@@ -60,8 +60,7 @@ BOOL ov10_0221FE8C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
             continue;
         }
 
-        // Retain the vanilla narrowing until the expanded-ability contract is ported.
-        if (ability == (u8)GetMonData(mon, MON_DATA_ABILITY, NULL) && (BattleSystem_Random(battleSystem) & 1)) {
+        if (ability == GetMonData(mon, MON_DATA_ABILITY, NULL) && (BattleSystem_Random(battleSystem) & 1)) {
             ctx->unk_21A4[battlerId] = i;
             return TRUE;
         }

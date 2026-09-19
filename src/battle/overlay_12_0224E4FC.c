@@ -557,7 +557,7 @@ void SetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         mon->statChanges[index] = *datas8;
     } break;
     case BMON_DATA_ABILITY:
-        mon->ability = *data8;
+        mon->ability = *data16;
         break;
     case BMON_DATA_TYPE_1:
         mon->type1 = *data8;
@@ -2634,7 +2634,7 @@ BOOL WhirlwindCheck(BattleSystem *battleSystem, BattleContext *ctx) {
     return ret;
 }
 
-u8 GetBattlerAbility(BattleContext *ctx, int battlerId) {
+u16 GetBattlerAbility(BattleContext *ctx, int battlerId) {
     if ((ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED) && ctx->battleMons[battlerId].ability != ABILITY_MULTITYPE) {
         return ABILITY_NONE;
     } else if ((ctx->fieldCondition & FIELD_CONDITION_GRAVITY) && ctx->battleMons[battlerId].ability == ABILITY_LEVITATE) {
@@ -5458,7 +5458,7 @@ typedef struct MoveDamageCalc {
     int item;
     int mod;
     u32 status;
-    u8 ability;
+    u16 ability;
     u8 gender;
     u8 type1;
     u8 type2;
@@ -6576,7 +6576,7 @@ static void ov12_02258584(BattleContext *ctx, u8 battlerId) {
 }
 
 static void ov12_0225859C(BattleContext *ctx, u8 battlerId) {
-    ctx->trainerAIData.abilities[battlerId] = ABILITY_NONE;
+    ctx->trainerAIAbilities[battlerId] = ABILITY_NONE;
 }
 
 static void ov12_022585A8(BattleContext *ctx, u8 battlerId) {

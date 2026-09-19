@@ -26,8 +26,8 @@ void ov10_0221D0A8(BattleSystem *battleSystem, BattleContext *ctx) {
     if (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED) {
         ctx->trainerAIData.unk8 = ABILITY_NONE;
     } else if (ctx->trainerAIData.battlerIdAttacker != battlerId && battler != AI_BATTLER_ATTACKER_PARTNER) {
-        if (ctx->trainerAIData.abilities[battlerId] != ABILITY_NONE) {
-            ctx->trainerAIData.unk8 = ctx->trainerAIData.abilities[battlerId];
+        if (ctx->trainerAIAbilities[battlerId] != ABILITY_NONE) {
+            ctx->trainerAIData.unk8 = ctx->trainerAIAbilities[battlerId];
         } else if (ctx->battleMons[battlerId].ability == ABILITY_SHADOW_TAG
             || ctx->battleMons[battlerId].ability == ABILITY_MAGNET_PULL
             || ctx->battleMons[battlerId].ability == ABILITY_ARENA_TRAP) {
@@ -68,7 +68,7 @@ void ov10_0221D188(BattleSystem *battleSystem, BattleContext *ctx) {
     if (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED) {
         ability1 = ABILITY_NONE;
     } else if (battler == AI_BATTLER_TARGET || battler == AI_BATTLER_TARGET_PARTNER) {
-        ability1 = ctx->trainerAIData.abilities[battlerId];
+        ability1 = ctx->trainerAIAbilities[battlerId];
         if (ability1 != ABILITY_NONE) {
             ctx->trainerAIData.unk8 = ability1;
         } else {

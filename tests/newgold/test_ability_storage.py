@@ -16,10 +16,11 @@ import unittest
 from test_repels import ROOT, REFERENCE, REFERENCE_COMMIT, function, revision, without_includes
 
 
-def selected_cases(source, name, fields):
+def selected_cases(source, name, fields, variable="attr"):
     code = function(source, name)
-    start = code.index("    switch (attr) {")
-    body = start + len("    switch (attr) {")
+    switch = "    switch (" + variable + ") {"
+    start = code.index(switch)
+    body = start + len(switch)
     end, depth = body, 1
     while depth:
         depth += (code[end] == "{") - (code[end] == "}")

@@ -4,11 +4,11 @@ Validation date: 2026-09-19. Input revisions are pinned in `MIGRATION.md`.
 This report distinguishes source tests, a matching vanilla ROM, a modified ROM
 build, and emulator/hardware testing. The latter is not implied by compilation.
 
-## Required final comparison with the original NewGold build
+## Final fidelity comparison with the original NewGold build
 
-The user additionally requires building the original konefr repository and
-checking whether its ROM equals the native port's ROM. The final full-port gate
-is **PENDING**. An actual intermediate comparison at M16 is now complete: both
+The user clarified that the required result is a faithful native C port of the
+hack, not a byte-identical final ROM. The compiled original remains the
+behavior/data reference. The final fidelity gate is **PENDING**. An actual intermediate comparison at M16 is now complete: both
 ROMs build, but they are not byte-identical. All 960 decoded ability texts agree.
 See [REFERENCE_BUILD.md](REFERENCE_BUILD.md) for hashes, differences and scope.
 Build pinned NewGold `1b872926eaa0363816d4e376fad1531435b04b9c` in an isolated
@@ -20,8 +20,8 @@ and produces `test.nds`; it does not provide an equivalent SoulSilver target.
 The matching upstream HG baseline already built here is a reproducible candidate
 input, subject to checking the reference's complete build requirements.
 
-Record both ROM hashes and an actual byte-for-byte comparison, regardless of
-the expected result. A source-level port can have a different code/layout binary
+Record build hashes for provenance. The completed intermediate byte comparison
+is diagnostic, not an acceptance criterion for the whole hack. A source-level port can have a different code/layout binary
 while implementing the same behavior; do not call that byte-identical, and do
 not add hooks or address constraints merely to force equality. If the binaries
 differ, separately compare decoded game data/resources and representative
@@ -496,3 +496,41 @@ assembler warnings. Evidence and runnable audit are in
 M16 boot/menu smoke and original-ROM comparison apply to these identical ROMs.
 This is a validated vanilla C prerequisite; the BattleMon source ability remains
 u8, and no expanded ability gameplay or protocol change is enabled yet.
+
+## M18 — Battle ability IDs and coherent AI cache
+
+Evidence: `build/milestones/18-battle-abilities/verification.json`, full build
+logs, maps/ROMs, host-test log, runnable audit and runtime-smoke records.
+
+| ROM | SHA-1 | SHA-256 |
+| --- | --- | --- |
+| HeartGold | `b0ef8ed8d4647c512c08150492aa9bd1e6fddab4` | `2cb97987200f9970c86cf996db091375170ffa737b28dac281c4b4af873ce123` |
+| SoulSilver | `c70a864195f7623d67f6f8603e451f1acb168dc2` | `6f8c1b388acd4e128d45d5adf23d00dc7055ac618243e1af762723143c00ecb2` |
+
+Both full builds pass without new compiler/assembler warnings. Target assertions
+verify BattleMon stride 0xC0, ability 0x7A, PP 0x2C, item 0x78, effects 0x80; original
+AI held-item 0x40 and move-table 0x8A offsets; BattleContext mons 0x2D40, appended
+cache 0x3158 and total size 0x3160. No other context member is moved. Source checks
+find no BattleMon unk76 accesses or remaining raw old-ability literal; all sixteen
+ASM GetBattlerAbility calls preserve the complete return value.
+
+All fourteen host checks pass. The new test runs actual structs and native
+ability accessors, cache initialization/revelation/query/reset, AI switch selection,
+packet producers and end-of-battle reward eligibility with ASan/UBSan. It covers
+all 512 IDs in four battlers (2,048 cases), suppression and Gravity/Ingrain,
+known/guessed abilities, per-slot reset, unchanged neighboring data, the existing
+44-byte full-ID packet, absorbing aliases and 512 reward cases. Personal data,
+party access, RNG, script input, reward tables and transport are controlled.
+The private damage record's width is asserted, but the complete damage formula,
+battle loader and modern ability effects are not claimed as executed by this test.
+
+ARM7 and every non-overlay resource remain identical to M17. Overlay10/12 code
+changes; overlay8 and ARM9 also reflect linking changes. The decompressed ARM9
+diff is two bytes and overlay8 is 25 bytes with unchanged ASM sources; raw compressed
+sizes are not evidence of changed game data. Whole-ROM identity is neither
+expected nor an acceptance condition for this native behavior change.
+
+Both ROMs run 1,436 frames in isolated melonDS processes and reach the readable
+intro through menu input. This smoke does not exercise a battle. Actual NewGold
+ability gameplay parity remains unverified; UI, field, personal assignment and
+external-record compatibility are still dependencies before broader high-ID use.

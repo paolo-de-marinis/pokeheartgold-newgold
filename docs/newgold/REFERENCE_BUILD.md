@@ -3,7 +3,8 @@
 The original pinned repository builds successfully without tracked source or
 configuration changes. Its ROM is **not byte-identical** to the native M16 port.
 This is an intermediate measurement: the port is incomplete, and gameplay
-parity is not established. Repeat the comparison at the final completion gate.
+parity is not established. The user subsequently clarified that final acceptance means faithful behavior
+and data, not whole-ROM byte identity. Use this build for that fidelity gate.
 
 | Input / output | Value |
 | --- | --- |

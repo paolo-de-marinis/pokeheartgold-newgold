@@ -2,7 +2,7 @@
 
 Source: `hg-engine-newgold-reference` at `1b872926eaa0363816d4e376fad1531435b04b9c`. Original target: pret `e97c7fc975a7447f288c42acc2e155f5a673e30f`. Function ranges in the TSV use the pinned xMAP already used by the migration inventory. Line numbers and ranges refer to the pinned original sources; current conversion milestones are recorded in the TSV and MIGRATION.md.
 
-`ability-consumers.tsv` contains 67 evidence rows. This is a bounded consumer/dependency census, **not proof that every ROM path is now closed**. Positive width boundaries are separated from width-safe ASM and from functions exposed only if unrelated offsets move.
+`ability-consumers.tsv` contains 68 evidence rows. This is a bounded consumer/dependency census, **not proof that every ROM path is now closed**. Positive width boundaries are separated from width-safe ASM and from functions exposed only if unrelated offsets move.
 
 ## Converted byte boundaries and remaining contracts
 
@@ -20,15 +20,15 @@ Fourteen additional original ASM byte boundaries are established: all now conver
 
 These are additional dependency targets, **not a revision of the original hook-only42ASM census**. Some have no explicit source ability patch; they expose shortcomings to resolve before claiming end-to-end native IDs0–319. Do not automatically reproduce source truncation or silently alter protocol semantics.
 
-PC producer/renderer are already the M6 matching-C prerequisite. The party-heal sender is matching C in M7; summary producer/display are the M8 prerequisite. Those are not part of the thirteen above.
+PC producer/renderer are already the M6 matching-C prerequisite. The party-heal sender is matching C in M7; summary producer/display are the M8 prerequisite. Those are not part of the fourteen above.
 
-## AI cache: source inconsistency and native ABI constraint
+## AI cache: source inconsistency and native ABI resolution
 
-Native `TrainerAIData.abilities` is u8[4], relative0x3C / BattleContext+0x390. Following heldItems start at relative0x40; moveData starts at relative0x8A / context0x3DE. Source `BattleAIWorkTable` still declares `u8 ai_tokusyu_no[4]` at0x3C, but `armips/asm/abilities.s` replaces the writer at02248648 with a halfword store to context0x3E0 + 2*battler. That storage lies inside the old move-table area; source `armips/asm/moves.s` moves the move table to0x317E. Therefore its relocation depends on move expansion.
+Before M18, native `TrainerAIData.abilities` was u8[4], relative0x3C / BattleContext+0x390. Following heldItems start at relative0x40; moveData starts at relative0x8A / context0x3DE. Source `BattleAIWorkTable` still declares `u8 ai_tokusyu_no[4]` at 0x3C, but `armips/asm/abilities.s` replaces the writer at02248648 with a halfword store to context0x3E0 + 2*battler. That storage lies inside the old move-table area; source `armips/asm/moves.s` moves the move table to 0x317E. Therefore its relocation depends on move expansion.
 
-Both AI readers above still load original cache0x390 and original BattleMon ability0x2D67. Native reset `ov12_0225859C` clears original cache0x390. No replacement/reset patch was found. Default reachability was checked: native `ov10_0221C278` dispatches through `ov10_0222B0B4`, which retains both ability handlers. Source `src/battle/ai.c` replaces only overlay 12 AITypeCalc; enabled overlay10 manifest hooks contain only the binding switch restriction. DEBUG_BATTLE_SCENARIOS entry replacements are disabled by default. Relevant ARMIPS AI edits change move-data offsets, not these cache loads.
+The original ASM versions of both readers load cache 0x390 and BattleMon ability 0x2D67. The original native reset `ov12_0225859C` clears cache 0x390. No replacement/reset patch was found. Default reachability was checked: native `ov10_0221C278` dispatches through `ov10_0222B0B4`, which retains both ability handlers. Source `src/battle/ai.c` replaces only overlay 12 AITypeCalc; enabled overlay10 manifest hooks contain only the binding switch restriction. DEBUG_BATTLE_SCENARIOS entry replacements are disabled by default. Relevant ARMIPS AI edits change move-data offsets, not these cache loads.
 
-This establishes a **static producer/consumer inconsistency in the default source**, not an emulator-verified gameplay defect. It should not be copied as architecture. Prefer one typed native cache with coherent write/read/reset. Decide how to preserve the native BattleContext ABI first; simply changing u8[4] to u16[4] shifts following AI fields and later BattleContext members consumed by extensive ASM. Compiler-generated offsetof assertions have **not** been run in this census; source comments and original instructions support the listed offsets.
+This establishes a **static producer/consumer inconsistency in the default source**, not an emulator-verified gameplay defect. It should not be copied as architecture. Prefer one typed native cache with coherent write/read/reset. Decide how to preserve the native BattleContext ABI first; simply changing u8[4] to u16[4] shifts following AI fields and later BattleContext members consumed by extensive ASM. M18 target-compiler assertions now verify the unchanged AI held-item/move-data offsets, BattleMon stride/neighbor fields and complete BattleContext prefix. A u16[4] cache is appended to BattleContext at 0x3158; allocation grows from 0x3158 to 0x3160 using the existing sizeof-based allocator. AI initialization, revelation, inference/query and switch reset all use this field. The old bytes remain reserved. This avoids moving unrelated ASM consumers and does not reproduce the source producer/consumer inconsistency.
 
 ## Patch-only targets now identified
 
@@ -41,8 +41,8 @@ This establishes a **static producer/consumer inconsistency in the default sourc
 
 1. **Saved Pokémon — M16 implemented:** native Block A retains 32 bytes, uses EXP low21 bits and bit31 for abilityMSB, and preserves bits21–30. Get/Set/Add follow the reference, including ability assignment in Add. Multitype compares the complete ID. Actual native encryption, checksum, locking and compact serialization pass 32,768 host cases against the pinned reference edited cases; EXP curves/personal data are controlled test inputs.
 2. **Setter pointer ABI — M16 implemented:** native ability setters now read u16. GiveMon has a u16 parameter; Frontier, Trainer House and Pokéwalker importers widen their protocol bytes into u16 locals. Existing u32/int assignment locals and the GBA migration word temporary are large enough. Battle-copy sender stores a complete word at SP+0x34, packet+0x24 (packet starts SP+0x10, length0x2C); receiver ov12_022591F4 passes this aligned field to SetMonData. Dynamic PC wrapper callers set items/markings, not abilities; traced follower/Frontier dynamic setters use Shiny Leaves/held-item attributes.
-3. **Personal resources:** native abilities[2] are bytes at0x16/17. Source halfwords at0x16/1A use a different layout. Native `personal.json.txt` emits the native struct and sizeof; preserve native generation and validate every member offset rather than importing source binary records.
-4. **Battle record:** source places halfword ability at0x7A while retaining stride0xC0 and old0x27 as dummy. Prove padding availability in native layout; do not insert a halfword at 0x27 and shift unrelated fields. C SetBattlerVar must read the selected16-bit payload, not data8.
+3. **Personal resources:** native abilities[2] are bytes at 0x16/17. Source halfwords at 0x16/1A use a different layout. Native `personal.json.txt` emits the native struct and sizeof; preserve native generation and validate every member offset rather than importing source binary records.
+4. **Battle record — M18 implemented:** ability is u16 in the previously unused halfword at 0x7A; the0xC0 stride and all other members stay fixed, with old0x27 reserved. Native SetBattlerVar reads data16 and GetBattlerAbility returns u16. The private damage record and end-of-battle ability local are widened; the AI switch helper no longer narrows party abilities. Known raw byte consumers are now C. The sixteen remaining ASM GetBattlerAbility callsites preserve full registers/word temporaries, or compare directly; four apparent relative0x27 hits actually pass move-PP attributes to GetBattlerVar. No old2D67/new2DBA raw literal or BattleMon unk76 access remains in the reviewed sources. These are bounded checks, not a claim of complete game-wide consumer closure.
 5. **PC/summary/UI records:** prefer per-record fields and stable other offsets. Native PC's28-byte record, summary form/ability swap, and overlay83 records each require explicit allocation/offset assertions. Do not recreate executable scratch storage. Full other-field offset-consumer lists are not completed here, so in-place growth is not authorized by this census.
 6. **Compact serialization — M16 implemented:** `sub_02072A98`/`sub_02072D64` copy expAndAbility as the raw word and retain the separate ability byte in the0x70 record. Roundtrips preserve the ninth bit and reserved bits. Their ASM callers `sub_020306DC`/`sub_02030724` advance0x70 and do not read ability; their ABI is unchanged.
 7. **External records:** Frontier, TrainerHouse, Pokéwalker and link/trade compatibility need an explicit policy. A byte wire/save field cannot be enlarged just because a runtime field grows. Native names/descriptions/constants must be expanded before displaying any new ID. Hidden-ability assignment/form tables and per-ability mechanics are later features, not consequences of width alone.
@@ -54,3 +54,17 @@ The party-heal packet can remain byte-sized for the currently traced predicate: 
 Reviewed ASM paths already holding full ability results include ov08_0221D184/ov08_0221E120 (halfword UI record), ov83_0223FD4C (direct name formatting), AGB_GetBoxMonAbility/MigrateBoxMon (word payload), and the AI/party accessor-only paths listed in the TSV. These are not mandatory decompilation tasks solely because IDs become wider.
 
 Suggested bounded validation after each conversion: matching original routine/wholeROM first; then actual-C host checks for IDs0,123,255,256,319 and every battler slot through cache reveal/reset/guess; explicit alias cases266/267/274; saved ability+EXP roundtrip/checksum and form reassignment; byte-backed setter input under sanitizer; personal binary member size/offset checks; UI name/description bounds. ROM boot is not ability gameplay validation. The initial census performed no behavior tests; M16 adds the scoped saved-storage check. End-to-end ability gameplay remains unverified.
+
+## M18 validation scope
+
+The new host check uses actual BattleMon/TrainerAIData/BattleContext declarations
+and actual native accessors, cache initialization/revelation/reset, both AI
+handlers, packet producers, absorbing-switch selection and reward eligibility.
+All 512 stored IDs across four battlers pass (2,048 cases), with suppression,
+Gravity/Ingrain, known/guessed abilities, packet flags and unrelated cache slots.
+IDs266/267/274 cannot alias10/11/18; all 512 end-of-battle reward eligibility cases
+pass. RNG, party/personal data, script operands and reward tables are controlled.
+The private damage record's width is compiled/asserted; complete damage formulas
+and new ability effects are not behaviorally verified by this test. HG/SS builds,
+all 14 checks and boot/menu smoke pass. UI/personal/field/export paths remain
+separate prerequisites before assigning higher IDs throughout the game.

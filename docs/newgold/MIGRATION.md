@@ -4,6 +4,10 @@ This branch extends `pret/pokeheartgold` with native source/data implementations
 of `konefr/hg-engine-newgold`. The reference patch engine is kept outside this
 repository. It is not linked, embedded, or used to build the port.
 
+Final acceptance is faithful NewGold behavior and data. Whole-ROM byte identity
+is not required, as clarified by the user; exact matching remains useful when
+validating an individual vanilla ASM-to-C prerequisite.
+
 ## Reference revisions
 
 | Input | Revision |
@@ -37,17 +41,17 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Additional patch-only ASM prerequisites identified | 4: two converted to matching C, two still ASM; outside the original hook census |
 | Further ability byte boundaries identified | 14 functions originally ASM: all converted to C (twelve MATCHING, two instruction-equivalent NONMATCHING before modification); outside the original hook census |
 | Entire hook replacements made unnecessary | 2, repel expiry and bag-use hooks |
-| Instruction-patch behaviors represented natively | 3, Rage, Fire Fang / Shadow Force and overworld poison |
+| Instruction-patch behaviors represented natively | 4 groups: Rage, Fire Fang / Shadow Force, overworld poison and battle ability widths (M18 foundation) |
 | Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
-| Reference binary patch mechanisms made unnecessary | 4: three instruction changes and one script-handler pointer replacement |
+| Reference binary patch mechanisms made unnecessary | 5 behavior groups: four instruction-patch groups and one script-handler pointer replacement; not a count of individual patched instructions |
 | Features ported | 5: Rage, Fire Fang / Shadow Force, reusable repels, overworld poison, existing friendship-evolution threshold |
 | Features verified at C/resource boundaries | 5; emulator scenarios still pending |
-| Saved-ability foundation | M16: native nine-bit saved abilities, u16 setter inputs and compact serialization; battle/UI/personal consumers still pending |
+| Ability-width foundations | M16 saved encoding/setter/compact data; M18 battle storage, accessors and coherent AI cache; UI/personal/field/external export consumers still pending |
 | Ability text resources ported | 3 native message banks, 320 entries each; all 960 compiled texts verified against pinned NewGold |
 | Features checked in a running ROM | 0 |
-| ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5, M13, M15 and M16; separate from feature gameplay verification |
+| ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5, M13, M15, M16 and M18; separate from feature gameplay verification |
 | Original NewGold comparison | M16 intermediate comparison complete: ROMs differ; 960 decoded ability texts agree; final completed-port comparison still pending |
-| Complete ROM build | HeartGold and SoulSilver PASS through M17; both complete ROMs byte-identical to M16 |
+| Complete ROM build | HeartGold and SoulSilver PASS through M18; no non-overlay resource or ARM7 changes from M17 |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -729,20 +733,64 @@ the 14th additional ability consumer. Original hook-target counters remain
 layout and consumer change; no new ability mechanics or hook retirement are
 claimed by this vanilla prerequisite.
 
+## M18 — Native battle ability width and coherent AI memory
+
+NewGold `include/battle.h`, `armips/asm/abilities.s` and the data-accessor hooks
+require full ability IDs in battle. `BattleMon.ability` now uses the previously
+unused halfword at 0x7A, retaining the 192-byte stride and every other field.
+`SetBattlerVar` reads u16; `GetBattlerAbility` returns u16. Existing C assignment,
+Trace/form checks and the converted packet producers pick up the typed member.
+The private damage-calculation record and end-of-battle reward local retain
+full IDs, and absorbing-switch selection no longer truncates party abilities.
+No new ability-specific effects or changed reward tables are enabled here.
+
+The reference moves its AI writer into another area without updating original
+readers/reset. The native implementation deliberately fixes this documented
+static inconsistency: a u16 cache is appended to BattleContext, and initialization,
+message revelation, both AI query handlers and switch reset use it together.
+The old four bytes remain reserved. The existing sizeof-based allocator and
+clear cover the extra eight bytes; all original context member offsets remain
+stable. Compile-time assertions verify the layout in both target builds.
+No dynamic sidecar, hook, linker placement or runtime address arithmetic is added.
+
+All direct native setter callers use word-backed payloads, including the recursive
+script-variable path; no ASM SetBattlerVar caller was found. Sixteen remaining
+ASM GetBattlerAbility calls preserve a full register/word result or compare it
+directly. The four apparent raw0x27 hits are move-PP attribute operands. The
+source and remaining ASM byte/padding checks are recorded in ABILITY_DATA_FLOW;
+they are not a claim that unrelated game-wide UI/export paths are complete.
+
+Both full ROMs, all fourteen tests and scoped formatting pass without new
+compiler/assembler warnings. The new actual-C test covers 2,048 full-ID battle,
+cache and packet cases plus 512 reward eligibility cases under ASan/UBSan.
+It includes known/unknown/suppressed abilities, switch reset, adjacent cache
+slots and absorbing aliases 266/267/274. Controlled game-data/RNG/transport
+inputs delimit its scope; complete damage formulas and new ability mechanics
+are not verified by this test. Both ROMs pass boot/render/menu smoke.
+Evidence: `build/milestones/18-battle-abilities`.
+
+This supersedes the battle-width instruction-patch behavior as native C, counted
+as one additional behavior group rather than each address in abilities.s.
+No whole multi-purpose hook replacement is retired: the reference ability getter
+and battle hooks also contain mechanics still awaiting migration. Conversion
+counts stay 21 (19 matching vanilla prerequisites and two equivalent); original
+hook targets stay 312 C / 37 ASM. Next widen native UI/field/personal consumers and
+define external-record handling before enabling higher-ID assignments.
+
 ## Remaining foundation — Expanded ability consumers
 
 The four identified AI byte consumers, three Frontier record routines and
 both Pokéwalker record boundaries are now C. M16 implements the saved ability
-storage and setter contract. M17 converts the battle-copy packet producer to matching C. Next close
-battle/UI/personal and external export paths before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
-[ability-consumers.tsv](ability-consumers.tsv) record 67 scoped evidence rows,
+storage and setter contract. M17 converts the battle-copy packet producer to matching C. M18 implements the battle storage and AI cache contract. Next close
+UI/personal/field and external export paths before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
+[ability-consumers.tsv](ability-consumers.tsv) record 68 scoped evidence rows,
 including fourteen additional original ASM byte boundaries (all now C), already-wide accessors,
 serialization constraints and remaining inventory gaps. These are not all
 equivalent: do not convert untouched width-safe ASM merely because it exists.
 Save and battle layouts must not move before affected consumers are understood.
 
-The source defines abilities 0–319. Saved Pokémon now support nine-bit abilities. Native personal data,
-`BattleMon`, AI memory and UI still include u8 ability fields. Adding the
+The source defines abilities 0–319. Saved Pokémon now support nine-bit abilities. Battle storage and AI memory now use u16. Native personal data,
+field state, UI and external records still include u8 ability fields. Adding the
 new IDs alone would truncate them; moving fields while ASM still consumes
 their old offsets would corrupt other state.
 
