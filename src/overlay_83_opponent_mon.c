@@ -33,9 +33,9 @@ void ov83_02245D48(Ov83OpponentSummaryStatePrefix *state) {
     state->summary.form = GetMonData(mon, MON_DATA_FORM, NULL);
     state->summary.personality = GetMonData(mon, MON_DATA_PERSONALITY, NULL);
     if (GetMonData(mon, MON_DATA_NO_PRINT_GENDER, NULL) == TRUE) {
-        state->summary.showGender = FALSE;
+        state->summary.hideGender = FALSE;
     } else {
-        state->summary.showGender = TRUE;
+        state->summary.hideGender = TRUE;
     }
     state->summary.gender = GetMonGender(mon);
 

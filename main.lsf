@@ -1092,8 +1092,12 @@ Overlay OVY_83
     Object asm/overlay_83.o
     Object src/overlay_83_player_mon.o
     Object asm/overlay_83_02241FF0.o
+    Object src/overlay_83_player_summary.o
+    Object asm/overlay_83_02242814.o
     Object src/overlay_83_opponent_mon.o
     Object asm/overlay_83_02245F24.o
+    Object src/overlay_83_opponent_summary.o
+    Object asm/overlay_83_0224691C.o
 }
 Overlay OVY_84
 {

@@ -83,6 +83,7 @@ validation paths, not new project dependencies.
 | Vanilla AI ability inference/query in C | PASS, exact M9 SHA-1 | PASS, exact M9 SHA-1 | Complete ROMs and overlay 10 are MATCHING; original AI behavior retained |
 | Vanilla AI ability switching in C | PASS, exact M10 SHA-1 | PASS, exact M10 SHA-1 | Complete ROMs and overlay 10 are MATCHING; existing RNG/accessor/cast behavior retained |
 | Vanilla Frontier summary record constructors in C | PASS, exact M11 SHA-1 | PASS, exact M11 SHA-1 | Complete ROMs and overlay 83 are MATCHING; original record layout and accessor order retained |
+| Vanilla Frontier summary renderers in C | PASS | PASS | Opponent MATCHING; player differs only by proven independent instruction reordering; boot/menu smoke passes |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -345,3 +346,45 @@ and remaining assembly partitions are unchanged. Both builds pass without
 compiler/assembler warnings; twelve tests, scoped formatting and whitespace
 checks pass. The associated renderers remain ASM, ability fields remain u8, and
 no in-game menu verification has been performed for this milestone.
+
+## M13 — Frontier summary renderers: one matching, one instruction-equivalent
+
+ROMs, maps, before/after overlays, logs and runnable proof:
+`build/milestones/13-frontier-renderer-cvalidation/verification.json` and
+`audit-frontier-renderer-c.py` in the same directory. Runtime evidence is under
+its `runtime-smoke` directory.
+
+| ROM | SHA-1 | SHA-256 |
+| --- | --- | --- |
+| HeartGold | `6971feb1fc72f4254078269ae2f1fecdeb55bf6f` | `7edb12853c005a05d85b20abea362200491c722c938fbc763deaf89afdba8ba5` |
+| SoulSilver | `e48ef72086bb2d7c0ee4e61d2d322f6c91cee95f` | `a343df9937c350e96bb6dbc2f0275bd6231c1deeccdb015f28ce61a137fdfd35` |
+
+`ov83_02246114` is MATCHING C, 2,056 bytes. `ov83_022421E0` remains 1,588 bytes
+but is NONMATCHING. Its eight-byte difference is exactly this equivalent schedule:
+
+```text
+Previous: STR r0,[sp,#4]; MOVS r0,#0; STR r0,[sp,#8]; LDR r3,[sp,#32]
+Native C: LDR r3,[sp,#32]; STR r0,[sp,#4]; MOVS r0,#0; STR r0,[sp,#8]
+```
+
+The moved load touches neither the stored stack locations nor r0; it does not
+set flags. The same MOVS sets flags in both sequences, and no branch enters the
+block interior. The audit asserts these exact sequences, equal function sizes,
+C symbol ownership and unchanged remaining assembly. Reordering the comparison
+copy back proves all other 43,256 overlay bytes identical; no normalized copy is
+written to a build output. This is a compiled-instruction equivalence proof,
+not a claim of exact matching or a runtime Frontier-menu test.
+
+In both ROMs, only NitroFS file 83 (overlay 83) changes. ARM9, ARM7 and every
+other resource/overlay are identical to M12. Both full builds pass without
+compiler/assembler warnings. All twelve existing tests, formatting and whitespace
+checks pass. Ability storage remains u8; no new ability mechanics are enabled.
+
+Both final ROMs additionally ran for 1,436 frames in isolated directories with
+the same installed melonDS core as M5 (SHA-256
+`5efc1975eabf12b66502b0ca68d823e9ba96cda8b680482d625e862b8f4c680e`). Both
+processes exited successfully; visual inspection confirms legible tutorial text
+at frame 1,436 reached by D-pad/A menu input. Exact commands, screenshots, logs,
+source and provenance are archived. No external BIOS, existing save or user
+configuration was used. This validates boot/rendering/menu input only; the
+feature-gameplay verification count remains zero.
