@@ -34,10 +34,10 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | ASM targets converted to C | 2, both MATCHING C |
 | ASM targets remaining | 40 |
 | Entire hook replacements made unnecessary | 0 |
-| Instruction-patch behaviors represented natively | 1, Rage |
-| Features ported | 1, Rage |
+| Instruction-patch behaviors represented natively | 2, Rage and Fire Fang / Shadow Force |
+| Features ported | 2, Rage and Fire Fang / Shadow Force |
 | Features checked in a running ROM | 0 |
-| Complete ROM build | HeartGold and SoulSilver PASS with Rage; prerequisite C conversions separately matched both retail ROMs |
+| Complete ROM build | HeartGold and SoulSilver PASS through M2; prerequisite C conversions separately matched both retail ROMs |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -92,7 +92,7 @@ inside it has been implemented or completely specified.
 | Subsystem / category | NewGold implementation | Native target and original state | Current state | Dependencies and validation |
 | --- | --- | --- | --- | --- |
 | Rage cleanup / executable logic | `src/individual/ServerBeforeAct.c::ServerBeforeActInternal`, `SBA_RAGE`; `armips/asm/moves.s` Rage fix | `src/battle/battle_controller_player.c::BattleControllerPlayer_BeforeTurn`, C | BUILDS; VERIFIED (host) | Actual-C regression and both modified ROM builds pass; emulator scenario pending; see M1 |
-| Fire Fang / Shadow Force classification / executable logic | `bytereplacement`, `0225848C` | `src/battle/overlay_12_0224E4FC.c::ov12_02258440`, C | MAPPED | Shared live-battle and AI predicate; see M2 |
+| Fire Fang / Shadow Force classification / executable logic | `bytereplacement`, `0225848C` | `src/battle/overlay_12_0224E4FC.c::ov12_02258440`, C | BUILDS; VERIFIED (host) | Both ROMs pass; actual helper and shared live/AI predicates checked; emulator pending; see M2 |
 | Reusable repels / executable logic and script | `src/repel.c`, `hooks`, `routinepointers`, `armips/asm/repel.s`, common-script changes | `asm/overlay_02_02248728.s::PlayerStepEvent_RepelCounterDecrement`; `asm/overlay_15.s::BagApp_GetRepelStepCountAddr`, ASM; native common script and script command table | VANILLA C DECOMPILED | Both targets MATCHING C; feature pending. Source selects Max, then Super, then normal Repel, not necessarily last used |
 | Core battle state / executable logic | `include/battle.h`, `src/battle/battle_start.c`, `armips/asm/moves.s` | `include/battle/battle.h`, `BattleContext_New`, `BattleContext_Init`, C with ASM consumers | MAPPED | Required consumers must be C before layout changes; ABI/offset/save checks |
 | Expanded move IDs, data and bytecode / data, script, executable logic | `data/Moves.c`, `src/moves.c`, `src/battle/battle_script_commands.c` | `include/constants/moves.h`, `include/constants/move_effects.h`, `src/battle/battle_command.c`, `files/poketool/waza`, `files/battledata/script`, C/data | MAPPED | IDs, table limits, script command dispatch and messages; per-effect tests |
@@ -173,6 +173,12 @@ See `VALIDATION.md` for toolchain, checksums and commands.
   include neutral/resisted Fire Fang against Wonder Guard (not only Shedinja's
   ordinarily super-effective matchup), super-effective attacks, Shadow Force
   charge/hit phases and AI evaluation.
+* Validation: `python3 tests/newgold/test_wonder_guard.py` executes the actual
+  helper and both caller predicates: 277 effects, charge/hit and unrelated-bit
+  patterns, type-effectiveness combinations, Wonder Guard, Mold Breaker and zero/
+  nonzero power. The original implementation demonstrably fails the regression.
+  Both full ROM builds pass without compiler/assembler warnings. Only overlay 12
+  differs from M1; all other modules and resources are identical.
 * Dependencies: baseline build only; no Fairy/type-chart expansion required.
 
 ## Build and review policy

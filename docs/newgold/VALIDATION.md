@@ -49,7 +49,7 @@ validation paths, not new project dependencies.
 | Unmodified upstream | PASS, exact retail SHA-1 | PASS, exact retail SHA-1 | Both ROMs byte-identical to retail |
 | Vanilla repel ASM-to-C conversions | PASS, exact retail SHA-1 | PASS, exact retail SHA-1 | Both converted functions are MATCHING C |
 | Rage cleanup | PASS | PASS | Actual-C regression passes, upstream fails; no new compiler/assembler warnings |
-| Fire Fang / Shadow Force classification | Pending | Pending | Planned actual-C helper and live/AI predicate regression |
+| Fire Fang / Shadow Force classification | PASS | PASS | Actual-C helper and live/AI predicates pass; upstream fails; no new compiler/assembler warnings |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -90,3 +90,19 @@ function grows by four bytes, and the native linker adjusts downstream symbols
 and callers. Changed overlays are 8, 10 and 12; an ARM9 call relocation changes
 accordingly. No NitroFS/NARC data or ARM7 bytes change. Exact clang-format 19
 checks pass for both modified battle files, as does `git diff --check`.
+
+## M2 — Wonder Guard classification build outputs
+
+Artifacts and module audit: `build/milestones/02-wonder-guard/verification.json`.
+
+| ROM | SHA-1 |
+| --- | --- |
+| HeartGold through M2 | `b21ffd80674a16695b5e4b99fbcdb880baf544ec` |
+| SoulSilver through M2 | `9dfca73b095c64ddcafffe4a2170bddfd4f731c3` |
+
+Both full builds pass without compiler/assembler warnings. Only overlay 12
+changes relative to M1; ARM9, ARM7, other overlays and every non-overlay resource
+are identical. The host regression exercises 1,108 helper cases, 17,728 AI
+predicates and 35,456 live-battle predicates; its negative check fails on the
+original Fire Fang/Shadow Force classification. These are function-boundary
+checks, not complete emulator battles.

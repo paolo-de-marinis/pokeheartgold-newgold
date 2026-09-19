@@ -6492,7 +6492,7 @@ static int ov12_02258440(BattleContext *ctx, int moveNo) {
     case MOVE_EFFECT_DIVE:
     case MOVE_EFFECT_DIG:
     case MOVE_EFFECT_BOUNCE:
-    case MOVE_EFFECT_FLINCH_BURN_HIT:
+    case MOVE_EFFECT_SHADOW_FORCE:
         return ctx->battleStatus & BATTLE_STATUS_CHARGE_MOVE_HIT;
     }
 
