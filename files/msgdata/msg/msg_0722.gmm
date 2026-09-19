@@ -496,4 +496,788 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Reduces a sleeping\nfoe’s HP.</language>
 	</row>
+	<row id="msg_0722_00124" index="124">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Steals an item when\nhit by another Pokémon.</language>
+	</row>
+	<row id="msg_0722_00125" index="125">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Removes added effects to\nincrease move damage.</language>
+	</row>
+	<row id="msg_0722_00126" index="126">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Makes stat changes\nhave an opposite effect.</language>
+	</row>
+	<row id="msg_0722_00127" index="127">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Makes the opponents\nunable to eat Berries.</language>
+	</row>
+	<row id="msg_0722_00128" index="128">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When its stats are lowered\nits Attack increases.</language>
+	</row>
+	<row id="msg_0722_00129" index="129">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lowers stats when\nHP becomes half or less.</language>
+	</row>
+	<row id="msg_0722_00130" index="130">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">May disable a move\nused on the Pokémon.</language>
+	</row>
+	<row id="msg_0722_00131" index="131">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">May heal an ally’s\nstatus conditions.</language>
+	</row>
+	<row id="msg_0722_00132" index="132">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Reduces damage\ndone to allies.</language>
+	</row>
+	<row id="msg_0722_00133" index="133">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Physical attacks lower\nDefense and raise Speed.</language>
+	</row>
+	<row id="msg_0722_00134" index="134">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Doubles the\nPokémon’s weight.</language>
+	</row>
+	<row id="msg_0722_00135" index="135">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Halves the\nPokémon’s weight.</language>
+	</row>
+	<row id="msg_0722_00136" index="136">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Reduces damage\nwhen HP is full.</language>
+	</row>
+	<row id="msg_0722_00137" index="137">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up physical\nattacks when poisoned.</language>
+	</row>
+	<row id="msg_0722_00138" index="138">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up special\nattacks when burned.</language>
+	</row>
+	<row id="msg_0722_00139" index="139">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">May create another Berry\nafter one is used.</language>
+	</row>
+	<row id="msg_0722_00140" index="140">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Anticipates an ally’s\nattack and dodges it.</language>
+	</row>
+	<row id="msg_0722_00141" index="141">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sharply raises one stat\nand lowers another.</language>
+	</row>
+	<row id="msg_0722_00142" index="142">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Protects the Pokémon from\ndamage from weather.</language>
+	</row>
+	<row id="msg_0722_00143" index="143">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">May poison targets when\na Pokémon makes contact.</language>
+	</row>
+	<row id="msg_0722_00144" index="144">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Restores a little HP when\nwithdrawn from battle.</language>
+	</row>
+	<row id="msg_0722_00145" index="145">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Protects from\nDefense-lowering attacks.</language>
+	</row>
+	<row id="msg_0722_00146" index="146">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts the Pokémon’s\nSpeed in a sandstorm.</language>
+	</row>
+	<row id="msg_0722_00147" index="147">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Makes status moves more\nlikely to miss.</language>
+	</row>
+	<row id="msg_0722_00148" index="148">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts move power when\nthe Pokémon moves last.</language>
+	</row>
+	<row id="msg_0722_00149" index="149">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Comes out disguised as\nthe Pokémon in back.</language>
+	</row>
+	<row id="msg_0722_00150" index="150">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It transforms itself into\nthe Pokémon it is facing.</language>
+	</row>
+	<row id="msg_0722_00151" index="151">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Passes through the foe’s\nbarrier and strikes.</language>
+	</row>
+	<row id="msg_0722_00152" index="152">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Contact with this Pokémon\nspreads this Ability.</language>
+	</row>
+	<row id="msg_0722_00153" index="153">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts Attack after\nknocking out any Pokémon.</language>
+	</row>
+	<row id="msg_0722_00154" index="154">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raises Attack when\nhit by a Dark-type move.</language>
+	</row>
+	<row id="msg_0722_00155" index="155">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Some move types scare\nit and boost its Speed.</language>
+	</row>
+	<row id="msg_0722_00156" index="156">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Reflects\nstatus-changing moves.</language>
+	</row>
+	<row id="msg_0722_00157" index="157">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts Attack when\nhit by a Grass-type move.</language>
+	</row>
+	<row id="msg_0722_00158" index="158">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gives priority to\na status move.</language>
+	</row>
+	<row id="msg_0722_00159" index="159">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts certain moves’\npower in a sandstorm.</language>
+	</row>
+	<row id="msg_0722_00160" index="160">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Inflicts damage to\nthe Pokémon on contact.</language>
+	</row>
+	<row id="msg_0722_00161" index="161">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Changes the Pokémon’s\nshape when HP is halved.</language>
+	</row>
+	<row id="msg_0722_00162" index="162">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts the accuracy of\nits allies and itself.</language>
+	</row>
+	<row id="msg_0722_00163" index="163">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Moves can be used\nregardless of Abilities.</language>
+	</row>
+	<row id="msg_0722_00164" index="164">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Moves can be used\nregardless of Abilities.</language>
+	</row>
+	<row id="msg_0722_00165" index="165">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Protects against attacks\nthat limit move choices.</language>
+	</row>
+	<row id="msg_0722_00166" index="166">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Protects Grass-type allies\nfrom stat/status effects.</language>
+	</row>
+	<row id="msg_0722_00167" index="167">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Restores HP as well when\nthe Pokémon eats a Berry.</language>
+	</row>
+	<row id="msg_0722_00168" index="168">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It changes type to that\nof the move it’s about to use.</language>
+	</row>
+	<row id="msg_0722_00169" index="169">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Halves the damage from\nphysical moves.</language>
+	</row>
+	<row id="msg_0722_00170" index="170">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Steals the held item of\na Pokémon it hits.</language>
+	</row>
+	<row id="msg_0722_00171" index="171">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Protects the Pokémon from\nsome ball and bomb moves.</language>
+	</row>
+	<row id="msg_0722_00172" index="172">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sharply boosts Sp. Atk\nwhen a stat is lowered.</language>
+	</row>
+	<row id="msg_0722_00173" index="173">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts the power of\nbiting moves.</language>
+	</row>
+	<row id="msg_0722_00174" index="174">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Normal-type moves become\nIce-type and powered up.</language>
+	</row>
+	<row id="msg_0722_00175" index="175">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Prevents itself and\nallies from falling asleep.</language>
+	</row>
+	<row id="msg_0722_00176" index="176">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Changes between Blade and\nShield Forme with attacks.</language>
+	</row>
+	<row id="msg_0722_00177" index="177">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flying-type moves gain\npriority when its HP is full.</language>
+	</row>
+	<row id="msg_0722_00178" index="178">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up aura and\npulse moves.</language>
+	</row>
+	<row id="msg_0722_00179" index="179">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts the Defense stat\non Grassy Terrain.</language>
+	</row>
+	<row id="msg_0722_00180" index="180">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Passes its held item to\nan ally that has used theirs.</language>
+	</row>
+	<row id="msg_0722_00181" index="181">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up moves that\nmake direct contact.</language>
+	</row>
+	<row id="msg_0722_00182" index="182">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Normal-type moves become\nFairy-type and powered up.</language>
+	</row>
+	<row id="msg_0722_00183" index="183">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Contact with it lowers the\nattacker’s Speed stat.</language>
+	</row>
+	<row id="msg_0722_00184" index="184">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Normal-type moves become\nFlying-type and power up.</language>
+	</row>
+	<row id="msg_0722_00185" index="185">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Parent and child\neach attacks.</language>
+	</row>
+	<row id="msg_0722_00186" index="186">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up each Pokémon’s\nDark-type moves.</language>
+	</row>
+	<row id="msg_0722_00187" index="187">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up each Pokémon’s\nFairy-type moves.</language>
+	</row>
+	<row id="msg_0722_00188" index="188">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The effects of “Aura”\nAbilities are reversed.</language>
+	</row>
+	<row id="msg_0722_00189" index="189">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Changes the weather\nto nullify Fire-type moves.</language>
+	</row>
+	<row id="msg_0722_00190" index="190">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Changes the weather\nto nullify Water-type moves.</language>
+	</row>
+	<row id="msg_0722_00191" index="191">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alters weather to\nremove Flying-type’s weaknesses.</language>
+	</row>
+	<row id="msg_0722_00192" index="192">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts Defense when\nhit by an attack.</language>
+	</row>
+	<row id="msg_0722_00193" index="193">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wimpily switches out if its\nHP becomes half or less.</language>
+	</row>
+	<row id="msg_0722_00194" index="194">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Switches out if its HP\nbecomes half or less.</language>
+	</row>
+	<row id="msg_0722_00195" index="195">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sharply ups Defense when\nhit by a Water-type move.</language>
+	</row>
+	<row id="msg_0722_00196" index="196">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Its attacks are critical\nhits if target is poisoned.</language>
+	</row>
+	<row id="msg_0722_00197" index="197">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Its shell breaks if its\nHP becomes half or less.</language>
+	</row>
+	<row id="msg_0722_00198" index="198">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Deals doubles damage to\na target’s replacement.</language>
+	</row>
+	<row id="msg_0722_00199" index="199">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Weakens incoming Fire-type\nmoves and prevents burns.</language>
+	</row>
+	<row id="msg_0722_00200" index="200">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up\nSteel-type moves.</language>
+	</row>
+	<row id="msg_0722_00201" index="201">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ups Sp. Atk if a hit\nmakes its HP half or less.</language>
+	</row>
+	<row id="msg_0722_00202" index="202">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts the Pokémon’s\nSpeed stat in a hailstorm.</language>
+	</row>
+	<row id="msg_0722_00203" index="203">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Uses moves without\nmaking contact with the target.</language>
+	</row>
+	<row id="msg_0722_00204" index="204">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Its sound-based moves\nbecome Water-type.</language>
+	</row>
+	<row id="msg_0722_00205" index="205">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gives priority to\na healing move.</language>
+	</row>
+	<row id="msg_0722_00206" index="206">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Normal-type moves become\nElectric-type and powered.</language>
+	</row>
+	<row id="msg_0722_00207" index="207">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Doubles Speed on\nElectric Terrain.</language>
+	</row>
+	<row id="msg_0722_00208" index="208">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Forms a powerful school\nwhile it has a lot of HP.</language>
+	</row>
+	<row id="msg_0722_00209" index="209">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Its shroud protects it\nfrom an attack just once.</language>
+	</row>
+	<row id="msg_0722_00210" index="210">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Defeating a foe\nlets it become Ash-Greninja.</language>
+	</row>
+	<row id="msg_0722_00211" index="211">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Changes with other Cells\nif HP becomes half or less.</language>
+	</row>
+	<row id="msg_0722_00212" index="212">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It can poison Steel- and\nPoison-type targets.</language>
+	</row>
+	<row id="msg_0722_00213" index="213">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It’s always drowsing, and\nattacks without waking.</language>
+	</row>
+	<row id="msg_0722_00214" index="214">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Makes foes unable to\nuse priority attacks.</language>
+	</row>
+	<row id="msg_0722_00215" index="215">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Damages an attacker that\nlands the finishing hit.</language>
+	</row>
+	<row id="msg_0722_00216" index="216">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Repeats another Pokémon’s\ndance move immediately.</language>
+	</row>
+	<row id="msg_0722_00217" index="217">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up ally\nPokémon’s special moves.</language>
+	</row>
+	<row id="msg_0722_00218" index="218">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Resists contact damage\nbut weaker to Fire-type.</language>
+	</row>
+	<row id="msg_0722_00219" index="219">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Makes foes unable to\nuse priority attacks.</language>
+	</row>
+	<row id="msg_0722_00220" index="220">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts Sp. Atk each\ntime a Pokémon faints.</language>
+	</row>
+	<row id="msg_0722_00221" index="221">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Contact with it lowers\nthe attacker’s Speed.</language>
+	</row>
+	<row id="msg_0722_00222" index="222">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Copies the Ability of\na defeated ally.</language>
+	</row>
+	<row id="msg_0722_00223" index="223">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Copies the Ability of\na defeated ally.</language>
+	</row>
+	<row id="msg_0722_00224" index="224">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts its best stat\neach time it deals a KO.</language>
+	</row>
+	<row id="msg_0722_00225" index="225">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Its type matches\nthe memory disc it holds.</language>
+	</row>
+	<row id="msg_0722_00226" index="226">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Turns the ground\ninto Electric Terrain.</language>
+	</row>
+	<row id="msg_0722_00227" index="227">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Turns the ground\ninto Psychic Terrain.</language>
+	</row>
+	<row id="msg_0722_00228" index="228">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Turns the ground\ninto Misty Terrain.</language>
+	</row>
+	<row id="msg_0722_00229" index="229">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Turns the ground\ninto Grassy Terrain.</language>
+	</row>
+	<row id="msg_0722_00230" index="230">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Prevents other Pokémon\nfrom lowering its stats.</language>
+	</row>
+	<row id="msg_0722_00231" index="231">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Resists damage while\nits HP is full.</language>
+	</row>
+	<row id="msg_0722_00232" index="232">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Reduces damage from\nsuper-effective attacks.</language>
+	</row>
+	<row id="msg_0722_00233" index="233">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up moves that\nare super-effective.</language>
+	</row>
+	<row id="msg_0722_00234" index="234">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts Attack when\nentering a battle.</language>
+	</row>
+	<row id="msg_0722_00235" index="235">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts Defense when\nentering a battle.</language>
+	</row>
+	<row id="msg_0722_00236" index="236">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It changes type to that\nof the move it’s about to use.</language>
+	</row>
+	<row id="msg_0722_00237" index="237">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Retrieves the first thrown\nPoké Ball if it failed.</language>
+	</row>
+	<row id="msg_0722_00238" index="238">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scatters Speed-lowering\ncotton fluff when hit.</language>
+	</row>
+	<row id="msg_0722_00239" index="239">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">This Pokémon’s\nmoves cannot be redirected.</language>
+	</row>
+	<row id="msg_0722_00240" index="240">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bounces back\nstat-lowering effects.</language>
+	</row>
+	<row id="msg_0722_00241" index="241">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Catches prey via Surf or Dive\nand spits it out when hit.</language>
+	</row>
+	<row id="msg_0722_00242" index="242">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">This Pokémon’s moves\ncannot be redirected.</language>
+	</row>
+	<row id="msg_0722_00243" index="243">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts Speed drastically\nif hit by Fire or Water.</language>
+	</row>
+	<row id="msg_0722_00244" index="244">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up own sound moves.\nResists other sound moves.</language>
+	</row>
+	<row id="msg_0722_00245" index="245">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Creates a sandstorm\nwhen hit by an attack.</language>
+	</row>
+	<row id="msg_0722_00246" index="246">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Halves the damage\ntaken from special moves.</language>
+	</row>
+	<row id="msg_0722_00247" index="247">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ripens Berries and\ndoubles their effect.</language>
+	</row>
+	<row id="msg_0722_00248" index="248">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Blocks a physical hit, but\nthe ice head breaks.</language>
+	</row>
+	<row id="msg_0722_00249" index="249">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Just being next to the\nPokémon powers up moves.</language>
+	</row>
+	<row id="msg_0722_00250" index="250">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Changes type depending\non the terrain.</language>
+	</row>
+	<row id="msg_0722_00251" index="251">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">On entering battle, clears\neffects of Reflect, etc.</language>
+	</row>
+	<row id="msg_0722_00252" index="252">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up ally Pokémon’s\nSteel-type moves.</language>
+	</row>
+	<row id="msg_0722_00253" index="253">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Both Pokémon faint 3 turns\nafter taking a contact hit.</language>
+	</row>
+	<row id="msg_0722_00254" index="254">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Swaps Abilities with\ncontact-making Pokémon.</language>
+	</row>
+	<row id="msg_0722_00255" index="255">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts Attack, but allows\nonly one move to be used.</language>
+	</row>
+	<row id="msg_0722_00256" index="256">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Nullifies the effects of\nall other Abilities.</language>
+	</row>
+	<row id="msg_0722_00257" index="257">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Protects the Pokémon and\nits allies from poisoning.</language>
+	</row>
+	<row id="msg_0722_00258" index="258">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Changes between Full Belly\nand Hangry Mode each turn.</language>
+	</row>
+	<row id="msg_0722_00259" index="259">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Enables the Pokémon to\nmove first occasionally.</language>
+	</row>
+	<row id="msg_0722_00260" index="260">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The Pokémon’s contact\nmoves ignore protections.</language>
+	</row>
+	<row id="msg_0722_00261" index="261">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Removes all allies’ stat\nchanges on joining battle.</language>
+	</row>
+	<row id="msg_0722_00262" index="262">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up\nElectric-type moves.</language>
+	</row>
+	<row id="msg_0722_00263" index="263">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up\nDragon-type moves.</language>
+	</row>
+	<row id="msg_0722_00264" index="264">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When knocking out a\ntarget, raises Attack.</language>
+	</row>
+	<row id="msg_0722_00265" index="265">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When knocking out a\ntarget, raises Sp. Atk.</language>
+	</row>
+	<row id="msg_0722_00266" index="266">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Combines Unnerve\nand Chilling Neigh.</language>
+	</row>
+	<row id="msg_0722_00267" index="267">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Combines Unnerve\nand Grim Neigh.</language>
+	</row>
+	<row id="msg_0722_00268" index="268">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Contact with this Pokémon\nspreads this Ability.</language>
+	</row>
+	<row id="msg_0722_00269" index="269">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Turns the ground into\nGrassy Terrain if attacked.</language>
+	</row>
+	<row id="msg_0722_00270" index="270">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ups Attack if hit\nby Fire moves. Prevents burns.</language>
+	</row>
+	<row id="msg_0722_00271" index="271">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ups stats if a hit\nmakes its HP half or less.</language>
+	</row>
+	<row id="msg_0722_00272" index="272">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Prevents status problems.\nWeakens Ghost moves.</language>
+	</row>
+	<row id="msg_0722_00273" index="273">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raises Defense if hit\nby a Fire-type move.</language>
+	</row>
+	<row id="msg_0722_00274" index="274">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raises Attack if hit\nby a wind-based move.</language>
+	</row>
+	<row id="msg_0722_00275" index="275">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ups Attack if intimidated.\nStops forced switching.</language>
+	</row>
+	<row id="msg_0722_00276" index="276">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up\nRock-type moves.</language>
+	</row>
+	<row id="msg_0722_00277" index="277">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Becomes charged if hit\nby a wind-based move.</language>
+	</row>
+	<row id="msg_0722_00278" index="278">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Becomes Hero Form upon\nswitching out.</language>
+	</row>
+	<row id="msg_0722_00279" index="279">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Enters the mouth of\nan ally Dondozo.</language>
+	</row>
+	<row id="msg_0722_00280" index="280">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Becomes charged when\nhit by an attack.</language>
+	</row>
+	<row id="msg_0722_00281" index="281">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts its best stat\nin harsh sunlight.</language>
+	</row>
+	<row id="msg_0722_00282" index="282">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boosts its best stat\nin Electric Terrain.</language>
+	</row>
+	<row id="msg_0722_00283" index="283">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">This Pokémon is immune\nto all status moves.</language>
+	</row>
+	<row id="msg_0722_00284" index="284">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lowers the Sp. Atk\nstat of other Pokémon.</language>
+	</row>
+	<row id="msg_0722_00285" index="285">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lowers the Defense\nstat of other Pokémon.</language>
+	</row>
+	<row id="msg_0722_00286" index="286">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lowers the Attack\nstat of other Pokémon.</language>
+	</row>
+	<row id="msg_0722_00287" index="287">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lowers the Sp. Def\nstat of other Pokémon.</language>
+	</row>
+	<row id="msg_0722_00288" index="288">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Makes the weather sunny.\nUps Attack in sun.</language>
+	</row>
+	<row id="msg_0722_00289" index="289">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Makes Electric Terrain.\nUps Sp. Atk on Electric Terrain.</language>
+	</row>
+	<row id="msg_0722_00290" index="290">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">If foe raises a stat,\nboosts the stat itself.</language>
+	</row>
+	<row id="msg_0722_00291" index="291">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">After eating a Berry,\nit’s eaten again next turn.</language>
+	</row>
+	<row id="msg_0722_00292" index="292">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Powers up\nslicing moves.</language>
+	</row>
+	<row id="msg_0722_00293" index="293">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ups Attack and Sp. Atk\nif allies were defeated.</language>
+	</row>
+	<row id="msg_0722_00294" index="294">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Copies an ally’s stat\nchanges when sent out.</language>
+	</row>
+	<row id="msg_0722_00295" index="295">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scatters poison spikes\nif hit by physical moves.</language>
+	</row>
+	<row id="msg_0722_00296" index="296">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Makes foes unable to\nuse priority attacks.</language>
+	</row>
+	<row id="msg_0722_00297" index="297">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Restores HP if hit by a\nGround-type move.</language>
+	</row>
+	<row id="msg_0722_00298" index="298">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Status moves go last\nbut ignore abilities.</language>
+	</row>
+	<row id="msg_0722_00299" index="299">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Upon entry, restores\nan allies HP.</language>
+	</row>
+	<row id="msg_0722_00300" index="300">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ignores accuracy changes\nand Ghost type immunities.</language>
+	</row>
+	<row id="msg_0722_00301" index="301">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The Teal Mask shines,\nboosting the Speed stat.</language>
+	</row>
+	<row id="msg_0722_00302" index="302">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The Wellspring Mask shines,\nboosting the Sp. Def stat.</language>
+	</row>
+	<row id="msg_0722_00303" index="303">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The Hearthflame Mask shines,\nboosting the Attack stat.</language>
+	</row>
+	<row id="msg_0722_00304" index="304">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The Cornerstone Mask shines,\nboosting the Defense stat.</language>
+	</row>
+	<row id="msg_0722_00305" index="305">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">May badly poison targets when\na Pokémon makes contact.</language>
+	</row>
+	<row id="msg_0722_00306" index="306">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lowers evasiveness of\nPokémon upon first entry.</language>
+	</row>
+	<row id="msg_0722_00307" index="307">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Transforms into Terastal Form\nupon entering battle.</language>
+	</row>
+	<row id="msg_0722_00308" index="308">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Resists all damage when\nHP is full.</language>
+	</row>
+	<row id="msg_0722_00309" index="309">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Reduces effects of weather\nand terrain to zero.</language>
+	</row>
+	<row id="msg_0722_00310" index="310">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Poison-inflicting moves\nwill also cause confusion.</language>
+	</row>
+	<row id="msg_0722_00311" index="311">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The Pokémon’s contact\nmoves ignore protections.</language>
+	</row>
+	<row id="msg_0722_00312" index="312">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Normal-type moves become\nDragon-type and powered up.</language>
+	</row>
+	<row id="msg_0722_00313" index="313">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grants Ground immunity.\nRaises its highest stat after a KO.</language>
+	</row>
+	<row id="msg_0722_00314" index="314">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Absorbs Water-type moves\nand sharply raises Attack.</language>
+	</row>
+	<row id="msg_0722_00315" index="315">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">All moves act as if\nHarsh Sunlight is active.</language>
+	</row>
+	<row id="msg_0722_00316" index="316">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Placeholder</language>
+	</row>
+	<row id="msg_0722_00317" index="317">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Placeholder</language>
+	</row>
+	<row id="msg_0722_00318" index="318">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Burns the attacker upon\ntaking damage.</language>
+	</row>
+	<row id="msg_0722_00319" index="319">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Water-type damaging moves\nhave no effect.</language>
+	</row>
 </body>

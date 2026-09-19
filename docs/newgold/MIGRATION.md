@@ -42,9 +42,10 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Reference binary patch mechanisms made unnecessary | 4: three instruction changes and one script-handler pointer replacement |
 | Features ported | 5: Rage, Fire Fang / Shadow Force, reusable repels, overworld poison, existing friendship-evolution threshold |
 | Features verified at C/resource boundaries | 5; emulator scenarios still pending |
+| Ability text resources ported | 3 native message banks, 320 entries each; all 960 compiled texts verified against pinned NewGold |
 | Features checked in a running ROM | 0 |
 | ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5; M6–M8 have identical ROM bytes; separate from feature gameplay verification |
-| Complete ROM build | HeartGold and SoulSilver PASS through M8; repel C prerequisites matched retail, later C prerequisites match the preceding modified ROMs |
+| Complete ROM build | HeartGold and SoulSilver PASS through M9; repel C prerequisites matched retail, later C prerequisites match the preceding modified ROMs |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -109,6 +110,7 @@ inside it has been implemented or completely specified.
 | PC ability display prerequisite / executable logic | `hooks:226–227`, `asm/other_hook.s::BoxDisplayMon_StoreAbility`, `BoxDisplayMon_GrabAbility` | `ov14_021E7358`, `ov14_021F528C`, originally ASM; now `src/pc_box_display.c`, `src/pc_box_display_ability.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M5; ability widening and hook retirement remain pending; see M6 |
 | Party-heal notification prerequisite / executable logic | `armips/asm/abilities.s:174–179` | `BattleControl_EmitPartyStatusHeal`, originally ASM, now `src/battle/battle_controller_party_heal.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M6; original four-byte protocol preserved; see M7 |
 | Summary data/ability display prerequisite / executable logic | `armips/asm/abilities.s`, summary hooks and EV/IV changes | `sub_0208981C`, `sub_0208D178`, originally ASM; now `src/pokemon_summary_mon.c`, `src/pokemon_summary_stats.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M7; expanded ability and EV/IV behavior remain pending; see M8 |
+| Ability names/descriptions / resource | `data/text/720.txt`, `721.txt`, `722.txt` | `files/msgdata/msg/msg_0720.gmm`, `msg_0721.gmm`, `msg_0722.gmm`, native message resources | PORTED; BUILDS; VERIFIED (compiled resources) | All 960 compiled strings equal pinned source; expanded IDs and mechanics remain pending; see M9 |
 | Core battle state / executable logic | `include/battle.h`, `src/battle/battle_start.c`, `armips/asm/moves.s` | `include/battle/battle.h`, `BattleContext_New`, `BattleContext_Init`, C with ASM consumers | MAPPED | Required consumers must be C before layout changes; ABI/offset/save checks |
 | Expanded move IDs, data and bytecode / data, script, executable logic | `data/Moves.c`, `src/moves.c`, `src/battle/battle_script_commands.c` | `include/constants/moves.h`, `include/constants/move_effects.h`, `src/battle/battle_command.c`, `files/poketool/waza`, `files/battledata/script`, C/data | MAPPED | IDs, table limits, script command dispatch and messages; per-effect tests |
 | Damage, accuracy and criticals / executable logic | `src/individual/CalcBaseDamage.c`, `src/battle/battle_calc_damage.c`, `src/battle/other_battle_calculators.c` | `CalcMoveDamage`, `TryCriticalHit`, `BattleSystem_CheckMoveHit`, C | MAPPED | Type, item, ability and state prerequisites; exact integer rounding and RNG |
@@ -447,6 +449,25 @@ This adds one converted original hook target and one converted patch-only target
 The original hook census is now 312 C / 37 ASM; total conversions are seven.
 No new ability mechanic, completed summary hook replacement or binary-patch
 retirement is counted. Existing boot/menu smoke covers these identical binaries.
+
+## M9 — Ability names and descriptions through native messages
+
+The three native GMM banks 720/721/722 now contain the reference's 320 ability
+names, uppercase names and descriptions. Existing row IDs/attributes are retained;
+new rows follow the native index convention. Three existing name strings change:
+`CompoundEyes`, `Lightning Rod` and `LIGHTNING ROD`. Existing descriptions remain
+unchanged. Reference placeholder text and escape sequences are preserved.
+
+Both full builds pass without compiler/assembler warnings. Only members
+720/721/722 of message NARC `a/0/2/7` differ from M8. Native `msgenc` decoding
+confirms all 960 compiled texts equal the pinned source. ARM9, ARM7, every
+overlay and every other resource remain identical. Two focused resource tests
+and all twelve tests pass; whitespace checks pass.
+
+This is a data prerequisite: ability constants, assignments, storage widths and
+mechanics are unchanged. It adds three verified resource banks, not another
+completed gameplay feature or retired hook. In-game ability displays have not
+yet been exercised with the new resource banks.
 
 ## Remaining foundation — Expanded ability consumers
 

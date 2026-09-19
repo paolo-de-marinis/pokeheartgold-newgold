@@ -58,7 +58,7 @@
 	</row>
 	<row id="msg_0720_00014" index="14">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Compoundeyes</language>
+		<language name="English">CompoundEyes</language>
 	</row>
 	<row id="msg_0720_00015" index="15">
 		<attribute name="window_context_name">used</attribute>
@@ -126,7 +126,7 @@
 	</row>
 	<row id="msg_0720_00031" index="31">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Lightningrod</language>
+		<language name="English">Lightning Rod</language>
 	</row>
 	<row id="msg_0720_00032" index="32">
 		<attribute name="window_context_name">used</attribute>
@@ -495,5 +495,789 @@
 	<row id="msg_0720_00123" index="123">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Bad Dreams</language>
+	</row>
+	<row id="msg_0720_00124" index="124">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pickpocket</language>
+	</row>
+	<row id="msg_0720_00125" index="125">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sheer Force</language>
+	</row>
+	<row id="msg_0720_00126" index="126">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Contrary</language>
+	</row>
+	<row id="msg_0720_00127" index="127">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Unnerve</language>
+	</row>
+	<row id="msg_0720_00128" index="128">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Defiant</language>
+	</row>
+	<row id="msg_0720_00129" index="129">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Defeatist</language>
+	</row>
+	<row id="msg_0720_00130" index="130">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cursed Body</language>
+	</row>
+	<row id="msg_0720_00131" index="131">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Healer</language>
+	</row>
+	<row id="msg_0720_00132" index="132">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Friend Guard</language>
+	</row>
+	<row id="msg_0720_00133" index="133">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Weak Armor</language>
+	</row>
+	<row id="msg_0720_00134" index="134">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Heavy Metal</language>
+	</row>
+	<row id="msg_0720_00135" index="135">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Light Metal</language>
+	</row>
+	<row id="msg_0720_00136" index="136">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Multiscale</language>
+	</row>
+	<row id="msg_0720_00137" index="137">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Toxic Boost</language>
+	</row>
+	<row id="msg_0720_00138" index="138">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flare Boost</language>
+	</row>
+	<row id="msg_0720_00139" index="139">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Harvest</language>
+	</row>
+	<row id="msg_0720_00140" index="140">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Telepathy</language>
+	</row>
+	<row id="msg_0720_00141" index="141">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Moody</language>
+	</row>
+	<row id="msg_0720_00142" index="142">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Overcoat</language>
+	</row>
+	<row id="msg_0720_00143" index="143">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Poison Touch</language>
+	</row>
+	<row id="msg_0720_00144" index="144">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Regenerator</language>
+	</row>
+	<row id="msg_0720_00145" index="145">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Big Pecks</language>
+	</row>
+	<row id="msg_0720_00146" index="146">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sand Rush</language>
+	</row>
+	<row id="msg_0720_00147" index="147">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wonder Skin</language>
+	</row>
+	<row id="msg_0720_00148" index="148">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Analytic</language>
+	</row>
+	<row id="msg_0720_00149" index="149">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Illusion</language>
+	</row>
+	<row id="msg_0720_00150" index="150">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Imposter</language>
+	</row>
+	<row id="msg_0720_00151" index="151">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Infiltrator</language>
+	</row>
+	<row id="msg_0720_00152" index="152">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mummy</language>
+	</row>
+	<row id="msg_0720_00153" index="153">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Moxie</language>
+	</row>
+	<row id="msg_0720_00154" index="154">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Justified</language>
+	</row>
+	<row id="msg_0720_00155" index="155">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rattled</language>
+	</row>
+	<row id="msg_0720_00156" index="156">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Magic Bounce</language>
+	</row>
+	<row id="msg_0720_00157" index="157">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sap Sipper</language>
+	</row>
+	<row id="msg_0720_00158" index="158">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Prankster</language>
+	</row>
+	<row id="msg_0720_00159" index="159">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sand Force</language>
+	</row>
+	<row id="msg_0720_00160" index="160">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Iron Barbs</language>
+	</row>
+	<row id="msg_0720_00161" index="161">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zen Mode</language>
+	</row>
+	<row id="msg_0720_00162" index="162">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Victory Star</language>
+	</row>
+	<row id="msg_0720_00163" index="163">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Turboblaze</language>
+	</row>
+	<row id="msg_0720_00164" index="164">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Teravolt</language>
+	</row>
+	<row id="msg_0720_00165" index="165">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Aroma Veil</language>
+	</row>
+	<row id="msg_0720_00166" index="166">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flower Veil</language>
+	</row>
+	<row id="msg_0720_00167" index="167">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cheek Pouch</language>
+	</row>
+	<row id="msg_0720_00168" index="168">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Protean</language>
+	</row>
+	<row id="msg_0720_00169" index="169">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fur Coat</language>
+	</row>
+	<row id="msg_0720_00170" index="170">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Magician</language>
+	</row>
+	<row id="msg_0720_00171" index="171">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bulletproof</language>
+	</row>
+	<row id="msg_0720_00172" index="172">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Competitive</language>
+	</row>
+	<row id="msg_0720_00173" index="173">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Strong Jaw</language>
+	</row>
+	<row id="msg_0720_00174" index="174">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Refrigerate</language>
+	</row>
+	<row id="msg_0720_00175" index="175">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sweet Veil</language>
+	</row>
+	<row id="msg_0720_00176" index="176">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">StanceChange</language>
+	</row>
+	<row id="msg_0720_00177" index="177">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gale Wings</language>
+	</row>
+	<row id="msg_0720_00178" index="178">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">MegaLauncher</language>
+	</row>
+	<row id="msg_0720_00179" index="179">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grass Pelt</language>
+	</row>
+	<row id="msg_0720_00180" index="180">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Symbiosis</language>
+	</row>
+	<row id="msg_0720_00181" index="181">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tough Claws</language>
+	</row>
+	<row id="msg_0720_00182" index="182">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pixilate</language>
+	</row>
+	<row id="msg_0720_00183" index="183">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gooey</language>
+	</row>
+	<row id="msg_0720_00184" index="184">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Aerilate</language>
+	</row>
+	<row id="msg_0720_00185" index="185">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Parental Bond</language>
+	</row>
+	<row id="msg_0720_00186" index="186">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dark Aura</language>
+	</row>
+	<row id="msg_0720_00187" index="187">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fairy Aura</language>
+	</row>
+	<row id="msg_0720_00188" index="188">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Aura Break</language>
+	</row>
+	<row id="msg_0720_00189" index="189">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Primordial Sea</language>
+	</row>
+	<row id="msg_0720_00190" index="190">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Desolate Land</language>
+	</row>
+	<row id="msg_0720_00191" index="191">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Delta Stream</language>
+	</row>
+	<row id="msg_0720_00192" index="192">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Stamina</language>
+	</row>
+	<row id="msg_0720_00193" index="193">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wimp Out</language>
+	</row>
+	<row id="msg_0720_00194" index="194">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">EmergencyExit</language>
+	</row>
+	<row id="msg_0720_00195" index="195">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">WaterCompaction</language>
+	</row>
+	<row id="msg_0720_00196" index="196">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Merciless</language>
+	</row>
+	<row id="msg_0720_00197" index="197">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Shields Down</language>
+	</row>
+	<row id="msg_0720_00198" index="198">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Stakeout</language>
+	</row>
+	<row id="msg_0720_00199" index="199">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Water Bubble</language>
+	</row>
+	<row id="msg_0720_00200" index="200">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Steelworker</language>
+	</row>
+	<row id="msg_0720_00201" index="201">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Berserk</language>
+	</row>
+	<row id="msg_0720_00202" index="202">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Slush Rush</language>
+	</row>
+	<row id="msg_0720_00203" index="203">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Long Reach</language>
+	</row>
+	<row id="msg_0720_00204" index="204">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Liquid Voice</language>
+	</row>
+	<row id="msg_0720_00205" index="205">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Triage</language>
+	</row>
+	<row id="msg_0720_00206" index="206">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Galvanize</language>
+	</row>
+	<row id="msg_0720_00207" index="207">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Surge Surfer</language>
+	</row>
+	<row id="msg_0720_00208" index="208">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Schooling</language>
+	</row>
+	<row id="msg_0720_00209" index="209">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Disguise</language>
+	</row>
+	<row id="msg_0720_00210" index="210">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Battle Bond</language>
+	</row>
+	<row id="msg_0720_00211" index="211">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Power Construct</language>
+	</row>
+	<row id="msg_0720_00212" index="212">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Corrosion</language>
+	</row>
+	<row id="msg_0720_00213" index="213">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Comatose</language>
+	</row>
+	<row id="msg_0720_00214" index="214">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Queenly Majesty</language>
+	</row>
+	<row id="msg_0720_00215" index="215">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Innards Out</language>
+	</row>
+	<row id="msg_0720_00216" index="216">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dancer</language>
+	</row>
+	<row id="msg_0720_00217" index="217">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Battery</language>
+	</row>
+	<row id="msg_0720_00218" index="218">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fluffy</language>
+	</row>
+	<row id="msg_0720_00219" index="219">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dazzling</language>
+	</row>
+	<row id="msg_0720_00220" index="220">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Soul-Heart</language>
+	</row>
+	<row id="msg_0720_00221" index="221">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tangling Hair</language>
+	</row>
+	<row id="msg_0720_00222" index="222">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Receiver</language>
+	</row>
+	<row id="msg_0720_00223" index="223">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Power of Alchemy</language>
+	</row>
+	<row id="msg_0720_00224" index="224">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Beast Boost</language>
+	</row>
+	<row id="msg_0720_00225" index="225">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">RKS System</language>
+	</row>
+	<row id="msg_0720_00226" index="226">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Electric Surge</language>
+	</row>
+	<row id="msg_0720_00227" index="227">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Psychic Surge</language>
+	</row>
+	<row id="msg_0720_00228" index="228">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Misty Surge</language>
+	</row>
+	<row id="msg_0720_00229" index="229">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grassy Surge</language>
+	</row>
+	<row id="msg_0720_00230" index="230">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">FullMetalBody</language>
+	</row>
+	<row id="msg_0720_00231" index="231">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Shadow Shield</language>
+	</row>
+	<row id="msg_0720_00232" index="232">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Prism Armor</language>
+	</row>
+	<row id="msg_0720_00233" index="233">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Neuroforce</language>
+	</row>
+	<row id="msg_0720_00234" index="234">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">IntrepidSword</language>
+	</row>
+	<row id="msg_0720_00235" index="235">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dauntless Shield</language>
+	</row>
+	<row id="msg_0720_00236" index="236">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Libero</language>
+	</row>
+	<row id="msg_0720_00237" index="237">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ball Fetch</language>
+	</row>
+	<row id="msg_0720_00238" index="238">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cotton Down</language>
+	</row>
+	<row id="msg_0720_00239" index="239">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Propeller Tail</language>
+	</row>
+	<row id="msg_0720_00240" index="240">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mirror Armor</language>
+	</row>
+	<row id="msg_0720_00241" index="241">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gulp Missile</language>
+	</row>
+	<row id="msg_0720_00242" index="242">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Stalwart</language>
+	</row>
+	<row id="msg_0720_00243" index="243">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Steam Engine</language>
+	</row>
+	<row id="msg_0720_00244" index="244">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Punk Rock</language>
+	</row>
+	<row id="msg_0720_00245" index="245">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sand Spit</language>
+	</row>
+	<row id="msg_0720_00246" index="246">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ice Scales</language>
+	</row>
+	<row id="msg_0720_00247" index="247">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ripen</language>
+	</row>
+	<row id="msg_0720_00248" index="248">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ice Face</language>
+	</row>
+	<row id="msg_0720_00249" index="249">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Power Spot</language>
+	</row>
+	<row id="msg_0720_00250" index="250">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mimicry</language>
+	</row>
+	<row id="msg_0720_00251" index="251">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Screen Cleaner</language>
+	</row>
+	<row id="msg_0720_00252" index="252">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Steely Spirit</language>
+	</row>
+	<row id="msg_0720_00253" index="253">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Perish Body</language>
+	</row>
+	<row id="msg_0720_00254" index="254">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wandering Spirit</language>
+	</row>
+	<row id="msg_0720_00255" index="255">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gorilla Tactics</language>
+	</row>
+	<row id="msg_0720_00256" index="256">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Neutralizing Gas</language>
+	</row>
+	<row id="msg_0720_00257" index="257">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pastel Veil</language>
+	</row>
+	<row id="msg_0720_00258" index="258">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hunger Switch</language>
+	</row>
+	<row id="msg_0720_00259" index="259">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Quick Draw</language>
+	</row>
+	<row id="msg_0720_00260" index="260">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Unseen Fist</language>
+	</row>
+	<row id="msg_0720_00261" index="261">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Curious Medicine</language>
+	</row>
+	<row id="msg_0720_00262" index="262">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Transistor</language>
+	</row>
+	<row id="msg_0720_00263" index="263">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dragon’s Maw</language>
+	</row>
+	<row id="msg_0720_00264" index="264">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Chilling Neigh</language>
+	</row>
+	<row id="msg_0720_00265" index="265">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grim Neigh</language>
+	</row>
+	<row id="msg_0720_00266" index="266">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">As One</language>
+	</row>
+	<row id="msg_0720_00267" index="267">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">As One</language>
+	</row>
+	<row id="msg_0720_00268" index="268">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lingering Aroma</language>
+	</row>
+	<row id="msg_0720_00269" index="269">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Seed Sower</language>
+	</row>
+	<row id="msg_0720_00270" index="270">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Thermal Exchange</language>
+	</row>
+	<row id="msg_0720_00271" index="271">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Anger Shell</language>
+	</row>
+	<row id="msg_0720_00272" index="272">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Purifying Salt</language>
+	</row>
+	<row id="msg_0720_00273" index="273">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Well-Baked Body</language>
+	</row>
+	<row id="msg_0720_00274" index="274">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wind Rider</language>
+	</row>
+	<row id="msg_0720_00275" index="275">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Guard Dog</language>
+	</row>
+	<row id="msg_0720_00276" index="276">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rocky Payload</language>
+	</row>
+	<row id="msg_0720_00277" index="277">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wind Power</language>
+	</row>
+	<row id="msg_0720_00278" index="278">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zero to Hero</language>
+	</row>
+	<row id="msg_0720_00279" index="279">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Commander</language>
+	</row>
+	<row id="msg_0720_00280" index="280">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Electromorphosis</language>
+	</row>
+	<row id="msg_0720_00281" index="281">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Protosynthesis</language>
+	</row>
+	<row id="msg_0720_00282" index="282">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Quark Drive</language>
+	</row>
+	<row id="msg_0720_00283" index="283">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Good as Gold</language>
+	</row>
+	<row id="msg_0720_00284" index="284">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vessel of Ruin</language>
+	</row>
+	<row id="msg_0720_00285" index="285">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sword of Ruin</language>
+	</row>
+	<row id="msg_0720_00286" index="286">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tablets of Ruin</language>
+	</row>
+	<row id="msg_0720_00287" index="287">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Beads of Ruin</language>
+	</row>
+	<row id="msg_0720_00288" index="288">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Orichalcum Pulse</language>
+	</row>
+	<row id="msg_0720_00289" index="289">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hadron Engine</language>
+	</row>
+	<row id="msg_0720_00290" index="290">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Opportunist</language>
+	</row>
+	<row id="msg_0720_00291" index="291">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cud Chew</language>
+	</row>
+	<row id="msg_0720_00292" index="292">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sharpness</language>
+	</row>
+	<row id="msg_0720_00293" index="293">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Supreme Overlord</language>
+	</row>
+	<row id="msg_0720_00294" index="294">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Costar</language>
+	</row>
+	<row id="msg_0720_00295" index="295">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Toxic Debris</language>
+	</row>
+	<row id="msg_0720_00296" index="296">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Armor Tail</language>
+	</row>
+	<row id="msg_0720_00297" index="297">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Earth Eater</language>
+	</row>
+	<row id="msg_0720_00298" index="298">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mycelium Might</language>
+	</row>
+	<row id="msg_0720_00299" index="299">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hospitality</language>
+	</row>
+	<row id="msg_0720_00300" index="300">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mind’s Eye</language>
+	</row>
+	<row id="msg_0720_00301" index="301">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Embody Aspect</language>
+	</row>
+	<row id="msg_0720_00302" index="302">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Embody Aspect</language>
+	</row>
+	<row id="msg_0720_00303" index="303">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Embody Aspect</language>
+	</row>
+	<row id="msg_0720_00304" index="304">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Embody Aspect</language>
+	</row>
+	<row id="msg_0720_00305" index="305">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Toxic Chain</language>
+	</row>
+	<row id="msg_0720_00306" index="306">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Supersweet Syrup</language>
+	</row>
+	<row id="msg_0720_00307" index="307">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tera Shift</language>
+	</row>
+	<row id="msg_0720_00308" index="308">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tera Shell</language>
+	</row>
+	<row id="msg_0720_00309" index="309">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Teraform Zero</language>
+	</row>
+	<row id="msg_0720_00310" index="310">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Poison Puppeteer</language>
+	</row>
+	<row id="msg_0720_00311" index="311">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Piercing Drill</language>
+	</row>
+	<row id="msg_0720_00312" index="312">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dragonize</language>
+	</row>
+	<row id="msg_0720_00313" index="313">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eelevate</language>
+	</row>
+	<row id="msg_0720_00314" index="314">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Irrigation</language>
+	</row>
+	<row id="msg_0720_00315" index="315">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mega Sol</language>
+	</row>
+	<row id="msg_0720_00316" index="316">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fire Mane</language>
+	</row>
+	<row id="msg_0720_00317" index="317">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Placeholder</language>
+	</row>
+	<row id="msg_0720_00318" index="318">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Spicy Spray</language>
+	</row>
+	<row id="msg_0720_00319" index="319">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Evaporate</language>
 	</row>
 </body>

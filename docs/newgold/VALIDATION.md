@@ -79,6 +79,7 @@ validation paths, not new project dependencies.
 | Vanilla PC constructor/ability renderer in C | PASS, exact M5 SHA-1 | PASS, exact M5 SHA-1 | Both functions and complete ROMs are MATCHING; no NewGold ability changes enabled |
 | Vanilla party-heal notification in C | PASS, exact M6 SHA-1 | PASS, exact M6 SHA-1 | Complete ROMs are MATCHING; four-byte packet and receiver contract preserved |
 | Vanilla summary loader/renderer in C | PASS, exact M7 SHA-1 | PASS, exact M7 SHA-1 | Complete ROMs are MATCHING; summary layout and behavior unchanged |
+| Ability names/descriptions | PASS | PASS | Only three message members change; all 960 decoded strings equal pinned NewGold |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -282,3 +283,20 @@ compiler/assembler warnings. The final source passes clang-format 19 and
 whitespace checks, plus the existing behavioral tests. No widened ability field
 or EV/IV display logic is enabled yet. Boot/menu smoke covers the same binary;
 summary gameplay interaction has not been separately exercised.
+
+## M9 — Native ability text resources
+
+Artifacts, ROMs, logs, decoded banks and reusable audit script:
+`build/milestones/09-ability-messages/verification.json`.
+
+| ROM | SHA-1 | SHA-256 |
+| --- | --- | --- |
+| HeartGold | `bf5a8fc0345e3f8d41dd1771fa734d7d20383c26` | `fbf2c1372349a7f96bbdffbdc870dca4fe829451e8cd792c816fdc1824ea74db` |
+| SoulSilver | `7d3744f11a8c865253498f75cbea485819559fa0` | `0e5e667e49e5207427bf8423814bfeee463c7be71933edb1c21532fd682ae528` |
+
+Both full builds pass without compiler/assembler warnings. ARM9, ARM7, all
+overlays and all other resources are byte-identical to M8. Only message NARC
+`a/0/2/7` members 720/721/722 change, each containing 320 entries. Native
+`msgenc` decoding verifies all 960 text payloads against pinned NewGold.
+All twelve focused tests and whitespace checks pass. No emulator ability-display
+check has been performed for this milestone; new ability mechanics remain pending.
