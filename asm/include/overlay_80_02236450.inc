@@ -50,3 +50,6 @@
 .public ov80_0223C050
 .public ov80_0223C07C
 .public ov80_0223C0AC
+.public ov80_02236734
+.public ov80_02236AF0
+.public ov80_02236B04

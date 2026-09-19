@@ -1044,6 +1044,8 @@ Overlay OVY_80
 {
     After OVY_42
     Object asm/overlay_80_02229EE0.o
+    Object src/frontier/frontier_mon.o
+    Object asm/overlay_80_0222A30C.o
     Object asm/frontier_system.o
     Object src/frontier/frontier_script_context.o
     Object asm/overlay_80_0222ACA0.o
@@ -1063,6 +1065,8 @@ Overlay OVY_80
     Object asm/overlay_80_02235900.o
     Object asm/overlay_80_02235FC8.o
     Object asm/overlay_80_02236450.o
+    Object src/frontier/frontier_tower_mon.o
+    Object asm/overlay_80_0223690C.o
     Object asm/overlay_80_02236B78.o
     Object asm/overlay_80_022372D8.o
     Object asm/overlay_80_02237A70.o

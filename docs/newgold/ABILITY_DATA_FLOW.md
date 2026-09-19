@@ -6,13 +6,13 @@ Source: `hg-engine-newgold-reference` at `1b872926eaa0363816d4e376fad1531435b04b
 
 ## Next concrete decompilation list
 
-M10 converted the AI pair `ov10_0221D0A8` and `ov10_0221D188` to matching vanilla C in `src/battle/trainer_ai_ability.c`; both complete HG/SS ROMs remain identical to M9. Both read the revealed-ability cache and raw battle ability. Change width only after an ABI decision. M11 also converted `ov10_0221F62C` and `ov10_0221FE8C` to matching C, preserving complete ROMs. M12 also converted the two overlay-83 record constructors to matching C. M13 converted both renderers: the opponent matches exactly; the player differs only by a proven independent instruction reorder. Next address Frontier and Pokéwalker record contracts. Their native C writer/reset are already `BattlerSetAbility` and `ov12_0225859C`.
+M10 converted the AI pair `ov10_0221D0A8` and `ov10_0221D188` to matching vanilla C in `src/battle/trainer_ai_ability.c`; both complete HG/SS ROMs remain identical to M9. Both read the revealed-ability cache and raw battle ability. Change width only after an ABI decision. M11 also converted `ov10_0221F62C` and `ov10_0221FE8C` to matching C, preserving complete ROMs. M12 also converted the two overlay-83 record constructors to matching C. M13 converted both renderers: the opponent matches exactly; the player differs only by a proven independent instruction reorder. M14 converted all three Frontier record producers/importer to matching C, preserving both complete ROMs. Next address the two Pokéwalker boundaries and the external-record contracts. Their native C writer/reset are already `BattlerSetAbility` and `ov12_0225859C`.
 
-Thirteen additional original ASM byte boundaries are established; eight are now C and five remain ASM:
+Thirteen additional original ASM byte boundaries are established; eleven are now C and two remain ASM:
 
 - AI raw/cache readers: `ov10_0221D0A8`, `ov10_0221D188` (M10 matching C), `ov10_0221F62C` (M11 matching C).
 - AI accessor narrowing: `ov10_0221FE8C` (M11 matching C; original cast retained). It truncates a party ability before comparisons with 10, 11 or 18; IDs266,267,274 can alias those values. This is separate from layout relocation.
-- Frontier record producers/importer: `ov80_02229F6C`, `ov80_02236734`, `ov80_0222A140`.
+- Frontier record producers/importer: `ov80_02229F6C`, `ov80_02236734`, `ov80_0222A140` (M14 matching C; original 56-byte record and ability byte retained).
 - Pokéwalker-related record producer/setter: `ov112_021F33D8`, `ov112_021EEAF0`.
 - Two overlay83 UI producer/renderer pairs: `ov83_02241E18`/`ov83_022421E0`, `ov83_02245D48`/`ov83_02246114`. M12 converted both constructors to matching C, retaining their original byte fields. The menus use message banks 31 (player Pokémon/item rental) and 33 (opponent move information using CP). Both renderers are now C (M13); ability fields are still u8.
 

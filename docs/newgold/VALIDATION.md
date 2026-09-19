@@ -388,3 +388,20 @@ at frame 1,436 reached by D-pad/A menu input. Exact commands, screenshots, logs,
 source and provenance are archived. No external BIOS, existing save or user
 configuration was used. This validates boot/rendering/menu input only; the
 feature-gameplay verification count remains zero.
+
+## M14 — Matching Frontier Pokémon record prerequisites
+
+Evidence and runnable audit:
+`build/milestones/14-frontier-mon-cvalidation/verification.json` and
+`audit-frontier-mon-c.py` in that directory.
+
+Both complete ROMs are byte-for-byte identical to M13 and retain its SHA-1 and
+SHA-256 values. All 81,504 overlay-80 bytes match. The C-owned functions are
+`ov80_02229F6C` (468 bytes), `ov80_0222A140` (460 bytes) and
+`ov80_02236734` (472 bytes). The audit also verifies unchanged remaining ASM
+partitions. Native record size/ability-offset and NARC-entry-size assertions
+compile successfully. Both complete builds pass without compiler/assembler
+warnings; twelve existing tests, scoped clang-format 19 and whitespace checks
+pass. The M13 boot/menu smoke covers these identical ROMs; no Frontier gameplay
+verification or ability widening is claimed. Original NewGold ROM comparison
+remains pending, as recorded in the final gate above.

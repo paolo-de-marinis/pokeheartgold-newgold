@@ -23,15 +23,6 @@
 #include "unk_02035900.h"
 #include "unk_0204A3F4.h"
 
-typedef struct FrontierMonNarcData {
-    u16 species;
-    u16 moves[4];
-    u8 evs;
-    u8 nature;
-    u16 item;
-    u16 form;
-} FrontierMonNarcData;
-
 static u32 FrontierFieldSystem_0204BABC(FrontierFieldSystem *frontierFsys, u16 *frontierTrainerData, u16 frontierTrainerIndex, FrontierMon *frontierMon, u8 numPokemon, u16 *partySpecies, u16 *partyItems, FrontierMultiBattleAllyData *allyData, enum HeapID heapID);
 static u16 *GetFrontierTrainerData(u32 frontierTrainerIndex, enum HeapID heapID);
 static void GetFrontierMonNarcData(FrontierMonNarcData *mon, u32 frontierMonIndex);
