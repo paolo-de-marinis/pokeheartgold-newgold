@@ -16,4 +16,9 @@ u32 ov10_0221EEF0(BattleContext *ctx);
 void ov10_0221EF24(BattleContext *ctx, int offset);
 u8 ov10_0221EF34(BattleContext *ctx, u8 battler);
 
+int ov10_0221F47C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int move);
+BOOL ov10_0221F62C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+BOOL ov10_0221FD34(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BOOL noRandom);
+BOOL ov10_0221FE8C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+
 #endif

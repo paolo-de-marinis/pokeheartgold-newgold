@@ -81,6 +81,7 @@ validation paths, not new project dependencies.
 | Vanilla summary loader/renderer in C | PASS, exact M7 SHA-1 | PASS, exact M7 SHA-1 | Complete ROMs are MATCHING; summary layout and behavior unchanged |
 | Ability names/descriptions | PASS | PASS | Only three message members change; all 960 decoded strings equal pinned NewGold |
 | Vanilla AI ability inference/query in C | PASS, exact M9 SHA-1 | PASS, exact M9 SHA-1 | Complete ROMs and overlay 10 are MATCHING; original AI behavior retained |
+| Vanilla AI ability switching in C | PASS, exact M10 SHA-1 | PASS, exact M10 SHA-1 | Complete ROMs and overlay 10 are MATCHING; existing RNG/accessor/cast behavior retained |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -317,3 +318,16 @@ all twelve tests, scoped clang-format 19 and whitespace checks pass.
 This validates the vanilla conversion, including its existing byte fields.
 NewGold ability widening and AI gameplay scenarios remain pending. No new
 emulator verification is claimed for these M9-identical binaries.
+
+## M11 — Matching AI switching prerequisites
+
+Evidence and runnable audit: `build/milestones/11-ai-switch-cvalidation/verification.json`
+and `audit-ai-switch-c.py` in the same directory.
+
+Both complete ROMs and overlay 10 are byte-identical to M10, retaining the M9
+hashes. `ov10_0221F62C` is 452 bytes; `ov10_0221FE8C` is 388 bytes. The archive
+records C symbol ownership and unchanged remaining assembly. Both full builds
+pass without compiler/assembler warnings; all twelve tests, scoped formatting
+and whitespace checks pass. The first compiled C versions already match.
+Vanilla byte narrowing is deliberately retained; expanded ability semantics and
+emulator switching scenarios remain pending.
