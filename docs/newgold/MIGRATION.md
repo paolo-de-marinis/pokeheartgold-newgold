@@ -31,11 +31,11 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Original C / ASM including resolved targets | 307 / 42 |
 | Semantically unidentified hook targets remaining | 0 |
 | Source hook-installation anomalies retained in the record | 5 |
-| ASM routines converted to C | 18: five original hook targets, two additional patch-only targets and eleven additional ability consumers; 17 MATCHING, one NONMATCHING with compiled-instruction equivalence verified before NewGold changes |
+| ASM routines converted to C | 20: five original hook targets, two additional patch-only targets and thirteen additional ability consumers; 18 MATCHING, two NONMATCHING with compiled-instruction equivalence verified before NewGold changes |
 | Current mapped targets represented in C | 312 |
 | ASM targets remaining | 37 |
 | Additional patch-only ASM prerequisites identified | 4: two converted to matching C, two still ASM; outside the original hook census |
-| Further ability byte boundaries identified | 13 functions originally ASM: eleven now C (ten MATCHING, one instruction-equivalent NONMATCHING), two still ASM; tracked separately, with serialization/source-behavior decisions still required |
+| Further ability byte boundaries identified | 13 functions originally ASM: all now C (eleven MATCHING, two instruction-equivalent NONMATCHING); tracked separately, with serialization/source-behavior decisions still required |
 | Entire hook replacements made unnecessary | 2, repel expiry and bag-use hooks |
 | Instruction-patch behaviors represented natively | 3, Rage, Fire Fang / Shadow Force and overworld poison |
 | Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
@@ -44,8 +44,8 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Features verified at C/resource boundaries | 5; emulator scenarios still pending |
 | Ability text resources ported | 3 native message banks, 320 entries each; all 960 compiled texts verified against pinned NewGold |
 | Features checked in a running ROM | 0 |
-| ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5 and M13; separate from feature gameplay verification |
-| Complete ROM build | HeartGold and SoulSilver PASS through M14; M14 is byte-identical to M13 |
+| ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5, M13 and M15; separate from feature gameplay verification |
+| Complete ROM build | HeartGold and SoulSilver PASS through M15; M15 differs only by equivalent private stack-slot allocation in the Pokéwalker exporter |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -622,13 +622,49 @@ only the two Pokéwalker boundaries remain ASM in that additional list. The
 original hook census remains 312 C / 37 ASM. Ability widening, new ability
 mechanics, external-record policy and further hook retirement remain pending.
 
+## M15 — Pokéwalker receive and Trainer House export in native C
+
+`ov112_021EEAF0` now lives in `src/pokewalker_receive.c`. It imports up to three
+caught Pokémon plus an optional gift into PC storage. `include/overlay_112.h`
+defines only the identified receive-state prefix and wire records, reusing
+native save, PC, profile and Pokédex types. Size/offset assertions preserve
+caught records (16 bytes), the gift prefix (52 bytes), ability at gift+0x2F and
+the separate ball byte at +0x30. Original RNG calls, the 24-nature range, box
+scan, trainer memo, gift OT/ability/ball/fateful fields, allocation lifetimes,
+Pokédex updates and returned PC pointer are retained.
+
+`ov112_021F33D8` now lives in `src/pokewalker_trainer_house.c`, using the existing
+`TrainerHouseMon`. It skips checksum failures and eggs, temporarily converts Sky
+Shaymin to Land Forme while serializing and restores it, and preserves held
+item, OT, personality, language, ability, friendship, level, nickname, PP upgrades,
+IV/EV packing and the six-mon cap. The 56-byte external record remains unchanged.
+No ability is widened and no new ability mechanic is enabled in this prerequisite.
+
+The receiver is MATCHING C (512 bytes). The exporter is NONMATCHING but
+instruction-equivalent C (460 bytes): eight Thumb load/store immediates exchange
+two private stack slots, SP+4 and SP+8. The audit checks their complete use set,
+non-escaping addresses and fixed stack depth. Mapping those slots back in an
+inspection-only copy proves every other overlay-112 byte identical. No build
+output is patched and no ASM fallback is retained. Both complete builds, twelve
+existing tests, scoped formatting and whitespace checks pass without new
+compiler/assembler warnings. Fresh isolated HG/SS emulator runs confirm boot,
+rendering and D-pad/A tutorial input; Pokéwalker transfers remain untested.
+
+Total conversions are twenty: eighteen matching and two with compiled-instruction
+equivalence proofs. All thirteen additional byte boundaries in the scoped ledger
+are now C; that is not proof of full consumer coverage. The original hook census
+remains 312 C / 37 ASM. Next settle the native ability storage/setter contract and
+external-record compatibility, closing affected consumers before enabling IDs
+above 255. The original NewGold build comparison remains pending.
+
 ## Remaining foundation — Expanded ability consumers
 
-The four identified AI byte consumers and the three Frontier record
-producers/importer are now matching C. Next address the two Pokéwalker record
-boundaries before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
+The four identified AI byte consumers, three Frontier record routines and
+both Pokéwalker record boundaries are now C. Next define the native ability
+storage and setter contract, then close the affected consumer/serialization
+paths before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
 [ability-consumers.tsv](ability-consumers.tsv) record 67 scoped evidence rows,
-including thirteen additional original ASM byte boundaries (eleven now C), already-wide accessors,
+including thirteen additional original ASM byte boundaries (all now C), already-wide accessors,
 serialization constraints and remaining inventory gaps. These are not all
 equivalent: do not convert untouched width-safe ASM merely because it exists.
 Save and battle layouts must not move before affected consumers are understood.

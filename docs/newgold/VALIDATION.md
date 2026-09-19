@@ -405,3 +405,38 @@ warnings; twelve existing tests, scoped clang-format 19 and whitespace checks
 pass. The M13 boot/menu smoke covers these identical ROMs; no Frontier gameplay
 verification or ability widening is claimed. Original NewGold ROM comparison
 remains pending, as recorded in the final gate above.
+
+## M15 — Pokéwalker receive/export prerequisites
+
+Evidence, maps, before/after overlays, ROMs and runnable proof are archived in
+`build/milestones/15-pokewalker-mon-cvalidation/verification.json` and
+`audit-pokewalker-mon-c.py`. Runtime evidence is under `runtime-smoke`.
+
+| ROM | SHA-1 | SHA-256 |
+| --- | --- | --- |
+| HeartGold | `5ff5d273bf1e68bd0905a6b91f970d821e1262a9` | `64986f86742a4d65ee05395b0776cc78acfb3cfaa1d772de6f4b2c7f3dc74810` |
+| SoulSilver | `eeea8cbf899c1940e029fed21d72678cc325530d` | `f8d8ab9803f36d535b18930a7d34e6d72c68ea609a1161cfe85650825cb27245` |
+
+`ov112_021EEAF0` is MATCHING C, 512 bytes. `ov112_021F33D8` is NONMATCHING C,
+460 bytes, with an instruction-equivalence proof: its move-copy cursor and IV
+accumulator exchange private SP+4/SP+8 slots. Exactly eight Thumb SP-relative
+loads/stores differ. Their registers and opcodes are unchanged; neither address
+escapes, stack depth is fixed inside the function, and the nickname buffer
+passed to callees starts at SP+32. The validator checks every reference to those
+slots and the exact before/after instruction words. Swapping the comparison
+copy back proves all other 106,712 overlay-112 bytes identical. This operation
+is only an audit in memory, never a ROM/build patch.
+
+In both games only NitroFS file 112 changes; ARM9, ARM7 and all other overlay and
+resource payloads are identical to M14. Both builds pass without new compiler
+or assembler warnings. Record layout assertions, all twelve existing tests,
+scoped clang-format 19 and whitespace checks pass. No expanded ability field
+or mechanic is enabled yet, and no Pokéwalker hardware transfer is claimed.
+
+Both final ROMs also complete 1,436 frames in fresh isolated melonDS processes,
+using the same installed core/provenance and interpreter/software settings as
+M13. Visual checks confirm tutorial text reached through D-pad/A input. Commands,
+logs, screenshots and ROM hashes are archived. No user save/configuration or
+external BIOS is used. This is boot/rendering/menu-input verification only;
+feature-gameplay verification remains zero. Comparison with the original
+compiled NewGold ROM is still pending.

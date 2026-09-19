@@ -1306,6 +1306,10 @@ Overlay OVY_112
 {
     After main
     Object asm/overlay_112.o
+    Object src/pokewalker_receive.o
+    Object asm/overlay_112_021EECF0.o
+    Object src/pokewalker_trainer_house.o
+    Object asm/overlay_112_021F35A4.o
 }
 Overlay OVY_113
 {
