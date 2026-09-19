@@ -570,6 +570,8 @@ Overlay OVY_2
     Object asm/overlay_02_02245B80.o
     Object src/field/encounter_check.o
     Object asm/overlay_02_02248728.o
+    Object src/field/repel.o
+    Object asm/overlay_02_0224BB18.o
     Object src/field/legend_cutscene_camera.o
     Object src/field/overlay_2_gear_phone.o
     Object src/field/event_cutscene_shaymin.o
@@ -672,6 +674,8 @@ Overlay OVY_15
 {
     After OVY_14
     Object asm/overlay_15.o
+    Object src/bag_app.o
+    Object asm/overlay_15_021F994C.o
 }
 Overlay OVY_16
 {

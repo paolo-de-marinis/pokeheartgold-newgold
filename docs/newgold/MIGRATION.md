@@ -31,13 +31,13 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Original C / ASM including resolved targets | 307 / 42 |
 | Semantically unidentified hook targets remaining | 0 |
 | Source hook-installation anomalies retained in the record | 5 |
-| ASM targets converted to C | 0 |
-| ASM targets remaining | 42 |
+| ASM targets converted to C | 2, both MATCHING C |
+| ASM targets remaining | 40 |
 | Entire hook replacements made unnecessary | 0 |
 | Instruction-patch behaviors represented natively | 0 |
 | Features ported | 0 |
 | Features checked in a running ROM | 0 |
-| Complete ROM build | Pending baseline toolchain setup |
+| Complete ROM build | HeartGold and SoulSilver PASS; vanilla C conversions match both retail ROMs |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -93,7 +93,7 @@ inside it has been implemented or completely specified.
 | --- | --- | --- | --- | --- |
 | Rage cleanup / executable logic | `src/individual/ServerBeforeAct.c::ServerBeforeActInternal`, `SBA_RAGE`; `armips/asm/moves.s` Rage fix | `src/battle/battle_controller_player.c::BattleControllerPlayer_BeforeTurn`, C | MAPPED | No expansion; planned host and ROM regression checks; see M1 |
 | Fire Fang / Shadow Force classification / executable logic | `bytereplacement`, `0225848C` | `src/battle/overlay_12_0224E4FC.c::ov12_02258440`, C | MAPPED | Shared live-battle and AI predicate; see M2 |
-| Reusable repels / executable logic and script | `src/repel.c`, `hooks`, `routinepointers`, `armips/asm/repel.s`, common-script changes | `asm/overlay_02_02248728.s::PlayerStepEvent_RepelCounterDecrement`; `asm/overlay_15.s::BagApp_GetRepelStepCountAddr`, ASM; native common script and script command table | MAPPED | Validate vanilla C conversions before feature; default source selects Max, then Super, then normal Repel, not necessarily last used |
+| Reusable repels / executable logic and script | `src/repel.c`, `hooks`, `routinepointers`, `armips/asm/repel.s`, common-script changes | `asm/overlay_02_02248728.s::PlayerStepEvent_RepelCounterDecrement`; `asm/overlay_15.s::BagApp_GetRepelStepCountAddr`, ASM; native common script and script command table | VANILLA C DECOMPILED | Both targets MATCHING C; feature pending. Source selects Max, then Super, then normal Repel, not necessarily last used |
 | Core battle state / executable logic | `include/battle.h`, `src/battle/battle_start.c`, `armips/asm/moves.s` | `include/battle/battle.h`, `BattleContext_New`, `BattleContext_Init`, C with ASM consumers | MAPPED | Required consumers must be C before layout changes; ABI/offset/save checks |
 | Expanded move IDs, data and bytecode / data, script, executable logic | `data/Moves.c`, `src/moves.c`, `src/battle/battle_script_commands.c` | `include/constants/moves.h`, `include/constants/move_effects.h`, `src/battle/battle_command.c`, `files/poketool/waza`, `files/battledata/script`, C/data | MAPPED | IDs, table limits, script command dispatch and messages; per-effect tests |
 | Damage, accuracy and criticals / executable logic | `src/individual/CalcBaseDamage.c`, `src/battle/battle_calc_damage.c`, `src/battle/other_battle_calculators.c` | `CalcMoveDamage`, `TryCriticalHit`, `BattleSystem_CheckMoveHit`, C | MAPPED | Type, item, ability and state prerequisites; exact integer rounding and RNG |
@@ -120,6 +120,24 @@ inside it has been implemented or completely specified.
 | Cries and audio expansion / executable logic and resource | Cry pseudobanks and `NNSi_SndArcLoadBank_hook` | `src/sound.c`, `asm/unk_02005D10.s`, `lib/asm/nnsys.s`, mixed C/ASM | MAPPED | Understand pseudobank contract; native bank/resource loading and boundary tests |
 | Overworld/followers, camera, seasons and roamers / executable logic, data, resource | Field/follower routines, BDHCam, seasons and roamer patches | Native field/follower/camera/roamer C with overlay consumers | MAPPED | Resolve BDHCam contract, native resource tables and state consumers before implementation |
 | Injected overlays/linker support / build-system support | `rom.ld`, `hooks`, `armhooks`, `bytereplacement`, `repoints`, `routinepointers`, `armips/global.s` | Native C object lists in `main.lsf`, existing overlay and data build | NOT STARTED | Retire feature by feature; no hook compatibility layer or executable blobs |
+
+## Vanilla prerequisite — Repel routines in matching C
+
+| Function | Original implementation | Native implementation | Validation |
+| --- | --- | --- | --- |
+| `PlayerStepEvent_RepelCounterDecrement` | `asm/overlay_02_02248728.s` | `src/field/repel.c` | MATCHING C, both full retail ROM checksums pass |
+| `BagApp_GetRepelStepCountAddr` | `asm/overlay_15.s` | `src/bag_app.c` | MATCHING C, both full retail ROM checksums pass |
+
+The second function is an existing counter **setter**, despite its upstream
+name. Its only caller uses it that way; the canonical name is retained.
+The ordinary `main.lsf` object list places each C routine between the original
+assembly prefix and a separate untouched suffix. Existing overlay `.inc` files
+provide the cross-object symbol declarations. No executable assembly was added
+or altered beyond removal of these two routines. The full matching ROM checks
+also validate that moving the untouched assembly/data did not change its bytes.
+
+This prerequisite does not itself add reusable repels or retire those hooks.
+See `VALIDATION.md` for toolchain, checksums and commands.
 
 ## M1 — Correct Rage cleanup
 
