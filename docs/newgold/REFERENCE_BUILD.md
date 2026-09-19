@@ -24,18 +24,18 @@ SoulSilver build is claimed. The reference checkout used for source analysis
 remains untouched; generated output lives in the separate build copy.
 
 Actual whole-file byte comparison returns false, with the first difference at
-ROM offset20 (0x14). File sizes also differ. Comparing NitroFS resources by name
-finds384 common files:335 are identical,49 differ. The JSON report lists every
+ROM offset 20 (0x14). File sizes also differ. Comparing NitroFS resources by name
+finds 384 common files: 335 are identical, 49 differ. The JSON report lists every
 path. This excludes executable overlays, which are not named NitroFS resources.
 No executable behavior equivalence is inferred from these counts.
 
-Message banks720/721/722 extracted from both compiled ROMs each contain320
-entries. All960 decoded ability names/uppercase names/descriptions are exactly
+Message banks 720/721/722 extracted from both compiled ROMs each contain 320
+entries. All 960 decoded ability names/uppercase names/descriptions are exactly
 equal. Their encoded binary members differ, demonstrating why resource content
 must be checked independently from ROM identity. Most other NewGold resources
 and executable behavior remain unported.
 
-Both native games and the original NewGold ROM complete the same1,436-frame
+Both native games and the original NewGold ROM complete the same 1,436-frame
 melonDS smoke: boot, rendering, D-pad/A menu input, readable tutorial text.
 Each run uses a fresh directory, no user save/configuration and no external
 BIOS. This does not verify abilities, battles, field features, saves, transfers

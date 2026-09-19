@@ -31,11 +31,11 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Original C / ASM including resolved targets | 307 / 42 |
 | Semantically unidentified hook targets remaining | 0 |
 | Source hook-installation anomalies retained in the record | 5 |
-| ASM routines converted to C | 20: five original hook targets, two additional patch-only targets and thirteen additional ability consumers; 18 MATCHING, two NONMATCHING with compiled-instruction equivalence verified before NewGold changes |
+| ASM routines converted to C | 21: five original hook targets, two additional patch-only targets and fourteen additional ability consumers; 19 MATCHING, two NONMATCHING with compiled-instruction equivalence verified before NewGold changes |
 | Current mapped targets represented in C | 312 |
 | ASM targets remaining | 37 |
 | Additional patch-only ASM prerequisites identified | 4: two converted to matching C, two still ASM; outside the original hook census |
-| Further ability byte boundaries identified | 14 functions originally ASM: thirteen converted to C (eleven MATCHING, two instruction-equivalent NONMATCHING before modification), one packet producer still ASM; outside the original hook census |
+| Further ability byte boundaries identified | 14 functions originally ASM: all converted to C (twelve MATCHING, two instruction-equivalent NONMATCHING before modification); outside the original hook census |
 | Entire hook replacements made unnecessary | 2, repel expiry and bag-use hooks |
 | Instruction-patch behaviors represented natively | 3, Rage, Fire Fang / Shadow Force and overworld poison |
 | Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
@@ -47,7 +47,7 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Features checked in a running ROM | 0 |
 | ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5, M13, M15 and M16; separate from feature gameplay verification |
 | Original NewGold comparison | M16 intermediate comparison complete: ROMs differ; 960 decoded ability texts agree; final completed-port comparison still pending |
-| Complete ROM build | HeartGold and SoulSilver PASS through M16; all non-overlay resources and ARM7 unchanged from M15 |
+| Complete ROM build | HeartGold and SoulSilver PASS through M17; both complete ROMs byte-identical to M16 |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -690,7 +690,7 @@ not another member of the original 349-hook-target census.
 
 `tests/newgold/test_ability_storage.py` compiles the actual native data cases,
 crypto, checksums, locks, reassignment and compact serialization with ASan/UBSan,
-and compares to the pinned reference edited cases. It covers all512 encodings,
+and compares to the pinned reference edited cases. It covers all 512 encodings,
 32 shuffle values and both lock states (32,768 cases), EXP extremes, reserved
 bits, compact roundtrips, Arceus alias prevention and checksum rejection.
 Unrelated accessor cases are omitted; curves/personal data are controlled inputs.
@@ -702,14 +702,41 @@ This milestone is a saved-data
 foundation, not a claim that expanded ability gameplay/UI/export works end to
 end. It retires no complete hook: the edited source hooks also handle met level.
 
+## M17 — Battle-to-party packet producer in matching C
+
+`src/battle/battle_controller_mon_copy.c` replaces the 356-byte
+`BattleController_EmitBattleMonToPartyMonCopy`. It reuses BattleContext,
+BattleMon and the existing send function. A local typed 44-byte packet preserves
+party-slot/Mimic nibbles, truncated HP, item/Knock Off flags, moves/PP, status,
+status2, form, the 32-bit ability payload and form/stat-update flags. Poison
+counter removal, fainted-status clearing and consumption of the two update
+flags retain their original order and behavior. Packet padding remains as in
+the vanilla producer; no protocol growth is introduced.
+
+Normal object ordering inserts the C function between unchanged assembly
+partitions; `overlay_12_battle_controller_02263CB0.s` contains the original next
+two functions. No custom executable ASM or wrapper is added. Both complete
+ROMs and every overlay 12 byte match M16 exactly. Packet size/offset assertions,
+all thirteen focused checks, formatting and whitespace checks pass without
+new compiler/assembler warnings. The M16 runtime smoke and compiled-reference
+comparison cover these identical ROMs; no ability gameplay test is claimed.
+Evidence: `build/milestones/17-battle-mon-copy-cvalidation/verification.json`
+and its runnable audit.
+
+This is the 21st ASM-to-C conversion (19 matching, two proven equivalent), and
+the 14th additional ability consumer. Original hook-target counters remain
+312 C / 37 ASM. BattleMon ability remains a byte pending a coherent native
+layout and consumer change; no new ability mechanics or hook retirement are
+claimed by this vanilla prerequisite.
+
 ## Remaining foundation — Expanded ability consumers
 
 The four identified AI byte consumers, three Frontier record routines and
 both Pokéwalker record boundaries are now C. M16 implements the saved ability
-storage and setter contract. Next convert the battle-copy packet producer and
-close battle/UI/personal and external export paths before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
+storage and setter contract. M17 converts the battle-copy packet producer to matching C. Next close
+battle/UI/personal and external export paths before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
 [ability-consumers.tsv](ability-consumers.tsv) record 67 scoped evidence rows,
-including fourteen additional original ASM byte boundaries (thirteen now C), already-wide accessors,
+including fourteen additional original ASM byte boundaries (all now C), already-wide accessors,
 serialization constraints and remaining inventory gaps. These are not all
 equivalent: do not convert untouched width-safe ASM merely because it exists.
 Save and battle layouts must not move before affected consumers are understood.
@@ -732,8 +759,7 @@ storage. Native per-record data will replace that mechanism; no equivalent
 global or code-address storage is needed. This requires auditing every record
 reader and allocation/copy size before its layout changes.
 
-Continue the scoped consumer work, convert the battle packet sender, finish
-runtime/protocol contracts, and migrate personal resources/constants/flags. Only
+Continue the scoped consumer work, finish runtime/protocol contracts, and migrate personal resources/constants/flags. Only
 then assign IDs above 255 or enable dependent ability mechanics. Check saved
 Pokémon checksum/roundtrip behavior and trade/Frontier/Pokéwalker consumers.
 

@@ -9,7 +9,7 @@ build, and emulator/hardware testing. The latter is not implied by compilation.
 The user additionally requires building the original konefr repository and
 checking whether its ROM equals the native port's ROM. The final full-port gate
 is **PENDING**. An actual intermediate comparison at M16 is now complete: both
-ROMs build, but they are not byte-identical. All960 decoded ability texts agree.
+ROMs build, but they are not byte-identical. All 960 decoded ability texts agree.
 See [REFERENCE_BUILD.md](REFERENCE_BUILD.md) for hashes, differences and scope.
 Build pinned NewGold `1b872926eaa0363816d4e376fad1531435b04b9c` in an isolated
 copy, preserving its original toolchain/configuration and recording the exact
@@ -456,15 +456,15 @@ ROMs, maps, Pokémon object/disassembly, host log, runnable
 | SoulSilver | `75b6d926539287a9171b7a53f7f824b8b87f113f` | `f8c5e28d3a25bbf06f325e6fba0b282a1aa8d89acc80ee1674705928ce550817` |
 
 Both builds pass with no new compiler/assembler warnings. Target layout
-assertions preserve Block A32 bytes, boxed136 bytes, compact112 bytes and the
+assertions preserve Block A 32 bytes, boxed 136 bytes, compact 112 bytes and the
 original EXP-word/ability-byte offsets. Inspection of compiled Thumb confirms
-low21 masking and the high ability bit in bit31. ARM9 and118 overlay payloads
+low21 masking and the high ability bit in bit31. ARM9 and 118 overlay payloads
 change after relinking; ARM7 and every non-overlay resource are identical to
 M15. No instruction normalization or output patching is used.
 
 All thirteen focused checks pass. The new test compares actual native selected
 accessor cases against the pinned reference functions, with real native crypto,
-checksum, locks and compact serialization under ASan/UBSan. All512 encodings,
+checksum, locks and compact serialization under ASan/UBSan. All 512 encodings,
 32 shuffle values and both lock states pass (32,768 cases), including EXP
 boundary/wrap/cap behavior, preserved reserved bits, ability reassignment,
 compact roundtrips and checksum rejection. Controlled curves/personal inputs
@@ -477,7 +477,22 @@ byte-limited; BattleMon, AI, UI and assignment data remain prerequisites before
 higher IDs can be enabled coherently. No complete edited accessor hook is
 counted as retired, because the reference also handles met level there.
 
-Both native ROMs ran1,436 frames in fresh melonDS processes. Final images show
+Both native ROMs ran 1,436 frames in fresh melonDS processes. Final images show
 the readable intro reached through menu input. The same smoke also passed for
 the original NewGold build. Runtime commands, core provenance and screenshots
 are archived; actual ability gameplay and cross-ROM behavior remain unverified.
+
+## M17 — Matching battle-to-party packet producer
+
+Both complete ROMs are byte-for-byte identical to M16 and retain its SHA-1 and
+SHA-256 hashes. All 226,176 overlay 12 bytes match in both games. The 356-byte
+`BattleController_EmitBattleMonToPartyMonCopy` is owned by
+`battle_controller_mon_copy.o`. Unchanged ASM partitions, packet 44-byte size,
+ability word at 0x24 and status2 at 0x1C are checked. The full builds, all thirteen
+focused tests, formatting and whitespace checks pass without new compiler or
+assembler warnings. Evidence and runnable audit are in
+`build/milestones/17-battle-mon-copy-cvalidation`.
+
+M16 boot/menu smoke and original-ROM comparison apply to these identical ROMs.
+This is a validated vanilla C prerequisite; the BattleMon source ability remains
+u8, and no expanded ability gameplay or protocol change is enabled yet.
