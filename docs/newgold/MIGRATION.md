@@ -31,19 +31,26 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Original C / ASM including resolved targets | 307 / 42 |
 | Semantically unidentified hook targets remaining | 0 |
 | Source hook-installation anomalies retained in the record | 5 |
-| ASM targets converted to C | 2, both MATCHING C |
+| ASM targets converted to C | 2, both vanilla conversions verified MATCHING before the feature |
+| Current mapped targets represented in C | 309 |
 | ASM targets remaining | 40 |
-| Entire hook replacements made unnecessary | 0 |
+| Entire hook replacements made unnecessary | 2, repel expiry and bag-use hooks |
 | Instruction-patch behaviors represented natively | 2, Rage and Fire Fang / Shadow Force |
-| Features ported | 2, Rage and Fire Fang / Shadow Force |
+| Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
+| Reference binary patch mechanisms made unnecessary | 3: two instruction fixes and one script-handler pointer replacement |
+| Features ported | 3: Rage, Fire Fang / Shadow Force, reusable repels |
+| Features verified at C/resource boundaries | 3; emulator scenarios still pending |
 | Features checked in a running ROM | 0 |
-| Complete ROM build | HeartGold and SoulSilver PASS through M2; prerequisite C conversions separately matched both retail ROMs |
+| Complete ROM build | HeartGold and SoulSilver PASS through M3; prerequisite C conversions separately matched both retail ROMs |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
 replace a function implementing many features. Porting Rage does **not** retire
 the entire `ServerBeforeAct` replacement. Data relocation is not executable
 patching. Field and battle script `.s` files assemble bytecode, not ARM code.
+The remaining 40 ASM targets refer to the initial hook census. Additional ASM
+consumers needed by data expansion or non-hook patches must be tracked when
+identified; this is not a claim that only 40 ASM routines remain in the game.
 
 Statuses: `NOT STARTED`, `MAPPED`, `VANILLA C DECOMPILED`, `PORTED`, `BUILDS`,
 `VERIFIED`. Verification must state its scope: host function test, matching
@@ -93,7 +100,7 @@ inside it has been implemented or completely specified.
 | --- | --- | --- | --- | --- |
 | Rage cleanup / executable logic | `src/individual/ServerBeforeAct.c::ServerBeforeActInternal`, `SBA_RAGE`; `armips/asm/moves.s` Rage fix | `src/battle/battle_controller_player.c::BattleControllerPlayer_BeforeTurn`, C | BUILDS; VERIFIED (host) | Actual-C regression and both modified ROM builds pass; emulator scenario pending; see M1 |
 | Fire Fang / Shadow Force classification / executable logic | `bytereplacement`, `0225848C` | `src/battle/overlay_12_0224E4FC.c::ov12_02258440`, C | BUILDS; VERIFIED (host) | Both ROMs pass; actual helper and shared live/AI predicates checked; emulator pending; see M2 |
-| Reusable repels / executable logic and script | `src/repel.c`, `hooks`, `routinepointers`, `armips/asm/repel.s`, common-script changes | `asm/overlay_02_02248728.s::PlayerStepEvent_RepelCounterDecrement`; `asm/overlay_15.s::BagApp_GetRepelStepCountAddr`, ASM; native common script and script command table | VANILLA C DECOMPILED | Both targets MATCHING C; feature pending. Source selects Max, then Super, then normal Repel, not necessarily last used |
+| Reusable repels / executable logic and script | `src/repel.c`, `hooks`, `routinepointers`, `armips/asm/repel.s`, common-script changes | `asm/overlay_02_02248728.s::PlayerStepEvent_RepelCounterDecrement`; `asm/overlay_15.s::BagApp_GetRepelStepCountAddr`, ASM; native common script and script command table | BUILDS; VERIFIED (C/resources) | Both vanilla conversions matched retail; native reuse feature builds on HG/SS and passes source/asset checks; runtime UI pending |
 | Core battle state / executable logic | `include/battle.h`, `src/battle/battle_start.c`, `armips/asm/moves.s` | `include/battle/battle.h`, `BattleContext_New`, `BattleContext_Init`, C with ASM consumers | MAPPED | Required consumers must be C before layout changes; ABI/offset/save checks |
 | Expanded move IDs, data and bytecode / data, script, executable logic | `data/Moves.c`, `src/moves.c`, `src/battle/battle_script_commands.c` | `include/constants/moves.h`, `include/constants/move_effects.h`, `src/battle/battle_command.c`, `files/poketool/waza`, `files/battledata/script`, C/data | MAPPED | IDs, table limits, script command dispatch and messages; per-effect tests |
 | Damage, accuracy and criticals / executable logic | `src/individual/CalcBaseDamage.c`, `src/battle/battle_calc_damage.c`, `src/battle/other_battle_calculators.c` | `CalcMoveDamage`, `TryCriticalHit`, `BattleSystem_CheckMoveHit`, C | MAPPED | Type, item, ability and state prerequisites; exact integer rounding and RNG |
@@ -180,6 +187,94 @@ See `VALIDATION.md` for toolchain, checksums and commands.
   Both full ROM builds pass without compiler/assembler warnings. Only overlay 12
   differs from M1; all other modules and resources are identical.
 * Dependencies: baseline build only; no Fairy/type-chart expansion required.
+
+## M3 — Reusable repels
+
+Source: `src/repel.c` (counter, selection, use and duration),
+`src/script_new_cmds.c::Script_RunNewCmd`, `asm/other_hook.s` (bag hook),
+`hooks:525–528`, `routinepointers:8`,
+`armips/scr_seq/scr_seq_00003_commonscript.s` entry 72 and `data/text/040.txt`
+entries 118–119. Default `IMPLEMENT_REUSABLE_REPELS` is enabled.
+
+Native implementation:
+
+| Part | Files / functions | State |
+| --- | --- | --- |
+| Expiry and item use | `src/field/repel.c`: `PlayerStepEvent_RepelCounterDecrement`, `GetPreferredRepel`, `FieldSystem_UseNextRepel`; declaration in `include/overlay_2/overlay_02_02248728.h` | BUILDS; VERIFIED (C/resource boundaries) |
+| Ordinary bag use | `src/bag_app.c::BagApp_GetRepelStepCountAddr` | Vanilla MATCHING C; no extra global refresh is needed |
+| Script command | `src/scrcmd_items.c::ScrCmd_UseNextRepel`, `include/scrcmd.h`, `src/data/fieldmap/script_cmd_table.h`, `asm/macros/script.inc` | Native appended opcode 853; old opcodes 0–852 preserved |
+| Prompt | `files/fielddata/script/scr_seq/scr_seq_0003.s`, `event_0003.h`, `include/constants/std_script.h` | Native common entry 72 / `std_reuse_repel`; no replaced original script |
+| Text | `files/msgdata/msg/msg_0040.gmm` entries 117–118 | Native message resources; all original rows preserved |
+
+The counter decrements normally. On expiry, another available repel triggers
+script 2072; an empty inventory uses the existing script 2022. Yes consumes one
+item and restores its data-defined duration (100/200/250). No or B leaves the
+counter expired and does not consume an item. The selected item is buffered in
+the confirmation message. No save structure or inventory limit changes.
+
+Reference details deliberately preserved:
+
+* Selection is **Max > Super > normal Repel**, even if a different repel was last
+  used. The source's `CurrentRepelType` is refreshed by every reader; it carries
+  no required persistent state. The bag hook's refresh is therefore unnecessary.
+* NewGold's `PlayFanfare` macro emits opcode 73, which is native `PlaySE`;
+  `wait_button_or_walk_away` emits opcode 50, which is native `WaitButton`.
+* The source command returns the selected item ID even when item removal fails.
+  The native command preserves that behavior. Directly invoking it without an
+  item can therefore report a selected item without consumption; the normal
+  locked prompt first checks availability. This source quirk was not silently
+  changed into a different command contract.
+
+The helper is in overlay 2, used by the expiry-triggered field script while its
+field context has that overlay loaded. Other map-loading modes conditionally
+omit the extended field overlay; the new script is not started in those modes.
+Do not call this command from unrelated overlay contexts without reviewing their
+lifetime requirements.
+
+Dependencies: the two separately validated vanilla ASM-to-C conversions. The
+feature uses existing item IDs, bag helpers and duration data. It requires no
+expanded species, items, save data, new injected overlay, or generic command
+multiplexer. The source's two branch hooks and its script-handler pointer patch
+are now unnecessary; both complete ROMs build successfully.
+
+Validation: `python3 tests/newgold/test_repels.py` compiles the actual native
+functions and, when the sibling reference checkout or `--reference PATH` is
+available, the pinned NewGold C. It checks all 256 counter values across 27
+inventories (6,912 cases), 81 consumption/command cases, all 256 ordinary bag
+setter inputs, the native Yes/No/B/wait handler, command-table preservation,
+script wiring and original/new message rows. The script/input checks are host
+checks, not execution of the entire field VM in an emulator.
+
+Both full ROM builds pass without compiler/assembler warnings. The compiled
+command table has 854 entries; entry 853 resolves to the Thumb address of
+`ScrCmd_UseNextRepel`. The compiled common bank has 73 entries, with the new
+entry 72 containing one use command, and message bank 40 has 119 messages.
+Only script NARC `a/0/1/2` member 3 and message NARC `a/0/2/7` member 40 change;
+all other non-overlay resources and ARM7 are unchanged from M2. See
+`VALIDATION.md` for hashes and the relocation audit.
+
+Required ROM checks still pending: expire normal/Super/Max Repel; mixed inventory
+priority; consume the last item; empty-bag fallback; No/B cancellation; correct
+item message, sound and duration; save/reload with an active repel; field exit/
+reentry and ordinary bag use. These are not replaced by successful compilation.
+
+## Next independent milestone
+
+Disable overworld poison damage, following enabled `UPDATE_OVERWORLD_POISON`.
+The reference is `bytereplacement:116–121` (the status mask at `02054474`);
+corresponding native code is `src/script_pokemon_util.c::ApplyPoisonStep`, called
+from `src/field/field_control.c::FieldSystem_UpdatePoison`. No species, type,
+ability or save expansion is required. Preserve the four-step counter and check
+HP/status/friendship/mood/field-message behavior. Inspect Pokémon accessor
+side effects before removing calls: `GetMonData` also performs integrity checks,
+so an unconditional no-op must not be assumed equivalent without that review.
+
+After the independent field change, the next progression candidate is the 160
+friendship threshold for the three existing evolution methods. Full NewGold
+evolution behavior additionally requires new methods/Fairy/species; in particular
+its Eevee Fairy-move evolution takes precedence over day/night evolution. Do not
+claim that the threshold alone ports the entire evolution subsystem or alter
+Elm's independent 220 friendship dialogue condition.
 
 ## Build and review policy
 

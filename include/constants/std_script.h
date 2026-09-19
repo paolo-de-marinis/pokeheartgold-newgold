@@ -63,6 +63,7 @@
 #define std_fade_heal_fade             2069
 #define std_play_rival_outro_music     2070
 #define std_fade_end_rival_outro_music 2071
+#define std_reuse_repel                2072
 
 #define _std_bookshelves       2500
 #define std_picture_books      2500

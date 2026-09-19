@@ -4783,6 +4783,11 @@
 	.byte \arg1
 	.endm
 
+	.macro UseNextRepel item
+	.short 853
+	.short \item
+	.endm
+
 	; Script headers
 
 	.macro MapScript kind, script

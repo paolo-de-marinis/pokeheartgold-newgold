@@ -50,6 +50,7 @@ validation paths, not new project dependencies.
 | Vanilla repel ASM-to-C conversions | PASS, exact retail SHA-1 | PASS, exact retail SHA-1 | Both converted functions are MATCHING C |
 | Rage cleanup | PASS | PASS | Actual-C regression passes, upstream fails; no new compiler/assembler warnings |
 | Fire Fang / Shadow Force classification | PASS | PASS | Actual-C helper and live/AI predicates pass; upstream fails; no new compiler/assembler warnings |
+| Reusable repels | PASS | PASS | Actual-C/reference tests and compiled command/script/message checks pass; runtime UI pending |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -106,3 +107,32 @@ are identical. The host regression exercises 1,108 helper cases, 17,728 AI
 predicates and 35,456 live-battle predicates; its negative check fails on the
 original Fire Fang/Shadow Force classification. These are function-boundary
 checks, not complete emulator battles.
+
+## M3 — Reusable repel build outputs
+
+Artifacts and binary audit: `build/milestones/03-reusable-repels/verification.json`.
+
+| ROM | SHA-1 |
+| --- | --- |
+| HeartGold through M3 | `696f6cd9a3e6d459fe1db71a4038ca719d59f6ac` |
+| SoulSilver through M3 | `197cebdcbc60448e4dd7c104d7d955799797ebba` |
+
+Both full builds pass without compiler/assembler warnings. Binary checks confirm
+854 command-table entries and entry 853 pointing to `ScrCmd_UseNextRepel | 1`.
+Common-script entry 72 resolves to valid compiled code containing one use command
+with `VAR_SPECIAL_RESULT`; the common bank has 73 entries. Compiled message bank
+40 contains 119 rows, with generated message symbols 117 and 118.
+
+Only the following named NitroFS resources change from M2:
+
+* `a/0/1/2`: only member 3 changes; the script NARC retains 965 members.
+* `a/0/2/7`: only member 40 changes; the message NARC retains 829 members.
+
+Other non-overlay files and ARM7 are identical. Native ARM9/field symbol movement
+causes relocation updates in 118 overlays; these are normal linker-generated
+changes, not changes to 118 gameplay subsystems or imported binary patches.
+
+All six current focused tests pass, including pinned NewGold comparisons.
+clang-format 19 passes for all modified C/header files, and whitespace checks
+pass. NewGold input/audio/display behavior still requires the listed emulator
+or hardware scenarios; no interactive ROM test has been claimed.
