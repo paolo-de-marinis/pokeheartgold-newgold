@@ -31,11 +31,11 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Original C / ASM including resolved targets | 307 / 42 |
 | Semantically unidentified hook targets remaining | 0 |
 | Source hook-installation anomalies retained in the record | 5 |
-| ASM routines converted to C | 7: five original hook targets and two additional patch-only targets; all vanilla conversions verified MATCHING before NewGold changes |
+| ASM routines converted to C | 9: five original hook targets, two additional patch-only targets and two additional ability consumers; all vanilla conversions verified MATCHING before NewGold changes |
 | Current mapped targets represented in C | 312 |
 | ASM targets remaining | 37 |
 | Additional patch-only ASM prerequisites identified | 4: two converted to matching C, two still ASM; outside the original hook census |
-| Further ability byte boundaries identified | 13 ASM functions; tracked separately, with serialization/source-behavior decisions still required |
+| Further ability byte boundaries identified | 13 functions originally ASM: two converted to matching C, eleven still ASM; tracked separately, with serialization/source-behavior decisions still required |
 | Entire hook replacements made unnecessary | 2, repel expiry and bag-use hooks |
 | Instruction-patch behaviors represented natively | 3, Rage, Fire Fang / Shadow Force and overworld poison |
 | Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
@@ -45,7 +45,7 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Ability text resources ported | 3 native message banks, 320 entries each; all 960 compiled texts verified against pinned NewGold |
 | Features checked in a running ROM | 0 |
 | ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5; M6–M8 have identical ROM bytes; separate from feature gameplay verification |
-| Complete ROM build | HeartGold and SoulSilver PASS through M9; repel C prerequisites matched retail, later C prerequisites match the preceding modified ROMs |
+| Complete ROM build | HeartGold and SoulSilver PASS through M10; repel C prerequisites matched retail, later C prerequisites match the preceding modified ROMs |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -111,6 +111,7 @@ inside it has been implemented or completely specified.
 | Party-heal notification prerequisite / executable logic | `armips/asm/abilities.s:174–179` | `BattleControl_EmitPartyStatusHeal`, originally ASM, now `src/battle/battle_controller_party_heal.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M6; original four-byte protocol preserved; see M7 |
 | Summary data/ability display prerequisite / executable logic | `armips/asm/abilities.s`, summary hooks and EV/IV changes | `sub_0208981C`, `sub_0208D178`, originally ASM; now `src/pokemon_summary_mon.c`, `src/pokemon_summary_stats.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M7; expanded ability and EV/IV behavior remain pending; see M8 |
 | Ability names/descriptions / resource | `data/text/720.txt`, `721.txt`, `722.txt` | `files/msgdata/msg/msg_0720.gmm`, `msg_0721.gmm`, `msg_0722.gmm`, native message resources | PORTED; BUILDS; VERIFIED (compiled resources) | All 960 compiled strings equal pinned source; expanded IDs and mechanics remain pending; see M9 |
+| AI ability inference/query prerequisites / executable logic | `armips/asm/abilities.s` changes the producer/storage, requiring compatible native consumers | `ov10_0221D0A8`, `ov10_0221D188`, originally ASM; now `src/battle/trainer_ai_ability.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M9; cache/battle field widening remains pending; see M10 |
 | Core battle state / executable logic | `include/battle.h`, `src/battle/battle_start.c`, `armips/asm/moves.s` | `include/battle/battle.h`, `BattleContext_New`, `BattleContext_Init`, C with ASM consumers | MAPPED | Required consumers must be C before layout changes; ABI/offset/save checks |
 | Expanded move IDs, data and bytecode / data, script, executable logic | `data/Moves.c`, `src/moves.c`, `src/battle/battle_script_commands.c` | `include/constants/moves.h`, `include/constants/move_effects.h`, `src/battle/battle_command.c`, `files/poketool/waza`, `files/battledata/script`, C/data | MAPPED | IDs, table limits, script command dispatch and messages; per-effect tests |
 | Damage, accuracy and criticals / executable logic | `src/individual/CalcBaseDamage.c`, `src/battle/battle_calc_damage.c`, `src/battle/other_battle_calculators.c` | `CalcMoveDamage`, `TryCriticalHit`, `BattleSystem_CheckMoveHit`, C | MAPPED | Type, item, ability and state prerequisites; exact integer rounding and RNG |
@@ -469,13 +470,39 @@ mechanics are unchanged. It adds three verified resource banks, not another
 completed gameplay feature or retired hook. In-game ability displays have not
 yet been exercised with the new resource banks.
 
+## M10 — AI ability inference and query in matching C
+
+`src/battle/trainer_ai_ability.c` replaces `ov10_0221D0A8` and
+`ov10_0221D188`, command-table entries 41 and 83. They use the existing
+`BattleContext`, `TrainerAIData`, `BattleMon`, base-stat accessor and RNG.
+Script operands, battler decoding, ability suppression, revealed cache values,
+trapping abilities and unknown-opponent inference retain vanilla behavior.
+The query retains its original 0/no, 1/yes and 2/unknown results. Random selection
+occurs exactly once only when both base abilities are present; odd selects the
+first. No helper abstraction, hook or data-layout change is introduced.
+
+Both complete ROMs and the entire 62,560-byte overlay 10 match M9 byte for byte.
+The two C functions remain 224 and 216 bytes. The original assembly suffix is
+moved unchanged to `overlay_10_trainer_ai_0221D260.s`; ordinary object ordering
+and shared symbol declarations integrate the C replacement. A runnable archived
+audit also verifies the remaining assembly text is unchanged. Builds introduce
+no compiler/assembler warnings; all twelve tests, formatting and whitespace
+checks pass. No new emulator battle check has been performed.
+
+These are two additional ability consumers outside the original hook census.
+Total ASM-to-C conversions rise to nine, while that census remains 312 C /
+37 ASM. Eleven of the thirteen additional ability boundaries remain ASM.
+Expanded ability fields and the documented source cache inconsistency remain
+pending; neither a gameplay feature nor another retired hook is counted here.
+
 ## Remaining foundation — Expanded ability consumers
 
-Next convert the two AI ability/cache readers `ov10_0221D0A8` and
-`ov10_0221D188`, then address the other concrete byte boundaries before enabling
-expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
+The two AI ability/cache readers `ov10_0221D0A8` and `ov10_0221D188` are
+now matching C. Next address the remaining AI byte reader `ov10_0221F62C` and
+accessor narrowing in `ov10_0221FE8C`, then the other concrete byte boundaries
+before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
 [ability-consumers.tsv](ability-consumers.tsv) record 67 scoped evidence rows,
-including thirteen additional ASM byte boundaries, already-wide accessors,
+including thirteen additional original ASM byte boundaries (two now C), already-wide accessors,
 serialization constraints and remaining inventory gaps. These are not all
 equivalent: do not convert untouched width-safe ASM merely because it exists.
 Save and battle layouts must not move before affected consumers are understood.

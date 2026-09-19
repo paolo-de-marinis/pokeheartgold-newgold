@@ -80,6 +80,7 @@ validation paths, not new project dependencies.
 | Vanilla party-heal notification in C | PASS, exact M6 SHA-1 | PASS, exact M6 SHA-1 | Complete ROMs are MATCHING; four-byte packet and receiver contract preserved |
 | Vanilla summary loader/renderer in C | PASS, exact M7 SHA-1 | PASS, exact M7 SHA-1 | Complete ROMs are MATCHING; summary layout and behavior unchanged |
 | Ability names/descriptions | PASS | PASS | Only three message members change; all 960 decoded strings equal pinned NewGold |
+| Vanilla AI ability inference/query in C | PASS, exact M9 SHA-1 | PASS, exact M9 SHA-1 | Complete ROMs and overlay 10 are MATCHING; original AI behavior retained |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -300,3 +301,19 @@ overlays and all other resources are byte-identical to M8. Only message NARC
 `msgenc` decoding verifies all 960 text payloads against pinned NewGold.
 All twelve focused tests and whitespace checks pass. No emulator ability-display
 check has been performed for this milestone; new ability mechanics remain pending.
+
+## M10 — Matching AI ability inference/query prerequisites
+
+Artifacts, maps, overlay binaries, logs and runnable source/binary audit:
+`build/milestones/10-ai-ability-cvalidation/verification.json` and
+`audit-ai-ability-c.py` in the same directory.
+
+Both complete ROMs retain the M9 SHA-1/SHA-256 values and match M9 byte for byte.
+The entire 62,560-byte overlay 10 matches; `ov10_0221D0A8` is 224 bytes and
+`ov10_0221D188` is 216 bytes. The audit verifies unchanged remaining assembly
+and C symbol ownership. Both builds pass without compiler/assembler warnings;
+all twelve tests, scoped clang-format 19 and whitespace checks pass.
+
+This validates the vanilla conversion, including its existing byte fields.
+NewGold ability widening and AI gameplay scenarios remain pending. No new
+emulator verification is claimed for these M9-identical binaries.

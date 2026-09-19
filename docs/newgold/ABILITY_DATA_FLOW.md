@@ -6,11 +6,11 @@ Source: `hg-engine-newgold-reference` at `1b872926eaa0363816d4e376fad1531435b04b
 
 ## Next concrete decompilation list
 
-The strongest next foundation is the AI pair `ov10_0221D0A8` and `ov10_0221D188`: both read the revealed-ability cache and raw battle ability. Convert the pair to matching vanilla C, prove unchanged HG/SS binaries, then change width only after an ABI decision. Their native C writer/reset are already `BattlerSetAbility` and `ov12_0225859C`.
+M10 converted the AI pair `ov10_0221D0A8` and `ov10_0221D188` to matching vanilla C in `src/battle/trainer_ai_ability.c`; both complete HG/SS ROMs remain identical to M9. Both read the revealed-ability cache and raw battle ability. Change width only after an ABI decision. Next decompile `ov10_0221F62C` and `ov10_0221FE8C`. Their native C writer/reset are already `BattlerSetAbility` and `ov12_0225859C`.
 
-Thirteen additional still-ASM byte boundaries are established:
+Thirteen additional original ASM byte boundaries are established; two are now C and eleven remain ASM:
 
-- AI raw/cache readers: `ov10_0221D0A8`, `ov10_0221D188`, `ov10_0221F62C`.
+- AI raw/cache readers: `ov10_0221D0A8`, `ov10_0221D188` (M10 matching C), `ov10_0221F62C` (still ASM).
 - AI accessor narrowing: `ov10_0221FE8C`. It truncates a party ability before comparisons with 10, 11 or 18; IDs266,267,274 can alias those values. This is separate from layout relocation.
 - Frontier record producers/importer: `ov80_02229F6C`, `ov80_02236734`, `ov80_0222A140`.
 - Pokéwalker-related record producer/setter: `ov112_021F33D8`, `ov112_021EEAF0`.

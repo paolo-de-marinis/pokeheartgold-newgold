@@ -10,4 +10,10 @@ u8 ov10_0221BEF4(BattleSystem *battleSystem, u8 battlerId);
 u8 ov10_0221BF44(BattleSystem *battleSystem, BattleContext *ctx);
 u8 ov10_0221C038(BattleSystem *battleSystem, BattleContext *ctx);
 
+void ov10_0221D0A8(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221D188(BattleSystem *battleSystem, BattleContext *ctx);
+u32 ov10_0221EEF0(BattleContext *ctx);
+void ov10_0221EF24(BattleContext *ctx, int offset);
+u8 ov10_0221EF34(BattleContext *ctx, u8 battler);
+
 #endif
