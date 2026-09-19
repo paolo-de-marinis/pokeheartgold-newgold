@@ -31,11 +31,11 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Original C / ASM including resolved targets | 307 / 42 |
 | Semantically unidentified hook targets remaining | 0 |
 | Source hook-installation anomalies retained in the record | 5 |
-| ASM routines converted to C | 11: five original hook targets, two additional patch-only targets and four additional ability consumers; all vanilla conversions verified MATCHING before NewGold changes |
+| ASM routines converted to C | 13: five original hook targets, two additional patch-only targets and six additional ability consumers; all vanilla conversions verified MATCHING before NewGold changes |
 | Current mapped targets represented in C | 312 |
 | ASM targets remaining | 37 |
 | Additional patch-only ASM prerequisites identified | 4: two converted to matching C, two still ASM; outside the original hook census |
-| Further ability byte boundaries identified | 13 functions originally ASM: four converted to matching C, nine still ASM; tracked separately, with serialization/source-behavior decisions still required |
+| Further ability byte boundaries identified | 13 functions originally ASM: six converted to matching C, seven still ASM; tracked separately, with serialization/source-behavior decisions still required |
 | Entire hook replacements made unnecessary | 2, repel expiry and bag-use hooks |
 | Instruction-patch behaviors represented natively | 3, Rage, Fire Fang / Shadow Force and overworld poison |
 | Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
@@ -45,7 +45,7 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Ability text resources ported | 3 native message banks, 320 entries each; all 960 compiled texts verified against pinned NewGold |
 | Features checked in a running ROM | 0 |
 | ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5; M6–M8 have identical ROM bytes; separate from feature gameplay verification |
-| Complete ROM build | HeartGold and SoulSilver PASS through M11; repel C prerequisites matched retail, later C prerequisites match the preceding modified ROMs |
+| Complete ROM build | HeartGold and SoulSilver PASS through M12; repel C prerequisites matched retail, later C prerequisites match the preceding modified ROMs |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -113,6 +113,7 @@ inside it has been implemented or completely specified.
 | Ability names/descriptions / resource | `data/text/720.txt`, `721.txt`, `722.txt` | `files/msgdata/msg/msg_0720.gmm`, `msg_0721.gmm`, `msg_0722.gmm`, native message resources | PORTED; BUILDS; VERIFIED (compiled resources) | All 960 compiled strings equal pinned source; expanded IDs and mechanics remain pending; see M9 |
 | AI ability inference/query prerequisites / executable logic | `armips/asm/abilities.s` changes the producer/storage, requiring compatible native consumers | `ov10_0221D0A8`, `ov10_0221D188`, originally ASM; now `src/battle/trainer_ai_ability.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M9; cache/battle field widening remains pending; see M10 |
 | AI switching against Wonder Guard / toward absorbing abilities / executable prerequisites | `armips/asm/abilities.s`, `armips/asm/trainer_ai.s` storage/table changes | `ov10_0221F62C`, `ov10_0221FE8C`, originally ASM; now `src/battle/trainer_ai_switch_wonder_guard.c`, `trainer_ai_switch_absorb.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M10; ability-width behavior remains pending; see M11 |
+| Frontier player/opponent summary record prerequisites / executable logic | Expanded abilities require compatible UI consumers; no corresponding source width patch found | `ov83_02241E18`, `ov83_02245D48`, originally ASM; now `src/overlay_83_player_mon.c`, `overlay_83_opponent_mon.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M11; renderers and ability widening remain pending; see M12 |
 | Core battle state / executable logic | `include/battle.h`, `src/battle/battle_start.c`, `armips/asm/moves.s` | `include/battle/battle.h`, `BattleContext_New`, `BattleContext_Init`, C with ASM consumers | MAPPED | Required consumers must be C before layout changes; ABI/offset/save checks |
 | Expanded move IDs, data and bytecode / data, script, executable logic | `data/Moves.c`, `src/moves.c`, `src/battle/battle_script_commands.c` | `include/constants/moves.h`, `include/constants/move_effects.h`, `src/battle/battle_command.c`, `files/poketool/waza`, `files/battledata/script`, C/data | MAPPED | IDs, table limits, script command dispatch and messages; per-effect tests |
 | Damage, accuracy and criticals / executable logic | `src/individual/CalcBaseDamage.c`, `src/battle/battle_calc_damage.c`, `src/battle/other_battle_calculators.c` | `CalcMoveDamage`, `TryCriticalHit`, `BattleSystem_CheckMoveHit`, C | MAPPED | Type, item, ability and state prerequisites; exact integer rounding and RNG |
@@ -520,13 +521,39 @@ ownership and the unchanged assembly partitions. No new runtime scenario is
 claimed. Total conversions are eleven; nine of the thirteen additional ability
 boundaries remain ASM. The original hook census stays 312 C / 37 ASM.
 
+## M12 — Frontier player/opponent summary records in matching C
+
+`ov83_02241E18` and `ov83_02245D48` now live in
+`src/overlay_83_player_mon.c` and `src/overlay_83_opponent_mon.c`. Both use the
+shared original 0x34-byte `Ov83MonSummary` from `include/overlay_83.h` and known
+application prefixes, with compile-time record/ability/move/party-offset checks.
+These prefix types are not complete allocation types and must not be used to
+allocate/copy the full menu state.
+
+The menus load message banks 31 and 33. Bank 31 names player Pokémon and item
+rental; bank 33 explicitly describes checking the opponent's moves using CP.
+This supports the player/opponent labels. Existing party selection helper,
+Pokémon locking, accessor order, pointers, species, level, ability, nature, item,
+stats, form, personality, gender-display bits, moves and PP are unchanged.
+
+Both complete HG/SS ROMs match M11 byte for byte, as does the full 43,264-byte
+overlay 83. Constructors compile to 472 and 476 bytes. The archived audit proves
+unchanged remaining assembly partitions and C symbol ownership. Builds add no
+compiler/assembler warnings; all twelve tests, scoped formatting and whitespace
+checks pass. No new runtime menu check is claimed.
+
+These are two more of the thirteen additional ability boundaries, bringing total
+ASM-to-C conversions to thirteen. Seven additional boundaries remain ASM, while
+the original hook census stays 312 C / 37 ASM. The two summary renderers are
+next; ability remains u8, and no NewGold ability mechanic is enabled yet.
+
 ## Remaining foundation — Expanded ability consumers
 
 The four identified AI byte consumers are now matching C. Next address the
-concrete overlay-83 UI producers/renderers, then Frontier and Pokéwalker record
-boundaries before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
+overlay-83 renderers `ov83_022421E0` and `ov83_02246114` (their record
+constructors are now C), then Frontier and Pokéwalker record boundaries before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
 [ability-consumers.tsv](ability-consumers.tsv) record 67 scoped evidence rows,
-including thirteen additional original ASM byte boundaries (four now C), already-wide accessors,
+including thirteen additional original ASM byte boundaries (six now C), already-wide accessors,
 serialization constraints and remaining inventory gaps. These are not all
 equivalent: do not convert untouched width-safe ASM merely because it exists.
 Save and battle layouts must not move before affected consumers are understood.

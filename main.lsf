@@ -1090,6 +1090,10 @@ Overlay OVY_83
 {
     After OVY_80
     Object asm/overlay_83.o
+    Object src/overlay_83_player_mon.o
+    Object asm/overlay_83_02241FF0.o
+    Object src/overlay_83_opponent_mon.o
+    Object asm/overlay_83_02245F24.o
 }
 Overlay OVY_84
 {

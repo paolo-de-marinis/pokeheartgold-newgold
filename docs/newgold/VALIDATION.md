@@ -82,6 +82,7 @@ validation paths, not new project dependencies.
 | Ability names/descriptions | PASS | PASS | Only three message members change; all 960 decoded strings equal pinned NewGold |
 | Vanilla AI ability inference/query in C | PASS, exact M9 SHA-1 | PASS, exact M9 SHA-1 | Complete ROMs and overlay 10 are MATCHING; original AI behavior retained |
 | Vanilla AI ability switching in C | PASS, exact M10 SHA-1 | PASS, exact M10 SHA-1 | Complete ROMs and overlay 10 are MATCHING; existing RNG/accessor/cast behavior retained |
+| Vanilla Frontier summary record constructors in C | PASS, exact M11 SHA-1 | PASS, exact M11 SHA-1 | Complete ROMs and overlay 83 are MATCHING; original record layout and accessor order retained |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -331,3 +332,16 @@ pass without compiler/assembler warnings; all twelve tests, scoped formatting
 and whitespace checks pass. The first compiled C versions already match.
 Vanilla byte narrowing is deliberately retained; expanded ability semantics and
 emulator switching scenarios remain pending.
+
+## M12 — Matching Frontier summary record prerequisites
+
+Evidence and runnable audit: `build/milestones/12-frontier-ui-cvalidation/verification.json`
+and `audit-frontier-ui-c.py` in the same directory.
+
+Both complete ROMs retain the M9 hashes and match M11 byte for byte. All 43,264
+bytes of overlay 83 match. `ov83_02241E18` is 472 bytes; `ov83_02245D48` is
+476 bytes. The first C versions match; record/field offset assertions compile,
+and remaining assembly partitions are unchanged. Both builds pass without
+compiler/assembler warnings; twelve tests, scoped formatting and whitespace
+checks pass. The associated renderers remain ASM, ability fields remain u8, and
+no in-game menu verification has been performed for this milestone.
