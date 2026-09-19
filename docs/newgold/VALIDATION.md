@@ -52,6 +52,7 @@ validation paths, not new project dependencies.
 | Fire Fang / Shadow Force classification | PASS | PASS | Actual-C helper and live/AI predicates pass; upstream fails; no new compiler/assembler warnings |
 | Reusable repels | PASS | PASS | Actual-C/reference tests and compiled command/script/message checks pass; runtime UI pending |
 | Overworld poison disabled | PASS | PASS | Actual-C accessor/counter checks match the reference zero-mask semantics; compiled function has only expected read/validation calls |
+| Existing friendship evolution threshold | PASS | PASS | Complete native function/RTC tests, reference branches and unchanged-method comparisons pass; exactly three ARM9 comparison immediates change |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -160,3 +161,26 @@ counter values. The pinned reference's changed mask is applied only to the
 test oracle, never to a built ROM. Actual field scenes and battle poison still
 require the emulator/hardware checks in the migration ledger. Clang-format 19
 and whitespace checks pass for the scoped change.
+
+## M5 — Friendship evolution build outputs
+
+Artifacts, function disassembly and audit:
+`build/milestones/05-friendship-evolution/verification.json`.
+
+| ROM | SHA-1 |
+| --- | --- |
+| HeartGold through M5 | `c094900f501bd22a662b4d2a69580141fe5ebd36` |
+| SoulSilver through M5 | `b41899eb0b12d741bd4bf915be8b6b2e88d06d6d` |
+
+Both complete builds pass without compiler/assembler warnings. Each uncompressed
+ARM9 differs from M4 in exactly three bytes, 220 to 160, at the comparison
+immediates in `GetMonEvolution`. Its size remains 1,032 bytes. Every one of the
+513 NitroFS files, including overlays, and ARM7 remain byte-identical to M4.
+These addresses are inspection evidence only; no build step patches bytes.
+
+All ten focused tests pass, including the three new friendship tests and pinned
+NewGold comparisons. Native RTC classification, all friendship values/hours,
+guards and 72,576 unrelated-method comparisons pass; vanilla fails the 160
+boundary. Clang-format 19 and whitespace checks pass. Runtime evolution/party
+menu scenarios remain pending, as do the separate expanded evolution methods
+and Fairy/Sylveon data required for full NewGold evolution behavior.

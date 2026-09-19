@@ -38,10 +38,10 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Instruction-patch behaviors represented natively | 3, Rage, Fire Fang / Shadow Force and overworld poison |
 | Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
 | Reference binary patch mechanisms made unnecessary | 4: three instruction changes and one script-handler pointer replacement |
-| Features ported | 4: Rage, Fire Fang / Shadow Force, reusable repels, overworld poison |
-| Features verified at C/resource boundaries | 4; emulator scenarios still pending |
+| Features ported | 5: Rage, Fire Fang / Shadow Force, reusable repels, overworld poison, existing friendship-evolution threshold |
+| Features verified at C/resource boundaries | 5; emulator scenarios still pending |
 | Features checked in a running ROM | 0 |
-| Complete ROM build | HeartGold and SoulSilver PASS through M4; prerequisite C conversions separately matched both retail ROMs |
+| Complete ROM build | HeartGold and SoulSilver PASS through M5; prerequisite C conversions separately matched both retail ROMs |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -102,6 +102,7 @@ inside it has been implemented or completely specified.
 | Fire Fang / Shadow Force classification / executable logic | `bytereplacement`, `0225848C` | `src/battle/overlay_12_0224E4FC.c::ov12_02258440`, C | BUILDS; VERIFIED (host) | Both ROMs pass; actual helper and shared live/AI predicates checked; emulator pending; see M2 |
 | Reusable repels / executable logic and script | `src/repel.c`, `hooks`, `routinepointers`, `armips/asm/repel.s`, common-script changes | `asm/overlay_02_02248728.s::PlayerStepEvent_RepelCounterDecrement`; `asm/overlay_15.s::BagApp_GetRepelStepCountAddr`, ASM; native common script and script command table | BUILDS; VERIFIED (C/resources) | Both vanilla conversions matched retail; native reuse feature builds on HG/SS and passes source/asset checks; runtime UI pending |
 | Overworld poison disabled / executable logic | `include/config.h::UPDATE_OVERWORLD_POISON`, `bytereplacement:118` | `src/script_pokemon_util.c::ApplyPoisonStep`, C | BUILDS; VERIFIED (host) | Both ROMs pass; accessor integrity checks and four-step counter preserved; see M4 |
+| Friendship evolution threshold / executable logic | `include/config.h::FRIENDSHIP_EVOLUTION_THRESHOLD`, `src/individual/GetMonEvolutionInternal.c` | `src/pokemon.c::GetMonEvolution`, C | BUILDS; VERIFIED (host), three existing methods | Both ROMs pass; new evolution methods, Fairy and Sylveon remain separate dependencies; see M5 |
 | Core battle state / executable logic | `include/battle.h`, `src/battle/battle_start.c`, `armips/asm/moves.s` | `include/battle/battle.h`, `BattleContext_New`, `BattleContext_Init`, C with ASM consumers | MAPPED | Required consumers must be C before layout changes; ABI/offset/save checks |
 | Expanded move IDs, data and bytecode / data, script, executable logic | `data/Moves.c`, `src/moves.c`, `src/battle/battle_script_commands.c` | `include/constants/moves.h`, `include/constants/move_effects.h`, `src/battle/battle_command.c`, `files/poketool/waza`, `files/battledata/script`, C/data | MAPPED | IDs, table limits, script command dispatch and messages; per-effect tests |
 | Damage, accuracy and criticals / executable logic | `src/individual/CalcBaseDamage.c`, `src/battle/battle_calc_damage.c`, `src/battle/other_battle_calculators.c` | `CalcMoveDamage`, `TryCriticalHit`, `BattleSystem_CheckMoveHit`, C | MAPPED | Type, item, ability and state prerequisites; exact integer rounding and RNG |
@@ -301,14 +302,59 @@ healthy, fainted and egg party slots; verify no field effect/message/cure; enter
 a battle and verify poison still damages there. Save/reload and map transitions
 must retain the ordinary step counter. These runtime scenarios remain pending.
 
-## Next independent milestone
+## M5 — Friendship evolution at 160
 
-The next progression candidate is the 160
-friendship threshold for the three existing evolution methods. Full NewGold
-evolution behavior additionally requires new methods/Fairy/species; in particular
-its Eevee Fairy-move evolution takes precedence over day/night evolution. Do not
-claim that the threshold alone ports the entire evolution subsystem or alter
-Elm's independent 220 friendship dialogue condition.
+Source: `include/config.h:129–131` sets `FRIENDSHIP_EVOLUTION_THRESHOLD` to 160.
+`src/individual/GetMonEvolutionInternal.c` uses it in the three original
+friendship/day/night methods and the new known-move-type method.
+`GetMonEvolutionBattle.c` includes the same implementation; `src/pokemon.c`
+dispatches through injected overlays, replacing the original via `hooks:31`.
+
+Native scope: `src/pokemon.c::GetMonEvolution` defines the threshold once and
+updates its three existing comparisons. The shared C function serves both
+post-battle evolution (`BattleSystem_CheckEvolution`) and Rare Candy evolution
+(`PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop`). Other C callers and the two
+calls in ASM `ov70_02241648` use item/trade contexts; they require no modification.
+No ASM conversion, table/resource/save change or injection is needed.
+
+Preserved behavior: the normal level-up trigger, native day/night periods,
+Everstone restrictions and Kadabra exception, Spiky-eared Pichu exclusion,
+first eligible evolution-table row, optional method output and unrelated
+evolution methods. Elm's independent 220 friendship dialogue, the Goldenrod
+checker bands, friendship gains, Return/Frustration and level-100 Rare Candy
+rules remain unchanged, matching the scope of this source setting.
+
+Validation: `python3 tests/newgold/test_friendship.py` compiles the complete
+actual `GetMonEvolution`, native RTC helpers, pinned vanilla implementation
+and the three pinned NewGold case bodies. It covers all 256 friendship values
+at all 24 hours for each method, guards/contexts/levels/NULL output/table order,
+and 72,576 unrelated-method scenarios against vanilla. The original 220
+threshold demonstrably fails the new boundary check. These are host tests;
+the encrypted data, complete level-up flow and evolution presentation are not
+emulated by the fixture.
+
+Both full ROM builds pass without compiler/assembler warnings. Each uncompressed
+ARM9 changes exactly three bytes from M4: the three comparisons change 220 to
+160 within the unchanged 1,032-byte `GetMonEvolution`. Every NitroFS file,
+including overlays, and ARM7 remain byte-identical. See `VALIDATION.md`.
+
+This ports one bounded feature, not all evolution behavior. The reference's
+`EVO_HAS_MOVE_TYPE` and Eevee-to-Sylveon row require expanded methods, Fairy move
+typing and species/resources. That row precedes Espeon/Umbreon in NewGold, so
+the present vanilla Eevee table does not yet reproduce full NewGold Eevee
+behavior. The complete `GetMonEvolution` hook is therefore not counted retired.
+
+Required ROM checks: battle and Rare Candy level-up on either side of 160,
+day/night boundaries, Everstone and Spiky-eared Pichu; verify the actual
+friendship after level-up gains. These gameplay scenarios remain pending.
+
+## Next foundation — Expanded ability consumers
+
+Begin with vanilla C conversion of required PC display-record consumers before
+widening ability IDs. Preserve the original behavior and transient record
+layout first, validate against the preceding ROM, then propagate the expanded
+ID through its actual consumers. Save and battle layouts must not be widened
+before the required consumers are understood and converted.
 
 ## Build and review policy
 

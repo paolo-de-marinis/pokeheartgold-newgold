@@ -27,6 +27,8 @@
 #include "unk_02016EDC.h"
 #include "unk_02078834.h"
 
+#define FRIENDSHIP_EVOLUTION_THRESHOLD 160
+
 void MonEncryptSegment(void *data, u32 size, u32 key);
 void MonDecryptSegment(void *data, u32 size, u32 key);
 u32 CalcMonChecksum(void *data, u32 size);
@@ -2821,19 +2823,19 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
             case EVO_NONE:
                 break;
             case EVO_FRIENDSHIP:
-                if (friendship >= 220) {
+                if (friendship >= FRIENDSHIP_EVOLUTION_THRESHOLD) {
                     target = evoTable[i].target;
                     *method_ret = EVO_FRIENDSHIP;
                 }
                 break;
             case EVO_FRIENDSHIP_DAY:
-                if (IsNighttime() == 0 && friendship >= 220) {
+                if (IsNighttime() == 0 && friendship >= FRIENDSHIP_EVOLUTION_THRESHOLD) {
                     target = evoTable[i].target;
                     *method_ret = EVO_FRIENDSHIP_DAY;
                 }
                 break;
             case EVO_FRIENDSHIP_NIGHT:
-                if (IsNighttime() == 1 && friendship >= 220) {
+                if (IsNighttime() == 1 && friendship >= FRIENDSHIP_EVOLUTION_THRESHOLD) {
                     target = evoTable[i].target;
                     *method_ret = EVO_FRIENDSHIP_NIGHT;
                 }
