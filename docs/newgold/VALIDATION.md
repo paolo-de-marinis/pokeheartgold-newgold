@@ -4,6 +4,29 @@ Validation date: 2026-09-19. Input revisions are pinned in `MIGRATION.md`.
 This report distinguishes source tests, a matching vanilla ROM, a modified ROM
 build, and emulator/hardware testing. The latter is not implied by compilation.
 
+## Required final comparison with the original NewGold build
+
+The user additionally requires building the original konefr repository and
+checking whether its ROM equals the native port's ROM. This gate is **PENDING**.
+Build pinned NewGold `1b872926eaa0363816d4e376fad1531435b04b9c` in an isolated
+copy, preserving its original toolchain/configuration and recording the exact
+base-ROM hash, dependencies and any required external inputs. Keep the reference
+checkout unchanged. Use comparable game/region/revision inputs for both builds.
+The original Makefile explicitly accepts US HeartGold (`IPKE`), reads `rom.nds`
+and produces `test.nds`; it does not provide an equivalent SoulSilver target.
+The matching upstream HG baseline already built here is a reproducible candidate
+input, subject to checking the reference's complete build requirements.
+
+Record both ROM hashes and an actual byte-for-byte comparison, regardless of
+the expected result. A source-level port can have a different code/layout binary
+while implementing the same behavior; do not call that byte-identical, and do
+not add hooks or address constraints merely to force equality. If the binaries
+differ, separately compare decoded game data/resources and representative
+gameplay behavior against that compiled reference. Explain every remaining
+unverified area; host-function tests or matching vanilla prerequisites alone
+cannot satisfy this final comparison. No original NewGold build comparison has
+yet been performed.
+
 ## Toolchain
 
 The build uses the tools and archive URLs specified by upstream
