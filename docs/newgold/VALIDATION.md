@@ -51,6 +51,7 @@ validation paths, not new project dependencies.
 | Rage cleanup | PASS | PASS | Actual-C regression passes, upstream fails; no new compiler/assembler warnings |
 | Fire Fang / Shadow Force classification | PASS | PASS | Actual-C helper and live/AI predicates pass; upstream fails; no new compiler/assembler warnings |
 | Reusable repels | PASS | PASS | Actual-C/reference tests and compiled command/script/message checks pass; runtime UI pending |
+| Overworld poison disabled | PASS | PASS | Actual-C accessor/counter checks match the reference zero-mask semantics; compiled function has only expected read/validation calls |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -136,3 +137,26 @@ All six current focused tests pass, including pinned NewGold comparisons.
 clang-format 19 passes for all modified C/header files, and whitespace checks
 pass. NewGold input/audio/display behavior still requires the listed emulator
 or hardware scenarios; no interactive ROM test has been claimed.
+
+## M4 — Overworld poison build outputs
+
+Artifacts, compiled-function disassembly and audit:
+`build/milestones/04-overworld-poison/verification.json`.
+
+| ROM | SHA-1 |
+| --- | --- |
+| HeartGold through M4 | `90c6bd0e58025a389ea5e0c9a3715572f3d8fdd9` |
+| SoulSilver through M4 | `04a81be999b967adfd5eddc4094b488a0ee3e12a` |
+
+Both full builds pass without compiler/assembler warnings. `ApplyPoisonStep`
+compiles to 54 bytes, with only `Party_GetCount`, `Party_GetMonByIndex`,
+`MonNotFaintedOrEgg` and `GetMonData` as direct callees, followed by a zero return.
+All named non-overlay NitroFS resources and ARM7 bytes are identical to M3.
+ARM9 symbol relocation updates change 118 overlays, without resource changes.
+
+Seven focused tests pass through M4. The new check covers 10,240 single-Pokémon
+cases, mixed parties, retained checksum-failure effects and all 65,536 step
+counter values. The pinned reference's changed mask is applied only to the
+test oracle, never to a built ROM. Actual field scenes and battle poison still
+require the emulator/hardware checks in the migration ledger. Clang-format 19
+and whitespace checks pass for the scoped change.

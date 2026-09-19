@@ -35,13 +35,13 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Current mapped targets represented in C | 309 |
 | ASM targets remaining | 40 |
 | Entire hook replacements made unnecessary | 2, repel expiry and bag-use hooks |
-| Instruction-patch behaviors represented natively | 2, Rage and Fire Fang / Shadow Force |
+| Instruction-patch behaviors represented natively | 3, Rage, Fire Fang / Shadow Force and overworld poison |
 | Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
-| Reference binary patch mechanisms made unnecessary | 3: two instruction fixes and one script-handler pointer replacement |
-| Features ported | 3: Rage, Fire Fang / Shadow Force, reusable repels |
-| Features verified at C/resource boundaries | 3; emulator scenarios still pending |
+| Reference binary patch mechanisms made unnecessary | 4: three instruction changes and one script-handler pointer replacement |
+| Features ported | 4: Rage, Fire Fang / Shadow Force, reusable repels, overworld poison |
+| Features verified at C/resource boundaries | 4; emulator scenarios still pending |
 | Features checked in a running ROM | 0 |
-| Complete ROM build | HeartGold and SoulSilver PASS through M3; prerequisite C conversions separately matched both retail ROMs |
+| Complete ROM build | HeartGold and SoulSilver PASS through M4; prerequisite C conversions separately matched both retail ROMs |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -101,6 +101,7 @@ inside it has been implemented or completely specified.
 | Rage cleanup / executable logic | `src/individual/ServerBeforeAct.c::ServerBeforeActInternal`, `SBA_RAGE`; `armips/asm/moves.s` Rage fix | `src/battle/battle_controller_player.c::BattleControllerPlayer_BeforeTurn`, C | BUILDS; VERIFIED (host) | Actual-C regression and both modified ROM builds pass; emulator scenario pending; see M1 |
 | Fire Fang / Shadow Force classification / executable logic | `bytereplacement`, `0225848C` | `src/battle/overlay_12_0224E4FC.c::ov12_02258440`, C | BUILDS; VERIFIED (host) | Both ROMs pass; actual helper and shared live/AI predicates checked; emulator pending; see M2 |
 | Reusable repels / executable logic and script | `src/repel.c`, `hooks`, `routinepointers`, `armips/asm/repel.s`, common-script changes | `asm/overlay_02_02248728.s::PlayerStepEvent_RepelCounterDecrement`; `asm/overlay_15.s::BagApp_GetRepelStepCountAddr`, ASM; native common script and script command table | BUILDS; VERIFIED (C/resources) | Both vanilla conversions matched retail; native reuse feature builds on HG/SS and passes source/asset checks; runtime UI pending |
+| Overworld poison disabled / executable logic | `include/config.h::UPDATE_OVERWORLD_POISON`, `bytereplacement:118` | `src/script_pokemon_util.c::ApplyPoisonStep`, C | BUILDS; VERIFIED (host) | Both ROMs pass; accessor integrity checks and four-step counter preserved; see M4 |
 | Core battle state / executable logic | `include/battle.h`, `src/battle/battle_start.c`, `armips/asm/moves.s` | `include/battle/battle.h`, `BattleContext_New`, `BattleContext_Init`, C with ASM consumers | MAPPED | Required consumers must be C before layout changes; ABI/offset/save checks |
 | Expanded move IDs, data and bytecode / data, script, executable logic | `data/Moves.c`, `src/moves.c`, `src/battle/battle_script_commands.c` | `include/constants/moves.h`, `include/constants/move_effects.h`, `src/battle/battle_command.c`, `files/poketool/waza`, `files/battledata/script`, C/data | MAPPED | IDs, table limits, script command dispatch and messages; per-effect tests |
 | Damage, accuracy and criticals / executable logic | `src/individual/CalcBaseDamage.c`, `src/battle/battle_calc_damage.c`, `src/battle/other_battle_calculators.c` | `CalcMoveDamage`, `TryCriticalHit`, `BattleSystem_CheckMoveHit`, C | MAPPED | Type, item, ability and state prerequisites; exact integer rounding and RNG |
@@ -258,18 +259,51 @@ priority; consume the last item; empty-bag fallback; No/B cancellation; correct
 item message, sound and duration; save/reload with an active repel; field exit/
 reentry and ordinary bag use. These are not replaced by successful compilation.
 
+## M4 — Disable overworld poison damage
+
+Source: default-enabled `include/config.h::UPDATE_OVERWORLD_POISON`,
+`bytereplacement:116–121`. The pinned upstream map identifies
+`ApplyPoisonStep` at `02054440`. Disassembling the verified baseline confirms
+that `02054474` loads the poison mask `0x88` immediately after the status read;
+the source changes it to zero, making the damage branch unreachable.
+
+Native implementation: `src/script_pokemon_util.c::ApplyPoisonStep` removes
+the HP, friendship and mood modification branch and returns `FIELD_POISON_NONE`.
+The party scan and original accessor order remain because `GetMonData` checks
+encrypted data integrity and can set `checksumFailed`. Fainted Pokémon read HP
+only; live eggs/bad eggs also read egg status; eligible Pokémon additionally
+read status. An unconditional return would discard those checks.
+
+The sole caller, `src/field/field_control.c::FieldSystem_UpdatePoison`, retains
+its four-step counter, including u16 wrap, and map-section lookup cadence.
+Walking does not damage or cure poison, modify friendship/mood through poison,
+play the poison effect, or start the survival message. Battle poison and the
+separately callable `SurvivePoisoning` script helper remain untouched.
+No ASM conversion, save change or expanded data is required.
+
+`python3 tests/newgold/test_field_poison.py` compiles the actual function,
+eligibility helper, `GetMonData` and field caller. A test-only oracle expresses
+the reference's zero mask in pinned vanilla C. It checks 10,240 single-Pokémon
+cases, mixed parties of sizes 0–6 (including existing checksum-failure flags),
+accessor order and all 65,536 counter values. The unmodified vanilla function
+still demonstrates damage and survival behavior. Encryption/checksum boundaries
+are instrumented, not DS encryption emulation.
+
+Both full ROM builds pass without compiler/assembler warnings. The compiled
+54-byte function calls only the four expected party/accessor helpers and returns
+zero; no damage/status/friendship/effect call remains. No non-overlay NitroFS
+resource or ARM7 bytes change from M3. Ordinary ARM9 relocation updates affect
+118 overlays. One additional instruction-patch behavior is now native; this
+feature does not change the hook-target C/ASM census.
+
+Required ROM checks: walk with normal/bad poison at 1, 2 and higher HP; mix
+healthy, fainted and egg party slots; verify no field effect/message/cure; enter
+a battle and verify poison still damages there. Save/reload and map transitions
+must retain the ordinary step counter. These runtime scenarios remain pending.
+
 ## Next independent milestone
 
-Disable overworld poison damage, following enabled `UPDATE_OVERWORLD_POISON`.
-The reference is `bytereplacement:116–121` (the status mask at `02054474`);
-corresponding native code is `src/script_pokemon_util.c::ApplyPoisonStep`, called
-from `src/field/field_control.c::FieldSystem_UpdatePoison`. No species, type,
-ability or save expansion is required. Preserve the four-step counter and check
-HP/status/friendship/mood/field-message behavior. Inspect Pokémon accessor
-side effects before removing calls: `GetMonData` also performs integrity checks,
-so an unconditional no-op must not be assumed equivalent without that review.
-
-After the independent field change, the next progression candidate is the 160
+The next progression candidate is the 160
 friendship threshold for the three existing evolution methods. Full NewGold
 evolution behavior additionally requires new methods/Fairy/species; in particular
 its Eevee Fairy-move evolution takes precedence over day/night evolution. Do not
