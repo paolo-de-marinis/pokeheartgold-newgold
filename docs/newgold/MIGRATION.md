@@ -31,9 +31,10 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Original C / ASM including resolved targets | 307 / 42 |
 | Semantically unidentified hook targets remaining | 0 |
 | Source hook-installation anomalies retained in the record | 5 |
-| ASM targets converted to C | 2, both vanilla conversions verified MATCHING before the feature |
-| Current mapped targets represented in C | 309 |
-| ASM targets remaining | 40 |
+| ASM targets converted to C | 4, all vanilla conversions verified MATCHING before NewGold changes |
+| Current mapped targets represented in C | 311 |
+| ASM targets remaining | 38 |
+| Additional patch-only ASM prerequisites identified | 4, outside the original hook census; see ability/Fairy foundation below |
 | Entire hook replacements made unnecessary | 2, repel expiry and bag-use hooks |
 | Instruction-patch behaviors represented natively | 3, Rage, Fire Fang / Shadow Force and overworld poison |
 | Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
@@ -41,16 +42,17 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Features ported | 5: Rage, Fire Fang / Shadow Force, reusable repels, overworld poison, existing friendship-evolution threshold |
 | Features verified at C/resource boundaries | 5; emulator scenarios still pending |
 | Features checked in a running ROM | 0 |
-| Complete ROM build | HeartGold and SoulSilver PASS through M5; prerequisite C conversions separately matched both retail ROMs |
+| ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5; M6 has the identical ROM bytes; separate from feature gameplay verification |
+| Complete ROM build | HeartGold and SoulSilver PASS through M6; repel C prerequisites matched retail, PC C prerequisites match the preceding M5 ROMs |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
 replace a function implementing many features. Porting Rage does **not** retire
 the entire `ServerBeforeAct` replacement. Data relocation is not executable
 patching. Field and battle script `.s` files assemble bytecode, not ARM code.
-The remaining 40 ASM targets refer to the initial hook census. Additional ASM
+The remaining 38 ASM targets refer to the initial hook census. Additional ASM
 consumers needed by data expansion or non-hook patches must be tracked when
-identified; this is not a claim that only 40 ASM routines remain in the game.
+identified; this is not a claim that only 38 ASM routines remain in the game.
 
 Statuses: `NOT STARTED`, `MAPPED`, `VANILLA C DECOMPILED`, `PORTED`, `BUILDS`,
 `VERIFIED`. Verification must state its scope: host function test, matching
@@ -103,6 +105,7 @@ inside it has been implemented or completely specified.
 | Reusable repels / executable logic and script | `src/repel.c`, `hooks`, `routinepointers`, `armips/asm/repel.s`, common-script changes | `asm/overlay_02_02248728.s::PlayerStepEvent_RepelCounterDecrement`; `asm/overlay_15.s::BagApp_GetRepelStepCountAddr`, ASM; native common script and script command table | BUILDS; VERIFIED (C/resources) | Both vanilla conversions matched retail; native reuse feature builds on HG/SS and passes source/asset checks; runtime UI pending |
 | Overworld poison disabled / executable logic | `include/config.h::UPDATE_OVERWORLD_POISON`, `bytereplacement:118` | `src/script_pokemon_util.c::ApplyPoisonStep`, C | BUILDS; VERIFIED (host) | Both ROMs pass; accessor integrity checks and four-step counter preserved; see M4 |
 | Friendship evolution threshold / executable logic | `include/config.h::FRIENDSHIP_EVOLUTION_THRESHOLD`, `src/individual/GetMonEvolutionInternal.c` | `src/pokemon.c::GetMonEvolution`, C | BUILDS; VERIFIED (host), three existing methods | Both ROMs pass; new evolution methods, Fairy and Sylveon remain separate dependencies; see M5 |
+| PC ability display prerequisite / executable logic | `hooks:226–227`, `asm/other_hook.s::BoxDisplayMon_StoreAbility`, `BoxDisplayMon_GrabAbility` | `ov14_021E7358`, `ov14_021F528C`, originally ASM; now `src/pc_box_display.c`, `src/pc_box_display_ability.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M5; ability widening and hook retirement remain pending; see M6 |
 | Core battle state / executable logic | `include/battle.h`, `src/battle/battle_start.c`, `armips/asm/moves.s` | `include/battle/battle.h`, `BattleContext_New`, `BattleContext_Init`, C with ASM consumers | MAPPED | Required consumers must be C before layout changes; ABI/offset/save checks |
 | Expanded move IDs, data and bytecode / data, script, executable logic | `data/Moves.c`, `src/moves.c`, `src/battle/battle_script_commands.c` | `include/constants/moves.h`, `include/constants/move_effects.h`, `src/battle/battle_command.c`, `files/poketool/waza`, `files/battledata/script`, C/data | MAPPED | IDs, table limits, script command dispatch and messages; per-effect tests |
 | Damage, accuracy and criticals / executable logic | `src/individual/CalcBaseDamage.c`, `src/battle/battle_calc_damage.c`, `src/battle/other_battle_calculators.c` | `CalcMoveDamage`, `TryCriticalHit`, `BattleSystem_CheckMoveHit`, C | MAPPED | Type, item, ability and state prerequisites; exact integer rounding and RNG |
@@ -348,13 +351,87 @@ Required ROM checks: battle and Rare Candy level-up on either side of 160,
 day/night boundaries, Everstone and Spiky-eared Pichu; verify the actual
 friendship after level-up gains. These gameplay scenarios remain pending.
 
-## Next foundation — Expanded ability consumers
+## M6 — PC display prerequisite in matching C
 
-Begin with vanilla C conversion of required PC display-record consumers before
-widening ability IDs. Preserve the original behavior and transient record
-layout first, validate against the preceding ROM, then propagate the expanded
-ID through its actual consumers. Save and battle layouts must not be widened
-before the required consumers are understood and converted.
+Two additional original hook targets now use ordinary C:
+
+| Function | Native file | Preserved vanilla behavior |
+| --- | --- | --- |
+| `ov14_021E7358` | `src/pc_box_display.c` | Allocate a display record when a species exists; retain accessor order, every copied field, four moves and the Nidoran/egg gender rule |
+| `ov14_021F528C` | `src/pc_box_display_ability.c` | Clear the selected window, buffer/print the ability or egg text, then schedule its VRAM copy |
+
+`include/pc_box_display.h` defines the original 28-byte display record and the
+identified prefix of the existing graphics state. Its window bound is proven
+by the native create/remove loops: 44 windows. The prefix is not treated as
+the complete allocation. Native compile-time checks verify record and graphics
+field offsets/sizes shared with remaining ASM. Ability storage remains u8.
+
+Normal `main.lsf` object ordering places the C objects between unchanged
+assembly partitions (`overlay_14.s`, `overlay_14_021E7468.s`,
+`overlay_14_021F52FC.s`); the shared include declares cross-object symbols.
+Recombining the partitions preserves every original nonblank assembly/data line
+outside the two removed routines. No executable replacement assembly was added.
+
+Both complete ROMs are **byte-for-byte identical to M5**, including all 80,512
+bytes of overlay 14. Both functions are therefore MATCHING vanilla C; no
+NONMATCHING workaround was needed. The constructor's C symbol excludes two
+bytes of the same trailing alignment present in the original object; its
+compiled instructions and complete ROM output remain identical. Build logs,
+maps and module evidence are in `06-pc-ability-cvalidation`.
+
+This is a prerequisite, not a sixth NewGold feature: it converts two ASM targets
+but does not yet retire either PC hook or enable IDs above 255. Existing ten
+behavioral tests, clang-format 19 and whitespace checks pass. Exact ROM identity
+validates the vanilla conversion; a separate mock of the same behavior is not
+needed. The M5 boot/menu smoke also applies to these identical binaries.
+
+## Remaining foundation — Expanded ability consumers
+
+Next convert the required summary data/display and battle transport consumers,
+then propagate expanded IDs through their actual data paths. Save and battle
+layouts must not be widened before all affected consumers are understood and
+converted. This sequence must also close the AI byte-reader inventory.
+
+The source defines abilities 0–319. Native personal data, saved Pokémon,
+`BattleMon`, AI memory and UI currently include u8 ability fields. Adding the
+new IDs alone would truncate them; moving fields while ASM still consumes
+their old offsets would corrupt other state.
+
+| Prerequisite | Original ASM target | Source reason / next operation |
+| --- | --- | --- |
+| PC display-record constructor — DONE (vanilla C) | Originally `asm/overlay_14.s::ov14_021E7358`, original hook census | `hooks:226`, `asm/other_hook.s::BoxDisplayMon_StoreAbility`; M6 preserves the original record; native widening remains pending |
+| PC ability renderer — DONE (vanilla C) | Originally `asm/overlay_14.s::ov14_021F528C`, original hook census | `hooks:227`, `BoxDisplayMon_GrabAbility`; M6 preserves typed fields/text/window behavior; native widening remains pending |
+| Summary data loader | `asm/unk_02088288.s::sub_0208981C`, additional patch-only ASM target | `armips/asm/abilities.s` summary construction edits; convert before widened ability storage |
+| Summary display | `asm/unk_0208C3E4.s::sub_0208D178`, original hook census | Ability name/description and member-selector changes in `abilities.s`; shares later EV/IV work |
+| Battle party-heal notification | `asm/overlay_12_battle_controller.s::BattleControl_EmitPartyStatusHeal`, additional patch-only ASM target | `abilities.s:174–177`; trace both producer and receiver before changing payload widths |
+
+The source PC hooks use writable executable bytes as shared ability scratch
+storage. Native per-record data will replace that mechanism; no equivalent
+global or code-address storage is needed. This requires auditing every record
+reader and allocation/copy size before its layout changes.
+
+After the PC prerequisite, finish the ability consumer census (including ASM
+AI byte readers), convert required routines, define native storage/serialization
+contracts, and migrate personal resources and names/descriptions/flags. Only
+then assign IDs above 255 or enable dependent ability mechanics. Check saved
+Pokémon checksum/roundtrip behavior and trade/Frontier/Pokéwalker consumers.
+
+Source issues to preserve as explicit questions during that work:
+
+* `GiveMon` takes a u8 ability, but the modified setter reads u16 from the supplied
+  pointer. Audit argument widths; do not reproduce a one-byte out-of-bounds read.
+* The party-heal patch widens the ability load but the original command payload
+  still stores one byte. Trace the receiver before assuming the transport
+  supports all new IDs or silently changing this source behavior.
+
+The separate Fairy dependency also exposes two additional ASM targets outside
+the original hook census: `asm/overlay_10_trainer_ai.s::ov10_0221F084` and
+`ov10_0221F47C`, modified by `armips/asm/fairy.s`. Source Fairy reuses type ID 9,
+but AI, chart, graphics and special move/type rules still need coherent changes.
+Investigate the latter function's apparent incoming-register return for
+suppressed/absent Weather Ball weather before its C conversion. These four
+newly identified patch-only ASM targets are additional to the original hook
+backlog; future conversions must not subtract them from that census.
 
 ## Build and review policy
 

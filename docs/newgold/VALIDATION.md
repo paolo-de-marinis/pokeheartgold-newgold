@@ -53,6 +53,7 @@ validation paths, not new project dependencies.
 | Reusable repels | PASS | PASS | Actual-C/reference tests and compiled command/script/message checks pass; runtime UI pending |
 | Overworld poison disabled | PASS | PASS | Actual-C accessor/counter checks match the reference zero-mask semantics; compiled function has only expected read/validation calls |
 | Existing friendship evolution threshold | PASS | PASS | Complete native function/RTC tests, reference branches and unchanged-method comparisons pass; exactly three ARM9 comparison immediates change |
+| Vanilla PC constructor/ability renderer in C | PASS, exact M5 SHA-1 | PASS, exact M5 SHA-1 | Both functions and complete ROMs are MATCHING; no NewGold ability changes enabled |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -184,3 +185,45 @@ guards and 72,576 unrelated-method comparisons pass; vanilla fails the 160
 boundary. Clang-format 19 and whitespace checks pass. Runtime evolution/party
 menu scenarios remain pending, as do the separate expanded evolution methods
 and Fairy/Sylveon data required for full NewGold evolution behavior.
+
+## Runtime smoke — Both M5 ROMs
+
+Evidence, runner source, exact commands, core provenance and framebuffer captures
+are archived in `build/milestones/05-friendship-evolution/runtime-smoke`.
+The source working directory was `/tmp/hgss-runtime-smoke`; the archive preserves
+the original command/provenance paths. See its `README.md` and both per-game
+`result.json` files for reproduction and screenshot hashes.
+
+The already installed melonDS libretro core (`0.9.3 66b5d263`, package
+`libretro-melonds 20260719.185838.g66b5d2634cd0-1.1`) ran each ROM for 1,436
+frames and exited successfully. Software rendering, interpreter mode, built-in
+FreeBIOS and generated firmware used isolated system/save directories. No
+external BIOS, existing save or user emulator configuration was used or changed.
+
+Visual inspection confirms the correct HeartGold/SoulSilver title at frame 728,
+the new-game information menu at frame 1,216 and tutorial text reached through
+emulated D-pad/A input at frame 1,436. Both 256×384 framebuffers and audio
+callbacks advanced; audio was not listened to. ROM hashes remained unchanged.
+
+This is **boot/rendering/menu-input verification only**. No ported battle,
+repel, poison or friendship feature was exercised in gameplay; that counter
+remains zero. No save/reload, field movement or hardware test is implied.
+
+## M6 — Matching PC display C prerequisites
+
+Artifacts, maps, overlay binaries and audit:
+`build/milestones/06-pc-ability-cvalidation/verification.json`.
+
+Both complete ROMs are byte-for-byte identical to M5, retaining its SHA-1 and
+SHA-256 values. The entire 80,512-byte overlay 14 is identical as well.
+`ov14_021E7358` and `ov14_021F528C` are MATCHING C; their original field widths,
+call sequence and behavior are preserved. No NONMATCHING implementation or
+assembly wrapper is used. The constructor's C symbol omits two unchanged
+alignment bytes from its reported size; actual ROM bytes do not differ.
+
+Both full builds pass without compiler/assembler warnings. Native size/offset
+assertions, all ten existing behavioral tests, clang-format 19 and whitespace
+checks pass. Assembly partition review confirms that only the two converted
+functions were removed; all other assembly/data lines are preserved.
+The M5 emulator boot/menu evidence covers the exact same binaries. This does
+not enable or verify the pending NewGold ability-width changes.
