@@ -46,6 +46,7 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Ability text resources ported | 3 native message banks, 320 entries each; all 960 compiled texts verified against pinned NewGold |
 | Features checked in a running ROM | 0 |
 | ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5, M13, M15 and M16; separate from feature gameplay verification |
+| Original NewGold comparison | M16 intermediate comparison complete: ROMs differ; 960 decoded ability texts agree; final completed-port comparison still pending |
 | Complete ROM build | HeartGold and SoulSilver PASS through M16; all non-overlay resources and ARM7 unchanged from M15 |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 

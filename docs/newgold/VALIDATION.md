@@ -7,7 +7,10 @@ build, and emulator/hardware testing. The latter is not implied by compilation.
 ## Required final comparison with the original NewGold build
 
 The user additionally requires building the original konefr repository and
-checking whether its ROM equals the native port's ROM. This gate is **PENDING**.
+checking whether its ROM equals the native port's ROM. The final full-port gate
+is **PENDING**. An actual intermediate comparison at M16 is now complete: both
+ROMs build, but they are not byte-identical. All960 decoded ability texts agree.
+See [REFERENCE_BUILD.md](REFERENCE_BUILD.md) for hashes, differences and scope.
 Build pinned NewGold `1b872926eaa0363816d4e376fad1531435b04b9c` in an isolated
 copy, preserving its original toolchain/configuration and recording the exact
 base-ROM hash, dependencies and any required external inputs. Keep the reference
@@ -24,8 +27,8 @@ not add hooks or address constraints merely to force equality. If the binaries
 differ, separately compare decoded game data/resources and representative
 gameplay behavior against that compiled reference. Explain every remaining
 unverified area; host-function tests or matching vanilla prerequisites alone
-cannot satisfy this final comparison. No original NewGold build comparison has
-yet been performed.
+cannot satisfy this final comparison. The archived M16 comparison does not
+close the final gate or establish gameplay parity for the unfinished port.
 
 ## Toolchain
 
