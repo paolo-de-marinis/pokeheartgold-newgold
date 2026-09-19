@@ -54,6 +54,7 @@ validation paths, not new project dependencies.
 | Overworld poison disabled | PASS | PASS | Actual-C accessor/counter checks match the reference zero-mask semantics; compiled function has only expected read/validation calls |
 | Existing friendship evolution threshold | PASS | PASS | Complete native function/RTC tests, reference branches and unchanged-method comparisons pass; exactly three ARM9 comparison immediates change |
 | Vanilla PC constructor/ability renderer in C | PASS, exact M5 SHA-1 | PASS, exact M5 SHA-1 | Both functions and complete ROMs are MATCHING; no NewGold ability changes enabled |
+| Vanilla party-heal notification in C | PASS, exact M6 SHA-1 | PASS, exact M6 SHA-1 | Complete ROMs are MATCHING; four-byte packet and receiver contract preserved |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
@@ -227,3 +228,20 @@ checks pass. Assembly partition review confirms that only the two converted
 functions were removed; all other assembly/data lines are preserved.
 The M5 emulator boot/menu evidence covers the exact same binaries. This does
 not enable or verify the pending NewGold ability-width changes.
+
+## M7 — Matching party-heal notification prerequisite
+
+Artifacts, maps, overlay binaries, disassembly and protocol audit:
+`build/milestones/07-party-heal-cvalidation/verification.json`.
+
+Both full ROMs are byte-for-byte identical to M6 and retain the M5 hashes.
+`BattleControl_EmitPartyStatusHeal` remains 44 bytes with the same command,
+ability-byte and move-halfword stores. All other overlay-12 instructions/data
+remain unchanged after the ordinary ASM partition and C insertion.
+
+Builds pass without compiler/assembler warnings; packet size/offset assertions,
+all ten existing behavioral tests, clang-format 19 and whitespace checks pass.
+The receiver audit and an enumeration of all 320 reference ability IDs confirm
+that the byte conversion preserves its Mold Breaker test in the release range.
+This does not test actual Heal Bell/Aromatherapy battles or enable new abilities.
+The existing boot/menu smoke covers these identical ROM binaries.
