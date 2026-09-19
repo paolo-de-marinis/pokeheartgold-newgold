@@ -1,0 +1,39 @@
+{
+  "source_commit": "1b872926eaa0363816d4e376fad1531435b04b9c",
+  "target_commit": "e97c7fc975a7447f288c42acc2e155f5a673e30f",
+  "map_commit": "ea4460e154ddaaca5a6deebd4b5254c2a3d484ae",
+  "xmap_sha256": "f3a80da12ae51e2cc90123a2838c79c53a2ff422cc4bf1378cdf2c465cf0a611",
+  "manifest_rows": {
+    "hooks": 391,
+    "armhooks": 1,
+    "bytereplacement": 309,
+    "repoints": 83,
+    "routinepointers": 5
+  },
+  "enabled_manifest_rows": {
+    "hooks": 369,
+    "armhooks": 1,
+    "bytereplacement": 158,
+    "repoints": 69,
+    "routinepointers": 5
+  },
+  "enabled_hook_rows": 370,
+  "enabled_hook_sites": 367,
+  "strict_mapped_functions": 344,
+  "strict_states": {
+    "C": 302,
+    "ASM": 42
+  },
+  "intended_mapped_functions": 349,
+  "intended_states": {
+    "C": 307,
+    "ASM": 42
+  },
+  "unresolved_hook_rows": 0,
+  "source_region_error_rows": 5,
+  "asm_targets_converted_to_c": 0,
+  "hooks_eliminated": 0,
+  "binary_patches_eliminated": 0,
+  "features_ported": 0,
+  "features_verified": 0
+}
