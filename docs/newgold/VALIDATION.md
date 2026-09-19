@@ -48,7 +48,7 @@ validation paths, not new project dependencies.
 | --- | --- | --- | --- |
 | Unmodified upstream | PASS, exact retail SHA-1 | PASS, exact retail SHA-1 | Both ROMs byte-identical to retail |
 | Vanilla repel ASM-to-C conversions | PASS, exact retail SHA-1 | PASS, exact retail SHA-1 | Both converted functions are MATCHING C |
-| Rage cleanup | Pending | Pending | Planned actual-C status/state/RNG regression |
+| Rage cleanup | PASS | PASS | Actual-C regression passes, upstream fails; no new compiler/assembler warnings |
 | Fire Fang / Shadow Force classification | Pending | Pending | Planned actual-C helper and live/AI predicate regression |
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
@@ -75,3 +75,18 @@ ROM scenarios still to execute are listed with their features in `MIGRATION.md`.
 
 Vanilla conversion logs: `/tmp/hgss-build-deps/vanilla-decomp-heartgold.log`
 and `/tmp/hgss-build-deps/vanilla-decomp-soulsilver.log`. No new compiler warnings.
+
+## M1 — Rage build outputs
+
+Artifacts and module audit: `build/milestones/01-rage/verification.json`.
+
+| ROM | SHA-1 |
+| --- | --- |
+| HeartGold with Rage fix | `261b0df5ff7bf90c4e0adfe0e77a799410ebeb1e` |
+| SoulSilver with Rage fix | `f0bb25badb9a3f1089caa36b139b8d4f1b7ea9b6` |
+
+Both complete builds passed without compiler/assembler warnings. The corrected
+function grows by four bytes, and the native linker adjusts downstream symbols
+and callers. Changed overlays are 8, 10 and 12; an ARM9 call relocation changes
+accordingly. No NitroFS/NARC data or ARM7 bytes change. Exact clang-format 19
+checks pass for both modified battle files, as does `git diff --check`.

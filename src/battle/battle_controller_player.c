@@ -753,7 +753,7 @@ static void BattleControllerPlayer_BeforeTurn(BattleSystem *battleSystem, Battle
         case BT_STATE_RAGE:
             for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
                 if ((ctx->battleMons[battlerId].status2 & STATUS2_RAGE) && GetBattlerSelectedMove(ctx, battlerId) != MOVE_RAGE) {
-                    ctx->battleMons[battlerId].status2 &= STATUS2_RAGE;
+                    ctx->battleMons[battlerId].status2 &= ~STATUS2_RAGE;
                 }
             }
             ctx->stateBeforeTurn++;

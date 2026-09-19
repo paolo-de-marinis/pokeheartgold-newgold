@@ -34,10 +34,10 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | ASM targets converted to C | 2, both MATCHING C |
 | ASM targets remaining | 40 |
 | Entire hook replacements made unnecessary | 0 |
-| Instruction-patch behaviors represented natively | 0 |
-| Features ported | 0 |
+| Instruction-patch behaviors represented natively | 1, Rage |
+| Features ported | 1, Rage |
 | Features checked in a running ROM | 0 |
-| Complete ROM build | HeartGold and SoulSilver PASS; vanilla C conversions match both retail ROMs |
+| Complete ROM build | HeartGold and SoulSilver PASS with Rage; prerequisite C conversions separately matched both retail ROMs |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -91,7 +91,7 @@ inside it has been implemented or completely specified.
 
 | Subsystem / category | NewGold implementation | Native target and original state | Current state | Dependencies and validation |
 | --- | --- | --- | --- | --- |
-| Rage cleanup / executable logic | `src/individual/ServerBeforeAct.c::ServerBeforeActInternal`, `SBA_RAGE`; `armips/asm/moves.s` Rage fix | `src/battle/battle_controller_player.c::BattleControllerPlayer_BeforeTurn`, C | MAPPED | No expansion; planned host and ROM regression checks; see M1 |
+| Rage cleanup / executable logic | `src/individual/ServerBeforeAct.c::ServerBeforeActInternal`, `SBA_RAGE`; `armips/asm/moves.s` Rage fix | `src/battle/battle_controller_player.c::BattleControllerPlayer_BeforeTurn`, C | BUILDS; VERIFIED (host) | Actual-C regression and both modified ROM builds pass; emulator scenario pending; see M1 |
 | Fire Fang / Shadow Force classification / executable logic | `bytereplacement`, `0225848C` | `src/battle/overlay_12_0224E4FC.c::ov12_02258440`, C | MAPPED | Shared live-battle and AI predicate; see M2 |
 | Reusable repels / executable logic and script | `src/repel.c`, `hooks`, `routinepointers`, `armips/asm/repel.s`, common-script changes | `asm/overlay_02_02248728.s::PlayerStepEvent_RepelCounterDecrement`; `asm/overlay_15.s::BagApp_GetRepelStepCountAddr`, ASM; native common script and script command table | VANILLA C DECOMPILED | Both targets MATCHING C; feature pending. Source selects Max, then Super, then normal Repel, not necessarily last used |
 | Core battle state / executable logic | `include/battle.h`, `src/battle/battle_start.c`, `armips/asm/moves.s` | `include/battle/battle.h`, `BattleContext_New`, `BattleContext_Init`, C with ASM consumers | MAPPED | Required consumers must be C before layout changes; ABI/offset/save checks |
@@ -147,14 +147,17 @@ See `VALIDATION.md` for toolchain, checksums and commands.
   the same correction appears as an instruction patch in `armips/asm/moves.s`.
 * Implementation: change the existing assignment to `&= ~STATUS2_RAGE`.
   No structures, resources, overlays, RNG calls or other turn states change.
-* Planned automated check: compile the actual source function with a host
-  fixture and demonstrate failure on upstream and success on the port. Cover
-  every other status bit, continuing Rage, absent Rage,
+* Automated check: `python3 tests/newgold/test_battle_regressions.py` compiles the
+  actual source function with a host fixture. It fails on upstream and passes on
+  the port. It covers every other status bit, continuing Rage, absent Rage,
   two/four battlers, inactive battlers, state transitions and four existing RNG
   draws. This does not test the Nintendo DS ABI or rendering.
 * Required ROM check: use Rage, retain another volatile condition, then choose
   another move. That condition must persist and later hits must not raise Attack
   through Rage. Check the other battlers remain unaffected in doubles.
+* Build: full HeartGold and SoulSilver builds pass with `COMPARE=0`; no new
+  compiler/assembler warnings. Native relocation updates affect overlays 8, 10
+  and 12; no NitroFS resources or ARM7 bytes change.
 * Dependencies: baseline build only. Whole `ServerBeforeAct` hook remains pending.
 
 ## M2 — Correct Fire Fang / Shadow Force effectiveness timing
