@@ -58,3 +58,17 @@
 .public sub_0208E994
 .public gOverlayTemplate_Battle
 .public gNatureStatMods
+
+.public _02104C84
+.public _02104CC4
+.public _02104D04
+.public _02104D94
+.public sub_0208C778
+.public sub_0208C7F8
+.public sub_0208C87C
+.public sub_0208C8C8
+.public sub_0208D178
+.public sub_0208D474
+.public sub_0208D520
+.public sub_0208D6B8
+.public sub_0208D728

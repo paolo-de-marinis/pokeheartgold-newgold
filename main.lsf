@@ -289,8 +289,12 @@ Static main
     Object asm/unk_02087FD4.o
     Object src/unk_0208805C.o
     Object asm/unk_02088288.o
+    Object src/pokemon_summary_mon.o
+    Object asm/unk_02089C50.o
     Object asm/unk_0208B1AC.o
     Object asm/unk_0208C3E4.o
+    Object src/pokemon_summary_stats.o
+    Object asm/unk_0208D474.o
     Object asm/unk_0208DE40.o
     Object src/ribbon.o
     Object src/trainer_memo.o
