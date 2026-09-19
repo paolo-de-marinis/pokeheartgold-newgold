@@ -35,17 +35,18 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | Current mapped targets represented in C | 312 |
 | ASM targets remaining | 37 |
 | Additional patch-only ASM prerequisites identified | 4: two converted to matching C, two still ASM; outside the original hook census |
-| Further ability byte boundaries identified | 13 functions originally ASM: all now C (eleven MATCHING, two instruction-equivalent NONMATCHING); tracked separately, with serialization/source-behavior decisions still required |
+| Further ability byte boundaries identified | 14 functions originally ASM: thirteen converted to C (eleven MATCHING, two instruction-equivalent NONMATCHING before modification), one packet producer still ASM; outside the original hook census |
 | Entire hook replacements made unnecessary | 2, repel expiry and bag-use hooks |
 | Instruction-patch behaviors represented natively | 3, Rage, Fire Fang / Shadow Force and overworld poison |
 | Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
 | Reference binary patch mechanisms made unnecessary | 4: three instruction changes and one script-handler pointer replacement |
 | Features ported | 5: Rage, Fire Fang / Shadow Force, reusable repels, overworld poison, existing friendship-evolution threshold |
 | Features verified at C/resource boundaries | 5; emulator scenarios still pending |
+| Saved-ability foundation | M16: native nine-bit saved abilities, u16 setter inputs and compact serialization; battle/UI/personal consumers still pending |
 | Ability text resources ported | 3 native message banks, 320 entries each; all 960 compiled texts verified against pinned NewGold |
 | Features checked in a running ROM | 0 |
-| ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5, M13 and M15; separate from feature gameplay verification |
-| Complete ROM build | HeartGold and SoulSilver PASS through M15; M15 differs only by equivalent private stack-slot allocation in the Pokéwalker exporter |
+| ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5, M13, M15 and M16; separate from feature gameplay verification |
+| Complete ROM build | HeartGold and SoulSilver PASS through M16; all non-overlay resources and ARM7 unchanged from M15 |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -119,6 +120,7 @@ inside it has been implemented or completely specified.
 | Expanded move IDs, data and bytecode / data, script, executable logic | `data/Moves.c`, `src/moves.c`, `src/battle/battle_script_commands.c` | `include/constants/moves.h`, `include/constants/move_effects.h`, `src/battle/battle_command.c`, `files/poketool/waza`, `files/battledata/script`, C/data | MAPPED | IDs, table limits, script command dispatch and messages; per-effect tests |
 | Damage, accuracy and criticals / executable logic | `src/individual/CalcBaseDamage.c`, `src/battle/battle_calc_damage.c`, `src/battle/other_battle_calculators.c` | `CalcMoveDamage`, `TryCriticalHit`, `BattleSystem_CheckMoveHit`, C | MAPPED | Type, item, ability and state prerequisites; exact integer rounding and RNG |
 | Fairy and effectiveness / executable logic, data, resource | `src/battle/battle_pokemon.c`, `src/battle/other_battle_calculators.c`, `armips/asm/fairy.s` | `sTypeEffectiveness`, `CalculateTypeEffectiveness`, `Battler_GetType`, `ov12_02252054`, C; some AI/UI ASM | MAPPED | Native type constants and graphics; Hidden Power, plates and AI consumers |
+| Saved ability encoding and setter ABI / executable logic | `include/pokemon.h`, `src/pokemon.c` edited data cases | `include/pokemon_types_def.h`, native Pokémon accessors, compact serialization and byte-backed importers, C | PORTED; VERIFIED (host) | M16; end-to-end battle/UI/assignment/export width remains pending |
 | Expanded abilities / executable logic and data | `include/constants/ability.h`, `data/AbilityFlags.c`, `src/battle/ability.c`, `src/individual/SwitchInAbilityCheck.c`, `src/individual/MoveHitDefenderAbilityCheck.c` | `TryAbilityOnEntry`, `CheckAbilityEffectOnHit`, ability accessors, C; widened fields have ASM consumers | MAPPED | Ability ID/storage width, summary/AI consumers; per-ability behavioral cases |
 | Held items and restoration / executable logic and data | `src/battle/battle_item.c`, `src/individual/CheckDefenderItemEffectOnHit.c`, `src/battle/battle_start.c` | `TryUseHeldItem`, `CheckItemEffectOnHit`, `CanTrickHeldItem`, `TryFling`, C | MAPPED | Item IDs/data and battle lifecycle; preserve restoration and AI item settings |
 | Speed and priority / executable logic | `src/battle/other_battle_calculators.c`, `src/individual/ServerBeforeAct.c` | `CheckSortSpeed`, `SortMonsBySpeed`, `SortExecutionOrderBySpeed`, player controller, C | MAPPED | State and ability/item prerequisites; ties, RNG and midturn changes |
@@ -657,20 +659,62 @@ remains 312 C / 37 ASM. Next settle the native ability storage/setter contract a
 external-record compatibility, closing affected consumers before enabling IDs
 above 255. The original NewGold build comparison remains pending.
 
+## M16 — Native saved ability storage and setter contract
+
+NewGold `include/pokemon.h` and `src/pokemon.c::{Get,Set,Add}BoxMonData_EditedCases`
+define a nine-bit ability: the original byte plus EXP bit31. Native
+`PokemonDataBlockA` now represents that layout directly in C. EXP retains 21
+bits; the ten reserved bits, 32-byte block and 136-byte boxed record remain
+unchanged. The compact 112-byte serializer copies the complete raw EXP/ability
+word. All storage access continues through existing encryption/checksum/locks.
+Add(ABILITY) assigns, as in the reference. EXP addition retains unsigned wrap
+and level-100 capping; this matters because a C bitfield otherwise promotes to
+signed int. Arceus checks the complete ability, avoiding an alias at ID377
+(outside the reference's current 0–319 range).
+
+The setter payload is now u16. `GiveMon` is widened in declaration/definition;
+its script operand was already u16. `ov80_0222A140`,
+`TrainerHouse_CopyToPokemon` and `ov112_021EEAF0` stage their existing byte
+records through a u16 local. Their wire/save records remain unchanged.
+Reference GiveMon still supplies a u8 address to its widened setter, a static
+pointer-width defect corrected here without importing undefined behavior.
+The previously matching Frontier/Pokéwalker C prerequisites are now modified
+intentionally; matching claims apply to their earlier vanilla conversions.
+
+The battle-copy packet producer stores a full u32 at packet+0x24; the existing
+ASM receiver passes that field to SetMonData safely. The producer's raw ability
+load is still a byte and needs C conversion before BattleMon widening. This
+adds one established byte-boundary prerequisite (fourteen total, thirteen C),
+not another member of the original 349-hook-target census.
+
+`tests/newgold/test_ability_storage.py` compiles the actual native data cases,
+crypto, checksums, locks, reassignment and compact serialization with ASan/UBSan,
+and compares to the pinned reference edited cases. It covers all512 encodings,
+32 shuffle values and both lock states (32,768 cases), EXP extremes, reserved
+bits, compact roundtrips, Arceus alias prevention and checksum rejection.
+Unrelated accessor cases are omitted; curves/personal data are controlled inputs.
+Existing ability assignment data stays vanilla. Both complete ROM builds, all thirteen focused checks and scoped formatting
+pass. ARM7 and every non-overlay resource remain unchanged. Boot/render/menu
+smoke passes for both games; no ability gameplay scenario is claimed. Evidence
+is archived under `build/milestones/16-saved-abilities`.
+This milestone is a saved-data
+foundation, not a claim that expanded ability gameplay/UI/export works end to
+end. It retires no complete hook: the edited source hooks also handle met level.
+
 ## Remaining foundation — Expanded ability consumers
 
 The four identified AI byte consumers, three Frontier record routines and
-both Pokéwalker record boundaries are now C. Next define the native ability
-storage and setter contract, then close the affected consumer/serialization
-paths before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
+both Pokéwalker record boundaries are now C. M16 implements the saved ability
+storage and setter contract. Next convert the battle-copy packet producer and
+close battle/UI/personal and external export paths before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
 [ability-consumers.tsv](ability-consumers.tsv) record 67 scoped evidence rows,
-including thirteen additional original ASM byte boundaries (all now C), already-wide accessors,
+including fourteen additional original ASM byte boundaries (thirteen now C), already-wide accessors,
 serialization constraints and remaining inventory gaps. These are not all
 equivalent: do not convert untouched width-safe ASM merely because it exists.
 Save and battle layouts must not move before affected consumers are understood.
 
-The source defines abilities 0–319. Native personal data, saved Pokémon,
-`BattleMon`, AI memory and UI currently include u8 ability fields. Adding the
+The source defines abilities 0–319. Saved Pokémon now support nine-bit abilities. Native personal data,
+`BattleMon`, AI memory and UI still include u8 ability fields. Adding the
 new IDs alone would truncate them; moving fields while ASM still consumes
 their old offsets would corrupt other state.
 
@@ -687,16 +731,16 @@ storage. Native per-record data will replace that mechanism; no equivalent
 global or code-address storage is needed. This requires auditing every record
 reader and allocation/copy size before its layout changes.
 
-After the PC prerequisite, finish the ability consumer census (including ASM
-AI byte readers), convert required routines, define native storage/serialization
-contracts, and migrate personal resources and names/descriptions/flags. Only
+Continue the scoped consumer work, convert the battle packet sender, finish
+runtime/protocol contracts, and migrate personal resources/constants/flags. Only
 then assign IDs above 255 or enable dependent ability mechanics. Check saved
 Pokémon checksum/roundtrip behavior and trade/Frontier/Pokéwalker consumers.
 
 Source issues to preserve as explicit questions during that work:
 
 * `GiveMon` takes a u8 ability, but the modified setter reads u16 from the supplied
-  pointer. Audit argument widths; do not reproduce a one-byte out-of-bounds read.
+  pointer. M16 fixes the native parameter and stages protocol bytes into u16
+  locals; the original source inconsistency is documented, not reproduced.
 * The party-heal patch widens the ability load but keeps its byte payload.
   M7 proves the existing receiver predicate is preserved for reference IDs
   0–319; revisit if ID 360 or a consumer needing the full ID is introduced.

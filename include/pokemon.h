@@ -50,6 +50,7 @@ void CalcMonLevelAndStats(Pokemon *mon);
 void CalcMonStats(Pokemon *mon);
 u32 GetMonData(Pokemon *mon, int attr, void *ptr);
 u32 GetBoxMonData(BoxPokemon *boxMon, int attr, void *ptr);
+// MON_DATA_ABILITY reads a u16 payload; byte-sized wire records must first widen it.
 void SetMonData(Pokemon *mon, int attr, const void *ptr);
 void SetBoxMonData(BoxPokemon *boxMon, int attr, const void *ptr);
 void AddMonData(Pokemon *mon, int attr, int amount);

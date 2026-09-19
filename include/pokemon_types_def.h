@@ -51,7 +51,15 @@ typedef struct {
     /* 0x02 */ u16 heldItem;
 
     /* 0x04 */ u32 otID;
-    /* 0x08 */ u32 exp;
+    // NewGold stores the ninth ability bit above the 21-bit experience value.
+    union {
+        struct {
+            u32 exp : 21;
+            u32 unusedExpBits : 10;
+            u32 abilityMSB : 1;
+        };
+        /* 0x08 */ u32 expAndAbility;
+    };
 
     /* 0x0C */ u8 friendship;
     /* 0x0D */ u8 ability;

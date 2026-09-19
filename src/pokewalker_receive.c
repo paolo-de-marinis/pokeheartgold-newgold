@@ -59,7 +59,8 @@ void ov112_021EEAF0(PokewalkerReceiveStatePrefix *state, BOOL usePreviousBox) {
             SetBoxMonData(boxMon, MON_DATA_OT_GENDER, &otGender);
             SetBoxMonData(boxMon, MON_DATA_OT_NAME_STRING, otName);
             BoxMonSetTrainerMemo(Mon_GetBoxMon(mon), state->profile, 4, state->giftMon.metLocation, HEAP_ID_154);
-            SetBoxMonData(boxMon, MON_DATA_ABILITY, &state->giftMon.ability);
+            u16 ability = state->giftMon.ability;
+            SetBoxMonData(boxMon, MON_DATA_ABILITY, &ability);
             fatefulEncounter = TRUE;
             SetBoxMonData(boxMon, MON_DATA_FATEFUL_ENCOUNTER, &fatefulEncounter);
             SetBoxMonData(boxMon, MON_DATA_POKEBALL, &state->giftMon.pokeball);

@@ -129,7 +129,8 @@ void ov80_0222A140(FrontierMon *frontierMon, Pokemon *mon, int level) {
     SetMonData(mon, MON_DATA_SPATK_EV, &value);
     value = frontierMon->evs[5];
     SetMonData(mon, MON_DATA_SPDEF_EV, &value);
-    SetMonData(mon, MON_DATA_ABILITY, &frontierMon->ability);
+    u16 ability = frontierMon->ability;
+    SetMonData(mon, MON_DATA_ABILITY, &ability);
     SetMonData(mon, MON_DATA_FRIENDSHIP, &frontierMon->friendship);
     if (frontierMon->useSpeciesName) {
         MsgData *msgData = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, NARC_msg_msg_0237_bin, HEAP_ID_FIELD1);

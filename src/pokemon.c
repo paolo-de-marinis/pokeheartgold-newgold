@@ -29,6 +29,12 @@
 
 #define FRIENDSHIP_EVOLUTION_THRESHOLD 160
 
+typedef char BoxMonBlockASizeCheck[sizeof(PokemonDataBlockA) == 0x20 ? 1 : -1];
+typedef char BoxMonExpWordOffsetCheck[offsetof(PokemonDataBlockA, expAndAbility) == 8 ? 1 : -1];
+typedef char BoxMonAbilityByteOffsetCheck[offsetof(PokemonDataBlockA, ability) == 0xD ? 1 : -1];
+typedef char BoxMonSizeCheck[sizeof(BoxPokemon) == 0x88 ? 1 : -1];
+typedef char CompactMonSizeCheck[sizeof(struct UnkPokemonStruct_02072A98) == 0x70 ? 1 : -1];
+
 void MonEncryptSegment(void *data, u32 size, u32 key);
 void MonDecryptSegment(void *data, u32 size, u32 key);
 u32 CalcMonChecksum(void *data, u32 size);
@@ -548,7 +554,7 @@ static u32 GetBoxMonDataInternal(BoxPokemon *boxMon, int attr, void *dest) {
         ret = blockA->friendship;
         break;
     case MON_DATA_ABILITY:
-        ret = blockA->ability;
+        ret = (blockA->abilityMSB << 8) | blockA->ability;
         break;
     case MON_DATA_MARKINGS:
         ret = blockA->markings;
@@ -861,7 +867,7 @@ static u32 GetBoxMonDataInternal(BoxPokemon *boxMon, int attr, void *dest) {
         break;
     case MON_DATA_TYPE_1:
     case MON_DATA_TYPE_2:
-        if (blockA->species == SPECIES_ARCEUS && blockA->ability == ABILITY_MULTITYPE) {
+        if (blockA->species == SPECIES_ARCEUS && blockA->abilityMSB == 0 && blockA->ability == ABILITY_MULTITYPE) {
             ret = (u32)GetArceusTypeByHeldItemEffect((u16)GetItemAttr(blockA->heldItem, ITEMATTR_HOLD_EFFECT, HEAP_ID_DEFAULT));
         } else {
             ret = (u32)GetMonBaseStat_HandleAlternateForm(blockA->species, blockB->form, (int)(attr - MON_DATA_TYPE_1 + BASE_TYPE1));
@@ -1019,7 +1025,8 @@ static void SetBoxMonDataInternal(BoxPokemon *boxMon, int attr, const void *valu
         blockA->friendship = VALUE(u8);
         break;
     case MON_DATA_ABILITY:
-        blockA->ability = VALUE(u8);
+        blockA->ability = VALUE(u16) & 0xFF;
+        blockA->abilityMSB = (VALUE(u16) >> 8) & 1;
         break;
     case MON_DATA_MARKINGS:
         blockA->markings = VALUE(u8);
@@ -1408,13 +1415,22 @@ static void AddBoxMonDataInternal(BoxPokemon *boxMon, int attr, int value) {
     PokemonDataBlockD *blockD = &GetSubstruct(boxMon, boxMon->personality, 3)->blockD;
 
     switch (attr) {
-    case MON_DATA_EXPERIENCE:
-        if (blockA->exp + value > GetMonExpBySpeciesAndLevel(blockA->species, 100)) {
+    case MON_DATA_EXPERIENCE: {
+        u32 experience = (u32)value;
+        if (blockA->exp + experience > GetMonExpBySpeciesAndLevel(blockA->species, 100)) {
             blockA->exp = GetMonExpBySpeciesAndLevel(blockA->species, 100);
         } else {
-            blockA->exp += value;
+            blockA->exp += experience;
         }
         break;
+    }
+    case MON_DATA_ABILITY: {
+        // NewGold assigns the ability in AddBoxMonData as well as SetBoxMonData.
+        u16 ability = (u16)value;
+        blockA->ability = ability & 0xFF;
+        blockA->abilityMSB = (ability >> 8) & 1;
+        break;
+    }
     case MON_DATA_FRIENDSHIP: {
         int friendship = blockA->friendship;
         if (friendship + value > FRIENDSHIP_MAX) {
@@ -1562,7 +1578,6 @@ static void AddBoxMonDataInternal(BoxPokemon *boxMon, int attr, int value) {
     case MON_DATA_SPECIES:
     case MON_DATA_HELD_ITEM:
     case MON_DATA_OT_ID:
-    case MON_DATA_ABILITY:
     case MON_DATA_MARKINGS:
     case MON_DATA_LANGUAGE:
     case MON_DATA_SINNOH_CHAMP_RIBBON:
@@ -4272,7 +4287,7 @@ void sub_02072A98(Pokemon *mon, struct UnkPokemonStruct_02072A98 *dest) {
     dest->species = dbA->species;
     dest->heldItem = dbA->heldItem;
     dest->otID = dbA->otID;
-    dest->exp = dbA->exp;
+    dest->exp = dbA->expAndAbility;
     dest->friendship = dbA->friendship;
     dest->ability = dbA->ability;
     dest->hpEV = dbA->hpEV;
@@ -4349,7 +4364,7 @@ void sub_02072D64(const struct UnkPokemonStruct_02072A98 *src, Pokemon *mon) {
     dbA->species = src->species;
     dbA->heldItem = src->heldItem;
     dbA->otID = src->otID;
-    dbA->exp = src->exp;
+    dbA->expAndAbility = src->exp;
     dbA->friendship = src->friendship;
     dbA->ability = src->ability;
     dbA->hpEV = src->hpEV;

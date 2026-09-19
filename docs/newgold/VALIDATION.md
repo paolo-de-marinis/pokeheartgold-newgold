@@ -440,3 +440,41 @@ logs, screenshots and ROM hashes are archived. No user save/configuration or
 external BIOS is used. This is boot/rendering/menu-input verification only;
 feature-gameplay verification remains zero. Comparison with the original
 compiled NewGold ROM is still pending.
+
+## M16 — Nine-bit saved abilities and safe setter inputs
+
+Evidence: `build/milestones/16-saved-abilities/verification.json`, build logs,
+ROMs, maps, Pokémon object/disassembly, host log, runnable
+`audit-ability-storage.py`, and `runtime-smoke`.
+
+| ROM | SHA-1 | SHA-256 |
+| --- | --- | --- |
+| HeartGold | `d1b021213731f22c1af7950b5f35a856588a4466` | `610716ab5b4b195428585c152d377d552b5356ee5802c0fb9a212abc6d2eb2a1` |
+| SoulSilver | `75b6d926539287a9171b7a53f7f824b8b87f113f` | `f8c5e28d3a25bbf06f325e6fba0b282a1aa8d89acc80ee1674705928ce550817` |
+
+Both builds pass with no new compiler/assembler warnings. Target layout
+assertions preserve Block A32 bytes, boxed136 bytes, compact112 bytes and the
+original EXP-word/ability-byte offsets. Inspection of compiled Thumb confirms
+low21 masking and the high ability bit in bit31. ARM9 and118 overlay payloads
+change after relinking; ARM7 and every non-overlay resource are identical to
+M15. No instruction normalization or output patching is used.
+
+All thirteen focused checks pass. The new test compares actual native selected
+accessor cases against the pinned reference functions, with real native crypto,
+checksum, locks and compact serialization under ASan/UBSan. All512 encodings,
+32 shuffle values and both lock states pass (32,768 cases), including EXP
+boundary/wrap/cap behavior, preserved reserved bits, ability reassignment,
+compact roundtrips and checksum rejection. Controlled curves/personal inputs
+replace unrelated game-data access; this is not whole-ROM gameplay execution.
+
+Frontier, Trainer House and Pokéwalker byte imports now use correctly sized
+locals. GiveMon takes u16. Static paired packet tracing confirms the unchanged
+battle-copy receiver already receives a full word. External records are still
+byte-limited; BattleMon, AI, UI and assignment data remain prerequisites before
+higher IDs can be enabled coherently. No complete edited accessor hook is
+counted as retired, because the reference also handles met level there.
+
+Both native ROMs ran1,436 frames in fresh melonDS processes. Final images show
+the readable intro reached through menu input. The same smoke also passed for
+the original NewGold build. Runtime commands, core provenance and screenshots
+are archived; actual ability gameplay and cross-ROM behavior remain unverified.
