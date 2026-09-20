@@ -577,7 +577,7 @@ sBattleScriptCommandTable: ; 0x0226C6C8
 	.word BtlCmd_SetBindingTurns ; 247 SetBindingTurns
 	.word BtlCmd_ClearBindingTurns ; 248 ClearBindingTurns
 	.word BtlCmd_NotImplemented ; 249 CanClearPrimalWeather
-	.word BtlCmd_NotImplemented ; 250 SetAbilityActivatedFlag
+	.word BtlCmd_SetAbilityActivatedFlag ; 250 SetAbilityActivatedFlag
 	.word BtlCmd_NotImplemented ; 251 SwitchInAbilityCheck
 	.word BtlCmd_TryStickyWeb ; 252 TryStickyWeb
 	.word BtlCmd_NotImplemented ; 253 TryMegaOrUltraBurstDuringPursuit
@@ -604,17 +604,17 @@ sBattleScriptCommandTable: ; 0x0226C6C8
 	.word BtlCmd_HandleBurnUp ; 274 HandleBurnUp
 	.word BtlCmd_HandleDoubleShock ; 275 HandleDoubleShock
 	.word BtlCmd_NotImplemented ; 276 StuffCheeks
-	.word BtlCmd_NotImplemented ; 277 SetMoveConditionFlag
-	.word BtlCmd_NotImplemented ; 278 AbilityPopup
+	.word BtlCmd_SetMoveConditionFlag ; 277 SetMoveConditionFlag
+	.word BtlCmd_AbilityPopup ; 278 AbilityPopup
 	.word BtlCmd_NotImplemented ; 279 ActivateParadoxAbility
 	.word BtlCmd_NotImplemented ; 280 ResetParadoxAbility
-	.word BtlCmd_NotImplemented ; 281 SetCurrentMoveSwitchingStatus
-	.word BtlCmd_NotImplemented ; 282 TrySynchronizeStatus
-	.word BtlCmd_NotImplemented ; 283 TryCureStatusBerry
-	.word BtlCmd_NotImplemented ; 284 BatchUpdateHealthBar
-	.word BtlCmd_NotImplemented ; 285 BatchUpdateHealthBarValue
-	.word BtlCmd_NotImplemented ; 286 BatchFollowupMessage
-	.word BtlCmd_NotImplemented ; 287 BatchEffectivenessMessage
+	.word BtlCmd_SetCurrentMoveSwitchingStatus ; 281 SetCurrentMoveSwitchingStatus
+	.word BtlCmd_TrySynchronizeStatus ; 282 TrySynchronizeStatus
+	.word BtlCmd_TryCureStatusBerry ; 283 TryCureStatusBerry
+	.word BtlCmd_BatchUpdateHealthBar ; 284 BatchUpdateHealthBar
+	.word BtlCmd_BatchUpdateHealthBarValue ; 285 BatchUpdateHealthBarValue
+	.word BtlCmd_BatchFollowupMessage ; 286 BatchFollowupMessage
+	.word BtlCmd_BatchEffectivenessMessage ; 287 BatchEffectivenessMessage
 	.word BtlCmd_DivideVarByValueRoundUp ; 288 DivideVarByValueRoundUp
 	.word BtlCmd_IsPursuitActive ; 289 IsPursuitActive
 	.word BtlCmd_GoBackToBeforeMove ; 290 GoBackToBeforeMove

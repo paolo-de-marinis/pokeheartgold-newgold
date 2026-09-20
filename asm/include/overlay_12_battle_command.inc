@@ -177,6 +177,16 @@
 .public BtlCmd_CheckProtectContactMoves
 .public BtlCmd_TryAuroraVeil
 .public BtlCmd_ClearAuroraVeil
+.public BtlCmd_SetAbilityActivatedFlag
+.public BtlCmd_SetMoveConditionFlag
+.public BtlCmd_AbilityPopup
+.public BtlCmd_SetCurrentMoveSwitchingStatus
+.public BtlCmd_TrySynchronizeStatus
+.public BtlCmd_TryCureStatusBerry
+.public BtlCmd_BatchUpdateHealthBar
+.public BtlCmd_BatchUpdateHealthBarValue
+.public BtlCmd_BatchFollowupMessage
+.public BtlCmd_BatchEffectivenessMessage
 .public BtlCmd_NotImplemented
 .public BtlCmd_CalcHeavySlamPower
 .public BtlCmd_CheckTargetIsPartner

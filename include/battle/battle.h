@@ -244,7 +244,8 @@ typedef struct BattleMon {
     u32 supersweetSyrupFlag : 1;
     u32 cheekPouchPending : 1;
     u32 competitivePending : 1;
-    u32 unk28_B : 18;
+    u32 abilityActivatedFlag : 1;
+    u32 unk28_B : 17;
     u8 movePPCur[MAX_MON_MOVES];
     u8 movePP[MAX_MON_MOVES];
     u8 level;
@@ -441,6 +442,10 @@ typedef struct BattleContext {
     u32 unused : 31;
     // Keep existing context offsets stable for untouched battle assembly.
     u16 trainerAIAbilities[BATTLER_MAX];
+    // Whether the move being used is one that switches its user out, which a
+    // battle script sets on its way through rather than being read from the
+    // move table.
+    int currentMoveSwitchStatus;
 } BattleContext;
 
 typedef struct BattleSystem BattleSystem;

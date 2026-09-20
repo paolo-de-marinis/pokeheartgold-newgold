@@ -1398,4 +1398,57 @@
     .long 263
     .endm
 
+    .macro SetAbilityActivatedFlag arg
+    .long 250
+    .long \arg
+    .endm
+
+    .macro SetMoveConditionFlag arg0, arg1
+    .long 277
+    .long \arg0
+    .long \arg1
+    .endm
+
+    .macro AbilityPopup arg0, arg1
+    .long 278
+    .long \arg0
+    .long \arg1
+    .endm
+
+    .macro SetCurrentMoveSwitchingStatus arg
+    .long 281
+    .long \arg
+    .endm
+
+    .macro TrySynchronizeStatus dest
+    .long 282
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro TryCureStatusBerry side, dest
+    .long 283
+    .long \side
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro BatchUpdateHealthBar
+    .long 284
+    .endm
+
+    .macro BatchUpdateHealthBarValue
+    .long 285
+    .endm
+
+    .macro BatchFollowupMessage arg
+    .long 286
+    .long \arg
+    .endm
+
+    .macro BatchEffectivenessMessage arg0, arg1, dest
+    .long 287
+    .long \arg0
+    .long \arg1
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
     .endif // ASM_BATTLE_SCRIPT_INC

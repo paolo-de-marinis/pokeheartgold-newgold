@@ -8640,6 +8640,135 @@ BOOL BtlCmd_CheckProtectContactMoves(BattleSystem *battleSystem, BattleContext *
     return FALSE;
 }
 
+// Bookkeeping for the ability popup. This game has no popup to show, so the
+// flag is kept and the showing of it is where the two engines part company.
+BOOL BtlCmd_SetAbilityActivatedFlag(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+
+    ctx->battleMons[BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side)].abilityActivatedFlag = TRUE;
+
+    return FALSE;
+}
+
+// The later games put a banner on screen naming the ability. This one says so
+// in the message the script goes on to print, so there is nothing to draw;
+// the flag is cleared so a second activation is a second flag.
+BOOL BtlCmd_AbilityPopup(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+
+    ctx->battleMons[BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side)].abilityActivatedFlag = FALSE;
+
+    return FALSE;
+}
+
+// Powder, Laser Focus, Glaive Rush and Throat Chop are the moves this records
+// something for, and this game has none of them, so there is never anything
+// to record. The arguments are still read: the script has written them.
+BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+
+    return FALSE;
+}
+
+BOOL BtlCmd_SetCurrentMoveSwitchingStatus(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    ctx->currentMoveSwitchStatus = BattleScriptReadWord(ctx);
+
+    return FALSE;
+}
+
+// Synchronize hands the status back to whoever inflicted it. The controller
+// pass has already decided that is happening and left the status where it can
+// be read; this only has to say which script to run for it.
+BOOL BtlCmd_TrySynchronizeStatus(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+    u32 status = ctx->battleMons[ctx->battlerIdTemp].status;
+    int script = BATTLE_SUBSCRIPT_NONE;
+
+    if (status & STATUS_POISON_ALL) {
+        script = BATTLE_SUBSCRIPT_POISON;
+    } else if (status & STATUS_BURN) {
+        script = BATTLE_SUBSCRIPT_BURN;
+    } else if (status & STATUS_PARALYSIS) {
+        script = BATTLE_SUBSCRIPT_PARALYZE;
+    }
+
+    if (script == BATTLE_SUBSCRIPT_NONE) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    } else {
+        ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+        ctx->tempData = script;
+    }
+
+    return FALSE;
+}
+
+// A berry that cures what the Pokemon has. The held-item check already knows
+// which berries those are and which script each one runs.
+BOOL BtlCmd_TryCureStatusBerry(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+    int battlerId = BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side);
+    u32 script;
+
+    if (CheckUseHeldItem(battleSystem, ctx, battlerId, &script) == TRUE) {
+        ctx->battlerIdTemp = battlerId;
+        ctx->itemTemp = GetBattlerHeldItem(ctx, battlerId);
+        ctx->tempData = script;
+    } else {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+// The four below batch work over everything a spread move hit at once. This
+// engine walks its targets one at a time and does that work as it goes, so by
+// the time a script asks there is nothing left over to do.
+BOOL BtlCmd_BatchUpdateHealthBar(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    return FALSE;
+}
+
+BOOL BtlCmd_BatchUpdateHealthBarValue(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    return FALSE;
+}
+
+BOOL BtlCmd_BatchFollowupMessage(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+    return FALSE;
+}
+
+BOOL BtlCmd_BatchEffectivenessMessage(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+    return FALSE;
+}
+
 static void BattlerSetAbility(BattleContext *ctx, u8 battlerID, u16 ability) {
     ctx->trainerAIAbilities[battlerID] = ability;
     return;
