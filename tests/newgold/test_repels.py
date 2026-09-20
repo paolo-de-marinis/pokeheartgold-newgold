@@ -19,7 +19,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 BASELINE = "e97c7fc975a7447f288c42acc2e155f5a673e30f"
-REFERENCE_COMMIT = "1b872926eaa0363816d4e376fad1531435b04b9c"
+REFERENCE_COMMIT = "41a28e2255b2805378163c7f4d6c1d87541174d1"
 REFERENCE = os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE")
 if REFERENCE is None and (ROOT.parent / "hg-engine-newgold-reference/.git").exists():
     REFERENCE = ROOT.parent / "hg-engine-newgold-reference"

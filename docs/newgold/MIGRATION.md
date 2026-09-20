@@ -13,8 +13,23 @@ validating an individual vanilla ASM-to-C prerequisite.
 | Input | Revision |
 | --- | --- |
 | pokeheartgold upstream | `e97c7fc975a7447f288c42acc2e155f5a673e30f` |
-| NewGold, `heartgold-modern` | `1b872926eaa0363816d4e376fad1531435b04b9c` |
+| NewGold, `heartgold-modern` | `41a28e2255b2805378163c7f4d6c1d87541174d1` |
 | Upstream HeartGold symbol map | `ea4460e154ddaaca5a6deebd4b5254c2a3d484ae`, `heartgoldus.xMAP` |
+
+The NewGold pin advanced from `1b872926` on 2026-09-20 at the user's request.
+The three added commits (`82d25801`, `eb4e20f1`, `41a28e22`) touch only
+`data/Trainers.c`, `data/Encounters.c`, `data/Species.c`,
+`data/learnsets/learnsets.json` and one new `armips/include/flags.s` constant.
+No manifest (`hooks`, `armhooks`, `bytereplacement`, `repoints`,
+`routinepointers`), manifest include, ARMIPS routine, ability text bank or C
+source changed. Regenerating the inventory at the new pin reproduces
+`manifest-ledger.tsv` byte-for-byte and every INVENTORY.md count, so the hook
+census and every milestone through M18 remain valid without re-verification.
+The changed data belongs to the not-yet-started trainer/encounter/species/
+learnset families; it is new porting input, not a correction to ported work.
+`REFERENCE_BUILD.md` intentionally keeps `1b872926`: that ROM comparison was
+built from it, and these data commits would change the original ROM's bytes.
+The final fidelity comparison must rebuild the reference at the current pin.
 
 Branch: `port/newgold-native`. The original analysis was read-only; no earlier
 port commits, build, or saved migration document existed in this workspace.

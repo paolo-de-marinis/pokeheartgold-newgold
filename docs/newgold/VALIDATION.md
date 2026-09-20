@@ -11,7 +11,7 @@ hack, not a byte-identical final ROM. The compiled original remains the
 behavior/data reference. The final fidelity gate is **PENDING**. An actual intermediate comparison at M16 is now complete: both
 ROMs build, but they are not byte-identical. All 960 decoded ability texts agree.
 See [REFERENCE_BUILD.md](REFERENCE_BUILD.md) for hashes, differences and scope.
-Build pinned NewGold `1b872926eaa0363816d4e376fad1531435b04b9c` in an isolated
+Build the currently pinned NewGold revision in an isolated
 copy, preserving its original toolchain/configuration and recording the exact
 base-ROM hash, dependencies and any required external inputs. Keep the reference
 checkout unchanged. Use comparable game/region/revision inputs for both builds.
@@ -28,7 +28,10 @@ differ, separately compare decoded game data/resources and representative
 gameplay behavior against that compiled reference. Explain every remaining
 unverified area; host-function tests or matching vanilla prerequisites alone
 cannot satisfy this final comparison. The archived M16 comparison does not
-close the final gate or establish gameplay parity for the unfinished port.
+close the final gate or establish gameplay parity for the unfinished port. It was
+built at the earlier pin `1b872926`; the pin advanced to `41a28e22` on
+2026-09-20 with data-only changes, so the final gate needs a fresh reference
+build rather than reuse of that archive.
 
 ## Toolchain
 

@@ -1,6 +1,6 @@
 # Ability data-flow prerequisites
 
-Source: `hg-engine-newgold-reference` at `1b872926eaa0363816d4e376fad1531435b04b9c`. Original target: pret `e97c7fc975a7447f288c42acc2e155f5a673e30f`. Function ranges in the TSV use the pinned xMAP already used by the migration inventory. Line numbers and ranges refer to the pinned original sources; current conversion milestones are recorded in the TSV and MIGRATION.md.
+Source: `hg-engine-newgold-reference` at `41a28e2255b2805378163c7f4d6c1d87541174d1`. The three commits after `1b872926` change only `data/Trainers.c`, `data/Encounters.c`, `data/Species.c`, `data/learnsets/learnsets.json` and one `armips/include/flags.s` constant; no ability source, manifest or text bank in this census is affected. Original target: pret `e97c7fc975a7447f288c42acc2e155f5a673e30f`. Function ranges in the TSV use the pinned xMAP already used by the migration inventory. Line numbers and ranges refer to the pinned original sources; current conversion milestones are recorded in the TSV and MIGRATION.md.
 
 `ability-consumers.tsv` contains 68 evidence rows. This is a bounded consumer/dependency census, **not proof that every ROM path is now closed**. Positive width boundaries are separated from width-safe ASM and from functions exposed only if unrelated offsets move.
 

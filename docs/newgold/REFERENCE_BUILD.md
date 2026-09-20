@@ -8,7 +8,7 @@ and data, not whole-ROM byte identity. Use this build for that fidelity gate.
 
 | Input / output | Value |
 | --- | --- |
-| NewGold revision | `1b872926eaa0363816d4e376fad1531435b04b9c` |
+| NewGold revision as built | `1b872926eaa0363816d4e376fad1531435b04b9c` |
 | Native milestone | `ed91e50c`, saved-ability storage |
 | Game / region | US HeartGold, `IPKE` for both |
 | Original command | `make -j4`, default config, `AUTO_TEST` unset |
@@ -18,6 +18,14 @@ and data, not whole-ROM byte identity. Use this build for that fidelity gate.
 | Native output size | 134,217,728 bytes |
 | Original output SHA-256 | `34d3f4d65bf7915bd4b7a8c16462a503f69e45676c5a8634ac2371de88e9015a` |
 | Native output SHA-256 | `610716ab5b4b195428585c152d377d552b5356ee5802c0fb9a212abc6d2eb2a1` |
+
+This build predates the 2026-09-20 pin advance to `41a28e2255b2805378163c7f4d6c1d87541174d1`.
+The revision above is kept deliberately: the hashes below describe the ROM that
+was actually compiled. The three newer reference commits change trainer,
+encounter, species and learnset data, so a reference ROM built at the current
+pin would not reproduce these hashes. The final fidelity comparison must rebuild
+the original at the current pin; this intermediate M16 measurement is not reused
+for it.
 
 The original input is the matching upstream HeartGold ROM built earlier from
 pret. The original Makefile accepts HeartGold only; no comparable original

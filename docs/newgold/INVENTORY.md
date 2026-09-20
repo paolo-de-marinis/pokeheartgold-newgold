@@ -2,7 +2,7 @@
 
 This is a pinned, reproducible **baseline mapping**, not a progress claim. Current milestone status and counters belong in the migration document; regenerating this inventory must not reset that progress.
 
-- NewGold: `1b872926eaa0363816d4e376fad1531435b04b9c`.
+- NewGold: `41a28e2255b2805378163c7f4d6c1d87541174d1`.
 - pokeheartgold: `e97c7fc975a7447f288c42acc2e155f5a673e30f`.
 - xMAP branch: `ea4460e154ddaaca5a6deebd4b5254c2a3d484ae`; `heartgoldus.xMAP` SHA-256 `f3a80da12ae51e2cc90123a2838c79c53a2ff422cc4bf1378cdf2c465cf0a611`.
 
