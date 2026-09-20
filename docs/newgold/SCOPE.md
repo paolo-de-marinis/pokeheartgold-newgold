@@ -88,53 +88,40 @@ already implements equivalently:
 
 ## Work order
 
-Behaviour switches that need no new data come first, and most are done: the
-story level cap, reusable TMs, the vitamin ceiling, overworld poison, the
-friendship threshold, the low-HP warning, the scaled experience formula,
-capture experience and the modern ball multipliers.
+**Done.** The behaviour switches that need no new data: the story level cap,
+reusable TMs, the vitamin ceiling, overworld poison, the friendship threshold,
+the low-HP warning, the scaled experience formula, capture experience and the
+modern ball multipliers.
 
-What remains splits in two.
+The data: the Fairy type and its place in the chart; 27 ability names; the 65
+species New Gold reaches, with personal records, learnsets, evolutions, battle
+sprites, heights, party icons and names; the experience yield widened past the
+Gen 4 ceiling; and the 491 of HGSS's own 493 species the hack rewrites. Then
+konefr's content itself: 140 of 142 encounter maps, 650 of 738 trainers, and
+the headbutt trees.
 
-**Behaviour still open.** Item restoration at the end of a battle and critical
-captures are ordinary C. The static HP bar, the machine labels in the bag,
-deletable HMs and reusable repels all live in code pret has not decompiled yet,
-so each carries a conversion with it. Expanded pockets and thirty boxes change
-the save layout and are their own workstream.
+**What is left.**
 
-**The data, which is what makes the ROM look like New Gold.** In dependency
-order:
-
-1. Species identifiers for the 65 new species. HGSS uses 1-493 for species and
-   494-507 for the egg, the bad egg and the alternate forms, so the new ones
-   are appended from 508 rather than displacing that block: vanilla identifiers
-   stay where every save, table and interface already expects them, and the
-   National Dex number stops being the same thing as the species identifier.
-2. Personal records for those species - stats, types, abilities, held items,
-   gender, hatching, growth and machine compatibility - generated into
-   `files/poketool/personal/personal.json`, the pipeline pokeheartgold already
-   uses. Base experience yields move to the Gen 5 and later values here, which
-   is where the byte-wide field has to be decided.
-3. Graphics, without which the new species cannot appear: battle sprites,
-   the heights that stand them on the ground, and party icons. Each of these
-   archives is read by arithmetic on the species number rather than by name, so
-   they have to stay dense; a gap does not fail the build, it moves every later
-   species onto somebody else's data.
-4. Learnsets and evolutions.
-5. Cries. This is the last thing between the new species and an encounter, and
-   the only remaining blocker. PlayCryEx is still assembly and compares the
-   species against 494 before reaching the sound archive, so it has to be
-   decompiled before it can be taught about the rest, and the archive itself
-   needs their sounds. The reference reaches this through bespoke "cry
-   pseudobanks", which is engine machinery rather than behaviour and is not
-   reproduced here.
-6. Footprints and Dex entries, needed only if the Dex is ever widened; a new
+1. The eighteen-plus-nine abilities have names but no effects; a Pokemon
+   carrying one has an ability that does nothing.
+2. Fourteen moves and konefr's own Solar Seeds, with their effects and
+   animations. Six evolutions wait on these, and on the items Black Augurite,
+   Peat Block and the apples; six trainers wait on the Eviolite, Sticky Web,
+   Acrobatics and Soft-Boiled.
+3. Cries. PlayCryEx clamps anything above species 495 to Bulbasaur rather than
+   reading past the sound archive, so the added species sound wrong but nothing
+   breaks. Giving them their own cries needs that function decompiled and the
+   archive extended.
+4. konefr's scripted content: the Cherrygrove vendor with its own script
+   commands, and the Bug-Catching Contest encounters and rewards.
+5. Hidden abilities, which eleven trainer Pokemon ask for.
+6. Footprints and Dex entries, needed only if the Dex is widened; an added
    species records nothing in it today, deliberately.
-7. The fourteen new moves, their effects and animations. Six evolutions wait
-   on these, along with the items Black Augurite, Peat Block and the apples.
-8. The effects behind the eighteen ability names, and konefr's own Irrigation
-   and Evaporate.
-9. konefr's own rebalance: trainers, wild encounters, headbutt tables. This is
-   the point at which the game becomes New Gold to play.
+7. The remaining interface work the reference ships: the EV and IV viewer, the
+   static HP bar, the machine labels in the bag, deletable HMs and reusable
+   repels. Each of these lives in code pret has not decompiled, so each carries
+   a conversion with it.
+8. Expanded pockets and thirty boxes, which change the save layout.
 
 ## Method
 
