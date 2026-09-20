@@ -787,14 +787,28 @@ static void FieldSystem_CalculateFriendship(FieldSystem *fieldSystem) {
 }
 
 static BOOL FieldSystem_UpdatePoison(FieldSystem *fieldSystem) {
+    Party *party = SaveArray_Party_Get(fieldSystem->saveData);
+
     u16 *stepCounter = LocalFieldData_GetPoisonStepCounter(Save_LocalFieldData_Get(fieldSystem->saveData));
     (*stepCounter)++;
     *stepCounter %= 4;
+    if (*stepCounter) {
+        return FALSE;
+    }
 
-    // New Gold does not damage poisoned Pokemon while walking. The four-step
-    // counter still advances so the saved field keeps its ordinary values, and
-    // poison in battle, ApplyPoisonStep and SurvivePoisoning are untouched.
-    return FALSE;
+    switch (ApplyPoisonStep(party, MapHeader_GetMapSec(fieldSystem->location->mapId))) {
+    case FIELD_POISON_NONE:
+        return FALSE;
+    case FIELD_POISON_DAMAGE:
+        FieldSystem_DoPoisonEffect(fieldSystem->unk4->unk20);
+        return FALSE;
+    case FIELD_POISON_SURVIVE:
+        FieldSystem_DoPoisonEffect(fieldSystem->unk4->unk20);
+        StartMapSceneScript(fieldSystem, std_survive_poisoning, NULL);
+        return TRUE;
+    default:
+        return FALSE;
+    }
 }
 
 static BOOL FieldSystem_UpdateSafari(FieldSystem *fieldSystem) {

@@ -126,7 +126,7 @@ typedef struct TrainerAIData {
     u8 *unk14;
     u8 unk18[4];
     u16 moves[BATTLER_MAX][MOVES_MAX];
-    u8 abilities[BATTLER_MAX];
+    u8 unusedAbilities[BATTLER_MAX]; // Wide cache lives at the end of BattleContext.
     u16 heldItems[BATTLER_MAX];
     u16 unk68[2][4];
     u32 unk78[8];
@@ -227,7 +227,7 @@ typedef struct BattleMon {
     u8 form : 5;
     u8 shiny : 1;
     u8 unk26_6 : 2;
-    u8 ability;
+    u8 unusedAbility;
     u32 sendOutFlag : 1;
     u32 intimidateFlag : 1;
     u32 traceFlag : 1;
@@ -257,7 +257,7 @@ typedef struct BattleMon {
     u32 status2;
     u32 otid;
     u16 item;
-    u16 unk76;
+    u16 ability;
     u8 hitCount;
     u8 msgFlag;
     u8 gender : 4;
@@ -437,6 +437,8 @@ typedef struct BattleContext {
     int battlersOnField;
     u32 battleContinueFlag : 1;
     u32 unused : 31;
+    // Keep existing context offsets stable for untouched battle assembly.
+    u16 trainerAIAbilities[BATTLER_MAX];
 } BattleContext;
 
 typedef struct BattleSystem BattleSystem;

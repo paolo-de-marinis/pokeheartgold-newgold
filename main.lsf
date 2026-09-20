@@ -289,8 +289,12 @@ Static main
     Object asm/unk_02087FD4.o
     Object src/unk_0208805C.o
     Object asm/unk_02088288.o
+    Object src/pokemon_summary_mon.o
+    Object asm/unk_02089C50.o
     Object asm/unk_0208B1AC.o
     Object asm/unk_0208C3E4.o
+    Object src/pokemon_summary_stats.o
+    Object asm/unk_0208D474.o
     Object asm/unk_0208DE40.o
     Object src/ribbon.o
     Object src/trainer_memo.o
@@ -570,6 +574,8 @@ Overlay OVY_2
     Object asm/overlay_02_02245B80.o
     Object src/field/encounter_check.o
     Object asm/overlay_02_02248728.o
+    Object src/field/repel.o
+    Object asm/overlay_02_0224BB18.o
     Object src/field/legend_cutscene_camera.o
     Object src/field/overlay_2_gear_phone.o
     Object src/field/event_cutscene_shaymin.o
@@ -629,6 +635,12 @@ Overlay OVY_10
     After OVY_6
     Object src/battle/trainer_ai.o
     Object asm/overlay_10_trainer_ai.o
+    Object src/battle/trainer_ai_ability.o
+    Object asm/overlay_10_trainer_ai_0221D260.o
+    Object src/battle/trainer_ai_switch_wonder_guard.o
+    Object asm/overlay_10_trainer_ai_0221F7F0.o
+    Object src/battle/trainer_ai_switch_absorb.o
+    Object asm/overlay_10_trainer_ai_02220010.o
 }
 Overlay OVY_11
 {
@@ -647,6 +659,10 @@ Overlay OVY_12
     Object asm/overlay_12_battle_controller_opponent.o
     Object src/battle/battle_02261FD4.o
     Object asm/overlay_12_battle_controller.o
+    Object src/battle/battle_controller_mon_copy.o
+    Object asm/overlay_12_battle_controller_02263CB0.o
+    Object src/battle/battle_controller_party_heal.o
+    Object asm/overlay_12_battle_controller_02263D14.o
     Object src/battle/battle_hp_bar.o
     Object asm/overlay_12_02265E28.o
     Object src/battle/battle_input.o
@@ -667,11 +683,17 @@ Overlay OVY_14
 {
     After main
     Object asm/overlay_14.o
+    Object src/pc_box_display.o
+    Object asm/overlay_14_021E7468.o
+    Object src/pc_box_display_ability.o
+    Object asm/overlay_14_021F52FC.o
 }
 Overlay OVY_15
 {
     After OVY_14
     Object asm/overlay_15.o
+    Object src/bag_app.o
+    Object asm/overlay_15_021F994C.o
 }
 Overlay OVY_16
 {
@@ -1024,6 +1046,8 @@ Overlay OVY_80
 {
     After OVY_42
     Object asm/overlay_80_02229EE0.o
+    Object src/frontier/frontier_mon.o
+    Object asm/overlay_80_0222A30C.o
     Object asm/frontier_system.o
     Object src/frontier/frontier_script_context.o
     Object asm/overlay_80_0222ACA0.o
@@ -1043,6 +1067,8 @@ Overlay OVY_80
     Object asm/overlay_80_02235900.o
     Object asm/overlay_80_02235FC8.o
     Object asm/overlay_80_02236450.o
+    Object src/frontier/frontier_tower_mon.o
+    Object asm/overlay_80_0223690C.o
     Object asm/overlay_80_02236B78.o
     Object asm/overlay_80_022372D8.o
     Object asm/overlay_80_02237A70.o
@@ -1070,6 +1096,14 @@ Overlay OVY_83
 {
     After OVY_80
     Object asm/overlay_83.o
+    Object src/overlay_83_player_mon.o
+    Object asm/overlay_83_02241FF0.o
+    Object src/overlay_83_player_summary.o
+    Object asm/overlay_83_02242814.o
+    Object src/overlay_83_opponent_mon.o
+    Object asm/overlay_83_02245F24.o
+    Object src/overlay_83_opponent_summary.o
+    Object asm/overlay_83_0224691C.o
 }
 Overlay OVY_84
 {
@@ -1274,6 +1308,10 @@ Overlay OVY_112
 {
     After main
     Object asm/overlay_112.o
+    Object src/pokewalker_receive.o
+    Object asm/overlay_112_021EECF0.o
+    Object src/pokewalker_trainer_house.o
+    Object asm/overlay_112_021F35A4.o
 }
 Overlay OVY_113
 {

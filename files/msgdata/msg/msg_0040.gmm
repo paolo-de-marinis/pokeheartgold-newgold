@@ -486,4 +486,12 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">NOT TELLING</language>
 	</row>
+	<row id="msg_0040_00117" index="117">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The repellent’s effect wore off!\nWould you like to use another one?</language>
+	</row>
+	<row id="msg_0040_00118" index="118">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">You used the {STRVAR_1 8, 1, 0}.</language>
+	</row>
 </body>

@@ -1,5 +1,7 @@
 #include "constants/items.h"
 
+#include "overlay_2/overlay_02_02248728.h"
+
 #include "bag.h"
 #include "field_system.h"
 #include "scrcmd.h"
@@ -80,5 +82,11 @@ BOOL ScrCmd_GetItemPocket(ScriptContext *ctx) {
 
     *ret_ptr = GetItemAttr(item_id, ITEMATTR_FIELD_POCKET, HEAP_ID_FIELD2);
 
+    return FALSE;
+}
+
+BOOL ScrCmd_UseNextRepel(ScriptContext *ctx) {
+    u16 *itemId = ScriptGetVarPointer(ctx);
+    *itemId = FieldSystem_UseNextRepel(ctx->fieldSystem);
     return FALSE;
 }

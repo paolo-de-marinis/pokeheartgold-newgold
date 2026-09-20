@@ -58,7 +58,7 @@ static void BattleScriptJump(BattleContext *ctx, NarcId narcId, int adrs);
 static void BattleScriptGotoSubscript(BattleContext *ctx, NarcId narcId, int adrs);
 static void *BattleScriptGetVarPointer(BattleSystem *battleSystem, BattleContext *ctx, int var);
 static int BattleSystem_GetBattlerIDBySide(BattleSystem *battleSystem, BattleContext *ctx, int side);
-static void BattlerSetAbility(BattleContext *ctx, u8 a1, u8 a2);
+static void BattlerSetAbility(BattleContext *ctx, u8 a1, u16 ability);
 static void BattlerSetItem(BattleContext *ctx, u8 battlerId, u16 item);
 static void BattleScript_CalcEffortValues(Party *party, int slot, u32 species, u32 form);
 static u32 BattleSystem_CalculateBallShakes(BattleSystem *battleSystem, BattleContext *ctx);
@@ -4764,7 +4764,8 @@ extern const u8 sHoneyGatherChanceTable[10];
 BOOL BtlCmd_GenerateEndOfBattleItem(BattleSystem *battleSystem, BattleContext *ctx) {
     int rnd, i, j, k;
     u16 species, item;
-    u8 ability, lvl;
+    u16 ability;
+    u8 lvl;
     Pokemon *mon;
 
     BattleScriptIncrementPointer(ctx, 1);
@@ -8155,8 +8156,8 @@ static void UpdateFriendshipFainted(BattleSystem *battleSystem, BattleContext *c
     }
 }
 
-static void BattlerSetAbility(BattleContext *ctx, u8 battlerID, u8 ability) {
-    ctx->trainerAIData.abilities[battlerID] = ability;
+static void BattlerSetAbility(BattleContext *ctx, u8 battlerID, u16 ability) {
+    ctx->trainerAIAbilities[battlerID] = ability;
     return;
 }
 

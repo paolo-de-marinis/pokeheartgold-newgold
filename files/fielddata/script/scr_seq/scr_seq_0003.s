@@ -78,6 +78,7 @@
 	ScrDef scr_seq_0003_069
 	ScrDef scr_seq_0003_070
 	ScrDef scr_seq_0003_071
+	ScrDef scr_seq_0003_072
 	ScrDefEnd
 
 scr_seq_0003_002:
@@ -1748,6 +1749,24 @@ scr_seq_0003_064:
 	BufferPartyMonNick 0, VAR_SPECIAL_x8005
 	NPCMsg msg_0040_00100
 	WaitABPress
+	CloseMsg
+	ReleaseAll
+	End
+
+scr_seq_0003_072:
+	PlaySE SEQ_SE_DP_SELECT
+	LockAll
+	NPCMsg msg_0040_00117
+	YesNo VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _ReuseRepelEnd
+	UseNextRepel VAR_SPECIAL_RESULT
+	PlaySE SEQ_SE_DP_CARD2
+	BufferPlayersName 0
+	BufferItemName 1, VAR_SPECIAL_RESULT
+	NPCMsg msg_0040_00118
+	WaitButton
+_ReuseRepelEnd:
 	CloseMsg
 	ReleaseAll
 	End

@@ -13,6 +13,15 @@
 #define TOWER_MODE_WIFI_PRACTICE 5
 #define TOWER_MODE_6             6
 
+typedef struct FrontierMonNarcData {
+    u16 species;
+    u16 moves[4];
+    u8 evs;
+    u8 nature;
+    u16 item;
+    u16 form;
+} FrontierMonNarcData;
+
 typedef struct FrontierMon {
     u16 species : 11;
     u16 form : 5;
@@ -28,7 +37,8 @@ typedef struct FrontierMon {
             u32 spdIv : 5;
             u32 spAtkIv : 5;
             u32 spDefIv : 5;
-            u32 dummy : 2;
+            u32 useSpeciesName : 1;
+            u32 dummy : 1;
         };
         u32 ivsWord;
     };

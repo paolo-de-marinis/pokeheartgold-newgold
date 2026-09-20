@@ -143,6 +143,18 @@ static const ControllerFunction sPlayerBattleCommands[CONTROLLER_COMMAND_MAX] = 
     [CONTROLLER_COMMAND_45] = ov12_0224D53C
 };
 
+// Ability expansion preserves the original battle-record and context prefixes.
+typedef char BattleMonSizeCheck[sizeof(BattleMon) == 0xC0 ? 1 : -1];
+typedef char BattleMonAbilityOffsetCheck[offsetof(BattleMon, ability) == 0x7A ? 1 : -1];
+typedef char BattleMonPPOffsetCheck[offsetof(BattleMon, movePPCur) == 0x2C ? 1 : -1];
+typedef char BattleMonItemOffsetCheck[offsetof(BattleMon, item) == 0x78 ? 1 : -1];
+typedef char BattleMonEffectOffsetCheck[offsetof(BattleMon, moveEffectFlags) == 0x80 ? 1 : -1];
+typedef char TrainerAIHeldItemsOffsetCheck[offsetof(TrainerAIData, heldItems) == 0x40 ? 1 : -1];
+typedef char TrainerAIMoveDataOffsetCheck[offsetof(TrainerAIData, moveData) == 0x8A ? 1 : -1];
+typedef char BattleContextMonsOffsetCheck[offsetof(BattleContext, battleMons) == 0x2D40 ? 1 : -1];
+typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, trainerAIAbilities) == 0x3158 ? 1 : -1];
+typedef char BattleContextSizeCheck[sizeof(BattleContext) == 0x3160 ? 1 : -1];
+
 BattleContext *BattleContext_New(BattleSystem *battleSystem) {
     BattleContext *ctx = (BattleContext *)Heap_Alloc(HEAP_ID_BATTLE, sizeof(BattleContext));
     MI_CpuClearFast((u32 *)ctx, sizeof(BattleContext));
@@ -753,7 +765,7 @@ static void BattleControllerPlayer_BeforeTurn(BattleSystem *battleSystem, Battle
         case BT_STATE_RAGE:
             for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
                 if ((ctx->battleMons[battlerId].status2 & STATUS2_RAGE) && GetBattlerSelectedMove(ctx, battlerId) != MOVE_RAGE) {
-                    ctx->battleMons[battlerId].status2 &= STATUS2_RAGE;
+                    ctx->battleMons[battlerId].status2 &= ~STATUS2_RAGE;
                 }
             }
             ctx->stateBeforeTurn++;
@@ -3942,6 +3954,7 @@ static void ov12_0224E384(BattleSystem *battleSystem, BattleContext *ctx) {
     u16 item;
 
     MI_CpuClear32((u32 *)&ctx->trainerAIData, sizeof(TrainerAIData));
+    MI_CpuClear32(ctx->trainerAIAbilities, sizeof(ctx->trainerAIAbilities));
 
     if ((battleType & BATTLE_TYPE_TRAINER) && !(battleType & (BATTLE_TYPE_NO_EXP | BATTLE_TYPE_AI))) {
         for (battler = 0; battler < 4; battler++) {

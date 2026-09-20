@@ -557,7 +557,7 @@ void SetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         mon->statChanges[index] = *datas8;
     } break;
     case BMON_DATA_ABILITY:
-        mon->ability = *data8;
+        mon->ability = *data16;
         break;
     case BMON_DATA_TYPE_1:
         mon->type1 = *data8;
@@ -2676,7 +2676,7 @@ static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId) {
     return FALSE;
 }
 
-u8 GetBattlerAbility(BattleContext *ctx, int battlerId) {
+u16 GetBattlerAbility(BattleContext *ctx, int battlerId) {
     if (AbilitiesAreNeutralized(ctx, battlerId) == TRUE) {
         return ABILITY_NONE;
     } else if ((ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED) && ctx->battleMons[battlerId].ability != ABILITY_MULTITYPE) {
@@ -5764,7 +5764,7 @@ typedef struct MoveDamageCalc {
     int item;
     int mod;
     u32 status;
-    u8 ability;
+    u16 ability;
     u8 gender;
     u8 type1;
     u8 type2;
@@ -6806,7 +6806,7 @@ static int ov12_02258440(BattleContext *ctx, int moveNo) {
     case MOVE_EFFECT_DIVE:
     case MOVE_EFFECT_DIG:
     case MOVE_EFFECT_BOUNCE:
-    case MOVE_EFFECT_FLINCH_BURN_HIT:
+    case MOVE_EFFECT_SHADOW_FORCE:
         return ctx->battleStatus & BATTLE_STATUS_CHARGE_MOVE_HIT;
     }
 
@@ -6890,7 +6890,7 @@ static void ov12_02258584(BattleContext *ctx, u8 battlerId) {
 }
 
 static void ov12_0225859C(BattleContext *ctx, u8 battlerId) {
-    ctx->trainerAIData.abilities[battlerId] = ABILITY_NONE;
+    ctx->trainerAIAbilities[battlerId] = ABILITY_NONE;
 }
 
 static void ov12_022585A8(BattleContext *ctx, u8 battlerId) {

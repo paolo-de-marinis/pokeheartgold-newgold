@@ -5,6 +5,7 @@
 
 typedef void (*ControllerFunction)(BattleSystem *, BattleContext *ctx);
 
+void ov12_02262240(BattleSystem *battleSystem, int bufferId, int battlerId, void *data, u8 size);
 void BattleController_EmitPlayEncounterAnimation(BattleSystem *battleSystem, BOOL a1);
 void BattleController_EmitPokemonEncounter(BattleSystem *battleSystem, int battlerId);
 void BattleController_EmitPokemonSlideIn(BattleSystem *battleSystem, int battlerId);

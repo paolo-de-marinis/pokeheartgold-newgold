@@ -59,3 +59,5 @@
 .public ov80_0222A7CC
 .public ov80_0222A7EC
 .public ov80_0222A840
+.public ov80_02229F6C
+.public _0223B620

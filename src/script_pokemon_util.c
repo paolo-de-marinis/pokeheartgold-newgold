@@ -3,6 +3,7 @@
 #include "global.h"
 
 #include "constants/battle.h"
+#include "constants/field_poison.h"
 #include "constants/items.h"
 
 #include "get_egg.h"
@@ -18,7 +19,7 @@ static BOOL MonNotFaintedOrEgg(Pokemon *mon) {
     return !GetMonData(mon, MON_DATA_IS_EGG, NULL);
 }
 
-BOOL GiveMon(enum HeapID heapID, SaveData *saveData, int species, int level, int form, u8 ability, u16 heldItem, int ball, int encounterType) {
+BOOL GiveMon(enum HeapID heapID, SaveData *saveData, int species, int level, int form, u16 ability, u16 heldItem, int ball, int encounterType) {
     Party *party;
     Pokemon *mon;
     PlayerProfile *profile;
@@ -158,43 +159,21 @@ BOOL HasEnoughAlivePokemonForDoubleBattle(Party *party) {
 }
 
 BOOL ApplyPoisonStep(Party *party, u16 location) {
+#pragma unused(location)
     int n;
     int i;
-    int n_poisoned;
-    int n_fainted;
-    u32 hp;
     Pokemon *mon;
 
-    n_poisoned = 0;
-    n_fainted = 0;
     n = Party_GetCount(party);
     for (i = 0; i < n; i++) {
         mon = Party_GetMonByIndex(party, i);
         if (!MonNotFaintedOrEgg(mon)) {
             continue;
         }
-        if (!(GetMonData(mon, MON_DATA_STATUS, NULL) & (STATUS_POISON | STATUS_BAD_POISON))) {
-            continue;
-        }
-        hp = GetMonData(mon, MON_DATA_HP, NULL);
-        if (hp > 1) {
-            hp--;
-        }
-        SetMonData(mon, MON_DATA_HP, &hp);
-        if (hp == 1) {
-            n_fainted++;
-            MonApplyFriendshipMod(mon, FRIENDSHIP_EVENT_HEAL_FIELD_PSN, location);
-            ApplyMonMoodModifier(mon, MON_MOOD_MODIFIER_SURVIVED_PSN);
-        }
-        n_poisoned++;
+        // Preserve the Pokémon integrity checks without applying field poison.
+        GetMonData(mon, MON_DATA_STATUS, NULL);
     }
-    if (n_fainted != 0) {
-        return 2;
-    } else if (n_poisoned != 0) {
-        return 1;
-    } else {
-        return 0;
-    }
+    return FIELD_POISON_NONE;
 }
 
 BOOL SurvivePoisoning(Pokemon *mon) {

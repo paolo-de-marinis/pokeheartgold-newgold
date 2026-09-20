@@ -4,6 +4,7 @@
 #include "field_system.h"
 
 BOOL PlayerStepEvent_RepelCounterDecrement(SaveData *saveData, FieldSystem *fieldSystem);
+u16 FieldSystem_UseNextRepel(FieldSystem *fieldSystem);
 BOOL ov02_0224E35C(FieldSystem *fieldSystem);
 BOOL ov02_0224E4CC(u8 tile, int arg1);
 BOOL ov02_0224E4DC(u8 tile, int arg1);

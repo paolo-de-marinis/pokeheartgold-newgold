@@ -73,5 +73,6 @@
 #define _EV_scr_seq_0003_069 69
 #define _EV_scr_seq_0003_070 70
 #define _EV_scr_seq_0003_071 71
+#define _EV_scr_seq_0003_072 72
 
 #endif // SCR_SEQ_0003_H_

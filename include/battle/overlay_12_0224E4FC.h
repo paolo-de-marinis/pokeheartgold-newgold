@@ -15,6 +15,7 @@ void ov12_0224ED00(BattleContext *ctx, int id, int battlerId, int index);
 BOOL Link_QueueNotEmpty(BattleContext *ctx);
 void BattleBuffer_Clear(BattleContext *ctx, int battlerId);
 int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *data);
+// BMON_DATA_ABILITY consumes a u16 payload.
 void SetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *data);
 void AddBattlerVar(BattleContext *ctx, int battlerId, u32 varId, int data);
 void BattleMon_AddVar(BattleMon *mon, u32 varId, int data);
@@ -54,7 +55,7 @@ BOOL CurseUserIsGhost(BattleContext *ctx, u16 moveNo, int battlerId);
 BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL CanTrickHeldItem(BattleContext *ctx, int battlerId);
 BOOL WhirlwindCheck(BattleSystem *battleSystem, BattleContext *ctx);
-u8 GetBattlerAbility(BattleContext *ctx, int battlerId);
+u16 GetBattlerAbility(BattleContext *ctx, int battlerId);
 BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int ability);
 BOOL CanSwitchMon(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL CantEscape(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BattleMessage *msg);
