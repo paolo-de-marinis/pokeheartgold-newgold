@@ -27,6 +27,23 @@ RODS = (("oldRodSlots", "old_rod", "rateOldRod"),
         ("superRodSlots", "super_rod", "rateSuperRod"))
 
 
+def keep_version_split(existing, wanted):
+    """Write New Gold's value into HeartGold's side and leave SoulSilver's.
+
+    The native table carries a HEARTGOLD and a SOULSILVER value wherever the two
+    games differ, and the reference, which is a HeartGold hack, has only one. A
+    plain overwrite would hand SoulSilver HeartGold's wild Pokemon.
+    """
+    if isinstance(existing, dict) and set(existing) == {"HEARTGOLD", "SOULSILVER"}:
+        return {"HEARTGOLD": wanted, "SOULSILVER": existing["SOULSILVER"]}
+    if isinstance(existing, dict) and isinstance(wanted, dict):
+        return {key: keep_version_split(existing.get(key), value) for key, value in wanted.items()}
+    if isinstance(existing, list) and isinstance(wanted, list):
+        return [keep_version_split(existing[i] if i < len(existing) else None, value)
+                for i, value in enumerate(wanted)]
+    return wanted
+
+
 def species_constants():
     return set(re.findall(r"#define (SPECIES_[A-Z0-9_]+)",
                           (ROOT / "include/constants/species.h").read_text()))
@@ -155,6 +172,7 @@ def main():
         if missing:
             problems.append(f"{code}: undefined {', '.join(missing)}")
             continue
+        wanted = {key: keep_version_split(entry.get(key), value) for key, value in wanted.items()}
         differing = [key for key in wanted if entry.get(key) != wanted[key]]
         if not differing:
             continue

@@ -33,16 +33,28 @@ class EncounterTests(unittest.TestCase):
         self.maps = json.loads(ENCOUNTERS.read_text())["encounters"]
         self.ids = species_ids()
         self.named = set()
+
+        def collect(value):
+            # A slot names one species, or one per game where they differ.
+            if isinstance(value, dict):
+                for inner in value.values():
+                    collect(inner)
+            elif isinstance(value, list):
+                for inner in value:
+                    collect(inner)
+            elif isinstance(value, str) and value.startswith("SPECIES_"):
+                self.named.add(value)
+
         for entry in self.maps:
             for slot in entry["land"]["mons"]:
-                self.named.update(slot["species"].values())
+                collect(slot["species"])
             for key in ("surf", "rock_smash"):
-                self.named.update(slot["species"] for slot in entry[key]["mons"])
+                collect([slot["species"] for slot in entry[key]["mons"]])
             for rod in entry["fishing"].values():
-                self.named.update(slot["species"] for slot in rod["mons"])
-            self.named.update(entry["hoenn"])
-            self.named.update(entry["sinnoh"])
-            self.named.add(entry["landSwarm"])
+                collect([slot["species"] for slot in rod["mons"]])
+            collect(entry["hoenn"])
+            collect(entry["sinnoh"])
+            collect(entry["landSwarm"])
 
     def test_every_species_named_exists(self):
         for name in self.named:
@@ -66,6 +78,24 @@ class EncounterTests(unittest.TestCase):
         added = {f"SPECIES_{name}" for name in import_species.NEW_SPECIES}
         wild = added & self.named
         self.assertGreater(len(wild), 10, "the rebalance should place added species")
+
+    def test_soulsilver_keeps_its_own_wild_pokemon(self):
+        """The reference is a HeartGold hack; it must not overwrite both games."""
+        split = 0
+        for entry in self.maps:
+            for slot in entry["land"]["mons"]:
+                for key in ("level", "species"):
+                    value = slot[key]
+                    if key == "species":
+                        for time in value.values():
+                            if isinstance(time, dict):
+                                self.assertEqual(set(time), {"HEARTGOLD", "SOULSILVER"})
+                                split += 1
+                    elif isinstance(value, dict):
+                        self.assertEqual(set(value), {"HEARTGOLD", "SOULSILVER"})
+                        split += 1
+        # pret's table names both games in hundreds of places.
+        self.assertGreater(split, 500)
 
     def test_every_wild_species_can_appear(self):
         # A species in the table needs the data the game reads when it shows up.
