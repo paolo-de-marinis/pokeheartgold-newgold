@@ -34,7 +34,7 @@ def revision(root, commit, path):
 
 
 def function(source, name):
-    match = re.search(r"^(?:static )?\w+ " + name + r"\([^;]*?\) \{", source, re.M)
+    match = re.search(r"^(?:static )?\w+ \*?" + name + r"\([^;]*?\) \{", source, re.M)
     if match is None:
         raise ValueError(f"Function definition not found: {name}")
     depth, end = 1, match.end()

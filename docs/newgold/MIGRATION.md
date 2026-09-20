@@ -55,18 +55,18 @@ Do not replace these choices with a blanket assumption of Generation 9 behavior.
 | ASM targets remaining | 37 |
 | Additional patch-only ASM prerequisites identified | 4: two converted to matching C, two still ASM; outside the original hook census |
 | Further ability byte boundaries identified | 14 functions originally ASM: all converted to C (twelve MATCHING, two instruction-equivalent NONMATCHING before modification); outside the original hook census |
-| Entire hook replacements made unnecessary | 2, repel expiry and bag-use hooks |
+| Entire hook replacements made unnecessary | 4: repel expiry, bag use and both PC ability scratch hooks |
 | Instruction-patch behaviors represented natively | 4 groups: Rage, Fire Fang / Shadow Force, overworld poison and battle ability widths (M18 foundation) |
 | Function-pointer patch replacements made unnecessary | 1, reusable-repel script handler |
 | Reference binary patch mechanisms made unnecessary | 5 behavior groups: four instruction-patch groups and one script-handler pointer replacement; not a count of individual patched instructions |
 | Features ported | 5: Rage, Fire Fang / Shadow Force, reusable repels, overworld poison, existing friendship-evolution threshold |
 | Features verified at C/resource boundaries | 5; emulator scenarios still pending |
-| Ability-width foundations | M16 saved encoding/setter/compact data; M18 battle storage, accessors and coherent AI cache; UI/personal/field/external export consumers still pending |
+| Ability-width foundations | M16 saved encoding/setter/compact data; M18 battle storage, accessors and coherent AI cache; M19 PC box display record; summary/personal/field/external export consumers still pending |
 | Ability text resources ported | 3 native message banks, 320 entries each; all 960 compiled texts verified against pinned NewGold |
 | Features checked in a running ROM | 0 |
-| ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5, M13, M15, M16 and M18; separate from feature gameplay verification |
+| ROM boot/rendering/menu-input smoke | HeartGold and SoulSilver PASS on M5, M13, M15, M16, M18 and M19; separate from feature gameplay verification |
 | Original NewGold comparison | M16 intermediate comparison complete: ROMs differ; 960 decoded ability texts agree; final completed-port comparison still pending |
-| Complete ROM build | HeartGold and SoulSilver PASS through M18; no non-overlay resource or ARM7 changes from M17 |
+| Complete ROM build | HeartGold and SoulSilver PASS through M19; M19 changes overlay 14 only |
 | NewGold hook / binary instruction patch / executable ASM implementations added | 0 / 0 / 0 |
 
 These are distinct metrics. Several hooks can touch one function; one hook can
@@ -128,7 +128,7 @@ inside it has been implemented or completely specified.
 | Reusable repels / executable logic and script | `src/repel.c`, `hooks`, `routinepointers`, `armips/asm/repel.s`, common-script changes | `asm/overlay_02_02248728.s::PlayerStepEvent_RepelCounterDecrement`; `asm/overlay_15.s::BagApp_GetRepelStepCountAddr`, ASM; native common script and script command table | BUILDS; VERIFIED (C/resources) | Both vanilla conversions matched retail; native reuse feature builds on HG/SS and passes source/asset checks; runtime UI pending |
 | Overworld poison disabled / executable logic | `include/config.h::UPDATE_OVERWORLD_POISON`, `bytereplacement:118` | `src/script_pokemon_util.c::ApplyPoisonStep`, C | BUILDS; VERIFIED (host) | Both ROMs pass; accessor integrity checks and four-step counter preserved; see M4 |
 | Friendship evolution threshold / executable logic | `include/config.h::FRIENDSHIP_EVOLUTION_THRESHOLD`, `src/individual/GetMonEvolutionInternal.c` | `src/pokemon.c::GetMonEvolution`, C | BUILDS; VERIFIED (host), three existing methods | Both ROMs pass; new evolution methods, Fairy and Sylveon remain separate dependencies; see M5 |
-| PC ability display prerequisite / executable logic | `hooks:226–227`, `asm/other_hook.s::BoxDisplayMon_StoreAbility`, `BoxDisplayMon_GrabAbility` | `ov14_021E7358`, `ov14_021F528C`, originally ASM; now `src/pc_box_display.c`, `src/pc_box_display_ability.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M5; ability widening and hook retirement remain pending; see M6 |
+| PC ability display / executable logic | `hooks:226–227`, `asm/other_hook.s::BoxDisplayMon_StoreAbility`, `BoxDisplayMon_GrabAbility` | `ov14_021E7358`, `ov14_021F528C`, originally ASM; now `src/pc_box_display.c`, `src/pc_box_display_ability.c` | VANILLA C DECOMPILED (M6); PORTED; BUILDS; VERIFIED (host) | M6 matched both ROMs exactly; M19 carries the full ID in the record and retires both hooks and their executable scratch halfword |
 | Party-heal notification prerequisite / executable logic | `armips/asm/abilities.s:174–179` | `BattleControl_EmitPartyStatusHeal`, originally ASM, now `src/battle/battle_controller_party_heal.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M6; original four-byte protocol preserved; see M7 |
 | Summary data/ability display prerequisite / executable logic | `armips/asm/abilities.s`, summary hooks and EV/IV changes | `sub_0208981C`, `sub_0208D178`, originally ASM; now `src/pokemon_summary_mon.c`, `src/pokemon_summary_stats.c` | VANILLA C DECOMPILED; MATCHING; BUILDS | Both ROMs exactly match M7; expanded ability and EV/IV behavior remain pending; see M8 |
 | Ability names/descriptions / resource | `data/text/720.txt`, `721.txt`, `722.txt` | `files/msgdata/msg/msg_0720.gmm`, `msg_0721.gmm`, `msg_0722.gmm`, native message resources | PORTED; BUILDS; VERIFIED (compiled resources) | All 960 compiled strings equal pinned source; expanded IDs and mechanics remain pending; see M9 |
@@ -792,35 +792,89 @@ counts stay 21 (19 matching vanilla prerequisites and two equivalent); original
 hook targets stay 312 C / 37 ASM. Next widen native UI/field/personal consumers and
 define external-record handling before enabling higher-ID assignments.
 
+## M19 — Full ability IDs in the PC box display record
+
+NewGold `hooks:226–227` install `asm/other_hook.s::BoxDisplayMon_StoreAbility`
+and `BoxDisplayMon_GrabAbility`. The first replaces the record's ability store
+with a halfword written into the reference's own executable bytes at
+`0x021E73B8`; the second makes the renderer read that global back. One shared
+scratch halfword therefore serves every displayed Pokémon.
+
+The native record carries the value instead. `PCBoxDisplayMon` gains a `u16
+ability` appended at 0x1C and its original byte at 0x0E becomes `unusedAbility`,
+kept only so every later field keeps its address. `ov14_021E7358` writes the
+complete `MON_DATA_ABILITY` result, which M16 already returns as nine bits, and
+`ov14_021F528C` passes it to the existing `u32` `BufferAbilityName` parameter.
+Both hooks and the writable-code storage are retired; no global, sidecar or
+address arithmetic replaces them.
+
+Growth is safe because the record is heap data owned by native C. Only
+`ov14_021E7358` allocates it, using `sizeof`, and `ov14_021E7468` releases it
+through `Heap_Free`, which takes no size. No assembly allocates, copies or
+strides this record: the two `mov r1, #0x1c` allocations in overlay 14 belong to
+`ov14_021F1F24`'s separate cursor state, which has its own `ov14_021F1F38`
+release.
+
+The consumer audit that milestone 6 left open is now complete. Both call sites
+(`ov14_021E7588`, `ov14_021E75F4`) pass the record to `ov14_021E74F0`,
+`ov14_021E7470`, `ov14_021F36DC`, `ov14_021F3D70`, `ov14_021F5368` and the free
+routine; `ov14_021F5368` fans out to eight window renderers, one of which is the
+native `ov14_021F528C`. Their reads are the mon pointer at 0x00, species 0x04,
+held item 0x06, types 0x0C/0x0D, nature 0x0F, markings 0x10 and the packed
+level/egg and gender bytes 0x12/0x13. Each of those is an immediate-offset
+access; none of the traced consumers indexes the record through a register.
+**No immediate-offset instruction anywhere in overlay 14 uses 0x0E**, which is
+why the reference could discard that store without providing a reader. Compile-time checks in `src/pc_box_display.c`
+assert the new 0x20 size and every original offset, so a future layout mistake
+fails both target builds.
+
+A new actual-C host check compiles both native functions under ASan/UBSan and
+covers 512 ability IDs through construction and rendering, the egg branch, an
+empty slot and the two Nidoran gender cases, asserting that the neighbouring
+fields the remaining assembly reads are unchanged and that the original 0x0E
+byte is never written. Host pointer width moves every field, so DS offsets stay
+the ROM build's compile-time assertions, not the test's. Evidence:
+`build/milestones/19-pc-ability-width`.
+
+Both full ROMs build. Against M18 the only changed ROM file in either game is
+overlay 14: ARM9, ARM7 and all 512 other files are byte-identical, and the
+1,436-frame boot/render/menu-input smoke produces frames identical to M18's.
+
+Conversion counts are unchanged: no ASM was converted here. Hook targets stay
+312 C / 37 ASM, and retired hook replacements rise from two to four. The summary
+record cannot use this technique — it is embedded inside the assembly-shared
+application allocation — so its widening, the personal/field consumers and the
+external-record policy remain the next steps before IDs above 255 are assigned.
+
 ## Remaining foundation — Expanded ability consumers
 
 The four identified AI byte consumers, three Frontier record routines and
 both Pokéwalker record boundaries are now C. M16 implements the saved ability
-storage and setter contract. M17 converts the battle-copy packet producer to matching C. M18 implements the battle storage and AI cache contract. Next close
-UI/personal/field and external export paths before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
+storage and setter contract. M17 converts the battle-copy packet producer to matching C. M18 implements the battle storage and AI cache contract. M19 widens the PC box display record. Next close
+the summary, personal/field and external export paths before enabling expanded IDs. [ABILITY_DATA_FLOW.md](ABILITY_DATA_FLOW.md) and
 [ability-consumers.tsv](ability-consumers.tsv) record 68 scoped evidence rows,
 including fourteen additional original ASM byte boundaries (all now C), already-wide accessors,
 serialization constraints and remaining inventory gaps. These are not all
 equivalent: do not convert untouched width-safe ASM merely because it exists.
 Save and battle layouts must not move before affected consumers are understood.
 
-The source defines abilities 0–319. Saved Pokémon now support nine-bit abilities. Battle storage and AI memory now use u16. Native personal data,
-field state, UI and external records still include u8 ability fields. Adding the
+The source defines abilities 0–319. Saved Pokémon now support nine-bit abilities. Battle storage, AI memory and the PC box display record now use u16. Native personal data,
+field state, the summary record, remaining UI and external records still include u8 ability fields. Adding the
 new IDs alone would truncate them; moving fields while ASM still consumes
 their old offsets would corrupt other state.
 
 | Prerequisite | Original ASM target | Source reason / next operation |
 | --- | --- | --- |
-| PC display-record constructor — DONE (vanilla C) | Originally `asm/overlay_14.s::ov14_021E7358`, original hook census | `hooks:226`, `asm/other_hook.s::BoxDisplayMon_StoreAbility`; M6 preserves the original record; native widening remains pending |
-| PC ability renderer — DONE (vanilla C) | Originally `asm/overlay_14.s::ov14_021F528C`, original hook census | `hooks:227`, `BoxDisplayMon_GrabAbility`; M6 preserves typed fields/text/window behavior; native widening remains pending |
+| PC display-record constructor — DONE (widened) | Originally `asm/overlay_14.s::ov14_021E7358`, original hook census | `hooks:226`, `asm/other_hook.s::BoxDisplayMon_StoreAbility`; M6 preserved the original record, M19 appends the full ID and retires the hook |
+| PC ability renderer — DONE (widened) | Originally `asm/overlay_14.s::ov14_021F528C`, original hook census | `hooks:227`, `BoxDisplayMon_GrabAbility`; M6 preserved typed fields/text/window behavior, M19 renders the full ID and retires the hook |
 | Summary data loader — DONE (vanilla C) | Originally `asm/unk_02088288.s::sub_0208981C`, additional patch-only ASM target | M8 preserves data/lock behavior; widened ability storage remains pending |
 | Summary display — DONE (vanilla C) | Originally `asm/unk_0208C3E4.s::sub_0208D178`, original hook census | M8 preserves ability/stat presentation; widened ability and EV/IV behavior remain pending |
 | Battle party-heal notification — DONE (vanilla C) | Originally `asm/overlay_12_battle_controller.s::BattleControl_EmitPartyStatusHeal`, additional patch-only ASM target | M7 preserves the packet; `abilities.s:174–179` later changes the ability source field; receiver predicate supports reference IDs without widening |
 
-The source PC hooks use writable executable bytes as shared ability scratch
-storage. Native per-record data will replace that mechanism; no equivalent
-global or code-address storage is needed. This requires auditing every record
-reader and allocation/copy size before its layout changes.
+The source PC hooks used writable executable bytes as shared ability scratch
+storage. M19 replaces that mechanism with native per-record data after auditing
+every overlay 14 reader and the record's allocation and release; no equivalent
+global or code-address storage exists in the port.
 
 Continue the scoped consumer work, finish runtime/protocol contracts, and migrate personal resources/constants/flags. Only
 then assign IDs above 255 or enable dependent ability mechanics. Check saved

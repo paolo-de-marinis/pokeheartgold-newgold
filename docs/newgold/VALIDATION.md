@@ -50,26 +50,34 @@ project helper tools built successfully. The exact CI formatter, clang-format
 19.1.7, is installed in a temporary virtual environment.
 
 The workspace path contains a space, which the upstream Makefiles do not handle.
-Validation therefore uses a separate copy at `/tmp/pokeheartgold-validation`.
-The initial copy was checked against every tracked upstream blob (respecting
-`charmap.txt`'s required CRLF working-tree conversion). Subsequent builds copy
-only the milestone's changed files, leaving unrelated working changes out.
+Validation therefore uses a separate copy without one. Through M18 that copy and
+its toolchain lived under `/tmp`; a reboot before M19 removed both, so they were
+rebuilt under `/home/paolo/hgss-build`, which survives restarts. The rebuilt copy
+is a `git clone` of the port branch, so every tracked blob matches by
+construction, including `charmap.txt`'s required CRLF working-tree conversion.
+Subsequent builds copy only the milestone's changed files, leaving unrelated
+working changes out. The per-milestone logs, ROMs and maps under
+`build/milestones/` are unaffected by the loss and remain the evidence chain; the
+older `/tmp` baseline and vanilla-conversion logs referenced below are gone.
 
-On this host, the build environment is:
+The toolchain was rebuilt from the same upstream CI assets, both re-checked
+against the SHA-256 values above, plus wine, pugixml and `arm-none-eabi-binutils`
+extracted from this host's own Arch package mirror into
+`/home/paolo/hgss-build/deps/root` without installing system packages. The
+extracted ARM binutils is again 2.47. On this host the build environment is:
 
 ```sh
-export PATH=/tmp/hgss-build-deps/arch/usr/bin:$PATH
-export WINEPREFIX=/tmp/hgss-build-deps/wineprefix
-export WINEDEBUG=-all
-export WINEDLLOVERRIDES=mscoree,mshtml=
-cd /tmp/pokeheartgold-validation
+source /home/paolo/hgss-build/env.sh
+cd /home/paolo/hgss-build/pokeheartgold-validation
 make -j4 COMPARE=1
 make -j4 GAME_VERSION=SOULSILVER COMPARE=1
 ```
 
-For intentionally modified ROMs use `COMPARE=0`. On another machine, use
-`INSTALL.md` and a checkout without spaces; the `/tmp` paths above are local
-validation paths, not new project dependencies.
+`env.sh` sets `PATH`, `PKG_CONFIG_PATH`, `LD_LIBRARY_PATH`, `LIBRARY_PATH`,
+`CPATH` and the wine variables for that extracted runtime. For intentionally
+modified ROMs use `COMPARE=0`. On another machine, use `INSTALL.md` and a
+checkout without spaces; the paths above are local validation paths, not new
+project dependencies.
 
 ## Results
 
@@ -93,8 +101,9 @@ validation paths, not new project dependencies.
 
 Baseline HeartGold SHA-1: `4fcded0e2713dc03929845de631d0932ea2b5a37`.
 Baseline SoulSilver SHA-1: `f8dc38ea20c17541a43b58c5e6d18c1732c7e582`.
-Baseline logs: `/tmp/hgss-build-deps/baseline-heartgold.log` and
-`/tmp/hgss-build-deps/baseline-soulsilver.log`.
+Baseline logs were `/tmp/hgss-build-deps/baseline-heartgold.log` and
+`/tmp/hgss-build-deps/baseline-soulsilver.log`, removed with the tmpfs before M19;
+the recorded retail SHA-1 results above stand, but that pair is no longer on disk.
 The linker already warns about unset `MWLibraries` and `MWLibraryFiles` in the
 successful baseline; Wine emits Mesa display warnings. These are environmental
 baseline warnings, not warnings introduced by ported C.
@@ -102,7 +111,7 @@ baseline warnings, not warnings introduced by ported C.
 Run the current focused checks with:
 
 ```sh
-python3 -m unittest discover -s tests/newgold -v
+python3 -m unittest discover -s tests/newgold -t tests/newgold -v
 git diff --check
 ```
 
@@ -113,8 +122,10 @@ the original fails the regression while preserving unrelated effect behavior.
 
 ROM scenarios still to execute are listed with their features in `MIGRATION.md`.
 
-Vanilla conversion logs: `/tmp/hgss-build-deps/vanilla-decomp-heartgold.log`
-and `/tmp/hgss-build-deps/vanilla-decomp-soulsilver.log`. No new compiler warnings.
+Vanilla conversion logs were `/tmp/hgss-build-deps/vanilla-decomp-heartgold.log`
+and `/tmp/hgss-build-deps/vanilla-decomp-soulsilver.log`, removed with the tmpfs
+before M19. They recorded no new compiler warnings; the archived per-milestone
+logs under `build/milestones/` remain available.
 
 ## M1 — Rage build outputs
 
@@ -537,3 +548,48 @@ Both ROMs run 1,436 frames in isolated melonDS processes and reach the readable
 intro through menu input. This smoke does not exercise a battle. Actual NewGold
 ability gameplay parity remains unverified; UI, field, personal assignment and
 external-record compatibility are still dependencies before broader high-ID use.
+
+## M19 — Full ability IDs in the PC box display record
+
+Evidence: `build/milestones/19-pc-ability-width/verification.json`, both build
+logs, maps, ROMs, `pc_box_display.o`, `OVY_14.sbin`, host-test log, runnable
+audit and runtime-smoke records.
+
+| ROM | SHA-1 | SHA-256 |
+| --- | --- | --- |
+| HeartGold | `fa6d4ab53e636663778fd5750fa3b6308d9dec2e` | `e73f33f95a043e55398bc16309b3fc216cb738748697814d5bc8b2efb5e16509` |
+| SoulSilver | `6facb97d8dfc6ea7edc1bc8017dbfe66e9874dfa` | `1a362a418eb0137fecb5d468fb7d36ef07f4e8cd837e9051816a22d4abca33ac` |
+
+Both full builds pass with no new compiler or assembler warnings; only the
+pre-existing `MWLibraries` / `MWLibraryFiles` linker notices and wine's Mesa
+messages appear. This is the first build on the rebuilt toolchain described
+above, so it also re-establishes that environment. The CI-pinned clang-format
+19.1.7 virtualenv was lost with the tmpfs; the host's clang-format 22.1.8
+reports no change for either edited file, which were already formatted under
+19.1.7.
+
+The change is tightly scoped. Comparing each ROM with its M18 counterpart, the
+**only** differing file of 513 is overlay 14; the decompressed ARM9, the ARM7
+binary and every other file are byte-identical in both games. No relink note is
+needed because nothing outside the edited overlay moved. Target assertions in
+`src/pc_box_display.c` verify the record's new 0x20 size and the unchanged
+offsets 0x04, 0x06, 0x08, 0x0C, 0x0D, 0x0E, 0x0F, 0x10 and 0x14, plus the
+appended ability at 0x1C, so a later layout mistake fails both builds.
+
+All fifteen host checks pass. The new one compiles the actual `ov14_021E7358`
+and `ov14_021F528C` under ASan/UBSan and drives 512 ability IDs through record
+construction and rendering, asserting the complete ID reaches the already-`u32`
+`BufferAbilityName` parameter, that the original 0x0E byte is never written, and
+that species, held item, personality, types, nature, markings, level, egg and
+gender fields the remaining assembly reads keep their values. It also covers the
+egg branch, an empty box slot and both Nidoran species. Box data, heap, message
+format and windows are controlled stand-ins, and host pointer width moves every
+field, so DS offsets remain the ROM build's assertions rather than the test's.
+
+Both ROMs complete the same 1,436-frame melonDS smoke as earlier milestones,
+using the identical core `5efc1975eabf12b66502b0ca68d823e9ba96cda8b680482d625e862b8f4c680e`
+(melonDS 0.9.3), no external BIOS and no saved data. All twenty-two captured
+frames are byte-identical to M18's, and frame 1436 shows the readable intro
+text. The smoke never opens the PC, so it demonstrates an unchanged boot path,
+not the widened display. Actual PC rendering of an ability above 255 is still
+unverified in a running ROM, and no ID above 255 is assigned yet.

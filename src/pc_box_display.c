@@ -5,17 +5,21 @@
 #include "heap.h"
 #include "pokemon.h"
 
-// The remaining PC assembly shares this record's original layout.
-typedef char PCBoxDisplayMonSizeCheck[sizeof(PCBoxDisplayMon) == 0x1C ? 1 : -1];
+// The remaining PC assembly shares every original offset below.
+// The record grew from 0x1C to 0x20 for the full ability ID. Only this file
+// allocates it, using sizeof, and ov14_021E7468 frees it through Heap_Free
+// without a size; no assembly allocates, copies or strides it.
+typedef char PCBoxDisplayMonSizeCheck[sizeof(PCBoxDisplayMon) == 0x20 ? 1 : -1];
 typedef char PCBoxDisplayMonSpeciesCheck[offsetof(PCBoxDisplayMon, species) == 0x04 ? 1 : -1];
 typedef char PCBoxDisplayMonItemCheck[offsetof(PCBoxDisplayMon, heldItem) == 0x06 ? 1 : -1];
 typedef char PCBoxDisplayMonPersonalityCheck[offsetof(PCBoxDisplayMon, personality) == 0x08 ? 1 : -1];
 typedef char PCBoxDisplayMonType1Check[offsetof(PCBoxDisplayMon, type1) == 0x0C ? 1 : -1];
 typedef char PCBoxDisplayMonType2Check[offsetof(PCBoxDisplayMon, type2) == 0x0D ? 1 : -1];
-typedef char PCBoxDisplayMonAbilityCheck[offsetof(PCBoxDisplayMon, ability) == 0x0E ? 1 : -1];
+typedef char PCBoxDisplayMonUnusedAbilityCheck[offsetof(PCBoxDisplayMon, unusedAbility) == 0x0E ? 1 : -1];
 typedef char PCBoxDisplayMonNatureCheck[offsetof(PCBoxDisplayMon, nature) == 0x0F ? 1 : -1];
 typedef char PCBoxDisplayMonMarkingsCheck[offsetof(PCBoxDisplayMon, markings) == 0x10 ? 1 : -1];
 typedef char PCBoxDisplayMonMovesCheck[offsetof(PCBoxDisplayMon, moves) == 0x14 ? 1 : -1];
+typedef char PCBoxDisplayMonWideAbilityCheck[offsetof(PCBoxDisplayMon, ability) == 0x1C ? 1 : -1];
 
 PCBoxDisplayMon *ov14_021E7358(BoxPokemon *mon) {
     PCBoxDisplayMon *displayMon;
@@ -28,6 +32,8 @@ PCBoxDisplayMon *ov14_021E7358(BoxPokemon *mon) {
         displayMon->personality = GetBoxMonData(mon, MON_DATA_PERSONALITY, NULL);
         displayMon->type1 = GetBoxMonData(mon, MON_DATA_TYPE_1, NULL);
         displayMon->type2 = GetBoxMonData(mon, MON_DATA_TYPE_2, NULL);
+        // Full NewGold ID. The reference instead stores this halfword in its own
+        // executable bytes at 0x021E73B8 and has the renderer read it back.
         displayMon->ability = GetBoxMonData(mon, MON_DATA_ABILITY, NULL);
         displayMon->nature = GetBoxMonNature(mon);
         displayMon->markings = GetBoxMonData(mon, MON_DATA_MARKINGS, NULL);
