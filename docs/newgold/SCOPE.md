@@ -42,7 +42,8 @@ the player can actually meet:
 
 | Kind | Referenced | Beyond vanilla HGSS |
 | --- | ---: | ---: |
-| Species | 395 | **38** (> 493) |
+| Species met directly | 395 | **38** (> 493) |
+| Species with the evolution closure | 450 | **65** (> 493) |
 | Moves | 370 | **13** (> 467), plus Solar Seeds |
 | Abilities (of those species) | 139 | **21** (> 123), two of them konefr's |
 | Items in rosters | 42 | to be counted |
@@ -51,8 +52,16 @@ This is the number that matters. hg-engine defines 1,476 species, ~923 moves
 and 320 abilities; New Gold's content uses a small slice of that. Nothing is
 implemented because the engine defines it — only because the game reaches it.
 
-Still to be counted the same way: species obtainable by evolution, gift and
-static encounters from scripts, Pokédex and PC display requirements.
+Following the evolution table from those 395 adds 55 more reachable species,
+27 of them beyond vanilla: the Lillipup, Tympole, Sewaddle, Yamask, Trubbish,
+Karrablast, Foongus, Joltik, Ferroseed, Klink, Elgyem, Litwick and Shelmet
+lines, the Bunnelby, Fletchling, Litleo, Espurr, Phantump, Pumpkaboo, Noibat
+and Applin lines, Sizzlipede, Sylveon, Dedenne, Bouffalant, Emolga, and the
+convergent forms Wyrdeer, Kleavor, Ursaluna, Annihilape, Farigiraf, Dudunsparce
+and Hydrapple. Sylveon confirms the Fairy type is required, not optional.
+
+Still to be counted the same way: gift and static encounters placed by scripts,
+and what the Pokédex and PC displays must cover.
 
 ## Out of scope
 
