@@ -28,6 +28,8 @@ IMPLEMENTED = {
     "POISON_TOUCH",
     "SAND_RUSH",
     "SAP_SIPPER",
+    "SHARPNESS",
+    "SHEER_FORCE",
     "TELEPATHY",
     "WIND_RIDER",
 }
@@ -44,8 +46,6 @@ PENDING = {
     "NEUTRALIZING_GAS",
     "REGENERATOR",
     "RIPEN",
-    "SHARPNESS",
-    "SHEER_FORCE",
     "SUPERSWEET_SYRUP",
     "UNNERVE",
     "WEAK_ARMOR",
@@ -110,6 +110,7 @@ class MoveListTests(unittest.TestCase):
     and a name that drifts out of the list simply stops being blocked."""
 
     SOURCE = ROOT / "src/battle/overlay_12_0224E4FC.c"
+    TABLES = ("sBallAndBombMoves", "sSlicingMoves", "sWindMoves")
 
     def table(self, name):
         body = re.search(r"static const u16 " + name + r"\[\] = \{(.*?)\};",
@@ -119,14 +120,33 @@ class MoveListTests(unittest.TestCase):
     def test_every_move_named_exists(self):
         defined = set(re.findall(r"#define (MOVE_[A-Z0-9_]+) ",
                                  (ROOT / "include/constants/moves.h").read_text()))
-        for table in ("sBallAndBombMoves", "sWindMoves"):
+        for table in self.TABLES:
             moves = self.table(table)
             self.assertTrue(moves, table)
             for move in moves:
                 self.assertIn(move, defined, f"{table} names {move}")
 
     def test_the_lists_are_sorted_and_have_no_repeat(self):
-        for table in ("sBallAndBombMoves", "sWindMoves"):
+        for table in self.TABLES:
             moves = self.table(table)
             self.assertEqual(moves, sorted(moves), table)
             self.assertEqual(len(moves), len(set(moves)), table)
+
+
+class SheerForceTests(unittest.TestCase):
+    """Sheer Force pays for its extra power by losing the effect, so the two
+    halves have to agree on which moves that is or it gets the power free."""
+
+    SOURCE = ROOT / "src/battle/overlay_12_0224E4FC.c"
+
+    def test_both_halves_ask_the_same_question(self):
+        source = self.SOURCE.read_text()
+        self.assertEqual(source.count("IsSuppressibleSecondaryEffect(ctx,"), 2)
+        self.assertEqual(source.count("static BOOL IsSuppressibleSecondaryEffect"), 1)
+
+    def test_the_guaranteed_effects_are_left_alone(self):
+        body = re.search(r"static BOOL IsSuppressibleSecondaryEffect.*?\n\}", self.SOURCE.read_text(), re.S).group(0)
+        for flag in ("MOVE_SIDE_EFFECT_ON_HIT", "MOVE_SIDE_EFFECT_CHECK_SUBSTITUTE",
+                     "MOVE_SIDE_EFFECT_CHECK_HP_AND_SUBSTITUTE", "MOVE_SIDE_EFFECT_CHECK_HP"):
+            self.assertIn(flag, body)
+        self.assertIn("effectChance != 0", body)

@@ -1275,9 +1275,24 @@ BOOL ov12_022503EC(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     return ret;
 }
 
+// Sheer Force gives up whatever a move does on top of its damage in exchange
+// for a third again the power. What it gives up is exactly the effects
+// ov12_02250490 rolls against the move's effect chance: the branches above
+// those happen come what may and are not secondary effects at all. The effect
+// script sets this before it asks for the damage, so both halves of the
+// ability can ask the same question.
+static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
+    return ctx->unk_2174 != 0 && ctx->trainerAIData.moveData[moveNo].effectChance != 0 && !(ctx->unk_2174 & (MOVE_SIDE_EFFECT_ON_HIT | MOVE_SIDE_EFFECT_CHECK_SUBSTITUTE | MOVE_SIDE_EFFECT_CHECK_HP_AND_SUBSTITUTE | MOVE_SIDE_EFFECT_CHECK_HP));
+}
+
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     BOOL ret = FALSE;
     u16 effectChance;
+
+    if (IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE && GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE) {
+        ctx->unk_2174 = 0;
+        return FALSE;
+    }
 
     if (ctx->unk_2174 & (1 << 29)) {
         *out = GetMoveStatusChangeScript(ctx, 2, ctx->unk_2174);
@@ -3027,6 +3042,25 @@ static u16 sSoundMoves[] = {
 // Bulletproof and Wind Rider go by the move rather than its type, and this
 // generation has no flag for either, so the moves are listed. Only the ones
 // this game has: the later games' storm moves are not here to name.
+static const u16 sSlicingMoves[] = {
+    MOVE_AERIAL_ACE,
+    MOVE_AIR_CUTTER,
+    MOVE_AIR_SLASH,
+    MOVE_CROSS_POISON,
+    MOVE_CRUSH_CLAW,
+    MOVE_CUT,
+    MOVE_DRAGON_CLAW,
+    MOVE_FURY_CUTTER,
+    MOVE_LEAF_BLADE,
+    MOVE_METAL_CLAW,
+    MOVE_NIGHT_SLASH,
+    MOVE_PSYCHO_CUT,
+    MOVE_RAZOR_LEAF,
+    MOVE_SHADOW_CLAW,
+    MOVE_SLASH,
+    MOVE_X_SCISSOR,
+};
+
 static const u16 sBallAndBombMoves[] = {
     MOVE_AURA_SPHERE,
     MOVE_BARRAGE,
@@ -5726,6 +5760,14 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     }
 
     if (calcAttacker.ability == ABILITY_TECHNICIAN && moveNo != MOVE_STRUGGLE && movePower <= 60) {
+        movePower = movePower * 15 / 10;
+    }
+
+    if (calcAttacker.ability == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, moveNo) == TRUE) {
+        movePower = movePower * 13 / 10;
+    }
+
+    if (calcAttacker.ability == ABILITY_SHARPNESS && MoveIsInList(moveNo, sSlicingMoves, NELEMS(sSlicingMoves)) == TRUE) {
         movePower = movePower * 15 / 10;
     }
 
