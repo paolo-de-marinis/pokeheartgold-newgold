@@ -300,6 +300,10 @@
 #define BATTLE_SUBSCRIPT_OVERWORLD_TRICK_ROOM             295
 #define BATTLE_SUBSCRIPT_GIRATINA_FORM_CHANGE             296
 #define BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_ATTACK          297
+#define BATTLE_SUBSCRIPT_WEAK_ARMOR                       298
+#define BATTLE_SUBSCRIPT_CURSED_BODY                      299
+#define BATTLE_SUBSCRIPT_MUMMY                            300
+#define BATTLE_SUBSCRIPT_SUPERSWEET_SYRUP                 301
 
 #define MOVE_SUBSCRIPT_PTR_NONE                             0
 #define MOVE_SUBSCRIPT_PTR_SLEEP                            1

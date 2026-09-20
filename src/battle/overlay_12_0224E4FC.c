@@ -3670,7 +3670,22 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 15: // end
+        case 15: // Supersweet Syrup
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].supersweetSyrupFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_SUPERSWEET_SYRUP) {
+                    ctx->battleMons[battlerId].supersweetSyrupFlag = TRUE;
+                    ctx->battlerIdTemp = battlerId;
+                    script = BATTLE_SUBSCRIPT_SUPERSWEET_SYRUP;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 16: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;
@@ -3806,6 +3821,38 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
             ctx->battlerIdStatChange = ctx->battlerIdAttacker;
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_INFATUATE;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_WEAK_ARMOR:
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage) {
+            ctx->battlerIdStatChange = ctx->battlerIdTarget;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_WEAK_ARMOR;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_CURSED_BODY: {
+        // Anything that damages will do, contact or not, but only a move the
+        // attacker still has and has not already had taken away.
+        int moveIndex = BattleMon_GetMoveIndex(&ctx->battleMons[ctx->battlerIdAttacker], ctx->moveNoCur);
+
+        if (ctx->battleMons[ctx->battlerIdAttacker].hp && !ctx->battleMons[ctx->battlerIdAttacker].unk88.disabledMove && moveIndex != 4 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (BattleSystem_Random(battleSystem) % 10 < 3)) {
+            ctx->moveTemp = ctx->moveNoCur;
+            ctx->battleMons[ctx->battlerIdAttacker].unk88.disabledMove = ctx->moveNoCur;
+            ctx->battleMons[ctx->battlerIdAttacker].unk88.disabledTurns = BattleSystem_Random(battleSystem) % 4 + 3;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_CURSED_BODY;
+            ret = TRUE;
+        }
+        break;
+    }
+    case ABILITY_MUMMY:
+        // Multitype is what a Pokemon is rather than what it does, so it is
+        // the one ability the wrapping does not take.
+        if (ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MUMMY && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MULTITYPE && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (ctx->trainerAIData.moveData[ctx->moveNoCur].unkB & 1)) {
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_MUMMY;
             ret = TRUE;
         }
         break;

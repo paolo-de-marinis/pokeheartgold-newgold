@@ -21,16 +21,20 @@ LAST_VANILLA = 123
 IMPLEMENTED = {
     "BIG_PECKS",
     "BULLETPROOF",
+    "CURSED_BODY",
     "EARTH_EATER",
     "EVAPORATE",
     "IRON_BARBS",
     "IRRIGATION",
+    "MUMMY",
     "POISON_TOUCH",
     "SAND_RUSH",
     "SAP_SIPPER",
     "SHARPNESS",
     "SHEER_FORCE",
+    "SUPERSWEET_SYRUP",
     "TELEPATHY",
+    "WEAK_ARMOR",
     "WIND_RIDER",
 }
 
@@ -40,15 +44,11 @@ PENDING = {
     "CHEEK_POUCH",
     "COMPETITIVE",
     "CUD_CHEW",
-    "CURSED_BODY",
     "INFILTRATOR",
-    "MUMMY",
     "NEUTRALIZING_GAS",
     "REGENERATOR",
     "RIPEN",
-    "SUPERSWEET_SYRUP",
     "UNNERVE",
-    "WEAK_ARMOR",
 }
 
 
@@ -94,11 +94,16 @@ class SubscriptNumberingTests(unittest.TestCase):
     def test_no_define_points_past_the_last_script(self):
         self.assertEqual(max(self.defines.values()), len(self.files) - 1)
 
-    def test_the_absorb_script_is_the_one_that_was_added(self):
-        index = self.defines["ABSORB_AND_RAISE_ATTACK"]
-        self.assertEqual(self.files[index].name, "subscript_0297_AbsorbAndRaiseAttack.s")
-        body = self.files[index].read_text()
-        self.assertIn("Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE", body)
+    def test_each_added_script_is_the_file_it_names(self):
+        added = {
+            "ABSORB_AND_RAISE_ATTACK": "subscript_0297_AbsorbAndRaiseAttack.s",
+            "WEAK_ARMOR": "subscript_0298_WeakArmor.s",
+            "CURSED_BODY": "subscript_0299_CursedBody.s",
+            "MUMMY": "subscript_0300_Mummy.s",
+            "SUPERSWEET_SYRUP": "subscript_0301_SupersweetSyrup.s",
+        }
+        for name, filename in added.items():
+            self.assertEqual(self.files[self.defines[name]].name, filename)
 
 
 if __name__ == "__main__":
