@@ -70,6 +70,9 @@ BOOL BattleContext_CheckMoveHealBlocked(BattleSystem *battleSystem, BattleContex
 void ov12_02252E30(BattleSystem *battleSystem, BattleContext *ctx);
 int GetBattlerLearnedMoveCount(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget);
+BOOL BattleMoveIsSoundBased(u32 moveNo);
+BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo);
+u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo);
 BOOL ov12_02253068(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 int DamageDivide(int num, int denom);
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx);

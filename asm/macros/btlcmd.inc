@@ -1245,4 +1245,55 @@
     .long 224
     .endm
 
+// Commands past this point are not in retail. They carry the opcodes and the
+// argument shapes hg-engine gives them, so a battle script written for that
+// engine assembles here unchanged; what each one does is written from what
+// the game needs, not from how that engine does it.
+
+    .macro ReduceWeight amount
+    .long 225
+    .long \amount
+    .endm
+
+    .macro CalcHeavySlamPower
+    .long 226
+    .endm
+
+    .macro IsAttackerLevelLowerThanDefender dest
+    .long 227
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GotoIfMovePowerNotZero dest
+    .long 231
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GotoIfCurrentAdjustedMoveIsType type, dest
+    .long 233
+    .long \type
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GotoIfContactMove dest
+    .long 234
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GotoIfSoundMove dest
+    .long 235
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro CheckTargetIsPartner dest
+    .long 265
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro DivideVarByValueRoundUp var, val
+    .long 288
+    .long \var
+    .long \val
+    .endm
+
     .endif // ASM_BATTLE_SCRIPT_INC

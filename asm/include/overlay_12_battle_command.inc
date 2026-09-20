@@ -156,6 +156,16 @@
 .public BattleSystem_CheckMonCaught
 .public BattleSystem_PrintBattleMessage
 .public ov12_0223C4E8
+.public BtlCmd_NotImplemented
+.public BtlCmd_CalcHeavySlamPower
+.public BtlCmd_CheckTargetIsPartner
+.public BtlCmd_DivideVarByValueRoundUp
+.public BtlCmd_GotoIfContactMove
+.public BtlCmd_GotoIfCurrentAdjustedMoveIsType
+.public BtlCmd_GotoIfMovePowerNotZero
+.public BtlCmd_GotoIfSoundMove
+.public BtlCmd_IsAttackerLevelLowerThanDefender
+.public BtlCmd_ReduceWeight
 .public BtlCmd_PlayEncounterAnimation
 .public BtlCmd_SetPokemonEncounter
 .public BtlCmd_PokemonSlideIn

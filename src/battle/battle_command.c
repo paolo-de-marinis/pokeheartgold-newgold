@@ -8156,6 +8156,161 @@ static void UpdateFriendshipFainted(BattleSystem *battleSystem, BattleContext *c
     }
 }
 
+// Retail's battle script commands end at 224. What follows carries the opcodes
+// hg-engine gives the ones it adds, so that a script written against that
+// engine assembles and runs here; each one is written from what the game needs
+// rather than from how that engine writes it. A command whose turn has not
+// come yet is BtlCmd_NotImplemented, which says so rather than running whatever
+// happens to sit past the end of the table.
+
+BOOL BtlCmd_NotImplemented(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    GF_ASSERT(FALSE);
+    BattleScriptIncrementPointer(ctx, 1);
+    return FALSE;
+}
+
+// Autotomize and the like. A Pokemon never weighs less than a tenth of a kilo.
+BOOL BtlCmd_ReduceWeight(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int amount = BattleScriptReadWord(ctx);
+    BattleMon *mon = &ctx->battleMons[ctx->battlerIdAttacker];
+
+    if (amount >= mon->weight) {
+        mon->weight = 1;
+    } else {
+        mon->weight -= amount;
+    }
+
+    return FALSE;
+}
+
+// Heavy Slam and Heat Crash: the lighter the target is against the attacker,
+// the harder it lands. The ratio is kept to two decimal places so the bands
+// fall where the later games put them.
+BOOL BtlCmd_CalcHeavySlamPower(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int attacker = ctx->battleMons[ctx->battlerIdAttacker].weight;
+    int target = ctx->battleMons[ctx->battlerIdTarget].weight;
+    int ratio = attacker ? target * 10000 / attacker : 10000;
+
+    if (ratio <= 2000) {
+        ctx->movePower = 120;
+    } else if (ratio <= 2500) {
+        ctx->movePower = 100;
+    } else if (ratio <= 3334) {
+        ctx->movePower = 80;
+    } else if (ratio <= 5000) {
+        ctx->movePower = 60;
+    } else {
+        ctx->movePower = 40;
+    }
+
+    return FALSE;
+}
+
+BOOL BtlCmd_IsAttackerLevelLowerThanDefender(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (ctx->battleMons[ctx->battlerIdAttacker].level < ctx->battleMons[ctx->battlerIdTarget].level) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+BOOL BtlCmd_GotoIfMovePowerNotZero(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (ctx->trainerAIData.moveData[ctx->moveNoCur].power) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+// The type the move will actually be used as, which is not always the type the
+// table gives it.
+BOOL BtlCmd_GotoIfCurrentAdjustedMoveIsType(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int type = BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur) == type) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+BOOL BtlCmd_GotoIfContactMove(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (BattleMoveMakesContact(ctx, ctx->moveNoCur) == TRUE) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+BOOL BtlCmd_GotoIfSoundMove(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (BattleMoveIsSoundBased(ctx->moveNoCur) == TRUE) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+// Only in a double battle is there anyone to be the partner, and the message
+// that follows names whoever is in battlerIdTemp.
+BOOL BtlCmd_CheckTargetIsPartner(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (ctx->battlerIdTarget == (ctx->battlerIdAttacker ^ 2)) {
+        ctx->battlerIdTemp = ctx->battlerIdTarget;
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+BOOL BtlCmd_DivideVarByValueRoundUp(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int varId = BattleScriptReadWord(ctx);
+    int divisor = BattleScriptReadWord(ctx);
+    int *data = BattleScriptGetVarPointer(battleSystem, ctx, varId);
+
+    if (divisor != 0) {
+        *data = (*data + divisor - 1) / divisor;
+    }
+
+    return FALSE;
+}
+
 static void BattlerSetAbility(BattleContext *ctx, u8 battlerID, u16 ability) {
     ctx->trainerAIAbilities[battlerID] = ability;
     return;

@@ -3124,6 +3124,27 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count) {
     return FALSE;
 }
 
+// The sound moves, the contact flag and a move's type after Normalize are all
+// read from more than one place now, so they are answered here, next to the
+// tables they read.
+BOOL BattleMoveIsSoundBased(u32 moveNo) {
+    return MoveIsInList(moveNo, sSoundMoves, NELEMS(sSoundMoves));
+}
+
+BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo) {
+    return (ctx->trainerAIData.moveData[moveNo].unkB & 1) != 0;
+}
+
+u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) {
+    if (GetBattlerAbility(ctx, battlerId) == ABILITY_NORMALIZE) {
+        return TYPE_NORMAL;
+    }
+    if (ctx->moveType) {
+        return ctx->moveType;
+    }
+    return ctx->trainerAIData.moveData[moveNo].type;
+}
+
 int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget) {
     int script;
     int moveType;

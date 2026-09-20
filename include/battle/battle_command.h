@@ -233,6 +233,16 @@ BOOL BtlCmd_RefreshMonData(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_222(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_223(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_EndScript(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL BtlCmd_NotImplemented(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL BtlCmd_ReduceWeight(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL BtlCmd_CalcHeavySlamPower(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL BtlCmd_IsAttackerLevelLowerThanDefender(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL BtlCmd_GotoIfMovePowerNotZero(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL BtlCmd_GotoIfCurrentAdjustedMoveIsType(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL BtlCmd_GotoIfContactMove(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL BtlCmd_GotoIfSoundMove(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL BtlCmd_CheckTargetIsPartner(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL BtlCmd_DivideVarByValueRoundUp(BattleSystem *battleSystem, BattleContext *ctx);
 int BattleScriptReadWord(BattleContext *ctx);
 
 #endif
