@@ -29,7 +29,12 @@ typedef struct PokemonSummaryMon {
     u16 spatk;
     u16 spdef;
     u16 speed;
-    u8 ability;
+    // Swapped with the halfword at 0x4E so battle-legal ability IDs fit. The
+    // record cannot grow: it is embedded in the assembly-shared application.
+    // MON_DATA_FORM is a five-bit saved field, so a byte cannot truncate it.
+    u8 form;
+    // sub_0208C7F8 reads this byte at application offset 0x263 for
+    // gNatureStatMods, so it must stay here.
     u8 nature;
     u16 moves[MAX_MON_MOVES];
     u8 pp[MAX_MON_MOVES];
@@ -43,7 +48,11 @@ typedef struct PokemonSummaryMon {
     u8 sheen;
     u8 preferredFlavor;
     u16 markings;
-    u16 form;
+    // Was form. Nothing in the summary application reads this halfword, which is
+    // why it can carry the full ability ID.
+    u16 ability;
+    // Read as a complete 28-bit value: unk_0208B1AC.s masks with lsl #4 / lsr #4
+    // and compares with 7, so these bits are not spare.
     u32 statusIcon : 28;
     u32 isEgg : 1;
     u32 isShiny : 1;

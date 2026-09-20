@@ -28,7 +28,7 @@ typedef char PokemonSummaryMonLayoutCheck[sizeof(PokemonSummaryMon) == 0x64
             && offsetof(PokemonSummaryMon, spatk) == 0x2C
             && offsetof(PokemonSummaryMon, spdef) == 0x2E
             && offsetof(PokemonSummaryMon, speed) == 0x30
-            && offsetof(PokemonSummaryMon, ability) == 0x32
+            && offsetof(PokemonSummaryMon, form) == 0x32
             && offsetof(PokemonSummaryMon, nature) == 0x33
             && offsetof(PokemonSummaryMon, moves) == 0x34
             && offsetof(PokemonSummaryMon, pp) == 0x3C
@@ -42,7 +42,7 @@ typedef char PokemonSummaryMonLayoutCheck[sizeof(PokemonSummaryMon) == 0x64
             && offsetof(PokemonSummaryMon, sheen) == 0x4A
             && offsetof(PokemonSummaryMon, preferredFlavor) == 0x4B
             && offsetof(PokemonSummaryMon, markings) == 0x4C
-            && offsetof(PokemonSummaryMon, form) == 0x4E
+            && offsetof(PokemonSummaryMon, ability) == 0x4E
             && offsetof(PokemonSummaryMon, ribbons) == 0x54
         ? 1
         : -1];
@@ -104,6 +104,8 @@ void sub_0208981C(PokemonSummaryAppPrefix *summary, Pokemon *mon, PokemonSummary
     summaryMon->spatk = GetMonData(mon, MON_DATA_SP_ATK, NULL);
     summaryMon->spdef = GetMonData(mon, MON_DATA_SP_DEF, NULL);
     summaryMon->speed = GetMonData(mon, MON_DATA_SPEED, NULL);
+    // Full NewGold ID. The reference reaches the same layout by patching the
+    // two stores and three loads in armips/asm/abilities.s.
     summaryMon->ability = GetMonData(mon, MON_DATA_ABILITY, NULL);
     summaryMon->nature = GetMonNature(mon);
 
