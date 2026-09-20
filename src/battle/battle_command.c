@@ -1414,6 +1414,17 @@ BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSystem, BattleContext *ctx) {
         break;
     }
 
+    // Regenerator mends what it can on the way out, before the slot is handed
+    // to whatever comes in. The party copy has to be told: what is left in
+    // battleMons is about to be overwritten by the incoming Pokemon.
+    if (ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].hp < (int)ctx->battleMons[battlerId].maxHp && GetBattlerAbility(ctx, battlerId) == ABILITY_REGENERATOR) {
+        ctx->battleMons[battlerId].hp += ctx->battleMons[battlerId].maxHp / 3;
+        if (ctx->battleMons[battlerId].hp > (int)ctx->battleMons[battlerId].maxHp) {
+            ctx->battleMons[battlerId].hp = ctx->battleMons[battlerId].maxHp;
+        }
+        CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
+    }
+
     ctx->unk_13C[battlerId] &= ~1;
     ctx->switchInFlag &= (MaskOfFlagNo(battlerId) ^ ~0);
     ctx->selectedMonIndex[battlerId] = ctx->unk_21A0[battlerId];
@@ -1742,6 +1753,11 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->buffMsg.tag = TAG_NICKNAME_STAT;
             ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
             ctx->buffMsg.param[1] = stat + 1;
+        }
+        // Competitive does not answer here, where the drop is only half
+        // applied; it is marked and answered in the pass after the move.
+        if (ctx->battlerIdAttacker != ctx->battlerIdStatChange && (ctx->battlerIdAttacker & 1) != (ctx->battlerIdStatChange & 1) && GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_COMPETITIVE) {
+            ctx->battleMons[ctx->battlerIdStatChange].competitivePending = TRUE;
         }
         mon->statChanges[stat + 1] += change;
         if (mon->statChanges[stat + 1] < 0) {

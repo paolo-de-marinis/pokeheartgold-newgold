@@ -2659,8 +2659,27 @@ BOOL WhirlwindCheck(BattleSystem *battleSystem, BattleContext *ctx) {
     return ret;
 }
 
+// Neutralizing Gas does not act, it stops everything else acting, so the only
+// place it can live is where an ability is read. The gas itself is read raw
+// rather than through this function, which would ask the question again.
+static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId) {
+    int i;
+
+    if (ctx->battleMons[battlerId].ability == ABILITY_NEUTRALIZING_GAS || ctx->battleMons[battlerId].ability == ABILITY_MULTITYPE) {
+        return FALSE;
+    }
+    for (i = 0; i < (int)NELEMS(ctx->battleMons); i++) {
+        if (ctx->battleMons[i].ability == ABILITY_NEUTRALIZING_GAS && ctx->battleMons[i].hp && !(ctx->battleMons[i].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED)) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 u8 GetBattlerAbility(BattleContext *ctx, int battlerId) {
-    if ((ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED) && ctx->battleMons[battlerId].ability != ABILITY_MULTITYPE) {
+    if (AbilitiesAreNeutralized(ctx, battlerId) == TRUE) {
+        return ABILITY_NONE;
+    } else if ((ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED) && ctx->battleMons[battlerId].ability != ABILITY_MULTITYPE) {
         return ABILITY_NONE;
     } else if ((ctx->fieldCondition & FIELD_CONDITION_GRAVITY) && ctx->battleMons[battlerId].ability == ABILITY_LEVITATE) {
         return ABILITY_NONE;
@@ -3180,6 +3199,10 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
         script = BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_ATTACK;
     }
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_BULLETPROOF) == TRUE && MoveIsInList(ctx->moveNoCur, sBallAndBombMoves, NELEMS(sBallAndBombMoves)) == TRUE) {
+        script = BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF;
+    }
+    // Armor Tail turns away anything hurried, whatever it is made of.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ARMOR_TAIL) == TRUE && (battlerIdAttacker & 1) != (battlerIdTarget & 1) && ctx->trainerAIData.moveData[ctx->moveNoCur].priority > 0) {
         script = BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF;
     }
     // Telepathy only sees what an ally aims at it, so it is the one immunity
@@ -4003,6 +4026,24 @@ BOOL TrySyncronizeStatus(BattleSystem *battleSystem, BattleContext *ctx, Control
         }
     }
 
+    // Competitive answers a stat the other side took away. The drop itself
+    // marked the Pokemon on its way through BtlCmd_ChangeStatStage; this is
+    // the first pass after the move where a script can be run in reply.
+    for (int i = 0; i < (int)NELEMS(ctx->battleMons); i++) {
+        if (ctx->battleMons[i].competitivePending) {
+            ctx->battleMons[i].competitivePending = FALSE;
+            if (ctx->battleMons[i].hp && GetBattlerAbility(ctx, i) == ABILITY_COMPETITIVE) {
+                ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_2_STAGES;
+                ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+                ctx->battlerIdStatChange = i;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
+                ctx->commandNext = command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                return TRUE;
+            }
+        }
+    }
+
     ret = Battler_CheckWeatherFormChange(battleSystem, ctx, &script);
     if (ret == TRUE) {
         ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
@@ -4033,6 +4074,33 @@ BOOL TrySyncronizeStatus(BattleSystem *battleSystem, BattleContext *ctx, Control
     return FALSE;
 }
 
+// Three of the added abilities are about berries, and all three have to agree
+// on which items are berries, so they ask here rather than twice over in the
+// two held-item checks below.
+static BOOL BattlerHoldsBerry(BattleContext *ctx, int battlerId) {
+    int item = ctx->battleMons[battlerId].item;
+    return item >= FIRST_BERRY_IDX && item <= LAST_BERRY_IDX;
+}
+
+// Unnerve on the far side is enough to put a Pokemon off its food; Ripen on
+// this one makes what it does eat go twice as far.
+static BOOL BerryCanBeEaten(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int *boost) {
+    int i;
+
+    if (BattlerHoldsBerry(ctx, battlerId) == FALSE) {
+        return TRUE;
+    }
+    for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
+        if (BattleSystem_GetFieldSide(battleSystem, battlerId) != BattleSystem_GetFieldSide(battleSystem, i) && ctx->battleMons[i].hp && GetBattlerAbility(ctx, i) == ABILITY_UNNERVE) {
+            return FALSE;
+        }
+    }
+    if (GetBattlerAbility(ctx, battlerId) == ABILITY_RIPEN) {
+        *boost *= 2;
+    }
+    return TRUE;
+}
+
 BOOL TryUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     BOOL ret = FALSE;
     int script;
@@ -4041,6 +4109,27 @@ BOOL TryUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
 
     item = GetBattlerHeldItemEffect(ctx, battlerId);
     boost = GetHeldItemModifier(ctx, battlerId, 0);
+
+    if (BerryCanBeEaten(battleSystem, ctx, battlerId, &boost) == FALSE) {
+        return FALSE;
+    }
+
+    // Cheek Pouch empties after the berry has gone down rather than with it,
+    // which is a second pass: the callers here keep asking until nothing more
+    // wants to happen.
+    if (ctx->battleMons[battlerId].cheekPouchPending) {
+        ctx->battleMons[battlerId].cheekPouchPending = FALSE;
+        if (ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].hp < (int)ctx->battleMons[battlerId].maxHp) {
+            ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 3);
+            ctx->battlerIdTemp = battlerId;
+            script = BATTLE_SUBSCRIPT_CHEEK_POUCH;
+            ctx->itemTemp = GetBattlerHeldItem(ctx, battlerId);
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return TRUE;
+        }
+    }
 
     if (ctx->battleMons[battlerId].hp) {
         switch (item) {
@@ -4311,6 +4400,9 @@ BOOL TryUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
             break;
         }
         if (ret == TRUE) {
+            if (BattlerHoldsBerry(ctx, battlerId) == TRUE && GetBattlerAbility(ctx, battlerId) == ABILITY_CHEEK_POUCH) {
+                ctx->battleMons[battlerId].cheekPouchPending = TRUE;
+            }
             ctx->battlerIdTemp = battlerId;
             ctx->itemTemp = GetBattlerHeldItem(ctx, battlerId);
             ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
@@ -4372,6 +4464,23 @@ BOOL CheckUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battle
 
     item = GetBattlerHeldItemEffect(ctx, battlerId);
     boost = GetHeldItemModifier(ctx, battlerId, 0);
+
+    if (BerryCanBeEaten(battleSystem, ctx, battlerId, &boost) == FALSE) {
+        return FALSE;
+    }
+
+    // Cheek Pouch empties after the berry has gone down rather than with it,
+    // which is a second pass: the callers here keep asking until nothing more
+    // wants to happen.
+    if (ctx->battleMons[battlerId].cheekPouchPending) {
+        ctx->battleMons[battlerId].cheekPouchPending = FALSE;
+        if (ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].hp < (int)ctx->battleMons[battlerId].maxHp) {
+            ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 3);
+            ctx->battlerIdTemp = battlerId;
+            *script = BATTLE_SUBSCRIPT_CHEEK_POUCH;
+            return TRUE;
+        }
+    }
 
     if (ctx->battleMons[battlerId].hp) {
         switch (item) {
@@ -4642,6 +4751,9 @@ BOOL CheckUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battle
             break;
         }
         if (ret == TRUE) {
+            if (BattlerHoldsBerry(ctx, battlerId) == TRUE && GetBattlerAbility(ctx, battlerId) == ABILITY_CHEEK_POUCH) {
+                ctx->battleMons[battlerId].cheekPouchPending = TRUE;
+            }
             ctx->itemTemp = GetBattlerHeldItem(ctx, battlerId);
         }
     }
@@ -5431,6 +5543,12 @@ u8 BattleBuffer_GetNext(BattleContext *ctx, int battlerId) {
 BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) {
     BOOL ret = FALSE;
 
+    // Infiltrator goes round a substitute rather than into it. Its own it
+    // still has to answer for, so the attacker is excepted.
+    if (battlerId != ctx->battlerIdAttacker && GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_INFILTRATOR) {
+        return FALSE;
+    }
+
     if (ctx->selfTurnData[battlerId].unk14 & (1 << 3)) {
         ret = TRUE;
     }
@@ -6058,7 +6176,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
             dmg /= 2;
         }
 
-        if ((sideCondition & SIDE_CONDITION_REFLECT) && crit == 1 && ctx->trainerAIData.moveData[moveNo].effect != MOVE_EFFECT_REMOVE_SCREENS) {
+        if ((sideCondition & SIDE_CONDITION_REFLECT) && crit == 1 && ctx->trainerAIData.moveData[moveNo].effect != MOVE_EFFECT_REMOVE_SCREENS && calcAttacker.ability != ABILITY_INFILTRATOR) {
             if ((battleType & BATTLE_TYPE_DOUBLES) && GetMonsHitCount(battleSystem, ctx, 1, battlerIdTarget) == 2) {
                 dmg = dmg * 2 / 3;
             } else {
@@ -6092,7 +6210,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         dmg /= dmg2;
         dmg /= 50;
 
-        if ((sideCondition & SIDE_CONDITION_LIGHT_SCREEN) && crit == 1 && ctx->trainerAIData.moveData[moveNo].effect != MOVE_EFFECT_REMOVE_SCREENS) {
+        if ((sideCondition & SIDE_CONDITION_LIGHT_SCREEN) && crit == 1 && ctx->trainerAIData.moveData[moveNo].effect != MOVE_EFFECT_REMOVE_SCREENS && calcAttacker.ability != ABILITY_INFILTRATOR) {
             if ((battleType & BATTLE_TYPE_DOUBLES) && GetMonsHitCount(battleSystem, ctx, 1, battlerIdTarget) == 2) {
                 dmg = dmg * 2 / 3;
             } else {

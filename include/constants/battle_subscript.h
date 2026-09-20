@@ -304,6 +304,7 @@
 #define BATTLE_SUBSCRIPT_CURSED_BODY                      299
 #define BATTLE_SUBSCRIPT_MUMMY                            300
 #define BATTLE_SUBSCRIPT_SUPERSWEET_SYRUP                 301
+#define BATTLE_SUBSCRIPT_CHEEK_POUCH                      302
 
 #define MOVE_SUBSCRIPT_PTR_NONE                             0
 #define MOVE_SUBSCRIPT_PTR_SLEEP                            1

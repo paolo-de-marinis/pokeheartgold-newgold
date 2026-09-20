@@ -19,36 +19,38 @@ SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
 LAST_VANILLA = 123
 
 IMPLEMENTED = {
+    "ARMOR_TAIL",
     "BIG_PECKS",
     "BULLETPROOF",
+    "CHEEK_POUCH",
+    "COMPETITIVE",
     "CURSED_BODY",
     "EARTH_EATER",
     "EVAPORATE",
+    "INFILTRATOR",
     "IRON_BARBS",
     "IRRIGATION",
     "MUMMY",
+    "NEUTRALIZING_GAS",
     "POISON_TOUCH",
+    "REGENERATOR",
+    "RIPEN",
     "SAND_RUSH",
     "SAP_SIPPER",
     "SHARPNESS",
     "SHEER_FORCE",
     "SUPERSWEET_SYRUP",
     "TELEPATHY",
+    "UNNERVE",
     "WEAK_ARMOR",
     "WIND_RIDER",
 }
 
-# Still only names. Each moves up as its effect lands.
+# Cud Chew is a name in New Gold too: the reference declares it and nothing
+# reads it, so a Farigiraf there does not bring its berry back up either.
+# Giving it an effect here would be a change to the game, not a port of it.
 PENDING = {
-    "ARMOR_TAIL",
-    "CHEEK_POUCH",
-    "COMPETITIVE",
     "CUD_CHEW",
-    "INFILTRATOR",
-    "NEUTRALIZING_GAS",
-    "REGENERATOR",
-    "RIPEN",
-    "UNNERVE",
 }
 
 
@@ -76,6 +78,9 @@ class AbilityEffectTests(unittest.TestCase):
         for name in sorted(PENDING):
             self.assertNotIn(f"ABILITY_{name}", source, f"ABILITY_{name} works now; move it to IMPLEMENTED")
 
+    def test_everything_but_cud_chew_now_does_something(self):
+        self.assertEqual(PENDING, {"CUD_CHEW"})
+
 
 class SubscriptNumberingTests(unittest.TestCase):
     """A subscript is fetched by index into the archive, which is the files in
@@ -101,6 +106,7 @@ class SubscriptNumberingTests(unittest.TestCase):
             "CURSED_BODY": "subscript_0299_CursedBody.s",
             "MUMMY": "subscript_0300_Mummy.s",
             "SUPERSWEET_SYRUP": "subscript_0301_SupersweetSyrup.s",
+            "CHEEK_POUCH": "subscript_0302_CheekPouch.s",
         }
         for name, filename in added.items():
             self.assertEqual(self.files[self.defines[name]].name, filename)

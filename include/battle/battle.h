@@ -240,7 +240,9 @@ typedef struct BattleMon {
     u32 moldBreakerFlag : 1;
     u32 pressureFlag : 1;
     u32 supersweetSyrupFlag : 1;
-    u32 unk28_B : 20;
+    u32 cheekPouchPending : 1;
+    u32 competitivePending : 1;
+    u32 unk28_B : 18;
     u8 movePPCur[MAX_MON_MOVES];
     u8 movePP[MAX_MON_MOVES];
     u8 level;
