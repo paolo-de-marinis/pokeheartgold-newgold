@@ -2857,7 +2857,7 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
     case EVOCTX_LEVELUP:
         level = (u8)GetMonData(mon, MON_DATA_LEVEL, NULL);
         friendship = (u16)GetMonData(mon, MON_DATA_FRIENDSHIP, NULL);
-        for (i = 0; i < 7; i++) {
+        for (i = 0; i < MAX_EVOS_PER_POKE; i++) {
             switch (evoTable[i].method) {
             case EVO_NONE:
                 break;
@@ -2958,6 +2958,12 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     *method_ret = EVO_HAS_MOVE;
                 }
                 break;
+            case EVO_HAS_MOVE_TYPE:
+                if (MonHasMoveOfType(mon, (u8)evoTable[i].param) == TRUE) {
+                    target = evoTable[i].target;
+                    *method_ret = EVO_HAS_MOVE_TYPE;
+                }
+                break;
             case EVO_OTHER_PARTY_MON:
                 if (party != NULL && Party_HasMon(party, evoTable[i].param) == 1) {
                     target = evoTable[i].target;
@@ -3001,7 +3007,7 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
         }
         break;
     case EVOCTX_TRADE:
-        for (i = 0; i < 7; i++) {
+        for (i = 0; i < MAX_EVOS_PER_POKE; i++) {
             switch (evoTable[i].method) {
             case EVO_TRADE:
                 target = evoTable[i].target;
@@ -3021,7 +3027,7 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
         break;
     case EVOCTX_ITEM_CHECK:
     case EVOCTX_ITEM_USE:
-        for (i = 0; i < 7; i++) {
+        for (i = 0; i < MAX_EVOS_PER_POKE; i++) {
             if (evoTable[i].method == EVO_STONE && usedItem == evoTable[i].param) {
                 target = evoTable[i].target;
                 *method_ret = 0;
@@ -3264,6 +3270,16 @@ BOOL MonHasMove(Pokemon *mon, u16 move) {
     } else {
         return FALSE;
     }
+}
+
+BOOL MonHasMoveOfType(Pokemon *mon, u8 type) {
+    for (int i = 0; i < MAX_MON_MOVES; i++) {
+        u16 move = GetMonData(mon, MON_DATA_MOVE1 + i, NULL);
+        if (move != MOVE_NONE && GetMoveAttr(move, MOVEATTR_TYPE) == type) {
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 void CopyBoxPokemonToPokemon(const BoxPokemon *src, Pokemon *dest) {

@@ -163,6 +163,7 @@ void MonSetMoveInSlot_ResetPpUp(Pokemon *mon, u16 move, u8 slot);
 u32 MonTryLearnMoveOnLevelUp(Pokemon *mon, int *last_i, u16 *sp0);
 void MonDeleteMoveSlot(Pokemon *mon, u32 slot);
 BOOL MonHasMove(Pokemon *mon, u16 move);
+BOOL MonHasMoveOfType(Pokemon *mon, u8 type);
 u16 SpeciesToJohtoDexNo(u16 species);
 void Mon_ForceSetGiratinaOriginForm(Pokemon *mon);
 void Party_UpdateAllGiratina_DistortionWorld(Party *party, BOOL force_origin);

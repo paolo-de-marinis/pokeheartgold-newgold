@@ -593,6 +593,8 @@ typedef enum EvoMethod {
     EVO_CORONET,
     EVO_ETERNA,
     EVO_ROUTE217,
+    // New Gold needs Eevee to notice it knows a Fairy move.
+    EVO_HAS_MOVE_TYPE,
 } EvoMethod;
 
 typedef enum {

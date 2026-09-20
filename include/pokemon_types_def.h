@@ -305,7 +305,7 @@ struct Evolution {
     u16 param;
     u16 target;
 };
-#define MAX_EVOS_PER_POKE 7
+#define MAX_EVOS_PER_POKE 8 // New Gold gives Eevee an eighth, Sylveon.
 
 typedef struct PartyCore {
     int maxCount;
