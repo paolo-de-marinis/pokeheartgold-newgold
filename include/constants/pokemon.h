@@ -390,6 +390,9 @@
 #define FRIENDSHIP_TIER_NUM     3
 #define FRIENDSHIP_MAX          255
 
+// New Gold evolves friendship Pokemon at the modern threshold, not 220.
+#define FRIENDSHIP_EVOLUTION_THRESHOLD 160
+
 #define BASE_HP               0
 #define BASE_ATK              1
 #define BASE_DEF              2
