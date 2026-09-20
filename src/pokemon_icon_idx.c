@@ -6,6 +6,13 @@
 
 #include "pokemon.h"
 
+// HGSS reads a species' icon at species + 7, and the entries just past the
+// last species are taken by the alternate form icons, so the species New Gold
+// adds are given the range after all of them. Their palette numbers follow the
+// form entries in the table below for the same reason.
+#define FIRST_ADDED_ICON    551
+#define FIRST_ADDED_PALETTE 544
+
 static u16 BoxMonGetForm(BoxPokemon *boxMon);
 
 u32 Boxmon_GetIconNaix(BoxPokemon *boxMon) {
@@ -60,6 +67,9 @@ u32 GetMonIconNaixEx(u32 species, BOOL isEgg, u32 form) {
         }
     }
     if (species > MAX_SPECIES) {
+        if (species >= SPECIES_LILLIPUP && species <= NUM_SPECIES) {
+            return species - SPECIES_LILLIPUP + FIRST_ADDED_ICON;
+        }
         species = 0;
     }
     return species + 7;
@@ -645,6 +655,72 @@ static const u8 sPokemonPalNoBySpeciesAndForm[] = {
     0,
     0,
     1,
+    // The species New Gold adds, in identifier order from 508.
+    2, // LILLIPUP,
+    2, // HERDIER,
+    2, // STOUTLAND,
+    0, // PURRLOIN,
+    0, // LIEPARD,
+    2, // TYMPOLE,
+    2, // PALPITOAD,
+    0, // SEISMITOAD,
+    1, // SEWADDLE,
+    1, // SWADLOON,
+    1, // LEAVANNY,
+    0, // YAMASK,
+    0, // COFAGRIGUS,
+    1, // TRUBBISH,
+    1, // GARBODOR,
+    2, // EMOLGA,
+    0, // KARRABLAST,
+    0, // ESCAVALIER,
+    0, // FOONGUS,
+    0, // AMOONGUSS,
+    0, // JOLTIK,
+    2, // GALVANTULA,
+    1, // FERROSEED,
+    1, // FERROTHORN,
+    0, // KLINK,
+    0, // KLANG,
+    0, // KLINKLANG,
+    0, // ELGYEM,
+    2, // BEHEEYEM,
+    2, // LITWICK,
+    2, // LAMPENT,
+    2, // CHANDELURE,
+    1, // SHELMET,
+    1, // ACCELGOR,
+    2, // BOUFFALANT,
+    2, // BUNNELBY,
+    2, // DIGGERSBY,
+    0, // FLETCHLING,
+    0, // FLETCHINDER,
+    0, // TALONFLAME,
+    2, // LITLEO,
+    2, // PYROAR,
+    2, // ESPURR,
+    0, // MEOWSTIC,
+    0, // SYLVEON,
+    0, // DEDENNE,
+    1, // PHANTUMP,
+    1, // TREVENANT,
+    2, // PUMPKABOO,
+    2, // GOURGEIST,
+    2, // NOIBAT,
+    2, // NOIVERN,
+    1, // APPLIN,
+    1, // FLAPPLE,
+    1, // APPLETUN,
+    0, // SIZZLIPEDE,
+    0, // CENTISKORCH,
+    0, // WYRDEER,
+    2, // KLEAVOR,
+    2, // URSALUNA,
+    0, // ANNIHILAPE,
+    0, // FARIGIRAF,
+    0, // DUDUNSPARCE,
+    1, // DIPPLIN,
+    1, // HYDRAPPLE
 };
 
 const u8 GetMonIconPaletteEx(u32 species, u32 form, u32 isEgg) {
@@ -655,7 +731,11 @@ const u8 GetMonIconPaletteEx(u32 species, u32 form, u32 isEgg) {
             species = 494;
         }
     } else if (species > MAX_SPECIES) {
-        species = 0;
+        if (species >= SPECIES_LILLIPUP && species <= NUM_SPECIES) {
+            species = species - SPECIES_LILLIPUP + FIRST_ADDED_PALETTE;
+        } else {
+            species = 0;
+        }
     } else if (form != 0) {
         if (species == SPECIES_DEOXYS) {
             species = 496 + form - 1;
