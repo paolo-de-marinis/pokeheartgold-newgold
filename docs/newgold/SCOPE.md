@@ -86,6 +86,42 @@ already implements equivalently:
   would be visible in the game konefr has built so far, which reaches Morty.
   Recheck these when later content lands.
 
+## Work order
+
+Behaviour switches that need no new data come first, and most are done: the
+story level cap, reusable TMs, the vitamin ceiling, overworld poison, the
+friendship threshold, the low-HP warning, the scaled experience formula,
+capture experience and the modern ball multipliers.
+
+What remains splits in two.
+
+**Behaviour still open.** Item restoration at the end of a battle and critical
+captures are ordinary C. The static HP bar, the machine labels in the bag,
+deletable HMs and reusable repels all live in code pret has not decompiled yet,
+so each carries a conversion with it. Expanded pockets and thirty boxes change
+the save layout and are their own workstream.
+
+**The data, which is what makes the ROM look like New Gold.** In dependency
+order:
+
+1. Species identifiers for the 65 new species. HGSS uses 1-493 for species and
+   494-507 for the egg, the bad egg and the alternate forms, so the new ones
+   are appended from 508 rather than displacing that block: vanilla identifiers
+   stay where every save, table and interface already expects them, and the
+   National Dex number stops being the same thing as the species identifier.
+2. Personal records for those species - stats, types, abilities, held items,
+   gender, hatching, growth and machine compatibility - generated into
+   `files/poketool/personal/personal.json`, the pipeline pokeheartgold already
+   uses. Base experience yields move to the Gen 5 and later values here, which
+   is where the byte-wide field has to be decided.
+3. Graphics and cries, without which the new species cannot appear.
+4. Learnsets and evolutions.
+5. The fourteen new moves, their effects and animations.
+6. The twenty-one new abilities, Irrigation and Evaporate among them.
+7. The Fairy type and the type chart.
+8. konefr's own rebalance: trainers, wild encounters, headbutt tables.
+9. The Pokédex.
+
 ## Method
 
 1. The reference is read, never transcribed. Each item is described as an
