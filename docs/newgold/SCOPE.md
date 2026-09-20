@@ -114,13 +114,27 @@ order:
    `files/poketool/personal/personal.json`, the pipeline pokeheartgold already
    uses. Base experience yields move to the Gen 5 and later values here, which
    is where the byte-wide field has to be decided.
-3. Graphics and cries, without which the new species cannot appear.
+3. Graphics, without which the new species cannot appear: battle sprites,
+   the heights that stand them on the ground, and party icons. Each of these
+   archives is read by arithmetic on the species number rather than by name, so
+   they have to stay dense; a gap does not fail the build, it moves every later
+   species onto somebody else's data.
 4. Learnsets and evolutions.
-5. The fourteen new moves, their effects and animations.
-6. The twenty-one new abilities, Irrigation and Evaporate among them.
-7. The Fairy type and the type chart.
-8. konefr's own rebalance: trainers, wild encounters, headbutt tables.
-9. The Pokédex.
+5. Cries. This is the last thing between the new species and an encounter, and
+   the only remaining blocker. PlayCryEx is still assembly and compares the
+   species against 494 before reaching the sound archive, so it has to be
+   decompiled before it can be taught about the rest, and the archive itself
+   needs their sounds. The reference reaches this through bespoke "cry
+   pseudobanks", which is engine machinery rather than behaviour and is not
+   reproduced here.
+6. Footprints and Dex entries, needed only if the Dex is ever widened; a new
+   species records nothing in it today, deliberately.
+7. The fourteen new moves, their effects and animations. Six evolutions wait
+   on these, along with the items Black Augurite, Peat Block and the apples.
+8. The effects behind the eighteen ability names, and konefr's own Irrigation
+   and Evaporate.
+9. konefr's own rebalance: trainers, wild encounters, headbutt tables. This is
+   the point at which the game becomes New Gold to play.
 
 ## Method
 
