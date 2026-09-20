@@ -3124,6 +3124,35 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count) {
     return FALSE;
 }
 
+// A stat once its stage has been applied. The table this reads is the one the
+// damage calculation uses, so a command asking for a boosted stat gets the
+// same number the damage would have used.
+u32 BattleStatWithStage(u32 stat, int stage) {
+    return stat * sStatChangeTable[stage][0] / sStatChangeTable[stage][1];
+}
+
+// Whether the ground can reach a Pokemon. Levitate, a Flying type, Magnet Rise
+// and an Air Balloon lift it; Gravity, Ingrain and an Iron Ball bring it back
+// down; and something in the air mid-move is not standing anywhere at all.
+BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) {
+    int holdEffect = GetBattlerHeldItemEffect(ctx, battlerId);
+    BOOL lifted = GetBattlerAbility(ctx, battlerId) == ABILITY_LEVITATE
+        || ctx->battleMons[battlerId].type1 == TYPE_FLYING
+        || ctx->battleMons[battlerId].type2 == TYPE_FLYING
+        || ctx->battleMons[battlerId].unk88.magnetRiseTurns != 0;
+    BOOL pulledDown = holdEffect == HOLD_EFFECT_SPEED_DOWN_GROUNDED
+        || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
+        || (ctx->fieldCondition & FIELD_CONDITION_GRAVITY);
+
+    if (lifted && !pulledDown) {
+        return FALSE;
+    }
+    if (ctx->battleMons[battlerId].moveEffectFlags & (MOVE_EFFECT_FLAG_FLY | MOVE_EFFECT_FLAG_DIG | MOVE_EFFECT_FLAG_DIVE)) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
 // The sound moves, the contact flag and a move's type after Normalize are all
 // read from more than one place now, so they are answered here, next to the
 // tables they read.

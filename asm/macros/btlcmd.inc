@@ -1296,4 +1296,89 @@
     .long \val
     .endm
 
+    .macro SetTailwindCounter side
+    .long 228
+    .long \side
+    .endm
+
+    .macro GotoIfTailwindActive side, dest
+    .long 229
+    .long \side
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GotoIfGrounded side, dest
+    .long 232
+    .long \side
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro SetBindingTurns dest
+    .long 247
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro ClearBindingTurns
+    .long 248
+    .endm
+
+    .macro CalcConfusionDamage dest
+    .long 254
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro StrengthSapCalc
+    .long 264
+    .endm
+
+    .macro ClearSmog
+    .long 266
+    .endm
+
+    .macro IsPursuitActive dest
+    .long 289
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GoBackToBeforeMove
+    .long 290
+    .endm
+
+    .macro CheckCanActivateDefiantOrCompetitive fail, defiant, competitive
+    .long 255
+    .long (((\fail - .) / 4) - 3)
+    .long (((\defiant - .) / 4) - 2)
+    .long (((\competitive - .) / 4) - 1)
+    .endm
+
+    .macro TryIncinerate dest
+    .long 260
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro HandleRoost side
+    .long 269
+    .long \side
+    .endm
+
+    .macro HandleSoak side
+    .long 270
+    .long \side
+    .endm
+
+    .macro HandleMagicPowder side
+    .long 271
+    .long \side
+    .endm
+
+    .macro HandleBurnUp side
+    .long 274
+    .long \side
+    .endm
+
+    .macro HandleDoubleShock side
+    .long 275
+    .long \side
+    .endm
+
     .endif // ASM_BATTLE_SCRIPT_INC

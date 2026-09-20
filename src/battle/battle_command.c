@@ -8311,6 +8311,283 @@ BOOL BtlCmd_DivideVarByValueRoundUp(BattleSystem *battleSystem, BattleContext *c
     return FALSE;
 }
 
+// Tailwind is already a move this game has: the turns sit in the side's
+// condition flags, the end-of-turn handler counts them down and announces the
+// end, and the Speed is applied where Swift Swim's is. These two only have to
+// read and write what is already there.
+BOOL BtlCmd_SetTailwindCounter(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+    int fieldSide = BattleSystem_GetFieldSide(battleSystem, BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side));
+
+    ctx->fieldSideConditionFlags[fieldSide] |= SIDE_CONDITION_TAILWIND;
+
+    return FALSE;
+}
+
+BOOL BtlCmd_GotoIfTailwindActive(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+    int fieldSide = BattleSystem_GetFieldSide(battleSystem, BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side));
+
+    if (ctx->fieldSideConditionFlags[fieldSide] & SIDE_CONDITION_TAILWIND) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+BOOL BtlCmd_GotoIfGrounded(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (BattlerIsGrounded(ctx, BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side)) == TRUE) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+// Bind and the rest. The turns live in the target's status word, counted down
+// by the end-of-turn handler, so this only has to put them there; a target
+// already held takes the branch instead.
+BOOL BtlCmd_SetBindingTurns(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (ctx->battleMons[ctx->battlerIdTarget].status2 & STATUS2_BIND) {
+        BattleScriptIncrementPointer(ctx, adrs);
+        return FALSE;
+    }
+
+    int turns;
+    if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_EXTEND_TRAPPING) {
+        turns = 6;
+    } else {
+        turns = 3 + (BattleSystem_Random(battleSystem) & 1);
+    }
+
+    ctx->battleMons[ctx->battlerIdTarget].status2 |= turns << STATUS2_BINDING_SHIFT;
+    ctx->battleMons[ctx->battlerIdTarget].unk88.battlerIdBinding = ctx->battlerIdAttacker;
+    ctx->battleMons[ctx->battlerIdTarget].unk88.bindingMove = ctx->moveNoCur;
+
+    return FALSE;
+}
+
+BOOL BtlCmd_ClearBindingTurns(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    ctx->battleMons[ctx->battlerIdAttacker].status2 &= ~STATUS2_BIND;
+
+    return FALSE;
+}
+
+// Hitting yourself in confusion: forty power, physical, no type and no
+// modifiers of any kind.
+BOOL BtlCmd_CalcConfusionDamage(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptReadWord(ctx);
+
+    BattleMon *mon = &ctx->battleMons[ctx->battlerIdAttacker];
+    u32 attack = BattleStatWithStage(mon->atk, mon->statChanges[1]);
+    u32 defense = BattleStatWithStage(mon->def, mon->statChanges[2]);
+
+    if (defense == 0) {
+        defense = 1;
+    }
+    ctx->damage = ((2 * mon->level / 5 + 2) * 40 * attack / defense) / 50 + 2;
+
+    return FALSE;
+}
+
+// Strength Sap takes as much as the target's Attack is worth.
+BOOL BtlCmd_StrengthSapCalc(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleMon *mon = &ctx->battleMons[ctx->battlerIdTarget];
+    ctx->hpCalc = -(int)BattleStatWithStage(mon->atk, mon->statChanges[1]);
+
+    return FALSE;
+}
+
+// Clear Smog leaves the target as it came in.
+BOOL BtlCmd_ClearSmog(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    for (int i = 0; i < NUM_BATTLE_STATS; i++) {
+        ctx->battleMons[ctx->battlerIdTarget].statChanges[i] = 6;
+    }
+
+    return FALSE;
+}
+
+// A move that caught somebody on the way out. That is what this engine marks
+// by giving the attacker the switch target and the pursuit action.
+BOOL BtlCmd_IsPursuitActive(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (ctx->playerActions[ctx->battlerIdAttacker].command != CONTROLLER_COMMAND_40 || ctx->battlerIdTarget != ctx->battlerIdSwitch) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+// Put the turn back to just before the move was used, with nothing pending.
+BOOL BtlCmd_GoBackToBeforeMove(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    ctx->unk_2170 = 0;
+    ctx->unk_2174 = 0;
+    ctx->command = CONTROLLER_COMMAND_23;
+    ctx->commandNext = CONTROLLER_COMMAND_23;
+
+    return FALSE;
+}
+
+// Roost puts a bird on the ground for the turn. This engine does that with a
+// turn flag the type chart reads rather than by editing the Pokemon's types,
+// so that is what this sets; the effect is the same and it undoes itself.
+BOOL BtlCmd_HandleRoost(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+
+    ctx->turnData[BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side)].roostFlag = TRUE;
+
+    return FALSE;
+}
+
+// Soak and Magic Powder leave the target one type and nothing else.
+static void MakeBattlerPureType(BattleContext *ctx, int battlerId, u8 type) {
+    ctx->battleMons[battlerId].type1 = type;
+    ctx->battleMons[battlerId].type2 = type;
+}
+
+// Burn Up and Double Shock spend a type to use the move. What is left of a
+// Pokemon that was only that type is nothing, which the chart reads as a
+// typeless Pokemon rather than as an error.
+static void RemoveBattlerType(BattleContext *ctx, int battlerId, u8 type) {
+    if (ctx->battleMons[battlerId].type1 == type && ctx->battleMons[battlerId].type2 == type) {
+        MakeBattlerPureType(ctx, battlerId, TYPE_NORMAL);
+    } else if (ctx->battleMons[battlerId].type1 == type) {
+        ctx->battleMons[battlerId].type1 = ctx->battleMons[battlerId].type2;
+    } else if (ctx->battleMons[battlerId].type2 == type) {
+        ctx->battleMons[battlerId].type2 = ctx->battleMons[battlerId].type1;
+    }
+}
+
+BOOL BtlCmd_HandleSoak(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+
+    MakeBattlerPureType(ctx, ctx->battlerIdTarget, TYPE_WATER);
+
+    return FALSE;
+}
+
+BOOL BtlCmd_HandleMagicPowder(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+
+    MakeBattlerPureType(ctx, ctx->battlerIdTarget, TYPE_PSYCHIC);
+
+    return FALSE;
+}
+
+BOOL BtlCmd_HandleBurnUp(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+
+    RemoveBattlerType(ctx, ctx->battlerIdAttacker, TYPE_FIRE);
+
+    return FALSE;
+}
+
+BOOL BtlCmd_HandleDoubleShock(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+
+    RemoveBattlerType(ctx, ctx->battlerIdAttacker, TYPE_ELECTRIC);
+
+    return FALSE;
+}
+
+// Incinerate burns the berry the target was holding. Sticky Hold keeps hold of
+// it, and there is nothing to burn if the target was not holding one; either
+// way the move has nothing to say and takes the branch.
+BOOL BtlCmd_TryIncinerate(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+    int item = ctx->battleMons[ctx->battlerIdTarget].item;
+
+    if (item < FIRST_BERRY_IDX || item > LAST_BERRY_IDX) {
+        BattleScriptIncrementPointer(ctx, adrs);
+        return FALSE;
+    }
+    if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE && ctx->battleMons[ctx->battlerIdTarget].hp) {
+        BattleScriptIncrementPointer(ctx, adrs);
+        return FALSE;
+    }
+
+    ctx->itemTemp = item;
+    ctx->battlerIdTemp = ctx->battlerIdTarget;
+    // Burnt, not knocked off: there is nothing left for Recycle to find.
+    ctx->battleMons[ctx->battlerIdTarget].item = ITEM_NONE;
+
+    return FALSE;
+}
+
+// Competitive, and Defiant when it exists. The drop that provoked it marked
+// the Pokemon on its way through BtlCmd_ChangeStatStage; this decides whether
+// there is still anything to raise.
+BOOL BtlCmd_CheckCanActivateDefiantOrCompetitive(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int failAdrs = BattleScriptReadWord(ctx);
+    int defiantAdrs = BattleScriptReadWord(ctx);
+    int competitiveAdrs = BattleScriptReadWord(ctx);
+    BattleMon *mon = &ctx->battleMons[ctx->battlerIdStatChange];
+
+    if (mon->hp && mon->competitivePending && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN)) {
+        mon->competitivePending = FALSE;
+        if (GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_COMPETITIVE && mon->statChanges[4] < 12) {
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            BattleScriptIncrementPointer(ctx, competitiveAdrs);
+            return FALSE;
+        }
+    }
+
+    BattleScriptIncrementPointer(ctx, failAdrs);
+    // Defiant has no ability number here yet; the branch stays reachable so a
+    // script that has one does not have to be rewritten when it does.
+    (void)defiantAdrs;
+
+    return FALSE;
+}
+
 static void BattlerSetAbility(BattleContext *ctx, u8 battlerID, u16 ability) {
     ctx->trainerAIAbilities[battlerID] = ability;
     return;
