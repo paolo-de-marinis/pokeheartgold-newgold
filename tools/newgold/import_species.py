@@ -43,7 +43,8 @@ def gender_fraction(stored):
         raise ValueError(f"gender ratio byte {stored} is not a multiple of an eighth")
     return fraction
 
-# The personal record reserves one byte for the yield.
+# The original field is a byte; the full value lives beside it in what Gen 4
+# left as padding, so nothing is lost and nothing shifts.
 MAX_STORED_EXP_YIELD = 255
 
 # Constants this repository spells differently from the reference.
@@ -129,6 +130,7 @@ def record(name, block, expYield, learned, tms, hms):
         "types": [native(name) for name in pair(block, "types")],
         "catchRate": int(field(block, "catchRate")),
         "expYield": min(expYield, MAX_STORED_EXP_YIELD),
+        "expYieldFull": expYield,
         "hp_yield": int(field(yields, "hp")),
         "atk_yield": int(field(yields, "attack")),
         "def_yield": int(field(yields, "defense")),

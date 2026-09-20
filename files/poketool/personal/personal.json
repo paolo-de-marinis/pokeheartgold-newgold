@@ -40,7 +40,8 @@
       "color": 0,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 0
     },
     {
       "species": "BULBASAUR",
@@ -112,7 +113,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 64
     },
     {
       "species": "IVYSAUR",
@@ -184,7 +186,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 141
     },
     {
       "species": "VENUSAUR",
@@ -261,7 +264,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 208
     },
     {
       "species": "CHARMANDER",
@@ -340,7 +344,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 65
     },
     {
       "species": "CHARMELEON",
@@ -419,7 +424,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 142
     },
     {
       "species": "CHARIZARD",
@@ -508,7 +514,8 @@
         2,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 209
     },
     {
       "species": "SQUIRTLE",
@@ -586,7 +593,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 66
     },
     {
       "species": "WARTORTLE",
@@ -664,7 +672,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 143
     },
     {
       "species": "BLASTOISE",
@@ -751,7 +760,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 210
     },
     {
       "species": "CATERPIE",
@@ -793,7 +803,8 @@
       "color": 3,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 53
     },
     {
       "species": "METAPOD",
@@ -835,7 +846,8 @@
       "color": 3,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 72
     },
     {
       "species": "BUTTERFREE",
@@ -913,7 +925,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 160
     },
     {
       "species": "WEEDLE",
@@ -955,7 +968,8 @@
       "color": 5,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 52
     },
     {
       "species": "KAKUNA",
@@ -997,7 +1011,8 @@
       "color": 2,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 71
     },
     {
       "species": "BEEDRILL",
@@ -1077,7 +1092,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 159
     },
     {
       "species": "PIDGEY",
@@ -1146,7 +1162,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 55
     },
     {
       "species": "PIDGEOTTO",
@@ -1215,7 +1232,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 113
     },
     {
       "species": "PIDGEOT",
@@ -1286,7 +1304,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 172
     },
     {
       "species": "RATTATA",
@@ -1365,7 +1384,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 57
     },
     {
       "species": "RATICATE",
@@ -1449,7 +1469,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 116
     },
     {
       "species": "SPEAROW",
@@ -1518,7 +1539,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 58
     },
     {
       "species": "FEAROW",
@@ -1589,7 +1611,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 162
     },
     {
       "species": "EKANS",
@@ -1665,7 +1688,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 62
     },
     {
       "species": "ARBOK",
@@ -1743,7 +1767,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 147
     },
     {
       "species": "PIKACHU",
@@ -1819,7 +1844,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 82
     },
     {
       "species": "RAICHU",
@@ -1899,7 +1925,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 122
     },
     {
       "species": "SANDSHREW",
@@ -1981,7 +2008,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 93
     },
     {
       "species": "SANDSLASH",
@@ -2067,7 +2095,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 163
     },
     {
       "species": "NIDORAN_F",
@@ -2145,7 +2174,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 59
     },
     {
       "species": "NIDORINA",
@@ -2223,7 +2253,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 117
     },
     {
       "species": "NIDOQUEEN",
@@ -2324,7 +2355,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 194
     },
     {
       "species": "NIDORAN_M",
@@ -2401,7 +2433,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 60
     },
     {
       "species": "NIDORINO",
@@ -2478,7 +2511,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 118
     },
     {
       "species": "NIDOKING",
@@ -2578,7 +2612,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 195
     },
     {
       "species": "CLEFAIRY",
@@ -2672,7 +2707,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 68
     },
     {
       "species": "CLEFABLE",
@@ -2769,7 +2805,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 129
     },
     {
       "species": "VULPIX",
@@ -2840,7 +2877,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 63
     },
     {
       "species": "NINETALES",
@@ -2916,7 +2954,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 178
     },
     {
       "species": "JIGGLYPUFF",
@@ -3008,7 +3047,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 76
     },
     {
       "species": "WIGGLYTUFF",
@@ -3103,7 +3143,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 109
     },
     {
       "species": "ZUBAT",
@@ -3179,7 +3220,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 54
     },
     {
       "species": "GOLBAT",
@@ -3257,7 +3299,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 171
     },
     {
       "species": "ODDISH",
@@ -3327,7 +3370,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 78
     },
     {
       "species": "GLOOM",
@@ -3399,7 +3443,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 132
     },
     {
       "species": "VILEPLUME",
@@ -3473,7 +3518,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 184
     },
     {
       "species": "PARAS",
@@ -3550,7 +3596,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 70
     },
     {
       "species": "PARASECT",
@@ -3629,7 +3676,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 128
     },
     {
       "species": "VENONAT",
@@ -3696,7 +3744,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 75
     },
     {
       "species": "VENOMOTH",
@@ -3770,7 +3819,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 138
     },
     {
       "species": "DIGLETT",
@@ -3843,7 +3893,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 81
     },
     {
       "species": "DUGTRIO",
@@ -3919,7 +3970,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 153
     },
     {
       "species": "MEOWTH",
@@ -4001,7 +4053,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 69
     },
     {
       "species": "PERSIAN",
@@ -4087,7 +4140,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 148
     },
     {
       "species": "PSYDUCK",
@@ -4169,7 +4223,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 80
     },
     {
       "species": "GOLDUCK",
@@ -4255,7 +4310,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 174
     },
     {
       "species": "MANKEY",
@@ -4339,7 +4395,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 74
     },
     {
       "species": "PRIMEAPE",
@@ -4426,7 +4483,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 149
     },
     {
       "species": "GROWLITHE",
@@ -4498,7 +4556,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 91
     },
     {
       "species": "ARCANINE",
@@ -4575,7 +4634,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 213
     },
     {
       "species": "POLIWAG",
@@ -4646,7 +4706,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 77
     },
     {
       "species": "POLIWHIRL",
@@ -4723,7 +4784,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 131
     },
     {
       "species": "POLIWRATH",
@@ -4809,7 +4871,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 185
     },
     {
       "species": "ABRA",
@@ -4896,7 +4959,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 75
     },
     {
       "species": "KADABRA",
@@ -4983,7 +5047,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 145
     },
     {
       "species": "ALAKAZAM",
@@ -5073,7 +5138,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 186
     },
     {
       "species": "MACHOP",
@@ -5152,7 +5218,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 75
     },
     {
       "species": "MACHOKE",
@@ -5231,7 +5298,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 146
     },
     {
       "species": "MACHAMP",
@@ -5313,7 +5381,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 193
     },
     {
       "species": "BELLSPROUT",
@@ -5384,7 +5453,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 84
     },
     {
       "species": "WEEPINBELL",
@@ -5455,7 +5525,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 151
     },
     {
       "species": "VICTREEBEL",
@@ -5528,7 +5599,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 191
     },
     {
       "species": "TENTACOOL",
@@ -5604,7 +5676,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 105
     },
     {
       "species": "TENTACRUEL",
@@ -5682,7 +5755,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 205
     },
     {
       "species": "GEODUDE",
@@ -5761,7 +5835,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 73
     },
     {
       "species": "GRAVELER",
@@ -5840,7 +5915,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 134
     },
     {
       "species": "GOLEM",
@@ -5923,7 +5999,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 177
     },
     {
       "species": "PONYTA",
@@ -5991,7 +6068,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 152
     },
     {
       "species": "RAPIDASH",
@@ -6062,7 +6140,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 192
     },
     {
       "species": "SLOWPOKE",
@@ -6150,7 +6229,8 @@
         3,
         4,
         5
-      ]
+      ],
+      "expYieldFull": 99
     },
     {
       "species": "SLOWBRO",
@@ -6247,7 +6327,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 164
     },
     {
       "species": "MAGNEMITE",
@@ -6319,7 +6400,8 @@
         90,
         91
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 89
     },
     {
       "species": "MAGNETON",
@@ -6393,7 +6475,8 @@
         90,
         91
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 161
     },
     {
       "species": "FARFETCHD",
@@ -6467,7 +6550,8 @@
       "hms": [
         1,
         2
-      ]
+      ],
+      "expYieldFull": 94
     },
     {
       "species": "DODUO",
@@ -6534,7 +6618,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 96
     },
     {
       "species": "DODRIO",
@@ -6606,7 +6691,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 158
     },
     {
       "species": "SEEL",
@@ -6678,7 +6764,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 100
     },
     {
       "species": "DEWGONG",
@@ -6753,7 +6840,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 176
     },
     {
       "species": "GRIMER",
@@ -6834,7 +6922,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 90
     },
     {
       "species": "MUK",
@@ -6922,7 +7011,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 157
     },
     {
       "species": "SHELLDER",
@@ -6992,7 +7082,8 @@
       "hms": [
         3,
         5
-      ]
+      ],
+      "expYieldFull": 97
     },
     {
       "species": "CLOYSTER",
@@ -7067,7 +7158,8 @@
       "hms": [
         3,
         5
-      ]
+      ],
+      "expYieldFull": 203
     },
     {
       "species": "GASTLY",
@@ -7147,7 +7239,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 95
     },
     {
       "species": "HAUNTER",
@@ -7230,7 +7323,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 126
     },
     {
       "species": "GENGAR",
@@ -7323,7 +7417,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 190
     },
     {
       "species": "ONIX",
@@ -7405,7 +7500,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 108
     },
     {
       "species": "DROWZEE",
@@ -7488,7 +7584,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 102
     },
     {
       "species": "HYPNO",
@@ -7574,7 +7671,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 165
     },
     {
       "species": "KRABBY",
@@ -7654,7 +7752,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 115
     },
     {
       "species": "KINGLER",
@@ -7736,7 +7835,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 206
     },
     {
       "species": "VOLTORB",
@@ -7806,7 +7906,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 103
     },
     {
       "species": "ELECTRODE",
@@ -7878,7 +7979,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 150
     },
     {
       "species": "EXEGGCUTE",
@@ -7957,7 +8059,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 98
     },
     {
       "species": "EXEGGUTOR",
@@ -8038,7 +8141,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 212
     },
     {
       "species": "CUBONE",
@@ -8120,7 +8224,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 87
     },
     {
       "species": "MAROWAK",
@@ -8206,7 +8311,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 124
     },
     {
       "species": "HITMONLEE",
@@ -8282,7 +8388,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 139
     },
     {
       "species": "HITMONCHAN",
@@ -8358,7 +8465,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 140
     },
     {
       "species": "LICKITUNG",
@@ -8451,7 +8559,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 127
     },
     {
       "species": "KOFFING",
@@ -8528,7 +8637,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 114
     },
     {
       "species": "WEEZING",
@@ -8607,7 +8717,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 173
     },
     {
       "species": "RHYHORN",
@@ -8694,7 +8805,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 135
     },
     {
       "species": "RHYDON",
@@ -8792,7 +8904,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 204
     },
     {
       "species": "CHANSEY",
@@ -8893,7 +9006,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 255
     },
     {
       "species": "TANGELA",
@@ -8970,7 +9084,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 166
     },
     {
       "species": "KANGASKHAN",
@@ -9067,7 +9182,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 175
     },
     {
       "species": "HORSEA",
@@ -9138,7 +9254,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 83
     },
     {
       "species": "SEADRA",
@@ -9211,7 +9328,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 155
     },
     {
       "species": "GOLDEEN",
@@ -9280,7 +9398,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 111
     },
     {
       "species": "SEAKING",
@@ -9351,7 +9470,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 170
     },
     {
       "species": "STARYU",
@@ -9429,7 +9549,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 106
     },
     {
       "species": "STARMIE",
@@ -9514,7 +9635,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 207
     },
     {
       "species": "MR_MIME",
@@ -9608,7 +9730,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 136
     },
     {
       "species": "SCYTHER",
@@ -9684,7 +9807,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 187
     },
     {
       "species": "JYNX",
@@ -9773,7 +9897,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 137
     },
     {
       "species": "ELECTABUZZ",
@@ -9853,7 +9978,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 156
     },
     {
       "species": "MAGMAR",
@@ -9930,7 +10056,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 167
     },
     {
       "species": "PINSIR",
@@ -10013,7 +10140,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 200
     },
     {
       "species": "TAUROS",
@@ -10098,7 +10226,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 211
     },
     {
       "species": "MAGIKARP",
@@ -10140,7 +10269,8 @@
       "color": 0,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 20
     },
     {
       "species": "GYARADOS",
@@ -10228,7 +10358,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 214
     },
     {
       "species": "LAPRAS",
@@ -10311,7 +10442,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 219
     },
     {
       "species": "DITTO",
@@ -10353,7 +10485,8 @@
       "color": 6,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 61
     },
     {
       "species": "EEVEE",
@@ -10417,7 +10550,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 92
     },
     {
       "species": "VAPOREON",
@@ -10495,7 +10629,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 196
     },
     {
       "species": "JOLTEON",
@@ -10572,7 +10707,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 197
     },
     {
       "species": "FLAREON",
@@ -10646,7 +10782,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 198
     },
     {
       "species": "PORYGON",
@@ -10725,7 +10862,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 130
     },
     {
       "species": "OMANYTE",
@@ -10802,7 +10940,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 99
     },
     {
       "species": "OMASTAR",
@@ -10883,7 +11022,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 199
     },
     {
       "species": "KABUTO",
@@ -10961,7 +11101,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 99
     },
     {
       "species": "KABUTOPS",
@@ -11048,7 +11189,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 199
     },
     {
       "species": "AERODACTYL",
@@ -11135,7 +11277,8 @@
         2,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 202
     },
     {
       "species": "SNORLAX",
@@ -11224,7 +11367,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 154
     },
     {
       "species": "ARTICUNO",
@@ -11301,7 +11445,8 @@
       "hms": [
         2,
         6
-      ]
+      ],
+      "expYieldFull": 215
     },
     {
       "species": "ZAPDOS",
@@ -11379,7 +11524,8 @@
       "hms": [
         2,
         6
-      ]
+      ],
+      "expYieldFull": 216
     },
     {
       "species": "MOLTRES",
@@ -11456,7 +11602,8 @@
       "hms": [
         2,
         6
-      ]
+      ],
+      "expYieldFull": 217
     },
     {
       "species": "DRATINI",
@@ -11535,7 +11682,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 67
     },
     {
       "species": "DRAGONAIR",
@@ -11614,7 +11762,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 144
     },
     {
       "species": "DRAGONITE",
@@ -11712,7 +11861,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 218
     },
     {
       "species": "MEWTWO",
@@ -11823,7 +11973,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 220
     },
     {
       "species": "MEW",
@@ -11967,7 +12118,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 64
     },
     {
       "species": "CHIKORITA",
@@ -12040,7 +12192,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 64
     },
     {
       "species": "BAYLEEF",
@@ -12115,7 +12268,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 141
     },
     {
       "species": "MEGANIUM",
@@ -12194,7 +12348,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 208
     },
     {
       "species": "CYNDAQUIL",
@@ -12262,7 +12417,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 65
     },
     {
       "species": "QUILAVA",
@@ -12335,7 +12491,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 142
     },
     {
       "species": "TYPHLOSION",
@@ -12419,7 +12576,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 209
     },
     {
       "species": "TOTODILE",
@@ -12498,7 +12656,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 66
     },
     {
       "species": "CROCONAW",
@@ -12580,7 +12739,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 143
     },
     {
       "species": "FERALIGATR",
@@ -12670,7 +12830,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 210
     },
     {
       "species": "SENTRET",
@@ -12752,7 +12913,8 @@
         1,
         3,
         5
-      ]
+      ],
+      "expYieldFull": 57
     },
     {
       "species": "FURRET",
@@ -12841,7 +13003,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 116
     },
     {
       "species": "HOOTHOOT",
@@ -12916,7 +13079,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 58
     },
     {
       "species": "NOCTOWL",
@@ -12993,7 +13157,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 162
     },
     {
       "species": "LEDYBA",
@@ -13070,7 +13235,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 54
     },
     {
       "species": "LEDIAN",
@@ -13153,7 +13319,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 134
     },
     {
       "species": "SPINARAK",
@@ -13221,7 +13388,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 54
     },
     {
       "species": "ARIADOS",
@@ -13291,7 +13459,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 134
     },
     {
       "species": "CROBAT",
@@ -13371,7 +13540,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 204
     },
     {
       "species": "CHINCHOU",
@@ -13446,7 +13616,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 90
     },
     {
       "species": "LANTURN",
@@ -13523,7 +13694,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 156
     },
     {
       "species": "PICHU",
@@ -13593,7 +13765,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 42
     },
     {
       "species": "CLEFFA",
@@ -13673,7 +13846,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 37
     },
     {
       "species": "IGGLYBUFF",
@@ -13752,7 +13926,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 39
     },
     {
       "species": "TOGEPI",
@@ -13831,7 +14006,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 74
     },
     {
       "species": "TOGETIC",
@@ -13920,7 +14096,8 @@
       "hms": [
         2,
         6
-      ]
+      ],
+      "expYieldFull": 114
     },
     {
       "species": "NATU",
@@ -14002,7 +14179,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 73
     },
     {
       "species": "XATU",
@@ -14088,7 +14266,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 171
     },
     {
       "species": "MAREEP",
@@ -14156,7 +14335,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 59
     },
     {
       "species": "FLAAFFY",
@@ -14230,7 +14410,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 117
     },
     {
       "species": "AMPHAROS",
@@ -14308,7 +14489,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 194
     },
     {
       "species": "BELLOSSOM",
@@ -14383,7 +14565,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 184
     },
     {
       "species": "MARILL",
@@ -14459,7 +14642,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 58
     },
     {
       "species": "AZUMARILL",
@@ -14538,7 +14722,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 153
     },
     {
       "species": "SUDOWOODO",
@@ -14618,7 +14803,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 135
     },
     {
       "species": "POLITOED",
@@ -14699,7 +14885,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 185
     },
     {
       "species": "HOPPIP",
@@ -14769,7 +14956,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 74
     },
     {
       "species": "SKIPLOOM",
@@ -14839,7 +15027,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 136
     },
     {
       "species": "JUMPLUFF",
@@ -14911,7 +15100,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 176
     },
     {
       "species": "AIPOM",
@@ -14997,7 +15187,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 94
     },
     {
       "species": "SUNKERN",
@@ -15069,7 +15260,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 52
     },
     {
       "species": "SUNFLORA",
@@ -15143,7 +15335,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 146
     },
     {
       "species": "YANMA",
@@ -15215,7 +15408,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 147
     },
     {
       "species": "WOOPER",
@@ -15290,7 +15484,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 52
     },
     {
       "species": "QUAGSIRE",
@@ -15375,7 +15570,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 137
     },
     {
       "species": "ESPEON",
@@ -15453,7 +15649,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 197
     },
     {
       "species": "UMBREON",
@@ -15530,7 +15727,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 197
     },
     {
       "species": "MURKROW",
@@ -15610,7 +15808,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 107
     },
     {
       "species": "SLOWKING",
@@ -15707,7 +15906,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 164
     },
     {
       "species": "MISDREAVUS",
@@ -15790,7 +15990,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 147
     },
     {
       "species": "UNOWN",
@@ -15832,7 +16033,8 @@
       "color": 4,
       "flip": 1,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 61
     },
     {
       "species": "WOBBUFFET",
@@ -15874,7 +16076,8 @@
       "color": 1,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 177
     },
     {
       "species": "GIRAFARIG",
@@ -15959,7 +16162,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 149
     },
     {
       "species": "PINECO",
@@ -16035,7 +16239,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 60
     },
     {
       "species": "FORRETRESS",
@@ -16115,7 +16320,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 118
     },
     {
       "species": "DUNSPARCE",
@@ -16204,7 +16410,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 125
     },
     {
       "species": "GLIGAR",
@@ -16294,7 +16501,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 108
     },
     {
       "species": "STEELIX",
@@ -16380,7 +16588,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 196
     },
     {
       "species": "SNUBBULL",
@@ -16466,7 +16675,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 63
     },
     {
       "species": "GRANBULL",
@@ -16560,7 +16770,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 178
     },
     {
       "species": "QWILFISH",
@@ -16638,7 +16849,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 100
     },
     {
       "species": "SCIZOR",
@@ -16718,7 +16930,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 200
     },
     {
       "species": "SHUCKLE",
@@ -16793,7 +17006,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 80
     },
     {
       "species": "HERACROSS",
@@ -16874,7 +17088,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 200
     },
     {
       "species": "SNEASEL",
@@ -16967,7 +17182,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 132
     },
     {
       "species": "TEDDIURSA",
@@ -17048,7 +17264,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 124
     },
     {
       "species": "URSARING",
@@ -17135,7 +17352,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 189
     },
     {
       "species": "SLUGMA",
@@ -17205,7 +17423,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 78
     },
     {
       "species": "MAGCARGO",
@@ -17286,7 +17505,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 154
     },
     {
       "species": "SWINUB",
@@ -17361,7 +17581,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 78
     },
     {
       "species": "PILOSWINE",
@@ -17440,7 +17661,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 160
     },
     {
       "species": "CORSOLA",
@@ -17526,7 +17748,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 113
     },
     {
       "species": "REMORAID",
@@ -17603,7 +17826,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 78
     },
     {
       "species": "OCTILLERY",
@@ -17685,7 +17909,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 164
     },
     {
       "species": "DELIBIRD",
@@ -17759,7 +17984,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 183
     },
     {
       "species": "MANTINE",
@@ -17835,7 +18061,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 168
     },
     {
       "species": "SKARMORY",
@@ -17917,7 +18144,8 @@
         1,
         2,
         6
-      ]
+      ],
+      "expYieldFull": 168
     },
     {
       "species": "HOUNDOUR",
@@ -17996,7 +18224,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 114
     },
     {
       "species": "HOUNDOOM",
@@ -18078,7 +18307,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 204
     },
     {
       "species": "KINGDRA",
@@ -18151,7 +18381,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 207
     },
     {
       "species": "PHANPY",
@@ -18221,7 +18452,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 124
     },
     {
       "species": "DONPHAN",
@@ -18297,7 +18529,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 189
     },
     {
       "species": "PORYGON2",
@@ -18376,7 +18609,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 180
     },
     {
       "species": "STANTLER",
@@ -18459,7 +18693,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 165
     },
     {
       "species": "SMEARGLE",
@@ -18501,7 +18736,8 @@
       "color": 8,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 106
     },
     {
       "species": "TYROGUE",
@@ -18570,7 +18806,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 91
     },
     {
       "species": "HITMONTOP",
@@ -18644,7 +18881,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 138
     },
     {
       "species": "SMOOCHUM",
@@ -18724,7 +18962,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 87
     },
     {
       "species": "ELEKID",
@@ -18798,7 +19037,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 106
     },
     {
       "species": "MAGBY",
@@ -18870,7 +19110,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 117
     },
     {
       "species": "MILTANK",
@@ -18959,7 +19200,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 200
     },
     {
       "species": "BLISSEY",
@@ -19062,7 +19304,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 255
     },
     {
       "species": "RAIKOU",
@@ -19143,7 +19386,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 216
     },
     {
       "species": "ENTEI",
@@ -19224,7 +19468,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 217
     },
     {
       "species": "SUICUNE",
@@ -19306,7 +19551,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 215
     },
     {
       "species": "LARVITAR",
@@ -19383,7 +19629,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 67
     },
     {
       "species": "PUPITAR",
@@ -19460,7 +19707,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 144
     },
     {
       "species": "TYRANITAR",
@@ -19562,7 +19810,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 218
     },
     {
       "species": "LUGIA",
@@ -19660,7 +19909,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 220
     },
     {
       "species": "HO_OH",
@@ -19752,7 +20002,8 @@
         2,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 220
     },
     {
       "species": "CELEBI",
@@ -19841,7 +20092,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 64
     },
     {
       "species": "TREECKO",
@@ -19922,7 +20174,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 65
     },
     {
       "species": "GROVYLE",
@@ -20005,7 +20258,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 141
     },
     {
       "species": "SCEPTILE",
@@ -20096,7 +20350,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 208
     },
     {
       "species": "TORCHIC",
@@ -20170,7 +20425,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 65
     },
     {
       "species": "COMBUSKEN",
@@ -20250,7 +20506,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 142
     },
     {
       "species": "BLAZIKEN",
@@ -20337,7 +20594,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 209
     },
     {
       "species": "MUDKIP",
@@ -20411,7 +20669,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 65
     },
     {
       "species": "MARSHTOMP",
@@ -20489,7 +20748,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 143
     },
     {
       "species": "SWAMPERT",
@@ -20575,7 +20835,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 210
     },
     {
       "species": "POOCHYENA",
@@ -20649,7 +20910,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 55
     },
     {
       "species": "MIGHTYENA",
@@ -20726,7 +20988,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 128
     },
     {
       "species": "ZIGZAGOON",
@@ -20806,7 +21069,8 @@
         3,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 60
     },
     {
       "species": "LINOONE",
@@ -20891,7 +21155,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 128
     },
     {
       "species": "WURMPLE",
@@ -20933,7 +21198,8 @@
       "color": 0,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 54
     },
     {
       "species": "SILCOON",
@@ -20975,7 +21241,8 @@
       "color": 8,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 72
     },
     {
       "species": "BEAUTIFLY",
@@ -21049,7 +21316,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 161
     },
     {
       "species": "CASCOON",
@@ -21091,7 +21359,8 @@
       "color": 6,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 72
     },
     {
       "species": "DUSTOX",
@@ -21166,7 +21435,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 161
     },
     {
       "species": "LOTAD",
@@ -21242,7 +21512,8 @@
       "hms": [
         3,
         5
-      ]
+      ],
+      "expYieldFull": 74
     },
     {
       "species": "LOMBRE",
@@ -21324,7 +21595,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 141
     },
     {
       "species": "LUDICOLO",
@@ -21411,7 +21683,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 181
     },
     {
       "species": "SEEDOT",
@@ -21483,7 +21756,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 74
     },
     {
       "species": "NUZLEAF",
@@ -21568,7 +21842,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 141
     },
     {
       "species": "SHIFTRY",
@@ -21658,7 +21933,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 181
     },
     {
       "species": "TAILLOW",
@@ -21727,7 +22003,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 59
     },
     {
       "species": "SWELLOW",
@@ -21798,7 +22075,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 162
     },
     {
       "species": "WINGULL",
@@ -21872,7 +22150,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 64
     },
     {
       "species": "PELIPPER",
@@ -21952,7 +22231,8 @@
         2,
         3,
         5
-      ]
+      ],
+      "expYieldFull": 164
     },
     {
       "species": "RALTS",
@@ -22035,7 +22315,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 70
     },
     {
       "species": "KIRLIA",
@@ -22118,7 +22399,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 140
     },
     {
       "species": "GARDEVOIR",
@@ -22205,7 +22487,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 208
     },
     {
       "species": "SURSKIT",
@@ -22275,7 +22558,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 63
     },
     {
       "species": "MASQUERAIN",
@@ -22352,7 +22636,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 128
     },
     {
       "species": "SHROOMISH",
@@ -22422,7 +22707,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 65
     },
     {
       "species": "BRELOOM",
@@ -22508,7 +22794,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 165
     },
     {
       "species": "SLAKOTH",
@@ -22591,7 +22878,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 83
     },
     {
       "species": "VIGOROTH",
@@ -22679,7 +22967,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 126
     },
     {
       "species": "SLAKING",
@@ -22769,7 +23058,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 210
     },
     {
       "species": "NINCADA",
@@ -22838,7 +23128,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 65
     },
     {
       "species": "NINJASK",
@@ -22916,7 +23207,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 155
     },
     {
       "species": "SHEDINJA",
@@ -22991,7 +23283,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 95
     },
     {
       "species": "WHISMUR",
@@ -23062,7 +23355,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 68
     },
     {
       "species": "LOUDRED",
@@ -23143,7 +23437,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 126
     },
     {
       "species": "EXPLOUD",
@@ -23231,7 +23526,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 184
     },
     {
       "species": "MAKUHITA",
@@ -23308,7 +23604,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 87
     },
     {
       "species": "HARIYAMA",
@@ -23390,7 +23687,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 184
     },
     {
       "species": "AZURILL",
@@ -23459,7 +23757,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 33
     },
     {
       "species": "NOSEPASS",
@@ -23536,7 +23835,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 108
     },
     {
       "species": "SKITTY",
@@ -23616,7 +23916,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 65
     },
     {
       "species": "DELCATTY",
@@ -23701,7 +24002,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 138
     },
     {
       "species": "SABLEYE",
@@ -23789,7 +24091,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 98
     },
     {
       "species": "MAWILE",
@@ -23877,7 +24180,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 98
     },
     {
       "species": "ARON",
@@ -23955,7 +24259,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 96
     },
     {
       "species": "LAIRON",
@@ -24034,7 +24339,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 152
     },
     {
       "species": "AGGRON",
@@ -24137,7 +24443,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 205
     },
     {
       "species": "MEDITITE",
@@ -24220,7 +24527,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 91
     },
     {
       "species": "MEDICHAM",
@@ -24306,7 +24614,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 153
     },
     {
       "species": "ELECTRIKE",
@@ -24379,7 +24688,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 104
     },
     {
       "species": "MANECTRIC",
@@ -24455,7 +24765,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 168
     },
     {
       "species": "PLUSLE",
@@ -24525,7 +24836,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 120
     },
     {
       "species": "MINUN",
@@ -24595,7 +24907,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 120
     },
     {
       "species": "VOLBEAT",
@@ -24676,7 +24989,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 146
     },
     {
       "species": "ILLUMISE",
@@ -24757,7 +25071,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 146
     },
     {
       "species": "ROSELIA",
@@ -24831,7 +25146,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 152
     },
     {
       "species": "GULPIN",
@@ -24906,7 +25222,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 75
     },
     {
       "species": "SWALOT",
@@ -24984,7 +25301,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 168
     },
     {
       "species": "CARVANHA",
@@ -25058,7 +25376,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 88
     },
     {
       "species": "SHARPEDO",
@@ -25141,7 +25460,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 175
     },
     {
       "species": "WAILMER",
@@ -25216,7 +25536,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 137
     },
     {
       "species": "WAILORD",
@@ -25293,7 +25614,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 206
     },
     {
       "species": "NUMEL",
@@ -25366,7 +25688,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 88
     },
     {
       "species": "CAMERUPT",
@@ -25447,7 +25770,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 175
     },
     {
       "species": "TORKOAL",
@@ -25526,7 +25850,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 161
     },
     {
       "species": "SPOINK",
@@ -25608,7 +25933,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 89
     },
     {
       "species": "GRUMPIG",
@@ -25698,7 +26024,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 164
     },
     {
       "species": "SPINDA",
@@ -25783,7 +26110,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 85
     },
     {
       "species": "TRAPINCH",
@@ -25854,7 +26182,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 73
     },
     {
       "species": "VIBRAVA",
@@ -25931,7 +26260,8 @@
         2,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 126
     },
     {
       "species": "FLYGON",
@@ -26015,7 +26345,8 @@
         2,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 197
     },
     {
       "species": "CACNEA",
@@ -26092,7 +26423,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 97
     },
     {
       "species": "CACTURNE",
@@ -26174,7 +26506,8 @@
       "hms": [
         1,
         4
-      ]
+      ],
+      "expYieldFull": 177
     },
     {
       "species": "SWABLU",
@@ -26248,7 +26581,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 74
     },
     {
       "species": "ALTARIA",
@@ -26331,7 +26665,8 @@
       "hms": [
         2,
         6
-      ]
+      ],
+      "expYieldFull": 188
     },
     {
       "species": "ZANGOOSE",
@@ -26426,7 +26761,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 165
     },
     {
       "species": "SEVIPER",
@@ -26503,7 +26839,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 165
     },
     {
       "species": "LUNATONE",
@@ -26589,7 +26926,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 150
     },
     {
       "species": "SOLROCK",
@@ -26678,7 +27016,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 150
     },
     {
       "species": "BARBOACH",
@@ -26749,7 +27088,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 92
     },
     {
       "species": "WHISCASH",
@@ -26826,7 +27166,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 158
     },
     {
       "species": "CORPHISH",
@@ -26909,7 +27250,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 111
     },
     {
       "species": "CRAWDAUNT",
@@ -26996,7 +27338,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 161
     },
     {
       "species": "BALTOY",
@@ -27080,7 +27423,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 58
     },
     {
       "species": "CLAYDOL",
@@ -27170,7 +27514,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 189
     },
     {
       "species": "LILEEP",
@@ -27243,7 +27588,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 99
     },
     {
       "species": "CRADILY",
@@ -27323,7 +27669,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 199
     },
     {
       "species": "ANORITH",
@@ -27398,7 +27745,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 99
     },
     {
       "species": "ARMALDO",
@@ -27480,7 +27828,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 199
     },
     {
       "species": "FEEBAS",
@@ -27548,7 +27897,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 61
     },
     {
       "species": "MILOTIC",
@@ -27623,7 +27973,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 213
     },
     {
       "species": "CASTFORM",
@@ -27702,7 +28053,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 145
     },
     {
       "species": "KECLEON",
@@ -27798,7 +28150,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 132
     },
     {
       "species": "SHUPPET",
@@ -27880,7 +28233,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 97
     },
     {
       "species": "BANETTE",
@@ -27966,7 +28320,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 179
     },
     {
       "species": "DUSKULL",
@@ -28047,7 +28402,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 97
     },
     {
       "species": "DUSCLOPS",
@@ -28138,7 +28494,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 179
     },
     {
       "species": "TROPIUS",
@@ -28219,7 +28576,8 @@
         2,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 169
     },
     {
       "species": "CHIMECHO",
@@ -28300,7 +28658,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 147
     },
     {
       "species": "ABSOL",
@@ -28400,7 +28759,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 174
     },
     {
       "species": "WYNAUT",
@@ -28442,7 +28802,8 @@
       "color": 1,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 44
     },
     {
       "species": "SNORUNT",
@@ -28511,7 +28872,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 74
     },
     {
       "species": "GLALIE",
@@ -28589,7 +28951,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 187
     },
     {
       "species": "SPHEAL",
@@ -28664,7 +29027,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 75
     },
     {
       "species": "SEALEO",
@@ -28740,7 +29104,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 128
     },
     {
       "species": "WALREIN",
@@ -28819,7 +29184,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 192
     },
     {
       "species": "CLAMPERL",
@@ -28888,7 +29254,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 142
     },
     {
       "species": "HUNTAIL",
@@ -28961,7 +29328,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 178
     },
     {
       "species": "GOREBYSS",
@@ -29036,7 +29404,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 178
     },
     {
       "species": "RELICANTH",
@@ -29118,7 +29487,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 198
     },
     {
       "species": "LUVDISC",
@@ -29189,7 +29559,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 110
     },
     {
       "species": "BAGON",
@@ -29264,7 +29635,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 89
     },
     {
       "species": "SHELGON",
@@ -29339,7 +29711,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 144
     },
     {
       "species": "SALAMENCE",
@@ -29422,7 +29795,8 @@
         2,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 218
     },
     {
       "species": "BELDUM",
@@ -29464,7 +29838,8 @@
       "color": 1,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 103
     },
     {
       "species": "METANG",
@@ -29547,7 +29922,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 153
     },
     {
       "species": "METAGROSS",
@@ -29631,7 +30007,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 210
     },
     {
       "species": "REGIROCK",
@@ -29716,7 +30093,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 217
     },
     {
       "species": "REGICE",
@@ -29801,7 +30179,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 216
     },
     {
       "species": "REGISTEEL",
@@ -29887,7 +30266,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 215
     },
     {
       "species": "LATIAS",
@@ -29984,7 +30364,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 211
     },
     {
       "species": "LATIOS",
@@ -30081,7 +30462,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 211
     },
     {
       "species": "KYOGRE",
@@ -30165,7 +30547,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 218
     },
     {
       "species": "GROUDON",
@@ -30259,7 +30642,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 218
     },
     {
       "species": "RAYQUAZA",
@@ -30358,7 +30742,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 220
     },
     {
       "species": "JIRACHI",
@@ -30446,7 +30831,8 @@
         91,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 215
     },
     {
       "species": "DEOXYS",
@@ -30548,7 +30934,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 215
     },
     {
       "species": "TURTWIG",
@@ -30625,7 +31012,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 64
     },
     {
       "species": "GROTLE",
@@ -30702,7 +31090,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 141
     },
     {
       "species": "TORTERRA",
@@ -30788,7 +31177,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 208
     },
     {
       "species": "CHIMCHAR",
@@ -30871,7 +31261,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 65
     },
     {
       "species": "MONFERNO",
@@ -30958,7 +31349,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 142
     },
     {
       "species": "INFERNAPE",
@@ -31052,7 +31444,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 209
     },
     {
       "species": "PIPLUP",
@@ -31130,7 +31523,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 66
     },
     {
       "species": "PRINPLUP",
@@ -31211,7 +31605,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 143
     },
     {
       "species": "EMPOLEON",
@@ -31302,7 +31697,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 210
     },
     {
       "species": "STARLY",
@@ -31371,7 +31767,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 56
     },
     {
       "species": "STARAVIA",
@@ -31440,7 +31837,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 113
     },
     {
       "species": "STARAPTOR",
@@ -31511,7 +31909,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 172
     },
     {
       "species": "BIDOOF",
@@ -31590,7 +31989,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 58
     },
     {
       "species": "BIBAREL",
@@ -31679,7 +32079,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 116
     },
     {
       "species": "KRICKETOT",
@@ -31721,7 +32122,8 @@
       "color": 0,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 54
     },
     {
       "species": "KRICKETUNE",
@@ -31796,7 +32198,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 159
     },
     {
       "species": "SHINX",
@@ -31868,7 +32271,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 60
     },
     {
       "species": "LUXIO",
@@ -31940,7 +32344,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 117
     },
     {
       "species": "LUXRAY",
@@ -32014,7 +32419,8 @@
       ],
       "hms": [
         4
-      ]
+      ],
+      "expYieldFull": 194
     },
     {
       "species": "BUDEW",
@@ -32087,7 +32493,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 68
     },
     {
       "species": "ROSERADE",
@@ -32163,7 +32570,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 204
     },
     {
       "species": "CRANIDOS",
@@ -32250,7 +32658,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 99
     },
     {
       "species": "RAMPARDOS",
@@ -32346,7 +32755,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 199
     },
     {
       "species": "SHIELDON",
@@ -32430,7 +32840,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 99
     },
     {
       "species": "BASTIODON",
@@ -32517,7 +32928,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 199
     },
     {
       "species": "BURMY",
@@ -32559,7 +32971,8 @@
       "color": 7,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 61
     },
     {
       "species": "WORMADAM",
@@ -32635,7 +33048,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 159
     },
     {
       "species": "MOTHIM",
@@ -32713,7 +33127,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 159
     },
     {
       "species": "COMBEE",
@@ -32755,7 +33170,8 @@
       "color": 2,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 63
     },
     {
       "species": "VESPIQUEN",
@@ -32829,7 +33245,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 188
     },
     {
       "species": "PACHIRISU",
@@ -32903,7 +33320,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 120
     },
     {
       "species": "BUIZEL",
@@ -32980,7 +33398,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 75
     },
     {
       "species": "FLOATZEL",
@@ -33064,7 +33483,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 178
     },
     {
       "species": "CHERUBI",
@@ -33132,7 +33552,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 68
     },
     {
       "species": "CHERRIM",
@@ -33202,7 +33623,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 133
     },
     {
       "species": "SHELLOS",
@@ -33270,7 +33692,8 @@
       "hms": [
         3,
         5
-      ]
+      ],
+      "expYieldFull": 73
     },
     {
       "species": "GASTRODON",
@@ -33351,7 +33774,8 @@
         5,
         6,
         7
-      ]
+      ],
+      "expYieldFull": 176
     },
     {
       "species": "AMBIPOM",
@@ -33439,7 +33863,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 186
     },
     {
       "species": "DRIFLOON",
@@ -33522,7 +33947,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 127
     },
     {
       "species": "DRIFBLIM",
@@ -33608,7 +34034,8 @@
       "hms": [
         1,
         2
-      ]
+      ],
+      "expYieldFull": 204
     },
     {
       "species": "BUNEARY",
@@ -33686,7 +34113,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 84
     },
     {
       "species": "LOPUNNY",
@@ -33770,7 +34198,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 178
     },
     {
       "species": "MISMAGIUS",
@@ -33856,7 +34285,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 187
     },
     {
       "species": "HONCHKROW",
@@ -33938,7 +34368,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 187
     },
     {
       "species": "GLAMEOW",
@@ -34019,7 +34450,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 71
     },
     {
       "species": "PURUGLY",
@@ -34103,7 +34535,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 183
     },
     {
       "species": "CHINGLING",
@@ -34183,7 +34616,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 74
     },
     {
       "species": "STUNKY",
@@ -34262,7 +34696,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 79
     },
     {
       "species": "SKUNTANK",
@@ -34345,7 +34780,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 209
     },
     {
       "species": "BRONZOR",
@@ -34428,7 +34864,8 @@
         91,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 72
     },
     {
       "species": "BRONZONG",
@@ -34517,7 +34954,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 188
     },
     {
       "species": "BONSLY",
@@ -34588,7 +35026,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 68
     },
     {
       "species": "MIME_JR",
@@ -34676,7 +35115,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 78
     },
     {
       "species": "HAPPINY",
@@ -34755,7 +35195,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 255
     },
     {
       "species": "CHATOT",
@@ -34826,7 +35267,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 107
     },
     {
       "species": "SPIRITOMB",
@@ -34906,7 +35348,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 168
     },
     {
       "species": "GIBLE",
@@ -34986,7 +35429,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 67
     },
     {
       "species": "GABITE",
@@ -35067,7 +35511,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 144
     },
     {
       "species": "GARCHOMP",
@@ -35157,7 +35602,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 218
     },
     {
       "species": "MUNCHLAX",
@@ -35243,7 +35689,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 94
     },
     {
       "species": "RIOLU",
@@ -35323,7 +35770,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 72
     },
     {
       "species": "LUCARIO",
@@ -35414,7 +35862,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 204
     },
     {
       "species": "HIPPOPOTAS",
@@ -35486,7 +35935,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 95
     },
     {
       "species": "HIPPOWDON",
@@ -35561,7 +36011,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 198
     },
     {
       "species": "SKORUPI",
@@ -35644,7 +36095,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 114
     },
     {
       "species": "DRAPION",
@@ -35733,7 +36185,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 204
     },
     {
       "species": "CROAGUNK",
@@ -35818,7 +36271,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 83
     },
     {
       "species": "TOXICROAK",
@@ -35908,7 +36362,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 181
     },
     {
       "species": "CARNIVINE",
@@ -35983,7 +36438,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 164
     },
     {
       "species": "FINNEON",
@@ -36058,7 +36514,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 90
     },
     {
       "species": "LUMINEON",
@@ -36135,7 +36592,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 156
     },
     {
       "species": "MANTYKE",
@@ -36205,7 +36663,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 108
     },
     {
       "species": "SNOVER",
@@ -36281,7 +36740,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 131
     },
     {
       "species": "ABOMASNOW",
@@ -36370,7 +36830,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 214
     },
     {
       "species": "WEAVILE",
@@ -36466,7 +36927,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 199
     },
     {
       "species": "MAGNEZONE",
@@ -36540,7 +37002,8 @@
         90,
         91
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 211
     },
     {
       "species": "LICKILICKY",
@@ -36636,7 +37099,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 193
     },
     {
       "species": "RHYPERIOR",
@@ -36735,7 +37199,8 @@
         5,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 217
     },
     {
       "species": "TANGROWTH",
@@ -36822,7 +37287,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 211
     },
     {
       "species": "ELECTIVIRE",
@@ -36909,7 +37375,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 199
     },
     {
       "species": "MAGMORTAR",
@@ -36993,7 +37460,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 199
     },
     {
       "species": "TOGEKISS",
@@ -37083,7 +37551,8 @@
       "hms": [
         2,
         6
-      ]
+      ],
+      "expYieldFull": 220
     },
     {
       "species": "YANMEGA",
@@ -37158,7 +37627,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 198
     },
     {
       "species": "LEAFEON",
@@ -37237,7 +37707,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 196
     },
     {
       "species": "GLACEON",
@@ -37312,7 +37783,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 196
     },
     {
       "species": "GLISCOR",
@@ -37404,7 +37876,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 192
     },
     {
       "species": "MAMOSWINE",
@@ -37484,7 +37957,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 207
     },
     {
       "species": "PORYGON_Z",
@@ -37565,7 +38039,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 185
     },
     {
       "species": "GALLADE",
@@ -37668,7 +38143,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 208
     },
     {
       "species": "PROBOPASS",
@@ -37748,7 +38224,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 198
     },
     {
       "species": "DUSKNOIR",
@@ -37840,7 +38317,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 210
     },
     {
       "species": "FROSLASS",
@@ -37924,7 +38402,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 187
     },
     {
       "species": "ROTOM",
@@ -37998,7 +38477,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 132
     },
     {
       "species": "UXIE",
@@ -38086,7 +38566,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 210
     },
     {
       "species": "MESPRIT",
@@ -38174,7 +38655,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 210
     },
     {
       "species": "AZELF",
@@ -38266,7 +38748,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 210
     },
     {
       "species": "DIALGA",
@@ -38359,7 +38842,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 220
     },
     {
       "species": "PALKIA",
@@ -38456,7 +38940,8 @@
         4,
         5,
         6
-      ]
+      ],
+      "expYieldFull": 220
     },
     {
       "species": "HEATRAN",
@@ -38541,7 +39026,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 215
     },
     {
       "species": "REGIGIGAS",
@@ -38622,7 +39108,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 220
     },
     {
       "species": "GIRATINA",
@@ -38714,7 +39201,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 220
     },
     {
       "species": "CRESSELIA",
@@ -38795,7 +39283,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 210
     },
     {
       "species": "PHIONE",
@@ -38867,7 +39356,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 165
     },
     {
       "species": "MANAPHY",
@@ -38949,7 +39439,8 @@
         3,
         5,
         7
-      ]
+      ],
+      "expYieldFull": 215
     },
     {
       "species": "DARKRAI",
@@ -39049,7 +39540,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 210
     },
     {
       "species": "SHAYMIN",
@@ -39119,7 +39611,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 64
     },
     {
       "species": "ARCEUS",
@@ -39242,7 +39735,8 @@
         6,
         7,
         8
-      ]
+      ],
+      "expYieldFull": 255
     },
     {
       "species": "EGG",
@@ -39284,7 +39778,8 @@
       "color": 10,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 255
     },
     {
       "species": "BAD_EGG",
@@ -39326,7 +39821,8 @@
       "color": 10,
       "flip": 0,
       "tms": [],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 255
     },
     {
       "species": "DEOXYS_ATK",
@@ -39428,7 +39924,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 215
     },
     {
       "species": "DEOXYS_DEF",
@@ -39530,7 +40027,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 215
     },
     {
       "species": "DEOXYS_SPD",
@@ -39632,7 +40130,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 215
     },
     {
       "species": "WORMADAM_SANDY",
@@ -39707,7 +40206,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 159
     },
     {
       "species": "WORMADAM_TRASH",
@@ -39781,7 +40281,8 @@
         90,
         91
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 159
     },
     {
       "species": "GIRATINA_ORIGIN",
@@ -39873,7 +40374,8 @@
         4,
         6,
         8
-      ]
+      ],
+      "expYieldFull": 220
     },
     {
       "species": "SHAYMIN_SKY",
@@ -39943,7 +40445,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 64
     },
     {
       "species": "ROTOM_HEAT",
@@ -40017,7 +40520,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 132
     },
     {
       "species": "ROTOM_WASH",
@@ -40091,7 +40595,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 132
     },
     {
       "species": "ROTOM_FROST",
@@ -40165,7 +40670,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 132
     },
     {
       "species": "ROTOM_FAN",
@@ -40239,7 +40745,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 132
     },
     {
       "species": "ROTOM_MOW",
@@ -40313,7 +40820,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 132
     },
     {
       "species": "LILLIPUP",
@@ -40383,7 +40891,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 55
     },
     {
       "species": "HERDIER",
@@ -40455,7 +40964,8 @@
         3,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 130
     },
     {
       "species": "STOUTLAND",
@@ -40529,7 +41039,8 @@
         3,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 250
     },
     {
       "species": "PURRLOIN",
@@ -40605,7 +41116,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 56
     },
     {
       "species": "LIEPARD",
@@ -40684,7 +41196,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 156
     },
     {
       "species": "TYMPOLE",
@@ -40746,7 +41259,8 @@
       ],
       "hms": [
         3
-      ]
+      ],
+      "expYieldFull": 59
     },
     {
       "species": "PALPITOAD",
@@ -40810,7 +41324,8 @@
       "hms": [
         3,
         6
-      ]
+      ],
+      "expYieldFull": 134
     },
     {
       "species": "SEISMITOAD",
@@ -40888,7 +41403,8 @@
         3,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 255
     },
     {
       "species": "SEWADDLE",
@@ -40959,7 +41475,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 62
     },
     {
       "species": "SWADLOON",
@@ -41030,7 +41547,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 133
     },
     {
       "species": "LEAVANNY",
@@ -41112,7 +41630,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 250
     },
     {
       "species": "YAMASK",
@@ -41185,7 +41704,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 61
     },
     {
       "species": "COFAGRIGUS",
@@ -41262,7 +41782,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 169
     },
     {
       "species": "TRUBBISH",
@@ -41328,7 +41849,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 66
     },
     {
       "species": "GARBODOR",
@@ -41402,7 +41924,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 166
     },
     {
       "species": "EMOLGA",
@@ -41476,7 +41999,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 150
     },
     {
       "species": "KARRABLAST",
@@ -41543,7 +42067,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 63
     },
     {
       "species": "ESCAVALIER",
@@ -41615,7 +42140,8 @@
       "hms": [
         1,
         6
-      ]
+      ],
+      "expYieldFull": 173
     },
     {
       "species": "FOONGUS",
@@ -41682,7 +42208,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 59
     },
     {
       "species": "AMOONGUSS",
@@ -41751,7 +42278,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 162
     },
     {
       "species": "JOLTIK",
@@ -41822,7 +42350,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 64
     },
     {
       "species": "GALVANTULA",
@@ -41895,7 +42424,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 165
     },
     {
       "species": "FERROSEED",
@@ -41969,7 +42499,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 61
     },
     {
       "species": "FERROTHORN",
@@ -42053,7 +42584,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 171
     },
     {
       "species": "KLINK",
@@ -42118,7 +42650,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 60
     },
     {
       "species": "KLANG",
@@ -42183,7 +42716,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 154
     },
     {
       "species": "KLINKLANG",
@@ -42251,7 +42785,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 260
     },
     {
       "species": "ELGYEM",
@@ -42330,7 +42865,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 67
     },
     {
       "species": "BEHEEYEM",
@@ -42412,7 +42948,8 @@
         91,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 170
     },
     {
       "species": "LITWICK",
@@ -42489,7 +43026,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 55
     },
     {
       "species": "LAMPENT",
@@ -42566,7 +43104,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 130
     },
     {
       "species": "CHANDELURE",
@@ -42645,7 +43184,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 260
     },
     {
       "species": "SHELMET",
@@ -42706,7 +43246,8 @@
         87,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 61
     },
     {
       "species": "ACCELGOR",
@@ -42773,7 +43314,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 173
     },
     {
       "species": "BOUFFALANT",
@@ -42847,7 +43389,8 @@
         3,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 172
     },
     {
       "species": "BUNNELBY",
@@ -42926,7 +43469,8 @@
         3,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 47
     },
     {
       "species": "DIGGERSBY",
@@ -43007,7 +43551,8 @@
         3,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 148
     },
     {
       "species": "FLETCHLING",
@@ -43077,7 +43622,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 56
     },
     {
       "species": "FLETCHINDER",
@@ -43149,7 +43695,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 134
     },
     {
       "species": "TALONFLAME",
@@ -43225,7 +43772,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 175
     },
     {
       "species": "LITLEO",
@@ -43298,7 +43846,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 74
     },
     {
       "species": "PYROAR",
@@ -43373,7 +43922,8 @@
       "hms": [
         4,
         6
-      ]
+      ],
+      "expYieldFull": 177
     },
     {
       "species": "ESPURR",
@@ -43453,7 +44003,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 71
     },
     {
       "species": "MEOWSTIC",
@@ -43536,7 +44087,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 163
     },
     {
       "species": "SYLVEON",
@@ -43611,7 +44163,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 184
     },
     {
       "species": "DEDENNE",
@@ -43687,7 +44240,8 @@
       ],
       "hms": [
         1
-      ]
+      ],
+      "expYieldFull": 151
     },
     {
       "species": "PHANTUMP",
@@ -43769,7 +44323,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 62
     },
     {
       "species": "TREVENANT",
@@ -43858,7 +44413,8 @@
         1,
         4,
         6
-      ]
+      ],
+      "expYieldFull": 166
     },
     {
       "species": "PUMPKABOO",
@@ -43941,7 +44497,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 67
     },
     {
       "species": "GOURGEIST",
@@ -44027,7 +44584,8 @@
       ],
       "hms": [
         6
-      ]
+      ],
+      "expYieldFull": 173
     },
     {
       "species": "NOIBAT",
@@ -44106,7 +44664,8 @@
       "hms": [
         1,
         2
-      ]
+      ],
+      "expYieldFull": 49
     },
     {
       "species": "NOIVERN",
@@ -44190,7 +44749,8 @@
       "hms": [
         1,
         2
-      ]
+      ],
+      "expYieldFull": 187
     },
     {
       "species": "APPLIN",
@@ -44234,7 +44794,8 @@
       "tms": [
         45
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 52
     },
     {
       "species": "FLAPPLE",
@@ -44297,7 +44858,8 @@
       ],
       "hms": [
         2
-      ]
+      ],
+      "expYieldFull": 170
     },
     {
       "species": "APPLETUN",
@@ -44363,7 +44925,8 @@
         86,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 170
     },
     {
       "species": "SIZZLIPEDE",
@@ -44414,7 +44977,8 @@
         82,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 61
     },
     {
       "species": "CENTISKORCH",
@@ -44473,7 +45037,8 @@
         82,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 184
     },
     {
       "species": "WYRDEER",
@@ -44544,7 +45109,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 200
     },
     {
       "species": "KLEAVOR",
@@ -44609,7 +45175,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 175
     },
     {
       "species": "URSALUNA",
@@ -44679,7 +45246,8 @@
         82,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 200
     },
     {
       "species": "ANNIHILAPE",
@@ -44753,7 +45321,8 @@
         89,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 268
     },
     {
       "species": "FARIGIRAF",
@@ -44823,7 +45392,8 @@
         90,
         92
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 260
     },
     {
       "species": "DUDUNSPARCE",
@@ -44897,7 +45467,8 @@
         84,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 182
     },
     {
       "species": "DIPPLIN",
@@ -44957,7 +45528,8 @@
         86,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 170
     },
     {
       "species": "HYDRAPPLE",
@@ -45019,7 +45591,8 @@
         86,
         90
       ],
-      "hms": []
+      "hms": [],
+      "expYieldFull": 270
     }
   ]
 }

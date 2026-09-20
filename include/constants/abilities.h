@@ -149,6 +149,15 @@
 #define ABILITY_CUD_CHEW             139
 #define ABILITY_ARMOR_TAIL           140
 #define ABILITY_SUPERSWEET_SYRUP     141
+#define ABILITY_LIGHTNING_ROD        142
+#define ABILITY_COMPETITIVE          143
+#define ABILITY_CURSED_BODY          144
+#define ABILITY_SHARPNESS            145
+#define ABILITY_NEUTRALIZING_GAS     146
+#define ABILITY_WIND_RIDER           147
+#define ABILITY_EARTH_EATER          148
+#define ABILITY_IRRIGATION           149
+#define ABILITY_EVAPORATE            150
 
 // Not a count: the field code passes this where a Pokemon has no ability,
 // because the lead is an egg. It stays below the abilities above so that the

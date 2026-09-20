@@ -1761,7 +1761,7 @@ int GetPersonalAttr(const BASE_STATS *baseStats, int attr) {
         ret = baseStats->catchRate;
         break;
     case BASE_EXP_YIELD:
-        ret = baseStats->expYield;
+        ret = baseStats->expYieldFull;
         break;
     case BASE_HP_YIELD:
         ret = baseStats->hp_yield;

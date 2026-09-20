@@ -34,7 +34,10 @@ typedef struct BaseStats {
     /* 0x18 */ u8 greatMarshRate;
     /* 0x19 */ u8 color : 7;
     u8 flip : 1;
-    u8 padding_1A[2];
+    // Gen 4 capped the yield at 255 and left these two bytes spare; the later
+    // table runs to 635, so the full value lives here and the byte above keeps
+    // whatever fits for anything still reading the original field.
+    /* 0x1A */ u16 expYieldFull;
     /* 0x1C */ u32 tmhm_1;
     /* 0x20 */ u32 tmhm_2;
     /* 0x24 */ u32 tmhm_3;

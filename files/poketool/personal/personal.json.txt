@@ -46,7 +46,7 @@ const struct BaseStats __data[] = {
         {{ mon.greatMarshRate }}, // Great Marsh flee rate?
         {{ mon.color }}, // Color
         {{ mon.flip }}, // Flip
-		{0, 0}, // Padding
+		{{ mon.expYieldFull }}, // Experience yield, full range
 		// TM/HM
         {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 1) in mon.tms %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
         {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 33) in mon.tms %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
