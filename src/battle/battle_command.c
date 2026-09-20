@@ -61,6 +61,7 @@ static void BattlerSetAbility(BattleContext *ctx, u8 a1, u8 a2);
 static void BattlerSetItem(BattleContext *ctx, u8 battlerId, u16 item);
 static void BattleScript_CalcEffortValues(Party *party, int slot, u32 species, u32 form);
 static u32 BattleSystem_CalculateBallShakes(BattleSystem *battleSystem, BattleContext *ctx);
+static u32 BattleScript_ScaleExpToLevel(u32 exp, u32 faintedLevel, u32 gainerLevel);
 static s32 GetMonWeight(u16 species);
 static void InitBattleMsgData(BattleContext *ctx, BattleMessageData *msgdata);
 static int ov12_022480C0(BattleSystem *battleSystem, BattleContext *ctx, int side);
@@ -1247,7 +1248,7 @@ BOOL BtlCmd_CalcExpGain(BattleSystem *battleSystem, BattleContext *ctx) {
             }
         }
         totalExp = GetMonBaseStat(ctx->battleMons[ctx->battlerIdFainted].species, BASE_EXP_YIELD);
-        totalExp = (totalExp * ctx->battleMons[ctx->battlerIdFainted].level) / 7;
+        totalExp = (totalExp * ctx->battleMons[ctx->battlerIdFainted].level) / 5;
         if (expShareMonsCnt) {
             ctx->gainedExp = (totalExp / 2) / expMonsCnt;
             if (ctx->gainedExp == 0) {
@@ -6056,6 +6057,10 @@ static void Task_GetExp(SysTask *task, void *inData) {
                 totalExp += data->ctx->partyGainedExp;
             }
 
+            totalExp = BattleScript_ScaleExpToLevel(totalExp,
+                data->ctx->battleMons[data->ctx->battlerIdFainted].level,
+                GetMonData(mon, MON_DATA_LEVEL, NULL));
+
             if (itemEffect == HOLD_EFFECT_EXP_UP) {
                 totalExp = totalExp * 150 / 100;
             }
@@ -7175,6 +7180,31 @@ static inline u32 CP_GetSqrtResultImm32(void) {
 static inline u32 CP_GetSqrtResult32(void) {
     CP_WaitSqrt();
     return CP_GetSqrtResultImm32();
+}
+
+// Experience scales with how far the fainted Pokemon outranks the one being
+// rewarded: beating something above your level pays more, grinding on weaker
+// Pokemon pays less. The ratio is ((2L+10) / (L+Lp+10)) raised to 2.5.
+//
+// The hardware square root is whole-numbered, so each root is taken of its
+// operand shifted up twenty-two bits, which leaves eleven fractional bits; the
+// shared factor cancels between the two sides of the ratio. Level 100 shifted
+// that far still fits a 32-bit parameter.
+static u32 BattleScript_ScaleExpToLevel(u32 exp, u32 faintedLevel, u32 gainerLevel) {
+    u32 top = 2 * faintedLevel + 10;
+    u32 bottom = faintedLevel + gainerLevel + 10;
+
+    CP_SetSqrt32(top << 22);
+    u64 scaled = (u64)top * top * CP_GetSqrtResult32();
+    CP_SetSqrt32(bottom << 22);
+    u64 divisor = (u64)bottom * bottom * CP_GetSqrtResult32();
+
+    u32 result = (u32)((u64)exp * scaled / divisor);
+    // A reward that survives the battle never rounds away to nothing.
+    if (result == 0 && exp != 0) {
+        result = 1;
+    }
+    return result;
 }
 
 static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *ctx) {
