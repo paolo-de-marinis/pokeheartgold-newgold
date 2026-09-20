@@ -523,7 +523,78 @@
 #define SPECIES_ROTOM_FAN       506
 #define SPECIES_ROTOM_MOW       507
 
-#define NUM_SPECIES SPECIES_ROTOM_MOW
+// The species New Gold reaches beyond HGSS. They are appended rather than
+// placed at their National Dex numbers, which 494 to 507 already use for the
+// egg, the bad egg and the alternate forms: every identifier a save, a table
+// or an interface already expects keeps its place, and the Dex number stops
+// being the same thing as the species identifier.
+#define SPECIES_LILLIPUP        508
+#define SPECIES_HERDIER         509
+#define SPECIES_STOUTLAND       510
+#define SPECIES_PURRLOIN        511
+#define SPECIES_LIEPARD         512
+#define SPECIES_TYMPOLE         513
+#define SPECIES_PALPITOAD       514
+#define SPECIES_SEISMITOAD      515
+#define SPECIES_SEWADDLE        516
+#define SPECIES_SWADLOON        517
+#define SPECIES_LEAVANNY        518
+#define SPECIES_YAMASK          519
+#define SPECIES_COFAGRIGUS      520
+#define SPECIES_TRUBBISH        521
+#define SPECIES_GARBODOR        522
+#define SPECIES_EMOLGA          523
+#define SPECIES_KARRABLAST      524
+#define SPECIES_ESCAVALIER      525
+#define SPECIES_FOONGUS         526
+#define SPECIES_AMOONGUSS       527
+#define SPECIES_JOLTIK          528
+#define SPECIES_GALVANTULA      529
+#define SPECIES_FERROSEED       530
+#define SPECIES_FERROTHORN      531
+#define SPECIES_KLINK           532
+#define SPECIES_KLANG           533
+#define SPECIES_KLINKLANG       534
+#define SPECIES_ELGYEM          535
+#define SPECIES_BEHEEYEM        536
+#define SPECIES_LITWICK         537
+#define SPECIES_LAMPENT         538
+#define SPECIES_CHANDELURE      539
+#define SPECIES_SHELMET         540
+#define SPECIES_ACCELGOR        541
+#define SPECIES_BOUFFALANT      542
+#define SPECIES_BUNNELBY        543
+#define SPECIES_DIGGERSBY       544
+#define SPECIES_FLETCHLING      545
+#define SPECIES_FLETCHINDER     546
+#define SPECIES_TALONFLAME      547
+#define SPECIES_LITLEO          548
+#define SPECIES_PYROAR          549
+#define SPECIES_ESPURR          550
+#define SPECIES_MEOWSTIC        551
+#define SPECIES_SYLVEON         552
+#define SPECIES_DEDENNE         553
+#define SPECIES_PHANTUMP        554
+#define SPECIES_TREVENANT       555
+#define SPECIES_PUMPKABOO       556
+#define SPECIES_GOURGEIST       557
+#define SPECIES_NOIBAT          558
+#define SPECIES_NOIVERN         559
+#define SPECIES_APPLIN          560
+#define SPECIES_FLAPPLE         561
+#define SPECIES_APPLETUN        562
+#define SPECIES_SIZZLIPEDE      563
+#define SPECIES_CENTISKORCH     564
+#define SPECIES_WYRDEER         565
+#define SPECIES_KLEAVOR         566
+#define SPECIES_URSALUNA        567
+#define SPECIES_ANNIHILAPE      568
+#define SPECIES_FARIGIRAF       569
+#define SPECIES_DUDUNSPARCE     570
+#define SPECIES_DIPPLIN         571
+#define SPECIES_HYDRAPPLE       572
+
+#define NUM_SPECIES SPECIES_HYDRAPPLE
 
 #define SPECIES_MANAPHY_EGG SPECIES_BAD_EGG
 
