@@ -33,12 +33,16 @@ void Pokedex_Copy(const Pokedex *src, Pokedex *dest) {
 }
 
 BOOL DexSpeciesIsInvalid(u16 species) {
-    if (species == SPECIES_NONE || species > SPECIES_ARCEUS) {
+    if (species == SPECIES_NONE || species > NUM_SPECIES) {
         GF_ASSERT(FALSE);
         return TRUE;
     }
 
-    return FALSE;
+    // The species New Gold adds sit past the Dex on purpose: their identifiers
+    // continue after the egg and the alternate forms rather than taking Dex
+    // numbers. Meeting one is not an error, it simply records nothing, so this
+    // must not reach the assertion above, which resets the game.
+    return species > SPECIES_ARCEUS;
 }
 
 static inline BOOL CheckDexFlag(const u8 *array, u16 flagId) {
