@@ -173,6 +173,10 @@
 .public BtlCmd_HandleMagicPowder
 .public BtlCmd_HandleBurnUp
 .public BtlCmd_HandleDoubleShock
+.public BtlCmd_TryStickyWeb
+.public BtlCmd_CheckProtectContactMoves
+.public BtlCmd_TryAuroraVeil
+.public BtlCmd_ClearAuroraVeil
 .public BtlCmd_NotImplemented
 .public BtlCmd_CalcHeavySlamPower
 .public BtlCmd_CheckTargetIsPartner

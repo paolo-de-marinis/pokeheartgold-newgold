@@ -280,6 +280,10 @@ typedef enum Terrain {
 #define SIDE_CONDITION_TAILWIND      (3 << 8)
 #define SIDE_CONDITION_TOXIC_SPIKES  (1 << 10)
 #define SIDE_CONDITION_LUCKY_CHANT   (7 << 12)
+// Laid by moves this game did not have. Bit 11 was the gap left between Toxic
+// Spikes and Lucky Chant; Aurora Veil goes above them all.
+#define SIDE_CONDITION_STICKY_WEB    (1 << 11)
+#define SIDE_CONDITION_AURORA_VEIL   (1 << 15)
 
 #define SIDE_CONDITION_TAILWIND_SHIFT    8
 #define SIDE_CONDITION_LUCKY_CHANT_SHIFT 12

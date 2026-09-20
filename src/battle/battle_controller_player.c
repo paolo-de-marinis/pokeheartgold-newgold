@@ -851,6 +851,11 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
         case UFC_STATE_REFLECT:
             while (ctx->fieldConditionUpdateData < 2) {
                 side = ctx->fieldConditionUpdateData;
+                // Aurora Veil is not a move this game has a name for, so it
+                // runs out quietly rather than announcing itself.
+                if ((ctx->fieldSideConditionFlags[side] & SIDE_CONDITION_AURORA_VEIL) && --ctx->fieldSideConditionData[side].auroraVeilTurns == 0) {
+                    ctx->fieldSideConditionFlags[side] &= ~SIDE_CONDITION_AURORA_VEIL;
+                }
                 if (ctx->fieldSideConditionFlags[side] & SIDE_CONDITION_REFLECT) {
                     if (--ctx->fieldSideConditionData[side].reflectTurns == 0) {
                         ctx->fieldSideConditionFlags[side] &= ~SIDE_CONDITION_REFLECT;

@@ -6226,7 +6226,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
             dmg /= 2;
         }
 
-        if ((sideCondition & SIDE_CONDITION_REFLECT) && crit == 1 && ctx->trainerAIData.moveData[moveNo].effect != MOVE_EFFECT_REMOVE_SCREENS && calcAttacker.ability != ABILITY_INFILTRATOR) {
+        if ((sideCondition & (SIDE_CONDITION_REFLECT | SIDE_CONDITION_AURORA_VEIL)) && crit == 1 && ctx->trainerAIData.moveData[moveNo].effect != MOVE_EFFECT_REMOVE_SCREENS && calcAttacker.ability != ABILITY_INFILTRATOR) {
             if ((battleType & BATTLE_TYPE_DOUBLES) && GetMonsHitCount(battleSystem, ctx, 1, battlerIdTarget) == 2) {
                 dmg = dmg * 2 / 3;
             } else {
@@ -6260,7 +6260,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         dmg /= dmg2;
         dmg /= 50;
 
-        if ((sideCondition & SIDE_CONDITION_LIGHT_SCREEN) && crit == 1 && ctx->trainerAIData.moveData[moveNo].effect != MOVE_EFFECT_REMOVE_SCREENS && calcAttacker.ability != ABILITY_INFILTRATOR) {
+        if ((sideCondition & (SIDE_CONDITION_LIGHT_SCREEN | SIDE_CONDITION_AURORA_VEIL)) && crit == 1 && ctx->trainerAIData.moveData[moveNo].effect != MOVE_EFFECT_REMOVE_SCREENS && calcAttacker.ability != ABILITY_INFILTRATOR) {
             if ((battleType & BATTLE_TYPE_DOUBLES) && GetMonsHitCount(battleSystem, ctx, 1, battlerIdTarget) == 2) {
                 dmg = dmg * 2 / 3;
             } else {

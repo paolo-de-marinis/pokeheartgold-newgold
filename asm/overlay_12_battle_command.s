@@ -579,18 +579,18 @@ sBattleScriptCommandTable: ; 0x0226C6C8
 	.word BtlCmd_NotImplemented ; 249 CanClearPrimalWeather
 	.word BtlCmd_NotImplemented ; 250 SetAbilityActivatedFlag
 	.word BtlCmd_NotImplemented ; 251 SwitchInAbilityCheck
-	.word BtlCmd_NotImplemented ; 252 TryStickyWeb
+	.word BtlCmd_TryStickyWeb ; 252 TryStickyWeb
 	.word BtlCmd_NotImplemented ; 253 TryMegaOrUltraBurstDuringPursuit
 	.word BtlCmd_CalcConfusionDamage ; 254 CalcConfusionDamage
 	.word BtlCmd_CheckCanActivateDefiantOrCompetitive ; 255 CheckCanActivateDefiantOrCompetitive
 	.word BtlCmd_NotImplemented ; 256 JumpToCurrentEntryHazard
 	.word BtlCmd_NotImplemented ; 257 AddEntryHazardToQueue
 	.word BtlCmd_NotImplemented ; 258 RemoveEntryHazardFromQueue
-	.word BtlCmd_NotImplemented ; 259 CheckProtectContactMoves
+	.word BtlCmd_CheckProtectContactMoves ; 259 CheckProtectContactMoves
 	.word BtlCmd_TryIncinerate ; 260 TryIncinerate
 	.word BtlCmd_NotImplemented ; 261 AddType
-	.word BtlCmd_NotImplemented ; 262 TryAuroraVeil
-	.word BtlCmd_NotImplemented ; 263 ClearAuroraVeil
+	.word BtlCmd_TryAuroraVeil ; 262 TryAuroraVeil
+	.word BtlCmd_ClearAuroraVeil ; 263 ClearAuroraVeil
 	.word BtlCmd_StrengthSapCalc ; 264 StrengthSapCalc
 	.word BtlCmd_CheckTargetIsPartner ; 265 CheckTargetIsPartner
 	.word BtlCmd_ClearSmog ; 266 ClearSmog

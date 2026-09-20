@@ -70,7 +70,9 @@ typedef struct SideConditionData {
     u32 unk0_1D : 3;
     u32 spikesLayers : 2;
     u32 toxicSpikesLayers : 2;
-    u32 unk4_4 : 28;
+    u32 auroraVeilBattler : 2;
+    u32 auroraVeilTurns : 4;
+    u32 unk4_4 : 22;
 } SideConditionData;
 
 typedef struct TurnData {

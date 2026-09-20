@@ -8588,6 +8588,58 @@ BOOL BtlCmd_CheckCanActivateDefiantOrCompetitive(BattleSystem *battleSystem, Bat
     return FALSE;
 }
 
+// Sticky Web is laid over the far side and stays until something clears it.
+// A second one fails, and the script says so.
+BOOL BtlCmd_TryStickyWeb(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+    int fieldSide = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget);
+
+    if (ctx->fieldSideConditionFlags[fieldSide] & SIDE_CONDITION_STICKY_WEB) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    } else {
+        ctx->fieldSideConditionFlags[fieldSide] |= SIDE_CONDITION_STICKY_WEB;
+    }
+
+    return FALSE;
+}
+
+// Aurora Veil stands for five turns, eight with Light Clay, and is counted
+// down beside Reflect and Light Screen.
+BOOL BtlCmd_TryAuroraVeil(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int fieldSide = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker);
+
+    ctx->fieldSideConditionFlags[fieldSide] |= SIDE_CONDITION_AURORA_VEIL;
+    ctx->fieldSideConditionData[fieldSide].auroraVeilBattler = ctx->battlerIdAttacker;
+    ctx->fieldSideConditionData[fieldSide].auroraVeilTurns = GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_EXTEND_SCREENS ? 8 : 5;
+
+    return FALSE;
+}
+
+BOOL BtlCmd_ClearAuroraVeil(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int fieldSide = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget);
+
+    ctx->fieldSideConditionFlags[fieldSide] &= ~SIDE_CONDITION_AURORA_VEIL;
+    ctx->fieldSideConditionData[fieldSide].auroraVeilTurns = 0;
+
+    return FALSE;
+}
+
+// Every move this answers for — King's Shield, Spiky Shield, Baneful Bunker,
+// Obstruct — belongs to a later generation than this game, so a Protect here
+// only ever protects and there is nothing to hand back.
+BOOL BtlCmd_CheckProtectContactMoves(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    return FALSE;
+}
+
 static void BattlerSetAbility(BattleContext *ctx, u8 battlerID, u16 ability) {
     ctx->trainerAIAbilities[battlerID] = ability;
     return;

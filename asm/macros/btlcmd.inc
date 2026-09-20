@@ -1381,4 +1381,21 @@
     .long \side
     .endm
 
+    .macro TryStickyWeb dest
+    .long 252
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro CheckProtectContactMoves
+    .long 259
+    .endm
+
+    .macro TryAuroraVeil
+    .long 262
+    .endm
+
+    .macro ClearAuroraVeil
+    .long 263
+    .endm
+
     .endif // ASM_BATTLE_SCRIPT_INC
