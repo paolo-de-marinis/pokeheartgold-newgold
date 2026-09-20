@@ -6,6 +6,7 @@
 
 #include "bag_view.h"
 #include "heap.h"
+#include "item.h"
 #include "save.h"
 
 static u32 Bag_GetItemPocket(Bag *bag, u16 itemId, ItemSlot **itemSlots, u32 *countPtr, enum HeapID heapID);
@@ -135,7 +136,10 @@ static ItemSlot *Bag_GetItemSlotForAdd(Bag *bag, u16 itemId, u16 quantity, enum 
     u32 count;
     u32 pocket = Bag_GetItemPocket(bag, itemId, &slots, &count, heapID);
     if (pocket == POCKET_TMHMS) {
-        return Pocket_GetItemSlotForAdd(slots, count, itemId, quantity, BAG_TMHM_QUANTITY_MAX);
+        // New Gold never consumes a machine, so a second copy would be dead
+        // weight and a second purchase wasted money. One is all the bag takes.
+        u16 max = ItemIsTM(itemId) ? 1 : BAG_TMHM_QUANTITY_MAX;
+        return Pocket_GetItemSlotForAdd(slots, count, itemId, quantity, max);
     } else {
         return Pocket_GetItemSlotForAdd(slots, count, itemId, quantity, BAG_SLOT_QUANTITY_MAX);
     }

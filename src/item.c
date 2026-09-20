@@ -953,6 +953,10 @@ BOOL MoveIsHM(u16 moveId) {
     return FALSE;
 }
 
+BOOL ItemIsTM(u16 itemId) {
+    return itemId >= ITEM_TM01 && itemId <= ITEM_TM92;
+}
+
 u8 ItemToTMHMId(u16 itemId) {
     if (itemId < ITEM_TM01 || itemId > ITEM_HM08) {
         return 0;
