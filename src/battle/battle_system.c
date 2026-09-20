@@ -2,6 +2,7 @@
 
 #include "global.h"
 
+#include "constants/battle.h"
 #include "constants/game_stats.h"
 #include "constants/message_tags.h"
 #include "constants/sndseq.h"
@@ -1088,12 +1089,16 @@ void BattleSystem_SetBattleOutcomeFlags(BattleSystem *battleSystem, u8 battleOut
     battleSystem->battleOutcomeFlag = battleOutcomeFlag;
 }
 
+// New Gold drops the low-HP warning, so the flag stays switched off and the
+// battle music is never swapped for the critical-health track.
 u8 BattleSystem_GetCriticalHpMusicFlag(BattleSystem *battleSystem) {
-    return battleSystem->criticalHpMusic;
+    (void)battleSystem;
+    return CRITICAL_MUSIC_OFF;
 }
 
 void BattleSystem_SetCriticalHpMusicFlag(BattleSystem *battleSystem, u8 flag) {
-    battleSystem->criticalHpMusic = flag;
+    (void)flag;
+    battleSystem->criticalHpMusic = CRITICAL_MUSIC_OFF;
 }
 
 u8 BattleSystem_GetCriticalHpMusicDelay(BattleSystem *battleSystem) {
