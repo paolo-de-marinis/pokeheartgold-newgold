@@ -11,6 +11,7 @@
 #include "constants/move_effects.h"
 #include "constants/moves.h"
 #include "constants/opcode.h"
+#include "constants/balls.h"
 #include "constants/pokemon.h"
 #include "constants/sndseq.h"
 
@@ -7231,7 +7232,7 @@ static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *c
         switch (ctx->itemTemp) {
         case ITEM_NET_BALL: {
             if (targetMonType1 == TYPE_WATER || targetMonType2 == TYPE_WATER || targetMonType1 == TYPE_BUG || targetMonType2 == TYPE_BUG) {
-                ballMultiplier = 30;
+                ballMultiplier = 35;
                 break;
             }
             break;
@@ -7243,26 +7244,23 @@ static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *c
             break;
         case ITEM_NEST_BALL:
             u8 level = ctx->battleMons[ctx->battlerIdTarget].level;
-            if (level < 40) {
-                // Up to a 40/10 multiplier (x4).
-                ballMultiplier = 40 - level;
-
-                // Don't let the level "bonus" make the ball worse than a pokeball.
-                if (ballMultiplier < 10) {
-                    ballMultiplier = 10;
-                }
+            // Narrower than HGSS but stronger where it applies: a 40/10
+            // multiplier (x4) at level 1, down to 11/10 at level 30.
+            if (level <= 30) {
+                ballMultiplier = 41 - level;
                 break;
             }
             break;
         }
         case ITEM_REPEAT_BALL:
             if (BattleSystem_CheckMonCaught(bsys, ctx->battleMons[ctx->battlerIdTarget].species) == TRUE) {
-                ballMultiplier = 30;
+                ballMultiplier = 35;
             }
             break;
         case ITEM_TIMER_BALL:
-            // Use the (turn count + 10)/10 as the multiplier.
-            ballMultiplier = ctx->totalTurns + 10;
+            // Three tenths per turn rather than one, so the ball reaches its
+            // ceiling in ten turns instead of thirty.
+            ballMultiplier = 10 + 3 * ctx->totalTurns;
 
             // Then cap it at 40/10 multiplier (x4).
             if (ballMultiplier > 40) {
@@ -7271,12 +7269,12 @@ static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *c
             break;
         case ITEM_DUSK_BALL:
             if (BattleSystem_GetTimezone(bsys) == 3 || BattleSystem_GetTimezone(bsys) == 4 || BattleSystem_GetTerrainId(bsys) == TERRAIN_CAVE) {
-                ballMultiplier = 35;
+                ballMultiplier = 30;
             }
             break;
         case ITEM_QUICK_BALL:
             if (ctx->totalTurns < 1) {
-                ballMultiplier = 40;
+                ballMultiplier = 50;
             }
             break;
 
@@ -7395,7 +7393,7 @@ static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *c
         return shakeCount;
     }
     if (ctx->itemTemp == ITEM_FRIEND_BALL) {
-        u8 friendship = FRIENDSHIP_TIER_HI_MIN;
+        u8 friendship = FRIEND_BALL_FRIENDSHIP;
         SetMonData(BattleSystem_GetPartyMon(bsys, ctx->battlerIdTarget, 0), MON_DATA_FRIENDSHIP, &friendship);
     }
     return shakeCount;

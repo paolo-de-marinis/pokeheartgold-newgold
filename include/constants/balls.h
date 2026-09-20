@@ -2,6 +2,9 @@
 #define POKEHEARTGOLD_CONSTANTS_BALLS_H
 
 // OG balls
+// New Gold uses the modern Friend Ball value rather than HGSS's 200.
+#define FRIEND_BALL_FRIENDSHIP 150
+
 #define BALL_NONE   0
 #define BALL_MASTER 1
 #define BALL_ULTRA  2
