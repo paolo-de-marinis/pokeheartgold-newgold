@@ -12,6 +12,7 @@ plays like New Gold, not that it resembles hg-engine internally.
 | pokeheartgold (base) | `e97c7fc975a7447f288c42acc2e155f5a673e30f`, `master` |
 | konefr/hg-engine-newgold (behaviour reference) | `41a28e2255b2805378163c7f4d6c1d87541174d1`, `heartgold-modern` |
 | hg-engine the reference forked from | `d0380a487`, the parent of konefr's first commit |
+| antonsynd/pokeheartgold-slop (decompilation only) | `808283ee2`, `mainline`; a fork of the same base carrying 141 source files pret has not decompiled yet |
 
 ## What New Gold actually is
 
@@ -98,30 +99,30 @@ species New Gold reaches, with personal records, learnsets, evolutions, battle
 sprites, heights, party icons and names; the experience yield widened past the
 Gen 4 ceiling; and the 491 of HGSS's own 493 species the hack rewrites. Then
 konefr's content itself: 140 of 142 encounter maps, 650 of 738 trainers, and
-the headbutt trees.
+the headbutt trees. Then twenty-five of the twenty-six added abilities: only
+Cud Chew is still a name, and it is one in the reference too.
 
 **What is left.**
 
-1. The eighteen-plus-nine abilities have names but no effects; a Pokemon
-   carrying one has an ability that does nothing.
-2. Fourteen moves and konefr's own Solar Seeds, with their effects and
+1. Fourteen moves and konefr's own Solar Seeds, with their effects and
    animations. Six evolutions wait on these, and on the items Black Augurite,
    Peat Block and the apples; six trainers wait on the Eviolite, Sticky Web,
    Acrobatics and Soft-Boiled.
-3. Cries. PlayCryEx clamps anything above species 495 to Bulbasaur rather than
+2. Cries. PlayCryEx clamps anything above species 495 to Bulbasaur rather than
    reading past the sound archive, so the added species sound wrong but nothing
    breaks. Giving them their own cries needs that function decompiled and the
-   archive extended.
-4. konefr's scripted content: the Cherrygrove vendor with its own script
+   archive extended. The slop fork above has already decompiled the file it
+   lives in, so what is left is the sound data rather than the function.
+3. konefr's scripted content: the Cherrygrove vendor with its own script
    commands, and the Bug-Catching Contest encounters and rewards.
-5. Hidden abilities, which eleven trainer Pokemon ask for.
-6. Footprints and Dex entries, needed only if the Dex is widened; an added
+4. Hidden abilities, which eleven trainer Pokemon ask for.
+5. Footprints and Dex entries, needed only if the Dex is widened; an added
    species records nothing in it today, deliberately.
-7. The remaining interface work the reference ships: the EV and IV viewer, the
+6. The remaining interface work the reference ships: the EV and IV viewer, the
    static HP bar, the machine labels in the bag, deletable HMs and reusable
    repels. Each of these lives in code pret has not decompiled, so each carries
    a conversion with it.
-8. Expanded pockets and thirty boxes, which change the save layout.
+7. Expanded pockets and thirty boxes, which change the save layout.
 
 ## Method
 
