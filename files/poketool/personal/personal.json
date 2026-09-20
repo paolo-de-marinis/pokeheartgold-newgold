@@ -8378,7 +8378,7 @@
       ],
       "abilities": [
         "ABILITY_ROCK_HEAD",
-        "ABILITY_LIGHTNING_ROD"
+        "ABILITY_LIGHTNINGROD"
       ],
       "greatMarshRate": 0,
       "color": 5,
@@ -8461,7 +8461,7 @@
       ],
       "abilities": [
         "ABILITY_ROCK_HEAD",
-        "ABILITY_LIGHTNING_ROD"
+        "ABILITY_LIGHTNINGROD"
       ],
       "greatMarshRate": 0,
       "color": 5,
@@ -8967,7 +8967,7 @@
         "EGG_GROUP_FIELD"
       ],
       "abilities": [
-        "ABILITY_LIGHTNING_ROD",
+        "ABILITY_LIGHTNINGROD",
         "ABILITY_ROCK_HEAD"
       ],
       "greatMarshRate": 0,
@@ -9055,7 +9055,7 @@
         "EGG_GROUP_FIELD"
       ],
       "abilities": [
-        "ABILITY_LIGHTNING_ROD",
+        "ABILITY_LIGHTNINGROD",
         "ABILITY_ROCK_HEAD"
       ],
       "greatMarshRate": 0,
@@ -25183,7 +25183,7 @@
       ],
       "abilities": [
         "ABILITY_STATIC",
-        "ABILITY_LIGHTNING_ROD"
+        "ABILITY_LIGHTNINGROD"
       ],
       "greatMarshRate": 0,
       "color": 3,
@@ -25257,7 +25257,7 @@
       ],
       "abilities": [
         "ABILITY_STATIC",
-        "ABILITY_LIGHTNING_ROD"
+        "ABILITY_LIGHTNINGROD"
       ],
       "greatMarshRate": 0,
       "color": 2,
@@ -37857,7 +37857,7 @@
         "EGG_GROUP_FIELD"
       ],
       "abilities": [
-        "ABILITY_LIGHTNING_ROD",
+        "ABILITY_LIGHTNINGROD",
         "ABILITY_SOLID_ROCK"
       ],
       "greatMarshRate": 0,
