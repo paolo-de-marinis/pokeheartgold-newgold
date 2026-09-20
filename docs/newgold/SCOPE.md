@@ -77,6 +77,14 @@ already implements equivalently:
   and flags with TODOs, so they are not behaviour to reproduce.
 * Already equivalent in pokeheartgold: wild slot selection, hidden item table,
   swarms, default mart tiers, Rock Smash behaviour.
+* Enabled in the engine but unreachable in the content as it stands, and so
+  deferred until it is not: **Mega Evolution** (no mega stone appears anywhere
+  in the trainer or species data — Eviolite is the only held item whose name
+  ends that way), **Primal Reversion** (neither Kyogre nor Groudon is
+  reachable) and **seasons** (Deerling and Sawsbuck are not). Each is a large
+  feature involving form lifecycles, assets and interface work; none of it
+  would be visible in the game konefr has built so far, which reaches Morty.
+  Recheck these when later content lands.
 
 ## Method
 
