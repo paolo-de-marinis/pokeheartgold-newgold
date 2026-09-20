@@ -1030,10 +1030,10 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
     speed2 = ctx->battleMons[battlerId2].speed * sStatChangeTable[speedStatChange2][0] / sStatChangeTable[speedStatChange2][1];
 
     if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        if ((ability1 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability1 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL)) {
+        if ((ability1 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability1 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) || (ability1 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL)) {
             speed1 *= 2;
         }
-        if ((ability2 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability2 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL)) {
+        if ((ability2 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability2 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) || (ability2 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL)) {
             speed2 *= 2;
         }
     }
@@ -3068,6 +3068,29 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerIdTarget].maxHp, 4);
         script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;
     }
+    // Sap Sipper swallows a Grass move and Irrigation a Water one; neither
+    // restores HP, they raise the holder's Attack instead.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SAP_SIPPER) == TRUE && moveType == TYPE_GRASS && battlerIdAttacker != battlerIdTarget) {
+        ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE;
+        ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+        ctx->battlerIdStatChange = battlerIdTarget;
+        script = BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_ATTACK;
+    }
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_IRRIGATION) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && battlerIdAttacker != battlerIdTarget) {
+        ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES;
+        ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+        ctx->battlerIdStatChange = battlerIdTarget;
+        script = BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_ATTACK;
+    }
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_EARTH_EATER) == TRUE && moveType == TYPE_GROUND && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && ctx->trainerAIData.moveData[ctx->moveNoCur].power) {
+        ctx->hpCalc = DamageDivide(ctx->battleMons[battlerIdTarget].maxHp, 4);
+        script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;
+    }
+    // Evaporate gains nothing from the Water move, it only refuses it. The
+    // subscript Soundproof uses says exactly that and names the ability.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_EVAPORATE) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && ctx->trainerAIData.moveData[ctx->moveNoCur].power) {
+        script = BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF;
+    }
 
     return script;
 }
@@ -3624,6 +3647,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         break;
     }
     case ABILITY_ROUGH_SKIN:
+    case ABILITY_IRON_BARBS:
         if (ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (ctx->trainerAIData.moveData[ctx->moveNoCur].unkB & 1)) {
             ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * -1, 8);
             ctx->battlerIdTemp = ctx->battlerIdAttacker;
