@@ -1451,4 +1451,96 @@
     .long (((\dest - .) / 4) - 1)
     .endm
 
+    .macro GotoIfCurrentFieldIsType arg, dest
+    .long 230
+    .long \arg
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro UpdateTerrainOverlay arg, dest
+    .long 236
+    .long \arg
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GotoIfTerrainOverlayIsType arg, dest
+    .long 237
+    .long \arg
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro SetPsychicTerrainMoveUsedFlag
+    .long 238
+    .endm
+
+    .macro GotoIfFirstHitOfParentalBond dest
+    .long 239
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GotoIfSecondHitOfParentalBond dest
+    .long 240
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro SetParentalBondFlag
+    .long 241
+    .endm
+
+    .macro GotoIfCurrentMoveIsValidForParentalBond dest
+    .long 242
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GotoIfCanApplyKnockOffBoost dest
+    .long 243
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GotoIfParentalBondIsActive dest
+    .long 244
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro CanClearPrimalWeather arg, sun, rain, winds, fail
+    .long 249
+    .long \arg
+    .long (((\sun - .) / 4) - 4)
+    .long (((\rain - .) / 4) - 3)
+    .long (((\winds - .) / 4) - 2)
+    .long (((\fail - .) / 4) - 1)
+    .endm
+
+    .macro TryMegaOrUltraBurstDuringPursuit dest
+    .long 253
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GoToIfTerastallized arg, dest
+    .long 268
+    .long \arg
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro ActivateParadoxAbility arg
+    .long 279
+    .long \arg
+    .endm
+
+    .macro ResetParadoxAbility arg
+    .long 280
+    .long \arg
+    .endm
+
+    .macro MakeTotem arg, dest
+    .long 291
+    .long \arg
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro TryActivateZeroToHero arg
+    .long 293
+    .long \arg
+    .endm
+
     .endif // ASM_BATTLE_SCRIPT_INC

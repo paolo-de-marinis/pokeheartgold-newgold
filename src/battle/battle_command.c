@@ -8769,6 +8769,172 @@ BOOL BtlCmd_BatchEffectivenessMessage(BattleSystem *battleSystem, BattleContext 
     return FALSE;
 }
 
+// The ground the battle is being fought on, which this game already knows
+// about: it is what Camouflage and Nature Power read.
+BOOL BtlCmd_GotoIfCurrentFieldIsType(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int terrain = BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (BattleSystem_GetTerrainId(battleSystem) == terrain) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+// The four below are for the terrains laid over a battle by Grassy Terrain and
+// its kin. None of those moves exist this far back, so nothing ever lays one
+// and there is never an overlay to read: what is underfoot is the ground the
+// battle started on, which GotoIfCurrentFieldIsType answers for.
+BOOL BtlCmd_UpdateTerrainOverlay(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+
+    return FALSE;
+}
+
+BOOL BtlCmd_GotoIfTerrainOverlayIsType(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+
+    return FALSE;
+}
+
+BOOL BtlCmd_SetPsychicTerrainMoveUsedFlag(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    return FALSE;
+}
+
+// Parental Bond is an ability this game does not have, so no move is ever
+// struck twice by it: the first of these five never branches, the next three
+// never branch either, and there is no flag worth setting.
+BOOL BtlCmd_GotoIfFirstHitOfParentalBond(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+    return FALSE;
+}
+
+BOOL BtlCmd_GotoIfSecondHitOfParentalBond(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+    return FALSE;
+}
+
+BOOL BtlCmd_SetParentalBondFlag(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    return FALSE;
+}
+
+BOOL BtlCmd_GotoIfCurrentMoveIsValidForParentalBond(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+    return FALSE;
+}
+
+BOOL BtlCmd_GotoIfParentalBondIsActive(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+    return FALSE;
+}
+
+// Knock Off hits harder for taking an item away from the sixth generation on.
+// Here it only takes the item, so the boost never applies.
+BOOL BtlCmd_GotoIfCanApplyKnockOffBoost(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptIncrementPointer(ctx, BattleScriptReadWord(ctx));
+
+    return FALSE;
+}
+
+// Desolate Land, Primordial Sea and Delta Stream are the weather this asks
+// about, and none of the three exists here, so there is never any to clear.
+BOOL BtlCmd_CanClearPrimalWeather(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+    BattleScriptIncrementPointer(ctx, BattleScriptReadWord(ctx));
+
+    return FALSE;
+}
+
+// Neither Mega Evolution nor Ultra Burst reaches this game, so a Pokemon
+// caught on the way out has nothing to become first.
+BOOL BtlCmd_TryMegaOrUltraBurstDuringPursuit(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptIncrementPointer(ctx, BattleScriptReadWord(ctx));
+
+    return FALSE;
+}
+
+BOOL BtlCmd_GoToIfTerastallized(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+
+    return FALSE;
+}
+
+// The paradox Pokemon and their weather-and-terrain abilities are eight
+// generations away; nothing here can have one to activate or reset.
+BOOL BtlCmd_ActivateParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+    return FALSE;
+}
+
+BOOL BtlCmd_ResetParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+    return FALSE;
+}
+
+// Totem Pokemon are a feature of the Alola games and of no battle this one
+// can start.
+BOOL BtlCmd_MakeTotem(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptReadWord(ctx);
+    BattleScriptIncrementPointer(ctx, BattleScriptReadWord(ctx));
+
+    return FALSE;
+}
+
+// Zero to Hero belongs to Palafin, which is not a Pokemon this game has.
+BOOL BtlCmd_TryActivateZeroToHero(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+    return FALSE;
+}
+
 static void BattlerSetAbility(BattleContext *ctx, u8 battlerID, u16 ability) {
     ctx->trainerAIAbilities[battlerID] = ability;
     return;

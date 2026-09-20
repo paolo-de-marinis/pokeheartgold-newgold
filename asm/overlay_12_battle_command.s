@@ -557,30 +557,30 @@ sBattleScriptCommandTable: ; 0x0226C6C8
 	.word BtlCmd_IsAttackerLevelLowerThanDefender ; 227 IsAttackerLevelLowerThanDefender
 	.word BtlCmd_SetTailwindCounter ; 228 SetTailwindCounter
 	.word BtlCmd_GotoIfTailwindActive ; 229 GotoIfTailwindActive
-	.word BtlCmd_NotImplemented ; 230 GotoIfCurrentFieldIsType
+	.word BtlCmd_GotoIfCurrentFieldIsType ; 230 GotoIfCurrentFieldIsType
 	.word BtlCmd_GotoIfMovePowerNotZero ; 231 GotoIfMovePowerNotZero
 	.word BtlCmd_GotoIfGrounded ; 232 GotoIfGrounded
 	.word BtlCmd_GotoIfCurrentAdjustedMoveIsType ; 233 GotoIfCurrentAdjustedMoveIsType
 	.word BtlCmd_GotoIfContactMove ; 234 GotoIfContactMove
 	.word BtlCmd_GotoIfSoundMove ; 235 GotoIfSoundMove
-	.word BtlCmd_NotImplemented ; 236 UpdateTerrainOverlay
-	.word BtlCmd_NotImplemented ; 237 GotoIfTerrainOverlayIsType
-	.word BtlCmd_NotImplemented ; 238 SetPsychicTerrainMoveUsedFlag
-	.word BtlCmd_NotImplemented ; 239 GotoIfFirstHitOfParentalBond
-	.word BtlCmd_NotImplemented ; 240 GotoIfSecondHitOfParentalBond
-	.word BtlCmd_NotImplemented ; 241 SetParentalBondFlag
-	.word BtlCmd_NotImplemented ; 242 GotoIfCurrentMoveIsValidForParentalBond
-	.word BtlCmd_NotImplemented ; 243 GotoIfCanApplyKnockOffBoost
-	.word BtlCmd_NotImplemented ; 244 GotoIfParentalBondIsActive
+	.word BtlCmd_UpdateTerrainOverlay ; 236 UpdateTerrainOverlay
+	.word BtlCmd_GotoIfTerrainOverlayIsType ; 237 GotoIfTerrainOverlayIsType
+	.word BtlCmd_SetPsychicTerrainMoveUsedFlag ; 238 SetPsychicTerrainMoveUsedFlag
+	.word BtlCmd_GotoIfFirstHitOfParentalBond ; 239 GotoIfFirstHitOfParentalBond
+	.word BtlCmd_GotoIfSecondHitOfParentalBond ; 240 GotoIfSecondHitOfParentalBond
+	.word BtlCmd_SetParentalBondFlag ; 241 SetParentalBondFlag
+	.word BtlCmd_GotoIfCurrentMoveIsValidForParentalBond ; 242 GotoIfCurrentMoveIsValidForParentalBond
+	.word BtlCmd_GotoIfCanApplyKnockOffBoost ; 243 GotoIfCanApplyKnockOffBoost
+	.word BtlCmd_GotoIfParentalBondIsActive ; 244 GotoIfParentalBondIsActive
 	.word BtlCmd_NotImplemented ; 245 ChangePermanentBackground
 	.word BtlCmd_NotImplemented ; 246 ChangeExecutionOrderPriority
 	.word BtlCmd_SetBindingTurns ; 247 SetBindingTurns
 	.word BtlCmd_ClearBindingTurns ; 248 ClearBindingTurns
-	.word BtlCmd_NotImplemented ; 249 CanClearPrimalWeather
+	.word BtlCmd_CanClearPrimalWeather ; 249 CanClearPrimalWeather
 	.word BtlCmd_SetAbilityActivatedFlag ; 250 SetAbilityActivatedFlag
 	.word BtlCmd_NotImplemented ; 251 SwitchInAbilityCheck
 	.word BtlCmd_TryStickyWeb ; 252 TryStickyWeb
-	.word BtlCmd_NotImplemented ; 253 TryMegaOrUltraBurstDuringPursuit
+	.word BtlCmd_TryMegaOrUltraBurstDuringPursuit ; 253 TryMegaOrUltraBurstDuringPursuit
 	.word BtlCmd_CalcConfusionDamage ; 254 CalcConfusionDamage
 	.word BtlCmd_CheckCanActivateDefiantOrCompetitive ; 255 CheckCanActivateDefiantOrCompetitive
 	.word BtlCmd_NotImplemented ; 256 JumpToCurrentEntryHazard
@@ -595,7 +595,7 @@ sBattleScriptCommandTable: ; 0x0226C6C8
 	.word BtlCmd_CheckTargetIsPartner ; 265 CheckTargetIsPartner
 	.word BtlCmd_ClearSmog ; 266 ClearSmog
 	.word BtlCmd_NotImplemented ; 267 GoToIfThirdType
-	.word BtlCmd_NotImplemented ; 268 GoToIfTerastallized
+	.word BtlCmd_GoToIfTerastallized ; 268 GoToIfTerastallized
 	.word BtlCmd_HandleRoost ; 269 HandleRoost
 	.word BtlCmd_HandleSoak ; 270 HandleSoak
 	.word BtlCmd_HandleMagicPowder ; 271 HandleMagicPowder
@@ -606,8 +606,8 @@ sBattleScriptCommandTable: ; 0x0226C6C8
 	.word BtlCmd_NotImplemented ; 276 StuffCheeks
 	.word BtlCmd_SetMoveConditionFlag ; 277 SetMoveConditionFlag
 	.word BtlCmd_AbilityPopup ; 278 AbilityPopup
-	.word BtlCmd_NotImplemented ; 279 ActivateParadoxAbility
-	.word BtlCmd_NotImplemented ; 280 ResetParadoxAbility
+	.word BtlCmd_ActivateParadoxAbility ; 279 ActivateParadoxAbility
+	.word BtlCmd_ResetParadoxAbility ; 280 ResetParadoxAbility
 	.word BtlCmd_SetCurrentMoveSwitchingStatus ; 281 SetCurrentMoveSwitchingStatus
 	.word BtlCmd_TrySynchronizeStatus ; 282 TrySynchronizeStatus
 	.word BtlCmd_TryCureStatusBerry ; 283 TryCureStatusBerry
@@ -618,9 +618,9 @@ sBattleScriptCommandTable: ; 0x0226C6C8
 	.word BtlCmd_DivideVarByValueRoundUp ; 288 DivideVarByValueRoundUp
 	.word BtlCmd_IsPursuitActive ; 289 IsPursuitActive
 	.word BtlCmd_GoBackToBeforeMove ; 290 GoBackToBeforeMove
-	.word BtlCmd_NotImplemented ; 291 MakeTotem
+	.word BtlCmd_MakeTotem ; 291 MakeTotem
 	.word BtlCmd_NotImplemented ; 292 GetMonByCottonDownOrder
-	.word BtlCmd_NotImplemented ; 293 TryActivateZeroToHero
+	.word BtlCmd_TryActivateZeroToHero ; 293 TryActivateZeroToHero
 
 .public sPickupWeightTable
 
