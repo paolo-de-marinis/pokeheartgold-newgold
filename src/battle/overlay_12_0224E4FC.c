@@ -3024,6 +3024,53 @@ static u16 sSoundMoves[] = {
     MOVE_CHATTER
 };
 
+// Bulletproof and Wind Rider go by the move rather than its type, and this
+// generation has no flag for either, so the moves are listed. Only the ones
+// this game has: the later games' storm moves are not here to name.
+static const u16 sBallAndBombMoves[] = {
+    MOVE_AURA_SPHERE,
+    MOVE_BARRAGE,
+    MOVE_BULLET_SEED,
+    MOVE_EGG_BOMB,
+    MOVE_ENERGY_BALL,
+    MOVE_FOCUS_BLAST,
+    MOVE_GYRO_BALL,
+    MOVE_ICE_BALL,
+    MOVE_MAGNET_BOMB,
+    MOVE_MIST_BALL,
+    MOVE_MUD_BOMB,
+    MOVE_OCTAZOOKA,
+    MOVE_ROCK_BLAST,
+    MOVE_ROCK_WRECKER,
+    MOVE_SEED_BOMB,
+    MOVE_SHADOW_BALL,
+    MOVE_SLUDGE_BOMB,
+    MOVE_WEATHER_BALL,
+    MOVE_ZAP_CANNON,
+};
+
+static const u16 sWindMoves[] = {
+    MOVE_AEROBLAST,
+    MOVE_AIR_CUTTER,
+    MOVE_BLIZZARD,
+    MOVE_GUST,
+    MOVE_HEAT_WAVE,
+    MOVE_ICY_WIND,
+    MOVE_SANDSTORM,
+    MOVE_TAILWIND,
+    MOVE_TWISTER,
+    MOVE_WHIRLWIND,
+};
+
+static BOOL MoveIsInList(u32 move, const u16 *list, int count) {
+    for (int i = 0; i < count; i++) {
+        if (list[i] == move) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget) {
     int script;
     int moveType;
@@ -3089,6 +3136,21 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
     // Evaporate gains nothing from the Water move, it only refuses it. The
     // subscript Soundproof uses says exactly that and names the ability.
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_EVAPORATE) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && ctx->trainerAIData.moveData[ctx->moveNoCur].power) {
+        script = BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF;
+    }
+    // Wind Rider takes the wind move and a stage of Attack with it.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_WIND_RIDER) == TRUE && MoveIsInList(ctx->moveNoCur, sWindMoves, NELEMS(sWindMoves)) == TRUE && battlerIdAttacker != battlerIdTarget) {
+        ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE;
+        ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+        ctx->battlerIdStatChange = battlerIdTarget;
+        script = BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_ATTACK;
+    }
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_BULLETPROOF) == TRUE && MoveIsInList(ctx->moveNoCur, sBallAndBombMoves, NELEMS(sBallAndBombMoves)) == TRUE) {
+        script = BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF;
+    }
+    // Telepathy only sees what an ally aims at it, so it is the one immunity
+    // here that asks which side the attacker is on rather than what it used.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_TELEPATHY) == TRUE && battlerIdAttacker != battlerIdTarget && (battlerIdAttacker & 1) == (battlerIdTarget & 1) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && ctx->trainerAIData.moveData[ctx->moveNoCur].power) {
         script = BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF;
     }
 
@@ -3616,6 +3678,17 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
 
     if (BattlerCheckSubstitute(ctx, ctx->battlerIdTarget) == TRUE) {
         return ret;
+    }
+
+    // Every ability below belongs to the Pokemon that was hit. Poison Touch is
+    // the attacker's, so it is checked on its own and poisons the other way
+    // round: the target takes the status, the attacker is named for it.
+    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_POISON_TOUCH && ctx->battleMons[ctx->battlerIdTarget].hp && !ctx->battleMons[ctx->battlerIdTarget].status && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (ctx->trainerAIData.moveData[ctx->moveNoCur].unkB & 1) && (BattleSystem_Random(battleSystem) % 10 < 3)) {
+        ctx->statChangeType = 3;
+        ctx->battlerIdStatChange = ctx->battlerIdTarget;
+        ctx->battlerIdTemp = ctx->battlerIdAttacker;
+        *script = BATTLE_SUBSCRIPT_POISON;
+        return TRUE;
     }
 
     switch (GetBattlerAbility(ctx, ctx->battlerIdTarget)) {

@@ -20,18 +20,21 @@ LAST_VANILLA = 123
 
 IMPLEMENTED = {
     "BIG_PECKS",
+    "BULLETPROOF",
     "EARTH_EATER",
     "EVAPORATE",
     "IRON_BARBS",
     "IRRIGATION",
+    "POISON_TOUCH",
     "SAND_RUSH",
     "SAP_SIPPER",
+    "TELEPATHY",
+    "WIND_RIDER",
 }
 
 # Still only names. Each moves up as its effect lands.
 PENDING = {
     "ARMOR_TAIL",
-    "BULLETPROOF",
     "CHEEK_POUCH",
     "COMPETITIVE",
     "CUD_CHEW",
@@ -39,16 +42,13 @@ PENDING = {
     "INFILTRATOR",
     "MUMMY",
     "NEUTRALIZING_GAS",
-    "POISON_TOUCH",
     "REGENERATOR",
     "RIPEN",
     "SHARPNESS",
     "SHEER_FORCE",
     "SUPERSWEET_SYRUP",
-    "TELEPATHY",
     "UNNERVE",
     "WEAK_ARMOR",
-    "WIND_RIDER",
 }
 
 
@@ -103,3 +103,30 @@ class SubscriptNumberingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MoveListTests(unittest.TestCase):
+    """Bulletproof and Wind Rider go by a list of moves rather than by type,
+    and a name that drifts out of the list simply stops being blocked."""
+
+    SOURCE = ROOT / "src/battle/overlay_12_0224E4FC.c"
+
+    def table(self, name):
+        body = re.search(r"static const u16 " + name + r"\[\] = \{(.*?)\};",
+                         self.SOURCE.read_text(), re.S).group(1)
+        return re.findall(r"MOVE_[A-Z0-9_]+", body)
+
+    def test_every_move_named_exists(self):
+        defined = set(re.findall(r"#define (MOVE_[A-Z0-9_]+) ",
+                                 (ROOT / "include/constants/moves.h").read_text()))
+        for table in ("sBallAndBombMoves", "sWindMoves"):
+            moves = self.table(table)
+            self.assertTrue(moves, table)
+            for move in moves:
+                self.assertIn(move, defined, f"{table} names {move}")
+
+    def test_the_lists_are_sorted_and_have_no_repeat(self):
+        for table in ("sBallAndBombMoves", "sWindMoves"):
+            moves = self.table(table)
+            self.assertEqual(moves, sorted(moves), table)
+            self.assertEqual(len(moves), len(set(moves)), table)
