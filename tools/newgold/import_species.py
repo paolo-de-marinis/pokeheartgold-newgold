@@ -39,7 +39,9 @@ def gender_fraction(stored):
     if stored == 255:
         return 2.0
     fraction = round(stored / 254.75 * 8) / 8
-    if int(fraction * 254.75) != stored:
+    # The reference stores 190 where this repository's arithmetic gives 191 for
+    # the same three-quarters, so a byte either side counts as a match.
+    if abs(int(fraction * 254.75) - stored) > 1:
         raise ValueError(f"gender ratio byte {stored} is not a multiple of an eighth")
     return fraction
 
@@ -47,15 +49,32 @@ def gender_fraction(stored):
 # left as padding, so nothing is lost and nothing shifts.
 MAX_STORED_EXP_YIELD = 255
 
-# Constants this repository spells differently from the reference.
+# Constants this repository spells differently from the reference, or that the
+# later games renamed.
 ALIASES = {
     "ABILITY_COMPOUND_EYES": "ABILITY_COMPOUNDEYES",
     "ITEM_TINY_MUSHROOM": "ITEM_TINYMUSHROOM",
+    "ITEM_BRIGHT_POWDER": "ITEM_BRIGHTPOWDER",
+    "ITEM_NEVER_MELT_ICE": "ITEM_NEVERMELTICE",
+    "ITEM_DEEP_SEA_SCALE": "ITEM_DEEPSEASCALE",
+    "ITEM_DEEP_SEA_TOOTH": "ITEM_DEEPSEATOOTH",
+    "ITEM_SILVER_POWDER": "ITEM_SILVERPOWDER",
+    "ITEM_TWISTED_SPOON": "ITEM_TWISTEDSPOON",
+    "ITEM_UP_GRADE": "ITEM_UPGRADE",
+    "ITEM_LEEK": "ITEM_STICK",
+}
+
+# Wild held items from later generations that HGSS does not have. A species
+# that would hold one holds nothing instead, until the items exist.
+UNAVAILABLE_ITEMS = {
+    "ITEM_ABSORB_BULB", "ITEM_AIR_BALLOON", "ITEM_CELL_BATTERY",
+    "ITEM_PRETTY_FEATHER", "ITEM_PSYCHIC_SEED", "ITEM_SNOWBALL",
 }
 
 
 def native(name):
-    return ALIASES.get(name, name)
+    name = ALIASES.get(name, name)
+    return "ITEM_NONE" if name in UNAVAILABLE_ITEMS else name
 
 
 def species_entries(reference):

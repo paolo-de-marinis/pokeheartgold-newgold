@@ -69,6 +69,28 @@ class SpeciesRecordTests(unittest.TestCase):
             self.assertLessEqual(max(entry["tms"], default=0), 92, name)
             self.assertLessEqual(max(entry["hms"], default=0), 8, name)
 
+    def test_the_fairy_retypes_landed(self):
+        # The species the later generations moved to Fairy, plus the two konefr
+        # retyped himself.
+        expected = {
+            "CLEFAIRY": ["TYPE_FAIRY", "TYPE_FAIRY"],
+            "AZUMARILL": ["TYPE_WATER", "TYPE_FAIRY"],
+            "GARDEVOIR": ["TYPE_PSYCHIC", "TYPE_FAIRY"],
+            "TOGEKISS": ["TYPE_FAIRY", "TYPE_FLYING"],
+            "MAWILE": ["TYPE_STEEL", "TYPE_FAIRY"],
+            "MEGANIUM": ["TYPE_GRASS", "TYPE_FAIRY"],
+            "TYPHLOSION": ["TYPE_FIRE", "TYPE_GROUND"],
+        }
+        for name, types in expected.items():
+            self.assertEqual(self.records[self.constants[name]]["types"], types, name)
+
+    def test_yields_past_the_old_ceiling_survive(self):
+        # The byte keeps what fits; the full value is what the game reads.
+        for name, yieldValue in (("BLISSEY", 635), ("CHANSEY", 395), ("DRAGONITE", 300)):
+            record = self.records[self.constants[name]]
+            self.assertEqual(record["expYieldFull"], yieldValue, name)
+            self.assertEqual(record["expYield"], min(yieldValue, 255), name)
+
     @unittest.skipIf(REFERENCE is None, "behaviour reference not present")
     def test_records_still_match_the_reference(self):
         reference = Path(REFERENCE)
@@ -76,9 +98,21 @@ class SpeciesRecordTests(unittest.TestCase):
         yields = import_species.base_exp_yields(reference)
         learnsets = import_species.machine_moves(reference)
         tms, hms = import_species.machine_numbers()
-        for name in import_species.NEW_SPECIES:
-            regenerated = import_species.record(name, blocks[name], yields[name], learnsets.get(name, set()), tms, hms)
-            self.assertEqual(self.records[self.constants[name]], regenerated, name)
+        # Every species whose record is generated: HGSS's own, and the added
+        # ones. The egg, the bad egg and the alternate forms in between are
+        # left as pret wrote them.
+        managed = set(range(1, 494)) | {self.constants[n] for n in import_species.NEW_SPECIES}
+        checked = 0
+        for name, index in self.constants.items():
+            if index not in managed or self.records[index]["species"] != name:
+                continue
+            if name not in blocks:
+                continue
+            regenerated = import_species.record(name, blocks[name], yields.get(name, 0),
+                                                learnsets.get(name, set()), tms, hms)
+            self.assertEqual(self.records[index], regenerated, name)
+            checked += 1
+        self.assertGreater(checked, 500)
 
 
 if __name__ == "__main__":

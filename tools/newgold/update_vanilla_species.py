@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Bring the personal records of HGSS's own species up to New Gold's values.
+
+New Gold does not only add species: it rebalances the ones already there, with
+the later generations' stats, types, abilities, wild held items, base
+friendship and experience yields. Those records are regenerated here from the
+same reference the new species came from, into the same table.
+
+The species' names, identifiers and order are untouched; only their contents
+change, and only where the reference differs.
+
+Usage: update_vanilla_species.py REFERENCE_CHECKOUT [--write] [--field NAME]
+"""
+
+import argparse
+import collections
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+PERSONAL = ROOT / "files/poketool/personal/personal.json"
+
+import import_species  # noqa: E402
+
+# HGSS's own species, leaving the egg, the bad egg and the alternate forms
+# alone: those records are not species and the reference does not describe them.
+LAST_VANILLA = 493
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("reference", type=Path)
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--field", help="show every species that changes in one field")
+    args = parser.parse_args()
+
+    blocks = import_species.species_entries(args.reference)
+    yields = import_species.base_exp_yields(args.reference)
+    learnsets = import_species.machine_moves(args.reference)
+    tms, hms = import_species.machine_numbers()
+
+    personal = json.loads(PERSONAL.read_text())
+    records = personal["baseStats"]
+
+    changes = collections.Counter()
+    listed = collections.defaultdict(list)
+    skipped, updated = [], 0
+
+    for index in range(1, LAST_VANILLA + 1):
+        record = records[index]
+        name = record["species"]
+        if name not in blocks:
+            skipped.append(name)
+            continue
+        try:
+            wanted = import_species.record(
+                name, blocks[name], yields.get(name, record["expYieldFull"]),
+                learnsets.get(name, set()), tms, hms)
+        except ValueError as error:
+            skipped.append(f"{name} ({error})")
+            continue
+
+        differing = [key for key in record if record[key] != wanted[key]]
+        if not differing:
+            continue
+        updated += 1
+        for key in differing:
+            changes[key] += 1
+            listed[key].append(name)
+        if args.write:
+            records[index] = wanted
+
+    print(f"{updated} of {LAST_VANILLA} species change")
+    for key, count in changes.most_common():
+        print(f"  {key}: {count}")
+    if skipped:
+        print(f"left alone: {', '.join(skipped)}")
+    if args.field:
+        print(f"\n{args.field}: {', '.join(listed[args.field])}")
+
+    if not args.write:
+        print("\nnothing written; pass --write")
+        return
+    PERSONAL.write_text(json.dumps(personal, indent=2) + "\n")
+    print(f"\nwrote {PERSONAL.relative_to(ROOT)}")
+
+
+if __name__ == "__main__":
+    main()
