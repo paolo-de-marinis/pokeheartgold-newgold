@@ -3,8 +3,10 @@
 #include "global.h"
 
 #include "constants/abilities.h"
+#include "constants/badge.h"
 #include "constants/balls.h"
 #include "constants/battle.h"
+#include "constants/flags.h"
 #include "constants/items.h"
 #include "constants/map_sections.h"
 #include "constants/moves.h"
@@ -18,6 +20,9 @@
 #include "move.h"
 #include "msgdata.h"
 #include "party.h"
+#include "player_data.h"
+#include "save.h"
+#include "save_vars_flags.h"
 #include "seal_case.h"
 #include "sound_02004A44.h"
 #include "sprite.h"
@@ -2759,17 +2764,53 @@ BoxPokemon *Mon_GetBoxMon(Pokemon *mon) {
     return &mon->box;
 }
 
+u8 GetLevelCap(void) {
+    SaveData *saveData = SaveData_Get();
+    PlayerProfile *profile = Save_PlayerData_GetProfile(saveData);
+    SaveVarsFlags *varsFlags = Save_VarsFlags_Get(saveData);
+
+    // Latest milestone first. Beating Morty lifts the cap for the rest of the
+    // game so far; the stages before it gate the early route rebalance.
+    if (PlayerProfile_TestBadgeFlag(profile, BADGE_FOG)) {
+        return MAX_LEVEL;
+    }
+    if (Save_VarsFlags_CheckFlagInArray(varsFlags, FLAG_HIDE_BURNED_TOWER_1F_RIVAL)) {
+        return 36;
+    }
+    if (PlayerProfile_TestBadgeFlag(profile, BADGE_PLAIN)) {
+        return 34;
+    }
+    if (PlayerProfile_TestBadgeFlag(profile, BADGE_HIVE)) {
+        return 30;
+    }
+    if (Save_VarsFlags_CheckFlagInArray(varsFlags, FLAG_BEAT_AZALEA_ROCKETS)) {
+        return 22;
+    }
+    if (PlayerProfile_TestBadgeFlag(profile, BADGE_ZEPHYR)) {
+        return 19;
+    }
+    if (Save_VarsFlags_CheckFlagInArray(varsFlags, FLAG_UNK_076)) {
+        return 13;
+    }
+    return 10;
+}
+
 BOOL Pokemon_TryLevelUp(Pokemon *mon) {
     u16 species = (u16)GetMonData(mon, MON_DATA_SPECIES, NULL);
     u8 level = (u8)(GetMonData(mon, MON_DATA_LEVEL, NULL) + 1);
     u32 exp = GetMonData(mon, MON_DATA_EXPERIENCE, NULL);
     u32 growthrate = (u32)GetMonBaseStat(species, BASE_GROWTH_RATE);
-    u32 maxexp = GetExpByGrowthRateAndLevel((int)growthrate, 100);
-    if (exp > maxexp) {
+    u8 cap = GetLevelCap();
+    u32 maxexp = GetExpByGrowthRateAndLevel((int)growthrate, cap);
+    // Hold a capped Pokemon's experience at the cap so raising the cap never
+    // grants several levels at once. A Pokemon already past the cap keeps its
+    // experience: Rare Candies are deliberately not gated, and clamping here
+    // would undo them at the next battle.
+    if (level - 1 <= cap && exp > maxexp) {
         exp = maxexp;
         SetMonData(mon, MON_DATA_EXPERIENCE, &exp);
     }
-    if (level > 100) {
+    if (level > cap) {
         return FALSE;
     }
     if (exp >= GetExpByGrowthRateAndLevel((int)growthrate, level)) {
