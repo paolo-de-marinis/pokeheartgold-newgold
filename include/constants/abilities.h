@@ -126,6 +126,33 @@
 #define ABILITY_FLOWER_GIFT  122
 #define ABILITY_BAD_DREAMS   123
 
+// Abilities the species New Gold reaches need. They are numbered from 124 in
+// the order the later games number them, rather than with those games' own
+// identifiers: three of those sit above 306, and the saved record still keeps
+// an ability in one byte. Personal records are generated, so renumbering these
+// once that field widens costs a regeneration rather than a migration.
+#define ABILITY_SHEER_FORCE          124
+#define ABILITY_UNNERVE              125
+#define ABILITY_WEAK_ARMOR           126
+#define ABILITY_TELEPATHY            127
+#define ABILITY_POISON_TOUCH         128
+#define ABILITY_REGENERATOR          129
+#define ABILITY_BIG_PECKS            130
+#define ABILITY_SAND_RUSH            131
+#define ABILITY_INFILTRATOR          132
+#define ABILITY_MUMMY                133
+#define ABILITY_SAP_SIPPER           134
+#define ABILITY_IRON_BARBS           135
+#define ABILITY_CHEEK_POUCH          136
+#define ABILITY_BULLETPROOF          137
+#define ABILITY_RIPEN                138
+#define ABILITY_CUD_CHEW             139
+#define ABILITY_ARMOR_TAIL           140
+#define ABILITY_SUPERSWEET_SYRUP     141
+
+// Not a count: the field code passes this where a Pokemon has no ability,
+// because the lead is an egg. It stays below the abilities above so that the
+// switches reading it still match nothing.
 #define NUM_ABILITIES ABILITY_BAD_DREAMS
 
 #endif // POKEHEARTGOLD_CONSTANTS_ABILITIES_H
