@@ -642,8 +642,19 @@ This is boot and menu evidence. None of the four items was exercised in play:
 * The thirtieth box, which needs the PC.
 
 Reaching any of them by script is a long frame-accurate sequence through
-naming, the starter and the first route. The harness can drive it — buttons
-and touch both work — but the sequence is not written. Until it is, or until
-somebody plays it, these four are implemented and unplayed, and this file says
-so rather than implying otherwise.
+naming, the starter and the first route. The harness can drive it: buttons and
+touch both work, an input can be repeated on a period, and the emulator's
+state can be written out and started from, which is what makes the sequence
+worth writing once rather than replaying every time.
+
+Driven as far as it has been, HeartGold gets through the controls tutorial —
+which is touch only — answers the "do you understand everything so far"
+prompt, and reaches the information menu. Past that is the name entry and then
+the overworld. The state to keep is the one taken in the overworld: from
+there, checking a summary screen, a bag, a Dex entry or the thirtieth box is a
+few hundred frames each instead of twenty thousand.
+
+Until that state exists, or until somebody plays it, these four are
+implemented and unplayed, and this file says so rather than implying
+otherwise.
 
