@@ -1976,4 +1976,328 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">ARCEUS</language>
 	</row>
+	<row id="msg_0819_unused_494" index="494">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0819_unused_495" index="495">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0819_form_496" index="496">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">DEOXYS</language>
+	</row>
+	<row id="msg_0819_form_497" index="497">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">DEOXYS</language>
+	</row>
+	<row id="msg_0819_form_498" index="498">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">DEOXYS</language>
+	</row>
+	<row id="msg_0819_form_499" index="499">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BURMADAME</language>
+	</row>
+	<row id="msg_0819_form_500" index="500">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BURMADAME</language>
+	</row>
+	<row id="msg_0819_form_501" index="501">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">GIRATINA</language>
+	</row>
+	<row id="msg_0819_form_502" index="502">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">SHAYMIN</language>
+	</row>
+	<row id="msg_0819_form_503" index="503">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">ROTOM</language>
+	</row>
+	<row id="msg_0819_form_504" index="504">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">ROTOM</language>
+	</row>
+	<row id="msg_0819_form_505" index="505">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">ROTOM</language>
+	</row>
+	<row id="msg_0819_form_506" index="506">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">ROTOM</language>
+	</row>
+	<row id="msg_0819_form_507" index="507">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">ROTOM</language>
+	</row>
+	<row id="msg_0819_lillipup" index="508">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lillipup</language>
+	</row>
+	<row id="msg_0819_herdier" index="509">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Herdier</language>
+	</row>
+	<row id="msg_0819_stoutland" index="510">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Stoutland</language>
+	</row>
+	<row id="msg_0819_purrloin" index="511">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Purrloin</language>
+	</row>
+	<row id="msg_0819_liepard" index="512">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Liepard</language>
+	</row>
+	<row id="msg_0819_tympole" index="513">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tympole</language>
+	</row>
+	<row id="msg_0819_palpitoad" index="514">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Palpitoad</language>
+	</row>
+	<row id="msg_0819_seismitoad" index="515">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Seismitoad</language>
+	</row>
+	<row id="msg_0819_sewaddle" index="516">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sewaddle</language>
+	</row>
+	<row id="msg_0819_swadloon" index="517">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Swadloon</language>
+	</row>
+	<row id="msg_0819_leavanny" index="518">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Leavanny</language>
+	</row>
+	<row id="msg_0819_yamask" index="519">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Yamask</language>
+	</row>
+	<row id="msg_0819_cofagrigus" index="520">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cofagrigus</language>
+	</row>
+	<row id="msg_0819_trubbish" index="521">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Trubbish</language>
+	</row>
+	<row id="msg_0819_garbodor" index="522">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Garbodor</language>
+	</row>
+	<row id="msg_0819_emolga" index="523">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Emolga</language>
+	</row>
+	<row id="msg_0819_karrablast" index="524">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Karrablast</language>
+	</row>
+	<row id="msg_0819_escavalier" index="525">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Escavalier</language>
+	</row>
+	<row id="msg_0819_foongus" index="526">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Foongus</language>
+	</row>
+	<row id="msg_0819_amoonguss" index="527">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Amoonguss</language>
+	</row>
+	<row id="msg_0819_joltik" index="528">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Joltik</language>
+	</row>
+	<row id="msg_0819_galvantula" index="529">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Galvantula</language>
+	</row>
+	<row id="msg_0819_ferroseed" index="530">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ferroseed</language>
+	</row>
+	<row id="msg_0819_ferrothorn" index="531">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ferrothorn</language>
+	</row>
+	<row id="msg_0819_klink" index="532">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Klink</language>
+	</row>
+	<row id="msg_0819_klang" index="533">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Klang</language>
+	</row>
+	<row id="msg_0819_klinklang" index="534">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Klinklang</language>
+	</row>
+	<row id="msg_0819_elgyem" index="535">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Elgyem</language>
+	</row>
+	<row id="msg_0819_beheeyem" index="536">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Beheeyem</language>
+	</row>
+	<row id="msg_0819_litwick" index="537">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Litwick</language>
+	</row>
+	<row id="msg_0819_lampent" index="538">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lampent</language>
+	</row>
+	<row id="msg_0819_chandelure" index="539">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Chandelure</language>
+	</row>
+	<row id="msg_0819_shelmet" index="540">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Shelmet</language>
+	</row>
+	<row id="msg_0819_accelgor" index="541">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Accelgor</language>
+	</row>
+	<row id="msg_0819_bouffalant" index="542">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bouffalant</language>
+	</row>
+	<row id="msg_0819_bunnelby" index="543">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bunnelby</language>
+	</row>
+	<row id="msg_0819_diggersby" index="544">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Diggersby</language>
+	</row>
+	<row id="msg_0819_fletchling" index="545">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fletchling</language>
+	</row>
+	<row id="msg_0819_fletchinder" index="546">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flechinder</language>
+	</row>
+	<row id="msg_0819_talonflame" index="547">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Talonflame</language>
+	</row>
+	<row id="msg_0819_litleo" index="548">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Litleo</language>
+	</row>
+	<row id="msg_0819_pyroar" index="549">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pyroar</language>
+	</row>
+	<row id="msg_0819_espurr" index="550">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Espurr</language>
+	</row>
+	<row id="msg_0819_meowstic" index="551">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowstic</language>
+	</row>
+	<row id="msg_0819_sylveon" index="552">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sylveon</language>
+	</row>
+	<row id="msg_0819_dedenne" index="553">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dedenne</language>
+	</row>
+	<row id="msg_0819_phantump" index="554">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Phantump</language>
+	</row>
+	<row id="msg_0819_trevenant" index="555">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Trevenant</language>
+	</row>
+	<row id="msg_0819_pumpkaboo" index="556">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pumpkaboo</language>
+	</row>
+	<row id="msg_0819_gourgeist" index="557">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gourgeist</language>
+	</row>
+	<row id="msg_0819_noibat" index="558">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Noibat</language>
+	</row>
+	<row id="msg_0819_noivern" index="559">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Noivern</language>
+	</row>
+	<row id="msg_0819_applin" index="560">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Applin</language>
+	</row>
+	<row id="msg_0819_flapple" index="561">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flapple</language>
+	</row>
+	<row id="msg_0819_appletun" index="562">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Appletun</language>
+	</row>
+	<row id="msg_0819_sizzlipede" index="563">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sizzlipede</language>
+	</row>
+	<row id="msg_0819_centiskorch" index="564">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Centskorch</language>
+	</row>
+	<row id="msg_0819_wyrdeer" index="565">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wyrdeer</language>
+	</row>
+	<row id="msg_0819_kleavor" index="566">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kleavor</language>
+	</row>
+	<row id="msg_0819_ursaluna" index="567">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ursaluna</language>
+	</row>
+	<row id="msg_0819_annihilape" index="568">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Annihilape</language>
+	</row>
+	<row id="msg_0819_farigiraf" index="569">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Farigiraf</language>
+	</row>
+	<row id="msg_0819_dudunsparce" index="570">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dudunspars</language>
+	</row>
+	<row id="msg_0819_dipplin" index="571">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dipplin</language>
+	</row>
+	<row id="msg_0819_hydrapple" index="572">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hydrapple</language>
+	</row>
+	<row id="msg_0819_slowpoke_galarian" index="573">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Slowpoke</language>
+	</row>
+	<row id="msg_0819_slowbro_galarian" index="574">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Slowbro</language>
+	</row>
 </body>

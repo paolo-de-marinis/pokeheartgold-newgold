@@ -2470,4 +2470,340 @@
 		<language name="English"></language>
 		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
+	<row id="msg_0811_unused_494" index="494">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_unused_495" index="495">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_form_496" index="496">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_497" index="497">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_498" index="498">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_499" index="499">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_500" index="500">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_501" index="501">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_502" index="502">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_503" index="503">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_504" index="504">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_505" index="505">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_506" index="506">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_form_507" index="507">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+	</row>
+	<row id="msg_0811_lillipup" index="508">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_herdier" index="509">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_stoutland" index="510">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_purrloin" index="511">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_liepard" index="512">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_tympole" index="513">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_palpitoad" index="514">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_seismitoad" index="515">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_sewaddle" index="516">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_swadloon" index="517">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_leavanny" index="518">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_yamask" index="519">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_cofagrigus" index="520">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_trubbish" index="521">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_garbodor" index="522">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_emolga" index="523">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_karrablast" index="524">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_escavalier" index="525">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_foongus" index="526">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_amoonguss" index="527">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_joltik" index="528">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_galvantula" index="529">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_ferroseed" index="530">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_ferrothorn" index="531">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_klink" index="532">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_klang" index="533">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_klinklang" index="534">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_elgyem" index="535">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_beheeyem" index="536">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_litwick" index="537">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_lampent" index="538">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_chandelure" index="539">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_shelmet" index="540">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_accelgor" index="541">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_bouffalant" index="542">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_bunnelby" index="543">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_diggersby" index="544">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_fletchling" index="545">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_fletchinder" index="546">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_talonflame" index="547">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_litleo" index="548">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_pyroar" index="549">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_espurr" index="550">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_meowstic" index="551">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_sylveon" index="552">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_dedenne" index="553">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_phantump" index="554">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_trevenant" index="555">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_pumpkaboo" index="556">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_gourgeist" index="557">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_noibat" index="558">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_noivern" index="559">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_applin" index="560">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_flapple" index="561">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_appletun" index="562">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_sizzlipede" index="563">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_centiskorch" index="564">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_wyrdeer" index="565">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_kleavor" index="566">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_ursaluna" index="567">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_annihilape" index="568">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_farigiraf" index="569">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_dudunsparce" index="570">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_dipplin" index="571">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_hydrapple" index="572">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_slowpoke_galarian" index="573">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_slowbro_galarian" index="574">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
 </body>

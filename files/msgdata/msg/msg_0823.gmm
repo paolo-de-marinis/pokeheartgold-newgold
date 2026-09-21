@@ -1976,4 +1976,328 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Alpha Pokémon</language>
 	</row>
+	<row id="msg_0823_unused_494" index="494">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0823_unused_495" index="495">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0823_form_496" index="496">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">DNA Pokémon</language>
+	</row>
+	<row id="msg_0823_form_497" index="497">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">DNA Pokémon</language>
+	</row>
+	<row id="msg_0823_form_498" index="498">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">DNA Pokémon</language>
+	</row>
+	<row id="msg_0823_form_499" index="499">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bagworm Pokémon</language>
+	</row>
+	<row id="msg_0823_form_500" index="500">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bagworm Pokémon</language>
+	</row>
+	<row id="msg_0823_form_501" index="501">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Renegade Pokémon</language>
+	</row>
+	<row id="msg_0823_form_502" index="502">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gratitude Pokémon</language>
+	</row>
+	<row id="msg_0823_form_503" index="503">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Plasma Pokémon</language>
+	</row>
+	<row id="msg_0823_form_504" index="504">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Plasma Pokémon</language>
+	</row>
+	<row id="msg_0823_form_505" index="505">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Plasma Pokémon</language>
+	</row>
+	<row id="msg_0823_form_506" index="506">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Plasma Pokémon</language>
+	</row>
+	<row id="msg_0823_form_507" index="507">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Plasma Pokémon</language>
+	</row>
+	<row id="msg_0823_lillipup" index="508">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Puppy Pokémon</language>
+	</row>
+	<row id="msg_0823_herdier" index="509">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Loyal Dog Pokémon</language>
+	</row>
+	<row id="msg_0823_stoutland" index="510">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Big-Hearted Pokémon</language>
+	</row>
+	<row id="msg_0823_purrloin" index="511">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Devious Pokémon</language>
+	</row>
+	<row id="msg_0823_liepard" index="512">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cruel Pokémon</language>
+	</row>
+	<row id="msg_0823_tympole" index="513">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tadpole Pokémon</language>
+	</row>
+	<row id="msg_0823_palpitoad" index="514">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vibration Pokémon</language>
+	</row>
+	<row id="msg_0823_seismitoad" index="515">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vibration Pokémon</language>
+	</row>
+	<row id="msg_0823_sewaddle" index="516">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sewing Pokémon</language>
+	</row>
+	<row id="msg_0823_swadloon" index="517">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Leaf-Wrapped Pokémon</language>
+	</row>
+	<row id="msg_0823_leavanny" index="518">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Nurturing Pokémon</language>
+	</row>
+	<row id="msg_0823_yamask" index="519">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Spirit Pokémon</language>
+	</row>
+	<row id="msg_0823_cofagrigus" index="520">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Coffin Pokémon</language>
+	</row>
+	<row id="msg_0823_trubbish" index="521">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Trash Bag Pokémon</language>
+	</row>
+	<row id="msg_0823_garbodor" index="522">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Trash Heap Pokémon</language>
+	</row>
+	<row id="msg_0823_emolga" index="523">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sky Squirrel Pokémon</language>
+	</row>
+	<row id="msg_0823_karrablast" index="524">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Clamping Pokémon</language>
+	</row>
+	<row id="msg_0823_escavalier" index="525">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cavalry Pokémon</language>
+	</row>
+	<row id="msg_0823_foongus" index="526">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mushroom Pokémon</language>
+	</row>
+	<row id="msg_0823_amoonguss" index="527">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mushroom Pokémon</language>
+	</row>
+	<row id="msg_0823_joltik" index="528">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Attaching Pokémon</language>
+	</row>
+	<row id="msg_0823_galvantula" index="529">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">EleSpider Pokémon</language>
+	</row>
+	<row id="msg_0823_ferroseed" index="530">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Thorn Seed Pokémon</language>
+	</row>
+	<row id="msg_0823_ferrothorn" index="531">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Thorn Pod Pokémon</language>
+	</row>
+	<row id="msg_0823_klink" index="532">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gear Pokémon</language>
+	</row>
+	<row id="msg_0823_klang" index="533">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gear Pokémon</language>
+	</row>
+	<row id="msg_0823_klinklang" index="534">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gear Pokémon</language>
+	</row>
+	<row id="msg_0823_elgyem" index="535">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cerebral Pokémon</language>
+	</row>
+	<row id="msg_0823_beheeyem" index="536">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cerebral Pokémon</language>
+	</row>
+	<row id="msg_0823_litwick" index="537">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Candle Pokémon</language>
+	</row>
+	<row id="msg_0823_lampent" index="538">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lamp Pokémon</language>
+	</row>
+	<row id="msg_0823_chandelure" index="539">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Luring Pokémon</language>
+	</row>
+	<row id="msg_0823_shelmet" index="540">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Snail Pokémon</language>
+	</row>
+	<row id="msg_0823_accelgor" index="541">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Shell Out Pokémon</language>
+	</row>
+	<row id="msg_0823_bouffalant" index="542">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bash Buffalo Pokémon</language>
+	</row>
+	<row id="msg_0823_bunnelby" index="543">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Digging Pokémon</language>
+	</row>
+	<row id="msg_0823_diggersby" index="544">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Digging Pokémon</language>
+	</row>
+	<row id="msg_0823_fletchling" index="545">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tiny Robin Pokémon</language>
+	</row>
+	<row id="msg_0823_fletchinder" index="546">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ember Pokémon</language>
+	</row>
+	<row id="msg_0823_talonflame" index="547">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scorching Pokémon</language>
+	</row>
+	<row id="msg_0823_litleo" index="548">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lion Cub Pokémon</language>
+	</row>
+	<row id="msg_0823_pyroar" index="549">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Royal Pokémon</language>
+	</row>
+	<row id="msg_0823_espurr" index="550">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Restraint Pokémon</language>
+	</row>
+	<row id="msg_0823_meowstic" index="551">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Constraint Pokémon</language>
+	</row>
+	<row id="msg_0823_sylveon" index="552">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Intertwining Pokémon</language>
+	</row>
+	<row id="msg_0823_dedenne" index="553">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Antenna Pokémon</language>
+	</row>
+	<row id="msg_0823_phantump" index="554">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Stump Pokémon</language>
+	</row>
+	<row id="msg_0823_trevenant" index="555">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Elder Tree Pokémon</language>
+	</row>
+	<row id="msg_0823_pumpkaboo" index="556">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pumpkin Pokémon</language>
+	</row>
+	<row id="msg_0823_gourgeist" index="557">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pumpkin Pokémon</language>
+	</row>
+	<row id="msg_0823_noibat" index="558">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sound Wave Pokémon</language>
+	</row>
+	<row id="msg_0823_noivern" index="559">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sound Wave Pokémon</language>
+	</row>
+	<row id="msg_0823_applin" index="560">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Apple Core Pokémon</language>
+	</row>
+	<row id="msg_0823_flapple" index="561">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Apple Wing Pokémon</language>
+	</row>
+	<row id="msg_0823_appletun" index="562">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Apple Nectar Pokémon</language>
+	</row>
+	<row id="msg_0823_sizzlipede" index="563">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Radiator Pokémon</language>
+	</row>
+	<row id="msg_0823_centiskorch" index="564">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Radiator Pokémon</language>
+	</row>
+	<row id="msg_0823_wyrdeer" index="565">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Big Horn Pokémon</language>
+	</row>
+	<row id="msg_0823_kleavor" index="566">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Axe Pokémon</language>
+	</row>
+	<row id="msg_0823_ursaluna" index="567">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Peat Pokémon</language>
+	</row>
+	<row id="msg_0823_annihilape" index="568">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rage Monkey Pokémon</language>
+	</row>
+	<row id="msg_0823_farigiraf" index="569">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Long Neck Pokémon</language>
+	</row>
+	<row id="msg_0823_dudunsparce" index="570">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Land Snake Pokémon</language>
+	</row>
+	<row id="msg_0823_dipplin" index="571">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Candy Apple Pokémon</language>
+	</row>
+	<row id="msg_0823_hydrapple" index="572">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Apple Hydra Pokémon</language>
+	</row>
+	<row id="msg_0823_slowpoke_galarian" index="573">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dopey Pokémon</language>
+	</row>
+	<row id="msg_0823_slowbro_galarian" index="574">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hermit Crab Pokémon</language>
+	</row>
 </body>

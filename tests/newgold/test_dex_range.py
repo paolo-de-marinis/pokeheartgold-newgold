@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Run the Pokedex species check with host sanitizers.
 
-A failed GF_ASSERT resets the game, so what this really tests is that meeting
-one of the species New Gold adds records nothing instead of resetting, while a
-genuinely impossible species still trips the assertion.
+A failed GF_ASSERT resets the game. The species New Gold adds now have Dex
+entries of their own, so what this tests is that the Dex covers them, still
+passes silently over the fourteen identifiers between them and Arceus — the
+egg and the alternate forms, which are not Dex numbers — and still trips the
+assertion on a species that cannot exist.
 """
 
 import os
@@ -34,16 +36,22 @@ static int assertions;
 
 MAIN = r'''
 int main(void) {
-    // Everything the Dex covers is valid and silent.
+    // Everything the Dex covers is valid and silent: HeartGold's own species
+    // and the ones New Gold adds after the gap.
     for (u16 species = SPECIES_BULBASAUR; species <= SPECIES_ARCEUS; species++) {
         assertions = 0;
         assert(DexSpeciesIsInvalid(species) == FALSE);
         assert(assertions == 0);
     }
+    for (u16 species = LAST_DEX_GAP + 1; species <= NUM_SPECIES; species++) {
+        assertions = 0;
+        assert(DexSpeciesIsInvalid(species) == FALSE);
+        assert(assertions == 0);
+    }
 
-    // The egg, the bad egg, the alternate forms and the species New Gold adds
-    // are all outside the Dex. None of them may reset the game.
-    for (u16 species = SPECIES_ARCEUS + 1; species <= NUM_SPECIES; species++) {
+    // The egg, the bad egg and the alternate forms have no Dex entry. Meeting
+    // one is not an error either, so none of them may reset the game.
+    for (u16 species = FIRST_DEX_GAP; species <= LAST_DEX_GAP; species++) {
         assertions = 0;
         assert(DexSpeciesIsInvalid(species) == TRUE);
         assert(assertions == 0);
@@ -57,8 +65,8 @@ int main(void) {
     assert(DexSpeciesIsInvalid(NUM_SPECIES + 1) == TRUE);
     assert(assertions == 1);
 
-    printf("PASS: %d Dex species, %d outside it silently, impossible species still assert.\n",
-        SPECIES_ARCEUS, NUM_SPECIES - SPECIES_ARCEUS);
+    printf("PASS: %d Dex species, %d without an entry silently, impossible species still assert.\n",
+        NUM_SPECIES - NUM_DEX_GAP, NUM_DEX_GAP);
 }
 '''
 
@@ -76,14 +84,19 @@ class DexRangeTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             print(result.stdout.strip())
 
-    def test_the_dex_still_counts_only_its_own_species(self):
+    def test_the_dex_reaches_the_end_of_the_species(self):
         source = (ROOT / "src/pokedex.c").read_text()
-        # The counting loops must not have been widened along with the check.
         self.assertGreater(source.count("i <= NATIONAL_DEX_COUNT"), 0)
-        self.assertNotIn("i <= NUM_SPECIES", source)
         header = (ROOT / "include/constants/species.h").read_text()
-        self.assertIn("#define NATIONAL_DEX_COUNT SPECIES_ARCEUS", header)
+        self.assertIn("#define NATIONAL_DEX_COUNT NUM_SPECIES", header)
         self.assertEqual(re.search(r"#define SPECIES_ARCEUS\s+(\d+)", header).group(1), "493")
+
+    def test_completing_the_dex_does_not_ask_for_the_gap(self):
+        """The fourteen without an entry can never be caught, so a target that
+        counted them would put completion out of reach."""
+        source = (ROOT / "src/pokedex.c").read_text()
+        line = next(l for l in source.splitlines() if "Pokedex_NationalDexIsComplete" in source and "NUM_DEX_GAP" in l)
+        self.assertIn("NATIONAL_DEX_COUNT - NUM_DEX_GAP", line)
 
 
 if __name__ == "__main__":

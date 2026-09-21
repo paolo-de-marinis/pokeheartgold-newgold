@@ -505,8 +505,8 @@
 #define SPECIES_SHAYMIN    492
 #define SPECIES_ARCEUS     493
 
-#define MAX_SPECIES        SPECIES_ARCEUS
-#define NATIONAL_DEX_COUNT SPECIES_ARCEUS
+#define MAX_SPECIES SPECIES_ARCEUS
+
 
 #define SPECIES_EGG             494
 #define SPECIES_BAD_EGG         495
@@ -599,6 +599,15 @@
 #define SPECIES_SLOWBRO_GALARIAN  574
 
 #define NUM_SPECIES SPECIES_SLOWBRO_GALARIAN
+
+// The highest species with a Dex entry. HeartGold's own stop at Arceus and
+// the fourteen identifiers after it are the egg and the alternate forms,
+// which are not Dex numbers; the species New Gold adds come after those and
+// are, so the Dex reaches to the end of the list and skips the middle.
+#define NATIONAL_DEX_COUNT NUM_SPECIES
+#define FIRST_DEX_GAP      SPECIES_EGG
+#define LAST_DEX_GAP       SPECIES_ROTOM_MOW
+#define NUM_DEX_GAP        (LAST_DEX_GAP - FIRST_DEX_GAP + 1)
 
 #define SPECIES_MANAPHY_EGG SPECIES_BAD_EGG
 

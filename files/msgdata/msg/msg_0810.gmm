@@ -1977,4 +1977,328 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">１０００ぼんの　うでで\nうちゅうを　つくった　ポケモンとして\nしんわに　えがかれている。</language>
 	</row>
+	<row id="msg_0810_unused_494" index="494">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0810_unused_495" index="495">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0810_form_496" index="496">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">いんせきに　ふちゃくしていた\nうちゅうウイルスの　ＤＮＡが\nへんいして　うまれた　ポケモン。</language>
+	</row>
+	<row id="msg_0810_form_497" index="497">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">いんせきに　ふちゃくしていた\nうちゅうウイルスの　ＤＮＡが\nへんいして　うまれた　ポケモン。</language>
+	</row>
+	<row id="msg_0810_form_498" index="498">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">いんせきに　ふちゃくしていた\nうちゅうウイルスの　ＤＮＡが\nへんいして　うまれた　ポケモン。</language>
+	</row>
+	<row id="msg_0810_form_499" index="499">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">ミノムッチから　しんかしたとき\nミノが　からだの　いちぶに　なった。\nいっしょう　ミノを　ぬぐことはない。</language>
+	</row>
+	<row id="msg_0810_form_500" index="500">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">ミノムッチから　しんかしたとき\nミノが　からだの　いちぶに　なった。\nいっしょう　ミノを　ぬぐことはない。</language>
+	</row>
+	<row id="msg_0810_form_501" index="501">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">このよの　うらがわにある　せかいに\nすんでいると　いわれる　ポケモン。\nこだいの　はかばに　あらわれる。</language>
+	</row>
+	<row id="msg_0810_form_502" index="502">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">はなばたけの　なかで　くらしているが\nからだを　まるめると　はなのように\nみえるため　だれも　きづかないのだ。</language>
+	</row>
+	<row id="msg_0810_form_503" index="503">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">プラズマで　できた　からだを　もつ。\nでんかせいひんに　もぐりこみ\nわるさを　することで　しられている。</language>
+	</row>
+	<row id="msg_0810_form_504" index="504">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">プラズマで　できた　からだを　もつ。\nでんかせいひんに　もぐりこみ\nわるさを　することで　しられている。</language>
+	</row>
+	<row id="msg_0810_form_505" index="505">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">プラズマで　できた　からだを　もつ。\nでんかせいひんに　もぐりこみ\nわるさを　することで　しられている。</language>
+	</row>
+	<row id="msg_0810_form_506" index="506">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">プラズマで　できた　からだを　もつ。\nでんかせいひんに　もぐりこみ\nわるさを　することで　しられている。</language>
+	</row>
+	<row id="msg_0810_form_507" index="507">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">プラズマで　できた　からだを　もつ。\nでんかせいひんに　もぐりこみ\nわるさを　することで　しられている。</language>
+	</row>
+	<row id="msg_0810_lillipup" index="508">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Though it is a very brave Pokémon,\nit’s also smart enough to check\nits foe’s strength and avoid battle.</language>
+	</row>
+	<row id="msg_0810_herdier" index="509">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">This very loyal Pokémon helps Trainers,\nand it also takes care of other Pokémon.</language>
+	</row>
+	<row id="msg_0810_stoutland" index="510">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Being wrapped in its long fur is so\ncomfortable that a person would be fine\neven overnight on a wintry mountain.</language>
+	</row>
+	<row id="msg_0810_purrloin" index="511">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Their cute act is a ruse. They trick\npeople and steal their valuables\njust to see the looks on their faces.</language>
+	</row>
+	<row id="msg_0810_liepard" index="512">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Their beautiful form comes from\nthe muscles they have developed.\nThey run silently in the night.</language>
+	</row>
+	<row id="msg_0810_tympole" index="513">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">By vibrating its cheeks, it emits\nsound waves imperceptible to humans\nand warns others of danger.</language>
+	</row>
+	<row id="msg_0810_palpitoad" index="514">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It lives in the water and on land.\nIt uses its long, sticky tongue\nto immobilize its opponents.</language>
+	</row>
+	<row id="msg_0810_seismitoad" index="515">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">By putting power into its bumps,\nit creates vibrations and\nincreases the power of its punches.</language>
+	</row>
+	<row id="msg_0810_sewaddle" index="516">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Since this Pokémon makes its own clothes\nout of leaves, it is a popular mascot for\nfashion designers.</language>
+	</row>
+	<row id="msg_0810_swadloon" index="517">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Preferring dark, damp places,\nit spends the entire day eating\nfallen leaves that lie around it.</language>
+	</row>
+	<row id="msg_0810_leavanny" index="518">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Upon finding a small Pokémon, it weaves\nclothing for it from leaves by using\nthe sticky silk secreted from its mouth.</language>
+	</row>
+	<row id="msg_0810_yamask" index="519">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">These Pokémon arose from the\nspirits of people interred in graves.\nEach retains memories of its former life.</language>
+	</row>
+	<row id="msg_0810_cofagrigus" index="520">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grave robbers who mistake them\nfor real coffins and get too close\nend up trapped inside their bodies.</language>
+	</row>
+	<row id="msg_0810_trubbish" index="521">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wanting more garbage, they\nfollow people who litter.\nThey always belch poison gas.</language>
+	</row>
+	<row id="msg_0810_garbodor" index="522">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Consuming garbage makes\nnew kinds of poison gases\nand liquids inside their bodies.</language>
+	</row>
+	<row id="msg_0810_emolga" index="523">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It glides on its outstretched membrane\nwhile shocking foes with the electricity\nstored in the pouches on its cheeks.</language>
+	</row>
+	<row id="msg_0810_karrablast" index="524">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">For some reason they evolve when they\nreceive electrical energy while they\nare attacking Shelmet.</language>
+	</row>
+	<row id="msg_0810_escavalier" index="525">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wearing the shell covering they stole\nfrom Shelmet, they defend themselves\nand attack with two lances.</language>
+	</row>
+	<row id="msg_0810_foongus" index="526">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It lures Pokémon with its pattern\nthat looks just like a Poké Ball\nthen releases poison spores.</language>
+	</row>
+	<row id="msg_0810_amoonguss" index="527">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It moves the caps on both arms\nand does a dance to lure prey.\nIt prefers damp places.</language>
+	</row>
+	<row id="msg_0810_joltik" index="528">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Since it can’t generate its own electricity,\nit sticks onto large-bodied Pokémon and\nabsorbs static electricity.</language>
+	</row>
+	<row id="msg_0810_galvantula" index="529">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It creates barriers from\nelectrified silk that stun foes.\nThis works as a weapon as well as a defense.</language>
+	</row>
+	<row id="msg_0810_ferroseed" index="530">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It absorbs the iron it finds in\nthe rock while clinging to the ceiling.\nIt shoots spikes when in danger.</language>
+	</row>
+	<row id="msg_0810_ferrothorn" index="531">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">By swinging around its three\nspiky feelers and shooting spikes,\nit can obliterate an opponent.</language>
+	</row>
+	<row id="msg_0810_klink" index="532">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Two bodies comprise a fixed pair.\nThey spin around each\nother to generate energy.</language>
+	</row>
+	<row id="msg_0810_klang" index="533">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A minigear and big gear comprise its body.\nIf the minigear it launches at\na foe doesn’t return, it will die.</language>
+	</row>
+	<row id="msg_0810_klinklang" index="534">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The minigear spins at high speed.\nThen the energy from the red core charges\nthe minigear to make it ready to fire.</language>
+	</row>
+	<row id="msg_0810_elgyem" index="535">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rumors of its origin are\nlinked to a UFO crash site\nin the desert 50 years ago.</language>
+	</row>
+	<row id="msg_0810_beheeyem" index="536">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Apparently, it communicates by\nflashing its three fingers, but\nthose patterns haven’t been decoded.</language>
+	</row>
+	<row id="msg_0810_litwick" index="537">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Its flame is usually out, but it\nstarts shining when Litwick absorbs\nlife-force from people or Pokémon.</language>
+	</row>
+	<row id="msg_0810_lampent" index="538">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The spirits it absorbs fuel its baleful fire.\nIt hangs around hospitals\nwaiting for people to pass on.</language>
+	</row>
+	<row id="msg_0810_chandelure" index="539">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The spirits burned up in its\nominous flame lose their way\nand wander this world forever.</language>
+	</row>
+	<row id="msg_0810_shelmet" index="540">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When it and Karrablast are together, and\nboth receive electrical stimulation,\nthey both evolve.</language>
+	</row>
+	<row id="msg_0810_accelgor" index="541">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When its body dries out, it weakens.\nSo it wraps a membrane around itself\nfor protection while it spits poison.</language>
+	</row>
+	<row id="msg_0810_bouffalant" index="542">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">They are known to charge so wildly that\nif a train were to enter their territory,\nthey would send it flying.</language>
+	</row>
+	<row id="msg_0810_bunnelby" index="543">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">They use their large ears to dig\nburrows. They will dig the whole night\nthrough.</language>
+	</row>
+	<row id="msg_0810_diggersby" index="544">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">As powerful as an excavator, its ears\ncan reduce dense bedrock to rubble.</language>
+	</row>
+	<row id="msg_0810_fletchling" index="545">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When it’s excited, its temperature can\ndouble, spiking hormone production in\nits body.</language>
+	</row>
+	<row id="msg_0810_fletchinder" index="546">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Its speed right after takeoff already\nputs it in the top speed class of all\nbird Pokémon.</language>
+	</row>
+	<row id="msg_0810_talonflame" index="547">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When attacking prey, it can reach\nspeeds of up to 310 mph. It finishes its\nprey off with a colossal kick.</language>
+	</row>
+	<row id="msg_0810_litleo" index="548">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The stronger the opponent it faces, the\nmore heat and power flow through its\nbody.</language>
+	</row>
+	<row id="msg_0810_pyroar" index="549">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The male with the largest mane of fire\nis the leader of the pride.</language>
+	</row>
+	<row id="msg_0810_espurr" index="550">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The organ that emits its intense\npsychic power is sheltered by its ears\nto keep power from leaking out.</language>
+	</row>
+	<row id="msg_0810_meowstic" index="551">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When in danger, it raises its ears and\nreleases enough psychic power to grind\na 10-ton truck to dust.</language>
+	</row>
+	<row id="msg_0810_sylveon" index="552">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It sends a soothing aura from its\nribbonlike feelers to calm fights.</language>
+	</row>
+	<row id="msg_0810_dedenne" index="553">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Its upper whiskers are sensors that\nsurvey its surroundings. Its lower\nwhiskers shoot electricity.</language>
+	</row>
+	<row id="msg_0810_phantump" index="554">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It is created when a spirit possesses\nrotten tree stumps. It prefers to live\nin abandoned forests.</language>
+	</row>
+	<row id="msg_0810_trevenant" index="555">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It can control trees at will. It will\ntrap people who harm the forest, so they\ncan never leave.</language>
+	</row>
+	<row id="msg_0810_pumpkaboo" index="556">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It is said to carry wandering spirits\nto the place where they belong so they\ncan move on.</language>
+	</row>
+	<row id="msg_0810_gourgeist" index="557">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It enwraps its prey in its hairlike\narms. It sings joyfully as it observes\nthe suffering of its prey.</language>
+	</row>
+	<row id="msg_0810_noibat" index="558">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">They live in pitch black caves. Their\nenormous ears can emit ultrasonic waves\nof 200,000 hertz.</language>
+	</row>
+	<row id="msg_0810_noivern" index="559">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">This hot-blooded Pokémon attacks\nanything it sees with ultrasonic waves\nthat can crush boulders.</language>
+	</row>
+	<row id="msg_0810_applin" index="560">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">As soon as it’s born, it burrows into\nan apple. the flavor of the apple is\nwhat determines its evolution.</language>
+	</row>
+	<row id="msg_0810_flapple" index="561">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It ate a sour apple, which induced its\nevolution. It stores an acid capable of\ncausing chemical burns in its cheeks.</language>
+	</row>
+	<row id="msg_0810_appletun" index="562">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It ate a sweet apple, which induced\nits evolution. Back in the day, children\nused to have it as a snack.</language>
+	</row>
+	<row id="msg_0810_sizzlipede" index="563">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It stores flammable gas in its body\nand uses it to generate heat. It then\ncoils around its prey and cooks it.</language>
+	</row>
+	<row id="msg_0810_centiskorch" index="564">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">This excessively hostile Pokémon has\nlarge and very sharp fangs in addition\nto its dangerous burning body. </language>
+	</row>
+	<row id="msg_0810_wyrdeer" index="565">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The fur shed from its beard retains\nheat well and is a highly useful\nmaterial for winter clothing.</language>
+	</row>
+	<row id="msg_0810_kleavor" index="566">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Parts of its body turned to stone when\nit evolved thanks to an extremely rare\nore found in volcanic areas.</language>
+	</row>
+	<row id="msg_0810_ursaluna" index="567">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">I believe it was Hisui’s swampy terrain that gave Ursaluna its\nburly physique and newfound capacity to manipulate peat\nat will.</language>
+	</row>
+	<row id="msg_0810_annihilape" index="568">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When its anger rose beyond a critical\npoint, this Pokémon gained power that is\nunfettered by the limits of its physical body.</language>
+	</row>
+	<row id="msg_0810_farigiraf" index="569">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The hardened head from the tail protects\nthe head of the main body as Farigiraf whips\nits long neck around to headbutt enemies.</language>
+	</row>
+	<row id="msg_0810_dudunsparce" index="570">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It drives enemies out of its nest by sucking\nin enough air to fill its long, narrow lungs,\nthen releasing the air in an intense blast.</language>
+	</row>
+	<row id="msg_0810_dipplin" index="571">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dipplin is two creatures in one Pokémon.\nIts evolution was triggered by a special\napple grown only in one place.</language>
+	</row>
+	<row id="msg_0810_hydrapple" index="572">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">These capricious syrpents have banded\ntogether. On the rare occasion that their\nmoods align, their true power is unleashed.</language>
+	</row>
+	<row id="msg_0810_slowpoke_galarian" index="573">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0810_slowbro_galarian" index="574">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
 </body>

@@ -38,11 +38,11 @@ BOOL DexSpeciesIsInvalid(u16 species) {
         return TRUE;
     }
 
-    // The species New Gold adds sit past the Dex on purpose: their identifiers
-    // continue after the egg and the alternate forms rather than taking Dex
-    // numbers. Meeting one is not an error, it simply records nothing, so this
-    // must not reach the assertion above, which resets the game.
-    return species > SPECIES_ARCEUS;
+    // The identifiers between Arceus and the species New Gold adds are the
+    // egg and the alternate forms. They have no Dex entry, and meeting one is
+    // not an error either, so this must not reach the assertion above, which
+    // resets the game.
+    return species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP;
 }
 
 static inline BOOL CheckDexFlag(const u8 *array, u16 flagId) {
@@ -598,7 +598,7 @@ u16 Pokedex_CountJohtoDexSeen(Pokedex *pokedex) {
 }
 
 BOOL Pokedex_NationalDexIsComplete(Pokedex *pokedex) {
-    return Pokedex_CountNationalOwned_ExcludeMythical(pokedex) >= (NATIONAL_DEX_COUNT - NELEMS(sNationalMythicals));
+    return Pokedex_CountNationalOwned_ExcludeMythical(pokedex) >= (NATIONAL_DEX_COUNT - NUM_DEX_GAP - NELEMS(sNationalMythicals));
 }
 
 BOOL Pokedex_JohtoDexIsComplete(Pokedex *pokedex) {
