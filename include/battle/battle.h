@@ -461,6 +461,8 @@ typedef struct BattleContext {
     u8 hazardQueueTracker;
     // How far a script walking the field one Pokemon at a time has got.
     u8 abilityLoopTracker;
+    // Whether the ball now in the air was thrown critically.
+    u8 criticalCapture;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

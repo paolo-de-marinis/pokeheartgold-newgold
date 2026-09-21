@@ -6779,7 +6779,9 @@ static void Task_GetPokemon(SysTask *task, void *inData) {
             ov12_022628A0(data->battleSystem, battlerId, data->ballID);
             data->tempData[DATA_GET_POKEMON_BALL_SHAKES_TOTAL] = BattleSystem_CalculateBallShakes(data->battleSystem, data->ctx);
 
-            if (data->tempData[DATA_GET_POKEMON_BALL_SHAKES_TOTAL] < BALL_SHAKE_MAX) {
+            if (data->ctx->criticalCapture) {
+                data->tempData[DATA_GET_POKEMON_BALL_SHAKE_ANIMATIONS] = 1; // A critical throw shakes once whatever it is going to do.
+            } else if (data->tempData[DATA_GET_POKEMON_BALL_SHAKES_TOTAL] < BALL_SHAKE_MAX) {
                 data->tempData[DATA_GET_POKEMON_BALL_SHAKE_ANIMATIONS] = data->tempData[DATA_GET_POKEMON_BALL_SHAKES_TOTAL]; // Store the number of shake animations we actually need to do.
             } else {
                 data->tempData[DATA_GET_POKEMON_BALL_SHAKE_ANIMATIONS] = 3; // Even if we should catch, there should still only be 3 shakes. The 4th is a different animation.
@@ -7266,6 +7268,30 @@ static u32 BattleScript_ScaleExpToLevel(u32 exp, u32 faintedLevel, u32 gainerLev
     return result;
 }
 
+// A throw is sometimes a critical one: the ball flashes, shakes once and
+// settles. It is no more likely to catch than an ordinary throw — the roll is
+// the same — it just takes less time about it. How often depends on how much
+// of the Pokedex the player has filled in.
+static u32 CriticalCaptureRate(BattleSystem *bsys, u32 modifiedCatchRate) {
+    u16 owned = BattleSystem_CountDexOwned(bsys);
+    u32 tenths;
+
+    if (owned > 600) {
+        tenths = 25;
+    } else if (owned > 450) {
+        tenths = 20;
+    } else if (owned > 300) {
+        tenths = 15;
+    } else if (owned > 150) {
+        tenths = 10;
+    } else if (owned > 30) {
+        tenths = 5;
+    } else {
+        return 0;
+    }
+    return modifiedCatchRate * tenths / 10 / 6;
+}
+
 static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *ctx) {
     s32 catchRate;
     s32 targetMonType1 = 0;
@@ -7428,6 +7454,8 @@ static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *c
     if ((STATUS_BURN | STATUS_PARALYSIS | STATUS_BAD_POISON | STATUS_POISON) & status) {
         modifiedCatchRate = (modifiedCatchRate * 15) / 10;
     }
+
+    ctx->criticalCapture = BattleSystem_Random(bsys) % 256 < CriticalCaptureRate(bsys, modifiedCatchRate);
 
     s32 shakeCount;
     if (modifiedCatchRate >= 255) {
