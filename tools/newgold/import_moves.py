@@ -142,10 +142,26 @@ def ranges(block):
     return value
 
 
+# Some of the reference's numbers are written as a choice, and which way it
+# goes is a setting in its own configuration rather than something to guess at.
+# These are the settings as New Gold has them.
+CONDITIONS = {
+    "CHAMPIONS_POWER_CHANGES": True,
+    "CHAMPIONS_TYPE_CHANGES": True,
+    "CHAMPIONS_ACC_CHANGES": True,
+    "CHAMPIONS_PP_CHANGES": False,
+    "CHAMPIONS_EFFECT_CHANCE_CHANGES": True,
+}
+
+
 def number(block, key):
-    """Some numbers are written as a choice between generations. The second is
-    the older of the two, which is what this game is."""
-    numbers = re.findall(r"\d+", field(block, key) or "0")
+    text = field(block, key) or "0"
+    choice = re.match(r"\(\((\w+)\)\s*\?\s*\((\d+)\)\s*:\s*\((\d+)\)\)", text)
+    if choice:
+        if choice.group(1) not in CONDITIONS:
+            raise SystemExit(f"{key} turns on {choice.group(1)}, which is not a setting this knows")
+        return int(choice.group(2) if CONDITIONS[choice.group(1)] else choice.group(3))
+    numbers = re.findall(r"\d+", text)
     return int(numbers[-1]) if numbers else 0
 
 

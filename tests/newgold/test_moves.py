@@ -78,6 +78,18 @@ class MoveTests(unittest.TestCase):
             self.assertLessEqual(accuracy, 100, name)
             self.assertTrue(1 <= pp <= 40, name)
 
+    def test_the_settings_the_reference_runs_under_are_the_ones_read(self):
+        """Three of the added moves have a value written as a choice, and the
+        reference's own configuration settles it. Reading the other branch
+        would give a weaker Hyper Drill and a Moonblast that lowers Sp. Atk
+        three times as often."""
+        expected = {"HYPER_DRILL": ("power", 120), "PSYSHIELD_BASH": ("power", 90),
+                    "MOONBLAST": ("effectChance", 10)}
+        field = {"power": 2, "effectChance": 6}
+        for name, (key, value) in expected.items():
+            record = struct.unpack(import_moves.RECORD, self.table[self.added[name]])
+            self.assertEqual(record[field[key]], value, f"{name} {key}")
+
     def test_a_status_move_has_no_power_and_a_damaging_one_has_some(self):
         for name, index in self.added.items():
             _, split, power = struct.unpack(import_moves.RECORD, self.table[index])[:3]
