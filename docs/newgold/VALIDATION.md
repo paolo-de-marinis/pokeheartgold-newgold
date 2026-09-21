@@ -657,61 +657,62 @@ the front door into New Bark Town. It can write the emulator's state out at
 the end, and the four stages are named for where they arrive, so a later one
 can be extended rather than rediscovered.
 
-`--to lab` goes further: west across New Bark Town, past the man who stops
-you leaving without a Pokemon, in through the laboratory door and through the
-Professor's speech, arriving in front of him. Three minutes and forty seconds
-from a cold boot.
+`--to skills` goes all the way: west across New Bark Town, past the man who
+stops you leaving without a Pokemon, into the laboratory, through the
+Professor's speech, four tiles right and one up to the machine the starters
+sit on, a Chikorita taken from it, the nickname declined, then the menu, the
+party, the summary and right one page to the stats. **Six and a quarter
+minutes from a cold boot.**
 
-That is as far as it goes. The starter is on the machine behind him and the
-route does not take it yet: the last few tiles were being aimed by eye from
-screenshots, which does not converge, because the camera moves with the player
-and a picture says where things sit relative to each other rather than where
-the player is.
+The tile is the whole trick, and it is why this took so long: one either side
+of it and the press finds a memo instead of a Poke Ball. Thirty-two tiles were
+visited by eye and none of them was it; with `where.py` reading the party
+count, six tries found it.
 
-Two ways past that were tried and neither landed it.
+### The EV and IV viewer, verified in play
 
-Searching memory: the harness can dump the console's own, and a halfword or a
-word that moves with the player was looked for across several experiments —
-one tile, five tiles, in the laboratory and in the open. What turns up
-responds to both directions, or tracks for one move and then stops, which is a
-counter or the camera rather than a coordinate.
+On the stats page, with a Chikorita at level 5:
 
-Brute force: thirty positions around the machine the starters sit on, each
-walked to, pressed at, and then checked by opening the menu and looking for
-the party entry that would appear once there is a Pokemon in it. None of the
-thirty took one.
+| | HP | Attack | Defense | Sp. Atk | Sp. Def | Speed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Stats (Select) | 20/20 | 10 | 13 | 9 | 12 | 11 |
+| Effort values (L) | 0 | 0 | 0 | 0 | 0 | 0 |
+| Individual values (R) | 1 | 28 | 13 | 31 | 12 | 8 |
 
-The third way worked. `sFieldSysPtr` is a real symbol in the built ROM, and
-every struct between it and the player's tile is decompiled here, so the walk
-is `sFieldSysPtr` to `FieldSystem.playerAvatar` to `PlayerAvatar.mapObject` to
-`LocalMapObject.currentX` and `.currentZ`, with the party count in the save
-block beside it. `tools/newgold/where.py` does that walk on a memory dump —
-one address looked up in `main.elf`, every offset a field this repository
-declares, and a test that holds each of them against the header it came from.
+Every effort value is zero, which is what a Pokemon that has not fought has.
+Every individual value is inside nought to thirty-one. And they agree with the
+stats: Chikorita's base Attack is 49, so at level 5 with 28 there,
+((2*49 + 28) * 5 / 100) + 5 is 11, and the stat is 11. An ordering mistake in
+the table that maps the page's order onto the record's would have put Speed's
+value under Sp. Atk and none of that would have held.
 
-With it, a scripted walk can be aimed: thirty-two tiles of the laboratory were
-then visited exactly rather than approximately, each pressed at, each checked
-by reading the party count rather than by looking at the screen. None of them
-took a starter, and the party stayed empty in all thirty-two.
+The captures are in `validation/`: `skills-stats.png`, `skills-evs.png` and
+`skills-ivs.png`.
 
-That says the starter is not on offer yet rather than that the tile was
-missed: the Professor's script has a step still to clear, and the button
-mashing that carried the route this far is the likely reason — a prompt
-answered the wrong way passes unnoticed when nothing reads the answer. What
-the next session needs is to walk his conversation deliberately instead, one
-prompt at a time, which is now possible because the party count says
-immediately whether it worked. What each of
-the four items still wants after that:
+### The nature's mark, verified in play
 
-* The EV and IV viewer wants the starter, and then the summary screen. It is
-  the closest of the four.
-* The machine badges and the missing count want a TM, which is a gym away.
+In the same captures, Defense is drawn in red and Sp. Atk in blue, which is
+the nature that raised one and lowered the other. That is the other half of
+the summary work: HeartGold changed only the letter's shadow, a palette index
+away from plain, and against the plate behind it that cannot be read. Here the
+letter changes.
+
+### What is still unplayed
+
+* The machine badges and the missing count in the bag want a TM, which is a
+  gym away. The bag itself opens and its eight pockets draw.
 * A Dex entry for an added species wants one caught, and with it the two
-  things the Dex screen is known to owe.
+  things the Dex screen is known to owe: it prints the species identifier
+  rather than a National Dex number, and the area screen has nothing to say
+  about a species no map places.
 * The thirtieth box wants a Pokemon Centre.
 
-So these four are implemented and unplayed, and this file says so rather than
-implying otherwise. What has changed is that the next session does not start
-by writing an emulator harness, by finding the opening again, or by crossing
-the town again.
+The route can be extended to all three, and now has both the means: a walk can
+be aimed with `where.py` and its result checked without looking at the screen.
 
+One caveat on determinism. The opening is scripted and arrives in the same
+place every time, but the Pokemon it hands over is not the same one: the
+console seeds itself from its clock, so the Chikorita's nature and individual
+values differ from run to run. The route is repeatable; the numbers on the
+screen are not, and a check written against it has to assert what must be true
+rather than what was seen once.
