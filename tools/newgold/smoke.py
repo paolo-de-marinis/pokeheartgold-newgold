@@ -14,6 +14,20 @@ writes out what was on it.
     smoke.py --frames 3000 --shot 2999 --out /tmp/shots
 
 Usage without arguments boots both ROMs far enough to know they are running.
+
+boot_check.c takes its actions on the command line, one per argument:
+
+    press:FRAME:LEN:BUTTON          a joypad button, by libretro's id
+    mash:FROM:UNTIL:PERIOD:LEN:BUTTON   the same, every PERIOD frames
+    touch:FRAME:LEN:X:Y             the touch screen, in its own pixels
+    tap:FROM:UNTIL:PERIOD:LEN:X:Y   the same, every PERIOD frames
+    shot:FRAME:PATH                 write the framebuffer out
+    save:FRAME:PATH                 write the emulator's state out
+    load:PATH                       start from a state instead of a boot
+
+The last two are what make anything past the opening practical: reaching the
+overworld by script is twenty thousand frames of tutorial, and a state taken
+there costs one frame to return to.
 """
 
 import argparse

@@ -141,6 +141,9 @@ int main(int argc, char **argv) {
     bool (*load_game)(const struct game_info *) = SYM("retro_load_game");
     void (*run)(void) = SYM("retro_run");
     void (*unload)(void) = SYM("retro_unload_game");
+    size_t (*serialize_size)(void) = SYM("retro_serialize_size");
+    bool (*serialize)(void *, size_t) = SYM("retro_serialize");
+    bool (*unserialize)(const void *, size_t) = SYM("retro_unserialize");
     void (*deinit)(void) = SYM("retro_deinit");
     if (!set_environment || !core_init || !load_game || !run) {
         fprintf(stderr, "the core is missing the libretro entry points\n");
@@ -162,6 +165,24 @@ int main(int argc, char **argv) {
     struct game_info info = { rom_path, data, (size_t)size, NULL };
     if (!load_game(&info)) { fprintf(stderr, "the core would not load the ROM\n"); return 1; }
 
+    // Starting from a state costs one frame instead of twenty thousand, which
+    // is what makes checking anything past the opening practical at all.
+    for (int i = 5; i < argc; i++) {
+        char path[256];
+        if (sscanf(argv[i], "load:%255s", path) != 1) continue;
+        FILE *f = fopen(path, "rb");
+        if (!f) { perror(path); return 1; }
+        fseek(f, 0, SEEK_END); long n = ftell(f); fseek(f, 0, SEEK_SET);
+        void *state = malloc((size_t)n);
+        if (fread(state, 1, (size_t)n, f) != (size_t)n) { perror("read"); return 1; }
+        fclose(f);
+        if (!unserialize || !unserialize(state, (size_t)n)) {
+            fprintf(stderr, "the core would not take the state in %s\n", path);
+            return 1;
+        }
+        free(state);
+    }
+
     for (frames_run = 0; frames_run < frames; frames_run++) {
         memset(pressed, 0, sizeof pressed);
         touching = 0;
@@ -170,8 +191,22 @@ int main(int argc, char **argv) {
             if (sscanf(argv[i], "press:%lu:%lu:%d", &at, &len, &button) == 3
                 && frames_run >= at && frames_run < at + len)
                 pressed[button] = 1;
+            unsigned long until, period;
+            // Held down every so often between two frames, for getting through
+            // a long stretch of text without writing out every press.
+            if (sscanf(argv[i], "mash:%lu:%lu:%lu:%lu:%d", &at, &until, &period, &len, &button) == 5
+                && frames_run >= at && frames_run < until
+                && (frames_run - at) % period < len)
+                pressed[button] = 1;
             // The pointer is the whole framebuffer, so a touch is given in the
             // bottom screen's own pixels and moved down into it here.
+            if (sscanf(argv[i], "tap:%lu:%lu:%lu:%lu:%d:%d", &at, &until, &period, &len, &px, &py) == 6
+                && frames_run >= at && frames_run < until
+                && (frames_run - at) % period < len) {
+                touching = 1;
+                touch_x = (int)((((double)px / 256.0) * 2.0 - 1.0) * 0x7FFF);
+                touch_y = (int)((((double)(py + 192) / 384.0) * 2.0 - 1.0) * 0x7FFF);
+            }
             if (sscanf(argv[i], "touch:%lu:%lu:%d:%d", &at, &len, &px, &py) == 4
                 && frames_run >= at && frames_run < at + len) {
                 touching = 1;
@@ -184,6 +219,20 @@ int main(int argc, char **argv) {
             unsigned long at; char path[256];
             if (sscanf(argv[i], "shot:%lu:%255s", &at, path) == 2 && frames_run == at)
                 write_ppm(path);
+            if (sscanf(argv[i], "save:%lu:%255s", &at, path) == 2 && frames_run == at) {
+                size_t n = serialize_size ? serialize_size() : 0;
+                void *state = n ? malloc(n) : NULL;
+                if (!state || !serialize(state, n)) {
+                    fprintf(stderr, "the core would not give up its state\n");
+                    return 1;
+                }
+                FILE *f = fopen(path, "wb");
+                if (!f) { perror(path); return 1; }
+                fwrite(state, 1, n, f);
+                fclose(f);
+                free(state);
+                printf("state at frame %lu: %zu bytes in %s\n", at, n, path);
+            }
         }
     }
 
