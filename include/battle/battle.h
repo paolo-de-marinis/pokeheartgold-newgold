@@ -463,6 +463,9 @@ typedef struct BattleContext {
     u8 abilityLoopTracker;
     // Whether the ball now in the air was thrown critically.
     u8 criticalCapture;
+    // What the player's party was holding when the battle began. A single-use
+    // item is given back at the end rather than being gone for good.
+    u16 itemsToRestore[PARTY_SIZE];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

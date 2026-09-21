@@ -156,7 +156,29 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // The size is pinned so that growth is deliberate rather than noticed in a
 // battle. Only the offsets matter to the assembly that still reads this
 // structure, and everything it reads is below what has been appended.
-typedef char BattleContextSizeCheck[sizeof(BattleContext) == 0x3334 ? 1 : -1];
+typedef char BattleContextSizeCheck[sizeof(BattleContext) == 0x3340 ? 1 : -1];
+
+// A Focus Sash or a herb used in battle is gone for the rest of it, but not
+// for good: what the party was holding is written down at the start and given
+// back at the end. Berries are the exception — those are eaten.
+static void RememberHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
+    int count = BattleSystem_GetPartySize(battleSystem, BATTLER_PLAYER);
+
+    for (int i = 0; i < count && i < PARTY_SIZE; i++) {
+        ctx->itemsToRestore[i] = GetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, NULL);
+    }
+}
+
+static void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
+    int count = BattleSystem_GetPartySize(battleSystem, BATTLER_PLAYER);
+
+    for (int i = 0; i < count && i < PARTY_SIZE; i++) {
+        u16 item = ctx->itemsToRestore[i];
+        if (item != ITEM_NONE && (item < FIRST_BERRY_IDX || item > LAST_BERRY_IDX)) {
+            SetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, &item);
+        }
+    }
+}
 
 BattleContext *BattleContext_New(BattleSystem *battleSystem) {
     BattleContext *ctx = (BattleContext *)Heap_Alloc(HEAP_ID_BATTLE, sizeof(BattleContext));
@@ -168,6 +190,7 @@ BattleContext *BattleContext_New(BattleSystem *battleSystem) {
     LoadMoveTbl(ctx->trainerAIData.moveData);
     LoadAddedMoveTbl(ctx->addedMoveData);
     ctx->trainerAIData.itemData = LoadAllItemData(HEAP_ID_BATTLE);
+    RememberHeldItems(battleSystem, ctx);
 
     return ctx;
 }
@@ -181,6 +204,7 @@ BOOL BattleContext_Main(BattleSystem *battleSystem, BattleContext *ctx) {
 
     sPlayerBattleCommands[ctx->command](battleSystem, ctx);
     if (ctx->command == CONTROLLER_COMMAND_45) {
+        GiveBackHeldItems(battleSystem, ctx);
         return TRUE;
     }
     return FALSE;
@@ -2562,6 +2586,14 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
 
     if (ctx->fieldCondition & FIELD_CONDITION_GRAVITY) {
         hitChance = hitChance * 10 / 6;
+    }
+
+    // A Pokemon that likes the player as much as it can dodges a little more
+    // than it otherwise would, which is one of the things friendship buys from
+    // the sixth generation on. It only helps the player's own, and only where
+    // it is not a battle where everyone is brought to the same footing.
+    if (ctx->battleMons[battlerIdTarget].friendship == FRIENDSHIP_MAX && BattleSystem_GetFieldSide(battleSystem, battlerIdTarget) == 0 && !(BattleSystem_GetBattleType(battleSystem) & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER))) {
+        hitChance = hitChance < 10 ? 0 : hitChance - 10;
     }
 
     if ((BattleSystem_Random(battleSystem) % 100) + 1 > hitChance) {
