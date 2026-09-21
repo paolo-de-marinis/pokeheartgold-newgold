@@ -681,14 +681,26 @@ walked to, pressed at, and then checked by opening the menu and looking for
 the party entry that would appear once there is a Pokemon in it. None of the
 thirty took one.
 
-So the coordinate is the blocker, and the reliable way to it is through the
-game's own symbols rather than a search. `PlayerAvatar_GetXCoord` reads
-`mapObject->currentX`, `LocalMapObject` keeps `currentX` at 0x64 and
-`currentZ` at 0x6C, and both are decompiled here — what is missing is the
-runtime pointer to the field system, which pokeheartgold passes as a parameter
-rather than keeping in a global this could read. Finding an anchor for it —
-a function that loads one, or the save's own field data — is the next thing to
-do, and it is what the last few tiles need. What each of
+The third way worked. `sFieldSysPtr` is a real symbol in the built ROM, and
+every struct between it and the player's tile is decompiled here, so the walk
+is `sFieldSysPtr` to `FieldSystem.playerAvatar` to `PlayerAvatar.mapObject` to
+`LocalMapObject.currentX` and `.currentZ`, with the party count in the save
+block beside it. `tools/newgold/where.py` does that walk on a memory dump —
+one address looked up in `main.elf`, every offset a field this repository
+declares, and a test that holds each of them against the header it came from.
+
+With it, a scripted walk can be aimed: thirty-two tiles of the laboratory were
+then visited exactly rather than approximately, each pressed at, each checked
+by reading the party count rather than by looking at the screen. None of them
+took a starter, and the party stayed empty in all thirty-two.
+
+That says the starter is not on offer yet rather than that the tile was
+missed: the Professor's script has a step still to clear, and the button
+mashing that carried the route this far is the likely reason — a prompt
+answered the wrong way passes unnoticed when nothing reads the answer. What
+the next session needs is to walk his conversation deliberately instead, one
+prompt at a time, which is now possible because the party count says
+immediately whether it worked. What each of
 the four items still wants after that:
 
 * The EV and IV viewer wants the starter, and then the summary screen. It is
