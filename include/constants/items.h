@@ -31,14 +31,17 @@
 
 #define POCKET_BAG_VIEW_END 0xFF
 
-#define NUM_BAG_ITEMS        165
+// The pockets New Gold widens, by the counts the engine uses. HeartGold sized
+// them for its own item list and nothing else; a pocket that fills up drops
+// what will not fit, so the room has to be there before the items are.
+#define NUM_BAG_ITEMS        (165 + 32)
 #define NUM_BAG_MEDICINE     40
-#define NUM_BAG_BALLS        24
+#define NUM_BAG_BALLS        (24 + 2)
 #define NUM_BAG_TMS_HMS      101
 #define NUM_BAG_BERRIES      64
 #define NUM_BAG_MAIL         12
 #define NUM_BAG_BATTLE_ITEMS 30
-#define NUM_BAG_KEY_ITEMS    50
+#define NUM_BAG_KEY_ITEMS    (50 + 42)
 
 #define BAG_SLOT_QUANTITY_MAX 999
 #define BAG_TMHM_QUANTITY_MAX 99

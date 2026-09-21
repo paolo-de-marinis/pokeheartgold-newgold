@@ -10,6 +10,7 @@ bag interface or its rendering.
 
 import os
 from pathlib import Path
+import re
 import shlex
 import subprocess
 import tempfile
@@ -157,6 +158,34 @@ class ReusableTMTests(unittest.TestCase):
             result = subprocess.run([str(exe)], capture_output=True, text=True, env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
             self.assertEqual(result.returncode, 0, result.stderr)
             print(result.stdout.strip())
+
+
+class PocketSizeTests(unittest.TestCase):
+    """A pocket that fills up drops what will not fit.
+
+    HeartGold sized its pockets for its own item list. New Gold widens three of
+    them, and the counts are the engine's: thirty-two more general items, two
+    more balls, forty-two more key items.
+    """
+
+    WIDENED = {"NUM_BAG_ITEMS": (165, 32), "NUM_BAG_BALLS": (24, 2), "NUM_BAG_KEY_ITEMS": (50, 42)}
+    UNCHANGED = {"NUM_BAG_MEDICINE": 40, "NUM_BAG_TMS_HMS": 101, "NUM_BAG_BERRIES": 64,
+                 "NUM_BAG_MAIL": 12, "NUM_BAG_BATTLE_ITEMS": 30}
+
+    def setUp(self):
+        self.header = (ROOT / "include/constants/items.h").read_text()
+
+    def test_the_three_pockets_are_widened(self):
+        for name, (base, added) in self.WIDENED.items():
+            match = re.search(rf"#define {name}\s+\((\d+) \+ (\d+)\)", self.header)
+            self.assertIsNotNone(match, f"{name} is no longer widened")
+            self.assertEqual((int(match.group(1)), int(match.group(2))), (base, added), name)
+
+    def test_the_rest_keep_their_size(self):
+        for name, value in self.UNCHANGED.items():
+            match = re.search(rf"#define {name}\s+(\d+)\s*$", self.header, re.M)
+            self.assertIsNotNone(match, name)
+            self.assertEqual(int(match.group(1)), value, name)
 
 
 class BagDisplayTests(unittest.TestCase):
