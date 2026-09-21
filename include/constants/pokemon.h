@@ -9,7 +9,11 @@
 #define MAX_EV_SUM        510
 #define MAX_LEARNED_MOVES 22
 
-#define NUM_BOXES       18
+// HeartGold has eighteen boxes; New Gold has thirty, which is what every
+// game since has had. The old count is kept because the eighteen box names
+// the game shipped stay where they are in their message bank.
+#define HEARTGOLD_NUM_BOXES 18
+#define NUM_BOXES       30
 #define MONS_PER_BOX    30
 #define BOX_NAME_LENGTH 20
 

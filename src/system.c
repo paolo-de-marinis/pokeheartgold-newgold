@@ -85,9 +85,13 @@ void HBlankIntrRegsToggle(BOOL enable) {
 
 static const struct HeapParam sDefaultHeapSpec[] = {
     { 0xD200,   OS_ARENA_MAIN },
-    { 0x23600,  OS_ARENA_MAIN },
+    // Heap 1 holds SaveData, which holds the whole save region, and was sized
+    // to it with a couple of hundred bytes to spare. Thirty boxes add thirteen
+    // sectors to that region, so the heap takes the same 0xD000 and the
+    // general heap below gives it up.
+    { 0x30600,  OS_ARENA_MAIN },
     { 0x10,     OS_ARENA_MAIN },
-    { 0x11D000, OS_ARENA_MAIN },
+    { 0x110000, OS_ARENA_MAIN },
 };
 
 void sub_0201A1B4(void) {

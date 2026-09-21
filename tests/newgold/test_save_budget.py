@@ -55,6 +55,16 @@ class SaveBudgetTests(unittest.TestCase):
         """It is the block this port keeps widening."""
         self.assertIn("Save_Pokedex_sizeof", [name for name, _, _ in self.inside])
 
+    def test_the_heap_that_holds_the_save_is_big_enough(self):
+        """SaveData is the whole region plus its headers, and it is allocated
+        from heap 1. The heap was sized to the region; it has to keep up."""
+        import re
+        spec = (ROOT / "src/system.c").read_text()
+        heaps = re.findall(r"\{ (0x[0-9A-Fa-f]+),\s+OS_ARENA_MAIN \}", spec)
+        self.assertGreaterEqual(len(heaps), 2)
+        self.assertGreater(int(heaps[1], 16), save_budget.REGION,
+                           "heap 1 no longer holds the save region")
+
 
 if __name__ == "__main__":
     unittest.main()

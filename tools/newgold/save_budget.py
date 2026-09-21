@@ -24,8 +24,14 @@ ROOT = Path(__file__).resolve().parents[2]
 ARRAYS = ROOT / "src/save_arrays.c"
 MAIN_BASE = 0x02000000
 
-SAVE_PAGE_MAX = 35
-SAVE_SECTOR_SIZE = 0x1000
+def _constant(name, default):
+    text = (ROOT / "include/constants/save_arrays.h").read_text()
+    match = re.search(rf"#define {name}\s+(0x[0-9A-Fa-f]+|\d+)", text)
+    return int(match.group(1), 0) if match else default
+
+
+SAVE_PAGE_MAX = _constant("SAVE_PAGE_MAX", 35)
+SAVE_SECTOR_SIZE = _constant("SAVE_SECTOR_SIZE", 0x1000)
 REGION = SAVE_PAGE_MAX * SAVE_SECTOR_SIZE
 FOOTER = 16  # sizeof(struct SaveChunkFooter)
 CRC = 4      # every chunk carries one past its own size

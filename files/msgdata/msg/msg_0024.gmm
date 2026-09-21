@@ -387,4 +387,52 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">???</language>
 	</row>
+	<row id="msg_0024_box_19" index="94">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 19</language>
+	</row>
+	<row id="msg_0024_box_20" index="95">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 20</language>
+	</row>
+	<row id="msg_0024_box_21" index="96">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 21</language>
+	</row>
+	<row id="msg_0024_box_22" index="97">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 22</language>
+	</row>
+	<row id="msg_0024_box_23" index="98">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 23</language>
+	</row>
+	<row id="msg_0024_box_24" index="99">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 24</language>
+	</row>
+	<row id="msg_0024_box_25" index="100">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 25</language>
+	</row>
+	<row id="msg_0024_box_26" index="101">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 26</language>
+	</row>
+	<row id="msg_0024_box_27" index="102">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 27</language>
+	</row>
+	<row id="msg_0024_box_28" index="103">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 28</language>
+	</row>
+	<row id="msg_0024_box_29" index="104">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 29</language>
+	</row>
+	<row id="msg_0024_box_30" index="105">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BOX 30</language>
+	</row>
 </body>

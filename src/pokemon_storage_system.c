@@ -43,7 +43,11 @@ void PCStorage_InitializeBoxes(PCStorage *storage) {
     msgData = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, NARC_msg_msg_0024_bin, HEAP_ID_DEFAULT);
     if (msgData != NULL) {
         for (i = 0; i < NUM_BOXES; i++) {
-            ReadMsgDataIntoU16Array(msgData, i + msg_0024_00006, storage->box_names[i]);
+            // HeartGold's eighteen names sit at row 6, and row 24 is already
+            // something else, so the rest are appended at the end of the bank
+            // rather than inserted after them.
+            int row = i < HEARTGOLD_NUM_BOXES ? msg_0024_00006 + i : msg_0024_box_19 + (i - HEARTGOLD_NUM_BOXES);
+            ReadMsgDataIntoU16Array(msgData, row, storage->box_names[i]);
         }
         DestroyMsgData(msgData);
     }

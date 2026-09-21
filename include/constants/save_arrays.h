@@ -47,7 +47,10 @@
 #define SAVE_PCSTORAGE                     41
 #define SAVE_BLOCK_NUM                     42
 
-#define SAVE_PAGE_MAX    35
+// Thirty boxes are thirteen sectors more than eighteen. The chunks written
+// past this region sit at SAVE_PAGE_MAX plus an offset and move with it; the
+// flash erases sixty-four sectors in a half, and they still end inside one.
+#define SAVE_PAGE_MAX    48
 #define SAVE_SECTOR_SIZE 0x1000
 
 #endif // POKEHEARTGOLD_CONSTANTS_SAVE_ARRAYS_H
