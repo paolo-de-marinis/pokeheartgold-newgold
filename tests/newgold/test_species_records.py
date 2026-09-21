@@ -98,6 +98,12 @@ class SpeciesRecordTests(unittest.TestCase):
         yields = import_species.base_exp_yields(reference)
         learnsets = import_species.machine_moves(reference)
         tms, hms = import_species.machine_numbers()
+        # The hidden ability lives in a table of its own in the reference, and
+        # an ability this game has not got leaves the species without one.
+        known = set(re.findall(r"#define (ABILITY_[A-Z0-9_]+)",
+                               (ROOT / "include/constants/abilities.h").read_text()))
+        hidden = {species: ability for species, ability
+                  in import_species.hidden_abilities(REFERENCE).items() if ability in known}
         # Every species whose record is generated: HGSS's own, and the added
         # ones. The egg, the bad egg and the alternate forms in between are
         # left as pret wrote them.
@@ -109,7 +115,8 @@ class SpeciesRecordTests(unittest.TestCase):
             if name not in blocks:
                 continue
             regenerated = import_species.record(name, blocks[name], yields.get(name, 0),
-                                                learnsets.get(name, set()), tms, hms)
+                                                learnsets.get(name, set()), tms, hms,
+                                                hidden.get("SPECIES_" + name, "ABILITY_NONE"))
             self.assertEqual(self.records[index], regenerated, name)
             checked += 1
         self.assertGreater(checked, 500)

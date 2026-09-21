@@ -2,6 +2,7 @@
 
 #include "global.h"
 
+#include "constants/abilities.h"
 #include "constants/moves.h"
 #include "constants/trainer_class.h"
 
@@ -266,6 +267,7 @@ TrainerGender TrainerClass_GetGenderOrTrainerCount(int trainerClass) {
 }
 
 void TrMon_OverridePidGender(int species, int form, int overrideParam, u32 *pid);
+void TrMon_ApplyHiddenAbility(Pokemon *mon, int species, int form, int overrideParam);
 void TrMon_FrustrationCheckAndSetFriendship(Pokemon *mon);
 
 void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID heapID) {
@@ -341,6 +343,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             // personalized ball capsules.
             SetTrMonCapsule(monSpecies[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
+            TrMon_ApplyHiddenAbility(mon, species, form, monSpecies[i].genderAbilityOverride);
             // Starting in HGSS, an AI Pokemon with Frustration
             // will have minimum friendship.
             TrMon_FrustrationCheckAndSetFriendship(mon);
@@ -370,6 +373,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             }
             SetTrMonCapsule(monSpeciesMoves[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
+            TrMon_ApplyHiddenAbility(mon, species, form, monSpeciesMoves[i].genderAbilityOverride);
             TrMon_FrustrationCheckAndSetFriendship(mon);
             Party_AddMon(enemies->party[partyIndex], mon);
         }
@@ -395,6 +399,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             SetMonData(mon, MON_DATA_HELD_ITEM, &monSpeciesItem[i].item);
             SetTrMonCapsule(monSpeciesItem[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
+            TrMon_ApplyHiddenAbility(mon, species, form, monSpeciesItem[i].genderAbilityOverride);
             TrMon_FrustrationCheckAndSetFriendship(mon);
             Party_AddMon(enemies->party[partyIndex], mon);
         }
@@ -423,6 +428,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             }
             SetTrMonCapsule(monSpeciesItemMoves[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
+            TrMon_ApplyHiddenAbility(mon, species, form, monSpeciesItemMoves[i].genderAbilityOverride);
             TrMon_FrustrationCheckAndSetFriendship(mon);
             Party_AddMon(enemies->party[partyIndex], mon);
         }
@@ -464,4 +470,18 @@ void TrMon_FrustrationCheckAndSetFriendship(Pokemon *mon) {
         }
     }
     SetMonData(mon, MON_DATA_FRIENDSHIP, &friendship);
+}
+
+// The first two ability overrides work by choosing a personality, because the
+// personality is what picks between a species' two abilities. A hidden one is
+// not among them, so it has to be written onto the Pokemon once it exists.
+void TrMon_ApplyHiddenAbility(Pokemon *mon, int species, int form, int overrideParam) {
+    if (((overrideParam & 0xF0) >> 4) != TRPOKE_ABILITY_OVERRIDE_HIDDEN) {
+        return;
+    }
+
+    u32 ability = GetMonBaseStat_HandleAlternateForm(species, form, BASE_HIDDEN_ABILITY);
+    if (ability != ABILITY_NONE) {
+        SetMonData(mon, MON_DATA_ABILITY, &ability);
+    }
 }

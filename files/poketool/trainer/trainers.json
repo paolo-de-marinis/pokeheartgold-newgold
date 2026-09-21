@@ -910,7 +910,7 @@
         {
           "difficulty": 100,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 12,
           "species": "SPECIES_HOOTHOOT",
           "item": "ITEM_WIDE_LENS",
@@ -940,7 +940,7 @@
         {
           "difficulty": 120,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 12,
           "species": "SPECIES_FARFETCHD",
           "item": "ITEM_STICK",
@@ -970,7 +970,7 @@
         {
           "difficulty": 120,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 13,
           "species": "SPECIES_MURKROW",
           "item": "ITEM_EVIOLITE",
@@ -1440,7 +1440,7 @@
         {
           "difficulty": 30,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 12,
           "species": "SPECIES_HOOTHOOT",
           "item": "ITEM_ORAN_BERRY",
@@ -1562,7 +1562,7 @@
         {
           "difficulty": 180,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 30,
           "species": "SPECIES_FARIGIRAF",
           "item": "ITEM_TWISTEDSPOON",
@@ -2780,7 +2780,7 @@
         {
           "difficulty": 100,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 9,
           "species": "SPECIES_BELLSPROUT",
           "item": "ITEM_STARF_BERRY",
@@ -2858,7 +2858,7 @@
         {
           "difficulty": 100,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 10,
           "species": "SPECIES_BELLSPROUT",
           "item": "ITEM_SALAC_BERRY",
@@ -9519,7 +9519,7 @@
         {
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 38,
           "species": "SPECIES_MARILL",
           "capsule": 0
@@ -14398,7 +14398,7 @@
         {
           "difficulty": 50,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 10,
           "species": "SPECIES_BELLSPROUT",
           "item": "ITEM_SALAC_BERRY",
@@ -14413,7 +14413,7 @@
         {
           "difficulty": 70,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 10,
           "species": "SPECIES_BELLSPROUT",
           "item": "ITEM_MICLE_BERRY",
@@ -27225,7 +27225,7 @@
         {
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_HIDDEN",
           "level": 45,
           "species": "SPECIES_CROAGUNK",
           "capsule": 0

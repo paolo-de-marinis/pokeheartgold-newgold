@@ -42,6 +42,10 @@ typedef struct BaseStats {
     /* 0x20 */ u32 tmhm_2;
     /* 0x24 */ u32 tmhm_3;
     /* 0x28 */ u32 tmhm_4;
+    // The ability a Pokemon has only when something asks for it by name. No
+    // personality picks it, so nothing that does not know about it can give
+    // one out by accident.
+    /* 0x2C */ u8 hiddenAbility;
 } BASE_STATS;
 
 // Structs

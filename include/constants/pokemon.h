@@ -427,6 +427,7 @@
 #define BASE_TMHM_2           30
 #define BASE_TMHM_3           31
 #define BASE_TMHM_4           32
+#define BASE_HIDDEN_ABILITY   33
 
 // Forms used in asm files
 #define SHAYMIN_LAND     0

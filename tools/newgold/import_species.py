@@ -131,7 +131,16 @@ def section(block, name):
             return block[start:end]
 
 
-def record(name, block, expYield, learned, tms, hms):
+def hidden_abilities(reference):
+    """The reference keeps these in a table of their own rather than in the
+    species record, because nothing picks one by personality: it is given only
+    when something asks for it by name."""
+    source = (reference / "data/HiddenAbilityTable.c").read_text(errors="replace")
+    return {m[1]: native(m[2]) for m in
+            re.finditer(r"\[\s*(SPECIES_[A-Z0-9_]+)\s*\]\s*=\s*(ABILITY_[A-Z0-9_]+)", source)}
+
+
+def record(name, block, expYield, learned, tms, hms, hidden="ABILITY_NONE"):
     stats = section(block, "baseStats")
     yields = section(block, "evYields")
     items = section(block, "wildHeldItems")
@@ -164,6 +173,7 @@ def record(name, block, expYield, learned, tms, hms):
         "growthRate": field(block, "expRate")[len("GROWTH_"):],
         "eggGroups": pair(block, "eggGroups"),
         "abilities": [native(name) for name in pair(block, "abilities")],
+        "hiddenAbility": hidden,
         "greatMarshRate": int(field(block, "safariFleeRate")),
         "color": COLORS[field(block, "bodyColor")],
         "flip": int(field(block, "flipSprite")),

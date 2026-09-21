@@ -49,6 +49,19 @@ class AbilityTests(unittest.TestCase):
         marker = re.search(r"#define NUM_ABILITIES ABILITY_([A-Z0-9_]+)", HEADER.read_text()).group(1)
         self.assertEqual(marker, "BAD_DREAMS")
 
+    def test_a_hidden_ability_is_one_that_exists(self):
+        """A hidden ability is given only when a trainer asks for it, so a
+        species carrying one this game has not got would hand out a number
+        nothing reads."""
+        known = {f"ABILITY_{name}" for name, _ in self.abilities}
+        records = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
+        carrying = 0
+        for record in records:
+            hidden = record.get("hiddenAbility", "ABILITY_NONE")
+            self.assertIn(hidden, known, record["species"])
+            carrying += hidden != "ABILITY_NONE"
+        self.assertGreater(carrying, 300)
+
     def test_species_only_name_abilities_that_exist(self):
         known = {f"ABILITY_{name}" for name, _ in self.abilities}
         records = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]

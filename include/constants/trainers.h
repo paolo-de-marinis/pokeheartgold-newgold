@@ -751,6 +751,9 @@
 #define TRPOKE_ABILITY_OVERRIDE_OFF    0
 #define TRPOKE_ABILITY_OVERRIDE_FIRST  1
 #define TRPOKE_ABILITY_OVERRIDE_SECOND 2
+// The ability no personality picks. Unlike the other two this cannot be
+// arranged by choosing a personality, so it is set on the Pokemon afterwards.
+#define TRPOKE_ABILITY_OVERRIDE_HIDDEN 3
 
 // Indices identifying messages in trtbl.narc.
 // For use with GetTrainerMessageByIdPair and

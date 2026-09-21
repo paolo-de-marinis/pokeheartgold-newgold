@@ -27,11 +27,11 @@ HAS_MOVES, HAS_ITEM = 0x01, 0x02
 TYPE_NAMES = {0: "TRTYPE_MON", HAS_MOVES: "TRTYPE_MON_MOVES",
               HAS_ITEM: "TRTYPE_MON_ITEM", HAS_MOVES | HAS_ITEM: "TRTYPE_MON_ITEM_MOVES"}
 
-# A hidden ability has no counterpart yet, so those Pokemon keep the ability
-# their personality gives them until hidden abilities exist.
+# A hidden ability is not one a personality can pick, so it is asked for by
+# name and written onto the Pokemon once it exists.
 ABILITY_SLOTS = {"TRAINER_POKEMON_ABILITY_1": "TRPOKE_ABILITY_OVERRIDE_FIRST",
                  "TRAINER_POKEMON_ABILITY_2": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-                 "TRAINER_POKEMON_ABILITY_HIDDEN": "TRPOKE_ABILITY_OVERRIDE_OFF"}
+                 "TRAINER_POKEMON_ABILITY_HIDDEN": "TRPOKE_ABILITY_OVERRIDE_HIDDEN"}
 
 DOUBLE = {"SINGLE_BATTLE": 0, "DOUBLE_BATTLE": 2}
 
@@ -209,8 +209,7 @@ def main():
     for key, count in counts.most_common():
         print(f"  {key}: {count}")
     if hidden:
-        print(f"  {hidden} Pokemon ask for a hidden ability, which does not exist yet; "
-              f"they keep the one their personality gives them")
+        print(f"  {hidden} Pokemon ask for a hidden ability")
     for problem, count in problems.most_common():
         print(f"  left alone, {count}: {problem}")
 
