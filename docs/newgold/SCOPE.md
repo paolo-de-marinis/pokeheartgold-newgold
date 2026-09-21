@@ -10,9 +10,21 @@ plays like New Gold, not that it resembles hg-engine internally.
 | Input | Revision |
 | --- | --- |
 | pokeheartgold (base) | `e97c7fc975a7447f288c42acc2e155f5a673e30f`, `master` |
-| konefr/hg-engine-newgold (behaviour reference) | `41a28e2255b2805378163c7f4d6c1d87541174d1`, `heartgold-modern` |
+| konefr/hg-engine-newgold (behaviour reference) | `41a28e2255b2805378163c7f4d6c1d87541174d1`, `heartgold-modern`, 2026-09-20, "bug fixing pre sea route 40-41" |
 | hg-engine the reference forked from | `d0380a487`, the parent of konefr's first commit |
 | antonsynd/pokeheartgold-slop | `808283ee2`, `mainline`; not an input, with one exception named in the method: `src/unk_02005D10.c` |
+
+The reference is `https://github.com/konefr/hg-engine-newgold.git`, branch
+`heartgold-modern`, and it is checked out locally at that pin in
+`/home/paolo/Porting HGSS/hg-engine-newgold-reference`. Every importer reads
+from there and from nowhere else. **Never read hg-engine upstream.** The
+reference is hg-engine *plus* konefr's 67 commits, and his changes have to come
+last: taking a record from upstream would silently drop whatever he did to it.
+Farigiraf's learnset (species 1031) is the only thing he has touched above
+species 493 so far, and the rest of his rebalance sits inside the vanilla 493
+and is already imported — but that will grow, so the importers point at his
+tree from the start. When he publishes new commits the checkout is refetched
+and the pin above is updated.
 
 ## What New Gold actually is
 
@@ -36,10 +48,36 @@ Their own work is:
   `UNCAP_CANDIES_FROM_LEVEL_CAP` and `ALLOW_LEVEL_CAP_EVOLVE`, and
   `DELETABLE_HMS`. Every other setting is the engine's default.
 
-## Measured scope
+## The criterion
 
-Counted from the reference's trainer, wild-encounter and headbutt tables — what
-the player can actually meet:
+**The platform has to carry what New Gold could reach, not what it reaches
+today.** konefr is moving New Gold's development onto this repository, so this
+is no longer a port of a finished hack — it is the thing he will build on. He
+must be able to open `Trainers.c`, put any Pokemon in a party, and have it work
+without asking anyone for an import first. A species the engine defines and
+this port does not is a trap: he would find it by playing, long after writing
+it.
+
+That reverses the rule this file was written under, which was *implement only
+what the game reaches*. That rule was right while this was a port of a fixed
+piece of content, and it is what got the first phase done at a sane size. It
+stops being right the moment the content starts growing here.
+
+The target is hg-engine's own range, in full:
+
+| Kind | Here now | Target | To add |
+| --- | ---: | ---: | ---: |
+| Species | 574 | 1075 | **501** |
+| Moves | 495 | 922 | **427** |
+| Abilities | 150 | 319 | **169** |
+
+### The scope that was measured, and why it is kept
+
+The table below is what the first phase was sized against: everything the
+player can meet, counted from the reference's trainer, wild-encounter and
+headbutt tables. It is no longer the measure of what to implement, but it is
+still the measure of what is *exercised* — the part of the range that has been
+played rather than merely defined — so it stays as a record.
 
 | Kind | Referenced | Beyond vanilla HGSS |
 | --- | ---: | ---: |
@@ -48,21 +86,6 @@ the player can actually meet:
 | Moves | 370 | **13** (> 467), plus Solar Seeds |
 | Abilities (of those species) | 139 | **21** (> 123), two of them konefr's |
 | Items in rosters | 42 | to be counted |
-
-This is the number that matters. hg-engine defines 1,476 species, ~923 moves
-and 320 abilities; New Gold's content uses a small slice of that. Nothing is
-implemented because the engine defines it — only because the game reaches it.
-
-Following the evolution table from those 395 adds 55 more reachable species,
-27 of them beyond vanilla: the Lillipup, Tympole, Sewaddle, Yamask, Trubbish,
-Karrablast, Foongus, Joltik, Ferroseed, Klink, Elgyem, Litwick and Shelmet
-lines, the Bunnelby, Fletchling, Litleo, Espurr, Phantump, Pumpkaboo, Noibat
-and Applin lines, Sizzlipede, Sylveon, Dedenne, Bouffalant, Emolga, and the
-convergent forms Wyrdeer, Kleavor, Ursaluna, Annihilape, Farigiraf, Dudunsparce
-and Hydrapple. Sylveon confirms the Fairy type is required, not optional.
-
-Still to be counted the same way: gift and static encounters placed by scripts,
-and what the Pokédex and PC displays must cover.
 
 ## Out of scope
 
@@ -86,14 +109,12 @@ already implements equivalently:
   Pokemon's effort values to a chosen spread. It is also written as a patch
   into a built script file rather than as source. A player never sees it and
   the method here would not reproduce it that way, so it stays out.
-* Enabled in the engine but unreachable in the content as it stands, and so
-  deferred until it is not: **Mega Evolution** (no mega stone appears anywhere
-  in the trainer or species data — Eviolite is the only held item whose name
-  ends that way), **Primal Reversion** (neither Kyogre nor Groudon is
-  reachable) and **seasons** (Deerling and Sawsbuck are not). Each is a large
-  feature involving form lifecycles, assets and interface work; none of it
-  would be visible in the game konefr has built so far, which reaches Morty.
-  Recheck these when later content lands.
+* **Mega Evolution**, **Primal Reversion** and **seasons**. Each is a large
+  feature of form lifecycles, assets and interface work rather than a record in
+  a table, and none of the three is in the expansion's work order. Widening the
+  species, move and ability range does not drag them in: a Mega form is not a
+  species record, and the one battle-script command this port does not define,
+  `GoToIfSecondHitOfParentalBond`, is Mega's. They stay out until asked for.
 
 ## Work order
 
@@ -155,6 +176,75 @@ doing and why it is recorded as finished here.
    catching one is silent rather than a crash. Widening it is the Dex data
    archives and the screen that reads them, and footprints come with it.
 3. Expanded pockets and thirty boxes, which change the save layout.
+
+Then a session on melonDS covering those three, written up in
+`VALIDATION.md`. **That write-up is the precondition for everything below.**
+Nothing of the expansion starts over an unproven base: if something in that
+session does not pass, it is fixed first.
+
+## Next phase: the whole range
+
+The numbers are in *The criterion* above — 501 species, 427 moves, 169
+abilities. This is affordable, and the reason is that the infrastructure is
+already here. Nothing restarts and no tool is rewritten; the existing ones are
+widened.
+
+* Seventeen importers in `tools/newgold/`, all idempotent — run again over an
+  imported tree they answer "0 to change". For the species this is widening a
+  range, not writing code: `import_species.py`, `import_sprites.py` and
+  `import_icons.py` (which copy rather than convert), `heights.py`,
+  `import_evolutions.py`, `import_hidden_abilities.py`, `import_moves.py`,
+  `import_cries.py` with `sdat.py` for the sound archive, and `wotbl.py`,
+  which round-trips the learnset archive and checks it before appending.
+* The battle script command set is **complete**: 295 defined against the 278
+  the reference uses, 96% overlapping. The remaining 427 moves are effect
+  script translation, not engine work.
+* The ability dispatch points are already ported — 222 call sites across
+  `src/battle/overlay_12_0224E4FC.c` and its neighbours. The median ability is
+  **one line** in one of them. The remaining 169 are insertions, not
+  architecture.
+* Animations are borrowed by number and `import_moves.py` already does it.
+* The cries are solved at the root: `PlayCryEx` is decompiled in
+  `src/unk_02005D10.c` and `main.lsf` links the object, so there is no longer a
+  ceiling at 495. Extending the sound archive is running the same two tools
+  over a wider range.
+* Thirty-six tests in `tests/newgold/`, one per area, so a regression shows up
+  the same day.
+* Of hg-engine's 349 hook targets, 307 are already C in pokeheartgold. The 37
+  still in assembly are not on this path.
+
+**First step: expand the ROM.** `rom.rsf`, `RomSize 1G` to `RomSize 2G`.
+128,766,012 bytes of 134,217,728 are used today, about 5.2 MiB free.
+`pokegra.narc` is 12,838,796 bytes for 574 species, 21.8 KiB each, so 501 more
+species is about 10.7 MiB of battle sprites alone before icons and cries. It
+does not fit otherwise. If more room is wanted later, `pokegra.narc` is not
+compressed today — there is no LZ step in its `.mk`.
+
+Then, in order:
+
+1. Every species' data: personal records, learnsets, evolutions, names, hidden
+   abilities. This is the free part, roughly 130 bytes a species.
+2. The remaining 169 abilities.
+3. The remaining 427 moves: records, effect scripts, animations by number.
+4. Graphics: battle sprites, heights, icons.
+5. Cries for every species, not only the ones in play today.
+6. Dex entries and footprints across the new range, consistent with what the
+   phase before did for the species it added.
+
+**Steps 2 and 3 are not optional.** Importing species without their abilities
+and moves is worse than not importing them: konefr would have hundreds of
+Pokemon whose abilities do nothing and whose moves cannot be learnt, and no
+sign of it until he played.
+
+The discipline does not change. A matching decompilation stays in its own
+commit, separate from the behaviour change, and that commit does not alter a
+byte of either ROM. HeartGold and SoulSilver both build and `tests/newgold/`
+passes at every step.
+
+It closes with another melonDS session, aimed at the expansion: one species
+taken at random from each generation added, with its sprite, icon, cry, name
+and Dex entry, and one new ability and one new move working in a battle.
+`VALIDATION.md` is updated with it.
 
 ## Method
 
