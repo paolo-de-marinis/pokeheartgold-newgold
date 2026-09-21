@@ -185,7 +185,31 @@ doing and why it is recorded as finished here.
    a species no map places. Both want looking at on a running game rather than
    guessing, so they are part of the melonDS session below.
 
-3. Expanded pockets and thirty boxes, which change the save layout.
+3. Thirty PC boxes. The pockets are done — three of them widened by the
+   engine's own counts, three hundred and four bytes, which fitted in the page
+   the save already had. The boxes do not fit anything, and
+   `tools/newgold/save_budget.py` says why:
+
+   * The save is at **thirty-five pages of thirty-five**. It is written as two
+     slots, sixteen pages for the save proper and nineteen for the boxes, and
+     `SaveData_InitSlotSpecs` asserts the total against `SAVE_PAGE_MAX`. There
+     is about 2,300 bytes of slack inside the save's own last page and no page
+     after it.
+   * A box is about 4,140 bytes, so twelve more are thirteen pages.
+     `SAVE_PAGE_MAX` has to go from 35 to 48. The chunks written past the
+     region sit at `SAVE_PAGE_MAX` plus an offset and move with it, from
+     page 47 to page 60 of the 64 the flash erases in one half. It fits.
+   * `SaveData` holds the whole region, and heap 1 is 0x23600 — sized to it
+     with about two hundred bytes to spare. It has to grow by the same 53,248
+     bytes, out of heap 3.
+   * Twelve more box names in `msg_0024`, which holds the eighteen at rows 6
+     to 23.
+   * The screen. `NUM_BOXES` reaches the storage code, but the two PC display
+     overlays hold twenty-one literal eighteens between them, and whichever of
+     those are box counts have to be decompiled before they can be changed.
+
+   That last one is the work; everything above it is arithmetic that is now
+   done.
 
 Then a session on melonDS covering those, written up in
 `VALIDATION.md`. **That write-up is the precondition for everything below.**
