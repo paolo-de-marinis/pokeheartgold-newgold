@@ -97,5 +97,34 @@ class BattleCommandTests(unittest.TestCase):
         self.assertEqual(set(theirs) - set(self.macros), set())
 
 
+class ItemGrabTests(unittest.TestCase):
+    """The engine turns AI_CAN_GRAB_ITEMS on.
+
+    HeartGold refuses Trick and Switcheroo when the other side starts them
+    outside a link or Frontier battle, so the player can never lose a held
+    item to a trainer. New Gold lifts that, having the battle hand every item
+    back when it ends. Thief and Covet keep the old rule: the engine's own
+    note says so, and a stolen item is gone the moment the wild Pokemon flees.
+    """
+
+    def setUp(self):
+        body = SOURCE.read_text()
+        def command(name):
+            start = body.index(f"BOOL {name}(")
+            return body[start:body.index("\n}\n", start)]
+        self.swap = command("BtlCmd_TrySwapItems")
+        self.steal = command("BtlCmd_TryStealItem")
+
+    def test_swapping_is_no_longer_refused_by_side(self):
+        self.assertNotIn("BATTLE_TYPE_FRONTIER", self.swap)
+
+    def test_stealing_still_is(self):
+        self.assertIn("BATTLE_TYPE_FRONTIER", self.steal)
+
+    def test_the_items_come_back(self):
+        """Without the restore there would be nothing to make this safe."""
+        self.assertIn("itemsToRestore", (ROOT / "include/battle/battle.h").read_text())
+
+
 if __name__ == "__main__":
     unittest.main()

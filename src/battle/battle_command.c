@@ -3934,13 +3934,14 @@ BOOL BtlCmd_TrySwapItems(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrsA = BattleScriptReadWord(ctx);
     int adrsB = BattleScriptReadWord(ctx);
 
-    u32 battleType = BattleSystem_GetBattleType(battleSystem);
     int sideAttacker = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker);
     int sideTarget = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget);
 
-    if (BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker) && (battleType & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER)) == 0) {
-        BattleScriptIncrementPointer(ctx, adrsA);
-    } else if ((ctx->fieldSideConditionData[sideAttacker].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdAttacker])) || (ctx->fieldSideConditionData[sideTarget].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]))) {
+    // HeartGold refuses the swap when the other side starts it outside a link
+    // or Frontier battle, so the player can never lose a held item to the AI.
+    // New Gold drops that refusal: whatever the player was holding is handed
+    // back when the battle ends, so the item is not gone for good.
+    if ((ctx->fieldSideConditionData[sideAttacker].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdAttacker])) || (ctx->fieldSideConditionData[sideTarget].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]))) {
         BattleScriptIncrementPointer(ctx, adrsA);
     } else if ((ctx->battleMons[ctx->battlerIdAttacker].item == 0 && ctx->battleMons[ctx->battlerIdTarget].item == 0) || !CanTrickHeldItem(ctx, ctx->battlerIdAttacker) || !CanTrickHeldItem(ctx, ctx->battlerIdTarget)) {
         BattleScriptIncrementPointer(ctx, adrsA);
