@@ -789,78 +789,107 @@ values differ from run to run. The route is repeatable; the numbers on the
 screen are not, and a check written against it has to assert what must be true
 rather than what was seen once.
 
-## The black battles: what the emulator session established
+## The black battles: found, and what it cost to find
 
-The report is that battles render black in a played ROM. It is not reproduced
-here, and this is what the session settled on the way, so the next attempt
-does not repeat it.
+Wild battles rendered nothing: both screens blank, the music still playing,
+and after about five seconds the game handed back to the overworld with no
+error of any kind. On the panel it reads black; captured from the emulator it
+is white, which is the same thing -- the display was off, not drawn wrong.
 
-### The error screen is not a communication error
+### What it was
 
-"A communication error has occurred" is the game's *generic* error screen.
-Three things reach it, and telling them apart is the whole diagnosis:
+`Battle_Run` carves the battle its own heap out of the general one and does
+not look at what it gets back:
 
-* `GF_AssertFail` — any `GF_ASSERT` that fails, via `src/error_handling.c`.
-* `AllocFail` in `src/heap.c:200` — `Heap_Alloc` returning NULL. This is the
-  silent failure worth looking for: a heap too small does not crash, it draws
-  nothing and shows this.
-* `sub_02000F60` in `src/main.c` — a real wireless error, from the byte at
-  `_021D4150 + 0x56`.
+    Heap_Create(HEAP_ID_3, HEAP_ID_BATTLE, 0xB0000);
 
-They were told apart by building once with `GF_ASSERT` recording `__LINE__`
-and `__FILE__` into two globals, and `Heap_Alloc` recording the size and heap
-of a failed allocation into two more, then reading them out of a memory dump
-with the addresses from `main.elf`. That instrumentation is not in the tree —
-it is four lines and worth writing again the moment a failure is silent.
+Thirty boxes made `SaveData` `0xD000` bigger, heap 1 took that, and heap 3
+gave it up -- `0x11D000` down to `0x110000`, `0xD000` less than every shipped
+HeartGold. `Heap_Create` could no longer find a free block that size, returned
+FALSE unread, and the battle ran with no heap: every allocation inside it came
+back NULL, nothing was drawn, and it unwound.
 
-### What was ruled out
+Heap 3 is back to `0x11D000`. The `0xD000` comes from the arena, which has the
+room, and `tests/newgold/test_heaps.py` holds the margin from now on: after
+the field's heaps and the battle's, heap 3 must have at least what retail had.
+It fails on `0x110000` and passes on `0x11D000`.
 
-* **The card size.** The same failure happens at `RomSize 1G` and at `2G`.
-* **Heap 3.** Thirty boxes took `0xD000` from the general heap for heap 1.
-  Giving it back changes nothing, and no allocation failure was recorded at
-  all: `gAllocFailSize` stayed zero through every run.
+### Why nothing said so
+
+Both paths that report a failure are switched off:
+
+```c
+void GF_AssertFail(void) {
+    if (!sub_02037D78()) {
+        return;
+    }
+    ...
+}
+
+static void AllocFail(void) {
+    if (sub_02037D78()) {
+        PrintErrorMessageAndReset();
+    }
+}
+```
+
+A failed assertion and a NULL allocation both pass without a sound. That is
+why 175 tests and two clean builds said nothing, and why the only symptom was
+a blank screen. **When something fails silently, this is the first place to
+look.**
+
+### How it was found, which is the reusable part
+
+* One build with `GF_ASSERT` recording `__FILE__` and `__LINE__` into globals,
+  and `Heap_Alloc` recording the size and heap of a failed allocation into
+  two more. Four lines, read back out of a memory dump with the addresses from
+  `main.elf`. It is not in the tree and is worth writing again the moment a
+  failure is silent.
+* Reading the running emulator. melonDS keeps the console's memory in a shared
+  mapping its own process holds open, so `/proc/PID/fd/N` gives the emulated
+  main RAM of a game somebody is playing, live, without touching it. The
+  cartridge header sits at the end of the first four megabytes and pins the
+  base. From there `where.py` reads the player's tile and the save out of a
+  game in progress.
+* Walking the expansion heap's free list in that dump. An NNS heap starts with
+  `EXPH` and its free blocks are marked `FR`, so every heap in the console can
+  be found by signature and measured without a symbol. Heap 3's largest free
+  block was `0x128e8` against the `0xB0000` a battle asks for. Total free
+  space is not the number that matters: `Heap_Create` needs one block.
+
+### What was ruled out on the way, with evidence
+
+* **The card size.** The same failure at `RomSize 1G` and at `2G`.
 * **The sprite archive.** `pokegra` is dense: 575 directories, 0000 to 0574,
-  no gaps, and the built archive has exactly 3450 members, six per species.
-  An index computed as species x 6 cannot miss.
+  no gaps, and 3450 built members, six per species. An index computed as
+  species times six cannot miss.
+* **The encounter tables.** Route 29's record is 196 bytes with rate 25 at
+  member 1, which is what `ENCDATA_R29` names, and every species in it is
+  vanilla.
 
-### What it actually was, twice
+### Two things the harness cannot do
 
-The first blue screen was `CopyU16ArrayToString` in `src/pm_string.c:330`
-asserting: the main menu copies the player's name into a `String`, and a name
-of zeroes never reaches `EOS`, so the copy runs past the buffer. That is a
-property of a save file built rather than played, not of the ROM, and
-`savedit.py --name` fixes it.
-
-The second is the wireless: the main menu brings up `WM_InitializeForListening`
-(`asm/unk_02032844.s`, the only call site that passes 5 to `sub_02039AD8`),
-and the melonDS libretro core emulates no wireless at all — its option list
-has no wifi entry. **The main menu cannot be used in this harness**, which
-means a save file cannot be loaded through Continue here however correct it
-is. A new game skips that path, which is why every session so far has reached
-the overworld and none has ever seen the main menu.
-
-### Where a battle has to come from
-
-A wild encounter never fired. The opening was played to the starter, the
-Pokegear fetched, the man at the town's edge passed, and Route 29 walked from
-x=663 down to the shore at z=412 and west to x=606 — six separate areas, well
-over a hundred tiles, at a land rate of 25 — with no encounter at all. Route
-29 declares no trainer, so there is no scripted battle on it either.
-
-Whether that is the harness, the route's terrain, or the encounter code is the
-open question, and it is the first thing to settle next: it is either the way
-to reproduce the black battle or a second bug.
+* **The main menu.** It brings up `WM_InitializeForListening`, and the melonDS
+  libretro core emulates no wireless at all -- its option list has no wifi
+  entry. So a save file cannot be loaded through Continue here however correct
+  it is. A new game skips that path, which is why every scripted session
+  reaches the overworld and none has ever seen the main menu. On a real
+  melonDS it is fine.
+* **A wild encounter.** Over a hundred tiles of Route 29 in six areas, at a
+  land rate of 25, never rolled one. Played by hand it takes seconds. The
+  scripted walk bounces off the route's ledges and chunk boundaries, and
+  `encounterInhibitSteps` resets on a map connection, so the gate rarely
+  climbs past the three it needs.
 
 ### The tools that came out of it
 
 * `boot_check` gained `poke:FRAME:ADDR:WIDTH:VALUE`, the mirror of `ram:`, and
-  `where.py --addresses` prints where the player's tile is. Together they move
-  the player anywhere inside the map already loaded, which is what made six
-  areas of Route 29 reachable in one run. They do not cross a map edge: the
-  player stops at x=576 on every row, because the neighbouring chunk is not
-  loaded.
-* `boot_check` also counts which devices the core polls, which is how the
-  touch screen was shown to work after all — every touch does reach the core.
-* `smoke.py` keeps the route as legs now, not frame numbers, and `WALKS` holds
-  the two that were found: `pokegear` and `route29`.
-
+  `where.py --addresses` prints where the player's tile is kept. Together they
+  move the player anywhere inside the map already loaded. They do not cross a
+  map edge: the neighbouring chunk is not loaded.
+* `savedit.py` prepares a save instead of playing to it -- a party of any
+  species at any level, machines in the bag, Dex entries, a Pokemon in any
+  box, badges. Every offset is checked against a size the ROM reports for
+  itself.
+* `smoke.py` keeps the route past the opening as legs rather than frame
+  numbers, and `WALKS` holds the two found here: `pokegear` and `route29`.
