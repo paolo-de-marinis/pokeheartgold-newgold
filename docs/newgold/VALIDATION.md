@@ -709,13 +709,32 @@ letter changes.
 
 The route can be extended to all three, and now has both the means: a walk can
 be aimed with `where.py` and its result checked without looking at the screen.
-It was extended as far as the edge of New Bark Town, and stops there. Walking
-west from the laboratory reaches tile (676, 399) and a townsperson says "Wait a
-sec!"; playing the line out and walking again reaches the same tile and the
-same line. Letting it finish, waiting on it, and pressing through it slowly all
-end the same way, so it is a story gate rather than a mistimed press — a step
-of the Professor's errand the route has not done, and the thing to find before
-the walk to Cherrygrove is worth scripting.
+### The gate out of New Bark, and what was behind it
+
+Walking west from the laboratory stops at tile (676, 399) with "Wait a sec!".
+Playing it out, waiting on it and pressing through it slowly all end the same
+way, so it is a story gate rather than a mistimed press. Guessing at it got
+nowhere; reading it took one grep. The line is row 10 of `msg_0542_T20`, and
+row 11 is the rest of it: *"Did you leave your Pokegear at home? You should
+ask your mom."*
+
+So the gate is two errands, and the route now does both. Back into the house —
+its door is at (696, 397), approached from below and entered with one more
+step up, which is three tiles right and three down from where the walk from
+the laboratory lands. Mum is at the table, three tiles right of the mat, and
+gives the Pokegear. Out again, west, and the Professor catches you at the same
+tile with "Wait one second!" to put his number in it. **Past that, tile (657,
+400) is Route 29**, and the first step into the grass starts a wild battle.
+
+That is where it stops now, and on something smaller: the Poke Ball pocket is
+empty. The aide's "I want you to have these" inside the laboratory was not the
+balls, and the route has not found where they are given. Nothing can be caught
+until it does, and the Dex entry waits on that.
+
+These legs were driven from saved states rather than from a cold boot, so they
+are written here rather than folded into `smoke.py`'s route: putting them
+there means one verification run from frame zero, which is worth doing when
+the leg after them is known.
 
 One caveat on determinism. The opening is scripted and arrives in the same
 place every time, but the Pokemon it hands over is not the same one: the
