@@ -404,6 +404,7 @@ $(eval $(call arc_strip_name,files/poketool/pokegra/pokegra.narc,files/a/0/0/4))
 $(eval $(call arc_strip_name,files/poketool/pokegra/height.narc,files/a/0/0/5))
 $(eval $(call arc_strip_name,files/poketool/waza/waza_tbl.narc,files/a/0/1/1))
 $(eval $(call arc_strip_name,files/fielddata/script/scr_seq.narc,files/a/0/1/2))
+$(eval $(call arc_strip_name,files/graphic/bag_gra.narc,files/a/0/1/5))
 $(eval $(call arc_strip_name,files/graphic/font.narc,files/a/0/1/6))
 $(eval $(call arc_strip_name,files/itemtool/itemdata/item_data.narc,files/a/0/1/7))
 $(eval $(call arc_strip_name,files/itemtool/itemdata/item_icon.narc,files/a/0/1/8))
@@ -537,6 +538,7 @@ include files/application/zukanlist/zkn_data/zukan_data.mk
 include files/application/zukanlist/zkn_data/zukan_hw_data.mk
 include files/data/photo_data.mk
 include files/tel/pmtel_book.mk
+include files/graphic/bag_gra.mk
 include files/graphic/camera_viewfinder.mk
 include files/application/guinness.mk
 include files/demo/intro/intro.mk
