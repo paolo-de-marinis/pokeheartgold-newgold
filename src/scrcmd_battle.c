@@ -132,7 +132,7 @@ BOOL ScrCmd_GetTrainerMsgParams(ScriptContext *ctx) {
     u16 *msgPtr2 = ScriptGetVarPointer(ctx);
 
     int msg0, msg1, msg2;
-    if (!(u16)TrainerNumIsDouble(ScriptNumToTrainerNum(*script))) {
+    if (!(u16)TrainerNumHasDoublePartner(ScriptNumToTrainerNum(*script))) {
         msg0 = TRMSG_INTRO;
         msg1 = TRMSG_AFTER;
         msg2 = TRMSG_INTRO;
@@ -161,7 +161,7 @@ BOOL ScrCmd_GetRematchMsgParams(ScriptContext *ctx) {
     u16 *msgPtr2 = ScriptGetVarPointer(ctx);
 
     u16 msg0, msg1, msg2;
-    if (!(u16)TrainerNumIsDouble(ScriptNumToTrainerNum(*script))) {
+    if (!(u16)TrainerNumHasDoublePartner(ScriptNumToTrainerNum(*script))) {
         msg0 = TRMSG_PHONE_REMATCH_INTRO;
         msg1 = TRMSG_INTRO;
         msg2 = TRMSG_INTRO;

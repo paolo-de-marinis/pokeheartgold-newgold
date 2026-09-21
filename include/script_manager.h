@@ -43,6 +43,7 @@ void FieldMove_SetArgs(FieldSystem *fieldSystem, u16 v8000, u16 v8001, u16 v8002
 u16 ScriptNumToTrainerNum(u16 script);
 BOOL ScriptNoToDoublePartnerNo(u16 a0);
 BOOL TrainerNumIsDouble(u32 trainer);
+BOOL TrainerNumHasDoublePartner(u32 trainer);
 BOOL TrainerFlagCheck(SaveData *a0, u32 trno);
 void TrainerFlagSet(SaveData *a0, u32 trno);
 void TrainerFlagClear(SaveData *a0, u32 trno);

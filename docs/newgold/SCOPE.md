@@ -12,7 +12,7 @@ plays like New Gold, not that it resembles hg-engine internally.
 | pokeheartgold (base) | `e97c7fc975a7447f288c42acc2e155f5a673e30f`, `master` |
 | konefr/hg-engine-newgold (behaviour reference) | `41a28e2255b2805378163c7f4d6c1d87541174d1`, `heartgold-modern` |
 | hg-engine the reference forked from | `d0380a487`, the parent of konefr's first commit |
-| antonsynd/pokeheartgold-slop | `808283ee2`, `mainline`; consulted, nothing taken. Not an input to this port — see the method |
+| antonsynd/pokeheartgold-slop | `808283ee2`, `mainline`; not an input, with one exception named in the method: `src/unk_02005D10.c` |
 
 ## What New Gold actually is
 
@@ -134,8 +134,10 @@ this game has the source for rather than patched into the built bytes.
 1. Cries. PlayCryEx clamps anything above species 495 to Bulbasaur rather than
    reading past the sound archive, so the added species sound wrong but nothing
    breaks. Giving them their own cries needs that function decompiled and the
-   archive extended. Both halves are still to do: the function is assembly
-   here, and the sounds do not exist at all.
+   archive extended. Both halves are still to do here — that file is entirely
+   assembly, and the sounds do not exist at all — but the decompilation does
+   not have to be done twice: the slop fork has it, and taking it is the one
+   exception the method makes.
 2. One trainer still cannot be read: it wants a double battle with no
    partner, which is a battle type this game has not got.
 3. Footprints and Dex entries, needed only if the Dex is widened; an added
@@ -165,6 +167,22 @@ this game has the source for rather than patched into the built bytes.
    Gold has to change, so what they have and what is needed overlap by
    accident rather than by design. Reading someone else's conversion to
    understand a function is fine; copying it is not.
+
+   The exception is `src/unk_02005D10.c`, where PlayCryEx lives, and it is
+   worth naming because the argument above is about averages and this file is
+   not average. The slop fork has it — 942 lines, fifty functions, their
+   main.lsf linking `src/unk_02005D10.o` rather than the assembly. Here the
+   whole file is assembly and PlayCryEx alone is 512 lines of it, several
+   times the size of the routines the other branch was converting at nine
+   minutes each, and it is exactly what stands between this port and the
+   cries. So when the cries are done that file is taken rather than redone:
+   cherry-picked with `-n`, their harness and tooling restored away, and
+   committed with the author line set to theirs.
+
+   One trap, which has already cost a wrong answer once: their tree keeps the
+   original `.s` beside the C, and the two `.s` files are byte-identical. That
+   says nothing about what is built. The linker script is the authority — read
+   `main.lsf`, not whether the assembly is still in the tree.
 3. Byte-level comparison against a compiled reference ROM is not an acceptance
    criterion. Equivalence is judged on game behaviour.
 4. Each change builds both HeartGold and SoulSilver and keeps the focused host

@@ -435,7 +435,15 @@ BOOL ScriptNoToDoublePartnerNo(u16 a0) {
 }
 
 BOOL TrainerNumIsDouble(u32 trainer) {
-    return TrainerData_GetAttr(trainer, TRATTR_DOUBLEBTL) != 0;
+    return TrainerData_GetAttr(trainer, TRATTR_DOUBLEBTL) != TRAINER_BATTLE_SINGLE;
+}
+
+// Whether a second trainer walks up to join this one. Every double battle
+// HeartGold had did; New Gold has one that does not, and everything that
+// looks for the partner — the object on the map, the messages that address
+// two trainers, the text box that names them — asks this instead.
+BOOL TrainerNumHasDoublePartner(u32 trainer) {
+    return TrainerData_GetAttr(trainer, TRATTR_DOUBLEBTL) == TRAINER_BATTLE_DOUBLE;
 }
 
 BOOL TrainerFlagCheck(SaveData *saveData, u32 trainer) {

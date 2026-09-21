@@ -18912,48 +18912,43 @@
       "messages": []
     },
     {
-      "type": "TRTYPE_MON_MOVES",
+      "type": "TRTYPE_MON",
       "class": "TRAINERCLASS_PSYCHIC_M",
       "name": "{TRNAME}Mark",
       "items": [],
       "ai_flags": 7,
-      "double": 0,
+      "double": 3,
       "party": [
         {
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 14,
-          "species": "SPECIES_ABRA",
-          "moves": [
-            "MOVE_TELEPORT",
-            "MOVE_FLASH"
-          ],
-          "capsule": 0
-        },
-        {
-          "difficulty": 0,
-          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 14,
-          "species": "SPECIES_ABRA",
-          "moves": [
-            "MOVE_TELEPORT",
-            "MOVE_FLASH"
-          ],
-          "capsule": 0
-        },
-        {
-          "difficulty": 0,
-          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 16,
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 26,
           "species": "SPECIES_KADABRA",
-          "moves": [
-            "MOVE_TELEPORT",
-            "MOVE_KINESIS",
-            "MOVE_CONFUSION"
-          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 26,
+          "species": "SPECIES_GIRAFARIG",
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 27,
+          "species": "SPECIES_MEOWSTIC",
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 28,
+          "species": "SPECIES_KADABRA",
           "capsule": 0
         }
       ],

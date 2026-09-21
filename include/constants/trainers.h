@@ -755,6 +755,14 @@
 // arranged by choosing a personality, so it is set on the Pokemon afterwards.
 #define TRPOKE_ABILITY_OVERRIDE_HIDDEN 3
 
+// What a trainer's doubleBattle field says. Two is HeartGold's own double
+// battle, where a second trainer walks up and the player brings a partner.
+// Three is New Gold's: two Pokemon out on each side and nobody else on the
+// field, so everything that goes looking for a partner has to not.
+#define TRAINER_BATTLE_SINGLE           0
+#define TRAINER_BATTLE_DOUBLE           2
+#define TRAINER_BATTLE_DOUBLE_NO_PARTNER 3
+
 // Indices identifying messages in trtbl.narc.
 // For use with GetTrainerMessageByIdPair and
 // TrainerMessageWithIdPairExists.

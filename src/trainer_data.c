@@ -40,7 +40,11 @@ void EnemyTrainerSet_Init(BattleSetup *battleSetup, SaveData *saveData, enum Hea
             CreateNPCTrainerParty(battleSetup, i, heapID);
         }
     }
-    battleSetup->battleType |= trainer.data.doubleBattle;
+    // The field holds a battle type rather than a mask: three would otherwise
+    // set BATTLE_TYPE_TRAINER as well.
+    if (trainer.data.doubleBattle != TRAINER_BATTLE_SINGLE) {
+        battleSetup->battleType |= BATTLE_TYPE_DOUBLES;
+    }
     DestroyMsgData(msgData);
 }
 

@@ -4696,7 +4696,7 @@ BOOL ScrCmd_GetPhoneContactMsgIds(ScriptContext *ctx) {
     r5 = r6 + 1;
     if (p_ret_gmm >= LAST_TRAINER_INDEX) {
         *p_ret_msg = r5;
-    } else if ((u16)TrainerNumIsDouble(ScriptNumToTrainerNum(*p_scriptno)) == FALSE) {
+    } else if ((u16)TrainerNumHasDoublePartner(ScriptNumToTrainerNum(*p_scriptno)) == FALSE) {
         *p_ret_msg = r5;
     } else {
         ScriptNoToDoublePartnerNo(*p_scriptno);

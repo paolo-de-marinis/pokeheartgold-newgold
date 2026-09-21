@@ -39,7 +39,7 @@ static LocalMapObject *ov26_02259A24(FieldSystem *fieldSystem, LocalMapObject *a
     u16 script = MapObject_GetScriptID(a1);
     u32 trainer = ScriptNumToTrainerNum(script);
 
-    if (!TrainerNumIsDouble(trainer)) {
+    if (!TrainerNumHasDoublePartner(trainer)) {
         return NULL;
     }
 
