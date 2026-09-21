@@ -177,8 +177,30 @@ doing and why it is recorded as finished here.
 
 2. Dex entries for the added species. hg-engine's Pokedex covers all of them;
    this one stops at 493 and records nothing for the rest, which is why
-   catching one is silent rather than a crash. Widening it is the Dex data
-   archives and the screen that reads them, and footprints come with it.
+   catching one is silent rather than a crash. Surveyed, it is:
+
+   * `NATIONAL_DEX_COUNT`, today `SPECIES_ARCEUS`. Everything sizes off it —
+     the seen and caught bitmaps, the caught languages, the screen's own
+     table, the completion checks — so it becomes the species count and the
+     rest follows. It is **save layout**: the Dex block grows 128 bytes at
+     574 species and about 870 at 1075. `tools/newgold/save_budget.py` says
+     the general region has 6,034 bytes free, so both fit; it is worth
+     rerunning after, because the boxes below will not.
+   * The text, all of it indexed by species and all of it 494 rows long:
+     `msg_0803` and `msg_0804` for the flavour text HeartGold and SoulSilver
+     each show, `msg_0812`/`msg_0813` for the weight, `msg_0814`/`msg_0815`
+     for the height, `msg_0816` for the category, and `msg_0238` for the
+     article form the rest of the game uses. The per-language banks
+     (`msg_0805`–`msg_0810`, `msg_0817`–`msg_0828`) are read only for a
+     Pokemon traded from another language, and are indexed the same way, so
+     they are either widened too or the read is bounded.
+   * The footprints in `files/poketool/pokefoot/`, already a directory of
+     members rather than a blob, so they extend the way the bag archive did.
+   * The area screen, which reads `zukan_enc` by species and has nothing to
+     say about a species no map places.
+
+   The species' own heights and weights are already imported; this is the Dex
+   reading them back.
 3. Expanded pockets and thirty boxes, which change the save layout.
 
 Then a session on melonDS covering those, written up in
