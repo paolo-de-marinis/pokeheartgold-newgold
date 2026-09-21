@@ -17,15 +17,15 @@ argument.
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    71%
-  done, seen running   ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
+Overall                                                                    74%
+  done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
   done, never played   ██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  43%
   partial              ███████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  30%
-  still to do          ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
+  still to do          ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
   deferred / no scope  ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
 
 Implementation         ███████████████████████████████████████░░░░░░░░░░░  78%
-Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%
+Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%
 
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
@@ -124,7 +124,7 @@ This is the section that holds the overall number down.
 | Boot and menus | both ROMs boot to a drawn screen; the scripted walk to the summary is HeartGold only | ✅ done |
 | EV and IV viewer | six and a quarter minutes from a cold boot; captures in `validation/` | ✅ done |
 | A battle renders | forced against species 19, 575, 900 and 1041, indoors and on Route 29's grass: background, sprite, name, and the battle runs to its end | ✅ done |
-| A battle from a wild encounter | the same tile, the same species, the same terrain: started by the encounter check it freezes before `Battle_Run`, started directly it does not | 🔴 open |
+| A battle from a wild encounter | nine in a row on Route 29 from a cold boot, each from the game's own check, each running INIT to EXIT and handing the field back | ✅ done |
 | The four gyms to Morty | parties, levels, held items, and the AI using what it carries | 🔴 never |
 | The seven level-cap steps | `savedit.py` sets badges one at a time — thirty seconds a step | 🔴 never |
 | The 1041 species in play | sprite, icon, cry, name, Dex, an ability that does something | 🔴 never |
@@ -134,9 +134,9 @@ This is the section that holds the overall number down.
 
 ## Why 71% and not 78%
 
-The seven points between the two numbers are the verification column, and the
-reason it is not a formality is that four silent memory bugs surfaced in one
-evening, every one of them introduced by the expansion:
+The points between the two numbers are the verification column, and the reason
+it is not a formality is that four silent memory bugs surfaced in one evening,
+every one of them introduced by the expansion:
 
 - the cry archive read thirteen entries along its own table
 - `LEVEL_UP_LEARNSET_MAX` was 21 against Mr. Rime's twenty-seven moves, and
@@ -147,6 +147,10 @@ evening, every one of them introduced by the expansion:
   it, and two tables in C were read past their end
 
 None fails a build, none fails a test, and each can produce a black screen.
+Two apparent fifths were the instrument rather than the game — a forced land
+encounter on a map whose table is surf-only, and a teleport that wrote the
+player's tile without the position vector that goes with it — which is its
+own lesson about what a diagnostic switch may do.
 Three in three hours is not a rate that exhausts itself — it is the rate they
 are being looked for. What is left is not writing code. It is turning the game
 on.
