@@ -169,7 +169,12 @@ int main(int argc, char **argv) {
     if (!load_game(&info)) { fprintf(stderr, "the core would not load the ROM\n"); return 1; }
 
     // Starting from a state costs one frame instead of twenty thousand, which
-    // is what makes checking anything past the opening practical at all.
+    // is what makes checking anything past the opening practical at all. The
+    // core wants a frame of its own before it will take one.
+    for (int i = 5; i < argc; i++) {
+        char probe[256];
+        if (sscanf(argv[i], "load:%255s", probe) == 1) { run(); break; }
+    }
     for (int i = 5; i < argc; i++) {
         char path[256];
         if (sscanf(argv[i], "load:%255s", path) != 1) continue;

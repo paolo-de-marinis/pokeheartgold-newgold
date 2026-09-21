@@ -52,6 +52,42 @@ ROMS = {
 OPENING = ["press:1000:10:8", "press:1200:10:3", "press:1500:10:8",
            "press:1800:10:3", "press:2100:10:8", "press:2400:10:8"]
 
+# A route through the opening, found frame by frame and kept so it need not be
+# found again. Each stage carries on from the one before it, so --to outside
+# runs all of them; the whole thing is about two and a half minutes.
+#
+# The opening is scripted and takes no random turns, so the same frames give
+# the same result every time. What it does not survive is a change to the game
+# that moves any of it: if a stage stops arriving where it says, the frames
+# after it are wrong rather than the game.
+ROUTES = {
+    # Publisher screens, the sunrise, the title, the controls tutorial (touch
+    # only), the "do you understand" prompt and the information menu.
+    "name": [
+        "mash:900:3000:40:6:8",
+        "tap:3000:26000:70:12:225:163",     # the Touch panel, bottom right
+        "tap:12000:26000:410:12:128:73",    # Yes, when it is asked
+        "tap:12200:26000:430:12:128:153",   # NO INFO NEEDED
+        "mash:16000:26000:60:8:8",
+        "mash:26100:26600:40:8:8",          # a letter, so the name is not empty
+    ],
+    # OK on the keyboard, then the rest of the professor's introduction.
+    "bedroom": [
+        "tap:27180:27380:60:15:215:71",     # OK
+        "mash:27470:31050:40:8:8",
+        "tap:27550:31050:120:12:225:163",
+    ],
+    # Up and left to the stairs, down them, and through the conversation.
+    "downstairs": [
+        "press:31150:250:4", "press:31430:350:6", "press:31810:250:4",
+        "press:32090:250:6", "press:32370:150:4",
+        "mash:32600:35500:25:8:8",
+    ],
+    # Out of the front door, into New Bark Town.
+    "outside": ["press:35550:400:5", "press:35980:250:5"],
+}
+ROUTE_FRAMES = {"name": 27200, "bedroom": 31100, "downstairs": 35500, "outside": 36500}
+
 
 def build(into):
     host = Path(into) / "boot_check"
@@ -102,6 +138,8 @@ def main():
     parser.add_argument("--shot", type=int, action="append", default=[])
     parser.add_argument("--out", type=Path)
     parser.add_argument("--rom", choices=sorted(ROMS), action="append", default=[])
+    parser.add_argument("--to", choices=list(ROUTES), help="play the opening this far")
+    parser.add_argument("--state", type=Path, help="write the emulator's state out at the end")
     args = parser.parse_args()
 
     if not CORE.exists():
@@ -116,9 +154,17 @@ def main():
             if not rom.exists():
                 print(f"  {name}: not built")
                 continue
-            shots = args.shot or [args.frames - 1]
-            actions = OPENING + [f"shot:{at}:{Path(temp) / f'{name}-{at}.ppm'}" for at in shots]
-            line = run(host, rom, args.frames, actions, temp)
+            if args.to:
+                stages = list(ROUTES)[:list(ROUTES).index(args.to) + 1]
+                opening = [action for stage in stages for action in ROUTES[stage]]
+                frames = ROUTE_FRAMES[args.to]
+            else:
+                opening, frames = OPENING, args.frames
+            shots = args.shot or [frames - 1]
+            actions = opening + [f"shot:{at}:{Path(temp) / f'{name}-{at}.ppm'}" for at in shots]
+            if args.state:
+                actions.append(f"save:{frames - 10}:{args.state}")
+            line = run(host, rom, frames, actions, temp)
             for at in shots:
                 ppm = Path(temp) / f"{name}-{at}.ppm"
                 if ppm.exists():
