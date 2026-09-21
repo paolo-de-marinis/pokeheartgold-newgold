@@ -187,10 +187,15 @@ So two things stand between here and the expansion:
 
 1. A play session, by script or by hand, covering the four: the EV and IV
    viewer on a real Pokemon, the machine badges and the missing count in the
-   bag, a Dex entry for an added species, and the thirtieth box.
-   `tools/newgold/smoke.py` can drive it — buttons and touch both work — but
-   the sequence through naming, the starter and the first route is not
-   written.
+   bag, a Dex entry for an added species, and the thirtieth box. Most of what
+   that needs now exists: `tools/newgold/smoke.py --to lab` plays the opening
+   and crosses the town to Professor Elm in under four minutes, and
+   `tools/newgold/where.py` reads the player's tile and the party count out of
+   a memory dump through the game's own structs, so a scripted walk can be
+   aimed and its result checked rather than guessed. What is missing is the
+   starter: thirty-two tiles of the laboratory were visited exactly and none
+   of them took one, which points at a step of the Professor's script the
+   route has not cleared rather than at a tile it missed.
 2. Two things the Dex screen is known to owe, which that session should look
    at rather than guess: it prints the species identifier rather than a
    National Dex number for an added species, and the area screen has nothing
