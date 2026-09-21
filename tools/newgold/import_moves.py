@@ -51,7 +51,9 @@ MODELS = {
     "RAGE_FIST": ("SHADOW_PUNCH", "SHADOW_PUNCH"),
     "STICKY_WEB": ("SPIKES", "SPIDER_WEB"),
     "STRUGGLE_BUG": ("BUG_BUZZ", "BUG_BUZZ"),
-    "SOLAR_SEEDS": ("BULLET_SEED", "EMBER"),
+    # konefr made Solar Seeds a verbatim copy of Bullet Seed's animation
+    # rather than writing one, so it borrows the same.
+    "SOLAR_SEEDS": ("BULLET_SEED", "BULLET_SEED"),
     "TWIN_BEAM": ("DOUBLE_KICK", "PSYBEAM"),
     "HYPER_DRILL": ("MEGAHORN", "DRILL_PECK"),
     "DRAGON_CHEER": ("HELPING_HAND", "HELPING_HAND"),

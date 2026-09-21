@@ -896,7 +896,7 @@ static u16 MoveAnimationFor(u16 move) {
         MOVE_SHADOW_PUNCH, // Rage Fist
         MOVE_SPIDER_WEB,   // Sticky Web
         MOVE_BUG_BUZZ,     // Struggle Bug
-        MOVE_EMBER,        // Solar Seeds
+        MOVE_BULLET_SEED,  // Solar Seeds, which is what the reference copies
         MOVE_PSYBEAM,      // Twin Beam
         MOVE_DRILL_PECK,   // Hyper Drill
         MOVE_HELPING_HAND, // Dragon Cheer
