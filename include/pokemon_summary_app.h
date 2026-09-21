@@ -99,6 +99,8 @@ typedef struct PokemonSummaryAppPrefix {
 
 u32 sub_02088B40(PokemonSummaryAppPrefix *summary);
 void PokemonSummary_ShowStatValues(PokemonSummaryAppPrefix *summary, u32 mode);
+void sub_0208C778(PokemonSummaryAppPrefix *summary, Window *window, u32 color, int alignment);
+void sub_0208C7F8(PokemonSummaryAppPrefix *summary, int windowID, int msgID, int statIndex, int alignment);
 void sub_0208981C(PokemonSummaryAppPrefix *summary, Pokemon *mon, PokemonSummaryMon *summaryMon);
 void sub_0208D178(PokemonSummaryAppPrefix *summary);
 

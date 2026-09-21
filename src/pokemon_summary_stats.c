@@ -6,8 +6,6 @@
 #include "pokemon_summary_app.h"
 #include "text.h"
 
-extern void sub_0208C778(PokemonSummaryAppPrefix *summary, Window *window, u32 color, int alignment);
-extern void sub_0208C7F8(PokemonSummaryAppPrefix *summary, int windowID, int msgID, int stat, int alignment);
 extern void sub_0208C87C(PokemonSummaryAppPrefix *summary, int msgID, s32 number, u32 digits, u8 printingMode);
 extern void sub_0208C8C8(PokemonSummaryAppPrefix *summary, int windowID, int separatorMsgID, int firstNumberMsgID, int secondNumberMsgID, u16 firstNumber, u16 secondNumber, u8 digits, u8 centerX, u8 y);
 

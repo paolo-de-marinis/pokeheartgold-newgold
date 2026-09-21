@@ -72,3 +72,5 @@
 .public sub_0208D520
 .public sub_0208D6B8
 .public sub_0208D728
+.public sub_0208C73C
+.public sub_0208C9A4
