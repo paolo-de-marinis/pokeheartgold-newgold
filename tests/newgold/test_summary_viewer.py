@@ -91,6 +91,18 @@ class SummaryViewerTests(unittest.TestCase):
         body = INPUT.read_text()
         self.assertLess(body.index("summary->page == SUMMARY_PAGE_STATS"), body.index("PAD_BUTTON_L"))
 
+    def test_the_nature_colours_are_the_engine_s(self):
+        """HeartGold only changed the shadow, which does not read."""
+        source = (ROOT / "src/pokemon_summary_stat_name.c").read_text()
+        for name, colour in (("STAT_NAME_LOWERED", (4, 3, 0)), ("STAT_NAME_RAISED", (6, 5, 0))):
+            match = re.search(rf"#define {name}\s+MAKE_TEXT_COLOR\((\w+), (\w+), (\w+)\)", source)
+            self.assertIsNotNone(match, name)
+            self.assertEqual(tuple(int(v, 0) for v in match.groups()), colour, name)
+        # The letter changes, not only the shadow: the two differ in the first
+        # component, which HeartGold left at 0xE for both.
+        self.assertNotIn("MAKE_TEXT_COLOR(0xE, 8, 0)", source)
+        self.assertNotIn("MAKE_TEXT_COLOR(0xE, 7, 0)", source)
+
     def test_the_labels_exist(self):
         text = MESSAGES.read_text()
         for label in ("EVs", "IVs"):
