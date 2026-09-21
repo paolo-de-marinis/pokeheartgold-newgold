@@ -7,7 +7,6 @@
 #define MAX_EV_VITAMINS   252 // New Gold: vitamins train a stat fully, not to 100
 #define MAX_EV_PER_STAT   255
 #define MAX_EV_SUM        510
-#define MAX_LEARNED_MOVES 22
 
 // HeartGold has eighteen boxes; New Gold has thirty, which is what every
 // game since has had. The old count is kept because the eighteen box names

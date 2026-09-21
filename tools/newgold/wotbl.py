@@ -30,6 +30,7 @@ ARCHIVE = ROOT / "files/poketool/personal/wotbl.narc"
 # learnsets say that this does not is konefr's own work.
 ENGINE_BASE = "d0380a487"
 
+ENTRY_SIZE = 2
 MOVE_BITS = 9
 MOVE_MASK = (1 << MOVE_BITS) - 1
 TERMINATOR = 0xFFFF

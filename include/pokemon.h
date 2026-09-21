@@ -15,7 +15,16 @@
 #include "sound_chatot.h"
 
 #define LEVEL_UP_LEARNSET_END 0xFFFF
-#define LEVEL_UP_LEARNSET_MAX 21
+
+// The longest learnset in the archive, in moves, and the buffer one is read
+// into: those moves plus the terminator. Reading a member writes the whole of
+// it whatever the buffer is, so a buffer that is one entry short overruns the
+// heap by two bytes and a buffer six entries short by twelve. Retail's longest
+// was twenty-one moves and these were written for it; the species the
+// expansion added brought a longer one. tests/newgold/test_learnsets.py pins
+// both to what the archive actually holds.
+#define LEVEL_UP_LEARNSET_MAX  27
+#define LEVEL_UP_LEARNSET_SIZE (LEVEL_UP_LEARNSET_MAX + 1)
 
 #define LEVEL_UP_LEARNSET_MOVEID_MASK  0x01FF
 #define LEVEL_UP_LEARNSET_MOVEID_SHIFT 0

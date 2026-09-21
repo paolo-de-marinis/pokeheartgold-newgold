@@ -24,12 +24,12 @@ u16 *MoveRelearner_GetEligibleLevelUpMoves(Pokemon *mon, enum HeapID heapID) {
         moves[i] = GetMonData(mon, MON_DATA_MOVE1 + i, NULL);
     }
 
-    u16 *tableFromFile = Heap_Alloc(heapID, LEVEL_UP_LEARNSET_MAX * 2);
-    u16 *returnTable = Heap_Alloc(heapID, LEVEL_UP_LEARNSET_MAX * 2);
+    u16 *tableFromFile = Heap_Alloc(heapID, LEVEL_UP_LEARNSET_SIZE * sizeof(u16));
+    u16 *returnTable = Heap_Alloc(heapID, LEVEL_UP_LEARNSET_SIZE * sizeof(u16));
 
     LoadLevelUpLearnset_HandleAlternateForm(species, form, tableFromFile);
 
-    for (u8 i = 0, j, k = 0; i < LEVEL_UP_LEARNSET_MAX; i++) {
+    for (u8 i = 0, j, k = 0; i < LEVEL_UP_LEARNSET_SIZE; i++) {
         if (tableFromFile[i] == LEVEL_UP_LEARNSET_END) {
             returnTable[k] = LEVEL_UP_LEARNSET_END;
             break;
