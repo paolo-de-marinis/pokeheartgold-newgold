@@ -172,6 +172,21 @@ int main(int argc, char **argv) {
     struct game_info info = { rom_path, data, (size_t)size, NULL };
     if (!load_game(&info)) { fprintf(stderr, "the core would not load the ROM\n"); return 1; }
 
+    // A save file goes in before anything runs, so the title screen offers
+    // Continue. The core hands out its battery-backed memory as one block.
+    for (int i = 5; i < argc; i++) {
+        char path[256];
+        if (sscanf(argv[i], "sram:%255s", path) != 1) continue;
+        FILE *f = fopen(path, "rb");
+        if (!f) { perror(path); return 1; }
+        void *memory = memory_data ? memory_data(0) : NULL;
+        size_t room = memory_size ? memory_size(0) : 0;
+        if (!memory || !room) { fprintf(stderr, "the core has no save memory\n"); return 1; }
+        size_t read = fread(memory, 1, room, f);
+        fclose(f);
+        fprintf(stderr, "loaded %zu of %zu bytes of save memory from %s\n", read, room, path);
+    }
+
     // Starting from a state costs one frame instead of twenty thousand, which
     // is what makes checking anything past the opening practical at all. The
     // core wants a frame of its own before it will take one.

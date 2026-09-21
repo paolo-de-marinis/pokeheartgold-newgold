@@ -12,8 +12,10 @@ either unless the round trip reproduces the original byte for byte.
     wotbl.py konefr REFERENCE       rewrite the learnsets konefr himself
                                     changed, and only those
 
-Each learnset is a list of 16-bit entries, the move in the low nine bits and
-the level in the top seven, ending with 0xFFFF.
+Each learnset is a list of 32-bit entries, the move in the low halfword and
+the level in the high one, ending with 0xFFFF. Retail packed both into a
+single halfword, nine bits for the move; that holds until a move is numbered
+past 511, and the reference's go to 923.
 """
 
 import argparse
@@ -30,9 +32,10 @@ ARCHIVE = ROOT / "files/poketool/personal/wotbl.narc"
 # learnsets say that this does not is konefr's own work.
 ENGINE_BASE = "d0380a487"
 
-ENTRY_SIZE = 2
-MOVE_BITS = 9
+ENTRY_SIZE = 4
+MOVE_BITS = 16
 MOVE_MASK = (1 << MOVE_BITS) - 1
+LEVEL_MAX = 0xFFFF
 TERMINATOR = 0xFFFF
 
 
@@ -58,21 +61,32 @@ def read_narc(data):
 
 def decode(raw):
     moves = []
-    for offset in range(0, len(raw), 2):
-        entry = struct.unpack_from("<H", raw, offset)[0]
+    for offset in range(0, len(raw) - ENTRY_SIZE + 1, ENTRY_SIZE):
+        entry = struct.unpack_from("<I", raw, offset)[0]
         if entry == TERMINATOR:
             break
         moves.append({"level": entry >> MOVE_BITS, "move": entry & MOVE_MASK})
     return moves
 
 
+def decode_retail(raw):
+    """The format pret ships: one halfword, nine bits of move, seven of level.
+
+    Only wanted for comparing against an archive from before this widened the
+    entry -- the test that checks pret's own learnsets are untouched.
+    """
+    moves = []
+    for offset in range(0, len(raw), 2):
+        entry = struct.unpack_from("<H", raw, offset)[0]
+        if entry == 0xFFFF:
+            break
+        moves.append({"level": entry >> 9, "move": entry & 0x1FF})
+    return moves
+
+
 def encode(moves):
-    raw = b"".join(struct.pack("<H", (m["level"] << MOVE_BITS) | m["move"]) for m in moves)
-    raw += struct.pack("<H", TERMINATOR)
-    # Each file is padded with zeroes to a multiple of four bytes.
-    if len(raw) % 4:
-        raw += struct.pack("<H", 0)
-    return raw
+    raw = b"".join(struct.pack("<I", (m["level"] << MOVE_BITS) | m["move"]) for m in moves)
+    return raw + struct.pack("<I", TERMINATOR)
 
 
 def build_narc(files):
@@ -246,8 +260,10 @@ def extend(args, files, rebuild=False):
             if number is None:
                 missing.append(step["Move"])
                 continue
-            # The archive packs the move into nine bits and the level into seven.
-            if number > MOVE_MASK or step["Level"] > (TERMINATOR >> MOVE_BITS):
+            # The move takes the low halfword and the level the high one. The
+            # terminator is a move of 0xFFFF at level 0, so no real move may be
+            # numbered that high.
+            if number >= MOVE_MASK or step["Level"] > LEVEL_MAX:
                 raise SystemExit(f"{name}: {step['Move']} at level {step['Level']} does not fit an entry")
             learned.append({"level": step["Level"], "move": number})
         # A species whose level-one moves are all still missing would be

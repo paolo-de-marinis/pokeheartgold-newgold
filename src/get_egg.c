@@ -384,7 +384,9 @@ struct EggMoveSearch {
     int dad_moves[MAX_MON_MOVES];
     int shared_moves[MAX_MON_MOVES];
     int mom_moves[MAX_MON_MOVES];
-    u16 baby_learnset[50];
+    // One move per learnset entry: sized by the same constant the readers
+    // use, so a species with a longer learnset cannot overrun it.
+    u16 baby_learnset[LEVEL_UP_LEARNSET_SIZE];
     u16 baby_egg_moves[MAX_EGG_MOVES];
 };
 

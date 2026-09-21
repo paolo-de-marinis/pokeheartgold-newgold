@@ -23,13 +23,20 @@
 // was twenty-one moves and these were written for it; the species the
 // expansion added brought a longer one. tests/newgold/test_learnsets.py pins
 // both to what the archive actually holds.
-#define LEVEL_UP_LEARNSET_MAX  27
+#define LEVEL_UP_LEARNSET_MAX  30
 #define LEVEL_UP_LEARNSET_SIZE (LEVEL_UP_LEARNSET_MAX + 1)
 
-#define LEVEL_UP_LEARNSET_MOVEID_MASK  0x01FF
+// An entry is a move and the level it is learnt at. Retail packed both into
+// one halfword, nine bits for the move and seven for the level, which holds
+// exactly as long as no move is numbered past 511. The reference's moves go
+// to 923, so most of what an added species learns would not fit and would be
+// dropped silently. The entry is a word now, the move in the low half and the
+// level in the high half, which is how the reference stores it too. Nothing
+// outside C reads the archive.
+#define LEVEL_UP_LEARNSET_MOVEID_MASK  0x0000FFFF
 #define LEVEL_UP_LEARNSET_MOVEID_SHIFT 0
-#define LEVEL_UP_LEARNSET_LEVEL_MASK   0xFE00
-#define LEVEL_UP_LEARNSET_LEVEL_SHIFT  9
+#define LEVEL_UP_LEARNSET_LEVEL_MASK   0xFFFF0000
+#define LEVEL_UP_LEARNSET_LEVEL_SHIFT  16
 
 #define LEVEL_UP_LEARNSET_MOVE(x) ((u16)(((x) & LEVEL_UP_LEARNSET_MOVEID_MASK) >> LEVEL_UP_LEARNSET_MOVEID_SHIFT))
 #define LEVEL_UP_LEARNSET_LVL(x)  (((x) & LEVEL_UP_LEARNSET_LEVEL_MASK) >> LEVEL_UP_LEARNSET_LEVEL_SHIFT)
@@ -100,7 +107,7 @@ u32 TryAppendBoxMonMove(BoxPokemon *boxMon, u16 move);
 void BoxMonSetMoveInSlot(BoxPokemon *boxMon, u16 move, u8 slot);
 void DeleteMonFirstMoveAndAppend(Pokemon *mon, u16 move);
 void DeleteBoxMonFirstMoveAndAppend(BoxPokemon *boxMon, u16 move);
-void LoadLevelUpLearnset_HandleAlternateForm(int species, int form, u16 *levelUpLearnset);
+void LoadLevelUpLearnset_HandleAlternateForm(int species, int form, u32 *levelUpLearnset);
 void MonSwapMoves(Pokemon *mon, int a, int b);
 void BoxMonSwapMoves(BoxPokemon *boxMon, int a, int b);
 BoxPokemon *Mon_GetBoxMon(Pokemon *mon);

@@ -8,6 +8,37 @@ Build modified ROMs with `make COMPARE=0` or `make soulsilver COMPARE=0` after
 following the upstream setup instructions below. The retail checksums describe
 the unmodified upstream base, not the modified ROMs.
 
+## Port progress
+
+<!-- LEDGER:SUMMARY:START -->
+```
+Overall                          78%
+  done, seen running   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%
+  done, never played   ████████████████████████████████░░░░░░░░░░░░░░░░░░  64%
+  still to do          ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
+  deferred / no scope  ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%
+
+Implementation         ██████████████████████████████████████████████░░░░  93%
+Verified in play       ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  15%
+```
+<!-- LEDGER:SUMMARY:END -->
+
+<!-- LEDGER:COUNTS:START -->
+```
+Species     ████████████████████████████████████████████████░░  1041 / 1075
+Moves       ██████████████████████████████████████████████████   923 /  923
+Abilities   ██████████████████████████████████████████████████   319 /  319
+Items       ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   545 / 2684
+Trainers    ██████████████████████████████████████████████████   738 /  738
+Tests       47 files
+ROM         143.8 MB of 268.4 MB   (2G card, 54% used)
+```
+<!-- LEDGER:COUNTS:END -->
+
+Feature by feature, with what is done and what has never been played:
+**[the ledger](https://paolo-de-marinis.github.io/pokeheartgold-newgold/)**
+— or [as Markdown](docs/newgold/LEDGER.md), if you would rather stay here.
+
 This is a WIP disassembly of Pokémon HeartGold and SoulSilver. For instructions on how to set up the repository, please read [INSTALL.md](INSTALL.md).
 
 The upstream base builds the following ROMs:

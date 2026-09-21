@@ -326,7 +326,10 @@ BOOL ScrCmd_742(ScriptContext *ctx) {
     *result = FALSE;
     Party *party = SaveArray_Party_Get(ctx->fieldSystem->saveData);
     Pokemon *mon = Party_GetMonByIndex(party, slot);
-    u16 *unk = Heap_AllocAtEnd(HEAP_ID_FIELD2, 0x2c);
+    // 0x2c held retail's longest learnset, twenty-one moves and a terminator.
+    // The expansion's species learn more than that, and this writes one move
+    // per entry, so the block is sized by the same constant the readers use.
+    u16 *unk = Heap_AllocAtEnd(HEAP_ID_FIELD2, LEVEL_UP_LEARNSET_SIZE * sizeof(u16));
     u32 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
     u32 form = GetMonData(mon, MON_DATA_FORM, NULL);
     s32 size = Species_LoadLearnsetTable(species, form, unk);

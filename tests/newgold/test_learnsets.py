@@ -55,8 +55,12 @@ class LearnsetTests(unittest.TestCase):
         theirs, _, _ = wotbl.read_narc(original)
         self.assertEqual(len(theirs), 508)
         names = wotbl.species_names()
+        # Not byte for byte: the entry is a word now, because a move numbered
+        # past 511 does not fit the halfword pret packed it into. What has to
+        # match is what the entries say.
         differing = {names.get(i, str(i)) for i, (a, b)
-                     in enumerate(zip(self.files[:len(theirs)], theirs)) if a != b}
+                     in enumerate(zip(self.files[:len(theirs)], theirs))
+                     if wotbl.decode(a) != wotbl.decode_retail(b)}
         # Farigiraf is one of the added species, past the end of pret's data.
         vanilla = {name for index, name in names.items() if index < len(theirs)}
         self.assertEqual(differing, self.KONEFR_LEARNSETS & vanilla)

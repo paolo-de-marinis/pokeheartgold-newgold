@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Everything hg-engine and konefr change against vanilla HeartGold, and where the native port stands on each. The counters are derived from the repository; the states are maintained ">
+<title>New Gold port ledger</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans+Condensed:wght@500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+  :root{
+    --ground:#faf8f4; --surface:#ffffff; --sunk:#f3efe6;
+    --ink:#1a1813; --ink-2:#4a4436; --muted:#7d7566; --rule:#e4ded0; --rule-2:#d2cab8;
+    --accent:#8f6b14; --accent-soft:#f0e5c8;
+    --done:#4a7343; --done-soft:#e0ead9;
+    --part:#a96a22; --part-soft:#f6e6d2;
+    --gap:#93433a; --gap-soft:#f4dfdb;
+    --f-disp:"IBM Plex Sans Condensed",-apple-system,"Segoe UI",sans-serif;
+    --f-body:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#15130e; --surface:#1d1a14; --sunk:#221e17;
+      --ink:#f2eee3; --ink-2:#c9c2b0; --muted:#948c7b; 
+      --rule:#2e291f; --rule-2:#3d372a;
+      --accent:#d6a63c; --accent-soft:#3a3020;
+      --done:#7fae74; --done-soft:#26301f;
+      --part:#d69a53; --part-soft:#332618;
+      --gap:#cf7a6d; --gap-soft:#32211d;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#15130e; --surface:#1d1a14; --sunk:#221e17;
+    --ink:#f2eee3; --ink-2:#c9c2b0; --muted:#948c7b; --rule:#2e291f; --rule-2:#3d372a;
+    --accent:#d6a63c; --accent-soft:#3a3020;
+    --done:#7fae74; --done-soft:#26301f;
+    --part:#d69a53; --part-soft:#332618;
+    --gap:#cf7a6d; --gap-soft:#32211d;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--ground);color:var(--ink);font-family:var(--f-body);
+       font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 28px 80px}
+
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:34px}
+  h1{font-family:var(--f-disp);font-weight:700;font-size:38px;line-height:1.05;
+     letter-spacing:-.01em;margin:0 0 10px;text-wrap:balance}
+  .sub{color:var(--muted);font-size:14px;max-width:62ch;margin:0}
+  .pins{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:14px;
+        font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2)}
+  .pins b{color:var(--muted);font-weight:500}
+
+  .total{background:var(--surface);border:1px solid var(--rule);padding:22px 24px;margin-bottom:12px}
+  .total-top{display:flex;justify-content:space-between;align-items:baseline;
+             gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  .total-top h2{font-family:var(--f-disp);font-size:13px;font-weight:600;margin:0;
+                text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+  .big{font-family:var(--f-mono);font-size:44px;font-weight:600;line-height:1;
+       letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stack{height:26px;display:flex;background:var(--sunk);
+         border:1px solid var(--rule-2);overflow:hidden}
+  .stack span{display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:12px;
+          font-size:12.5px;color:var(--ink-2)}
+  .legend i{display:inline-block;width:10px;height:10px;margin-right:6px;
+            vertical-align:-1px;font-style:normal}
+  .legend b{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:600}
+
+  .split{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+         gap:12px;margin-bottom:40px}
+  .half{background:var(--surface);border:1px solid var(--rule);padding:18px 20px}
+  .half h3{font-family:var(--f-disp);font-size:12px;font-weight:600;margin:0 0 6px;
+           text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+  .half .n{font-family:var(--f-mono);font-size:30px;font-weight:600;line-height:1;
+           font-variant-numeric:tabular-nums}
+  .half p{margin:8px 0 0;font-size:13px;color:var(--ink-2);line-height:1.45}
+
+  section{margin-bottom:38px}
+  .shead{display:flex;align-items:baseline;gap:14px;
+         border-bottom:1px solid var(--ink);padding-bottom:7px;margin-bottom:2px}
+  .shead h2{font-family:var(--f-disp);font-size:21px;font-weight:700;margin:0;
+            letter-spacing:-.005em}
+  .shead .cnt{font-family:var(--f-mono);font-size:12px;color:var(--muted);
+              margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .rows{display:flex;flex-direction:column}
+  .row{display:grid;grid-template-columns:minmax(0,1fr) 88px 96px;gap:16px;
+       align-items:center;padding:11px 0;border-bottom:1px solid var(--rule)}
+  .row .name{font-weight:500;font-size:14.5px;margin:0 0 2px}
+  .row .det{margin:0;font-size:12.5px;color:var(--muted);line-height:1.4}
+  .row code{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2);
+            background:var(--sunk);padding:1px 4px;border-radius:2px}
+  .bar{height:7px;background:var(--sunk);border:1px solid var(--rule-2);overflow:hidden}
+  .bar span{display:block;height:100%}
+  .chip{font-family:var(--f-mono);font-size:10.5px;font-weight:600;
+        text-transform:uppercase;letter-spacing:.06em;padding:3px 7px;
+        text-align:center;white-space:nowrap}
+  .c-done{background:var(--done-soft);color:var(--done)}
+  .c-part{background:var(--part-soft);color:var(--part)}
+  .c-gap{background:var(--gap-soft);color:var(--gap)}
+  .c-defer{background:var(--sunk);color:var(--muted)}
+  .b-done{background:var(--done)} .b-part{background:var(--part)}
+  .b-gap{background:var(--gap)} .b-defer{background:var(--rule-2)}
+
+  .note{background:var(--sunk);border-left:3px solid var(--accent);
+        padding:14px 18px;font-size:13.5px;color:var(--ink-2);line-height:1.5}
+  .note strong{color:var(--ink)}
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--rule);
+         font-size:12.5px;color:var(--muted);line-height:1.6}
+  @media (max-width:620px){
+    .row{grid-template-columns:minmax(0,1fr) 78px;row-gap:8px}
+    .row .chip{grid-column:2}
+    .row .bar{grid-column:1/-1;order:3}
+    h1{font-size:30px}
+  }
+</style>
+</head>
+<body>
+<!-- Made by tools/newgold/ledger.py from docs/newgold/LEDGER.md. Edit that. -->
+<div class="wrap">
+
+<header>
+  <h1>New Gold port ledger</h1>
+  <p class="sub">Everything hg-engine and konefr change against vanilla HeartGold, and where the native port stands on each. The counters are derived from the repository; the states are maintained by hand, in the commit that moves them. The percentages at the top score a done row 1 and a partial row a half, over the rows that are in scope — the deferred ones are left out of the denominator rather than counted as failures.</p>
+  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 148 commits</span><span><b>generated</b> 2026-09-21 22:09</span></div>
+</header>
+
+<div class="total">
+  <div class="total-top">
+    <h2>Overall</h2>
+    <div class="big">67<span style="font-size:24px;color:var(--muted)">%</span></div>
+  </div>
+  <div class="stack"><span style="width:6%;background:var(--done)"></span><span style="width:34%;background:var(--part)"></span><span style="width:38%;background:var(--accent)"></span><span style="width:11%;background:var(--gap)"></span><span style="width:11%;background:var(--rule-2)"></span></div>
+  <div class="legend"><span><i style="background:var(--done)"></i>done, seen running <b>6%</b></span><span><i style="background:var(--part)"></i>done, never played <b>34%</b></span><span><i style="background:var(--accent)"></i>partial <b>38%</b></span><span><i style="background:var(--gap)"></i>still to do <b>11%</b></span><span><i style="background:var(--rule-2)"></i>deferred / no scope <b>11%</b></span></div>
+</div>
+
+<div class="split"><div class="half"><h3>Implementation         ████████████████████████████████████░░░░░░░░░░░░░░</h3><div class="n" style="color:var(--done)">72%</div></div><div class="half"><h3>Verified in play       ███████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</h3><div class="n" style="color:var(--gap)">38%</div></div></div>
+
+<section>
+  <div class="shead">
+    <h2>Counted from the tree</h2>
+    <span class="cnt">regenerated by tools/newgold/ledger.py</span>
+  </div>
+  <div class="rows">
+<div class="row"><div><p class="name">Species</p></div><div class="bar"><span class="b-part" style="width:97%"></span></div><div class="chip c-part">1041 / 1075</div></div>
+<div class="row"><div><p class="name">Moves</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">923 / 923</div></div>
+<div class="row"><div><p class="name">Abilities</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">319 / 319</div></div>
+<div class="row"><div><p class="name">Items</p></div><div class="bar"><span class="b-part" style="width:20%"></span></div><div class="chip c-part">545 / 2684</div></div>
+<div class="row"><div><p class="name">Trainers</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">738 / 738</div></div>
+<div class="row"><div><p class="name">Tests</p><p class="det">47 files</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">counted</div></div>
+<div class="row"><div><p class="name">ROM</p><p class="det">143.8 MB of 268.4 MB   (2G card, 54% used)</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">counted</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="shead">
+    <h2>hg-engine engine features</h2>
+    <span class="cnt">75 toggles are enabled in the reference's own <code>config.h</code></span>
+  </div>
+  <div class="rows">
+<div class="row"><div><p class="name">Fairy type and the effectiveness chart</p><p class="det">type 18 and the twelve chart rows, Sylveon and 66 species, 30 moves — but no name string (<code>msg_0735</code> stops at 17) and no icon</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Story level cap</p><p class="det">wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Hidden abilities</p><p class="det"><code>TRPOKE_ABILITY_OVERRIDE_HIDDEN</code>; eleven trainer Pokémon ask for one</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Ability field past one byte</p><p class="det">save, battle record, AI memory, PC box and summary widened; personal <code>abilities[2]</code> is still a byte, so 85 species truncate</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Reusable TMs, deletable HMs</p><p class="det"><code>REUSABLE_TMS</code>, <code>DELETABLE_HMS</code>, plus the machine badge in the bag</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">EV and IV viewer</p><p class="det">L shows effort, R shows individuals, Select restores stats</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Expanded pockets, thirty boxes</p><p class="det">change the save layout — and caused the first black battle</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Scaled and capture experience</p><p class="det"><code>EXPERIENCE_FORMULA_GEN</code>, <code>IMPLEMENT_CAPTURE_EXPERIENCE</code></p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Eleven ball multipliers, critical capture</p><p class="det">nine match the reference; Moon keeps HGSS's fourteen-species table and Sport is ungated</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Reusable repels, overworld poison, friendship threshold</p><p class="det">repels and poison each on a matching decompilation; the 160 threshold misses Eevee → Sylveon</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Static HP bar, vitamin caps, low-HP music</p><p class="det"><code>STATIC_HP_BAR</code>, <code>UPDATE_VITAMIN_EV_CAPS</code>, <code>DISABLE_CRITICAL_HP_WARNING</code></p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Item restoration, friendship effects, AI item grab</p><p class="det"><code>RESTORE_ITEMS_AT_BATTLE_END</code>, <code>FRIENDSHIP_EFFECTS</code>, <code>AI_CAN_GRAB_ITEMS</code></p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Champions move values</p><p class="det">read from the reference's <code>config.h</code>; the added moves take them, four retail moves do not</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Widened Pokédex and footprints</p><p class="det">footprints for all 1041; the Dex text stops at 574, so 467 species have no entry</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Bigger card</p><p class="det"><code>RomSize 1G → 2G</code>, 256 MiB, <code>test_rom_budget.py</code> holds the margin</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Per-move toggled mechanics</p><p class="det">Protean, Battle Bond, Corrosive Gas, Snow Warning, Natural Gift, Unseen Fist, Booster Energy</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Expanded prize money, gender, music, roamer tables</p><p class="det"><code>EXPAND_*</code> — not checked one by one</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Mart expansion</p><p class="det">the decomp already holds the mart tables in C (<code>src/scrcmd_mart.c</code>); <code>MART_EXPANSION</code> is stock hg-engine and konefr never touched it</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">not needed</div></div>
+<div class="row"><div><p class="name">BDHCAM routine</p><p class="det"><code>ov01_021FB04C</code> — map-editing infrastructure, no map touched</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">not needed</div></div>
+<div class="row"><div><p class="name">Mega Evolution, Primal Reversion, seasons</p><p class="det">no mega stone in the data, no Kyogre or Groudon, no Deerling</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">deferred</div></div>
+<div class="row"><div><p class="name">Z-Moves, Dynamax, Terastallization</p><p class="det">states and flags with TODOs upstream — not behaviour to reproduce</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">out of scope</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="shead">
+    <h2>Engine content</h2>
+    <span class="cnt">The whole range, after the criterion changed: the platform has to carry what konefr <em>could</em> reach, not only what the game reaches today</span>
+  </div>
+  <div class="rows">
+<div class="row"><div><p class="name">Species</p><p class="det">1042 sprite directories, 1277 icons, heights, learnsets, evolutions; every base species the reference names is here, the rest are its forms</p></div><div class="bar"><span class="b-part" style="width:97%"></span></div><div class="chip c-part">1041 / 1075</div></div>
+<div class="row"><div><p class="name">Moves</p><p class="det">131 effect scripts, 59 subscripts, 62 side-effect table slots</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">923 / 923</div></div>
+<div class="row"><div><p class="name">Abilities</p><p class="det">149 do something — 123 retail effects and 26 added; the other 170 are a name and a species field, and <code>test_ability_effects.py</code> counts them down</p></div><div class="bar"><span class="b-part" style="width:47%"></span></div><div class="chip c-part">149 / 319</div></div>
+<div class="row"><div><p class="name">Level-up learnsets</p><p class="det">1042; the entry is a word now, so a move past 511 can be learnt</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Battle script commands</p><p class="det">294 opcodes, name- and number-identical to the reference; 24 of the added handlers still only consume their operands</p></div><div class="bar"><span class="b-part" style="width:92%"></span></div><div class="chip c-part">270 / 294</div></div>
+<div class="row"><div><p class="name">Cries</p><p class="det"><code>PlayCryEx</code> decompiled in <code>src/unk_02005D10.c</code> and linked by <code>main.lsf</code> — the 495 ceiling is gone, but the bank is mapped twice on one path</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Items</p><p class="det">545 against the engine's 2684; nine Gen 8/9 evolution items are missing and Ability Shield is a dead identifier</p></div><div class="bar"><span class="b-part" style="width:20%"></span></div><div class="chip c-part">545 / 2684</div></div>
+<div class="row"><div><p class="name">Effects with a script but no C</p><p class="det">counted by <code>test_move_effects.py</code>; a move using one can stall a battle</p></div><div class="bar"><span class="b-gap" style="width:25%"></span></div><div class="chip c-gap">20 open</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="shead">
+    <h2>konefr's own work</h2>
+    <span class="cnt">69 commits — the content that makes New Gold a hack rather than an engine</span>
+  </div>
+  <div class="rows">
+<div class="row"><div><p class="name">Trainers</p><p class="det">Falkner through Morty and the Chuck gym; Denise (index 92) is still vanilla, skipped when Mareanie did not exist yet</p></div><div class="bar"><span class="b-part" style="width:100%"></span></div><div class="chip c-part">737 / 738</div></div>
+<div class="row"><div><p class="name">Wild encounters</p><p class="det">every map; route 40-41 landed, but the Whirl Islands and Cianwood's surf are still vanilla</p></div><div class="bar"><span class="b-part" style="width:97%"></span></div><div class="chip c-part">138 / 142</div></div>
+<div class="row"><div><p class="name">Headbutt trees</p><p class="det">routes 29-39, the Exeggcute filler replaced</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Vanilla species rebalance</p><p class="det">35 species: 5 type changes, 15 ability changes, 28 stat spreads</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Vanilla evolutions, learnsets, hidden abilities</p><p class="det">learnsets and hidden abilities exact, 15 and 15; of the nine evolutions only Primeape and Stantler by move</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Irrigation and Evaporate</p><p class="det">his only two abilities — Water absorb with +2 Attack, and Water immunity</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Solar Seeds</p><p class="det">Fire special 25 BP multi-hit with burn; borrows Bullet Seed's animation</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Bug-Catching Contest</p><p class="det">Butterfree through Escavalier, levels 20-30, evolution-item prizes</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Cherrygrove vendor and EV presets</p><p class="det">his debug vendor, patched into a built script file — excluded in <code>SCOPE.md</code></p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">out of scope</div></div>
+<div class="row"><div><p class="name">Water Absorb and Leaf Guard fixes</p><p class="det">no self-trigger, damaging moves only; Leaf Guard restricted to sun</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="shead">
+    <h2>Verification</h2>
+    <span class="cnt">This is the section that holds the overall number down</span>
+  </div>
+  <div class="rows">
+<div class="row"><div><p class="name">Boot and menus</p><p class="det">both ROMs boot to a drawn screen; the scripted walk to the summary is HeartGold only</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">EV and IV viewer</p><p class="det">six and a quarter minutes from a cold boot; captures in <code>validation/</code></p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">A battle renders</p><p class="det">forced against species 19, 575, 900 and 1041, indoors and on Route 29's grass: background, sprite, name, and the battle runs to its end</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">A battle from a wild encounter</p><p class="det">the same tile, the same species, the same terrain: started by the encounter check it freezes before <code>Battle_Run</code>, started directly it does not</p></div><div class="bar"><span class="b-gap" style="width:25%"></span></div><div class="chip c-gap">open</div></div>
+<div class="row"><div><p class="name">The four gyms to Morty</p><p class="det">parties, levels, held items, and the AI using what it carries</p></div><div class="bar"><span class="b-gap" style="width:0%"></span></div><div class="chip c-gap">never</div></div>
+<div class="row"><div><p class="name">The seven level-cap steps</p><p class="det"><code>savedit.py</code> sets badges one at a time — thirty seconds a step</p></div><div class="bar"><span class="b-gap" style="width:0%"></span></div><div class="chip c-gap">never</div></div>
+<div class="row"><div><p class="name">The 1041 species in play</p><p class="det">sprite, icon, cry, name, Dex, an ability that does something</p></div><div class="bar"><span class="b-gap" style="width:0%"></span></div><div class="chip c-gap">never</div></div>
+<div class="row"><div><p class="name">Automated tests</p><p class="det">47 files, 198 checks: all but one read source and data, <code>test_boot.py</code> runs both ROMs — each memory bug got its regression test after the fact, not before</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+  </div>
+</section>
+
+<div class="note"><strong>Why 67% and not 72%.</strong> The five points between the two numbers are the verification column, and the reason it is not a formality is that four silent memory bugs surfaced in one evening, every one of them introduced by the expansion: - the cry archive read thirteen entries along its own table - <code>LEVEL_UP_LEARNSET_MAX</code> was 21 against Mr. Rime's twenty-seven moves, and two more buffers for the same data were sized by hand — <code>0x2c</code> in the move tutor, <code>50</code> in the egg search - tables indexed by a species number had not grown with it: <code>evo.narc</code> stayed 575 members long because its rule did not depend on the header that sizes it, and two tables in C were read past their end None fails a build, none fails a test, and each can produce a black screen. Three in three hours is not a rate that exhausts itself — it is the rate they are being looked for. What is left is not writing code. It is turning the game on. Not counted here: the rebalance konefr is still publishing, and the 2139 engine items no content reaches. ---</div>
+
+<footer>
+  <code>tools/newgold/ledger.py</code> regenerates the counters between the <code>LEDGER:COUNTS</code> markers here and in <code>README.md</code> from the repository itself — the species, move and ability ceilings from their headers, the trainer count from <code>trainers.json</code>, the test count from <code>tests/newgold/</code>, and the ROM figures from the built header. The states in the tables are edited by hand in the same commit as the work they describe.
+</footer>
+
+</div>
+
+</body>
+</html>

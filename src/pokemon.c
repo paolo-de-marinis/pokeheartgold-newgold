@@ -3101,13 +3101,13 @@ u16 GetEggSpecies(u16 species) {
 
 void InitBoxMonMoveset(BoxPokemon *boxMon) {
     BOOL decry;
-    u16 *levelUpLearnset;
+    u32 *levelUpLearnset;
     int i;
     u16 species;
     u32 form;
     u8 level;
     u16 move;
-    levelUpLearnset = Heap_Alloc(HEAP_ID_DEFAULT, LEVEL_UP_LEARNSET_SIZE * sizeof(u16));
+    levelUpLearnset = Heap_Alloc(HEAP_ID_DEFAULT, LEVEL_UP_LEARNSET_SIZE * sizeof(u32));
     decry = AcquireBoxMonLock(boxMon);
     species = (u16)GetBoxMonData(boxMon, MON_DATA_SPECIES, NULL);
     form = GetBoxMonData(boxMon, MON_DATA_FORM, NULL);
@@ -3208,7 +3208,7 @@ void BoxMonSetMoveInSlot(BoxPokemon *boxMon, u16 move, u8 slot) {
 
 u32 MonTryLearnMoveOnLevelUp(Pokemon *mon, int *last_i, u16 *sp0) {
     u32 ret = 0;
-    u16 *levelUpLearnset = Heap_Alloc(HEAP_ID_DEFAULT, LEVEL_UP_LEARNSET_SIZE * sizeof(u16));
+    u32 *levelUpLearnset = Heap_Alloc(HEAP_ID_DEFAULT, LEVEL_UP_LEARNSET_SIZE * sizeof(u32));
     u16 species = (u16)GetMonData(mon, MON_DATA_SPECIES, NULL);
     u32 form = GetMonData(mon, MON_DATA_FORM, NULL);
     u8 level = (u8)GetMonData(mon, MON_DATA_LEVEL, NULL);
@@ -3377,7 +3377,7 @@ s8 GetFlavorPreferenceFromPID(u32 personality, int flavor) {
 
 int Species_LoadLearnsetTable(u32 species, u32 form, u16 *dest) {
     int i;
-    u16 *levelUpLearnset = Heap_Alloc(HEAP_ID_DEFAULT, LEVEL_UP_LEARNSET_SIZE * sizeof(u16));
+    u32 *levelUpLearnset = Heap_Alloc(HEAP_ID_DEFAULT, LEVEL_UP_LEARNSET_SIZE * sizeof(u32));
     LoadLevelUpLearnset_HandleAlternateForm(species, (int)form, levelUpLearnset);
     for (i = 0; levelUpLearnset[i] != LEVEL_UP_LEARNSET_END; i++) {
         dest[i] = LEVEL_UP_LEARNSET_MOVE(levelUpLearnset[i]);
@@ -3743,7 +3743,7 @@ BOOL Mon_UpdateRotomForm(Pokemon *mon, int form, int defaultSlot) {
     return TRUE;
 }
 
-void LoadLevelUpLearnset_HandleAlternateForm(int species, int form, u16 *levelUpLearnset) {
+void LoadLevelUpLearnset_HandleAlternateForm(int species, int form, u32 *levelUpLearnset) {
     ReadWholeNarcMemberByIdPair(levelUpLearnset, NARC_poketool_personal_wotbl, ResolveMonForm(species, form));
 }
 
