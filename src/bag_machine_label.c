@@ -1,14 +1,14 @@
-#include "bag_machine_label.h"
+#include "bag_app_state.h"
 
 #include "constants/items.h"
 #include "graphic/bag_gra.naix"
 
 #include "heap.h"
 
-typedef char BagAppLabelGraphicsCheck[offsetof(BagAppLabelState, graphics) == 0x244 ? 1 : -1];
-typedef char BagAppLabelPrinterCheck[offsetof(BagAppLabelState, msgPrinter) == 0x2EC ? 1 : -1];
-typedef char BagAppLabelFormatCheck[offsetof(BagAppLabelState, messageFormat) == 0x2F4 ? 1 : -1];
-typedef char BagAppLabelStringCheck[offsetof(BagAppLabelState, unk5EC) == 0x5EC ? 1 : -1];
+typedef char BagAppStateGraphicsCheck[offsetof(BagAppStatePrefix, graphics) == 0x244 ? 1 : -1];
+typedef char BagAppStatePrinterCheck[offsetof(BagAppStatePrefix, msgPrinter) == 0x2EC ? 1 : -1];
+typedef char BagAppStateFormatCheck[offsetof(BagAppStatePrefix, messageFormat) == 0x2F4 ? 1 : -1];
+typedef char BagAppStateStringCheck[offsetof(BagAppStatePrefix, unk5EC) == 0x5EC ? 1 : -1];
 
 #define BAG_LABEL_HEAP HEAP_ID_6
 
@@ -30,7 +30,7 @@ typedef char BagAppLabelStringCheck[offsetof(BagAppLabelState, unk5EC) == 0x5EC 
 #define NUMBER_X 24
 #define NUMBER_Y 5
 
-void ov15_021FE914(BagAppLabelState *state, Window *window, ItemSlot *slot, u32 y) {
+void ov15_021FE914(BagAppStatePrefix *state, Window *window, ItemSlot *slot, u32 y) {
     u32 badge = BAG_HM_BADGE;
     u32 digits = HM_DIGITS;
     u16 number = slot->id - (ITEM_HM01 - 1);
@@ -45,18 +45,18 @@ void ov15_021FE914(BagAppLabelState *state, Window *window, ItemSlot *slot, u32 
     ov15_021FE9B0(state, window, badge, y);
 }
 
-static void *ReadBadgeSheet(BagAppLabelState *state, u32 badge, NNSG2dCharacterData **charData) {
+static void *ReadBadgeSheet(BagAppStatePrefix *state, u32 badge, NNSG2dCharacterData **charData) {
     void *data = NARC_AllocAndReadWholeMember(state->graphics, badge, BAG_LABEL_HEAP);
     NNS_G2dGetUnpackedBGCharacterData(data, charData);
     return data;
 }
 
 // The remaining bag assembly reads the HM sheet through this one.
-void *ov15_021FE990(BagAppLabelState *state, NNSG2dCharacterData **charData) {
+void *ov15_021FE990(BagAppStatePrefix *state, NNSG2dCharacterData **charData) {
     return ReadBadgeSheet(state, BAG_HM_BADGE, charData);
 }
 
-void ov15_021FE9B0(BagAppLabelState *state, Window *window, u32 badge, u32 y) {
+void ov15_021FE9B0(BagAppStatePrefix *state, Window *window, u32 badge, u32 y) {
     NNSG2dCharacterData *charData;
     void *data = ReadBadgeSheet(state, badge, &charData);
 

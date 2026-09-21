@@ -700,6 +700,8 @@ Overlay OVY_15
     Object asm/overlay_15_021F994C.o
     Object src/bag_machine_label.o
     Object asm/overlay_15_021FE9F0.o
+    Object src/bag_item_row.o
+    Object asm/overlay_15_021FF66C.o
 }
 Overlay OVY_16
 {

@@ -407,3 +407,6 @@
 .public _02201300
 .public _02201480
 .public ov15_021FE9B0
+.public ov15_021FF570
+.public ov15_021FF97C
+.public ov15_022008C8
