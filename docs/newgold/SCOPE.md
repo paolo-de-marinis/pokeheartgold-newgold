@@ -12,7 +12,7 @@ plays like New Gold, not that it resembles hg-engine internally.
 | pokeheartgold (base) | `e97c7fc975a7447f288c42acc2e155f5a673e30f`, `master` |
 | konefr/hg-engine-newgold (behaviour reference) | `41a28e2255b2805378163c7f4d6c1d87541174d1`, `heartgold-modern` |
 | hg-engine the reference forked from | `d0380a487`, the parent of konefr's first commit |
-| antonsynd/pokeheartgold-slop (decompilation only) | `808283ee2`, `mainline`; a fork of the same base carrying 141 source files pret has not decompiled yet |
+| antonsynd/pokeheartgold-slop | `808283ee2`, `mainline`; consulted, nothing taken. Not an input to this port — see the method |
 
 ## What New Gold actually is
 
@@ -134,8 +134,8 @@ this game has the source for rather than patched into the built bytes.
 1. Cries. PlayCryEx clamps anything above species 495 to Bulbasaur rather than
    reading past the sound archive, so the added species sound wrong but nothing
    breaks. Giving them their own cries needs that function decompiled and the
-   archive extended. The slop fork above has already decompiled the file it
-   lives in, so what is left is the sound data rather than the function.
+   archive extended. Both halves are still to do: the function is assembly
+   here, and the sounds do not exist at all.
 2. One trainer still cannot be read: it wants a double battle with no
    partner, which is a battle type this game has not got.
 3. Footprints and Dex entries, needed only if the Dex is widened; an added
@@ -143,21 +143,10 @@ this game has the source for rather than patched into the built bytes.
 4. The remaining interface work the reference ships: the EV and IV viewer, the
    static HP bar, the machine labels in the bag, deletable HMs and reusable
    repels. Each of these lives in code pret has not decompiled, so each carries
-   a conversion with it. The slop fork listed among the sources has done some
-   of that conversion; it is a remote on this repository and its files are
-   taken one at a time when a feature needs them, rather than merged wholesale.
+   a conversion with it, done here. If a feature ever needs most of one
+   overlay, whether to take someone else's conversion is a decision to make
+   then.
 
-   Taking one is two of their commits, not one: the commit that split the
-   overlay into address-ordered pieces, and the commit that decompiled the
-   function. `git log --format=%H --diff-filter=A slop/mainline -- <path>`
-   finds them. Each is cherry-picked with `-n`, their harness and tooling
-   (`tools/`, `.claude/`, `scripts/`) restored away, and what is left — `asm/`,
-   `src/`, `include/`, `main.lsf` — committed with `--author` set to theirs, or
-   to this branch's author with them as a `Co-authored-by:` trailer when the
-   result had to be adapted by hand. One overlay per commit, and both ROMs and
-   the tests before the next: a main.lsf out of step does not fail clearly.
-   The pinned revision in the source table moves the first time something is
-   taken.
 5. Expanded pockets and thirty boxes, which change the save layout.
 
 ## Method
@@ -167,8 +156,15 @@ this game has the source for rather than patched into the built bytes.
    pokeheartgold's own structures, resources and build system.
 2. No hooks, byte patches, repointed tables, injected overlays or hardcoded
    addresses. If a behaviour lives in a function pret has not decompiled yet,
-   that function is decompiled first — matching retail, because this branch
-   must stay mergeable with upstream — and only then changed.
+   that function is decompiled here first — matching retail, because this
+   branch must stay mergeable with upstream — and only then changed, as two
+   commits: the conversion, then the change. That separation is what keeps a
+   later merge with pret cheap, and it is why the conversions are done here
+   rather than taken from a fork that has done its own. Those forks decompile
+   whole overlays in coverage order; this one decompiles the functions New
+   Gold has to change, so what they have and what is needed overlap by
+   accident rather than by design. Reading someone else's conversion to
+   understand a function is fine; copying it is not.
 3. Byte-level comparison against a compiled reference ROM is not an acceptance
    criterion. Equivalence is judged on game behaviour.
 4. Each change builds both HeartGold and SoulSilver and keeps the focused host
