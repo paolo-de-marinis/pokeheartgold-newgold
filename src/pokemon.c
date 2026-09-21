@@ -1823,13 +1823,13 @@ int GetPersonalAttr(const BASE_STATS *baseStats, int attr) {
         ret = baseStats->eggGroups[1];
         break;
     case BASE_ABILITY_1:
-        ret = baseStats->abilities[0];
+        ret = baseStats->abilitiesFull[0];
         break;
     case BASE_ABILITY_2:
-        ret = baseStats->abilities[1];
+        ret = baseStats->abilitiesFull[1];
         break;
     case BASE_HIDDEN_ABILITY:
-        ret = baseStats->hiddenAbility;
+        ret = baseStats->hiddenAbilityFull;
         break;
     case BASE_GREAT_MARSH_RATE:
         ret = baseStats->greatMarshRate;

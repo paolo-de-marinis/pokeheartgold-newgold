@@ -4743,7 +4743,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_SWIMMER_F",
       "name": "{TRNAME}Denise",
       "items": [],
@@ -4754,8 +4754,45 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
-          "level": 22,
-          "species": "SPECIES_SEEL",
+          "level": 34,
+          "species": "SPECIES_DEWGONG",
+          "item": "ITEM_SITRUS_BERRY",
+          "moves": [
+            "MOVE_ICY_WIND",
+            "MOVE_AQUA_JET",
+            "MOVE_REST",
+            "MOVE_SLEEP_TALK"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 33,
+          "species": "SPECIES_MAREANIE",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_TOXIC",
+            "MOVE_POISON_JAB",
+            "MOVE_WATER_PULSE",
+            "MOVE_RECOVER"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 35,
+          "species": "SPECIES_SLOWPOKE",
+          "item": "ITEM_SITRUS_BERRY",
+          "moves": [
+            "MOVE_YAWN",
+            "MOVE_SURF",
+            "MOVE_CONFUSION",
+            "MOVE_AMNESIA"
+          ],
           "capsule": 0
         }
       ],

@@ -15,10 +15,12 @@ docs/newgold/LEDGER.md is the ledger. Everything else is made from it:
     ledger.py            rewrite the counters and render the page
     ledger.py --check    say what is out of date, and change nothing
 
-The summary block -- the overall percentages -- stays by hand in the Markdown.
-Those are a judgement about how much of the port has been played, and nothing
-in the repository knows that. Edit the Markdown; the page comes from it. Keep
-them apart and within a day the wrong one is the prettier.
+  the summary between its LEDGER:SUMMARY markers is counted from the states in
+    the tables, because the only judgement there is which state a row carries
+
+Edit the Markdown; everything else comes from it. Keep them apart and within a
+day the wrong one is the prettier -- which is what happened to the page, and
+then to the summary that was the last thing left by hand.
 
 Usage: ledger.py [--check] [--reference PATH]
 """
@@ -34,6 +36,8 @@ LEDGER = ROOT / "docs/newgold/LEDGER.md"
 REFERENCE = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
 FILES = [LEDGER, ROOT / "README.md"]
 START, END = "<!-- LEDGER:COUNTS:START -->", "<!-- LEDGER:COUNTS:END -->"
+SUMMARY_START = "<!-- LEDGER:SUMMARY:START -->"
+SUMMARY_END = "<!-- LEDGER:SUMMARY:END -->"
 
 WIDTH = 50
 FULL, EMPTY = "█", "░"
@@ -67,6 +71,77 @@ def highest(path, prefix):
     if not numbers:
         raise SystemExit(f"{path} defines nothing starting with {prefix}")
     return max(numbers)
+
+
+
+# ------------------------------------------------------------- the summary
+
+# Where a row's state puts it. The judgement is which state a row carries;
+# the arithmetic below is not a judgement and is not typed by hand.
+BUCKETS = ["done, seen running", "done, never played", "partial",
+           "still to do", "deferred / no scope"]
+VERIFICATION = "Verification"
+
+
+def ledger_rows():
+    """Every table row in the ledger, as (section, item, detail, state)."""
+    rows, section = [], None
+    for line in LEDGER.read_text().splitlines():
+        if line.startswith("## "):
+            section = line[3:].strip()
+        match = re.match(r"^\| (.+?) \| (.+?) \| (.+?) \|$", line)
+        if match and match.group(1) not in ("Feature", "Item") \
+                and not set(match.group(1)) <= set("-: "):
+            rows.append((section, *match.groups()))
+    return rows
+
+
+def bucket_of(section, state):
+    if state.startswith("\u2705"):
+        return 0 if section == VERIFICATION else 1
+    if state.startswith("\U0001f7e0"):
+        return 2
+    if state.startswith("\U0001f534"):
+        return 3
+    return 4
+
+
+def score(rows):
+    """Done counts one, partial a half, and a deferred row is not counted at
+    all -- it is out of scope, not a failure."""
+    done = sum(1 for r in rows if bucket_of(*r) in (0, 1))
+    partial = sum(1 for r in rows if bucket_of(*r) == 2)
+    todo = sum(1 for r in rows if bucket_of(*r) == 3)
+    within = done + partial + todo
+    return round(100 * (done + partial / 2) / within) if within else 0
+
+
+def summary():
+    rows = [(section, state) for section, _, _, state in ledger_rows()]
+    counts = [sum(1 for r in rows if bucket_of(*r) == i) for i in range(len(BUCKETS))]
+    total = sum(counts) or 1
+    shares = [round(100 * n / total) for n in counts]
+
+    overall = score(rows)
+    built = score([r for r in rows if r[0] != VERIFICATION])
+    # Of the rows that are done, the share that has been seen running. A row
+    # that is only partly there cannot have been played, so it is not in the
+    # denominator.
+    seen = counts[0] + counts[1]
+    played = round(100 * counts[0] / seen) if seen else 0
+
+    width = max(len(label) for label in BUCKETS) + 2
+    lines = [f"{'Overall':<{width + 2}}{' ' * WIDTH} {overall:>3}%"]
+    for label, share in zip(BUCKETS, shares):
+        lines.append(f"  {label:<{width}}{bar(share, 100)} {share:>3}%")
+    lines.append("")
+    lines.append(f"{'Implementation':<{width + 2}}{bar(built, 100)} {built:>3}%")
+    lines.append(f"{'Verified in play':<{width + 2}}{bar(played, 100)} {played:>3}%")
+    lines.append("")
+    lines.append("Overall and Implementation: done 1, partial a half, deferred rows")
+    lines.append("out of the denominator. Verified in play: of the rows that are done,")
+    lines.append("the share seen running. All three from the states in the tables.")
+    return "```\n" + "\n".join(lines) + "\n```"
 
 
 def bar(have, want):
@@ -342,9 +417,12 @@ def read_ledger():
 
 def summary_html(lines):
     """The overall bar, its legend, and the two halves under it."""
-    buckets, halves, overall = [], [], "\u2014"
+    buckets, halves, overall, rule = [], [], "\u2014", []
     for line in lines:
-        match = re.match(r"^(\S.*?)\s{2,}(\d+)%$", line)
+        if line and "%" not in line:
+            rule.append(line.strip())
+            continue
+        match = re.match(r"^(\S.*?)\s{2,}[\u2588\u2591]*\s*(\d+)%$", line)
         if match and not line.startswith("  "):
             if match.group(1).strip() == "Overall":
                 overall = match.group(2)
@@ -366,6 +444,8 @@ def summary_html(lines):
         f'<div class="half"><h3>{escape(label)}</h3>'
         f'<div class="n" style="color:{tone[min(i, 1)]}">{value}%</div></div>'
         for i, (label, value) in enumerate(halves))
+    caption = (f'<p style="margin:10px 0 0;font-size:12.5px;color:var(--muted)">'
+               f'{escape(" ".join(rule))}</p>') if rule else ""
     return f"""<div class="total">
   <div class="total-top">
     <h2>Overall</h2>
@@ -375,7 +455,8 @@ def summary_html(lines):
   <div class="legend">{legend}</div>
 </div>
 
-<div class="split">{split}</div>"""
+<div class="split">{split}</div>
+{caption}"""
 
 
 def counts_html(lines):
@@ -459,6 +540,15 @@ def render_page():
 """
 
 
+def replace_between(path, block, start, end):
+    text = path.read_text()
+    if start not in text or end not in text:
+        raise SystemExit(f"{path} has no {start} ... {end} markers")
+    before, rest = text.split(start, 1)
+    _, after = rest.split(end, 1)
+    return before + start + "\n" + block + "\n" + end + after
+
+
 def replace(path, block):
     text = path.read_text()
     if START not in text or END not in text:
@@ -478,9 +568,22 @@ def main():
     block = counts(args.reference)
     stale = []
     for path in FILES:
-        updated = replace(path, block)
+        updated = replace_between(path, block, START, END)
         if updated != path.read_text():
             stale.append(path)
+            if not args.check:
+                path.write_text(updated)
+
+    # The summary comes from the states in the tables, after the counters are
+    # in: the judgement is which state a row carries, and nothing past that.
+    if not args.check:
+        LEDGER.write_text(replace_between(LEDGER, summary(), SUMMARY_START, SUMMARY_END))
+    digest = summary()
+    for path in FILES:
+        updated = replace_between(path, digest, SUMMARY_START, SUMMARY_END)
+        if updated != path.read_text():
+            if path not in stale:
+                stale.append(path)
             if not args.check:
                 path.write_text(updated)
 

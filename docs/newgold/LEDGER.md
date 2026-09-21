@@ -1,13 +1,12 @@
 # New Gold port ledger
 
 Everything hg-engine and konefr change against vanilla HeartGold, and where the
-native port stands on each. The counters are derived from the repository; the
-states are maintained by hand, in the commit that moves them. The percentages
-at the top score a done row 1 and a partial row a half, over the rows that are
-in scope — the deferred ones are left out of the denominator rather than
-counted as failures.
-
-`docs/index.html` is rendered from this file. Edit this one.
+native port stands on each. The one thing written by hand is the state on each
+row, in the commit that moves it. Everything else — the counters, the
+percentages at the top, `README.md`'s copy of both, and `docs/index.html` —
+is generated from this file by `tools/newgold/ledger.py`. The summary was the
+last part kept by hand and it was the part that was wrong, which is the whole
+argument.
 
 | | |
 | --- | --- |
@@ -18,15 +17,19 @@ counted as failures.
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                          67%
+Overall                                                                    71%
   done, seen running   ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
-  done, never played   █████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  34%
-  partial              ███████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  38%
+  done, never played   ██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  43%
+  partial              ███████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  30%
   still to do          ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
   deferred / no scope  ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
 
-Implementation         ████████████████████████████████████░░░░░░░░░░░░░░  72%
-Verified in play       ███████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  38%
+Implementation         ███████████████████████████████████████░░░░░░░░░░░  78%
+Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%
+
+Overall and Implementation: done 1, partial a half, deferred rows
+out of the denominator. Verified in play: of the rows that are done,
+the share seen running. All three from the states in the tables.
 ```
 <!-- LEDGER:SUMMARY:END -->
 
@@ -37,8 +40,8 @@ Moves       ██████████████████████�
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   545 / 2684
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       47 files
-ROM         143.8 MB of 268.4 MB   (2G card, 54% used)
+Tests       48 files
+ROM         144.9 MB of 268.4 MB   (2G card, 54% used)
 ```
 <!-- LEDGER:COUNTS:END -->
 
@@ -54,7 +57,7 @@ that carry behaviour.
 | Fairy type and the effectiveness chart | type 18 and the twelve chart rows, Sylveon and 66 species, 30 moves — but no name string (`msg_0735` stops at 17) and no icon | 🟠 partial |
 | Story level cap | wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100 | ✅ done |
 | Hidden abilities | `TRPOKE_ABILITY_OVERRIDE_HIDDEN`; eleven trainer Pokémon ask for one | ✅ done |
-| Ability field past one byte | save, battle record, AI memory, PC box and summary widened; personal `abilities[2]` is still a byte, so 85 species truncate | 🟠 partial |
+| Ability field past one byte | save, battle record, AI memory, PC box, summary — and the personal record, whose three ability bytes now have their full values past the end of it | ✅ done |
 | Reusable TMs, deletable HMs | `REUSABLE_TMS`, `DELETABLE_HMS`, plus the machine badge in the bag | ✅ done |
 | EV and IV viewer | L shows effort, R shows individuals, Select restores stats | ✅ done |
 | Expanded pockets, thirty boxes | change the save layout — and caused the first black battle | ✅ done |
@@ -64,7 +67,7 @@ that carry behaviour.
 | Static HP bar, vitamin caps, low-HP music | `STATIC_HP_BAR`, `UPDATE_VITAMIN_EV_CAPS`, `DISABLE_CRITICAL_HP_WARNING` | ✅ done |
 | Item restoration, friendship effects, AI item grab | `RESTORE_ITEMS_AT_BATTLE_END`, `FRIENDSHIP_EFFECTS`, `AI_CAN_GRAB_ITEMS` | ✅ done |
 | Champions move values | read from the reference's `config.h`; the added moves take them, four retail moves do not | 🟠 partial |
-| Widened Pokédex and footprints | footprints for all 1041; the Dex text stops at 574, so 467 species have no entry | 🟠 partial |
+| Widened Pokédex and footprints | footprints and Dex text for all 1041: entry, category, height and weight in twenty-seven banks | ✅ done |
 | Bigger card | `RomSize 1G → 2G`, 256 MiB, `test_rom_budget.py` holds the margin | ✅ done |
 | Per-move toggled mechanics | Protean, Battle Bond, Corrosive Gas, Snow Warning, Natural Gift, Unseen Fist, Booster Energy | 🟠 partial |
 | Expanded prize money, gender, music, roamer tables | `EXPAND_*` — not checked one by one | 🟠 partial |
@@ -99,8 +102,8 @@ konefr *could* reach, not only what the game reaches today.
 
 | Item | Detail | State |
 | --- | --- | :-- |
-| Trainers | Falkner through Morty and the Chuck gym; Denise (index 92) is still vanilla, skipped when Mareanie did not exist yet | 🟠 737 / 738 |
-| Wild encounters | every map; route 40-41 landed, but the Whirl Islands and Cianwood's surf are still vanilla | 🟠 138 / 142 |
+| Trainers | Falkner through Morty and the Chuck gym; Denise has her Mareanie now that the species exists | ✅ 738 / 738 |
+| Wild encounters | every map, the Whirl Islands and Cianwood's surf included; a slot list the reference leaves short takes its last species rather than a hole | ✅ 142 / 142 |
 | Headbutt trees | routes 29-39, the Exeggcute filler replaced | ✅ done |
 | Vanilla species rebalance | 35 species: 5 type changes, 15 ability changes, 28 stat spreads | ✅ done |
 | Vanilla evolutions, learnsets, hidden abilities | learnsets and hidden abilities exact, 15 and 15; of the nine evolutions only Primeape and Stantler by move | 🟠 partial |
@@ -125,13 +128,13 @@ This is the section that holds the overall number down.
 | The four gyms to Morty | parties, levels, held items, and the AI using what it carries | 🔴 never |
 | The seven level-cap steps | `savedit.py` sets badges one at a time — thirty seconds a step | 🔴 never |
 | The 1041 species in play | sprite, icon, cry, name, Dex, an ability that does something | 🔴 never |
-| Automated tests | 47 files, 198 checks: all but one read source and data, `test_boot.py` runs both ROMs — each memory bug got its regression test after the fact, not before | 🟠 partial |
+| Automated tests | 48 files, 202 checks: all but one read source and data, `test_boot.py` runs both ROMs — each memory bug got its regression test after the fact, not before | 🟠 partial |
 
 ---
 
-## Why 67% and not 72%
+## Why 71% and not 78%
 
-The five points between the two numbers are the verification column, and the
+The seven points between the two numbers are the verification column, and the
 reason it is not a formality is that four silent memory bugs surfaced in one
 evening, every one of them introduced by the expansion:
 
@@ -155,9 +158,21 @@ items no content reaches.
 
 ## Keeping this current
 
-`tools/newgold/ledger.py` regenerates the counters between the `LEDGER:COUNTS`
-markers here and in `README.md` from the repository itself — the species, move
-and ability ceilings from their headers, the trainer count from
-`trainers.json`, the test count from `tests/newgold/`, and the ROM figures from
-the built header. The states in the tables are edited by hand in the same
-commit as the work they describe.
+`tools/newgold/ledger.py` does three things, and `tests/newgold/test_ledger.py`
+fails if any of them is behind.
+
+It reads the counters out of the repository — the species, move, ability and
+item ceilings from the headers on both sides, the trainers from
+`trainers.json`, the tests from `tests/newgold/`, the ROM from the header of
+the card it just built — and writes them between the `LEDGER:COUNTS` markers
+here and in `README.md`.
+
+It counts the states in the tables below and writes the summary from them. A
+done row scores one and a partial row a half; deferred rows leave the
+denominator rather than counting as failures. "Verified in play" is, of the
+rows that are done, the share that has been seen running. Assigning a row its
+state is the judgement; none of the arithmetic is.
+
+It renders `docs/index.html` from this file: the heading, both blocks of bars,
+and the four tables, each row's three columns becoming a name, a bar and a
+chip, with the state choosing the chip's class and the bar's width.

@@ -53,6 +53,11 @@ const struct BaseStats __data[] = {
         {{ setVarInt("tms", 0) }}{% for i in range(28) %}{% if add(i, 65) in mon.tms %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{% for i in range(4) %}{% if add(i, 1) in mon.hms %}{{ setBit("tms", add(i, 28)) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
         {{ setVarInt("tms", 0) }}{% for i in range(4) %}{% if add(i, 5) in mon.hms %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
         {{ mon.hiddenAbility }}, // The ability only a trainer can ask for
+        0, // padding
+        // The same three abilities at their full width, which is what the
+        // game reads; the bytes above keep whatever fits.
+        { {{ mon.abilities.0 }}, {{ mon.abilities.1 }} },
+        {{ mon.hiddenAbility }},
     },
 ## endfor
 };

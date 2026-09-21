@@ -192,9 +192,10 @@ def main():
         if args.write:
             entry.update(wanted)
 
-    print(f"{len(changed)} of {len(data['encounters'])} maps change")
+    print(f"{len(changed)} of {len(data['encounters'])} maps change"
+          + (": " + ", ".join(changed) if changed else ""))
     for note in getattr(translate, "short", []):
-        print(f"  a slot list the reference left short, filled with nothing: {note}")
+        print(f"  a slot list the reference leaves short, tail filled with its last species: {note}")
     for key, count in counts.most_common():
         print(f"  {key}: {count}")
     if unmatched:

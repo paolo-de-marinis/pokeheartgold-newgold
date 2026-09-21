@@ -31,7 +31,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import import_species  # noqa: E402
 
 FIRST_ADDED = 508
-LAST_ADDED = 574
+# Where the added species stop is whatever the species header says now, not a
+# number written here: the expansion moved it once already.
+LAST_ADDED = FIRST_ADDED + len(import_species.added_species()) - 1
 
 # The egg, the bad egg, and the forms that are not Dex numbers of their own.
 FORM_BASES = {
@@ -136,8 +138,12 @@ def main():
         if name not in data:
             raise SystemExit(f"the reference has no text for SPECIES_{name}")
         added[FIRST_ADDED + offset] = (name, data[name])
-    if FIRST_ADDED + len(import_species.added_species()) - 1 != LAST_ADDED:
-        raise SystemExit("the added species no longer end where this expects")
+    last = int(re.search(r"#define SPECIES_" + re.search(
+        r"#define NUM_SPECIES SPECIES_([A-Z0-9_]+)",
+        (ROOT / "include/constants/species.h").read_text()).group(1) + r"\s+(\d+)",
+        (ROOT / "include/constants/species.h").read_text()).group(1))
+    if LAST_ADDED != last:
+        raise SystemExit(f"the added species end at {LAST_ADDED}, the header at {last}")
 
     names = rows("0237")
     changed = 0

@@ -12,14 +12,19 @@ the unmodified upstream base, not the modified ROMs.
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                          78%
-  done, seen running   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%
-  done, never played   ████████████████████████████████░░░░░░░░░░░░░░░░░░  64%
-  still to do          ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
-  deferred / no scope  ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%
+Overall                                                                    71%
+  done, seen running   ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
+  done, never played   ██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  43%
+  partial              ███████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  30%
+  still to do          ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
+  deferred / no scope  ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
 
-Implementation         ██████████████████████████████████████████████░░░░  93%
-Verified in play       ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  15%
+Implementation         ███████████████████████████████████████░░░░░░░░░░░  78%
+Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%
+
+Overall and Implementation: done 1, partial a half, deferred rows
+out of the denominator. Verified in play: of the rows that are done,
+the share seen running. All three from the states in the tables.
 ```
 <!-- LEDGER:SUMMARY:END -->
 
@@ -30,8 +35,8 @@ Moves       ██████████████████████�
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   545 / 2684
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       47 files
-ROM         143.8 MB of 268.4 MB   (2G card, 54% used)
+Tests       48 files
+ROM         144.9 MB of 268.4 MB   (2G card, 54% used)
 ```
 <!-- LEDGER:COUNTS:END -->
 

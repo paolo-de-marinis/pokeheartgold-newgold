@@ -2300,4 +2300,1872 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">????.? lbs.</language>
 	</row>
+	<row id="msg_0813_victini" index="575">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   8.8 lbs.</language>
+	</row>
+	<row id="msg_0813_snivy" index="576">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  17.9 lbs.</language>
+	</row>
+	<row id="msg_0813_servine" index="577">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  35.3 lbs.</language>
+	</row>
+	<row id="msg_0813_serperior" index="578">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 138.9 lbs.</language>
+	</row>
+	<row id="msg_0813_tepig" index="579">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  21.8 lbs.</language>
+	</row>
+	<row id="msg_0813_pignite" index="580">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 122.4 lbs.</language>
+	</row>
+	<row id="msg_0813_emboar" index="581">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 330.7 lbs.</language>
+	</row>
+	<row id="msg_0813_oshawott" index="582">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  13.0 lbs.</language>
+	</row>
+	<row id="msg_0813_dewott" index="583">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  54.0 lbs.</language>
+	</row>
+	<row id="msg_0813_samurott" index="584">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 208.6 lbs.</language>
+	</row>
+	<row id="msg_0813_patrat" index="585">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  25.6 lbs.</language>
+	</row>
+	<row id="msg_0813_watchog" index="586">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  59.5 lbs.</language>
+	</row>
+	<row id="msg_0813_pansage" index="587">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  23.1 lbs.</language>
+	</row>
+	<row id="msg_0813_simisage" index="588">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  67.2 lbs.</language>
+	</row>
+	<row id="msg_0813_pansear" index="589">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  24.3 lbs.</language>
+	</row>
+	<row id="msg_0813_simisear" index="590">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  61.7 lbs.</language>
+	</row>
+	<row id="msg_0813_panpour" index="591">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  29.8 lbs.</language>
+	</row>
+	<row id="msg_0813_simipour" index="592">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  63.9 lbs.</language>
+	</row>
+	<row id="msg_0813_munna" index="593">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  51.4 lbs.</language>
+	</row>
+	<row id="msg_0813_musharna" index="594">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 133.4 lbs.</language>
+	</row>
+	<row id="msg_0813_pidove" index="595">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   4.6 lbs.</language>
+	</row>
+	<row id="msg_0813_tranquill" index="596">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  33.1 lbs.</language>
+	</row>
+	<row id="msg_0813_unfezant" index="597">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  63.9 lbs.</language>
+	</row>
+	<row id="msg_0813_blitzle" index="598">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  65.7 lbs.</language>
+	</row>
+	<row id="msg_0813_zebstrika" index="599">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 175.3 lbs.</language>
+	</row>
+	<row id="msg_0813_roggenrola" index="600">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  39.7 lbs.</language>
+	</row>
+	<row id="msg_0813_boldore" index="601">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 224.9 lbs.</language>
+	</row>
+	<row id="msg_0813_gigalith" index="602">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 573.2 lbs.</language>
+	</row>
+	<row id="msg_0813_woobat" index="603">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   4.6 lbs.</language>
+	</row>
+	<row id="msg_0813_swoobat" index="604">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  23.1 lbs.</language>
+	</row>
+	<row id="msg_0813_drilbur" index="605">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  18.7 lbs.</language>
+	</row>
+	<row id="msg_0813_excadrill" index="606">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  89.1 lbs.</language>
+	</row>
+	<row id="msg_0813_audino" index="607">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  68.3 lbs.</language>
+	</row>
+	<row id="msg_0813_timburr" index="608">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  27.6 lbs.</language>
+	</row>
+	<row id="msg_0813_gurdurr" index="609">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  88.2 lbs.</language>
+	</row>
+	<row id="msg_0813_conkeldurr" index="610">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 191.8 lbs.</language>
+	</row>
+	<row id="msg_0813_throh" index="611">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 122.4 lbs.</language>
+	</row>
+	<row id="msg_0813_sawk" index="612">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 112.4 lbs.</language>
+	</row>
+	<row id="msg_0813_venipede" index="613">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  11.7 lbs.</language>
+	</row>
+	<row id="msg_0813_whirlipede" index="614">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 129.0 lbs.</language>
+	</row>
+	<row id="msg_0813_scolipede" index="615">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 442.0 lbs.</language>
+	</row>
+	<row id="msg_0813_cottonee" index="616">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   1.3 lbs.</language>
+	</row>
+	<row id="msg_0813_whimsicott" index="617">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  14.6 lbs.</language>
+	</row>
+	<row id="msg_0813_petilil" index="618">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  14.6 lbs.</language>
+	</row>
+	<row id="msg_0813_lilligant" index="619">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  35.9 lbs.</language>
+	</row>
+	<row id="msg_0813_basculin" index="620">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  39.7 lbs.</language>
+	</row>
+	<row id="msg_0813_sandile" index="621">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  33.5 lbs.</language>
+	</row>
+	<row id="msg_0813_krokorok" index="622">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  73.6 lbs.</language>
+	</row>
+	<row id="msg_0813_krookodile" index="623">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 212.3 lbs.</language>
+	</row>
+	<row id="msg_0813_darumaka" index="624">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  82.7 lbs.</language>
+	</row>
+	<row id="msg_0813_darmanitan" index="625">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 204.8 lbs.</language>
+	</row>
+	<row id="msg_0813_maractus" index="626">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  61.7 lbs.</language>
+	</row>
+	<row id="msg_0813_dwebble" index="627">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  32.0 lbs.</language>
+	</row>
+	<row id="msg_0813_crustle" index="628">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 440.9 lbs.</language>
+	</row>
+	<row id="msg_0813_scraggy" index="629">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  26.0 lbs.</language>
+	</row>
+	<row id="msg_0813_scrafty" index="630">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  66.1 lbs.</language>
+	</row>
+	<row id="msg_0813_sigilyph" index="631">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  30.9 lbs.</language>
+	</row>
+	<row id="msg_0813_tirtouga" index="632">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  36.4 lbs.</language>
+	</row>
+	<row id="msg_0813_carracosta" index="633">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 178.6 lbs.</language>
+	</row>
+	<row id="msg_0813_archen" index="634">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  20.9 lbs.</language>
+	</row>
+	<row id="msg_0813_archeops" index="635">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  70.5 lbs.</language>
+	</row>
+	<row id="msg_0813_zorua" index="636">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  27.6 lbs.</language>
+	</row>
+	<row id="msg_0813_zoroark" index="637">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 178.8 lbs.</language>
+	</row>
+	<row id="msg_0813_minccino" index="638">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  12.8 lbs.</language>
+	</row>
+	<row id="msg_0813_cinccino" index="639">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  16.5 lbs.</language>
+	</row>
+	<row id="msg_0813_gothita" index="640">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  12.8 lbs.</language>
+	</row>
+	<row id="msg_0813_gothorita" index="641">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  39.7 lbs.</language>
+	</row>
+	<row id="msg_0813_gothitelle" index="642">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  97.0 lbs.</language>
+	</row>
+	<row id="msg_0813_solosis" index="643">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   2.2 lbs.</language>
+	</row>
+	<row id="msg_0813_duosion" index="644">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  17.6 lbs.</language>
+	</row>
+	<row id="msg_0813_reuniclus" index="645">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  44.3 lbs.</language>
+	</row>
+	<row id="msg_0813_ducklett" index="646">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  12.1 lbs.</language>
+	</row>
+	<row id="msg_0813_swanna" index="647">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  53.4 lbs.</language>
+	</row>
+	<row id="msg_0813_vanillite" index="648">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  12.6 lbs.</language>
+	</row>
+	<row id="msg_0813_vanillish" index="649">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  90.4 lbs.</language>
+	</row>
+	<row id="msg_0813_vanilluxe" index="650">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 126.8 lbs.</language>
+	</row>
+	<row id="msg_0813_deerling" index="651">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  43.0 lbs.</language>
+	</row>
+	<row id="msg_0813_sawsbuck" index="652">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 203.9 lbs.</language>
+	</row>
+	<row id="msg_0813_frillish" index="653">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  72.8 lbs.</language>
+	</row>
+	<row id="msg_0813_jellicent" index="654">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 297.6 lbs.</language>
+	</row>
+	<row id="msg_0813_alomomola" index="655">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  69.7 lbs.</language>
+	</row>
+	<row id="msg_0813_tynamo" index="656">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.7 lbs.</language>
+	</row>
+	<row id="msg_0813_eelektrik" index="657">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  48.5 lbs.</language>
+	</row>
+	<row id="msg_0813_eelektross" index="658">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 177.5 lbs.</language>
+	</row>
+	<row id="msg_0813_axew" index="659">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  39.7 lbs.</language>
+	</row>
+	<row id="msg_0813_fraxure" index="660">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  79.4 lbs.</language>
+	</row>
+	<row id="msg_0813_haxorus" index="661">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 232.6 lbs.</language>
+	</row>
+	<row id="msg_0813_cubchoo" index="662">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  18.7 lbs.</language>
+	</row>
+	<row id="msg_0813_beartic" index="663">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 573.2 lbs.</language>
+	</row>
+	<row id="msg_0813_cryogonal" index="664">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 326.3 lbs.</language>
+	</row>
+	<row id="msg_0813_stunfisk" index="665">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  24.3 lbs.</language>
+	</row>
+	<row id="msg_0813_mienfoo" index="666">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  44.1 lbs.</language>
+	</row>
+	<row id="msg_0813_mienshao" index="667">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  78.3 lbs.</language>
+	</row>
+	<row id="msg_0813_druddigon" index="668">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 306.4 lbs.</language>
+	</row>
+	<row id="msg_0813_golett" index="669">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 202.8 lbs.</language>
+	</row>
+	<row id="msg_0813_golurk" index="670">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 727.5 lbs.</language>
+	</row>
+	<row id="msg_0813_pawniard" index="671">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  22.5 lbs.</language>
+	</row>
+	<row id="msg_0813_bisharp" index="672">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 154.3 lbs.</language>
+	</row>
+	<row id="msg_0813_rufflet" index="673">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  23.1 lbs.</language>
+	</row>
+	<row id="msg_0813_braviary" index="674">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  90.4 lbs.</language>
+	</row>
+	<row id="msg_0813_vullaby" index="675">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  19.8 lbs.</language>
+	</row>
+	<row id="msg_0813_mandibuzz" index="676">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  87.1 lbs.</language>
+	</row>
+	<row id="msg_0813_heatmor" index="677">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 127.9 lbs.</language>
+	</row>
+	<row id="msg_0813_durant" index="678">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  72.8 lbs.</language>
+	</row>
+	<row id="msg_0813_deino" index="679">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  38.1 lbs.</language>
+	</row>
+	<row id="msg_0813_zweilous" index="680">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 110.2 lbs.</language>
+	</row>
+	<row id="msg_0813_hydreigon" index="681">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 352.7 lbs.</language>
+	</row>
+	<row id="msg_0813_larvesta" index="682">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  63.5 lbs.</language>
+	</row>
+	<row id="msg_0813_volcarona" index="683">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 101.4 lbs.</language>
+	</row>
+	<row id="msg_0813_cobalion" index="684">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 551.2 lbs.</language>
+	</row>
+	<row id="msg_0813_terrakion" index="685">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 573.2 lbs.</language>
+	</row>
+	<row id="msg_0813_virizion" index="686">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 440.9 lbs.</language>
+	</row>
+	<row id="msg_0813_tornadus" index="687">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 138.9 lbs.</language>
+	</row>
+	<row id="msg_0813_thundurus" index="688">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 134.5 lbs.</language>
+	</row>
+	<row id="msg_0813_reshiram" index="689">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 727.5 lbs.</language>
+	</row>
+	<row id="msg_0813_zekrom" index="690">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 760.6 lbs.</language>
+	</row>
+	<row id="msg_0813_landorus" index="691">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 149.9 lbs.</language>
+	</row>
+	<row id="msg_0813_kyurem" index="692">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 716.5 lbs.</language>
+	</row>
+	<row id="msg_0813_keldeo" index="693">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 106.9 lbs.</language>
+	</row>
+	<row id="msg_0813_meloetta" index="694">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  14.3 lbs.</language>
+	</row>
+	<row id="msg_0813_genesect" index="695">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 181.9 lbs.</language>
+	</row>
+	<row id="msg_0813_chespin" index="696">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  19.8 lbs.</language>
+	</row>
+	<row id="msg_0813_quilladin" index="697">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  63.9 lbs.</language>
+	</row>
+	<row id="msg_0813_chesnaught" index="698">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 198.4 lbs.</language>
+	</row>
+	<row id="msg_0813_fennekin" index="699">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  20.7 lbs.</language>
+	</row>
+	<row id="msg_0813_braixen" index="700">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  32.0 lbs.</language>
+	</row>
+	<row id="msg_0813_delphox" index="701">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  86.0 lbs.</language>
+	</row>
+	<row id="msg_0813_froakie" index="702">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  15.4 lbs.</language>
+	</row>
+	<row id="msg_0813_frogadier" index="703">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  24.0 lbs.</language>
+	</row>
+	<row id="msg_0813_greninja" index="704">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  88.2 lbs.</language>
+	</row>
+	<row id="msg_0813_scatterbug" index="705">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   5.5 lbs.</language>
+	</row>
+	<row id="msg_0813_spewpa" index="706">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  18.5 lbs.</language>
+	</row>
+	<row id="msg_0813_vivillon" index="707">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  37.5 lbs.</language>
+	</row>
+	<row id="msg_0813_flabebe" index="708">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.2 lbs.</language>
+	</row>
+	<row id="msg_0813_floette" index="709">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   2.0 lbs.</language>
+	</row>
+	<row id="msg_0813_florges" index="710">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  22.0 lbs.</language>
+	</row>
+	<row id="msg_0813_skiddo" index="711">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  68.3 lbs.</language>
+	</row>
+	<row id="msg_0813_gogoat" index="712">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 200.6 lbs.</language>
+	</row>
+	<row id="msg_0813_pancham" index="713">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  17.6 lbs.</language>
+	</row>
+	<row id="msg_0813_pangoro" index="714">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 299.8 lbs.</language>
+	</row>
+	<row id="msg_0813_furfrou" index="715">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  61.7 lbs.</language>
+	</row>
+	<row id="msg_0813_honedge" index="716">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   4.4 lbs.</language>
+	</row>
+	<row id="msg_0813_doublade" index="717">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   9.9 lbs.</language>
+	</row>
+	<row id="msg_0813_aegislash" index="718">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 116.8 lbs.</language>
+	</row>
+	<row id="msg_0813_spritzee" index="719">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   1.1 lbs.</language>
+	</row>
+	<row id="msg_0813_aromatisse" index="720">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  34.2 lbs.</language>
+	</row>
+	<row id="msg_0813_swirlix" index="721">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   7.7 lbs.</language>
+	</row>
+	<row id="msg_0813_slurpuff" index="722">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  11.0 lbs.</language>
+	</row>
+	<row id="msg_0813_inkay" index="723">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   7.7 lbs.</language>
+	</row>
+	<row id="msg_0813_malamar" index="724">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 103.6 lbs.</language>
+	</row>
+	<row id="msg_0813_binacle" index="725">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  68.3 lbs.</language>
+	</row>
+	<row id="msg_0813_barbaracle" index="726">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 211.6 lbs.</language>
+	</row>
+	<row id="msg_0813_skrelp" index="727">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  16.1 lbs.</language>
+	</row>
+	<row id="msg_0813_dragalge" index="728">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 179.7 lbs.</language>
+	</row>
+	<row id="msg_0813_clauncher" index="729">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  18.3 lbs.</language>
+	</row>
+	<row id="msg_0813_clawitzer" index="730">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  77.8 lbs.</language>
+	</row>
+	<row id="msg_0813_helioptile" index="731">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  13.2 lbs.</language>
+	</row>
+	<row id="msg_0813_heliolisk" index="732">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  46.3 lbs.</language>
+	</row>
+	<row id="msg_0813_tyrunt" index="733">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  57.3 lbs.</language>
+	</row>
+	<row id="msg_0813_tyrantrum" index="734">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 595.2 lbs.</language>
+	</row>
+	<row id="msg_0813_amaura" index="735">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  55.6 lbs.</language>
+	</row>
+	<row id="msg_0813_aurorus" index="736">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 496.0 lbs.</language>
+	</row>
+	<row id="msg_0813_hawlucha" index="737">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  47.4 lbs.</language>
+	</row>
+	<row id="msg_0813_carbink" index="738">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  12.6 lbs.</language>
+	</row>
+	<row id="msg_0813_goomy" index="739">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   6.2 lbs.</language>
+	</row>
+	<row id="msg_0813_sliggoo" index="740">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  38.6 lbs.</language>
+	</row>
+	<row id="msg_0813_goodra" index="741">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 331.8 lbs.</language>
+	</row>
+	<row id="msg_0813_klefki" index="742">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   6.6 lbs.</language>
+	</row>
+	<row id="msg_0813_bergmite" index="743">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 219.4 lbs.</language>
+	</row>
+	<row id="msg_0813_avalugg" index="744">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1113.3 lbs.</language>
+	</row>
+	<row id="msg_0813_xerneas" index="745">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 474.0 lbs.</language>
+	</row>
+	<row id="msg_0813_yveltal" index="746">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 447.5 lbs.</language>
+	</row>
+	<row id="msg_0813_zygarde" index="747">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 672.4 lbs.</language>
+	</row>
+	<row id="msg_0813_diancie" index="748">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  19.4 lbs.</language>
+	</row>
+	<row id="msg_0813_hoopa" index="749">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  19.8 lbs.</language>
+	</row>
+	<row id="msg_0813_volcanion" index="750">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 429.9 lbs.</language>
+	</row>
+	<row id="msg_0813_rowlet" index="751">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   3.3 lbs.</language>
+	</row>
+	<row id="msg_0813_dartrix" index="752">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  35.3 lbs.</language>
+	</row>
+	<row id="msg_0813_decidueye" index="753">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  80.7 lbs.</language>
+	</row>
+	<row id="msg_0813_litten" index="754">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   9.5 lbs.</language>
+	</row>
+	<row id="msg_0813_torracat" index="755">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  55.1 lbs.</language>
+	</row>
+	<row id="msg_0813_incineroar" index="756">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 183.0 lbs.</language>
+	</row>
+	<row id="msg_0813_popplio" index="757">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  16.5 lbs.</language>
+	</row>
+	<row id="msg_0813_brionne" index="758">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  38.6 lbs.</language>
+	</row>
+	<row id="msg_0813_primarina" index="759">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  97.0 lbs.</language>
+	</row>
+	<row id="msg_0813_pikipek" index="760">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   2.6 lbs.</language>
+	</row>
+	<row id="msg_0813_trumbeak" index="761">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  32.6 lbs.</language>
+	</row>
+	<row id="msg_0813_toucannon" index="762">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  57.3 lbs.</language>
+	</row>
+	<row id="msg_0813_yungoos" index="763">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  13.2 lbs.</language>
+	</row>
+	<row id="msg_0813_gumshoos" index="764">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  31.3 lbs.</language>
+	</row>
+	<row id="msg_0813_grubbin" index="765">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   9.7 lbs.</language>
+	</row>
+	<row id="msg_0813_charjabug" index="766">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  23.1 lbs.</language>
+	</row>
+	<row id="msg_0813_vikavolt" index="767">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  99.2 lbs.</language>
+	</row>
+	<row id="msg_0813_crabrawler" index="768">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  15.4 lbs.</language>
+	</row>
+	<row id="msg_0813_crabominable" index="769">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 396.8 lbs.</language>
+	</row>
+	<row id="msg_0813_oricorio" index="770">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   7.5 lbs.</language>
+	</row>
+	<row id="msg_0813_cutiefly" index="771">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.4 lbs.</language>
+	</row>
+	<row id="msg_0813_ribombee" index="772">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   1.1 lbs.</language>
+	</row>
+	<row id="msg_0813_rockruff" index="773">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  20.3 lbs.</language>
+	</row>
+	<row id="msg_0813_lycanroc" index="774">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  55.1 lbs.</language>
+	</row>
+	<row id="msg_0813_wishiwashi" index="775">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.7 lbs.</language>
+	</row>
+	<row id="msg_0813_mareanie" index="776">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  17.6 lbs.</language>
+	</row>
+	<row id="msg_0813_toxapex" index="777">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  32.0 lbs.</language>
+	</row>
+	<row id="msg_0813_mudbray" index="778">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 242.5 lbs.</language>
+	</row>
+	<row id="msg_0813_mudsdale" index="779">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">2028.3 lbs.</language>
+	</row>
+	<row id="msg_0813_dewpider" index="780">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   8.8 lbs.</language>
+	</row>
+	<row id="msg_0813_araquanid" index="781">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 180.8 lbs.</language>
+	</row>
+	<row id="msg_0813_fomantis" index="782">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   3.3 lbs.</language>
+	</row>
+	<row id="msg_0813_lurantis" index="783">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  40.8 lbs.</language>
+	</row>
+	<row id="msg_0813_morelull" index="784">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   3.3 lbs.</language>
+	</row>
+	<row id="msg_0813_shiinotic" index="785">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  25.4 lbs.</language>
+	</row>
+	<row id="msg_0813_salandit" index="786">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  10.6 lbs.</language>
+	</row>
+	<row id="msg_0813_salazzle" index="787">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  48.9 lbs.</language>
+	</row>
+	<row id="msg_0813_stufful" index="788">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  15.0 lbs.</language>
+	</row>
+	<row id="msg_0813_bewear" index="789">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 297.6 lbs.</language>
+	</row>
+	<row id="msg_0813_bounsweet" index="790">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   7.1 lbs.</language>
+	</row>
+	<row id="msg_0813_steenee" index="791">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  18.1 lbs.</language>
+	</row>
+	<row id="msg_0813_tsareena" index="792">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  47.2 lbs.</language>
+	</row>
+	<row id="msg_0813_comfey" index="793">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.7 lbs.</language>
+	</row>
+	<row id="msg_0813_oranguru" index="794">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 167.6 lbs.</language>
+	</row>
+	<row id="msg_0813_passimian" index="795">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 182.5 lbs.</language>
+	</row>
+	<row id="msg_0813_wimpod" index="796">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  26.5 lbs.</language>
+	</row>
+	<row id="msg_0813_golisopod" index="797">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 238.1 lbs.</language>
+	</row>
+	<row id="msg_0813_sandygast" index="798">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 154.3 lbs.</language>
+	</row>
+	<row id="msg_0813_palossand" index="799">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 551.2 lbs.</language>
+	</row>
+	<row id="msg_0813_pyukumuku" index="800">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   2.6 lbs.</language>
+	</row>
+	<row id="msg_0813_type_null" index="801">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 265.7 lbs.</language>
+	</row>
+	<row id="msg_0813_silvally" index="802">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 221.6 lbs.</language>
+	</row>
+	<row id="msg_0813_minior" index="803">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  88.2 lbs.</language>
+	</row>
+	<row id="msg_0813_komala" index="804">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  43.9 lbs.</language>
+	</row>
+	<row id="msg_0813_turtonator" index="805">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 467.4 lbs.</language>
+	</row>
+	<row id="msg_0813_togedemaru" index="806">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   7.3 lbs.</language>
+	</row>
+	<row id="msg_0813_mimikyu" index="807">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   1.5 lbs.</language>
+	</row>
+	<row id="msg_0813_bruxish" index="808">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  41.9 lbs.</language>
+	</row>
+	<row id="msg_0813_drampa" index="809">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 407.9 lbs.</language>
+	</row>
+	<row id="msg_0813_dhelmise" index="810">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 463.0 lbs.</language>
+	</row>
+	<row id="msg_0813_jangmo_o" index="811">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  65.5 lbs.</language>
+	</row>
+	<row id="msg_0813_hakamo_o" index="812">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 103.6 lbs.</language>
+	</row>
+	<row id="msg_0813_kommo_o" index="813">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 172.4 lbs.</language>
+	</row>
+	<row id="msg_0813_tapu_koko" index="814">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  45.2 lbs.</language>
+	</row>
+	<row id="msg_0813_tapu_lele" index="815">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  41.0 lbs.</language>
+	</row>
+	<row id="msg_0813_tapu_bulu" index="816">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 100.3 lbs.</language>
+	</row>
+	<row id="msg_0813_tapu_fini" index="817">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  46.7 lbs.</language>
+	</row>
+	<row id="msg_0813_cosmog" index="818">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.2 lbs.</language>
+	</row>
+	<row id="msg_0813_cosmoem" index="819">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">2204.4 lbs.</language>
+	</row>
+	<row id="msg_0813_solgaleo" index="820">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 507.1 lbs.</language>
+	</row>
+	<row id="msg_0813_lunala" index="821">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 264.6 lbs.</language>
+	</row>
+	<row id="msg_0813_nihilego" index="822">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 122.4 lbs.</language>
+	</row>
+	<row id="msg_0813_buzzwole" index="823">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 735.5 lbs.</language>
+	</row>
+	<row id="msg_0813_pheromosa" index="824">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  55.1 lbs.</language>
+	</row>
+	<row id="msg_0813_xurkitree" index="825">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 220.5 lbs.</language>
+	</row>
+	<row id="msg_0813_celesteela" index="826">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">2204.4 lbs.</language>
+	</row>
+	<row id="msg_0813_kartana" index="827">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.2 lbs.</language>
+	</row>
+	<row id="msg_0813_guzzlord" index="828">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1957.7 lbs.</language>
+	</row>
+	<row id="msg_0813_necrozma" index="829">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 507.1 lbs.</language>
+	</row>
+	<row id="msg_0813_magearna" index="830">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 177.5 lbs.</language>
+	</row>
+	<row id="msg_0813_marshadow" index="831">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  48.9 lbs.</language>
+	</row>
+	<row id="msg_0813_poipole" index="832">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   4.0 lbs.</language>
+	</row>
+	<row id="msg_0813_naganadel" index="833">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 330.7 lbs.</language>
+	</row>
+	<row id="msg_0813_stakataka" index="834">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1807.8 lbs.</language>
+	</row>
+	<row id="msg_0813_blacephalon" index="835">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  28.7 lbs.</language>
+	</row>
+	<row id="msg_0813_zeraora" index="836">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  98.1 lbs.</language>
+	</row>
+	<row id="msg_0813_meltan" index="837">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  17.6 lbs.</language>
+	</row>
+	<row id="msg_0813_melmetal" index="838">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1763.7 lbs.</language>
+	</row>
+	<row id="msg_0813_grookey" index="839">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  11.0 lbs.</language>
+	</row>
+	<row id="msg_0813_thwackey" index="840">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  30.9 lbs.</language>
+	</row>
+	<row id="msg_0813_rillaboom" index="841">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 198.4 lbs.</language>
+	</row>
+	<row id="msg_0813_scorbunny" index="842">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   9.9 lbs.</language>
+	</row>
+	<row id="msg_0813_raboot" index="843">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  19.8 lbs.</language>
+	</row>
+	<row id="msg_0813_cinderace" index="844">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  72.8 lbs.</language>
+	</row>
+	<row id="msg_0813_sobble" index="845">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   8.8 lbs.</language>
+	</row>
+	<row id="msg_0813_drizzile" index="846">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  25.4 lbs.</language>
+	</row>
+	<row id="msg_0813_inteleon" index="847">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  99.6 lbs.</language>
+	</row>
+	<row id="msg_0813_skwovet" index="848">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   5.5 lbs.</language>
+	</row>
+	<row id="msg_0813_greedent" index="849">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  13.2 lbs.</language>
+	</row>
+	<row id="msg_0813_rookidee" index="850">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   4.0 lbs.</language>
+	</row>
+	<row id="msg_0813_corvisquire" index="851">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  35.3 lbs.</language>
+	</row>
+	<row id="msg_0813_corviknight" index="852">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 165.3 lbs.</language>
+	</row>
+	<row id="msg_0813_blipbug" index="853">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  17.6 lbs.</language>
+	</row>
+	<row id="msg_0813_dottler" index="854">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  43.0 lbs.</language>
+	</row>
+	<row id="msg_0813_orbeetle" index="855">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  89.9 lbs.</language>
+	</row>
+	<row id="msg_0813_nickit" index="856">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  19.6 lbs.</language>
+	</row>
+	<row id="msg_0813_thievul" index="857">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  43.9 lbs.</language>
+	</row>
+	<row id="msg_0813_gossifleur" index="858">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   4.9 lbs.</language>
+	</row>
+	<row id="msg_0813_eldegoss" index="859">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   5.5 lbs.</language>
+	</row>
+	<row id="msg_0813_wooloo" index="860">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  13.2 lbs.</language>
+	</row>
+	<row id="msg_0813_dubwool" index="861">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  94.8 lbs.</language>
+	</row>
+	<row id="msg_0813_chewtle" index="862">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  18.7 lbs.</language>
+	</row>
+	<row id="msg_0813_drednaw" index="863">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 254.6 lbs.</language>
+	</row>
+	<row id="msg_0813_yamper" index="864">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  29.8 lbs.</language>
+	</row>
+	<row id="msg_0813_boltund" index="865">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  75.0 lbs.</language>
+	</row>
+	<row id="msg_0813_rolycoly" index="866">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  26.5 lbs.</language>
+	</row>
+	<row id="msg_0813_carkol" index="867">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 172.0 lbs.</language>
+	</row>
+	<row id="msg_0813_coalossal" index="868">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 684.5 lbs.</language>
+	</row>
+	<row id="msg_0813_silicobra" index="869">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  16.8 lbs.</language>
+	</row>
+	<row id="msg_0813_sandaconda" index="870">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 144.4 lbs.</language>
+	</row>
+	<row id="msg_0813_cramorant" index="871">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  39.7 lbs.</language>
+	</row>
+	<row id="msg_0813_arrokuda" index="872">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   2.2 lbs.</language>
+	</row>
+	<row id="msg_0813_barraskewda" index="873">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  66.1 lbs.</language>
+	</row>
+	<row id="msg_0813_toxel" index="874">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  24.3 lbs.</language>
+	</row>
+	<row id="msg_0813_toxtricity" index="875">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  88.2 lbs.</language>
+	</row>
+	<row id="msg_0813_clobbopus" index="876">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   8.8 lbs.</language>
+	</row>
+	<row id="msg_0813_grapploct" index="877">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  86.0 lbs.</language>
+	</row>
+	<row id="msg_0813_sinistea" index="878">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.4 lbs.</language>
+	</row>
+	<row id="msg_0813_polteageist" index="879">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.9 lbs.</language>
+	</row>
+	<row id="msg_0813_hatenna" index="880">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   7.5 lbs.</language>
+	</row>
+	<row id="msg_0813_hattrem" index="881">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  10.6 lbs.</language>
+	</row>
+	<row id="msg_0813_hatterene" index="882">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  11.2 lbs.</language>
+	</row>
+	<row id="msg_0813_impidimp" index="883">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  12.1 lbs.</language>
+	</row>
+	<row id="msg_0813_morgrem" index="884">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  27.6 lbs.</language>
+	</row>
+	<row id="msg_0813_grimmsnarl" index="885">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 134.5 lbs.</language>
+	</row>
+	<row id="msg_0813_obstagoon" index="886">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 101.4 lbs.</language>
+	</row>
+	<row id="msg_0813_perrserker" index="887">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  61.7 lbs.</language>
+	</row>
+	<row id="msg_0813_cursola" index="888">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.9 lbs.</language>
+	</row>
+	<row id="msg_0813_sirfetchd" index="889">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 257.9 lbs.</language>
+	</row>
+	<row id="msg_0813_mr_rime" index="890">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 128.3 lbs.</language>
+	</row>
+	<row id="msg_0813_runerigus" index="891">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 146.8 lbs.</language>
+	</row>
+	<row id="msg_0813_milcery" index="892">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.7 lbs.</language>
+	</row>
+	<row id="msg_0813_alcremie" index="893">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   1.1 lbs.</language>
+	</row>
+	<row id="msg_0813_falinks" index="894">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 136.7 lbs.</language>
+	</row>
+	<row id="msg_0813_pincurchin" index="895">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   2.2 lbs.</language>
+	</row>
+	<row id="msg_0813_snom" index="896">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   8.4 lbs.</language>
+	</row>
+	<row id="msg_0813_frosmoth" index="897">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  92.6 lbs.</language>
+	</row>
+	<row id="msg_0813_stonjourner" index="898">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1146.4 lbs.</language>
+	</row>
+	<row id="msg_0813_eiscue" index="899">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 196.2 lbs.</language>
+	</row>
+	<row id="msg_0813_indeedee" index="900">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  61.7 lbs.</language>
+	</row>
+	<row id="msg_0813_morpeko" index="901">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   6.6 lbs.</language>
+	</row>
+	<row id="msg_0813_cufant" index="902">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 220.5 lbs.</language>
+	</row>
+	<row id="msg_0813_copperajah" index="903">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1433.0 lbs.</language>
+	</row>
+	<row id="msg_0813_dracozolt" index="904">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 418.9 lbs.</language>
+	</row>
+	<row id="msg_0813_arctozolt" index="905">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 330.7 lbs.</language>
+	</row>
+	<row id="msg_0813_dracovish" index="906">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 474.0 lbs.</language>
+	</row>
+	<row id="msg_0813_arctovish" index="907">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 385.8 lbs.</language>
+	</row>
+	<row id="msg_0813_duraludon" index="908">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  88.2 lbs.</language>
+	</row>
+	<row id="msg_0813_dreepy" index="909">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   4.4 lbs.</language>
+	</row>
+	<row id="msg_0813_drakloak" index="910">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  24.3 lbs.</language>
+	</row>
+	<row id="msg_0813_dragapult" index="911">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 110.2 lbs.</language>
+	</row>
+	<row id="msg_0813_zacian" index="912">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 242.5 lbs.</language>
+	</row>
+	<row id="msg_0813_zamazenta" index="913">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 463.0 lbs.</language>
+	</row>
+	<row id="msg_0813_eternatus" index="914">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">2094.4 lbs.</language>
+	</row>
+	<row id="msg_0813_kubfu" index="915">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  26.5 lbs.</language>
+	</row>
+	<row id="msg_0813_urshifu" index="916">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 231.5 lbs.</language>
+	</row>
+	<row id="msg_0813_zarude" index="917">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 154.3 lbs.</language>
+	</row>
+	<row id="msg_0813_regieleki" index="918">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 319.7 lbs.</language>
+	</row>
+	<row id="msg_0813_regidrago" index="919">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 440.9 lbs.</language>
+	</row>
+	<row id="msg_0813_glastrier" index="920">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1763.7 lbs.</language>
+	</row>
+	<row id="msg_0813_spectrier" index="921">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  98.1 lbs.</language>
+	</row>
+	<row id="msg_0813_calyrex" index="922">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  17.0 lbs.</language>
+	</row>
+	<row id="msg_0813_basculegion" index="923">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 242.5 lbs.</language>
+	</row>
+	<row id="msg_0813_sneasler" index="924">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  94.8 lbs.</language>
+	</row>
+	<row id="msg_0813_overqwil" index="925">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 133.4 lbs.</language>
+	</row>
+	<row id="msg_0813_enamorus" index="926">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 105.8 lbs.</language>
+	</row>
+	<row id="msg_0813_sprigatito" index="927">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   9.0 lbs.</language>
+	</row>
+	<row id="msg_0813_floragato" index="928">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  26.9 lbs.</language>
+	</row>
+	<row id="msg_0813_meowscarada" index="929">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  68.8 lbs.</language>
+	</row>
+	<row id="msg_0813_fuecoco" index="930">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  21.6 lbs.</language>
+	</row>
+	<row id="msg_0813_crocalor" index="931">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  67.7 lbs.</language>
+	</row>
+	<row id="msg_0813_skeledirge" index="932">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 719.8 lbs.</language>
+	</row>
+	<row id="msg_0813_quaxly" index="933">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  13.4 lbs.</language>
+	</row>
+	<row id="msg_0813_quaxwell" index="934">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  47.4 lbs.</language>
+	</row>
+	<row id="msg_0813_quaquaval" index="935">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 136.5 lbs.</language>
+	</row>
+	<row id="msg_0813_lechonk" index="936">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  22.5 lbs.</language>
+	</row>
+	<row id="msg_0813_oinkologne" index="937">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 264.6 lbs.</language>
+	</row>
+	<row id="msg_0813_tarountula" index="938">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   8.8 lbs.</language>
+	</row>
+	<row id="msg_0813_spidops" index="939">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  36.4 lbs.</language>
+	</row>
+	<row id="msg_0813_nymble" index="940">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   2.2 lbs.</language>
+	</row>
+	<row id="msg_0813_lokix" index="941">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  38.6 lbs.</language>
+	</row>
+	<row id="msg_0813_pawmi" index="942">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   5.5 lbs.</language>
+	</row>
+	<row id="msg_0813_pawmo" index="943">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  14.3 lbs.</language>
+	</row>
+	<row id="msg_0813_pawmot" index="944">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  90.4 lbs.</language>
+	</row>
+	<row id="msg_0813_tandemaus" index="945">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   4.0 lbs.</language>
+	</row>
+	<row id="msg_0813_maushold" index="946">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   5.1 lbs.</language>
+	</row>
+	<row id="msg_0813_fidough" index="947">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  24.0 lbs.</language>
+	</row>
+	<row id="msg_0813_dachsbun" index="948">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  32.8 lbs.</language>
+	</row>
+	<row id="msg_0813_smoliv" index="949">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  14.3 lbs.</language>
+	</row>
+	<row id="msg_0813_dolliv" index="950">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  26.2 lbs.</language>
+	</row>
+	<row id="msg_0813_arboliva" index="951">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 106.3 lbs.</language>
+	</row>
+	<row id="msg_0813_squawkabilly" index="952">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   5.3 lbs.</language>
+	</row>
+	<row id="msg_0813_nacli" index="953">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  35.3 lbs.</language>
+	</row>
+	<row id="msg_0813_naclstack" index="954">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 231.5 lbs.</language>
+	</row>
+	<row id="msg_0813_garganacl" index="955">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 529.1 lbs.</language>
+	</row>
+	<row id="msg_0813_charcadet" index="956">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  23.1 lbs.</language>
+	</row>
+	<row id="msg_0813_armarouge" index="957">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 187.4 lbs.</language>
+	</row>
+	<row id="msg_0813_ceruledge" index="958">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 136.7 lbs.</language>
+	</row>
+	<row id="msg_0813_tadbulb" index="959">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.9 lbs.</language>
+	</row>
+	<row id="msg_0813_bellibolt" index="960">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 249.1 lbs.</language>
+	</row>
+	<row id="msg_0813_wattrel" index="961">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   7.9 lbs.</language>
+	</row>
+	<row id="msg_0813_kilowattrel" index="962">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  85.1 lbs.</language>
+	</row>
+	<row id="msg_0813_maschiff" index="963">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  35.3 lbs.</language>
+	</row>
+	<row id="msg_0813_mabosstiff" index="964">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 134.5 lbs.</language>
+	</row>
+	<row id="msg_0813_shroodle" index="965">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   1.5 lbs.</language>
+	</row>
+	<row id="msg_0813_grafaiai" index="966">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  60.0 lbs.</language>
+	</row>
+	<row id="msg_0813_bramblin" index="967">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   1.3 lbs.</language>
+	</row>
+	<row id="msg_0813_brambleghast" index="968">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  13.2 lbs.</language>
+	</row>
+	<row id="msg_0813_toedscool" index="969">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  72.8 lbs.</language>
+	</row>
+	<row id="msg_0813_toedscruel" index="970">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 127.9 lbs.</language>
+	</row>
+	<row id="msg_0813_klawf" index="971">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 174.2 lbs.</language>
+	</row>
+	<row id="msg_0813_capsakid" index="972">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   6.6 lbs.</language>
+	</row>
+	<row id="msg_0813_scovillain" index="973">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  33.1 lbs.</language>
+	</row>
+	<row id="msg_0813_rellor" index="974">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   2.2 lbs.</language>
+	</row>
+	<row id="msg_0813_rabsca" index="975">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   7.7 lbs.</language>
+	</row>
+	<row id="msg_0813_flittle" index="976">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   3.3 lbs.</language>
+	</row>
+	<row id="msg_0813_espathra" index="977">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 198.4 lbs.</language>
+	</row>
+	<row id="msg_0813_tinkatink" index="978">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  19.6 lbs.</language>
+	</row>
+	<row id="msg_0813_tinkatuff" index="979">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 130.3 lbs.</language>
+	</row>
+	<row id="msg_0813_tinkaton" index="980">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 248.7 lbs.</language>
+	</row>
+	<row id="msg_0813_wiglett" index="981">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   4.0 lbs.</language>
+	</row>
+	<row id="msg_0813_wugtrio" index="982">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  11.9 lbs.</language>
+	</row>
+	<row id="msg_0813_bombirdier" index="983">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  94.6 lbs.</language>
+	</row>
+	<row id="msg_0813_finizen" index="984">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 132.7 lbs.</language>
+	</row>
+	<row id="msg_0813_palafin" index="985">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 132.7 lbs.</language>
+	</row>
+	<row id="msg_0813_varoom" index="986">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  77.2 lbs.</language>
+	</row>
+	<row id="msg_0813_revavroom" index="987">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 264.6 lbs.</language>
+	</row>
+	<row id="msg_0813_cyclizar" index="988">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 138.9 lbs.</language>
+	</row>
+	<row id="msg_0813_orthworm" index="989">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 683.4 lbs.</language>
+	</row>
+	<row id="msg_0813_glimmet" index="990">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  17.6 lbs.</language>
+	</row>
+	<row id="msg_0813_glimmora" index="991">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  99.2 lbs.</language>
+	</row>
+	<row id="msg_0813_greavard" index="992">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  77.2 lbs.</language>
+	</row>
+	<row id="msg_0813_houndstone" index="993">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  33.1 lbs.</language>
+	</row>
+	<row id="msg_0813_flamigo" index="994">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  81.6 lbs.</language>
+	</row>
+	<row id="msg_0813_cetoddle" index="995">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  99.2 lbs.</language>
+	</row>
+	<row id="msg_0813_cetitan" index="996">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1543.2 lbs.</language>
+	</row>
+	<row id="msg_0813_veluza" index="997">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 198.4 lbs.</language>
+	</row>
+	<row id="msg_0813_dondozo" index="998">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 485.0 lbs.</language>
+	</row>
+	<row id="msg_0813_tatsugiri" index="999">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  17.6 lbs.</language>
+	</row>
+	<row id="msg_0813_clodsire" index="1000">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 491.6 lbs.</language>
+	</row>
+	<row id="msg_0813_kingambit" index="1001">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 264.6 lbs.</language>
+	</row>
+	<row id="msg_0813_great_tusk" index="1002">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 705.5 lbs.</language>
+	</row>
+	<row id="msg_0813_scream_tail" index="1003">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  17.6 lbs.</language>
+	</row>
+	<row id="msg_0813_brute_bonnet" index="1004">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  46.3 lbs.</language>
+	</row>
+	<row id="msg_0813_flutter_mane" index="1005">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   8.8 lbs.</language>
+	</row>
+	<row id="msg_0813_slither_wing" index="1006">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 202.8 lbs.</language>
+	</row>
+	<row id="msg_0813_sandy_shocks" index="1007">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 132.3 lbs.</language>
+	</row>
+	<row id="msg_0813_iron_treads" index="1008">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 529.1 lbs.</language>
+	</row>
+	<row id="msg_0813_iron_bundle" index="1009">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  24.3 lbs.</language>
+	</row>
+	<row id="msg_0813_iron_hands" index="1010">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 839.3 lbs.</language>
+	</row>
+	<row id="msg_0813_iron_jugulis" index="1011">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 244.7 lbs.</language>
+	</row>
+	<row id="msg_0813_iron_moth" index="1012">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  79.4 lbs.</language>
+	</row>
+	<row id="msg_0813_iron_thorns" index="1013">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 668.0 lbs.</language>
+	</row>
+	<row id="msg_0813_frigibax" index="1014">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  37.5 lbs.</language>
+	</row>
+	<row id="msg_0813_arctibax" index="1015">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  66.1 lbs.</language>
+	</row>
+	<row id="msg_0813_baxcalibur" index="1016">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 463.0 lbs.</language>
+	</row>
+	<row id="msg_0813_gimmighoul" index="1017">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  11.0 lbs.</language>
+	</row>
+	<row id="msg_0813_gholdengo" index="1018">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  66.1 lbs.</language>
+	</row>
+	<row id="msg_0813_wo_chien" index="1019">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 163.6 lbs.</language>
+	</row>
+	<row id="msg_0813_chien_pao" index="1020">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 335.5 lbs.</language>
+	</row>
+	<row id="msg_0813_ting_lu" index="1021">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1542.6 lbs.</language>
+	</row>
+	<row id="msg_0813_chi_yu" index="1022">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  10.8 lbs.</language>
+	</row>
+	<row id="msg_0813_roaring_moon" index="1023">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 837.8 lbs.</language>
+	</row>
+	<row id="msg_0813_iron_valiant" index="1024">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  77.2 lbs.</language>
+	</row>
+	<row id="msg_0813_koraidon" index="1025">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 668.0 lbs.</language>
+	</row>
+	<row id="msg_0813_miraidon" index="1026">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 529.1 lbs.</language>
+	</row>
+	<row id="msg_0813_walking_wake" index="1027">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 617.3 lbs.</language>
+	</row>
+	<row id="msg_0813_iron_leaves" index="1028">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 275.6 lbs.</language>
+	</row>
+	<row id="msg_0813_poltchageist" index="1029">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   2.4 lbs.</language>
+	</row>
+	<row id="msg_0813_sinistcha" index="1030">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   4.9 lbs.</language>
+	</row>
+	<row id="msg_0813_okidogi" index="1031">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 203.3 lbs.</language>
+	</row>
+	<row id="msg_0813_munkidori" index="1032">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  26.9 lbs.</language>
+	</row>
+	<row id="msg_0813_fezandipiti" index="1033">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  66.4 lbs.</language>
+	</row>
+	<row id="msg_0813_ogerpon" index="1034">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  87.7 lbs.</language>
+	</row>
+	<row id="msg_0813_archaludon" index="1035">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 132.3 lbs.</language>
+	</row>
+	<row id="msg_0813_gouging_fire" index="1036">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1300.7 lbs.</language>
+	</row>
+	<row id="msg_0813_raging_bolt" index="1037">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1058.2 lbs.</language>
+	</row>
+	<row id="msg_0813_iron_boulder" index="1038">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 358.3 lbs.</language>
+	</row>
+	<row id="msg_0813_iron_crown" index="1039">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 343.9 lbs.</language>
+	</row>
+	<row id="msg_0813_terapagos" index="1040">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  14.3 lbs.</language>
+	</row>
+	<row id="msg_0813_pecharunt" index="1041">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">   0.7 lbs.</language>
+	</row>
 </body>

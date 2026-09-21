@@ -46,6 +46,14 @@ typedef struct BaseStats {
     // personality picks it, so nothing that does not know about it can give
     // one out by accident.
     /* 0x2C */ u8 hiddenAbility;
+    // The three bytes above cannot hold an ability any more: the expansion
+    // numbers them to 319, and 89 of the slots the reference fills are past
+    // 255. The full values live here, the same way the experience yield does,
+    // and the bytes keep whatever fits for anything still reading the record
+    // by offset.
+    /* 0x2D */ u8 padding_2D;
+    /* 0x2E */ u16 abilitiesFull[2];
+    /* 0x32 */ u16 hiddenAbilityFull;
 } BASE_STATS;
 
 // Structs
