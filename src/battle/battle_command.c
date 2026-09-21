@@ -8935,6 +8935,214 @@ BOOL BtlCmd_TryActivateZeroToHero(BattleSystem *battleSystem, BattleContext *ctx
     return FALSE;
 }
 
+// Forest's Curse and Trick-or-Treat give a Pokemon a type on top of what it
+// already has. A Pokemon that already has that type gains nothing.
+static void AddBattlerType(BattleContext *ctx, int battlerId, u8 type) {
+    if (ctx->battleMons[battlerId].type1 == type || ctx->battleMons[battlerId].type2 == type) {
+        return;
+    }
+    ctx->battleMons[battlerId].type3 = type;
+}
+
+BOOL BtlCmd_AddType(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    AddBattlerType(ctx, ctx->battlerIdTarget, BattleScriptReadWord(ctx));
+
+    return FALSE;
+}
+
+BOOL BtlCmd_HandleForestsCurse(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+
+    AddBattlerType(ctx, ctx->battlerIdTarget, TYPE_GRASS);
+
+    return FALSE;
+}
+
+BOOL BtlCmd_HandleTrickOrTreat(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+    BattleScriptReadWord(ctx);
+
+    AddBattlerType(ctx, ctx->battlerIdTarget, TYPE_GHOST);
+
+    return FALSE;
+}
+
+BOOL BtlCmd_GoToIfThirdType(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+    int type = BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (ctx->battleMons[BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side)].type3 == type) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+// The hazards a side has, in the order something switching in meets them. The
+// queue is kept rather than derived so that the order is the order they were
+// laid in, which is what decides whether a Pokemon is poisoned before or after
+// the pointed stones have taken their share.
+static void EntryHazardQueueRemove(BattleContext *ctx, int side, int hazard) {
+    int read, write = 0;
+
+    for (read = 0; read < NUM_HAZARD_IDX; read++) {
+        if (ctx->entryHazardQueue[side][read] != hazard) {
+            ctx->entryHazardQueue[side][write++] = ctx->entryHazardQueue[side][read];
+        }
+    }
+    while (write < NUM_HAZARD_IDX) {
+        ctx->entryHazardQueue[side][write++] = HAZARD_IDX_NONE;
+    }
+}
+
+BOOL BtlCmd_AddEntryHazardToQueue(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+    int hazard = BattleScriptReadWord(ctx);
+    int fieldSide = BattleSystem_GetFieldSide(battleSystem, BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side));
+
+    EntryHazardQueueRemove(ctx, fieldSide, hazard);
+    for (int i = 0; i < NUM_HAZARD_IDX; i++) {
+        if (ctx->entryHazardQueue[fieldSide][i] == HAZARD_IDX_NONE) {
+            ctx->entryHazardQueue[fieldSide][i] = hazard;
+            break;
+        }
+    }
+
+    return FALSE;
+}
+
+BOOL BtlCmd_RemoveEntryHazardFromQueue(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+    int hazard = BattleScriptReadWord(ctx);
+
+    EntryHazardQueueRemove(ctx, BattleSystem_GetFieldSide(battleSystem, BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side)), hazard);
+
+    return FALSE;
+}
+
+// Called round and round by the switch-in script until the queue runs out.
+BOOL BtlCmd_JumpToCurrentEntryHazard(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int side = BattleScriptReadWord(ctx);
+    int adrs[NUM_HAZARD_IDX];
+
+    for (int i = 0; i < NUM_HAZARD_IDX; i++) {
+        adrs[i] = BattleScriptReadWord(ctx);
+    }
+
+    int fieldSide = BattleSystem_GetFieldSide(battleSystem, BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side));
+    int hazard = ctx->entryHazardQueue[fieldSide][ctx->hazardQueueTracker];
+
+    if (hazard == HAZARD_IDX_NONE) {
+        ctx->hazardQueueTracker = 0;
+    } else {
+        ctx->hazardQueueTracker++;
+        BattleScriptIncrementPointer(ctx, adrs[hazard - 1]);
+    }
+
+    return FALSE;
+}
+
+// Stuff Cheeks eats the berry whether or not the moment called for it. The
+// held-item check knows what each berry does; what it declines to do, this
+// does anyway, because the move has already committed to eating it.
+BOOL BtlCmd_StuffCheeks(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+    u32 script;
+
+    if (CheckUseHeldItem(battleSystem, ctx, ctx->battlerIdAttacker, &script) == TRUE) {
+        ctx->battlerIdTemp = ctx->battlerIdAttacker;
+        ctx->itemTemp = GetBattlerHeldItem(ctx, ctx->battlerIdAttacker);
+        ctx->tempData = script;
+    } else {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+// Cotton Down lowers the Speed of everything else on the field, one at a time.
+// The script calls this until it runs out of Pokemon to hand back.
+BOOL BtlCmd_GetMonByCottonDownOrder(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+    while (ctx->abilityLoopTracker < maxBattlers) {
+        int battlerId = ctx->turnOrder[ctx->abilityLoopTracker++];
+        if (battlerId != ctx->battlerIdTarget && ctx->battleMons[battlerId].hp && !BattlerCheckSubstitute(ctx, battlerId)) {
+            ctx->battlerIdStatChange = battlerId;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            return FALSE;
+        }
+    }
+
+    ctx->abilityLoopTracker = 0;
+    BattleScriptIncrementPointer(ctx, adrs);
+
+    return FALSE;
+}
+
+// Whatever the Pokemon that just came in has to say for itself.
+BOOL BtlCmd_SwitchInAbilityCheck(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+    int script = TryAbilityOnEntry(battleSystem, ctx);
+
+    if (script) {
+        ctx->tempData = script;
+    } else {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
+
+    return FALSE;
+}
+
+// After You and Quash reorder a turn that is already under way. This engine
+// settles the order once, before the turn starts, and nothing in it asks to
+// move again afterwards, so there is no order left to change.
+BOOL BtlCmd_ChangeExecutionOrderPriority(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+    BattleScriptIncrementPointer(ctx, BattleScriptReadWord(ctx));
+
+    return FALSE;
+}
+
+// The background a battle is fought against is chosen when the battle starts
+// and there is no way to change it partway through, so this asks for something
+// the game cannot do. It is cosmetic, and nothing else depends on it.
+BOOL BtlCmd_ChangePermanentBackground(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    BattleScriptIncrementPointer(ctx, 1);
+
+    BattleScriptReadWord(ctx);
+    BattleScriptReadWord(ctx);
+
+    return FALSE;
+}
+
 static void BattlerSetAbility(BattleContext *ctx, u8 battlerID, u16 ability) {
     ctx->trainerAIAbilities[battlerID] = ability;
     return;

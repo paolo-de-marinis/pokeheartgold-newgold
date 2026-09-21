@@ -84,9 +84,17 @@ class BattleCommandTests(unittest.TestCase):
         for name in sorted(shared):
             self.assertEqual(self.macros[name], theirs[name], name)
 
-    def test_what_is_left_to_write_only_shrinks(self):
+    def test_nothing_is_left_to_write(self):
         missing = [i for i, name in enumerate(self.table) if name == "BtlCmd_NotImplemented"]
-        self.assertLessEqual(len(missing), 60, sorted(missing))
+        self.assertEqual(missing, [], "these opcodes still have no command")
+
+    def test_every_opcode_the_engine_has_is_spelled_the_same_way_here(self):
+        """The macro names are what a translated script writes, so a command
+        this port spells differently would not assemble."""
+        if not REFERENCE_MACROS.exists():
+            self.skipTest("reference checkout not present")
+        theirs = opcodes(REFERENCE_MACROS.read_text(errors="replace"))
+        self.assertEqual(set(theirs) - set(self.macros), set())
 
 
 if __name__ == "__main__":

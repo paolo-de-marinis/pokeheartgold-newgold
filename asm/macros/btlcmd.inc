@@ -1543,4 +1543,83 @@
     .long \arg
     .endm
 
+    .macro ChangePermanentBackground arg0, arg1
+    .long 245
+    .long \arg0
+    .long \arg1
+    .endm
+
+    .macro ChangeExecutionOrderPriority arg0, arg1, dest
+    .long 246
+    .long \arg0
+    .long \arg1
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro SwitchInAbilityCheck dest
+    .long 251
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro JumpToCurrentEntryHazard side, spikes, toxic, rocks, web, steel
+    .long 256
+    .long \side
+    .long (((\spikes - .) / 4) - 5)
+    .long (((\toxic - .) / 4) - 4)
+    .long (((\rocks - .) / 4) - 3)
+    .long (((\web - .) / 4) - 2)
+    .long (((\steel - .) / 4) - 1)
+    .endm
+
+    .macro AddEntryHazardToQueue arg0, arg1
+    .long 257
+    .long \arg0
+    .long \arg1
+    .endm
+
+    .macro RemoveEntryHazardFromQueue arg0, arg1
+    .long 258
+    .long \arg0
+    .long \arg1
+    .endm
+
+    .macro AddType arg
+    .long 261
+    .long \arg
+    .endm
+
+    .macro GoToIfThirdType arg0, arg1, dest
+    .long 267
+    .long \arg0
+    .long \arg1
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro HandleForestsCurse arg
+    .long 272
+    .long \arg
+    .endm
+
+    .macro HandleTrickOrTreat arg
+    .long 273
+    .long \arg
+    .endm
+
+    .macro StuffCheeks dest
+    .long 276
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+    .macro GetMonByCottonDownOrder dest
+    .long 292
+    .long (((\dest - .) / 4) - 1)
+    .endm
+
+// Not a command: a shorthand for the two abilities that answer a stat being
+// taken away, so the animation is not turned off before they have had their
+// turn. Defiant has no number in this game, so only Competitive is asked for.
+    .macro CheckShouldNotTurnOffMultiStatAnim battlerCategory, dest
+    CheckAbility CHECK_OPCODE_HAVE, \battlerCategory, ABILITY_COMPETITIVE, \dest
+    .endm
+
     .endif // ASM_BATTLE_SCRIPT_INC

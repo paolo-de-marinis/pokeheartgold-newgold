@@ -245,7 +245,12 @@ typedef struct BattleMon {
     u32 cheekPouchPending : 1;
     u32 competitivePending : 1;
     u32 abilityActivatedFlag : 1;
-    u32 unk28_B : 17;
+    // A third type, TYPE_NONE unless a script has added one. It takes eight of
+    // the spare bits rather than a byte of its own: the assembly that still
+    // reads this structure does so by offset, and type1 and type2 have code
+    // above them.
+    u32 type3 : 8;
+    u32 unk28_B : 9;
     u8 movePPCur[MAX_MON_MOVES];
     u8 movePP[MAX_MON_MOVES];
     u8 level;
@@ -446,6 +451,12 @@ typedef struct BattleContext {
     // battle script sets on its way through rather than being read from the
     // move table.
     int currentMoveSwitchStatus;
+    // Which hazards a side has, in the order a Pokemon walking into them meets
+    // them, and how far through that order the switch-in script has got.
+    u8 entryHazardQueue[2][NUM_HAZARD_IDX];
+    u8 hazardQueueTracker;
+    // How far a script walking the field one Pokemon at a time has got.
+    u8 abilityLoopTracker;
 } BattleContext;
 
 typedef struct BattleSystem BattleSystem;

@@ -496,6 +496,20 @@ typedef enum Terrain {
 #define BMON_DATA_99                      99 // unused
 #define BMON_DATA_TEMP                    100
 
+// A third type, which nothing in this game gives a Pokemon but which a battle
+// script written for a later one can. TYPE_NONE, which constants/pokemon.h
+// already defines, means it has none.
+#define BMON_DATA_TYPE_3                  101
+
+// The order entry hazards are worked through when something switches in.
+#define HAZARD_IDX_NONE         0
+#define HAZARD_IDX_SPIKES       1
+#define HAZARD_IDX_TOXIC_SPIKES 2
+#define HAZARD_IDX_STEALTH_ROCK 3
+#define HAZARD_IDX_STICKY_WEB   4
+#define HAZARD_IDX_SHARP_STEEL  5
+#define NUM_HAZARD_IDX          5
+
 // Battle Status
 #define BATTLE_STATUS_NO_ATTACK_MESSAGE         (1 << 0)
 #define BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE      (1 << 1)

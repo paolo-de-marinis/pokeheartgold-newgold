@@ -92,6 +92,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
 
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
+    ctx->battleMons[battlerId].type3 = TYPE_NONE;
 
     ctx->battleMons[battlerId].gender = GetMonGender(mon);
     ctx->battleMons[battlerId].shiny = MonIsShiny(mon);
@@ -326,6 +327,7 @@ int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         return mon->ability;
     case BMON_DATA_TYPE_1:
     case BMON_DATA_TYPE_2:
+    case BMON_DATA_TYPE_3:
         return Battler_GetType(ctx, battlerId, id);
     case BMON_DATA_GENDER:
         return mon->gender;
@@ -564,6 +566,9 @@ void SetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         break;
     case BMON_DATA_TYPE_2:
         mon->type2 = *data8;
+        break;
+    case BMON_DATA_TYPE_3:
+        mon->type3 = *data8;
         break;
     case BMON_DATA_GENDER:
         mon->gender = *data8;
@@ -2317,6 +2322,15 @@ int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, in
                     }
                 }
                 if (sTypeEffectiveness[i][TYPETABLE_DEFENDER] == GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL) && GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL) != GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL)) {
+                    if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE) {
+                        damage = ov12_022583B4(ctx, battlerIdAttacker, sTypeEffectiveness[i][TYPETABLE_EFFECT], damage, movePower, moveStatusFlag);
+                        if (sTypeEffectiveness[i][TYPETABLE_EFFECT] == TYPE_MUL_SUPER_EFFECTIVE) {
+                            seffectMod *= 2;
+                        }
+                    }
+                }
+                // A third type, which only a battle script can have given.
+                if (sTypeEffectiveness[i][TYPETABLE_DEFENDER] == ctx->battleMons[battlerIdTarget].type3 && ctx->battleMons[battlerIdTarget].type3 != GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL) && ctx->battleMons[battlerIdTarget].type3 != GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL)) {
                     if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE) {
                         damage = ov12_022583B4(ctx, battlerIdAttacker, sTypeEffectiveness[i][TYPETABLE_EFFECT], damage, movePower, moveStatusFlag);
                         if (sTypeEffectiveness[i][TYPETABLE_EFFECT] == TYPE_MUL_SUPER_EFFECTIVE) {
@@ -6870,6 +6884,10 @@ static u8 Battler_GetType(BattleContext *ctx, int battlerId, int var) {
         type = ctx->battleMons[battlerId].type1;
     } else if (var == BMON_DATA_TYPE_2) {
         type = ctx->battleMons[battlerId].type2;
+    } else if (var == BMON_DATA_TYPE_3) {
+        // Nothing here gives a third type, so it is usually TYPE_NONE, and a
+        // Pokemon with none of one is not an Arceus holding a plate either.
+        return ctx->battleMons[battlerId].type3;
     } else {
         GF_ASSERT(FALSE);
     }

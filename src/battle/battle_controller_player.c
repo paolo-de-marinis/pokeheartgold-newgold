@@ -156,7 +156,7 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // The size is pinned so that growth is deliberate rather than noticed in a
 // battle. Only the offsets matter to the assembly that still reads this
 // structure, and everything it reads is below what has been appended.
-typedef char BattleContextSizeCheck[sizeof(BattleContext) == 0x3164 ? 1 : -1];
+typedef char BattleContextSizeCheck[sizeof(BattleContext) == 0x3170 ? 1 : -1];
 
 BattleContext *BattleContext_New(BattleSystem *battleSystem) {
     BattleContext *ctx = (BattleContext *)Heap_Alloc(HEAP_ID_BATTLE, sizeof(BattleContext));
