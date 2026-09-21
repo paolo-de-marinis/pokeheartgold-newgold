@@ -664,8 +664,17 @@ from a cold boot.
 
 That is as far as it goes. The starter is on the machine behind him and the
 route does not take it yet: the last few tiles were being aimed by eye from
-screenshots, and the reliable way to finish is to read the player's position
-out of the emulator's memory rather than to keep estimating it. What each of
+screenshots, which does not converge, because the camera moves with the player
+and a picture says where things sit relative to each other rather than where
+the player is.
+
+The harness can dump the console's memory, and looking for a halfword that
+moves with the player was tried and did not settle: what turns up responds to
+both directions, which is a counter or the camera rather than a coordinate.
+The reliable way is through the game's own symbols rather than a search —
+`PlayerAvatar_GetXCoord` and the field system it hangs off are both decompiled
+here, so the offsets are known and only the runtime pointer has to be found.
+That is the next thing to do, and it is what the last few tiles need. What each of
 the four items still wants after that:
 
 * The EV and IV viewer wants the starter, and then the summary screen. It is
