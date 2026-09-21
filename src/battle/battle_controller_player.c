@@ -155,8 +155,12 @@ typedef char BattleContextMonsOffsetCheck[offsetof(BattleContext, battleMons) ==
 typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, trainerAIAbilities) == 0x3158 ? 1 : -1];
 // The size is pinned so that growth is deliberate rather than noticed in a
 // battle. Only the offsets matter to the assembly that still reads this
-// structure, and everything it reads is below what has been appended.
-typedef char BattleContextSizeCheck[sizeof(BattleContext) == 0x3340 ? 1 : -1];
+// structure, and everything it reads is below what has been appended. The
+// added moves' records are the one part meant to grow -- importing more moves
+// makes that table longer and moves nothing else -- so they are written out
+// here rather than folded into the number.
+typedef char BattleContextSizeCheck[
+    sizeof(BattleContext) == 0x3180 + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given

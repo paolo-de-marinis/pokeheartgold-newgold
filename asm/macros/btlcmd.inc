@@ -6,6 +6,7 @@
 #include "constants/battle.h"
 #include "constants/battle_script.h"
 #include "constants/battle_subscript.h"
+#include "constants/battle_script_imports.h"
 #include "constants/game_stats.h"
 #include "constants/global.h"
 #include "constants/items.h"

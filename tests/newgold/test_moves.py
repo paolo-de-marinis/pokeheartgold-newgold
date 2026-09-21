@@ -36,7 +36,10 @@ class MoveTests(unittest.TestCase):
     def setUp(self):
         self.moves = constants("include/constants/moves.h", "MOVE_")
         self.table = import_moves.read_table()
-        self.added = {name: self.moves[f"MOVE_{name}"] for name in import_moves.MODELS}
+        # Everything numbered past retail: the reference's moves, brought in
+        # by tools/newgold/import_moves.py.
+        self.added = {name[len("MOVE_"):]: number for name, number in self.moves.items()
+                      if number > LAST_RETAIL}
 
     def test_the_archive_regenerates_byte_for_byte(self):
         """The importer rebuilds the whole archive, so it has to rebuild the
@@ -90,8 +93,17 @@ class MoveTests(unittest.TestCase):
             record = struct.unpack(import_moves.RECORD, self.table[self.added[name]])
             self.assertEqual(record[field[key]], value, f"{name} {key}")
 
+    # Forty-one damaging moves carry no power, and the reference carries them
+    # the same way, because the battle works the damage out instead: a Z-move
+    # takes the power of the move it was made from, and five more take the
+    # user's friendship or the target's health.
+    POWER_AT_RUNTIME = {"GUARDIAN_OF_ALOLA", "NATURES_MADNESS", "PIKA_PAPOW",
+                        "VEEVEE_VOLLEY", "HARD_PRESS"}
+
     def test_a_status_move_has_no_power_and_a_damaging_one_has_some(self):
         for name, index in self.added.items():
+            if name.endswith(("_PHYSICAL", "_SPECIAL")) or name in self.POWER_AT_RUNTIME:
+                continue
             _, split, power = struct.unpack(import_moves.RECORD, self.table[index])[:3]
             self.assertEqual(power == 0, split == 2, name)
 

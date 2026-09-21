@@ -911,6 +911,434 @@ static u16 MoveAnimationFor(u16 move) {
         MOVE_FIRE_BLAST,   // Inferno
         MOVE_FOLLOW_ME,    // Rage Powder
         MOVE_LEER,         // Tearful Look
+        MOVE_JUDGMENT,          // 468
+        MOVE_JUDGMENT,          // 469
+        MOVE_JUDGMENT,          // 470
+        MOVE_TORMENT,           // Hone Claws
+        MOVE_SANDSTORM,         // Wide Guard
+        MOVE_HYPNOSIS,          // Guard Split
+        MOVE_HYPNOSIS,          // Power Split
+        MOVE_HYPNOSIS,          // Wonder Room
+        MOVE_FUTURE_SIGHT,      // Psyshock
+        MOVE_SLUDGE,            // Venoshock
+        MOVE_SWORDS_DANCE,      // Autotomize
+        MOVE_HYPNOSIS,          // Telekinesis
+        MOVE_HYPNOSIS,          // Magic Room
+        MOVE_ROCK_THROW,        // Smack Down
+        MOVE_ROLLING_KICK,      // Storm Throw
+        MOVE_LAVA_PLUME,        // Flame Burst
+        MOVE_SLUDGE_BOMB,       // Sludge Wave
+        MOVE_GYRO_BALL,         // Heavy Slam
+        MOVE_DREAM_EATER,       // Synchronoise
+        MOVE_THUNDER_SHOCK,     // Electro Ball
+        MOVE_WITHDRAW,          // Soak
+        MOVE_ROLLING_KICK,      // Low Sweep
+        MOVE_ACID,              // Acid Spray
+        MOVE_CRUNCH,            // Foul Play
+        MOVE_SWORDS_DANCE,      // Simple Beam
+        MOVE_SWORDS_DANCE,      // Entrainment
+        MOVE_SWORDS_DANCE,      // After You
+        MOVE_SWIFT,             // Round
+        MOVE_HEADBUTT,          // Chip Away
+        MOVE_ACID,              // Clear Smog
+        MOVE_PSYWAVE,           // Stored Power
+        MOVE_DETECT,            // Quick Guard
+        MOVE_HYPNOSIS,          // Ally Switch
+        MOVE_SWORDS_DANCE,      // Shell Smash
+        MOVE_HYPNOSIS,          // Heal Pulse
+        MOVE_WING_ATTACK,       // Sky Drop
+        MOVE_METAL_SOUND,       // Shift Gear
+        MOVE_ROLLING_KICK,      // Circle Throw
+        MOVE_EMBER,             // Incinerate
+        MOVE_TORMENT,           // Quash
+        MOVE_SWORDS_DANCE,      // Reflect Type
+        MOVE_HEADBUTT,          // Retaliate
+        MOVE_VACUUM_WAVE,       // Final Gambit
+        MOVE_SWORDS_DANCE,      // Bestow
+        MOVE_SURF,              // Water Pledge
+        MOVE_LAVA_PLUME,        // Fire Pledge
+        MOVE_ENERGY_BALL,       // Grass Pledge
+        MOVE_SHOCK_WAVE,        // Volt Switch
+        MOVE_AURORA_BEAM,       // Frost Breath
+        MOVE_DRAGON_CLAW,       // Dragon Tail
+        MOVE_SWORDS_DANCE,      // Work Up
+        MOVE_SHOCK_WAVE,        // Electroweb
+        MOVE_THUNDER_PUNCH,     // Wild Charge
+        MOVE_DIG,               // Drill Run
+        MOVE_DRAGON_CLAW,       // Dual Chop
+        MOVE_PSYCHO_CUT,        // Heart Stamp
+        MOVE_SEED_BOMB,         // Horn Leech
+        MOVE_JUMP_KICK,         // Sacred Sword
+        MOVE_WATERFALL,         // Razor Shell
+        MOVE_FLAME_WHEEL,       // Heat Crash
+        MOVE_GIGA_DRAIN,        // Leaf Tornado
+        MOVE_U_TURN,            // Steamroller
+        MOVE_LEECH_SEED,        // Cotton Guard
+        MOVE_DARK_PULSE,        // Night Daze
+        MOVE_DREAM_EATER,       // Psystrike
+        MOVE_RAGE,              // Tail Slap
+        MOVE_AEROBLAST,         // Hurricane
+        MOVE_MEGA_KICK,         // Head Charge
+        MOVE_MAGNET_BOMB,       // Gear Grind
+        MOVE_HEAT_WAVE,         // Searing Shot
+        MOVE_JUDGMENT,          // Techno Blast
+        MOVE_RAZOR_WIND,        // Relic Song
+        MOVE_AURA_SPHERE,       // Secret Sword
+        MOVE_AURORA_BEAM,       // Glaciate
+        MOVE_THUNDER,           // Bolt Strike
+        MOVE_FIRE_BLAST,        // Blue Flare
+        MOVE_LAVA_PLUME,        // Fiery Dance
+        MOVE_BLIZZARD,          // Freeze Shock
+        MOVE_BLIZZARD,          // Ice Burn
+        MOVE_DARK_PULSE,        // Snarl
+        MOVE_ICE_PUNCH,         // Icicle Crash
+        MOVE_FLARE_BLITZ,       // V Create
+        MOVE_HEAT_WAVE,         // Fusion Flare
+        MOVE_THUNDERBOLT,       // Fusion Bolt
+        MOVE_HI_JUMP_KICK,      // Flying Press
+        MOVE_DETECT,            // Mat Block
+        MOVE_SLUDGE_BOMB,       // Belch
+        MOVE_SAND_ATTACK,       // Rototiller
+        MOVE_SHADOW_CLAW,       // Phantom Force
+        MOVE_CONFUSE_RAY,       // Trick Or Treat
+        MOVE_SWORDS_DANCE,      // Noble Roar
+        MOVE_THUNDER_WAVE,      // Ion Deluge
+        MOVE_SHOCK_WAVE,        // Parabolic Charge
+        MOVE_LEECH_SEED,        // Forests Curse
+        MOVE_RAZOR_WIND,        // Disarming Voice
+        MOVE_TORMENT,           // Parting Shot
+        MOVE_TORMENT,           // Topsy Turvy
+        MOVE_RAZOR_WIND,        // Draining Kiss
+        MOVE_SWORDS_DANCE,      // Crafty Shield
+        MOVE_SWORDS_DANCE,      // Flower Shield
+        MOVE_LEECH_SEED,        // Grassy Terrain
+        MOVE_SWORDS_DANCE,      // Misty Terrain
+        MOVE_THUNDER_WAVE,      // Electrify
+        MOVE_POUND,             // Play Rough
+        MOVE_HYPER_BEAM,        // Boomburst
+        MOVE_SWORDS_DANCE,      // Fairy Lock
+        MOVE_METAL_SOUND,       // Kings Shield
+        MOVE_SWORDS_DANCE,      // Play Nice
+        MOVE_SWORDS_DANCE,      // Confide
+        MOVE_STONE_EDGE,        // Diamond Storm
+        MOVE_HYDRO_PUMP,        // Steam Eruption
+        MOVE_FUTURE_SIGHT,      // Hyperspace Hole
+        MOVE_WHIRLPOOL,         // Water Shuriken
+        MOVE_LEECH_SEED,        // Spiky Shield
+        MOVE_SWORDS_DANCE,      // Aromatic Mist
+        MOVE_THUNDER_WAVE,      // Eerie Impulse
+        MOVE_POISON_POWDER,     // Venom Drench
+        MOVE_STRING_SHOT,       // Powder
+        MOVE_SWORDS_DANCE,      // Geomancy
+        MOVE_THUNDER_WAVE,      // Magnetic Flux
+        MOVE_SWORDS_DANCE,      // Happy Hour
+        MOVE_THUNDER_WAVE,      // Electric Terrain
+        MOVE_SWORDS_DANCE,      // Celebrate
+        MOVE_SWORDS_DANCE,      // Hold Hands
+        MOVE_SWORDS_DANCE,      // Baby Doll Eyes
+        MOVE_SPARK,             // Nuzzle
+        MOVE_POUND,             // Hold Back
+        MOVE_MACH_PUNCH,        // Power Up Punch
+        MOVE_AIR_SLASH,         // Oblivion Wing
+        MOVE_EARTHQUAKE,        // Thousand Arrows
+        MOVE_EARTHQUAKE,        // Thousand Waves
+        MOVE_EARTHQUAKE,        // Lands Wrath
+        MOVE_RAZOR_WIND,        // Light Of Ruin
+        MOVE_HYDRO_PUMP,        // Origin Pulse
+        MOVE_EARTHQUAKE,        // Precipice Blades
+        MOVE_BRAVE_BIRD,        // Dragon Ascent
+        MOVE_CRUNCH,            // Hyperspace Fury
+        MOVE_GUILLOTINE,        // Breakneck Blitz Physical
+        MOVE_SONIC_BOOM,        // Breakneck Blitz Special
+        MOVE_LOW_KICK,          // All Out Pummeling Physical
+        MOVE_VACUUM_WAVE,       // All Out Pummeling Special
+        MOVE_PECK,              // Supersonic Skystrike Physical
+        MOVE_GUST,              // Supersonic Skystrike Special
+        MOVE_POISON_STING,      // Acid Downpour Physical
+        MOVE_SMOG,              // Acid Downpour Special
+        MOVE_FISSURE,           // Tectonic Rage Physical
+        MOVE_MUD_SLAP,          // Tectonic Rage Special
+        MOVE_ROCK_BLAST,        // Continental Crush Physical
+        MOVE_ANCIENT_POWER,     // Continental Crush Special
+        MOVE_FURY_CUTTER,       // Savage Spin Out Physical
+        MOVE_SILVER_WIND,       // Savage Spin Out Special
+        MOVE_LICK,              // Never Ending Nightmare Physical
+        MOVE_NIGHT_SHADE,       // Never Ending Nightmare Special
+        MOVE_GYRO_BALL,         // Corkscrew Crash Physical
+        MOVE_MIRROR_SHOT,       // Corkscrew Crash Special
+        MOVE_FLAME_WHEEL,       // Inferno Overdrive Physical
+        MOVE_FIRE_SPIN,         // Inferno Overdrive Special
+        MOVE_CLAMP,             // Hydro Vortex Physical
+        MOVE_WHIRLPOOL,         // Hydro Vortex Special
+        MOVE_BULLET_SEED,       // Bloom Doom Physical
+        MOVE_GRASS_KNOT,        // Bloom Doom Special
+        MOVE_SPARK,             // Gigavolt Havoc Physical
+        MOVE_THUNDER_SHOCK,     // Gigavolt Havoc Special
+        MOVE_PSYCHO_CUT,        // Shattered Psyche Physical
+        MOVE_PSYWAVE,           // Shattered Psyche Special
+        MOVE_ICICLE_SPEAR,      // Subzero Slammer Physical
+        MOVE_SHEER_COLD,        // Subzero Slammer Special
+        MOVE_DRAGON_CLAW,       // Devastating Drake Physical
+        MOVE_DRAGON_RAGE,       // Devastating Drake Special
+        MOVE_FLING,             // Black Hole Eclipse Physical
+        MOVE_DARK_PULSE,        // Black Hole Eclipse Special
+        MOVE_POUND,             // Twinkle Tackle Physical
+        MOVE_RAZOR_WIND,        // Twinkle Tackle Special
+        MOVE_VOLT_TACKLE,       // Catastropika
+        MOVE_SAND_ATTACK,       // Shore Up
+        MOVE_ATTACK_ORDER,      // First Impression
+        MOVE_POISON_POWDER,     // Baneful Bunker
+        MOVE_SHADOW_CLAW,       // Spirit Shackle
+        MOVE_CRUNCH,            // Darkest Lariat
+        MOVE_SURF,              // Sparkling Aria
+        MOVE_ICE_PUNCH,         // Ice Hammer
+        MOVE_SWORDS_DANCE,      // Floral Healing
+        MOVE_EARTHQUAKE,        // High Horsepower
+        MOVE_LEECH_SEED,        // Strength Sap
+        MOVE_POWER_WHIP,        // Solar Blade
+        MOVE_VINE_WHIP,         // Leafage
+        MOVE_SWORDS_DANCE,      // Spotlight
+        MOVE_SWORDS_DANCE,      // Laser Focus
+        MOVE_METAL_SOUND,       // Gear Up
+        MOVE_CRUNCH,            // Throat Chop
+        MOVE_BUG_BUZZ,          // Pollen Puff
+        MOVE_IRON_TAIL,         // Anchor Shot
+        MOVE_HYPNOSIS,          // Psychic Terrain
+        MOVE_X_SCISSOR,         // Lunge
+        MOVE_BLAZE_KICK,        // Fire Lash
+        MOVE_KNOCK_OFF,         // Power Trip
+        MOVE_FIRE_BLAST,        // Burn Up
+        MOVE_HYPNOSIS,          // Speed Swap
+        MOVE_STEEL_WING,        // Smart Strike
+        MOVE_POISON_POWDER,     // Purify
+        MOVE_JUDGMENT,          // Revelation Dance
+        MOVE_SPACIAL_REND,      // Core Enforcer
+        MOVE_LEAF_BLADE,        // Trop Kick
+        MOVE_HYPNOSIS,          // Instruct
+        MOVE_BRAVE_BIRD,        // Beak Blast
+        MOVE_SPACIAL_REND,      // Clanging Scales
+        MOVE_DRAGON_RUSH,       // Dragon Hammer
+        MOVE_BITE,              // Brutal Swing
+        MOVE_MIST,              // Aurora Veil
+        MOVE_SHADOW_FORCE,      // Sinister Arrow Raid
+        MOVE_CRUNCH,            // Malicious Moonsault
+        MOVE_HYDRO_CANNON,      // Oceanic Operetta
+        MOVE_RAZOR_WIND,        // Guardian Of Alola
+        MOVE_SHADOW_FORCE,      // Soul Stealing 7 Star Strike
+        MOVE_THUNDER,           // Stoked Sparksurfer
+        MOVE_SELFDESTRUCT,      // Pulverizing Pancake
+        MOVE_SWORDS_DANCE,      // Extreme Evoboost
+        MOVE_PSYCHO_BOOST,      // Genesis Supernova
+        MOVE_ERUPTION,          // Shell Trap
+        MOVE_RAZOR_WIND,        // Fleur Cannon
+        MOVE_ZEN_HEADBUTT,      // Psychic Fangs
+        MOVE_DIG,               // Stomping Tantrum
+        MOVE_SHADOW_CLAW,       // Shadow Bone
+        MOVE_ROCK_THROW,        // Accelerock
+        MOVE_WATERFALL,         // Liquidation
+        MOVE_PSYCHO_BOOST,      // Prismatic Laser
+        MOVE_SHADOW_CLAW,       // Spectral Thief
+        MOVE_IRON_TAIL,         // Sunsteel Strike
+        MOVE_SHADOW_BALL,       // Moongeist Beam
+        MOVE_THUNDER_PUNCH,     // Zing Zap
+        MOVE_RAZOR_WIND,        // Natures Madness
+        MOVE_MEGA_KICK,         // Multi Attack
+        MOVE_THUNDER,           // 10 000 000 Volt Thunderbolt
+        MOVE_ERUPTION,          // Mind Blown
+        MOVE_VOLT_TACKLE,       // Plasma Fists
+        MOVE_DREAM_EATER,       // Photon Geyser
+        MOVE_PSYCHO_BOOST,      // Light That Burns The Sky
+        MOVE_IRON_TAIL,         // Searing Sunraze Smash
+        MOVE_SHADOW_BALL,       // Menacing Moonraze Maelstrom
+        MOVE_POUND,             // Lets Snuggle Forever
+        MOVE_ROCK_WRECKER,      // Splintered Stormshards
+        MOVE_ROAR_OF_TIME,      // Clangorous Soulblaze
+        MOVE_THUNDER_PUNCH,     // Zippy Zap
+        MOVE_SURF,              // Splishy Splash
+        MOVE_FLY,               // Floaty Fall
+        MOVE_THUNDER_SHOCK,     // Pika Papow
+        MOVE_WATER_PULSE,       // Bouncy Bubble
+        MOVE_SHOCK_WAVE,        // Buzzy Buzz
+        MOVE_FLAME_WHEEL,       // Sizzly Slide
+        MOVE_FUTURE_SIGHT,      // Glitzy Glow
+        MOVE_DARK_PULSE,        // Baddy Bad
+        MOVE_LEAF_BLADE,        // Sappy Seed
+        MOVE_ICE_BEAM,          // Freezy Frost
+        MOVE_RAZOR_WIND,        // Sparkly Swirl
+        MOVE_GUILLOTINE,        // Veevee Volley
+        MOVE_MAGNET_BOMB,       // Double Iron Bash
+        MOVE_SWORDS_DANCE,      // Max Guard
+        MOVE_SPACIAL_REND,      // Dynamax Cannon
+        MOVE_SURF,              // Snipe Shot
+        MOVE_CRUNCH,            // Jaw Lock
+        MOVE_SWORDS_DANCE,      // Stuff Cheeks
+        MOVE_DETECT,            // No Retreat
+        MOVE_SANDSTORM,         // Tar Shot
+        MOVE_HYPNOSIS,          // Magic Powder
+        MOVE_DRAGON_CLAW,       // Dragon Darts
+        MOVE_SWORDS_DANCE,      // Teatime
+        MOVE_DETECT,            // Octolock
+        MOVE_THUNDER_PUNCH,     // Bolt Beak
+        MOVE_WATERFALL,         // Fishious Rend
+        MOVE_SWORDS_DANCE,      // Court Change
+        MOVE_SACRED_FIRE,       // Max Flare
+        MOVE_FURY_CUTTER,       // Max Flutterby
+        MOVE_SPARK,             // Max Lightning
+        MOVE_CONSTRICT,         // Max Strike
+        MOVE_TRIPLE_KICK,       // Max Knuckle
+        MOVE_LICK,              // Max Phantasm
+        MOVE_ICICLE_SPEAR,      // Max Hailstorm
+        MOVE_POISON_STING,      // Max Ooze
+        MOVE_CLAMP,             // Max Geyser
+        MOVE_PECK,              // Max Airstream
+        MOVE_POUND,             // Max Starfall
+        MOVE_DRAGON_CLAW,       // Max Wyrmwind
+        MOVE_PSYCHO_CUT,        // Max Mindstorm
+        MOVE_ROCK_BLAST,        // Max Rockfall
+        MOVE_SAND_TOMB,         // Max Quake
+        MOVE_BEAT_UP,           // Max Darkness
+        MOVE_BULLET_SEED,       // Max Overgrowth
+        MOVE_GYRO_BALL,         // Max Steelspike
+        MOVE_DRAGON_DANCE,      // Clangorous Soul
+        MOVE_SUBMISSION,        // Body Press
+        MOVE_SWORDS_DANCE,      // Decorate
+        MOVE_SEED_BOMB,         // Drum Beating
+        MOVE_BULLET_PUNCH,      // Snap Trap
+        MOVE_FLARE_BLITZ,       // Pyro Ball
+        MOVE_IRON_TAIL,         // Behemoth Blade
+        MOVE_IRON_TAIL,         // Behemoth Bash
+        MOVE_VOLT_TACKLE,       // Aura Wheel
+        MOVE_DRAGON_CLAW,       // Breaking Swipe
+        MOVE_VINE_WHIP,         // Branch Poke
+        MOVE_DISCHARGE,         // Overdrive
+        MOVE_PETAL_DANCE,       // Apple Acid
+        MOVE_LEAF_BLADE,        // Grav Apple
+        MOVE_POUND,             // Spirit Break
+        MOVE_RAZOR_WIND,        // Strange Steam
+        MOVE_WITHDRAW,          // Life Dew
+        MOVE_TORMENT,           // Obstruct
+        MOVE_CRUNCH,            // False Surrender
+        MOVE_FOCUS_PUNCH,       // Meteor Assault
+        MOVE_ROAR_OF_TIME,      // Eternabeam
+        MOVE_DOOM_DESIRE,       // Steel Beam
+        MOVE_FUTURE_SIGHT,      // Expanding Force
+        MOVE_IRON_TAIL,         // Steel Roller
+        MOVE_DRAGON_CLAW,       // Scale Shot
+        MOVE_POWER_GEM,         // Meteor Beam
+        MOVE_SLUDGE_BOMB,       // Shell Side Arm
+        MOVE_RAZOR_WIND,        // Misty Explosion
+        MOVE_RAZOR_LEAF,        // Grassy Glide
+        MOVE_SHOCK_WAVE,        // Rising Voltage
+        MOVE_UPROAR,            // Terrain Pulse
+        MOVE_U_TURN,            // Skitter Smack
+        MOVE_LAVA_PLUME,        // Burning Jealousy
+        MOVE_CRUNCH,            // Lash Out
+        MOVE_SHADOW_FORCE,      // Poltergeist
+        MOVE_POISON_POWDER,     // Corrosive Gas
+        MOVE_DETECT,            // Coaching
+        MOVE_WATERFALL,         // Flip Turn
+        MOVE_ICE_BALL,          // Triple Axel
+        MOVE_PECK,              // Dual Wingbeat
+        MOVE_MUD_BOMB,          // Scorching Sands
+        MOVE_LEECH_SEED,        // Jungle Healing
+        MOVE_CRUNCH,            // Wicked Blow
+        MOVE_CLAMP,             // Surging Strikes
+        MOVE_DISCHARGE,         // Thunder Cage
+        MOVE_ROAR_OF_TIME,      // Dragon Energy
+        MOVE_PSYCHIC,           // Freezing Glare
+        MOVE_DARK_PULSE,        // Fiery Wrath
+        MOVE_JUMP_KICK,         // Thunderous Kick
+        MOVE_ICE_PUNCH,         // Glacial Lance
+        MOVE_SHADOW_BALL,       // Astral Barrage
+        MOVE_FUTURE_SIGHT,      // Eerie Spell
+        MOVE_POISON_JAB,        // Dire Claw
+        MOVE_SWORDS_DANCE,      // Power Shift
+        MOVE_ROCK_SLIDE,        // Stone Axe
+        MOVE_RAZOR_WIND,        // Springtide Storm
+        MOVE_LUSTER_PURGE,      // Mystical Power
+        MOVE_FLARE_BLITZ,       // Raging Fury
+        MOVE_CRABHAMMER,        // Wave Crash
+        MOVE_FRENZY_PLANT,      // Chloroblast
+        MOVE_ICE_PUNCH,         // Mountain Gale
+        MOVE_DETECT,            // Victory Dance
+        MOVE_EARTHQUAKE,        // Headlong Rush
+        MOVE_POISON_FANG,       // Barb Barrage
+        MOVE_FUTURE_SIGHT,      // Esper Wing
+        MOVE_SHADOW_BALL,       // Bitter Malice
+        MOVE_METAL_SOUND,       // Shelter
+        MOVE_JUMP_KICK,         // Triple Arrows
+        MOVE_OMINOUS_WIND,      // Infernal Parade
+        MOVE_BITE,              // Ceaseless Edge
+        MOVE_AEROBLAST,         // Bleakwind Storm
+        MOVE_THUNDERBOLT,       // Wildbolt Storm
+        MOVE_EARTH_POWER,       // Sandsear Storm
+        MOVE_HYPNOSIS,          // Lunar Blessing
+        MOVE_HYPNOSIS,          // Take Heart
+        MOVE_RAZOR_WIND,        // Tera Blast
+        MOVE_STRING_SHOT,       // Silk Trap
+        MOVE_SUPERPOWER,        // Axe Kick
+        MOVE_SHADOW_PUNCH,      // Last Respects
+        MOVE_FUTURE_SIGHT,      // Lumina Crash
+        MOVE_DRAGON_CLAW,       // Order Up
+        MOVE_WATERFALL,         // Jet Punch
+        MOVE_LEECH_SEED,        // Spicy Extract
+        MOVE_IRON_TAIL,         // Spin Out
+        MOVE_RAGE,              // Population Bomb
+        MOVE_ICE_PUNCH,         // Ice Spinner
+        MOVE_OUTRAGE,           // Glaive Rush
+        MOVE_SWORDS_DANCE,      // Revival Blessing
+        MOVE_ROCK_THROW,        // Salt Cure
+        MOVE_CLAMP,             // Triple Dive
+        MOVE_POISON_STING,      // Mortal Spin
+        MOVE_SWORDS_DANCE,      // Doodle
+        MOVE_SWORDS_DANCE,      // Fillet Away
+        MOVE_CRUNCH,            // Kowtow Cleave
+        MOVE_NEEDLE_ARM,        // Flower Trick
+        MOVE_LAVA_PLUME,        // Torch Song
+        MOVE_WATERFALL,         // Aqua Step
+        MOVE_TAKE_DOWN,         // Raging Bull
+        MOVE_DOOM_DESIRE,       // Make It Rain
+        MOVE_ZEN_HEADBUTT,      // Psyblade
+        MOVE_SURF,              // Hydro Steam
+        MOVE_DARK_PULSE,        // Ruination
+        MOVE_HI_JUMP_KICK,      // Collision Course
+        MOVE_THUNDERBOLT,       // Electro Drift
+        MOVE_SWORDS_DANCE,      // Shed Tail
+        MOVE_MIST,              // Chilly Reception
+        MOVE_SWORDS_DANCE,      // Tidy Up
+        MOVE_MIST,              // Snowscape
+        MOVE_BUG_BITE,          // Pounce
+        MOVE_RAZOR_LEAF,        // Trailblaze
+        MOVE_WATER_GUN,         // Chilling Water
+        MOVE_FIRE_BLAST,        // Armor Cannon
+        MOVE_BLAZE_KICK,        // Bitter Blade
+        MOVE_VOLT_TACKLE,       // Double Shock
+        MOVE_IRON_TAIL,         // Gigaton Hammer
+        MOVE_FLING,             // Comeuppance
+        MOVE_WATERFALL,         // Aqua Cutter
+        MOVE_FIRE_PUNCH,        // Blazing Torque
+        MOVE_CRUNCH,            // Wicked Torque
+        MOVE_POISON_JAB,        // Noxious Torque
+        MOVE_HI_JUMP_KICK,      // Combat Torque
+        MOVE_POUND,             // Magical Torque
+        MOVE_HYPER_BEAM,        // Blood Moon
+        MOVE_ENERGY_BALL,       // Matcha Gotcha
+        MOVE_GIGA_DRAIN,        // Syrup Bomb
+        MOVE_LEAF_BLADE,        // Ivy Cudgel
+        MOVE_THUNDER,           // Electro Shot
+        MOVE_JUDGMENT,          // Tera Starstorm
+        MOVE_DRAGON_PULSE,      // Fickle Beam
+        MOVE_SUNNY_DAY,         // Burning Bulwark
+        MOVE_SHOCK_WAVE,        // Thunderclap
+        MOVE_STONE_EDGE,        // Mighty Cleave
+        MOVE_MIRROR_SHOT,       // Tachyon Cutter
+        MOVE_GYRO_BALL,         // Hard Press
+        MOVE_RAZOR_WIND,        // Alluring Voice
+        MOVE_FIRE_PUNCH,        // Temper Flare
+        MOVE_VOLT_TACKLE,       // Supercell Slam
+        MOVE_FUTURE_SIGHT,      // Psychic Noise
+        MOVE_ROLLING_KICK,      // Upper Hand
+        MOVE_SLUDGE_BOMB,       // Malignant Chain
     };
 
     if (move > NUM_MOVES && move <= NUM_MOVES_TOTAL) {
