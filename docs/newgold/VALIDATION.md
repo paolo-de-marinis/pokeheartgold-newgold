@@ -593,3 +593,57 @@ frames are byte-identical to M18's, and frame 1436 shows the readable intro
 text. The smoke never opens the PC, so it demonstrates an unchanged boot path,
 not the widened display. Actual PC rendering of an ability above 255 is still
 unverified in a running ROM, and no ID above 255 is assigned yet.
+
+## Interface, Dex, pockets and boxes — emulator session
+
+Date: 2026-09-21. The four items the expansion's precondition names are
+implemented; this is what was checked on a running ROM and what was not.
+
+### What the session can do now
+
+`tools/newgold/boot_check.c` is a headless libretro host of about two hundred
+lines: no emulator front end, no BIOS of its own, no configuration of the
+user's. It loads the installed melonDS core, runs frames, presses buttons,
+touches the screen and writes out the framebuffer.
+`tools/newgold/smoke.py` drives it and `tests/newgold/test_boot.py` runs a
+short one on every test pass.
+
+This replaces the earlier milestones' arrangement, whose runner lived outside
+the repository and is no longer on disk. It is in the repository now, so the
+next session starts from a working harness rather than writing one.
+
+### What was verified
+
+Both ROMs, built at this commit, boot and keep running: publisher screens, the
+sunrise intro, the title, and the controls tutorial reached through scripted
+button presses and a scripted touch. Three thousand frames each, software
+rendering, the core's own FreeBIOS, an isolated system and save directory.
+Neither stops, resets, or shows an assertion.
+
+That is the gate that matters for the save. Thirty boxes moved `SAVE_PAGE_MAX`
+from 35 to 48 and grew heap 1 by the same 0xD000 out of the general heap, and
+the widened Dex and pockets grew the region again. `SaveData_InitSubstructs`
+and `SaveData_InitSlotSpecs` assert their results at boot and would have
+stopped the game before the title. They do not.
+`tools/newgold/save_budget.py` reads the same numbers out of the built ROM:
+187,644 bytes of 196,608, forty-seven pages of forty-eight, highest page 60 of
+the 64 the flash erases in a half.
+
+### What was not verified
+
+This is boot and menu evidence. None of the four items was exercised in play:
+
+* The EV and IV viewer, which needs a Pokemon and the summary screen.
+* The machine badges and the dropped count, which need the bag.
+* A Dex entry for an added species, which needs one caught, and with it the
+  two things the Dex screen is known to owe: it prints the species identifier
+  rather than a National Dex number, and the area screen has nothing to say
+  about a species no map places.
+* The thirtieth box, which needs the PC.
+
+Reaching any of them by script is a long frame-accurate sequence through
+naming, the starter and the first route. The harness can drive it — buttons
+and touch both work — but the sequence is not written. Until it is, or until
+somebody plays it, these four are implemented and unplayed, and this file says
+so rather than implying otherwise.
+
