@@ -727,9 +727,16 @@ tile with "Wait one second!" to put his number in it. **Past that, tile (657,
 400) is Route 29**, and the first step into the grass starts a wild battle.
 
 That is where it stops now, and on something smaller: the Poke Ball pocket is
-empty. The aide's "I want you to have these" inside the laboratory was not the
-balls, and the route has not found where they are given. Nothing can be caught
-until it does, and the Dex entry waits on that.
+empty. Reading again rather than guessing, `msg_0373_R29` row 0 says who has
+them — *"You can catch wild Pokemon with Poke Balls. Follow me!"* — so they
+come with the catching tutorial on Route 29 itself, from Lyra or Ethan
+depending on which you are.
+
+The route reaches Route 29 and walks it west as far as tile (642, 410),
+through two wild battles on the way, without that scene triggering: it wants a
+particular patch of grass rather than any of it. Finding which patch is the
+next thing, and it is the last thing between here and a caught Pokemon, which
+is what the Dex entry needs.
 
 These legs were driven from saved states rather than from a cold boot, so they
 are written here rather than folded into `smoke.py`'s route: putting them
