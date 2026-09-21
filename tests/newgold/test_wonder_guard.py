@@ -35,6 +35,15 @@ typedef struct {
     int abilityAttacker, abilityTarget;
 } BattleContext;
 
+typedef struct { int effect; } MoveTbl;
+
+// The real accessor picks between retail's move table and the added moves
+// kept past the end of the context; here there is only the move under test.
+static inline const MoveTbl *BattleMoveTbl(BattleContext *ctx, unsigned move) {
+    (void)move;
+    return (const MoveTbl *)&ctx->trainerAIData.moveData[0];
+}
+
 static int CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int attacker, int target, int ability) {
     (void)attacker;
     (void)target;

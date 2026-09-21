@@ -10,6 +10,12 @@ void LoadMoveTbl(MoveTbl *dest) {
     ReadFromNarcMemberByIdPair(dest, NARC_poketool_waza_waza_tbl, 0, 0, (NUM_MOVES + 1) * sizeof(MoveTbl));
 }
 
+// The moves past what retail had, which a battle keeps separately because the
+// table it keeps the others in is a fixed length.
+void LoadAddedMoveTbl(MoveTbl *dest) {
+    ReadFromNarcMemberByIdPair(dest, NARC_poketool_waza_waza_tbl, 0, (NUM_MOVES + 1) * sizeof(MoveTbl), NUM_ADDED_MOVES * sizeof(MoveTbl));
+}
+
 u32 GetMoveAttr(u16 moveId, MoveAttr attrno) {
     MoveTbl movedata;
     LoadMoveEntry(moveId, &movedata);
@@ -25,7 +31,7 @@ u8 GetMoveMaxPP(u16 moveId, u8 ppUps) {
     return pp + ((pp * 20 * ppUps) / 100);
 }
 
-u32 GetMoveTblAttr(MoveTbl *moveTbl, MoveAttr attr) {
+u32 GetMoveTblAttr(const MoveTbl *moveTbl, MoveAttr attr) {
     switch (attr) {
     case MOVEATTR_EFFECT:
         return moveTbl->effect;

@@ -21,15 +21,15 @@ BOOL ov10_0221FE8C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     if (ctx->moveNoHit[battlerId] == MOVE_NONE) {
         return FALSE;
     }
-    if (ctx->trainerAIData.moveData[ctx->moveNoHit[battlerId]].power == 0) {
+    if (BattleMoveTbl(ctx, ctx->moveNoHit[battlerId])->power == 0) {
         return FALSE;
     }
 
-    if (ctx->trainerAIData.moveData[ctx->moveNoHit[battlerId]].type == TYPE_FIRE) {
+    if (BattleMoveTbl(ctx, ctx->moveNoHit[battlerId])->type == TYPE_FIRE) {
         ability = ABILITY_FLASH_FIRE;
-    } else if (ctx->trainerAIData.moveData[ctx->moveNoHit[battlerId]].type == TYPE_WATER) {
+    } else if (BattleMoveTbl(ctx, ctx->moveNoHit[battlerId])->type == TYPE_WATER) {
         ability = ABILITY_WATER_ABSORB;
-    } else if (ctx->trainerAIData.moveData[ctx->moveNoHit[battlerId]].type == TYPE_ELECTRIC) {
+    } else if (BattleMoveTbl(ctx, ctx->moveNoHit[battlerId])->type == TYPE_ELECTRIC) {
         ability = ABILITY_VOLT_ABSORB;
     } else {
         return FALSE;

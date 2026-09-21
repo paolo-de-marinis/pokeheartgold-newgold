@@ -273,4 +273,12 @@
 #define MOVE_EFFECT_FLINCH_PARALYZE_HIT                275
 #define MOVE_EFFECT_RAISE_SP_ATK_HIT                   276
 
+// Effects the moves New Gold reaches need and this game had no script for.
+#define MOVE_EFFECT_DOUBLE_POWER_WITHOUT_ITEM          277
+#define MOVE_EFFECT_ATK_DEF_ACC_UP                     278
+#define MOVE_EFFECT_DOUBLE_DAMAGE_ON_STATUS            279
+#define MOVE_EFFECT_SP_ATK_SP_DEF_SPEED_UP             280
+#define MOVE_EFFECT_STICKY_WEB                         281
+#define MOVE_EFFECT_BURN_MULTI_HIT                     282
+
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

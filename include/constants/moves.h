@@ -470,7 +470,31 @@
 #define MOVE_OMINOUS_WIND  466
 #define MOVE_SHADOW_FORCE  467
 
-#define NUM_MOVES MOVE_SHADOW_FORCE
+// The moves New Gold reaches that this game did not have. Solar Seeds is
+// konefr's own; the rest are from later generations.
+#define MOVE_ACROBATICS       468
+#define MOVE_BULLDOZE         469
+#define MOVE_COIL             470
+#define MOVE_DAZZLING_GLEAM   471
+#define MOVE_ECHOED_VOICE     472
+#define MOVE_HEX              473
+#define MOVE_MOONBLAST        474
+#define MOVE_MYSTICAL_FIRE    475
+#define MOVE_PETAL_BLIZZARD   476
+#define MOVE_QUIVER_DANCE     477
+#define MOVE_RAGE_FIST        478
+#define MOVE_STICKY_WEB       479
+#define MOVE_STRUGGLE_BUG     480
+#define MOVE_SOLAR_SEEDS      481
+
+// NUM_MOVES sizes the copy of the move table a battle keeps in its context,
+// and that copy cannot grow: the battle assembly this port has not decompiled
+// yet reads the structure it sits in by offset, and everything after it would
+// move. The added moves are kept past the end of that structure instead and
+// reached through BattleMoveTbl, so NUM_MOVES stays where retail left it.
+#define NUM_MOVES       MOVE_SHADOW_FORCE
+#define NUM_MOVES_TOTAL MOVE_SOLAR_SEEDS
+#define NUM_ADDED_MOVES (NUM_MOVES_TOTAL - NUM_MOVES)
 
 // Move Attributes
 #define MOVE_ATTRIBUTE_EFFECT         0

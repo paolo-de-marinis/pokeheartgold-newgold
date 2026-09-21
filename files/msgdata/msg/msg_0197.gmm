@@ -5120,4 +5120,12 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">{STRVAR_1 1, 0, 0}’s Ability\nbecame {STRVAR_1 5, 1, 0}!</language>
 	</row>
+	<row id="msg_0197_01277" index="1277">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A sticky web has been laid out\nbeneath your team’s feet!</language>
+	</row>
+	<row id="msg_0197_01278" index="1278">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A sticky web has been laid out\nbeneath the feet of the foe’s team!</language>
+	</row>
 </body>

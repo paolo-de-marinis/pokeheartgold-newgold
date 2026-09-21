@@ -1872,4 +1872,60 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">SHADOW FORCE</language>
 	</row>
+	<row id="msg_0751_acrobatics" index="468">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">ACROBATICS</language>
+	</row>
+	<row id="msg_0751_bulldoze" index="469">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BULLDOZE</language>
+	</row>
+	<row id="msg_0751_coil" index="470">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">COIL</language>
+	</row>
+	<row id="msg_0751_dazzling_gleam" index="471">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">DAZZLING GLEAM</language>
+	</row>
+	<row id="msg_0751_echoed_voice" index="472">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">ECHOED VOICE</language>
+	</row>
+	<row id="msg_0751_hex" index="473">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">HEX</language>
+	</row>
+	<row id="msg_0751_moonblast" index="474">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">MOONBLAST</language>
+	</row>
+	<row id="msg_0751_mystical_fire" index="475">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">MYSTICAL FIRE</language>
+	</row>
+	<row id="msg_0751_petal_blizzard" index="476">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">PETAL BLIZZARD</language>
+	</row>
+	<row id="msg_0751_quiver_dance" index="477">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">QUIVER DANCE</language>
+	</row>
+	<row id="msg_0751_rage_fist" index="478">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">RAGE FIST</language>
+	</row>
+	<row id="msg_0751_sticky_web" index="479">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">STICKY WEB</language>
+	</row>
+	<row id="msg_0751_struggle_bug" index="480">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">STRUGGLE BUG</language>
+	</row>
+	<row id="msg_0751_solar_seeds" index="481">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">SOLAR SEEDS</language>
+	</row>
 </body>

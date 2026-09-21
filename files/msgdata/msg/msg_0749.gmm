@@ -1872,4 +1872,60 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The user disappears,\nthen strikes the foe\non the second turn.\nIt hits even if the\nfoe protects itself.</language>
 	</row>
+	<row id="msg_0749_00468" index="468">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A nimble attack\nthat does double\ndamage if the user\nhas no held item.</language>
+	</row>
+	<row id="msg_0749_00469" index="469">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user hits all\nPokémon in battle\nby stomping. Lowers\nSpeed of those hit.</language>
+	</row>
+	<row id="msg_0749_00470" index="470">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user coils up,\nraising its Attack,\nDefense, and\naccuracy.</language>
+	</row>
+	<row id="msg_0749_00471" index="471">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user damages\nopposing Pokémon by\nemitting a powerful\nflash.</language>
+	</row>
+	<row id="msg_0749_00472" index="472">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user attacks\nthe target with a\nharsh echo.\nIf used every turn,\npower increases.</language>
+	</row>
+	<row id="msg_0749_00473" index="473">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">This attack does\ndouble damage to a\ntarget affected by\na status problem.</language>
+	</row>
+	<row id="msg_0749_00474" index="474">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Borrowing the power of\nthe moon, the user\nattacks the target.\nThis may also lower the\ntarget’s Sp. Atk stat.</language>
+	</row>
+	<row id="msg_0749_00475" index="475">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user attacks by\nbreathing a special,\nhot fire.\nThis also lowers the\ntarget’s Sp. Atk stat.</language>
+	</row>
+	<row id="msg_0749_00476" index="476">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user stirs up a\nviolent petal blizzard\nand attacks everything\naround it.</language>
+	</row>
+	<row id="msg_0749_00477" index="477">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user mystically\ndances, raising its\nSp. Atk, Sp. Def,\nand Speed.</language>
+	</row>
+	<row id="msg_0749_00478" index="478">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user converts its\nrage into energy to\nattack. The more the\nuser has been attacked,\nthe greater the power.</language>
+	</row>
+	<row id="msg_0749_00479" index="479">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user weaves a web\naround the opposing\nteam, which lowers\ntheir Speed stat upon\nswitching into battle.</language>
+	</row>
+	<row id="msg_0749_00480" index="480">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">While resisting, the\nuser attacks the\nfoe, lowering its\nSp. Atk stat.</language>
+	</row>
+	<row id="msg_0749_00481" index="481">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user launches\nblazing seeds two to\nfive times. They may\nalso burn the target.</language>
+	</row>
 </body>

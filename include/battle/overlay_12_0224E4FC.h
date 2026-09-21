@@ -70,6 +70,7 @@ BOOL BattleContext_CheckMoveHealBlocked(BattleSystem *battleSystem, BattleContex
 void ov12_02252E30(BattleSystem *battleSystem, BattleContext *ctx);
 int GetBattlerLearnedMoveCount(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget);
+const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo);
 u32 BattleStatWithStage(u32 stat, int stage);
 BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId);
 BOOL BattleMoveIsSoundBased(u32 moveNo);

@@ -185,7 +185,7 @@ class BattleAbilityWidthTests(unittest.TestCase):
         ai = (ROOT / "src/battle/trainer_ai_ability.c").read_text()
         types += ai[ai.index("enum {"):ai.index("};")+2]
         native = [selected_cases(pokemon, name, {"BMON_DATA_ABILITY"}, "id") for name in ("GetBattlerVar", "SetBattlerVar")]
-        native += [function(pokemon, name) for name in ("AbilitiesAreNeutralized", "GetBattlerAbility", "ov12_0225859C")]
+        native += [function(pokemon, name) for name in ("AbilitiesAreNeutralized", "BattleMoveTbl", "GetBattlerAbility", "ov12_0225859C")]
         native += [function(command, name) for name in ("BattlerSetAbility", "ov12_0224819C", "BtlCmd_GenerateEndOfBattleItem")]
         native += [function(ai, name) for name in ("ov10_0221D0A8", "ov10_0221D188")]
         native += [function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224E384")]
