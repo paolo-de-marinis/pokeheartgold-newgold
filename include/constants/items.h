@@ -967,7 +967,12 @@
 #define ITEM_SYRUPY_APPLE     541
 #define ITEM_EVIOLITE         542
 
-#define ITEMS_COUNT       543
+// Three more, which the Bug-Catching Contest hands out as prizes.
+#define ITEM_PRISM_SCALE      543
+#define ITEM_ICE_STONE        544
+#define ITEM_LINKING_CORD     545
+
+#define ITEMS_COUNT       546
 
 #define ITEM_MIN 1
 #define ITEM_MAX ITEMS_COUNT - 1

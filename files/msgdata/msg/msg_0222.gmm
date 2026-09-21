@@ -2172,4 +2172,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Eviolite</language>
 	</row>
+	<row id="msg_0222_00543" index="543">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Prism Scale</language>
+	</row>
+	<row id="msg_0222_00544" index="544">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ice Stone</language>
+	</row>
+	<row id="msg_0222_00545" index="545">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Linking Cord</language>
+	</row>
 </body>

@@ -2195,4 +2195,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">A mysterious lump.\nRaises the Defense\nand Sp. Def of a\nPokémon that can\nstill evolve.</language>
 	</row>
+	<row id="msg_0221_00543" index="543">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A scale that\nshines a rainbow\ncolour. Certain\nPokémon evolve\nwhen holding it.</language>
+	</row>
+	<row id="msg_0221_00544" index="544">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A peculiar stone\nthat can make\ncertain species of\nPokémon evolve.</language>
+	</row>
+	<row id="msg_0221_00545" index="545">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A cord that links\ntwo Pokémon. Makes\ncertain Pokémon\nevolve.</language>
+	</row>
 </body>

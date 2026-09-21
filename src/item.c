@@ -681,6 +681,12 @@ static const u16 sItemNarcIds[ITEMS_COUNT][4] = {
     [ITEM_SYRUPY_APPLE] = { NARC_item_data_0518_bin, NARC_item_icon_item_icon_176_NCGR, NARC_item_icon_item_icon_177_NCLR, AGB_ITEM_NONE },
     // Borrowing Everstone's icon; these have none of their own.
     [ITEM_EVIOLITE] = { NARC_item_data_0519_bin, NARC_item_icon_item_icon_281_NCGR, NARC_item_icon_item_icon_282_NCLR, AGB_ITEM_NONE },
+    // Borrowing Dragon Scale's icon.
+    [ITEM_PRISM_SCALE] = { NARC_item_data_0520_bin, NARC_item_icon_item_icon_293_NCGR, NARC_item_icon_item_icon_294_NCLR, AGB_ITEM_NONE },
+    // Borrowing Water Stone's icon.
+    [ITEM_ICE_STONE] = { NARC_item_data_0521_bin, NARC_item_icon_item_icon_123_NCGR, NARC_item_icon_item_icon_124_NCLR, AGB_ITEM_NONE },
+    // Borrowing Upgrade's icon.
+    [ITEM_LINKING_CORD] = { NARC_item_data_0522_bin, NARC_item_icon_item_icon_326_NCGR, NARC_item_icon_item_icon_327_NCLR, AGB_ITEM_NONE },
 };
 
 void MoveItemSlotInList(ItemSlot *slots, int from, int to, int pocket, enum HeapID heapID) {
