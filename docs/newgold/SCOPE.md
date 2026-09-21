@@ -133,14 +133,23 @@ The cries, which needed a reader and writer for the sound archive before
 anything could be added to it. Every trainer in the reference now reads,
 including the one that wanted a double battle with nobody to partner it.
 Deletable HMs, the last of the four engine switches konefr turned on himself.
-Critical captures, which were in the engine and missing from this list.
+Critical captures, which were in the engine and missing from this list. The
+HP bar that drains at a fixed rate. Trick and Switcheroo taking the player's
+item, which the engine allows because it hands every item back at the end.
+
+Reading the engine's `include/config.h` end to end closed that list. Of its
+seventy-five settings konefr changed exactly two groups himself: the level cap
+with its candy exemptions, and deletable HMs. Both are in. The rest are the
+engine's own defaults, and the ones that are visible in play were found by
+this sweep rather than by the commit list — critical captures, the items
+handed back, the friendship effects, Trick — which is why the sweep was worth
+doing and why it is recorded as finished here.
 
 **What is left.**
 
 1. The interface the engine turns on and konefr left on: the EV and IV viewer
-   in the summary, the HP bar that drains at a fixed rate, and the machine
-   move labels in the bag. Each lives in code pret has not decompiled, so each
-   carries a conversion with it.
+   in the summary and the machine move labels in the bag. Each lives in code
+   pret has not decompiled, so each carries a conversion with it.
 2. Dex entries for the added species. hg-engine's Pokedex covers all of them;
    this one stops at 493 and records nothing for the rest, which is why
    catching one is silent rather than a crash. Widening it is the Dex data
