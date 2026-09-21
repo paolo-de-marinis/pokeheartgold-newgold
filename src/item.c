@@ -959,20 +959,24 @@ u16 TMHMGetMove(u16 itemId) {
     return sTMHMMoves[itemId];
 }
 
+// Everything that asks this asks it for one reason: to refuse to let the move
+// be forgotten. New Gold lets them be forgotten, so the answer is always no.
+// The move deleter, the summary and the party menu all reach it through this
+// one function, so this is the whole of the change.
+//
+// Whether a move came from a machine is a different question, and the one
+// place that wanted that asks ItemIsMachine about the item instead.
 BOOL MoveIsHM(u16 moveId) {
-    u8 i;
-
-    for (i = 0; i < NUM_HMS; i++) {
-        if (sTMHMMoves[i + ITEM_HM01 - ITEM_TM01] == moveId) {
-            return TRUE;
-        }
-    }
-
+#pragma unused(moveId)
     return FALSE;
 }
 
 BOOL ItemIsTM(u16 itemId) {
     return itemId >= ITEM_TM01 && itemId <= ITEM_TM92;
+}
+
+BOOL ItemIsMachine(u16 itemId) {
+    return itemId >= ITEM_TM01 && itemId <= ITEM_HM08;
 }
 
 u8 ItemToTMHMId(u16 itemId) {

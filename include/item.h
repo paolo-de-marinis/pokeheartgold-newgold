@@ -252,6 +252,7 @@ BOOL MoveIsHM(u16 moveId);
  * @returns: Number of the TM or HM. If an HM, subtract 92 to get the true number.
  */
 BOOL ItemIsTM(u16 itemId);
+BOOL ItemIsMachine(u16 itemId);
 u8 ItemToTMHMId(u16 itemId);
 
 /*

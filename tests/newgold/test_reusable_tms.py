@@ -73,14 +73,9 @@ static u16 GetMoveMaxPP(u16 move, u8 ppUps) { (void)ppUps; return (u16)(move % 3
 static void MonApplyFriendshipMod(Pokemon *mon, int event, u16 mapSec) { (void)mon; (void)mapSec; assert(event == FRIENDSHIP_EVENT_LEARN_TMHM); friendshipCalls++; }
 static void ApplyMonMoodModifier(Pokemon *mon, int mod) { (void)mon; assert(mod == MON_MOOD_MODIFIER_LEARN_TMHM); moodCalls++; }
 static u16 PartyMenu_GetCurrentMapSec(PartyMenu *partyMenu) { (void)partyMenu; return 1; }
-// HM moves stay genuinely recognisable; only the machine item is kept.
+// The HM moves, which New Gold lets a Pokemon forget: MoveIsHM answers no for
+// all of them now, and what the machine costs is decided by the item instead.
 static const u16 hmMoves[] = { 15, 19, 57, 70, 148, 249, 127, 291 };
-static BOOL MoveIsHM(u16 moveId) {
-    for (unsigned i = 0; i < sizeof(hmMoves) / sizeof(*hmMoves); i++) {
-        if (hmMoves[i] == moveId) return TRUE;
-    }
-    return FALSE;
-}
 @NATIVE@
 '''
 
@@ -100,6 +95,15 @@ int main(void) {
     for (u16 item = 1; item < ITEM_TM01; item++) assert(!ItemIsTM(item));
     for (u16 item = ITEM_TM01; item <= ITEM_TM92; item++) assert(ItemIsTM(item));
     for (u16 item = ITEM_HM01; item <= ITEM_HM08; item++) assert(!ItemIsTM(item));
+
+    // A machine is a TM or an HM, and nothing outside that range is one.
+    for (u16 item = 1; item < ITEM_TM01; item++) assert(!ItemIsMachine(item));
+    for (u16 item = ITEM_TM01; item <= ITEM_HM08; item++) assert(ItemIsMachine(item));
+
+    // Every HM move can be forgotten now, which is what MoveIsHM is asked.
+    for (unsigned i = 0; i < sizeof(hmMoves) / sizeof(*hmMoves); i++) {
+        assert(!MoveIsHM(hmMoves[i]));
+    }
     assert(ITEM_TM92 - ITEM_TM01 + 1 == NUM_TMS);
     assert(ITEM_HM08 - ITEM_HM01 + 1 == NUM_HMS);
 
@@ -140,7 +144,8 @@ int main(void) {
 
 class ReusableTMTests(unittest.TestCase):
     def test_native_reusable_machines(self):
-        native = [function((ROOT / "src/item.c").read_text(), "ItemIsTM"),
+        native = [function((ROOT / "src/item.c").read_text(), name)
+                  for name in ("ItemIsTM", "ItemIsMachine", "MoveIsHM")] + [
                   function((ROOT / "src/bag.c").read_text(), "Bag_GetItemSlotForAdd").replace("static ", "", 1),
                   function((ROOT / "src/party_menu_items.c").read_text(), "PartyMenu_LearnMoveToSlot")]
         program = PREFIX.replace("@NATIVE@", "\n".join(native)) + MAIN
