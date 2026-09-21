@@ -1995,6 +1995,14 @@ void FieldSystem_UnkSub108_MoveMoodTowardsNeutral(FieldSystemUnkSub108 *a0) {
 // following three might be better off in another file? they're not explicitly related to following mons
 
 int SpeciesToOverworldModelIndexOffset(int species) {
+    // One entry a species, and the table is retail's: the species the
+    // expansion added are past its end and none of them has a model to walk
+    // behind the player. Reading past it gave a model number out of the
+    // archive, and then a length out of whatever followed that archive's
+    // allocation table.
+    if (species < 0 || species >= (int)NELEMS(sModelIndexLUT)) {
+        return FOLLOWER_MON_NONE;
+    }
     return sModelIndexLUT[species];
 }
 

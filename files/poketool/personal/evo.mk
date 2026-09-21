@@ -11,6 +11,12 @@ $(EVO_NARC): %.narc: $(EVO_JSON) $(EVO_TEMPLATE)
 $(EVO_NARC): MWCFLAGS += -include global.h
 $(EVO_JSON): | $(WORK_DIR)/include/global.h
 
+# The template sizes the archive at NUM_SPECIES + 1, so the archive is stale
+# the moment that number changes and nothing here said so: the species
+# expansion left it 575 members long for 1042 species, and every read past the
+# end took a length out of whatever followed the allocation table.
+$(EVO_NARC): include/constants/species.h
+
 clean-evo:
 	$(RM) $(EVO_NARC) $(EVO_NARC:%.narc=%.c) $(EVO_NARC:%.narc=%.o)
 

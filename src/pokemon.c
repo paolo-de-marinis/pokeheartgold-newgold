@@ -5066,7 +5066,12 @@ void CalcBoxMonPokeathlonPerformance(BoxPokemon *boxMon, struct PokeathlonTodayP
 
     species = GetBoxMonData(boxMon, MON_DATA_SPECIES, NULL);
     form = GetBoxMonData(boxMon, MON_DATA_FORM, NULL);
-    ReadWholeNarcMemberByIdPair(&data, NARC_poketool_personal_performance, sPokeathlonPerformanceArcIdxs[species] + form);
+    // The same as the overworld models: the table is retail's, one entry a
+    // species, and the added species are past its end with no Pokeathlon
+    // record of their own. Reading past it gave an archive member number out
+    // of a table that is not this one.
+    u16 performanceIdx = species < NELEMS(sPokeathlonPerformanceArcIdxs) ? sPokeathlonPerformanceArcIdxs[species] : 0;
+    ReadWholeNarcMemberByIdPair(&data, NARC_poketool_personal_performance, performanceIdx + form);
     dest->stats[PERFORMANCE_POWER].base = data.base[ARCPERF_POWER];
     dest->stats[PERFORMANCE_POWER].lo = data.minmax[ARCPERF_POWER][0];
     dest->stats[PERFORMANCE_POWER].hi = data.minmax[ARCPERF_POWER][1];
