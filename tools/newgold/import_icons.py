@@ -47,24 +47,24 @@ def main():
     palettes = palette_numbers(args.reference)
     first = first_free_icon()
     print(f"icons already go up to {first - 1}; the new species take {first} to "
-          f"{first + len(import_species.NEW_SPECIES) - 1}")
+          f"{first + len(import_species.added_species()) - 1}")
 
-    missing = [name for name in import_species.NEW_SPECIES
+    missing = [name for name in import_species.added_species()
                if not (sprites / name.lower() / "icon.png").exists()]
     if missing:
         raise SystemExit(f"the reference has no icon for: {', '.join(missing)}")
-    unknown = [name for name in import_species.NEW_SPECIES if name not in palettes]
+    unknown = [name for name in import_species.added_species() if name not in palettes]
     if unknown:
         raise SystemExit(f"no palette number for: {', '.join(unknown)}")
 
-    numbers = [palettes[name] for name in import_species.NEW_SPECIES]
+    numbers = [palettes[name] for name in import_species.added_species()]
     print("palette numbers:", ", ".join(str(n) for n in sorted(set(numbers))))
 
     if not args.write:
         print("nothing written; pass --write")
         return
 
-    for offset, name in enumerate(import_species.NEW_SPECIES):
+    for offset, name in enumerate(import_species.added_species()):
         shutil.copyfile(sprites / name.lower() / "icon.png",
                         ICONS / f"poke_icon_{first + offset:08d}.png")
 
@@ -80,7 +80,7 @@ def main():
     addition = (marker + ", in identifier order from "
                 f"{FIRST_ADDED_SPECIES}.\n    "
                 + ",\n    ".join(f"{number}, // {name}" for number, name
-                                 in zip(numbers, import_species.NEW_SPECIES)))
+                                 in zip(numbers, import_species.added_species())))
     INDEX.write_text(source[:table.start(2)] + body + addition + source[table.end(2):])
     print(f"wrote {len(numbers)} icons and their palette numbers")
 

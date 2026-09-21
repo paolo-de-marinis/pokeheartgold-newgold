@@ -43,9 +43,12 @@ SHARED_WITH = {
 
 
 def reference_species(reference):
+    """The reference's numbers. A few of its lines carry a trailing comment --
+    Vivillon's names its pattern -- so the number is read without anchoring at
+    the end of the line."""
     header = (reference / "include/constants/species.h").read_text(errors="replace")
     return {m[1][len("SPECIES_"):]: int(m[2]) for m in
-            re.finditer(r"#define (SPECIES_[A-Z0-9_]+)\s+(\d+)\s*$", header, re.M)}
+            re.finditer(r"#define (SPECIES_[A-Z0-9_]+)\s+(\d+)\s*(?://.*)?$", header, re.M)}
 
 
 def our_species():
@@ -106,7 +109,7 @@ def main():
 
     theirs = reference_species(args.reference)
     ours = our_species()
-    added = [name for name in import_species.NEW_SPECIES if name not in SHARED_WITH]
+    added = [name for name in import_species.added_species() if name not in SHARED_WITH]
     shared = {name: ours[base] for name, base in SHARED_WITH.items()}
 
     firstBank = len(archive.records["SBNK"])
@@ -146,7 +149,7 @@ def main():
         print(f"  {name} shares {base}'s cry, bank {mapping[name]}")
 
     table = "\n".join(f"    {mapping[name]}, // {name.title().replace('_', ' ')}"
-                      for name in import_species.NEW_SPECIES)
+                      for name in import_species.added_species())
     if not args.write:
         print("nothing written; pass --write")
         print(table)
@@ -155,6 +158,21 @@ def main():
     ARCHIVE.write_bytes(archive.build())
     print(f"wrote {ARCHIVE.relative_to(ROOT)}, {ARCHIVE.stat().st_size // 1024} KiB")
     (ROOT / "tools/newgold/cry_banks.txt").write_text(table + "\n")
+
+    # The lookup that turns a species into a bank lives in C and used to be
+    # kept by hand, which is how it came to name sixty-seven species while the
+    # archive held five hundred. It is written from the same mapping now, so
+    # the two cannot drift apart again.
+    source = ROOT / "src/unk_02005D10.c"
+    text = source.read_text()
+    start = text.index("static const u16 sAddedCryBanks[] = {")
+    end = text.index("};", start) + len("};")
+    text = text[:start] + "static const u16 sAddedCryBanks[] = {\n" + table + "\n};" + text[end:]
+    text = re.sub(r"#define ARCHIVE_BANK_COUNT\s+\d+",
+                  f"#define ARCHIVE_BANK_COUNT     {len(archive.records['SBNK'])}", text)
+    source.write_text(text)
+    print(f"wrote {source.relative_to(ROOT)}: {len(mapping)} banks, "
+          f"ARCHIVE_BANK_COUNT {len(archive.records['SBNK'])}")
 
 
 if __name__ == "__main__":

@@ -75,7 +75,7 @@ class EncounterTests(unittest.TestCase):
                 self.assertLessEqual(rod["rate"], 100, f"{entry['map']} {name}")
 
     def test_the_added_species_reached_the_wild(self):
-        added = {f"SPECIES_{name}" for name in import_species.NEW_SPECIES}
+        added = {f"SPECIES_{name}" for name in import_species.added_species()}
         wild = added & self.named
         self.assertGreater(len(wild), 10, "the rebalance should place added species")
 

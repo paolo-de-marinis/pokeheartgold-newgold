@@ -78,7 +78,7 @@ class TrainerTests(unittest.TestCase):
 
     def test_added_species_reach_trainers(self):
         named = {member["species"] for trainer in self.trainers for member in trainer["party"]}
-        added = {f"SPECIES_{name}" for name in import_species.NEW_SPECIES}
+        added = {f"SPECIES_{name}" for name in import_species.added_species()}
         self.assertTrue(added & named, "the rebalance should hand added species to trainers")
 
 

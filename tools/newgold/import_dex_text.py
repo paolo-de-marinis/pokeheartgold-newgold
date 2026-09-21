@@ -132,11 +132,11 @@ def main():
 
     data = text_data(args.reference)
     added = {}
-    for offset, name in enumerate(import_species.NEW_SPECIES):
+    for offset, name in enumerate(import_species.added_species()):
         if name not in data:
             raise SystemExit(f"the reference has no text for SPECIES_{name}")
         added[FIRST_ADDED + offset] = (name, data[name])
-    if FIRST_ADDED + len(import_species.NEW_SPECIES) - 1 != LAST_ADDED:
+    if FIRST_ADDED + len(import_species.added_species()) - 1 != LAST_ADDED:
         raise SystemExit("the added species no longer end where this expects")
 
     names = rows("0237")

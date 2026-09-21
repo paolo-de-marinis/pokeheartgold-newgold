@@ -50,8 +50,58 @@ IMPLEMENTED = {
 # Cud Chew is a name in New Gold too: the reference declares it and nothing
 # reads it, so a Farigiraf there does not bring its berry back up either.
 # Giving it an effect here would be a change to the game, not a port of it.
+#
+# The rest are the abilities that came in with the whole species range. Every
+# one of them is read somewhere in the reference -- none is a name there --
+# so every one is real work, and this list is the ledger of it. An ability
+# moves out of here and into IMPLEMENTED when the battle actually reads it.
+#
+# They are listed rather than waved through because the danger is not that
+# they are unfinished, it is finishing without noticing: a Pokemon whose
+# ability does nothing looks right on the summary screen and loses battles
+# quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
     "CUD_CHEW",
+
+    "AERILATE", "ANALYTIC", "ANGER_SHELL", "AROMA_VEIL", "AS_ONE_GLASTRIER",
+    "AS_ONE_SPECTRIER", "AURA_BREAK", "BALL_FETCH", "BATTERY",
+    "BATTLE_BOND", "BEADS_OF_RUIN", "BEAST_BOOST", "BERSERK",
+    "CHILLING_NEIGH", "COMATOSE", "COMMANDER", "CONTRARY", "CORROSION",
+    "COSTAR", "COTTON_DOWN", "CURIOUS_MEDICINE", "DANCER", "DARK_AURA",
+    "DAUNTLESS_SHIELD", "DAZZLING", "DEFEATIST", "DEFIANT", "DELTA_STREAM",
+    "DESOLATE_LAND", "DISGUISE", "DRAGONIZE", "DRAGONS_MAW", "EELEVATE",
+    "ELECTRIC_SURGE", "ELECTROMORPHOSIS", "EMBODY_ASPECT",
+    "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4",
+    "EMERGENCY_EXIT", "FAIRY_AURA", "FIRE_MANE", "FLARE_BOOST",
+    "FLOWER_VEIL", "FLUFFY", "FRIEND_GUARD", "FULL_METAL_BODY", "FUR_COAT",
+    "GALE_WINGS", "GALVANIZE", "GOOD_AS_GOLD", "GOOEY", "GORILLA_TACTICS",
+    "GRASSY_SURGE", "GRASS_PELT", "GRIM_NEIGH", "GUARD_DOG", "GULP_MISSILE",
+    "HADRON_ENGINE", "HARVEST", "HEALER", "HEAVY_METAL", "HOSPITALITY",
+    "HUNGER_SWITCH", "ICE_FACE", "ICE_SCALES", "ILLUSION", "IMPOSTER",
+    "INNARDS_OUT", "INTREPID_SWORD", "JUSTIFIED", "LIBERO", "LIGHT_METAL",
+    "LINGERING_AROMA", "LIQUID_VOICE", "LONG_REACH", "MAGICIAN",
+    "MAGIC_BOUNCE", "MEGA_LAUNCHER", "MEGA_SOL", "MERCILESS", "MIMICRY",
+    "MINDS_EYE", "MIRROR_ARMOR", "MISTY_SURGE", "MOODY", "MOXIE",
+    "MULTISCALE", "MYCELIUM_MIGHT", "NEUROFORCE", "OPPORTUNIST",
+    "ORICHALCUM_PULSE", "OVERCOAT", "PARENTAL_BOND", "PASTEL_VEIL",
+    "PERISH_BODY", "PICKPOCKET", "PIERCING_DRILL", "PIXILATE",
+    "POISON_PUPPETEER", "POWER_CONSTRUCT", "POWER_OF_ALCHEMY", "POWER_SPOT",
+    "PRANKSTER", "PRIMORDIAL_SEA", "PRISM_ARMOR", "PROPELLER_TAIL",
+    "PROTEAN", "PROTOSYNTHESIS", "PSYCHIC_SURGE", "PUNK_ROCK",
+    "PURIFYING_SALT", "QUARK_DRIVE", "QUEENLY_MAJESTY", "RATTLED",
+    "RECEIVER", "REFRIGERATE", "RKS_SYSTEM", "ROCKY_PAYLOAD", "SAND_FORCE",
+    "SAND_SPIT", "SCHOOLING", "SCREEN_CLEANER", "SEED_SOWER",
+    "SHADOW_SHIELD", "SHIELDS_DOWN", "SLUSH_RUSH", "SOUL_HEART",
+    "SPICY_SPRAY", "STAKEOUT", "STALWART", "STAMINA", "STANCE_CHANGE",
+    "STEAM_ENGINE", "STEELWORKER", "STEELY_SPIRIT", "STRONG_JAW",
+    "SUPREME_OVERLORD", "SURGE_SURFER", "SWEET_VEIL", "SWORD_OF_RUIN",
+    "SYMBIOSIS", "TABLETS_OF_RUIN", "TANGLING_HAIR", "TEMP4",
+    "TERAFORM_ZERO", "TERAVOLT", "TERA_SHELL", "TERA_SHIFT",
+    "THERMAL_EXCHANGE", "TOUGH_CLAWS", "TOXIC_BOOST", "TOXIC_CHAIN",
+    "TOXIC_DEBRIS", "TRANSISTOR", "TRIAGE", "TURBOBLAZE", "UNSEEN_FIST",
+    "VESSEL_OF_RUIN", "VICTORY_STAR", "WANDERING_SPIRIT", "WATER_BUBBLE",
+    "WATER_COMPACTION", "WELL_BAKED_BODY", "WIMP_OUT", "WIND_POWER",
+    "WONDER_SKIN", "ZEN_MODE", "ZERO_TO_HERO"
 }
 
 
@@ -79,8 +129,21 @@ class AbilityEffectTests(unittest.TestCase):
         for name in sorted(PENDING):
             self.assertNotIn(f"ABILITY_{name}", source, f"ABILITY_{name} works now; move it to IMPLEMENTED")
 
-    def test_everything_but_cud_chew_now_does_something(self):
-        self.assertEqual(PENDING, {"CUD_CHEW"})
+    # A ratchet, not a target. It was once "everything but Cud Chew is done",
+    # which held while the rule was to implement only what the game reached.
+    # The whole species range came in with a hundred and sixty-nine more
+    # abilities, every one of them read somewhere in the reference, so the
+    # number went up once and may only come down from here: lowering it is the
+    # work, raising it needs a reason written next to it.
+    STILL_TO_DO = 170
+
+    def test_the_pending_list_only_ever_shrinks(self):
+        self.assertLessEqual(
+            len(PENDING), self.STILL_TO_DO,
+            f"{len(PENDING)} abilities are pending and the ledger allows "
+            f"{self.STILL_TO_DO}; an added ability needs its effect, or a "
+            f"reason here for why it has none")
+        self.assertIn("CUD_CHEW", PENDING)
 
 
 class SubscriptNumberingTests(unittest.TestCase):

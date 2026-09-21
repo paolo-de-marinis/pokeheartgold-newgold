@@ -51,10 +51,20 @@ class SpriteTreeTests(unittest.TestCase):
                 self.assertTrue(any(sizes), f"{slot} has no {picture} at all")
 
     def test_new_species_have_pictures(self):
-        for index, name in enumerate(import_species.NEW_SPECIES):
+        """A picture from each side, under whichever gender has one.
+
+        Eight of the added species are female only -- Vullaby, Salazzle,
+        Tsareena and the rest -- so the reference has no male picture for them
+        and neither does this. What must not happen is a slot with no picture
+        at all, which would leave the archive a member short and shift every
+        species after it.
+        """
+        for index, name in enumerate(import_species.added_species()):
             directory = SPRITES / f"{508 + index:04d}"
-            self.assertGreater((directory / "male/front.png").stat().st_size, 0, name)
-            self.assertGreater((directory / "male/back.png").stat().st_size, 0, name)
+            for picture in ("front.png", "back.png"):
+                sizes = [(directory / gender / picture).stat().st_size
+                         for gender in ("male", "female")]
+                self.assertTrue(any(sizes), f"{name} has no {picture} at all")
 
     def test_padding_slots_are_only_padding(self):
         # 494 to 507 are the egg, the bad egg and the alternate forms, whose

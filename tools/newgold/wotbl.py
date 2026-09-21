@@ -227,10 +227,10 @@ def extend(args, files, rebuild=False):
     moves = move_names()
     reference = json.loads((args.reference / "data/learnsets/learnsets.json").read_text())
 
-    added, dropped = [], {}
+    added, dropped, lowered = [], {}, {}
     # The added species start where the egg and form block ends.
     firstAdded = min(index for index, name in names.items()
-                     if name in import_species.NEW_SPECIES)
+                     if name in import_species.added_species())
     first = firstAdded if rebuild else len(files)
     for index in range(first, max(names) + 1):
         name = names.get(index)
@@ -249,6 +249,15 @@ def extend(args, files, rebuild=False):
             if number > MOVE_MASK or step["Level"] > (TERMINATOR >> MOVE_BITS):
                 raise SystemExit(f"{name}: {step['Move']} at level {step['Level']} does not fit an entry")
             learned.append({"level": step["Level"], "move": number})
+        # A species whose level-one moves are all still missing would be
+        # obtained with nothing it could use -- Indeedee knows Stored Power
+        # and Play Nice at one, and neither exists here yet. The earliest move
+        # that did survive is taught at level one instead, so it can fight.
+        # Rebuilding once the real moves arrive puts the learnset right.
+        if learned and min(step["level"] for step in learned) > 1:
+            earliest = min(learned, key=lambda step: step["level"])
+            earliest["level"] = 1
+            lowered[name] = earliest["move"]
         added.append(encode(learned))
         if missing:
             dropped[name] = missing
@@ -261,6 +270,12 @@ def extend(args, files, rebuild=False):
             print(f"  {name}: {', '.join(sorted(dropped[name]))}")
         if len(dropped) > 6:
             print(f"  ... and {len(dropped) - 6} more")
+    if lowered:
+        byNumber = {number: name for name, number in moves.items()}
+        print(f"{len(lowered)} species had no level-one move left and were given "
+              f"their earliest surviving one at level one:")
+        for name, move in sorted(lowered.items()):
+            print(f"  {name}: {byNumber.get(move, move)}")
     if not args.write:
         return
     ARCHIVE.write_bytes(build_narc(files[:first] + added))

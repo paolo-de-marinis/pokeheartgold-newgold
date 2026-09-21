@@ -66,7 +66,7 @@ class CryLookupTests(unittest.TestCase):
             r"^    (\d+), //", re.search(r"sAddedCryBanks\[\] = \{(.*?)\n\};", self.source, re.S).group(1), re.M)]
 
     def test_there_is_one_bank_for_every_added_species(self):
-        self.assertEqual(len(self.banks), len(import_species.NEW_SPECIES))
+        self.assertEqual(len(self.banks), len(import_species.added_species()))
 
     def test_no_bank_is_past_the_end_of_the_archive(self):
         limit = int(re.search(r"#define ARCHIVE_BANK_COUNT\s+(\d+)", self.source).group(1))

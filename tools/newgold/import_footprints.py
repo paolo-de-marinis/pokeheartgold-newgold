@@ -90,7 +90,7 @@ def main():
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args()
 
-    theirs = their_numbers(args.reference, import_species.NEW_SPECIES)
+    theirs = their_numbers(args.reference, import_species.added_species())
     prints = args.reference / "rawdata/footprints"
     if not prints.is_dir():
         raise SystemExit(f"{prints} is not there")
@@ -106,7 +106,7 @@ def main():
         wanted.setdefault(species, FOOTPRINTS / f"pokefoot_{494 + MEMBER_OFFSET:08d}.png")
 
     added = {}
-    for offset, name in enumerate(import_species.NEW_SPECIES):
+    for offset, name in enumerate(import_species.added_species()):
         species = import_dex_text.FIRST_ADDED + offset
         number = theirs.get(name)
         if number is None:

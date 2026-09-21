@@ -40,8 +40,8 @@ class IconTests(unittest.TestCase):
                          (re.match(r"poke_icon_0*(\d+)\.png$", p.name) for p in ICONS.iterdir()) if m}
         self.firstIcon = constant("FIRST_ADDED_ICON")
         self.firstPalette = constant("FIRST_ADDED_PALETTE")
-        self.first = species_id(import_species.NEW_SPECIES[0])
-        self.last = species_id(import_species.NEW_SPECIES[-1])
+        self.first = species_id(import_species.added_species()[0])
+        self.last = species_id(import_species.added_species()[-1])
 
     def test_the_new_range_starts_clear_of_the_form_icons(self):
         # Everything HGSS names must come before the range we took.
@@ -49,24 +49,24 @@ class IconTests(unittest.TestCase):
         self.assertEqual(max(reserved) + 1, self.firstIcon)
 
     def test_every_new_species_has_an_icon(self):
-        for offset, name in enumerate(import_species.NEW_SPECIES):
+        for offset, name in enumerate(import_species.added_species()):
             self.assertIn(self.firstIcon + offset, self.pictures, name)
 
     def test_no_new_icon_lands_on_an_old_one(self):
         taken = {index for index in self.pictures if index < self.firstIcon}
-        wanted = {self.firstIcon + offset for offset in range(len(import_species.NEW_SPECIES))}
+        wanted = {self.firstIcon + offset for offset in range(len(import_species.added_species()))}
         self.assertFalse(taken & wanted)
 
     def test_the_palette_table_covers_the_new_species(self):
         table = palette_table()
-        self.assertEqual(len(table), self.firstPalette + len(import_species.NEW_SPECIES))
+        self.assertEqual(len(table), self.firstPalette + len(import_species.added_species()))
         for value in table:
             self.assertIn(int(value), (0, 1, 2))
 
     def test_both_lookups_recognise_the_new_range(self):
         # The index and the palette must agree on which species are new.
         self.assertEqual(SOURCE.count("species >= SPECIES_LILLIPUP && species <= NUM_SPECIES"), 2)
-        self.assertEqual(self.last - self.first + 1, len(import_species.NEW_SPECIES))
+        self.assertEqual(self.last - self.first + 1, len(import_species.added_species()))
 
 
 if __name__ == "__main__":

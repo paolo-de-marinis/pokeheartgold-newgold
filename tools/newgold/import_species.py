@@ -17,20 +17,55 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
-# The species reachable in New Gold that HGSS does not have, in National Dex
-# order. Derived from the trainer, encounter and headbutt tables closed over
-# the evolution table; see docs/newgold/SCOPE.md.
-NEW_SPECIES = """
-    LILLIPUP HERDIER STOUTLAND PURRLOIN LIEPARD TYMPOLE PALPITOAD SEISMITOAD
-    SEWADDLE SWADLOON LEAVANNY YAMASK COFAGRIGUS TRUBBISH GARBODOR EMOLGA
-    KARRABLAST ESCAVALIER FOONGUS AMOONGUSS JOLTIK GALVANTULA FERROSEED
-    FERROTHORN KLINK KLANG KLINKLANG ELGYEM BEHEEYEM LITWICK LAMPENT CHANDELURE
-    SHELMET ACCELGOR BOUFFALANT BUNNELBY DIGGERSBY FLETCHLING FLETCHINDER
-    TALONFLAME LITLEO PYROAR ESPURR MEOWSTIC SYLVEON DEDENNE PHANTUMP TREVENANT
-    PUMPKABOO GOURGEIST NOIBAT NOIVERN APPLIN FLAPPLE APPLETUN SIZZLIPEDE
-    CENTISKORCH WYRDEER KLEAVOR URSALUNA ANNIHILAPE FARIGIRAF DUDUNSPARCE
-    DIPPLIN HYDRAPPLE SLOWPOKE_GALARIAN SLOWBRO_GALARIAN
-""".split()
+# Every species the reference defines that this repository has not got, in
+# National Dex order.
+#
+# This used to be a list of sixty-seven, closed over the evolution table from
+# what New Gold's own trainers and encounters reach. That was the right list
+# while the rule was "implement only what the game reaches". It is not any
+# more: konefr develops New Gold on this repository now, so the platform has
+# to carry what he could reach, not what he reaches today -- he must be able
+# to open Trainers.c and put any Pokemon in it without asking for an import.
+# See docs/newgold/SCOPE.md.
+#
+# The reference numbers a species by its National Dex number below 494, and by
+# that number plus fifty above it, with the fifty in between given to forms.
+# The base species are therefore ids 1 to 493 and 544 to 1075, and the ones
+# missing here are added in that order so a later import is stable.
+FORM_BLOCK = range(494, 544)
+LAST_BASE = 1075
+
+
+def reference_species(reference):
+    """Every base species the reference defines, in its own order."""
+    header = (reference / "include/constants/species.h").read_text()
+    numbered = sorted((int(number), name) for name, number in
+                      re.findall(r"#define SPECIES_([A-Z0-9_]+)\s+(\d+)", header))
+    return [name for number, name in numbered
+            if number not in FORM_BLOCK and 1 <= number <= LAST_BASE]
+
+
+def added_species():
+    """The species this repository has that HeartGold did not.
+
+    Everything past the form block: the egg, the bad egg and the alternate
+    forms sit between Arceus and the first added species, and LAST_DEX_GAP
+    names the last of them.
+    """
+    header = (ROOT / "include/constants/species.h").read_text()
+    numbered = {name: int(number) for name, number in
+                re.findall(r"#define SPECIES_([A-Z0-9_]+)\s+(\d+)", header)}
+    last_gap = re.search(r"#define LAST_DEX_GAP\s+SPECIES_([A-Z0-9_]+)", header).group(1)
+    after = numbered[last_gap]
+    return [name for name, number in sorted(numbered.items(), key=lambda kv: kv[1])
+            if number > after]
+
+
+def species_to_add(reference):
+    """Those of them this repository has not got yet."""
+    have = set(re.findall(r"#define SPECIES_([A-Z0-9_]+)",
+                          (ROOT / "include/constants/species.h").read_text()))
+    return [name for name in reference_species(reference) if name not in have]
 
 # GENDER_RATIO(frac) stores (u8)(frac * 254.75), and a fraction above one means
 # genderless. Every ratio the games use is a multiple of an eighth, so the
@@ -71,6 +106,29 @@ UNAVAILABLE_ITEMS = {
     "ITEM_ABSORB_BULB", "ITEM_AIR_BALLOON", "ITEM_CELL_BATTERY",
     "ITEM_PRETTY_FEATHER", "ITEM_PSYCHIC_SEED", "ITEM_SNOWBALL",
 }
+
+
+def known_items():
+    return set(re.findall(r"#define (ITEM_[A-Z0-9_]+)",
+                          (ROOT / "include/constants/items.h").read_text()))
+
+
+def native_item(name, known, dropped):
+    """The item under this repository's spelling, or nothing.
+
+    The reference spells a few items with an underscore this game does not
+    (ITEM_BLACK_GLASSES against ITEM_BLACKGLASSES), and it has a few this game
+    has never had at all -- the terrain seeds. A wild held item that does not
+    exist here is recorded as none rather than invented, and reported.
+    """
+    if name in known:
+        return name
+    squashed = {item.replace("_", ""): item for item in known}
+    found = squashed.get(name.replace("_", ""))
+    if found:
+        return found
+    dropped.add(name)
+    return "ITEM_NONE"
 
 
 def native(name):
@@ -166,7 +224,8 @@ def record(name, block, expYield, learned, tms, hms, hidden="ABILITY_NONE"):
         "speed_yield": int(field(yields, "speed")),
         "spatk_yield": int(field(yields, "spAttack")),
         "spdef_yield": int(field(yields, "spDefense")),
-        "items": [native(field(items, "common")), native(field(items, "rare"))],
+        "items": [native_item(native(field(items, "common")), known_items(), set()),
+                  native_item(native(field(items, "rare")), known_items(), set())],
         "genderRatio": genderRatio,
         "eggCycles": int(field(block, "hatchCycles")),
         "friendship": int(field(block, "baseFriendship")),
@@ -201,14 +260,22 @@ def main():
     personal = json.loads(personalPath.read_text())
     existing = {entry["species"] for entry in personal["baseStats"]}
 
-    added, clamped = [], []
-    for name in NEW_SPECIES:
+    wanted = species_to_add(args.reference)
+    added, clamped, absent = [], [], []
+    for name in wanted:
         if name in existing:
             continue
-        entry = record(name, blocks[name], yields[name], learnsets.get(name, set()), tms, hms)
-        if yields[name] > MAX_STORED_EXP_YIELD:
+        if name not in blocks:
+            absent.append(name)
+            continue
+        entry = record(name, blocks[name], yields.get(name, 0), learnsets.get(name, set()), tms, hms)
+        if yields.get(name, 0) > MAX_STORED_EXP_YIELD:
             clamped.append((name, yields[name]))
         added.append(entry)
+    if absent:
+        print(f"{len(absent)} named in the reference's header with no block in "
+              f"Species.c, left alone: {', '.join(absent[:6])}"
+              + (" ..." if len(absent) > 6 else ""))
 
     first = len(personal["baseStats"])
     print(f"{len(added)} species to append, identifiers {first} to {first + len(added) - 1}")

@@ -55,10 +55,10 @@ class SpeciesRecordTests(unittest.TestCase):
         self.assertEqual(self.constants["BAD_EGG"], 495)
         self.assertEqual(self.constants["ROTOM_MOW"], 507)
         # New species start after it.
-        self.assertEqual(self.constants[import_species.NEW_SPECIES[0]], 508)
+        self.assertEqual(self.constants[import_species.added_species()[0]], 508)
 
     def test_new_species_are_complete(self):
-        for name in import_species.NEW_SPECIES:
+        for name in import_species.added_species():
             self.assertIn(name, self.constants, name)
             entry = self.records[self.constants[name]]
             self.assertEqual(entry["species"], name)
@@ -107,7 +107,7 @@ class SpeciesRecordTests(unittest.TestCase):
         # Every species whose record is generated: HGSS's own, and the added
         # ones. The egg, the bad egg and the alternate forms in between are
         # left as pret wrote them.
-        managed = set(range(1, 494)) | {self.constants[n] for n in import_species.NEW_SPECIES}
+        managed = set(range(1, 494)) | {self.constants[n] for n in import_species.added_species()}
         checked = 0
         for name, index in self.constants.items():
             if index not in managed or self.records[index]["species"] != name:

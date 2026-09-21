@@ -45,7 +45,7 @@ def main():
     table = reference_table(args.reference)
     evolutions = json.loads(EVOLUTIONS.read_text())
     already = {entry["baseSpecies"] for entry in evolutions["evoTable"]}
-    wanted = {"SPECIES_" + name for name in import_species.NEW_SPECIES}
+    wanted = {"SPECIES_" + name for name in import_species.added_species()}
 
     added, skipped = [], []
     for base, body in table.items():

@@ -65,8 +65,8 @@ def main():
     # Rewrite from the first added species rather than from the end of the
     # bank, so running this again after a species is added says the same thing
     # about the ones already there.
-    first = species_id(import_species.NEW_SPECIES[0])
-    last = species_id(import_species.NEW_SPECIES[-1])
+    first = species_id(import_species.added_species()[0])
+    last = species_id(import_species.added_species()[-1])
     bank = re.sub(r'\t<row id="[^"]+" index="(\d+)">.*?\t</row>\n',
                   lambda m: "" if int(m.group(1)) >= first else m.group(0), bank, flags=re.S)
     print(f"the bank names {len(present)} rows, 0 to {max(present)}; "
@@ -76,11 +76,11 @@ def main():
     for name, text in FORM_NAMES.items():
         names[name] = text
 
-    missing = [name for name in import_species.NEW_SPECIES if name not in names]
+    missing = [name for name in import_species.added_species() if name not in names]
     if missing:
         raise SystemExit(f"the reference has no name for: {', '.join(missing)}")
 
-    wanted = {species_id(name): (name.lower(), names[name]) for name in import_species.NEW_SPECIES}
+    wanted = {species_id(name): (name.lower(), names[name]) for name in import_species.added_species()}
     rows = []
     for index in range(first, last + 1):
         identifier, text = wanted.get(index, (f"unused_{index}", PLACEHOLDER))
@@ -89,7 +89,7 @@ def main():
     padded = sum(1 for index in range(first, last + 1) if index not in wanted)
     print(f"{len(rows)} rows to add: {len(wanted)} names and {padded} placeholders "
           f"for the alternate forms between them")
-    print("first names:", ", ".join(names[n] for n in import_species.NEW_SPECIES[:5]))
+    print("first names:", ", ".join(names[n] for n in import_species.added_species()[:5]))
 
     if not args.write:
         print("nothing written; pass --write")

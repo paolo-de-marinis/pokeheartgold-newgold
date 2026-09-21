@@ -91,7 +91,7 @@ def main():
             for name in ("front.png", "back.png"):
                 (destination / "female" / name).write_bytes(b"")
 
-    names = {name: 508 + index for index, name in enumerate(import_species.NEW_SPECIES)}
+    names = {name: 508 + index for index, name in enumerate(import_species.added_species())}
     for name, identifier in names.items():
         source = reference / name.lower()
         if not source.is_dir():

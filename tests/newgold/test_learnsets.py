@@ -61,7 +61,7 @@ class LearnsetTests(unittest.TestCase):
         self.assertEqual(differing, self.KONEFR_LEARNSETS & vanilla)
 
     def test_new_species_can_fight(self):
-        for name in import_species.NEW_SPECIES:
+        for name in import_species.added_species():
             index = next(i for i, n in self.names.items() if n == name)
             moves = wotbl.decode(self.files[index])
             self.assertTrue(moves, name)
