@@ -104,9 +104,32 @@ ROUTES = {
         "press:40410:350:6", "press:40820:400:4",
         "mash:41280:45200:25:8:8",
     ],
+    # Face the Professor, hear him out, then four tiles right and one up to
+    # stand under the machine the starters are on, and take one. The tile is
+    # the whole trick: one either side of it and the press finds a memo.
+    "starter": [
+        "press:45550:60:4",
+        "mash:45650:59000:25:8:8",
+        "press:59100:20:0",
+        "press:59160:19:7", "press:59192:19:7", "press:59224:9:7",
+        "press:59250:19:4", "press:59290:8:4",
+        "press:59320:50:8",
+        "mash:59410:60100:30:8:8",
+        "mash:60150:61400:40:10:0",         # no, it does not want a nickname
+    ],
+    # The menu, the party, that Pokemon, its summary, and right one page to
+    # the stats. L, R and Select answer from there.
+    "skills": [
+        "mash:61500:62900:35:10:8",
+        "press:63000:20:9",
+        "touch:63200:25:42:74",             # POKEMON
+        "touch:63900:25:60:25",             # the first party slot
+        "touch:64600:25:192:40",            # SUMMARY
+        "press:65300:15:7",
+    ],
 }
 ROUTE_FRAMES = {"name": 27200, "bedroom": 31100, "downstairs": 35500,
-                "outside": 36500, "lab": 45500}
+                "outside": 36500, "lab": 45500, "starter": 61450, "skills": 65900}
 
 
 def build(into):
