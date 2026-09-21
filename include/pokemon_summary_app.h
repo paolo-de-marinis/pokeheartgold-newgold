@@ -92,7 +92,13 @@ typedef struct PokemonSummaryAppPrefix {
     u8 ribbonCount;
 } PokemonSummaryAppPrefix;
 
+#define SUMMARY_STATS_RAW 0
+#define SUMMARY_STATS_EVS 1
+#define SUMMARY_STATS_IVS 2
+#define SUMMARY_STATS_NONE 3
+
 u32 sub_02088B40(PokemonSummaryAppPrefix *summary);
+void PokemonSummary_ShowStatValues(PokemonSummaryAppPrefix *summary, u32 mode);
 void sub_0208981C(PokemonSummaryAppPrefix *summary, Pokemon *mon, PokemonSummaryMon *summaryMon);
 void sub_0208D178(PokemonSummaryAppPrefix *summary);
 

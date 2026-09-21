@@ -35,6 +35,29 @@ u32 sub_02088B40(PokemonSummaryAppPrefix *summary) {
     }
 
     keys = gSystem.newAndRepeatedKeys;
+
+    // New Gold shows what is behind the stats: L for the effort values, R for
+    // the individual values, Select for the stats themselves. Nothing is
+    // remembered — the page's own redraw puts the stats back — so this only
+    // answers while the stats page is the one on screen.
+    if (summary->page == SUMMARY_PAGE_STATS) {
+        u32 mode = SUMMARY_STATS_RAW;
+
+        if (keys & PAD_BUTTON_L) {
+            mode = SUMMARY_STATS_EVS;
+        } else if (keys & PAD_BUTTON_R) {
+            mode = SUMMARY_STATS_IVS;
+        } else if (!(keys & PAD_BUTTON_SELECT)) {
+            mode = SUMMARY_STATS_NONE;
+        }
+
+        if (mode != SUMMARY_STATS_NONE) {
+            PlaySE(SEQ_SE_DP_SELECT5);
+            PokemonSummary_ShowStatValues(summary, mode);
+            return 2;
+        }
+    }
+
     if (keys & PAD_KEY_LEFT) {
         sub_02089E30(summary, -1);
         return 2;
