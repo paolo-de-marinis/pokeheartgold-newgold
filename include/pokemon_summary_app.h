@@ -77,10 +77,22 @@ typedef struct PokemonSummaryAppPrefix {
     MsgData *ribbonMsgData;
     MessageFormat *messageFormat;
     String *stringBuffer;
-    u8 unk7B0[0x7C6 - 0x7B0];
+    u8 unk7B0[0x7BC - 0x7B0];
+    // Which of the summary's pages is showing: 1 is the stats page, 2 the
+    // ribbons. Negative while the screen is coming up.
+    s8 page;
+    // Low nibble: which move the cursor is on.
+    u8 unk7BD;
+    u8 unk7BE;
+    u8 unk7BF_0 : 4;
+    u8 unk7BF_4 : 4;
+    u8 unk7C0[0x7C4 - 0x7C0];
+    u8 unk7C4;
+    u8 unk7C5;
     u8 ribbonCount;
 } PokemonSummaryAppPrefix;
 
+u32 sub_02088B40(PokemonSummaryAppPrefix *summary);
 void sub_0208981C(PokemonSummaryAppPrefix *summary, Pokemon *mon, PokemonSummaryMon *summaryMon);
 void sub_0208D178(PokemonSummaryAppPrefix *summary);
 

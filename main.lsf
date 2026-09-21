@@ -289,6 +289,8 @@ Static main
     Object asm/unk_02087FD4.o
     Object src/unk_0208805C.o
     Object asm/unk_02088288.o
+    Object src/pokemon_summary_input.o
+    Object asm/unk_02088D18.o
     Object src/pokemon_summary_mon.o
     Object asm/unk_02089C50.o
     Object asm/unk_0208B1AC.o

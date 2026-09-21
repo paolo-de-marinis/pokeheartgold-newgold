@@ -20,6 +20,8 @@ typedef struct PokemonSummaryArgs {
     u8 partySlot;
     u8 unk15;
     u8 unk16;
+    // Not padding: sub_02088B40 sets this byte when the screen is dismissed.
+    u8 unk17;
     u16 moveToLearn;
     u8 unk1A[0x2];
     BOOL natDexEnabled;
