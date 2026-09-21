@@ -175,46 +175,26 @@ doing and why it is recorded as finished here.
 
 **What is left.**
 
-2. The Pokedex screen itself. The entries are in — every string it shows is
-   imported, the footprints are in, and the Dex's species now run to the end
-   of the list rather than stopping at Arceus, passing over the fourteen
-   identifiers in between that are the egg and the alternate forms. What is
-   left is what the screen makes of that: the Dex number it prints is the
-   species identifier, so an added species shows the number it has here rather
-   than its National Dex number, and the area screen has nothing to say about
-   a species no map places. Both want looking at on a running game rather than
-   guessing, so they are part of the melonDS session below.
+The four items the expansion's precondition named are implemented: the
+interface the engine turns on, the Dex for the added species, the pockets, and
+thirty boxes. `VALIDATION.md` records the emulator session for them, and it
+records honestly that the session is boot and menu evidence — both ROMs start,
+keep running and take scripted button and touch input through the controls
+tutorial, which is past everything the save region and the heaps have to
+survive, and no further. None of the four has been exercised in play.
 
-3. Thirty PC boxes. The pockets are done — three of them widened by the
-   engine's own counts, three hundred and four bytes, which fitted in the page
-   the save already had. The boxes do not fit anything, and
-   `tools/newgold/save_budget.py` says why:
+So two things stand between here and the expansion:
 
-   * The save is at **thirty-five pages of thirty-five**. It is written as two
-     slots, sixteen pages for the save proper and nineteen for the boxes, and
-     `SaveData_InitSlotSpecs` asserts the total against `SAVE_PAGE_MAX`. There
-     is about 2,300 bytes of slack inside the save's own last page and no page
-     after it.
-   * A box is about 4,140 bytes, so twelve more are thirteen pages.
-     `SAVE_PAGE_MAX` has to go from 35 to 48. The chunks written past the
-     region sit at `SAVE_PAGE_MAX` plus an offset and move with it, from
-     page 47 to page 60 of the 64 the flash erases in one half. It fits.
-   * `SaveData` holds the whole region, and heap 1 is 0x23600 — sized to it
-     with about two hundred bytes to spare. It has to grow by the same 53,248
-     bytes, out of heap 3.
-   * Twelve more box names in `msg_0024`, which holds the eighteen at rows 6
-     to 23.
-   * The screen. `NUM_BOXES` reaches the storage code, but the two PC display
-     overlays hold twenty-one literal eighteens between them, and whichever of
-     those are box counts have to be decompiled before they can be changed.
-
-   That last one is the work; everything above it is arithmetic that is now
-   done.
-
-Then a session on melonDS covering those, written up in
-`VALIDATION.md`. **That write-up is the precondition for everything below.**
-Nothing of the expansion starts over an unproven base: if something in that
-session does not pass, it is fixed first.
+1. A play session, by script or by hand, covering the four: the EV and IV
+   viewer on a real Pokemon, the machine badges and the missing count in the
+   bag, a Dex entry for an added species, and the thirtieth box.
+   `tools/newgold/smoke.py` can drive it — buttons and touch both work — but
+   the sequence through naming, the starter and the first route is not
+   written.
+2. Two things the Dex screen is known to owe, which that session should look
+   at rather than guess: it prints the species identifier rather than a
+   National Dex number for an added species, and the area screen has nothing
+   to say about a species no map places.
 
 ## Next phase: the whole range
 
