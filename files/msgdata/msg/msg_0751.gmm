@@ -1928,4 +1928,60 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">SOLAR SEEDS</language>
 	</row>
+	<row id="msg_0751_twin_beam" index="482">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">TWIN BEAM</language>
+	</row>
+	<row id="msg_0751_hyper_drill" index="483">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">HYPER DRILL</language>
+	</row>
+	<row id="msg_0751_dragon_cheer" index="484">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">DRAGON CHEER</language>
+	</row>
+	<row id="msg_0751_psyshield_bash" index="485">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">PSYSHIELD BASH</language>
+	</row>
+	<row id="msg_0751_fell_stinger" index="486">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">FELL STINGER</language>
+	</row>
+	<row id="msg_0751_infestation" index="487">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">INFESTATION</language>
+	</row>
+	<row id="msg_0751_toxic_thread" index="488">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">TOXIC THREAD</language>
+	</row>
+	<row id="msg_0751_freeze-dry" index="489">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">FREEZE-DRY</language>
+	</row>
+	<row id="msg_0751_fairy_wind" index="490">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">FAIRY WIND</language>
+	</row>
+	<row id="msg_0751_scald" index="491">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">SCALD</language>
+	</row>
+	<row id="msg_0751_flame_charge" index="492">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">FLAME CHARGE</language>
+	</row>
+	<row id="msg_0751_inferno" index="493">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">INFERNO</language>
+	</row>
+	<row id="msg_0751_rage_powder" index="494">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">RAGE POWDER</language>
+	</row>
+	<row id="msg_0751_tearful_look" index="495">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">TEARFUL LOOK</language>
+	</row>
 </body>

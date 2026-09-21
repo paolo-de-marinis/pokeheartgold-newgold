@@ -897,6 +897,20 @@ static u16 MoveAnimationFor(u16 move) {
         MOVE_SPIDER_WEB,   // Sticky Web
         MOVE_BUG_BUZZ,     // Struggle Bug
         MOVE_EMBER,        // Solar Seeds
+        MOVE_PSYBEAM,      // Twin Beam
+        MOVE_DRILL_PECK,   // Hyper Drill
+        MOVE_HELPING_HAND, // Dragon Cheer
+        MOVE_ZEN_HEADBUTT, // Psyshield Bash
+        MOVE_TWINEEDLE,    // Fell Stinger
+        MOVE_WHIRLPOOL,    // Infestation
+        MOVE_STRING_SHOT,  // Toxic Thread
+        MOVE_ICE_BEAM,     // Freeze-Dry
+        MOVE_SWIFT,        // Fairy Wind
+        MOVE_SURF,         // Scald
+        MOVE_FLAME_WHEEL,  // Flame Charge
+        MOVE_FIRE_BLAST,   // Inferno
+        MOVE_FOLLOW_ME,    // Rage Powder
+        MOVE_LEER,         // Tearful Look
     };
 
     if (move > NUM_MOVES && move <= NUM_MOVES_TOTAL) {

@@ -1,0 +1,8 @@
+    .include "macros/btlcmd.inc"
+
+    .data
+
+// Tearful Look.
+_000:
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_FLAGS_DIRECT, MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_TARGET_ATK_AND_SP_ATK_DOWN_1_STAGE
+    End 

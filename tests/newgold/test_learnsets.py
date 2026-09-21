@@ -38,13 +38,27 @@ class LearnsetTests(unittest.TestCase):
         for index, raw in enumerate(self.files):
             self.assertEqual(wotbl.encode(wotbl.decode(raw)), raw, self.names.get(index, index))
 
-    def test_pret_data_is_untouched(self):
+    # The vanilla learnsets New Gold changes, and the only ones it changes.
+    # hg-engine replaces every learnset with a modern one; konefr changed
+    # fifteen of them himself, and those fifteen are what is ported.
+    KONEFR_LEARNSETS = {
+        "CHIKORITA", "QUILAVA", "CROCONAW", "ARIADOS", "SUDOWOODO", "POLITOED",
+        "SKIPLOOM", "JUMPLUFF", "SUNFLORA", "QUAGSIRE", "GIRAFARIG", "DELIBIRD",
+        "STANTLER", "AMBIPOM", "FARIGIRAF",
+    }
+
+    def test_pret_data_is_untouched_but_for_the_fifteen(self):
         original = upstream_archive()
         if original is None:
             self.skipTest("upstream/master is not fetched")
         theirs, _, _ = wotbl.read_narc(original)
         self.assertEqual(len(theirs), 508)
-        self.assertEqual(self.files[:len(theirs)], theirs)
+        names = wotbl.species_names()
+        differing = {names.get(i, str(i)) for i, (a, b)
+                     in enumerate(zip(self.files[:len(theirs)], theirs)) if a != b}
+        # Farigiraf is one of the added species, past the end of pret's data.
+        vanilla = {name for index, name in names.items() if index < len(theirs)}
+        self.assertEqual(differing, self.KONEFR_LEARNSETS & vanilla)
 
     def test_new_species_can_fight(self):
         for name in import_species.NEW_SPECIES:

@@ -52,6 +52,20 @@ MODELS = {
     "STICKY_WEB": ("SPIKES", "SPIDER_WEB"),
     "STRUGGLE_BUG": ("BUG_BUZZ", "BUG_BUZZ"),
     "SOLAR_SEEDS": ("BULLET_SEED", "EMBER"),
+    "TWIN_BEAM": ("DOUBLE_KICK", "PSYBEAM"),
+    "HYPER_DRILL": ("MEGAHORN", "DRILL_PECK"),
+    "DRAGON_CHEER": ("HELPING_HAND", "HELPING_HAND"),
+    "PSYSHIELD_BASH": ("METAL_CLAW", "ZEN_HEADBUTT"),
+    "FELL_STINGER": ("TWINEEDLE", "TWINEEDLE"),
+    "INFESTATION": ("WHIRLPOOL", "WHIRLPOOL"),
+    "TOXIC_THREAD": ("LEER", "STRING_SHOT"),
+    "FREEZE_DRY": ("ICE_BEAM", "ICE_BEAM"),
+    "FAIRY_WIND": ("SWIFT", "SWIFT"),
+    "SCALD": ("HYDRO_PUMP", "SURF"),
+    "FLAME_CHARGE": ("FLAME_WHEEL", "FLAME_WHEEL"),
+    "INFERNO": ("FIRE_BLAST", "FIRE_BLAST"),
+    "RAGE_POWDER": ("FOLLOW_ME", "FOLLOW_ME"),
+    "TEARFUL_LOOK": ("LEER", "LEER"),
 }
 
 # The reference's effect names, against ours. Six had no script here and were
@@ -66,6 +80,17 @@ EFFECTS = {
     "MOVE_EFFECT_SP_ATK_SP_DEF_SPEED_UP": "MOVE_EFFECT_SP_ATK_SP_DEF_SPEED_UP",
     "MOVE_EFFECT_STICKY_WEB": "MOVE_EFFECT_STICKY_WEB",
     "MOVE_EFFECT_BURN_MULTI_HIT": "MOVE_EFFECT_BURN_MULTI_HIT",
+    "MOVE_EFFECT_HIT_TWICE": "MOVE_EFFECT_HIT_TWICE",
+    "MOVE_EFFECT_RAISE_DEF_HIT": "MOVE_EFFECT_RAISE_DEF_HIT",
+    "MOVE_EFFECT_FELL_STINGER": "MOVE_EFFECT_FELL_STINGER",
+    "MOVE_EFFECT_BIND_HIT": "MOVE_EFFECT_BIND_HIT",
+    "MOVE_EFFECT_TOXIC_THREAD": "MOVE_EFFECT_TOXIC_THREAD",
+    "MOVE_EFFECT_FREEZE_HIT": "MOVE_EFFECT_FREEZE_HIT",
+    "MOVE_EFFECT_THAW_AND_BURN_HIT": "MOVE_EFFECT_THAW_AND_BURN_HIT",
+    "MOVE_EFFECT_RAISE_SPEED_HIT": "MOVE_EFFECT_RAISE_SPEED_HIT",
+    "MOVE_EFFECT_BURN_HIT": "MOVE_EFFECT_BURN_HIT",
+    "MOVE_EFFECT_MAKE_GLOBAL_TARGET": "MOVE_EFFECT_MAKE_GLOBAL_TARGET",
+    "MOVE_EFFECT_ATK_SP_ATK_DOWN": "MOVE_EFFECT_ATK_SP_ATK_DOWN",
 }
 
 SPLITS = {"SPLIT_PHYSICAL": 0, "SPLIT_SPECIAL": 1, "SPLIT_STATUS": 2}
@@ -115,11 +140,10 @@ def ranges(block):
     return value
 
 
-def chance(block):
-    """The reference writes some chances as a choice between generations."""
-    text = field(block, "effectChance") or "0"
-    numbers = re.findall(r"\d+", text)
-    # A conditional picks the older of the two, which is what this game is.
+def number(block, key):
+    """Some numbers are written as a choice between generations. The second is
+    the older of the two, which is what this game is."""
+    numbers = re.findall(r"\d+", field(block, key) or "0")
     return int(numbers[-1]) if numbers else 0
 
 
@@ -151,12 +175,16 @@ def rows(path):
 
 
 def append_rows(path, prefix, texts, start, write):
+    """Rewrite every row from `start` on, so running this twice is the same as
+    running it once."""
     text = path.read_text()
+    text = re.sub(r'\t<row id="[^"]+" index="(\d+)">.*?\t</row>\n',
+                  lambda m: "" if int(m.group(1)) >= start else m.group(0), text, flags=re.S)
     block = ""
     for offset, value in enumerate(texts):
         index = start + offset
-        name = f"{prefix}_{index:05d}" if prefix == "msg_0750" or prefix == "msg_0749" else \
-            f"{prefix}_{value.lower().replace(' ', '_')}"
+        name = (f"{prefix}_{value.lower().replace(' ', '_')}" if prefix == "msg_0751"
+                else f"{prefix}_{index:05d}")
         block += (f'\t<row id="{name}" index="{index}">\n'
                   f'\t\t<attribute name="window_context_name">used</attribute>\n'
                   f'\t\t<language name="English">{value}</language>\n'
@@ -198,13 +226,13 @@ def main():
             RECORD,
             effects[EFFECTS[effect]],
             SPLITS[field(block, "split")],
-            int(field(block, "power")),
+            number(block, "power"),
             constants("include/constants/pokemon.h", "TYPE_")[field(block, "type")],
-            int(field(block, "accuracy")),
-            int(field(block, "pp")),
-            chance(block),
+            number(block, "accuracy"),
+            number(block, "pp"),
+            number(block, "effectChance"),
             ranges(block),
-            int(field(block, "priority")),
+            number(block, "priority"),
             modelFields[9],   # the flag byte, from the model
             modelFields[10],  # and the contest appeal
             modelFields[11],

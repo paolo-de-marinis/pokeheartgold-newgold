@@ -486,6 +486,24 @@
 #define MOVE_STICKY_WEB       479
 #define MOVE_STRUGGLE_BUG     480
 #define MOVE_SOLAR_SEEDS      481
+// Four more, each of which is how one of the convergent forms is reached:
+// Girafarig, Dunsparce, Stantler and Dipplin evolve on having learned them.
+#define MOVE_TWIN_BEAM       482
+#define MOVE_HYPER_DRILL     483
+#define MOVE_DRAGON_CHEER    484
+#define MOVE_PSYSHIELD_BASH  485
+// Ten more, which konefr's own learnset changes hand to Ariados, Delibird,
+// Jumpluff, Politoed, Quilava, Skiploom and Sudowoodo.
+#define MOVE_FELL_STINGER     486
+#define MOVE_INFESTATION      487
+#define MOVE_TOXIC_THREAD     488
+#define MOVE_FREEZE_DRY       489
+#define MOVE_FAIRY_WIND       490
+#define MOVE_SCALD            491
+#define MOVE_FLAME_CHARGE     492
+#define MOVE_INFERNO          493
+#define MOVE_RAGE_POWDER      494
+#define MOVE_TEARFUL_LOOK     495
 
 // NUM_MOVES sizes the copy of the move table a battle keeps in its context,
 // and that copy cannot grow: the battle assembly this port has not decompiled
@@ -493,7 +511,7 @@
 // move. The added moves are kept past the end of that structure instead and
 // reached through BattleMoveTbl, so NUM_MOVES stays where retail left it.
 #define NUM_MOVES       MOVE_SHADOW_FORCE
-#define NUM_MOVES_TOTAL MOVE_SOLAR_SEEDS
+#define NUM_MOVES_TOTAL MOVE_TEARFUL_LOOK
 #define NUM_ADDED_MOVES (NUM_MOVES_TOTAL - NUM_MOVES)
 
 // Move Attributes

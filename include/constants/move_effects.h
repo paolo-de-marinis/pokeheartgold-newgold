@@ -280,5 +280,9 @@
 #define MOVE_EFFECT_SP_ATK_SP_DEF_SPEED_UP             280
 #define MOVE_EFFECT_STICKY_WEB                         281
 #define MOVE_EFFECT_BURN_MULTI_HIT                     282
+#define MOVE_EFFECT_FELL_STINGER                       283
+#define MOVE_EFFECT_TOXIC_THREAD                       284
+#define MOVE_EFFECT_RAISE_SPEED_HIT                    285
+#define MOVE_EFFECT_ATK_SP_ATK_DOWN                    286
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

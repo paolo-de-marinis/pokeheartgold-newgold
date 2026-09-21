@@ -1928,4 +1928,60 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The user launches\nblazing seeds two to\nfive times. They may\nalso burn the target.</language>
 	</row>
+	<row id="msg_0749_00482" index="482">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user shoots\nmystical beams from its\neyes to inflict damage.\nThe target is hit twice\nin a row.</language>
+	</row>
+	<row id="msg_0749_00483" index="483">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user spins at high\nspeed to pierce the\ntarget. This attack can\nhit through a move such\nas Protect or Detect.</language>
+	</row>
+	<row id="msg_0749_00484" index="484">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Allies’ morale is raised\nwith a draconic cry,\nboosting their critical\nhit rate. This rouses\nDragon types more.</language>
+	</row>
+	<row id="msg_0749_00485" index="485">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cloaked in psychic\nenergy, the user slams\ninto the target. This\nalso boosts the user’s\nDefense stat.</language>
+	</row>
+	<row id="msg_0749_00486" index="486">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When the user knocks\nout a target with\nthis move, the\nuser’s Attack stat\nrises drastically.</language>
+	</row>
+	<row id="msg_0749_00487" index="487">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The target is infested\nand attacked for four\nto five turns.\nThe target can’t flee\nduring this time.</language>
+	</row>
+	<row id="msg_0749_00488" index="488">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user shoots\npoisonous threads\nto poison the target\nand lower the\ntarget’s Speed stat.</language>
+	</row>
+	<row id="msg_0749_00489" index="489">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user rapidly cools\nthe target, possibly\nleaving them frozen.\nThis move is super\neffective on Water.</language>
+	</row>
+	<row id="msg_0749_00490" index="490">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user attacks by\nstirring up a fairy\nwind to strike the\ntarget.</language>
+	</row>
+	<row id="msg_0749_00491" index="491">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Boiling water is\nshot at the foe.\nIt may also cause\na burn.</language>
+	</row>
+	<row id="msg_0749_00492" index="492">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user cloaks\nitself in flames and\nattacks. It also ups\nthe user’s Speed.</language>
+	</row>
+	<row id="msg_0749_00493" index="493">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The foe is engulfed\nby an intense fire\nthat is sure to\nleave a burn.</language>
+	</row>
+	<row id="msg_0749_00494" index="494">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user scatters\na cloud of powder,\nmaking foes attack\nonly the user.</language>
+	</row>
+	<row id="msg_0749_00495" index="495">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The user tears up,\nlowering the target’s\nAttack and Sp. Atk\nstats.\nBypasses Protect.</language>
+	</row>
 </body>

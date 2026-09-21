@@ -6670,7 +6670,7 @@ void ov12_022582B8(BattleSystem *battleSystem, BattleContext *ctx, int var, int 
     }
 }
 
-static const int sMoveStatusChangeScripts[147] = {
+static const int sMoveStatusChangeScripts[150] = {
     BATTLE_SUBSCRIPT_NONE,
     BATTLE_SUBSCRIPT_FALL_ASLEEP,
     BATTLE_SUBSCRIPT_POISON,
@@ -6817,7 +6817,10 @@ static const int sMoveStatusChangeScripts[147] = {
     BATTLE_SUBSCRIPT_LUNAR_DANCE,
     BATTLE_SUBSCRIPT_GIVE_TARGET_OWN_STATUS,
     BATTLE_SUBSCRIPT_USER_ATK_DEF_ACC_UP_1_STAGE,
-    BATTLE_SUBSCRIPT_USER_SPATK_SPDEF_SPEED_UP_1_STAGE
+    BATTLE_SUBSCRIPT_USER_SPATK_SPDEF_SPEED_UP_1_STAGE,
+    BATTLE_SUBSCRIPT_TARGET_ATK_AND_SP_ATK_DOWN_1_STAGE,
+    BATTLE_SUBSCRIPT_POISON_AND_SPEED_DOWN,
+    BATTLE_SUBSCRIPT_ATTACK_UP_3_ON_FAINT
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

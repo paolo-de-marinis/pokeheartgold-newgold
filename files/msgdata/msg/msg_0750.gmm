@@ -1928,4 +1928,60 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Solar Seeds</language>
 	</row>
+	<row id="msg_0750_00482" index="482">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Twin Beam</language>
+	</row>
+	<row id="msg_0750_00483" index="483">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hyper Drill</language>
+	</row>
+	<row id="msg_0750_00484" index="484">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dragon Cheer</language>
+	</row>
+	<row id="msg_0750_00485" index="485">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Psyshield Bash</language>
+	</row>
+	<row id="msg_0750_00486" index="486">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fell Stinger</language>
+	</row>
+	<row id="msg_0750_00487" index="487">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Infestation</language>
+	</row>
+	<row id="msg_0750_00488" index="488">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Toxic Thread</language>
+	</row>
+	<row id="msg_0750_00489" index="489">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Freeze-Dry</language>
+	</row>
+	<row id="msg_0750_00490" index="490">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fairy Wind</language>
+	</row>
+	<row id="msg_0750_00491" index="491">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scald</language>
+	</row>
+	<row id="msg_0750_00492" index="492">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flame Charge</language>
+	</row>
+	<row id="msg_0750_00493" index="493">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Inferno</language>
+	</row>
+	<row id="msg_0750_00494" index="494">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rage Powder</language>
+	</row>
+	<row id="msg_0750_00495" index="495">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tearful Look</language>
+	</row>
 </body>

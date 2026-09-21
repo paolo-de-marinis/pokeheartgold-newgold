@@ -7,6 +7,10 @@ either unless the round trip reproduces the original byte for byte.
 
     wotbl.py verify                 check the archive round-trips
     wotbl.py extend REFERENCE       append the new species' learnsets
+    wotbl.py rebuild REFERENCE      rewrite the added species' learnsets, for
+                                    when a move they wanted has since arrived
+    wotbl.py konefr REFERENCE       rewrite the learnsets konefr himself
+                                    changed, and only those
 
 Each learnset is a list of 16-bit entries, the move in the low nine bits and
 the level in the top seven, ending with 0xFFFF.
@@ -21,6 +25,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 ARCHIVE = ROOT / "files/poketool/personal/wotbl.narc"
+
+# The hg-engine commit New Gold was forked from. Everything the reference's
+# learnsets say that this does not is konefr's own work.
+ENGINE_BASE = "d0380a487"
 
 MOVE_BITS = 9
 MOVE_MASK = (1 << MOVE_BITS) - 1
@@ -80,10 +88,24 @@ def build_narc(files):
     return header + btaf + btnf + gmif
 
 
+# Names the reference spells differently from this game.
+MOVE_ALIASES = {
+    "MOVE_SMOKESCREEN": "MOVE_SMOKE_SCREEN",
+    "MOVE_SELF_DESTRUCT": "MOVE_SELFDESTRUCT",
+    "MOVE_SOFT_BOILED": "MOVE_SOFTBOILED",
+    "MOVE_FEINT_ATTACK": "MOVE_FAINT_ATTACK",
+    "MOVE_HIGH_JUMP_KICK": "MOVE_HI_JUMP_KICK",
+}
+
+
 def move_names():
-    """Map every move HGSS knows to its number."""
+    """Map every move HGSS knows to its number, under either spelling."""
     header = (ROOT / "include/constants/moves.h").read_text()
-    return {m[1]: int(m[2]) for m in re.finditer(r"#define (MOVE_[A-Z0-9_]+)\s+(\d+)\s*$", header, re.M)}
+    known = {m[1]: int(m[2]) for m in re.finditer(r"#define (MOVE_[A-Z0-9_]+)\s+(\d+)\s*$", header, re.M)}
+    for theirs, ours in MOVE_ALIASES.items():
+        if ours in known:
+            known[theirs] = known[ours]
+    return known
 
 
 def species_names():
@@ -98,9 +120,13 @@ def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("verify")
-    extendArgs = sub.add_parser("extend")
-    extendArgs.add_argument("reference", type=Path)
-    extendArgs.add_argument("--write", action="store_true")
+    for name in ("extend", "rebuild", "konefr"):
+        command = sub.add_parser(name)
+        command.add_argument("reference", type=Path)
+        command.add_argument("--write", action="store_true")
+        if name == "konefr":
+            command.add_argument("--base", default=ENGINE_BASE,
+                                 help="the hg-engine revision New Gold forked from")
     args = parser.parse_args()
 
     data = ARCHIVE.read_bytes()
@@ -121,11 +147,79 @@ def main():
         print(f"{len(files)} learnsets round-trip byte for byte")
         return
 
-    extend(args, files)
+    if args.command == "konefr":
+        konefr(args, files)
+        return
+
+    extend(args, files, rebuild=args.command == "rebuild")
 
 
-def extend(args, files):
-    """Append a learnset for every species the archive does not cover yet."""
+def konefr(args, files):
+    """Rewrite the learnsets konefr changed, and only those.
+
+    The reference's learnset file is hg-engine's whole modern dataset, most of
+    which is not New Gold. What is New Gold is the difference between it and
+    the revision the hack was forked from — fifteen species, at the time of
+    writing — so that difference is what is taken.
+    """
+    import subprocess
+
+    names = species_names()
+    moves = move_names()
+    byName = {name: index for index, name in names.items()}
+
+    def revision(rev):
+        result = subprocess.run(["git", "-C", str(args.reference), "show",
+                                 f"{rev}:data/learnsets/learnsets.json"],
+                                capture_output=True, text=True)
+        if result.returncode:
+            raise SystemExit(f"cannot read the learnsets at {rev}")
+        return json.loads(result.stdout)
+
+    before, after = revision(args.base), revision("HEAD")
+    changed = [key for key in after if before.get(key) != after[key]]
+
+    files = list(files)
+    rewritten, dropped, unreachable = 0, {}, []
+    for key in changed:
+        name = key.replace("SPECIES_", "")
+        index = byName.get(name)
+        if index is None or index >= len(files):
+            unreachable.append(name)
+            continue
+        learned, missing = [], []
+        for step in after[key]["LevelMoves"]:
+            number = moves.get(step["Move"])
+            if number is None:
+                missing.append(step["Move"])
+                continue
+            learned.append({"level": step["Level"], "move": number})
+        raw = encode(learned)
+        if raw != files[index]:
+            files[index] = raw
+            rewritten += 1
+        if missing:
+            dropped[name] = missing
+
+    print(f"konefr changed {len(changed)} learnsets; {rewritten} of them differ here")
+    for name in sorted(dropped):
+        print(f"  {name}: left out {', '.join(sorted(dropped[name]))}")
+    for name in sorted(unreachable):
+        print(f"  {name}: this game has no such species")
+    if not args.write:
+        print("nothing written; pass --write")
+        return
+    ARCHIVE.write_bytes(build_narc(files))
+    print(f"wrote {ARCHIVE.relative_to(ROOT)}")
+
+
+def extend(args, files, rebuild=False):
+    """Append a learnset for every species the archive does not cover yet.
+
+    With rebuild, the species already added are written again as well, which is
+    what to do once a move one of them wanted has since been added: the first
+    import had to leave it out.
+    """
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import import_species
 
@@ -134,7 +228,11 @@ def extend(args, files):
     reference = json.loads((args.reference / "data/learnsets/learnsets.json").read_text())
 
     added, dropped = [], {}
-    for index in range(len(files), max(names) + 1):
+    # The added species start where the egg and form block ends.
+    firstAdded = min(index for index, name in names.items()
+                     if name in import_species.NEW_SPECIES)
+    first = firstAdded if rebuild else len(files)
+    for index in range(first, max(names) + 1):
         name = names.get(index)
         if name is None:
             raise SystemExit(f"no species is defined at identifier {index}")
@@ -155,7 +253,7 @@ def extend(args, files):
         if missing:
             dropped[name] = missing
 
-    print(f"{len(added)} learnsets to append, identifiers {len(files)} to {len(files) + len(added) - 1}")
+    print(f"{len(added)} learnsets, identifiers {first} to {first + len(added) - 1}")
     if dropped:
         total = sum(len(v) for v in dropped.values())
         print(f"{total} level-up moves HGSS does not have yet, across {len(dropped)} species, left out:")
@@ -165,8 +263,8 @@ def extend(args, files):
             print(f"  ... and {len(dropped) - 6} more")
     if not args.write:
         return
-    ARCHIVE.write_bytes(build_narc(files + added))
-    print(f"wrote {ARCHIVE.relative_to(ROOT)} with {len(files) + len(added)} learnsets")
+    ARCHIVE.write_bytes(build_narc(files[:first] + added))
+    print(f"wrote {ARCHIVE.relative_to(ROOT)} with {first + len(added)} learnsets")
 
 
 if __name__ == "__main__":
