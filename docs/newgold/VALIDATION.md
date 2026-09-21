@@ -668,13 +668,27 @@ screenshots, which does not converge, because the camera moves with the player
 and a picture says where things sit relative to each other rather than where
 the player is.
 
-The harness can dump the console's memory, and looking for a halfword that
-moves with the player was tried and did not settle: what turns up responds to
-both directions, which is a counter or the camera rather than a coordinate.
-The reliable way is through the game's own symbols rather than a search —
-`PlayerAvatar_GetXCoord` and the field system it hangs off are both decompiled
-here, so the offsets are known and only the runtime pointer has to be found.
-That is the next thing to do, and it is what the last few tiles need. What each of
+Two ways past that were tried and neither landed it.
+
+Searching memory: the harness can dump the console's own, and a halfword or a
+word that moves with the player was looked for across several experiments —
+one tile, five tiles, in the laboratory and in the open. What turns up
+responds to both directions, or tracks for one move and then stops, which is a
+counter or the camera rather than a coordinate.
+
+Brute force: thirty positions around the machine the starters sit on, each
+walked to, pressed at, and then checked by opening the menu and looking for
+the party entry that would appear once there is a Pokemon in it. None of the
+thirty took one.
+
+So the coordinate is the blocker, and the reliable way to it is through the
+game's own symbols rather than a search. `PlayerAvatar_GetXCoord` reads
+`mapObject->currentX`, `LocalMapObject` keeps `currentX` at 0x64 and
+`currentZ` at 0x6C, and both are decompiled here — what is missing is the
+runtime pointer to the field system, which pokeheartgold passes as a parameter
+rather than keeping in a global this could read. Finding an anchor for it —
+a function that loads one, or the save's own field data — is the next thing to
+do, and it is what the last few tiles need. What each of
 the four items still wants after that:
 
 * The EV and IV viewer wants the starter, and then the summary screen. It is
