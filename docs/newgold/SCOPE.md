@@ -129,27 +129,23 @@ that ask. The two Galarian forms, as species of their own, with Quick Draw
 for one of them; the Bug-Catching Contest's prizes, written into the script
 this game has the source for rather than patched into the built bytes.
 
+The cries, which needed a reader and writer for the sound archive before
+anything could be added to it. Every trainer in the reference now reads,
+including the one that wanted a double battle with nobody to partner it.
+Deletable HMs, the last of the four engine switches konefr turned on himself.
+Critical captures, which were in the engine and missing from this list.
+
 **What is left.**
 
-1. Cries. PlayCryEx clamps anything above species 495 to Bulbasaur rather than
-   reading past the sound archive, so the added species sound wrong but nothing
-   breaks. Giving them their own cries needs that function decompiled and the
-   archive extended. Both halves are still to do here — that file is entirely
-   assembly, and the sounds do not exist at all — but the decompilation does
-   not have to be done twice: the slop fork has it, and taking it is the one
-   exception the method makes.
-2. One trainer still cannot be read: it wants a double battle with no
-   partner, which is a battle type this game has not got.
-3. Footprints and Dex entries, needed only if the Dex is widened; an added
-   species records nothing in it today, deliberately.
-4. The remaining interface work the reference ships: the EV and IV viewer, the
-   static HP bar, the machine labels in the bag, deletable HMs and reusable
-   repels. Each of these lives in code pret has not decompiled, so each carries
-   a conversion with it, done here. If a feature ever needs most of one
-   overlay, whether to take someone else's conversion is a decision to make
-   then.
-
-5. Expanded pockets and thirty boxes, which change the save layout.
+1. The interface the engine turns on and konefr left on: the EV and IV viewer
+   in the summary, the HP bar that drains at a fixed rate, and the machine
+   move labels in the bag. Each lives in code pret has not decompiled, so each
+   carries a conversion with it.
+2. Dex entries for the added species. hg-engine's Pokedex covers all of them;
+   this one stops at 493 and records nothing for the rest, which is why
+   catching one is silent rather than a crash. Widening it is the Dex data
+   archives and the screen that reads them, and footprints come with it.
+3. Expanded pockets and thirty boxes, which change the save layout.
 
 ## Method
 
