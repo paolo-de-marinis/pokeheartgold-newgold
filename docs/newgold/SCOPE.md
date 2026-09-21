@@ -185,17 +185,21 @@ survive, and no further. None of the four has been exercised in play.
 
 So two things stand between here and the expansion:
 
-1. A play session, by script or by hand, covering the four: the EV and IV
-   viewer on a real Pokemon, the machine badges and the missing count in the
-   bag, a Dex entry for an added species, and the thirtieth box. Most of what
-   that needs now exists: `tools/newgold/smoke.py --to lab` plays the opening
-   and crosses the town to Professor Elm in under four minutes, and
-   `tools/newgold/where.py` reads the player's tile and the party count out of
-   a memory dump through the game's own structs, so a scripted walk can be
-   aimed and its result checked rather than guessed. What is missing is the
-   starter: thirty-two tiles of the laboratory were visited exactly and none
-   of them took one, which points at a step of the Professor's script the
-   route has not cleared rather than at a tile it missed.
+1. The rest of the play session. **The EV and IV viewer is done** — seen on a
+   running ROM, six and a quarter minutes from a cold boot: L shows every
+   effort value at zero, R shows individual values that agree with the stats
+   they produce, Select puts the stats back, and the nature's mark on a stat
+   name is finally legible in the same captures. `VALIDATION.md` has the
+   numbers and `validation/` has the pictures.
+
+   The other three want the game played further, and the route can be extended
+   to each: `tools/newgold/smoke.py --to skills` gets to a Pokemon and its
+   summary, and `tools/newgold/where.py` reads the player's tile and the party
+   count out of a memory dump through the game's own structs, so a walk can be
+   aimed and its result checked without looking at the screen. The machine
+   badges want a TM, a Dex entry wants a species caught, and the thirtieth box
+   wants a Pokemon Centre — Cherrygrove has both of the last two, one route
+   west.
 2. Two things the Dex screen is known to owe, which that session should look
    at rather than guess: it prints the species identifier rather than a
    National Dex number for an added species, and the area screen has nothing
