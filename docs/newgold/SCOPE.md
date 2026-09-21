@@ -102,6 +102,14 @@ konefr's content itself: 140 of 142 encounter maps, 650 of 738 trainers, and
 the headbutt trees. Then twenty-five of the twenty-six added abilities: only
 Cud Chew is still a name, and it is one in the reference too.
 
+The battle script command set: pokeheartgold has 225 commands and hg-engine
+has 294, the same 225 at the same opcodes plus 69 of its own. All 69 are
+written, at those opcodes and under those names, so a battle script written
+for that engine assembles and runs here. Seventeen of them ask about a feature
+this game never had — terrain overlays, Parental Bond, Terastallization, the
+primal weathers, the paradox abilities, totems — and answer accordingly rather
+than asserting.
+
 **What is left.**
 
 1. Fourteen moves and konefr's own Solar Seeds, with their effects and
@@ -121,7 +129,21 @@ Cud Chew is still a name, and it is one in the reference too.
 6. The remaining interface work the reference ships: the EV and IV viewer, the
    static HP bar, the machine labels in the bag, deletable HMs and reusable
    repels. Each of these lives in code pret has not decompiled, so each carries
-   a conversion with it.
+   a conversion with it. The slop fork listed among the sources has done some
+   of that conversion; it is a remote on this repository and its files are
+   taken one at a time when a feature needs them, rather than merged wholesale.
+
+   Taking one is two of their commits, not one: the commit that split the
+   overlay into address-ordered pieces, and the commit that decompiled the
+   function. `git log --format=%H --diff-filter=A slop/mainline -- <path>`
+   finds them. Each is cherry-picked with `-n`, their harness and tooling
+   (`tools/`, `.claude/`, `scripts/`) restored away, and what is left — `asm/`,
+   `src/`, `include/`, `main.lsf` — committed with `--author` set to theirs, or
+   to this branch's author with them as a `Co-authored-by:` trailer when the
+   result had to be adapted by hand. One overlay per commit, and both ROMs and
+   the tests before the next: a main.lsf out of step does not fail clearly.
+   The pinned revision in the source table moves the first time something is
+   taken.
 7. Expanded pockets and thirty boxes, which change the save layout.
 
 ## Method
