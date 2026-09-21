@@ -2669,6 +2669,86 @@
           "target": "SPECIES_CENTISKORCH"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_PRIMEAPE",
+      "evos": [
+        {
+          "method": "EVO_HAS_MOVE",
+          "param": "MOVE_RAGE_FIST",
+          "target": "SPECIES_ANNIHILAPE"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_GIRAFARIG",
+      "evos": [
+        {
+          "method": "EVO_HAS_MOVE",
+          "param": "MOVE_TWIN_BEAM",
+          "target": "SPECIES_FARIGIRAF"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_DUNSPARCE",
+      "evos": [
+        {
+          "method": "EVO_HAS_MOVE",
+          "param": "MOVE_HYPER_DRILL",
+          "target": "SPECIES_DUDUNSPARCE"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_URSARING",
+      "evos": [
+        {
+          "method": "EVO_ITEM_NIGHT",
+          "param": "ITEM_PEAT_BLOCK",
+          "target": "SPECIES_URSALUNA"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_STANTLER",
+      "evos": [
+        {
+          "method": "EVO_HAS_MOVE",
+          "param": "MOVE_PSYSHIELD_BASH",
+          "target": "SPECIES_WYRDEER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_APPLIN",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_TART_APPLE",
+          "target": "SPECIES_FLAPPLE"
+        },
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_SWEET_APPLE",
+          "target": "SPECIES_APPLETUN"
+        },
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_SYRUPY_APPLE",
+          "target": "SPECIES_DIPPLIN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_DIPPLIN",
+      "evos": [
+        {
+          "method": "EVO_HAS_MOVE",
+          "param": "MOVE_DRAGON_CHEER",
+          "target": "SPECIES_HYDRAPPLE"
+        }
+      ]
     }
   ]
 }

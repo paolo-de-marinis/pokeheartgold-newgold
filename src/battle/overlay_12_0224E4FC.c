@@ -43,6 +43,21 @@ static int ov12_022585B8(BattleSystem *battleSystem, BattleContext *ctx, int bat
 static BOOL ov12_0225865C(BattleContext *ctx, int moveNo);
 static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int moveNo);
 
+// Eviolite works for anything that has not finished growing up. The archive
+// lists a species' evolutions whether or not it can reach them, and an empty
+// list is what "fully evolved" means here.
+static BOOL SpeciesHasEvolution(u16 species) {
+    struct Evolution table[MAX_EVOS_PER_POKE];
+
+    LoadMonEvolutionTable(species, table);
+    for (int i = 0; i < MAX_EVOS_PER_POKE; i++) {
+        if (table[i].method != EVO_NONE) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u8 selectedMon) {
     Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, battlerId, selectedMon);
     int i;
@@ -93,6 +108,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
     ctx->battleMons[battlerId].type3 = TYPE_NONE;
+    ctx->battleMons[battlerId].canStillEvolve = SpeciesHasEvolution(ctx->battleMons[battlerId].species);
 
     ctx->battleMons[battlerId].gender = GetMonGender(mon);
     ctx->battleMons[battlerId].shiny = MonIsShiny(mon);
@@ -6040,6 +6056,11 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     }
 
     if (calcTarget.item == HOLD_EFFECT_LATI_SPECIAL && !(battleType & BATTLE_TYPE_FRONTIER) && (calcTarget.species == SPECIES_LATIOS || calcTarget.species == SPECIES_LATIAS)) {
+        monSpDef = monSpDef * 150 / 100;
+    }
+
+    if (calcTarget.item == HOLD_EFFECT_BOOST_IF_NOT_EVOLVED && ctx->battleMons[battlerIdTarget].canStillEvolve) {
+        monDef = monDef * 150 / 100;
         monSpDef = monSpDef * 150 / 100;
     }
 

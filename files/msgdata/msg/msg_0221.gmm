@@ -2171,4 +2171,28 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">A crystal ball that was excavated from\nthe ground. A very beautiful stone that\nis covered with bits of rock and earth.</language>
 	</row>
+	<row id="msg_0221_00537" index="537">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A peculiar black\nstone that makes\ncertain Pokémon\nevolve.</language>
+	</row>
+	<row id="msg_0221_00538" index="538">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A block of peat\nthat makes certain\nPokémon evolve\nunder a full moon.</language>
+	</row>
+	<row id="msg_0221_00539" index="539">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A sour apple that\nmakes certain\nPokémon evolve.</language>
+	</row>
+	<row id="msg_0221_00540" index="540">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A sweet apple that\nmakes certain\nPokémon evolve.</language>
+	</row>
+	<row id="msg_0221_00541" index="541">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A syrupy apple\nthat makes certain\nPokémon evolve.</language>
+	</row>
+	<row id="msg_0221_00542" index="542">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A mysterious lump.\nRaises the Defense\nand Sp. Def of a\nPokémon that can\nstill evolve.</language>
+	</row>
 </body>

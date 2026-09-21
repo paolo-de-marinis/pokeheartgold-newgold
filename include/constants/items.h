@@ -264,6 +264,9 @@
 #define HOLD_EFFECT_EVOLVE_PORYGON2       145
 #define HOLD_EFFECT_EVOLVE_DUSCLOPS       146
 
+// Eviolite's, which is the only held item New Gold adds.
+#define HOLD_EFFECT_BOOST_IF_NOT_EVOLVED  147
+
 #define ITEM_NONE 0
 
 // Balls
@@ -955,7 +958,16 @@
 #define ITEM_RED_ORB      534
 #define ITEM_BLUE_ORB     535
 #define ITEM_ENIGMA_STONE 536
-#define ITEMS_COUNT       537
+// The items New Gold reaches: five that make a Pokemon evolve and one that is
+// held. They are numbered after ITEM_ENIGMA_STONE, the last retail had.
+#define ITEM_BLACK_AUGURITE   537
+#define ITEM_PEAT_BLOCK       538
+#define ITEM_TART_APPLE       539
+#define ITEM_SWEET_APPLE      540
+#define ITEM_SYRUPY_APPLE     541
+#define ITEM_EVIOLITE         542
+
+#define ITEMS_COUNT       543
 
 #define ITEM_MIN 1
 #define ITEM_MAX ITEMS_COUNT - 1

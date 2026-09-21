@@ -62,10 +62,19 @@ class TrainerTests(unittest.TestCase):
                 self.assertEqual("item" in member, carriesItem, index)
 
     def test_the_rebalance_landed(self):
-        # Falkner is the first gym New Gold reworks, and his team shows it.
+        """Falkner is the first gym New Gold reworks, and his team shows it:
+        five Pokemon, every one of them holding something, where HeartGold gave
+        him two and nothing."""
         falkner = next(t for t in self.trainers if t["name"].endswith("Falkner"))
-        self.assertEqual([m["level"] for m in falkner["party"]], [9, 13])
-        self.assertIn("MOVE_ROOST", falkner["party"][1]["moves"])
+        self.assertEqual([m["level"] for m in falkner["party"]], [12, 12, 12, 13, 13])
+        self.assertEqual(falkner["type"], "TRTYPE_MON_ITEM_MOVES")
+        for member in falkner["party"]:
+            self.assertNotEqual(member["item"], "ITEM_NONE", member["species"])
+        # The Leek, which this game calls the Stick, and an Eviolite: both are
+        # items the port had to add before this trainer could be read at all.
+        held = {member["item"] for member in falkner["party"]}
+        self.assertIn("ITEM_STICK", held)
+        self.assertIn("ITEM_EVIOLITE", held)
 
     def test_added_species_reach_trainers(self):
         named = {member["species"] for trainer in self.trainers for member in trainer["party"]}

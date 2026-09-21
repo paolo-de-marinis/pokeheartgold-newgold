@@ -250,7 +250,11 @@ typedef struct BattleMon {
     // reads this structure does so by offset, and type1 and type2 have code
     // above them.
     u32 type3 : 8;
-    u32 unk28_B : 9;
+    // Whether the species has any evolution left, which is what Eviolite asks.
+    // Read once on the way into battle rather than per damage calculation,
+    // because answering it means reading the evolution archive.
+    u32 canStillEvolve : 1;
+    u32 unk28_B : 8;
     u8 movePPCur[MAX_MON_MOVES];
     u8 movePP[MAX_MON_MOVES];
     u8 level;

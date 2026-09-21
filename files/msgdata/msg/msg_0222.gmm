@@ -2148,4 +2148,28 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Enigma Stone</language>
 	</row>
+	<row id="msg_0222_00537" index="537">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Black Augurite</language>
+	</row>
+	<row id="msg_0222_00538" index="538">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Peat Block</language>
+	</row>
+	<row id="msg_0222_00539" index="539">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tart Apple</language>
+	</row>
+	<row id="msg_0222_00540" index="540">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sweet Apple</language>
+	</row>
+	<row id="msg_0222_00541" index="541">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Syrupy Apple</language>
+	</row>
+	<row id="msg_0222_00542" index="542">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eviolite</language>
+	</row>
 </body>

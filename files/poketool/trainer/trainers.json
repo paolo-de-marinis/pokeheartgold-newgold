@@ -900,34 +900,85 @@
       "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_LEADER_FALKNER",
       "name": "{TRNAME}Falkner",
-      "items": [],
+      "items": [
+        "ITEM_SUPER_POTION",
+        "ITEM_SUPER_POTION"
+      ],
       "ai_flags": 3,
       "double": 0,
       "party": [
         {
-          "difficulty": 50,
+          "difficulty": 100,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 9,
-          "species": "SPECIES_PIDGEY",
-          "item": "ITEM_NONE",
+          "level": 12,
+          "species": "SPECIES_HOOTHOOT",
+          "item": "ITEM_WIDE_LENS",
           "moves": [
-            "MOVE_TACKLE",
-            "MOVE_SAND_ATTACK"
+            "MOVE_AIR_CUTTER",
+            "MOVE_REFLECT",
+            "MOVE_HYPNOSIS",
+            "MOVE_TAILWIND"
           ],
           "capsule": 0
         },
         {
-          "difficulty": 50,
+          "difficulty": 120,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 12,
+          "species": "SPECIES_DODUO",
+          "item": "ITEM_SCOPE_LENS",
+          "moves": [
+            "MOVE_FOCUS_ENERGY",
+            "MOVE_DOUBLE_HIT",
+            "MOVE_QUICK_ATTACK",
+            "MOVE_PLUCK"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 120,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 12,
+          "species": "SPECIES_FARFETCHD",
+          "item": "ITEM_STICK",
+          "moves": [
+            "MOVE_FOCUS_ENERGY",
+            "MOVE_AERIAL_ACE",
+            "MOVE_SLASH",
+            "MOVE_KNOCK_OFF"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 100,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 13,
+          "species": "SPECIES_DELIBIRD",
+          "item": "ITEM_FOCUS_SASH",
+          "moves": [
+            "MOVE_FAKE_OUT",
+            "MOVE_ICY_WIND",
+            "MOVE_AERIAL_ACE",
+            "MOVE_PRESENT"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 120,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 13,
-          "species": "SPECIES_PIDGEOTTO",
-          "item": "ITEM_NONE",
+          "species": "SPECIES_MURKROW",
+          "item": "ITEM_EVIOLITE",
           "moves": [
-            "MOVE_TACKLE",
+            "MOVE_TAUNT",
+            "MOVE_THUNDER_WAVE",
             "MOVE_ROOST",
-            "MOVE_GUST"
+            "MOVE_PLUCK"
           ],
           "capsule": 0
         }
@@ -954,45 +1005,81 @@
       "items": [
         "ITEM_SUPER_POTION"
       ],
-      "ai_flags": 7,
+      "ai_flags": 15,
       "double": 0,
       "party": [
         {
-          "difficulty": 80,
+          "difficulty": 100,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 20,
+          "species": "SPECIES_LEDIAN",
+          "item": "ITEM_LIGHT_CLAY",
+          "moves": [
+            "MOVE_REFLECT",
+            "MOVE_LIGHT_SCREEN",
+            "MOVE_DRAIN_PUNCH",
+            "MOVE_U_TURN"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 100,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 20,
+          "species": "SPECIES_SHUCKLE",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_ROCK_TOMB",
+            "MOVE_STRUGGLE_BUG",
+            "MOVE_KNOCK_OFF",
+            "MOVE_STEALTH_ROCK"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 130,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-          "level": 17,
-          "species": "SPECIES_SCYTHER",
-          "item": "ITEM_SITRUS_BERRY",
+          "level": 22,
+          "species": "SPECIES_ARIADOS",
+          "item": "ITEM_BLACK_SLUDGE",
           "moves": [
-            "MOVE_QUICK_ATTACK",
-            "MOVE_LEER",
-            "MOVE_U_TURN",
-            "MOVE_FOCUS_ENERGY"
+            "MOVE_STICKY_WEB",
+            "MOVE_POISON_JAB",
+            "MOVE_LEECH_LIFE",
+            "MOVE_SUCKER_PUNCH"
           ],
           "capsule": 0
         },
         {
-          "difficulty": 80,
+          "difficulty": 150,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 15,
-          "species": "SPECIES_KAKUNA",
-          "item": "ITEM_NONE",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 21,
+          "species": "SPECIES_SCIZOR",
+          "item": "ITEM_METAL_COAT",
           "moves": [
-            "MOVE_POISON_STING"
+            "MOVE_BULLET_PUNCH",
+            "MOVE_BUG_BITE",
+            "MOVE_AERIAL_ACE",
+            "MOVE_QUICK_ATTACK"
           ],
           "capsule": 0
         },
         {
-          "difficulty": 80,
+          "difficulty": 150,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 15,
-          "species": "SPECIES_METAPOD",
-          "item": "ITEM_NONE",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 22,
+          "species": "SPECIES_HERACROSS",
+          "item": "ITEM_FLAME_ORB",
           "moves": [
-            "MOVE_TACKLE"
+            "MOVE_BRICK_BREAK",
+            "MOVE_PIN_MISSILE",
+            "MOVE_ROCK_TOMB",
+            "MOVE_AERIAL_ACE"
           ],
           "capsule": 0
         }
@@ -1343,7 +1430,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_BIRD_KEEPER_GS",
       "name": "{TRNAME}Rod",
       "items": [],
@@ -1354,16 +1441,50 @@
           "difficulty": 30,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 7,
-          "species": "SPECIES_PIDGEY",
+          "level": 12,
+          "species": "SPECIES_HOOTHOOT",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_HYPNOSIS",
+            "MOVE_REFLECT",
+            "MOVE_AIR_CUTTER",
+            "MOVE_CONFUSION"
+          ],
           "capsule": 0
         },
         {
-          "difficulty": 30,
+          "difficulty": 150,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 7,
-          "species": "SPECIES_PIDGEY",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 13,
+          "species": "SPECIES_NOIBAT",
+          "item": "ITEM_NONE",
+          "moves": [],
+          "capsule": 0
+        },
+        {
+          "difficulty": 200,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 12,
+          "species": "SPECIES_HOPPIP",
+          "item": "ITEM_WIDE_LENS",
+          "moves": [
+            "MOVE_SLEEP_POWDER",
+            "MOVE_TAILWIND",
+            "MOVE_LEECH_SEED",
+            "MOVE_ACROBATICS"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 200,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 12,
+          "species": "SPECIES_DELIBIRD",
+          "item": "ITEM_NONE",
+          "moves": [],
           "capsule": 0
         }
       ],
@@ -1390,36 +1511,81 @@
         "ITEM_SUPER_POTION",
         "ITEM_SUPER_POTION"
       ],
-      "ai_flags": 7,
+      "ai_flags": 271,
       "double": 0,
       "party": [
         {
-          "difficulty": 100,
+          "difficulty": 150,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 17,
-          "species": "SPECIES_CLEFAIRY",
-          "item": "ITEM_NONE",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 28,
+          "species": "SPECIES_FURRET",
+          "item": "ITEM_SITRUS_BERRY",
           "moves": [
-            "MOVE_DOUBLE_SLAP",
-            "MOVE_MIMIC",
-            "MOVE_ENCORE",
-            "MOVE_METRONOME"
+            "MOVE_BODY_SLAM",
+            "MOVE_KNOCK_OFF",
+            "MOVE_U_TURN",
+            "MOVE_BRICK_BREAK"
           ],
           "capsule": 0
         },
         {
-          "difficulty": 100,
+          "difficulty": 180,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-          "level": 19,
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 28,
+          "species": "SPECIES_AMBIPOM",
+          "item": "ITEM_SILK_SCARF",
+          "moves": [
+            "MOVE_FAKE_OUT",
+            "MOVE_DOUBLE_HIT",
+            "MOVE_AERIAL_ACE",
+            "MOVE_U_TURN"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 160,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 29,
+          "species": "SPECIES_WIGGLYTUFF",
+          "item": "ITEM_CHOPLE_BERRY",
+          "moves": [
+            "MOVE_HYPER_VOICE",
+            "MOVE_DAZZLING_GLEAM",
+            "MOVE_THUNDER_WAVE",
+            "MOVE_FLAMETHROWER"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 180,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 30,
+          "species": "SPECIES_FARIGIRAF",
+          "item": "ITEM_TWISTEDSPOON",
+          "moves": [
+            "MOVE_PSYCHIC",
+            "MOVE_HYPER_VOICE",
+            "MOVE_THUNDERBOLT",
+            "MOVE_NASTY_PLOT"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 200,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 30,
           "species": "SPECIES_MILTANK",
           "item": "ITEM_LUM_BERRY",
           "moves": [
-            "MOVE_ROLLOUT",
-            "MOVE_ATTRACT",
-            "MOVE_STOMP",
-            "MOVE_MILK_DRINK"
+            "MOVE_BODY_SLAM",
+            "MOVE_MILK_DRINK",
+            "MOVE_BULLDOZE",
+            "MOVE_ZEN_HEADBUTT"
           ],
           "capsule": 0
         }
@@ -1451,62 +1617,77 @@
       "double": 0,
       "party": [
         {
-          "difficulty": 100,
+          "difficulty": 150,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 21,
-          "species": "SPECIES_GASTLY",
-          "item": "ITEM_NONE",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 34,
+          "species": "SPECIES_MISDREAVUS",
+          "item": "ITEM_EVIOLITE",
           "moves": [
-            "MOVE_LICK",
-            "MOVE_SPITE",
-            "MOVE_MEAN_LOOK",
-            "MOVE_CURSE"
+            "MOVE_CALM_MIND",
+            "MOVE_HEX",
+            "MOVE_WILL_O_WISP",
+            "MOVE_PAIN_SPLIT"
           ],
           "capsule": 0
         },
         {
-          "difficulty": 100,
+          "difficulty": 150,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 21,
-          "species": "SPECIES_HAUNTER",
-          "item": "ITEM_NONE",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 34,
+          "species": "SPECIES_SHUPPET",
+          "item": "ITEM_FOCUS_SASH",
           "moves": [
-            "MOVE_HYPNOSIS",
-            "MOVE_DREAM_EATER",
+            "MOVE_WILL_O_WISP",
+            "MOVE_KNOCK_OFF",
             "MOVE_CURSE",
-            "MOVE_NIGHTMARE"
+            "MOVE_SHADOW_SNEAK"
           ],
           "capsule": 0
         },
         {
-          "difficulty": 100,
+          "difficulty": 170,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 25,
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 35,
+          "species": "SPECIES_ANNIHILAPE",
+          "item": "ITEM_LUM_BERRY",
+          "moves": [
+            "MOVE_BULK_UP",
+            "MOVE_RAGE_FIST",
+            "MOVE_DRAIN_PUNCH",
+            "MOVE_TAUNT"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 200,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 35,
           "species": "SPECIES_GENGAR",
           "item": "ITEM_SITRUS_BERRY",
           "moves": [
-            "MOVE_HYPNOSIS",
+            "MOVE_ENERGY_BALL",
             "MOVE_SHADOW_BALL",
-            "MOVE_MEAN_LOOK",
-            "MOVE_SUCKER_PUNCH"
+            "MOVE_SLUDGE_BOMB",
+            "MOVE_THUNDERBOLT"
           ],
           "capsule": 0
         },
         {
-          "difficulty": 100,
+          "difficulty": 200,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 23,
-          "species": "SPECIES_HAUNTER",
-          "item": "ITEM_NONE",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 36,
+          "species": "SPECIES_MISMAGIUS",
+          "item": "ITEM_SITRUS_BERRY",
           "moves": [
-            "MOVE_CURSE",
-            "MOVE_MEAN_LOOK",
-            "MOVE_SUCKER_PUNCH",
-            "MOVE_NIGHT_SHADE"
+            "MOVE_NASTY_PLOT",
+            "MOVE_SHADOW_BALL",
+            "MOVE_MYSTICAL_FIRE",
+            "MOVE_DAZZLING_GLEAM"
           ],
           "capsule": 0
         }
@@ -18471,24 +18652,68 @@
       ]
     },
     {
-      "type": "TRTYPE_MON_MOVES",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_POKE_MANIAC",
       "name": "{TRNAME}Issac",
-      "items": [],
+      "items": [
+        "ITEM_HYPER_POTION"
+      ],
       "ai_flags": 33,
       "double": 0,
       "party": [
         {
-          "difficulty": 0,
+          "difficulty": 50,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 12,
-          "species": "SPECIES_LICKITUNG",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 21,
+          "species": "SPECIES_WHISMUR",
+          "item": "ITEM_NONE",
           "moves": [
-            "MOVE_LICK",
-            "MOVE_SUPERSONIC",
-            "MOVE_CUT"
+            "MOVE_ECHOED_VOICE",
+            "MOVE_HOWL",
+            "MOVE_REST",
+            "MOVE_STOMP"
           ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 50,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 22,
+          "species": "SPECIES_GLAMEOW",
+          "item": "ITEM_NONE",
+          "moves": [
+            "MOVE_GROWL",
+            "MOVE_HYPNOSIS",
+            "MOVE_AERIAL_ACE",
+            "MOVE_FURY_SWIPES"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 50,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 23,
+          "species": "SPECIES_FURRET",
+          "item": "ITEM_NONE",
+          "moves": [
+            "MOVE_QUICK_ATTACK",
+            "MOVE_DEFENSE_CURL",
+            "MOVE_COIL",
+            "MOVE_FURY_SWIPES"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 50,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 24,
+          "species": "SPECIES_LICKITUNG",
+          "item": "ITEM_NONE",
+          "moves": [],
           "capsule": 0
         }
       ],
@@ -18842,16 +19067,30 @@
       "double": 0,
       "party": [
         {
+          "difficulty": 200,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 36,
+          "species": "SPECIES_JUMPLUFF",
+          "moves": [
+            "MOVE_GIGA_DRAIN",
+            "MOVE_U_TURN",
+            "MOVE_COTTON_SPORE",
+            "MOVE_SLEEP_POWDER"
+          ],
+          "capsule": 0
+        },
+        {
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 18,
-          "species": "SPECIES_HOPPIP",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 36,
+          "species": "SPECIES_BELLOSSOM",
           "moves": [
-            "MOVE_MEGA_DRAIN",
-            "MOVE_TAIL_WHIP",
-            "MOVE_TACKLE",
-            "MOVE_POISON_POWDER"
+            "MOVE_PETAL_BLIZZARD",
+            "MOVE_MOONBLAST",
+            "MOVE_QUIVER_DANCE",
+            "MOVE_SUNNY_DAY"
           ],
           "capsule": 0
         },
@@ -18859,13 +19098,13 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-          "level": 18,
-          "species": "SPECIES_SKIPLOOM",
+          "level": 36,
+          "species": "SPECIES_SUNFLORA",
           "moves": [
-            "MOVE_MEGA_DRAIN",
-            "MOVE_TAIL_WHIP",
-            "MOVE_TACKLE",
-            "MOVE_STUN_SPORE"
+            "MOVE_MYSTICAL_FIRE",
+            "MOVE_ENERGY_BALL",
+            "MOVE_EARTH_POWER",
+            "MOVE_SUNNY_DAY"
           ],
           "capsule": 0
         }
@@ -30591,7 +30830,7 @@
     {
       "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_PKMN_TRAINER_CHERYL",
-      "name": "Cheryl",
+      "name": "{TRNAME}Cheryl",
       "items": [
         "ITEM_FULL_RESTORE",
         "ITEM_FULL_RESTORE"
@@ -30602,7 +30841,7 @@
         {
           "difficulty": 200,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
           "level": 61,
           "species": "SPECIES_WOBBUFFET",
           "item": "ITEM_NONE",
@@ -30617,7 +30856,7 @@
         {
           "difficulty": 200,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
           "level": 61,
           "species": "SPECIES_DRIFBLIM",
           "item": "ITEM_NONE",
@@ -30632,7 +30871,7 @@
         {
           "difficulty": 200,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
           "level": 62,
           "species": "SPECIES_HARIYAMA",
           "item": "ITEM_NONE",
@@ -30647,7 +30886,7 @@
         {
           "difficulty": 200,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
           "level": 63,
           "species": "SPECIES_WAILORD",
           "item": "ITEM_NONE",
@@ -30662,7 +30901,7 @@
         {
           "difficulty": 200,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
           "level": 65,
           "species": "SPECIES_BLISSEY",
           "item": "ITEM_SITRUS_BERRY",

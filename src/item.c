@@ -669,6 +669,18 @@ static const u16 sItemNarcIds[ITEMS_COUNT][4] = {
     [ITEM_RED_ORB] = { NARC_item_data_0511_bin, NARC_item_icon_item_icon_751_NCGR, NARC_item_icon_item_icon_752_NCLR, AGB_ITEM_RED_ORB                },
     [ITEM_BLUE_ORB] = { NARC_item_data_0512_bin, NARC_item_icon_item_icon_753_NCGR, NARC_item_icon_item_icon_754_NCLR, AGB_ITEM_BLUE_ORB               },
     [ITEM_ENIGMA_STONE] = { NARC_item_data_0513_bin, NARC_item_icon_item_icon_757_NCGR, NARC_item_icon_item_icon_758_NCLR, AGB_ITEM_NONE                   },
+    // Borrowing Hard Stone's icon; these have none of their own.
+    [ITEM_BLACK_AUGURITE] = { NARC_item_data_0514_bin, NARC_item_icon_item_icon_299_NCGR, NARC_item_icon_item_icon_300_NCLR, AGB_ITEM_NONE },
+    // Borrowing Soft Sand's icon; these have none of their own.
+    [ITEM_PEAT_BLOCK] = { NARC_item_data_0515_bin, NARC_item_icon_item_icon_297_NCGR, NARC_item_icon_item_icon_298_NCLR, AGB_ITEM_NONE },
+    // Borrowing Oran Berry's icon; these have none of their own.
+    [ITEM_TART_APPLE] = { NARC_item_data_0516_bin, NARC_item_icon_item_icon_176_NCGR, NARC_item_icon_item_icon_177_NCLR, AGB_ITEM_NONE },
+    // Borrowing Oran Berry's icon; these have none of their own.
+    [ITEM_SWEET_APPLE] = { NARC_item_data_0517_bin, NARC_item_icon_item_icon_176_NCGR, NARC_item_icon_item_icon_177_NCLR, AGB_ITEM_NONE },
+    // Borrowing Oran Berry's icon; these have none of their own.
+    [ITEM_SYRUPY_APPLE] = { NARC_item_data_0518_bin, NARC_item_icon_item_icon_176_NCGR, NARC_item_icon_item_icon_177_NCLR, AGB_ITEM_NONE },
+    // Borrowing Everstone's icon; these have none of their own.
+    [ITEM_EVIOLITE] = { NARC_item_data_0519_bin, NARC_item_icon_item_icon_281_NCGR, NARC_item_icon_item_icon_282_NCLR, AGB_ITEM_NONE },
 };
 
 void MoveItemSlotInList(ItemSlot *slots, int from, int to, int pocket, enum HeapID heapID) {
