@@ -647,14 +647,26 @@ touch both work, an input can be repeated on a period, and the emulator's
 state can be written out and started from, which is what makes the sequence
 worth writing once rather than replaying every time.
 
-Driven as far as it has been, HeartGold gets through the controls tutorial —
-which is touch only — answers the "do you understand everything so far"
-prompt, and reaches the information menu. Past that is the name entry and then
-the overworld. The state to keep is the one taken in the overworld: from
-there, checking a summary screen, a bag, a Dex entry or the thirtieth box is a
-few hundred frames each instead of twenty thousand.
+The opening is now played all the way through. `smoke.py --to outside` runs
+the route in about two and a half minutes: publisher screens, the sunrise, the
+title, the controls tutorial — which is touch only, and which nothing reached
+before the core's touch mode was answered — the "do you understand everything
+so far" prompt, the information menu, the name entry, the professor's
+introduction, the bedroom, the stairs, the conversation downstairs, and out of
+the front door into New Bark Town. It can write the emulator's state out at
+the end, and the four stages are named for where they arrive, so a later one
+can be extended rather than rediscovered.
 
-Until that state exists, or until somebody plays it, these four are
-implemented and unplayed, and this file says so rather than implying
-otherwise.
+That is as far as it goes. What each of the four items still wants:
+
+* The EV and IV viewer wants a Pokemon, which means Elm's laboratory. The
+  route stops outside the player's house; the laboratory is across the town.
+* The machine badges and the missing count want a TM, which is a gym away.
+* A Dex entry for an added species wants one caught, and with it the two
+  things the Dex screen is known to owe.
+* The thirtieth box wants a Pokemon Centre.
+
+So these four are implemented and unplayed, and this file says so rather than
+implying otherwise. What has changed is that the next session does not start
+by writing an emulator harness or by finding the opening again.
 
