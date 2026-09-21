@@ -709,6 +709,13 @@ letter changes.
 
 The route can be extended to all three, and now has both the means: a walk can
 be aimed with `where.py` and its result checked without looking at the screen.
+It was extended as far as the edge of New Bark Town, and stops there. Walking
+west from the laboratory reaches tile (676, 399) and a townsperson says "Wait a
+sec!"; playing the line out and walking again reaches the same tile and the
+same line. Letting it finish, waiting on it, and pressing through it slowly all
+end the same way, so it is a story gate rather than a mistimed press — a step
+of the Professor's errand the route has not done, and the thing to find before
+the walk to Cherrygrove is worth scripting.
 
 One caveat on determinism. The opening is scripted and arrives in the same
 place every time, but the Pokemon it hands over is not the same one: the
