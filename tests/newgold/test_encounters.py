@@ -110,6 +110,28 @@ class EncounterTests(unittest.TestCase):
             self.assertTrue((directory / "male/front.png").stat().st_size
                             or (directory / "female/front.png").stat().st_size, name)
 
+    def test_no_land_table_is_partly_empty(self):
+        """A table with species in it must have no empty slot.
+
+        The reference's Route 30 names eleven of twelve for the day, and its
+        compiler zero-fills the twelfth, so that route had a slot holding
+        species zero which the game would still roll one time in a hundred.
+        A table that is empty throughout is a map with no grass and is fine;
+        one that is empty in places is the defect.
+        """
+        def named(value):
+            return [value] if isinstance(value, str) else list(value.values())
+
+        for entry in self.maps:
+            for time in ("morn", "day", "nite"):
+                slots = [name for slot in entry["land"]["mons"]
+                         for name in named(slot["species"][time])]
+                filled = [name for name in slots if name != "SPECIES_NONE"]
+                if filled:
+                    self.assertEqual(len(filled), len(slots),
+                                     f"{entry['map']} {time} has "
+                                     f"{len(slots) - len(filled)} empty slots")
+
 
 if __name__ == "__main__":
     unittest.main()

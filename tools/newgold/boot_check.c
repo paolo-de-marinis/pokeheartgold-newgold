@@ -97,8 +97,10 @@ static void video(const void *data, unsigned width, unsigned height, size_t pitc
 static size_t audio_batch(const int16_t *data, size_t frames) { (void)data; return frames; }
 static void audio_sample(int16_t l, int16_t r) { (void)l; (void)r; }
 static void input_poll(void) {}
+static unsigned long polled[8];
 static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id) {
     (void)index;
+    if (device < 8) polled[device]++;
     if (port) return 0;
     if (device == 6) { // pointer: the touch screen
         if (id == 0) return touch_x;
@@ -219,6 +221,15 @@ int main(int argc, char **argv) {
                 touch_x = (int)((((double)px / 256.0) * 2.0 - 1.0) * 0x7FFF);
                 touch_y = (int)((((double)(py + 192) / 384.0) * 2.0 - 1.0) * 0x7FFF);
             }
+            // Raw pointer coordinates, already in libretro's -0x7FFF..0x7FFF
+            // space, for working out what the core expects.
+            {
+                int rx, ry;
+                if (sscanf(argv[i], "rawtouch:%lu:%lu:%d:%d", &at, &len, &rx, &ry) == 4
+                    && frames_run >= at && frames_run < at + len) {
+                    touching = 1; touch_x = rx; touch_y = ry;
+                }
+            }
             if (sscanf(argv[i], "touch:%lu:%lu:%d:%d", &at, &len, &px, &py) == 4
                 && frames_run >= at && frames_run < at + len) {
                 touching = 1;
@@ -261,6 +272,9 @@ int main(int argc, char **argv) {
     }
 
     printf("ran %lu frames, last frame %ux%u\n", frames_run, frame_w, frame_h);
+    printf("input polls:");
+    for (unsigned d = 0; d < 8; d++) if (polled[d]) printf(" device%u=%lu", d, polled[d]);
+    printf("\n");
     if (unload) unload();
     if (deinit) deinit();
     return 0;

@@ -1,57 +1,73 @@
 #!/usr/bin/env python3
-"""Check the Bug-Catching Contest prizes.
+"""Check the Bug-Catching Contest table.
 
-New Gold replaces what the contest hands out. The reference does it by
-patching the built script's bytes, because hg-engine has no source for that
-script; this game does, so it is written there. The hazard is the same either
-way: a prize table whose branches do not cover every roll leaves a placing
-with whatever the original judging put in the variable.
+The contest does not read the wild encounter NARC: it reads
+files/data/mushi/mushi_encount.csv, which is why the rebalance that changed
+every route left this one table vanilla. A contest handing out Caterpie at
+level seven beside a level cap of thirty is not obviously broken -- it is just
+the wrong game -- so nothing would have said so.
+
+Only the first of the four tables is New Gold's. The other three are what the
+base ROM plays after the National Dex, and the reference leaves them alone.
 """
 
+import csv
 import re
 import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT
 
-SCRIPT = ROOT / "files/fielddata/script/scr_seq/scr_seq_0151.s"
+TABLE = ROOT / "files/data/mushi/mushi_encount.csv"
+PER_TABLE = 10
+STORY_CAP = 30  # Whitney's cap, which the contest is balanced around
+
+
+def species_constants():
+    return set(re.findall(r"#define (SPECIES_[A-Z0-9_]+)",
+                          (ROOT / "include/constants/species.h").read_text()))
 
 
 class BugContestTests(unittest.TestCase):
     def setUp(self):
-        self.source = SCRIPT.read_text()
-        self.items = set(re.findall(r"#define (ITEM_[A-Z0-9_]+)",
-                                    (ROOT / "include/constants/items.h").read_text()))
+        with TABLE.open() as f:
+            self.rows = list(csv.DictReader(f))
+        self.story = self.rows[:PER_TABLE]
 
-    def test_the_prize_routine_is_called_where_the_judging_ends(self):
-        self.assertIn("JudgeBugContest VAR_TEMP_x4000, VAR_TEMP_x4001, VAR_TEMP_x4002\n"
-                      "\tCall _NEWGOLD_BUG_CONTEST_PRIZE\n", self.source)
+    def test_the_table_still_has_its_four_tables(self):
+        self.assertEqual(len(self.rows), 4 * PER_TABLE)
 
-    def test_every_prize_is_an_item_this_game_has(self):
-        prizes = re.findall(r"SetVar VAR_TEMP_x4001, (ITEM_[A-Z0-9_]+)", self.source)
-        self.assertGreater(len(prizes), 20)
-        for item in prizes:
-            self.assertIn(item, self.items, item)
+    def test_the_story_contest_is_new_golds(self):
+        wanted = ["SPECIES_BUTTERFREE", "SPECIES_BEEDRILL", "SPECIES_ARIADOS",
+                  "SPECIES_LEDIAN", "SPECIES_SHUCKLE", "SPECIES_SCYTHER",
+                  "SPECIES_PINSIR", "SPECIES_HERACROSS", "SPECIES_GALVANTULA",
+                  "SPECIES_ESCAVALIER"]
+        self.assertEqual([row["species"] for row in self.story], wanted)
 
-    def test_every_roll_lands_on_a_prize(self):
-        """Random N gives 0..N-1; N-1 of those branch and the last falls
-        through, so a table has to have exactly one fewer branch than its
-        range or a roll ends up somewhere else."""
-        for block in re.finditer(r"Random VAR_SPECIAL_RESULT, (\d+)\n(.*?)\n\n", self.source, re.S):
-            size = int(block.group(1))
-            branches = re.findall(r"Compare VAR_SPECIAL_RESULT, (\d+)\n\tGoToIfEq", block.group(2))
-            self.assertEqual([int(n) for n in branches], list(range(size - 1)))
-            self.assertIn("GoTo _NEWGOLD_PRIZE_", block.group(2))
+    def test_the_thresholds_and_scores_are_the_references(self):
+        self.assertEqual([int(row["rate"]) for row in self.story],
+                         [80, 60, 50, 40, 30, 20, 15, 10, 5, 0])
+        self.assertEqual([int(row["score"]) for row in self.story],
+                         [60, 60, 60, 60, 80, 80, 80, 80, 100, 100])
 
-    def test_every_branch_has_somewhere_to_land(self):
-        targets = set(re.findall(r"^(_NEWGOLD_[A-Z_]+):", self.source, re.M))
-        for name in re.findall(r"(?:GoToIfEq|GoTo|Call) (_NEWGOLD_[A-Z_]+)", self.source):
-            self.assertIn(name, targets, name)
+    def test_the_levels_sit_under_the_cap_the_contest_is_played_at(self):
+        for row in self.story:
+            self.assertLessEqual(int(row["lvlmin"]), int(row["lvlmax"]), row["species"])
+            self.assertLessEqual(int(row["lvlmax"]), STORY_CAP, row["species"])
+            self.assertGreaterEqual(int(row["lvlmin"]), 20, row["species"])
 
-    def test_the_routine_returns_rather_than_falling_into_the_next(self):
-        body = self.source[self.source.index("_NEWGOLD_BUG_CONTEST_PRIZE:"):]
-        for block in re.finditer(r"SetVar VAR_TEMP_x4001, ITEM_[A-Z0-9_]+\n(\t\w+)", body):
-            self.assertEqual(block.group(1).strip(), "Return")
+    def test_every_species_named_exists(self):
+        known = species_constants()
+        for row in self.rows:
+            self.assertIn(row["species"], known, row["species"])
+
+    def test_the_thresholds_descend_in_every_table(self):
+        """The rate is a descending threshold, not a percentage, so a table
+        whose rates do not fall would never reach its last entries."""
+        for start in range(0, len(self.rows), PER_TABLE):
+            rates = [int(row["rate"]) for row in self.rows[start:start + PER_TABLE]]
+            self.assertEqual(rates, sorted(rates, reverse=True), f"table at row {start}")
+            self.assertEqual(rates[-1], 0, f"table at row {start} never reaches its last slot")
 
 
 if __name__ == "__main__":

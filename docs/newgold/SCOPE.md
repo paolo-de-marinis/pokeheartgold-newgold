@@ -10,7 +10,7 @@ plays like New Gold, not that it resembles hg-engine internally.
 | Input | Revision |
 | --- | --- |
 | pokeheartgold (base) | `e97c7fc975a7447f288c42acc2e155f5a673e30f`, `master` |
-| konefr/hg-engine-newgold (behaviour reference) | `41a28e2255b2805378163c7f4d6c1d87541174d1`, `heartgold-modern`, 2026-09-20, "bug fixing pre sea route 40-41" |
+| konefr/hg-engine-newgold (behaviour reference) | `ccf2c9f5e954348041df5b195bd804ff18d05e66`, `heartgold-modern`, 2026-09-21, "Rebalance Chuck gym trainers" |
 | hg-engine the reference forked from | `d0380a487`, the parent of konefr's first commit |
 | antonsynd/pokeheartgold-slop | `808283ee2`, `mainline`; not an input, with one exception named in the method: `src/unk_02005D10.c` |
 

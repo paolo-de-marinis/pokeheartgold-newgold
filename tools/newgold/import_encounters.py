@@ -122,8 +122,16 @@ def translate(block):
         if len(values) < slots:
             translate.short.append(f"{name} has {len(values)} of {slots}")
     # A list the reference leaves short is zero-filled by its own compiler, so
-    # the missing slots really are empty in its game.
+    # in its game those slots hold species zero. That is a defect rather than a
+    # choice -- Route 30's speciesDay has eleven of twelve -- and a live slot
+    # holding SPECIES_NONE is worse here than a repeat: the twelfth land slot
+    # still comes up one time in a hundred. The tail is filled with the last
+    # species the reference actually named, which is what its own tails do
+    # anyway (Route 30's day ends MANKEY, MANKEY), so a regenerated Encounters.c
+    # cannot put the hole back.
     for values in (morning, day, night):
+        if values and len(values) < slots:
+            values.extend([values[-1]] * (slots - len(values)))
         values.extend(["SPECIES_NONE"] * (slots - len(values)))
     levels.extend([0] * (slots - len(levels)))
 
