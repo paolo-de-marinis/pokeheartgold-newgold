@@ -1,5 +1,12 @@
 #include "global.h"
 
+#include "constants/species.h"
+
+// The last species HeartGold records a cry for, and how many banks the sound
+// archive holds once the added ones are in it.
+#define NUM_SPECIES_WITH_CRIES 494
+#define ARCHIVE_BANK_COUNT     843
+
 #include "heap.h"
 #include "sound_radio.h"
 #include "sys_task.h"
@@ -406,6 +413,87 @@ void sub_020061EC(int a0) {
     }
 }
 
+// HeartGold's cries are bank N for species N, and its species stop at 494.
+// The ones New Gold adds have banks of their own past the end of the archive,
+// except the two regional forms, which use the cry their base species has.
+// The numbers are where tools/newgold/import_cries.py put them.
+static const u16 sAddedCryBanks[] = {
+    778, // Lillipup
+    779, // Herdier
+    780, // Stoutland
+    781, // Purrloin
+    782, // Liepard
+    783, // Tympole
+    784, // Palpitoad
+    785, // Seismitoad
+    786, // Sewaddle
+    787, // Swadloon
+    788, // Leavanny
+    789, // Yamask
+    790, // Cofagrigus
+    791, // Trubbish
+    792, // Garbodor
+    793, // Emolga
+    794, // Karrablast
+    795, // Escavalier
+    796, // Foongus
+    797, // Amoonguss
+    798, // Joltik
+    799, // Galvantula
+    800, // Ferroseed
+    801, // Ferrothorn
+    802, // Klink
+    803, // Klang
+    804, // Klinklang
+    805, // Elgyem
+    806, // Beheeyem
+    807, // Litwick
+    808, // Lampent
+    809, // Chandelure
+    810, // Shelmet
+    811, // Accelgor
+    812, // Bouffalant
+    813, // Bunnelby
+    814, // Diggersby
+    815, // Fletchling
+    816, // Fletchinder
+    817, // Talonflame
+    818, // Litleo
+    819, // Pyroar
+    820, // Espurr
+    821, // Meowstic
+    822, // Sylveon
+    823, // Dedenne
+    824, // Phantump
+    825, // Trevenant
+    826, // Pumpkaboo
+    827, // Gourgeist
+    828, // Noibat
+    829, // Noivern
+    830, // Applin
+    831, // Flapple
+    832, // Appletun
+    833, // Sizzlipede
+    834, // Centiskorch
+    835, // Wyrdeer
+    836, // Kleavor
+    837, // Ursaluna
+    838, // Annihilape
+    839, // Farigiraf
+    840, // Dudunsparce
+    841, // Dipplin
+    842, // Hydrapple
+    79, // Slowpoke Galarian
+    80, // Slowbro Galarian
+};
+
+static int CryBankForSpecies(int species) {
+    if (species > NUM_SPECIES_WITH_CRIES && species <= NUM_SPECIES) {
+        return sAddedCryBanks[species - NUM_SPECIES_WITH_CRIES - 1];
+    }
+    return species;
+}
+
 BOOL PlayCry(int species, int form) {
     u8 *p12;
     void **p24;
@@ -418,7 +506,8 @@ BOOL PlayCry(int species, int form) {
         species = 0x1EE;
     }
     if (species != 0x1EE) {
-        if ((u32)species > 0x1EF || species == 0) {
+        species = CryBankForSpecies(species);
+        if ((u32)species >= ARCHIVE_BANK_COUNT || species == 0) {
             species = 1;
         }
     }
@@ -502,7 +591,8 @@ BOOL PlayCryEx(int mode, int species, int pan, int volume, int heapId, int form)
         species = 0x1EE;
     }
     if (species != 0x1EE) {
-        if ((u32)species > 0x1EF || species == 0) {
+        species = CryBankForSpecies(species);
+        if ((u32)species >= ARCHIVE_BANK_COUNT || species == 0) {
             species = 1;
         }
     }
