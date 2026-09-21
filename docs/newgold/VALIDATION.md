@@ -745,11 +745,24 @@ catching tutorial and its Poke Balls are on the **return** trip through
 Route 29, after Mr Pokemon's errand, not the first one. That is a long way
 round for five Poke Balls.
 
-**Cherrygrove is the shorter way, and it is worth two of the three.** It has
-the Mart, which sells Poke Balls, and the Pokemon Centre, whose PC is where
-the thirtieth box would show. Route 29 west is passable along its southern
-edge — the trees at (642, 410) are gone round by dropping a tile first, which
-reaches (618, 412) — and Cherrygrove is at the end of it.
+**Cherrygrove is the shorter way, and the map data gives its addresses.**
+`064_T21.json` puts the city at x 522 to 575, z 384 to 407, with the Pokemon
+Centre's door at **(564, 391)** and the Mart's at **(555, 391)**. The Centre's
+PC is where the thirtieth box would show, which is the check worth having
+most: the boxes moved `SAVE_PAGE_MAX`, the save's page count and heap 1, and
+that is the riskiest change in this phase. The Mart sells the Poke Balls a
+catch needs.
+
+The Dex entry is further than it looks even so. The Pokedex is Professor Oak's
+and he hands it over at Mr Pokemon's house, past Cherrygrove on Route 30, so
+that check waits on the errand either way.
+
+Route 29 runs x 572 to 666, z 386 to 410, and the way west is not along the
+bottom of it: the walk gets round the trees at (642, 410) by dropping a tile,
+reaches (618, 412) and then (606, 408), and stops there in a pocket with a
+trainer above and trees on two sides. Its own objects say where the open
+ground is — a man at (600, 395) and an Apricorn tree at (596, 392), both west
+of the wall and fifteen tiles north of where the walk stalls.
 
 The walk got as far as tile (606, 408), by dropping south of the trees at
 (642, 410), west, then north again. It stops there against a trainer standing
