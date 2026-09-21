@@ -110,21 +110,28 @@ this game never had — terrain overlays, Parental Bond, Terastallization, the
 primal weathers, the paradox abilities, totems — and answer accordingly rather
 than asserting.
 
+Twenty-eight moves, including konefr's own Solar Seeds: thirteen his trainers
+and learnsets name, four that are how the convergent forms are reached, ten
+his own learnset changes hand out, and Sticky Web. Six items: five that make a
+Pokemon evolve and the Eviolite. The six evolutions that were waiting on them.
+The fifteen learnsets konefr changed himself, which is what his learnset work
+amounts to once the engine's modern dataset is set aside. Hidden abilities,
+for the 383 species whose one this game has and for the four trainer Pokemon
+that ask.
+
 **What is left.**
 
-1. Fourteen moves and konefr's own Solar Seeds, with their effects and
-   animations. Six evolutions wait on these, and on the items Black Augurite,
-   Peat Block and the apples; six trainers wait on the Eviolite, Sticky Web,
-   Acrobatics and Soft-Boiled.
-2. Cries. PlayCryEx clamps anything above species 495 to Bulbasaur rather than
+1. Cries. PlayCryEx clamps anything above species 495 to Bulbasaur rather than
    reading past the sound archive, so the added species sound wrong but nothing
    breaks. Giving them their own cries needs that function decompiled and the
    archive extended. The slop fork above has already decompiled the file it
    lives in, so what is left is the sound data rather than the function.
-3. konefr's scripted content: the Cherrygrove vendor with its own script
+2. konefr's scripted content: the Cherrygrove vendor with its own script
    commands, and the Bug-Catching Contest encounters and rewards.
-4. Hidden abilities, which eleven trainer Pokemon ask for.
-5. Footprints and Dex entries, needed only if the Dex is widened; an added
+3. Three trainers still cannot be read: two want Galarian Slowpoke and
+   Slowbro, which are forms this game has no species for, and one wants a
+   double battle with no partner.
+4. Footprints and Dex entries, needed only if the Dex is widened; an added
    species records nothing in it today, deliberately.
 6. The remaining interface work the reference ships: the EV and IV viewer, the
    static HP bar, the machine labels in the bag, deletable HMs and reusable
