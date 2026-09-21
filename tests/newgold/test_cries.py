@@ -68,6 +68,28 @@ class CryLookupTests(unittest.TestCase):
     def test_there_is_one_bank_for_every_added_species(self):
         self.assertEqual(len(self.banks), len(import_species.added_species()))
 
+    def test_the_lookup_lands_on_the_table(self):
+        """The index must put the first added species at entry zero.
+
+        CryBankForSpecies reads sAddedCryBanks[species - NUM_SPECIES_WITH_CRIES
+        - 1]. The egg, the bad egg and the twelve alternate forms sit between
+        Arceus and the first added species and have no cries, so that constant
+        is the last identifier with one, not the count of them. It said 494
+        for a table that starts at 508, which slid every added species
+        thirteen entries along and ran the last thirteen off the end.
+        """
+        constant = int(re.search(r"#define NUM_SPECIES_WITH_CRIES\s+(\d+)",
+                                 self.source).group(1))
+        header = (ROOT / "include/constants/species.h").read_text()
+        numbers = {name: int(value) for name, value in
+                   re.findall(r"#define SPECIES_([A-Z0-9_]+)\s+(\d+)", header)}
+        added = import_species.added_species()
+        first = numbers[added[0]] - constant - 1
+        last = numbers[added[-1]] - constant - 1
+        self.assertEqual(first, 0, f"{added[0]} lands on entry {first}, not the first")
+        self.assertEqual(last, len(self.banks) - 1,
+                         f"{added[-1]} lands on entry {last} of {len(self.banks)}")
+
     def test_no_bank_is_past_the_end_of_the_archive(self):
         limit = int(re.search(r"#define ARCHIVE_BANK_COUNT\s+(\d+)", self.source).group(1))
         archive = sdat.load(import_cries.ARCHIVE)

@@ -250,9 +250,16 @@ int main(int argc, char **argv) {
             // where.py works out the address, this puts a value there. It
             // cannot change map: the game has to load one.
             {
-                unsigned long address; int width; long value;
-                if (sscanf(argv[i], "poke:%lu:%lx:%d:%ld", &at, &address, &width, &value) == 4
-                    && frames_run == at) {
+                unsigned long address, len; int width; long value;
+                // poke:FRAME:ADDR:WIDTH:VALUE writes once;
+                // hold:FRAME:LEN:ADDR:WIDTH:VALUE writes every frame of a
+                // stretch, which is how a value the game keeps changing --
+                // the random seed, say -- can be held where it is wanted.
+                int once = sscanf(argv[i], "poke:%lu:%lx:%d:%ld", &at, &address, &width, &value) == 4
+                           && frames_run == at;
+                int held = sscanf(argv[i], "hold:%lu:%lu:%lx:%d:%ld", &at, &len, &address, &width, &value) == 5
+                           && frames_run >= at && frames_run < at + len;
+                if (once || held) {
                     void *ram = memory_data ? memory_data(2) : NULL;
                     size_t size = memory_size ? memory_size(2) : 0;
                     unsigned long offset = address - 0x02000000;

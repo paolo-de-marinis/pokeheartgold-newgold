@@ -195,6 +195,10 @@ static void *AllocFromHeapInternal(NNSFndHeapHandle heap, u32 size, s32 alignmen
     return ptr;
 }
 
+extern u32 gAllocFailCount;
+extern u32 gAllocFailSize;
+extern u32 gAllocFailHeap;
+
 static void AllocFail(void) {
     if (sub_02037D78()) {
         PrintErrorMessageAndReset();
@@ -212,6 +216,9 @@ void *Heap_Alloc(enum HeapID heapID, u32 size) {
     if (ptr != NULL) {
         sHeapInfo.numMemBlocks[heapID]++;
     } else {
+        gAllocFailCount++;
+        gAllocFailSize = size;
+        gAllocFailHeap = (u32)heapID;
         AllocFail();
     }
 
@@ -229,6 +236,9 @@ void *Heap_AllocAtEnd(enum HeapID heapID, u32 size) {
     if (ptr != NULL) {
         sHeapInfo.numMemBlocks[heapID]++;
     } else {
+        gAllocFailCount++;
+        gAllocFailSize = size;
+        gAllocFailHeap = (u32)heapID;
         AllocFail();
     }
 

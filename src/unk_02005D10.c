@@ -4,7 +4,13 @@
 
 // The last species HeartGold records a cry for, and how many banks the sound
 // archive holds once the added ones are in it.
-#define NUM_SPECIES_WITH_CRIES 494
+// The last identifier the base archive has a cry for. The egg, the bad egg
+// and the twelve alternate forms sit at 494 to 507 and have none, so the
+// added species -- and sAddedCryBanks -- start at 508. This said 494, which
+// put every added species thirteen entries along its own table: Lillipup
+// played Karrablast's cry, and the last thirteen read past the end of the
+// table entirely for whatever halfword followed it.
+#define NUM_SPECIES_WITH_CRIES 507
 #define ARCHIVE_BANK_COUNT     1375
 
 #include "heap.h"

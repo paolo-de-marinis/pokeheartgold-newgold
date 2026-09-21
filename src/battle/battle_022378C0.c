@@ -42,8 +42,22 @@ typedef enum BattleState {
     BSTATE_EXIT
 } BattleState;
 
+extern u32 gBattleState;
+extern u32 gBattleTicks;
+extern u32 gBattleStateSeen;
+
 BOOL Battle_Run(OverlayManager *man, int *state) {
     BattleSetup *setup = OverlayManager_GetArgs(man);
+
+    if ((u32)*state == gBattleState) {
+        gBattleTicks++;
+    } else {
+        gBattleState = (u32)*state;
+        gBattleTicks = 0;
+    }
+    if (*state < 32) {
+        gBattleStateSeen |= 1u << *state;
+    }
 
     switch (*state) {
     case BSTATE_INIT:

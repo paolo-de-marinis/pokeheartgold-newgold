@@ -10,7 +10,10 @@
  * Pass NO_GF_ASSERT=1 to make to remove these.
  */
 #ifdef PM_KEEP_ASSERTS
-#define GF_ASSERT(expr) ((expr) ? (void)0 : GF_AssertFail())
+extern u32 gAssertCount;
+extern u32 gAssertLine;
+extern const char *gAssertFile;
+#define GF_ASSERT(expr) ((expr) ? (void)0 : (gAssertCount++, gAssertLine = __LINE__, gAssertFile = __FILE__, GF_AssertFail()))
 #else
 #define GF_ASSERT(...) ((void)0)
 #endif // PM_KEEP_ASSERTS
