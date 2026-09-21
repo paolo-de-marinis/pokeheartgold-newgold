@@ -732,11 +732,28 @@ them — *"You can catch wild Pokemon with Poke Balls. Follow me!"* — so they
 come with the catching tutorial on Route 29 itself, from Lyra or Ethan
 depending on which you are.
 
-The route reaches Route 29 and walks it west as far as tile (642, 410),
-through two wild battles on the way, without that scene triggering: it wants a
-particular patch of grass rather than any of it. Finding which patch is the
-next thing, and it is the last thing between here and a caught Pokemon, which
-is what the Dex entry needs.
+The route reaches Route 29 and walks it west without that scene triggering.
+Reading the map's own event data says why. `030_R29.json` has one coordinate
+event: a strip one tile wide and seven tall at **x 666, z 396 to 402**,
+running `scr_seq_R29_001` when `VAR_UNK_408B` is 1. The route crosses that
+strip — twice, once each way, checked by walking east to (684, 400) and back —
+and nothing happens, because the variable is 0.
+
+Grepping for what sets it answers the rest: `scr_seq_0843_T20R0101`, the
+laboratory, in the scene that takes the Mystery Egg back from you. So the
+catching tutorial and its Poke Balls are on the **return** trip through
+Route 29, after Mr Pokemon's errand, not the first one. That is a long way
+round for five Poke Balls.
+
+**Cherrygrove is the shorter way, and it is worth two of the three.** It has
+the Mart, which sells Poke Balls, and the Pokemon Centre, whose PC is where
+the thirtieth box would show. Route 29 west is passable along its southern
+edge — the trees at (642, 410) are gone round by dropping a tile first, which
+reaches (618, 412) — and Cherrygrove is at the end of it.
+
+One practical note for whoever continues: a state saved while the player is
+mid-step comes back corrupt and the core segfaults loading it. Save when the
+player is standing still.
 
 These legs were driven from saved states rather than from a cold boot, so they
 are written here rather than folded into `smoke.py`'s route: putting them
