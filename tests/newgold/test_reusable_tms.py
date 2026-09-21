@@ -159,5 +159,24 @@ class ReusableTMTests(unittest.TestCase):
             print(result.stdout.strip())
 
 
+class BagDisplayTests(unittest.TestCase):
+    """A TM that is never spent has no quantity worth showing.
+
+    HeartGold prints a count beside every TM in the bag. With reusable TMs the
+    number is whatever the player happened to buy and never changes, so it says
+    nothing; HMs never had one for the same reason.
+    """
+
+    def test_the_machine_row_prints_no_quantity(self):
+        row = (ROOT / "src/bag_item_row.c").read_text()
+        start = row.index("case POCKET_TMHMS:")
+        block = row[start:row.index("case POCKET_KEY_ITEMS:", start)]
+        self.assertNotIn("ov15_021FF66C", block, "the TM row still prints a count")
+
+    def test_every_other_pocket_still_does(self):
+        row = (ROOT / "src/bag_item_row.c").read_text()
+        self.assertIn("ov15_021FF66C", row[row.index("default:"):])
+
+
 if __name__ == "__main__":
     unittest.main()

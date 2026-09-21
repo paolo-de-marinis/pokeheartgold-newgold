@@ -21,9 +21,9 @@ void ov15_021FF570(BagAppStatePrefix *state, Window *window, String *name, BagIt
     case POCKET_TMHMS:
         AddTextPrinterParameterizedWithColor(window, 0, name, 0, 0, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);
         ov15_021FE914(state, window, &list->slots[index], ROW_Y);
-        if (list->slots[index].id >= ITEM_TM01 && list->slots[index].id <= ITEM_TM92) {
-            ov15_021FF66C(state->messageFormat, state->msgData, window, list->slots[index].quantity);
-        }
+        // HeartGold counts TMs beside the name. New Gold's are never spent, so
+        // the count is always the one the player bought and says nothing; HMs
+        // never had one for the same reason.
         break;
     case POCKET_KEY_ITEMS:
         AddTextPrinterParameterizedWithColor(window, 0, name, 0, 0, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);

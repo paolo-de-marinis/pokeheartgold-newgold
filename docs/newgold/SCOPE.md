@@ -158,6 +158,13 @@ Critical captures, which were in the engine and missing from this list. The
 HP bar that drains at a fixed rate. Trick and Switcheroo taking the player's
 item, which the engine allows because it hands every item back at the end.
 
+The interface the engine turns on: the machine badges in the bag, with the
+count beside a reusable TM dropped; and the EV and IV viewer in the summary,
+where L, R and Select swap the stats page between the stats, the effort values
+and the individual values, and a nature-moved stat name is finally legible.
+Four functions of overlay 15 and two of the summary were converted for it,
+each in its own commit, each leaving both ROMs byte for byte unchanged.
+
 Reading the engine's `include/config.h` end to end closed that list. Of its
 seventy-five settings konefr changed exactly two groups himself: the level cap
 with its candy exemptions, and deletable HMs. Both are in. The rest are the
@@ -168,23 +175,13 @@ doing and why it is recorded as finished here.
 
 **What is left.**
 
-1. The EV and IV viewer in the summary. L, R and Select swap the stats page
-   between the raw stats, the effort values and the individual values, and the
-   stat names take a + or a - for the nature. It lives in code pret has not
-   decompiled, so it carries a conversion with it: the reference reaches it
-   through two hand-written hooks into the summary's input handling, and here
-   the summary's own code has to be converted first.
-2. The quantity a TM shows in the bag list. The machine badges are done, but
-   the row still prints a count beside a TM, which the engine drops once TMs
-   are reusable — the count means nothing when the item is never spent. It is
-   the same row renderer, `ov15_021FF570`, still in assembly.
-3. Dex entries for the added species. hg-engine's Pokedex covers all of them;
+2. Dex entries for the added species. hg-engine's Pokedex covers all of them;
    this one stops at 493 and records nothing for the rest, which is why
    catching one is silent rather than a crash. Widening it is the Dex data
    archives and the screen that reads them, and footprints come with it.
-4. Expanded pockets and thirty boxes, which change the save layout.
+3. Expanded pockets and thirty boxes, which change the save layout.
 
-Then a session on melonDS covering those four, written up in
+Then a session on melonDS covering those, written up in
 `VALIDATION.md`. **That write-up is the precondition for everything below.**
 Nothing of the expansion starts over an unproven base: if something in that
 session does not pass, it is fixed first.
