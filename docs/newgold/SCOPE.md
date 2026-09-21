@@ -125,7 +125,9 @@ Pokemon evolve and the Eviolite. The six evolutions that were waiting on them.
 The fifteen learnsets konefr changed himself, which is what his learnset work
 amounts to once the engine's modern dataset is set aside. Hidden abilities,
 for the 383 species whose one this game has and for the four trainer Pokemon
-that ask.
+that ask. The two Galarian forms, as species of their own, with Quick Draw
+for one of them; the Bug-Catching Contest's prizes, written into the script
+this game has the source for rather than patched into the built bytes.
 
 **What is left.**
 
@@ -134,9 +136,8 @@ that ask.
    breaks. Giving them their own cries needs that function decompiled and the
    archive extended. The slop fork above has already decompiled the file it
    lives in, so what is left is the sound data rather than the function.
-2. Three trainers still cannot be read: two want Galarian Slowpoke and
-   Slowbro, which are forms this game has no species for, and one wants a
-   double battle with no partner.
+2. One trainer still cannot be read: it wants a double battle with no
+   partner, which is a battle type this game has not got.
 3. Footprints and Dex entries, needed only if the Dex is widened; an added
    species records nothing in it today, deliberately.
 4. The remaining interface work the reference ships: the EV and IV viewer, the
