@@ -20,6 +20,8 @@ Usage:
 """
 
 import argparse
+import csv
+import json
 import re
 import struct
 import subprocess
@@ -31,7 +33,15 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import save_budget  # noqa: E402
 
+LANGUAGE_ENGLISH = 2            # include/config.h
+VERSION_HEARTGOLD = 7           # include/config.h
+GENDER_RATIO = lambda frac: int(frac * 254.75) if frac <= 1 else 255
 PLAYER_NAME_LENGTH = 7          # include/constants/global.h
+POKEMON_NAME_LENGTH = 10        # include/constants/global.h
+PARTY_SIZE = 6                  # include/constants/pokemon.h
+BOX_MON = 0x88                  # sizeof(BoxPokemon)
+PARTY_MON = 0xEC                # sizeof(Pokemon)
+BLOCK = 0x20                    # sizeof(PokemonDataBlockA), and of B, C and D
 HALF = 0x40000                  # GetChunkOffsetFromCurrentSaveSlot
 CHUNK_MAGIC = 0x20060623        # SAVE_CHUNK_MAGIC
 CHUNK_FOOTER = 16               # sizeof(struct SaveChunkFooter)
@@ -83,6 +93,254 @@ def build_save(region, build=None):
             at = sector * save_budget.SAVE_SECTOR_SIZE
             raw[at:at + len(body)] = body
     return raw
+
+
+def mon_crypt(data, seed):
+    """MonEncryptSegment: a halfword at a time, against the LCRNG's high half.
+
+    _MonEncryptSegment in src/math_util.c, whose generator is
+    seed = seed * 1103515245 + 24691 and whose output is the top sixteen bits.
+    It is its own inverse, which is why decrypting calls the same function.
+    """
+    out = bytearray(data)
+    for i in range(0, len(out) & ~1, 2):
+        seed = (seed * 1103515245 + 24691) & 0xFFFFFFFF
+        value = struct.unpack_from("<H", out, i)[0] ^ (seed >> 16)
+        struct.pack_into("<H", out, i, value)
+    return bytes(out)
+
+
+def mon_checksum(data):
+    """CalcMonChecksum: the halfwords added up, sixteen bits wide."""
+    total = 0
+    for i in range(0, len(data), 2):
+        total += struct.unpack_from("<H", data, i)[0]
+    return total & 0xFFFF
+
+
+# GetSubstruct's table: which of the four blocks sits at each of the four
+# offsets, chosen by bits 13 to 17 of the personality value.
+SHUFFLE = [
+    (0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3), (0, 3, 1, 2), (0, 2, 3, 1), (0, 3, 2, 1),
+    (1, 0, 2, 3), (1, 0, 3, 2), (2, 0, 1, 3), (3, 0, 1, 2), (2, 0, 3, 1), (3, 0, 2, 1),
+    (1, 2, 0, 3), (1, 3, 0, 2), (2, 1, 0, 3), (3, 1, 0, 2), (2, 3, 0, 1), (3, 2, 0, 1),
+    (1, 2, 3, 0), (1, 3, 2, 0), (2, 1, 3, 0), (3, 1, 2, 0), (2, 3, 1, 0), (3, 2, 1, 0),
+    (0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3), (0, 3, 1, 2), (0, 2, 3, 1), (0, 3, 2, 1),
+    (1, 0, 2, 3), (1, 0, 3, 2),
+]
+
+
+def shuffle_order(personality):
+    """Where block A, B, C and D go, for this personality."""
+    return SHUFFLE[(personality & 0x3E000) >> 13]
+
+
+# ModifyStatByNature, over gNatureStatMods: +10% on one stat, -10% on another.
+NATURE_MODS = [
+    (0, 0, 0, 0, 0), (1, -1, 0, 0, 0), (1, 0, -1, 0, 0), (1, 0, 0, -1, 0), (1, 0, 0, 0, -1),
+    (-1, 1, 0, 0, 0), (0, 0, 0, 0, 0), (0, 1, -1, 0, 0), (0, 1, 0, -1, 0), (0, 1, 0, 0, -1),
+    (-1, 0, 1, 0, 0), (0, -1, 1, 0, 0), (0, 0, 0, 0, 0), (0, 0, 1, -1, 0), (0, 0, 1, 0, -1),
+    (-1, 0, 0, 1, 0), (0, -1, 0, 1, 0), (0, 0, -1, 1, 0), (0, 0, 0, 0, 0), (0, 0, 0, 1, -1),
+    (-1, 0, 0, 0, 1), (0, -1, 0, 0, 1), (0, 0, -1, 0, 1), (0, 0, 0, -1, 1), (0, 0, 0, 0, 0),
+]
+
+
+def species_numbers():
+    return {m.group(1): int(m.group(2)) for m in
+            re.finditer(r"#define SPECIES_([A-Z0-9_]+)\s+(\d+)\s*$",
+                        (ROOT / "include/constants/species.h").read_text(), re.M)}
+
+
+def personal(species_name):
+    """One species' record, as files/poketool/personal/personal.json holds it."""
+    records = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
+    index = species_numbers()[species_name]
+    return records[index], index
+
+
+def experience_for(growth_rate, level):
+    """The total experience a level costs, from growtbl.csv."""
+    with (ROOT / "files/poketool/personal/growtbl.csv").open() as f:
+        for row in csv.DictReader(f):
+            if row["rate"] == f"GROWTH_{growth_rate}":
+                return int(row[f"lv{level:03d}"])
+    raise SystemExit(f"no growth curve called {growth_rate}")
+
+
+def learnset(index, level):
+    """The moves this species knows at this level: the last four it learns.
+
+    wotbl.py already decodes the archive and refuses to touch it unless the
+    round trip is byte for byte, so the reading is borrowed rather than
+    repeated.
+    """
+    sys.path.insert(0, str(ROOT / "tools/newgold"))
+    import wotbl
+    files, _, _ = wotbl.read_narc(wotbl.ARCHIVE.read_bytes())
+    known = [entry["move"] for entry in wotbl.decode(files[index])
+             if entry["level"] <= level]
+    return known[-4:]
+
+
+def ability_of(record, personality):
+    """CreateBoxMon: the second ability on an odd personality, if there is one."""
+    numbers = {m.group(1): int(m.group(2)) for m in
+               re.finditer(r"#define ABILITY_([A-Z0-9_]+)\s+(\d+)",
+                           (ROOT / "include/constants/abilities.h").read_text())}
+    first, second = (numbers[name[len("ABILITY_"):]] for name in record["abilities"])
+    return second if second and (personality & 1) else first
+
+
+def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
+              ot_name="A", ot_id=0, personality=None):
+    """One party Pokemon, encrypted and checksummed the way the game does.
+
+    The four blocks are written in their declared order and then shuffled into
+    the order GetSubstruct reads them for this personality, the shuffled
+    result is summed for the checksum and encrypted under it, and the party
+    stats are encrypted under the personality. CalcMonStats gives the stats.
+    """
+    record, index = personal(species_name)
+    if personality is None:
+        personality = 0x00010203
+        if nature is not None:
+            # GetNatureFromPersonality is the personality modulo 25.
+            personality = (personality - personality % 25 + nature) & 0xFFFFFFFF
+    if nature is None:
+        nature = personality % 25
+
+    ability = ability_of(record, personality)
+    exp = experience_for(record["growthRate"], level)
+    moves = learnset(index, level)
+    ratio = GENDER_RATIO(record["genderRatio"])
+    if ratio in (0, 254, 255):
+        gender = {0: 0, 254: 1, 255: 2}[ratio]
+    else:
+        gender = 1 if ratio > (personality & 0xFF) else 0
+
+    a = bytearray(BLOCK)
+    struct.pack_into("<HHI", a, 0, index, item, ot_id)
+    struct.pack_into("<I", a, 8, (exp & 0x1FFFFF) | ((ability >> 8) << 31))
+    a[0x0C] = record["friendship"]
+    a[0x0D] = ability & 0xFF
+    a[0x0F] = LANGUAGE_ENGLISH
+    for i in range(6):
+        a[0x10 + i] = evs[i] if isinstance(evs, (list, tuple)) else evs
+
+    b = bytearray(BLOCK)
+    for i, move in enumerate(moves):
+        struct.pack_into("<H", b, 2 * i, move)
+        b[8 + i] = 40                       # plenty of PP for a test battle
+    iv = ivs if isinstance(ivs, (list, tuple)) else [ivs] * 6
+    packed = 0
+    for i in range(6):
+        packed |= (iv[i] & 0x1F) << (5 * i)
+    struct.pack_into("<I", b, 0x10, packed)
+    b[0x18] = (gender & 3) << 1
+
+    c = bytearray(BLOCK)
+    for i, code in enumerate(charcode(species_name.replace("_", ""))[:POKEMON_NAME_LENGTH + 1]):
+        struct.pack_into("<H", c, 2 * i, code)
+    c[0x17] = VERSION_HEARTGOLD
+
+    d = bytearray(BLOCK)
+    for i, code in enumerate(charcode(ot_name)):
+        struct.pack_into("<H", d, 2 * i, code)
+    d[0x1B] = 4                             # ITEM_POKE_BALL
+    d[0x1C] = level & 0x7F
+    d[0x1E] = 4
+
+    order = shuffle_order(personality)
+    blocks_in_place = [None] * 4
+    for which, block in enumerate((a, b, c, d)):
+        blocks_in_place[order[which]] = block
+    body = b"".join(bytes(x) for x in blocks_in_place)
+
+    mon = bytearray(PARTY_MON)
+    struct.pack_into("<I", mon, 0, personality)
+    checksum = mon_checksum(body)
+    struct.pack_into("<H", mon, 6, checksum)
+    mon[8:8 + 4 * BLOCK] = mon_crypt(body, checksum)
+
+    stats = stat_line(record, level, iv, evs, nature)
+    party = bytearray(PARTY_MON - BOX_MON)
+    party[4] = level
+    struct.pack_into("<7H", party, 6, stats[0], *stats)
+    mon[BOX_MON:] = mon_crypt(bytes(party), personality)
+    return bytes(mon)
+
+
+def stat_line(record, level, iv, evs, nature):
+    """CalcMonStats, including the nature's ten per cent either way."""
+    ev = evs if isinstance(evs, (list, tuple)) else [evs] * 6
+    base = [record["hp"], record["atk"], record["def"],
+            record["speed"], record["spatk"], record["spdef"]]
+    hp = (base[0] * 2 + iv[0] + ev[0] // 4) * level // 100 + level + 10
+    out = [hp]
+    for i in range(1, 6):
+        value = (base[i] * 2 + iv[i] + ev[i] // 4) * level // 100 + 5
+        mod = NATURE_MODS[nature][i - 1]
+        if mod > 0:
+            value = value * 110 // 100
+        elif mod < 0:
+            value = value * 90 // 100
+        out.append(value)
+    # The record's order is hp, atk, def, speed, spatk, spdef; the party keeps
+    # hp, atk, def, speed, spatk, spdef too, so nothing is reordered here.
+    return out
+
+
+# struct Bag, in its declared order. Each slot is { u16 id; u16 quantity; }
+# and the whole thing is 2252 bytes, which is what the ROM reports for
+# Save_Bag_sizeof -- so the pockets below are counted, not guessed.
+POCKETS = [("items", 165 + 32), ("keyItems", 50 + 42), ("TMsHMs", 101),
+           ("mail", 12), ("medicine", 40), ("berries", 64),
+           ("balls", 24 + 2), ("battleItems", 30)]
+
+
+def pocket_at(name):
+    at = 0
+    for pocket, count in POCKETS:
+        if pocket == name:
+            return at, count
+        at += 4 * count
+    raise SystemExit(f"no pocket called {name}")
+
+
+def put_in_pocket(block, pocket, item, quantity):
+    """The first free slot, or the one already holding it."""
+    at, count = pocket_at(pocket)
+    for slot in range(count):
+        here = at + 4 * slot
+        got, _ = struct.unpack_from("<HH", block, here)
+        if got in (0, item):
+            struct.pack_into("<HH", block, here, item, quantity)
+            return slot
+    raise SystemExit(f"the {pocket} pocket is full")
+
+
+# struct Pokedex. NUM_DEX_FLAG_WORDS is CEILDIV(NATIONAL_DEX_COUNT + 8, 32),
+# and the offsets below add up to the 960 the ROM reports for
+# Save_Pokedex_sizeof.
+DEX_WORDS = (NATIONAL_DEX_COUNT := 574, (574 + 8 + 31) // 32)[1]
+DEX_CAUGHT = 4
+DEX_SEEN = DEX_CAUGHT + 4 * DEX_WORDS
+DEX_GENDERS = DEX_SEEN + 4 * DEX_WORDS
+DEX_ENABLED = (4 + 4 * DEX_WORDS * 4 + 4 + 4 + 28 + 28
+               + ((NATIONAL_DEX_COUNT + 3) & ~3) + 2)
+DEX_NATIONAL = DEX_ENABLED + 1
+
+
+def set_dex_flag(block, at, species):
+    """SetDexFlag: the species number, counted from one."""
+    flag = species - 1
+    block[at + (flag >> 3)] |= 1 << (flag & 7)
+
+
+# struct PokemonStorageSystem. A box is thirty BoxPokemon and sixteen spare
+# bytes, which is exactly 0x1000, so thirty boxes end at 0x1E000.
+BOX = 0x1000
+BOX_NAME_LENGTH = 20
 
 
 def blocks(build=None):
@@ -248,6 +506,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("save", type=Path)
     parser.add_argument("--show", action="store_true")
+    parser.add_argument("--tm", metavar="N[,N...]",
+                        help="put these machines in the bag, e.g. 1,2,26")
+    parser.add_argument("--dex", metavar="SPECIES[,...]",
+                        help="mark these seen and caught, and switch the Dex on")
+    parser.add_argument("--box", metavar="N:SPECIES:LEVEL",
+                        help="put one Pokemon in box N, counted from one")
+    parser.add_argument("--party", metavar="SPECIES:LEVEL[:NATURE][,...]",
+                        help="fill the party, e.g. CHIKORITA:5,PIDGEY:3")
     parser.add_argument("--name", help="the player's name, which the save must carry "
                                        "terminated: the main menu copies it into a String "
                                        "and asserts on one that never ends")
@@ -299,6 +565,58 @@ def main():
             struct.pack_into("<H", block, NAME + 2 * i, value)
         save.write()
         print(f"named the player {args.name}")
+
+    if args.party:
+        block = save.block("SAVE_PARTY")
+        wanted = []
+        for entry in args.party.split(","):
+            parts = entry.split(":")
+            wanted.append((parts[0].upper(), int(parts[1]),
+                           int(parts[2]) if len(parts) > 2 else None))
+        if len(wanted) > PARTY_SIZE:
+            raise SystemExit(f"a party holds {PARTY_SIZE}")
+        # PartyCore is { int maxCount; int curCount; Pokemon mons[PARTY_SIZE]; }
+        struct.pack_into("<ii", block, 0, PARTY_SIZE, len(wanted))
+        for slot, (name, level, nature) in enumerate(wanted):
+            mon = build_mon(name, level, nature=nature, ot_name=args.name or "A",
+                            ot_id=args.trainer_id or 0)
+            block[8 + slot * PARTY_MON:8 + (slot + 1) * PARTY_MON] = mon
+        save.write()
+        print("party: " + ", ".join(f"{n} at level {l}" for n, l, _ in wanted))
+
+    if args.tm:
+        block = save.block("SAVE_BAG")
+        machines = [int(n) for n in args.tm.split(",")]
+        first = int(re.search(r"#define ITEM_TM01\s+(\d+)",
+                              (ROOT / "include/constants/items.h").read_text()).group(1))
+        for n in machines:
+            put_in_pocket(block, "TMsHMs", first + n - 1, 1)
+        save.write()
+        print(f"bag: TM{', TM'.join(f'{n:02d}' for n in machines)}")
+
+    if args.dex:
+        block = save.block("SAVE_POKEDEX")
+        numbers = species_numbers()
+        for name in args.dex.upper().split(","):
+            if name not in numbers:
+                raise SystemExit(f"there is no SPECIES_{name}")
+            set_dex_flag(block, DEX_SEEN, numbers[name])
+            set_dex_flag(block, DEX_CAUGHT, numbers[name])
+        block[DEX_ENABLED] = 1
+        block[DEX_NATIONAL] = 1
+        save.write()
+        print(f"dex: {args.dex.upper()} seen and caught, and the Dex is on")
+
+    if args.box:
+        number, name, level = args.box.split(":")
+        number = int(number)
+        if not 1 <= number <= 30:
+            raise SystemExit("boxes are numbered one to thirty")
+        block = save.block("SAVE_PCSTORAGE")
+        at = (number - 1) * BOX
+        block[at:at + BOX_MON] = build_mon(name.upper(), int(level))[:BOX_MON]
+        save.write()
+        print(f"box {number}: {name.upper()} at level {level}")
 
     if args.trainer_id is not None:
         block = save.block("SAVE_PLAYERDATA")
