@@ -71,12 +71,17 @@ def main():
     source = INDEX.read_text()
     table = re.search(r"(static const u8 sPokemonPalNoBySpeciesAndForm\[\] = \{)(.*?)(\n\};)",
                       source, re.S)
-    addition = ("\n    // The species New Gold adds, in identifier order from "
+    marker = "\n    // The species New Gold adds"
+    body = table.group(2)
+    # Rewrite what was added last time rather than adding it again, so running
+    # this twice leaves the table the length it should be.
+    if marker in body:
+        body = body[:body.index(marker)]
+    addition = (marker + ", in identifier order from "
                 f"{FIRST_ADDED_SPECIES}.\n    "
                 + ",\n    ".join(f"{number}, // {name}" for number, name
                                  in zip(numbers, import_species.NEW_SPECIES)))
-    source = source[:table.end(2)] + addition + source[table.end(2):]
-    INDEX.write_text(source)
+    INDEX.write_text(source[:table.start(2)] + body + addition + source[table.end(2):])
     print(f"wrote {len(numbers)} icons and their palette numbers")
 
 

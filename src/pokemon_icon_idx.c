@@ -720,7 +720,9 @@ static const u8 sPokemonPalNoBySpeciesAndForm[] = {
     0, // FARIGIRAF,
     0, // DUDUNSPARCE,
     1, // DIPPLIN,
-    1, // HYDRAPPLE
+    1, // HYDRAPPLE,
+    1, // SLOWPOKE_GALARIAN,
+    0, // SLOWBRO_GALARIAN
 };
 
 const u8 GetMonIconPaletteEx(u32 species, u32 form, u32 isEgg) {

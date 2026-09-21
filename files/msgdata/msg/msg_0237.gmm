@@ -2292,4 +2292,12 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Hydrapple</language>
 	</row>
+	<row id="msg_0237_slowpoke_galarian" index="573">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Slowpoke</language>
+	</row>
+	<row id="msg_0237_slowbro_galarian" index="574">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Slowbro</language>
+	</row>
 </body>

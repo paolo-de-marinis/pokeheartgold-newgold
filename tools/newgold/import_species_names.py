@@ -28,6 +28,15 @@ ROW = """\t<row id="msg_0237_{identifier}" index="{index}">
 """
 
 
+# A regional form has no name of its own in the reference: it is a form of
+# something, and the game shows the base species' name. Here they are species
+# in their own right, so the name has to be said.
+FORM_NAMES = {
+    "SLOWPOKE_GALARIAN": "Slowpoke",
+    "SLOWBRO_GALARIAN": "Slowbro",
+}
+
+
 def species_names(reference):
     """The display name the reference gives each species."""
     source = (reference / "data/Species.c").read_text(errors="replace")
@@ -53,10 +62,20 @@ def main():
 
     bank = BANK.read_text()
     present = {int(m) for m in re.findall(r'<row id="[^"]*" index="(\d+)">', bank)}
-    first, last = max(present) + 1, species_id(import_species.NEW_SPECIES[-1])
-    print(f"the bank names {len(present)} rows, 0 to {max(present)}; it must reach {last}")
+    # Rewrite from the first added species rather than from the end of the
+    # bank, so running this again after a species is added says the same thing
+    # about the ones already there.
+    first = species_id(import_species.NEW_SPECIES[0])
+    last = species_id(import_species.NEW_SPECIES[-1])
+    bank = re.sub(r'\t<row id="[^"]+" index="(\d+)">.*?\t</row>\n',
+                  lambda m: "" if int(m.group(1)) >= first else m.group(0), bank, flags=re.S)
+    print(f"the bank names {len(present)} rows, 0 to {max(present)}; "
+          f"rewriting {first} to {last}")
 
     names = species_names(args.reference)
+    for name, text in FORM_NAMES.items():
+        names[name] = text
+
     missing = [name for name in import_species.NEW_SPECIES if name not in names]
     if missing:
         raise SystemExit(f"the reference has no name for: {', '.join(missing)}")

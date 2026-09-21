@@ -15,6 +15,7 @@ from test_level_cap import ROOT
 
 sys.path.insert(0, str(ROOT / "tools/newgold"))
 import import_species  # noqa: E402
+import import_species_names  # noqa: E402
 import import_species_names as names  # noqa: E402
 
 BANK = ROOT / "files/msgdata/msg/msg_0237.gmm"
@@ -59,7 +60,8 @@ class SpeciesNameTests(unittest.TestCase):
         header = (ROOT / "include/constants/species.h").read_text()
         for name in import_species.NEW_SPECIES:
             index = int(re.search(rf"#define SPECIES_{name}\s+(\d+)", header).group(1))
-            expected = self.SHORTENED.get(name, name.replace("_", " "))
+            expected = import_species_names.FORM_NAMES.get(
+                name, self.SHORTENED.get(name, name.replace("_", " ")))
             self.assertEqual(self.rows[index].upper(), expected.upper(), name)
             if name in self.SHORTENED:
                 self.assertEqual(len(name), NAME_LENGTH + 1, name)

@@ -593,8 +593,12 @@
 #define SPECIES_DUDUNSPARCE     570
 #define SPECIES_DIPPLIN         571
 #define SPECIES_HYDRAPPLE       572
+// Two regional forms, which New Gold's trainers use as species in their own
+// right rather than as forms of the Johto Slowpoke line.
+#define SPECIES_SLOWPOKE_GALARIAN 573
+#define SPECIES_SLOWBRO_GALARIAN  574
 
-#define NUM_SPECIES SPECIES_HYDRAPPLE
+#define NUM_SPECIES SPECIES_SLOWBRO_GALARIAN
 
 #define SPECIES_MANAPHY_EGG SPECIES_BAD_EGG
 

@@ -1156,19 +1156,22 @@
       ]
     },
     {
-      "type": "TRTYPE_MON",
+      "type": "TRTYPE_MON_ITEM",
       "class": "TRAINERCLASS_POKE_MANIAC",
       "name": "{TRNAME}Larry",
-      "items": [],
+      "items": [
+        "ITEM_SUPER_POTION"
+      ],
       "ai_flags": 33,
       "double": 0,
       "party": [
         {
-          "difficulty": 0,
+          "difficulty": 100,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-          "level": 11,
-          "species": "SPECIES_SLOWPOKE",
+          "level": 12,
+          "species": "SPECIES_SLOWPOKE_GALARIAN",
+          "item": "ITEM_NONE",
           "capsule": 0
         }
       ],
@@ -18558,18 +18561,19 @@
       "name": "{TRNAME}Nelson",
       "items": [],
       "ai_flags": 7,
-      "double": 0,
+      "double": 2,
       "party": [
         {
-          "difficulty": 0,
+          "difficulty": 120,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 17,
-          "species": "SPECIES_SLOWPOKE",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
+          "level": 36,
+          "species": "SPECIES_SLOWKING",
           "moves": [
-            "MOVE_TACKLE",
-            "MOVE_GROWL",
-            "MOVE_WATER_GUN"
+            "MOVE_NASTY_PLOT",
+            "MOVE_YAWN",
+            "MOVE_SURF",
+            "MOVE_PSYCHIC"
           ],
           "capsule": 0
         },
@@ -18577,13 +18581,41 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-          "level": 20,
-          "species": "SPECIES_SLOWPOKE",
+          "level": 36,
+          "species": "SPECIES_SLOWBRO",
           "moves": [
-            "MOVE_CURSE",
+            "MOVE_RAIN_DANCE",
             "MOVE_HEADBUTT",
-            "MOVE_WATER_GUN",
-            "MOVE_CONFUSION"
+            "MOVE_SURF",
+            "MOVE_ZEN_HEADBUTT"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 200,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_FIRST",
+          "level": 36,
+          "species": "SPECIES_LUDICOLO",
+          "moves": [
+            "MOVE_RAIN_DANCE",
+            "MOVE_TEETER_DANCE",
+            "MOVE_SURF",
+            "MOVE_DRAIN_PUNCH"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
+          "level": 36,
+          "species": "SPECIES_SLOWBRO_GALARIAN",
+          "moves": [
+            "MOVE_DRAIN_PUNCH",
+            "MOVE_WATERFALL",
+            "MOVE_PSYCHIC",
+            "MOVE_SLUDGE_BOMB"
           ],
           "capsule": 0
         }

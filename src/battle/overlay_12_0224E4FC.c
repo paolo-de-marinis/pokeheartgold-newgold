@@ -1102,6 +1102,16 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
         }
     }
 
+    // Quick Draw is a Quick Claw the Pokemon was born with: the same roll,
+    // the same flag, and the same three chances in ten.
+    if (ability1 == ABILITY_QUICK_DRAW && ctx->unk_310C[battlerId1] % (100 / 30) == 0) {
+        boostedPriority1 = 1;
+
+        if (!flag) {
+            ctx->battleMons[battlerId1].unk88.quickClawFlag = TRUE;
+        }
+    }
+
     if (heldItem1 == HOLD_EFFECT_PINCH_PRIORITY) {
         if (GetBattlerAbility(ctx, battlerId1) == ABILITY_GLUTTONY) {
             extra1 /= 2;
@@ -1158,6 +1168,16 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
             if (!flag) {
                 ctx->battleMons[battlerId2].unk88.quickClawFlag = TRUE;
             }
+        }
+    }
+
+    // Quick Draw is a Quick Claw the Pokemon was born with: the same roll,
+    // the same flag, and the same three chances in ten.
+    if (ability2 == ABILITY_QUICK_DRAW && ctx->unk_310C[battlerId2] % (100 / 30) == 0) {
+        boostedPriority2 = 1;
+
+        if (!flag) {
+            ctx->battleMons[battlerId2].unk88.quickClawFlag = TRUE;
         }
     }
 

@@ -158,6 +158,10 @@
 #define ABILITY_IRRIGATION           148
 #define ABILITY_EVAPORATE            149
 
+// Galarian Slowbro's, and the only ability the two regional forms need that
+// the rest of New Gold does not.
+#define ABILITY_QUICK_DRAW           150
+
 // Not a count: the field code passes this where a Pokemon has no ability,
 // because the lead is an egg. It stays below the abilities above so that the
 // switches reading it still match nothing.
