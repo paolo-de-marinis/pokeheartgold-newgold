@@ -87,11 +87,20 @@ static const struct HeapParam sDefaultHeapSpec[] = {
     { 0xD200,   OS_ARENA_MAIN },
     // Heap 1 holds SaveData, which holds the whole save region, and was sized
     // to it with a couple of hundred bytes to spare. Thirty boxes add thirteen
-    // sectors to that region, so the heap takes the same 0xD000 and the
-    // general heap below gives it up.
+    // sectors to that region, so the heap takes the same 0xD000.
+    //
+    // The general heap below keeps its retail size. It is the parent of every
+    // application heap, and the battle carves 0xB0000 out of it beside the
+    // field's own: when it gave up the 0xD000 for heap 1, Heap_Create could
+    // no longer find that room, Battle_Run does not check, and GF_ASSERT is
+    // gated off -- so every wild battle was a blank screen with the music
+    // playing until it unwound. The 0xD000 comes from the arena instead,
+    // which has 0x1D880 to spare with the game running (read from
+    // OS_GetArenaLo/Hi on a live dump), and tests/newgold/test_heaps.py holds
+    // the margin.
     { 0x30600,  OS_ARENA_MAIN },
     { 0x10,     OS_ARENA_MAIN },
-    { 0x110000, OS_ARENA_MAIN },
+    { 0x11D000, OS_ARENA_MAIN },
 };
 
 void sub_0201A1B4(void) {
