@@ -1,3 +1,4 @@
+#include "constants/pokemon.h"
 #include "constants/moves.h"
 	.include "asm/macros.inc"
 	.include "overlay_08.inc"
@@ -13622,7 +13623,7 @@ _02222D26:
 	bne _02222D66
 	add r0, r4, #0
 	bl PCStorage_FindFirstBoxWithEmptySlot
-	cmp r0, #0x12
+	cmp r0, #NUM_BOXES
 	bne _02222D66
 	ldr r0, [r5, #0x10]
 	ldr r2, [r5, #0x18]

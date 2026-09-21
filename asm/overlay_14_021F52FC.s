@@ -3477,7 +3477,7 @@ _021F6D64:
 	add r0, #0x25
 	ldrb r0, [r0]
 	add r0, r0, #1
-	cmp r0, #0x12
+	cmp r0, #NUM_BOXES
 	blt _021F6D7C
 	mov r1, #0
 	b _021F6D84
@@ -3520,7 +3520,7 @@ _021F6DC0:
 	ldrb r0, [r0]
 	sub r0, r0, #1
 	bpl _021F6DD6
-	mov r1, #0x11
+	mov r1, #(NUM_BOXES - 1)
 	b _021F6DDE
 _021F6DD6:
 	add r0, r5, #0
@@ -4083,7 +4083,7 @@ _021F71FC:
 	add r0, #0x25
 	ldrb r0, [r0]
 	add r0, r0, #1
-	cmp r0, #0x12
+	cmp r0, #NUM_BOXES
 	blt _021F7214
 	mov r1, #0
 	b _021F721C
@@ -4126,7 +4126,7 @@ _021F7258:
 	ldrb r0, [r0]
 	sub r0, r0, #1
 	bpl _021F726E
-	mov r1, #0x11
+	mov r1, #(NUM_BOXES - 1)
 	b _021F7276
 _021F726E:
 	add r0, r5, #0
@@ -4779,7 +4779,7 @@ _021F7750:
 	add r0, #0x25
 	ldrb r0, [r0]
 	add r0, r0, #1
-	cmp r0, #0x12
+	cmp r0, #NUM_BOXES
 	blt _021F7768
 	mov r1, #0
 	b _021F7770
@@ -4822,7 +4822,7 @@ _021F77AC:
 	ldrb r0, [r0]
 	sub r0, r0, #1
 	bpl _021F77C2
-	mov r1, #0x11
+	mov r1, #(NUM_BOXES - 1)
 	b _021F77CA
 _021F77C2:
 	add r0, r5, #0

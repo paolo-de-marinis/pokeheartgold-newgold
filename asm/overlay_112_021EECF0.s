@@ -1,3 +1,4 @@
+#include "constants/pokemon.h"
 #include "config.h"
 	.include "asm/macros.inc"
 	.include "overlay_112.inc"
@@ -828,7 +829,7 @@ ov112_021EF31C: ; 0x021EF31C
 	bne _021EF3EA
 	ldr r6, [r5, #0xc]
 	ldr r0, [r4, #0x20]
-	cmp r6, #0x12
+	cmp r6, #NUM_BOXES
 	bne _021EF38C
 	bl SaveArray_Party_Get
 	ldr r1, [r5, #0x10]
@@ -940,7 +941,7 @@ _021EF414:
 	mov r1, #2
 	add r0, sp, #0x34
 	strb r1, [r0, #9]
-	cmp r5, #0x12
+	cmp r5, #NUM_BOXES
 	ldr r0, [r2, #0x20]
 	bne _021EF4D6
 	bl SaveArray_Party_Get

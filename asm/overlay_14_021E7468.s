@@ -17847,7 +17847,7 @@ ov14_021F028C: ; 0x021F028C
 	add r4, r1, #0
 	cmp r0, #0
 	bne _021F029C
-	mov r0, #0x11
+	mov r0, #(NUM_BOXES - 1)
 	b _021F029E
 _021F029C:
 	sub r0, r0, #1
@@ -17910,7 +17910,7 @@ ov14_021F0314: ; 0x021F0314
 	add r5, r0, #0
 	ldrb r0, [r5, #0x1f]
 	add r4, r1, #0
-	cmp r0, #0x11
+	cmp r0, #(NUM_BOXES - 1)
 	bne _021F0324
 	mov r0, #0
 	b _021F0326
@@ -19490,12 +19490,12 @@ ov14_021F1004: ; 0x021F1004
 	mul r0, r4
 	add r1, r1, r0
 	bpl _021F101A
-	add r1, #0x12
+	add r1, #NUM_BOXES
 	b _021F1020
 _021F101A:
-	cmp r1, #0x12
+	cmp r1, #NUM_BOXES
 	blt _021F1020
-	sub r1, #0x12
+	sub r1, #NUM_BOXES
 _021F1020:
 	add r0, r5, #0
 	add r0, #0x25
@@ -26832,7 +26832,7 @@ _021F49CE:
 	add r1, r4, #0
 	bl ov14_021F4958
 	add r4, r4, #1
-	cmp r4, #0x12
+	cmp r4, #NUM_BOXES
 	blo _021F49CE
 	pop {r3, r4, r5, pc}
 	.balign 4, 0
