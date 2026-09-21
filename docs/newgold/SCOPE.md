@@ -78,6 +78,14 @@ already implements equivalently:
   and flags with TODOs, so they are not behaviour to reproduce.
 * Already equivalent in pokeheartgold: wild slot selection, hidden item table,
   swarms, default mart tiers, Rock Smash behaviour.
+* konefr's Cherrygrove vendor, which the earlier reading of this file listed
+  as content to port. It is not content: the script calls itself "New Gold
+  debug vendor", asks for a password, hands out Rare Candies, and drives the
+  developer EV presets that make up the 148 lines added to script_commands.c —
+  twelve invalid species numbers, 2000 to 2011, that set the first party
+  Pokemon's effort values to a chosen spread. It is also written as a patch
+  into a built script file rather than as source. A player never sees it and
+  the method here would not reproduce it that way, so it stays out.
 * Enabled in the engine but unreachable in the content as it stands, and so
   deferred until it is not: **Mega Evolution** (no mega stone appears anywhere
   in the trainer or species data — Eviolite is the only held item whose name
@@ -126,14 +134,12 @@ that ask.
    breaks. Giving them their own cries needs that function decompiled and the
    archive extended. The slop fork above has already decompiled the file it
    lives in, so what is left is the sound data rather than the function.
-2. konefr's scripted content: the Cherrygrove vendor with its own script
-   commands, and the Bug-Catching Contest encounters and rewards.
-3. Three trainers still cannot be read: two want Galarian Slowpoke and
+2. Three trainers still cannot be read: two want Galarian Slowpoke and
    Slowbro, which are forms this game has no species for, and one wants a
    double battle with no partner.
-4. Footprints and Dex entries, needed only if the Dex is widened; an added
+3. Footprints and Dex entries, needed only if the Dex is widened; an added
    species records nothing in it today, deliberately.
-6. The remaining interface work the reference ships: the EV and IV viewer, the
+4. The remaining interface work the reference ships: the EV and IV viewer, the
    static HP bar, the machine labels in the bag, deletable HMs and reusable
    repels. Each of these lives in code pret has not decompiled, so each carries
    a conversion with it. The slop fork listed among the sources has done some
@@ -151,7 +157,7 @@ that ask.
    the tests before the next: a main.lsf out of step does not fail clearly.
    The pinned revision in the source table moves the first time something is
    taken.
-7. Expanded pockets and thirty boxes, which change the save layout.
+5. Expanded pockets and thirty boxes, which change the save layout.
 
 ## Method
 
