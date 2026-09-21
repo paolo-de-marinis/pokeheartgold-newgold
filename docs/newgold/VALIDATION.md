@@ -751,9 +751,18 @@ the thirtieth box would show. Route 29 west is passable along its southern
 edge — the trees at (642, 410) are gone round by dropping a tile first, which
 reaches (618, 412) — and Cherrygrove is at the end of it.
 
-One practical note for whoever continues: a state saved while the player is
-mid-step comes back corrupt and the core segfaults loading it. Save when the
-player is standing still.
+The walk got as far as tile (606, 408), by dropping south of the trees at
+(642, 410), west, then north again. It stops there against a trainer standing
+in the way with trees either side, which is a leg of walking rather than
+another gate.
+
+Two practical notes for whoever continues. A state saved while the player is
+mid-step comes back corrupt and the core segfaults loading it, and so does one
+saved shortly after a map change; save while standing still and well inside a
+map, or chain the legs in one run from a state that loads. And the walk runs
+from every wild battle by touching RUN at (127, 172) on the bottom screen —
+which also means the starter takes no experience, so it stays at level five
+and the battles stay short.
 
 These legs were driven from saved states rather than from a cold boot, so they
 are written here rather than folded into `smoke.py`'s route: putting them
