@@ -23,7 +23,8 @@ typedef struct BagAppLabelState {
     String *unk5EC;
 } BagAppLabelState;
 
+void ov15_021FE914(BagAppLabelState *state, Window *window, ItemSlot *slot, u32 y);
 void *ov15_021FE990(BagAppLabelState *state, NNSG2dCharacterData **charData);
-void ov15_021FE9B0(BagAppLabelState *state, Window *window, u32 y);
+void ov15_021FE9B0(BagAppLabelState *state, Window *window, u32 badge, u32 y);
 
 #endif // POKEHEARTGOLD_BAG_MACHINE_LABEL_H
