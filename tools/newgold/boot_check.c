@@ -63,6 +63,9 @@ static bool environment(unsigned cmd, void *data) {
         else if (!strcmp(v->key, "melonds_threaded_renderer")) v->value = "disabled";
         else if (!strcmp(v->key, "melonds_jit_enable")) v->value = "disabled";
         else if (!strcmp(v->key, "melonds_screen_layout")) v->value = "Top/Bottom";
+        // Without this the core ignores the pointer, and every touch this
+        // harness sends goes nowhere at all.
+        else if (!strcmp(v->key, "melonds_touch_mode")) v->value = "Touch";
         else v->value = NULL;
         return v->value != NULL;
     }
@@ -198,8 +201,10 @@ int main(int argc, char **argv) {
                 && frames_run >= at && frames_run < until
                 && (frames_run - at) % period < len)
                 pressed[button] = 1;
-            // The pointer is the whole framebuffer, so a touch is given in the
-            // bottom screen's own pixels and moved down into it here.
+            // The pointer spans both screens, so a touch is given in the
+            // bottom screen's own pixels and moved down into it here. The
+            // core also ignores the pointer entirely unless its touch mode
+            // says otherwise, which is answered in the environment above.
             if (sscanf(argv[i], "tap:%lu:%lu:%lu:%lu:%d:%d", &at, &until, &period, &len, &px, &py) == 6
                 && frames_run >= at && frames_run < until
                 && (frames_run - at) % period < len) {
