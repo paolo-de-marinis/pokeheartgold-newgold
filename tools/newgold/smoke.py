@@ -24,10 +24,17 @@ boot_check.c takes its actions on the command line, one per argument:
     shot:FRAME:PATH                 write the framebuffer out
     save:FRAME:PATH                 write the emulator's state out
     load:PATH                       start from a state instead of a boot
+    ram:FRAME:PATH                  write the console's own memory out
 
-The last two are what make anything past the opening practical: reaching the
+save and load are what make anything past the opening practical: reaching the
 overworld by script is twenty thousand frames of tutorial, and a state taken
 there costs one frame to return to.
+
+ram is for finishing the route. Aiming the last few tiles of a walk by eye
+from screenshots does not converge — the camera moves with the player, so the
+picture says where things are relative to each other and not where the player
+is. Dumping the memory at two positions and looking for the halfword that
+changed by one is how to find where the game keeps the answer.
 """
 
 import argparse

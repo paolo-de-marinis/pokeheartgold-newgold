@@ -143,6 +143,8 @@ int main(int argc, char **argv) {
     void (*core_init)(void) = SYM("retro_init");
     bool (*load_game)(const struct game_info *) = SYM("retro_load_game");
     void (*run)(void) = SYM("retro_run");
+    void *(*memory_data)(unsigned) = SYM("retro_get_memory_data");
+    size_t (*memory_size)(unsigned) = SYM("retro_get_memory_size");
     void (*unload)(void) = SYM("retro_unload_game");
     size_t (*serialize_size)(void) = SYM("retro_serialize_size");
     bool (*serialize)(void *, size_t) = SYM("retro_serialize");
@@ -229,6 +231,18 @@ int main(int argc, char **argv) {
             unsigned long at; char path[256];
             if (sscanf(argv[i], "shot:%lu:%255s", &at, path) == 2 && frames_run == at)
                 write_ppm(path);
+            // The console's own memory, for finding where the game keeps
+            // something rather than guessing it from the screen.
+            if (sscanf(argv[i], "ram:%lu:%255s", &at, path) == 2 && frames_run == at) {
+                size_t n = memory_size ? memory_size(2) : 0;  // SYSTEM_RAM
+                void *ram = memory_data ? memory_data(2) : NULL;
+                if (!ram || !n) { fprintf(stderr, "the core hands out no RAM\n"); return 1; }
+                FILE *f = fopen(path, "wb");
+                if (!f) { perror(path); return 1; }
+                fwrite(ram, 1, n, f);
+                fclose(f);
+                printf("ram at frame %lu: %zu bytes in %s\n", at, n, path);
+            }
             if (sscanf(argv[i], "save:%lu:%255s", &at, path) == 2 && frames_run == at) {
                 size_t n = serialize_size ? serialize_size() : 0;
                 void *state = n ? malloc(n) : NULL;
