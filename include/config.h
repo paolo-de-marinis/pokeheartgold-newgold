@@ -47,6 +47,12 @@
 #define NONMATCHING
 #endif //__MWERKS__
 
+// New Gold drains the HP bar at a fixed rate, a pixel a frame, rather than at
+// a rate proportional to the Pokemon's maximum HP. pokeheartgold already has
+// the switch for it: retail takes that path only for a Pokemon with fewer HP
+// than the bar has pixels, where stepping by HP would jump.
+#define FAST_HP_BARS
+
 #include "constants/bugfix.h"
 
 #endif // POKEHEARTGOLD_CONFIG_H
