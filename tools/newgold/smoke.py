@@ -85,8 +85,21 @@ ROUTES = {
     ],
     # Out of the front door, into New Bark Town.
     "outside": ["press:35550:400:5", "press:35980:250:5"],
+    # West across the town, past the man who stops you leaving, to the sign,
+    # and in through the laboratory door, then through the Professor's speech.
+    "lab": [
+        "press:36530:20:0",                 # close the menu the walk opened
+        "press:36600:250:5", "press:36880:650:6", "press:37610:450:4",
+        "press:38130:300:7", "press:38490:250:4",
+        "mash:38760:39100:25:8:8",
+        "press:39140:250:7", "press:39450:200:4",
+        "press:39720:150:7", "press:39900:300:4", "press:40230:150:5",
+        "press:40410:350:6", "press:40820:400:4",
+        "mash:41280:45200:25:8:8",
+    ],
 }
-ROUTE_FRAMES = {"name": 27200, "bedroom": 31100, "downstairs": 35500, "outside": 36500}
+ROUTE_FRAMES = {"name": 27200, "bedroom": 31100, "downstairs": 35500,
+                "outside": 36500, "lab": 45500}
 
 
 def build(into):

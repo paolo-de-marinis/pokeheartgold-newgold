@@ -657,10 +657,19 @@ the front door into New Bark Town. It can write the emulator's state out at
 the end, and the four stages are named for where they arrive, so a later one
 can be extended rather than rediscovered.
 
-That is as far as it goes. What each of the four items still wants:
+`--to lab` goes further: west across New Bark Town, past the man who stops
+you leaving without a Pokemon, in through the laboratory door and through the
+Professor's speech, arriving in front of him. Three minutes and forty seconds
+from a cold boot.
 
-* The EV and IV viewer wants a Pokemon, which means Elm's laboratory. The
-  route stops outside the player's house; the laboratory is across the town.
+That is as far as it goes. The starter is on the machine behind him and the
+route does not take it yet: the last few tiles were being aimed by eye from
+screenshots, and the reliable way to finish is to read the player's position
+out of the emulator's memory rather than to keep estimating it. What each of
+the four items still wants after that:
+
+* The EV and IV viewer wants the starter, and then the summary screen. It is
+  the closest of the four.
 * The machine badges and the missing count want a TM, which is a gym away.
 * A Dex entry for an added species wants one caught, and with it the two
   things the Dex screen is known to owe.
@@ -668,5 +677,6 @@ That is as far as it goes. What each of the four items still wants:
 
 So these four are implemented and unplayed, and this file says so rather than
 implying otherwise. What has changed is that the next session does not start
-by writing an emulator harness or by finding the opening again.
+by writing an emulator harness, by finding the opening again, or by crossing
+the town again.
 
