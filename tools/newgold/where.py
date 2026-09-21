@@ -113,7 +113,33 @@ def look(path, field_sys_ptr, page_max, sector):
     return where, party
 
 
+def addresses(path, field_sys_ptr):
+    """Where the player's tile is kept, for boot_check's poke: action.
+
+    The chain is the same one look() walks; this stops one step short and
+    hands back the addresses instead of the values, so a position can be
+    written as well as read. It moves the player inside the map already
+    loaded -- it cannot change map, which the game has to do itself.
+    """
+    memory = Memory(path)
+    field = memory.word(field_sys_ptr)
+    if not field:
+        return None
+    avatar = memory.word(field + PLAYER_AVATAR)
+    obj = memory.word(avatar + MAP_OBJECT) if avatar else None
+    if not obj:
+        return None
+    return obj + CURRENT_X, obj + CURRENT_Z
+
+
 def main():
+    if len(sys.argv) > 2 and sys.argv[1] == "--addresses":
+        field_sys_ptr = symbol("sFieldSysPtr")
+        for path in sys.argv[2:]:
+            found = addresses(path, field_sys_ptr)
+            print(f"{path}: " + ("the field system is not up" if not found
+                                 else f"x at {found[0]:#010x}, z at {found[1]:#010x}"))
+        return
     if len(sys.argv) < 2:
         raise SystemExit(__doc__.strip().splitlines()[-1])
     field_sys_ptr = symbol("sFieldSysPtr")

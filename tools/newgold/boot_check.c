@@ -244,6 +244,26 @@ int main(int argc, char **argv) {
                 write_ppm(path);
             // The console's own memory, for finding where the game keeps
             // something rather than guessing it from the screen.
+            // The mirror of ram:. The player's tile is a field of a struct
+            // this repository declares, reached from a symbol in the ROM, so
+            // moving them inside the map they are already on is a write --
+            // where.py works out the address, this puts a value there. It
+            // cannot change map: the game has to load one.
+            {
+                unsigned long address; int width; long value;
+                if (sscanf(argv[i], "poke:%lu:%lx:%d:%ld", &at, &address, &width, &value) == 4
+                    && frames_run == at) {
+                    void *ram = memory_data ? memory_data(2) : NULL;
+                    size_t size = memory_size ? memory_size(2) : 0;
+                    unsigned long offset = address - 0x02000000;
+                    if (ram && offset + (unsigned)width <= size) {
+                        for (int b = 0; b < width; b++)
+                            ((unsigned char *)ram)[offset + b] = (unsigned char)(value >> (8 * b));
+                    } else {
+                        fprintf(stderr, "poke: %#lx is outside the console's memory\n", address);
+                    }
+                }
+            }
             if (sscanf(argv[i], "ram:%lu:%255s", &at, path) == 2 && frames_run == at) {
                 size_t n = memory_size ? memory_size(2) : 0;  // SYSTEM_RAM
                 void *ram = memory_data ? memory_data(2) : NULL;

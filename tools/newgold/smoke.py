@@ -132,6 +132,74 @@ ROUTE_FRAMES = {"name": 27200, "bedroom": 31100, "downstairs": 35500,
                 "outside": 36500, "lab": 45500, "starter": 61450, "skills": 65900}
 
 
+# Past the opening the route is better kept as legs than as frame numbers: a
+# leg is "hold this direction this long", and the frames are worked out from
+# the list, so inserting one step does not move every number after it.
+#
+# Each leg is preceded by a touch on RUN, in case a wild battle has started,
+# and by a mash of B, which closes a message box. That matters more than it
+# sounds: walking into a wall or an NPC opens one, and every later direction
+# press is then eaten by it, which reads exactly like a wall that is not there.
+# A leg of "m" mashes A instead, for a conversation, which B will not advance.
+LEG_RUN = (127, 172)        # the RUN button, in the bottom screen's own pixels
+LEG_ESCAPE = 25             # frames to hold that touch
+LEG_CLEAR = 240             # frames of B before the leg
+LEG_SETTLE = 20             # frames after it, so a sample is not mid-step
+BUTTONS = {"u": 4, "d": 5, "l": 6, "r": 7, "a": 8}
+
+
+def legs(route, start=300):
+    """The actions for a list of "direction:frames" legs."""
+    actions, frame = [], start
+    for leg in route:
+        direction, hold = leg.split(":")
+        hold = int(hold)
+        if direction == "m":
+            actions.append(f"mash:{frame}:{frame + hold}:30:8:8")
+            frame += hold + LEG_SETTLE
+            continue
+        actions.append(f"touch:{frame}:{LEG_ESCAPE}:{LEG_RUN[0]}:{LEG_RUN[1]}")
+        frame += LEG_ESCAPE + 15
+        actions.append(f"mash:{frame}:{frame + LEG_CLEAR}:30:8:0")
+        frame += LEG_CLEAR + LEG_SETTLE
+        actions.append(f"press:{frame}:{hold}:{BUTTONS[direction]}")
+        frame += hold + LEG_SETTLE
+    return actions, frame
+
+
+# Found leg by leg against the built ROM, and kept so it need not be found
+# again. It carries on from the state --to starter leaves, after Professor
+# Elm's speech has been mashed through.
+#
+# The town will not let the player leave without the Pokegear -- the man at the
+# western edge says so, in msg_0542_T20 rows 10 and 11 -- so the route goes
+# home for it first. The door of the house is entered from the tile below it,
+# which is why the walk drops to z=402 before lining up on x=695.
+WALKS = {
+    # Out of the laboratory, through Lyra's speech, into the house, to the
+    # mother, and out again with the Pokegear in the menu.
+    "pokegear": ["m:2500",                              # the aide's Poke Balls
+                 "d:400", "d:300", "l:300", "d:300",    # down and out the door
+                 "m:3000",                              # Lyra, outside the lab
+                 "r:200", "d:100", "r:50", "u:250",     # onto the house's door
+                 "r:60", "l:12", "m:2500",              # up to the mother
+                 "u:12", "m:2500", "d:12", "m:2500",
+                 # Out again. The door is one tile wide at x=3, and counting
+                 # frames onto it does not land: the walk goes to the west wall
+                 # and comes back a single tile, which is the same every run.
+                 "d:250", "l:200", "r:12", "d:150"],
+    # West out of the town -- the man at the edge takes a mash of A once the
+    # Pokegear is in the bag -- and onto Route 29. The route's eastern corridor
+    # is closed at x=651 for every row between z=394 and z=407: the way past is
+    # the shore at z=410, and then z=412, which is south of every object the
+    # map declares.
+    "route29": ["l:400", "m:1500", "l:400",             # past the man, onto R29
+                "d:700", "l:300", "d:60", "l:300",      # down to the shore
+                "d:60", "l:400", "u:200", "l:150"],     # west along it, to x=606
+}
+
+
+
 def build(into):
     host = Path(into) / "boot_check"
     result = subprocess.run(["cc", "-O2", "-o", str(host), str(HOST), "-ldl"],

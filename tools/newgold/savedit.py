@@ -31,6 +31,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import save_budget  # noqa: E402
 
+PLAYER_NAME_LENGTH = 7          # include/constants/global.h
 HALF = 0x40000                  # GetChunkOffsetFromCurrentSaveSlot
 CHUNK_MAGIC = 0x20060623        # SAVE_CHUNK_MAGIC
 CHUNK_FOOTER = 16               # sizeof(struct SaveChunkFooter)
@@ -187,16 +188,45 @@ class Save:
         Path(path or self.path).write_bytes(bytes(self.raw))
 
 
+def charcode(text):
+    """The game's own character codes, from include/constants/charcode.h.
+
+    Letters and digits are contiguous there, so CHAR_A and CHAR_0 place the
+    rest. A name has to end in EOS or the game reads past its buffer: that is
+    the assertion in CopyU16ArrayToString, which is what an all-zero name in a
+    save file trips.
+    """
+    table = (ROOT / "include/constants/charcode.h").read_text()
+    def value(name):
+        return int(re.search(rf"#define {name}\s+(\d+)", table).group(1))
+    upper, digit, eos = value("CHAR_A"), value("CHAR_0"), 0xFFFF
+    out = []
+    for character in text:
+        if "A" <= character <= "Z":
+            out.append(upper + ord(character) - ord("A"))
+        elif "a" <= character <= "z":
+            out.append(upper + 26 + ord(character) - ord("a"))
+        elif character.isdigit():
+            out.append(digit + int(character))
+        else:
+            raise SystemExit(f"{character!r} is not a letter or a digit")
+    return out + [eos]
+
+
 def offsets(struct_name, header, fields):
-    """Ask the host compiler where the fields are, from this repository's headers."""
-    body = "\n".join(f'    printf("%s %zu\\n", "{f}", offsetof({struct_name}, {f}));'
+    """Ask the host compiler where the fields are, from this repository's headers.
+
+    No system header is included: this repository's headers pull in the SDK's
+    own stdio and the two disagree. __builtin_offsetof and __builtin_printf
+    need neither.
+    """
+    body = "\n".join(f'    __builtin_printf("%s %lu\\n", "{f}", '
+                     f'(unsigned long)__builtin_offsetof({struct_name}, {f}));'
                      for f in fields)
     source = f"""
-#include <stdio.h>
-#include <stddef.h>
 #include "{header}"
 int main(void) {{
-    printf("sizeof %zu\\n", sizeof({struct_name}));
+    __builtin_printf("sizeof %lu\\n", (unsigned long)sizeof({struct_name}));
 {body}
     return 0;
 }}
@@ -207,7 +237,7 @@ int main(void) {{
         run = subprocess.run(
             ["cc", "-o", str(Path(tmp) / "probe"), str(c),
              f"-I{ROOT}/include", f"-I{ROOT}/include/library", f"-I{ROOT}/files",
-             "-w"], capture_output=True, text=True)
+             f"-I{ROOT}/lib/include", "-w"], capture_output=True, text=True)
         if run.returncode:
             raise SystemExit(f"could not lay out {struct_name}:\n{run.stderr[:800]}")
         out = subprocess.run([str(Path(tmp) / "probe")], capture_output=True, text=True).stdout
@@ -218,6 +248,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("save", type=Path)
     parser.add_argument("--show", action="store_true")
+    parser.add_argument("--name", help="the player's name, which the save must carry "
+                                       "terminated: the main menu copies it into a String "
+                                       "and asserts on one that never ends")
+    parser.add_argument("--trainer-id", type=int)
+    parser.add_argument("--badges", type=int, help="how many Johto badges to set")
+    parser.add_argument("--where", metavar="MAP:X:Y[:DIR]",
+                        help="put the player on a map, the way the save records it: "
+                             "LocalFieldData.currentPosition, which is a Location of "
+                             "mapId, warpId, x, y and direction")
     parser.add_argument("--from-ram", type=Path,
                         help="a boot_check memory dump; the game lays out a whole "
                              "save region before the title screen, and this seals it "
@@ -240,6 +279,52 @@ def main():
         print(f"wrote {args.save} from {args.from_ram}")
 
     save = Save(args.save)
+
+    # PLAYERDATA is { Options options; PlayerProfile profile; ... } and
+    # Save_PlayerData_GetProfile is "adds r0, #4" after fetching the block, so
+    # the profile starts four bytes in. PlayerProfile then begins with
+    # name[PLAYER_NAME_LENGTH + 1] and PlayerProfile_GetNamePtr is a bare
+    # "bx lr", so the name is at the profile's own start.
+    PROFILE = 4
+    NAME = PROFILE
+    TRAINER_ID = PROFILE + 2 * (PLAYER_NAME_LENGTH + 1)
+    JOHTO_BADGES = TRAINER_ID + 4 + 4 + 2
+
+    if args.name:
+        letters = charcode(args.name)
+        if len(letters) > PLAYER_NAME_LENGTH + 1:
+            raise SystemExit(f"a name is at most {PLAYER_NAME_LENGTH} characters")
+        block = save.block("SAVE_PLAYERDATA")
+        for i, value in enumerate(letters):
+            struct.pack_into("<H", block, NAME + 2 * i, value)
+        save.write()
+        print(f"named the player {args.name}")
+
+    if args.trainer_id is not None:
+        block = save.block("SAVE_PLAYERDATA")
+        struct.pack_into("<I", block, TRAINER_ID, args.trainer_id)
+        save.write()
+        print(f"trainer id {args.trainer_id}")
+
+    if args.badges is not None:
+        # PlayerProfile_SetBadgeFlag: badges 0-7 are a bit each in johtoBadges.
+        block = save.block("SAVE_PLAYERDATA")
+        struct.pack_into("<B", block, JOHTO_BADGES, (1 << args.badges) - 1)
+        save.write()
+        print(f"{args.badges} Johto badges")
+
+    if args.where:
+        parts = args.where.split(":")
+        map_id, x, y = (int(v) for v in parts[:3])
+        direction = int(parts[3]) if len(parts) > 3 else 0
+        block = save.block("SAVE_LOCAL_FIELD_DATA")
+        # struct LocalFieldData starts with currentPosition, a Location of
+        # { int mapId; int warpId; int x; int y; int direction; }. A warpId of
+        # -1 is the value the game uses for a position that is not a warp.
+        struct.pack_into("<iiiii", block, 0, map_id, -1, x, y, direction)
+        save.write()
+        print(f"put the player on map {map_id} at ({x}, {y}) facing {direction}")
+
     print(f"{args.save}: half {save.half:#x} is newest, "
           f"save counter {save._footer(save.half, save.specs[0])['count']}")
     if args.show:
