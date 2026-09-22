@@ -27,6 +27,7 @@ Usage: ledger.py [--check] [--reference PATH]
 import argparse
 import re
 import struct
+import subprocess
 import sys
 from pathlib import Path
 
@@ -558,6 +559,30 @@ def replace(path, block):
     return before + START + "\n" + block + "\n" + END + after
 
 
+def pins():
+    """The two rows of the top table that are facts about the repository.
+
+    `base` and `reference` are pins -- a person chooses those. The other two
+    were being typed, and by the time anyone read them they were a dozen
+    commits out. They are git's to answer.
+    """
+    def git(*args):
+        return subprocess.run(["git", "-C", str(ROOT), *args],
+                              capture_output=True, text=True).stdout.strip()
+    # The port's own commits, not the decompilation's five thousand: count
+    # from the base this table already pins.
+    base = re.search(r"^\| base \| `([0-9a-f]+)`", LEDGER.read_text(), re.M).group(1)
+    count = git("rev-list", "--count", f"{base}..HEAD")
+    when = git("log", "-1", "--date=format:%Y-%m-%d %H:%M", "--format=%cd")
+    return {"port": f"{count} commits", "generated": when}
+
+
+def rewrite_pins(text):
+    for key, value in pins().items():
+        text = re.sub(rf"^\| {key} \| .*? \|$", f"| {key} | {value} |", text, flags=re.M)
+    return text
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true",
@@ -576,7 +601,11 @@ def main():
 
     # The summary comes from the states in the tables, after the counters are
     # in: the judgement is which state a row carries, and nothing past that.
+    # The two git-answered pins go in with it. They are deliberately outside
+    # --check: they move with every commit, and a check that fails because
+    # time passed teaches nothing.
     if not args.check:
+        LEDGER.write_text(rewrite_pins(LEDGER.read_text()))
         LEDGER.write_text(replace_between(LEDGER, summary(), SUMMARY_START, SUMMARY_END))
     digest = summary()
     for path in FILES:
