@@ -5512,4 +5512,164 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} couldn’t\nfully protect itself and got hurt!</language>
 	</row>
+	<row id="msg_0197_01375" index="1375">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} concentrated intensely!</language>
+	</row>
+	<row id="msg_0197_01376" index="1376">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} concentrated\nintensely!</language>
+	</row>
+	<row id="msg_0197_01377" index="1377">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} concentrated\nintensely!</language>
+	</row>
+	<row id="msg_0197_01378" index="1378">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} is covered in powder!</language>
+	</row>
+	<row id="msg_0197_01379" index="1379">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} is covered\nin powder!</language>
+	</row>
+	<row id="msg_0197_01380" index="1380">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} is covered\nin powder!</language>
+	</row>
+	<row id="msg_0197_01381" index="1381">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} had\nits HP restored.</language>
+	</row>
+	<row id="msg_0197_01382" index="1382">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} had\nits HP restored.</language>
+	</row>
+	<row id="msg_0197_01383" index="1383">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} had\nits HP restored.</language>
+	</row>
+	<row id="msg_0197_01384" index="1384">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} transformed\ninto the Psychic type!</language>
+	</row>
+	<row id="msg_0197_01385" index="1385">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} transformed\ninto the Psychic type!</language>
+	</row>
+	<row id="msg_0197_01386" index="1386">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} transformed\ninto the Psychic type!</language>
+	</row>
+	<row id="msg_0197_01387" index="1387">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ghost type was added\nto {STRVAR_1 1, 0, 0}!</language>
+	</row>
+	<row id="msg_0197_01388" index="1388">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ghost type was added\nto the wild {STRVAR_1 1, 0, 0}!</language>
+	</row>
+	<row id="msg_0197_01389" index="1389">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ghost type was added\nto the opposing {STRVAR_1 1, 0, 0}!</language>
+	</row>
+	<row id="msg_0197_01390" index="1390">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grass type was added\nto {STRVAR_1 1, 0, 0}!</language>
+	</row>
+	<row id="msg_0197_01391" index="1391">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grass type was added\nto the wild {STRVAR_1 1, 0, 0}!</language>
+	</row>
+	<row id="msg_0197_01392" index="1392">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grass type was added\nto the opposing {STRVAR_1 1, 0, 0}!</language>
+	</row>
+	<row id="msg_0197_01393" index="1393">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s move\nwas postponed!</language>
+	</row>
+	<row id="msg_0197_01394" index="1394">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s move\nwas postponed!</language>
+	</row>
+	<row id="msg_0197_01395" index="1395">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s move\nwas postponed!</language>
+	</row>
+	<row id="msg_0197_01396" index="1396">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}\ntook the kind offer!</language>
+	</row>
+	<row id="msg_0197_01397" index="1397">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}\ntook the kind offer!</language>
+	</row>
+	<row id="msg_0197_01398" index="1398">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}\ntook the kind offer!</language>
+	</row>
+	<row id="msg_0197_01399" index="1399">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} shed its tail to\ncreate a decoy!</language>
+	</row>
+	<row id="msg_0197_01400" index="1400">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} shed its tail to\ncreate a decoy!</language>
+	</row>
+	<row id="msg_0197_01401" index="1401">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} shed its tail to\ncreate a decoy!</language>
+	</row>
+	<row id="msg_0197_01402" index="1402">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} transformed\ninto the Water type!</language>
+	</row>
+	<row id="msg_0197_01403" index="1403">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} transformed\ninto the Water type!</language>
+	</row>
+	<row id="msg_0197_01404" index="1404">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} transformed\ninto the Water type!</language>
+	</row>
+	<row id="msg_0197_01405" index="1405">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} shared its\npower with the target!</language>
+	</row>
+	<row id="msg_0197_01406" index="1406">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} shared its\npower with the target!</language>
+	</row>
+	<row id="msg_0197_01407" index="1407">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} shared its\npower with the target!</language>
+	</row>
+	<row id="msg_0197_01408" index="1408">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} shared its\nguard with the target!</language>
+	</row>
+	<row id="msg_0197_01409" index="1409">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} shared its\nguard with the target!</language>
+	</row>
+	<row id="msg_0197_01410" index="1410">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} shared its\nguard with the target!</language>
+	</row>
+	<row id="msg_0197_01411" index="1411">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">When the flame touched the powder on\nthe Pokémon, it exploded!</language>
+	</row>
+	<row id="msg_0197_01412" index="1412">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The effects of Throat Chop prevent\n{STRVAR_1 1, 0, 0} from using certain moves!</language>
+	</row>
+	<row id="msg_0197_01413" index="1413">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The effects of Throat Chop prevent\nthe wild {STRVAR_1 1, 0, 0}\ffrom using certain moves!</language>
+	</row>
+	<row id="msg_0197_01414" index="1414">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The effects of Throat Chop prevent\nthe opposing {STRVAR_1 1, 0, 0}\ffrom using certain moves!</language>
+	</row>
 </body>
