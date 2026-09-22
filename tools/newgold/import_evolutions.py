@@ -15,6 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 EVOLUTIONS = ROOT / "files/poketool/personal/evo.json"
+MAX_EVOS = int(re.search(r"#define MAX_EVOS_PER_POKE (\d+)", (ROOT / "include/pokemon_types_def.h").read_text()).group(1))
 
 import import_species  # noqa: E402
 
@@ -103,10 +104,15 @@ def main():
 
     table = reference_table(args.reference)
     evolutions = json.loads(EVOLUTIONS.read_text())
-    already = {entry["baseSpecies"] for entry in evolutions["evoTable"]}
+    for entry in evolutions["evoTable"]:
+        for evo in entry["evos"]:
+            # A level written as "16" renders the same as 16, and compares differently.
+            if isinstance(evo["param"], str) and evo["param"].lstrip("-").isdigit():
+                evo["param"] = int(evo["param"])
+    already = {entry["baseSpecies"]: entry for entry in evolutions["evoTable"]}
     wanted = {"SPECIES_" + name for name in import_species.added_species()}
 
-    added, skipped = [], []
+    added, merged, skipped = [], [], []
     for base, body in table.items():
         rows = [(method, param, native_target(target)) for method, param, target in ROW.findall(body)]
         rows = [(method, param, target) for method, param, target in rows if target != "SPECIES_NONE"]
@@ -129,6 +135,7 @@ def main():
             if absent:
                 missing.append((method, param, target, absent))
                 continue
+            param = int(param) if param.lstrip("-").isdigit() else param
             usable.append({"method": method, "param": param, "target": target})
 
         if missing:
@@ -136,13 +143,24 @@ def main():
         if not usable:
             continue
         if base in already:
-            skipped.append((base, [("already listed", "", "", [])]))
+            # A species this tree already evolves gets the rows it is missing,
+            # up to the limit: Scyther keeps Scizor and gains Kleavor.
+            entry = already[base]
+            have = {(row["method"], str(row["param"]), row["target"]) for row in entry["evos"]}
+            new = [row for row in usable if (row["method"], str(row["param"]), row["target"]) not in have]
+            if new:
+                if len(entry["evos"]) + len(new) > MAX_EVOS:
+                    raise SystemExit(f"{base} would have {len(entry['evos']) + len(new)} evolutions; the limit is {MAX_EVOS}")
+                merged.append((base, new))
             continue
         added.append({"baseSpecies": base, "evos": usable})
 
     changes = relevelled(table, evolutions)
 
-    print(f"{len(added)} species gain evolutions")
+    print(f"{len(added)} species gain evolutions, {len(merged)} listed already gain a row")
+    for base, rows in merged:
+        for row in rows:
+            print(f"  {base} also -> {row['target']} ({row['method']}, {row['param']})")
     for base, missing in skipped:
         for method, param, target, absent in missing:
             detail = ", ".join(absent) if absent else "the table already lists it"
@@ -155,6 +173,8 @@ def main():
         return
     if not args.levels_only:
         evolutions["evoTable"].extend(added)
+        for base, rows in merged:
+            already[base]["evos"].extend(rows)
     for _, _, evo, param in changes:
         evo["param"] = param
     EVOLUTIONS.write_text(json.dumps(evolutions, indent=2) + "\n")
