@@ -185,7 +185,20 @@ def main():
             f'\t\t<language name="English">{value}</language>\n'
             f"\t</row>\n"
             for index, tag, value in additions)
-        text = path.read_text()
+        # A row this writes replaces the one it wrote last time. Appending
+        # instead left each form's rows two and three times over, and the
+        # game reads the first: the two Galarian lines showed an empty entry.
+        # Earlier runs also left some rows twice; the first is the one the
+        # game reads, so a later copy of any row goes.
+        rewritten = {index for index, _, _ in additions}
+        kept = set()
+        def keep(m):
+            index = int(m.group(1))
+            if index in rewritten or index in kept:
+                return ""
+            kept.add(index)
+            return m.group(0)
+        text = re.sub(r'\t<row id="[^"]*" index="(\d+)">.*?\t</row>\n', keep, path.read_text(), flags=re.S)
         path.write_text(text.replace("</body>", block + "</body>"))
 
     print(f"{changed} rows in {len(BANKS)} banks")
