@@ -3,6 +3,12 @@
 
     gym.py SAVE [--move N] [--frames N]
 
+Without --move it picks, each turn, the move that hits hardest by the game's
+own data: power from the move table, same-type bonus from the personal
+records, and the type chart from the battle's source. That is a heuristic --
+no accuracy, no stat stages, no status moves unless nothing else is left --
+but it is enough to play a leader rather than lose to one on purpose.
+
 The ROM is the NEWGOLD_DIAG=1 build, run in-process by core.py. Nothing is
 drawn and nothing is looked at: after every few frames the diagnostics'
 memory says what the battle printed, who is fighting, and whether the game
@@ -15,13 +21,14 @@ trainer's AI spent, anything that asserted, and the party before and after.
 """
 import argparse
 import os
+import re
 import struct
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from core import Core  # noqa: E402
-from markers import DIAG_ELF, STATES, Markers  # noqa: E402
+from markers import BATTLER, DIAG_ELF, STATES, Markers  # noqa: E402
 from party import party  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -33,6 +40,48 @@ PARTY = [(64, 35), (192, 38), (64, 78), (192, 81), (64, 123), (192, 126)]
 SHIFT = (127, 113)
 KEEP_BATTLING = (128, 139)   # "will you switch?" -- the lower of the two
 BATTLE_MAIN, EXIT = STATES.index("BATTLE_MAIN"), STATES.index("EXIT")
+
+
+def narc(path):
+    """The members of an archive, as bytes."""
+    data = path.read_bytes()
+    count = struct.unpack_from("<H", data, 0x18)[0]
+    spans = [struct.unpack_from("<II", data, 0x1C + 8 * i) for i in range(count)]
+    base = data.index(b"GMIF") + 8
+    return [data[base + start:base + end] for start, end in spans]
+
+
+class Scorer:
+    """How hard a move hits a Pokemon, from the data this tree builds."""
+
+    def __init__(self):
+        self.moves = narc(ROOT / "files/poketool/waza/waza_tbl.narc")
+        self.personal = narc(ROOT / "files/poketool/personal/personal.narc")
+        header = (ROOT / "include/constants/pokemon.h").read_text()
+        # TYPE_FORESIGHT is 0xFE: read as a bare \d+ it is 0, and the Foresight
+        # marker row becomes "Normal does nothing to Normal".
+        numbers = {name: int(value, 0) for name, value in
+                   re.findall(r"#define (TYPE_\w+)\s+(0x[0-9A-Fa-f]+|\d+)\b", header)}
+        source = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        table = source[source.index("sTypeEffectiveness[][3] = {"):]
+        table = table[:table.index("};")]
+        self.chart = {(numbers[a], numbers[d]): numbers[m] / 10
+                      for a, d, m in re.findall(r"\{\s*(TYPE_\w+),\s*(TYPE_\w+),\s*(TYPE_MUL_\w+)\s*\}", table)}
+
+    def types(self, species):
+        record = self.personal[species] if species < len(self.personal) else b""
+        return set(record[6:8]) if len(record) >= 8 else set()
+
+    def score(self, move, user, target):
+        record = self.moves[move] if move < len(self.moves) else b""
+        # effect (2 bytes), split, power, type: import_moves.py's RECORD.
+        if len(record) < 5 or record[3] == 0:
+            return 0.1  # a status move, or one this table does not know: last resort
+        power, kind = record[3], record[4]
+        value = power * (1.5 if kind in self.types(user) else 1)
+        for defending in self.types(target):
+            value *= self.chart.get((kind, defending), 1)
+        return value
 
 
 def quiet():
@@ -47,13 +96,15 @@ def quiet():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("save", type=Path)
-    parser.add_argument("--move", type=int, default=0, help="the move slot to use, 1 to 4; 0 for the first with PP")
+    parser.add_argument("--move", type=int, default=-1,
+                        help="the move slot to use, 1 to 4; 0 for the first with PP; left out, the hardest-hitting")
     parser.add_argument("--frames", type=int, default=40000)
     args = parser.parse_args()
 
     out = quiet()
     say = lambda line: print(line, file=out)  # noqa: E731
     markers = Markers(DIAG_ELF)
+    scorer = Scorer()
     core = Core(ROM, save=args.save)
     ignore = markers.address("gDiagIgnoreCommunicationError")
     hold = [lambda c: c.poke(ignore, 1)]
@@ -121,6 +172,11 @@ def main():
             moves = view[0].split("|")[1].split(",")
             usable = [i for i, part in enumerate(moves) if not part.strip().endswith(" 0") and i not in refused]
             slot = args.move - 1 if 1 <= args.move <= 4 and args.move - 1 not in refused else (usable or [0])[0]
+            if args.move < 0 and usable:
+                at = markers.address("gDiagBattlers") - 0x02000000
+                you = struct.unpack_from(BATTLER, ram, at)
+                foe = struct.unpack_from(BATTLER, ram, at + struct.calcsize(BATTLER))
+                slot = max(usable, key=lambda i: scorer.score(you[7 + i], you[0], foe[0]))
             last_slot = slot
             core.touch(*MOVES[slot], 6, hold)
             core.step(20, hold)
