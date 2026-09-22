@@ -411,5 +411,6 @@
 #define MOVE_EFFECT_GIVE_HELD_ITEM                               405
 #define MOVE_EFFECT_IGNORE_PROTECT                               406
 #define MOVE_EFFECT_SMACK_DOWN                                   407
+#define MOVE_EFFECT_HIT_THREE_TIMES_FLAT                         408
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

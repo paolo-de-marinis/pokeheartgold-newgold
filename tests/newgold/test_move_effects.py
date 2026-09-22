@@ -185,5 +185,25 @@ class WhatIsStillMissingTests(unittest.TestCase):
             f"missing, or say here why it has none")
 
 
+
+class PriorityTests(unittest.TestCase):
+    """The move importer once read a priority's digits and dropped its sign:
+    Circle Throw and Dragon Tail went last in every other game and first here."""
+
+    def test_negative_priorities_keep_their_sign(self):
+        import struct
+        data = (ROOT / "files/poketool/waza/waza_tbl.narc").read_bytes()
+        count = struct.unpack_from("<H", data, 0x18)[0]
+        spans = [struct.unpack_from("<II", data, 0x1C + 8 * i) for i in range(count)]
+        body = data.index(b"GMIF") + 8
+        moves = {m.group(1): int(m.group(2)) for m in re.finditer(r"#define (MOVE_[A-Z0-9_]+)\s+(\d+)\s*$",
+                 (ROOT / "include/constants/moves.h").read_text(), re.M)}
+        for name, want in (("MOVE_CIRCLE_THROW", -6), ("MOVE_DRAGON_TAIL", -6), ("MOVE_ROAR", -6),
+                           ("MOVE_BEAK_BLAST", -3), ("MOVE_SHELL_TRAP", -3), ("MOVE_QUICK_ATTACK", 1)):
+            start, _ = spans[moves[name]]
+            priority = struct.unpack_from("<b", data, body + start + 10)[0]
+            self.assertEqual(priority, want, name)
+
+
 if __name__ == "__main__":
     unittest.main()

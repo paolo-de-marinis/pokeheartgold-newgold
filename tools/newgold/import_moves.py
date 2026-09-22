@@ -82,6 +82,8 @@ RECORD_SIZE = 16
 # The last effect retail had. Up to here the two trees hold the same script at
 # the same index, whatever either calls it.
 LAST_VANILLA_EFFECT = 276
+# Effects the reference named the way pret names a different, retail effect.
+COLLIDING_EFFECTS = {"MOVE_EFFECT_HIT_THREE_TIMES": "MOVE_EFFECT_HIT_THREE_TIMES_FLAT"}
 
 # The same for the subscripts, and for the table of side effects that points
 # into them. Past these two this repository had numbered its own additions
@@ -247,8 +249,31 @@ def ranges(block, known):
     return value
 
 
+KEPT = []
+
+
+def guarded(path, text, rewrite):
+    """Write a script or a header only if it is new or unchanged since import.
+
+    The scripts and the headers this writes have been edited by hand since:
+    effects given their C, subscripts added for abilities, comments that say
+    why. A second run used to overwrite all of it with what the reference
+    has -- Storm Throw lost its always-critical line, and a block of
+    subscripts vanished from battle_subscript.h. So a file that exists and
+    would change is left alone, and reported, unless --rewrite-scripts says
+    to take the reference's over the hand's.
+    """
+    path = Path(path)
+    if path.exists() and path.read_text() != text and not rewrite:
+        KEPT.append(path.relative_to(ROOT))
+        return
+    path.write_text(text)
+
+
 def number(block, key):
-    numbers = re.findall(r"\d+", field(block, key) or "0")
+    # A priority is signed: Circle Throw and Dragon Tail are -6. Reading only
+    # the digits made them +6, the highest priority in the game.
+    numbers = re.findall(r"-?\d+", field(block, key) or "0")
     return int(numbers[-1]) if numbers else 0
 
 
@@ -452,6 +477,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("reference", type=Path)
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--rewrite-scripts", action="store_true",
+                        help="overwrite scripts and headers edited by hand since the import")
     args = parser.parse_args()
     reference = args.reference
 
@@ -484,15 +511,29 @@ def main():
     # there both trees hold the same script at that index. Past it, a name the
     # ten effects this game added answers to is that one, and the rest are new.
     first_effect = max(ours_effects.values()) + 1
-    effect_id, new_effects = {}, []
+    effect_id, new_effects, collisions = {}, [], []
     for name, theirs in sorted(their_effects.items(), key=lambda item: item[1]):
         if theirs <= LAST_VANILLA_EFFECT:
             effect_id[name] = theirs
-        elif name in ours_effects:
+        elif name in ours_effects and ours_effects[name] > LAST_VANILLA_EFFECT:
             effect_id[name] = ours_effects[name]
+        elif name in ours_effects:
+            # The reference named one of its own effects the way pret names a
+            # retail one: its MOVE_EFFECT_HIT_THREE_TIMES is 299, three flat
+            # hits (Triple Dive), where pret's is 104, Triple Kick's rising
+            # three. A name match would give Triple Dive Triple Kick's effect.
+            collisions.append((theirs, name))
         else:
             effect_id[name] = first_effect + len(new_effects)
             new_effects.append((effect_id[name], theirs, name))
+    # Numbered after every other new effect, so adding them renumbers nothing.
+    for theirs, name in collisions:
+        renamed = COLLIDING_EFFECTS.get(name)
+        if renamed is None:
+            raise SystemExit(f"the reference's {name} ({theirs}) is a retail effect's name here; "
+                             "give it a name of its own in COLLIDING_EFFECTS")
+        effect_id[name] = first_effect + len(new_effects)
+        new_effects.append((effect_id[name], theirs, renamed))
 
     # Subscripts line up the way the effects do, and so does the table of
     # side effects that points into them: the two trees agree up to where
@@ -658,15 +699,15 @@ def main():
     # The scripts. An effect script is named by the effect it is, a subscript
     # keeps the number it has in the reference, because nothing renumbers.
     for mine, _, _ in new_effects:
-        (EFFECT_SCRIPTS / f"effect_script_{mine:04d}.s").write_text(copied[mine])
+        guarded(EFFECT_SCRIPTS / f"effect_script_{mine:04d}.s", copied[mine], args.rewrite_scripts)
     for mine, theirs, name in new_subscripts:
         spelling = re.match(r"subscript_\d+_(.+)\.s", their_subscript_files[theirs].name).group(1)
-        (SUBSCRIPTS / f"subscript_{mine:04d}_{camel(spelling)}.s").write_text(imported[f"s{mine}"])
+        guarded(SUBSCRIPTS / f"subscript_{mine:04d}_{camel(spelling)}.s", imported[f"s{mine}"], args.rewrite_scripts)
     for identifier, _, _ in added:
-        (MOVE_SCRIPTS / f"move_script_{identifier:04d}.s").write_text(
-            "    .include \"macros/btlcmd.inc\"\n\n    .data\n\n_000:\n    GoToEffectScript \n")
+        guarded(MOVE_SCRIPTS / f"move_script_{identifier:04d}.s",
+                "    .include \"macros/btlcmd.inc\"\n\n    .data\n\n_000:\n    GoToEffectScript \n", args.rewrite_scripts)
 
-    IMPORTS_H.write_text(
+    guarded(IMPORTS_H,
         "#ifndef POKEHEARTGOLD_CONSTANTS_BATTLE_SCRIPT_IMPORTS_H\n"
         "#define POKEHEARTGOLD_CONSTANTS_BATTLE_SCRIPT_IMPORTS_H\n"
         "\n"
@@ -678,7 +719,7 @@ def main():
         "\n"
         + "".join(f"#define {name:<46} {value}\n"
                  for name, value in sorted(unknown.items(), key=lambda item: (item[1], item[0])))
-        + "\n#endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SCRIPT_IMPORTS_H\n")
+        + "\n#endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SCRIPT_IMPORTS_H\n", args.rewrite_scripts)
     include = (ROOT / "asm/macros/btlcmd.inc").read_text()
     if "battle_script_imports.h" not in include:
         (ROOT / "asm/macros/btlcmd.inc").write_text(include.replace(
@@ -701,8 +742,8 @@ def main():
                       if name.startswith("MOVE_SUBSCRIPT_PTR_"))
              + "\n")
     at = subscript_text.rindex("\n#endif")
-    (ROOT / "include/constants/battle_subscript.h").write_text(
-        subscript_text[:at] + block + subscript_text[at:])
+    guarded(ROOT / "include/constants/battle_subscript.h",
+            subscript_text[:at] + block + subscript_text[at:], args.rewrite_scripts)
 
     # The table a side effect is looked up in. It is indexed by the slot, so
     # it grows by exactly the slots that were added, in their order.
@@ -713,9 +754,9 @@ def main():
     body = text[text.index("{", start) + 1:end].rstrip().rstrip(",")
     keep = [line.strip().rstrip(",") for line in body.splitlines() if line.strip()]
     keep = keep[:max(ours_pointers.values()) + 1] + [target for _, _, target in sorted(new_pointers)]
-    table_file.write_text(text[:start] + "static const int sMoveStatusChangeScripts[] = {\n"
+    guarded(table_file, text[:start] + "static const int sMoveStatusChangeScripts[] = {\n"
                           + ",\n".join("    " + entry for entry in keep)
-                          + text[end:])
+                          + text[end:], args.rewrite_scripts)
 
     # The effect numbers, beside the ones this game already had.
     effects_text = original("include/constants/move_effects.h")
@@ -770,10 +811,15 @@ def main():
     kept = text[start:end].splitlines()[1:-1][:HANDPICKED_ANIMATIONS]
     rows_ = kept + [f"        MOVE_{model + ',':<18} // {name.title().replace('_', ' ')}"
                     for name, model in borrowed]
-    COMMANDS.write_text(text[:start]
-                        + "    static const u16 borrowed[NUM_ADDED_MOVES] = {\n"
-                        + "\n".join(rows_) + "\n    };" + text[end:])
+    guarded(COMMANDS, text[:start]
+            + "    static const u16 borrowed[NUM_ADDED_MOVES] = {\n"
+            + "\n".join(rows_) + "\n    };" + text[end:], args.rewrite_scripts)
     print("written")
+    if KEPT:
+        print(f"{len(KEPT)} files edited by hand since they were imported, left as they are "
+              "(--rewrite-scripts to take the reference's over them):")
+        for path in KEPT:
+            print(f"  {path}")
 
 
 if __name__ == "__main__":
