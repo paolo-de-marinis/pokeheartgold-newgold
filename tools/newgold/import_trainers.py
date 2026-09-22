@@ -14,6 +14,7 @@ Usage: import_trainers.py REFERENCE_CHECKOUT [--write] [--index N]
 
 import argparse
 import collections
+import functools
 import json
 import re
 from pathlib import Path
@@ -22,8 +23,15 @@ ROOT = Path(__file__).resolve().parents[2]
 TRAINERS = ROOT / "files/poketool/trainer/trainers.json"
 
 # The reference's bits for a party entry carrying moves and a held item are the
-# ones this repository's TRTYPE names are built from.
-HAS_MOVES, HAS_ITEM = 0x01, 0x02
+# ones this repository's TRTYPE names are built from. HAS_ABILITY is a third
+# the reference has and this table has not: it lets a party entry name its
+# ability outright instead of picking one of the species' slots. Two trainers
+# in the whole of konefr's table use it, Bugsy and Whitney, and every ability
+# the ten of them ask for is one of that species' own three -- so the name
+# resolves back to the slot override this table already carries and nothing
+# has to grow a field. An ability that is none of the three would be a real
+# gap; resolve_ability raises and the trainer is reported and left alone.
+HAS_MOVES, HAS_ITEM, HAS_ABILITY = 0x01, 0x02, 0x04
 TYPE_NAMES = {0: "TRTYPE_MON", HAS_MOVES: "TRTYPE_MON_MOVES",
               HAS_ITEM: "TRTYPE_MON_ITEM", HAS_MOVES | HAS_ITEM: "TRTYPE_MON_ITEM_MOVES"}
 
@@ -44,11 +52,41 @@ ALIASES = {
     "MOVE_SOFT_BOILED": "MOVE_SOFTBOILED",
     "ITEM_TWISTED_SPOON": "ITEM_TWISTEDSPOON",
     "ITEM_LEEK": "ITEM_STICK",
+    "ABILITY_COMPOUND_EYES": "ABILITY_COMPOUNDEYES",
 }
 
 
 def native(name):
     return ALIASES.get(name, name)
+
+
+@functools.lru_cache(maxsize=1)
+def personal_abilities():
+    """Each species' first, second and hidden ability, from the personal data.
+
+    This is what a slot override resolves to at battle time: FIRST and SECOND
+    bias the personality so CreateMon picks abilities[0] or abilities[1], and
+    HIDDEN writes the hidden one on afterwards.
+    """
+    rows = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
+    return {"SPECIES_" + row["species"]:
+            (row["abilities"][0], row["abilities"][1], row.get("hiddenAbility"))
+            for row in rows}
+
+
+def resolve_ability(abilities, species, ability):
+    """The slot override that gives this species this ability."""
+    slots = abilities.get(species)
+    if slots is None:
+        raise ValueError(f"no personal record for {species}")
+    first, second, hidden = slots
+    if ability == first:
+        return "TRPOKE_ABILITY_OVERRIDE_FIRST"
+    if ability == second:
+        return "TRPOKE_ABILITY_OVERRIDE_SECOND"
+    if ability == hidden:
+        return "TRPOKE_ABILITY_OVERRIDE_HIDDEN"
+    raise ValueError(f"{species} has no slot for {ability}; it has {slots}")
 
 
 def constants(path, prefix):
@@ -138,6 +176,13 @@ def translate(block, flags, types):
         if trainerType & HAS_MOVES:
             moves = re.findall(r"\bMOVE_[A-Z0-9_]+", section(member, "moves")) if ".moves = {" in member else []
             entry["moves"] = [native(move) for move in moves if move != "MOVE_NONE"]
+        if trainerType & HAS_ABILITY:
+            # The ability named outright wins over the slot the entry also
+            # gives: the reference writes both and reads the name.
+            named = re.search(r"\.ability\s*=\s*(ABILITY_[A-Z0-9_]+)", member)
+            if named:
+                entry["abilityOverride"] = resolve_ability(
+                    personal_abilities(), entry["species"], native(named.group(1)))
         seal = re.search(r"\.ballSeal\s*=\s*(\d+)", member)
         entry["capsule"] = int(seal.group(1)) if seal else 0
         party.append(entry)
