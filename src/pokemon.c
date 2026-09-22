@@ -2667,6 +2667,13 @@ u8 GetMonPicHeightBySpeciesGenderForm_PBR(u16 species, u8 gender, u8 whichFacing
     s32 fileId;
     u8 ret;
 
+    // Four records a species, and the archive is retail's: this is the other
+    // game's picture data, which the species New Gold adds have no entry in.
+    // Reading past it gave a height out of whatever followed the archive.
+    if (species >= SPECIES_EGG) {
+        return 0;
+    }
+
     form = sub_02070438(species, form);
     switch (species) {
     case SPECIES_BURMY:
@@ -3134,9 +3141,15 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
 u16 ReadFromPersonalPmsNarc(u16 species) {
     u16 ret = 0;
     FSFile file;
-    GF_ASSERT(species < SPECIES_EGG);
     FS_InitFile(&file);
     FS_OpenFile(&file, "poketool/personal/pms.narc");
+    // One halfword a species, and the file is retail's. A species past its
+    // end has no entry, which is not an error: it answers nothing rather
+    // than seeking past the file and keeping whatever was in the buffer.
+    if ((s32)(species * 2 + 2) > file.prop.file.bottom - file.prop.file.top) {
+        FS_CloseFile(&file);
+        return 0;
+    }
     FS_SeekFile(&file, species * 2, FS_SEEK_SET);
     FS_ReadFile(&file, &ret, 2);
     FS_CloseFile(&file);
@@ -3403,6 +3416,11 @@ u8 Party_GetMaxLevel(Party *party) {
 
 u16 SpeciesToJohtoDexNo(u16 species) {
     u16 ret;
+    // The table is retail's, one halfword a species up to the egg. A species
+    // past it is not in the Johto Dex, which is the answer zero.
+    if (species >= SPECIES_EGG) {
+        return 0;
+    }
     ReadFromNarcMemberByIdPair(&ret, NARC_poketool_johtozukan, 0, species * sizeof(u16), sizeof(u16));
     return ret;
 }
@@ -4323,9 +4341,19 @@ void RestoreBoxMonPP(BoxPokemon *boxMon) {
     ReleaseBoxMonLock(boxMon, decry);
 }
 
+// The animation scripts are one record a species in a member the size of
+// retail's species count, so a species past it reads whatever follows the
+// archive. The added species have no animation of their own: they take the
+// first record, which is the one the game plays for a Pokemon with nothing
+// special about it.
+static u16 PokepicAnimSpecies(u16 species) {
+    return species < SPECIES_EGG ? species : 0;
+}
+
 void NARC_ReadPokepicAnimScript(NARC *narc, PokepicAnimScript *dest, u16 species, u16 a3) {
     struct UnkStruct_02072914 sp4;
     int r5 = (a3 & 1 ? 0 : 1);
+    species = PokepicAnimSpecies(species);
     NARC_ReadFromMember(narc, 0, species * sizeof(struct UnkStruct_02072914), sizeof(struct UnkStruct_02072914), &sp4);
     MI_CpuCopy8(&sp4.unk0[r5].unk_3[0], dest, sizeof(PokepicAnimScript) * 10);
 }

@@ -128,6 +128,10 @@ static inline int ov18_021E5A50_sub(int languageFlag) {
     return languageFlag;
 }
 
+// The name banks in the other languages are retail's and stop at Arceus, so
+// a species past him has its own language and no other. That is not an error
+// -- the Dex meets one every day now -- so the caller is told to show the
+// native name rather than asserting.
 static inline BOOL ov18_021E5A50_sub2(int species, int languageFlag) {
     if (species > MAX_SPECIES && languageFlag != DEX_LANGUAGE_FLAG_MAX) {
         return FALSE;
@@ -141,5 +145,8 @@ static void ov18_021E5A50(u16 species, int language, int *pMsgNo, int *pLanguage
     GF_ASSERT(*pLanguageFlag < DEX_LANGUAGE_FLAG_MAX);
     *pMsgNo = species;
     *pLanguageFlagNativeMask = ov18_021E5A50_sub(*pLanguageFlag);
-    GF_ASSERT(ov18_021E5A50_sub2(*pMsgNo, *pLanguageFlagNativeMask));
+    if (!ov18_021E5A50_sub2(*pMsgNo, *pLanguageFlagNativeMask)) {
+        *pLanguageFlag = DEX_LANGUAGE_FLAG_MAX;
+        *pLanguageFlagNativeMask = ov18_021E5A50_sub(*pLanguageFlag);
+    }
 }

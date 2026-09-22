@@ -2007,21 +2007,20 @@ int SpeciesToOverworldModelIndexOffset(int species) {
 }
 
 int OverworldModelLookupFormCount(int species) {
-    if (!(species > 0 && species <= NATIONAL_DEX_COUNT)) {
-        GF_ASSERT(FALSE);
-        species = 0;
-    } else {
-        species--;
+    // One entry a species, and the table is retail's: a species past its end
+    // has no model to walk behind the player, and reading past it gave a form
+    // count out of whatever follows the table. Not an error -- meeting one of
+    // the added species is ordinary -- so it answers none rather than
+    // asserting, as the model lookup above does.
+    if (species <= 0 || species > (int)NELEMS(sFormMaxLUT)) {
+        return 0;
     }
-    return sFormMaxLUT[species];
+    return sFormMaxLUT[species - 1];
 }
 
 BOOL OverworldModelLookupHasFemaleForm(int species) {
-    if (!(species > 0 && species <= NATIONAL_DEX_COUNT)) {
-        GF_ASSERT(FALSE);
-        species = 0;
-    } else {
-        species--;
+    if (species <= 0 || species > (int)NELEMS(sFemaleFlagLUT)) {
+        return FALSE;
     }
-    return sFemaleFlagLUT[species];
+    return sFemaleFlagLUT[species - 1];
 }

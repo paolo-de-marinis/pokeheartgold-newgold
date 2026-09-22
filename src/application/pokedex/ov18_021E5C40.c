@@ -1903,6 +1903,15 @@ static void ov18_021E8698(PokedexAppData_UnkSub18DC_0 *a0, u16 species, int a2) 
         base = NARC_zukan_enc_zukan_enc_00003467; // 7 * 495 + 2
         break;
     }
+    // Each method's block is 495 records long, one a species up to the egg,
+    // and the archive is retail's. A species past that has no map of its own,
+    // and reading on would hand it the next method's records.
+    if (species >= SPECIES_EGG) {
+        a0->maps = NULL;
+        a0->nMaps = 0;
+        return;
+    }
+
     // UB: if unexpected a2, r3 is uninitialized
     a0->maps = GfGfxLoader_LoadFromNarc_GetSizeOut(NARC_application_zukanlist_zkn_data_zukan_enc, base + species, FALSE, HEAP_ID_POKEDEX_APP, FALSE, &size);
     a0->nMaps = size / sizeof(u32);
