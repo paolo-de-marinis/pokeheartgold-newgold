@@ -893,3 +893,54 @@ look.**
   itself.
 * `smoke.py` keeps the route past the opening as legs rather than frame
   numbers, and `WALKS` holds the two found here: `pokegear` and `route29`.
+
+## The second black battle: a party read before it existed
+
+The first black battle came back, on a real save and a real melonDS: both
+screens black, the music still playing, and this time it never handed back to
+the overworld. The harness could not see it -- from a fresh game a wild
+battle on Route 29 ran nine times in a row on the same code.
+
+### What it was
+
+`RememberHeldItems`, the half of the single-use item restore that writes down
+what the party holds, was called from `BattleContext_New`. The battle system
+builds its context before it copies the parties in, so at that point every
+entry of `trainerParty` is still NULL, and `BattleSystem_GetPartySize` ends in
+`Party_GetCount(NULL)`: a load from address 4.
+
+On an ARM9 with the SDK's protection unit that is a data abort. Nothing
+handles it, so the BIOS parks the processor on a `b .` at `0xFFFF0108` and the
+ARM7 keeps playing the music. The reference reads the same items from the
+save's party instead, which is why it never saw this; here they are written
+down from the first controller command, which runs once the parties are in.
+`tests/newgold/test_battle_context.py` holds that `BattleContext_New` reads no
+party from now on.
+
+### Why the harness said nine in a row
+
+The melonDS libretro core the harness runs on raises no data abort: a load
+from address 4 returns zero, `Party_GetCount` came back 0, the loop ran zero
+times and the battle went on as if nothing had happened. A standalone melonDS
+that emulates the protection unit stops dead. **A NULL read that the harness
+survives is not a NULL read that hardware survives**; the harness proves a
+path runs, not that it is sound.
+
+### How it was found, which is the reusable part
+
+* The trail: sixteen numbered sites writing into a ring, read back from the
+  frozen game's memory. It ended at the Pokedex copy inside the battle init,
+  which said *where* but not *why* -- the rest of that routine is assembly
+  with no site in it.
+* The battle heap's used list. An NNS expansion heap keeps its allocated
+  blocks on a list too (`DU`), so walking it from the handle gives every
+  allocation the battle managed in order: the battle system, four profiles,
+  the bag, the Pokedex, the context, and then nothing. Two more steps than
+  the trail.
+* A savestate from the frozen melonDS (`Shift+F1`), which carries the ARM9's
+  registers and the DTCM the stack lives in. CPSR read `0x97` -- abort mode,
+  interrupts off -- the PC was in the BIOS, and the abort-mode link register
+  pointed eight bytes past `Party_GetCount` with r0 zero. The return addresses
+  on the DTCM stack then gave the whole chain: `Battle_Run`, `ov12_0223A0D4`,
+  `ov12_02238A68`, `BattleContext_New`, `BattleSystem_GetPartySize`. No
+  reading of assembly was needed past the one instruction that faulted.

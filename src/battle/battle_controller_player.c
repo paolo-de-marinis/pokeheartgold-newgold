@@ -165,6 +165,13 @@ typedef char BattleContextSizeCheck[
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
 // back at the end. Berries are the exception — those are eaten.
+//
+// Written down from the first controller command, not from BattleContext_New:
+// the battle system builds its context before it has copied the parties in, so
+// at that point BattleSystem_GetPartySize reads a party pointer that is still
+// NULL. On hardware, and in a melonDS that raises data aborts, that is a black
+// screen with the music still playing; the libretro core the harness runs on
+// reads address 4 as zero and carried on, which is how it went unnoticed.
 static void RememberHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     int count = BattleSystem_GetPartySize(battleSystem, BATTLER_PLAYER);
 
@@ -194,7 +201,6 @@ BattleContext *BattleContext_New(BattleSystem *battleSystem) {
     LoadMoveTbl(ctx->trainerAIData.moveData);
     LoadAddedMoveTbl(ctx->addedMoveData);
     ctx->trainerAIData.itemData = LoadAllItemData(HEAP_ID_BATTLE);
-    RememberHeldItems(battleSystem, ctx);
 
     return ctx;
 }
@@ -228,6 +234,7 @@ static void BattleControllerPlayer_GetBattleMon(BattleSystem *battleSystem, Batt
     int battlerId;
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
+    RememberHeldItems(battleSystem, ctx);
     for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
         BattleSystem_GetBattleMon(battleSystem, ctx, battlerId, ctx->selectedMonIndex[battlerId]);
     }
