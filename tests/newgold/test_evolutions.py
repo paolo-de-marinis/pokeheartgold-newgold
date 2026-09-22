@@ -80,6 +80,15 @@ class EvolutionTests(unittest.TestCase):
         self.assertNotIn("for (i = 0; i < 7; i++)", source, "a loop still stops at seven")
         self.assertEqual(source.count("for (i = 0; i < MAX_EVOS_PER_POKE; i++)"), 3)
 
+    def test_a_linking_cord_stands_in_for_a_trade_with_an_item(self):
+        """hg-engine at d0380a487: used on a Pokemon that evolves by trading
+        while holding something, a Linking Cord evolves it -- if it holds it."""
+        source = (ROOT / "src/pokemon.c").read_text()
+        use = source[source.index("case EVOCTX_ITEM_USE:"):]
+        use = use[:use.index("Heap_Free(evoTable);")]
+        self.assertRegex(use, r"method == EVO_TRADE_ITEM && heldItem == evoTable\[i\]\.param"
+                              r" && usedItem == ITEM_LINKING_CORD")
+
     def test_every_name_is_defined(self):
         known = (constants("include/constants/pokemon.h", "EVO_")
                  | constants("include/constants/pokemon.h", "TYPE_")

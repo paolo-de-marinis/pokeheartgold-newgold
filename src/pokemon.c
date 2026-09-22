@@ -3131,6 +3131,13 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                 *method_ret = 0;
                 break;
             }
+            // hg-engine: a Linking Cord stands in for the trade a held-item
+            // evolution asks for. The held item is still required, and stays.
+            if (evoTable[i].method == EVO_TRADE_ITEM && heldItem == evoTable[i].param && usedItem == ITEM_LINKING_CORD) {
+                target = evoTable[i].target;
+                *method_ret = 0;
+                break;
+            }
         }
         break;
     }
