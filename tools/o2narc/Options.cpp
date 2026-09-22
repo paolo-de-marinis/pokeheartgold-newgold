@@ -93,17 +93,34 @@ void Options::ReadObjectFile(vector<unsigned char> &rodata, vector<uint32_t> &si
     }
 }
 
+// The file allocation table starts every member on a four byte boundary, so a
+// member whose size is not a multiple of four needs its padding INSERTED after
+// it. Writing that padding over the image in place, as this used to, left the
+// image packed while the table walked it in aligned strides: each member began
+// two bytes earlier than the table said for every odd-sized member before it,
+// and the pad bytes landed inside the next member rather than after this one.
+// Every row in this repository is a multiple of four but one -- evo.narc's
+// became 50 bytes when a Pokemon was allowed an eighth evolution -- and that
+// archive has read as noise from Ivysaur onwards ever since.
 void Options::OverwritePadding(vector<unsigned char> &rodata, vector<uint32_t> &sizes) const {
-    if (rodata.size() & 3) {
-        rodata.resize((rodata.size() + 3) & ~3, padval);
-    }
-    uint32_t end = 0;
+    vector<unsigned char> padded;
+    padded.reserve((rodata.size() + 3) & ~3);
+    size_t start = 0;
     for (auto &size : sizes) {
-        end += size;
-        uint32_t pad_end = (end + 3) & ~3;
-        memset(&rodata[end], padval, pad_end - end);
-        end = pad_end;
+        size_t end = start + size;
+        if (end > rodata.size()) {
+            end = rodata.size();
+        }
+        padded.insert(padded.end(), rodata.begin() + start, rodata.begin() + end);
+        padded.resize((padded.size() + 3) & ~3, padval);
+        start = end;
     }
+    // Anything the sizes did not account for is kept as it was, aligned.
+    if (start < rodata.size()) {
+        padded.insert(padded.end(), rodata.begin() + start, rodata.end());
+        padded.resize((padded.size() + 3) & ~3, padval);
+    }
+    rodata.swap(padded);
 }
 
 void Options::WriteNarc(vector<unsigned char> &rodata, vector<uint32_t> &sizes) {

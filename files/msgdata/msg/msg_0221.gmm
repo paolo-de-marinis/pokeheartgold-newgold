@@ -2207,4 +2207,76 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">A cord that links\ntwo Pokémon. Makes\ncertain Pokémon\nevolve.</language>
 	</row>
+	<row id="msg_0221_00546" index="546">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A mysterious piece\nof armor. Certain\nPokémon evolve\nwhen holding it.</language>
+	</row>
+	<row id="msg_0221_00547" index="547">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A chipped teapot\nthat makes certain\nPokémon evolve.</language>
+	</row>
+	<row id="msg_0221_00548" index="548">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A cracked teapot\nthat makes certain\nPokémon evolve.</language>
+	</row>
+	<row id="msg_0221_00549" index="549">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A cuff woven from\nGalarica twigs.\nMakes certain\nPokémon evolve.</language>
+	</row>
+	<row id="msg_0221_00550" index="550">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A wreath woven from\nGalarica twigs.\nMakes certain\nPokémon evolve.</language>
+	</row>
+	<row id="msg_0221_00551" index="551">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A cursed piece of\narmor. Certain\nPokémon evolve\nwhen holding it.</language>
+	</row>
+	<row id="msg_0221_00552" index="552">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A peculiar metal\nthat makes certain\nPokémon evolve.</language>
+	</row>
+	<row id="msg_0221_00553" index="553">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A peculiar scroll\nwith the secrets of\nthe dark path\nwritten on it.</language>
+	</row>
+	<row id="msg_0221_00554" index="554">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A peculiar scroll\nwith the secrets of\nthe water path\nwritten on it.</language>
+	</row>
+	<row id="msg_0221_00555" index="555">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A bulb that raises\nSp. Atk if the\nholder is hit by a\nWater-type move.\nIt is used up.</language>
+	</row>
+	<row id="msg_0221_00556" index="556">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A balloon that\nlets the holder\nfloat. It bursts\nwhen the holder\nis hit.</language>
+	</row>
+	<row id="msg_0221_00557" index="557">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A battery that\nraises Attack if\nthe holder is hit\nby an Electric-type\nmove. It is used up.</language>
+	</row>
+	<row id="msg_0221_00558" index="558">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A seed that raises\nDefense on Electric\nTerrain. It is\nused up.</language>
+	</row>
+	<row id="msg_0221_00559" index="559">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A seed that raises\nDefense on Grassy\nTerrain. It is\nused up.</language>
+	</row>
+	<row id="msg_0221_00560" index="560">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A seed that raises\nSp. Def on Misty\nTerrain. It is\nused up.</language>
+	</row>
+	<row id="msg_0221_00561" index="561">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A seed that raises\nSp. Def on Psychic\nTerrain. It is\nused up.</language>
+	</row>
+	<row id="msg_0221_00562" index="562">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A beautiful but\nplain feather that\ndoes nothing. It\nsells at a low\nprice.</language>
+	</row>
+	<row id="msg_0221_00563" index="563">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A ball of snow\nthat raises Attack\nif the holder is\nhit by an Ice-type\nmove. It is used up.</language>
+	</row>
 </body>

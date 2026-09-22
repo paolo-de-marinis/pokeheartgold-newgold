@@ -2749,6 +2749,71 @@
           "target": "SPECIES_HYDRAPPLE"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_SINISTEA",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_CRACKED_POT",
+          "target": "SPECIES_POLTEAGEIST"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_DURALUDON",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_METAL_ALLOY",
+          "target": "SPECIES_ARCHALUDON"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_KUBFU",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_SCROLL_OF_DARKNESS",
+          "target": "SPECIES_URSHIFU"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_CHARCADET",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_AUSPICIOUS_ARMOR",
+          "target": "SPECIES_ARMAROUGE"
+        },
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_MALICIOUS_ARMOR",
+          "target": "SPECIES_CERULEDGE"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_POLTCHAGEIST",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_CRACKED_POT",
+          "target": "SPECIES_SINISTCHA"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_SLOWPOKE_GALARIAN",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_GALARICA_CUFF",
+          "target": "SPECIES_SLOWBRO_GALARIAN"
+        }
+      ]
     }
   ]
 }

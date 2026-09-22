@@ -100,13 +100,6 @@ ALIASES = {
     "ITEM_LEEK": "ITEM_STICK",
 }
 
-# Wild held items from later generations that HGSS does not have. A species
-# that would hold one holds nothing instead, until the items exist.
-UNAVAILABLE_ITEMS = {
-    "ITEM_ABSORB_BULB", "ITEM_AIR_BALLOON", "ITEM_CELL_BATTERY",
-    "ITEM_PRETTY_FEATHER", "ITEM_PSYCHIC_SEED", "ITEM_SNOWBALL",
-}
-
 
 def known_items():
     return set(re.findall(r"#define (ITEM_[A-Z0-9_]+)",
@@ -117,9 +110,9 @@ def native_item(name, known, dropped):
     """The item under this repository's spelling, or nothing.
 
     The reference spells a few items with an underscore this game does not
-    (ITEM_BLACK_GLASSES against ITEM_BLACKGLASSES), and it has a few this game
-    has never had at all -- the terrain seeds. A wild held item that does not
-    exist here is recorded as none rather than invented, and reported.
+    (ITEM_BLACK_GLASSES against ITEM_BLACKGLASSES). A wild held item that does
+    not exist here is recorded as none rather than invented, and reported --
+    though since the six that were missing were added, none of them is.
     """
     if name in known:
         return name
@@ -132,8 +125,7 @@ def native_item(name, known, dropped):
 
 
 def native(name):
-    name = ALIASES.get(name, name)
-    return "ITEM_NONE" if name in UNAVAILABLE_ITEMS else name
+    return ALIASES.get(name, name)
 
 
 def species_entries(reference):

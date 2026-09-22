@@ -2184,4 +2184,76 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Linking Cord</language>
 	</row>
+	<row id="msg_0222_00546" index="546">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Auspicious Armor</language>
+	</row>
+	<row id="msg_0222_00547" index="547">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Chipped Pot</language>
+	</row>
+	<row id="msg_0222_00548" index="548">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cracked Pot</language>
+	</row>
+	<row id="msg_0222_00549" index="549">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Galarica Cuff</language>
+	</row>
+	<row id="msg_0222_00550" index="550">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Galarica Wreath</language>
+	</row>
+	<row id="msg_0222_00551" index="551">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Malicious Armor</language>
+	</row>
+	<row id="msg_0222_00552" index="552">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Metal Alloy</language>
+	</row>
+	<row id="msg_0222_00553" index="553">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scroll of Darkness</language>
+	</row>
+	<row id="msg_0222_00554" index="554">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scroll of Waters</language>
+	</row>
+	<row id="msg_0222_00555" index="555">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Absorb Bulb</language>
+	</row>
+	<row id="msg_0222_00556" index="556">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Air Balloon</language>
+	</row>
+	<row id="msg_0222_00557" index="557">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cell Battery</language>
+	</row>
+	<row id="msg_0222_00558" index="558">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Electric Seed</language>
+	</row>
+	<row id="msg_0222_00559" index="559">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grassy Seed</language>
+	</row>
+	<row id="msg_0222_00560" index="560">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Misty Seed</language>
+	</row>
+	<row id="msg_0222_00561" index="561">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Psychic Seed</language>
+	</row>
+	<row id="msg_0222_00562" index="562">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pretty Feather</language>
+	</row>
+	<row id="msg_0222_00563" index="563">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Snowball</language>
+	</row>
 </body>

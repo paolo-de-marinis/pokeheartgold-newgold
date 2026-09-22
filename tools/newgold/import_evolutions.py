@@ -29,6 +29,32 @@ def reference_table(reference):
     return {blocks[i]: blocks[i + 1] for i in range(1, len(blocks), 2)}
 
 
+# A row is a method, a bare parameter and a target; the target may be a form of
+# another species, MON_WITH_FORM(SPECIES_SLOWBRO, 2). The older pattern matched
+# only a plain SPECIES_, so the 36 form lines were not left out but unseen --
+# they never reached the report at all.
+ROW = re.compile(r"\{\s*(EVO_[A-Z0-9_]+)\s*,\s*([A-Za-z0-9_-]+)\s*,\s*"
+                 r"(SPECIES_[A-Z0-9_]+|MON_WITH_FORM\(\s*SPECIES_[A-Z0-9_]+\s*,\s*\d+\s*\))\s*\}")
+
+# This repository's evolution data has no form field, so a form can only be an
+# evolution target where the port carries it as a species of its own.
+FORM_TARGETS = {
+    ("SPECIES_SLOWBRO", "2"): "SPECIES_SLOWBRO_GALARIAN",
+}
+
+
+def native_target(target):
+    """The target under this repository's spelling, or a name nothing defines.
+
+    A form this port does not carry comes back as "SPECIES_URSHIFU form 1",
+    which is in no header and so is reported as missing rather than written.
+    """
+    form = re.fullmatch(r"MON_WITH_FORM\(\s*(SPECIES_[A-Z0-9_]+)\s*,\s*(\d+)\s*\)", target)
+    if not form:
+        return target
+    return FORM_TARGETS.get(form.groups(), f"{form[1]} form {form[2]}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("reference", type=Path)
@@ -49,7 +75,7 @@ def main():
 
     added, skipped = [], []
     for base, body in table.items():
-        rows = re.findall(r"\{\s*(EVO_[A-Z0-9_]+)\s*,\s*([^,]+?)\s*,\s*(SPECIES_[A-Z0-9_]+)\s*\}", body)
+        rows = [(method, param, native_target(target)) for method, param, target in ROW.findall(body)]
         rows = [(method, param, target) for method, param, target in rows if target != "SPECIES_NONE"]
         # Only lines that touch a new species: either it evolves, or something
         # already here gains a way to become one.

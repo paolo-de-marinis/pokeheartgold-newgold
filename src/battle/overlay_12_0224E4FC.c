@@ -109,6 +109,9 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     // Protean's "once per appearance" is this flag, so a new appearance has to
     // start without it. The reference clears it here for the same reason.
     ctx->battleMons[battlerId].abilityActivatedFlag = 0;
+    // An Air Balloon announces itself once per appearance, so the same goes
+    // for its flag. The reference clears it alongside these.
+    ctx->battleMons[battlerId].airBalloonFlag = 0;
     // Kept off the BattleMon because that structure's size is pinned; cleared
     // here, which is where the reference clears its copy.
     ctx->psychicTerrainMoveUsed[battlerId] = 0;
@@ -2269,7 +2272,7 @@ BOOL ov12_02251A28(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
         ret = FALSE;
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_BELCH) & MaskOfFlagNo(movePos)) {
         msg->tag = TAG_NICKNAME;
-        msg->id = msg_0197_01348;
+        msg->id = msg_0197_01350;
         msg->param[0] = CreateNicknameTag(ctx, battlerId);
         ret = FALSE;
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_NO_PP) & MaskOfFlagNo(movePos)) {
@@ -2490,7 +2493,13 @@ int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, in
 
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_LEVITATE) == TRUE && moveType == TYPE_GROUND && itemTarget != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
         *moveStatusFlag |= MOVE_STATUS_LEVITATE_IMMUNE;
-    } else if (ctx->battleMons[battlerIdTarget].unk88.magnetRiseTurns && !(ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN) && moveType == TYPE_GROUND && itemTarget != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
+    } else if ((ctx->battleMons[battlerIdTarget].unk88.magnetRiseTurns || itemTarget == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT) && !(ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN) && moveType == TYPE_GROUND && itemTarget != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
+        // An Air Balloon rides out a Ground move the same way Magnet Rise
+        // does, and the reference answers both from one place too. It leaves
+        // the same flag behind, so what gets printed is the Magnet Rise line
+        // rather than one naming the balloon -- which is the reference's own
+        // behaviour, with the reference's own note saying the AI would need a
+        // second flag before it could tell them apart.
         *moveStatusFlag |= MOVE_STATUS_MAGNET_RISE_IMMUNE;
     } else {
         i = 0;
@@ -2623,6 +2632,11 @@ void ov12_02252054(BattleContext *ctx, int moveNo, int moveTypeDefault, int abil
     moveType = BattleMoveTypeForAbility(ctx, abilityAttacker, moveNo, moveTypeDefault);
 
     if (abilityAttacker != ABILITY_MOLD_BREAKER && abilityTarget == ABILITY_LEVITATE && moveType == TYPE_GROUND && !(ctx->fieldCondition & FIELD_CONDITION_GRAVITY) && item != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
+        *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
+    } else if (item == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT && moveType == TYPE_GROUND && !(ctx->fieldCondition & FIELD_CONDITION_GRAVITY)) {
+        // What the AI is told about an Air Balloon: a Ground move does
+        // nothing. Its own clause rather than a term on the Levitate one,
+        // because a balloon does not care about Mold Breaker.
         *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
     } else {
         i = 0;
@@ -3460,7 +3474,8 @@ BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) {
         || GetBattlerAbility(ctx, battlerId) == ABILITY_EELEVATE
         || ctx->battleMons[battlerId].type1 == TYPE_FLYING
         || ctx->battleMons[battlerId].type2 == TYPE_FLYING
-        || ctx->battleMons[battlerId].unk88.magnetRiseTurns != 0;
+        || ctx->battleMons[battlerId].unk88.magnetRiseTurns != 0
+        || holdEffect == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT;
     BOOL pulledDown = holdEffect == HOLD_EFFECT_SPEED_DOWN_GROUNDED
         || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
         || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_SMACK_DOWN)
@@ -3489,6 +3504,30 @@ void BattleContext_UpdateTerrainOverlay(BattleContext *ctx, int terrainType) {
 
     ctx->terrainOverlayType = terrainType;
     ctx->terrainOverlayTurns = terrainType != TERRAIN_NONE ? TERRAIN_TURNS : 0;
+}
+
+// Which stat the Seed a battler is holding would raise, or STAT_HP for "none
+// of them" -- no Seed, or the wrong ground under it. The reference asks the
+// item id here, through a macro over a run of four consecutive ids it happens
+// to have; asking the hold effect is the same four items and is what the
+// record on each of them is for. The turn count is asked as well as the type,
+// the way the reference asks it, so a terrain that has run out is no terrain.
+static int TerrainSeedStat(BattleContext *ctx, int battlerId) {
+    if (ctx->terrainOverlayTurns == 0) {
+        return STAT_HP;
+    }
+    switch (GetBattlerHeldItemEffect(ctx, battlerId)) {
+    case HOLD_EFFECT_BOOST_DEF_ON_ELECRIC_TERRAIN:
+        return ctx->terrainOverlayType == ELECTRIC_TERRAIN ? STAT_DEF : STAT_HP;
+    case HOLD_EFFECT_BOOST_DEF_ON_GRASSY_TERRAIN:
+        return ctx->terrainOverlayType == GRASSY_TERRAIN ? STAT_DEF : STAT_HP;
+    case HOLD_EFFECT_BOOST_SPDEF_ON_MISTY_TERRAIN:
+        return ctx->terrainOverlayType == MISTY_TERRAIN ? STAT_SPDEF : STAT_HP;
+    case HOLD_EFFECT_BOOST_SPDEF_ON_PSYCHIC_TERRAIN:
+        return ctx->terrainOverlayType == PSYCHIC_TERRAIN ? STAT_SPDEF : STAT_HP;
+    default:
+        return STAT_HP;
+    }
 }
 
 // Which of a battler's five stats is highest right now, stat stages included.
@@ -4655,7 +4694,52 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 24: // end
+        case 24: // Air Balloon
+            // The flag goes on whether or not the sentence is printed, so a
+            // Pokemon that walked in already pinned to the ground -- Gravity,
+            // an Iron Ball -- never announces the balloon afterwards. That is
+            // the reference's reading of the mechanic, and its comment cites
+            // where it comes from.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (ctx->battleMons[battlerId].airBalloonFlag || !ctx->battleMons[battlerId].hp) {
+                    continue;
+                }
+                ctx->battleMons[battlerId].airBalloonFlag = TRUE;
+                if (GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT && BattlerIsGrounded(ctx, battlerId) == FALSE) {
+                    ctx->battlerIdTemp = battlerId;
+                    ctx->itemTemp = ctx->battleMons[battlerId].item;
+                    script = BATTLE_SUBSCRIPT_AIR_BALLOON_FLOAT;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 25: // Terrain Seeds
+            // After the Surges, because the ground one of them lays is ground
+            // a Seed answers to. The Seed is spent whether or not the stat had
+            // room, which is the reference's script doing the raise and the
+            // removal in one run either way.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                j = ctx->battleMons[battlerId].hp ? TerrainSeedStat(ctx, battlerId) : STAT_HP;
+                if (j != STAT_HP) {
+                    ctx->msgTemp = j;
+                    ctx->battlerIdTemp = battlerId;
+                    ctx->itemTemp = ctx->battleMons[battlerId].item;
+                    script = BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 26: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;
@@ -6084,6 +6168,36 @@ BOOL ov12_0225561C(BattleContext *ctx, int battlerId) {
     return ctx->playerActions[battlerId].command == CONTROLLER_COMMAND_40;
 }
 
+// Absorb Bulb, Cell Battery and Snowball are one item three times over: a
+// damaging hit of the named type raises one stat by a stage and the item goes
+// with it. The ceiling is read the reference's way -- Contrary turns the raise
+// into a drop, so what a Contrary holder needs is room below rather than above.
+//
+// BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT is the bank's own item-credited stat
+// raise, the one the Liechi family of Berries runs: it plays the item's
+// animation, moves the stage, prints "The {item} raised {mon}'s {stat}!" and
+// eats the item. The reference writes a script per item to say "{mon}'s {item}
+// raised its {stat}!" instead -- a row this bank has not got. The sentence here
+// is this bank's, and it credits the item, which is the part that matters.
+static BOOL ItemRaisesStatOnTypeHit(BattleContext *ctx, int moveType, int stat, int *script) {
+    int target = ctx->battlerIdTarget;
+    int stage = ctx->battleMons[target].statChanges[stat];
+    BOOL contrary = CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, target, ABILITY_CONTRARY);
+
+    if (!ctx->battleMons[target].hp
+        || BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur) != moveType
+        || (!ctx->selfTurnData[target].physicalDamage && !ctx->selfTurnData[target].specialDamage)
+        || (contrary == TRUE ? stage == 0 : stage == 12)) {
+        return FALSE;
+    }
+
+    ctx->msgTemp = stat;
+    ctx->battlerIdTemp = target;
+    ctx->itemTemp = ctx->battleMons[target].item;
+    *script = BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT;
+    return TRUE;
+}
+
 BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     BOOL ret = FALSE;
     int item;
@@ -6129,6 +6243,25 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
             *script = BATTLE_SUBSCRIPT_HELD_ITEM_HP_RESTORE;
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             ctx->itemTemp = ctx->battleMons[ctx->battlerIdTarget].item;
+            ret = TRUE;
+        }
+        break;
+    case HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT: // absorb bulb
+        ret = ItemRaisesStatOnTypeHit(ctx, TYPE_WATER, STAT_SPATK, script);
+        break;
+    case HOLD_EFFECT_BOOST_ATK_ON_ELECTRIC_HIT: // cell battery
+        ret = ItemRaisesStatOnTypeHit(ctx, TYPE_ELECTRIC, STAT_ATK, script);
+        break;
+    case HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT: // snowball
+        ret = ItemRaisesStatOnTypeHit(ctx, TYPE_ICE, STAT_ATK, script);
+        break;
+    case HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT: // air balloon
+        // Any damaging hit, of any type, pops it. The reference checks nothing
+        // but that damage was dealt and the holder is still standing.
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            ctx->itemTemp = ctx->battleMons[ctx->battlerIdTarget].item;
+            *script = BATTLE_SUBSCRIPT_AIR_BALLOON_POP;
             ret = TRUE;
         }
         break;
@@ -7952,7 +8085,10 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     moveEffect = ctx->battleMons[battlerIdTarget].moveEffectFlags;
     ability = ctx->battleMons[battlerIdAttacker].ability;
 
-    critUp = (((status2 & STATUS2_FOCUS_ENERGY) != 0) * 2) + (item == HOLD_EFFECT_CRITRATE_UP) + critCnt + (ability == ABILITY_SUPER_LUCK) + 2 * ((item == HOLD_EFFECT_CHANSEY_CRITRATE_UP) && (species == SPECIES_CHANSEY)) + 2 * ((item == HOLD_EFFECT_FARFETCHD_CRITRATE_UP) && (species == SPECIES_FARFETCHD));
+    // The reference's Leek is this game's Stick, the same item down to the row
+    // of item data, and the reference gives its two stages to Sirfetch'd as
+    // well as to Farfetch'd. That second species is the whole of the Leek here.
+    critUp = (((status2 & STATUS2_FOCUS_ENERGY) != 0) * 2) + (item == HOLD_EFFECT_CRITRATE_UP) + critCnt + (ability == ABILITY_SUPER_LUCK) + 2 * ((item == HOLD_EFFECT_CHANSEY_CRITRATE_UP) && (species == SPECIES_CHANSEY)) + 2 * ((item == HOLD_EFFECT_FARFETCHD_CRITRATE_UP) && (species == SPECIES_FARFETCHD)) + 2 * ((item == HOLD_EFFECT_FARFETCHD_CRITRATE_UP) && (species == SPECIES_SIRFETCHD));
 
     if (critUp > 4) {
         critUp = 4;

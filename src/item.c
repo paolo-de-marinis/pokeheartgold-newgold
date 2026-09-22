@@ -687,6 +687,26 @@ static const u16 sItemNarcIds[ITEMS_COUNT][4] = {
     [ITEM_ICE_STONE] = { NARC_item_data_0521_bin, NARC_item_icon_item_icon_123_NCGR, NARC_item_icon_item_icon_124_NCLR, AGB_ITEM_NONE },
     // Borrowing Upgrade's icon.
     [ITEM_LINKING_CORD] = { NARC_item_data_0522_bin, NARC_item_icon_item_icon_326_NCGR, NARC_item_icon_item_icon_327_NCLR, AGB_ITEM_NONE },
+    // These eighteen brought their own pictures: files/itemtool/itemdata/item_icon
+    // grew a PNG each, and members 797 up are built from them.
+    [ITEM_AUSPICIOUS_ARMOR] = { NARC_item_data_0523_bin, NARC_item_icon_item_icon_797_NCGR, NARC_item_icon_item_icon_798_NCLR, AGB_ITEM_NONE },
+    [ITEM_CHIPPED_POT] = { NARC_item_data_0524_bin, NARC_item_icon_item_icon_799_NCGR, NARC_item_icon_item_icon_800_NCLR, AGB_ITEM_NONE },
+    [ITEM_CRACKED_POT] = { NARC_item_data_0525_bin, NARC_item_icon_item_icon_801_NCGR, NARC_item_icon_item_icon_802_NCLR, AGB_ITEM_NONE },
+    [ITEM_GALARICA_CUFF] = { NARC_item_data_0526_bin, NARC_item_icon_item_icon_803_NCGR, NARC_item_icon_item_icon_804_NCLR, AGB_ITEM_NONE },
+    [ITEM_GALARICA_WREATH] = { NARC_item_data_0527_bin, NARC_item_icon_item_icon_805_NCGR, NARC_item_icon_item_icon_806_NCLR, AGB_ITEM_NONE },
+    [ITEM_MALICIOUS_ARMOR] = { NARC_item_data_0528_bin, NARC_item_icon_item_icon_807_NCGR, NARC_item_icon_item_icon_808_NCLR, AGB_ITEM_NONE },
+    [ITEM_METAL_ALLOY] = { NARC_item_data_0529_bin, NARC_item_icon_item_icon_809_NCGR, NARC_item_icon_item_icon_810_NCLR, AGB_ITEM_NONE },
+    [ITEM_SCROLL_OF_DARKNESS] = { NARC_item_data_0530_bin, NARC_item_icon_item_icon_811_NCGR, NARC_item_icon_item_icon_812_NCLR, AGB_ITEM_NONE },
+    [ITEM_SCROLL_OF_WATERS] = { NARC_item_data_0531_bin, NARC_item_icon_item_icon_813_NCGR, NARC_item_icon_item_icon_814_NCLR, AGB_ITEM_NONE },
+    [ITEM_ABSORB_BULB] = { NARC_item_data_0532_bin, NARC_item_icon_item_icon_815_NCGR, NARC_item_icon_item_icon_816_NCLR, AGB_ITEM_NONE },
+    [ITEM_AIR_BALLOON] = { NARC_item_data_0533_bin, NARC_item_icon_item_icon_817_NCGR, NARC_item_icon_item_icon_818_NCLR, AGB_ITEM_NONE },
+    [ITEM_CELL_BATTERY] = { NARC_item_data_0534_bin, NARC_item_icon_item_icon_819_NCGR, NARC_item_icon_item_icon_820_NCLR, AGB_ITEM_NONE },
+    [ITEM_ELECTRIC_SEED] = { NARC_item_data_0535_bin, NARC_item_icon_item_icon_821_NCGR, NARC_item_icon_item_icon_822_NCLR, AGB_ITEM_NONE },
+    [ITEM_GRASSY_SEED] = { NARC_item_data_0536_bin, NARC_item_icon_item_icon_823_NCGR, NARC_item_icon_item_icon_824_NCLR, AGB_ITEM_NONE },
+    [ITEM_MISTY_SEED] = { NARC_item_data_0537_bin, NARC_item_icon_item_icon_825_NCGR, NARC_item_icon_item_icon_826_NCLR, AGB_ITEM_NONE },
+    [ITEM_PSYCHIC_SEED] = { NARC_item_data_0538_bin, NARC_item_icon_item_icon_827_NCGR, NARC_item_icon_item_icon_828_NCLR, AGB_ITEM_NONE },
+    [ITEM_PRETTY_FEATHER] = { NARC_item_data_0539_bin, NARC_item_icon_item_icon_829_NCGR, NARC_item_icon_item_icon_830_NCLR, AGB_ITEM_NONE },
+    [ITEM_SNOWBALL] = { NARC_item_data_0540_bin, NARC_item_icon_item_icon_831_NCGR, NARC_item_icon_item_icon_832_NCLR, AGB_ITEM_NONE },
 };
 
 void MoveItemSlotInList(ItemSlot *slots, int from, int to, int pocket, enum HeapID heapID) {
@@ -1060,7 +1080,13 @@ String *GetNutName(u16 berryId, enum HeapID heapID) {
 }
 
 ItemData *LoadAllItemData(enum HeapID heapID) {
-    return AllocAndReadFromNarcMemberByIdPair(NARC_itemtool_itemdata_item_data, 0, heapID, 0, GetItemIndexMapping(ITEM_MAX, ITEMNARC_PARAM) * sizeof(ItemData));
+    // The battle indexes this array by an item's own data member, so the last
+    // item's record has to be inside it: the mapping gives that member's
+    // number, and a count is one more than the last number. HeartGold left the
+    // plus one out and never noticed, because the last item it had was the
+    // Enigma Stone and nothing carries a key item into a battle. New Gold's
+    // last item is the Snowball, which a wild Pokemon holds.
+    return AllocAndReadFromNarcMemberByIdPair(NARC_itemtool_itemdata_item_data, 0, heapID, 0, (GetItemIndexMapping(ITEM_MAX, ITEMNARC_PARAM) + 1) * sizeof(ItemData));
 }
 
 ItemData *GetItemDataPtrFromArray(ItemData *itemData, u32 itemDataIdx) {

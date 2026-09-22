@@ -12,20 +12,20 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 165 commits |
-| generated | 2026-09-22 08:10 |
+| port | 166 commits |
+| generated | 2026-09-22 09:21 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
 Overall                                                                    76%
-  done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
+  done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
   done, never played   ██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  45%
-  partial              ███████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  30%
+  partial              ████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  31%
   still to do          ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
-  deferred / no scope  ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
+  deferred / no scope  █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  10%
 
 Implementation         ████████████████████████████████████████░░░░░░░░░░  81%
-Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  16%
+Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  15%
 
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
@@ -38,9 +38,9 @@ the share seen running. All three from the states in the tables.
 Species     ████████████████████████████████████████████████░░  1041 / 1075
 Moves       ██████████████████████████████████████████████████   923 /  923
 Abilities   ██████████████████████████████████████████████████   319 /  319
-Items       ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   545 / 2684
+Items       ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   563 / 2684
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       53 files
+Tests       56 files
 ROM         144.9 MB of 268.4 MB   (2G card, 54% used)
 ```
 <!-- LEDGER:COUNTS:END -->
@@ -91,7 +91,9 @@ konefr *could* reach, not only what the game reaches today.
 | Level-up learnsets | 1042; the entry is a word now, so a move past 511 can be learnt | ✅ done |
 | Battle script commands | 294 opcodes, name- and number-identical to the reference; 24 of the added handlers still only consume their operands | 🟠 270 / 294 |
 | Cries | `PlayCryEx` decompiled in `src/unk_02005D10.c` and linked by `main.lsf` — the 495 ceiling is gone, but the bank is mapped twice on one path | 🟠 partial |
-| Items | 545 against the engine's 2684; nine Gen 8/9 evolution items are missing and Ability Shield is a dead identifier | 🟠 545 / 2684 |
+| Items | 563 against the engine's 2684, and every item konefr's own content names is now one of them: the nine Gen 8/9 evolution items and nine wild held items went in, the tenth held item being ITEM_LEEK, which this game has always had as ITEM_STICK. The rest of the engine's range is item data nothing in their game reaches. Twenty-three species carry the new held items in the wild, as the reference has them. Ability Shield is still a dead identifier, and none of the nine held items does anything yet | 🟠 563 / 2684 |
+| Evolutions | six species now evolve with one of the new items — Charcadet twice, Duraludon, Kubfu, Sinistea, Poltchageist and the Galarian Slowpoke. The three rows left are the ones whose target is a form this tree has no species for: Rapid Strike Urshifu, Galarian Slowking, and the Antique Sinistea and Masterpiece Poltchageist that take the chipped pot, so `ITEM_SCROLL_OF_WATERS`, `ITEM_GALARICA_WREATH` and `ITEM_CHIPPED_POT` exist and reach nothing. The other 160 species the reference gives an evolution have never been imported at all — `import_evolutions.py` reports them | 🟠 partial |
+| Evolution archive | evo.narc's row stopped being a multiple of four when Sylveon made it eight evolutions, and o2narc wrote each member's padding over the next member instead of after this one: the allocation table strode 52 bytes through a 50-byte image, so every Pokemon from Ivysaur on read another one's evolutions. Fixed in `tools/o2narc/Options.cpp`; `tests/newgold/test_narc_alignment.py` checks all 115 built archives | ✅ fixed |
 | Effects with a script but no C | two left, Techno Blast and Multi-Attack, and both want a held item this game has not got — the Drives and the Memories | 🟠 2 open |
 
 ---

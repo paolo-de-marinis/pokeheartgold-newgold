@@ -5406,6 +5406,46 @@
 	</row>
 	<row id="msg_0197_01348" index="1348">
 		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s {STRVAR_1 8, 1, 0}\nwas burned up!</language>
+	</row>
+	<row id="msg_0197_01349" index="1349">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s\n{STRVAR_1 8, 1, 0} was burned up!</language>
+	</row>
+	<row id="msg_0197_01350" index="1350">
+		<attribute name="window_context_name">used</attribute>
 		<language name="English">{STRVAR_1 1, 0, 0} hasn’t eaten any held Berries,\nso it can’t possibly belch!</language>
+	</row>
+	<row id="msg_0197_01351" index="1351">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} hasn’t eaten any held\nBerries, so it can’t possibly belch!</language>
+	</row>
+	<row id="msg_0197_01352" index="1352">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} hasn’t eaten any held\nBerries, so it can’t possibly belch!</language>
+	</row>
+	<row id="msg_0197_01353" index="1353">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} floats in the\nair with its {STRVAR_1 8, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01354" index="1354">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} floats in the\nair with its {STRVAR_1 8, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01355" index="1355">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} floats in the\nair with its {STRVAR_1 8, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01356" index="1356">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s\n{STRVAR_1 8, 1, 0} popped!</language>
+	</row>
+	<row id="msg_0197_01357" index="1357">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s\n{STRVAR_1 8, 1, 0} popped!</language>
+	</row>
+	<row id="msg_0197_01358" index="1358">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s\n{STRVAR_1 8, 1, 0} popped!</language>
 	</row>
 </body>

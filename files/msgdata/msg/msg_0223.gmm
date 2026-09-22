@@ -2148,4 +2148,112 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">an {COLOR 255}Enigma Stone{COLOR 0}</language>
 	</row>
+	<row id="msg_0223_00537" index="537">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Black Augurite{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00538" index="538">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Peat Block{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00539" index="539">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Tart Apple{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00540" index="540">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Sweet Apple{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00541" index="541">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Syrupy Apple{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00542" index="542">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">an {COLOR 255}Eviolite{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00543" index="543">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Prism Scale{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00544" index="544">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">an {COLOR 255}Ice Stone{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00545" index="545">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Linking Cord{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00546" index="546">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">an {COLOR 255}Auspicious Armor{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00547" index="547">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Chipped Pot{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00548" index="548">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Cracked Pot{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00549" index="549">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Galarica Cuff{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00550" index="550">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Galarica Wreath{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00551" index="551">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Malicious Armor{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00552" index="552">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Metal Alloy{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00553" index="553">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Scroll of Darkness{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00554" index="554">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Scroll of Waters{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00555" index="555">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">an {COLOR 255}Absorb Bulb{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00556" index="556">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">an {COLOR 255}Air Balloon{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00557" index="557">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Cell Battery{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00558" index="558">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">an {COLOR 255}Electric Seed{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00559" index="559">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Grassy Seed{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00560" index="560">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Misty Seed{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00561" index="561">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Psychic Seed{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00562" index="562">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Pretty Feather{COLOR 0}</language>
+	</row>
+	<row id="msg_0223_00563" index="563">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a {COLOR 255}Snowball{COLOR 0}</language>
+	</row>
 </body>

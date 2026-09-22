@@ -258,7 +258,12 @@ typedef struct BattleMon {
     // Read once on the way into battle rather than per damage calculation,
     // because answering it means reading the evolution archive.
     u32 canStillEvolve : 1;
-    u32 unk28_B : 4;
+    // Whether the held Air Balloon has already said it is floating. Set on the
+    // way in whether or not the message was printed, so a Pokemon that walked
+    // in grounded never announces the balloon later. Another bit out of the
+    // spare four, so the structure is the same size it was.
+    u32 airBalloonFlag : 1;
+    u32 unk28_B : 3;
     u8 movePPCur[MAX_MON_MOVES];
     u8 movePP[MAX_MON_MOVES];
     u8 level;

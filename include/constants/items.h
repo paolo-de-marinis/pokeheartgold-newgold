@@ -270,6 +270,20 @@
 // Eviolite's, which is the only held item New Gold adds.
 #define HOLD_EFFECT_BOOST_IF_NOT_EVOLVED  147
 
+// The effects of the wild held items New Gold's species carry. The names are
+// konefr's -- ELECRIC is the reference's own spelling, kept so a grep answers
+// in both trees -- and the numbers are this game's, since the reference numbers
+// these 155 to 179 around a list this game does not have. Nothing reads them
+// yet: the items come first, the effects are the next agent's.
+#define HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT          148
+#define HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT  149
+#define HOLD_EFFECT_BOOST_ATK_ON_ELECTRIC_HIT          150
+#define HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT               151
+#define HOLD_EFFECT_BOOST_DEF_ON_ELECRIC_TERRAIN       152
+#define HOLD_EFFECT_BOOST_SPDEF_ON_PSYCHIC_TERRAIN     153
+#define HOLD_EFFECT_BOOST_SPDEF_ON_MISTY_TERRAIN       154
+#define HOLD_EFFECT_BOOST_DEF_ON_GRASSY_TERRAIN        155
+
 #define ITEM_NONE 0
 
 // Balls
@@ -975,7 +989,31 @@
 #define ITEM_ICE_STONE        544
 #define ITEM_LINKING_CORD     545
 
-#define ITEMS_COUNT       546
+// Nine more that make a Pokemon evolve. The two scrolls are key items in the
+// reference and stay key items here; the rest sit with the ordinary items.
+#define ITEM_AUSPICIOUS_ARMOR   546
+#define ITEM_CHIPPED_POT        547
+#define ITEM_CRACKED_POT        548
+#define ITEM_GALARICA_CUFF      549
+#define ITEM_GALARICA_WREATH    550
+#define ITEM_MALICIOUS_ARMOR    551
+#define ITEM_METAL_ALLOY        552
+#define ITEM_SCROLL_OF_DARKNESS 553
+#define ITEM_SCROLL_OF_WATERS   554
+
+// And nine wild held items. The tenth konefr's species hold, ITEM_LEEK, this
+// game has always had as ITEM_STICK, down to the same row of item data.
+#define ITEM_ABSORB_BULB        555
+#define ITEM_AIR_BALLOON        556
+#define ITEM_CELL_BATTERY       557
+#define ITEM_ELECTRIC_SEED      558
+#define ITEM_GRASSY_SEED        559
+#define ITEM_MISTY_SEED         560
+#define ITEM_PSYCHIC_SEED       561
+#define ITEM_PRETTY_FEATHER     562
+#define ITEM_SNOWBALL           563
+
+#define ITEMS_COUNT       564
 
 #define ITEM_MIN 1
 #define ITEM_MAX ITEMS_COUNT - 1

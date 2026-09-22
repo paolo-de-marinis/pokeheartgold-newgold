@@ -98,3 +98,7 @@ demo/intro/intro.narc
 data/namein.narc
 data/sbox_gra.narc
 *.NCLR
+
+# New Gold's item icons are built from the PNGs beside them, the way the
+# palettes above are; the archive's own members were extracted and are kept.
+itemtool/itemdata/item_icon/*.NCGR

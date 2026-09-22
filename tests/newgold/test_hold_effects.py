@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""Check that a hold effect this port added is a hold effect something reads.
+
+An added held item is three separate things: a constant, a row of item data
+naming a HOLD_EFFECT_, and battle code that switches on that effect. The first
+two build and test clean on their own -- the item is in the bag, has a name, a
+price and an icon, and a Pokemon holds it -- and the third can simply be
+missing. Nine items shipped that way: the effects were defined, the records
+pointed at them, and no line in src/ ever looked at one, so every one of them
+was an ordinary rock to carry around.
+
+Nothing else says so, because there is nothing to say it: an unread case in a
+switch is not an error in any language.
+
+Only the effects past retail's last are checked. The retail ones below it are
+not all named in C -- the type-weakening Berries are one computed range, the
+evolution items are read out of the evolution tables, the weather extenders go
+by number -- and sorting those out is a different job from this one.
+"""
+
+import re
+import unittest
+
+from test_level_cap import ROOT
+
+HEADER = ROOT / "include/constants/items.h"
+ITEM_DATA = ROOT / "files/itemtool/itemdata/item_data.csv"
+SRC = ROOT / "src"
+
+# Eviolite's, the first effect this port added. Everything at or above it is
+# New Gold's and has to be read by name somewhere.
+FIRST_ADDED = "HOLD_EFFECT_BOOST_IF_NOT_EVOLVED"
+
+
+def effects_defined():
+    """Every hold effect constant, by name -> number."""
+    return {name: int(value) for name, value
+            in re.findall(r"#define (HOLD_EFFECT_[A-Z0-9_]+)\s+(\d+)", HEADER.read_text())}
+
+
+def effects_added():
+    """The hold effects this port added, by name."""
+    defined = effects_defined()
+    return {name for name, value in defined.items() if value >= defined[FIRST_ADDED]}
+
+
+def effects_in_records():
+    """Every hold effect an item record names, by name."""
+    return {line.split(",")[2] for line in ITEM_DATA.read_text().splitlines()[1:] if line.strip()}
+
+
+def effects_read():
+    """Every hold effect named anywhere under src/, by name."""
+    read = set()
+    for path in SRC.rglob("*.c"):
+        read.update(re.findall(r"HOLD_EFFECT_[A-Z0-9_]+", path.read_text(errors="replace")))
+    return read
+
+
+class HoldEffectTests(unittest.TestCase):
+    def test_every_effect_a_record_names_is_defined(self):
+        defined = effects_defined()
+        for effect in sorted(effects_in_records() - {"HOLD_EFFECT_NONE"}):
+            self.assertIn(effect, defined, f"{effect} is in item_data.csv and in no header")
+
+    def test_every_added_effect_an_item_carries_is_read(self):
+        read = effects_read()
+        for effect in sorted(effects_added() & effects_in_records()):
+            self.assertIn(effect, read,
+                          f"an item carries {effect} and nothing in src/ reads it, "
+                          f"so the item does nothing when it is held")
+
+    def test_every_added_effect_is_carried_by_an_item(self):
+        records = effects_in_records()
+        for effect in sorted(effects_added()):
+            self.assertIn(effect, records,
+                          f"{effect} is defined and no item record names it, so no "
+                          f"Pokemon can ever have it")
+
+
+if __name__ == "__main__":
+    unittest.main()

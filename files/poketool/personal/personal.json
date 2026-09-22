@@ -3463,7 +3463,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_ABSORB_BULB"
       ],
       "genderRatio": 0.5,
       "eggCycles": 20,
@@ -3536,7 +3536,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_ABSORB_BULB"
       ],
       "genderRatio": 0.5,
       "eggCycles": 20,
@@ -3611,7 +3611,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_ABSORB_BULB"
       ],
       "genderRatio": 0.5,
       "eggCycles": 20,
@@ -8304,7 +8304,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_PSYCHIC_SEED"
       ],
       "genderRatio": 0.5,
       "eggCycles": 20,
@@ -15010,7 +15010,7 @@
       "spdef_yield": 3,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_ABSORB_BULB"
       ],
       "genderRatio": 0.5,
       "eggCycles": 20,
@@ -22834,7 +22834,7 @@
       "spatk_yield": 0,
       "spdef_yield": 0,
       "items": [
-        "ITEM_NONE",
+        "ITEM_PRETTY_FEATHER",
         "ITEM_NONE"
       ],
       "genderRatio": 0.5,
@@ -22913,7 +22913,7 @@
       "spatk_yield": 0,
       "spdef_yield": 0,
       "items": [
-        "ITEM_NONE",
+        "ITEM_PRETTY_FEATHER",
         "ITEM_LUCKY_EGG"
       ],
       "genderRatio": 0.5,
@@ -25633,7 +25633,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_CELL_BATTERY"
       ],
       "genderRatio": 0.5,
       "eggCycles": 20,
@@ -25706,7 +25706,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_CELL_BATTERY"
       ],
       "genderRatio": 0.5,
       "eggCycles": 20,
@@ -25944,7 +25944,7 @@
       "spatk_yield": 2,
       "spdef_yield": 0,
       "items": [
-        "ITEM_NONE",
+        "ITEM_ABSORB_BULB",
         "ITEM_POISON_BARB"
       ],
       "genderRatio": 0.5,
@@ -29798,7 +29798,7 @@
       "spatk_yield": 0,
       "spdef_yield": 0,
       "items": [
-        "ITEM_NONE",
+        "ITEM_SNOWBALL",
         "ITEM_BABIRI_BERRY"
       ],
       "genderRatio": 0.5,
@@ -33570,7 +33570,7 @@
       "spatk_yield": 3,
       "spdef_yield": 0,
       "items": [
-        "ITEM_NONE",
+        "ITEM_ABSORB_BULB",
         "ITEM_POISON_BARB"
       ],
       "genderRatio": 0.5,
@@ -35080,7 +35080,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_AIR_BALLOON"
       ],
       "genderRatio": 0.5,
       "eggCycles": 30,
@@ -50287,7 +50287,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_ABSORB_BULB"
       ],
       "genderRatio": 0.5,
       "eggCycles": 20,
@@ -50355,7 +50355,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_ABSORB_BULB"
       ],
       "genderRatio": 0.5,
       "eggCycles": 20,
@@ -50432,7 +50432,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_ABSORB_BULB"
       ],
       "genderRatio": 1.0,
       "eggCycles": 20,
@@ -50502,7 +50502,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_ABSORB_BULB"
       ],
       "genderRatio": 1.0,
       "eggCycles": 20,
@@ -62192,7 +62192,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_CELL_BATTERY"
       ],
       "genderRatio": 0.5,
       "eggCycles": 15,
@@ -63924,7 +63924,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_GRASSY_SEED"
       ],
       "genderRatio": 1.0,
       "eggCycles": 20,
@@ -63991,7 +63991,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_GRASSY_SEED"
       ],
       "genderRatio": 1.0,
       "eggCycles": 20,
@@ -64059,7 +64059,7 @@
       "spatk_yield": 0,
       "spdef_yield": 0,
       "items": [
-        "ITEM_NONE",
+        "ITEM_GRASSY_SEED",
         "ITEM_NONE"
       ],
       "genderRatio": 1.0,
@@ -64133,7 +64133,7 @@
       "spdef_yield": 2,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_MISTY_SEED"
       ],
       "genderRatio": 0.75,
       "eggCycles": 20,
@@ -65124,7 +65124,7 @@
       "spdef_yield": 0,
       "items": [
         "ITEM_NONE",
-        "ITEM_NONE"
+        "ITEM_ELECTRIC_SEED"
       ],
       "genderRatio": 0.5,
       "eggCycles": 10,

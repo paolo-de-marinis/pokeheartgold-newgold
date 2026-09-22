@@ -91,6 +91,35 @@ class EvolutionTests(unittest.TestCase):
                 targets = {evo["target"] for evo in self.byBase.get(base, [])}
                 self.assertIn(target, targets, base)
 
+    def test_the_new_evolution_items_evolve_something(self):
+        # An evolution item nothing names is an item that does nothing. These
+        # are konefr's nine Gen 8/9 ones, as data/Evolutions.c spends them.
+        for base, item, target in [
+            ("SPECIES_CHARCADET", "ITEM_AUSPICIOUS_ARMOR", "SPECIES_ARMAROUGE"),
+            ("SPECIES_CHARCADET", "ITEM_MALICIOUS_ARMOR", "SPECIES_CERULEDGE"),
+            ("SPECIES_DURALUDON", "ITEM_METAL_ALLOY", "SPECIES_ARCHALUDON"),
+            ("SPECIES_KUBFU", "ITEM_SCROLL_OF_DARKNESS", "SPECIES_URSHIFU"),
+            ("SPECIES_SINISTEA", "ITEM_CRACKED_POT", "SPECIES_POLTEAGEIST"),
+            ("SPECIES_POLTCHAGEIST", "ITEM_CRACKED_POT", "SPECIES_SINISTCHA"),
+            ("SPECIES_SLOWPOKE_GALARIAN", "ITEM_GALARICA_CUFF", "SPECIES_SLOWBRO_GALARIAN"),
+        ]:
+            self.assertIn({"method": "EVO_STONE", "param": item, "target": target},
+                          self.byBase.get(base, []), base)
+
+        # The other three are spent on a form this port does not carry as a
+        # species: the Rapid Strike Urshifu, the Galarian Slowking, and the
+        # Antique Sinistea and Masterpiece Poltchageist that take the chipped
+        # pot rather than the cracked one. Naming another target would be
+        # inventing one, so those three items exist and reach nothing. If a
+        # form below ever becomes a species here, its row comes with it.
+        species = constants("include/constants/species.h", "SPECIES_")
+        for name in ("SPECIES_SLOWKING_GALARIAN", "SPECIES_URSHIFU_RAPID_STRIKE",
+                     "SPECIES_SINISTEA_ANTIQUE", "SPECIES_POLTCHAGEIST_MASTERPIECE"):
+            self.assertNotIn(name, species, name)
+        params = {str(evo["param"]) for evos in self.byBase.values() for evo in evos}
+        self.assertEqual(params & {"ITEM_CHIPPED_POT", "ITEM_SCROLL_OF_WATERS",
+                                   "ITEM_GALARICA_WREATH"}, set())
+
     def test_species_without_an_evolution_are_absent(self):
         # Emolga, Bouffalant and Dedenne do not evolve; a stray entry for them
         # would mean the import misread a block.

@@ -122,7 +122,7 @@
 <header>
   <h1>New Gold port ledger</h1>
   <p class="sub">Everything hg-engine and konefr change against vanilla HeartGold, and where the native port stands on each. The one thing written by hand is the state on each row, in the commit that moves it. Everything else — the counters, the percentages at the top, <code>README.md</code>'s copy of both, and <code>docs/index.html</code> — is generated from this file by <code>tools/newgold/ledger.py</code>. The summary was the last part kept by hand and it was the part that was wrong, which is the whole argument.</p>
-  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 165 commits</span><span><b>generated</b> 2026-09-22 08:10</span></div>
+  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 166 commits</span><span><b>generated</b> 2026-09-22 09:21</span></div>
 </header>
 
 <div class="total">
@@ -130,11 +130,11 @@
     <h2>Overall</h2>
     <div class="big">76<span style="font-size:24px;color:var(--muted)">%</span></div>
   </div>
-  <div class="stack"><span style="width:9%;background:var(--done)"></span><span style="width:45%;background:var(--part)"></span><span style="width:30%;background:var(--accent)"></span><span style="width:6%;background:var(--gap)"></span><span style="width:11%;background:var(--rule-2)"></span></div>
-  <div class="legend"><span><i style="background:var(--done)"></i>done, seen running <b>9%</b></span><span><i style="background:var(--part)"></i>done, never played <b>45%</b></span><span><i style="background:var(--accent)"></i>partial <b>30%</b></span><span><i style="background:var(--gap)"></i>still to do <b>6%</b></span><span><i style="background:var(--rule-2)"></i>deferred / no scope <b>11%</b></span></div>
+  <div class="stack"><span style="width:8%;background:var(--done)"></span><span style="width:45%;background:var(--part)"></span><span style="width:31%;background:var(--accent)"></span><span style="width:6%;background:var(--gap)"></span><span style="width:10%;background:var(--rule-2)"></span></div>
+  <div class="legend"><span><i style="background:var(--done)"></i>done, seen running <b>8%</b></span><span><i style="background:var(--part)"></i>done, never played <b>45%</b></span><span><i style="background:var(--accent)"></i>partial <b>31%</b></span><span><i style="background:var(--gap)"></i>still to do <b>6%</b></span><span><i style="background:var(--rule-2)"></i>deferred / no scope <b>10%</b></span></div>
 </div>
 
-<div class="split"><div class="half"><h3>Implementation</h3><div class="n" style="color:var(--done)">81%</div></div><div class="half"><h3>Verified in play</h3><div class="n" style="color:var(--gap)">16%</div></div></div>
+<div class="split"><div class="half"><h3>Implementation</h3><div class="n" style="color:var(--done)">81%</div></div><div class="half"><h3>Verified in play</h3><div class="n" style="color:var(--gap)">15%</div></div></div>
 <p style="margin:10px 0 0;font-size:12.5px;color:var(--muted)">Overall and Implementation: done 1, partial a half, deferred rows out of the denominator. Verified in play: of the rows that are done, the share seen running. All three from the states in the tables.</p>
 
 <section>
@@ -146,9 +146,9 @@
 <div class="row"><div><p class="name">Species</p></div><div class="bar"><span class="b-part" style="width:97%"></span></div><div class="chip c-part">1041 / 1075</div></div>
 <div class="row"><div><p class="name">Moves</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">923 / 923</div></div>
 <div class="row"><div><p class="name">Abilities</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">319 / 319</div></div>
-<div class="row"><div><p class="name">Items</p></div><div class="bar"><span class="b-part" style="width:20%"></span></div><div class="chip c-part">545 / 2684</div></div>
+<div class="row"><div><p class="name">Items</p></div><div class="bar"><span class="b-part" style="width:21%"></span></div><div class="chip c-part">563 / 2684</div></div>
 <div class="row"><div><p class="name">Trainers</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">738 / 738</div></div>
-<div class="row"><div><p class="name">Tests</p><p class="det">53 files</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">counted</div></div>
+<div class="row"><div><p class="name">Tests</p><p class="det">56 files</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">counted</div></div>
 <div class="row"><div><p class="name">ROM</p><p class="det">144.9 MB of 268.4 MB   (2G card, 54% used)</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">counted</div></div>
   </div>
 </section>
@@ -195,7 +195,9 @@
 <div class="row"><div><p class="name">Level-up learnsets</p><p class="det">1042; the entry is a word now, so a move past 511 can be learnt</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
 <div class="row"><div><p class="name">Battle script commands</p><p class="det">294 opcodes, name- and number-identical to the reference; 24 of the added handlers still only consume their operands</p></div><div class="bar"><span class="b-part" style="width:92%"></span></div><div class="chip c-part">270 / 294</div></div>
 <div class="row"><div><p class="name">Cries</p><p class="det"><code>PlayCryEx</code> decompiled in <code>src/unk_02005D10.c</code> and linked by <code>main.lsf</code> — the 495 ceiling is gone, but the bank is mapped twice on one path</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
-<div class="row"><div><p class="name">Items</p><p class="det">545 against the engine's 2684; nine Gen 8/9 evolution items are missing and Ability Shield is a dead identifier</p></div><div class="bar"><span class="b-part" style="width:20%"></span></div><div class="chip c-part">545 / 2684</div></div>
+<div class="row"><div><p class="name">Items</p><p class="det">563 against the engine's 2684, and every item konefr's own content names is now one of them: the nine Gen 8/9 evolution items and nine wild held items went in, the tenth held item being ITEM_LEEK, which this game has always had as ITEM_STICK. The rest of the engine's range is item data nothing in their game reaches. Twenty-three species carry the new held items in the wild, as the reference has them. Ability Shield is still a dead identifier, and none of the nine held items does anything yet</p></div><div class="bar"><span class="b-part" style="width:21%"></span></div><div class="chip c-part">563 / 2684</div></div>
+<div class="row"><div><p class="name">Evolutions</p><p class="det">six species now evolve with one of the new items — Charcadet twice, Duraludon, Kubfu, Sinistea, Poltchageist and the Galarian Slowpoke. The three rows left are the ones whose target is a form this tree has no species for: Rapid Strike Urshifu, Galarian Slowking, and the Antique Sinistea and Masterpiece Poltchageist that take the chipped pot, so <code>ITEM_SCROLL_OF_WATERS</code>, <code>ITEM_GALARICA_WREATH</code> and <code>ITEM_CHIPPED_POT</code> exist and reach nothing. The other 160 species the reference gives an evolution have never been imported at all — <code>import_evolutions.py</code> reports them</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Evolution archive</p><p class="det">evo.narc's row stopped being a multiple of four when Sylveon made it eight evolutions, and o2narc wrote each member's padding over the next member instead of after this one: the allocation table strode 52 bytes through a 50-byte image, so every Pokemon from Ivysaur on read another one's evolutions. Fixed in <code>tools/o2narc/Options.cpp</code>; <code>tests/newgold/test_narc_alignment.py</code> checks all 115 built archives</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">fixed</div></div>
 <div class="row"><div><p class="name">Effects with a script but no C</p><p class="det">two left, Techno Blast and Multi-Attack, and both want a held item this game has not got — the Drives and the Memories</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">2 open</div></div>
   </div>
 </section>

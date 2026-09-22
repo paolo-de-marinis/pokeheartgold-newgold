@@ -623,6 +623,8 @@
 #define BATTLE_SUBSCRIPT_RECOIL_HALF_MAX_HP                 389
 #define BATTLE_SUBSCRIPT_CLEAR_SMOG                         390
 #define BATTLE_SUBSCRIPT_INCINERATE                         391
+#define BATTLE_SUBSCRIPT_AIR_BALLOON_FLOAT                  392
+#define BATTLE_SUBSCRIPT_AIR_BALLOON_POP                    393
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

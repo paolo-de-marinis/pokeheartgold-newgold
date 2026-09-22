@@ -2148,4 +2148,112 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Enigma Stones</language>
 	</row>
+	<row id="msg_0224_00537" index="537">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Black Augurites</language>
+	</row>
+	<row id="msg_0224_00538" index="538">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Peat Blocks</language>
+	</row>
+	<row id="msg_0224_00539" index="539">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tart Apples</language>
+	</row>
+	<row id="msg_0224_00540" index="540">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sweet Apples</language>
+	</row>
+	<row id="msg_0224_00541" index="541">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Syrupy Apples</language>
+	</row>
+	<row id="msg_0224_00542" index="542">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eviolites</language>
+	</row>
+	<row id="msg_0224_00543" index="543">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Prism Scales</language>
+	</row>
+	<row id="msg_0224_00544" index="544">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ice Stones</language>
+	</row>
+	<row id="msg_0224_00545" index="545">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Linking Cords</language>
+	</row>
+	<row id="msg_0224_00546" index="546">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Auspicious Armors</language>
+	</row>
+	<row id="msg_0224_00547" index="547">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Chipped Pots</language>
+	</row>
+	<row id="msg_0224_00548" index="548">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cracked Pots</language>
+	</row>
+	<row id="msg_0224_00549" index="549">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Galarica Cuffs</language>
+	</row>
+	<row id="msg_0224_00550" index="550">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Galarica Wreaths</language>
+	</row>
+	<row id="msg_0224_00551" index="551">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Malicious Armors</language>
+	</row>
+	<row id="msg_0224_00552" index="552">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Metal Alloys</language>
+	</row>
+	<row id="msg_0224_00553" index="553">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scrolls of Darkness</language>
+	</row>
+	<row id="msg_0224_00554" index="554">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scrolls of Waters</language>
+	</row>
+	<row id="msg_0224_00555" index="555">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Absorb Bulbs</language>
+	</row>
+	<row id="msg_0224_00556" index="556">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Air Balloons</language>
+	</row>
+	<row id="msg_0224_00557" index="557">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cell Batteries</language>
+	</row>
+	<row id="msg_0224_00558" index="558">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Electric Seeds</language>
+	</row>
+	<row id="msg_0224_00559" index="559">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grassy Seeds</language>
+	</row>
+	<row id="msg_0224_00560" index="560">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Misty Seeds</language>
+	</row>
+	<row id="msg_0224_00561" index="561">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Psychic Seeds</language>
+	</row>
+	<row id="msg_0224_00562" index="562">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pretty Feathers</language>
+	</row>
+	<row id="msg_0224_00563" index="563">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Snowballs</language>
+	</row>
 </body>
