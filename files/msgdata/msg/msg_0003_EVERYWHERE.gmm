@@ -5774,15 +5774,15 @@
 	</row>
 	<row id="msg_0003_EVERYWHERE_01443" index="1443">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 1, 0, 0} used\n-!</language>
+		<language name="English">{STRVAR_1 1, 0, 0} used\nSolar Seeds!</language>
 	</row>
 	<row id="msg_0003_EVERYWHERE_01444" index="1444">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The wild {STRVAR_1 1, 0, 0} used\n-!</language>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} used\nSolar Seeds!</language>
 	</row>
 	<row id="msg_0003_EVERYWHERE_01445" index="1445">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The opposing {STRVAR_1 1, 0, 0} used\n-!</language>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} used\nSolar Seeds!</language>
 	</row>
 	<row id="msg_0003_EVERYWHERE_01446" index="1446">
 		<attribute name="window_context_name">used</attribute>
