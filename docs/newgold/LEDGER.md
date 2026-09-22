@@ -12,16 +12,16 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 186 commits |
-| generated | 2026-09-22 17:40 |
+| port | 189 commits |
+| generated | 2026-09-22 18:07 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    89%
+Overall                                                                    90%
   done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
   done, never played   ██████████████████████████████████░░░░░░░░░░░░░░░░  67%
-  partial              ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
-  still to do          ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
+  partial              █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  10%
+  still to do          ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
   deferred / no scope  █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  10%
 
 Implementation         ████████████████████████████████████████████████░░  96%
@@ -127,7 +127,7 @@ This is the section that holds the overall number down.
 | EV and IV viewer | six and a quarter minutes from a cold boot; captures in `validation/` | ✅ done |
 | A battle renders | forced against species 19, 575, 900 and 1041, indoors and on Route 29's grass: background, sprite, name, and the battle runs to its end | ✅ done |
 | A battle from a wild encounter | nine in a row on Route 29 from a cold boot, each from the game's own check, each running INIT to EXIT and handing the field back | ✅ done |
-| The four gyms to Morty | parties, levels, held items, and the AI using what it carries | 🔴 never |
+| The four gyms to Morty | Falkner played through on melonDS on 2026-09-22, from `hgss-saves/gyms/falkner.sav` at cap 13: Hoothoot, Farfetch'd, Doduo, Delibird and Murkrow, the party konefr's `Trainers.c` gives him, his two Potions used at the right moments, his lines on the last Pokemon, no experience for a party at the cap, the Zephyr Badge and TM51 at the end. Half of it was played from a shell with `tools/newgold/diag/play.py`. Two assertions fired on a Pokemon's way into battle and returned; the build now keeps the stack at an assertion, so the next run names who asked. Bugsy, Whitney and Morty are still to play, their saves ready | 🟠 1 of 4 |
 | The seven level-cap steps | `savedit.py` sets badges one at a time — thirty seconds a step | 🔴 never |
 | The 1041 species in play | sprite, icon, cry, name, Dex, an ability that does something | 🔴 never |
 | Automated tests | All but one read source and data, `test_boot.py` runs both ROMs and the diagnostics build. Each memory bug got its regression test after the fact, not before, and the two that caught something before it shipped are the newest: the nickname lines that come in threes, and the stubs a script must not run | 🟠 partial |

@@ -15,7 +15,10 @@ why it is built this way, is in `docs/newgold/DIAGNOSTICS.md`.
 - `frozen.py` -- read the ARM9 out of a melonDS savestate (Shift+F1) once the
   game has stopped: the mode, the faulting instruction, the call chain off
   the stack, every address named against the ELF.
-- `markers.py` -- the decoding the other three share.
+- `play.py` -- drive the melonDS on this desktop: launch it on a ROM, bring its
+  window to the front, tap its keys through a virtual keyboard, capture its
+  window. A gym can be played from a shell, one screenshot a turn.
+- `markers.py` -- the decoding the readers share.
 
 Every one of them takes the ELF the running ROM was linked from, and defaults
 to the diag build's. Symbols move with every build, so a reading against the

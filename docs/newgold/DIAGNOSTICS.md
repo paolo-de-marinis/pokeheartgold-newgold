@@ -64,6 +64,11 @@ noise, not a wrong answer.
   decrypted the way the game does it: species, level, experience, HP and
   held item, which is how a level cap or a held item is checked without
   trusting the screen.
+- `tools/newgold/diag/play.py launch|focus|press|hold|shot|quit` drives the
+  melonDS on this desktop -- the flatpak, its window through KWin, its keys
+  through a virtual keyboard in whatever mapping the player set, its window
+  through Spectacle -- so a gym is played from a shell, one screenshot a
+  turn, with the readers above watching the same game.
 - `tools/newgold/diag/dump.py OUTDIR` reads the `ram:` dumps of a harness run
   the same way, one line a dump, and pastes the run's shots into a sheet.
 - `tools/newgold/diag/battle.py OUTDIR encounter|battle:SPECIES` plays the
