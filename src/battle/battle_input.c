@@ -1422,7 +1422,7 @@ void BattleInput_LoadDefaultResources(BattleInput *battleInput) {
 
     sub_0207775C(spriteSystem, spriteManager, 20017, 20017);
 
-    sub_02077720(BattleSystem_GetPaletteData(battleInput->battleSystem), 3, spriteSystem, spriteManager, 2, 20020);
+    sub_02077720(BattleSystem_GetPaletteData(battleInput->battleSystem), PLTTBUF_SUB_OBJ, spriteSystem, spriteManager, 2, 20020);
 
     for (int i = 0; i < 4; i++) {
         sub_020776B8(spriteSystem, spriteManager, NNS_G2D_VRAM_TYPE_2DSUB, TYPE_NORMAL, 20025 + i);
