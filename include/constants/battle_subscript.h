@@ -616,6 +616,13 @@
 #define BATTLE_SUBSCRIPT_HADRON_ENGINE_NO_TERRAIN_SETUP     382
 #define BATTLE_SUBSCRIPT_PARADOX_ABILITY_START              383
 #define BATTLE_SUBSCRIPT_PARADOX_ABILITY_END                384
+#define BATTLE_SUBSCRIPT_JAW_LOCK                           385
+#define BATTLE_SUBSCRIPT_SET_STEALTH_ROCK                   386
+#define BATTLE_SUBSCRIPT_SET_SPIKES                         387
+#define BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN                 388
+#define BATTLE_SUBSCRIPT_RECOIL_HALF_MAX_HP                 389
+#define BATTLE_SUBSCRIPT_CLEAR_SMOG                         390
+#define BATTLE_SUBSCRIPT_INCINERATE                         391
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -675,6 +682,18 @@
 #define MOVE_SUBSCRIPT_PTR_GUARD_SPLIT                      205
 #define MOVE_SUBSCRIPT_PTR_RAISE_ATTACK_AND_ACCURACY        206
 #define MOVE_SUBSCRIPT_PTR_END_TERRAIN                      207
+#define MOVE_SUBSCRIPT_PTR_JAW_LOCK                         208
+#define MOVE_SUBSCRIPT_PTR_SET_STEALTH_ROCK                 209
+#define MOVE_SUBSCRIPT_PTR_SET_SPIKES                       210
+#define MOVE_SUBSCRIPT_PTR_FELL_STRAIGHT_DOWN               211
+// The reference's three-stage drops run from attack down to evasion and came
+// over here back to front, one stat short: sp. attack had no slot left inside
+// the run, so it sits out here on its own and BtlCmd_ChangeStatStage reads it
+// by name.
+#define MOVE_SUBSCRIPT_PTR_SP_ATTACK_DOWN_3_STAGES          212
+#define MOVE_SUBSCRIPT_PTR_RECOIL_HALF_MAX_HP               213
+#define MOVE_SUBSCRIPT_PTR_CLEAR_SMOG                       214
+#define MOVE_SUBSCRIPT_PTR_INCINERATE                       215
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

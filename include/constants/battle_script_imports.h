@@ -9,7 +9,8 @@
 //
 // The four terrain types used to be here. They have moved to
 // constants/battle.h, next to the field conditions, because a terrain
-// is now something this game has.
+// is now something this game has. Ion Deluge's field condition went the
+// same way, for the same reason.
 
 #define EXECUTION_ORDER_AFTER_YOU                      1
 #define EXECUTION_ORDER_QUASH                          2
@@ -40,6 +41,5 @@
 #define HOLD_EFFECT_FAIRY_MEMORY                       196
 #define ITEM_ABILITY_SHIELD                            1881
 #define FIELD_CONDITION_SNOW_TEMP                      1048576
-#define FIELD_CONDITION_ION_DELUGE                     134217728
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SCRIPT_IMPORTS_H

@@ -12,19 +12,19 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 164 commits |
-| generated | 2026-09-22 08:03 |
+| port | 165 commits |
+| generated | 2026-09-22 08:10 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    75%
+Overall                                                                    76%
   done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
   done, never played   ██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  45%
-  partial              ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  28%
-  still to do          ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
+  partial              ███████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  30%
+  still to do          ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
   deferred / no scope  ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
 
-Implementation         ████████████████████████████████████████░░░░░░░░░░  79%
+Implementation         ████████████████████████████████████████░░░░░░░░░░  81%
 Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  16%
 
 Overall and Implementation: done 1, partial a half, deferred rows
@@ -92,7 +92,7 @@ konefr *could* reach, not only what the game reaches today.
 | Battle script commands | 294 opcodes, name- and number-identical to the reference; 24 of the added handlers still only consume their operands | 🟠 270 / 294 |
 | Cries | `PlayCryEx` decompiled in `src/unk_02005D10.c` and linked by `main.lsf` — the 495 ceiling is gone, but the bank is mapped twice on one path | 🟠 partial |
 | Items | 545 against the engine's 2684; nine Gen 8/9 evolution items are missing and Ability Shield is a dead identifier | 🟠 545 / 2684 |
-| Effects with a script but no C | counted by `test_move_effects.py`; a move using one can stall a battle | 🔴 18 open |
+| Effects with a script but no C | two left, Techno Blast and Multi-Attack, and both want a held item this game has not got — the Drives and the Memories | 🟠 2 open |
 
 ---
 

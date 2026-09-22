@@ -122,19 +122,19 @@
 <header>
   <h1>New Gold port ledger</h1>
   <p class="sub">Everything hg-engine and konefr change against vanilla HeartGold, and where the native port stands on each. The one thing written by hand is the state on each row, in the commit that moves it. Everything else — the counters, the percentages at the top, <code>README.md</code>'s copy of both, and <code>docs/index.html</code> — is generated from this file by <code>tools/newgold/ledger.py</code>. The summary was the last part kept by hand and it was the part that was wrong, which is the whole argument.</p>
-  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 164 commits</span><span><b>generated</b> 2026-09-22 08:03</span></div>
+  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 165 commits</span><span><b>generated</b> 2026-09-22 08:10</span></div>
 </header>
 
 <div class="total">
   <div class="total-top">
     <h2>Overall</h2>
-    <div class="big">75<span style="font-size:24px;color:var(--muted)">%</span></div>
+    <div class="big">76<span style="font-size:24px;color:var(--muted)">%</span></div>
   </div>
-  <div class="stack"><span style="width:9%;background:var(--done)"></span><span style="width:45%;background:var(--part)"></span><span style="width:28%;background:var(--accent)"></span><span style="width:9%;background:var(--gap)"></span><span style="width:11%;background:var(--rule-2)"></span></div>
-  <div class="legend"><span><i style="background:var(--done)"></i>done, seen running <b>9%</b></span><span><i style="background:var(--part)"></i>done, never played <b>45%</b></span><span><i style="background:var(--accent)"></i>partial <b>28%</b></span><span><i style="background:var(--gap)"></i>still to do <b>9%</b></span><span><i style="background:var(--rule-2)"></i>deferred / no scope <b>11%</b></span></div>
+  <div class="stack"><span style="width:9%;background:var(--done)"></span><span style="width:45%;background:var(--part)"></span><span style="width:30%;background:var(--accent)"></span><span style="width:6%;background:var(--gap)"></span><span style="width:11%;background:var(--rule-2)"></span></div>
+  <div class="legend"><span><i style="background:var(--done)"></i>done, seen running <b>9%</b></span><span><i style="background:var(--part)"></i>done, never played <b>45%</b></span><span><i style="background:var(--accent)"></i>partial <b>30%</b></span><span><i style="background:var(--gap)"></i>still to do <b>6%</b></span><span><i style="background:var(--rule-2)"></i>deferred / no scope <b>11%</b></span></div>
 </div>
 
-<div class="split"><div class="half"><h3>Implementation</h3><div class="n" style="color:var(--done)">79%</div></div><div class="half"><h3>Verified in play</h3><div class="n" style="color:var(--gap)">16%</div></div></div>
+<div class="split"><div class="half"><h3>Implementation</h3><div class="n" style="color:var(--done)">81%</div></div><div class="half"><h3>Verified in play</h3><div class="n" style="color:var(--gap)">16%</div></div></div>
 <p style="margin:10px 0 0;font-size:12.5px;color:var(--muted)">Overall and Implementation: done 1, partial a half, deferred rows out of the denominator. Verified in play: of the rows that are done, the share seen running. All three from the states in the tables.</p>
 
 <section>
@@ -196,7 +196,7 @@
 <div class="row"><div><p class="name">Battle script commands</p><p class="det">294 opcodes, name- and number-identical to the reference; 24 of the added handlers still only consume their operands</p></div><div class="bar"><span class="b-part" style="width:92%"></span></div><div class="chip c-part">270 / 294</div></div>
 <div class="row"><div><p class="name">Cries</p><p class="det"><code>PlayCryEx</code> decompiled in <code>src/unk_02005D10.c</code> and linked by <code>main.lsf</code> — the 495 ceiling is gone, but the bank is mapped twice on one path</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
 <div class="row"><div><p class="name">Items</p><p class="det">545 against the engine's 2684; nine Gen 8/9 evolution items are missing and Ability Shield is a dead identifier</p></div><div class="bar"><span class="b-part" style="width:20%"></span></div><div class="chip c-part">545 / 2684</div></div>
-<div class="row"><div><p class="name">Effects with a script but no C</p><p class="det">counted by <code>test_move_effects.py</code>; a move using one can stall a battle</p></div><div class="bar"><span class="b-gap" style="width:25%"></span></div><div class="chip c-gap">18 open</div></div>
+<div class="row"><div><p class="name">Effects with a script but no C</p><p class="det">two left, Techno Blast and Multi-Attack, and both want a held item this game has not got — the Drives and the Memories</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">2 open</div></div>
   </div>
 </section>
 

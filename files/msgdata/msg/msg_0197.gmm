@@ -5384,4 +5384,28 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">{STRVAR_1 1, 0, 0} shared its\nguard with the target!</language>
 	</row>
+	<row id="msg_0197_01343" index="1343">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}\nfell straight down!</language>
+	</row>
+	<row id="msg_0197_01344" index="1344">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}\nfell straight down!</language>
+	</row>
+	<row id="msg_0197_01345" index="1345">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}\nfell straight down!</language>
+	</row>
+	<row id="msg_0197_01346" index="1346">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Neither Pokémon can run away!</language>
+	</row>
+	<row id="msg_0197_01347" index="1347">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s {STRVAR_1 8, 1, 0}\nwas burned up!</language>
+	</row>
+	<row id="msg_0197_01348" index="1348">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} hasn’t eaten any held Berries,\nso it can’t possibly belch!</language>
+	</row>
 </body>

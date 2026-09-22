@@ -356,6 +356,9 @@ int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
     case BMON_DATA_TYPE_2:
     case BMON_DATA_TYPE_3:
         return Battler_GetType(ctx, battlerId, id);
+    case BMON_DATA_BERRY_EATEN:
+        // Not on the BattleMon: see the constant.
+        return ctx->berryEaten[battlerId][ctx->selectedMonIndex[battlerId]];
     case BMON_DATA_GENDER:
         return mon->gender;
     case BMON_DATA_IS_SHINY:
@@ -2199,6 +2202,14 @@ u32 StruggleCheck(BattleSystem *battleSystem, BattleContext *ctx, int battlerId,
                 nonSelectableMoves |= MaskOfFlagNo(movePos);
             }
         }
+        // Belch is not offered until the Pokemon has eaten a Berry. This is
+        // the half of the refusal the reference's own build compiles; the
+        // effect script carries the other half, for when the move is reached
+        // without going through this menu.
+        if ((struggleCheckFlags & STRUGGLE_CHECK_BELCH) && ctx->battleMons[battlerId].moves[movePos] == MOVE_BELCH
+            && ctx->berryEaten[battlerId][ctx->selectedMonIndex[battlerId]] == FALSE) {
+            nonSelectableMoves |= MaskOfFlagNo(movePos);
+        }
     }
     return nonSelectableMoves;
 }
@@ -2255,6 +2266,11 @@ BOOL ov12_02251A28(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
         msg->id = msg_0197_01283;
         msg->param[0] = CreateNicknameTag(ctx, battlerId);
         msg->param[1] = ctx->moveNoBattlerPrev[battlerId];
+        ret = FALSE;
+    } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_BELCH) & MaskOfFlagNo(movePos)) {
+        msg->tag = TAG_NICKNAME;
+        msg->id = msg_0197_01348;
+        msg->param[0] = CreateNicknameTag(ctx, battlerId);
         ret = FALSE;
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_NO_PP) & MaskOfFlagNo(movePos)) {
         msg->tag = TAG_NONE;
@@ -3436,8 +3452,8 @@ u32 BattleStatWithStage(u32 stat, int stage) {
 
 // Whether the ground can reach a Pokemon. Levitate, Eelevate -- which is
 // Levitate under another name -- a Flying type, Magnet Rise and an Air Balloon
-// lift it; Gravity, Ingrain and an Iron Ball bring it back down; and something
-// in the air mid-move is not standing anywhere at all.
+// lift it; Gravity, Ingrain, an Iron Ball and a Smack Down bring it back down;
+// and something in the air mid-move is not standing anywhere at all.
 BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) {
     int holdEffect = GetBattlerHeldItemEffect(ctx, battlerId);
     BOOL lifted = GetBattlerAbility(ctx, battlerId) == ABILITY_LEVITATE
@@ -3447,6 +3463,7 @@ BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) {
         || ctx->battleMons[battlerId].unk88.magnetRiseTurns != 0;
     BOOL pulledDown = holdEffect == HOLD_EFFECT_SPEED_DOWN_GROUNDED
         || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
+        || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_SMACK_DOWN)
         || (ctx->fieldCondition & FIELD_CONDITION_GRAVITY);
 
     if (lifted && !pulledDown) {
@@ -3638,6 +3655,15 @@ static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, 
     // move. It pays no power for the change.
     if (ability == ABILITY_LIQUID_VOICE && BattleMoveIsSoundBased(moveNo) == TRUE) {
         moveType = TYPE_WATER;
+    }
+
+    // Ion Deluge gets the last word, after every ability above has had its
+    // say: whatever is still Normal when the air is charged goes out as
+    // Electric. Unlike the -ate abilities it asks what the move has ended up
+    // as rather than what the move table says, so a move Normalize has just
+    // turned Normal is caught too. The reference is explicit about the order.
+    if (moveType == TYPE_NORMAL && (ctx->fieldCondition & FIELD_CONDITION_ION_DELUGE)) {
+        moveType = TYPE_ELECTRIC;
     }
 
     return moveType;
@@ -7936,7 +7962,13 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     // target is a critical hit every time. The roll still happens first, so
     // the RNG is drawn either way, and the armours and Lucky Chant still
     // refuse it. The ability is read raw, as Super Luck is just above.
-    if ((BattleSystem_Random(battleSystem) % sCritChance[critUp]) == 0 || (ability == ABILITY_MERCILESS && (ctx->battleMons[battlerIdTarget].status & STATUS_POISON_ALL))) {
+    //
+    // An always-critical move -- Frost Breath and its kind -- skips the roll
+    // the same way. The reference reads the move's effect here; this game's
+    // effect scripts carry more, so the script says so by asking for a
+    // critical stage the ladder above has no rung for. The stage is capped
+    // before the roll, so the sentinel cannot walk off the table either.
+    if ((BattleSystem_Random(battleSystem) % sCritChance[critUp]) == 0 || critCnt >= CRITICAL_STAGE_ALWAYS || (ability == ABILITY_MERCILESS && (ctx->battleMons[battlerIdTarget].status & STATUS_POISON_ALL))) {
         if (!CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_BATTLE_ARMOR) && !CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SHELL_ARMOR) && !(sideCondition & SIDE_CONDITION_LUCKY_CHANT) && !(moveEffect & MOVE_EFFECT_FLAG_LUCKY_CHANT)) {
             ret = 2;
         }
@@ -8443,7 +8475,15 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_POWER_SPLIT,
     BATTLE_SUBSCRIPT_GUARD_SPLIT,
     BATTLE_SUBSCRIPT_RAISE_ATTACK_AND_ACCURACY,
-    BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END
+    BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END,
+    BATTLE_SUBSCRIPT_JAW_LOCK,
+    BATTLE_SUBSCRIPT_SET_STEALTH_ROCK,
+    BATTLE_SUBSCRIPT_SET_SPIKES,
+    BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN,
+    BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE, // sp. attack down three stages -- no room for it in the run above
+    BATTLE_SUBSCRIPT_RECOIL_HALF_MAX_HP,
+    BATTLE_SUBSCRIPT_CLEAR_SMOG,
+    BATTLE_SUBSCRIPT_INCINERATE
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

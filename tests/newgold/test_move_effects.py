@@ -157,15 +157,27 @@ def reaches_for_what_is_not_here():
             and names & set(re.findall(r"\b[A-Z][A-Z0-9_]{3,}\b", path.read_text()))}
 
 
+# Effects whose script is a bare hit in the reference too, and which need
+# nothing here. They match plain_hit() by shape and would be counted as work
+# for ever, so each one is named with the reason it is finished.
+NOTHING_TO_WRITE = {
+    # Mighty Cleave. This engine's only Protect gate reads the move record's
+    # flag bit, and that move's record has it clear -- like Feint, Shadow
+    # Force and Hyperspace Fury, which go through Protect the same way. The
+    # reference's extra effect check is belt and braces over the same record.
+    406,
+}
+
+
 class WhatIsStillMissingTests(unittest.TestCase):
     # A ratchet, not a target. Every added move has a record, a name, a script
     # and an animation; these are the ones whose script cannot do the whole
     # job on its own, because the reference does the rest in C this port has
     # not written yet. The number may only come down.
-    STILL_TO_DO = 18
+    STILL_TO_DO = 2
 
     def test_the_list_only_ever_shrinks(self):
-        pending = plain_hit() | reaches_for_what_is_not_here()
+        pending = (plain_hit() | reaches_for_what_is_not_here()) - NOTHING_TO_WRITE
         self.assertLessEqual(
             len(pending), self.STILL_TO_DO,
             f"{len(pending)} effects are scripted but not finished and the "

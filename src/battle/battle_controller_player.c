@@ -161,9 +161,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // here rather than folded into the number. The number is not the sum of what
 // has been appended: six bytes of terrain state grew it by four, because two
 // of them went into padding the structure already carried. The four after
-// those, for the Paradox abilities, grew it by four.
+// those, for the Paradox abilities, grew it by four, and the twenty-four for
+// Belch's eaten-a-Berry flags grew it by twenty-four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3194 + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
+    sizeof(BattleContext) == 0x31AC + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -1736,6 +1737,14 @@ static void BattleControllerPlayer_UpdateFieldConditionExtra(BattleSystem *battl
     default:
         break;
     }
+    // Ion Deluge charges the air for the turn and no longer, and it has no
+    // message to go out on, so there is no state of its own to sit in and no
+    // script to run: it is just cleared here, past the last thing that could
+    // still have asked a move its type. Clearing a bit that is already clear
+    // costs nothing, which is as well, because this line is passed twice on a
+    // turn that ended Trick Room. The reference ends it last for the same
+    // reason and says so in the same words.
+    ctx->fieldCondition &= ~FIELD_CONDITION_ION_DELUGE;
     ctx->stateUpdateFieldConditionExtra = 0;
     ctx->updateFieldConditionExtraData = 0;
     ctx->command = CONTROLLER_COMMAND_TURN_END;

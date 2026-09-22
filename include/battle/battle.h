@@ -498,6 +498,14 @@ typedef struct BattleContext {
     // item and its hold effect are not in this game, so the flag would never
     // be set and is not here.
     u8 paradoxBoostedStat[BATTLER_MAX];
+    // Belch is only there to be used once the Pokemon has eaten a Berry, and
+    // nothing else in the battle remembers that it did. Written down per party
+    // slot, like the entry abilities above, so that a Pokemon which ate its
+    // Berry, went out and came back can still belch. The reference indexes the
+    // same fact by side; this is by battler, because the one place that reads
+    // it has no battle system to ask which side a battler is on, and a party
+    // slot only ever comes back to the position it left from.
+    u8 berryEaten[BATTLER_MAX][PARTY_SIZE];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

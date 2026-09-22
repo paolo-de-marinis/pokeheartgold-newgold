@@ -190,6 +190,11 @@ typedef enum Terrain {
 #define MOVE_EFFECT_FLAG_CAMOUFLAGE         (1 << 28)
 #define MOVE_EFFECT_FLAG_PHANTOM_FORCE      (1 << 29)
 #define MOVE_EFFECT_FLAG_IMPRISON           (1 << 30)
+// Smack Down and Thousand Arrows hold the target on the ground until it
+// switches out, which is exactly how long this word lasts. The reference
+// keeps the same fact in a per-battler flags struct this tree only has a stub
+// of, so the bit lives here and nothing new has to be stored.
+#define MOVE_EFFECT_FLAG_SMACK_DOWN         (1 << 31)
 
 #define MOVE_EFFECT_FLAG_LOCK_ON (MOVE_EFFECT_FLAG_LOCK_ON_0 | MOVE_EFFECT_FLAG_LOCK_ON_1)
 
@@ -210,6 +215,12 @@ typedef enum Terrain {
 #define MOVE_SIDE_EFFECT_ON_HIT                  (1 << 29)
 #define MOVE_SIDE_EFFECT_TO_ATTACKER             (1 << 30)
 #define MOVE_SIDE_EFFECT_TO_DEFENDER             (1 << 31)
+
+// A critical stage no ladder reaches. An effect script that asks for this one
+// is saying its move does not roll for a critical hit at all. TryCriticalHit
+// reads it as that, and everything that can refuse a critical hit -- the two
+// armours, Lucky Chant -- still refuses this one.
+#define CRITICAL_STAGE_ALWAYS 100
 
 // Move status
 #define MOVE_STATUS_MISSED              (1 << 0)
@@ -259,6 +270,11 @@ typedef enum Terrain {
 #define FIELD_CONDITION_FOG                 (1 << 15)
 #define FIELD_CONDITION_TRICK_ROOM_INIT     (5 << 16)
 #define FIELD_CONDITION_TRICK_ROOM          (7 << 16)
+// Ion Deluge charges the air until the turn is over, so unlike everything
+// above it there is no count to keep: the bit goes on when the move lands and
+// off in the last step of the end of turn. The bit is the reference's own,
+// which is why it sits away up here rather than at the next one free.
+#define FIELD_CONDITION_ION_DELUGE          (1 << 27)
 
 #define FIELD_CONDITION_WEATHER_NO_SUN   (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SANDSTORM_ALL | FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_FOG)
 #define FIELD_CONDITION_WEATHER_CASTFORM (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SUN_ALL | FIELD_CONDITION_HAIL_ALL)
@@ -398,6 +414,7 @@ typedef enum Terrain {
 #define STRUGGLE_CHECK_ENCORE     (1 << 8) // unused because they straight up forgot
 #define STRUGGLE_CHECK_CHOICED    (1 << 9)
 #define STRUGGLE_CHECK_GORILLA_TACTICS (1 << 10)
+#define STRUGGLE_CHECK_BELCH           (1 << 11)
 
 // Ability Checks
 #define CHECK_ABILITY_SAME_SIDE            0
@@ -518,6 +535,13 @@ typedef enum Terrain {
 // script written for a later one can. TYPE_NONE, which constants/pokemon.h
 // already defines, means it has none.
 #define BMON_DATA_TYPE_3                  101
+
+// Whether this Pokemon has eaten a Berry in this battle, which is Belch's one
+// condition. It does not live on the BattleMon -- that is rebuilt every time
+// its Pokemon walks back in, and the eating has to be remembered across a
+// switch -- so the getter reads it off the battle instead. Read only: nothing
+// sets it through a script.
+#define BMON_DATA_BERRY_EATEN             102
 
 // The order entry hazards are worked through when something switches in.
 #define HAZARD_IDX_NONE         0

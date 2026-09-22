@@ -2052,7 +2052,28 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
 
     ctx->battleStatus &= ~BATTLE_STATUS_FAIL_STAT_STAGE_CHANGE;
 
-    if (ctx->statChangeParam >= 46) {
+    // Three stages at a time. Retail has no such move, so the four runs below
+    // stop at two and these were imported without the reading half. The
+    // reference's runs go attack first and evasion last; they came over here
+    // back to front, and the drops came over a stat short, so sp. attack sits
+    // on its own past the end of the table and the rest of its run steps over
+    // the gap where it should have been.
+    if (ctx->statChangeParam == MOVE_SUBSCRIPT_PTR_SP_ATTACK_DOWN_3_STAGES) {
+        stat = STAT_SPATK - 1;
+        change = -3;
+        ctx->tempData = 13;
+    } else if (ctx->statChangeParam >= MOVE_SUBSCRIPT_PTR_EVASION_UP_3_STAGES) {
+        stat = MOVE_SUBSCRIPT_PTR_ATTACK_UP_3_STAGES - ctx->statChangeParam;
+        change = 3;
+        ctx->tempData = 12;
+    } else if (ctx->statChangeParam >= MOVE_SUBSCRIPT_PTR_EVASION_DOWN_3_STAGES) {
+        stat = MOVE_SUBSCRIPT_PTR_ATTACK_DOWN_3_STAGES - ctx->statChangeParam;
+        if (stat >= STAT_SPATK - 1) {
+            stat++;
+        }
+        change = -3;
+        ctx->tempData = 13;
+    } else if (ctx->statChangeParam >= 46) {
         stat = ctx->statChangeParam - 46;
         change = -2;
         ctx->tempData = 13;
@@ -5995,6 +6016,18 @@ BOOL BtlCmd_RemoveItem(BattleSystem *battleSystem, BattleContext *ctx) {
     int battlerId = BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side);
 
     ctx->recycleItem[battlerId] = ctx->battleMons[battlerId].item;
+
+    // Every Berry eaten in a battle leaves through here -- the held-item
+    // scripts all end by calling BATTLE_SUBSCRIPT_PLUCK_CHECK, which is a
+    // RemoveItem and nothing else -- so this is the one place Belch has to be
+    // told. The reference has no such choke point and writes the same flag at
+    // each of the eight sites that eat one. Two of those sites name a battler
+    // this cannot: a Berry plucked off the target is eaten by the attacker,
+    // and a flung one by the target, so those two credit the wrong half of the
+    // pair.
+    if (ItemIdIsBerry(ctx->battleMons[battlerId].item) == TRUE) {
+        ctx->berryEaten[battlerId][ctx->selectedMonIndex[battlerId]] = TRUE;
+    }
 
     ctx->battleMons[battlerId].item = 0;
 
