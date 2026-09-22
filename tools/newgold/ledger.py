@@ -185,6 +185,24 @@ def reference_trainer_count(reference):
     return max(indices) + 1
 
 
+def species_carried(reference):
+    """The species counted by name, the way the items are.
+
+    The same trap: this tree numbers its added species densely and the
+    reference leaves forty-eight reserved gaps between Arceus and its own
+    additions, so the highest constant is 1041 here and 1075 there and the
+    bar read 34 short while nothing was missing. Every species the reference
+    NAMES is here -- the forty-eight it does not name are the gaps -- and this
+    tree carries eighteen more forms besides. Count what can be named.
+    """
+    named = lambda path: {name for name in re.findall(
+        r"^#define\s+SPECIES_([A-Z0-9_]+)\s+\d+", Path(path).read_text(errors="replace"), re.M)
+        if not name.isdigit()}
+    here = named(ROOT / "include/constants/species.h")
+    theirs = named(reference / "include/constants/species.h")
+    return len(theirs & here), len(theirs)
+
+
 def items_carried(reference):
     """The items counted by name, against how many the reference defines.
 
@@ -211,8 +229,7 @@ def counts(reference):
     def pair(label, have, want):
         rows.append(f"{label:<11} {bar(have, want)} {have:>5} / {want:>4}")
 
-    pair("Species", highest(ROOT / "include/constants/species.h", "SPECIES_"),
-         highest(reference / "include/constants/species.h", "SPECIES_"))
+    pair("Species", *species_carried(reference))
     pair("Moves", highest(ROOT / "include/constants/moves.h", "MOVE_"),
          highest(reference / "include/constants/moves.h", "MOVE_"))
     pair("Abilities", highest(ROOT / "include/constants/abilities.h", "ABILITY_"),

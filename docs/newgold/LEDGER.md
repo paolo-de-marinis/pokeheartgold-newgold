@@ -12,19 +12,19 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 172 commits |
-| generated | 2026-09-22 13:46 |
+| port | 173 commits |
+| generated | 2026-09-22 13:48 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    78%
+Overall                                                                    80%
   done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
-  done, never played   ████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░  49%
-  partial              ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  27%
+  done, never played   ██████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░  51%
+  partial              ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  24%
   still to do          ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
   deferred / no scope  █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  10%
 
-Implementation         ██████████████████████████████████████████░░░░░░░░  83%
+Implementation         ██████████████████████████████████████████░░░░░░░░  85%
 Verified in play       ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%
 
 Overall and Implementation: done 1, partial a half, deferred rows
@@ -35,7 +35,7 @@ the share seen running. All three from the states in the tables.
 
 <!-- LEDGER:COUNTS:START -->
 ```
-Species     ████████████████████████████████████████████████░░  1041 / 1075
+Species     ██████████████████████████████████████████████████  1028 / 1028
 Moves       ██████████████████████████████████████████████████   923 /  923
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████████████████████████████████████████████  2685 / 2685
@@ -85,7 +85,7 @@ konefr *could* reach, not only what the game reaches today.
 
 | Item | Detail | State |
 | --- | --- | :-- |
-| Species | 1042 sprite directories, 1277 icons, heights, learnsets, evolutions; every base species the reference names is here, the rest are its forms | 🟠 1041 / 1075 |
+| Species | 1042 sprite directories, 1277 icons, heights, learnsets, evolutions. Every species konefr's tree NAMES is here -- all 1028 of them -- and this tree carries eighteen forms besides. The bar used to read 1041 of 1075 and mean nothing: that was the highest constant on each side, and the reference leaves forty-eight reserved gaps between Arceus and its own additions where this tree numbers densely. Counted by name, as the items are | ✅ 1028 / 1028 |
 | Moves | 131 effect scripts, 59 subscripts, 62 side-effect table slots | ✅ 923 / 923 |
 | Abilities | 280 do something — 123 retail effects and 157 added; of the other 39, sixteen are a name in the reference too and the rest want a primal weather, a paradox booster or a form this tree has not got | 🟠 280 / 319 |
 | Level-up learnsets | 1042; the entry is a word now, so a move past 511 can be learnt | ✅ done |

@@ -94,3 +94,38 @@ class TableBoundTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SpeciesRangeTests(unittest.TestCase):
+    """Every species konefr names has a counterpart here.
+
+    The ledger used to compare the highest constant on each side -- 1041 here
+    against 1075 there -- and read 34 short while nothing was missing: the
+    reference leaves forty-eight reserved gaps between Arceus and its own
+    additions, with bare numbers for names, and this tree numbers densely. The
+    honest question is how many of their species this tree can name.
+    """
+
+    REFERENCE = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
+
+    @staticmethod
+    def named(path):
+        return {name for name in re.findall(r"^#define\s+SPECIES_([A-Z0-9_]+)\s+\d+",
+                                            Path(path).read_text(errors="replace"), re.M)
+                if not name.isdigit()}
+
+    def test_every_species_the_reference_names_is_here(self):
+        if not self.REFERENCE.exists():
+            self.skipTest("Pinned NewGold reference checkout not configured")
+        theirs = self.named(self.REFERENCE / "include/constants/species.h")
+        here = self.named(ROOT / "include/constants/species.h")
+        self.assertEqual(sorted(theirs - here), [], "species the reference names and this tree has not")
+        self.assertGreaterEqual(len(theirs), 1000)
+
+    def test_the_gaps_the_reference_leaves_are_unnamed(self):
+        if not self.REFERENCE.exists():
+            self.skipTest("Pinned NewGold reference checkout not configured")
+        text = (self.REFERENCE / "include/constants/species.h").read_text(errors="replace")
+        gaps = [n for n in re.findall(r"^#define\s+SPECIES_([A-Z0-9_]+)\s+\d+", text, re.M)
+                if n.isdigit()]
+        self.assertGreater(len(gaps), 40, "the reserved gaps are what the old count mistook for work")
