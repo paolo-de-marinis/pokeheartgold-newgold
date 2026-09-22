@@ -20,7 +20,7 @@ _000:
     Wait
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS2, STATUS2_SUBSTITUTE
     // {0} shed its tail to create a decoy!
-    PrintMessage 1414, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    PrintMessage msg_0197_01339, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
     Wait
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STAT_CHANGE_ATK, 6
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STAT_CHANGE_DEF, 6
@@ -43,13 +43,13 @@ _137:
 _142:
     PrintAttackMessage
     // {0} already has a substitute!
-    PrintMessage 351, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    PrintMessage msg_0197_00351, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
     Wait
     End
 
 _149:
     PrintAttackMessage
     // It was too weak to make a substitute!
-    PrintMessage 819, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    PrintMessage msg_0197_00819, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
     Wait
     End

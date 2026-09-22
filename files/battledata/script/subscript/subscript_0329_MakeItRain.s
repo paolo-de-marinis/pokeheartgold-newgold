@@ -10,7 +10,7 @@ _000:
 
 _016:
     // Coins were scattered everywhere!
-    PrintMessage 818, TAG_NONE
+    PrintMessage msg_0197_00818, TAG_NONE
     Wait 
     WaitButtonABTime 30
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_ATTACKER

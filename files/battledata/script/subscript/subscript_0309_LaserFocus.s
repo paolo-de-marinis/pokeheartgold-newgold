@@ -11,7 +11,7 @@ _000:
     Wait
     SetMoveConditionFlag MOVE_LASER_FOCUS, BATTLER_CATEGORY_ATTACKER
     // {STRVAR_1 1, 0, 0} concentrated intensely!
-    PrintMessage 1616, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    PrintMessage msg_0197_01322, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
     Wait 
     WaitButtonABTime 30
     End

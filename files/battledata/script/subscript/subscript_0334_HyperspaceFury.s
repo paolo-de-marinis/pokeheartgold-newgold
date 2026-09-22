@@ -5,7 +5,7 @@
 _000:
     IfTurnFlag BATTLER_CATEGORY_DEFENDER, TURN_FLAG_PROTECTING, 0, _022
     // It broke through {0}’s protection!
-    PrintMessage 1243, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
+    PrintMessage msg_0197_01243, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
     Wait 
     WaitButtonABTime 30
 

@@ -24,7 +24,7 @@ _046:
     Wait 
     WaitButtonABTime 30
     // {0}’s stats won’t go any higher!
-    PrintMessage 768, TAG_NICKNAME, BATTLER_CATEGORY_SIDE_EFFECT_MON
+    PrintMessage msg_0197_00768, TAG_NICKNAME, BATTLER_CATEGORY_SIDE_EFFECT_MON
     Wait 
     WaitButtonABTime 30
 
@@ -33,7 +33,7 @@ _refresh:
     Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS, STATUS_NONE
     // {0}’s status returned to normal!
-    PrintMessage 491, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    PrintMessage msg_0197_00491, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
     Wait 
     SetHealthbarStatus BATTLER_CATEGORY_ATTACKER, BATTLE_ANIMATION_NONE
     WaitButtonABTime 30

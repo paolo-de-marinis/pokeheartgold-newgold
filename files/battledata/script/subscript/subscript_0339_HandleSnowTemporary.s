@@ -5,7 +5,7 @@
 _000:
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SNOW_TEMP, _035
     // It started to snow!
-    PrintMessage 1439, TAG_NONE
+    PrintMessage msg_0197_01336, TAG_NONE
     Wait
     WaitButtonABTime 30
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_WEATHER

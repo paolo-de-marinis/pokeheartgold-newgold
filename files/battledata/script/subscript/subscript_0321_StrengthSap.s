@@ -36,7 +36,7 @@ _088:
     AbilityPopup BATTLER_CATEGORY_DEFENDER, -1
     Call BATTLE_SUBSCRIPT_UPDATE_HP
     // It sucked up the liquid ooze!
-    PrintMessage 720, TAG_NONE
+    PrintMessage msg_0197_00720, TAG_NONE
     Wait 
     WaitButtonABTime 30
 

@@ -10,7 +10,7 @@ _000:
     PlayMoveAnimation BATTLER_CATEGORY_ATTACKER
     Wait 
     // {0} took the kind offer!
-    PrintMessage 1430, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
+    PrintMessage msg_0197_01338, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
     Wait 
     WaitButtonABTime 30
     End 

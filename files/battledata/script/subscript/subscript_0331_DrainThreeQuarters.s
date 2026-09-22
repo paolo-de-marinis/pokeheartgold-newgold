@@ -22,7 +22,7 @@ DrainHealth:
     UpdateVar OPCODE_MUL, BSCRIPT_VAR_HP_CALC, -1
     Call BATTLE_SUBSCRIPT_UPDATE_HP
     // {0} had its energy drained!
-    PrintMessage 82, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
+    PrintMessage msg_0197_00082, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
     Wait 
     WaitButtonABTime 30
     End 
@@ -32,7 +32,7 @@ DamageInstead:
     AbilityPopup BATTLER_CATEGORY_DEFENDER, -1
     Call BATTLE_SUBSCRIPT_UPDATE_HP
     // It sucked up the liquid ooze!
-    PrintMessage 720, TAG_NONE
+    PrintMessage msg_0197_00720, TAG_NONE
     Wait 
     WaitButtonABTime 30
 

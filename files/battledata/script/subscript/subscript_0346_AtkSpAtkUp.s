@@ -25,7 +25,7 @@ _048:
     Wait 
     WaitButtonABTime 30
     // {0}’s stats won’t go any higher!
-    PrintMessage 768, TAG_NICKNAME, BATTLER_CATEGORY_SIDE_EFFECT_MON
+    PrintMessage msg_0197_00768, TAG_NICKNAME, BATTLER_CATEGORY_SIDE_EFFECT_MON
     Wait 
     WaitButtonABTime 30
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_NO_MORE_WORK
