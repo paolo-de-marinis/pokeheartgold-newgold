@@ -22,7 +22,22 @@ import unittest
 from test_level_cap import ROOT
 
 SYSTEM = ROOT / "src/system.c"
+ITEM_DATA = ROOT / "files/itemtool/itemdata/item_data.csv"
 RETAIL_MARGIN = 0x4D000     # 0x11D000 - 0x1C000 - 0x4000 - 0xB0000
+
+# sizeof(ItemData) in include/item.h: thirty-four bytes of fields and two of
+# padding. LoadAllItemData asks the battle heap for one of these per record.
+ITEM_RECORD = 36
+# The battle heap's share that the item table may take. It is the only
+# allocation in the game the item range sizes, and the range is what this port
+# keeps growing: the 541 records before it cost 0x4C14, the whole range costs
+# 0x17778 of the 0xB0000 Battle_Run carves. An eighth of the battle heap is
+# the line, which leaves room for about another nine hundred items, and heap 3
+# has none to spare to widen the battle's share -- the margin above is already
+# only what retail had. Crossing it is not a build error and not a crash: it
+# is the same blank battle a heap too small always gives here, which is why
+# the number is checked rather than discovered.
+BATTLE_ITEM_TABLE_CEILING = 0x20000
 
 # What is alive inside heap 3 while a wild battle runs.
 CHILDREN = {
@@ -38,6 +53,16 @@ def default_heaps():
     block = text[text.index("sDefaultHeapSpec[] = {"):]
     block = block[:block.index("};")]
     return [int(m, 16) for m in re.findall(r"\{\s*(0x[0-9A-Fa-f]+),", block)]
+
+
+def item_table_size():
+    """What LoadAllItemData asks for: one record per row of item_data.csv.
+
+    csv2bin makes one archive member per row in order, and the last item's
+    mapping points at the last member, so the row count is the count the C
+    works out at runtime from GetItemIndexMapping(ITEM_MAX) + 1.
+    """
+    return (len(ITEM_DATA.read_text().splitlines()) - 1) * ITEM_RECORD
 
 
 def child_size(name, path):
@@ -62,6 +87,17 @@ class HeapTests(unittest.TestCase):
             f"heap 3 is {general:#x}; after the field's heaps and the battle's "
             f"({used:#x}) it has {left:#x} left, and retail had {RETAIL_MARGIN:#x}")
         print(f"PASS: heap 3 leaves {left:#x} after a wild battle's heaps; retail left {RETAIL_MARGIN:#x}.")
+
+    def test_the_item_table_still_fits_inside_the_battle_heap(self):
+        """The whole item table is loaded into the battle heap for the AI."""
+        size = item_table_size()
+        battle = self.children["HEAP_ID_BATTLE"]
+        self.assertLess(
+            size, BATTLE_ITEM_TABLE_CEILING,
+            f"LoadAllItemData asks the battle heap for {size:#x} of its "
+            f"{battle:#x}, and the ceiling is {BATTLE_ITEM_TABLE_CEILING:#x}; "
+            "the items have outgrown the battle heap's share of heap 3")
+        print(f"PASS: the item table is {size:#x} of the battle heap's {battle:#x}.")
 
     def test_the_save_still_fits_its_heap(self):
         """Heap 1 holds SaveData, whose region is SAVE_PAGE_MAX sectors."""

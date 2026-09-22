@@ -11,12 +11,32 @@ table sized to the old range more than once.
 
 The member numbers are checked against the archives' own contents, so an icon
 that was never built fails here rather than showing up blank in the bag.
+
+The range itself is checked the same way the other ranges are. konefr's items
+are imported BY NAME and renumbered densely from where this tree was -- their
+Black Augurite is 1691 and this tree's is 537, and taking their number would
+renumber every item already in Paolo's save -- so the port is the mapping in
+tools/newgold/item_map.csv, and an item of theirs the mapping does not name is
+an item this game cannot be given. Where their checkout is beside this one the
+mapping is checked against it; where it is not, the numbers are pinned.
 """
 
+import csv
+import os
 import re
+import sys
 import unittest
+from pathlib import Path
 
 from test_level_cap import ROOT
+
+sys.path.insert(0, str(ROOT / "tools/newgold"))
+import import_items  # noqa: E402
+
+REFERENCE = os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE")
+if REFERENCE is None:
+    sibling = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
+    REFERENCE = sibling if (sibling / ".git").exists() else None
 
 HEADER = ROOT / "include/constants/items.h"
 ITEM_DATA = ROOT / "files/itemtool/itemdata/item_data.csv"
@@ -30,6 +50,24 @@ ITEM_BANKS = [ROOT / f"files/msgdata/msg/msg_{bank}.gmm"
               for bank in ("0221", "0222", "0223", "0224")]
 NAMES, ARTICLES = ITEM_BANKS[1], ITEM_BANKS[2]
 ICON_DIR = ROOT / "files/itemtool/itemdata/item_icon"
+ITEM_MAP = ROOT / "tools/newgold/item_map.csv"
+
+# What the import read out of konefr's tree, for a run with no checkout beside
+# it. Theirs is ITEM_NONE to ITEM_CANARI_BREAD.
+REFERENCE_ITEMS = 2685
+# Those, and the eight slots HeartGold left empty that konefr filled with real
+# items: a real item facing a gap is not that gap under another spelling, so
+# the gap stays here and their item is imported beside it.
+ITEMS_HERE = REFERENCE_ITEMS + 8
+# The last id the two trees share, and the last id this tree had before the
+# whole of konefr's range arrived. Both are pinned because an import that took
+# konefr's numbering rather than this tree's would move them, and everything
+# numbered at or below them is in Paolo's save, his bag and the held items in
+# the data.
+SHARED_LAST = ("ITEM_ENIGMA_STONE", 536)
+LAST_BEFORE_THE_IMPORT = ("ITEM_SNOWBALL", 563)
+# ItemData.holdEffect is one byte wide.
+HOLD_EFFECT_MAX = 255
 
 
 def items_count():
@@ -39,10 +77,16 @@ def items_count():
 def item_ids():
     """The item constants, by name. The block runs from ITEM_NONE to the count;
     HOLD_EFFECT_ above it and ITEM_VAR_ below are not item ids."""
-    header = HEADER.read_text()
-    block = header[header.index("#define ITEM_NONE 0"):header.index("#define ITEMS_COUNT")]
-    return {name: int(value)
-            for name, value in re.findall(r"#define (ITEM_[A-Z0-9_]+)\s+(\d+)$", block, re.M)}
+    return import_items.item_block(HEADER.read_text())
+
+
+def item_records():
+    return list(csv.DictReader(ITEM_DATA.read_text().splitlines()))
+
+
+def mapping():
+    """konefr's item name -> this tree's id, as the importer wrote it down."""
+    return list(csv.DictReader(ITEM_MAP.read_text().splitlines()))
 
 
 def narc_rows():
@@ -94,6 +138,9 @@ class ItemRangeTests(unittest.TestCase):
     def test_every_item_says_where_its_data_and_icon_live(self):
         self.assertEqual(set(self.ids) - set(self.rows), set(),
                          "items with no line in sItemNarcIds")
+        # The one table an item id indexes. Sized by the range rather than by a
+        # number someone typed, so it cannot be left behind by the next import.
+        self.assertIn("sItemNarcIds[ITEMS_COUNT][4]", ITEM_C.read_text())
 
     def test_the_item_data_every_item_points_at_was_written(self):
         """csv2bin makes one archive member per row, in order, so the last row
@@ -123,6 +170,95 @@ class ItemRangeTests(unittest.TestCase):
         for item, value in enumerate(message_text(ARTICLES)[:self.count]):
             if item and "???" not in (names[item], value):
                 self.assertIn(names[item], value, f"msg_0223 row {item}")
+
+
+class ItemRangeAgainstTheReferenceTests(unittest.TestCase):
+    """The whole of konefr's item range, under this tree's numbering.
+
+    Every other range in this port -- species, moves, abilities -- holds
+    everything the reference could reach, not only what their game reaches
+    today. Items were the exception for a long time, and the way that goes
+    wrong again is quiet: an importer that resolves a name badly drops the item
+    rather than failing, and nobody notices until the thing it was wanted for
+    is written. So the mapping is checked item by item, not counted.
+    """
+
+    def setUp(self):
+        self.mapping = mapping()
+        self.ids = item_ids()
+        self.records = item_records()
+
+    def test_the_mapping_names_every_item_the_reference_defines(self):
+        theirs = {row["reference_name"] for row in self.mapping}
+        self.assertEqual(len(theirs), len(self.mapping), "a reference item is mapped twice")
+        self.assertEqual(len(self.mapping), REFERENCE_ITEMS,
+                         "the mapping no longer covers konefr's whole item range")
+        if REFERENCE is None:
+            self.skipTest("behaviour reference not present; the count above is the pin")
+        reference = import_items.defines(
+            (Path(REFERENCE) / "include/constants/item.h").read_text(), "ITEM_")
+        self.assertEqual(sorted(set(reference) - theirs), [],
+                         "items the reference defines that this game cannot name")
+
+    def test_the_mapping_gives_every_item_an_id_of_its_own(self):
+        """One id per item, and the id the header actually gives that name.
+        Two of konefr's names landing on one constant is two items the game
+        would treat as one -- which is what a bad alias looks like from here."""
+        ids = [int(row["item_id"]) for row in self.mapping]
+        self.assertEqual(len(set(ids)), len(ids), "two of the reference's items share an id here")
+        for row in self.mapping:
+            self.assertEqual(self.ids.get(row["item_name"]), int(row["item_id"]),
+                             f"{row['reference_name']} maps to {row['item_name']}, "
+                             "which is not that id in this tree")
+
+    def test_nothing_that_was_already_here_was_renumbered(self):
+        for name, number in (SHARED_LAST, LAST_BEFORE_THE_IMPORT):
+            self.assertEqual(self.ids.get(name), number,
+                             f"{name} has moved: the import took konefr's numbering "
+                             "instead of this tree's, and every save is numbered against it")
+        self.assertGreaterEqual(items_count(), ITEMS_HERE,
+                                "the item range has gone short of konefr's again")
+
+    def test_the_last_items_data_record_is_the_last_one_written(self):
+        """LoadAllItemData sizes the whole table off ITEM_MAX's own data member
+        -- GetItemIndexMapping(ITEM_MAX) + 1 records -- so an item numbered
+        after the last one to be given a record shortens that allocation and
+        the battle reads past the end of it for everything above."""
+        rows = narc_rows()
+        last = {number: name for name, number in self.ids.items()}[max(self.ids.values())]
+        self.assertEqual(rows[last][0], max(data for data, _, _ in rows.values()),
+                         f"{last} is ITEM_MAX and does not hold the highest data member")
+
+    def test_every_item_data_record_belongs_to_an_item(self):
+        """csv2bin writes one member per row whatever points at it, so the
+        members an item names have to be the members that exist: a gap is a
+        record the cartridge carries and nothing opens, and it moves every
+        record after it."""
+        members = sorted({data for data, _, _ in narc_rows().values()})
+        self.assertEqual(members, list(range(len(self.records))),
+                         "item_data.csv and the members sItemNarcIds names disagree")
+
+    def test_no_record_names_a_field_routine_this_game_has_not_got(self):
+        """GetItemFieldUseFunc indexes sItemFieldUseFuncs with the record's own
+        fieldUseFunc and checks nothing. konefr has six routines past this
+        game's thirty -- Mint, Nectar, Ability Capsule, Reveal Glass, DNA
+        Splicers, Rotom Catalog -- and a record carrying one of those would
+        jump through whatever follows the table."""
+        for row in self.records:
+            self.assertLess(int(row["fieldUseFunc"]), import_items.FIELD_USE_FUNCS, row["item"])
+
+    def test_every_hold_effect_an_item_names_fits_the_byte_it_is_kept_in(self):
+        """The import brings konefr's hold effects with it, renumbered here for
+        the same reason the items are. ItemData.holdEffect is one byte, so that
+        list is the one place this range can overflow something narrower than
+        the item id itself."""
+        effects = import_items.defines(HEADER.read_text(), "HOLD_EFFECT_")
+        self.assertEqual(sorted(effects.values()), list(range(len(effects))),
+                         "the hold effect numbers are not dense")
+        self.assertLessEqual(max(effects.values()), HOLD_EFFECT_MAX,
+                             "ItemData.holdEffect is one byte")
+        for row in self.records:
+            self.assertIn(row["holdEffect"], effects, row["item"])
 
 
 if __name__ == "__main__":

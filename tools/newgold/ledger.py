@@ -25,6 +25,7 @@ then to the summary that was the last thing left by hand.
 Usage: ledger.py [--check] [--reference PATH]
 """
 import argparse
+import csv
 import re
 import struct
 import subprocess
@@ -184,6 +185,26 @@ def reference_trainer_count(reference):
     return max(indices) + 1
 
 
+def items_carried(reference):
+    """The items counted by name, against how many the reference defines.
+
+    Every other range here shares its numbering with the reference, so the
+    highest constant on each side is a fair have-and-want. Items do not:
+    konefr's Black Augurite is 1691 and this tree's is 537, because adopting
+    their ids would renumber every item in Paolo's save. Counting the highest
+    constant on both sides said 2692 of 2684, which is over a hundred percent
+    and means nothing. So the count is how many of their items this tree can
+    name, through the mapping the import wrote down.
+    """
+    named = lambda path: set(re.findall(r"^#define\s+(ITEM_[A-Z0-9_]+)\s+\d+",
+                                        Path(path).read_text(errors="replace"), re.M))
+    here = named(ROOT / "include/constants/items.h")
+    theirs = named(reference / "include/constants/item.h")
+    mapping = csv.DictReader((ROOT / "tools/newgold/item_map.csv").read_text().splitlines())
+    mapped = {row["reference_name"]: row["item_name"] for row in mapping}
+    return sum(1 for name in theirs if mapped.get(name) in here), len(theirs)
+
+
 def counts(reference):
     rows = []
 
@@ -196,8 +217,7 @@ def counts(reference):
          highest(reference / "include/constants/moves.h", "MOVE_"))
     pair("Abilities", highest(ROOT / "include/constants/abilities.h", "ABILITY_"),
          highest(reference / "include/constants/ability.h", "ABILITY_"))
-    pair("Items", highest(ROOT / "include/constants/items.h", "ITEM_"),
-         highest(reference / "include/constants/item.h", "ITEM_"))
+    pair("Items", *items_carried(reference))
     pair("Trainers", trainer_count(), reference_trainer_count(reference))
 
     tests = len(list((ROOT / "tests/newgold").glob("test_*.py")))

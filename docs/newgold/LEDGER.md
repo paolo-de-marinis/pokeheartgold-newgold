@@ -12,19 +12,19 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 167 commits |
+| port | 168 commits |
 | generated | 2026-09-22 11:18 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    76%
+Overall                                                                    77%
   done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
-  done, never played   ██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  45%
-  partial              ████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  31%
+  done, never played   ████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░  47%
+  partial              ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  29%
   still to do          ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
   deferred / no scope  █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  10%
 
-Implementation         ████████████████████████████████████████░░░░░░░░░░  81%
+Implementation         █████████████████████████████████████████░░░░░░░░░  82%
 Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  15%
 
 Overall and Implementation: done 1, partial a half, deferred rows
@@ -38,10 +38,10 @@ the share seen running. All three from the states in the tables.
 Species     ████████████████████████████████████████████████░░  1041 / 1075
 Moves       ██████████████████████████████████████████████████   923 /  923
 Abilities   ██████████████████████████████████████████████████   319 /  319
-Items       ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   563 / 2684
+Items       ██████████████████████████████████████████████████  2685 / 2685
 Trainers    ██████████████████████████████████████████████████   738 /  738
 Tests       56 files
-ROM         144.9 MB of 268.4 MB   (2G card, 54% used)
+ROM         146.0 MB of 268.4 MB   (2G card, 54% used)
 ```
 <!-- LEDGER:COUNTS:END -->
 
@@ -91,10 +91,10 @@ konefr *could* reach, not only what the game reaches today.
 | Level-up learnsets | 1042; the entry is a word now, so a move past 511 can be learnt | ✅ done |
 | Battle script commands | 294 opcodes, name- and number-identical to the reference; 24 of the added handlers still only consume their operands | 🟠 270 / 294 |
 | Cries | `PlayCryEx` decompiled in `src/unk_02005D10.c` and linked by `main.lsf` — the 495 ceiling is gone, but the bank is mapped twice on one path | 🟠 partial |
-| Items | 563 against the engine's 2684, and every item konefr's own content names is now one of them: the nine Gen 8/9 evolution items and nine wild held items went in, the tenth held item being ITEM_LEEK, which this game has always had as ITEM_STICK. The rest of the engine's range is item data nothing in their game reaches. Twenty-three species carry the new held items in the wild, as the reference has them. all nine held items do what the reference makes them do -- the three that answer a type, the four Seeds that read a terrain, and Air Balloon, which floats until it is hit. Ability Shield is still a dead identifier | 🟠 563 / 2684 |
+| Items | 2685 of 2685: every item konefr's tree defines has a counterpart here. They are imported by name and renumbered densely from where this tree was -- their Black Augurite is 1691 and this one's is 537, because taking their ids would renumber every item in Paolo's save, his bag and every held item in the data -- and `tools/newgold/item_map.csv` is the mapping, 2685 of their names against 2685 ids here. This pass brought 2129 of them: ITEMS_COUNT 564 to 2693, the eight over their range being the slots HeartGold left empty that konefr filled with real items, so the gap stays here and their item is numbered beside it. 518 icons are built from konefr's PNGs, resolved by archive member and never by name; the other 1611 take ITEM_NONE's question mark knowingly, because konefr's art for them is byte-identical to `none.png`. 84 of their constants are reserved gaps with no name in 222.txt and are written the way this game already writes an empty slot. Descriptions are konefr's own single line, "Custom item description", for everything but the eighteen the pass before wrote prose for -- their description bank is that one line for the whole game. What is not true yet: 64 hold effects came in with the range and no line in src/ reads one, so those items are an ordinary rock to carry, Ability Shield included; three prices are clamped to 65535 because this game's price field is the sixteen bits Gen 4 gave it -- Big Nugget 80000, Ability Capsule 100000, Ability Patch 500000; 29 records name one of the six field-use routines konefr has and this game has not -- the twenty Mints, the four Nectars, Ability Capsule, Reveal Glass, DNA Splicers, Rotom Catalog -- and were given routine 0, so they sit in the bag and do nothing rather than jumping past the end of `sItemFieldUseFuncs`; and nothing puts any of the 2129 in the world -- no mart, no hidden item, no wild Pokemon carrying one beyond the nine already imported | ✅ 2685 / 2685 |
 | Evolutions | six species now evolve with one of the new items — Charcadet twice, Duraludon, Kubfu, Sinistea, Poltchageist and the Galarian Slowpoke. The three rows left are the ones whose target is a form this tree has no species for: Rapid Strike Urshifu, Galarian Slowking, and the Antique Sinistea and Masterpiece Poltchageist that take the chipped pot, so `ITEM_SCROLL_OF_WATERS`, `ITEM_GALARICA_WREATH` and `ITEM_CHIPPED_POT` exist and reach nothing. The other 160 species the reference gives an evolution have never been imported at all — `import_evolutions.py` reports them | 🟠 partial |
 | Evolution archive | evo.narc's row stopped being a multiple of four when Sylveon made it eight evolutions, and o2narc wrote each member's padding over the next member instead of after this one: the allocation table strode 52 bytes through a 50-byte image, so every Pokemon from Ivysaur on read another one's evolutions. Fixed in `tools/o2narc/Options.cpp`; `tests/newgold/test_narc_alignment.py` checks all 115 built archives | ✅ fixed |
-| Effects with a script but no C | two left, Techno Blast and Multi-Attack, and both want a held item this game has not got — the Drives and the Memories | 🟠 2 open |
+| Effects with a script but no C | two left, Techno Blast and Multi-Attack. The Drives and the Memories are real items with real hold effects now, and the placeholders that stood in for them are gone from `battle_script_imports.h` -- they carried konefr's numbers 147 to 150, which are this game's Eviolite, Air Balloon, Absorb Bulb and Cell Battery, so Techno Blast was picking its type off those four. What is left is the C that reads the held Drive or Memory: both effects are among the sixty-four the item import left unread | 🟠 2 open |
 
 ---
 
