@@ -24,19 +24,32 @@ from markers import DIAG_ELF, MAIN_RAM  # noqa: E402
 
 ROOT = where.ROOT
 BLOCK_A_SIZE = 32
+SAVE_PLAYERDATA = 1  # the block table's order, save_budget.py and savedit.py --show
 
 
-def party(ram, elf):
-    memory = where.Memory(ram)
+def block(memory, elf, index):
+    """Where save block `index` sits in the RAM copy the field keeps."""
     field = memory.word(where.symbol("sFieldSysPtr", elf))
     if not field:
-        raise SystemExit("the field is down; the party is read through it")
+        raise SystemExit("the field is down; the save is read through it")
     save = memory.word(field + where.SAVE_DATA)
     page = where.constant("SAVE_PAGE_MAX", "include/constants/save_arrays.h")
     sector = where.constant("SAVE_SECTOR_SIZE", "include/constants/save_arrays.h")
     headers = save + where.DYNAMIC_REGION + page * sector + 4
-    offset = memory.word(headers + where.SAVE_PARTY * where.HEADER_SIZE + where.HEADER_OFFSET)
-    base = save + where.DYNAMIC_REGION + offset
+    offset = memory.word(headers + index * where.HEADER_SIZE + where.HEADER_OFFSET)
+    return save + where.DYNAMIC_REGION + offset
+
+
+def badges(ram, elf):
+    """The Johto badges the player holds, as a count: one bit each, packed
+    the way savedit.py --badges writes them."""
+    at = block(where.Memory(ram), elf, SAVE_PLAYERDATA) + savedit.JOHTO_BADGES - MAIN_RAM
+    return bin(ram[at]).count("1")
+
+
+def party(ram, elf):
+    memory = where.Memory(ram)
+    base = block(memory, elf, where.SAVE_PARTY)
     count = memory.word(base + where.PARTY_COUNT)
     names = {v: k for k, v in savedit.species_numbers().items()}
     items = {int(m.group(2)): m.group(1)[len("ITEM_"):] for m in

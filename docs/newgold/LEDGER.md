@@ -12,20 +12,20 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 217 commits |
-| generated | 2026-09-23 01:38 |
+| port | 218 commits |
+| generated | 2026-09-23 01:39 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    90%
-  done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   7%
+Overall                                                                    92%
+  done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
   done, never played   ██████████████████████████████░░░░░░░░░░░░░░░░░░░░  60%
   partial              ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
-  still to do          ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
+  still to do          █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
   deferred / no scope  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  21%
 
 Implementation         ████████████████████████████████████████████████░░  96%
-Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
+Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%
 
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
@@ -144,14 +144,14 @@ This is the section that holds the overall number down.
 | EV and IV viewer | six and a quarter minutes from a cold boot; captures in `validation/` | ✅ done |
 | A battle renders | forced against species 19, 575, 900 and 1041, indoors and on Route 29's grass: background, sprite, name, and the battle runs to its end | ✅ done |
 | A battle from a wild encounter | nine in a row on Route 29 from a cold boot, each from the game's own check, each running INIT to EXIT and handing the field back | ✅ done |
-| The four gyms to Morty | Falkner played through on melonDS on 2026-09-22, from `hgss-saves/gyms/falkner.sav` at cap 13: Hoothoot, Farfetch'd, Doduo, Delibird and Murkrow, the party konefr's `Trainers.c` gives him, his two Potions used at the right moments, his lines on the last Pokemon, no experience for a party at the cap, the Zephyr Badge and TM51 at the end. Half of it was played from a shell with `tools/newgold/devkit/diag/play.py`. Two assertions fired on a Pokemon's way into battle and returned; the build now keeps the stack at an assertion, so the next run names who asked. Bugsy beaten headlessly on 2026-09-23 by `tools/newgold/devkit/diag/gym.py` at cap 22: Ledian, Scizor, Heracross, Ariados and Shuckle, as konefr's `Trainers.c` has them, his one Super Potion spent, no experience past the cap, no assertion. Whitney and Morty play to the end with no assertion since bank 3 has a line for every move -- until then any move past 467 stopped the battle, Morty's Hex first -- with konefr's teams and their potions spent; the bot, which sends the party in order and never switches, loses both, so their badges are still unseen | 🟠 2 of 4 |
-| The seven level-cap steps | `savedit.py` sets badges one at a time — thirty seconds a step | 🔴 never |
+| The four gyms to Morty | Falkner played through on melonDS on 2026-09-22 from `hgss-saves/gyms/falkner.sav` at cap 13 -- his party from konefr's `Trainers.c`, his two Potions used, no experience at the cap, the Zephyr Badge and TM51. Bugsy, Whitney and Morty on 2026-09-23 headlessly with `tools/newgold/devkit/diag/gym.py`, every one won, no assertion: Bugsy at cap 22 -- Ledian, Scizor, Heracross, Ariados, Shuckle and his Super Potion -- and the badge counted 1 -> 2 in RAM after the fight; Whitney at cap 30 -- Furret, Wigglytuff, Miltank, Ambipom, Farigiraf; Morty at cap 36 -- Misdreavus, Annihilape, Mismagius, Gengar, Shuppet -- and the badge 3 -> 4. Whitney's badge is the one not seen: as in retail she cries and gives it only when spoken to again after her Lass (`FLAG_UNK_0B7`). No party gained a point of experience at its cap. Whitney and Morty were fought with parties picked against them, because the bot never switches; the mixed saves lost, on matchups, and until bank 3 was complete they stopped on Morty's Hex | ✅ 4 / 4 |
+| The seven level-cap steps | the cap seen holding in battle at 13, 22, 30 and 36 -- a party at the cap wins no experience from a leader -- and the badges that move it seen landing for Zephyr, Hive and Fog. The rise itself, a Pokemon levelling past the old cap after the badge, and the 10 and 19 and 34 steps, are still unseen; `savedit.py` sets badges one at a time | 🟠 partial |
 | The 1041 species in play | sprite, icon, cry, name, Dex, an ability that does something | 🔴 never |
 | Automated tests | All but one read source and data, `test_boot.py` runs both ROMs and the diagnostics build. Each memory bug got its regression test after the fact, not before, and the two that caught something before it shipped are the newest: the nickname lines that come in threes, and the stubs a script must not run | 🟠 partial |
 
 ---
 
-## Why 90% and not 96%
+## Why 92% and not 96%
 
 The points between the two numbers are the verification column, and the reason
 it is not a formality is that four silent bugs surfaced in one evening, on

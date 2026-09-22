@@ -29,7 +29,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from core import Core  # noqa: E402
 from markers import BATTLER, DIAG_ELF, STATES, Markers  # noqa: E402
-from party import party  # noqa: E402
+from party import badges, party  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 ROM = ROOT / "build/heartgold.us.diag/pokeheartgold.us.nds"
@@ -206,6 +206,27 @@ def main():
 
     ram = core.ram()
     say(f"[{core.frames}] trainer items {markers.read(ram, 'gDiagAiItemCount')}")
+    # After a win the gym's script hands over the badge: the leader's lines,
+    # the badge, the TM. A until the field is back and the count stops moving.
+    if markers.read(ram, "gDiagBattleState") == EXIT:
+        try:
+            held = badges(ram, DIAG_ELF)
+        except SystemExit:
+            held = None
+        for _ in range(60):
+            core.press("A", 6, hold)
+            core.step(60, hold)
+            try:
+                now = badges(core.ram(), DIAG_ELF)
+            except SystemExit:
+                continue
+            if held is None:
+                held = now
+            elif now != held:
+                say(f"[{core.frames}] badges {held} -> {now}")
+                held = now
+        say(f"[{core.frames}] badges held: {held}")
+        ram = core.ram()
     say("at the end: " + markers.describe(ram))
     if markers.read(ram, "gDiagBattleState") != EXIT:
         say("the battle did not finish; last prompt " + str(markers.read(ram, "gDiagBattlePrompt"))

@@ -52,6 +52,15 @@ ARRAY_FOOTER = 16               # sizeof(struct SaveArrayFooter)
 FOOTER_CRC_AT = 14              # offsetof(struct SaveArrayFooter, crc)
 FLASH = 512 * 1024
 PAGES_PER_HALF = 64             # the flash is erased in two halves
+# PLAYERDATA is { Options options; PlayerProfile profile; ... } and
+# Save_PlayerData_GetProfile is "adds r0, #4" after fetching the block, so
+# the profile starts four bytes in. PlayerProfile then begins with
+# name[PLAYER_NAME_LENGTH + 1] and PlayerProfile_GetNamePtr is a bare
+# "bx lr", so the name is at the profile's own start.
+PROFILE = 4
+NAME = PROFILE
+TRAINER_ID = PROFILE + 2 * (PLAYER_NAME_LENGTH + 1)
+JOHTO_BADGES = TRAINER_ID + 4 + 4 + 2
 
 
 def constants(header, prefix):
@@ -578,16 +587,6 @@ def main():
         print(f"wrote {args.save} from {args.from_ram}")
 
     save = Save(args.save)
-
-    # PLAYERDATA is { Options options; PlayerProfile profile; ... } and
-    # Save_PlayerData_GetProfile is "adds r0, #4" after fetching the block, so
-    # the profile starts four bytes in. PlayerProfile then begins with
-    # name[PLAYER_NAME_LENGTH + 1] and PlayerProfile_GetNamePtr is a bare
-    # "bx lr", so the name is at the profile's own start.
-    PROFILE = 4
-    NAME = PROFILE
-    TRAINER_ID = PROFILE + 2 * (PLAYER_NAME_LENGTH + 1)
-    JOHTO_BADGES = TRAINER_ID + 4 + 4 + 2
 
     if args.name:
         letters = charcode(args.name)
