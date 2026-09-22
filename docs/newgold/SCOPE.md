@@ -18,7 +18,7 @@ The reference is `https://github.com/konefr/hg-engine-newgold.git`, branch
 `heartgold-modern`, and it is checked out locally at that pin in
 `/home/paolo/Porting HGSS/hg-engine-newgold-reference`. Every importer reads
 from there and from nowhere else. **Never read hg-engine upstream.** The
-reference is hg-engine *plus* konefr's 67 commits, and his changes have to come
+reference is hg-engine *plus* konefr's 73 commits, and his changes have to come
 last: taking a record from upstream would silently drop whatever he did to it.
 Farigiraf's learnset (species 1031) is the only thing he has touched above
 species 493 so far, and the rest of his rebalance sits inside the vanilla 493
@@ -28,9 +28,11 @@ and the pin above is updated.
 
 ## What New Gold actually is
 
-The reference is BluRosie's **hg-engine** plus **67 commits** by konefr and
-Francesco Greco, beginning 2026-09-03. Those 67 commits touch 37 files and are
-the hack itself; everything older is the engine it happens to sit on.
+The reference is BluRosie's **hg-engine** plus **73 commits**,
+`d0380a487..ccf2c9f5`, beginning 2026-09-03: konefr, Francesco Greco (the same
+person) and four by github-actions[bot], which are his patchers. They touch 37
+files and are the hack itself; everything older is the engine it happens to sit
+on.
 
 Their own work is:
 
@@ -44,9 +46,89 @@ Their own work is:
 * **New scripted content** — the Cherrygrove vendor (297 lines of script and
   148 lines of new script commands), Bug-Catching Contest encounters and
   rewards.
-* **Engine switches they turned on** — the level cap system with
-  `UNCAP_CANDIES_FROM_LEVEL_CAP` and `ALLOW_LEVEL_CAP_EVOLVE`, and
-  `DELETABLE_HMS`. Every other setting is the engine's default.
+* **Engine switches they turned on** — exactly five: `IMPLEMENT_LEVEL_CAP`,
+  `LEVEL_CAP_VARIABLE`, `UNCAP_CANDIES_FROM_LEVEL_CAP`,
+  `ALLOW_LEVEL_CAP_EVOLVE` and `DELETABLE_HMS`. Every other setting is the
+  engine's default.
+
+## Two layers
+
+The port is meant to become two things. The split itself is deferred until
+further notice (the last section). What holds from now is working so that it
+stays possible: everything new knows which layer it belongs to, and no commit
+mixes the two.
+
+| Layer | What it is |
+| --- | --- |
+| **Engine** | pokeheartgold with hg-engine's features as hg-engine ships them, and no hack's content. The devkit, `tools/newgold/devkit/`, belongs here: anyone building a hack on this tree uses it. |
+| **New Gold** | everything konefr added or changed on top of hg-engine. This repository is going to him. |
+
+**Provenance is read in the repositories, never inferred.** The reference
+holds both histories, and the boundary is one commit:
+
+```
+d0380a487   BluRosie's hg-engine, the parent of konefr's first commit
+ccf2c9f5    konefr's tip today
+```
+
+`d0380a487..ccf2c9f5` is 73 linear commits and no merges: konefr, Francesco
+Greco (the same person) and four by github-actions[bot], which are his
+patchers. So:
+
+* whatever that range introduces **or modifies** is New Gold;
+* whatever hg-engine has at `d0380a487` and pret does not is Engine, with the
+  values and defaults it has at `d0380a487`;
+* whatever is in neither repository — decompilations, the harness, the port's
+  own infrastructure — goes in the lowest layer that needs it. That is almost
+  always the engine, because hg-engine's range already needs it: the learnset
+  entry became a word for 923 moves, not for konefr.
+
+The motive never counts; where it sits in the history does. To check:
+
+```
+REF="/home/paolo/Porting HGSS/hg-engine-newgold-reference"
+git -C "$REF" log --oneline -S <SYMBOL> d0380a487..ccf2c9f5   # any commit: konefr's
+git -C "$REF" show d0380a487:<file>                           # hg-engine's value
+git -C "$REF" show ccf2c9f5:<file>                            # New Gold's value
+```
+
+What belongs to whom, already checked against the reference:
+
+* **Configuration.** konefr changed exactly five switches from hg-engine's
+  defaults: `IMPLEMENT_LEVEL_CAP`, `LEVEL_CAP_VARIABLE`,
+  `UNCAP_CANDIES_FROM_LEVEL_CAP`, `ALLOW_LEVEL_CAP_EVOLVE`, `DELETABLE_HMS`. At
+  `d0380a487` all five are commented out. The other seventy active switches
+  are hg-engine's defaults: Engine.
+* **Level cap.** The mechanism is hg-engine's and reads `LEVEL_CAP_VARIABLE`;
+  the ladder 10→13→19→22→30→34→36 wired into `GetLevelCap` is konefr's.
+* **Vanilla species.** The 38 records konefr rebalanced — 35 of HeartGold's
+  species and three Galarian forms — and their evolutions, learnsets and hidden
+  abilities: New Gold. The engine would carry `d0380a487`'s values.
+* **Abilities and moves.** Evaporate (319) and Solar Seeds (923), with
+  `MOVE_EFFECT_BURN_MULTI_HIT`, the subscript `ABSORB_AND_ATK_UP_2_STAGE` and
+  the animation: New Gold. Their extension point is `NUM_OF_CUSTOM_MOVES`.
+  Irrigation (314) sits in `ABILITY_TEMP2`, a slot hg-engine already had: the
+  slot is Engine, the name and the effect are konefr's.
+* **Behaviour changes.** The Water Absorb and Leaf Guard fixes, and the Linking
+  Cord evolving an `EVO_TRADE` species too (`e26576dd1`), are in the range: New
+  Gold, even though they look like corrections.
+* **Content.** Trainers, wild encounters, headbutt trees, the Bug-Catching
+  Contest, the text of bank 550, the Cherrygrove vendor and the EV presets: New
+  Gold. The vendor and the presets are konefr's development tools *inside the
+  game*, not to be confused with the devkit.
+
+**One commit, one thing.** If konefr's content needs the engine widened, that
+is two commits: the engine first, then the content that uses it. The commit is
+the atom: splitting one afterwards means rewriting the history of a public
+repository with a collaborator on it, which is not done. It holds for konefr's
+new commits too: when they are imported, the import commit carries only his
+data.
+
+**The reference's defects** are neither engine nor content: they are bugs to
+fix — Route 30 with 11 of its 12 slots, Solar Seeds' animation pointing at
+Ember. Each is fixed in the layer of the thing it corrects, and the commit says
+why it was not copied, so that it does not come back when konefr regenerates
+his data.
 
 ## The criterion
 
@@ -102,7 +184,7 @@ already implements equivalently:
 * Already equivalent in pokeheartgold: wild slot selection, hidden item table,
   swarms, default mart tiers, Rock Smash behaviour.
 * konefr's Cherrygrove vendor, which the earlier reading of this file listed
-  as content to port. It is not content: the script calls itself "New Gold
+  as content to port. It is not content a player meets: the script calls itself "New Gold
   debug vendor", asks for a password, hands out Rare Candies, and drives the
   developer EV presets that make up the 148 lines added to script_commands.c —
   twelve invalid species numbers, 2000 to 2011, that set the first party
@@ -305,3 +387,66 @@ and Dex entry, and one new ability and one new move working in a battle.
    criterion. Equivalence is judged on game behaviour.
 4. Each change builds both HeartGold and SoulSilver and keeps the focused host
    tests passing.
+
+## The cycle
+
+The method above, as the loop every change goes through:
+
+```
+decide the change
+ └─ is what it touches already C?
+      yes -> make it. One commit.
+      no  -> a) check whether the slop fork has it:
+                   git ls-tree -r --name-only slop/mainline | grep <unit>
+                 if it does, minutes instead of hours
+             b) decompile to MATCHING, and commit only that.
+                Neither ROM changes by a byte.
+             c) then the change, in a separate commit.
+ └─ build HeartGold and SoulSilver, run tests/newgold/
+ └─ update the row's state in LEDGER.md, in the SAME commit as the work
+```
+
+(a) is for reading: their C is the fastest way to understand the function, and
+what is committed is still this tree's own conversion, in the shape (b) asks
+for — point 2 of the method says why their files are not taken.
+
+(b) is the part that gets lost, so here is why. It is the only moment at
+which the decompilation can be checked: the ROM is what it was, byte for byte,
+so the C is exactly the assembly. After the change the ROM differs for two
+reasons at once and they can no longer be told apart. And it makes the
+behaviour change portable: the day pret decompiles the same function, their
+version is taken and commit (c) is cherry-picked on top of it.
+
+**Assembly is not a reason to stop.** If a change needs a routine that is still
+assembly, decompiling it is part of the change; it does not make the row
+🟠 partial.
+
+## Deferred until further notice
+
+The split into the two layers is not work for now. These are its steps. The
+ledger carries the same list as its *Two layers* section, every row ⬜
+deferred, so they can be seen and stay out of the denominator.
+
+1. konefr's five switches made configurable: off in the engine, on in New
+   Gold. Today the port has them wired always on.
+2. `GetLevelCap` reading `LEVEL_CAP_VARIABLE` as hg-engine does, with konefr's
+   ladder as data.
+3. Irrigation, Evaporate and Solar Seeds moved behind the extension points:
+   `ABILITY_TEMP2` and `NUM_OF_CUSTOM_MOVES` at 0 in the engine.
+4. The importers taking a revision: at `d0380a487` the engine's data, at
+   `ccf2c9f5` New Gold's.
+5. Recounting the separation by the provenance rule. The old count, 8 mixed
+   commits of 175, looked only at file paths.
+6. The split, without rewriting published history: `git tag port-history`; an
+   `engine` branch from pret (`e97c7fc9`) with the matching decompilations
+   cherry-picked and everything else regenerated at `d0380a487`; `newgold`
+   rebuilt on top of `engine` at `ccf2c9f5`; then, on the rebuilt branch,
+   `git merge -s ours` of the published `newgold`, so the push is a
+   fast-forward and no clone breaks.
+7. Building and playing the engine-only configuration, which has never been
+   built.
+
+**One exception.** If, before then, ordinary work already touches one of these
+areas — the level cap, one of the five switches, one of konefr's abilities —
+that piece is done the layered way already, in its own commit. No campaign for
+it, but no new work written the old way either.

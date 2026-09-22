@@ -12,17 +12,17 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 206 commits |
-| generated | 2026-09-23 00:00 |
+| port | 208 commits |
+| generated | 2026-09-23 00:31 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
 Overall                                                                    90%
-  done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
-  done, never played   ██████████████████████████████████░░░░░░░░░░░░░░░░  67%
-  partial              █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  10%
+  done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   7%
+  done, never played   ██████████████████████████████░░░░░░░░░░░░░░░░░░░░  59%
+  partial              ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
   still to do          ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
-  deferred / no scope  █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  10%
+  deferred / no scope  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  21%
 
 Implementation         ████████████████████████████████████████████████░░  96%
 Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
@@ -114,6 +114,22 @@ konefr *could* reach, not only what the game reaches today.
 | Bug-Catching Contest | Butterfree through Escavalier, levels 20-30, evolution-item prizes | ✅ done |
 | Cherrygrove vendor and EV presets | his debug vendor, patched into a built script file — excluded in `SCOPE.md` | ⬜ out of scope |
 | Water Absorb and Leaf Guard fixes | the row had it backwards. Leaf Guard's sunshine is HGSS's own and was never port work — but it left Rest out, and the Rest subscript now asks the same two questions the other six statuses ask. Water Absorb had the damaging-move guard and not the no-self-trigger one; it has both. Dry Skin keeps only the power check, in the reference as here | ✅ done |
+
+---
+
+## Two layers
+
+The split into an engine and New Gold, deferred until further notice: `SCOPE.md` has the rule that holds meanwhile and the same seven steps. Every row is deferred, so none of them moves a percentage.
+
+| Item | Detail | State |
+| --- | --- | :-- |
+| konefr's five switches configurable | `IMPLEMENT_LEVEL_CAP`, `LEVEL_CAP_VARIABLE`, `UNCAP_CANDIES_FROM_LEVEL_CAP`, `ALLOW_LEVEL_CAP_EVOLVE`, `DELETABLE_HMS`: off in the engine, on in New Gold. Today they are wired always on | ⬜ deferred |
+| `GetLevelCap` reads the variable | as hg-engine does, `LEVEL_CAP_VARIABLE`, with konefr's ladder 10→13→19→22→30→34→36 as data rather than code | ⬜ deferred |
+| konefr's abilities and move behind the extension points | Irrigation, Evaporate, Solar Seeds; `ABILITY_TEMP2` and `NUM_OF_CUSTOM_MOVES` at 0 in the engine | ⬜ deferred |
+| Importers that take a revision | `d0380a487` gives the engine's data, `ccf2c9f5` New Gold's | ⬜ deferred |
+| The separation recounted by provenance | the old count, 8 mixed commits of 175, looked only at file paths; the rule is what `d0380a487..ccf2c9f5` introduces or modifies | ⬜ deferred |
+| The split | `git tag port-history`; `engine` from pret `e97c7fc9` with the matching decompilations cherry-picked and the rest regenerated at `d0380a487`; `newgold` rebuilt on it at `ccf2c9f5`; `git merge -s ours` of the published branch, so the push is a fast-forward | ⬜ deferred |
+| The engine-only configuration played | never built yet | ⬜ deferred |
 
 ---
 
