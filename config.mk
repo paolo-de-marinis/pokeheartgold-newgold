@@ -36,6 +36,14 @@ GF_DEFINES  := -D$(GAME_VERSION) -DGAME_REMASTER=$(GAME_REMASTER) -D$(GAME_LANGU
 ifeq ($(NO_GF_ASSERT),)
 GF_DEFINES  += -DPM_KEEP_ASSERTS
 endif
+# NEWGOLD_DIAG=1 builds in the diagnostics under src/newgold/diag, read by
+# tools/newgold/diag (docs/newgold/DIAGNOSTICS.md). Off, every hook compiles
+# to nothing and the ROM is byte for byte the ROM without them. The build
+# gets its own directory, so the two never share an object.
+ifeq ($(NEWGOLD_DIAG),1)
+BUILD_DIR   := $(BUILD_DIR).diag
+GF_DEFINES  += -DNEWGOLD_DIAG
+endif
 GLB_DEFINES := -DSDK_ARM9 -DSDK_CODE_ARM -DSDK_FINALROM
 
 # CLI_DEFINES="-DMY_DEFINE=1 -DMY_OTHER_DEFINE=2 ..."

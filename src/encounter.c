@@ -350,6 +350,11 @@ static BOOL Task_WildEncounter(TaskManager *taskManager) {
     FieldSystem *fieldSystem = TaskManager_GetFieldSystem(taskManager);
     WildEncounter *encounter = TaskManager_GetEnvironment(taskManager);
 
+#ifdef NEWGOLD_DIAG
+    gDiagWildStage = encounter->state + 1;
+    gDiagWildTicks++;
+#endif
+
     switch (encounter->state) {
     case 0:
         MapObjectManager_PauseAllMovement(fieldSystem->mapObjectManager);

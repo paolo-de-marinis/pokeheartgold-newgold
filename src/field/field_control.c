@@ -484,6 +484,23 @@ static BOOL FieldSystem_CheckWildEncounter(FieldSystem *fieldSystem) {
         return FALSE;
     }
 
+#ifdef NEWGOLD_DIAG
+    // A tile written into these puts the player on it here, at the step
+    // check: the overworld is one coordinate space, so a tile on Route 29
+    // written from New Bark Town is Route 29, grass and encounter table
+    // included. The alternative is a pointer chain that moves with every build.
+    if (gDiagWarpX != 0 || gDiagWarpZ != 0) {
+        LocalMapObject *object = PlayerAvatar_GetMapObject(fieldSystem->playerAvatar);
+        MapObject_SetPositionFromXYZAndDirection(object, gDiagWarpX, 0, gDiagWarpZ, MapObject_GetFacingDirection(object));
+        gDiagWarpX = 0;
+        gDiagWarpZ = 0;
+        return FALSE;
+    }
+    if (gDiagForceBattleSpecies != 0) {
+        return Diag_ForceBattle(fieldSystem);
+    }
+#endif
+
     return MapHeader_HasWildEncounters(fieldSystem->location->mapId) && FieldSystem_PerformLandOrSurfEncounterCheck(fieldSystem) == TRUE;
 }
 

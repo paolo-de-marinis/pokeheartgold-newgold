@@ -45,6 +45,10 @@ typedef enum BattleState {
 BOOL Battle_Run(OverlayManager *man, int *state) {
     BattleSetup *setup = OverlayManager_GetArgs(man);
 
+#ifdef NEWGOLD_DIAG
+    Diag_BattleState(*state);
+#endif
+
     switch (*state) {
     case BSTATE_INIT:
         Heap_Create(HEAP_ID_3, HEAP_ID_BATTLE, 0xB0000);

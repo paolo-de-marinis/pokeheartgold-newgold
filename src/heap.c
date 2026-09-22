@@ -212,6 +212,9 @@ void *Heap_Alloc(enum HeapID heapID, u32 size) {
     if (ptr != NULL) {
         sHeapInfo.numMemBlocks[heapID]++;
     } else {
+#ifdef NEWGOLD_DIAG
+        Diag_AllocFailed(heapID, size);
+#endif
         AllocFail();
     }
 
@@ -229,6 +232,9 @@ void *Heap_AllocAtEnd(enum HeapID heapID, u32 size) {
     if (ptr != NULL) {
         sHeapInfo.numMemBlocks[heapID]++;
     } else {
+#ifdef NEWGOLD_DIAG
+        Diag_AllocFailed(heapID, size);
+#endif
         AllocFail();
     }
 

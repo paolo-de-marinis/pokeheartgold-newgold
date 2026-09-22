@@ -53,6 +53,9 @@ ROMS = {
     "heartgold": ROOT / "build/heartgold.us/pokeheartgold.us.nds",
     "soulsilver": ROOT / "build/soulsilver.us/pokesoulsilver.us.nds",
 }
+# The build with the diagnostics in (make NEWGOLD_DIAG=1 COMPARE=0); the
+# readers in tools/newgold/diag want this one.
+DIAG_ROM = ROOT / "build/heartgold.us.diag/pokeheartgold.us.nds"
 
 # Enough to get past the publisher screens, the intro and the title, which is
 # where a save or heap that does not fit would have stopped it.

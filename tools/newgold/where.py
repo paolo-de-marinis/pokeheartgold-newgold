@@ -50,8 +50,8 @@ def constant(name, header):
     return int(match.group(1), 0)
 
 
-def symbol(name, elf=None):
-    """Where the linker put it, so nothing here is a guessed address."""
+def _elf(elf):
+    """Every symbol in the linked ELF: name -> (value, size, kind, section)."""
     b = (elf or ROOT / "build/heartgold.us/main.elf").read_bytes()
     shoff, = struct.unpack("<I", b[0x20:0x24])
     shentsize, shnum, shstrndx = struct.unpack("<HHH", b[0x2E:0x34])
@@ -59,24 +59,57 @@ def symbol(name, elf=None):
         o = shoff + i * shentsize
         return struct.unpack("<IIIIIIIIII", b[o:o + 40])
     names = header(shstrndx)[4]
-    sections = {}
+    section_names, sections = [], {}
     for i in range(shnum):
         fields = header(i)
         end = b.index(b"\0", names + fields[0])
-        sections[b[names + fields[0]:end].decode()] = fields
+        section_names.append(b[names + fields[0]:end].decode())
+        sections[section_names[-1]] = fields
     symtab, strtab = sections[".symtab"], sections[".strtab"]
+    found = {}
     for i in range(symtab[5] // 16):
         o = symtab[4] + i * 16
-        nm, value = struct.unpack("<II", b[o:o + 8])
+        nm, value, size, info, _, shndx = struct.unpack("<IIIBBH", b[o:o + 16])
         end = b.index(b"\0", strtab[4] + nm)
-        if b[strtab[4] + nm:end].decode() == name:
-            return value
-    raise SystemExit(f"{name} is not in the ROM")
+        name = b[strtab[4] + nm:end].decode()
+        if name and name not in found:
+            found[name] = (value, size, info & 0xF, section_names[shndx] if shndx < shnum else "")
+    return found
+
+
+def symbols(elf=None):
+    """Where the linker put everything, looked up once for many names."""
+    return {name: value for name, (value, _, _, _) in _elf(elf).items()}
+
+
+def symbol(name, elf=None):
+    """Where the linker put it, so nothing here is a guessed address."""
+    found = _elf(elf).get(name)
+    if found is None:
+        raise SystemExit(f"{name} is not in the ROM")
+    return found[0]
+
+
+def function_at(address, elf=None, table=None):
+    """The function an address is in, as "name+offset (section)".
+
+    Overlays share addresses, so an address in one may name a function in
+    several; every section's own answer is listed and the loaded overlay is
+    the one that is true.
+    """
+    address &= ~1
+    best = {}
+    for name, (value, size, kind, section) in (table or _elf(elf)).items():
+        if kind != 2 or value > address or address - value >= max(size, 0x2000):
+            continue
+        if section not in best or value > best[section][1]:
+            best[section] = (name, value)
+    return ", ".join(f"{name}+{address - value:#x} ({section})" for section, (name, value) in sorted(best.items())) or f"{address:#x}"
 
 
 class Memory:
     def __init__(self, path):
-        self.ram = Path(path).read_bytes()
+        self.ram = path if isinstance(path, bytes) else Path(path).read_bytes()
 
     def word(self, address):
         offset = address - MAIN_RAM

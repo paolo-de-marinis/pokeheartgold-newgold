@@ -562,7 +562,30 @@ static BOOL FieldSystem_GenerateRockSmashEncounter(FieldSystem *fieldSystem, Pok
     return FieldSystem_GenerateRegularEncounter(leadMon, ROD_TYPE_NONE, encounterGen, encSlots, ENCOUNTER_TYPE_ROCK_SMASH, BATTLER_ENEMY, battleSetup);
 }
 
+#ifdef NEWGOLD_DIAG
+// A wild battle against whatever gDiagForceBattleSpecies says, from wherever
+// the player stands, indoors included. It is what answers "is a battle black
+// for a species this game always had, or only for an added one" without
+// playing to a patch of grass.
+BOOL Diag_ForceBattle(FieldSystem *fieldSystem) {
+    BattleSetup *battleSetup = BattleSetup_New(HEAP_ID_FIELD2, BATTLE_TYPE_NONE);
+    BattleSetup_InitFromFieldSystem(battleSetup, fieldSystem);
+    FieldSystem_GenerateSingleWildPokemon(fieldSystem, gDiagForceBattleSpecies, 5, FALSE, battleSetup);
+    gDiagForceBattleSpecies = 0;
+    sub_02050B08(fieldSystem, battleSetup);
+    return TRUE;
+}
+#endif
+
 static BOOL FieldSystem_EncounterRateRoll(FieldSystem *fieldSystem, u8 encounterRate, u8 metatileBehavior) {
+#ifdef NEWGOLD_DIAG
+    // Forces the roll and nothing else. Answering "this tile has encounters"
+    // as well once produced a battle in New Bark Town, whose table is
+    // surf-only, against species zero: the instrument inventing a bug.
+    if (gDiagForceEncounter) {
+        return TRUE;
+    }
+#endif
     if (encounterRate > 100) {
         encounterRate = 100;
     }
@@ -1348,6 +1371,10 @@ static u8 EncounterGen_ChooseUnownForm(EncounterGenState *encounterGen) {
 }
 
 static BOOL addGeneratedMonToBattleSetupParty(int battler, EncounterGenState *encounterGen, Pokemon *pokemon, BattleSetup *battleSetup) {
+#ifdef NEWGOLD_DIAG
+    gDiagLastWildSpecies = GetMonData(pokemon, MON_DATA_SPECIES, NULL);
+    gDiagLastWildLevel = GetMonData(pokemon, MON_DATA_LEVEL, NULL);
+#endif
     WildMonSetRandomHeldItem(pokemon, battleSetup->battleType, !encounterGen->isEgg && encounterGen->ability == ABILITY_COMPOUNDEYES ? 1 : 0);
     if (GetMonData(pokemon, MON_DATA_SPECIES, NULL) == SPECIES_UNOWN) {
         u8 form = EncounterGen_ChooseUnownForm(encounterGen);

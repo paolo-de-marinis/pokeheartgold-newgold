@@ -41,8 +41,8 @@ class BootTests(unittest.TestCase):
         if hasattr(cls, "temp"):
             cls.temp.cleanup()
 
-    def boot(self, name):
-        rom = smoke.ROMS[name]
+    def boot(self, name, rom=None):
+        rom = rom or smoke.ROMS[name]
         shot = Path(self.temp.name) / f"{name}.ppm"
         line = smoke.run(self.host, rom, FRAMES, [f"shot:{FRAMES - 1}:{shot}"], self.temp.name)
         self.assertIn(f"ran {FRAMES} frames", line)
@@ -59,6 +59,13 @@ class BootTests(unittest.TestCase):
 
     def test_soulsilver_boots(self):
         self.boot("soulsilver")
+
+    def test_heartgold_with_diagnostics_boots(self):
+        # The diagnostics add to the static module, and the main arena after
+        # boot is tight: this is where too much of them shows up.
+        if not smoke.DIAG_ROM.exists():
+            self.skipTest("not built: make NEWGOLD_DIAG=1 COMPARE=0")
+        self.boot("heartgold.diag", smoke.DIAG_ROM)
 
 
 if __name__ == "__main__":

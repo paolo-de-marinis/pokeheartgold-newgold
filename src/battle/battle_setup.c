@@ -527,6 +527,11 @@ static void sub_02052504(BattleSetup *setup, FieldSystem *fieldSystem) {
     }
 
     setup->terrain = FieldSystem_GetTerrainFromStandingTile(fieldSystem, setup->battleBg);
+#ifdef NEWGOLD_DIAG
+    gDiagLastBattleMap = fieldSystem->location->mapId;
+    gDiagLastBattleBg = setup->battleBg;
+    gDiagLastBattleTerrain = setup->terrain;
+#endif
 }
 
 void sub_02052544(BattleSetup *setup) {

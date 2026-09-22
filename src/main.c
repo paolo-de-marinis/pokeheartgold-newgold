@@ -184,6 +184,13 @@ static void sub_02000F40(u32 param) {
 
 static void sub_02000F60(void) {
     int r1 = sub_020399B8();
+#ifdef NEWGOLD_DIAG
+    // The harness this port is tested in emulates no wireless, so the main
+    // menu shows a communication error and resets before Continue can work.
+    if (gDiagIgnoreCommunicationError) {
+        return;
+    }
+#endif
     switch (r1) {
     case 5:
         sub_02000FD8(0, r1);
