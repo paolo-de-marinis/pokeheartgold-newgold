@@ -130,7 +130,7 @@ NO_DESCRIPTION = "Custom item description"
 GENERATED = {
     ITEMS_H: (r"\n// The hold effects the reference brings with it.*?(?=\n#define ITEM_NONE 0)",
               r"\n// The rest of the reference's items.*?(?=\n#define ITEMS_COUNT)"),
-    ITEM_C: (r"\n    // The rest of the reference's items.*?(?=\n\};)",),
+    ITEM_C: (r"\n// The rest of the reference's items take no rows.*?\n\};\n",),
     ITEM_MK: (r"\n# The rest of the reference's item icons.*?(?=\n\$\(ITEMICON_NARC\))",),
 }
 
@@ -685,6 +685,10 @@ def main():
     report["items taking the blank icon"] = blank_art
     report["items the reference leaves unnamed"] = unnamed
     report["item icons built from a PNG"] = len(icon_rules)
+    if narc_rows:
+        here_after = dict(here, **dict(constants))
+        by_id = sorted(narc_rows, key=lambda r: here_after[r[0]])
+        first_id, first_data = here_after[by_id[0][0]], by_id[0][1]
     report["ITEMS_COUNT"] = f"{len(here)} -> {len(here) + len(missing)}"
     for key, value in report.items():
         print(f"{key}: {value}")
@@ -712,6 +716,9 @@ def main():
         block.append("")
         text = text.replace("\n#define ITEMS_COUNT", "\n" + "\n".join(block) + "\n#define ITEMS_COUNT")
     text = re.sub(r"#define ITEMS_COUNT[ \t]+\d+", f"#define ITEMS_COUNT       {count}", text)
+    if narc_rows:
+        text = re.sub(r"#define FIRST_IMPORTED_ITEM[ \t]+\d+", f"#define FIRST_IMPORTED_ITEM      {first_id}", text)
+        text = re.sub(r"#define FIRST_IMPORTED_ITEM_DATA[ \t]+\d+", f"#define FIRST_IMPORTED_ITEM_DATA {first_data}", text)
     ITEMS_H.write_text(text)
 
     # here_rows is what sync() edits in place, so the kept rows are read back
@@ -724,18 +731,28 @@ def main():
 
     table = original(ITEM_C)
     if narc_rows:
-        lines = ["    // The rest of the reference's items. An item whose art is konefr's blank",
-                 f"    // placeholder takes ITEM_NONE's icon, members {BLANK_ICON[0]} and",
-                 f"    // {BLANK_ICON[1]}; the rest are built from the PNGs in item_icon."]
-        lines += [f"    [{name}] = {{ NARC_item_data_{data:04d}_bin, "
-                  f"NARC_item_icon_item_icon_{tiles:03d}_NCGR, "
-                  f"NARC_item_icon_item_icon_{palette:03d}_NCLR, AGB_ITEM_NONE }},"
-                  for name, data, tiles, palette in narc_rows]
-        # The table's own closing brace, not the first one in the file: this
-        # went into sPocketCounts once.
-        head, marker, rest = table.partition("sItemNarcIds[ITEMS_COUNT][4] = {")
-        end = rest.index("\n};")
-        table = head + marker + rest[:end] + "\n" + "\n".join(lines) + rest[end:]
+        # One halfword an item: the data member follows the id, the AGB code is
+        # none, and the icon is its own tiles member (the palette is always the
+        # next one) or zero for the blank pair. The full four-column rows cost
+        # the main arena 21 KB, and that arena is what a new heap is carved from.
+        for k, (name, data, tiles, palette) in enumerate(by_id):
+            if data != first_data + k:
+                raise SystemExit(f"{name}: data member {data} breaks the run from {first_data}")
+            if tiles != BLANK_ICON[0] and palette != tiles + 1:
+                raise SystemExit(f"{name}: palette {palette} is not the member after its tiles {tiles}")
+        icon_members = [0 if tiles == BLANK_ICON[0] else tiles for _, _, tiles, _ in by_id]
+        lines = ["// The rest of the reference's items take no rows: their data members run in",
+                 "// order from FIRST_IMPORTED_ITEM_DATA, their AGB code is none, and their icon",
+                 "// is either a member of their own -- the palette is always the next one -- or",
+                 "// the blank pair ITEM_NONE draws with, which is what a zero here means. Kept",
+                 "// as one halfword an item instead of four, because the full table cost the",
+                 "// arena 21 KB it did not have to spend.",
+                 "static const u16 sImportedItemIcons[ITEMS_COUNT - FIRST_IMPORTED_ITEM] = {"]
+        lines += ["    " + ", ".join(f"{v:4d}" for v in icon_members[k:k + 12]) + "," for k in range(0, len(icon_members), 12)]
+        lines.append("};")
+        head, marker, rest = table.partition("sItemNarcIds[FIRST_IMPORTED_ITEM][4] = {")
+        end = rest.index("\n};\n") + len("\n};\n")
+        table = head + marker + rest[:end] + "\n" + "\n".join(lines) + "\n" + rest[end:]
     ITEM_C.write_text(table)
 
     makefile = original(ITEM_MK)

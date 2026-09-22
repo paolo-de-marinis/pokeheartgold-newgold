@@ -90,14 +90,33 @@ def mapping():
 
 
 def narc_rows():
-    """The sItemNarcIds lines, as item name -> (data, NCGR, NCLR) member."""
-    table = ITEM_C.read_text()
-    table = table[table.index("sItemNarcIds[ITEMS_COUNT][4] = {"):]
+    """Every item's (data, NCGR, NCLR) member, as GetItemIndexMapping answers.
+
+    The shipped items keep a four-column row each in sItemNarcIds. The
+    imported ones do not: their data member follows their id from
+    FIRST_IMPORTED_ITEM_DATA, and sImportedItemIcons holds one halfword an
+    item -- its tiles member, the palette being the next one, or zero for the
+    blank pair. Both are read back here so the checks below see one table.
+    """
+    text = ITEM_C.read_text()
+    table = text[text.index("sItemNarcIds[FIRST_IMPORTED_ITEM][4] = {"):]
     table = table[:table.index("\n};")]
     rows = re.findall(r"\[(ITEM_[A-Z0-9_]+)\] = \{ NARC_item_data_(\d+)_bin, "
                       r"NARC_item_icon_item_icon_(\d+)_NCGR, "
                       r"NARC_item_icon_item_icon_(\d+)_NCLR", table)
-    return {name: (int(data), int(ncgr), int(nclr)) for name, data, ncgr, nclr in rows}
+    out = {name: (int(data), int(ncgr), int(nclr)) for name, data, ncgr, nclr in rows}
+    header = HEADER.read_text()
+    first = int(re.search(r"#define FIRST_IMPORTED_ITEM\s+(\d+)", header).group(1))
+    first_data = int(re.search(r"#define FIRST_IMPORTED_ITEM_DATA\s+(\d+)", header).group(1))
+    icons = text[text.index("sImportedItemIcons[ITEMS_COUNT - FIRST_IMPORTED_ITEM] = {"):]
+    icons = [int(v) for v in re.findall(r"\b(\d+)\b", icons[icons.index("{") + 1:icons.index("\n};")])]
+    by_id = {number: name for name, number in item_ids().items()}
+    for k, tiles in enumerate(icons):
+        name = by_id.get(first + k)
+        if name is None:
+            continue
+        out[name] = (first_data + k, tiles or 793, tiles + 1 if tiles else 794)
+    return out
 
 
 def icon_members():
@@ -140,7 +159,7 @@ class ItemRangeTests(unittest.TestCase):
                          "items with no line in sItemNarcIds")
         # The one table an item id indexes. Sized by the range rather than by a
         # number someone typed, so it cannot be left behind by the next import.
-        self.assertIn("sItemNarcIds[ITEMS_COUNT][4]", ITEM_C.read_text())
+        self.assertIn("sItemNarcIds[FIRST_IMPORTED_ITEM][4]", ITEM_C.read_text())
 
     def test_the_item_data_every_item_points_at_was_written(self):
         """csv2bin makes one archive member per row, in order, so the last row

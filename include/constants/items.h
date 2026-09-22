@@ -3218,6 +3218,10 @@
 #define ITEM_CANARI_BREAD                2692
 
 #define ITEMS_COUNT       2693
+// The first item the whole-range import brought, and the data member it sits
+// at: from here on the archive members follow the ids in order.
+#define FIRST_IMPORTED_ITEM      564
+#define FIRST_IMPORTED_ITEM_DATA 541
 
 #define ITEM_MIN 1
 #define ITEM_MAX ITEMS_COUNT - 1
