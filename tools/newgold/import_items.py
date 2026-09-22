@@ -474,6 +474,51 @@ def row_body(text):
 # --- the self-check ------------------------------------------------------
 
 
+# Fields where a shared item's record disagreeing with the reference means
+# konefr changed the number and this port owes the change. Everything else
+# that disagrees is a difference in how the two engines do the same thing,
+# and is named in KEPT below with the reason.
+SYNCED = ("price", "naturalGiftPower", "flingPower", "holdEffectParam")
+
+KEPT = {
+    # This engine evolves a Pokemon by a party-use routine, not by a hold
+    # effect: Prism Scale here has fieldUseFunc 20, partyUse and evolve set
+    # and no hold effect, which is how every other evolution stone in the
+    # game is written. Taking the reference's HOLD_EFFECT_EVOLVE_FEEBAS and
+    # its zeroes would leave Feebas unable to evolve at all.
+    ("ITEM_PRISM_SCALE", "holdEffect"),
+    ("ITEM_PRISM_SCALE", "fieldUseFunc"),
+    ("ITEM_PRISM_SCALE", "partyUse"),
+    ("ITEM_PRISM_SCALE", "evolve"),
+}
+
+
+def sync(reference, pairs, effects, fields, rows, report):
+    """Bring the shared items' records up to the reference's numbers.
+
+    The importer only ever adds an item it has not got, so a record that came
+    over with the ROM keeps the value Game Freak gave it even where konefr
+    changed his. That is most of the economy -- an Amulet Coin is 100 here and
+    30000 there -- and all of Natural Gift's sixth-generation powers.
+    """
+    changed = {}
+    index = {name: i for i, name in enumerate(fields)}
+    for theirs, ours in sorted(pairs.items()):
+        if theirs not in reference.records or ours not in rows:
+            continue
+        got = record(reference, theirs, fields, effects, {})
+        for field in SYNCED:
+            if (ours, field) in KEPT:
+                continue
+            at = index[field]
+            if rows[ours][at] != got[at]:
+                changed.setdefault(field, []).append((ours, rows[ours][at], got[at]))
+                rows[ours][at] = got[at]
+    report["shared records brought up to the reference"] = {
+        field: len(v) for field, v in sorted(changed.items())}
+    return changed
+
+
 def check(reference, pairs, effects, fields, here_rows, report):
     """Rebuild the items both trees already have and say where they disagree.
 
@@ -515,6 +560,8 @@ def main():
     parser.add_argument("reference", type=Path)
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--limit", type=int, help="import only the first N, for a look by eye")
+    parser.add_argument("--sync", action="store_true",
+                        help="also bring the shared items' records up to the reference's numbers")
     args = parser.parse_args()
 
     reference = Reference(args.reference)
@@ -530,6 +577,8 @@ def main():
 
     report = {}
     check(reference, pairs, effects, fields, here_rows, report)
+    if args.sync:
+        sync(reference, pairs, effects, fields, here_rows, report)
 
     missing = [name for number, name in sorted((n, i) for i, n in reference.ids.items())
                if name not in pairs]
@@ -636,7 +685,9 @@ def main():
     text = re.sub(r"#define ITEMS_COUNT[ \t]+\d+", f"#define ITEMS_COUNT       {count}", text)
     ITEMS_H.write_text(text)
 
-    kept = [row for row in rows[1:] if row[0] in here]
+    # here_rows is what sync() edits in place, so the kept rows are read back
+    # out of it rather than out of the file as it was.
+    kept = [[row[0]] + here_rows[row[0]] for row in rows[1:] if row[0] in here]
     with ITEM_CSV.open("w", newline="") as out:
         writer = csv.writer(out, lineterminator="\n")
         writer.writerow(rows[0])

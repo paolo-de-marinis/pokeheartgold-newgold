@@ -261,5 +261,45 @@ class ItemRangeAgainstTheReferenceTests(unittest.TestCase):
             self.assertIn(row["holdEffect"], effects, row["item"])
 
 
+
+class SharedRecordTests(unittest.TestCase):
+    """An item both trees have should carry konefr's numbers, not Game Freak's.
+
+    The importer only ever adds an item this tree has not got, so for a long
+    while every item that came over with the ROM kept its vanilla record even
+    where the reference changed it -- 277 prices and all 64 of Natural Gift's
+    sixth-generation powers. import_items.py --sync is what closes that, and
+    this is what notices if it opens again.
+    """
+
+    REFERENCE = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
+    # Fields that disagree for a reason, with the reason. See KEPT in the
+    # importer: this engine evolves by a party-use routine, not a hold effect.
+    ALLOWED = {("ITEM_PRISM_SCALE", "holdEffect"), ("ITEM_PRISM_SCALE", "fieldUseFunc"),
+               ("ITEM_PRISM_SCALE", "partyUse"), ("ITEM_PRISM_SCALE", "evolve")}
+
+    def test_every_shared_record_matches_the_reference(self):
+        if not self.REFERENCE.exists():
+            self.skipTest("Pinned NewGold reference checkout not configured")
+        sys.path.insert(0, str(ROOT / "tools/newgold"))
+        import import_items as importer
+        reference = importer.Reference(self.REFERENCE)
+        header = importer.original(importer.ITEMS_H)
+        here = importer.item_block(header)
+        pairs = importer.correspondence(reference, here)
+        effects = importer.hold_effect_map(reference, importer.defines(header, "HOLD_EFFECT_"))
+        rows = list(csv.reader(importer.ITEM_CSV.read_text().splitlines()))
+        fields, mine = rows[0][1:], {r[0]: r[1:] for r in rows[1:]}
+        bad = []
+        for theirs, ours in sorted(pairs.items()):
+            if theirs not in reference.records or ours not in mine:
+                continue
+            want = importer.record(reference, theirs, fields, effects, {})
+            for field, wanted, got in zip(fields, want, mine[ours]):
+                if wanted != got and (ours, field) not in self.ALLOWED:
+                    bad.append(f"{ours}.{field}: {got} here, {wanted} in the reference")
+        self.assertEqual(bad, [], "run tools/newgold/import_items.py --sync --write")
+
+
 if __name__ == "__main__":
     unittest.main()
