@@ -2,6 +2,17 @@
 
     .data
 
+// Imported from the reference. Two things it asks for that this game has not
+// got, and why the lines are not here:
+//
+//  - PlayBattleAnimation BATTLE_ANIMATION_*_TERRAIN. Those four are entries
+//    the reference added to the status-effect animation table; this game's
+//    table stops at BATTLE_ANIMATION_DAMAGE_INGRAIN, so asking for one reads
+//    past the end of it. The terrain is announced by its message alone until
+//    the animations exist.
+//  - ChangePermanentBackground, which is a no-op in this game and was already
+//    absent from this file.
+
 _000:
     CompareVarToValue OPCODE_NEQ, BSCRIPT_VAR_SIDE_EFFECT_TYPE, SIDE_EFFECT_TYPE_ABILITY, _skipAbilityPopup
     AbilityPopup BATTLER_CATEGORY_MSG_TEMP, -1
@@ -14,42 +25,37 @@ _skipAbilityPopup:
     GoTo _049
 
 _HadronEngineTerrain:
-    PlayBattleAnimation BATTLER_CATEGORY_ATTACKER, BATTLE_ANIMATION_ELECTRIC_TERRAIN
     Wait
     // {0} turned the ground into Electric Terrain, energizing its futuristic engine!
-    PrintMessage 1701, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP
+    PrintMessage msg_0197_01292, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP
     Wait
     WaitButtonABTime 30
     GoTo _ActivateParadoxTerrainAbility
 
 _019:
-    PlayBattleAnimation BATTLER_CATEGORY_ATTACKER, BATTLE_ANIMATION_GRASSY_TERRAIN
     Wait
     // Grass grew to cover the battlefield!
-    PrintMessage 1388, TAG_NONE
+    PrintMessage msg_0197_01284, TAG_NONE
     GoTo _ResetParadoxTerrainAbility
 
 _024:
-    PlayBattleAnimation BATTLER_CATEGORY_ATTACKER, BATTLE_ANIMATION_MISTY_TERRAIN
     Wait
     // Mist swirled about the battlefield!
-    PrintMessage 1390, TAG_NONE
+    PrintMessage msg_0197_01286, TAG_NONE
     GoTo _ResetParadoxTerrainAbility
 
 _029:
-    PlayBattleAnimation BATTLER_CATEGORY_ATTACKER, BATTLE_ANIMATION_ELECTRIC_TERRAIN
     Wait
     // An electric current ran across the battlefield!
-    PrintMessage 1392, TAG_NONE
+    PrintMessage msg_0197_01288, TAG_NONE
     Wait
     WaitButtonABTime 30
     GoTo _ActivateParadoxTerrainAbility
 
 _034:
-    PlayBattleAnimation BATTLER_CATEGORY_ATTACKER, BATTLE_ANIMATION_PSYCHIC_TERRAIN
     Wait
     // The battlefield got weird!
-    PrintMessage 1394, TAG_NONE
+    PrintMessage msg_0197_01290, TAG_NONE
 
 // TODO: something weird is happening after using Terrain move rather than Surge ability
 

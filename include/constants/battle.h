@@ -268,6 +268,23 @@ typedef enum Terrain {
 #define FIELD_CONDITION_GRAVITY_SHIFT    12
 #define FIELD_CONDITION_TRICK_ROOM_SHIFT 16
 
+// The terrain a move lays over the battle. It is the field condition above in
+// everything but its spelling -- five turns, counted down in the same place,
+// ended with a message -- but only one terrain can be down at a time, so it is
+// a value rather than a set of flags. The values are the ones the battle
+// scripts hand to GotoIfTerrainOverlayIsType.
+//
+// Not the Terrain enum near the top of this file: that is the ground the
+// battle is being fought on, which is chosen when the battle starts and never
+// changes. A terrain laid here covers that ground over.
+#define TERRAIN_NONE     0
+#define GRASSY_TERRAIN   1
+#define MISTY_TERRAIN    2
+#define ELECTRIC_TERRAIN 3
+#define PSYCHIC_TERRAIN  4
+
+#define TERRAIN_TURNS 5
+
 // Field Side Conditions Flags
 #define SIDE_CONDITION_REFLECT       (1 << 0)
 #define SIDE_CONDITION_LIGHT_SCREEN  (1 << 1)

@@ -2,17 +2,17 @@
 #define POKEHEARTGOLD_CONSTANTS_BATTLE_SCRIPT_IMPORTS_H
 
 // What the imported battle scripts name and this game has not got:
-// the terrains, the Drives, the Memories, the weather the reference
-// added. A script that mentions one of these assembles and runs; the
-// branch it guards is never taken, because nothing here sets it. The
-// list is what tests/newgold/test_move_effects.py counts down.
+// the Drives, the Memories, the weather the reference added. A script
+// that mentions one of these assembles and runs; the branch it guards
+// is never taken, because nothing here sets it. The list is what
+// tests/newgold/test_move_effects.py counts down.
+//
+// The four terrain types used to be here. They have moved to
+// constants/battle.h, next to the field conditions, because a terrain
+// is now something this game has.
 
 #define EXECUTION_ORDER_AFTER_YOU                      1
-#define GRASSY_TERRAIN                                 1
 #define EXECUTION_ORDER_QUASH                          2
-#define MISTY_TERRAIN                                  2
-#define ELECTRIC_TERRAIN                               3
-#define PSYCHIC_TERRAIN                                4
 #define BATTLE_ANIMATION_GRASSY_TERRAIN                50
 #define BATTLE_ANIMATION_MISTY_TERRAIN                 51
 #define BATTLE_ANIMATION_ELECTRIC_TERRAIN              52

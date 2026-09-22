@@ -11,4 +11,6 @@ _000:
     WaitButtonABTime 30
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_WEATHER
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SUN_PERMANENT
-    End 
+    // The sun is out, so Protosynthesis switches on.
+    ActivateParadoxAbility ABILITY_PROTOSYNTHESIS
+    End

@@ -5148,4 +5148,144 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">{STRVAR_1 1, 0, 0} can only use\n{STRVAR_1 6, 1, 0}!</language>
 	</row>
+	<row id="msg_0197_01284" index="1284">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grass grew to cover the battlefield!</language>
+	</row>
+	<row id="msg_0197_01285" index="1285">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The grass disappeared\nfrom the battlefield.</language>
+	</row>
+	<row id="msg_0197_01286" index="1286">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mist swirled about the battlefield!</language>
+	</row>
+	<row id="msg_0197_01287" index="1287">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The mist disappeared\nfrom the battlefield.</language>
+	</row>
+	<row id="msg_0197_01288" index="1288">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">An electric current\nran across the battlefield!</language>
+	</row>
+	<row id="msg_0197_01289" index="1289">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The electricity disappeared\nfrom the battlefield.</language>
+	</row>
+	<row id="msg_0197_01290" index="1290">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The battlefield got weird!</language>
+	</row>
+	<row id="msg_0197_01291" index="1291">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The weirdness disappeared\nfrom the battlefield.</language>
+	</row>
+	<row id="msg_0197_01292" index="1292">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} turned the ground into\nElectric Terrain, energizing its\ffuturistic engine!</language>
+	</row>
+	<row id="msg_0197_01293" index="1293">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} turned the ground\ninto Electric Terrain, energizing its\ffuturistic engine!</language>
+	</row>
+	<row id="msg_0197_01294" index="1294">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} turned the\nground into Electric Terrain,\fenergizing its futuristic engine!</language>
+	</row>
+	<row id="msg_0197_01295" index="1295">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} is protected by\nthe Psychic Terrain!</language>
+	</row>
+	<row id="msg_0197_01296" index="1296">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} is protected\nby the Psychic Terrain!</language>
+	</row>
+	<row id="msg_0197_01297" index="1297">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} is protected\nby the Psychic Terrain!</language>
+	</row>
+	<row id="msg_0197_01298" index="1298">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} is protected by\nthe Electric Terrain!</language>
+	</row>
+	<row id="msg_0197_01299" index="1299">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} is protected\nby the Electric Terrain!</language>
+	</row>
+	<row id="msg_0197_01300" index="1300">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} is protected\nby the Electric Terrain!</language>
+	</row>
+	<row id="msg_0197_01301" index="1301">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} surrounds itself\nwith a protective mist!</language>
+	</row>
+	<row id="msg_0197_01302" index="1302">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} surrounds itself\nwith a protective mist!</language>
+	</row>
+	<row id="msg_0197_01303" index="1303">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} surrounds\nitself with a protective mist!</language>
+	</row>
+	<row id="msg_0197_01304" index="1304">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} used the Electric Terrain\nto energize its futuristic engine!</language>
+	</row>
+	<row id="msg_0197_01305" index="1305">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} used the Electric\nTerrain to energize its futuristic engine!</language>
+	</row>
+	<row id="msg_0197_01306" index="1306">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} used the\nElectric Terrain to energize its\ffuturistic engine!</language>
+	</row>
+	<row id="msg_0197_01307" index="1307">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The harsh sunlight activated\n{STRVAR_1 1, 0, 0}’s {STRVAR_1 5, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01308" index="1308">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The harsh sunlight activated the wild\n{STRVAR_1 1, 0, 0}’s {STRVAR_1 5, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01309" index="1309">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The harsh sunlight activated the opposing\n{STRVAR_1 1, 0, 0}’s {STRVAR_1 5, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01310" index="1310">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The Electric Terrain activated\n{STRVAR_1 1, 0, 0}’s {STRVAR_1 5, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01311" index="1311">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The Electric Terrain activated the wild\n{STRVAR_1 1, 0, 0}’s {STRVAR_1 5, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01312" index="1312">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The Electric Terrain activated the opposing\n{STRVAR_1 1, 0, 0}’s {STRVAR_1 5, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01313" index="1313">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s {STRVAR_1 13, 1, 0}\nwas heightened!</language>
+	</row>
+	<row id="msg_0197_01314" index="1314">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s {STRVAR_1 13, 1, 0}\nwas heightened!</language>
+	</row>
+	<row id="msg_0197_01315" index="1315">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s\n{STRVAR_1 13, 1, 0} was heightened!</language>
+	</row>
+	<row id="msg_0197_01316" index="1316">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The effects of {STRVAR_1 1, 0, 0}’s\n{STRVAR_1 5, 1, 0} wore off!</language>
+	</row>
+	<row id="msg_0197_01317" index="1317">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The effects of the wild {STRVAR_1 1, 0, 0}’s\n{STRVAR_1 5, 1, 0} wore off!</language>
+	</row>
+	<row id="msg_0197_01318" index="1318">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The effects of the opposing\n{STRVAR_1 1, 0, 0}’s {STRVAR_1 5, 1, 0} wore off!</language>
+	</row>
 </body>

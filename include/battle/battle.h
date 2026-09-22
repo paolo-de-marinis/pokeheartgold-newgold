@@ -475,6 +475,29 @@ typedef struct BattleContext {
     // per party slot here and not on the BattleMon, which is rebuilt every
     // time its Pokemon walks back in.
     u8 onceOnlyEntryAbilityDone[2][PARTY_SIZE];
+    // The terrain laid over the battle and how many turns it has left. The pair
+    // is fieldCondition and fieldConditionData.weatherTurns again, in the one
+    // spelling a thing that can only be one of five things at a time wants.
+    // Zeroed with the rest of the context when a battle begins, and gone with
+    // it when the battle ends.
+    u8 terrainOverlayType;
+    u8 terrainOverlayTurns;
+    // Set when a battler uses a move Psychic Terrain could have refused, and
+    // cleared when that battler is loaded. Nothing reads it -- the reference
+    // writes this flag in exactly one place and never asks about it again --
+    // but the flag is the reference's, so the port keeps it rather than
+    // quietly dropping the command that sets it.
+    u8 psychicTerrainMoveUsed[BATTLER_MAX];
+    // Which one stat Protosynthesis or Quark Drive has raised, as a STAT_*, or
+    // zero for none -- STAT_HP is never the answer, so zero is free to mean
+    // "not raised". Cleared when the Pokemon is loaded into its slot, so the
+    // boost does not follow it out of the battle and back in.
+    //
+    // The reference keeps a boosterEnergyActivated flag beside this one, for
+    // the item that switches the ability on when the weather will not. That
+    // item and its hold effect are not in this game, so the flag would never
+    // be set and is not here.
+    u8 paradoxBoostedStat[BATTLER_MAX];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

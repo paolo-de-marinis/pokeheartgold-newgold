@@ -9308,30 +9308,61 @@ BOOL BtlCmd_BatchEffectivenessMessage(BattleSystem *battleSystem, BattleContext 
 }
 
 // The ground the battle is being fought on, which this game already knows
-// about: it is what Camouflage and Nature Power read.
+// about: it is what Camouflage and Nature Power read. A terrain laid over the
+// battle covers that ground, so while one is down the answer is always no.
 BOOL BtlCmd_GotoIfCurrentFieldIsType(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
     int terrain = BattleScriptReadWord(ctx);
     int adrs = BattleScriptReadWord(ctx);
 
-    if (BattleSystem_GetTerrainId(battleSystem) == terrain) {
+    if (BattleSystem_GetTerrainId(battleSystem) == terrain && ctx->terrainOverlayType == TERRAIN_NONE) {
         BattleScriptIncrementPointer(ctx, adrs);
     }
 
     return FALSE;
 }
 
-// The four below are for the terrains laid over a battle by Grassy Terrain and
-// its kin. None of those moves exist this far back, so nothing ever lays one
-// and there is never an overlay to read: what is underfoot is the ground the
-// battle started on, which GotoIfCurrentFieldIsType answers for.
+// Lay the terrain the move being used calls for, or -- when the script passes
+// TRUE, which is Defog's and Ice Spinner's way in -- clear whatever is down.
+//
+// The jump is the reference's and is dead there too: laying the terrain that is
+// already down takes it, and then UpdateTerrainOverlay finds nothing to change
+// and the move goes on to announce a terrain it did not lay. Kept as the
+// reference has it rather than made to fail the move.
 BOOL BtlCmd_UpdateTerrainOverlay(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
 
-    BattleScriptReadWord(ctx);
-    BattleScriptReadWord(ctx);
+    int endTerrain = BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+    int terrainType = TERRAIN_NONE;
+
+    if (endTerrain == TRUE) {
+        BattleContext_UpdateTerrainOverlay(ctx, TERRAIN_NONE);
+        return FALSE;
+    }
+
+    switch (ctx->moveNoCur) {
+    case MOVE_GRASSY_TERRAIN:
+        terrainType = GRASSY_TERRAIN;
+        break;
+    case MOVE_MISTY_TERRAIN:
+        terrainType = MISTY_TERRAIN;
+        break;
+    case MOVE_ELECTRIC_TERRAIN:
+        terrainType = ELECTRIC_TERRAIN;
+        break;
+    case MOVE_PSYCHIC_TERRAIN:
+        terrainType = PSYCHIC_TERRAIN;
+        break;
+    }
+
+    if (terrainType == ctx->terrainOverlayType) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    } else {
+        BattleContext_UpdateTerrainOverlay(ctx, terrainType);
+    }
 
     return FALSE;
 }
@@ -9340,15 +9371,23 @@ BOOL BtlCmd_GotoIfTerrainOverlayIsType(BattleSystem *battleSystem, BattleContext
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
 
-    BattleScriptReadWord(ctx);
-    BattleScriptReadWord(ctx);
+    int terrainType = BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (ctx->terrainOverlayType == terrainType) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
 
     return FALSE;
 }
 
+// Nothing asks about this flag, here or in the reference, which writes it in
+// exactly one place and never reads it back. See BattleContext.
 BOOL BtlCmd_SetPsychicTerrainMoveUsedFlag(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
+
+    ctx->psychicTerrainMoveUsed[ctx->battlerIdAttacker] = 1;
 
     return FALSE;
 }
@@ -9437,19 +9476,61 @@ BOOL BtlCmd_GoToIfTerastallized(BattleSystem *battleSystem, BattleContext *ctx) 
     return FALSE;
 }
 
-// The paradox Pokemon and their weather-and-terrain abilities are eight
-// generations away; nothing here can have one to activate or reset.
+// The two commands below are how a weather or a terrain tells Protosynthesis
+// and Quark Drive that something underfoot or overhead has changed. Both walk
+// every battler with the named ability, and both hand off to a subscript and
+// then rewind the script pointer onto themselves, so that the next battler is
+// dealt with once that subscript has run: one message at a time, and the
+// command only falls through when nobody is left.
+//
+// The order is the turn order rather than the reference's own raw-speed sort,
+// which this game has not got. It decides which of two Pokemon is announced
+// first and nothing else.
 BOOL BtlCmd_ActivateParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx) {
-#pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
-    BattleScriptReadWord(ctx);
+
+    int ability = BattleScriptReadWord(ctx);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+    int i;
+
+    for (i = 0; i < maxBattlers; i++) {
+        int battlerId = ctx->turnOrder[i];
+        int script;
+
+        if (GetBattlerAbility(ctx, battlerId) != ability) {
+            continue;
+        }
+        // Whether the weather or the ground is actually right is asked there.
+        script = BattleContext_ActivateParadoxAbility(battleSystem, ctx, battlerId);
+        if (script != BATTLE_SUBSCRIPT_NONE) {
+            BattleScriptIncrementPointer(ctx, -2);
+            BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, script);
+            break;
+        }
+    }
+
     return FALSE;
 }
 
 BOOL BtlCmd_ResetParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx) {
-#pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
-    BattleScriptReadWord(ctx);
+
+    int ability = BattleScriptReadWord(ctx);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+    int i;
+
+    for (i = 0; i < maxBattlers; i++) {
+        int battlerId = ctx->turnOrder[i];
+
+        if (GetBattlerAbility(ctx, battlerId) == ability && ctx->paradoxBoostedStat[battlerId] != 0) {
+            ctx->paradoxBoostedStat[battlerId] = 0;
+            ctx->battlerIdTemp = battlerId;
+            BattleScriptIncrementPointer(ctx, -2);
+            BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_PARADOX_ABILITY_END);
+            break;
+        }
+    }
+
     return FALSE;
 }
 

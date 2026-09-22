@@ -12,8 +12,8 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 162 commits |
-| generated | 2026-09-22 06:52 |
+| port | 163 commits |
+| generated | 2026-09-22 06:57 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
@@ -40,7 +40,7 @@ Moves       ██████████████████████�
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   545 / 2684
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       51 files
+Tests       52 files
 ROM         144.9 MB of 268.4 MB   (2G card, 54% used)
 ```
 <!-- LEDGER:COUNTS:END -->
@@ -87,12 +87,12 @@ konefr *could* reach, not only what the game reaches today.
 | --- | --- | :-- |
 | Species | 1042 sprite directories, 1277 icons, heights, learnsets, evolutions; every base species the reference names is here, the rest are its forms | 🟠 1041 / 1075 |
 | Moves | 131 effect scripts, 59 subscripts, 62 side-effect table slots | ✅ 923 / 923 |
-| Abilities | 270 do something — 123 retail effects and 147 added; of the other 49, sixteen are a name in the reference too and the rest want a terrain, a primal weather or a paradox booster this tree has not got | 🟠 270 / 319 |
+| Abilities | 280 do something — 123 retail effects and 157 added; of the other 39, sixteen are a name in the reference too and the rest want a primal weather, a paradox booster or a form this tree has not got | 🟠 280 / 319 |
 | Level-up learnsets | 1042; the entry is a word now, so a move past 511 can be learnt | ✅ done |
 | Battle script commands | 294 opcodes, name- and number-identical to the reference; 24 of the added handlers still only consume their operands | 🟠 270 / 294 |
 | Cries | `PlayCryEx` decompiled in `src/unk_02005D10.c` and linked by `main.lsf` — the 495 ceiling is gone, but the bank is mapped twice on one path | 🟠 partial |
 | Items | 545 against the engine's 2684; nine Gen 8/9 evolution items are missing and Ability Shield is a dead identifier | 🟠 545 / 2684 |
-| Effects with a script but no C | counted by `test_move_effects.py`; a move using one can stall a battle | 🔴 20 open |
+| Effects with a script but no C | counted by `test_move_effects.py`; a move using one can stall a battle | 🔴 18 open |
 
 ---
 

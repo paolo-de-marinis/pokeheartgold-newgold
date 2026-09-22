@@ -158,9 +158,12 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // structure, and everything it reads is below what has been appended. The
 // added moves' records are the one part meant to grow -- importing more moves
 // makes that table longer and moves nothing else -- so they are written out
-// here rather than folded into the number.
+// here rather than folded into the number. The number is not the sum of what
+// has been appended: six bytes of terrain state grew it by four, because two
+// of them went into padding the structure already carried. The four after
+// those, for the Paradox abilities, grew it by four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x318C + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
+    sizeof(BattleContext) == 0x3194 + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -867,6 +870,7 @@ typedef enum UpdateFieldConditionState {
     UFC_STATE_HAIL,
     UFC_STATE_FOG,
     UFC_STATE_GRAVITY,
+    UFC_STATE_TERRAIN,
     UFC_STATE_END
 } UpdateFieldConditionState;
 
@@ -1181,6 +1185,24 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
                 ctx->fieldCondition -= (1 << FIELD_CONDITION_GRAVITY_SHIFT);
                 if ((ctx->fieldCondition & FIELD_CONDITION_GRAVITY) == 0) {
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_GRAVITY_END);
+                    ctx->commandNext = ctx->command;
+                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                    flag = 1;
+                }
+            }
+            ctx->stateFieldConditionUpdate++;
+            break;
+        case UFC_STATE_TERRAIN:
+            // A terrain runs out the way a weather above does, one turn at a
+            // time in the same loop, and the script it runs is what says which
+            // terrain ended and clears it. The count stops at the floor rather
+            // than wrapping, which is what the reference's own guard is for.
+            if (ctx->terrainOverlayType != TERRAIN_NONE) {
+                if (ctx->terrainOverlayTurns > 0) {
+                    ctx->terrainOverlayTurns--;
+                }
+                if (ctx->terrainOverlayTurns == 0) {
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END);
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                     flag = 1;

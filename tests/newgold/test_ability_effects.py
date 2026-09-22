@@ -50,6 +50,7 @@ IMPLEMENTED = {
     "DRAGONS_MAW",
     "EARTH_EATER",
     "EELEVATE",
+    "ELECTRIC_SURGE",
     "ELECTROMORPHOSIS",
     "EVAPORATE",
     "FAIRY_AURA",
@@ -65,8 +66,11 @@ IMPLEMENTED = {
     "GOOD_AS_GOLD",
     "GOOEY",
     "GORILLA_TACTICS",
+    "GRASSY_SURGE",
+    "GRASS_PELT",
     "GRIM_NEIGH",
     "GULP_MISSILE",
+    "HADRON_ENGINE",
     "HARVEST",
     "HEALER",
     "HEAVY_METAL",
@@ -90,6 +94,7 @@ IMPLEMENTED = {
     "MERCILESS",
     "MINDS_EYE",
     "MIRROR_ARMOR",
+    "MISTY_SURGE",
     "MOODY",
     "MOXIE",
     "MULTISCALE",
@@ -112,8 +117,11 @@ IMPLEMENTED = {
     "PRISM_ARMOR",
     "PROPELLER_TAIL",
     "PROTEAN",
+    "PROTOSYNTHESIS",
+    "PSYCHIC_SURGE",
     "PUNK_ROCK",
     "PURIFYING_SALT",
+    "QUARK_DRIVE",
     "QUEENLY_MAJESTY",
     "QUICK_DRAW",
     "RATTLED",
@@ -129,6 +137,7 @@ IMPLEMENTED = {
     "SAP_SIPPER",
     "SCHOOLING",
     "SCREEN_CLEANER",
+    "SEED_SOWER",
     "SHADOW_SHIELD",
     "SHARPNESS",
     "SHEER_FORCE",
@@ -142,6 +151,7 @@ IMPLEMENTED = {
     "STEELY_SPIRIT",
     "STRONG_JAW",
     "SUPERSWEET_SYRUP",
+    "SURGE_SURFER",
     "SWEET_VEIL",
     "SWORD_OF_RUIN",
     "TABLETS_OF_RUIN",
@@ -168,6 +178,7 @@ IMPLEMENTED = {
     "WONDER_SKIN",
 }
 
+
 # Cud Chew is a name in New Gold too: the reference declares it and nothing
 # reads it, so a Farigiraf there does not bring its berry back up either.
 # Giving it an effect here would be a change to the game, not a port of it.
@@ -182,22 +193,14 @@ IMPLEMENTED = {
 # ability does nothing looks right on the summary screen and loses battles
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
-    "CUD_CHEW",
-    "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE", "DANCER",
-    "DELTA_STREAM", "DESOLATE_LAND", "DISGUISE", "ELECTRIC_SURGE",
-    "EMBODY_ASPECT", "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4",
-    "EMERGENCY_EXIT",
-    "GRASSY_SURGE", "GRASS_PELT", "GUARD_DOG", "HADRON_ENGINE", "HUNGER_SWITCH", "ICE_FACE",
-    "ILLUSION",
-    "MEGA_SOL", "MIMICRY", "MISTY_SURGE",
-    "OPPORTUNIST", "PARENTAL_BOND", "POWER_SPOT",
-    "PRIMORDIAL_SEA",
-    "PROTOSYNTHESIS", "PSYCHIC_SURGE", "QUARK_DRIVE", "SEED_SOWER",
-    "SHIELDS_DOWN", "STAKEOUT",
-    "STANCE_CHANGE", "SUPREME_OVERLORD", "SURGE_SURFER", "SYMBIOSIS", "TEMP4",
-    "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN",
-    "VICTORY_STAR", "WIMP_OUT",
-    "ZEN_MODE", "ZERO_TO_HERO"
+    "CUD_CHEW", "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE",
+    "DANCER", "DELTA_STREAM", "DESOLATE_LAND", "DISGUISE", "EMBODY_ASPECT",
+    "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4", "EMERGENCY_EXIT",
+    "GUARD_DOG", "HUNGER_SWITCH", "ICE_FACE", "ILLUSION", "MEGA_SOL", "MIMICRY",
+    "OPPORTUNIST", "PARENTAL_BOND", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN",
+    "STAKEOUT", "STANCE_CHANGE", "SUPREME_OVERLORD", "SYMBIOSIS", "TEMP4",
+    "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR",
+    "WIMP_OUT", "ZEN_MODE", "ZERO_TO_HERO"
 }
 
 
@@ -253,7 +256,7 @@ class AbilityEffectTests(unittest.TestCase):
     # abilities, every one of them read somewhere in the reference, so the
     # number went up once and may only come down from here: lowering it is the
     # work, raising it needs a reason written next to it.
-    STILL_TO_DO = 49
+    STILL_TO_DO = 39
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

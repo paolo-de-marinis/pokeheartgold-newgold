@@ -109,6 +109,12 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     // Protean's "once per appearance" is this flag, so a new appearance has to
     // start without it. The reference clears it here for the same reason.
     ctx->battleMons[battlerId].abilityActivatedFlag = 0;
+    // Kept off the BattleMon because that structure's size is pinned; cleared
+    // here, which is where the reference clears its copy.
+    ctx->psychicTerrainMoveUsed[battlerId] = 0;
+    // A Paradox ability picks its stat again from scratch when its Pokemon
+    // comes back out, so what it had picked before does not travel with it.
+    ctx->paradoxBoostedStat[battlerId] = 0;
 
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
@@ -1035,6 +1041,13 @@ static s8 BattlerMovePriority(BattleContext *ctx, int battlerId, u16 moveNo) {
         return priority;
     }
 
+    // Grassy Glide is hurried by the grass rather than by an ability, so it is
+    // outside the switch. The reference never asks whether the user is
+    // standing on that grass, only whether the grass is there.
+    if (moveNo == MOVE_GRASSY_GLIDE && ctx->terrainOverlayType == GRASSY_TERRAIN) {
+        priority++;
+    }
+
     switch (GetBattlerAbility(ctx, battlerId)) {
     case ABILITY_PRANKSTER:
         if (BattleMoveTbl(ctx, moveNo)->category == CATEGORY_STATUS) {
@@ -1134,6 +1147,29 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
         if ((ability2 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability2 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) || (ability2 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) || (ability2 == ABILITY_SLUSH_RUSH && ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL)) {
             speed2 *= 2;
         }
+    }
+
+    // Surge Surfer is the terrain's answer to Swift Swim and reads the same
+    // way, but outside the block above: Cloud Nine and Air Lock blot out the
+    // weather and leave the ground alone.
+    if (ctx->terrainOverlayType == ELECTRIC_TERRAIN) {
+        if (ability1 == ABILITY_SURGE_SURFER) {
+            speed1 *= 2;
+        }
+        if (ability2 == ABILITY_SURGE_SURFER) {
+            speed2 *= 2;
+        }
+    }
+
+    // Protosynthesis and Quark Drive raise whichever stat was highest when
+    // they switched on, and Speed is the one they raise by half rather than by
+    // three tenths. Which stat that is was settled once, in
+    // BattleContext_ActivateParadoxAbility; here it is only read.
+    if ((ability1 == ABILITY_PROTOSYNTHESIS || ability1 == ABILITY_QUARK_DRIVE) && ctx->paradoxBoostedStat[battlerId1] == STAT_SPEED) {
+        speed1 = speed1 * 15 / 10;
+    }
+    if ((ability2 == ABILITY_PROTOSYNTHESIS || ability2 == ABILITY_QUARK_DRIVE) && ctx->paradoxBoostedStat[battlerId2] == STAT_SPEED) {
+        speed2 = speed2 * 15 / 10;
     }
 
     for (i = 0; i < NELEMS(sSpeedHalvingItemEffects); i++) {
@@ -3422,6 +3458,95 @@ BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) {
     return TRUE;
 }
 
+// Lay a terrain over the battle, or clear the one that is there. The turns are
+// the five a weather gets. The reference lengthens them for a Terrain Extender,
+// which is an item this game has no hold effect for, so the count here is
+// always the plain five.
+//
+// Setting the terrain that is already down does nothing at all, which is what
+// makes the move fail rather than refresh it.
+void BattleContext_UpdateTerrainOverlay(BattleContext *ctx, int terrainType) {
+    if (ctx->terrainOverlayType == terrainType) {
+        return;
+    }
+
+    ctx->terrainOverlayType = terrainType;
+    ctx->terrainOverlayTurns = terrainType != TERRAIN_NONE ? TERRAIN_TURNS : 0;
+}
+
+// Which of a battler's five stats is highest right now, stat stages included.
+// Attack wins a tie, then Defense, Sp. Atk, Sp. Def, and Speed last -- which is
+// why Speed is left out of the loop and asked afterwards.
+static u8 ParadoxGreatestStat(BattleContext *ctx, int battlerId) {
+    BattleMon *mon = &ctx->battleMons[battlerId];
+    u16 stats[] = { mon->atk, mon->def, mon->speed, mon->spAtk, mon->spDef };
+    u8 highestStat = STAT_ATK;
+    u32 highest = BattleStatWithStage(stats[STAT_ATK - 1], mon->statChanges[STAT_ATK]);
+    u32 value;
+    int stat;
+
+    for (stat = STAT_DEF; stat < STAT_ACC; stat++) {
+        if (stat == STAT_SPEED) {
+            continue;
+        }
+        value = BattleStatWithStage(stats[stat - 1], mon->statChanges[stat]);
+        if (value > highest) {
+            highest = value;
+            highestStat = stat;
+        }
+    }
+
+    if (BattleStatWithStage(stats[STAT_SPEED - 1], mon->statChanges[STAT_SPEED]) > highest) {
+        highestStat = STAT_SPEED;
+    }
+
+    return highestStat;
+}
+
+// Protosynthesis in the sun and Quark Drive on the Electric Terrain. Both pick
+// out the holder's best stat once, keep it until the weather or the ground
+// that switched them on has gone, and are announced by the same subscript.
+//
+// Returns the subscript to run, or BATTLE_SUBSCRIPT_NONE when there is nothing
+// to switch on. Called from the send-out check and from the ActivateParadoxAbility
+// script command, which is why it does all of its own asking.
+//
+// The reference also switches these on from a Booster Energy, the item that
+// stands in for the weather. This game has no such item and no hold effect for
+// one, so that half is not here.
+int BattleContext_ActivateParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int script = BATTLE_SUBSCRIPT_NONE;
+
+    // A Transformed Pokemon does not get to use a Paradox ability it copied.
+    if (ctx->paradoxBoostedStat[battlerId] != 0 || !ctx->battleMons[battlerId].hp || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+        return BATTLE_SUBSCRIPT_NONE;
+    }
+
+    switch (GetBattlerAbility(ctx, battlerId)) {
+    case ABILITY_PROTOSYNTHESIS:
+        // The sun is weather, so Cloud Nine and Air Lock blot it out.
+        if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) && (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL)) {
+            script = BATTLE_SUBSCRIPT_PARADOX_ABILITY_START;
+        }
+        break;
+    case ABILITY_QUARK_DRIVE:
+        // The ground is not weather, so neither of those two touches it.
+        if (ctx->terrainOverlayType == ELECTRIC_TERRAIN) {
+            script = BATTLE_SUBSCRIPT_PARADOX_ABILITY_START;
+        }
+        break;
+    }
+
+    if (script != BATTLE_SUBSCRIPT_NONE) {
+        ctx->paradoxBoostedStat[battlerId] = ParadoxGreatestStat(ctx, battlerId);
+        ctx->battlerIdTemp = battlerId;
+        // Which stat the subscript names.
+        ctx->msgTemp = ctx->paradoxBoostedStat[battlerId];
+    }
+
+    return script;
+}
+
 // A battle keeps retail's move table where retail kept it, because the battle
 // assembly still reads the structure around it by offset. The moves added
 // since are kept past the end of that structure, and this is the only place
@@ -3649,6 +3774,40 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
             ctx->battlerIdTemp = blocker;
             script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
         }
+    }
+    // The terrain refuses a move the way an ability does -- one script, one
+    // line of text, no more work -- so its three refusals are answered here
+    // rather than in a hook of their own. All three want the move's target
+    // standing on the terrain; the reference reads that through Mold Breaker,
+    // which this game has no grounded-with-Mold-Breaker question for.
+    //
+    // Psychic Terrain turns away anything hurried from the other side. It is
+    // the priority the turn order compared, so an ability's extra step counts
+    // as much as the move table's, and the exemption is the same one the three
+    // abilities above take. Future Sight is the reference's fourth exemption
+    // and is not here: its delayed hit never comes through this function.
+    if (ctx->terrainOverlayType == PSYCHIC_TERRAIN
+        && BattlerMovePriority(ctx, battlerIdAttacker, ctx->moveNoCur) > 0
+        && (battlerIdAttacker & 1) != (battlerIdTarget & 1)
+        && !(BattleMoveTbl(ctx, ctx->moveNoCur)->range & (RANGE_USER | RANGE_USER_SIDE | RANGE_FIELD | RANGE_OPPONENT_SIDE))
+        && BattlerIsGrounded(ctx, battlerIdTarget) == TRUE) {
+        script = BATTLE_SUBSCRIPT_PSYCHIC_TERRAIN_PROTECTION;
+    }
+    // Electric Terrain keeps the ground awake and Misty Terrain keeps it well.
+    // Both count Rest, which is aimed at its own user, so a Pokemon standing on
+    // either cannot rest -- the reference's behaviour, and the same shape as
+    // Sweet Veil above.
+    if (ctx->terrainOverlayType == ELECTRIC_TERRAIN
+        && (moveEffect == MOVE_EFFECT_STATUS_SLEEP || moveEffect == MOVE_EFFECT_STATUS_SLEEP_NEXT_TURN || moveEffect == MOVE_EFFECT_RECOVER_HEALTH_AND_SLEEP)
+        && BattlerIsGrounded(ctx, battlerIdTarget) == TRUE) {
+        script = BATTLE_SUBSCRIPT_ELECTRIC_TERRAIN_PROTECTION;
+    }
+    if (ctx->terrainOverlayType == MISTY_TERRAIN
+        && (moveEffect == MOVE_EFFECT_STATUS_SLEEP || moveEffect == MOVE_EFFECT_STATUS_SLEEP_NEXT_TURN || moveEffect == MOVE_EFFECT_RECOVER_HEALTH_AND_SLEEP
+            || moveEffect == MOVE_EFFECT_STATUS_PARALYZE || moveEffect == MOVE_EFFECT_STATUS_POISON || moveEffect == MOVE_EFFECT_STATUS_BADLY_POISON
+            || moveEffect == MOVE_EFFECT_STATUS_BURN || moveEffect == MOVE_EFFECT_STATUS_CONFUSE)
+        && BattlerIsGrounded(ctx, battlerIdTarget) == TRUE) {
+        script = BATTLE_SUBSCRIPT_MISTY_TERRAIN_PROTECTION;
     }
     // Telepathy only sees what an ally aims at it, so it is the one immunity
     // here that asks which side the attacker is on rather than what it used.
@@ -4403,7 +4562,74 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 22: // end
+        case 22: // The four Surges, and Hadron Engine, which is a fifth
+            for (i = 0; i < maxBattlers; i++) {
+                int terrainType = TERRAIN_NONE;
+
+                battlerId = ctx->turnOrder[i];
+                if (ctx->battleMons[battlerId].abilityActivatedFlag || !ctx->battleMons[battlerId].hp) {
+                    continue;
+                }
+                switch (GetBattlerAbility(ctx, battlerId)) {
+                case ABILITY_GRASSY_SURGE:
+                    terrainType = GRASSY_TERRAIN;
+                    break;
+                case ABILITY_MISTY_SURGE:
+                    terrainType = MISTY_TERRAIN;
+                    break;
+                case ABILITY_ELECTRIC_SURGE:
+                case ABILITY_HADRON_ENGINE:
+                    terrainType = ELECTRIC_TERRAIN;
+                    break;
+                case ABILITY_PSYCHIC_SURGE:
+                    terrainType = PSYCHIC_TERRAIN;
+                    break;
+                default:
+                    continue;
+                }
+                ctx->battleMons[battlerId].abilityActivatedFlag = TRUE;
+                ctx->battlerIdTemp = battlerId;
+                // What tells the subscript to put an Ability popup up before
+                // it announces the ground.
+                ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+                // Hadron Engine is the only one of the five that asks whether
+                // the ground it wants is already there: it has a second line
+                // for that case, because what it announces is its engine
+                // rather than the ground. A Surge walking onto its own terrain
+                // simply announces it again -- UpdateTerrainOverlay finds
+                // nothing to change and the script reads out what is down.
+                // That is the reference's behaviour, not an oversight here.
+                if (GetBattlerAbility(ctx, battlerId) == ABILITY_HADRON_ENGINE && ctx->terrainOverlayType == ELECTRIC_TERRAIN) {
+                    script = BATTLE_SUBSCRIPT_HADRON_ENGINE_NO_TERRAIN_SETUP;
+                } else {
+                    BattleContext_UpdateTerrainOverlay(ctx, terrainType);
+                    script = BATTLE_SUBSCRIPT_CREATE_TERRAIN_OVERLAY;
+                }
+                flag = TRUE;
+                break;
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 23: // Protosynthesis and Quark Drive
+            // Last, because what switches them on is the sun or the ground,
+            // and both of those can have been laid down by something further
+            // up this same list.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                j = BattleContext_ActivateParadoxAbility(battleSystem, ctx, battlerId);
+                if (j != BATTLE_SUBSCRIPT_NONE) {
+                    script = j;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 24: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;
@@ -4813,6 +5039,19 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
     case ABILITY_SAND_SPIT:
         if (!(ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
             *script = BATTLE_SUBSCRIPT_SAND_SPIT;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_SEED_SOWER:
+        // Sand Spit again with grass instead of sand. The terrain is laid here
+        // rather than in the subscript, because the subscript's only job is to
+        // read what is down and say so; the side-effect type is what tells it
+        // to put an Ability popup up first.
+        if (ctx->terrainOverlayType != GRASSY_TERRAIN && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+            BattleContext_UpdateTerrainOverlay(ctx, GRASSY_TERRAIN);
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_CREATE_TERRAIN_OVERLAY;
             ret = TRUE;
         }
         break;
@@ -6961,6 +7200,21 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     GF_ASSERT(ctx->unk_2158 >= 10);
     movePower = movePower * ctx->unk_2158 / 10;
 
+    // Two moves whose own power is a question about the terrain rather than a
+    // number in the table. They are decided here, with the rest of what the
+    // move is worth before anything modifies it -- the reference settles them
+    // in the same place, ahead of its base-power modifiers, which is why Rising
+    // Voltage can be written out flat without eating a Helping Hand.
+    //
+    // Rising Voltage asks only whether the current is on, not whether anyone is
+    // standing in it. That is the reference's version of the move.
+    if (moveNo == MOVE_RISING_VOLTAGE && ctx->terrainOverlayType == ELECTRIC_TERRAIN) {
+        movePower = 140;
+    }
+    if (moveNo == MOVE_TERRAIN_PULSE && ctx->terrainOverlayType != TERRAIN_NONE && BattlerIsGrounded(ctx, battlerIdAttacker) == TRUE) {
+        movePower *= 2;
+    }
+
     // Wake-Up Slap already doubles against a sleeping target, in its own
     // effect script, which asks the status word directly. Comatose does not
     // set that word, so the ability is answered here instead -- and only when
@@ -7061,6 +7315,49 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 
     if (moveType == TYPE_STEEL && calcAttacker.ability == ABILITY_STEELY_SPIRIT) {
         movePower = movePower * 15 / 10;
+    }
+
+    // The terrain laid over the battle, which the reference weighs here among
+    // the field effects, after the abilities. A boost is for whoever is
+    // standing on the terrain, so it asks about the attacker; Misty Terrain's
+    // halving of a Dragon move asks about the target, because it is the mist
+    // around the target that softens the blow. The three Ground moves the grass
+    // muffles are named rather than typed -- it is the ground itself they
+    // shake, which is why Earth Power is not among them.
+    //
+    // Expanding Force and Misty Explosion are here for the same reason the
+    // weather's Solar Beam is: their half again is a modifier, not a power of
+    // their own. Neither asks for anyone to be standing on the terrain.
+    switch (ctx->terrainOverlayType) {
+    case GRASSY_TERRAIN:
+        if (moveType == TYPE_GRASS && BattlerIsGrounded(ctx, battlerIdAttacker) == TRUE) {
+            movePower = movePower * 13 / 10;
+        }
+        if (moveNo == MOVE_EARTHQUAKE || moveNo == MOVE_MAGNITUDE || moveNo == MOVE_BULLDOZE) {
+            movePower /= 2;
+        }
+        break;
+    case ELECTRIC_TERRAIN:
+        if (moveType == TYPE_ELECTRIC && BattlerIsGrounded(ctx, battlerIdAttacker) == TRUE) {
+            movePower = movePower * 13 / 10;
+        }
+        break;
+    case MISTY_TERRAIN:
+        if (moveType == TYPE_DRAGON && BattlerIsGrounded(ctx, battlerIdTarget) == TRUE) {
+            movePower /= 2;
+        }
+        if (moveNo == MOVE_MISTY_EXPLOSION) {
+            movePower = movePower * 15 / 10;
+        }
+        break;
+    case PSYCHIC_TERRAIN:
+        if (moveType == TYPE_PSYCHIC && BattlerIsGrounded(ctx, battlerIdAttacker) == TRUE) {
+            movePower = movePower * 13 / 10;
+        }
+        if (moveNo == MOVE_EXPANDING_FORCE) {
+            movePower = movePower * 15 / 10;
+        }
+        break;
     }
 
     moveCategory = BattleMoveTbl(ctx, moveNo)->category;
@@ -7221,6 +7518,25 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monDef *= 2;
     }
 
+    // Grass Pelt is a Fur Coat that only grows in the grass, and half rather
+    // than double. The physical-only half of it is again monDef being the
+    // stat nothing else reads.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_GRASS_PELT) == TRUE && ctx->terrainOverlayType == GRASSY_TERRAIN) {
+        monDef = monDef * 150 / 100;
+    }
+
+    // The defending half of Protosynthesis and Quark Drive. Its own ability,
+    // so no Mold Breaker gate, and the split picks the stat for us: scaling
+    // the one the ability raised leaves the other untouched either way.
+    if (calcTarget.ability == ABILITY_PROTOSYNTHESIS || calcTarget.ability == ABILITY_QUARK_DRIVE) {
+        if (ctx->paradoxBoostedStat[battlerIdTarget] == STAT_DEF) {
+            monDef = monDef * 130 / 100;
+        }
+        if (ctx->paradoxBoostedStat[battlerIdTarget] == STAT_SPDEF) {
+            monSpDef = monSpDef * 130 / 100;
+        }
+    }
+
     if (calcAttacker.ability == ABILITY_PLUS && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_SAME_SIDE_HP, battlerIdAttacker, ABILITY_MINUS)) {
         monSpAtk = monSpAtk * 150 / 100;
     }
@@ -7295,6 +7611,24 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     if (moveType == TYPE_ELECTRIC && calcAttacker.ability == ABILITY_TRANSISTOR) {
         monAtk = monAtk * 130 / 100;
         monSpAtk = monSpAtk * 130 / 100;
+    }
+
+    // The attacking half of Protosynthesis and Quark Drive, three tenths on
+    // the one stat the ability picked out when it switched on.
+    if (calcAttacker.ability == ABILITY_PROTOSYNTHESIS || calcAttacker.ability == ABILITY_QUARK_DRIVE) {
+        if (ctx->paradoxBoostedStat[battlerIdAttacker] == STAT_ATK) {
+            monAtk = monAtk * 130 / 100;
+        }
+        if (ctx->paradoxBoostedStat[battlerIdAttacker] == STAT_SPATK) {
+            monSpAtk = monSpAtk * 130 / 100;
+        }
+    }
+
+    // Hadron Engine runs its Sp. Atk off the current it laid down, and takes a
+    // third rather than the three tenths above. Nothing asks whether the
+    // holder is standing in that current.
+    if (calcAttacker.ability == ABILITY_HADRON_ENGINE && ctx->terrainOverlayType == ELECTRIC_TERRAIN) {
+        monSpAtk = monSpAtk * 4 / 3;
     }
 
     // Water Bubble doubles the water it throws; the fire it takes is halved
@@ -8108,7 +8442,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_AUTOTOMIZE,
     BATTLE_SUBSCRIPT_POWER_SPLIT,
     BATTLE_SUBSCRIPT_GUARD_SPLIT,
-    BATTLE_SUBSCRIPT_RAISE_ATTACK_AND_ACCURACY
+    BATTLE_SUBSCRIPT_RAISE_ATTACK_AND_ACCURACY,
+    BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {
@@ -8393,6 +8728,28 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
                     type = TYPE_ICE;
                 }
                 // BUG: If the weather is foggy, then type doesn't get set properly before being returned
+            }
+        }
+        break;
+    // Terrain Pulse takes the colour of whatever is underfoot, and only if the
+    // user is standing on it. With nothing down it stays Normal, which is what
+    // the default below would have said anyway.
+    case MOVE_TERRAIN_PULSE:
+        type = TYPE_NORMAL;
+        if (BattlerIsGrounded(ctx, battlerId) == TRUE) {
+            switch (ctx->terrainOverlayType) {
+            case GRASSY_TERRAIN:
+                type = TYPE_GRASS;
+                break;
+            case ELECTRIC_TERRAIN:
+                type = TYPE_ELECTRIC;
+                break;
+            case MISTY_TERRAIN:
+                type = TYPE_FAIRY;
+                break;
+            case PSYCHIC_TERRAIN:
+                type = TYPE_PSYCHIC;
+                break;
             }
         }
         break;

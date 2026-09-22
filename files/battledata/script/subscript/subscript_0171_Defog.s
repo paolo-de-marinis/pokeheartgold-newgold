@@ -11,6 +11,12 @@ _000:
     CheckSideCondition BATTLER_CATEGORY_DEFENDER, CHECK_SIDE_COND_VAL_NOT_ZERO, SIDE_COND_TOXIC_SPIKES_LAYERS, _041
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_SIDE_CONDITION_TARGET, SIDE_CONDITION_STEALTH_ROCKS, _041
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_FOG, _041
+    // A terrain is something to blow away too, so it counts towards whether
+    // this move has anything to do at all.
+    GotoIfTerrainOverlayIsType GRASSY_TERRAIN, _041
+    GotoIfTerrainOverlayIsType MISTY_TERRAIN, _041
+    GotoIfTerrainOverlayIsType ELECTRIC_TERRAIN, _041
+    GotoIfTerrainOverlayIsType PSYCHIC_TERRAIN, _041
     GoTo _043
 
 _041:
@@ -56,9 +62,42 @@ _133:
     Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
 
 _149:
-    CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_SIDE_CONDITION_TARGET, SIDE_CONDITION_STEALTH_ROCKS, _164
+    CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_SIDE_CONDITION_TARGET, SIDE_CONDITION_STEALTH_ROCKS, _ClearTerrain
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_TARGET, SIDE_CONDITION_STEALTH_ROCKS
     UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_STEALTH_ROCK
+    Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
+
+// Defog is the other way a terrain ends. The reference repaints the battle
+// background as it goes; that command does nothing in this game, so the line
+// is left out, and the terrain is named by the move that laid it.
+_ClearTerrain:
+    GotoIfTerrainOverlayIsType GRASSY_TERRAIN, _ClearGrassyTerrain
+    GotoIfTerrainOverlayIsType MISTY_TERRAIN, _ClearMistyTerrain
+    GotoIfTerrainOverlayIsType ELECTRIC_TERRAIN, _ClearElectricTerrain
+    GotoIfTerrainOverlayIsType PSYCHIC_TERRAIN, _ClearPsychicTerrain
+    GoTo _164
+
+_ClearGrassyTerrain:
+    UpdateTerrainOverlay TRUE, _164
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_GRASSY_TERRAIN
+    Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
+    GoTo _164
+
+_ClearMistyTerrain:
+    UpdateTerrainOverlay TRUE, _164
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_MISTY_TERRAIN
+    Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
+    GoTo _164
+
+_ClearElectricTerrain:
+    UpdateTerrainOverlay TRUE, _164
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_ELECTRIC_TERRAIN
+    Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
+    GoTo _164
+
+_ClearPsychicTerrain:
+    UpdateTerrainOverlay TRUE, _164
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_PSYCHIC_TERRAIN
     Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
 
 _164:
