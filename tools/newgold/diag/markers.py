@@ -31,6 +31,21 @@ class Markers:
         self.page = where.constant("SAVE_PAGE_MAX", "include/constants/save_arrays.h")
         self.sector = where.constant("SAVE_SECTOR_SIZE", "include/constants/save_arrays.h")
 
+    def matches(self, ram):
+        """Whether the game in this memory is the build the ELF came from.
+
+        The static ARM9 module sits at the start of main RAM. Its first two
+        kilobytes are the secure area, which the ROM carries encrypted, and
+        its start is the same in every build; the code after that is not,
+        so a quarter of a megabyte of it has to match the build's own copy
+        or every symbol read is a number from a different build.
+        """
+        binary = self.elf.with_name("main.sbin")
+        if not binary.exists():
+            return True
+        code = binary.read_bytes()[0x800:0x40000]
+        return ram[0x800:0x800 + len(code)] == code
+
     def address(self, name):
         return self.table[name][0] if name in self.table else None
 
@@ -56,6 +71,8 @@ class Markers:
         w = lambda name: self.read(ram, name)  # noqa: E731
         look = where.look(ram, self.address("sFieldSysPtr"), self.page, self.sector)
         field = "field down" if look is None else f"at {look[0]} party {look[1]}"
+        if not self.matches(ram):
+            return f"{field} | the game running is not the build this ELF is from; reopen the ROM"
         if self.address("gDiagBattleState") is None:
             return f"{field} | no diagnostics in this build"
         state, seen = w("gDiagBattleState"), w("gDiagBattleStateSeen")
