@@ -214,7 +214,7 @@ class CorrosiveGasTests(unittest.TestCase):
     def test_this_game_carries_the_same_record(self):
         import struct
         import sys
-        sys.path.insert(0, str(ROOT / "tools/newgold"))
+        sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
         import import_moves  # noqa: E402
 
         import_moves.read_conditions(REFERENCE)

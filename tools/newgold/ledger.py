@@ -218,7 +218,7 @@ def items_carried(reference):
                                         Path(path).read_text(errors="replace"), re.M))
     here = named(ROOT / "include/constants/items.h")
     theirs = named(reference / "include/constants/item.h")
-    mapping = csv.DictReader((ROOT / "tools/newgold/item_map.csv").read_text().splitlines())
+    mapping = csv.DictReader((ROOT / "tools/newgold/import/item_map.csv").read_text().splitlines())
     mapped = {row["reference_name"]: row["item_name"] for row in mapping}
     return sum(1 for name in theirs if mapped.get(name) in here), len(theirs)
 

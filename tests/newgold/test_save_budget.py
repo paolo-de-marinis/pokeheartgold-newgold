@@ -16,7 +16,7 @@ from pathlib import Path
 
 from test_level_cap import ROOT
 
-sys.path.insert(0, str(ROOT / "tools/newgold"))
+sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import save_budget  # noqa: E402
 
 BUILD = ROOT / "build/heartgold.us"

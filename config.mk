@@ -37,7 +37,7 @@ ifeq ($(NO_GF_ASSERT),)
 GF_DEFINES  += -DPM_KEEP_ASSERTS
 endif
 # NEWGOLD_DIAG=1 builds in the diagnostics under src/newgold/diag, read by
-# tools/newgold/diag (docs/newgold/DIAGNOSTICS.md). Off, every hook compiles
+# tools/newgold/devkit/diag (docs/newgold/DIAGNOSTICS.md). Off, every hook compiles
 # to nothing and the ROM is byte for byte the ROM without them. The build
 # gets its own directory, so the two never share an object.
 ifeq ($(NEWGOLD_DIAG),1)

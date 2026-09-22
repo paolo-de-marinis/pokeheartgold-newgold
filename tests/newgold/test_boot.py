@@ -7,7 +7,7 @@ port keeps making — the save region, the heaps — and they fail as an asserti
 at boot rather than as a build error, which is to say silently.
 
 The run is short on purpose: far enough to know the ROM is executing and
-drawing, not far enough to be a play session. tools/newgold/smoke.py takes it
+drawing, not far enough to be a play session. tools/newgold/devkit/harness/smoke.py takes it
 further when a change deserves it.
 """
 
@@ -19,7 +19,7 @@ from pathlib import Path
 
 from test_level_cap import ROOT
 
-sys.path.insert(0, str(ROOT / "tools/newgold"))
+sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import smoke  # noqa: E402
 
 FRAMES = 900

@@ -58,7 +58,7 @@ class DiagnosticsTests(unittest.TestCase):
         header = (ROOT / "include/newgold/diag.h").read_text()
         names = set(re.findall(r"extern unsigned (?:int|short) (gDiag\w+);", header))
         read = set()
-        for script in (ROOT / "tools/newgold/diag").glob("*.py"):
+        for script in (ROOT / "tools/newgold/devkit/diag").glob("*.py"):
             read |= set(re.findall(r"gDiag\w+", script.read_text()))
         self.assertEqual(names - read, set(), "in diag.h and read by nothing")
 

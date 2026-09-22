@@ -422,7 +422,7 @@ void sub_020061EC(int a0) {
 // HeartGold's cries are bank N for species N, and its species stop at 494.
 // The ones New Gold adds have banks of their own past the end of the archive,
 // except the two regional forms, which use the cry their base species has.
-// The numbers are where tools/newgold/import_cries.py put them.
+// The numbers are where tools/newgold/import/import_cries.py put them.
 static const u16 sAddedCryBanks[] = {
     843, // Lillipup
     844, // Herdier

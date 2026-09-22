@@ -16,7 +16,7 @@ The range itself is checked the same way the other ranges are. konefr's items
 are imported BY NAME and renumbered densely from where this tree was -- their
 Black Augurite is 1691 and this tree's is 537, and taking their number would
 renumber every item already in Paolo's save -- so the port is the mapping in
-tools/newgold/item_map.csv, and an item of theirs the mapping does not name is
+tools/newgold/import/item_map.csv, and an item of theirs the mapping does not name is
 an item this game cannot be given. Where their checkout is beside this one the
 mapping is checked against it; where it is not, the numbers are pinned.
 """
@@ -30,7 +30,7 @@ from pathlib import Path
 
 from test_level_cap import ROOT
 
-sys.path.insert(0, str(ROOT / "tools/newgold"))
+sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import import_items  # noqa: E402
 
 REFERENCE = os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE")
@@ -50,7 +50,7 @@ ITEM_BANKS = [ROOT / f"files/msgdata/msg/msg_{bank}.gmm"
               for bank in ("0221", "0222", "0223", "0224")]
 NAMES, ARTICLES = ITEM_BANKS[1], ITEM_BANKS[2]
 ICON_DIR = ROOT / "files/itemtool/itemdata/item_icon"
-ITEM_MAP = ROOT / "tools/newgold/item_map.csv"
+ITEM_MAP = ROOT / "tools/newgold/import/item_map.csv"
 
 # What the import read out of konefr's tree, for a run with no checkout beside
 # it. Theirs is ITEM_NONE to ITEM_CANARI_BREAD.
@@ -300,7 +300,7 @@ class SharedRecordTests(unittest.TestCase):
     def test_every_shared_record_matches_the_reference(self):
         if not self.REFERENCE.exists():
             self.skipTest("Pinned NewGold reference checkout not configured")
-        sys.path.insert(0, str(ROOT / "tools/newgold"))
+        sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
         import import_items as importer
         reference = importer.Reference(self.REFERENCE)
         header = importer.original(importer.ITEMS_H)
@@ -317,7 +317,7 @@ class SharedRecordTests(unittest.TestCase):
             for field, wanted, got in zip(fields, want, mine[ours]):
                 if wanted != got and (ours, field) not in self.ALLOWED:
                     bad.append(f"{ours}.{field}: {got} here, {wanted} in the reference")
-        self.assertEqual(bad, [], "run tools/newgold/import_items.py --sync --write")
+        self.assertEqual(bad, [], "run tools/newgold/import/import_items.py --sync --write")
 
 
 if __name__ == "__main__":

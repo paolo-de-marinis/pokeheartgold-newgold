@@ -16,7 +16,7 @@ from pathlib import Path
 
 from test_level_cap import ROOT
 
-sys.path.insert(0, str(ROOT / "tools/newgold"))
+sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import import_moves  # noqa: E402
 
 LAST_RETAIL = 467
@@ -41,7 +41,7 @@ class MoveTests(unittest.TestCase):
         self.moves = constants("include/constants/moves.h", "MOVE_")
         self.table = import_moves.read_table()
         # Everything numbered past retail: the reference's moves, brought in
-        # by tools/newgold/import_moves.py.
+        # by tools/newgold/import/import_moves.py.
         self.added = {name[len("MOVE_"):]: number for name, number in self.moves.items()
                       if number > LAST_RETAIL}
 

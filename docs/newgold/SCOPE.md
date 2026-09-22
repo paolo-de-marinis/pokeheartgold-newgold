@@ -193,8 +193,8 @@ So two things stand between here and the expansion:
    numbers and `validation/` has the pictures.
 
    The other three want the game played further, and the route can be extended
-   to each: `tools/newgold/smoke.py --to skills` gets to a Pokemon and its
-   summary, and `tools/newgold/where.py` reads the player's tile and the party
+   to each: `tools/newgold/devkit/harness/smoke.py --to skills` gets to a Pokemon and its
+   summary, and `tools/newgold/devkit/harness/where.py` reads the player's tile and the party
    count out of a memory dump through the game's own structs, so a walk can be
    aimed and its result checked without looking at the screen. The machine
    badges want a TM, a Dex entry wants a species caught, and the thirtieth box

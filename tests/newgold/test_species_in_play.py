@@ -37,7 +37,7 @@ from pathlib import Path
 from test_level_cap import ROOT
 from test_repels import REFERENCE
 
-sys.path.insert(0, str(ROOT / "tools/newgold"))
+sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import import_cries  # noqa: E402
 import import_dex_text  # noqa: E402
 import import_footprints  # noqa: E402
@@ -402,7 +402,7 @@ class SpeciesInPlayTests(unittest.TestCase):
         three read off the end of a heap allocation, and nothing says so: a
         garbage weight is a Low Kick doing the wrong damage, not a crash.
 
-        tools/newgold/import_dex_metrics.py carried konefr's own metricsData
+        tools/newgold/import/import_dex_metrics.py carried konefr's own metricsData
         across. This is what stops it going short again.
         """
         zukan, _, _ = wotbl.read_narc(
@@ -418,7 +418,7 @@ class SpeciesInPlayTests(unittest.TestCase):
         """Every species' height and weight is konefr's, not a filler."""
         if REFERENCE is None:
             self.skipTest("no reference checkout")
-        sys.path.insert(0, str(ROOT / "tools/newgold"))
+        sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
         import import_dex_metrics as importer
         theirs = importer.metrics(Path(REFERENCE), importer.body_styles(Path(REFERENCE)))
         rows = json.loads((ROOT / "files/application/zukanlist/zkn_data/zukan_data.json")

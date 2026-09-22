@@ -18,7 +18,7 @@ from pathlib import Path
 
 from test_level_cap import ROOT, function
 
-sys.path.insert(0, str(ROOT / "tools/newgold"))
+sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import make_tm_label  # noqa: E402
 
 BAG = ROOT / "files/graphic/bag_gra"
@@ -47,7 +47,7 @@ class BagLabelTests(unittest.TestCase):
             self.hm = grid(render.read_bytes())
 
     def test_the_badge_is_what_the_generator_draws(self):
-        result = subprocess.run([sys.executable, ROOT / "tools/newgold/make_tm_label.py", "--check"],
+        result = subprocess.run([sys.executable, ROOT / "tools/newgold/import/make_tm_label.py", "--check"],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 

@@ -601,11 +601,11 @@ implemented; this is what was checked on a running ROM and what was not.
 
 ### What the session can do now
 
-`tools/newgold/boot_check.c` is a headless libretro host of about two hundred
+`tools/newgold/devkit/harness/boot_check.c` is a headless libretro host of about two hundred
 lines: no emulator front end, no BIOS of its own, no configuration of the
 user's. It loads the installed melonDS core, runs frames, presses buttons,
 touches the screen and writes out the framebuffer.
-`tools/newgold/smoke.py` drives it and `tests/newgold/test_boot.py` runs a
+`tools/newgold/devkit/harness/smoke.py` drives it and `tests/newgold/test_boot.py` runs a
 short one on every test pass.
 
 This replaces the earlier milestones' arrangement, whose runner lived outside
@@ -625,7 +625,7 @@ from 35 to 48 and grew heap 1 by the same 0xD000 out of the general heap, and
 the widened Dex and pockets grew the region again. `SaveData_InitSubstructs`
 and `SaveData_InitSlotSpecs` assert their results at boot and would have
 stopped the game before the title. They do not.
-`tools/newgold/save_budget.py` reads the same numbers out of the built ROM:
+`tools/newgold/devkit/harness/save_budget.py` reads the same numbers out of the built ROM:
 187,644 bytes of 196,608, forty-seven pages of forty-eight, highest page 60 of
 the 64 the flash erases in a half.
 

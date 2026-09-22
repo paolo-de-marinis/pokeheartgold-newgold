@@ -23,8 +23,8 @@ there. `GAME_VERSION=SOULSILVER` works the same way.
   encounter roll, the wild encounter task, the step check, and the battle
   setup's map, background and terrain. `grep -rn NEWGOLD_DIAG src include`
   is the full list.
-- `tools/newgold/diag/` -- the readers: live memory, harness dumps, a
-  frozen savestate, and the harness battle.
+- `tools/newgold/devkit/` -- the readers, the headless player, the save
+  editor and the harness; its README says what is where.
 - `tests/newgold/test_diag.py` -- reads every source and fails on a
   diagnostic mentioned outside the `#ifdef`, which is what keeps the ordinary
   build clean after the next hook is added.
@@ -60,27 +60,27 @@ Every reader takes the ELF the ROM was linked from, `build/heartgold.us.diag/mai
 by default. Symbols move with every build; a reading against the wrong ELF is
 noise, not a wrong answer.
 
-- `tools/newgold/diag/live.py [--follow]` reads the RAM of the melonDS that
+- `tools/newgold/devkit/diag/live.py [--follow]` reads the RAM of the melonDS that
   is running, through the memory mapping its process holds open, and prints
   one line: field and party, encounter, battle state, failures. `--follow`
   prints every change until Ctrl-C. This is how a play session is watched.
-- `tools/newgold/diag/party.py` reads the party out of the same memory,
+- `tools/newgold/devkit/diag/party.py` reads the party out of the same memory,
   decrypted the way the game does it: species, level, experience, HP and
   held item, which is how a level cap or a held item is checked without
   trusting the screen.
-- `tools/newgold/diag/play.py launch|focus|press|hold|shot|quit` drives the
+- `tools/newgold/devkit/diag/play.py launch|focus|press|hold|shot|quit` drives the
   melonDS on this desktop -- the flatpak, its window through KWin, its keys
   through a virtual keyboard in whatever mapping the player set, its window
   through Spectacle -- so a gym is played from a shell, one screenshot a
   turn, with the readers above watching the same game.
-- `tools/newgold/diag/gym.py SAVE` fights, in the headless harness, whatever
+- `tools/newgold/devkit/diag/gym.py SAVE` fights, in the headless harness, whatever
   the save stands the player in front of, with the auto-battle switch on,
-  and prints the battle as text; `tools/newgold/diag/watch.py` prints the
+  and prints the battle as text; `tools/newgold/devkit/diag/watch.py` prints the
   same text from the melonDS that is running. Neither needs a screen, and
   neither costs an image to read -- this is how a gym is checked.
-- `tools/newgold/diag/dump.py OUTDIR` reads the `ram:` dumps of a harness run
+- `tools/newgold/devkit/diag/dump.py OUTDIR` reads the `ram:` dumps of a harness run
   the same way, one line a dump, and pastes the run's shots into a sheet.
-- `tools/newgold/diag/battle.py OUTDIR encounter|battle:SPECIES` plays the
+- `tools/newgold/devkit/diag/battle.py OUTDIR encounter|battle:SPECIES` plays the
   opening in the harness, warps to Route 29, throws a switch, and reads the
   dumps back. About ten minutes from a cold boot. The harness does not draw
   a battle -- its screen goes black the moment overlay 12 loads, on every
@@ -89,7 +89,7 @@ noise, not a wrong answer.
   answers.
 
 A frozen melonDS answers too. `Shift+F1` writes a savestate beside the ROM,
-and `tools/newgold/diag/frozen.py STATE.ml1` reads its `ARM9` section as the
+and `tools/newgold/devkit/diag/frozen.py STATE.ml1` reads its `ARM9` section as the
 registers -- CPSR 0x97 is abort mode, where the faulting instruction is eight
 bytes before the link register -- and the end of its `CP15` section as the
 stack, naming every return address against the ELF. Overlay symbols overlap
@@ -119,6 +119,6 @@ markers for that hang under the same `#ifdef`, read them, and take them out.
 1. Declare it in `include/newgold/diag.h`, define it in `diag.c`.
 2. Write it at the site under `#ifdef NEWGOLD_DIAG`; the header comes in
    through `global.h`.
-3. Print it in `tools/newgold/diag/markers.py`; `test_diag.py` fails on a
+3. Print it in `tools/newgold/devkit/diag/markers.py`; `test_diag.py` fails on a
    global no reader prints.
 4. Build both ways. The ordinary ROM must not change a byte.

@@ -4,7 +4,7 @@
 
 // Built in with NEWGOLD_DIAG=1 and nothing without it. The hook sites are the
 // places in the game that write these, each under the same #ifdef; the readers
-// are in tools/newgold/diag. Everything lives in the static module so an
+// are in tools/newgold/devkit/diag. Everything lives in the static module so an
 // overlay can write it and a memory dump can find it at one address.
 #ifdef NEWGOLD_DIAG
 

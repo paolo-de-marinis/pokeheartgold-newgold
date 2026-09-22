@@ -102,7 +102,7 @@ class HeapTests(unittest.TestCase):
     def test_the_save_still_fits_its_heap(self):
         """Heap 1 holds SaveData, whose region is SAVE_PAGE_MAX sectors."""
         import sys
-        sys.path.insert(0, str(ROOT / "tools/newgold"))
+        sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
         import save_budget
         region = save_budget.REGION
         self.assertGreater(self.heaps[1], region,

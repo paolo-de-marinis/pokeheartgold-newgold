@@ -2,7 +2,7 @@
 #define POKEHEARTGOLD_NEWGOLD_DIAG_H
 
 // The diagnostics a NEWGOLD_DIAG=1 build carries. docs/newgold/DIAGNOSTICS.md
-// says what each one is for and tools/newgold/diag reads them. Off, nothing
+// says what each one is for and tools/newgold/devkit/diag reads them. Off, nothing
 // in here exists and no hook site compiles to anything, so the ROM is byte
 // for byte the ROM without them.
 //

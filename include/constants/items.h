@@ -1085,7 +1085,7 @@
 
 // The rest of the reference's items, renumbered densely from where this tree
 // is: konefr's id is theirs, not ours, and adopting it would renumber every
-// item already here. tools/newgold/item_map.csv holds both.
+// item already here. tools/newgold/import/item_map.csv holds both.
 
 #define ITEM_TEA                         564
 #define ITEM_AUTOGRAPH                   565

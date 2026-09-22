@@ -17,7 +17,7 @@ from pathlib import Path
 
 from test_level_cap import ROOT
 
-sys.path.insert(0, str(ROOT / "tools/newgold"))
+sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import import_footprints  # noqa: E402
 
 FOOTPRINTS = ROOT / "files/poketool/pokefoot/pokefoot"
