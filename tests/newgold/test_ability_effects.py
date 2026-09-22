@@ -274,16 +274,52 @@ if __name__ == "__main__":
 
 
 class MoveListTests(unittest.TestCase):
-    """Bulletproof and Wind Rider go by a list of moves rather than by type,
-    and a name that drifts out of the list simply stops being blocked."""
+    """Several abilities go by a list of moves rather than by type, and a name
+    missing from the list simply stops being blocked or boosted.
+
+    Each list is the reference's own. They were written when the game reached
+    only the moves HeartGold shipped with, and they stayed that length after
+    the move range was imported -- Sharpness missed fifteen slicing moves the
+    game now has, Iron Fist nine punches, Soundproof fourteen sounds. Where
+    the reference checkout is present, the comparison against it is the test;
+    where it is not, the length is still pinned here.
+    """
 
     SOURCE = ROOT / "src/battle/overlay_12_0224E4FC.c"
-    TABLES = ("sBallAndBombMoves", "sSlicingMoves", "sWindMoves")
+    TABLES = ("sBallAndBombMoves", "sPunchingMoves", "sSlicingMoves",
+              "sSoundMoves", "sWindMoves")
+    # name here -> name in the reference, and the length both should have
+    AGAINST_REFERENCE = {
+        "sBallAndBombMoves": ("BallAndBombMoveList", 26),
+        "sPunchingMoves": ("PunchingMoveTable", 24),
+        "sSlicingMoves": ("SlicingMoveTable", 31),
+        "sSoundMoves": ("SoundBasedMoveList", 33),
+        "sWindMoves": ("WindMoveTable", 17),
+    }
 
     def table(self, name):
-        body = re.search(r"static const u16 " + name + r"\[\] = \{(.*?)\};",
+        body = re.search(r"static (?:const )?u16 " + name + r"\[\] = \{(.*?)\};",
                          self.SOURCE.read_text(), re.S).group(1)
         return re.findall(r"MOVE_[A-Z0-9_]+", body)
+
+    def test_each_list_is_as_long_as_the_reference_s(self):
+        for table, (_, length) in self.AGAINST_REFERENCE.items():
+            self.assertEqual(len(self.table(table)), length, table)
+
+    def test_each_list_holds_what_the_reference_holds(self):
+        reference = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
+        if not reference.exists():
+            self.skipTest("Pinned NewGold reference checkout not configured")
+        defined = set(re.findall(r"#define (MOVE_[A-Z0-9_]+)\s",
+                                 (ROOT / "include/constants/moves.h").read_text()))
+        sources = "\n".join(p.read_text(errors="replace")
+                            for p in sorted((reference / "src").rglob("*.c")))
+        for table, (their_name, _) in self.AGAINST_REFERENCE.items():
+            found = re.search(their_name + r"\[[^\]]*\]\s*=\s*\{(.*?)\};", sources, re.S)
+            self.assertIsNotNone(found, f"{their_name} is not in the reference")
+            want = {m for m in re.findall(r"MOVE_[A-Z0-9_]+", found.group(1))
+                    if m in defined}
+            self.assertEqual(set(self.table(table)), want, table)
 
     def test_every_move_named_exists(self):
         defined = set(re.findall(r"#define (MOVE_[A-Z0-9_]+) ",
