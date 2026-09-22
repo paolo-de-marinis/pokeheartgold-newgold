@@ -12,8 +12,8 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 185 commits |
-| generated | 2026-09-22 17:32 |
+| port | 186 commits |
+| generated | 2026-09-22 17:40 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
@@ -41,7 +41,7 @@ Abilities   ██████████████████████�
 Items       ██████████████████████████████████████████████████  2685 / 2685
 Trainers    ██████████████████████████████████████████████████   738 /  738
 Tests       63 files
-ROM         146.0 MB of 268.4 MB   (2G card, 54% used)
+ROM         151.1 MB of 268.4 MB   (2G card, 56% used)
 ```
 <!-- LEDGER:COUNTS:END -->
 
@@ -85,7 +85,7 @@ konefr *could* reach, not only what the game reaches today.
 
 | Item | Detail | State |
 | --- | --- | :-- |
-| Species | 1042 sprite directories, 1277 icons, heights, learnsets, evolutions. Every species konefr's tree NAMES is here -- all 1028 of them -- and this tree carries eighteen forms besides. The bar used to read 1041 of 1075 and mean nothing: that was the highest constant on each side, and the reference leaves forty-eight reserved gaps between Arceus and its own additions where this tree numbers densely. Counted by name, as the items are | ✅ 1028 / 1028 |
+| Species | 1042 sprite directories, 1277 icons, heights, learnsets, evolutions. Every species konefr's tree NAMES is here -- all 1028 of them -- and this tree carries eighteen forms besides. The bar used to read 1041 of 1075 and mean nothing: that was the highest constant on each side, and the reference leaves forty-eight reserved gaps between Arceus and its own additions where this tree numbers densely. Counted by name, as the items are. Every species that can be female has a female picture now -- the male one again where the reference draws no difference, which is how the repository keeps its own; the importer used to leave it empty, and a female Sylveon sent out against Falkner read an empty archive member and aborted, the first thing Paolo's play found. `test_sprites.py` keeps it | ✅ 1028 / 1028 |
 | Moves | 131 effect scripts, 59 subscripts, 62 side-effect table slots | ✅ 923 / 923 |
 | Abilities | 280 do something — 123 retail effects and 157 added; of the other 39, sixteen are a name in the reference too and the rest want a primal weather, a paradox booster or a form this tree has not got | 🟠 280 / 319 |
 | Level-up learnsets | 1042; the entry is a word now, so a move past 511 can be learnt | ✅ done |

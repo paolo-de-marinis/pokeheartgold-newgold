@@ -122,7 +122,7 @@
 <header>
   <h1>New Gold port ledger</h1>
   <p class="sub">Everything hg-engine and konefr change against vanilla HeartGold, and where the native port stands on each. The one thing written by hand is the state on each row, in the commit that moves it. Everything else — the counters, the percentages at the top, <code>README.md</code>'s copy of both, and <code>docs/index.html</code> — is generated from this file by <code>tools/newgold/ledger.py</code>. The summary was the last part kept by hand and it was the part that was wrong, which is the whole argument.</p>
-  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 185 commits</span><span><b>generated</b> 2026-09-22 17:32</span></div>
+  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 186 commits</span><span><b>generated</b> 2026-09-22 17:40</span></div>
 </header>
 
 <div class="total">
@@ -149,7 +149,7 @@
 <div class="row"><div><p class="name">Items</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">2685 / 2685</div></div>
 <div class="row"><div><p class="name">Trainers</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">738 / 738</div></div>
 <div class="row"><div><p class="name">Tests</p><p class="det">63 files</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">counted</div></div>
-<div class="row"><div><p class="name">ROM</p><p class="det">146.0 MB of 268.4 MB   (2G card, 54% used)</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">counted</div></div>
+<div class="row"><div><p class="name">ROM</p><p class="det">151.1 MB of 268.4 MB   (2G card, 56% used)</p></div><div class="bar"><span class="b-defer" style="width:0%"></span></div><div class="chip c-defer">counted</div></div>
   </div>
 </section>
 
@@ -189,7 +189,7 @@
     <span class="cnt">The whole range, after the criterion changed: the platform has to carry what konefr <em>could</em> reach, not only what the game reaches today</span>
   </div>
   <div class="rows">
-<div class="row"><div><p class="name">Species</p><p class="det">1042 sprite directories, 1277 icons, heights, learnsets, evolutions. Every species konefr's tree NAMES is here -- all 1028 of them -- and this tree carries eighteen forms besides. The bar used to read 1041 of 1075 and mean nothing: that was the highest constant on each side, and the reference leaves forty-eight reserved gaps between Arceus and its own additions where this tree numbers densely. Counted by name, as the items are</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">1028 / 1028</div></div>
+<div class="row"><div><p class="name">Species</p><p class="det">1042 sprite directories, 1277 icons, heights, learnsets, evolutions. Every species konefr's tree NAMES is here -- all 1028 of them -- and this tree carries eighteen forms besides. The bar used to read 1041 of 1075 and mean nothing: that was the highest constant on each side, and the reference leaves forty-eight reserved gaps between Arceus and its own additions where this tree numbers densely. Counted by name, as the items are. Every species that can be female has a female picture now -- the male one again where the reference draws no difference, which is how the repository keeps its own; the importer used to leave it empty, and a female Sylveon sent out against Falkner read an empty archive member and aborted, the first thing Paolo's play found. <code>test_sprites.py</code> keeps it</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">1028 / 1028</div></div>
 <div class="row"><div><p class="name">Moves</p><p class="det">131 effect scripts, 59 subscripts, 62 side-effect table slots</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">923 / 923</div></div>
 <div class="row"><div><p class="name">Abilities</p><p class="det">280 do something — 123 retail effects and 157 added; of the other 39, sixteen are a name in the reference too and the rest want a primal weather, a paradox booster or a form this tree has not got</p></div><div class="bar"><span class="b-part" style="width:88%"></span></div><div class="chip c-part">280 / 319</div></div>
 <div class="row"><div><p class="name">Level-up learnsets</p><p class="det">1042; the entry is a word now, so a move past 511 can be learnt</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>

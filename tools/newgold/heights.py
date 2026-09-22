@@ -25,6 +25,7 @@ ARCHIVE = ROOT / "files/poketool/pokegra/height.narc"
 SPRITES = ROOT / "files/poketool/pokegra/pokegra"
 
 FRAME_WIDTH = 80
+PRET_SPECIES = 508  # what pret ships heights for: the species, the egg, the bad egg and the forms
 # Back and front, each for the female then the male picture.
 SLOTS = (("female", "back.png"), ("male", "back.png"),
          ("female", "front.png"), ("male", "front.png"))
@@ -102,7 +103,10 @@ def main():
     original, _, _ = read_narc(ARCHIVE.read_bytes())
     generated = entries()
 
-    shared = min(len(original), len(generated))
+    # The proof of the rule is pret's own archive, the first 508 species; the
+    # entries after those were derived by this tool and change whenever a
+    # picture is added, a female one for instance.
+    shared = min(len(original), len(generated), PRET_SPECIES * len(SLOTS))
     mismatched = [i for i in range(shared) if original[i] != generated[i]]
     if mismatched:
         print(f"{len(mismatched)} of pret's {shared} entries do not regenerate, "

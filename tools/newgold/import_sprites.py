@@ -16,6 +16,7 @@ Usage: import_sprites.py REFERENCE_CHECKOUT [--write]
 
 import argparse
 import filecmp
+import json
 import shutil
 from pathlib import Path
 
@@ -33,27 +34,33 @@ FIRST_PADDED, LAST_PADDED = 494, 507
 FILES = ("front.png", "front.png.key", "back.png", "back.png.key")
 
 
-def copy_species(source, destination, write):
-    """Copy one species' pictures, leaving a gender empty when it matches."""
+def copy_species(source, destination, write, can_be_female=True):
+    """Copy one species' pictures.
+
+    The game asks for the female picture of every female Pokemon, and the
+    repository keeps one for every species that can be female -- the male
+    picture again when there is no difference -- leaving a gender's files
+    empty only where that gender does not exist. The reference keeps a
+    female picture only where it differs, so the male one stands in. An
+    earlier version left the female empty when it matched the male, which
+    made every female of 504 imported species abort the game on the way in.
+    """
     actions = []
     for gender in ("male", "female"):
         for name in FILES:
             origin = source / gender / name
             target = destination / gender / name
-            if not origin.exists():
-                continue
-            # A female picture identical to the male one is left empty, as the
-            # repository does for every species without a distinct female, and
-            # its palette key is dropped with it.
-            if gender == "female":
+            if gender == "female" and can_be_female:
                 picture = name.removesuffix(".key")
                 male = source / "male" / picture
                 female = source / "female" / picture
-                if male.exists() and female.exists() and filecmp.cmp(female, male, shallow=False):
-                    if name.endswith(".key"):
-                        continue
-                    actions.append((None, target))
-                    continue
+                if not female.exists() or (male.exists() and filecmp.cmp(female, male, shallow=False)):
+                    origin = source / "male" / name
+            if gender == "female" and not can_be_female:
+                actions.append((None, target))
+                continue
+            if not origin.exists():
+                continue
             actions.append((origin, target))
     if not write:
         return actions
@@ -91,12 +98,15 @@ def main():
             for name in ("front.png", "back.png"):
                 (destination / "female" / name).write_bytes(b"")
 
+    personal = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
     names = {name: 508 + index for index, name in enumerate(import_species.added_species())}
     for name, identifier in names.items():
         source = reference / name.lower()
         if not source.is_dir():
             raise SystemExit(f"the reference has no sprites for {name}")
-        actions = copy_species(source, SPRITES / f"{identifier:04d}", args.write)
+        # genderRatio is a fraction: 0 is male only, 1 female only, above one genderless.
+        ratio = personal[identifier]["genderRatio"]
+        actions = copy_species(source, SPRITES / f"{identifier:04d}", args.write, can_be_female=0 < ratio <= 1)
         copied += sum(1 for origin, _ in actions if origin is not None)
         emptied += sum(1 for origin, _ in actions if origin is None)
 

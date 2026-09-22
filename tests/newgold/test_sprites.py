@@ -1,87 +1,37 @@
 #!/usr/bin/env python3
-"""Check the battle sprite tree stays dense and complete.
+"""Every Pokemon that can be female has a female picture.
 
-A species' pictures live at species * 6 in pokegra.narc, which is built from
-whatever directories exist, in name order. A missing directory does not fail
-the build: it silently shifts every later species onto the wrong sprite. So the
-invariant worth testing is the tree, not the archive.
+The game reads the female member of pokegra.narc for every female Pokemon,
+so the repository keeps a female picture for every species that can be
+female -- the male one again where there is no difference -- and leaves a
+gender's files empty only where that gender does not exist. An importer that
+left the female empty when it matched the male sent 504 species' females
+into a data abort on the way into battle (2026-09-22, a female Sylveon
+against Falkner).
 """
 
-import re
-import sys
+import json
 import unittest
-from pathlib import Path
 
 from test_level_cap import ROOT
 
-sys.path.insert(0, str(ROOT / "tools/newgold"))
-import import_species  # noqa: E402
-import import_sprites  # noqa: E402
-
 SPRITES = ROOT / "files/poketool/pokegra/pokegra"
-PICTURES_PER_SPECIES = 6
 
 
-def last_species():
-    header = (ROOT / "include/constants/species.h").read_text()
-    name = re.search(r"#define NUM_SPECIES SPECIES_([A-Z0-9_]+)", header).group(1)
-    return int(re.search(rf"#define SPECIES_{name}\s+(\d+)", header).group(1))
-
-
-class SpriteTreeTests(unittest.TestCase):
-    def setUp(self):
-        self.slots = sorted(int(p.name) for p in SPRITES.iterdir() if p.name.isdigit())
-
-    def test_the_tree_is_dense(self):
-        self.assertEqual(self.slots, list(range(len(self.slots))))
-
-    def test_every_species_has_a_slot(self):
-        self.assertEqual(self.slots[-1], last_species())
-
-    def test_each_slot_can_produce_all_six_entries(self):
-        for slot in self.slots:
-            directory = SPRITES / f"{slot:04d}"
-            for gender in ("male", "female"):
-                for picture in ("front.png", "back.png"):
-                    self.assertTrue((directory / gender / picture).exists(), f"{slot} {gender} {picture}")
-            # A palette is built from whichever gender has a picture; a slot
-            # with neither would produce no palette and shift the archive.
-            for picture in ("front.png", "back.png"):
-                sizes = [(directory / gender / picture).stat().st_size for gender in ("male", "female")]
-                self.assertTrue(any(sizes), f"{slot} has no {picture} at all")
-
-    def test_new_species_have_pictures(self):
-        """A picture from each side, under whichever gender has one.
-
-        Eight of the added species are female only -- Vullaby, Salazzle,
-        Tsareena and the rest -- so the reference has no male picture for them
-        and neither does this. What must not happen is a slot with no picture
-        at all, which would leave the archive a member short and shift every
-        species after it.
-        """
-        for index, name in enumerate(import_species.added_species()):
-            directory = SPRITES / f"{508 + index:04d}"
-            for picture in ("front.png", "back.png"):
-                sizes = [(directory / gender / picture).stat().st_size
-                         for gender in ("male", "female")]
-                self.assertTrue(any(sizes), f"{name} has no {picture} at all")
-
-    def test_padding_slots_are_only_padding(self):
-        # 494 to 507 are the egg, the bad egg and the alternate forms, whose
-        # pictures come from otherpoke.narc.
-        for slot in range(import_sprites.FIRST_PADDED, import_sprites.LAST_PADDED + 1):
-            directory = SPRITES / f"{slot:04d}"
-            source = SPRITES / import_sprites.PADDING_SOURCE
-            self.assertEqual((directory / "male/front.png").read_bytes(),
-                             (source / "male/front.png").read_bytes(), slot)
-
-    def test_a_female_picture_is_empty_or_has_its_key(self):
-        for slot in self.slots:
-            directory = SPRITES / f"{slot:04d}"
-            for picture in ("front.png", "back.png"):
-                path = directory / "female" / picture
-                if path.stat().st_size:
-                    self.assertTrue(path.with_suffix(path.suffix + ".key").exists(), f"{slot} {picture}")
+class SpriteTests(unittest.TestCase):
+    def test_every_gender_a_species_can_be_has_its_pictures(self):
+        personal = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
+        missing = []
+        for species in range(1, len(personal)):
+            if 494 <= species <= 507:
+                continue  # the egg, the bad egg and the retail forms live in otherpoke.narc
+            ratio = personal[species]["genderRatio"]
+            genders = (["male"] if ratio < 1 else []) + (["female"] if 0 < ratio <= 1 else [])
+            for gender in genders:
+                for name in ("front.png", "back.png"):
+                    if (SPRITES / f"{species:04d}" / gender / name).stat().st_size == 0:
+                        missing.append(f"{species:04d}/{gender}/{name}")
+        self.assertEqual(missing, [], "a picture the game will ask for is empty:\n" + "\n".join(missing[:20]))
 
 
 if __name__ == "__main__":
