@@ -178,9 +178,16 @@ def base_exp_yields(reference):
 
 
 def machine_moves(reference):
+    """Each species' TM and HM moves. A form the reference gives none of its
+    own learns its base species' -- the reference reads the base's list for
+    it at run time -- so 324 forms do not come out unable to learn any TM."""
     learnsets = json.loads((reference / "data/learnsets/learnsets.json").read_text())
-    return {name[len("SPECIES_"):]: set(entry.get("MachineMoves", []))
-            for name, entry in learnsets.items()}
+    moves = {name[len("SPECIES_"):]: set(entry.get("MachineMoves", []))
+             for name, entry in learnsets.items()}
+    for form, base in base_species_of(reference).items():
+        if not moves.get(form):
+            moves[form] = set(moves.get(base, set()))
+    return moves
 
 
 def machine_numbers():
@@ -294,6 +301,7 @@ def main():
     existing = {entry["species"] for entry in personal["baseStats"]}
 
     wanted = species_to_add(args.reference)
+    wanted_all = set(added_species())
     added, clamped, absent = [], [], []
     for name in wanted:
         if name in existing:
@@ -309,6 +317,18 @@ def main():
         print(f"{len(absent)} named in the reference's header with no block in "
               f"Species.c, left alone: {', '.join(absent[:6])}"
               + (" ..." if len(absent) > 6 else ""))
+
+    # The records already written keep everything but their machine moves,
+    # which follow the rule above: a second run brings them up to date.
+    refreshed = 0
+    for entry in personal["baseStats"]:
+        name = entry["species"]
+        if name in wanted_all and name in learnsets:
+            fresh = sorted(tms[m] for m in learnsets[name] if m in tms), sorted(hms[m] for m in learnsets[name] if m in hms)
+            if (entry["tms"], entry["hms"]) != fresh:
+                entry["tms"], entry["hms"] = fresh
+                refreshed += 1
+    print(f"{refreshed} records already written take new machine moves")
 
     first = len(personal["baseStats"])
     print(f"{len(added)} species to append, identifiers {first} to {first + len(added) - 1}")

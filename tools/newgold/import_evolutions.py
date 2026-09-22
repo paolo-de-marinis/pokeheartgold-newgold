@@ -136,6 +136,7 @@ def main():
     items = constants("include/constants/items.h", "ITEM_")
     types = constants("include/constants/pokemon.h", "TYPE_")
     known = methods | species | moves | items | types
+    squashed_items = {name.replace("_", ""): name for name in items}
 
     FORMS_OF.update(form_table(args.reference))
     table = reference_table(args.reference)
@@ -166,6 +167,10 @@ def main():
 
         usable, missing = [], []
         for method, param, target in rows:
+            # The reference spells a few items with an underscore this game does
+            # not: ITEM_THUNDER_STONE is ITEM_THUNDERSTONE here. Unmapped, it
+            # dropped Eelektrik's, Charjabug's and Tadbulb's evolutions.
+            param = squashed_items.get(param.replace("_", ""), param) if param.startswith("ITEM_") else param
             needed = [method, target] + ([param] if not param.lstrip("-").isdigit() else [])
             absent = [name for name in needed if name not in known]
             if absent:

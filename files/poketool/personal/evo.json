@@ -4889,6 +4889,36 @@
           "target": "SPECIES_SINISTCHA_MASTERPIECE"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_EELEKTRIK",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_THUNDERSTONE",
+          "target": "SPECIES_EELEKTROSS"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_CHARJABUG",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_THUNDERSTONE",
+          "target": "SPECIES_VIKAVOLT"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_TADBULB",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_THUNDERSTONE",
+          "target": "SPECIES_BELLIBOLT"
+        }
+      ]
     }
   ]
 }
