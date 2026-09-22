@@ -581,6 +581,8 @@ Overlay OVY_2
     Object asm/overlay_02_02248728.o
     Object src/field/repel.o
     Object asm/overlay_02_0224BB18.o
+    Object src/field/overlay_02_0224F76C.o
+    Object asm/overlay_02_0224F79C.o
     Object src/field/legend_cutscene_camera.o
     Object src/field/overlay_2_gear_phone.o
     Object src/field/event_cutscene_shaymin.o
