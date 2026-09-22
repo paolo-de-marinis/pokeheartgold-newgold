@@ -24,11 +24,17 @@ import import_species  # noqa: E402
 FIRST_ADDED_SPECIES = 508
 
 
-def first_free_icon():
-    """The first archive entry after everything the game already names."""
-    used = sorted(int(m.group(1)) for m in
-                  (re.match(r"poke_icon_0*(\d+)\.png$", p.name) for p in ICONS.iterdir()) if m)
-    return used[-1] + 1
+def first_added_icon():
+    """Where the added species' icons start, as the game's own lookup has it.
+
+    This used to be "the first free entry", which is not the same thing twice:
+    a second run appended another copy of every icon and left the lookup
+    pointing at the first, so the forms imported in the second run showed
+    another species' picture. The number comes from the C now, and a species
+    is always written at the same entry.
+    """
+    source = (ROOT / "src/pokemon_icon_idx.c").read_text()
+    return int(re.search(r"#define FIRST_ADDED_ICON\s+(\d+)", source).group(1))
 
 
 def palette_numbers(reference):
@@ -48,9 +54,10 @@ def main():
     for form, base in import_species.base_species_of(args.reference).items():
         if form not in palettes and base in palettes:
             palettes[form] = palettes[base]
-    first = first_free_icon()
-    print(f"icons already go up to {first - 1}; the new species take {first} to "
-          f"{first + len(import_species.added_species()) - 1}")
+    first = first_added_icon()
+    added = import_species.added_species()
+    print(f"the added species take icons {first} to {first + len(added) - 1}, "
+          f"{len(added)} of them")
 
     missing = [name for name in import_species.added_species()
                if not (sprites / name.lower() / "icon.png").exists()]
