@@ -174,7 +174,7 @@ class WhatIsStillMissingTests(unittest.TestCase):
     # and an animation; these are the ones whose script cannot do the whole
     # job on its own, because the reference does the rest in C this port has
     # not written yet. The number may only come down.
-    STILL_TO_DO = 2
+    STILL_TO_DO = 0
 
     def test_the_list_only_ever_shrinks(self):
         pending = (plain_hit() | reaches_for_what_is_not_here()) - NOTHING_TO_WRITE
