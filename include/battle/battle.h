@@ -498,11 +498,14 @@ typedef struct BattleContext {
     // "not raised". Cleared when the Pokemon is loaded into its slot, so the
     // boost does not follow it out of the battle and back in.
     //
-    // The reference keeps a boosterEnergyActivated flag beside this one, for
-    // the item that switches the ability on when the weather will not. That
-    // item and its hold effect are not in this game, so the flag would never
-    // be set and is not here.
     u8 paradoxBoostedStat[BATTLER_MAX];
+    // Whether the stat above was raised by a Booster Energy rather than by the
+    // sun or the ground. Two things read it: the ability will not switch on a
+    // second time from the weather once the energy has done it, and the
+    // command that takes the boost away when the weather or the ground goes
+    // leaves an energy's boost alone -- that one lasts as long as the Pokemon
+    // is out. Cleared with the stat, when the Pokemon is loaded in.
+    u8 boosterEnergyActivated[BATTLER_MAX];
     // Belch is only there to be used once the Pokemon has eaten a Berry, and
     // nothing else in the battle remembers that it did. Written down per party
     // slot, like the entry abilities above, so that a Pokemon which ate its

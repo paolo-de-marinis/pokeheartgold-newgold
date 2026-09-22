@@ -5448,4 +5448,48 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s\n{STRVAR_1 8, 1, 0} popped!</language>
 	</row>
+	<row id="msg_0197_01359" index="1359">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s {STRVAR_1 8, 1, 0}\nprevents {STRVAR_1 13, 2, 0} loss!</language>
+	</row>
+	<row id="msg_0197_01360" index="1360">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s\n{STRVAR_1 8, 1, 0} prevents\f{STRVAR_1 13, 2, 0} loss!</language>
+	</row>
+	<row id="msg_0197_01361" index="1361">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The foe’s {STRVAR_1 1, 0, 0}’s\n{STRVAR_1 8, 1, 0} prevents\f{STRVAR_1 13, 2, 0} loss!</language>
+	</row>
+	<row id="msg_0197_01362" index="1362">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The effects of the {STRVAR_1 8, 0, 0}\nprevent status moves from being used!</language>
+	</row>
+	<row id="msg_0197_01363" index="1363">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The {STRVAR_1 8, 0, 0} was used up...</language>
+	</row>
+	<row id="msg_0197_01364" index="1364">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} used the {STRVAR_1 8, 2, 0} to\nactivate {STRVAR_1 5, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01365" index="1365">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} used the\n{STRVAR_1 8, 2, 0} to activate\f{STRVAR_1 5, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01366" index="1366">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} used the\n{STRVAR_1 8, 2, 0} to activate\f{STRVAR_1 5, 1, 0}!</language>
+	</row>
+	<row id="msg_0197_01367" index="1367">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}\nis not affected by\f{STRVAR_1 6, 1, 0}\fthanks to its Safety Goggles!</language>
+	</row>
+	<row id="msg_0197_01368" index="1368">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}\nis not affected by\f{STRVAR_1 6, 1, 0}\fthanks to its Safety Goggles!</language>
+	</row>
+	<row id="msg_0197_01369" index="1369">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}\nis not affected by\f{STRVAR_1 6, 1, 0}\fthanks to its Safety Goggles!</language>
+	</row>
 </body>

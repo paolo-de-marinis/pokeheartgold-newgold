@@ -349,6 +349,7 @@ void CalcMonStats(Pokemon *mon) {
     int newSpeed;
     int newSpatk;
     int newSpdef;
+    u8 nature;
 
     BOOL decry = AcquireMonLock(mon);
     level = (int)GetMonData(mon, MON_DATA_LEVEL, NULL);
@@ -368,6 +369,8 @@ void CalcMonStats(Pokemon *mon) {
     spdefEv = (int)GetMonData(mon, MON_DATA_SPDEF_EV, NULL);
     form = (int)GetMonData(mon, MON_DATA_FORM, NULL);
     species = (int)GetMonData(mon, MON_DATA_SPECIES, NULL);
+    // The one place a Mint reaches: which nature the five stats follow.
+    nature = GetMonNatureAfterMint(mon);
 
     baseStats = (BASE_STATS *)Heap_Alloc(HEAP_ID_DEFAULT, sizeof(BASE_STATS));
     LoadMonBaseStats_HandleAlternateForm(species, form, baseStats);
@@ -380,23 +383,23 @@ void CalcMonStats(Pokemon *mon) {
     SetMonData(mon, MON_DATA_MAX_HP, &newMaxHp);
 
     newAtk = (baseStats->atk * 2 + atkIv + atkEv / 4) * level / 100 + 5;
-    newAtk = ModifyStatByNature(GetMonNature(mon), (u16)newAtk, STAT_ATK);
+    newAtk = ModifyStatByNature(nature, (u16)newAtk, STAT_ATK);
     SetMonData(mon, MON_DATA_ATK, &newAtk);
 
     newDef = (baseStats->def * 2 + defIv + defEv / 4) * level / 100 + 5;
-    newDef = ModifyStatByNature(GetMonNature(mon), (u16)newDef, STAT_DEF);
+    newDef = ModifyStatByNature(nature, (u16)newDef, STAT_DEF);
     SetMonData(mon, MON_DATA_DEF, &newDef);
 
     newSpeed = (baseStats->speed * 2 + speedIv + speedEv / 4) * level / 100 + 5;
-    newSpeed = ModifyStatByNature(GetMonNature(mon), (u16)newSpeed, STAT_SPEED);
+    newSpeed = ModifyStatByNature(nature, (u16)newSpeed, STAT_SPEED);
     SetMonData(mon, MON_DATA_SPEED, &newSpeed);
 
     newSpatk = (baseStats->spatk * 2 + spatkIv + spatkEv / 4) * level / 100 + 5;
-    newSpatk = ModifyStatByNature(GetMonNature(mon), (u16)newSpatk, STAT_SPATK);
+    newSpatk = ModifyStatByNature(nature, (u16)newSpatk, STAT_SPATK);
     SetMonData(mon, MON_DATA_SP_ATK, &newSpatk);
 
     newSpdef = (baseStats->spdef * 2 + spdefIv + spdefEv / 4) * level / 100 + 5;
-    newSpdef = ModifyStatByNature(GetMonNature(mon), (u16)newSpdef, STAT_SPDEF);
+    newSpdef = ModifyStatByNature(nature, (u16)newSpdef, STAT_SPDEF);
     SetMonData(mon, MON_DATA_SP_DEF, &newSpdef);
 
     Heap_Free(baseStats);
@@ -1983,6 +1986,61 @@ u8 GetBoxMonNature(BoxPokemon *boxMon) {
 
 u8 GetNatureFromPersonality(u32 pid) {
     return (u8)(pid % 25);
+}
+
+// A Mint does not touch the personality value, so GetMonNature keeps answering
+// the nature the Pokemon was born with -- what a Mint moves is only which
+// nature the stats follow. konefr keeps that second nature in blockB->unused2,
+// MON_DATA_UNUSED_114, as nature+1 in bits 1 to 5 so that a zero there means no
+// Mint; bit 0 is their ability-slot bit, which this tree does not need because
+// a Pokemon here stores its ability outright. The layout is kept anyway so the
+// same field means the same thing in both trees.
+#define MON_MINT_NATURE_MASK 0x003E
+
+u8 GetMonNatureAfterMint(Pokemon *mon) {
+    u32 mint = (GetMonData(mon, MON_DATA_UNUSED_114, NULL) & MON_MINT_NATURE_MASK) >> 1;
+    if (mint != 0) {
+        return (u8)(mint - 1);
+    }
+    return GetMonNature(mon);
+}
+
+void Mon_SetMintNature(Pokemon *mon, u8 nature) {
+    u16 flags = (u16)GetMonData(mon, MON_DATA_UNUSED_114, NULL);
+    flags &= ~MON_MINT_NATURE_MASK;
+    flags |= (u16)(((nature + 1) << 1) & MON_MINT_NATURE_MASK);
+    SetMonData(mon, MON_DATA_UNUSED_114, &flags);
+}
+
+// An Ability Capsule swaps ability one for ability two. This game writes a
+// Pokemon's ability onto the Pokemon rather than deriving it from a slot bit,
+// so the swap is the ability itself and there is nothing to store; the price is
+// that a Pokemon whose ability is neither of the two -- one given its hidden
+// ability -- has no slot to swap, and the Capsule refuses rather than
+// overwriting it. konefr refuse that case too, by reading their hidden-ability
+// bit.
+BOOL Mon_CanUseAbilityCapsule(Pokemon *mon) {
+    int species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    int form = GetMonData(mon, MON_DATA_FORM, NULL);
+    int ability = GetMonData(mon, MON_DATA_ABILITY, NULL);
+    int ability1 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_1);
+    int ability2 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_2);
+
+    if (ability2 == ABILITY_NONE || ability1 == ability2) {
+        return FALSE;
+    }
+    return ability == ability1 || ability == ability2;
+}
+
+void Mon_SwapAbilitySlot(Pokemon *mon) {
+    int species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    int form = GetMonData(mon, MON_DATA_FORM, NULL);
+    int ability = GetMonData(mon, MON_DATA_ABILITY, NULL);
+    int ability1 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_1);
+    int ability2 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_2);
+    u16 swapped = (u16)((ability == ability1) ? ability2 : ability1);
+
+    SetMonData(mon, MON_DATA_ABILITY, &swapped);
 }
 
 const s8 gNatureStatMods[NATURE_NUM][NUM_EV_STATS] = {

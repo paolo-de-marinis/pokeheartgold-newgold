@@ -107,7 +107,10 @@ void sub_0208981C(PokemonSummaryAppPrefix *summary, Pokemon *mon, PokemonSummary
     // Full NewGold ID. The reference reaches the same layout by patching the
     // two stores and three loads in armips/asm/abilities.s.
     summaryMon->ability = GetMonData(mon, MON_DATA_ABILITY, NULL);
-    summaryMon->nature = GetMonNature(mon);
+    // pokemon_summary_stat_name.c colours the five stat names off this, so a
+    // Mint has to reach it -- the one screen konefr's Summary_ColorizeStatScreen
+    // reaches too.
+    summaryMon->nature = GetMonNatureAfterMint(mon);
 
     for (u16 i = 0; i < MAX_MON_MOVES; i++) {
         summaryMon->moves[i] = GetMonData(mon, MON_DATA_MOVE1 + i, NULL);

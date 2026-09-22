@@ -625,6 +625,10 @@
 #define BATTLE_SUBSCRIPT_INCINERATE                         391
 #define BATTLE_SUBSCRIPT_AIR_BALLOON_FLOAT                  392
 #define BATTLE_SUBSCRIPT_AIR_BALLOON_POP                    393
+#define BATTLE_SUBSCRIPT_WEAKNESS_POLICY                    394
+#define BATTLE_SUBSCRIPT_ROOM_SERVICE                       395
+#define BATTLE_SUBSCRIPT_BOOSTER_ENERGY                     396
+#define BATTLE_SUBSCRIPT_SAFETY_GOGGLES                     397
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

@@ -97,6 +97,13 @@ static u32 GetMonData(Pokemon *mon, int attribute, void *out) {
     return monData[attribute];
 }
 static u8 GetMonNature(Pokemon *mon) { (void)mon; return NATURE_ADAMANT; }
+// The summary reads the nature a Mint gave, not the one the personality value
+// says. Same body as src/pokemon.c so the page is checked on the real path.
+#define MON_MINT_NATURE_MASK 0x003E
+static u8 GetMonNatureAfterMint(Pokemon *mon) {
+    u32 mint = (GetMonData(mon, MON_DATA_UNUSED_114, NULL) & MON_MINT_NATURE_MASK) >> 1;
+    return mint != 0 ? (u8)(mint - 1) : GetMonNature(mon);
+}
 static u8 GetMonGender(Pokemon *mon) { (void)mon; return MON_MALE; }
 static u32 GetMonExpBySpeciesAndLevel(int species, int level) { (void)species; return (u32)level * 100; }
 static u16 GetMoveMaxPP(u16 move, u8 ppUps) { return (u16)(move % 16 + ppUps); }

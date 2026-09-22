@@ -818,4 +818,12 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Pokémon holding a Soul Dew cannot be\nentered in the GS Cup.\r</language>
 	</row>
+	<row id="msg_0300_00192" index="192">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s ability changed!\r</language>
+	</row>
+	<row id="msg_0300_00193" index="193">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the {STRVAR_1 8, 1, 0}!\r</language>
+	</row>
 </body>

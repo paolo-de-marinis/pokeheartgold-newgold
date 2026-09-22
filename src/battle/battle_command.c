@@ -1955,6 +1955,8 @@ BOOL BtlCmd_SetMultiHit(BattleSystem *battleSystem, BattleContext *ctx) {
     int cnt = BattleScriptReadWord(ctx);
     int checkMultiHit = BattleScriptReadWord(ctx);
 
+    int loadedDice = GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_INCREASE_MULTI_STRIKE_MINIMUM;
+
     if (ctx->multiHitCountTemp == 0) {
         if (cnt == 0) {
             if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SKILL_LINK) {
@@ -1964,10 +1966,27 @@ BOOL BtlCmd_SetMultiHit(BattleSystem *battleSystem, BattleContext *ctx) {
             } else {
                 cnt = (BattleSystem_Random(battleSystem) & 3) + 2;
             }
+            // Loaded Dice rolls the two-to-five count again as four or five,
+            // and leaves a roll that already came up four or five alone. That
+            // same condition is what keeps it off a Skill Link's five above,
+            // which is why the reference needs no separate guard for it.
+            if (loadedDice && cnt != 4 && cnt != 5) {
+                cnt = 5 - (BattleSystem_Random(battleSystem) % 2);
+            }
+        }
+        // Population Bomb is the move that asks for ten, and is the reason the
+        // count is read here rather than only where it was rolled: with the
+        // dice it hits four to ten times instead.
+        if (cnt == 10 && loadedDice) {
+            cnt = 10 - (BattleSystem_Random(battleSystem) % 7);
         }
         ctx->multiHitCount = cnt;
         ctx->multiHitCountTemp = cnt;
-        ctx->checkMultiHit = checkMultiHit;
+        // The moves that check accuracy per hit -- Triple Kick, Triple Axel,
+        // Population Bomb -- stop doing that while the dice are held: the
+        // reference gives every one of them the plain multi-hit move's rules
+        // instead, so the first roll decides how many times it lands.
+        ctx->checkMultiHit = loadedDice ? MULTIHIT_MULTI_HIT_MOVE : checkMultiHit;
     }
 
     return FALSE;
@@ -2120,8 +2139,11 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->buffMsg.param[1] = ctx->battleMons[ctx->battlerIdStatChange].ability;
                 ctx->buffMsg.param[2] = stat + 1;
             } else if (ctx->statChangeType == 5) {
-                // "The {1} raised {0}'s {2}!"
-                ctx->buffMsg.id = msg_0197_00756;
+                // "The {1} (sharply) raised {0}'s {2}!" -- the same pair the
+                // plain sentence below is written as. Every held-item raise in
+                // the tree was one stage until the Weakness Policy, which is
+                // two, and the reference prints this bank's own 759 for it.
+                ctx->buffMsg.id = (change == 1) ? msg_0197_00756 : msg_0197_00759;
                 ctx->buffMsg.tag = TAG_NICKNAME_ITEM_STAT;
                 ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
                 ctx->buffMsg.param[1] = ctx->itemTemp;
@@ -2181,6 +2203,23 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                         ctx->buffMsg.param[0] = CreateNicknameTag(ctx, blocker);
                         ctx->buffMsg.param[1] = ctx->battleMons[blocker].ability;
                     }
+                    unkD = TRUE;
+                } else if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdStatChange) == HOLD_EFFECT_PREVENT_STAT_DROPS) {
+                    // A Clear Amulet, which is Clear Body worn rather than
+                    // born: it goes here, below the abilities and above Hyper
+                    // Cutter, because that is where the reference puts it, and
+                    // it refuses every stat rather than one of them. Mold
+                    // Breaker has nothing to say to an item, so it is asked
+                    // raw. The sentence is the abilities' own, with the item
+                    // named in place of the ability -- the reference points at
+                    // the ability row and hands it an item id, which would read
+                    // the item's number out of the ability names.
+                    // "{0}'s {1} prevents {2} loss!"
+                    ctx->buffMsg.id = msg_0197_01359;
+                    ctx->buffMsg.tag = TAG_NICKNAME_ITEM_STAT;
+                    ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
+                    ctx->buffMsg.param[1] = GetBattlerHeldItem(ctx, ctx->battlerIdStatChange);
+                    ctx->buffMsg.param[2] = stat + 1;
                     unkD = TRUE;
                 } else if ((CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_KEEN_EYE) == TRUE && (1 + stat) == 6) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_HYPER_CUTTER) == TRUE && (1 + stat) == 1) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_BIG_PECKS) == TRUE && (1 + stat) == 2) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_MINDS_EYE) == TRUE && (1 + stat) == 6)) {
                     if (ctx->statChangeType == 3) {
@@ -3922,8 +3961,12 @@ BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSystem, BattleContext *ct
     u32 type2 = GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL);
 
     if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) == 0 && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) == 0) {
+        // Safety Goggles keep the sand and the hail off the same way Overcoat
+        // does, and the reference writes it as one more term on each of those
+        // two conditions. It is not on the sun or the rain below: nothing
+        // there is weather falling on the Pokemon.
         if (ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) {
-            if (type1 != TYPE_ROCK && type2 != TYPE_ROCK && type1 != TYPE_STEEL && type2 != TYPE_STEEL && type1 != TYPE_GROUND && type2 != TYPE_GROUND && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) != ABILITY_SAND_VEIL && GetBattlerAbility(ctx, battlerId) != ABILITY_OVERCOAT && !(ctx->battleMons[battlerId].moveEffectFlags & 0x40080)) {
+            if (type1 != TYPE_ROCK && type2 != TYPE_ROCK && type1 != TYPE_STEEL && type2 != TYPE_STEEL && type1 != TYPE_GROUND && type2 != TYPE_GROUND && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) != ABILITY_SAND_VEIL && GetBattlerAbility(ctx, battlerId) != ABILITY_OVERCOAT && GetBattlerHeldItemEffect(ctx, battlerId) != HOLD_EFFECT_SPORE_POWDER_IMMUNITY && !(ctx->battleMons[battlerId].moveEffectFlags & 0x40080)) {
                 ctx->moveTemp = MOVE_SANDSTORM;
                 ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 16);
             }
@@ -3944,7 +3987,7 @@ BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSystem, BattleContext *ct
                     if (ctx->battleMons[battlerId].hp < ctx->battleMons[battlerId].maxHp) {
                         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 16);
                     }
-                } else if (type1 != TYPE_ICE && type2 != TYPE_ICE && GetBattlerAbility(ctx, battlerId) != ABILITY_SNOW_CLOAK && GetBattlerAbility(ctx, battlerId) != ABILITY_OVERCOAT) {
+                } else if (type1 != TYPE_ICE && type2 != TYPE_ICE && GetBattlerAbility(ctx, battlerId) != ABILITY_SNOW_CLOAK && GetBattlerAbility(ctx, battlerId) != ABILITY_OVERCOAT && GetBattlerHeldItemEffect(ctx, battlerId) != HOLD_EFFECT_SPORE_POWDER_IMMUNITY) {
                     ctx->moveTemp = MOVE_HAIL;
                     ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 16);
                 }
@@ -4694,6 +4737,13 @@ extern u16 sLowKickDamageTable[6][2];
 // Heavy Metal doubles the weight a move asks after and Light Metal halves it.
 // Mold Breaker switches either off, except when the Pokemon asking is the one
 // being weighed: there is no mold to break against yourself.
+//
+// A Float Stone halves it once more, after either ability and whichever it
+// was. The reference collects its halvings into one divisor and applies it at
+// the end, so Heavy Metal and a Float Stone cancel and Light Metal with one
+// quarters the weight; dividing twice here reaches the same numbers, whole
+// division included. The reference asks for the item by name, this asks the
+// record the import gave it, which is the same one item.
 static int BattlerWeight(BattleContext *ctx, int battlerIdAttacker, int battlerId) {
     int weight = ctx->battleMons[battlerId].weight;
 
@@ -4706,6 +4756,10 @@ static int BattlerWeight(BattleContext *ctx, int battlerIdAttacker, int battlerI
     } else if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerId, ABILITY_HEAVY_METAL) == TRUE) {
         weight *= 2;
     } else if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerId, ABILITY_LIGHT_METAL) == TRUE) {
+        weight /= 2;
+    }
+
+    if (GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_HALVE_WEIGHT) {
         weight /= 2;
     }
 
@@ -9372,7 +9426,7 @@ BOOL BtlCmd_UpdateTerrainOverlay(BattleSystem *battleSystem, BattleContext *ctx)
     int terrainType = TERRAIN_NONE;
 
     if (endTerrain == TRUE) {
-        BattleContext_UpdateTerrainOverlay(ctx, TERRAIN_NONE);
+        BattleContext_UpdateTerrainOverlay(ctx, ctx->battlerIdAttacker, TERRAIN_NONE);
         return FALSE;
     }
 
@@ -9394,7 +9448,7 @@ BOOL BtlCmd_UpdateTerrainOverlay(BattleSystem *battleSystem, BattleContext *ctx)
     if (terrainType == ctx->terrainOverlayType) {
         BattleScriptIncrementPointer(ctx, adrs);
     } else {
-        BattleContext_UpdateTerrainOverlay(ctx, terrainType);
+        BattleContext_UpdateTerrainOverlay(ctx, ctx->battlerIdAttacker, terrainType);
     }
 
     return FALSE;
@@ -9555,7 +9609,10 @@ BOOL BtlCmd_ResetParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx) 
     for (i = 0; i < maxBattlers; i++) {
         int battlerId = ctx->turnOrder[i];
 
-        if (GetBattlerAbility(ctx, battlerId) == ability && ctx->paradoxBoostedStat[battlerId] != 0) {
+        // A boost a Booster Energy bought is not the weather's to take back:
+        // it lasts as long as the Pokemon stays out, so the battler holding
+        // that record is passed over here.
+        if (GetBattlerAbility(ctx, battlerId) == ability && ctx->paradoxBoostedStat[battlerId] != 0 && !ctx->boosterEnergyActivated[battlerId]) {
             ctx->paradoxBoostedStat[battlerId] = 0;
             ctx->battlerIdTemp = battlerId;
             BattleScriptIncrementPointer(ctx, -2);

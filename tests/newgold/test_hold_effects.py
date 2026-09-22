@@ -42,9 +42,16 @@ FIRST_ADDED = "HOLD_EFFECT_BOOST_IF_NOT_EVOLVED"
 # hand, and those have to be read by name somewhere. At or above it are the
 # ones the range brought with it, which are counted instead.
 FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
-# How many of those an item carries and no line in src/ reads. It is every one
-# of them: the import gave the items their records and left the behaviour.
-IMPORTED_AND_UNREAD = 64
+# How many of those an item carries and no line in src/ reads. It was every one
+# of them when the range came in; the nine held items that answer being hit or
+# hitting took nine off it, and the thirteen that change a number rather than
+# answer an event took thirteen more.
+#
+# Two of that second batch are still counted here and are not unread: the
+# Roseli Berry and Heavy-Duty Boots are battle scripts asking the hold effect
+# by name, and a script is not src/. Anything this test still lists is worth
+# checking against files/battledata before believing it does nothing.
+IMPORTED_AND_UNREAD = 42
 
 
 def effects_defined():

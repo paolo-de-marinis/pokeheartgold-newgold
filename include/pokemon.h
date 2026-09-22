@@ -90,6 +90,11 @@ int CalcLevelBySpeciesAndExp(u16 species, u32 experience);
 int CalcLevelBySpeciesAndExp_PreloadedPersonal(BASE_STATS *personal, u16 species, u32 experience);
 u8 GetBoxMonNature(BoxPokemon *boxMon);
 u8 GetMonNature(Pokemon *mon);
+// The nature a Mint made this Pokemon's stats follow, or its born nature if no
+// Mint was ever used on it. Everything else -- Synchronize, the trainer memo,
+// breeding -- still reads the born nature, which is konefr's reach as well.
+u8 GetMonNatureAfterMint(Pokemon *mon);
+void Mon_SetMintNature(Pokemon *mon, u8 nature);
 u8 GetNatureFromPersonality(u32 pid);
 void MonApplyFriendshipMod(Pokemon *mon, u8 kind, u16 location);
 u8 GetMonGender(Pokemon *mon);
@@ -185,6 +190,8 @@ u16 SpeciesToJohtoDexNo(u16 species);
 void Mon_ForceSetGiratinaOriginForm(Pokemon *mon);
 void Party_UpdateAllGiratina_DistortionWorld(Party *party, BOOL force_origin);
 BOOL Mon_CanUseGracidea(Pokemon *mon);
+BOOL Mon_CanUseAbilityCapsule(Pokemon *mon);
+void Mon_SwapAbilitySlot(Pokemon *mon);
 void Party_ResetAllShayminToLandForm(Party *party);
 BOOL Party_TryResetShaymin(Party *party, int min_max, const RTCTime *time);
 BOOL Mon_UpdateRotomForm(Pokemon *mon, int form, int defaultSlot);

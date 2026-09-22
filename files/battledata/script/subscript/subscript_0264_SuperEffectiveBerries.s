@@ -36,7 +36,14 @@ _033:
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_TEMP_DATA, HOLD_EFFECT_WEAKEN_SE_GHOST, _219
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_TEMP_DATA, HOLD_EFFECT_WEAKEN_SE_DRAGON, _226
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_TEMP_DATA, HOLD_EFFECT_WEAKEN_SE_DARK, _233
+    // The Roseli Berry, added where the reference adds it: between the Dark
+    // one and the Steel one, ahead of the Steel test that falls through.
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_TEMP_DATA, HOLD_EFFECT_WEAKEN_SE_FAIRY, _FAIRY
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_TEMP_DATA, HOLD_EFFECT_WEAKEN_SE_STEEL, _240
+    GoTo _262
+
+_FAIRY:
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, TYPE_FAIRY, _245
     GoTo _262
 
 _128:

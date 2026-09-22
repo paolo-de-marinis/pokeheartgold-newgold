@@ -15,5 +15,11 @@ _009:
     PrintMessage msg_0197_01160, TAG_NICKNAME_NICKNAME_ITEM, BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_DEFENDER, BATTLER_CATEGORY_DEFENDER
     Wait 
     WaitButtonABTime 30
+    // A Jaboca or a Rowap Berry is eaten doing this; a Rocky Helmet is worn
+    // and stays on. The reference spends the same script on all three and
+    // names the helmet here rather than write a second copy of it.
+    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_HELD_ITEM, ITEM_ROCKY_HELMET, _END
     RemoveItem BATTLER_CATEGORY_DEFENDER
+
+_END:
     End 

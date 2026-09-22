@@ -2402,8 +2402,75 @@ static u8 PartyMenu_GiveOrUseItemOnMon_HandleInput(PartyMenu *partyMenu) {
     return sub_0207A8FC(partyMenu);
 }
 
+// The Mints, in item order from ITEM_LONELY_MINT to ITEM_SERIOUS_MINT -- twenty-one
+// of them, one per nature that is worth a Mint. konefr key the same range with
+// IS_ITEM_NATURE_MINT and read it out of a nature-indexed table; the ids are
+// consecutive in both trees, so the table can run the other way here.
+static const u8 sMintNatures[ITEM_SERIOUS_MINT - ITEM_LONELY_MINT + 1] = {
+    NATURE_LONELY,
+    NATURE_ADAMANT,
+    NATURE_NAUGHTY,
+    NATURE_BRAVE,
+    NATURE_BOLD,
+    NATURE_IMPISH,
+    NATURE_LAX,
+    NATURE_RELAXED,
+    NATURE_MODEST,
+    NATURE_MILD,
+    NATURE_RASH,
+    NATURE_QUIET,
+    NATURE_CALM,
+    NATURE_GENTLE,
+    NATURE_CAREFUL,
+    NATURE_SASSY,
+    NATURE_TIMID,
+    NATURE_HASTY,
+    NATURE_JOLLY,
+    NATURE_NAIVE,
+    NATURE_SERIOUS,
+};
+
+// A Mint and the Ability Capsule change a Pokemon without changing its form, so
+// neither has a partyUseParam for CanUseItemOnMonInParty to say yes to: like the
+// Gracidea they are answered ahead of it. Neither gets the form-change scene --
+// there is no form to animate -- so the line is printed the way a healing item
+// prints its own and the menu then leaves.
+static BOOL PartyMenu_TryUseMintOrAbilityCapsule(PartyMenu *partyMenu) {
+    u16 itemId = partyMenu->args->itemId;
+    Pokemon *mon = Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex);
+    String *string;
+
+    if (itemId >= ITEM_LONELY_MINT && itemId <= ITEM_SERIOUS_MINT) {
+        // konefr do not ask whether the Pokemon already follows that nature, and
+        // neither does this: the Mint is spent either way.
+        Mon_SetMintNature(mon, sMintNatures[itemId - ITEM_LONELY_MINT]);
+        CalcMonLevelAndStats(mon);
+        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00193);
+        BufferItemName(partyMenu->msgFormat, 1, itemId);
+    } else if (itemId == ITEM_ABILITY_CAPSULE && Mon_CanUseAbilityCapsule(mon) == TRUE) {
+        Mon_SwapAbilitySlot(mon);
+        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00192);
+    } else {
+        return FALSE;
+    }
+
+    BufferBoxMonNickname(partyMenu->msgFormat, 0, Mon_GetBoxMon(mon));
+    StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
+    String_Delete(string);
+    Bag_TakeItem(partyMenu->args->bag, itemId, 1, HEAP_ID_PARTY_MENU);
+    PartyMenu_PrintMessageOnWindow34(partyMenu, -1, TRUE);
+    PlaySE(SEQ_SE_DP_KAIFUKU);
+    partyMenu->itemUseCallback = PartyMenu_ItemUseFunc_WaitTextPrinterThenExit;
+    return TRUE;
+}
+
 static int PartyMenu_HandleUseItemOnMon(PartyMenu *partyMenu) {
     ItemData *itemData = LoadItemDataOrGfx(partyMenu->args->itemId, ITEMNARC_PARAM, HEAP_ID_PARTY_MENU);
+
+    if (PartyMenu_TryUseMintOrAbilityCapsule(partyMenu) == TRUE) {
+        Heap_Free(itemData);
+        return PARTY_MENU_STATE_ITEM_USE_CB;
+    }
 
     if (partyMenu->args->itemId == ITEM_GRACIDEA && Mon_CanUseGracidea(Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex)) == TRUE) {
         partyMenu->args->species = SHAYMIN_SKY; // SPECIES_BULBASAUR

@@ -415,6 +415,7 @@ typedef enum Terrain {
 #define STRUGGLE_CHECK_CHOICED    (1 << 9)
 #define STRUGGLE_CHECK_GORILLA_TACTICS (1 << 10)
 #define STRUGGLE_CHECK_BELCH           (1 << 11)
+#define STRUGGLE_CHECK_ASSAULT_VEST    (1 << 12)
 
 // Ability Checks
 #define CHECK_ABILITY_SAME_SIDE            0

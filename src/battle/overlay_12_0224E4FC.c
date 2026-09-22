@@ -42,6 +42,10 @@ static void ov12_022585A8(BattleContext *ctx, u8 battlerId);
 static int ov12_022585B8(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTarget1, int battlerIdTarget2);
 static BOOL ov12_0225865C(BattleContext *ctx, int moveNo);
 static BOOL MoveIsInList(u32 move, const u16 *list, int count);
+// Declared up here because the contact check needs it and the list it reads
+// sits down beside the damage calculation, which is the only thing that
+// wanted it before the Punching Glove.
+static BOOL BattleMoveIsPunching(u32 moveNo);
 static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int moveNo);
 static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault);
 
@@ -116,8 +120,10 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     // here, which is where the reference clears its copy.
     ctx->psychicTerrainMoveUsed[battlerId] = 0;
     // A Paradox ability picks its stat again from scratch when its Pokemon
-    // comes back out, so what it had picked before does not travel with it.
+    // comes back out, so what it had picked before does not travel with it --
+    // nor does the record of a Booster Energy having been what raised it.
     ctx->paradoxBoostedStat[battlerId] = 0;
+    ctx->boosterEnergyActivated[battlerId] = FALSE;
 
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
@@ -1449,7 +1455,18 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     BOOL ret = FALSE;
     u16 effectChance;
 
-    if (IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE && GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE) {
+    // A Covert Cloak on whoever was hit eats the same effects Sheer Force
+    // gives up, and the reference asks the two in one condition here. What it
+    // does not do is the other half of Sheer Force -- the cloak is the target's
+    // item and buys the attacker nothing, so the power boost in CalcMoveDamage
+    // stays the ability's alone.
+    //
+    // The reference's list is Sheer Force's list, self-targeting effects
+    // included, so a cloak also swallows the attacker's own Power-Up Punch
+    // boost. That is its behaviour rather than an oversight here.
+    if (IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE
+        && (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE
+            || (ctx->battlerIdTarget != BATTLER_NONE && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) == HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS))) {
         ctx->unk_2174 = 0;
         return FALSE;
     }
@@ -2213,6 +2230,15 @@ u32 StruggleCheck(BattleSystem *battleSystem, BattleContext *ctx, int battlerId,
             && ctx->berryEaten[battlerId][ctx->selectedMonIndex[battlerId]] == FALSE) {
             nonSelectableMoves |= MaskOfFlagNo(movePos);
         }
+        // An Assault Vest will not let its wearer pick a status move. Me First
+        // is the reference's one exception, and by name rather than by any
+        // property of it: it is a status move that only ever goes out as
+        // somebody else's attack.
+        if ((struggleCheckFlags & STRUGGLE_CHECK_ASSAULT_VEST) && item == HOLD_EFFECT_SPDEF_BOOST_NO_STATUS_MOVES
+            && BattleMoveTbl(ctx, ctx->battleMons[battlerId].moves[movePos])->category == CATEGORY_STATUS
+            && ctx->battleMons[battlerId].moves[movePos] != MOVE_ME_FIRST) {
+            nonSelectableMoves |= MaskOfFlagNo(movePos);
+        }
     }
     return nonSelectableMoves;
 }
@@ -2274,6 +2300,13 @@ BOOL ov12_02251A28(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
         msg->tag = TAG_NICKNAME;
         msg->id = msg_0197_01350;
         msg->param[0] = CreateNicknameTag(ctx, battlerId);
+        ret = FALSE;
+    } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_ASSAULT_VEST) & MaskOfFlagNo(movePos)) {
+        // Ahead of the no-PP line, where the reference has it: a vest refuses
+        // the move whether or not there was PP for it.
+        msg->tag = TAG_ITEM;
+        msg->id = msg_0197_01362;
+        msg->param[0] = ctx->battleMons[battlerId].item;
         ret = FALSE;
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_NO_PP) & MaskOfFlagNo(movePos)) {
         msg->tag = TAG_NONE;
@@ -2452,6 +2485,18 @@ BOOL ov12_02251C74(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarge
         if (sTypeEffectiveness[index][1] == TYPE_DARK && sTypeEffectiveness[index][2] == TYPE_MUL_NO_EFFECT) {
             ret = FALSE;
         }
+    }
+
+    // A Ring Target takes away every type immunity the holder has, which is
+    // every row of this table that says "no effect" against it. The reference
+    // does the same thing by moving all of those rows to the bottom of its own
+    // table and stopping the walk at a marker row above them; the table here
+    // is still retail's, with each immunity where it always sat, so the
+    // question is asked of the row instead of once of the table. Same rows,
+    // same answer. An Iron Ball and Gravity above are the same idea already,
+    // narrowed to Flying.
+    if (item == HOLD_EFFECT_LOSE_TYPE_IMMUNITIES && sTypeEffectiveness[index][2] == TYPE_MUL_NO_EFFECT) {
+        ret = FALSE;
     }
 
     return ret;
@@ -2675,6 +2720,13 @@ static BOOL CheckFlyingImmunity(BattleContext *ctx, int item, int index) {
     }
 
     if (ctx->fieldCondition & FIELD_CONDITION_GRAVITY && sTypeEffectiveness[index][1] == TYPE_FLYING && sTypeEffectiveness[index][2] == TYPE_MUL_NO_EFFECT) {
+        ret = FALSE;
+    }
+
+    // What the AI is told about a Ring Target: the same no-effect rows the
+    // damage calculation skips for one, skipped here too. The reference keeps
+    // the two copies in step like this as well.
+    if (item == HOLD_EFFECT_LOSE_TYPE_IMMUNITIES && sTypeEffectiveness[index][2] == TYPE_MUL_NO_EFFECT) {
         ret = FALSE;
     }
 
@@ -3448,6 +3500,20 @@ static const u16 sWindMoves[] = {
     MOVE_WILDBOLT_STORM,
 };
 
+// What a pair of Safety Goggles keeps out. The reference's list, in its order,
+// which is why Powder and Rage Powder are on it beside the four that put a
+// status on: a powder is a powder whatever it does when it lands.
+static const u16 sPowderMoves[] = {
+    MOVE_COTTON_SPORE,
+    MOVE_POISON_POWDER,
+    MOVE_SLEEP_POWDER,
+    MOVE_STUN_SPORE,
+    MOVE_SPORE,
+    MOVE_POWDER,
+    MOVE_RAGE_POWDER,
+    MOVE_MAGIC_POWDER,
+};
+
 static BOOL MoveIsInList(u32 move, const u16 *list, int count) {
     for (int i = 0; i < count; i++) {
         if (list[i] == move) {
@@ -3491,19 +3557,26 @@ BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) {
 }
 
 // Lay a terrain over the battle, or clear the one that is there. The turns are
-// the five a weather gets. The reference lengthens them for a Terrain Extender,
-// which is an item this game has no hold effect for, so the count here is
-// always the plain five.
+// the five a weather gets, plus whatever a Terrain Extender adds -- which is
+// the whole reason the battler laying the ground is passed in: the item is
+// read off whoever laid it, not off whoever is standing on it, and a Terrain
+// Extender that walks in afterwards lengthens nothing. The three the item's
+// record carries is the three turns it is supposed to add.
 //
 // Setting the terrain that is already down does nothing at all, which is what
-// makes the move fail rather than refresh it.
-void BattleContext_UpdateTerrainOverlay(BattleContext *ctx, int terrainType) {
+// makes the move fail rather than refresh it -- and so an Extender cannot be
+// used to top up its own ground either.
+void BattleContext_UpdateTerrainOverlay(BattleContext *ctx, int battlerId, int terrainType) {
     if (ctx->terrainOverlayType == terrainType) {
         return;
     }
 
     ctx->terrainOverlayType = terrainType;
     ctx->terrainOverlayTurns = terrainType != TERRAIN_NONE ? TERRAIN_TURNS : 0;
+
+    if (terrainType != TERRAIN_NONE && GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_EXTEND_TERRAIN) {
+        ctx->terrainOverlayTurns += GetHeldItemModifier(ctx, battlerId, 0);
+    }
 }
 
 // Which stat the Seed a battler is holding would raise, or STAT_HP for "none
@@ -3567,14 +3640,17 @@ static u8 ParadoxGreatestStat(BattleContext *ctx, int battlerId) {
 // to switch on. Called from the send-out check and from the ActivateParadoxAbility
 // script command, which is why it does all of its own asking.
 //
-// The reference also switches these on from a Booster Energy, the item that
-// stands in for the weather. This game has no such item and no hold effect for
-// one, so that half is not here.
+// A Booster Energy stands in for whichever of the two is missing, and only
+// when it is missing: the reference asks the weather or the ground first and
+// spends the item only if the answer was no. An energy that has been spent is
+// remembered, because the boost it bought does not end the way the weather's
+// does and because the ability must not switch on again over the top of it.
 int BattleContext_ActivateParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int script = BATTLE_SUBSCRIPT_NONE;
+    BOOL energy = GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_ACTIVATE_PARADOX_ABILITIES;
 
     // A Transformed Pokemon does not get to use a Paradox ability it copied.
-    if (ctx->paradoxBoostedStat[battlerId] != 0 || !ctx->battleMons[battlerId].hp || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+    if (ctx->paradoxBoostedStat[battlerId] != 0 || ctx->boosterEnergyActivated[battlerId] || !ctx->battleMons[battlerId].hp || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
         return BATTLE_SUBSCRIPT_NONE;
     }
 
@@ -3583,17 +3659,24 @@ int BattleContext_ActivateParadoxAbility(BattleSystem *battleSystem, BattleConte
         // The sun is weather, so Cloud Nine and Air Lock blot it out.
         if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) && (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL)) {
             script = BATTLE_SUBSCRIPT_PARADOX_ABILITY_START;
+        } else if (energy) {
+            script = BATTLE_SUBSCRIPT_BOOSTER_ENERGY;
         }
         break;
     case ABILITY_QUARK_DRIVE:
         // The ground is not weather, so neither of those two touches it.
         if (ctx->terrainOverlayType == ELECTRIC_TERRAIN) {
             script = BATTLE_SUBSCRIPT_PARADOX_ABILITY_START;
+        } else if (energy) {
+            script = BATTLE_SUBSCRIPT_BOOSTER_ENERGY;
         }
         break;
     }
 
     if (script != BATTLE_SUBSCRIPT_NONE) {
+        if (script == BATTLE_SUBSCRIPT_BOOSTER_ENERGY) {
+            ctx->boosterEnergyActivated[battlerId] = TRUE;
+        }
         ctx->paradoxBoostedStat[battlerId] = ParadoxGreatestStat(ctx, battlerId);
         ctx->battlerIdTemp = battlerId;
         // Which stat the subscript names.
@@ -3625,8 +3708,28 @@ BOOL BattleMoveIsSoundBased(u32 moveNo) {
 // question is not one the move table can answer on its own. It is asked of the
 // move the attacker is using, everywhere it is asked, which is why the ability
 // belongs in here rather than at each of the callers.
+//
+// Protective Pads goes in beside it for the same reason: the reference answers
+// both from one function, IsContactBeingMade, and every read of contact over
+// there goes through it -- Rough Skin, Static, Rocky Helmet, Sticky Barb, and
+// Unseen Fist punching through a Protect, which the pads therefore also stop.
+// Either side's pads end the contact, which is the reference's own reading:
+// the attacker's keep it off what it hits, the target's keep the attacker off
+// itself.
 BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo) {
     if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_LONG_REACH) {
+        return FALSE;
+    }
+    if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_PREVENT_CONTACT_EFFECTS) {
+        return FALSE;
+    }
+    if (ctx->battlerIdTarget != BATTLER_NONE && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) == HOLD_EFFECT_PREVENT_CONTACT_EFFECTS) {
+        return FALSE;
+    }
+    // A Punching Glove is a pair of pads for punches alone: the reference asks
+    // it in the same function and only of the attacker, so a glove on what is
+    // being punched changes nothing.
+    if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_INCREASE_PUNCHING_MOVE_DMG && BattleMoveIsPunching(moveNo) == TRUE) {
         return FALSE;
     }
     return (BattleMoveTbl(ctx, moveNo)->unkB & 1) != 0;
@@ -3809,6 +3912,15 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
     }
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_BULLETPROOF) == TRUE && MoveIsInList(ctx->moveNoCur, sBallAndBombMoves, NELEMS(sBallAndBombMoves)) == TRUE) {
         script = BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF;
+    }
+    // Safety Goggles keep a powder move off whoever is wearing them. An item
+    // rather than an ability, in a function that says abilities in its name --
+    // but this is the one place this tree answers "the move does not touch
+    // this target", and the reference asks its goggles in the same sweep as
+    // Bulletproof above. A Pokemon powdering itself is let through, which is
+    // the reference's condition and not an accident of this one.
+    if (GetBattlerHeldItemEffect(ctx, battlerIdTarget) == HOLD_EFFECT_SPORE_POWDER_IMMUNITY && MoveIsInList(ctx->moveNoCur, sPowderMoves, NELEMS(sPowderMoves)) == TRUE && battlerIdAttacker != battlerIdTarget) {
+        script = BATTLE_SUBSCRIPT_SAFETY_GOGGLES;
     }
     // Sweet Veil keeps its side awake: the moves that put a Pokemon to sleep,
     // Yawn, and Rest. Rest aims at its user, so a Pokemon under Sweet Veil
@@ -4667,7 +4779,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 if (GetBattlerAbility(ctx, battlerId) == ABILITY_HADRON_ENGINE && ctx->terrainOverlayType == ELECTRIC_TERRAIN) {
                     script = BATTLE_SUBSCRIPT_HADRON_ENGINE_NO_TERRAIN_SETUP;
                 } else {
-                    BattleContext_UpdateTerrainOverlay(ctx, terrainType);
+                    BattleContext_UpdateTerrainOverlay(ctx, battlerId, terrainType);
                     script = BATTLE_SUBSCRIPT_CREATE_TERRAIN_OVERLAY;
                 }
                 flag = TRUE;
@@ -4739,7 +4851,28 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 26: // end
+        case 26: // Room Service
+            // A Pokemon that walks into a Trick Room already up gets the same
+            // Speed drop as one that was standing in it when the dimensions
+            // twisted. The script walks the whole field rather than the one
+            // battler, so the one run here spends every Room Service there is
+            // to spend and the next pass through this state finds none -- the
+            // reference runs the same script from its own switch-in check for
+            // the same reason.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (ctx->battleMons[battlerId].hp && (ctx->fieldCondition & FIELD_CONDITION_TRICK_ROOM) && GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_DROP_SPEED_IN_TRICK_ROOM) {
+                    ctx->battlerIdTemp = battlerId;
+                    script = BATTLE_SUBSCRIPT_ROOM_SERVICE;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 27: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;
@@ -4826,8 +4959,11 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
 
     // Every ability below belongs to the Pokemon that was hit. Poison Touch is
     // the attacker's, so it is checked on its own and poisons the other way
-    // round: the target takes the status, the attacker is named for it.
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_POISON_TOUCH && ctx->battleMons[ctx->battlerIdTarget].hp && !ctx->battleMons[ctx->battlerIdTarget].status && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur) && (BattleSystem_Random(battleSystem) % 10 < 3)) {
+    // round: the target takes the status, the attacker is named for it. A
+    // Covert Cloak on the target stops it -- the one ability on this list the
+    // reference guards with the cloak, because it is the only one here that
+    // does something to the Pokemon holding it.
+    if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) != HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS && GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_POISON_TOUCH && ctx->battleMons[ctx->battlerIdTarget].hp && !ctx->battleMons[ctx->battlerIdTarget].status && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur) && (BattleSystem_Random(battleSystem) % 10 < 3)) {
         ctx->statChangeType = 3;
         ctx->battlerIdStatChange = ctx->battlerIdTarget;
         ctx->battlerIdTemp = ctx->battlerIdAttacker;
@@ -5004,7 +5140,12 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
     case ABILITY_WANDERING_SPIRIT:
         // Mummy above takes; this one gives back in exchange, so it refuses
         // the same abilities Skill Swap refuses.
-        if (ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_WANDERING_SPIRIT && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MULTITYPE && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_WONDER_GUARD && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+        //
+        // An Ability Shield on either of the two stops the swap, and this is
+        // the only thing in the reference that reads that item: it guards the
+        // exchange, not the taking, so a Mummy above still wraps an ability
+        // that is standing behind a shield. Odd, and the reference's.
+        if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) != HOLD_EFFECT_PREVENT_ABILITY_CHANGES && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) != HOLD_EFFECT_PREVENT_ABILITY_CHANGES && ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_WANDERING_SPIRIT && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MULTITYPE && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_WONDER_GUARD && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
             *script = BATTLE_SUBSCRIPT_WANDERING_SPIRIT;
             ret = TRUE;
         }
@@ -5158,7 +5299,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // read what is down and say so; the side-effect type is what tells it
         // to put an Ability popup up first.
         if (ctx->terrainOverlayType != GRASSY_TERRAIN && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
-            BattleContext_UpdateTerrainOverlay(ctx, GRASSY_TERRAIN);
+            BattleContext_UpdateTerrainOverlay(ctx, ctx->battlerIdTarget, GRASSY_TERRAIN);
             ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_CREATE_TERRAIN_OVERLAY;
@@ -6168,10 +6309,13 @@ BOOL ov12_0225561C(BattleContext *ctx, int battlerId) {
     return ctx->playerActions[battlerId].command == CONTROLLER_COMMAND_40;
 }
 
-// Absorb Bulb, Cell Battery and Snowball are one item three times over: a
-// damaging hit of the named type raises one stat by a stage and the item goes
-// with it. The ceiling is read the reference's way -- Contrary turns the raise
-// into a drop, so what a Contrary holder needs is room below rather than above.
+// Absorb Bulb, Cell Battery, Snowball and Luminous Moss are one item four
+// times over: a damaging hit of the named type raises one stat by a stage and
+// the item goes with it. Kee Berry and Maranga Berry are that item again with
+// the condition on the damage's class rather than on the move's type, so what
+// woke the item up is passed in and only the ceiling is asked here. The
+// ceiling is read the reference's way -- Contrary turns the raise into a drop,
+// so what a Contrary holder needs is room below rather than above.
 //
 // BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT is the bank's own item-credited stat
 // raise, the one the Liechi family of Berries runs: it plays the item's
@@ -6179,14 +6323,13 @@ BOOL ov12_0225561C(BattleContext *ctx, int battlerId) {
 // eats the item. The reference writes a script per item to say "{mon}'s {item}
 // raised its {stat}!" instead -- a row this bank has not got. The sentence here
 // is this bank's, and it credits the item, which is the part that matters.
-static BOOL ItemRaisesStatOnTypeHit(BattleContext *ctx, int moveType, int stat, int *script) {
+static BOOL ItemRaisesStatOnHit(BattleContext *ctx, BOOL triggered, int stat, int *script) {
     int target = ctx->battlerIdTarget;
     int stage = ctx->battleMons[target].statChanges[stat];
     BOOL contrary = CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, target, ABILITY_CONTRARY);
 
-    if (!ctx->battleMons[target].hp
-        || BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur) != moveType
-        || (!ctx->selfTurnData[target].physicalDamage && !ctx->selfTurnData[target].specialDamage)
+    if (triggered == FALSE
+        || !ctx->battleMons[target].hp
         || (contrary == TRUE ? stage == 0 : stage == 12)) {
         return FALSE;
     }
@@ -6203,6 +6346,9 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
     int item;
     int boost;
     int side;
+    BOOL physical;
+    BOOL special;
+    int moveType;
 
     if (ctx->battlerIdTarget == BATTLER_NONE) {
         return ret;
@@ -6215,6 +6361,9 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
     item = GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget);
     boost = GetHeldItemModifier(ctx, ctx->battlerIdTarget, 0);
     side = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker);
+    physical = ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage != 0;
+    special = ctx->selfTurnData[ctx->battlerIdTarget].specialDamage != 0;
+    moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
 
     switch (item) {
     case HOLD_EFFECT_DMG_USER_CONTACT_XFR: // sticky barb
@@ -6247,13 +6396,61 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
         }
         break;
     case HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT: // absorb bulb
-        ret = ItemRaisesStatOnTypeHit(ctx, TYPE_WATER, STAT_SPATK, script);
+        ret = ItemRaisesStatOnHit(ctx, (physical || special) && moveType == TYPE_WATER, STAT_SPATK, script);
         break;
     case HOLD_EFFECT_BOOST_ATK_ON_ELECTRIC_HIT: // cell battery
-        ret = ItemRaisesStatOnTypeHit(ctx, TYPE_ELECTRIC, STAT_ATK, script);
+        ret = ItemRaisesStatOnHit(ctx, (physical || special) && moveType == TYPE_ELECTRIC, STAT_ATK, script);
         break;
     case HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT: // snowball
-        ret = ItemRaisesStatOnTypeHit(ctx, TYPE_ICE, STAT_ATK, script);
+        ret = ItemRaisesStatOnHit(ctx, (physical || special) && moveType == TYPE_ICE, STAT_ATK, script);
+        break;
+    case HOLD_EFFECT_BOOST_SPECIAL_DEFENSE_ON_WATER_HIT: // luminous moss
+        ret = ItemRaisesStatOnHit(ctx, (physical || special) && moveType == TYPE_WATER, STAT_SPDEF, script);
+        break;
+    case HOLD_EFFECT_BOOST_DEF_ON_PHYSICAL_HIT: // kee berry
+        // The class of the damage and nothing else: no type, and -- this being
+        // the reference's condition rather than an omission -- no check that
+        // the move touched, so a physical hit from across the field still
+        // feeds it.
+        ret = ItemRaisesStatOnHit(ctx, physical, STAT_DEF, script);
+        break;
+    case HOLD_EFFECT_BOOST_SPDEF_ON_SPECIAL_HIT: // maranga berry
+        ret = ItemRaisesStatOnHit(ctx, special, STAT_SPDEF, script);
+        break;
+    case HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE: // weakness policy
+        // A super effective hit, the holder still standing, and nothing else:
+        // alone among the items in this switch the reference does not ask
+        // whether any damage was actually dealt. Either stat having room is
+        // enough for both to be tried, and the Contrary arm is the reference's
+        // own shape -- an OR beside the plain test rather than the alternative
+        // to it, so a Contrary holder at the ceiling still passes on the plain
+        // one.
+        if (ctx->battleMons[ctx->battlerIdTarget].hp
+            && (ctx->moveStatusFlag & MOVE_STATUS_SUPER_EFFECTIVE)
+            && ((ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] < 12)
+                || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_CONTRARY) == TRUE
+                    && (ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] > 0 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] > 0)))) {
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            ctx->itemTemp = ctx->battleMons[ctx->battlerIdTarget].item;
+            *script = BATTLE_SUBSCRIPT_WEAKNESS_POLICY;
+            ret = TRUE;
+        }
+        break;
+    case HOLD_EFFECT_DAMAGE_ON_CONTACT: // rocky helmet
+        // The reference asks for Protective Pads twice here, once on its own
+        // and once inside IsContactBeingMade; the second is where it lives in
+        // this tree, so BattleMoveMakesContact answers both.
+        //
+        // The U-turn test is this tree's, not the reference's: a pivot move
+        // runs the pivot script's own held-item step and then comes back
+        // through here, so the Jaboca Berry and the Sticky Barb below already
+        // stand the second pass off this way and the helmet has to as well or
+        // it hurts twice.
+        if (ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (physical || special) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+            ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * -1, boost);
+            *script = BATTLE_SUBSCRIPT_HELD_ITEM_RECOIL_WHEN_HIT;
+            ret = TRUE;
+        }
         break;
     case HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT: // air balloon
         // Any damaging hit, of any type, pops it. The reference checks nothing
@@ -7216,7 +7413,14 @@ static const u8 sTypeEnhancingItems[][2] = {
     { HOLD_EFFECT_ARCEUS_GHOST,        TYPE_GHOST    },
     { HOLD_EFFECT_ARCEUS_DRAGON,       TYPE_DRAGON   },
     { HOLD_EFFECT_ARCEUS_DARK,         TYPE_DARK     },
-    { HOLD_EFFECT_ARCEUS_STEEL,        TYPE_STEEL    }
+    { HOLD_EFFECT_ARCEUS_STEEL,        TYPE_STEEL    },
+    // The Fairy pair. The reference keeps them behind the switch that says
+    // whether the Fairy type exists at all, which is why they are last rather
+    // than beside their own kind; this game has the type, so they are simply
+    // two more rows. The Pixie Plate comes with the Feather because it is the
+    // same missing pair in the reference's own table.
+    { HOLD_EFFECT_STRENGTHEN_FAIRY,    TYPE_FAIRY    },
+    { HOLD_EFFECT_ARCEUS_FAIRY,        TYPE_FAIRY    }
 };
 
 static const u8 sStatChangeTable[][2] = {
@@ -7261,6 +7465,10 @@ static const u16 sPunchingMoves[] = {
     MOVE_THUNDER_PUNCH,
     MOVE_WICKED_BLOW,
 };
+
+static BOOL BattleMoveIsPunching(u32 moveNo) {
+    return MoveIsInList(moveNo, sPunchingMoves, NELEMS(sPunchingMoves));
+}
 
 static const u16 sBitingMoves[] = {
     MOVE_BITE,
@@ -7598,6 +7806,13 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monSpDef = monSpDef * 150 / 100;
     }
 
+    // An Assault Vest is half an Eviolite: Sp. Def only, and for anything
+    // wearing it. What it costs the wearer is the status moves, and that is
+    // asked where the moves are offered rather than here.
+    if (calcTarget.item == HOLD_EFFECT_SPDEF_BOOST_NO_STATUS_MOVES && moveCategory == CATEGORY_SPECIAL) {
+        monSpDef = monSpDef * 150 / 100;
+    }
+
     if (calcAttacker.item == HOLD_EFFECT_CLAMPERL_SPATK && calcAttacker.species == SPECIES_CLAMPERL) {
         monSpAtk *= 2;
     }
@@ -7894,11 +8109,17 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower = movePower * 75 / 100;
     }
 
+    // A Punching Glove is a tenth where Iron Fist is two, off the same list of
+    // moves, and the two stack. What it also does is take the contact off the
+    // punch, which is asked in BattleMoveMakesContact rather than here.
     for (i = 0; i < NELEMS(sPunchingMoves); i++) {
         if (sPunchingMoves[i] == moveNo && calcAttacker.ability == ABILITY_IRON_FIST) {
             movePower = movePower * BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE / 10;
             break;
         }
+    }
+    if (calcAttacker.item == HOLD_EFFECT_INCREASE_PUNCHING_MOVE_DMG && BattleMoveIsPunching(moveNo) == TRUE) {
+        movePower = movePower * 110 / 100;
     }
 
     if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
@@ -7906,10 +8127,11 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
             monSpAtk = monSpAtk * 15 / 10;
         }
         // Orichalcum Pulse works the sun harder than Solar Power does, and on
-        // the physical side. The reference also excuses a Utility Umbrella,
-        // which this game has no item for; if one is ever added, this is a
-        // line that has to learn about it.
-        if ((fieldCondition & FIELD_CONDITION_SUN_ALL) && calcAttacker.ability == ABILITY_ORICHALCUM_PULSE) {
+        // the physical side. A Utility Umbrella on the one with the ability
+        // takes the Attack away -- but not the sentence the ability prints on
+        // its way in, which the reference has a note of its own about: the
+        // pulse still announces itself from under the umbrella.
+        if ((fieldCondition & FIELD_CONDITION_SUN_ALL) && calcAttacker.ability == ABILITY_ORICHALCUM_PULSE && calcAttacker.item != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
             monAtk = monAtk * 4 / 3;
         }
         // Sand Force reads the weather from inside this block like everything
@@ -8034,7 +8256,18 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
                 dmg = dmg * 15 / 10;
                 break;
             case TYPE_WATER:
-                dmg /= 2;
+                // Hydro Steam is the Water move the sun helps rather than
+                // hinders, and a Utility Umbrella on the one using it takes
+                // that away -- leaving the halving every other Water move
+                // gets, which is what the reference's else does. The item
+                // reaches no further than this in the reference: the rain and
+                // the sun are otherwise read with nobody's items in the
+                // question, and only Orichalcum Pulse below excuses it too.
+                if (moveNo == MOVE_HYDRO_STEAM && calcAttacker.item != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
+                    dmg = dmg * 15 / 10;
+                } else {
+                    dmg /= 2;
+                }
                 break;
             }
         }
@@ -8313,6 +8546,15 @@ BOOL CheckItemEffectOnUTurn(BattleSystem *battleSystem, BattleContext *ctx, int 
     }
 
     if (itemTarget == HOLD_EFFECT_RECOIL_PHYSICAL && ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD && ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage) {
+        ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * -1, modTarget);
+        *script = BATTLE_SUBSCRIPT_HELD_ITEM_RECOIL_WHEN_HIT;
+        ret = TRUE;
+    }
+
+    // Rocky Helmet's other half. The reference keeps this set of four -- Shell
+    // Bell, Life Orb, Jaboca and Sticky Barb -- in one function with the
+    // helmet, and a pivot move that makes contact is a hit like any other.
+    if (itemTarget == HOLD_EFFECT_DAMAGE_ON_CONTACT && ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
         ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * -1, modTarget);
         *script = BATTLE_SUBSCRIPT_HELD_ITEM_RECOIL_WHEN_HIT;
         ret = TRUE;

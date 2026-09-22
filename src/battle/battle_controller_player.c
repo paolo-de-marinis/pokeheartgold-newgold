@@ -162,9 +162,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // has been appended: six bytes of terrain state grew it by four, because two
 // of them went into padding the structure already carried. The four after
 // those, for the Paradox abilities, grew it by four, and the twenty-four for
-// Belch's eaten-a-Berry flags grew it by twenty-four.
+// Belch's eaten-a-Berry flags grew it by twenty-four. The four after those,
+// for whose Paradox ability a Booster Energy switched on, grew it by four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x31AC + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
+    sizeof(BattleContext) == 0x31B0 + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -3969,7 +3970,10 @@ static BOOL TryItemFlinch(BattleSystem *battleSystem, BattleContext *ctx) {
     int item = GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker);
     int itemMod = GetHeldItemModifier(ctx, ctx->battlerIdAttacker, 0);
 
+    // A Covert Cloak is the first thing the reference's flinch check asks
+    // about, before the King's Rock or Stench that would have caused one.
     if (ctx->battlerIdTarget != BATTLER_NONE
+        && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) != HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS
         && item == HOLD_EFFECT_FLINCH_CHANCE
         && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)
         && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage != 0 || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage != 0)
@@ -4065,6 +4069,28 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_30++;
             break;
         case 3:
+            // A Throat Spray answers the attacker using a sound move, and that
+            // is the whole of the reference's condition: not that the move hit,
+            // not that there was anything to hit, and not that Sp. Atk had room
+            // left -- a spray at +6 prints "won't go any higher" and is spent
+            // all the same. It sits here because this is where the attacker's
+            // own items are read after its move, beside the Shell Bell and the
+            // Life Orb.
+            if (item == HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE
+                && BattleMoveIsSoundBased(ctx->moveNoCur) == TRUE
+                && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {
+
+                ctx->msgTemp = STAT_SPATK;
+                ctx->battlerIdTemp = ctx->battlerIdAttacker;
+                ctx->itemTemp = ctx->battleMons[ctx->battlerIdAttacker].item;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            ctx->unk_30++;
+            break;
+        case 4:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;

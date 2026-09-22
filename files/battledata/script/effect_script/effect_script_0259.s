@@ -2,12 +2,28 @@
 
     .data
 
+// Putting Trick Room up says so itself and then lets every Room Service on
+// the field answer it. Taking it back down is the branch below and answers
+// nothing, so it still buffers its line and leaves the printing to the move's
+// own side effect.
+//
+// The line for putting it up is printed here rather than buffered, which is
+// the reference's own arrangement of this script and the reason it can run the
+// Room Services afterwards: a buffered line would not be read out until after
+// this script had finished, and the Speed drops would be announced before the
+// dimensions they answer to.
+
 _000:
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_TRICK_ROOM, _014
+    Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_TRICK_ROOM_INIT
     // {0} twisted the dimensions!
-    BufferMessage msg_0197_01070, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
-    GoTo _022
+    PrintMessage msg_0197_01070, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    Wait
+    WaitButtonABTime 30
+    TrickRoom
+    Call BATTLE_SUBSCRIPT_ROOM_SERVICE
+    End
 
 _014:
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_TRICK_ROOM
