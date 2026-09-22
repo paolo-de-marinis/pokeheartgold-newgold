@@ -67,8 +67,7 @@ BOOL CanUseItemOnPokemon(Pokemon *mon, u16 itemID, s32 moveIdx, enum HeapID heap
         return TRUE;
     }
 
-    // A Rare Candy is refused at the level cap, as the reference refuses it.
-    if (GetItemAttr_PreloadedItemData(itemData, ITEMATTR_LEVEL_UP) && GetMonData(mon, MON_DATA_LEVEL, NULL) < MAX_LEVEL && GetMonData(mon, MON_DATA_LEVEL, NULL) < GetLevelCap()) {
+    if (GetItemAttr_PreloadedItemData(itemData, ITEMATTR_LEVEL_UP) && GetMonData(mon, MON_DATA_LEVEL, NULL) < MAX_LEVEL) {
         Heap_Free(itemData);
         return TRUE;
     }
@@ -219,6 +218,17 @@ BOOL CanUseItemOnPokemon(Pokemon *mon, u16 itemID, s32 moveIdx, enum HeapID heap
 
 BOOL CanUseItemOnMonInParty(Party *party, u16 itemID, s32 partyIdx, s32 moveIdx, enum HeapID heapID) {
     Pokemon *mon = Party_GetMonByIndex(party, partyIdx);
+    int method;
+
+    // The reference lets a Rare Candy be used on a Pokemon at the top level
+    // when it still has an evolution by level to give: the candy does not
+    // raise it, the evolution happens. (Below the top the candy is not held
+    // back by the story's level cap: konefr builds with
+    // UNCAP_CANDIES_FROM_LEVEL_CAP.)
+    if (GetItemAttr(itemID, ITEMATTR_LEVEL_UP, heapID) && GetMonData(mon, MON_DATA_LEVEL, NULL) == MAX_LEVEL
+        && GetMonEvolution(party, mon, EVOCTX_LEVELUP, ITEM_NONE, &method) != SPECIES_NONE) {
+        return TRUE;
+    }
     return CanUseItemOnPokemon(mon, itemID, moveIdx, heapID);
 }
 
@@ -293,13 +303,18 @@ BOOL UseItemOnPokemon(Pokemon *mon, u16 itemID, u16 moveIdx, u16 location, enum 
 
     sp5C = GetMonData(mon, MON_DATA_LEVEL, NULL);
     if (GetItemAttr_PreloadedItemData(itemData, ITEMATTR_LEVEL_UP)) {
-        if (sp5C < MAX_LEVEL && sp5C < GetLevelCap()) {
+        if (sp5C < MAX_LEVEL) {
             AddMonData(mon, MON_DATA_EXPERIENCE, CalcMonExpToNextLevel(mon));
             CalcMonLevelAndStats(mon);
             if (sp54 == 0) {
                 sp60 = GetMonData(mon, MON_DATA_MAX_HP, NULL);
                 RestoreMonHPBy(mon, sp54, sp60, sp60 - sp58);
             }
+            hadEffect = TRUE;
+        } else if (GetMonEvolution(NULL, mon, EVOCTX_LEVELUP, ITEM_NONE, &sp70) != SPECIES_NONE) {
+            // At the top level the candy is spent on the evolution the level
+            // would have given; the party menu finds it the way it does after
+            // any level gained.
             hadEffect = TRUE;
         }
         effectFound = TRUE;
