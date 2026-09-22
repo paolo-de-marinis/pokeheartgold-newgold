@@ -11,7 +11,10 @@
 //
 // The type table runs one entry a type, TYPE_NORMAL first, and then carries
 // five more the contests used: Cool, Beauty, Cute, Smart and Tough, in that
-// order, from a generation this game does not hold a contest in.
+// order, from a generation this game does not hold a contest in. The contest
+// block therefore begins at NUMBER_OF_MON_TYPES, which is what the move
+// relearner adds to a move's contest type -- the one caller that asks this
+// table for something that is not a type.
 static const u8 sMoveSplitIconPalettes[] = { 0, 1, 0 };
 
 static const int sMoveSplitIconFiles[] = { 0xF4, 0xF6, 0xF5 };
@@ -35,6 +38,9 @@ static const int sTypeIconFiles[] = {
     0xE6,
     0xDD,
     0xE0,
+    // TYPE_FAIRY. Every icon above is a member of the battle graphics archive
+    // that shipped with the game; this one was added to the end of it.
+    0x15A,
     0xF0,
     0xDB,
     0xDC,
@@ -44,7 +50,9 @@ static const int sTypeIconFiles[] = {
 
 static const u8 sTypeIconPalettes[] = {
     0, 0, 1, 1, 0, 0, 2, 1, 0, 2, 0, 1,
-    2, 0, 1, 1, 2, 0, 0, 1, 1, 2, 0
+    2, 0, 1, 1, 2, 0,
+    2, // TYPE_FAIRY, the palette the reference draws its icon against
+    0, 1, 1, 2, 0
 };
 
 int sub_02077678(int moveType) {

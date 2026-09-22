@@ -1,3 +1,4 @@
+#include "constants/pokemon.h"
 	.include "asm/macros.inc"
 	.include "overlay_68.inc"
 	.include "global.inc"
@@ -2911,7 +2912,7 @@ _021E7044:
 	mov r1, #0xb
 	bl GetMoveAttr
 	add r6, r0, #0
-	add r6, #0x12
+	add r6, #NUMBER_OF_MON_TYPES
 _021E7050:
 	bl sub_020776B4
 	add r7, r0, #0

@@ -40,7 +40,7 @@ Moves       ██████████████████████�
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   545 / 2684
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       50 files
+Tests       51 files
 ROM         144.9 MB of 268.4 MB   (2G card, 54% used)
 ```
 <!-- LEDGER:COUNTS:END -->
@@ -54,7 +54,7 @@ that carry behaviour.
 
 | Feature | Detail | State |
 | --- | --- | :-- |
-| Fairy type and the effectiveness chart | type 18, the twelve chart rows, Sylveon and 66 species, 30 moves, and its name in `msg_0735`; the type icon and the Dex's search list still stop at seventeen | 🟠 partial |
+| Fairy type and the effectiveness chart | type 18, the twelve chart rows, Sylveon and 66 species, 30 moves, its name in `msg_0735` and its icon in the battle graphics archive; the Dex's search list still stops at seventeen | 🟠 partial |
 | Story level cap | wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100 | ✅ done |
 | Hidden abilities | `TRPOKE_ABILITY_OVERRIDE_HIDDEN`; eleven trainer Pokémon ask for one | ✅ done |
 | Ability field past one byte | save, battle record, AI memory, PC box, summary — and the personal record, whose three ability bytes now have their full values past the end of it | ✅ done |
