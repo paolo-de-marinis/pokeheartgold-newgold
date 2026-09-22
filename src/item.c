@@ -981,7 +981,9 @@ int GetItemIndexMapping(u16 itemId, int attrNo) {
 u16 UpConvertItemId_Gen3to4(u16 agbcode) {
     u16 ntrcode;
 
-    for (ntrcode = ITEM_MIN; ntrcode <= ITEM_MAX; ntrcode++) {
+    // Only the shipped items have rows, and only they have a Gen 3 code; an
+    // imported item's is always none.
+    for (ntrcode = ITEM_MIN; ntrcode < FIRST_IMPORTED_ITEM; ntrcode++) {
         if (agbcode == sItemNarcIds[ntrcode][ITEMNARC_AGBCODE]) {
             return ntrcode;
         }
@@ -1002,13 +1004,15 @@ void *LoadItemDataOrGfx(u16 itemId, int attrno, enum HeapID heapID) {
     if (itemId > ITEM_MAX) {
         itemId = ITEM_NONE;
     }
+    // Through the mapping, which knows that the imported items have no row
+    // of their own in sItemNarcIds: indexing the table with one read past it.
     switch (attrno) {
     case ITEMNARC_PARAM:
-        return AllocAndReadWholeNarcMemberByIdPair(NARC_itemtool_itemdata_item_data, sItemNarcIds[itemId][ITEMNARC_PARAM], heapID);
+        return AllocAndReadWholeNarcMemberByIdPair(NARC_itemtool_itemdata_item_data, GetItemIndexMapping(itemId, ITEMNARC_PARAM), heapID);
     case ITEMNARC_NCGR:
-        return AllocAndReadWholeNarcMemberByIdPair(NARC_itemtool_itemdata_item_icon, sItemNarcIds[itemId][ITEMNARC_NCGR], heapID);
+        return AllocAndReadWholeNarcMemberByIdPair(NARC_itemtool_itemdata_item_icon, GetItemIndexMapping(itemId, ITEMNARC_NCGR), heapID);
     case ITEMNARC_NCLR:
-        return AllocAndReadWholeNarcMemberByIdPair(NARC_itemtool_itemdata_item_icon, sItemNarcIds[itemId][ITEMNARC_NCLR], heapID);
+        return AllocAndReadWholeNarcMemberByIdPair(NARC_itemtool_itemdata_item_icon, GetItemIndexMapping(itemId, ITEMNARC_NCLR), heapID);
     }
 
     return NULL;
@@ -1038,7 +1042,7 @@ s32 GetItemAttr(u16 itemId, u16 attrno, enum HeapID heapID) {
 s32 GetItemAttr_PreloadedItemData(ItemData *itemData, u16 attrno) {
     switch (attrno) {
     case ITEMATTR_PRICE:
-        return itemData->price | (itemData->price_high << 16);
+        return itemData->price | (itemData->partyUseParam.price_high << 16);
     case ITEMATTR_HOLD_EFFECT:
         return itemData->holdEffect;
     case ITEMATTR_HOLD_EFFECT_PARAM:

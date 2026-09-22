@@ -64,7 +64,14 @@ typedef struct ItemPartyParam {
     s8 friendship_mod_lo_param;
     s8 friendship_mod_med_param;
     s8 friendship_mod_hi_param;
-    u8 paddding[2];
+    // konefr's game sells things Gen 4 could not price: an Ability Patch is
+    // 500000 and ItemData.price is sixteen bits. The top four are in this
+    // record's own padding, byte 0x20 of the item record, which is where
+    // item_data.txt packs them (price_high:u8.4). The item record is 34 bytes
+    // and nothing past it is data.
+    u8 price_high : 4;
+    u8 pricepad : 4;
+    u8 padding;
 } ItemPartyParam;
 
 /*
@@ -91,13 +98,6 @@ typedef struct ItemData {
         u8 dummy;
         ItemPartyParam partyUseParam;
     };
-    // konefr's game sells things Gen 4 could not price: an Ability Patch is
-    // 500000 and the field is sixteen bits. The top four live in what was the
-    // first byte of this record's tail padding, which is where the reference
-    // puts them too.
-    u8 price_high : 4;
-    u8 padding_22 : 4;
-    u8 padding_23;
 } ItemData;
 
 /*

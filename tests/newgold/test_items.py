@@ -357,5 +357,72 @@ class PriceTests(unittest.TestCase):
             self.assertEqual(got, want, name)
 
     def test_the_reader_puts_the_two_halves_back(self):
-        self.assertIn("itemData->price | (itemData->price_high << 16)",
+        self.assertIn("itemData->price | (itemData->partyUseParam.price_high << 16)",
                       (ROOT / "src/item.c").read_text())
+
+    def test_the_game_reads_the_nibble_where_the_data_puts_it(self):
+        """The packer and the struct have to agree on where price_high is.
+
+        They did not: the struct had it at byte 0x22, past the 34-byte record,
+        and the manifest at 0x20, so every price the game read took its top
+        bits from whatever followed the record. Both field lists are laid out
+        here with C's rule for bitfields -- a field that does not fit in what
+        is left of its unit starts a new one -- and the offsets compared.
+        """
+        SIZE = {"u8": 8, "s8": 8, "u16": 16, "s16": 16, "u32": 32}
+
+        def offset(fields, stop):
+            bits, unit, used = 0, None, 0
+            for name, kind, width, count in fields:
+                if name == stop:
+                    return (bits + (used if unit else 0)) // 8 if not width else (bits + used) // 8
+                if width:
+                    if unit == kind and used + width <= SIZE[kind]:
+                        used += width
+                        continue
+                    bits += SIZE[unit] if unit else 0
+                    unit, used = kind, width
+                    continue
+                if unit:
+                    bits += SIZE[unit]
+                    unit, used = None, 0
+                bits += SIZE[kind] * count
+            return None
+
+        manifest = []
+        for field in (ROOT / "files/itemtool/itemdata/item_data.txt").read_text().split():
+            name, kind = field.split(":")[:2]
+            if kind == "skip":
+                continue
+            if kind.startswith("pad"):
+                manifest.append((name, "u8", 0, int(kind[3:])))
+            elif "." in kind:
+                manifest.append((name, kind.split(".")[0], int(kind.split(".")[1]), 1))
+            else:
+                manifest.append((name, kind, 0, 1))
+
+        header = (ROOT / "include/item.h").read_text()
+        def c_fields(block):
+            out = []
+            for line in block.splitlines()[1:]:
+                line = line.split("//")[0].strip().rstrip(";")
+                if not line or line.startswith(("union", "}", "{", "ItemPartyParam")):
+                    continue
+                kind, rest = line.split(None, 1)
+                if kind not in SIZE:
+                    continue
+                if ":" in rest:
+                    out.append((rest.split(":")[0].strip(), kind, int(rest.split(":")[1]), 1))
+                elif "[" in rest:
+                    out.append((rest.split("[")[0].strip(), kind, 0, int(rest.split("[")[1].rstrip("]"))))
+                else:
+                    out.append((rest.strip(), kind, 0, 1))
+            return out
+        item = header[header.index("typedef struct ItemData {"):header.index("union {", header.index("typedef struct ItemData {"))]
+        party = header[header.index("typedef struct ItemPartyParam {"):header.index("} ItemPartyParam;")]
+        c_layout = c_fields(item) + c_fields(party)
+
+        data_offset = offset(manifest, "price_high")
+        self.assertEqual(data_offset, 0x20)
+        self.assertEqual(offset(c_layout, "price_high"), data_offset,
+                         "the struct reads the price's top bits somewhere the data does not put them")
