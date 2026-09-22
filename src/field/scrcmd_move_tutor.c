@@ -148,12 +148,12 @@ BOOL ScrCmd_656(ScriptContext *ctx) {
 }
 
 static u16 GetMoveTutorLearnsetIndex(u16 species, u8 form) {
-    // The file has an entry a species with the egg and the bad egg left out,
-    // so a species is its own number and a form is its own species' number,
-    // both minus the two missing. Nothing set this for an ordinary species:
-    // the index was whatever the stack held, and the tutor read some other
-    // Pokemon's moves -- or past the end of the file.
-    u16 index = species;
+    // The file has a record a species with the egg and the bad egg left out:
+    // up to Arceus a species is its own number, and from the retail forms on
+    // -- the species New Gold adds included -- it is two less. Nothing set
+    // this for an ordinary species before: the index was whatever the stack
+    // held. The retail forms below are named by the form they are.
+    u16 index = species > SPECIES_ARCEUS ? species - 2 : species;
     // subtract 2 because SPECIES_EGG and SPECIES_BAD_EGG are missing
     switch (species) {
     case SPECIES_DEOXYS:
