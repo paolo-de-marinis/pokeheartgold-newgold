@@ -12,8 +12,8 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 208 commits |
-| generated | 2026-09-23 00:31 |
+| port | 209 commits |
+| generated | 2026-09-23 00:32 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
@@ -166,13 +166,15 @@ it is not a formality is that four silent bugs surfaced in one evening, on
   575 members long because its rule did not depend on the header that sizes
   it, and two tables in C were read past their end
 
-None fails a build, none fails a test, and each can produce a black screen.
+None fails a build and none fails a test. Three of them can produce a black
+screen; the fourth teaches a Pokemon the wrong move and says nothing. Four in
+one evening was not a rate that exhausts itself — it was the rate they were
+being looked for. What is left is not writing code. It is turning the game on.
+
 Two apparent fifths were the instrument rather than the game — a forced land
 encounter on a map whose table is surf-only, and a teleport that wrote the
 player's tile without the position vector that goes with it — which is its
 own lesson about what a diagnostic switch may do.
-That was not a rate that exhausts itself — it was the rate they were being
-looked for. What is left is not writing code. It is turning the game on.
 
 The figures are in the blocks above and nowhere in this prose. This heading
 once kept two percentages the summary had long since left, so `ledger.py`
