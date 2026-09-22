@@ -43,6 +43,9 @@ BOX_MON = 0x88                  # sizeof(BoxPokemon)
 PARTY_MON = 0xEC                # sizeof(Pokemon)
 BLOCK = 0x20                    # sizeof(PokemonDataBlockA), and of B, C and D
 HALF = 0x40000                  # GetChunkOffsetFromCurrentSaveSlot
+LOCATION = 20                   # sizeof(Location): mapId, warpId, x, y, direction
+NUM_VARS = 0x170                # include/constants/vars.h; the flags follow the vars
+FLAG_CONTINUE_BY_WARP = 0x966   # FLAG_UNK_966, read by CallFieldTask_ContinueGame_Normal
 CHUNK_MAGIC = 0x20060623        # SAVE_CHUNK_MAGIC
 CHUNK_FOOTER = 16               # sizeof(struct SaveChunkFooter)
 ARRAY_FOOTER = 16               # sizeof(struct SaveArrayFooter)
@@ -640,8 +643,18 @@ def main():
         # { int mapId; int warpId; int x; int y; int direction; }. A warpId of
         # -1 is the value the game uses for a position that is not a warp.
         struct.pack_into("<iiiii", block, 0, map_id, -1, x, y, direction)
+        # Continue normally restores the map objects the save holds -- the
+        # player object among them, still at the coordinates of wherever the
+        # save was really made, which on a one-chunk map is off the map and
+        # a null soundplate away from a data abort. The game has a second way
+        # in, the one it uses for the Union Room: with FLAG_UNK_966 set,
+        # Continue warps to LocalFieldData.dynamicWarp and builds the player,
+        # the follower and the map's objects from the zone data instead.
+        struct.pack_into("<iiiii", block, 3 * LOCATION, map_id, -1, x, y, direction)
+        flags = save.block("SAVE_FLAGS")
+        flags[NUM_VARS * 2 + FLAG_CONTINUE_BY_WARP // 8] |= 1 << (FLAG_CONTINUE_BY_WARP % 8)
         save.write()
-        print(f"put the player on map {map_id} at ({x}, {y}) facing {direction}")
+        print(f"put the player on map {map_id} at ({x}, {y}) facing {direction}, by warp")
 
     print(f"{args.save}: half {save.half:#x} is newest, "
           f"save counter {save._footer(save.half, save.specs[0])['count']}")

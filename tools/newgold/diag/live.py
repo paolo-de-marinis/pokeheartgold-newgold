@@ -11,6 +11,7 @@ The ELF has to be the one the running ROM was linked from: every symbol moves
 with every build. The default is the NEWGOLD_DIAG=1 build's.
 """
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -42,9 +43,11 @@ def main():
     last = None
     while True:
         line = markers.describe(main_ram())
-        if line != last:
+        # A step or a frame is not news; a state, a species or a failure is.
+        key = re.sub(r"at \(\d+, \d+\)|\d+ ticks", "", line)
+        if key != last:
             print(time.strftime("%H:%M:%S"), line, flush=True)
-            last = line
+            last = key
         time.sleep(2)
 
 

@@ -23,7 +23,8 @@ there. `GAME_VERSION=SOULSILVER` works the same way.
   encounter roll, the wild encounter task, the step check, and the battle
   setup's map, background and terrain. `grep -rn NEWGOLD_DIAG src include`
   is the full list.
-- `tools/newgold/diag/` -- the readers.
+- `tools/newgold/diag/` -- the readers: live memory, harness dumps, a
+  frozen savestate, and the harness battle.
 - `tests/newgold/test_diag.py` -- reads every source and fails on a
   diagnostic mentioned outside the `#ifdef`, which is what keeps the ordinary
   build clean after the next hook is added.
@@ -69,11 +70,16 @@ noise, not a wrong answer.
   how far `Battle_Run` got. Whether it draws is a question only melonDS
   answers.
 
-A frozen melonDS answers too: `Shift+F1` writes a savestate beside the ROM
-whose `ARM9` section is the registers (CPSR 0x97 is abort mode, the abort
-LR is the faulting instruction plus 8) and whose `CP15` section ends in the
-stack. Overlay symbols overlap by address; `markers.py` lists every overlay's
-own answer for one.
+A frozen melonDS answers too. `Shift+F1` writes a savestate beside the ROM,
+and `tools/newgold/diag/frozen.py STATE.ml1` reads its `ARM9` section as the
+registers -- CPSR 0x97 is abort mode, where the faulting instruction is eight
+bytes before the link register -- and the end of its `CP15` section as the
+stack, naming every return address against the ELF. Overlay symbols overlap
+by address, so each overlay's own answer is listed and the loaded one is the
+true one. The first thing it caught was not the game: a generated save whose
+player object stood at Route 29's coordinates inside a one-chunk gym, which
+`GetLocalSoundplateID` read through a null pointer. The harness had passed
+it, because its core reads a null as zero.
 
 ## Why it is shaped this way
 
