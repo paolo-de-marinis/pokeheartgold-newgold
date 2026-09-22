@@ -367,7 +367,10 @@ POCKETS = ["POCKET_ITEMS", "POCKET_MEDICINE", "POCKET_BALLS", "POCKET_TMHMS",
            "POCKET_BERRIES", "POCKET_MAIL", "POCKET_BATTLE_ITEMS", "POCKET_KEY_ITEMS"]
 # This game's price field is the sixteen bits Gen 4 gave it. The reference added
 # a nibble beside it for the three items that cost more.
+# The price is sixteen bits in the record plus a four-bit tail, as the
+# reference splits it: konefr sells an Ability Patch for 500000.
 MAX_PRICE = 0xFFFF
+MAX_PRICE_WHOLE = 0xFFFFF
 
 
 def record(reference, name, fields, effects, report):
@@ -384,13 +387,17 @@ def record(reference, name, fields, effects, report):
     else:
         price = reference.number(values["price"])
         price |= reference.number(values.get("price_high", "0")) << 16
-    if price > MAX_PRICE:
-        report.setdefault("clamped prices", []).append((name, price))
-        price = MAX_PRICE
+    if price > MAX_PRICE_WHOLE:
+        report.setdefault("prices past twenty bits", []).append((name, price))
+        price = MAX_PRICE_WHOLE
     row = []
     for field in fields:
         if field == "price":
-            row.append(str(price))
+            row.append(str(price & 0xFFFF))
+        elif field == "price_high":
+            row.append(str((price >> 16) & 0xF))
+        elif field == "pricepad":
+            row.append("0")
         elif field == "holdEffect":
             theirs = reference.hold_effect(values[field])
             row.append(effects.get(theirs, theirs))
@@ -478,7 +485,7 @@ def row_body(text):
 # konefr changed the number and this port owes the change. Everything else
 # that disagrees is a difference in how the two engines do the same thing,
 # and is named in KEPT below with the reason.
-SYNCED = ("price", "naturalGiftPower", "flingPower", "holdEffectParam")
+SYNCED = ("price", "price_high", "naturalGiftPower", "flingPower", "holdEffectParam")
 
 KEPT = {
     # This engine evolves a Pokemon by a party-use routine, not by a hold

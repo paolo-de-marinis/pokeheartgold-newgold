@@ -59,4 +59,6 @@ pp_restore_param:u8
 friendship_mod_lo_param:s8
 friendship_mod_med_param:s8
 friendship_mod_hi_param:s8
-partyparampad:pad2
+price_high:u8.4
+pricepad:u8.4
+partyparampad:pad1

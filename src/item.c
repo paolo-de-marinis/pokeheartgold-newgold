@@ -2966,7 +2966,7 @@ s32 GetItemAttr(u16 itemId, u16 attrno, enum HeapID heapID) {
 s32 GetItemAttr_PreloadedItemData(ItemData *itemData, u16 attrno) {
     switch (attrno) {
     case ITEMATTR_PRICE:
-        return itemData->price;
+        return itemData->price | (itemData->price_high << 16);
     case ITEMATTR_HOLD_EFFECT:
         return itemData->holdEffect;
     case ITEMATTR_HOLD_EFFECT_PARAM:

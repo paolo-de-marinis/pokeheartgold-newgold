@@ -303,3 +303,40 @@ class SharedRecordTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PriceTests(unittest.TestCase):
+    """The price is twenty bits, because konefr sells things Gen 4 could not.
+
+    An Ability Patch is 500000 and the record's price field is sixteen bits.
+    The reference puts the top four in the first byte of the record's tail
+    padding; so does this tree, and ITEMATTR_PRICE puts them back together.
+    Three items need it, and if the reader ever stops combining them an
+    Ability Patch quietly becomes 41248.
+    """
+
+    BIG = {"ITEM_BIG_NUGGET": 80000, "ITEM_ABILITY_CAPSULE": 100000,
+           "ITEM_ABILITY_PATCH": 500000}
+
+    def rows(self):
+        rows = list(csv.reader((ROOT / "files/itemtool/itemdata/item_data.csv")
+                               .read_text().splitlines()))
+        head = rows[0]
+        return head, {r[0]: dict(zip(head[1:], r[1:])) for r in rows[1:]}
+
+    def test_the_record_carries_the_high_nibble(self):
+        head, _ = self.rows()
+        self.assertIn("price_high", head)
+        manifest = (ROOT / "files/itemtool/itemdata/item_data.txt").read_text()
+        self.assertIn("price_high:u8.4", manifest)
+
+    def test_the_expensive_items_keep_their_price(self):
+        _, rows = self.rows()
+        for name, want in self.BIG.items():
+            row = rows[name]
+            got = int(row["price"]) | (int(row["price_high"]) << 16)
+            self.assertEqual(got, want, name)
+
+    def test_the_reader_puts_the_two_halves_back(self):
+        self.assertIn("itemData->price | (itemData->price_high << 16)",
+                      (ROOT / "src/item.c").read_text())
