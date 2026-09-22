@@ -19,31 +19,68 @@ SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
 LAST_VANILLA = 123
 
 IMPLEMENTED = {
+    "ANGER_SHELL",
     "ARMOR_TAIL",
+    "AS_ONE_GLASTRIER",
+    "AS_ONE_SPECTRIER",
+    "BEAST_BOOST",
+    "BERSERK",
     "BIG_PECKS",
     "BULLETPROOF",
     "CHEEK_POUCH",
+    "CHILLING_NEIGH",
     "COMPETITIVE",
+    "COTTON_DOWN",
     "CURSED_BODY",
+    "DAUNTLESS_SHIELD",
+    "DAZZLING",
     "EARTH_EATER",
+    "EELEVATE",
+    "ELECTROMORPHOSIS",
     "EVAPORATE",
+    "GOOEY",
+    "GRIM_NEIGH",
+    "HOSPITALITY",
+    "IMPOSTER",
     "INFILTRATOR",
+    "INNARDS_OUT",
+    "INTREPID_SWORD",
     "IRON_BARBS",
     "IRRIGATION",
+    "JUSTIFIED",
+    "LINGERING_AROMA",
+    "MAGICIAN",
+    "MOXIE",
     "MUMMY",
     "NEUTRALIZING_GAS",
+    "PERISH_BODY",
+    "PICKPOCKET",
     "POISON_TOUCH",
+    "QUEENLY_MAJESTY",
+    "QUICK_DRAW",
+    "RATTLED",
     "REGENERATOR",
     "RIPEN",
     "SAND_RUSH",
+    "SAND_SPIT",
     "SAP_SIPPER",
+    "SCREEN_CLEANER",
     "SHARPNESS",
     "SHEER_FORCE",
-    "QUICK_DRAW",
+    "SPICY_SPRAY",
+    "STAMINA",
+    "STEAM_ENGINE",
     "SUPERSWEET_SYRUP",
+    "SWEET_VEIL",
+    "TANGLING_HAIR",
     "TELEPATHY",
+    "THERMAL_EXCHANGE",
+    "TOXIC_DEBRIS",
     "UNNERVE",
+    "WANDERING_SPIRIT",
+    "WATER_COMPACTION",
     "WEAK_ARMOR",
+    "WELL_BAKED_BODY",
     "WIND_RIDER",
 }
 
@@ -62,46 +99,35 @@ IMPLEMENTED = {
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
     "CUD_CHEW",
-
-    "AERILATE", "ANALYTIC", "ANGER_SHELL", "AROMA_VEIL", "AS_ONE_GLASTRIER",
-    "AS_ONE_SPECTRIER", "AURA_BREAK", "BALL_FETCH", "BATTERY",
-    "BATTLE_BOND", "BEADS_OF_RUIN", "BEAST_BOOST", "BERSERK",
-    "CHILLING_NEIGH", "COMATOSE", "COMMANDER", "CONTRARY", "CORROSION",
-    "COSTAR", "COTTON_DOWN", "CURIOUS_MEDICINE", "DANCER", "DARK_AURA",
-    "DAUNTLESS_SHIELD", "DAZZLING", "DEFEATIST", "DEFIANT", "DELTA_STREAM",
-    "DESOLATE_LAND", "DISGUISE", "DRAGONIZE", "DRAGONS_MAW", "EELEVATE",
-    "ELECTRIC_SURGE", "ELECTROMORPHOSIS", "EMBODY_ASPECT",
-    "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4",
-    "EMERGENCY_EXIT", "FAIRY_AURA", "FIRE_MANE", "FLARE_BOOST",
-    "FLOWER_VEIL", "FLUFFY", "FRIEND_GUARD", "FULL_METAL_BODY", "FUR_COAT",
-    "GALE_WINGS", "GALVANIZE", "GOOD_AS_GOLD", "GOOEY", "GORILLA_TACTICS",
-    "GRASSY_SURGE", "GRASS_PELT", "GRIM_NEIGH", "GUARD_DOG", "GULP_MISSILE",
-    "HADRON_ENGINE", "HARVEST", "HEALER", "HEAVY_METAL", "HOSPITALITY",
-    "HUNGER_SWITCH", "ICE_FACE", "ICE_SCALES", "ILLUSION", "IMPOSTER",
-    "INNARDS_OUT", "INTREPID_SWORD", "JUSTIFIED", "LIBERO", "LIGHT_METAL",
-    "LINGERING_AROMA", "LIQUID_VOICE", "LONG_REACH", "MAGICIAN",
+    "AERILATE", "ANALYTIC", "AROMA_VEIL", "AURA_BREAK", "BALL_FETCH",
+    "BATTERY", "BATTLE_BOND", "BEADS_OF_RUIN", "COMATOSE", "COMMANDER",
+    "CONTRARY", "CORROSION", "COSTAR", "CURIOUS_MEDICINE", "DANCER",
+    "DARK_AURA", "DEFEATIST", "DEFIANT", "DELTA_STREAM",
+    "DESOLATE_LAND", "DISGUISE", "DRAGONIZE", "DRAGONS_MAW", "ELECTRIC_SURGE",
+    "EMBODY_ASPECT", "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4",
+    "EMERGENCY_EXIT", "FAIRY_AURA", "FIRE_MANE", "FLARE_BOOST", "FLOWER_VEIL",
+    "FLUFFY", "FRIEND_GUARD", "FULL_METAL_BODY", "FUR_COAT", "GALE_WINGS",
+    "GALVANIZE", "GOOD_AS_GOLD", "GORILLA_TACTICS", "GRASSY_SURGE",
+    "GRASS_PELT", "GUARD_DOG", "GULP_MISSILE", "HADRON_ENGINE", "HARVEST",
+    "HEALER", "HEAVY_METAL", "HUNGER_SWITCH", "ICE_FACE", "ICE_SCALES",
+    "ILLUSION", "LIBERO", "LIGHT_METAL", "LIQUID_VOICE", "LONG_REACH",
     "MAGIC_BOUNCE", "MEGA_LAUNCHER", "MEGA_SOL", "MERCILESS", "MIMICRY",
-    "MINDS_EYE", "MIRROR_ARMOR", "MISTY_SURGE", "MOODY", "MOXIE",
-    "MULTISCALE", "MYCELIUM_MIGHT", "NEUROFORCE", "OPPORTUNIST",
-    "ORICHALCUM_PULSE", "OVERCOAT", "PARENTAL_BOND", "PASTEL_VEIL",
-    "PERISH_BODY", "PICKPOCKET", "PIERCING_DRILL", "PIXILATE",
+    "MINDS_EYE", "MIRROR_ARMOR", "MISTY_SURGE", "MOODY", "MULTISCALE",
+    "MYCELIUM_MIGHT", "NEUROFORCE", "OPPORTUNIST", "ORICHALCUM_PULSE",
+    "OVERCOAT", "PARENTAL_BOND", "PASTEL_VEIL", "PIERCING_DRILL", "PIXILATE",
     "POISON_PUPPETEER", "POWER_CONSTRUCT", "POWER_OF_ALCHEMY", "POWER_SPOT",
-    "PRANKSTER", "PRIMORDIAL_SEA", "PRISM_ARMOR", "PROPELLER_TAIL",
-    "PROTEAN", "PROTOSYNTHESIS", "PSYCHIC_SURGE", "PUNK_ROCK",
-    "PURIFYING_SALT", "QUARK_DRIVE", "QUEENLY_MAJESTY", "RATTLED",
-    "RECEIVER", "REFRIGERATE", "RKS_SYSTEM", "ROCKY_PAYLOAD", "SAND_FORCE",
-    "SAND_SPIT", "SCHOOLING", "SCREEN_CLEANER", "SEED_SOWER",
-    "SHADOW_SHIELD", "SHIELDS_DOWN", "SLUSH_RUSH", "SOUL_HEART",
-    "SPICY_SPRAY", "STAKEOUT", "STALWART", "STAMINA", "STANCE_CHANGE",
-    "STEAM_ENGINE", "STEELWORKER", "STEELY_SPIRIT", "STRONG_JAW",
-    "SUPREME_OVERLORD", "SURGE_SURFER", "SWEET_VEIL", "SWORD_OF_RUIN",
-    "SYMBIOSIS", "TABLETS_OF_RUIN", "TANGLING_HAIR", "TEMP4",
-    "TERAFORM_ZERO", "TERAVOLT", "TERA_SHELL", "TERA_SHIFT",
-    "THERMAL_EXCHANGE", "TOUGH_CLAWS", "TOXIC_BOOST", "TOXIC_CHAIN",
-    "TOXIC_DEBRIS", "TRANSISTOR", "TRIAGE", "TURBOBLAZE", "UNSEEN_FIST",
-    "VESSEL_OF_RUIN", "VICTORY_STAR", "WANDERING_SPIRIT", "WATER_BUBBLE",
-    "WATER_COMPACTION", "WELL_BAKED_BODY", "WIMP_OUT", "WIND_POWER",
-    "WONDER_SKIN", "ZEN_MODE", "ZERO_TO_HERO"
+    "PRANKSTER", "PRIMORDIAL_SEA", "PRISM_ARMOR", "PROPELLER_TAIL", "PROTEAN",
+    "PROTOSYNTHESIS", "PSYCHIC_SURGE", "PUNK_ROCK", "PURIFYING_SALT",
+    "QUARK_DRIVE", "RECEIVER", "REFRIGERATE", "RKS_SYSTEM",
+    "ROCKY_PAYLOAD", "SAND_FORCE", "SCHOOLING", "SEED_SOWER", "SHADOW_SHIELD",
+    "SHIELDS_DOWN", "SLUSH_RUSH", "SOUL_HEART", "STAKEOUT", "STALWART",
+    "STANCE_CHANGE", "STEELWORKER", "STEELY_SPIRIT", "STRONG_JAW",
+    "SUPREME_OVERLORD", "SURGE_SURFER", "SWORD_OF_RUIN",
+    "SYMBIOSIS", "TABLETS_OF_RUIN", "TEMP4", "TERAFORM_ZERO", "TERAVOLT",
+    "TERA_SHELL", "TERA_SHIFT", "TOUGH_CLAWS", "TOXIC_BOOST", "TOXIC_CHAIN",
+    "TRANSISTOR", "TRIAGE", "TURBOBLAZE", "UNSEEN_FIST", "VESSEL_OF_RUIN",
+    "VICTORY_STAR", "WATER_BUBBLE", "WIMP_OUT",
+    "WIND_POWER", "WONDER_SKIN", "ZEN_MODE", "ZERO_TO_HERO"
 }
 
 
@@ -135,7 +161,7 @@ class AbilityEffectTests(unittest.TestCase):
     # abilities, every one of them read somewhere in the reference, so the
     # number went up once and may only come down from here: lowering it is the
     # work, raising it needs a reason written next to it.
-    STILL_TO_DO = 170
+    STILL_TO_DO = 133
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
@@ -171,6 +197,21 @@ class SubscriptNumberingTests(unittest.TestCase):
             "MUMMY": "subscript_0300_Mummy.s",
             "SUPERSWEET_SYRUP": "subscript_0301_SupersweetSyrup.s",
             "CHEEK_POUCH": "subscript_0302_CheekPouch.s",
+            "ABILITY_STAT_CHANGE": "subscript_0356_AbilityStatChange.s",
+            "ABILITY_CUTS_STAT": "subscript_0357_AbilityCutsStat.s",
+            "COTTON_DOWN": "subscript_0358_CottonDown.s",
+            "ANGER_SHELL": "subscript_0359_AngerShell.s",
+            "CHARGE_FROM_HIT": "subscript_0360_ChargeFromHit.s",
+            "ABILITY_TAKES_ITEM": "subscript_0361_AbilityTakesItem.s",
+            "TOXIC_DEBRIS": "subscript_0362_ToxicDebris.s",
+            "PERISH_BODY": "subscript_0363_PerishBody.s",
+            "SAND_SPIT": "subscript_0364_SandSpit.s",
+            "STEAM_ENGINE": "subscript_0365_SteamEngine.s",
+            "WANDERING_SPIRIT": "subscript_0366_WanderingSpirit.s",
+            "UNNERVE": "subscript_0367_Unnerve.s",
+            "SCREEN_CLEANER": "subscript_0368_ScreenCleaner.s",
+            "HOSPITALITY": "subscript_0369_Hospitality.s",
+            "IMPOSTER": "subscript_0370_Imposter.s",
         }
         for name, filename in added.items():
             self.assertEqual(self.files[self.defines[name]].name, filename)
@@ -216,7 +257,7 @@ class SheerForceTests(unittest.TestCase):
 
     def test_both_halves_ask_the_same_question(self):
         source = self.SOURCE.read_text()
-        self.assertEqual(source.count("IsSuppressibleSecondaryEffect(ctx,"), 2)
+        self.assertEqual(source.count("IsSuppressibleSecondaryEffect(ctx,"), 5)
         self.assertEqual(source.count("static BOOL IsSuppressibleSecondaryEffect"), 1)
 
     def test_the_guaranteed_effects_are_left_alone(self):

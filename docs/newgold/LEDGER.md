@@ -87,7 +87,7 @@ konefr *could* reach, not only what the game reaches today.
 | --- | --- | :-- |
 | Species | 1042 sprite directories, 1277 icons, heights, learnsets, evolutions; every base species the reference names is here, the rest are its forms | 🟠 1041 / 1075 |
 | Moves | 131 effect scripts, 59 subscripts, 62 side-effect table slots | ✅ 923 / 923 |
-| Abilities | 149 do something — 123 retail effects and 26 added; the other 170 are a name and a species field, and `test_ability_effects.py` counts them down | 🟠 149 / 319 |
+| Abilities | 186 do something — 123 retail effects and 63 added; the other 133 are a name and a species field, and `test_ability_effects.py` counts them down | 🟠 186 / 319 |
 | Level-up learnsets | 1042; the entry is a word now, so a move past 511 can be learnt | ✅ done |
 | Battle script commands | 294 opcodes, name- and number-identical to the reference; 24 of the added handlers still only consume their operands | 🟠 270 / 294 |
 | Cries | `PlayCryEx` decompiled in `src/unk_02005D10.c` and linked by `main.lsf` — the 495 ceiling is gone, but the bank is mapped twice on one path | 🟠 partial |

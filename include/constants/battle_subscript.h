@@ -587,6 +587,23 @@
 #define BATTLE_SUBSCRIPT_POWER_SPLIT                        353
 #define BATTLE_SUBSCRIPT_GUARD_SPLIT                        354
 #define BATTLE_SUBSCRIPT_RAISE_ATTACK_AND_ACCURACY          355
+#define BATTLE_SUBSCRIPT_ABILITY_STAT_CHANGE                356
+#define BATTLE_SUBSCRIPT_ABILITY_CUTS_STAT                  357
+#define BATTLE_SUBSCRIPT_COTTON_DOWN                        358
+#define BATTLE_SUBSCRIPT_ANGER_SHELL                        359
+#define BATTLE_SUBSCRIPT_CHARGE_FROM_HIT                    360
+#define BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM                 361
+#define BATTLE_SUBSCRIPT_TOXIC_DEBRIS                       362
+#define BATTLE_SUBSCRIPT_PERISH_BODY                        363
+#define BATTLE_SUBSCRIPT_SAND_SPIT                          364
+#define BATTLE_SUBSCRIPT_STEAM_ENGINE                       365
+#define BATTLE_SUBSCRIPT_WANDERING_SPIRIT                   366
+#define BATTLE_SUBSCRIPT_UNNERVE                            367
+#define BATTLE_SUBSCRIPT_SCREEN_CLEANER                     368
+#define BATTLE_SUBSCRIPT_HOSPITALITY                        369
+#define BATTLE_SUBSCRIPT_IMPOSTER                           370
+#define BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY                 371
+#define BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_DEFENSE           372
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

@@ -5128,4 +5128,20 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">A sticky web has been laid out\nbeneath the feet of the foe’s team!</language>
 	</row>
+	<row id="msg_0197_01279" index="1279">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s {STRVAR_1 5, 1, 0} makes\nthe opposing team too nervous\fto eat Berries!</language>
+	</row>
+	<row id="msg_0197_01280" index="1280">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}\nhas two Abilities!</language>
+	</row>
+	<row id="msg_0197_01281" index="1281">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">All screens on the field\nwere cleansed!</language>
+	</row>
+	<row id="msg_0197_01282" index="1282">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} drank down all\nthe matcha that {STRVAR_1 1, 1, 0}\fmade!</language>
+	</row>
 </body>

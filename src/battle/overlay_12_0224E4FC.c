@@ -3235,6 +3235,21 @@ u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) {
     return BattleMoveTbl(ctx, moveNo)->type;
 }
 
+// Sweet Veil, and the three abilities that turn away a hurried move, cover
+// their ally as much as themselves. This answers with the battler whose
+// ability it is, so the message can name the right one, and BATTLER_NONE when
+// neither of the pair has it. An empty slot in a single battle has no HP and
+// so is never asked.
+static int BattlerOrAllyWithAbility(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int ability) {
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ability) == TRUE) {
+        return battlerIdTarget;
+    }
+    if (ctx->battleMons[battlerIdTarget ^ 2].hp != 0 && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget ^ 2, ability) == TRUE) {
+        return battlerIdTarget ^ 2;
+    }
+    return BATTLER_NONE;
+}
+
 int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget) {
     int script;
     int moveType;
@@ -3262,6 +3277,18 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLASH_FIRE) == TRUE && moveType == TYPE_FIRE && !(ctx->battleMons[battlerIdTarget].status & STATUS_FREEZE) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN)) {
         if (BattleMoveTbl(ctx, ctx->moveNoCur)->power || ctx->moveNoCur == MOVE_WILL_O_WISP) {
             script = BATTLE_SUBSCRIPT_ABSORB_AND_BOOST_FIRE_TYPE_MOVES;
+        }
+    }
+    // Well Baked Body eats the Fire move and comes out harder for it. Like
+    // Flash Fire it counts Will-O-Wisp, which has no power to swallow, but
+    // unlike Flash Fire it will not feed on a Fire move the holder aimed at
+    // itself.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_WELL_BAKED_BODY) == TRUE && moveType == TYPE_FIRE && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && battlerIdAttacker != battlerIdTarget) {
+        if (BattleMoveTbl(ctx, ctx->moveNoCur)->power || ctx->moveNoCur == MOVE_WILL_O_WISP) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_DEFENSE_UP_2_STAGES;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = battlerIdTarget;
+            script = BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_DEFENSE;
         }
     }
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SOUNDPROOF) == TRUE) {
@@ -3312,9 +3339,35 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_BULLETPROOF) == TRUE && MoveIsInList(ctx->moveNoCur, sBallAndBombMoves, NELEMS(sBallAndBombMoves)) == TRUE) {
         script = BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF;
     }
-    // Armor Tail turns away anything hurried, whatever it is made of.
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ARMOR_TAIL) == TRUE && (battlerIdAttacker & 1) != (battlerIdTarget & 1) && BattleMoveTbl(ctx, ctx->moveNoCur)->priority > 0) {
-        script = BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF;
+    // Sweet Veil keeps its side awake: the moves that put a Pokemon to sleep,
+    // Yawn, and Rest. Rest aims at its user, so a Pokemon under Sweet Veil
+    // cannot rest either, which is the reference's behaviour and reads as a
+    // bug until you know that.
+    int moveEffect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
+    if (moveEffect == MOVE_EFFECT_STATUS_SLEEP || moveEffect == MOVE_EFFECT_STATUS_SLEEP_NEXT_TURN || moveEffect == MOVE_EFFECT_RECOVER_HEALTH_AND_SLEEP) {
+        int veiled = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SWEET_VEIL);
+        if (veiled != BATTLER_NONE) {
+            ctx->battlerIdTemp = veiled;
+            script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
+        }
+    }
+    // Armor Tail, Queenly Majesty and Dazzling are one ability wearing three
+    // names: each turns away anything hurried coming from the other side, on
+    // behalf of its ally as much as itself. A move aimed at its own user, at
+    // the field, or at a whole side is never hurried past them -- that is the
+    // same exemption Psychic Terrain takes, and it is by range alone.
+    if (BattleMoveTbl(ctx, ctx->moveNoCur)->priority > 0 && (battlerIdAttacker & 1) != (battlerIdTarget & 1) && !(BattleMoveTbl(ctx, ctx->moveNoCur)->range & (RANGE_USER | RANGE_USER_SIDE | RANGE_FIELD | RANGE_OPPONENT_SIDE))) {
+        int blocker = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ARMOR_TAIL);
+        if (blocker == BATTLER_NONE) {
+            blocker = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_QUEENLY_MAJESTY);
+        }
+        if (blocker == BATTLER_NONE) {
+            blocker = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_DAZZLING);
+        }
+        if (blocker != BATTLER_NONE) {
+            ctx->battlerIdTemp = blocker;
+            script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
+        }
     }
     // Telepathy only sees what an ally aims at it, so it is the one immunity
     // here that asks which side the attacker is on rather than what it used.
@@ -3819,7 +3872,146 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 16: // end
+        case 16: // Unnerve, and the two halves of As One that carry it
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].unnerveFlag && ctx->battleMons[battlerId].hp && (GetBattlerAbility(ctx, battlerId) == ABILITY_AS_ONE_GLASTRIER || GetBattlerAbility(ctx, battlerId) == ABILITY_AS_ONE_SPECTRIER || GetBattlerAbility(ctx, battlerId) == ABILITY_UNNERVE)) {
+                    ctx->battleMons[battlerId].unnerveFlag = TRUE;
+                    ctx->battlerIdTemp = battlerId;
+                    // An As One announces that it has two Abilities and then
+                    // speaks as the one that has something to say here, so
+                    // the name the message prints is Unnerve either way.
+                    ctx->abilityTemp = ABILITY_UNNERVE;
+                    script = BATTLE_SUBSCRIPT_UNNERVE;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 17: // Screen Cleaner
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].screenCleanerFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_SCREEN_CLEANER) {
+                    u32 screens = SIDE_CONDITION_REFLECT | SIDE_CONDITION_LIGHT_SCREEN | SIDE_CONDITION_AURORA_VEIL;
+
+                    // Marked whether or not a screen was up, so that a
+                    // Pokemon walking into a bare field stops looking.
+                    ctx->battleMons[battlerId].screenCleanerFlag = TRUE;
+                    if ((ctx->fieldSideConditionFlags[0] | ctx->fieldSideConditionFlags[1]) & screens) {
+                        // Both sides lose them, the holder's own included.
+                        // The counters go with the flags: the end-of-turn
+                        // pass decrements as soon as it sees a flag, so one
+                        // left set over a zero counter would wrap it.
+                        for (j = 0; j < 2; j++) {
+                            ctx->fieldSideConditionFlags[j] &= ~screens;
+                            ctx->fieldSideConditionData[j].reflectTurns = 0;
+                            ctx->fieldSideConditionData[j].lightScreenTurns = 0;
+                            ctx->fieldSideConditionData[j].auroraVeilTurns = 0;
+                        }
+                        ctx->battlerIdTemp = battlerId;
+                        script = BATTLE_SUBSCRIPT_SCREEN_CLEANER;
+                        flag = TRUE;
+                        break;
+                    }
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 18: // Imposter
+            for (i = 0; i < maxBattlers; i++) {
+                int battlerIdCopied;
+
+                battlerId = ctx->turnOrder[i];
+                // The one standing visibly opposite, which in a double
+                // battle is the far slot rather than the near one.
+                battlerIdCopied = (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_DOUBLES) ? (battlerId ^ 3) : (battlerId ^ 1);
+                // A wild Pokemon only copies if it is a Ditto or a Mew; a
+                // trainer's may be anything. The reference also refuses a
+                // target hidden behind an Illusion, and this game has none.
+                if (!ctx->battleMons[battlerId].imposterFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_IMPOSTER && ctx->battleMons[battlerIdCopied].hp && ctx->battleMons[battlerIdCopied].ability != ABILITY_IMPOSTER && !(ctx->battleMons[battlerIdCopied].status2 & (STATUS2_SUBSTITUTE | STATUS2_TRANSFORM)) && ((BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) || ctx->battleMons[battlerId].species == SPECIES_DITTO || ctx->battleMons[battlerId].species == SPECIES_MEW)) {
+                    ctx->battleMons[battlerId].imposterFlag = TRUE;
+                    // Transform copies from the attacker to the target, and
+                    // this is not a move: what those two were is put aside
+                    // here and given back at the end of the subscript,
+                    // because the turn this runs in the middle of still
+                    // wants them. The animation is asked for by name rather
+                    // than through moveNoCur for the same reason.
+                    ctx->battlerIdAttackerTemp = ctx->battlerIdAttacker;
+                    ctx->battlerIdTargetTemp = ctx->battlerIdTarget;
+                    ctx->battlerIdAttacker = battlerId;
+                    ctx->battlerIdTarget = battlerIdCopied;
+                    ctx->moveTemp = MOVE_TRANSFORM;
+                    script = BATTLE_SUBSCRIPT_IMPOSTER;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 19: // Intrepid Sword and Dauntless Shield
+            for (i = 0; i < maxBattlers; i++) {
+                int fieldSide;
+
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].hp) {
+                    continue;
+                }
+                // Once per Pokemon per battle, not once per send-out: the
+                // slot it was drawn from is what remembers.
+                fieldSide = BattleSystem_GetFieldSide(battleSystem, battlerId);
+                if (ctx->onceOnlyEntryAbilityDone[fieldSide][ctx->selectedMonIndex[battlerId]]) {
+                    continue;
+                }
+                if (GetBattlerAbility(ctx, battlerId) == ABILITY_INTREPID_SWORD) {
+                    ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE;
+                } else if (GetBattlerAbility(ctx, battlerId) == ABILITY_DAUNTLESS_SHIELD) {
+                    ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_DEFENSE_UP_1_STAGE;
+                } else {
+                    continue;
+                }
+                ctx->onceOnlyEntryAbilityDone[fieldSide][ctx->selectedMonIndex[battlerId]] = TRUE;
+                ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+                ctx->battlerIdStatChange = battlerId;
+                script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;
+                flag = TRUE;
+                break;
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 20: // Hospitality
+            if (BattleSystem_GetBattleType(battleSystem) & (BATTLE_TYPE_DOUBLES | BATTLE_TYPE_MULTI)) {
+                for (i = 0; i < maxBattlers; i++) {
+                    battlerId = ctx->turnOrder[i];
+                    j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
+                    if (!ctx->battleMons[battlerId].hospitalityFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_HOSPITALITY && ctx->battleMons[j].hp && (u32)ctx->battleMons[j].hp != ctx->battleMons[j].maxHp) {
+                        ctx->battleMons[battlerId].hospitalityFlag = TRUE;
+                        ctx->hpCalc = DamageDivide(ctx->battleMons[j].maxHp, 4);
+                        ctx->battlerIdTemp = battlerId;
+                        // The one being poured for, which the subscript
+                        // moves into the temporary slot before it heals.
+                        ctx->battlerIdStatChange = j;
+                        script = BATTLE_SUBSCRIPT_HOSPITALITY;
+                        flag = TRUE;
+                        break;
+                    }
+                }
+                if (i == maxBattlers) {
+                    ctx->sendOutState++;
+                }
+            } else {
+                ctx->sendOutState++;
+            }
+            break;
+        case 21: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;
@@ -3850,6 +4042,47 @@ int Battler_GetRandomOpposingBattlerId(BattleSystem *battleSystem, BattleContext
     }
 
     return battlerIdTarget;
+}
+
+// Beast Boost raises whichever stat is biggest before any stage change has
+// touched it, ties going to the earliest. The order is the one the stat
+// change scripts are numbered in, so the answer is the offset to add to
+// MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE.
+static int BattlerGreatestStat(BattleContext *ctx, int battlerId) {
+    u16 stats[] = {
+        ctx->battleMons[battlerId].atk,
+        ctx->battleMons[battlerId].def,
+        ctx->battleMons[battlerId].speed,
+        ctx->battleMons[battlerId].spAtk,
+        ctx->battleMons[battlerId].spDef,
+    };
+    int max = 0;
+    int i;
+
+    for (i = 1; i < (int)NELEMS(stats); i++) {
+        if (stats[i] > stats[max]) {
+            max = i;
+        }
+    }
+
+    return max;
+}
+
+// Pickpocket and Magician both move one held item to a pair of empty hands.
+// Whether the item itself will go is the question Thief asks, written out
+// here because BtlCmd_TryStealItem asks it of the attacker and the target
+// rather than of a taker and a loser.
+static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTaker, int battlerIdLoser) {
+    if (ctx->battleMons[battlerIdTaker].item != ITEM_NONE) {
+        return FALSE;
+    }
+    if (ctx->battleMons[battlerIdLoser].item == ITEM_GRISEOUS_ORB) {
+        return FALSE;
+    }
+    if (GetBattlerAbility(ctx, battlerIdTaker) == ABILITY_MULTITYPE || GetBattlerAbility(ctx, battlerIdLoser) == ABILITY_MULTITYPE) {
+        return FALSE;
+    }
+    return CanStealHeldItem(battleSystem, ctx, battlerIdLoser);
 }
 
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
@@ -3949,6 +4182,17 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
             ret = TRUE;
         }
         break;
+    case ABILITY_SPICY_SPRAY:
+        // Flame Body's wiring with the contact test and the roll taken out:
+        // the reference burns on any hit that landed, every time.
+        if (ctx->battleMons[ctx->battlerIdAttacker].hp && !ctx->battleMons[ctx->battlerIdAttacker].status && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = ctx->battlerIdAttacker;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_BURN;
+            ret = TRUE;
+        }
+        break;
     case ABILITY_CUTE_CHARM:
         if (ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_ATTRACT) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (BattleMoveTbl(ctx, ctx->moveNoCur)->unkB & 1) && ctx->battleMons[ctx->battlerIdTarget].hp && ((BattleSystem_Random(battleSystem) % 10) < 3)) {
             ctx->statChangeType = 3;
@@ -3959,13 +4203,56 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         }
         break;
     case ABILITY_WEAK_ARMOR:
-        if (ctx->battleMons[ctx->battlerIdTarget].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage) {
+        // Nothing left to loosen and nowhere left to run: the reference does
+        // not announce the ability at all in that case.
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && (ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_DEF] > 0 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPEED] < 12) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage) {
             ctx->battlerIdStatChange = ctx->battlerIdTarget;
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_WEAK_ARMOR;
             ret = TRUE;
         }
         break;
+    case ABILITY_BERSERK:
+        // Only the blow that carries the holder past half its health, and so
+        // only once. The bar has already been updated by the time this pass
+        // runs, so the damage just dealt is added back to see where the
+        // holder came from; the two figures are negative, as the bar wants.
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] < 12 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE) && ctx->battleMons[ctx->battlerIdTarget].hp <= (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) && (ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) || ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].specialDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2))) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_1_STAGE;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = ctx->battlerIdTarget;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_ABILITY_STAT_CHANGE;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_ANGER_SHELL:
+        // The same crossing Berserk waits for, but the payout is five stat
+        // changes, so the whole of it is a subscript. Any one of the five
+        // having room is enough.
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && (ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPEED] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_DEF] > 0 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPDEF] > 0) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE) && ctx->battleMons[ctx->battlerIdTarget].hp <= (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) && (ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) || ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].specialDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2))) {
+            ctx->battlerIdStatChange = ctx->battlerIdTarget;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_ANGER_SHELL;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_TOXIC_DEBRIS: {
+        // A physical blow only, and the spikes land under whoever threw it.
+        // The layer is laid here rather than in the script for the reason
+        // BtlCmd_TryToxicSpikes lays its own: the cap is a condition, not a
+        // message.
+        int side = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker);
+
+        if (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && ctx->fieldSideConditionData[side].toxicSpikesLayers < 2) {
+            ctx->fieldSideConditionFlags[side] |= SIDE_CONDITION_TOXIC_SPIKES;
+            ctx->fieldSideConditionData[side].toxicSpikesLayers++;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_TOXIC_DEBRIS;
+            ret = TRUE;
+        }
+        break;
+    }
     case ABILITY_CURSED_BODY: {
         // Anything that damages will do, contact or not, but only a move the
         // attacker still has and has not already had taken away.
@@ -3982,11 +4269,34 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         break;
     }
     case ABILITY_MUMMY:
+    case ABILITY_LINGERING_AROMA:
         // Multitype is what a Pokemon is rather than what it does, so it is
-        // the one ability the wrapping does not take.
-        if (ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MUMMY && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MULTITYPE && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (BattleMoveTbl(ctx, ctx->moveNoCur)->unkB & 1)) {
+        // the one ability the wrapping does not take. The refusal is against
+        // the holder's own ability rather than against Mummy by name, so
+        // Lingering Aroma shares the branch and neither re-wraps its own.
+        if (ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != GetBattlerAbility(ctx, ctx->battlerIdTarget) && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MULTITYPE && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (BattleMoveTbl(ctx, ctx->moveNoCur)->unkB & 1)) {
+            ctx->abilityTemp = GetBattlerAbility(ctx, ctx->battlerIdTarget);
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_MUMMY;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_WANDERING_SPIRIT:
+        // Mummy above takes; this one gives back in exchange, so it refuses
+        // the same abilities Skill Swap refuses.
+        if (ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_WANDERING_SPIRIT && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MULTITYPE && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_WONDER_GUARD && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+            *script = BATTLE_SUBSCRIPT_WANDERING_SPIRIT;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_PICKPOCKET:
+        // Lifts whatever touched it, if its own hands are empty. The theft
+        // is the Thief guard already in this tree, asked of the attacker
+        // rather than of the target.
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur) && BattleMoveTbl(ctx, ctx->moveNoCur)->power && !(GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE) && CanAbilityTakeHeldItem(battleSystem, ctx, ctx->battlerIdTarget, ctx->battlerIdAttacker) == TRUE) {
+            ctx->battlerIdStatChange = ctx->battlerIdTarget;
+            ctx->battlerIdTemp = ctx->battlerIdAttacker;
+            *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
             ret = TRUE;
         }
         break;
@@ -3998,9 +4308,183 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
             ret = TRUE;
         }
         break;
+    case ABILITY_INNARDS_OUT:
+        // hitDamage is the blow that landed, already trimmed of overkill and
+        // already negative. The reference reads its own running total, which
+        // in this tree is only ever cleared when Bide starts.
+        if (ctx->battlerIdTarget == ctx->battlerIdFainted && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD && ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)) {
+            ctx->hpCalc = ctx->hitDamage;
+            ctx->battlerIdTemp = ctx->battlerIdAttacker;
+            *script = BATTLE_SUBSCRIPT_ROUGH_SKIN;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_STAMINA:
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_DEF] < 12 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_DEFENSE_UP_1_STAGE;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = ctx->battlerIdTarget;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_ABILITY_STAT_CHANGE;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_RATTLED: {
+        u8 moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
+
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPEED] < 12 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (moveType == TYPE_DARK || moveType == TYPE_GHOST || moveType == TYPE_BUG)) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SPEED_UP_1_STAGE;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = ctx->battlerIdTarget;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_ABILITY_STAT_CHANGE;
+            ret = TRUE;
+        }
+        break;
+    }
+    case ABILITY_JUSTIFIED:
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur) == TYPE_DARK) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = ctx->battlerIdTarget;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_ABILITY_STAT_CHANGE;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_THERMAL_EXCHANGE:
+        // The substitute test the reference makes here is already answered at
+        // the top of this function; the burn half of the ability is not read
+        // at this site at all and is still missing.
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur) == TYPE_FIRE) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = ctx->battlerIdTarget;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_ABILITY_STAT_CHANGE;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_WATER_COMPACTION:
+        // The reference refuses at +5 rather than settling for one stage, so
+        // a Defense that close to the ceiling gets nothing at all.
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_DEF] < 11 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur) == TYPE_WATER) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_DEFENSE_UP_2_STAGES;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = ctx->battlerIdTarget;
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
+            *script = BATTLE_SUBSCRIPT_ABILITY_STAT_CHANGE;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_STEAM_ENGINE: {
+        u8 moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
+
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPEED] < 12 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (moveType == TYPE_FIRE || moveType == TYPE_WATER)) {
+            *script = BATTLE_SUBSCRIPT_STEAM_ENGINE;
+            ret = TRUE;
+        }
+        break;
+    }
+    case ABILITY_GOOEY:
+    case ABILITY_TANGLING_HAIR:
+        if (ctx->battleMons[ctx->battlerIdAttacker].statChanges[STAT_SPEED] > 0 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = ctx->battlerIdAttacker;
+            *script = BATTLE_SUBSCRIPT_ABILITY_CUTS_STAT;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_COTTON_DOWN:
+        // Everything else on the field, allies included, and the holder does
+        // not have to have survived to shed.
+        if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+            ctx->abilityLoopTracker = 0;
+            *script = BATTLE_SUBSCRIPT_COTTON_DOWN;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_PERISH_BODY:
+        // The holder does not have to survive the blow it answers.
+        if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+            *script = BATTLE_SUBSCRIPT_PERISH_BODY;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_ELECTROMORPHOSIS:
+        if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+            *script = BATTLE_SUBSCRIPT_CHARGE_FROM_HIT;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_SAND_SPIT:
+        if (!(ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+            *script = BATTLE_SUBSCRIPT_SAND_SPIT;
+            ret = TRUE;
+        }
+        break;
     default:
         break;
     }
+
+    if (ret == TRUE) {
+        return ret;
+    }
+
+    // The last two belong to the attacker rather than to the Pokemon that was
+    // hit, and they are asked after the switch because the reference answers
+    // them in a later pass than the ones above. Only one script runs per hit,
+    // so whichever is asked first is the one that happens.
+    //
+    // A knockout is answered by the attacker's ability rather than by the
+    // fallen one's. Aftermath reads the same pair to know the target is down.
+    if (ctx->battlerIdTarget == ctx->battlerIdFainted && ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].battlerIdPhysicalAttacker == ctx->battlerIdAttacker || ctx->selfTurnData[ctx->battlerIdTarget].battlerIdSpecialAttacker == ctx->battlerIdAttacker)) {
+        int stat = -1;
+
+        switch (GetBattlerAbility(ctx, ctx->battlerIdAttacker)) {
+        case ABILITY_MOXIE:
+        case ABILITY_CHILLING_NEIGH:
+        case ABILITY_AS_ONE_GLASTRIER:
+            stat = STAT_ATK - 1;
+            break;
+        case ABILITY_GRIM_NEIGH:
+        case ABILITY_AS_ONE_SPECTRIER:
+            stat = STAT_SPATK - 1;
+            break;
+        // E-Levitate is Levitate in the air and Beast Boost on the ground.
+        // The half that answers a knockout is the same one either way. Both
+        // sit out the turn they came in on, the way Speed Boost does.
+        case ABILITY_BEAST_BOOST:
+        case ABILITY_EELEVATE:
+            if (ctx->battleMons[ctx->battlerIdAttacker].unk88.fakeOutCount != ctx->totalTurns + 1) {
+                stat = BattlerGreatestStat(ctx, ctx->battlerIdAttacker);
+            }
+            break;
+        default:
+            break;
+        }
+
+        if (stat >= 0 && ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat + 1] < 12) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + stat;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = ctx->battlerIdAttacker;
+            ctx->battlerIdTemp = ctx->battlerIdAttacker;
+            *script = BATTLE_SUBSCRIPT_ABILITY_STAT_CHANGE;
+            return TRUE;
+        }
+    }
+
+    // Magician palms what it has just hurt, if its own hands are empty. The
+    // reference walks every battler looking for one it damaged; this chain
+    // already runs once per target, so the target in hand is that one.
+    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MAGICIAN && ctx->battleMons[ctx->battlerIdAttacker].hp && BattleMoveTbl(ctx, ctx->moveNoCur)->category != CATEGORY_STATUS && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(GetBattlerAbility(ctx, ctx->battlerIdTarget) == ABILITY_STICKY_HOLD && ctx->battleMons[ctx->battlerIdTarget].hp) && CanAbilityTakeHeldItem(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget) == TRUE) {
+        ctx->battlerIdStatChange = ctx->battlerIdAttacker;
+        ctx->battlerIdTemp = ctx->battlerIdTarget;
+        *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
+        return TRUE;
+    }
+
     return ret;
 }
 

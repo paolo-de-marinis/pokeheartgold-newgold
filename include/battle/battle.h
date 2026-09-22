@@ -245,6 +245,10 @@ typedef struct BattleMon {
     u32 cheekPouchPending : 1;
     u32 competitivePending : 1;
     u32 abilityActivatedFlag : 1;
+    u32 unnerveFlag : 1;
+    u32 screenCleanerFlag : 1;
+    u32 imposterFlag : 1;
+    u32 hospitalityFlag : 1;
     // A third type, TYPE_NONE unless a script has added one. It takes eight of
     // the spare bits rather than a byte of its own: the assembly that still
     // reads this structure does so by offset, and type1 and type2 have code
@@ -254,7 +258,7 @@ typedef struct BattleMon {
     // Read once on the way into battle rather than per damage calculation,
     // because answering it means reading the evolution archive.
     u32 canStillEvolve : 1;
-    u32 unk28_B : 8;
+    u32 unk28_B : 4;
     u8 movePPCur[MAX_MON_MOVES];
     u8 movePP[MAX_MON_MOVES];
     u8 level;
@@ -466,6 +470,11 @@ typedef struct BattleContext {
     // What the player's party was holding when the battle began. A single-use
     // item is given back at the end rather than being gone for good.
     u16 itemsToRestore[PARTY_SIZE];
+    // Intrepid Sword and Dauntless Shield fire once per Pokemon per battle
+    // rather than once per send-out, so what has already fired is remembered
+    // per party slot here and not on the BattleMon, which is rebuilt every
+    // time its Pokemon walks back in.
+    u8 onceOnlyEntryAbilityDone[2][PARTY_SIZE];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

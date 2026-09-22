@@ -160,7 +160,7 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // makes that table longer and moves nothing else -- so they are written out
 // here rather than folded into the number.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3180 + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
+    sizeof(BattleContext) == 0x318C + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -2426,7 +2426,10 @@ static BOOL ov12_0224BC2C(BattleSystem *battleSystem, BattleContext *ctx) {
         switch (ctx->unk_54) {
         case 0:
             script = BattleContext_CheckMoveImmunityFromAbility(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
-            if ((script && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)) || script == BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF) {
+            // A refusal is still worth saying even when the move was going to
+            // miss or do nothing anyway, which is why the two scripts that
+            // only name an ability are let past the DID_NOT_HIT test.
+            if ((script && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)) || script == BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF || script == BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY) {
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
