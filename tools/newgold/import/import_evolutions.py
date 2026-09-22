@@ -5,12 +5,19 @@ Only evolutions this repository can already express are written: an evolution
 needing a method, item or move HGSS does not have yet is reported and left out,
 so nothing silently evolves into the wrong thing.
 
-Usage: import_evolutions.py REFERENCE_CHECKOUT [--write]
+Usage: import_evolutions.py REFERENCE_CHECKOUT [--write] [--levels-only | --engine-reworks]
+
+--engine-reworks writes the other kind: what hg-engine itself changed about a
+species HeartGold already had -- a Linking Cord in place of a trade, a stone
+in place of a place Johto does not have. Those rows are the engine's, so they
+are read at the engine's revision, ENGINE_REVISION, and a species konefr's
+range touches is left to the rows that are his.
 """
 
 import argparse
 import json
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -24,8 +31,16 @@ def constants(path, prefix):
     return set(re.findall(r"\b(" + prefix + r"[A-Z0-9_]+)", (ROOT / path).read_text()))
 
 
-def reference_table(reference):
-    source = (reference / "data/Evolutions.c").read_text(errors="replace")
+# hg-engine as it was before konefr's first commit: the parent of his range.
+ENGINE_REVISION = "d0380a487"
+
+
+def reference_table(reference, revision=None):
+    if revision is None:
+        source = (reference / "data/Evolutions.c").read_text(errors="replace")
+    else:
+        source = subprocess.run(["git", "-C", str(reference), "show", f"{revision}:data/Evolutions.c"],
+                                capture_output=True, text=True, check=True).stdout
     blocks = re.split(r"\n    \[(SPECIES_[A-Z0-9_]+)\] = \{", source)
     return {blocks[i]: blocks[i + 1] for i in range(1, len(blocks), 2)}
 
@@ -120,6 +135,55 @@ def relevelled(table, evolutions):
     return changes
 
 
+def engine_reworks(reference, evolutions, known, spell):
+    """hg-engine's rows for species HeartGold already had, where they differ
+    from this table by more than spelling and konefr has not touched them.
+
+    A row this table has and the engine has not is replaced in place by the
+    engine's row for the same target when there is one -- Eevee's Eterna and
+    Route 217 become the Leaf and Ice Stones where they stood, so Sylveon keeps
+    her place ahead of Espeon -- and dropped otherwise; what is left of the
+    engine's rows goes at the end. Rows by a method this game has not got are
+    reported and left out, as everywhere else in this file."""
+    engine = reference_table(reference, ENGINE_REVISION)
+    theirs = reference_table(reference)
+    numbers = {int(v): n for n, v in re.findall(r"#define (SPECIES_[A-Z0-9_]+)\s+(\d+)",
+                                                  (ROOT / "include/constants/species.h").read_text())}
+    retail = {name for number, name in numbers.items() if 0 < number <= 493}
+    out = []
+    for entry in evolutions["evoTable"]:
+        base = entry["baseSpecies"]
+        if base not in retail or base not in engine or theirs.get(base) != engine[base]:
+            continue
+        rows, missing = [], []
+        for method, param, target in ROW.findall(engine[base]):
+            if target == "SPECIES_NONE":
+                continue  # the padding rows, EVO_NONE to nothing
+            target = native_target(target)
+            param = spell(method, param)
+            absent = [name for name in [method, target] + ([] if isinstance(param, int) else [param])
+                      if name not in known]
+            (missing if absent else rows).append((method, param, target))
+        mine = [(e["method"], e["param"], e["target"]) for e in entry["evos"]]
+        extra = [row for row in rows if row not in mine]
+        gone = [row for row in mine if row not in rows]
+        if not extra and not gone:
+            continue
+        new = []
+        for row in mine:
+            if row in rows:
+                new.append(row)
+                continue
+            swap = next((r for r in extra if r[2] == row[2]), None)
+            if swap:
+                extra.remove(swap)
+                new.append(swap)
+        new += extra
+        out.append((base, [e for e in mine if e not in new], [e for e in new if e not in mine], missing,
+                    [{"method": m, "param": p, "target": s} for m, p, s in new]))
+    return out
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("reference", type=Path)
@@ -128,6 +192,7 @@ def main():
     # are separate debts on separate ledger rows, so either can be written on
     # its own without dragging the other in.
     parser.add_argument("--levels-only", action="store_true")
+    parser.add_argument("--engine-reworks", action="store_true")
     args = parser.parse_args()
 
     methods = constants("include/constants/pokemon.h", "EVO_")
@@ -198,6 +263,24 @@ def main():
 
     changes = relevelled(table, evolutions)
 
+    item_names = {int(v): n for n, v in re.findall(r"#define (ITEM_[A-Z0-9_]+)\s+(\d+)\b",
+                                                   (ROOT / "include/constants/items.h").read_text())}
+
+    def spell(method, param):
+        """A parameter as this table writes it: a number stays a number, except
+        an item the reference gives by its number (Kirlia's Dawn Stone is 109)."""
+        if param.lstrip("-").isdigit():
+            if method.startswith(("EVO_STONE", "EVO_TRADE_ITEM", "EVO_ITEM")) and int(param) in item_names:
+                return item_names[int(param)]
+            return int(param)
+        return squashed_items.get(param.replace("_", ""), param) if param.startswith("ITEM_") else param
+
+    reworks = engine_reworks(args.reference, evolutions, known, spell) if args.engine_reworks else []
+    for base, gone, new, missing, _ in reworks:
+        print(f"  {base} (engine): " + ", ".join([f"-{m} {p} {s}" for m, p, s in gone] + [f"+{m} {p} {s}" for m, p, s in new]))
+        for method, param, target in missing:
+            print(f"    left out {method} {param} {target}")
+
     print(f"{len(added)} species gain evolutions, {len(merged)} listed already gain a row")
     for base, rows in merged:
         for row in rows:
@@ -211,6 +294,14 @@ def main():
         print(f"  {base} -> {target}: {evo['param']} becomes {param}")
 
     if not args.write:
+        return
+    if args.engine_reworks:
+        for base, _, _, _, rows in reworks:
+            if len(rows) > MAX_EVOS:
+                raise SystemExit(f"{base} would have {len(rows)} evolutions; the limit is {MAX_EVOS}")
+            already[base]["evos"] = rows
+        EVOLUTIONS.write_text(json.dumps(evolutions, indent=2) + "\n")
+        print(f"wrote {EVOLUTIONS.relative_to(ROOT)}: {len(reworks)} species take the engine's rows")
         return
     if not args.levels_only:
         evolutions["evoTable"].extend(added)

@@ -397,6 +397,11 @@
           "method": "EVO_TRADE",
           "param": 0,
           "target": "SPECIES_ALAKAZAM"
+        },
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_LINKING_CORD",
+          "target": "SPECIES_ALAKAZAM"
         }
       ]
     },
@@ -416,6 +421,11 @@
         {
           "method": "EVO_TRADE",
           "param": 0,
+          "target": "SPECIES_MACHAMP"
+        },
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_LINKING_CORD",
           "target": "SPECIES_MACHAMP"
         }
       ]
@@ -477,6 +487,11 @@
           "method": "EVO_TRADE",
           "param": 0,
           "target": "SPECIES_GOLEM"
+        },
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_LINKING_CORD",
+          "target": "SPECIES_GOLEM"
         }
       ]
     },
@@ -519,8 +534,8 @@
       "baseSpecies": "SPECIES_MAGNETON",
       "evos": [
         {
-          "method": "EVO_CORONET",
-          "param": 0,
+          "method": "EVO_STONE",
+          "param": "ITEM_THUNDERSTONE",
           "target": "SPECIES_MAGNEZONE"
         }
       ]
@@ -581,6 +596,11 @@
         {
           "method": "EVO_TRADE",
           "param": 0,
+          "target": "SPECIES_GENGAR"
+        },
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_LINKING_CORD",
           "target": "SPECIES_GENGAR"
         }
       ]
@@ -794,13 +814,13 @@
       "baseSpecies": "SPECIES_EEVEE",
       "evos": [
         {
-          "method": "EVO_ETERNA",
-          "param": 0,
+          "method": "EVO_STONE",
+          "param": "ITEM_LEAF_STONE",
           "target": "SPECIES_LEAFEON"
         },
         {
-          "method": "EVO_ROUTE217",
-          "param": 0,
+          "method": "EVO_STONE",
+          "param": "ITEM_ICE_STONE",
           "target": "SPECIES_GLACEON"
         },
         {
@@ -1599,8 +1619,8 @@
       "baseSpecies": "SPECIES_NOSEPASS",
       "evos": [
         {
-          "method": "EVO_CORONET",
-          "param": 0,
+          "method": "EVO_STONE",
+          "param": "ITEM_THUNDERSTONE",
           "target": "SPECIES_PROBOPASS"
         }
       ]
@@ -1631,6 +1651,11 @@
         {
           "method": "EVO_BEAUTY",
           "param": 170,
+          "target": "SPECIES_MILOTIC"
+        },
+        {
+          "method": "EVO_TRADE_ITEM",
+          "param": "ITEM_PRISM_SCALE",
           "target": "SPECIES_MILOTIC"
         }
       ]

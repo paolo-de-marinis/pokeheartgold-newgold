@@ -89,6 +89,22 @@ class EvolutionTests(unittest.TestCase):
         self.assertRegex(use, r"method == EVO_TRADE_ITEM && heldItem == evoTable\[i\]\.param"
                               r" && usedItem == ITEM_LINKING_CORD")
 
+    def test_the_engines_own_changes_to_retail_species(self):
+        """hg-engine at d0380a487 reworks eight of HeartGold's species, and
+        they are the engine's, not konefr's: a Linking Cord for four trades,
+        a stone for three places Johto has not got, a Prism Scale trade."""
+        rows = {(base, evo["method"], evo["param"], evo["target"])
+                for base, evos in self.byBase.items() for evo in evos}
+        for base, target in [("KADABRA", "ALAKAZAM"), ("MACHOKE", "MACHAMP"),
+                             ("GRAVELER", "GOLEM"), ("HAUNTER", "GENGAR")]:
+            self.assertIn((f"SPECIES_{base}", "EVO_STONE", "ITEM_LINKING_CORD", f"SPECIES_{target}"), rows)
+        for base, item, target in [("MAGNETON", "THUNDERSTONE", "MAGNEZONE"), ("NOSEPASS", "THUNDERSTONE", "PROBOPASS"),
+                                   ("EEVEE", "LEAF_STONE", "LEAFEON"), ("EEVEE", "ICE_STONE", "GLACEON")]:
+            self.assertIn((f"SPECIES_{base}", "EVO_STONE", f"ITEM_{item}", f"SPECIES_{target}"), rows)
+        self.assertIn(("SPECIES_FEEBAS", "EVO_TRADE_ITEM", "ITEM_PRISM_SCALE", "SPECIES_MILOTIC"), rows)
+        # The places they replace were never reachable in Johto.
+        self.assertFalse({row for row in rows if row[1] in ("EVO_CORONET", "EVO_ETERNA", "EVO_ROUTE217")})
+
     def test_every_name_is_defined(self):
         known = (constants("include/constants/pokemon.h", "EVO_")
                  | constants("include/constants/pokemon.h", "TYPE_")
