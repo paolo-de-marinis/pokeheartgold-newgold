@@ -163,6 +163,7 @@ IMPLEMENTED = {
     "WATER_COMPACTION",
     "WEAK_ARMOR",
     "WELL_BAKED_BODY",
+    "WIND_POWER",
     "WIND_RIDER",
     "WONDER_SKIN",
 }
@@ -196,7 +197,7 @@ PENDING = {
     "STANCE_CHANGE", "SUPREME_OVERLORD", "SURGE_SURFER", "SYMBIOSIS", "TEMP4",
     "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN",
     "VICTORY_STAR", "WIMP_OUT",
-    "WIND_POWER", "ZEN_MODE", "ZERO_TO_HERO"
+    "ZEN_MODE", "ZERO_TO_HERO"
 }
 
 
@@ -252,7 +253,7 @@ class AbilityEffectTests(unittest.TestCase):
     # abilities, every one of them read somewhere in the reference, so the
     # number went up once and may only come down from here: lowering it is the
     # work, raising it needs a reason written next to it.
-    STILL_TO_DO = 50
+    STILL_TO_DO = 49
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

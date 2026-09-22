@@ -4385,7 +4385,25 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 21: // end
+        case 21: // Wind Power, when Tailwind is already blowing
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].abilityActivatedFlag && ctx->battleMons[battlerId].hp && (ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerId)] & SIDE_CONDITION_TAILWIND) && GetBattlerAbility(ctx, battlerId) == ABILITY_WIND_POWER) {
+                    // The flag is what stops it charging again every send-out
+                    // while the same Tailwind blows; the field condition
+                    // running out clears it.
+                    ctx->battleMons[battlerId].abilityActivatedFlag = TRUE;
+                    ctx->battlerIdTemp = battlerId;
+                    script = BATTLE_SUBSCRIPT_CHARGE_FROM_HIT;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 22: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;
@@ -4780,6 +4798,14 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         break;
     case ABILITY_ELECTROMORPHOSIS:
         if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+            *script = BATTLE_SUBSCRIPT_CHARGE_FROM_HIT;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_WIND_POWER:
+        // The holder need not survive: the reference comments out its own
+        // hp test rather than deleting it, and says so.
+        if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && MoveIsInList(ctx->moveNoCur, sWindMoves, NELEMS(sWindMoves)) == TRUE) {
             *script = BATTLE_SUBSCRIPT_CHARGE_FROM_HIT;
             ret = TRUE;
         }

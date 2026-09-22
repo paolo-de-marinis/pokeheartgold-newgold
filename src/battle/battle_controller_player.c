@@ -998,6 +998,14 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
                         ctx->commandNext = ctx->command;
                         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                         ctx->battlerIdTemp = ov12_02257E98(battleSystem, ctx, side);
+                        // Wind Power charges once while a Tailwind blows, and
+                        // the flag is what remembers that; the wind dropping
+                        // is what lets it charge again next time.
+                        for (int battlerId = 0; battlerId < BattleSystem_GetMaxBattlers(battleSystem); battlerId++) {
+                            if (BattleSystem_GetFieldSide(battleSystem, battlerId) == side && GetBattlerAbility(ctx, battlerId) == ABILITY_WIND_POWER) {
+                                ctx->battleMons[battlerId].abilityActivatedFlag = FALSE;
+                            }
+                        }
                         flag = 1;
                     }
                 }
