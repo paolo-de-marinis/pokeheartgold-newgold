@@ -12,8 +12,8 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 182 commits |
-| generated | 2026-09-22 17:24 |
+| port | 185 commits |
+| generated | 2026-09-22 17:32 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
@@ -55,7 +55,7 @@ that carry behaviour.
 | Feature | Detail | State |
 | --- | --- | :-- |
 | Fairy type and the effectiveness chart | type 18, the twelve chart rows, Sylveon and 66 species, 30 moves, its name in `msg_0735` and its icon in the battle graphics archive. The Dex's type search is not part of it: the reference never touches those lists, so there it covers seventeen types and 493 species too | ✅ done |
-| Story level cap | wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100 | ✅ done |
+| Story level cap | wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100, and it acts as the reference's does: a Pokemon at the cap wins no experience from a battle, so its bar does not move, and still gets the effort values; a Rare Candy is refused at the cap; experience past the cap's threshold is cut back for whoever carries it. It used to hand the experience over and cut it at the end, which is what Paolo saw as a bar that filled and snapped back | ✅ done |
 | Hidden abilities | `TRPOKE_ABILITY_OVERRIDE_HIDDEN`; eleven trainer Pokémon ask for one | ✅ done |
 | Ability field past one byte | save, battle record, AI memory, PC box, summary — and the personal record, whose three ability bytes now have their full values past the end of it | ✅ done |
 | Reusable TMs, deletable HMs | `REUSABLE_TMS`, `DELETABLE_HMS`, plus the machine badge in the bag | ✅ done |

@@ -2880,11 +2880,11 @@ BOOL Pokemon_TryLevelUp(Pokemon *mon) {
     u32 growthrate = (u32)GetMonBaseStat(species, BASE_GROWTH_RATE);
     u8 cap = GetLevelCap();
     u32 maxexp = GetExpByGrowthRateAndLevel((int)growthrate, cap);
-    // Hold a capped Pokemon's experience at the cap so raising the cap never
-    // grants several levels at once. A Pokemon already past the cap keeps its
-    // experience: Rare Candies are deliberately not gated, and clamping here
-    // would undo them at the next battle.
-    if (level - 1 <= cap && exp > maxexp) {
+    // Hold experience at the cap's threshold, whoever carries it, so raising
+    // the cap never hands over several levels at once. This is the
+    // reference's rule; the battle gives a capped Pokemon nothing to begin
+    // with, and a Rare Candy is refused at the cap, so this is the backstop.
+    if (exp > maxexp) {
         exp = maxexp;
         SetMonData(mon, MON_DATA_EXPERIENCE, &exp);
     }

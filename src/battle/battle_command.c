@@ -6670,10 +6670,19 @@ static void Task_GetExp(SysTask *task, void *inData) {
         }
 
         u32 totalExp = 0;
+        u8 cap = GetLevelCap();
         // "{0} gained {1} Exp. Points!"
         msg.id = msg_0197_00001;
 
-        if (GetMonData(mon, MON_DATA_HP, NULL) && GetMonData(mon, MON_DATA_LEVEL, NULL) != 100) {
+        // At the cap there is no experience to gain, so the bar does not
+        // move; the effort values still come, as the reference hands them to
+        // a Pokemon exactly at the cap in a step of its own.
+        if (GetMonData(mon, MON_DATA_HP, NULL) && GetMonData(mon, MON_DATA_LEVEL, NULL) == cap && cap != MAX_LEVEL) {
+            BattleScript_CalcEffortValues(BattleSystem_GetParty(data->battleSystem, expBattler),
+                slot,
+                data->ctx->battleMons[data->ctx->battlerIdFainted].species,
+                data->ctx->battleMons[data->ctx->battlerIdFainted].form);
+        } else if (GetMonData(mon, MON_DATA_HP, NULL) && GetMonData(mon, MON_DATA_LEVEL, NULL) != 100 && GetMonData(mon, MON_DATA_LEVEL, NULL) < cap) {
             if (data->ctx->unk_A4[side] & MaskOfFlagNo(slot)) {
                 totalExp = data->ctx->gainedExp;
             }

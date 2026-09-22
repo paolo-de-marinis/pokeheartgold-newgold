@@ -122,7 +122,7 @@
 <header>
   <h1>New Gold port ledger</h1>
   <p class="sub">Everything hg-engine and konefr change against vanilla HeartGold, and where the native port stands on each. The one thing written by hand is the state on each row, in the commit that moves it. Everything else — the counters, the percentages at the top, <code>README.md</code>'s copy of both, and <code>docs/index.html</code> — is generated from this file by <code>tools/newgold/ledger.py</code>. The summary was the last part kept by hand and it was the part that was wrong, which is the whole argument.</p>
-  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 182 commits</span><span><b>generated</b> 2026-09-22 17:24</span></div>
+  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 185 commits</span><span><b>generated</b> 2026-09-22 17:32</span></div>
 </header>
 
 <div class="total">
@@ -160,7 +160,7 @@
   </div>
   <div class="rows">
 <div class="row"><div><p class="name">Fairy type and the effectiveness chart</p><p class="det">type 18, the twelve chart rows, Sylveon and 66 species, 30 moves, its name in <code>msg_0735</code> and its icon in the battle graphics archive. The Dex's type search is not part of it: the reference never touches those lists, so there it covers seventeen types and 493 species too</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
-<div class="row"><div><p class="name">Story level cap</p><p class="det">wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
+<div class="row"><div><p class="name">Story level cap</p><p class="det">wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100, and it acts as the reference's does: a Pokemon at the cap wins no experience from a battle, so its bar does not move, and still gets the effort values; a Rare Candy is refused at the cap; experience past the cap's threshold is cut back for whoever carries it. It used to hand the experience over and cut it at the end, which is what Paolo saw as a bar that filled and snapped back</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
 <div class="row"><div><p class="name">Hidden abilities</p><p class="det"><code>TRPOKE_ABILITY_OVERRIDE_HIDDEN</code>; eleven trainer Pokémon ask for one</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
 <div class="row"><div><p class="name">Ability field past one byte</p><p class="det">save, battle record, AI memory, PC box, summary — and the personal record, whose three ability bytes now have their full values past the end of it</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
 <div class="row"><div><p class="name">Reusable TMs, deletable HMs</p><p class="det"><code>REUSABLE_TMS</code>, <code>DELETABLE_HMS</code>, plus the machine badge in the bag</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>

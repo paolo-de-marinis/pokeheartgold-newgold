@@ -148,13 +148,14 @@ int main(void) {
         assert(mon.exp == cap * 1000);
     }
 
-    // A Pokemon carried past the cap by Rare Candies keeps its experience and
-    // its level; it simply gains no further levels from battle.
+    // A Pokemon somehow past the cap keeps its level -- levels never come
+    // off -- but its experience is cut back to the cap's threshold, as the
+    // reference does it.
     {
         Pokemon mon = { cap + 6, (cap + 6) * 1000 + 500, 1 };
         assert(!Pokemon_TryLevelUp(&mon));
         assert(mon.level == cap + 6);
-        assert(mon.exp == (cap + 6) * 1000 + 500);
+        assert(mon.exp == cap * 1000);
     }
 
     // Once the cap lifts, the held experience resumes levelling normally.
@@ -175,7 +176,7 @@ int main(void) {
         assert(mon.exp == MAX_LEVEL * 1000);
     }
 
-    puts("PASS: 8 level cap stages, ordering, capped hold, candy overshoot and max level.");
+    puts("PASS: 8 level cap stages, ordering, capped hold, overshoot cut back and max level.");
 }
 '''
 
