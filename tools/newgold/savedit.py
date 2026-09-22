@@ -200,8 +200,13 @@ def ability_of(record, personality):
     return second if second and (personality & 1) else first
 
 
+def move_numbers():
+    return {m.group(1): int(m.group(2)) for m in
+            re.finditer(r"#define MOVE_([A-Z0-9_]+)\s+(\d+)", (ROOT / "include/constants/moves.h").read_text())}
+
+
 def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
-              ot_name="A", ot_id=0, personality=None):
+              ot_name="A", ot_id=0, personality=None, moves=None):
     """One party Pokemon, encrypted and checksummed the way the game does.
 
     The four blocks are written in their declared order and then shuffled into
@@ -220,7 +225,8 @@ def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
 
     ability = ability_of(record, personality)
     exp = experience_for(record["growthRate"], level)
-    moves = learnset(index, level)
+    if moves is None:
+        moves = learnset(index, level)
     ratio = GENDER_RATIO(record["genderRatio"])
     if ratio in (0, 254, 255):
         gender = {0: 0, 254: 1, 255: 2}[ratio]
@@ -580,20 +586,32 @@ def main():
     if args.party:
         block = save.block("SAVE_PARTY")
         wanted = []
+        numbers = move_numbers()
         for entry in args.party.split(","):
+            # SPECIES:LEVEL[:NATURE][:MOVE+MOVE+...]; moves not given come
+            # from the learnset at that level.
             parts = entry.split(":")
+            moves = None
+            if len(parts) > 3 and parts[3]:
+                moves = []
+                for move in parts[3].upper().split("+"):
+                    if move not in numbers:
+                        raise SystemExit(f"there is no MOVE_{move}")
+                    moves.append(numbers[move])
+                if len(moves) > 4:
+                    raise SystemExit("a Pokemon knows four moves")
             wanted.append((parts[0].upper(), int(parts[1]),
-                           int(parts[2]) if len(parts) > 2 else None))
+                           int(parts[2]) if len(parts) > 2 and parts[2] else None, moves))
         if len(wanted) > PARTY_SIZE:
             raise SystemExit(f"a party holds {PARTY_SIZE}")
         # PartyCore is { int maxCount; int curCount; Pokemon mons[PARTY_SIZE]; }
         struct.pack_into("<ii", block, 0, PARTY_SIZE, len(wanted))
-        for slot, (name, level, nature) in enumerate(wanted):
+        for slot, (name, level, nature, moves) in enumerate(wanted):
             mon = build_mon(name, level, nature=nature, ot_name=args.name or "A",
-                            ot_id=args.trainer_id or 0)
+                            ot_id=args.trainer_id or 0, moves=moves)
             block[8 + slot * PARTY_MON:8 + (slot + 1) * PARTY_MON] = mon
         save.write()
-        print("party: " + ", ".join(f"{n} at level {l}" for n, l, _ in wanted))
+        print("party: " + ", ".join(f"{n} at level {l}" for n, l, _, _ in wanted))
 
     if args.tm:
         block = save.block("SAVE_BAG")
