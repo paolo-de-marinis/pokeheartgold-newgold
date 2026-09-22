@@ -122,19 +122,19 @@
 <header>
   <h1>New Gold port ledger</h1>
   <p class="sub">Everything hg-engine and konefr change against vanilla HeartGold, and where the native port stands on each. The one thing written by hand is the state on each row, in the commit that moves it. Everything else — the counters, the percentages at the top, <code>README.md</code>'s copy of both, and <code>docs/index.html</code> — is generated from this file by <code>tools/newgold/ledger.py</code>. The summary was the last part kept by hand and it was the part that was wrong, which is the whole argument.</p>
-  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 157 commits</span><span><b>generated</b> 2026-09-22 05:12</span></div>
+  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 158 commits</span><span><b>generated</b> 2026-09-22 05:17</span></div>
 </header>
 
 <div class="total">
   <div class="total-top">
     <h2>Overall</h2>
-    <div class="big">74<span style="font-size:24px;color:var(--muted)">%</span></div>
+    <div class="big">75<span style="font-size:24px;color:var(--muted)">%</span></div>
   </div>
-  <div class="stack"><span style="width:9%;background:var(--done)"></span><span style="width:43%;background:var(--part)"></span><span style="width:30%;background:var(--accent)"></span><span style="width:9%;background:var(--gap)"></span><span style="width:11%;background:var(--rule-2)"></span></div>
-  <div class="legend"><span><i style="background:var(--done)"></i>done, seen running <b>9%</b></span><span><i style="background:var(--part)"></i>done, never played <b>43%</b></span><span><i style="background:var(--accent)"></i>partial <b>30%</b></span><span><i style="background:var(--gap)"></i>still to do <b>9%</b></span><span><i style="background:var(--rule-2)"></i>deferred / no scope <b>11%</b></span></div>
+  <div class="stack"><span style="width:9%;background:var(--done)"></span><span style="width:45%;background:var(--part)"></span><span style="width:28%;background:var(--accent)"></span><span style="width:9%;background:var(--gap)"></span><span style="width:11%;background:var(--rule-2)"></span></div>
+  <div class="legend"><span><i style="background:var(--done)"></i>done, seen running <b>9%</b></span><span><i style="background:var(--part)"></i>done, never played <b>45%</b></span><span><i style="background:var(--accent)"></i>partial <b>28%</b></span><span><i style="background:var(--gap)"></i>still to do <b>9%</b></span><span><i style="background:var(--rule-2)"></i>deferred / no scope <b>11%</b></span></div>
 </div>
 
-<div class="split"><div class="half"><h3>Implementation</h3><div class="n" style="color:var(--done)">78%</div></div><div class="half"><h3>Verified in play</h3><div class="n" style="color:var(--gap)">17%</div></div></div>
+<div class="split"><div class="half"><h3>Implementation</h3><div class="n" style="color:var(--done)">79%</div></div><div class="half"><h3>Verified in play</h3><div class="n" style="color:var(--gap)">16%</div></div></div>
 <p style="margin:10px 0 0;font-size:12.5px;color:var(--muted)">Overall and Implementation: done 1, partial a half, deferred rows out of the denominator. Verified in play: of the rows that are done, the share seen running. All three from the states in the tables.</p>
 
 <section>
@@ -159,7 +159,7 @@
     <span class="cnt">75 toggles are enabled in the reference's own <code>config.h</code></span>
   </div>
   <div class="rows">
-<div class="row"><div><p class="name">Fairy type and the effectiveness chart</p><p class="det">type 18, the twelve chart rows, Sylveon and 66 species, 30 moves, its name in <code>msg_0735</code> and its icon in the battle graphics archive; the Dex's search list still stops at seventeen</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>
+<div class="row"><div><p class="name">Fairy type and the effectiveness chart</p><p class="det">type 18, the twelve chart rows, Sylveon and 66 species, 30 moves, its name in <code>msg_0735</code> and its icon in the battle graphics archive. The Dex's type search is not part of it: the reference never touches those lists, so there it covers seventeen types and 493 species too</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
 <div class="row"><div><p class="name">Story level cap</p><p class="det">wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
 <div class="row"><div><p class="name">Hidden abilities</p><p class="det"><code>TRPOKE_ABILITY_OVERRIDE_HIDDEN</code>; eleven trainer Pokémon ask for one</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
 <div class="row"><div><p class="name">Ability field past one byte</p><p class="det">save, battle record, AI memory, PC box, summary — and the personal record, whose three ability bytes now have their full values past the end of it</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>

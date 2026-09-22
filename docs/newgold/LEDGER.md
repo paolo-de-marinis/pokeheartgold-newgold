@@ -12,20 +12,20 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 157 commits |
-| generated | 2026-09-22 05:12 |
+| port | 158 commits |
+| generated | 2026-09-22 05:17 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    74%
+Overall                                                                    75%
   done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
-  done, never played   ██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  43%
-  partial              ███████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  30%
+  done, never played   ██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  45%
+  partial              ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  28%
   still to do          ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
   deferred / no scope  ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
 
-Implementation         ███████████████████████████████████████░░░░░░░░░░░  78%
-Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%
+Implementation         ████████████████████████████████████████░░░░░░░░░░  79%
+Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  16%
 
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
@@ -54,7 +54,7 @@ that carry behaviour.
 
 | Feature | Detail | State |
 | --- | --- | :-- |
-| Fairy type and the effectiveness chart | type 18, the twelve chart rows, Sylveon and 66 species, 30 moves, its name in `msg_0735` and its icon in the battle graphics archive; the Dex's search list still stops at seventeen | 🟠 partial |
+| Fairy type and the effectiveness chart | type 18, the twelve chart rows, Sylveon and 66 species, 30 moves, its name in `msg_0735` and its icon in the battle graphics archive. The Dex's type search is not part of it: the reference never touches those lists, so there it covers seventeen types and 493 species too | ✅ done |
 | Story level cap | wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100 | ✅ done |
 | Hidden abilities | `TRPOKE_ABILITY_OVERRIDE_HIDDEN`; eleven trainer Pokémon ask for one | ✅ done |
 | Ability field past one byte | save, battle record, AI memory, PC box, summary — and the personal record, whose three ability bytes now have their full values past the end of it | ✅ done |
