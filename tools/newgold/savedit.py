@@ -335,9 +335,19 @@ def put_in_pocket(block, pocket, item, quantity):
 
 
 # struct Pokedex. NUM_DEX_FLAG_WORDS is CEILDIV(NATIONAL_DEX_COUNT + 8, 32),
-# and the offsets below add up to the 960 the ROM reports for
-# Save_Pokedex_sizeof.
-DEX_WORDS = (NATIONAL_DEX_COUNT := 574, (574 + 8 + 31) // 32)[1]
+# and the offsets below follow include/pokedex.h. The count is read from the
+# header, since it has moved twice: it was 574 when this was first written,
+# and a number typed here would put every Dex flag in the wrong word.
+def _national_dex_count():
+    header = (ROOT / "include/constants/species.h").read_text()
+    name = re.search(r"#define NATIONAL_DEX_COUNT\s+(\w+)", header).group(1)
+    while not name.startswith("SPECIES_"):
+        name = re.search(rf"#define {name}\s+(\w+)", header).group(1)
+    return int(re.search(rf"#define {name}\s+(\d+)", header).group(1))
+
+
+NATIONAL_DEX_COUNT = _national_dex_count()
+DEX_WORDS = (NATIONAL_DEX_COUNT + 8 + 31) // 32
 DEX_CAUGHT = 4
 DEX_SEEN = DEX_CAUGHT + 4 * DEX_WORDS
 DEX_GENDERS = DEX_SEEN + 4 * DEX_WORDS

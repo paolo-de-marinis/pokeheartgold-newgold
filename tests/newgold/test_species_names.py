@@ -5,9 +5,11 @@ Names are read by species number, so a bank that stops short means an
 out-of-range read the moment one of the added species has to be named.
 """
 
+import os
 import re
 import sys
 import unittest
+from pathlib import Path
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -15,6 +17,11 @@ from test_level_cap import ROOT
 
 sys.path.insert(0, str(ROOT / "tools/newgold"))
 import import_species  # noqa: E402
+
+REFERENCE = os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE")
+if REFERENCE is None:
+    sibling = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
+    REFERENCE = sibling if (sibling / ".git").exists() else None
 import import_species_names  # noqa: E402
 import import_species_names as names  # noqa: E402
 
@@ -49,6 +56,7 @@ def fold(text):
 class SpeciesNameTests(unittest.TestCase):
     def setUp(self):
         self.rows = rows()
+        self.bases = import_species.base_species_of(Path(REFERENCE)) if REFERENCE else {}
 
     def test_the_bank_is_dense_and_reaches_the_last_species(self):
         self.assertEqual(sorted(self.rows), list(range(last_species() + 1)))
@@ -83,9 +91,11 @@ class SpeciesNameTests(unittest.TestCase):
             self.assertTrue(shown, name)
             self.assertLessEqual(len(shown), NAME_LENGTH, name)
             expected = import_species_names.FORM_NAMES.get(name, name.replace("_", " "))
+            if name in self.bases:
+                expected = self.bases[name].replace("_", " ")  # a form is named after its base
             if fold(expected) == fold(shown):
                 continue
-            if name in import_species_names.FORM_NAMES or name.endswith("_GALARIAN"):
+            if name in import_species_names.FORM_NAMES or name.endswith("_GALARIAN") or name in self.bases:
                 continue
             self.assertEqual(fold(shown)[0], fold(expected)[0], name)
 

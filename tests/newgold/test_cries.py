@@ -115,7 +115,7 @@ class CryLookupTests(unittest.TestCase):
                                  self.source).group(1))
         last = constant + len(self.banks)
         collide = [bank for bank in self.banks if constant < bank <= last]
-        self.assertEqual(len(collide), 199)
+        self.assertEqual(len(collide), 781)
         self.assertIn(997, collide)
 
     def test_play_cry_ex_keeps_its_argument_a_species(self):

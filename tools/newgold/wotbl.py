@@ -241,6 +241,7 @@ def extend(args, files, rebuild=False):
     names = species_names()
     moves = move_names()
     reference = json.loads((args.reference / "data/learnsets/learnsets.json").read_text())
+    bases = import_species.base_species_of(args.reference)
 
     added, dropped, lowered = [], {}, {}
     # The added species start where the egg and form block ends.
@@ -252,6 +253,8 @@ def extend(args, files, rebuild=False):
         if name is None:
             raise SystemExit(f"no species is defined at identifier {index}")
         entry = reference.get("SPECIES_" + name)
+        if entry is None and name in bases:
+            entry = reference.get("SPECIES_" + bases[name])  # a form learns what its base learns
         if entry is None:
             raise SystemExit(f"the reference has no learnset for {name}")
         learned, missing = [], []

@@ -133,19 +133,20 @@ class EvolutionTests(unittest.TestCase):
             self.assertIn({"method": "EVO_STONE", "param": item, "target": target},
                           self.byBase.get(base, []), base)
 
-        # The other three are spent on a form this port does not carry as a
-        # species: the Rapid Strike Urshifu, the Galarian Slowking, and the
-        # Antique Sinistea and Masterpiece Poltchageist that take the chipped
-        # pot rather than the cracked one. Naming another target would be
-        # inventing one, so those three items exist and reach nothing. If a
-        # form below ever becomes a species here, its row comes with it.
+        # The other three are spent on forms, which are species here since
+        # the reference's forms came in: the Rapid Strike Urshifu, the
+        # Galarian Slowking, and the Antique Sinistea and Masterpiece
+        # Poltchageist that take the chipped pot rather than the cracked one.
         species = constants("include/constants/species.h", "SPECIES_")
-        for name in ("SPECIES_SLOWKING_GALARIAN", "SPECIES_URSHIFU_RAPID_STRIKE",
-                     "SPECIES_SINISTEA_ANTIQUE", "SPECIES_POLTCHAGEIST_MASTERPIECE"):
-            self.assertNotIn(name, species, name)
-        params = {str(evo["param"]) for evos in self.byBase.values() for evo in evos}
-        self.assertEqual(params & {"ITEM_CHIPPED_POT", "ITEM_SCROLL_OF_WATERS",
-                                   "ITEM_GALARICA_WREATH"}, set())
+        for base, item, target in [
+            ("SPECIES_KUBFU", "ITEM_SCROLL_OF_WATERS", "SPECIES_URSHIFU_RAPID_STRIKE"),
+            ("SPECIES_SLOWPOKE_GALARIAN", "ITEM_GALARICA_WREATH", "SPECIES_SLOWKING_GALARIAN"),
+            ("SPECIES_SINISTEA_ANTIQUE", "ITEM_CHIPPED_POT", "SPECIES_POLTEAGEIST_ANTIQUE"),
+            ("SPECIES_POLTCHAGEIST_MASTERPIECE", "ITEM_CHIPPED_POT", "SPECIES_SINISTCHA_MASTERPIECE"),
+        ]:
+            self.assertIn(target, species, target)
+            self.assertIn({"method": "EVO_STONE", "param": item, "target": target},
+                          self.byBase.get(base, []), base)
 
     def test_konefrs_nine_vanilla_changes(self):
         for (base, target), level in KONEFR_LEVELS.items():

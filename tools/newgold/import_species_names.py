@@ -75,6 +75,11 @@ def main():
     names = species_names(args.reference)
     for name, text in FORM_NAMES.items():
         names[name] = text
+    # The reference names a form "-----" and shows the base species' name at
+    # run time; here a form is a species, so it takes the base's name outright.
+    for form, base in import_species.base_species_of(args.reference).items():
+        if names.get(form, PLACEHOLDER) == PLACEHOLDER and base in names:
+            names[form] = names[base]
 
     missing = [name for name in import_species.added_species() if name not in names]
     if missing:

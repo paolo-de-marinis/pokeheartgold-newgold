@@ -133,8 +133,18 @@ def main():
     args = parser.parse_args()
 
     data = text_data(args.reference)
+    # The reference gives a form no text of its own -- "-----" for a name and
+    # nothing for an entry -- and shows its base's; here the form is a species
+    # and takes the base's text outright.
+    for form, base in import_species.base_species_of(args.reference).items():
+        if form in data and base in data and not data[form]["entry"]:
+            data[form] = dict(data[base])
+    bases = import_species.base_species_of(args.reference)
+    forms = set()
     added = {}
     for offset, name in enumerate(import_species.added_species()):
+        if name in bases:
+            forms.add(FIRST_ADDED + offset)
         if name not in data:
             raise SystemExit(f"the reference has no text for SPECIES_{name}")
         added[FIRST_ADDED + offset] = (name, data[name])
@@ -152,7 +162,7 @@ def main():
         have = rows(bank)
         additions = []
         for index in range(494, LAST_ADDED + 1):
-            if index in have:
+            if index in have and index not in forms:
                 continue
             if index in FORM_BASES:
                 value, tag = have.get(FORM_BASES[index], ""), f"form_{index}"

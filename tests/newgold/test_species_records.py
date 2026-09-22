@@ -35,6 +35,8 @@ class SpeciesRecordTests(unittest.TestCase):
     def setUp(self):
         self.records = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
         self.constants = constants()
+        # The forms the reference numbers as species, each with its base.
+        self.bases = import_species.base_species_of(Path(REFERENCE)) if REFERENCE else {}
 
     def test_every_record_sits_at_its_identifier(self):
         for index, entry in enumerate(self.records):
@@ -63,7 +65,8 @@ class SpeciesRecordTests(unittest.TestCase):
             entry = self.records[self.constants[name]]
             self.assertEqual(entry["species"], name)
             self.assertGreater(entry["hp"], 0, name)
-            self.assertGreater(entry["catchRate"], 0, name)
+            if name not in self.bases:
+                self.assertGreater(entry["catchRate"], 0, name)  # a mega cannot be caught, so its rate is nought
             self.assertIn(entry["genderRatio"], (0.0, 0.125, 0.25, 0.5, 0.75, 0.875, 1.0, 2.0), name)
             self.assertLessEqual(entry["expYield"], 255, name)
             self.assertLessEqual(max(entry["tms"], default=0), 92, name)
@@ -96,6 +99,8 @@ class SpeciesRecordTests(unittest.TestCase):
         reference = Path(REFERENCE)
         blocks = import_species.species_entries(reference)
         yields = import_species.base_exp_yields(reference)
+        for form, base in self.bases.items():
+            yields.setdefault(form, yields.get(base, 0))  # as the import gives a form its base's yield
         learnsets = import_species.machine_moves(reference)
         tms, hms = import_species.machine_numbers()
         # The hidden ability lives in a table of its own in the reference, and
@@ -104,6 +109,8 @@ class SpeciesRecordTests(unittest.TestCase):
                                (ROOT / "include/constants/abilities.h").read_text()))
         hidden = {species: ability for species, ability
                   in import_species.hidden_abilities(REFERENCE).items() if ability in known}
+        for form, base in self.bases.items():
+            hidden.setdefault("SPECIES_" + form, hidden.get("SPECIES_" + base, "ABILITY_NONE"))
         # Every species whose record is generated: HGSS's own, and the added
         # ones. The egg, the bad egg and the alternate forms in between are
         # left as pret wrote them.

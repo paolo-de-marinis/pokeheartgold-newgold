@@ -23,7 +23,7 @@
 // was twenty-one moves and these were written for it; the species the
 // expansion added brought a longer one. tests/newgold/test_learnsets.py pins
 // both to what the archive actually holds.
-#define LEVEL_UP_LEARNSET_MAX  30
+#define LEVEL_UP_LEARNSET_MAX  33
 #define LEVEL_UP_LEARNSET_SIZE (LEVEL_UP_LEARNSET_MAX + 1)
 
 // An entry is a move and the level it is learnt at. Retail packed both into

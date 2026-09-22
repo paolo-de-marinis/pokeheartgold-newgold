@@ -42,7 +42,8 @@ BOOL DexSpeciesIsInvalid(u16 species) {
     // egg and the alternate forms. They have no Dex entry, and meeting one is
     // not an error either, so this must not reach the assertion above, which
     // resets the game.
-    return species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP;
+    // The same goes for the forms after the last Dex species.
+    return (species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP) || species > NATIONAL_DEX_COUNT;
 }
 
 static inline BOOL CheckDexFlag(const u8 *array, u16 flagId) {

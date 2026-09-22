@@ -34,6 +34,8 @@ def main():
     known = set(re.findall(r"#define (ABILITY_[A-Z0-9_]+)",
                            (ROOT / "include/constants/abilities.h").read_text()))
     table = import_species.hidden_abilities(args.reference)
+    for form, base in import_species.base_species_of(args.reference).items():
+        table.setdefault("SPECIES_" + form, table.get("SPECIES_" + base, "ABILITY_NONE"))
     data = json.loads(PERSONAL.read_text())
 
     given, missing = 0, collections.Counter()

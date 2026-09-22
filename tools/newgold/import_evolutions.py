@@ -44,16 +44,51 @@ FORM_TARGETS = {
 }
 
 
+FORMS_OF = {}
+
+
+def form_table(reference):
+    """The reference's PokeFormDataTbl: each base species' forms, in order,
+    so that form n of a species is the n-th name listed for it."""
+    source = (reference / "data/PokeFormDataTbl.c").read_text(errors="replace")
+    table = {}
+    for m in re.finditer(r"\[SPECIES_([A-Z0-9_]+)\] = \{(.*?)\}", source, re.S):
+        table[m.group(1)] = re.findall(r"SPECIES_([A-Z0-9_]+)", m.group(2))
+    return table
+
+
+def carried_form(base, target):
+    """A form keeps its form when it evolves: the reference writes the base
+    target and carries the form number over, so an Antique Sinistea becomes
+    an Antique Polteageist. Here a form is a species, so the target is the
+    same-numbered form of the target species when it has one."""
+    if not target.startswith("SPECIES_") or " form " in target:
+        return target
+    base, target = base[len("SPECIES_"):], target[len("SPECIES_"):]
+    for species, forms in FORMS_OF.items():
+        if base in forms:
+            number = forms.index(base)
+            if target in FORMS_OF and number < len(FORMS_OF[target]) and target not in forms:
+                return "SPECIES_" + FORMS_OF[target][number]
+            break
+    return "SPECIES_" + target
+
+
 def native_target(target):
     """The target under this repository's spelling, or a name nothing defines.
 
-    A form this port does not carry comes back as "SPECIES_URSHIFU form 1",
+    A form is the n-th name the reference's form table lists for its base;
+    one this port does not carry comes back as "SPECIES_URSHIFU form 1",
     which is in no header and so is reported as missing rather than written.
     """
-    form = re.fullmatch(r"MON_WITH_FORM\(\s*(SPECIES_[A-Z0-9_]+)\s*,\s*(\d+)\s*\)", target)
+    form = re.fullmatch(r"MON_WITH_FORM\(\s*SPECIES_([A-Z0-9_]+)\s*,\s*(\d+)\s*\)", target)
     if not form:
         return target
-    return FORM_TARGETS.get(form.groups(), f"{form[1]} form {form[2]}")
+    base, number = form.group(1), int(form.group(2))
+    listed = FORMS_OF.get(base, [])
+    if 1 <= number <= len(listed):
+        return "SPECIES_" + listed[number - 1]
+    return FORM_TARGETS.get(("SPECIES_" + base, str(number)), f"SPECIES_{base} form {number}")
 
 
 def relevelled(table, evolutions):
@@ -102,6 +137,7 @@ def main():
     types = constants("include/constants/pokemon.h", "TYPE_")
     known = methods | species | moves | items | types
 
+    FORMS_OF.update(form_table(args.reference))
     table = reference_table(args.reference)
     evolutions = json.loads(EVOLUTIONS.read_text())
     for entry in evolutions["evoTable"]:
@@ -114,7 +150,7 @@ def main():
 
     added, merged, skipped = [], [], []
     for base, body in table.items():
-        rows = [(method, param, native_target(target)) for method, param, target in ROW.findall(body)]
+        rows = [(method, param, carried_form(base, native_target(target))) for method, param, target in ROW.findall(body)]
         rows = [(method, param, target) for method, param, target in rows if target != "SPECIES_NONE"]
         # Only lines that touch a new species: either it evolves, or something
         # already here gains a way to become one.

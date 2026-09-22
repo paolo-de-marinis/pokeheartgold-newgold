@@ -2622,6 +2622,11 @@
           "method": "EVO_LEVEL_MALE",
           "param": 35,
           "target": "SPECIES_PYROAR"
+        },
+        {
+          "method": "EVO_LEVEL_FEMALE",
+          "param": 35,
+          "target": "SPECIES_PYROAR_FEMALE"
         }
       ]
     },
@@ -2632,6 +2637,11 @@
           "method": "EVO_LEVEL_MALE",
           "param": 25,
           "target": "SPECIES_MEOWSTIC"
+        },
+        {
+          "method": "EVO_LEVEL_FEMALE",
+          "param": 25,
+          "target": "SPECIES_MEOWSTIC_FEMALE"
         }
       ]
     },
@@ -2782,6 +2792,11 @@
           "method": "EVO_STONE",
           "param": "ITEM_SCROLL_OF_DARKNESS",
           "target": "SPECIES_URSHIFU"
+        },
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_SCROLL_OF_WATERS",
+          "target": "SPECIES_URSHIFU_RAPID_STRIKE"
         }
       ]
     },
@@ -2817,6 +2832,11 @@
           "method": "EVO_STONE",
           "param": "ITEM_GALARICA_CUFF",
           "target": "SPECIES_SLOWBRO_GALARIAN"
+        },
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_GALARICA_WREATH",
+          "target": "SPECIES_SLOWKING_GALARIAN"
         }
       ]
     },
@@ -2947,6 +2967,11 @@
           "method": "EVO_LEVEL_MALE",
           "param": 32,
           "target": "SPECIES_UNFEZANT"
+        },
+        {
+          "method": "EVO_LEVEL_FEMALE",
+          "param": 32,
+          "target": "SPECIES_UNFEZANT_FEMALE"
         }
       ]
     },
@@ -4217,6 +4242,11 @@
           "method": "EVO_LEVEL_MALE",
           "param": 18,
           "target": "SPECIES_OINKOLOGNE"
+        },
+        {
+          "method": "EVO_LEVEL_FEMALE",
+          "param": 18,
+          "target": "SPECIES_OINKOLOGNE_FEMALE"
         }
       ]
     },
@@ -4457,6 +4487,406 @@
           "method": "EVO_LEVEL",
           "param": 54,
           "target": "SPECIES_BAXCALIBUR"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_SANDSHREW_ALOLAN",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_ICE_STONE",
+          "target": "SPECIES_SANDSLASH_ALOLAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_VULPIX_ALOLAN",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_ICE_STONE",
+          "target": "SPECIES_NINETALES_ALOLAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_DIGLETT_ALOLAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 26,
+          "target": "SPECIES_DUGTRIO_ALOLAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_MEOWTH_ALOLAN",
+      "evos": [
+        {
+          "method": "EVO_FRIENDSHIP",
+          "param": 0,
+          "target": "SPECIES_PERSIAN_ALOLAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_GEODUDE_ALOLAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 25,
+          "target": "SPECIES_GRAVELER_ALOLAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_GRAVELER_ALOLAN",
+      "evos": [
+        {
+          "method": "EVO_TRADE",
+          "param": 0,
+          "target": "SPECIES_GOLEM_ALOLAN"
+        },
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_LINKING_CORD",
+          "target": "SPECIES_GOLEM_ALOLAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_GRIMER_ALOLAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 38,
+          "target": "SPECIES_MUK_ALOLAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_MEOWTH_GALARIAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 28,
+          "target": "SPECIES_PERRSERKER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_PONYTA_GALARIAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 40,
+          "target": "SPECIES_RAPIDASH_GALARIAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_MR_MIME_GALARIAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 42,
+          "target": "SPECIES_MR_RIME"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_CORSOLA_GALARIAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 38,
+          "target": "SPECIES_CURSOLA"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_ZIGZAGOON_GALARIAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 20,
+          "target": "SPECIES_LINOONE_GALARIAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_LINOONE_GALARIAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 35,
+          "target": "SPECIES_OBSTAGOON"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_DARUMAKA_GALARIAN",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_ICE_STONE",
+          "target": "SPECIES_DARMANITAN_GALARIAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_SHELLOS_EAST_SEA",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 30,
+          "target": "SPECIES_GASTRODON_EAST_SEA"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_BASCULIN_WHITE_STRIPED",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_MALE",
+          "param": 0,
+          "target": "SPECIES_BASCULEGION"
+        },
+        {
+          "method": "EVO_LEVEL_FEMALE",
+          "param": 0,
+          "target": "SPECIES_BASCULEGION_FEMALE"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_DEERLING_SUMMER",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 34,
+          "target": "SPECIES_SAWSBUCK_SUMMER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_DEERLING_AUTUMN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 34,
+          "target": "SPECIES_SAWSBUCK_AUTUMN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_DEERLING_WINTER",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 34,
+          "target": "SPECIES_SAWSBUCK_WINTER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_FLABEBE_YELLOW_FLOWER",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 19,
+          "target": "SPECIES_FLOETTE_YELLOW_FLOWER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_FLABEBE_ORANGE_FLOWER",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 19,
+          "target": "SPECIES_FLOETTE_ORANGE_FLOWER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_FLABEBE_BLUE_FLOWER",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 19,
+          "target": "SPECIES_FLOETTE_BLUE_FLOWER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_FLABEBE_WHITE_FLOWER",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 19,
+          "target": "SPECIES_FLOETTE_WHITE_FLOWER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_FLOETTE_YELLOW_FLOWER",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_SHINY_STONE",
+          "target": "SPECIES_FLORGES_YELLOW_FLOWER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_FLOETTE_ORANGE_FLOWER",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_SHINY_STONE",
+          "target": "SPECIES_FLORGES_ORANGE_FLOWER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_FLOETTE_BLUE_FLOWER",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_SHINY_STONE",
+          "target": "SPECIES_FLORGES_BLUE_FLOWER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_FLOETTE_WHITE_FLOWER",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_SHINY_STONE",
+          "target": "SPECIES_FLORGES_WHITE_FLOWER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_PUMPKABOO_SMALL",
+      "evos": [
+        {
+          "method": "EVO_TRADE",
+          "param": 0,
+          "target": "SPECIES_GOURGEIST_SMALL"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_PUMPKABOO_LARGE",
+      "evos": [
+        {
+          "method": "EVO_TRADE",
+          "param": 0,
+          "target": "SPECIES_GOURGEIST_LARGE"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_PUMPKABOO_SUPER",
+      "evos": [
+        {
+          "method": "EVO_TRADE",
+          "param": 0,
+          "target": "SPECIES_GOURGEIST_SUPER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_SINISTEA_ANTIQUE",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_CHIPPED_POT",
+          "target": "SPECIES_POLTEAGEIST_ANTIQUE"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_GROWLITHE_HISUIAN",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_FIRE_STONE",
+          "target": "SPECIES_ARCANINE_HISUIAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_VOLTORB_HISUIAN",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_LEAF_STONE",
+          "target": "SPECIES_ELECTRODE_HISUIAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_QWILFISH_HISUIAN",
+      "evos": [
+        {
+          "method": "EVO_HAS_MOVE",
+          "param": "MOVE_BARB_BARRAGE",
+          "target": "SPECIES_OVERQWIL"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_SNEASEL_HISUIAN",
+      "evos": [
+        {
+          "method": "EVO_ITEM_DAY",
+          "param": "ITEM_RAZOR_CLAW",
+          "target": "SPECIES_SNEASLER"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_ZORUA_HISUIAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 30,
+          "target": "SPECIES_ZOROARK_HISUIAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_FRILLISH_FEMALE",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_FEMALE",
+          "param": 40,
+          "target": "SPECIES_JELLICENT_FEMALE"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_WOOPER_PALDEAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL",
+          "param": 20,
+          "target": "SPECIES_CLODSIRE"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_POLTCHAGEIST_MASTERPIECE",
+      "evos": [
+        {
+          "method": "EVO_STONE",
+          "param": "ITEM_CHIPPED_POT",
+          "target": "SPECIES_SINISTCHA_MASTERPIECE"
         }
       ]
     }

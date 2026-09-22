@@ -43,9 +43,17 @@ int main(void) {
         assert(DexSpeciesIsInvalid(species) == FALSE);
         assert(assertions == 0);
     }
-    for (u16 species = LAST_DEX_GAP + 1; species <= NUM_SPECIES; species++) {
+    for (u16 species = LAST_DEX_GAP + 1; species <= NATIONAL_DEX_COUNT; species++) {
         assertions = 0;
         assert(DexSpeciesIsInvalid(species) == FALSE);
+        assert(assertions == 0);
+    }
+
+    // The forms after the last Dex species have no entry either, and are met
+    // in battle all the time, so they are silent too.
+    for (u16 species = NATIONAL_DEX_COUNT + 1; species <= NUM_SPECIES; species++) {
+        assertions = 0;
+        assert(DexSpeciesIsInvalid(species) == TRUE);
         assert(assertions == 0);
     }
 
@@ -66,7 +74,7 @@ int main(void) {
     assert(assertions == 1);
 
     printf("PASS: %d Dex species, %d without an entry silently, impossible species still assert.\n",
-        NUM_SPECIES - NUM_DEX_GAP, NUM_DEX_GAP);
+        NATIONAL_DEX_COUNT - NUM_DEX_GAP, NUM_DEX_GAP + NUM_SPECIES - NATIONAL_DEX_COUNT);
 }
 '''
 
@@ -88,7 +96,8 @@ class DexRangeTests(unittest.TestCase):
         source = (ROOT / "src/pokedex.c").read_text()
         self.assertGreater(source.count("i <= NATIONAL_DEX_COUNT"), 0)
         header = (ROOT / "include/constants/species.h").read_text()
-        self.assertIn("#define NATIONAL_DEX_COUNT NUM_SPECIES", header)
+        self.assertIn("#define NATIONAL_DEX_COUNT LAST_DEX_SPECIES", header)
+        self.assertIn("#define LAST_DEX_SPECIES   SPECIES_PECHARUNT", header)
         self.assertEqual(re.search(r"#define SPECIES_ARCEUS\s+(\d+)", header).group(1), "493")
 
     def test_completing_the_dex_does_not_ask_for_the_gap(self):

@@ -34,6 +34,12 @@ import sdat  # noqa: E402
 # needs for it.
 CRY_RATE = 10512
 NDS_CLOCK = 16756991
+# The archive this import appends to: the one commit 4c8176ea1 left, 843
+# banks, HeartGold's own 778 and the first sixty-five it added. Every run
+# appends the whole added range again, so it has to start from that one --
+# `git show 4c8176ea1:files/data/sound/gs_sound_data.sdat` -- or the archive
+# doubles.
+BASE_BANKS = 843
 
 # A form has no cry of its own; it uses its base species'.
 SHARED_WITH = {
@@ -109,10 +115,18 @@ def main():
 
     theirs = reference_species(args.reference)
     ours = our_species()
-    added = [name for name in import_species.added_species() if name not in SHARED_WITH]
-    shared = {name: ours[base] for name, base in SHARED_WITH.items()}
+    # A form has no cry of its own; it uses its base species'.
+    sharing = dict(SHARED_WITH)
+    for form, base in import_species.base_species_of(args.reference).items():
+        if form in ours:
+            sharing.setdefault(form, base)
+    added = [name for name in import_species.added_species() if name not in sharing]
 
     firstBank = len(archive.records["SBNK"])
+    if firstBank != BASE_BANKS:
+        raise SystemExit(f"the archive holds {firstBank} banks and this import appends to the one with "
+                         f"{BASE_BANKS}: git show 4c8176ea1:files/data/sound/gs_sound_data.sdat > "
+                         "files/data/sound/gs_sound_data.sdat first")
     model = archive.records["SBNK"][1]
     modelFile = struct.unpack("<H", model[:2])[0]
     bankBytes = archive.files[modelFile]
@@ -140,13 +154,13 @@ def main():
         archive.names["SBNK"].append(None)
         mapping[name] = index
 
-    for name, base in shared.items():
-        mapping[name] = base
+    for name, base in sharing.items():
+        # An added base has a bank of its own; a retail one's bank is its number.
+        mapping[name] = mapping[base] if base in mapping else ours[base]
 
     print(f"{len(added)} cries added as banks {firstBank} to {firstBank + len(added) - 1}, "
           f"{bytesAdded // 1024} KiB")
-    for name, base in SHARED_WITH.items():
-        print(f"  {name} shares {base}'s cry, bank {mapping[name]}")
+    print(f"  {len(sharing)} share their base species' cry")
 
     table = "\n".join(f"    {mapping[name]}, // {name.title().replace('_', ' ')}"
                       for name in import_species.added_species())

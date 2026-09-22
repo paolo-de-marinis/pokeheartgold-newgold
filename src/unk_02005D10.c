@@ -958,6 +958,402 @@ static const u16 sAddedCryBanks[] = {
     1372, // Iron Crown
     1373, // Terapagos
     1374, // Pecharunt
+    3, // Mega Venusaur
+    6, // Mega Charizard X
+    6, // Mega Charizard Y
+    9, // Mega Blastoise
+    15, // Mega Beedrill
+    18, // Mega Pidgeot
+    65, // Mega Alakazam
+    80, // Mega Slowbro
+    94, // Mega Gengar
+    115, // Mega Kangaskhan
+    127, // Mega Pinsir
+    130, // Mega Gyarados
+    142, // Mega Aerodactyl
+    150, // Mega Mewtwo X
+    150, // Mega Mewtwo Y
+    181, // Mega Ampharos
+    208, // Mega Steelix
+    212, // Mega Scizor
+    214, // Mega Heracross
+    229, // Mega Houndoom
+    248, // Mega Tyranitar
+    254, // Mega Sceptile
+    257, // Mega Blaziken
+    260, // Mega Swampert
+    282, // Mega Gardevoir
+    302, // Mega Sableye
+    303, // Mega Mawile
+    306, // Mega Aggron
+    308, // Mega Medicham
+    310, // Mega Manectric
+    319, // Mega Sharpedo
+    323, // Mega Camerupt
+    334, // Mega Altaria
+    354, // Mega Banette
+    359, // Mega Absol
+    362, // Mega Glalie
+    373, // Mega Salamence
+    376, // Mega Metagross
+    380, // Mega Latias
+    381, // Mega Latios
+    384, // Mega Rayquaza
+    428, // Mega Lopunny
+    445, // Mega Garchomp
+    448, // Mega Lucario
+    460, // Mega Abomasnow
+    475, // Mega Gallade
+    940, // Mega Audino
+    1081, // Mega Diancie
+    382, // Kyogre Primal
+    383, // Groudon Primal
+    19, // Rattata Alolan
+    20, // Raticate Alolan
+    26, // Raichu Alolan
+    27, // Sandshrew Alolan
+    28, // Sandslash Alolan
+    37, // Vulpix Alolan
+    38, // Ninetales Alolan
+    50, // Diglett Alolan
+    51, // Dugtrio Alolan
+    52, // Meowth Alolan
+    53, // Persian Alolan
+    74, // Geodude Alolan
+    75, // Graveler Alolan
+    76, // Golem Alolan
+    88, // Grimer Alolan
+    89, // Muk Alolan
+    103, // Exeggutor Alolan
+    105, // Marowak Alolan
+    20, // Raticate Alolan Large
+    105, // Marowak Alolan Large
+    1097, // Gumshoos Large
+    1100, // Vikavolt Large
+    1105, // Ribombee Large
+    1114, // Araquanid Large
+    1116, // Lurantis Large
+    1120, // Salazzle Large
+    1139, // Togedemaru Large
+    1140, // Mimikyu Large
+    1140, // Mimikyu Busted Large
+    1146, // Kommo O Large
+    52, // Meowth Galarian
+    77, // Ponyta Galarian
+    78, // Rapidash Galarian
+    83, // Farfetchd Galarian
+    110, // Weezing Galarian
+    122, // Mr Mime Galarian
+    144, // Articuno Galarian
+    145, // Zapdos Galarian
+    146, // Moltres Galarian
+    199, // Slowking Galarian
+    222, // Corsola Galarian
+    263, // Zigzagoon Galarian
+    264, // Linoone Galarian
+    957, // Darumaka Galarian
+    958, // Darmanitan Galarian
+    854, // Yamask Galarian
+    998, // Stunfisk Galarian
+    25, // Pikachu Cosplay
+    25, // Pikachu Rock Star
+    25, // Pikachu Belle
+    25, // Pikachu Pop Star
+    25, // Pikachu Ph D
+    25, // Pikachu Libre
+    25, // Pikachu Original Cap
+    25, // Pikachu Hoenn Cap
+    25, // Pikachu Sinnoh Cap
+    25, // Pikachu Unova Cap
+    25, // Pikachu Kalos Cap
+    25, // Pikachu Alola Cap
+    25, // Pikachu Partner Cap
+    25, // Pikachu World Cap
+    351, // Castform Sunny
+    351, // Castform Rainy
+    351, // Castform Snowy
+    421, // Cherrim Sunshine
+    422, // Shellos East Sea
+    423, // Gastrodon East Sea
+    483, // Dialga Origin
+    484, // Palkia Origin
+    953, // Basculin Blue Striped
+    953, // Basculin White Striped
+    958, // Darmanitan Zen Mode
+    958, // Darmanitan Zen Mode Galarian
+    984, // Deerling Summer
+    984, // Deerling Autumn
+    984, // Deerling Winter
+    985, // Sawsbuck Summer
+    985, // Sawsbuck Autumn
+    985, // Sawsbuck Winter
+    1020, // Tornadus Therian
+    1021, // Thundurus Therian
+    1024, // Landorus Therian
+    1025, // Kyurem White
+    1025, // Kyurem Black
+    1026, // Keldeo Resolute
+    1027, // Meloetta Pirouette
+    1028, // Genesect Douse Drive
+    1028, // Genesect Shock Drive
+    1028, // Genesect Burn Drive
+    1028, // Genesect Chill Drive
+    1037, // Greninja Battle Bond
+    1037, // Greninja Ash
+    1040, // Vivillon Polar
+    1040, // Vivillon Tundra
+    1040, // Vivillon Continental
+    1040, // Vivillon Garden
+    1040, // Vivillon Elegant
+    1040, // Vivillon Meadow
+    1040, // Vivillon Modern
+    1040, // Vivillon Marine
+    1040, // Vivillon Archipelago
+    1040, // Vivillon High Plains
+    1040, // Vivillon Sandstorm
+    1040, // Vivillon River
+    1040, // Vivillon Monsoon
+    1040, // Vivillon Savanna
+    1040, // Vivillon Sun
+    1040, // Vivillon Ocean
+    1040, // Vivillon Jungle
+    1040, // Vivillon Fancy
+    1040, // Vivillon Poke Ball
+    1041, // Flabebe Yellow Flower
+    1041, // Flabebe Orange Flower
+    1041, // Flabebe Blue Flower
+    1041, // Flabebe White Flower
+    1042, // Floette Yellow Flower
+    1042, // Floette Orange Flower
+    1042, // Floette Blue Flower
+    1042, // Floette White Flower
+    1042, // Floette Eternal Flower
+    1043, // Florges Yellow Flower
+    1043, // Florges Orange Flower
+    1043, // Florges Blue Flower
+    1043, // Florges White Flower
+    1048, // Furfrou Heart
+    1048, // Furfrou Star
+    1048, // Furfrou Diamond
+    1048, // Furfrou Debutante
+    1048, // Furfrou Matron
+    1048, // Furfrou Dandy
+    1048, // Furfrou La Reine
+    1048, // Furfrou Kabuki
+    1048, // Furfrou Pharaoh
+    1051, // Aegislash Blade
+    891, // Pumpkaboo Small
+    891, // Pumpkaboo Large
+    891, // Pumpkaboo Super
+    892, // Gourgeist Small
+    892, // Gourgeist Large
+    892, // Gourgeist Super
+    1078, // Xerneas Active
+    1080, // Zygarde 10
+    1080, // Zygarde 10 Power Construct
+    1080, // Zygarde 50 Power Construct
+    1080, // Zygarde 10 Complete
+    1080, // Zygarde 50 Complete
+    1082, // Hoopa Unbound
+    1103, // Oricorio Pom Pom
+    1103, // Oricorio Pau
+    1103, // Oricorio Sensu
+    1106, // Rockruff Own Tempo
+    1107, // Lycanroc Midnight
+    1107, // Lycanroc Dusk
+    1108, // Wishiwashi School
+    1136, // Minior Meteor Orange
+    1136, // Minior Meteor Yellow
+    1136, // Minior Meteor Green
+    1136, // Minior Meteor Blue
+    1136, // Minior Meteor Indigo
+    1136, // Minior Meteor Violet
+    1136, // Minior Core Red
+    1136, // Minior Core Orange
+    1136, // Minior Core Yellow
+    1136, // Minior Core Green
+    1136, // Minior Core Blue
+    1136, // Minior Core Indigo
+    1136, // Minior Core Violet
+    1140, // Mimikyu Busted
+    1162, // Necrozma Dusk Mane
+    1162, // Necrozma Dawn Wings
+    1162, // Necrozma Ultra Dusk Mane
+    1162, // Necrozma Ultra Dawn Wings
+    1163, // Magearna Original
+    25, // Pikachu Partner
+    133, // Eevee Partner
+    1204, // Cramorant Gulping
+    1204, // Cramorant Gorging
+    1208, // Toxtricity Low Key
+    1211, // Sinistea Antique
+    1212, // Polteageist Antique
+    1226, // Alcremie Berry Sweet
+    1226, // Alcremie Love Sweet
+    1226, // Alcremie Star Sweet
+    1226, // Alcremie Clover Sweet
+    1226, // Alcremie Flower Sweet
+    1226, // Alcremie Ribbon Sweet
+    1232, // Eiscue Noice Face
+    1234, // Morpeko Hangry
+    1245, // Zacian Crowned
+    1246, // Zamazenta Crowned
+    1247, // Eternatus Eternamax
+    1249, // Urshifu Rapid Strike
+    1250, // Zarude Dada
+    1255, // Calyrex Ice Rider
+    1255, // Calyrex Shadow Rider
+    1259, // Enamorus Therian
+    58, // Growlithe Hisuian
+    59, // Arcanine Hisuian
+    100, // Voltorb Hisuian
+    101, // Electrode Hisuian
+    157, // Typhlosion Hisuian
+    211, // Qwilfish Hisuian
+    215, // Sneasel Hisuian
+    917, // Samurott Hisuian
+    952, // Lilligant Hisuian
+    969, // Zorua Hisuian
+    970, // Zoroark Hisuian
+    1007, // Braviary Hisuian
+    1073, // Sliggoo Hisuian
+    1074, // Goodra Hisuian
+    1077, // Avalugg Hisuian
+    1086, // Decidueye Hisuian
+    901, // Kleavor Lord
+    952, // Lilligant Lady
+    59, // Arcanine Lord
+    101, // Electrode Lord
+    1077, // Avalugg Lord
+    930, // Unfezant Female
+    986, // Frillish Female
+    987, // Jellicent Female
+    884, // Pyroar Female
+    886, // Meowstic Female
+    1233, // Indeedee Female
+    1256, // Basculegion Female
+    1279, // Maushold Family Of Three
+    1285, // Squawkabilly Blue Plumage
+    1285, // Squawkabilly Yellow Plumage
+    1285, // Squawkabilly White Plumage
+    1318, // Palafin Hero
+    1332, // Tatsugiri Droopy
+    1332, // Tatsugiri Stretchy
+    905, // Dudunsparce Three Segment
+    1350, // Gimmighoul Roaming
+    194, // Wooper Paldean
+    128, // Tauros Combat
+    128, // Tauros Blaze
+    128, // Tauros Aqua
+    1270, // Oinkologne Female
+    1320, // Revavroom Segin
+    1320, // Revavroom Schedar
+    1320, // Revavroom Navi
+    1320, // Revavroom Ruchbah
+    1320, // Revavroom Caph
+    1358, // Koraidon Limited Build
+    1358, // Koraidon Sprinting Build
+    1358, // Koraidon Swimming Build
+    1358, // Koraidon Gliding Build
+    1359, // Miraidon Low Power Mode
+    1359, // Miraidon Drive Mode
+    1359, // Miraidon Aquatic Mode
+    1359, // Miraidon Glide Mode
+    1362, // Poltchageist Masterpiece
+    1363, // Sinistcha Masterpiece
+    1367, // Ogerpon Wellspring Mask
+    1367, // Ogerpon Hearthflame Mask
+    1367, // Ogerpon Cornerstone Mask
+    1367, // Ogerpon Teal Mask Terastal
+    1367, // Ogerpon Wellspring Mask Terastal
+    1367, // Ogerpon Hearthflame Mask Terastal
+    1367, // Ogerpon Cornerstone Mask Terastal
+    902, // Ursaluna Bloodmoon
+    1373, // Terapagos Terastal
+    1373, // Terapagos Stellar
+    3, // Gigantamax Venusaur
+    6, // Gigantamax Charizard
+    9, // Gigantamax Blastoise
+    12, // Gigantamax Butterfree
+    25, // Gigantamax Pikachu
+    52, // Gigantamax Meowth
+    68, // Gigantamax Machamp
+    94, // Gigantamax Gengar
+    99, // Gigantamax Kingler
+    131, // Gigantamax Lapras
+    133, // Gigantamax Eevee
+    143, // Gigantamax Snorlax
+    857, // Gigantamax Garbodor
+    1171, // Gigantamax Melmetal
+    1174, // Gigantamax Rillaboom
+    1177, // Gigantamax Cinderace
+    1180, // Gigantamax Inteleon
+    1185, // Gigantamax Corviknight
+    1188, // Gigantamax Orbeetle
+    1196, // Gigantamax Drednaw
+    1201, // Gigantamax Coalossal
+    896, // Gigantamax Flapple
+    897, // Gigantamax Appletun
+    1203, // Gigantamax Sandaconda
+    1208, // Gigantamax Toxtricity
+    1208, // Gigantamax Toxtricity Low Key
+    899, // Gigantamax Centiskorch
+    1215, // Gigantamax Hatterene
+    1218, // Gigantamax Grimmsnarl
+    1226, // Gigantamax Alcremie
+    1236, // Gigantamax Copperajah
+    1241, // Gigantamax Duraludon
+    1249, // Gigantamax Urshifu
+    1249, // Gigantamax Urshifu Rapid Strike
+    26, // Mega Raichu X
+    26, // Mega Raichu Y
+    36, // Mega Clefable
+    71, // Mega Victreebel
+    121, // Mega Starmie
+    149, // Mega Dragonite
+    154, // Mega Meganium
+    160, // Mega Feraligatr
+    227, // Mega Skarmory
+    358, // Mega Chimecho
+    359, // Mega Absol Z
+    398, // Mega Staraptor
+    445, // Mega Garchomp Z
+    448, // Mega Lucario Z
+    478, // Mega Froslass
+    485, // Mega Heatran
+    491, // Mega Darkrai
+    914, // Mega Emboar
+    939, // Mega Excadrill
+    948, // Mega Scolipede
+    963, // Mega Scrafty
+    991, // Mega Eelektross
+    874, // Mega Chandelure
+    1003, // Mega Golurk
+    1031, // Mega Chesnaught
+    1034, // Mega Delphox
+    1037, // Mega Greninja
+    884, // Mega Pyroar
+    1042, // Mega Floette
+    886, // Mega Meowstic
+    886, // Mega Meowstic Female
+    1057, // Mega Malamar
+    1059, // Mega Barbaracle
+    1061, // Mega Dragalge
+    1070, // Mega Hawlucha
+    1080, // Mega Zygarde
+    1102, // Mega Crabominable
+    1130, // Mega Golisopod
+    1142, // Mega Drampa
+    1163, // Mega Magearna
+    1163, // Mega Magearna Original
+    1169, // Mega Zeraora
+    1227, // Mega Falinks
+    1306, // Mega Scovillain
+    1324, // Mega Glimmora
+    1332, // Mega Tatsugiri
+    1332, // Mega Tatsugiri Droopy
+    1332, // Mega Tatsugiri Stretchy
+    1349, // Mega Baxcalibur
 };
 
 static int CryBankForSpecies(int species) {

@@ -91,6 +91,9 @@ def main():
     args = parser.parse_args()
 
     theirs = their_numbers(args.reference, import_species.added_species())
+    bases = import_species.base_species_of(args.reference)
+    ours = {m.group(1): int(m.group(2)) for m in
+            re.finditer(r"#define SPECIES_([A-Z0-9_]+)\s+(\d+)", (ROOT / "include/constants/species.h").read_text())}
     prints = args.reference / "rawdata/footprints"
     if not prints.is_dir():
         raise SystemExit(f"{prints} is not there")
@@ -113,9 +116,12 @@ def main():
             raise SystemExit(f"the reference has no number for SPECIES_{name}")
         source = prints / f"a069_{number + MEMBER_OFFSET:04d}"
         if not source.exists():
-            if name not in BORROW_FROM:
+            borrow = BORROW_FROM.get(name)
+            if borrow is None and name in bases and bases[name] in ours:
+                borrow = ours[bases[name]]  # a form leaves its base's footprint
+            if borrow is None:
                 raise SystemExit(f"the reference has no footprint for SPECIES_{name} ({source.name})")
-            wanted[species] = FOOTPRINTS / f"pokefoot_{BORROW_FROM[name] + MEMBER_OFFSET:08d}.png"
+            wanted[species] = FOOTPRINTS / f"pokefoot_{borrow + MEMBER_OFFSET:08d}.png"
             continue
         added[species] = source
 

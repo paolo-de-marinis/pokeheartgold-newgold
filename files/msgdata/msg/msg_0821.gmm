@@ -4168,4 +4168,3180 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Pecharunt</language>
 	</row>
+	<row id="msg_0821_mega_venusaur" index="1042">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Venusaur</language>
+	</row>
+	<row id="msg_0821_mega_charizard_x" index="1043">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Charizard</language>
+	</row>
+	<row id="msg_0821_mega_charizard_y" index="1044">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Charizard</language>
+	</row>
+	<row id="msg_0821_mega_blastoise" index="1045">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Blastoise</language>
+	</row>
+	<row id="msg_0821_mega_beedrill" index="1046">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Beedrill</language>
+	</row>
+	<row id="msg_0821_mega_pidgeot" index="1047">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pidgeot</language>
+	</row>
+	<row id="msg_0821_mega_alakazam" index="1048">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alakazam</language>
+	</row>
+	<row id="msg_0821_mega_slowbro" index="1049">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Slowbro</language>
+	</row>
+	<row id="msg_0821_mega_gengar" index="1050">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gengar</language>
+	</row>
+	<row id="msg_0821_mega_kangaskhan" index="1051">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kangaskhan</language>
+	</row>
+	<row id="msg_0821_mega_pinsir" index="1052">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pinsir</language>
+	</row>
+	<row id="msg_0821_mega_gyarados" index="1053">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gyarados</language>
+	</row>
+	<row id="msg_0821_mega_aerodactyl" index="1054">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Aerodactyl</language>
+	</row>
+	<row id="msg_0821_mega_mewtwo_x" index="1055">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mewtwo</language>
+	</row>
+	<row id="msg_0821_mega_mewtwo_y" index="1056">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mewtwo</language>
+	</row>
+	<row id="msg_0821_mega_ampharos" index="1057">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ampharos</language>
+	</row>
+	<row id="msg_0821_mega_steelix" index="1058">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Steelix</language>
+	</row>
+	<row id="msg_0821_mega_scizor" index="1059">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scizor</language>
+	</row>
+	<row id="msg_0821_mega_heracross" index="1060">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Heracross</language>
+	</row>
+	<row id="msg_0821_mega_houndoom" index="1061">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Houndoom</language>
+	</row>
+	<row id="msg_0821_mega_tyranitar" index="1062">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tyranitar</language>
+	</row>
+	<row id="msg_0821_mega_sceptile" index="1063">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sceptile</language>
+	</row>
+	<row id="msg_0821_mega_blaziken" index="1064">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Blaziken</language>
+	</row>
+	<row id="msg_0821_mega_swampert" index="1065">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Swampert</language>
+	</row>
+	<row id="msg_0821_mega_gardevoir" index="1066">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gardevoir</language>
+	</row>
+	<row id="msg_0821_mega_sableye" index="1067">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sableye</language>
+	</row>
+	<row id="msg_0821_mega_mawile" index="1068">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mawile</language>
+	</row>
+	<row id="msg_0821_mega_aggron" index="1069">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Aggron</language>
+	</row>
+	<row id="msg_0821_mega_medicham" index="1070">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Medicham</language>
+	</row>
+	<row id="msg_0821_mega_manectric" index="1071">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Manectric</language>
+	</row>
+	<row id="msg_0821_mega_sharpedo" index="1072">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sharpedo</language>
+	</row>
+	<row id="msg_0821_mega_camerupt" index="1073">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Camerupt</language>
+	</row>
+	<row id="msg_0821_mega_altaria" index="1074">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Altaria</language>
+	</row>
+	<row id="msg_0821_mega_banette" index="1075">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Banette</language>
+	</row>
+	<row id="msg_0821_mega_absol" index="1076">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Absol</language>
+	</row>
+	<row id="msg_0821_mega_glalie" index="1077">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Glalie</language>
+	</row>
+	<row id="msg_0821_mega_salamence" index="1078">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Salamence</language>
+	</row>
+	<row id="msg_0821_mega_metagross" index="1079">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Metagross</language>
+	</row>
+	<row id="msg_0821_mega_latias" index="1080">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Latias</language>
+	</row>
+	<row id="msg_0821_mega_latios" index="1081">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Latios</language>
+	</row>
+	<row id="msg_0821_mega_rayquaza" index="1082">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rayquaza</language>
+	</row>
+	<row id="msg_0821_mega_lopunny" index="1083">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lopunny</language>
+	</row>
+	<row id="msg_0821_mega_garchomp" index="1084">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Garchomp</language>
+	</row>
+	<row id="msg_0821_mega_lucario" index="1085">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lucario</language>
+	</row>
+	<row id="msg_0821_mega_abomasnow" index="1086">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Abomasnow</language>
+	</row>
+	<row id="msg_0821_mega_gallade" index="1087">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gallade</language>
+	</row>
+	<row id="msg_0821_mega_audino" index="1088">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Audino</language>
+	</row>
+	<row id="msg_0821_mega_diancie" index="1089">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Diancie</language>
+	</row>
+	<row id="msg_0821_kyogre_primal" index="1090">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kyogre</language>
+	</row>
+	<row id="msg_0821_groudon_primal" index="1091">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Groudon</language>
+	</row>
+	<row id="msg_0821_rattata_alolan" index="1092">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rattata</language>
+	</row>
+	<row id="msg_0821_raticate_alolan" index="1093">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raticate</language>
+	</row>
+	<row id="msg_0821_raichu_alolan" index="1094">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raichu</language>
+	</row>
+	<row id="msg_0821_sandshrew_alolan" index="1095">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sandshrew</language>
+	</row>
+	<row id="msg_0821_sandslash_alolan" index="1096">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sandslash</language>
+	</row>
+	<row id="msg_0821_vulpix_alolan" index="1097">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vulpix</language>
+	</row>
+	<row id="msg_0821_ninetales_alolan" index="1098">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ninetales</language>
+	</row>
+	<row id="msg_0821_diglett_alolan" index="1099">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Diglett</language>
+	</row>
+	<row id="msg_0821_dugtrio_alolan" index="1100">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dugtrio</language>
+	</row>
+	<row id="msg_0821_meowth_alolan" index="1101">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowth</language>
+	</row>
+	<row id="msg_0821_persian_alolan" index="1102">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Persian</language>
+	</row>
+	<row id="msg_0821_geodude_alolan" index="1103">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Geodude</language>
+	</row>
+	<row id="msg_0821_graveler_alolan" index="1104">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Graveler</language>
+	</row>
+	<row id="msg_0821_golem_alolan" index="1105">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Golem</language>
+	</row>
+	<row id="msg_0821_grimer_alolan" index="1106">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grimer</language>
+	</row>
+	<row id="msg_0821_muk_alolan" index="1107">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Muk</language>
+	</row>
+	<row id="msg_0821_exeggutor_alolan" index="1108">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Exeggutor</language>
+	</row>
+	<row id="msg_0821_marowak_alolan" index="1109">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Marowak</language>
+	</row>
+	<row id="msg_0821_raticate_alolan_large" index="1110">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raticate</language>
+	</row>
+	<row id="msg_0821_marowak_alolan_large" index="1111">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Marowak</language>
+	</row>
+	<row id="msg_0821_gumshoos_large" index="1112">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gumshoos</language>
+	</row>
+	<row id="msg_0821_vikavolt_large" index="1113">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vikavolt</language>
+	</row>
+	<row id="msg_0821_ribombee_large" index="1114">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ribombee</language>
+	</row>
+	<row id="msg_0821_araquanid_large" index="1115">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Araquanid</language>
+	</row>
+	<row id="msg_0821_lurantis_large" index="1116">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lurantis</language>
+	</row>
+	<row id="msg_0821_salazzle_large" index="1117">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Salazzle</language>
+	</row>
+	<row id="msg_0821_togedemaru_large" index="1118">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Togedemaru</language>
+	</row>
+	<row id="msg_0821_mimikyu_large" index="1119">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mimikyu</language>
+	</row>
+	<row id="msg_0821_mimikyu_busted_large" index="1120">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mimikyu</language>
+	</row>
+	<row id="msg_0821_kommo_o_large" index="1121">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kommo-o</language>
+	</row>
+	<row id="msg_0821_meowth_galarian" index="1122">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowth</language>
+	</row>
+	<row id="msg_0821_ponyta_galarian" index="1123">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ponyta</language>
+	</row>
+	<row id="msg_0821_rapidash_galarian" index="1124">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rapidash</language>
+	</row>
+	<row id="msg_0821_farfetchd_galarian" index="1125">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">FARFETCHD</language>
+	</row>
+	<row id="msg_0821_weezing_galarian" index="1126">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Weezing</language>
+	</row>
+	<row id="msg_0821_mr_mime_galarian" index="1127">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mr. Mime</language>
+	</row>
+	<row id="msg_0821_articuno_galarian" index="1128">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Articuno</language>
+	</row>
+	<row id="msg_0821_zapdos_galarian" index="1129">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zapdos</language>
+	</row>
+	<row id="msg_0821_moltres_galarian" index="1130">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Moltres</language>
+	</row>
+	<row id="msg_0821_slowking_galarian" index="1131">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">SLOWKING</language>
+	</row>
+	<row id="msg_0821_corsola_galarian" index="1132">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Corsola</language>
+	</row>
+	<row id="msg_0821_zigzagoon_galarian" index="1133">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zigzagoon</language>
+	</row>
+	<row id="msg_0821_linoone_galarian" index="1134">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Linoone</language>
+	</row>
+	<row id="msg_0821_darumaka_galarian" index="1135">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Darumaka</language>
+	</row>
+	<row id="msg_0821_darmanitan_galarian" index="1136">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Darmanitan</language>
+	</row>
+	<row id="msg_0821_yamask_galarian" index="1137">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Yamask</language>
+	</row>
+	<row id="msg_0821_stunfisk_galarian" index="1138">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Stunfisk</language>
+	</row>
+	<row id="msg_0821_pikachu_cosplay" index="1139">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_rock_star" index="1140">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_belle" index="1141">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_pop_star" index="1142">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_ph_d" index="1143">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_libre" index="1144">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_original_cap" index="1145">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_hoenn_cap" index="1146">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_sinnoh_cap" index="1147">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_unova_cap" index="1148">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_kalos_cap" index="1149">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_alola_cap" index="1150">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_partner_cap" index="1151">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_world_cap" index="1152">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_castform_sunny" index="1153">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Castform</language>
+	</row>
+	<row id="msg_0821_castform_rainy" index="1154">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Castform</language>
+	</row>
+	<row id="msg_0821_castform_snowy" index="1155">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Castform</language>
+	</row>
+	<row id="msg_0821_cherrim_sunshine" index="1156">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cherrim</language>
+	</row>
+	<row id="msg_0821_shellos_east_sea" index="1157">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Shellos</language>
+	</row>
+	<row id="msg_0821_gastrodon_east_sea" index="1158">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gastrodon</language>
+	</row>
+	<row id="msg_0821_dialga_origin" index="1159">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dialga</language>
+	</row>
+	<row id="msg_0821_palkia_origin" index="1160">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Palkia</language>
+	</row>
+	<row id="msg_0821_basculin_blue_striped" index="1161">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Basculin</language>
+	</row>
+	<row id="msg_0821_basculin_white_striped" index="1162">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Basculin</language>
+	</row>
+	<row id="msg_0821_darmanitan_zen_mode" index="1163">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Darmanitan</language>
+	</row>
+	<row id="msg_0821_darmanitan_zen_mode_galarian" index="1164">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Darmanitan</language>
+	</row>
+	<row id="msg_0821_deerling_summer" index="1165">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Deerling</language>
+	</row>
+	<row id="msg_0821_deerling_autumn" index="1166">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Deerling</language>
+	</row>
+	<row id="msg_0821_deerling_winter" index="1167">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Deerling</language>
+	</row>
+	<row id="msg_0821_sawsbuck_summer" index="1168">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sawsbuck</language>
+	</row>
+	<row id="msg_0821_sawsbuck_autumn" index="1169">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sawsbuck</language>
+	</row>
+	<row id="msg_0821_sawsbuck_winter" index="1170">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sawsbuck</language>
+	</row>
+	<row id="msg_0821_tornadus_therian" index="1171">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tornadus</language>
+	</row>
+	<row id="msg_0821_thundurus_therian" index="1172">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Thundurus</language>
+	</row>
+	<row id="msg_0821_landorus_therian" index="1173">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Landorus</language>
+	</row>
+	<row id="msg_0821_kyurem_white" index="1174">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kyurem</language>
+	</row>
+	<row id="msg_0821_kyurem_black" index="1175">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kyurem</language>
+	</row>
+	<row id="msg_0821_keldeo_resolute" index="1176">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Keldeo</language>
+	</row>
+	<row id="msg_0821_meloetta_pirouette" index="1177">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meloetta</language>
+	</row>
+	<row id="msg_0821_genesect_douse_drive" index="1178">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Genesect</language>
+	</row>
+	<row id="msg_0821_genesect_shock_drive" index="1179">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Genesect</language>
+	</row>
+	<row id="msg_0821_genesect_burn_drive" index="1180">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Genesect</language>
+	</row>
+	<row id="msg_0821_genesect_chill_drive" index="1181">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Genesect</language>
+	</row>
+	<row id="msg_0821_greninja_battle_bond" index="1182">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Greninja</language>
+	</row>
+	<row id="msg_0821_greninja_ash" index="1183">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Greninja</language>
+	</row>
+	<row id="msg_0821_vivillon_polar" index="1184">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_tundra" index="1185">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_continental" index="1186">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_garden" index="1187">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_elegant" index="1188">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_meadow" index="1189">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_modern" index="1190">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_marine" index="1191">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_archipelago" index="1192">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_high_plains" index="1193">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_sandstorm" index="1194">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_river" index="1195">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_monsoon" index="1196">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_savanna" index="1197">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_sun" index="1198">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_ocean" index="1199">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_jungle" index="1200">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_fancy" index="1201">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_poke_ball" index="1202">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_flabebe_yellow_flower" index="1203">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flabébé</language>
+	</row>
+	<row id="msg_0821_flabebe_orange_flower" index="1204">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flabébé</language>
+	</row>
+	<row id="msg_0821_flabebe_blue_flower" index="1205">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flabébé</language>
+	</row>
+	<row id="msg_0821_flabebe_white_flower" index="1206">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flabébé</language>
+	</row>
+	<row id="msg_0821_floette_yellow_flower" index="1207">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_floette_orange_flower" index="1208">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_floette_blue_flower" index="1209">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_floette_white_flower" index="1210">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_floette_eternal_flower" index="1211">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_florges_yellow_flower" index="1212">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Florges</language>
+	</row>
+	<row id="msg_0821_florges_orange_flower" index="1213">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Florges</language>
+	</row>
+	<row id="msg_0821_florges_blue_flower" index="1214">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Florges</language>
+	</row>
+	<row id="msg_0821_florges_white_flower" index="1215">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Florges</language>
+	</row>
+	<row id="msg_0821_furfrou_heart" index="1216">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_star" index="1217">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_diamond" index="1218">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_debutante" index="1219">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_matron" index="1220">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_dandy" index="1221">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_la_reine" index="1222">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_kabuki" index="1223">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_pharaoh" index="1224">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_aegislash_blade" index="1225">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Aegislash</language>
+	</row>
+	<row id="msg_0821_pumpkaboo_small" index="1226">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pumpkaboo</language>
+	</row>
+	<row id="msg_0821_pumpkaboo_large" index="1227">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pumpkaboo</language>
+	</row>
+	<row id="msg_0821_pumpkaboo_super" index="1228">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pumpkaboo</language>
+	</row>
+	<row id="msg_0821_gourgeist_small" index="1229">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gourgeist</language>
+	</row>
+	<row id="msg_0821_gourgeist_large" index="1230">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gourgeist</language>
+	</row>
+	<row id="msg_0821_gourgeist_super" index="1231">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gourgeist</language>
+	</row>
+	<row id="msg_0821_xerneas_active" index="1232">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Xerneas</language>
+	</row>
+	<row id="msg_0821_zygarde_10" index="1233">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_zygarde_10_power_construct" index="1234">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_zygarde_50_power_construct" index="1235">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_zygarde_10_complete" index="1236">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_zygarde_50_complete" index="1237">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_hoopa_unbound" index="1238">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hoopa</language>
+	</row>
+	<row id="msg_0821_oricorio_pom_pom" index="1239">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oricorio</language>
+	</row>
+	<row id="msg_0821_oricorio_pau" index="1240">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oricorio</language>
+	</row>
+	<row id="msg_0821_oricorio_sensu" index="1241">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oricorio</language>
+	</row>
+	<row id="msg_0821_rockruff_own_tempo" index="1242">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rockruff</language>
+	</row>
+	<row id="msg_0821_lycanroc_midnight" index="1243">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lycanroc</language>
+	</row>
+	<row id="msg_0821_lycanroc_dusk" index="1244">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lycanroc</language>
+	</row>
+	<row id="msg_0821_wishiwashi_school" index="1245">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wishiwashi</language>
+	</row>
+	<row id="msg_0821_minior_meteor_orange" index="1246">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_meteor_yellow" index="1247">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_meteor_green" index="1248">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_meteor_blue" index="1249">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_meteor_indigo" index="1250">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_meteor_violet" index="1251">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_red" index="1252">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_orange" index="1253">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_yellow" index="1254">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_green" index="1255">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_blue" index="1256">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_indigo" index="1257">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_violet" index="1258">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_mimikyu_busted" index="1259">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mimikyu</language>
+	</row>
+	<row id="msg_0821_necrozma_dusk_mane" index="1260">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Necrozma</language>
+	</row>
+	<row id="msg_0821_necrozma_dawn_wings" index="1261">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Necrozma</language>
+	</row>
+	<row id="msg_0821_necrozma_ultra_dusk_mane" index="1262">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Necrozma</language>
+	</row>
+	<row id="msg_0821_necrozma_ultra_dawn_wings" index="1263">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Necrozma</language>
+	</row>
+	<row id="msg_0821_magearna_original" index="1264">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Magearna</language>
+	</row>
+	<row id="msg_0821_pikachu_partner" index="1265">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_eevee_partner" index="1266">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eevee</language>
+	</row>
+	<row id="msg_0821_cramorant_gulping" index="1267">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cramorant</language>
+	</row>
+	<row id="msg_0821_cramorant_gorging" index="1268">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cramorant</language>
+	</row>
+	<row id="msg_0821_toxtricity_low_key" index="1269">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Toxtricity</language>
+	</row>
+	<row id="msg_0821_sinistea_antique" index="1270">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sinistea</language>
+	</row>
+	<row id="msg_0821_polteageist_antique" index="1271">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Poltegeist</language>
+	</row>
+	<row id="msg_0821_alcremie_berry_sweet" index="1272">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_alcremie_love_sweet" index="1273">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_alcremie_star_sweet" index="1274">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_alcremie_clover_sweet" index="1275">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_alcremie_flower_sweet" index="1276">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_alcremie_ribbon_sweet" index="1277">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_eiscue_noice_face" index="1278">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eiscue</language>
+	</row>
+	<row id="msg_0821_morpeko_hangry" index="1279">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Morpeko</language>
+	</row>
+	<row id="msg_0821_zacian_crowned" index="1280">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zacian</language>
+	</row>
+	<row id="msg_0821_zamazenta_crowned" index="1281">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zamazenta</language>
+	</row>
+	<row id="msg_0821_eternatus_eternamax" index="1282">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eternatus</language>
+	</row>
+	<row id="msg_0821_urshifu_rapid_strike" index="1283">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Urshifu</language>
+	</row>
+	<row id="msg_0821_zarude_dada" index="1284">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zarude</language>
+	</row>
+	<row id="msg_0821_calyrex_ice_rider" index="1285">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Calyrex</language>
+	</row>
+	<row id="msg_0821_calyrex_shadow_rider" index="1286">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Calyrex</language>
+	</row>
+	<row id="msg_0821_enamorus_therian" index="1287">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Enamorus</language>
+	</row>
+	<row id="msg_0821_growlithe_hisuian" index="1288">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Growlithe</language>
+	</row>
+	<row id="msg_0821_arcanine_hisuian" index="1289">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Arcanine</language>
+	</row>
+	<row id="msg_0821_voltorb_hisuian" index="1290">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Voltorb</language>
+	</row>
+	<row id="msg_0821_electrode_hisuian" index="1291">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Electrode</language>
+	</row>
+	<row id="msg_0821_typhlosion_hisuian" index="1292">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Typhlosion</language>
+	</row>
+	<row id="msg_0821_qwilfish_hisuian" index="1293">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Qwilfish</language>
+	</row>
+	<row id="msg_0821_sneasel_hisuian" index="1294">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sneasel</language>
+	</row>
+	<row id="msg_0821_samurott_hisuian" index="1295">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Samurott</language>
+	</row>
+	<row id="msg_0821_lilligant_hisuian" index="1296">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lilligant</language>
+	</row>
+	<row id="msg_0821_zorua_hisuian" index="1297">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zorua</language>
+	</row>
+	<row id="msg_0821_zoroark_hisuian" index="1298">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zoroark</language>
+	</row>
+	<row id="msg_0821_braviary_hisuian" index="1299">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Braviary</language>
+	</row>
+	<row id="msg_0821_sliggoo_hisuian" index="1300">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sliggoo</language>
+	</row>
+	<row id="msg_0821_goodra_hisuian" index="1301">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Goodra</language>
+	</row>
+	<row id="msg_0821_avalugg_hisuian" index="1302">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Avalugg</language>
+	</row>
+	<row id="msg_0821_decidueye_hisuian" index="1303">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Decidueye</language>
+	</row>
+	<row id="msg_0821_kleavor_lord" index="1304">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kleavor</language>
+	</row>
+	<row id="msg_0821_lilligant_lady" index="1305">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lilligant</language>
+	</row>
+	<row id="msg_0821_arcanine_lord" index="1306">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Arcanine</language>
+	</row>
+	<row id="msg_0821_electrode_lord" index="1307">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Electrode</language>
+	</row>
+	<row id="msg_0821_avalugg_lord" index="1308">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Avalugg</language>
+	</row>
+	<row id="msg_0821_unfezant_female" index="1309">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Unfezant</language>
+	</row>
+	<row id="msg_0821_frillish_female" index="1310">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Frillish</language>
+	</row>
+	<row id="msg_0821_jellicent_female" index="1311">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Jellicent</language>
+	</row>
+	<row id="msg_0821_pyroar_female" index="1312">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pyroar</language>
+	</row>
+	<row id="msg_0821_meowstic_female" index="1313">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowstic</language>
+	</row>
+	<row id="msg_0821_indeedee_female" index="1314">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Indeedee</language>
+	</row>
+	<row id="msg_0821_basculegion_female" index="1315">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Basclegion</language>
+	</row>
+	<row id="msg_0821_maushold_family_of_three" index="1316">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Maushold</language>
+	</row>
+	<row id="msg_0821_squawkabilly_blue_plumage" index="1317">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Squawkbily</language>
+	</row>
+	<row id="msg_0821_squawkabilly_yellow_plumage" index="1318">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Squawkbily</language>
+	</row>
+	<row id="msg_0821_squawkabilly_white_plumage" index="1319">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Squawkbily</language>
+	</row>
+	<row id="msg_0821_palafin_hero" index="1320">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Palafin</language>
+	</row>
+	<row id="msg_0821_tatsugiri_droopy" index="1321">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tatsugiri</language>
+	</row>
+	<row id="msg_0821_tatsugiri_stretchy" index="1322">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tatsugiri</language>
+	</row>
+	<row id="msg_0821_dudunsparce_three_segment" index="1323">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dudunspars</language>
+	</row>
+	<row id="msg_0821_gimmighoul_roaming" index="1324">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gimmighoul</language>
+	</row>
+	<row id="msg_0821_wooper_paldean" index="1325">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wooper</language>
+	</row>
+	<row id="msg_0821_tauros_combat" index="1326">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tauros</language>
+	</row>
+	<row id="msg_0821_tauros_blaze" index="1327">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tauros</language>
+	</row>
+	<row id="msg_0821_tauros_aqua" index="1328">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tauros</language>
+	</row>
+	<row id="msg_0821_oinkologne_female" index="1329">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oinkologne</language>
+	</row>
+	<row id="msg_0821_revavroom_segin" index="1330">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Revavroom</language>
+	</row>
+	<row id="msg_0821_revavroom_schedar" index="1331">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Revavroom</language>
+	</row>
+	<row id="msg_0821_revavroom_navi" index="1332">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Revavroom</language>
+	</row>
+	<row id="msg_0821_revavroom_ruchbah" index="1333">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Revavroom</language>
+	</row>
+	<row id="msg_0821_revavroom_caph" index="1334">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Revavroom</language>
+	</row>
+	<row id="msg_0821_koraidon_limited_build" index="1335">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Koraidon</language>
+	</row>
+	<row id="msg_0821_koraidon_sprinting_build" index="1336">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Koraidon</language>
+	</row>
+	<row id="msg_0821_koraidon_swimming_build" index="1337">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Koraidon</language>
+	</row>
+	<row id="msg_0821_koraidon_gliding_build" index="1338">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Koraidon</language>
+	</row>
+	<row id="msg_0821_miraidon_low_power_mode" index="1339">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Miraidon</language>
+	</row>
+	<row id="msg_0821_miraidon_drive_mode" index="1340">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Miraidon</language>
+	</row>
+	<row id="msg_0821_miraidon_aquatic_mode" index="1341">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Miraidon</language>
+	</row>
+	<row id="msg_0821_miraidon_glide_mode" index="1342">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Miraidon</language>
+	</row>
+	<row id="msg_0821_poltchageist_masterpiece" index="1343">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Polchgeist</language>
+	</row>
+	<row id="msg_0821_sinistcha_masterpiece" index="1344">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sinistcha</language>
+	</row>
+	<row id="msg_0821_ogerpon_wellspring_mask" index="1345">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_hearthflame_mask" index="1346">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_cornerstone_mask" index="1347">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_teal_mask_terastal" index="1348">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_wellspring_mask_terastal" index="1349">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_hearthflame_mask_terastal" index="1350">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_cornerstone_mask_terastal" index="1351">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ursaluna_bloodmoon" index="1352">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ursaluna</language>
+	</row>
+	<row id="msg_0821_terapagos_terastal" index="1353">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Terapagos</language>
+	</row>
+	<row id="msg_0821_terapagos_stellar" index="1354">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Terapagos</language>
+	</row>
+	<row id="msg_0821_gigantamax_venusaur" index="1355">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Venusaur</language>
+	</row>
+	<row id="msg_0821_gigantamax_charizard" index="1356">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Charizard</language>
+	</row>
+	<row id="msg_0821_gigantamax_blastoise" index="1357">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Blastoise</language>
+	</row>
+	<row id="msg_0821_gigantamax_butterfree" index="1358">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Butterfree</language>
+	</row>
+	<row id="msg_0821_gigantamax_pikachu" index="1359">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_gigantamax_meowth" index="1360">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowth</language>
+	</row>
+	<row id="msg_0821_gigantamax_machamp" index="1361">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Machamp</language>
+	</row>
+	<row id="msg_0821_gigantamax_gengar" index="1362">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gengar</language>
+	</row>
+	<row id="msg_0821_gigantamax_kingler" index="1363">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kingler</language>
+	</row>
+	<row id="msg_0821_gigantamax_lapras" index="1364">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lapras</language>
+	</row>
+	<row id="msg_0821_gigantamax_eevee" index="1365">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eevee</language>
+	</row>
+	<row id="msg_0821_gigantamax_snorlax" index="1366">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Snorlax</language>
+	</row>
+	<row id="msg_0821_gigantamax_garbodor" index="1367">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Garbodor</language>
+	</row>
+	<row id="msg_0821_gigantamax_melmetal" index="1368">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Melmetal</language>
+	</row>
+	<row id="msg_0821_gigantamax_rillaboom" index="1369">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rillaboom</language>
+	</row>
+	<row id="msg_0821_gigantamax_cinderace" index="1370">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cinderace</language>
+	</row>
+	<row id="msg_0821_gigantamax_inteleon" index="1371">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Inteleon</language>
+	</row>
+	<row id="msg_0821_gigantamax_corviknight" index="1372">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Corviknite</language>
+	</row>
+	<row id="msg_0821_gigantamax_orbeetle" index="1373">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Orbeetle</language>
+	</row>
+	<row id="msg_0821_gigantamax_drednaw" index="1374">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Drednaw</language>
+	</row>
+	<row id="msg_0821_gigantamax_coalossal" index="1375">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Coalossal</language>
+	</row>
+	<row id="msg_0821_gigantamax_flapple" index="1376">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flapple</language>
+	</row>
+	<row id="msg_0821_gigantamax_appletun" index="1377">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Appletun</language>
+	</row>
+	<row id="msg_0821_gigantamax_sandaconda" index="1378">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sandaconda</language>
+	</row>
+	<row id="msg_0821_gigantamax_toxtricity" index="1379">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Toxtricity</language>
+	</row>
+	<row id="msg_0821_gigantamax_toxtricity_low_key" index="1380">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Toxtricity</language>
+	</row>
+	<row id="msg_0821_gigantamax_centiskorch" index="1381">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Centskorch</language>
+	</row>
+	<row id="msg_0821_gigantamax_hatterene" index="1382">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hatterene</language>
+	</row>
+	<row id="msg_0821_gigantamax_grimmsnarl" index="1383">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grimmsnarl</language>
+	</row>
+	<row id="msg_0821_gigantamax_alcremie" index="1384">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_gigantamax_copperajah" index="1385">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Copperajah</language>
+	</row>
+	<row id="msg_0821_gigantamax_duraludon" index="1386">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Duraludon</language>
+	</row>
+	<row id="msg_0821_gigantamax_urshifu" index="1387">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Urshifu</language>
+	</row>
+	<row id="msg_0821_gigantamax_urshifu_rapid_strike" index="1388">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Urshifu</language>
+	</row>
+	<row id="msg_0821_mega_raichu_x" index="1389">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raichu</language>
+	</row>
+	<row id="msg_0821_mega_raichu_y" index="1390">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raichu</language>
+	</row>
+	<row id="msg_0821_mega_clefable" index="1391">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Clefable</language>
+	</row>
+	<row id="msg_0821_mega_victreebel" index="1392">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Victreebel</language>
+	</row>
+	<row id="msg_0821_mega_starmie" index="1393">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Starmie</language>
+	</row>
+	<row id="msg_0821_mega_dragonite" index="1394">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dragonite</language>
+	</row>
+	<row id="msg_0821_mega_meganium" index="1395">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meganium</language>
+	</row>
+	<row id="msg_0821_mega_feraligatr" index="1396">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Feraligatr</language>
+	</row>
+	<row id="msg_0821_mega_skarmory" index="1397">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Skarmory</language>
+	</row>
+	<row id="msg_0821_mega_chimecho" index="1398">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Chimecho</language>
+	</row>
+	<row id="msg_0821_mega_absol_z" index="1399">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Absol</language>
+	</row>
+	<row id="msg_0821_mega_staraptor" index="1400">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Staraptor</language>
+	</row>
+	<row id="msg_0821_mega_garchomp_z" index="1401">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Garchomp</language>
+	</row>
+	<row id="msg_0821_mega_lucario_z" index="1402">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lucario</language>
+	</row>
+	<row id="msg_0821_mega_froslass" index="1403">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Froslass</language>
+	</row>
+	<row id="msg_0821_mega_heatran" index="1404">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Heatran</language>
+	</row>
+	<row id="msg_0821_mega_darkrai" index="1405">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Darkrai</language>
+	</row>
+	<row id="msg_0821_mega_emboar" index="1406">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Emboar</language>
+	</row>
+	<row id="msg_0821_mega_excadrill" index="1407">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Excadrill</language>
+	</row>
+	<row id="msg_0821_mega_scolipede" index="1408">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scolipede</language>
+	</row>
+	<row id="msg_0821_mega_scrafty" index="1409">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scrafty</language>
+	</row>
+	<row id="msg_0821_mega_eelektross" index="1410">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eelektross</language>
+	</row>
+	<row id="msg_0821_mega_chandelure" index="1411">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Chandelure</language>
+	</row>
+	<row id="msg_0821_mega_golurk" index="1412">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Golurk</language>
+	</row>
+	<row id="msg_0821_mega_chesnaught" index="1413">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Chesnaught</language>
+	</row>
+	<row id="msg_0821_mega_delphox" index="1414">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Delphox</language>
+	</row>
+	<row id="msg_0821_mega_greninja" index="1415">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Greninja</language>
+	</row>
+	<row id="msg_0821_mega_pyroar" index="1416">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pyroar</language>
+	</row>
+	<row id="msg_0821_mega_floette" index="1417">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_mega_meowstic" index="1418">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowstic</language>
+	</row>
+	<row id="msg_0821_mega_meowstic_female" index="1419">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowstic</language>
+	</row>
+	<row id="msg_0821_mega_malamar" index="1420">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Malamar</language>
+	</row>
+	<row id="msg_0821_mega_barbaracle" index="1421">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Barbaracle</language>
+	</row>
+	<row id="msg_0821_mega_dragalge" index="1422">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dragalge</language>
+	</row>
+	<row id="msg_0821_mega_hawlucha" index="1423">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hawlucha</language>
+	</row>
+	<row id="msg_0821_mega_zygarde" index="1424">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_mega_crabominable" index="1425">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Crabomnabl</language>
+	</row>
+	<row id="msg_0821_mega_golisopod" index="1426">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Golisopod</language>
+	</row>
+	<row id="msg_0821_mega_drampa" index="1427">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Drampa</language>
+	</row>
+	<row id="msg_0821_mega_magearna" index="1428">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Magearna</language>
+	</row>
+	<row id="msg_0821_mega_magearna_original" index="1429">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Magearna</language>
+	</row>
+	<row id="msg_0821_mega_zeraora" index="1430">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zeraora</language>
+	</row>
+	<row id="msg_0821_mega_falinks" index="1431">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Falinks</language>
+	</row>
+	<row id="msg_0821_mega_scovillain" index="1432">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scovillain</language>
+	</row>
+	<row id="msg_0821_mega_glimmora" index="1433">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Glimmora</language>
+	</row>
+	<row id="msg_0821_mega_tatsugiri" index="1434">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tatsugiri</language>
+	</row>
+	<row id="msg_0821_mega_tatsugiri_droopy" index="1435">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tatsugiri</language>
+	</row>
+	<row id="msg_0821_mega_tatsugiri_stretchy" index="1436">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tatsugiri</language>
+	</row>
+	<row id="msg_0821_mega_baxcalibur" index="1437">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Baxcalibur</language>
+	</row>
+	<row id="msg_0821_slowpoke_galarian" index="573">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Slowpoke</language>
+	</row>
+	<row id="msg_0821_slowbro_galarian" index="574">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Slowbro</language>
+	</row>
+	<row id="msg_0821_mega_venusaur" index="1042">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Venusaur</language>
+	</row>
+	<row id="msg_0821_mega_charizard_x" index="1043">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Charizard</language>
+	</row>
+	<row id="msg_0821_mega_charizard_y" index="1044">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Charizard</language>
+	</row>
+	<row id="msg_0821_mega_blastoise" index="1045">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Blastoise</language>
+	</row>
+	<row id="msg_0821_mega_beedrill" index="1046">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Beedrill</language>
+	</row>
+	<row id="msg_0821_mega_pidgeot" index="1047">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pidgeot</language>
+	</row>
+	<row id="msg_0821_mega_alakazam" index="1048">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alakazam</language>
+	</row>
+	<row id="msg_0821_mega_slowbro" index="1049">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Slowbro</language>
+	</row>
+	<row id="msg_0821_mega_gengar" index="1050">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gengar</language>
+	</row>
+	<row id="msg_0821_mega_kangaskhan" index="1051">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kangaskhan</language>
+	</row>
+	<row id="msg_0821_mega_pinsir" index="1052">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pinsir</language>
+	</row>
+	<row id="msg_0821_mega_gyarados" index="1053">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gyarados</language>
+	</row>
+	<row id="msg_0821_mega_aerodactyl" index="1054">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Aerodactyl</language>
+	</row>
+	<row id="msg_0821_mega_mewtwo_x" index="1055">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mewtwo</language>
+	</row>
+	<row id="msg_0821_mega_mewtwo_y" index="1056">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mewtwo</language>
+	</row>
+	<row id="msg_0821_mega_ampharos" index="1057">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ampharos</language>
+	</row>
+	<row id="msg_0821_mega_steelix" index="1058">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Steelix</language>
+	</row>
+	<row id="msg_0821_mega_scizor" index="1059">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scizor</language>
+	</row>
+	<row id="msg_0821_mega_heracross" index="1060">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Heracross</language>
+	</row>
+	<row id="msg_0821_mega_houndoom" index="1061">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Houndoom</language>
+	</row>
+	<row id="msg_0821_mega_tyranitar" index="1062">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tyranitar</language>
+	</row>
+	<row id="msg_0821_mega_sceptile" index="1063">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sceptile</language>
+	</row>
+	<row id="msg_0821_mega_blaziken" index="1064">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Blaziken</language>
+	</row>
+	<row id="msg_0821_mega_swampert" index="1065">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Swampert</language>
+	</row>
+	<row id="msg_0821_mega_gardevoir" index="1066">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gardevoir</language>
+	</row>
+	<row id="msg_0821_mega_sableye" index="1067">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sableye</language>
+	</row>
+	<row id="msg_0821_mega_mawile" index="1068">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mawile</language>
+	</row>
+	<row id="msg_0821_mega_aggron" index="1069">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Aggron</language>
+	</row>
+	<row id="msg_0821_mega_medicham" index="1070">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Medicham</language>
+	</row>
+	<row id="msg_0821_mega_manectric" index="1071">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Manectric</language>
+	</row>
+	<row id="msg_0821_mega_sharpedo" index="1072">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sharpedo</language>
+	</row>
+	<row id="msg_0821_mega_camerupt" index="1073">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Camerupt</language>
+	</row>
+	<row id="msg_0821_mega_altaria" index="1074">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Altaria</language>
+	</row>
+	<row id="msg_0821_mega_banette" index="1075">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Banette</language>
+	</row>
+	<row id="msg_0821_mega_absol" index="1076">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Absol</language>
+	</row>
+	<row id="msg_0821_mega_glalie" index="1077">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Glalie</language>
+	</row>
+	<row id="msg_0821_mega_salamence" index="1078">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Salamence</language>
+	</row>
+	<row id="msg_0821_mega_metagross" index="1079">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Metagross</language>
+	</row>
+	<row id="msg_0821_mega_latias" index="1080">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Latias</language>
+	</row>
+	<row id="msg_0821_mega_latios" index="1081">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Latios</language>
+	</row>
+	<row id="msg_0821_mega_rayquaza" index="1082">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rayquaza</language>
+	</row>
+	<row id="msg_0821_mega_lopunny" index="1083">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lopunny</language>
+	</row>
+	<row id="msg_0821_mega_garchomp" index="1084">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Garchomp</language>
+	</row>
+	<row id="msg_0821_mega_lucario" index="1085">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lucario</language>
+	</row>
+	<row id="msg_0821_mega_abomasnow" index="1086">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Abomasnow</language>
+	</row>
+	<row id="msg_0821_mega_gallade" index="1087">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gallade</language>
+	</row>
+	<row id="msg_0821_mega_audino" index="1088">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Audino</language>
+	</row>
+	<row id="msg_0821_mega_diancie" index="1089">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Diancie</language>
+	</row>
+	<row id="msg_0821_kyogre_primal" index="1090">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kyogre</language>
+	</row>
+	<row id="msg_0821_groudon_primal" index="1091">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Groudon</language>
+	</row>
+	<row id="msg_0821_rattata_alolan" index="1092">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rattata</language>
+	</row>
+	<row id="msg_0821_raticate_alolan" index="1093">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raticate</language>
+	</row>
+	<row id="msg_0821_raichu_alolan" index="1094">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raichu</language>
+	</row>
+	<row id="msg_0821_sandshrew_alolan" index="1095">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sandshrew</language>
+	</row>
+	<row id="msg_0821_sandslash_alolan" index="1096">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sandslash</language>
+	</row>
+	<row id="msg_0821_vulpix_alolan" index="1097">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vulpix</language>
+	</row>
+	<row id="msg_0821_ninetales_alolan" index="1098">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ninetales</language>
+	</row>
+	<row id="msg_0821_diglett_alolan" index="1099">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Diglett</language>
+	</row>
+	<row id="msg_0821_dugtrio_alolan" index="1100">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dugtrio</language>
+	</row>
+	<row id="msg_0821_meowth_alolan" index="1101">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowth</language>
+	</row>
+	<row id="msg_0821_persian_alolan" index="1102">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Persian</language>
+	</row>
+	<row id="msg_0821_geodude_alolan" index="1103">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Geodude</language>
+	</row>
+	<row id="msg_0821_graveler_alolan" index="1104">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Graveler</language>
+	</row>
+	<row id="msg_0821_golem_alolan" index="1105">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Golem</language>
+	</row>
+	<row id="msg_0821_grimer_alolan" index="1106">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grimer</language>
+	</row>
+	<row id="msg_0821_muk_alolan" index="1107">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Muk</language>
+	</row>
+	<row id="msg_0821_exeggutor_alolan" index="1108">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Exeggutor</language>
+	</row>
+	<row id="msg_0821_marowak_alolan" index="1109">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Marowak</language>
+	</row>
+	<row id="msg_0821_raticate_alolan_large" index="1110">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raticate</language>
+	</row>
+	<row id="msg_0821_marowak_alolan_large" index="1111">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Marowak</language>
+	</row>
+	<row id="msg_0821_gumshoos_large" index="1112">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gumshoos</language>
+	</row>
+	<row id="msg_0821_vikavolt_large" index="1113">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vikavolt</language>
+	</row>
+	<row id="msg_0821_ribombee_large" index="1114">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ribombee</language>
+	</row>
+	<row id="msg_0821_araquanid_large" index="1115">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Araquanid</language>
+	</row>
+	<row id="msg_0821_lurantis_large" index="1116">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lurantis</language>
+	</row>
+	<row id="msg_0821_salazzle_large" index="1117">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Salazzle</language>
+	</row>
+	<row id="msg_0821_togedemaru_large" index="1118">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Togedemaru</language>
+	</row>
+	<row id="msg_0821_mimikyu_large" index="1119">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mimikyu</language>
+	</row>
+	<row id="msg_0821_mimikyu_busted_large" index="1120">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mimikyu</language>
+	</row>
+	<row id="msg_0821_kommo_o_large" index="1121">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kommo-o</language>
+	</row>
+	<row id="msg_0821_meowth_galarian" index="1122">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowth</language>
+	</row>
+	<row id="msg_0821_ponyta_galarian" index="1123">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ponyta</language>
+	</row>
+	<row id="msg_0821_rapidash_galarian" index="1124">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rapidash</language>
+	</row>
+	<row id="msg_0821_farfetchd_galarian" index="1125">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">FARFETCHD</language>
+	</row>
+	<row id="msg_0821_weezing_galarian" index="1126">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Weezing</language>
+	</row>
+	<row id="msg_0821_mr_mime_galarian" index="1127">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mr. Mime</language>
+	</row>
+	<row id="msg_0821_articuno_galarian" index="1128">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Articuno</language>
+	</row>
+	<row id="msg_0821_zapdos_galarian" index="1129">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zapdos</language>
+	</row>
+	<row id="msg_0821_moltres_galarian" index="1130">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Moltres</language>
+	</row>
+	<row id="msg_0821_slowking_galarian" index="1131">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">SLOWKING</language>
+	</row>
+	<row id="msg_0821_corsola_galarian" index="1132">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Corsola</language>
+	</row>
+	<row id="msg_0821_zigzagoon_galarian" index="1133">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zigzagoon</language>
+	</row>
+	<row id="msg_0821_linoone_galarian" index="1134">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Linoone</language>
+	</row>
+	<row id="msg_0821_darumaka_galarian" index="1135">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Darumaka</language>
+	</row>
+	<row id="msg_0821_darmanitan_galarian" index="1136">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Darmanitan</language>
+	</row>
+	<row id="msg_0821_yamask_galarian" index="1137">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Yamask</language>
+	</row>
+	<row id="msg_0821_stunfisk_galarian" index="1138">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Stunfisk</language>
+	</row>
+	<row id="msg_0821_pikachu_cosplay" index="1139">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_rock_star" index="1140">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_belle" index="1141">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_pop_star" index="1142">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_ph_d" index="1143">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_libre" index="1144">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_original_cap" index="1145">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_hoenn_cap" index="1146">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_sinnoh_cap" index="1147">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_unova_cap" index="1148">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_kalos_cap" index="1149">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_alola_cap" index="1150">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_partner_cap" index="1151">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_pikachu_world_cap" index="1152">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_castform_sunny" index="1153">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Castform</language>
+	</row>
+	<row id="msg_0821_castform_rainy" index="1154">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Castform</language>
+	</row>
+	<row id="msg_0821_castform_snowy" index="1155">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Castform</language>
+	</row>
+	<row id="msg_0821_cherrim_sunshine" index="1156">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cherrim</language>
+	</row>
+	<row id="msg_0821_shellos_east_sea" index="1157">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Shellos</language>
+	</row>
+	<row id="msg_0821_gastrodon_east_sea" index="1158">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gastrodon</language>
+	</row>
+	<row id="msg_0821_dialga_origin" index="1159">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dialga</language>
+	</row>
+	<row id="msg_0821_palkia_origin" index="1160">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Palkia</language>
+	</row>
+	<row id="msg_0821_basculin_blue_striped" index="1161">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Basculin</language>
+	</row>
+	<row id="msg_0821_basculin_white_striped" index="1162">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Basculin</language>
+	</row>
+	<row id="msg_0821_darmanitan_zen_mode" index="1163">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Darmanitan</language>
+	</row>
+	<row id="msg_0821_darmanitan_zen_mode_galarian" index="1164">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Darmanitan</language>
+	</row>
+	<row id="msg_0821_deerling_summer" index="1165">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Deerling</language>
+	</row>
+	<row id="msg_0821_deerling_autumn" index="1166">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Deerling</language>
+	</row>
+	<row id="msg_0821_deerling_winter" index="1167">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Deerling</language>
+	</row>
+	<row id="msg_0821_sawsbuck_summer" index="1168">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sawsbuck</language>
+	</row>
+	<row id="msg_0821_sawsbuck_autumn" index="1169">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sawsbuck</language>
+	</row>
+	<row id="msg_0821_sawsbuck_winter" index="1170">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sawsbuck</language>
+	</row>
+	<row id="msg_0821_tornadus_therian" index="1171">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tornadus</language>
+	</row>
+	<row id="msg_0821_thundurus_therian" index="1172">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Thundurus</language>
+	</row>
+	<row id="msg_0821_landorus_therian" index="1173">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Landorus</language>
+	</row>
+	<row id="msg_0821_kyurem_white" index="1174">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kyurem</language>
+	</row>
+	<row id="msg_0821_kyurem_black" index="1175">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kyurem</language>
+	</row>
+	<row id="msg_0821_keldeo_resolute" index="1176">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Keldeo</language>
+	</row>
+	<row id="msg_0821_meloetta_pirouette" index="1177">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meloetta</language>
+	</row>
+	<row id="msg_0821_genesect_douse_drive" index="1178">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Genesect</language>
+	</row>
+	<row id="msg_0821_genesect_shock_drive" index="1179">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Genesect</language>
+	</row>
+	<row id="msg_0821_genesect_burn_drive" index="1180">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Genesect</language>
+	</row>
+	<row id="msg_0821_genesect_chill_drive" index="1181">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Genesect</language>
+	</row>
+	<row id="msg_0821_greninja_battle_bond" index="1182">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Greninja</language>
+	</row>
+	<row id="msg_0821_greninja_ash" index="1183">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Greninja</language>
+	</row>
+	<row id="msg_0821_vivillon_polar" index="1184">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_tundra" index="1185">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_continental" index="1186">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_garden" index="1187">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_elegant" index="1188">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_meadow" index="1189">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_modern" index="1190">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_marine" index="1191">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_archipelago" index="1192">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_high_plains" index="1193">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_sandstorm" index="1194">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_river" index="1195">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_monsoon" index="1196">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_savanna" index="1197">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_sun" index="1198">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_ocean" index="1199">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_jungle" index="1200">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_fancy" index="1201">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_vivillon_poke_ball" index="1202">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Vivillon</language>
+	</row>
+	<row id="msg_0821_flabebe_yellow_flower" index="1203">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flabébé</language>
+	</row>
+	<row id="msg_0821_flabebe_orange_flower" index="1204">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flabébé</language>
+	</row>
+	<row id="msg_0821_flabebe_blue_flower" index="1205">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flabébé</language>
+	</row>
+	<row id="msg_0821_flabebe_white_flower" index="1206">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flabébé</language>
+	</row>
+	<row id="msg_0821_floette_yellow_flower" index="1207">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_floette_orange_flower" index="1208">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_floette_blue_flower" index="1209">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_floette_white_flower" index="1210">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_floette_eternal_flower" index="1211">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_florges_yellow_flower" index="1212">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Florges</language>
+	</row>
+	<row id="msg_0821_florges_orange_flower" index="1213">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Florges</language>
+	</row>
+	<row id="msg_0821_florges_blue_flower" index="1214">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Florges</language>
+	</row>
+	<row id="msg_0821_florges_white_flower" index="1215">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Florges</language>
+	</row>
+	<row id="msg_0821_furfrou_heart" index="1216">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_star" index="1217">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_diamond" index="1218">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_debutante" index="1219">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_matron" index="1220">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_dandy" index="1221">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_la_reine" index="1222">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_kabuki" index="1223">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_furfrou_pharaoh" index="1224">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Furfrou</language>
+	</row>
+	<row id="msg_0821_aegislash_blade" index="1225">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Aegislash</language>
+	</row>
+	<row id="msg_0821_pumpkaboo_small" index="1226">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pumpkaboo</language>
+	</row>
+	<row id="msg_0821_pumpkaboo_large" index="1227">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pumpkaboo</language>
+	</row>
+	<row id="msg_0821_pumpkaboo_super" index="1228">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pumpkaboo</language>
+	</row>
+	<row id="msg_0821_gourgeist_small" index="1229">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gourgeist</language>
+	</row>
+	<row id="msg_0821_gourgeist_large" index="1230">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gourgeist</language>
+	</row>
+	<row id="msg_0821_gourgeist_super" index="1231">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gourgeist</language>
+	</row>
+	<row id="msg_0821_xerneas_active" index="1232">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Xerneas</language>
+	</row>
+	<row id="msg_0821_zygarde_10" index="1233">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_zygarde_10_power_construct" index="1234">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_zygarde_50_power_construct" index="1235">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_zygarde_10_complete" index="1236">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_zygarde_50_complete" index="1237">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_hoopa_unbound" index="1238">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hoopa</language>
+	</row>
+	<row id="msg_0821_oricorio_pom_pom" index="1239">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oricorio</language>
+	</row>
+	<row id="msg_0821_oricorio_pau" index="1240">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oricorio</language>
+	</row>
+	<row id="msg_0821_oricorio_sensu" index="1241">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oricorio</language>
+	</row>
+	<row id="msg_0821_rockruff_own_tempo" index="1242">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rockruff</language>
+	</row>
+	<row id="msg_0821_lycanroc_midnight" index="1243">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lycanroc</language>
+	</row>
+	<row id="msg_0821_lycanroc_dusk" index="1244">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lycanroc</language>
+	</row>
+	<row id="msg_0821_wishiwashi_school" index="1245">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wishiwashi</language>
+	</row>
+	<row id="msg_0821_minior_meteor_orange" index="1246">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_meteor_yellow" index="1247">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_meteor_green" index="1248">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_meteor_blue" index="1249">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_meteor_indigo" index="1250">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_meteor_violet" index="1251">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_red" index="1252">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_orange" index="1253">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_yellow" index="1254">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_green" index="1255">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_blue" index="1256">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_indigo" index="1257">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_minior_core_violet" index="1258">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Minior</language>
+	</row>
+	<row id="msg_0821_mimikyu_busted" index="1259">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mimikyu</language>
+	</row>
+	<row id="msg_0821_necrozma_dusk_mane" index="1260">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Necrozma</language>
+	</row>
+	<row id="msg_0821_necrozma_dawn_wings" index="1261">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Necrozma</language>
+	</row>
+	<row id="msg_0821_necrozma_ultra_dusk_mane" index="1262">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Necrozma</language>
+	</row>
+	<row id="msg_0821_necrozma_ultra_dawn_wings" index="1263">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Necrozma</language>
+	</row>
+	<row id="msg_0821_magearna_original" index="1264">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Magearna</language>
+	</row>
+	<row id="msg_0821_pikachu_partner" index="1265">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_eevee_partner" index="1266">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eevee</language>
+	</row>
+	<row id="msg_0821_cramorant_gulping" index="1267">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cramorant</language>
+	</row>
+	<row id="msg_0821_cramorant_gorging" index="1268">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cramorant</language>
+	</row>
+	<row id="msg_0821_toxtricity_low_key" index="1269">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Toxtricity</language>
+	</row>
+	<row id="msg_0821_sinistea_antique" index="1270">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sinistea</language>
+	</row>
+	<row id="msg_0821_polteageist_antique" index="1271">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Poltegeist</language>
+	</row>
+	<row id="msg_0821_alcremie_berry_sweet" index="1272">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_alcremie_love_sweet" index="1273">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_alcremie_star_sweet" index="1274">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_alcremie_clover_sweet" index="1275">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_alcremie_flower_sweet" index="1276">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_alcremie_ribbon_sweet" index="1277">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_eiscue_noice_face" index="1278">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eiscue</language>
+	</row>
+	<row id="msg_0821_morpeko_hangry" index="1279">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Morpeko</language>
+	</row>
+	<row id="msg_0821_zacian_crowned" index="1280">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zacian</language>
+	</row>
+	<row id="msg_0821_zamazenta_crowned" index="1281">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zamazenta</language>
+	</row>
+	<row id="msg_0821_eternatus_eternamax" index="1282">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eternatus</language>
+	</row>
+	<row id="msg_0821_urshifu_rapid_strike" index="1283">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Urshifu</language>
+	</row>
+	<row id="msg_0821_zarude_dada" index="1284">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zarude</language>
+	</row>
+	<row id="msg_0821_calyrex_ice_rider" index="1285">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Calyrex</language>
+	</row>
+	<row id="msg_0821_calyrex_shadow_rider" index="1286">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Calyrex</language>
+	</row>
+	<row id="msg_0821_enamorus_therian" index="1287">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Enamorus</language>
+	</row>
+	<row id="msg_0821_growlithe_hisuian" index="1288">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Growlithe</language>
+	</row>
+	<row id="msg_0821_arcanine_hisuian" index="1289">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Arcanine</language>
+	</row>
+	<row id="msg_0821_voltorb_hisuian" index="1290">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Voltorb</language>
+	</row>
+	<row id="msg_0821_electrode_hisuian" index="1291">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Electrode</language>
+	</row>
+	<row id="msg_0821_typhlosion_hisuian" index="1292">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Typhlosion</language>
+	</row>
+	<row id="msg_0821_qwilfish_hisuian" index="1293">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Qwilfish</language>
+	</row>
+	<row id="msg_0821_sneasel_hisuian" index="1294">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sneasel</language>
+	</row>
+	<row id="msg_0821_samurott_hisuian" index="1295">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Samurott</language>
+	</row>
+	<row id="msg_0821_lilligant_hisuian" index="1296">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lilligant</language>
+	</row>
+	<row id="msg_0821_zorua_hisuian" index="1297">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zorua</language>
+	</row>
+	<row id="msg_0821_zoroark_hisuian" index="1298">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zoroark</language>
+	</row>
+	<row id="msg_0821_braviary_hisuian" index="1299">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Braviary</language>
+	</row>
+	<row id="msg_0821_sliggoo_hisuian" index="1300">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sliggoo</language>
+	</row>
+	<row id="msg_0821_goodra_hisuian" index="1301">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Goodra</language>
+	</row>
+	<row id="msg_0821_avalugg_hisuian" index="1302">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Avalugg</language>
+	</row>
+	<row id="msg_0821_decidueye_hisuian" index="1303">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Decidueye</language>
+	</row>
+	<row id="msg_0821_kleavor_lord" index="1304">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kleavor</language>
+	</row>
+	<row id="msg_0821_lilligant_lady" index="1305">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lilligant</language>
+	</row>
+	<row id="msg_0821_arcanine_lord" index="1306">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Arcanine</language>
+	</row>
+	<row id="msg_0821_electrode_lord" index="1307">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Electrode</language>
+	</row>
+	<row id="msg_0821_avalugg_lord" index="1308">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Avalugg</language>
+	</row>
+	<row id="msg_0821_unfezant_female" index="1309">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Unfezant</language>
+	</row>
+	<row id="msg_0821_frillish_female" index="1310">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Frillish</language>
+	</row>
+	<row id="msg_0821_jellicent_female" index="1311">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Jellicent</language>
+	</row>
+	<row id="msg_0821_pyroar_female" index="1312">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pyroar</language>
+	</row>
+	<row id="msg_0821_meowstic_female" index="1313">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowstic</language>
+	</row>
+	<row id="msg_0821_indeedee_female" index="1314">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Indeedee</language>
+	</row>
+	<row id="msg_0821_basculegion_female" index="1315">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Basclegion</language>
+	</row>
+	<row id="msg_0821_maushold_family_of_three" index="1316">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Maushold</language>
+	</row>
+	<row id="msg_0821_squawkabilly_blue_plumage" index="1317">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Squawkbily</language>
+	</row>
+	<row id="msg_0821_squawkabilly_yellow_plumage" index="1318">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Squawkbily</language>
+	</row>
+	<row id="msg_0821_squawkabilly_white_plumage" index="1319">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Squawkbily</language>
+	</row>
+	<row id="msg_0821_palafin_hero" index="1320">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Palafin</language>
+	</row>
+	<row id="msg_0821_tatsugiri_droopy" index="1321">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tatsugiri</language>
+	</row>
+	<row id="msg_0821_tatsugiri_stretchy" index="1322">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tatsugiri</language>
+	</row>
+	<row id="msg_0821_dudunsparce_three_segment" index="1323">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dudunspars</language>
+	</row>
+	<row id="msg_0821_gimmighoul_roaming" index="1324">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gimmighoul</language>
+	</row>
+	<row id="msg_0821_wooper_paldean" index="1325">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wooper</language>
+	</row>
+	<row id="msg_0821_tauros_combat" index="1326">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tauros</language>
+	</row>
+	<row id="msg_0821_tauros_blaze" index="1327">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tauros</language>
+	</row>
+	<row id="msg_0821_tauros_aqua" index="1328">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tauros</language>
+	</row>
+	<row id="msg_0821_oinkologne_female" index="1329">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oinkologne</language>
+	</row>
+	<row id="msg_0821_revavroom_segin" index="1330">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Revavroom</language>
+	</row>
+	<row id="msg_0821_revavroom_schedar" index="1331">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Revavroom</language>
+	</row>
+	<row id="msg_0821_revavroom_navi" index="1332">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Revavroom</language>
+	</row>
+	<row id="msg_0821_revavroom_ruchbah" index="1333">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Revavroom</language>
+	</row>
+	<row id="msg_0821_revavroom_caph" index="1334">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Revavroom</language>
+	</row>
+	<row id="msg_0821_koraidon_limited_build" index="1335">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Koraidon</language>
+	</row>
+	<row id="msg_0821_koraidon_sprinting_build" index="1336">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Koraidon</language>
+	</row>
+	<row id="msg_0821_koraidon_swimming_build" index="1337">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Koraidon</language>
+	</row>
+	<row id="msg_0821_koraidon_gliding_build" index="1338">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Koraidon</language>
+	</row>
+	<row id="msg_0821_miraidon_low_power_mode" index="1339">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Miraidon</language>
+	</row>
+	<row id="msg_0821_miraidon_drive_mode" index="1340">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Miraidon</language>
+	</row>
+	<row id="msg_0821_miraidon_aquatic_mode" index="1341">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Miraidon</language>
+	</row>
+	<row id="msg_0821_miraidon_glide_mode" index="1342">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Miraidon</language>
+	</row>
+	<row id="msg_0821_poltchageist_masterpiece" index="1343">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Polchgeist</language>
+	</row>
+	<row id="msg_0821_sinistcha_masterpiece" index="1344">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sinistcha</language>
+	</row>
+	<row id="msg_0821_ogerpon_wellspring_mask" index="1345">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_hearthflame_mask" index="1346">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_cornerstone_mask" index="1347">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_teal_mask_terastal" index="1348">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_wellspring_mask_terastal" index="1349">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_hearthflame_mask_terastal" index="1350">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ogerpon_cornerstone_mask_terastal" index="1351">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ogerpon</language>
+	</row>
+	<row id="msg_0821_ursaluna_bloodmoon" index="1352">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Ursaluna</language>
+	</row>
+	<row id="msg_0821_terapagos_terastal" index="1353">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Terapagos</language>
+	</row>
+	<row id="msg_0821_terapagos_stellar" index="1354">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Terapagos</language>
+	</row>
+	<row id="msg_0821_gigantamax_venusaur" index="1355">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Venusaur</language>
+	</row>
+	<row id="msg_0821_gigantamax_charizard" index="1356">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Charizard</language>
+	</row>
+	<row id="msg_0821_gigantamax_blastoise" index="1357">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Blastoise</language>
+	</row>
+	<row id="msg_0821_gigantamax_butterfree" index="1358">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Butterfree</language>
+	</row>
+	<row id="msg_0821_gigantamax_pikachu" index="1359">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pikachu</language>
+	</row>
+	<row id="msg_0821_gigantamax_meowth" index="1360">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowth</language>
+	</row>
+	<row id="msg_0821_gigantamax_machamp" index="1361">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Machamp</language>
+	</row>
+	<row id="msg_0821_gigantamax_gengar" index="1362">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Gengar</language>
+	</row>
+	<row id="msg_0821_gigantamax_kingler" index="1363">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Kingler</language>
+	</row>
+	<row id="msg_0821_gigantamax_lapras" index="1364">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lapras</language>
+	</row>
+	<row id="msg_0821_gigantamax_eevee" index="1365">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eevee</language>
+	</row>
+	<row id="msg_0821_gigantamax_snorlax" index="1366">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Snorlax</language>
+	</row>
+	<row id="msg_0821_gigantamax_garbodor" index="1367">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Garbodor</language>
+	</row>
+	<row id="msg_0821_gigantamax_melmetal" index="1368">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Melmetal</language>
+	</row>
+	<row id="msg_0821_gigantamax_rillaboom" index="1369">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rillaboom</language>
+	</row>
+	<row id="msg_0821_gigantamax_cinderace" index="1370">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cinderace</language>
+	</row>
+	<row id="msg_0821_gigantamax_inteleon" index="1371">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Inteleon</language>
+	</row>
+	<row id="msg_0821_gigantamax_corviknight" index="1372">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Corviknite</language>
+	</row>
+	<row id="msg_0821_gigantamax_orbeetle" index="1373">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Orbeetle</language>
+	</row>
+	<row id="msg_0821_gigantamax_drednaw" index="1374">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Drednaw</language>
+	</row>
+	<row id="msg_0821_gigantamax_coalossal" index="1375">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Coalossal</language>
+	</row>
+	<row id="msg_0821_gigantamax_flapple" index="1376">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Flapple</language>
+	</row>
+	<row id="msg_0821_gigantamax_appletun" index="1377">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Appletun</language>
+	</row>
+	<row id="msg_0821_gigantamax_sandaconda" index="1378">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sandaconda</language>
+	</row>
+	<row id="msg_0821_gigantamax_toxtricity" index="1379">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Toxtricity</language>
+	</row>
+	<row id="msg_0821_gigantamax_toxtricity_low_key" index="1380">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Toxtricity</language>
+	</row>
+	<row id="msg_0821_gigantamax_centiskorch" index="1381">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Centskorch</language>
+	</row>
+	<row id="msg_0821_gigantamax_hatterene" index="1382">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hatterene</language>
+	</row>
+	<row id="msg_0821_gigantamax_grimmsnarl" index="1383">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Grimmsnarl</language>
+	</row>
+	<row id="msg_0821_gigantamax_alcremie" index="1384">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alcremie</language>
+	</row>
+	<row id="msg_0821_gigantamax_copperajah" index="1385">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Copperajah</language>
+	</row>
+	<row id="msg_0821_gigantamax_duraludon" index="1386">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Duraludon</language>
+	</row>
+	<row id="msg_0821_gigantamax_urshifu" index="1387">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Urshifu</language>
+	</row>
+	<row id="msg_0821_gigantamax_urshifu_rapid_strike" index="1388">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Urshifu</language>
+	</row>
+	<row id="msg_0821_mega_raichu_x" index="1389">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raichu</language>
+	</row>
+	<row id="msg_0821_mega_raichu_y" index="1390">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Raichu</language>
+	</row>
+	<row id="msg_0821_mega_clefable" index="1391">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Clefable</language>
+	</row>
+	<row id="msg_0821_mega_victreebel" index="1392">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Victreebel</language>
+	</row>
+	<row id="msg_0821_mega_starmie" index="1393">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Starmie</language>
+	</row>
+	<row id="msg_0821_mega_dragonite" index="1394">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dragonite</language>
+	</row>
+	<row id="msg_0821_mega_meganium" index="1395">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meganium</language>
+	</row>
+	<row id="msg_0821_mega_feraligatr" index="1396">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Feraligatr</language>
+	</row>
+	<row id="msg_0821_mega_skarmory" index="1397">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Skarmory</language>
+	</row>
+	<row id="msg_0821_mega_chimecho" index="1398">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Chimecho</language>
+	</row>
+	<row id="msg_0821_mega_absol_z" index="1399">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Absol</language>
+	</row>
+	<row id="msg_0821_mega_staraptor" index="1400">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Staraptor</language>
+	</row>
+	<row id="msg_0821_mega_garchomp_z" index="1401">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Garchomp</language>
+	</row>
+	<row id="msg_0821_mega_lucario_z" index="1402">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lucario</language>
+	</row>
+	<row id="msg_0821_mega_froslass" index="1403">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Froslass</language>
+	</row>
+	<row id="msg_0821_mega_heatran" index="1404">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Heatran</language>
+	</row>
+	<row id="msg_0821_mega_darkrai" index="1405">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Darkrai</language>
+	</row>
+	<row id="msg_0821_mega_emboar" index="1406">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Emboar</language>
+	</row>
+	<row id="msg_0821_mega_excadrill" index="1407">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Excadrill</language>
+	</row>
+	<row id="msg_0821_mega_scolipede" index="1408">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scolipede</language>
+	</row>
+	<row id="msg_0821_mega_scrafty" index="1409">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scrafty</language>
+	</row>
+	<row id="msg_0821_mega_eelektross" index="1410">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Eelektross</language>
+	</row>
+	<row id="msg_0821_mega_chandelure" index="1411">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Chandelure</language>
+	</row>
+	<row id="msg_0821_mega_golurk" index="1412">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Golurk</language>
+	</row>
+	<row id="msg_0821_mega_chesnaught" index="1413">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Chesnaught</language>
+	</row>
+	<row id="msg_0821_mega_delphox" index="1414">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Delphox</language>
+	</row>
+	<row id="msg_0821_mega_greninja" index="1415">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Greninja</language>
+	</row>
+	<row id="msg_0821_mega_pyroar" index="1416">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pyroar</language>
+	</row>
+	<row id="msg_0821_mega_floette" index="1417">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Floette</language>
+	</row>
+	<row id="msg_0821_mega_meowstic" index="1418">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowstic</language>
+	</row>
+	<row id="msg_0821_mega_meowstic_female" index="1419">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Meowstic</language>
+	</row>
+	<row id="msg_0821_mega_malamar" index="1420">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Malamar</language>
+	</row>
+	<row id="msg_0821_mega_barbaracle" index="1421">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Barbaracle</language>
+	</row>
+	<row id="msg_0821_mega_dragalge" index="1422">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dragalge</language>
+	</row>
+	<row id="msg_0821_mega_hawlucha" index="1423">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hawlucha</language>
+	</row>
+	<row id="msg_0821_mega_zygarde" index="1424">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zygarde</language>
+	</row>
+	<row id="msg_0821_mega_crabominable" index="1425">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Crabomnabl</language>
+	</row>
+	<row id="msg_0821_mega_golisopod" index="1426">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Golisopod</language>
+	</row>
+	<row id="msg_0821_mega_drampa" index="1427">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Drampa</language>
+	</row>
+	<row id="msg_0821_mega_magearna" index="1428">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Magearna</language>
+	</row>
+	<row id="msg_0821_mega_magearna_original" index="1429">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Magearna</language>
+	</row>
+	<row id="msg_0821_mega_zeraora" index="1430">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Zeraora</language>
+	</row>
+	<row id="msg_0821_mega_falinks" index="1431">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Falinks</language>
+	</row>
+	<row id="msg_0821_mega_scovillain" index="1432">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Scovillain</language>
+	</row>
+	<row id="msg_0821_mega_glimmora" index="1433">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Glimmora</language>
+	</row>
+	<row id="msg_0821_mega_tatsugiri" index="1434">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tatsugiri</language>
+	</row>
+	<row id="msg_0821_mega_tatsugiri_droopy" index="1435">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tatsugiri</language>
+	</row>
+	<row id="msg_0821_mega_tatsugiri_stretchy" index="1436">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Tatsugiri</language>
+	</row>
+	<row id="msg_0821_mega_baxcalibur" index="1437">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Baxcalibur</language>
+	</row>
 </body>

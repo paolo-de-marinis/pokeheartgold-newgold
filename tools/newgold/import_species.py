@@ -13,6 +13,7 @@ Without --write it reports what it would change and touches nothing.
 import argparse
 import json
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -61,11 +62,47 @@ def added_species():
             if number > after]
 
 
+def reference_forms(reference):
+    """The reference's forms, in its own order, as species names.
+
+    Past SPECIES_MEGA_START the reference numbers every mega, regional,
+    Gigantamax and other form as a species of its own, by an expression on a
+    marker (SPECIES_MEGA_START + 1); its own preprocessor says what each one
+    comes to. Only a form with a personal block in Species.c and pictures is
+    a species: the overworld-only variants (a female Venusaur, Unown's
+    letters) have neither and are skipped.
+    """
+    header = (reference / "include/constants/species.h").read_text()
+    names = re.findall(r"^#define SPECIES_([A-Z0-9_]+)\s+\(", header, re.M)
+    source = '#include "constants/species.h"\n' + "\n".join(f"SPECIES_{n} X_{n}" for n in names)
+    out = subprocess.run(["cpp", "-P", "-I", str(reference / "include"), "-"],
+                         input=source, capture_output=True, text=True, check=True).stdout
+    numbered = []
+    for m in re.finditer(r"^(.+?) X_([A-Z0-9_]+)$", out, re.M):
+        expression = m.group(1).strip()
+        if re.fullmatch(r"[\d\s()+*-]+", expression):
+            numbered.append((eval(expression), m.group(2)))  # digits and arithmetic only
+    blocks = species_entries(reference)
+    sprites = reference / "data/graphics/sprites"
+    bases = base_species_of(reference)
+    # A real form has a base species in the reference's own table; the
+    # filler slots it keeps in a range have a block and no base.
+    return [name for number, name in sorted(set(numbered))
+            if name in blocks and name in bases and (sprites / name.lower()).is_dir()]
+
+
+def base_species_of(reference):
+    """Each form's base species, from the reference's own table."""
+    table = (reference / "data/FormToSpeciesMapping.c").read_text(errors="replace")
+    return dict(re.findall(r"\[SPECIES_([A-Z0-9_]+) - SPECIES_MEGA_START\]\s*=\s*SPECIES_([A-Z0-9_]+)", table))
+
+
 def species_to_add(reference):
-    """Those of them this repository has not got yet."""
+    """Those of them this repository has not got yet: the base species first,
+    then the forms, each in the reference's order."""
     have = set(re.findall(r"#define SPECIES_([A-Z0-9_]+)",
                           (ROOT / "include/constants/species.h").read_text()))
-    return [name for name in reference_species(reference) if name not in have]
+    return [name for name in reference_species(reference) + reference_forms(reference) if name not in have]
 
 # GENDER_RATIO(frac) stores (u8)(frac * 254.75), and a fraction above one means
 # genderless. Every ratio the games use is a multiple of an eighth, so the
@@ -245,6 +282,10 @@ def main():
 
     blocks = species_entries(args.reference)
     yields = base_exp_yields(args.reference)
+    # A form the reference gives no yield of its own inherits its base's.
+    bases = base_species_of(args.reference)
+    for form, base in bases.items():
+        yields.setdefault(form, yields.get(base, 0))
     learnsets = machine_moves(args.reference)
     tms, hms = machine_numbers()
 
@@ -284,6 +325,15 @@ def main():
     personal["baseStats"].extend(added)
     personalPath.write_text(json.dumps(personal, indent=2) + "\n")
     print(f"wrote {personalPath.relative_to(ROOT)}")
+    if added:
+        # The constants go in ahead of NUM_SPECIES, which then names the last.
+        headerPath = ROOT / "include/constants/species.h"
+        header = headerPath.read_text()
+        last = added[-1]["species"]
+        header = re.sub(r"\n#define NUM_SPECIES SPECIES_[A-Z0-9_]+\n",
+                        "\n" + constants + f"\n\n#define NUM_SPECIES SPECIES_{last}\n", header, count=1)
+        headerPath.write_text(header)
+        print(f"wrote {headerPath.relative_to(ROOT)}: NUM_SPECIES is SPECIES_{last}")
     print(constants)
 
 

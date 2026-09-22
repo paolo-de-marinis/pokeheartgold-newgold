@@ -45,6 +45,9 @@ def main():
 
     sprites = args.reference / "data/graphics/sprites"
     palettes = palette_numbers(args.reference)
+    for form, base in import_species.base_species_of(args.reference).items():
+        if form not in palettes and base in palettes:
+            palettes[form] = palettes[base]
     first = first_free_icon()
     print(f"icons already go up to {first - 1}; the new species take {first} to "
           f"{first + len(import_species.added_species()) - 1}")

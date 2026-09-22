@@ -68,19 +68,19 @@ FOOTPRINT_OFFSET = import_footprints.MEMBER_OFFSET
 # Pokemon: nothing can put one in a party, they have no Dex page of their own,
 # and their sprites come from otherpoke.narc. They are checked by the tests
 # that own those tables, not here.
-SPECIES_IN_PLAY = 1027
+SPECIES_IN_PLAY = 1423
 
 # The two the reference ships with an empty Pokedex entry and placeholder
 # measurements of its own -- konefr's Galarian Slowpoke is still called "-----"
 # in his own text table. Blank here is faithful, not missing; what would be a
 # port bug is a third one appearing.
-BLANK_IN_THE_REFERENCE = {"SLOWPOKE_GALARIAN", "SLOWBRO_GALARIAN"}
+BLANK_IN_THE_REFERENCE = set()  # a form carries its base's text, the two Galarian lines included
 
 # A species whose only abilities are still names loses battles quietly: it
 # looks right on the summary screen and does nothing. This is the ledger's
 # number for the row, not a pass or a fail -- it comes down as the abilities
 # get their effects, and it may only come down.
-SPECIES_WITH_NOTHING_TO_DO = 18
+SPECIES_WITH_NOTHING_TO_DO = 58
 
 # Two tables indexed by species that never grew past Arceus. See the test that
 # pins them; the number is 494 entries, species 0 to 493.
@@ -249,7 +249,13 @@ class SpeciesInPlayTests(unittest.TestCase):
         """
         banks, _ = self.cry_banks()
         numbers = species_numbers()
-        shared = {numbers[form]: numbers[base] for form, base in import_cries.SHARED_WITH.items()}
+        # The two Galarian lines, and every form the reference numbers as a
+        # species: a form cries as its base.
+        sharing = dict(import_cries.SHARED_WITH)
+        for form, base in import_species.base_species_of(Path(REFERENCE)).items():
+            if form in numbers:
+                sharing.setdefault(form, base)
+        shared = {numbers[form]: numbers[base] for form, base in sharing.items()}
         self.assertTrue(shared)
         for form, base in shared.items():
             self.assertEqual(banks[form], banks[base])
@@ -303,6 +309,10 @@ class SpeciesInPlayTests(unittest.TestCase):
         would notice the whole range sliding by one.
         """
         data = import_dex_text.text_data(Path(REFERENCE))
+        # A form takes its base's text, as the import gives it.
+        for form, base in import_species.base_species_of(Path(REFERENCE)).items():
+            if form in data and base in data and not data[form]["entry"]:
+                data[form] = dict(data[base])
         names = import_dex_text.rows("0237")
         added = import_species.added_species()
         checked = 0
