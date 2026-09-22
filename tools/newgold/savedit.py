@@ -54,6 +54,12 @@ FLASH = 512 * 1024
 PAGES_PER_HALF = 64             # the flash is erased in two halves
 
 
+def constants(header, prefix):
+    """Every #define with the prefix, by name."""
+    text = (ROOT / header).read_text()
+    return {m.group(1): int(m.group(2), 0) for m in re.finditer(rf"#define ({prefix}\w+)\s+(0x[0-9A-Fa-f]+|\d+)", text)}
+
+
 def crc16(data, crc=0xFFFF):
     """GF_CalcCRC16: the SDK's CCITT table, polynomial 0x1021, fed high bit first."""
     for byte in data:
@@ -522,6 +528,8 @@ def main():
                                        "and asserts on one that never ends")
     parser.add_argument("--trainer-id", type=int)
     parser.add_argument("--badges", type=int, help="how many Johto badges to set")
+    parser.add_argument("--flag", action="append", default=[], metavar="FLAG_NAME",
+                        help="set a script flag by its name in include/constants/flags.h; repeatable")
     parser.add_argument("--where", metavar="MAP:X:Y[:DIR]",
                         help="put the player on a map, the way the save records it: "
                              "LocalFieldData.currentPosition, which is a Location of "
@@ -633,6 +641,17 @@ def main():
         struct.pack_into("<B", block, JOHTO_BADGES, (1 << args.badges) - 1)
         save.write()
         print(f"{args.badges} Johto badges")
+
+    for name in args.flag:
+        # A script flag by its name in include/constants/flags.h: the cap
+        # for Falkner is 13 only once FLAG_UNK_076 says Sprout Tower is done.
+        flags = save.block("SAVE_FLAGS")
+        number = constants("include/constants/flags.h", "FLAG_").get(name)
+        if number is None:
+            raise SystemExit(f"there is no {name} in include/constants/flags.h")
+        flags[NUM_VARS * 2 + number // 8] |= 1 << (number % 8)
+        save.write()
+        print(f"{name} ({number:#x}) set")
 
     if args.where:
         parts = args.where.split(":")

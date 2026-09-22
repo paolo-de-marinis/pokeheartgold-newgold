@@ -60,6 +60,10 @@ noise, not a wrong answer.
   is running, through the memory mapping its process holds open, and prints
   one line: field and party, encounter, battle state, failures. `--follow`
   prints every change until Ctrl-C. This is how a play session is watched.
+- `tools/newgold/diag/party.py` reads the party out of the same memory,
+  decrypted the way the game does it: species, level, experience, HP and
+  held item, which is how a level cap or a held item is checked without
+  trusting the screen.
 - `tools/newgold/diag/dump.py OUTDIR` reads the `ram:` dumps of a harness run
   the same way, one line a dump, and pastes the run's shots into a sheet.
 - `tools/newgold/diag/battle.py OUTDIR encounter|battle:SPECIES` plays the
