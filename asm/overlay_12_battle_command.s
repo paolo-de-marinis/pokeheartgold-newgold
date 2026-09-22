@@ -129,21 +129,16 @@ sSafariCatchRateStages: ; 0x0226C3CE
 
 .public sMoonBallPokemon
 
+; HGSS listed whole families here. New Gold lists only the species a Moon Stone
+; actually evolves, which is what the ball has meant since Generation VIII, so
+; the pre-evolutions and the already-evolved fall off and Munna joins.
 sMoonBallPokemon: ; 0x0226C3E8
-	.short SPECIES_NIDORAN_F
 	.short SPECIES_NIDORINA
-	.short SPECIES_NIDOQUEEN
-	.short SPECIES_NIDORAN_M
 	.short SPECIES_NIDORINO
-	.short SPECIES_NIDOKING
-	.short SPECIES_CLEFFA
 	.short SPECIES_CLEFAIRY
-	.short SPECIES_CLEFABLE
-	.short SPECIES_IGGLYBUFF
 	.short SPECIES_JIGGLYPUFF
-	.short SPECIES_WIGGLYTUFF
 	.short SPECIES_SKITTY
-	.short SPECIES_DELCATTY
+	.short SPECIES_MUNNA
 
 .public sPickupTable1
 

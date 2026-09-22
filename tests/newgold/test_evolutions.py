@@ -8,6 +8,7 @@ Eevee keeping every branch it had.
 """
 
 import json
+import os
 import re
 import sys
 import unittest
@@ -17,6 +18,32 @@ from test_level_cap import ROOT
 
 sys.path.insert(0, str(ROOT / "tools/newgold"))
 import import_species  # noqa: E402
+import import_evolutions  # noqa: E402
+
+REFERENCE = os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE")
+if REFERENCE is None:
+    sibling = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
+    REFERENCE = sibling if (sibling / ".git").exists() else None
+
+# konefr's nine changes to species HeartGold already had: seven that move a
+# level, two that add a way to reach a Hisui evolution by move. The levels are
+# pinned here so they are checked with no reference to hand; with the checkout
+# present the test below proves no vanilla level disagrees with
+# data/Evolutions.c at all.
+KONEFR_LEVELS = {
+    ("SPECIES_BAYLEEF", "SPECIES_MEGANIUM"): 35,
+    ("SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"): 16,
+    ("SPECIES_QUILAVA", "SPECIES_TYPHLOSION"): 35,
+    ("SPECIES_TOTODILE", "SPECIES_CROCONAW"): 16,
+    ("SPECIES_CROCONAW", "SPECIES_FERALIGATR"): 35,
+    ("SPECIES_FLAAFFY", "SPECIES_AMPHAROS"): 35,
+    ("SPECIES_MARILL", "SPECIES_AZUMARILL"): 22,
+}
+
+KONEFR_MOVES = {
+    ("SPECIES_PRIMEAPE", "SPECIES_ANNIHILAPE"): "MOVE_RAGE_FIST",
+    ("SPECIES_STANTLER", "SPECIES_WYRDEER"): "MOVE_PSYSHIELD_BASH",
+}
 
 VANILLA_EEVEE = {
     "SPECIES_VAPOREON", "SPECIES_JOLTEON", "SPECIES_FLAREON",
@@ -119,6 +146,26 @@ class EvolutionTests(unittest.TestCase):
         params = {str(evo["param"]) for evos in self.byBase.values() for evo in evos}
         self.assertEqual(params & {"ITEM_CHIPPED_POT", "ITEM_SCROLL_OF_WATERS",
                                    "ITEM_GALARICA_WREATH"}, set())
+
+    def test_konefrs_nine_vanilla_changes(self):
+        for (base, target), level in KONEFR_LEVELS.items():
+            evo = next(e for e in self.byBase[base] if e["target"] == target)
+            self.assertEqual(evo["method"], "EVO_LEVEL", base)
+            self.assertEqual(evo["param"], level, base)
+        for (base, target), move in KONEFR_MOVES.items():
+            self.assertIn({"method": "EVO_HAS_MOVE", "param": move, "target": target},
+                          self.byBase[base], base)
+
+    def test_no_vanilla_level_disagrees_with_the_reference(self):
+        # The reference also gives Annihilape and Wyrdeer an EVO_FORM_ARGUMENT
+        # row counting twenty uses of the move. That is hg-engine's own method
+        # and this tree has no EVO_FORM_ARGUMENT and no form argument on a
+        # Pokemon to count into, so the move row is the whole of what konefr
+        # changed and the whole of what is owed.
+        if REFERENCE is None:
+            self.skipTest("the reference checkout is not present")
+        table = import_evolutions.reference_table(Path(REFERENCE))
+        self.assertEqual(import_evolutions.relevelled(table, {"evoTable": self.table}), [])
 
     def test_species_without_an_evolution_are_absent(self):
         # Emolga, Bouffalant and Dedenne do not evolve; a stray entry for them

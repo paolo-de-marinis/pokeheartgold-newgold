@@ -1361,10 +1361,12 @@ BOOL BattleSystem_CheckMonCaught(BattleSystem *battleSystem, int battlerId) {
     return Pokedex_CheckMonCaughtFlag(battleSystem->pokedex, battlerId);
 }
 
-// How many species the player has caught, which is what decides how often a
-// throw is a critical one.
-u16 BattleSystem_CountDexOwned(BattleSystem *battleSystem) {
-    return Pokedex_CountDexOwned(battleSystem->pokedex);
+// How many species of the Johto dex the player has caught, which is what
+// decides how often a throw is a critical one. The regional dex rather than the
+// national one, so finishing the national dex does not make every throw
+// critical; that is how the games have counted it since Generation IX.
+u16 BattleSystem_CountRegionalDexOwned(BattleSystem *battleSystem) {
+    return Pokedex_CountJohtoDexOwned(battleSystem->pokedex);
 }
 
 void BattleSystem_SetDefaultBlend() {

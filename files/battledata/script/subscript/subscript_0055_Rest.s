@@ -7,6 +7,16 @@ _000:
     Wait 
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_INSOMNIA, _098
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_VITAL_SPIRIT, _098
+    // Leaf Guard keeps its holder awake in sunshine, Rest included. The other
+    // six statuses ask the same two questions in their own subscripts; this is
+    // the one the game left out. The reference asks it in C before the move
+    // runs and says "it doesn't affect" instead; the sentence below is the one
+    // this script already has for staying awake.
+    CheckIgnoreWeather _LEAF_GUARD_OFF
+    CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SUN_ALL, _LEAF_GUARD_OFF
+    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_LEAF_GUARD, _098
+
+_LEAF_GUARD_OFF:
     CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS, STATUS_SLEEP, _107
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_SOUNDPROOF, _027
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_UPROAR, _115

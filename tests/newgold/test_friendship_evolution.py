@@ -16,6 +16,7 @@ import tempfile
 import unittest
 
 from test_level_cap import ROOT, function
+from test_repels import REFERENCE, REFERENCE_COMMIT, revision
 
 PROGRAM = r'''
 #include <assert.h>
@@ -56,6 +57,50 @@ class FriendshipEvolutionTests(unittest.TestCase):
             result = subprocess.run([str(exe)], capture_output=True, text=True, env={**os.environ, "UBSAN_OPTIONS": "halt_on_error=1"})
             self.assertEqual(result.returncode, 0, result.stderr)
             print(result.stdout.strip())
+
+
+    def test_sylveon_wants_the_friendship_too(self):
+        # A Fairy move alone is not enough; Eevee has to like you as much as
+        # Espeon and Umbreon ask for.
+        source = function((ROOT / "src/pokemon.c").read_text(), "GetMonEvolution")
+        case = source[source.index("case EVO_HAS_MOVE_TYPE:"):]
+        case = case[:case.index("break;")]
+        self.assertIn("friendship >= FRIENDSHIP_EVOLUTION_THRESHOLD", case)
+        # Its neighbour asks for the move alone, in the reference as here.
+        plain = source[source.index("case EVO_HAS_MOVE:"):source.index("case EVO_HAS_MOVE_TYPE:")]
+        self.assertNotIn("friendship", plain)
+
+    def test_sylveon_gate_matches_the_reference(self):
+        if REFERENCE is None:
+            self.skipTest("no reference checkout")
+        source = revision(REFERENCE, REFERENCE_COMMIT, "src/individual/GetMonEvolutionInternal.c")
+        source = source[source.index("case EVOCTX_LEVELUP:"):]
+        case = source[source.index("case EVO_HAS_MOVE_TYPE:"):]
+        case = case[:case.index("case EVO_LEVEL_DARK_TYPE_MON_IN_PARTY:")]
+        self.assertIn("friendship >= FRIENDSHIP_EVOLUTION_THRESHOLD", case)
+
+    def test_eevee_reaches_sylveon_before_the_other_two(self):
+        # The level-up loop stops at the first row that matches, so a Fairy-move
+        # Eevee that is fond enough for Espeon or Umbreon has to meet Sylveon
+        # first or it never becomes one. The reference lists it there too.
+        import json
+        table = json.loads((ROOT / "files/poketool/personal/evo.json").read_text())["evoTable"]
+        eevee = next(e for e in table if e["baseSpecies"] == "SPECIES_EEVEE")
+        methods = [evo["method"] for evo in eevee["evos"]]
+        self.assertLess(methods.index("EVO_HAS_MOVE_TYPE"), methods.index("EVO_FRIENDSHIP_DAY"))
+        self.assertLess(methods.index("EVO_HAS_MOVE_TYPE"), methods.index("EVO_FRIENDSHIP_NIGHT"))
+        levelup = function((ROOT / "src/pokemon.c").read_text(), "GetMonEvolution")
+        levelup = levelup[levelup.index("case EVOCTX_LEVELUP:"):levelup.index("case EVOCTX_TRADE:")]
+        self.assertIn("if (target != SPECIES_NONE)", levelup)
+
+    def test_eevee_order_matches_the_reference(self):
+        if REFERENCE is None:
+            self.skipTest("no reference checkout")
+        source = revision(REFERENCE, REFERENCE_COMMIT, "data/Evolutions.c")
+        entry = source[source.index("[SPECIES_EEVEE] = {"):]
+        entry = entry[:entry.index("},\n\n")]
+        targets = re.findall(r"SPECIES_(ESPEON|UMBREON|SYLVEON)", entry)
+        self.assertEqual(targets, ["SYLVEON", "ESPEON", "UMBREON"])
 
 
 if __name__ == "__main__":

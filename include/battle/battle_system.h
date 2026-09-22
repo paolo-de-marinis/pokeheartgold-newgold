@@ -143,7 +143,7 @@ u32 CalcMoneyLoss(Party *party, PlayerProfile *profile);
 void BattleSystem_SetPokedexSeen(BattleSystem *battleSystem, int battlerId);
 void BattleSystem_SetPokedexCaught(BattleSystem *battleSystem, int battlerId);
 BOOL BattleSystem_CheckMonCaught(BattleSystem *battleSystem, int battlerId);
-u16 BattleSystem_CountDexOwned(BattleSystem *battleSystem);
+u16 BattleSystem_CountRegionalDexOwned(BattleSystem *battleSystem);
 void BattleSystem_SetDefaultBlend(void);
 u8 BattleSystem_PrintTrainerMessage(BattleSystem *battleSystem, int trainerId, int battlerId, int a2, int delay);
 u32 BattleSystem_PrintBattleMessage(BattleSystem *battleSystem, MsgData *data, BattleMessage *msg, u8 delay);

@@ -629,6 +629,11 @@
 #define BATTLE_SUBSCRIPT_ROOM_SERVICE                       395
 #define BATTLE_SUBSCRIPT_BOOSTER_ENERGY                     396
 #define BATTLE_SUBSCRIPT_SAFETY_GOGGLES                     397
+// Snow running out, the way hail does at 237. The reference numbers it 359;
+// this game numbers its own from where it had stopped.
+#define BATTLE_SUBSCRIPT_SNOW_END                           398
+// The line Unseen Fist prints when it goes through a Protect. 511 there.
+#define BATTLE_SUBSCRIPT_UNSEEN_FIST                        399
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

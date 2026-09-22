@@ -1153,10 +1153,10 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
     speed2 = ctx->battleMons[battlerId2].speed * sStatChangeTable[speedStatChange2][0] / sStatChangeTable[speedStatChange2][1];
 
     if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        if ((ability1 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability1 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) || (ability1 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) || (ability1 == ABILITY_SLUSH_RUSH && ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL)) {
+        if ((ability1 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability1 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) || (ability1 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) || (ability1 == ABILITY_SLUSH_RUSH && ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL))) {
             speed1 *= 2;
         }
-        if ((ability2 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability2 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) || (ability2 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) || (ability2 == ABILITY_SLUSH_RUSH && ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL)) {
+        if ((ability2 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability2 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) || (ability2 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) || (ability2 == ABILITY_SLUSH_RUSH && ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL))) {
             speed2 *= 2;
         }
     }
@@ -2947,11 +2947,53 @@ BOOL CurseUserIsGhost(BattleContext *ctx, u16 moveNo, int battlerId) {
     return moveNo == MOVE_CURSE && (GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) == TYPE_GHOST || GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL) == TYPE_GHOST);
 }
 
+// A Paradox Pokemon cannot be parted from its Booster Energy -- not by Thief,
+// not by Trick, not by an ability that helps itself to what it has just hit.
+//
+// This is the one clause of the reference's CanItemBeRemovedFromSpecies that
+// this game can read today. The other nine are the items welded to Zacian,
+// Zamazenta, Genesect, Kyogre, Groudon, Giratina, Silvally, Ogerpon and
+// Arceus: those came over as hold effects no line in this tree reads yet, and
+// they are the item range's debt rather than this row's.
+//
+// Four Paradox species are deliberately not on the list. The reference defines
+// VANILLA_PARADOX_BOOSTER_ENERGY_BEHAVIOUR, and that define is exactly what
+// takes Gouging Fire, Raging Bolt, Iron Boulder and Iron Crown off it -- in
+// New Gold those four can be tricked out of a Booster Energy and the sixteen
+// below cannot.
+static BOOL ItemIsWeldedToTheSpecies(BattleContext *ctx, int battlerId) {
+    if (ctx->battleMons[battlerId].item != ITEM_BOOSTER_ENERGY) {
+        return FALSE;
+    }
+
+    switch (ctx->battleMons[battlerId].species) {
+    case SPECIES_GREAT_TUSK:
+    case SPECIES_SCREAM_TAIL:
+    case SPECIES_BRUTE_BONNET:
+    case SPECIES_FLUTTER_MANE:
+    case SPECIES_SLITHER_WING:
+    case SPECIES_SANDY_SHOCKS:
+    case SPECIES_IRON_TREADS:
+    case SPECIES_IRON_BUNDLE:
+    case SPECIES_IRON_HANDS:
+    case SPECIES_IRON_JUGULIS:
+    case SPECIES_IRON_MOTH:
+    case SPECIES_IRON_THORNS:
+    case SPECIES_ROARING_MOON:
+    case SPECIES_IRON_VALIANT:
+    case SPECIES_WALKING_WAKE:
+    case SPECIES_IRON_LEAVES:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
 BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     BOOL ret = FALSE;
     int side = BattleSystem_GetFieldSide(battleSystem, battlerId);
 
-    if (ctx->battleMons[battlerId].item && !(ctx->fieldSideConditionData[side].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[battlerId])) && !ItemIdIsMail(ctx->battleMons[battlerId].item)) {
+    if (ctx->battleMons[battlerId].item && !(ctx->fieldSideConditionData[side].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[battlerId])) && !ItemIdIsMail(ctx->battleMons[battlerId].item) && !ItemIsWeldedToTheSpecies(ctx, battlerId)) {
         ret = TRUE;
     }
 
@@ -2959,7 +3001,7 @@ BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battle
 }
 
 BOOL CanTrickHeldItem(BattleContext *ctx, int battlerId) {
-    return !ItemIdIsMail(ctx->battleMons[battlerId].item);
+    return !ItemIdIsMail(ctx->battleMons[battlerId].item) && !ItemIsWeldedToTheSpecies(ctx, battlerId);
 }
 
 BOOL WhirlwindCheck(BattleSystem *battleSystem, BattleContext *ctx) {
@@ -3843,7 +3885,10 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
         script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;
     }
 
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_WATER_ABSORB) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && BattleMoveTbl(ctx, ctx->moveNoCur)->power) {
+    // Water Absorb wants a damaging Water move, and one it did not aim at
+    // itself -- the reference asks both of it, as it does of Volt Absorb and
+    // Irrigation. Dry Skin below asks only for the power, there as here.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_WATER_ABSORB) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && battlerIdAttacker != battlerIdTarget && BattleMoveTbl(ctx, ctx->moveNoCur)->power) {
         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerIdTarget].maxHp, 4);
         script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;
     }
@@ -4259,7 +4304,10 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                         break;
                     case ABILITY_SNOW_WARNING:
                         ctx->battleMons[battlerId].sendOutFlag = TRUE;
-                        if (!(ctx->fieldCondition & FIELD_CONDITION_HAIL_PERMANENT)) {
+                        // The reference asks for hail of either kind here and
+                        // leaves the rest to the subscript, which is the one
+                        // that knows it is laying snow now.
+                        if (!(ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL)) {
                             script = BATTLE_SUBSCRIPT_SNOW_WARNING;
                             flag = TRUE;
                         }
@@ -4968,6 +5016,17 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         ctx->battlerIdStatChange = ctx->battlerIdTarget;
         ctx->battlerIdTemp = ctx->battlerIdAttacker;
         *script = BATTLE_SUBSCRIPT_POISON;
+        return TRUE;
+    }
+
+    // The other ability of the attacker's that is answered here rather than in
+    // the switch. A contact move that went through a Protect says so, once the
+    // quarter damage has been dealt. The reference asks only about Unseen
+    // Fist, not about Piercing Drill, even though both punch through: the
+    // sentence names an ability, and this is the ability it names.
+    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_UNSEEN_FIST && ctx->turnData[ctx->battlerIdTarget].protectFlag && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+        ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+        *script = BATTLE_SUBSCRIPT_UNSEEN_FIST;
         return TRUE;
     }
 
@@ -8141,6 +8200,11 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         }
         if ((fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) && (calcTarget.type1 == TYPE_ROCK || calcTarget.type2 == TYPE_ROCK)) {
             monSpDef = monSpDef * 15 / 10;
+        }
+        // What the sandstorm does for a Rock-type's Sp. Def, the snow does for
+        // an Ice-type's Defence. It is the whole of what snow is for.
+        if ((fieldCondition & FIELD_CONDITION_SNOW_ALL) && (calcTarget.type1 == TYPE_ICE || calcTarget.type2 == TYPE_ICE)) {
+            monDef = monDef * 15 / 10;
         }
         if ((fieldCondition & FIELD_CONDITION_SUN_ALL) && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_SAME_SIDE_HP, battlerIdAttacker, ABILITY_FLOWER_GIFT)) {
             monAtk = monAtk * 15 / 10;

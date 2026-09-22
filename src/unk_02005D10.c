@@ -1046,6 +1046,7 @@ BOOL IsCryFinished(void) {
 }
 
 BOOL PlayCryEx(int mode, int species, int pan, int volume, int heapId, int form) {
+    int bank;
     int panHalf;
     int volAdj;
     u8 *p10;
@@ -1063,10 +1064,19 @@ BOOL PlayCryEx(int mode, int species, int pan, int volume, int heapId, int form)
     if (sub_02006A0C(species, form) == 1) {
         species = 0x1EE;
     }
-    if (species != 0x1EE) {
-        species = CryBankForSpecies(species);
-        if ((u32)species >= ARCHIVE_BANK_COUNT || species == 0) {
-            species = 1;
+    // A species and its bank were the same number until the added ones needed
+    // one, so the mapping went into PlayCry and into here, and then this
+    // function handed its already-mapped number back to PlayCry -- which
+    // mapped it a second time. That is only harmless while the bank falls
+    // outside the species range: 199 of the 534 added banks do not, Cryogonal
+    // at 997 among them, and those played another Pokemon's cry. So the
+    // species stays a species here, for PlayCry and sub_02006AC0, which map it
+    // themselves; `bank` is what the archive is asked for.
+    bank = species;
+    if (bank != 0x1EE) {
+        bank = CryBankForSpecies(bank);
+        if ((u32)bank >= ARCHIVE_BANK_COUNT || bank == 0) {
+            bank = 1;
         }
     }
 
@@ -1099,13 +1109,13 @@ BOOL PlayCryEx(int mode, int species, int pan, int volume, int heapId, int form)
             PlayCry(0x1B9, form);
             if (*p1e == 0) {
                 GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-                sub_02006820(species, 1, volume);
+                sub_02006820(bank, 1, volume);
             } else if (*p10 == 1) {
                 sub_02005748(0xE, (u8)panHalf);
                 sub_02005774(0xE, volume);
             } else {
                 GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-                sub_02006820(species, 1, volume);
+                sub_02006820(bank, 1, volume);
             }
             return 1;
         default:
@@ -1118,74 +1128,74 @@ BOOL PlayCryEx(int mode, int species, int pan, int volume, int heapId, int form)
     case 0:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         break;
     case 1:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         sub_02006838(0x14, heapId);
         break;
     case 2:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         GF_SndHandleSetTrackPitch(1, 0xFFFF, 0x40);
         sub_02006AC0(species, 0x14, form);
         GF_SndHandleSetTrackPan(8, 0xFFFF, pan);
-        sub_02006820(species, 8, volAdj);
+        sub_02006820(bank, 8, volAdj);
         break;
     case 3:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         sub_02006838(0x1E, heapId);
         GF_SndHandleSetTrackPitch(1, 0xFFFF, 0xC0);
         sub_02006AC0(species, 0x10, form);
         GF_SndHandleSetTrackPan(8, 0xFFFF, pan);
-        sub_02006820(species, 8, volAdj);
+        sub_02006820(bank, 8, volAdj);
         break;
     case 4:
         sub_02005600(0xE);
-        sub_020057AC(species, volume, panHalf, 0xE, heapId);
+        sub_020057AC(bank, volume, panHalf, 0xE, heapId);
         sub_02005748(0xE, (u8)panHalf);
         sub_02006838(0xF, heapId);
         sub_02005760(0xE, 0x8600);
-        sub_02006AF4(species, -64, volAdj, panHalf, heapId);
+        sub_02006AF4(bank, -64, volAdj, panHalf, heapId);
         sub_02005760(0xF, 0x8600);
         break;
     case 5:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         GF_SndHandleSetTrackPitch(1, 0xFFFF, -224);
         break;
     case 6:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         GF_SndHandleSetTrackPitch(1, 0xFFFF, 0x2C);
         sub_02006AC0(species, -64, form);
         GF_SndHandleSetTrackPan(8, 0xFFFF, pan);
-        sub_02006820(species, 8, volAdj);
+        sub_02006820(bank, 8, volAdj);
         break;
     case 7:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         sub_02006838(0xB, heapId);
         GF_SndHandleSetTrackPitch(1, 0xFFFF, -128);
         break;
     case 8:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         sub_02006838(0x3C, heapId);
         GF_SndHandleSetTrackPitch(1, 0xFFFF, 0x3C);
         break;
     case 9:
         sub_02005600(0xE);
-        sub_020057AC(species, volume, panHalf, 0xE, heapId);
+        sub_020057AC(bank, volume, panHalf, 0xE, heapId);
         sub_02005748(0xE, (u8)panHalf);
         sub_02006838(0xD, heapId);
         sub_02005760(0xE, 0x6800);
@@ -1193,26 +1203,26 @@ BOOL PlayCryEx(int mode, int species, int pan, int volume, int heapId, int form)
     case 10:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         sub_02006838(0x64, heapId);
         GF_SndHandleSetTrackPitch(1, 0xFFFF, -44);
         break;
     case 11:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         GF_SndHandleSetTrackPitch(1, 0xFFFF, -96);
         break;
     case 12:
         PlayCry(species, form);
         GF_SndHandleSetTrackPan(1, 0xFFFF, pan);
-        sub_02006820(species, 1, volume);
+        sub_02006820(bank, 1, volume);
         sub_02006838(0x14, heapId);
         GF_SndHandleSetTrackPitch(1, 0xFFFF, -96);
         break;
     case 13:
         PlayCry(species, form);
-        sub_02006820(species, 1, 0x7F);
+        sub_02006820(bank, 1, 0x7F);
         sub_02006AC0(species, 0x14, form);
         GF_SndHandleSetTrackPan(8, 0xFFFF, pan);
         GF_SndHandleMoveVolume(8, volume, 0);

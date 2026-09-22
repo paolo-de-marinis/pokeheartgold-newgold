@@ -135,6 +135,14 @@ void TrainerData_ReadTrPoke(u32 idx, TRPOKE *dest) {
     ReadWholeNarcMemberByIdPair(dest, NARC_poketool_trainer_trpoke, (s32)idx);
 }
 
+// The reference retypes this table in C under EXPAND_TRAINER_GENDER_TABLE and
+// its copy is what its ROM reads, so three rows below are its copy's rather
+// than the cartridge's: Koga and Bruno, which it calls female where the ROM
+// says TRAINER_DOUBLE, and a row for the last class, which the ROM's table
+// stops one short of. Only TRAINER_FEMALE is ever tested -- it decides which
+// way a 50/50 species falls for that trainer -- so the first two change the
+// gender Koga's and Bruno's Pokemon are generated as, and the third is the
+// difference between a row and a byte read past the end of the array.
 static const u8 sTrainerGenders[] = {
     TRAINER_MALE,   // TRAINERCLASS_PKMN_TRAINER_ETHAN
     TRAINER_FEMALE, // TRAINERCLASS_PKMN_TRAINER_LYRA
@@ -225,7 +233,7 @@ static const u8 sTrainerGenders[] = {
     TRAINER_MALE,   // TRAINERCLASS_CHAMPION
     TRAINER_FEMALE, // TRAINERCLASS_ELITE_FOUR_WILL
     TRAINER_FEMALE, // TRAINERCLASS_ELITE_FOUR_KAREN
-    TRAINER_DOUBLE, // TRAINERCLASS_ELITE_FOUR_KOGA
+    TRAINER_FEMALE, // TRAINERCLASS_ELITE_FOUR_KOGA   (TRAINER_DOUBLE in the ROM)
     TRAINER_FEMALE, // TRAINERCLASS_PKMN_TRAINER_CHERYL
     TRAINER_MALE,   // TRAINERCLASS_PKMN_TRAINER_RILEY
     TRAINER_FEMALE, // TRAINERCLASS_PKMN_TRAINER_BUCK
@@ -248,7 +256,7 @@ static const u8 sTrainerGenders[] = {
     TRAINER_MALE,   // TRAINERCLASS_PKMN_TRAINER_RED
     TRAINER_MALE,   // TRAINERCLASS_LEADER_BLUE
     TRAINER_MALE,   // TRAINERCLASS_ELDER
-    TRAINER_DOUBLE, // TRAINERCLASS_ELITE_FOUR_BRUNO
+    TRAINER_FEMALE, // TRAINERCLASS_ELITE_FOUR_BRUNO  (TRAINER_DOUBLE in the ROM)
     TRAINER_MALE,   // TRAINERCLASS_SCIENTIST_GS
     TRAINER_FEMALE, // TRAINERCLASS_EXECUTIVE_ARIANA
     TRAINER_MALE,   // TRAINERCLASS_BOARDER
@@ -264,6 +272,7 @@ static const u8 sTrainerGenders[] = {
     TRAINER_MALE,   // TRAINERCLASS_PKMN_TRAINER_LUCAS_DP
     TRAINER_FEMALE, // TRAINERCLASS_PKMN_TRAINER_DAWN_DP
     TRAINER_MALE,   // TRAINERCLASS_PKMN_TRAINER_LUCAS_PT
+    TRAINER_FEMALE, // TRAINERCLASS_PKMN_TRAINER_DAWN_PT (the ROM's table has no row for class 128)
 };
 
 TrainerGender TrainerClass_GetGenderOrTrainerCount(int trainerClass) {

@@ -10,7 +10,9 @@
 // The four terrain types used to be here. They have moved to
 // constants/battle.h, next to the field conditions, because a terrain
 // is now something this game has. Ion Deluge's field condition went the
-// same way, for the same reason.
+// same way, for the same reason, and so has snow: the weather is read
+// in C now, so FIELD_CONDITION_SNOW_TEMP is a condition rather than a
+// number a script sets and nothing looks at.
 //
 // The four Drives and the seventeen Memories went to constants/items.h
 // when the whole of konefr's item range arrived, because they are real
@@ -27,6 +29,5 @@
 #define BATTLE_ANIMATION_MISTY_TERRAIN                 51
 #define BATTLE_ANIMATION_ELECTRIC_TERRAIN              52
 #define BATTLE_ANIMATION_PSYCHIC_TERRAIN               53
-#define FIELD_CONDITION_SNOW_TEMP                      1048576
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SCRIPT_IMPORTS_H

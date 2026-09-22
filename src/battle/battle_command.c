@@ -3993,6 +3993,14 @@ BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSystem, BattleContext *ct
                 }
             }
         }
+        // Snow is hail with nothing falling out of it: no damage, no types
+        // or abilities to be spared from it, and Ice Body fed all the same.
+        // The reference writes it as its own block beside the hail one.
+        if (ctx->fieldCondition & FIELD_CONDITION_SNOW_ALL) {
+            if (ctx->battleMons[battlerId].hp && !(ctx->battleMons[battlerId].moveEffectFlags & 0x40080) && GetBattlerAbility(ctx, battlerId) == ABILITY_ICE_BODY && ctx->battleMons[battlerId].hp < ctx->battleMons[battlerId].maxHp) {
+                ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 16);
+            }
+        }
         if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
             if (ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].hp < ctx->battleMons[battlerId].maxHp && GetBattlerAbility(ctx, battlerId) == ABILITY_RAIN_DISH) {
                 ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 16);
@@ -4793,7 +4801,10 @@ BOOL BtlCmd_CalcWeatherBallParams(BattleSystem *battleSystem, BattleContext *ctx
 
     if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
         if (ctx->fieldCondition & FIELD_CONDITION_WEATHER) {
-            ctx->movePower = BattleMoveTbl(ctx, ctx->moveNoCur)->power * 2;
+            // Snow is weather this move does not answer to: the reference
+            // leaves both its power and its type alone under it, so there is
+            // no Ice-type branch below either.
+            ctx->movePower = BattleMoveTbl(ctx, ctx->moveNoCur)->power * ((ctx->fieldCondition & FIELD_CONDITION_SNOW_ALL) ? 1 : 2);
             if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
                 ctx->moveType = TYPE_WATER;
             }
@@ -7762,7 +7773,7 @@ static void Task_GetPokemon(SysTask *task, void *inData) {
 
 extern u8 sStandardBallCatchRates[4];
 extern u8 sSafariCatchRateStages[13][2];
-extern u16 sMoonBallPokemon[14];
+extern u16 sMoonBallPokemon[6];
 
 #define CP_SQRT_32BIT_MODE (0UL << REG_CP_SQRTCNT_MODE_SHIFT)
 
@@ -7825,9 +7836,15 @@ static u32 BattleScript_ScaleExpToLevel(u32 exp, u32 faintedLevel, u32 gainerLev
 // A throw is sometimes a critical one: the ball flashes, shakes once and
 // settles. It is no more likely to catch than an ordinary throw — the roll is
 // the same — it just takes less time about it. How often depends on how much
-// of the Pokedex the player has filled in.
+// of the Johto dex the player has filled in.
+//
+// The reference shortens the throw to a single shake check when this roll hits,
+// which would make the capture likelier; it also never sets the flag that tells
+// the animation a critical happened, so there a critical throw is a guaranteed
+// escape. That is a dead variable rather than a rule, so the roll stays what it
+// reads as here: the animation, and nothing else.
 static u32 CriticalCaptureRate(BattleSystem *bsys, u32 modifiedCatchRate) {
-    u16 owned = BattleSystem_CountDexOwned(bsys);
+    u16 owned = BattleSystem_CountRegionalDexOwned(bsys);
     u32 tenths;
 
     if (owned > 600) {
@@ -7947,14 +7964,18 @@ static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *c
         case ITEM_HEAVY_BALL: {
             s32 weight = GetMonWeight(ctx->battleMons[ctx->battlerIdTarget].species);
             // Weight is in kilograms, moved to the left by 1 decimal point.
-            if (weight >= 4096) { // 409.6 kg / 903.0 lbs. or more.
-                catchRate += 40;
-            } else if (weight >= 3072) { // 307.2 kg / 677.3 lbs. or more.
-                catchRate += 30;
-            } else if (weight >= 2048) { // 204.8 kg / 451.5 lbs. or more.
-                catchRate += 20;
-            } else if (catchRate < 1024) { // Catch rate is mistakenly checked here instead of weight, causing all Pokemon that do not benefit from the Heavy Ball to be penalized by it.
+            // The modern bands: a penalty under 100 kg, nothing to 200, then a
+            // bonus in two steps. HGSS asked its last question about the catch
+            // rate rather than the weight, which penalised everything light
+            // enough to be worth catching; the weight is asked about here.
+            if (weight < 999) { // Under 99.9 kg / 220.2 lbs.
                 catchRate -= 20;
+            } else if (weight < 1999) { // Under 199.9 kg / 440.7 lbs.
+                // No change.
+            } else if (weight < 2999) { // Under 299.9 kg / 661.2 lbs.
+                catchRate += 20;
+            } else {
+                catchRate += 30;
             }
             break;
         }
@@ -7975,7 +7996,11 @@ static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *c
             break;
         }
         case ITEM_SPORT_BALL:
-            ballMultiplier = 15;
+            // Only worth its extra half in the Bug-Catching Contest, which is
+            // the only place it is handed out.
+            if (BattleSystem_GetBattleType(bsys) & BATTLE_TYPE_BUG_CONTEST) {
+                ballMultiplier = 15;
+            }
             break;
         case ITEM_FRIEND_BALL:
         // case ITEM_PARK_BALL:
@@ -8031,6 +8056,11 @@ static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *c
     }
     if (shakeCount < BALL_SHAKE_MAX) {
         return shakeCount;
+    }
+    // Catching something already in the dex is shown as a critical throw, which
+    // is where the Master Ball's single shake comes from.
+    if (BattleSystem_CheckMonCaught(bsys, ctx->battleMons[ctx->battlerIdTarget].species) == TRUE) {
+        ctx->criticalCapture = TRUE;
     }
     if (ctx->itemTemp == ITEM_FRIEND_BALL) {
         u8 friendship = FRIEND_BALL_FRIENDSHIP;

@@ -99,8 +99,42 @@ class CryLookupTests(unittest.TestCase):
 
     def test_both_ways_into_a_cry_go_through_the_lookup(self):
         """PlayCry and PlayCryEx both clamp, and both have to ask."""
-        self.assertEqual(self.source.count("species = CryBankForSpecies(species);"), 2)
+        self.assertEqual(self.source.count("CryBankForSpecies("),
+                         1 + 2, "the definition and one lookup on each way in")
         self.assertEqual(self.source.count("static int CryBankForSpecies"), 1)
+
+    def test_a_second_lookup_would_not_be_harmless(self):
+        """Most added banks are themselves a number in the species range.
+
+        CryBankForSpecies is not safe to apply twice: the added species run
+        from NUM_SPECIES_WITH_CRIES + 1 to the end of the table, and a bank
+        that happens to fall in that window is mapped again into somebody
+        else's. Cryogonal's 997 is the plain case.
+        """
+        constant = int(re.search(r"#define NUM_SPECIES_WITH_CRIES\s+(\d+)",
+                                 self.source).group(1))
+        last = constant + len(self.banks)
+        collide = [bank for bank in self.banks if constant < bank <= last]
+        self.assertEqual(len(collide), 199)
+        self.assertIn(997, collide)
+
+    def test_play_cry_ex_keeps_its_argument_a_species(self):
+        """It maps once, for the archive, and hands PlayCry the species.
+
+        PlayCry and sub_02006AC0 look a bank up for themselves, so a number
+        this function has already mapped goes through the table twice. Which
+        is what used to happen, and what the count above says it costs.
+        """
+        body = re.search(r"\nBOOL PlayCryEx\([^)]*\) \{\n(.*?)\n\}\n", self.source, re.S).group(1)
+        self.assertNotIn("species = CryBankForSpecies", body)
+        for call in ("PlayCry(", "sub_02006AC0("):
+            args = re.findall(re.escape(call) + r"(\w+)", body)
+            self.assertTrue(args, call)
+            self.assertLessEqual(set(args), {"species", "0x1B9"}, call)
+        for call in ("sub_02006820(", "sub_020057AC(", "sub_02006AF4("):
+            args = re.findall(re.escape(call) + r"(\w+)", body)
+            self.assertTrue(args, call)
+            self.assertEqual(set(args), {"bank"}, call)
 
 
 if __name__ == "__main__":

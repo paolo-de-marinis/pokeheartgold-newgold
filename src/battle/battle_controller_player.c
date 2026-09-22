@@ -870,6 +870,7 @@ typedef enum UpdateFieldConditionState {
     UFC_STATE_SANDSTORM,
     UFC_STATE_SUN,
     UFC_STATE_HAIL,
+    UFC_STATE_SNOW,
     UFC_STATE_FOG,
     UFC_STATE_GRAVITY,
     UFC_STATE_TERRAIN,
@@ -1166,6 +1167,41 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 }
                 ctx->tempData = 20;
+                flag = 1;
+            }
+            ctx->stateFieldConditionUpdate++;
+            break;
+        case UFC_STATE_SNOW:
+            // Hail's step again, with two things of its own. The line for the
+            // snow continuing is this bank's -- the reference leaves that
+            // branch without a message id at all, so its own game prints
+            // whichever line was last in the buffer, and that is a thing to
+            // copy only by accident. The animation is hail's, borrowed the way
+            // an added move borrows one: snow is entry 54 of the table the
+            // reference added to, and this game's stops earlier.
+            //
+            // Running WEATHER_CONTINUES is not only the message. It is the
+            // script that walks the battlers and applies the weather to each,
+            // which is where Ice Body feeds on the snow.
+            if (ctx->fieldCondition & FIELD_CONDITION_SNOW_ALL) {
+                if (ctx->fieldCondition & FIELD_CONDITION_SNOW_PERMANENT) {
+                    ctx->buffMsg.id = msg_0197_01371; // The snow continues to fall.
+                    ctx->buffMsg.tag = TAG_NONE;
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_WEATHER_CONTINUES);
+                    ctx->commandNext = ctx->command;
+                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                } else if (--ctx->fieldConditionData.weatherTurns == 0) {
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SNOW_END);
+                    ctx->commandNext = ctx->command;
+                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                } else {
+                    ctx->buffMsg.id = msg_0197_01371; // The snow continues to fall.
+                    ctx->buffMsg.tag = TAG_NONE;
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_WEATHER_CONTINUES);
+                    ctx->commandNext = ctx->command;
+                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                }
+                ctx->tempData = BATTLE_ANIMATION_WEATHER_HAIL;
                 flag = 1;
             }
             ctx->stateFieldConditionUpdate++;
@@ -2602,7 +2638,7 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
             hitChance = hitChance * 80 / 100;
         }
 
-        if (ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SNOW_CLOAK) == TRUE) {
+        if (ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL) && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SNOW_CLOAK) == TRUE) {
             hitChance = hitChance * 80 / 100;
         }
 
@@ -2699,7 +2735,7 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL && BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_THUNDER) {
             ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
         }
-        if (ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL && BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_BLIZZARD) {
+        if (ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL) && BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_BLIZZARD) {
             ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
         }
     }

@@ -17,6 +17,19 @@ import tempfile
 import unittest
 
 from test_level_cap import ROOT, function
+from test_repels import REFERENCE, REFERENCE_COMMIT, revision
+
+# The species a Moon Stone evolves, which is what the Moon Ball has meant since
+# Generation VIII. HGSS listed whole families instead; the reference builds this
+# list with MOON_BALL_GENERATION at GEN_LATEST, so the families are compiled out.
+MOON_BALL_SPECIES = [
+    "SPECIES_NIDORINA",
+    "SPECIES_NIDORINO",
+    "SPECIES_CLEFAIRY",
+    "SPECIES_JIGGLYPUFF",
+    "SPECIES_SKITTY",
+    "SPECIES_MUNNA",
+]
 
 # Multipliers are tenths: 35 means a 3.5x catch rate.
 EXPECTED = {
@@ -72,6 +85,39 @@ class BallMultiplierTests(unittest.TestCase):
         # Ten turns to reach the ceiling: 10 + 3 * 10 == 40.
         self.assertEqual(10 + 3 * 10, 40)
         self.assertIn("> 40", self.body[self.body.index("case ITEM_TIMER_BALL:"):])
+
+    def test_moon_ball_follows_the_moon_stone(self):
+        table = (ROOT / "asm/overlay_12_battle_command.s").read_text()
+        table = table[table.index("sMoonBallPokemon:"):]
+        table = table[:table.index(".public")]
+        self.assertEqual(re.findall(r"SPECIES_\w+", table), MOON_BALL_SPECIES)
+        # NELEMS walks the extern, so its declared length has to follow.
+        self.assertIn(f"extern u16 sMoonBallPokemon[{len(MOON_BALL_SPECIES)}];", (ROOT / "src/battle/battle_command.c").read_text())
+
+    def test_moon_ball_matches_the_reference(self):
+        if REFERENCE is None:
+            self.skipTest("no reference checkout")
+        source = revision(REFERENCE, REFERENCE_COMMIT, "src/individual/CalculateBallShakes.c")
+        source = source[source.index("MoonBallSpecies[]"):]
+        source = source[:source.index("};")]
+        # MOON_BALL_GENERATION is GEN_LATEST, so the gen-4 families are not built.
+        kept = source[:source.index("#if MOON_BALL_GENERATION == 4")]
+        self.assertEqual(re.findall(r"SPECIES_\w+", kept), MOON_BALL_SPECIES)
+
+    def test_sport_ball_only_helps_in_the_bug_contest(self):
+        sport = self.case("ITEM_SPORT_BALL")
+        self.assertIn("BATTLE_TYPE_BUG_CONTEST", sport)
+        self.assertIn("ballMultiplier = 15;", sport)
+        # Ungated it would have been a Poke Ball and a half everywhere.
+        self.assertLess(sport.index("BATTLE_TYPE_BUG_CONTEST"), sport.index("ballMultiplier = 15;"))
+
+    def test_heavy_ball_weighs_the_pokemon(self):
+        heavy = self.case("ITEM_HEAVY_BALL")
+        self.assertEqual(
+            re.findall(r"weight < (\d+)", heavy) + re.findall(r"catchRate ([-+]= \d+)", heavy),
+            ["999", "1999", "2999", "-= 20", "+= 20", "+= 30"])
+        # HGSS asked its last question about the catch rate, not the weight.
+        self.assertNotIn("catchRate < 1024", heavy)
 
     def test_friend_ball_uses_its_own_constant(self):
         self.assertIn("u8 friendship = FRIEND_BALL_FRIENDSHIP;", self.body)

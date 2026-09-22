@@ -27,6 +27,13 @@ BOOL sub_02004EB4(u16);
 
 // clang-format off
 // Class, Eyes meet theme
+//
+// The reference retypes this table in C under EXPAND_MUSIC_TABLES and repoints
+// the game at its copy, so its copy is what its ROM reads. The two copies agree
+// on all forty-four rows but two: where the cartridge names the Ace Trainer
+// classes it names their Johto twins, so in New Gold an Ace Trainer of class 24
+// or 25 has no row and the two GS classes have one. That is the reference's
+// table, not an improvement on it -- the rows are marked below.
 const static u16 sTrainerEncounterMusicParam[][3] = {
     { TRAINERCLASS_YOUNGSTER, SEQ_GS_EYE_J_SHOUNEN, SEQ_GS_EYE_J_SHOUNEN },
 	{ TRAINERCLASS_LASS, SEQ_GS_EYE_K_SHOUJO, SEQ_GS_EYE_K_SHOUJO },
@@ -39,8 +46,8 @@ const static u16 sTrainerEncounterMusicParam[][3] = {
 	{ TRAINERCLASS_BLACK_BELT, SEQ_GS_EYE_K_AYASHII, SEQ_GS_EYE_K_AYASHII },
 	{ TRAINERCLASS_POKEFAN_M, SEQ_GS_EYE_K_AYASHII, SEQ_GS_EYE_K_AYASHII },
 	{ TRAINERCLASS_POKEFAN, SEQ_GS_EYE_J_SHOUJO, SEQ_GS_EYE_J_SHOUJO },
-	{ TRAINERCLASS_ACE_TRAINER_M, SEQ_GS_EYE_K_AYASHII, SEQ_GS_EYE_K_AYASHII },
-	{ TRAINERCLASS_ACE_TRAINER_F, SEQ_GS_EYE_J_SHOUJO, SEQ_GS_EYE_J_SHOUJO },
+	{ TRAINERCLASS_ACE_TRAINER_M_GS, SEQ_GS_EYE_K_AYASHII, SEQ_GS_EYE_K_AYASHII }, // ACE_TRAINER_M in the ROM
+	{ TRAINERCLASS_ACE_TRAINER_F_GS, SEQ_GS_EYE_J_SHOUJO, SEQ_GS_EYE_J_SHOUJO }, // ACE_TRAINER_F in the ROM
 	{ TRAINERCLASS_BIRD_KEEPER_GS, SEQ_GS_EYE_J_SHOUNEN, SEQ_GS_EYE_J_SHOUNEN },
 	{ TRAINERCLASS_JUGGLER, SEQ_GS_EYE_J_AYASHII, SEQ_GS_EYE_J_AYASHII },
 	{ TRAINERCLASS_GENTLEMAN, SEQ_GS_EYE_K_AYASHII, SEQ_GS_EYE_K_AYASHII },

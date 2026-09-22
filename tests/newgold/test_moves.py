@@ -7,6 +7,7 @@ the same way out of their own archives, and nothing checks that the three
 agree with each other.
 """
 
+import os
 import re
 import struct
 import sys
@@ -19,6 +20,9 @@ sys.path.insert(0, str(ROOT / "tools/newgold"))
 import import_moves  # noqa: E402
 
 LAST_RETAIL = 467
+
+REFERENCE = Path(os.environ.get(
+    "NEWGOLD_REFERENCE", "/home/paolo/Porting HGSS/hg-engine-newgold-reference"))
 
 
 def constants(path, prefix):
@@ -92,6 +96,43 @@ class MoveTests(unittest.TestCase):
         for name, (key, value) in expected.items():
             record = struct.unpack(import_moves.RECORD, self.table[self.added[name]])
             self.assertEqual(record[field[key]], value, f"{name} {key}")
+
+    # Four retail moves the same settings move off their HeartGold values, and
+    # the three the settings leave alone. Pinned here; checked against the
+    # reference itself below when the checkout is there.
+    CHAMPIONS_RETAIL = {"GROWTH": dict(type=12, pp=20),
+                        "CRABHAMMER": dict(power=100, accuracy=95),
+                        "BONE_RUSH": dict(power=30, accuracy=90),
+                        "IRON_HEAD": dict(effectChance=20)}
+    CHAMPIONS_UNMOVED = {"PROTECT": dict(pp=10), "SANDSTORM": dict(pp=10),
+                         "NIGHT_SLASH": dict(pp=15)}
+    FIELD = {"power": 2, "type": 3, "accuracy": 4, "pp": 5, "effectChance": 6}
+
+    def test_the_four_retail_moves_the_settings_move(self):
+        """CHAMPIONS_PP_CHANGES is off and the other four are on, so of the
+        seven retail moves the reference writes as a choice, four take a value
+        this game did not have: a Grass-type Growth, a 95-accuracy Crabhammer,
+        a 30-power Bone Rush and an Iron Head that flinches one time in five."""
+        for name, wanted in {**self.CHAMPIONS_RETAIL, **self.CHAMPIONS_UNMOVED}.items():
+            record = struct.unpack(import_moves.RECORD, self.table[self.moves[f"MOVE_{name}"]])
+            for key, value in wanted.items():
+                self.assertEqual(record[self.FIELD[key]], value, f"{name} {key}")
+
+    @unittest.skipUnless(REFERENCE.exists(), "the reference checkout is not here")
+    def test_those_four_records_are_the_reference_s_own(self):
+        """Not only the field the setting decides: half of konefr's Crabhammer
+        would be neither game's move."""
+        import_moves.read_conditions(REFERENCE)
+        blocks = import_moves.reference_records(REFERENCE)
+        types = constants("include/constants/pokemon.h", "TYPE_")
+        for name in import_moves.CHAMPIONS_RETAIL:
+            block = blocks[name]
+            record = struct.unpack(import_moves.RECORD, self.table[self.moves[f"MOVE_{name}"]])
+            self.assertEqual(record[2], import_moves.number(block, "power"), name)
+            self.assertEqual(record[3], types[import_moves.field(block, "type")], name)
+            self.assertEqual(record[4], import_moves.number(block, "accuracy"), name)
+            self.assertEqual(record[5], import_moves.number(block, "pp"), name)
+            self.assertEqual(record[6], import_moves.number(block, "effectChance"), name)
 
     # Forty-one damaging moves carry no power, and the reference carries them
     # the same way, because the battle works the damage out instead: a Z-move

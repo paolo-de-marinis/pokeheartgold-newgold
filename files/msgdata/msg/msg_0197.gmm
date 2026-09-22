@@ -5492,4 +5492,24 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0}\nis not affected by\f{STRVAR_1 6, 1, 0}\fthanks to its Safety Goggles!</language>
 	</row>
+	<row id="msg_0197_01370" index="1370">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The snow stopped.</language>
+	</row>
+	<row id="msg_0197_01371" index="1371">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The snow continues to fall.</language>
+	</row>
+	<row id="msg_0197_01372" index="1372">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} couldn’t\nfully protect itself and got hurt!</language>
+	</row>
+	<row id="msg_0197_01373" index="1373">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} couldn’t\nfully protect itself and got hurt!</language>
+	</row>
+	<row id="msg_0197_01374" index="1374">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} couldn’t\nfully protect itself and got hurt!</language>
+	</row>
 </body>

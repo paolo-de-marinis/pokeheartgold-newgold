@@ -55,10 +55,43 @@ def native_target(target):
     return FORM_TARGETS.get(form.groups(), f"{form[1]} form {form[2]}")
 
 
+def relevelled(table, evolutions):
+    """Rows this table and the reference share that differ only in a number.
+
+    Of konefr's nine changes to species HeartGold already had, seven move a
+    level number and two add an `EVO_HAS_MOVE` line; these are the seven. A row
+    is matched by method and target, which is unique within a species, and only
+    when both sides give a bare number -- the reference writes Kirlia's Dawn
+    Stone as the literal 109 where this tree names the item, which is a
+    spelling difference and not a change. Every other disagreement over a
+    vanilla row is hg-engine's rework of the method itself (a Linking Cord for
+    a trade, an Ice Stone for Glaceon) and is left alone here.
+    """
+    changes = []
+    for entry in evolutions["evoTable"]:
+        body = table.get(entry["baseSpecies"])
+        if body is None:
+            continue
+        theirs = {(method, native_target(target)): param
+                  for method, param, target in ROW.findall(body)}
+        for evo in entry["evos"]:
+            param = theirs.get((evo["method"], evo["target"]))
+            if param is None or not param.lstrip("-").isdigit():
+                continue
+            if not str(evo["param"]).lstrip("-").isdigit() or int(param) == int(evo["param"]):
+                continue
+            changes.append((entry["baseSpecies"], evo["target"], evo, int(param)))
+    return changes
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("reference", type=Path)
     parser.add_argument("--write", action="store_true")
+    # The 163 species that gain an evolution and the seven that move a level
+    # are separate debts on separate ledger rows, so either can be written on
+    # its own without dragging the other in.
+    parser.add_argument("--levels-only", action="store_true")
     args = parser.parse_args()
 
     methods = constants("include/constants/pokemon.h", "EVO_")
@@ -107,15 +140,23 @@ def main():
             continue
         added.append({"baseSpecies": base, "evos": usable})
 
+    changes = relevelled(table, evolutions)
+
     print(f"{len(added)} species gain evolutions")
     for base, missing in skipped:
         for method, param, target, absent in missing:
             detail = ", ".join(absent) if absent else "the table already lists it"
             print(f"  left out {base} -> {target or '?'} ({method}): {detail}")
+    print(f"{len(changes)} species evolve at a different level")
+    for base, target, evo, param in changes:
+        print(f"  {base} -> {target}: {evo['param']} becomes {param}")
 
     if not args.write:
         return
-    evolutions["evoTable"].extend(added)
+    if not args.levels_only:
+        evolutions["evoTable"].extend(added)
+    for _, _, evo, param in changes:
+        evo["param"] = param
     EVOLUTIONS.write_text(json.dumps(evolutions, indent=2) + "\n")
     print(f"wrote {EVOLUTIONS.relative_to(ROOT)} with {len(evolutions['evoTable'])} entries")
 

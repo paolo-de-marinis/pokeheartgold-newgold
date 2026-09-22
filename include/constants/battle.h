@@ -270,15 +270,25 @@ typedef enum Terrain {
 #define FIELD_CONDITION_FOG                 (1 << 15)
 #define FIELD_CONDITION_TRICK_ROOM_INIT     (5 << 16)
 #define FIELD_CONDITION_TRICK_ROOM          (7 << 16)
+// Snow is hail with the damage taken out and a Defence boost put in: nothing
+// falls on anybody, an Ice-type's Defence is half again as much, and Ice Body
+// still feeds on it. The two bits are the reference's own numbers, and the
+// temporary one keeps the reference's spelling because the subscripts imported
+// from it already name it that way.
+#define FIELD_CONDITION_SNOW_TEMP           (1 << 20)
+#define FIELD_CONDITION_SNOW_PERMANENT      (1 << 21)
+#define FIELD_CONDITION_SNOW_ALL            (FIELD_CONDITION_SNOW_TEMP | FIELD_CONDITION_SNOW_PERMANENT)
 // Ion Deluge charges the air until the turn is over, so unlike everything
 // above it there is no count to keep: the bit goes on when the move lands and
 // off in the last step of the end of turn. The bit is the reference's own,
 // which is why it sits away up here rather than at the next one free.
 #define FIELD_CONDITION_ION_DELUGE          (1 << 27)
 
-#define FIELD_CONDITION_WEATHER_NO_SUN   (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SANDSTORM_ALL | FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_FOG)
+#define FIELD_CONDITION_WEATHER_NO_SUN   (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SANDSTORM_ALL | FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL | FIELD_CONDITION_FOG)
+// Snow is not on this one: the reference leaves Castform and Cherrim reading
+// hail alone, so a Forecast Castform stays Normal while it snows.
 #define FIELD_CONDITION_WEATHER_CASTFORM (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SUN_ALL | FIELD_CONDITION_HAIL_ALL)
-#define FIELD_CONDITION_WEATHER          (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SANDSTORM_ALL | FIELD_CONDITION_SUN_ALL | FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_FOG)
+#define FIELD_CONDITION_WEATHER          (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SANDSTORM_ALL | FIELD_CONDITION_SUN_ALL | FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL | FIELD_CONDITION_FOG)
 
 #define FIELD_CONDITION_UPROAR_SHIFT     8
 #define FIELD_CONDITION_GRAVITY_SHIFT    12

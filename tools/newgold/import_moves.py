@@ -252,6 +252,36 @@ def number(block, key):
     return int(numbers[-1]) if numbers else 0
 
 
+# The four retail moves the reference's CHAMPIONS_ settings move off their
+# HeartGold values: Growth's type, Crabhammer's accuracy, Bone Rush's power,
+# Iron Head's effect chance. Three more moves are written as a choice as well
+# -- Protect, Sandstorm and Night Slash -- and for all three the setting picks
+# the value this game already has, so nothing here has to name them.
+#
+# Each of the four takes the whole of the reference's record for it, not only
+# the field the setting decides: half of konefr's Crabhammer is neither game's
+# move. The rest of the retail range keeps this game's own data, which is a
+# wider gap than this row and is counted in the ledger beside it.
+CHAMPIONS_RETAIL = ("GROWTH", "CRABHAMMER", "BONE_RUSH", "IRON_HEAD")
+
+
+def champions_retail(blocks, moves, types, table):
+    """Give those four the reference's power, type, accuracy, PP and chance.
+
+    Nothing else in their records differs -- not the effect, the target, the
+    priority or the flags -- so nothing else is written.
+    """
+    for name in CHAMPIONS_RETAIL:
+        block = blocks[name]
+        fields = list(struct.unpack(RECORD, table[moves[name]]))
+        fields[2] = number(block, "power")
+        fields[3] = types[field(block, "type")]
+        fields[4] = number(block, "accuracy")
+        fields[5] = number(block, "pp")
+        fields[6] = number(block, "effectChance")
+        table[moves[name]] = struct.pack(RECORD, *fields)
+
+
 def read_table():
     data = TABLE.read_bytes()
     count = struct.unpack("<H", data[0x18:0x1A])[0]
@@ -717,6 +747,7 @@ def main():
     MOVES_H.write_text(moves_text)
 
     # The table, which must stay dense, and the three banks beside it.
+    champions_retail(blocks, plain, types, table)
     while len(table) < first_move:
         table.append(bytes(RECORD_SIZE))
     for identifier, _, record in added:

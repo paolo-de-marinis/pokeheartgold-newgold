@@ -3037,7 +3037,10 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                 }
                 break;
             case EVO_HAS_MOVE_TYPE:
-                if (MonHasMoveOfType(mon, (u8)evoTable[i].param) == TRUE) {
+                // Knowing the move is not enough: Sylveon wants the same
+                // friendship the other two eeveelutions want. EVO_HAS_MOVE
+                // just above asks for the move alone, there as here.
+                if (MonHasMoveOfType(mon, (u8)evoTable[i].param) == TRUE && friendship >= FRIENDSHIP_EVOLUTION_THRESHOLD) {
                     target = evoTable[i].target;
                     *method_ret = EVO_HAS_MOVE_TYPE;
                 }

@@ -31,7 +31,7 @@ typedef uint32_t u32;
 typedef int BOOL;
 typedef struct BattleSystem BattleSystem;
 static u16 owned;
-static u16 BattleSystem_CountDexOwned(BattleSystem *bsys) { (void)bsys; return owned; }
+static u16 BattleSystem_CountRegionalDexOwned(BattleSystem *bsys) { (void)bsys; return owned; }
 @NATIVE@
 
 int main(void) {
@@ -78,6 +78,21 @@ class CriticalCaptureTests(unittest.TestCase):
         source = SOURCE.read_text()
         self.assertIn("if (data->ctx->criticalCapture) {", source)
         self.assertIn("ctx->criticalCapture = BattleSystem_Random(bsys) % 256 < CriticalCaptureRate(", source)
+
+    def test_the_count_is_the_regional_dex(self):
+        # The reference counts the Johto dex, not the national one, so filling
+        # in the national dex does not make every throw a critical one.
+        system = (ROOT / "src/battle/battle_system.c").read_text()
+        self.assertIn("return Pokedex_CountJohtoDexOwned(battleSystem->pokedex);",
+                      function(system, "BattleSystem_CountRegionalDexOwned"))
+        self.assertNotIn("BattleSystem_CountDexOwned", SOURCE.read_text())
+
+    def test_catching_a_registered_species_is_shown_as_critical(self):
+        # Where the Master Ball's single shake comes from.
+        body = function(SOURCE.read_text(), "BattleSystem_CalculateBallShakes")
+        tail = body[body.index("if (shakeCount < BALL_SHAKE_MAX) {"):]
+        self.assertIn("BattleSystem_CheckMonCaught(bsys, ctx->battleMons[ctx->battlerIdTarget].species) == TRUE", tail)
+        self.assertIn("ctx->criticalCapture = TRUE;", tail)
 
 
 if __name__ == "__main__":

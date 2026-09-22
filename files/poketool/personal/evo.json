@@ -814,6 +814,11 @@
           "target": "SPECIES_FLAREON"
         },
         {
+          "method": "EVO_HAS_MOVE_TYPE",
+          "param": "TYPE_FAIRY",
+          "target": "SPECIES_SYLVEON"
+        },
+        {
           "method": "EVO_FRIENDSHIP_DAY",
           "param": 0,
           "target": "SPECIES_ESPEON"
@@ -822,11 +827,6 @@
           "method": "EVO_FRIENDSHIP_NIGHT",
           "param": 0,
           "target": "SPECIES_UMBREON"
-        },
-        {
-          "method": "EVO_HAS_MOVE_TYPE",
-          "param": "TYPE_FAIRY",
-          "target": "SPECIES_SYLVEON"
         }
       ]
     },
@@ -895,7 +895,7 @@
       "evos": [
         {
           "method": "EVO_LEVEL",
-          "param": 32,
+          "param": 35,
           "target": "SPECIES_MEGANIUM"
         }
       ]
@@ -905,7 +905,7 @@
       "evos": [
         {
           "method": "EVO_LEVEL",
-          "param": 14,
+          "param": 16,
           "target": "SPECIES_QUILAVA"
         }
       ]
@@ -915,7 +915,7 @@
       "evos": [
         {
           "method": "EVO_LEVEL",
-          "param": 36,
+          "param": 35,
           "target": "SPECIES_TYPHLOSION"
         }
       ]
@@ -925,7 +925,7 @@
       "evos": [
         {
           "method": "EVO_LEVEL",
-          "param": 18,
+          "param": 16,
           "target": "SPECIES_CROCONAW"
         }
       ]
@@ -935,7 +935,7 @@
       "evos": [
         {
           "method": "EVO_LEVEL",
-          "param": 30,
+          "param": 35,
           "target": "SPECIES_FERALIGATR"
         }
       ]
@@ -1065,7 +1065,7 @@
       "evos": [
         {
           "method": "EVO_LEVEL",
-          "param": 30,
+          "param": 35,
           "target": "SPECIES_AMPHAROS"
         }
       ]
@@ -1075,7 +1075,7 @@
       "evos": [
         {
           "method": "EVO_LEVEL",
-          "param": 18,
+          "param": 22,
           "target": "SPECIES_AZUMARILL"
         }
       ]
