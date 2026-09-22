@@ -37,7 +37,7 @@ def party(ram, elf):
     offset = memory.word(headers + where.SAVE_PARTY * where.HEADER_SIZE + where.HEADER_OFFSET)
     base = save + where.DYNAMIC_REGION + offset
     count = memory.word(base + where.PARTY_COUNT)
-    names = {v: k[len("SPECIES_"):] for k, v in savedit.species_numbers().items()}
+    names = {v: k for k, v in savedit.species_numbers().items()}
     items = {int(m.group(2)): m.group(1)[len("ITEM_"):] for m in
              re.finditer(r"^#define (ITEM_[A-Z0-9_]+)\s+(\d+)\s*$", (ROOT / "include/constants/items.h").read_text(), re.M)}
     out = []
