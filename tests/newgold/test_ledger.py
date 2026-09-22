@@ -99,6 +99,22 @@ class LedgerTests(unittest.TestCase):
             self.assertEqual(int(found.group(1)), value,
                              f"{label} says {found.group(1)}% and the rows give {value}%")
 
+    def test_the_why_section_is_headed_by_the_summary(self):
+        """Its heading names the summary's two figures; its prose names none.
+
+        It was typed once as "Why 71% and not 78%" and still said so with the
+        summary at 90 and 96."""
+        text = LEDGER.read_text()
+        block = re.search(r"LEDGER:SUMMARY:START -->\n```\n(.*?)\n```", text, re.S).group(1)
+        overall, built = (int(re.search(rf"^{label}\s+[█░]*\s*(\d+)%$", block, re.M).group(1))
+                          for label in ("Overall", "Implementation"))
+        section = re.search(r"^## Why (\d+)% and not (\d+)%$\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+        self.assertIsNotNone(section, "the Why section is missing or its heading has another shape")
+        self.assertEqual((int(section.group(1)), int(section.group(2))), (overall, built),
+                         "run tools/newgold/ledger.py: the heading is behind the summary")
+        self.assertIsNone(re.search(r"\d+\s*%", section.group(3)),
+                          "a percentage typed in the Why prose will go stale; the blocks carry them")
+
     def test_the_page_says_it_is_generated(self):
         self.assertIn("ledger.py", PAGE.read_text())
 

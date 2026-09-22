@@ -118,14 +118,30 @@ def score(rows):
     return round(100 * (done + partial / 2) / within) if within else 0
 
 
+def headline():
+    """Overall and Implementation, the two figures the summary leads with."""
+    rows = [(section, state) for section, _, _, state in ledger_rows()]
+    return score(rows), score([r for r in rows if r[0] != VERIFICATION])
+
+
+# The heading of the section that explains the gap between the two figures.
+# It was typed once, "Why 71% and not 78%", and still said so at 90 and 96:
+# the figures are the summary's, so the heading is written from it.
+WHY = re.compile(r"^## Why \d+% and not \d+%$", re.M)
+
+
+def rewrite_why(text):
+    overall, built = headline()
+    return WHY.sub(f"## Why {overall}% and not {built}%", text)
+
+
 def summary():
     rows = [(section, state) for section, _, _, state in ledger_rows()]
     counts = [sum(1 for r in rows if bucket_of(*r) == i) for i in range(len(BUCKETS))]
     total = sum(counts) or 1
     shares = [round(100 * n / total) for n in counts]
 
-    overall = score(rows)
-    built = score([r for r in rows if r[0] != VERIFICATION])
+    overall, built = headline()
     # Of the rows that are done, the share that has been seen running. A row
     # that is only partly there cannot have been played, so it is not in the
     # denominator.
@@ -652,6 +668,14 @@ def main():
                 stale.append(path)
             if not args.check:
                 path.write_text(updated)
+
+    # The heading that names the two figures is theirs too.
+    updated = rewrite_why(LEDGER.read_text())
+    if updated != LEDGER.read_text():
+        if LEDGER not in stale:
+            stale.append(LEDGER)
+        if not args.check:
+            LEDGER.write_text(updated)
 
     # The page comes last: it is rendered from the Markdown as the counters
     # have just left it, so the two cannot disagree.

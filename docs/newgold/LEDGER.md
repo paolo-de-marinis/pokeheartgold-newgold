@@ -150,16 +150,18 @@ This is the section that holds the overall number down.
 
 ---
 
-## Why 71% and not 78%
+## Why 90% and not 96%
 
 The points between the two numbers are the verification column, and the reason
-it is not a formality is that four silent memory bugs surfaced in one evening,
-every one of them introduced by the expansion:
+it is not a formality is that four silent bugs surfaced in one evening, on
+2026-09-21, every one of them introduced by the expansion:
 
 - the cry archive read thirteen entries along its own table
 - `LEVEL_UP_LEARNSET_MAX` was 21 against Mr. Rime's twenty-seven moves, and
   two more buffers for the same data were sized by hand — `0x2c` in the move
   tutor, `50` in the egg search
+- a learnset entry kept its move in nine bits, so every move past 511 was
+  quietly learnt as a different one
 - tables indexed by a species number had not grown with it: `evo.narc` stayed
   575 members long because its rule did not depend on the header that sizes
   it, and two tables in C were read past their end
@@ -169,12 +171,15 @@ Two apparent fifths were the instrument rather than the game — a forced land
 encounter on a map whose table is surf-only, and a teleport that wrote the
 player's tile without the position vector that goes with it — which is its
 own lesson about what a diagnostic switch may do.
-Three in three hours is not a rate that exhausts itself — it is the rate they
-are being looked for. What is left is not writing code. It is turning the game
-on.
+That was not a rate that exhausts itself — it was the rate they were being
+looked for. What is left is not writing code. It is turning the game on.
 
-Not counted here: the rebalance konefr is still publishing, and the 2139 engine
-items no content reaches.
+The figures are in the blocks above and nowhere in this prose. This heading
+once kept two percentages the summary had long since left, so `ledger.py`
+writes it now, and `test_ledger.py` fails on a figure typed here by hand.
+
+Not counted here: whatever konefr publishes after the reference pinned at the
+top.
 
 ---
 
