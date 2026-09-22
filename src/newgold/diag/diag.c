@@ -26,6 +26,19 @@ u16 gDiagForceBattleSpecies;
 u16 gDiagWarpX;
 u16 gDiagWarpZ;
 
+u16 gDiagBattleText[DIAG_BATTLE_TEXT_LINES][DIAG_BATTLE_TEXT_CHARS];
+u32 gDiagBattleTextCount;
+u32 gDiagLastMessage[5];
+DiagBattler gDiagBattlers[4];
+u16 gDiagPartySpecies[6];
+u16 gDiagPartyHp[6];
+u32 gDiagBattleCommand;
+u32 gDiagBattleScript[3];
+u32 gDiagBattlePrompt;
+
+u32 gDiagAiItemCount;
+u32 gDiagAiItemLast;
+
 u32 gDiagWildStage;
 u32 gDiagWildTicks;
 u32 gDiagLastWildSpecies;
@@ -47,6 +60,17 @@ void Diag_BattleState(int state) {
     if (state < 32) {
         gDiagBattleStateSeen |= 1u << state;
     }
+}
+
+void Diag_BattleText(const u16 *text) {
+    u16 *line = gDiagBattleText[gDiagBattleTextCount % DIAG_BATTLE_TEXT_LINES];
+    int i;
+
+    for (i = 0; i < DIAG_BATTLE_TEXT_CHARS - 1 && text[i] != 0xFFFF; i++) {
+        line[i] = text[i];
+    }
+    line[i] = 0xFFFF;
+    gDiagBattleTextCount++;
 }
 
 void Diag_AllocFailed(u32 heapId, u32 size) {

@@ -25,7 +25,7 @@ extern unsigned long gDiagAssertReturn;
 // The sixteen words under the stack pointer when the last one fired: the
 // caller's saved registers and, among them, its own return address, so the
 // reader can say who asked the function that asserted.
-#define DIAG_ASSERT_STACK_WORDS 16
+#define DIAG_ASSERT_STACK_WORDS 64
 extern unsigned long gDiagAssertStack[DIAG_ASSERT_STACK_WORDS];
 void Diag_AssertFail(void);
 
@@ -41,6 +41,48 @@ extern unsigned long gDiagForceEncounter;           // the encounter roll always
 extern unsigned short gDiagForceBattleSpecies;      // the next step is a wild battle against it
 extern unsigned short gDiagWarpX;                   // the next step check puts the player on this tile
 extern unsigned short gDiagWarpZ;
+
+// The battle as text, so it can be followed without a screen. The last lines
+// the battle printed, in the game's own character codes (charmap.txt decodes
+// them), newest at gDiagBattleTextCount - 1 modulo the ring.
+#define DIAG_BATTLE_TEXT_LINES 16
+#define DIAG_BATTLE_TEXT_CHARS 96
+extern unsigned short gDiagBattleText[DIAG_BATTLE_TEXT_LINES][DIAG_BATTLE_TEXT_CHARS];
+extern unsigned long gDiagBattleTextCount;
+void Diag_BattleText(const unsigned short *text);
+// The last message the battle was asked to print, before its placeholders are
+// filled: bank row, tag and the first three parameters. When filling them in
+// fails -- a row or a name past the end of its bank -- this is the one.
+extern unsigned long gDiagLastMessage[5];
+
+// The four battlers as the battle sees them, refreshed every frame, and where
+// the player's side is in choosing: gDiagBattlePrompt is the selection
+// state (1 a command, 4 a move, 6 a target, 10 a Pokemon; 13 and up chosen).
+typedef struct DiagBattler {
+    unsigned short species;
+    unsigned short hp;
+    unsigned short maxHp;
+    unsigned char level;
+    unsigned char partySlot;
+    unsigned long status;
+    unsigned short item;
+    unsigned short moves[4];
+    unsigned char pp[4];
+} DiagBattler;
+extern DiagBattler gDiagBattlers[4];
+// The player's party in the battle's own order -- the order its party
+// screen shows -- as species and HP, so the Pokemon to send after a faint can
+// be chosen from memory.
+extern unsigned short gDiagPartySpecies[6];
+extern unsigned short gDiagPartyHp[6];
+extern unsigned long gDiagBattleCommand;
+// The battle script running: its archive, its member and how far into it.
+extern unsigned long gDiagBattleScript[3];
+extern unsigned long gDiagBattlePrompt;
+
+// What the trainer's own AI spent: how many items, and the last one.
+extern unsigned long gDiagAiItemCount;
+extern unsigned long gDiagAiItemLast;
 
 // Where the last wild encounter got to.
 extern unsigned long gDiagWildStage;

@@ -210,7 +210,47 @@ BattleContext *BattleContext_New(BattleSystem *battleSystem) {
     return ctx;
 }
 
+#ifdef NEWGOLD_DIAG
+// The battlers, copied where a memory reader can find them without knowing
+// the battle context's layout.
+static void Diag_BattleView(BattleSystem *battleSystem, BattleContext *ctx) {
+    int battlerId, i;
+    Party *party = BattleSystem_GetParty(battleSystem, BATTLER_PLAYER);
+    int count = Party_GetCount(party);
+
+    for (i = 0; i < 6; i++) {
+        Pokemon *mon = i < count ? BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i) : NULL;
+        gDiagPartySpecies[i] = mon ? GetMonData(mon, MON_DATA_SPECIES, NULL) : 0;
+        gDiagPartyHp[i] = mon ? GetMonData(mon, MON_DATA_HP, NULL) : 0;
+    }
+
+    for (battlerId = 0; battlerId < 4; battlerId++) {
+        BattleMon *mon = &ctx->battleMons[battlerId];
+        DiagBattler *view = &gDiagBattlers[battlerId];
+        view->species = mon->species;
+        view->hp = mon->hp;
+        view->maxHp = mon->maxHp;
+        view->level = mon->level;
+        view->partySlot = ctx->selectedMonIndex[battlerId];
+        view->status = mon->status;
+        view->item = mon->item;
+        for (i = 0; i < 4; i++) {
+            view->moves[i] = mon->moves[i];
+            view->pp[i] = mon->movePPCur[i];
+        }
+    }
+    gDiagBattleCommand = ctx->command;
+    gDiagBattleScript[0] = ctx->scriptNarcId;
+    gDiagBattleScript[1] = ctx->scriptFileId;
+    gDiagBattleScript[2] = ctx->scriptSeqNo;
+    gDiagBattlePrompt = ctx->unk_0[BATTLER_PLAYER];
+}
+#endif
+
 BOOL BattleContext_Main(BattleSystem *battleSystem, BattleContext *ctx) {
+#ifdef NEWGOLD_DIAG
+    Diag_BattleView(battleSystem, ctx);
+#endif
     if (!ctx->battleEndFlag) {
         if (BattleSystem_GetBattleOutcomeFlags(battleSystem) && !(BattleSystem_GetBattleOutcomeFlags(battleSystem) & 0x40)) {
             ctx->command = CONTROLLER_COMMAND_42;
@@ -1883,6 +1923,10 @@ static void BattleControllerPlayer_ItemInput(BattleSystem *battleSystem, BattleC
             break;
         }
         ctx->itemTemp = ctx->trainerAIData.unkA0[ctx->battlerIdAttacker >> 1];
+#ifdef NEWGOLD_DIAG
+        gDiagAiItemCount++;
+        gDiagAiItemLast = ctx->itemTemp;
+#endif
     } else {
         switch (item->page) {
         case BTLPOCKETLIST_HP_PP_RESTORE:

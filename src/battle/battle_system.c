@@ -1433,9 +1433,19 @@ u8 BattleSystem_PrintTrainerMessage(BattleSystem *battleSystem, int trainerId, i
 
 u32 BattleSystem_PrintBattleMessage(BattleSystem *battleSystem, MsgData *data, BattleMessage *msg, u8 delay) {
     Window *window = BattleSystem_GetWindow(battleSystem, 0);
+#ifdef NEWGOLD_DIAG
+    gDiagLastMessage[0] = msg->id;
+    gDiagLastMessage[1] = msg->tag;
+    gDiagLastMessage[2] = msg->param[0];
+    gDiagLastMessage[3] = msg->param[1];
+    gDiagLastMessage[4] = msg->param[2];
+#endif
     BattleSystem_AdjustMessageForSide(battleSystem, msg);
     BattleSystem_BufferMessage(battleSystem, msg);
     BattleMessage_ExpandPlaceholders(battleSystem, data, msg);
+#ifdef NEWGOLD_DIAG
+    Diag_BattleText(String_cstr(battleSystem->msgBuffer));
+#endif
     FillWindowPixelBuffer(window, 0xFF);
     return AddTextPrinterParameterized(window, 1, battleSystem->msgBuffer, 0, 0, delay, ov12_0223CF14);
 }

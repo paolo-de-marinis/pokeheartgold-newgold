@@ -170,22 +170,30 @@ int main(int argc, char **argv) {
     fclose(rom);
 
     struct game_info info = { rom_path, data, (size_t)size, NULL };
-    if (!load_game(&info)) { fprintf(stderr, "the core would not load the ROM\n"); return 1; }
-
     // A save file goes in before anything runs, so the title screen offers
-    // Continue. The core hands out its battery-backed memory as one block.
+    // Continue. This core keeps no battery memory to write into: it reads
+    // and writes <save directory>/<rom name>.sav itself, so the file is put
+    // there under the name it will look for, before the ROM is loaded.
     for (int i = 5; i < argc; i++) {
         char path[256];
         if (sscanf(argv[i], "sram:%255s", path) != 1) continue;
-        FILE *f = fopen(path, "rb");
-        if (!f) { perror(path); return 1; }
-        void *memory = memory_data ? memory_data(0) : NULL;
-        size_t room = memory_size ? memory_size(0) : 0;
-        if (!memory || !room) { fprintf(stderr, "the core has no save memory\n"); return 1; }
-        size_t read = fread(memory, 1, room, f);
-        fclose(f);
-        fprintf(stderr, "loaded %zu of %zu bytes of save memory from %s\n", read, room, path);
+        FILE *from = fopen(path, "rb");
+        if (!from) { perror(path); return 1; }
+        const char *name = strrchr(rom_path, '/');
+        name = name ? name + 1 : rom_path;
+        char target[512];
+        snprintf(target, sizeof target, "%s/%.*s.sav", save_dir,
+                 (int)(strrchr(name, '.') ? (size_t)(strrchr(name, '.') - name) : strlen(name)), name);
+        FILE *to = fopen(target, "wb");
+        if (!to) { perror(target); return 1; }
+        char chunk[1 << 16];
+        size_t got, wrote = 0;
+        while ((got = fread(chunk, 1, sizeof chunk, from)) > 0) { wrote += fwrite(chunk, 1, got, to); }
+        fclose(from); fclose(to);
+        fprintf(stderr, "put %zu bytes of save into %s\n", wrote, target);
     }
+
+    if (!load_game(&info)) { fprintf(stderr, "the core would not load the ROM\n"); return 1; }
 
     // Starting from a state costs one frame instead of twenty thousand, which
     // is what makes checking anything past the opening practical at all. The
@@ -295,6 +303,24 @@ int main(int argc, char **argv) {
                 fwrite(ram, 1, n, f);
                 fclose(f);
                 printf("ram at frame %lu: %zu bytes in %s\n", at, n, path);
+            }
+            // A small window of RAM, sampled every so many frames into one file:
+            // a four-byte frame number, then the bytes. It is how a battle is
+            // followed as text -- the diagnostics' own block is a few
+            // kilobytes, where a whole dump is four megabytes a sample.
+            unsigned long every, address, length;
+            if (sscanf(argv[i], "mem:%lu:%lu:%lx:%lu:%255s", &at, &every, &address, &length, path) == 5
+                && frames_run >= at && every && (frames_run - at) % every == 0) {
+                unsigned char *ram = memory_data ? memory_data(2) : NULL;
+                size_t n = memory_size ? memory_size(2) : 0;
+                if (ram && address >= 0x02000000 && address - 0x02000000 + length <= n) {
+                    FILE *f = fopen(path, "ab");
+                    if (!f) { perror(path); return 1; }
+                    unsigned int frame = (unsigned int)frames_run;
+                    fwrite(&frame, 4, 1, f);
+                    fwrite(ram + (address - 0x02000000), 1, length, f);
+                    fclose(f);
+                }
             }
             if (sscanf(argv[i], "save:%lu:%255s", &at, path) == 2 && frames_run == at) {
                 size_t n = serialize_size ? serialize_size() : 0;

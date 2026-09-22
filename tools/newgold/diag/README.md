@@ -7,6 +7,14 @@ why it is built this way, is in `docs/newgold/DIAGNOSTICS.md`.
   process memory, without pausing it. `--follow` prints every change.
 - `dump.py` -- read the memory dumps a harness run wrote, one line a dump, so
   the run reads as a timeline.
+- `gym.py SAVE` -- fight whatever the save puts the player in front of, in
+  the headless harness, with the game answering its own prompts
+  (`gDiagAutoBattle`): the report is the battle's own text, the battlers
+  each time the game waits, what the trainer's AI spent, and the party at
+  the end. No screen, no key, no image -- a gym in a few hundred lines of
+  text.
+- `watch.py` -- the same text for the melonDS that is running: every line
+  the battle prints, and the battlers whenever it waits for the player.
 - `battle.py` -- play the opening in the harness and start a wild battle on
   Route 29, forced, then read the dumps back.
 - `party.py` -- the party of the game running in melonDS, decrypted as the game

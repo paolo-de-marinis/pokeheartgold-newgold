@@ -41,6 +41,10 @@ there. `GAME_VERSION=SOULSILVER` works the same way.
 | `gDiagLastWildSpecies`, `gDiagLastWildLevel` | the encounter generator | What the encounter actually made. |
 | `gDiagLastBattleMap`, `gDiagLastBattleBg`, `gDiagLastBattleTerrain` | the battle setup | Where the battle was started from and what it chose to draw. A battle whose screen stays black has usually failed to choose one of these. |
 
+| `gDiagBattleText`, `gDiagBattleTextCount` | `BattleSystem_PrintBattleMessage` | The last sixteen lines the battle printed, in the game's own character codes (`charmap.txt` decodes them). The battle as text: "Falkner used a Potion!", "It's super effective!". |
+| `gDiagBattlers`, `gDiagBattlePrompt`, `gDiagBattleCommand` | `BattleContext_Main`, every frame | The four battlers -- species, level, HP, status, held item, moves and PP -- and where the player is in choosing (a command, a move, a target, a Pokemon). |
+| `gDiagAiItemCount`, `gDiagAiItemLast` | the trainer AI's item use | What the trainer spent in battle. |
+
 And the switches, zero unless something outside the game writes them:
 
 | Switch | Read by | Does |
@@ -69,6 +73,11 @@ noise, not a wrong answer.
   through a virtual keyboard in whatever mapping the player set, its window
   through Spectacle -- so a gym is played from a shell, one screenshot a
   turn, with the readers above watching the same game.
+- `tools/newgold/diag/gym.py SAVE` fights, in the headless harness, whatever
+  the save stands the player in front of, with the auto-battle switch on,
+  and prints the battle as text; `tools/newgold/diag/watch.py` prints the
+  same text from the melonDS that is running. Neither needs a screen, and
+  neither costs an image to read -- this is how a gym is checked.
 - `tools/newgold/diag/dump.py OUTDIR` reads the `ram:` dumps of a harness run
   the same way, one line a dump, and pastes the run's shots into a sheet.
 - `tools/newgold/diag/battle.py OUTDIR encounter|battle:SPECIES` plays the
