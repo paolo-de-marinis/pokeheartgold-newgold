@@ -380,6 +380,7 @@ typedef enum Terrain {
 #define STRUGGLE_CHECK_HEAL_BLOCK (1 << 7)
 #define STRUGGLE_CHECK_ENCORE     (1 << 8) // unused because they straight up forgot
 #define STRUGGLE_CHECK_CHOICED    (1 << 9)
+#define STRUGGLE_CHECK_GORILLA_TACTICS (1 << 10)
 
 // Ability Checks
 #define CHECK_ABILITY_SAME_SIDE            0

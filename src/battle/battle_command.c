@@ -747,15 +747,7 @@ BOOL BtlCmd_Wait(BattleSystem *battleSystem, BattleContext *ctx) {
 }
 
 static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx) {
-    int type;
-
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_NORMALIZE) {
-        type = TYPE_NORMAL;
-    } else if (ctx->moveType) {
-        type = ctx->moveType;
-    } else {
-        type = BattleMoveTbl(ctx, ctx->moveNoCur)->type;
-    }
+    int type = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
 
     ctx->damage = CalcMoveDamage(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget)], ctx->fieldCondition, ctx->movePower, type, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->criticalMultiplier);
 

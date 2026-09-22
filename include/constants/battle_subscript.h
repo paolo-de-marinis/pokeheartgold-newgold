@@ -604,6 +604,10 @@
 #define BATTLE_SUBSCRIPT_IMPOSTER                           370
 #define BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY                 371
 #define BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_DEFENSE           372
+#define BATTLE_SUBSCRIPT_HARVEST                            373
+#define BATTLE_SUBSCRIPT_HEALER                             374
+#define BATTLE_SUBSCRIPT_MOODY                              375
+#define BATTLE_SUBSCRIPT_PROTEAN                            376
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

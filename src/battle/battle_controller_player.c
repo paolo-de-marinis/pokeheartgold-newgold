@@ -2485,13 +2485,7 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
         return FALSE;
     }
 
-    if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_NORMALIZE) {
-        moveType = TYPE_NORMAL;
-    } else if (ctx->moveType != 0) {
-        moveType = ctx->moveType;
-    } else {
-        moveType = BattleMoveTbl(ctx, move)->type;
-    }
+    moveType = BattleMoveAdjustedType(ctx, battlerIdAttacker, move);
 
     moveCategory = BattleMoveTbl(ctx, move)->category;
     attackerAccuracy = ctx->battleMons[battlerIdAttacker].statChanges[STAT_ACC] - 6;
@@ -2669,7 +2663,17 @@ static BOOL ov12_0224C204(BattleSystem *battleSystem, BattleContext *ctx) {
         return FALSE;
     }
 
-    if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && ctx->turnData[ctx->battlerIdTarget].magicCoatFlag && (BattleMoveTbl(ctx, ctx->moveNoCur)->unkB & 4)) {
+    // Magic Bounce is Magic Coat the Pokemon was born with: the same move
+    // flag, the same reflection, the same line of text -- the reference runs
+    // its bounce through this very script. The ability stands down when the
+    // coat is already up, and it cannot reach something halfway underground.
+    // What is not here is the reference's doubles apparatus, where a
+    // field-wide move can be bounced by both opponents in turn.
+    BOOL bouncedByAbility = !ctx->turnData[ctx->battlerIdTarget].magicCoatFlag
+        && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_MAGIC_BOUNCE) == TRUE
+        && !(ctx->battleMons[ctx->battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE);
+
+    if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && (ctx->turnData[ctx->battlerIdTarget].magicCoatFlag || bouncedByAbility) && (BattleMoveTbl(ctx, ctx->moveNoCur)->unkB & 4)) {
         ctx->turnData[ctx->battlerIdTarget].magicCoatFlag = 0;
         ctx->moveNoProtect[ctx->battlerIdAttacker] = 0;
         ctx->moveNoBattlerPrev[ctx->battlerIdAttacker] = ctx->moveNoTemp;
@@ -2754,19 +2758,46 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         }
         ctx->unk_48++;
         // fallthrough
-    case 4:
+    case 4: {
+        // Protean and Libero make the user whatever it is about to throw, once
+        // per appearance -- the flag that remembers it is cleared on switch-in.
+        // The types are written here rather than in the script because there is
+        // no third-type slot a script can reach. Nothing distinguishes the two
+        // abilities anywhere in the reference.
+        int ability = ctx->battleMons[ctx->battlerIdAttacker].ability;
+        u8 moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
+
+        if ((ability == ABILITY_PROTEAN || ability == ABILITY_LIBERO)
+            && moveType != TYPE_MYSTERY
+            && !(ctx->battleMons[ctx->battlerIdAttacker].type1 == moveType && ctx->battleMons[ctx->battlerIdAttacker].type2 == moveType && ctx->battleMons[ctx->battlerIdAttacker].type3 == TYPE_NONE)
+            && ctx->battleMons[ctx->battlerIdAttacker].abilityActivatedFlag == FALSE) {
+            ctx->battleMons[ctx->battlerIdAttacker].type1 = moveType;
+            ctx->battleMons[ctx->battlerIdAttacker].type2 = moveType;
+            ctx->battleMons[ctx->battlerIdAttacker].type3 = TYPE_NONE;
+            ctx->battleMons[ctx->battlerIdAttacker].abilityActivatedFlag = TRUE;
+            ctx->msgTemp = moveType;
+            ctx->battlerIdTemp = ctx->battlerIdAttacker;
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_PROTEAN);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        }
+    }
+        ctx->unk_48++;
+        // fallthrough
+    case 5:
         if (ov12_0224B398(battleSystem, ctx) == TRUE) {
             return;
         }
         ctx->unk_48++;
         // fallthrough
-    case 5:
+    case 6:
         if (!(ctx->unk_2184 & (1 << 7)) && ov12_0224C204(battleSystem, ctx) == TRUE) {
             return;
         }
         ctx->unk_48++;
         // fallthrough
-    case 6:
+    case 7:
         ov12_02250A18(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
         ctx->unk_48 = 0;
     }
@@ -3163,15 +3194,7 @@ void ov12_0224CC88(BattleSystem *battleSystem, BattleContext *ctx) {
     }
         // fallthrough
     case 6: {
-        int moveType;
-
-        if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_NORMALIZE) {
-            moveType = TYPE_NORMAL;
-        } else if (ctx->moveType != 0) {
-            moveType = ctx->moveType;
-        } else {
-            moveType = BattleMoveTbl(ctx, ctx->moveNoCur)->type;
-        }
+        int moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
 
         ctx->unk_40++;
 
@@ -3771,16 +3794,8 @@ static BOOL ov12_0224DD18(BattleContext *ctx, ControllerCommand commandNext, Con
 
 static void ov12_0224DD74(BattleSystem *battleSystem, BattleContext *ctx) {
     int flag;
-    int moveType;
+    int moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
     u8 item;
-
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_NORMALIZE) {
-        moveType = TYPE_NORMAL;
-    } else if (ctx->moveType != 0) {
-        moveType = ctx->moveType;
-    } else {
-        moveType = BattleMoveTbl(ctx, ctx->moveNoCur)->type;
-    }
 
     flag = BattleMoveTbl(ctx, ctx->moveNoTemp)->unkB;
 
