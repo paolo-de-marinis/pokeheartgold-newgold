@@ -89,6 +89,16 @@ class EvolutionTests(unittest.TestCase):
         self.assertRegex(use, r"method == EVO_TRADE_ITEM && heldItem == evoTable\[i\]\.param"
                               r" && usedItem == ITEM_LINKING_CORD")
 
+    def test_konefrs_linking_cord_stands_in_for_any_trade(self):
+        """konefr's e26576dd1: a plain trade evolution, no item held, also
+        evolves with a Linking Cord -- and ahead of the engine's held-item
+        case, in his order."""
+        source = (ROOT / "src/pokemon.c").read_text()
+        use = source[source.index("case EVOCTX_ITEM_USE:"):]
+        use = use[:use.index("Heap_Free(evoTable);")]
+        plain = use.index("usedItem == ITEM_LINKING_CORD && evoTable[i].method == EVO_TRADE)")
+        self.assertLess(plain, use.index("method == EVO_TRADE_ITEM && heldItem"))
+
     def test_the_engines_own_changes_to_retail_species(self):
         """hg-engine at d0380a487 reworks eight of HeartGold's species, and
         they are the engine's, not konefr's: a Linking Cord for four trades,

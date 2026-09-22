@@ -12,14 +12,14 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 214 commits |
-| generated | 2026-09-23 01:29 |
+| port | 215 commits |
+| generated | 2026-09-23 01:35 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
 Overall                                                                    90%
   done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   7%
-  done, never played   ██████████████████████████████░░░░░░░░░░░░░░░░░░░░  59%
+  done, never played   ██████████████████████████████░░░░░░░░░░░░░░░░░░░░  60%
   partial              ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
   still to do          ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
   deferred / no scope  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  21%
@@ -108,11 +108,12 @@ konefr *could* reach, not only what the game reaches today.
 | Wild encounters | every map, the Whirl Islands and Cianwood's surf included; a slot list the reference leaves short takes its last species rather than a hole | ✅ 142 / 142 |
 | Headbutt trees | routes 29-39, the Exeggcute filler replaced | ✅ done |
 | Vanilla species rebalance | 35 species: 5 type changes, 15 ability changes, 28 stat spreads | ✅ done |
-| Vanilla evolutions, learnsets, hidden abilities | the row was right on all three counts: 15 learnsets and 15 hidden abilities, exact, and nine evolutions of which Primeape and Stantler had landed. The seven left were levels and nothing else — Bayleef 32 to 35, Cyndaquil 14 to 16, Quilava 36 to 35, Totodile 18 to 16, Croconaw 30 to 35, Flaaffy 30 to 35, Marill 18 to 22 — so the item range that came in this morning was not what they were waiting for. Written by `import_evolutions.py --levels-only`, which matches a row by method and target and moves it only where both sides give a bare number, so the reference writing Kirlia's Dawn Stone as the literal 109 stays the spelling difference it is and hg-engine's own rework of a vanilla method, the Linking Cord for a trade and the Ice Stone for Glaceon, stays out of this row. The reference also gives Annihilape and Wyrdeer an `EVO_FORM_ARGUMENT` row counting twenty uses of the move: that is hg-engine's method rather than konefr's change, and this tree has neither the method nor a form argument on a Pokemon to count into, so the `EVO_HAS_MOVE` line konefr added beside it is the whole of what was owed and the rest is not port work. `tests/newgold/test_evolutions.py` pins the nine and, with the reference checkout present, proves no vanilla level disagrees with `data/Evolutions.c` at all | ✅ done |
+| Vanilla evolutions, learnsets, hidden abilities | the row was right on all three counts: 15 learnsets and 15 hidden abilities, exact, and nine evolutions of which Primeape and Stantler had landed. The seven left were levels and nothing else — Bayleef 32 to 35, Cyndaquil 14 to 16, Quilava 36 to 35, Totodile 18 to 16, Croconaw 30 to 35, Flaaffy 30 to 35, Marill 18 to 22 — so the item range that came in this morning was not what they were waiting for. Written by `import_evolutions.py --levels-only`, which matches a row by method and target and moves it only where both sides give a bare number, so the reference writing Kirlia's Dawn Stone as the literal 109 stays the spelling difference it is and hg-engine's own rework of a vanilla method, the Linking Cord as a stone for Kadabra's line and the Ice Stone for Glaceon, is the engine's and is on the Evolutions row. The reference also gives Annihilape and Wyrdeer an `EVO_FORM_ARGUMENT` row counting twenty uses of the move: that is hg-engine's method rather than konefr's change, and this tree has neither the method nor a form argument on a Pokemon to count into, so the `EVO_HAS_MOVE` line konefr added beside it is the whole of what was owed and the rest is not port work. `tests/newgold/test_evolutions.py` pins the nine and, with the reference checkout present, proves no vanilla level disagrees with `data/Evolutions.c` at all | ✅ done |
 | Irrigation and Evaporate | his only two abilities — Water absorb with +2 Attack, and Water immunity | ✅ done |
 | Solar Seeds | Fire special 25 BP multi-hit with burn; borrows Bullet Seed's animation | ✅ done |
 | Bug-Catching Contest | Butterfree through Escavalier, levels 20-30, evolution-item prizes | ✅ done |
 | Cherrygrove vendor and EV presets | his debug vendor, patched into a built script file — excluded in `SCOPE.md` | ⬜ out of scope |
+| Linking Cord for any trade | his `e26576dd1`: a Pokemon that evolves by trading alone evolves when a Linking Cord is used on it -- Phantump, Pumpkaboo and the rest. It sits ahead of the engine's own case, the trade with a held item, as in his code; the engine's stone rows for Kadabra and the other three are on the Evolutions row, not this one | ✅ done |
 | Water Absorb and Leaf Guard fixes | the row had it backwards. Leaf Guard's sunshine is HGSS's own and was never port work — but it left Rest out, and the Rest subscript now asks the same two questions the other six statuses ask. Water Absorb had the damaging-move guard and not the no-self-trigger one; it has both. Dry Skin keeps only the power check, in the reference as here | ✅ done |
 
 ---
