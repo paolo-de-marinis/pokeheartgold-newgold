@@ -72,4 +72,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">DARK</language>
 	</row>
+	<row id="msg_0735_fairy" index="18">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">FAIRY</language>
+	</row>
 </body>

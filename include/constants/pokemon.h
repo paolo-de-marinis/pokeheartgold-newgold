@@ -37,7 +37,10 @@
 #define TYPE_DRAGON         16
 #define TYPE_DARK           17
 #define TYPE_FAIRY          18
-#define NUMBER_OF_MON_TYPES 18
+// One past the last type, which is what every count of them wants. It said 18
+// while TYPE_FAIRY was 18, so it named one fewer than there are; nothing reads
+// it today, which is why nothing noticed.
+#define NUMBER_OF_MON_TYPES 19
 
 // Type effectiveness
 #define TYPE_MUL_NO_EFFECT       0

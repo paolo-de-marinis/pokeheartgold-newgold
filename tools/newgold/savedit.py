@@ -649,7 +649,7 @@ def main():
         for b in save.table:
             print(f"  {b['index']:2d} {b['id']:<36s} {b['offset']:#08x} {b['size']:6d} {b['slot']}")
         for spec in save.specs:
-            print(f"  slot {spec['slot']:<24s} {spec['offset']:#08x} {spec['size']:7d}")
+            print(f"  slot {spec['slot']:<2} {spec['offset']:#08x} {spec['size']:7d}")
 
 
 if __name__ == "__main__":

@@ -40,7 +40,7 @@ Moves       ██████████████████████�
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   545 / 2684
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       48 files
+Tests       49 files
 ROM         144.9 MB of 268.4 MB   (2G card, 54% used)
 ```
 <!-- LEDGER:COUNTS:END -->
@@ -54,7 +54,7 @@ that carry behaviour.
 
 | Feature | Detail | State |
 | --- | --- | :-- |
-| Fairy type and the effectiveness chart | type 18 and the twelve chart rows, Sylveon and 66 species, 30 moves — but no name string (`msg_0735` stops at 17) and no icon | 🟠 partial |
+| Fairy type and the effectiveness chart | type 18, the twelve chart rows, Sylveon and 66 species, 30 moves, and its name in `msg_0735`; the type icon and the Dex's search list still stop at seventeen | 🟠 partial |
 | Story level cap | wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100 | ✅ done |
 | Hidden abilities | `TRPOKE_ABILITY_OVERRIDE_HIDDEN`; eleven trainer Pokémon ask for one | ✅ done |
 | Ability field past one byte | save, battle record, AI memory, PC box, summary — and the personal record, whose three ability bytes now have their full values past the end of it | ✅ done |
@@ -128,7 +128,7 @@ This is the section that holds the overall number down.
 | The four gyms to Morty | parties, levels, held items, and the AI using what it carries | 🔴 never |
 | The seven level-cap steps | `savedit.py` sets badges one at a time — thirty seconds a step | 🔴 never |
 | The 1041 species in play | sprite, icon, cry, name, Dex, an ability that does something | 🔴 never |
-| Automated tests | 48 files, 202 checks: all but one read source and data, `test_boot.py` runs both ROMs — each memory bug got its regression test after the fact, not before | 🟠 partial |
+| Automated tests | 50 files, 205 checks: all but one read source and data, `test_boot.py` runs both ROMs — each memory bug got its regression test after the fact, not before | 🟠 partial |
 
 ---
 
