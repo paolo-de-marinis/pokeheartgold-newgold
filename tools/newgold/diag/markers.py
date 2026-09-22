@@ -34,17 +34,17 @@ class Markers:
     def matches(self, ram):
         """Whether the game in this memory is the build the ELF came from.
 
-        The static ARM9 module sits at the start of main RAM. Its first two
-        kilobytes are the secure area, which the ROM carries encrypted, and
-        its start is the same in every build; the code after that is not,
-        so a quarter of a megabyte of it has to match the build's own copy
-        or every symbol read is a number from a different build.
+        The static ARM9 module sits at the start of main RAM. Its first four
+        kilobytes hold the secure area and a word the game writes at start,
+        and its start is the same in every build; the code after that is
+        not, so a quarter of a megabyte of it has to match the build's own
+        copy or every symbol read is a number from a different build.
         """
         binary = self.elf.with_name("main.sbin")
         if not binary.exists():
             return True
-        code = binary.read_bytes()[0x800:0x40000]
-        return ram[0x800:0x800 + len(code)] == code
+        code = binary.read_bytes()[0x1000:0x40000]
+        return ram[0x1000:0x1000 + len(code)] == code
 
     def address(self, name):
         return self.table[name][0] if name in self.table else None
