@@ -12,8 +12,8 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 209 commits |
-| generated | 2026-09-23 00:32 |
+| port | 211 commits |
+| generated | 2026-09-23 00:55 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
@@ -41,7 +41,7 @@ Abilities   ██████████████████████�
 Items       ██████████████████████████████████████████████████  2685 / 2685
 Trainers    ██████████████████████████████████████████████████   738 /  738
 Tests       66 files
-ROM         162.1 MB of 268.4 MB   (2G card, 60% used)
+ROM         162.2 MB of 268.4 MB   (2G card, 60% used)
 ```
 <!-- LEDGER:COUNTS:END -->
 
@@ -86,7 +86,7 @@ konefr *could* reach, not only what the game reaches today.
 | Item | Detail | State |
 | --- | --- | :-- |
 | Species | Every species konefr's tree NAMES is here -- all 1028 of them, counted by name as the items are -- and, since 2026-09-22, every form it numbers as a species as well: 396 of them, from `SPECIES_MEGA_VENUSAUR` at 1042 to `SPECIES_MEGA_BAXCALIBUR` at 1437 -- the megas, the primals, the Alolan, Galarian, Hisuian and Paldean forms, the Gigantamax forms, Rotom's and Deoxys's kin among the newer generations. Each is a species of its own here, as the two Galarian Slowpoke were already: its own personal record, pictures, icon, heights, learnset (its base's where the reference gives it none), cry (its base's), name (its base's), Dex text (its base's), footprint, hidden ability, and its evolutions. What is not here is the machinery that turns one form into another: Mega Evolution, primal reversion, Dynamax, the ability-driven changes. `NUM_SPECIES` is the last form; `NATIONAL_DEX_COUNT` stays on Pecharunt, so the Dex has 1027 pages and a form met in battle registers nothing. The picture rule: every species that can be female has a female picture, the male one again where the reference draws no difference | ✅ 1028 / 1028 |
-| Moves | 131 effect scripts, 59 subscripts, 62 side-effect table slots | ✅ 923 / 923 |
+| Moves | 131 effect scripts, 59 subscripts, 62 side-effect table slots, and the three "X used Y!" lines each move reads from bank 3. Until 2026-09-23 that bank stopped at Shadow Force, so any move past 467 stopped the battle the moment it was used -- Morty's Misdreavus found it with Hex | ✅ 923 / 923 |
 | Abilities | 280 do something — 123 retail effects and 157 added; of the other 39, sixteen are a name in the reference too and the rest want a primal weather, a paradox booster or a form this tree has not got | 🟠 280 / 319 |
 | Level-up learnsets | 1042; the entry is a word now, so a move past 511 can be learnt | ✅ done |
 | Battle script commands | 294 opcodes, name- and number-identical to the reference. Every command a script here runs does what the reference's does: the last two that only read their operands -- SetMoveConditionFlag, which is Powder, Laser Focus, Glaive Rush and Throat Chop, and ChangeExecutionOrderPriority, which is After You and Quash -- got their state, their consumers and, for the order, the reference's re-sort of whoever has not moved yet after every move. 19 added handlers are still stubs, and `test_battle_commands.py` names each one and proves no script runs it: they wait on mega and ultra burst, tera, totems, primal weather, Parental Bond and the batched messages of a spread move, none of which this tree has | 🟠 275 / 294 |

@@ -66,6 +66,10 @@ TABLE = ROOT / "files/poketool/waza/waza_tbl.narc"
 NAMES = ROOT / "files/msgdata/msg/msg_0750.gmm"
 CAPS = ROOT / "files/msgdata/msg/msg_0751.gmm"
 DESCRIPTIONS = ROOT / "files/msgdata/msg/msg_0749.gmm"
+# "X used Y!", three rows a move -- the player's, the wild one's, the
+# opponent's -- read at 3 * move + side. A move with no row here asserts the
+# moment anyone uses it, and the battle stops there.
+USED = ROOT / "files/msgdata/msg/msg_0003_EVERYWHERE.gmm"
 EFFECT_SCRIPTS = ROOT / "files/battledata/script/effect_script"
 MOVE_SCRIPTS = ROOT / "files/battledata/script/move_script"
 SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
@@ -359,6 +363,16 @@ def append_rows(path, prefix, texts, start, write):
     return len(texts)
 
 
+def used_rows(block):
+    """The three "used" lines for one move, as the reference's movedatagen
+    writes them: its full name, not the twelve-letter one, with straight
+    quotes turned typographic."""
+    full = re.search(r'\.fullName = "([^"]*)"', block).group(1)
+    full = full.replace('"', "\u201d").replace("'", "\u2019").replace("`", "\u2019")
+    full = full.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return [f"{who}{{STRVAR_1 1, 0, 0}} used\\n{full}!" for who in ("", "The wild ", "The opposing ")]
+
+
 def animation_for(block, moves, table, last_vanilla, types):
     """An existing move to borrow the animation from.
 
@@ -631,7 +645,13 @@ def main():
                      and name[len("MOVE_"):] not in plain)
     first_move = max(plain.values()) + 1
 
-    added, names, caps, descriptions, borrowed = [], [], [], [], []
+    added, names, caps, descriptions, borrowed, used = [], [], [], [], [], []
+    # The moves added by hand before this importer existed have their records
+    # and their names, and no row in the "used" bank either: it stops where
+    # retail stopped, so it starts from there.
+    by_number = {value: name for name, value in plain.items() if name in blocks}
+    for identifier in range(last_vanilla + 1, first_move):
+        used += used_rows(blocks[by_number[identifier]])
     for offset, (_, name) in enumerate(order):
         block = blocks[name]
         effect = field(block, "effect")
@@ -659,6 +679,7 @@ def main():
         borrowed.append((name, animation_for(block, plain, table, last_vanilla, types)))
         names.append(re.search(r'\.name = "([^"]*)"', block).group(1))
         caps.append(re.search(r'\.capsName = "([^"]*)"', block).group(1))
+        used += used_rows(block)
         text = re.search(r'\.description = "((?:[^"\\\\]|\\\\.)*)"', block).group(1)
         # The reference's text goes through a C compiler first, so it doubles
         # every backslash; the message banks here take them single.
@@ -800,6 +821,7 @@ def main():
     append_rows(NAMES, "msg_0750", names, first_move, True)
     append_rows(CAPS, "msg_0751", caps, first_move, True)
     append_rows(DESCRIPTIONS, "msg_0749", descriptions, first_move, True)
+    append_rows(USED, "msg_0003_EVERYWHERE", used, 3 * (last_vanilla + 1), True)
 
     # The animations. The twenty-eight already there were chosen by hand and
     # are left alone; the rest are the nearest move this game has.
