@@ -634,6 +634,8 @@
 #define BATTLE_SUBSCRIPT_SNOW_END                           398
 // The line Unseen Fist prints when it goes through a Protect. 511 there.
 #define BATTLE_SUBSCRIPT_UNSEEN_FIST                        399
+#define BATTLE_SUBSCRIPT_TAKE_POWDER_DAMAGE                 400
+#define BATTLE_SUBSCRIPT_MOVE_FAIL_THROAT_CHOP              401
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

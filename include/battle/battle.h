@@ -85,7 +85,8 @@ typedef struct TurnData {
     u32 roostFlag : 1;
     u32 runFlag : 2; // 1 - Fled using item, 2 - Fled using ability
     u32 endureFlag : 1;
-    u32 unk0_A : 22;
+    u32 forceExecutionOrder : 2; // EXECUTION_ORDER_*: After You brings this battler forward, Quash sends it last
+    u32 unk0_A : 20;
     int physicalDamage[4];
     int battlerIdPhysicalDamage;
     int battlerBitPhysicalDamage;
@@ -157,7 +158,8 @@ typedef struct MoveFailFlags {
     u32 confusion : 1;
     u32 gravity : 1;
     u32 healBlock : 1;
-    u32 unused : 21;
+    u32 throatChop : 1;
+    u32 unused : 20;
 } MoveFailFlags;
 
 typedef struct UnkBattlemonSub {
@@ -299,6 +301,17 @@ typedef struct PlayerActions {
     u32 unk8;
     u32 inputSelection;
 } PlayerActions;
+
+// What a move left on a battler for later. The reference keeps these apart
+// from the one-turn flags because they outlive the turn: a Laser Focus lands
+// next turn, a Throat Chop holds for two. Cleared when the Pokemon is loaded
+// in, counted down when a turn starts.
+typedef struct MoveConditions {
+    u8 powderBlockingFireMove : 1; // Powder: a Fire move this turn goes off in the user's face
+    u8 laserFocusTimer : 2;        // Laser Focus: every hit is a critical hit while this runs
+    u8 glaiveRush : 1;             // Glaive Rush: takes double, and cannot dodge, until it moves again
+    u8 throatChopTimer : 2;        // Throat Chop: no sound moves while this runs
+} MoveConditions;
 
 typedef struct BattleContext {
     u8 unk_0[4];
@@ -517,6 +530,7 @@ typedef struct BattleContext {
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.
+    MoveConditions moveConditions[BATTLER_MAX];
     MoveTbl addedMoveData[NUM_ADDED_MOVES];
 } BattleContext;
 

@@ -88,6 +88,43 @@ class BattleCommandTests(unittest.TestCase):
         missing = [i for i, name in enumerate(self.table) if name == "BtlCmd_NotImplemented"]
         self.assertEqual(missing, [], "these opcodes still have no command")
 
+    # An added command that reads its operands and does nothing else is a
+    # stub, and a script that runs one carries on as if the command worked.
+    # These are the ones still waiting on a system this tree has not got --
+    # mega and ultra burst, tera, totems, primal weather, Parental Bond, the
+    # batched messages of a spread move -- and no script here runs any of
+    # them. A ratchet: the set may only shrink.
+    STUBS = {
+        "AddType", "BatchEffectivenessMessage", "BatchFollowupMessage", "BatchUpdateHealthBar",
+        "BatchUpdateHealthBarValue", "CanClearPrimalWeather", "ChangePermanentBackground",
+        "CheckProtectContactMoves", "GoToIfTerastallized", "GotoIfCanApplyKnockOffBoost",
+        "GotoIfCurrentMoveIsValidForParentalBond", "GotoIfFirstHitOfParentalBond",
+        "GotoIfParentalBondIsActive", "GotoIfSecondHitOfParentalBond", "MakeTotem",
+        "SetCurrentMoveSwitchingStatus", "SetParentalBondFlag", "TryActivateZeroToHero",
+        "TryMegaOrUltraBurstDuringPursuit",
+    }
+
+    def test_no_added_command_is_a_stub_unless_listed(self):
+        source = SOURCE.read_text()
+        scripts = "\n".join(p.read_text(errors="replace") for p in sorted((ROOT / "files/battledata/script").rglob("*.s")))
+        stubs = set()
+        for opcode, name in enumerate(self.table):
+            if opcode <= LAST_RETAIL:
+                continue
+            body = re.search(rf"^BOOL {name}\(BattleSystem \*battleSystem, BattleContext \*ctx\) \{{\n(.*?)^\}}", source, re.M | re.S)
+            if body is None:
+                continue
+            lines = [l.strip() for l in body.group(1).splitlines() if l.strip() and not l.strip().startswith(("//", "/*", "*"))]
+            work = [l for l in lines if not (l.startswith("#pragma") or "BattleScriptReadWord" in l or "BattleScriptIncrementPointer" in l
+                                             or l in ("return FALSE;", "return TRUE;"))]
+            if not work:
+                stubs.add(name[len("BtlCmd_"):])
+        self.assertEqual(stubs - self.STUBS, set(), "commands that only read their operands and are not listed above")
+        for name in sorted(stubs):
+            macro = next((m for m, code in self.macros.items() if code == self.table.index("BtlCmd_" + name)), None)
+            self.assertIsNotNone(macro, name)
+            self.assertNotRegex(scripts, rf"^\s*{macro}\b", f"{macro} runs in a script and does nothing")
+
     def test_every_opcode_the_engine_has_is_spelled_the_same_way_here(self):
         """The macro names are what a translated script writes, so a command
         this port spells differently would not assemble."""

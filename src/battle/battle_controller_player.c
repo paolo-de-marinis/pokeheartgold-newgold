@@ -165,7 +165,7 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // Belch's eaten-a-Berry flags grew it by twenty-four. The four after those,
 // for whose Paradox ability a Booster Energy switched on, grew it by four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x31B0 + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
+    sizeof(BattleContext) == 0x31B4 + NUM_ADDED_MOVES * sizeof(MoveTbl) ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -1475,6 +1475,18 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
             break;
         case UMC_STATE_UPROAR:
             if (ctx->battleMons[battlerId].status2 & STATUS2_UPROAR) {
+                // Throat Chop silences an uproar in progress.
+                if (ctx->moveConditions[battlerId].throatChopTimer) {
+                    ctx->battleMons[battlerId].status2 &= ~STATUS2_UPROAR;
+                    ctx->fieldCondition &= (MaskOfFlagNo(battlerId) << 8) ^ 0xFFFFFFFF;
+                    ctx->battlerIdTemp = battlerId;
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPROAR_END);
+                    ctx->commandNext = ctx->command;
+                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                    flag = 1;
+                    ctx->stateUpdateMonCondition++;
+                    break;
+                }
                 u8 battlerIdSleep;
                 for (battlerIdSleep = 0; battlerIdSleep < maxBattlers; battlerIdSleep++) {
                     if ((ctx->battleMons[battlerIdSleep].status & STATUS_SLEEP) && ctx->battleMons[battlerIdSleep].hp != 0 && GetBattlerAbility(ctx, battlerIdSleep) != ABILITY_SOUNDPROOF) {
@@ -2478,6 +2490,36 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_50++;
             break;
         case 16:
+            // Throat Chop refuses a sound move for the turn it landed and the
+            // next. The selection screen refuses it too; this catches a move
+            // chosen before the chop, or picked by something else.
+            if (ctx->moveConditions[ctx->battlerIdAttacker].throatChopTimer && BattleMoveIsSoundBased(ctx->moveNoCur)) {
+                ctx->moveFail[ctx->battlerIdAttacker].throatChop = TRUE;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_MOVE_FAIL_THROAT_CHOP);
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                ctx->commandNext = CONTROLLER_COMMAND_39;
+                ret = 1;
+            }
+            ctx->unk_50++;
+            break;
+        case 17:
+            // Powder: a Fire move by a Pokemon covered in it goes off in its
+            // face instead, for a quarter of its HP unless it has Magic Guard,
+            // and the move is spent.
+            if (ctx->moveConditions[ctx->battlerIdAttacker].powderBlockingFireMove && BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur) == TYPE_FIRE) {
+                ctx->battlerIdTemp = ctx->battlerIdAttacker;
+                ctx->hpCalc = 0;
+                if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD) {
+                    ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * -1, 4);
+                }
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_TAKE_POWDER_DAMAGE);
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                ctx->commandNext = CONTROLLER_COMMAND_25;
+                ret = 1;
+            }
+            ctx->unk_50++;
+            break;
+        case 18:
             ctx->unk_50 = 0;
             ret = 3;
             break;
@@ -2726,7 +2768,8 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         && ((ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_LOCK_ON
                 && ctx->battleMons[battlerIdTarget].unk88.battlerIdLockOn == battlerIdAttacker)
             || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_NO_GUARD
-            || GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_NO_GUARD)) {
+            || GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_NO_GUARD
+            || ctx->moveConditions[battlerIdTarget].glaiveRush)) {
         ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
         return FALSE;
     }
@@ -3497,6 +3540,11 @@ static void ov12_0224D23C(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->moveNoSketch[ctx->battlerIdAttacker] = ctx->moveNoTemp;
     }
 
+    // Glaive Rush leaves its user open until it moves again.
+    if (ctx->moveConditions[ctx->battlerIdAttacker].glaiveRush && ctx->moveNoCur != MOVE_GLAIVE_RUSH) {
+        ctx->moveConditions[ctx->battlerIdAttacker].glaiveRush = FALSE;
+    }
+
     ov12_0224DD74(battleSystem, ctx);
     ov12_02256694(battleSystem, ctx);
     ctx->command = CONTROLLER_COMMAND_40;
@@ -3541,6 +3589,7 @@ static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->executionIndex = 0;
     } else {
         ctx->executionIndex++;
+        SortRemainingExecutionOrderBySpeed(battleSystem, ctx);
     }
 
     BattleContext_Init(ctx);

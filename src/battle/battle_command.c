@@ -4275,6 +4275,7 @@ BOOL BtlCmd_CopyStatStages(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 
     ctx->battleMons[ctx->battlerIdAttacker].status2 |= (ctx->battleMons[ctx->battlerIdTarget].status2 & STATUS2_FOCUS_ENERGY);
+    ctx->moveConditions[ctx->battlerIdAttacker].laserFocusTimer = ctx->moveConditions[ctx->battlerIdTarget].laserFocusTimer;
 
     return FALSE;
 }
@@ -9325,11 +9326,31 @@ BOOL BtlCmd_AbilityPopup(BattleSystem *battleSystem, BattleContext *ctx) {
 // something for, and this game has none of them, so there is never anything
 // to record. The arguments are still read: the script has written them.
 BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx) {
-#pragma unused(battleSystem)
+    int move;
+    int battlerId;
+
     BattleScriptIncrementPointer(ctx, 1);
 
-    BattleScriptReadWord(ctx);
-    BattleScriptReadWord(ctx);
+    move = BattleScriptReadWord(ctx);
+    battlerId = BattleSystem_GetBattlerIDBySide(battleSystem, ctx, BattleScriptReadWord(ctx));
+
+    switch (move) {
+    case MOVE_POWDER:
+        ctx->moveConditions[battlerId].powderBlockingFireMove = TRUE;
+        break;
+    case MOVE_LASER_FOCUS:
+        ctx->moveConditions[battlerId].laserFocusTimer = 2;
+        break;
+    case MOVE_GLAIVE_RUSH:
+        ctx->moveConditions[battlerId].glaiveRush = TRUE;
+        break;
+    case MOVE_THROAT_CHOP:
+        // A second chop does not restart the first; the reference tested it.
+        if (ctx->moveConditions[battlerId].throatChopTimer == 0) {
+            ctx->moveConditions[battlerId].throatChopTimer = 2;
+        }
+        break;
+    }
 
     return FALSE;
 }
@@ -9859,12 +9880,29 @@ BOOL BtlCmd_SwitchInAbilityCheck(BattleSystem *battleSystem, BattleContext *ctx)
 // settles the order once, before the turn starts, and nothing in it asks to
 // move again afterwards, so there is no order left to change.
 BOOL BtlCmd_ChangeExecutionOrderPriority(BattleSystem *battleSystem, BattleContext *ctx) {
-#pragma unused(battleSystem)
+    int battlerId;
+    int order;
+    int jump;
+    int position;
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
     BattleScriptIncrementPointer(ctx, 1);
 
-    BattleScriptReadWord(ctx);
-    BattleScriptReadWord(ctx);
-    BattleScriptIncrementPointer(ctx, BattleScriptReadWord(ctx));
+    battlerId = BattleSystem_GetBattlerIDBySide(battleSystem, ctx, BattleScriptReadWord(ctx));
+    order = BattleScriptReadWord(ctx);
+    jump = BattleScriptReadWord(ctx);
+
+    for (position = 0; position < maxBattlers; position++) {
+        if (ctx->executionOrder[position] == battlerId) {
+            break;
+        }
+    }
+    // Too late once the target has moved.
+    if (ctx->executionIndex > position) {
+        BattleScriptIncrementPointer(ctx, jump);
+        return FALSE;
+    }
+    ctx->turnData[battlerId].forceExecutionOrder = order;
 
     return FALSE;
 }

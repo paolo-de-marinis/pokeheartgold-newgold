@@ -4,6 +4,7 @@
 
 #include "constants/abilities.h"
 #include "constants/battle.h"
+#include "constants/battle_script_imports.h"
 #include "constants/battle_menu.h"
 #include "constants/battle_subscript.h"
 #include "constants/game_stats.h"
@@ -1115,6 +1116,17 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
         return 0;
     }
 
+    // After You puts a battler next and Quash puts it last, whatever its
+    // speed. The pair only disagrees when one of them carries the mark.
+    if (ctx->turnData[battlerId1].forceExecutionOrder != ctx->turnData[battlerId2].forceExecutionOrder) {
+        if (ctx->turnData[battlerId1].forceExecutionOrder == EXECUTION_ORDER_AFTER_YOU || ctx->turnData[battlerId2].forceExecutionOrder == EXECUTION_ORDER_QUASH) {
+            return 0;
+        }
+        if (ctx->turnData[battlerId1].forceExecutionOrder == EXECUTION_ORDER_QUASH || ctx->turnData[battlerId2].forceExecutionOrder == EXECUTION_ORDER_AFTER_YOU) {
+            return 1;
+        }
+    }
+
     ability1 = GetBattlerAbility(ctx, battlerId1);
     ability2 = GetBattlerAbility(ctx, battlerId2);
 
@@ -2025,6 +2037,7 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
     for (i = 0; i < sizeof(UnkBattlemonSub); i++) {
         data[i] = 0;
     }
+    MI_CpuClear8(&ctx->moveConditions[battlerId], sizeof(MoveConditions));
 
     if (ctx->battleStatus & BATTLE_STATUS_BATON_PASS) {
         ctx->battleMons[battlerId].unk88.substituteHp = unkStruct.substituteHp;
@@ -2106,6 +2119,7 @@ void InitFaintedWork(BattleSystem *battleSystem, BattleContext *ctx, int battler
     for (i = 0; i < sizeof(UnkBattlemonSub); i++) {
         data[i] = 0;
     }
+    MI_CpuClear8(&ctx->moveConditions[battlerId], sizeof(MoveConditions));
 
     data = (u8 *)&ctx->turnData[battlerId];
     for (i = 0; i < sizeof(TurnData); i++) {
@@ -2155,6 +2169,14 @@ void ov12_02251710(BattleSystem *battleSystem, BattleContext *ctx) {
     for (battlerId = 0; battlerId < 4; battlerId++) {
         MI_CpuClearFast((u32 *)&ctx->turnData[battlerId], sizeof(TurnData));
         MI_CpuClearFast((u32 *)&ctx->moveFail[battlerId], sizeof(MoveFailFlags));
+        // A turn has gone by for what the last one left behind.
+        ctx->moveConditions[battlerId].powderBlockingFireMove = FALSE;
+        if (ctx->moveConditions[battlerId].laserFocusTimer) {
+            ctx->moveConditions[battlerId].laserFocusTimer--;
+        }
+        if (ctx->moveConditions[battlerId].throatChopTimer) {
+            ctx->moveConditions[battlerId].throatChopTimer--;
+        }
         ctx->battleMons[battlerId].status2 &= ~STATUS2_FLINCH;
         if (ctx->battleMons[battlerId].unk88.rechargeCount + 1 < ctx->totalTurns) {
             ctx->battleMons[battlerId].status2 &= ~STATUS2_RECHARGE;
@@ -2189,6 +2211,9 @@ u32 StruggleCheck(BattleSystem *battleSystem, BattleContext *ctx, int battlerId,
             nonSelectableMoves |= MaskOfFlagNo(movePos);
         }
         if (ctx->battleMons[battlerId].unk88.tauntTurns && (struggleCheckFlags & STRUGGLE_CHECK_TAUNT) && !(BattleMoveTbl(ctx, ctx->battleMons[battlerId].moves[movePos])->power)) {
+            nonSelectableMoves |= MaskOfFlagNo(movePos);
+        }
+        if (ctx->moveConditions[battlerId].throatChopTimer && (struggleCheckFlags & STRUGGLE_CHECK_THROAT_CHOP) && BattleMoveIsSoundBased(ctx->battleMons[battlerId].moves[movePos])) {
             nonSelectableMoves |= MaskOfFlagNo(movePos);
         }
         if (BattleContext_CheckMoveImprisoned(battleSystem, ctx, battlerId, ctx->battleMons[battlerId].moves[movePos]) && (struggleCheckFlags & STRUGGLE_CHECK_IMPRISON)) {
@@ -2299,6 +2324,12 @@ BOOL ov12_02251A28(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_BELCH) & MaskOfFlagNo(movePos)) {
         msg->tag = TAG_NICKNAME;
         msg->id = msg_0197_01350;
+        msg->param[0] = CreateNicknameTag(ctx, battlerId);
+        ret = FALSE;
+    } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_THROAT_CHOP) & MaskOfFlagNo(movePos)) {
+        // The effects of Throat Chop prevent {0} from using certain moves!
+        msg->tag = TAG_NICKNAME;
+        msg->id = msg_0197_01412;
         msg->param[0] = CreateNicknameTag(ctx, battlerId);
         ret = FALSE;
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_ASSAULT_VEST) & MaskOfFlagNo(movePos)) {
@@ -8349,6 +8380,11 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         dmg /= 4;
     }
 
+    // Glaive Rush: whoever used it last takes double until it moves again.
+    if (ctx->moveConditions[battlerIdTarget].glaiveRush) {
+        dmg *= 2;
+    }
+
     return dmg + 2;
 }
 
@@ -8387,7 +8423,8 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     // well as to Farfetch'd. That second species is the whole of the Leek here.
     critUp = (((status2 & STATUS2_FOCUS_ENERGY) != 0) * 2) + (item == HOLD_EFFECT_CRITRATE_UP) + critCnt + (ability == ABILITY_SUPER_LUCK) + 2 * ((item == HOLD_EFFECT_CHANSEY_CRITRATE_UP) && (species == SPECIES_CHANSEY)) + 2 * ((item == HOLD_EFFECT_FARFETCHD_CRITRATE_UP) && (species == SPECIES_FARFETCHD)) + 2 * ((item == HOLD_EFFECT_FARFETCHD_CRITRATE_UP) && (species == SPECIES_SIRFETCHD));
 
-    if (critUp > 4) {
+    // Laser Focus makes the next hit certain, the way four stages would.
+    if (critUp > 4 || ctx->moveConditions[battlerIdAttacker].laserFocusTimer) {
         critUp = 4;
     }
 
@@ -8547,6 +8584,35 @@ void SortExecutionOrderBySpeed(BattleSystem *battleSystem, BattleContext *ctx) {
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
     for (i = 0; i < maxBattlers - 1; i++) {
+        for (j = i + 1; j < maxBattlers; j++) {
+            battlerId1 = ctx->executionOrder[i];
+            battlerId2 = ctx->executionOrder[j];
+            if (ctx->playerActions[battlerId1].inputSelection == ctx->playerActions[battlerId2].inputSelection) {
+                if (ctx->playerActions[battlerId1].inputSelection != BATTLE_INPUT_FIGHT) {
+                    flag = 1;
+                } else {
+                    flag = 0;
+                }
+                if (CheckSortSpeed(battleSystem, ctx, battlerId1, battlerId2, flag)) {
+                    ctx->executionOrder[i] = battlerId2;
+                    ctx->executionOrder[j] = battlerId1;
+                }
+            }
+        }
+    }
+}
+
+// The reference sorts whoever has not moved yet after every move, so a speed
+// that changed this turn -- or an After You, or a Quash -- counts this turn.
+// The ones who have moved keep their places.
+void SortRemainingExecutionOrderBySpeed(BattleSystem *battleSystem, BattleContext *ctx) {
+    int i, j;
+    int battlerId1;
+    int battlerId2;
+    int flag;
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+    for (i = ctx->executionIndex; i < maxBattlers - 1; i++) {
         for (j = i + 1; j < maxBattlers; j++) {
             battlerId1 = ctx->executionOrder[i];
             battlerId2 = ctx->executionOrder[j];

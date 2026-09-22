@@ -124,6 +124,7 @@ BOOL IsMoveEncored(BattleContext *ctx, u16 moveNo);
 s32 GetItemVar(BattleContext *ctx, u16 itemNo, u16 var);
 int ov12_02257E98(BattleSystem *battleSystem, BattleContext *ctx, int side);
 void SortExecutionOrderBySpeed(BattleSystem *battleSystem, BattleContext *ctx);
+void SortRemainingExecutionOrderBySpeed(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL CheckStatusEffectsSubstitute(BattleContext *battleSystem, int battlerId, int status);
 BOOL CheckItemEffectOnUTurn(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 void CheckIgnorePressure(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget);
