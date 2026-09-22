@@ -2070,6 +2070,13 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->tempData = 12;
     }
 
+    // Contrary turns the change round before anything is decided on its sign,
+    // so the cap checks, the messages and the animation all follow the flip.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_CONTRARY) == TRUE) {
+        change = -change;
+        ctx->tempData = (ctx->tempData == 12) ? 13 : 12;
+    }
+
     if (change > 0) { // Stat Increase
         if (mon->statChanges[stat + 1] == 12) {
             ctx->battleStatus |= BATTLE_STATUS_FAIL_STAT_STAGE_CHANGE;
@@ -2113,6 +2120,18 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
     } else { // Stat Decrease
         if (!(ctx->statChangeFlag & (1 << 27))) {
             if (ctx->battlerIdAttacker != ctx->battlerIdStatChange) {
+                // Flower Veil shelters the Grass types on its own side. Each
+                // slot is asked separately rather than through CheckAbilityActive
+                // so that Mold Breaker can put out one flower and not the other.
+                int flowerVeilHolder = -1;
+                if (GetBattlerVar(ctx, ctx->battlerIdStatChange, BMON_DATA_TYPE_1, NULL) == TYPE_GRASS || GetBattlerVar(ctx, ctx->battlerIdStatChange, BMON_DATA_TYPE_2, NULL) == TYPE_GRASS || GetBattlerVar(ctx, ctx->battlerIdStatChange, BMON_DATA_TYPE_3, NULL) == TYPE_GRASS) {
+                    int ally = BattleSystem_GetBattlerIdPartner(battleSystem, ctx->battlerIdStatChange);
+                    if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_FLOWER_VEIL) == TRUE) {
+                        flowerVeilHolder = ctx->battlerIdStatChange;
+                    } else if (ally != ctx->battlerIdStatChange && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ally, ABILITY_FLOWER_VEIL) == TRUE) {
+                        flowerVeilHolder = ally;
+                    }
+                }
                 // Mist
                 if (ctx->fieldSideConditionData[BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdStatChange)].mistTurns) {
                     // "{0} is protected by Mist!"
@@ -2120,21 +2139,26 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                     ctx->buffMsg.tag = TAG_NICKNAME;
                     ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
                     unkD = 1;
-                } else if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_CLEAR_BODY) == TRUE || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_WHITE_SMOKE) == TRUE) {
+                } else if (flowerVeilHolder != -1 || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_CLEAR_BODY) == TRUE || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_WHITE_SMOKE) == TRUE || GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_FULL_METAL_BODY) {
+                    // Full Metal Body is Clear Body that Mold Breaker cannot get
+                    // at, so it is the one ability above read raw. The message
+                    // names whoever refused the drop, which for a Flower Veil
+                    // held by the partner is not the target.
+                    int blocker = (flowerVeilHolder != -1) ? flowerVeilHolder : ctx->battlerIdStatChange;
                     if (ctx->statChangeType == 3) {
                         // "{0}'s {1} suppressed {2}'s {3}!"
                         ctx->buffMsg.id = msg_0197_00727;
                         ctx->buffMsg.tag = TAG_NICKNAME_ABILITY_NICKNAME_ABILITY;
-                        ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
-                        ctx->buffMsg.param[1] = ctx->battleMons[ctx->battlerIdStatChange].ability;
+                        ctx->buffMsg.param[0] = CreateNicknameTag(ctx, blocker);
+                        ctx->buffMsg.param[1] = ctx->battleMons[blocker].ability;
                         ctx->buffMsg.param[2] = CreateNicknameTag(ctx, ctx->battlerIdAttacker);
                         ctx->buffMsg.param[3] = ctx->battleMons[ctx->battlerIdAttacker].ability;
                     } else {
                         // "{0}'s {1} prevents stat loss!"
                         ctx->buffMsg.id = msg_0197_00669;
                         ctx->buffMsg.tag = TAG_NICKNAME_ABILITY;
-                        ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
-                        ctx->buffMsg.param[1] = ctx->battleMons[ctx->battlerIdStatChange].ability;
+                        ctx->buffMsg.param[0] = CreateNicknameTag(ctx, blocker);
+                        ctx->buffMsg.param[1] = ctx->battleMons[blocker].ability;
                     }
                     unkD = TRUE;
                 } else if ((CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_KEEN_EYE) == TRUE && (1 + stat) == 6) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_HYPER_CUTTER) == TRUE && (1 + stat) == 1) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_BIG_PECKS) == TRUE && (1 + stat) == 2)) {
@@ -2215,9 +2239,10 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
             ctx->buffMsg.param[1] = stat + 1;
         }
-        // Competitive does not answer here, where the drop is only half
-        // applied; it is marked and answered in the pass after the move.
-        if (ctx->battlerIdAttacker != ctx->battlerIdStatChange && (ctx->battlerIdAttacker & 1) != (ctx->battlerIdStatChange & 1) && GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_COMPETITIVE) {
+        // Competitive and Defiant do not answer here, where the drop is only
+        // half applied; the mark is set now and read in the pass after the
+        // move. One Pokemon has one ability, so the two share the bit.
+        if (ctx->battlerIdAttacker != ctx->battlerIdStatChange && (ctx->battlerIdAttacker & 1) != (ctx->battlerIdStatChange & 1) && (GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_COMPETITIVE || GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_DEFIANT)) {
             ctx->battleMons[ctx->battlerIdStatChange].competitivePending = TRUE;
         }
         mon->statChanges[stat + 1] += change;
@@ -3877,7 +3902,7 @@ BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSystem, BattleContext *ct
 
     if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) == 0 && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) == 0) {
         if (ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) {
-            if (type1 != TYPE_ROCK && type2 != TYPE_ROCK && type1 != TYPE_STEEL && type2 != TYPE_STEEL && type1 != TYPE_GROUND && type2 != TYPE_GROUND && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) != ABILITY_SAND_VEIL && !(ctx->battleMons[battlerId].moveEffectFlags & 0x40080)) {
+            if (type1 != TYPE_ROCK && type2 != TYPE_ROCK && type1 != TYPE_STEEL && type2 != TYPE_STEEL && type1 != TYPE_GROUND && type2 != TYPE_GROUND && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) != ABILITY_SAND_VEIL && GetBattlerAbility(ctx, battlerId) != ABILITY_OVERCOAT && !(ctx->battleMons[battlerId].moveEffectFlags & 0x40080)) {
                 ctx->moveTemp = MOVE_SANDSTORM;
                 ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 16);
             }
@@ -3898,7 +3923,7 @@ BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSystem, BattleContext *ct
                     if (ctx->battleMons[battlerId].hp < ctx->battleMons[battlerId].maxHp) {
                         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 16);
                     }
-                } else if (type1 != TYPE_ICE && type2 != TYPE_ICE && GetBattlerAbility(ctx, battlerId) != ABILITY_SNOW_CLOAK) {
+                } else if (type1 != TYPE_ICE && type2 != TYPE_ICE && GetBattlerAbility(ctx, battlerId) != ABILITY_SNOW_CLOAK && GetBattlerAbility(ctx, battlerId) != ABILITY_OVERCOAT) {
                     ctx->moveTemp = MOVE_HAIL;
                     ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 16);
                 }
@@ -4645,11 +4670,32 @@ BOOL BtlCmd_TrySnatch(BattleSystem *battleSystem, BattleContext *ctx) {
 
 extern u16 sLowKickDamageTable[6][2];
 
+// Heavy Metal doubles the weight a move asks after and Light Metal halves it.
+// Mold Breaker switches either off, except when the Pokemon asking is the one
+// being weighed: there is no mold to break against yourself.
+static int BattlerWeight(BattleContext *ctx, int battlerIdAttacker, int battlerId) {
+    int weight = ctx->battleMons[battlerId].weight;
+
+    if (battlerIdAttacker == battlerId) {
+        if (GetBattlerAbility(ctx, battlerId) == ABILITY_HEAVY_METAL) {
+            weight *= 2;
+        } else if (GetBattlerAbility(ctx, battlerId) == ABILITY_LIGHT_METAL) {
+            weight /= 2;
+        }
+    } else if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerId, ABILITY_HEAVY_METAL) == TRUE) {
+        weight *= 2;
+    } else if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerId, ABILITY_LIGHT_METAL) == TRUE) {
+        weight /= 2;
+    }
+
+    return weight;
+}
+
 BOOL BtlCmd_CalcWeightBasedPower(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
     int cnt = 0;
-    int weight = ctx->battleMons[ctx->battlerIdTarget].weight;
+    int weight = BattlerWeight(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
 
     do {
         if (sLowKickDamageTable[cnt][0] >= weight) {
@@ -8684,8 +8730,8 @@ BOOL BtlCmd_CalcHeavySlamPower(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
 
-    int attacker = ctx->battleMons[ctx->battlerIdAttacker].weight;
-    int target = ctx->battleMons[ctx->battlerIdTarget].weight;
+    int attacker = BattlerWeight(ctx, ctx->battlerIdAttacker, ctx->battlerIdAttacker);
+    int target = BattlerWeight(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
     int ratio = attacker ? target * 10000 / attacker : 10000;
 
     if (ratio <= 2000) {
@@ -9068,12 +9114,14 @@ BOOL BtlCmd_CheckCanActivateDefiantOrCompetitive(BattleSystem *battleSystem, Bat
             BattleScriptIncrementPointer(ctx, competitiveAdrs);
             return FALSE;
         }
+        if (GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_DEFIANT && mon->statChanges[1] < 12) {
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            BattleScriptIncrementPointer(ctx, defiantAdrs);
+            return FALSE;
+        }
     }
 
     BattleScriptIncrementPointer(ctx, failAdrs);
-    // Defiant has no ability number here yet; the branch stays reachable so a
-    // script that has one does not have to be rewritten when it does.
-    (void)defiantAdrs;
 
     return FALSE;
 }

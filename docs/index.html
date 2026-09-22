@@ -122,7 +122,7 @@
 <header>
   <h1>New Gold port ledger</h1>
   <p class="sub">Everything hg-engine and konefr change against vanilla HeartGold, and where the native port stands on each. The one thing written by hand is the state on each row, in the commit that moves it. Everything else — the counters, the percentages at the top, <code>README.md</code>'s copy of both, and <code>docs/index.html</code> — is generated from this file by <code>tools/newgold/ledger.py</code>. The summary was the last part kept by hand and it was the part that was wrong, which is the whole argument.</p>
-  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 160 commits</span><span><b>generated</b> 2026-09-22 06:21</span></div>
+  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 161 commits</span><span><b>generated</b> 2026-09-22 06:25</span></div>
 </header>
 
 <div class="total">
@@ -191,7 +191,7 @@
   <div class="rows">
 <div class="row"><div><p class="name">Species</p><p class="det">1042 sprite directories, 1277 icons, heights, learnsets, evolutions; every base species the reference names is here, the rest are its forms</p></div><div class="bar"><span class="b-part" style="width:97%"></span></div><div class="chip c-part">1041 / 1075</div></div>
 <div class="row"><div><p class="name">Moves</p><p class="det">131 effect scripts, 59 subscripts, 62 side-effect table slots</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">923 / 923</div></div>
-<div class="row"><div><p class="name">Abilities</p><p class="det">247 do something — 123 retail effects and 124 added; the other 72 are a name and a species field, and <code>test_ability_effects.py</code> counts them down</p></div><div class="bar"><span class="b-part" style="width:77%"></span></div><div class="chip c-part">247 / 319</div></div>
+<div class="row"><div><p class="name">Abilities</p><p class="det">269 do something — 123 retail effects and 146 added; the other 50 are a name and a species field, and <code>test_ability_effects.py</code> counts them down</p></div><div class="bar"><span class="b-part" style="width:84%"></span></div><div class="chip c-part">269 / 319</div></div>
 <div class="row"><div><p class="name">Level-up learnsets</p><p class="det">1042; the entry is a word now, so a move past 511 can be learnt</p></div><div class="bar"><span class="b-done" style="width:100%"></span></div><div class="chip c-done">done</div></div>
 <div class="row"><div><p class="name">Battle script commands</p><p class="det">294 opcodes, name- and number-identical to the reference; 24 of the added handlers still only consume their operands</p></div><div class="bar"><span class="b-part" style="width:92%"></span></div><div class="chip c-part">270 / 294</div></div>
 <div class="row"><div><p class="name">Cries</p><p class="det"><code>PlayCryEx</code> decompiled in <code>src/unk_02005D10.c</code> and linked by <code>main.lsf</code> — the 495 ceiling is gone, but the bank is mapped twice on one path</p></div><div class="bar"><span class="b-part" style="width:55%"></span></div><div class="chip c-part">partial</div></div>

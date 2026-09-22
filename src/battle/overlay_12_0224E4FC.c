@@ -2445,7 +2445,9 @@ int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, in
         do {
             // &sTypeEffectiveness[i] -> spC
             if (sTypeEffectiveness[i][TYPETABLE_ATTACKER] == TYPE_FORESIGHT) {
-                if ((ctx->battleMons[battlerIdTarget].status2 & STATUS2_FORESIGHT) || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_SCRAPPY) {
+                // Mind's Eye is a second Scrappy: Normal and Fighting reach a
+                // Ghost, here and in the AI's copy of this loop below.
+                if ((ctx->battleMons[battlerIdTarget].status2 & STATUS2_FORESIGHT) || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_SCRAPPY || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_MINDS_EYE) {
                     break;
                 } else {
                     i++;
@@ -2574,7 +2576,7 @@ void ov12_02252054(BattleContext *ctx, int moveNo, int moveTypeDefault, int abil
         i = 0;
         do {
             if (sTypeEffectiveness[i][0] == TYPE_FORESIGHT) {
-                if (abilityAttacker == ABILITY_SCRAPPY) {
+                if (abilityAttacker == ABILITY_SCRAPPY || abilityAttacker == ABILITY_MINDS_EYE) {
                     break;
                 } else {
                     i++;
@@ -4992,14 +4994,23 @@ BOOL TrySyncronizeStatus(BattleSystem *battleSystem, BattleContext *ctx, Control
         }
     }
 
-    // Competitive answers a stat the other side took away. The drop itself
-    // marked the Pokemon on its way through BtlCmd_ChangeStatStage; this is
-    // the first pass after the move where a script can be run in reply.
+    // Competitive and Defiant answer a stat the other side took away, the one
+    // with Special Attack and the other with Attack. The drop itself marked the
+    // Pokemon on its way through BtlCmd_ChangeStatStage; this is the first pass
+    // after the move where a script can be run in reply.
     for (int i = 0; i < (int)NELEMS(ctx->battleMons); i++) {
         if (ctx->battleMons[i].competitivePending) {
             ctx->battleMons[i].competitivePending = FALSE;
-            if (ctx->battleMons[i].hp && GetBattlerAbility(ctx, i) == ABILITY_COMPETITIVE) {
-                ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_2_STAGES;
+            int statChangeParam = 0;
+            if (ctx->battleMons[i].hp) {
+                if (GetBattlerAbility(ctx, i) == ABILITY_COMPETITIVE) {
+                    statChangeParam = MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_2_STAGES;
+                } else if (GetBattlerAbility(ctx, i) == ABILITY_DEFIANT) {
+                    statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES;
+                }
+            }
+            if (statChangeParam != 0) {
+                ctx->statChangeParam = statChangeParam;
                 ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
                 ctx->battlerIdStatChange = i;
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
@@ -7512,6 +7523,14 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 
     if (GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_FLASH_FIRE, NULL) && moveType == TYPE_FIRE) {
         dmg = dmg * 15 / 10;
+    }
+
+    // Whatever Unseen Fist or Piercing Drill got through a Protect with, it
+    // got through weakened. The reference asks only whether this target was
+    // protecting, not whether the move touched -- the contact test already
+    // happened where the move was let through, in BattleSystem_CheckMoveEffect.
+    if ((calcAttacker.ability == ABILITY_UNSEEN_FIST || calcAttacker.ability == ABILITY_PIERCING_DRILL) && ctx->turnData[battlerIdTarget].protectFlag) {
+        dmg /= 4;
     }
 
     return dmg + 2;

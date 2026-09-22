@@ -2503,7 +2503,10 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
         attackerAccuracy = 0;
     }
 
-    if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_UNAWARE) {
+    // Mind's Eye sees past a raised guard the way Unaware does. Its other two
+    // legs are elsewhere: the Ghost immunity in the type table, and the
+    // accuracy it will not let anything lower.
+    if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_UNAWARE || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_MINDS_EYE) {
         targetEvasion = 0;
     }
 
@@ -2532,6 +2535,13 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
 
     if (ctx->battleStatus & BATTLE_STATUS_FLAT_HIT_RATE) {
         return FALSE;
+    }
+
+    // Wonder Skin makes a status move a coin flip at best, and it does so to
+    // the move's own accuracy, before the stage table or the weather are
+    // allowed to move the number.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_WONDER_SKIN) == TRUE && moveCategory == CATEGORY_STATUS && hitChance > 50) {
+        hitChance = 50;
     }
 
     if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
@@ -2616,8 +2626,19 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         return FALSE;
     }
 
+    // Unseen Fist and Piercing Drill go through a guard rather than round it:
+    // a move that touches still lands, and the damage calculation then takes
+    // three quarters of it off. The reference keeps Unseen Fist behind
+    // UNSEEN_FIST_GENERATION and Piercing Drill behind nothing, but its own
+    // config sets that generation high enough that both arms are live, so
+    // neither is gated here.
+    int attackerAbility = GetBattlerAbility(ctx, battlerIdAttacker);
+    BOOL punchesThroughProtect = (attackerAbility == ABILITY_UNSEEN_FIST || attackerAbility == ABILITY_PIERCING_DRILL)
+        && BattleMoveMakesContact(ctx, move) == TRUE;
+
     if (ctx->turnData[battlerIdTarget].protectFlag
         && BattleMoveTbl(ctx, move)->unkB & (1 << 1)
+        && punchesThroughProtect == FALSE
         && (move != MOVE_CURSE || CurseUserIsGhost(ctx, move, battlerIdAttacker) == TRUE)
         && (!BattleCtx_IsIdenticalToCurrentMove(ctx, move) || ctx->battleStatus & BATTLE_STATUS_CHARGE_MOVE_HIT)) {
         UnlockBattlerOutOfCurrentMove(battleSystem, ctx, battlerIdAttacker);

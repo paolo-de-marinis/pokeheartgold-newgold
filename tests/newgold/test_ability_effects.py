@@ -35,13 +35,17 @@ IMPLEMENTED = {
     "CHEEK_POUCH",
     "CHILLING_NEIGH",
     "COMATOSE",
+    "COMMANDER",
     "COMPETITIVE",
+    "CONTRARY",
+    "CORROSION",
     "COTTON_DOWN",
     "CURSED_BODY",
     "DARK_AURA",
     "DAUNTLESS_SHIELD",
     "DAZZLING",
     "DEFEATIST",
+    "DEFIANT",
     "DRAGONIZE",
     "DRAGONS_MAW",
     "EARTH_EATER",
@@ -51,16 +55,21 @@ IMPLEMENTED = {
     "FAIRY_AURA",
     "FIRE_MANE",
     "FLARE_BOOST",
+    "FLOWER_VEIL",
     "FLUFFY",
     "FRIEND_GUARD",
+    "FULL_METAL_BODY",
     "FUR_COAT",
     "GALE_WINGS",
     "GALVANIZE",
+    "GOOD_AS_GOLD",
     "GOOEY",
     "GORILLA_TACTICS",
     "GRIM_NEIGH",
+    "GULP_MISSILE",
     "HARVEST",
     "HEALER",
+    "HEAVY_METAL",
     "HOSPITALITY",
     "ICE_SCALES",
     "IMPOSTER",
@@ -71,6 +80,7 @@ IMPLEMENTED = {
     "IRRIGATION",
     "JUSTIFIED",
     "LIBERO",
+    "LIGHT_METAL",
     "LINGERING_AROMA",
     "LIQUID_VOICE",
     "LONG_REACH",
@@ -78,6 +88,8 @@ IMPLEMENTED = {
     "MAGIC_BOUNCE",
     "MEGA_LAUNCHER",
     "MERCILESS",
+    "MINDS_EYE",
+    "MIRROR_ARMOR",
     "MOODY",
     "MOXIE",
     "MULTISCALE",
@@ -86,11 +98,16 @@ IMPLEMENTED = {
     "NEUROFORCE",
     "NEUTRALIZING_GAS",
     "ORICHALCUM_PULSE",
+    "OVERCOAT",
     "PASTEL_VEIL",
     "PERISH_BODY",
     "PICKPOCKET",
+    "PIERCING_DRILL",
     "PIXILATE",
+    "POISON_PUPPETEER",
     "POISON_TOUCH",
+    "POWER_CONSTRUCT",
+    "POWER_OF_ALCHEMY",
     "PRANKSTER",
     "PRISM_ARMOR",
     "PROPELLER_TAIL",
@@ -100,6 +117,7 @@ IMPLEMENTED = {
     "QUEENLY_MAJESTY",
     "QUICK_DRAW",
     "RATTLED",
+    "RECEIVER",
     "REFRIGERATE",
     "REGENERATOR",
     "RIPEN",
@@ -109,11 +127,13 @@ IMPLEMENTED = {
     "SAND_RUSH",
     "SAND_SPIT",
     "SAP_SIPPER",
+    "SCHOOLING",
     "SCREEN_CLEANER",
     "SHADOW_SHIELD",
     "SHARPNESS",
     "SHEER_FORCE",
     "SLUSH_RUSH",
+    "SOUL_HEART",
     "SPICY_SPRAY",
     "STALWART",
     "STAMINA",
@@ -136,6 +156,7 @@ IMPLEMENTED = {
     "TRIAGE",
     "TURBOBLAZE",
     "UNNERVE",
+    "UNSEEN_FIST",
     "VESSEL_OF_RUIN",
     "WANDERING_SPIRIT",
     "WATER_BUBBLE",
@@ -143,6 +164,7 @@ IMPLEMENTED = {
     "WEAK_ARMOR",
     "WELL_BAKED_BODY",
     "WIND_RIDER",
+    "WONDER_SKIN",
 }
 
 # Cud Chew is a name in New Gold too: the reference declares it and nothing
@@ -160,26 +182,21 @@ IMPLEMENTED = {
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
     "CUD_CHEW",
-    "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COMMANDER",
-    "CONTRARY", "CORROSION", "COSTAR", "CURIOUS_MEDICINE", "DANCER", "DEFIANT",
+    "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE", "DANCER",
     "DELTA_STREAM", "DESOLATE_LAND", "DISGUISE", "ELECTRIC_SURGE",
     "EMBODY_ASPECT", "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4",
-    "EMERGENCY_EXIT", "FLOWER_VEIL",
-    "FULL_METAL_BODY", "GOOD_AS_GOLD",
-    "GRASSY_SURGE", "GRASS_PELT", "GUARD_DOG", "GULP_MISSILE", "HADRON_ENGINE",
-    "HEAVY_METAL", "HUNGER_SWITCH", "ICE_FACE",
-    "ILLUSION", "LIGHT_METAL",
-    "MEGA_SOL", "MIMICRY",
-    "MINDS_EYE", "MIRROR_ARMOR", "MISTY_SURGE",
-    "OPPORTUNIST", "OVERCOAT", "PARENTAL_BOND", "PIERCING_DRILL", "POISON_PUPPETEER",
-    "POWER_CONSTRUCT", "POWER_OF_ALCHEMY", "POWER_SPOT",
+    "EMERGENCY_EXIT",
+    "GRASSY_SURGE", "GRASS_PELT", "GUARD_DOG", "HADRON_ENGINE", "HUNGER_SWITCH", "ICE_FACE",
+    "ILLUSION",
+    "MEGA_SOL", "MIMICRY", "MISTY_SURGE",
+    "OPPORTUNIST", "PARENTAL_BOND", "POWER_SPOT",
     "PRIMORDIAL_SEA",
-    "PROTOSYNTHESIS", "PSYCHIC_SURGE", "QUARK_DRIVE", "RECEIVER", "SCHOOLING", "SEED_SOWER",
-    "SHIELDS_DOWN", "SOUL_HEART", "STAKEOUT",
+    "PROTOSYNTHESIS", "PSYCHIC_SURGE", "QUARK_DRIVE", "SEED_SOWER",
+    "SHIELDS_DOWN", "STAKEOUT",
     "STANCE_CHANGE", "SUPREME_OVERLORD", "SURGE_SURFER", "SYMBIOSIS", "TEMP4",
     "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN",
-    "UNSEEN_FIST", "VICTORY_STAR", "WIMP_OUT",
-    "WIND_POWER", "WONDER_SKIN", "ZEN_MODE", "ZERO_TO_HERO"
+    "VICTORY_STAR", "WIMP_OUT",
+    "WIND_POWER", "ZEN_MODE", "ZERO_TO_HERO"
 }
 
 
@@ -189,7 +206,29 @@ def added():
 
 
 def battle_source():
-    return "\n".join(path.read_text() for path in sorted((ROOT / "src").rglob("*.c")))
+    """Everywhere the game can read an ability: the C, and the battle scripts.
+
+    Some abilities are answered in a script rather than in C, and that is
+    where the reference answers them too -- Corrosion in the poison
+    subscripts, Soul-Heart in the one that faints a Pokemon, and ten whose
+    every read in the reference is a blocklist saying they cannot be copied,
+    swapped or suppressed. A script is source here as much as a .c is."""
+    paths = sorted((ROOT / "src").rglob("*.c"))
+    paths += sorted((ROOT / "files/battledata").rglob("*.s"))
+    return "\n".join(path.read_text(errors="replace") for path in paths)
+
+
+def written_in_c():
+    """Only the C.
+
+    The two questions are not the same one. "Is it read" has to count the
+    scripts, or ten finished abilities read as unfinished. "Did someone write
+    an effect and forget to move the name" must not: an ability appears in a
+    blocklist the moment somebody else's script imports one, and Zen Mode
+    sitting in Simple Beam's list of abilities it may not overwrite says
+    nothing about whether Zen Mode changes a form."""
+    return "\n".join(path.read_text(errors="replace")
+                     for path in sorted((ROOT / "src").rglob("*.c")))
 
 
 class AbilityEffectTests(unittest.TestCase):
@@ -203,7 +242,7 @@ class AbilityEffectTests(unittest.TestCase):
             self.assertIn(f"ABILITY_{name}", source, f"ABILITY_{name} is listed as done but nothing reads it")
 
     def test_a_pending_ability_is_not_quietly_half_wired(self):
-        source = battle_source()
+        source = written_in_c()
         for name in sorted(PENDING):
             self.assertNotIn(f"ABILITY_{name}", source, f"ABILITY_{name} works now; move it to IMPLEMENTED")
 
@@ -213,7 +252,7 @@ class AbilityEffectTests(unittest.TestCase):
     # abilities, every one of them read somewhere in the reference, so the
     # number went up once and may only come down from here: lowering it is the
     # work, raising it needs a reason written next to it.
-    STILL_TO_DO = 72
+    STILL_TO_DO = 50
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

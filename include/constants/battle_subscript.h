@@ -608,6 +608,7 @@
 #define BATTLE_SUBSCRIPT_HEALER                             374
 #define BATTLE_SUBSCRIPT_MOODY                              375
 #define BATTLE_SUBSCRIPT_PROTEAN                            376
+#define BATTLE_SUBSCRIPT_SOUL_HEART                         377
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
