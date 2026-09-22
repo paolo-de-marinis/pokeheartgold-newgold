@@ -78,15 +78,25 @@ class Markers:
             return None
         return struct.unpack_from("<I" if width == 4 else "<H", ram, address - MAIN_RAM)[0]
 
-    def callers(self, ram):
-        """Return addresses among the stack words saved at the last assertion."""
+    def callers(self, ram, loaded=("main",)):
+        """Return addresses among the stack words saved at the last assertion.
+
+        An address in overlay space names a function in every overlay placed
+        there; the answer taken is the first section in `loaded` that has one,
+        and only failing that the first alphabetically -- which in a battle is
+        OVY_114 rather than OVY_12, and was every name past main on the line.
+        """
         base = self.address("gDiagAssertStack")
         if base is None:
             return "?"
         words = struct.unpack_from("<64I", ram, base - MAIN_RAM)
-        names = [where.function_at(word, table=self.table) for word in words
-                 if 0x02000000 <= word < 0x02400000 and word & 1]
-        names = [n.split(",")[0] for n in names if "+" in n]
+        names = []
+        for word in words:
+            if not (0x02000000 <= word < 0x02400000 and word & 1):
+                continue
+            answers = [a.strip() for a in where.function_at(word, table=self.table).split(",") if "+" in a]
+            if answers:
+                names.append(next((a for s in loaded for a in answers if a.endswith(f"({s})")), answers[0]))
         return " < ".join(names[:12]) or "nothing on the stack looks like a return"
 
     def block(self):
@@ -166,13 +176,15 @@ class Markers:
         state, seen = w("gDiagBattleState"), w("gDiagBattleStateSeen")
         reached = ",".join(STATES[i] for i in range(16) if seen >> i & 1)
         asserts, allocs = w("gDiagAssertCount"), w("gDiagAllocFailCount")
+        # Overlay 12 is the battle; between BATTLE_INIT and EXIT it is loaded.
+        loaded = ("main", "OVY_12") if STATES.index("BATTLE_INIT") <= state < STATES.index("EXIT") else ("main",)
         parts = [
             field,
             f"wild stage {w('gDiagWildStage')} after {w('gDiagWildTicks')} sp {w('gDiagLastWildSpecies')} L{w('gDiagLastWildLevel')}"
             f" map {w('gDiagLastBattleMap')} bg {w('gDiagLastBattleBg')} terrain {w('gDiagLastBattleTerrain')}",
             f"battle {STATES[state] if state < 16 else state} {w('gDiagBattleTicks')} ticks [{reached}]",
             f"asserts {asserts}" + (f" last at {where.function_at(w('gDiagAssertReturn'), table=self.table)}"
-                                   f" called from {self.callers(ram)}" if asserts else ""),
+                                   f" called from {self.callers(ram, loaded)}" if asserts else ""),
             f"alloc failures {allocs}" + (f" last {w('gDiagAllocFailSize')} bytes from heap {w('gDiagAllocFailHeap')}" if allocs else ""),
         ]
         # A switch left on explains a run that behaves oddly.

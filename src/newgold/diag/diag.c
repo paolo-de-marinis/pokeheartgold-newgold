@@ -29,6 +29,7 @@ u16 gDiagWarpZ;
 u16 gDiagBattleText[DIAG_BATTLE_TEXT_LINES][DIAG_BATTLE_TEXT_CHARS];
 u32 gDiagBattleTextCount;
 u32 gDiagLastMessage[5];
+u32 gDiagLastScriptMessage[4];
 DiagBattler gDiagBattlers[4];
 u16 gDiagPartySpecies[6];
 u16 gDiagPartyHp[6];

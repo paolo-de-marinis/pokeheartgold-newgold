@@ -54,6 +54,10 @@ void Diag_BattleText(const unsigned short *text);
 // filled: bank row, tag and the first three parameters. When filling them in
 // fails -- a row or a name past the end of its bank -- this is the one.
 extern unsigned long gDiagLastMessage[5];
+// The last message a battle script asked for, and where the script was:
+// row, archive, member, position. A script that names a row the bank has
+// not got shows up here, with the place to fix it.
+extern unsigned long gDiagLastScriptMessage[4];
 
 // The four battlers as the battle sees them, refreshed every frame, and where
 // the player's side is in choosing: gDiagBattlePrompt is the selection

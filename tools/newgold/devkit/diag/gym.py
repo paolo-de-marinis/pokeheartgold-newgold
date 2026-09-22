@@ -89,6 +89,8 @@ def main():
             at = markers.address("gDiagLastMessage")
             if at is not None:
                 say(f"[{core.frames}]   the last message asked for: row, tag, params = {struct.unpack_from('<5I', ram, at - 0x02000000)}")
+                say(f"[{core.frames}]   the last message a script asked for: row, archive, member, position = "
+                    f"{struct.unpack_from('<4I', ram, markers.address('gDiagLastScriptMessage') - 0x02000000)}")
                 say(f"[{core.frames}]   the script running: archive, member, position = "
                     f"{struct.unpack_from('<3I', ram, markers.address('gDiagBattleScript') - 0x02000000)}")
             last_asserts = asserts

@@ -8228,7 +8228,15 @@ static int BattleSystem_GetBattlerIDBySide(BattleSystem *battleSystem, BattleCon
 
 static void InitBattleMsgData(BattleContext *ctx, BattleMessageData *msgData) {
     int params = 0;
+#ifdef NEWGOLD_DIAG
+    gDiagLastScriptMessage[1] = ctx->scriptNarcId;
+    gDiagLastScriptMessage[2] = ctx->scriptFileId;
+    gDiagLastScriptMessage[3] = ctx->scriptSeqNo;
+#endif
     msgData->id = BattleScriptReadWord(ctx);
+#ifdef NEWGOLD_DIAG
+    gDiagLastScriptMessage[0] = msgData->id;
+#endif
     msgData->tag = BattleScriptReadWord(ctx);
     switch (msgData->tag) {
     case TAG_NONE:
