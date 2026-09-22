@@ -40,6 +40,17 @@ class Markers:
             return None
         return struct.unpack_from("<I" if width == 4 else "<H", ram, address - MAIN_RAM)[0]
 
+    def callers(self, ram):
+        """Return addresses among the stack words saved at the last assertion."""
+        base = self.address("gDiagAssertStack")
+        if base is None:
+            return "?"
+        words = struct.unpack_from("<16I", ram, base - MAIN_RAM)
+        names = [where.function_at(word, table=self.table) for word in words
+                 if 0x02000000 <= word < 0x02400000 and word & 1]
+        names = [n.split(",")[0] for n in names if "+" in n]
+        return " < ".join(names[:4]) or "nothing on the stack looks like a return"
+
     def describe(self, ram):
         """One line: the field, the encounter, the battle, and what failed."""
         w = lambda name: self.read(ram, name)  # noqa: E731
@@ -55,7 +66,8 @@ class Markers:
             f"wild stage {w('gDiagWildStage')} after {w('gDiagWildTicks')} sp {w('gDiagLastWildSpecies')} L{w('gDiagLastWildLevel')}"
             f" map {w('gDiagLastBattleMap')} bg {w('gDiagLastBattleBg')} terrain {w('gDiagLastBattleTerrain')}",
             f"battle {STATES[state] if state < 16 else state} {w('gDiagBattleTicks')} ticks [{reached}]",
-            f"asserts {asserts}" + (f" last at {where.function_at(w('gDiagAssertReturn'), table=self.table)}" if asserts else ""),
+            f"asserts {asserts}" + (f" last at {where.function_at(w('gDiagAssertReturn'), table=self.table)}"
+                                   f" called from {self.callers(ram)}" if asserts else ""),
             f"alloc failures {allocs}" + (f" last {w('gDiagAllocFailSize')} bytes from heap {w('gDiagAllocFailHeap')}" if allocs else ""),
         ]
         # A switch left on explains a run that behaves oddly.

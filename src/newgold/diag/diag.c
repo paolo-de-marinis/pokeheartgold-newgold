@@ -14,6 +14,7 @@ u32 gDiagBattleStateSeen;
 
 u32 gDiagAssertCount;
 u32 gDiagAssertReturn;
+u32 gDiagAssertStack[DIAG_ASSERT_STACK_WORDS];
 
 u32 gDiagAllocFailCount;
 u32 gDiagAllocFailHeap;
@@ -54,10 +55,11 @@ void Diag_AllocFailed(u32 heapId, u32 size) {
     gDiagAllocFailSize = size;
 }
 
-// Records where the assertion returns to, then lets GF_AssertFail decide what
-// to do about it as it always has. Assembly because that address is in lr and
-// nothing in C can read it. The load spells its offset out: this compiler's
-// assembler turned a bare [r0] after the literal load into [r0, #0x78].
+// Records where the assertion returns to and the top of the stack, then lets
+// GF_AssertFail decide what to do about it as it always has. Assembly because
+// that address is in lr and nothing in C can read it. r0-r3 are the caller's
+// scratch. The loads spell their offsets out: this compiler's assembler
+// turned a bare [r0] after the literal load into [r0, #0x78].
 // clang-format off
 asm void Diag_AssertFail(void) {
     ldr r0, =gDiagAssertReturn
@@ -66,7 +68,17 @@ asm void Diag_AssertFail(void) {
     ldr r0, =gDiagAssertCount
     ldr r1, [r0, #0]
     add r1, r1, #1
-    str r1, [r0]
+    str r1, [r0, #0]
+    mov r2, sp
+    ldr r3, =gDiagAssertStack
+    mov r1, #DIAG_ASSERT_STACK_WORDS
+@copy:
+    ldr r0, [r2, #0]
+    str r0, [r3, #0]
+    add r2, #4
+    add r3, #4
+    sub r1, #1
+    bne @copy
     push {lr}
     bl GF_AssertFail
     pop {pc}

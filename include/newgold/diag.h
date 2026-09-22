@@ -22,6 +22,11 @@ void Diag_BattleState(int state);
 // nothing, where __FILE__ and __LINE__ cost the main arena more than it has.
 extern unsigned long gDiagAssertCount;
 extern unsigned long gDiagAssertReturn;
+// The sixteen words under the stack pointer when the last one fired: the
+// caller's saved registers and, among them, its own return address, so the
+// reader can say who asked the function that asserted.
+#define DIAG_ASSERT_STACK_WORDS 16
+extern unsigned long gDiagAssertStack[DIAG_ASSERT_STACK_WORDS];
 void Diag_AssertFail(void);
 
 // Every allocation that failed, and the last one's heap and size.
