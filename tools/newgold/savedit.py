@@ -206,7 +206,7 @@ def move_numbers():
 
 
 def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
-              ot_name="A", ot_id=0, personality=None, moves=None):
+              ot_name="A", ot_id=0, personality=None, moves=None, ot_codes=None, ot_gender=0):
     """One party Pokemon, encrypted and checksummed the way the game does.
 
     The four blocks are written in their declared order and then shuffled into
@@ -259,10 +259,14 @@ def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
     c[0x17] = VERSION_HEARTGOLD
 
     d = bytearray(BLOCK)
-    for i, code in enumerate(charcode(ot_name)):
+    # The original trainer is who the game compares with the player to decide
+    # a Pokemon was traded -- the name, the id and the gender -- and a traded
+    # Pokemon past the badges' level does not obey. Given the player's own,
+    # the party is the player's.
+    for i, code in enumerate(ot_codes if ot_codes is not None else charcode(ot_name)):
         struct.pack_into("<H", d, 2 * i, code)
     d[0x1B] = 4                             # ITEM_POKE_BALL
-    d[0x1C] = level & 0x7F
+    d[0x1C] = (level & 0x7F) | ((ot_gender & 1) << 7)
     d[0x1E] = 4
 
     order = shuffle_order(personality)
@@ -544,6 +548,8 @@ def main():
                                        "and asserts on one that never ends")
     parser.add_argument("--trainer-id", type=int)
     parser.add_argument("--badges", type=int, help="how many Johto badges to set")
+    parser.add_argument("--var", action="append", default=[], metavar="VAR_NAME=VALUE",
+                        help="set a script variable by its name in include/constants/vars.h; repeatable")
     parser.add_argument("--flag", action="append", default=[], metavar="FLAG_NAME",
                         help="set a script flag by its name in include/constants/flags.h; repeatable")
     parser.add_argument("--where", metavar="MAP:X:Y[:DIR]",
@@ -616,9 +622,14 @@ def main():
             raise SystemExit(f"a party holds {PARTY_SIZE}")
         # PartyCore is { int maxCount; int curCount; Pokemon mons[PARTY_SIZE]; }
         struct.pack_into("<ii", block, 0, PARTY_SIZE, len(wanted))
+        profile = save.block("SAVE_PLAYERDATA")
+        codes = list(struct.unpack_from(f"<{PLAYER_NAME_LENGTH + 1}H", profile, NAME))
+        codes = codes[:codes.index(0xFFFF) + 1] if 0xFFFF in codes else codes
+        player_id = struct.unpack_from("<I", profile, TRAINER_ID)[0]
+        player_gender = profile[TRAINER_ID + 4 + 4]
         for slot, (name, level, nature, moves) in enumerate(wanted):
-            mon = build_mon(name, level, nature=nature, ot_name=args.name or "A",
-                            ot_id=args.trainer_id or 0, moves=moves)
+            mon = build_mon(name, level, nature=nature, moves=moves,
+                            ot_codes=codes, ot_id=player_id, ot_gender=player_gender)
             block[8 + slot * PARTY_MON:8 + (slot + 1) * PARTY_MON] = mon
         save.write()
         print("party: " + ", ".join(f"{n} at level {l}" for n, l, _, _ in wanted))
@@ -669,6 +680,19 @@ def main():
         struct.pack_into("<B", block, JOHTO_BADGES, (1 << args.badges) - 1)
         save.write()
         print(f"{args.badges} Johto badges")
+
+    for assignment in args.var:
+        # A script variable by its name in include/constants/vars.h. The
+        # story keeps its place in these: Morty's gym turns the player away
+        # while VAR_UNK_4079 is 0, and the Burned Tower sets it to 2.
+        name, _, value = assignment.partition("=")
+        number = constants("include/constants/vars.h", "VAR_").get(name)
+        if number is None:
+            raise SystemExit(f"there is no {name} in include/constants/vars.h")
+        flags = save.block("SAVE_FLAGS")
+        struct.pack_into("<H", flags, 2 * (number - 0x4000), int(value, 0))
+        save.write()
+        print(f"{name} ({number:#x}) = {value}")
 
     for name in args.flag:
         # A script flag by its name in include/constants/flags.h: the cap
