@@ -46,7 +46,7 @@ import save_budget  # noqa: E402
 GENDER_RATIO = lambda frac: int(frac * 254.75) if frac <= 1 else 255   # GENDER_RATIO, constants/pokemon.h
 HALF = 0x40000                  # GetChunkOffsetFromCurrentSaveSlot
 FLASH = 2 * HALF                # the two halves the game saves in by turns
-MAX_PLAY_HOURS = 999            # where IGT_Add stops the clock, at 999:59:59
+MAX_PLAY_HOURS = 999            # where AddIGTSeconds stops the clock, at 999:59:59
 # Every other size, offset and limit of the save is read from the headers
 # by _layout(), below, and set again when one changes.
 

@@ -10,6 +10,7 @@ sealed the way the game seals one -- the older half different from the
 newest, the blocks' own checksum fields zero, as the game leaves most of them.
 """
 
+import re
 import struct
 import subprocess
 import sys
@@ -570,6 +571,146 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(sv.describe_mon(bytes(raw))["ok"], False)
         with self.assertRaises(ValueError):
             sv.edit_mon(bytes(raw), level=5)
+
+
+class TheCodeSaveditKeeps(unittest.TestCase):
+    """What savedit keeps as code rather than reads: the game has it only as
+    code too -- a function, a macro, a struct the compiler lays out -- so
+    each is held here to the tree's own, and fails the day they differ."""
+
+    def fields(self, kind, *names):
+        values, _ = sv.compile_c(tuple(f"__builtin_offsetof({kind}, {name})" for name in names))
+        return dict(zip(names, values))
+
+    def mask(self, kind, init):
+        """The bits a bitfield takes in its struct, as one number."""
+        _, (raw,) = sv.compile_c(inits=((kind, init),))
+        return int.from_bytes(raw, "little")
+
+    def test_the_pokemon_record_is_laid_out_as_savedit_reads_it(self):
+        """The offsets and bits savedit reads and writes inside a Pokemon."""
+        self.assertEqual(self.fields("BoxPokemon", "personality", "checksum", "dataBlocks"),
+                         {"personality": 0, "checksum": 6, "dataBlocks": 8})
+        self.assertEqual(self.fields("PokemonDataBlockA", "species", "heldItem", "otID", "expAndAbility", "friendship",
+                                     "ability", "originLanguage", "hpEV", "spDefEV"),
+                         {"species": 0, "heldItem": 2, "otID": 4, "expAndAbility": 8, "friendship": 0x0C,
+                          "ability": 0x0D, "originLanguage": 0x0F, "hpEV": 0x10, "spDefEV": 0x15})
+        self.assertEqual(self.fields("PokemonDataBlockB", "moves", "moveCurrentPPs", "movePPUps", "unused2"),
+                         {"moves": 0, "moveCurrentPPs": 8, "movePPUps": 12, "unused2": 0x1A})
+        self.assertEqual(self.fields("PokemonDataBlockC", "nickname", "originGame"), {"nickname": 0, "originGame": 0x17})
+        self.assertEqual(self.fields("PokemonDataBlockD", "otName", "pokeball", "HGSS_Pokeball"),
+                         {"otName": 0, "pokeball": 0x1B, "HGSS_Pokeball": 0x1E})
+        self.assertEqual(self.fields("PartyPokemon", "status", "level", "hp", "maxHP", "spdef"),
+                         {"status": 0, "level": 4, "hp": 6, "maxHP": 8, "spdef": 18})
+        a, b, d = "PokemonDataBlockA", "PokemonDataBlockB", "PokemonDataBlockD"
+        self.assertEqual(self.mask(a, ".exp = ~0u"), sv.EXP_BITS << 8 * 8)
+        self.assertEqual(self.mask(a, ".abilityMSB = 1"), 1 << 31 << 8 * 8)
+        self.assertEqual(self.mask(b, ".hpIV = ~0u, .atkIV = ~0u, .defIV = ~0u, .speedIV = ~0u, .spAtkIV = ~0u, "
+                                      ".spDefIV = ~0u"), (1 << 30) - 1 << 8 * 0x10, "IVs: five bits each, in order")
+        self.assertEqual(self.mask(b, ".isEgg = 1"), 1 << 30 << 8 * 0x10)
+        self.assertEqual(self.mask(b, ".hasNickname = 1"), 1 << 31 << 8 * 0x10)
+        self.assertEqual(self.mask(b, ".gender = ~0u"), 3 << 1 << 8 * 0x18)
+        self.assertEqual(self.mask(b, ".form = ~0u"), 0x1F << 3 << 8 * 0x18)
+        self.assertEqual(self.mask(b, ".unused1 = ~0u"), 3 << 6 << 8 * 0x19, "the hidden-ability bit's byte")
+        self.assertEqual(self.mask(d, ".metLevel = ~0u"), 0x7F << 8 * 0x1C)
+        self.assertEqual(self.mask(d, ".otGender = 1"), 0x80 << 8 * 0x1C)
+
+    def test_the_rest_of_the_save_is_laid_out_as_savedit_packs_it(self):
+        """The footers, the play time, a Location and the party's counts,
+        packed by struct formats; and the dynamic warp, a Location of
+        LocalFieldData, which src/save_local_field_data.c declares."""
+        self.assertEqual(self.fields("struct SaveChunkFooter", "count", "size", "magic", "slot", "crc"),
+                         dict(zip(("count", "size", "magic", "slot", "crc"), (0, 4, 8, 12, 14))), "<IIIHH")
+        self.assertEqual(self.fields("struct SaveArrayFooter", "magic", "saveno", "size", "idx", "crc"),
+                         dict(zip(("magic", "saveno", "size", "idx", "crc"), (0, 4, 8, 12, 14))), "<IIIH, then crc")
+        self.assertEqual(self.fields("IGT", "hours", "minutes", "seconds"), {"hours": 0, "minutes": 2, "seconds": 3})
+        self.assertEqual(self.fields("Location", "mapId", "warpId", "x", "y", "direction"),
+                         dict(zip(("mapId", "warpId", "x", "y", "direction"), (0, 4, 8, 12, 16))), "<5i")
+        self.assertEqual(self.fields("PartyCore", "maxCount", "curCount"), {"maxCount": 0, "curCount": 4})
+        text = (ROOT / "src/save_local_field_data.c").read_text()
+        members = re.findall(r"^\s*(\w+) (\w+);", text[text.index("struct LocalFieldData {"):], re.M)
+        self.assertEqual(members[:4], [("Location", "currentPosition"), ("Location", "entrancePosition"),
+                                       ("Location", "previousPosition"), ("Location", "dynamicWarp")],
+                         "the dynamic warp is 3 * LOCATION in")
+
+    def test_the_mail_is_mail_init_s(self):
+        """MAIL_INIT is Mail_Init and MailMsg_Init over struct Mail: the same
+        fields set to the same things, where the compiler puts them."""
+        init = sv.c_function("src/mail.c", "void Mail_Init(")
+        self.assertEqual(dict(re.findall(r"mail->(\w+)(?:\[i\]\.raw)? = (\w+);", init)),
+                         {"author_otId": "0", "author_gender": "PLAYER_GENDER_MALE", "author_language": "gGameLanguage",
+                          "author_version": "gGameVersion", "mail_type": "MAIL_NONE", "mon_icons": "0xFFFF",
+                          "form_flags": "0"})
+        self.assertIn("StringFillEOS(mail->author_name, PLAYER_NAME_LENGTH + 1)", init)
+        self.assertIn("MailMsg_Init(&mail->unk_20[i])", init)
+        message = sv.c_function("src/mail_message.c", "void MailMsg_Init(")
+        self.assertEqual(re.findall(r"mailMessage->(\w+)(?:\[i\])? = (\w+);", message),
+                         [("msg_bank", "MAILMSG_BANK_NONE"), ("fields", "EC_WORD_NULL")], "the number left alone")
+        at = self.fields("Mail", "author_gender", "author_language", "author_version", "mail_type", "author_name",
+                         "mon_icons", "form_flags", "unk_20")
+        self.assertEqual(at, {"author_gender": 4, "author_language": 5, "author_version": 6, "mail_type": 7,
+                              "author_name": 8, "mon_icons": 8 + 2 * (sv.PLAYER_NAME_LENGTH + 1),
+                              "form_flags": 14 + 2 * (sv.PLAYER_NAME_LENGTH + 1),
+                              "unk_20": 16 + 2 * (sv.PLAYER_NAME_LENGTH + 1)})
+        self.assertEqual(len(sv.MAIL_INIT), sv.compile_c(("sizeof(Mail)",))[0][0])
+
+    def test_the_game_s_rules_are_the_ones_savedit_follows(self):
+        """The rules that exist only as code: the encryption's generator,
+        the shiny test, the nature, the gender ratio's scale, the nature's
+        tenth, the flash's halves, the clock's end, the tutor's record, the
+        badges' bytes, a TM's one copy, the machines' order, the ability a
+        Pokemon's bits give it and the Dex pages."""
+        pokemon = (ROOT / "src/pokemon.c").read_text()
+        self.assertIn("*seed = *seed * 1103515245 + 24691;\n    return (u16)(*seed >> 16);",
+                      sv.c_function("src/math_util.c", "static u16 MonEncryptionLCRNG("), "mon_crypt")
+        self.assertRegex(pokemon, r"#define SHINY_CHECK\(otid, pid\) \(\(\s*\\\s*\(\(\(otid\) & 0xFFFF0000u\) >> 16u\) \^ "
+                                  r"\(\(otid\) & 0xFFFFu\) \^ \(\(\(pid\) & 0xFFFF0000u\) >> 16u\) \^ \(\(pid\) & 0xFFFFu\)\)"
+                                  r"\s*\\\s*< 8u\)", "is_shiny")
+        self.assertIn("return (u8)(pid % 25);", sv.c_function("src/pokemon.c", "u8 GetNatureFromPersonality("))
+        self.assertIn("#define GENDER_RATIO(frac) ((frac) <= 1 ? (u8)((frac) * 254.75) : 255)",
+                      (ROOT / "include/constants/pokemon.h").read_text())
+        self.assertIn("GENDER_RATIO({{ mon.genderRatio }})", (ROOT / "files/poketool/personal/personal.json.txt").read_text())
+        self.assertEqual([sv.GENDER_RATIO(f) for f in (0.0, 0.125, 0.5, 1.0, 2.0)], [0, 31, 127, 254, 255])
+        gender = sv.c_function("src/pokemon.c", "u8 GetGenderBySpeciesAndPersonality_PreloadedPersonal(")
+        self.assertRegex(gender, r"if \(ratio > \(u8\)pid\) \{\s*gender = MON_FEMALE;")
+        nature = sv.c_function("src/pokemon.c", "u16 ModifyStatByNature(")
+        self.assertRegex(nature, r"(?s)case 1:.*retVal = n \* 110;\s*retVal /= 100;.*case -1:.*retVal = n \* 90;\s*retVal /= 100;")
+        self.assertIn(f"adrs = {sv.HALF:#x};", sv.c_function("src/save.c", "static u32 GetChunkOffsetFromCurrentSaveSlot("))
+        self.assertIn(f"hours = {sv.MAX_PLAY_HOURS};", sv.c_function("src/igt.c", "void AddIGTSeconds("))
+        tutor = sv.c_function("src/field/scrcmd_move_tutor.c", "static u16 GetMoveTutorLearnsetIndex(")
+        self.assertIn("u16 index = species > SPECIES_ARCEUS ? species - 2 : species;", tutor, "tutor_moves")
+        self.assertIn("return index - 1;", tutor)
+        badge = sv.c_function("src/player_data.c", "void PlayerProfile_SetBadgeFlag(")
+        self.assertRegex(badge, r"if \(badge_no < 8\) \{\s*profile->johtoBadges \|= \(1 << badge_no\);\s*\} else \{\s*"
+                                r"profile->kantoBadges \|= \(1 << badge_no - 8\);", "badges()")
+        self.assertIn("u16 max = ItemIsTM(itemId) ? 1 : BAG_TMHM_QUANTITY_MAX;",
+                      sv.c_function("src/bag.c", "static ItemSlot *Bag_GetItemSlotForAdd("), "item_limit")
+        self.assertRegex(sv.c_function("src/bag.c", "static int MachineSortGroup("),
+                         r"if \(ItemIsHM\(itemId\)\) \{\s*return 2;\s*\}\s*if \(ItemIsTR\(itemId\)\) \{\s*return 1;\s*\}\s*"
+                         r"return 0;", "_machine_order")
+        ability = sv.c_function("src/pokemon.c", "void UpdateBoxMonAbility(")
+        self.assertRegex(ability, r"(?s)MON_SWAP_ABILITY_SLOT_BIT\) \{\s*pid \^= 1;\s*\}\s*if \(\(GetBoxMonData\(boxMon, "
+                                  r"MON_DATA_UNUSED_113, NULL\) & MON_HIDDEN_ABILITY_BIT\) && hiddenAbility != ABILITY_NONE\)"
+                                  r".*else if \(ability2 != ABILITY_NONE\) \{\s*if \(pid & 1\) \{\s*SetBoxMonData\(boxMon, "
+                                  r"MON_DATA_ABILITY, &ability2\);", "ability_slot")
+        self.assertIn("return (species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP) || species > NATIONAL_DEX_COUNT;",
+                      sv.c_function("src/pokedex.c", "BOOL DexSpeciesIsInvalid("), "dex_species")
+
+    def test_the_machines_sit_where_the_template_packs_them(self):
+        """machine_places: TM n at n - 1, HM n after the NUM_TMS TMs, the
+        rest at their own number -- the bits personal.json.txt sets."""
+        template = (ROOT / "files/poketool/personal/personal.json.txt").read_text()
+        place = {}
+        for word, line in enumerate(l for l in template.splitlines() if 'setVarInt("tms", 0)' in l):
+            for count, first, kind, bit in re.findall(r"range\((\d+)\) %\}\{% if add\(i, (\d+)\) in mon\.(\w+) %\}"
+                                                     r"\{\{ setBit\(\"tms\", (i|add\(i, \d+\))\) \}\}", line):
+                shift = 0 if bit == "i" else int(re.search(r"\d+", bit).group())
+                for i in range(int(count)):
+                    place[(kind, int(first) + i)] = 32 * word + shift + i
+        record = {"tms": sorted(n for k, n in place if k == "tms"), "hms": sorted(n for k, n in place if k == "hms"),
+                  "machines": sorted(n for k, n in place if k == "machines")}
+        self.assertEqual(sv.machine_places(record), [place[("tms", n)] for n in record["tms"]]
+                         + [place[("hms", n)] for n in record["hms"]] + [place[("machines", n)] for n in record["machines"]])
 
 
 if __name__ == "__main__":
