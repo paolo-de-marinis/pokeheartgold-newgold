@@ -72,10 +72,46 @@ TRAINER_ID = PROFILE + 2 * (PLAYER_NAME_LENGTH + 1)
 JOHTO_BADGES = TRAINER_ID + 4 + 4 + 2
 
 
-@functools.cache
+# What the game data is, read from the tree as it is now. A reader's result
+# is kept (tree_cache) only while every file it read (source) is unchanged:
+# fresh() forgets them all once one of those files has moved on, so an
+# edited table is what the editor shows, offers and enforces next.
+_READ = {}
+_CACHES = []
+
+
+def source(path):
+    """A file of the tree, noted with its modification time for fresh()."""
+    path = ROOT / path
+    _READ.setdefault(path, path.stat().st_mtime_ns)
+    return path
+
+
+def tree_cache(fn):
+    """functools.cache for a reader of the tree, forgotten by fresh()."""
+    fn = functools.cache(fn)
+    _CACHES.append(fn)
+    return fn
+
+
+def fresh():
+    """Every cached reading dropped if a file behind one has changed since.
+    saveui calls it before each request; a CLI run reads the tree once."""
+    def moved(path, when):
+        try:
+            return path.stat().st_mtime_ns != when
+        except OSError:
+            return True
+    if any(moved(path, when) for path, when in list(_READ.items())):
+        _READ.clear()
+        for fn in _CACHES:
+            fn.cache_clear()
+
+
+@tree_cache
 def constants(header, prefix):
     """Every #define with the prefix, by name."""
-    text = (ROOT / header).read_text()
+    text = source(header).read_text()
     return {m.group(1): int(m.group(2), 0) for m in re.finditer(rf"#define ({prefix}\w+)\s+(0x[0-9A-Fa-f]+|\d+)", text)}
 
 
@@ -181,17 +217,17 @@ NATURE_MODS = [
 ]
 
 
-@functools.cache
+@tree_cache
 def species_numbers():
     return {m.group(1): int(m.group(2)) for m in
             re.finditer(r"#define SPECIES_([A-Z0-9_]+)\s+(\d+)\s*$",
-                        (ROOT / "include/constants/species.h").read_text(), re.M)}
+                        source("include/constants/species.h").read_text(), re.M)}
 
 
-@functools.cache
+@tree_cache
 def personal_records():
     """files/poketool/personal/personal.json, a record for every species."""
-    return json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
+    return json.loads(source("files/poketool/personal/personal.json").read_text())["baseStats"]
 
 
 def personal(species_name):
@@ -200,10 +236,10 @@ def personal(species_name):
     return personal_records()[index], index
 
 
-@functools.cache
+@tree_cache
 def growth_curves():
     """growtbl.csv: every curve's experience at levels 0 to 100."""
-    with (ROOT / "files/poketool/personal/growtbl.csv").open() as f:
+    with source("files/poketool/personal/growtbl.csv").open() as f:
         return {row["rate"][len("GROWTH_"):]: [int(row[f"lv{level:03d}"]) for level in range(101)]
                 for row in csv.DictReader(f)}
 
@@ -221,7 +257,7 @@ def level_for(growth_rate, exp):
     return next((level - 1 for level in range(1, 101) if curve[level] > exp), 100)
 
 
-@functools.cache
+@tree_cache
 def learnsets():
     """Every species' level-up moves, as (level, move).
 
@@ -231,7 +267,7 @@ def learnsets():
     """
     sys.path.insert(0, str(ROOT / "tools/newgold/import"))
     import wotbl
-    files, _, _ = wotbl.read_narc(wotbl.ARCHIVE.read_bytes())
+    files, _, _ = wotbl.read_narc(source(wotbl.ARCHIVE).read_bytes())
     return [[(entry["level"], entry["move"]) for entry in wotbl.decode(f)] for f in files]
 
 
@@ -255,11 +291,11 @@ def moveset(index, level):
     return moves
 
 
-@functools.cache
+@tree_cache
 def ability_numbers():
     return {m.group(1): int(m.group(2)) for m in
             re.finditer(r"#define ABILITY_([A-Z0-9_]+)\s+(\d+)",
-                        (ROOT / "include/constants/abilities.h").read_text())}
+                        source("include/constants/abilities.h").read_text())}
 
 
 def ability_of(record, personality):
@@ -277,9 +313,10 @@ def gender_of(record, personality):
     return 1 if ratio > (personality & 0xFF) else 0
 
 
+@tree_cache
 def move_numbers():
     return {m.group(1): int(m.group(2)) for m in
-            re.finditer(r"#define MOVE_([A-Z0-9_]+)\s+(\d+)", (ROOT / "include/constants/moves.h").read_text())}
+            re.finditer(r"#define MOVE_([A-Z0-9_]+)\s+(\d+)", source("include/constants/moves.h").read_text())}
 
 
 def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
@@ -829,20 +866,21 @@ def set_position(save, map_id, x, y, direction=0):
 SPECIES_NAMES, MOVE_NAMES, ITEM_NAMES, ABILITY_NAMES, NATURE_NAMES, MAPSEC_NAMES = 237, 750, 222, 720, 34, 279
 
 
-@functools.cache
+@tree_cache
 def bank(number):
     """A message bank's rows, by index, as the game prints them."""
     sys.path.insert(0, str(ROOT / "tools/newgold/import"))
     import gmm
+    source(gmm.path_of(number))
     return [html.unescape(row["text"]) for row in gmm.read(number)]
 
 
-@functools.cache
+@tree_cache
 def charmap():
     """charmap.txt both ways. A character the table gives twice is written
     with its Western code, the one the English game's own text uses."""
     decode, encode = {}, {}
-    for line in (ROOT / "charmap.txt").read_text(encoding="utf-8").splitlines():
+    for line in source("charmap.txt").read_text(encoding="utf-8").splitlines():
         m = re.fullmatch(r"([0-9A-F]{4})=(.)", line)
         if not m:
             continue
@@ -881,16 +919,16 @@ def species_name(species):
     return names[species] if 0 <= species < len(names) else f"#{species}"
 
 
-@functools.cache
+@tree_cache
 def battle_forms():
     """The species a battle turns into and back (Megas, Gigantamax and the
     like): src/data/form_reversion.h, hg-engine's FormReversionMapping."""
     numbers = species_numbers()
-    text = (ROOT / "src/data/form_reversion.h").read_text()
+    text = source("src/data/form_reversion.h").read_text()
     return {numbers[name] for name in re.findall(r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_", text)}
 
 
-@functools.cache
+@tree_cache
 def species_table():
     """Every species with the name the game prints. A form, or any species
     whose name a lower number already prints (the Galarian Slowpoke), carries
@@ -924,39 +962,40 @@ POCKET_OF = {"POCKET_ITEMS": "items", "POCKET_KEY_ITEMS": "keyItems", "POCKET_TM
              "POCKET_BALLS": "balls", "POCKET_BATTLE_ITEMS": "battleItems"}
 
 
-@functools.cache
+@tree_cache
 def item_table():
     """Every item: its name, its constant, and the pocket it goes in
     (fieldPocket, which the csv gives by the item's name)."""
     names = bank(ITEM_NAMES)
-    with (ROOT / "files/itemtool/itemdata/item_data.csv").open() as f:
+    with source("files/itemtool/itemdata/item_data.csv").open() as f:
         pockets = {row["item"]: POCKET_OF.get(row["fieldPocket"]) for row in csv.DictReader(f)}
     by_id = {}
     for m in re.finditer(r"^#define (ITEM_\w+)\s+(\d+)\s*$",
-                         (ROOT / "include/constants/items.h").read_text(), re.M):
+                         source("include/constants/items.h").read_text(), re.M):
         by_id.setdefault(int(m.group(2)), m.group(1))
     return {number: {"id": number, "const": const, "pocket": pockets.get(const),
                      "name": names[number] if number < len(names) else const}
             for number, const in sorted(by_id.items())}
 
 
-@functools.cache
+@tree_cache
 def move_table():
     """Every move's name and base PP, the PP out of waza_tbl.narc."""
     sys.path.insert(0, str(ROOT / "tools/newgold/import"))
     import import_moves
+    source(import_moves.TABLE)
     records = import_moves.read_table()
     return [{"id": n, "name": name,
              "pp": struct.unpack(import_moves.RECORD, records[n])[5] if n < len(records) else 0}
             for n, name in enumerate(bank(MOVE_NAMES))]
 
 
-@functools.cache
+@tree_cache
 def map_table():
     """Every map by id, with the section name the game shows for it."""
     names = bank(MAPSEC_NAMES)
     sections = constants("include/constants/map_sections.h", "MAPSEC_")
-    headers = (ROOT / "src/data/map_headers.h").read_text()
+    headers = source("src/data/map_headers.h").read_text()
     section_of = dict(re.findall(r"\[(MAP_\w+)\] = \{[^}]*?\.mapsec = (MAPSEC_\w+)", headers))
     out = {}
     for const, number in constants("include/constants/maps.h", "MAP_").items():
@@ -970,16 +1009,16 @@ MATRICES = ROOT / "files/fielddata/mapmatrix/map_matrix"
 CHUNK_TILES = 32                # a map chunk is 32 by 32 tiles
 
 
-@functools.cache
+@tree_cache
 def _matrix_of():
     """Each map's matrix, as its header in src/data/map_headers.h names it."""
     number = constants("include/constants/maps.h", "MAP_")
-    headers = (ROOT / "src/data/map_headers.h").read_text()
+    headers = source("src/data/map_headers.h").read_text()
     return {number[const]: int(m) for const, m in re.findall(
         r"\[(MAP_\w+)\] = \{[^}]*?\.matrixId = NARC_map_matrix_map_matrix_(\d{4})", headers) if const in number}
 
 
-@functools.cache
+@tree_cache
 def map_chunks(map_id):
     """The chunks of its matrix that are this map's, as (column, row).
 
@@ -990,7 +1029,8 @@ def map_chunks(map_id):
     matrix = _matrix_of().get(map_id)
     if matrix is None:
         return frozenset()
-    data = next(p for p in MATRICES.iterdir() if re.fullmatch(rf"map_matrix_{matrix:04d}(_\w+)?\.bin", p.name)).read_bytes()
+    data = source(next(p for p in source(MATRICES).iterdir()
+                       if re.fullmatch(rf"map_matrix_{matrix:04d}(_\w+)?\.bin", p.name))).read_bytes()
     width, height, has_maps, has_altitudes, name_length = data[:5]
     at = 5 + name_length
     cells = width * height
@@ -1255,17 +1295,17 @@ def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, 
     return raw if party else raw[:BOX_MON]
 
 
-@functools.cache
+@tree_cache
 def item_types():
     """GetArceusTypeByHeldItemEffect and GetSilvallyTypeByHeldItemEffect as
     src/pokemon.c writes them -- hold effect to type, "default" for the rest
     -- and every item's hold effect from item_data.csv, by item id."""
-    source = (ROOT / "src/pokemon.c").read_text()
+    text = source("src/pokemon.c").read_text()
     tables = {}
     for fn in ("GetArceusTypeByHeldItemEffect", "GetSilvallyTypeByHeldItemEffect"):
-        start = source.index(f"u32 {fn}(")
+        start = text.index(f"u32 {fn}(")
         table, waiting = {}, []
-        for line in source[start:source.index("\n}\n", start)].splitlines():
+        for line in text[start:text.index("\n}\n", start)].splitlines():
             case = re.match(r"\s*(?:case (HOLD_EFFECT_\w+)|(default)):", line)
             if case:
                 waiting.append(case.group(1) or "default")
@@ -1274,7 +1314,7 @@ def item_types():
                 table.update({key: ret.group(1) for key in waiting})
                 waiting = []
         tables[fn] = table
-    with (ROOT / "files/itemtool/itemdata/item_data.csv").open() as f:
+    with source("files/itemtool/itemdata/item_data.csv").open() as f:
         effect = {row["item"]: row["holdEffect"] for row in csv.DictReader(f)}
     held = {number: effect.get(row["const"], "HOLD_EFFECT_NONE") for number, row in item_table().items()}
     return tables["GetArceusTypeByHeldItemEffect"], tables["GetSilvallyTypeByHeldItemEffect"], held
@@ -1639,7 +1679,7 @@ UNOWN_SEEN = DEX_GENDERS + 8 * DEX_WORDS + 8   # after spindaPersonality and fou
 UNOWN_CAUGHT = UNOWN_SEEN + 28
 
 
-@functools.cache
+@tree_cache
 def dex_species():
     """The species with a Dex page: 1 to NATIONAL_DEX_COUNT but the egg and
     the retail forms numbered between Arceus and the species New Gold adds

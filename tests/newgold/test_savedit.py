@@ -177,6 +177,17 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(sv.describe_mon(sv.party_raw(self.open())[0])["types"],
                          sv.mon_types(sv.describe_mon(sv.party_raw(self.open())[0])["species"], 0, 0))
 
+    def test_an_edited_table_is_read_again(self):
+        """Paolo's data is the tree as it is: a file changed since a reader
+        read it is read again, one left alone is not."""
+        kept = sv.personal_records()
+        sv.fresh()
+        self.assertIs(sv.personal_records(), kept, "nothing changed, nothing read")
+        sv._READ[sv.ROOT / "files/poketool/personal/personal.json"] -= 1   # as if saved since
+        sv.fresh()
+        self.assertIsNot(sv.personal_records(), kept)
+        self.assertEqual(sv.personal_records(), kept)
+
     def test_crc16_is_the_bitwise_one(self):
         data = bytes(range(256)) * 9
         self.assertEqual(sv.crc16(data), reference_crc16(data))

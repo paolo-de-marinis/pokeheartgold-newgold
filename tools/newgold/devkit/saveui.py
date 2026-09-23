@@ -230,16 +230,15 @@ ICON_FORMS = {"DEOXYS": (503, 496, 4), "UNOWN": (507, 499, 28), "BURMY": (534, 5
               "GIRATINA": (540, 533, 2), "SHAYMIN": (541, 534, 2), "ROTOM": (542, 535, 6)}
 
 
+@sv.tree_cache
 def _icon_tables():
-    if not hasattr(_icon_tables, "cache"):
-        source = (ROOT / "src/pokemon_icon_idx.c").read_text()
-        start = source.index("sPokemonPalNoBySpeciesAndForm[] = {")
-        palette_of = [int(n) for n in re.findall(r"^\s*(\d+),", source[start:source.index("\n};", start)], re.M)]
-        lines = (ICONS / "poke_icon_00000000.pal").read_text().split("\n")[3:]
-        colours = [tuple(int(v) for v in line.split()) for line in lines if line.strip()]
-        first = sv.constants("include/pokemon_icon_idx.h", "FIRST_ADDED_")
-        _icon_tables.cache = palette_of, colours, first["FIRST_ADDED_ICON"], first["FIRST_ADDED_PALETTE"]
-    return _icon_tables.cache
+    text = sv.source("src/pokemon_icon_idx.c").read_text()
+    start = text.index("sPokemonPalNoBySpeciesAndForm[] = {")
+    palette_of = [int(n) for n in re.findall(r"^\s*(\d+),", text[start:text.index("\n};", start)], re.M)]
+    lines = sv.source(ICONS / "poke_icon_00000000.pal").read_text().split("\n")[3:]
+    colours = [tuple(int(v) for v in line.split()) for line in lines if line.strip()]
+    first = sv.constants("include/pokemon_icon_idx.h", "FIRST_ADDED_")
+    return palette_of, colours, first["FIRST_ADDED_ICON"], first["FIRST_ADDED_PALETTE"]
 
 
 def icon(species, form=0, egg=False):
@@ -1138,6 +1137,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         if not self.trusted():
             return self.reply(403, {"error": "richiesta non ammessa"})
+        sv.fresh()      # what the page gets is the tree as it is now
         url = urllib.parse.urlsplit(self.path)
         q = {k: v[-1] for k, v in urllib.parse.parse_qs(url.query).items()}
         try:
@@ -1176,6 +1176,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.trusted() or not self.headers.get("Content-Type", "").startswith("application/json"):
             return self.reply(403, {"error": "richiesta non ammessa"})
+        sv.fresh()
         try:
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
             lib, path = self.library, urllib.parse.urlsplit(self.path).path
