@@ -112,9 +112,12 @@ def fresh():
 
 @tree_cache
 def constants(header, prefix):
-    """Every #define with the prefix, by name."""
+    """Every #define with the prefix whose value is a number, by name, as
+    the compiler takes it: a comment after the value is not part of it, a
+    define commented out or given an expression is not read as a number."""
     text = source(header).read_text()
-    return {m.group(1): int(m.group(2), 0) for m in re.finditer(rf"#define ({prefix}\w+)\s+(0x[0-9A-Fa-f]+|\d+)", text)}
+    return {m.group(1): int(m.group(2), 0) for m in re.finditer(
+        rf"^[ \t]*#define ({prefix}\w+)[ \t]+(0x[0-9A-Fa-f]+|\d+)[ \t]*(?://.*|/\*.*)?$", text, re.M)}
 
 
 def c_function(path, head):
@@ -416,11 +419,8 @@ def nature_mods():
             for row in re.findall(r"\{([^{}]*)\}", c_table("src/pokemon.c", "gNatureStatMods"))]
 
 
-@tree_cache
 def species_numbers():
-    return {m.group(1): int(m.group(2)) for m in
-            re.finditer(r"#define SPECIES_([A-Z0-9_]+)\s+(\d+)\s*$",
-                        source("include/constants/species.h").read_text(), re.M)}
+    return {name[len("SPECIES_"):]: n for name, n in constants("include/constants/species.h", "SPECIES_").items()}
 
 
 @tree_cache
@@ -533,11 +533,8 @@ def preset_moves(species, level, form=0):
     return moves
 
 
-@tree_cache
 def ability_numbers():
-    return {m.group(1): int(m.group(2)) for m in
-            re.finditer(r"#define ABILITY_([A-Z0-9_]+)\s+(\d+)",
-                        source("include/constants/abilities.h").read_text())}
+    return {name[len("ABILITY_"):]: n for name, n in constants("include/constants/abilities.h", "ABILITY_").items()}
 
 
 def ability_of(record, personality):
@@ -556,10 +553,8 @@ def gender_of(record, personality):
     return MON_FEMALE if ratio > (personality & 0xFF) else MON_MALE
 
 
-@tree_cache
 def move_numbers():
-    return {m.group(1): int(m.group(2)) for m in
-            re.finditer(r"#define MOVE_([A-Z0-9_]+)\s+(\d+)", source("include/constants/moves.h").read_text())}
+    return {name[len("MOVE_"):]: n for name, n in constants("include/constants/moves.h", "MOVE_").items()}
 
 
 def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
@@ -1248,9 +1243,8 @@ def item_table():
         pocket_of = {p["const"]: p["name"] for p in pockets()}
         filed = {row["item"]: pocket_of.get(row["fieldPocket"]) for row in csv.DictReader(f)}
     by_id = {}
-    for m in re.finditer(r"^#define (ITEM_\w+)\s+(\d+)\s*$",
-                         source("include/constants/items.h").read_text(), re.M):
-        by_id.setdefault(int(m.group(2)), m.group(1))
+    for const, number in constants("include/constants/items.h", "ITEM_").items():
+        by_id.setdefault(number, const)
     return {number: {"id": number, "const": const, "pocket": filed.get(const),
                      "name": names[number] if number < len(names) else const}
             for number, const in sorted(by_id.items())}

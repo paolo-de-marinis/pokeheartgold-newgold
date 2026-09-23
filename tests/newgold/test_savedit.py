@@ -230,6 +230,15 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(reader(), 2, "and kept this time")
         self.assertIn(path, sv._READ)
 
+    def test_a_define_is_read_as_the_compiler_reads_it(self):
+        """A comment after the value, as pokemon.h writes MAX_EV_PER_STAT's,
+        is no part of it; a define commented out is none."""
+        header = Path(self.tmp.name) / "probe.h"
+        header.write_text("#define SPECIES_A 152 // a note\n#define SPECIES_B   7 /* another */\n"
+                          "// #define SPECIES_C 9\n#define SPECIES_D (SPECIES_A + 1)\n")
+        self.addCleanup(sv._READ.pop, header, None)
+        self.assertEqual(sv.constants(str(header), "SPECIES_"), {"SPECIES_A": 152, "SPECIES_B": 7})
+
     def test_crc16_is_the_bitwise_one(self):
         data = bytes(range(256)) * 9
         self.assertEqual(sv.crc16(data), reference_crc16(data))
