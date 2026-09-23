@@ -103,5 +103,102 @@ int main(void) {
 """
 
 
+# The real GiveBackHeldItems, run against a party of six.
+RESTORE_FIXTURE = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#define PARTY_SIZE 6
+#include "constants/battle.h"
+#include "constants/heap.h"
+#include "constants/items.h"
+#include "constants/pokemon.h"
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+typedef struct { u16 item; } Pokemon;
+typedef struct { int unused; } Bag;
+typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; } BattleSystem;
+typedef struct { u16 itemsToRestore[PARTY_SIZE]; } BattleContext;
+
+static u16 sAdded[8][2];
+static int sAdds;
+
+static int BattleSystem_GetPartySize(BattleSystem *bs, int side) { assert(side == BATTLER_PLAYER); return bs->count; }
+static Pokemon *BattleSystem_GetPartyMon(BattleSystem *bs, int side, int i) { assert(side == BATTLER_PLAYER); return &bs->party[i]; }
+static u32 BattleSystem_GetBattleType(BattleSystem *bs) { return bs->type; }
+static Bag *BattleSystem_GetBag(BattleSystem *bs) { return &bs->bag; }
+static u32 GetMonData(Pokemon *mon, int attr, void *ptr) { assert(attr == MON_DATA_HELD_ITEM && ptr == 0); return mon->item; }
+static void SetMonData(Pokemon *mon, int attr, const void *value) { assert(attr == MON_DATA_HELD_ITEM); mon->item = *(const u16 *)value; }
+static BOOL Bag_AddItem(Bag *bag, u16 item, u16 quantity, enum HeapID heapID) {
+    (void)bag; assert(heapID == HEAP_ID_BATTLE);
+    sAdded[sAdds][0] = item; sAdded[sAdds][1] = quantity; sAdds++;
+    return 1;
+}
+
+@IS_BERRY@
+@GIVE_BACK@
+
+static void run(u32 type, const u16 *before, const u16 *after, BattleSystem *bs) {
+    BattleContext ctx;
+    bs->count = PARTY_SIZE;
+    bs->type = type;
+    for (int i = 0; i < PARTY_SIZE; i++) {
+        ctx.itemsToRestore[i] = before[i];
+        bs->party[i].item = after[i];
+    }
+    sAdds = 0;
+    GiveBackHeldItems(bs, &ctx);
+}
+
+int main(void) {
+    BattleSystem bs;
+    // Started: Focus Sash, nothing, nothing, Kee, Roseli, Oran.
+    // Now: nothing (used), Leftovers and Leftovers (stolen twice), nothing
+    // (Kee eaten), nothing (Roseli eaten), nothing (Oran eaten).
+    const u16 before[PARTY_SIZE] = { ITEM_FOCUS_SASH, ITEM_NONE, ITEM_NONE, ITEM_KEE_BERRY, ITEM_ROSELI_BERRY, ITEM_ORAN_BERRY };
+    const u16 after[PARTY_SIZE] = { ITEM_NONE, ITEM_LEFTOVERS, ITEM_LEFTOVERS, ITEM_NONE, ITEM_NONE, ITEM_NONE };
+
+    run(BATTLE_TYPE_NONE, before, after, &bs);
+    assert(sAdds == 1 && sAdded[0][0] == ITEM_LEFTOVERS && sAdded[0][1] == 2);
+    assert(bs.party[0].item == ITEM_FOCUS_SASH);
+    assert(bs.party[1].item == ITEM_NONE && bs.party[2].item == ITEM_NONE);
+    assert(bs.party[3].item == ITEM_NONE && bs.party[4].item == ITEM_NONE && bs.party[5].item == ITEM_NONE);
+
+    // A trainer's items are not the player's to keep.
+    run(BATTLE_TYPE_TRAINER, before, after, &bs);
+    assert(sAdds == 0);
+    assert(bs.party[0].item == ITEM_FOCUS_SASH && bs.party[1].item == ITEM_NONE);
+
+    // Swapped within the party is not gained.
+    const u16 swapped[PARTY_SIZE] = { ITEM_NONE, ITEM_FOCUS_SASH, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
+    run(BATTLE_TYPE_NONE, before, swapped, &bs);
+    assert(sAdds == 0 && bs.party[0].item == ITEM_FOCUS_SASH && bs.party[1].item == ITEM_NONE);
+    return 0;
+}
+"""
+
+
+class RestoreItemsTests(unittest.TestCase):
+    """RESTORE_ITEMS_AT_BATTLE_END as the reference writes it
+    (battle_pokemon.c): the Gen 6+ berries stay eaten, a Pokemon that held
+    nothing holds nothing again, and what the party took in a wild battle
+    goes to the bag, once."""
+
+    def test_the_real_function_on_a_party(self):
+        source = CONTROLLER.read_text()
+        program = (RESTORE_FIXTURE.replace("@IS_BERRY@", function(source, "IsBerry"))
+                   .replace("@GIVE_BACK@", function(source, "GiveBackHeldItems")))
+        with tempfile.TemporaryDirectory(prefix="newgold-restore-") as directory:
+            path = Path(directory)
+            (path / "check.c").write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+                str(path / "check.c"), "-o", str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

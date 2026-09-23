@@ -185,12 +185,61 @@ static void RememberHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
+// The reference's IS_ITEM_BERRY: the berry range, and the three Gen 6+
+// berries imported after it.
+static BOOL IsBerry(u16 item) {
+    return (item >= FIRST_BERRY_IDX && item <= LAST_BERRY_IDX)
+        || (item >= ITEM_ROSELI_BERRY && item <= ITEM_MARANGA_BERRY);
+}
+
+// As the reference's RESTORE_ITEMS_AT_BATTLE_END: outside a trainer battle,
+// any item the party holds more of than it started with was taken in battle
+// and goes to the bag; then every Pokemon gets back what it started with,
+// nothing included, unless that was a berry.
 static void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     int count = BattleSystem_GetPartySize(battleSystem, BATTLER_PLAYER);
+    u16 held[PARTY_SIZE];
+    int i, j;
 
-    for (int i = 0; i < count && i < PARTY_SIZE; i++) {
+    if (count > PARTY_SIZE) {
+        count = PARTY_SIZE;
+    }
+    for (i = 0; i < count; i++) {
+        held[i] = GetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, NULL);
+    }
+
+    if (!(BattleSystem_GetBattleType(battleSystem) & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_NO_EXP))) {
+        for (i = 0; i < count; i++) {
+            int now = 0;
+            int before = 0;
+
+            if (held[i] == ITEM_NONE) {
+                continue;
+            }
+            // Counted once, at its first holder. The reference meant this
+            // too, but its `continue` leaves only the inner loop, so a second
+            // holder of the same item adds it to the bag again.
+            for (j = 0; j < i; j++) {
+                if (held[j] == held[i]) {
+                    break;
+                }
+            }
+            if (j < i) {
+                continue;
+            }
+            for (j = 0; j < count; j++) {
+                now += held[j] == held[i];
+                before += ctx->itemsToRestore[j] == held[i];
+            }
+            if (now > before) {
+                Bag_AddItem(BattleSystem_GetBag(battleSystem), held[i], now - before, HEAP_ID_BATTLE);
+            }
+        }
+    }
+
+    for (i = 0; i < count; i++) {
         u16 item = ctx->itemsToRestore[i];
-        if (item != ITEM_NONE && (item < FIRST_BERRY_IDX || item > LAST_BERRY_IDX)) {
+        if (!IsBerry(item)) {
             SetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, &item);
         }
     }
