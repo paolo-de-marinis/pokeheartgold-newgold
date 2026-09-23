@@ -358,6 +358,11 @@
 // the Pokemon has its species' hidden ability.
 #define MON_HIDDEN_ABILITY_BIT 1
 
+// hg-engine's DUMMY_P2_2_CHANGE_ABILITY_SLOT, bit 0 of MON_DATA_UNUSED_114: an
+// Ability Capsule has swapped the slot the personality picks. The Mint's
+// nature takes bits 1 to 5 of the same field.
+#define MON_SWAP_ABILITY_SLOT_BIT 1
+
 #define OT_ID_PLAYER_ID       0
 #define OT_ID_PRESET          1
 #define OT_ID_RANDOM_NO_SHINY 2

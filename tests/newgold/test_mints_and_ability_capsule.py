@@ -42,22 +42,29 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 
-// Only the fields the four functions read. MON_DATA_UNUSED_114 is a u16 in
-// block B; MON_DATA_ABILITY takes a u16 payload.
+// Only the fields the functions read. MON_DATA_UNUSED_113 and _114 are a u8
+// and a u16 in block B; MON_DATA_ABILITY takes a u16 payload.
 typedef struct {
     u16 unused2;
+    u8 unused113;
     u16 ability;
     u16 species;
     u8 form;
     u32 personality;
+} BoxPokemon;
+
+typedef struct {
+    BoxPokemon box;
 } Pokemon;
 
 static u16 sAbility1[2];
 static u16 sAbility2[2];
+static u16 sHidden;
 
-static u32 GetMonData(Pokemon *mon, int attr, void *ptr) {
+static u32 GetBoxMonData(BoxPokemon *mon, int attr, void *ptr) {
     assert(ptr == NULL);
     switch (attr) {
+    case MON_DATA_UNUSED_113: return mon->unused113;
     case MON_DATA_UNUSED_114: return mon->unused2;
     case MON_DATA_ABILITY:    return mon->ability;
     case MON_DATA_SPECIES:    return mon->species;
@@ -68,7 +75,7 @@ static u32 GetMonData(Pokemon *mon, int attr, void *ptr) {
     return 0;
 }
 
-static void SetMonData(Pokemon *mon, int attr, const void *value) {
+static void SetBoxMonData(BoxPokemon *mon, int attr, const void *value) {
     switch (attr) {
     case MON_DATA_UNUSED_114: mon->unused2 = *(const u16 *)value; return;
     case MON_DATA_ABILITY:    mon->ability = *(const u16 *)value; return;
@@ -76,14 +83,28 @@ static void SetMonData(Pokemon *mon, int attr, const void *value) {
     assert(0 && "Unexpected attribute");
 }
 
+static u32 GetMonData(Pokemon *mon, int attr, void *ptr) { return GetBoxMonData(&mon->box, attr, ptr); }
+static void SetMonData(Pokemon *mon, int attr, const void *value) { SetBoxMonData(&mon->box, attr, value); }
+static BOOL AcquireBoxMonLock(BoxPokemon *mon) { (void)mon; return FALSE; }
+static void ReleaseBoxMonLock(BoxPokemon *mon, BOOL decry) { (void)mon; (void)decry; }
+
 static int GetMonBaseStat_HandleAlternateForm(int species, int form, int stat) {
     assert(species == 1 && form < 2);
-    return stat == BASE_ABILITY_1 ? sAbility1[form] : sAbility2[form];
+    switch (stat) {
+    case BASE_ABILITY_1:      return sAbility1[form];
+    case BASE_ABILITY_2:      return sAbility2[form];
+    case BASE_HIDDEN_ABILITY: return sHidden;
+    }
+    assert(0 && "Unexpected stat");
+    return 0;
 }
 
 static u8 GetNatureFromPersonality(u32 pid) { return (u8)(pid % 25); }
-static u8 GetMonNature(Pokemon *mon) { return GetNatureFromPersonality(mon->personality); }
+static u8 GetMonNature(Pokemon *mon) { return GetNatureFromPersonality(mon->box.personality); }
 
+void UpdateMonAbility(Pokemon *mon);
+@UPDATE_BOX@
+@UPDATE@
 @MASK@
 @NATURE@
 @SET@
@@ -99,16 +120,16 @@ int main(void) {
     for (u32 nature = 0; nature < NATURE_NUM; ++nature) {
         for (u32 noise = 0; noise < 4; ++noise) {
             static const u16 others[4] = { 0x0000, 0xFFC1, 0x0001, 0x8000 };
-            Pokemon mon = { .unused2 = others[noise], .personality = 7 };
+            Pokemon mon = { .box = { .unused2 = others[noise], .personality = 7 } };
             Mon_SetMintNature(&mon, (u8)nature);
             assert(GetMonNatureAfterMint(&mon) == nature);
-            assert((mon.unused2 & (u16)~0x003E) == others[noise]);
+            assert((mon.box.unused2 & (u16)~0x003E) == others[noise]);
         }
     }
 
     // A Pokemon no Mint has touched still answers the nature it was born with.
     for (u32 pid = 0; pid < 100; ++pid) {
-        Pokemon mon = { .unused2 = 0, .personality = pid };
+        Pokemon mon = { .box = { .unused2 = 0, .personality = pid } };
         assert(GetMonNatureAfterMint(&mon) == GetNatureFromPersonality(pid));
     }
 
@@ -120,36 +141,54 @@ int main(void) {
         assert(seen[sMintNatures[i]]++ == 0);
     }
 
-    // The Capsule swaps, and swapping twice is where it started.
+    // The Capsule swaps, for either slot the personality picks, and swapping
+    // twice is where it started.
     sAbility1[0] = ABILITY_OVERGROW;
     sAbility2[0] = ABILITY_CHLOROPHYLL;
-    {
-        Pokemon mon = { .species = 1, .form = 0, .ability = ABILITY_OVERGROW };
+    sHidden = ABILITY_SOLAR_POWER;
+    for (u32 pid = 0; pid < 2; ++pid) {
+        Pokemon mon = { .box = { .species = 1, .form = 0, .personality = pid } };
+        UpdateMonAbility(&mon);
+        u16 born = mon.box.ability, other = born == ABILITY_OVERGROW ? ABILITY_CHLOROPHYLL : ABILITY_OVERGROW;
         assert(Mon_CanUseAbilityCapsule(&mon) == TRUE);
         Mon_SwapAbilitySlot(&mon);
-        assert(mon.ability == ABILITY_CHLOROPHYLL);
+        assert(mon.box.ability == other);
+        // The swap outlives the next time the ability is worked out again,
+        // as on an evolution or a form change.
+        UpdateMonAbility(&mon);
+        assert(mon.box.ability == other);
+        // And the Mint's bits beside it are left alone.
+        Mon_SetMintNature(&mon, 3);
+        UpdateMonAbility(&mon);
+        assert(mon.box.ability == other && GetMonNatureAfterMint(&mon) == 3);
         assert(Mon_CanUseAbilityCapsule(&mon) == TRUE);
         Mon_SwapAbilitySlot(&mon);
-        assert(mon.ability == ABILITY_OVERGROW);
+        assert(mon.box.ability == born);
+        UpdateMonAbility(&mon);
+        assert(mon.box.ability == born && GetMonNatureAfterMint(&mon) == 3);
     }
 
     // One ability, or the same one twice: nothing to swap.
     sAbility2[0] = ABILITY_NONE;
     {
-        Pokemon mon = { .species = 1, .form = 0, .ability = ABILITY_OVERGROW };
+        Pokemon mon = { .box = { .species = 1, .form = 0, .ability = ABILITY_OVERGROW } };
         assert(Mon_CanUseAbilityCapsule(&mon) == FALSE);
     }
     sAbility2[0] = ABILITY_OVERGROW;
     {
-        Pokemon mon = { .species = 1, .form = 0, .ability = ABILITY_OVERGROW };
+        Pokemon mon = { .box = { .species = 1, .form = 0, .ability = ABILITY_OVERGROW } };
         assert(Mon_CanUseAbilityCapsule(&mon) == FALSE);
     }
 
-    // A hidden ability is neither slot, so the Capsule must not eat it.
+    // A hidden ability is neither slot, so the Capsule must not eat it, whether
+    // its bit says so or only the ability does.
     sAbility1[0] = ABILITY_OVERGROW;
     sAbility2[0] = ABILITY_CHLOROPHYLL;
     {
-        Pokemon mon = { .species = 1, .form = 0, .ability = ABILITY_SOLAR_POWER };
+        Pokemon mon = { .box = { .species = 1, .form = 0, .ability = ABILITY_SOLAR_POWER } };
+        assert(Mon_CanUseAbilityCapsule(&mon) == FALSE);
+        mon.box.unused113 = MON_HIDDEN_ABILITY_BIT;
+        mon.box.ability = ABILITY_OVERGROW;
         assert(Mon_CanUseAbilityCapsule(&mon) == FALSE);
     }
 
@@ -157,10 +196,10 @@ int main(void) {
     sAbility1[1] = ABILITY_BLAZE;
     sAbility2[1] = ABILITY_SOLAR_POWER;
     {
-        Pokemon mon = { .species = 1, .form = 1, .ability = ABILITY_BLAZE };
+        Pokemon mon = { .box = { .species = 1, .form = 1, .ability = ABILITY_BLAZE } };
         assert(Mon_CanUseAbilityCapsule(&mon) == TRUE);
         Mon_SwapAbilitySlot(&mon);
-        assert(mon.ability == ABILITY_SOLAR_POWER);
+        assert(mon.box.ability == ABILITY_SOLAR_POWER);
     }
 
     puts("ok");
@@ -247,6 +286,8 @@ class NatureOverrideAndAbilitySwap(unittest.TestCase):
             "@SET@": function(pokemon, "Mon_SetMintNature"),
             "@CAN_CAPSULE@": function(pokemon, "Mon_CanUseAbilityCapsule"),
             "@SWAP@": function(pokemon, "Mon_SwapAbilitySlot"),
+            "@UPDATE_BOX@": function(pokemon, "UpdateBoxMonAbility"),
+            "@UPDATE@": function(pokemon, "UpdateMonAbility"),
             "@MINTS@": mints.group(1),
         }.items():
             source = source.replace(token, replacement)

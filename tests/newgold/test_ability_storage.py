@@ -180,7 +180,7 @@ class AbilityStorageTests(unittest.TestCase):
         math = (ROOT / "src/math_util.c").read_text()
         # Typedef aliases let the existing extractor handle pointer return types.
         pokemon = pokemon.replace("PokemonDataBlock *GetSubstruct(", "PokemonDataBlockPointer GetSubstruct(").replace("BoxPokemon *Mon_GetBoxMon(", "BoxPokemonPointer Mon_GetBoxMon(")
-        wanted = {"MON_DATA_PERSONALITY", "MON_DATA_SPECIES", "MON_DATA_FORM", "MON_DATA_EXPERIENCE", "MON_DATA_ABILITY", "MON_DATA_LEVEL", "MON_DATA_TYPE_1", "MON_DATA_TYPE_2", "MON_DATA_UNUSED_113"}
+        wanted = {"MON_DATA_PERSONALITY", "MON_DATA_SPECIES", "MON_DATA_FORM", "MON_DATA_EXPERIENCE", "MON_DATA_ABILITY", "MON_DATA_LEVEL", "MON_DATA_TYPE_1", "MON_DATA_TYPE_2", "MON_DATA_UNUSED_113", "MON_DATA_UNUSED_114"}
         native = [selected_cases(pokemon, "GetBoxMonDataInternal", wanted),
                   selected_cases(pokemon, "SetBoxMonDataInternal", {"MON_DATA_EXPERIENCE", "MON_DATA_ABILITY"}),
                   selected_cases(pokemon, "AddBoxMonDataInternal", {"MON_DATA_EXPERIENCE", "MON_DATA_ABILITY"})]

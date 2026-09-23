@@ -1992,9 +1992,8 @@ u8 GetNatureFromPersonality(u32 pid) {
 // the nature the Pokemon was born with -- what a Mint moves is only which
 // nature the stats follow. konefr keeps that second nature in blockB->unused2,
 // MON_DATA_UNUSED_114, as nature+1 in bits 1 to 5 so that a zero there means no
-// Mint; bit 0 is their ability-slot bit, which this tree does not need because
-// a Pokemon here stores its ability outright. The layout is kept anyway so the
-// same field means the same thing in both trees.
+// Mint; bit 0 is their ability-slot bit, MON_SWAP_ABILITY_SLOT_BIT, which the
+// Ability Capsule toggles.
 #define MON_MINT_NATURE_MASK 0x003E
 
 u8 GetMonNatureAfterMint(Pokemon *mon) {
@@ -2012,13 +2011,12 @@ void Mon_SetMintNature(Pokemon *mon, u8 nature) {
     SetMonData(mon, MON_DATA_UNUSED_114, &flags);
 }
 
-// An Ability Capsule swaps ability one for ability two. This game writes a
-// Pokemon's ability onto the Pokemon rather than deriving it from a slot bit,
-// so the swap is the ability itself and there is nothing to store; the price is
-// that a Pokemon whose ability is neither of the two -- one given its hidden
-// ability -- has no slot to swap, and the Capsule refuses rather than
-// overwriting it. konefr refuse that case too, by reading their hidden-ability
-// bit.
+// An Ability Capsule swaps ability one for ability two. As in the reference it
+// toggles MON_SWAP_ABILITY_SLOT_BIT and lets UpdateMonAbility pick the ability
+// again, so the swap outlives the next time the ability is worked out afresh,
+// on an evolution or a form change. The reference refuses a Pokemon with its
+// hidden ability; so does this, by its bit and, for an ability written on the
+// Pokemon some other way, by its being neither of the two.
 BOOL Mon_CanUseAbilityCapsule(Pokemon *mon) {
     int species = GetMonData(mon, MON_DATA_SPECIES, NULL);
     int form = GetMonData(mon, MON_DATA_FORM, NULL);
@@ -2026,6 +2024,9 @@ BOOL Mon_CanUseAbilityCapsule(Pokemon *mon) {
     int ability1 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_1);
     int ability2 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_2);
 
+    if (GetMonData(mon, MON_DATA_UNUSED_113, NULL) & MON_HIDDEN_ABILITY_BIT) {
+        return FALSE;
+    }
     if (ability2 == ABILITY_NONE || ability1 == ability2) {
         return FALSE;
     }
@@ -2033,14 +2034,11 @@ BOOL Mon_CanUseAbilityCapsule(Pokemon *mon) {
 }
 
 void Mon_SwapAbilitySlot(Pokemon *mon) {
-    int species = GetMonData(mon, MON_DATA_SPECIES, NULL);
-    int form = GetMonData(mon, MON_DATA_FORM, NULL);
-    int ability = GetMonData(mon, MON_DATA_ABILITY, NULL);
-    int ability1 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_1);
-    int ability2 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_2);
-    u16 swapped = (u16)((ability == ability1) ? ability2 : ability1);
+    u16 flags = (u16)GetMonData(mon, MON_DATA_UNUSED_114, NULL);
 
-    SetMonData(mon, MON_DATA_ABILITY, &swapped);
+    flags ^= MON_SWAP_ABILITY_SLOT_BIT;
+    SetMonData(mon, MON_DATA_UNUSED_114, &flags);
+    UpdateMonAbility(mon);
 }
 
 // The Ability Patch gives a Pokemon its species' hidden ability, or takes it
@@ -4083,6 +4081,10 @@ void UpdateBoxMonAbility(BoxPokemon *boxMon) {
     int ability1 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_1);
     int ability2 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_2);
     int hiddenAbility = GetMonBaseStat_HandleAlternateForm(species, form, BASE_HIDDEN_ABILITY);
+    // An Ability Capsule's swap turns the personality's slot over.
+    if (GetBoxMonData(boxMon, MON_DATA_UNUSED_114, NULL) & MON_SWAP_ABILITY_SLOT_BIT) {
+        pid ^= 1;
+    }
     if ((GetBoxMonData(boxMon, MON_DATA_UNUSED_113, NULL) & MON_HIDDEN_ABILITY_BIT) && hiddenAbility != ABILITY_NONE) {
         SetBoxMonData(boxMon, MON_DATA_ABILITY, &hiddenAbility);
     } else if (ability2 != ABILITY_NONE) {

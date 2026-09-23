@@ -49,6 +49,7 @@ static u32 GetBoxMonData(BoxPokemon *b, int field, void *unused) {
     case MON_DATA_FORM: return b->form;
     case MON_DATA_ABILITY: return b->ability;
     case MON_DATA_UNUSED_113: return b->bits;
+    case MON_DATA_UNUSED_114: return 0; // no Ability Capsule swap
     }
     assert(0);
     return 0;
