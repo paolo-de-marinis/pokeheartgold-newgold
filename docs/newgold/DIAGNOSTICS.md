@@ -107,10 +107,20 @@ it, because its core reads a null as zero.
 
 ## Why it is shaped this way
 
-The main arena has about 44 KB to spare after boot, and a new heap is carved
-from it. The first version of the assertion hook recorded `__FILE__` and
+The main arena is what is left after the static module and the largest
+overlay (overlay 12, the battle), and the heaps are carved from it at boot.
+The first version of the assertion hook recorded `__FILE__` and
 `__LINE__` at every `GF_ASSERT` site; that is a string and a literal per site,
-17 KB across the static module, and the ROM stopped booting. The return
+17 KB across the static module, and the ROM stopped booting.
+
+By the seventh round overlay 12 had grown into nearly all of that room: the
+ordinary build has 0x72C bytes left once the file system's table is loaded,
+and the diagnostics, 0x1420 bytes across the static module and overlay 12,
+no longer fitted -- `FS_TryLoadTable`'s allocation failed at boot and the
+screen stayed blank. So a diagnostics build takes 0x2000 back from the
+default heap (`sDefaultHeapSpec` in `src/system.c`), which a cold boot, the
+opening and two wild battles never used more than 0x1504 of. The ordinary
+build is not changed; its own margin is the one to watch. The return
 address costs the site nothing -- `bl Diag_AssertFail` is the size of
 `bl GF_AssertFail` -- so that is what is kept, and the ELF turns it back
 into a function.

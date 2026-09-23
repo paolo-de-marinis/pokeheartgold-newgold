@@ -84,7 +84,18 @@ void HBlankIntrRegsToggle(BOOL enable) {
 }
 
 static const struct HeapParam sDefaultHeapSpec[] = {
+#ifdef NEWGOLD_DIAG
+    // Overlay 12's end is where the main arena starts, and what these heaps
+    // leave of it at boot must still hold the file system's table
+    // (FS_TryLoadTable, 0x1B5E bytes): the ordinary build has 0x72C to spare
+    // after it. The diagnostics push the static module and overlay 12 up by
+    // 0x1420, so this build takes that and more back from the default heap,
+    // which a cold boot, the opening and two wild battles never used more
+    // than 0x1504 of (gDiagHeapLowWater). The ordinary build is untouched.
+    { 0xD200 - 0x2000, OS_ARENA_MAIN },
+#else
     { 0xD200,   OS_ARENA_MAIN },
+#endif
     // Heap 1 holds SaveData, which holds the whole save region, and was sized
     // to it with a couple of hundred bytes to spare. Thirty boxes add thirteen
     // sectors to that region, so the heap takes the same 0xD000.
