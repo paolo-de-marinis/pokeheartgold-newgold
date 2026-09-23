@@ -155,6 +155,34 @@ class MoveTests(unittest.TestCase):
             self.assertEqual(len(indices), len(self.table), bank)
             self.assertEqual(indices[-1], last, bank)
 
+    def test_a_move_s_text_is_hg_engine_s_for_the_same_move(self):
+        """The text is hg-engine's, and past retail it is found by the move's
+        name: Hone Claws is 471 there and 499 here. The retail renames, the
+        opposing line and Hidden Power's description are the engine's."""
+        text = {bank: [row["text"] for row in import_moves.gmm.read(bank)] for bank in (3, 749, 750, 751)}
+        self.assertEqual(text[750][self.moves["MOVE_DOUBLE_SLAP"]], "Double Slap")
+        self.assertEqual(text[750][self.moves["MOVE_FAINT_ATTACK"]], "Feint Attack")
+        self.assertEqual(text[751][self.moves["MOVE_VICE_GRIP"]], "VISE GRIP")
+        self.assertEqual(text[750][self.moves["MOVE_HONE_CLAWS"]], "Hone Claws")
+        self.assertEqual(text[749][self.moves["MOVE_HIDDEN_POWER"]],
+                         "A unique attack that\\nvaries in type\\ndepending on the\\nPokémon using it.")
+        self.assertEqual(text[3][3 * self.moves["MOVE_POUND"] + 2],
+                         "The opposing {STRVAR_1 1, 0, 0} used\\nPound!")
+        self.assertEqual(text[3][3 * self.moves["MOVE_HONE_CLAWS"]],
+                         "{STRVAR_1 1, 0, 0} used\\nHone Claws!")
+
+    @unittest.skipUnless(REFERENCE.exists(), "the reference checkout is not here")
+    def test_the_text_banks_are_what_the_importer_writes(self):
+        """Every row of the five banks is `import_moves.py --text` at the
+        engine revision, or at New Gold's for the rows konefr changed."""
+        engine = import_moves.text_banks(import_moves.gmm.ENGINE)
+        newgold = import_moves.text_banks(import_moves.gmm.NEWGOLD)
+        for bank, texts in engine.items():
+            rows = [row["text"] for row in import_moves.gmm.read(bank)]
+            self.assertEqual(len(rows), len(texts), bank)
+            for index, row in enumerate(rows):
+                self.assertIn(row, (texts[index], newgold[bank][index]), f"bank {bank} row {index}")
+
     def test_every_added_move_borrows_an_animation_that_exists(self):
         """The animation archive stops where retail's moves stopped."""
         source = (ROOT / "src/battle/battle_command.c").read_text()

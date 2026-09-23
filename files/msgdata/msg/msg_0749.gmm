@@ -950,7 +950,7 @@
 	</row>
 	<row id="msg_0749_00237" index="237">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">A unique attack that\nvaries in type and\nintensity depending\non the Pokémon using\nit.</language>
+		<language name="English">A unique attack that\nvaries in type\ndepending on the\nPokémon using it.</language>
 	</row>
 	<row id="msg_0749_00238" index="238">
 		<attribute name="window_context_name">used</attribute>
@@ -1926,7 +1926,7 @@
 	</row>
 	<row id="msg_0749_00481" index="481">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The user launches\nblazing seeds two to\nfive times. They may\nalso burn the target.</language>
+		<language name="English">--</language>
 	</row>
 	<row id="msg_0749_00482" index="482">
 		<attribute name="window_context_name">used</attribute>

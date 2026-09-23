@@ -14,7 +14,7 @@
 	</row>
 	<row id="msg_0751_double_slap" index="3">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">DOUBLESLAP</language>
+		<language name="English">DOUBLE SLAP</language>
 	</row>
 	<row id="msg_0751_comet_punch" index="4">
 		<attribute name="window_context_name">used</attribute>
@@ -38,7 +38,7 @@
 	</row>
 	<row id="msg_0751_thunder_punch" index="9">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">THUNDERPUNCH</language>
+		<language name="English">THUNDER PUNCH</language>
 	</row>
 	<row id="msg_0751_scratch" index="10">
 		<attribute name="window_context_name">used</attribute>
@@ -46,7 +46,7 @@
 	</row>
 	<row id="msg_0751_vise_grip" index="11">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">VICEGRIP</language>
+		<language name="English">VISE GRIP</language>
 	</row>
 	<row id="msg_0751_guillotine" index="12">
 		<attribute name="window_context_name">used</attribute>
@@ -114,7 +114,7 @@
 	</row>
 	<row id="msg_0751_sand_attack" index="28">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">SAND-ATTACK</language>
+		<language name="English">SAND ATTACK</language>
 	</row>
 	<row id="msg_0751_headbutt" index="29">
 		<attribute name="window_context_name">used</attribute>
@@ -198,7 +198,7 @@
 	</row>
 	<row id="msg_0751_sonic_boom" index="49">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">SONICBOOM</language>
+		<language name="English">SONIC BOOM</language>
 	</row>
 	<row id="msg_0751_disable" index="50">
 		<attribute name="window_context_name">used</attribute>
@@ -246,7 +246,7 @@
 	</row>
 	<row id="msg_0751_bubble_beam" index="61">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">BUBBLEBEAM</language>
+		<language name="English">BUBBLE BEAM</language>
 	</row>
 	<row id="msg_0751_aurora_beam" index="62">
 		<attribute name="window_context_name">used</attribute>
@@ -306,11 +306,11 @@
 	</row>
 	<row id="msg_0751_solar_beam" index="76">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">SOLARBEAM</language>
+		<language name="English">SOLAR BEAM</language>
 	</row>
 	<row id="msg_0751_poison_powder" index="77">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">POISONPOWDER</language>
+		<language name="English">POISON POWDER</language>
 	</row>
 	<row id="msg_0751_stun_spore" index="78">
 		<attribute name="window_context_name">used</attribute>
@@ -338,7 +338,7 @@
 	</row>
 	<row id="msg_0751_thunder_shock" index="84">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">THUNDERSHOCK</language>
+		<language name="English">THUNDER SHOCK</language>
 	</row>
 	<row id="msg_0751_thunderbolt" index="85">
 		<attribute name="window_context_name">used</attribute>
@@ -482,7 +482,7 @@
 	</row>
 	<row id="msg_0751_self_destruct" index="120">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">SELFDESTRUCT</language>
+		<language name="English">SELF-DESTRUCT</language>
 	</row>
 	<row id="msg_0751_egg_bomb" index="121">
 		<attribute name="window_context_name">used</attribute>
@@ -542,11 +542,11 @@
 	</row>
 	<row id="msg_0751_soft_boiled" index="135">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">SOFTBOILED</language>
+		<language name="English">SOFT-BOILED</language>
 	</row>
 	<row id="msg_0751_high_jump_kick" index="136">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">HI JUMP KICK</language>
+		<language name="English">HIGH JUMP KICK</language>
 	</row>
 	<row id="msg_0751_glare" index="137">
 		<attribute name="window_context_name">used</attribute>
@@ -742,7 +742,7 @@
 	</row>
 	<row id="msg_0751_feint_attack" index="185">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">FAINT ATTACK</language>
+		<language name="English">FEINT ATTACK</language>
 	</row>
 	<row id="msg_0751_sweet_kiss" index="186">
 		<attribute name="window_context_name">used</attribute>
@@ -894,7 +894,7 @@
 	</row>
 	<row id="msg_0751_dynamic_punch" index="223">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">DYNAMICPUNCH</language>
+		<language name="English">DYNAMIC PUNCH</language>
 	</row>
 	<row id="msg_0751_megahorn" index="224">
 		<attribute name="window_context_name">used</attribute>
@@ -902,7 +902,7 @@
 	</row>
 	<row id="msg_0751_dragon_breath" index="225">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">DRAGONBREATH</language>
+		<language name="English">DRAGON BREATH</language>
 	</row>
 	<row id="msg_0751_baton_pass" index="226">
 		<attribute name="window_context_name">used</attribute>
@@ -982,11 +982,11 @@
 	</row>
 	<row id="msg_0751_extreme_speed" index="245">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">EXTREMESPEED</language>
+		<language name="English">EXTREME SPEED</language>
 	</row>
 	<row id="msg_0751_ancient_power" index="246">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">ANCIENTPOWER</language>
+		<language name="English">ANCIENT POWER</language>
 	</row>
 	<row id="msg_0751_shadow_ball" index="247">
 		<attribute name="window_context_name">used</attribute>
@@ -1062,7 +1062,7 @@
 	</row>
 	<row id="msg_0751_smelling_salts" index="265">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">SMELLINGSALT</language>
+		<language name="English">SMELLING SALTS</language>
 	</row>
 	<row id="msg_0751_follow_me" index="266">
 		<attribute name="window_context_name">used</attribute>
@@ -1190,7 +1190,7 @@
 	</row>
 	<row id="msg_0751_feather_dance" index="297">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">FEATHERDANCE</language>
+		<language name="English">FEATHER DANCE</language>
 	</row>
 	<row id="msg_0751_teeter_dance" index="298">
 		<attribute name="window_context_name">used</attribute>
@@ -1282,7 +1282,7 @@
 	</row>
 	<row id="msg_0751_grass_whistle" index="320">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">GRASSWHISTLE</language>
+		<language name="English">GRASS WHISTLE</language>
 	</row>
 	<row id="msg_0751_tickle" index="321">
 		<attribute name="window_context_name">used</attribute>
@@ -1926,7 +1926,7 @@
 	</row>
 	<row id="msg_0751_solar_seeds" index="481">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">SOLAR SEEDS</language>
+		<language name="English">-</language>
 	</row>
 	<row id="msg_0751_twin_beam" index="482">
 		<attribute name="window_context_name">used</attribute>

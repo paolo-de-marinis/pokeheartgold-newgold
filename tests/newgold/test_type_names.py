@@ -43,8 +43,15 @@ class TypeNameTests(unittest.TestCase):
         for name, number in type_numbers().items():
             self.assertIn(number, have, f"TYPE_{name} ({number}) has no row in msg_0735")
 
-    def test_the_fairy_type_is_named(self):
-        self.assertEqual(rows()[type_numbers()["FAIRY"]], "FAIRY")
+    def test_a_type_is_named_by_what_it_is_not_its_number(self):
+        """hg-engine gives Fairy 9 and the ??? type 18; here they are the
+        other way round, so the engine's names go in by meaning, and its
+        Stellar row, which no type here has, stays at 19."""
+        numbers, have = type_numbers(), rows()
+        self.assertEqual(have[numbers["FAIRY"]], "Fairy")
+        self.assertEqual(have[numbers["MYSTERY"]], "???")
+        self.assertEqual(have[numbers["ELECTRIC"]], "Electric")
+        self.assertEqual(have[19], "Stellar")
 
     def test_the_count_is_one_past_the_last_type(self):
         text = TYPES.read_text()

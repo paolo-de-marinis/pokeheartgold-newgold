@@ -53,6 +53,11 @@ that does nothing is listed by tests/newgold/test_move_effects.py rather than
 left to be discovered in play.
 
 Usage: import_moves.py REFERENCE_CHECKOUT [--write]
+       import_moves.py --text [--revision REVISION] [--write]
+
+The second form writes every row of the move text banks and the type names at
+a revision of the reference, read with git: d0380a487 (the default) is hg-
+engine's text, ccf2c9f5 is konefr's. See text_banks().
 """
 import argparse
 import collections
@@ -60,6 +65,8 @@ import re
 import shutil
 import struct
 from pathlib import Path
+
+import gmm
 
 ROOT = Path(__file__).resolve().parents[3]
 TABLE = ROOT / "files/poketool/waza/waza_tbl.narc"
@@ -183,7 +190,10 @@ def as_number(text):
 
 def reference_records(reference):
     """Every move block the reference declares, by name."""
-    source = (reference / "data/Moves.c").read_text(errors="replace")
+    return records_in((reference / "data/Moves.c").read_text(errors="replace"))
+
+
+def records_in(source):
     out = {}
     for match in re.finditer(r"\[MOVE_([A-Z0-9_]+)\]\s*=\s*\{", source):
         start = source.index("{", match.start())
@@ -363,14 +373,86 @@ def append_rows(path, prefix, texts, start, write):
     return len(texts)
 
 
+def c_text(block, key):
+    """A string field of a move as movedatagen writes it and msg_cat.py reads
+    it back: C's doubled backslashes single, straight quotes typographic, and
+    & < > escaped for a gmm."""
+    text = re.search(r"\." + key + r' = "([^"]*)"', block).group(1).replace("\\\\", "\\")
+    return gmm.escape(text.replace('"', "\u201d").replace("'", "\u2019").replace("`", "\u2019"))
+
+
 def used_rows(block):
     """The three "used" lines for one move, as the reference's movedatagen
-    writes them: its full name, not the twelve-letter one, with straight
-    quotes turned typographic."""
-    full = re.search(r'\.fullName = "([^"]*)"', block).group(1)
-    full = full.replace('"', "\u201d").replace("'", "\u2019").replace("`", "\u2019")
-    full = full.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    writes them: its full name, not the twelve-letter one."""
+    full = c_text(block, "fullName")
     return [f"{who}{{STRVAR_1 1, 0, 0}} used\\n{full}!" for who in ("", "The wild ", "The opposing ")]
+
+
+# THE TEXT OF EVERY MOVE, AT A REVISION
+#
+# hg-engine keeps no text for moves: its movedatagen writes 749 (descriptions),
+# 750 (names), 751 (capitals, which msg_cat.py upper-cases) and 003 (three
+# "used" lines a move, row 3 * move + side) out of data/Moves.c, one row per
+# move in its own numbering. Past retail this game numbers moves its own way,
+# so a row here is the reference's text for the move of the same NAME, never
+# the row at the same index. A move the revision has not got -- Solar Seeds,
+# konefr's, at the engine revision -- reads as the engine's own filler: MOVE_
+# NONE's name, "-", and the description of its unused slots 468..470, "--".
+FILLER = '.name = "-" .capsName = "-" .fullName = "-" .description = "--"'
+
+# The engine gives Fairy 9, the number of TYPE_MYSTERY, and calls the ??? type
+# TYPE_TYPELESS at 18; this game keeps TYPE_MYSTERY at 9 and gives Fairy 18. A
+# type is named with the engine's name for the same type, not the same number.
+SAME_TYPE = {"MYSTERY": "TYPELESS"}
+
+
+def text_banks(revision):
+    """{bank: [row text, ...]} for 749, 750, 751, 003 and 735, whole."""
+    blocks = records_in(gmm.git_show(revision, "data/Moves.c"))
+    header = MOVES_H.read_text()
+    names = collections.defaultdict(list)
+    for name, value in re.findall(r"^#define MOVE_([A-Z0-9_]+)\s+(\d+)\s*$", header, re.M):
+        names[int(value)].append(name)
+    last = re.search(r"#define NUM_MOVES_TOTAL MOVE_([A-Z0-9_]+)", header).group(1)
+    last = next(value for value, spellings in names.items() if last in spellings)
+    banks = {749: [], 750: [], 751: [], 3: []}
+    for move in range(last + 1):
+        block = next((blocks[name] for name in names[move] if name in blocks), FILLER)
+        banks[749].append(c_text(block, "description"))
+        banks[750].append(c_text(block, "name"))
+        banks[751].append(c_text(block, "capsName").upper())
+        banks[3] += used_rows(block)
+
+    theirs = {name: int(value) for name, value in re.findall(
+        r"^#define TYPE_([A-Z]+)\s+(\d+)\s*$", gmm.git_show(revision, "include/constants/pokemon.h"), re.M)}
+    engine = gmm.reference_rows(revision, 735)
+    banks[735] = list(engine)
+    for name, value in re.findall(r"^#define TYPE_([A-Z]+)\s+(\d+)\s*$",
+                                  (ROOT / "include/constants/pokemon.h").read_text(), re.M):
+        if name != "NONE":
+            banks[735][int(value)] = engine[theirs[SAME_TYPE.get(name, name)]]
+    return banks
+
+
+def write_text(revision, write):
+    """Every row of the five banks as the revision has it. A row keeps its id;
+    one this adds is named the way its bank names them."""
+    for bank, texts in text_banks(revision).items():
+        rows = gmm.read(bank)[:len(texts)]
+        changed = sum(row["text"] != text for row, text in zip(rows, texts))
+        print(f"bank {bank}: {len(texts)} rows, {changed} changed, {len(texts) - len(rows)} added")
+        taken = {row["id"] for row in rows}
+        for index in range(len(rows), len(texts)):
+            name = None
+            if bank in (735, 751):
+                name = f"msg_{bank:04d}_" + re.sub(r"[^a-z0-9]+", "_", texts[index].lower()).strip("_")
+                name = f"{name}_{index:05d}" if name in taken else name
+                taken.add(name)
+            rows.append(gmm.new_row(bank, index, texts[index], name))
+        for row, text in zip(rows, texts):
+            row["text"] = text
+        if write:
+            gmm.write(bank, rows)
 
 
 def animation_for(block, moves, table, last_vanilla, types):
@@ -489,11 +571,19 @@ def camel(name):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("reference", type=Path)
+    parser.add_argument("reference", type=Path, nargs="?")
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--rewrite-scripts", action="store_true",
                         help="overwrite scripts and headers edited by hand since the import")
+    parser.add_argument("--text", action="store_true",
+                        help="write banks 749, 750, 751, 003 and 735 whole, at --revision")
+    parser.add_argument("--revision", default=gmm.ENGINE)
     args = parser.parse_args()
+    if args.text:
+        write_text(args.revision, args.write)
+        return
+    if args.reference is None:
+        parser.error("REFERENCE_CHECKOUT is needed unless --text")
     reference = args.reference
 
     read_conditions(reference)
@@ -677,14 +767,10 @@ def main():
             CONTEST_TYPES.get(contest_field(block, "contestType"), 0),
             0)))
         borrowed.append((name, animation_for(block, plain, table, last_vanilla, types)))
-        names.append(re.search(r'\.name = "([^"]*)"', block).group(1))
-        caps.append(re.search(r'\.capsName = "([^"]*)"', block).group(1))
+        names.append(c_text(block, "name"))
+        caps.append(c_text(block, "capsName").upper())
         used += used_rows(block)
-        text = re.search(r'\.description = "((?:[^"\\\\]|\\\\.)*)"', block).group(1)
-        # The reference's text goes through a C compiler first, so it doubles
-        # every backslash; the message banks here take them single.
-        text = re.sub(r"\\\\(.)", r"\\\1", text)
-        descriptions.append(text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+        descriptions.append(c_text(block, "description"))
 
     # The moves this run is about to number are not missing either.
     ours_names |= {"MOVE_" + name for _, name in order}
