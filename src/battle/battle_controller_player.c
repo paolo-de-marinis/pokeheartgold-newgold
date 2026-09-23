@@ -178,9 +178,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // than by side, grew it by twelve. The byte for which battlers had a stat
 // raised, for Parting Shot, and the Binding Band's byte both went into the
 // padding after the Mirror Herb's stages. What Parental Bond's first strike
-// leaves to the second grew it by four.
+// leaves to the second grew it by four. Echoed Voice's two bytes, after
+// Parental Bond's four, grew it by four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3234 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3238 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -2113,6 +2114,15 @@ static void BattleControllerPlayer_TurnEnd(BattleSystem *battleSystem, BattleCon
         }
     }
 
+    // Echoed Voice's run: a turn it was used in adds to it, one it was not
+    // ends it.
+    if (!ctx->echoedVoiceUsed) {
+        ctx->echoedVoiceTurns = 0;
+    } else if (ctx->echoedVoiceTurns < 4) {
+        ctx->echoedVoiceTurns++;
+    }
+    ctx->echoedVoiceUsed = FALSE;
+
     ctx->totalTurns++;
     ctx->meFirstTotal++;
 
@@ -3381,6 +3391,19 @@ static BOOL PrimalWeatherStopsMove(u32 weather, int category, int type) {
             || ((weather & FIELD_CONDITION_HEAVY_RAIN) && type == TYPE_FIRE));
 }
 
+// What the moves that answer one another in a turn need to know of the move
+// now being used: it has come through everything that can stop a Pokemon
+// acting, and has spent its PP, whether or not it goes on to fail.
+static void NoteMoveUsed(BattleSystem *battleSystem, BattleContext *ctx) {
+#pragma unused(battleSystem)
+    // Echoed Voice counts a turn a move of it was used in, failed or not;
+    // one the user could not act in does not count (Pokemon Central,
+    // Echeggiavoce).
+    if (ctx->moveNoCur == MOVE_ECHOED_VOICE) {
+        ctx->echoedVoiceUsed = TRUE;
+    }
+}
+
 static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
     switch (ctx->unk_48) {
     case 0:
@@ -3501,6 +3524,7 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->unk_48 = 0;
     }
 
+    NoteMoveUsed(battleSystem, ctx);
     if (ctx->moveStatusFlag & MOVE_STATUS_FAIL) {
         ctx->command = CONTROLLER_COMMAND_26;
     } else {

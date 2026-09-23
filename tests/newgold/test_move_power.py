@@ -67,6 +67,24 @@ class LashOutTests(unittest.TestCase):
                       function(controller, "BattleControllerPlayer_SelectionScreenInit"))
 
 
+class EchoedVoiceTests(unittest.TestCase):
+    def test_it_grows_40_a_turn_in_a_row_to_200(self):
+        """40 times one more than the turns in a row before this one that it
+        was used, 200 at most (Pokemon Central, Echeggiavoce): 40, 80, 120,
+        160, 200 are 19, 37, 54, 72, 90."""
+        run_c(self, damage_program(r"""
+#define VOICE(move) CalcMoveDamage(&bs, &ctx, move, 0, 0, 0, TYPE_NORMAL, 0, 1, 1)
+    reset(4); S.move.power = 40;
+    EXPECT(VOICE(MOVE_ECHOED_VOICE), 19);
+    ctx.echoedVoiceTurns = 1; EXPECT(VOICE(MOVE_ECHOED_VOICE), 37);
+    ctx.echoedVoiceTurns = 2; EXPECT(VOICE(MOVE_ECHOED_VOICE), 54);
+    ctx.echoedVoiceTurns = 3; EXPECT(VOICE(MOVE_ECHOED_VOICE), 72);
+    ctx.echoedVoiceTurns = 4; EXPECT(VOICE(MOVE_ECHOED_VOICE), 90);
+    // No other move reads the run.
+    EXPECT(VOICE(MOVE_HYPER_VOICE), 19);
+"""))
+
+
 if __name__ == "__main__":
     unittest.main()
 

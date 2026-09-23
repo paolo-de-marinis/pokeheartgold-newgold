@@ -126,5 +126,19 @@ class ImplementedMoveTests(unittest.TestCase):
         meets = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "SecondaryEffectMeetsItsTarget")
         self.assertIn("ctx->moveNoCur == MOVE_ALLURING_VOICE", meets)
 
+    def test_echoed_voice_grows_with_each_turn_in_a_row(self):
+        # Pokemon Central (Echeggiavoce): 40 times the turns in a row someone
+        # used it, 200 at most; a turn nobody did ends the run.
+        self.assertImplemented("ECHOED_VOICE", "MOVE_EFFECT_HIT")
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        self.assertIn("ctx->echoedVoiceUsed = TRUE;", function(controller, "NoteMoveUsed"))
+        self.assertIn("NoteMoveUsed(battleSystem, ctx);\n    if (ctx->moveStatusFlag & MOVE_STATUS_FAIL) {",
+                      function(controller, "ov12_0224C38C"))
+        self.assertIn("if (!ctx->echoedVoiceUsed) {\n        ctx->echoedVoiceTurns = 0;\n"
+                      "    } else if (ctx->echoedVoiceTurns < 4) {\n        ctx->echoedVoiceTurns++;\n    }\n"
+                      "    ctx->echoedVoiceUsed = FALSE;",
+                      function(controller, "BattleControllerPlayer_TurnEnd"))
+        # The power itself is test_move_power's EchoedVoiceTests.
+
 if __name__ == "__main__":
     unittest.main()

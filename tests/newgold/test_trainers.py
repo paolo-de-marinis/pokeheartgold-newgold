@@ -308,9 +308,9 @@ class TrainerTests(unittest.TestCase):
     def test_a_move_the_engine_has_no_effect_for_leaves_its_slot_empty(self):
         """hg-engine's BLOCK_LEARNING_UNIMPLEMENTED_MOVES: a trainer's Pokemon
         is not given a move flagged FLAG_UNUSABLE_UNIMPLEMENTED, and the slot
-        stays where it was. Two in konefr's table carry one: Morty's Annihilape
-        goes in with Bulk Up, nothing, Drain Punch and Taunt, and Issac's
-        Whismur without Echoed Voice."""
+        stays where it was. Two in konefr's table carried one, Morty's
+        Annihilape Rage Fist and Issac's Whismur Echoed Voice; a move given its
+        effect here (import_moves.IMPLEMENTED_HERE) is theirs again."""
         party = function((ROOT / "src/trainer_data.c").read_text(), "CreateNPCTrainerParty")
         self.assertEqual(re.findall(r"MonSetMoveInSlot\(mon, ([^;]*)\);", party),
                          ["TrMon_UsableMove(monSpeciesMoves[i].moves[j]), (u8)j", "TrMon_UsableMove(monSpeciesItemMoves[i].moves[j]), (u8)j"])
@@ -327,8 +327,9 @@ class TrainerTests(unittest.TestCase):
         self.assertEqual(len(listed), 79 - len(import_moves.IMPLEMENTED_HERE))
         carried = {(index, member["species"], move) for index, trainer in enumerate(self.trainers)
                    for member in trainer["party"] for move in member.get("moves", []) if move in listed}
-        self.assertEqual(carried, {(31, "SPECIES_ANNIHILAPE", "MOVE_RAGE_FIST"),
-                                   (391, "SPECIES_WHISMUR", "MOVE_ECHOED_VOICE")})
+        self.assertEqual(carried, {entry for entry in {(31, "SPECIES_ANNIHILAPE", "MOVE_RAGE_FIST"),
+                                                       (391, "SPECIES_WHISMUR", "MOVE_ECHOED_VOICE")}
+                                   if entry[2][len("MOVE_"):] not in import_moves.IMPLEMENTED_HERE})
 
     @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
     def test_the_unimplemented_moves_are_the_engine_s(self):

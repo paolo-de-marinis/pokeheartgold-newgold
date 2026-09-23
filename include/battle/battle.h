@@ -658,6 +658,11 @@ typedef struct BattleContext {
     // it, until the multi-strike loop knows whether the second strike comes;
     // zero when nothing waits. Cleared as each action is dispatched.
     u32 parentalBondDeferred;
+    // Echoed Voice: the turns in a row someone has used it, four at most, and
+    // whether someone has in this one. A turn it was used in lengthens the
+    // run when it ends, and a turn it was not ends the run.
+    u8 echoedVoiceTurns;
+    u8 echoedVoiceUsed;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

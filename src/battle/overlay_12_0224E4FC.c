@@ -10155,6 +10155,12 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower *= 2;
     }
 
+    // Echoed Voice is 40 more for each turn in a row before this one that
+    // someone used it, 200 at the most (Pokemon Central, Echeggiavoce).
+    if (moveNo == MOVE_ECHOED_VOICE) {
+        movePower = movePower * (1 + ctx->echoedVoiceTurns);
+    }
+
     moveType = BattleMoveTypeForAbility(ctx, calcAttacker.ability, moveNo, type & 0x3F);
 
     GF_ASSERT(ctx->unk_2158 >= 10);

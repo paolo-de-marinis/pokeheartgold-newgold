@@ -344,6 +344,9 @@ IMPLEMENTED_HERE = {
     # Alluring Voice confuses only a target whose stats rose this turn
     # (Pokemon Central, Ammaliavoce): Psybeam's effect, asked the same way.
     "ALLURING_VOICE": "MOVE_EFFECT_CONFUSE_HIT",
+    # Echoed Voice is 40 more for each turn in a row someone used it, to 200
+    # (Pokemon Central, Echeggiavoce): CalcMoveDamage reads the run.
+    "ECHOED_VOICE": "MOVE_EFFECT_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
