@@ -206,5 +206,27 @@ class ImplementedMoveTests(unittest.TestCase):
             for stat in stats:
                 self.assertIn(f"MOVE_SUBSCRIPT_PTR_{stat}_UP_1_STAGE", script[raised:])
 
+    def test_flower_shield_and_rototiller_raise_the_grass_types(self):
+        # Pokemon Central (Fiordifesa, Aracampo): every Grass-type on the
+        # field, on the ground for Rototiller; none there, and it fails; a
+        # substitute stops it short of Infiltrator, the air or the ground
+        # short of No Guard.
+        for move, effect, stats, grounded in (
+                ("FLOWER_SHIELD", "MOVE_EFFECT_GRASS_TYPES_DEF_UP", ("DEFENSE",), False),
+                ("ROTOTILLER", "MOVE_EFFECT_GROUNDED_GRASS_TYPES_ATK_SP_ATK_UP", ("ATTACK", "SP_ATTACK"), True)):
+            self.assertImplemented(move, effect)
+            self.assertEqual(record(move)[7], 1 << 6, "RANGE_FIELD")
+            script = effect_script(effect)
+            found, raised = script.index("_FOUND:"), script.index("_RAISE:")
+            self.assertLess(script.index("MOVE_STATUS_FAILED"), found)
+            self.assertEqual(script.count("TYPE_GRASS"), 6)
+            self.assertEqual(script.count("GotoIfGrounded BATTLER_CATEGORY_SIDE_EFFECT_MON"), 2 if grounded else 0)
+            self.assertNotIn("IfSameSide", script)
+            self.assertIn("ABILITY_INFILTRATOR, _RAISE\n    CheckSubstitute BATTLER_CATEGORY_SIDE_EFFECT_MON, _NEXT", script)
+            self.assertIn("ABILITY_NO_GUARD", script)
+            self.assertEqual(script[raised:].count("MOVE_SUBSCRIPT_PTR_"), len(stats))
+            for stat in stats:
+                self.assertIn(f"MOVE_SUBSCRIPT_PTR_{stat}_UP_1_STAGE", script[raised:])
+
 if __name__ == "__main__":
     unittest.main()

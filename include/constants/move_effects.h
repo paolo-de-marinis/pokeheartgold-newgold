@@ -422,5 +422,7 @@
 #define MOVE_EFFECT_MAGIC_ROOM                                   412
 #define MOVE_EFFECT_PLUS_MINUS_DEF_SP_DEF_UP                     413
 #define MOVE_EFFECT_PLUS_MINUS_ATK_SP_ATK_UP                     414
+#define MOVE_EFFECT_GRASS_TYPES_DEF_UP                           415
+#define MOVE_EFFECT_GROUNDED_GRASS_TYPES_ATK_SP_ATK_UP           416
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

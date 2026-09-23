@@ -367,6 +367,12 @@ IMPLEMENTED_HERE = {
     # and 414.
     "MAGNETIC_FLUX": "MOVE_EFFECT_PLUS_MINUS_DEF_SP_DEF_UP",
     "GEAR_UP": "MOVE_EFFECT_PLUS_MINUS_ATK_SP_ATK_UP",
+    # Flower Shield raises the Defense of every Grass-type on the field, and
+    # Rototiller the Attack and Sp. Atk of every one on the ground; each fails
+    # with none (Pokemon Central, Fiordifesa, Aracampo): effect scripts 415
+    # and 416.
+    "FLOWER_SHIELD": "MOVE_EFFECT_GRASS_TYPES_DEF_UP",
+    "ROTOTILLER": "MOVE_EFFECT_GROUNDED_GRASS_TYPES_ATK_SP_ATK_UP",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -378,6 +384,11 @@ FIELDS_HERE = {
     "UPPER_HAND": {"effectChance": 100},
     # Sure, once the target's stats have risen this turn.
     "ALLURING_VOICE": {"effectChance": 100},
+    # The whole field, as Haze and Perish Song: the reference's adjacent
+    # Pokemon and the user would have the controller walk the targets, and
+    # the effect scripts walk the field themselves.
+    "FLOWER_SHIELD": {"target": "RANGE_FIELD"},
+    "ROTOTILLER": {"target": "RANGE_FIELD"},
 }
 
 # The effects written here for those moves follow the reference's in
@@ -874,7 +885,7 @@ def main():
             number(block, "accuracy"),
             number(block, "pp"),
             FIELDS_HERE.get(name, {}).get("effectChance", number(block, "effectChance")),
-            ranges(block, rangesets),
+            rangesets[FIELDS_HERE[name]['target']] if 'target' in FIELDS_HERE.get(name, {}) else ranges(block, rangesets),
             number(block, "priority"),
             flags,
             appeals.get(contest_field(block, "appeal"), 0),
