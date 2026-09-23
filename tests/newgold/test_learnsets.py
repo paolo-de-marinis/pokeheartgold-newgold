@@ -50,19 +50,14 @@ class LearnsetTests(unittest.TestCase):
     def test_retail_species_learn_the_reference_s_moves(self):
         reference = wotbl.reference_learnsets(REFERENCE, self.LEARNSETS_REVISION)
         moves = wotbl.move_names()
-        checked = 0
         for index in list(range(1, wotbl.LAST_RETAIL_SPECIES + 1)) + list(wotbl.NUMBERED_FORMS):
             name = self.names[index]
             entry = reference.get(wotbl.reference_key(index, self.names))
-            if entry is None and index in self.NOT_IN_THE_REFERENCE:
-                continue
+            if entry is None:
+                # Only where the reference has none: Trash Cloak Wormadam.
+                entry = wotbl.REFERENCE_DEFECTS[index]
             wanted = [{"level": step["Level"], "move": moves[step["Move"]]} for step in entry["LevelMoves"]]
             self.assertEqual(wotbl.decode(self.files[index]), wanted, name)
-            checked += 1
-        self.assertEqual(checked, wotbl.LAST_RETAIL_SPECIES + len(wotbl.NUMBERED_FORMS) - len(self.NOT_IN_THE_REFERENCE))
-
-    # The reference files no learnset for Trash Cloak Wormadam.
-    NOT_IN_THE_REFERENCE = {500}
 
     def test_dunsparce_learns_hyper_drill(self):
         # The one way to Dudunsparce: it evolves knowing Hyper Drill.
@@ -80,7 +75,7 @@ class LearnsetTests(unittest.TestCase):
         # Not byte for byte: the entry is a word now, because a move numbered
         # past 511 does not fit the halfword pret packed it into. What has to
         # match is what the entries say.
-        for index in [494, 495] + sorted(self.NOT_IN_THE_REFERENCE):
+        for index in [494, 495]:
             self.assertEqual(wotbl.decode(self.files[index]), wotbl.decode_retail(theirs[index]),
                              self.names.get(index, index))
 
@@ -94,6 +89,15 @@ class LearnsetTests(unittest.TestCase):
         self.assertNotIn(moves["MOVE_OMINOUS_WIND"], [step["move"] for step in heat])
         self.assertIn({"level": 25, "move": moves["MOVE_PSYSHOCK"]}, wotbl.decode(self.files[496]))
         self.assertIn({"level": 0, "move": moves["MOVE_QUIVER_DANCE"]}, wotbl.decode(self.files[499]))
+
+    def test_trash_cloak_wormadam_learns_its_own_moves(self):
+        # The reference gives it none; retail's list had Mirror Shot at 26,
+        # a move the eighth generation took out.
+        moves = wotbl.move_names()
+        trash = wotbl.decode(self.files[500])
+        for level, move in ((0, "QUIVER_DANCE"), (26, "METAL_BURST"), (29, "METAL_SOUND"), (47, "IRON_HEAD")):
+            self.assertIn({"level": level, "move": moves["MOVE_" + move]}, trash)
+        self.assertNotIn(moves["MOVE_MIRROR_SHOT"], [step["move"] for step in trash])
 
     def test_new_species_can_fight(self):
         for name in import_species.added_species():

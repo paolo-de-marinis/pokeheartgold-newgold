@@ -43,6 +43,27 @@ LAST_RETAIL_SPECIES = 493
 # (SPECIES_496), not under a name.
 NUMBERED_FORMS = range(496, 508)
 
+# The reference files no learnset for 500, Trash Cloak Wormadam, so its build
+# gives the form an empty list. The per-game files it made learnsets.json from
+# (data/learnsets/base/) put that cloak's moves under SPECIES_WORMADAM in every
+# game from Diamond on, mixed into the Plant Cloak's, and never under
+# SPECIES_500. What is written here is Pokemon Central's list for the latest
+# games with Wormadam in them, the eighth generation's Brilliant Diamond and
+# Shining Pearl (Wormadam/Mosse apprese in ottava generazione, Manto Scarti),
+# in the reference's shape: level 0 is the move learnt on evolving.
+REFERENCE_DEFECTS = {
+    500: {
+        "LevelMoves": [{"Level": level, "Move": "MOVE_" + move} for level, move in (
+            (0, "QUIVER_DANCE"),
+            (1, "BUG_BITE"), (1, "METAL_BURST"), (1, "PROTECT"), (1, "QUIVER_DANCE"),
+            (1, "SUCKER_PUNCH"), (1, "TACKLE"),
+            (10, "PROTECT"), (15, "BUG_BITE"), (20, "STRING_SHOT"), (23, "CONFUSION"),
+            (26, "METAL_BURST"), (29, "METAL_SOUND"), (32, "PSYBEAM"), (35, "INFESTATION"),
+            (38, "FLAIL"), (41, "ATTRACT"), (44, "PSYCHIC"), (47, "IRON_HEAD"), (50, "BUG_BUZZ"),
+        )],
+    },
+}
+
 ENTRY_SIZE = 4
 MOVE_BITS = 16
 MOVE_MASK = (1 << MOVE_BITS) - 1
@@ -220,10 +241,7 @@ def engine(args, files):
     files = list(files)
     rewritten = 0
     for index in list(range(1, LAST_RETAIL_SPECIES + 1)) + list(NUMBERED_FORMS):
-        entry = reference.get(reference_key(index, names))
-        if entry is None and index in NUMBERED_FORMS:
-            print(f"the reference has no learnset for {names[index]} ({index}); left as it is")
-            continue
+        entry = reference.get(reference_key(index, names), REFERENCE_DEFECTS.get(index))
         if entry is None:
             raise SystemExit(f"the reference has no learnset for {names[index]}")
         learned = []
