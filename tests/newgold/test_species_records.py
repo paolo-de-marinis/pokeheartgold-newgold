@@ -128,6 +128,15 @@ class SpeciesRecordTests(unittest.TestCase):
             checked += 1
         self.assertGreater(checked, 500)
 
+    @unittest.skipIf(REFERENCE is None, "behaviour reference not present")
+    def test_updating_the_vanilla_species_changes_nothing(self):
+        """A dry run of update_vanilla_species.py on the current table. It
+        used to build each record with no hidden ability, so --write would
+        have reset 451 of them."""
+        import update_vanilla_species
+        _, updates, _ = update_vanilla_species.pending(Path(REFERENCE))
+        self.assertEqual([(wanted["species"], differing) for _, wanted, differing in updates], [])
+
 
 if __name__ == "__main__":
     unittest.main()

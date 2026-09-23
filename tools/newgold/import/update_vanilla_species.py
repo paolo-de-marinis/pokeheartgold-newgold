@@ -27,24 +27,18 @@ import import_species  # noqa: E402
 LAST_VANILLA = 493
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("reference", type=Path)
-    parser.add_argument("--write", action="store_true")
-    parser.add_argument("--field", help="show every species that changes in one field")
-    args = parser.parse_args()
-
-    blocks = import_species.species_entries(args.reference)
-    yields = import_species.base_exp_yields(args.reference)
-    learnsets = import_species.machine_moves(args.reference)
+def pending(reference):
+    """What --write would change: the personal table, each species whose
+    record differs as (index, the record it would get, the fields that
+    differ), and the species left alone."""
+    blocks = import_species.species_entries(reference)
+    yields = import_species.base_exp_yields(reference)
+    learnsets = import_species.machine_moves(reference)
     tms, hms = import_species.machine_numbers()
 
     personal = json.loads(PERSONAL.read_text())
     records = personal["baseStats"]
-
-    changes = collections.Counter()
-    listed = collections.defaultdict(list)
-    skipped, updated = [], 0
+    updates, skipped = [], []
 
     for index in range(1, LAST_VANILLA + 1):
         record = records[index]
@@ -52,25 +46,41 @@ def main():
         if name not in blocks:
             skipped.append(name)
             continue
+        # The hidden ability is not in the reference's species block but in
+        # a table of its own, which import_hidden_abilities.py writes; the
+        # record's is passed through, or --write would reset 451 of them.
         try:
             wanted = import_species.record(
                 name, blocks[name], yields.get(name, record["expYieldFull"]),
-                learnsets.get(name, set()), tms, hms)
+                learnsets.get(name, set()), tms, hms, record["hiddenAbility"])
         except ValueError as error:
             skipped.append(f"{name} ({error})")
             continue
 
         differing = [key for key in record if record[key] != wanted[key]]
-        if not differing:
-            continue
-        updated += 1
+        if differing:
+            updates.append((index, wanted, differing))
+    return personal, updates, skipped
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("reference", type=Path)
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--field", help="show every species that changes in one field")
+    args = parser.parse_args()
+
+    personal, updates, skipped = pending(args.reference)
+    changes = collections.Counter()
+    listed = collections.defaultdict(list)
+    for index, wanted, differing in updates:
         for key in differing:
             changes[key] += 1
-            listed[key].append(name)
+            listed[key].append(wanted["species"])
         if args.write:
-            records[index] = wanted
+            personal["baseStats"][index] = wanted
 
-    print(f"{updated} of {LAST_VANILLA} species change")
+    print(f"{len(updates)} of {LAST_VANILLA} species change")
     for key, count in changes.most_common():
         print(f"  {key}: {count}")
     if skipped:
