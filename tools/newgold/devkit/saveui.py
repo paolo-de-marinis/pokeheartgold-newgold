@@ -85,9 +85,13 @@ STALE = ("il file è cambiato su disco da quando la pagina l'ha letto (melonDS, 
          "savedit): l'ho ricaricato, rifai la modifica")
 
 
+def digest(data):
+    return hashlib.sha1(data).hexdigest()
+
+
 def version(path):
     """What the page read, to tell whether the file has moved on since."""
-    return hashlib.sha1(Path(path).read_bytes()).hexdigest()
+    return digest(Path(path).read_bytes())
 
 
 def melonds_running():
@@ -443,7 +447,9 @@ class Library:
 
     def write(self, f, data, tag=None, validate=True):
         """Write beside the file, reopen what was written, back up what is
-        there, then replace it."""
+        there, then replace it. An untagged backup -- one "Annulla" may go
+        back to -- is named <stamp>.<what replaced it>.sav, so that undo can
+        tell whether the file is still what this write left."""
         path, key, is_slot = self.locate(f)
         if is_slot and melonds_running():
             raise Refused("melonDS è aperto: riscriverebbe lo slot alla chiusura. Chiudilo prima.")
@@ -459,7 +465,7 @@ class Library:
             if path.exists():
                 folder = self.backups / key
                 folder.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(path, folder / f"{stamp()}{'-' + tag if tag else ''}.sav")
+                shutil.copyfile(path, folder / f"{stamp()}{'-' + tag if tag else '.' + digest(data)[:12]}.sav")
             os.replace(temporary, path)
         finally:
             temporary.unlink(missing_ok=True)
@@ -497,13 +503,23 @@ class Library:
                 self.write(f, data)
         return self.detail(f)
 
-    def undo(self, f):
+    def undo(self, f, seen=None):
+        """The file as it was before the last write made here -- refused if
+        the file is no longer what that write left (a session in melonDS
+        since), which going back would throw away; Cronologia still can."""
         with self.lock:
             path, key, _ = self.locate(f)
+            if seen is not None and seen != self.current(f):
+                raise Refused(STALE, "stale")
             stack = [b for b in self.history(key) if b["undo"]]
             if not stack:
                 raise Refused("non c'è nulla da annullare")
             latest = self.backups / key / stack[0]["name"]
+            left = latest.stem.partition(".")[2]
+            if left and not version(path).startswith(left):
+                raise Refused("il file è cambiato dopo l'ultima modifica fatta qui (per esempio una partita in "
+                              "melonDS): annullarla butterebbe via anche quello. Se è proprio ciò che vuoi, "
+                              "scegli il backup in Cronologia.")
             self.write(f, latest.read_bytes(), tag="prima-di-annullare")
             latest.rename(latest.with_name(latest.stem + "-ripristinato.sav"))
         return self.detail(f)
@@ -973,7 +989,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.reply(200, lib.edit(body.get("f"), body.get("op"), body.get("args") or {},
                                                 body.get("version")))
             if path == "/api/undo":
-                return self.reply(200, lib.undo(body.get("f")))
+                return self.reply(200, lib.undo(body.get("f"), body.get("version")))
             if path == "/api/restore":
                 return self.reply(200, lib.restore(body.get("f"), body.get("backup")))
             if path == "/api/duplicate":

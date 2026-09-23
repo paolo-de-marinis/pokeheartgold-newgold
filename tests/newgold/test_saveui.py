@@ -236,6 +236,25 @@ class SaveUiTests(unittest.TestCase):
         out = self.ok("/api/edit", {"f": "gyms/test.sav", "op": "trainer", "version": now, "args": {"name": "Paola"}})
         self.assertEqual((out["profile"]["name"], out["profile"]["money"]), ("Paola", 7777))
 
+    def test_undo_keeps_what_happened_after_the_edit(self):
+        """An edit, then an hour in melonDS: Annulla would throw the hour
+        away with the edit, so it refuses; Cronologia still restores."""
+        self.edit("trainer", {"money": 1})
+        save = sv.Save(self.save)
+        sv.set_profile(save, johto=0b1, play_time=[3, 0, 0])
+        self.save.write_bytes(save.image())
+        played = self.save.read_bytes()
+        self.assertIn("Cronologia", self.refused("/api/undo", {"f": "gyms/test.sav"}))
+        self.assertEqual(self.save.read_bytes(), played)
+        seen = self.ok("/api/save?f=gyms/test.sav")["version"]
+        self.assertEqual(self.call("/api/undo", {"f": "gyms/test.sav", "version": "0" * 40})[1]["code"], "stale")
+        out = self.ok("/api/restore", {"f": "gyms/test.sav", "backup": self.backups()[0].name})
+        self.assertEqual(out["profile"]["money"], sv.profile(sv.Save(self.template))["money"])
+        # Undo of that restore is allowed: nothing has touched the file since.
+        self.assertNotEqual(out["version"], seen)
+        out = self.ok("/api/undo", {"f": "gyms/test.sav", "version": out["version"]})
+        self.assertEqual(self.save.read_bytes(), played)
+
     def test_nothing_changed_writes_nothing(self):
         now = self.ok("/api/save?f=gyms/test.sav")["party"][0]
         self.edit("party_edit", {"slot": 0, "species": now["species"], "level": now["level"],

@@ -605,8 +605,14 @@ async function edit(op, args, ok = "Salvato (backup fatto)", version = S.save.ve
   } finally { S.busy--; }
 }
 $("#undo").addEventListener("click", async () => {
-  const out = await run(() => api("/api/undo", {f: S.f}), "Ultima modifica annullata");
-  if (out) { S.dex.changes.clear(); showSave(out); loadLibrary(); }
+  S.busy++;
+  try {
+    const out = await api("/api/undo", {f: S.f, version: S.save.version});
+    toast("Ultima modifica annullata"); S.dex.changes.clear(); showSave(out); loadLibrary();
+  } catch (e) {
+    toast(e.message, true);
+    if (e.code === "stale") await openSave(S.f);
+  } finally { S.busy--; }
 });
 $("#history").addEventListener("click", () => S.f && showHistory(S.f));
 $("#reload").addEventListener("click", () => S.f && openSave(S.f));
