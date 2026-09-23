@@ -10279,13 +10279,18 @@ BOOL BtlCmd_GotoIfParentalBondIsActive(BattleSystem *battleSystem, BattleContext
     return FALSE;
 }
 
-// Knock Off hits harder for taking an item away from the sixth generation on.
-// Here it only takes the item, so the boost never applies.
+// Knock Off hits harder for taking an item away from the sixth generation on;
+// CalcMoveDamage applies it. Despite its name the command jumps when the boost
+// does NOT apply, as the reference's canapplyknockoffdamageboost does.
 BOOL BtlCmd_GotoIfCanApplyKnockOffBoost(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
 
-    BattleScriptIncrementPointer(ctx, BattleScriptReadWord(ctx));
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (!KnockOffCanRemoveItem(ctx, ctx->battlerIdTarget)) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
 
     return FALSE;
 }

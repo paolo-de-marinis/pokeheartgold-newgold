@@ -3300,6 +3300,18 @@ BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battle
     return ret;
 }
 
+// Whether Knock Off would take the Pokemon's item: it holds one, and neither
+// of the refusals of Knock Off's own subscript (142) -- Multitype, a Griseous
+// Orb -- nor a species the item is welded to keeps it on. Sticky Hold and a
+// substitute keep the item too, but not the move's power: the reference
+// (CanKnockOffApply) leaves both out of this question.
+BOOL KnockOffCanRemoveItem(BattleContext *ctx, int battlerId) {
+    return ctx->battleMons[battlerId].item != ITEM_NONE
+        && ctx->battleMons[battlerId].ability != ABILITY_MULTITYPE
+        && ctx->battleMons[battlerId].item != ITEM_GRISEOUS_ORB
+        && !ItemIsWeldedToTheSpecies(ctx, battlerId);
+}
+
 BOOL CanTrickHeldItem(BattleContext *ctx, int battlerId) {
     return !ItemIdIsMail(ctx->battleMons[battlerId].item) && !ItemIsWeldedToTheSpecies(ctx, battlerId);
 }
@@ -9543,6 +9555,13 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     }
 
     if (ctx->turnData[battlerIdAttacker].helpingHandFlag) {
+        movePower = movePower * 15 / 10;
+    }
+
+    // Knock Off hits half again as hard when there is an item it could knock
+    // off, from the sixth generation on: 65 becomes 97. The reference
+    // multiplies it in with Helping Hand's among its base-power modifiers.
+    if (moveNo == MOVE_KNOCK_OFF && KnockOffCanRemoveItem(ctx, battlerIdTarget)) {
         movePower = movePower * 15 / 10;
     }
 

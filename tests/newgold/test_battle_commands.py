@@ -105,7 +105,6 @@ class BattleCommandTests(unittest.TestCase):
         "CanClearPrimalWeather": "nothing: no script needs to ask it",
         "ChangePermanentBackground": "the battle background Defog and a terrain's end redraw",
         "GoToIfTerastallized": "no script in the reference runs it either",
-        "GotoIfCanApplyKnockOffBoost": "no script in the reference runs it either",
         "MakeTotem": "totems",
         # The reference's pending-switch ordering (subscripts 0009, 0091,
         # 0114, 0175, 0340, 0469, 0498, read in ServerDoPostMoveEffects.c):
