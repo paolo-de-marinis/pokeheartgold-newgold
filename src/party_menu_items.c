@@ -394,6 +394,14 @@ int PartyMenu_ItemUseFunc_WaitTextPrinterThenExit(PartyMenu *partyMenu) {
         return PARTY_MENU_STATE_ITEM_USE_CB;
     } else {
         partyMenu->args->selectedAction = PARTY_MENU_ACTION_RETURN_0;
+        // With more of the item in the bag, and it not one that evolves a
+        // Pokemon, the menu stays on "Use on which Pokemon?" for the next one
+        // instead of going back to the bag, as the Rare Candy's does.
+        if (!GetItemAttr(partyMenu->args->itemId, ITEMATTR_EVOLVE, HEAP_ID_PARTY_MENU) && Bag_HasItem(partyMenu->args->bag, partyMenu->args->itemId, 1, HEAP_ID_PARTY_MENU)) {
+            ClearFrameAndWindow2(&partyMenu->windows[PARTY_MENU_WINDOW_ID_34], TRUE);
+            PartyMenu_PrintMessageOnWindow32(partyMenu, msg_0300_00033, TRUE);
+            return PARTY_MENU_STATE_USE_ITEM_SELECT_MON;
+        }
         return PARTY_MENU_STATE_BEGIN_EXIT;
     }
 }
