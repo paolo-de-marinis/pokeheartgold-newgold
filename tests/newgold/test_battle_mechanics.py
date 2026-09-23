@@ -117,5 +117,22 @@ class PriorityBlockTests(unittest.TestCase):
         self.assertNotIn("->priority", guard)
 
 
+class PranksterTests(unittest.TestCase):
+    def test_a_dark_type_across_the_field_is_not_affected(self):
+        # BattleController_CheckTypeBasedMoveConditionImmunities1: a status
+        # move, Prankster, a non-zero priority, a Dark type in any of the three
+        # slots, an enemy -- and "It doesn't affect {0}...".
+        body = function(OVERLAY.read_text(), "BattleContext_CheckMoveImmunityFromAbility")
+        match = re.search(r"if \((GetBattlerAbility\(ctx, battlerIdAttacker\) == ABILITY_PRANKSTER.*?)\) \{(.*?)\n    \}", body, re.S)
+        self.assertIsNotNone(match, "Prankster is not asked about in the immunity sweep")
+        condition, action = match.groups()
+        for term in ("CATEGORY_STATUS", "BattlerMovePriority(ctx, battlerIdAttacker, ctx->moveNoCur) != 0",
+                     "(battlerIdAttacker & 1) != (battlerIdTarget & 1)"):
+            self.assertIn(term, condition)
+        for slot in (1, 2, 3):
+            self.assertIn(f"BMON_DATA_TYPE_{slot}, NULL) == TYPE_DARK", condition)
+        self.assertIn("ctx->moveStatusFlag |= MOVE_STATUS_NO_EFFECT;", action)
+
+
 if __name__ == "__main__":
     unittest.main()

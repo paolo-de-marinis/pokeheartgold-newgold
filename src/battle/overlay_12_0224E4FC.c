@@ -3920,6 +3920,23 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
 
     moveType = BattleMoveAdjustedType(ctx, battlerIdAttacker, ctx->moveNoCur);
 
+    // A Dark type on the other side is not fooled by a status move Prankster
+    // hurried: it does not affect it. That is a type's immunity rather than an
+    // ability's refusal, so it is answered the way the type chart answers one,
+    // with the no-effect flag the miss script turns into "It doesn't affect
+    // {0}...". The priority is the one the turn order compared, and it is asked
+    // to be non-zero rather than positive because the reference reads it as a
+    // u8: a Prankster Roar at -5 is refused there too, which is also the
+    // canonical rule, since every status move Prankster touches is refused.
+    if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_PRANKSTER
+        && BattleMoveTbl(ctx, ctx->moveNoCur)->category == CATEGORY_STATUS
+        && BattlerMovePriority(ctx, battlerIdAttacker, ctx->moveNoCur) != 0
+        && (battlerIdAttacker & 1) != (battlerIdTarget & 1)
+        && (GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL) == TYPE_DARK || GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL) == TYPE_DARK || GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_3, NULL) == TYPE_DARK)) {
+        ctx->moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
+        ctx->moveFail[battlerIdAttacker].noEffect = TRUE;
+    }
+
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_VOLT_ABSORB) == TRUE && moveType == TYPE_ELECTRIC && battlerIdAttacker != battlerIdTarget) {
         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerIdTarget].maxHp, 4);
         script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;
