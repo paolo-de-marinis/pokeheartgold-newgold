@@ -628,5 +628,12 @@ void sub_02076C90(EvolutionTaskData *data) {
         i = ITEM_NONE;
         SetMonData(data->mon, MON_DATA_HELD_ITEM, &i);
         break;
+    case EVO_FORM_ARGUMENT:
+        // Gimmighoul spends the 999 Gimmighoul Coins it evolved on, as in the
+        // games ("consuming the coins in the process", Bulbapedia).
+        if (data->species == SPECIES_GIMMIGHOUL) {
+            Bag_TakeItem(data->bag, ITEM_GIMMIGHOUL_COIN, GIMMIGHOUL_EVOLUTION_COINS, data->heapID);
+        }
+        break;
     }
 }

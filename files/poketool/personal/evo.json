@@ -5154,6 +5154,16 @@
           "target": "SPECIES_RABSCA"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_GIMMIGHOUL",
+      "evos": [
+        {
+          "method": "EVO_FORM_ARGUMENT",
+          "param": 999,
+          "target": "SPECIES_GHOLDENGO"
+        }
+      ]
     }
   ]
 }

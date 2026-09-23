@@ -368,6 +368,10 @@
 #define LETS_GO_STEPS_PER_COUNT 4
 #define LETS_GO_EVOLUTION_COUNT (1000 / LETS_GO_STEPS_PER_COUNT)
 
+// Gimmighoul evolves with this many Gimmighoul Coins in the Bag, and spends
+// them: its EVO_FORM_ARGUMENT row's number.
+#define GIMMIGHOUL_EVOLUTION_COINS 999
+
 // hg-engine's DUMMY_P2_2_CHANGE_ABILITY_SLOT, bit 0 of MON_DATA_UNUSED_114: an
 // Ability Capsule has swapped the slot the personality picks. The Mint's
 // nature takes bits 1 to 5 of the same field.

@@ -14,6 +14,7 @@
 #include "constants/trainer_class.h"
 #include "constants/weather.h"
 
+#include "bag.h"
 #include "gf_rtc.h"
 #include "item.h"
 #include "mail.h"
@@ -3215,12 +3216,21 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     *method_ret = EVO_HURT_IN_BATTLE_AMOUNT;
                 }
             } break;
-            case EVO_FORM_ARGUMENT:
-                if (GetMonData(mon, MON_DATA_EVOLUTION_COUNTER, NULL) >= evoTable[i].param) {
+            case EVO_FORM_ARGUMENT: {
+                u32 count;
+                // Gimmighoul keeps no count of its own: Pokemon Central gives
+                // Gholdengo's as a level-up "se il giocatore ha almeno 999
+                // Monete di Gimmighoul nella Borsa", which the evolution spends.
+                if (species == SPECIES_GIMMIGHOUL) {
+                    count = Bag_GetQuantity(Save_Bag_Get(SaveData_Get()), ITEM_GIMMIGHOUL_COIN, HEAP_ID_DEFAULT);
+                } else {
+                    count = GetMonData(mon, MON_DATA_EVOLUTION_COUNTER, NULL);
+                }
+                if (count >= evoTable[i].param) {
                     target = evoTable[i].target;
                     *method_ret = EVO_FORM_ARGUMENT;
                 }
-                break;
+            } break;
             case EVO_LETS_GO:
                 if (GetMonData(mon, MON_DATA_EVOLUTION_COUNTER, NULL) >= LETS_GO_EVOLUTION_COUNT) {
                     target = evoTable[i].target;

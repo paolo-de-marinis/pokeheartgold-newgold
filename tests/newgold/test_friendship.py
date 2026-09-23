@@ -53,6 +53,7 @@ typedef struct { u16 species; } Party;
 typedef struct { int mapId; } Location;
 typedef struct SaveData SaveData;
 typedef struct LocalFieldData LocalFieldData;
+typedef struct Bag Bag;
 // Nowhere magnetic: the magnetic field has its own test.
 static Location location = { MAP_NEW_BARK };
 // The baseline's name for what hg-engine made the magnetic field.
@@ -103,6 +104,8 @@ static inline SaveData *SaveData_Get(void) { return (SaveData *)&location; }
 static inline LocalFieldData *Save_LocalFieldData_Get(SaveData *save) { return (LocalFieldData *)save; }
 static inline Location *LocalFieldData_GetCurrentPosition(LocalFieldData *field) { return (Location *)field; }
 static inline u16 LocalFieldData_GetWeatherType(LocalFieldData *field) { (void)field; return 0; }
+static inline Bag *Save_Bag_Get(SaveData *save) { return (Bag *)save; }
+static inline u16 Bag_GetQuantity(Bag *bag, u16 item, enum HeapID heap) { (void)bag; (void)item; (void)heap; return 0; }
 @HOUR_FUNCTION@
 static TIMEOFDAY GF_RTC_GetTimeOfDay(void) { return GF_RTC_GetTimeOfDayByHour(hour); }
 typedef struct { int hour, minute, second; } RTCTime;

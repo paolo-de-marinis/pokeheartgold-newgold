@@ -54,10 +54,11 @@ typedef struct { int count; Pokemon mons[6]; } Party;
 typedef struct { int mapId; } Location;
 typedef struct SaveData SaveData;
 typedef struct LocalFieldData LocalFieldData;
+typedef struct Bag Bag;
 
 static struct Evolution table[MAX_EVOS_PER_POKE];
 static int hour, allocations;
-static u16 weather;
+static u16 weather, coins;
 static Location location;
 
 static u32 GetMonData(Pokemon *mon, int field, void *dest) {
@@ -105,6 +106,12 @@ static inline Pokemon *Party_GetMonByIndex(Party *party, int slot) { assert(slot
 static inline SaveData *SaveData_Get(void) { return (SaveData *)&location; }
 static inline LocalFieldData *Save_LocalFieldData_Get(SaveData *save) { return (LocalFieldData *)save; }
 static inline Location *LocalFieldData_GetCurrentPosition(LocalFieldData *field) { return (Location *)field; }
+static inline Bag *Save_Bag_Get(SaveData *save) { return (Bag *)save; }
+static inline u16 Bag_GetQuantity(Bag *bag, u16 item, enum HeapID heap) {
+    (void)bag;
+    assert(item == ITEM_GIMMIGHOUL_COIN && heap == HEAP_ID_DEFAULT);
+    return coins;
+}
 static inline u16 LocalFieldData_GetWeatherType(LocalFieldData *field) { (void)field; return weather; }
 static inline void GF_RTC_CopyTime(RTCTime *time) { time->hour = hour; time->minute = 30; time->second = 0; }
 @HOUR_FUNCTION@
@@ -271,6 +278,21 @@ static void check_form_argument(void) {
     }
 }
 
+static void check_gimmighoul_coins(void) {
+    // Gimmighoul's count is the Gimmighoul Coins in the Bag, not its own.
+    Pokemon mon = { .species = SPECIES_GIMMIGHOUL, .level = 1, .evolutionCounter = 255 };
+    one_row(EVO_FORM_ARGUMENT, GIMMIGHOUL_EVOLUTION_COINS, SPECIES_GHOLDENGO);
+    for (coins = 990; coins <= 999; coins++) {
+        assert(evolve(&mon, NULL, EVO_FORM_ARGUMENT) == (coins >= 999 ? SPECIES_GHOLDENGO : SPECIES_NONE));
+    }
+    // And no one else's is.
+    mon.species = SPECIES_BISHARP;
+    mon.evolutionCounter = 0;
+    one_row(EVO_FORM_ARGUMENT, 3, SPECIES_KINGAMBIT);
+    assert(evolve(&mon, NULL, EVO_FORM_ARGUMENT) == SPECIES_NONE);
+    coins = 0;
+}
+
 static void check_counted_moves(void) {
     // Primeape counts Rage Fist and Stantler Psyshield Bash, nothing else and
     // no one else; the count stops at 255.
@@ -318,11 +340,88 @@ int main(void) {
     check_hurt();
     check_critical_hits();
     check_form_argument();
+    check_gimmighoul_coins();
     check_counted_moves();
     check_lets_go();
     return 0;
 }
 """
+
+
+SCENE = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+#include "constants/game_stats.h"
+#include "constants/heap.h"
+#include "constants/items.h"
+#include "constants/pokemon.h"
+#include "constants/species.h"
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { u8 bytes[16]; } Window;
+typedef struct { u16 heldItem; } Pokemon;
+typedef struct Bag Bag;
+typedef struct Mail Mail;
+typedef struct BgConfig BgConfig; typedef struct MsgData MsgData; typedef struct MessageFormat MessageFormat;
+typedef struct String String; typedef struct PaletteData PaletteData; typedef struct PokepicManager PokepicManager;
+typedef struct Pokepic Pokepic; typedef struct Party Party; typedef struct Options Options;
+typedef struct GF3DVramMan GF3DVramMan; typedef struct OverlayManager OverlayManager;
+typedef struct PokemonSummaryArgs PokemonSummaryArgs; typedef struct Pokedex Pokedex; typedef struct GameStats GameStats;
+typedef struct NARC NARC; typedef struct SpriteSystem SpriteSystem; typedef struct SpriteManager SpriteManager;
+typedef struct ManagedSprite ManagedSprite;
+@STRUCT@
+typedef struct EvolutionTaskData EvolutionTaskData;
+static int taken, takenItem;
+static BOOL Bag_TakeItem(Bag *bag, u16 item, u16 quantity, enum HeapID heap) { (void)bag; (void)heap; takenItem = item; taken += quantity; return TRUE; }
+static void SetMonData(Pokemon *mon, int field, void *value) { assert(field == MON_DATA_HELD_ITEM); mon->heldItem = *(int *)value; }
+// The Shedinja half is the retail code, moved to C matching; it is not run here.
+static u16 Bag_GetQuantity(Bag *bag, u16 item, enum HeapID heap) { (void)bag; (void)item; (void)heap; return 0; }
+static int Party_GetCount(Party *party) { (void)party; return 6; }
+static int Party_GetMaxCount(Party *party) { (void)party; return 6; }
+static Pokemon *AllocMonZeroed(enum HeapID heap) { (void)heap; assert(0); return NULL; }
+static void CopyPokemonToPokemon(Pokemon *a, Pokemon *b) { (void)a; (void)b; }
+static Mail *Mail_New(enum HeapID heap) { (void)heap; return NULL; }
+static void Heap_Free(void *p) { (void)p; }
+#define MI_CpuClearFast(dest, size) memset(dest, 0, size)
+static void UpdateMonAbility(Pokemon *mon) { (void)mon; }
+static void CalcMonLevelAndStats(Pokemon *mon) { (void)mon; }
+static BOOL Party_AddMon(Party *party, Pokemon *mon) { (void)party; (void)mon; return TRUE; }
+static void Pokedex_SetMonCaughtFlag(Pokedex *dex, Pokemon *mon) { (void)dex; (void)mon; }
+static void GameStats_Inc(GameStats *stats, int stat) { (void)stats; (void)stat; }
+static void GameStats_AddScore(GameStats *stats, int score) { (void)stats; (void)score; }
+@FUNCTION@
+
+int main(void) {
+    Pokemon mon = { ITEM_EVERSTONE };
+    EvolutionTaskData data = { .mon = &mon };
+    // Gimmighoul spends its 999 coins; any other species by the same method
+    // spends nothing.
+    data.evolutionCondition = EVO_FORM_ARGUMENT;
+    data.species = SPECIES_GIMMIGHOUL;
+    sub_02076C90(&data);
+    assert(taken == 999 && takenItem == ITEM_GIMMIGHOUL_COIN);
+    data.species = SPECIES_PRIMEAPE;
+    sub_02076C90(&data);
+    assert(taken == 999 && mon.heldItem == ITEM_EVERSTONE);
+    // Retail's: an item held to evolve is taken.
+    data.evolutionCondition = EVO_ITEM_DAY;
+    sub_02076C90(&data);
+    assert(mon.heldItem == ITEM_NONE && taken == 999);
+    return 0;
+}
+"""
+
+
+def scene():
+    source = read("src/unk_02075E14.c")
+    struct = re.search(r"struct EvolutionTaskData \{.*?\}; // size: 0x[0-9A-F]+", source, re.S).group()
+    return SCENE.replace("@STRUCT@", struct).replace("@FUNCTION@", function(source, "sub_02076C90"))
 
 
 def program():
@@ -344,7 +443,23 @@ def program():
     return text
 
 
+def run_program(test, text):
+    with tempfile.TemporaryDirectory(prefix="newgold-evolution-methods-") as directory:
+        path = Path(directory)
+        (path / "test.c").write_text(text)
+        build = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+            "-std=c99", "-Wall", "-Wextra", "-Werror", "-iquote", str(ROOT / "include"),
+            str(path / "test.c"), "-o", str(path / "test"),
+        ], capture_output=True, text=True)
+        test.assertEqual(build.returncode, 0, build.stderr)
+        run = subprocess.run([str(path / "test")], capture_output=True, text=True)
+        test.assertEqual(run.returncode, 0, run.stderr)
+
+
 class EvolutionMethods(unittest.TestCase):
+    def test_the_evolution_spends_gimmighouls_coins(self):
+        run_program(self, scene())
+
     def test_the_field_counts_the_follower_one_step_in_four(self):
         """Each step with the Pokemon walking behind the player visible, one
         in four by the steps walked, for the first Pokemon able to battle --
@@ -364,16 +479,7 @@ class EvolutionMethods(unittest.TestCase):
                                 r"Mon_CountEvolutionMove\(BattleSystem_GetPartyMon\(battleSystem, ctx->battlerIdAttacker, ctx->selectedMonIndex\[ctx->battlerIdAttacker\]\), ctx->moveNoTemp\);")
 
     def test_methods_on_the_host(self):
-        with tempfile.TemporaryDirectory(prefix="newgold-evolution-methods-") as directory:
-            path = Path(directory)
-            (path / "test.c").write_text(program())
-            build = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
-                "-std=c99", "-Wall", "-Wextra", "-Werror", "-iquote", str(ROOT / "include"),
-                str(path / "test.c"), "-o", str(path / "test"),
-            ], capture_output=True, text=True)
-            self.assertEqual(build.returncode, 0, build.stderr)
-            run = subprocess.run([str(path / "test")], capture_output=True, text=True)
-            self.assertEqual(run.returncode, 0, run.stderr)
+        run_program(self, program())
 
 
 if __name__ == "__main__":
