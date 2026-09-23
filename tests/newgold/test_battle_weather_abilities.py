@@ -12,6 +12,7 @@ source.
 """
 
 import os
+import re
 import shlex
 import subprocess
 import tempfile
@@ -245,6 +246,34 @@ int main(void) {
         script = subscript("PrimalWeatherStopsMove")
         self.assertIn("PrintMessage msg_0197_01443, TAG_NONE", script)
         self.assertIn("PrintMessage msg_0197_01447, TAG_NONE", script)
+
+
+class WeatherAbilityTests(unittest.TestCase):
+    """Drizzle, Sand Stream and Drought (Pokemon Central: Piovischio,
+    Sabbiafiume, Siccita): five turns, eight with the rock their own Pokemon
+    holds, nothing while the weather is up, and not over the map's weather."""
+
+    ABILITIES = (("Drizzle", "DRIZZLE", "RAIN", "RAIN"),
+                 ("SandStream", "SAND_STREAM", "SANDSTORM", "SANDSTORM"),
+                 ("Drought", "DROUGHT", "SUN", "SUN"))
+
+    def test_the_weather_they_lay_ends(self):
+        entry = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        for name, ability, bit, rock in self.ABILITIES:
+            script = subscript(name)
+            self.assertIn(f"UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_{bit}\n", script, name)
+            self.assertIn("UpdateVar OPCODE_SET, BSCRIPT_VAR_WEATHER_TURNS, 5", script, name)
+            self.assertIn(f"CheckItemHoldEffect CHECK_OPCODE_NOT_HAVE, BATTLER_CATEGORY_MSG_BATTLER_TEMP, HOLD_EFFECT_EXTEND_{rock}", script, name)
+            self.assertLess(script.index("FIELD_CONDITION_OVERWORLD_WEATHER_ANY, _MapWeather"), script.index("PrintMessage"), name)
+            self.assertIn("PrintMessage msg_0197_00796, TAG_NONE", script[script.index("\n_MapWeather:"):], name)
+            case = entry[entry.index(f"case ABILITY_{ability}:"):]
+            self.assertIn(f"(ctx->fieldCondition & FIELD_CONDITION_{bit}_ALL)", case[:case.index("break;")], name)
+
+    def test_only_the_map_lays_a_weather_for_good(self):
+        setters = sorted(path.name for path in (ROOT / "files/battledata/script").rglob("*.s")
+                         if re.search(r"FLAG_ON, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_\w+_PERMANENT", path.read_text()))
+        self.assertEqual(setters, ["subscript_0271_OverworldRain.s", "subscript_0272_OverworldHail.s",
+                                   "subscript_0273_OverworldSand.s", "subscript_0294_OverworldSun.s"])
 
 
 class StrongWindsTests(unittest.TestCase):

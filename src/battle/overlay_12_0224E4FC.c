@@ -5611,24 +5611,27 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                         flag = TRUE;
                         j = ABILITY_NONE;
                     }
+                    // Drizzle, Sand Stream and Drought do nothing while their
+                    // weather is up, of whatever kind; their subscripts set it
+                    // for five turns.
                     switch (j) {
                     case ABILITY_DRIZZLE:
                         ctx->battleMons[battlerId].sendOutFlag = TRUE;
-                        if (!(ctx->fieldCondition & FIELD_CONDITION_RAIN_PERMANENT)) {
+                        if (!(ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL)) {
                             script = BATTLE_SUBSCRIPT_DRIZZLE;
                             flag = TRUE;
                         }
                         break;
                     case ABILITY_SAND_STREAM:
                         ctx->battleMons[battlerId].sendOutFlag = TRUE;
-                        if (!(ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_PERMANENT)) {
+                        if (!(ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL)) {
                             script = BATTLE_SUBSCRIPT_SAND_STREAM;
                             flag = TRUE;
                         }
                         break;
                     case ABILITY_DROUGHT:
                         ctx->battleMons[battlerId].sendOutFlag = TRUE;
-                        if (!(ctx->fieldCondition & FIELD_CONDITION_SUN_PERMANENT)) {
+                        if (!(ctx->fieldCondition & FIELD_CONDITION_SUN_ALL)) {
                             script = BATTLE_SUBSCRIPT_DROUGHT;
                             flag = TRUE;
                         }
@@ -5652,11 +5655,11 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                             flag = TRUE;
                         }
                         break;
-                    // A strong weather comes in over any other, the field's
+                    // A strong weather comes in over any other, the map's
                     // own included, but is not raised again over itself. The
-                    // reference refuses it under the field's weather; that
-                    // is its reading of the four permanent bits, which here
-                    // Drizzle, Drought and Sand Stream set too.
+                    // reference refuses it under the map's weather; no game
+                    // with the ninth generation's rule for the map's weather
+                    // has these three.
                     case ABILITY_DESOLATE_LAND:
                     case ABILITY_PRIMORDIAL_SEA:
                     case ABILITY_DELTA_STREAM:
