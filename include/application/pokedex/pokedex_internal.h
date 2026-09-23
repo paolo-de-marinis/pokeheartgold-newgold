@@ -278,7 +278,7 @@ struct PokedexAppData {
     String *strBufFormatted;                        // 0x0664
     u8 filler_0668[4];                              // 0x0668
     SpriteManager *unk_066C;                        // 0x066C
-    u8 filler_0770[0x1E0];                          // 0x0770
+    ManagedSprite *unk_0670[120];                   // 0x0670
     PaletteData *paletteData;                       // 0x0850
     NARC *gfxNarc;                                  // 0x0854
     u8 filler_0858[4];                              // 0x0858
@@ -476,6 +476,7 @@ void ov18_021F1004(PokedexAppData *pokedexApp);
 void ov18_021F118C(PokedexAppData *pokedexApp, int a1, int a2);
 int ov18_021F11AC(PokedexAppData *pokedexApp, int a1);
 void ov18_021F11C0(PokedexAppData *pokedexApp, int a1, int a2);
+void ov18_021F1598(PokedexAppData *pokedexApp, int idx, int spriteIdx);
 void ov18_021F1620(PokedexAppData *pokedexApp, int a1);
 void ov18_021F16C4(PokedexAppData *pokedexApp, int a1, int a2, u8 a3);
 void ov18_021F1760(PokedexAppData *pokedexApp, int a1, int a2, u8 a3);
