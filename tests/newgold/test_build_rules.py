@@ -115,6 +115,14 @@ class BuildRuleTests(unittest.TestCase):
         self.assertIn("files/arc/safari_enc.json files/arc/safari_enc.json.txt files/arc/safari_enc.s", result.stdout,
                       result.stdout + result.stderr)
 
+    def test_zukan_enc_naix_is_made_before_anything_is_compiled(self):
+        """The Pokedex includes zukan_enc.naix, which is sed's copy of the
+        version's own index, not an archive's. Only `filesystem` asked for
+        it, and with -j the objects do not wait for that: a build after
+        clean-zukan-enc, or a first one, could compile the Pokedex first."""
+        prerequisites = re.search(r"^files_for_compile:(.*)$", database(), re.M).group(1).split()
+        self.assertIn("files/application/zukanlist/zkn_data/zukan_enc.naix", prerequisites)
+
 
 if __name__ == "__main__":
     unittest.main()

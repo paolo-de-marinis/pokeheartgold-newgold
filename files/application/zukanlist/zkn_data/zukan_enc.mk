@@ -8,6 +8,11 @@ ZUKAN_ENC_JSON_TXT := $(ZUKAN_ENC_PREF).json.txt
 $(ZUKAN_ENC_NAIX): %.naix: %_$(shortname).naix
 	$(SED) 's/_$(shortname)//g' $< > $@
 filesystem: $(ZUKAN_ENC_NAIX)
+# The Pokedex includes it, so it is made before anything is compiled, as the
+# archives' own indexes are: `filesystem` alone does not order it before the
+# objects, and a first build, or one after clean-zukan-enc, could compile the
+# Pokedex first.
+files_for_compile: $(ZUKAN_ENC_NAIX)
 
 # This explicit dependency is required for multi-core builds
 $(ZUKAN_ENC_NARC:%.narc=%.naix): $(ZUKAN_ENC_NARC) ;
