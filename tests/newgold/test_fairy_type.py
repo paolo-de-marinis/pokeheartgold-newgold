@@ -7,10 +7,16 @@ src/battle/overlay_12_0224E4FC.c and checks the Fairy matchups, Steel's lost
 resistances and the invariants the lookup relies on.
 """
 
+import os
 import re
+import shlex
+import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 
 from test_level_cap import ROOT
+from test_repels import function
 
 NOT_EFFECTIVE = "TYPE_MUL_NOT_EFFECTIVE"
 NORMAL = "TYPE_MUL_NORMAL"
@@ -108,6 +114,79 @@ class DexTypeIconTests(unittest.TestCase):
         rules = (ROOT / "files/graphic/zukan_gra.mk").read_text()
         self.assertIn("zukan_gra_00000123.NCGR.lz", rules)
         self.assertTrue((ROOT / "files/graphic/zukan_gra/zukan_gra_00000123.png").exists())
+
+# The three places an Arceus's plate becomes a type, the real functions run on
+# the host: its form and its type out of battle, its type in battle, and
+# Judgment's type.
+ARCEUS = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+#include "constants/species.h"
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define GF_ASSERT(x) assert(x)
+typedef struct {
+    u16 species, ability, item;
+    u8 type1, type2, type3;
+    u32 hpIV : 5, atkIV : 5, defIV : 5, speedIV : 5, spAtkIV : 5, spDefIV : 5;
+} BattleMon;
+typedef struct { BattleMon battleMons[4]; u32 fieldCondition; u8 terrainOverlayType; } BattleContext;
+typedef struct BattleSystem BattleSystem;
+static int GetItemVar(BattleContext *ctx, u16 item, u16 var) { (void)ctx; assert(var == ITEM_VAR_HOLD_EFFECT); return item; }
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].item; }
+static int GetNaturalGiftType(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return 0; }
+static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int a, int b, int c) { (void)bs; (void)ctx; (void)a; (void)b; (void)c; return 0; }
+static BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return TRUE; }
+@FUNCTIONS@
+int main(void) {
+    BattleContext ctx = { 0 };
+    // The item's hold effect stands for the item here.
+    ctx.battleMons[0] = (BattleMon){ SPECIES_ARCEUS, ABILITY_MULTITYPE, HOLD_EFFECT_ARCEUS_FAIRY, TYPE_NORMAL, TYPE_NORMAL, TYPE_NONE };
+    assert(GetArceusTypeByHeldItemEffect(HOLD_EFFECT_ARCEUS_FAIRY) == TYPE_FAIRY);
+    assert(GetArceusTypeByHeldItemEffect(HOLD_EFFECT_ARCEUS_STEEL) == TYPE_STEEL);
+    assert(GetArceusTypeByHeldItemEffect(0) == TYPE_NORMAL);
+    assert(Battler_GetType(&ctx, 0, BMON_DATA_TYPE_1) == TYPE_FAIRY);
+    assert(Battler_GetType(&ctx, 0, BMON_DATA_TYPE_2) == TYPE_FAIRY);
+    assert(GetDynamicMoveType(0, &ctx, 0, MOVE_JUDGMENT) == TYPE_FAIRY);
+    ctx.battleMons[0].item = HOLD_EFFECT_ARCEUS_DRAGON;
+    assert(Battler_GetType(&ctx, 0, BMON_DATA_TYPE_1) == TYPE_DRAGON);
+    assert(GetDynamicMoveType(0, &ctx, 0, MOVE_JUDGMENT) == TYPE_DRAGON);
+    ctx.battleMons[0].item = 0;
+    assert(Battler_GetType(&ctx, 0, BMON_DATA_TYPE_1) == TYPE_NORMAL);
+    puts("PASS: a Pixie Plate makes Arceus and its Judgment Fairy.");
+    return 0;
+}
+"""
+
+
+class ArceusFairyTests(unittest.TestCase):
+    def test_the_pixie_plate_makes_arceus_fairy(self):
+        """An Arceus holding a Pixie Plate is Fairy -- its form, its type in
+        battle and Judgment -- as in hg-engine (armips/asm/fairy.s and
+        other_battle_calculators.c:3387); here all three stayed Normal."""
+        battle = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        functions = "\n".join([function((ROOT / "src/pokemon.c").read_text(), "GetArceusTypeByHeldItemEffect"),
+                               function(battle, "Battler_GetType"), function(battle, "GetDynamicMoveType")])
+        with tempfile.TemporaryDirectory(prefix="newgold-arceus-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(ARCEUS.replace("@FUNCTIONS@", functions))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
+                str(path / "test.c"), "-o", str(path / "test")], check=True)
+            result = subprocess.run([str(path / "test")], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        print(result.stdout.strip())
+
 
 if __name__ == "__main__":
     unittest.main()

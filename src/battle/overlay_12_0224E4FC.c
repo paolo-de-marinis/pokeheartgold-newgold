@@ -9576,6 +9576,11 @@ static u8 Battler_GetType(BattleContext *ctx, int battlerId, int var) {
         case HOLD_EFFECT_ARCEUS_STEEL:
             type = TYPE_STEEL;
             break;
+        // The Pixie Plate makes it Fairy, as hg-engine's hook here has it
+        // (armips/asm/fairy.s, 0x022584FE).
+        case HOLD_EFFECT_ARCEUS_FAIRY:
+            type = TYPE_FAIRY;
+            break;
         default:
             type = TYPE_NORMAL;
             break;
@@ -9692,6 +9697,11 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
             break;
         case HOLD_EFFECT_ARCEUS_DARK:
             type = TYPE_DARK;
+            break;
+        // Judgment with the Pixie Plate is Fairy
+        // (other_battle_calculators.c:3387).
+        case HOLD_EFFECT_ARCEUS_FAIRY:
+            type = TYPE_FAIRY;
             break;
         default:
             type = TYPE_NORMAL;

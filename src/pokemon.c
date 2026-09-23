@@ -3740,6 +3740,11 @@ u32 GetArceusTypeByHeldItemEffect(u16 heldEffect) {
         return TYPE_DARK;
     case HOLD_EFFECT_ARCEUS_STEEL:
         return TYPE_STEEL;
+    // The Pixie Plate, as hg-engine's get_arceus_type_from_held_effect has it
+    // (armips/asm/fairy.s:45). Form 18 has no picture of its own in either
+    // tree: the sprite code draws a form past ARCEUS_FORM_MAX as form 0.
+    case HOLD_EFFECT_ARCEUS_FAIRY:
+        return TYPE_FAIRY;
     default:
         return TYPE_NORMAL;
     }
