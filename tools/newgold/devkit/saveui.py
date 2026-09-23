@@ -204,6 +204,15 @@ def rom_problem(rom, save):
     return None
 
 
+def sync_folder(folder):
+    """A rename in the folder made to last a power cut."""
+    fd = os.open(folder, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
 def stamp():
     return datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
 
@@ -518,10 +527,19 @@ class Library:
             if validate:
                 self.open(temporary)
             if path.exists():
+                # The backup is whole or not there: copied under a hidden
+                # name, flushed, then renamed into the history.
                 folder = self.backups / key
                 folder.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(path, folder / f"{stamp()}{'-' + tag if tag else '.' + digest(data)[:12]}.sav")
+                backup = folder / f"{stamp()}{'-' + tag if tag else '.' + digest(data)[:12]}.sav"
+                partial = backup.with_name(f".{backup.name}.tmp")
+                shutil.copyfile(path, partial)
+                with open(partial, "rb") as copy:
+                    os.fsync(copy.fileno())
+                os.replace(partial, backup)
+                sync_folder(folder)
             os.replace(temporary, path)
+            sync_folder(path.parent)
         finally:
             temporary.unlink(missing_ok=True)
 
@@ -559,6 +577,13 @@ class Library:
                 self.write(f, data)
             return {**self.detail(f), "changed": changed}
 
+    def readable(self, path):
+        try:
+            self.open(path)
+            return True
+        except Refused:
+            return False
+
     def undo(self, f, seen=None):
         """The file as it was before the last write made here -- refused if
         the file is no longer what that write left (a session in melonDS
@@ -567,10 +592,12 @@ class Library:
             path, key, _ = self.locate(f)
             if seen is not None and seen != self.current(f):
                 raise Refused(STALE, "stale")
-            stack = [b for b in self.history(key) if b["undo"]]
-            if not stack:
+            # A backup that does not open (one cut short by a kill before
+            # backups were written whole) is passed over, not stopped at.
+            stack = [self.backups / key / b["name"] for b in self.history(key) if b["undo"]]
+            latest = next((b for b in stack if self.readable(b)), None)
+            if latest is None:
                 raise Refused("non c'è nulla da annullare")
-            latest = self.backups / key / stack[0]["name"]
             left = latest.stem.partition(".")[2]
             if left and not version(path).startswith(left):
                 raise Refused("il file è cambiato dopo l'ultima modifica fatta qui (per esempio una partita in "

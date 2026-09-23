@@ -274,6 +274,19 @@ class SaveUiTests(unittest.TestCase):
         out = self.ok("/api/undo", {"f": "gyms/test.sav", "version": out["version"]})
         self.assertEqual(self.save.read_bytes(), played)
 
+    def test_a_backup_cut_short_is_passed_over(self):
+        """A kill in the middle of copying a backup (before backups were
+        written whole) left a short file that undo stopped at."""
+        before = self.save.read_bytes()
+        self.edit("trainer", {"money": 1})
+        self.edit("trainer", {"money": 2})
+        short = self.library / ".backups/gyms/test.sav/29991231-235959-999999.sav"
+        short.write_bytes(before[:4096])
+        self.assertEqual(self.ok("/api/undo", {"f": "gyms/test.sav"})["profile"]["money"], 1)
+        self.ok("/api/undo", {"f": "gyms/test.sav"})
+        self.assertEqual(self.save.read_bytes(), before)
+        self.assertEqual([p.name for p in self.backups() if p.name.startswith(".")], [], "no partial copies left")
+
     def test_nothing_changed_writes_nothing(self):
         now = self.ok("/api/save?f=gyms/test.sav")["party"][0]
         out = self.edit("party_edit", {"slot": 0, "species": now["species"], "level": now["level"],
