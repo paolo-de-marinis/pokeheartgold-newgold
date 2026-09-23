@@ -89,7 +89,13 @@ BLANK_IN_THE_REFERENCE = set()  # a form carries its base's text, the two Galari
 # raise with its reason: 58 = the 18 base species plus 40 form species
 # (1042..1437) whose only abilities are pending -- a form is a species of its
 # own here and brings its own ability record.
-SPECIES_WITH_NOTHING_TO_DO = 58
+#
+# 58 -> 65: Schooling and Power Construct went back to pending (see
+# test_ability_effects.py), which leaves seven species with nothing:
+# WISHIWASHI, WISHIWASHI_SCHOOL, ZYGARDE_10/50_POWER_CONSTRUCT,
+# ZYGARDE_10/50_COMPLETE and MEGA_ZYGARDE. They were never doing anything; the
+# count now says so.
+SPECIES_WITH_NOTHING_TO_DO = 65
 
 
 def constant(source, name):

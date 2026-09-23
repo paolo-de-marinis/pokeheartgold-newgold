@@ -111,7 +111,6 @@ IMPLEMENTED = {
     "PIXILATE",
     "POISON_PUPPETEER",
     "POISON_TOUCH",
-    "POWER_CONSTRUCT",
     "POWER_OF_ALCHEMY",
     "PRANKSTER",
     "PRISM_ARMOR",
@@ -135,7 +134,6 @@ IMPLEMENTED = {
     "SAND_RUSH",
     "SAND_SPIT",
     "SAP_SIPPER",
-    "SCHOOLING",
     "SCREEN_CLEANER",
     "SEED_SOWER",
     "SHADOW_SHIELD",
@@ -188,6 +186,13 @@ IMPLEMENTED = {
 # so every one is real work, and this list is the ledger of it. An ability
 # moves out of here and into IMPLEMENTED when the battle actually reads it.
 #
+# Schooling and Power Construct were once counted done because their names
+# are read here -- but only in the blocklists of Skill Swap, Role Play, Worry
+# Seed, Gastro Acid and Simple Beam. The reference never reads either by name
+# in C: its form changes key on SPECIES_WISHIWASHI and SPECIES_ZYGARDE
+# (BattleFormChangeCheck.c), and this tree has no in-battle form change yet,
+# so both do nothing here. They move out when that machinery comes in.
+#
 # They are listed rather than waved through because the danger is not that
 # they are unfinished, it is finishing without noticing: a Pokemon whose
 # ability does nothing looks right on the summary screen and loses battles
@@ -198,6 +203,7 @@ PENDING = {
     "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4", "EMERGENCY_EXIT",
     "GUARD_DOG", "HUNGER_SWITCH", "ICE_FACE", "ILLUSION", "MEGA_SOL", "MIMICRY",
     "OPPORTUNIST", "PARENTAL_BOND", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN",
+    "SCHOOLING", "POWER_CONSTRUCT",
     "STAKEOUT", "STANCE_CHANGE", "SUPREME_OVERLORD", "SYMBIOSIS", "TEMP4",
     "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR",
     "WIMP_OUT", "ZEN_MODE", "ZERO_TO_HERO"
@@ -214,9 +220,16 @@ def battle_source():
 
     Some abilities are answered in a script rather than in C, and that is
     where the reference answers them too -- Corrosion in the poison
-    subscripts, Soul-Heart in the one that faints a Pokemon, and ten whose
-    every read in the reference is a blocklist saying they cannot be copied,
-    swapped or suppressed. A script is source here as much as a .c is."""
+    subscripts, Soul-Heart in the one that faints a Pokemon, Mirror Armor in
+    the hazards check, Good as Gold in Transform's, and five -- Commander,
+    Gulp Missile, Poison Puppeteer, Power of Alchemy, Receiver -- whose every
+    read in the reference is a blocklist saying they cannot be copied,
+    swapped or suppressed. A script is source here as much as a .c is.
+
+    A blocklist read is not always the whole of an ability, though: Schooling
+    and Power Construct are blocklist-only by name in the reference too, and
+    still do something there, because their form changes are keyed on the
+    species. That is why they are pending and not counted by this."""
     paths = sorted((ROOT / "src").rglob("*.c"))
     paths += sorted((ROOT / "files/battledata").rglob("*.s"))
     return "\n".join(path.read_text(errors="replace") for path in paths)
@@ -256,7 +269,10 @@ class AbilityEffectTests(unittest.TestCase):
     # abilities, every one of them read somewhere in the reference, so the
     # number went up once and may only come down from here: lowering it is the
     # work, raising it needs a reason written next to it.
-    STILL_TO_DO = 39
+    #
+    # 39 -> 41: Schooling and Power Construct had been counted done on their
+    # blocklist reads alone; see the note above PENDING.
+    STILL_TO_DO = 41
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
