@@ -151,7 +151,22 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .dfoot .left { margin-right: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 .stats6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
 .stats6 input { width: 100%; }
-.moves4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.moves4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
+.mvfield { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mvin { position: relative; }
+.mvin input { width: 100%; }
+.mvtags { display: flex; flex-wrap: wrap; gap: 3px; min-height: 18px; }
+.mvlist { position: absolute; top: calc(100% + 2px); left: 0; right: 0; z-index: 5; max-height: 280px; overflow: auto;
+          background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.mvopt { padding: 5px 8px; cursor: pointer; display: flex; flex-wrap: wrap; gap: 3px; align-items: baseline; }
+.mvopt:hover { background: var(--accent-soft); }
+.mvopt.on { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.mvopt .nm { font-weight: 600; margin-right: 4px; }
+.tag.pre { border-style: dashed; }
+.tag.warn { background: var(--warn-soft); border-color: var(--warn-border); color: var(--text); }
+.tag.bad { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.flash { animation: flash 1.8s ease-out; }
+@keyframes flash { from { background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent); } to { box-shadow: 0 0 0 0 transparent; } }
 .monsum { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 13px; }
 .kv dt { color: var(--muted); }
@@ -237,7 +252,6 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 <dialog id="dlg"></dialog>
 <div id="toasts" aria-live="polite"></div>
 <datalist id="dl-species"></datalist>
-<datalist id="dl-moves"></datalist>
 <datalist id="dl-items"></datalist>
 <datalist id="dl-maps"></datalist>
 
@@ -334,7 +348,6 @@ function buildLists() {
   S.mapIndex = new Map(d.maps.map(r => [mapLabel(r).toLowerCase(), r.id]));
   const opts = (rows, label) => rows.map(r => `<option value="${esc(ref(label(r), r.id))}">`).join("");
   $("#dl-species").innerHTML = opts(d.species.filter(r => r.pick), r => r.label);
-  $("#dl-moves").innerHTML = opts(d.moves.filter(r => r.id), r => r.name);
   $("#dl-items").innerHTML = opts(items, r => r.label);
   $("#dl-maps").innerHTML = opts(d.maps, mapLabel);
 }
@@ -926,9 +939,23 @@ function onDragCancel() { stopDrag(); }
 function onDragKey(ev) { if (ev.key === "Escape") stopDrag(); }
 
 // ---- the Pokemon dialog -------------------------------------------------
+// What a species can learn and be comes from the server (/api/species), read
+// from the tree: every move with all its sources, the abilities by the slot
+// the game keeps them in, and the moves the game gives it at a level.
+const MACHINE_PREFIX = {TM: "MT", HM: "MN", TR: "DT"};
+function sourceTag(s) {
+  const item = S.items.get(s.item)?.name ?? `#${s.item}`;
+  const how = s.how === "level" ? (s.level ? `Lv. ${s.level}` : "Evoluzione")
+    : s.how === "machine" ? item.replace(/^(TM|HM|TR)/, p => MACHINE_PREFIX[p] + " ")
+    : s.how === "tutor" ? "Insegnante" : "Mossa uovo";
+  const from = s.from ? S.species.get(s.from)?.name ?? `#${s.from}` : "";
+  return !from ? how : s.how === "egg" ? `${how} da ${from}` : `da ${from} ${how}`;
+}
+const sourceTags = sources => sources.map(s => `<span class="tag src${s.from ? " pre" : ""}">${esc(sourceTag(s))}</span>`).join("");
+
 // `typed` is what the user had entered when the dialog was turned down:
-// it opens again with it, not with the Pokemon's values.
-function monDialog(where, m, typed = null, version = S.save.version) {
+// it opens again with it, not with the Pokemon's values, and with `why` on top.
+function monDialog(where, m, typed = null, version = S.save.version, why = "") {
   const isNew = !m;
   const v = m || {species: 0, level: 5, nature: 0, item: 0, moves: [], ivs: [31, 31, 31, 31, 31, 31], evs: [0, 0, 0, 0, 0, 0], friendship: 70};
   const title = isNew ? (where.kind === "party" ? "Nuovo Pokémon in squadra" : `Nuovo Pokémon · box ${where.box + 1}, posto ${where.slot + 1}`)
@@ -943,24 +970,35 @@ function monDialog(where, m, typed = null, version = S.save.version) {
       <dt>Personalità</dt><dd class="mono">${m.personality.toString(16).padStart(8, "0")}${m.shiny ? ` <span class="star">★ cromatico</span>` : ""}${m.mint !== null ? ` · menta: ${esc(S.data.natures[m.mint])}` : ""}</dd>
       <dt>Esperienza</dt><dd>${m.exp}${m.stats ? ` · PS ${m.hp}/${m.stats[0]} · ${m.stats.slice(1).map((x, i) => `${STATS[i + 1]} ${x}`).join(" · ")}` : ""}</dd>
     </dl></div>`;
-  const body = `${summary}
+  const body = `${why ? `<p class="lock" style="margin:0 0 12px">${esc(why)}</p>` : ""}${summary}
     <div class="form">
       <label class="f" style="grid-column:1/-1">Specie<input name="species" list="dl-species" required value="${esc(speciesRef(v.species))}" placeholder="Cerca per nome…"></label>
       <label class="f">Livello<input type="number" name="level" min="1" max="100" required value="${v.level}"></label>
       <label class="f">Natura<select name="nature">${S.data.natures.map((_, n) => `<option value="${n}" ${n === v.nature ? "selected" : ""}>${esc(natureLabel(n))}</option>`).join("")}</select></label>
+      <label class="f" id="abilitybox">Abilità<select name="ability" required><option value="">Scegli la specie</option></select></label>
       <label class="f">Strumento tenuto<input name="held" list="dl-items" value="${esc(itemRef(v.item))}" placeholder="Nessuno"></label>
       <label class="f">Amicizia<input type="number" name="friendship" min="0" max="255" value="${v.friendship}"></label>
     </div>
-    <div class="box"><div class="sechead"><h3 style="margin:0">Mosse</h3><button type="button" class="small" id="learn">Mosse per livello</button></div>
-      <div class="moves4">${moves.map((id, i) => `<input name="move${i}" list="dl-moves" value="${esc(moveRef(id))}" placeholder="Mossa ${i + 1}" aria-label="Mossa ${i + 1}">`).join("")}</div>
-      <p class="note">Una mossa che il Pokémon già conosce tiene i suoi PP; una nuova li ha pieni. "Mosse per livello" mette le ultime quattro che la specie impara entro il livello.</p></div>
+    <div class="box" id="movesbox"><div class="sechead"><h3 style="margin:0">Mosse</h3><button type="button" class="small" id="learn">Mosse per livello</button></div>
+      <div class="moves4">${moves.map((id, i) => `<div class="mvfield"><div class="mvin"><input name="move${i}" value="${esc(moveRef(id))}" placeholder="Mossa ${i + 1}" aria-label="Mossa ${i + 1}"
+        autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mvlist"></div><div class="mvtags" id="mvtags${i}"></div></div>`).join("")}</div>
+      <p class="note" id="presetnote" hidden></p>
+      <p class="note">Si sceglie solo tra le mosse che la specie può imparare, a qualsiasi livello, ognuna con tutte le sue fonti: livello (Evoluzione: quando si evolve),
+        MT, MN e DT, insegnanti, mosse uovo, e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
+        (una mossa evento) resta finché non la cambi e non cambi specie. Una mossa che il Pokémon già conosce tiene i suoi PP; una nuova li ha pieni.
+        "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie.</p></div>
     <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="31">Tutti 31</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${six("iv", v.ivs, 31)}</div>
     <div class="box"><div class="sechead"><h3 style="margin:0">EV</h3><span class="muted" id="evsum"></span></div>${six("ev", v.evs, 255)}</div>
-    <p class="note">Cambiare natura cambia la personalità, tenendo genere e cromaticità (una menta viene tolta). Cambiare specie ricalcola abilità, genere e nome se non ha un soprannome.</p>`;
+    <p class="note">Cambiare specie sostituisce subito mosse e abilità con quelle che il gioco dà alla nuova specie: le mosse al livello scelto, l'abilità
+      che il Pokémon avrebbe come quella specie (la nascosta se ha la nascosta e la specie ne ha una, altrimenti prima o seconda come la sua personalità);
+      natura, livello, IV, EV e strumento restano, genere e nome (se non ha un soprannome) si ricalcolano. Cambiare natura cambia la personalità,
+      tenendo genere, abilità e cromaticità (una menta viene tolta).</p>`;
   const buttons = isNew ? [["save", "Aggiungi", "primary"], ["", "Annulla"]]
     : [["save", "Salva", "primary"], ["", "Chiudi"],
        [where.kind === "party" ? "deposit" : "withdraw", where.kind === "party" ? `Sposta nel box ${S.box + 1}` : "Sposta in squadra", "", "left"],
        ["remove", where.kind === "party" ? "Togli dalla squadra" : "Libera", "danger", "left"]];
+  // The species whose rules the dialog holds: its moves (with their sources), and those the Pokemon knows already.
+  const st = {species: 0, moves: [], legal: new Map(), known: new Set()};
   return ask(title, body, buttons, d => {
     const form = $("form", d), evsum = () => {
       const t = [0, 1, 2, 3, 4, 5].reduce((a, i) => a + (+form.elements["ev" + i].value || 0), 0);
@@ -971,12 +1009,92 @@ function monDialog(where, m, typed = null, version = S.save.version) {
     evsum();
     form.addEventListener("input", ev => { if (ev.target.name?.startsWith("ev")) evsum(); });
     $$("[data-iv]", d).forEach(b => b.onclick = () => [0, 1, 2, 3, 4, 5].forEach(i => form.elements["iv" + i].value = b.dataset.iv));
-    $("#learn", d).onclick = async () => {
-      const sp = parseRef(form.elements.species.value, S.speciesIndex), lv = +form.elements.level.value;
-      if (!sp) return toast("Scegli prima la specie", true);
-      const list = await run(() => api(`/api/learnset?species=${sp}&level=${lv}`));
-      if (list) [0, 1, 2, 3].forEach(i => form.elements["move" + i].value = moveRef(list[i] || 0));
+    const inputs = [0, 1, 2, 3].map(i => form.elements["move" + i]), sel = form.elements.ability;
+    const tagLine = value => {
+      const id = parseRef(value, S.moveIndex);
+      if (!id || !st.species) return "";
+      if (st.legal.has(id)) return sourceTags(st.legal.get(id));
+      if (st.known.has(id)) return `<span class="tag warn">fuori elenco (mossa evento?): resta finché non la cambi</span>`;
+      return `<span class="tag bad">${esc(S.species.get(st.species)?.name ?? "")} non la impara</span>`;
     };
+    const showTags = () => inputs.forEach((el, i) => { $(`#mvtags${i}`, d).innerHTML = tagLine(el.value); });
+    const flash = el => { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); };
+    // mode: null keeps what the fields hold, "moves" puts the preset in, "all" the preset and the ability.
+    async function load(species, mode, ability) {
+      st.species = species;
+      const same = !!m && species === m.species, lv = Math.min(100, Math.max(1, +form.elements.level.value || 1));
+      const r = await run(() => api(`/api/species?species=${species}&form=${same ? m.form : 0}&level=${lv}&hidden=${m?.hidden_ability ? 1 : 0}&bit=${m?.ability_bit ?? 0}`));
+      if (!r || st.species !== species) return;       // another species was picked meanwhile
+      Object.assign(st, {moves: r.moves, legal: new Map(r.moves.map(x => [x.id, x.sources])), known: new Set(same ? m.moves.map(x => x.id) : [])});
+      const was = sel.value;
+      sel.innerHTML = r.abilities.map(a => `<option value="${a.slot}">${esc(a.name)}${a.slot === 2 ? " (nascosta)" : ""}</option>`).join("");
+      sel.value = mode === "all" ? r.ability : mode === "moves" ? was : ability || (same ? m.ability_slot : r.ability);
+      if (!sel.value) sel.value = r.ability;
+      const name = S.species.get(species)?.name ?? `#${species}`;
+      if (mode) {
+        inputs.forEach((el, i) => el.value = moveRef(r.preset[i] || 0));
+        $("#presetnote", d).hidden = false;
+        $("#presetnote", d).textContent = mode === "all" ? `Mosse e abilità sostituite con quelle che il gioco dà a ${name} al livello ${lv}.`
+                                                         : `Mosse sostituite con quelle che il gioco dà a ${name} al livello ${lv}.`;
+        flash($("#movesbox", d));
+        if (mode === "all") flash($("#abilitybox", d));
+      }
+      showTags();
+    }
+    const first = typed ? parseRef(typed.species, S.speciesIndex) : v.species;
+    if (first) load(first, null, typed?.ability);
+    form.elements.species.addEventListener("input", () => {
+      const sp = parseRef(form.elements.species.value, S.speciesIndex);
+      if (sp && sp !== st.species) load(sp, "all");
+    });
+    $("#learn", d).onclick = () => {
+      const sp = parseRef(form.elements.species.value, S.speciesIndex);
+      if (!sp) return toast("Scegli prima la specie", true);
+      load(sp, "moves");
+    };
+    // Each move field is a search over the species' moves, a row a move with all its sources.
+    const list = Object.assign(document.createElement("div"), {id: "mvlist", className: "mvlist", hidden: true});
+    list.setAttribute("role", "listbox");
+    let cur = null, shown = [], active = -1;
+    const close = () => { list.hidden = true; cur?.setAttribute("aria-expanded", "false"); cur?.removeAttribute("aria-activedescendant"); active = -1; };
+    const open = (el, q) => {
+      cur = el; el.parentElement.append(list);
+      shown = st.moves.filter(x => !q || (S.moves.get(x.id)?.name ?? "").toLowerCase().includes(q.toLowerCase()));
+      active = -1;
+      list.innerHTML = shown.map((x, i) => `<div class="mvopt" role="option" id="mvopt${i}" data-i="${i}"><span class="nm">${esc(S.moves.get(x.id)?.name ?? `#${x.id}`)}</span>${sourceTags(x.sources)}</div>`).join("")
+        || `<div class="mvopt muted">${st.species ? "Nessuna mossa della specie ha questo nome" : "Scegli prima la specie"}</div>`;
+      list.hidden = false;
+      el.setAttribute("aria-expanded", "true");
+    };
+    const mark = i => {
+      $$(".mvopt.on", list).forEach(o => o.classList.remove("on"));
+      active = i;
+      const o = $(`#mvopt${i}`, list);
+      if (!o) return;
+      o.classList.add("on"); o.scrollIntoView({block: "nearest"});
+      cur.setAttribute("aria-activedescendant", o.id);
+    };
+    const pick = i => { cur.value = moveRef(shown[i].id); close(); showTags(); };
+    list.addEventListener("mousedown", ev => { ev.preventDefault(); const o = ev.target.closest("[data-i]"); if (o) pick(+o.dataset.i); });
+    for (const el of inputs) {
+      el.addEventListener("focus", () => open(el, ""));
+      el.addEventListener("input", () => { open(el, el.value.replace(/\s*#\d+\s*$/, "").trim()); showTags(); });
+      el.addEventListener("blur", close);
+      el.addEventListener("keydown", ev => {
+        if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+          ev.preventDefault();
+          if (list.hidden) open(el, "");
+          const step = ev.key === "ArrowDown" ? 1 : -1;
+          if (shown.length) mark(((active < 0 && step < 0 ? 0 : active) + step + shown.length) % shown.length);
+        } else if (ev.key === "Enter") {     // never the dialog's submit from here
+          ev.preventDefault();
+          if (!list.hidden && (active >= 0 || shown.length === 1)) pick(Math.max(active, 0));
+          else close();
+        } else if (ev.key === "Escape" && !list.hidden) {
+          ev.preventDefault(); close();
+        }
+      });
+    }
   }).then(async r => {
     if (!r.value) return;
     const base = where.kind === "party" ? {slot: where.slot} : {box: where.box, slot: where.slot};
@@ -993,12 +1111,17 @@ function monDialog(where, m, typed = null, version = S.save.version) {
     if (!species) bad.push("specie");
     if (item === null) bad.push("strumento");
     mv.forEach((x, i) => x === null && bad.push(`mossa ${i + 1}`));
-    if (bad.length) { toast(`Non riconosco: ${bad.join(", ")}. Sceglili dall'elenco.`, true); return monDialog(where, m, d, version); }
+    const again = why => { toast(why, true); return monDialog(where, m, d, version, why); };
+    if (bad.length) return again(`Non riconosco: ${bad.join(", ")}. Sceglili dall'elenco.`);
+    const wrong = st.species === species ? mv.filter(x => x && !st.legal.has(x) && !st.known.has(x)) : [];
+    if (wrong.length)
+      return again(`${S.species.get(species)?.name ?? ""} non può imparare ${wrong.map(x => S.moves.get(x)?.name ?? x).join(", ")}: scegli dall'elenco delle sue mosse.`);
     const args = {...base, species, level: +d.level, nature: +d.nature, item, friendship: +d.friendship,
+                  ability: d.ability === "" ? undefined : +d.ability,
                   moves: mv.filter(Boolean), ivs: [0, 1, 2, 3, 4, 5].map(i => +d["iv" + i]), evs: [0, 1, 2, 3, 4, 5].map(i => +d["ev" + i])};
     const op = isNew ? (where.kind === "party" ? "party_add" : "box_add") : (where.kind === "party" ? "party_edit" : "box_edit");
     if (!await edit(op, args, isNew ? "Pokémon aggiunto" : "Pokémon salvato", version) && refusal?.code !== "stale")
-      return monDialog(where, m, d, version);
+      return monDialog(where, m, d, version, refusal?.message);
   });
 }
 

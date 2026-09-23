@@ -575,6 +575,8 @@ class Library:
             save = self.open(path)
             try:
                 handler(save, args)
+            except sv.Illegal as e:
+                raise Refused(illegal(e))
             except (KeyError, TypeError) as e:
                 raise Refused(f"richiesta incompleta: {e}")
             except (ValueError, SystemExit) as e:
@@ -952,6 +954,8 @@ def checked_mon(a):
             raise Refused("gli EV sono al massimo 510 in tutto")
     if "friendship" in a:
         out["friendship"] = number(a["friendship"], 0, 255, "amicizia")
+    if "ability" in a:
+        out["ability"] = number(a["ability"], 0, sv.HIDDEN_SLOT, "abilità")
     for key in ("ivs", "evs"):
         if key in out and len(out[key]) != 6:
             raise Refused(f"{key}: sei valori")
@@ -960,13 +964,28 @@ def checked_mon(a):
 
 def changed(fields, now):
     """Only what differs, so that a field left alone is not rewritten -- a
-    level sent back unchanged would put the experience at the level's floor."""
+    level sent back unchanged would put the experience at the level's floor.
+    With a new species the moves and the ability sent are the new species'
+    to check, even when they are the ones the Pokemon has."""
     if now is None or not now["ok"]:
         raise Refused("qui non c'è un Pokémon leggibile")
     current = {"species": now["species"], "level": now["level"], "nature": now["nature"], "item": now["item"],
                "moves": [m["id"] for m in now["moves"]], "ivs": now["ivs"], "evs": now["evs"],
-               "friendship": now["friendship"]}
-    return {k: v for k, v in fields.items() if v != current[k]}
+               "friendship": now["friendship"], "ability": now["ability_slot"]}
+    out = {k: v for k, v in fields.items() if v != current[k]}
+    if "species" in out:
+        out.update({k: fields[k] for k in ("moves", "ability") if k in fields})
+    return out
+
+
+def illegal(e):
+    """savedit's Illegal in Italian, naming what the species cannot have."""
+    who = sv.species_name(e.species)
+    if e.moves:
+        return (f"{who} non può imparare {', '.join(sv.move_table()[m]['name'] for m in e.moves)}: non è tra le "
+                f"mosse della specie (livello, MT/MN/DT, insegnanti, mosse uovo, pre-evoluzioni)")
+    what = "un'abilità nascosta" if e.ability == sv.HIDDEN_SLOT else "una seconda abilità"
+    return f"{who} non ha {what}: scegli una delle sue abilità"
 
 
 def storable(fields):
@@ -991,7 +1010,7 @@ def created(save, a, party):
         # asserts on (CopyU16ArrayToString).
         raise Refused("il giocatore non ha ancora un nome: daglielo nella scheda Allenatore, poi aggiungi il Pokémon")
     raw = sv.new_mon(fields["species"], fields["level"], sv.owner(save), nature=fields.get("nature"),
-                     moves=fields.get("moves"), item=fields.get("item", 0),
+                     moves=fields.get("moves"), item=fields.get("item", 0), ability=fields.get("ability"),
                      ivs=fields.get("ivs", 31), evs=fields.get("evs", 0), party=party)
     if "friendship" in fields:
         raw = sv.edit_mon(raw, friendship=fields["friendship"])
@@ -1096,6 +1115,20 @@ def browse(path, want):
             "saves": sum(1 for _ in here.glob("*.sav")) if want == "dir" else None}
 
 
+def species_rules(q):
+    """What the Pokemon dialog offers for a species (in a form): every move
+    it can learn with all its sources, by name; its abilities by slot; the
+    moves the game gives it at the level (the preset); and the ability slot
+    the game gives a Pokemon with these bits (hidden, bit) as this species."""
+    species = number(q.get("species"), 1, len(sv.personal_records()) - 1, "specie")
+    form = number(q.get("form", 0), 0, 31, "forma")
+    moves, names = sv.learnable_moves(species, form), sv.move_table()
+    return {"moves": [{"id": m, "sources": moves[m]} for m in sorted(moves, key=lambda m: names[m]["name"])],
+            "abilities": sv.species_abilities(species, form),
+            "ability": sv.ability_slot(species, form, q.get("hidden") == "1", q.get("bit") == "1"),
+            "preset": sv.preset_moves(species, number(q.get("level", 1), 1, 100, "livello"), form)}
+
+
 def tables():
     """The names the page searches: species, moves, items, natures, maps."""
     return {"species": sv.species_table(), "moves": sv.move_table(),
@@ -1160,9 +1193,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 path, _, _ = self.library.locate(q.get("f"))
                 found = sv.find_flags(self.library.open(path), q.get("q", ""))
                 return self.reply(200, {"rows": found[:FLAG_ROWS], "total": len(found)})
-            if url.path == "/api/learnset":
-                species = number(q.get("species"), 1, len(sv.personal_records()) - 1, "specie")
-                return self.reply(200, sv.preset_moves(species, number(q.get("level"), 1, 100, "livello")))
+            if url.path == "/api/species":
+                return self.reply(200, species_rules(q))
             if url.path == "/api/icon":
                 png = icon(number(q.get("species"), 0, 0xFFFF, "specie"), number(q.get("form", 0), 0, 255, "forma"),
                            q.get("egg") in ("1", "true"))

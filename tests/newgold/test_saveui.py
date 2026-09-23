@@ -227,7 +227,7 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(len(data["natures"]), 25)
         self.assertIn(sv.species_numbers()["PIKACHU"], data["dex"])
         n = sv.species_numbers()["CHIKORITA"]
-        self.assertEqual(self.ok(f"/api/learnset?species={n}&level=20"), sv.preset_moves(n, 20))
+        self.assertEqual(self.ok(f"/api/species?species={n}&level=20")["preset"], sv.preset_moves(n, 20))
 
     def test_no_build_is_not_a_bad_save(self):
         """With no build to measure the layout from (a make clean, a wrong
@@ -378,6 +378,61 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(out["party"][-1]["species_name"], "Mew")
         out = self.edit("box_remove", {"box": 29, "slot": 29})
         self.assertIsNone(out["boxes"]["mons"][29][29])
+
+    def test_what_a_species_offers(self):
+        """The dialog's lists: every move Charizard can learn, each with all
+        its sources, its two abilities by slot, the game's moves at the
+        level, and the ability a Pokemon's bits give it as Charizard."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        out = self.ok(f"/api/species?species={n['CHARIZARD']}&level=5&hidden=1&bit=1")
+        offered = {m["id"]: m["sources"] for m in out["moves"]}
+        self.assertEqual(offered, sv.learnable_moves(n["CHARIZARD"]))
+        self.assertGreater(len(offered[moves["FLAMETHROWER"]]), 3, "every source, not the first")
+        self.assertNotIn(moves["SURF"], offered)
+        self.assertEqual([a["slot"] for a in out["abilities"]], [0, sv.HIDDEN_SLOT])
+        self.assertEqual((out["ability"], out["preset"]), (sv.HIDDEN_SLOT, sv.preset_moves(n["CHARIZARD"], 5)))
+        self.assertEqual(self.ok(f"/api/species?species={n['CHARIZARD']}&bit=1")["ability"], 0, "no second: the first")
+
+    def test_only_what_the_species_can_have(self):
+        """A move the species never learns, or an ability slot it lacks, is
+        refused in Italian naming both; the species' own are written, a new
+        species brings its own moves and ability, and the old moves sent
+        back with it are refused like any other."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        f = "gyms/test.sav"
+        said = self.refused("/api/edit", {"f": f, "op": "party_edit", "args": {"slot": 0, "moves": [moves["SURF"], moves["TACKLE"]]}})
+        self.assertIn("Chikorita non può imparare Surf", said)
+        said = self.refused("/api/edit", {"f": f, "op": "box_edit", "args": {"box": 2, "slot": 5, "ability": sv.HIDDEN_SLOT}})
+        self.assertIn("Mew non ha un'abilità nascosta", said)
+        self.assertIn("Chikorita non può imparare Surf", self.refused("/api/edit", {"f": f, "op": "box_add", "args": {
+            "box": 0, "slot": 0, "species": n["CHIKORITA"], "level": 5, "moves": [moves["SURF"]]}}))
+        self.assertEqual(self.backups(f), [], "nothing written")
+        out = self.edit("party_edit", {"slot": 0, "moves": [moves["RAZOR_LEAF"], moves["ANCIENT_POWER"]], "ability": 1})
+        self.assertEqual(([m["name"] for m in out["party"][0]["moves"]], out["party"][0]["ability_name"]),
+                         (["Razor Leaf", "Ancient Power"], "Leaf Guard"))
+        pidgey = out["party"][1]
+        self.assertIn("Chikorita non può imparare", self.refused("/api/edit", {"f": f, "op": "party_edit", "args": {
+            "slot": 1, "species": n["CHIKORITA"], "moves": [m["id"] for m in pidgey["moves"]]}}))
+        out = self.edit("party_edit", {"slot": 1, "species": n["CHIKORITA"], "level": pidgey["level"]})
+        self.assertEqual([m["id"] for m in out["party"][1]["moves"]], sv.preset_moves(n["CHIKORITA"], pidgey["level"]))
+        self.assertEqual(out["party"][1]["ability_slot"], sv.ability_slot(n["CHIKORITA"], 0, pidgey["hidden_ability"],
+                                                                          pidgey["ability_bit"]))
+        out = self.edit("box_add", {"box": 0, "slot": 0, "species": n["EEVEE"], "level": 10, "ability": sv.HIDDEN_SLOT,
+                                    "moves": [moves["WISH"], moves["TACKLE"]]})
+        self.assertEqual((out["boxes"]["mons"][0][0]["ability_name"], out["boxes"]["mons"][0][0]["hidden_ability"]),
+                         ("Anticipation", True))
+
+    def test_an_event_move_is_kept_until_it_is_changed(self):
+        """A Pokemon the game made may know what no rule lists: editing it
+        keeps that move while the move and the species stay."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        save = sv.Save(self.save)
+        sv.set_box_mon(save, 0, 0, sv.build_mon("CHARIZARD", 40, moves=[moves["SURF"], moves["EMBER"]])[:sv.BOX_MON])
+        self.save.write_bytes(save.image())
+        out = self.edit("box_edit", {"box": 0, "slot": 0, "level": 41, "moves": [moves["SURF"], moves["FLAMETHROWER"]]})
+        self.assertEqual([m["name"] for m in out["boxes"]["mons"][0][0]["moves"]], ["Surf", "Flamethrower"])
+        self.assertIn("Charizard non può imparare Waterfall", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "box_edit",
+            "args": {"box": 0, "slot": 0, "moves": [moves["WATERFALL"], moves["FLAMETHROWER"]]}}))
 
     def test_only_species_a_pokemon_can_be(self):
         """504 is a row of the form table, not Rotom Wash; a Mega is a
