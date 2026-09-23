@@ -708,7 +708,8 @@ function renderTrainer() {
 // ---- Squadra -------------------------------------------------------------
 function monCard(m, i, count) {
   if (!m || !m.ok) return `<div class="mon"><div class="head">${iconImg(m)}<span class="invalid">Checksum errato</span></div>
-    <div class="sub">Questo Pokémon non si legge (nel gioco è un Uovo Difettoso).</div></div>`;
+    <div class="sub">Questo Pokémon non si legge (nel gioco è un Uovo Difettoso).</div>
+    <div class="acts"><button class="small danger" type="button" data-remove="${i}">Togli dalla squadra</button></div></div>`;
   const hp = m.stats ? Math.round(100 * m.hp / Math.max(1, m.stats[0])) : null;
   return `<div class="mon">
     <div class="head">${iconImg(m, 48)}<div><div class="nm">${esc(m.nickname || m.species_name)} ${GENDER_MARK[m.gender] || ""} ${m.shiny ? `<span class="star" title="Cromatico">★</span>` : ""}</div>
@@ -733,6 +734,7 @@ function renderParty() {
     if (!b) return;
     if (b.id === "addparty") return monDialog({kind: "party"}, null);
     if (b.dataset.edit !== undefined) return monDialog({kind: "party", slot: +b.dataset.edit}, party[+b.dataset.edit]);
+    if (b.dataset.remove !== undefined) return dropUnreadable("party_remove", {slot: +b.dataset.remove}, `squadra, posto ${+b.dataset.remove + 1}`);
     if (b.dataset.up !== undefined) return edit("party_swap", {a: +b.dataset.up, b: +b.dataset.up - 1}, "Ordine cambiato");
     if (b.dataset.down !== undefined) return edit("party_swap", {a: +b.dataset.down, b: +b.dataset.down + 1}, "Ordine cambiato");
   };
@@ -814,6 +816,12 @@ function monDialog(where, m, typed = null, version = S.save.version) {
   });
 }
 
+async function dropUnreadable(op, args, where) {
+  const r = await ask("Pokémon illeggibile", `<p>In ${esc(where)} c'è un Pokémon il cui checksum non torna: nel gioco è un Uovo Difettoso, e qui non si può modificare.
+    Toglierlo? Resta nei backup: "Annulla ultima modifica" lo riporta.</p>`, [["yes", op === "party_remove" ? "Togli dalla squadra" : "Libera", "danger"], ["", "Annulla"]]);
+  if (r.value === "yes") edit(op, args, "Pokémon tolto");
+}
+
 // ---- Box -----------------------------------------------------------------
 function renderBox() {
   const boxes = S.save.boxes, mons = boxes.mons[S.box];
@@ -834,7 +842,7 @@ function renderBox() {
     const b = ev.target.closest("button[data-slot]");
     if (!b) return;
     const slot = +b.dataset.slot, m = mons[slot];
-    if (m && !m.ok) return toast("Questo posto contiene un Pokémon illeggibile (checksum errato).", true);
+    if (m && !m.ok) return dropUnreadable("box_remove", {box: S.box, slot}, `box ${S.box + 1}, posto ${slot + 1}`);
     monDialog({kind: "box", box: S.box, slot}, m);
   };
 }
