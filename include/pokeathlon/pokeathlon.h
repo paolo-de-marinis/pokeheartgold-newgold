@@ -2,6 +2,7 @@
 #define POKEHEARTGOLD_POKEATHLON_H
 
 #include "constants/heap.h"
+#include "constants/species.h"
 
 #include "pokeathlon/pokeathlon_save.h"
 
@@ -192,6 +193,11 @@ u8 *ov96_021E8A20(void *ptr);
 int ov96_021E8A24(void);
 int ov96_021E8A2C(void);
 u32 ov96_021E91B8(int species, int form, int gender);
+
+// One performance.narc member for each retail species, 0..493.
+extern const u16 ov96_0221AAE8[MAX_SPECIES + 1];
+int ov96_021E679C(int species, int form);
+
 void *ov96_021E92E0(enum HeapID heapId);
 void ov96_021E9320(void *ptr);
 void *ov96_021E9A14(void);

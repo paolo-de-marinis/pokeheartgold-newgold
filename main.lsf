@@ -1248,8 +1248,12 @@ Overlay OVY_96
     After main
     Object src/pokeathlon/pokeathlon_course.o
     Object asm/overlay_96_021E604C.o
+    Object src/pokeathlon/overlay_96_021E679C.o
+    Object asm/overlay_96_021E67AC.o
     Object src/pokeathlon/overlay_96_021E91B8.o
     Object asm/overlay_96.o
+    Object src/pokeathlon/overlay_96_0221AAE8.o
+    Object asm/overlay_96_0221AEC4.o
     Object src/pokeathlon/pokeathlon_data.o
 }
 Overlay OVY_97
