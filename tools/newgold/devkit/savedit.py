@@ -1551,6 +1551,19 @@ def form_moves():
     return {species_numbers()[species]: table}
 
 
+@tree_cache
+def item_egg_moves():
+    """Daycare_LightBallCheck (src/get_egg.c): the move an egg of the
+    species GiveEggToPlayer checks is given when a parent holds the item.
+    {species: [(move, item)]}."""
+    check = c_function("src/get_egg.c", "static void Daycare_LightBallCheck(")
+    item = constants("include/constants/items.h", "ITEM_")[re.search(r"== (ITEM_\w+)", check).group(1)]
+    move = move_numbers()[re.search(r"TryAppendMonMove\(egg, MOVE_(\w+)\)", check).group(1)]
+    species = re.search(r"if \(species == SPECIES_(\w+)\) \{\s*Daycare_LightBallCheck\(",
+                        source("src/get_egg.c").read_text()).group(1)
+    return {species_numbers()[species]: [(move, item)]}
+
+
 def evolution_line(species):
     """The species and every species it can have been before evolving,
     nearest first, each with whether an egg can hatch as it (a first stage,
@@ -1571,7 +1584,8 @@ def learnable_moves(species, form=0):
     it is learnt, never only the first: {move: [source, ...]}. A source is
     {"how": "level", "level": n} (0: on evolving), {"how": "machine",
     "item": the TM, HM or TR}, {"how": "tutor"} ("type": the type the
-    Blackthorn tutor teaches it for, type_tutors), {"how": "egg"} or
+    Blackthorn tutor teaches it for, type_tutors), {"how": "egg"} ("item":
+    the one a parent holds, item_egg_moves) or
     {"how": "form"} (the move a Rotom form has of its own), with
     "from": the species when it is a pre-evolution's -- a move learnt
     before evolving is kept. Its own form's row (ResolveMonForm) for its
@@ -1590,6 +1604,7 @@ def learnable_moves(species, form=0):
         own = form_moves().get(s, []) if s == species else []
         found += [(own[form], {"how": "form"})] if form < len(own) else []
         found += [(move, {"how": "egg"}) for move in (egg_moves()[s] if hatches and s < len(egg_moves()) else [])]
+        found += [(move, {"how": "egg", "item": item}) for move, item in (item_egg_moves().get(s, []) if hatches else [])]
         for move, how in found:
             if s != species and how["how"] in ("machine", "tutor") and how in out.get(move, []):
                 continue

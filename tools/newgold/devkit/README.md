@@ -53,7 +53,8 @@ and TRs its `personal.json` record is compatible with (`sTMHMMoves` and
 `sTutorMoves`, at the record `GetMoveTutorLearnsetIndex` reads; and the
 Blackthorn tutor's script, `scr_seq_0948_T30R0601.s`, which teaches its
 move to a Pokemon of the type its `GetMonTypes` tests name), the egg
-moves (`kowaza_list.narc`) of the species its line hatches as, a Rotom
+moves (`kowaza_list.narc`) of the species its line hatches as, with
+the one `Daycare_LightBallCheck` adds for a parent's Light Ball, a Rotom
 form's own move (`sRotomFormMoves`, which the Rotom Catalog teaches), and the same
 for its pre-evolutions (`evo.json`; a form without one of its own takes its
 base's, `sFormBaseSpecies`). `species_abilities` is its first, second and
@@ -63,7 +64,10 @@ bit (an Ability Capsule turns it over) or `MON_HIDDEN_ABILITY_BIT`, which
 refuse anything else (`Illegal`); a species change brings the new species'
 moves at that level (`preset_moves`) and the ability the game gives it,
 and only a Pokemon keeping its species keeps a move it already knew that
-no rule lists, an event's.
+no rule lists, an event's. The moves a script gives one Pokemon only --
+Brock's traded Rhyhorn's Thunder Fang (`SetMonMove`), the spiky-eared
+Pichu's Volt Tackle and Pain Split -- are such moves: kept on the Pokemon
+that has them, never added to another.
 
 Nothing the game has is typed into it: all of it is read from the tree as
 the build would compile it, and read again once a file it came from has

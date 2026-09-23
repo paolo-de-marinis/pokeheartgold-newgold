@@ -968,7 +968,7 @@ function sourceTag(s) {
   const how = s.how === "level" ? (s.level ? `Lv. ${s.level}` : "Evoluzione")
     : s.how === "machine" ? item.replace(/^(TM|HM|TR)/, p => MACHINE_PREFIX[p] + " ")
     : s.how === "tutor" ? (s.type ? `Insegnante (tipo ${(TYPES[s.type] || [s.type])[0]})` : "Insegnante")
-    : s.how === "form" ? "Mossa della forma" : "Mossa uovo";
+    : s.how === "form" ? "Mossa della forma" : s.item ? `Mossa uovo (${item})` : "Mossa uovo";
   const from = s.from ? S.species.get(s.from)?.name ?? `#${s.from}` : "";
   return !from ? how : s.how === "egg" ? `${how} da ${from}` : `da ${from} ${how}`;
 }

@@ -1033,7 +1033,8 @@ def illegal(e):
     who = sv.species_name(e.species)
     if e.moves:
         return (f"{who} non può imparare {', '.join(sv.move_table()[m]['name'] for m in e.moves)}: non è tra le "
-                f"mosse della specie (livello, MT/MN/DT, insegnanti, mosse uovo, forma, pre-evoluzioni)")
+                f"mosse della specie (livello, MT/MN/DT, insegnanti, mosse uovo, forma, pre-evoluzioni). Una mossa "
+                f"che solo un evento o un regalo dà resta su un Pokémon che la conosce già, non si aggiunge")
     what = "un'abilità nascosta" if e.ability == sv.HIDDEN_SLOT else "una seconda abilità"
     return f"{who} non ha {what}: scegli una delle sue abilità"
 

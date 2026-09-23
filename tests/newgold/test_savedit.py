@@ -373,6 +373,16 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertNotIn(moves["DRACO_METEOR"], sv.learnable_moves(n["CHARIZARD"]))
         sv.new_mon(n["DRUDDIGON"], 30, sv.owner(self.open()), moves=[moves["DRACO_METEOR"]])
 
+    def test_a_light_ball_egg_knows_volt_tackle(self):
+        """GiveEggToPlayer runs Daycare_LightBallCheck on a Pichu egg: with a
+        parent holding a Light Ball it knows Volt Tackle, and so may the
+        Pikachu and Raichu it becomes."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        ball = sv.constants("include/constants/items.h", "ITEM_")["ITEM_LIGHT_BALL"]
+        self.assertIn({"how": "egg", "item": ball}, sv.learnable_moves(n["PICHU"])[moves["VOLT_TACKLE"]])
+        self.assertIn({"how": "egg", "item": ball, "from": n["PICHU"]}, sv.learnable_moves(n["RAICHU"])[moves["VOLT_TACKLE"]])
+        sv.new_mon(n["PICHU"], 5, sv.owner(self.open()), moves=[moves["VOLT_TACKLE"], moves["THUNDER_SHOCK"]])
+
     def test_an_event_move_stays_while_untouched(self):
         """A Pokemon the game made may know a move no rule lists: it keeps it
         while it keeps its species and the move, and loses nothing else."""
