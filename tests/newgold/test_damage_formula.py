@@ -509,6 +509,35 @@ class DamageFormulaTests(unittest.TestCase):
         use = function(overlay, "TryUseHeldItem")
         self.assertIn("if (ctx->battleMons[battlerId].cheekPouchPending) {", use)
 
+    def test_cheek_pouch_does_not_heal_under_heal_block(self):
+        # Pokemon Central (Guancegonfie): no heal under Heal Block, at full
+        # HP, or for a Pokemon that has fainted; the reference's subscript 458
+        # asks the three. Both places that answer the pending mark ask it.
+        fixture = r"""
+#include <assert.h>
+typedef int BOOL;
+typedef struct { int hp; unsigned maxHp; struct { unsigned healBlockTurns : 3; } unk88; } BattleMon;
+typedef struct { BattleMon battleMons[4]; } BattleContext;
+@FUNCTION@
+int main(void) {
+    BattleContext ctx = { { { 10, 30, { 0 } }, { 10, 30, { 5 } }, { 30, 30, { 0 } }, { 0, 30, { 0 } } } };
+    assert(CheekPouchHeals(&ctx, 0));
+    assert(!CheekPouchHeals(&ctx, 1));
+    assert(!CheekPouchHeals(&ctx, 2));
+    assert(!CheekPouchHeals(&ctx, 3));
+    return 0;
+}
+"""
+        with tempfile.TemporaryDirectory(prefix="newgold-cheek-pouch-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(fixture.replace("@FUNCTION@", function(OVERLAY, "CheekPouchHeals")))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function",
+                str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+        for name in ("TryUseHeldItem", "CheckUseHeldItem"):
+            self.assertIn("if (CheekPouchHeals(ctx, battlerId)) {", function(OVERLAY, name), name)
+
     def test_future_sight_keeps_the_screens(self):
         # Its damage is worked out when it lands, through the whole chain,
         # the screens of the final modifier included (test_future_sight).

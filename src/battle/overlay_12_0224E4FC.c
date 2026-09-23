@@ -7589,6 +7589,15 @@ BOOL BerryCanBeEaten(BattleSystem *battleSystem, BattleContext *ctx, int battler
     return TRUE;
 }
 
+// Whether Cheek Pouch, owed for a Berry the Pokemon has eaten, heals it now: a
+// third of its maximum HP if it still stands, is not at full HP and is not
+// under Heal Block (Pokemon Central, Guancegonfie; the reference's subscript
+// 458 asks the same three).
+static BOOL CheekPouchHeals(BattleContext *ctx, int battlerId) {
+    return ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].hp < (int)ctx->battleMons[battlerId].maxHp
+        && !ctx->battleMons[battlerId].unk88.healBlockTurns;
+}
+
 BOOL TryUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     BOOL ret = FALSE;
     int script;
@@ -7607,7 +7616,7 @@ BOOL TryUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
     // wants to happen.
     if (ctx->battleMons[battlerId].cheekPouchPending) {
         ctx->battleMons[battlerId].cheekPouchPending = FALSE;
-        if (ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].hp < (int)ctx->battleMons[battlerId].maxHp) {
+        if (CheekPouchHeals(ctx, battlerId)) {
             ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 3);
             ctx->battlerIdTemp = battlerId;
             script = BATTLE_SUBSCRIPT_CHEEK_POUCH;
@@ -8016,7 +8025,7 @@ BOOL CheckUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battle
     // wants to happen.
     if (ctx->battleMons[battlerId].cheekPouchPending) {
         ctx->battleMons[battlerId].cheekPouchPending = FALSE;
-        if (ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].hp < (int)ctx->battleMons[battlerId].maxHp) {
+        if (CheekPouchHeals(ctx, battlerId)) {
             ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 3);
             ctx->battlerIdTemp = battlerId;
             *script = BATTLE_SUBSCRIPT_CHEEK_POUCH;
