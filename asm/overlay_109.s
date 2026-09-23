@@ -4057,37 +4057,6 @@ _021E784C:
 	.balign 4, 0
 	thumb_func_end ov109_021E7810
 
-	thumb_func_start ov109_021E7850
-ov109_021E7850: ; 0x021E7850
-	push {r3, r4}
-	mov r1, #0
-	ldr r3, _021E7880 ; =0x000001ED
-	add r2, r1, #0
-_021E7858:
-	lsl r4, r2, #2
-	add r4, r0, r4
-	add r4, #0x6c
-	ldrh r4, [r4]
-	cmp r4, #0
-	ble _021E786E
-	cmp r4, r3
-	bgt _021E786E
-	add r1, r1, #1
-	lsl r1, r1, #0x18
-	lsr r1, r1, #0x18
-_021E786E:
-	add r2, r2, #1
-	lsl r2, r2, #0x18
-	lsr r2, r2, #0x18
-	cmp r2, #6
-	blo _021E7858
-	add r0, r1, #0
-	pop {r3, r4}
-	bx lr
-	nop
-_021E7880: .word 0x000001ED
-	thumb_func_end ov109_021E7850
-
 	.rodata
 
 _021E7884:

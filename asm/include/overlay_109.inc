@@ -128,3 +128,4 @@
 .public PhotoAlbum_Init
 .public PhotoAlbum_Main
 .public PhotoAlbum_Exit
+.public ov109_021E7850
