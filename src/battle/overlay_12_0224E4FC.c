@@ -3709,7 +3709,15 @@ u16 GetBattlerAbility(BattleContext *ctx, int battlerId) {
 
 // Teravolt and Turboblaze ignore the target's ability exactly as Mold Breaker
 // does; Mycelium Might does so only while what it is using is a status move.
+// Sunsteel Strike and Moongeist Beam ignore it too, whoever uses them, but
+// only used directly and not called by another move such as Metronome
+// (Pokemon Central, Astrocarica, Raggio d'Ombra; the reference's
+// MoldBreakerAbilityCheckInternal asks the two by number).
 static BOOL BattlerIgnoresAbilities(BattleContext *ctx, int battlerId) {
+    if (battlerId == ctx->battlerIdAttacker && ctx->moveNoCur == ctx->moveNoTemp
+        && (ctx->moveNoCur == MOVE_SUNSTEEL_STRIKE || ctx->moveNoCur == MOVE_MOONGEIST_BEAM)) {
+        return TRUE;
+    }
     switch (GetBattlerAbility(ctx, battlerId)) {
     case ABILITY_MOLD_BREAKER:
     case ABILITY_TERAVOLT:

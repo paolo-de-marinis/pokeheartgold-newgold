@@ -382,6 +382,11 @@ IMPLEMENTED_HERE = {
     # Reflect Type makes the user the target's types (Pokemon Central,
     # Riflettipo): effect script 419.
     "REFLECT_TYPE": "MOVE_EFFECT_REFLECT_TYPE",
+    # Sunsteel Strike and Moongeist Beam ignore the target's ability, used
+    # directly (Pokemon Central, Astrocarica, Raggio d'Ombra):
+    # BattlerIgnoresAbilities asks for them.
+    "SUNSTEEL_STRIKE": "MOVE_EFFECT_HIT",
+    "MOONGEIST_BEAM": "MOVE_EFFECT_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

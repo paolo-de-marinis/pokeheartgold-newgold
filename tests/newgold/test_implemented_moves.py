@@ -294,5 +294,15 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn(f"msg_0197_{import_battle_messages.port_row('reflect type'):05d}, TAG_NICKNAME_NICKNAME, "
                       "BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_DEFENDER", copying)
 
+    def test_sunsteel_strike_and_moongeist_beam_ignore_abilities(self):
+        # Pokemon Central (Astrocarica, Raggio d'Ombra): the target's ability,
+        # as Mold Breaker does, when the move is used and not called.
+        self.assertImplemented("SUNSTEEL_STRIKE", "MOVE_EFFECT_HIT")
+        self.assertImplemented("MOONGEIST_BEAM", "MOVE_EFFECT_HIT")
+        ignores = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "BattlerIgnoresAbilities")
+        self.assertIn("if (battlerId == ctx->battlerIdAttacker && ctx->moveNoCur == ctx->moveNoTemp\n"
+                      "        && (ctx->moveNoCur == MOVE_SUNSTEEL_STRIKE || ctx->moveNoCur == MOVE_MOONGEIST_BEAM)) {\n"
+                      "        return TRUE;", ignores)
+
 if __name__ == "__main__":
     unittest.main()
