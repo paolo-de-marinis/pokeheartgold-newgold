@@ -4,6 +4,7 @@
 
 #include "heap.h"
 #include "overlay_manager.h"
+#include "party.h"
 #include "pokemon.h"
 #include "unk_020755E8.h"
 
@@ -23,13 +24,15 @@ typedef struct GtsArgs {
 typedef struct GtsWork {
     GtsArgs *args;
     u8 unk004[0x20];
-    int tradeType; // 8 and 10 take a deposit back, 9 trades for an offer found
+    int tradeType; // 9 trades for an offer found; 8 and 10 collect the deposit, or what it was traded for
     u8 unk028[0x4];
     int subState;
     u8 unk030[0x88];
     OverlayManager *tradeSequence;
     u8 unk0BC[0x54];
     EvolutionTaskData *evolutionTask;
+    u8 unk114[0x10DC];
+    Pokemon *given; // what the trade animation sends: the Pokemon given
 } GtsWork;
 
 Pokemon *ov70_02241868(GtsWork *work, int tradeType);
@@ -37,6 +40,20 @@ void ov70_022418A4(GtsWork *work);
 void ov70_02238E50(GtsWork *work, int a1, int a2);
 void sub_0202DB64(void *gtsSave, Pokemon *dest);
 int ov70_02241648(GtsWork *work);
+
+// A trade evolution that names the Pokemon it is traded for -- Karrablast for
+// Shelmet, Shelmet for Karrablast -- asks the party it is given for it, so the
+// Pokemon given goes in a party of one, as the wireless trade does it. The
+// station passed none, and a Karrablast received here never evolved.
+static int GetTradeEvolution(Pokemon *mon, Pokemon *given, int *evolutionCondition) {
+    Party *partner = SaveArray_Party_Alloc(HEAP_ID_61);
+    int species;
+
+    Party_AddMon(partner, given);
+    species = GetMonEvolution(partner, mon, EVOCTX_TRADE, GetMonData(mon, MON_DATA_HELD_ITEM, NULL), evolutionCondition);
+    Heap_Free(partner);
+    return species;
+}
 
 // After the trade animation: the Pokemon received evolves if its trade
 // evolution allows, unless it is the one the player had on deposit coming
@@ -57,7 +74,7 @@ int ov70_02241648(GtsWork *work) {
         OverlayManager_Delete(work->tradeSequence);
         if (work->tradeType == 9) {
             mon = ov70_02241868(work, work->tradeType);
-            species = GetMonEvolution(NULL, mon, EVOCTX_TRADE, GetMonData(mon, MON_DATA_HELD_ITEM, NULL), &evolutionCondition);
+            species = GetTradeEvolution(mon, work->given, &evolutionCondition);
             if (species != SPECIES_NONE) {
                 work->evolutionTask = sub_02075A7C(NULL, mon, species, work->args->options, work->args->unk38, work->args->pokedex, work->args->bag, work->args->gameStats, evolutionCondition, 4, HEAP_ID_61);
                 work->subState = 1;
@@ -70,7 +87,7 @@ int ov70_02241648(GtsWork *work) {
             deposit = AllocMonZeroed(HEAP_ID_61);
             sub_0202DB64(work->args->gtsSave, deposit);
             if (GetMonData(mon, MON_DATA_SPECIES, NULL) != GetMonData(deposit, MON_DATA_SPECIES, NULL) || GetMonData(mon, MON_DATA_PERSONALITY, NULL) != GetMonData(deposit, MON_DATA_PERSONALITY, NULL)) {
-                species = GetMonEvolution(NULL, mon, EVOCTX_TRADE, GetMonData(mon, MON_DATA_HELD_ITEM, NULL), &depositCondition);
+                species = GetTradeEvolution(mon, deposit, &depositCondition);
                 if (species != SPECIES_NONE) {
                     work->evolutionTask = sub_02075A7C(NULL, mon, species, work->args->options, work->args->unk38, work->args->pokedex, work->args->bag, work->args->gameStats, depositCondition, 4, HEAP_ID_61);
                     work->subState = 1;

@@ -522,6 +522,25 @@ class EvolutionMethods(unittest.TestCase):
         # unk38 is the Pokemon sent and unk3C the one received.
         self.assertIn("data->tradeSequence.unk0 = Mon_GetBoxMon(data->wirelessTradeSelectMon.unk38);", body)
 
+    def test_the_gts_passes_what_it_was_traded_for(self):
+        """The station's evolution check after a trade is given the Pokemon
+        the player gave, as a party of one: the one the trade animation sent
+        for an offer found, the deposit read back from the save for a
+        deposit collected."""
+        source = read("src/overlay_70_02241648.c")
+        self.assertRegex(function(source, "GetTradeEvolution"),
+                         r"Party \*partner = SaveArray_Party_Alloc\(HEAP_ID_61\);\s*int species;\s*"
+                         r"Party_AddMon\(partner, given\);\s*"
+                         r"species = GetMonEvolution\(partner, mon, EVOCTX_TRADE, [^;]*;\s*"
+                         r"Heap_Free\(partner\);")
+        body = function(source, "ov70_02241648")
+        self.assertNotIn("GetMonEvolution", body)
+        self.assertIn("GetTradeEvolution(mon, work->given, &evolutionCondition)", body)
+        self.assertIn("GetTradeEvolution(mon, deposit, &depositCondition)", body)
+        # The animation sends the station's copy of the save's deposit, at
+        # 0x11F0 of its work, which the next step frees.
+        self.assertIn("u8 unk114[0x10DC];\n    Pokemon *given;", source)
+
     def test_the_battle_counts_an_opponent_the_player_defeats(self):
         """Where a Pokemon faints, an opponent's faint counts for the
         player's own Pokemon whose move it was."""
