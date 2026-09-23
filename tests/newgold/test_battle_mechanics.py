@@ -132,6 +132,17 @@ class StuffCheeksTests(unittest.TestCase):
         self.assertNotIn("StuffCheeks", maxed)
         self.assertNotIn("RemoveItem", maxed)
 
+    def test_a_berry_eaten_by_its_own_script_is_not_removed_again(self):
+        # RemoveItem keeps the item for Recycle and Harvest; a second one on
+        # an empty hand would keep nothing. The Berry's own script eats it, so
+        # the move's RemoveItem is only for a Berry that did nothing.
+        script = subscript("StuffCheeks")
+        tail = script[script.index("CallFromVar BSCRIPT_VAR_TEMP_DATA"):script.index("\n_DEFENSE_MAXED:")]
+        guard = "CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HELD_ITEM, ITEM_NONE, _end"
+        self.assertIn(guard, tail)
+        self.assertLess(tail.index(guard), tail.index("RemoveItem BATTLER_CATEGORY_ATTACKER"))
+        self.assertLess(tail.index("RemoveItem BATTLER_CATEGORY_ATTACKER"), tail.index("\n_end:"))
+
 
 class CoachingTests(unittest.TestCase):
     def test_it_needs_a_partner_to_coach(self):

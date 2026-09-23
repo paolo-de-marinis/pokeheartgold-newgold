@@ -21,7 +21,12 @@ _000:
 
 _noBerryScript:
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_STAT_STAGE_CHANGE_SHOWN
+    // A Berry whose script ran has been eaten there already, and RemoveItem
+    // on an empty hand would leave Recycle and Harvest nothing to bring back.
+    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HELD_ITEM, ITEM_NONE, _end
     RemoveItem BATTLER_CATEGORY_ATTACKER
+
+_end:
     End
 
 _DEFENSE_MAXED:
