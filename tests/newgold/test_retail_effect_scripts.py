@@ -35,16 +35,10 @@ PARENTAL_BOND = "Parental Bond, whose commands are stubs here (test_battle_comma
 STILL_DIFFERENT = {
     7: IN_C.format("Damp and the user's fainting, BattleController_BeforeMove.c"),
     13: "Growth's two stages in sunshine: the engine's subscript HANDLE_GROWTH",
-    20: "retail's unused speed drop, the engine's a two-stage one; no move runs it",
-    21: "retail's damage stub, the engine's Sp. Atk drop; no move runs it",
-    22: "retail's damage stub, the engine's Sp. Def drop; no move runs it",
     33: "Toxic from a Poison type: the engine's sure hit, in its accuracy check",
     34: PARENTAL_BOND,
     42: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
     48: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
-    61: "retail's damage stub, the engine's two-stage Sp. Atk drop (Eerie Impulse)",
-    63: "retail's damage stub, the engine's two-stage accuracy drop; no move runs it",
-    64: "retail's damage stub, the engine's two-stage evasion drop (Sweet Scent)",
     83: PARENTAL_BOND,
     97: PARENTAL_BOND,
     104: IN_C.format("Triple Kick's rising power, CalcBaseDamage.c"),
@@ -179,6 +173,25 @@ class RetailEffectScriptTests(unittest.TestCase):
                          "effect scripts that differ from the engine's and are not listed")
         self.assertEqual(sorted(set(STILL_DIFFERENT) - differing), [],
                          "effect scripts that are the engine's now: take them off the list")
+
+
+def script(effect):
+    return next(EFFECT_SCRIPTS.glob(f"effect_script_{effect:04d}*.s")).read_text()
+
+
+class BroughtOverTests(unittest.TestCase):
+    """What the engine's scripts do that retail's did not, checked without the
+    reference: each fails on the retail script it replaced."""
+
+    def test_the_stubs_are_stat_drops(self):
+        # Retail left 21, 22, 61, 63 and 64 as a bare damage calculation, so
+        # Eerie Impulse (61) lowered nothing.
+        for effect, pointer in ((20, "SPEED_DOWN_2_STAGES"), (21, "SP_ATTACK_DOWN_1_STAGE"),
+                                (22, "SP_DEFENSE_DOWN_1_STAGE"), (61, "SP_ATTACK_DOWN_2_STAGES"),
+                                (63, "ACCURACY_DOWN_2_STAGES"), (64, "EVASION_DOWN_2_STAGES")):
+            text = script(effect)
+            self.assertIn(f"MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_{pointer}", text, effect)
+            self.assertNotIn("CalcDamage", text, effect)
 
 
 if __name__ == "__main__":
