@@ -7402,6 +7402,28 @@ void BattleSystem_ChangeBattlerForm(BattleSystem *battleSystem, BattleContext *c
     PokedexData_Delete(dexData);
 }
 
+// Zen Mode (BattleFormChangeCheck.c:208): at half its HP or less a Darmanitan
+// goes into its Zen Mode, and out of it above half or without the ability.
+// The species to become, or SPECIES_NONE. hg-engine does not leave a
+// transformed battler out, and its BattleFormChange then gave the copy its
+// own stats back; the caller here leaves it alone.
+static u16 Battler_ZenModeForm(BattleContext *ctx, int battlerId) {
+    BOOL zen = GetBattlerAbility(ctx, battlerId) == ABILITY_ZEN_MODE
+        && ctx->battleMons[battlerId].hp <= (s32)(ctx->battleMons[battlerId].maxHp / 2);
+
+    switch (ctx->battleMons[battlerId].species) {
+    case SPECIES_DARMANITAN:
+        return zen ? SPECIES_DARMANITAN_ZEN_MODE : SPECIES_NONE;
+    case SPECIES_DARMANITAN_GALARIAN:
+        return zen ? SPECIES_DARMANITAN_ZEN_MODE_GALARIAN : SPECIES_NONE;
+    case SPECIES_DARMANITAN_ZEN_MODE:
+        return zen ? SPECIES_NONE : SPECIES_DARMANITAN;
+    case SPECIES_DARMANITAN_ZEN_MODE_GALARIAN:
+        return zen ? SPECIES_NONE : SPECIES_DARMANITAN_GALARIAN;
+    }
+    return SPECIES_NONE;
+}
+
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int form;
@@ -7538,6 +7560,15 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
                     ret = TRUE;
                     break;
                 }
+            }
+        }
+        if (ctx->battleMons[ctx->battlerIdTemp].hp && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {
+            form = Battler_ZenModeForm(ctx, ctx->battlerIdTemp);
+            if (form != SPECIES_NONE) {
+                BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, form, TRUE);
+                *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
+                ret = TRUE;
+                break;
             }
         }
         // Xerneas is always in its Active Mode (BattleFormChangeCheck.c:258),

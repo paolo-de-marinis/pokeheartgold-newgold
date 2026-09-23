@@ -174,6 +174,7 @@ IMPLEMENTED = {
     "WIND_POWER",
     "WIND_RIDER",
     "WONDER_SKIN",
+    "ZEN_MODE",
 }
 
 
@@ -206,7 +207,7 @@ PENDING = {
     "SCHOOLING", "POWER_CONSTRUCT",
     "STAKEOUT", "STANCE_CHANGE", "SUPREME_OVERLORD", "SYMBIOSIS", "TEMP4",
     "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR",
-    "WIMP_OUT", "ZEN_MODE", "ZERO_TO_HERO"
+    "WIMP_OUT", "ZERO_TO_HERO"
 }
 
 
@@ -272,7 +273,7 @@ class AbilityEffectTests(unittest.TestCase):
     #
     # 39 -> 41: Schooling and Power Construct had been counted done on their
     # blocklist reads alone; see the note above PENDING.
-    STILL_TO_DO = 41
+    STILL_TO_DO = 40
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+"""The forms a Pokemon changes into during a battle, and when.
+
+hg-engine (d0380a487) changes a battler's form from its ability, its HP or the
+move it uses: Zen Mode, Schooling, Stance Change and the rest, each keyed on
+the species and switched through BattleFormChange. None of them was here. A
+form is a species here, so each rule picks the species to become; the rules
+are extracted from src/battle and compiled natively, and the places that act
+on them are read from the source.
+"""
+
+import os
+import shlex
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+
+from test_repels import ROOT, function
+
+PREFIX = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/moves.h"
+#include "constants/species.h"
+typedef uint8_t u8;
+typedef int8_t s8;
+typedef uint16_t u16;
+typedef int32_t s32;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+
+typedef struct {
+    u16 species;
+    u16 ability;
+    s32 hp;
+    u32 maxHp;
+    u32 status2;
+    u8 level;
+} BattleMon;
+typedef struct {
+    BattleMon battleMons[4];
+} BattleContext;
+
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+
+static BattleContext ctx;
+static void set(u16 species, u16 ability, s32 hp, u32 maxHp) {
+    ctx.battleMons[0] = (BattleMon){ species, ability, hp, maxHp, 0, 50 };
+}
+"""
+
+
+def run(functions, body, prefix):
+    source = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+    program = PREFIX + "\n".join(function(source, name) for name in functions) + "\nint main(void) {\n" + body + "\n    return 0;\n}\n"
+    with tempfile.TemporaryDirectory(prefix=prefix) as directory:
+        path = Path(directory)
+        (path / "test.c").write_text(program)
+        subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+            "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-fsanitize=address,undefined",
+            "-iquote", str(ROOT / "include"), str(path / "test.c"), "-o", str(path / "test")], check=True)
+        result = subprocess.run([str(path / "test")], capture_output=True, text=True,
+                                env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0"})
+    if result.returncode:
+        raise AssertionError(result.stdout + result.stderr)
+    return result.stdout.strip()
+
+
+class FormChangeTests(unittest.TestCase):
+    def setUp(self):
+        self.check = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "Battler_CheckWeatherFormChange")
+
+    def test_zen_mode(self):
+        """At half its HP or less a Darmanitan is in its Zen Mode, above half
+        or without the ability it is not; the Galarian one likewise."""
+        print(run(["Battler_ZenModeForm"], r"""
+    set(SPECIES_DARMANITAN, ABILITY_ZEN_MODE, 51, 100);
+    assert(Battler_ZenModeForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_DARMANITAN, ABILITY_ZEN_MODE, 50, 100);
+    assert(Battler_ZenModeForm(&ctx, 0) == SPECIES_DARMANITAN_ZEN_MODE);
+    set(SPECIES_DARMANITAN, ABILITY_SHEER_FORCE, 10, 100);
+    assert(Battler_ZenModeForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_DARMANITAN_GALARIAN, ABILITY_ZEN_MODE, 1, 100);
+    assert(Battler_ZenModeForm(&ctx, 0) == SPECIES_DARMANITAN_ZEN_MODE_GALARIAN);
+    set(SPECIES_DARMANITAN_ZEN_MODE, ABILITY_ZEN_MODE, 50, 100);
+    assert(Battler_ZenModeForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_DARMANITAN_ZEN_MODE, ABILITY_ZEN_MODE, 51, 100);
+    assert(Battler_ZenModeForm(&ctx, 0) == SPECIES_DARMANITAN);
+    set(SPECIES_DARMANITAN_ZEN_MODE_GALARIAN, ABILITY_NONE, 1, 100);
+    assert(Battler_ZenModeForm(&ctx, 0) == SPECIES_DARMANITAN_GALARIAN);
+    set(SPECIES_SLOWPOKE, ABILITY_ZEN_MODE, 1, 100);
+    assert(Battler_ZenModeForm(&ctx, 0) == SPECIES_NONE);
+    puts("PASS: Zen Mode comes at half HP and goes above it or without the ability.");""", "newgold-zen-"))
+        self.assertIn("form = Battler_ZenModeForm(ctx, ctx->battlerIdTemp);", self.check)
+
+
+if __name__ == "__main__":
+    unittest.main()
