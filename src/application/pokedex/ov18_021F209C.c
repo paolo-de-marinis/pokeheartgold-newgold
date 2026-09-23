@@ -12,7 +12,10 @@ void ov18_021F21FC(PokedexAppData *pokedexApp, int spriteIdx, u16 type);
 // language, from the four sprites at spriteIdx: two pairs used in turn
 // (unk_185F_4 says which), so the pair being replaced can be hidden while
 // the other is drawn. A species only seen shows none; a second type that is
-// Normal or the first shows no second icon.
+// the first shows no second icon. Retail hid a Normal second type too, as no
+// species of its Dex had one; Litleo and Pyroar are Fire and Normal, and the
+// reference shows it (bytereplacement, "normal as a second type should show
+// up in the dex/pc").
 void ov18_021F209C(PokedexAppData *pokedexApp, u32 species, int idx, u32 spriteIdx) {
     int form;
     u16 type1;
@@ -46,7 +49,7 @@ void ov18_021F209C(PokedexAppData *pokedexApp, u32 species, int idx, u32 spriteI
     ov18_021F21FC(pokedexApp, spriteIdx, type1);
     ManagedSprite_SetDrawFlag(pokedexApp->unk_0670[spriteIdx], TRUE);
     type2 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_TYPE2);
-    if (type2 == TYPE_NORMAL || type1 == type2) {
+    if (type1 == type2) {
         ManagedSprite_SetDrawFlag(pokedexApp->unk_0670[spriteIdx + 1], FALSE);
     } else {
         ov18_021F21FC(pokedexApp, spriteIdx + 1, type2);

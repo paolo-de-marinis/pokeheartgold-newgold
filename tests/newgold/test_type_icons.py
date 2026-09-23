@@ -15,6 +15,7 @@ import re
 import struct
 import unittest
 
+from test_dex_range import c_function, run_native
 from test_level_cap import ROOT
 
 SOURCE = ROOT / "src/unk_02077678.c"
@@ -41,6 +42,69 @@ def archive_members():
     return struct.unpack_from("<I", data, 0x18)[0]
 
 
+SECOND_TYPE = r"""
+#include <assert.h>
+#include <stdio.h>
+#include "constants/pokemon.h"
+#include "constants/species.h"
+typedef unsigned char u8; typedef unsigned short u16; typedef unsigned int u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { int unused; } ManagedSprite, Pokedex;
+static int drawn[64];
+static int shown[64];
+static void ManagedSprite_SetDrawFlag(ManagedSprite *sprite, int flag) { drawn[sprite->unused] = flag; }
+/* the PC */
+typedef struct { ManagedSprite *sprites[15]; } PCBoxAppGraphics;
+typedef struct { u8 type1, type2; u8 isEgg; } PCBoxDisplayMon;
+static void ov14_021F3D0C(PCBoxAppGraphics *g, int type, int idx, int unused) { shown[idx] = type; }
+/* the Dex */
+typedef struct { Pokedex *pokedex; } PokedexArgs;
+typedef struct { u8 unk_0; u8 unk_2; } PokedexEntry;
+typedef struct {
+    int unk_185C; u8 unk_185F_4; PokedexEntry unk_1030[1];
+    ManagedSprite *unk_0670[64]; PokedexArgs *args;
+} PokedexAppData;
+static u16 gTypes[2];
+static int Pokedex_GetSeenFormByIdx(Pokedex *pokedex, u32 species, int idx) { return 0; }
+static u16 GetMonBaseStat_HandleAlternateForm(u32 species, int form, int stat) { return gTypes[stat == BASE_TYPE2]; }
+static void ov18_021F21FC(PokedexAppData *app, int spriteIdx, u16 type) { shown[spriteIdx] = type; }
+@NATIVE@
+int main(void) {
+    static ManagedSprite pool[64];
+    PCBoxAppGraphics graphics;
+    for (int i = 0; i < 64; i++) {
+        pool[i].unused = i;
+    }
+    for (int i = 0; i < 15; i++) {
+        graphics.sprites[i] = &pool[i];
+    }
+    /* Litleo, Fire and Normal: two icons; Charmander, Fire alone: one */
+    PCBoxDisplayMon litleo = { TYPE_FIRE, TYPE_NORMAL, 0 }, charmander = { TYPE_FIRE, TYPE_FIRE, 0 };
+    ov14_021F3D70(&graphics, &litleo);
+    assert(drawn[13] && drawn[14] && shown[14] == TYPE_NORMAL);
+    ov14_021F3D70(&graphics, &charmander);
+    assert(drawn[13] && !drawn[14]);
+
+    Pokedex dex;
+    PokedexArgs args = { &dex };
+    PokedexAppData app = { .unk_185C = 2, .args = &args };
+    for (int i = 0; i < 64; i++) {
+        app.unk_0670[i] = &pool[i];
+    }
+    gTypes[0] = TYPE_FIRE, gTypes[1] = TYPE_NORMAL;
+    ov18_021F209C(&app, SPECIES_LITLEO, 0, 14);   /* draws the pair at 16, hides 14 */
+    assert(drawn[16] && drawn[17] && shown[17] == TYPE_NORMAL);
+    gTypes[1] = TYPE_FIRE;
+    ov18_021F209C(&app, SPECIES_LITLEO, 0, 14);   /* then the pair at 14 */
+    assert(drawn[14] && !drawn[15]);
+    printf("PASS: the PC and the Dex show Litleo's Normal second type, and one icon for a single type.\n");
+    return 0;
+}
+"""
+
+
 class TypeIconTests(unittest.TestCase):
     def test_the_table_holds_every_type_and_the_five_conditions(self):
         want = number_of_types() + CONTEST_CONDITIONS
@@ -61,6 +125,16 @@ class TypeIconTests(unittest.TestCase):
     def test_no_two_types_share_an_icon(self):
         files = table("sTypeIconFiles")[:number_of_types()]
         self.assertEqual(len(set(files)), len(files))
+
+
+    def test_a_normal_second_type_has_its_icon(self):
+        """Retail's Dex and PC showed no second icon for a Normal second type,
+        which no species of theirs had; Litleo and Pyroar are Fire and
+        Normal. The reference shows it (bytereplacement, "normal as a second
+        type should show up in the dex/pc")."""
+        pc = c_function((ROOT / "src/overlay_14_021F3D70.c").read_text(), "ov14_021F3D70")
+        dex = c_function((ROOT / "src/application/pokedex/ov18_021F209C.c").read_text(), "ov18_021F209C")
+        run_native(self, SECOND_TYPE.replace("@NATIVE@", pc + "\n" + dex), "newgold-second-type-")
 
 
 if __name__ == "__main__":
