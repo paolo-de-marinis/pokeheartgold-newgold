@@ -2,7 +2,11 @@
 #define POKEHEARTGOLD_CONSTANTS_BALLS_H
 
 // OG balls
-// New Gold uses the modern Friend Ball value rather than HGSS's 200.
+// New Gold uses the modern Friend Ball value rather than HGSS's 200. It is
+// the value hg-engine's config asks for (FRIEND_BALL_GENERATION = GEN_LATEST,
+// "150 in Generation VIII onwards"); its CalculateBallShakes.c writes 150 and
+// then 200 over it in a second, unconditional block on every catch, which
+// contradicts that config, so the 200 is not copied.
 #define FRIEND_BALL_FRIENDSHIP 150
 
 #define BALL_NONE   0

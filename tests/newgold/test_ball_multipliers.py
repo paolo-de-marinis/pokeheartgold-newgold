@@ -5,7 +5,9 @@ BattleSystem_CalculateBallShakes reaches into the battle context, the save and
 the clock, so running it on the host would mean stubbing most of a battle for
 what are, in the end, seven numbers. This reads the multiplier each ball case
 sets instead, which is the thing that changed, and pins the Friend Ball's
-friendship away from the tier constant that happens to share HGSS's value.
+friendship at the 150 hg-engine's config asks for. The reference's own code
+overwrites its 150 with 200 on every catch, against that config; the port
+keeps the config's value.
 """
 
 import os
@@ -47,7 +49,8 @@ PROGRAM = r'''
 #include "constants/pokemon.h"
 
 int main(void) {
-    // The modern Friend Ball value, kept apart from the friendship tier that
+    // The modern Friend Ball value, FRIEND_BALL_GENERATION = GEN_LATEST in
+    // the reference's config, kept apart from the friendship tier that
     // happens to carry HGSS's 200.
     assert(FRIEND_BALL_FRIENDSHIP == 150);
     assert(FRIENDSHIP_TIER_HI_MIN == 200);
