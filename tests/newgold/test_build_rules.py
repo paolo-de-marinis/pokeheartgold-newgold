@@ -108,6 +108,13 @@ class BuildRuleTests(unittest.TestCase):
                 self.assertIn("files/" + header.group(1), prerequisites[bin_], bin_)
         print(f"{built} of {len(jsons)} zone events depend on their json's header")
 
+    def test_safari_enc_is_built_beside_its_json(self):
+        """Its recipe writes $*.s and $*.o. The rule was an explicit one, which
+        has no stem, so they were '.s' and '.o' in the tree's root."""
+        result = run_make("-n", "-W", "files/arc/safari_enc.json", "files/arc/safari_enc.narc")
+        self.assertIn("files/arc/safari_enc.json files/arc/safari_enc.json.txt files/arc/safari_enc.s", result.stdout,
+                      result.stdout + result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
