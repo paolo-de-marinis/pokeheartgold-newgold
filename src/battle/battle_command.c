@@ -1855,6 +1855,16 @@ BOOL BtlCmd_WaitMonSelection(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// Whether a Palafin leaving the field turns into its Hero Form: one in its
+// Zero Form with the ability, not fainted and not transformed. The ability is
+// read as hg-engine reads it, off the battler.
+static BOOL Battler_TurnsHero(BattleContext *ctx, int battlerId) {
+    return ctx->battleMons[battlerId].species == SPECIES_PALAFIN
+        && ctx->battleMons[battlerId].ability == ABILITY_ZERO_TO_HERO
+        && ctx->battleMons[battlerId].hp
+        && !(ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM);
+}
+
 BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
@@ -1888,11 +1898,21 @@ BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSystem, BattleContext *ctx) {
     // hg-engine's TryRevertFormChange (battle_pokemon.c:1010): a battler in a
     // form that lasts only for a battle leaves in the form it came from. Not a
     // crowned Zacian or Zamazenta: hg-engine crowns them when the battle starts
-    // and nowhere else, so it took the crown for the rest of the battle.
+    // and nowhere else, so it took the crown for the rest of the battle. Nor a
+    // Palafin in its Hero Form, which it took by leaving: hg-engine sent it
+    // back to its Zero Form the second time it left.
     if (Species_GetBattleFormReversion(ctx->battleMons[battlerId].species) != SPECIES_NONE
         && ctx->battleMons[battlerId].species != SPECIES_ZACIAN_CROWNED
-        && ctx->battleMons[battlerId].species != SPECIES_ZAMAZENTA_CROWNED) {
+        && ctx->battleMons[battlerId].species != SPECIES_ZAMAZENTA_CROWNED
+        && ctx->battleMons[battlerId].species != SPECIES_PALAFIN_HERO) {
         Mon_RevertFormChange(BattleSystem_GetPartyMon(battleSystem, battlerId, ctx->selectedMonIndex[battlerId]));
+    }
+    // Zero to Hero (btl_scr_cmd_125, run from hg-engine's switch and
+    // attack-then-switch subscripts): a Palafin that leaves the field of its
+    // own accord comes back in its Hero Form. The Pokemon changes, not the
+    // battler, which is on its way out.
+    if (side != BATTLER_CATEGORY_FORCED_OUT && Battler_TurnsHero(ctx, battlerId)) {
+        Mon_ChangeFormSpecies(BattleSystem_GetPartyMon(battleSystem, battlerId, ctx->selectedMonIndex[battlerId]), SPECIES_PALAFIN_HERO);
     }
 
     ctx->unk_13C[battlerId] &= ~1;

@@ -4829,7 +4829,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 19: // Intrepid Sword and Dauntless Shield
+        case 19: // Intrepid Sword, Dauntless Shield and Zero to Hero
             for (i = 0; i < maxBattlers; i++) {
                 int fieldSide;
 
@@ -4842,6 +4842,16 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 fieldSide = BattleSystem_GetFieldSide(battleSystem, battlerId);
                 if (ctx->onceOnlyEntryAbilityDone[fieldSide][ctx->selectedMonIndex[battlerId]]) {
                     continue;
+                }
+                // A Palafin back in its Hero Form says so, once
+                // (SwitchInAbilityCheck.c:965, zeroToHeroFlag).
+                if (ctx->battleMons[battlerId].species == SPECIES_PALAFIN_HERO && ctx->battleMons[battlerId].ability == ABILITY_ZERO_TO_HERO
+                    && !(ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+                    ctx->onceOnlyEntryAbilityDone[fieldSide][ctx->selectedMonIndex[battlerId]] = TRUE;
+                    ctx->battlerIdTemp = battlerId;
+                    script = BATTLE_SUBSCRIPT_ZERO_TO_HERO;
+                    flag = TRUE;
+                    break;
                 }
                 if (GetBattlerAbility(ctx, battlerId) == ABILITY_INTREPID_SWORD) {
                     ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE;

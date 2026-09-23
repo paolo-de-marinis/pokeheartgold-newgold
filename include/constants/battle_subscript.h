@@ -642,6 +642,9 @@
 #define BATTLE_SUBSCRIPT_MORTAL_SPIN                        403
 // A Disguise or an Ice Face giving way. 332 there.
 #define BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE                  404
+// Zero to Hero's line on the way back in. 516 there.
+#define BATTLE_SUBSCRIPT_ZERO_TO_HERO                       405
+
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
 #define MOVE_SUBSCRIPT_PTR_POWDER                           152

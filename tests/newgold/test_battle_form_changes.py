@@ -237,6 +237,33 @@ class FormChangeTests(unittest.TestCase):
                      "DivideVarByValue BSCRIPT_VAR_HP_CALC, 8", "PrintMessage msg_0197_00721"):
             self.assertIn(line, script)
 
+    def test_zero_to_hero(self):
+        """A Palafin that leaves the field of its own accord comes back in
+        its Hero Form, and says so the first time it does; not a fainted one,
+        a transformed one, or one forced out."""
+        print(run(["Battler_TurnsHero"], r"""
+    set(SPECIES_PALAFIN, ABILITY_ZERO_TO_HERO, 1, 1);
+    assert(Battler_TurnsHero(&ctx, 0));
+    set(SPECIES_PALAFIN, ABILITY_ZERO_TO_HERO, 0, 1);
+    assert(!Battler_TurnsHero(&ctx, 0));
+    set(SPECIES_PALAFIN_HERO, ABILITY_ZERO_TO_HERO, 1, 1);
+    assert(!Battler_TurnsHero(&ctx, 0));
+    set(SPECIES_PALAFIN, ABILITY_NONE, 1, 1);
+    assert(!Battler_TurnsHero(&ctx, 0));
+    set(SPECIES_PALAFIN, ABILITY_ZERO_TO_HERO, 1, 1);
+    ctx.battleMons[0].status2 = STATUS2_TRANSFORM;
+    assert(!Battler_TurnsHero(&ctx, 0));
+    puts("PASS: Zero to Hero on the way out.");""", "newgold-hero-", "src/battle/battle_command.c"))
+        switch = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SwitchAndUpdateMon")
+        self.assertIn("if (side != BATTLER_CATEGORY_FORCED_OUT && Battler_TurnsHero(ctx, battlerId)) {", switch)
+        self.assertIn("&& ctx->battleMons[battlerId].species != SPECIES_PALAFIN_HERO) {", switch)
+        self.assertLess(switch.index("SPECIES_PALAFIN_HERO"), switch.index("ctx->selectedMonIndex[battlerId] = ctx->unk_21A0[battlerId];"))
+        entry = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        entry = entry[entry.index("case 19: // Intrepid Sword"):entry.index("case 20: // Hospitality")]
+        self.assertIn("script = BATTLE_SUBSCRIPT_ZERO_TO_HERO;", entry)
+        self.assertIn("PrintMessage msg_0197_01780, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP",
+                      (ROOT / "files/battledata/script/subscript/subscript_0404_ZeroToHero.s").read_text())
+
 
 if __name__ == "__main__":
     unittest.main()
