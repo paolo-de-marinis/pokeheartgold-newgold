@@ -144,6 +144,15 @@ class StuffCheeksTests(unittest.TestCase):
         self.assertLess(tail.index("RemoveItem BATTLER_CATEGORY_ATTACKER"), tail.index("\n_end:"))
 
 
+class SpitUpTests(unittest.TestCase):
+    def test_spit_up_rolls_its_damage(self):
+        # effect_script_0161_SPIT_UP.s at d0380a487 calls CalcDamage, which
+        # rolls; HeartGold's CalcMaxDamage did not.
+        script = (ROOT / "files/battledata/script/effect_script/effect_script_0161.s").read_text()
+        self.assertRegex(script, r"\n\s*CalcDamage\s*\n")
+        self.assertNotRegex(script, r"(?m)^\s*CalcMaxDamage")
+
+
 class CoachingTests(unittest.TestCase):
     def test_it_needs_a_partner_to_coach(self):
         # BattleController_BeforeMove.c:4618 at d0380a487: a single battle, or

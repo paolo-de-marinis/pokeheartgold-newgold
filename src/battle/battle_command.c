@@ -880,8 +880,9 @@ static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, i
 // weather, Glaive Rush, the critical hit, the roll, STAB and the type chart, a
 // burn, the final modifier, Unseen Fist, and at least 1. HeartGold folded the
 // burn, the screens, the spread and the weather into the base, and applied the
-// type chart and what hangs off it after the roll, from the controller. Spit
-// Up's CalcMaxDamage is the same without the roll.
+// type chart and what hangs off it after the roll, from the controller.
+// CalcMaxDamage is the same without the roll; no script asks for it now that
+// Spit Up rolls as the reference's does.
 static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BOOL roll) {
     int battlerIdAttacker = ctx->battlerIdAttacker;
     int battlerIdTarget = ctx->battlerIdTarget;

@@ -24,7 +24,9 @@ _000:
 
 _STRIKE:
     CalcCrit 
-    CalcMaxDamage 
+    // Rolled like any other hit from Generation V on, as the reference's
+    // script has it; HeartGold's CalcMaxDamage left the roll out.
+    CalcDamage 
     End 
 
 _064:
