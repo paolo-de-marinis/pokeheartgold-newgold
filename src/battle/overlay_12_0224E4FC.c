@@ -1654,7 +1654,9 @@ static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
 
 // Whether Sheer Force traded the attacker's move effect for power, for what
 // answers the hit: Emergency Exit's arming, Berserk, Anger Shell, Pickpocket,
-// the Red Card and the Eject Button, and the user's Shell Bell and Life Orb.
+// the Red Card and the Eject Button, the user's Shell Bell and Life Orb, and
+// Relic Song's change of form (Pokemon Central, Forzabruta). Shell Trap, when
+// it is added, must ask it too: a boosted move does not set the trap off.
 // From the effect roll on, the flags IsSuppressibleSecondaryEffect reads are
 // gone -- ov12_02250490 clears them as it rolls or gives the effect up -- so
 // what it found then is kept for the rest of the action.
@@ -9414,11 +9416,13 @@ static u16 Battler_RestoredFaceForm(BattleSystem *battleSystem, BattleContext *c
 
 // Relic Song (BattleFormChangeCheck.c:232): a Meloetta that has used it on a
 // target turns from its Aria Forme to its Pirouette Forme or back, once the
-// last hit is in. Not a transformed battler, which keeps the form it copied.
+// last hit is in. Not a transformed battler, which keeps the form it copied,
+// and not one whose Sheer Force traded the song's sleep for power (Pokemon
+// Central, Forzabruta); the reference does not ask the ability.
 static u16 Battler_RelicSongForm(BattleContext *ctx, int battlerId) {
     if (battlerId != ctx->battlerIdAttacker || ctx->moveNoCur != MOVE_RELIC_SONG || !ctx->battleMons[battlerId].hp
         || (ctx->moveStatusFlag & MOVE_STATUS_FAILED) || !(ctx->relicSongTracker & MaskOfFlagNo(battlerId)) || ctx->multiHitCount > 1
-        || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+        || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM) || SheerForceTradedEffect(ctx) == TRUE) {
         return SPECIES_NONE;
     }
     switch (ctx->battleMons[battlerId].species) {

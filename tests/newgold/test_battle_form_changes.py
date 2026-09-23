@@ -54,7 +54,7 @@ typedef struct {
     u32 moveNoCur;
     u32 moveStatusFlag;
     u8 multiHitCount;
-    BOOL moldBreaker, cloudNine;
+    BOOL moldBreaker, cloudNine, sheerForce;
 } BattleContext;
 typedef struct BattleSystem BattleSystem;
 typedef struct { u16 power; u8 category; } MoveTbl;
@@ -74,6 +74,7 @@ static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, in
     return ctx->cloudNine && (ability == ABILITY_CLOUD_NINE || ability == ABILITY_AIR_LOCK);
 }
 static u32 MaskOfFlagNo(int flagNo) { return 1u << flagNo; }
+static BOOL SheerForceTradedEffect(BattleContext *ctx) { return ctx->sheerForce; }
 
 static BattleContext ctx;
 static void set(u16 species, u16 ability, s32 hp, u32 maxHp) {
@@ -301,6 +302,12 @@ class FormChangeTests(unittest.TestCase):
     ctx.multiHitCount = 0;
     ctx.battleMons[0].status2 = STATUS2_TRANSFORM;
     assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_NONE);
+    // A song Sheer Force boosted turns nobody (Pokemon Central, Forzabruta).
+    ctx.battleMons[0].status2 = 0;
+    ctx.sheerForce = TRUE;
+    assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_NONE);
+    ctx.sheerForce = FALSE;
+    assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_MELOETTA);
     puts("PASS: Relic Song turns Meloetta once it has reached a target.");""", "newgold-relic-"))
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
         self.assertIn("ctx->relicSongTracker |= MaskOfFlagNo(battlerIdAttacker);",

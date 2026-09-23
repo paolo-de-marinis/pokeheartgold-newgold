@@ -14,6 +14,7 @@ import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT
+from test_repels import function
 
 HEADER = ROOT / "include/constants/abilities.h"
 SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
@@ -473,10 +474,12 @@ class SheerForceTests(unittest.TestCase):
         self.assertEqual(source.count("IsSuppressibleSecondaryEffect(ctx,"), 4)
         self.assertEqual(source.count("static BOOL IsSuppressibleSecondaryEffect"), 1)
         # Emergency Exit's arming, Berserk, Anger Shell, Color Change,
-        # Pickpocket, the Red Card and Eject Button, and the Kee and Maranga
-        # Berries; the controller asks it for the user's Shell Bell and Life
-        # Orb.
-        self.assertEqual(source.count("SheerForceTradedEffect(ctx)"), 8)
+        # Pickpocket, the Red Card and Eject Button, the Kee and Maranga
+        # Berries, and Relic Song's change of form (Pokemon Central,
+        # Forzabruta); the controller asks it for the user's Shell Bell and
+        # Life Orb.
+        self.assertEqual(source.count("SheerForceTradedEffect(ctx)"), 9)
+        self.assertIn("SheerForceTradedEffect(ctx) == TRUE", function(source, "Battler_RelicSongForm"))
 
     def test_the_guaranteed_effects_are_left_alone(self):
         body = re.search(r"static BOOL IsSuppressibleSecondaryEffect.*?\n\}", self.SOURCE.read_text(), re.S).group(0)
