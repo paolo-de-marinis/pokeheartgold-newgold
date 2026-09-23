@@ -63,6 +63,7 @@ static void BattlerSetItem(BattleContext *ctx, u8 battlerId, u16 item);
 static void BattleScript_CalcEffortValues(Party *party, int slot, u32 species, u32 form);
 static u32 BattleSystem_CalculateBallShakes(BattleSystem *battleSystem, BattleContext *ctx);
 static u32 BattleScript_ScaleExpToLevel(u32 exp, u32 faintedLevel, u32 gainerLevel);
+static u32 BattleScript_GainerExp(u32 exp, u32 faintedLevel, u32 gainerLevel, int expMonsCnt, int expShareMonsCnt, BOOL participated, BOOL holdsExpShare);
 static s32 GetMonWeight(u16 species);
 static void InitBattleMsgData(BattleContext *ctx, BattleMessageData *msgdata);
 static int ov12_022480C0(BattleSystem *battleSystem, BattleContext *ctx, int side);
@@ -1692,40 +1693,24 @@ BOOL BtlCmd_CalcExpGain(BattleSystem *battleSystem, BattleContext *ctx) {
     adrs = BattleScriptReadWord(ctx);
 
     if ((opponentData->battlerType & BATTLER_TYPE_IS_ENEMY) && !(battleType & (BATTLE_TYPE_LINK | BATTLE_TYPE_SAFARI | BATTLE_TYPE_FRONTIER | BATTLE_TYPE_PAL_PARK))) {
-        int expMonsCnt = 0;
-        int expShareMonsCnt = 0;
-        u16 totalExp;
         u16 itemNo;
         Pokemon *mon;
+        // Only the counts are taken here, while every participant still has
+        // its bit: the experience is worked out for each gainer at its own
+        // level in Task_GetExp, which clears the bits as it goes.
+        ctx->expMonsCnt = 0;
+        ctx->expShareMonsCnt = 0;
         for (int i = 0; i < Party_GetCount(BattleSystem_GetParty(battleSystem, 0)); i++) {
             mon = BattleSystem_GetPartyMon(battleSystem, 0, i);
             if (GetMonData(mon, MON_DATA_SPECIES, 0) && GetMonData(mon, MON_DATA_HP, 0)) {
                 if (ctx->unk_A4[(ctx->battlerIdFainted >> 1) & 1] & MaskOfFlagNo(i)) {
-                    expMonsCnt++;
+                    ctx->expMonsCnt++;
                 }
                 itemNo = GetMonData(mon, MON_DATA_HELD_ITEM, 0);
                 if (GetItemVar(ctx, itemNo, ITEM_VAR_HOLD_EFFECT) == HOLD_EFFECT_EXP_SHARE) {
-                    expShareMonsCnt++;
+                    ctx->expShareMonsCnt++;
                 }
             }
-        }
-        totalExp = GetMonBaseStat(ctx->battleMons[ctx->battlerIdFainted].species, BASE_EXP_YIELD);
-        totalExp = (totalExp * ctx->battleMons[ctx->battlerIdFainted].level) / 5;
-        if (expShareMonsCnt) {
-            ctx->gainedExp = (totalExp / 2) / expMonsCnt;
-            if (ctx->gainedExp == 0) {
-                ctx->gainedExp = 1;
-            }
-            ctx->partyGainedExp = (totalExp / 2) / expShareMonsCnt;
-            if (ctx->partyGainedExp == 0) {
-                ctx->partyGainedExp = 1;
-            }
-        } else {
-            ctx->gainedExp = totalExp / expMonsCnt;
-            if (ctx->gainedExp == 0) {
-                ctx->gainedExp = 1;
-            }
-            ctx->partyGainedExp = 0;
         }
     } else {
         BattleScriptIncrementPointer(ctx, adrs);
@@ -6681,17 +6666,15 @@ static void Task_GetExp(SysTask *task, void *inData) {
                 data->ctx->battleMons[data->ctx->battlerIdFainted].species,
                 data->ctx->battleMons[data->ctx->battlerIdFainted].form);
         } else if (GetMonData(mon, MON_DATA_HP, NULL) && GetMonData(mon, MON_DATA_LEVEL, NULL) != 100 && GetMonData(mon, MON_DATA_LEVEL, NULL) < cap) {
-            if (data->ctx->unk_A4[side] & MaskOfFlagNo(slot)) {
-                totalExp = data->ctx->gainedExp;
-            }
-
-            if (itemEffect == HOLD_EFFECT_EXP_SHARE) {
-                totalExp += data->ctx->partyGainedExp;
-            }
-
-            totalExp = BattleScript_ScaleExpToLevel(totalExp,
-                data->ctx->battleMons[data->ctx->battlerIdFainted].level,
-                GetMonData(mon, MON_DATA_LEVEL, NULL));
+            u32 faintedLevel = data->ctx->battleMons[data->ctx->battlerIdFainted].level;
+            totalExp = GetMonBaseStat(data->ctx->battleMons[data->ctx->battlerIdFainted].species, BASE_EXP_YIELD) * faintedLevel / 5;
+            totalExp = BattleScript_GainerExp(totalExp,
+                faintedLevel,
+                GetMonData(mon, MON_DATA_LEVEL, NULL),
+                data->ctx->expMonsCnt,
+                data->ctx->expShareMonsCnt,
+                (data->ctx->unk_A4[side] & MaskOfFlagNo(slot)) != 0,
+                itemEffect == HOLD_EFFECT_EXP_SHARE);
 
             if (itemEffect == HOLD_EFFECT_EXP_UP) {
                 totalExp = totalExp * 150 / 100;
@@ -7817,27 +7800,57 @@ static inline u32 CP_GetSqrtResult32(void) {
 
 // Experience scales with how far the fainted Pokemon outranks the one being
 // rewarded: beating something above your level pays more, grinding on weaker
-// Pokemon pays less. The ratio is ((2L+10) / (L+Lp+10)) raised to 2.5.
+// Pokemon pays less. The ratio is ((2L+10) / (L+Lp+10)) raised to 2.5, worked
+// out the way hg-engine works it out (Task_DistributeExp_Extend): each side is
+// t*t*sqrt(t) with the hardware's whole-numbered square root, all in 32 bits.
 //
-// The hardware square root is whole-numbered, so each root is taken of its
-// operand shifted up twenty-two bits, which leaves eleven fractional bits; the
-// shared factor cancels between the two sides of the ratio. Level 100 shifted
-// that far still fits a 32-bit parameter.
+// exp * top passes 32 bits when a low-level Pokemon beats a high-level one
+// with a large yield (at most 12160 * 617400, which wraps once). The engine
+// then adds back what the wrap took off one bottom at a time, a close
+// approximation of the true quotient, and so does this.
 static u32 BattleScript_ScaleExpToLevel(u32 exp, u32 faintedLevel, u32 gainerLevel) {
     u32 top = 2 * faintedLevel + 10;
     u32 bottom = faintedLevel + gainerLevel + 10;
 
-    CP_SetSqrt32(top << 22);
-    u64 scaled = (u64)top * top * CP_GetSqrtResult32();
-    CP_SetSqrt32(bottom << 22);
-    u64 divisor = (u64)bottom * bottom * CP_GetSqrtResult32();
+    CP_SetSqrt32(top);
+    top = top * top * CP_GetSqrtResult32();
+    CP_SetSqrt32(bottom);
+    bottom = bottom * bottom * CP_GetSqrtResult32();
 
-    u32 result = (u32)((u64)exp * scaled / divisor);
-    // A reward that survives the battle never rounds away to nothing.
-    if (result == 0 && exp != 0) {
-        result = 1;
+    u32 result = top * exp;
+    if (result / top != exp) {
+        return (result + 1) / bottom + 0xFFFFFFFF / bottom + 1;
     }
-    return result;
+    return result / bottom;
+}
+
+// What one Pokemon wins from the fainted one, before the Lucky Egg, trainer
+// and trade bonuses. As in hg-engine, the whole award is scaled to the
+// gainer's level first and only then shared out: half among the participants
+// and half among the Exp. Share holders when anyone holds one, each part at
+// least 1. A participant that holds the Exp. Share takes both parts.
+static u32 BattleScript_GainerExp(u32 exp, u32 faintedLevel, u32 gainerLevel, int expMonsCnt, int expShareMonsCnt, BOOL participated, BOOL holdsExpShare) {
+    u32 participantExp;
+    u32 expShareExp;
+
+    exp = BattleScript_ScaleExpToLevel(exp, faintedLevel, gainerLevel);
+    if (expShareMonsCnt) {
+        participantExp = (exp / 2) / expMonsCnt;
+        if (participantExp == 0) {
+            participantExp = 1;
+        }
+        expShareExp = (exp / 2) / expShareMonsCnt;
+        if (expShareExp == 0) {
+            expShareExp = 1;
+        }
+    } else {
+        participantExp = exp / expMonsCnt;
+        if (participantExp == 0) {
+            participantExp = 1;
+        }
+        expShareExp = 0;
+    }
+    return (participated ? participantExp : 0) + (holdsExpShare ? expShareExp : 0);
 }
 
 // A throw is sometimes a critical one: the ball flashes, shakes once and

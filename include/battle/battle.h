@@ -353,8 +353,8 @@ typedef struct BattleContext {
     int statChangeFlag;
     int battlerIdStatChange;
     int unk_98;
-    int gainedExp;
-    int partyGainedExp;
+    int expMonsCnt; // participants still standing, counted when the foe faints
+    int expShareMonsCnt; // Exp. Share holders still standing
     u32 unk_A4[2];
     NarcId scriptNarcId;
     int scriptFileId;
