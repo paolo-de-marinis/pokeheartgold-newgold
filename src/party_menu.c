@@ -2555,11 +2555,54 @@ static u16 DNASplicersSpecies(Party *party, int partySlot, const SAVE_MISC_DATA 
     return SPECIES_NONE;
 }
 
+// The panels from partySlot on drawn again for the party as it is now, as
+// PartyMenu_DrawPanels_Default drew them: the DNA Splicers take a Pokemon out
+// of the party or put one back while the menu is open. A panel that had a
+// Pokemon keeps its sprites and has its icon reloaded; one that has none now
+// is cleared and its sprites hidden.
+static void PartyMenu_RedrawPanelsFrom(PartyMenu *partyMenu, u8 partySlot) {
+    const UnkStruct_0207A22C *a1 = partyMenu->args->unk_25 == 2 ? _0210150C[1] : _0210150C[0];
+    NARC *narc = NARC_New(NARC_poketool_icongra_poke_icon, HEAP_ID_PARTY_MENU);
+    BOOL hadMon;
+    u8 i;
+
+    for (i = partySlot; i < PARTY_SIZE; i++) {
+        hadMon = partyMenu->monsDrawState[i].active;
+        if (sub_02079E38(partyMenu, i) == TRUE) {
+            sub_0207A174(partyMenu, i, a1[i].unk_0, a1[i].unk_2, partyMenu->monsDrawState[i].isEgg != TRUE);
+            sub_0207D5DC(partyMenu, i);
+            if (hadMon) {
+                sub_0207ECE0(partyMenu, i);
+            } else {
+                sub_0207EBE4(partyMenu, i, a1[i].unk_4, a1[i].unk_6, narc);
+                sub_0207EF5C(partyMenu, i, a1[i].unk_8, a1[i].unk_A);
+            }
+            PartyMenu_DrawMonHeldItemIcon(partyMenu, i, partyMenu->monsDrawState[i].heldItem);
+            PartyMenu_SetMonHeldItemIconCoords(partyMenu, i, a1[i].unk_4, a1[i].unk_6);
+            PartyMenu_DrawMonCapsuleIcon(partyMenu, i);
+            PartyMenu_RefreshMonCapsuleIconSpritePos(partyMenu, i);
+            PartyMenu_DrawMonStatusIcon(partyMenu, i, partyMenu->monsDrawState[i].status);
+        } else if (hadMon) {
+            partyMenu->monsDrawState[i].capsule = 0;
+            sub_0207A780(partyMenu, i, a1[i].unk_0, a1[i].unk_2);
+            PartyMenu_CommitPartyMonPanelWindowsToVram_NotInVBlank(partyMenu, i);
+            Sprite_SetDrawFlag(partyMenu->monsDrawState[i].iconSprite, FALSE);
+            Sprite_SetDrawFlag(partyMenu->monsDrawState[i].mainScreenIconSprite, FALSE);
+            Sprite_SetDrawFlag(partyMenu->sprites[PARTY_MENU_SPRITE_ID_BALL + i], FALSE);
+        }
+    }
+    NARC_Delete(narc);
+    ScheduleBgTilemapBufferTransfer(partyMenu->bgConfig, GF_BG_LYR_MAIN_2);
+    ScheduleBgTilemapBufferTransfer(partyMenu->bgConfig, GF_BG_LYR_SUB_0);
+}
+
 // Once the form change scene has changed the Kyurem: fused, the partner goes
 // into the save and leaves the party, Glaciate becomes Ice Burn or Freeze
 // Shock and Scary Face Fusion Flare or Fusion Bolt; separated, the partner
 // comes back at the end of the party and the moves go back. The partner
-// leaves after the scene so that the scene draws the Kyurem where it is.
+// leaves after the scene so that the scene draws the Kyurem where it is, and
+// the panels are drawn again for the party it leaves, which the menu shows
+// while it closes; the cursor stays on the Kyurem.
 static void PartyMenu_FinishDNASplicers(PartyMenu *partyMenu) {
     Party *party = partyMenu->args->party;
     SAVE_MISC_DATA *misc = Save_Misc_Get(FieldSystem_GetSaveData(partyMenu->args->fieldSystem));
@@ -2576,6 +2619,7 @@ static void PartyMenu_FinishDNASplicers(PartyMenu *partyMenu) {
         Party_AddMon(party, &misc->storedMons[STORED_MONS_DNA_SPLICERS]);
         MI_CpuClear8(&misc->storedMons[STORED_MONS_DNA_SPLICERS], sizeof(Pokemon));
         misc->isMonStored[STORED_MONS_DNA_SPLICERS] = FALSE;
+        PartyMenu_RedrawPanelsFrom(partyMenu, Party_GetCount(party) - 1);
         return;
     }
     Mon_SwapMove(kyurem, MOVE_GLACIATE, white ? MOVE_ICE_BURN : MOVE_FREEZE_SHOCK);
@@ -2585,6 +2629,11 @@ static void PartyMenu_FinishDNASplicers(PartyMenu *partyMenu) {
             misc->storedMons[STORED_MONS_DNA_SPLICERS] = *Party_GetMonByIndex(party, i);
             misc->isMonStored[STORED_MONS_DNA_SPLICERS] = TRUE;
             Party_RemoveMon(party, i);
+            if (i < partyMenu->partyMonIndex) {
+                partyMenu->partyMonIndex--;
+                sub_0207A89C(partyMenu);
+            }
+            PartyMenu_RedrawPanelsFrom(partyMenu, i);
             return;
         }
     }
