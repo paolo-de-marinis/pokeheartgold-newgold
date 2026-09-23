@@ -18,11 +18,19 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT, function
+
+sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness")]
+import savedit  # noqa: E402
+
+BUILD = ROOT / "build/heartgold.us"
+# The first slot's size and the PC slot's, in each layout the game reads.
+LAYOUTS = {"now": [65088, 124156], "before the DNA Splicers": [64140, 124156]}
 
 NATIVE = r"""
 #include <assert.h>
@@ -101,6 +109,17 @@ class LegacySaveTests(unittest.TestCase):
                                  env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
             print(run.stdout.strip())
+
+    def test_the_layout_is_one_the_game_reads(self):
+        """A save carries no layout version: the game tells the two layouts
+        apart by where the footers are and the sizes they give. A block that
+        changes size makes a third, which a save of either would not load
+        as; docs/newgold/SAVE-LAYOUT.md says what that change has to do."""
+        if not (BUILD / "main.sbin").exists():
+            self.skipTest("the ROM has not been built")
+        for legacy, name in ((False, "now"), (True, "before the DNA Splicers")):
+            sizes = [spec["size"] for spec in savedit.slot_specs(savedit.blocks(BUILD, legacy=legacy))]
+            self.assertEqual(sizes, LAYOUTS[name], f"{name}: the save's layout changed, see docs/newgold/SAVE-LAYOUT.md")
 
     def test_the_expansion_starts_where_heartgold_s_block_ended(self):
         header = (ROOT / "include/save_misc_data.h").read_text()
