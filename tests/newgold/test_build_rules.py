@@ -85,6 +85,29 @@ class BuildRuleTests(unittest.TestCase):
             normal, _, order_only = rules[0].partition("|")
             self.assertTrue(name not in normal.split() and name in order_only.split(), f"{target}: {name}")
 
+    def test_a_zone_event_is_rebuilt_for_the_header_its_json_names(self):
+        """A zone's events name their scripts by the ids of the header the
+        json gives ({{ header }}); only the assembler knew which, and the
+        dependency file it wrote was never read, so a renumbered script left
+        the old ids in the archive. Each bin depends on its own X.bin.d, and
+        once built, through it, on that header."""
+        db = database()
+        prerequisites = {}
+        for m in re.finditer(r"^(files/fielddata/eventdata/zone_event/[^:\s]+\.bin):(.*)$", db, re.M):
+            if "=" not in m.group(2):
+                prerequisites.setdefault(m.group(1), set()).update(m.group(2).replace("|", " ").split())
+        jsons = sorted((ROOT / "files/fielddata/eventdata/zone_event").glob("*.json"))
+        self.assertEqual(len(prerequisites), len(jsons))
+        built = 0
+        for json in jsons:
+            bin_ = f"files/fielddata/eventdata/zone_event/{json.stem}.bin"
+            self.assertIn(bin_ + ".d", prerequisites[bin_])
+            header = re.match(r'\s*\{\s*"header":\s*"([^"]+)"', json.read_text())
+            if header and (ROOT / (bin_ + ".d")).exists():
+                built += 1
+                self.assertIn("files/" + header.group(1), prerequisites[bin_], bin_)
+        print(f"{built} of {len(jsons)} zone events depend on their json's header")
+
 
 if __name__ == "__main__":
     unittest.main()
