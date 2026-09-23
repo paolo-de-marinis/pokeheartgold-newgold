@@ -4938,6 +4938,30 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_30++;
             break;
         case 4:
+            // Parting Shot's user goes back once the move is over, if the
+            // move lowered a stat of its target (Pokemon Central, Monito; the
+            // reference's Activate_Switch, ServerDoPostMoveEffects.c:2149 at
+            // d0380a487). Nothing lowered -- a miss, Protect, Soundproof,
+            // Clear Body, Mist, both stats at -6 -- and it stays, as it has
+            // since the seventh generation. It goes before the user's Throat
+            // Spray, which a user that left with its move does not use, and a
+            // target's Eject Pack does not answer a Parting Shot: unk_34 says
+            // so to the step that asks it.
+            if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_PARTING_SHOT
+                && ctx->battlerIdTarget != BATTLER_NONE
+                && ctx->battlerIdTarget != ctx->battlerIdAttacker
+                && (ctx->statLoweredBattlers & MaskOfFlagNo(ctx->battlerIdTarget))
+                && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
+                && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HANDLE_PARTING_SHOT);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                ctx->unk_34 = SWITCH_ITEM_USED;
+                flag = 1;
+            }
+            ctx->unk_30++;
+            break;
+        case 5:
             // A Throat Spray answers the attacker using a sound move, and that
             // is the whole of the reference's condition: not that the move hit,
             // not that there was anything to hit, and not that Sp. Atk had room
@@ -4966,10 +4990,11 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_34 = 0;
             }
             break;
-        case 5:
+        case 6:
             // An Eject Pack on anyone who had a stat lowered during the move,
             // after the user's own items, where the reference asks it; not
-            // once a Red Card or an Eject Button has sent somebody away.
+            // once a Red Card or an Eject Button has sent somebody away, or
+            // after a Parting Shot.
             while (ctx->unk_34 < maxBattlers) {
                 int script = CheckEjectPack(ctx, ctx->turnOrder[ctx->unk_34++]);
 
@@ -4986,7 +5011,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 6: {
+        case 7: {
             // Emergency Exit and Wimp Out, one Pokemon at a time: this step
             // comes round again after each, until none is left to go.
             int script;
@@ -5001,7 +5026,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 7:
+        case 8:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;

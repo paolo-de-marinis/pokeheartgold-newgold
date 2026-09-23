@@ -24,7 +24,7 @@ import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT
-from test_repels import REFERENCE
+from test_repels import REFERENCE, function
 
 NEWGOLD = "ccf2c9f5"  # konefr's tip, the engine under it included
 
@@ -227,7 +227,6 @@ UNREAD_HERE = {
     "CHANGE_TO_PSYCHIC_TYPE": "script: subscript 323 fails behind a substitute, as the reference's substitute list does",
     "COACHING": "script: effect script 383 fails it in a single battle or with no partner standing",
     "DECORATE": "script: subscript 314 does not affect a target behind a substitute, the reference's stat-drop list",
-    "PARTING_SHOT": "not ported: it lowers the two stats but the user never switches out",
     "FORCE_SWITCH_HIT": "script: a CHECK_HP_AND_SUBSTITUTE side effect runs Whirlwind's subscript after the damage",
     "STUFF_CHEEKS": "script: effect script 398 fails it without a berry and subscript 311 refuses it at +6 Defense",
     "RECOIL_HALF_MAX_HP": "script: Reckless's boost and the half-HP recoil are effect script 404's",
@@ -237,7 +236,7 @@ UNREAD_HERE = {
 
 class WhatIsStillMissingTests(unittest.TestCase):
     # A ratchet, not a target: the table above may only shrink.
-    STILL_UNREAD = 44
+    STILL_UNREAD = 42
 
     def test_the_table_only_ever_shrinks(self):
         self.assertLessEqual(
@@ -271,6 +270,39 @@ class WhatIsStillMissingTests(unittest.TestCase):
 
     def test_no_script_reaches_for_a_placeholder(self):
         self.assertEqual(reaches_for_what_is_not_here(), set())
+
+
+class PartingShotTests(unittest.TestCase):
+    """Parting Shot lowers its target's Attack and Sp. Atk and then its user
+    goes back, as U-turn's does (Pokemon Central, Monito); since the seventh
+    generation only when a stat was lowered. The reference runs the switch
+    from its post-move steps (Activate_Switch and subscript 469 at
+    d0380a487); here the stats fell and the user stayed."""
+
+    def test_the_user_goes_back_once_the_move_is_over(self):
+        from test_hold_effects import CONTROLLER
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        step = body[body.index("MOVE_EFFECT_PARTING_SHOT"):]
+        step = step[:step.index("break;")]
+        self.assertIn("(ctx->statLoweredBattlers & MaskOfFlagNo(ctx->battlerIdTarget))", step)
+        self.assertIn("!(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)", step)
+        self.assertIn("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HANDLE_PARTING_SHOT);", step)
+        # A user that left with its move does not spray its throat, and a
+        # Parting Shot is not answered by the target's Eject Pack.
+        self.assertIn("ctx->unk_34 = SWITCH_ITEM_USED;", step)
+        self.assertLess(body.index("MOVE_EFFECT_PARTING_SHOT"), body.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"))
+        self.assertLess(body.index("MOVE_EFFECT_PARTING_SHOT"), body.index("CheckEjectPack"))
+
+    def test_the_script_switches_the_user_out(self):
+        from test_hold_effects import subscript_named, walk
+        script = subscript_named("BATTLE_SUBSCRIPT_HANDLE_PARTING_SHOT")
+        self.assertEqual(walk(script, {}.get), [])
+        self.assertEqual(walk(script, {"REPLACEMENT": True}.get),
+                         ["BATTLE_SUBSCRIPT_PURSUIT", "BATTLE_SUBSCRIPT_SHOW_PARTY_LIST"])
+        self.assertEqual(walk(script, {"REPLACEMENT": True, "BMON_DATA_HP": 0}.get), ["BATTLE_SUBSCRIPT_PURSUIT"])
+        self.assertIn("BSCRIPT_VAR_BATTLER_SWITCH, BSCRIPT_VAR_BATTLER_ATTACKER", script)
+        gone = script[script.index("DeletePokemon BATTLER_CATEGORY_ATTACKER"):script.index("GoToSubscript")]
+        self.assertIn("BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_UTURN", gone)
 
 
 class PriorityTests(unittest.TestCase):
