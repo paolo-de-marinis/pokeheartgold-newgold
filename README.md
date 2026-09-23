@@ -21,9 +21,9 @@ Overall                                                                    93%
 
 Implementation         ████████████████████████████████████████████████░░  96%
 Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  12%
-Audit rows closed      ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  23%
+Audit rows closed      ██████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  35%
 
-Audit: 120 of 156 rows in docs/newgold/AUDIT-*.md still open.
+Audit: 101 of 156 rows in docs/newgold/AUDIT-*.md still open.
 The port is finished when none is, or each is closed with a reason.
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
