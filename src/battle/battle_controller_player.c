@@ -5027,6 +5027,16 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         ctx->battlerIdStatChange = target;
         script = BATTLE_SUBSCRIPT_BIND_START;
         break;
+    // Knock Off takes the target's item once the move is over: not if the
+    // user has fainted to Rough Skin, Aftermath or the like, and from a target
+    // the move felled all the same (Pokemon Central, Privazione); not past a
+    // substitute that took the hit. Subscript 142 asks the rest.
+    case MOVE_EFFECT_REMOVE_HELD_ITEM:
+        if (!ctx->battleMons[ctx->battlerIdAttacker].hp || BattlerCheckSubstitute(ctx, target)) {
+            return FALSE;
+        }
+        script = BATTLE_SUBSCRIPT_KNOCK_OFF;
+        break;
     default:
         return FALSE;
     }

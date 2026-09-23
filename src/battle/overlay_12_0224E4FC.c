@@ -1949,13 +1949,13 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     }
 
     // What these do waits for Parental Bond's second strike (Pokemon Central,
-    // Amorefiliale): U-turn's switch, Dragon Tail's, the item Thief takes,
-    // Pluck eats or Knock Off knocks away, Smack Down's fall and Anchor Shot's
-    // trap, and the terrain Steel Roller and Ice Spinner tear up, which Steel
-    // Roller needs for its second strike. The reference does these after the
-    // move; here they come with the hit, so the first strike leaves them to
-    // the second, unless the first was the last. (The cure Smelling Salts and
-    // Wake-Up Slap give is a post-move step here too, TryAdditionalMoveEffect.)
+    // Amorefiliale): U-turn's switch, Dragon Tail's, the item Thief takes or
+    // Pluck eats, Smack Down's fall and Anchor Shot's trap, and the terrain
+    // Steel Roller and Ice Spinner tear up, which Steel Roller needs for its
+    // second strike. The reference does these after the move; here they come
+    // with the hit, so the first strike leaves them to the second, unless the
+    // first was the last. (The cure Smelling Salts and Wake-Up Slap give, and
+    // Knock Off's, are post-move steps here too, TryAdditionalMoveEffect.)
     //
     // The first strike can still prove the last once these have been asked:
     // Effect Spore puts the user to sleep, and the move ends there (Pokemon
@@ -1970,7 +1970,6 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         case BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE:
         case BATTLE_SUBSCRIPT_STEAL_ITEM:
         case BATTLE_SUBSCRIPT_PLUCK:
-        case BATTLE_SUBSCRIPT_KNOCK_OFF:
         case BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN:
         case BATTLE_SUBSCRIPT_MEAN_LOOK:
         case BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END:

@@ -241,7 +241,7 @@ class ParentalBondTests(unittest.TestCase):
         body = function(OVERLAY.read_text(), "ov12_02250490")
         waiting = body[body.index("if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {"):]
         for script in ("ATTACK_THEN_SWITCH_OUT", "FORCE_TARGET_TO_SWITCH_OR_FLEE", "STEAL_ITEM", "PLUCK",
-                       "KNOCK_OFF", "FELL_STRAIGHT_DOWN", "MEAN_LOOK", "HANDLE_TERRAIN_END"):
+                       "FELL_STRAIGHT_DOWN", "MEAN_LOOK", "HANDLE_TERRAIN_END"):
             self.assertIn(f"case BATTLE_SUBSCRIPT_{script}:", waiting)
         self.assertIn("!ParentalBond_StrikeToCome(ctx)", function(CONTROLLER.read_text(), "ov12_0224CC88"))
         self.assertIn("!ParentalBond_IsSecondStrike(ctx)", function(COMMANDS.read_text(), "BtlCmd_CalcFuryCutterPower"))

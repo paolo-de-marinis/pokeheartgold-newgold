@@ -71,7 +71,6 @@ STILL_DIFFERENT = {
     173: CALLED_MOVE,
     178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
     180: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
-    188: IN_C.format("the knocking off, ServerDoPostMoveEffects.c"),
     222: IN_C.format("Natural Gift's type, power and berry, CalcBaseDamage.c"),
     224: IN_C.format("the berry eaten, ServerDoPostMoveEffects.c"),
     228: IN_C.format("the switch, ServerDoPostMoveEffects.c"),
@@ -360,6 +359,20 @@ class BroughtOverTests(unittest.TestCase):
         self.assertIn("CheckSubstitute BATTLER_CATEGORY_SIDE_EFFECT_MON", subscript("BIND_START"))
         for effect in (42, 261):
             self.assertNotIn("SIDE_EFFECT", script(effect), effect)
+
+    def test_knock_off_takes_once_the_move_is_over(self):
+        # The engine's post-move step, the user still standing; Pokemon
+        # Central, Privazione: not once Rough Skin or Aftermath has felled the
+        # user, which answer the hit before the move is over.
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        step = function(controller, "TryAdditionalMoveEffect")
+        case = step[step.index("case MOVE_EFFECT_REMOVE_HELD_ITEM:"):]
+        case = case[:case.index("break;")]
+        self.assertIn("!ctx->battleMons[ctx->battlerIdAttacker].hp || BattlerCheckSubstitute(ctx, target)", case)
+        self.assertIn("script = BATTLE_SUBSCRIPT_KNOCK_OFF;", case)
+        self.assertNotIn("SIDE_EFFECT", script(188))
+        body = function(controller, "ov12_0224E1BC")
+        self.assertLess(body.index("TryAdditionalMoveEffect(ctx)"), body.index("TryPickpocket(battleSystem, ctx, &script)"))
 
     def test_howl_raises_the_allies_too(self):
         # The reference raises Howl's user alone; from Generation VIII the
