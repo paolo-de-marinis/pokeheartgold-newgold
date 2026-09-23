@@ -276,7 +276,7 @@ static void TrainerHouse_CopyToPokemon(TrainerHouseMon *trainerHouseMon, Pokemon
         tempByte = *(&trainerHouseMon->hpEv + i);
         SetMonData(mon, MON_DATA_HP_EV + i, &tempByte);
     }
-    u16 ability = trainerHouseMon->ability;
+    u16 ability = trainerHouseMon->ability | (trainerHouseMon->abilityMSB << 8);
     SetMonData(mon, MON_DATA_ABILITY, &ability);
     SetMonData(mon, MON_DATA_FRIENDSHIP, &(trainerHouseMon->friendship));
     u16 nickname[POKEMON_NAME_LENGTH + 1];

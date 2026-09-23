@@ -3,6 +3,7 @@
 typedef char PokewalkerTrainerHouseMonSizeCheck[sizeof(TrainerHouseMon) == 0x38 ? 1 : -1];
 typedef char PokewalkerTrainerHouseAbilityOffsetCheck[offsetof(TrainerHouseMon, ability) == 0x20 ? 1 : -1];
 typedef char PokewalkerTrainerHouseNicknameOffsetCheck[offsetof(TrainerHouseMon, nickname) == 0x24 ? 1 : -1];
+typedef char PokewalkerTrainerHouseAbilityMSBOffsetCheck[offsetof(TrainerHouseMon, abilityMSB) == 0x23 ? 1 : -1];
 
 // NONMATCHING: two private stack slots are exchanged; all other instructions match.
 // The compiled-instruction equivalence audit is recorded in docs/newgold/VALIDATION.md.
@@ -32,7 +33,9 @@ void ov112_021F33D8(TrainerHouseMon *dest, Party *party) {
         dest->otid = GetMonData(mon, MON_DATA_OT_ID, NULL);
         dest->pid = GetMonData(mon, MON_DATA_PERSONALITY, NULL);
         dest->language = GetMonData(mon, MON_DATA_LANGUAGE, NULL);
-        dest->ability = GetMonData(mon, MON_DATA_ABILITY, NULL);
+        u16 ability = GetMonData(mon, MON_DATA_ABILITY, NULL);
+        dest->ability = ability;
+        dest->abilityMSB = ability >> 8;
         dest->friendship = GetMonData(mon, MON_DATA_FRIENDSHIP, NULL);
         dest->level = GetMonData(mon, MON_DATA_LEVEL, NULL);
         GetMonData(mon, MON_DATA_NICKNAME, nickname);

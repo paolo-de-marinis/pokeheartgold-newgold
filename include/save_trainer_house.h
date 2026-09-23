@@ -52,6 +52,7 @@ typedef struct TrainerHouseMon {
     u8 ability;
     u8 friendship;
     u8 level;
+    u8 abilityMSB; // New Gold: the ability's high byte, in what was padding
     u16 nickname[POKEMON_NAME_LENGTH];
 } TrainerHouseMon;
 
