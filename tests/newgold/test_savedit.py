@@ -57,6 +57,32 @@ def game_like_save(path):
     Path(path).write_bytes(bytes(raw))
 
 
+def the_game_saves(path):
+    """The game's next save of this file, as bytes: SaveData_New loads the
+    newest half and keeps its PC flag (save.c's boxModifiedFlags), Continue
+    clears the copy in RAM, and the save writes the other half -- the main
+    slot whole, of the PC slot only the boxes the kept flag names, then the
+    rest of the slot, each slot under a footer computed over RAM."""
+    save = sv.Save(path)
+    ram, raw = bytearray(save.region), bytearray(save.raw)
+    pc = save.entry("SAVE_PCSTORAGE")["offset"]
+    kept = struct.unpack_from("<I", ram, pc + sv.BOX_MODIFIED)[0]
+    struct.pack_into("<I", ram, pc + sv.BOX_MODIFIED, 0)
+    other = sv.HALF - save.half
+    for spec in save.specs:
+        start, end = spec["offset"], spec["offset"] + spec["size"]
+        struct.pack_into("<IIIHH", ram, end - sv.CHUNK_FOOTER, save.counter() + 1, spec["size"], sv.CHUNK_MAGIC,
+                         spec["slot"], sv.crc16(ram[start:end - sv.CHUNK_FOOTER]))
+        if start == pc:
+            written = [(pc + n * sv.BOX, pc + (n + 1) * sv.BOX) for n in range(sv.NUM_BOXES) if kept >> n & 1]
+            written.append((pc + sv.NUM_BOXES * sv.BOX, end))
+        else:
+            written = [(start, end)]
+        for lo, hi in written:
+            raw[other + lo:other + hi] = ram[lo:hi]
+    return bytes(raw)
+
+
 def party_save(blank, path):
     """The game-like save with a party of six and a boxed Mew, as a
     player's save would have."""
@@ -211,6 +237,35 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(sv.describe_mon(after[899])["level"], 40)
         self.assertEqual(sv.boxes(again)["mons"][29][29]["species_name"], "Togekiss")
         self.assert_only(save, ["SAVE_PCSTORAGE"])
+
+    def test_the_games_next_save_after_a_box_edit(self):
+        """The game writes only the boxes the PC flag names into the older
+        half; a box changed here that the flag left out would be the old one
+        there under the new footer, and the next boot would load the save
+        before with 'The save file is corrupted'."""
+        save = self.open()
+        pc = save.entry("SAVE_PCSTORAGE")["offset"]
+        self.assertIn(pc, [spec["offset"] for spec in save.specs], "the boxes open their slot")
+        sv.set_box_mon(save, 29, 0, sv.new_mon(sv.species_numbers()["TOGEKISS"], 40, sv.owner(save), party=False))
+        edited = Path(self.tmp.name) / "boxed.sav"
+        edited.write_bytes(save.image())
+        flag_at = save.half + pc + sv.BOX_MODIFIED
+        self.assertEqual(struct.unpack_from("<I", edited.read_bytes(), flag_at)[0], 1 << 2 | 1 << 29,
+                         "the fixture's Mew in box 3, and box 30")
+        after = Path(self.tmp.name) / "after.sav"
+        after.write_bytes(the_game_saves(edited))
+        again = sv.Save(after)
+        self.assertEqual((again.half, again.valid(0), again.valid(sv.HALF)), (0, True, True))
+        self.assertEqual(sv.boxes(again)["mons"][29][0]["species_name"], "Togekiss")
+        # The same edit with box 30 left out of the flag, as image() once wrote it.
+        broken = bytearray(edited.read_bytes())
+        struct.pack_into("<I", broken, flag_at, 1 << 2)
+        spec = next(s for s in save.specs if s["offset"] == pc)
+        footer = save.half + spec["offset"] + spec["size"] - sv.CHUNK_FOOTER
+        struct.pack_into("<H", broken, footer + sv.FOOTER_CRC_AT, sv.crc16(broken[save.half + pc:footer]))
+        edited.write_bytes(bytes(broken))
+        after.write_bytes(the_game_saves(edited))
+        self.assertFalse(sv.Save(after).valid(0), "the replay catches what the game calls corrupt")
 
     def test_moving_between_party_and_box(self):
         save = self.open()

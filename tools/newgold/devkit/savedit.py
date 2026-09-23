@@ -547,8 +547,21 @@ class Save:
         that changed gets its checksum, only a slot holding one gets a new
         footer, and only the newest half is touched -- so a save opened and
         written back unchanged is the same bytes.
+
+        The older half is also where the game's next save goes, and of the
+        PC slot it writes only the boxes PokemonStorageSystem.boxModifiedFlag
+        names (Save_CalcPCBoxModifiedFlags, Save_WriteNextPCBox) under a
+        footer computed over all of them. A box changed here is added to the
+        flag, or the older half would keep its old bytes under that footer
+        and the game would call the save corrupt at the next boot.
         """
         region = bytearray(self.region)
+        pc = self.entry("SAVE_PCSTORAGE")["offset"]
+        boxes = [n for n in range(NUM_BOXES)
+                 if region[pc + n * BOX:pc + (n + 1) * BOX] != self.opened[pc + n * BOX:pc + (n + 1) * BOX]]
+        if boxes:
+            flags = struct.unpack_from("<I", region, pc + BOX_MODIFIED)[0]
+            struct.pack_into("<I", region, pc + BOX_MODIFIED, flags | sum(1 << n for n in boxes))
         slots = set()
         for b in self.table:
             start, end = b["offset"], b["offset"] + b["size"]
@@ -1175,6 +1188,7 @@ PARTY_EXTRA = 8 + PARTY_SIZE * PARTY_MON      # PartyExtra, after PartyCore
 PERFORMANCE_MAX = 5                           # sizeof(PartyExtraSub)
 NUM_BOXES = MONS_PER_BOX = 30                 # include/constants/pokemon.h
 CURRENT_BOX = NUM_BOXES * BOX                 # PokemonStorageSystem.curBox
+BOX_MODIFIED = CURRENT_BOX + 4                # .boxModifiedFlag, a bit a box
 BOX_NAMES = CURRENT_BOX + 8                   # .box_names, after boxModifiedFlag
 
 
