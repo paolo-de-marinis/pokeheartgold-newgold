@@ -7966,14 +7966,14 @@ BOOL CheckItemGradualHPRestore(BattleSystem *battleSystem, BattleContext *ctx, i
 // stat stages, the holder gains the same, all of them at once however many
 // stats and Pokemon went up, spends the herb, and does nothing if every stat
 // it would copy is already at +6. RecordMirrorHerbStages is told of every
-// stage BtlCmd_ChangeStatStage actually adds; the stages wait there until the
-// holder's items are next asked -- after the move that raised them, after the
-// entry abilities, at the end of the turn -- and MirrorHerbCopiesStages
-// applies them. The herb's own copy is written straight into the stages, so
-// it is not told to anybody's herb in turn. Costar and Opportunist are not
-// copied either; neither is written yet. A stage raised without
-// BtlCmd_ChangeStatStage -- Belly Drum, a Starf Berry, Stuff Cheeks -- is not
-// seen.
+// stage BtlCmd_ChangeStatStage actually adds, and of every one a script raises
+// itself through BtlCmd_UpdateMonData -- Belly Drum, a Starf Berry, Anger
+// Point -- or Rage builds; the stages wait there until the holder's items are
+// next asked -- after the move that raised them, after the entry abilities, at
+// the end of the turn -- and MirrorHerbCopiesStages applies them. The herb's
+// own copy is written straight into the stages, so it is not told to
+// anybody's herb in turn, and neither is Costar's, which Pokemon Central
+// leaves out as well.
 void RecordMirrorHerbStages(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int stat, int stages) {
     int i;
 

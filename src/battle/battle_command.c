@@ -2752,6 +2752,8 @@ BOOL BtlCmd_UpdateMonData(BattleSystem *battleSystem, BattleContext *ctx) {
     int val = BattleScriptReadWord(ctx);
     int battlerId = BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side);
     int var = GetBattlerVar(ctx, battlerId, varId, NULL);
+    int before = var;
+    int stage = varId == BMON_DATA_TEMP ? ctx->tempData : varId;
 
     switch (opcode) {
     case 7:
@@ -2812,6 +2814,18 @@ BOOL BtlCmd_UpdateMonData(BattleSystem *battleSystem, BattleContext *ctx) {
 
     SetBattlerVar(ctx, battlerId, varId, &var);
     CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
+
+    // A stage a script raises itself rather than through the stat-change
+    // command -- Belly Drum, Anger Point, Rage, Motor Drive, Steam Engine, a
+    // Starf Berry -- is copied by a Mirror Herb on the other side too, as far
+    // as the stage really rose (Pokemon Central, Foglia carbone: Belly Drum's
+    // copy is the stages actually gained). A stage set back to neutral is
+    // reset, not raised (Shed Tail), and the swaps write through another
+    // command.
+    if (stage >= BMON_DATA_STAT_CHANGE_ATK && stage <= BMON_DATA_STAT_CHANGE_EVASION && !(opcode == 7 && val == 6)
+        && (var > 12 ? 12 : var) > before) {
+        RecordMirrorHerbStages(battleSystem, ctx, battlerId, stage - BMON_DATA_STAT_CHANGE_HP, (var > 12 ? 12 : var) - before);
+    }
 
     return FALSE;
 }

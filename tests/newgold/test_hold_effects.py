@@ -1098,6 +1098,18 @@ class MirrorHerbTests(unittest.TestCase):
         self.assertIn("*script = BATTLE_SUBSCRIPT_MIRROR_HERB;", case[:case.index("break;")])
         self.assertIn("MI_CpuClear8(ctx->mirrorHerbStages[battlerId]", function(source, "BattleSystem_GetBattleMon"))
 
+    def test_a_stage_a_script_raises_is_told_too(self):
+        """Pokemon Central (Foglia carbone) copies Belly Drum as far as the
+        stage really rose; Anger Point, Rage, Motor Drive, Steam Engine and a
+        Starf Berry raise theirs from a script, not the stat command."""
+        update = function(COMMANDS.read_text(), "BtlCmd_UpdateMonData")
+        self.assertIn("int stage = varId == BMON_DATA_TEMP ? ctx->tempData : varId;", update)
+        self.assertIn("if (stage >= BMON_DATA_STAT_CHANGE_ATK && stage <= BMON_DATA_STAT_CHANGE_EVASION && !(opcode == 7 && val == 6)\n"
+                      "        && (var > 12 ? 12 : var) > before) {\n"
+                      "        RecordMirrorHerbStages(battleSystem, ctx, battlerId, stage - BMON_DATA_STAT_CHANGE_HP, (var > 12 ? 12 : var) - before);", update)
+        rage = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "TryBuildRage")
+        self.assertIn("RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdTarget, STAT_ATK, 1);", rage)
+
     def test_the_herb_is_shown_and_spent(self):
         script = subscript_named("BATTLE_SUBSCRIPT_MIRROR_HERB")
         self.assertIn("PrintMessage msg_0197_01824, TAG_NICKNAME_ITEM, BATTLER_CATEGORY_MSG_TEMP, BATTLER_CATEGORY_MSG_TEMP", script)
