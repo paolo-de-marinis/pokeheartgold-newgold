@@ -186,7 +186,11 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(out["boxes"]["mons"][2][5]["species_name"], "Mew")
         self.assertEqual(out["info"]["counter"], 2)
         self.assertEqual(out["backups"], [])
-        self.assertIn("FLAG_UNK_076", [r["name"] for r in self.ok("/api/flags?f=gyms/test.sav&q=UNK_076")])
+        self.assertIn("FLAG_UNK_076", [r["name"] for r in self.ok("/api/flags?f=gyms/test.sav&q=UNK_076")["rows"]])
+        found = self.ok("/api/flags?f=gyms/test.sav&q=UNK")
+        self.assertEqual((len(found["rows"]), found["rows"][0]["kind"]), (300, "var"), "the variables first")
+        self.assertGreater(found["total"], 1300)
+        self.assertNotIn("VAR_BASE", [r["name"] for r in self.ok("/api/flags?f=gyms/test.sav&q=VAR_")["rows"]])
         data = self.ok("/api/data")
         self.assertEqual(len(data["natures"]), 25)
         self.assertIn(sv.species_numbers()["PIKACHU"], data["dex"])
@@ -369,9 +373,9 @@ class SaveUiTests(unittest.TestCase):
         self.assertTrue(out["position"]["by_warp"])
         self.edit("flag", {"number": 0x76, "value": True})
         self.edit("var", {"number": 0x4079, "value": 2})
-        found = {r["name"]: r["value"] for r in self.ok("/api/flags?f=gyms/test.sav&q=UNK_07")}
+        found = {r["name"]: r["value"] for r in self.ok("/api/flags?f=gyms/test.sav&q=UNK_07")["rows"]}
         self.assertEqual(found["FLAG_UNK_076"], 1)
-        self.assertEqual(self.ok("/api/flags?f=gyms/test.sav&q=4079")[0]["value"], 2)
+        self.assertEqual(self.ok("/api/flags?f=gyms/test.sav&q=4079")["rows"][0]["value"], 2)
         self.assertEqual(len(self.backups()), 8, "one backup a write")
         self.assertIn("mappa", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position",
                                                           "args": {"map": 60000, "x": 1, "y": 1}}))

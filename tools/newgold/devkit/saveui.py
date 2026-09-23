@@ -82,6 +82,7 @@ class Refused(Exception):
 
 
 INVALID = "non è un salvataggio valido"
+FLAG_ROWS = 300      # the flags and variables one search shows
 MELON_OPEN = "melonDS è aperto: riscriverebbe lo slot alla chiusura. Chiudilo prima."
 STALE = ("il file è cambiato su disco da quando la pagina l'ha letto (melonDS, un'altra scheda o "
          "savedit): l'ho ricaricato, rifai la modifica")
@@ -1091,7 +1092,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.reply(200, self.library.detail(q.get("f")))
             if url.path == "/api/flags":
                 path, _, _ = self.library.locate(q.get("f"))
-                return self.reply(200, sv.find_flags(self.library.open(path), q.get("q", "")))
+                found = sv.find_flags(self.library.open(path), q.get("q", ""))
+                return self.reply(200, {"rows": found[:FLAG_ROWS], "total": len(found)})
             if url.path == "/api/learnset":
                 species = number(q.get("species"), 1, len(sv.personal_records()) - 1, "specie")
                 return self.reply(200, sv.moveset(species, number(q.get("level"), 1, 100, "livello")))

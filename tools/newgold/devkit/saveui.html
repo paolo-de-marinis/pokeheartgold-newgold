@@ -1000,13 +1000,14 @@ function renderFlags() {
     const q = $("#flagq").value.trim();
     S.flagq = q;
     if (q.length < 2) { $("#flagres").innerHTML = `<p class="muted">Scrivi almeno due caratteri.</p>`; return; }
-    const rows = await run(() => api(`/api/flags?f=${encodeURIComponent(S.f)}&q=${encodeURIComponent(q)}`));
-    if (!rows) return;
-    $("#flagres").innerHTML = rows.length ? `<table><tr><th>Nome</th><th>Numero</th><th>Valore</th></tr>${rows.map(r => `<tr>
+    const found = await run(() => api(`/api/flags?f=${encodeURIComponent(S.f)}&q=${encodeURIComponent(q)}`));
+    if (!found) return;
+    const rows = found.rows;
+    $("#flagres").innerHTML = (found.total > rows.length ? `<p class="note">I primi ${rows.length} di ${found.total} (prima le variabili): restringi la ricerca.</p>` : "") + (rows.length ? `<table><tr><th>Nome</th><th>Numero</th><th>Valore</th></tr>${rows.map(r => `<tr>
       <td class="mono">${esc(r.name)}</td><td class="mono muted">0x${r.number.toString(16)}</td>
       <td>${r.kind === "flag" ? `<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-flag="${r.number}" ${r.value ? "checked" : ""}> ${r.value ? "attivo" : "spento"}</label>`
         : `<input type="number" min="0" max="65535" value="${r.value}" data-var="${r.number}" aria-label="${esc(r.name)}"> <button type="button" class="small" data-setvar="${r.number}">Imposta</button>`}</td></tr>`).join("")}</table>`
-      : `<p class="muted">Nessun risultato.</p>`;
+      : `<p class="muted">Nessun risultato.</p>`);
   };
   $("#flagq").oninput = () => { clearTimeout(flagTimer); flagTimer = setTimeout(search, 250); };
   $("#flagres").onchange = async ev => {

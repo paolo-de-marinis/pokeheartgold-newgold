@@ -1609,17 +1609,18 @@ def write_var(save, number, value):
     struct.pack_into("<H", save.block("SAVE_FLAGS"), 2 * (number - VAR_BASE), value)
 
 
-def find_flags(save, query, limit=300):
-    """The flags and variables the save keeps whose name holds the query."""
+def find_flags(save, query):
+    """The variables, then the flags, the save keeps whose name holds the
+    query. VAR_BASE is where the variables start, not one of them."""
     query = query.upper()
     out = []
+    for name, number in constants("include/constants/vars.h", "VAR_").items():
+        if query in name and VAR_BASE <= number < VAR_BASE + NUM_VARS and name != "VAR_BASE":
+            out.append({"kind": "var", "name": name, "number": number, "value": var_value(save, number)})
     for name, number in constants("include/constants/flags.h", "FLAG_").items():
         if query in name and 0 < number < num_flags() and not name.startswith("FLAG_ACTION_"):
             out.append({"kind": "flag", "name": name, "number": number, "value": int(flag_is_set(save, number))})
-    for name, number in constants("include/constants/vars.h", "VAR_").items():
-        if query in name and VAR_BASE <= number < VAR_BASE + NUM_VARS:
-            out.append({"kind": "var", "name": name, "number": number, "value": var_value(save, number)})
-    return out[:limit]
+    return out
 
 
 def info(save):
