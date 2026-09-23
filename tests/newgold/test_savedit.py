@@ -496,7 +496,10 @@ class SaveditLibraryTests(unittest.TestCase):
         for species, level in (("METAPOD", 1), ("PIDGEOTTO", 5)):
             known = [m["id"] for m in sv.describe_mon(sv.new_mon(n[species], level, sv.owner(self.open())))["moves"]]
             self.assertEqual(len(known), len(set(known)), species)
-        self.assertEqual(sv.learnset(n["METAPOD"], 1), [moves["HARDEN"]] * 2, "the CLI's default is as it was")
+        self.assertEqual([m["id"] for m in sv.describe_mon(sv.build_mon("METAPOD", 1))["moves"]], [moves["HARDEN"]],
+                         "the CLI's default too")
+        with self.assertRaises(SystemExit):
+            sv.parse_party("CHIKORITA:5::TACKLE+TACKLE")
 
     def test_a_form_has_its_own_stats(self):
         """CalcMonStats reads the form's record (ResolveMonForm): a Rotom

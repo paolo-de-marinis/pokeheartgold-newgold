@@ -505,13 +505,6 @@ def learnsets():
             for f in files]
 
 
-def learnset(index, level):
-    """The moves this species knows at this level: the last four it learns.
-    The CLI's --party default, kept as it was; preset_moves() is the game's."""
-    known = [move for learned, move in learnsets()[index] if learned <= level]
-    return known[-MAX_MON_MOVES:]
-
-
 def preset_moves(species, level, form=0):
     """The moves the game gives a Pokemon of this species at this level, a
     wild one or one made new (InitBoxMonMoveset): the learnset of its form's
@@ -578,7 +571,7 @@ def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
     ability = ability_of(record, personality)
     exp = experience_for(record["growthRate"], level)
     if moves is None:
-        moves = learnset(index, level)
+        moves = preset_moves(index, level)
     gender = gender_of(record, personality)
 
     a = bytearray(BLOCK)
@@ -989,8 +982,9 @@ def owner(save):
 
 
 def parse_party(text):
-    """SPECIES:LEVEL[:NATURE][:MOVE+MOVE+...],...; moves not given come from
-    the learnset at that level, moves given must be ones it can learn."""
+    """SPECIES:LEVEL[:NATURE][:MOVE+MOVE+...],...; moves not given are the
+    game's at that level (preset_moves), moves given must be ones it can
+    learn, each once."""
     numbers = move_numbers()
     wanted = []
     for entry in text.split(","):
@@ -1002,8 +996,8 @@ def parse_party(text):
                 if move not in numbers:
                     raise SystemExit(f"there is no MOVE_{move}")
                 moves.append(numbers[move])
-            if len(moves) > 4:
-                raise SystemExit("a Pokemon knows four moves")
+            if len(moves) > MAX_MON_MOVES or len(set(moves)) != len(moves):
+                raise SystemExit(f"a Pokemon knows at most {MAX_MON_MOVES} moves, each once")
             if parts[0].upper() in species_numbers():
                 try:
                     check_moves(species_numbers()[parts[0].upper()], moves)
