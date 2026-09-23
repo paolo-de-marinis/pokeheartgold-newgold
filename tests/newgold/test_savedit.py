@@ -349,6 +349,18 @@ class SaveditLibraryTests(unittest.TestCase):
         with self.assertRaises(sv.Illegal):
             sv.new_mon(n["CHARIZARD"], 5, me, moves=[moves["SURF"]])
 
+    def test_a_rotom_form_has_its_own_move(self):
+        """The Rotom Catalog teaches each appliance form its move
+        (sRotomFormMoves): a Heat Rotom may know Overheat, a Rotom in no
+        appliance may not."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        self.assertIn({"how": "form"}, sv.learnable_moves(n["ROTOM"], 1)[moves["OVERHEAT"]])
+        self.assertNotIn({"how": "form"}, sv.learnable_moves(n["ROTOM"], 0).get(moves["OVERHEAT"], []))
+        mon = sv.open_mon(sv.new_mon(n["ROTOM"], 30, sv.owner(self.open())))
+        mon["blocks"][1][0x18] |= 1 << 3
+        heat = sv.edit_mon(sv.seal_mon(mon), moves=[moves["OVERHEAT"], moves["THUNDER_SHOCK"]])
+        self.assertEqual([m["name"] for m in sv.describe_mon(heat)["moves"]], ["Overheat", "Thunder Shock"])
+
     def test_an_event_move_stays_while_untouched(self):
         """A Pokemon the game made may know a move no rule lists: it keeps it
         while it keeps its species and the move, and loses nothing else."""

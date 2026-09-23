@@ -51,7 +51,8 @@ drops for every reader, the TMs, HMs
 and TRs its `personal.json` record is compatible with (`sTMHMMoves` and
 `ItemToTMHMId` in `src/item.c`), the move tutors (`waza_oshie.json` through
 `sTutorMoves`, at the record `GetMoveTutorLearnsetIndex` reads), the egg
-moves (`kowaza_list.narc`) of the species its line hatches as, and the same
+moves (`kowaza_list.narc`) of the species its line hatches as, a Rotom
+form's own move (`sRotomFormMoves`, which the Rotom Catalog teaches), and the same
 for its pre-evolutions (`evo.json`; a form without one of its own takes its
 base's, `sFormBaseSpecies`). `species_abilities` is its first, second and
 hidden ability by the slot the game keeps each in: the personality's low

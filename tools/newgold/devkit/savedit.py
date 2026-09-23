@@ -1506,6 +1506,18 @@ def incense_parents():
             re.findall(r"\{\s*SPECIES_\w+,\s*ITEM_\w+,\s*SPECIES_(\w+)\s*\}", text[:text.index("};")])}
 
 
+@tree_cache
+def form_moves():
+    """sRotomFormMoves (src/pokemon.c): the move each form of the species
+    Mon_UpdateRotomForm changes has of its own, which the Rotom Catalog
+    teaches with the form. {species: [move, by form]}."""
+    moves = move_numbers()
+    table = [moves[name] for name in re.findall(r"MOVE_(\w+)", c_table("src/pokemon.c", "sRotomFormMoves"))]
+    species = re.search(r"MON_DATA_SPECIES, NULL\) != SPECIES_(\w+)\)",
+                        c_function("src/pokemon.c", "BOOL Mon_UpdateRotomForm(")).group(1)
+    return {species_numbers()[species]: table}
+
+
 def evolution_line(species):
     """The species and every species it can have been before evolving,
     nearest first, each with whether an egg can hatch as it (a first stage,
@@ -1525,7 +1537,8 @@ def learnable_moves(species, form=0):
     """Every move this species can know, whatever its level, with every way
     it is learnt, never only the first: {move: [source, ...]}. A source is
     {"how": "level", "level": n} (0: on evolving), {"how": "machine",
-    "item": the TM, HM or TR}, {"how": "tutor"} or {"how": "egg"}, with
+    "item": the TM, HM or TR}, {"how": "tutor"}, {"how": "egg"} or
+    {"how": "form"} (the move a Rotom form has of its own), with
     "from": the species when it is a pre-evolution's -- a move learnt
     before evolving is kept. Its own form's row (ResolveMonForm) for its
     learnset, machines and tutors; egg moves are those of the species an
@@ -1538,6 +1551,8 @@ def learnable_moves(species, form=0):
         found += [(machines()[place][0], {"how": "machine", "item": machines()[place][1]})
                   for place in machine_places(personal_records()[row]) if place < len(machines())]
         found += [(move, {"how": "tutor"}) for move in tutor_moves(row)]
+        own = form_moves().get(s, []) if s == species else []
+        found += [(own[form], {"how": "form"})] if form < len(own) else []
         found += [(move, {"how": "egg"}) for move in (egg_moves()[s] if hatches and s < len(egg_moves()) else [])]
         for move, how in found:
             if s != species and how["how"] in ("machine", "tutor") and how in out.get(move, []):

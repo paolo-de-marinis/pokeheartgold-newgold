@@ -967,7 +967,7 @@ function sourceTag(s) {
   const item = S.items.get(s.item)?.name ?? `#${s.item}`;
   const how = s.how === "level" ? (s.level ? `Lv. ${s.level}` : "Evoluzione")
     : s.how === "machine" ? item.replace(/^(TM|HM|TR)/, p => MACHINE_PREFIX[p] + " ")
-    : s.how === "tutor" ? "Insegnante" : "Mossa uovo";
+    : s.how === "tutor" ? "Insegnante" : s.how === "form" ? "Mossa della forma" : "Mossa uovo";
   const from = s.from ? S.species.get(s.from)?.name ?? `#${s.from}` : "";
   return !from ? how : s.how === "egg" ? `${how} da ${from}` : `da ${from} ${how}`;
 }
@@ -1006,7 +1006,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
         autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mvlist"></div><div class="mvtags" id="mvtags${i}"></div></div>`).join("")}</div>
       <p class="note" id="presetnote" hidden></p>
       <p class="note">Si sceglie solo tra le mosse che la specie può imparare, a qualsiasi livello, ognuna con tutte le sue fonti: livello (Evoluzione: quando si evolve),
-        MT, MN e DT, insegnanti, mosse uovo, e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
+        MT, MN e DT, insegnanti, mosse uovo, la mossa della forma (Rotom), e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
         (una mossa evento) resta finché non la cambi e non cambi specie. Una mossa che il Pokémon già conosce tiene i suoi PP; una nuova li ha pieni.
         "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie.</p></div>
     <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="${lim.iv}">Tutti ${lim.iv}</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${perStat("iv", v.ivs, lim.iv)}</div>
