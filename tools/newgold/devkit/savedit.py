@@ -236,9 +236,23 @@ def learnsets():
 
 
 def learnset(index, level):
-    """The moves this species knows at this level: the last four it learns."""
+    """The moves this species knows at this level: the last four it learns.
+    The CLI's --party default, kept as it was; moveset() is the game's."""
     known = [move for learned, move in learnsets()[index] if learned <= level]
     return known[-4:]
+
+
+def moveset(index, level):
+    """InitBoxMonMoveset: the learnset up to the level, each move appended
+    unless already known (MOVE_APPEND_KNOWN), the first dropped when four
+    are known -- so a move learned twice is known once."""
+    moves = []
+    for learned, move in learnsets()[index]:
+        if learned > level:
+            break
+        if move not in moves:
+            moves = (moves + [move])[-4:]
+    return moves
 
 
 @functools.cache
@@ -1212,7 +1226,8 @@ def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, 
     if nature is not None:
         personality = personality_for_nature(personality, nature, me["id"])
     mon = open_mon(build_mon(const, level, ivs=ivs, evs=evs, item=item, personality=personality,
-                             moves=moves, ot_codes=me["codes"], ot_id=me["id"], ot_gender=me["gender"]))
+                             moves=moves or moveset(species, level), ot_codes=me["codes"], ot_id=me["id"],
+                             ot_gender=me["gender"]))
     _, b, c, _ = mon["blocks"]
     table = move_table()
     for i in range(4):

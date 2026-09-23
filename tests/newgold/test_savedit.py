@@ -238,6 +238,16 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(mail(raw), bytes(len(sv.MAIL_INIT)))
         self.assertEqual(mail(sv.edit_mon(raw, item=137)), sv.MAIL_INIT, "an all-zero one is mended on an edit")
 
+    def test_a_new_pokemon_knows_each_move_once(self):
+        """InitBoxMonMoveset skips a move already known: Metapod learns
+        Harden twice and knows it once, Pidgeotto keeps Sand Attack once."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        self.assertEqual(sv.moveset(n["METAPOD"], 1), [moves["HARDEN"]])
+        for species, level in (("METAPOD", 1), ("PIDGEOTTO", 5)):
+            known = [m["id"] for m in sv.describe_mon(sv.new_mon(n[species], level, sv.owner(self.open())))["moves"]]
+            self.assertEqual(len(known), len(set(known)), species)
+        self.assertEqual(sv.learnset(n["METAPOD"], 1), [moves["HARDEN"]] * 2, "the CLI's default is as it was")
+
     def test_a_form_has_its_own_stats(self):
         """CalcMonStats reads the form's record (ResolveMonForm): a Rotom
         Wash is SPECIES_ROTOM in form 2, with Rotom Wash's base stats."""
