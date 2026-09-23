@@ -921,3 +921,11 @@
 .public ov14_021F8630
 .public ov14_021F864C
 .public ov14_021F8B10
+.public ov14_021F6E68
+.public ov14_021F6F08
+.public ov14_021F6F70
+.public ov14_021F7010
+.public ov14_021F708C
+.public ov14_021F70A4
+.public ov14_021F70F4
+.public ov14_021F7184
