@@ -387,6 +387,11 @@ IMPLEMENTED_HERE = {
     # BattlerIgnoresAbilities asks for them.
     "SUNSTEEL_STRIKE": "MOVE_EFFECT_HIT",
     "MOONGEIST_BEAM": "MOVE_EFFECT_HIT",
+    # Steel Beam and Mind Blown cost their user half its maximum HP once the
+    # move is over, hit or miss; Damp stops Mind Blown (Pokemon Central,
+    # Raggio d'Acciaio, Sbalorditesta): effect script 420.
+    "STEEL_BEAM": "MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP",
+    "MIND_BLOWN": "MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

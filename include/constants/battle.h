@@ -436,6 +436,9 @@ typedef enum Terrain {
 #define SELF_TURN_FLAG_INFATUATED     (1 << 2)
 #define SELF_TURN_FLAG_SUBSTITUTE_HIT (1 << 3)
 #define SELF_TURN_FLAG_RESIST_BERRY   (1 << 4)
+// Steel Beam and Mind Blown have gone off: half the user's HP once the move
+// is over (ov12_0224E1BC).
+#define SELF_TURN_FLAG_LOSE_HALF_MAX_HP (1 << 5)
 
 // Struggle Checks
 #define STRUGGLE_CHECK_NO_MOVES   (1 << 0)

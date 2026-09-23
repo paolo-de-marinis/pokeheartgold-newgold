@@ -5428,7 +5428,27 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 11: {
+        case 11:
+            // Steel Beam and Mind Blown cost their user half its maximum HP,
+            // rounded up, once the move is over, whether it hit or not; only
+            // Magic Guard spares it (Pokemon Central, Raggio d'Acciaio,
+            // Sbalorditesta). Effect script 420 marks the user when the move
+            // goes off at a target, so one with none to go at costs nothing.
+            if ((ctx->selfTurnData[ctx->battlerIdAttacker].unk14 & SELF_TURN_FLAG_LOSE_HALF_MAX_HP)
+                && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD
+                && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {
+                ctx->selfTurnData[ctx->battlerIdAttacker].unk14 &= ~SELF_TURN_FLAG_LOSE_HALF_MAX_HP;
+                ctx->battlerIdTemp = ctx->battlerIdAttacker;
+                ctx->hpCalc = -(int)((ctx->battleMons[ctx->battlerIdAttacker].maxHp + 1) / 2);
+                ctx->battleStatus |= BATTLE_STATUS_NO_BLINK;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_HP);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            ctx->unk_30++;
+            break;
+        case 12: {
             // Emergency Exit and Wimp Out, one Pokemon at a time: this step
             // comes round again after each, until none is left to go.
             int script;
@@ -5443,13 +5463,13 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 12:
+        case 13:
             ctx->unk_30++;
             if (TryPivotSwitch(ctx) == TRUE) {
                 flag = 1;
             }
             break;
-        case 13:
+        case 14:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;

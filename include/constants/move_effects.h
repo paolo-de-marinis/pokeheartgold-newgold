@@ -427,5 +427,6 @@
 #define MOVE_EFFECT_SPEED_SWAP                                   417
 #define MOVE_EFFECT_TOPSY_TURVY                                  418
 #define MOVE_EFFECT_REFLECT_TYPE                                 419
+#define MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP                         420
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

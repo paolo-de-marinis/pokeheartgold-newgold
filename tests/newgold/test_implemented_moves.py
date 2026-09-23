@@ -304,5 +304,25 @@ class ImplementedMoveTests(unittest.TestCase):
                       "        && (ctx->moveNoCur == MOVE_SUNSTEEL_STRIKE || ctx->moveNoCur == MOVE_MOONGEIST_BEAM)) {\n"
                       "        return TRUE;", ignores)
 
+    def test_steel_beam_and_mind_blown_cost_half_the_user_s_hp(self):
+        # Pokemon Central (Raggio d'Acciaio, Sbalorditesta): half the maximum
+        # HP, rounded up, once the move is over, hit or miss; Magic Guard
+        # alone spares it; Damp stops Mind Blown.
+        from test_hold_effects import CONTROLLER
+        for move in ("STEEL_BEAM", "MIND_BLOWN"):
+            self.assertImplemented(move, "MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP")
+        script = effect_script("MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP")
+        self.assertIn("MOVE_MIND_BLOWN, _MARK\n    CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ALL, ABILITY_DAMP, _DAMP", script)
+        self.assertIn("UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_ATTACKER_SELF_TURN_STATUS_FLAGS, SELF_TURN_FLAG_LOSE_HALF_MAX_HP", script)
+        self.assertNotIn("ABILITY_ROCK_HEAD", script)
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        step = body[body.index("& SELF_TURN_FLAG_LOSE_HALF_MAX_HP"):]
+        step = step[:step.index("break;")]
+        self.assertIn("!= ABILITY_MAGIC_GUARD", step)
+        self.assertIn("ctx->hpCalc = -(int)((ctx->battleMons[ctx->battlerIdAttacker].maxHp + 1) / 2);", step)
+        self.assertIn("BATTLE_SUBSCRIPT_UPDATE_HP", step)
+        # Before Emergency Exit and Wimp Out are asked.
+        self.assertLess(body.index("SELF_TURN_FLAG_LOSE_HALF_MAX_HP"), body.index("TryRetreatAbility(battleSystem, ctx, &script)"))
+
 if __name__ == "__main__":
     unittest.main()
