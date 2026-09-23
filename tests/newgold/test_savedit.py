@@ -175,6 +175,10 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(sv.mon_types(n["ARCEUS"], ab["ABILITY_MULTITYPE"], items["ITEM_FLAME_PLATE"]), ["FIRE"])
         self.assertEqual(sv.mon_types(n["ARCEUS"], ab["ABILITY_MULTITYPE"], 0), ["NORMAL"])
         self.assertEqual(sv.mon_types(n["SILVALLY"], ab["ABILITY_RKS_SYSTEM"], items["ITEM_WATER_MEMORY"]), ["WATER"])
+        self.assertEqual(sv.mon_types(n["WORMADAM"], 0, 0, form=1), ["BUG", "GROUND"], "a Sandy Cloak: its form's record")
+        self.assertRegex(sv.c_function("src/pokemon.c", "static u32 GetBoxMonDataInternal("),
+                         r"(?s)case MON_DATA_TYPE_1:.*ABILITY_MULTITYPE.*ABILITY_RKS_SYSTEM.*"
+                         r"GetMonBaseStat_HandleAlternateForm\(blockA->species, blockB->form,")
         self.assertEqual(sv.describe_mon(sv.party_raw(self.open())[0])["types"],
                          sv.mon_types(sv.describe_mon(sv.party_raw(self.open())[0])["species"], 0, 0))
 
