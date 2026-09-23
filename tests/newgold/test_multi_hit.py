@@ -112,6 +112,16 @@ class MultiHitScripts(unittest.TestCase):
         effect_script_0407_BURN_MULTI_HIT at ccf2c9f5."""
         self.assertEqual(set_multi_hit(script_for("SOLAR_SEEDS")), ("0", "MULTIHIT_MULTI_HIT_MOVE"))
 
+    def test_triple_axel_climbs_twenty_a_hit(self):
+        """20, 40, 60, as the reference's CalcBaseDamage has it at d0380a487
+        (20 * (4 - multiHitCount)). The power a hit uses starts at 0 and the
+        script runs once a hit, which is how Triple Kick's own script makes its
+        10, 20, 30."""
+        steps = lambda move: re.findall(r"UpdateVar OPCODE_ADD, BSCRIPT_VAR_MOVE_POWER, (\d+)", script_for(move))
+        self.assertEqual(steps("TRIPLE_KICK"), ["10"])
+        self.assertEqual(steps("TRIPLE_AXEL"), ["20"])
+        self.assertEqual(set_multi_hit(script_for("TRIPLE_AXEL")), ("3", "MULTIHIT_TRIPLE_KICK"))
+
 
 class RolledCount(unittest.TestCase):
     def test_the_odds_are_the_references(self):
