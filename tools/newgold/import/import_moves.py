@@ -432,6 +432,9 @@ IMPLEMENTED_HERE = {
     # the next three turns' ends while the thrower stays (Pokemon Central,
     # Bomba Sciroppata): effect script 428.
     "SYRUP_BOMB": "MOVE_EFFECT_SYRUP_BOMB",
+    # Tar Shot lowers the target's Speed and makes Fire moves twice as
+    # effective on it (Pokemon Central, Colpocatrame): effect script 429.
+    "TAR_SHOT": "MOVE_EFFECT_TAR_SHOT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

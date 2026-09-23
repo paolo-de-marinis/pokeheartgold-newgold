@@ -214,6 +214,13 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} got covered\nin sticky candy syrup!",
         r"The opposing {STRVAR_1 1, 0, 0} got covered\nin sticky candy syrup!",
     ]),
+    # Tar Shot. The engine leaves the move unimplemented; the later games'
+    # line.
+    ("tar shot", [
+        r"{STRVAR_1 1, 0, 0} became weaker\nto fire!",
+        r"The wild {STRVAR_1 1, 0, 0} became\nweaker to fire!",
+        r"The opposing {STRVAR_1 1, 0, 0} became\nweaker to fire!",
+    ]),
 ]
 
 

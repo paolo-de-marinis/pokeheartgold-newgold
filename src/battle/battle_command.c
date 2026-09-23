@@ -10274,6 +10274,12 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
             ctx->moveConditions[battlerId].syrupBombUser = ctx->battlerIdAttacker;
         }
         break;
+    // Weaker to Fire while it stays in; once is all there is (CALC_TEMP says
+    // whether this was the once).
+    case MOVE_TAR_SHOT:
+        ctx->calcTemp = !ctx->moveConditions[battlerId].tarShot;
+        ctx->moveConditions[battlerId].tarShot = TRUE;
+        break;
     }
 
     return FALSE;

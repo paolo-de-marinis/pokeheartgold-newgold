@@ -514,5 +514,21 @@ class ImplementedMoveTests(unittest.TestCase):
         for name in ("InitSwitchWork", "InitFaintedWork"):
             self.assertIn("ctx->moveConditions[i].syrupBombUser == battlerId) {\n", function(overlay, name))
 
+    def test_tar_shot_slows_and_tars(self):
+        # Pokemon Central (Colpocatrame): a stage of Speed, and Fire moves
+        # twice as effective from then on, the tar once only.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("TAR_SHOT", "MOVE_EFFECT_TAR_SHOT")
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_TAR_SHOT", effect_script("MOVE_EFFECT_TAR_SHOT"))
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_TAR_SHOT"), "BATTLE_SUBSCRIPT_TAR_SHOT")
+        tarring = subscript_named("BATTLE_SUBSCRIPT_TAR_SHOT")
+        self.assertLess(tarring.index("MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE"), tarring.index("SetMoveConditionFlag MOVE_TAR_SHOT, BATTLER_CATEGORY_DEFENDER"))
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('tar shot'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER", tarring)
+        effectiveness = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CalcTypeEffectiveness")
+        self.assertIn("if (typeMul != 0 && moveType == TYPE_FIRE && ctx->moveConditions[battlerIdTarget].tarShot) {\n"
+                      "            ov12_022583B4(TYPE_MUL_SUPER_EFFECTIVE, movePower, moveStatusFlag);\n"
+                      "            typeMul *= 2;", effectiveness)
+
 if __name__ == "__main__":
     unittest.main()

@@ -3211,6 +3211,14 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
             *moveStatusFlag &= ~MOVE_STATUS_SUPER_EFFECTIVE;
             *moveStatusFlag |= MOVE_STATUS_NOT_VERY_EFFECTIVE;
         }
+        // Tar Shot doubles what a Fire move does to its target, short of no
+        // effect; a resisted one hits normally, a Wonder Guard lets it through
+        // (Pokemon Central, Colpocatrame). A super effective row more is what
+        // the chart would say.
+        if (typeMul != 0 && moveType == TYPE_FIRE && ctx->moveConditions[battlerIdTarget].tarShot) {
+            ov12_022583B4(TYPE_MUL_SUPER_EFFECTIVE, movePower, moveStatusFlag);
+            typeMul *= 2;
+        }
     }
 
     if (!(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS) && !(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_IMMUNITY)) {
@@ -11833,7 +11841,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_NO_RETREAT,
     BATTLE_SUBSCRIPT_OCTOLOCK,
     BATTLE_SUBSCRIPT_SALT_CURE,
-    BATTLE_SUBSCRIPT_SYRUP_BOMB
+    BATTLE_SUBSCRIPT_SYRUP_BOMB,
+    BATTLE_SUBSCRIPT_TAR_SHOT
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

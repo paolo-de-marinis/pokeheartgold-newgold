@@ -54,7 +54,7 @@ typedef struct {
     u32 fieldCondition; u32 fieldSideConditionFlags[2];
     int criticalMultiplier; int damage; int meFirstTotal; u32 battleStatus;
     BattleMon battleMons[4];
-    struct { int glaiveRush; } moveConditions[4];
+    struct { int glaiveRush; int tarShot; } moveConditions[4];
     struct { int protectFlag, roostFlag; } turnData[4];
     u8 teraShellResisting;
     struct { u32 unk14; } selfTurnData[4];
@@ -194,6 +194,13 @@ int main(void) {
     reset(); S.types[1][0] = S.types[1][1] = TYPE_WATER; EXPECT(calc(), 22);
     reset(); S.types[1][0] = TYPE_WATER; S.types[1][1] = TYPE_ROCK; EXPECT(calc(), 11);
     reset(); S.types[1][0] = TYPE_GRASS; S.types[1][1] = TYPE_BUG; EXPECT(calc(), 180);
+    // Tar Shot doubles a Fire move on its target, whatever the chart said
+    // short of no effect: into Water 45, into Normal 90, into Grass 180; a
+    // Water move is left alone at 45.
+    reset(); ctx.moveConditions[1].tarShot = TRUE; S.types[1][0] = S.types[1][1] = TYPE_WATER; EXPECT(calc(), 45);
+    reset(); ctx.moveConditions[1].tarShot = TRUE; EXPECT(calc(), 90);
+    reset(); ctx.moveConditions[1].tarShot = TRUE; S.types[1][0] = S.types[1][1] = TYPE_GRASS; EXPECT(calc(), 180);
+    reset(); ctx.moveConditions[1].tarShot = TRUE; ctx.moveType = TYPE_WATER; EXPECT(calc(), 45);
     // Delta Stream's winds take the Flying weakness out: Rock into Flying 45
     // rather than 90, into Fire/Flying 90 rather than 180; not under Cloud
     // Nine, and they say so only where they did something.
