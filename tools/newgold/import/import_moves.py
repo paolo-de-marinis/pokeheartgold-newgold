@@ -300,14 +300,6 @@ def number(block, key):
 # rolls (BattleSystem_CheckMoveHit here, CalcAccuracy there) -- so Whirlwind
 # and Roar take it and stop missing, as they do in the engine.
 #
-# One power is the engine's number for something this game works out
-# differently, and stays this game's:
-RETAIL_POWER_KEPT = {
-    # The engine writes 1 and gives each hit 5 + the member's base Attack / 10
-    # in CalcBaseDamage; BtlCmd_BeatUp multiplies the base Attack by the
-    # table's power, so 1 would be a tenth of a Beat Up.
-    "BEAT_UP",
-}
 # The effect and the flag byte are behaviour rather than numbers. The seven
 # flag bits solved for above mean the same thing to both games -- a set bit is
 # what each side's Protect, Magic Coat, Snatch and Mirror Move checks ask
@@ -342,8 +334,7 @@ def retail_moves(reference, last_vanilla, types, effect_id, table):
         fields = list(struct.unpack(RECORD, table[move]))
         if name not in RETAIL_TARGETS_KEPT:
             fields[7] = ranges(block, rangesets)
-        if name not in RETAIL_POWER_KEPT:
-            fields[2] = number(block, "power")
+        fields[2] = number(block, "power")
         fields[3] = types[field(block, "type")]
         fields[4] = number(block, "accuracy")
         fields[5] = number(block, "pp")

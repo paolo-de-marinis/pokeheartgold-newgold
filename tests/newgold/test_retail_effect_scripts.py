@@ -55,7 +55,6 @@ STILL_DIFFERENT = {
     147: IN_C.format("Earthquake against Dig, CalcBaseDamage.c"),
     148: "the engine's Future Sight, worked out when it lands",
     151: IN_C.format("the charge turn, BattleController_BeforeMove.c"),
-    154: "the engine's Beat Up, one hit per member at 5 + base Attack / 10",
     161: PARENTAL_BOND,
     164: "the primal weathers and the engine's weather subscripts",
     171: IN_C.format("Smelling Salts' doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),

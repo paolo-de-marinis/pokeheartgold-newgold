@@ -745,23 +745,6 @@ BOOL BtlCmd_Wait(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-// criticalMultiplier is 1, 2, or 3 for a Sniper's critical hit, and it is also
-// the flag the scripts and the screen and stat-stage tests read, so those
-// values stay. What a critical hit does to the damage is the reference's
-// (battle_calc_damage.c, 6.4 and 6.9.3): x1.5, and x1.5 again for Sniper.
-// HeartGold doubled it, and tripled it for Sniper. This is Beat Up's, whose
-// damage is still HeartGold's own sum; an ordinary hit takes the first half in
-// DamageCalcDefault and Sniper's in the final modifier, where the reference
-// has them.
-static void ApplyCriticalHit(BattleContext *ctx) {
-    if (ctx->criticalMultiplier > 1) {
-        ctx->damage = ctx->damage * 15 / 10;
-    }
-    if (ctx->criticalMultiplier == 3) {
-        ctx->damage = ctx->damage * 15 / 10;
-    }
-}
-
 // Reflect, Light Screen and Aurora Veil (battle_calc_damage.c, 6.9.1): a half
 // in a single battle and 2732/4096 in any double one, however many are left
 // standing on the side. HeartGold took the two thirds only while two stood
@@ -4808,80 +4791,53 @@ BOOL BtlCmd_TryTeleport(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// A party member Beat Up strikes for: the user whatever its state, and
+// everyone else who is not fainted, not an egg and has no status condition.
+static BOOL BeatUpMemberStrikes(BattleSystem *battleSystem, BattleContext *ctx, int slot) {
+    Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdAttacker, slot);
+
+    return slot == ctx->selectedMonIndex[ctx->battlerIdAttacker]
+        || (GetMonData(mon, MON_DATA_HP, NULL) != 0
+            && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_NONE
+            && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG
+            && GetMonData(mon, MON_DATA_STATUS, NULL) == STATUS_NONE);
+}
+
+// Beat Up from the fifth generation on, as the reference has it (its BeatUp
+// command and CalcBaseDamage.c): one hit for each member that strikes, each an
+// ordinary hit of the Dark-type move with the user's Attack against the
+// target's Defence, at a power of 5 + that member's base Attack / 10. The
+// first call counts the hits and sets the move up as a multi-hit one; every
+// call gives the next member's power to the CalcDamage after it.
 BOOL BtlCmd_BeatUp(BattleSystem *battleSystem, BattleContext *ctx) {
-    int species;
-    int form;
-    int level;
+    int monCnt, i;
     Pokemon *mon;
 
     BattleScriptIncrementPointer(ctx, 1);
 
-    int monCnt = BattleSystem_GetPartySize(battleSystem, ctx->battlerIdAttacker);
+    monCnt = BattleSystem_GetPartySize(battleSystem, ctx->battlerIdAttacker);
 
     if (ctx->multiHitCountTemp == 0) {
-        ctx->multiHitCountTemp = 2;
-        ctx->checkMultiHit = 253;
+        ctx->multiHitCount = 0;
+        for (i = 0; i < monCnt; i++) {
+            if (BeatUpMemberStrikes(battleSystem, ctx, i)) {
+                ctx->multiHitCount++;
+            }
+        }
+        ctx->multiHitCountTemp = ctx->multiHitCount;
+        ctx->checkMultiHit = MULTIHIT_MULTI_HIT_MOVE;
         ctx->beatUpCount = 0;
-
-        while (TRUE) {
-            mon = BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdAttacker, ctx->beatUpCount);
-            if (ctx->beatUpCount == ctx->selectedMonIndex[ctx->battlerIdAttacker]
-                || (GetMonData(mon, MON_DATA_HP, 0) != 0
-                    && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, 0) != SPECIES_NONE
-                    && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, 0) != SPECIES_EGG
-                    && GetMonData(mon, MON_DATA_STATUS, 0) == STATUS_NONE)) {
-                break;
-            }
-            ctx->beatUpCount++;
-        }
     }
 
-    mon = BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdAttacker, ctx->beatUpCount);
-    species = GetMonData(mon, MON_DATA_SPECIES, 0);
-    form = GetMonData(mon, MON_DATA_FORM, 0);
-    level = GetMonData(mon, MON_DATA_LEVEL, 0);
-
-    ctx->damage = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ATK);
-    ctx->damage *= BattleMoveTbl(ctx, ctx->moveNoCur)->power;
-    ctx->damage *= (level * 2 / 5 + 2);
-    ctx->damage /= (u32)GetMonBaseStat_HandleAlternateForm(ctx->battleMons[ctx->battlerIdTarget].species, ctx->battleMons[ctx->battlerIdTarget].form, BASE_DEF);
-    ctx->damage /= 50;
-    ctx->damage += 2;
-    ApplyCriticalHit(ctx);
-    if (ctx->turnData[ctx->battlerIdAttacker].helpingHandFlag) {
-        ctx->damage = ctx->damage * 15 / 10;
+    while (ctx->beatUpCount < monCnt && !BeatUpMemberStrikes(battleSystem, ctx, ctx->beatUpCount)) {
+        ctx->beatUpCount++;
     }
-    ctx->damage = ApplyDamageRange(battleSystem, ctx, ctx->damage);
-    ctx->damage *= -1;
-
-    // "{0}'s attack!" The reference's Beat Up prints no line a hit and marks
-    // retail's 481 to 483 "(Unused)", so the three are this port's rows now.
-    ctx->buffMsg.id = msg_0197_01794;
-    ctx->buffMsg.tag = TAG_NICKNAME;
-    ctx->buffMsg.param[0] = (ctx->battlerIdAttacker | (ctx->beatUpCount << 8));
-
-    ctx->beatUpCount++;
-    ctx->multiHitCount = 2;
-
-    if (ctx->beatUpCount < monCnt) {
-        while (TRUE) {
-            mon = BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdAttacker, ctx->beatUpCount);
-            if (ctx->beatUpCount == ctx->selectedMonIndex[ctx->battlerIdAttacker]
-                || (GetMonData(mon, MON_DATA_HP, 0) != 0
-                    && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, 0) != SPECIES_NONE
-                    && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, 0) != SPECIES_EGG
-                    && GetMonData(mon, MON_DATA_STATUS, 0) == STATUS_NONE)) {
-                break;
-            }
-            ctx->beatUpCount++;
-            if (ctx->beatUpCount >= monCnt) {
-                ctx->multiHitCount = 1;
-                break;
-            }
-        }
-    } else {
-        ctx->multiHitCount = 1;
+    if (ctx->beatUpCount >= monCnt) {
+        return FALSE;
     }
+
+    mon = BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdAttacker, ctx->beatUpCount++);
+    ctx->movePower = 5 + GetMonBaseStat_HandleAlternateForm(GetMonData(mon, MON_DATA_SPECIES, NULL), GetMonData(mon, MON_DATA_FORM, NULL), BASE_ATK) / 10;
 
     return FALSE;
 }

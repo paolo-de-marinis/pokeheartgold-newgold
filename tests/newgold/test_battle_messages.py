@@ -184,7 +184,10 @@ class BattleMessageTests(unittest.TestCase):
         battle = ROOT / "src/battle"
         self.assertIn("msg->id = msg_0197_01790;", (battle / "overlay_12_0224E4FC.c").read_text())
         self.assertEqual((battle / "battle_controller_player.c").read_text().count("msg_0197_01793"), 2)
-        self.assertIn("ctx->buffMsg.id = msg_0197_01794;", (battle / "battle_command.c").read_text())
+        # Beat Up's rows stay where they are, printed by nothing since the move
+        # became the later games' one ordinary hit per member, with no line a
+        # hit: taking them out would renumber every port row after them.
+        self.assertNotIn("msg_0197_01794", (battle / "battle_command.c").read_text())
 
     def test_the_lines_the_port_moved_to_the_engines_rows(self):
         """A sample of the lines the port had appended before the engine's

@@ -188,38 +188,16 @@ class CriticalHitTests(unittest.TestCase):
         self.assertEqual([int(n) for n in table.split(",")], [24, 8, 2, 1, 1])
 
 
-    def test_a_critical_hit_is_half_again_and_sniper_half_again_on_that(self):
+    def test_the_damage_path_takes_it(self):
         # battle_calc_damage.c: 6.4 multiplies by 150/100, and 6.9.3 gives
         # Sniper another 1.5. HeartGold multiplied by 2, and by 3 for Sniper.
-        program = "typedef struct { int damage, criticalMultiplier; } BattleContext;\n"
-        program += function(COMMANDS.read_text(), "ApplyCriticalHit")
-        program += """
-#include <assert.h>
-int main(void) {
-    int expected[] = { 0, 100, 150, 225 };
-    for (int crit = 1; crit <= 3; crit++) {
-        BattleContext ctx = { 100, crit };
-        ApplyCriticalHit(&ctx);
-        assert(ctx.damage == expected[crit]);
-    }
-    return 0;
-}
-"""
-        with tempfile.TemporaryDirectory(prefix="newgold-crit-") as directory:
-            path = Path(directory)
-            (path / "test.c").write_text(program)
-            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
-                "-std=c99", "-Wall", "-Werror", str(path / "test.c"), "-o", str(path / "test")], check=True)
-            subprocess.run([str(path / "test")], check=True)
-
-    def test_both_damage_paths_take_it(self):
-        # Beat Up's own sum takes both halves at once; an ordinary hit takes
-        # the critical hit's before the roll and Sniper's in the final
-        # modifier, as the reference's chain does. Neither multiplies by the
-        # stored number any more.
+        # An ordinary hit takes the critical hit's half before the roll and
+        # Sniper's in the final modifier, as the reference's chain does, and
+        # nothing multiplies by the stored number any more. Beat Up used to
+        # have a sum of its own; its hits are ordinary ones now.
         source = COMMANDS.read_text()
         self.assertNotIn("*= ctx->criticalMultiplier", source)
-        self.assertIn("ApplyCriticalHit(ctx);", function(source, "BtlCmd_BeatUp"))
+        self.assertNotIn("ctx->damage", function(source, "BtlCmd_BeatUp"))
         self.assertRegex(function(source, "DamageCalcDefault"),
                          r"criticalMultiplier > 1\) \{\n\s*damage = damage \* 150 / 100;")
         self.assertRegex(function(source, "FinalDamageModifier"),

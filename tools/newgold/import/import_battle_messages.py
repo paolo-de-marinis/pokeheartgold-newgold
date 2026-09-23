@@ -57,7 +57,9 @@ PORT_ROWS = [
     ]),
     # Beat Up, one line a hit. The reference's Beat Up is the later games',
     # with no line for each party member, and it marks retail's 481 to 483
-    # "(Unused)"; this game still prints one, so it keeps retail's three.
+    # "(Unused)". This game printed one until its Beat Up became the engine's
+    # too; the three rows stay, printed by nothing, because taking them out
+    # would renumber every row after them.
     ("beat up", [
         r"{STRVAR_1 1, 0, 0}’s attack!",
         r"The wild {STRVAR_1 1, 0, 0}’s attack!",

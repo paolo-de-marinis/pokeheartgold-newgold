@@ -147,8 +147,6 @@ class MoveTests(unittest.TestCase):
     # 1..467 -- type, power, accuracy, PP, effect chance, priority, effect, and
     # the seven flag bits both games name -- is the engine's (d0380a487).
     RETAIL_EXCEPTIONS = {
-        ("BEAT_UP", "power"): "the engine's 1 is a placeholder for 5 + base Attack / 10; "
-                              "BtlCmd_BeatUp multiplies base Attack by the table's power",
         ("HOWL", "effect"): "the engine's raises the ally through RANGE_USER_SIDE and its "
                             "controller; this game's script would raise the user alone",
         ("HOWL", "target"): "RANGE_USER_SIDE goes with the effect",
