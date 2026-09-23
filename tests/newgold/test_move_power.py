@@ -99,6 +99,23 @@ class RoundTests(unittest.TestCase):
 """))
 
 
+class FusionTests(unittest.TestCase):
+    def test_each_doubles_straight_after_the_other(self):
+        """100 is 46 and 200 is 90 when the move used just before this one,
+        this turn and by anyone, was the other of the pair (Pokemon Central,
+        Incrofiamma, Incrotuono)."""
+        run_c(self, damage_program(r"""
+#define FUSION(move) CalcMoveDamage(&bs, &ctx, move, 0, 0, 0, TYPE_FIRE, 0, 1, 1)
+    reset(4);
+    EXPECT(FUSION(MOVE_FUSION_FLARE), 46);
+    ctx.moveUsedBefore = MOVE_FUSION_BOLT; EXPECT(FUSION(MOVE_FUSION_FLARE), 90);
+    EXPECT(FUSION(MOVE_FUSION_BOLT), 46);
+    ctx.moveUsedBefore = MOVE_FUSION_FLARE; EXPECT(FUSION(MOVE_FUSION_BOLT), 90);
+    EXPECT(FUSION(MOVE_FUSION_FLARE), 46);
+    ctx.moveUsedBefore = MOVE_TACKLE; EXPECT(FUSION(MOVE_FUSION_BOLT), 46);
+"""))
+
+
 if __name__ == "__main__":
     unittest.main()
 

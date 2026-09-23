@@ -351,6 +351,10 @@ IMPLEMENTED_HERE = {
     # chose it to go next (Pokemon Central, Coro): NoteMoveUsed and
     # CalcMoveDamage.
     "ROUND": "MOVE_EFFECT_HIT",
+    # Fusion Flare and Fusion Bolt double straight after each other, and
+    # Fusion Flare thaws its user (Pokemon Central, Incrofiamma, Incrotuono).
+    "FUSION_FLARE": "MOVE_EFFECT_HIT",
+    "FUSION_BOLT": "MOVE_EFFECT_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

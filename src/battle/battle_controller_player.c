@@ -181,9 +181,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // padding after the Mirror Herb's stages. What Parental Bond's first strike
 // leaves to the second grew it by four. Echoed Voice's two bytes, after
 // Parental Bond's four, grew it by four. Round's byte went into the padding
-// after them.
+// after them. The two moves used last this turn, for Fusion Flare and Fusion
+// Bolt, grew it by four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3238 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x323C + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -2125,6 +2126,8 @@ static void BattleControllerPlayer_TurnEnd(BattleSystem *battleSystem, BattleCon
     }
     ctx->echoedVoiceUsed = FALSE;
     ctx->roundUsers = 0;
+    ctx->moveUsedLast = MOVE_NONE;
+    ctx->moveUsedBefore = MOVE_NONE;
 
     ctx->totalTurns++;
     ctx->meFirstTotal++;
@@ -2679,7 +2682,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
         case 2:
             if (ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_FREEZE) {
                 if (BattleSystem_Random(battleSystem) % 5 != 0) {
-                    if (effect != MOVE_EFFECT_THAW_AND_BURN_HIT && effect != MOVE_EFFECT_RECOIL_BURN_HIT && effect != MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT) {
+                    if (effect != MOVE_EFFECT_THAW_AND_BURN_HIT && effect != MOVE_EFFECT_RECOIL_BURN_HIT && effect != MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT && ctx->moveNoCur != MOVE_FUSION_FLARE) {
                         ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FROZEN);
                         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                         ctx->commandNext = CONTROLLER_COMMAND_39;
@@ -2872,8 +2875,10 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
         case 15:
             if (ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_FREEZE) {
                 // Matcha Gotcha thaws its user as Flame Wheel does, as the
-                // reference's BattleController_CheckThawOut has it.
-                if (effect == MOVE_EFFECT_THAW_AND_BURN_HIT || effect == MOVE_EFFECT_RECOIL_BURN_HIT || effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT) {
+                // reference's BattleController_CheckThawOut has it, and so
+                // does Fusion Flare, which has no side effect to ask by
+                // (Pokemon Central, Incrofiamma).
+                if (effect == MOVE_EFFECT_THAW_AND_BURN_HIT || effect == MOVE_EFFECT_RECOIL_BURN_HIT || effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT || ctx->moveNoCur == MOVE_FUSION_FLARE) {
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_DEFROSTED_BY_MOVE);
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
@@ -3398,6 +3403,8 @@ static BOOL PrimalWeatherStopsMove(u32 weather, int category, int type) {
 // now being used: it has come through everything that can stop a Pokemon
 // acting, and has spent its PP, whether or not it goes on to fail.
 static void NoteMoveUsed(BattleSystem *battleSystem, BattleContext *ctx) {
+    ctx->moveUsedBefore = ctx->moveUsedLast;
+    ctx->moveUsedLast = ctx->moveNoCur;
     // Echoed Voice counts a turn a move of it was used in, failed or not;
     // one the user could not act in does not count (Pokemon Central,
     // Echeggiavoce).

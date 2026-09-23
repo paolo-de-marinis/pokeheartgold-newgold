@@ -10166,6 +10166,15 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower *= 2;
     }
 
+    // Fusion Flare doubles when the last move anyone used this turn was
+    // Fusion Bolt, and Fusion Bolt when it was Fusion Flare (Pokemon Central,
+    // Incrofiamma, Incrotuono). The move being used is the last by now, so
+    // the one before it is asked.
+    if ((moveNo == MOVE_FUSION_FLARE && ctx->moveUsedBefore == MOVE_FUSION_BOLT)
+        || (moveNo == MOVE_FUSION_BOLT && ctx->moveUsedBefore == MOVE_FUSION_FLARE)) {
+        movePower *= 2;
+    }
+
     moveType = BattleMoveTypeForAbility(ctx, calcAttacker.ability, moveNo, type & 0x3F);
 
     GF_ASSERT(ctx->unk_2158 >= 10);

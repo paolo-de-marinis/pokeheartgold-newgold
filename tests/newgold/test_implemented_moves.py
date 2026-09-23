@@ -152,5 +152,20 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("ov12_0225561C(ctx, battlerId) == FALSE", noted)
         self.assertIn("ctx->roundUsers = 0;", function(controller, "BattleControllerPlayer_TurnEnd"))
 
+    def test_fusion_flare_and_bolt_remember_the_move_before(self):
+        # Pokemon Central (Incrofiamma, Incrotuono): the move used just before,
+        # this turn, by anyone; the power is test_move_power's FusionTests.
+        # Fusion Flare thaws its user as Flame Wheel does.
+        self.assertImplemented("FUSION_FLARE", "MOVE_EFFECT_HIT")
+        self.assertImplemented("FUSION_BOLT", "MOVE_EFFECT_HIT")
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        self.assertIn("ctx->moveUsedBefore = ctx->moveUsedLast;\n    ctx->moveUsedLast = ctx->moveNoCur;",
+                      function(controller, "NoteMoveUsed"))
+        self.assertIn("ctx->moveUsedLast = MOVE_NONE;\n    ctx->moveUsedBefore = MOVE_NONE;",
+                      function(controller, "BattleControllerPlayer_TurnEnd"))
+        checks = function(controller, "ov12_0224B528")
+        self.assertIn("effect != MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT && ctx->moveNoCur != MOVE_FUSION_FLARE", checks)
+        self.assertIn("effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT || ctx->moveNoCur == MOVE_FUSION_FLARE", checks)
+
 if __name__ == "__main__":
     unittest.main()

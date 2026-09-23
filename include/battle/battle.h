@@ -666,6 +666,11 @@ typedef struct BattleContext {
     // Round: the battlers that have used it this turn, a bit each. Every
     // Round after the first in a turn has twice the power.
     u8 roundUsers;
+    // The last move used this turn and the one before it, by anyone: Fusion
+    // Flare and Fusion Bolt double straight after each other. MOVE_NONE when
+    // the turn has had none.
+    u16 moveUsedLast;
+    u16 moveUsedBefore;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.
