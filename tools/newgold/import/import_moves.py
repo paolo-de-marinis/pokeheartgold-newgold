@@ -329,6 +329,9 @@ IMPLEMENTED_HERE = {
     # Confide lowers the target's Sp. Atk a stage, through Protect and, being a
     # sound move, a substitute: retail's effect 21 (Pokemon Central, Confidenza).
     "CONFIDE": "MOVE_EFFECT_SP_ATK_DOWN",
+    # Aromatic Mist raises the ally's Sp. Def a stage and fails with no ally
+    # (Pokemon Central, Nebularoma): effect script 409.
+    "AROMATIC_MIST": "MOVE_EFFECT_RAISE_ALLY_SP_DEF",
 }
 
 # The effects written here for those moves follow the reference's in

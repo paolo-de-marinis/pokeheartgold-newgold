@@ -59,5 +59,25 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("MOVE_SUBSCRIPT_PTR_SP_ATTACK_DOWN_1_STAGE", effect_script("MOVE_EFFECT_SP_ATK_DOWN"))
         self.assertFalse(record("CONFIDE")[9] & 1 << 1)
 
+    def test_aromatic_mist_raises_the_ally_s_sp_def(self):
+        # Pokemon Central (Nebularoma): the ally's Sp. Def, a stage; with no
+        # ally standing it fails, as Coaching does.
+        self.assertImplemented("AROMATIC_MIST", "MOVE_EFFECT_RAISE_ALLY_SP_DEF")
+        script = effect_script("MOVE_EFFECT_RAISE_ALLY_SP_DEF")
+        self.assertIn("BSCRIPT_VAR_BATTLE_TYPE, BATTLE_TYPE_DOUBLES, _NO_PARTNER", script)
+        self.assertIn("BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_ATTACKER, BMON_DATA_HP, 0, _NO_PARTNER", script)
+        self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_SP_DEFENSE_UP_1_STAGE", script)
+
+    def test_an_effect_written_here_survives_a_rerun(self):
+        # The importer rewrites move_effects.h from the base header and the
+        # reference's block; the effects written here sit after that block
+        # and must come through both.
+        here = import_moves.effects_written_here()
+        self.assertIn("MOVE_EFFECT_RAISE_ALLY_SP_DEF", here)
+        self.assertEqual(min(here.values()), 409)
+        kept = import_moves.original("include/constants/move_effects.h")
+        self.assertIn("#define MOVE_EFFECT_RAISE_ALLY_SP_DEF", kept)
+        self.assertNotIn("MOVE_EFFECT_HIT_THREE_TIMES_FLAT", kept)
+
 if __name__ == "__main__":
     unittest.main()

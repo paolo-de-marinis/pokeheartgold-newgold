@@ -413,4 +413,9 @@
 #define MOVE_EFFECT_SMACK_DOWN                                   407
 #define MOVE_EFFECT_HIT_THREE_TIMES_FLAT                         408
 
+// Effects written here for the moves the engine leaves unimplemented
+// (tools/newgold/import/import_moves.py IMPLEMENTED_HERE), after the
+// reference's so that a run of the importer numbers those as it always has.
+#define MOVE_EFFECT_RAISE_ALLY_SP_DEF                            409
+
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H
