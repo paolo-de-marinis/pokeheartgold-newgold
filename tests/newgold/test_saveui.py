@@ -175,7 +175,7 @@ class SaveUiTests(unittest.TestCase):
         self.assertTrue(files["gyms/test.sav"]["valid"])
         self.assertEqual([m["name"] for m in files["gyms/test.sav"]["party"]][:2], ["Chikorita", "Pidgey"])
         self.assertFalse(files["junk.sav"]["valid"])
-        self.assertIn("non è un salvataggio valido", files["junk.sav"]["error"])
+        self.assertEqual(files["junk.sav"]["error"], "nessuna delle due metà della flash contiene un salvataggio integro")
         self.assertEqual([(s["slot"], s["exists"]) for s in out["slots"]], [("hg-diag", True), ("hg", False)])
         self.assertEqual(out["playable"], ["hg-diag", "hg"])
 
@@ -506,6 +506,21 @@ class SaveUiTests(unittest.TestCase):
             self.assertIsNone(saveui.rom_problem(real, real.with_suffix(".sav")))
         finally:
             os.environ["SAVEUI_DRY_RUN"] = "1"
+
+    def test_what_is_refused_is_said_in_italian(self):
+        (self.library / "corto.sav").write_bytes(self.template.read_bytes()[:1000])
+        (self.library / "vuoto.sav").write_bytes(b"")
+        files = {e["f"]: e for e in self.ok("/api/library")["files"]}
+        self.assertIn("il file ha 1000 byte, un salvataggio ne ha 524288", files["corto.sav"]["error"])
+        self.assertIn("il file ha 0 byte", files["vuoto.sav"]["error"])
+        for op, args, said in (("var", {"number": 1, "value": 2}, "variabile: da 16384"),
+                               ("flag", {"number": 0xFFFF, "value": True}, "flag: da 1"),
+                               ("dex", {"changes": [{"id": 494, "seen": True, "caught": False}]}, "pagina nel Pokédex"),
+                               ("trainer", {"play_time": [1, 2]}, "ore, minuti e secondi")):
+            self.assertIn(said, self.refused("/api/edit", {"f": "gyms/test.sav", "op": op, "args": args}))
+        self.assertIn("non c'è più", self.refused("/api/rename", {"f": "gone.sav", "name": "altro"}))
+        self.assertIn("non c'è più", self.refused("/api/trash", {"f": "gone.sav"}))
+        self.assertFalse((self.library / ".trash").exists(), "no empty folder left in the bin")
 
     def test_paths_that_leave_the_library(self):
         outside = Path(self.tmp.name) / "outside.sav"

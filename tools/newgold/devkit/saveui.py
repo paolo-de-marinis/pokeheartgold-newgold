@@ -81,6 +81,7 @@ class Refused(Exception):
         self.code = code
 
 
+INVALID = "non è un salvataggio valido"
 MELON_OPEN = "melonDS è aperto: riscriverebbe lo slot alla chiusura. Chiudilo prima."
 STALE = ("il file è cambiato su disco da quando la pagina l'ha letto (melonDS, un'altra scheda o "
          "savedit): l'ho ricaricato, rifai la modifica")
@@ -417,12 +418,18 @@ class Library:
         problem = self.layout_problem()
         if problem:
             raise Refused(problem, "build")
+        size = path.stat().st_size
+        if size < sv.FLASH:
+            raise Refused(f"{INVALID}: il file ha {size} byte, un salvataggio ne ha {sv.FLASH} (è troncato, o è "
+                          f"un'altra cosa)", "invalid")
         try:
             return sv.Save(path, self.layout)
         except SystemExit as e:
-            raise Refused(f"non è un salvataggio valido: {str(e).replace(str(path) + ': ', '')}")
+            why = str(e).replace(str(path) + ": ", "")
+            raise Refused(f"{INVALID}: " + ("nessuna delle due metà della flash contiene un salvataggio integro"
+                                            if "neither half" in why else why), "invalid")
         except Exception as e:
-            raise Refused(f"non è un salvataggio valido: {type(e).__name__}: {e}")
+            raise Refused(f"{INVALID}: {type(e).__name__}: {e}", "invalid")
 
     # -- reading ------------------------------------------------------------
 
@@ -432,7 +439,8 @@ class Library:
         try:
             save = self.open(path)
         except Refused as e:
-            return {**entry, "valid": None if e.code == "build" else False, "error": str(e)}
+            return {**entry, "valid": None if e.code == "build" else False,
+                    "error": str(e).removeprefix(INVALID + ": ")}   # the card says it already
         profile = sv.profile(save)
         where = sv.position(save)["current"]
         place = sv.map_table().get(where["map"], {})
@@ -591,6 +599,8 @@ class Library:
             source, key, is_slot = self.locate(f)
             if is_slot:
                 raise Refused("uno slot dell'emulatore non si rinomina")
+            if not source.is_file():
+                raise Refused(f"{f} non c'è più")
             target = self.new_name(name)
             new = target.relative_to(self.root).as_posix()
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -709,6 +719,8 @@ class Library:
                   "kanto": (255, "medaglie di Kanto"), "coins": (sv.MAX_COINS, "gettoni")}
         values = {k: number(a[k], 0, high, what) for k, (high, what) in limits.items() if k in a}
         if "play_time" in a:
+            if not isinstance(a["play_time"], list) or len(a["play_time"]) != 3:
+                raise Refused("il tempo di gioco: ore, minuti e secondi")
             hours, minutes, seconds = a["play_time"]
             values["play_time"] = [number(hours, 0, 999, "ore"), number(minutes, 0, 59, "minuti"),
                                    number(seconds, 0, 59, "secondi")]
@@ -780,7 +792,10 @@ class Library:
 
     def op_dex(self, save, a):
         for change in a["changes"]:
-            sv.set_dex(save, [number(change["id"], 1, 0xFFFF, "specie")], bool(change["seen"]), bool(change["caught"]))
+            species = number(change["id"], 1, 0xFFFF, "specie")
+            if species not in sv.dex_species():
+                raise Refused(f"la specie {species} non ha una pagina nel Pokédex")
+            sv.set_dex(save, [species], bool(change["seen"]), bool(change["caught"]))
 
     def op_dex_all(self, save, a):
         mode = a["mode"]
@@ -804,10 +819,11 @@ class Library:
         sv.set_position(save, where, x, y, number(a.get("direction", 0), 0, 3, "direzione"))
 
     def op_flag(self, save, a):
-        sv.write_flag(save, number(a["number"], 1, 0xFFFF, "flag"), bool(a["value"]))
+        sv.write_flag(save, number(a["number"], 1, sv.num_flags() - 1, "flag"), bool(a["value"]))
 
     def op_var(self, save, a):
-        sv.write_var(save, number(a["number"], 0, 0xFFFF, "variabile"), number(a["value"], 0, 0xFFFF, "valore"))
+        sv.write_var(save, number(a["number"], sv.VAR_BASE, sv.VAR_BASE + sv.NUM_VARS - 1, "variabile"),
+                     number(a["value"], 0, 0xFFFF, "valore"))
 
 
 def standable(map_id):
@@ -1087,7 +1103,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         except Refused as e:
             return self.reply(400, {"error": str(e), "code": e.code})
         except Exception as e:
-            return self.reply(500, {"error": f"{type(e).__name__}: {e}"})
+            return self.reply(500, {"error": f"errore interno dell'editor ({type(e).__name__}: {e})"})
 
     def do_POST(self):
         if not self.trusted() or not self.headers.get("Content-Type", "").startswith("application/json"):
@@ -1135,7 +1151,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         except Refused as e:
             return self.reply(400, {"error": str(e), "code": e.code})
         except Exception as e:
-            return self.reply(500, {"error": f"{type(e).__name__}: {e}"})
+            return self.reply(500, {"error": f"errore interno dell'editor ({type(e).__name__}: {e})"})
 
 
 def serve(library, build, port, roms=None, persist=False):
@@ -1147,7 +1163,7 @@ def serve(library, build, port, roms=None, persist=False):
         except OSError:
             continue
     else:
-        raise SystemExit(f"no free port from {port} to {port + 9}")
+        raise SystemExit(f"nessuna porta libera da {port} a {port + 9}")
     Handler.library = Library(library, build, roms)
     Handler.port = server.server_address[1]
     Handler.persist = persist
@@ -1156,19 +1172,19 @@ def serve(library, build, port, roms=None, persist=False):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser = argparse.ArgumentParser(description="L'editor dei salvataggi, come pagina su questo computer.")
     parser.add_argument("--library", type=Path, default=None,
-                        help="the folder of .sav files for this run; otherwise the one chosen in the page, "
-                             "or ~/hgss-saves")
+                        help="la cartella dei .sav per questa volta; altrimenti quella scelta nella pagina, "
+                             "o ~/hgss-saves")
     parser.add_argument("--port", type=int, default=8765,
-                        help="8765 by default; if it is taken, the next free one of ten")
-    parser.add_argument("--no-browser", action="store_true", help="print the address instead of opening it")
+                        help="8765 se non si dice; se è occupata, la prima libera delle dieci dopo")
+    parser.add_argument("--no-browser", action="store_true", help="scrive l'indirizzo invece di aprire il browser")
     parser.add_argument("--build", type=Path, default=ROOT / "build",
-                        help="the folder holding heartgold.us, heartgold.us.diag and the rest")
+                        help="la cartella con heartgold.us, heartgold.us.diag e le altre")
     parser.add_argument("--dry-run-launch", action="store_true",
-                        help="Gioca prints the melonDS command instead of running it (or SAVEUI_DRY_RUN=1)")
+                        help="Gioca scrive il comando di melonDS invece di eseguirlo (o SAVEUI_DRY_RUN=1)")
     parser.add_argument("--install-launcher", action="store_true",
-                        help="add 'Editor salvataggi New Gold' to the desktop's application menu and stop")
+                        help="aggiunge 'Editor salvataggi New Gold' al menu delle applicazioni ed esce")
     args = parser.parse_args()
     if args.install_launcher:
         return install_launcher()
@@ -1178,14 +1194,14 @@ def main():
         # A second start -- a double click on the launcher while the editor
         # runs -- opens the page on the one that is there.
         url = f"http://127.0.0.1:{args.port}/"
-        print(f"the save editor is already running on {url}")
+        print(f"l'editor dei salvataggi è già aperto su {url}")
         webbrowser.open(url)
         return
     settings = load_settings()
     library = args.library or Path(settings.get("library") or Path.home() / "hgss-saves")
     if not library.is_dir():
         if args.library:
-            raise SystemExit(f"{args.library} is not a folder")
+            raise SystemExit(f"{args.library} non è una cartella")
         # Not the home folder instead: the page opens on the settings, and
         # nothing is read or written until a folder is chosen there.
         print(f"la cartella dei salvataggi {library} non c'è: sceglila nella pagina, in Cartelle e ROM")
@@ -1195,8 +1211,8 @@ def main():
     if problem:
         print("attenzione:", problem)
     url = f"http://127.0.0.1:{Handler.port}/"
-    print(f"save editor on {url} -- library {Handler.library.root}, build {Handler.library.build}"
-          f"{' (launches simulated)' if dry_run() else ''}; Ctrl+C to stop")
+    print(f"editor dei salvataggi su {url} -- libreria {Handler.library.root}, build {Handler.library.build}"
+          f"{' (avvii di melonDS simulati)' if dry_run() else ''}; Ctrl+C per fermarlo")
     if not args.no_browser:
         webbrowser.open(url)
     try:
@@ -1223,7 +1239,7 @@ def install_launcher():
                      "Comment=I salvataggi di HeartGold New Gold: modificali, caricali in melonDS e gioca\n"
                      f"Exec={sys.executable} {Path(__file__).resolve()}\nIcon=applications-games\n"
                      "Terminal=false\nCategories=Game;Utility;\n")
-    print(f"wrote {entry}")
+    print(f"scritto {entry}")
 
 
 if __name__ == "__main__":

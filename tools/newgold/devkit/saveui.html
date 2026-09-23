@@ -251,7 +251,9 @@ const store = {
 
 async function api(path, body) {
   const init = body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)};
-  const r = await fetch(path, init);
+  let r;
+  try { r = await fetch(path, init); }
+  catch { throw Object.assign(new Error("L'editor non risponde: riaprilo (doppio clic su Editor salvataggi) e ricarica la pagina."), {code: "down"}); }
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw Object.assign(new Error(j.error || `${r.status} ${r.statusText}`), {code: j.code});
   return j;
