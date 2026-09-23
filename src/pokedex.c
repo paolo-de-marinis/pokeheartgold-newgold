@@ -809,6 +809,14 @@ static void Pokedex_TryAppendSeenForm(Pokedex *pokedex, u16 species, Pokemon *mo
     u32 form;
 
     form = GetMonData(mon, MON_DATA_FORM, NULL);
+    // An East Sea Shellos or Gastrodon is a species of its own here, with form
+    // 0; the Dex keeps it as its base's form 1, as the reference stores it.
+    switch (GetMonData(mon, MON_DATA_SPECIES, NULL)) {
+    case SPECIES_SHELLOS_EAST_SEA:
+    case SPECIES_GASTRODON_EAST_SEA:
+        form = SHELLOS_EAST;
+        break;
+    }
     switch (species) {
     case SPECIES_UNOWN:
         Pokedex_TryAppendUnownLetter(pokedex, form, FALSE);

@@ -174,6 +174,43 @@ int main(void) {
 }
 '''
 
+SEEN_FORM = PREFIX + r'''
+typedef struct Pokedex { int unused; } Pokedex;
+typedef struct Pokemon { u16 species; u32 form; } Pokemon;
+static u32 GetMonData(Pokemon *mon, int field, void *unused) {
+    (void)unused;
+    return field == MON_DATA_SPECIES ? mon->species : field == MON_DATA_FORM ? mon->form : 0;
+}
+static u32 GetMonGender(Pokemon *mon) { (void)mon; return MON_MALE; }
+static u32 seenSpecies, seenForm;
+static void Pokedex_SetSeenForm_2max(Pokedex *pokedex, u32 species, u32 form) { (void)pokedex; seenSpecies = species; seenForm = form; }
+static void Pokedex_SetSeenForm_3max(Pokedex *pokedex, u32 species, u32 form) { (void)pokedex; (void)species; (void)form; }
+static void Pokedex_TryAppendUnownLetter(Pokedex *pokedex, u32 letter, BOOL caught) { (void)pokedex; (void)letter; (void)caught; }
+static void Pokedex_SetSeenDeoxysForm(Pokedex *pokedex, u32 species, Pokemon *mon) { (void)pokedex; (void)species; (void)mon; }
+static void Pokedex_SetSeenRotomForm(Pokedex *pokedex, u32 species, u32 form) { (void)pokedex; (void)species; (void)form; }
+@NATIVE@
+
+int main(void) {
+    static Pokedex dex;
+    static const struct { u16 species, base; u32 form, seen; } cases[] = {
+        { SPECIES_SHELLOS, SPECIES_SHELLOS, SHELLOS_WEST, SHELLOS_WEST },
+        { SPECIES_SHELLOS, SPECIES_SHELLOS, SHELLOS_EAST, SHELLOS_EAST },
+        // The form species carry form 0, and are the East Sea all the same.
+        { SPECIES_SHELLOS_EAST_SEA, SPECIES_SHELLOS, 0, SHELLOS_EAST },
+        { SPECIES_GASTRODON_EAST_SEA, SPECIES_GASTRODON, 0, GASTRODON_EAST },
+    };
+    for (unsigned i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        Pokemon mon = { cases[i].species, cases[i].form };
+        seenSpecies = seenForm = 99;
+        Pokedex_TryAppendSeenForm(&dex, cases[i].base, &mon);
+        assert(seenSpecies == cases[i].base);
+        assert(seenForm == cases[i].seen);
+    }
+    puts("PASS: an East Sea Shellos or Gastrodon registers the East Sea form.");
+    return 0;
+}
+'''
+
 NATIVE = ["CheckDexFlag", "SetDexFlag", "SetDexFlagState", "CheckDexGender",
           "Pokedex_SetSeenGenderFlagInternal", "Pokedex_SetSeenGenderFlag",
           "DexSpeciesIsInvalid", "SpeciesToDexSpecies", "Pokedex_CheckMonCaughtFlag",
@@ -221,6 +258,13 @@ class FormDexTests(unittest.TestCase):
         native = (form_table(source) + "\n" + definition(source, "SpeciesToDexSpecies") + "\n"
                   + definition((ROOT / "src/pokedex_util.c").read_text(), "Pokedex_ConvertToCurrentDexNo"))
         print(run(NUMBER.replace("@NATIVE@", native), "newgold-form-number-"))
+
+    def test_an_east_sea_form_registers_as_east(self):
+        """Shellos' and Gastrodon's East Sea are species here, with form 0,
+        and used to register as the West Sea's form 0."""
+        source = (ROOT / "src/pokedex.c").read_text()
+        native = definition(source, "Pokedex_TryAppendSeenForm")
+        print(run(SEEN_FORM.replace("@NATIVE@", native), "newgold-seen-form-"))
 
 
 if __name__ == "__main__":
