@@ -61,6 +61,17 @@ class ParalysisTests(unittest.TestCase):
         self.assertIn("msg_0197_00027", block)
 
 
+class ThawTests(unittest.TestCase):
+    def test_matcha_gotcha_thaws_its_user(self):
+        # BattleController_BeforeMove.c:1251 and 1785 at d0380a487: the frozen
+        # roll lets the three thawing effects through, and the thaw names them.
+        source = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        self.assertIn("effect != MOVE_EFFECT_THAW_AND_BURN_HIT && effect != MOVE_EFFECT_RECOIL_BURN_HIT"
+                      " && effect != MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT", source)
+        self.assertIn("effect == MOVE_EFFECT_THAW_AND_BURN_HIT || effect == MOVE_EFFECT_RECOIL_BURN_HIT"
+                      " || effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT", source)
+
+
 class CriticalHitTests(unittest.TestCase):
     def test_the_odds_at_each_stage_are_the_reference_s(self):
         # other_battle_calculators.c's CriticalRateTable. HeartGold's was
