@@ -87,12 +87,8 @@ class CriticalCaptureTests(unittest.TestCase):
                       function(system, "BattleSystem_CountRegionalDexOwned"))
         self.assertNotIn("BattleSystem_CountDexOwned", SOURCE.read_text())
 
-    def test_catching_a_registered_species_is_shown_as_critical(self):
-        # Where the Master Ball's single shake comes from.
-        body = function(SOURCE.read_text(), "BattleSystem_CalculateBallShakes")
-        tail = body[body.index("if (shakeCount < BALL_SHAKE_MAX) {"):]
-        self.assertIn("BattleSystem_CheckMonCaught(bsys, ctx->battleMons[ctx->battlerIdTarget].species) == TRUE", tail)
-        self.assertIn("ctx->criticalCapture = TRUE;", tail)
+    # That a caught registered species is shown as a critical throw, the
+    # Master Ball's single shake included, is run in test_ball_multipliers.py.
 
 
 if __name__ == "__main__":
