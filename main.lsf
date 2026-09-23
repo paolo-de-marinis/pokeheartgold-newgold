@@ -738,6 +738,8 @@ Overlay OVY_14
 {
     After main
     Object asm/overlay_14.o
+    Object src/overlay_14_021E64D0.o
+    Object asm/overlay_14_021E6548.o
     Object src/pc_box_display.o
     Object asm/overlay_14_021E7468.o
     Object src/overlay_14_021EAFAC.o

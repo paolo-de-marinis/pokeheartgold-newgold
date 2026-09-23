@@ -6,6 +6,7 @@
 #include "menu_input_state.h"
 #include "overlay_manager.h"
 #include "filesystem.h"
+#include "pokemon_types_def.h"
 #include "save.h"
 #include "sys_task_api.h"
 #include "unk_02019BA4.h"
@@ -114,5 +115,7 @@ void ov14_021F6D14(void *data, int newTarget, int prevTarget);
 void ov14_021F7184(void *data, int newTarget, int prevTarget);
 void ov14_021F7700(void *data, int newTarget, int prevTarget);
 void ov14_021F7AC4(PCBoxAppGraphics *graphics, int newTarget, int prevTarget);
+
+BOOL ov14_021E64D0(BoxPokemon *boxMon);
 
 #endif // POKEHEARTGOLD_OVY_14_H
