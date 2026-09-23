@@ -612,6 +612,17 @@ class InfiltratorSubstituteTests(unittest.TestCase):
         body = function(COMMANDS.read_text(), "BtlCmd_ChangeStatStage")
         self.assertIn("!(SideEffectIsTheMoves(ctx->statChangeType) && InfiltratorGoesRoundSubstitute(ctx, ctx->battlerIdStatChange))", body)
 
+    def test_the_hit_itself_goes_round_it_and_so_does_a_sound_move(self):
+        # ServerHPCalc.c:42 at d0380a487: the substitute takes the damage only
+        # when the attacker lacks Infiltrator and the move is not a sound move.
+        body = function(OVERLAY.read_text(), "SubstituteTakesHit")
+        self.assertIn("(ctx->battleMons[battlerId].status2 & STATUS2_SUBSTITUTE)", body)
+        self.assertIn("!InfiltratorGoesRoundSubstitute(ctx, battlerId)", body)
+        self.assertIn("!BattleMoveIsSoundBased(ctx->moveNoCur)", body)
+        hp = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_HpCalc")
+        self.assertIn("if (SubstituteTakesHit(ctx, ctx->battlerIdTarget) && ctx->damage < 0) {", hp)
+        self.assertNotIn("status2 & STATUS2_SUBSTITUTE && ctx->damage < 0", hp)
+
 
 class HealBlockTests(unittest.TestCase):
     # Moves the reference's HealBlockUnusableMoveEffects reaches by effect,

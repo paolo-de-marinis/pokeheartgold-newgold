@@ -3524,7 +3524,7 @@ static void BattleControllerPlayer_HpCalc(BattleSystem *battleSystem, BattleCont
 
         ctx->unk_30F4[ctx->battlerIdTarget] = ctx->battlerIdAttacker;
 
-        if (ctx->battleMons[ctx->battlerIdTarget].status2 & STATUS2_SUBSTITUTE && ctx->damage < 0) {
+        if (SubstituteTakesHit(ctx, ctx->battlerIdTarget) && ctx->damage < 0) {
             if (ctx->battleMons[ctx->battlerIdTarget].unk88.substituteHp + ctx->damage <= 0) {
                 ctx->selfTurnData[ctx->battlerIdAttacker].shellBellDamage += ctx->battleMons[ctx->battlerIdTarget].unk88.substituteHp * -1;
                 ctx->battleMons[ctx->battlerIdTarget].status2 &= ~STATUS2_SUBSTITUTE;

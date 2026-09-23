@@ -127,6 +127,7 @@ BOOL Battler_CanSelectAction(BattleContext *ctx, int battlerId);
 void ov12_022567D4(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon);
 u8 BattleBuffer_GetNext(BattleContext *ctx, int battlerId);
 BOOL InfiltratorGoesRoundSubstitute(BattleContext *ctx, int battlerId);
+BOOL SubstituteTakesHit(BattleContext *ctx, int battlerId);
 BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId);
 BOOL ov12_02256854(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL ov12_022568B0(BattleSystem *battleSystem, Pokemon *mon);

@@ -8800,6 +8800,13 @@ BOOL InfiltratorGoesRoundSubstitute(BattleContext *ctx, int battlerId) {
         && ctx->moveNoCur != MOVE_TRANSFORM && ctx->moveNoCur != MOVE_SKY_DROP;
 }
 
+// Whether a substitute takes this hit for the Pokemon behind it: an
+// Infiltrator's hit and a sound move's go round it (ServerHPCalc.c:42 at
+// d0380a487).
+BOOL SubstituteTakesHit(BattleContext *ctx, int battlerId) {
+    return (ctx->battleMons[battlerId].status2 & STATUS2_SUBSTITUTE) && !InfiltratorGoesRoundSubstitute(ctx, battlerId) && !BattleMoveIsSoundBased(ctx->moveNoCur);
+}
+
 BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) {
     BOOL ret = FALSE;
 
