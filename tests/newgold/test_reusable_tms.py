@@ -145,6 +145,13 @@ int main(void) {
     teach(ITEM_TM92, 433);
     assert(takeCalls == 0);
 
+    // A TR is spent, and still counts as learning from a machine.
+    teach(ITEM_TR00, 14);
+    assert(takeCalls == 1 && takenItem == ITEM_TR00 && friendshipCalls == 1 && moodCalls == 1);
+    // A TM past HM08 is kept like the others.
+    teach(ITEM_TM093, 430);
+    assert(takeCalls == 0);
+
     // HMs were already kept, by move and now also by item.
     teach(ITEM_HM01, hmMoves[0]);
     assert(takeCalls == 0 && friendshipCalls == 1 && moodCalls == 1);
@@ -153,7 +160,7 @@ int main(void) {
     teach(ITEM_NONE, 264);
     assert(takeCalls == 0 && friendshipCalls == 0 && moodCalls == 0);
 
-    puts("PASS: 92 TMs, 8 HMs, bag limits, machine teaching and the relearner path.");
+    puts("PASS: TMs, HMs and TRs, bag limits, machine teaching and the relearner path.");
 }
 '''
 
