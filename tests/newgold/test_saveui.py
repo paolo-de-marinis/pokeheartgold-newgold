@@ -400,9 +400,24 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("melonDS", self.refused("/api/edit", {"f": "emu:hg-diag", "op": "trainer", "args": {"money": 1}}))
         self.assertEqual(slot.read_bytes(), old)
         type(self).running = False
-        self.ok("/api/load", {"f": "gyms/test.sav", "slot": "hg-diag"})
+        # The slot holds a save no library file is (the edit moved the one it
+        # matched): progress made in melonDS would be, so it is asked for.
+        got, out = self.call("/api/load", {"f": "gyms/test.sav", "slot": "hg-diag"})
+        self.assertEqual((got, out["code"]), (400, "unsaved"))
+        self.assertIn("contiene progressi", self.refused("/api/play", {"f": "gyms/test.sav", "slot": "hg-diag"}))
+        self.assertEqual(slot.read_bytes(), old)
+        self.ok("/api/load", {"f": "gyms/test.sav", "slot": "hg-diag", "force": True})
         self.assertEqual(slot.read_bytes(), self.save.read_bytes())
         self.assertEqual(self.backups("emulatore/hg-diag")[0].read_bytes(), old)
+        # A slot the library holds a copy of is loaded over without asking.
+        self.ok("/api/duplicate", {"f": "gyms/test.sav", "name": "copia"})
+        self.edit("trainer", {"money": 43})
+        self.ok("/api/load", {"f": "gyms/test.sav", "slot": "hg-diag"})
+        # Gioca on the slot itself: melonDS on it as it is, nothing copied.
+        before = slot.read_bytes()
+        self.ok("/api/play", {"f": "emu:hg-diag", "slot": "hg-diag"})
+        self.assertEqual(saveui.LAUNCHED[-1], (self.build / "heartgold.us.diag/pokeheartgold.us.nds").resolve())
+        self.assertEqual(slot.read_bytes(), before)
         self.ok("/api/play", {"f": "gyms/test.sav", "slot": "hg"})
         self.assertEqual(saveui.LAUNCHED[-1], (self.build / "heartgold.us/pokeheartgold.us.nds").resolve())
         self.assertIn("non c'è lo slot", self.refused("/api/play", {"f": "gyms/test.sav", "slot": "ss"}))

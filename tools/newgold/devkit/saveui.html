@@ -346,6 +346,7 @@ function renderLibrary() {
       <div class="row1"><span class="fname">${esc(e.label)}</span><span class="date">${e.exists ? fmtDate(e.mtime) : ""}</span></div>
       ${entryLine(e)}
       <div class="acts">
+        ${e.exists && e.valid && lib.playable.includes(e.slot) ? `<button class="small primary" data-act="resume" data-f="${esc(e.f)}" type="button" title="Apre melonDS su questo slot com'è, senza copiarci niente">Gioca</button>` : ""}
         ${e.exists && e.valid ? `<button class="small" data-act="open" data-f="${esc(e.f)}" type="button">Apri</button>` : ""}
         ${e.exists ? `<button class="small" data-act="take" data-f="${esc(e.f)}" type="button">Prendi dall'emulatore</button>` : ""}
       </div>
@@ -392,15 +393,36 @@ function suggestName(f) {
   const d = new Date(), p = n => String(n).padStart(2, "0");
   return `${base}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
 }
+// Load or play into a slot; when the slot holds progress no library file
+// has, the server refuses and the page asks: take it first, or overwrite.
+async function toSlot(path, f, slot, done) {
+  let force = false;
+  for (;;) {
+    try { await api(path, {f, slot, force}); toast(done); return true; }
+    catch (e) {
+      if (e.code !== "unsaved") { toast(e.message, true); return false; }
+      const r = await ask("Lo slot ha progressi non presi", `<p>${esc(e.message)}</p>
+        <label class="f">Nome della copia nella libreria<input name="name" required value="${esc(suggestName("emu:" + slot))}"></label>`,
+        [["take", "Prendili, poi continua", "primary"], ["over", "Sovrascrivi", "danger"], ["", "Annulla"]]);
+      if (r.value === "over") force = true;
+      else if (r.value !== "take" || !await run(() => api("/api/take", {slot, name: r.data.name}), "Slot copiato nella libreria")) return false;
+    }
+  }
+}
 async function libraryAction(act, f, t) {
   if (act === "open") return openSave(f);
+  if (act === "resume") {
+    toast("Apro melonDS…");
+    await run(() => api("/api/play", {f, slot: f.slice(4)}), "melonDS è aperto");
+    return loadLibrary();
+  }
   if (act === "play") {
     const r = await ask("Gioca", `<p>Il salvataggio <strong>${esc(f)}</strong> viene copiato nello slot scelto (quello che c'era finisce nei backup), poi si apre melonDS.</p>
       <label class="f">Slot<select name="slot">${slotOptions(S.lib.playable)}</select></label>`,
       [["go", "Carica e avvia melonDS", "primary"], ["", "Annulla"]]);
     if (r.value !== "go") return;
     toast("Carico il salvataggio e apro melonDS…");
-    await run(() => api("/api/play", {f, slot: r.data.slot}), "melonDS è aperto");
+    await toSlot("/api/play", f, r.data.slot, "melonDS è aperto");
     return loadLibrary();
   }
   if (act === "load") {
@@ -408,7 +430,7 @@ async function libraryAction(act, f, t) {
       <label class="f">Slot<select name="slot">${slotOptions(usableSlots())}</select></label>`,
       [["go", "Carica", "primary"], ["", "Annulla"]]);
     if (r.value !== "go") return;
-    await run(() => api("/api/load", {f, slot: r.data.slot}), "Caricato nello slot");
+    await toSlot("/api/load", f, r.data.slot, "Caricato nello slot");
     return loadLibrary();
   }
   if (act === "take") {

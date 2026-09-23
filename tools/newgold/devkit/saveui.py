@@ -81,6 +81,7 @@ class Refused(Exception):
         self.code = code
 
 
+MELON_OPEN = "melonDS è aperto: riscriverebbe lo slot alla chiusura. Chiudilo prima."
 STALE = ("il file è cambiato su disco da quando la pagina l'ha letto (melonDS, un'altra scheda o "
          "savedit): l'ho ricaricato, rifai la modifica")
 
@@ -414,14 +415,18 @@ class Library:
                 "location": place.get("name") or place.get("const") or f"mappa {where['map']}",
                 "counter": save.counter(), "play_time": profile["play_time"]}
 
-    def listing(self):
-        files = []
+    def library_files(self):
+        """Every .sav in the library; hidden folders (the backups, the bin)
+        and links left out."""
         for folder, dirs, names in os.walk(self.root):
             dirs[:] = sorted(d for d in dirs if not d.startswith("."))
             for name in sorted(names):
                 path = Path(folder) / name
                 if name.endswith(".sav") and not name.startswith(".") and path.is_file() and not path.is_symlink():
-                    files.append({"f": path.relative_to(self.root).as_posix(), **self.summary(path)})
+                    yield path
+
+    def listing(self):
+        files = [{"f": path.relative_to(self.root).as_posix(), **self.summary(path)} for path in self.library_files()]
         slots = []
         for key in self.slots():
             rom, path = self.slot_paths(key)
@@ -464,7 +469,7 @@ class Library:
         tell whether the file is still what this write left."""
         path, key, is_slot = self.locate(f)
         if is_slot and melonds_running():
-            raise Refused("melonDS è aperto: riscriverebbe lo slot alla chiusura. Chiudilo prima.")
+            raise Refused(MELON_OPEN)
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
         try:
@@ -589,9 +594,11 @@ class Library:
             self.move_history(f".cestino/{t}", new)
             return new
 
-    def load(self, f, slot):
+    def load(self, f, slot, force=False):
         """'Carica nell'emulatore': a valid save copied into a slot, beside
-        a ROM melonDS can play."""
+        a ROM melonDS can play. A slot holding a save the library has no
+        copy of -- what was played there since it was loaded -- is not
+        overwritten unless `force`: it would go only to the slot's backups."""
         with self.lock:
             source, _, _ = self.locate(f)
             target, _, _ = self.locate(f"emu:{slot}")
@@ -599,7 +606,26 @@ class Library:
             if problem:
                 raise Refused(f"{self.label(slot)}: {problem}")
             self.open(source)
-            self.write(f"emu:{slot}", source.read_bytes())
+            data = source.read_bytes()
+            if melonds_running():
+                raise Refused(MELON_OPEN)
+            if not force and target.is_file() and target.read_bytes() != data:
+                self.unsaved(slot, target)
+            self.write(f"emu:{slot}", data)
+
+    def unsaved(self, slot, path):
+        """Refuses when the slot holds a valid save that no library file is."""
+        try:
+            save = self.open(path)
+        except Refused:
+            return
+        held = digest(path.read_bytes())
+        if any(version(path) == held for path in self.library_files()):
+            return
+        p = sv.profile(save)
+        raise Refused(f"lo slot {self.label(slot)} contiene progressi che non sono nella libreria ({p['name']}, "
+                      f"salvataggio n. {save.counter()}, tempo {p['play_time'][0]}:{p['play_time'][1]:02d}). "
+                      f"Prendili prima, o sovrascrivili: resterebbero solo nei backup dello slot.", "unsaved")
 
     def take(self, slot, name):
         """'Prendi dall'emulatore': a slot copied into the library."""
@@ -611,15 +637,23 @@ class Library:
             self.write(target.relative_to(self.root).as_posix(), source.read_bytes(), validate=False)
             return target.relative_to(self.root).as_posix()
 
-    def play(self, f, slot):
+    def play(self, f, slot, force=False):
+        """'Gioca': the file loaded into the slot, then melonDS on its ROM;
+        the slot itself (f is emu:<slot>) is played as it is."""
         if not isinstance(slot, str) or slot not in self.slots():
             raise Refused(f"non c'è lo slot {slot}")
         rom, sav = self.slot_paths(slot)
-        if rom_problem(rom, sav) is None and not self.playable(slot):
+        problem = rom_problem(rom, sav)
+        if problem is None and not self.playable(slot):
             raise Refused(f"{self.label(slot)}: si gioca su una ROM di HeartGold, i salvataggi qui sono di HeartGold")
         if melonds_running():
             raise Refused("melonDS è già aperto: chiudilo prima, poi premi di nuovo Gioca")
-        self.load(f, slot)
+        if f == f"emu:{slot}":
+            if problem:
+                raise Refused(f"{self.label(slot)}: {problem}")
+            self.open(sav)
+        else:
+            self.load(f, slot, force)
         launch(rom.resolve())
 
     # -- the settings: which folder, which ROMs -------------------------------
@@ -1040,12 +1074,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if path == "/api/untrash":
                 return self.reply(200, {"f": lib.untrash(body.get("t"), body.get("name"))})
             if path == "/api/load":
-                lib.load(body.get("f"), body.get("slot"))
+                lib.load(body.get("f"), body.get("slot"), body.get("force") is True)
                 return self.reply(200, {})
             if path == "/api/take":
                 return self.reply(200, {"f": lib.take(body.get("slot"), body.get("name"))})
             if path == "/api/play":
-                lib.play(body.get("f"), body.get("slot"))
+                lib.play(body.get("f"), body.get("slot"), body.get("force") is True)
                 return self.reply(200, {})
             if path == "/api/quit":
                 # The page's "Chiudi l'editor": started with a double click,
