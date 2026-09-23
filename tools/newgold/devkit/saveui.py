@@ -309,6 +309,12 @@ def store_settings(settings):
     os.replace(temporary, CONFIG)
 
 
+# One lock for the server's whole life: choosing another folder makes a new
+# Library, and a request still holding the old one must not write beside a
+# request holding the new one.
+LOCK = threading.RLock()
+
+
 class Library:
     def __init__(self, library, build, roms=None):
         self.root = Path(library).expanduser().resolve()
@@ -317,7 +323,7 @@ class Library:
         self.roms = [dict(r) for r in (default_roms(build) if roms is None else roms)]
         self.backups = self.root / ".backups"
         self.trash = self.root / ".trash"
-        self.lock = threading.RLock()
+        self.lock = LOCK
 
     # -- where things are ---------------------------------------------------
 
@@ -518,7 +524,7 @@ class Library:
         if is_slot and melonds_running():
             raise Refused(MELON_OPEN)
         path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+        temporary = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
         try:
             with open(temporary, "wb") as out:
                 out.write(data)

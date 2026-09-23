@@ -582,6 +582,9 @@ class SaveUiTests(unittest.TestCase):
             self.assertEqual(refused.exception.code, "nolibrary")
         self.assertFalse((Path(self.tmp.name) / "nessuna").exists())
 
+    def test_one_lock_across_a_change_of_folder(self):
+        self.assertIs(saveui.Library(self.library, self.build).lock, saveui.Handler.library.lock)
+
     def test_only_this_page_may_ask(self):
         body = {"f": "gyms/test.sav", "op": "trainer", "args": {"money": 1}}
         self.assertEqual(self.call("/api/edit", body, {"Origin": "http://evil.example"})[0], 403)
