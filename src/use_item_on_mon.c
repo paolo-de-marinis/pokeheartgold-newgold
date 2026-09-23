@@ -311,12 +311,11 @@ BOOL UseItemOnPokemon(Pokemon *mon, u16 itemID, u16 moveIdx, u16 location, enum 
                 RestoreMonHPBy(mon, sp54, sp60, sp60 - sp58);
             }
             hadEffect = TRUE;
-        } else if (GetMonEvolution(NULL, mon, EVOCTX_LEVELUP, ITEM_NONE, &sp70) != SPECIES_NONE) {
-            // At the top level the candy is spent on the evolution the level
-            // would have given; the party menu finds it the way it does after
-            // any level gained.
-            hadEffect = TRUE;
         }
+        // At the top level a candy CanUseItemOnMonInParty let through is spent
+        // on the evolution alone: it has no effect here, so the friendship
+        // below is not raised, and the party menu finds the evolution the way
+        // it does after any level gained.
         effectFound = TRUE;
     }
 
