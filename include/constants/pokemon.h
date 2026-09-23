@@ -286,7 +286,7 @@
 #define MON_DATA_NICKNAME_FLAT_COMPARE      118
 #define MON_DATA_NICKNAME_STRING            119
 #define MON_DATA_NICKNAME_STRING_AND_FLAG   120
-#define MON_DATA_UNUSED_121                 121
+#define MON_DATA_EVOLUTION_COUNTER          121 // the games' form argument: Mon_IncrementEvolutionCounter
 #define MON_DATA_MET_GAME                   122
 #define MON_DATA_SUPER_COOL_RIBBON          123
 #define MON_DATA_SUPER_COOL_RIBBON_GREAT    124
@@ -634,6 +634,10 @@ typedef enum EvoMethod {
     // hg-engine: a level with this much HP gone and some left, for the
     // Galarian Yamask's 49 -- the games' damage taken without fainting.
     EVO_HURT_IN_BATTLE_AMOUNT,
+    // hg-engine names the method and checks nothing: the games' form
+    // argument, a count on the Pokemon -- Rage Fist or Psyshield Bash used,
+    // Bisharp defeated -- at least the row's number.
+    EVO_FORM_ARGUMENT,
 } EvoMethod;
 
 typedef enum {

@@ -47,7 +47,7 @@ typedef struct { int hour, minute, second; } RTCTime;
 
 typedef struct {
     u16 species, heldItem, friendship;
-    u8 level, form, type1, type2, bits113;
+    u8 level, form, type1, type2, bits113, evolutionCounter;
     u32 pid, hp, maxHp;
 } Pokemon;
 typedef struct { int count; Pokemon mons[6]; } Party;
@@ -73,10 +73,15 @@ static u32 GetMonData(Pokemon *mon, int field, void *dest) {
     case MON_DATA_TYPE_1: return mon->type1;
     case MON_DATA_TYPE_2: return mon->type2;
     case MON_DATA_UNUSED_113: return mon->bits113;
+    case MON_DATA_EVOLUTION_COUNTER: return mon->evolutionCounter;
     case MON_DATA_HP: return mon->hp;
     case MON_DATA_MAX_HP: return mon->maxHp;
     default: assert(0 && "Unexpected field"); return 0;
     }
+}
+static inline void SetMonData(Pokemon *mon, int field, void *value) {
+    assert(field == MON_DATA_EVOLUTION_COUNTER);
+    mon->evolutionCounter = *(u8 *)value;
 }
 static u32 GetItemAttr(u16 item, int field, enum HeapID heap) {
     assert(field == ITEMATTR_HOLD_EFFECT && heap == HEAP_ID_DEFAULT);
@@ -255,6 +260,34 @@ static void check_critical_hits(void) {
     }
 }
 
+static void check_form_argument(void) {
+    // The games' count on the Pokemon, at least the row's number, at any
+    // level: Primeape's twenty Rage Fists, Bisharp's three Bisharp.
+    Pokemon mon = { .species = SPECIES_PRIMEAPE, .level = 1 };
+    one_row(EVO_FORM_ARGUMENT, 20, SPECIES_ANNIHILAPE);
+    for (int count = 0; count <= 255; count++) {
+        mon.evolutionCounter = count;
+        assert(evolve(&mon, NULL, EVO_FORM_ARGUMENT) == (count >= 20 ? SPECIES_ANNIHILAPE : SPECIES_NONE));
+    }
+}
+
+static void check_counted_moves(void) {
+    // Primeape counts Rage Fist and Stantler Psyshield Bash, nothing else and
+    // no one else; the count stops at 255.
+    static const u16 species[] = { SPECIES_PRIMEAPE, SPECIES_STANTLER, SPECIES_MANKEY, SPECIES_ANNIHILAPE };
+    static const u16 moves[] = { MOVE_RAGE_FIST, MOVE_PSYSHIELD_BASH, MOVE_TACKLE };
+    for (unsigned s = 0; s < 4; s++) {
+        for (unsigned m = 0; m < 3; m++) {
+            Pokemon mon = { .species = species[s] };
+            int counts = (species[s] == SPECIES_PRIMEAPE && moves[m] == MOVE_RAGE_FIST) || (species[s] == SPECIES_STANTLER && moves[m] == MOVE_PSYSHIELD_BASH);
+            for (int use = 1; use <= 300; use++) {
+                Mon_CountEvolutionMove(&mon, moves[m]);
+                assert(mon.evolutionCounter == (counts ? (use < 255 ? use : 255) : 0));
+            }
+        }
+    }
+}
+
 int main(void) {
     check_magnetic_field();
     check_time_of_day();
@@ -263,6 +296,8 @@ int main(void) {
     check_nature();
     check_hurt();
     check_critical_hits();
+    check_form_argument();
+    check_counted_moves();
     return 0;
 }
 """
@@ -279,7 +314,7 @@ def program():
         "@RTC_TYPE@": rtc.group(),
         "@HOUR_FUNCTION@": function(read("src/gf_rtc.c"), "GF_RTC_GetTimeOfDayByHour"),
         "@NIGHT_FUNCTION@": function(read("src/gf_rtc.c"), "IsNighttime"),
-        "@FUNCTIONS@": "\n".join(function(source, name) for name in ("GetNatureFromPersonality", "EvolvedPassiveForm", "GetMonEvolution")),
+        "@FUNCTIONS@": "\n".join(function(source, name) for name in ("GetNatureFromPersonality", "EvolvedPassiveForm", "GetMonEvolution", "Mon_IncrementEvolutionCounter", "Mon_CountEvolutionMove")),
     }
     text = FIXTURE
     for placeholder, replacement in replacements.items():
@@ -288,6 +323,14 @@ def program():
 
 
 class EvolutionMethods(unittest.TestCase):
+    def test_the_battle_counts_a_move_when_its_pp_goes(self):
+        """A move is counted where the battle takes its PP for it, for the
+        player's own Pokemon, by its party record."""
+        body = function(read("src/battle/battle_controller_player.c"), "ov12_0224B1FC")
+        taken = body[body.index("movePPCur[index] -= decreasePP;"):body.index("ctx->moveStatusFlag |= MOVE_STATUS_NO_PP;")]
+        self.assertRegex(taken, r"BattleSystem_GetParty\(battleSystem, ctx->battlerIdAttacker\) == BattleSystem_GetParty\(battleSystem, BATTLER_PLAYER\)\) \{\s*"
+                                r"Mon_CountEvolutionMove\(BattleSystem_GetPartyMon\(battleSystem, ctx->battlerIdAttacker, ctx->selectedMonIndex\[ctx->battlerIdAttacker\]\), ctx->moveNoTemp\);")
+
     def test_methods_on_the_host(self):
         with tempfile.TemporaryDirectory(prefix="newgold-evolution-methods-") as directory:
             path = Path(directory)

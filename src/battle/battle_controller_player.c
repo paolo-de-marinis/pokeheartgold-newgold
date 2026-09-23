@@ -2428,6 +2428,11 @@ BOOL ov12_0224B1FC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->battleMons[ctx->battlerIdAttacker].movePPCur[index] = 0;
             }
             CopyBattleMonToPartyMon(battleSystem, ctx, ctx->battlerIdAttacker);
+            // A move used, for the evolutions that count one: the player's own
+            // Pokemon, asked by its party record, so a Transform is not it.
+            if (BattleSystem_GetParty(battleSystem, ctx->battlerIdAttacker) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
+                Mon_CountEvolutionMove(BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdAttacker, ctx->selectedMonIndex[ctx->battlerIdAttacker]), ctx->moveNoTemp);
+            }
         } else {
             ctx->moveStatusFlag |= MOVE_STATUS_NO_PP;
         }

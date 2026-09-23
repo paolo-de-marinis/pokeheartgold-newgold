@@ -773,7 +773,7 @@ static u32 GetBoxMonDataInternal(BoxPokemon *boxMon, int attr, void *dest) {
             CopyU16ArrayToString(dest, blockC->nickname);
         }
         break;
-    case MON_DATA_UNUSED_121:
+    case MON_DATA_EVOLUTION_COUNTER:
         ret = blockC->unused;
         break;
     case MON_DATA_MET_GAME:
@@ -1233,7 +1233,7 @@ static void SetBoxMonDataInternal(BoxPokemon *boxMon, int attr, const void *valu
     case MON_DATA_NICKNAME_STRING:
         CopyStringToU16Array(value, blockC->nickname, POKEMON_NAME_LENGTH + 1);
         break;
-    case MON_DATA_UNUSED_121:
+    case MON_DATA_EVOLUTION_COUNTER:
         blockC->unused = VALUE(u8);
         break;
     case MON_DATA_MET_GAME:
@@ -1669,7 +1669,7 @@ static void AddBoxMonDataInternal(BoxPokemon *boxMon, int attr, int value) {
     case MON_DATA_NICKNAME_FLAT_COMPARE:
     case MON_DATA_NICKNAME_STRING:
     case MON_DATA_NICKNAME_STRING_AND_FLAG:
-    case MON_DATA_UNUSED_121:
+    case MON_DATA_EVOLUTION_COUNTER:
     case MON_DATA_MET_GAME:
     case MON_DATA_SUPER_COOL_RIBBON:
     case MON_DATA_SUPER_COOL_RIBBON_GREAT:
@@ -2066,6 +2066,30 @@ BOOL Mon_CanUseAbilityPatch(Pokemon *mon) {
     int form = GetMonData(mon, MON_DATA_FORM, NULL);
 
     return GetMonBaseStat_HandleAlternateForm(species, form, BASE_HIDDEN_ABILITY) != ABILITY_NONE;
+}
+
+// The games keep a count on the Pokemon that some evolutions wait for, their
+// form argument; here it is MON_DATA_EVOLUTION_COUNTER, the byte of block C
+// neither tree uses, and it stops at 255.
+void Mon_IncrementEvolutionCounter(Pokemon *mon) {
+    u8 count = (u8)GetMonData(mon, MON_DATA_EVOLUTION_COUNTER, NULL);
+
+    if (count < 255) {
+        count++;
+        SetMonData(mon, MON_DATA_EVOLUTION_COUNTER, &count);
+    }
+}
+
+// Primeape counts the Rage Fists it uses and Stantler its Psyshield Bashes:
+// Pokemon Central gives Annihilape's as "dopo aver usato la mossa Pugno
+// Furibondo 20 volte" and Wyrdeer's as Barrierassalto twenty times in the agile
+// style, which this game has not got, so any use counts.
+void Mon_CountEvolutionMove(Pokemon *mon, u16 move) {
+    u16 species = (u16)GetMonData(mon, MON_DATA_SPECIES, NULL);
+
+    if ((species == SPECIES_PRIMEAPE && move == MOVE_RAGE_FIST) || (species == SPECIES_STANTLER && move == MOVE_PSYSHIELD_BASH)) {
+        Mon_IncrementEvolutionCounter(mon);
+    }
 }
 
 void Mon_ToggleHiddenAbility(Pokemon *mon) {
@@ -3173,6 +3197,12 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     *method_ret = EVO_HURT_IN_BATTLE_AMOUNT;
                 }
             } break;
+            case EVO_FORM_ARGUMENT:
+                if (GetMonData(mon, MON_DATA_EVOLUTION_COUNTER, NULL) >= evoTable[i].param) {
+                    target = evoTable[i].target;
+                    *method_ret = EVO_FORM_ARGUMENT;
+                }
+                break;
             case EVO_OTHER_PARTY_MON:
                 if (party != NULL && Party_HasMon(party, evoTable[i].param) == 1) {
                     target = evoTable[i].target;

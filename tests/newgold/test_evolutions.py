@@ -69,6 +69,8 @@ ENGINE_METHOD_ROWS = [
     ("SPECIES_TOXEL", ("EVO_LEVEL_NATURE_LOW_KEY", 30, "SPECIES_TOXTRICITY_LOW_KEY")),
     ("SPECIES_YAMASK_GALARIAN", ("EVO_HURT_IN_BATTLE_AMOUNT", 49, "SPECIES_RUNERIGUS")),
     ("SPECIES_FARFETCHD_GALARIAN", ("EVO_AMOUNT_OF_CRITICAL_HITS", 3, "SPECIES_SIRFETCHD")),
+    ("SPECIES_PRIMEAPE", ("EVO_FORM_ARGUMENT", 20, "SPECIES_ANNIHILAPE")),
+    ("SPECIES_STANTLER", ("EVO_FORM_ARGUMENT", 20, "SPECIES_WYRDEER")),
 ]
 
 VANILLA_EEVEE = {
@@ -260,10 +262,9 @@ class EvolutionTests(unittest.TestCase):
 
     def test_no_vanilla_level_disagrees_with_the_reference(self):
         # The reference also gives Annihilape and Wyrdeer an EVO_FORM_ARGUMENT
-        # row counting twenty uses of the move. That is hg-engine's own method
-        # and this tree has no EVO_FORM_ARGUMENT and no form argument on a
-        # Pokemon to count into, so the move row is the whole of what konefr
-        # changed and the whole of what is owed.
+        # row counting twenty uses of the move. That is hg-engine's own row,
+        # read with the engine's methods; the move row beside it is the whole
+        # of what konefr changed.
         if REFERENCE is None:
             self.skipTest("the reference checkout is not present")
         table = import_evolutions.reference_table(Path(REFERENCE))

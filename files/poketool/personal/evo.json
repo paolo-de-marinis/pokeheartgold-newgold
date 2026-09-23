@@ -2727,6 +2727,11 @@
           "method": "EVO_HAS_MOVE",
           "param": "MOVE_RAGE_FIST",
           "target": "SPECIES_ANNIHILAPE"
+        },
+        {
+          "method": "EVO_FORM_ARGUMENT",
+          "param": 20,
+          "target": "SPECIES_ANNIHILAPE"
         }
       ]
     },
@@ -2766,6 +2771,11 @@
         {
           "method": "EVO_HAS_MOVE",
           "param": "MOVE_PSYSHIELD_BASH",
+          "target": "SPECIES_WYRDEER"
+        },
+        {
+          "method": "EVO_FORM_ARGUMENT",
+          "param": 20,
           "target": "SPECIES_WYRDEER"
         }
       ]
