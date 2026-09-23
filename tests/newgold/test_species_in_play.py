@@ -51,7 +51,7 @@ import wotbl  # noqa: E402
 # still a name. Reading it here rather than writing a second list means the two
 # cannot disagree: an ability that moves out of PENDING there stops counting a
 # species as dead here on the same commit.
-from test_ability_effects import PENDING as INERT_ABILITIES, battle_source  # noqa: E402
+from test_ability_effects import NOT_AN_ABILITY, PENDING as INERT_ABILITIES, battle_source  # noqa: E402
 
 SPRITES = ROOT / "files/poketool/pokegra/pokegra"
 ICONS = ROOT / "files/poketool/icongra/poke_icon"
@@ -370,7 +370,7 @@ class SpeciesInPlayTests(unittest.TestCase):
         names = re.findall(r"#define ABILITY_([A-Z0-9_]+)\s+\d+",
                            (ROOT / "include/constants/abilities.h").read_text())
         for name in names:
-            if name == "NONE" or name in INERT_ABILITIES:
+            if name == "NONE" or name in INERT_ABILITIES or name in NOT_AN_ABILITY:
                 continue
             self.assertTrue(f"ABILITY_{name}" in source,
                             f"ABILITY_{name} counts as an effect and nothing reads it")

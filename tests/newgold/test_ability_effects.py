@@ -8,6 +8,7 @@ as either done or still to do, and a done one has to be read somewhere the
 battle actually runs.
 """
 
+import json
 import re
 import unittest
 from pathlib import Path
@@ -214,13 +215,19 @@ IMPLEMENTED = {
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
     "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE",
-    "DELTA_STREAM", "DESOLATE_LAND", "EMBODY_ASPECT",
-    "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4",
-    "GUARD_DOG", "MEGA_SOL", "MIMICRY",
-    "OPPORTUNIST", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN",
-    "STAKEOUT", "SUPREME_OVERLORD", "SYMBIOSIS", "TEMP4",
-    "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR",
+    "DELTA_STREAM", "DESOLATE_LAND", "EMBODY_ASPECT", "EMBODY_ASPECT_2",
+    "EMBODY_ASPECT_3", "EMBODY_ASPECT_4", "GUARD_DOG", "MEGA_SOL", "MIMICRY",
+    "OPPORTUNIST", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN", "STAKEOUT",
+    "SUPREME_OVERLORD", "SYMBIOSIS", "TERAFORM_ZERO", "TERA_SHELL",
+    "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR"
 }
+
+# Numbers the engine keeps free rather than abilities. TEMP4 (317) sits
+# between Fire Mane and Spicy Spray, where the engine reserved a slot for an
+# ability it had not named yet; its name in every bank is the engine's
+# "Placeholder", no game has an ability there, and no species in
+# personal.json carries it, so there is nothing for a battle to do with it.
+NOT_AN_ABILITY = {"TEMP4"}
 
 
 def added():
@@ -263,8 +270,15 @@ def written_in_c():
 
 class AbilityEffectTests(unittest.TestCase):
     def test_every_added_ability_is_accounted_for(self):
-        self.assertEqual(added(), IMPLEMENTED | PENDING)
+        self.assertEqual(added(), IMPLEMENTED | PENDING | NOT_AN_ABILITY)
         self.assertFalse(IMPLEMENTED & PENDING)
+        self.assertFalse((IMPLEMENTED | PENDING) & NOT_AN_ABILITY)
+
+    def test_a_reserved_slot_is_carried_by_no_species(self):
+        personal = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
+        carried = {ability for mon in personal for ability in mon["abilities"] + [mon["hiddenAbility"]]}
+        for name in NOT_AN_ABILITY:
+            self.assertNotIn(f"ABILITY_{name}", carried)
 
     def test_an_implemented_ability_is_read_by_the_game(self):
         source = battle_source()
@@ -295,7 +309,8 @@ class AbilityEffectTests(unittest.TestCase):
     # blocklist reads alone; see the note above PENDING. Cud Chew done.
     # Emergency Exit and Wimp Out done, then Parental Bond, Dancer and
     # Illusion.
-    STILL_TO_DO = 27
+    # 32 -> 31: TEMP4 is a reserved slot, not an ability; see NOT_AN_ABILITY.
+    STILL_TO_DO = 26
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
