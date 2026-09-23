@@ -58,7 +58,7 @@ void ov18_021F8CCC(PokedexCapturePage *page) {
 
     ov18_021F9648(&page->windows[0], msgData, msg_0802_00144, 112, 0, 4, MAKE_TEXT_COLOR(2, 1, 0), 2);
 
-    BufferIntegerAsString(msgFormat, 0, Pokedex_ConvertToCurrentDexNo(page->natDexEnabled, page->species), 3, PRINTING_MODE_LEADING_ZEROS, TRUE);
+    BufferIntegerAsString(msgFormat, 0, Pokedex_ConvertToCurrentDexNo(page->natDexEnabled, page->species), DEX_NUMBER_DIGITS, PRINTING_MODE_LEADING_ZEROS, TRUE);
     string = NewString_ReadMsgData(msgData, msg_0802_00009);
     StringExpandPlaceholders(msgFormat, buffer, string);
     ov18_021F95FC(&page->windows[1], buffer, 1, 0, 4, MAKE_TEXT_COLOR(2, 1, 0), 0);

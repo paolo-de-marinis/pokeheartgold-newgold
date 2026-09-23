@@ -25,7 +25,7 @@ void ov14_021F5190(PCBoxApp *app, PCBoxDisplayMon *mon, int windowID) {
         u32 dexNo = Pokedex_ConvertToCurrentDexNo(SaveArray_IsNatDexEnabled(app->args->saveData), mon->species);
         if (dexNo != 0) {
             sub_0200CDAC(((PCBoxGraphicsStatePrefix *)app->graphics)->messagePrinter, 2, &((PCBoxGraphicsStatePrefix *)app->graphics)->windows[windowID], 0, 5);
-            BufferIntegerAsString(((PCBoxGraphicsStatePrefix *)app->graphics)->messageFormat, 0, dexNo, 3, PRINTING_MODE_LEADING_ZEROS, TRUE);
+            BufferIntegerAsString(((PCBoxGraphicsStatePrefix *)app->graphics)->messageFormat, 0, dexNo, DEX_NUMBER_DIGITS, PRINTING_MODE_LEADING_ZEROS, TRUE);
             ov14_021F4FBC((PCBoxGraphicsStatePrefix *)app->graphics, ((PCBoxGraphicsStatePrefix *)app->graphics)->msgData, windowID, msg_0024_00091, 16, 0, 0, MAKE_TEXT_COLOR(1, 2, 0), 0);
         }
     }

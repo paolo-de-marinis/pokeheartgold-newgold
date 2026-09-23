@@ -51,7 +51,7 @@ void sub_0208CC88(PokemonSummaryAppPrefix *summary) {
 
     u32 dexNo = Pokedex_ConvertToCurrentDexNo(summary->args->natDexEnabled, summary->mon.species);
     if (dexNo != 0) {
-        sub_0208C87C(summary, msg_0302_00009, dexNo, 3, PRINTING_MODE_LEADING_ZEROS);
+        sub_0208C87C(summary, msg_0302_00009, dexNo, DEX_NUMBER_DIGITS, PRINTING_MODE_LEADING_ZEROS);
     } else {
         ReadMsgDataIntoString(summary->msgData, msg_0302_00022, summary->stringBuffer);
     }

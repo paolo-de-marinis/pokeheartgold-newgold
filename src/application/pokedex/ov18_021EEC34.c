@@ -22,7 +22,7 @@ void ov18_021EEC34(PokedexAppData *pokedexApp, u32 species, int windowId, int ch
         charset = TRUE;
         break;
     }
-    BufferIntegerAsString(pokedexApp->msgFormat, 0, Pokedex_ConvertToCurrentDexNo(pokedexApp->unk_1858, species), 3, PRINTING_MODE_LEADING_ZEROS, charset);
+    BufferIntegerAsString(pokedexApp->msgFormat, 0, Pokedex_ConvertToCurrentDexNo(pokedexApp->unk_1858, species), DEX_NUMBER_DIGITS, PRINTING_MODE_LEADING_ZEROS, charset);
     ov18_021EE3AC(pokedexApp, pokedexApp->msgData, windowId, msg_0802_00009, 0, 0, 0, MAKE_TEXT_COLOR(2, 1, 0), 0);
     ScheduleWindowCopyToVram(&pokedexApp->windows[windowId]);
 }
