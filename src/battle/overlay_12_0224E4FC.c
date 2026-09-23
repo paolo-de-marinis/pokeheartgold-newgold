@@ -4183,12 +4183,20 @@ BOOL ParentalBond_IsSecondStrike(BattleContext *ctx) {
     return ctx->selfTurnData[ctx->battlerIdAttacker].parentalBond && ctx->multiHitCount == 1;
 }
 
+// A multi-strike move stops when its user falls asleep partway, to Effect
+// Spore, but not one Sleep Talk called, whose user was asleep from the start
+// (Pokemon Central, Mossa multicolpo). Parental Bond's second strike is one
+// more of these. Retail stopped both after the first strike.
+BOOL MultiHit_StoppedBySleep(BattleContext *ctx) {
+    return (ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_SLEEP) && ctx->moveNoTemp != MOVE_SLEEP_TALK;
+}
+
 // The first strike has landed and the second will follow: nothing the first
 // did stopped the move, as the multi-strike loop (ov12_0224CF14) asks it.
 BOOL ParentalBond_StrikeToCome(BattleContext *ctx) {
     return ParentalBond_IsFirstStrike(ctx)
         && ctx->battlerIdFainted == BATTLER_NONE
-        && !(ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_SLEEP)
+        && !MultiHit_StoppedBySleep(ctx)
         && !(ctx->moveStatusFlag & MOVE_STATUS_MULTI_HIT_DISRUPTED);
 }
 

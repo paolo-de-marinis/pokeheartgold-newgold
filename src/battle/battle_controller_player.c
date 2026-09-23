@@ -3902,7 +3902,7 @@ static void ov12_0224CF10(BattleSystem *battleSystem, BattleContext *ctx) {
 
 static void ov12_0224CF14(BattleSystem *battleSystem, BattleContext *ctx) {
     if (ctx->multiHitCountTemp != 0) {
-        if (ctx->battlerIdFainted == BATTLER_NONE && !(ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_SLEEP) && !(ctx->moveStatusFlag & MOVE_STATUS_MULTI_HIT_DISRUPTED)) {
+        if (ctx->battlerIdFainted == BATTLER_NONE && !MultiHit_StoppedBySleep(ctx) && !(ctx->moveStatusFlag & MOVE_STATUS_MULTI_HIT_DISRUPTED)) {
             if (--ctx->multiHitCount) {
                 ctx->unk_2180 = 1;
                 ov12_02252D14(battleSystem, ctx);
@@ -3918,7 +3918,7 @@ static void ov12_0224CF14(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->commandNext = CONTROLLER_COMMAND_34;
             }
         } else {
-            if (ctx->battlerIdFainted != BATTLER_NONE || ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_SLEEP) {
+            if (ctx->battlerIdFainted != BATTLER_NONE || MultiHit_StoppedBySleep(ctx)) {
                 ctx->msgTemp = ctx->multiHitCountTemp - ctx->multiHitCount + 1;
             } else {
                 ctx->msgTemp = ctx->multiHitCountTemp - ctx->multiHitCount;

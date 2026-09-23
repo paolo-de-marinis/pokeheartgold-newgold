@@ -43,7 +43,7 @@ typedef struct { u32 parentalBond : 1; } SelfTurnData;
 typedef struct {
     Mon battleMons[4];
     SelfTurnData selfTurnData[4];
-    int battlerIdAttacker, battlerIdFainted, moveNoCur, damage;
+    int battlerIdAttacker, battlerIdFainted, moveNoCur, moveNoTemp, damage;
     u32 moveStatusFlag, unk_2184, checkMultiHit;
     int unk_38;
     u8 multiHitCount, multiHitCountTemp;
@@ -85,6 +85,14 @@ int main(void) {
     ctx.battlerIdFainted = 1;
     assert(!ParentalBond_StrikeToCome(&ctx));
     ctx.battlerIdFainted = BATTLER_NONE;
+    // Put to sleep by the first strike, it stops; asleep through Sleep Talk,
+    // it goes on.
+    ctx.battleMons[0].status = STATUS_SLEEP;
+    ctx.moveNoTemp = MOVE_TACKLE;
+    assert(!ParentalBond_StrikeToCome(&ctx));
+    ctx.moveNoTemp = MOVE_SLEEP_TALK;
+    assert(ParentalBond_StrikeToCome(&ctx));
+    ctx.battleMons[0].status = 0;
     ctx.multiHitCount = 1;
     assert(ParentalBond_IsSecondStrike(&ctx) && !ParentalBond_StrikeToCome(&ctx));
     // Seismic Toss and the like do too; a status move, another ability, a
@@ -163,7 +171,7 @@ class ParentalBondTests(unittest.TestCase):
             + [function(source, "MoveIsInList")]
             + [function(source, name) for name in (
                 "ParentalBond_MoveApplies", "TryStartParentalBond", "ParentalBond_IsFirstStrike",
-                "ParentalBond_IsSecondStrike", "ParentalBond_StrikeToCome")])
+                "ParentalBond_IsSecondStrike", "MultiHit_StoppedBySleep", "ParentalBond_StrikeToCome")])
         with tempfile.TemporaryDirectory(prefix="newgold-parental-") as directory:
             path = Path(directory)
             (path / "test.c").write_text(FIXTURE.replace("@FUNCTIONS@", functions))

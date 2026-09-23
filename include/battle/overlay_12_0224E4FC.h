@@ -94,6 +94,7 @@ BOOL ParentalBond_MoveApplies(BattleSystem *battleSystem, BattleContext *ctx, u3
 void TryStartParentalBond(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL ParentalBond_IsFirstStrike(BattleContext *ctx);
 BOOL ParentalBond_IsSecondStrike(BattleContext *ctx);
+BOOL MultiHit_StoppedBySleep(BattleContext *ctx);
 BOOL ParentalBond_StrikeToCome(BattleContext *ctx);
 BOOL BattleMoveIsDance(u32 moveNo);
 Pokemon *Battler_IllusionMon(BattleSystem *battleSystem, int battlerId);
