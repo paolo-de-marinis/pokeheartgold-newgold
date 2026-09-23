@@ -321,8 +321,12 @@ TARGETS_FIXED = {"CONVERSION_2": "RANGE_SINGLE_TARGET"}
 # (Pokemon Central), so without the flag. An effect is named as this game's
 # move_effects.h names it, the ones written here for these moves included.
 # Floral Healing is Heal Pulse's heal; subscript 320 gives it two thirds in
-# Grassy Terrain.
-IMPLEMENTED_HERE = {"FLORAL_HEALING": "MOVE_EFFECT_HEAL_TARGET"}
+# Grassy Terrain. Tera Blast changes type and split only for a terastallized
+# user, and nothing here terastallizes, so it is the plain hit it already had.
+IMPLEMENTED_HERE = {
+    "FLORAL_HEALING": "MOVE_EFFECT_HEAL_TARGET",
+    "TERA_BLAST": "MOVE_EFFECT_HIT",
+}
 
 # The effects written here for those moves follow the reference's in
 # move_effects.h, under this line. A run keeps them where they are and numbers
