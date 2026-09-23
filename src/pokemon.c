@@ -12,6 +12,7 @@
 #include "constants/maps.h"
 #include "constants/moves.h"
 #include "constants/trainer_class.h"
+#include "constants/weather.h"
 
 #include "gf_rtc.h"
 #include "item.h"
@@ -3164,6 +3165,20 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     *method_ret = EVO_LEVEL_DUSK;
                 }
             } break;
+            case EVO_LEVEL_RAIN:
+                // The engine asks the field system for the map's weather; the
+                // save keeps the weather the field is showing.
+                if (evoTable[i].param <= level) {
+                    switch (LocalFieldData_GetWeatherType(Save_LocalFieldData_Get(SaveData_Get()))) {
+                    case WEATHER_RAIN:
+                    case WEATHER_HEAVY_RAIN:
+                    case WEATHER_THUNDERSTORM:
+                        target = evoTable[i].target;
+                        *method_ret = EVO_LEVEL_RAIN;
+                        break;
+                    }
+                }
+                break;
             }
             if (target != SPECIES_NONE) {
                 break;

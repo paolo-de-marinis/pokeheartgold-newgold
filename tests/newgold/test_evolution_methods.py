@@ -30,6 +30,7 @@ FIXTURE = r"""
 #include "constants/moves.h"
 #include "constants/pokemon.h"
 #include "constants/species.h"
+#include "constants/weather.h"
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -56,6 +57,7 @@ typedef struct LocalFieldData LocalFieldData;
 
 static struct Evolution table[MAX_EVOS_PER_POKE];
 static int hour, allocations;
+static u16 weather;
 static Location location;
 
 static u32 GetMonData(Pokemon *mon, int field, void *dest) {
@@ -91,6 +93,7 @@ static inline BOOL Party_HasMon(Party *party, u16 species) { (void)party; (void)
 static inline SaveData *SaveData_Get(void) { return (SaveData *)&location; }
 static inline LocalFieldData *Save_LocalFieldData_Get(SaveData *save) { return (LocalFieldData *)save; }
 static inline Location *LocalFieldData_GetCurrentPosition(LocalFieldData *field) { return (Location *)field; }
+static inline u16 LocalFieldData_GetWeatherType(LocalFieldData *field) { (void)field; return weather; }
 static inline void GF_RTC_CopyTime(RTCTime *time) { time->hour = hour; time->minute = 30; time->second = 0; }
 @HOUR_FUNCTION@
 static TIMEOFDAY GF_RTC_GetTimeOfDay(void) { return GF_RTC_GetTimeOfDayByHour(hour); }
@@ -152,9 +155,27 @@ static void check_time_of_day(void) {
     assert(evolve(&mon, NULL, EVO_LEVEL_NIGHT) == SPECIES_LYCANROC_MIDNIGHT);
 }
 
+static void check_rain(void) {
+    // hg-engine: rain, heavy rain and thunderstorms, the weather the field
+    // shows -- Route 33's and the Lake of Rage's here. The games also count
+    // fog, which this game has none of.
+    Pokemon mon = { .species = SPECIES_SLIGGOO };
+    hour = 12;
+    one_row(EVO_LEVEL_RAIN, 50, SPECIES_GOODRA);
+    for (weather = WEATHER_SUNNY; weather <= WEATHER_LOW_LIGHT; weather++) {
+        int rain = weather == WEATHER_RAIN || weather == WEATHER_HEAVY_RAIN || weather == WEATHER_THUNDERSTORM;
+        for (mon.level = 49; mon.level <= 51; mon.level++) {
+            u16 expected = rain && mon.level >= 50 ? SPECIES_GOODRA : SPECIES_NONE;
+            assert(evolve(&mon, NULL, EVO_LEVEL_RAIN) == expected);
+        }
+    }
+    weather = WEATHER_SUNNY;
+}
+
 int main(void) {
     check_magnetic_field();
     check_time_of_day();
+    check_rain();
     return 0;
 }
 """

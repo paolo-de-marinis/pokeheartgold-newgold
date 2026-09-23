@@ -5049,6 +5049,26 @@
           "target": "SPECIES_LYCANROC_DUSK"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_SLIGGOO",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_RAIN",
+          "param": 50,
+          "target": "SPECIES_GOODRA"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_SLIGGOO_HISUIAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_RAIN",
+          "param": 50,
+          "target": "SPECIES_GOODRA_HISUIAN"
+        }
+      ]
     }
   ]
 }

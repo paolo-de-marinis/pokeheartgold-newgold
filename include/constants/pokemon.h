@@ -615,6 +615,8 @@ typedef enum EvoMethod {
     EVO_LEVEL_DAY,
     EVO_LEVEL_NIGHT,
     EVO_LEVEL_DUSK,
+    // hg-engine: a level while it rains in the overworld.
+    EVO_LEVEL_RAIN,
     // New Gold needs Eevee to notice it knows a Fairy move.
     EVO_HAS_MOVE_TYPE,
 } EvoMethod;
