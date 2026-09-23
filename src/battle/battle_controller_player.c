@@ -4110,20 +4110,60 @@ static BOOL TryBuildRage(BattleSystem *battleSystem, BattleContext *ctx) {
     return ret;
 }
 
+// The moves a King's Rock, a Razor Fang or Stench can make flinch, by the
+// reference's rule (IsMoveAffectedByKingsRock, ability.c): any move with power
+// that does not flinch by itself already. Retail marked its own list with bit
+// 5 of the flag byte instead, and the imported moves only ever guessed at it.
+static BOOL MoveIsAffectedByKingsRock(BattleContext *ctx, u16 move) {
+    if (BattleMoveTbl(ctx, move)->power == 0) {
+        return FALSE;
+    }
+    switch (BattleMoveTbl(ctx, move)->effect) {
+    case MOVE_EFFECT_FLINCH_HIT:
+    case MOVE_EFFECT_CHARGE_TURN_HIGH_CRIT_FLINCH:
+    case MOVE_EFFECT_FLINCH_DOUBLE_DAMAGE_FLY_OR_BOUNCE:
+    case MOVE_EFFECT_FLINCH_MINIMIZE_DOUBLE_HIT:
+    case MOVE_EFFECT_ALWAYS_FLINCH_FIRST_TURN_ONLY:
+    case MOVE_EFFECT_FLINCH_BURN_HIT:
+    case MOVE_EFFECT_FLINCH_FREEZE_HIT:
+    case MOVE_EFFECT_FLINCH_PARALYZE_HIT:
+    case MOVE_EFFECT_HIT_TWICE_AND_FLINCH:
+        return FALSE;
+    default:
+        return TRUE;
+    }
+}
+
 static BOOL TryItemFlinch(BattleSystem *battleSystem, BattleContext *ctx) {
     BOOL ret = FALSE;
-    int item = GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker);
-    int itemMod = GetHeldItemModifier(ctx, ctx->battlerIdAttacker, 0);
+    int ability = GetBattlerAbility(ctx, ctx->battlerIdAttacker);
+    int chance = 0;
+
+    if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_FLINCH_CHANCE) {
+        chance = GetHeldItemModifier(ctx, ctx->battlerIdAttacker, 0);
+    }
+    // Stench is a tenth more, with a King's Rock or without one. The reference
+    // adds its ten to whatever parameter the held item has, so a Choice Band's
+    // or a Charcoal's would count as a flinch chance too; only the King's
+    // Rock's does here.
+    if (ability == ABILITY_STENCH) {
+        chance += 10;
+    }
+    // Serene Grace doubles the chance, as it doubles every added effect's. The
+    // reference shifts the roll instead of the chance, which halves it.
+    if (ability == ABILITY_SERENE_GRACE) {
+        chance *= 2;
+    }
 
     // A Covert Cloak is the first thing the reference's flinch check asks
     // about, before the King's Rock or Stench that would have caused one.
     if (ctx->battlerIdTarget != BATTLER_NONE
         && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) != HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS
-        && item == HOLD_EFFECT_FLINCH_CHANCE
+        && chance != 0
         && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)
         && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage != 0 || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage != 0)
-        && (BattleSystem_Random(battleSystem) % 100) < itemMod
-        && BattleMoveTbl(ctx, ctx->moveNoCur)->unkB & (1 << 5)
+        && (BattleSystem_Random(battleSystem) % 100) < chance
+        && MoveIsAffectedByKingsRock(ctx, ctx->moveNoCur)
         && ctx->battleMons[ctx->battlerIdTarget].hp != 0) {
         ctx->battlerIdStatChange = ctx->battlerIdTarget;
         ctx->statChangeType = 2;
