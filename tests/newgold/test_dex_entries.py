@@ -76,7 +76,9 @@ class DexEntryTests(unittest.TestCase):
         (ov18_021F8CCC, the 5th of ov18_021FBDB4) is the same size. The
         widths agree with retail, whose widest line is 222 px."""
         self.assertEqual(import_species_text.entry_window(), (224, 3))
-        capture = (ROOT / "asm/overlay_18_021FA304.s").read_text()
+        # The table's file changes as overlay 18 is decompiled around it.
+        capture = next(text for text in (path.read_text() for path in sorted((ROOT / "asm").glob("overlay_18_*.s")))
+                       if "ov18_021FBDB4:" in text)
         rows = re.findall(r"\.byte (.*)\n\s*\.short", capture[capture.index("ov18_021FBDB4:"):])
         self.assertEqual([int(n, 0) for n in rows[4].split(",")][3:5], [28, 6])
         self.assertIn("foes, it weaves its flexible body in close,", entries(HEARTGOLD)[454])
