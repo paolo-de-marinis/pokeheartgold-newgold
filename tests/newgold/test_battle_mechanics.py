@@ -565,5 +565,14 @@ class RuinTests(unittest.TestCase):
             self.assertIn(f"ABILITY_{ability}) && {side}.ability != ABILITY_{ability})", body)
 
 
+class AuraTests(unittest.TestCase):
+    def test_each_aura_powers_its_own_type(self):
+        # The reference's Fairy Aura block tests TYPE_DARK (CalcBaseDamage.c:609),
+        # a copy of the Dark Aura one; that slip is not copied.
+        body = function(OVERLAY.read_text(), "CalcMoveDamage")
+        self.assertIn("moveType == TYPE_DARK && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_DARK_AURA)", body)
+        self.assertIn("moveType == TYPE_FAIRY && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_FAIRY_AURA)", body)
+
+
 if __name__ == "__main__":
     unittest.main()

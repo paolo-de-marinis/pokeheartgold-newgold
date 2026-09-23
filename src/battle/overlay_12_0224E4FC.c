@@ -8517,32 +8517,18 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monSpAtk *= 2;
     }
 
-    // Dark Aura, Fairy Aura and Aura Break. The reference's Fairy Aura test
-    // reads TYPE_DARK just as the Dark Aura one does, so in New Gold both
-    // auras answer to a Dark move and neither answers to a Fairy one; that is
-    // what the game plays like and the port keeps it rather than correcting
-    // it. Aura Break does not cancel an aura, it turns it round, and it does
-    // so once per Aura Break holder -- with both auras and a single Aura
-    // Break out, one aura is inverted and the other does nothing at all.
-    if (moveType == TYPE_DARK) {
-        int auraBreaks = CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AURA_BREAK);
-        int breaksLeft = auraBreaks;
-
-        if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_DARK_AURA)) {
-            if (auraBreaks) {
-                movePower = movePower * 3 / 4;
-                breaksLeft--;
-            } else {
-                movePower = movePower * 4 / 3;
-            }
-        }
-
-        if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_FAIRY_AURA)) {
-            if (breaksLeft) {
-                movePower = movePower * 3 / 4;
-            } else if (!auraBreaks) {
-                movePower = movePower * 4 / 3;
-            }
+    // Dark Aura powers up every Dark move on the field and Fairy Aura every
+    // Fairy one, a third each however many holders are out; Aura Break turns
+    // either round into a quarter off. The reference's Fairy Aura test reads
+    // TYPE_DARK, a copy of the Dark Aura block it sits under, so there both
+    // auras answer to a Dark move and neither to a Fairy one. That is a slip,
+    // not a rule, and it is not copied.
+    if ((moveType == TYPE_DARK && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_DARK_AURA))
+        || (moveType == TYPE_FAIRY && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_FAIRY_AURA))) {
+        if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AURA_BREAK)) {
+            movePower = movePower * 3 / 4;
+        } else {
+            movePower = movePower * 4 / 3;
         }
     }
 
