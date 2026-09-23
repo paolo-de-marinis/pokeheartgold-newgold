@@ -411,5 +411,38 @@ class GemTests(unittest.TestCase):
         self.assertRegex(OVERLAY.read_text(), r"== ABILITY_MAGICIAN && !ctx->gemBoostingMove &&")
 
 
+BIND_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/items.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+typedef struct { struct { u32 battlerIdBinding : 2; } unk88; } BattleMon;
+typedef struct { BattleMon battleMons[4]; } BattleContext;
+static int sItem[4];
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return sItem[battlerId]; }
+@FUNCTION@
+int main(void) {
+    BattleContext ctx = { 0 };
+    ctx.battleMons[0].unk88.battlerIdBinding = 1;
+    @CHECKS@
+    return 0;
+}
+"""
+
+
+class BindingTests(unittest.TestCase):
+    def run_divisor(self, checks):
+        body = function(CONTROLLER.read_text(), "BindDamageDivisor")
+        run_c(BIND_FIXTURE.replace("@FUNCTION@", body).replace("@CHECKS@", checks))
+
+    def test_a_binding_move_takes_an_eighth(self):
+        """ServerFieldConditionCheck.c:870 at d0380a487 divides by 8;
+        HeartGold divided by 16."""
+        self.run_divisor("assert(BindDamageDivisor(&ctx, 0) == 8);")
+        self.assertIn("DamageDivide(ctx->battleMons[battlerId].maxHp * -1, BindDamageDivisor(ctx, battlerId))",
+                      function(CONTROLLER.read_text(), "BattleControllerPlayer_UpdateMonCondition"))
+
+
 if __name__ == "__main__":
     unittest.main()

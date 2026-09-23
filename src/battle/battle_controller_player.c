@@ -1452,6 +1452,13 @@ typedef enum UpdateMonConditionState {
     UMC_STATE_END
 } UpdateMonConditionState;
 
+// What a binding move takes at the end of each turn it holds on: an eighth of
+// the bound Pokemon's maximum HP, as the reference has it
+// (ServerFieldConditionCheck.c:870 at d0380a487). HeartGold took a sixteenth.
+static int BindDamageDivisor(BattleContext *ctx, int battlerId) {
+    return 8;
+}
+
 static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     u8 flag = 0;
@@ -1605,7 +1612,7 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
             if ((ctx->battleMons[battlerId].status2 & STATUS2_BIND) && ctx->battleMons[battlerId].hp != 0) {
                 ctx->battleMons[battlerId].status2 -= 1 << STATUS2_BINDING_SHIFT;
                 if (ctx->battleMons[battlerId].status2 & STATUS2_BIND) {
-                    ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 16);
+                    ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, BindDamageDivisor(ctx, battlerId));
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_BIND_EFFECT);
                 } else {
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_BIND_END);
