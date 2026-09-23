@@ -8,6 +8,9 @@
 // gone. The sun takes Protosynthesis with it, and the ground's own subscript
 // ends whatever terrain is down, Quark Drive with the electricity.
 _000:
+    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT, _HarshSun
+    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_HEAVY_RAIN, _HeavyRain
+    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_STRONG_WINDS, _StrongWinds
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_RAIN_ALL, _Rain
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SANDSTORM_ALL, _Sandstorm
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SUN_ALL, _Sun
@@ -15,6 +18,24 @@ _000:
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SNOW_ALL, _Snow
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_FOG, _Fog
     GoTo _Terrain
+
+// The strong weathers too, with their own lines, though their Pokemon are
+// still out: the later games have no strong weather to ask about, and their
+// Teraform Zero clears whatever weather is up.
+_HarshSun:
+    // The harsh sunlight faded.
+    PrintMessage msg_0197_01444, TAG_NONE
+    GoTo _WeatherGone
+
+_HeavyRain:
+    // The heavy rain has lifted!
+    PrintMessage msg_0197_01448, TAG_NONE
+    GoTo _WeatherGone
+
+_StrongWinds:
+    // The mysterious strong winds have dissipated!
+    PrintMessage msg_0197_01452, TAG_NONE
+    GoTo _WeatherGone
 
 _Rain:
     // The rain stopped.

@@ -4859,6 +4859,45 @@ static u16 Battler_TeraShiftForm(BattleContext *ctx, int battlerId) {
     return SPECIES_NONE;
 }
 
+// Desolate Land, Primordial Sea and Delta Stream (Pokemon Central, Terra
+// Estrema, Mare Primordiale, Flusso Delta) each raise a strong weather as their
+// Pokemon comes in. The one each raises, or 0 for another ability.
+static u32 PrimalWeatherOf(u16 ability) {
+    switch (ability) {
+    case ABILITY_DESOLATE_LAND:
+        return FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT;
+    case ABILITY_PRIMORDIAL_SEA:
+        return FIELD_CONDITION_HEAVY_RAIN;
+    case ABILITY_DELTA_STREAM:
+        return FIELD_CONDITION_STRONG_WINDS;
+    }
+    return 0;
+}
+
+// A strong weather ends when no Pokemon on the field keeps it up any more: the
+// one that raised it has gone out, fainted, or lost its ability or had it
+// suppressed, and nobody else there has the same one. The weather is not the
+// Pokemon's alone, so a second Kyogre keeps the heavy rain after the first
+// has gone. hg-engine (d0380a487) asks this only when a Pokemon switches out
+// or faints (subscripts 368 and 369, btl_scr_cmd_F9_canclearprimalweather),
+// so its weather outlasts Roar, Dragon Tail, Red Card, Eject Button, Gastro
+// Acid, Skill Swap and Neutralizing Gas; asking it with the entry abilities,
+// after every action, reaches all of those.
+static BOOL BattleContext_PrimalWeatherHasEnded(BattleSystem *battleSystem, BattleContext *ctx) {
+    u32 weather = ctx->fieldCondition & FIELD_CONDITION_PRIMAL_WEATHER;
+    int i;
+
+    if (weather == 0) {
+        return FALSE;
+    }
+    for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
+        if (ctx->battleMons[i].hp && PrimalWeatherOf(GetBattlerAbility(ctx, i)) == weather) {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
 // Shields Down (Pokemon Central, Scudosoglia): a Minior with more than half its
 // HP wears its shell, the Meteor Form, and at half or less loses it, the Core
 // Form of its colour. The form is checked when it comes in and at the end of
@@ -4923,7 +4962,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
 
     do {
         switch (ctx->sendOutState) {
-        case 0: // Neutralizing Gas, Tera Shift, Shields Down, and then the field weather
+        case 0: // Neutralizing Gas, a strong weather's end, Tera Shift, Shields Down, and then the field weather
             // The gas goes before every other entry ability, as it does in the
             // later games, and says when it has gone as well as when it came:
             // once it has, the abilities it held back find their flags unset
@@ -4954,6 +4993,13 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 }
             }
             if (flag == TRUE) {
+                break;
+            }
+            // A strong weather whose Pokemon is gone ends before anything new
+            // speaks, the gas having had its say about who is suppressed.
+            if (BattleContext_PrimalWeatherHasEnded(battleSystem, ctx) == TRUE) {
+                script = BATTLE_SUBSCRIPT_PRIMAL_WEATHER_END;
+                flag = TRUE;
                 break;
             }
             // Tera Shift, in the reference's own step beside the gas. The
@@ -5067,7 +5113,17 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
             for (i = 0; i < maxBattlers; i++) {
                 battlerId = ctx->turnOrder[i];
                 if (!ctx->battleMons[battlerId].sendOutFlag && ctx->battleMons[battlerId].hp) {
-                    switch (GetBattlerAbility(ctx, battlerId)) {
+                    j = GetBattlerAbility(ctx, battlerId);
+                    // Under a strong weather the other four weather abilities
+                    // say that nothing changes, and change nothing.
+                    if ((ctx->fieldCondition & FIELD_CONDITION_PRIMAL_WEATHER)
+                        && (j == ABILITY_DRIZZLE || j == ABILITY_SAND_STREAM || j == ABILITY_DROUGHT || j == ABILITY_SNOW_WARNING)) {
+                        ctx->battleMons[battlerId].sendOutFlag = TRUE;
+                        script = BATTLE_SUBSCRIPT_PRIMAL_WEATHER_HOLDS;
+                        flag = TRUE;
+                        j = ABILITY_NONE;
+                    }
+                    switch (j) {
                     case ABILITY_DRIZZLE:
                         ctx->battleMons[battlerId].sendOutFlag = TRUE;
                         if (!(ctx->fieldCondition & FIELD_CONDITION_RAIN_PERMANENT)) {
@@ -5096,6 +5152,21 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                         // that knows it is laying snow now.
                         if (!(ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL)) {
                             script = BATTLE_SUBSCRIPT_SNOW_WARNING;
+                            flag = TRUE;
+                        }
+                        break;
+                    // A strong weather comes in over any other, the field's
+                    // own included, but is not raised again over itself. The
+                    // reference refuses it under the field's weather; that
+                    // is its reading of the four permanent bits, which here
+                    // Drizzle, Drought and Sand Stream set too.
+                    case ABILITY_DESOLATE_LAND:
+                    case ABILITY_PRIMORDIAL_SEA:
+                    case ABILITY_DELTA_STREAM:
+                        ctx->battleMons[battlerId].sendOutFlag = TRUE;
+                        if (!(ctx->fieldCondition & PrimalWeatherOf(j))) {
+                            ctx->fieldCondition = (ctx->fieldCondition & ~FIELD_CONDITION_WEATHER) | PrimalWeatherOf(j);
+                            script = BATTLE_SUBSCRIPT_PRIMAL_WEATHER_START;
                             flag = TRUE;
                         }
                         break;
@@ -6272,7 +6343,8 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         break;
     case ABILITY_SAND_SPIT:
         if (!(ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
-            *script = BATTLE_SUBSCRIPT_SAND_SPIT;
+            // Under a strong weather it says that nothing changes instead.
+            *script = (ctx->fieldCondition & FIELD_CONDITION_PRIMAL_WEATHER) ? BATTLE_SUBSCRIPT_PRIMAL_WEATHER_HOLDS : BATTLE_SUBSCRIPT_SAND_SPIT;
             ret = TRUE;
         }
         break;
@@ -10530,7 +10602,7 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
         // under Mega Sol, Fire.
         u32 weather = BattlerMoveWeather(battleSystem, ctx, battlerId);
 
-        if (weather) {
+        if (weather && !(weather & FIELD_CONDITION_STRONG_WINDS)) {
             if (weather & FIELD_CONDITION_RAIN_ALL) {
                 type = TYPE_WATER;
             }

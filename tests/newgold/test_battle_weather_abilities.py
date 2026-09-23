@@ -3,8 +3,12 @@
 
 Mega Sol makes its holder's moves behave as in harsh sunlight. What a move
 sees is one question, BattlerMoveWeather (hg-engine's GetWeather), and every
-place a move of the holder's reads the weather has to ask it. The rules are
-compiled natively; the places are read from the source.
+place a move of the holder's reads the weather has to ask it.
+
+Desolate Land, Primordial Sea and Delta Stream raise a strong weather that
+lasts while a Pokemon with the ability is out and that nothing but another of
+them replaces. The rules are compiled natively; the places are read from the
+source.
 """
 
 import os
@@ -35,8 +39,10 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 typedef struct { int unused; } BattleSystem;
-typedef struct { u32 fieldCondition; u16 ability[4]; BOOL cloudNine; } BattleContext;
+typedef struct { int hp; } BattleMon;
+typedef struct { u32 fieldCondition; u16 ability[4]; BOOL cloudNine; BattleMon battleMons[4]; } BattleContext;
 static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->ability[battlerId]; }
+static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 4; }
 static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, int battlerId, int ability) {
     (void)bs; (void)flag; (void)battlerId;
     return ctx->cloudNine && ability == ABILITY_CLOUD_NINE;
@@ -101,6 +107,94 @@ class MegaSolTests(unittest.TestCase):
         self.assertLess(solar.index("CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_MEGA_SOL, _028"),
                         solar.index("CheckIgnoreWeather"))
         self.assertNotIn("MEGA_SOL", (EFFECTS / "effect_script_0330.s").read_text())
+
+
+SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
+
+
+def subscript(name):
+    return next(SUBSCRIPTS.glob(f"subscript_*_{name}.s")).read_text()
+
+
+class StrongWeatherTests(unittest.TestCase):
+    def test_the_weather_lasts_while_its_pokemon_does(self):
+        print(run(["PrimalWeatherOf", "BattleContext_PrimalWeatherHasEnded"], r"""
+    assert(PrimalWeatherOf(ABILITY_DESOLATE_LAND) == FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT);
+    assert(PrimalWeatherOf(ABILITY_PRIMORDIAL_SEA) == FIELD_CONDITION_HEAVY_RAIN);
+    assert(PrimalWeatherOf(ABILITY_DELTA_STREAM) == FIELD_CONDITION_STRONG_WINDS);
+    assert(PrimalWeatherOf(ABILITY_DROUGHT) == 0);
+    // Nothing strong up, nothing to end.
+    ctx.fieldCondition = FIELD_CONDITION_RAIN;
+    assert(!BattleContext_PrimalWeatherHasEnded(&bs, &ctx));
+    ctx.fieldCondition = FIELD_CONDITION_HEAVY_RAIN;
+    ctx.ability[1] = ABILITY_PRIMORDIAL_SEA;
+    ctx.battleMons[1].hp = 1;
+    assert(!BattleContext_PrimalWeatherHasEnded(&bs, &ctx));
+    // Fainted, or its ability gone or suppressed: over, unless another has it.
+    ctx.battleMons[1].hp = 0;
+    assert(BattleContext_PrimalWeatherHasEnded(&bs, &ctx));
+    ctx.ability[3] = ABILITY_PRIMORDIAL_SEA;
+    ctx.battleMons[3].hp = 5;
+    assert(!BattleContext_PrimalWeatherHasEnded(&bs, &ctx));
+    ctx.ability[3] = ABILITY_NONE;
+    assert(BattleContext_PrimalWeatherHasEnded(&bs, &ctx));
+    // A Groudon does not keep the heavy rain up.
+    ctx.ability[3] = ABILITY_DESOLATE_LAND;
+    assert(BattleContext_PrimalWeatherHasEnded(&bs, &ctx));
+    ctx.fieldCondition = FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT;
+    assert(!BattleContext_PrimalWeatherHasEnded(&bs, &ctx));
+    puts("PASS: a strong weather lasts while a Pokemon with its ability is out.");"""))
+
+    def test_rain_and_sun_include_them_and_the_winds_are_weather(self):
+        battle = (ROOT / "include/constants/battle.h").read_text()
+        for mask, bit in (("RAIN_ALL", "HEAVY_RAIN"), ("SUN_ALL", "EXTREMELY_HARSH_SUNLIGHT"), ("WEATHER", "STRONG_WINDS")):
+            line = next(l for l in battle.splitlines() if l.startswith(f"#define FIELD_CONDITION_{mask} "))
+            self.assertIn(f"FIELD_CONDITION_{bit}", line, mask)
+        for mask in ("WEATHER_NO_SUN", "WEATHER_CASTFORM"):
+            line = next(l for l in battle.splitlines() if l.startswith(f"#define FIELD_CONDITION_{mask} "))
+            self.assertNotIn("STRONG_WINDS", line, mask)
+
+    def test_they_come_in_over_any_weather_and_nothing_else_replaces_them(self):
+        body = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        first = body[body.index("case 0:"):body.index("case 1: // Trace")]
+        self.assertLess(first.index("NEUTRALIZING_GAS_END"), first.index("BattleContext_PrimalWeatherHasEnded(battleSystem, ctx)"))
+        self.assertLess(first.index("script = BATTLE_SUBSCRIPT_PRIMAL_WEATHER_END;"), first.index("Battler_TeraShiftForm"))
+        weather = body[body.index("case 2: // Weather from abilities"):body.index("case 3: // Intimidate")]
+        self.assertLess(weather.index("script = BATTLE_SUBSCRIPT_PRIMAL_WEATHER_HOLDS;"), weather.index("switch (j) {"))
+        self.assertIn("ctx->fieldCondition = (ctx->fieldCondition & ~FIELD_CONDITION_WEATHER) | PrimalWeatherOf(j);", weather)
+        self.assertIn("if (!(ctx->fieldCondition & PrimalWeatherOf(j))) {", weather)
+        for ability in ("DESOLATE_LAND", "PRIMORDIAL_SEA", "DELTA_STREAM"):
+            self.assertIn(f"case ABILITY_{ability}:", weather)
+        hit = function(OVERLAY.read_text(), "CheckAbilityEffectOnHit")
+        self.assertIn("(ctx->fieldCondition & FIELD_CONDITION_PRIMAL_WEATHER) ? BATTLE_SUBSCRIPT_PRIMAL_WEATHER_HOLDS : BATTLE_SUBSCRIPT_SAND_SPIT", hit)
+        for number in ("0115", "0136", "0137", "0164", "0324"):
+            script = (EFFECTS / f"effect_script_{number}.s").read_text()
+            self.assertIn("FIELD_CONDITION_PRIMAL_WEATHER, _PrimalWeather", script, number)
+            self.assertIn("Call BATTLE_SUBSCRIPT_PRIMAL_WEATHER_HOLDS", script, number)
+
+    def test_the_lines(self):
+        for name, rows in (("PrimalWeatherStart", ("01441", "01445", "01449")),
+                           ("PrimalWeatherHolds", ("01442", "01446", "01450")),
+                           ("PrimalWeatherEnd", ("01444", "01448", "01452")),
+                           ("TeraformZero", ("01444", "01448", "01452"))):
+            script = subscript(name)
+            for row in rows:
+                self.assertIn(f"PrintMessage msg_0197_{row}, TAG_NONE", script, name)
+        self.assertIn("UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_WEATHER", subscript("PrimalWeatherEnd"))
+        zero = subscript("TeraformZero")
+        self.assertLess(zero.index("FIELD_CONDITION_HEAVY_RAIN, _HeavyRain"), zero.index("FIELD_CONDITION_RAIN_ALL, _Rain"))
+
+    def test_no_turns_are_counted_and_the_winds_blow_on(self):
+        controller = function(CONTROLLER.read_text(), "BattleControllerPlayer_UpdateFieldCondition")
+        self.assertIn("(FIELD_CONDITION_RAIN_PERMANENT | FIELD_CONDITION_HEAVY_RAIN)", controller)
+        self.assertIn("(FIELD_CONDITION_SUN_PERMANENT | FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT)", controller)
+        winds = controller[controller.index("case UFC_STATE_STRONG_WINDS:"):controller.index("case UFC_STATE_GRAVITY:")]
+        self.assertIn("ctx->buffMsg.id = msg_0197_01456;", winds)
+
+    def test_the_winds_leave_weather_ball_and_the_heals_alone(self):
+        commands = COMMANDS.read_text()
+        self.assertIn("if (weather && !(weather & FIELD_CONDITION_STRONG_WINDS)) {", function(commands, "BtlCmd_CalcWeatherBallParams"))
+        self.assertIn("if (!weather || (weather & FIELD_CONDITION_STRONG_WINDS)) {", function(commands, "BtlCmd_WeatherHPRecovery"))
 
 
 if __name__ == "__main__":

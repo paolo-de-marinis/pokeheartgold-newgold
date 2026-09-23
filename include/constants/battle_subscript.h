@@ -668,6 +668,13 @@
 #define BATTLE_SUBSCRIPT_TERAFORM_ZERO                      415
 // Battle Bond's three stat rises. 515 there.
 #define BATTLE_SUBSCRIPT_BATTLE_BOND                        416
+// Desolate Land, Primordial Sea and Delta Stream raising their weather. 365
+// to 367 there.
+#define BATTLE_SUBSCRIPT_PRIMAL_WEATHER_START               417
+// A strong weather that nothing else replaces saying so. 373 there.
+#define BATTLE_SUBSCRIPT_PRIMAL_WEATHER_HOLDS               418
+// A strong weather ending with its last Pokemon. 368 and 369 there.
+#define BATTLE_SUBSCRIPT_PRIMAL_WEATHER_END                 419
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

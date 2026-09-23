@@ -4513,10 +4513,12 @@ BOOL BtlCmd_RapidSpin(BattleSystem *battleSystem, BattleContext *ctx) {
 BOOL BtlCmd_WeatherHPRecovery(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
-    // Under Mega Sol the user's always heals two thirds, as in the sun.
+    // Under Mega Sol the user's always heals two thirds, as in the sun. Delta
+    // Stream's winds leave it the half it heals in clear weather (hg-engine's
+    // BtlCmd_WeatherHPRecovery).
     u32 weather = BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker);
 
-    if (!weather) {
+    if (!weather || (weather & FIELD_CONDITION_STRONG_WINDS)) {
         ctx->hpCalc = ctx->battleMons[ctx->battlerIdAttacker].maxHp / 2;
     } else if (weather & FIELD_CONDITION_SUN_ALL) {
         ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * 20, 30);
@@ -5080,12 +5082,13 @@ BOOL BtlCmd_CalcWeightBasedPower(BattleSystem *battleSystem, BattleContext *ctx)
 BOOL BtlCmd_CalcWeatherBallParams(BattleSystem *battleSystem, BattleContext *ctx) {
     // Under Mega Sol the user's is a Fire move of double power, whatever the
     // weather. Under Cloud Nine or Air Lock there is none, and the power is
-    // the move's own, which is what an unset power reads as anyway.
+    // the move's own, which is what an unset power reads as anyway; Delta
+    // Stream's winds leave it Normal and undoubled too (hg-engine's).
     u32 weather = BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker);
 
     BattleScriptIncrementPointer(ctx, 1);
 
-    if (weather) {
+    if (weather && !(weather & FIELD_CONDITION_STRONG_WINDS)) {
         // Snow is weather this move does not answer to: the reference
         // leaves both its power and its type alone under it, so there is
         // no Ice-type branch below either.
@@ -10076,8 +10079,10 @@ BOOL BtlCmd_GotoIfCanApplyKnockOffBoost(BattleSystem *battleSystem, BattleContex
     return FALSE;
 }
 
-// Desolate Land, Primordial Sea and Delta Stream are the weather this asks
-// about, and none of the three exists here, so there is never any to clear.
+// The reference's question, asked when a Pokemon switches out or faints, of
+// whether its Desolate Land, Primordial Sea or Delta Stream takes the weather
+// with it. Here BattleContext_PrimalWeatherHasEnded asks it with the entry
+// abilities, after every action, and no script uses this command.
 BOOL BtlCmd_CanClearPrimalWeather(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);

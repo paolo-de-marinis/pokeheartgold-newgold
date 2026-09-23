@@ -99,7 +99,10 @@ class BattleCommandTests(unittest.TestCase):
         "BatchFollowupMessage": "the batched messages of a spread move",
         "BatchUpdateHealthBar": "the batched messages of a spread move",
         "BatchUpdateHealthBarValue": "the batched messages of a spread move",
-        "CanClearPrimalWeather": "primal weather",
+        # The strong weathers end in C, BattleContext_PrimalWeatherHasEnded,
+        # asked with the entry abilities after every action rather than by
+        # the switch and faint scripts the reference asks it from.
+        "CanClearPrimalWeather": "nothing: no script needs to ask it",
         "ChangePermanentBackground": "the battle background Defog and a terrain's end redraw",
         "GoToIfTerastallized": "no script in the reference runs it either",
         "GotoIfCanApplyKnockOffBoost": "no script in the reference runs it either",

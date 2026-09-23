@@ -1006,6 +1006,7 @@ typedef enum UpdateFieldConditionState {
     UFC_STATE_HAIL,
     UFC_STATE_SNOW,
     UFC_STATE_FOG,
+    UFC_STATE_STRONG_WINDS,
     UFC_STATE_GRAVITY,
     UFC_STATE_TERRAIN,
     UFC_STATE_END
@@ -1211,7 +1212,9 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
             break;
         case UFC_STATE_RAIN:
             if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
-                if (ctx->fieldCondition & FIELD_CONDITION_RAIN_PERMANENT) {
+                // Heavy rain lasts as long as its Pokemon, with no turns to
+                // count, and is announced the way the reference does, as rain.
+                if (ctx->fieldCondition & (FIELD_CONDITION_RAIN_PERMANENT | FIELD_CONDITION_HEAVY_RAIN)) {
                     ctx->buffMsg.id = msg_0197_00801; // Rain continues to fall.
                     ctx->buffMsg.tag = TAG_NONE;
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_WEATHER_CONTINUES);
@@ -1259,7 +1262,8 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
             break;
         case UFC_STATE_SUN:
             if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
-                if (ctx->fieldCondition & FIELD_CONDITION_SUN_PERMANENT) {
+                // Extremely harsh sunlight likewise, as sun.
+                if (ctx->fieldCondition & (FIELD_CONDITION_SUN_PERMANENT | FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT)) {
                     ctx->buffMsg.id = msg_0197_00808; // The sunlight is strong.
                     ctx->buffMsg.tag = TAG_NONE;
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_WEATHER_CONTINUES);
@@ -1348,6 +1352,21 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 ctx->tempData = 18;
+                flag = 1;
+            }
+            ctx->stateFieldConditionUpdate++;
+            break;
+        case UFC_STATE_STRONG_WINDS:
+            // Delta Stream's winds have no turns to count and do nothing to
+            // anybody at the end of one; they only blow on, which the
+            // reference says (ServerFieldConditionCheck.c:272). Its Tailwind
+            // animation is left out, as the snow's is.
+            if (ctx->fieldCondition & FIELD_CONDITION_STRONG_WINDS) {
+                ctx->buffMsg.id = msg_0197_01456; // The mysterious strong winds blow on!
+                ctx->buffMsg.tag = TAG_NONE;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SHOW_PREPARED_MESSAGE);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 flag = 1;
             }
             ctx->stateFieldConditionUpdate++;

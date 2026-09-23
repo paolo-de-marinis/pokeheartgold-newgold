@@ -259,13 +259,13 @@ typedef enum Terrain {
 // Field Conditions
 #define FIELD_CONDITION_RAIN                (1 << 0)
 #define FIELD_CONDITION_RAIN_PERMANENT      (1 << 1)
-#define FIELD_CONDITION_RAIN_ALL            (FIELD_CONDITION_RAIN | FIELD_CONDITION_RAIN_PERMANENT)
+#define FIELD_CONDITION_RAIN_ALL            (FIELD_CONDITION_RAIN | FIELD_CONDITION_RAIN_PERMANENT | FIELD_CONDITION_HEAVY_RAIN)
 #define FIELD_CONDITION_SANDSTORM           (1 << 2)
 #define FIELD_CONDITION_SANDSTORM_PERMANENT (1 << 3)
 #define FIELD_CONDITION_SANDSTORM_ALL       (FIELD_CONDITION_SANDSTORM | FIELD_CONDITION_SANDSTORM_PERMANENT)
 #define FIELD_CONDITION_SUN                 (1 << 4)
 #define FIELD_CONDITION_SUN_PERMANENT       (1 << 5)
-#define FIELD_CONDITION_SUN_ALL             (FIELD_CONDITION_SUN | FIELD_CONDITION_SUN_PERMANENT)
+#define FIELD_CONDITION_SUN_ALL             (FIELD_CONDITION_SUN | FIELD_CONDITION_SUN_PERMANENT | FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT)
 #define FIELD_CONDITION_HAIL                (1 << 6)
 #define FIELD_CONDITION_HAIL_PERMANENT      (1 << 7)
 #define FIELD_CONDITION_HAIL_ALL            (FIELD_CONDITION_HAIL | FIELD_CONDITION_HAIL_PERMANENT)
@@ -283,6 +283,16 @@ typedef enum Terrain {
 #define FIELD_CONDITION_SNOW_TEMP           (1 << 20)
 #define FIELD_CONDITION_SNOW_PERMANENT      (1 << 21)
 #define FIELD_CONDITION_SNOW_ALL            (FIELD_CONDITION_SNOW_TEMP | FIELD_CONDITION_SNOW_PERMANENT)
+// The strong weathers of Desolate Land, Primordial Sea and Delta Stream, on the
+// reference's own bits (battle_constants.h). Each lasts as long as a Pokemon
+// with its ability is out, with no turns to count, and nothing but another of
+// them replaces it. Heavy rain is rain and extremely harsh sunlight is sun to
+// everything else that asks, so the two are in RAIN_ALL and SUN_ALL, as the
+// reference has them; the winds are weather, and none of the others.
+#define FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT (1 << 24)
+#define FIELD_CONDITION_HEAVY_RAIN               (1 << 25)
+#define FIELD_CONDITION_STRONG_WINDS             (1 << 26)
+#define FIELD_CONDITION_PRIMAL_WEATHER           (FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT | FIELD_CONDITION_HEAVY_RAIN | FIELD_CONDITION_STRONG_WINDS)
 // Ion Deluge charges the air until the turn is over, so unlike everything
 // above it there is no count to keep: the bit goes on when the move lands and
 // off in the last step of the end of turn. The bit is the reference's own,
@@ -293,7 +303,7 @@ typedef enum Terrain {
 // Snow is not on this one: the reference leaves Castform and Cherrim reading
 // hail alone, so a Forecast Castform stays Normal while it snows.
 #define FIELD_CONDITION_WEATHER_CASTFORM (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SUN_ALL | FIELD_CONDITION_HAIL_ALL)
-#define FIELD_CONDITION_WEATHER          (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SANDSTORM_ALL | FIELD_CONDITION_SUN_ALL | FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL | FIELD_CONDITION_FOG)
+#define FIELD_CONDITION_WEATHER          (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SANDSTORM_ALL | FIELD_CONDITION_SUN_ALL | FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL | FIELD_CONDITION_FOG | FIELD_CONDITION_STRONG_WINDS)
 
 #define FIELD_CONDITION_UPROAR_SHIFT     8
 #define FIELD_CONDITION_GRAVITY_SHIFT    12

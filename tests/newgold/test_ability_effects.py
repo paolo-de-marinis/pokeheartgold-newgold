@@ -50,6 +50,8 @@ IMPLEMENTED = {
     "DAZZLING",
     "DEFEATIST",
     "DEFIANT",
+    "DELTA_STREAM",
+    "DESOLATE_LAND",
     "DISGUISE",
     "DRAGONIZE",
     "DRAGONS_MAW",
@@ -129,6 +131,7 @@ IMPLEMENTED = {
     "POWER_CONSTRUCT",
     "POWER_OF_ALCHEMY",
     "PRANKSTER",
+    "PRIMORDIAL_SEA",
     "PRISM_ARMOR",
     "PROPELLER_TAIL",
     "PROTEAN",
@@ -224,10 +227,9 @@ IMPLEMENTED = {
 # ability does nothing looks right on the summary screen and loses battles
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
-    "AROMA_VEIL", "BALL_FETCH", "COSTAR", "CURIOUS_MEDICINE", "DELTA_STREAM",
-    "DESOLATE_LAND", "GUARD_DOG", "MIMICRY", "OPPORTUNIST", "POWER_SPOT",
-    "PRIMORDIAL_SEA", "STAKEOUT", "SUPREME_OVERLORD", "SYMBIOSIS",
-    "TOXIC_CHAIN", "VICTORY_STAR"
+    "AROMA_VEIL", "BALL_FETCH", "COSTAR", "CURIOUS_MEDICINE", "GUARD_DOG",
+    "MIMICRY", "OPPORTUNIST", "POWER_SPOT", "STAKEOUT", "SUPREME_OVERLORD",
+    "SYMBIOSIS", "TOXIC_CHAIN", "VICTORY_STAR"
 }
 
 # Numbers the engine keeps free rather than abilities. TEMP4 (317) sits
@@ -322,7 +324,9 @@ class AbilityEffectTests(unittest.TestCase):
     # Shields Down done.
     # Shields Down and Battle Bond done.
     # Shields Down, Battle Bond and Mega Sol done.
-    STILL_TO_DO = 16
+    # Shields Down, Battle Bond and Mega Sol done. Desolate Land, Primordial
+    # Sea and Delta Stream done.
+    STILL_TO_DO = 13
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
