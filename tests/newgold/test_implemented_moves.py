@@ -688,5 +688,23 @@ int main(void) {
         self.assertLess(script.index("HANDLE_SNOW_TEMPORARY"), script.index("TryReplaceFaintedMon BATTLER_CATEGORY_ATTACKER, TRUE, _END"))
         self.assertIn("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST", script)
 
+    def test_doodle_gives_the_user_and_its_ally_the_target_s_ability(self):
+        # Pokemon Central (Ricalco): the user, then a standing ally; the page's
+        # nineteen abilities on any of the three, or Receiver on the target,
+        # and it fails.
+        from test_hold_effects import subscript_named
+        self.assertImplemented("DOODLE", "MOVE_EFFECT_DOODLE")
+        self.assertFalse(record("DOODLE")[9] & (1 << 1 | 1 << 2 | 1 << 4), "FLAG_PROTECT, FLAG_MAGIC_COAT, FLAG_MIRROR_MOVE")
+        self.assertIn("CheckSubstitute BATTLER_CATEGORY_DEFENDER, _FAILED", effect_script("MOVE_EFFECT_DOODLE"))
+        self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SIDE_EFFECT_CHECK_HP|MOVE_SUBSCRIPT_PTR_DOODLE", effect_script("MOVE_EFFECT_DOODLE"))
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_DOODLE"), "BATTLE_SUBSCRIPT_DOODLE")
+        doodle = subscript_named("BATTLE_SUBSCRIPT_DOODLE")
+        for who in ("BATTLER_CATEGORY_DEFENDER", "BATTLER_CATEGORY_ATTACKER", "BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_ATTACKER"):
+            self.assertEqual(doodle.count(f"CompareMonDataToValue OPCODE_EQU, {who}, BMON_DATA_ABILITY, ABILITY_"),
+                             21 if who == "BATTLER_CATEGORY_DEFENDER" else 19, who)
+            if who != "BATTLER_CATEGORY_DEFENDER":
+                self.assertIn(f"UpdateMonDataFromVar OPCODE_SET, {who}, BMON_DATA_ABILITY, BSCRIPT_VAR_TEMP_DATA", doodle)
+        self.assertIn("BMON_DATA_ABILITY, ABILITY_RECEIVER, _FAILED", doodle)
+
 if __name__ == "__main__":
     unittest.main()

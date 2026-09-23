@@ -461,6 +461,9 @@ IMPLEMENTED_HERE = {
     # Chilly Reception brings snow and sends its user back (Pokemon Central,
     # Freddura): effect script 436.
     "CHILLY_RECEPTION": "MOVE_EFFECT_SNOW_AND_SWITCH",
+    # Doodle gives the user and its ally the target's ability (Pokemon
+    # Central, Ricalco): effect script 437.
+    "DOODLE": "MOVE_EFFECT_DOODLE",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -510,6 +513,9 @@ FIELDS_HERE = {
     # The field's weather and the user's switch: Protect and Magic Coat have
     # nothing to do with it (Pokemon Central, Freddura).
     "CHILLY_RECEPTION": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
+    # Protect does not stop it, Magic Coat does not send it back and Mirror
+    # Move cannot copy it (Pokemon Central, Ricalco).
+    "DOODLE": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT", "FLAG_MIRROR_MOVE")},
 }
 
 # The effects written here for those moves follow the reference's in

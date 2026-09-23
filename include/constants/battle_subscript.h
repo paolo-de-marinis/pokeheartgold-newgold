@@ -767,6 +767,9 @@
 // Corrosive Gas melting a target's item, which the reference has no script
 // for.
 #define BATTLE_SUBSCRIPT_CORROSIVE_GAS                      456
+// Doodle handing the target's ability to the user and its ally, which the
+// reference has no script for.
+#define BATTLE_SUBSCRIPT_DOODLE                             457
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -855,6 +858,7 @@
 #define MOVE_SUBSCRIPT_PTR_EERIE_SPELL                      230
 #define MOVE_SUBSCRIPT_PTR_DRAGON_CHEER                     231
 #define MOVE_SUBSCRIPT_PTR_CORROSIVE_GAS                    232
+#define MOVE_SUBSCRIPT_PTR_DOODLE                           233
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H
