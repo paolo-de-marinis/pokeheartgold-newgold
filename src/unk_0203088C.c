@@ -6,12 +6,13 @@
 
 // Reads a field of a battle video's header (sub_0202FF08 fills it): the
 // species and the form of each of the twelve recorded Pokemon that is not an
-// egg, the streak, a mode byte, the recorded id, and one byte more.
+// egg, the streak, a mode byte, the recorded id, and one byte more. A species
+// past the last one reads as none.
 u64 sub_0203088C(u8 *header, int field, int idx) {
     switch (field) {
     case 0:
         GF_ASSERT(idx < 12);
-        if (((u16 *)header)[idx] > SPECIES_ARCEUS) {
+        if (((u16 *)header)[idx] > NUM_SPECIES) {
             return 0;
         }
         return ((u16 *)header)[idx];

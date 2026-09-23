@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the battle video's load check and its playback move check on the host.
+"""Run the battle video's load check, playback move check and header getter.
 
 A saved video is checked when it is loaded: sub_0203018C (src/unk_0203018C.c)
 rejects it as corrupted when a recorded Pokemon's species, held item or move
@@ -7,7 +7,9 @@ is past the last one the game knows. During playback, ov12_0225E4EC
 (src/battle/overlay_12_0225E4EC.c) ends the video when the move in the
 recorded slot is past the last move. Both had retail's last species, item and
 move, so a video with Lillipup, a Linking Cord or Baby-Doll Eyes in it did not
-load. They are extracted and run with the save and the battle stubbed.
+load. The video screens (overlay 40) read each recorded species through
+sub_0203088C (src/unk_0203088C.c), which showed an empty slot for anything past
+Arceus. They are extracted and run with the save and the battle stubbed.
 """
 
 import re
@@ -109,6 +111,26 @@ int main(void) {
 '''
 
 
+HEADER = COMMON + r'''
+typedef uint64_t u64;
+#define GF_ASSERT(x) assert(x)
+@NATIVE@
+
+int main(void) {
+    static u8 header[0x64];
+    u16 *species = (u16 *)header;
+
+    species[0] = SPECIES_LILLIPUP;
+    species[11] = NUM_SPECIES;
+    species[5] = NUM_SPECIES + 1;
+    assert(sub_0203088C(header, 0, 0) == SPECIES_LILLIPUP);
+    assert(sub_0203088C(header, 0, 11) == NUM_SPECIES);
+    assert(sub_0203088C(header, 0, 5) == 0);
+    return 0;
+}
+'''
+
+
 def between(text, start, end):
     text = text[text.index(start):]
     return text[:text.index(end) + len(end)]
@@ -136,6 +158,11 @@ class BattleVideoTests(unittest.TestCase):
         program = (PLAYBACK.replace("@DEFINES@", defines(source)).replace("@MOVE1@", move1)
                    .replace("@INPUT@", between(source, "typedef struct RecordedMoveInput {", "} RecordedMoveInput;"))
                    .replace("@NATIVE@", function(source, "ov12_0225E4EC")))
+        run(program, "newgold-battle-video-")
+
+    def test_the_video_screens_see_an_added_species(self):
+        source = (ROOT / "src/unk_0203088C.c").read_text()
+        program = HEADER.replace("@DEFINES@", "").replace("@NATIVE@", function(source, "sub_0203088C"))
         run(program, "newgold-battle-video-")
 
 
