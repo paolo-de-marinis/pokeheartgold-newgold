@@ -301,7 +301,8 @@ Static main
     Object src/pokemon_summary_input.o
     Object asm/unk_02088D18.o
     Object src/pokemon_summary_mon.o
-    Object asm/unk_02089C50.o
+    Object src/pokemon_summary_cry.o
+    Object asm/unk_02089CB4.o
     Object asm/unk_0208B1AC.o
     Object asm/unk_0208C3E4.o
     Object src/pokemon_summary_stat_name.o

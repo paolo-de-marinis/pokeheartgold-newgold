@@ -13,58 +13,6 @@
 
 	.text
 
-	thumb_func_start sub_02089C50
-sub_02089C50: ; 0x02089C50
-	push {r4, lr}
-	sub sp, #8
-	mov r2, #0xa
-	add r4, r0, #0
-	lsl r2, r2, #6
-	ldr r0, [r4, r2]
-	lsl r0, r0, #3
-	lsr r0, r0, #0x1f
-	bne _02089CAA
-	ldr r0, _02089CB0 ; =0x000007B8
-	sub r2, #0x44
-	ldrh r2, [r4, r2]
-	ldr r0, [r4, r0]
-	add r1, sp, #4
-	mov r3, #1
-	bl sub_020729A4
-	mov r2, #0x8f
-	lsl r2, r2, #2
-	add r1, r2, #0
-	ldrh r0, [r4, r2]
-	sub r1, #0x83
-	cmp r0, r1
-	bne _02089C9A
-	add r0, sp, #4
-	ldrb r0, [r0]
-	mov r1, #0
-	sub r2, #0x10
-	str r0, [sp]
-	ldr r0, [r4, r2]
-	mov r2, #0x64
-	ldr r0, [r0, #0x28]
-	add r3, r1, #0
-	bl sub_02006EA0
-	add sp, #8
-	pop {r4, pc}
-_02089C9A:
-	add r2, #0x42
-	ldrh r2, [r4, r2]
-	add r1, sp, #4
-	ldrb r1, [r1]
-	lsl r2, r2, #0x18
-	lsr r2, r2, #0x18
-	bl sub_020062E0
-_02089CAA:
-	add sp, #8
-	pop {r4, pc}
-	nop
-_02089CB0: .word 0x000007B8
-	thumb_func_end sub_02089C50
-
 	thumb_func_start sub_02089CB4
 sub_02089CB4: ; 0x02089CB4
 	push {r4, lr}

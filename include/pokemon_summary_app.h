@@ -77,7 +77,9 @@ typedef struct PokemonSummaryAppPrefix {
     MsgData *ribbonMsgData;
     MessageFormat *messageFormat;
     String *stringBuffer;
-    u8 unk7B0[0x7BC - 0x7B0];
+    u8 unk7B0[0x7B8 - 0x7B0];
+    // The archive sub_020729A4 reads a species' cry delay from.
+    NARC *unk7B8;
     // Which of the summary's pages is showing: 1 is the stats page, 2 the
     // ribbons. Negative while the screen is coming up.
     s8 page;
@@ -98,6 +100,7 @@ typedef struct PokemonSummaryAppPrefix {
 #define SUMMARY_STATS_NONE 3
 
 u32 sub_02088B40(PokemonSummaryAppPrefix *summary);
+void sub_02089C50(PokemonSummaryAppPrefix *summary);
 void PokemonSummary_ShowStatValues(PokemonSummaryAppPrefix *summary, u32 mode);
 void sub_0208C778(PokemonSummaryAppPrefix *summary, Window *window, u32 color, int alignment);
 void sub_0208C7F8(PokemonSummaryAppPrefix *summary, int windowID, int msgID, int statIndex, int alignment);
