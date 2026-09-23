@@ -519,6 +519,50 @@ class SubstituteTests(unittest.TestCase):
             self.assertIn(f"BSCRIPT_VAR_MOVE_STATUS_FLAGS, {flag}\n    End", failure, name)
 
 
+BELCH_FIXTURE = r"""
+#include <assert.h>
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+typedef struct { int dummy; } Party;
+typedef struct { Party *parties[4]; } BattleSystem;
+typedef struct { unsigned char berryEaten[4][6]; int selectedMonIndex[4]; } BattleContext;
+static int BattleSystem_GetBattlerIdPartner(BattleSystem *bs, int battlerId) { (void)bs; return battlerId ^ 2; }
+static Party *BattleSystem_GetParty(BattleSystem *bs, int battlerId) { return bs->parties[battlerId]; }
+@FUNCTION@
+int main(void) {
+    static Party player, enemy, partner;
+    // One trainer's double: the Pokemon in slot 3 eats a Berry from the
+    // left position and is known to have eaten it from the right one too.
+    BattleSystem bs = { { &player, &enemy, &player, &enemy } };
+    BattleContext ctx = { { { 0 } }, { 0, 1, 3, 2 } };
+    RememberBerryEaten(&bs, &ctx, 2);
+    assert(ctx.berryEaten[2][3] && ctx.berryEaten[0][3]);
+    assert(!ctx.berryEaten[1][3] && !ctx.berryEaten[3][3] && !ctx.berryEaten[0][0]);
+    // A multi battle's partner has a party of its own: its slot 3 is another Pokemon.
+    BattleSystem multi = { { &player, &enemy, &partner, &enemy } };
+    BattleContext other = { { { 0 } }, { 3, 1, 0, 2 } };
+    RememberBerryEaten(&multi, &other, 0);
+    assert(other.berryEaten[0][3] && !other.berryEaten[2][3]);
+    return 0;
+}
+"""
+
+
+class BelchMemoryTests(unittest.TestCase):
+    """Belch's eaten Berry is remembered for the Pokemon, whichever position
+    of its trainer's pair it comes back to, as the entry abilities are."""
+
+    def test_both_positions_of_a_shared_party_are_told(self):
+        commands = COMMANDS.read_text()
+        with tempfile.TemporaryDirectory(prefix="newgold-belch-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(BELCH_FIXTURE.replace("@FUNCTION@", function(commands, "RememberBerryEaten")))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function",
+                str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+        self.assertIn("RememberBerryEaten(battleSystem, ctx, battlerId);", function(commands, "BtlCmd_RemoveItem"))
+
 INFILTRATOR_FIXTURE = r"""
 #include <assert.h>
 #include <stdint.h>

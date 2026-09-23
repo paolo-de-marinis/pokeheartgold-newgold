@@ -6533,6 +6533,22 @@ BOOL BtlCmd_BoostRandomStatBy2(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// Belch's memory of a Berry the Pokemon in battlerId has eaten, kept by its
+// party slot for each battler it could come back in. The two battlers a
+// single trainer fields share one party, and a Pokemon that leaves one
+// position can be sent back to the other, so both are told -- the key the
+// once-per-battle entry abilities are remembered by (OnceOnlyEntryAbilityDone,
+// the reference's SanitizeClientForTeamAccess); a multi or tag partner has a
+// party of its own and is not.
+static void RememberBerryEaten(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int partner = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
+
+    ctx->berryEaten[battlerId][ctx->selectedMonIndex[battlerId]] = TRUE;
+    if (partner != battlerId && BattleSystem_GetParty(battleSystem, partner) == BattleSystem_GetParty(battleSystem, battlerId)) {
+        ctx->berryEaten[partner][ctx->selectedMonIndex[battlerId]] = TRUE;
+    }
+}
+
 BOOL BtlCmd_RemoveItem(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
@@ -6550,7 +6566,7 @@ BOOL BtlCmd_RemoveItem(BattleSystem *battleSystem, BattleContext *ctx) {
     // and a flung one by the target, so those two credit the wrong half of the
     // pair.
     if (ItemIdIsBerry(ctx->battleMons[battlerId].item) == TRUE) {
-        ctx->berryEaten[battlerId][ctx->selectedMonIndex[battlerId]] = TRUE;
+        RememberBerryEaten(battleSystem, ctx, battlerId);
     }
 
     ctx->battleMons[battlerId].item = 0;

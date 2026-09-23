@@ -545,10 +545,11 @@ typedef struct BattleContext {
     // Belch is only there to be used once the Pokemon has eaten a Berry, and
     // nothing else in the battle remembers that it did. Written down per party
     // slot, like the entry abilities above, so that a Pokemon which ate its
-    // Berry, went out and came back can still belch. The reference indexes the
-    // same fact by side; this is by battler, because the one place that reads
-    // it has no battle system to ask which side a battler is on, and a party
-    // slot only ever comes back to the position it left from.
+    // Berry, went out and came back can still belch. It is read by battler,
+    // because the one place that reads it has no battle system to ask which
+    // party a battler draws from; so the writer tells both battlers that share
+    // the party, a Pokemon being free to come back in the other position of
+    // a single trainer's pair (RememberBerryEaten).
     u8 berryEaten[BATTLER_MAX][PARTY_SIZE];
     // Which battlers saw hail or snow the last time their forms were checked,
     // a bit each: an Ice Face comes back when the weather begins, or on the
