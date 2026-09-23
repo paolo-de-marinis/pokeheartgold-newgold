@@ -64,6 +64,9 @@ SLOTS = {
 NAME = re.compile(r"[\w\- .]+")
 APP = "net.kuribo64.melonDS"    # diag/play.py's
 LAUNCHED = []                   # what a dry run would have started
+# What this editor's code is: a server running older code answers with
+# another, and a new start replaces it instead of opening its page.
+CODE = hashlib.sha1(b"".join(f.read_bytes() for f in (Path(__file__).resolve(), HERE / "saveui.html", HERE / "savedit.py"))).hexdigest()[:12]
 HEARTGOLD = b"IPK"              # the cartridge's game code, IPKE for the American HeartGold
 CONFIG = Path(os.environ.get("SAVEUI_CONFIG") or
               Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "newgold-saveui/settings.json")
@@ -1115,7 +1118,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if url.path in ("/", "/index.html"):
                 return self.reply(200, PAGE.read_bytes(), "text/html; charset=utf-8")
             if url.path == "/api/state":
-                return self.reply(200, {"melonds": melonds_running(),
+                return self.reply(200, {"melonds": melonds_running(), "code": CODE,
                                         "version": self.library.current(q["f"]) if q.get("f") else None})
             if url.path == "/api/settings":
                 return self.reply(200, self.library.settings())
@@ -1229,13 +1232,19 @@ def main():
         return install_launcher()
     if args.dry_run_launch:
         os.environ["SAVEUI_DRY_RUN"] = "1"
-    if not args.no_browser and args.port and already_serving(args.port):
+    running = already_serving(args.port) if args.port else None
+    if running == CODE and not args.no_browser:
         # A second start -- a double click on the launcher while the editor
         # runs -- opens the page on the one that is there.
         url = f"http://127.0.0.1:{args.port}/"
         print(f"l'editor dei salvataggi è già aperto su {url}")
         webbrowser.open(url)
         return
+    if running is not None and running != CODE:
+        # The one running is older code -- the tree was updated since it
+        # started -- so it is replaced rather than reopened.
+        print("un editor con codice più vecchio era aperto: " + ("chiuso, riparto con quello nuovo" if stop_outdated(args.port)
+                                                                   else "non si chiude, parto su un'altra porta"))
     settings = load_settings()
     library = args.library or Path(settings.get("library") or Path.home() / "hgss-saves")
     if not library.is_dir():
@@ -1261,13 +1270,34 @@ def main():
 
 
 def already_serving(port):
-    """Whether this editor answers on the port already."""
+    """The code of the editor answering on the port, "" for one too old to
+    say, or None when nothing answers."""
     import urllib.request
     try:
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/state", timeout=1) as reply:
-            return "melonds" in json.load(reply)
+            state = json.load(reply)
     except (OSError, ValueError):
+        return None
+    return state.get("code", "") if "melonds" in state else None
+
+
+def stop_outdated(port, wait=5.0):
+    """Ask the editor on the port, running older code, to stop, and wait for
+    the port to be free. False when it would not (one from before "Chiudi
+    l'editor"): the new one then takes the next free port."""
+    import urllib.request
+    request = urllib.request.Request(f"http://127.0.0.1:{port}/api/quit", data=b"{}", method="POST", headers={
+        "Content-Type": "application/json", "Origin": f"http://127.0.0.1:{port}"})
+    try:
+        urllib.request.urlopen(request, timeout=2).read()
+    except OSError:
         return False
+    deadline = time.monotonic() + wait
+    while time.monotonic() < deadline:
+        if already_serving(port) is None:
+            return True
+        time.sleep(0.2)
+    return False
 
 
 def install_launcher():

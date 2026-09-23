@@ -121,6 +121,12 @@ class SaveUiTests(unittest.TestCase):
         folder = self.library / ".backups" / key
         return sorted(folder.iterdir()) if folder.is_dir() else []
 
+    def test_a_start_replaces_an_editor_running_older_code(self):
+        self.assertEqual(saveui.already_serving(self.port), saveui.CODE, "the running one says what code it is")
+        self.assertIsNone(saveui.already_serving(1), "nothing answers there")
+        self.assertTrue(saveui.stop_outdated(self.port), "asked to stop, it stops")
+        self.assertIsNone(saveui.already_serving(self.port))
+
     # -- the settings: the folder and the ROMs the page chooses -------------------
 
     def test_the_settings(self):
