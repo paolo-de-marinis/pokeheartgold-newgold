@@ -64,6 +64,7 @@ BOOL PCBox_Main(OverlayManager *man, int *state);
 BOOL PCBox_Exit(OverlayManager *man, int *state);
 
 void ov14_021E59AC(SysTask *task, void *data);
+void ov14_021E5A50(PCBoxAppGraphics *graphics, void (*func)(PCBoxApp *app));
 void ov14_021E5A60(void);
 void ov14_021E5A70(PCBoxApp *app);
 void ov14_021E5C54(PCBoxApp *app);
@@ -84,6 +85,7 @@ void ov14_021E84A4(void *a0);
 int ov14_021E8544(void *a0);
 void ov14_021E92AC(PCBoxApp *app);
 void ov14_021E9370(PCBoxApp *app);
+void ov14_021E9F20(PCBoxApp *app);
 int ov14_021EAFAC(PCBoxApp *app);
 void ov14_021F0234(PCBoxApp *app, void (*func)(PCBoxApp *app), int a2);
 void ov14_021F028C(PCBoxApp *app, int a1);
@@ -108,5 +110,9 @@ void ov14_021F5620(PCBoxApp *app);
 void ov14_021F566C(PCBoxApp *app);
 void ov14_021F57B8(PCBoxApp *app);
 void ov14_021F6A44(PCBoxApp *app);
+void ov14_021F6D14(void *data, int newTarget, int prevTarget);
+void ov14_021F7184(void *data, int newTarget, int prevTarget);
+void ov14_021F7700(void *data, int newTarget, int prevTarget);
+void ov14_021F7AC4(PCBoxAppGraphics *graphics, int newTarget, int prevTarget);
 
 #endif // POKEHEARTGOLD_OVY_14_H

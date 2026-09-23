@@ -909,3 +909,15 @@
 .public ov14_021EA728
 .public ov14_021EA928
 .public ov14_021EAF08
+.public ov14_021F6B28
+.public ov14_021F6B60
+.public ov14_021F6B7C
+.public ov14_021F6B8C
+.public ov14_021F6BA4
+.public ov14_021F6C3C
+.public ov14_021F6C94
+.public ov14_021F6D14
+.public ov14_021F8614
+.public ov14_021F8630
+.public ov14_021F864C
+.public ov14_021F8B10
