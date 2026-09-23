@@ -338,5 +338,35 @@ class HexTests(unittest.TestCase):
                                  r"ABILITY_COMATOSE, (_\w+)\n(?:.*\n)*?\1:\n    UpdateVar OPCODE_SET, BSCRIPT_VAR_POWER_MULTI, 20")
 
 
+class HealBlockTests(unittest.TestCase):
+    # Moves the reference's HealBlockUnusableMoveEffects reaches by effect,
+    # retail's fourteen among them, and the two it names by move.
+    BLOCKED = ("ABSORB", "GIGA_DRAIN", "DRAIN_PUNCH", "DRAINING_KISS", "BOUNCY_BUBBLE", "DREAM_EATER",
+               "MATCHA_GOTCHA", "RECOVER", "SOFT_BOILED", "ROOST", "SYNTHESIS", "SHORE_UP", "REST",
+               "SWALLOW", "LUNAR_DANCE", "HEALING_WISH", "WISH", "HEAL_PULSE", "LIFE_DEW")
+    BY_MOVE = ("FLORAL_HEALING", "LUNAR_BLESSING")
+
+    def test_the_reference_s_effects_are_blocked(self):
+        import struct
+        from test_moves import constants, import_moves
+        moves = constants("include/constants/moves.h", "MOVE_")
+        effects = {int(number): name for name, number in re.findall(
+            r"#define (MOVE_EFFECT_\w+)\s+(\d+)", (ROOT / "include/constants/move_effects.h").read_text())}
+        table = import_moves.read_table()
+        source = OVERLAY.read_text()
+        self.assertIn("sHealBlockUnusableMoveEffects[] = {", source)
+        listed = source[source.index("sHealBlockUnusableMoveEffects[] = {"):]
+        listed = set(re.findall(r"(MOVE_EFFECT_\w+),", listed[:listed.index("};")]))
+        for move in self.BLOCKED:
+            effect = effects[struct.unpack_from("<H", table[moves["MOVE_" + move]])[0]]
+            self.assertIn(effect, listed, move)
+        named = source[source.index("sHealBlockUnusableMoves[] = {"):]
+        named = named[:named.index("};")]
+        for move in self.BY_MOVE:
+            self.assertIn(f"MOVE_{move},", named)
+        body = function(source, "BattleContext_CheckMoveHealBlocked")
+        self.assertIn("sHealBlockUnusableMoveEffects[i] == effect", body)
+
+
 if __name__ == "__main__":
     unittest.main()

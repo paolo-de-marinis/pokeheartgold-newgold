@@ -3407,37 +3407,52 @@ BOOL BattleContext_CheckMoveUnuseableInGravity(BattleSystem *battleSystem, Battl
     return ret;
 }
 
+// Heal Block goes by effect, as the reference's HealBlockUnusableMoveEffects
+// does: every move that heals its user, the draining moves and Dream Eater
+// included, and the two that heal another -- Heal Pulse and Life Dew. Floral
+// Healing and Lunar Blessing have no effect of their own yet, so the reference
+// names them as moves.
 static const u16 sHealBlockUnusableMoves[] = {
-    MOVE_RECOVER,
-    MOVE_SOFTBOILED,
-    MOVE_REST,
-    MOVE_MILK_DRINK,
-    MOVE_MORNING_SUN,
-    MOVE_SYNTHESIS,
-    MOVE_MOONLIGHT,
-    MOVE_SWALLOW,
-    MOVE_HEAL_ORDER,
-    MOVE_SLACK_OFF,
-    MOVE_ROOST,
-    MOVE_LUNAR_DANCE,
-    MOVE_HEALING_WISH,
-    MOVE_WISH
+    MOVE_FLORAL_HEALING,
+    MOVE_LUNAR_BLESSING,
+};
+
+static const u16 sHealBlockUnusableMoveEffects[] = {
+    MOVE_EFFECT_RECOVER_HALF_DAMAGE_DELT,
+    MOVE_EFFECT_RECOVER_THREE_QUARTERS_DAMAGE_DEALT,
+    MOVE_EFFECT_RECOVER_FULL_DAMAGE_DEALT,
+    MOVE_EFFECT_RECOVER_DAMAGE_SLEEP,
+    MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT,
+    MOVE_EFFECT_RESTORE_HALF_HP,
+    MOVE_EFFECT_HEAL_HALF_REMOVE_FLYING_TYPE,
+    MOVE_EFFECT_HEAL_HALF_MORE_IN_SUN,
+    MOVE_EFFECT_RECOVER_HEALTH_AND_SLEEP,
+    MOVE_EFFECT_SWALLOW,
+    MOVE_EFFECT_FAINT_FULL_RESTORE_NEXT_MON,
+    MOVE_EFFECT_FAINT_AND_FULL_HEAL_NEXT_MON,
+    MOVE_EFFECT_HEAL_IN_3_TURNS,
+    MOVE_EFFECT_HEAL_TARGET,
+    MOVE_EFFECT_LIFE_DEW,
 };
 
 BOOL BattleContext_CheckMoveHealBlocked(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int moveNo) {
     int i;
-    BOOL ret = FALSE;
+    int effect = BattleMoveTbl(ctx, moveNo)->effect;
 
     if (ctx->battleMons[battlerId].unk88.healBlockTurns) {
         for (i = 0; i < NELEMS(sHealBlockUnusableMoves); i++) {
             if (sHealBlockUnusableMoves[i] == moveNo) {
-                ret = TRUE;
-                break;
+                return TRUE;
+            }
+        }
+        for (i = 0; i < NELEMS(sHealBlockUnusableMoveEffects); i++) {
+            if (sHealBlockUnusableMoveEffects[i] == effect) {
+                return TRUE;
             }
         }
     }
 
-    return ret;
+    return FALSE;
 }
 
 void ov12_02252E30(BattleSystem *battleSystem, BattleContext *ctx) {

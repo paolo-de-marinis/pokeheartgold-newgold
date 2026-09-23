@@ -201,7 +201,6 @@ UNREAD_HERE = {
     "ATK_SP_ATK_SPEED_UP_2": "unused",
     "SHED_TAIL": "not ported: subscript 343 makes the decoy but the user never switches out",
     "QUASH": "not ported: a substitute does not stop it here (the reference's substitute list)",
-    "RECOVER_FULL_DAMAGE_DEALT": "not ported: Heal Block does not stop it; this game's list is retail's moves",
     "CHARGE_TURN_ATK_SP_ATK_SPEED_UP_2": "script: the charge turn, Power Herb and the +6 refusal are effect script 323's",
     "SET_ABILITY_TO_SIMPLE": "script: subscript 338 fails behind a substitute itself",
     "CHARGE_TURN_SP_ATK_UP": "script: the charge turn and Power Herb are effect script 329's",
@@ -216,9 +215,6 @@ UNREAD_HERE = {
     "SPEED_DOWN_3": "unused",
     "SP_ATK_DOWN_3": "unused",
     "SP_DEF_DOWN_3": "unused",
-    "RECOVER_THREE_QUARTERS_DAMAGE_DEALT": "not ported: Heal Block does not stop it; this game's list is retail's moves",
-    "RECOVER_HALF_DAMAGE_DEALT_BURN_HIT": "not ported: Matcha Gotcha neither thaws its frozen user nor is "
-                                          "stopped by Heal Block",
     "PREVENT_ESCAPE_BOTH_HIT": "script: the side effect runs Jaw Lock's subscript after the damage",
     "STEALTH_ROCK_HIT": "script: an ON_HIT side effect lays the stones after the damage",
     "SET_SPIKES_HIT": "script: an ON_HIT side effect lays the spikes after the damage",
@@ -229,9 +225,7 @@ UNREAD_HERE = {
     "ADD_TYPE_GRASS": "not ported: a substitute does not stop it here (the reference's substitute list)",
     "ADD_TYPE_GHOST": "not ported: a substitute does not stop it here (the reference's substitute list)",
     "CHANGE_TO_PSYCHIC_TYPE": "not ported: a substitute does not stop it here (the reference's substitute list)",
-    "HEAL_TARGET": "not ported: neither a substitute nor Heal Block stops Heal Pulse here",
     "COACHING": "not ported: the reference's failure with no partner to coach is not here",
-    "LIFE_DEW": "not ported: Heal Block does not stop it; this game's list is retail's moves",
     "DECORATE": "not ported: a substitute does not stop it here (the reference's substitute list)",
     "PARTING_SHOT": "not ported: it lowers the two stats but the user never switches out",
     "FORCE_SWITCH_HIT": "script: a CHECK_HP_AND_SUBSTITUTE side effect runs Whirlwind's subscript after the damage",
@@ -243,7 +237,7 @@ UNREAD_HERE = {
 
 class WhatIsStillMissingTests(unittest.TestCase):
     # A ratchet, not a target: the table above may only shrink.
-    STILL_UNREAD = 49
+    STILL_UNREAD = 44
 
     def test_the_table_only_ever_shrinks(self):
         self.assertLessEqual(
