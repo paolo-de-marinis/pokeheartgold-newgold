@@ -475,12 +475,16 @@ class AbilityBlockListTests(unittest.TestCase):
             self.assertEqual({a for _, a in self.entries(text)} & self.unsuppressable(), set(), name)
 
     # What the port refuses beyond the reference's script, and why: a target
-    # holding an Ability Shield (Pokemon Central, Scudo abilita), and
-    # retail's Griseous Orb.
+    # holding an Ability Shield (Pokemon Central, Scudo abilita). Retail's
+    # Griseous Orb is gone from Worry Seed, as from the fifth generation
+    # (Pokemon Central, Affannoseme) and from the reference.
     ADDED = {
         "subscript/subscript_0163_GastroAcid.s": {("DEFENDER", "ITEM_ABILITY_SHIELD")},
-        "subscript/subscript_0167_WorrySeed.s": {("DEFENDER", "ITEM_GRISEOUS_ORB")},
     }
+
+    def test_worry_seed_ignores_the_griseous_orb(self):
+        text = (ROOT / "files/battledata/script/subscript/subscript_0167_WorrySeed.s").read_text()
+        self.assertNotIn("ITEM_GRISEOUS_ORB", text)
 
     def test_the_lists_are_the_reference_s(self):
         from test_repels import REFERENCE, revision
