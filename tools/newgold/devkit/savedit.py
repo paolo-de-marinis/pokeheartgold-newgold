@@ -1474,7 +1474,10 @@ def egg_moves():
 @tree_cache
 def pre_evolutions():
     """evo.json, which the build packs into evo.narc for GetMonEvolution,
-    turned around: the species each one evolves from."""
+    turned around: the species each one evolves from. EvolvedPassiveForm's
+    cases (src/pokemon.c) are evolutions too: a form 1 Dunsparce or
+    Tandemaus becomes the form species it names, from the same species the
+    target it replaces comes from."""
     numbers = species_numbers()
     out = {}
     for entry in json.loads(source("files/poketool/personal/evo.json").read_text())["evoTable"]:
@@ -1482,17 +1485,10 @@ def pre_evolutions():
             if evo["target"] != "SPECIES_NONE":
                 out.setdefault(numbers[evo["target"][len("SPECIES_"):]], set()).add(
                     numbers[entry["baseSpecies"][len("SPECIES_"):]])
+    passive = c_function("src/pokemon.c", "static u16 EvolvedPassiveForm(")
+    for target, form in re.findall(r"case SPECIES_(\w+):\s*return SPECIES_(\w+);", passive):
+        out.setdefault(numbers[form], set()).update(out.get(numbers[target], set()))
     return out
-
-
-@tree_cache
-def form_bases():
-    """sFormBaseSpecies (src/pokedex.c): each form's base species."""
-    text = source("src/pokedex.c").read_text()
-    text = text[text.index("sFormBaseSpecies["):]
-    numbers = species_numbers()
-    return {numbers[form]: numbers[base] for form, base in
-            re.findall(r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_(\w+)", text[:text.index("};")])}
 
 
 @tree_cache
@@ -1567,9 +1563,8 @@ def item_egg_moves():
 def evolution_line(species):
     """The species and every species it can have been before evolving,
     nearest first, each with whether an egg can hatch as it (a first stage,
-    or the parent an incense baby hatches as without its incense). A form
-    with no pre-evolution of its own takes its base's."""
-    before = lambda s: pre_evolutions().get(s) or pre_evolutions().get(form_bases().get(s), set())
+    or the parent an incense baby hatches as without its incense)."""
+    before = lambda s: pre_evolutions().get(s, set())
     line, todo = [], [species]
     while todo:
         s = todo.pop(0)

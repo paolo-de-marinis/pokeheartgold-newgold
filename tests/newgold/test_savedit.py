@@ -337,6 +337,12 @@ class SaveditLibraryTests(unittest.TestCase):
                          [n["NINETALES_ALOLAN"], n["VULPIX_ALOLAN"]], "a regional form's own line")
         self.assertEqual(sv.evolution_line(n["MARILL"]), [(n["MARILL"], True), (n["AZURILL"], True)],
                          "Marill hatches without the Sea Incense")
+        self.assertEqual([s for s, _ in sv.evolution_line(n["RAICHU_ALOLAN"])], [n["RAICHU_ALOLAN"]],
+                         "no evolution in evo.json makes one: not its base's Pikachu")
+        self.assertEqual([s for sources in sv.learnable_moves(n["RAICHU_ALOLAN"]).values() for s in sources if "from" in s],
+                         [], "nothing from a Pikachu or a Pichu")
+        self.assertEqual([s for s, _ in sv.evolution_line(n["DUDUNSPARCE_THREE_SEGMENT"])],
+                         [n["DUDUNSPARCE_THREE_SEGMENT"], n["DUNSPARCE"]], "EvolvedPassiveForm's")
 
         me = sv.owner(self.open())
         young = sv.new_mon(n["CHARIZARD"], 5, me)

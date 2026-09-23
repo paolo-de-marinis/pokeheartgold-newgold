@@ -56,8 +56,8 @@ move to a Pokemon of the type its `GetMonTypes` tests name), the egg
 moves (`kowaza_list.narc`) of the species its line hatches as, with
 the one `Daycare_LightBallCheck` adds for a parent's Light Ball, a Rotom
 form's own move (`sRotomFormMoves`, which the Rotom Catalog teaches), and the same
-for its pre-evolutions (`evo.json`; a form without one of its own takes its
-base's, `sFormBaseSpecies`). `species_abilities` is its first, second and
+for its pre-evolutions (`evo.json`, and `EvolvedPassiveForm`'s two form
+species: a form the game never evolves into has none). `species_abilities` is its first, second and
 hidden ability by the slot the game keeps each in: the personality's low
 bit (an Ability Capsule turns it over) or `MON_HIDDEN_ABILITY_BIT`, which
 `UpdateBoxMonAbility` reads again on evolving. `edit_mon` and `new_mon`
