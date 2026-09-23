@@ -785,7 +785,10 @@ int PartyMenu_HandleUseTMHMonMon(PartyMenu *partyMenu) {
     case 2:
     case 3:
         PartyMenu_LearnMoveToSlot(partyMenu, mon, response);
-        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00062);
+        // hg-engine's row 62 says 'and it learned X instead!', for after a
+        // move was forgotten; a free slot reads 219 (its byte patch at
+        // arm9 020821B0).
+        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00219);
         StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
         String_Delete(string);
         PartyMenu_PrintMessageOnWindow34(partyMenu, -1, TRUE);

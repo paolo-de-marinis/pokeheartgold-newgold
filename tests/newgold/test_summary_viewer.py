@@ -105,7 +105,7 @@ class SummaryViewerTests(unittest.TestCase):
 
     def test_the_labels_exist(self):
         text = MESSAGES.read_text()
-        for label in ("EVs", "IVs"):
+        for label in ("EV", "IV"):
             self.assertIn(f">{label}</language>", text, f"the {label} label is missing")
 
     def test_the_labels_are_the_ones_the_page_reads(self):

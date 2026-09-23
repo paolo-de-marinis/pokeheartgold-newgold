@@ -113,7 +113,7 @@ void PokemonSummary_ShowStatValues(PokemonSummaryAppPrefix *summary, u32 mode) {
 
     FillWindowPixelBuffer(&summary->windows[15], 0);
     ReadMsgDataIntoString(summary->msgData,
-        mode == SUMMARY_STATS_EVS ? msg_0302_00195 : mode == SUMMARY_STATS_IVS ? msg_0302_00196 : msg_0302_00110,
+        mode == SUMMARY_STATS_EVS ? msg_0302_00206 : mode == SUMMARY_STATS_IVS ? msg_0302_00207 : msg_0302_00110,
         summary->stringBuffer);
     sub_0208C778(summary, &summary->windows[15], MAKE_TEXT_COLOR(0xE, 0xF, 0), 0);
     ScheduleWindowCopyToVram(&summary->windows[15]);

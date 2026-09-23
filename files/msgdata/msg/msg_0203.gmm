@@ -17,10 +17,18 @@
 	</row>
 	<row id="msg_0203_00003" index="3">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 3, 0, 0} scurried to\na Pokémon Center, protecting\nthe exhausted and fainted\nPokémon from further harm...</language>
+		<language name="English">You hurry to\nthe Pokémon Center, shielding\nyour exhausted\nPokémon from any further harm...</language>
 	</row>
 	<row id="msg_0203_00004" index="4">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 3, 0, 0} scurried back\nhome, protecting the exhausted\nand fainted Pokémon from further\nharm...</language>
+		<language name="English">You hurry back\nhome, shielding your exhausted\nPokémon from any further\nharm...</language>
+	</row>
+	<row id="msg_0203_00005" index="5">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">You went running to\nthe Pokémon Center to regroup\nand reconsider your battle\nstrategy...</language>
+	</row>
+	<row id="msg_0203_00006" index="6">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">You went running back\nhome to regroup\nand reconsider your battle\nstrategy...</language>
 	</row>
 </body>

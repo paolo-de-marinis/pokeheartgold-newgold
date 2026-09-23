@@ -2445,11 +2445,11 @@ static BOOL PartyMenu_TryUseMintOrAbilityCapsule(PartyMenu *partyMenu) {
         // neither does this: the Mint is spent either way.
         Mon_SetMintNature(mon, sMintNatures[itemId - ITEM_LONELY_MINT]);
         CalcMonLevelAndStats(mon);
-        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00193);
-        BufferItemName(partyMenu->msgFormat, 1, itemId);
+        // hg-engine has a line per nature, the Mint's name written in.
+        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00194 + sMintNatures[itemId - ITEM_LONELY_MINT]);
     } else if (itemId == ITEM_ABILITY_CAPSULE && Mon_CanUseAbilityCapsule(mon) == TRUE) {
         Mon_SwapAbilitySlot(mon);
-        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00192);
+        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00193);
     } else {
         return FALSE;
     }

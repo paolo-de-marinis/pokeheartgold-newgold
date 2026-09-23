@@ -279,24 +279,24 @@ class RepelRegression(unittest.TestCase):
         body = source.split("scr_seq_0003_072:\n", 1)[1].split("\t.balign", 1)[0]
         commands = [line.strip() for line in body.splitlines() if line.strip()]
         self.assertEqual(commands, [
-            "PlaySE SEQ_SE_DP_SELECT", "LockAll", "NPCMsg msg_0040_00117",
+            "PlaySE SEQ_SE_DP_SELECT", "LockAll", "NPCMsg msg_0040_00118",
             "YesNo VAR_SPECIAL_RESULT", "Compare VAR_SPECIAL_RESULT, 1", "GoToIfEq _ReuseRepelEnd",
             "UseNextRepel VAR_SPECIAL_RESULT", "PlaySE SEQ_SE_DP_CARD2", "BufferPlayersName 0",
-            "BufferItemName 1, VAR_SPECIAL_RESULT", "NPCMsg msg_0040_00118", "WaitButton",
+            "BufferItemName 1, VAR_SPECIAL_RESULT", "NPCMsg msg_0040_00119", "WaitButton",
             "_ReuseRepelEnd:", "CloseMsg", "ReleaseAll", "End",
         ])
         self.assertRegex(read("include/constants/std_script.h"), r"#define std_reuse_repel\s+2072\b")
         self.assertRegex(read("files/fielddata/script/scr_seq/event_0003.h"), r"#define _EV_scr_seq_0003_072 72\b")
 
-    def test_messages_preserve_original_rows_and_reference_text(self):
-        path = "files/msgdata/msg/msg_0040.gmm"
-        messages = lambda source: {row.attrib["id"]: (row.attrib["index"], row.find("language").text)
-                                   for row in ET.fromstring(source).findall("row")}
-        old, new = messages(revision(ROOT, BASELINE, path)), messages(read(path))
-        self.assertEqual({key: new[key] for key in old}, old)
+    def test_messages_are_hg_engines_rows(self):
+        """The bank is hg-engine's 040.txt, which put the prompt and the
+        confirmation at 118 and 119 (117 is empty); test_interface_text.py
+        holds the rest of the bank."""
+        rows = {row.attrib["id"]: row.find("language").text
+                for row in ET.fromstring(read("files/msgdata/msg/msg_0040.gmm")).findall("row")}
         expected = ["The repellent’s effect wore off!\\nWould you like to use another one?",
                     "You used the {STRVAR_1 8, 1, 0}."]
-        self.assertEqual([new[f"msg_0040_{i:05d}"][1] for i in (117, 118)], expected)
+        self.assertEqual([rows[f"msg_0040_{i:05d}"] for i in (118, 119)], expected)
         if REFERENCE is not None:
             source = revision(REFERENCE, REFERENCE_COMMIT, "data/text/040.txt").splitlines()
             self.assertEqual(source[118:120], expected)

@@ -660,14 +660,14 @@ _085F:
 
 _0892:
 	BufferPlayersName 0
-	BufferItemName 1, VAR_SPECIAL_x8004
+	BufferItemNameIndef 1, VAR_SPECIAL_x8004
 	NPCMsg msg_0040_00028
 	GoTo _08C9
 
 _08A3:
 	Compare VAR_SPECIAL_x8005, 1
 	GoToIfGt _08BB
-	BufferItemName 0, VAR_SPECIAL_x8004
+	BufferItemNameIndef 0, VAR_SPECIAL_x8004
 	GoTo _08C0
 
 _08BB:
@@ -1756,7 +1756,7 @@ scr_seq_0003_064:
 scr_seq_0003_072:
 	PlaySE SEQ_SE_DP_SELECT
 	LockAll
-	NPCMsg msg_0040_00117
+	NPCMsg msg_0040_00118
 	YesNo VAR_SPECIAL_RESULT
 	Compare VAR_SPECIAL_RESULT, 1
 	GoToIfEq _ReuseRepelEnd
@@ -1764,7 +1764,7 @@ scr_seq_0003_072:
 	PlaySE SEQ_SE_DP_CARD2
 	BufferPlayersName 0
 	BufferItemName 1, VAR_SPECIAL_RESULT
-	NPCMsg msg_0040_00118
+	NPCMsg msg_0040_00119
 	WaitButton
 _ReuseRepelEnd:
 	CloseMsg

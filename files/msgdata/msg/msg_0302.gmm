@@ -81,9 +81,8 @@
 		<language name="English">To Next Lv.</language>
 	</row>
 	<row id="msg_0302_00020" index="20">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語"></language>
 	</row>
 	<row id="msg_0302_00021" index="21">
 		<attribute name="window_context_name">used</attribute>
@@ -813,10 +812,54 @@
 	</row>
 	<row id="msg_0302_00195" index="195">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">EVs</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0302_00196" index="196">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">IVs</language>
+		<language name="English">Attack↑</language>
+	</row>
+	<row id="msg_0302_00197" index="197">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Defense↑</language>
+	</row>
+	<row id="msg_0302_00198" index="198">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sp. Atk↑</language>
+	</row>
+	<row id="msg_0302_00199" index="199">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sp. Def↑</language>
+	</row>
+	<row id="msg_0302_00200" index="200">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Speed↑</language>
+	</row>
+	<row id="msg_0302_00201" index="201">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Attack↓</language>
+	</row>
+	<row id="msg_0302_00202" index="202">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Defense↓</language>
+	</row>
+	<row id="msg_0302_00203" index="203">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sp. Atk↓</language>
+	</row>
+	<row id="msg_0302_00204" index="204">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sp. Def↓</language>
+	</row>
+	<row id="msg_0302_00205" index="205">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Speed↓</language>
+	</row>
+	<row id="msg_0302_00206" index="206">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">EV</language>
+	</row>
+	<row id="msg_0302_00207" index="207">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">IV</language>
 	</row>
 </body>

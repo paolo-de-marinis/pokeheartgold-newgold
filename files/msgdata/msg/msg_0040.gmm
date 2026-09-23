@@ -49,13 +49,12 @@
 		<language name="English">{STRVAR_1 3, 0, 0} is out of battle-ready\nPokémon!\r{STRVAR_1 3, 0, 0}’s vision dimmed!</language>
 	</row>
 	<row id="msg_0040_00012" index="12">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00013" index="13">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Would you like to save the game? {YESNO 0}</language>
+		<language name="English">Would you like to\nsave your adventure so far? {YESNO 0}</language>
 	</row>
 	<row id="msg_0040_00014" index="14">
 		<attribute name="window_context_name">used</attribute>
@@ -63,25 +62,23 @@
 	</row>
 	<row id="msg_0040_00015" index="15">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Saving...\nDon’t turn off the power.</language>
+		<language name="English">Now saving your Pokémon adventure...\nDon’t turn off the power.</language>
 	</row>
 	<row id="msg_0040_00016" index="16">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 3, 0, 0} saved the game.</language>
+		<language name="English">You saved your progress!</language>
 	</row>
 	<row id="msg_0040_00017" index="17">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00018" index="18">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Save error.</language>
 	</row>
 	<row id="msg_0040_00019" index="19">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00020" index="20">
 		<attribute name="window_context_name">used</attribute>
@@ -92,28 +89,24 @@
 		<language name="English">Saving a lot of data...\nDon’t turn off the power.</language>
 	</row>
 	<row id="msg_0040_00022" index="22">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00023" index="23">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00024" index="24">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00025" index="25">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Obtained the {STRVAR_1 8, 0, 0}!</language>
+		<language name="English">Obtained {STRVAR_1 8, 0, 0}!</language>
 	</row>
 	<row id="msg_0040_00026" index="26">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00027" index="27">
 		<attribute name="window_context_name">used</attribute>
@@ -121,11 +114,11 @@
 	</row>
 	<row id="msg_0040_00028" index="28">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 3, 0, 0} obtained\nthe {COLOR 2}{STRVAR_1 8, 1, 0}{COLOR 0}!</language>
+		<language name="English">{STRVAR_1 3, 0, 0} obtained\n{COLOR 2}{STRVAR_1 8, 1, 0}{COLOR 0}!</language>
 	</row>
 	<row id="msg_0040_00029" index="29">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 3, 0, 0} obtained\nthe {COLOR 1}{STRVAR_1 8, 1, 0}{COLOR 0}!</language>
+		<language name="English">{STRVAR_1 3, 0, 0} obtained\n{COLOR 1}{STRVAR_1 8, 1, 0}{COLOR 0}!</language>
 	</row>
 	<row id="msg_0040_00030" index="30">
 		<attribute name="window_context_name">used</attribute>
@@ -164,9 +157,8 @@
 		<language name="English">Welcome!\nWhat do you need?</language>
 	</row>
 	<row id="msg_0040_00039" index="39">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00040" index="40">
 		<attribute name="window_context_name">used</attribute>
@@ -201,9 +193,8 @@
 		<language name="English">There’s no Mail in the Mailbox.\r</language>
 	</row>
 	<row id="msg_0040_00048" index="48">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00049" index="49">
 		<attribute name="window_context_name">used</attribute>
@@ -226,9 +217,8 @@
 		<language name="English">{STRVAR_1 1, 0, 0} survived the poisoning.\nThe poison faded away!\r</language>
 	</row>
 	<row id="msg_0040_00054" index="54">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00055" index="55">
 		<attribute name="window_context_name">used</attribute>
@@ -272,31 +262,27 @@
 	</row>
 	<row id="msg_0040_00065" index="65">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Repel’s effect wore off...</language>
+		<language name="English">The repellent’s effect wore off!</language>
 	</row>
 	<row id="msg_0040_00066" index="66">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00067" index="67">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00068" index="68">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">I’m very sorry.\rWe are working underground right now.\nIt’s off-limits to the public.\rPlease try later on.</language>
 	</row>
 	<row id="msg_0040_00069" index="69">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00070" index="70">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00071" index="71">
 		<attribute name="window_context_name">used</attribute>
@@ -335,13 +321,12 @@
 		<language name="English">Ball Capsules can’t be used because\nyou don’t have any Seals.\r</language>
 	</row>
 	<row id="msg_0040_00080" index="80">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00081" index="81">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Would you like to save the game?</language>
+		<language name="English">Would you like to\nsave your adventure so far?</language>
 	</row>
 	<row id="msg_0040_00082" index="82">
 		<attribute name="window_context_name">used</attribute>
@@ -380,14 +365,12 @@
 		<language name="English">{STRVAR_1 3, 0, 0} put away the\n{STRVAR_1 31, 1, 0} in the Fashion Case.\r</language>
 	</row>
 	<row id="msg_0040_00091" index="91">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00092" index="92">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00093" index="93">
 		<attribute name="window_context_name">used</attribute>
@@ -402,9 +385,8 @@
 		<language name="English">{STRVAR_1 3, 0, 0} received\n{STRVAR_1 31, 1, 0}!\rBut the Fashion Case is already full!</language>
 	</row>
 	<row id="msg_0040_00096" index="96">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0040_00097" index="97">
 		<attribute name="window_context_name">used</attribute>
@@ -488,10 +470,18 @@
 	</row>
 	<row id="msg_0040_00117" index="117">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The repellent’s effect wore off!\nWould you like to use another one?</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0040_00118" index="118">
 		<attribute name="window_context_name">used</attribute>
+		<language name="English">The repellent’s effect wore off!\nWould you like to use another one?</language>
+	</row>
+	<row id="msg_0040_00119" index="119">
+		<attribute name="window_context_name">used</attribute>
 		<language name="English">You used the {STRVAR_1 8, 1, 0}.</language>
+	</row>
+	<row id="msg_0040_00120" index="120">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Begin auto-battle.</language>
 	</row>
 </body>

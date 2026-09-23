@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
 <body language="English">
 	<row id="msg_0435_00000" index="0">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0435_00001" index="1">
 		<attribute name="window_context_name">used</attribute>
@@ -54,17 +53,16 @@
 		<language name="English">{STRVAR_1 8, 0, 0}? Certainly.\nHow many would you like?</language>
 	</row>
 	<row id="msg_0435_00013" index="13">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0435_00014" index="14">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">For {STRVAR_1 51, 0, 0}, that will\nbe ${STRVAR_1 55, 1, 0}, please.</language>
+		<language name="English">OK, {STRVAR_1 51, 0, 0}. That’ll be\n${STRVAR_1 55, 1, 0}.</language>
 	</row>
 	<row id="msg_0435_00015" index="15">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Here you are!\nThank you!{WAIT 1}\rYou put away the {STRVAR_1 8, 0, 0}\nin the {STRVAR_1 27, 1, 0} Pocket.</language>
+		<language name="English">Here you are.\nThanks for shopping with us.</language>
 	</row>
 	<row id="msg_0435_00016" index="16">
 		<attribute name="window_context_name">used</attribute>
@@ -87,14 +85,12 @@
 		<language name="English">You also get a Premier Ball as\nan added bonus.</language>
 	</row>
 	<row id="msg_0435_00021" index="21">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0435_00022" index="22">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0435_00023" index="23">
 		<attribute name="window_context_name">used</attribute>
@@ -113,19 +109,16 @@
 		<language name="English">You already have this!</language>
 	</row>
 	<row id="msg_0435_00027" index="27">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXXXXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXXXXX</language>
 	</row>
 	<row id="msg_0435_00028" index="28">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXXXXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXXXXX</language>
 	</row>
 	<row id="msg_0435_00029" index="29">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXX</language>
 	</row>
 	<row id="msg_0435_00030" index="30">
 		<attribute name="window_context_name">used</attribute>
@@ -144,9 +137,8 @@
 		<language name="English">Athlete Pts.</language>
 	</row>
 	<row id="msg_0435_00034" index="34">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0435_00035" index="35">
 		<attribute name="window_context_name">used</attribute>
@@ -157,28 +149,24 @@
 		<language name="English">{STRVAR_1 52, 0, 0}</language>
 	</row>
 	<row id="msg_0435_00037" index="37">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXXXXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXXXXX</language>
 	</row>
 	<row id="msg_0435_00038" index="38">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">${STRVAR_1 55, 0, 0}</language>
 	</row>
 	<row id="msg_0435_00039" index="39">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XX</language>
 	</row>
 	<row id="msg_0435_00040" index="40">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXX</language>
 	</row>
 	<row id="msg_0435_00041" index="41">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXXXXXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXXXXXX</language>
 	</row>
 	<row id="msg_0435_00042" index="42">
 		<attribute name="window_context_name">used</attribute>
@@ -201,9 +189,8 @@
 		<language name="English">Would you like\n{STRVAR_1 8, 0, 0}?</language>
 	</row>
 	<row id="msg_0435_00047" index="47">
-		<attribute name="window_context_name">garbage</attribute>
-		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0435_00048" index="48">
 		<attribute name="window_context_name">used</attribute>

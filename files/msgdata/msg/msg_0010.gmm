@@ -261,7 +261,7 @@
 	</row>
 	<row id="msg_0010_00055" index="55">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Is it OK to throw away\n{STRVAR_1 52, 1, 0} {STRVAR_1 8, 0, 0}?</language>
+		<language name="English">Is it OK to throw away\n{STRVAR_1 52, 1, 0}?</language>
 	</row>
 	<row id="msg_0010_00056" index="56">
 		<attribute name="window_context_name">garbage</attribute>
@@ -278,11 +278,11 @@
 	</row>
 	<row id="msg_0010_00059" index="59">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Booted up a TM.{WAIT 3}{WAIT 4}\n</language>
+		<language name="English">You booted up the TM.{WAIT 3}{WAIT 4}\n</language>
 	</row>
 	<row id="msg_0010_00060" index="60">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Booted up an HM.{WAIT 3}{WAIT 4}\n</language>
+		<language name="English">You booted up the TM.{WAIT 3}{WAIT 4}\n</language>
 	</row>
 	<row id="msg_0010_00061" index="61">
 		<attribute name="window_context_name">used</attribute>
@@ -290,7 +290,7 @@
 	</row>
 	<row id="msg_0010_00062" index="62">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 3, 0, 0} used the\n{STRVAR_1 8, 1, 0}.</language>
+		<language name="English">You used the\n{STRVAR_1 8, 1, 0}.</language>
 	</row>
 	<row id="msg_0010_00063" index="63">
 		<attribute name="window_context_name">used</attribute>
@@ -298,11 +298,11 @@
 	</row>
 	<row id="msg_0010_00064" index="64">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 3, 0, 0} used the\n{STRVAR_1 8, 1, 0}.\rWild Pokémon will be lured.</language>
+		<language name="English">You used the\n{STRVAR_1 8, 1, 0}.\rWild Pokémon will be lured.</language>
 	</row>
 	<row id="msg_0010_00065" index="65">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 3, 0, 0} used the\n{STRVAR_1 8, 1, 0}.\rWild Pokémon will be repelled.</language>
+		<language name="English">You used the\n{STRVAR_1 8, 1, 0}.\rWild Pokémon will be repelled.</language>
 	</row>
 	<row id="msg_0010_00066" index="66">
 		<attribute name="window_context_name">garbage</attribute>

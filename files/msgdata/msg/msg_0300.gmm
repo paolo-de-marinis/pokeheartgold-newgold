@@ -9,34 +9,28 @@
 		<language name="English">CANCEL</language>
 	</row>
 	<row id="msg_0300_00002" index="2">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00003" index="3">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00004" index="4">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00005" index="5">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00006" index="6">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00007" index="7">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00008" index="8">
 		<attribute name="window_context_name">used</attribute>
@@ -63,69 +57,56 @@
 		<language name="English">{STRVAR_1 1, 0, 0}</language>
 	</row>
 	<row id="msg_0300_00014" index="14">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00015" index="15">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00016" index="16">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00017" index="17">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00018" index="18">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00019" index="19">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00020" index="20">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00021" index="21">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00022" index="22">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00023" index="23">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00024" index="24">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00025" index="25">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00026" index="26">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">X</language>
 	</row>
 	<row id="msg_0300_00027" index="27">
 		<attribute name="window_context_name">used</attribute>
@@ -157,16 +138,15 @@
 	</row>
 	<row id="msg_0300_00034" index="34">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Teach which Pokémon?</language>
+		<language name="English">Use on which Pokémon?</language>
 	</row>
 	<row id="msg_0300_00035" index="35">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Choose Pokémon and confirm.</language>
 	</row>
 	<row id="msg_0300_00036" index="36">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0300_00037" index="37">
 		<attribute name="window_context_name">used</attribute>
@@ -201,14 +181,12 @@
 		<language name="English">Send the removed Mail to\nyour PC?</language>
 	</row>
 	<row id="msg_0300_00045" index="45">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00046" index="46">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00047" index="47">
 		<attribute name="window_context_name">used</attribute>
@@ -219,14 +197,12 @@
 		<language name="English">If the Mail is removed, its written\nmessage will be lost. Is that OK?</language>
 	</row>
 	<row id="msg_0300_00049" index="49">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00050" index="50">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00051" index="51">
 		<attribute name="window_context_name">used</attribute>
@@ -238,51 +214,47 @@
 	</row>
 	<row id="msg_0300_00053" index="53">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 1, 0, 0} wants to learn the\nmove {STRVAR_1 6, 1, 0}.\rHowever, {STRVAR_1 1, 0, 0} already\nknows four moves.\rShould a move be deleted and\nreplaced with {STRVAR_1 6, 1, 0}?</language>
+		<language name="English">{STRVAR_1 1, 0, 0} wants to learn the\nmove {STRVAR_1 6, 1, 0}.\rShould another move be forgotten and\nreplaced with {STRVAR_1 6, 1, 0}?</language>
 	</row>
 	<row id="msg_0300_00054" index="54">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00055" index="55">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00056" index="56">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Stop trying to teach\n{STRVAR_1 6, 1, 0}?</language>
 	</row>
 	<row id="msg_0300_00057" index="57">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00058" index="58">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00059" index="59">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 1, 0, 0} did not learn the\nmove {STRVAR_1 6, 1, 0}.\r</language>
+		<language name="English">{STRVAR_1 1, 0, 0} did not learn\n{STRVAR_1 6, 1, 0}.\r</language>
 	</row>
 	<row id="msg_0300_00060" index="60">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Which move should be\nforgotten?\r</language>
+		<language name="English">Please choose a move that will be\nreplaced with {STRVAR_1 6, 1, 0}.\r</language>
 	</row>
 	<row id="msg_0300_00061" index="61">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">1, {PAUSE 20}2, and{PAUSE 20}... {PAUSE 20}... {PAUSE 20}... Poof!{WAIT 3}{WAIT 5}\r{STRVAR_1 1, 0, 0} forgot how to\nuse {STRVAR_1 6, 1, 0}.\rAnd...\r</language>
+		<language name="English">One...{PAUSE 20}two...{PAUSE 20}and...{PAUSE 20}ta-da!{WAIT 3}{WAIT 5}\r{STRVAR_1 1, 0, 0} forgot\n{STRVAR_1 6, 1, 0}\r</language>
 	</row>
 	<row id="msg_0300_00062" index="62">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 1, 0, 0} learned\n{STRVAR_1 6, 1, 0}!{WAIT 4}{WAIT 2}\r</language>
+		<language name="English">and it learned {STRVAR_1 6, 1, 0} instead!{WAIT 4}{WAIT 2}\r</language>
 	</row>
 	<row id="msg_0300_00063" index="63">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 1, 0, 0} and {STRVAR_1 6, 1, 0}\nare not compatible.\r{STRVAR_1 6, 1, 0} can’t be learned.\r</language>
+		<language name="English">{STRVAR_1 1, 0, 0} can’t learn\n{STRVAR_1 6, 1, 0}!\rThe two are incompatible!\r</language>
 	</row>
 	<row id="msg_0300_00064" index="64">
 		<attribute name="window_context_name">used</attribute>
@@ -349,14 +321,12 @@
 		<language name="English">{STRVAR_1 1, 0, 0} is already holding\n{STRVAR_1 8, 1, 0}.\rWould you like to switch the\ntwo items?</language>
 	</row>
 	<row id="msg_0300_00080" index="80">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00081" index="81">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00082" index="82">
 		<attribute name="window_context_name">used</attribute>
@@ -375,68 +345,56 @@
 		<language name="English">The {STRVAR_1 8, 1, 0} was taken and\nreplaced with the {STRVAR_1 8, 2, 0}.\r</language>
 	</row>
 	<row id="msg_0300_00086" index="86">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0300_00087" index="87">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00088" index="88">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00089" index="89">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0300_00090" index="90">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00091" index="91">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00092" index="92">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">{STRVAR_1 1, 0, 0}\nwoke up.\r</language>
 	</row>
 	<row id="msg_0300_00093" index="93">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0300_00094" index="94">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00095" index="95">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00096" index="96">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0300_00097" index="97">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00098" index="98">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00099" index="99">
 		<attribute name="window_context_name">used</attribute>
@@ -527,34 +485,28 @@
 		<language name="English">This can’t be used on\nthat Pokémon.\r</language>
 	</row>
 	<row id="msg_0300_00121" index="121">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0300_00122" index="122">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00123" index="123">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00124" index="124">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0300_00125" index="125">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XX</language>
 	</row>
 	<row id="msg_0300_00126" index="126">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXX</language>
 	</row>
 	<row id="msg_0300_00127" index="127">
 		<attribute name="window_context_name">used</attribute>
@@ -593,9 +545,8 @@
 		<language name="English">QUIT</language>
 	</row>
 	<row id="msg_0300_00136" index="136">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXX</language>
 	</row>
 	<row id="msg_0300_00137" index="137">
 		<attribute name="window_context_name">used</attribute>
@@ -790,9 +741,8 @@
 		<language name="English">Please select an Egg.</language>
 	</row>
 	<row id="msg_0300_00185" index="185">
-		<attribute name="window_context_name">garbage</attribute>
+		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
-		<language name="日本語">XXXXXXXXXXXXXXXX</language>
 	</row>
 	<row id="msg_0300_00186" index="186">
 		<attribute name="window_context_name">used</attribute>
@@ -820,10 +770,142 @@
 	</row>
 	<row id="msg_0300_00192" index="192">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 0, 0, 0}’s ability changed!\r</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0300_00193" index="193">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the {STRVAR_1 8, 1, 0}!\r</language>
+		<language name="English">{STRVAR_1 0, 0, 0}’s ability changed!\r</language>
+	</row>
+	<row id="msg_0300_00194" index="194">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Hardy Mint!\r</language>
+	</row>
+	<row id="msg_0300_00195" index="195">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Lonely Mint!\r</language>
+	</row>
+	<row id="msg_0300_00196" index="196">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Brave Mint!\r</language>
+	</row>
+	<row id="msg_0300_00197" index="197">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Adamant Mint!\r</language>
+	</row>
+	<row id="msg_0300_00198" index="198">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Naughty Mint!\r</language>
+	</row>
+	<row id="msg_0300_00199" index="199">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Bold Mint!\r</language>
+	</row>
+	<row id="msg_0300_00200" index="200">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Docile Mint!\r</language>
+	</row>
+	<row id="msg_0300_00201" index="201">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Relaxed Mint!\r</language>
+	</row>
+	<row id="msg_0300_00202" index="202">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Impish Mint!\r</language>
+	</row>
+	<row id="msg_0300_00203" index="203">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Lax Mint!\r</language>
+	</row>
+	<row id="msg_0300_00204" index="204">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Timid Mint!\r</language>
+	</row>
+	<row id="msg_0300_00205" index="205">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Hasty Mint!\r</language>
+	</row>
+	<row id="msg_0300_00206" index="206">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Serious Mint!\r</language>
+	</row>
+	<row id="msg_0300_00207" index="207">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Jolly Mint!\r</language>
+	</row>
+	<row id="msg_0300_00208" index="208">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Naive Mint!\r</language>
+	</row>
+	<row id="msg_0300_00209" index="209">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Modest Mint!\r</language>
+	</row>
+	<row id="msg_0300_00210" index="210">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Mild Mint!\r</language>
+	</row>
+	<row id="msg_0300_00211" index="211">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Quiet Mint!\r</language>
+	</row>
+	<row id="msg_0300_00212" index="212">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Bashful Mint!\r</language>
+	</row>
+	<row id="msg_0300_00213" index="213">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Rash Mint!\r</language>
+	</row>
+	<row id="msg_0300_00214" index="214">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Calm Mint!\r</language>
+	</row>
+	<row id="msg_0300_00215" index="215">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Gentle Mint!\r</language>
+	</row>
+	<row id="msg_0300_00216" index="216">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Sassy Mint!\r</language>
+	</row>
+	<row id="msg_0300_00217" index="217">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Careful Mint!\r</language>
+	</row>
+	<row id="msg_0300_00218" index="218">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 0, 0, 0}’s stats may have changed due\nto the effects of the Quirky Mint!\r</language>
+	</row>
+	<row id="msg_0300_00219" index="219">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} learned\n{STRVAR_1 6, 1, 0}!{WAIT 4}{WAIT 2}\r</language>
+	</row>
+	<row id="msg_0300_00220" index="220">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Order which appliance?</language>
+	</row>
+	<row id="msg_0300_00221" index="221">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Refrigerator</language>
+	</row>
+	<row id="msg_0300_00222" index="222">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Electric Fan</language>
+	</row>
+	<row id="msg_0300_00223" index="223">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Lawn Mower</language>
+	</row>
+	<row id="msg_0300_00224" index="224">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Light Bulb</language>
+	</row>
+	<row id="msg_0300_00225" index="225">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Microwave Oven</language>
+	</row>
+	<row id="msg_0300_00226" index="226">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Washing Machine</language>
 	</row>
 </body>
