@@ -4331,6 +4331,7 @@ static BOOL TryDancer(BattleSystem *battleSystem, BattleContext *ctx) {
 
 static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
     int script;
+    int i;
     u32 battleType = BattleSystem_GetBattleType(battleSystem);
 
     if (!(battleType & (BATTLE_TYPE_SAFARI | BATTLE_TYPE_PAL_PARK))) {
@@ -4361,6 +4362,23 @@ static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->commandNext = ctx->command;
             ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
             return;
+        }
+        // An Eject Pack on a Pokemon an entry lowered a stat of during the
+        // action -- Intimidate from what came in, Sticky Web on its way in,
+        // a switch chosen for the turn included -- once the entries are over,
+        // after Emergency Exit and Wimp Out (Pokemon Central, Zainofuga). Only
+        // the fastest holder's acts, and what the move itself lowered was
+        // answered once it was over or given up to the switch that came
+        // first (ov12_0224E1BC), so the marks go with it.
+        for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
+            script = CheckEjectPack(ctx, ctx->turnOrder[i]);
+            if (script != BATTLE_SUBSCRIPT_NONE) {
+                ctx->statLoweredBattlers = 0;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                return;
+            }
         }
         if (ov12_0224E130(battleSystem, ctx) == TRUE) {
             return;
@@ -4963,6 +4981,11 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                     ctx->unk_34 = card ? maxBattlers : (2 * maxBattlers | SWITCH_ITEM_USED);
+                    // With the button, the Eject Packs give up what the move
+                    // lowered; what an entry lowers from here on is theirs.
+                    if (!card) {
+                        ctx->statLoweredBattlers = 0;
+                    }
                     flag = 1;
                     break;
                 }
@@ -5048,6 +5071,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                     ctx->unk_34 = SWITCH_ITEM_USED;
+                    ctx->statLoweredBattlers = 0;
                     flag = 1;
                 }
             }
@@ -5097,6 +5121,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                     ctx->unk_34 = SWITCH_ITEM_USED;
+                    ctx->statLoweredBattlers = 0;
                     flag = 1;
                     break;
                 }

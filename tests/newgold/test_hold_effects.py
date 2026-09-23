@@ -1022,6 +1022,20 @@ class EjectPackTests(unittest.TestCase):
         self.assertLess(body.index("CheckSwitchItemOnHit"), ask)
         self.assertIn("if (!(ctx->unk_34 & SWITCH_ITEM_USED)) {\n                ctx->unk_34 = 0;", body)
 
+    def test_an_entry_s_drop_is_answered_once_the_action_is_over(self):
+        """Pokemon Central (Zainofuga): Intimidate and Sticky Web on entry set
+        the Pack off; the reference has that check commented out. Asked after
+        the entry abilities and Emergency Exit, once an action is over; the
+        move's own drops are spent by then, answered or given up."""
+        end = function(CONTROLLER.read_text(), "ov12_0224D368")
+        ask = end.index("script = CheckEjectPack(ctx, ctx->turnOrder[i]);")
+        self.assertLess(end.index("script = TryAbilityOnEntry(battleSystem, ctx);"), ask)
+        self.assertLess(end.index("TryRetreatAbilityOutsideMove(battleSystem, ctx, &script)"), ask)
+        self.assertIn("ctx->statLoweredBattlers = 0;", end[ask:end.index("ov12_0224E130(battleSystem, ctx)")])
+        move = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        # The button, the Parting Shot and the Pack each spend the move's drops.
+        self.assertEqual(move.count("ctx->statLoweredBattlers = 0;"), 3)
+
     def test_the_pack_has_its_own_line(self):
         script = subscript_named("BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM")
         self.assertEqual(walk(script, {"REPLACEMENT": True, "BMON_DATA_HELD_ITEM": "ITEM_EJECT_PACK"}.get),
