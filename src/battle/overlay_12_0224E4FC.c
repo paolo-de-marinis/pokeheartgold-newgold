@@ -7137,17 +7137,6 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
             ret = TRUE;
         }
         break;
-    case ABILITY_PICKPOCKET:
-        // Lifts whatever touched it, if its own hands are empty. The theft
-        // is the Thief guard already in this tree, asked of the attacker
-        // rather than of the target.
-        if (ctx->battleMons[ctx->battlerIdTarget].hp && !Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur) && BattleMoveTbl(ctx, ctx->moveNoCur)->power && !SheerForceTradedEffect(ctx) && CanAbilityTakeHeldItem(battleSystem, ctx, ctx->battlerIdTarget, ctx->battlerIdAttacker) == TRUE) {
-            ctx->battlerIdStatChange = ctx->battlerIdTarget;
-            ctx->battlerIdTemp = ctx->battlerIdAttacker;
-            *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
-            ret = TRUE;
-        }
-        break;
     case ABILITY_AFTERMATH:
         if (ctx->battlerIdTarget == ctx->battlerIdFainted && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_DAMP) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
             ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * -1, 4);
@@ -7396,6 +7385,45 @@ BOOL TryMagician(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
             *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
             return TRUE;
         }
+    }
+    return FALSE;
+}
+
+// Pickpocket lifts whatever touched its holder, if its own hands are empty,
+// once the move is over (Activate_Pickpocket, ServerDoPostMoveEffects.c:1993
+// at d0380a487, the step after the user's switch): after Thief, Covet, Knock
+// Off, Pluck and Bug Bite have taken or eaten, after Magician, and after a Red
+// Card (Pokemon Central, Arraffalesto) -- so a Pokemon whose item a Knock Off
+// has just taken lifts the attacker's. Not by a holder the hit felled, one
+// behind a substitute, or one sent away or dragged in since; not from a user
+// that has gone, nor from a move Sheer Force boosted. The theft is the Thief
+// guard already in this tree, asked of the attacker rather than of the
+// target. It was one of the answers to each hit before.
+BOOL TryPickpocket(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+    int attacker = ctx->battlerIdAttacker;
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+    if (!BattleMoveMakesContact(ctx, ctx->moveNoCur) || !BattleMoveTbl(ctx, ctx->moveNoCur)->power
+        || (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
+        || SheerForceTradedEffect(ctx)) {
+        return FALSE;
+    }
+    for (int i = 0; i < maxBattlers; i++) {
+        int battlerId = ctx->turnOrder[i];
+
+        if (battlerId == attacker
+            || GetBattlerAbility(ctx, battlerId) != ABILITY_PICKPOCKET
+            || !ctx->battleMons[battlerId].hp
+            || !(ctx->selfTurnData[battlerId].physicalDamage || ctx->selfTurnData[battlerId].specialDamage)
+            || BattlerCheckSubstitute(ctx, battlerId)
+            || Battler_CameInAfterTheHit(ctx, battlerId)
+            || !CanAbilityTakeHeldItem(battleSystem, ctx, battlerId, attacker)) {
+            continue;
+        }
+        ctx->battlerIdStatChange = battlerId;
+        ctx->battlerIdTemp = attacker;
+        *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
+        return TRUE;
     }
     return FALSE;
 }

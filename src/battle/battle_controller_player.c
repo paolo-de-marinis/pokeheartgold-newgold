@@ -5214,7 +5214,21 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 8:
+        case 8: {
+            // Pickpocket, once the move and the user's switch are over; see
+            // TryPickpocket.
+            int script;
+
+            ctx->unk_30++;
+            if (TryPickpocket(battleSystem, ctx, &script) == TRUE) {
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            break;
+        }
+        case 9:
             // A Throat Spray answers the attacker using a sound move, and that
             // is the whole of the reference's condition: not that the move hit,
             // not that there was anything to hit, and not that Sp. Atk had room
@@ -5243,7 +5257,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_34 = 0;
             }
             break;
-        case 9:
+        case 10:
             // An Eject Pack on anyone who had a stat lowered during the move,
             // after the user's own items, where the reference asks it; not
             // once an Eject Button has sent somebody away, or after a
@@ -5267,7 +5281,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 10: {
+        case 11: {
             // Emergency Exit and Wimp Out, one Pokemon at a time: this step
             // comes round again after each, until none is left to go.
             int script;
@@ -5282,7 +5296,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 11:
+        case 12:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;

@@ -160,11 +160,12 @@ class SheerForceAftermathTests(unittest.TestCase):
     def test_the_answers_to_the_hit_ask_what_was_kept(self):
         source = OVERLAY.read_text()
         hit = function(source, "CheckAbilityEffectOnHit")
-        for ability in ("BERSERK", "ANGER_SHELL", "PICKPOCKET", "COLOR_CHANGE"):
+        for ability in ("BERSERK", "ANGER_SHELL", "COLOR_CHANGE"):
             case = hit[hit.index(f"case ABILITY_{ability}:"):]
             case = case[:case.index("break;")]
             self.assertIn("!SheerForceTradedEffect(ctx)", case, ability)
             self.assertNotIn("IsSuppressibleSecondaryEffect", case, ability)
+        self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "TryPickpocket"))
         self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "SwitchItemAnswersHit"))
 
     def test_the_kee_and_maranga_berries_ask_it(self):
@@ -278,6 +279,106 @@ class MagicianTests(unittest.TestCase):
         self.assertLess(body.index("TryAdditionalMoveEffect(ctx)"), body.index("TryMagician(battleSystem, ctx, &script)"))
         self.assertLess(body.index("TryMagician(battleSystem, ctx, &script)"), body.index("CheckSwitchItemOnHit"))
         self.assertNotIn("ABILITY_MAGICIAN", function(OVERLAY.read_text(), "CheckAbilityEffectOnHit"))
+
+
+PICKPOCKET = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+typedef struct { int maxBattlers; } BattleSystem;
+typedef struct { u16 power; } MoveTbl;
+typedef struct { int physicalDamage, specialDamage; } SelfTurnData;
+typedef struct { int ability, hp, item, substitute, cameIn; } Mon;
+typedef struct {
+    Mon battleMons[4]; SelfTurnData selfTurnData[4]; u8 turnOrder[4];
+    int battlerIdAttacker, battlerIdStatChange, battlerIdTemp;
+    u32 moveNoCur, battleStatus, battleStatus2;
+} BattleContext;
+static MoveTbl move;
+static BOOL contact, sheerForce;
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &move; }
+static BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return contact; }
+static BOOL SheerForceTradedEffect(BattleContext *ctx) { (void)ctx; return sheerForce; }
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static int BattleSystem_GetMaxBattlers(BattleSystem *battleSystem) { return battleSystem->maxBattlers; }
+static BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].substitute; }
+static BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].cameIn; }
+static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int taker, int loser) {
+    (void)battleSystem;
+    return !ctx->battleMons[taker].item && ctx->battleMons[loser].item;
+}
+@FUNCTIONS@
+static BattleSystem bs = { 4 };
+static BattleContext ctx;
+static void reset(void) {
+    // The user 0 holds an item and touched 1 and 3, who both have
+    // Pickpocket and empty hands; 3 is faster.
+    static const u8 order[4] = { 2, 3, 0, 1 };
+    for (int i = 0; i < 4; i++) {
+        ctx.battleMons[i] = (Mon){ i & 1 ? ABILITY_PICKPOCKET : ABILITY_NONE, 100, 0, FALSE, FALSE };
+        ctx.selfTurnData[i] = (SelfTurnData){ i & 1 ? 10 : 0, 0 };
+        ctx.turnOrder[i] = order[i];
+    }
+    ctx.battleMons[0].item = 1;
+    ctx.battlerIdAttacker = 0; ctx.battleStatus = 0; ctx.battleStatus2 = 0;
+    ctx.battlerIdTemp = ctx.battlerIdStatChange = 0xFF;
+    move.power = 80; contact = TRUE; sheerForce = FALSE;
+}
+static int lifts(void) {
+    int script = 0;
+    if (TryPickpocket(&bs, &ctx, &script) == FALSE) {
+        return -1;
+    }
+    assert(script == BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM && ctx.battlerIdTemp == 0);
+    return ctx.battlerIdStatChange;
+}
+int main(void) {
+    reset(); assert(lifts() == 3);
+    reset(); ctx.battleMons[3].hp = 0; assert(lifts() == 1);
+    reset(); ctx.battleMons[3].item = 1; assert(lifts() == 1);
+    reset(); ctx.battleMons[3].substitute = TRUE; assert(lifts() == 1);
+    reset(); ctx.battleMons[3].cameIn = TRUE; assert(lifts() == 1);
+    reset(); ctx.selfTurnData[3].physicalDamage = 0; ctx.selfTurnData[1].physicalDamage = 0; assert(lifts() == -1);
+    reset(); ctx.battleMons[1].ability = ctx.battleMons[3].ability = ABILITY_NONE; assert(lifts() == -1);
+    reset(); ctx.battleMons[0].item = 0; assert(lifts() == -1);
+    reset(); contact = FALSE; assert(lifts() == -1);
+    reset(); move.power = 0; assert(lifts() == -1);
+    reset(); sheerForce = TRUE; assert(lifts() == -1);
+    reset(); ctx.battleStatus2 = BATTLE_STATUS2_UTURN; assert(lifts() == -1);
+    reset(); ctx.battleStatus = BATTLE_STATUS_CHARGE_TURN; assert(lifts() == -1);
+    // The user's own Pickpocket takes nothing from itself.
+    reset(); ctx.battleMons[1].ability = ctx.battleMons[3].ability = ABILITY_NONE;
+    ctx.battleMons[0].ability = ABILITY_PICKPOCKET; ctx.selfTurnData[0].physicalDamage = 10; assert(lifts() == -1);
+    return 0;
+}
+"""
+
+
+class PickpocketTests(unittest.TestCase):
+    """Pokemon Central, Arraffalesto; the engine's Activate_Pickpocket,
+    ServerDoPostMoveEffects.c:1993 at d0380a487."""
+
+    def test_who_lifts_what(self):
+        run_c(PICKPOCKET.replace("@FUNCTIONS@", function(OVERLAY.read_text(), "TryPickpocket")))
+
+    def test_it_lifts_once_the_move_is_over(self):
+        # After Magician, the Red Card and the Eject Button and the user's
+        # switch, before the user's Throat Spray and Eject Pack; no longer one
+        # of the answers to each hit.
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        pickpocket = body.index("TryPickpocket(battleSystem, ctx, &script)")
+        for before in ("TryMagician(battleSystem, ctx, &script)", "CheckSwitchItemOnHit", "BATTLE_SUBSCRIPT_HANDLE_PARTING_SHOT"):
+            self.assertLess(body.index(before), pickpocket, before)
+        for after in ("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE", "CheckEjectPack"):
+            self.assertLess(pickpocket, body.index(after), after)
+        self.assertNotIn("ABILITY_PICKPOCKET", function(OVERLAY.read_text(), "CheckAbilityEffectOnHit"))
 
 
 class OrichalcumPulseTests(unittest.TestCase):
