@@ -3670,6 +3670,11 @@ static void BattleControllerPlayer_HpCalc(BattleSystem *battleSystem, BattleCont
             ctx->turnData[ctx->battlerIdTarget].unk34 = ctx->damage;
             ctx->turnData[ctx->battlerIdTarget].unk38 = ctx->battlerIdAttacker;
             Battler_ArmRetreat(ctx, ctx->battlerIdTarget);
+            // The user too, for what its own hit costs it -- recoil, a Life
+            // Orb, a Rocky Helmet or Rough Skin on the other side (Pokemon
+            // Central, Passoindietro); what a move of its own costs it
+            // before any hit, Belly Drum's or Substitute's, does not come here.
+            Battler_ArmRetreat(ctx, ctx->battlerIdAttacker);
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             ctx->hpCalc = ctx->damage;
             ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_HP);

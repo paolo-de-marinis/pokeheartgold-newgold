@@ -434,6 +434,14 @@ class RetreatOutsideMoveTests(unittest.TestCase):
         self.assertLess(turn_end.index("ov12_0224D540(battleSystem, ctx)"), turn_end.index("TryRetreatAbilityOutsideMove(battleSystem, ctx, &script)"))
         self.assertLess(turn_end.index("TryRetreatAbilityOutsideMove"), turn_end.index("BattleContext_Init(ctx);"))
 
+    def test_the_user_is_armed_with_its_hit(self):
+        # Its recoil, its Life Orb and the other side's Rocky Helmet come
+        # before the ask at the end of the move.
+        hp_calc = function(CONTROLLER.read_text(), "BattleControllerPlayer_HpCalc")
+        target = hp_calc.index("Battler_ArmRetreat(ctx, ctx->battlerIdTarget);")
+        self.assertLess(target, hp_calc.index("Battler_ArmRetreat(ctx, ctx->battlerIdAttacker);"))
+        self.assertLess(hp_calc.index("Battler_ArmRetreat(ctx, ctx->battlerIdAttacker);"), hp_calc.index("BATTLE_SUBSCRIPT_UPDATE_HP"))
+
     def test_the_turn_s_end_arms_every_holder(self):
         # Before the first of the turn's end effects, and what comes in to a
         # slot does not keep the mark.
