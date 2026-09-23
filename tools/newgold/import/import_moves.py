@@ -417,6 +417,9 @@ IMPLEMENTED_HERE = {
     # Electrify makes the target's move this turn Electric (Pokemon Central,
     # Elettrocontagio): effect script 424.
     "ELECTRIFY": "MOVE_EFFECT_ELECTRIFY",
+    # No Retreat raises the user's five stats and holds it in (Pokemon
+    # Central, Spalle al Muro): effect script 425.
+    "NO_RETREAT": "MOVE_EFFECT_NO_RETREAT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -448,6 +451,10 @@ FIELDS_HERE = {
     # Magic Coat and Magic Bounce do not send it back (Pokemon Central,
     # Elettrocontagio); the reference flags it as though they did.
     "ELECTRIFY": {"flagsOff": ("FLAG_MAGIC_COAT",)},
+    # A move on the user alone: nothing to protect against or send back,
+    # Snatch takes it and Mirror Move cannot copy it (Pokemon Central, Spalle
+    # al Muro).
+    "NO_RETREAT": {"flagsOn": ("FLAG_SNATCH",), "flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT", "FLAG_MIRROR_MOVE")},
 }
 
 # The effects written here for those moves follow the reference's in

@@ -425,5 +425,22 @@ class ImplementedMoveTests(unittest.TestCase):
                       "        moveType = TYPE_ELECTRIC;", typing)
         self.assertGreater(typing.index("ctx->turnData[battlerId].electrified"), typing.index("FIELD_CONDITION_ION_DELUGE"))
 
+    def test_no_retreat_raises_every_stat_and_holds_the_user_in(self):
+        # Pokemon Central (Spalle al Muro): a stage of each of the five, and
+        # no leaving; it fails for a user its own No Retreat holds, not for
+        # one Mean Look holds.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("NO_RETREAT", "MOVE_EFFECT_NO_RETREAT")
+        self.assertEqual(record("NO_RETREAT")[9] & 0x1F, 1 << 3, "FLAG_SNATCH alone of the five")
+        script = effect_script("MOVE_EFFECT_NO_RETREAT")
+        self.assertIn("CompareMonDataToVar OPCODE_EQU, BATTLER_CATEGORY_ATTACKER, BMON_DATA_MEAN_LOOK_TARGET, BSCRIPT_VAR_BATTLER_ATTACKER, _FAILED", script)
+        self.assertIn("MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_NO_RETREAT", script)
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_NO_RETREAT"), "BATTLE_SUBSCRIPT_NO_RETREAT")
+        holding = subscript_named("BATTLE_SUBSCRIPT_NO_RETREAT")
+        self.assertLess(holding.index("Call BATTLE_SUBSCRIPT_BOOST_ALL_STATS"), holding.index("STATUS2_MEAN_LOOK, _END"))
+        self.assertIn("UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_MEAN_LOOK_TARGET, BSCRIPT_VAR_BATTLER_ATTACKER", holding)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('no retreat'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER", holding)
+
 if __name__ == "__main__":
     unittest.main()

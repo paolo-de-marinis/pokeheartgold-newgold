@@ -7388,4 +7388,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s moves\nhave been electrified!</language>
 	</row>
+	<row id="msg_0197_01847" index="1847">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} can no longer escape\nbecause it used No Retreat!</language>
+	</row>
+	<row id="msg_0197_01848" index="1848">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} can no longer\nescape because it used No Retreat!</language>
+	</row>
+	<row id="msg_0197_01849" index="1849">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} can no longer\nescape because it used No Retreat!</language>
+	</row>
 </body>

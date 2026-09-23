@@ -188,6 +188,13 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0}’s moves\nhave been electrified!",
         r"The opposing {STRVAR_1 1, 0, 0}’s moves\nhave been electrified!",
     ]),
+    # No Retreat. The engine leaves the move unimplemented; the later games'
+    # line.
+    ("no retreat", [
+        r"{STRVAR_1 1, 0, 0} can no longer escape\nbecause it used No Retreat!",
+        r"The wild {STRVAR_1 1, 0, 0} can no longer\nescape because it used No Retreat!",
+        r"The opposing {STRVAR_1 1, 0, 0} can no longer\nescape because it used No Retreat!",
+    ]),
 ]
 
 

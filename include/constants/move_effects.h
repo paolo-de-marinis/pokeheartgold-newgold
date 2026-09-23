@@ -432,5 +432,6 @@
 #define MOVE_EFFECT_PURIFY                                       422
 #define MOVE_EFFECT_CORE_ENFORCER                                423
 #define MOVE_EFFECT_ELECTRIFY                                    424
+#define MOVE_EFFECT_NO_RETREAT                                   425
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H
