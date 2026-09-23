@@ -4021,10 +4021,13 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
     }
     // Armor Tail, Queenly Majesty and Dazzling are one ability wearing three
     // names: each turns away anything hurried coming from the other side, on
-    // behalf of its ally as much as itself. A move aimed at its own user, at
-    // the field, or at a whole side is never hurried past them -- that is the
-    // same exemption Psychic Terrain takes, and it is by range alone.
-    if (BattleMoveTbl(ctx, ctx->moveNoCur)->priority > 0 && (battlerIdAttacker & 1) != (battlerIdTarget & 1) && !(BattleMoveTbl(ctx, ctx->moveNoCur)->range & (RANGE_USER | RANGE_USER_SIDE | RANGE_FIELD | RANGE_OPPONENT_SIDE))) {
+    // behalf of its ally as much as itself. Hurried means the priority the
+    // turn order compared, as the reference reads clientPriority, so Prankster,
+    // Gale Wings, Triage and Grassy Glide count as much as the move table. A
+    // move aimed at its own user, at the field, or at a whole side is never
+    // hurried past them -- that is the same exemption Psychic Terrain takes,
+    // and it is by range alone.
+    if (BattlerMovePriority(ctx, battlerIdAttacker, ctx->moveNoCur) > 0 && (battlerIdAttacker & 1) != (battlerIdTarget & 1) && !(BattleMoveTbl(ctx, ctx->moveNoCur)->range & (RANGE_USER | RANGE_USER_SIDE | RANGE_FIELD | RANGE_OPPONENT_SIDE))) {
         int blocker = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ARMOR_TAIL);
         if (blocker == BATTLER_NONE) {
             blocker = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_QUEENLY_MAJESTY);

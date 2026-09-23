@@ -105,5 +105,17 @@ class SandstormTests(unittest.TestCase):
             self.assertIn(f"GetBattlerAbility(ctx, battlerId) != ABILITY_{ability}", sand)
 
 
+class PriorityBlockTests(unittest.TestCase):
+    def test_the_three_abilities_read_the_priority_the_turn_order_used(self):
+        # The reference tests clientPriority, which Prankster, Gale Wings,
+        # Triage and Grassy Glide have already raised; the move table's own
+        # number misses all four.
+        body = function(OVERLAY.read_text(), "BattleContext_CheckMoveImmunityFromAbility")
+        guard = body[:body.index("ABILITY_ARMOR_TAIL")]
+        guard = guard[guard.rindex("if ("):]
+        self.assertIn("BattlerMovePriority(ctx, battlerIdAttacker, ctx->moveNoCur) > 0", guard)
+        self.assertNotIn("->priority", guard)
+
+
 if __name__ == "__main__":
     unittest.main()
