@@ -198,6 +198,17 @@ class TerrainAbilityTests(unittest.TestCase):
         self.assertIn("case ABILITY_HADRON_ENGINE:", body)
         self.assertIn("BATTLE_SUBSCRIPT_HADRON_ENGINE_NO_TERRAIN_SETUP", body)
 
+    def test_a_surge_announces_itself_once(self):
+        # The Surges' only guard against acting twice is abilityActivatedFlag,
+        # and their subscript shows the ability popup. A popup that cleared
+        # the flag sent every battle with a Surge on the field into an endless
+        # "An electric current ran across the battlefield!" (the species
+        # check's battle walk, Tapu Koko and the others).
+        text = COMMANDS.read_text()
+        start = text.index("BOOL BtlCmd_AbilityPopup(")
+        body = text[start:text.index("\n}\n", start)]
+        self.assertNotIn("abilityActivatedFlag", body)
+
     def test_the_paradox_boost_is_read_wherever_a_stat_is_used(self):
         text = OVERLAY.read_text()
         for stat in ("STAT_ATK", "STAT_SPATK", "STAT_DEF", "STAT_SPDEF", "STAT_SPEED"):

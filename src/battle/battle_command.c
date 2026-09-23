@@ -10128,15 +10128,16 @@ BOOL BtlCmd_SetAbilityActivatedFlag(BattleSystem *battleSystem, BattleContext *c
 }
 
 // The later games put a banner on screen naming the ability. This one says so
-// in the message the script goes on to print, so there is nothing to draw;
-// the flag is cleared so a second activation is a second flag.
+// in the message the script goes on to print, so there is nothing to draw,
+// and nothing else to do: the reference's command only draws. The battler's
+// abilityActivatedFlag is not this command's to touch -- it is what makes a
+// Surge, Wind Power or Protean act once an appearance, and clearing it here
+// sent a Surge's entry round again after its own announcement, for ever.
 BOOL BtlCmd_AbilityPopup(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
-    int side = BattleScriptReadWord(ctx);
     BattleScriptReadWord(ctx);
-
-    ctx->battleMons[BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side)].abilityActivatedFlag = FALSE;
+    BattleScriptReadWord(ctx);
 
     return FALSE;
 }
