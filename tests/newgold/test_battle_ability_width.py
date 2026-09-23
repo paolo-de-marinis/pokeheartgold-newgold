@@ -78,6 +78,18 @@ static const u8 sHoneyGatherChanceTable[10]={100};
 '''
 
 MAIN = r'''
+// What Gastro Acid's mark leaves working: the games' list of what nothing
+// suppresses (Pokemon Central, Gas Reagente), less the gas, which it silences.
+static int spared_by_gastro_acid(u16 ability) {
+    switch(ability) {
+    case ABILITY_STANCE_CHANGE: case ABILITY_SCHOOLING: case ABILITY_DISGUISE: case ABILITY_ICE_FACE:
+    case ABILITY_GULP_MISSILE: case ABILITY_BATTLE_BOND: case ABILITY_MULTITYPE: case ABILITY_POWER_CONSTRUCT:
+    case ABILITY_SHIELDS_DOWN: case ABILITY_AS_ONE_GLASTRIER: case ABILITY_AS_ONE_SPECTRIER: case ABILITY_RKS_SYSTEM:
+    case ABILITY_COMATOSE: case ABILITY_ZEN_MODE: case ABILITY_ZERO_TO_HERO: case ABILITY_TERA_SHIFT:
+        return 1;
+    }
+    return 0;
+}
 int main(void) {
     BattleContext ctx;
     BattleSystem system={0};
@@ -93,7 +105,7 @@ int main(void) {
         assert(GetBattlerVar(&ctx,battler,BMON_DATA_ABILITY,NULL)==ability);
         assert(GetBattlerAbility(&ctx,battler)==ability);
         ctx.battleMons[battler].moveEffectFlags=MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED;
-        assert(GetBattlerAbility(&ctx,battler)==(ability==ABILITY_MULTITYPE?ability:ABILITY_NONE));
+        assert(GetBattlerAbility(&ctx,battler)==(spared_by_gastro_acid(ability)?ability:ABILITY_NONE));
         ctx.battleMons[battler].moveEffectFlags=MOVE_EFFECT_FLAG_INGRAIN;
         assert(GetBattlerAbility(&ctx,battler)==(ability==ABILITY_LEVITATE?ABILITY_NONE:ability));
         ctx.battleMons[battler].moveEffectFlags=0;
@@ -226,6 +238,16 @@ class BattleAbilityWidthTests(unittest.TestCase):
             result = subprocess.run([str(exe)], capture_output=True, text=True, env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
             self.assertEqual(result.returncode, 0, result.stderr)
             print(result.stdout.strip())
+
+    def test_gastro_acid_refuses_what_its_mark_would_not_hold(self):
+        # Whatever GetBattlerAbility keeps working under the mark, the move
+        # refuses outright instead of printing that it was suppressed.
+        pokemon = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        spared = set(re.findall(r"case (ABILITY_\w+):", function(pokemon, "AbilityIsUnsuppressable"))) - {"ABILITY_NEUTRALIZING_GAS"}
+        script = (ROOT / "files/battledata/script/subscript/subscript_0163_GastroAcid.s").read_text()
+        refused = set(re.findall(r"BMON_DATA_ABILITY, (ABILITY_\w+), _034", script))
+        self.assertTrue(spared)
+        self.assertEqual(spared - refused, set())
 
 
 if __name__ == "__main__":

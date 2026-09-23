@@ -3362,7 +3362,9 @@ static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId) {
 u16 GetBattlerAbility(BattleContext *ctx, int battlerId) {
     if (AbilitiesAreNeutralized(ctx, battlerId) == TRUE) {
         return ABILITY_NONE;
-    } else if ((ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED) && ctx->battleMons[battlerId].ability != ABILITY_MULTITYPE) {
+    } else if ((ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED) && (ctx->battleMons[battlerId].ability == ABILITY_NEUTRALIZING_GAS || !AbilityIsUnsuppressable(ctx->battleMons[battlerId].ability))) {
+        // Gastro Acid's mark, which Baton Pass hands on, spares what the gas
+        // spares -- all but the gas itself, which the acid does silence.
         return ABILITY_NONE;
     } else if ((ctx->fieldCondition & FIELD_CONDITION_GRAVITY) && ctx->battleMons[battlerId].ability == ABILITY_LEVITATE) {
         return ABILITY_NONE;

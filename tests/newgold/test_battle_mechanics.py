@@ -472,6 +472,13 @@ class AbilityBlockListTests(unittest.TestCase):
                      if a == "ABILITY_COMATOSE"}
             self.assertEqual(found, battlers, name)
 
+    # What the port refuses beyond the reference, and why: Gastro Acid also
+    # turns away the two the games' unsuppressible list has and the
+    # reference's list lacks, since its mark would not hold on them.
+    ADDED = {
+        "subscript/subscript_0163_GastroAcid.s": {("DEFENDER", "ABILITY_ZEN_MODE"), ("DEFENDER", "ABILITY_TERA_SHIFT")},
+    }
+
     def test_the_lists_are_the_reference_s(self):
         from test_repels import REFERENCE, revision
         if REFERENCE is None:
@@ -479,7 +486,9 @@ class AbilityBlockListTests(unittest.TestCase):
         for name, theirs in self.SCRIPTS.items():
             ours = self.entries((ROOT / "files/battledata/script" / name).read_text())
             reference = self.entries(revision(REFERENCE, "d0380a487", "data/battle_scripts/" + theirs))
-            self.assertEqual(ours - {(b, "ITEM_GRISEOUS_ORB") for b in ("ATTACKER", "DEFENDER")}, reference, name)
+            added = self.ADDED.get(name, set()) | {(b, "ITEM_GRISEOUS_ORB") for b in ("ATTACKER", "DEFENDER")}
+            self.assertEqual(ours - added, reference, name)
+            self.assertLessEqual(self.ADDED.get(name, set()), ours, name)
 
 
 class SubstituteTests(unittest.TestCase):
