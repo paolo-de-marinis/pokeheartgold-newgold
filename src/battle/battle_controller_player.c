@@ -196,6 +196,21 @@ static void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
+// A bad poisoning does not outlast the battle: the player's Pokemon leave it
+// ordinarily poisoned, as hg-engine's RevertFormChange leaves them.
+static void EaseBadPoison(BattleSystem *battleSystem) {
+    int count = BattleSystem_GetPartySize(battleSystem, BATTLER_PLAYER);
+
+    for (int i = 0; i < count && i < PARTY_SIZE; i++) {
+        Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i);
+        u32 status = GetMonData(mon, MON_DATA_STATUS, NULL);
+        if (status & STATUS_BAD_POISON) {
+            status = (status & ~STATUS_BAD_POISON) | STATUS_POISON;
+            SetMonData(mon, MON_DATA_STATUS, &status);
+        }
+    }
+}
+
 BattleContext *BattleContext_New(BattleSystem *battleSystem) {
     BattleContext *ctx = (BattleContext *)Heap_Alloc(HEAP_ID_BATTLE, sizeof(BattleContext));
     MI_CpuClearFast((u32 *)ctx, sizeof(BattleContext));
@@ -260,6 +275,7 @@ BOOL BattleContext_Main(BattleSystem *battleSystem, BattleContext *ctx) {
     sPlayerBattleCommands[ctx->command](battleSystem, ctx);
     if (ctx->command == CONTROLLER_COMMAND_45) {
         GiveBackHeldItems(battleSystem, ctx);
+        EaseBadPoison(battleSystem);
         return TRUE;
     }
     return FALSE;
