@@ -508,6 +508,33 @@ class SaveUiTests(unittest.TestCase):
         self.refused("/api/edit", {"f": "gyms/test.sav", "op": "__init__", "args": {}})
         self.assertEqual(sv.profile(sv.Save(outside))["money"], sv.profile(sv.Save(self.template))["money"])
 
+    def test_a_slot_reached_through_the_library_is_a_slot(self):
+        """A library folder that holds a ROM's folder lists the slot's .sav
+        as a file; written that way while melonDS runs, melonDS would write
+        over it when it closes."""
+        library = saveui.Library(self.tmp.name, self.build)
+        rel = "build/heartgold.us.diag/pokeheartgold.us.sav"
+        self.assertIn(rel, [e["f"] for e in library.listing()["files"]])
+        type(self).running = True
+        with self.assertRaises(saveui.Refused) as refused:
+            library.edit(rel, "trainer", {"money": 1})
+        self.assertIn("melonDS", str(refused.exception))
+        with self.assertRaises(saveui.Refused):
+            library.throw(rel)
+        type(self).running = False
+        self.assertEqual(library.edit(rel, "trainer", {"money": 1})["profile"]["money"], 1)
+
+    def test_no_library_folder_reads_and_writes_nothing(self):
+        library = saveui.Library(Path(self.tmp.name) / "nessuna", self.build)
+        listing = library.listing()
+        self.assertEqual((listing["missing"], listing["files"], listing["trash"]), (True, [], []))
+        for call in (lambda: library.detail("a.sav"), lambda: library.duplicate("emu:hg-diag", "a"),
+                     lambda: library.edit("emu:hg-diag", "trainer", {"money": 1})):
+            with self.assertRaises(saveui.Refused) as refused:
+                call()
+            self.assertEqual(refused.exception.code, "nolibrary")
+        self.assertFalse((Path(self.tmp.name) / "nessuna").exists())
+
     def test_only_this_page_may_ask(self):
         body = {"f": "gyms/test.sav", "op": "trainer", "args": {"money": 1}}
         self.assertEqual(self.call("/api/edit", body, {"Origin": "http://evil.example"})[0], 403)

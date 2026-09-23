@@ -1055,7 +1055,7 @@ async function init() {
   S.tab = TABS.some(t => t[0] === store.get("tab")) ? store.get("tab") : "trainer";
   S.box = Math.min(29, Math.max(0, +store.get("box") || 0));
   await loadLibrary();
-  if (S.lib && !S.lib.configured && !S.lib.files.length) openSettings(true);
+  if (S.lib && (S.lib.missing || (!S.lib.configured && !S.lib.files.length))) openSettings(true);
   const last = store.get("f");
   if (last && S.lib && (S.lib.files.some(e => e.f === last && e.valid) || S.lib.slots.some(e => e.f === last && e.valid))) openSave(last);
   setInterval(poll, 4000);

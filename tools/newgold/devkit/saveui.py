@@ -336,6 +336,7 @@ class Library:
         """A path under the library (or `base`), refused if it climbs out,
         hides, or passes through a link."""
         base = base or self.root
+        self.need_root()
         if not isinstance(rel, str) or not rel or "\\" in rel or "\0" in rel:
             raise Refused("percorso non valido")
         parts = PurePosixPath(rel).parts
@@ -352,9 +353,15 @@ class Library:
             raise Refused(f"{rel} è fuori dalla libreria")
         return path
 
+    def need_root(self):
+        if not self.root.is_dir():
+            raise Refused(f"la cartella dei salvataggi {self.root} non c'è: sceglila in Cartelle e ROM", "nolibrary")
+
     def locate(self, f):
         """(path, backup key, is it an emulator slot) for 'emu:<slot>' or a
-        path in the library."""
+        path in the library. A library path that is a slot's .sav -- a
+        library folder holding a ROM's folder -- is a slot too, so that it
+        is not written while melonDS runs."""
         if isinstance(f, str) and f.startswith("emu:"):
             key = f[4:]
             if key not in self.slots():
@@ -363,7 +370,8 @@ class Library:
             if path.is_symlink():
                 raise Refused(f"{path} è un collegamento simbolico")
             return path, f"emulatore/{key}", True
-        return self.inside(f), f, False
+        path = self.inside(f)
+        return path, f, path.resolve() in {self.slot_paths(key)[1].resolve() for key in self.slots()}
 
     def new_name(self, name):
         """A library path for a file that does not exist yet. Backups kept
@@ -458,7 +466,7 @@ class Library:
                 rel = path.relative_to(self.trash).as_posix()
                 trash.append({"t": rel, "f": rel.split("/", 1)[-1], "when": rel.split("/", 1)[0]})
         return {"library": str(self.root), "files": files, "slots": slots, "trash": trash,
-                "build": self.layout_problem(),
+                "build": self.layout_problem(), "missing": not self.root.is_dir(),
                 "playable": [s["slot"] for s in slots if not s["problem"] and self.playable(s["slot"])],
                 "configured": CONFIG.exists(),
                 "melonds": melonds_running()}
@@ -488,6 +496,7 @@ class Library:
         back to -- is named <stamp>.<what replaced it>.sav, so that undo can
         tell whether the file is still what this write left."""
         path, key, is_slot = self.locate(f)
+        self.need_root()    # the backups live in the library, a slot's too
         if is_slot and melonds_running():
             raise Refused(MELON_OPEN)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1172,7 +1181,9 @@ def main():
     if not library.is_dir():
         if args.library:
             raise SystemExit(f"{args.library} is not a folder")
-        library = Path.home()   # the page opens on the settings to choose one
+        # Not the home folder instead: the page opens on the settings, and
+        # nothing is read or written until a folder is chosen there.
+        print(f"la cartella dei salvataggi {library} non c'è: sceglila nella pagina, in Cartelle e ROM")
     roms = settings.get("roms") if isinstance(settings.get("roms"), list) else None
     server = serve(library, args.build, args.port, roms, persist=True)
     problem = Handler.library.layout_problem()
