@@ -3304,7 +3304,7 @@ BOOL BtlCmd_Metronome(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
     while (TRUE) {
-        moveNo = (BattleSystem_Random(battleSystem) % 0x1d3) + 1;
+        moveNo = (BattleSystem_Random(battleSystem) % NUM_MOVES_TOTAL) + 1;
 
         for (metronomeIndex = 0; metronomeIndex < MAX_MON_MOVES; metronomeIndex++) {
             if (ctx->battleMons[ctx->battlerIdAttacker].moves[metronomeIndex] == moveNo) {
