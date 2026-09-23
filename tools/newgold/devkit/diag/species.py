@@ -190,14 +190,14 @@ def make_mon(e, me, rng):
             continue
         break
     const = next(k for k, v in savedit.species_numbers().items() if v == species)
-    raw = savedit.build_mon(const, LEVEL, personality=p, moves=savedit.moveset(species, LEVEL) or [1],
+    raw = savedit.build_mon(const, LEVEL, personality=p, moves=savedit.preset_moves(species, LEVEL, form) or [1],
                             ot_codes=me["codes"], ot_id=me["id"], ot_gender=me["gender"])
     mon = savedit.open_mon(raw)
     a, b, c, _ = mon["blocks"]
     b[0x18] = (b[0x18] & 7) | (form << 3)
     if e["hidden"]:
         b[0x19] |= savedit.HIDDEN_ABILITY_BIT << 6
-    savedit._set_ability(a, b, p, savedit.personal_row(species, form))
+    savedit._set_ability(mon)
     codes = savedit.encode_text(savedit.species_name(species), savedit.POKEMON_NAME_LENGTH)
     c[0:2 * (savedit.POKEMON_NAME_LENGTH + 1)] = struct.pack(
         f"<{savedit.POKEMON_NAME_LENGTH + 1}H", *codes + [0] * (savedit.POKEMON_NAME_LENGTH + 1 - len(codes)))
