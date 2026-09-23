@@ -3353,20 +3353,13 @@ BOOL CanTrickHeldItem(BattleContext *ctx, int battlerIdAttacker, int battlerIdTa
         && ItemCanChangeHands(ctx, ctx->battleMons[battlerIdTarget].item, battlerIdAttacker, battlerIdTarget);
 }
 
+// Whirlwind and Roar against a wild Pokemon: they fail whenever the user's
+// level is below the target's, from the fifth generation (Pokemon Central,
+// Turbine and Ruggito). Retail's fourth generation gave a lower-level user a
+// chance by a roll.
 BOOL WhirlwindCheck(BattleSystem *battleSystem, BattleContext *ctx) {
-    BOOL ret = FALSE;
-
-    if (ctx->battleMons[ctx->battlerIdAttacker].level >= ctx->battleMons[ctx->battlerIdTarget].level) {
-        ret = TRUE;
-    } else {
-        int level = ((BattleSystem_Random(battleSystem) & 0xFF) * (ctx->battleMons[ctx->battlerIdAttacker].level + ctx->battleMons[ctx->battlerIdTarget].level) >> 8) + 1;
-
-        if (level > ctx->battleMons[ctx->battlerIdTarget].level / 4) {
-            ret = TRUE;
-        }
-    }
-
-    return ret;
+#pragma unused(battleSystem)
+    return ctx->battleMons[ctx->battlerIdAttacker].level >= ctx->battleMons[ctx->battlerIdTarget].level;
 }
 
 // Neutralizing Gas does not act, it stops everything else acting, so the only
@@ -8153,9 +8146,8 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
 //
 // Red Card: the attacker is dragged out for a Pokemon at random. The
 // reference asks it only in a trainer battle, as Pokemon Central's
-// Cartelrosso does for a wild Pokemon, and uses Whirlwind's choice; it is
-// chosen here, without Whirlwind's level test, which a card does not make, and
-// with nobody to bring in the card is not used. Pokemon Central (the reference
+// Cartelrosso does for a wild Pokemon, and uses Whirlwind's choice, which
+// asks no level there; with nobody to bring in the card is not used. Pokemon Central (the reference
 // keeps the card instead): Suction Cups, Guard Dog or Ingrain on the attacker
 // spend the card and keep the attacker where it is (Cartelrosso; Cane da
 // Guardia, which no item or move of another Pokemon makes leave the field).
@@ -8186,7 +8178,7 @@ int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int bat
         if (GetBattlerAbility(ctx, attacker) != ABILITY_SUCTION_CUPS
             && GetBattlerAbility(ctx, attacker) != ABILITY_GUARD_DOG
             && !(ctx->battleMons[attacker].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
-            && TryPickForcedSwitchIn(battleSystem, ctx, attacker, FALSE) == FALSE) {
+            && TryPickForcedSwitchIn(battleSystem, ctx, attacker) == FALSE) {
             return BATTLE_SUBSCRIPT_NONE;
         }
         ctx->battlerIdTemp = battlerId;

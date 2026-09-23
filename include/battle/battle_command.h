@@ -112,7 +112,7 @@ BOOL BtlCmd_TryStealItem(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_TryProtection(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_TrySubstitute(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSystem, BattleContext *ctx);
-BOOL TryPickForcedSwitchIn(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BOOL checkLevel);
+BOOL TryPickForcedSwitchIn(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL BtlCmd_Transform(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_TrySpikes(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_CheckSpikes(BattleSystem *battleSystem, BattleContext *ctx);

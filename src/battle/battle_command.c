@@ -4174,14 +4174,13 @@ BOOL BtlCmd_TrySubstitute(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-// Whirlwind's and Roar's choice of who is dragged out in a trainer battle,
-// for battlerId: FALSE when the party has nobody to send in, or when
-// checkLevel asks WhirlwindCheck's question and it says no; otherwise a
-// Pokemon at random, written where SwitchAndUpdateMon will take it. The level
-// is asked between the two, where retail asked it, so the random numbers are
-// drawn as they always were. A Red Card drags out the same way without the
-// level test.
-BOOL TryPickForcedSwitchIn(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BOOL checkLevel) {
+// Whirlwind's, Roar's and a Red Card's choice of who is dragged out in a
+// trainer battle, for battlerId: FALSE when the party has nobody to send in,
+// otherwise a Pokemon at random, written where SwitchAndUpdateMon will take
+// it. No level is asked: in a trainer battle the later games drag out any
+// Pokemon, whatever the levels (Pokemon Central, Turbine and Ruggito, from the
+// fifth generation).
+BOOL TryPickForcedSwitchIn(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     u32 battleType = BattleSystem_GetBattleType(battleSystem);
     Party *party;
     Pokemon *mon;
@@ -4229,9 +4228,6 @@ BOOL TryPickForcedSwitchIn(BattleSystem *battleSystem, BattleContext *ctx, int b
     if (cnt <= cntMax) {
         return FALSE;
     }
-    if (checkLevel && !WhirlwindCheck(battleSystem, ctx)) {
-        return FALSE;
-    }
     do {
         do {
             monIndex = (BattleSystem_Random(battleSystem) % maxRand);
@@ -4253,7 +4249,7 @@ BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSystem, BattleContext *ctx) {
     u32 battleType = BattleSystem_GetBattleType(battleSystem);
 
     if (battleType & BATTLE_TYPE_TRAINER) {
-        if (TryPickForcedSwitchIn(battleSystem, ctx, ctx->battlerIdTarget, TRUE) == FALSE) {
+        if (TryPickForcedSwitchIn(battleSystem, ctx, ctx->battlerIdTarget) == FALSE) {
             BattleScriptIncrementPointer(ctx, adrs);
         }
     } else if (WhirlwindCheck(battleSystem, ctx) == FALSE) {

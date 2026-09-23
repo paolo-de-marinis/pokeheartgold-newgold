@@ -674,20 +674,20 @@ typedef struct {
     int battlerIdAttacker, battlerIdTemp; u32 moveNoCur; u32 battleStatus2;
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
 } BattleContext;
-static struct { int item[4], ability[4]; u32 battleType; int suppressible, replacements, picked, pickedLevel; } S;
+static struct { int item[4], ability[4]; u32 battleType; int suppressible, replacements, picked; } S;
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return S.item[battlerId]; }
 static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return S.ability[battlerId]; }
 static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return S.suppressible; }
 static u32 BattleSystem_GetBattleType(BattleSystem *bs) { (void)bs; return S.battleType; }
-static BOOL TryPickForcedSwitchIn(BattleSystem *bs, BattleContext *ctx, int battlerId, BOOL checkLevel) {
-    (void)bs; (void)ctx; S.picked = battlerId + 1; S.pickedLevel = checkLevel; return S.replacements;
+static BOOL TryPickForcedSwitchIn(BattleSystem *bs, BattleContext *ctx, int battlerId) {
+    (void)bs; (void)ctx; S.picked = battlerId + 1; return S.replacements;
 }
 @FUNCTION@
 static BattleContext ctx;
 static BattleSystem bs;
 static void reset(void) {
     for (int i = 0; i < 4; i++) { S.item[i] = HOLD_EFFECT_NONE; S.ability[i] = ABILITY_NONE; }
-    S.battleType = BATTLE_TYPE_TRAINER; S.suppressible = 0; S.replacements = 1; S.picked = 0; S.pickedLevel = -1;
+    S.battleType = BATTLE_TYPE_TRAINER; S.suppressible = 0; S.replacements = 1; S.picked = 0;
     ctx = (BattleContext){ 0 };
     ctx.battlerIdAttacker = 0; ctx.battlerIdTemp = -1;
     for (int i = 0; i < 4; i++) { ctx.battleMons[i].hp = 50; ctx.battleMons[i].hitCount = 1; }
@@ -717,9 +717,9 @@ int main(void) {
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; ctx.battleMons[1].hitCount = 0;
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
-    // Red Card: the attacker is dragged out for someone chosen without the level test.
+    // Red Card: the attacker is dragged out for someone chosen at random.
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE;
-    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.battlerIdTemp == 1 && S.picked == 1 && S.pickedLevel == FALSE);
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.battlerIdTemp == 1 && S.picked == 1);
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.replacements = 0;
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.battleType = 0;
@@ -757,7 +757,7 @@ class SwitchItemTests(unittest.TestCase):
         self.assertIn("ctx->unk_34 = SWITCH_ITEM_USED;", body)
         spray = body[body.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"):]
         self.assertIn("!(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)", spray[:spray.index("{")])
-        self.assertIn("TryPickForcedSwitchIn(battleSystem, ctx, ctx->battlerIdTarget, TRUE)",
+        self.assertIn("TryPickForcedSwitchIn(battleSystem, ctx, ctx->battlerIdTarget)",
                       function(COMMANDS.read_text(), "BtlCmd_TryWhirlwind"))
 
     def test_the_eject_button_sends_its_holder_back(self):
@@ -787,6 +787,48 @@ class SwitchItemTests(unittest.TestCase):
         dragged = script[script.index("Call BATTLE_SUBSCRIPT_HAZARDS_CHECK"):script.index("_SUCTION_CUPS:")]
         self.assertIn("BATTLE_STATUS2_UTURN", dragged)
 
+
+WHIRLWIND_LEVEL_FIXTURE = r"""
+#include <assert.h>
+#include <stdlib.h>
+typedef int BOOL;
+typedef struct { int unused; } BattleSystem;
+typedef struct { int level; } BattleMon;
+typedef struct { int battlerIdAttacker, battlerIdTarget; BattleMon battleMons[4]; } BattleContext;
+static int BattleSystem_Random(BattleSystem *bs) { (void)bs; abort(); }
+@FUNCTION@
+int main(void) {
+    BattleSystem bs;
+    BattleContext ctx = { 0, 1, { { 50 }, { 51 } } };
+    assert(!WhirlwindCheck(&bs, &ctx));      // lower: always fails, no roll
+    ctx.battleMons[1].level = 50;
+    assert(WhirlwindCheck(&bs, &ctx));
+    ctx.battleMons[1].level = 5;
+    assert(WhirlwindCheck(&bs, &ctx));
+    (void)BattleSystem_Random;
+    return 0;
+}
+"""
+
+
+class ForcedSwitchLevelTests(unittest.TestCase):
+    """Roar, Whirlwind, Dragon Tail and Circle Throw ask no level in a trainer
+    battle, and against a wild Pokemon fail whenever the user's level is the
+    lower, with no roll (Pokemon Central, Turbine and Ruggito, from the fifth
+    generation); retail's fourth generation asked with a roll in both."""
+
+    def test_the_wild_test_is_the_levels_alone(self):
+        source = OVERLAY.read_text().replace("#pragma unused(battleSystem)\n", "(void)battleSystem;\n")
+        run_c(WHIRLWIND_LEVEL_FIXTURE.replace("@FUNCTION@", function(source, "WhirlwindCheck")))
+
+    def test_a_trainer_battle_asks_no_level(self):
+        commands = COMMANDS.read_text()
+        self.assertNotIn("WhirlwindCheck", function(commands, "TryPickForcedSwitchIn"))
+        body = function(commands, "BtlCmd_TryWhirlwind")
+        trainer = body[body.index("if (battleType & BATTLE_TYPE_TRAINER) {"):body.index("} else if")]
+        self.assertIn("TryPickForcedSwitchIn(battleSystem, ctx, ctx->battlerIdTarget) == FALSE", trainer)
+        self.assertNotIn("WhirlwindCheck", trainer)
+        self.assertIn("} else if (WhirlwindCheck(battleSystem, ctx) == FALSE) {", body)
 
 EJECT_PACK_FIXTURE = r"""
 #include <assert.h>
