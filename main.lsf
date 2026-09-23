@@ -671,6 +671,7 @@ Overlay OVY_12
     Object asm/overlay_12_battle_command.o
     Object src/battle/battle_controller_player.o
     Object src/battle/overlay_12_0224E4FC.o
+    Object src/battle/overlay_12_02258800.o
     Object asm/overlay_12_battle_controller_opponent.o
     Object src/battle/overlay_12_0225E4EC.o
     Object asm/overlay_12_battle_controller_opponent_0225E568.o
