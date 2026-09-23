@@ -5160,6 +5160,18 @@ static void CostarCopiesAlly(BattleContext *ctx, int battlerId, int ally) {
     ctx->moveConditions[battlerId].laserFocusTimer = ctx->moveConditions[ally].laserFocusTimer;
 }
 
+// Where a once-per-battle entry ability is remembered for this battler's
+// Pokemon: its slot in the party it was sent out from. A side one trainer
+// fields shares one party between its two battlers, and a multi or tag
+// battle gives each partner its own (BattleSystem_GetParty's choice), so
+// the partner's first Pokemon is not the player's (the reference's
+// SanitizeClientForTeamAccess).
+static u8 *OnceOnlyEntryAbilityDone(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int party = BattleSystem_GetParty(battleSystem, battlerId) == BattleSystem_GetParty(battleSystem, battlerId & 1) ? (battlerId & 1) : battlerId;
+
+    return &ctx->onceOnlyEntryAbilityDone[party][ctx->selectedMonIndex[battlerId]];
+}
+
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int j;
@@ -5691,7 +5703,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 u8 *syrupDone;
 
                 battlerId = ctx->turnOrder[i];
-                syrupDone = &ctx->onceOnlyEntryAbilityDone[BattleSystem_GetFieldSide(battleSystem, battlerId)][ctx->selectedMonIndex[battlerId]];
+                syrupDone = OnceOnlyEntryAbilityDone(battleSystem, ctx, battlerId);
                 if (!*syrupDone && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_SUPERSWEET_SYRUP) {
                     *syrupDone = TRUE;
                     ctx->battlerIdTemp = battlerId;
@@ -5789,7 +5801,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
             break;
         case 19: // Intrepid Sword, Dauntless Shield and Zero to Hero
             for (i = 0; i < maxBattlers; i++) {
-                int fieldSide;
+                u8 *done;
 
                 battlerId = ctx->turnOrder[i];
                 if (!ctx->battleMons[battlerId].hp) {
@@ -5797,15 +5809,15 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 }
                 // Once per Pokemon per battle, not once per send-out: the
                 // slot it was drawn from is what remembers.
-                fieldSide = BattleSystem_GetFieldSide(battleSystem, battlerId);
-                if (ctx->onceOnlyEntryAbilityDone[fieldSide][ctx->selectedMonIndex[battlerId]]) {
+                done = OnceOnlyEntryAbilityDone(battleSystem, ctx, battlerId);
+                if (*done) {
                     continue;
                 }
                 // A Palafin back in its Hero Form says so, once
                 // (SwitchInAbilityCheck.c:965, zeroToHeroFlag).
                 if (ctx->battleMons[battlerId].species == SPECIES_PALAFIN_HERO && ctx->battleMons[battlerId].ability == ABILITY_ZERO_TO_HERO
                     && !(ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
-                    ctx->onceOnlyEntryAbilityDone[fieldSide][ctx->selectedMonIndex[battlerId]] = TRUE;
+                    *done = TRUE;
                     ctx->battlerIdTemp = battlerId;
                     script = BATTLE_SUBSCRIPT_ZERO_TO_HERO;
                     flag = TRUE;
@@ -5818,7 +5830,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 } else {
                     continue;
                 }
-                ctx->onceOnlyEntryAbilityDone[fieldSide][ctx->selectedMonIndex[battlerId]] = TRUE;
+                *done = TRUE;
                 ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
                 ctx->battlerIdStatChange = battlerId;
                 script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;
@@ -6046,7 +6058,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 u8 *done;
 
                 battlerId = ctx->turnOrder[i];
-                done = &ctx->onceOnlyEntryAbilityDone[BattleSystem_GetFieldSide(battleSystem, battlerId)][ctx->selectedMonIndex[battlerId]];
+                done = OnceOnlyEntryAbilityDone(battleSystem, ctx, battlerId);
                 if (*done || !ctx->battleMons[battlerId].hp || ctx->battleMons[battlerId].ability != ABILITY_TERAFORM_ZERO
                     || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
                     continue;
@@ -6819,7 +6831,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
     // fallen one's. Aftermath reads the same pair to know the target is down.
     if (ctx->battlerIdTarget == ctx->battlerIdFainted && ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].battlerIdPhysicalAttacker == ctx->battlerIdAttacker || ctx->selfTurnData[ctx->battlerIdTarget].battlerIdSpecialAttacker == ctx->battlerIdAttacker)) {
         int stat = -1;
-        u8 *bondSpent = &ctx->onceOnlyEntryAbilityDone[BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker)][ctx->selectedMonIndex[ctx->battlerIdAttacker]];
+        u8 *bondSpent = OnceOnlyEntryAbilityDone(battleSystem, ctx, ctx->battlerIdAttacker);
 
         if (BattlerBattleBondBoosts(ctx, ctx->battlerIdAttacker, *bondSpent) == TRUE) {
             *bondSpent = TRUE;

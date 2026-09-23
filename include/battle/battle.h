@@ -510,12 +510,12 @@ typedef struct BattleContext {
     // What the player's party was holding when the battle began. A single-use
     // item is given back at the end rather than being gone for good.
     u16 itemsToRestore[PARTY_SIZE];
-    // Intrepid Sword, Dauntless Shield, Supersweet Syrup, Teraform Zero and
-    // Battle Bond fire once per Pokemon per battle rather than once per
-    // send-out, so what has already fired is remembered per party slot here
-    // and not on the BattleMon, which is rebuilt every time its Pokemon walks
-    // back in.
-    u8 onceOnlyEntryAbilityDone[2][PARTY_SIZE];
+    // Intrepid Sword, Dauntless Shield and Supersweet Syrup fire once per
+    // Pokemon per battle rather than once per send-out, so what has already
+    // fired is remembered per party slot here and not on the BattleMon, which
+    // is rebuilt every time its Pokemon walks back in. By party, not by side:
+    // two partners on a side each have one (OnceOnlyEntryAbilityDone).
+    u8 onceOnlyEntryAbilityDone[BATTLER_MAX][PARTY_SIZE];
     // The terrain laid over the battle and how many turns it has left. The pair
     // is fieldCondition and fieldConditionData.weatherTurns again, in the one
     // spelling a thing that can only be one of five things at a time wants.

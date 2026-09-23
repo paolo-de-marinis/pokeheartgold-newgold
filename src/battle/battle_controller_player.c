@@ -174,9 +174,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // by thirty-two and Symbiosis's marks by four. Ball Fetch's two-byte ball went
 // into padding and grew it by nothing; the Gem's byte by four, the Eject
 // Pack's byte into what the Gem's left, and the Mirror Herb's stages by
-// thirty-two.
+// thirty-two The once-per-battle entry abilities, remembered by party rather
+// than by side, grew it by twelve.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3224 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3230 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given

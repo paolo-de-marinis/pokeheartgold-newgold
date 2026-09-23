@@ -768,9 +768,56 @@ class SupersweetSyrupTests(unittest.TestCase):
         # BattleMon is rebuilt each time, so the party slot remembers it.
         body = function(OVERLAY.read_text(), "TryAbilityOnEntry")
         syrup = body[body.index("case 15: // Supersweet Syrup"):body.index("case 16:")]
-        self.assertIn("syrupDone = &ctx->onceOnlyEntryAbilityDone[", syrup)
+        self.assertIn("syrupDone = OnceOnlyEntryAbilityDone(battleSystem, ctx, battlerId);", syrup)
         self.assertIn("if (!*syrupDone && ", syrup)
         self.assertIn("*syrupDone = TRUE;", syrup)
+
+
+ONCE_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+enum { BATTLER_MAX = 4, PARTY_SIZE = 6 };
+typedef struct { int dummy; } Party;
+typedef struct { Party parties[4]; int multi; } BattleSystem;
+typedef struct { u8 onceOnlyEntryAbilityDone[BATTLER_MAX][PARTY_SIZE]; u8 selectedMonIndex[4]; } BattleContext;
+// BattleSystem_GetParty's rule: a battler's own party in a multi battle, its
+// side's otherwise.
+static Party *BattleSystem_GetParty(BattleSystem *bs, int battlerId) { return &bs->parties[bs->multi ? battlerId : battlerId & 1]; }
+@FUNCTION@
+int main(void) {
+    BattleSystem bs = { .multi = 1 };
+    BattleContext ctx = { 0 };
+    // The player's and the partner's first Pokemon are two Pokemon.
+    assert(OnceOnlyEntryAbilityDone(&bs, &ctx, 0) != OnceOnlyEntryAbilityDone(&bs, &ctx, 2));
+    assert(OnceOnlyEntryAbilityDone(&bs, &ctx, 1) != OnceOnlyEntryAbilityDone(&bs, &ctx, 3));
+    // One trainer's double battle: the same Pokemon sent to either slot.
+    bs.multi = 0;
+    ctx.selectedMonIndex[0] = 4;
+    ctx.selectedMonIndex[2] = 4;
+    assert(OnceOnlyEntryAbilityDone(&bs, &ctx, 0) == OnceOnlyEntryAbilityDone(&bs, &ctx, 2));
+    ctx.selectedMonIndex[2] = 3;
+    assert(OnceOnlyEntryAbilityDone(&bs, &ctx, 0) != OnceOnlyEntryAbilityDone(&bs, &ctx, 2));
+    return 0;
+}
+"""
+
+
+class OnceOnlyEntryAbilityTests(unittest.TestCase):
+    def test_multi_battle_partners_remember_their_own_pokemon(self):
+        # The reference keys it by SanitizeClientForTeamAccess and the party
+        # slot; a flag by side and slot let the partner's first Pokemon spend
+        # the player's Intrepid Sword.
+        source = OVERLAY.read_text()
+        with tempfile.TemporaryDirectory(prefix="newgold-once-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(ONCE_FIXTURE.replace("@FUNCTION@", function(source, "OnceOnlyEntryAbilityDone")))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+        entry = function(source, "TryAbilityOnEntry")
+        self.assertNotIn("onceOnlyEntryAbilityDone[", entry)
+        self.assertEqual(entry.count("OnceOnlyEntryAbilityDone(battleSystem, ctx, battlerId)"), 3)
 
 
 class EntryAbilityFlagTests(unittest.TestCase):
@@ -878,7 +925,7 @@ class BattleBondTests(unittest.TestCase):
                 str(path / "test.c"), "-o", str(path / "test")], check=True)
             subprocess.run([str(path / "test")], check=True)
         hit = function(source, "CheckAbilityEffectOnHit")
-        knockout = hit[hit.index("u8 *bondSpent = &ctx->onceOnlyEntryAbilityDone["):]
+        knockout = hit[hit.index("u8 *bondSpent = OnceOnlyEntryAbilityDone(battleSystem, ctx, ctx->battlerIdAttacker);"):]
         self.assertLess(knockout.index("BattlerBattleBondBoosts(ctx, ctx->battlerIdAttacker, *bondSpent) == TRUE"),
                         knockout.index("*bondSpent = TRUE;"))
         self.assertIn("*script = BATTLE_SUBSCRIPT_BATTLE_BOND;", knockout)

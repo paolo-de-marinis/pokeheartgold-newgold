@@ -158,7 +158,7 @@ class TeraShellTests(unittest.TestCase):
 class TeraformZeroTests(unittest.TestCase):
     def test_the_first_entry_as_the_stellar_form_clears_the_field(self):
         state = entry_state("Teraform Zero")
-        self.assertIn("done = &ctx->onceOnlyEntryAbilityDone[", state)
+        self.assertIn("done = OnceOnlyEntryAbilityDone(battleSystem, ctx, battlerId);", state)
         self.assertIn("ctx->battleMons[battlerId].ability != ABILITY_TERAFORM_ZERO", state)
         self.assertIn("(ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)", state)
         # Spent whether or not the gas lets it act.
