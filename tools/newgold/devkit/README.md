@@ -76,7 +76,14 @@ has to open with `savedit.Save`, and a rename puts it in place. "Annulla
 ultima modifica" restores the newest backup, keeping the state it replaces
 as a backup too. The bin is `LIBRARY/.trash/<timestamp>/<its path>`. melonDS
 writes its `.sav` back when it closes, so while it runs the page says so and
-refuses every write to a slot. Paths outside the library and the slots,
+refuses every write to a slot. A slot is loaded or played only beside a
+real ROM -- a Nintendo DS header whose two checksums hold, and a file as
+long as the header says -- in a folder the melonDS flatpak can write to
+(`flatpak info --show-permissions` says `home` here; never `/tmp`, which the
+sandbox keeps private); the page shows why a slot is not usable.
+`--dry-run-launch`, or `SAVEUI_DRY_RUN=1`, makes "Gioca" print the command
+instead of starting melonDS, and skips the sandbox check with it; the tests
+run that way. Paths outside the library and the slots,
 symbolic links included, are refused, and the server answers only this page
 (its own Host and Origin, JSON bodies). `tests/newgold/test_saveui.py`
 drives every endpoint against a temporary library.
