@@ -271,6 +271,9 @@ int ov10_0221F47C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId,
         }
         break;
     case MOVE_WEATHER_BALL:
+        // Normal unless a weather below makes it something else, as in
+        // GetDynamicMoveType.
+        type = TYPE_NORMAL;
         if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
             // Retail's weather: snow, which FIELD_CONDITION_WEATHER takes in
             // now, is not asked after here.
@@ -287,8 +290,6 @@ int ov10_0221F47C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId,
                 if (ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL) {
                     type = TYPE_ICE;
                 }
-                // BUG: as in GetDynamicMoveType, fog leaves type unset, and so
-                // does Cloud Nine or Air Lock above.
             }
         }
         break;

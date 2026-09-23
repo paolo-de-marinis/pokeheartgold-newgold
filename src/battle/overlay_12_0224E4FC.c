@@ -11669,9 +11669,13 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
         break;
     case MOVE_WEATHER_BALL: {
         // What the move will be, as BtlCmd_CalcWeatherBallParams decides it:
-        // under Mega Sol, Fire.
+        // under Mega Sol, Fire. Normal where no weather makes it anything else
+        // -- a clear sky, the fog, the strong winds, Cloud Nine or Air Lock --
+        // which retail left unset for Lightning Rod to read (Pokemon Central,
+        // Palla Clima; the reference's BUGFIX, other_battle_calculators.c:3326).
         u32 weather = BattlerMoveWeather(battleSystem, ctx, battlerId);
 
+        type = TYPE_NORMAL;
         if (weather && !(weather & FIELD_CONDITION_STRONG_WINDS)) {
             if (weather & FIELD_CONDITION_RAIN_ALL) {
                 type = TYPE_WATER;
@@ -11685,7 +11689,6 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
             if (weather & FIELD_CONDITION_HAIL_ALL) {
                 type = TYPE_ICE;
             }
-            // BUG: If the weather is foggy, then type doesn't get set properly before being returned
         }
     } break;
     // Terrain Pulse takes the colour of whatever is underfoot, and only if the
