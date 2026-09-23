@@ -123,6 +123,7 @@ class SpeciesRecordTests(unittest.TestCase):
             yields.setdefault(form, yields.get(base, 0))  # as the import gives a form its base's yield
         learnsets = import_species.machine_moves(reference)
         tms, hms = import_species.machine_numbers()
+        machine_list = import_species.reference_machine_list(reference)
         # The hidden ability lives in a table of its own in the reference, and
         # an ability this game has not got leaves the species without one.
         known = set(re.findall(r"#define (ABILITY_[A-Z0-9_]+)",
@@ -142,7 +143,7 @@ class SpeciesRecordTests(unittest.TestCase):
             if name not in blocks:
                 continue
             regenerated = import_species.record(name, blocks[name], yields.get(name, 0),
-                                                learnsets.get(name, set()), tms, hms,
+                                                learnsets.get(name, set()), tms, hms, machine_list,
                                                 hidden.get("SPECIES_" + name, "ABILITY_NONE"))
             self.assertEqual(self.records[index], regenerated, name)
             checked += 1

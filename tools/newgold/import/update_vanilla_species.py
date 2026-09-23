@@ -35,6 +35,7 @@ def pending(reference):
     yields = import_species.base_exp_yields(reference)
     learnsets = import_species.machine_moves(reference)
     tms, hms = import_species.machine_numbers()
+    machine_list = import_species.reference_machine_list(reference)
 
     personal = json.loads(PERSONAL.read_text())
     records = personal["baseStats"]
@@ -52,7 +53,7 @@ def pending(reference):
         try:
             wanted = import_species.record(
                 name, blocks[name], yields.get(name, record["expYieldFull"]),
-                learnsets.get(name, set()), tms, hms, record["hiddenAbility"])
+                learnsets.get(name, set()), tms, hms, machine_list, record["hiddenAbility"])
         except ValueError as error:
             skipped.append(f"{name} ({error})")
             continue

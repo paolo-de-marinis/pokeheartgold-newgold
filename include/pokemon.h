@@ -211,9 +211,9 @@ void sub_0207213C(BoxPokemon *boxMon, PlayerProfile *playerProfile, u32 pokeball
 void sub_0207217C(Pokemon *mon, PlayerProfile *a1, u32 pokeball, u32 a3, u32 encounterType, enum HeapID heapID);
 void sub_02072190(BoxPokemon *boxMon, PlayerProfile *a1, u32 pokeball, u32 a3, u32 encounterType, enum HeapID heapID);
 void WildMonSetRandomHeldItem(Pokemon *mon, u32 battleType, u32 isCompoundEyes);
-BOOL GetMonTMHMCompat(Pokemon *mon, u8 tmhm);
-BOOL GetBoxMonTMHMCompat(BoxPokemon *boxMon, u8 tmhm);
-BOOL GetTMHMCompatBySpeciesAndForm(u16 species, u32 form, u8 tmhm);
+BOOL GetMonTMHMCompat(Pokemon *mon, u16 tmhm);
+BOOL GetBoxMonTMHMCompat(BoxPokemon *boxMon, u16 tmhm);
+BOOL GetTMHMCompatBySpeciesAndForm(u16 species, u32 form, u16 tmhm);
 void SetMonPersonality(Pokemon *mon, u32 personality);
 u32 ChangePersonalityToNatureGenderAndAbility(u32 pid, u16 species, u8 nature, u8 gender, u8 ability, BOOL gen_mode);
 void LoadMonPersonal(int species, BASE_STATS *personal);

@@ -218,12 +218,28 @@ def base_exp_yields(reference):
     return {m[1]: int(m[2]) for m in re.finditer(r"\[SPECIES_([A-Z0-9_]+)\s*\]\s*=\s*(\d+)", table)}
 
 
-def reference_machines(reference):
-    """The moves the reference has a machine for: TM01 to HM08 as here, then
-    the later games' TMs and TRs, which have no machine in this game."""
+# HeartGold's own machines, TM01 to HM08, lead the reference's list.
+RETAIL_MACHINES = 100
+
+
+def reference_machine_list(reference):
+    """The reference's machines in its own order (sMachineMoves in its
+    src/item.c): TM01 to HM08 as here, then the later games' TMs and TRs."""
     source = (reference / "src/item.c").read_text(errors="replace")
     table = source[source.index("sMachineMoves[] = {"):]
-    return set(re.findall(r"MOVE_[A-Z0-9_]+", table[:table.index("};")]))
+    return re.findall(r"MOVE_[A-Z0-9_]+", table[:table.index("};")])
+
+
+def reference_machines(reference):
+    """The moves the reference has a machine for."""
+    return set(reference_machine_list(reference))
+
+
+def machines_past_hm08(learned, machine_list):
+    """The machines past HM08 a species can be taught, by their place in the
+    reference's list, which is the number the game reads their bit by."""
+    return [index for index, move in enumerate(machine_list)
+            if index >= RETAIL_MACHINES and move in learned]
 
 
 def machine_moves(reference):
@@ -258,7 +274,7 @@ def machine_numbers():
     table = table[:table.index("};")]
     moves = re.findall(r"(MOVE_[A-Z0-9_]+),", table)
     tms = {move: number for number, move in enumerate(moves[:92], start=1)}
-    hms = {move: number for number, move in enumerate(moves[92:], start=1)}
+    hms = {move: number for number, move in enumerate(moves[92:RETAIL_MACHINES], start=1)}
     return tms, hms
 
 
@@ -295,7 +311,7 @@ def hidden_abilities(reference):
             re.finditer(r"\[\s*(SPECIES_[A-Z0-9_]+)\s*\]\s*=\s*(ABILITY_[A-Z0-9_]+)", source)}
 
 
-def record(name, block, expYield, learned, tms, hms, hidden="ABILITY_NONE"):
+def record(name, block, expYield, learned, tms, hms, machine_list, hidden="ABILITY_NONE"):
     stats = section(block, "baseStats")
     yields = section(block, "evYields")
     items = section(block, "wildHeldItems")
@@ -335,6 +351,7 @@ def record(name, block, expYield, learned, tms, hms, hidden="ABILITY_NONE"):
         "flip": int(field(block, "flipSprite")),
         "tms": sorted(tms[move] for move in learned if move in tms),
         "hms": sorted(hms[move] for move in learned if move in hms),
+        "machines": machines_past_hm08(learned, machine_list),
     }
 
 
@@ -356,6 +373,7 @@ def main():
         yields.setdefault(form, yields.get(base, 0))
     learnsets = machine_moves(args.reference)
     tms, hms = machine_numbers()
+    machine_list = reference_machine_list(args.reference)
 
     personalPath = ROOT / "files/poketool/personal/personal.json"
     personal = json.loads(personalPath.read_text())
@@ -370,7 +388,7 @@ def main():
         if name not in blocks:
             absent.append(name)
             continue
-        entry = record(name, blocks[name], yields.get(name, 0), learnsets.get(name, set()), tms, hms)
+        entry = record(name, blocks[name], yields.get(name, 0), learnsets.get(name, set()), tms, hms, machine_list)
         if yields.get(name, 0) > MAX_STORED_EXP_YIELD:
             clamped.append((name, yields[name]))
         added.append(entry)
@@ -385,19 +403,13 @@ def main():
     for entry in personal["baseStats"]:
         name = entry["species"]
         if name in wanted_all and name in learnsets:
-            fresh = sorted(tms[m] for m in learnsets[name] if m in tms), sorted(hms[m] for m in learnsets[name] if m in hms)
-            if (entry["tms"], entry["hms"]) != fresh:
-                entry["tms"], entry["hms"] = fresh
+            fresh = (sorted(tms[m] for m in learnsets[name] if m in tms), sorted(hms[m] for m in learnsets[name] if m in hms),
+                     machines_past_hm08(learnsets[name], machine_list))
+            if (entry["tms"], entry["hms"], entry.get("machines")) != fresh:
+                entry["tms"], entry["hms"], entry["machines"] = fresh
                 refreshed += 1
     print(f"{refreshed} records already written take new machine moves")
 
-    # This game has TM01 to HM08 only; the reference's other machines have no
-    # item here, so a species' compatibility with them has nowhere to go.
-    dropped = {name: learnsets.get(name, set()) - tms.keys() - hms.keys() for name in wanted_all}
-    past = sorted(set().union(*dropped.values()))
-    print(f"{sum(map(len, dropped.values()))} machine compatibilities dropped from "
-          f"{sum(1 for moves in dropped.values() if moves)} species, {len(past)} moves "
-          f"with no machine past HM08: {', '.join(past[:6])}" + (" ..." if len(past) > 6 else ""))
 
     first = len(personal["baseStats"])
     print(f"{len(added)} species to append, identifiers {first} to {first + len(added) - 1}")

@@ -1,0 +1,140 @@
+#!/usr/bin/env python3
+"""The machines past HM08: which species can be taught them.
+
+hg-engine numbers 340 machines, HeartGold's TM01 to HM08 first (sMachineMoves
+in its src/item.c), and keeps one bit per machine per species. The personal
+record here held 128 bits, of which HeartGold used 100; the other 240 machines
+had nowhere to go, so no species could be taught Flash Cannon from TM093 or
+anything from a TR. The record now carries seven more words, and the reader
+takes a machine's place in that numbering to its word and bit.
+
+The archive is compared bit for bit with the JSON it is built from, for every
+species; the reader is compiled natively over a record with one bit set.
+"""
+
+import json
+import os
+import shlex
+import struct
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+from test_level_cap import ROOT, function
+from test_personal_abilities import NARC, SOURCE, records
+
+sys.path[:0] = [str(ROOT / "tools/newgold/import")]
+import import_species  # noqa: E402
+
+NUM_MACHINES = 340
+WORDS_AT = [0x1C, 0x20, 0x24, 0x28] + [0x34 + 4 * i for i in range(7)]
+
+
+def bits(record):
+    words = [struct.unpack_from("<I", record, at)[0] for at in WORDS_AT]
+    return {i for i in range(len(words) * 32) if words[i // 32] >> (i % 32) & 1}
+
+
+def wanted(row):
+    """TM n is bit n - 1, HM n bit 91 + n, the rest their own place."""
+    return {n - 1 for n in row["tms"]} | {91 + n for n in row["hms"]} | set(row["machines"])
+
+
+class MachineDataTests(unittest.TestCase):
+    def setUp(self):
+        self.rows = json.loads(SOURCE.read_text())["baseStats"]
+
+    def test_every_record_has_its_machines_past_hm08(self):
+        for row in self.rows:
+            machines = row["machines"]
+            self.assertEqual(machines, sorted(set(machines)), row["species"])
+            self.assertTrue(all(import_species.RETAIL_MACHINES <= m < NUM_MACHINES for m in machines),
+                            row["species"])
+
+    def test_the_archive_holds_every_bit(self):
+        if not NARC.exists():
+            self.skipTest("the personal archive is not built")
+        built = records()
+        self.assertEqual(len(built), len(self.rows))
+        for record, row in zip(built, self.rows):
+            self.assertEqual(bits(record), wanted(row), row["species"])
+
+    def test_the_machines_hg_engine_gives_pikachu(self):
+        """TR08 is Thunderbolt, place 248; TM093 Flash Cannon is not Pikachu's."""
+        pikachu = next(row for row in self.rows if row["species"] == "PIKACHU")
+        self.assertIn(248, pikachu["machines"])
+        self.assertNotIn(102, pikachu["machines"])
+
+
+NATIVE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define GF_ASSERT(x) assert(x)
+#include "constants/pokemon.h"
+#include "constants/species.h"
+#include "constants/items.h"
+
+@RECORD@
+
+static BASE_STATS sRecord;
+
+@ATTR@
+
+static int GetMonBaseStat_HandleAlternateForm(int species, int form, int attr) {
+    assert(species == SPECIES_PIKACHU && form == 0);
+    return GetPersonalAttr(&sRecord, attr);
+}
+
+@COMPAT@
+
+int main(void) {
+    for (int machine = 0; machine < NUM_MACHINES; machine++) {
+        u32 *words[] = { &sRecord.tmhm_1, &sRecord.tmhm_2, &sRecord.tmhm_3, &sRecord.tmhm_4,
+                         &sRecord.tmhmMore[0], &sRecord.tmhmMore[1], &sRecord.tmhmMore[2], &sRecord.tmhmMore[3],
+                         &sRecord.tmhmMore[4], &sRecord.tmhmMore[5], &sRecord.tmhmMore[6] };
+        *words[machine / 32] = 1u << (machine % 32);
+        for (int other = 0; other < NUM_MACHINES + 12; other++) {
+            assert(GetTMHMCompatBySpeciesAndForm(SPECIES_PIKACHU, 0, other) == (other == machine));
+        }
+        *words[machine / 32] = 0;
+    }
+    assert(!GetTMHMCompatBySpeciesAndForm(SPECIES_EGG, 0, 0));
+    puts("PASS: 340 machines, each read from its own bit and no other.");
+    return 0;
+}
+"""
+
+
+class MachineReaderTests(unittest.TestCase):
+    def test_each_machine_reads_its_own_bit(self):
+        source = (ROOT / "src/pokemon.c").read_text()
+        header = (ROOT / "include/pokemon_types_def.h").read_text()
+        record = header[header.index("typedef struct BaseStats {"):header.index("} BASE_STATS;") + len("} BASE_STATS;")]
+        program = (NATIVE.replace("@RECORD@", record).replace("@ATTR@", function(source, "GetPersonalAttr"))
+                   .replace("@COMPAT@", function(source, "GetTMHMCompatBySpeciesAndForm")))
+        with tempfile.TemporaryDirectory(prefix="newgold-machines-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            c.write_text(program)
+            build = subprocess.run(
+                shlex.split(os.environ.get("CC", "cc")) +
+                ["-std=c11", "-O1", "-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
+                 "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)],
+                capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            run = subprocess.run([str(exe)], capture_output=True, text=True,
+                                 env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            print(run.stdout.strip())
+
+
+if __name__ == "__main__":
+    unittest.main()

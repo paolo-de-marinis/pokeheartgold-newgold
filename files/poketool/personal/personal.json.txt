@@ -51,13 +51,24 @@ const struct BaseStats __data[] = {
         {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 1) in mon.tms %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
         {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 33) in mon.tms %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
         {{ setVarInt("tms", 0) }}{% for i in range(28) %}{% if add(i, 65) in mon.tms %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{% for i in range(4) %}{% if add(i, 1) in mon.hms %}{{ setBit("tms", add(i, 28)) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
-        {{ setVarInt("tms", 0) }}{% for i in range(4) %}{% if add(i, 5) in mon.hms %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
+        {{ setVarInt("tms", 0) }}{% for i in range(4) %}{% if add(i, 5) in mon.hms %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{% for i in range(28) %}{% if add(i, 100) in mon.machines %}{{ setBit("tms", add(i, 4)) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
         {{ mon.hiddenAbility }}, // The ability only a trainer can ask for
         0, // padding
         // The same three abilities at their full width, which is what the
         // game reads; the bytes above keep whatever fits.
         { {{ mon.abilities.0 }}, {{ mon.abilities.1 }} },
         {{ mon.hiddenAbility }},
+        // The machines past HM08, by their place in hg-engine's numbering:
+        // 100 to 127 are the top of the fourth word above, 128 to 351 these.
+        {
+            {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 128) in mon.machines %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
+            {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 160) in mon.machines %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
+            {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 192) in mon.machines %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
+            {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 224) in mon.machines %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
+            {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 256) in mon.machines %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
+            {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 288) in mon.machines %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
+            {{ setVarInt("tms", 0) }}{% for i in range(32) %}{% if add(i, 320) in mon.machines %}{{ setBit("tms", i) }}{% endif %}{%endfor %}{{ getVarHex("tms") }},
+        },
     },
 ## endfor
 };

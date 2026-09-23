@@ -1855,6 +1855,15 @@ int GetPersonalAttr(const BASE_STATS *baseStats, int attr) {
     case BASE_TMHM_4:
         ret = (int)baseStats->tmhm_4;
         break;
+    case BASE_TMHM_5:
+    case BASE_TMHM_5 + 1:
+    case BASE_TMHM_5 + 2:
+    case BASE_TMHM_5 + 3:
+    case BASE_TMHM_5 + 4:
+    case BASE_TMHM_5 + 5:
+    case BASE_TMHM_11:
+        ret = (int)baseStats->tmhmMore[attr - BASE_TMHM_5];
+        break;
     }
     return ret;
 }
@@ -4031,11 +4040,11 @@ void WildMonSetRandomHeldItem(Pokemon *mon, u32 battleType, u32 isCompoundEyes) 
     }
 }
 
-BOOL GetMonTMHMCompat(Pokemon *mon, u8 tmhm) {
+BOOL GetMonTMHMCompat(Pokemon *mon, u16 tmhm) {
     return GetBoxMonTMHMCompat(&mon->box, tmhm);
 }
 
-BOOL GetBoxMonTMHMCompat(BoxPokemon *boxMon, u8 tmhm) {
+BOOL GetBoxMonTMHMCompat(BoxPokemon *boxMon, u16 tmhm) {
     u16 species;
     u32 form;
 
@@ -4044,29 +4053,16 @@ BOOL GetBoxMonTMHMCompat(BoxPokemon *boxMon, u8 tmhm) {
     return GetTMHMCompatBySpeciesAndForm(species, form, tmhm);
 }
 
-BOOL GetTMHMCompatBySpeciesAndForm(u16 species, u32 form, u8 tmhm) {
-    u32 mask;
-    int baseStat;
-    if (species == SPECIES_EGG) {
+// tmhm is a machine's place in hg-engine's numbering, 0 to NUM_MACHINES - 1,
+// which for TM01 to HM08 is the one HeartGold has always used.
+BOOL GetTMHMCompatBySpeciesAndForm(u16 species, u32 form, u16 tmhm) {
+    int word;
+
+    if (species == SPECIES_EGG || tmhm >= NUM_MACHINES) {
         return FALSE;
     }
-
-    // mask = 1 << (a2 % 32);
-    // baseStat = BASE_TMHM_1 + (a2 / 32);
-    if (tmhm < 32) {
-        mask = 1 << tmhm;
-        baseStat = BASE_TMHM_1;
-    } else if (tmhm < 64) {
-        mask = 1 << (tmhm - 32);
-        baseStat = BASE_TMHM_2;
-    } else if (tmhm < 96) {
-        mask = 1 << (tmhm - 64);
-        baseStat = BASE_TMHM_3;
-    } else {
-        mask = 1 << (tmhm - 96);
-        baseStat = BASE_TMHM_4;
-    }
-    return (GetMonBaseStat_HandleAlternateForm(species, form, baseStat) & mask) != 0;
+    word = tmhm / 32;
+    return (GetMonBaseStat_HandleAlternateForm(species, form, word < 4 ? BASE_TMHM_1 + word : BASE_TMHM_5 + word - 4) & (1u << (tmhm % 32))) != 0;
 }
 
 void UpdateMonAbility(Pokemon *mon) {

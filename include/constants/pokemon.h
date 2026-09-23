@@ -441,6 +441,8 @@
 #define BASE_TMHM_3           31
 #define BASE_TMHM_4           32
 #define BASE_HIDDEN_ABILITY   33
+#define BASE_TMHM_5           34 // to BASE_TMHM_11: the machines past bit 127
+#define BASE_TMHM_11          40
 
 // Forms used in asm files
 #define SHAYMIN_LAND     0

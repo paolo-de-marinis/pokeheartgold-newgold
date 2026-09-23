@@ -933,6 +933,9 @@
 #define NUM_HMS   8
 #define NUM_TMHMS 100
 
+// hg-engine's machines, HeartGold's 100 first: sMachineMoves in its src/item.c.
+#define NUM_MACHINES 340
+
 // Key Items
 #define ITEM_EXPLORER_KIT 428
 #define ITEM_LOOT_SACK    429
