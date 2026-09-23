@@ -47,7 +47,7 @@ STILL_DIFFERENT = {
     122: PARENTAL_BOND,
     123: IN_C.format("Frustration's power, CalcBaseDamage.c"),
     129: "the engine raises Rapid Spin's Speed here and clears the field in "
-         "ServerDoPostMoveEffects.c; here both are the move's subscript, 115",
+         "ServerDoPostMoveEffects.c; here both are the move's additional effect, subscript 115",
     132: "Mega Sol, which the recovery command here does not read",
     136: "the primal weathers and the engine's weather subscripts",
     137: "the primal weathers and the engine's weather subscripts",
@@ -259,7 +259,15 @@ class BroughtOverTests(unittest.TestCase):
         # the user stands; retail's subscript 115 was the clearing alone.
         text = subscript("RAPID_SPIN")
         self.assertRegex(text, r"BMON_DATA_HP, 0, (\w+)[^:]*MOVE_SUBSCRIPT_PTR_SPEED_UP_1_STAGE\s*"
-                               r"Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE\s*RapidSpin")
+                               r"Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE\s*"
+                               r"CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, ABILITY_SHIELD_DUST, \1\s*RapidSpin")
+
+    def test_rapid_spin_is_an_additional_effect(self):
+        # Pokemon Central, Rapigiro: the rise (Generation VIII) and the clearing
+        # (IX) are additional effects, so the side effect is the rolled kind
+        # IsSuppressibleSecondaryEffect answers for Sheer Force and the cloak.
+        self.assertIn("BSCRIPT_VAR_SIDE_EFFECT_FLAGS_INDIRECT, MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_RAPID_SPIN\n",
+                      script(129))
 
     def test_growth_raises_both_attacks_and_twice_in_the_sun(self):
         # Retail's Growth (13) raised Sp. Atk alone.
