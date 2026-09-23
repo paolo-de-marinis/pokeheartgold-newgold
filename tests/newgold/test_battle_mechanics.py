@@ -846,31 +846,43 @@ class CudChewTests(unittest.TestCase):
     FLING_FIXTURE = r"""
 #include <assert.h>
 #include <stdint.h>
-typedef uint32_t u32; typedef uint16_t u16;
+typedef uint32_t u32; typedef uint16_t u16; typedef int8_t s8;
 typedef int BOOL;
 enum { FALSE = 0, TRUE = 1 };
 #include "constants/battle.h"
 #include "constants/battle_subscript.h"
+typedef struct { int unused; } BattleSystem;
+typedef struct { int hp; u32 status2; s8 statChanges[8]; int pp[4]; } BattleMon;
 typedef struct {
-    struct { int hp; u32 status2; } battleMons[4];
+    BattleMon battleMons[4];
     struct { u32 unk14; } selfTurnData[4];
-    int battlerIdAttacker, battlerIdStatChange, flingScript, infiltrator;
+    int battlerIdAttacker, battlerIdStatChange, flingScript, flingData, infiltrator, copied;
+    u16 moveTemp;
     u16 recycleItem[4];
     int kept[4];
 } BattleContext;
 static BOOL InfiltratorGoesRoundSubstitute(BattleContext *ctx, int battlerId) { (void)battlerId; return ctx->infiltrator; }
 static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item) { ctx->kept[eater] = item; }
+static int BattleMon_GetMoveIndex(BattleMon *mon, u16 move) { (void)mon; return move - 100; }
+static void BattleMon_AddVar(BattleMon *mon, u32 varId, int data) { mon->pp[varId - BMON_DATA_CUR_PP_1] += data; }
+static void CopyBattleMonToPartyMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; ctx->copied = battlerId + 1; }
 @FUNCTION@
+static BattleContext ctx;
 static int kept(int script, int flingScript, int hp, u32 status2, int infiltrator) {
-    BattleContext ctx = { 0 };
+    BattleSystem bs;
+    ctx = (BattleContext){ 0 };
     ctx.battlerIdAttacker = 0;
     ctx.battlerIdStatChange = 1;
     ctx.flingScript = flingScript;
     ctx.battleMons[1].hp = hp;
     ctx.battleMons[1].status2 = status2;
+    ctx.battleMons[1].statChanges[2] = 4;
+    ctx.battleMons[1].statChanges[5] = 9;
     ctx.infiltrator = infiltrator;
     ctx.recycleItem[0] = 149;
-    CudChewKeepsFlungBerry(&ctx, script);
+    ctx.moveTemp = 102;
+    ctx.flingData = 10;
+    FlungItemLands(&bs, &ctx, script);
     return ctx.kept[1];
 }
 int main(void) {
@@ -880,15 +892,28 @@ int main(void) {
     assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, STATUS2_SUBSTITUTE, 0) == 0);
     assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, STATUS2_SUBSTITUTE, 1) == 149);
     assert(kept(BATTLE_SUBSCRIPT_FLINCH_MON, 198, 50, 0, 0) == 0);
+    // A Leppa Berry restores the chosen move's PP when it lands, not before.
+    kept(BATTLE_SUBSCRIPT_FLING, BATTLE_SUBSCRIPT_HELD_ITEM_PP_RESTORE, 50, 0, 0);
+    assert(ctx.battleMons[1].pp[2] == 10 && ctx.copied == 2);
+    kept(BATTLE_SUBSCRIPT_MISSED, BATTLE_SUBSCRIPT_HELD_ITEM_PP_RESTORE, 50, 0, 0);
+    assert(ctx.battleMons[1].pp[2] == 0 && ctx.copied == 0);
+    kept(BATTLE_SUBSCRIPT_FLING, BATTLE_SUBSCRIPT_HELD_ITEM_PP_RESTORE, 50, STATUS2_SUBSTITUTE, 0);
+    assert(ctx.battleMons[1].pp[2] == 0);
+    // A White Herb resets the lowered stats when it lands, and only those.
+    kept(BATTLE_SUBSCRIPT_FLING, BATTLE_SUBSCRIPT_HELD_ITEM_STATDOWN_RESTORE, 50, 0, 0);
+    assert(ctx.battleMons[1].statChanges[2] == 6 && ctx.battleMons[1].statChanges[5] == 9 && ctx.battleMons[1].statChanges[0] == 6);
+    kept(BATTLE_SUBSCRIPT_MISSED, BATTLE_SUBSCRIPT_HELD_ITEM_STATDOWN_RESTORE, 50, 0, 0);
+    assert(ctx.battleMons[1].statChanges[2] == 4);
     return 0;
 }
 """
 
     def test_a_flung_berry_is_kept_by_the_one_it_hit(self):
         # Pokemon Central, Ruminante: a Berry flung at it counts when its
-        # effect goes off; that is known once the hit is.
+        # effect goes off; that is known once the hit is. So is the PP a
+        # Leppa Berry gives back and the stats a White Herb puts right.
         source = OVERLAY.read_text()
-        fixture = self.FLING_FIXTURE.replace("@FUNCTION@", function(source, "CudChewKeepsFlungBerry"))
+        fixture = self.FLING_FIXTURE.replace("@FUNCTION@", function(source, "FlungItemLands"))
         with tempfile.TemporaryDirectory(prefix="newgold-cud-chew-") as directory:
             path = Path(directory)
             (path / "test.c").write_text(fixture)
@@ -898,8 +923,10 @@ int main(void) {
             subprocess.run([str(path / "test")], check=True)
         dispatch = function(source, "ov12_02250490")
         hit = dispatch[dispatch.index("if (ctx->unk_2174 & (1 << 29)) {"):dispatch.index("} else if (ctx->unk_2174 & (1 << 24)) {")]
-        self.assertIn("CudChewKeepsFlungBerry(ctx, *out);", hit)
-
+        self.assertIn("FlungItemLands(battleSystem, ctx, *out);", hit)
+        fling = function(source, "TryFling")
+        self.assertNotIn("BattleMon_AddVar", fling)
+        self.assertNotIn("statChanges[stat] = 6", fling)
 
 BOND_FIXTURE = r"""
 #include <assert.h>

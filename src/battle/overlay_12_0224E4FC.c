@@ -1638,14 +1638,17 @@ BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *scri
     return FALSE;
 }
 
-// A Berry flung at a Cud Chew Pokemon is kept for the turn after, when it
-// did something (Pokemon Central, Ruminante: Lancio). TryFling cannot know
-// that, running before the hit; this is where the hit is known, and it asks
-// what subscript 220 asks before it runs the Berry's script: a script to run,
-// the target standing and no substitute in the way. The Berry itself left the
+// A flung item that lands, where the hit is known: TryFling, which runs
+// before it, only chose what the item would do. It asks what subscript 220
+// asks before it runs the item's script: a script to run, the target standing
+// and no substitute in the way. A Leppa Berry restores the PP TryFling chose
+// and a White Herb the lowered stats -- neither when the Fling misses or hits
+// a substitute. A Berry flung at a Cud Chew Pokemon is kept for the turn
+// after (Pokemon Central, Ruminante: Lancio); the Berry itself left the
 // thrower's hand through RemoveItem, which kept it in recycleItem.
-static void CudChewKeepsFlungBerry(BattleContext *ctx, int script) {
+static void FlungItemLands(BattleSystem *battleSystem, BattleContext *ctx, int script) {
     int battlerId = ctx->battlerIdStatChange;
+    int stat;
 
     if (script != BATTLE_SUBSCRIPT_FLING || !ctx->flingScript || !ctx->battleMons[battlerId].hp) {
         return;
@@ -1653,6 +1656,19 @@ static void CudChewKeepsFlungBerry(BattleContext *ctx, int script) {
     if (((ctx->battleMons[battlerId].status2 & STATUS2_SUBSTITUTE) || (ctx->selfTurnData[battlerId].unk14 & SELF_TURN_FLAG_SUBSTITUTE_HIT))
         && !InfiltratorGoesRoundSubstitute(ctx, battlerId)) {
         return;
+    }
+    switch (ctx->flingScript) {
+    case BATTLE_SUBSCRIPT_HELD_ITEM_PP_RESTORE:
+        BattleMon_AddVar(&ctx->battleMons[battlerId], BMON_DATA_CUR_PP_1 + BattleMon_GetMoveIndex(&ctx->battleMons[battlerId], ctx->moveTemp), ctx->flingData);
+        CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
+        break;
+    case BATTLE_SUBSCRIPT_HELD_ITEM_STATDOWN_RESTORE:
+        for (stat = 0; stat < 8; stat++) {
+            if (ctx->battleMons[battlerId].statChanges[stat] < 6) {
+                ctx->battleMons[battlerId].statChanges[stat] = 6;
+            }
+        }
+        break;
     }
     CudChewKeepsBerry(ctx, battlerId, ctx->recycleItem[ctx->battlerIdAttacker]);
 }
@@ -1682,7 +1698,7 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         ctx->unk_2174 = 0;
         if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
             ret = TRUE;
-            CudChewKeepsFlungBerry(ctx, *out);
+            FlungItemLands(battleSystem, ctx, *out);
         }
         // U-turn, Volt Switch and Flip Turn do not take their user out when
         // the Pokemon they hit is leaving by Emergency Exit or Wimp Out
@@ -8600,10 +8616,10 @@ BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
                 }
             }
         }
+        // The PP is restored when the Berry lands (FlungItemLands).
         if (max) {
-            BattleMon_AddVar(&ctx->battleMons[ctx->battlerIdTarget], BMON_DATA_CUR_PP_1 + maxIndex, mod);
-            CopyBattleMonToPartyMon(battleSystem, ctx, ctx->battlerIdTarget);
             ctx->moveTemp = ctx->battleMons[ctx->battlerIdTarget].moves[maxIndex];
+            ctx->flingData = mod;
             ctx->flingScript = 204;
         }
         break;
@@ -8683,12 +8699,11 @@ BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
             ctx->flingScript = 198;
         }
         break;
-    case STEAL_EFFECT_RESET_STATS: // white herb
+    case STEAL_EFFECT_RESET_STATS: // white herb, whose stats are reset when it lands (FlungItemLands)
     {
         int stat;
         for (stat = 0; stat < 8; stat++) {
             if (ctx->battleMons[ctx->battlerIdTarget].statChanges[stat] < 6) {
-                ctx->battleMons[ctx->battlerIdTarget].statChanges[stat] = 6;
                 ctx->flingScript = 211;
             }
         }
