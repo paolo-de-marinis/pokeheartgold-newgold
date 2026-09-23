@@ -496,6 +496,15 @@ $(MOVE_SCRIPT_BINS): $(FIRST_MSG_H_GEN)
 include files/battledata/script/subscript.mk
 $(BTL_SUBSCRIPT_SCRIPT_BINS): $(FIRST_MSG_H_GEN)
 
+# A battle script archive holds the .bin each .s makes, in name order, which
+# is number order, and nothing else. nitroarc on its own packs the whole
+# directory, so the .bin of a script renumbered or removed was packed too and
+# every member after it moved. .narcorder is the list nitroarc reads; -E '*'
+# keeps it from adding the directory's other files after it.
+$(EFFECT_SCRIPT_NARC) $(MOVE_SCRIPT_NARC) $(BTL_SUBSCRIPT_SCRIPT_NARC): %.narc:
+	printf '%s\n' $(notdir $(sort $(filter %.bin,$^))) >$*/.narcorder
+	$(NARC) -cf $@ --index-namespace -E '*' $*
+
 include files/fielddata/eventdata/zone_event.mk
 include files/data/sound/sound_data.mk
 include files/data/gs_areawindow.mk

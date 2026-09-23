@@ -176,6 +176,21 @@ class BuildRuleTests(unittest.TestCase):
         prerequisites = re.search(r"^files_for_compile:(.*)$", database(), re.M).group(1).split()
         self.assertIn("files/application/zukanlist/zkn_data/zukan_enc.naix", prerequisites)
 
+    def test_a_battle_script_archive_holds_script_n_at_member_n(self):
+        """The archive rule packed every .bin in the folder, so a script
+        renumbered or removed left its old .bin in the next build and every
+        script after it ran another's code. Reads the index the build wrote:
+        member N is the .bin of the .s numbered N, and there is no other."""
+        for name in ("subscript", "effect_script", "move_script"):
+            index = ROOT / f"files/battledata/script/{name}.naix"
+            if not index.exists():
+                self.skipTest(f"{index.name} is not built")
+            members = re.findall(rf"^#define NARC_{name}_(\w+)_bin (\d+)$", index.read_text(), re.M)
+            sources = sorted(s.stem for s in (ROOT / f"files/battledata/script/{name}").glob("*.s"))
+            self.assertEqual([stem for stem, _ in members], sources, name)
+            for stem, member in members:
+                self.assertEqual(int(re.search(r"_(\d+)", stem).group(1)), int(member), stem)
+
 
 if __name__ == "__main__":
     unittest.main()
