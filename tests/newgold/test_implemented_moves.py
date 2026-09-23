@@ -442,5 +442,31 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_MEAN_LOOK_TARGET, BSCRIPT_VAR_BATTLER_ATTACKER", holding)
         self.assertIn(f"msg_0197_{import_battle_messages.port_row('no retreat'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER", holding)
 
+    def test_octolock_holds_the_target_and_wears_it_down(self):
+        # Pokemon Central (Tentacolock): held while the user stays in, a stage
+        # of Defense and Sp. Def at each turn's end; not a Ghost-type, not one
+        # already held; the wearing down does not go with a Baton Pass.
+        from test_hold_effects import subscript_named
+        self.assertImplemented("OCTOLOCK", "MOVE_EFFECT_OCTOLOCK")
+        script = effect_script("MOVE_EFFECT_OCTOLOCK")
+        self.assertEqual(script.count("TYPE_GHOST, _FAILED"), 3)
+        self.assertIn("BMON_DATA_STATUS2, STATUS2_MEAN_LOOK, _FAILED", script)
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_OCTOLOCK", script)
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_OCTOLOCK"), "BATTLE_SUBSCRIPT_OCTOLOCK")
+        holding = subscript_named("BATTLE_SUBSCRIPT_OCTOLOCK")
+        self.assertIn("UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_MEAN_LOOK_TARGET, BSCRIPT_VAR_BATTLER_ATTACKER", holding)
+        self.assertIn("SetMoveConditionFlag MOVE_OCTOLOCK, BATTLER_CATEGORY_DEFENDER", holding)
+        self.assertIn("case MOVE_OCTOLOCK:\n        ctx->moveConditions[battlerId].octolocked = TRUE;",
+                      function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SetMoveConditionFlag"))
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        umc = function(controller, "BattleControllerPlayer_UpdateMonCondition")
+        step = umc[umc.index("case UMC_STATE_OCTOLOCK:"):umc.index("case UMC_STATE_BAD_DREAMS:")]
+        self.assertIn("ctx->battlerIdAttacker = ctx->battleMons[battlerId].unk88.battlerIdMeanLook;", step)
+        self.assertIn("BATTLE_SUBSCRIPT_USER_DEF_AND_SPDEF_DOWN_1_STAGE", step)
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        switching = function(overlay, "InitSwitchWork")
+        self.assertLess(switching.index("ctx->moveConditions[i].octolocked = FALSE;"), switching.index("BATTLE_STATUS_BATON_PASS"))
+        self.assertIn("ctx->moveConditions[i].octolocked = FALSE;", function(overlay, "InitFaintedWork"))
+
 if __name__ == "__main__":
     unittest.main()

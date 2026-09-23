@@ -184,9 +184,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // after them. The two moves used last this turn, for Fusion Flare and Fusion
 // Bolt, grew it by four. The Rooms' two bytes grew it by four. Rage Fist's
 // count by party, two of its bytes in the padding the Rooms' left, grew it by
-// twenty-four.
+// twenty-four. Octolock's bit took each battler's move conditions to a second
+// byte, four in all.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3258 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x325C + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -1485,6 +1486,7 @@ typedef enum UpdateMonConditionState {
     UMC_STATE_NIGHTMARE,
     UMC_STATE_CURSE,
     UMC_STATE_BINDING,
+    UMC_STATE_OCTOLOCK,
     UMC_STATE_BAD_DREAMS,
     UMC_STATE_UPROAR,
     UMC_STATE_RAMPAGE,
@@ -1701,6 +1703,23 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
                 }
                 ctx->moveTemp = ctx->battleMons[battlerId].unk88.bindingMove;
                 ctx->battlerIdTemp = battlerId;
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            ctx->stateUpdateMonCondition++;
+            break;
+        case UMC_STATE_OCTOLOCK:
+            // An Octolock wears its target's Defense and Sp. Def down a stage
+            // each at the end of every turn its user stays in (Pokemon
+            // Central, Tentacolock): the drop Close Combat's user takes, but
+            // made by the Octolock's user, so Clear Body, Mist and their kind
+            // stand against it as against any foe's.
+            if (ctx->moveConditions[battlerId].octolocked && (ctx->battleMons[battlerId].status2 & STATUS2_MEAN_LOOK) && ctx->battleMons[battlerId].hp != 0) {
+                ctx->battlerIdStatChange = battlerId;
+                ctx->battlerIdAttacker = ctx->battleMons[battlerId].unk88.battlerIdMeanLook;
+                ctx->statChangeType = SIDE_EFFECT_TYPE_MOVE_EFFECT;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_USER_DEF_AND_SPDEF_DOWN_1_STAGE);
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 flag = 1;

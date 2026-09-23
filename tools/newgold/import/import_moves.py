@@ -420,6 +420,10 @@ IMPLEMENTED_HERE = {
     # No Retreat raises the user's five stats and holds it in (Pokemon
     # Central, Spalle al Muro): effect script 425.
     "NO_RETREAT": "MOVE_EFFECT_NO_RETREAT",
+    # Octolock holds the target and lowers its Defense and Sp. Def at each
+    # turn's end while its user stays (Pokemon Central, Tentacolock): effect
+    # script 426.
+    "OCTOLOCK": "MOVE_EFFECT_OCTOLOCK",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

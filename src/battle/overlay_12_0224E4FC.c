@@ -2446,6 +2446,14 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
     // next turn begins, so a Pokemon sent out between turns does not keep it.
     ctx->turnData[battlerId].switchedIn = TRUE;
 
+    // An Octolock ends when its user leaves, Baton Pass or not: the hold
+    // may pass, the wearing down does not (Pokemon Central, Tentacolock).
+    for (i = 0; i < maxBattlers; i++) {
+        if (ctx->moveConditions[i].octolocked && ctx->battleMons[i].unk88.battlerIdMeanLook == battlerId) {
+            ctx->moveConditions[i].octolocked = FALSE;
+        }
+    }
+
     if (!(ctx->battleStatus & BATTLE_STATUS_BATON_PASS)) {
         for (i = 0; i < maxBattlers; i++) {
             if ((ctx->battleMons[i].status2 & STATUS2_MEAN_LOOK) && (ctx->battleMons[i].unk88.battlerIdMeanLook == battlerId)) {
@@ -2558,6 +2566,7 @@ void InitFaintedWork(BattleSystem *battleSystem, BattleContext *ctx, int battler
     for (i = 0; i < maxBattlers; i++) {
         if ((ctx->battleMons[i].status2 & STATUS2_MEAN_LOOK) && ctx->battleMons[i].unk88.battlerIdMeanLook == battlerId) {
             ctx->battleMons[i].status2 &= ~STATUS2_MEAN_LOOK;
+            ctx->moveConditions[i].octolocked = FALSE;
         }
         if (ctx->battleMons[i].status2 & (MaskOfFlagNo(battlerId) << STATUS2_ATTRACT_SHIFT)) {
             ctx->battleMons[i].status2 &= (MaskOfFlagNo(battlerId) << STATUS2_ATTRACT_SHIFT) ^ 0xFFFFFFFF;
@@ -11813,7 +11822,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_PURIFY,
     BATTLE_SUBSCRIPT_CORE_ENFORCER,
     BATTLE_SUBSCRIPT_ELECTRIFY,
-    BATTLE_SUBSCRIPT_NO_RETREAT
+    BATTLE_SUBSCRIPT_NO_RETREAT,
+    BATTLE_SUBSCRIPT_OCTOLOCK
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

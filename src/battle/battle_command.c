@@ -10255,6 +10255,10 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
     case MOVE_ELECTRIFY:
         ctx->turnData[battlerId].electrified = TRUE;
         break;
+    // Held by the Octolock's user and worn down at each turn's end.
+    case MOVE_OCTOLOCK:
+        ctx->moveConditions[battlerId].octolocked = TRUE;
+        break;
     }
 
     return FALSE;
