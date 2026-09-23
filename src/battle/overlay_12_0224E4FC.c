@@ -9864,6 +9864,12 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         }
     }
 
+    // Assurance doubles against a Pokemon already hurt this turn, which
+    // UPDATE_HP writes down for it (the reference's CalcBaseDamage).
+    if (moveNo == MOVE_ASSURANCE && ctx->turnData[battlerIdTarget].unk3C) {
+        movePower *= 2;
+    }
+
     moveType = BattleMoveTypeForAbility(ctx, calcAttacker.ability, moveNo, type & 0x3F);
 
     GF_ASSERT(ctx->unk_2158 >= 10);

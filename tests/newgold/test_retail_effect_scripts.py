@@ -74,7 +74,6 @@ STILL_DIFFERENT = {
     224: IN_C.format("the berry eaten, ServerDoPostMoveEffects.c"),
     228: IN_C.format("the switch, ServerDoPostMoveEffects.c"),
     230: IN_C.format("Payback's power, CalcBaseDamage.c"),
-    231: IN_C.format("Assurance's power, CalcBaseDamage.c"),
     233: IN_C.format("the fling and the items that cannot be flung, BattleController_BeforeMove.c"),
     241: CALLED_MOVE,
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,

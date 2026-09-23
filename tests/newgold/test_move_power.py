@@ -119,5 +119,19 @@ class RisingPowerTests(unittest.TestCase):
             self.assertNotIn("BSCRIPT_VAR_MOVE_POWER", read(f"files/battledata/script/effect_script/effect_script_{effect}.s"))
 
 
+class DoublingTests(unittest.TestCase):
+    def test_assurance_doubles_against_a_pokemon_hurt_this_turn(self):
+        # Power 100 from the stubbed table: 46; doubled, 200: 90.
+        run_c(self, damage_program(f"""
+    reset(4); EXPECT({hit("MOVE_ASSURANCE")}, 46);
+    ctx.turnData[1].unk3C = -20; EXPECT({hit("MOVE_ASSURANCE")}, 90);
+    // The target's hurt, not the user's; and only Assurance asks.
+    reset(4); ctx.turnData[0].unk3C = -20; EXPECT({hit("MOVE_ASSURANCE")}, 46);
+    reset(4); ctx.turnData[1].unk3C = -20; EXPECT({hit("MOVE_TACKLE")}, 46);
+"""))
+        from test_repels import read
+        self.assertNotIn("BSCRIPT_VAR_MOVE_POWER", read("files/battledata/script/effect_script/effect_script_0231.s"))
+
+
 if __name__ == "__main__":
     unittest.main()
