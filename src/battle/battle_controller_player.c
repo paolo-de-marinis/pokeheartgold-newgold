@@ -3430,6 +3430,12 @@ static BOOL PrimalWeatherStopsMove(u32 weather, int category, int type) {
 // now being used: it has come through everything that can stop a Pokemon
 // acting, and has spent its PP, whether or not it goes on to fail.
 static void NoteMoveUsed(BattleSystem *battleSystem, BattleContext *ctx) {
+    // A move that hits several comes back through here for each target after
+    // the first, with unk_2184 at 13 to pass the checks it has been through
+    // (ov12_0224D03C); it was used once, and noted with its first.
+    if (ctx->unk_2184 == 13) {
+        return;
+    }
     ctx->moveUsedBefore = ctx->moveUsedLast;
     ctx->moveUsedLast = ctx->moveNoCur;
     // Echoed Voice counts a turn a move of it was used in, failed or not;

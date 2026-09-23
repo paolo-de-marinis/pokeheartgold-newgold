@@ -167,8 +167,11 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertImplemented("FUSION_FLARE", "MOVE_EFFECT_HIT")
         self.assertImplemented("FUSION_BOLT", "MOVE_EFFECT_HIT")
         controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
-        self.assertIn("ctx->moveUsedBefore = ctx->moveUsedLast;\n    ctx->moveUsedLast = ctx->moveNoCur;",
-                      function(controller, "NoteMoveUsed"))
+        noted = function(controller, "NoteMoveUsed")
+        self.assertIn("ctx->moveUsedBefore = ctx->moveUsedLast;\n    ctx->moveUsedLast = ctx->moveNoCur;", noted)
+        # Once a move, not once a target: the spread loop comes back with 13.
+        self.assertLess(noted.index("if (ctx->unk_2184 == 13) {\n        return;"), noted.index("ctx->moveUsedBefore"))
+        self.assertIn("ctx->unk_2184 = 13;", function(controller, "ov12_0224D03C"))
         self.assertIn("ctx->moveUsedLast = MOVE_NONE;\n    ctx->moveUsedBefore = MOVE_NONE;",
                       function(controller, "BattleControllerPlayer_TurnEnd"))
         checks = function(controller, "ov12_0224B528")
