@@ -623,8 +623,11 @@ typedef enum EvoMethod {
     // hg-engine: Route 43 and Route 10, by the Power Plant, in place of the
     // Mt. Coronet this game has not got.
     EVO_MAGNETIC_FIELD,
-    EVO_ETERNA,
-    EVO_ROUTE217,
+    // hg-engine: the Moss Rock in Ilex Forest and Viridian Forest, and the Ice
+    // Rock on Ice Path and in the Seafoam Islands, in place of the Eterna
+    // Forest and Route 217 this game has not got.
+    EVO_MOSSY_ROCK,
+    EVO_ICY_ROCK,
     // hg-engine: a level by the time of day, dusk being five in the afternoon.
     EVO_LEVEL_DAY,
     EVO_LEVEL_NIGHT,

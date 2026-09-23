@@ -3274,18 +3274,24 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     *method_ret = EVO_MAGNETIC_FIELD;
                 }
             } break;
-            case EVO_ETERNA:
-                if (usedItem == evoTable[i].method) {
+            case EVO_MOSSY_ROCK: {
+                // hg-engine at d0380a487: Ilex Forest and Viridian Forest
+                // (maps 117 and 147), read as the magnetic field's map is.
+                int mapId = LocalFieldData_GetCurrentPosition(Save_LocalFieldData_Get(SaveData_Get()))->mapId;
+                if (mapId == MAP_ILEX_FOREST || mapId == MAP_VIRIDIAN_FOREST) {
                     target = evoTable[i].target;
-                    *method_ret = EVO_ETERNA;
+                    *method_ret = EVO_MOSSY_ROCK;
                 }
-                break;
-            case EVO_ROUTE217:
-                if (usedItem == evoTable[i].method) {
+            } break;
+            case EVO_ICY_ROCK: {
+                // hg-engine at d0380a487: Ice Path B3F and Seafoam Islands B4F
+                // (maps 239 and 456).
+                int mapId = LocalFieldData_GetCurrentPosition(Save_LocalFieldData_Get(SaveData_Get()))->mapId;
+                if (mapId == MAP_ICE_PATH_B3F || mapId == MAP_SEAFOAM_ISLANDS_B4F) {
                     target = evoTable[i].target;
-                    *method_ret = EVO_ROUTE217;
+                    *method_ret = EVO_ICY_ROCK;
                 }
-                break;
+            } break;
             case EVO_LEVEL_DAY:
                 if (IsNighttime() == 0 && evoTable[i].param <= level) {
                     target = evoTable[i].target;

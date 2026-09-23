@@ -56,8 +56,11 @@ typedef struct LocalFieldData LocalFieldData;
 typedef struct Bag Bag;
 // Nowhere magnetic: the magnetic field has its own test.
 static Location location = { MAP_NEW_BARK };
-// The baseline's name for what hg-engine made the magnetic field.
+// The baseline's names for what hg-engine made the magnetic field and the
+// Moss and Ice Rocks.
 #define EVO_CORONET EVO_MAGNETIC_FIELD
+#define EVO_ETERNA EVO_MOSSY_ROCK
+#define EVO_ROUTE217 EVO_ICY_ROCK
 static struct Evolution table[MAX_EVOS_PER_POKE];
 static int hour, allocations;
 
@@ -204,9 +207,10 @@ static void check_unrelated_methods(void) {
     Party party = { .species = SPECIES_PIKACHU };
     for (int method = EVO_NONE; method <= EVO_ROUTE217; method++) {
         if (method >= EVO_FRIENDSHIP && method <= EVO_FRIENDSHIP_NIGHT) continue;
-        // HeartGold's Mt. Coronet matched a map evolution method no map has;
-        // hg-engine's magnetic field reads the map (test_evolution_methods.py).
-        if (method == EVO_MAGNETIC_FIELD) continue;
+        // HeartGold's Mt. Coronet, Eterna and Route 217 matched a map
+        // evolution method no map has; hg-engine's magnetic field and rocks
+        // read the map (test_evolution_methods.py).
+        if (method >= EVO_MAGNETIC_FIELD && method <= EVO_ICY_ROCK) continue;
         for (unsigned p = 0; p < sizeof(parameters) / sizeof(parameters[0]); p++) {
             one_row(method, parameters[p]);
             for (int context = EVOCTX_LEVELUP; context <= EVOCTX_ITEM_USE; context++) {

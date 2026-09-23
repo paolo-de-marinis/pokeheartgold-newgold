@@ -168,8 +168,9 @@ class EvolutionTests(unittest.TestCase):
         # Route 10 stand in for Mt. Coronet.
         for base, target in [("MAGNETON", "MAGNEZONE"), ("NOSEPASS", "PROBOPASS")]:
             self.assertIn((f"SPECIES_{base}", "EVO_MAGNETIC_FIELD", 0, f"SPECIES_{target}"), rows)
-        # The places they replace were never reachable in Johto.
-        self.assertFalse({row for row in rows if row[1] in ("EVO_ETERNA", "EVO_ROUTE217")})
+        # HeartGold's Eterna and Route 217 rows stay out: their numbers are
+        # the engine's Moss and Ice Rocks now, which neither tree's data uses.
+        self.assertFalse({row for row in rows if row[1] in ("EVO_MOSSY_ROCK", "EVO_ICY_ROCK")})
 
     def test_spritzee_and_swirlix_want_their_items_held(self):
         """hg-engine's Evolutions.c at d0380a487 evolves both by any trade; the

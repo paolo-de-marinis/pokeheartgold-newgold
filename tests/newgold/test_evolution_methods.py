@@ -155,6 +155,33 @@ static void check_magnetic_field(void) {
     }
 }
 
+static void check_rocks(void) {
+    // hg-engine: the Moss Rock in Ilex Forest and Viridian Forest, the Ice
+    // Rock on Ice Path B3F and Seafoam Islands B4F, at any level. Retail's
+    // Eterna and Route 217 compared the map's evolution method, which no map
+    // has; the rocks read the map, so that number evolves nothing now.
+    static const struct { int method; int maps[2]; u16 target; } rocks[] = {
+        { EVO_MOSSY_ROCK, { MAP_ILEX_FOREST, MAP_VIRIDIAN_FOREST }, SPECIES_LEAFEON },
+        { EVO_ICY_ROCK, { MAP_ICE_PATH_B3F, MAP_SEAFOAM_ISLANDS_B4F }, SPECIES_GLACEON },
+    };
+    Pokemon mon = { .species = SPECIES_EEVEE, .level = 1 };
+    for (int r = 0; r < 2; r++) {
+        one_row(rocks[r].method, 0, rocks[r].target);
+        for (int map = 0; map < MAP_ID_MAX; map++) {
+            location.mapId = map;
+            u16 expected = map == rocks[r].maps[0] || map == rocks[r].maps[1] ? rocks[r].target : SPECIES_NONE;
+            assert(evolve(&mon, NULL, rocks[r].method) == expected);
+            int method = -1;
+            assert(GetMonEvolution(NULL, &mon, EVOCTX_LEVELUP, rocks[r].method, &method) == expected);
+        }
+        location.mapId = rocks[r].maps[0];
+        for (int context = EVOCTX_TRADE; context <= EVOCTX_ITEM_USE; context++) {
+            assert(GetMonEvolution(NULL, &mon, context, ITEM_LEAF_STONE, NULL) == SPECIES_NONE);
+        }
+    }
+    location.mapId = MAP_NEW_BARK;
+}
+
 static void check_time_of_day(void) {
     // hg-engine: this game's day and night, and dusk as the hour from five.
     // Night is from eight in the evening to four in the morning.
@@ -381,6 +408,7 @@ static void check_lets_go(void) {
 
 int main(void) {
     check_magnetic_field();
+    check_rocks();
     check_time_of_day();
     check_rain();
     check_dark_type_in_party();
