@@ -76,11 +76,13 @@ void Options::ReadObjectFile(vector<unsigned char> &rodata, vector<uint32_t> &si
         sizes.resize(count_if(objfile.symbols().begin(), objfile.symbols().end(), pred));
         ELF_ASSERT(!sizes.empty());
         names.resize(sizes.size());
+        offsets.resize(sizes.size());
         int t = 0;
         for (const auto &sym : objfile.symbols()) {
             if (pred(sym)) {
                 sizes[t] = sym.st_size;
                 names[t] = objfile.GetSymbolName(sym);
+                offsets[t] = sym.st_value;
                 ++t;
             }
         }
@@ -102,11 +104,22 @@ void Options::ReadObjectFile(vector<unsigned char> &rodata, vector<uint32_t> &si
 // Every row in this repository is a multiple of four but one -- evo.narc's
 // became 50 bytes when a Pokemon was allowed an eighth evolution -- and that
 // archive has read as noise from Ivysaur onwards ever since.
+//
+// That holds for rows laid out back to back (__size). Members that are
+// symbols are where the assembler put them, which for zukan_data is after a
+// ".balign 4, 255": counting them as packed took each member after an
+// odd-sized one from two bytes too early, so every Dex sort list began with
+// the previous one's last species or its padding. They are read from their
+// own offsets.
 void Options::OverwritePadding(vector<unsigned char> &rodata, vector<uint32_t> &sizes) const {
     vector<unsigned char> padded;
     padded.reserve((rodata.size() + 3) & ~3);
     size_t start = 0;
-    for (auto &size : sizes) {
+    for (size_t i = 0; i < sizes.size(); i++) {
+        const uint32_t size = sizes[i];
+        if (!offsets.empty()) {
+            start = offsets[i];
+        }
         size_t end = start + size;
         if (end > rodata.size()) {
             end = rodata.size();
@@ -115,8 +128,9 @@ void Options::OverwritePadding(vector<unsigned char> &rodata, vector<uint32_t> &
         padded.resize((padded.size() + 3) & ~3, padval);
         start = end;
     }
-    // Anything the sizes did not account for is kept as it was, aligned.
-    if (start < rodata.size()) {
+    // Anything the sizes did not account for is kept as it was, aligned; past
+    // the last symbol there is only the assembler's alignment.
+    if (offsets.empty() && start < rodata.size()) {
         padded.insert(padded.end(), rodata.begin() + start, rodata.end());
         padded.resize((padded.size() + 3) & ~3, padval);
     }

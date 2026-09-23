@@ -30,6 +30,9 @@ class Options {
     char padval = '\xFF';
     Elf objfile;
     ofstream narcfile;
+    // Where each member starts in .rodata, when the members are symbols: the
+    // assembler aligns them, so they are not packed one after another.
+    vector<uint32_t> offsets;
 
     void ReadObjectFile(vector<unsigned char> &rodata, vector<uint32_t> &sizes, vector<string> &names);
     void OverwritePadding(vector<unsigned char> &rodata, vector<uint32_t> &sizes) const;
