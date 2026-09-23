@@ -211,6 +211,7 @@ static int GetNaturalGiftType(BattleContext *ctx, int battlerId) { (void)ctx; (v
 static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int a, int b, int c) { (void)bs; (void)ctx; (void)a; (void)b; (void)c; return 0; }
 static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; (void)battlerId; return 1; }
 static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; return 0; }
+static int BeatUp_TotalPower(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return 0; }
 static int CalcMoveDamage(BattleSystem *bs, BattleContext *ctx, u32 move, u32 side, u32 field, u16 power, u8 type, u8 attacker, u8 target, u8 crit) {
     (void)bs; (void)ctx; (void)move; (void)side; (void)field; (void)power; (void)attacker; (void)target; (void)crit;
     sDamageType = type;

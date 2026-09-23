@@ -3,6 +3,7 @@
 #include "constants/items.h"
 #include "constants/moves.h"
 
+#include "battle/battle_command.h"
 #include "battle/battle_system.h"
 #include "battle/overlay_12_0224E4FC.h"
 #include "battle/trainer_ai.h"
@@ -150,6 +151,9 @@ u32 ov10_0221F084(BattleSystem *battleSystem, BattleContext *ctx, u16 move, u16 
         break;
     case MOVE_SONIC_BOOM:
         damage = 20;
+        break;
+    case MOVE_BEAT_UP:
+        power = BeatUp_TotalPower(battleSystem, ctx, battlerId);
         break;
     case MOVE_LOW_KICK:
     case MOVE_GRASS_KNOT:

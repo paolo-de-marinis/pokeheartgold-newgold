@@ -7,6 +7,7 @@
 // Realistically these should all be static in battle_command.c, but the command table that needs them is in src/battle/overlay_12_0226C3E8.c, a file of its own for the layout of retail's read-only data, so they stay public, and declared here so the compiler does not allow a function without a declaration
 
 BOOL RunBattleScript(BattleSystem *battleSystem, BattleContext *ctx);
+int BeatUp_TotalPower(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL BtlCmd_PlayEncounterAnimation(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_SetPokemonEncounter(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_PokemonSlideIn(BattleSystem *battleSystem, BattleContext *ctx);

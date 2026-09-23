@@ -4804,14 +4804,36 @@ BOOL BtlCmd_TryTeleport(BattleSystem *battleSystem, BattleContext *ctx) {
 
 // A party member Beat Up strikes for: the user whatever its state, and
 // everyone else who is not fainted, not an egg and has no status condition.
-static BOOL BeatUpMemberStrikes(BattleSystem *battleSystem, BattleContext *ctx, int slot) {
-    Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdAttacker, slot);
+static BOOL BeatUpMemberStrikes(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int slot) {
+    Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, battlerId, slot);
 
-    return slot == ctx->selectedMonIndex[ctx->battlerIdAttacker]
+    return slot == ctx->selectedMonIndex[battlerId]
         || (GetMonData(mon, MON_DATA_HP, NULL) != 0
             && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_NONE
             && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG
             && GetMonData(mon, MON_DATA_STATUS, NULL) == STATUS_NONE);
+}
+
+// The power of the hit a member strikes: 5 + its base Attack / 10.
+static int BeatUpMemberPower(BattleSystem *battleSystem, int battlerId, int slot) {
+    Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, battlerId, slot);
+
+    return 5 + GetMonBaseStat_HandleAlternateForm(GetMonData(mon, MON_DATA_SPECIES, NULL), GetMonData(mon, MON_DATA_FORM, NULL), BASE_ATK) / 10;
+}
+
+// What the trainer AI values the battler's Beat Up at (ov10_0221F084): the
+// powers of all its hits, summed into one.
+// ponytail: one hit at the summed power, not one estimate per hit; it misses
+// each hit's own rounding and critical roll, which the AI's comparison does not need.
+int BeatUp_TotalPower(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int i, power = 0;
+
+    for (i = 0; i < BattleSystem_GetPartySize(battleSystem, battlerId); i++) {
+        if (BeatUpMemberStrikes(battleSystem, ctx, battlerId, i)) {
+            power += BeatUpMemberPower(battleSystem, battlerId, i);
+        }
+    }
+    return power;
 }
 
 // Beat Up from the fifth generation on, as the reference has it (its BeatUp
@@ -4822,7 +4844,6 @@ static BOOL BeatUpMemberStrikes(BattleSystem *battleSystem, BattleContext *ctx, 
 // call gives the next member's power to the CalcDamage after it.
 BOOL BtlCmd_BeatUp(BattleSystem *battleSystem, BattleContext *ctx) {
     int monCnt, i;
-    Pokemon *mon;
 
     BattleScriptIncrementPointer(ctx, 1);
 
@@ -4831,7 +4852,7 @@ BOOL BtlCmd_BeatUp(BattleSystem *battleSystem, BattleContext *ctx) {
     if (ctx->multiHitCountTemp == 0) {
         ctx->multiHitCount = 0;
         for (i = 0; i < monCnt; i++) {
-            if (BeatUpMemberStrikes(battleSystem, ctx, i)) {
+            if (BeatUpMemberStrikes(battleSystem, ctx, ctx->battlerIdAttacker, i)) {
                 ctx->multiHitCount++;
             }
         }
@@ -4840,15 +4861,14 @@ BOOL BtlCmd_BeatUp(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->beatUpCount = 0;
     }
 
-    while (ctx->beatUpCount < monCnt && !BeatUpMemberStrikes(battleSystem, ctx, ctx->beatUpCount)) {
+    while (ctx->beatUpCount < monCnt && !BeatUpMemberStrikes(battleSystem, ctx, ctx->battlerIdAttacker, ctx->beatUpCount)) {
         ctx->beatUpCount++;
     }
     if (ctx->beatUpCount >= monCnt) {
         return FALSE;
     }
 
-    mon = BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdAttacker, ctx->beatUpCount++);
-    ctx->movePower = 5 + GetMonBaseStat_HandleAlternateForm(GetMonData(mon, MON_DATA_SPECIES, NULL), GetMonData(mon, MON_DATA_FORM, NULL), BASE_ATK) / 10;
+    ctx->movePower = BeatUpMemberPower(battleSystem, ctx->battlerIdAttacker, ctx->beatUpCount++);
 
     return FALSE;
 }

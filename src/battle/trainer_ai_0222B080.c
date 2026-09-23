@@ -23,6 +23,7 @@ const u16 ov10_0222B080[] = {
     MOVE_EFFECT_POWER_BASED_ON_LOW_FRIENDSHIP,
     MOVE_EFFECT_10_DAMAGE_FLAT,
     MOVE_EFFECT_INCREASE_POWER_WITH_WEIGHT,
+    MOVE_EFFECT_BEAT_UP, // one hit per member, its table power the engine's 1
     0xFFFF,
 };
 
