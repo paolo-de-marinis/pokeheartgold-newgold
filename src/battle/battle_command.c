@@ -2660,7 +2660,7 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                 } else if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_SHIELD_DUST) == TRUE && ctx->statChangeType == 2) {
                     unkD = 1;
                 } else if ((ctx->battleMons[ctx->battlerIdStatChange].status2 & STATUS2_SUBSTITUTE)
-                    && !(SideEffectIsTheMoves(ctx->statChangeType) && InfiltratorGoesRoundSubstitute(ctx, ctx->battlerIdStatChange))) {
+                    && !(SideEffectIsTheMoves(ctx->statChangeType) && MoveGoesRoundSubstitute(ctx, ctx->battlerIdStatChange))) {
                     unkD = 2;
                 }
             } else if (mon->statChanges[1 + stat] == 0) {
@@ -6669,10 +6669,11 @@ BOOL BtlCmd_CheckSubstitute(BattleSystem *battleSystem, BattleContext *ctx) {
     int battlerId = BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side);
 
     // Leech Seed, Gastro Acid, Nightmare, the status subscripts and the rest
-    // reach past it for an Infiltrator. The reference lets through only its
-    // direct and move-effect types; its chance effects and the move's own
-    // script are the move's too, and the games let those past as well.
-    if (SideEffectIsTheMoves(ctx->statChangeType) && InfiltratorGoesRoundSubstitute(ctx, battlerId)) {
+    // reach past it for an Infiltrator, and for a sound move. The reference
+    // lets through only its direct and move-effect types, and only for
+    // Infiltrator; its chance effects and the move's own script are the
+    // move's too, and the games let those past as well.
+    if (SideEffectIsTheMoves(ctx->statChangeType) && MoveGoesRoundSubstitute(ctx, battlerId)) {
         return FALSE;
     }
 

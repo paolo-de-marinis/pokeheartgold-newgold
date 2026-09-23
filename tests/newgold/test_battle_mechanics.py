@@ -539,6 +539,10 @@ static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->ba
 static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { ctx->pc += n; }
 static int BattleScriptReadWord(BattleContext *ctx) { return ctx->words[ctx->pc++ - 1]; }
 static int BattleSystem_GetBattlerIDBySide(BattleSystem *bs, BattleContext *ctx, int side) { (void)bs; (void)ctx; return side; }
+static BOOL BattleMoveIsSoundBased(u32 move) {
+    return move == MOVE_GROWL || move == MOVE_SING || move == MOVE_SUPERSONIC || move == MOVE_CONFIDE
+        || move == MOVE_PARTING_SHOT || move == MOVE_BUG_BUZZ;
+}
 @FUNCTIONS@
 // Whether CheckSubstitute on battler 1 jumps to its "a substitute is there".
 static int stopped(int ability, u32 move, int type, int battler) {
@@ -568,6 +572,16 @@ int main(void) {
     assert(stopped(ABILITY_INFILTRATOR, MOVE_TACKLE, SIDE_EFFECT_TYPE_ABILITY, 1));
     assert(stopped(ABILITY_INFILTRATOR, MOVE_TACKLE, SIDE_EFFECT_TYPE_HELD_ITEM, 1));
     assert(stopped(ABILITY_INFILTRATOR, MOVE_SUBSTITUTE, SIDE_EFFECT_TYPE_NONE, 0));
+    // A sound move's own effects go round it as its damage does, from any
+    // user; not a Pokemon's own substitute, nor what is not the move's.
+    assert(!stopped(ABILITY_NONE, MOVE_GROWL, SIDE_EFFECT_TYPE_DIRECT, 1));
+    assert(!stopped(ABILITY_NONE, MOVE_SING, SIDE_EFFECT_TYPE_DIRECT, 1));
+    assert(!stopped(ABILITY_NONE, MOVE_SUPERSONIC, SIDE_EFFECT_TYPE_DIRECT, 1));
+    assert(!stopped(ABILITY_NONE, MOVE_CONFIDE, SIDE_EFFECT_TYPE_DIRECT, 1));
+    assert(!stopped(ABILITY_NONE, MOVE_PARTING_SHOT, SIDE_EFFECT_TYPE_DIRECT, 1));
+    assert(!stopped(ABILITY_NONE, MOVE_BUG_BUZZ, SIDE_EFFECT_TYPE_INDIRECT, 1));
+    assert(stopped(ABILITY_NONE, MOVE_GROWL, SIDE_EFFECT_TYPE_DIRECT, 0));
+    assert(stopped(ABILITY_NONE, MOVE_BUG_BUZZ, SIDE_EFFECT_TYPE_ABILITY, 1));
     return 0;
 }
 """
@@ -578,7 +592,7 @@ class InfiltratorSubstituteTests(unittest.TestCase):
         # battle_script_commands.c:3716 at d0380a487, and Pokemon Central's
         # Intrapasso for which effects are the move's.
         commands = COMMANDS.read_text()
-        functions = "\n".join([function(OVERLAY.read_text(), "InfiltratorGoesRoundSubstitute")]
+        functions = "\n".join([function(OVERLAY.read_text(), name) for name in ("InfiltratorGoesRoundSubstitute", "MoveGoesRoundSubstitute")]
                               + [function(commands, name) for name in ("SideEffectIsTheMoves", "BtlCmd_CheckSubstitute")])
         with tempfile.TemporaryDirectory(prefix="newgold-infiltrator-") as directory:
             path = Path(directory)
@@ -590,7 +604,7 @@ class InfiltratorSubstituteTests(unittest.TestCase):
 
     def test_a_stat_drop_asks_the_same(self):
         body = function(COMMANDS.read_text(), "BtlCmd_ChangeStatStage")
-        self.assertIn("!(SideEffectIsTheMoves(ctx->statChangeType) && InfiltratorGoesRoundSubstitute(ctx, ctx->battlerIdStatChange))", body)
+        self.assertIn("!(SideEffectIsTheMoves(ctx->statChangeType) && MoveGoesRoundSubstitute(ctx, ctx->battlerIdStatChange))", body)
 
     def test_the_hit_itself_goes_round_it_and_so_does_a_sound_move(self):
         # ServerHPCalc.c:42 at d0380a487: the substitute takes the damage only

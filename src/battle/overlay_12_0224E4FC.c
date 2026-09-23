@@ -8912,6 +8912,15 @@ BOOL InfiltratorGoesRoundSubstitute(BattleContext *ctx, int battlerId) {
         && ctx->moveNoCur != MOVE_TRANSFORM && ctx->moveNoCur != MOVE_SKY_DROP;
 }
 
+// Whether the move in use reaches past another Pokemon's substitute with its
+// own effects: an Infiltrator's, as above, and from the sixth generation any
+// sound move that can hit something other than its user (Pokemon Central,
+// Proprieta delle mosse) -- Growl, Sing, Supersonic, Confide, Parting Shot and
+// the added effects of the damaging ones, as well as their damage (below).
+BOOL MoveGoesRoundSubstitute(BattleContext *ctx, int battlerId) {
+    return InfiltratorGoesRoundSubstitute(ctx, battlerId) || (battlerId != ctx->battlerIdAttacker && BattleMoveIsSoundBased(ctx->moveNoCur));
+}
+
 // Whether a substitute takes this hit for the Pokemon behind it: an
 // Infiltrator's hit and a sound move's go round it (ServerHPCalc.c:42 at
 // d0380a487).
