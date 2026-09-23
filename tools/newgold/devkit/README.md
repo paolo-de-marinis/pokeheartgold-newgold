@@ -43,6 +43,24 @@ Pokemon it makes are the game's in the details that bite: the moves
 `InitBoxMonMoveset` would give, `Mail_Init`'s empty mail record, the stats
 of the form's own record (`ResolveMonForm`).
 
+It holds a Pokemon to what its species can have. `learnable_moves` is every
+move a species can know at any level, each with every way it is learnt:
+its level-up learnset (`wotbl.narc`; level 0 is on evolving), the TMs, HMs
+and TRs its `personal.json` record is compatible with (`sTMHMMoves` and
+`ItemToTMHMId` in `src/item.c`), the move tutors (`waza_oshie.json` through
+`sTutorMoves`, at the record `GetMoveTutorLearnsetIndex` reads), the egg
+moves (`kowaza_list.narc`) of the species its line hatches as, and the same
+for its pre-evolutions (`evo.json`; a form without one of its own takes its
+base's, `sFormBaseSpecies`). `species_abilities` is its first, second and
+hidden ability by the slot the game keeps each in: the personality's low
+bit (an Ability Capsule turns it over) or `MON_HIDDEN_ABILITY_BIT`, which
+`UpdateBoxMonAbility` reads again on evolving. `edit_mon` and `new_mon`
+refuse anything else (`Illegal`); a species change brings the new species'
+moves at that level (`preset_moves`) and the ability the game gives it,
+and only a Pokemon keeping its species keeps a move it already knew that
+no rule lists, an event's. Every table is read from the tree as it is: a
+reading is kept only until its file changes (`fresh()`).
+
 ## saveui.py
 
 A double click on `Editor salvataggi` in this folder (`Editor
@@ -88,9 +106,9 @@ it as it is.
 
 On the right, the open save, in tabs: Allenatore (name, ids, money, gender,
 the sixteen badges, coins, play time), Squadra and Box (every Pokemon, a
-slot editor for species, level, nature, held item, moves -- with the
-learnset at that level a click away -- IVs, EVs and friendship; adding,
-removing, reordering, moving between box and party), Borsa, Pokedex (per
+slot editor for species, level, nature, ability, held item, moves, IVs, EVs
+and friendship; adding, removing, reordering, moving between box and
+party), Borsa, Pokedex (per
 species, all at once, and the two switches), Posizione (the `--where`
 write), Flag e variabili (by name) and Info (the two halves and the block
 table). The name can only be written in letters and digits: that is all
@@ -98,6 +116,17 @@ table). The name can only be written in letters and digits: that is all
 species list leaves out what a Pokemon cannot be (the egg, the retail form
 rows 496-507, the forms only a battle has); a position must be a tile of
 the map, not the black around it.
+
+In the Pokemon dialog a move is picked only from the species'
+`learnable_moves`, each shown with all its sources as tags (Lv. 36, MT 035,
+Insegnante, Mossa uovo, da Ponyta Lv. 20...), and the ability from its
+`species_abilities`. Changing the species puts in, at once, the moves the
+game gives the new species at that level and the ability it would give
+this Pokemon as that species; "Mosse per livello" puts in the same moves.
+The server refuses in Italian a move or an ability the species cannot
+have, whatever sent it; a move the Pokemon already knew that the species
+does not learn (an event's) stays while it is left alone and the species
+is kept.
 
 Nothing is deleted. Before every write the file is copied to
 `LIBRARY/.backups/<its path>/<timestamp>.sav` -- an emulator slot to
