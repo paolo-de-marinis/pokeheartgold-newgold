@@ -3044,6 +3044,38 @@ static void BattleControllerPlayer_RunScript(BattleSystem *battleSystem, BattleC
     }
 }
 
+// Stance Change (BattleController_BeforeMove.c:1522): before an Aegislash
+// uses a move, King's Shield puts it in its Shield Forme and any move with
+// power in its Blade Forme. The species to become, or SPECIES_NONE. The
+// ability is read as hg-engine reads it, not through GetBattlerAbility, since
+// nothing suppresses it; a transformed battler keeps the form it copied.
+static u16 Battler_StanceChangeForm(BattleContext *ctx, int battlerId, u16 move) {
+    if (ctx->battleMons[battlerId].ability != ABILITY_STANCE_CHANGE || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+        return SPECIES_NONE;
+    }
+    if (move == MOVE_KINGS_SHIELD && ctx->battleMons[battlerId].species == SPECIES_AEGISLASH_BLADE) {
+        return SPECIES_AEGISLASH;
+    }
+    if (BattleMoveTbl(ctx, move)->power != 0 && ctx->battleMons[battlerId].species == SPECIES_AEGISLASH) {
+        return SPECIES_AEGISLASH_BLADE;
+    }
+    return SPECIES_NONE;
+}
+
+static BOOL TryStanceChange(BattleSystem *battleSystem, BattleContext *ctx) {
+    u16 form = Battler_StanceChangeForm(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
+
+    if (form == SPECIES_NONE) {
+        return FALSE;
+    }
+    ctx->battlerIdTemp = ctx->battlerIdAttacker;
+    BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdAttacker, form, FALSE);
+    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FORM_CHANGE);
+    ctx->commandNext = ctx->command;
+    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+    return TRUE;
+}
+
 static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
     switch (ctx->unk_48) {
     case 0:
@@ -3082,6 +3114,11 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->unk_48++;
         // fallthrough
     case 3:
+        // Before the PP goes, where hg-engine's before-move sequence has it;
+        // the check comes round again once the form has changed, and passes.
+        if (TryStanceChange(battleSystem, ctx) == TRUE) {
+            return;
+        }
         if (!(ctx->unk_2184 & (1 << 3)) && ov12_0224B1FC(battleSystem, ctx) == TRUE) {
             return;
         }

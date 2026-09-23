@@ -46,8 +46,11 @@ typedef struct {
 typedef struct {
     BattleMon battleMons[4];
 } BattleContext;
+typedef struct { u16 power; } MoveTbl;
 
 static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static MoveTbl sMoves[] = { [MOVE_TACKLE] = { 40 }, [MOVE_SWORDS_DANCE] = { 0 }, [MOVE_KINGS_SHIELD] = { 0 } };
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u16 move) { (void)ctx; return &sMoves[move]; }
 
 static BattleContext ctx;
 static void set(u16 species, u16 ability, s32 hp, u32 maxHp) {
@@ -56,8 +59,8 @@ static void set(u16 species, u16 ability, s32 hp, u32 maxHp) {
 """
 
 
-def run(functions, body, prefix):
-    source = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+def run(functions, body, prefix, path="src/battle/overlay_12_0224E4FC.c"):
+    source = (ROOT / path).read_text()
     program = PREFIX + "\n".join(function(source, name) for name in functions) + "\nint main(void) {\n" + body + "\n    return 0;\n}\n"
     with tempfile.TemporaryDirectory(prefix=prefix) as directory:
         path = Path(directory)
@@ -119,6 +122,28 @@ class FormChangeTests(unittest.TestCase):
     assert(Battler_SchoolingForm(&ctx, 0) == SPECIES_NONE);
     puts("PASS: Schooling above a quarter of the HP, from level 20.");""", "newgold-schooling-"))
         self.assertIn("form = Battler_SchoolingForm(ctx, ctx->battlerIdTemp);", self.check)
+
+    def test_stance_change(self):
+        """Before an Aegislash moves, a move with power puts it in its Blade
+        Forme and King's Shield in its Shield Forme; a status move changes
+        nothing, nor does the move of a transformed battler."""
+        print(run(["Battler_StanceChangeForm"], r"""
+    set(SPECIES_AEGISLASH, ABILITY_STANCE_CHANGE, 1, 1);
+    assert(Battler_StanceChangeForm(&ctx, 0, MOVE_TACKLE) == SPECIES_AEGISLASH_BLADE);
+    assert(Battler_StanceChangeForm(&ctx, 0, MOVE_SWORDS_DANCE) == SPECIES_NONE);
+    assert(Battler_StanceChangeForm(&ctx, 0, MOVE_KINGS_SHIELD) == SPECIES_NONE);
+    set(SPECIES_AEGISLASH_BLADE, ABILITY_STANCE_CHANGE, 1, 1);
+    assert(Battler_StanceChangeForm(&ctx, 0, MOVE_KINGS_SHIELD) == SPECIES_AEGISLASH);
+    assert(Battler_StanceChangeForm(&ctx, 0, MOVE_TACKLE) == SPECIES_NONE);
+    set(SPECIES_AEGISLASH, ABILITY_STANCE_CHANGE, 1, 1);
+    ctx.battleMons[0].status2 = STATUS2_TRANSFORM;
+    assert(Battler_StanceChangeForm(&ctx, 0, MOVE_TACKLE) == SPECIES_NONE);
+    set(SPECIES_AEGISLASH, ABILITY_NONE, 1, 1);
+    assert(Battler_StanceChangeForm(&ctx, 0, MOVE_TACKLE) == SPECIES_NONE);
+    puts("PASS: Stance Change to Blade for a move with power, to Shield for King's Shield.");""",
+                  "newgold-stance-", "src/battle/battle_controller_player.c"))
+        before = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224C38C")
+        self.assertLess(before.index("TryStanceChange(battleSystem, ctx)"), before.index("ov12_0224B1FC(battleSystem, ctx)"))
 
 
 if __name__ == "__main__":
