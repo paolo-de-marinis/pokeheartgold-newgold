@@ -38,6 +38,11 @@ CALLED_MOVE = "the called move's Parental Bond, started in C here (TryStartParen
 BACK_TO_BEFORE_MOVE = ("; the engine also sends the called move back through the before-move checks "
                        "(GoBackToBeforeMove), where here it starts at once, as in retail")
 
+WEATHER = ("the engine sets the weather through its HANDLE_*_TEMPORARY subscripts where this script and "
+           "WEATHER_START do the same; under a strong weather its script adds \"But it failed!\" after the "
+           "strong weather's own line (MOVE_STATUS_FAILED), where this ends the move on the line "
+           "(NO_MORE_WORK), as Snowscape (effect 324) does here")
+
 STILL_DIFFERENT = {
     7: IN_C.format("Damp and the user's fainting, BattleController_BeforeMove.c"),
     34: "Pay Day scatters its coins on the first strike or the only one; the engine's branch scatters "
@@ -48,20 +53,23 @@ STILL_DIFFERENT = {
          "which retail's Metronome does not",
     97: CALLED_MOVE,
     105: IN_C.format("the theft, ServerDoPostMoveEffects.c"),
-    115: "the primal weathers and the engine's weather subscripts",
+    115: WEATHER,
     122: "Present asks for Parental Bond with CheckAbility, which a suppressed ability fails, where the "
           "engine reads the raw ability (BMON_DATA_ABILITY)",
     129: "the engine raises Rapid Spin's Speed here and clears the field in "
          "ServerDoPostMoveEffects.c; here both are the move's additional effect, subscript 115",
-    132: "Mega Sol, which the recovery command here does not read",
-    136: "the primal weathers and the engine's weather subscripts",
-    137: "the primal weathers and the engine's weather subscripts",
+    132: "Mega Sol's ability popup, which the engine shows off the raw ability, so a suppressed Mega Sol "
+         "would show it where BattlerMoveWeather no longer gives it the sun",
+    136: WEATHER,
+    137: WEATHER,
     148: "the engine runs the landing back through its before-move sequence; here it is subscript 121's, "
          "worked out by BattleContext_LandFutureSight, and the use keeps retail's flags",
     150: "the doubling against Minimize is the damage chain's here, for every stamping move (BattleMoveStampsOnMinimize), as battle_calc_damage.c 6.9.14.1 does it",
     151: IN_C.format("the charge turn, BattleController_BeforeMove.c"),
-    161: IN_C.format("Spit Up's power from the stockpile, CalcBaseDamage.c"),
-    164: "the primal weathers and the engine's weather subscripts",
+    161: "Spit Up's power from the stockpile: the engine reads it in CalcBaseDamage.c, and on Parental "
+         "Bond's second strike, the stockpile spent, falls back on damage_power, which its script never "
+         "sets; the script here sets the power before the stockpile goes, for both strikes",
+    164: WEATHER,
     171: IN_C.format("Smelling Salts' doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
     173: CALLED_MOVE,
     178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
@@ -76,7 +84,8 @@ STILL_DIFFERENT = {
     241: CALLED_MOVE,
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     253: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
-    259: "the engine's Room Service subscript and its message wait",
+    259: "the engine waits for a button after only buffering the line that restores the dimensions, "
+         "which waits on nothing, and calls its Room Service subscript by another name (395 here)",
     261: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
     262: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     269: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
