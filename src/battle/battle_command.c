@@ -7949,16 +7949,14 @@ static u32 BattleScript_GainerExp(u32 exp, u32 faintedLevel, u32 gainerLevel, in
     return (participated ? participantExp : 0) + (holdsExpShare ? expShareExp : 0);
 }
 
-// A throw is sometimes a critical one: the ball flashes, shakes once and
-// settles. It is no more likely to catch than an ordinary throw — the roll is
-// the same — it just takes less time about it. How often depends on how much
-// of the Johto dex the player has filled in.
+// A throw is sometimes a critical one: the ball shakes once, and a single
+// shake check decides it rather than four, so it is likelier to catch. How
+// often depends on how much of the Johto dex the player has filled in.
 //
-// The reference shortens the throw to a single shake check when this roll hits,
-// which would make the capture likelier; it also never sets the flag that tells
-// the animation a critical happened, so there a critical throw is a guaranteed
-// escape. That is a dead variable rather than a rule, so the roll stays what it
-// reads as here: the animation, and nothing else.
+// The reference means the same and gets neither half: its rate multiplies an
+// int by a u32 and wraps, so the roll never hits, and were it to hit, the flag
+// its caller reads is never set, so the one passed check would come back as a
+// plain single shake -- an escape. Neither is copied (Paolo, 2026-09-23).
 static u32 CriticalCaptureRate(BattleSystem *bsys, u32 modifiedCatchRate) {
     u16 owned = BattleSystem_CountRegionalDexOwned(bsys);
     u32 tenths;
@@ -8237,15 +8235,25 @@ static u32 BattleSystem_CalculateBallShakes(BattleSystem *bsys, BattleContext *c
 
     ctx->criticalCapture = BattleSystem_Random(bsys) % 256 < CriticalCaptureRate(bsys, modifiedCatchRate / CATCH_Q12_ONE);
 
-    // Step 11: four shake checks against the table's chance.
+    // Step 11: four shake checks against the table's chance, or one for a
+    // critical throw -- which that one catches, and whose failure breaks free
+    // without a shake, as the reference's DealWithCriticalCaptureShakes has it.
     u32 shakeChance = modifiedCatchRate == 255 * CATCH_Q12_ONE ? 0x10000 : sShakeChances[modifiedCatchRate / CATCH_Q12_ONE];
     s32 shakeCount;
     if (catchRate > 255) {
         shakeCount = BALL_SHAKE_MAX;
     } else {
-        for (shakeCount = 0; shakeCount < BALL_SHAKE_MAX; shakeCount++) {
+        s32 shakeChecks = ctx->criticalCapture ? 1 : BALL_SHAKE_MAX;
+        for (shakeCount = 0; shakeCount < shakeChecks; shakeCount++) {
             if (BattleSystem_Random(bsys) >= shakeChance) {
                 break;
+            }
+        }
+        if (ctx->criticalCapture) {
+            if (shakeCount == 1) {
+                shakeCount = BALL_SHAKE_MAX;
+            } else {
+                ctx->criticalCapture = FALSE;
             }
         }
     }
