@@ -49,6 +49,7 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count);
 // wanted it before the Punching Glove.
 static BOOL BattleMoveIsPunching(u32 moveNo);
 static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int moveNo);
+static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item);
 static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault);
 static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId);
 
@@ -1631,6 +1632,25 @@ BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *scri
     return FALSE;
 }
 
+// A Berry flung at a Cud Chew Pokemon is kept for the turn after, when it
+// did something (Pokemon Central, Ruminante: Lancio). TryFling cannot know
+// that, running before the hit; this is where the hit is known, and it asks
+// what subscript 220 asks before it runs the Berry's script: a script to run,
+// the target standing and no substitute in the way. The Berry itself left the
+// thrower's hand through RemoveItem, which kept it in recycleItem.
+static void CudChewKeepsFlungBerry(BattleContext *ctx, int script) {
+    int battlerId = ctx->battlerIdStatChange;
+
+    if (script != BATTLE_SUBSCRIPT_FLING || !ctx->flingScript || !ctx->battleMons[battlerId].hp) {
+        return;
+    }
+    if (((ctx->battleMons[battlerId].status2 & STATUS2_SUBSTITUTE) || (ctx->selfTurnData[battlerId].unk14 & SELF_TURN_FLAG_SUBSTITUTE_HIT))
+        && !InfiltratorGoesRoundSubstitute(ctx, battlerId)) {
+        return;
+    }
+    CudChewKeepsBerry(ctx, battlerId, ctx->recycleItem[ctx->battlerIdAttacker]);
+}
+
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     BOOL ret = FALSE;
     u16 effectChance;
@@ -1656,6 +1676,7 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         ctx->unk_2174 = 0;
         if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
             ret = TRUE;
+            CudChewKeepsFlungBerry(ctx, *out);
         }
         // U-turn, Volt Switch and Flip Turn do not take their user out when
         // the Pokemon they hit is leaving by Emergency Exit or Wimp Out

@@ -865,6 +865,63 @@ class CudChewTests(unittest.TestCase):
         self.assertIn("script = BATTLE_SUBSCRIPT_CUD_CHEW;", chew)
         self.assertIn("CallFromVar BSCRIPT_VAR_TEMP_DATA", subscript("CudChew"))
 
+    FLING_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint32_t u32; typedef uint16_t u16;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+typedef struct {
+    struct { int hp; u32 status2; } battleMons[4];
+    struct { u32 unk14; } selfTurnData[4];
+    int battlerIdAttacker, battlerIdStatChange, flingScript, infiltrator;
+    u16 recycleItem[4];
+    int kept[4];
+} BattleContext;
+static BOOL InfiltratorGoesRoundSubstitute(BattleContext *ctx, int battlerId) { (void)battlerId; return ctx->infiltrator; }
+static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item) { ctx->kept[eater] = item; }
+@FUNCTION@
+static int kept(int script, int flingScript, int hp, u32 status2, int infiltrator) {
+    BattleContext ctx = { 0 };
+    ctx.battlerIdAttacker = 0;
+    ctx.battlerIdStatChange = 1;
+    ctx.flingScript = flingScript;
+    ctx.battleMons[1].hp = hp;
+    ctx.battleMons[1].status2 = status2;
+    ctx.infiltrator = infiltrator;
+    ctx.recycleItem[0] = 149;
+    CudChewKeepsFlungBerry(&ctx, script);
+    return ctx.kept[1];
+}
+int main(void) {
+    assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, 0, 0) == 149);
+    assert(kept(BATTLE_SUBSCRIPT_FLING, 0, 50, 0, 0) == 0);
+    assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 0, 0, 0) == 0);
+    assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, STATUS2_SUBSTITUTE, 0) == 0);
+    assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, STATUS2_SUBSTITUTE, 1) == 149);
+    assert(kept(BATTLE_SUBSCRIPT_FLINCH_MON, 198, 50, 0, 0) == 0);
+    return 0;
+}
+"""
+
+    def test_a_flung_berry_is_kept_by_the_one_it_hit(self):
+        # Pokemon Central, Ruminante: a Berry flung at it counts when its
+        # effect goes off; that is known once the hit is.
+        source = OVERLAY.read_text()
+        fixture = self.FLING_FIXTURE.replace("@FUNCTION@", function(source, "CudChewKeepsFlungBerry"))
+        with tempfile.TemporaryDirectory(prefix="newgold-cud-chew-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(fixture)
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
+                str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+        dispatch = function(source, "ov12_02250490")
+        hit = dispatch[dispatch.index("if (ctx->unk_2174 & (1 << 29)) {"):dispatch.index("} else if (ctx->unk_2174 & (1 << 24)) {")]
+        self.assertIn("CudChewKeepsFlungBerry(ctx, *out);", hit)
+
 
 BOND_FIXTURE = r"""
 #include <assert.h>
