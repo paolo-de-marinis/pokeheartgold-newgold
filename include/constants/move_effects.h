@@ -417,5 +417,6 @@
 // (tools/newgold/import/import_moves.py IMPLEMENTED_HERE), after the
 // reference's so that a run of the importer numbers those as it always has.
 #define MOVE_EFFECT_RAISE_ALLY_SP_DEF                            409
+#define MOVE_EFFECT_UPPER_HAND                                   410
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

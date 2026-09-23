@@ -335,12 +335,19 @@ IMPLEMENTED_HERE = {
     # Hard Press is Wring Out's effect on a scale of 100, never under 1
     # (Pokemon Central, Pressa d'Acciaio): BtlCmd_CalcWringOutPower asks for it.
     "HARD_PRESS": "MOVE_EFFECT_INCREASE_POWER_WITH_MORE_HP",
+    # Upper Hand flinches a target about to use an attack at +1 to +3, and
+    # fails on any other (Pokemon Central, Colpo di Mano): effect script 410.
+    "UPPER_HAND": "MOVE_EFFECT_UPPER_HAND",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
 # power of 1 is what every move whose power is worked out has, retail's and
 # the engine's: Me First, the AI and the damage check ask for one above 0.
-FIELDS_HERE = {"HARD_PRESS": {"power": 1}}
+FIELDS_HERE = {
+    "HARD_PRESS": {"power": 1},
+    # A flinch that always comes, as a side effect the chance is read for.
+    "UPPER_HAND": {"effectChance": 100},
+}
 
 # The effects written here for those moves follow the reference's in
 # move_effects.h, under this line. A run keeps them where they are and numbers

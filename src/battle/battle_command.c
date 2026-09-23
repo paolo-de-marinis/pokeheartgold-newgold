@@ -5729,6 +5729,12 @@ BOOL BtlCmd_TrySuckerPunch(BattleSystem *battleSystem, BattleContext *ctx) {
 
     if (ctx->playerActions[ctx->battlerIdTarget].command == CONTROLLER_COMMAND_40 || (BattleMoveTbl(ctx, move)->power == 0 && !ctx->turnData[ctx->battlerIdTarget].struggleFlag)) {
         BattleScriptIncrementPointer(ctx, adrs);
+    } else if (ctx->moveNoCur == MOVE_UPPER_HAND
+        && (BattlerMovePriority(ctx, ctx->battlerIdTarget, move) < 1 || BattlerMovePriority(ctx, ctx->battlerIdTarget, move) > 3)) {
+        // Upper Hand asks the same and one thing more: the attack chosen has
+        // to go at +1 to +3, as the turn order compared it, an ability's step
+        // included (Pokemon Central, Colpo di Mano).
+        BattleScriptIncrementPointer(ctx, adrs);
     }
 
     return FALSE;

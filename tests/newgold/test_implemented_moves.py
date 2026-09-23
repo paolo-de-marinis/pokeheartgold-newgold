@@ -89,5 +89,16 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("(100 * ctx->battleMons[ctx->battlerIdTarget].hp) / ctx->battleMons[ctx->battlerIdTarget].maxHp", hard)
         self.assertIn("if (ctx->movePower == 0) {\n            ctx->movePower = 1;", hard)
 
+    def test_upper_hand_answers_only_a_priority_attack(self):
+        # Pokemon Central (Colpo di Mano): it fails unless the target chose an
+        # attack going at +1 to +3 and has not moved; it always flinches.
+        self.assertImplemented("UPPER_HAND", "MOVE_EFFECT_UPPER_HAND")
+        self.assertEqual(record("UPPER_HAND")[6], 100)
+        script = effect_script("MOVE_EFFECT_UPPER_HAND")
+        self.assertLess(script.index("TrySuckerPunch _FAILED"), script.index("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_FLINCH"))
+        body = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TrySuckerPunch")
+        self.assertIn("ctx->moveNoCur == MOVE_UPPER_HAND", body)
+        self.assertIn("BattlerMovePriority(ctx, ctx->battlerIdTarget, move) < 1 || BattlerMovePriority(ctx, ctx->battlerIdTarget, move) > 3", body)
+
 if __name__ == "__main__":
     unittest.main()
