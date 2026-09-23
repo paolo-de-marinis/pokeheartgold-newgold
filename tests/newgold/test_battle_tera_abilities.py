@@ -31,9 +31,9 @@ typedef uint16_t u16;
 """
 
 
-def run(functions, body, source=OVERLAY):
+def run(functions, body, prefix="", source=OVERLAY):
     text = source.read_text()
-    program = PREFIX + "\n".join(function(text, name) for name in functions) + "\nint main(void) {\n" + body + "\n    return 0;\n}\n"
+    program = PREFIX + prefix + "\n".join(function(text, name) for name in functions) + "\nint main(void) {\n" + body + "\n    return 0;\n}\n"
     with tempfile.TemporaryDirectory(prefix="newgold-tera-") as directory:
         path = Path(directory)
         (path / "test.c").write_text(program)
@@ -98,6 +98,61 @@ class TeraShiftTests(unittest.TestCase):
         self.assertIn("script = BATTLE_SUBSCRIPT_TERA_SHIFT;", first)
         script = (ROOT / "files/battledata/script/subscript/subscript_0413_TeraShift.s").read_text()
         self.assertLess(script.index("Call BATTLE_SUBSCRIPT_FORM_CHANGE"), script.index("Call BATTLE_SUBSCRIPT_UPDATE_HP"))
+
+
+SHELL_PREFIX = r"""
+#include "constants/battle.h"
+#include "constants/moves.h"
+typedef uint8_t u8;
+typedef int32_t s32;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { u16 ability; s32 hp; u32 maxHp; } BattleMon;
+typedef struct { BattleMon battleMons[4]; u8 teraShellResisting; BOOL moldBreaker; } BattleContext;
+typedef struct { u8 category; } MoveTbl;
+static MoveTbl sMoves[] = { [MOVE_TACKLE] = { CATEGORY_PHYSICAL }, [MOVE_EMBER] = { CATEGORY_SPECIAL },
+                            [MOVE_THUNDER_WAVE] = { CATEGORY_STATUS } };
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u16 move) { (void)ctx; return &sMoves[move]; }
+static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int attacker, int target, int ability) {
+    (void)attacker;
+    return !ctx->moldBreaker && ctx->battleMons[target].ability == ability;
+}
+static u32 MaskOfFlagNo(int flagNo) { return 1u << flagNo; }
+static BattleContext ctx;
+"""
+
+
+class TeraShellTests(unittest.TestCase):
+    def test_a_damaging_move_is_resisted_at_full_hp(self):
+        print(run(["TeraShellResists"], prefix=SHELL_PREFIX, body=r"""
+    ctx.battleMons[1] = (BattleMon){ ABILITY_TERA_SHELL, 100, 100 };
+    assert(TeraShellResists(&ctx, 0, 1, MOVE_TACKLE));
+    assert(TeraShellResists(&ctx, 0, 1, MOVE_EMBER));
+    assert(!TeraShellResists(&ctx, 0, 1, MOVE_THUNDER_WAVE));
+    ctx.moldBreaker = TRUE;
+    assert(!TeraShellResists(&ctx, 0, 1, MOVE_TACKLE));
+    ctx.moldBreaker = FALSE;
+    ctx.battleMons[1].hp = 99;
+    assert(!TeraShellResists(&ctx, 0, 1, MOVE_TACKLE));
+    // The later hits of a move whose first hit it took.
+    ctx.teraShellResisting = 1 << 1;
+    assert(TeraShellResists(&ctx, 0, 1, MOVE_TACKLE));
+    ctx.battleMons[1] = (BattleMon){ ABILITY_SHELL_ARMOR, 100, 100 };
+    assert(!TeraShellResists(&ctx, 0, 1, MOVE_TACKLE));
+    puts("PASS: Tera Shell at full HP, and for the rest of a move it took.");"""))
+
+    def test_the_chart_and_the_line(self):
+        source = OVERLAY.read_text()
+        chart = function(source, "CalcTypeEffectiveness")
+        shell = chart[chart.index("if (typeMul != 0 && TeraShellResists("):]
+        self.assertIn("typeMul = 4;", shell[:shell.index("}")])
+        self.assertLess(chart.index("TeraShellResists("), chart.index("*effectiveness = typeMul;"))
+        self.assertIn("ctx->teraShellResisting = 0;", function(source, "BattleContext_Init"))
+        flags = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224B498")
+        self.assertIn("ctx->teraShellResisting |= MaskOfFlagNo(ctx->battlerIdTarget);", flags)
+        self.assertIn("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_TERA_SHELL);", flags)
 
 
 if __name__ == "__main__":

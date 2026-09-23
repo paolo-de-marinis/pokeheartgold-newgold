@@ -661,6 +661,8 @@
 // Tera Shift's Terastal Form and the HP it adds, which the reference has no
 // script for.
 #define BATTLE_SUBSCRIPT_TERA_SHIFT                         413
+// Tera Shell's line, which the reference has no script for.
+#define BATTLE_SUBSCRIPT_TERA_SHELL                         414
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

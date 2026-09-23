@@ -574,6 +574,10 @@ typedef struct BattleContext {
     u8 danceUser;
     u8 danceTarget;
     u8 dancing;
+    // Which battlers' Tera Shell has taken the move now under way, a bit each:
+    // a multi-hit move is not very effective on every hit if it was on the
+    // first, at full HP. Cleared when the next action begins.
+    u8 teraShellResisting;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

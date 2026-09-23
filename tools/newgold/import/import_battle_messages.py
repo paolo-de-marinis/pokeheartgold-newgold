@@ -87,6 +87,14 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} ate its\n{STRVAR_1 8, 1, 0} again!",
         r"The opposing {STRVAR_1 1, 0, 0} ate its\n{STRVAR_1 8, 1, 0} again!",
     ]),
+    # Tera Shell taking a hit at full HP. The reference gives the ability no
+    # effect (BattleController_CheckTeraShell is a TODO); these are the later
+    # games' line.
+    ("tera shell", [
+        r"{STRVAR_1 1, 0, 0} made its shell gleam!\nIt’s distorting type matchups!",
+        r"The wild {STRVAR_1 1, 0, 0} made its\nshell gleam!\fIt’s distorting type matchups!",
+        r"The opposing {STRVAR_1 1, 0, 0} made its\nshell gleam!\fIt’s distorting type matchups!",
+    ]),
 ]
 
 

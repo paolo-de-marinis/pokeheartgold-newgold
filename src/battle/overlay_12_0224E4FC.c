@@ -2153,6 +2153,7 @@ void BattleContext_Init(BattleContext *ctx) {
     ctx->battleStatus2 &= 0xFFFFFEA1;
 
     ctx->magnitude = 0;
+    ctx->teraShellResisting = 0;
 
     for (battlerId = 0; battlerId < 4; battlerId++) {
         MI_CpuClearFast((u32 *)&ctx->selfTurnData[battlerId], sizeof(SelfTurnData));
@@ -2738,6 +2739,22 @@ BOOL ov12_02251C74(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarge
     return ret;
 }
 
+// Tera Shell (Pokemon Central, Teraguscio): while the Pokemon has all its HP,
+// a move that damages it is not very effective, whatever its type, unless the
+// chart makes it no effect at all; a multi-hit move keeps what its first hit
+// found, which is what teraShellResisting remembers. Moves that ignore the
+// ability get past it. Struggle and the fixed-damage and one-hit KO moves are
+// not reduced -- they do not read the chart -- though the shell still gleams.
+// hg-engine (d0380a487) has a before-move step for it that is a TODO.
+BOOL TeraShellResists(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u32 moveNo) {
+    if (BattleMoveTbl(ctx, moveNo)->category == CATEGORY_STATUS
+        || CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_TERA_SHELL) != TRUE) {
+        return FALSE;
+    }
+    return ctx->battleMons[battlerIdTarget].hp == (s32)ctx->battleMons[battlerIdTarget].maxHp
+        || (ctx->teraShellResisting & MaskOfFlagNo(battlerIdTarget));
+}
+
 // The one walk over the type chart. It sets the flags the scripts and the AI
 // read, as HeartGold's did, and scales the damage by STAB and then by the
 // chart -- the chart once, by what its rows multiply to, the way the
@@ -2826,6 +2843,12 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
             }
             i++;
         } while (sTypeEffectiveness[i][TYPETABLE_ATTACKER] != TYPE_ENDTABLE);
+        // Whatever the chart said, short of no effect.
+        if (typeMul != 0 && TeraShellResists(ctx, battlerIdAttacker, battlerIdTarget, moveNo) == TRUE) {
+            typeMul = 4;
+            *moveStatusFlag &= ~MOVE_STATUS_SUPER_EFFECTIVE;
+            *moveStatusFlag |= MOVE_STATUS_NOT_VERY_EFFECTIVE;
+        }
     }
 
     if (!(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS) && !(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_IMMUNITY)) {

@@ -54,6 +54,7 @@ typedef struct {
     BattleMon battleMons[4];
     struct { int glaiveRush; } moveConditions[4];
     struct { int protectFlag, roostFlag; } turnData[4];
+    u8 teraShellResisting;
 } BattleContext;
 typedef struct { int range, category, effect, power; } MoveTbl;
 
@@ -91,6 +92,7 @@ static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *dat
 }
 static int ov12_02258440(BattleContext *ctx, int moveNo) { (void)ctx; (void)moveNo; return TRUE; }
 static BOOL ParentalBond_IsSecondStrike(BattleContext *ctx) { (void)ctx; return S.secondStrike; }
+static u32 MaskOfFlagNo(int flagNo) { return 1u << flagNo; }
 
 @OVERLAY@
 @COMMANDS@
@@ -169,6 +171,13 @@ int main(void) {
     reset(); S.types[1][0] = S.types[1][1] = TYPE_WATER; EXPECT(calc(), 22);
     reset(); S.types[1][0] = TYPE_WATER; S.types[1][1] = TYPE_ROCK; EXPECT(calc(), 11);
     reset(); S.types[1][0] = TYPE_GRASS; S.types[1][1] = TYPE_BUG; EXPECT(calc(), 180);
+    // Tera Shell at full HP makes it not very effective, whatever the chart
+    // said, 22; not with a point of HP gone, 180, nor where the chart says no
+    // effect.
+    reset(); S.types[1][0] = TYPE_GRASS; S.types[1][1] = TYPE_BUG; S.ability[1] = ABILITY_TERA_SHELL; EXPECT(calc(), 22);
+    ctx.battleMons[1].hp = 99; EXPECT(calc(), 180);
+    reset(); S.types[1][0] = S.types[1][1] = TYPE_GHOST; S.ability[1] = ABILITY_TERA_SHELL; ctx.moveType = TYPE_NORMAL;
+    EXPECT(calc(), 1);
 
     // The flags the scripts and the AI read still come out of the same walk.
     {
@@ -291,12 +300,14 @@ def program():
     enum = re.search(r"^enum \{\n    TYPETABLE_ATTACKER,.*?^\};", OVERLAY, re.M | re.S).group(0)
     overlay = "\n".join([enum, table(OVERLAY, "sTypeEffectiveness")] + [
         function(OVERLAY, name) for name in (
-            "QMul_RoundUp", "QMul_RoundDown", "ov12_02251C74", "ov12_022583B4", "CalcTypeEffectiveness")])
+            "QMul_RoundUp", "QMul_RoundDown", "ov12_02251C74", "ov12_022583B4", "TeraShellResists",
+            "CalcTypeEffectiveness")])
     commands = "\n".join(function(COMMANDS, name) for name in (
         "ScreenModifier", "FinalDamageModifier", "DamageCalcDefault"))
     return (FIXTURE.replace("@UQ412@", uq412)
             .replace("@OVERLAY@", overlay.replace("BOOL ov12_02251C74", "static BOOL ov12_02251C74")
                      .replace("int CalcTypeEffectiveness", "static int CalcTypeEffectiveness")
+                     .replace("BOOL TeraShellResists", "static BOOL TeraShellResists")
                      .replace("u32 QMul_", "static u32 QMul_"))
             .replace("@COMMANDS@", commands))
 

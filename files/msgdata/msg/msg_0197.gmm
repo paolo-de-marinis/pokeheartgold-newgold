@@ -7220,4 +7220,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} ate its\n{STRVAR_1 8, 1, 0} again!</language>
 	</row>
+	<row id="msg_0197_01805" index="1805">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} made its shell gleam!\nIt’s distorting type matchups!</language>
+	</row>
+	<row id="msg_0197_01806" index="1806">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} made its\nshell gleam!\fIt’s distorting type matchups!</language>
+	</row>
+	<row id="msg_0197_01807" index="1807">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} made its\nshell gleam!\fIt’s distorting type matchups!</language>
+	</row>
 </body>
