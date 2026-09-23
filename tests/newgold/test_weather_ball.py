@@ -75,10 +75,16 @@ def run(test, prelude, functions, call, snow):
     test.assertEqual(result.returncode, 0, result.stderr)
 
 
+# The Drive and Memory lookup every site asks for Techno Blast and Multi-Attack.
+def drive_or_memory():
+    return (function((ROOT / "src/pokemon.c").read_text(), "GetSilvallyTypeByHeldItemEffect") + "\n"
+            + function(OVERLAY, "GetDriveOrMemoryType") + "\n")
+
+
 SITES = (
-    ("battle", ARCEUS, lambda: function(OVERLAY, "GetDynamicMoveType"), "GetDynamicMoveType(0, &ctx, 0, MOVE_WEATHER_BALL)"),
-    ("battler, for the AI", AI, lambda: function(TRAINER_AI, "ov10_0221F47C"), "ov10_0221F47C(0, &ctx, 0, MOVE_WEATHER_BALL)"),
-    ("party, for the AI", AI, lambda: function(OPPONENT, "ov12_02258BB4"), "ov12_02258BB4(0, &ctx, 0, MOVE_WEATHER_BALL)"),
+    ("battle", ARCEUS, lambda: drive_or_memory() + function(OVERLAY, "GetDynamicMoveType"), "GetDynamicMoveType(0, &ctx, 0, MOVE_WEATHER_BALL)"),
+    ("battler, for the AI", AI, lambda: drive_or_memory() + function(TRAINER_AI, "ov10_0221F47C"), "ov10_0221F47C(0, &ctx, 0, MOVE_WEATHER_BALL)"),
+    ("party, for the AI", AI, lambda: drive_or_memory() + function(OPPONENT, "ov12_02258BB4"), "ov12_02258BB4(0, &ctx, 0, MOVE_WEATHER_BALL)"),
 )
 
 

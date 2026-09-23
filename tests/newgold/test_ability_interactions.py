@@ -165,7 +165,7 @@ class SheerForceAftermathTests(unittest.TestCase):
             case = case[:case.index("break;")]
             self.assertIn("!SheerForceTradedEffect(ctx)", case, ability)
             self.assertNotIn("IsSuppressibleSecondaryEffect", case, ability)
-        self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "CheckSwitchItemOnHit"))
+        self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "SwitchItemAnswersHit"))
 
     def test_the_kee_and_maranga_berries_ask_it(self):
         # Pokemon Central, Forzabruta: Baccalighia and Baccapane.

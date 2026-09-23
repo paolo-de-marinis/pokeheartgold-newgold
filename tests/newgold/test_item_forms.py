@@ -112,8 +112,9 @@ class RksSystemTests(unittest.TestCase):
         self.assertIn("form = GetSilvallyTypeByHeldItemEffect(", form)
 
     def test_multi_attack_takes_the_same_type(self):
-        body = function(read(OVERLAY), "GetDynamicMoveType")
-        self.assertIn("type = GetSilvallyTypeByHeldItemEffect(GetBattlerHeldItemEffect(ctx, battlerId));", body)
+        source = read(OVERLAY)
+        self.assertIn("type = GetDriveOrMemoryType(moveNo, GetBattlerHeldItemEffect(ctx, battlerId));", function(source, "GetDynamicMoveType"))
+        self.assertIn("type = GetSilvallyTypeByHeldItemEffect(holdEffect);", function(source, "GetDriveOrMemoryType"))
 
 
 HELD_FORM_FIXTURE = r"""

@@ -719,7 +719,8 @@ class AbilityShieldTests(unittest.TestCase):
         self.assertIn("UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED", failed)
 
     def test_the_abilities_that_change_an_ability_ask_it(self):
-        mummy = OVERLAY[OVERLAY.index("    case ABILITY_MUMMY:\n    case ABILITY_LINGERING_AROMA:"):]
+        hit = function(OVERLAY, "CheckAbilityEffectOnHit")
+        mummy = hit[hit.index("    case ABILITY_MUMMY:\n    case ABILITY_LINGERING_AROMA:"):]
         mummy = mummy[:mummy.index("break;")]
         self.assertIn("!BattlerHasAbilityShield(ctx, ctx->battlerIdAttacker)", mummy)
         entry = function(OVERLAY, "TryAbilityOnEntry")
