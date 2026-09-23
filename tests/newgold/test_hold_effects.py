@@ -248,6 +248,7 @@ class RedirectTypeTests(unittest.TestCase):
         memory = function((ROOT / "src/pokemon.c").read_text(), "GetSilvallyTypeByHeldItemEffect")
         overlay = OVERLAY.read_text()
         program = REDIRECT_TYPE_FIXTURE.replace("@FUNCTION@", memory + "\n" + function(overlay, "GetDriveOrMemoryType") + "\n"
+                                                + function(overlay, "WeatherBallWeather") + "\n" + function(overlay, "WeatherBallType") + "\n"
                                                 + function(overlay, "GetDynamicMoveType"))
         program = program.replace("@ITEMS@", ", ".join(items))
         out = [tuple(map(int, line.split())) for line in run_c(program).splitlines()]

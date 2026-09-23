@@ -5372,27 +5372,19 @@ BOOL BtlCmd_CalcWeatherBallParams(BattleSystem *battleSystem, BattleContext *ctx
     // Under Mega Sol the user's is a Fire move of double power, whatever the
     // weather. Under Cloud Nine or Air Lock there is none, and the power is
     // the move's own, which is what an unset power reads as anyway; Delta
-    // Stream's winds leave it Normal and undoubled too (hg-engine's).
-    u32 weather = BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker);
+    // Stream's winds leave it Normal and undoubled too (hg-engine's), and a
+    // Utility Umbrella the rain and the sun (WeatherBallWeather).
+    u32 weather = WeatherBallWeather(BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker));
 
     BattleScriptIncrementPointer(ctx, 1);
 
-    if (weather && !(weather & FIELD_CONDITION_STRONG_WINDS)) {
+    if (weather) {
         // Snow makes it an Ice move of double power, as hail did, from the
         // ninth generation (Pokemon Central, Palla Clima); the reference
         // leaves the move alone under it.
         ctx->movePower = BattleMoveTbl(ctx, ctx->moveNoCur)->power * 2;
-        if (weather & FIELD_CONDITION_RAIN_ALL) {
-            ctx->moveType = TYPE_WATER;
-        }
-        if (weather & FIELD_CONDITION_SANDSTORM_ALL) {
-            ctx->moveType = TYPE_ROCK;
-        }
-        if (weather & FIELD_CONDITION_SUN_ALL) {
-            ctx->moveType = TYPE_FIRE;
-        }
-        if (weather & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {
-            ctx->moveType = TYPE_ICE;
+        if (WeatherBallType(weather) != TYPE_NORMAL) {
+            ctx->moveType = WeatherBallType(weather);
         }
     } else {
         ctx->movePower = BattleMoveTbl(ctx, ctx->moveNoCur)->power;

@@ -119,7 +119,7 @@ class SnowTests(unittest.TestCase):
         self.assertIn("FIELD_CONDITION_SNOW_ALL", command)
         self.assertIn("ABILITY_ICE_BODY", command)
         # Weather Ball is an Ice move in it, as in hail (test_weather_ball).
-        self.assertIn("(FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {\n            ctx->moveType = TYPE_ICE;", command)
+        self.assertIn("(FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {\n        return TYPE_ICE;", overlay)
 
     def test_the_five_turns_are_counted_and_end_with_a_line(self):
         player = source("src/battle/battle_controller_player.c")

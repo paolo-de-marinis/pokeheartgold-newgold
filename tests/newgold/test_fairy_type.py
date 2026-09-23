@@ -261,6 +261,7 @@ class ArceusFairyTests(unittest.TestCase):
         pokemon = (ROOT / "src/pokemon.c").read_text()
         functions = "\n".join([function(pokemon, "GetArceusTypeByHeldItemEffect"), function(pokemon, "GetSilvallyTypeByHeldItemEffect"),
                                function(battle, "Battler_GetType"), function(battle, "GetDriveOrMemoryType"),
+                               function(battle, "WeatherBallWeather"), function(battle, "WeatherBallType"),
                                function(battle, "GetDynamicMoveType")])
         with tempfile.TemporaryDirectory(prefix="newgold-arceus-") as directory:
             path = Path(directory)

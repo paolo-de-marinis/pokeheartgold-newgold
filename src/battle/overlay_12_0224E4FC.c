@@ -2964,6 +2964,39 @@ u32 BattlerMoveWeather(BattleSystem *battleSystem, BattleContext *ctx, int battl
     return ctx->fieldCondition & FIELD_CONDITION_WEATHER;
 }
 
+// Weather Ball (Pokemon Central, Palla Clima): the weather that counts for it,
+// from the one its user's moves see. None in the strong winds, which leave it
+// Normal and undoubled (hg-engine's); no rain and no sun for a user holding a
+// Utility Umbrella, which keeps the move's own type and power there -- the
+// reference does not ask the umbrella. Whatever is left doubles its power.
+u32 WeatherBallWeather(u32 weather, int holdEffect) {
+    if (weather & FIELD_CONDITION_STRONG_WINDS) {
+        return 0;
+    }
+    if (holdEffect == HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
+        weather &= ~(FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SUN_ALL);
+    }
+    return weather;
+}
+
+// Its type in that weather: Normal in none, and in the fog; Ice in the snow as
+// in the hail.
+u8 WeatherBallType(u32 weather) {
+    if (weather & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {
+        return TYPE_ICE;
+    }
+    if (weather & FIELD_CONDITION_SUN_ALL) {
+        return TYPE_FIRE;
+    }
+    if (weather & FIELD_CONDITION_SANDSTORM_ALL) {
+        return TYPE_ROCK;
+    }
+    if (weather & FIELD_CONDITION_RAIN_ALL) {
+        return TYPE_WATER;
+    }
+    return TYPE_NORMAL;
+}
+
 // Tera Shell (Pokemon Central, Teraguscio): while the Pokemon has all its HP,
 // a move that damages it is not very effective, whatever its type, unless the
 // chart makes it no effect at all; a multi-hit move keeps what its first hit
@@ -11712,31 +11745,15 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
             type++;
         }
         break;
-    case MOVE_WEATHER_BALL: {
+    case MOVE_WEATHER_BALL:
         // What the move will be, as BtlCmd_CalcWeatherBallParams decides it:
         // under Mega Sol, Fire. Normal where no weather makes it anything else
-        // -- a clear sky, the fog, the strong winds, Cloud Nine or Air Lock --
-        // which retail left unset for Lightning Rod to read (Pokemon Central,
-        // Palla Clima; the reference's BUGFIX, other_battle_calculators.c:3326).
-        // Ice in the snow as in the hail.
-        u32 weather = BattlerMoveWeather(battleSystem, ctx, battlerId);
-
-        type = TYPE_NORMAL;
-        if (weather && !(weather & FIELD_CONDITION_STRONG_WINDS)) {
-            if (weather & FIELD_CONDITION_RAIN_ALL) {
-                type = TYPE_WATER;
-            }
-            if (weather & FIELD_CONDITION_SANDSTORM_ALL) {
-                type = TYPE_ROCK;
-            }
-            if (weather & FIELD_CONDITION_SUN_ALL) {
-                type = TYPE_FIRE;
-            }
-            if (weather & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {
-                type = TYPE_ICE;
-            }
-        }
-    } break;
+        // -- a clear sky, the fog, the strong winds, Cloud Nine or Air Lock,
+        // the rain or the sun under a Utility Umbrella -- which retail left
+        // unset for Lightning Rod to read (Pokemon Central, Palla Clima; the
+        // reference's BUGFIX, other_battle_calculators.c:3326).
+        type = WeatherBallType(WeatherBallWeather(BattlerMoveWeather(battleSystem, ctx, battlerId), GetBattlerHeldItemEffect(ctx, battlerId)));
+        break;
     // Terrain Pulse takes the colour of whatever is underfoot, and only if the
     // user is standing on it. With nothing down it stays Normal, which is what
     // the default below would have said anyway.

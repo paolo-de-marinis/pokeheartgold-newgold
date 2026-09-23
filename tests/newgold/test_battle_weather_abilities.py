@@ -89,14 +89,14 @@ class MegaSolTests(unittest.TestCase):
     def test_every_move_of_its_asks(self):
         commands = COMMANDS.read_text()
         self.assertIn("weather = BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker);", function(commands, "DamageCalcDefault"))
-        self.assertIn("u32 weather = BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker);",
+        self.assertIn("WeatherBallWeather(BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker),",
                       function(commands, "BtlCmd_CalcWeatherBallParams"))
         self.assertIn("u32 weather = BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker);",
                       function(commands, "BtlCmd_WeatherHPRecovery"))
         overlay = OVERLAY.read_text()
         self.assertIn("weather = fieldCondition ? BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker) : 0;",
                       function(overlay, "CalcMoveDamage"))
-        self.assertIn("u32 weather = BattlerMoveWeather(battleSystem, ctx, battlerId);", function(overlay, "GetDynamicMoveType"))
+        self.assertIn("WeatherBallWeather(BattlerMoveWeather(battleSystem, ctx, battlerId),", function(overlay, "GetDynamicMoveType"))
         controller = CONTROLLER.read_text()
         self.assertIn("weather = BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker);", function(controller, "BattleSystem_CheckMoveHit"))
         self.assertEqual(function(controller, "BattleSystem_CheckMoveEffect").count("BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker)"), 2)
@@ -194,7 +194,8 @@ class StrongWeatherTests(unittest.TestCase):
 
     def test_the_winds_leave_weather_ball_and_the_heals_alone(self):
         commands = COMMANDS.read_text()
-        self.assertIn("if (weather && !(weather & FIELD_CONDITION_STRONG_WINDS)) {", function(commands, "BtlCmd_CalcWeatherBallParams"))
+        self.assertIn("if (weather & FIELD_CONDITION_STRONG_WINDS) {\n        return 0;", function(OVERLAY.read_text(), "WeatherBallWeather"))
+        self.assertIn("u32 weather = WeatherBallWeather(", function(commands, "BtlCmd_CalcWeatherBallParams"))
         self.assertIn("if (!weather || (weather & FIELD_CONDITION_STRONG_WINDS)) {", function(commands, "BtlCmd_WeatherHPRecovery"))
 
 
