@@ -8258,10 +8258,6 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         }
     }
 
-    if (BattleMoveTbl(ctx, moveNo)->effect == MOVE_EFFECT_HALVE_DEFENSE) {
-        monDef /= 2;
-    }
-
     if (moveCategory == CATEGORY_PHYSICAL) {
         if (crit > 1) {
             if (statChangeAtk > 6) {

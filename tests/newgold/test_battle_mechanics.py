@@ -86,5 +86,14 @@ int main(void) {
             self.assertIn("ApplyCriticalHit(ctx);", function(source, name), name)
 
 
+class ExplosionTests(unittest.TestCase):
+    def test_the_target_s_defense_is_not_halved(self):
+        # HeartGold halved the target's Defense for effect 7 (Explosion and
+        # Self-Destruct). The reference keeps the effect only for fainting the
+        # user; its move records carry the later powers instead, and so do
+        # this game's.
+        self.assertNotIn("MOVE_EFFECT_HALVE_DEFENSE", function(OVERLAY.read_text(), "CalcMoveDamage"))
+
+
 if __name__ == "__main__":
     unittest.main()
