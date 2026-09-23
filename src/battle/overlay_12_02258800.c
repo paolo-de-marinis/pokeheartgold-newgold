@@ -206,6 +206,10 @@ int ov12_02258BB4(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon, 
             break;
         }
         break;
+    case MOVE_TECHNO_BLAST:
+    case MOVE_MULTI_ATTACK:
+        type = GetDriveOrMemoryType(moveNo, GetItemVar(ctx, GetMonData(mon, MON_DATA_HELD_ITEM, NULL), ITEMATTR_HOLD_EFFECT));
+        break;
     case MOVE_HIDDEN_POWER:
         type = (GetMonData(mon, MON_DATA_HP_IV, NULL) & 1) | ((GetMonData(mon, MON_DATA_ATK_IV, NULL) & 1) << 1) | ((GetMonData(mon, MON_DATA_DEF_IV, NULL) & 1) << 2) | ((GetMonData(mon, MON_DATA_SPEED_IV, NULL) & 1) << 3) | ((GetMonData(mon, MON_DATA_SPATK_IV, NULL) & 1) << 4) | ((GetMonData(mon, MON_DATA_SPDEF_IV, NULL) & 1) << 5);
 

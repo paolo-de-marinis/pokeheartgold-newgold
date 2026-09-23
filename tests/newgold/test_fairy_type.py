@@ -260,7 +260,8 @@ class ArceusFairyTests(unittest.TestCase):
         battle = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
         pokemon = (ROOT / "src/pokemon.c").read_text()
         functions = "\n".join([function(pokemon, "GetArceusTypeByHeldItemEffect"), function(pokemon, "GetSilvallyTypeByHeldItemEffect"),
-                               function(battle, "Battler_GetType"), function(battle, "GetDynamicMoveType")])
+                               function(battle, "Battler_GetType"), function(battle, "GetDriveOrMemoryType"),
+                               function(battle, "GetDynamicMoveType")])
         with tempfile.TemporaryDirectory(prefix="newgold-arceus-") as directory:
             path = Path(directory)
             (path / "test.c").write_text(ARCEUS.replace("@FUNCTIONS@", functions))
@@ -276,7 +277,8 @@ class ArceusFairyTests(unittest.TestCase):
         which hg-engine sends through the same plate routine
         (armips/asm/fairy.s, 0x0221F172, 0x0221F4C0, 0x02258C1A)."""
         ai = (ROOT / "src/battle/trainer_ai_0221F084.c").read_text()
-        functions = "\n".join([function(ai, "ov10_0221F084"), function(ai, "ov10_0221F47C"),
+        functions = "\n".join([function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "GetDriveOrMemoryType"),
+                               function(ai, "ov10_0221F084"), function(ai, "ov10_0221F47C"),
                                function((ROOT / "src/battle/overlay_12_02258800.c").read_text(), "ov12_02258BB4")])
         with tempfile.TemporaryDirectory(prefix="newgold-arceus-ai-") as directory:
             path = Path(directory)

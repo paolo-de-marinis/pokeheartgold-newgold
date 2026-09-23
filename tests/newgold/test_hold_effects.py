@@ -246,7 +246,9 @@ class RedirectTypeTests(unittest.TestCase):
         items = ["HOLD_EFFECT_NONE"] + [f"HOLD_EFFECT_{d}_DRIVE" for d in DRIVES] + \
             [f"HOLD_EFFECT_{m}_MEMORY" for m in MEMORIES]
         memory = function((ROOT / "src/pokemon.c").read_text(), "GetSilvallyTypeByHeldItemEffect")
-        program = REDIRECT_TYPE_FIXTURE.replace("@FUNCTION@", memory + "\n" + function(OVERLAY.read_text(), "GetDynamicMoveType"))
+        overlay = OVERLAY.read_text()
+        program = REDIRECT_TYPE_FIXTURE.replace("@FUNCTION@", memory + "\n" + function(overlay, "GetDriveOrMemoryType") + "\n"
+                                                + function(overlay, "GetDynamicMoveType"))
         program = program.replace("@ITEMS@", ", ".join(items))
         out = [tuple(map(int, line.split())) for line in run_c(program).splitlines()]
         defined = effects_defined()
@@ -264,6 +266,57 @@ class RedirectTypeTests(unittest.TestCase):
             self.assertEqual(got[moves["MOVE_TECHNO_BLAST"], effect[f"HOLD_EFFECT_{memory}_MEMORY"]], types["NORMAL"], memory)
         self.assertEqual(got[moves["MOVE_TECHNO_BLAST"], 0], types["NORMAL"])
         self.assertEqual(got[moves["MOVE_MULTI_ATTACK"], 0], types["NORMAL"])
+
+    def test_the_trainer_ai_types_them_too(self):
+        """The trainer AI works a move's type out in three places of its own:
+        its damage estimate (ov10_0221F084), a battler's move type
+        (ov10_0221F47C, for its switch and Wonder Guard checks) and a party
+        Pokemon's (ov12_02258BB4, for whom to send out). They knew Judgment's
+        plates and took a Drive's Techno Blast or a Memory's Multi-Attack for
+        a Normal move. The reference leaves them retail's; the games type the
+        move by the item wherever it is asked."""
+        from test_fairy_type import AI
+        ai = (ROOT / "src/battle/trainer_ai_0221F084.c").read_text()
+        functions = "\n".join([function((ROOT / "src/pokemon.c").read_text(), "GetSilvallyTypeByHeldItemEffect"),
+                               function(OVERLAY.read_text(), "GetDriveOrMemoryType"),
+                               function(ai, "ov10_0221F084"), function(ai, "ov10_0221F47C"),
+                               function((ROOT / "src/battle/overlay_12_02258800.c").read_text(), "ov12_02258BB4")])
+        program = AI[:AI.index("int main(void) {")].replace("@FUNCTIONS@", functions) + r"""
+int main(void) {
+    static BattleContext ctx;
+    static const int cases[][3] = {
+        { MOVE_TECHNO_BLAST, HOLD_EFFECT_SHOCK_DRIVE, TYPE_ELECTRIC },
+        { MOVE_TECHNO_BLAST, HOLD_EFFECT_CHILL_DRIVE, TYPE_ICE },
+        { MOVE_MULTI_ATTACK, HOLD_EFFECT_FAIRY_MEMORY, TYPE_FAIRY },
+        { MOVE_MULTI_ATTACK, HOLD_EFFECT_STEEL_MEMORY, TYPE_STEEL },
+        { MOVE_MULTI_ATTACK, HOLD_EFFECT_SHOCK_DRIVE, TYPE_NORMAL },
+        { MOVE_TECHNO_BLAST, 0, TYPE_NORMAL },
+    };
+    u8 ivs[6] = { 0 };
+    for (unsigned i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        ctx.battleMons[0].item = cases[i][1];
+        sMonItem = cases[i][1];
+        assert(ov10_0221F47C(0, &ctx, 0, cases[i][0]) == cases[i][2]);
+        assert(ov12_02258BB4(0, &ctx, 0, cases[i][0]) == cases[i][2]);
+        ov10_0221F084(0, &ctx, cases[i][0], cases[i][1], ivs, 0, ABILITY_DOWNLOAD, 0, 100);
+        assert(sDamageType == cases[i][2]);
+    }
+    // Klutz keeps the item out of it, as it does Judgment's plate.
+    ov10_0221F084(0, &ctx, MOVE_TECHNO_BLAST, HOLD_EFFECT_SHOCK_DRIVE, ivs, 0, ABILITY_KLUTZ, 0, 100);
+    assert(sDamageType == TYPE_NORMAL);
+    puts("PASS: the trainer AI types Techno Blast by its Drive and Multi-Attack by its Memory, at all three sites.");
+    return 0;
+}
+"""
+        with tempfile.TemporaryDirectory(prefix="newgold-drive-ai-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(program)
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-Wno-maybe-uninitialized",
+                "-iquote", str(ROOT / "include"), str(path / "test.c"), "-o", str(path / "test")], check=True)
+            result = subprocess.run([str(path / "test")], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        print(result.stdout.strip())
 
 
 def item_records():

@@ -11757,13 +11757,32 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
         }
         break;
     // Techno Blast takes the Drive's type and Multi-Attack the Memory's, for
-    // whoever holds one, as the reference's GetDynamicMoveType has it
-    // (other_battle_calculators.c:3434 and 3466 at d0380a487). The damage
-    // already had them from effect scripts 312 and 313; this is the type the
-    // redirecting abilities are asked about, so a Shock Drive's Techno Blast
-    // goes to a Lightning Rod and a Water Memory's Multi-Attack to Storm Drain.
+    // whoever holds one (GetDriveOrMemoryType). The damage already had them
+    // from effect scripts 312 and 313; this is the type the redirecting
+    // abilities are asked about, so a Shock Drive's Techno Blast goes to a
+    // Lightning Rod and a Water Memory's Multi-Attack to Storm Drain.
     case MOVE_TECHNO_BLAST:
-        switch (GetBattlerHeldItemEffect(ctx, battlerId)) {
+    case MOVE_MULTI_ATTACK:
+        type = GetDriveOrMemoryType(moveNo, GetBattlerHeldItemEffect(ctx, battlerId));
+        break;
+    default:
+        type = TYPE_NORMAL;
+        break;
+    }
+
+    return type;
+}
+
+// The type of Techno Blast with the Drive its user holds and of Multi-Attack
+// with the Memory, as the reference's GetDynamicMoveType has them
+// (other_battle_calculators.c:3434 and 3466 at d0380a487); with anything else,
+// Normal. GetDynamicMoveType and the trainer AI's own three type lookups all
+// ask it.
+int GetDriveOrMemoryType(int moveNo, int holdEffect) {
+    int type = TYPE_NORMAL;
+
+    if (moveNo == MOVE_TECHNO_BLAST) {
+        switch (holdEffect) {
         case HOLD_EFFECT_BURN_DRIVE:
             type = TYPE_FIRE;
             break;
@@ -11776,17 +11795,10 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
         case HOLD_EFFECT_CHILL_DRIVE:
             type = TYPE_ICE;
             break;
-        default:
-            type = TYPE_NORMAL;
-            break;
         }
-        break;
-    case MOVE_MULTI_ATTACK:
-        type = GetSilvallyTypeByHeldItemEffect(GetBattlerHeldItemEffect(ctx, battlerId));
-        break;
-    default:
-        type = TYPE_NORMAL;
-        break;
+    } else if (moveNo == MOVE_MULTI_ATTACK) {
+        // The Memory's type is RKS System's own (GetSilvallyTypeByHeldItemEffect).
+        type = GetSilvallyTypeByHeldItemEffect(holdEffect);
     }
 
     return type;

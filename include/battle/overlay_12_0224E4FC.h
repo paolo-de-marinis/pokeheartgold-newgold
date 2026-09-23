@@ -122,6 +122,7 @@ int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId);
 int GetHeldItemModifier(BattleContext *ctx, int battlerId, int flag);
 int GetNaturalGiftPower(BattleContext *ctx, int battlerId);
 int GetNaturalGiftType(BattleContext *ctx, int battlerId);
+int GetDriveOrMemoryType(int moveNo, int holdEffect);
 int GetHeldItemStealBerryEffect(BattleContext *ctx, int battlerId);
 int GetHeldItemFlingEffect(BattleContext *ctx, int battlerId);
 int GetHeldItemFlingPower(BattleContext *ctx, int battlerId);

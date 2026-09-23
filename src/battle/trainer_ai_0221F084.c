@@ -98,6 +98,14 @@ u32 ov10_0221F084(BattleSystem *battleSystem, BattleContext *ctx, u16 move, u16 
             }
         }
         break;
+    // Techno Blast with a Drive and Multi-Attack with a Memory take its type,
+    // as in GetDynamicMoveType, and as Judgment's plate above.
+    case MOVE_TECHNO_BLAST:
+    case MOVE_MULTI_ATTACK:
+        if (ability != ABILITY_KLUTZ && embargoTurns == 0) {
+            type = GetDriveOrMemoryType(move, GetItemVar(ctx, heldItem, ITEMATTR_HOLD_EFFECT));
+        }
+        break;
     case MOVE_HIDDEN_POWER:
         type = (ivs[STAT_HP] & 1) | ((ivs[STAT_ATK] & 1) << 1) | ((ivs[STAT_DEF] & 1) << 2) | ((ivs[STAT_SPEED] & 1) << 3) | ((ivs[STAT_SPATK] & 1) << 4) | ((ivs[STAT_SPDEF] & 1) << 5);
         power = ((ivs[STAT_HP] & 2) >> 1) | (ivs[STAT_ATK] & 2) | ((ivs[STAT_DEF] & 2) << 1) | ((ivs[STAT_SPEED] & 2) << 2) | ((ivs[STAT_SPATK] & 2) << 3) | ((ivs[STAT_SPDEF] & 2) << 4);
@@ -260,6 +268,10 @@ int ov10_0221F47C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId,
             type = TYPE_NORMAL;
             break;
         }
+        break;
+    case MOVE_TECHNO_BLAST:
+    case MOVE_MULTI_ATTACK:
+        type = GetDriveOrMemoryType(moveNo, GetBattlerHeldItemEffect(ctx, battlerId));
         break;
     case MOVE_HIDDEN_POWER:
         type = (ctx->battleMons[battlerId].hpIV & 1) | ((ctx->battleMons[battlerId].atkIV & 1) << 1) | ((ctx->battleMons[battlerId].defIV & 1) << 2) | ((ctx->battleMons[battlerId].speedIV & 1) << 3) | ((ctx->battleMons[battlerId].spAtkIV & 1) << 4) | ((ctx->battleMons[battlerId].spDefIV & 1) << 5);
