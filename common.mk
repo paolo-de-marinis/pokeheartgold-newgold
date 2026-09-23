@@ -166,8 +166,12 @@ patch_mwasmarm:
 ifeq ($(NODEP),)
 ifneq ($(WINPATH),)
 PROJECT_ROOT_NT := $(shell $(WINPATH) -w $(PROJECT_ROOT) | $(SED) 's/\\/\//g')
+# The compiler names the tree's files by their absolute path; they are written
+# relative to it, so a build directory copied into another checkout depends
+# on that checkout's headers, not the first one's, and a generated header it
+# names (a .naix) matches the rule that makes it.
 define fixdep
-$(SED) -i 's/\r//g; s/\\/\//g; s/\/$$/\\/g; s#$(PROJECT_ROOT_NT)#$(PROJECT_ROOT)#g' $(1)
+$(SED) -i 's/\r//g; s/\\/\//g; s/\/$$/\\/g; s#$(PROJECT_ROOT_NT)#$(WORK_DIR)/#g' $(1)
 touch -r $(1:%.d=%.o) $(1)
 endef
 else

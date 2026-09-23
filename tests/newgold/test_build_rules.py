@@ -44,6 +44,31 @@ class BuildRuleTests(unittest.TestCase):
         self.assertRegex(db, r"(?m)^\.NOTINTERMEDIATE:\s*$")
         self.assertNotRegex(db, r"(?m)^\.SECONDARY:\s*$")
 
+    def test_dependency_files_name_the_tree_relative_to_it(self):
+        """mwcc writes the tree's headers by absolute path. Kept absolute, a
+        build directory copied into a worktree made its objects depend on the
+        first checkout's headers -- an edit in the worktree rebuilt nothing --
+        and a generated .naix it named matched no rule once it was missing.
+        Runs fixdep's sed on a dependency file as mwcc writes one."""
+        text = (ROOT / "common.mk").read_text()
+        body = re.search(r"ifneq \(\$\(WINPATH\),\)\n.*?define fixdep\n(.*?)\n", text, re.S).group(1)
+        program = re.search(r"-i '([^']*)'", body).group(1)
+        program = program.replace("$(PROJECT_ROOT_NT)", "Z:/home/somebody/tree/").replace("$(WORK_DIR)", ".").replace("$$", "$")
+        written = ("build/heartgold.us/src/foo.o: src/foo.c \\\r\n"
+                   "\tZ:\\home\\somebody\\tree\\include\\global.h \\\r\n"
+                   "\tZ:\\home\\somebody\\tree\\files\\data\\resdat.naix\r\n")
+        fixed = subprocess.run(["sed", program], input=written, capture_output=True, text=True).stdout
+        self.assertEqual(fixed, "build/heartgold.us/src/foo.o: src/foo.c \\\n"
+                                "\t./include/global.h \\\n"
+                                "\t./files/data/resdat.naix\n")
+
+    def test_a_naix_is_made_by_making_its_archive(self):
+        """nitroarc writes an archive's .naix beside it. A pattern rule with
+        no recipe is no rule at all, so a .naix a dependency file named was
+        "nothing to be done" when stale and "no rule" when missing."""
+        result = run_make("-n", "-W", "files/data/resdat.json.txt", "files/data/resdat.naix")
+        self.assertIn("nitroarc -cf files/data/resdat.narc", result.stdout, result.stdout + result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

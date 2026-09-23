@@ -557,6 +557,11 @@ NTR_FILE_EXT := bin NCGR NCLR NCER NSCR NSBMD NSBCA NSBTA
 %.narc: $(NARC_DEPS)
 	$(NARC) -cf $@ --index-namespace $*
 %.naix: %.narc
+# nitroarc writes an archive's index beside it, so a .naix a dependency file
+# names is made, when missing, by making its archive. Only the archives' own
+# indexes, by name: a pattern would also claim a .naix written some other way
+# (zukan_enc.naix), and any absolute path an older dependency file still has.
+$(filter-out $(ZUKAN_ENC_NARC:%.narc=%.naix),$(NAIXS)): %.naix: %.narc ;
 
 .PHONY: filesystem clean-filesystem clean-fs
 files_for_compile: $(FILES_NEEDED_FOR_COMPILE)
