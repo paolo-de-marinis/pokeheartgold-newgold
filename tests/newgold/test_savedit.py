@@ -704,6 +704,25 @@ class TheCodeSaveditKeeps(unittest.TestCase):
         self.assertIn("return (species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP) || species > NATIONAL_DEX_COUNT;",
                       sv.c_function("src/pokedex.c", "BOOL DexSpeciesIsInvalid("), "dex_species")
 
+    def test_what_a_new_pokemon_is_given_is_the_game_s(self):
+        """preset_moves is InitBoxMonMoveset: the learnset up to the level,
+        a move known already skipped (MOVE_APPEND_KNOWN), the first dropped
+        when four are known; ability_of is CreateBoxMon's, the second on an
+        odd personality when there is one; egg_moves reads the lists the
+        way LoadEggMoves does."""
+        moveset = sv.c_function("src/pokemon.c", "void InitBoxMonMoveset(")
+        self.assertRegex(moveset, r"LEVEL_UP_LEARNSET_LEVEL_MASK\) > \(level << LEVEL_UP_LEARNSET_LEVEL_SHIFT\)\) \{\s*break;")
+        self.assertRegex(moveset, r"if \(TryAppendBoxMonMove\(boxMon, move\) == MOVE_APPEND_FULL\) \{\s*"
+                                  r"DeleteBoxMonFirstMoveAndAppend\(boxMon, move\);")
+        self.assertRegex(sv.c_function("src/pokemon.c", "u32 TryAppendBoxMonMove("),
+                         r"if \(cur_move == move\) \{\s*ret = MOVE_APPEND_KNOWN;")
+        self.assertRegex(sv.c_function("src/pokemon.c", "void CreateBoxMon("),
+                         r"iv = \(u32\)GetMonBaseStat\(species, BASE_ABILITY_2\);\s*if \(iv != 0\) \{\s*"
+                         r"if \(fixedPersonality & 1\) \{\s*SetBoxMonData\(boxMon, MON_DATA_ABILITY, &iv\);")
+        eggs = sv.c_function("src/get_egg.c", "u8 LoadEggMoves(")
+        self.assertIn("species * MAX_EGG_MOVES * sizeof(u16), MAX_EGG_MOVES * sizeof(u16)", eggs)
+        self.assertIn("dest[numEggMoves] != 0xFFFF", eggs)
+
     def test_the_machines_sit_where_the_template_packs_them(self):
         """machine_places: TM n at n - 1, HM n after the NUM_TMS TMs, the
         rest at their own number -- the bits personal.json.txt sets."""
