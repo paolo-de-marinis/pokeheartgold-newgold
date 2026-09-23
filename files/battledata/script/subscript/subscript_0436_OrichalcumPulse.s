@@ -6,12 +6,13 @@
 // with a Heat Rock, and says what the sun does for its pulse; already in the
 // sun, it only basks (Pokemon Central, Ritmo d'Oricalco; the reference's
 // subscript 487). Under a strong weather the C sends PRIMAL_WEATHER_HOLDS
-// instead, as for the other weather abilities. The reference's refusal under
-// the map's weather is left out for the reason Snow Warning gives: the
-// permanent weather bits it reads are Drought's and Drizzle's here too.
+// instead, as for the other weather abilities. It cannot write over the
+// weather the map brought (Pokemon Central), and fails there, as in the
+// reference.
 _000:
     AbilityPopup BATTLER_CATEGORY_MSG_TEMP, -1
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SUN_ALL, _AlreadySunny
+    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_OVERWORLD_WEATHER_ANY, _MapWeather
     PlayBattleAnimation BATTLER_CATEGORY_PLAYER, BATTLE_ANIMATION_WEATHER_SUN
     Wait
     // The sunlight turned harsh!
@@ -38,6 +39,13 @@ _AlreadySunny:
     Wait
     // {0} basked in the sunlight, sending its ancient pulse into a frenzy!
     PrintMessage msg_0197_01698, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP
+    Wait
+    WaitButtonABTime 30
+    End
+
+_MapWeather:
+    // But it failed!
+    PrintMessage msg_0197_00796, TAG_NONE
     Wait
     WaitButtonABTime 30
     End

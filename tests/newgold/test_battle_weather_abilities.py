@@ -269,6 +269,16 @@ class WeatherAbilityTests(unittest.TestCase):
             case = entry[entry.index(f"case ABILITY_{ability}:"):]
             self.assertIn(f"(ctx->fieldCondition & FIELD_CONDITION_{bit}_ALL)", case[:case.index("break;")], name)
 
+    def test_snow_warning_and_orichalcum_pulse_leave_the_map_s_weather(self):
+        # Pokemon Central (Scendineve, Ritmo d'Oricalco), and the reference's
+        # subscripts 252 and 487. Orichalcum Pulse basks in the map's sun.
+        for name in ("SnowWarning", "OrichalcumPulse"):
+            script = subscript(name)
+            self.assertLess(script.index("FIELD_CONDITION_OVERWORLD_WEATHER_ANY, _MapWeather"), script.index("PrintMessage"), name)
+            self.assertIn("PrintMessage msg_0197_00796, TAG_NONE", script[script.index("\n_MapWeather:"):], name)
+        pulse = subscript("OrichalcumPulse")
+        self.assertLess(pulse.index("FIELD_CONDITION_SUN_ALL, _AlreadySunny"), pulse.index("_MapWeather"))
+
     def test_only_the_map_lays_a_weather_for_good(self):
         setters = sorted(path.name for path in (ROOT / "files/battledata/script").rglob("*.s")
                          if re.search(r"FLAG_ON, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_\w+_PERMANENT", path.read_text()))
