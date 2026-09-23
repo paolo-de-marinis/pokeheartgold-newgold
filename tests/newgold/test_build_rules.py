@@ -69,6 +69,22 @@ class BuildRuleTests(unittest.TestCase):
         result = run_make("-n", "-W", "files/data/resdat.json.txt", "files/data/resdat.naix")
         self.assertIn("nitroarc -cf files/data/resdat.narc", result.stdout, result.stdout + result.stderr)
 
+    def test_a_target_that_is_never_a_file_only_orders(self):
+        """files_for_compile and check_scripts are names, not files: as an
+        ordinary prerequisite each is remade on every run and makes its
+        dependents out of date, which recompiled all 797 game objects, and
+        the script archive with the objects that read its index, on every
+        build with nothing changed. They only have to come first."""
+        db = database()
+        for target, name in (("build/heartgold.us/src/alph_checks.o", "files_for_compile"),
+                             ("build/heartgold.us/asm/overlay_96.o", "files_for_compile"),
+                             ("files/fielddata/script/scr_seq.narc", "check_scripts")):
+            # the prerequisites, not a target-specific variable
+            rules = [m.group(1) for m in re.finditer(rf"^{re.escape(target)}:(.*)$", db, re.M) if "=" not in m.group(1)]
+            self.assertEqual(len(rules), 1, target)
+            normal, _, order_only = rules[0].partition("|")
+            self.assertTrue(name not in normal.split() and name in order_only.split(), f"{target}: {name}")
+
 
 if __name__ == "__main__":
     unittest.main()

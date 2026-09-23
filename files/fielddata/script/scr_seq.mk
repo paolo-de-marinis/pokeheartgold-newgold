@@ -27,7 +27,7 @@ $(SCRIPT_BINS): %.bin: %.s
 	$(OBJCOPY) -O binary --file-alignment 4 $*.o $@
 endif
 
-$(SCRIPT_NARC): $(SCRIPT_BINS) check_scripts
+$(SCRIPT_NARC): $(SCRIPT_BINS) | check_scripts
 
 check_scripts: $(SCRIPT_BINS)
 ifeq ($(COMPARE),1)
