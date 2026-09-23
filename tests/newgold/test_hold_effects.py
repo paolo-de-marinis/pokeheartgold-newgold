@@ -1111,6 +1111,9 @@ class MirrorHerbTests(unittest.TestCase):
         rise = change[:change.index("} else { // Stat Decrease")]
         self.assertIn("RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdStatChange, stat + 1, "
                       "mon->statChanges[stat + 1] - stagesBefore);", rise)
+        # Not an Opportunist's copy (Pokemon Central, Foglia carbone).
+        self.assertIn("if (!(ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY && GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_OPPORTUNIST)) {\n"
+                      "                RecordMirrorHerbStages(", rise)
         source = OVERLAY.read_text()
         use = function(source, "CheckUseHeldItem")
         case = use[use.index("case HOLD_EFFECT_COPY_STAT_INCREASE:"):]

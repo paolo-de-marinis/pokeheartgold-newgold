@@ -7972,8 +7972,8 @@ BOOL CheckItemGradualHPRestore(BattleSystem *battleSystem, BattleContext *ctx, i
 // next asked -- after the move that raised them, after the entry abilities, at
 // the end of the turn -- and MirrorHerbCopiesStages applies them. The herb's
 // own copy is written straight into the stages, so it is not told to
-// anybody's herb in turn, and neither is Costar's, which Pokemon Central
-// leaves out as well.
+// anybody's herb in turn, and neither are Costar's and Opportunist's, which
+// Pokemon Central leaves out as well.
 void RecordMirrorHerbStages(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int stat, int stages) {
     int i;
 
