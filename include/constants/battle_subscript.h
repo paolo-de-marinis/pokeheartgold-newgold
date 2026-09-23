@@ -710,6 +710,9 @@
 #define BATTLE_SUBSCRIPT_MIRROR_HERB                        433
 // Growth: Attack and Sp. Atk, by two in the sun. 331 there.
 #define BATTLE_SUBSCRIPT_HANDLE_GROWTH                      434
+// A Dancer locked into another move failing the dance, which the reference
+// has no script for.
+#define BATTLE_SUBSCRIPT_DANCE_FAILED                       435
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

@@ -2516,6 +2516,17 @@ static BOOL TargetIsHealBlocked(BattleContext *ctx) {
     return ctx->moveNoCur == MOVE_POLLEN_PUFF && target == (ctx->battlerIdAttacker ^ 2);
 }
 
+// A Dancer locked into a move other than the dance -- by a Choice item, an
+// Encore or a rampage -- takes the dance up and fails it (Pokemon Central,
+// Sincrodanza), after whatever else stops a move.
+static BOOL Battler_DanceLocked(BattleContext *ctx, int battlerId) {
+    BattleMon *mon = &ctx->battleMons[battlerId];
+
+    return (mon->unk88.moveNoChoice && mon->unk88.moveNoChoice != ctx->danceMove)
+        || (mon->unk88.encoredMove && mon->unk88.encoredMove != ctx->danceMove)
+        || ((mon->status2 & (STATUS2_LOCKED_INTO_MOVE | STATUS2_RAMPAGE)) && ctx->moveNoLockedInto[battlerId] != ctx->danceMove);
+}
+
 static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
     int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
     int ret = 0;
@@ -2805,6 +2816,15 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_50++;
             break;
         case 18:
+            if (ctx->dancing && Battler_DanceLocked(ctx, ctx->battlerIdAttacker)) {
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_DANCE_FAILED);
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                ctx->commandNext = CONTROLLER_COMMAND_39;
+                ret = 1;
+            }
+            ctx->unk_50++;
+            break;
+        case 19:
             ctx->unk_50 = 0;
             ret = 3;
             break;
@@ -4055,21 +4075,14 @@ static void ov12_0224D23C(BattleSystem *battleSystem, BattleContext *ctx) {
 // changed no stat, or was snatched or reflected -- the reference copies
 // whatever happened --
 // nor from a copy, nor while
-// the dancer is in the air or underground, fainted, or locked into another
-// move by a Choice item, an Encore or a rampage. What stops any move still
-// stops it: sleep, a freeze, paralysis, confusion, a flinch, a Taunt.
+// the dancer is in the air or underground or fainted. Locked into another move
+// by a Choice item, an Encore or a rampage, it dances and fails
+// (Battler_DanceLocked). What stops any move still stops it: sleep, a freeze,
+// paralysis, confusion, a flinch, a Taunt.
 static BOOL Battler_CanDance(BattleContext *ctx, int battlerId) {
     BattleMon *mon = &ctx->battleMons[battlerId];
 
-    if (mon->hp == 0 || GetBattlerAbility(ctx, battlerId) != ABILITY_DANCER || (mon->moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE)) {
-        return FALSE;
-    }
-    if ((mon->unk88.moveNoChoice && mon->unk88.moveNoChoice != ctx->danceMove)
-        || (mon->unk88.encoredMove && mon->unk88.encoredMove != ctx->danceMove)
-        || ((mon->status2 & (STATUS2_LOCKED_INTO_MOVE | STATUS2_RAMPAGE)) && ctx->moveNoLockedInto[battlerId] != ctx->danceMove)) {
-        return FALSE;
-    }
-    return TRUE;
+    return mon->hp != 0 && GetBattlerAbility(ctx, battlerId) == ABILITY_DANCER && !(mon->moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE);
 }
 
 // A single-target dance goes back at the Pokemon that danced it, or, when

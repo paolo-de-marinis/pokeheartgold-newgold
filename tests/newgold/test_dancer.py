@@ -180,26 +180,37 @@ int main(void) {
     danced(1, MOVE_FIERY_DANCE, 0);
     ctx.battleMons[1].hp = 0;
     assert(next(&target) == 0 && target == 10);
-    // Fainted, in the air, locked into another move, or without the ability.
-    for (int lock = 0; lock < 5; lock++) {
+    // Fainted, in the air, or without the ability.
+    for (int lock = 0; lock < 3; lock++) {
         setup(0);
         ctx.battleMons[0].ability = ABILITY_DANCER;
         switch (lock) {
         case 0: ctx.battleMons[0].hp = 0; break;
         case 1: ctx.battleMons[0].moveEffectFlags = MOVE_EFFECT_FLAG_FLY; break;
-        case 2: ctx.battleMons[0].unk88.moveNoChoice = MOVE_TACKLE; break;
-        case 3: ctx.battleMons[0].unk88.encoredMove = MOVE_TACKLE; break;
-        case 4: ctx.battleMons[0].ability = ABILITY_OWN_TEMPO; break;
+        case 2: ctx.battleMons[0].ability = ABILITY_OWN_TEMPO; break;
         }
         danced(1, MOVE_SWORDS_DANCE, 1);
         assert(next(&target) == -1);
     }
-    // Locked into the dance itself, it dances.
+    // Locked into another move by a Choice item, an Encore or a rampage, it
+    // takes the dance up, and the check before the move fails it.
+    for (int lock = 0; lock < 3; lock++) {
+        setup(0);
+        ctx.battleMons[0].ability = ABILITY_DANCER;
+        switch (lock) {
+        case 0: ctx.battleMons[0].unk88.moveNoChoice = MOVE_TACKLE; break;
+        case 1: ctx.battleMons[0].unk88.encoredMove = MOVE_TACKLE; break;
+        case 2: ctx.battleMons[0].status2 = STATUS2_RAMPAGE; ctx.moveNoLockedInto[0] = MOVE_OUTRAGE; break;
+        }
+        danced(1, MOVE_SWORDS_DANCE, 1);
+        assert(next(&target) == 0 && Battler_DanceLocked(&ctx, 0));
+    }
+    // Locked into the dance itself, it dances and does not fail.
     setup(0);
     ctx.battleMons[0].ability = ABILITY_DANCER;
     ctx.battleMons[0].unk88.moveNoChoice = MOVE_SWORDS_DANCE;
     danced(1, MOVE_SWORDS_DANCE, 1);
-    assert(next(&target) == 0);
+    assert(next(&target) == 0 && !Battler_DanceLocked(&ctx, 0));
     return 0;
 }
 """
@@ -214,7 +225,7 @@ class DancerTests(unittest.TestCase):
     def test_who_dances_and_at_whom(self):
         source = CONTROLLER.read_text()
         functions = "\n".join(function(source, name) for name in (
-            "Battler_CanDance", "Dancer_Target", "Dance_ChangedNothing", "TryDancer"))
+            "Battler_DanceLocked", "Battler_CanDance", "Dancer_Target", "Dance_ChangedNothing", "TryDancer"))
         with tempfile.TemporaryDirectory(prefix="newgold-dancer-") as directory:
             path = Path(directory)
             (path / "test.c").write_text(FIXTURE.replace("@FUNCTIONS@", functions))
@@ -222,6 +233,17 @@ class DancerTests(unittest.TestCase):
                 "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
                 str(path / "test.c"), "-o", str(path / "test")], check=True)
             subprocess.run([str(path / "test")], check=True)
+
+    def test_a_locked_dancer_fails_the_dance(self):
+        # Pokemon Central, Sincrodanza: it tries the dance and fails unless the
+        # dance is the move it is locked into.
+        checks = function(CONTROLLER.read_text(), "ov12_0224B528")
+        self.assertRegex(checks, r"if \(ctx->dancing && Battler_DanceLocked\(ctx, ctx->battlerIdAttacker\)\) \{\s*"
+                                 r"ReadBattleScriptFromNarc\(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_DANCE_FAILED\);")
+        number = int(re.search(r"#define BATTLE_SUBSCRIPT_DANCE_FAILED\s+(\d+)",
+                               (ROOT / "include/constants/battle_subscript.h").read_text()).group(1))
+        script = next((ROOT / "files/battledata/script/subscript").glob(f"subscript_{number:04d}_*.s")).read_text()
+        self.assertRegex(script, r"PrintAttackMessage\s*Wait\s*WaitButtonABTime 30\s*Call BATTLE_SUBSCRIPT_BUT_IT_FAILED")
 
     def test_the_dances_are_the_reference_s(self):
         moves = table("sDanceMoves")
