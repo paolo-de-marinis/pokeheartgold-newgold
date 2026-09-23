@@ -248,6 +248,16 @@ Reading what the debug ROM records, and playing it without looking.
   harness, and its memory dumps read back.
 - `pc.py SAVE` -- the PC's storage system opened from a save standing in
   front of a PC, and how full every heap got.
+- `species.py OUT` -- every species and form through the screens that load
+  its resources: in the PC, in boxes savedit fills (its icon, its sprite,
+  its name, Dex number, types and ability on the hover, and its summary
+  with the cry it asks for); the Pokedex's list, every page and cry; and a
+  wild battle for each, to the command prompt, as markers. A picture is
+  compared with its PNG, a text with every other place the same string is
+  drawn. `OUT/report.txt` lists what failed, `OUT/fail/` holds a
+  screenshot of each failure; `--only`, `--walk` and `--jobs` narrow it.
+  The whole of it is about three quarters of an hour at twelve jobs, and
+  nothing may be built meanwhile: every job reads the ROM and the ELFs.
 - `markers.py` -- the decoding the others share.
 
 Every reader takes the ELF the ROM was linked from, the debug build's by
