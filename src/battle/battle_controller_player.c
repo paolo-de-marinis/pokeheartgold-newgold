@@ -185,9 +185,9 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // Bolt, grew it by four. The Rooms' two bytes grew it by four. Rage Fist's
 // count by party, two of its bytes in the padding the Rooms' left, grew it by
 // twenty-four. Octolock's bit took each battler's move conditions to a second
-// byte, four in all.
+// byte, four in all. Dragon Cheer's two took them to a third, four more.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x325C + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3260 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given

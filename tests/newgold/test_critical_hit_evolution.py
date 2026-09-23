@@ -43,7 +43,7 @@ typedef struct {
     u32 status, status2, moveEffectFlags;
     u8 criticalHits : 2;
 } BattleMon;
-typedef struct { u8 laserFocusTimer : 2; } MoveConditions;
+typedef struct { u8 laserFocusTimer : 2; u8 dragonCheer : 2; } MoveConditions;
 typedef struct {
     BattleMon battleMons[4];
     MoveConditions moveConditions[4];

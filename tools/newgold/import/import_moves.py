@@ -449,6 +449,9 @@ IMPLEMENTED_HERE = {
     # Synchronoise hurts only the Pokemon that share a type with its user
     # (Pokemon Central, Sincrumore): effect script 432.
     "SYNCHRONOISE": "MOVE_EFFECT_HIT_SHARED_TYPE",
+    # Dragon Cheer raises its ally's critical-hit ratio, two stages for a
+    # Dragon-type (Pokemon Central, Grido del Drago): effect script 433.
+    "DRAGON_CHEER": "MOVE_EFFECT_DRAGON_CHEER",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -489,6 +492,9 @@ FIELDS_HERE = {
     # The side effect that carries the two rolled ones, so Sheer Force sees it.
     "TRIPLE_ARROWS": {"effectChance": 100},
     "EERIE_SPELL": {"effectChance": 100},
+    # On an ally: Protect and Magic Coat have nothing to do with it (Pokemon
+    # Central, Grido del Drago).
+    "DRAGON_CHEER": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
 }
 
 # The effects written here for those moves follow the reference's in

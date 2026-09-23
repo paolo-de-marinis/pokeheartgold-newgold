@@ -11107,7 +11107,7 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     // The reference's Leek is this game's Stick, the same item down to the row
     // of item data, and the reference gives its two stages to Sirfetch'd as
     // well as to Farfetch'd. That second species is the whole of the Leek here.
-    critUp = (((status2 & STATUS2_FOCUS_ENERGY) != 0) * 2) + (item == HOLD_EFFECT_CRITRATE_UP) + critCnt + (ability == ABILITY_SUPER_LUCK) + 2 * ((item == HOLD_EFFECT_CHANSEY_CRITRATE_UP) && (species == SPECIES_CHANSEY)) + 2 * ((item == HOLD_EFFECT_FARFETCHD_CRITRATE_UP) && (species == SPECIES_FARFETCHD)) + 2 * ((item == HOLD_EFFECT_FARFETCHD_CRITRATE_UP) && (species == SPECIES_SIRFETCHD));
+    critUp = (((status2 & STATUS2_FOCUS_ENERGY) != 0) * 2) + ctx->moveConditions[battlerIdAttacker].dragonCheer + (item == HOLD_EFFECT_CRITRATE_UP) + critCnt + (ability == ABILITY_SUPER_LUCK) + 2 * ((item == HOLD_EFFECT_CHANSEY_CRITRATE_UP) && (species == SPECIES_CHANSEY)) + 2 * ((item == HOLD_EFFECT_FARFETCHD_CRITRATE_UP) && (species == SPECIES_FARFETCHD)) + 2 * ((item == HOLD_EFFECT_FARFETCHD_CRITRATE_UP) && (species == SPECIES_SIRFETCHD));
 
     // Laser Focus makes the next hit certain, the way four stages would.
     if (critUp > 4 || ctx->moveConditions[battlerIdAttacker].laserFocusTimer) {
@@ -11886,7 +11886,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_SYRUP_BOMB,
     BATTLE_SUBSCRIPT_TAR_SHOT,
     BATTLE_SUBSCRIPT_TRIPLE_ARROWS,
-    BATTLE_SUBSCRIPT_EERIE_SPELL
+    BATTLE_SUBSCRIPT_EERIE_SPELL,
+    BATTLE_SUBSCRIPT_DRAGON_CHEER
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

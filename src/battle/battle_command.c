@@ -10282,6 +10282,18 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         ctx->calcTemp = !ctx->moveConditions[battlerId].tarShot;
         ctx->moveConditions[battlerId].tarShot = TRUE;
         break;
+    // A critical stage more, two for a Dragon-type as it is now; nothing for
+    // a Pokemon already cheered or pumped by Focus Energy (CALC_TEMP says).
+    case MOVE_DRAGON_CHEER:
+        ctx->calcTemp = !ctx->moveConditions[battlerId].dragonCheer && !(ctx->battleMons[battlerId].status2 & STATUS2_FOCUS_ENERGY);
+        if (ctx->calcTemp) {
+            ctx->moveConditions[battlerId].dragonCheer = (GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) == TYPE_DRAGON
+                                                             || GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL) == TYPE_DRAGON
+                                                             || ctx->battleMons[battlerId].type3 == TYPE_DRAGON)
+                ? 2
+                : 1;
+        }
+        break;
     }
 
     return FALSE;

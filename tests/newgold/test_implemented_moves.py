@@ -624,5 +624,25 @@ int main(void) {
         self.assertIn("BSCRIPT_VAR_CALC_TEMP, TYPE_NONE, _NO_EFFECT", script)
         self.assertLess(script.index("MOVE_STATUS_NO_EFFECT"), script.index("_HIT:"))
 
+    def test_dragon_cheer_raises_the_ally_s_critical_ratio(self):
+        # Pokemon Central (Grido del Drago): a stage, two for a Dragon-type as
+        # it is when cheered; not on top of Focus Energy or another cheer; no
+        # ally, and it fails.
+        from test_hold_effects import subscript_named
+        self.assertImplemented("DRAGON_CHEER", "MOVE_EFFECT_DRAGON_CHEER")
+        self.assertFalse(record("DRAGON_CHEER")[9] & (1 << 1 | 1 << 2), "FLAG_PROTECT, FLAG_MAGIC_COAT")
+        script = effect_script("MOVE_EFFECT_DRAGON_CHEER")
+        self.assertIn("BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_ATTACKER, BMON_DATA_HP, 0, _NO_PARTNER", script)
+        self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_DRAGON_CHEER", script)
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_DRAGON_CHEER"), "BATTLE_SUBSCRIPT_DRAGON_CHEER")
+        self.assertIn("SetMoveConditionFlag MOVE_DRAGON_CHEER, BATTLER_CATEGORY_SIDE_EFFECT_MON",
+                      subscript_named("BATTLE_SUBSCRIPT_DRAGON_CHEER"))
+        flag = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SetMoveConditionFlag")
+        cheer = flag[flag.index("case MOVE_DRAGON_CHEER:"):]
+        self.assertIn("!(ctx->battleMons[battlerId].status2 & STATUS2_FOCUS_ENERGY)", cheer)
+        self.assertIn("TYPE_DRAGON)\n                ? 2\n                : 1;", cheer)
+        self.assertIn("+ ctx->moveConditions[battlerIdAttacker].dragonCheer +",
+                      function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "TryCriticalHit"))
+
 if __name__ == "__main__":
     unittest.main()

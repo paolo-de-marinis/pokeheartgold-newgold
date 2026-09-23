@@ -440,5 +440,6 @@
 #define MOVE_EFFECT_TRIPLE_ARROWS                                430
 #define MOVE_EFFECT_EERIE_SPELL                                  431
 #define MOVE_EFFECT_HIT_SHARED_TYPE                              432
+#define MOVE_EFFECT_DRAGON_CHEER                                 433
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

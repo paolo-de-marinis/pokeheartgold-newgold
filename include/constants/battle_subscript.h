@@ -761,6 +761,9 @@
 #define BATTLE_SUBSCRIPT_TRIPLE_ARROWS                      453
 // Eerie Spell's PP loss, which the reference has no script for.
 #define BATTLE_SUBSCRIPT_EERIE_SPELL                        454
+// Dragon Cheer raising its ally's critical-hit ratio, which the reference
+// has no script for.
+#define BATTLE_SUBSCRIPT_DRAGON_CHEER                       455
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -847,6 +850,7 @@
 #define MOVE_SUBSCRIPT_PTR_TAR_SHOT                         228
 #define MOVE_SUBSCRIPT_PTR_TRIPLE_ARROWS                    229
 #define MOVE_SUBSCRIPT_PTR_EERIE_SPELL                      230
+#define MOVE_SUBSCRIPT_PTR_DRAGON_CHEER                     231
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H
