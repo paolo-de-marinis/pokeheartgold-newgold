@@ -64,7 +64,7 @@ _102:
 
 _118:
     CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_STATUS, STATUS_NONE, _237
-    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_SIDE_EFFECT_TYPE, SIDE_EFFECT_TYPE_ABILITY, _147
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_SIDE_EFFECT_TYPE, SIDE_EFFECT_TYPE_ABILITY, _ABILITY_SAFEGUARD
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_MISSED|MOVE_STATUS_SEMI_INVULNERABLE, _237
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_SIDE_CONDITION_STAT_CHANGE, SIDE_CONDITION_SAFEGUARD, _SAFEGUARD
 _BYPASS_SAFEGUARD:
@@ -194,3 +194,11 @@ _ALLY_FLOWER_VEIL_MESSAGE:
     // {0} stayed awake because of its ally’s {1}!
     PrintMessage msg_0197_01385, TAG_NICKNAME_ABILITY, BATTLER_CATEGORY_SIDE_EFFECT_MON, BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_SIDE_EFFECT_MON
     GoTo _330
+
+// What an ability gives -- Static, Flame Body, Poison Point, Effect Spore and
+// Poison Touch on contact, Synchronize passing its own status on -- stops at
+// Safeguard from the fifth generation on, without a word (Pokemon Central,
+// Salvaguardia). The reference lets it through, as the third and fourth did.
+_ABILITY_SAFEGUARD:
+    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_SIDE_CONDITION_STAT_CHANGE, SIDE_CONDITION_SAFEGUARD, _337
+    GoTo _147
