@@ -1,14 +1,19 @@
 #include "global.h"
 
+#include "constants/items.h"
+#include "constants/moves.h"
+#include "constants/species.h"
+
 #include "pokemon_types_def.h"
 #include "save.h"
 #include "unk_0202FBCC.h"
 
 // The last species, held item and move a recorded Pokemon may have; past
-// them a video is taken for corrupted. Retail's.
-#define VIDEO_LAST_SPECIES 495
-#define VIDEO_LAST_ITEM    536
-#define VIDEO_LAST_MOVE    467
+// them a video is taken for corrupted. Retail stopped at its own 495, 536
+// and 467, which refused every video with an added species, item or move.
+#define VIDEO_LAST_SPECIES NUM_SPECIES
+#define VIDEO_LAST_ITEM    (ITEM_MAX)
+#define VIDEO_LAST_MOVE    NUM_MOVES_TOTAL
 
 // A party as a battle video keeps it (sub_020306DC).
 typedef struct RecordedParty {

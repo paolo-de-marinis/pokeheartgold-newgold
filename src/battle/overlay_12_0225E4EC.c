@@ -24,7 +24,7 @@ void ov12_0226430C(BattleSystem *battleSystem, int battlerId, int a2);
 
 // A recorded battle's move choice for one battler: the slot is read back from
 // the recording, and a slot that is empty or holds no known move ends the
-// playback.
+// playback. Retail's bound was its last move, 467; hg-engine lifts it.
 void ov12_0225E4EC(SysTask *task, void *_data) {
     RecordedMoveInput *data = _data;
     u8 input;
@@ -36,7 +36,7 @@ void ov12_0225E4EC(SysTask *task, void *_data) {
         ov12_02261EB8(data->battleSystem);
     } else {
         u16 move = GetBattlerVar(BattleSystem_GetBattleContext(data->battleSystem), data->battlerId, BMON_DATA_MOVE1 + input - 1, NULL);
-        if (move == MOVE_NONE || move > NUM_MOVES) {
+        if (move == MOVE_NONE || move > NUM_MOVES_TOTAL) {
             ov12_02261EB8(data->battleSystem);
         }
     }
