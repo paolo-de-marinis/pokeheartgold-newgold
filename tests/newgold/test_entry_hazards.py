@@ -190,12 +190,23 @@ class QueueTests(unittest.TestCase):
         self.assertLess(caught, web.index("ABILITY_MIRROR_ARMOR"))
         self.assertLess(caught, web.index("Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE"))
 
+    def test_rapid_spin_blows_the_web_away(self):
+        # From the sixth generation, and in the reference's BtlCmd_RapidSpin:
+        # the web goes with the rest, after the stones, and says so.
+        spin = function(read("src/battle/battle_command.c"), "BtlCmd_RapidSpin")
+        web = spin[spin.index("if (ctx->fieldSideConditionFlags[side] & SIDE_CONDITION_STICKY_WEB) {"):]
+        self.assertLess(spin.index("SIDE_CONDITION_STEALTH_ROCKS) {"), spin.index(web))
+        web = web[:web.index("return FALSE;")]
+        self.assertIn("ctx->fieldSideConditionFlags[side] &= ~SIDE_CONDITION_STICKY_WEB;", web)
+        self.assertIn("ctx->moveTemp = MOVE_STICKY_WEB;", web)
+        self.assertIn("BATTLE_SUBSCRIPT_BLOW_AWAY_HAZARDS", web)
+
     def test_what_clears_a_hazard_takes_it_off(self):
         defog = read("files/battledata/script/subscript/subscript_0171_Defog.s")
         for hazard in ("SPIKES", "TOXIC_SPIKES", "STEALTH_ROCK"):
             self.assertIn(f"RemoveEntryHazardFromQueue BATTLER_CATEGORY_DEFENDER, HAZARD_IDX_{hazard}", defog)
         spin = function(read("src/battle/battle_command.c"), "BtlCmd_RapidSpin")
-        for hazard in ("SPIKES", "TOXIC_SPIKES", "STEALTH_ROCK"):
+        for hazard in ("SPIKES", "TOXIC_SPIKES", "STEALTH_ROCK", "STICKY_WEB"):
             self.assertIn(f"EntryHazardQueueRemove(ctx, side, HAZARD_IDX_{hazard});", spin)
         tidy = read("files/battledata/script/subscript/subscript_0326_TidyUp.s")
         for side in ("ENEMY", "PLAYER"):

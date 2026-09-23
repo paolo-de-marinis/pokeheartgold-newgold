@@ -4712,6 +4712,16 @@ BOOL BtlCmd_RapidSpin(BattleSystem *battleSystem, BattleContext *ctx) {
         return FALSE;
     }
 
+    // Sticky Web, from the sixth generation on (the reference's
+    // BtlCmd_RapidSpin).
+    if (ctx->fieldSideConditionFlags[side] & SIDE_CONDITION_STICKY_WEB) {
+        ctx->fieldSideConditionFlags[side] &= ~SIDE_CONDITION_STICKY_WEB;
+        ctx->moveTemp = MOVE_STICKY_WEB;
+        EntryHazardQueueRemove(ctx, side, HAZARD_IDX_STICKY_WEB);
+        BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_BLOW_AWAY_HAZARDS);
+        return FALSE;
+    }
+
     BattleScriptIncrementPointer(ctx, 1);
 
     return FALSE;
