@@ -435,6 +435,7 @@ async function libraryAction(act, f, t) {
     if (r.value !== "go") return;
     toast("Carico il salvataggio e apro melonDS…");
     await toSlot("/api/play", f, r.data.slot, "melonDS è aperto");
+    if (S.f === "emu:" + r.data.slot) await openSave(S.f);   // shown as it now is, not as "changed on disk"
     return loadLibrary();
   }
   if (act === "load") {
@@ -443,6 +444,7 @@ async function libraryAction(act, f, t) {
       [["go", "Carica", "primary"], ["", "Annulla"]]);
     if (r.value !== "go") return;
     await toSlot("/api/load", f, r.data.slot, "Caricato nello slot");
+    if (S.f === "emu:" + r.data.slot) await openSave(S.f);
     return loadLibrary();
   }
   if (act === "take") {
