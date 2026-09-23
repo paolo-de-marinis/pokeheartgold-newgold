@@ -196,6 +196,11 @@ int ov12_02258BB4(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon, 
         case HOLD_EFFECT_ARCEUS_DARK:
             type = TYPE_DARK;
             break;
+        // Judgment with the Pixie Plate is Fairy, as in GetDynamicMoveType;
+        // hg-engine sends this site through its plate-to-type routine.
+        case HOLD_EFFECT_ARCEUS_FAIRY:
+            type = TYPE_FAIRY;
+            break;
         default:
             type = TYPE_NORMAL;
             break;

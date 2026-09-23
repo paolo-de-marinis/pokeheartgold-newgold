@@ -86,6 +86,11 @@ u32 ov10_0221F084(BattleSystem *battleSystem, BattleContext *ctx, u16 move, u16 
             case HOLD_EFFECT_ARCEUS_DARK:
                 type = TYPE_DARK;
                 break;
+            // Judgment with the Pixie Plate is Fairy, as in GetDynamicMoveType;
+            // hg-engine sends this site through its plate-to-type routine.
+            case HOLD_EFFECT_ARCEUS_FAIRY:
+                type = TYPE_FAIRY;
+                break;
             default:
                 type = TYPE_NORMAL;
                 break;
@@ -241,6 +246,11 @@ int ov10_0221F47C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId,
             break;
         case HOLD_EFFECT_ARCEUS_DARK:
             type = TYPE_DARK;
+            break;
+        // Judgment with the Pixie Plate is Fairy, as in GetDynamicMoveType;
+        // hg-engine sends this site through its plate-to-type routine.
+        case HOLD_EFFECT_ARCEUS_FAIRY:
+            type = TYPE_FAIRY;
             break;
         default:
             type = TYPE_NORMAL;

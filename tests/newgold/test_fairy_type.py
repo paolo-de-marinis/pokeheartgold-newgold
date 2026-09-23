@@ -169,6 +169,87 @@ int main(void) {
 """
 
 
+# The three places the trainer AI types a move for itself, the real functions
+# run on the host: the damage estimate, a battler's move type and a party
+# Pokemon's move type.
+AI = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+typedef struct {
+    u16 item;
+    u32 hpIV : 5, atkIV : 5, defIV : 5, speedIV : 5, spAtkIV : 5, spDefIV : 5;
+    u8 level, friendship;
+    int weight;
+} BattleMon;
+typedef struct { u8 battlerIdTarget; } TrainerAIData;
+typedef struct {
+    BattleMon battleMons[4];
+    u32 fieldCondition, fieldSideConditionFlags[2], battleStatus, effectiveSpeed[4];
+    TrainerAIData trainerAIData;
+} BattleContext;
+typedef struct BattleSystem BattleSystem;
+typedef struct Pokemon Pokemon;
+static const u16 ov10_0222B068[][2] = { { 0xFFFF, 0xFFFF } };
+static u16 sMonItem;
+static int sDamageType;
+// The item's hold effect stands for the item here.
+static int GetItemVar(BattleContext *ctx, u16 item, u16 var) { (void)ctx; return var == ITEMATTR_HOLD_EFFECT ? item : 0; }
+static u32 GetMonData(Pokemon *mon, int id, void *data) { (void)mon; (void)data; assert(id == MON_DATA_HELD_ITEM); return sMonItem; }
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].item; }
+static int GetNaturalGiftType(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return 0; }
+static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int a, int b, int c) { (void)bs; (void)ctx; (void)a; (void)b; (void)c; return 0; }
+static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; (void)battlerId; return 1; }
+static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; return 0; }
+static int CalcMoveDamage(BattleSystem *bs, BattleContext *ctx, u32 move, u32 side, u32 field, u16 power, u8 type, u8 attacker, u8 target, u8 crit) {
+    (void)bs; (void)ctx; (void)move; (void)side; (void)field; (void)power; (void)attacker; (void)target; (void)crit;
+    sDamageType = type;
+    return 100;
+}
+static int ov12_02251D28(BattleSystem *bs, BattleContext *ctx, int move, int type, int attacker, int target, int damage, u32 *flags) {
+    (void)bs; (void)ctx; (void)move; (void)attacker; (void)target; (void)flags;
+    assert(type == sDamageType);
+    return damage;
+}
+static int DamageDivide(int num, int denom) { return num / denom; }
+@FUNCTIONS@
+int main(void) {
+    static BattleContext ctx;
+    u8 ivs[6] = { 0 };
+    ctx.battleMons[0].item = HOLD_EFFECT_ARCEUS_FAIRY;
+    sMonItem = HOLD_EFFECT_ARCEUS_FAIRY;
+    assert(ov10_0221F47C(0, &ctx, 0, MOVE_JUDGMENT) == TYPE_FAIRY);
+    assert(ov12_02258BB4(0, &ctx, 0, MOVE_JUDGMENT) == TYPE_FAIRY);
+    assert(ov10_0221F084(0, &ctx, MOVE_JUDGMENT, HOLD_EFFECT_ARCEUS_FAIRY, ivs, 0, ABILITY_MULTITYPE, 0, 100) == 100);
+    assert(sDamageType == TYPE_FAIRY);
+    // Another plate its own type, none Normal, and Klutz none at all.
+    ctx.battleMons[0].item = HOLD_EFFECT_ARCEUS_DRAGON;
+    sMonItem = HOLD_EFFECT_ARCEUS_DRAGON;
+    assert(ov10_0221F47C(0, &ctx, 0, MOVE_JUDGMENT) == TYPE_DRAGON);
+    assert(ov12_02258BB4(0, &ctx, 0, MOVE_JUDGMENT) == TYPE_DRAGON);
+    ov10_0221F084(0, &ctx, MOVE_JUDGMENT, HOLD_EFFECT_ARCEUS_DRAGON, ivs, 0, ABILITY_MULTITYPE, 0, 100);
+    assert(sDamageType == TYPE_DRAGON);
+    ctx.battleMons[0].item = 0;
+    sMonItem = 0;
+    assert(ov10_0221F47C(0, &ctx, 0, MOVE_JUDGMENT) == TYPE_NORMAL);
+    assert(ov12_02258BB4(0, &ctx, 0, MOVE_JUDGMENT) == TYPE_NORMAL);
+    ov10_0221F084(0, &ctx, MOVE_JUDGMENT, HOLD_EFFECT_ARCEUS_FAIRY, ivs, 0, ABILITY_KLUTZ, 0, 100);
+    assert(sDamageType == TYPE_NORMAL);
+    puts("PASS: the trainer AI types Judgment with a Pixie Plate as Fairy, at all three sites.");
+    return 0;
+}
+"""
+
+
 class ArceusFairyTests(unittest.TestCase):
     def test_the_pixie_plate_makes_arceus_fairy(self):
         """An Arceus holding a Pixie Plate is Fairy -- its form, its type in
@@ -183,6 +264,23 @@ class ArceusFairyTests(unittest.TestCase):
             subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
                 "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
                 str(path / "test.c"), "-o", str(path / "test")], check=True)
+            result = subprocess.run([str(path / "test")], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        print(result.stdout.strip())
+
+    def test_the_ai_types_judgment_with_the_pixie_plate(self):
+        """The trainer AI works out Judgment's type in three places of its own,
+        which hg-engine sends through the same plate routine
+        (armips/asm/fairy.s, 0x0221F172, 0x0221F4C0, 0x02258C1A)."""
+        ai = (ROOT / "src/battle/trainer_ai_0221F084.c").read_text()
+        functions = "\n".join([function(ai, "ov10_0221F084"), function(ai, "ov10_0221F47C"),
+                               function((ROOT / "src/battle/overlay_12_02258800.c").read_text(), "ov12_02258BB4")])
+        with tempfile.TemporaryDirectory(prefix="newgold-arceus-ai-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(AI.replace("@FUNCTIONS@", functions))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-Wno-maybe-uninitialized",
+                "-iquote", str(ROOT / "include"), str(path / "test.c"), "-o", str(path / "test")], check=True)
             result = subprocess.run([str(path / "test")], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         print(result.stdout.strip())
