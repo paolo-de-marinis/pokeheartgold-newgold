@@ -26,6 +26,12 @@ _SWITCH_OUT:
     Wait
     HealthbarSlideOut BATTLER_CATEGORY_MSG_BATTLER_TEMP
     Wait
+    // The attacker leaving before its move is over: what comes in did not
+    // use the move (U-turn's flag, which the pivot moves set too).
+    CompareVarToVar OPCODE_NEQ, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_ATTACKER, _NOT_THE_ATTACKER
+    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_UTURN
+
+_NOT_THE_ATTACKER:
     GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST
 
 _FLEE:

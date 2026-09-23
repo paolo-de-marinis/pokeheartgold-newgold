@@ -4025,10 +4025,17 @@ static void ov12_0224D23C(BattleSystem *battleSystem, BattleContext *ctx) {
     BOOL copied = ctx->dancing;
     BOOL copyLocks = !copied || (ctx->battleMons[ctx->battlerIdAttacker].unk88.moveNoChoice == 0
         && BattleMon_GetMoveIndex(&ctx->battleMons[ctx->battlerIdAttacker], ctx->moveNoTemp) < MAX_MON_MOVES);
+    // The user can have left in the middle of its move: U-turn and the other
+    // pivot moves, Teleport, a Red Card, or its own Eject Pack or Emergency
+    // Exit (U-turn's flag), Baton Pass or Shed Tail (the Baton Pass flag).
+    // What stands in its slot now did not use the move, so it is neither
+    // locked into it by a Choice item nor remembered as having used it last;
+    // retail excused U-turn and Baton Pass from the lock alone.
+    BOOL userGone = (ctx->battleStatus2 & BATTLE_STATUS2_UTURN) || (ctx->battleStatus & BATTLE_STATUS_BATON_PASS);
 
-    if (copyLocks && (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN || ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE)) {
+    if (!userGone && copyLocks && (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN || ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE)) {
         if (item == HOLD_EFFECT_CHOICE_ATK || item == HOLD_EFFECT_CHOICE_SPEED || item == HOLD_EFFECT_CHOICE_SPATK) {
-            if (!(ctx->moveNoTemp == MOVE_STRUGGLE || (ctx->moveNoTemp == MOVE_U_TURN && ctx->battleStatus2 & BATTLE_STATUS2_UTURN) || (ctx->moveNoTemp == MOVE_BATON_PASS && ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED))) {
+            if (ctx->moveNoTemp != MOVE_STRUGGLE) {
                 ctx->battleMons[ctx->battlerIdAttacker].unk88.moveNoChoice = ctx->moveNoTemp;
             }
         } else {
@@ -4038,13 +4045,17 @@ static void ov12_0224D23C(BattleSystem *battleSystem, BattleContext *ctx) {
 
     if (!(ctx->battleStatus & BATTLE_STATUS_NO_MOVE_SET)) {
         if (ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {
-            ctx->moveNoProtect[ctx->battlerIdAttacker] = ctx->moveNoCur;
+            if (!userGone) {
+                ctx->moveNoProtect[ctx->battlerIdAttacker] = ctx->moveNoCur;
+            }
             ctx->moveNoPrev = ctx->moveNoTemp;
         } else {
-            ctx->moveNoProtect[ctx->battlerIdAttacker] = 0;
+            if (!userGone) {
+                ctx->moveNoProtect[ctx->battlerIdAttacker] = 0;
+            }
             ctx->moveNoPrev = 0;
         }
-        if (!copied) {
+        if (!copied && !userGone) {
             if (ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED) {
                 ctx->moveNoBattlerPrev[ctx->battlerIdAttacker] = ctx->moveNoTemp;
             } else {
@@ -4053,7 +4064,7 @@ static void ov12_0224D23C(BattleSystem *battleSystem, BattleContext *ctx) {
         }
     }
 
-    if (!copied && ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {
+    if (!copied && !userGone && ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {
         ctx->moveNoSketch[ctx->battlerIdAttacker] = ctx->moveNoTemp;
     }
 

@@ -264,9 +264,9 @@ class DancerTests(unittest.TestCase):
     def test_a_copy_is_not_the_move_last_used_and_does_not_rampage(self):
         after = function(CONTROLLER.read_text(), "ov12_0224D23C")
         self.assertIn("BOOL copied = ctx->dancing;", after)
-        self.assertIn("if (!copied) {", after)
-        self.assertIn("if (!copied && ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {", after)
-        self.assertIn("if (copyLocks && ", after)
+        self.assertIn("if (!copied && !userGone) {", after)
+        self.assertIn("if (!copied && !userGone && ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {", after)
+        self.assertIn("if (!userGone && copyLocks && ", after)
         effect = function(COMMANDS.read_text(), "BtlCmd_GoToEffectScript")
         self.assertIn("ctx->dancing && effect == MOVE_EFFECT_CONTINUE_AND_CONFUSE_SELF", effect)
 

@@ -830,6 +830,32 @@ class ForcedSwitchLevelTests(unittest.TestCase):
         self.assertNotIn("WhirlwindCheck", trainer)
         self.assertIn("} else if (WhirlwindCheck(battleSystem, ctx) == FALSE) {", body)
 
+class ReplacedUserTests(unittest.TestCase):
+    """What takes the user's slot in the middle of its move -- after U-turn,
+    Volt Switch, Flip Turn, Parting Shot, Teleport, a Red Card, Baton Pass,
+    Shed Tail, or the user's own Eject Pack or Emergency Exit -- did not use
+    the move: no Choice item locks it into it and nothing remembers it as its
+    last move (Pokemon Central, Scelta; retail excused U-turn and Baton Pass
+    from the lock alone)."""
+
+    def test_the_departed_user_s_move_is_not_the_newcomer_s(self):
+        body = function(CONTROLLER.read_text(), "ov12_0224D23C")
+        self.assertIn("BOOL userGone = (ctx->battleStatus2 & BATTLE_STATUS2_UTURN) || (ctx->battleStatus & BATTLE_STATUS_BATON_PASS);", body)
+        self.assertIn("if (!userGone && copyLocks && ", body)
+        self.assertNotIn("MOVE_U_TURN", body)
+        self.assertNotIn("MOVE_BATON_PASS", body)
+        self.assertIn("if (!copied && !userGone) {", body)
+        self.assertIn("if (!copied && !userGone && ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {", body)
+        self.assertEqual(body.count("if (!userGone) {"), 2)
+
+    def test_the_user_leaving_by_its_own_item_or_ability_says_so(self):
+        for name in ("BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM", "BATTLE_SUBSCRIPT_EMERGENCY_EXIT"):
+            script = subscript_named(name)
+            tail = script[script.index("_SWITCH_OUT:"):]
+            self.assertIn("CompareVarToVar OPCODE_NEQ, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_ATTACKER, _NOT_THE_ATTACKER\n"
+                          "    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_UTURN", tail, name)
+            self.assertLess(tail.index("BATTLE_STATUS2_UTURN"), tail.index("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST"), name)
+
 EJECT_PACK_FIXTURE = r"""
 #include <assert.h>
 #include <stdint.h>
