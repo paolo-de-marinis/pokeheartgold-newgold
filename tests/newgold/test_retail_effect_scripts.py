@@ -207,19 +207,23 @@ class BroughtOverTests(unittest.TestCase):
         # A Pokemon given Ghost as a third type (Trick-or-Treat) curses the
         # Ghost way; retail looked at the first two types only.
         self.assertIn("GoToIfThirdType BATTLER_CATEGORY_ATTACKER, TYPE_GHOST", script(109))
+
     def test_feint_hits_a_target_that_is_not_protecting(self):
         # From Generation V Feint deals its damage whether or not there was a
         # protection to break; retail failed.
         text = script(223)
         failure = re.search(r"TryFeint (\w+)", text).group(1)
         self.assertRegex(text, failure + r":\s*CalcCrit\s*CalcDamage\s*End")
+
     def test_role_play_is_not_refused_to_a_griseous_orb(self):
         # Retail failed Role Play for any user holding a Griseous Orb.
         self.assertNotIn("ITEM_GRISEOUS_ORB", script(178))
+
     def test_magnet_rise_is_refused_to_an_eelevate_holder(self):
         # Eelevate lifts a Pokemon the way Levitate does (BattlerIsGrounded),
         # and Magnet Rise fails for either.
         self.assertIn("CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_EELEVATE", script(252))
+
     def test_teleport_switches_out_in_a_trainer_battle(self):
         # From Generation VIII Teleport switches its user out when there is no
         # running away; retail failed it in a trainer battle.
@@ -228,6 +232,7 @@ class BroughtOverTests(unittest.TestCase):
         branch = text[text.index(trainer + ":"):]
         self.assertIn("TryReplaceFaintedMon BATTLER_CATEGORY_ATTACKER, TRUE", branch)
         self.assertIn("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST", branch)
+
     def test_toxic_from_a_poison_type_never_misses(self):
         # Generation VI: the script lets it reach a target that is flying,
         # digging, diving or vanished, and the hit check never lets it miss.
@@ -240,6 +245,7 @@ class BroughtOverTests(unittest.TestCase):
         self.assertRegex(body, r"move == MOVE_TOXIC\s*&& \(ctx->battleMons\[battlerIdAttacker\]\.type1 == TYPE_POISON"
                                r"[^{]*type3 == TYPE_POISON\)\) \{\s*ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;\s*return FALSE;")
         self.assertLess(body.index("MOVE_TOXIC"), body.index("ABILITY_NO_GUARD"))
+
     def test_rapid_spin_raises_speed_before_it_clears(self):
         # Generation VIII: the Speed rise, then the clearing, both only while
         # the user stands; retail's subscript 115 was the clearing alone.
