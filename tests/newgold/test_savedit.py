@@ -208,6 +208,28 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertIsNot(sv.personal_records(), kept)
         self.assertEqual(sv.personal_records(), kept)
 
+    def test_a_reading_the_tree_moved_under_is_not_kept(self):
+        """saveui reads in threads: a file saved while a reader is reading
+        it, and another request's fresh() in between, and what that reader
+        read may be the old file's. It is not kept, and the file is watched
+        again the next time it is read."""
+        path = sv.ROOT / "files/poketool/personal/personal.json"
+        calls = []
+
+        @sv.tree_cache
+        def reader():
+            sv.source("files/poketool/personal/personal.json")
+            calls.append(len(calls))
+            if len(calls) == 1:
+                sv._READ[path] -= 1     # saved while it was being read
+                sv.fresh()              # and another request has seen it
+            return len(calls)
+        self.addCleanup(sv._CACHES.remove, reader)
+        self.assertEqual(reader(), 1)
+        self.assertEqual(reader(), 2, "read again")
+        self.assertEqual(reader(), 2, "and kept this time")
+        self.assertIn(path, sv._READ)
+
     def test_crc16_is_the_bitwise_one(self):
         data = bytes(range(256)) * 9
         self.assertEqual(sv.crc16(data), reference_crc16(data))

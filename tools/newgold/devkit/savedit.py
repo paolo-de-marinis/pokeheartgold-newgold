@@ -37,6 +37,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -58,6 +59,7 @@ MAX_PLAY_HOURS = 999            # where AddIGTSeconds stops the clock, at 999:59
 _READ = {}
 _CACHES = []
 GENERATION = 0      # how many times fresh() has found the tree changed
+_FORGETTING = threading.Lock()      # fresh()'s forgetting against a reading being kept
 
 
 def source(path):
@@ -68,10 +70,26 @@ def source(path):
 
 
 def tree_cache(fn):
-    """functools.cache for a reader of the tree, forgotten by fresh()."""
-    fn = functools.cache(fn)
-    _CACHES.append(fn)
-    return fn
+    """functools.cache for a reader of the tree, forgotten by fresh(). A
+    reading fresh() overtook -- saveui serves requests in threads, and a
+    file changed while one was reading it -- is returned but not kept: it
+    may be the old file's, and fresh() has already forgotten that file."""
+    kept = {}
+
+    @functools.wraps(fn)
+    def read(*args, **kwargs):
+        key = (args, tuple(sorted(kwargs.items())))
+        if key in kept:
+            return kept[key]
+        seen = GENERATION
+        value = fn(*args, **kwargs)
+        with _FORGETTING:
+            if seen == GENERATION:
+                kept[key] = value
+        return value
+    read.cache_clear = kept.clear
+    _CACHES.append(read)
+    return read
 
 
 def fresh():
@@ -84,10 +102,11 @@ def fresh():
             return True
     global GENERATION
     if any(moved(path, when) for path, when in list(_READ.items())):
-        GENERATION += 1
-        _READ.clear()
-        for fn in _CACHES:
-            fn.cache_clear()
+        with _FORGETTING:
+            GENERATION += 1
+            _READ.clear()
+            for fn in _CACHES:
+                fn.cache_clear()
         globals().update(_layout())
 
 
