@@ -12,7 +12,10 @@ BOOL Pokedex_IsNatDexEnabled(const Pokedex *pokedex) {
     return Pokedex_GetNatDexFlag(pokedex) == TRUE;
 }
 
+// A form prints its base species' number: a female Pyroar is 1312, and
+// printed with three digits that came out as ?12.
 u32 Pokedex_ConvertToCurrentDexNo(BOOL natDexFlag, u32 species) {
+    species = SpeciesToDexSpecies((u16)species);
     if (natDexFlag == FALSE) {
         return SpeciesToJohtoDexNo((u16)species);
     }

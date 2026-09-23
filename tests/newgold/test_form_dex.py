@@ -5,7 +5,7 @@ Every form is a species of its own here, past the last Dex species: a female
 Pyroar is 1312, not Pyroar. The reference stores it as Pyroar and a form
 number, so its Dex credits Pyroar. A female Litleo evolving at 35 is how the
 difference shows: before src/pokedex.c mapped the form to its base, it left
-Pyroar neither seen nor caught.
+Pyroar neither seen nor caught, and the summary printed its number as ?12.
 """
 
 import os
@@ -150,6 +150,30 @@ int main(void) {
 }
 '''
 
+NUMBER = PREFIX + r'''
+// Retail's Johto table stops at the egg; any number will do for the others,
+// as long as it is the base's.
+static u16 SpeciesToJohtoDexNo(u16 species) { return species < SPECIES_EGG ? species + 1000 : 0; }
+@NATIVE@
+
+int main(void) {
+    // The summary and the PC print this with three digits: 1312 came out
+    // as ?12. A female Pyroar is Pyroar, 549 here.
+    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_PYROAR_FEMALE) == SPECIES_PYROAR);
+    assert(SPECIES_PYROAR == 549);
+    // Before the National Dex, a form of a Johto species is that species.
+    assert(Pokedex_ConvertToCurrentDexNo(FALSE, SPECIES_MEGA_AMPHAROS) == SpeciesToJohtoDexNo(SPECIES_AMPHAROS));
+    for (u16 species = NATIONAL_DEX_COUNT + 1; species <= NUM_SPECIES; species++) {
+        assert(Pokedex_ConvertToCurrentDexNo(TRUE, species) <= NATIONAL_DEX_COUNT);
+    }
+    for (u16 species = 1; species <= NATIONAL_DEX_COUNT; species++) {
+        assert(Pokedex_ConvertToCurrentDexNo(TRUE, species) == species);
+    }
+    puts("PASS: every form prints its base species' Dex number.");
+    return 0;
+}
+'''
+
 NATIVE = ["CheckDexFlag", "SetDexFlag", "SetDexFlagState", "CheckDexGender",
           "Pokedex_SetSeenGenderFlagInternal", "Pokedex_SetSeenGenderFlag",
           "DexSpeciesIsInvalid", "SpeciesToDexSpecies", "Pokedex_CheckMonCaughtFlag",
@@ -186,11 +210,17 @@ class FormTableTests(unittest.TestCase):
             self.assertEqual(stored.get(form), {base}, form)
 
 
-class FormRegistrationTests(unittest.TestCase):
+class FormDexTests(unittest.TestCase):
     def test_a_form_registers_its_base(self):
         source = (ROOT / "src/pokedex.c").read_text()
         native = form_table(source) + "\n" + "\n".join(definition(source, name) for name in NATIVE)
         print(run(REGISTRATION.replace("@NATIVE@", native), "newgold-form-dex-"))
+
+    def test_a_form_prints_its_base_number(self):
+        source = (ROOT / "src/pokedex.c").read_text()
+        native = (form_table(source) + "\n" + definition(source, "SpeciesToDexSpecies") + "\n"
+                  + definition((ROOT / "src/pokedex_util.c").read_text(), "Pokedex_ConvertToCurrentDexNo"))
+        print(run(NUMBER.replace("@NATIVE@", native), "newgold-form-number-"))
 
 
 if __name__ == "__main__":
