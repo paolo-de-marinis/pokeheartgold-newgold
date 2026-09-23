@@ -1,5 +1,7 @@
 #include "global.h"
 
+#include "constants/items.h"
+
 #include "msgdata/msg.naix"
 #include "msgdata/msg/msg_0778.h"
 
@@ -3059,13 +3061,15 @@ s32 ov44_0222DD64(UnkStruct_ov44_022319EC *arg0, s32 arg1) {
 
 s32 ov44_0222DFEC(UnkStruct_ov44_02231958 *arg0) {
     for (s32 i = 0; i < 6; i++) {
-        if (arg0->unk0[i] == 495) {
+        // As retail: no bad egg, no form id 496..507. The species and items
+        // New Gold adds past them are accepted.
+        if (arg0->unk0[i] >= SPECIES_BAD_EGG && arg0->unk0[i] <= LAST_DEX_GAP) {
             return 0;
         }
-        if (arg0->unk0[i] > 495) {
+        if (arg0->unk0[i] > NUM_SPECIES) {
             return 0;
         }
-        if (arg0->unkC[i] > 536) {
+        if (arg0->unkC[i] > ITEM_MAX) {
             return 0;
         }
     }
