@@ -434,6 +434,15 @@ class RetreatOutsideMoveTests(unittest.TestCase):
         self.assertLess(turn_end.index("ov12_0224D540(battleSystem, ctx)"), turn_end.index("TryRetreatAbilityOutsideMove(battleSystem, ctx, &script)"))
         self.assertLess(turn_end.index("TryRetreatAbilityOutsideMove"), turn_end.index("BattleContext_Init(ctx);"))
 
+    def test_the_turn_s_end_arms_every_holder(self):
+        # Before the first of the turn's end effects, and what comes in to a
+        # slot does not keep the mark.
+        order = function(CONTROLLER.read_text(), "ov12_02249460")
+        arm = order.index("Battler_ArmRetreatOutsideMove(ctx, battlerId);")
+        self.assertLess(order.rindex("if (ctx->executionIndex == maxBattlers) {", 0, arm), arm)
+        self.assertLess(arm, order.index("ctx->command = CONTROLLER_COMMAND_UPDATE_FIELD_CONDITION;"))
+        self.assertIn("ctx->selfTurnData[battlerId].retreatArmedOutsideMove = FALSE;", function(OVERLAY.read_text(), "InitSwitchWork"))
+
 
 if __name__ == "__main__":
     unittest.main()

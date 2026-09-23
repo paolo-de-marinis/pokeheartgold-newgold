@@ -997,6 +997,13 @@ static void ov12_02249460(BattleSystem *battleSystem, BattleContext *ctx) {
 
     if (ctx->executionIndex == maxBattlers) {
         ctx->executionIndex = 0;
+        // What the turn's end takes -- the weather, a status, Leech Seed, a
+        // curse, a bind, Future Sight -- can send an Emergency Exit or Wimp
+        // Out Pokemon off (Pokemon Central, Passoindietro). Each holder above
+        // half now is armed for it, and TurnEnd asks.
+        for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
+            Battler_ArmRetreatOutsideMove(ctx, battlerId);
+        }
         ctx->command = CONTROLLER_COMMAND_UPDATE_FIELD_CONDITION;
     } else {
         ctx->command = ctx->playerActions[ctx->executionOrder[ctx->executionIndex]].command;

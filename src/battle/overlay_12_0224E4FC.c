@@ -2420,9 +2420,11 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
     }
     MI_CpuClear8(&ctx->moveConditions[battlerId], sizeof(MoveConditions));
     // A Pokemon forced out by Dragon Tail before the move is over takes its
-    // Emergency Exit with it; what comes in was not hit. Nor is it striking
-    // twice with Parental Bond, whatever went out after its second strike.
+    // Emergency Exit with it; what comes in was not hit, nor was it above half
+    // when the turn's end began. Nor is it striking twice with Parental Bond,
+    // whatever went out after its second strike.
     ctx->selfTurnData[battlerId].retreatArmed = FALSE;
+    ctx->selfTurnData[battlerId].retreatArmedOutsideMove = FALSE;
     ctx->selfTurnData[battlerId].parentalBond = FALSE;
 
     if (ctx->battleStatus & BATTLE_STATUS_BATON_PASS) {
