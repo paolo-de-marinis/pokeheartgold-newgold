@@ -30,21 +30,30 @@ EFFECT_SCRIPTS = ROOT / "files/battledata/script/effect_script"
 
 # What the engine does elsewhere, in C, and this game still does in the script.
 IN_C = "the engine moved it into C ({}); the script here still does it, to the same effect"
-PARENTAL_BOND = "Parental Bond, whose commands are stubs here (test_battle_commands.STUBS)"
+# A move another move calls starts its Parental Bond in C here (TryStartParentalBond,
+# from GoToMoveScript) where the engine's script calls a subscript for it; the
+# engine's script also sets a Psychic Terrain flag that nothing reads in either
+# tree (SetPsychicTerrainMoveUsedFlag).
+CALLED_MOVE = "the called move's Parental Bond, started in C here (TryStartParentalBond from GoToMoveScript)"
+BACK_TO_BEFORE_MOVE = ("; the engine also sends the called move back through the before-move checks "
+                       "(GoBackToBeforeMove), where here it starts at once, as in retail")
 
 STILL_DIFFERENT = {
     7: IN_C.format("Damp and the user's fainting, BattleController_BeforeMove.c"),
-    34: PARENTAL_BOND,
+    34: "Pay Day scatters its coins on the first strike or the only one; the engine's branch scatters "
+         "them only on a first strike of Parental Bond, never without the ability (a6ee2c81c)",
     42: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
     48: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
-    83: PARENTAL_BOND,
-    97: PARENTAL_BOND,
+    83: CALLED_MOVE + BACK_TO_BEFORE_MOVE + ", and prints the move the finger picked (message 1483), "
+         "which retail's Metronome does not",
+    97: CALLED_MOVE,
     104: IN_C.format("Triple Kick's rising power, CalcBaseDamage.c"),
     105: IN_C.format("the theft, ServerDoPostMoveEffects.c"),
     112: "the entry-hazard queue, which nothing here reads yet",
     115: "the primal weathers and the engine's weather subscripts",
     121: IN_C.format("Return's power, CalcBaseDamage.c"),
-    122: PARENTAL_BOND,
+    122: "Present asks for Parental Bond with CheckAbility, which a suppressed ability fails, where the "
+          "engine reads the raw ability (BMON_DATA_ABILITY)",
     123: IN_C.format("Frustration's power, CalcBaseDamage.c"),
     129: "the engine raises Rapid Spin's Speed here and clears the field in "
          "ServerDoPostMoveEffects.c; here both are the move's additional effect, subscript 115",
@@ -56,12 +65,12 @@ STILL_DIFFERENT = {
          "worked out by BattleContext_LandFutureSight, and the use keeps retail's flags",
     150: "the doubling against Minimize is the damage chain's here, for every stamping move (BattleMoveStampsOnMinimize), as battle_calc_damage.c 6.9.14.1 does it",
     151: IN_C.format("the charge turn, BattleController_BeforeMove.c"),
-    161: PARENTAL_BOND,
+    161: IN_C.format("Spit Up's power from the stockpile, CalcBaseDamage.c"),
     164: "the primal weathers and the engine's weather subscripts",
     171: IN_C.format("Smelling Salts' doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
-    173: PARENTAL_BOND,
+    173: CALLED_MOVE,
     178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
-    180: PARENTAL_BOND,
+    180: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     188: IN_C.format("the knocking off, ServerDoPostMoveEffects.c"),
     198: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     217: IN_C.format("Wake-Up Slap's doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
@@ -71,8 +80,8 @@ STILL_DIFFERENT = {
     230: IN_C.format("Payback's power, CalcBaseDamage.c"),
     231: IN_C.format("Assurance's power, CalcBaseDamage.c"),
     233: IN_C.format("the fling and the items that cannot be flung, BattleController_BeforeMove.c"),
-    241: PARENTAL_BOND,
-    242: PARENTAL_BOND,
+    241: CALLED_MOVE,
+    242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     249: "the entry-hazard queue, which nothing here reads yet",
     253: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     257: IN_C.format("Surf against Dive, CalcBaseDamage.c"),
