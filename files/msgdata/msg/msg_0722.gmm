@@ -1254,11 +1254,11 @@
 	</row>
 	<row id="msg_0722_00313" index="313">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Grants Ground immunity.\nRaises its highest stat after a KO.</language>
+		<language name="English">Placeholder</language>
 	</row>
 	<row id="msg_0722_00314" index="314">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Absorbs Water-type moves\nand sharply raises Attack.</language>
+		<language name="English">Placeholder</language>
 	</row>
 	<row id="msg_0722_00315" index="315">
 		<attribute name="window_context_name">used</attribute>
@@ -1278,6 +1278,6 @@
 	</row>
 	<row id="msg_0722_00319" index="319">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Water-type damaging moves\nhave no effect.</language>
+		<language name="English">Placeholder</language>
 	</row>
 </body>

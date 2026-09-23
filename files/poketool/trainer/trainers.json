@@ -2525,7 +2525,7 @@
     {
       "type": "TRTYPE_MON",
       "class": "TRAINERCLASS_YOUNGSTER",
-      "name": "{TRNAME}Pippo Franco",
+      "name": "{TRNAME}Mikey",
       "items": [
         "ITEM_SUPER_POTION"
       ],
@@ -18684,7 +18684,7 @@
     {
       "type": "TRTYPE_MON",
       "class": "TRAINERCLASS_BIRD_KEEPER_GS",
-      "name": "{TRNAME}Pietro Pacciani",
+      "name": "{TRNAME}Peter",
       "items": [
         "ITEM_SUPER_POTION"
       ],

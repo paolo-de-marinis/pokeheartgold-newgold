@@ -8,14 +8,19 @@ outside what the game accepts, or a party longer than a team can be.
 
 import json
 import re
+import struct
 import sys
 import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT
+from test_repels import REFERENCE
 
 sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
+import gmm  # noqa: E402
 import import_species  # noqa: E402
+import import_trainer_text  # noqa: E402
+import wotbl  # noqa: E402
 
 TRAINERS = ROOT / "files/poketool/trainer/trainers.json"
 PARTY_MAX = 6
@@ -88,6 +93,30 @@ class TrainerTests(unittest.TestCase):
         rule = re.search(r"^\$\(TRNAME_GMM\):(.*)$", (ROOT / "files/msgdata/msg.mk").read_text(), re.M)
         self.assertIsNotNone(rule, "no rule makes $(TRNAME_GMM)")
         self.assertLessEqual({"$(TRAINER_JSON)", "$(TRNAME_TEMPLATE)"}, set(rule.group(1).split()))
+
+    def test_the_engine_s_names_and_lines(self):
+        """The engine layer: Youngster Mikey and Bird Keeper Peter as hg-engine
+        names them, and their lines where its trtbl map puts them. konefr's
+        renames and lines are New Gold's."""
+        self.assertEqual(self.trainers[47]["name"], "{TRNAME}Mikey")
+        self.assertEqual(self.trainers[383]["name"], "{TRNAME}Peter")
+        lines = [row["text"] for row in gmm.read(728)]
+        self.assertEqual(len(lines), 1717)
+        self.assertEqual(lines[649], "You’re a Pokémon Trainer, right?\\nThen you have to battle!\\r")
+        self.assertEqual(lines[661], "I should train again at the Gym in\\nViolet City.\\n")
+        trtbl = wotbl.read_narc((ROOT / "files/poketool/trmsg/trtbl.narc").read_bytes())[0][0]
+        self.assertEqual(struct.unpack_from("<HH", trtbl, 4 * 649), (47, 0))     # TRMSG_INTRO
+        self.assertEqual(struct.unpack_from("<HH", trtbl, 4 * 661), (383, 2))    # TRMSG_AFTER
+
+    @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
+    def test_the_text_is_what_the_engine_s_generator_makes(self):
+        """import_trainer_text.py is trainerdatagen and msg_cat.py again; at
+        d0380a487 it reproduces every name, bank 728 and both map archives."""
+        names, rows, trtbl, trtblofs = import_trainer_text.generate(gmm.ENGINE)
+        self.assertEqual([trainer["name"] for trainer in self.trainers], ["{TRNAME}" + name for name in names])
+        self.assertEqual([row["text"] for row in gmm.read(728)], [gmm.escape(text) for _, _, text in rows])
+        self.assertEqual((ROOT / "files/poketool/trmsg/trtbl.narc").read_bytes(), wotbl.build_narc([trtbl], 4))
+        self.assertEqual((ROOT / "files/poketool/trmsg/trtblofs.narc").read_bytes(), wotbl.build_narc([trtblofs], 4))
 
 
 if __name__ == "__main__":

@@ -1258,7 +1258,7 @@
 	</row>
 	<row id="msg_0721_00314" index="314">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">IRRIGATION</language>
+		<language name="English">PLACEHOLDER</language>
 	</row>
 	<row id="msg_0721_00315" index="315">
 		<attribute name="window_context_name">used</attribute>
@@ -1278,6 +1278,6 @@
 	</row>
 	<row id="msg_0721_00319" index="319">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">EVAPORATE</language>
+		<language name="English">PLACEHOLDER</language>
 	</row>
 </body>

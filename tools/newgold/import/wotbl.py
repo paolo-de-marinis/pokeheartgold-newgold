@@ -89,12 +89,15 @@ def encode(moves):
     return raw + struct.pack("<I", TERMINATOR)
 
 
-def build_narc(files):
+def build_narc(files, align=1):
+    """align=4 is how the build's own archives lay members out (trtblofs.narc):
+    each starts on four bytes, the gap after an odd-sized one filled with 0xFF.
+    height.narc was written packed, so 1 stays the default."""
     allocation = b""
     body = b""
     for raw in files:
         allocation += struct.pack("<II", len(body), len(body) + len(raw))
-        body += raw
+        body += raw + b"\xff" * (-len(raw) % align)
     btaf = b"BTAF" + struct.pack("<IHH", 12 + len(allocation), len(files), 0) + allocation
     btnf = b"BTNF" + struct.pack("<IIHH", 16, 4, 0, 1)
     gmif = b"GMIF" + struct.pack("<I", 8 + len(body)) + body
