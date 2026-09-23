@@ -282,5 +282,60 @@ class BagDisplayTests(unittest.TestCase):
             print(result.stdout.strip())
 
 
+SORT = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int32_t s32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#include "constants/items.h"
+typedef struct { u16 id, quantity; } ItemSlot;
+BOOL ItemIsTM(u16 itemId);
+BOOL ItemIsHM(u16 itemId);
+BOOL ItemIsTR(u16 itemId);
+@NATIVE@
+int main(void) {
+    ItemSlot pocket[] = {
+        { ITEM_HM01, 1 }, { ITEM_TR05, 3 }, { 0, 0 }, { ITEM_TM100_SV, 1 }, { ITEM_HM07_ORAS, 1 },
+        { ITEM_TM093, 1 }, { ITEM_TR00, 1 }, { ITEM_TM01, 1 }, { ITEM_TM92, 1 }, { ITEM_HM08, 1 },
+    };
+    const u16 wanted[] = { ITEM_TM01, ITEM_TM92, ITEM_TM093, ITEM_TM100_SV, ITEM_TR00, ITEM_TR05,
+                           ITEM_HM01, ITEM_HM08, ITEM_HM07_ORAS, 0 };
+    SortTMHMPocket(pocket, 10);
+    for (int i = 0; i < 10; i++) {
+        assert(pocket[i].id == wanted[i]);
+    }
+    assert(pocket[5].quantity == 3);
+    puts("PASS: the TM case sorts its TMs, then its TRs, then its HMs.");
+    return 0;
+}
+"""
+
+
+class MachineSortTests(unittest.TestCase):
+    """hg-engine sorts the TM case in three groups; by id alone the HMs would
+    sit between TM92 and TM093, and the TRs among the later TMs."""
+
+    def test_the_tm_case_sorts_tms_trs_then_hms(self):
+        item = (ROOT / "src/item.c").read_text()
+        bag = (ROOT / "src/bag.c").read_text()
+        native = [function(item, name) for name in ("ItemIsTM", "ItemIsHM", "ItemIsTR")]
+        native += [function(bag, name) for name in ("SwapItemSlots", "MachineSortGroup", "SortTMHMPocket")]
+        with tempfile.TemporaryDirectory(prefix="newgold-tm-sort-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            c.write_text(SORT.replace("@NATIVE@", "\n".join(native)))
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + ["-std=c11", "-O1", "-g", "-fsanitize=address,undefined", "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(exe)], capture_output=True, text=True, env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(result.returncode, 0, result.stderr)
+            print(result.stdout.strip())
+
+    def test_adding_a_machine_sorts_the_case_that_way(self):
+        body = function((ROOT / "src/bag.c").read_text(), "Bag_AddItem")
+        self.assertIn("SortTMHMPocket(slot, count)", body)
+
+
 if __name__ == "__main__":
     unittest.main()

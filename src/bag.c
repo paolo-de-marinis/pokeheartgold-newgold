@@ -17,6 +17,7 @@ static ItemSlot *Bag_GetItemSlotForRemove(Bag *bag, u16 itemId, u16 quantity, en
 static void SwapItemSlots(ItemSlot *a, ItemSlot *b);
 static void PocketCompaction(ItemSlot *slots, u32 count);
 static void SortPocket(ItemSlot *slots, u32 count);
+static void SortTMHMPocket(ItemSlot *slots, u32 count);
 
 u32 Save_Bag_sizeof(void) {
     return sizeof(Bag);
@@ -158,8 +159,11 @@ BOOL Bag_AddItem(Bag *bag, u16 itemId, u16 quantity, enum HeapID heapID) {
     slot->quantity += quantity;
     u32 count;
     u32 pocket_id = Bag_GetItemPocket(bag, itemId, &slot, &count, heapID);
-    if (pocket_id == POCKET_TMHMS || pocket_id == POCKET_BERRIES) {
+    if (pocket_id == POCKET_BERRIES) {
         SortPocket(slot, count);
+    }
+    if (pocket_id == POCKET_TMHMS) {
+        SortTMHMPocket(slot, count);
     }
     return TRUE;
 }
@@ -299,6 +303,30 @@ static void SortPocket(ItemSlot *slots, u32 count) {
     for (s32 i = 0; i < count - 1; i++) {
         for (s32 j = i + 1; j < count; j++) {
             if (slots[i].quantity == 0 || (slots[j].quantity != 0 && slots[i].id > slots[j].id)) {
+                SwapItemSlots(&slots[i], &slots[j]);
+            }
+        }
+    }
+}
+
+// hg-engine's SortTMHMPocket: the TMs, then the TRs, then the HMs, each by
+// item id. By id alone the HMs would sit between TM92 and TM093.
+static int MachineSortGroup(u16 itemId) {
+    if (ItemIsHM(itemId)) {
+        return 2;
+    }
+    if (ItemIsTR(itemId)) {
+        return 1;
+    }
+    return 0;
+}
+
+static void SortTMHMPocket(ItemSlot *slots, u32 count) {
+    for (s32 i = 0; i < count - 1; i++) {
+        for (s32 j = i + 1; j < count; j++) {
+            int groupI = MachineSortGroup(slots[i].id);
+            int groupJ = MachineSortGroup(slots[j].id);
+            if (slots[i].quantity == 0 || (slots[j].quantity != 0 && (groupI > groupJ || (groupI == groupJ && slots[i].id > slots[j].id)))) {
                 SwapItemSlots(&slots[i], &slots[j]);
             }
         }
