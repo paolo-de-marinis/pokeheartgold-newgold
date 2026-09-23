@@ -709,10 +709,15 @@ Overlay OVY_12
     Object asm/overlay_12_battle_controller_02262734.o
     Object src/battle/battle_controller_healthbar.o
     Object asm/overlay_12_battle_controller_02262B64.o
+    Object src/battle/battle_controller_faint.o
+    Object asm/overlay_12_battle_controller_022636FC.o
+    Object src/battle/battle_controller_healthbar_refresh.o
     Object src/battle/battle_controller_mon_copy.o
     Object asm/overlay_12_battle_controller_02263CB0.o
     Object src/battle/battle_controller_party_heal.o
     Object asm/overlay_12_battle_controller_02263D14.o
+    Object src/battle/battle_controller_substitute.o
+    Object asm/overlay_12_battle_controller_02264228.o
     Object src/battle/battle_hp_bar.o
     Object asm/overlay_12_02265E28.o
     Object src/battle/battle_input.o
