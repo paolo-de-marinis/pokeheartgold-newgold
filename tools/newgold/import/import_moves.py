@@ -403,6 +403,11 @@ IMPLEMENTED_HERE = {
     # Form, which is Terapagos terastallized and so never stands on the field
     # here (Pokemon Central, Teracluster).
     "TERA_STARSTORM": "MOVE_EFFECT_HIT",
+    # Jungle Healing and Lunar Blessing give the user and its allies a quarter
+    # of their HP and cure their status (Pokemon Central, Giunglacura,
+    # Invocaluna): effect script 421.
+    "JUNGLE_HEALING": "MOVE_EFFECT_HEAL_SIDE_QUARTER_CURE_STATUS",
+    "LUNAR_BLESSING": "MOVE_EFFECT_HEAL_SIDE_QUARTER_CURE_STATUS",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -428,6 +433,9 @@ FIELDS_HERE = {
     # One target: both foes are the Stellar Form's alone (Pokemon Central,
     # Teracluster); the reference gives every user both.
     "TERA_STARSTORM": {"target": "RANGE_SINGLE_TARGET"},
+    # The user and its allies, as Jungle Healing (Pokemon Central,
+    # Invocaluna); the reference aims it at the ally alone.
+    "LUNAR_BLESSING": {"target": "RANGE_USER_SIDE"},
 }
 
 # The effects written here for those moves follow the reference's in

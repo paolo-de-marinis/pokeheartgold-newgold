@@ -351,5 +351,24 @@ class ImplementedMoveTests(unittest.TestCase):
         fields = record("TERA_STARSTORM")
         self.assertEqual((fields[1], fields[2], fields[7]), (1, 120, 0), "special, 120, RANGE_SINGLE_TARGET")
 
+    def test_jungle_healing_and_lunar_blessing_heal_the_user_s_side(self):
+        # Pokemon Central (Giunglacura, Invocaluna): a quarter of the maximum
+        # HP and the status, the user first and then its allies; not under
+        # Heal Block or out of reach; nothing to do, and it fails.
+        for move in ("JUNGLE_HEALING", "LUNAR_BLESSING"):
+            self.assertImplemented(move, "MOVE_EFFECT_HEAL_SIDE_QUARTER_CURE_STATUS")
+            self.assertEqual(record(move)[7], 1 << 5, "RANGE_USER_SIDE")
+        script = effect_script("MOVE_EFFECT_HEAL_SIDE_QUARTER_CURE_STATUS")
+        found = script.index("_FOUND:")
+        self.assertLess(script.index("MOVE_STATUS_FAILED"), found)
+        self.assertEqual(script.count("BMON_DATA_HEAL_BLOCK_TURNS, 0, "), 2)
+        self.assertEqual(script.count("MOVE_EFFECT_FLAG_SEMI_INVULNERABLE"), 2)
+        self.assertIn("UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_STAT_CHANGE, BSCRIPT_VAR_BATTLER_ATTACKER", script[found:])
+        self.assertIn("DivideVarByValueRoundUp BSCRIPT_VAR_HP_CALC, 4\n    Call BATTLE_SUBSCRIPT_UPDATE_HP", script)
+        self.assertIn("UpdateMonData OPCODE_SET, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_STATUS, STATUS_NONE", script)
+        # The HP is asked against the maximum read into a variable, not
+        # against the variable numbered like BMON_DATA_MAXHP.
+        self.assertNotIn("BMON_DATA_HP, BMON_DATA_MAXHP", script)
+
 if __name__ == "__main__":
     unittest.main()
