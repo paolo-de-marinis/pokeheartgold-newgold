@@ -4045,6 +4045,77 @@ BOOL BtlCmd_TrySubstitute(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// Whirlwind's and Roar's choice of who is dragged out in a trainer battle,
+// for battlerId: FALSE when the party has nobody to send in, or when
+// checkLevel asks WhirlwindCheck's question and it says no; otherwise a
+// Pokemon at random, written where SwitchAndUpdateMon will take it. The level
+// is asked between the two, where retail asked it, so the random numbers are
+// drawn as they always were. A Red Card drags out the same way without the
+// level test.
+BOOL TryPickForcedSwitchIn(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BOOL checkLevel) {
+    u32 battleType = BattleSystem_GetBattleType(battleSystem);
+    Party *party;
+    Pokemon *mon;
+    int partySize;
+    int cnt = 0;
+    int cntMax;
+    int index0, indexEnd, monIndex, maxRand;
+    int monIndexA, monIndexB;
+
+    party = BattleSystem_GetParty(battleSystem, battlerId);
+    partySize = BattleSystem_GetPartySize(battleSystem, battlerId);
+
+    if (battleType & BATTLE_TYPE_MULTI || battleType & BATTLE_TYPE_TAG && BattleSystem_GetFieldSide(battleSystem, battlerId)) {
+        index0 = 0;
+        indexEnd = partySize;
+        maxRand = partySize;
+        cntMax = 1;
+        monIndexA = ctx->selectedMonIndex[battlerId];
+        monIndexB = ctx->selectedMonIndex[battlerId];
+    } else if (battleType & BATTLE_TYPE_DOUBLES) {
+        index0 = 0;
+        indexEnd = partySize;
+        maxRand = partySize;
+        cntMax = 2;
+        monIndexA = ctx->selectedMonIndex[battlerId];
+        monIndexB = ctx->selectedMonIndex[BattleSystem_GetBattlerIdPartner(battleSystem, battlerId)];
+    } else {
+        index0 = 0;
+        indexEnd = partySize;
+        maxRand = partySize;
+        cntMax = 1;
+        monIndexA = ctx->selectedMonIndex[battlerId];
+        monIndexB = ctx->selectedMonIndex[battlerId];
+    }
+
+    for (monIndex = index0; monIndex < indexEnd; monIndex++) {
+        mon = Party_GetMonByIndex(party, monIndex);
+        if (GetMonData(mon, MON_DATA_SPECIES, 0) != SPECIES_NONE
+            && !GetMonData(mon, MON_DATA_IS_EGG, 0)
+            && GetMonData(mon, MON_DATA_HP, 0) != 0) {
+            cnt++;
+        }
+    }
+
+    if (cnt <= cntMax) {
+        return FALSE;
+    }
+    if (checkLevel && !WhirlwindCheck(battleSystem, ctx)) {
+        return FALSE;
+    }
+    do {
+        do {
+            monIndex = (BattleSystem_Random(battleSystem) % maxRand);
+            monIndex += index0;
+        } while (monIndex == monIndexA || monIndex == monIndexB);
+        mon = Party_GetMonByIndex(party, monIndex);
+    } while (GetMonData(mon, MON_DATA_SPECIES, 0) == SPECIES_NONE
+        || GetMonData(mon, MON_DATA_IS_EGG, 0) == TRUE
+        || GetMonData(mon, MON_DATA_HP, 0) == 0);
+    ctx->unk_21A0[battlerId] = monIndex;
+    return TRUE;
+}
+
 BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
@@ -4053,66 +4124,9 @@ BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSystem, BattleContext *ctx) {
     u32 battleType = BattleSystem_GetBattleType(battleSystem);
 
     if (battleType & BATTLE_TYPE_TRAINER) {
-        Party *party;
-        Pokemon *mon;
-        int partySize;
-        int cnt = 0;
-        int cntMax;
-        int index0, indexEnd, monIndex, maxRand;
-        int monIndexA, monIndexB;
-
-        party = BattleSystem_GetParty(battleSystem, ctx->battlerIdTarget);
-        partySize = BattleSystem_GetPartySize(battleSystem, ctx->battlerIdTarget);
-
-        if (battleType & BATTLE_TYPE_MULTI || battleType & BATTLE_TYPE_TAG && BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget)) {
-            index0 = 0;
-            indexEnd = partySize;
-            maxRand = partySize;
-            cntMax = 1;
-            monIndexA = ctx->selectedMonIndex[ctx->battlerIdTarget];
-            monIndexB = ctx->selectedMonIndex[ctx->battlerIdTarget];
-        } else if (battleType & BATTLE_TYPE_DOUBLES) {
-            index0 = 0;
-            indexEnd = partySize;
-            maxRand = partySize;
-            cntMax = 2;
-            monIndexA = ctx->selectedMonIndex[ctx->battlerIdTarget];
-            monIndexB = ctx->selectedMonIndex[BattleSystem_GetBattlerIdPartner(battleSystem, ctx->battlerIdTarget)];
-        } else {
-            index0 = 0;
-            indexEnd = partySize;
-            maxRand = partySize;
-            cntMax = 1;
-            monIndexA = ctx->selectedMonIndex[ctx->battlerIdTarget];
-            monIndexB = ctx->selectedMonIndex[ctx->battlerIdTarget];
-        }
-
-        for (monIndex = index0; monIndex < indexEnd; monIndex++) {
-            mon = Party_GetMonByIndex(party, monIndex);
-            if (GetMonData(mon, MON_DATA_SPECIES, 0) != SPECIES_NONE
-                && !GetMonData(mon, MON_DATA_IS_EGG, 0)
-                && GetMonData(mon, MON_DATA_HP, 0) != 0) {
-                cnt++;
-            }
-        }
-
-        if (cnt <= cntMax) {
-            BattleScriptIncrementPointer(ctx, adrs);
-        } else if (WhirlwindCheck(battleSystem, ctx)) {
-            do {
-                do {
-                    monIndex = (BattleSystem_Random(battleSystem) % maxRand);
-                    monIndex += index0;
-                } while (monIndex == monIndexA || monIndex == monIndexB);
-                mon = Party_GetMonByIndex(party, monIndex);
-            } while (GetMonData(mon, MON_DATA_SPECIES, 0) == SPECIES_NONE
-                || GetMonData(mon, MON_DATA_IS_EGG, 0) == TRUE
-                || GetMonData(mon, MON_DATA_HP, 0) == 0);
-            ctx->unk_21A0[ctx->battlerIdTarget] = monIndex;
-        } else {
+        if (TryPickForcedSwitchIn(battleSystem, ctx, ctx->battlerIdTarget, TRUE) == FALSE) {
             BattleScriptIncrementPointer(ctx, adrs);
         }
-
     } else if (WhirlwindCheck(battleSystem, ctx) == FALSE) {
         BattleScriptIncrementPointer(ctx, adrs);
     }
