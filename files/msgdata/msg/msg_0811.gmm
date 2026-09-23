@@ -2798,6 +2798,14 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
 	</row>
+	<row id="msg_0811_slowpoke_galarian" index="573">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
+	<row id="msg_0811_slowbro_galarian" index="574">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"></language>
+	</row>
 	<row id="msg_0811_victini" index="575">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
@@ -4663,14 +4671,6 @@
 		<language name="English"></language>
 	</row>
 	<row id="msg_0811_pecharunt" index="1041">
-		<attribute name="window_context_name">used</attribute>
-		<language name="English"></language>
-	</row>
-	<row id="msg_0811_slowpoke_galarian" index="573">
-		<attribute name="window_context_name">used</attribute>
-		<language name="English"></language>
-	</row>
-	<row id="msg_0811_slowbro_galarian" index="574">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English"></language>
 	</row>

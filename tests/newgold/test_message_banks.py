@@ -23,6 +23,18 @@ class MessageBankTests(unittest.TestCase):
                 twice[bank.name] = again[:5]
         self.assertEqual(twice, {}, "rows written more than once, by bank")
 
+    def test_every_bank_is_in_index_order(self):
+        """msgenc reads rows in document order and ignores index=, so a row out
+        of place is read as another. import_dex_text.py once appended the two
+        Galarian rows at the end of 27 banks, and from Victini on every Dex
+        entry, name and height was the species two along."""
+        out = {}
+        for bank in sorted((ROOT / "files/msgdata/msg").glob("*.gmm")):
+            indices = [int(i) for i in re.findall(r'<row id="[^"]*" index="(\d+)">', bank.read_text())]
+            if indices != list(range(len(indices))):
+                out[bank.name] = next(i for i, n in enumerate(indices) if n != i)
+        self.assertEqual(out, {}, "first position out of order, by bank")
+
     def test_every_move_has_its_used_lines(self):
         """"X used Y!" is row 3 * move + side of bank 3, read by the battle
         without a bound: a move with no row there asserts the moment anyone

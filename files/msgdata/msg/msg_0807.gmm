@@ -2293,6 +2293,14 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">These capricious syrpents have banded\ntogether. On the rare occasion that their\nmoods align, their true power is unleashed.</language>
 	</row>
+	<row id="msg_0807_slowpoke_galarian" index="573">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It lazes vacantly near water.\nIf something bites its tail, it won’t\neven notice for a whole day.</language>
+	</row>
+	<row id="msg_0807_slowbro_galarian" index="574">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">If the tail-biting SHELLDER is thrown\noff in a harsh battle, it reverts to\nbeing an ordinary SLOWPOKE.</language>
+	</row>
 	<row id="msg_0807_victini" index="575">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">When it shares the infinite energy\nit creates, that being’s entire body\nwill be overflowing with power.</language>
@@ -4160,14 +4168,6 @@
 	<row id="msg_0807_pecharunt" index="1041">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Its peach-shaped shell serves as storage\nfor a potent poison. It makes poisonous\nmochi and serves it to people and Pokémon.</language>
-	</row>
-	<row id="msg_0807_slowpoke_galarian" index="573">
-		<attribute name="window_context_name">used</attribute>
-		<language name="English">It lazes vacantly near water.\nIf something bites its tail, it won’t\neven notice for a whole day.</language>
-	</row>
-	<row id="msg_0807_slowbro_galarian" index="574">
-		<attribute name="window_context_name">used</attribute>
-		<language name="English">If the tail-biting SHELLDER is thrown\noff in a harsh battle, it reverts to\nbeing an ordinary SLOWPOKE.</language>
 	</row>
 	<row id="msg_0807_mega_venusaur" index="1042">
 		<attribute name="window_context_name">used</attribute>

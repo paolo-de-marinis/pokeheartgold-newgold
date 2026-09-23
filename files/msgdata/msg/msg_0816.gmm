@@ -2292,6 +2292,14 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Apple Hydra Pokémon</language>
 	</row>
+	<row id="msg_0816_slowpoke_galarian" index="573">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Dopey Pokémon</language>
+	</row>
+	<row id="msg_0816_slowbro_galarian" index="574">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hermit Crab Pokémon</language>
+	</row>
 	<row id="msg_0816_victini" index="575">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Victory Pokémon</language>
@@ -4159,14 +4167,6 @@
 	<row id="msg_0816_pecharunt" index="1041">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Subjugation Pokémon</language>
-	</row>
-	<row id="msg_0816_slowpoke_galarian" index="573">
-		<attribute name="window_context_name">used</attribute>
-		<language name="English">Dopey Pokémon</language>
-	</row>
-	<row id="msg_0816_slowbro_galarian" index="574">
-		<attribute name="window_context_name">used</attribute>
-		<language name="English">Hermit Crab Pokémon</language>
 	</row>
 	<row id="msg_0816_mega_venusaur" index="1042">
 		<attribute name="window_context_name">used</attribute>

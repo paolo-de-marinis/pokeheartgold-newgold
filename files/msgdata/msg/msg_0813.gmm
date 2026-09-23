@@ -2292,6 +2292,14 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English"> 205.0 lbs.</language>
 	</row>
+	<row id="msg_0813_slowpoke_galarian" index="573">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  79.4 lbs.</language>
+	</row>
+	<row id="msg_0813_slowbro_galarian" index="574">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> 173.1 lbs.</language>
+	</row>
 	<row id="msg_0813_victini" index="575">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">   8.8 lbs.</language>
@@ -4159,14 +4167,6 @@
 	<row id="msg_0813_pecharunt" index="1041">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">   0.7 lbs.</language>
-	</row>
-	<row id="msg_0813_slowpoke_galarian" index="573">
-		<attribute name="window_context_name">used</attribute>
-		<language name="English">  79.4 lbs.</language>
-	</row>
-	<row id="msg_0813_slowbro_galarian" index="574">
-		<attribute name="window_context_name">used</attribute>
-		<language name="English"> 173.1 lbs.</language>
 	</row>
 	<row id="msg_0813_mega_venusaur" index="1042">
 		<attribute name="window_context_name">used</attribute>
