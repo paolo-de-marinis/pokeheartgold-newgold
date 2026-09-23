@@ -35,9 +35,13 @@ ARCHIVE = ROOT / "files/poketool/personal/wotbl.narc"
 ENGINE_BASE = "d0380a487"
 # konefr's tip: what New Gold's learnsets are.
 KONEFR_TIP = "ccf2c9f5"
-# HeartGold's own species. The egg, the bad egg and the twelve retail forms
-# after them are not in the reference's learnsets under names this game uses.
+# HeartGold's own species. The egg and the bad egg follow them, and have no
+# learnset anywhere.
 LAST_RETAIL_SPECIES = 493
+# HeartGold's alternate forms, Deoxys Attack to Rotom Mow. The reference keeps
+# them at these numbers and files their learnsets under the number
+# (SPECIES_496), not under a name.
+NUMBERED_FORMS = range(496, 508)
 
 ENTRY_SIZE = 4
 MOVE_BITS = 16
@@ -195,6 +199,11 @@ def reference_learnsets(reference, rev):
     return json.loads(result.stdout)
 
 
+def reference_key(index, names):
+    """What the reference files a species' learnset under."""
+    return f"SPECIES_{index}" if index in NUMBERED_FORMS else "SPECIES_" + names[index]
+
+
 def engine(args, files):
     """Rewrite HeartGold's own species with hg-engine's learnsets.
 
@@ -210,8 +219,11 @@ def engine(args, files):
 
     files = list(files)
     rewritten = 0
-    for index in range(1, LAST_RETAIL_SPECIES + 1):
-        entry = reference.get("SPECIES_" + names[index])
+    for index in list(range(1, LAST_RETAIL_SPECIES + 1)) + list(NUMBERED_FORMS):
+        entry = reference.get(reference_key(index, names))
+        if entry is None and index in NUMBERED_FORMS:
+            print(f"the reference has no learnset for {names[index]} ({index}); left as it is")
+            continue
         if entry is None:
             raise SystemExit(f"the reference has no learnset for {names[index]}")
         learned = []
@@ -225,7 +237,7 @@ def engine(args, files):
             files[index] = raw
             rewritten += 1
 
-    print(f"{rewritten} of {LAST_RETAIL_SPECIES} learnsets differ from hg-engine's at {ENGINE_BASE}")
+    print(f"{rewritten} of {LAST_RETAIL_SPECIES + len(NUMBERED_FORMS)} learnsets differ from hg-engine's at {ENGINE_BASE}")
     if not args.write:
         print("nothing written; pass --write")
         return

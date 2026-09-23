@@ -2,9 +2,9 @@
 """Check the level-up learnset archive.
 
 The archive is a binary pret ships, so the risk in extending it is silently
-rewriting what was already there. HeartGold's own species are compared against
-the reference's learnsets, the egg and the retail forms after them against the
-blob on upstream/master, and every new species is checked for a usable one.
+rewriting what was already there. HeartGold's own species and alternate forms
+are compared against the reference's learnsets, the two eggs against the blob
+on upstream/master, and every new species is checked for a usable one.
 """
 
 import subprocess
@@ -50,11 +50,19 @@ class LearnsetTests(unittest.TestCase):
     def test_retail_species_learn_the_reference_s_moves(self):
         reference = wotbl.reference_learnsets(REFERENCE, self.LEARNSETS_REVISION)
         moves = wotbl.move_names()
-        for index in range(1, wotbl.LAST_RETAIL_SPECIES + 1):
+        checked = 0
+        for index in list(range(1, wotbl.LAST_RETAIL_SPECIES + 1)) + list(wotbl.NUMBERED_FORMS):
             name = self.names[index]
-            wanted = [{"level": step["Level"], "move": moves[step["Move"]]}
-                      for step in reference["SPECIES_" + name]["LevelMoves"]]
+            entry = reference.get(wotbl.reference_key(index, self.names))
+            if entry is None and index in self.NOT_IN_THE_REFERENCE:
+                continue
+            wanted = [{"level": step["Level"], "move": moves[step["Move"]]} for step in entry["LevelMoves"]]
             self.assertEqual(wotbl.decode(self.files[index]), wanted, name)
+            checked += 1
+        self.assertEqual(checked, wotbl.LAST_RETAIL_SPECIES + len(wotbl.NUMBERED_FORMS) - len(self.NOT_IN_THE_REFERENCE))
+
+    # The reference files no learnset for Trash Cloak Wormadam.
+    NOT_IN_THE_REFERENCE = {500}
 
     def test_dunsparce_learns_hyper_drill(self):
         # The one way to Dudunsparce: it evolves knowing Hyper Drill.
@@ -63,7 +71,7 @@ class LearnsetTests(unittest.TestCase):
         self.assertIn({"level": 32, "move": moves["MOVE_HYPER_DRILL"]},
                       wotbl.decode(self.files[dunsparce]))
 
-    def test_the_egg_and_the_retail_forms_are_pret_s(self):
+    def test_the_eggs_are_pret_s(self):
         original = upstream_archive()
         if original is None:
             self.skipTest("upstream/master is not fetched")
@@ -72,9 +80,20 @@ class LearnsetTests(unittest.TestCase):
         # Not byte for byte: the entry is a word now, because a move numbered
         # past 511 does not fit the halfword pret packed it into. What has to
         # match is what the entries say.
-        for index in range(wotbl.LAST_RETAIL_SPECIES + 1, len(theirs)):
+        for index in [494, 495] + sorted(self.NOT_IN_THE_REFERENCE):
             self.assertEqual(wotbl.decode(self.files[index]), wotbl.decode_retail(theirs[index]),
                              self.names.get(index, index))
+
+    def test_the_retail_forms_learn_the_later_games_moves(self):
+        # Retail's forms kept the fourth generation's lists: Heat Rotom had
+        # Ominous Wind at 29 and no Electro Ball, Attack Forme Deoxys no
+        # Psyshock, Sandy Cloak Wormadam nothing on evolving.
+        moves = wotbl.move_names()
+        heat = wotbl.decode(self.files[503])
+        self.assertIn({"level": 20, "move": moves["MOVE_ELECTRO_BALL"]}, heat)
+        self.assertNotIn(moves["MOVE_OMINOUS_WIND"], [step["move"] for step in heat])
+        self.assertIn({"level": 25, "move": moves["MOVE_PSYSHOCK"]}, wotbl.decode(self.files[496]))
+        self.assertIn({"level": 0, "move": moves["MOVE_QUIVER_DANCE"]}, wotbl.decode(self.files[499]))
 
     def test_new_species_can_fight(self):
         for name in import_species.added_species():
