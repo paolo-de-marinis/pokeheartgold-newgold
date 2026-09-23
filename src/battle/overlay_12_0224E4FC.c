@@ -4776,6 +4776,27 @@ u32 QMul_RoundDown(u32 value, u32 q) {
     return (value * q + 0x7FF) >> 12;
 }
 
+// Embody Aspect (Pokemon Central, Albergamemorie): the Terastal Ogerpon of
+// each mask raises one stat a stage as it comes in -- Speed with the Teal
+// Mask, Sp. Def with the Wellspring, Attack with the Hearthflame and Defense
+// with the Cornerstone. The later games tie that to Terastallizing and to
+// every entry after it; this one has no Terastallization and the Terastal
+// forms are species of their own, so the Pokemon has it whenever it comes in.
+// The STAT_* it raises, or STAT_HP for another ability.
+static int EmbodyAspectStat(u16 ability) {
+    switch (ability) {
+    case ABILITY_EMBODY_ASPECT:
+        return STAT_SPEED;
+    case ABILITY_EMBODY_ASPECT_2:
+        return STAT_SPDEF;
+    case ABILITY_EMBODY_ASPECT_3:
+        return STAT_ATK;
+    case ABILITY_EMBODY_ASPECT_4:
+        return STAT_DEF;
+    }
+    return STAT_HP;
+}
+
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int j;
@@ -5544,7 +5565,36 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 27: // end
+        case 27: // Embody Aspect
+            // Each time it comes in, once: the flag is the battler's, and a
+            // Pokemon brought back in is a new battler. Held back by the gas,
+            // the ability finds the flag unset and speaks once the gas has
+            // gone, but not again for having been held back after it spoke.
+            // A Pokemon that Transformed into the mask has the ability and
+            // not the memory, and at +6 there is nothing to raise.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                j = EmbodyAspectStat(GetBattlerAbility(ctx, battlerId));
+                if (j == STAT_HP || ctx->battleMons[battlerId].abilityActivatedFlag || !ctx->battleMons[battlerId].hp
+                    || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+                    continue;
+                }
+                ctx->battleMons[battlerId].abilityActivatedFlag = TRUE;
+                if (ctx->battleMons[battlerId].statChanges[j] >= 12) {
+                    continue;
+                }
+                ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;
+                ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+                ctx->battlerIdStatChange = battlerId;
+                script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;
+                flag = TRUE;
+                break;
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 28: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;

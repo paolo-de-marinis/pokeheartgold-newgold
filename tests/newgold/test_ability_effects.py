@@ -54,6 +54,10 @@ IMPLEMENTED = {
     "DRAGONS_MAW",
     "EARTH_EATER",
     "EELEVATE",
+    "EMBODY_ASPECT",
+    "EMBODY_ASPECT_2",
+    "EMBODY_ASPECT_3",
+    "EMBODY_ASPECT_4",
     "ELECTRIC_SURGE",
     "ELECTROMORPHOSIS",
     "EMERGENCY_EXIT",
@@ -215,8 +219,7 @@ IMPLEMENTED = {
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
     "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE",
-    "DELTA_STREAM", "DESOLATE_LAND", "EMBODY_ASPECT", "EMBODY_ASPECT_2",
-    "EMBODY_ASPECT_3", "EMBODY_ASPECT_4", "GUARD_DOG", "MEGA_SOL", "MIMICRY",
+    "DELTA_STREAM", "DESOLATE_LAND", "GUARD_DOG", "MEGA_SOL", "MIMICRY",
     "OPPORTUNIST", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN", "STAKEOUT",
     "SUPREME_OVERLORD", "SYMBIOSIS", "TERAFORM_ZERO", "TERA_SHELL",
     "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR"
@@ -310,7 +313,8 @@ class AbilityEffectTests(unittest.TestCase):
     # Emergency Exit and Wimp Out done, then Parental Bond, Dancer and
     # Illusion.
     # 32 -> 31: TEMP4 is a reserved slot, not an ability; see NOT_AN_ABILITY.
-    STILL_TO_DO = 26
+    # Embody Aspect's four done.
+    STILL_TO_DO = 22
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
