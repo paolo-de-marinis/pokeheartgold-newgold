@@ -910,7 +910,7 @@ function renderDex() {
   });
   $("#tab").innerHTML = `<div class="bar" style="margin-top:0">
       <strong>Visti ${dex.seen.length}</strong> · <strong>Catturati ${dex.caught.length}</strong> <span class="muted">su ${S.data.dex.length}</span>
-      <label style="display:flex;gap:6px;align-items:center;margin-left:12px"><input type="checkbox" id="dexon" ${dex.enabled ? "checked" : ""}> Pokédex ottenuto</label>
+      <label style="display:flex;gap:6px;align-items:center;margin-left:12px" title="Il Pokédex e la sua voce nel menu (FLAG_GOT_POKEDEX)"><input type="checkbox" id="dexon" ${dex.enabled ? "checked" : ""}> Pokédex ottenuto (voce nel menu)</label>
       <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="dexnat" ${dex.national ? "checked" : ""}> Pokédex Nazionale</label>
     </div>
     <div class="bar">

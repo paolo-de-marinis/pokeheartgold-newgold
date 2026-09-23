@@ -352,9 +352,10 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(dex["seen"], sorted([n["BULBASAUR"], n["PIDGEY"], n["UNOWN"]]))
         self.assertEqual(dex["caught"], sorted([n["BULBASAUR"], n["UNOWN"]]))
         self.assertEqual(save.block("SAVE_POKEDEX")[sv.UNOWN_SEEN], 0, "Unown A recorded")
+        self.assertTrue(sv.flag_is_set(save, 0x6B), "FLAG_GOT_POKEDEX: POKéDEX in the start menu")
         with self.assertRaises(ValueError):
             sv.set_dex(save, [n["EGG"]], True, True)
-        self.assert_only(save, ["SAVE_POKEDEX", "SAVE_PLAYERDATA"])
+        self.assert_only(save, ["SAVE_POKEDEX", "SAVE_PLAYERDATA", "SAVE_FLAGS"])
 
     def test_flags_vars_and_position(self):
         save = self.open()

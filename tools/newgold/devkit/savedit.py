@@ -1513,8 +1513,12 @@ def dex(save):
     seen = [s for s in dex_species() if _dex_bit(block, DEX_SEEN, s)]
     # Pokedex_CheckMonCaughtFlag wants both flags.
     caught = [s for s in seen if _dex_bit(block, DEX_CAUGHT, s)]
-    return {"enabled": bool(block[DEX_ENABLED]), "national": bool(block[DEX_NATIONAL]),
-            "seen": seen, "caught": caught}
+    return {"enabled": bool(block[DEX_ENABLED]) and flag_is_set(save, _got_pokedex()),
+            "national": bool(block[DEX_NATIONAL]), "seen": seen, "caught": caught}
+
+
+def _got_pokedex():
+    return constants("include/constants/flags.h", "FLAG_")["FLAG_GOT_POKEDEX"]
 
 
 def set_dex(save, species, seen, caught):
@@ -1537,11 +1541,14 @@ def set_dex(save, species, seen, caught):
 
 
 def set_dex_switches(save, enabled=None, national=None):
-    """The Dex itself, and the National Dex -- which the script that gives
-    it sets twice, in the Dex and in the profile (PlayerProfile.natDex)."""
+    """The Dex itself -- Pokedex.dexEnabled, and FLAG_GOT_POKEDEX, which is
+    what puts POKéDEX in the start menu (CheckGotPokedex) -- and the
+    National Dex, which the script that gives it sets twice, in the Dex and
+    in the profile (PlayerProfile.natDex)."""
     block = save.block("SAVE_POKEDEX")
     if enabled is not None:
         block[DEX_ENABLED] = int(bool(enabled))
+        write_flag(save, _got_pokedex(), bool(enabled))
     if national is not None:
         block[DEX_NATIONAL] = int(bool(national))
         player = save.block("SAVE_PLAYERDATA")
