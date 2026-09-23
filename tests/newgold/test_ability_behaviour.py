@@ -398,5 +398,56 @@ class GuardDogTests(unittest.TestCase):
         self.assertLess(script.index("ABILITY_GUARD_DOG"), script.index("TryWhirlwind"))
 
 
+class AromaVeilTests(unittest.TestCase):
+    def test_what_it_keeps_off_and_whom(self):
+        program = HEADER + r"""
+typedef struct { int hp; } BattleMon;
+typedef struct { BattleMon battleMons[4]; } BattleContext;
+static int ability[4];
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return ability[battlerId]; }
+""" + function(OVERLAY, "MoveIsInList") + re.search(r"static const u16 sMoveLimitingEffects\[\] = \{.*?\};", OVERLAY, re.S).group(0) + \
+            function(OVERLAY, "MoveEffectLimitsMoves") + function(OVERLAY, "AromaVeilShelters") + r"""
+int main(void) {
+    BattleContext ctx = { { { 50 }, { 50 }, { 50 }, { 50 } } };
+    int limiting[] = { MOVE_EFFECT_TAUNT, MOVE_EFFECT_TORMENT, MOVE_EFFECT_ENCORE, MOVE_EFFECT_DISABLE,
+                       MOVE_EFFECT_PREVENT_HEALING, MOVE_EFFECT_INFATUATE };
+    for (unsigned i = 0; i < NELEMS(limiting); i++) {
+        EXPECT(MoveEffectLimitsMoves(limiting[i]), 1);
+    }
+    // Not the status conditions, nor Psychic Noise's hit, whose heal block is
+    // refused in its subscript rather than the move being turned away.
+    EXPECT(MoveEffectLimitsMoves(MOVE_EFFECT_STATUS_SLEEP), 0);
+    EXPECT(MoveEffectLimitsMoves(MOVE_EFFECT_PREVENT_HEALING_HIT), 0);
+    EXPECT(MoveEffectLimitsMoves(MOVE_EFFECT_HIT), 0);
+    // Its holder and a standing ally, not a fainted one, not a foe.
+    ability[0] = ABILITY_AROMA_VEIL;
+    EXPECT(AromaVeilShelters(&ctx, 0), 1); EXPECT(AromaVeilShelters(&ctx, 2), 1);
+    EXPECT(AromaVeilShelters(&ctx, 1), 0); EXPECT(AromaVeilShelters(&ctx, 3), 0);
+    ctx.battleMons[0].hp = 0; EXPECT(AromaVeilShelters(&ctx, 2), 0);
+    return 0;
+}
+"""
+        run_c(self, program)
+        immunity = function(OVERLAY, "BattleContext_CheckMoveImmunityFromAbility")
+        veil = immunity[immunity.index("if (MoveEffectLimitsMoves(moveEffect) == TRUE) {"):]
+        veil = veil[:veil.index("\n    }\n")]
+        self.assertIn("BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_AROMA_VEIL)", veil)
+        self.assertIn("script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;", veil)
+        hit = function(OVERLAY, "CheckAbilityEffectOnHit")
+        cursed = hit[hit.index("case ABILITY_CURSED_BODY:"):]
+        cursed = cursed[:cursed.index("break;")]
+        self.assertIn("AromaVeilShelters(ctx, ctx->battlerIdAttacker) == FALSE", cursed)
+
+    def test_the_other_ways_in_are_shut_too(self):
+        for name, battler, done in (("Infatuate", "BATTLER_CATEGORY_SIDE_EFFECT_MON", "_117"),
+                                    ("HealBlockStart", "BATTLER_CATEGORY_DEFENDER", "_AROMA_VEIL")):
+            script = subscript(name)
+            start = label(script, "_000")
+            self.assertIn(f"CheckIgnorableAbility CHECK_OPCODE_HAVE, {battler}, ABILITY_AROMA_VEIL, {done}", start, name)
+            self.assertIn(f"BATTLER_RELATIVE_ALLY|{battler}, BMON_DATA_HP, 0, _NO_AROMA_VEIL", start, name)
+            self.assertIn(f"CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_RELATIVE_ALLY|{battler}, ABILITY_AROMA_VEIL, {done}", start, name)
+            self.assertEqual(label(script, done).strip(), "End", name)
+
+
 if __name__ == "__main__":
     unittest.main()

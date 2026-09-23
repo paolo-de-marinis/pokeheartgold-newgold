@@ -4443,6 +4443,34 @@ static int BattlerOrAllyWithAbility(BattleContext *ctx, int battlerIdAttacker, i
     return BATTLER_NONE;
 }
 
+// Aroma Veil keeps off its holder and the holder's ally what limits the moves
+// a Pokemon may use: Taunt, Torment, Encore, Disable, Heal Block and
+// infatuation (Pokemon Central, Aromavelo). The reference declares the
+// ability and nothing reads it. Here are the status moves that bring them,
+// turned away before they land, as the reference turns away a status move
+// Sweet Veil or Pastel Veil refuses; Mold Breaker gets through. The same
+// effects arriving any other way -- Cursed Body's disabling, Cute Charm, a
+// Destiny Knot, Psychic Noise's heal block -- are refused where they arrive.
+static const u16 sMoveLimitingEffects[] = {
+    MOVE_EFFECT_DISABLE,
+    MOVE_EFFECT_ENCORE,
+    MOVE_EFFECT_INFATUATE,
+    MOVE_EFFECT_TORMENT,
+    MOVE_EFFECT_TAUNT,
+    MOVE_EFFECT_PREVENT_HEALING,
+};
+
+static BOOL MoveEffectLimitsMoves(int moveEffect) {
+    return MoveIsInList(moveEffect, sMoveLimitingEffects, NELEMS(sMoveLimitingEffects));
+}
+
+// Whether Aroma Veil on battlerId's side, its own or a standing ally's,
+// shelters it from something that is not a move aimed at it.
+static BOOL AromaVeilShelters(BattleContext *ctx, int battlerId) {
+    return GetBattlerAbility(ctx, battlerId) == ABILITY_AROMA_VEIL
+        || (ctx->battleMons[battlerId ^ 2].hp && GetBattlerAbility(ctx, battlerId ^ 2) == ABILITY_AROMA_VEIL);
+}
+
 int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget) {
     int script;
     int moveType;
@@ -4583,6 +4611,15 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
     // Pastel Veil keeps poison off its side.
     if (moveEffect == MOVE_EFFECT_STATUS_POISON || moveEffect == MOVE_EFFECT_STATUS_BADLY_POISON) {
         int veiled = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_PASTEL_VEIL);
+        if (veiled != BATTLER_NONE) {
+            ctx->battlerIdTemp = veiled;
+            script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
+        }
+    }
+    // Aroma Veil keeps its side free of the moves that limit which moves a
+    // Pokemon may use. See MoveEffectLimitsMoves.
+    if (MoveEffectLimitsMoves(moveEffect) == TRUE) {
+        int veiled = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_AROMA_VEIL);
         if (veiled != BATTLER_NONE) {
             ctx->battlerIdTemp = veiled;
             script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
@@ -6282,10 +6319,11 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
     }
     case ABILITY_CURSED_BODY: {
         // Anything that damages will do, contact or not, but only a move the
-        // attacker still has and has not already had taken away.
+        // attacker still has and has not already had taken away, and not
+        // behind an Aroma Veil on the attacker's side.
         int moveIndex = BattleMon_GetMoveIndex(&ctx->battleMons[ctx->battlerIdAttacker], ctx->moveNoCur);
 
-        if (ctx->battleMons[ctx->battlerIdAttacker].hp && !ctx->battleMons[ctx->battlerIdAttacker].unk88.disabledMove && moveIndex != 4 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (BattleSystem_Random(battleSystem) % 10 < 3)) {
+        if (ctx->battleMons[ctx->battlerIdAttacker].hp && !ctx->battleMons[ctx->battlerIdAttacker].unk88.disabledMove && moveIndex != 4 && AromaVeilShelters(ctx, ctx->battlerIdAttacker) == FALSE && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && (BattleSystem_Random(battleSystem) % 10 < 3)) {
             ctx->moveTemp = ctx->moveNoCur;
             ctx->battleMons[ctx->battlerIdAttacker].unk88.disabledMove = ctx->moveNoCur;
             ctx->battleMons[ctx->battlerIdAttacker].unk88.disabledTurns = BattleSystem_Random(battleSystem) % 4 + 3;

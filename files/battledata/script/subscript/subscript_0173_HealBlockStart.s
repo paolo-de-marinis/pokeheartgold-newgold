@@ -3,6 +3,14 @@
     .data
 
 _000:
+    // Aroma Veil on the target's side keeps a heal block off it. The status
+    // move is turned away before it lands, so what gets here is Psychic
+    // Noise's, which simply does not take (Pokemon Central, Aromavelo).
+    CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, ABILITY_AROMA_VEIL, _AROMA_VEIL
+    CompareMonDataToValue OPCODE_EQU, BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_DEFENDER, BMON_DATA_HP, 0, _NO_AROMA_VEIL
+    CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_DEFENDER, ABILITY_AROMA_VEIL, _AROMA_VEIL
+
+_NO_AROMA_VEIL:
     CheckSubstitute BATTLER_CATEGORY_DEFENDER, _028
     CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_DEFENDER, BMON_DATA_HEAL_BLOCK_TURNS, 0, _028
     Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION
@@ -24,3 +32,6 @@ _028:
     WaitButtonABTime 30
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_NO_MORE_WORK
     End 
+
+_AROMA_VEIL:
+    End
