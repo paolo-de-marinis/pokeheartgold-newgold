@@ -338,6 +338,46 @@ class HexTests(unittest.TestCase):
                                  r"ABILITY_COMATOSE, (_\w+)\n(?:.*\n)*?\1:\n    UpdateVar OPCODE_SET, BSCRIPT_VAR_POWER_MULTI, 20")
 
 
+class AbilityBlockListTests(unittest.TestCase):
+    # Role Play (its effect script and its subscript), Skill Swap, Gastro Acid
+    # and Worry Seed each refuse a list of abilities; the lists are the
+    # reference's, Comatose among them, with retail's Griseous Orb kept.
+    SCRIPTS = {
+        "effect_script/effect_script_0178.s": "effects/effect_script_0178_COPY_ABILITY.s",
+        "subscript/subscript_0135_CopyAbility.s": "subscripts/subscript_0135_COPY_ABILITY.s",
+        "subscript/subscript_0143_SwapAbility.s": "subscripts/subscript_0143_EXCHANGE_ABILITIES.s",
+        "subscript/subscript_0163_GastroAcid.s": "subscripts/subscript_0163_SUPPRESS_TARGET_ABILITY.s",
+        "subscript/subscript_0167_WorrySeed.s": "subscripts/subscript_0167_GIVE_TARGET_INSOMNIA.s",
+    }
+    ENTRY = re.compile(r"(?:CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_(\w+), BMON_DATA_(?:ABILITY|HELD_ITEM), (\w+)"
+                       r"|CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_(\w+), (ABILITY_\w+)), _")
+
+    def entries(self, text):
+        return {(a or c, b or d) for a, b, c, d in self.ENTRY.findall(text)}
+
+    def test_comatose_is_refused(self):
+        expected = {
+            "effect_script/effect_script_0178.s": {"ATTACKER"},
+            "subscript/subscript_0135_CopyAbility.s": {"ATTACKER", "DEFENDER"},
+            "subscript/subscript_0143_SwapAbility.s": {"ATTACKER", "DEFENDER"},
+            "subscript/subscript_0163_GastroAcid.s": {"DEFENDER"},
+            "subscript/subscript_0167_WorrySeed.s": {"DEFENDER"},
+        }
+        for name, battlers in expected.items():
+            found = {b for b, a in self.entries((ROOT / "files/battledata/script" / name).read_text())
+                     if a == "ABILITY_COMATOSE"}
+            self.assertEqual(found, battlers, name)
+
+    def test_the_lists_are_the_reference_s(self):
+        from test_repels import REFERENCE, revision
+        if REFERENCE is None:
+            self.skipTest("no reference checkout")
+        for name, theirs in self.SCRIPTS.items():
+            ours = self.entries((ROOT / "files/battledata/script" / name).read_text())
+            reference = self.entries(revision(REFERENCE, "d0380a487", "data/battle_scripts/" + theirs))
+            self.assertEqual(ours - {(b, "ITEM_GRISEOUS_ORB") for b in ("ATTACKER", "DEFENDER")}, reference, name)
+
+
 class SubstituteTests(unittest.TestCase):
     # BattleController_CheckSubstituteBlockingOtherEffects fails these before
     # they run, unless the user has Infiltrator; Decorate is in the stat-drop
