@@ -95,5 +95,15 @@ class ExplosionTests(unittest.TestCase):
         self.assertNotIn("MOVE_EFFECT_HALVE_DEFENSE", function(OVERLAY.read_text(), "CalcMoveDamage"))
 
 
+class SandstormTests(unittest.TestCase):
+    def test_the_sand_abilities_are_spared_the_chip_damage(self):
+        # battle_script_commands.c's BtlCmd_EndOfTurnWeatherEffect spares
+        # Sand Veil, Sand Rush and Sand Force alike.
+        body = function(COMMANDS.read_text(), "BtlCmd_EndOfTurnWeatherEffect")
+        sand = re.search(r"FIELD_CONDITION_SANDSTORM_ALL\) \{\n\s*if \(([^\n]*)\) \{", body).group(1)
+        for ability in ("SAND_VEIL", "SAND_RUSH", "SAND_FORCE"):
+            self.assertIn(f"GetBattlerAbility(ctx, battlerId) != ABILITY_{ability}", sand)
+
+
 if __name__ == "__main__":
     unittest.main()

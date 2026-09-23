@@ -3985,9 +3985,10 @@ BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSystem, BattleContext *ct
         // Safety Goggles keep the sand and the hail off the same way Overcoat
         // does, and the reference writes it as one more term on each of those
         // two conditions. It is not on the sun or the rain below: nothing
-        // there is weather falling on the Pokemon.
+        // there is weather falling on the Pokemon. Sand Rush and Sand Force
+        // are spared the sand as Sand Veil is, as the reference has them.
         if (ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) {
-            if (type1 != TYPE_ROCK && type2 != TYPE_ROCK && type1 != TYPE_STEEL && type2 != TYPE_STEEL && type1 != TYPE_GROUND && type2 != TYPE_GROUND && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) != ABILITY_SAND_VEIL && GetBattlerAbility(ctx, battlerId) != ABILITY_OVERCOAT && GetBattlerHeldItemEffect(ctx, battlerId) != HOLD_EFFECT_SPORE_POWDER_IMMUNITY && !(ctx->battleMons[battlerId].moveEffectFlags & 0x40080)) {
+            if (type1 != TYPE_ROCK && type2 != TYPE_ROCK && type1 != TYPE_STEEL && type2 != TYPE_STEEL && type1 != TYPE_GROUND && type2 != TYPE_GROUND && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) != ABILITY_SAND_VEIL && GetBattlerAbility(ctx, battlerId) != ABILITY_SAND_RUSH && GetBattlerAbility(ctx, battlerId) != ABILITY_SAND_FORCE && GetBattlerAbility(ctx, battlerId) != ABILITY_OVERCOAT && GetBattlerHeldItemEffect(ctx, battlerId) != HOLD_EFFECT_SPORE_POWDER_IMMUNITY && !(ctx->battleMons[battlerId].moveEffectFlags & 0x40080)) {
                 ctx->moveTemp = MOVE_SANDSTORM;
                 ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 16);
             }
