@@ -53,7 +53,8 @@ and TRs its `personal.json` record is compatible with (`sTMHMMoves` and
 `sTutorMoves`, at the record `GetMoveTutorLearnsetIndex` reads; and the
 Blackthorn tutor's script, `scr_seq_0948_T30R0601.s`, which teaches its
 move to a Pokemon of the type its `GetMonTypes` tests name), its own egg
-moves (`kowaza_list.narc`) -- an egg's, with the one
+moves (`kowaza_list.narc`) -- an egg's, for a species an egg hatches as
+(`pms.narc`, `Daycare_GetEggSpecies`, `sIncenseMons`), with the one
 `Daycare_LightBallCheck` adds for a parent's Light Ball, or, for a species
 no egg hatches as, the Day-Care's (`Daycare_LearnEggMovesFrom`: a Mirror
 Herb, or two of the same species) -- a Rotom

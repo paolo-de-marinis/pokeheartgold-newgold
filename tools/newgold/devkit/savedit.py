@@ -1560,16 +1560,27 @@ def item_egg_moves():
     return {species_numbers()[species]: [(move, item)]}
 
 
+@tree_cache
+def egg_species():
+    """The species an egg can hatch as: each one pms.narc gives a mother
+    (ReadFromPersonalPmsNarc, a halfword a species), the ones
+    Daycare_GetEggSpecies turns those into, and the parents an incense baby
+    hatches as without its incense."""
+    raw = source("files/poketool/personal/pms.narc").read_bytes()
+    numbers = species_numbers()
+    turned = re.findall(r"eggSpecies = SPECIES_(\w+);", c_function("src/get_egg.c", "static u16 Daycare_GetEggSpecies("))
+    return (set(struct.unpack(f"<{len(raw) // 2}H", raw)) - {0}) | {numbers[name] for name in turned} | incense_parents()
+
+
 def evolution_line(species):
     """The species and every species it can have been before evolving,
-    nearest first, each with whether an egg can hatch as it (a first stage,
-    or the parent an incense baby hatches as without its incense)."""
+    nearest first, each with whether an egg can hatch as it (egg_species)."""
     before = lambda s: pre_evolutions().get(s, set())
     line, todo = [], [species]
     while todo:
         s = todo.pop(0)
         if s not in [t for t, _ in line]:
-            line.append((s, not before(s) or s in incense_parents()))
+            line.append((s, s in egg_species()))
             todo += sorted(before(s))
     return line
 
