@@ -9097,7 +9097,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 
     moveCategory = BattleMoveTbl(ctx, moveNo)->category;
 
-    // Two base-power abilities belong to the attacker's ALLY, so they exist
+    // Three base-power abilities belong to the attacker's ALLY, so they exist
     // only in a double battle -- the slot two over is stale rather than empty
     // in a single one, which is what the maxBattlers guard is for. The ally's
     // Steely Spirit is a second boost and not an else: with the pair of them
@@ -9108,6 +9108,13 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         if (ally < maxBattlers && ctx->battleMons[ally].hp) {
             if (moveCategory == CATEGORY_SPECIAL && GetBattlerAbility(ctx, ally) == ABILITY_BATTERY) {
                 movePower = movePower * 4 / 3;
+            }
+            // Power Spot: three tenths on every move the ally uses, never on
+            // the holder's own (Pokemon Central, Fonte Energetica: 5325/4096).
+            // The reference reads the ally's ability without asking whether
+            // it is still standing, so a fainted Stonjourner went on helping.
+            if (GetBattlerAbility(ctx, ally) == ABILITY_POWER_SPOT) {
+                movePower = movePower * 13 / 10;
             }
             if (moveType == TYPE_STEEL && GetBattlerAbility(ctx, ally) == ABILITY_STEELY_SPIRIT) {
                 movePower = movePower * 15 / 10;
