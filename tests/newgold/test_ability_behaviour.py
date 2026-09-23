@@ -104,7 +104,7 @@ static u16 GetBattlerHeldItem(BattleContext *ctx, int battlerId) { (void)ctx; (v
 static int GetItemVar(BattleContext *ctx, u16 item, u32 var) { (void)ctx; (void)item; (void)var; return 0; }
 static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return S.maxBattlers; }
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &S.move; }
-static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int type) { (void)ctx; (void)ability; (void)moveNo; return type; }
+static u8 BattleMoveTypeForAbility(BattleContext *ctx, int battlerId, int ability, u32 moveNo, int type) { (void)ctx; (void)battlerId; (void)ability; (void)moveNo; return type; }
 static BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return TRUE; }
 static BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
 static BOOL SubstituteTakesHit(BattleContext *ctx, int battlerId) { (void)ctx; return S.substitute[battlerId]; }

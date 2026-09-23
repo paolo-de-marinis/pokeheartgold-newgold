@@ -10251,6 +10251,10 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         ctx->magicRoomTurns = ctx->magicRoomTurns ? 0 : 5;
         ctx->calcTemp = ctx->magicRoomTurns;
         break;
+    // The battler's move is Electric for the rest of the turn.
+    case MOVE_ELECTRIFY:
+        ctx->turnData[battlerId].electrified = TRUE;
+        break;
     }
 
     return FALSE;

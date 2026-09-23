@@ -414,6 +414,9 @@ IMPLEMENTED_HERE = {
     # Core Enforcer suppresses the ability of a target that has already acted
     # this turn (Pokemon Central, Nucleocastigo): effect script 423.
     "CORE_ENFORCER": "MOVE_EFFECT_CORE_ENFORCER",
+    # Electrify makes the target's move this turn Electric (Pokemon Central,
+    # Elettrocontagio): effect script 424.
+    "ELECTRIFY": "MOVE_EFFECT_ELECTRIFY",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -442,6 +445,9 @@ FIELDS_HERE = {
     # The user and its allies, as Jungle Healing (Pokemon Central,
     # Invocaluna); the reference aims it at the ally alone.
     "LUNAR_BLESSING": {"target": "RANGE_USER_SIDE"},
+    # Magic Coat and Magic Bounce do not send it back (Pokemon Central,
+    # Elettrocontagio); the reference flags it as though they did.
+    "ELECTRIFY": {"flagsOff": ("FLAG_MAGIC_COAT",)},
 }
 
 # The effects written here for those moves follow the reference's in

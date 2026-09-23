@@ -78,7 +78,7 @@ static int CalcMoveDamage(BattleSystem *bs, BattleContext *ctx, u32 moveNo, u32 
 }
 // A type change such as Pixilate's, when the scenario asks for one.
 static u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) { (void)battlerId; (void)moveNo; return S.adjustedType ? S.adjustedType : ctx->moveType; }
-static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault) { (void)ctx; (void)ability; (void)moveNo; return S.adjustedType ? S.adjustedType : moveTypeDefault; }
+static u8 BattleMoveTypeForAbility(BattleContext *ctx, int battlerId, int ability, u32 moveNo, int moveTypeDefault) { (void)ctx; (void)battlerId; (void)ability; (void)moveNo; return S.adjustedType ? S.adjustedType : moveTypeDefault; }
 // Each battler's Speed as its summary shows it.
 static Pokemon mons[4];
 static Pokemon *BattleSystem_GetPartyMon(BattleSystem *bs, int battlerId, int slot) { (void)bs; (void)slot; mons[battlerId].speed = S.speed[battlerId]; return &mons[battlerId]; }

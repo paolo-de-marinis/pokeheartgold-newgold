@@ -404,5 +404,26 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("ITEM_ABILITY_SHIELD, _END", enforcing)
         self.assertIn("UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_DEFENDER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED", enforcing)
 
+    def test_electrify_makes_the_target_s_move_electric(self):
+        # Pokemon Central (Elettrocontagio): the target's move this turn, any
+        # move but Struggle; it fails on one that has moved; not sent back.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("ELECTRIFY", "MOVE_EFFECT_ELECTRIFY")
+        self.assertFalse(record("ELECTRIFY")[9] & 1 << 2, "FLAG_MAGIC_COAT")
+        script = effect_script("MOVE_EFFECT_ELECTRIFY")
+        self.assertIn("IfMovedThisTurn BATTLER_CATEGORY_DEFENDER, _FAILED", script)
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_ELECTRIFY", script)
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_ELECTRIFY"), "BATTLE_SUBSCRIPT_ELECTRIFY")
+        charging = subscript_named("BATTLE_SUBSCRIPT_ELECTRIFY")
+        self.assertIn("SetMoveConditionFlag MOVE_ELECTRIFY, BATTLER_CATEGORY_DEFENDER", charging)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('electrify'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER", charging)
+        self.assertIn("case MOVE_ELECTRIFY:\n        ctx->turnData[battlerId].electrified = TRUE;",
+                      function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SetMoveConditionFlag"))
+        typing = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "BattleMoveTypeForAbility")
+        self.assertIn("if (battlerId < BATTLER_MAX && ctx->turnData[battlerId].electrified && moveNo != MOVE_STRUGGLE) {\n"
+                      "        moveType = TYPE_ELECTRIC;", typing)
+        self.assertGreater(typing.index("ctx->turnData[battlerId].electrified"), typing.index("FIELD_CONDITION_ION_DELUGE"))
+
 if __name__ == "__main__":
     unittest.main()

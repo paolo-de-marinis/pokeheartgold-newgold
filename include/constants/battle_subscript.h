@@ -740,6 +740,9 @@
 // Core Enforcer suppressing a target that has acted, which the reference has
 // no script for.
 #define BATTLE_SUBSCRIPT_CORE_ENFORCER                      445
+// Electrify charging its target's move, which the reference has no script
+// for.
+#define BATTLE_SUBSCRIPT_ELECTRIFY                          446
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -818,6 +821,7 @@
 #define MOVE_SUBSCRIPT_PTR_REFLECT_TYPE                     220
 #define MOVE_SUBSCRIPT_PTR_PURIFY                           221
 #define MOVE_SUBSCRIPT_PTR_CORE_ENFORCER                    222
+#define MOVE_SUBSCRIPT_PTR_ELECTRIFY                        223
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

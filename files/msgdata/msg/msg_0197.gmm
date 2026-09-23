@@ -7376,4 +7376,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s type\nbecame the same as the\fopposing {STRVAR_1 1, 1, 0}’s type!</language>
 	</row>
+	<row id="msg_0197_01844" index="1844">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s moves have\nbeen electrified!</language>
+	</row>
+	<row id="msg_0197_01845" index="1845">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s moves\nhave been electrified!</language>
+	</row>
+	<row id="msg_0197_01846" index="1846">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s moves\nhave been electrified!</language>
+	</row>
 </body>

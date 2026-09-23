@@ -181,6 +181,13 @@ PORT_ROWS = [
         r"The opposing {STRVAR_1 1, 0, 0}’s type became\nthe same as {STRVAR_1 1, 1, 0}’s type!",
         r"The opposing {STRVAR_1 1, 0, 0}’s type\nbecame the same as the\fopposing {STRVAR_1 1, 1, 0}’s type!",
     ]),
+    # Electrify. The engine leaves the move unimplemented; the later games'
+    # line, about the target.
+    ("electrify", [
+        r"{STRVAR_1 1, 0, 0}’s moves have\nbeen electrified!",
+        r"The wild {STRVAR_1 1, 0, 0}’s moves\nhave been electrified!",
+        r"The opposing {STRVAR_1 1, 0, 0}’s moves\nhave been electrified!",
+    ]),
 ]
 
 

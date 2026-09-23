@@ -89,7 +89,8 @@ typedef struct TurnData {
     u32 gainedProtectFlagFromAlly : 1; // protectFlag came from the ally's Wide Guard, Quick Guard, Mat Block or Crafty Shield
     u32 switchedIn : 1;                // came into the battle during this turn, so has not acted in it: Payback does not double
     u32 statRaised : 1; // a stat of its rose this turn, or before the first: Burning Jealousy burns it
-    u32 unk0_A : 17;
+    u32 electrified : 1; // Electrify landed on it: its move this turn is Electric
+    u32 unk0_A : 16;
     int physicalDamage[4];
     int battlerIdPhysicalDamage;
     int battlerBitPhysicalDamage;

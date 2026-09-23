@@ -51,7 +51,7 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count);
 static BOOL BattleMoveIsPunching(u32 moveNo);
 static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int moveNo);
 static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item);
-static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault);
+static u8 BattleMoveTypeForAbility(BattleContext *ctx, int battlerId, int ability, u32 moveNo, int moveTypeDefault);
 static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId);
 
 // Eviolite works for anything that has not finished growing up. The archive
@@ -3087,7 +3087,7 @@ BOOL StrongWindsWeakenMove(BattleSystem *battleSystem, BattleContext *ctx, int b
             && ctx->battleMons[battlerIdTarget].type3 != TYPE_FLYING)) {
         return FALSE;
     }
-    moveType = BattleMoveTypeForAbility(ctx, GetBattlerAbility(ctx, battlerIdAttacker), moveNo, moveTypeDefault);
+    moveType = BattleMoveTypeForAbility(ctx, battlerIdAttacker, GetBattlerAbility(ctx, battlerIdAttacker), moveNo, moveTypeDefault);
     for (i = 0; sTypeEffectiveness[i][TYPETABLE_ATTACKER] != TYPE_ENDTABLE; i++) {
         if (sTypeEffectiveness[i][TYPETABLE_ATTACKER] == moveType && StrongWindsShelterRow(winds, i) == TRUE) {
             return TRUE;
@@ -3122,7 +3122,7 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
 
     itemTarget = GetBattlerHeldItemEffect(ctx, battlerIdTarget);
 
-    moveType = BattleMoveTypeForAbility(ctx, GetBattlerAbility(ctx, battlerIdAttacker), moveNo, moveTypeDefault);
+    moveType = BattleMoveTypeForAbility(ctx, battlerIdAttacker, GetBattlerAbility(ctx, battlerIdAttacker), moveNo, moveTypeDefault);
 
     movePower = BattleMoveTbl(ctx, moveNo)->power;
     // Anticipation asks this chart too, with the winds taken off the field
@@ -3237,7 +3237,7 @@ void ov12_02252054(BattleContext *ctx, int moveNo, int moveTypeDefault, int abil
         return;
     }
 
-    moveType = BattleMoveTypeForAbility(ctx, abilityAttacker, moveNo, moveTypeDefault);
+    moveType = BattleMoveTypeForAbility(ctx, BATTLER_NONE, abilityAttacker, moveNo, moveTypeDefault);
 
     if ((!AbilityBreaksMolds(abilityAttacker) || item == HOLD_EFFECT_PREVENT_ABILITY_CHANGES) && abilityTarget == ABILITY_LEVITATE && moveType == TYPE_GROUND && !(ctx->fieldCondition & FIELD_CONDITION_GRAVITY) && item != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
         *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
@@ -4794,7 +4794,7 @@ static BOOL MoveTypeIsFixedByTheMove(u32 moveNo) {
 // question, so it is answered once here. moveTypeDefault is the type something
 // else has already decided on -- ctx->moveType for a caller that has a
 // battler, an explicit argument for the two that do not.
-static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault) {
+static u8 BattleMoveTypeForAbility(BattleContext *ctx, int battlerId, int ability, u32 moveNo, int moveTypeDefault) {
     u8 moveType;
 
     if (ability == ABILITY_NORMALIZE) {
@@ -4845,11 +4845,19 @@ static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, 
         moveType = TYPE_ELECTRIC;
     }
 
+    // Electrify makes the move of the Pokemon it landed on Electric for the
+    // rest of the turn, whatever the move was, a status move too; not
+    // Struggle (Pokemon Central, Elettrocontagio). BATTLER_NONE is a move no
+    // battler is using, as the AI's look at its party asks.
+    if (battlerId < BATTLER_MAX && ctx->turnData[battlerId].electrified && moveNo != MOVE_STRUGGLE) {
+        moveType = TYPE_ELECTRIC;
+    }
+
     return moveType;
 }
 
 u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) {
-    return BattleMoveTypeForAbility(ctx, GetBattlerAbility(ctx, battlerId), moveNo, ctx->moveType);
+    return BattleMoveTypeForAbility(ctx, battlerId, GetBattlerAbility(ctx, battlerId), moveNo, ctx->moveType);
 }
 
 // Sweet Veil, and the three abilities that turn away a hurried move, cover
@@ -10221,7 +10229,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower *= 2;
     }
 
-    moveType = BattleMoveTypeForAbility(ctx, calcAttacker.ability, moveNo, type & 0x3F);
+    moveType = BattleMoveTypeForAbility(ctx, battlerIdAttacker, calcAttacker.ability, moveNo, type & 0x3F);
 
     GF_ASSERT(ctx->unk_2158 >= 10);
     movePower = movePower * ctx->unk_2158 / 10;
@@ -11803,7 +11811,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_TOPSY_TURVY,
     BATTLE_SUBSCRIPT_REFLECT_TYPE,
     BATTLE_SUBSCRIPT_PURIFY,
-    BATTLE_SUBSCRIPT_CORE_ENFORCER
+    BATTLE_SUBSCRIPT_CORE_ENFORCER,
+    BATTLE_SUBSCRIPT_ELECTRIFY
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

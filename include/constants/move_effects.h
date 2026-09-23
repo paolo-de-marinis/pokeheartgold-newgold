@@ -431,5 +431,6 @@
 #define MOVE_EFFECT_HEAL_SIDE_QUARTER_CURE_STATUS                421
 #define MOVE_EFFECT_PURIFY                                       422
 #define MOVE_EFFECT_CORE_ENFORCER                                423
+#define MOVE_EFFECT_ELECTRIFY                                    424
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H
