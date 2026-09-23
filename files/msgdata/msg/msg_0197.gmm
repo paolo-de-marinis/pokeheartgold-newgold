@@ -7492,4 +7492,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} is preparing\nto tell a chillingly bad joke!</language>
 	</row>
+	<row id="msg_0197_01873" index="1873">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} stole the target’s\nboosted stats!</language>
+	</row>
+	<row id="msg_0197_01874" index="1874">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} stole the\ntarget’s boosted stats!</language>
+	</row>
+	<row id="msg_0197_01875" index="1875">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} stole the\ntarget’s boosted stats!</language>
+	</row>
 </body>

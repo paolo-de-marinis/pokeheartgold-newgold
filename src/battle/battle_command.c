@@ -10285,6 +10285,32 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         ctx->calcTemp = !ctx->moveConditions[battlerId].tarShot;
         ctx->moveConditions[battlerId].tarShot = TRUE;
         break;
+    // Spectral Thief takes every raised stage of the battler for its user,
+    // doubled by Simple and turned about by Contrary, and leaves the battler
+    // at 0 in each; Clear Body has nothing to say (Pokemon Central,
+    // Ombrafurto).
+    case MOVE_SPECTRAL_THIEF: {
+        int stat;
+        int ability = GetBattlerAbility(ctx, ctx->battlerIdAttacker);
+
+        for (stat = STAT_ATK; stat < NUM_BATTLE_STATS; stat++) {
+            int raised = ctx->battleMons[battlerId].statChanges[stat] - 6;
+            int stage;
+
+            if (raised <= 0) {
+                continue;
+            }
+            ctx->battleMons[battlerId].statChanges[stat] = 6;
+            if (ability == ABILITY_SIMPLE) {
+                raised *= 2;
+            } else if (ability == ABILITY_CONTRARY) {
+                raised = -raised;
+            }
+            stage = ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat] + raised;
+            ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat] = stage > 12 ? 12 : (stage < 0 ? 0 : stage);
+        }
+        break;
+    }
     // The field is locked till the next turn's end; not twice over (CALC_TEMP
     // says whether it took).
     case MOVE_FAIRY_LOCK:

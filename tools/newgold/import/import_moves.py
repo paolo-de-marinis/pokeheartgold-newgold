@@ -468,6 +468,10 @@ IMPLEMENTED_HERE = {
     # user's mouth, which only Commander puts there (Pokemon Central, Alta
     # Cucina); Sheer Force always boosts it. CalcMoveDamage asks the latter.
     "ORDER_UP": "MOVE_EFFECT_HIT",
+    # Spectral Thief takes the target's raised stages and strikes with them,
+    # round a substitute (Pokemon Central, Ombrafurto): the controller's
+    # command 27 and subscript 458.
+    "SPECTRAL_THIEF": "MOVE_EFFECT_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

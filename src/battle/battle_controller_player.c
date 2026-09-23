@@ -3773,7 +3773,28 @@ static void ov12_0224C5F8(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
+// Whether a battler has any stage above 0, for Spectral Thief to take.
+static BOOL Battler_HasRaisedStage(BattleContext *ctx, int battlerId) {
+    int stat;
+
+    for (stat = STAT_ATK; stat < NUM_BATTLE_STATS; stat++) {
+        if (ctx->battleMons[battlerId].statChanges[stat] > 6) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 static void ov12_0224C678(BattleSystem *battleSystem, BattleContext *ctx) {
+    // Spectral Thief takes the target's raised stages as it is about to
+    // connect and strikes with them (Pokemon Central, Ombrafurto): subscript
+    // 458 comes back here with nothing left to take.
+    if (ctx->moveNoCur == MOVE_SPECTRAL_THIEF && ctx->battlerIdTarget != BATTLER_NONE && Battler_HasRaisedStage(ctx, ctx->battlerIdTarget)) {
+        ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SPECTRAL_THIEF);
+        ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+        ctx->commandNext = CONTROLLER_COMMAND_27;
+        return;
+    }
     // The move is about to connect, so a Gem that is powering it is spent
     // now, before the move's animation: "The Fire Gem strengthened Ember's
     // power!" after the attack message, as the reference's gem subscript has

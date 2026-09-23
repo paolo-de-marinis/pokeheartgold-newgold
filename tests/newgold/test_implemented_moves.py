@@ -711,5 +711,26 @@ int main(void) {
         # OrderUpTests; the boost to a stat waits on a Tatsugiri in the mouth.
         self.assertImplemented("ORDER_UP", "MOVE_EFFECT_HIT")
 
+    def test_spectral_thief_takes_the_raised_stages_before_it_strikes(self):
+        # Pokemon Central (Ombrafurto): every raised stage, to the user,
+        # doubled by Simple and turned about by Contrary, before the damage,
+        # round a substitute.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("SPECTRAL_THIEF", "MOVE_EFFECT_HIT")
+        thief = subscript_named("BATTLE_SUBSCRIPT_SPECTRAL_THIEF")
+        self.assertLess(thief.index("SetMoveConditionFlag MOVE_SPECTRAL_THIEF, BATTLER_CATEGORY_DEFENDER"), thief.index("CalcDamage"))
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('spectral thief'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER", thief)
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        connecting = function(controller, "ov12_0224C678")
+        self.assertLess(connecting.index("BATTLE_SUBSCRIPT_SPECTRAL_THIEF"), connecting.index("BATTLE_SUBSCRIPT_GEM"))
+        flag = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SetMoveConditionFlag")
+        stealing = flag[flag.index("case MOVE_SPECTRAL_THIEF:"):]
+        for line in ("ctx->battleMons[battlerId].statChanges[stat] = 6;", "raised *= 2;", "raised = -raised;"):
+            self.assertIn(line, stealing)
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        self.assertIn("ctx->moveNoCur == MOVE_SPECTRAL_THIEF", function(overlay, "MoveGoesRoundSubstitute"))
+        self.assertIn("ctx->moveNoCur != MOVE_SPECTRAL_THIEF", function(overlay, "SubstituteTakesHit"))
+
 if __name__ == "__main__":
     unittest.main()

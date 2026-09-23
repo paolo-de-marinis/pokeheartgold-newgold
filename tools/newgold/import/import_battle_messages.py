@@ -244,6 +244,13 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} is preparing to\ntell a chillingly bad joke!",
         r"The opposing {STRVAR_1 1, 0, 0} is preparing\nto tell a chillingly bad joke!",
     ]),
+    # Spectral Thief taking its target's raised stages. The engine leaves the
+    # move unimplemented; the later games' line.
+    ("spectral thief", [
+        r"{STRVAR_1 1, 0, 0} stole the target’s\nboosted stats!",
+        r"The wild {STRVAR_1 1, 0, 0} stole the\ntarget’s boosted stats!",
+        r"The opposing {STRVAR_1 1, 0, 0} stole the\ntarget’s boosted stats!",
+    ]),
 ]
 
 

@@ -770,6 +770,9 @@
 // Doodle handing the target's ability to the user and its ally, which the
 // reference has no script for.
 #define BATTLE_SUBSCRIPT_DOODLE                             457
+// Spectral Thief taking its target's raised stages, which the reference has
+// no script for.
+#define BATTLE_SUBSCRIPT_SPECTRAL_THIEF                     458
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

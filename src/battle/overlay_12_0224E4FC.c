@@ -9478,15 +9478,19 @@ BOOL InfiltratorGoesRoundSubstitute(BattleContext *ctx, int battlerId) {
 // sound move that can hit something other than its user (Pokemon Central,
 // Proprieta delle mosse) -- Growl, Sing, Supersonic, Confide, Parting Shot and
 // the added effects of the damaging ones, as well as their damage (below).
+// Spectral Thief goes round a substitute as a sound move does, its theft and
+// its damage both (Pokemon Central, Ombrafurto).
 BOOL MoveGoesRoundSubstitute(BattleContext *ctx, int battlerId) {
-    return InfiltratorGoesRoundSubstitute(ctx, battlerId) || (battlerId != ctx->battlerIdAttacker && BattleMoveIsSoundBased(ctx->moveNoCur));
+    return InfiltratorGoesRoundSubstitute(ctx, battlerId)
+        || (battlerId != ctx->battlerIdAttacker && (BattleMoveIsSoundBased(ctx->moveNoCur) || ctx->moveNoCur == MOVE_SPECTRAL_THIEF));
 }
 
 // Whether a substitute takes this hit for the Pokemon behind it: an
 // Infiltrator's hit and a sound move's go round it (ServerHPCalc.c:42 at
 // d0380a487).
 BOOL SubstituteTakesHit(BattleContext *ctx, int battlerId) {
-    return (ctx->battleMons[battlerId].status2 & STATUS2_SUBSTITUTE) && !InfiltratorGoesRoundSubstitute(ctx, battlerId) && !BattleMoveIsSoundBased(ctx->moveNoCur);
+    return (ctx->battleMons[battlerId].status2 & STATUS2_SUBSTITUTE) && !InfiltratorGoesRoundSubstitute(ctx, battlerId) && !BattleMoveIsSoundBased(ctx->moveNoCur)
+        && ctx->moveNoCur != MOVE_SPECTRAL_THIEF;
 }
 
 BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) {
