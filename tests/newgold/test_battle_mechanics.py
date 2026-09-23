@@ -39,5 +39,13 @@ class ParalysisTests(unittest.TestCase):
         self.assertEqual(halvings, ["speed1", "speed2"])
 
 
+class CriticalHitTests(unittest.TestCase):
+    def test_the_odds_at_each_stage_are_the_reference_s(self):
+        # other_battle_calculators.c's CriticalRateTable. HeartGold's was
+        # 16, 8, 4, 3, 2.
+        table = re.search(r"sCritChance\[\] = \{([^}]*)\}", OVERLAY.read_text()).group(1)
+        self.assertEqual([int(n) for n in table.split(",")], [24, 8, 2, 1, 1])
+
+
 if __name__ == "__main__":
     unittest.main()

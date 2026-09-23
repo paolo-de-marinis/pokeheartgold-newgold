@@ -8412,8 +8412,11 @@ int ApplyDamageRange(BattleSystem *battleSystem, BattleContext *ctx, int damage)
     return damage;
 }
 
+// One in this many at each critical stage: the reference's CriticalRateTable,
+// the Generation VII odds. Stages 3 and 4 always land, since anything modulo 1
+// is 0. HeartGold's were 16, 8, 4, 3 and 2.
 static const u8 sCritChance[] = {
-    16, 8, 4, 3, 2
+    24, 8, 2, 1, 1
 };
 
 u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int critCnt, u32 sideCondition) {
