@@ -7232,4 +7232,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} made its\nshell gleam!\fIt’s distorting type matchups!</language>
 	</row>
+	<row id="msg_0197_01808" index="1808">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} became fully charged due\nto its bond with its Trainer!</language>
+	</row>
+	<row id="msg_0197_01809" index="1809">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} became fully charged\ndue to its bond with its Trainer!</language>
+	</row>
+	<row id="msg_0197_01810" index="1810">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} became fully\ncharged due to its bond with its Trainer!</language>
+	</row>
 </body>

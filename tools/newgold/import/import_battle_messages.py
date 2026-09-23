@@ -95,6 +95,14 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} made its\nshell gleam!\fIt’s distorting type matchups!",
         r"The opposing {STRVAR_1 1, 0, 0} made its\nshell gleam!\fIt’s distorting type matchups!",
     ]),
+    # Battle Bond's rises. The reference shows the ability's popup and no
+    # line (subscript_0515); this game has no popup, so it prints the later
+    # games' line for the ability.
+    ("battle bond", [
+        r"{STRVAR_1 1, 0, 0} became fully charged due\nto its bond with its Trainer!",
+        r"The wild {STRVAR_1 1, 0, 0} became fully charged\ndue to its bond with its Trainer!",
+        r"The opposing {STRVAR_1 1, 0, 0} became fully\ncharged due to its bond with its Trainer!",
+    ]),
 ]
 
 

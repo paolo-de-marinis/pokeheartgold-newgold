@@ -666,6 +666,8 @@
 // Teraform Zero clearing the weather and the ground, which the reference has
 // no script for.
 #define BATTLE_SUBSCRIPT_TERAFORM_ZERO                      415
+// Battle Bond's three stat rises. 515 there.
+#define BATTLE_SUBSCRIPT_BATTLE_BOND                        416
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

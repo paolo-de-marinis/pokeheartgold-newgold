@@ -655,5 +655,74 @@ class CudChewTests(unittest.TestCase):
         self.assertIn("CallFromVar BSCRIPT_VAR_TEMP_DATA", subscript("CudChew"))
 
 
+BOND_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef int8_t s8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/pokemon.h"
+#include "constants/species.h"
+typedef struct {
+    struct { u16 species, ability; u32 status2; s8 statChanges[8]; } battleMons[4];
+} BattleContext;
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+@FUNCTIONS@
+int main(void) {
+    BattleContext ctx = { 0 };
+    ctx.battleMons[0].species = SPECIES_GRENINJA_BATTLE_BOND;
+    ctx.battleMons[0].ability = ABILITY_BATTLE_BOND;
+    for (int i = 0; i < 8; i++) {
+        ctx.battleMons[0].statChanges[i] = 6;
+    }
+    assert(BattlerBattleBondBoosts(&ctx, 0, FALSE));
+    // Once a battle.
+    assert(!BattlerBattleBondBoosts(&ctx, 0, TRUE));
+    // Kept for later while all three are at +6; one with room is enough.
+    ctx.battleMons[0].statChanges[STAT_ATK] = 12;
+    ctx.battleMons[0].statChanges[STAT_SPATK] = 12;
+    ctx.battleMons[0].statChanges[STAT_SPEED] = 12;
+    assert(!BattlerBattleBondBoosts(&ctx, 0, FALSE));
+    ctx.battleMons[0].statChanges[STAT_SPEED] = 11;
+    assert(BattlerBattleBondBoosts(&ctx, 0, FALSE));
+    // Not an Ash-Greninja, not an ordinary Greninja, not a copy.
+    ctx.battleMons[0].species = SPECIES_GRENINJA_ASH;
+    assert(!BattlerBattleBondBoosts(&ctx, 0, FALSE));
+    ctx.battleMons[0].species = SPECIES_GRENINJA_BATTLE_BOND;
+    ctx.battleMons[0].ability = ABILITY_TORRENT;
+    assert(!BattlerBattleBondBoosts(&ctx, 0, FALSE));
+    ctx.battleMons[0].ability = ABILITY_BATTLE_BOND;
+    ctx.battleMons[0].status2 = STATUS2_TRANSFORM;
+    assert(!BattlerBattleBondBoosts(&ctx, 0, FALSE));
+    return 0;
+}
+"""
+
+
+class BattleBondTests(unittest.TestCase):
+    def test_a_knockout_raises_three_stats_once_a_battle(self):
+        source = OVERLAY.read_text()
+        with tempfile.TemporaryDirectory(prefix="newgold-bond-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(BOND_FIXTURE.replace("@FUNCTIONS@", function(source, "BattlerBattleBondBoosts")))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
+                str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+        hit = function(source, "CheckAbilityEffectOnHit")
+        knockout = hit[hit.index("u8 *bondSpent = &ctx->onceOnlyEntryAbilityDone["):]
+        self.assertLess(knockout.index("BattlerBattleBondBoosts(ctx, ctx->battlerIdAttacker, *bondSpent) == TRUE"),
+                        knockout.index("*bondSpent = TRUE;"))
+        self.assertIn("*script = BATTLE_SUBSCRIPT_BATTLE_BOND;", knockout)
+        script = subscript("BattleBond")
+        for stat in ("ATTACK", "SP_ATTACK", "SPEED"):
+            self.assertIn(f"MOVE_SUBSCRIPT_PTR_{stat}_UP_1_STAGE\n    Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE", script)
+
+
 if __name__ == "__main__":
     unittest.main()

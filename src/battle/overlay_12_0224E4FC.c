@@ -5864,6 +5864,23 @@ u16 Battler_BrokenFaceForm(BattleContext *ctx, int battlerIdAttacker, int battle
     return SPECIES_NONE;
 }
 
+// Battle Bond (Pokemon Central, Morfosintonia), as the ninth generation has it:
+// the first time in a battle that a Greninja in its Battle Bond form knocks a
+// Pokemon out with a move, ally or not, its Attack, Sp. Atk and Speed rise a
+// stage each, unless all three are at +6 already, in which case the chance is
+// kept for later. It no longer turns the Greninja into Ash-Greninja. That is
+// hg-engine's too (ServerDoPostMoveEffects.c:1713, BATTLE_BOND_GENERATION at
+// GEN_LATEST), keyed on the Battle Bond form and remembered per party slot; a
+// Pokemon that has the ability through Transform is left out, as the later
+// games leave it.
+static BOOL BattlerBattleBondBoosts(BattleContext *ctx, int battlerId, BOOL spent) {
+    return !spent && GetBattlerAbility(ctx, battlerId) == ABILITY_BATTLE_BOND
+        && ctx->battleMons[battlerId].species == SPECIES_GRENINJA_BATTLE_BOND
+        && !(ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)
+        && (ctx->battleMons[battlerId].statChanges[STAT_ATK] < 12 || ctx->battleMons[battlerId].statChanges[STAT_SPATK] < 12
+            || ctx->battleMons[battlerId].statChanges[STAT_SPEED] < 12);
+}
+
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     BOOL ret = FALSE;
     u16 form;
@@ -6273,6 +6290,15 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
     // fallen one's. Aftermath reads the same pair to know the target is down.
     if (ctx->battlerIdTarget == ctx->battlerIdFainted && ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].battlerIdPhysicalAttacker == ctx->battlerIdAttacker || ctx->selfTurnData[ctx->battlerIdTarget].battlerIdSpecialAttacker == ctx->battlerIdAttacker)) {
         int stat = -1;
+        u8 *bondSpent = &ctx->onceOnlyEntryAbilityDone[BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker)][ctx->selectedMonIndex[ctx->battlerIdAttacker]];
+
+        if (BattlerBattleBondBoosts(ctx, ctx->battlerIdAttacker, *bondSpent) == TRUE) {
+            *bondSpent = TRUE;
+            ctx->battlerIdStatChange = ctx->battlerIdAttacker;
+            ctx->battlerIdTemp = ctx->battlerIdAttacker;
+            *script = BATTLE_SUBSCRIPT_BATTLE_BOND;
+            return TRUE;
+        }
 
         switch (GetBattlerAbility(ctx, ctx->battlerIdAttacker)) {
         case ABILITY_MOXIE:
