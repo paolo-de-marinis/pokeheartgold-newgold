@@ -4051,8 +4051,9 @@ static void ov12_0224D23C(BattleSystem *battleSystem, BattleContext *ctx) {
 // d0380a487; Pokemon Central, Sincrodanza): when a Pokemon's dance move is
 // over, every other Pokemon with the ability dances it too, in speed order,
 // as a move of its own that takes no PP and does not count as the move it
-// last used. It does not when the dance missed or did nothing to its target,
-// or was snatched or reflected -- the reference copies whatever happened --
+// last used. It does not when the dance missed, did nothing to its target or
+// changed no stat, or was snatched or reflected -- the reference copies
+// whatever happened --
 // nor from a copy, nor while
 // the dancer is in the air or underground, fainted, or locked into another
 // move by a Choice item, an Encore or a rampage. What stops any move still
@@ -4091,6 +4092,19 @@ static int Dancer_Target(BattleSystem *battleSystem, BattleContext *ctx, int bat
     return ov12_022506D4(battleSystem, ctx, battlerId, ctx->danceMove, 1, 0);
 }
 
+// A dance that changed nothing failed, and Dancer does not copy it (Pokemon
+// Central, Sincrodanza: "la mossa non avrebbe effetto sull'utilizzatore",
+// Swords Dance at the top). The dances that raise several stats say so with
+// MOVE_STATUS_NO_MORE_WORK when every one is at the top; Swords Dance and
+// Feather Dance change one stat, and the change's own failure flag is left
+// from it.
+static BOOL Dance_ChangedNothing(BattleContext *ctx) {
+    int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
+
+    return (ctx->moveStatusFlag & MOVE_STATUS_NO_MORE_WORK)
+        || ((effect == MOVE_EFFECT_ATK_UP_2 || effect == MOVE_EFFECT_ATK_DOWN_2) && (ctx->battleStatus & BATTLE_STATUS_FAIL_STAT_STAGE_CHANGE));
+}
+
 static BOOL TryDancer(BattleSystem *battleSystem, BattleContext *ctx) {
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
     int i, battlerId;
@@ -4100,7 +4114,8 @@ static BOOL TryDancer(BattleSystem *battleSystem, BattleContext *ctx) {
     } else if ((ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED)
         && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)
         && !(ctx->battleStatus & BATTLE_STATUS_NO_MOVE_SET)
-        && BattleMoveIsDance(ctx->moveNoCur)) {
+        && BattleMoveIsDance(ctx->moveNoCur)
+        && !Dance_ChangedNothing(ctx)) {
         ctx->danceMove = ctx->moveNoCur;
         ctx->danceUser = ctx->battlerIdAttacker;
         ctx->danceTarget = ctx->battlerIdTarget;

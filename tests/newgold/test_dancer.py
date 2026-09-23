@@ -31,8 +31,9 @@ enum { FALSE = 0, TRUE = 1 };
 #include "constants/abilities.h"
 #include "constants/battle.h"
 #include "constants/moves.h"
+#include "constants/move_effects.h"
 typedef struct { int doubles; } BattleSystem;
-typedef struct { u8 range; } MoveTbl;
+typedef struct { u16 effect; u8 range; } MoveTbl;
 typedef struct {
     int hp, ability;
     u32 status2, moveEffectFlags;
@@ -54,6 +55,7 @@ static MoveTbl sMove;
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) {
     (void)ctx;
     sMove.range = moveNo == MOVE_SWORDS_DANCE ? RANGE_USER : moveNo == MOVE_TEETER_DANCE ? RANGE_ALL_ADJACENT : RANGE_SINGLE_TARGET;
+    sMove.effect = moveNo == MOVE_SWORDS_DANCE ? MOVE_EFFECT_ATK_UP_2 : moveNo == MOVE_FEATHER_DANCE ? MOVE_EFFECT_ATK_DOWN_2 : 0;
     return &sMove;
 }
 static BOOL BattleMoveIsDance(u32 moveNo) {
@@ -126,6 +128,25 @@ int main(void) {
     assert(next(&target) == -1);
     danced(0, MOVE_SWORDS_DANCE, 0);
     assert(next(&target) == -1);
+    // A dance that changed nothing: Swords Dance at +6, Feather Dance at -6
+    // (the change's failure flag), a several-stat dance with all at the top.
+    setup(0);
+    ctx.battleMons[0].ability = ABILITY_DANCER;
+    danced(1, MOVE_SWORDS_DANCE, 1);
+    ctx.battleStatus = BATTLE_STATUS_FAIL_STAT_STAGE_CHANGE;
+    assert(next(&target) == -1);
+    danced(1, MOVE_FEATHER_DANCE, 0);
+    ctx.battleStatus = BATTLE_STATUS_FAIL_STAT_STAGE_CHANGE;
+    assert(next(&target) == -1);
+    danced(1, MOVE_FIERY_DANCE, 0);
+    ctx.battleStatus = BATTLE_STATUS_FAIL_STAT_STAGE_CHANGE;
+    assert(next(&target) == 0);
+    setup(0);
+    ctx.battleMons[0].ability = ABILITY_DANCER;
+    danced(1, MOVE_TEETER_DANCE, 0);
+    ctx.moveStatusFlag = MOVE_STATUS_NO_MORE_WORK;
+    assert(next(&target) == -1);
+    ctx.moveStatusFlag = 0;
     // Snatched or bounced back: the battle status says it was not the move set.
     danced(1, MOVE_FEATHER_DANCE, 0);
     ctx.battleStatus = BATTLE_STATUS_NO_MOVE_SET;
@@ -192,7 +213,8 @@ def table(name):
 class DancerTests(unittest.TestCase):
     def test_who_dances_and_at_whom(self):
         source = CONTROLLER.read_text()
-        functions = "\n".join(function(source, name) for name in ("Battler_CanDance", "Dancer_Target", "TryDancer"))
+        functions = "\n".join(function(source, name) for name in (
+            "Battler_CanDance", "Dancer_Target", "Dance_ChangedNothing", "TryDancer"))
         with tempfile.TemporaryDirectory(prefix="newgold-dancer-") as directory:
             path = Path(directory)
             (path / "test.c").write_text(FIXTURE.replace("@FUNCTIONS@", functions))
