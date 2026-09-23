@@ -326,6 +326,9 @@ TARGETS_FIXED = {"CONVERSION_2": "RANGE_SINGLE_TARGET"}
 IMPLEMENTED_HERE = {
     "FLORAL_HEALING": "MOVE_EFFECT_HEAL_TARGET",
     "TERA_BLAST": "MOVE_EFFECT_HIT",
+    # Confide lowers the target's Sp. Atk a stage, through Protect and, being a
+    # sound move, a substitute: retail's effect 21 (Pokemon Central, Confidenza).
+    "CONFIDE": "MOVE_EFFECT_SP_ATK_DOWN",
 }
 
 # The effects written here for those moves follow the reference's in

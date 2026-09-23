@@ -52,5 +52,12 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertImplemented("TERA_BLAST", "MOVE_EFFECT_HIT")
 
 
+    def test_confide_lowers_sp_atk_through_protect(self):
+        # Pokemon Central (Confidenza): one stage, past Protect -- its record
+        # has no protect bit -- and past a substitute, as a sound move.
+        self.assertImplemented("CONFIDE", "MOVE_EFFECT_SP_ATK_DOWN")
+        self.assertIn("MOVE_SUBSCRIPT_PTR_SP_ATTACK_DOWN_1_STAGE", effect_script("MOVE_EFFECT_SP_ATK_DOWN"))
+        self.assertFalse(record("CONFIDE")[9] & 1 << 1)
+
 if __name__ == "__main__":
     unittest.main()
