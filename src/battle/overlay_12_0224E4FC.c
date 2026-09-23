@@ -4797,6 +4797,22 @@ static int EmbodyAspectStat(u16 ability) {
     return STAT_HP;
 }
 
+// Tera Shift (Pokemon Central, Teramorfosi): a Terapagos coming in takes its
+// Terastal Form, whose ability is Tera Shell, before anything else on the way
+// in speaks, and nothing suppresses it, so the ability is read off the
+// battler. It keeps the form when it is switched out or faints, and goes back
+// at the end of the battle (sFormReversion), so this happens once. hg-engine
+// (d0380a487, SwitchInAbilityCheck.c:107) names the ability there and does
+// nothing with it. Not for a Pokemon Transformed into one, which keeps the
+// form it copied.
+static u16 Battler_TeraShiftForm(BattleContext *ctx, int battlerId) {
+    if (ctx->battleMons[battlerId].species == SPECIES_TERAPAGOS && ctx->battleMons[battlerId].ability == ABILITY_TERA_SHIFT
+        && ctx->battleMons[battlerId].hp && !(ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+        return SPECIES_TERAPAGOS_TERASTAL;
+    }
+    return SPECIES_NONE;
+}
+
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int j;
@@ -4810,7 +4826,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
 
     do {
         switch (ctx->sendOutState) {
-        case 0: // Neutralizing Gas, and then the field weather
+        case 0: // Neutralizing Gas, Tera Shift, and then the field weather
             // The gas goes before every other entry ability, as it does in the
             // later games, and says when it has gone as well as when it came:
             // once it has, the abilities it held back find their flags unset
@@ -4836,6 +4852,27 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                     ctx->neutralizingGasOut = TRUE;
                     ctx->battlerIdTemp = battlerId;
                     script = BATTLE_SUBSCRIPT_NEUTRALIZING_GAS;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (flag == TRUE) {
+                break;
+            }
+            // Tera Shift, in the reference's own step beside the gas. The
+            // Terastal Form's HP is higher, and so is the Pokemon's, by as
+            // much, as Power Construct's Complete Forme has it.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                j = Battler_TeraShiftForm(ctx, battlerId);
+                if (j != SPECIES_NONE) {
+                    u32 maxHp = ctx->battleMons[battlerId].maxHp;
+
+                    BattleSystem_ChangeBattlerForm(battleSystem, ctx, battlerId, j, TRUE);
+                    ctx->battleMons[battlerId].maxHp = GetMonData(BattleSystem_GetPartyMon(battleSystem, battlerId, ctx->selectedMonIndex[battlerId]), MON_DATA_MAX_HP, NULL);
+                    ctx->hpCalc = ctx->battleMons[battlerId].maxHp - maxHp;
+                    ctx->battlerIdTemp = battlerId;
+                    script = BATTLE_SUBSCRIPT_TERA_SHIFT;
                     flag = TRUE;
                     break;
                 }

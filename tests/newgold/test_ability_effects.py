@@ -171,6 +171,7 @@ IMPLEMENTED = {
     "TABLETS_OF_RUIN",
     "TANGLING_HAIR",
     "TELEPATHY",
+    "TERA_SHIFT",
     "TERAVOLT",
     "THERMAL_EXCHANGE",
     "TOUGH_CLAWS",
@@ -222,7 +223,7 @@ PENDING = {
     "DELTA_STREAM", "DESOLATE_LAND", "GUARD_DOG", "MEGA_SOL", "MIMICRY",
     "OPPORTUNIST", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN", "STAKEOUT",
     "SUPREME_OVERLORD", "SYMBIOSIS", "TERAFORM_ZERO", "TERA_SHELL",
-    "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR"
+    "TOXIC_CHAIN", "VICTORY_STAR"
 }
 
 # Numbers the engine keeps free rather than abilities. TEMP4 (317) sits
@@ -290,7 +291,7 @@ class AbilityEffectTests(unittest.TestCase):
 
     # Pending abilities the C names only in the list of what Neutralizing Gas
     # cannot touch -- a fact about them, not an effect of theirs.
-    NAMED_IN_THE_GAS_LIST_ONLY = {"BATTLE_BOND", "SHIELDS_DOWN", "TERA_SHIFT"}
+    NAMED_IN_THE_GAS_LIST_ONLY = {"BATTLE_BOND", "SHIELDS_DOWN"}
 
     def test_a_pending_ability_is_not_quietly_half_wired(self):
         source = written_in_c()
@@ -314,7 +315,8 @@ class AbilityEffectTests(unittest.TestCase):
     # Illusion.
     # 32 -> 31: TEMP4 is a reserved slot, not an ability; see NOT_AN_ABILITY.
     # Embody Aspect's four done.
-    STILL_TO_DO = 22
+    # Embody Aspect's four done. Tera Shift done.
+    STILL_TO_DO = 21
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

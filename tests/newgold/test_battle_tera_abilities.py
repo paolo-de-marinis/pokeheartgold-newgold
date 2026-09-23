@@ -15,6 +15,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from test_battle_form_changes import run as run_with_battlers
 from test_level_cap import ROOT
 from test_repels import function
 
@@ -70,6 +71,33 @@ class EmbodyAspectTests(unittest.TestCase):
         self.assertIn("ctx->battleMons[battlerId].statChanges[j] >= 12", state)
         self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;", state)
         self.assertIn("script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;", state)
+
+
+class TeraShiftTests(unittest.TestCase):
+    def test_a_terapagos_takes_its_terastal_form(self):
+        """Only a Terapagos that has the ability and has not Transformed, and
+        only from its Normal Form."""
+        print(run_with_battlers(["Battler_TeraShiftForm"], r"""
+    set(SPECIES_TERAPAGOS, ABILITY_TERA_SHIFT, 100, 100);
+    assert(Battler_TeraShiftForm(&ctx, 0) == SPECIES_TERAPAGOS_TERASTAL);
+    set(SPECIES_TERAPAGOS_TERASTAL, ABILITY_TERA_SHELL, 100, 100);
+    assert(Battler_TeraShiftForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_TERAPAGOS, ABILITY_NONE, 100, 100);
+    assert(Battler_TeraShiftForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_TERAPAGOS, ABILITY_TERA_SHIFT, 100, 100);
+    ctx.battleMons[0].status2 = STATUS2_TRANSFORM;
+    assert(Battler_TeraShiftForm(&ctx, 0) == SPECIES_NONE);
+    puts("PASS: Tera Shift turns a Terapagos Terastal on the way in.");""", "newgold-terashift-"))
+
+    def test_it_comes_first_with_its_hp(self):
+        body = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        first = body[body.index("case 0:"):body.index("case 1:")]
+        self.assertIn("j = Battler_TeraShiftForm(ctx, battlerId);", first)
+        self.assertLess(first.index("Battler_TeraShiftForm"), first.index("weatherCheckFlag"))
+        self.assertIn("ctx->hpCalc = ctx->battleMons[battlerId].maxHp - maxHp;", first)
+        self.assertIn("script = BATTLE_SUBSCRIPT_TERA_SHIFT;", first)
+        script = (ROOT / "files/battledata/script/subscript/subscript_0413_TeraShift.s").read_text()
+        self.assertLess(script.index("Call BATTLE_SUBSCRIPT_FORM_CHANGE"), script.index("Call BATTLE_SUBSCRIPT_UPDATE_HP"))
 
 
 if __name__ == "__main__":
