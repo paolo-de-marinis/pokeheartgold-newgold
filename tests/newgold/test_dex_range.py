@@ -79,6 +79,30 @@ int main(void) {
 '''
 
 
+COMPLETE = r'''
+#include <assert.h>
+#include <stdint.h>
+#include "constants/species.h"
+typedef uint16_t u16;
+typedef int BOOL;
+typedef struct Pokedex Pokedex;
+#define NELEMS(a) (sizeof(a) / sizeof((a)[0]))
+
+static u16 owned;
+static u16 Pokedex_CountNationalOwned_ExcludeMythical(Pokedex *pokedex) { (void)pokedex; return owned; }
+@TABLE@
+@NATIVE@
+
+int main(void) {
+    // Oak calls it complete above @TOP@; so must everything else.
+    owned = @TOP@;
+    assert(!Pokedex_NationalDexIsComplete(0));
+    owned = @TOP@ + 1;
+    assert(Pokedex_NationalDexIsComplete(0));
+    return 0;
+}
+'''
+
 class DexRangeTests(unittest.TestCase):
     def test_new_species_do_not_reset_the_game(self):
         native = function((ROOT / "src/pokedex.c").read_text(), "DexSpeciesIsInvalid")
@@ -100,13 +124,25 @@ class DexRangeTests(unittest.TestCase):
         self.assertIn("#define LAST_DEX_SPECIES   SPECIES_PECHARUNT", header)
         self.assertEqual(re.search(r"#define SPECIES_ARCEUS\s+(\d+)", header).group(1), "493")
 
-    def test_completing_the_dex_does_not_ask_for_the_gap(self):
-        """The fourteen without an entry can never be caught, so a target that
-        counted them would put completion out of reach."""
+    def test_the_dex_is_complete_where_oak_says_it_is(self):
+        """Retail's 484, as the engine keeps it. Oak's rating, the diploma, the
+        trainer card's star and Oak's phone flag must agree on the number."""
         source = (ROOT / "src/pokedex.c").read_text()
-        line = next(l for l in source.splitlines() if "Pokedex_NationalDexIsComplete" in source and "NUM_DEX_GAP" in l)
-        self.assertIn("NATIONAL_DEX_COUNT - NUM_DEX_GAP", line)
-
+        table = source[source.index("static const u16 sNationalMythicals[]"):]
+        table = table[:table.index("};") + 2]
+        rating = (ROOT / "asm/unk_0205BB1C.s").read_text()
+        rating = rating[rating.index("thumb_func_start GetOakNationalDexRating"):rating.index("thumb_func_end GetOakNationalDexRating")]
+        base = int(re.search(r"mov r3, #(0x[0-9a-f]+)\n\tlsl r3, r3, #2", rating).group(1), 16) << 2
+        top = base + int(re.search(r"add r3, #(0x[0-9a-f]+)\n\tcmp r0, r3\n\tbhi", rating).group(1), 16)
+        program = COMPLETE.replace("@TABLE@", table).replace("@NATIVE@", function(source, "Pokedex_NationalDexIsComplete")).replace("@TOP@", str(top))
+        with tempfile.TemporaryDirectory(prefix="newgold-dex-complete-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            c.write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + ["-std=c11", "-O1", "-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer", "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(exe)], capture_output=True, text=True, env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(top, 483)
 
 if __name__ == "__main__":
     unittest.main()

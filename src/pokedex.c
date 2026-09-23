@@ -1011,8 +1011,10 @@ u16 Pokedex_CountJohtoDexSeen(Pokedex *pokedex) {
     return n;
 }
 
+// Retail's 484, which the engine keeps while counting past Arceus: the same
+// number at which Oak's rating (GetOakNationalDexRating) calls the Dex done.
 BOOL Pokedex_NationalDexIsComplete(Pokedex *pokedex) {
-    return Pokedex_CountNationalOwned_ExcludeMythical(pokedex) >= (NATIONAL_DEX_COUNT - NUM_DEX_GAP - NELEMS(sNationalMythicals));
+    return Pokedex_CountNationalOwned_ExcludeMythical(pokedex) >= (MAX_SPECIES - NELEMS(sNationalMythicals));
 }
 
 BOOL Pokedex_JohtoDexIsComplete(Pokedex *pokedex) {
