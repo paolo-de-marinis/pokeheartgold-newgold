@@ -392,6 +392,9 @@ IMPLEMENTED_HERE = {
     # Raggio d'Acciaio, Sbalorditesta): effect script 420.
     "STEEL_BEAM": "MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP",
     "MIND_BLOWN": "MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP",
+    # Last Respects is 50 more for each faint in the user's party (Pokemon
+    # Central, Omaggio ai KO): CalcMoveDamage counts them.
+    "LAST_RESPECTS": "MOVE_EFFECT_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

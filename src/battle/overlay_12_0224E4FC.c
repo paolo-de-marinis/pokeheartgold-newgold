@@ -10187,6 +10187,16 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower *= 2;
     }
 
+    // Last Respects is 50 more for each time a Pokemon of the user's own party
+    // has fainted in this battle, a revived one again each time, to 5050 after
+    // a hundred; a multi battle partner's do not count (Pokemon Central,
+    // Omaggio ai KO).
+    if (moveNo == MOVE_LAST_RESPECTS) {
+        int fallen = BattlerPartyFaintCount(battleSystem, ctx, battlerIdAttacker);
+
+        movePower = movePower * (1 + (fallen > 100 ? 100 : fallen));
+    }
+
     // Fusion Flare doubles when the last move anyone used this turn was
     // Fusion Bolt, and Fusion Bolt when it was Fusion Flare (Pokemon Central,
     // Incrofiamma, Incrotuono). The move being used is the last by now, so

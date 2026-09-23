@@ -324,5 +324,12 @@ class ImplementedMoveTests(unittest.TestCase):
         # Before Emergency Exit and Wimp Out are asked.
         self.assertLess(body.index("SELF_TURN_FLAG_LOSE_HALF_MAX_HP"), body.index("TryRetreatAbility(battleSystem, ctx, &script)"))
 
+    def test_last_respects_counts_the_party_s_fallen(self):
+        # Pokemon Central (Omaggio ai KO): the power is test_move_power's
+        # LastRespectsTests; the count is the user's own party's.
+        self.assertImplemented("LAST_RESPECTS", "MOVE_EFFECT_HIT")
+        calc = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CalcMoveDamage")
+        self.assertIn("int fallen = BattlerPartyFaintCount(battleSystem, ctx, battlerIdAttacker);", calc)
+
 if __name__ == "__main__":
     unittest.main()

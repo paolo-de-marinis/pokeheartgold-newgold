@@ -130,6 +130,24 @@ class WonderRoomTests(unittest.TestCase):
 """))
 
 
+class LastRespectsTests(unittest.TestCase):
+    def test_it_grows_50_for_each_faint_in_the_party(self):
+        """50 times one more than the faints in the user's party, 5050 at
+        most: 50, 100, 300 are 24, 46, 134 and 5050 is 2224 (Pokemon Central,
+        Omaggio ai KO). BattlerPartyFaintCount is stubbed to the user's own
+        count; the party walk is the Supreme Overlord's."""
+        run_c(self, damage_program(r"""
+#define RESPECTS(move) CalcMoveDamage(&bs, &ctx, move, 0, 0, 0, TYPE_GHOST, 0, 1, 1)
+    reset(4); S.move.power = 50;
+    EXPECT(RESPECTS(MOVE_LAST_RESPECTS), 24);
+    ctx.totalTimesFainted[0] = 1; EXPECT(RESPECTS(MOVE_LAST_RESPECTS), 46);
+    ctx.totalTimesFainted[0] = 5; EXPECT(RESPECTS(MOVE_LAST_RESPECTS), 134);
+    ctx.totalTimesFainted[0] = 100; EXPECT(RESPECTS(MOVE_LAST_RESPECTS), 2224);
+    ctx.totalTimesFainted[0] = 150; EXPECT(RESPECTS(MOVE_LAST_RESPECTS), 2224);
+    EXPECT(RESPECTS(MOVE_SHADOW_CLAW), 24);
+"""))
+
+
 if __name__ == "__main__":
     unittest.main()
 
