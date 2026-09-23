@@ -13,5 +13,6 @@ BOOL sub_0202FC48(void);
 void sub_02030260(int battlerId, u32 a1, u8 data);
 u8 sub_0203027C(int battlerId, u32 a1);
 BOOL sub_0203018C(SaveData *save, u8 *video);
+u64 sub_0203088C(u8 *header, int field, int idx);
 
 #endif // POKEHEARTGOLD_UNK_0202FBCC_H
