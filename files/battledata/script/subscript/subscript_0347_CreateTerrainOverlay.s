@@ -27,7 +27,7 @@ _skipAbilityPopup:
 _HadronEngineTerrain:
     Wait
     // {0} turned the ground into Electric Terrain, energizing its futuristic engine!
-    PrintMessage msg_0197_01292, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP
+    PrintMessage msg_0197_01701, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP
     Wait
     WaitButtonABTime 30
     GoTo _ActivateParadoxTerrainAbility
@@ -35,19 +35,19 @@ _HadronEngineTerrain:
 _019:
     Wait
     // Grass grew to cover the battlefield!
-    PrintMessage msg_0197_01284, TAG_NONE
+    PrintMessage msg_0197_01388, TAG_NONE
     GoTo _ResetParadoxTerrainAbility
 
 _024:
     Wait
     // Mist swirled about the battlefield!
-    PrintMessage msg_0197_01286, TAG_NONE
+    PrintMessage msg_0197_01390, TAG_NONE
     GoTo _ResetParadoxTerrainAbility
 
 _029:
     Wait
     // An electric current ran across the battlefield!
-    PrintMessage msg_0197_01288, TAG_NONE
+    PrintMessage msg_0197_01392, TAG_NONE
     Wait
     WaitButtonABTime 30
     GoTo _ActivateParadoxTerrainAbility
@@ -55,7 +55,7 @@ _029:
 _034:
     Wait
     // The battlefield got weird!
-    PrintMessage msg_0197_01290, TAG_NONE
+    PrintMessage msg_0197_01394, TAG_NONE
 
 // TODO: something weird is happening after using Terrain move rather than Surge ability
 

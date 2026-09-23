@@ -7,7 +7,7 @@
 // and nothing else.
 _000:
     // {0} floats in the air with its {1}!
-    PrintMessage msg_0197_01353, TAG_NICKNAME_ITEM, BATTLER_CATEGORY_MSG_TEMP, BATTLER_CATEGORY_MSG_TEMP
+    PrintMessage msg_0197_01370, TAG_NICKNAME_ITEM, BATTLER_CATEGORY_MSG_TEMP, BATTLER_CATEGORY_MSG_TEMP
     Wait
     WaitButtonABTime 30
     End

@@ -5,8 +5,8 @@
 _000:
     PlayBattleAnimation BATTLER_CATEGORY_PLAYER, BATTLE_ANIMATION_WEATHER_RAIN
     Wait 
-    // {0}’s {1} made it rain!
-    PrintMessage msg_0197_00619, TAG_NICKNAME_ABILITY, BATTLER_CATEGORY_MSG_TEMP, BATTLER_CATEGORY_MSG_BATTLER_TEMP
+    // It started to rain!
+    PrintMessage msg_0197_00619, TAG_NONE
     Wait 
     WaitButtonABTime 30
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_WEATHER

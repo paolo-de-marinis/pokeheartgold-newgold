@@ -6,7 +6,7 @@
 // so the line names neither Pokemon nor side.
 _000:
     // All screens on the field were cleansed!
-    PrintMessage msg_0197_01281, TAG_NONE
+    PrintMessage msg_0197_01783, TAG_NONE
     Wait
     WaitButtonABTime 30
     End

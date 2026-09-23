@@ -68,7 +68,7 @@ _clearSpikes:
     CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_CLEAR, SIDE_COND_SPIKES_LAYERS, _clearPlayerSpikes
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_TARGET, SIDE_CONDITION_SPIKES
     // The spikes disappeared from around the opposing team!
-    PrintMessage msg_0197_01329, TAG_NONE
+    PrintMessage msg_0197_01553, TAG_NONE
     Wait
     WaitButtonABTime 30
 
@@ -77,7 +77,7 @@ _clearPlayerSpikes:
     CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_CLEAR, SIDE_COND_SPIKES_LAYERS, _clearToxicSpikes
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_ATTACKER, SIDE_CONDITION_SPIKES
     // The spikes disappeared from around your team!
-    PrintMessage msg_0197_01330, TAG_NONE
+    PrintMessage msg_0197_01552, TAG_NONE
     Wait
     WaitButtonABTime 30
 
@@ -103,7 +103,7 @@ _clearStealthRock:
     CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_BATTLER_TARGET, SIDE_CONDITION_STEALTH_ROCKS, _clearPlayerStealthRock
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLER_TARGET, SIDE_CONDITION_STEALTH_ROCKS
     // The pointed stones disappeared from the ground around the opposing team!
-    PrintMessage msg_0197_01331, TAG_NONE
+    PrintMessage msg_0197_01551, TAG_NONE
     Wait
     WaitButtonABTime 30
 
@@ -111,7 +111,7 @@ _clearPlayerStealthRock:
     CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_BATTLER_ATTACKER, SIDE_CONDITION_STEALTH_ROCKS, _clearStickyWeb
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLER_ATTACKER, SIDE_CONDITION_STEALTH_ROCKS
     // The pointed stones disappeared from the ground around your team!
-    PrintMessage msg_0197_01332, TAG_NONE
+    PrintMessage msg_0197_01550, TAG_NONE
     Wait
     WaitButtonABTime 30
 
@@ -119,7 +119,7 @@ _clearStickyWeb:
     CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_BATTLER_TARGET, SIDE_CONDITION_STICKY_WEB, _clearPlayerStickyWeb
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLER_TARGET, SIDE_CONDITION_STICKY_WEB
     // The sticky web has disappeared from the ground around the opposing team!
-    PrintMessage msg_0197_01333, TAG_NONE
+    PrintMessage msg_0197_01555, TAG_NONE
     Wait
     WaitButtonABTime 30
 
@@ -127,13 +127,13 @@ _clearPlayerStickyWeb:
     CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_BATTLER_ATTACKER, SIDE_CONDITION_STICKY_WEB, _boosts
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLER_ATTACKER, SIDE_CONDITION_STICKY_WEB
     // The sticky web has disappeared from the ground around you!
-    PrintMessage msg_0197_01334, TAG_NONE
+    PrintMessage msg_0197_01554, TAG_NONE
     Wait
     WaitButtonABTime 30
 
 _boosts:
     // Tidying up complete!
-    PrintMessage msg_0197_01335, TAG_NONE
+    PrintMessage msg_0197_01549, TAG_NONE
     Wait
     WaitButtonABTime 30
     CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_STAT_CHANGE_ATK, 12, _011

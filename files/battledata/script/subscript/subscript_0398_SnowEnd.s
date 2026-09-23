@@ -9,7 +9,7 @@
 _000:
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SNOW_TEMP
     // The snow stopped.
-    PrintMessage msg_0197_01370, TAG_NONE
+    PrintMessage msg_0197_01440, TAG_NONE
     Wait
     WaitButtonABTime 30
     End

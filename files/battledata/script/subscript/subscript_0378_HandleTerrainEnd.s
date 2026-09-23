@@ -19,26 +19,26 @@ _000:
 _GrassyTerrain:
     UpdateTerrainOverlay TRUE, _End
     // The grass disappeared from the battlefield.
-    PrintMessage msg_0197_01285, TAG_NONE
+    PrintMessage msg_0197_01389, TAG_NONE
     GoTo _AfterMessage
 
 _MistyTerrain:
     UpdateTerrainOverlay TRUE, _End
     // The mist disappeared from the battlefield.
-    PrintMessage msg_0197_01287, TAG_NONE
+    PrintMessage msg_0197_01391, TAG_NONE
     GoTo _AfterMessage
 
 _ElectricTerrain:
     UpdateTerrainOverlay TRUE, _End
     // The electricity disappeared from the battlefield.
-    PrintMessage msg_0197_01289, TAG_NONE
+    PrintMessage msg_0197_01393, TAG_NONE
     ResetParadoxAbility ABILITY_QUARK_DRIVE
     GoTo _AfterMessage
 
 _PsychicTerrain:
     UpdateTerrainOverlay TRUE, _End
     // The weirdness disappeared from the battlefield.
-    PrintMessage msg_0197_01291, TAG_NONE
+    PrintMessage msg_0197_01395, TAG_NONE
 
 _AfterMessage:
     Wait

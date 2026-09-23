@@ -9,7 +9,7 @@ _000:
     DivideVarByValueRoundUp BSCRIPT_VAR_HP_CALC, 4
     Call BATTLE_SUBSCRIPT_UPDATE_HP
     // {0} had its HP restored.
-    PrintMessage msg_0197_01381, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP
+    PrintMessage msg_0197_01396, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP
     Wait
     WaitButtonABTime 30
 

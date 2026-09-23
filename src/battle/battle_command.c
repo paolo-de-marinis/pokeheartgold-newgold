@@ -2210,12 +2210,12 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                     // Cutter, because that is where the reference puts it, and
                     // it refuses every stat rather than one of them. Mold
                     // Breaker has nothing to say to an item, so it is asked
-                    // raw. The sentence is the abilities' own, with the item
-                    // named in place of the ability -- the reference points at
-                    // the ability row and hands it an item id, which would read
-                    // the item's number out of the ability names.
+                    // raw. The sentence is the abilities' own, row 704, which
+                    // the reference prints for it too (ITEM_PREVENTS_STAT_LOSS):
+                    // the tag buffers the item into slot 1, and a placeholder
+                    // is read by its slot, not by the kind it is written as.
                     // "{0}'s {1} prevents {2} loss!"
-                    ctx->buffMsg.id = msg_0197_01359;
+                    ctx->buffMsg.id = msg_0197_00704;
                     ctx->buffMsg.tag = TAG_NICKNAME_ITEM_STAT;
                     ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
                     ctx->buffMsg.param[1] = GetBattlerHeldItem(ctx, ctx->battlerIdStatChange);
@@ -2284,21 +2284,14 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                 return FALSE;
             }
         }
-        if (ctx->statChangeType == 3) {
-            // "{0}'s {1} cuts {2}'s {3}!"
-            ctx->buffMsg.id = msg_0197_00662;
-            ctx->buffMsg.tag = TAG_NICKNAME_ABILITY_NICKNAME_STAT;
-            ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdAttacker);
-            ctx->buffMsg.param[1] = ctx->battleMons[ctx->battlerIdAttacker].ability;
-            ctx->buffMsg.param[2] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
-            ctx->buffMsg.param[3] = stat + 1;
-        } else {
-            // "{0}'s {1} [harshly] fell!"
-            ctx->buffMsg.id = (change == -1) ? msg_0197_00762 : msg_0197_00765;
-            ctx->buffMsg.tag = TAG_NICKNAME_STAT;
-            ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
-            ctx->buffMsg.param[1] = stat + 1;
-        }
+        // "{0}'s {1} [harshly] fell!" -- an ability's drop too. The reference
+        // names the ability in a popup and says only what fell
+        // (btl_scr_cmd_33_statbuffchange.c), and its rows 662 to 668, retail's
+        // "{0}'s {1} cuts {2}'s {3}!", are "(Unused)".
+        ctx->buffMsg.id = (change == -1) ? msg_0197_00762 : msg_0197_00765;
+        ctx->buffMsg.tag = TAG_NICKNAME_STAT;
+        ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
+        ctx->buffMsg.param[1] = stat + 1;
         // Competitive and Defiant do not answer here, where the drop is only
         // half applied; the mark is set now and read in the pass after the
         // move. One Pokemon has one ability, so the two share the bit.
@@ -4382,8 +4375,9 @@ BOOL BtlCmd_BeatUp(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->damage = ApplyDamageRange(battleSystem, ctx, ctx->damage);
     ctx->damage *= -1;
 
-    // "{0}'s attack!"
-    ctx->buffMsg.id = msg_0197_00481;
+    // "{0}'s attack!" The reference's Beat Up prints no line a hit and marks
+    // retail's 481 to 483 "(Unused)", so the three are this port's rows now.
+    ctx->buffMsg.id = msg_0197_01794;
     ctx->buffMsg.tag = TAG_NICKNAME;
     ctx->buffMsg.param[0] = (ctx->battlerIdAttacker | (ctx->beatUpCount << 8));
 

@@ -20,7 +20,7 @@ _000:
 
 _NothingToBringUp:
     // {0} hasn’t eaten any held Berries, so it can’t possibly belch!
-    PrintMessage msg_0197_01350, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    PrintMessage msg_0197_01790, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
     Wait 
     WaitButtonABTime 30
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_NO_MORE_WORK

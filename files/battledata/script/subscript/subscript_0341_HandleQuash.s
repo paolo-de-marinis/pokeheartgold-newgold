@@ -10,7 +10,7 @@ _000:
     PlayMoveAnimation BATTLER_CATEGORY_ATTACKER
     Wait 
     // {0}’s move was postponed!
-    PrintMessage msg_0197_01393, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
+    PrintMessage msg_0197_01433, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
     Wait 
     WaitButtonABTime 30
     End 

@@ -14,7 +14,7 @@
 
 _000:
     // {0} used the Electric Terrain to energize its futuristic engine!
-    PrintMessage msg_0197_01304, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP
+    PrintMessage msg_0197_01704, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP
     Wait
     WaitButtonABTime 30
     End

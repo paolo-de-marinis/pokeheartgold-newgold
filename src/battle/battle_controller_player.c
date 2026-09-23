@@ -1225,7 +1225,7 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
             // which is where Ice Body feeds on the snow.
             if (ctx->fieldCondition & FIELD_CONDITION_SNOW_ALL) {
                 if (ctx->fieldCondition & FIELD_CONDITION_SNOW_PERMANENT) {
-                    ctx->buffMsg.id = msg_0197_01371; // The snow continues to fall.
+                    ctx->buffMsg.id = msg_0197_01793; // The snow continues to fall.
                     ctx->buffMsg.tag = TAG_NONE;
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_WEATHER_CONTINUES);
                     ctx->commandNext = ctx->command;
@@ -1235,7 +1235,7 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 } else {
-                    ctx->buffMsg.id = msg_0197_01371; // The snow continues to fall.
+                    ctx->buffMsg.id = msg_0197_01793; // The snow continues to fall.
                     ctx->buffMsg.tag = TAG_NONE;
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_WEATHER_CONTINUES);
                     ctx->commandNext = ctx->command;

@@ -12,13 +12,13 @@ _000:
 
 _TWO_ABILITIES:
     // {0} has two Abilities!
-    PrintMessage msg_0197_01280, TAG_NICKNAME, BATTLER_CATEGORY_MSG_BATTLER_TEMP
+    PrintMessage msg_0197_01463, TAG_NICKNAME, BATTLER_CATEGORY_MSG_BATTLER_TEMP
     Wait
     WaitButtonABTime 30
 
 _UNNERVE:
     // {0}’s {1} makes the opposing team too nervous to eat Berries!
-    PrintMessage msg_0197_01279, TAG_NICKNAME_ABILITY, BATTLER_CATEGORY_MSG_BATTLER_TEMP, BATTLER_CATEGORY_MSG_TEMP
+    PrintMessage msg_0197_01282, TAG_NICKNAME_ABILITY, BATTLER_CATEGORY_MSG_BATTLER_TEMP, BATTLER_CATEGORY_MSG_TEMP
     Wait
     WaitButtonABTime 30
     End

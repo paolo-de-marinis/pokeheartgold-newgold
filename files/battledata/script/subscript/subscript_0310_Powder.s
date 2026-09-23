@@ -11,7 +11,7 @@ _000:
     Wait
     SetMoveConditionFlag MOVE_POWDER, BATTLER_CATEGORY_DEFENDER
     // {0} is covered in powder!
-    PrintMessage msg_0197_01378, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
+    PrintMessage msg_0197_01613, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
     Wait 
     WaitButtonABTime 30
     End

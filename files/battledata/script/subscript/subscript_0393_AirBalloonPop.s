@@ -7,7 +7,7 @@
 // nothing can have plucked it.
 _000:
     // {0}’s {1} popped!
-    PrintMessage msg_0197_01356, TAG_NICKNAME_ITEM, BATTLER_CATEGORY_MSG_TEMP, BATTLER_CATEGORY_MSG_TEMP
+    PrintMessage msg_0197_01367, TAG_NICKNAME_ITEM, BATTLER_CATEGORY_MSG_TEMP, BATTLER_CATEGORY_MSG_TEMP
     Wait
     WaitButtonABTime 30
     RemoveItem BATTLER_CATEGORY_MSG_TEMP

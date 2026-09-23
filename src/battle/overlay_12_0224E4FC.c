@@ -2317,26 +2317,26 @@ BOOL ov12_02251A28(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_GORILLA_TACTICS) & MaskOfFlagNo(movePos)) {
         // The Choice line names the item; Gorilla Tactics has none to name.
         msg->tag = TAG_NICKNAME_MOVE;
-        msg->id = msg_0197_01283;
+        msg->id = msg_0197_01457;
         msg->param[0] = CreateNicknameTag(ctx, battlerId);
         msg->param[1] = ctx->moveNoBattlerPrev[battlerId];
         ret = FALSE;
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_BELCH) & MaskOfFlagNo(movePos)) {
         msg->tag = TAG_NICKNAME;
-        msg->id = msg_0197_01350;
+        msg->id = msg_0197_01790;
         msg->param[0] = CreateNicknameTag(ctx, battlerId);
         ret = FALSE;
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_THROAT_CHOP) & MaskOfFlagNo(movePos)) {
         // The effects of Throat Chop prevent {0} from using certain moves!
         msg->tag = TAG_NICKNAME;
-        msg->id = msg_0197_01412;
+        msg->id = msg_0197_01619;
         msg->param[0] = CreateNicknameTag(ctx, battlerId);
         ret = FALSE;
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_ASSAULT_VEST) & MaskOfFlagNo(movePos)) {
         // Ahead of the no-PP line, where the reference has it: a vest refuses
         // the move whether or not there was PP for it.
         msg->tag = TAG_ITEM;
-        msg->id = msg_0197_01362;
+        msg->id = msg_0197_01459;
         msg->param[0] = ctx->battleMons[battlerId].item;
         ret = FALSE;
     } else if (StruggleCheck(battleSystem, ctx, battlerId, 0, STRUGGLE_CHECK_NO_PP) & MaskOfFlagNo(movePos)) {

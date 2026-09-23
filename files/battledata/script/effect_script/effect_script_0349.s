@@ -8,7 +8,7 @@ _000:
     Wait 
     WaitButtonABTime 30
     // {1} is about to be attacked by its {2}!
-    PrintMessage msg_0197_01319, TAG_NICKNAME_ITEM, BATTLER_CATEGORY_DEFENDER, BATTLER_CATEGORY_DEFENDER
+    PrintMessage msg_0197_01542, TAG_NICKNAME_ITEM, BATTLER_CATEGORY_DEFENDER, BATTLER_CATEGORY_DEFENDER
     Wait 
     WaitButtonABTime 30
     CalcCrit 

@@ -9,7 +9,7 @@ _000:
     Wait
     Call BATTLE_SUBSCRIPT_UPDATE_HP
     // When the flame touched the powder on the Pokémon, it exploded!
-    PrintMessage msg_0197_01411, TAG_NONE
+    PrintMessage msg_0197_01612, TAG_NONE
     Wait
     WaitButtonABTime 30
     End
