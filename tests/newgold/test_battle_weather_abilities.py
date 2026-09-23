@@ -278,6 +278,13 @@ class WeatherAbilityTests(unittest.TestCase):
         self.assertIn("CheckItemHoldEffect CHECK_OPCODE_NOT_HAVE, BATTLER_CATEGORY_DEFENDER, HOLD_EFFECT_EXTEND_SANDSTORM", script)
         self.assertIn("GetItemEffectParam BATTLER_CATEGORY_DEFENDER, BSCRIPT_VAR_CALC_TEMP", script)
 
+    def test_sand_spit_puts_out_a_protosynthesis_the_sun_lit(self):
+        # Pokemon Central (Paleosintesi): the boost the sun gave ends with the
+        # sun; Sand Stream's subscript and the reference's
+        # HANDLE_SANDSTORM_TEMPORARY say so, and Sand Spit's sand ends it too.
+        script = subscript("SandSpit")
+        self.assertLess(script.index("FIELD_CONDITION_SANDSTORM\n"), script.index("ResetParadoxAbility ABILITY_PROTOSYNTHESIS"))
+
     def test_snow_warning_and_orichalcum_pulse_leave_the_map_s_weather(self):
         # Pokemon Central (Scendineve, Ritmo d'Oricalco), and the reference's
         # subscripts 252 and 487. Orichalcum Pulse basks in the map's sun.

@@ -24,4 +24,8 @@ _Message:
     PrintMessage msg_0197_00695, TAG_NONE
     Wait 
     WaitButtonABTime 30
+    // The sun is gone, if it was out, and a Protosynthesis it lit goes out
+    // with it, as for Sand Stream and the Sandstorm move.
+    ResetParadoxAbility ABILITY_PROTOSYNTHESIS
+    ActivateParadoxAbility ABILITY_PROTOSYNTHESIS
     End 
