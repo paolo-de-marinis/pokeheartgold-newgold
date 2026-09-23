@@ -5,6 +5,7 @@
 #include "gymmick.h"
 #include "mail_message.h"
 #include "pm_string.h"
+#include "pokemon_types_def.h"
 #include "save.h"
 
 typedef struct APRICORN_TREE {
@@ -37,6 +38,16 @@ typedef struct BerryPot {
 
 #define MAX_BERRY_POT 4
 
+// The Pokemon an item takes out of the party and keeps, as hg-engine's
+// SAVE_MISC_DATA keeps them (ALLOW_SAVE_CHANGES): the Reshiram or Zekrom the
+// DNA Splicers fuse into Kyurem, and three places the reference keeps for the
+// N-Solarizer, the N-Lunarizer and the Reins of Unity.
+#define STORED_MONS_DNA_SPLICERS   0
+#define STORED_MONS_N_SOLARIZER    1
+#define STORED_MONS_N_LUNARIZER    2
+#define STORED_MONS_REINS_OF_UNITY 3
+#define NUM_OF_STORED_MONS         4
+
 typedef struct SAVE_MISC_DATA {
     APRICORN_TREE apricorn_trees[MAX_APRICORN_TREE];
     BerryPot berry_pots[MAX_BERRY_POT];
@@ -58,7 +69,15 @@ typedef struct SAVE_MISC_DATA {
     u32 togepiEggPersonality;
     u8 togepiEggGender;
     u8 dummy_02DD[3];
+    // hg-engine's expansion, past HeartGold's 0x2E0 bytes. A save made before
+    // it has the block that much shorter; Save_LoadDynamicRegion reads it.
+    Pokemon storedMons[NUM_OF_STORED_MONS];
+    u8 isMonStored[NUM_OF_STORED_MONS];
 } SAVE_MISC_DATA;
+
+// HeartGold's misc block, which a save made before the expansion has.
+#define SAVE_MISC_LEGACY_SIZE 0x2E0
+
 
 void Save_BerryPots_Init(BerryPot *berryPot);
 void Save_BerryPotRTC_Init(struct GF_RTC_DateTime *dateTime);

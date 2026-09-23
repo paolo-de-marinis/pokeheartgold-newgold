@@ -22,6 +22,10 @@ void Save_BerryPotRTC_Init(struct GF_RTC_DateTime *dateTime) {
     GF_RTC_CopyDateTime(&dateTime->date, &dateTime->time);
 }
 
+// hg-engine's expansion starts where HeartGold's block ended, so a save made
+// before it is that block with nothing after (Save_LoadLegacySlots).
+typedef char SaveMiscLegacyCheck[offsetof(SAVE_MISC_DATA, storedMons) == SAVE_MISC_LEGACY_SIZE ? 1 : -1];
+
 u32 Save_Misc_sizeof(void) {
     return sizeof(SAVE_MISC_DATA);
 }

@@ -82,7 +82,8 @@ typedef struct SaveData {
     u16 nextBoxToWrite;
     u8 sectorCleanFlag[2];
     u16 lastGoodSector;
-} SaveData; // size=0x2330C
+    BOOL legacyMiscLayout; // the save in the flash has HeartGold's misc block
+} SaveData;
 
 struct SaveSlotCheck {
     BOOL valid;
