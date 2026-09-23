@@ -554,9 +554,10 @@ class Library:
             except (ValueError, SystemExit) as e:
                 raise Refused(str(e))
             data = save.image()
-            if data != path.read_bytes():
+            changed = data != path.read_bytes()
+            if changed:
                 self.write(f, data)
-        return self.detail(f)
+            return {**self.detail(f), "changed": changed}
 
     def undo(self, f, seen=None):
         """The file as it was before the last write made here -- refused if

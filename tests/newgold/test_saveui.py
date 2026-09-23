@@ -276,9 +276,10 @@ class SaveUiTests(unittest.TestCase):
 
     def test_nothing_changed_writes_nothing(self):
         now = self.ok("/api/save?f=gyms/test.sav")["party"][0]
-        self.edit("party_edit", {"slot": 0, "species": now["species"], "level": now["level"],
-                                 "nature": now["nature"], "moves": [m["id"] for m in now["moves"]]})
-        self.assertEqual(self.backups(), [])
+        out = self.edit("party_edit", {"slot": 0, "species": now["species"], "level": now["level"],
+                                       "nature": now["nature"], "moves": [m["id"] for m in now["moves"]]})
+        self.assertEqual((self.backups(), out["changed"]), ([], False))
+        self.assertTrue(self.edit("trainer", {"money": 5})["changed"])
 
     def test_the_party(self):
         before = sv.party_raw(sv.Save(self.save))

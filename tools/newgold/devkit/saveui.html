@@ -665,7 +665,7 @@ async function edit(op, args, ok = "Salvato (backup fatto)", version = S.save.ve
   refusal = null;
   try {
     const out = await api("/api/edit", {f: S.f, op, args, version});
-    toast(ok); showSave(out); loadLibrary();
+    toast(out.changed ? ok : "Nessuna modifica: il file è rimasto com'era"); showSave(out); loadLibrary();
     return out;
   } catch (e) {
     refusal = e;
