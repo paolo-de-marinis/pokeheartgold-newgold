@@ -70,7 +70,22 @@ class FormChangeRoutines(unittest.TestCase):
     def test_the_scene_changes_the_species_it_is_given(self):
         scene = function((ROOT / "src/overlay_94.c").read_text(), "PartyMenu_AnimateIconFormChange")
         self.assertIn("Mon_ChangeFormSpecies(mon, partyMenu->args->species);", scene)
-        self.assertIn("Mon_UpdateRotomForm(mon, partyMenu->args->species, 0);", scene)
+        self.assertIn("Mon_UpdateRotomForm(mon, partyMenu->args->species, partyMenu->args->selectedMoveIdx);", scene)
+
+    def test_a_rotom_with_four_moves_is_asked_which_to_forget(self):
+        """The games ask, as a machine does, and change the form only if a
+        move is forgotten; hg-engine overwrote the first slot."""
+        menu = (ROOT / "src/party_menu.c").read_text()
+        action = function(menu, "PartyMonContextMenuAction_RotomCatalog")
+        self.assertIn("Mon_RotomFormNeedsMoveSlot(", action)
+        self.assertIn("PartyMenu_AskToForgetMove(partyMenu)", action)
+        # Back from the summary screen, the catalog changes the form instead of
+        # teaching the move, and the catalog is not spent as a machine would be.
+        learn = function((ROOT / "src/party_menu_items.c").read_text(), "PartyMenu_Subtask_TMHMLearnMove")
+        catalog = learn[learn.index("ITEM_ROTOM_CATALOG"):learn.index("return PARTY_MENU_STATE_WAIT_TEXT_PRINTER;")]
+        self.assertIn("Rotom_GetFormOfMove(partyMenu->args->moveId)", catalog)
+        self.assertIn("PartyMenu_FormChangeScene_Begin(partyMenu)", catalog)
+        self.assertNotIn("PartyMenu_LearnMoveToSlot", catalog)
 
 
 NATIVE = r"""
@@ -112,6 +127,66 @@ int main(void) {
     return 0;
 }
 """
+
+
+ROTOM_NATIVE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+typedef struct { u16 moves[MAX_MON_MOVES]; } Pokemon;
+static u32 GetMonData(Pokemon *mon, int attr, void *dest) {
+    (void)dest;
+    return mon->moves[attr - MON_DATA_MOVE1];
+}
+
+@NATIVE@
+
+int main(void) {
+    Pokemon full = { { MOVE_THUNDERBOLT, MOVE_THUNDER_WAVE, MOVE_DOUBLE_TEAM, MOVE_SHADOW_BALL } };
+    Pokemon three = { { MOVE_THUNDERBOLT, MOVE_THUNDER_WAVE, MOVE_DOUBLE_TEAM, MOVE_NONE } };
+    Pokemon heat = { { MOVE_THUNDERBOLT, MOVE_OVERHEAT, MOVE_DOUBLE_TEAM, MOVE_SHADOW_BALL } };
+    for (int form = ROTOM_HEAT; form < ROTOM_FORM_MAX; form++) {
+        assert(Mon_RotomFormNeedsMoveSlot(&full, form));
+        assert(!Mon_RotomFormNeedsMoveSlot(&three, form));
+        assert(!Mon_RotomFormNeedsMoveSlot(&heat, form));
+        assert(Rotom_GetFormOfMove(Rotom_GetFormMove(form)) == form);
+    }
+    assert(!Mon_RotomFormNeedsMoveSlot(&full, ROTOM_NORMAL));
+    assert(Rotom_GetFormOfMove(MOVE_THUNDERBOLT) == ROTOM_NORMAL);
+    puts("PASS: a Rotom asks to forget only with four moves and none of a form's.");
+    return 0;
+}
+"""
+
+
+class RotomFormMoves(unittest.TestCase):
+    def test_only_a_full_moveset_without_a_form_move_asks(self):
+        source = (ROOT / "src/pokemon.c").read_text()
+        table = source[source.index("static const u16 sRotomFormMoves"):]
+        table = table[:table.index("};") + 2]
+        functions = [function(source, name) for name in ("Rotom_GetFormMove", "Rotom_GetFormOfMove", "Mon_RotomFormNeedsMoveSlot")]
+        program = ROTOM_NATIVE.replace("@NATIVE@", "\n".join([table] + functions))
+        with tempfile.TemporaryDirectory(prefix="newgold-rotom-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            c.write_text(program)
+            build = subprocess.run(
+                shlex.split(os.environ.get("CC", "cc")) +
+                ["-std=c11", "-O1", "-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
+                 "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)],
+                capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            run = subprocess.run([str(exe)], capture_output=True, text=True,
+                                 env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            print(run.stdout.strip())
 
 
 class FormChangeSpecies(unittest.TestCase):

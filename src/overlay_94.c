@@ -69,9 +69,9 @@ BOOL PartyMenu_AnimateIconFormChange(PartyMenu *partyMenu) {
         case SPECIES_ROTOM:
             // The Rotom Catalog's appliance, a form number, as Shaymin's is.
             // hg-engine changes the form with no particles; the form's move is
-            // swapped by Mon_UpdateRotomForm, into the first slot if all four
-            // are taken, as there.
-            Mon_UpdateRotomForm(mon, partyMenu->args->species, 0);
+            // swapped by Mon_UpdateRotomForm, into the slot the player chose
+            // to forget if all four are taken.
+            Mon_UpdateRotomForm(mon, partyMenu->args->species, partyMenu->args->selectedMoveIdx);
             work->duration = 1;
             work->fileId = NARC_particle_giratina;
             break;

@@ -50,7 +50,8 @@ class InterfaceTextTests(unittest.TestCase):
         free = tm[tm.index("int PartyMenu_HandleUseTMHMonMon("):]
         free = free[free.index("case 3:"):free.index("break;")]
         self.assertIn("msg_0300_00219", free)
-        self.assertEqual(tm.count("msg_0300_00062"), 2)
+        # after a machine's, a level-up's and the Rotom Catalog's forgotten move
+        self.assertEqual(tm.count("msg_0300_00062"), 3)
         script = read("files/fielddata/script/scr_seq/scr_seq_0003.s")
         self.assertIn("BufferItemNameIndef 1, VAR_SPECIAL_x8004\n\tNPCMsg msg_0040_00028", script)
         self.assertRegex(script, r"GoToIfGt _08BB\n\tBufferItemNameIndef 0, VAR_SPECIAL_x8004\n")

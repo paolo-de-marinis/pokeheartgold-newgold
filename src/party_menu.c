@@ -2536,12 +2536,22 @@ static const u8 sRotomCatalogForms[] = {
 };
 
 static void PartyMonContextMenuAction_RotomCatalog(PartyMenu *partyMenu, int *pState) {
-    // The form change scene takes the form from here, as it takes Shaymin's.
+    // The form change scene takes the form from here, as it takes Shaymin's,
+    // and the slot for the form's move from selectedMoveIdx.
     partyMenu->args->species = sRotomCatalogForms[partyMenu->contextMenuButtonAnim.selection];
+    partyMenu->args->selectedMoveIdx = 0;
     PartyMenu_SetTopScreenSelectionPanelVisibility(partyMenu, FALSE);
     ClearFrameAndWindow2(&partyMenu->windows[PARTY_MENU_WINDOW_ID_33], TRUE);
     PartyMenu_DeleteContextMenuAndList(partyMenu);
     PartyMenu_DisableMainScreenBlend_AfterYesNo();
+    // With four moves and none of another form's to replace, the games ask
+    // which move to forget, as a machine does, and the form changes only if
+    // one is; hg-engine overwrote the first.
+    if (Mon_RotomFormNeedsMoveSlot(Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex), partyMenu->args->species)) {
+        partyMenu->args->moveId = Rotom_GetFormMove(partyMenu->args->species);
+        *pState = PartyMenu_AskToForgetMove(partyMenu);
+        return;
+    }
     thunk_Sprite_SetPaletteOverride(partyMenu->sprites[PARTY_MENU_SPRITE_ID_CURSOR], 0);
     PartyMenu_FormChangeScene_Begin(partyMenu);
     *pState = PARTY_MENU_STATE_FORM_CHANGE_ANIM;

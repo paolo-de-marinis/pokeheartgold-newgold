@@ -14,6 +14,7 @@ int PartyMenu_Subtask_SacredAsh(PartyMenu *partyMenu);
 int PartyMenu_ItemUseFunc_LevelUpDoLearnMove(PartyMenu *partyMenu);
 u8 PartyMenu_CheckCanLearnTMHMMove(PartyMenu *partyMenu, Pokemon *mon);
 int PartyMenu_HandleUseTMHMonMon(PartyMenu *partyMenu);
+int PartyMenu_AskToForgetMove(PartyMenu *partyMenu);
 int PartyMenu_ItemUseFunc_TMHMDoLearnMove(PartyMenu *partyMenu);
 int PartyMenu_Subtask_TMHMLearnMove(PartyMenu *partyMenu);
 int PartyMenu_Subtask_SelectMove(PartyMenu *partyMenu);

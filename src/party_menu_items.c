@@ -839,6 +839,25 @@ int PartyMenu_HandleUseTMHMonMon(PartyMenu *partyMenu) {
     return PARTY_MENU_STATE_WAIT_TEXT_PRINTER;
 }
 
+// A move to learn from something other than a machine, with all four slots
+// taken: the machine's questions, so that yes chooses a move to forget on the
+// summary screen and the party menu comes back to PartyMenu_ItemUseFunc_TMHMDoLearnMove.
+int PartyMenu_AskToForgetMove(PartyMenu *partyMenu) {
+    Pokemon *mon = Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex);
+    String *string;
+
+    BufferBoxMonNickname(partyMenu->msgFormat, 0, Mon_GetBoxMon(mon));
+    BufferMoveName(partyMenu->msgFormat, 1, partyMenu->args->moveId);
+    string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00053);
+    StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
+    String_Delete(string);
+    PartyMenu_PrintMessageOnWindow34(partyMenu, -1, TRUE);
+    partyMenu->yesCallback = PartyMenu_ItemUseFunc_TMHMPromptForgetMove;
+    partyMenu->noCallback = PartyMenu_ItemUseFunc_TMHMAskStopTryingToLearn;
+    partyMenu->afterTextPrinterState = PARTY_MENU_STATE_YES_NO_INIT;
+    return PARTY_MENU_STATE_WAIT_TEXT_PRINTER;
+}
+
 int PartyMenu_ItemUseFunc_TMHMDoLearnMove(PartyMenu *partyMenu) {
     Pokemon *mon = Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex);
     BufferBoxMonNickname(partyMenu->msgFormat, 0, Mon_GetBoxMon(mon));
@@ -858,6 +877,20 @@ int PartyMenu_ItemUseFunc_TMHMDoLearnMove(PartyMenu *partyMenu) {
 
 int PartyMenu_Subtask_TMHMLearnMove(PartyMenu *partyMenu) {
     Pokemon *mon = Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex);
+    if (partyMenu->args->itemId == ITEM_ROTOM_CATALOG) {
+        // The catalog's appliance, found again by the move it teaches: the
+        // party menu was left for the summary screen. The form change scene
+        // puts the move in the slot just chosen.
+        String *string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00062);
+        BufferMoveName(partyMenu->msgFormat, 1, partyMenu->args->moveId);
+        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
+        String_Delete(string);
+        PartyMenu_PrintMessageOnWindow34(partyMenu, -1, FALSE);
+        partyMenu->args->species = Rotom_GetFormOfMove(partyMenu->args->moveId);
+        PartyMenu_FormChangeScene_Begin(partyMenu);
+        partyMenu->afterTextPrinterState = PARTY_MENU_STATE_FORM_CHANGE_ANIM;
+        return PARTY_MENU_STATE_WAIT_TEXT_PRINTER;
+    }
     PartyMenu_LearnMoveToSlot(partyMenu, mon, partyMenu->args->selectedMoveIdx);
     String *string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00062);
     BufferMoveName(partyMenu->msgFormat, 1, partyMenu->args->moveId);

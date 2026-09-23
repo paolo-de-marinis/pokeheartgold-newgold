@@ -3878,16 +3878,60 @@ BOOL Party_TryResetShaymin(Party *party, int min_max, const RTCTime *time) {
     }
 }
 
-BOOL Mon_UpdateRotomForm(Pokemon *mon, int form, int defaultSlot) {
-    static const u16 form_moves[ROTOM_FORM_MAX] = {
-        MOVE_NONE,
-        MOVE_OVERHEAT,
-        MOVE_HYDRO_PUMP,
-        MOVE_BLIZZARD,
-        MOVE_AIR_SLASH,
-        MOVE_LEAF_STORM,
-    };
+// The move each of Rotom's forms has of its own.
+static const u16 sRotomFormMoves[ROTOM_FORM_MAX] = {
+    MOVE_NONE,
+    MOVE_OVERHEAT,
+    MOVE_HYDRO_PUMP,
+    MOVE_BLIZZARD,
+    MOVE_AIR_SLASH,
+    MOVE_LEAF_STORM,
+};
 
+u16 Rotom_GetFormMove(int form) {
+    return sRotomFormMoves[form];
+}
+
+// The form whose move this is, ROTOM_NORMAL for any other.
+int Rotom_GetFormOfMove(u16 move) {
+    int form;
+
+    for (form = ROTOM_HEAT; form < ROTOM_FORM_MAX; form++) {
+        if (sRotomFormMoves[form] == move) {
+            return form;
+        }
+    }
+    return ROTOM_NORMAL;
+}
+
+// Whether changing to this form has to ask which move to forget first: the
+// form has a move of its own, the Pokemon knows no other form's move for it
+// to take the place of, and all four slots are taken. Mon_UpdateRotomForm
+// then puts the move in the slot that was chosen. A Rotom that will not
+// forget a move does not change form (Pokemon Central, Rotom: it cannot
+// change form without learning the form's move).
+BOOL Mon_RotomFormNeedsMoveSlot(Pokemon *mon, int form) {
+    int i, j;
+    u16 move;
+
+    if (sRotomFormMoves[form] == MOVE_NONE) {
+        return FALSE;
+    }
+    for (i = 0; i < MAX_MON_MOVES; i++) {
+        move = GetMonData(mon, MON_DATA_MOVE1 + i, NULL);
+        if (move == MOVE_NONE) {
+            return FALSE;
+        }
+        for (j = ROTOM_HEAT; j < ROTOM_FORM_MAX; j++) {
+            if (move == sRotomFormMoves[j]) {
+                return FALSE;
+            }
+        }
+    }
+    return TRUE;
+}
+
+BOOL Mon_UpdateRotomForm(Pokemon *mon, int form, int defaultSlot) {
     int i, j;
     int cur_move;
     int new_move;
@@ -3895,11 +3939,11 @@ BOOL Mon_UpdateRotomForm(Pokemon *mon, int form, int defaultSlot) {
         return FALSE;
     }
     GetMonData(mon, MON_DATA_FORM, NULL);
-    new_move = form_moves[form];
+    new_move = sRotomFormMoves[form];
     for (i = 0; i < MAX_MON_MOVES; i++) {
         cur_move = GetMonData(mon, MON_DATA_MOVE1 + i, NULL);
         for (j = ROTOM_HEAT; j < (unsigned)ROTOM_FORM_MAX; j++) {
-            if (cur_move != MOVE_NONE && cur_move == form_moves[j]) {
+            if (cur_move != MOVE_NONE && cur_move == sRotomFormMoves[j]) {
                 if (new_move != MOVE_NONE) {
                     MonSetMoveInSlot_ResetPpUp(mon, new_move, i);
                     new_move = MOVE_NONE;
