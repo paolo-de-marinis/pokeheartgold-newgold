@@ -11,9 +11,9 @@ are read from the banks msgenc built, which store them.
 Names, plurals and descriptions are checked for every item; the plurals
 against MessageFormat_New, which the bag reads them into, and the descriptions
 against the strings the bag, the battle bag and the shop read them into.
-The bag's list strings (ov15_021FA008, BAG_LIST_NAME_LENGTH) are sized for
-the longest name hg-engine has, which run to 22 with the terminator where
-HeartGold's fitted 18.
+The bag's list strings (ov15_021FA008) and the trade screen's held item
+(ov65_0221D674) are ITEM_NAME_LENGTH, sized for the longest name hg-engine
+has, which run to 22 with the terminator where HeartGold's fitted 18 and 20.
 
 Needs the build: run after make.
 """
@@ -30,8 +30,10 @@ MESSAGES = ROOT / "files/msgdata/msg"
 MOVE_NAME_CAPACITY = 16         # GetMoveName's String_New(16) (src/msgdata.c), the move tutor's String_New(0x10)
 SPECIES_NAME_CAPACITY = 11      # POKEMON_NAME_LENGTH + 1: GetSpeciesNameIntoArray copies the row into a nickname array unbounded
 MESSAGE_FORMAT_CAPACITY = 32    # MessageFormat_New_Custom(_, 32) callers: ability names, items with article
-ITEM_NAME_CAPACITY = int(re.search(r"#define BAG_LIST_NAME_LENGTH (\d+)",
-                                    (ROOT / "include/bag_app_state.h").read_text()).group(1))  # ov15_021FA008
+ITEM_NAME_CAPACITY = int(re.search(r"#define ITEM_NAME_LENGTH (\d+)",
+                                    (ROOT / "include/item.h").read_text()).group(1))  # the bag's list, the trade screen
+NAME_READERS = {"src/bag_pocket_list.c": "String_New(BAG_LIST_NAME_LENGTH, HEAP_ID_6)",  # ov15_021FA008
+                "src/trade_select_mon_panel.c": "String_New(ITEM_NAME_LENGTH, HEAP_ID_26)"}  # ov65_0221D674
 ITEM_DESCRIPTION_CAPACITY = int(re.search(r"#define ITEM_DESCRIPTION_LENGTH (\d+)",
                                            (ROOT / "include/item.h").read_text()).group(1))  # bag, battle bag, shop
 DESCRIPTION_READERS = ["src/bag_item_description.c", "src/battle_bag_description.c", "src/overlay_03/shop_menu.c"]
@@ -88,9 +90,10 @@ class TextLengthTests(unittest.TestCase):
     def test_every_item_name_fits_the_bags_list(self):
         self.assertEqual(over(ITEM_NAMES, ITEM_NAME_CAPACITY), {}, "item names the bag's list cannot hold")
 
-    def test_the_bags_list_strings_are_that_long(self):
-        source = (ROOT / "src/bag_pocket_list.c").read_text()
-        self.assertIn("String_New(BAG_LIST_NAME_LENGTH, HEAP_ID_6)", source)
+    def test_the_screens_read_names_at_that_length(self):
+        self.assertIn("#define BAG_LIST_NAME_LENGTH ITEM_NAME_LENGTH", (ROOT / "include/bag_app_state.h").read_text())
+        for path, call in NAME_READERS.items():
+            self.assertIn(call, (ROOT / path).read_text(), path)
 
     def test_every_item_plural_fits(self):
         # hg-engine's plurals run to 40 (Twice-Spiced Radish, Bitter Herba Mystica).

@@ -226,6 +226,11 @@ s32 GetItemAttr(u16 itemId, u16 attrno, enum HeapID heapID);
  */
 s32 GetItemAttr_PreloadedItemData(ItemData *itemData, u16 attrno);
 
+// An item name read into a String, terminator included. HeartGold's screens
+// made 18 to 20; hg-engine's names run to 22 (Super Lumiose Galette), and a
+// name that does not fit is not copied at all.
+#define ITEM_NAME_LENGTH 22
+
 // An item description read into a String, line breaks and terminator
 // included. HeartGold's screens made 130; hg-engine's descriptions run to 177
 // (Grit Pebble), and a row that does not fit is not copied at all.

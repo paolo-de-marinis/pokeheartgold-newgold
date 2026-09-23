@@ -98,7 +98,9 @@ void ov65_0221D674(Window *windows, int side, Party *party, int partySlot, Trade
     ov65_0221FB4C(&windows[side + 30], trade->unk19C, 7, 0, 3, 0);
     item = GetMonData(Party_GetMonByIndex(party, partySlot), MON_DATA_HELD_ITEM, NULL);
     FillWindowPixelBuffer(&windows[side + 32], 0);
-    string = String_New(20, HEAP_ID_26);
+    // HeartGold's 20 left the 16 item names past 19 characters blank, or
+    // showing the previous Pokemon's item.
+    string = String_New(ITEM_NAME_LENGTH, HEAP_ID_26);
     GetItemNameIntoString(string, item, HEAP_ID_26);
     ov65_0221FB4C(&windows[side + 32], string, 9, 0, 3, 0);
     String_Delete(string);
