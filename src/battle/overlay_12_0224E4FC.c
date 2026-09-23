@@ -215,7 +215,7 @@ void BattleSystem_ReloadMonData(BattleSystem *battleSystem, BattleContext *ctx, 
 }
 
 void ReadBattleScriptFromNarc(BattleContext *ctx, NarcId narcId, int fileId) {
-    GF_ASSERT(GetNarcMemberSizeByIdPair(narcId, fileId) < 1600);
+    GF_ASSERT(GetNarcMemberSizeByIdPair(narcId, fileId) <= sizeof(ctx->battleScriptBuffer));
     ctx->scriptNarcId = narcId;
     ctx->scriptFileId = fileId;
     ctx->scriptSeqNo = 0;
@@ -224,7 +224,7 @@ void ReadBattleScriptFromNarc(BattleContext *ctx, NarcId narcId, int fileId) {
 
 // PushBattleScriptFromNarc..?
 void ov12_0224EBDC(BattleContext *ctx, NarcId narcId, int fileId) {
-    GF_ASSERT(GetNarcMemberSizeByIdPair(narcId, fileId) < 1600);
+    GF_ASSERT(GetNarcMemberSizeByIdPair(narcId, fileId) <= sizeof(ctx->battleScriptBuffer));
     GF_ASSERT(ctx->unk_B8 < 4);
     ctx->unk_BC[ctx->unk_B8] = ctx->scriptNarcId;
     ctx->unk_CC[ctx->unk_B8] = ctx->scriptFileId;

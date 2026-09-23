@@ -314,6 +314,8 @@ typedef struct MoveConditions {
     u8 throatChopTimer : 2;        // Throat Chop: no sound moves while this runs
 } MoveConditions;
 
+#define BATTLE_SCRIPT_BUFFER_WORDS 650
+
 typedef struct BattleContext {
     u8 unk_0[4];
     u8 unk_4[4];
@@ -428,7 +430,10 @@ typedef struct BattleContext {
     u32 effectiveSpeed[4];
     u8 linkBuffer[4][4][16];
     u8 battleBuffer[4][256];
-    int battleScriptBuffer[400];
+    // Retail's script buffer, 1600 bytes. It stays here so that everything
+    // after it keeps its offset for the code that still reads by offset;
+    // the scripts run from battleScriptBuffer at the end.
+    int battleScriptBufferRetail[400];
     BattleMon battleMons[4];
     u32 moveNoTemp;
     u32 moveNoCur;
@@ -533,6 +538,11 @@ typedef struct BattleContext {
     // the right one.
     MoveConditions moveConditions[BATTLER_MAX];
     MoveTbl addedMoveData[NUM_ADDED_MOVES];
+    // hg-engine's SkillSeqWork[650] (d0380a487, include/battle.h), which it
+    // moved to the end of the structure and grew for the same reason: its
+    // status subscripts, with every immunity the later generations add, are
+    // longer than retail's 1600 bytes. The loaders assert a script fits.
+    int battleScriptBuffer[BATTLE_SCRIPT_BUFFER_WORDS];
 } BattleContext;
 
 typedef struct BattleSystem BattleSystem;

@@ -178,5 +178,23 @@ class ItemGrabTests(unittest.TestCase):
         self.assertIn("itemsToRestore", (ROOT / "include/battle/battle.h").read_text())
 
 
+
+class ScriptBufferTests(unittest.TestCase):
+    def test_every_built_script_fits_the_buffer(self):
+        """A battle script is copied whole into BattleContext.battleScriptBuffer.
+        Retail's was 1600 bytes, and four status subscripts grew past it once
+        they learnt the later generations' immunities -- Bad Poison to 2104 --
+        so every load wrote into the fields after the buffer. hg-engine grew
+        its buffer to 650 words for the same scripts; so does this tree."""
+        header = (ROOT / "include/battle/battle.h").read_text()
+        words = int(re.search(r"#define BATTLE_SCRIPT_BUFFER_WORDS (\d+)", header).group(1))
+        built = sorted((ROOT / "files/battledata/script").glob("*/*.bin"))
+        if not built:
+            self.skipTest("the battle scripts are not built")
+        too_long = {path.name: path.stat().st_size for path in built if path.stat().st_size > 4 * words}
+        self.assertEqual(too_long, {})
+        self.assertGreater(max(path.stat().st_size for path in built), 1600,
+                           "no script needs more than retail's buffer; the test would prove nothing")
+
 if __name__ == "__main__":
     unittest.main()
