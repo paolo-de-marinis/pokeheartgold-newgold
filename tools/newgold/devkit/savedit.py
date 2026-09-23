@@ -1455,12 +1455,28 @@ def machines():
     return [(move, item_at.get(place)) for place, move in enumerate(taught)]
 
 
+@tree_cache
+def machine_layout():
+    """personal.json.txt, the template the build packs personal.narc with:
+    for each (list, number) a record's "tms", "hms" and "machines" can name,
+    the bit it sets -- its line's word, 32 bits a word, and the bit in it --
+    which is the place GetTMHMCompatBySpeciesAndForm reads."""
+    template = source("files/poketool/personal/personal.json.txt").read_text()
+    place = {}
+    for word, line in enumerate(l for l in template.splitlines() if 'setVarInt("tms", 0)' in l):
+        for count, first, kind, bit in re.findall(r"range\((\d+)\) %\}\{% if add\(i, (\d+)\) in mon\.(\w+) %\}"
+                                                  r"\{\{ setBit\(\"tms\", (i|add\(i, \d+\))\) \}\}", line):
+            shift = 0 if bit == "i" else int(re.search(r"\d+", bit).group())
+            for i in range(int(count)):
+                place[(kind, int(first) + i)] = 32 * word + shift + i
+    return place
+
+
 def machine_places(record):
-    """The places GetTMHMCompatBySpeciesAndForm finds set in a record: the
-    template packs TM n at n - 1, HM n after the NUM_TMS TMs, and each of
-    "machines" at its own place."""
-    tms = constants("include/constants/items.h", "NUM_")["NUM_TMS"]
-    return [n - 1 for n in record["tms"]] + [tms + n - 1 for n in record["hms"]] + record.get("machines", [])
+    """The places GetTMHMCompatBySpeciesAndForm finds set in a record: where
+    the template packs each of its numbers; one it does not pack sets none."""
+    layout = machine_layout()
+    return [layout[kind, n] for kind in ("tms", "hms", "machines") for n in record.get(kind, []) if (kind, n) in layout]
 
 
 @tree_cache

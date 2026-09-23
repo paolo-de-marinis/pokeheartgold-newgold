@@ -866,20 +866,16 @@ class TheCodeSaveditKeeps(unittest.TestCase):
                          r"levelUpLearnset\[j\+\+\] = levelUpLearnset\[i\];", "learnsets(): every reader gets it filtered")
 
     def test_the_machines_sit_where_the_template_packs_them(self):
-        """machine_places: TM n at n - 1, HM n after the NUM_TMS TMs, the
-        rest at their own number -- the bits personal.json.txt sets."""
-        template = (ROOT / "files/poketool/personal/personal.json.txt").read_text()
-        place = {}
-        for word, line in enumerate(l for l in template.splitlines() if 'setVarInt("tms", 0)' in l):
-            for count, first, kind, bit in re.findall(r"range\((\d+)\) %\}\{% if add\(i, (\d+)\) in mon\.(\w+) %\}"
-                                                     r"\{\{ setBit\(\"tms\", (i|add\(i, \d+\))\) \}\}", line):
-                shift = 0 if bit == "i" else int(re.search(r"\d+", bit).group())
-                for i in range(int(count)):
-                    place[(kind, int(first) + i)] = 32 * word + shift + i
-        record = {"tms": sorted(n for k, n in place if k == "tms"), "hms": sorted(n for k, n in place if k == "hms"),
-                  "machines": sorted(n for k, n in place if k == "machines")}
-        self.assertEqual(sv.machine_places(record), [place[("tms", n)] for n in record["tms"]]
-                         + [place[("hms", n)] for n in record["hms"]] + [place[("machines", n)] for n in record["machines"]])
+        """machine_places: the bits personal.json.txt sets, and nothing for a
+        number it does not pack; TM01's and HM01's bits are the places
+        ItemToTMHMId gives those items."""
+        layout = sv.machine_layout()
+        self.assertEqual(len(set(layout.values())), len(layout), "one bit each")
+        self.assertEqual(sv.machine_places({"tms": [93], "hms": [9], "machines": [50]}), [], "not packed, not set")
+        items = sv.constants("include/constants/items.h", "ITEM_")
+        self.assertEqual(sv.machines()[layout["tms", 1]][1], items["ITEM_TM01"])
+        self.assertEqual(sv.machines()[layout["hms", 1]][1], items["ITEM_HM01"])
+        self.assertEqual(sv.machine_places({"tms": [2, 1], "hms": [1]}), [layout["tms", 2], layout["tms", 1], layout["hms", 1]])
 
 
 if __name__ == "__main__":
