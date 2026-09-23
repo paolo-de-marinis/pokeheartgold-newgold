@@ -26,6 +26,7 @@ FIXTURE = r"""
 #include <stdint.h>
 #include "constants/abilities.h"
 #include "constants/battle.h"
+#include "constants/items.h"
 #include "constants/move_effects.h"
 
 enum { TRUE = 1 };
@@ -64,7 +65,9 @@ static int live_immunity(BattleContext *ctx, u32 flags, u32 movePower) {
 static int ai_immunity(BattleContext *ctx, u32 flags) {
     int moveNo = 0;
     int abilityAttacker = ctx->abilityAttacker, abilityTarget = ctx->abilityTarget;
+    int item = 0; /* No Ability Shield. */
     u32 *moveStatusFlag = &flags;
+    (void)item;
     return @AI_PREDICATE@;
 }
 
@@ -110,7 +113,7 @@ int main(void) {
 
 def program(source, vanilla):
     predicates = re.findall(r"    if \(([^\n]*ABILITY_WONDER_GUARD[^\n]*ov12_02258440[^\n]*)\) \{", source)
-    if len(predicates) != 2 or not predicates[0].startswith("CheckBattlerAbilityIfNotIgnored") or not predicates[1].startswith(("abilityAttacker", "!AbilityBreaksMolds(abilityAttacker)")):
+    if len(predicates) != 2 or not predicates[0].startswith("CheckBattlerAbilityIfNotIgnored") or not predicates[1].startswith(("abilityAttacker", "(!AbilityBreaksMolds(abilityAttacker)")):
         raise ValueError("Expected the live and AI Wonder Guard predicates")
     # The AI's own Mold Breaker question, where the source has one.
     breaks = repels_function(source, "AbilityBreaksMolds") if "static BOOL AbilityBreaksMolds(" in source else ""

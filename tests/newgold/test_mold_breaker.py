@@ -120,17 +120,42 @@ int main(void) {
         assert(AbilityBreaksMolds(breakers[i]));
     }
     assert(!AbilityBreaksMolds(ABILITY_MYCELIUM_MIGHT) && !AbilityBreaksMolds(ABILITY_NONE));
-    @CHECKS@
+    // An Ability Shield keeps the holder's ability heard (Pokemon Central,
+    // Scudo abilita): the rod draws the move, the flowers bloom, and the
+    // shield on another Pokemon does nothing for this one.
+    for (int i = 0; i < 3; i++) {
+        reset();
+        S.ability[0] = breakers[i];
+        S.ability[1] = ABILITY_STURDY;
+        ctx.battleMons[1].item = HOLD_EFFECT_PREVENT_ABILITY_CHANGES;
+        assert(CheckBattlerAbilityIfNotIgnored(&ctx, 0, 1, ABILITY_STURDY));
+        ctx.battleMons[1].item = 0;
+        ctx.battleMons[0].item = HOLD_EFFECT_PREVENT_ABILITY_CHANGES;
+        assert(!CheckBattlerAbilityIfNotIgnored(&ctx, 0, 1, ABILITY_STURDY));
+        reset();
+        S.ability[0] = breakers[i];
+        S.ability[3] = ABILITY_LIGHTNINGROD;
+        S.type = TYPE_ELECTRIC;
+        ctx.battleMons[3].item = HOLD_EFFECT_PREVENT_ABILITY_CHANGES;
+        ctx.battlerIdTarget = 1;
+        ov12_02250A18(&bs, &ctx, 0, MOVE_THUNDERBOLT);
+        assert(ctx.battlerIdTarget == 3);
+        reset();
+        S.ability[0] = breakers[i];
+        S.ability[3] = ABILITY_FLOWER_GIFT;
+        ctx.battleMons[3].item = HOLD_EFFECT_PREVENT_ABILITY_CHANGES;
+        assert(SideAbilityNotIgnored(&bs, &ctx, 0, 1, ABILITY_FLOWER_GIFT));
+    }
     return 0;
 }
 """
 
 
-def run(test, checks=""):
+def run(test):
     names = ["AbilityBreaksMolds", "BattlerIgnoresRedirection", "BattlerHasAbilityShield", "BattlerIgnoresAbilities",
              "CheckBattlerAbilityIfNotIgnored", "SideAbilityNotIgnored", "ov12_02250A18"]
     functions = "\n".join(function(OVERLAY, name) for name in names)
-    program = PROGRAM.replace("@FUNCTIONS@", functions).replace("@CHECKS@", checks)
+    program = PROGRAM.replace("@FUNCTIONS@", functions)
     with tempfile.TemporaryDirectory(prefix="newgold-mold-breaker-") as directory:
         path = Path(directory)
         (path / "test.c").write_text(program)
@@ -145,13 +170,13 @@ def run(test, checks=""):
 
 
 class MoldBreakerTests(unittest.TestCase):
-    def test_teravolt_and_turboblaze_pass_the_rod_and_the_flowers_by(self):
+    def test_they_pass_the_rod_and_the_flowers_by_unless_shielded(self):
         run(self)
 
     def test_the_ai_asks_it_of_levitate_and_wonder_guard(self):
         body = function(OVERLAY, "ov12_02252054")
-        self.assertIn("if (!AbilityBreaksMolds(abilityAttacker) && abilityTarget == ABILITY_LEVITATE", body)
-        self.assertIn("if (!AbilityBreaksMolds(abilityAttacker) && abilityTarget == ABILITY_WONDER_GUARD", body)
+        for ability in ("LEVITATE", "WONDER_GUARD"):
+            self.assertIn("if ((!AbilityBreaksMolds(abilityAttacker) || item == HOLD_EFFECT_PREVENT_ABILITY_CHANGES) && abilityTarget == ABILITY_" + ability, body)
 
     def test_the_damage_asks_the_side_s_flower_gift_so(self):
         self.assertIn("(weather & FIELD_CONDITION_SUN_ALL) && SideAbilityNotIgnored(battleSystem, ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLOWER_GIFT)",

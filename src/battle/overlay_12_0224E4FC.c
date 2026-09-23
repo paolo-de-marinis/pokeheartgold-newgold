@@ -3183,7 +3183,8 @@ int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, in
 // The abilities that pass a target's ability by whatever the move: Teravolt
 // and Turboblaze as Mold Breaker (the reference's
 // CLIENT_HAS_MOLD_BREAKER_VARIATION), for the AI's question below, which has
-// the abilities and not the battlers.
+// the abilities and not the battlers; there the target's Ability Shield, its
+// held item, keeps its ability heard (Pokemon Central, Scudo abilita).
 static BOOL AbilityBreaksMolds(int ability) {
     return ability == ABILITY_MOLD_BREAKER || ability == ABILITY_TERAVOLT || ability == ABILITY_TURBOBLAZE;
 }
@@ -3198,7 +3199,7 @@ void ov12_02252054(BattleContext *ctx, int moveNo, int moveTypeDefault, int abil
 
     moveType = BattleMoveTypeForAbility(ctx, abilityAttacker, moveNo, moveTypeDefault);
 
-    if (!AbilityBreaksMolds(abilityAttacker) && abilityTarget == ABILITY_LEVITATE && moveType == TYPE_GROUND && !(ctx->fieldCondition & FIELD_CONDITION_GRAVITY) && item != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
+    if ((!AbilityBreaksMolds(abilityAttacker) || item == HOLD_EFFECT_PREVENT_ABILITY_CHANGES) && abilityTarget == ABILITY_LEVITATE && moveType == TYPE_GROUND && !(ctx->fieldCondition & FIELD_CONDITION_GRAVITY) && item != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
         *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
     } else if (item == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT && moveType == TYPE_GROUND && !(ctx->fieldCondition & FIELD_CONDITION_GRAVITY)) {
         // What the AI is told about an Air Balloon: a Ground move does
@@ -3229,7 +3230,7 @@ void ov12_02252054(BattleContext *ctx, int moveNo, int moveTypeDefault, int abil
         } while (sTypeEffectiveness[i][0] != TYPE_ENDTABLE);
     }
 
-    if (!AbilityBreaksMolds(abilityAttacker) && abilityTarget == ABILITY_WONDER_GUARD && ov12_02258440(ctx, moveNo) && (!(*moveStatusFlag & MOVE_STATUS_SUPER_EFFECTIVE) || (*moveStatusFlag & MOVE_STATUS_ANY_EFFECTIVE) == MOVE_STATUS_ANY_EFFECTIVE)) {
+    if ((!AbilityBreaksMolds(abilityAttacker) || item == HOLD_EFFECT_PREVENT_ABILITY_CHANGES) && abilityTarget == ABILITY_WONDER_GUARD && ov12_02258440(ctx, moveNo) && (!(*moveStatusFlag & MOVE_STATUS_SUPER_EFFECTIVE) || (*moveStatusFlag & MOVE_STATUS_ANY_EFFECTIVE) == MOVE_STATUS_ANY_EFFECTIVE)) {
         *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
     }
 }
@@ -3681,10 +3682,13 @@ static BOOL BattlerIgnoresAbilities(BattleContext *ctx, int battlerId) {
     return FALSE;
 }
 
+// An Ability Shield keeps its holder's ability from being ignored too (Pokemon
+// Central, Scudo abilita): against it the attacker's Mold Breaker and its kind
+// count for nothing. The reference does not ask the shield.
 BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int ability) {
     BOOL ret = FALSE;
 
-    if (BattlerIgnoresAbilities(ctx, battlerIdAttacker) == FALSE) {
+    if (BattlerIgnoresAbilities(ctx, battlerIdAttacker) == FALSE || BattlerHasAbilityShield(ctx, battlerIdTarget)) {
         if (GetBattlerAbility(ctx, battlerIdTarget) == ability) {
             ret = TRUE;
         }
