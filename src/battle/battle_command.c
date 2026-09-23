@@ -955,8 +955,10 @@ static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BO
 
     damage = CalcTypeEffectiveness(battleSystem, ctx, moveNo, ctx->moveType, battlerIdAttacker, battlerIdTarget, damage, &moveStatusFlag, &effectiveness);
 
-    // A burn halves a physical move, unless Guts has made use of it.
-    if (BattleMoveTbl(ctx, moveNo)->category == CATEGORY_PHYSICAL && (ctx->battleMons[battlerIdAttacker].status & STATUS_BURN) && GetBattlerAbility(ctx, battlerIdAttacker) != ABILITY_GUTS) {
+    // A burn halves a physical move, unless Guts has made use of it or the
+    // move is Facade, which the burn powers instead (the reference's 6.8, the
+    // rule from X and Y on). HeartGold halved Facade too.
+    if (BattleMoveTbl(ctx, moveNo)->category == CATEGORY_PHYSICAL && (ctx->battleMons[battlerIdAttacker].status & STATUS_BURN) && GetBattlerAbility(ctx, battlerIdAttacker) != ABILITY_GUTS && moveNo != MOVE_FACADE) {
         damage = QMul_RoundDown(damage, UQ412__0_5);
     }
 

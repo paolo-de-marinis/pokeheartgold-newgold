@@ -184,6 +184,8 @@ int main(void) {
     reset(); ctx.battleMons[0].status = STATUS_BURN; EXPECT(calc(), 22);
     S.ability[0] = ABILITY_GUTS; EXPECT(calc(), 45);
     S.ability[0] = ABILITY_NONE; S.move.category = CATEGORY_SPECIAL; EXPECT(calc(), 45);
+    // Nor is Facade, which the burn powers instead.
+    S.move.category = CATEGORY_PHYSICAL; ctx.moveNoCur = MOVE_FACADE; EXPECT(calc(), 45);
 
     // 6.9.1 the screens, in the final modifier: half in a single battle, 22.
     // A critical hit goes through them: 67.
