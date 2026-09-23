@@ -334,6 +334,7 @@ void ov18_021EE3AC(PokedexAppData *pokedexApp, MsgData *msgData, int windowId, i
 void ov18_021EE75C(PokedexAppData *pokedexApp, u32 species, int windowId);
 void ov18_021EE834(PokedexAppData *pokedexApp, u16 species, u32 idx, int windowId);
 void ov18_021EE984(PokedexAppData *pokedexApp, u16 species, u32 idx, int windowId);
+void ov18_021EEAE4(PokedexAppData *pokedexApp, u32 species, u32 idx, int windowId);
 void ov18_021EEC34(PokedexAppData *pokedexApp, u32 species, int windowId, int charsetOption);
 String *ov18_021E590C(u16 species, int language, enum HeapID heapId);
 String *ov18_021E595C(u16 species, int language, enum HeapID heapId);
