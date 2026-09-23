@@ -68,6 +68,7 @@ u8 ov10_0221EF34(BattleContext *ctx, u8 battler);
 s32 ov10_0221EF7C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 *moves, s32 *damages, u16 heldItem, u8 *ivs, int ability, int embargoTurns, int varyDamage);
 u32 ov10_0221F084(BattleSystem *battleSystem, BattleContext *ctx, u16 move, u16 heldItem, u8 *ivs, int battlerId, int ability, int embargoTurns, u8 roll);
 int ov10_0221F47C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int move);
+BOOL ov10_0221F7F0(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL ov10_0221F62C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL ov10_0221FD34(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BOOL noRandom);
 BOOL ov10_0221FE8C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
