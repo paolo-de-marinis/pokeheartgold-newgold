@@ -12,8 +12,8 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 219 commits |
-| generated | 2026-09-23 01:53 |
+| port | 220 commits |
+| generated | 2026-09-23 02:16 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
@@ -161,14 +161,16 @@ it is not a formality is that four silent bugs surfaced in one evening, on
 - `LEVEL_UP_LEARNSET_MAX` was 21 against Mr. Rime's twenty-seven moves, and
   two more buffers for the same data were sized by hand — `0x2c` in the move
   tutor, `50` in the egg search
-- a learnset entry kept its move in nine bits, so every move past 511 was
-  quietly learnt as a different one
+- a learnset entry kept its move in nine bits, and the learnsets were
+  written before the moves past 495 existed: 1060 entries naming them were
+  skipped as missing and never written again, so those Pokemon never learnt
+  them by level
 - tables indexed by a species number had not grown with it: `evo.narc` stayed
   575 members long because its rule did not depend on the header that sizes
   it, and two tables in C were read past their end
 
 None fails a build and none fails a test. Three of them can produce a black
-screen; the fourth teaches a Pokemon the wrong move and says nothing. Four in
+screen; the fourth leaves moves out of a learnset and says nothing. Four in
 one evening was not a rate that exhausts itself — it was the rate they were
 being looked for. What is left is not writing code. It is turning the game on.
 
