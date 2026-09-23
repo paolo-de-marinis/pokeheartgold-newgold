@@ -544,18 +544,14 @@ class PivotRetreatTests(unittest.TestCase):
     Exit or Wimp Out; a Berry that heals the target back above half keeps the
     target in, and so the user goes (Pokemon Central, Passoindietro)."""
 
-    def test_the_target_eats_before_the_move_decides(self):
-        body = function(CONTROLLER.read_text(), "ov12_0224CAA4")
-        rolls = [i for i in range(len(body)) if body.startswith("ov12_02250490(battleSystem, ctx, &script)", i)]
-        self.assertEqual(len(rolls), 2)
-        for roll in rolls:
-            before = body[:roll]
-            step = before.rindex("TryPivotTargetHeldItem(battleSystem, ctx) == TRUE")
-            # Nothing else in between: the step is the one just before the roll.
-            self.assertNotIn("(battleSystem, ctx", before[step + 50:])
-        pivot = function(OVERLAY.read_text(), "TryPivotTargetHeldItem")
-        self.assertIn("(ctx->unk_2174 & 0x7FFFFF) != MOVE_SUBSCRIPT_PTR_ATTACK_THEN_SWITCH_OUT", pivot)
-        self.assertIn("return TryUseHeldItem(battleSystem, ctx, ctx->battlerIdTarget);", pivot)
+    def test_the_switch_waits_for_the_retreat(self):
+        # The target's Berry comes with the hit's other held items
+        # (ov12_0224CC88), the retreat once the move is over, and the switch
+        # last, for a target still the one it hit.
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        self.assertLess(body.index("TryRetreatAbility(battleSystem, ctx, &script)"), body.index("TryPivotSwitch(ctx)"))
+        self.assertIn("Battler_CameInAfterTheHit(ctx, target)", function(CONTROLLER.read_text(), "TryPivotSwitch"))
+        self.assertIn("TryUseHeldItem(battleSystem, ctx, ctx->battlerIdTarget)", function(CONTROLLER.read_text(), "ov12_0224CC88"))
 
 
 RETREAT_OUTSIDE_MOVE = r"""

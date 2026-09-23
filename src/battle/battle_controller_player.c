@@ -3770,76 +3770,6 @@ static void ov12_0224CAA4(BattleSystem *battleSystem, BattleContext *ctx) {
                 return;
             }
             // fallthrough
-        case 2:
-            // A pivot move's target eats its Berry before the move decides
-            // whether its user goes (TryPivotTargetHeldItem).
-            ctx->unk_3C++;
-            if (TryPivotTargetHeldItem(battleSystem, ctx) == TRUE) {
-                return;
-            }
-            // fallthrough
-        case 3: {
-            int script;
-
-            ctx->unk_3C++;
-            if (ov12_02250490(battleSystem, ctx, &script) == TRUE && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)) {
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
-                ctx->commandNext = ctx->command;
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                return;
-            }
-        }
-            // fallthrough
-        case 4:
-            ctx->unk_3C++;
-            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_CHECK_SHAYMIN_FORM);
-            ctx->commandNext = ctx->command;
-            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-            return;
-        case 5:
-            ctx->unk_3C++;
-            if (TryBuildRage(battleSystem, ctx) == TRUE) {
-                return;
-            }
-            // fallthrough
-        case 6: {
-            int script;
-
-            ctx->unk_3C++;
-            if (CheckAbilityEffectOnHit(battleSystem, ctx, &script) == TRUE) {
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
-                ctx->commandNext = ctx->command;
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                return;
-            }
-        }
-            // fallthrough
-        case 7:
-            ctx->unk_3C++;
-            if (TryItemFlinch(battleSystem, ctx) == TRUE) {
-                return;
-            }
-            // fallthrough
-        default:
-            break;
-        }
-        break;
-    case 1:
-        switch (ctx->unk_3C) {
-        case 0:
-            ctx->unk_3C++;
-            if (ov12_0224DF7C(battleSystem, ctx) == TRUE) {
-                return;
-            }
-            // fallthrough
-        case 1:
-            // A pivot move's target eats its Berry before the move decides
-            // whether its user goes (TryPivotTargetHeldItem).
-            ctx->unk_3C++;
-            if (TryPivotTargetHeldItem(battleSystem, ctx) == TRUE) {
-                return;
-            }
-            // fallthrough
         case 2: {
             int script;
 
@@ -3878,11 +3808,65 @@ static void ov12_0224CAA4(BattleSystem *battleSystem, BattleContext *ctx) {
             // fallthrough
         case 6:
             ctx->unk_3C++;
+            if (TryItemFlinch(battleSystem, ctx) == TRUE) {
+                return;
+            }
+            // fallthrough
+        default:
+            break;
+        }
+        break;
+    case 1:
+        switch (ctx->unk_3C) {
+        case 0:
+            ctx->unk_3C++;
+            if (ov12_0224DF7C(battleSystem, ctx) == TRUE) {
+                return;
+            }
+            // fallthrough
+        case 1: {
+            int script;
+
+            ctx->unk_3C++;
+            if (ov12_02250490(battleSystem, ctx, &script) == TRUE && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)) {
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                return;
+            }
+        }
+            // fallthrough
+        case 2:
+            ctx->unk_3C++;
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_CHECK_SHAYMIN_FORM);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        case 3:
+            ctx->unk_3C++;
+            if (TryBuildRage(battleSystem, ctx) == TRUE) {
+                return;
+            }
+            // fallthrough
+        case 4: {
+            int script;
+
+            ctx->unk_3C++;
+            if (CheckAbilityEffectOnHit(battleSystem, ctx, &script) == TRUE) {
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                return;
+            }
+        }
+            // fallthrough
+        case 5:
+            ctx->unk_3C++;
             if (ov12_0224DF98(battleSystem, ctx) == TRUE) {
                 return;
             }
             // fallthrough
-        case 7:
+        case 6:
             ctx->unk_3C++;
             if (TryItemFlinch(battleSystem, ctx) == TRUE) {
                 return;
@@ -5064,6 +5048,33 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
     return TRUE;
 }
 
+// U-turn, Volt Switch and Flip Turn take their user out once the move is
+// over: the engine's Activate_Switch (ServerDoPostMoveEffects.c:2120 at
+// d0380a487), the step after Emergency Exit and Wimp Out, for a user still
+// standing with no switch pending. So the user goes after the hit's Rough
+// Skin, Static or Rocky Helmet, its own Life Orb and Shell Bell, Magician and
+// Pickpocket, and a user those felled stays. Nor does it go once it has left
+// already -- dragged out by a Red Card, gone with its own Emergency Exit or
+// Eject Pack (U-turn's flag) -- or once the Pokemon it hit has left, by its
+// Eject Button, Emergency Exit or Wimp Out (Pokemon Central, Pulsantefuga,
+// Cartelrosso and Passoindietro); a Berry that healed that Pokemon above half
+// has kept it in by then. A move that failed switches nothing. Nor does a
+// user holding a Red Card itself go (Pokemon Central, Cartelrosso;
+// Bulbapedia's U-turn, Volt Switch and Flip Turn); the reference switches it.
+static BOOL TryPivotSwitch(BattleContext *ctx) {
+    int target = ctx->battlerIdTarget;
+
+    if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect != MOVE_EFFECT_SWITCH_HIT
+        || target == BATTLER_NONE || (ctx->moveStatusFlag & MOVE_STATUS_FAIL)
+        || !ctx->battleMons[ctx->battlerIdAttacker].hp || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
+        || Battler_CameInAfterTheHit(ctx, target)
+        || GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {
+        return FALSE;
+    }
+    RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT);
+    return TRUE;
+}
+
 static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
     int flag = 0;
 
@@ -5245,8 +5256,8 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_30++;
             break;
         case 8: {
-            // Pickpocket, once the move and the user's switch are over; see
-            // TryPickpocket.
+            // Pickpocket, once the move is over and before U-turn's user
+            // leaves; see TryPickpocket.
             int script;
 
             ctx->unk_30++;
@@ -5327,6 +5338,12 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             break;
         }
         case 12:
+            ctx->unk_30++;
+            if (TryPivotSwitch(ctx) == TRUE) {
+                flag = 1;
+            }
+            break;
+        case 13:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;

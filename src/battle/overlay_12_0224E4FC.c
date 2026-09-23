@@ -51,7 +51,6 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count);
 static BOOL BattleMoveIsPunching(u32 moveNo);
 static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int moveNo);
 static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item);
-static BOOL SwitchItemWillAnswerPivot(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault);
 static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId);
 
@@ -1813,22 +1812,6 @@ static void FlungItemLands(BattleSystem *battleSystem, BattleContext *ctx, int s
     }
 }
 
-// A pivot move -- U-turn, Volt Switch, Flip Turn -- takes its user out with
-// the hit (ov12_02250490), and does not when the Pokemon it hit is leaving by
-// Emergency Exit or Wimp Out. A Berry that heals that Pokemon back above half
-// keeps it in, and in the games the Berry is eaten as the damage lands, so it
-// is eaten here before the move decides, rather than with the other held
-// items once the move is over; otherwise the user stays for a retreat that
-// never comes. The reference decides the user's switch at the end of the
-// move, after the items.
-BOOL TryPivotTargetHeldItem(BattleSystem *battleSystem, BattleContext *ctx) {
-    if (ctx->battlerIdTarget == BATTLER_NONE || !(ctx->unk_2174 & MOVE_SIDE_EFFECT_ON_HIT)
-        || (ctx->unk_2174 & 0x7FFFFF) != MOVE_SUBSCRIPT_PTR_ATTACK_THEN_SWITCH_OUT) {
-        return FALSE;
-    }
-    return TryUseHeldItem(battleSystem, ctx, ctx->battlerIdTarget);
-}
-
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     BOOL ret = FALSE;
     u16 effectChance;
@@ -1864,23 +1847,6 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
             ret = TRUE;
             FlungItemLands(battleSystem, ctx, *out);
-        }
-        // U-turn, Volt Switch and Flip Turn do not take their user out when
-        // the Pokemon they hit is leaving by Emergency Exit or Wimp Out
-        // (Pokemon Central, Passoindietro), or will send somebody away with
-        // its Eject Button or Red Card: the reference switches the user only
-        // if no switch is pending by then. Here the move's switch comes with
-        // the hit, so it asks ahead; the rest of the hit goes on as for any
-        // other attack.
-        if (*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && ctx->battlerIdTarget != BATTLER_NONE
-            && (Battler_Retreats(battleSystem, ctx, ctx->battlerIdTarget) || SwitchItemWillAnswerPivot(battleSystem, ctx, ctx->battlerIdTarget))) {
-            ret = FALSE;
-        }
-        // Nor when their user holds a Red Card itself (Pokemon Central,
-        // Cartelrosso; Bulbapedia's U-turn, Volt Switch and Flip Turn); the
-        // reference switches it.
-        if (*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {
-            ret = FALSE;
         }
     } else if (ctx->unk_2174 & (1 << 24)) {
         *out = GetMoveStatusChangeScript(ctx, 2, ctx->unk_2174);
@@ -1949,14 +1915,14 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     }
 
     // What these do waits for Parental Bond's second strike (Pokemon Central,
-    // Amorefiliale): U-turn's switch, Dragon Tail's, Smack Down's fall and
-    // Anchor Shot's trap, and the terrain Steel Roller and Ice Spinner tear
-    // up, which Steel Roller needs for its second strike. The reference does
-    // these after the move; here they come with the hit, so the first strike
-    // leaves them to the second, unless the first was the last. (The cure
-    // Smelling Salts and Wake-Up Slap give, Knock Off's knocking, Thief's
-    // taking and Pluck's eating are post-move steps here too,
-    // TryAdditionalMoveEffect.)
+    // Amorefiliale): Dragon Tail's switch, Smack Down's fall and Anchor Shot's
+    // trap, and the terrain Steel Roller and Ice Spinner tear up, which Steel
+    // Roller needs for its second strike. The reference does these after the
+    // move; here they come with the hit, so the first strike leaves them to
+    // the second, unless the first was the last. (The cure Smelling Salts and
+    // Wake-Up Slap give, Knock Off's knocking, Thief's taking and Pluck's
+    // eating are post-move steps here too, TryAdditionalMoveEffect, and
+    // U-turn's switch is TryPivotSwitch.)
     //
     // The first strike can still prove the last once these have been asked:
     // Effect Spore puts the user to sleep, and the move ends there (Pokemon
@@ -1967,7 +1933,6 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     // from the damage of the strikes there were.
     if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {
         switch (*out) {
-        case BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT:
         case BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE:
         case BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN:
         case BATTLE_SUBSCRIPT_MEAN_LOOK:
@@ -7389,14 +7354,16 @@ BOOL TryMagician(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
 
 // Pickpocket lifts whatever touched its holder, if its own hands are empty,
 // once the move is over (Activate_Pickpocket, ServerDoPostMoveEffects.c:1993
-// at d0380a487, the step after the user's switch): after Thief, Covet, Knock
-// Off, Pluck and Bug Bite have taken or eaten, after Magician, and after a Red
-// Card (Pokemon Central, Arraffalesto) -- so a Pokemon whose item a Knock Off
-// has just taken lifts the attacker's. Not by a holder the hit felled, one
-// behind a substitute, or one sent away or dragged in since; not from a user
-// that has gone, nor from a move Sheer Force boosted. The theft is the Thief
-// guard already in this tree, asked of the attacker rather than of the
-// target. It was one of the answers to each hit before.
+// at d0380a487, the step after the user's switch is set pending, so still
+// before a U-turn user leaves, as TryPivotSwitch comes after it here): after
+// Thief, Covet, Knock Off, Pluck and Bug Bite have taken or eaten, after
+// Magician, and after a Red Card (Pokemon Central, Arraffalesto) -- so a
+// Pokemon whose item a Knock Off has just taken lifts the attacker's. Not by
+// a holder the hit felled, one behind a substitute, or one sent away or
+// dragged in since; not from a user that has gone, nor from a move Sheer
+// Force boosted. The theft is the Thief guard already in this tree, asked of
+// the attacker rather than of the target. It was one of the answers to each
+// hit before.
 BOOL TryPickpocket(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int attacker = ctx->battlerIdAttacker;
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
@@ -8692,24 +8659,6 @@ int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int bat
     }
     ctx->battlerIdTemp = battlerId;
     return BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM;
-}
-
-// U-turn, Volt Switch and Flip Turn do not take their user out when the
-// Pokemon they hit will send somebody away with its Eject Button or its Red
-// Card once the move is over: the item wins (Pokemon Central, Pulsantefuga and
-// Cartelrosso; the reference switches the user only if no switch is pending).
-// Here the move's switch comes with the hit, so this asks ahead, with nothing
-// chosen and no random number drawn: whether the item answers, and whether
-// anyone is there to come in for the holder, or for an attacker a card can
-// move.
-static BOOL SwitchItemWillAnswerPivot(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
-    if (SwitchItemAnswersHit(battleSystem, ctx, battlerId, HOLD_EFFECT_SWITCH_OUT_WHEN_HIT)) {
-        return CanSwitchMon(battleSystem, ctx, battlerId);
-    }
-    if (SwitchItemAnswersHit(battleSystem, ctx, battlerId, HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE)) {
-        return !BattlerIsAnchored(ctx, ctx->battlerIdAttacker) && CanSwitchMon(battleSystem, ctx, ctx->battlerIdAttacker);
-    }
-    return FALSE;
 }
 
 // The Eject Pack, once the move is over: a holder that had a stat lowered

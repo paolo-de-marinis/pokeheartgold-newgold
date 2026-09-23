@@ -170,9 +170,11 @@ class RetreatTests(unittest.TestCase):
         self.assertIn("ctx->selfTurnData[battlerId].retreatArmed = FALSE;", function(OVERLAY.read_text(), "InitSwitchWork"))
 
     def test_u_turn_leaves_its_user_in_when_the_target_retreats(self):
-        body = function(OVERLAY.read_text(), "ov12_02250490")
-        self.assertIn("*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && ctx->battlerIdTarget != BATTLER_NONE\n"
-                      "            && (Battler_Retreats(battleSystem, ctx, ctx->battlerIdTarget) || ", body)
+        # The switch is the step after the retreat, and a target that has
+        # gone back is no longer the Pokemon that was hit.
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        self.assertLess(body.index("TryRetreatAbility(battleSystem, ctx, &script)"), body.index("TryPivotSwitch(ctx)"))
+        self.assertIn("Battler_CameInAfterTheHit(ctx, target)", function(CONTROLLER.read_text(), "TryPivotSwitch"))
 
     def test_the_script_switches_or_flees(self):
         header = (ROOT / "include/constants/battle_subscript.h").read_text()

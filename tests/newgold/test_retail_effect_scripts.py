@@ -71,7 +71,6 @@ STILL_DIFFERENT = {
     178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
     180: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     222: IN_C.format("Natural Gift's type, power and berry, CalcBaseDamage.c"),
-    228: IN_C.format("the switch, ServerDoPostMoveEffects.c"),
     233: IN_C.format("the fling and the items that cannot be flung, BattleController_BeforeMove.c"),
     241: CALLED_MOVE,
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
@@ -396,6 +395,29 @@ class BroughtOverTests(unittest.TestCase):
         self.assertIn("if (!ctx->battleMons[ctx->battlerIdAttacker].hp) {", case)
         self.assertIn("script = BATTLE_SUBSCRIPT_PLUCK;", case)
         self.assertNotIn("SIDE_EFFECT", script(224))
+
+    def test_u_turn_switches_once_the_move_is_over(self):
+        # The engine's Activate_Switch: the last step here, after Emergency
+        # Exit and Wimp Out, for a user still standing that has not left and
+        # a target that has not left either.
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        step = function(controller, "TryPivotSwitch")
+        for needed in ("!= MOVE_EFFECT_SWITCH_HIT", "(ctx->moveStatusFlag & MOVE_STATUS_FAIL)",
+                       "!ctx->battleMons[ctx->battlerIdAttacker].hp || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)",
+                       "Battler_CameInAfterTheHit(ctx, target)",
+                       "RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT);"):
+            self.assertIn(needed, step)
+        body = function(controller, "ov12_0224E1BC")
+        pivot = body.index("TryPivotSwitch(ctx)")
+        for before in ("TryMagician(battleSystem, ctx, &script)", "CheckSwitchItemOnHit", "HOLD_EFFECT_HP_DRAIN_ON_ATK",
+                       "TryPickpocket(battleSystem, ctx, &script)", "TryRetreatAbility(battleSystem, ctx, &script)"):
+            self.assertLess(body.index(before), pivot, before)
+        self.assertNotIn("SIDE_EFFECT", script(228))
+        # What the hit sets off is the hit's own business now, not the switch's.
+        text = subscript("ATTACK_THEN_SWITCH_OUT")
+        for gone in ("TriggerAbilityOnHit", "TriggerHeldItemOnPivotMove", "STATUS2_DESTINY_BOND", "TryGrudge"):
+            self.assertNotIn(gone, text)
+        self.assertIn("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST", text)
 
     def test_howl_raises_the_allies_too(self):
         # The reference raises Howl's user alone; from Generation VIII the

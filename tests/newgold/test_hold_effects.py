@@ -794,21 +794,6 @@ int main(void) {
     assert(CheckSwitchItemOnHit(&bs, &ctx, 1, HOLD_EFFECT_SWITCH_OUT_WHEN_HIT) == BATTLE_SUBSCRIPT_NONE && S.picked == 0);
     reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT;
     assert(CheckSwitchItemOnHit(&bs, &ctx, 1, HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) == BATTLE_SUBSCRIPT_NONE);
-    // A pivot move's user stays when the button or the card will act, and
-    // goes when nobody could come in, the card could not move it, or there is
-    // no such item.
-    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT;
-    assert(SwitchItemWillAnswerPivot(&bs, &ctx, 1));
-    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; S.replacements = 0;
-    assert(!SwitchItemWillAnswerPivot(&bs, &ctx, 1));
-    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE;
-    assert(SwitchItemWillAnswerPivot(&bs, &ctx, 1) && S.picked == 0);
-    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.ability[0] = ABILITY_SUCTION_CUPS;
-    assert(!SwitchItemWillAnswerPivot(&bs, &ctx, 1));
-    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.battleType = 0;
-    assert(!SwitchItemWillAnswerPivot(&bs, &ctx, 1));
-    reset();
-    assert(!SwitchItemWillAnswerPivot(&bs, &ctx, 1));
     reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; S.ability[0] = ABILITY_SHEER_FORCE; S.suppressible = 1;
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; S.ability[0] = ABILITY_SHEER_FORCE;
@@ -851,16 +836,15 @@ class SwitchItemTests(unittest.TestCase):
     def test_who_answers_a_hit(self):
         overlay = OVERLAY.read_text()
         body = "\n".join(function(overlay, name) for name in (
-            "SheerForceTradedEffect", "Battler_CameInAfterTheHit", "SwitchItemAnswersHit", "BattlerIsAnchored", "CheckSwitchItemOnHit",
-            "SwitchItemWillAnswerPivot"))
+            "SheerForceTradedEffect", "Battler_CameInAfterTheHit", "SwitchItemAnswersHit", "BattlerIsAnchored", "CheckSwitchItemOnHit"))
         run_c(SWITCH_ITEM_FIXTURE.replace("@FUNCTION@", body))
 
     def test_a_red_card_holder_s_own_pivot_move_keeps_it_in(self):
         """Pokemon Central (Cartelrosso) and Bulbapedia's U-turn, Volt Switch
         and Flip Turn: the three do not switch a user holding a Red Card."""
-        dispatch = function(OVERLAY.read_text(), "ov12_02250490")
-        self.assertIn("if (*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {\n"
-                      "            ret = FALSE;", dispatch)
+        pivot = function(CONTROLLER.read_text(), "TryPivotSwitch")
+        self.assertIn("|| GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {\n"
+                      "        return FALSE;", pivot)
 
     def test_asked_after_the_move_before_the_users_own_items(self):
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
@@ -870,9 +854,10 @@ class SwitchItemTests(unittest.TestCase):
         # A card leaves the Eject Pack its turn; a button does not (Pokemon
         # Central, Zainofuga and Pulsantefuga).
         self.assertIn("ctx->unk_34 = card ? maxBattlers : (2 * maxBattlers | SWITCH_ITEM_USED);", body)
-        # And a pivot move asks ahead.
-        dispatch = function(OVERLAY.read_text(), "ov12_02250490")
-        self.assertIn("SwitchItemWillAnswerPivot(battleSystem, ctx, ctx->battlerIdTarget)", dispatch)
+        # And a pivot move's user stays once the card has dragged it out
+        # (U-turn's flag) or the button has sent its target back: its switch
+        # is a later step.
+        self.assertLess(ask, body.index("TryPivotSwitch(ctx)"))
         self.assertLess(ask, body.index("HOLD_EFFECT_HP_RESTORE_ON_DMG"))
         self.assertLess(ask, body.index("HOLD_EFFECT_HP_DRAIN_ON_ATK"))
         self.assertIn("SWITCH_ITEM_USED", body)
