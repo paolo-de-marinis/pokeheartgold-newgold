@@ -20,9 +20,10 @@ The ROM is the NEWGOLD_DIAG=1 HeartGold build. What each walk does:
           name, category, types and entry as text) and the cry X plays,
           which also says which species the cursor is on. A form species
           is seen as the form the Dex shows first.
-  battle  A wild battle for every species and form: the variant leads the
-          party, the wild one is its species (form 0, as the switch makes
-          it), until both are out and the game asks for a command. The
+  battle  A wild battle for every species and form, and one more for every
+          ability none of those has: the variant leads the party, the wild
+          one is its species (form 0, as the switch makes it), until both
+          are out and the game asks for a command. The
           harness draws no battle, so a battle is its markers: the state,
           the battlers, the cries, asserts and failed allocations.
 
@@ -819,9 +820,17 @@ def main():
         if "dex" in walks:
             jobs += [(dex_pages, job) for job in dex_jobs(out, wanted)]
         if "battle" in walks:
+            # Every species and form once, and every ability once more on a
+            # variant that has it: an ability that acts on entry is what can
+            # hold up the start of a battle.
             firsts = {}
             for e in wanted:
                 firsts.setdefault((e["species"], e["form"]), e["n"])
+            covered = {e["ability"] for e in wanted if firsts[e["species"], e["form"]] == e["n"]}
+            for e in wanted:
+                if e["ability"] not in covered:
+                    covered.add(e["ability"])
+                    firsts[e["n"]] = e["n"]
             jobs += [(battle, (n, out)) for n in firsts.values()]
         results.write_text("")
         with multiprocessing.get_context("fork").Pool(args.jobs, maxtasksperchild=1) as pool:
