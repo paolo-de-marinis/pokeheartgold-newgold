@@ -176,6 +176,11 @@ class BuildRuleTests(unittest.TestCase):
         prerequisites = re.search(r"^files_for_compile:(.*)$", database(), re.M).group(1).split()
         self.assertIn("files/application/zukanlist/zkn_data/zukan_enc.naix", prerequisites)
 
+    def test_no_suffix_rule_is_live(self):
+        """make's built-in suffix rules matched stray files: a .d.p beside a
+        .d was Pascal source to it, and a way to remake the .d."""
+        self.assertRegex(database(), r"(?m)^\.SUFFIXES:[ \t]*$")
+
     def test_a_battle_script_archive_holds_script_n_at_member_n(self):
         """The archive rule packed every .bin in the folder, so a script
         renumbered or removed left its old .bin in the next build and every

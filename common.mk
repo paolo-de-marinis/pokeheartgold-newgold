@@ -4,6 +4,12 @@ COMPARE ?= 1
 
 default: all
 
+# No suffix rules: every file here has a rule of its own, and a stray one
+# matched make's built-in ones -- a .d.p beside a .d was Pascal source for
+# it. -r would do more, but MAKEFLAGS reaches the tools' own makefiles, and
+# nitroarc's is built by make's built-in .c.o.
+.SUFFIXES:
+
 PROJECT_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 ifeq ($(OS),Windows_NT)
