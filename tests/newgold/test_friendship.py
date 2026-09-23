@@ -99,6 +99,8 @@ static inline LocalFieldData *Save_LocalFieldData_Get(SaveData *save) { return (
 static inline Location *LocalFieldData_GetCurrentPosition(LocalFieldData *field) { return (Location *)field; }
 @HOUR_FUNCTION@
 static TIMEOFDAY GF_RTC_GetTimeOfDay(void) { return GF_RTC_GetTimeOfDayByHour(hour); }
+typedef struct { int hour, minute, second; } RTCTime;
+static inline void GF_RTC_CopyTime(RTCTime *time) { time->hour = hour; time->minute = 0; time->second = 0; }
 @NIGHT_FUNCTION@
 @VANILLA_FUNCTION@
 @NATIVE_FUNCTION@

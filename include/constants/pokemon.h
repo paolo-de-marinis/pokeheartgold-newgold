@@ -611,6 +611,10 @@ typedef enum EvoMethod {
     EVO_MAGNETIC_FIELD,
     EVO_ETERNA,
     EVO_ROUTE217,
+    // hg-engine: a level by the time of day, dusk being five in the afternoon.
+    EVO_LEVEL_DAY,
+    EVO_LEVEL_NIGHT,
+    EVO_LEVEL_DUSK,
     // New Gold needs Eevee to notice it knows a Fairy move.
     EVO_HAS_MOVE_TYPE,
 } EvoMethod;

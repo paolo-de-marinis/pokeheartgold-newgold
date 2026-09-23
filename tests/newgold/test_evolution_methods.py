@@ -126,8 +126,35 @@ static void check_magnetic_field(void) {
     }
 }
 
+static void check_time_of_day(void) {
+    // hg-engine: this game's day and night, and dusk as the hour from five.
+    // Night is from eight in the evening to four in the morning.
+    Pokemon mon = { .species = SPECIES_ROCKRUFF };
+    location.mapId = MAP_NEW_BARK;
+    for (int method = EVO_LEVEL_DAY; method <= EVO_LEVEL_DUSK; method++) {
+        one_row(method, 25, SPECIES_LYCANROC);
+        for (hour = 0; hour < 24; hour++) {
+            int night = hour < 4 || hour >= 20;
+            int rightTime = method == EVO_LEVEL_DAY ? !night : method == EVO_LEVEL_NIGHT ? night : hour == 17;
+            for (mon.level = 24; mon.level <= 26; mon.level++) {
+                u16 expected = rightTime && mon.level >= 25 ? SPECIES_LYCANROC : SPECIES_NONE;
+                assert(evolve(&mon, NULL, method) == expected);
+            }
+        }
+    }
+    // Rockruff's two rows: day first, so the hour decides between them.
+    one_row(EVO_LEVEL_DAY, 25, SPECIES_LYCANROC);
+    table[1] = (struct Evolution){ EVO_LEVEL_NIGHT, 25, SPECIES_LYCANROC_MIDNIGHT };
+    mon.level = 25;
+    hour = 12;
+    assert(evolve(&mon, NULL, EVO_LEVEL_DAY) == SPECIES_LYCANROC);
+    hour = 22;
+    assert(evolve(&mon, NULL, EVO_LEVEL_NIGHT) == SPECIES_LYCANROC_MIDNIGHT);
+}
+
 int main(void) {
     check_magnetic_field();
+    check_time_of_day();
     return 0;
 }
 """

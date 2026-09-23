@@ -4959,6 +4959,96 @@
           "target": "SPECIES_BELLIBOLT"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_TYRUNT",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_DAY",
+          "param": 39,
+          "target": "SPECIES_TYRANTRUM"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_YUNGOOS",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_DAY",
+          "param": 20,
+          "target": "SPECIES_GUMSHOOS"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_ROCKRUFF",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_DAY",
+          "param": 25,
+          "target": "SPECIES_LYCANROC"
+        },
+        {
+          "method": "EVO_LEVEL_NIGHT",
+          "param": 25,
+          "target": "SPECIES_LYCANROC_MIDNIGHT"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_FOMANTIS",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_DAY",
+          "param": 34,
+          "target": "SPECIES_LURANTIS"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_COSMOEM",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_DAY",
+          "param": 53,
+          "target": "SPECIES_SOLGALEO"
+        },
+        {
+          "method": "EVO_LEVEL_NIGHT",
+          "param": 53,
+          "target": "SPECIES_LUNALA"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_GREAVARD",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_NIGHT",
+          "param": 30,
+          "target": "SPECIES_HOUNDSTONE"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_RATTATA_ALOLAN",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_NIGHT",
+          "param": 20,
+          "target": "SPECIES_RATICATE_ALOLAN"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_ROCKRUFF_OWN_TEMPO",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_DUSK",
+          "param": 25,
+          "target": "SPECIES_LYCANROC_DUSK"
+        }
+      ]
     }
   ]
 }

@@ -3144,6 +3144,26 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     *method_ret = EVO_ROUTE217;
                 }
                 break;
+            case EVO_LEVEL_DAY:
+                if (IsNighttime() == 0 && evoTable[i].param <= level) {
+                    target = evoTable[i].target;
+                    *method_ret = EVO_LEVEL_DAY;
+                }
+                break;
+            case EVO_LEVEL_NIGHT:
+                if (IsNighttime() == 1 && evoTable[i].param <= level) {
+                    target = evoTable[i].target;
+                    *method_ret = EVO_LEVEL_NIGHT;
+                }
+                break;
+            case EVO_LEVEL_DUSK: {
+                RTCTime time;
+                GF_RTC_CopyTime(&time);
+                if (time.hour == 17 && evoTable[i].param <= level) {
+                    target = evoTable[i].target;
+                    *method_ret = EVO_LEVEL_DUSK;
+                }
+            } break;
             }
             if (target != SPECIES_NONE) {
                 break;
