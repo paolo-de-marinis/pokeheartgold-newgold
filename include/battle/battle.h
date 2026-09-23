@@ -684,6 +684,9 @@ typedef struct BattleContext {
     // The turns Wonder Room and Magic Room have left, 0 when they are down.
     u8 wonderRoomTurns;
     u8 magicRoomTurns;
+    // Fairy Lock: the turns' ends left before nobody is held any more, 2 on
+    // the turn it is used, so the next is held too.
+    u8 fairyLockTurns;
     // Rage Fist: the hits each Pokemon has taken this battle, six at most,
     // by the party slot it was sent out from (Battler_RageFistHits); switching
     // out and fainting keep the count.

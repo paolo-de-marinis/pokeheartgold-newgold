@@ -7448,4 +7448,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} became\nweaker to fire!</language>
 	</row>
+	<row id="msg_0197_01862" index="1862">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">No one will be able to run away\nduring the next turn!</language>
+	</row>
 </body>

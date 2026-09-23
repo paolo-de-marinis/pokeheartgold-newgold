@@ -3838,6 +3838,16 @@ BOOL CanSwitchMon(BattleSystem *battleSystem, BattleContext *ctx, int battlerId)
     return ret;
 }
 
+// Fairy Lock holds every Pokemon on the field but a Ghost-type until the end
+// of the turn after the one it was used in (Pokemon Central, Blocco Fatato);
+// Run Away, a Smoke Ball and a Shed Shell answer it as they answer any hold.
+static BOOL FairyLockHolds(BattleContext *ctx, int battlerId) {
+    return ctx->fairyLockTurns
+        && GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) != TYPE_GHOST
+        && GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL) != TYPE_GHOST
+        && ctx->battleMons[battlerId].type3 != TYPE_GHOST;
+}
+
 BOOL CantEscape(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BattleMessage *msg) {
     int battlerIdAbility;
     int maxBattlers;
@@ -3904,7 +3914,8 @@ BOOL CantEscape(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, B
         return TRUE;
     }
 
-    if ((ctx->battleMons[battlerId].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK)) || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)) {
+    if ((ctx->battleMons[battlerId].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK)) || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
+        || FairyLockHolds(ctx, battlerId)) {
         if (msg == NULL) {
             return TRUE;
         }
@@ -8836,7 +8847,8 @@ BOOL BattlerCanSwitch(BattleSystem *battleSystem, BattleContext *ctx, int battle
         return FALSE;
     }
 
-    if ((ctx->battleMons[battlerId].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK)) || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)) {
+    if ((ctx->battleMons[battlerId].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK)) || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
+        || FairyLockHolds(ctx, battlerId)) {
         ret = TRUE;
     }
 

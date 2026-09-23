@@ -185,7 +185,8 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // Bolt, grew it by four. The Rooms' two bytes grew it by four. Rage Fist's
 // count by party, two of its bytes in the padding the Rooms' left, grew it by
 // twenty-four. Octolock's bit took each battler's move conditions to a second
-// byte, four in all. Dragon Cheer's two took them to a third, four more.
+// byte, four in all. Dragon Cheer's two took them to a third, four more. Fairy
+// Lock's byte went into the padding after Rage Fist's count.
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x3260 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
@@ -2216,6 +2217,9 @@ static void BattleControllerPlayer_TurnEnd(BattleSystem *battleSystem, BattleCon
     }
     ctx->echoedVoiceUsed = FALSE;
     ctx->roundUsers = 0;
+    if (ctx->fairyLockTurns) {
+        ctx->fairyLockTurns--;
+    }
     ctx->moveUsedLast = MOVE_NONE;
     ctx->moveUsedBefore = MOVE_NONE;
 

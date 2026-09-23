@@ -10282,6 +10282,14 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         ctx->calcTemp = !ctx->moveConditions[battlerId].tarShot;
         ctx->moveConditions[battlerId].tarShot = TRUE;
         break;
+    // The field is locked till the next turn's end; not twice over (CALC_TEMP
+    // says whether it took).
+    case MOVE_FAIRY_LOCK:
+        ctx->calcTemp = !ctx->fairyLockTurns;
+        if (ctx->calcTemp) {
+            ctx->fairyLockTurns = 2;
+        }
+        break;
     // A critical stage more, two for a Dragon-type as it is now; nothing for
     // a Pokemon already cheered or pumped by Focus Energy (CALC_TEMP says).
     case MOVE_DRAGON_CHEER:

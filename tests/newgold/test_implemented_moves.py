@@ -644,5 +644,22 @@ int main(void) {
         self.assertIn("+ ctx->moveConditions[battlerIdAttacker].dragonCheer +",
                       function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "TryCriticalHit"))
 
+    def test_fairy_lock_holds_the_field_till_the_next_turn_s_end(self):
+        # Pokemon Central (Blocco Fatato): all but Ghost-types, this turn and
+        # the next; not twice over.
+        import import_battle_messages
+        self.assertImplemented("FAIRY_LOCK", "MOVE_EFFECT_FAIRY_LOCK")
+        script = effect_script("MOVE_EFFECT_FAIRY_LOCK")
+        self.assertIn("SetMoveConditionFlag MOVE_FAIRY_LOCK, BATTLER_CATEGORY_ATTACKER", script)
+        self.assertIn(f"BufferMessage msg_0197_{import_battle_messages.port_row('fairy lock'):05d}, TAG_NONE", script)
+        self.assertIn("case MOVE_FAIRY_LOCK:\n        ctx->calcTemp = !ctx->fairyLockTurns;",
+                      function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SetMoveConditionFlag"))
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        self.assertEqual(function(overlay, "FairyLockHolds").count("TYPE_GHOST"), 3)
+        for name in ("CantEscape", "BattlerCanSwitch"):
+            self.assertIn("|| FairyLockHolds(ctx, battlerId)) {", function(overlay, name))
+        self.assertIn("if (ctx->fairyLockTurns) {\n        ctx->fairyLockTurns--;",
+                      function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_TurnEnd"))
+
 if __name__ == "__main__":
     unittest.main()

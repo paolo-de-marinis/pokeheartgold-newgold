@@ -221,6 +221,11 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} became\nweaker to fire!",
         r"The opposing {STRVAR_1 1, 0, 0} became\nweaker to fire!",
     ]),
+    # Fairy Lock. The engine leaves the move unimplemented; the later games'
+    # line, about the field, so one row.
+    ("fairy lock", [
+        r"No one will be able to run away\nduring the next turn!",
+    ]),
 ]
 
 

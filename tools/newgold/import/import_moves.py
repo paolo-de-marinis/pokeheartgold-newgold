@@ -452,6 +452,9 @@ IMPLEMENTED_HERE = {
     # Dragon Cheer raises its ally's critical-hit ratio, two stages for a
     # Dragon-type (Pokemon Central, Grido del Drago): effect script 433.
     "DRAGON_CHEER": "MOVE_EFFECT_DRAGON_CHEER",
+    # Fairy Lock holds every Pokemon but a Ghost-type till the next turn's
+    # end (Pokemon Central, Blocco Fatato): effect script 434.
+    "FAIRY_LOCK": "MOVE_EFFECT_FAIRY_LOCK",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -495,6 +498,9 @@ FIELDS_HERE = {
     # On an ally: Protect and Magic Coat have nothing to do with it (Pokemon
     # Central, Grido del Drago).
     "DRAGON_CHEER": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
+    # The field's: Protect and Magic Coat have nothing to do with it (Pokemon
+    # Central, Blocco Fatato).
+    "FAIRY_LOCK": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
 }
 
 # The effects written here for those moves follow the reference's in

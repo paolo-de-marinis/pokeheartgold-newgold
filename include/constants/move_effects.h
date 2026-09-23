@@ -441,5 +441,6 @@
 #define MOVE_EFFECT_EERIE_SPELL                                  431
 #define MOVE_EFFECT_HIT_SHARED_TYPE                              432
 #define MOVE_EFFECT_DRAGON_CHEER                                 433
+#define MOVE_EFFECT_FAIRY_LOCK                                   434
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H
