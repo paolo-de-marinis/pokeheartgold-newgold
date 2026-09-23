@@ -1,9 +1,12 @@
+#include "constants/daycare.h"
+
 #include "bag.h"
 #include "field_system.h"
 #include "get_egg.h"
 #include "map_object.h"
 #include "party.h"
 #include "player_data.h"
+#include "pokedex.h"
 #include "pokemon.h"
 #include "scrcmd.h"
 
@@ -12,6 +15,8 @@ extern void FollowMon_SetObjectParams(LocalMapObject *mapObject, u16 species, u8
 extern u32 FollowMon_GetSpriteID(int species, u16 form, u32 gender);
 
 static LocalMapObject *CreateDaycareMonSpriteInternal(MapObjectManager *object_man, u8 dc_mon_idx, u16 species, u8 form, u32 gender, u32 direction, u32 x, u32 y, u32 map_no, BOOL shiny);
+static void Daycare_LearnEggMovesFrom(BoxPokemon *learner, BoxPokemon *teacher);
+static void Daycare_ShareEggMoves(BoxPokemon *partyMon, BoxPokemon *daycareMon);
 
 BOOL ScrCmd_BufferDaycareMonNicks(ScriptContext *ctx) {
     SaveData *saveData = ctx->fieldSystem->saveData;
@@ -243,5 +248,57 @@ BOOL ScrCmd_DaycareSanitizeMon(ScriptContext *ctx) {
         }
     }
 
+    BoxPokemon *daycareMon = Daycare_GetBoxMonI(Save_Daycare_Get(fieldSystem->saveData), 0);
+    if (GetBoxMonData(daycareMon, MON_DATA_SPECIES, NULL) != SPECIES_NONE) {
+        Daycare_ShareEggMoves(Mon_GetBoxMon(mon), daycareMon);
+    }
+
     return FALSE;
+}
+
+// The learner takes those of the teacher's moves that are among its own egg
+// moves and that it does not know, into its empty move slots, at full PP.
+static void Daycare_LearnEggMovesFrom(BoxPokemon *learner, BoxPokemon *teacher) {
+    u16 eggMoves[MAX_EGG_MOVES];
+    u32 known[MAX_MON_MOVES];
+    u32 move, pp;
+    u8 slot, i, j, numEggMoves;
+
+    for (slot = 0; slot < MAX_MON_MOVES; slot++) {
+        if ((known[slot] = GetBoxMonData(learner, MON_DATA_MOVE1 + slot, NULL)) == MOVE_NONE) {
+            break;
+        }
+    }
+    numEggMoves = LoadEggMoves(GetBoxMonData(learner, MON_DATA_SPECIES, NULL), eggMoves);
+    for (i = 0; i < MAX_MON_MOVES && slot < MAX_MON_MOVES; i++) {
+        move = GetBoxMonData(teacher, MON_DATA_MOVE1 + i, NULL);
+        for (j = 0; j < slot && known[j] != move; j++) { }
+        if (move == MOVE_NONE || j < slot) {
+            continue;
+        }
+        for (j = 0; j < numEggMoves && eggMoves[j] != move; j++) { }
+        if (j == numEggMoves) {
+            continue;
+        }
+        SetBoxMonData(learner, MON_DATA_MOVE1 + slot, &move);
+        pp = GetBoxMonData(learner, MON_DATA_MOVE1_MAX_PP + slot, NULL);
+        SetBoxMonData(learner, MON_DATA_MOVE1_PP + slot, &pp);
+        known[slot++] = move;
+    }
+}
+
+// hg-engine (d0380a487, ScrCmd_DaycareSanitizeMon): when a second Pokemon is
+// left, the one holding a Mirror Herb -- or each of the two, when they are the
+// same species -- learns the other's moves that are among its egg moves. The
+// reference's second branch filters a list only its first branch fills, and
+// against the wrong Pokemon's moves, so the Pokemon already in the Day-Care
+// never learns anything there; here both directions are the one rule.
+static void Daycare_ShareEggMoves(BoxPokemon *partyMon, BoxPokemon *daycareMon) {
+    BOOL sameSpecies = SpeciesToDexSpecies(GetBoxMonData(partyMon, MON_DATA_SPECIES, NULL)) == SpeciesToDexSpecies(GetBoxMonData(daycareMon, MON_DATA_SPECIES, NULL));
+    if (sameSpecies || GetBoxMonData(partyMon, MON_DATA_HELD_ITEM, NULL) == ITEM_MIRROR_HERB) {
+        Daycare_LearnEggMovesFrom(partyMon, daycareMon);
+    }
+    if (sameSpecies || GetBoxMonData(daycareMon, MON_DATA_HELD_ITEM, NULL) == ITEM_MIRROR_HERB) {
+        Daycare_LearnEggMovesFrom(daycareMon, partyMon);
+    }
 }

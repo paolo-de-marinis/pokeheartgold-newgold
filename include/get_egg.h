@@ -21,5 +21,6 @@ u16 Save_Daycare_BufferTailMonNick(Daycare *dayCare, MessageFormat *msgFmt);
 u8 Save_Daycare_GetState(Daycare *dayCare);
 u8 Save_Daycare_CalcCompatibility(Daycare *dayCare);
 void sub_0206D328(Pokemon *mon, enum HeapID heapID);
+u8 LoadEggMoves(u16 species, u16 *dest);
 
 #endif

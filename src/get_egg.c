@@ -36,7 +36,6 @@ static int Daycare_EverstoneCheck(Daycare *dayCare);
 static void GenerateEggPID(Daycare *dayCare);
 static void _IVList_Remove(u8 *ptr, int statID);
 static void InheritIVs(Pokemon *egg, Daycare *dayCare);
-static u8 LoadEggMoves(Pokemon *mon, u16 *dest);
 static void InheritMoves(Pokemon *egg, BoxPokemon *father, BoxPokemon *mother);
 static u16 Daycare_BreedingIncenseCheck(u16 species, Daycare *dayCare);
 static void Daycare_LightBallCheck(Pokemon *egg, Daycare *dayCare);
@@ -358,9 +357,8 @@ static void InheritIVs(Pokemon *egg, Daycare *dayCare) {
 // hg-engine's layout: MAX_EGG_MOVES halfwords a species, through NUM_SPECIES,
 // the list ended by 0xFFFF where it is shorter. Written with MAX_EGG_MOVES by
 // tools/newgold/import/import_egg_moves.py.
-static u8 LoadEggMoves(Pokemon *mon, u16 *dest) {
+u8 LoadEggMoves(u16 species, u16 *dest) {
     u8 numEggMoves = 0;
-    u16 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
     ReadFromNarcMemberByIdPair(dest, NARC_fielddata_breeding_egg_move_list, 0, species * MAX_EGG_MOVES * sizeof(u16), MAX_EGG_MOVES * sizeof(u16));
     while (numEggMoves < MAX_EGG_MOVES && dest[numEggMoves] != 0xFFFF) {
         numEggMoves++;
@@ -391,7 +389,7 @@ static void InheritMoves(Pokemon *egg, BoxPokemon *father, BoxPokemon *mother) {
         search->dad_moves[moveSlot] = GetBoxMonData(father, MON_DATA_MOVE1 + moveSlot, NULL);
         search->mom_moves[moveSlot] = GetBoxMonData(mother, MON_DATA_MOVE1 + moveSlot, NULL);
     }
-    u16 numEggMoves = LoadEggMoves(egg, search->baby_egg_moves);
+    u16 numEggMoves = LoadEggMoves(egg_species, search->baby_egg_moves);
     for (moveSlot = 0; moveSlot < MAX_MON_MOVES; moveSlot++) {
         if (search->dad_moves[moveSlot] != MOVE_NONE) {
             for (j = 0; j < numEggMoves; j++) {
