@@ -326,7 +326,9 @@ class SaveditLibraryTests(unittest.TestCase):
                          "the same TM as its own is not another way")
         self.assertIn({"how": "level", "level": 0}, charizard[moves["AIR_SLASH"]])
         self.assertIn({"how": "tutor"}, charizard[moves["HEAT_WAVE"]])
-        self.assertEqual(charizard[moves["METAL_CLAW"]], [{"how": "egg", "from": n["CHARMANDER"]}])
+        self.assertIn({"how": "egg", "from": n["CHARMANDER"]}, charizard[moves["METAL_CLAW"]])
+        self.assertEqual(sv.learnable_moves(n["POLIWRATH"])[moves["CIRCLE_THROW"]], [{"how": "egg", "daycare": True}],
+                         "Poliwrath's own egg move, learnt at the Day-Care (Daycare_LearnEggMovesFrom)")
         self.assertNotIn(moves["SURF"], charizard)
         self.assertEqual(sv.learnable_moves(n["NINETALES"])[moves["INCINERATE"]],
                          [{"how": "level", "level": 16, "from": n["VULPIX"]}])
@@ -775,6 +777,9 @@ class TheCodeSaveditKeeps(unittest.TestCase):
         eggs = sv.c_function("src/get_egg.c", "u8 LoadEggMoves(")
         self.assertIn("species * MAX_EGG_MOVES * sizeof(u16), MAX_EGG_MOVES * sizeof(u16)", eggs)
         self.assertIn("dest[numEggMoves] != 0xFFFF", eggs)
+        self.assertIn("LoadEggMoves(GetBoxMonData(learner, MON_DATA_SPECIES, NULL), eggMoves)",
+                      sv.c_function("src/scrcmd_daycare.c", "static void Daycare_LearnEggMovesFrom("),
+                      "learnable_moves: the Day-Care teaches a species' own egg moves, whatever its stage")
         self.assertRegex(sv.c_function("src/pokemon.c", "void LoadLevelUpLearnset_HandleAlternateForm("),
                          r"if \(!IsMoveUnimplemented\(LEVEL_UP_LEARNSET_MOVE\(levelUpLearnset\[i\]\)\)\) \{\s*"
                          r"levelUpLearnset\[j\+\+\] = levelUpLearnset\[i\];", "learnsets(): every reader gets it filtered")

@@ -1580,12 +1580,13 @@ def learnable_moves(species, form=0):
     {"how": "level", "level": n} (0: on evolving), {"how": "machine",
     "item": the TM, HM or TR}, {"how": "tutor"} ("type": the type the
     Blackthorn tutor teaches it for, type_tutors), {"how": "egg"} ("item":
-    the one a parent holds, item_egg_moves) or
+    the one a parent holds, item_egg_moves; "daycare": learnt at the
+    Day-Care, by a species no egg hatches as) or
     {"how": "form"} (the move a Rotom form has of its own), with
     "from": the species when it is a pre-evolution's -- a move learnt
     before evolving is kept. Its own form's row (ResolveMonForm) for its
-    learnset, machines and tutors; egg moves are those of the species an
-    egg of its line hatches as. A pre-evolution's machine or tutor that the
+    learnset, machines and tutors; egg moves are each species' own record.
+    A pre-evolution's machine or tutor that the
     species has itself is the same way, and is not repeated."""
     out = {}
     for s, hatches in evolution_line(species):
@@ -1598,7 +1599,12 @@ def learnable_moves(species, form=0):
         found += [(move, {"how": "tutor", "type": kind}) for move, kind in type_tutors() if kind in kinds]
         own = form_moves().get(s, []) if s == species else []
         found += [(own[form], {"how": "form"})] if form < len(own) else []
-        found += [(move, {"how": "egg"}) for move in (egg_moves()[s] if hatches and s < len(egg_moves()) else [])]
+        # Its own egg moves: an egg's, or at the Day-Care, where
+        # Daycare_LearnEggMovesFrom teaches a Pokemon of any stage those of
+        # its species' that the other one knows (a Mirror Herb, or the same
+        # species).
+        own = {"how": "egg"} if hatches else {"how": "egg", "daycare": True}
+        found += [(move, own) for move in (egg_moves()[s] if s < len(egg_moves()) else [])]
         found += [(move, {"how": "egg", "item": item}) for move, item in (item_egg_moves().get(s, []) if hatches else [])]
         for move, how in found:
             if s != species and how["how"] in ("machine", "tutor") and how in out.get(move, []):

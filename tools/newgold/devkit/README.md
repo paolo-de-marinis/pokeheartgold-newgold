@@ -52,9 +52,11 @@ and TRs its `personal.json` record is compatible with (`sTMHMMoves` and
 `ItemToTMHMId` in `src/item.c`), the move tutors (`waza_oshie.json` through
 `sTutorMoves`, at the record `GetMoveTutorLearnsetIndex` reads; and the
 Blackthorn tutor's script, `scr_seq_0948_T30R0601.s`, which teaches its
-move to a Pokemon of the type its `GetMonTypes` tests name), the egg
-moves (`kowaza_list.narc`) of the species its line hatches as, with
-the one `Daycare_LightBallCheck` adds for a parent's Light Ball, a Rotom
+move to a Pokemon of the type its `GetMonTypes` tests name), its own egg
+moves (`kowaza_list.narc`) -- an egg's, with the one
+`Daycare_LightBallCheck` adds for a parent's Light Ball, or, for a species
+no egg hatches as, the Day-Care's (`Daycare_LearnEggMovesFrom`: a Mirror
+Herb, or two of the same species) -- a Rotom
 form's own move (`sRotomFormMoves`, which the Rotom Catalog teaches), and the same
 for its pre-evolutions (`evo.json`, and `EvolvedPassiveForm`'s two form
 species: a form the game never evolves into has none). `species_abilities` is its first, second and
