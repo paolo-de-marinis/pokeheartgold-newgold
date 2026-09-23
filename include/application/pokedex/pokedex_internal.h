@@ -332,10 +332,12 @@ typedef char PokedexAppData_MatchesOverlay18[sizeof(PokedexAppData) == 0x1910 ? 
 
 void ov18_021EE3AC(PokedexAppData *pokedexApp, MsgData *msgData, int windowId, int msgId, int x, int y, int fontId, u32 color, int alignment);
 void ov18_021EE75C(PokedexAppData *pokedexApp, u32 species, int windowId);
+void ov18_021EE834(PokedexAppData *pokedexApp, u16 species, u32 idx, int windowId);
 void ov18_021EEC34(PokedexAppData *pokedexApp, u32 species, int windowId, int charsetOption);
 String *ov18_021E590C(u16 species, int language, enum HeapID heapId);
 String *ov18_021E595C(u16 species, int language, enum HeapID heapId);
 String *ov18_021E59A8(u16 species, int language, int a2, enum HeapID heapId);
+void ov18_021F95FC(Window *window, String *string, int x, int y, FontID fontId, u32 color, int alignment);
 
 void ov18_021E5C40(void *cb_arg);
 void ov18_021E5C74(void);
