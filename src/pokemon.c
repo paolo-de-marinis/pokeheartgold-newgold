@@ -3158,9 +3158,10 @@ u16 ReadFromPersonalPmsNarc(u16 species) {
     FSFile file;
     FS_InitFile(&file);
     FS_OpenFile(&file, "poketool/personal/pms.narc");
-    // One halfword a species, and the file is retail's. A species past its
-    // end has no entry, which is not an error: it answers nothing rather
-    // than seeking past the file and keeping whatever was in the buffer.
+    // One halfword a species, written by import_baby_species.py up to
+    // NUM_SPECIES. A species past its end has no entry, which is not an
+    // error: it answers nothing rather than seeking past the file and
+    // keeping whatever was in the buffer.
     if ((s32)(species * 2 + 2) > file.prop.file.bottom - file.prop.file.top) {
         FS_CloseFile(&file);
         return 0;
