@@ -197,5 +197,55 @@ class StrongWeatherTests(unittest.TestCase):
         self.assertIn("if (!weather || (weather & FIELD_CONDITION_STRONG_WINDS)) {", function(commands, "BtlCmd_WeatherHPRecovery"))
 
 
+class StrongWeatherMoveTests(unittest.TestCase):
+    PREFIX = r"""
+#include <assert.h>
+#include <stdio.h>
+#include "constants/battle.h"
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+typedef unsigned int u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+"""
+
+    def test_fire_goes_out_in_the_heavy_rain_and_water_in_the_harsh_sun(self):
+        source = CONTROLLER.read_text()
+        program = self.PREFIX + function(source, "PrimalWeatherStopsMove") + r"""
+int main(void) {
+    assert(PrimalWeatherStopsMove(FIELD_CONDITION_HEAVY_RAIN, CATEGORY_SPECIAL, TYPE_FIRE));
+    assert(PrimalWeatherStopsMove(FIELD_CONDITION_HEAVY_RAIN, CATEGORY_PHYSICAL, TYPE_FIRE));
+    assert(!PrimalWeatherStopsMove(FIELD_CONDITION_HEAVY_RAIN, CATEGORY_STATUS, TYPE_FIRE));
+    assert(!PrimalWeatherStopsMove(FIELD_CONDITION_HEAVY_RAIN, CATEGORY_SPECIAL, TYPE_WATER));
+    assert(PrimalWeatherStopsMove(FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT, CATEGORY_SPECIAL, TYPE_WATER));
+    assert(!PrimalWeatherStopsMove(FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT, CATEGORY_SPECIAL, TYPE_FIRE));
+    // Ordinary rain and sun, the winds, and nothing -- Cloud Nine -- stop nothing.
+    assert(!PrimalWeatherStopsMove(FIELD_CONDITION_RAIN, CATEGORY_SPECIAL, TYPE_FIRE));
+    assert(!PrimalWeatherStopsMove(FIELD_CONDITION_SUN, CATEGORY_SPECIAL, TYPE_WATER));
+    assert(!PrimalWeatherStopsMove(FIELD_CONDITION_STRONG_WINDS, CATEGORY_SPECIAL, TYPE_FIRE));
+    assert(!PrimalWeatherStopsMove(0, CATEGORY_SPECIAL, TYPE_FIRE));
+    puts("PASS: heavy rain puts out Fire, harsh sunlight dries up Water.");
+    return 0;
+}
+"""
+        with tempfile.TemporaryDirectory(prefix="newgold-primal-move-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(program)
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+                str(path / "test.c"), "-o", str(path / "test")], check=True)
+            print(subprocess.run([str(path / "test")], check=True, capture_output=True, text=True).stdout.strip())
+        # After the PP is spent, before Protean, with the weather the user's
+        # move sees.
+        before = function(source, "ov12_0224C38C")
+        self.assertLess(before.index("ov12_0224B1FC(battleSystem, ctx)"), before.index("PrimalWeatherStopsMove(BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker)"))
+        self.assertLess(before.index("PrimalWeatherStopsMove("), before.index("ABILITY_PROTEAN"))
+        self.assertIn("BATTLE_SUBSCRIPT_PRIMAL_WEATHER_STOPS_MOVE", before)
+        script = subscript("PrimalWeatherStopsMove")
+        self.assertIn("PrintMessage msg_0197_01443, TAG_NONE", script)
+        self.assertIn("PrintMessage msg_0197_01447, TAG_NONE", script)
+
+
 if __name__ == "__main__":
     unittest.main()

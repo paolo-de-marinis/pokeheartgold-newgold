@@ -3185,6 +3185,18 @@ static BOOL TryStanceChange(BattleSystem *battleSystem, BattleContext *ctx) {
     return TRUE;
 }
 
+// Desolate Land's extremely harsh sunlight evaporates a damaging Water move,
+// and Primordial Sea's heavy rain puts out a damaging Fire move, once it has
+// been used and its PP spent (Pokemon Central, Terra Estrema, Mare
+// Primordiale; hg-engine's BattleController_CheckPrimalWeather). The weather
+// is the one the user's move sees: none under Cloud Nine or Air Lock, and a
+// Mega Sol user's own sunlight whatever is up.
+static BOOL PrimalWeatherStopsMove(u32 weather, int category, int type) {
+    return category != CATEGORY_STATUS
+        && (((weather & FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT) && type == TYPE_WATER)
+            || ((weather & FIELD_CONDITION_HEAVY_RAIN) && type == TYPE_FIRE));
+}
+
 static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
     switch (ctx->unk_48) {
     case 0:
@@ -3229,6 +3241,17 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
             return;
         }
         if (!(ctx->unk_2184 & (1 << 3)) && ov12_0224B1FC(battleSystem, ctx) == TRUE) {
+            return;
+        }
+        if (PrimalWeatherStopsMove(BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), BattleMoveTbl(ctx, ctx->moveNoCur)->category,
+                BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur))
+            == TRUE) {
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_PRIMAL_WEATHER_STOPS_MOVE);
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            ctx->commandNext = CONTROLLER_COMMAND_25;
+            // As a move the before-move checks stop, Powder's among them.
+            ctx->battleStatus |= BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE;
+            ctx->moveStatusFlag |= MOVE_STATUS_NO_MORE_WORK;
             return;
         }
         ctx->unk_48++;

@@ -675,6 +675,9 @@
 #define BATTLE_SUBSCRIPT_PRIMAL_WEATHER_HOLDS               418
 // A strong weather ending with its last Pokemon. 368 and 369 there.
 #define BATTLE_SUBSCRIPT_PRIMAL_WEATHER_END                 419
+// A Water move evaporating in the harsh sunlight, or a Fire move in the heavy
+// rain. 370 and 371 there.
+#define BATTLE_SUBSCRIPT_PRIMAL_WEATHER_STOPS_MOVE          420
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
