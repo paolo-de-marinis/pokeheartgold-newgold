@@ -199,7 +199,7 @@ UNREAD_HERE = {
     "CONFUSE_HIT_CRASH_ON_MISS": "script: it sets the crash flag and Reckless's boost itself",
     "ATK_SP_ATK_UP": "script: subscript 346 refuses when both stats are at +6, the reference's up-front check",
     "ATK_SP_ATK_SPEED_UP_2": "unused",
-    "SHED_TAIL": "not ported: subscript 343 makes the decoy but the user never switches out",
+    "SHED_TAIL": "script: subscript 343 makes the decoy and switches the user out through Baton Pass's switch",
     "QUASH": "script: subscript 341 fails behind a substitute, as the reference's substitute list does",
     "CHARGE_TURN_ATK_SP_ATK_SPEED_UP_2": "script: the charge turn, Power Herb and the +6 refusal are effect script 323's",
     "SET_ABILITY_TO_SIMPLE": "script: subscript 338 fails behind a substitute itself",

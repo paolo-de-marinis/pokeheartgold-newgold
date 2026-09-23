@@ -30,11 +30,22 @@ _000:
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STAT_CHANGE_ACC, 6
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STAT_CHANGE_EVASION, 6
     UpdateMonData OPCODE_FLAG_OFF, BATTLER_CATEGORY_DEFENDER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_LEECH_SEED
-    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_BATON_PASS
+    // The reference switches the user out once the move is over, as it does
+    // for Parting Shot (ServerDoPostMoveEffects.c:2136-2147), with the Baton
+    // Pass flag set so the decoy goes to what comes in; the stages were reset
+    // above so that they do not go with it. This tree has no pass after the
+    // move, so the switch is Baton Pass's own, from here.
+    TryRestoreStatusOnSwitch BATTLER_CATEGORY_ATTACKER, _SWITCH_OUT
+    UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS, STATUS_NONE
 
-_111:
-    Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION
-    End
+_SWITCH_OUT:
+    DeletePokemon BATTLER_CATEGORY_ATTACKER
+    Wait 
+    HealthbarSlideOut BATTLER_CATEGORY_ATTACKER
+    Wait 
+    UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_SWITCH, BSCRIPT_VAR_BATTLER_ATTACKER
+    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_BATON_PASS
+    GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST
 
 _137:
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED

@@ -146,6 +146,20 @@ class CoachingTests(unittest.TestCase):
         self.assertIn("MOVE_STATUS_FAILED", script[script.index("\n_NO_PARTNER:"):])
 
 
+class ShedTailTests(unittest.TestCase):
+    def test_the_user_leaves_its_decoy_behind(self):
+        # ServerDoPostMoveEffects.c:2136-2147 at d0380a487 switches the user
+        # out after the move, with the Baton Pass flag the subscript sets.
+        # Here the subscript ends in Baton Pass's own switch.
+        script = subscript("HandleShedTail")
+        baton = subscript("BatonPass")
+        switch = baton[baton.index("DeletePokemon"):baton.index("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST")]
+        decoy = script.index("STATUS2_SUBSTITUTE\n")
+        self.assertIn(switch, script[decoy:])
+        self.assertLess(script.index("BMON_DATA_STAT_CHANGE_ATK, 6"), script.index(switch))
+        self.assertIn("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST", script[decoy:])
+
+
 class CriticalHitTests(unittest.TestCase):
     def test_the_odds_at_each_stage_are_the_reference_s(self):
         # other_battle_calculators.c's CriticalRateTable. HeartGold's was
