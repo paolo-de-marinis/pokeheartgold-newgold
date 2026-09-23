@@ -9956,7 +9956,6 @@ BOOL BtlCmd_GotoIfCurrentFieldIsType(BattleSystem *battleSystem, BattleContext *
 // and the move goes on to announce a terrain it did not lay. Kept as the
 // reference has it rather than made to fail the move.
 BOOL BtlCmd_UpdateTerrainOverlay(BattleSystem *battleSystem, BattleContext *ctx) {
-#pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
 
     int endTerrain = BattleScriptReadWord(ctx);
@@ -9965,6 +9964,11 @@ BOOL BtlCmd_UpdateTerrainOverlay(BattleSystem *battleSystem, BattleContext *ctx)
 
     if (endTerrain == TRUE) {
         BattleContext_UpdateTerrainOverlay(ctx, ctx->battlerIdAttacker, TERRAIN_NONE);
+        // Every Mimicry holder goes back to its own types as the ground goes,
+        // not after the next move.
+        for (int battlerId = 0; battlerId < BattleSystem_GetMaxBattlers(battleSystem); battlerId++) {
+            Battler_MimicryRestoreTypes(battleSystem, ctx, battlerId);
+        }
         return FALSE;
     }
 

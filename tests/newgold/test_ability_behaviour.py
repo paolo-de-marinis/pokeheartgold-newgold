@@ -524,5 +524,57 @@ int main(void) {
                       subscript("Costar"))
 
 
+class MimicryTests(unittest.TestCase):
+    def test_the_terrain_s_type_and_back(self):
+        program = HEADER + r"""
+typedef struct { int types[2]; } Pokemon;
+typedef struct { Pokemon party[4]; } BattleSystem;
+typedef struct { u8 type1, type2, type3; } BattleMon;
+typedef struct { BattleMon battleMons[4]; u8 mimicryTerrain[4]; u8 selectedMonIndex[4]; } BattleContext;
+static Pokemon *BattleSystem_GetPartyMon(BattleSystem *bs, int battlerId, int index) { (void)index; return &bs->party[battlerId]; }
+static int GetMonData(Pokemon *mon, int attr, void *out) { (void)out; return mon->types[attr == MON_DATA_TYPE_2]; }
+""" + function(OVERLAY, "TerrainMimicryType") + function(OVERLAY, "Battler_MimicryRestoreTypes") + r"""
+int main(void) {
+    BattleSystem bs = { { { { TYPE_GROUND, TYPE_STEEL } } } };
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    EXPECT(TerrainMimicryType(ELECTRIC_TERRAIN), TYPE_ELECTRIC);
+    EXPECT(TerrainMimicryType(GRASSY_TERRAIN), TYPE_GRASS);
+    EXPECT(TerrainMimicryType(MISTY_TERRAIN), TYPE_FAIRY);
+    EXPECT(TerrainMimicryType(PSYCHIC_TERRAIN), TYPE_PSYCHIC);
+    // A Galarian Stunfisk made Electric, with a Forest's Curse on it, goes
+    // back to Ground and Steel and keeps the Grass.
+    ctx.battleMons[0] = (BattleMon){ TYPE_ELECTRIC, TYPE_ELECTRIC, TYPE_GRASS };
+    ctx.mimicryTerrain[0] = ELECTRIC_TERRAIN;
+    Battler_MimicryRestoreTypes(&bs, &ctx, 0);
+    EXPECT(ctx.battleMons[0].type1, TYPE_GROUND);
+    EXPECT(ctx.battleMons[0].type2, TYPE_STEEL);
+    EXPECT(ctx.battleMons[0].type3, TYPE_GRASS);
+    EXPECT(ctx.mimicryTerrain[0], TERRAIN_NONE);
+    // One that never took a terrain's type, a Soaked one say, is left alone.
+    ctx.battleMons[0].type1 = ctx.battleMons[0].type2 = TYPE_WATER;
+    Battler_MimicryRestoreTypes(&bs, &ctx, 0);
+    EXPECT(ctx.battleMons[0].type1, TYPE_WATER);
+    return 0;
+}
+"""
+        run_c(self, program)
+        entry = function(OVERLAY, "TryAbilityOnEntry")
+        state = entry[entry.index("// Mimicry"):]
+        state = state[:state.index("case ", 10)]
+        # It answers a change of terrain, not every difference of type.
+        self.assertIn("GetBattlerAbility(ctx, battlerId) != ABILITY_MIMICRY || ctx->mimicryTerrain[battlerId] == ctx->terrainOverlayType", state)
+        self.assertIn("ctx->mimicryTerrain[battlerId] = ctx->terrainOverlayType;", state)
+        self.assertIn("ctx->battleMons[battlerId].type1 = ctx->msgTemp;", state)
+        self.assertIn("ctx->battleMons[battlerId].type2 = ctx->msgTemp;", state)
+        self.assertNotIn("type3", state)
+        self.assertIn("script = BATTLE_SUBSCRIPT_MIMICRY;", state)
+        self.assertIn("ctx->mimicryTerrain[battlerId] = TERRAIN_NONE;", function(OVERLAY, "BattleSystem_GetBattleMon"))
+        # The terrain ending puts the types back there and then.
+        command = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_UpdateTerrainOverlay")
+        ending = command[command.index("if (endTerrain == TRUE) {"):command.index("return FALSE;")]
+        self.assertIn("Battler_MimicryRestoreTypes(battleSystem, ctx, battlerId);", ending)
+
+
 if __name__ == "__main__":
     unittest.main()

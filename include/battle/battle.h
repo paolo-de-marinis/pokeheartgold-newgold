@@ -587,6 +587,9 @@ typedef struct BattleContext {
     // five at most: a tenth more power for each. Counted once, on the way in,
     // and cleared when the Pokemon is loaded into its slot.
     u8 supremeOverlordFallen[BATTLER_MAX];
+    // The terrain a Mimicry holder last took its type from, TERRAIN_NONE when
+    // it has its own. Cleared when the Pokemon is loaded into its slot.
+    u8 mimicryTerrain[BATTLER_MAX];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

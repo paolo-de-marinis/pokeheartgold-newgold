@@ -74,6 +74,7 @@ const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo);
 u32 BattleStatWithStage(u32 stat, int stage);
 BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId);
 void BattleContext_UpdateTerrainOverlay(BattleContext *ctx, int battlerId, int terrainType);
+void Battler_MimicryRestoreTypes(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 int BattleContext_ActivateParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL BattleMoveIsSoundBased(u32 moveNo);
 BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo);

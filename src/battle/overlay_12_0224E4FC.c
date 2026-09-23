@@ -201,6 +201,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->iceFaceWeatherSeen &= ~MaskOfFlagNo(battlerId);
     ctx->cudChewBerry[battlerId] = ITEM_NONE;
     ctx->supremeOverlordFallen[battlerId] = 0;
+    ctx->mimicryTerrain[battlerId] = TERRAIN_NONE;
 
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
@@ -4179,6 +4180,35 @@ BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) {
 // Setting the terrain that is already down does nothing at all, which is what
 // makes the move fail rather than refresh it -- and so an Extender cannot be
 // used to top up its own ground either.
+// The type Mimicry takes from each terrain.
+static u8 TerrainMimicryType(int terrainType) {
+    switch (terrainType) {
+    case ELECTRIC_TERRAIN:
+        return TYPE_ELECTRIC;
+    case GRASSY_TERRAIN:
+        return TYPE_GRASS;
+    case MISTY_TERRAIN:
+        return TYPE_FAIRY;
+    default:
+        return TYPE_PSYCHIC;
+    }
+}
+
+// A Mimicry holder going back to its own two types, which the reference
+// reads from the Pokemon as it does here, without a word; the third type
+// stays. Does nothing for a battler that has not taken a terrain's type.
+void Battler_MimicryRestoreTypes(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    Pokemon *mon;
+
+    if (ctx->mimicryTerrain[battlerId] == TERRAIN_NONE) {
+        return;
+    }
+    ctx->mimicryTerrain[battlerId] = TERRAIN_NONE;
+    mon = BattleSystem_GetPartyMon(battleSystem, battlerId, ctx->selectedMonIndex[battlerId]);
+    ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
+    ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
+}
+
 void BattleContext_UpdateTerrainOverlay(BattleContext *ctx, int battlerId, int terrainType) {
     if (ctx->terrainOverlayType == terrainType) {
         return;
@@ -6054,7 +6084,38 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 32: // end
+        case 32: // Mimicry
+            // The holder takes the type of the terrain under it: Electric,
+            // Grass, Fairy or Psychic for the four, a third type from Forest's
+            // Curse or Trick-or-Treat kept (Pokemon Central, Mimetismo). It
+            // answers when it comes in and whenever the terrain has changed
+            // since it last did, which is after the move or entry that changed
+            // it. The reference answers whenever the types differ, which also
+            // undid a Soak at once; the page says Soak prevails. Going back to
+            // its own types when the terrain ends is done as the terrain goes.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].hp || GetBattlerAbility(ctx, battlerId) != ABILITY_MIMICRY || ctx->mimicryTerrain[battlerId] == ctx->terrainOverlayType) {
+                    continue;
+                }
+                if (ctx->terrainOverlayType == TERRAIN_NONE) {
+                    Battler_MimicryRestoreTypes(battleSystem, ctx, battlerId);
+                    continue;
+                }
+                ctx->mimicryTerrain[battlerId] = ctx->terrainOverlayType;
+                ctx->msgTemp = TerrainMimicryType(ctx->terrainOverlayType);
+                ctx->battleMons[battlerId].type1 = ctx->msgTemp;
+                ctx->battleMons[battlerId].type2 = ctx->msgTemp;
+                ctx->battlerIdTemp = battlerId;
+                script = BATTLE_SUBSCRIPT_MIMICRY;
+                flag = TRUE;
+                break;
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 33: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;

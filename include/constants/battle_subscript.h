@@ -688,6 +688,9 @@
 // Costar copying its ally's stat changes, which the reference has no script
 // for.
 #define BATTLE_SUBSCRIPT_COSTAR                             424
+// Mimicry taking the terrain's type, which the reference gives Color
+// Change's subscript for.
+#define BATTLE_SUBSCRIPT_MIMICRY                            425
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
