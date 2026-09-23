@@ -595,8 +595,8 @@ def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
     b[0x18] = (gender & 3) << 1
 
     c = bytearray(BLOCK)
-    for i, code in enumerate(charcode(species_name.replace("_", ""))[:POKEMON_NAME_LENGTH + 1]):
-        struct.pack_into("<H", c, 2 * i, code)
+    for i, code in enumerate(encode_text(bank(SPECIES_NAMES)[index], POKEMON_NAME_LENGTH)):
+        struct.pack_into("<H", c, 2 * i, code)      # the name the game prints
     c[0x17] = GAME_VERSION
 
     d = bytearray(BLOCK)
@@ -1834,8 +1834,8 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
 
 def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, party=True, ability=None):
     """A Pokemon of the player's own, the way build_mon makes one, with a
-    personality of its own (not shiny), full PP, the species' name as the
-    game prints it and the stats CalcMonStats gives. Moves given must be
+    personality of its own (not shiny), full PP and the stats CalcMonStats
+    gives. Moves given must be
     ones it can learn, an ability one of its slots; without them, its
     moves at that level and the ability its personality picks."""
     const = next((row["const"] for row in species_table() if row["id"] == species and row["pick"]), None)
@@ -1853,13 +1853,10 @@ def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, 
                              ot_gender=me["gender"]))
     if ability is not None:
         _choose_ability(mon, ability)
-    _, b, c, _ = mon["blocks"]
+    b = mon["blocks"][1]
     table = move_table()
     for i in range(MAX_MON_MOVES):
         b[8 + i] = table[struct.unpack_from("<H", b, 2 * i)[0]]["pp"]
-    codes = encode_text(species_name(species), POKEMON_NAME_LENGTH)
-    c[0:2 * (POKEMON_NAME_LENGTH + 1)] = struct.pack(f"<{POKEMON_NAME_LENGTH + 1}H",
-                                                     *codes + [0] * (POKEMON_NAME_LENGTH + 1 - len(codes)))
     _set_party_stats(mon, level)    # build_mon's stats, but Shedinja's one HP
     raw = seal_mon(mon)
     return raw if party else raw[:BOX_MON]

@@ -501,6 +501,10 @@ class SaveditLibraryTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             sv.parse_party("CHIKORITA:5::TACKLE+TACKLE")
 
+    def test_the_cli_names_a_pokemon_as_the_game_prints_it(self):
+        """build_mon writes the species bank's name, not its constant."""
+        self.assertEqual(sv.describe_mon(sv.build_mon("MR_MIME", 5))["nickname"], "Mr. Mime")
+
     def test_a_form_has_its_own_stats(self):
         """CalcMonStats reads the form's record (ResolveMonForm): a Rotom
         Wash is SPECIES_ROTOM in form 2, with Rotom Wash's base stats."""
