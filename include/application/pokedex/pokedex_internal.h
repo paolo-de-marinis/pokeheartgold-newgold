@@ -330,6 +330,9 @@ struct PokedexAppData {
 // overlay_18.s reads and writes this struct at fixed offsets.
 typedef char PokedexAppData_MatchesOverlay18[sizeof(PokedexAppData) == 0x1910 ? 1 : -1];
 
+void ov18_021EE3AC(PokedexAppData *pokedexApp, MsgData *msgData, int windowId, int msgId, int x, int y, int fontId, u32 color, int alignment);
+void ov18_021EE75C(PokedexAppData *pokedexApp, u32 species, int windowId);
+void ov18_021EEC34(PokedexAppData *pokedexApp, u32 species, int windowId, int charsetOption);
 String *ov18_021E590C(u16 species, int language, enum HeapID heapId);
 String *ov18_021E595C(u16 species, int language, enum HeapID heapId);
 String *ov18_021E59A8(u16 species, int language, int a2, enum HeapID heapId);

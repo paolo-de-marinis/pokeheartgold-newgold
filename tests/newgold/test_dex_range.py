@@ -239,7 +239,7 @@ class DexRangeTests(unittest.TestCase):
         struct_ = re.search(r"typedef struct PokedexAppData_UnkSub0878 \{.*?\} PokedexAppData_UnkSub0878;", header, re.S).group(0)
         start = int(re.search(r"PokedexAppData_UnkSub0878 unk_0878;\s+// (0x[0-9A-F]+)", header).group(1), 16)
         end = int(re.search(r"PokedexAppData_UnkSub1030 unk_1030\[\d+\];\s+// (0x[0-9A-F]+)", header).group(1), 16)
-        asm = (ROOT / "asm/overlay_18.s").read_text()
+        asm = "".join(path.read_text() for path in sorted((ROOT / "asm").glob("overlay_18*.s")))
         self.assertIn(f".word 0x{end:08X}", asm, "overlay_18.s no longer finds unk_1030 at retail's offset")
         self.assertIn(f"=0x{start + 0x7B4:08X}", asm, "overlay_18.s no longer finds unk_7B4 at retail's offset")
         run_native(self, LAYOUT.replace("@STRUCT@", struct_).replace("@SIZE@", str(end - start)), "newgold-dex-app-")
