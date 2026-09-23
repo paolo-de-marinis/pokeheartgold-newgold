@@ -4056,7 +4056,9 @@ BOOL BtlCmd_CalcFuryCutterPower(BattleSystem *battleSystem, BattleContext *ctx) 
 
     BattleScriptIncrementPointer(ctx, 1);
 
-    if (ctx->battleMons[ctx->battlerIdAttacker].unk88.furyCutterCount < 5) {
+    // Three uses, as the engine counts them: its 40 doubles to 160 and stops,
+    // where retail's 10 doubled four times to the same 160.
+    if (ctx->battleMons[ctx->battlerIdAttacker].unk88.furyCutterCount < 3) {
         ctx->battleMons[ctx->battlerIdAttacker].unk88.furyCutterCount++;
     }
 

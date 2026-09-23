@@ -9,8 +9,11 @@ agree with each other.
 
 import os
 import re
+import shlex
 import struct
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -125,8 +128,6 @@ class MoveTests(unittest.TestCase):
     RETAIL_EXCEPTIONS = {
         ("BEAT_UP", "power"): "the engine's 1 is a placeholder for 5 + base Attack / 10; "
                               "BtlCmd_BeatUp multiplies base Attack by the table's power",
-        ("FURY_CUTTER", "power"): "the engine's 40 stops at 160 after three uses; "
-                                  "BtlCmd_CalcFuryCutterPower doubles it four times, to 640",
         ("SWEET_SCENT", "effect"): "the engine's 64 lowers evasion by two; this game's 64 and "
                                    "its EVA_DOWN_2 (63) are retail's unused damage stubs",
         ("HOWL", "effect"): "the engine's raises the ally through RANGE_USER_SIDE and its "
@@ -185,6 +186,44 @@ class MoveTests(unittest.TestCase):
                            r"\s*\} else \{\n\s*movePower = power;", body)
         self.assertIsNotNone(choice, "CalcMoveDamage no longer chooses between the table and its argument")
         self.assertIn("moveNo == MOVE_HIDDEN_POWER", choice.group(1))
+
+    def test_fury_cutter_doubles_40_up_to_160(self):
+        """hg-engine's Fury Cutter is 40 and counts three uses (40, 80, 160);
+        retail's was 10 and counted five. Runs the real command."""
+        self.assertEqual(struct.unpack(import_moves.RECORD, self.table[self.moves["MOVE_FURY_CUTTER"]])[2], 40)
+        source = (ROOT / "src/battle/battle_command.c").read_text()
+        command = source[source.index("BOOL BtlCmd_CalcFuryCutterPower("):]
+        command = command[:command.index("\n}\n") + 3]
+        program = """
+            #include <assert.h>
+            typedef int BOOL;
+            #define FALSE 0
+            typedef struct BattleSystem BattleSystem;
+            typedef struct { struct { unsigned furyCutterCount : 3; } unk88; } BattleMon;
+            typedef struct { BattleMon battleMons[4]; int battlerIdAttacker, moveNoCur, movePower; } BattleContext;
+            typedef struct { int power; } MoveTbl;
+            static MoveTbl table = { 40 };
+            static MoveTbl *BattleMoveTbl(BattleContext *ctx, int move) { (void)ctx; (void)move; return &table; }
+            static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+        """ + command + """
+            int main(void) {
+                static const int power[] = { 40, 80, 160, 160, 160, 160 };
+                BattleContext ctx = { .battlerIdAttacker = 1 };
+                for (int use = 0; use < 6; use++) {
+                    BtlCmd_CalcFuryCutterPower(0, &ctx);
+                    assert(ctx.movePower == power[use]);
+                }
+                return 0;
+            }
+        """
+        with tempfile.TemporaryDirectory(prefix="newgold-fury-cutter-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            c.write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + ["-std=c11", str(c), "-o", str(exe)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(exe)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     # Forty-one damaging moves carry no power, and the reference carries them
     # the same way, because the battle works the damage out instead: a Z-move

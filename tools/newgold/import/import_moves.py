@@ -303,16 +303,13 @@ def number(block, key):
 # rolls (BattleSystem_CheckMoveHit here, CalcAccuracy there) -- so Whirlwind
 # and Roar take it and stop missing, as they do in the engine.
 #
-# Two powers are the engine's number for something this game works out
-# differently, and stay this game's:
+# One power is the engine's number for something this game works out
+# differently, and stays this game's:
 RETAIL_POWER_KEPT = {
     # The engine writes 1 and gives each hit 5 + the member's base Attack / 10
     # in CalcBaseDamage; BtlCmd_BeatUp multiplies the base Attack by the
     # table's power, so 1 would be a tenth of a Beat Up.
     "BEAT_UP",
-    # The engine stops at three uses and 160; BtlCmd_CalcFuryCutterPower
-    # doubles the table's power up to four times, so 40 would reach 640.
-    "FURY_CUTTER",
 }
 # The effect and the flag byte are behaviour rather than numbers. The seven
 # flag bits solved for above mean the same thing to both games -- a set bit is
