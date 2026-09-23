@@ -4790,6 +4790,13 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
             script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
         }
     }
+    // Oblivious does not notice a taunt, from the sixth generation on (Pokemon
+    // Central, Indifferenza); a Mold Breaker gets through. The reference asks
+    // it nowhere, here or in the Taunt subscript.
+    if (moveEffect == MOVE_EFFECT_TAUNT && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_OBLIVIOUS) == TRUE) {
+        ctx->battlerIdTemp = battlerIdTarget;
+        script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
+    }
     // Sweet Veil keeps its side awake: the moves that put a Pokemon to sleep,
     // Yawn, and Rest. Rest aims at its user, so a Pokemon under Sweet Veil
     // cannot rest either, which is the reference's behaviour and reads as a

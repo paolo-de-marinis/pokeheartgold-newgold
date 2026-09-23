@@ -46,5 +46,12 @@ class AbilityStatusSafeguardTests(unittest.TestCase):
             self.assertIn("SIDE_CONDITION_SAFEGUARD", label_body(script, jump.group(1)), name)
 
 
+class ObliviousTests(unittest.TestCase):
+    def test_oblivious_turns_taunt_away(self):
+        # Pokemon Central, Indifferenza: from the sixth generation.
+        body = function(OVERLAY.read_text(), "BattleContext_CheckMoveImmunityFromAbility")
+        self.assertRegex(body, r"moveEffect == MOVE_EFFECT_TAUNT && CheckBattlerAbilityIfNotIgnored\(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_OBLIVIOUS\) == TRUE\) \{\n\s+ctx->battlerIdTemp = battlerIdTarget;\n\s+script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;")
+
+
 if __name__ == "__main__":
     unittest.main()
