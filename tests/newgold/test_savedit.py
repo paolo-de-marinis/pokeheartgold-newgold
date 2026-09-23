@@ -783,6 +783,31 @@ class TheCodeSaveditKeeps(unittest.TestCase):
         self.assertIn("return (species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP) || species > NATIONAL_DEX_COUNT;",
                       sv.c_function("src/pokedex.c", "BOOL DexSpeciesIsInvalid("), "dex_species")
 
+    def test_the_stats_are_calc_mon_stats(self):
+        """stat_line and _set_party_stats are CalcMonStats (src/pokemon.c):
+        each stat's formula, Shedinja's one HP, and how the HP it had
+        follows a new maximum."""
+        calc = sv.c_function("src/pokemon.c", "void CalcMonStats(")
+        self.assertRegex(calc, r"if \(species == SPECIES_SHEDINJA\) \{\s*newMaxHp = 1;\s*\} else \{\s*"
+                               r"newMaxHp = \(baseStats->hp \* 2 \+ hpIv \+ hpEv / 4\) \* level / 100 \+ level \+ 10;")
+        for stat in ("atk", "def", "speed", "spatk", "spdef"):
+            name = "new" + stat[0].upper() + stat[1:]
+            self.assertRegex(calc, rf"{name} = \(baseStats->{stat} \* 2 \+ {stat}Iv \+ {stat}Ev / 4\) \* level / 100 \+ 5;\s*"
+                                   rf"{name} = ModifyStatByNature\(nature, \(u16\){name}, STAT_{stat.upper()}\);", stat)
+        self.assertRegex(calc, r"if \(hp != 0 \|\| maxHp == 0\) \{\s*if \(species == SPECIES_SHEDINJA\) \{\s*hp = 1;\s*"
+                               r"\} else if \(hp == 0\) \{\s*hp = newMaxHp;\s*\} else if \(newMaxHp - maxHp < 0\) \{\s*"
+                               r"if \(hp > newMaxHp\) \{\s*hp = newMaxHp;\s*\}\s*\} else \{\s*hp \+= newMaxHp - maxHp;")
+        self.assertIn("nature = GetMonNatureAfterMint(mon);", calc, "a Mint's nature, as _set_party_stats reads it")
+        self.assertRegex(sv.c_function("src/pokemon.c", "u8 GetMonNatureAfterMint("),
+                         r"u32 mint = \(GetMonData\(mon, MON_DATA_UNUSED_114, NULL\) & MON_MINT_NATURE_MASK\) >> 1;\s*"
+                         r"if \(mint != 0\) \{\s*return \(u8\)\(mint - 1\);")
+        self.assertRegex(sv.c_function("src/pokemon.c", "static u32 GetBoxMonDataInternal("),
+                         r"case MON_DATA_UNUSED_114:\s*ret = blockB->unused2;", "the Mint in block B's unused2")
+        # And savedit's numbers are those: Chikorita at 50, IVs 31, no EVs, a neutral nature.
+        record = sv.personal_records()[sv.species_numbers()["CHIKORITA"]]
+        neutral = next(n for n, mods in enumerate(sv.nature_mods()) if not any(mods))
+        self.assertEqual(sv.stat_line(record, 50, [31] * 6, 0, neutral)[0], (record["hp"] * 2 + 31) * 50 // 100 + 50 + 10)
+
     def test_what_a_new_pokemon_is_given_is_the_game_s(self):
         """preset_moves is InitBoxMonMoveset: the learnset up to the level,
         a move known already skipped (MOVE_APPEND_KNOWN), the first dropped
