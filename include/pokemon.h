@@ -207,6 +207,7 @@ BOOL Mon_CanUseAbilityPatch(Pokemon *mon);
 void Mon_ToggleHiddenAbility(Pokemon *mon);
 void Mon_IncrementEvolutionCounter(Pokemon *mon);
 void Mon_CountEvolutionMove(Pokemon *mon, u16 move);
+void Mon_CountLetsGoStep(Pokemon *mon);
 void Party_ResetAllShayminToLandForm(Party *party);
 BOOL Party_TryResetShaymin(Party *party, int min_max, const RTCTime *time);
 BOOL Mon_UpdateRotomForm(Pokemon *mon, int form, int defaultSlot);

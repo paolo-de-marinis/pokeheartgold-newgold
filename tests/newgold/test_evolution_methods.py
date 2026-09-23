@@ -288,6 +288,27 @@ static void check_counted_moves(void) {
     }
 }
 
+static void check_lets_go(void) {
+    // A thousand steps, one in four counted: 250 on the byte.
+    Pokemon mon = { .species = SPECIES_PAWMO, .level = 1 };
+    one_row(EVO_LETS_GO, 0, SPECIES_PAWMOT);
+    for (int count = 0; count <= 255; count++) {
+        mon.evolutionCounter = count;
+        assert(evolve(&mon, NULL, EVO_LETS_GO) == (count >= 250 ? SPECIES_PAWMOT : SPECIES_NONE));
+    }
+    // The follower's steps count only for a species that evolves so, and stop
+    // at 255.
+    mon.evolutionCounter = 0;
+    table[0].method = EVO_LEVEL;
+    Mon_CountLetsGoStep(&mon);
+    assert(mon.evolutionCounter == 0);
+    table[1] = (struct Evolution){ EVO_LETS_GO, 0, SPECIES_PAWMOT };
+    for (int step = 1; step <= 300; step++) {
+        Mon_CountLetsGoStep(&mon);
+        assert(mon.evolutionCounter == (step < 255 ? step : 255));
+    }
+}
+
 int main(void) {
     check_magnetic_field();
     check_time_of_day();
@@ -298,6 +319,7 @@ int main(void) {
     check_critical_hits();
     check_form_argument();
     check_counted_moves();
+    check_lets_go();
     return 0;
 }
 """
@@ -314,7 +336,7 @@ def program():
         "@RTC_TYPE@": rtc.group(),
         "@HOUR_FUNCTION@": function(read("src/gf_rtc.c"), "GF_RTC_GetTimeOfDayByHour"),
         "@NIGHT_FUNCTION@": function(read("src/gf_rtc.c"), "IsNighttime"),
-        "@FUNCTIONS@": "\n".join(function(source, name) for name in ("GetNatureFromPersonality", "EvolvedPassiveForm", "GetMonEvolution", "Mon_IncrementEvolutionCounter", "Mon_CountEvolutionMove")),
+        "@FUNCTIONS@": "\n".join(function(source, name) for name in ("GetNatureFromPersonality", "EvolvedPassiveForm", "GetMonEvolution", "Mon_IncrementEvolutionCounter", "Mon_CountEvolutionMove", "Mon_CountLetsGoStep")),
     }
     text = FIXTURE
     for placeholder, replacement in replacements.items():
@@ -323,6 +345,16 @@ def program():
 
 
 class EvolutionMethods(unittest.TestCase):
+    def test_the_field_counts_the_follower_one_step_in_four(self):
+        """Each step with the Pokemon walking behind the player visible, one
+        in four by the steps walked, for the first Pokemon able to battle --
+        the one FollowMon_ChangeMon puts behind the player."""
+        body = function(read("src/field/field_control.c"), "FieldSystem_ProcessStep")
+        visible = body[body.index("if (FollowMon_IsVisible(fieldSystem)) {"):body.index("return FALSE;", body.index("FollowMon_IsVisible"))]
+        self.assertRegex(visible, r"GameStats_GetCapped\(Save_GameStats_Get\(fieldSystem->saveData\), GAME_STAT_STEPS_WALKED\) % LETS_GO_STEPS_PER_COUNT == 0\) \{\s*"
+                                  r"Mon_CountLetsGoStep\(GetFirstAliveMonInParty_CrashIfNone\(SaveArray_Party_Get\(fieldSystem->saveData\)\)\);")
+        self.assertIn("GetFirstAliveMonInParty_CrashIfNone(party)", function(read("src/follow_mon.c"), "FollowMon_ChangeMon"))
+
     def test_the_battle_counts_a_move_when_its_pp_goes(self):
         """A move is counted where the battle takes its PP for it, for the
         player's own Pokemon, by its party record."""

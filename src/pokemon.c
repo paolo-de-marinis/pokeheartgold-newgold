@@ -2092,6 +2092,24 @@ void Mon_CountEvolutionMove(Pokemon *mon, u16 move) {
     }
 }
 
+// The games count the steps a Pokemon walks out of its ball with Let's Go;
+// this game's is the Pokemon that walks behind the player, and the field
+// counts one step in four for it. Pokemon Central gives Pawmot's as "per
+// livello dopo aver fatto 1000 passi come Pokemon mandato avanti". Only a
+// species that evolves so counts, so the byte is left to any other count.
+void Mon_CountLetsGoStep(Pokemon *mon) {
+    struct Evolution evos[MAX_EVOS_PER_POKE];
+    int i;
+
+    LoadMonEvolutionTable((u16)GetMonData(mon, MON_DATA_SPECIES, NULL), evos);
+    for (i = 0; i < MAX_EVOS_PER_POKE; i++) {
+        if (evos[i].method == EVO_LETS_GO) {
+            Mon_IncrementEvolutionCounter(mon);
+            return;
+        }
+    }
+}
+
 void Mon_ToggleHiddenAbility(Pokemon *mon) {
     u8 bits = (u8)GetMonData(mon, MON_DATA_UNUSED_113, NULL);
 
@@ -3201,6 +3219,12 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                 if (GetMonData(mon, MON_DATA_EVOLUTION_COUNTER, NULL) >= evoTable[i].param) {
                     target = evoTable[i].target;
                     *method_ret = EVO_FORM_ARGUMENT;
+                }
+                break;
+            case EVO_LETS_GO:
+                if (GetMonData(mon, MON_DATA_EVOLUTION_COUNTER, NULL) >= LETS_GO_EVOLUTION_COUNT) {
+                    target = evoTable[i].target;
+                    *method_ret = EVO_LETS_GO;
                 }
                 break;
             case EVO_OTHER_PARTY_MON:

@@ -71,6 +71,9 @@ ENGINE_METHOD_ROWS = [
     ("SPECIES_FARFETCHD_GALARIAN", ("EVO_AMOUNT_OF_CRITICAL_HITS", 3, "SPECIES_SIRFETCHD")),
     ("SPECIES_PRIMEAPE", ("EVO_FORM_ARGUMENT", 20, "SPECIES_ANNIHILAPE")),
     ("SPECIES_STANTLER", ("EVO_FORM_ARGUMENT", 20, "SPECIES_WYRDEER")),
+    ("SPECIES_PAWMO", ("EVO_LETS_GO", 0, "SPECIES_PAWMOT")),
+    ("SPECIES_BRAMBLIN", ("EVO_LETS_GO", 0, "SPECIES_BRAMBLEGHAST")),
+    ("SPECIES_RELLOR", ("EVO_LETS_GO", 0, "SPECIES_RABSCA")),
 ]
 
 VANILLA_EEVEE = {
@@ -106,7 +109,8 @@ class EvolutionTests(unittest.TestCase):
     def test_loops_read_the_whole_table(self):
         source = (ROOT / "src/pokemon.c").read_text()
         self.assertNotIn("for (i = 0; i < 7; i++)", source, "a loop still stops at seven")
-        self.assertEqual(source.count("for (i = 0; i < MAX_EVOS_PER_POKE; i++)"), 3)
+        # GetMonEvolution's three contexts, and Mon_CountLetsGoStep's.
+        self.assertEqual(source.count("for (i = 0; i < MAX_EVOS_PER_POKE; i++)"), 4)
 
     def test_a_member_is_as_long_as_the_readers_buffer(self):
         """The whole member is read into MAX_EVOS_PER_POKE evolutions of six

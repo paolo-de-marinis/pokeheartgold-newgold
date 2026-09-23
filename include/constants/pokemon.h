@@ -363,6 +363,11 @@
 // battle, which Galarian Farfetch'd evolves on.
 #define MON_CRITICAL_HITS_EVOLUTION_BIT 2
 
+// Pawmo, Bramblin and Rellor evolve after a thousand steps walked out of the
+// ball. MON_DATA_EVOLUTION_COUNTER is a byte, so one step in four is counted.
+#define LETS_GO_STEPS_PER_COUNT 4
+#define LETS_GO_EVOLUTION_COUNT (1000 / LETS_GO_STEPS_PER_COUNT)
+
 // hg-engine's DUMMY_P2_2_CHANGE_ABILITY_SLOT, bit 0 of MON_DATA_UNUSED_114: an
 // Ability Capsule has swapped the slot the personality picks. The Mint's
 // nature takes bits 1 to 5 of the same field.
@@ -638,6 +643,9 @@ typedef enum EvoMethod {
     // argument, a count on the Pokemon -- Rage Fist or Psyshield Bash used,
     // Bisharp defeated -- at least the row's number.
     EVO_FORM_ARGUMENT,
+    // hg-engine names the method and checks nothing: the games' Let's Go, a
+    // thousand steps out of the ball; here, walking behind the player.
+    EVO_LETS_GO,
 } EvoMethod;
 
 typedef enum {

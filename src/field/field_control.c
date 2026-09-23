@@ -703,6 +703,10 @@ static BOOL FieldSystem_ProcessStep(FieldSystem *fieldSystem) {
 
     if (FollowMon_IsVisible(fieldSystem)) {
         FieldSystem_UnkSub108_MoveMoodTowardsNeutral(fieldSystem->unk108);
+        // Out of its ball, for the evolutions that count Let's Go steps.
+        if (GameStats_GetCapped(Save_GameStats_Get(fieldSystem->saveData), GAME_STAT_STEPS_WALKED) % LETS_GO_STEPS_PER_COUNT == 0) {
+            Mon_CountLetsGoStep(GetFirstAliveMonInParty_CrashIfNone(SaveArray_Party_Get(fieldSystem->saveData)));
+        }
     }
 
     return FALSE;

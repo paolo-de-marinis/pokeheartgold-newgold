@@ -5124,6 +5124,36 @@
           "target": "SPECIES_SIRFETCHD"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_PAWMO",
+      "evos": [
+        {
+          "method": "EVO_LETS_GO",
+          "param": 0,
+          "target": "SPECIES_PAWMOT"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_BRAMBLIN",
+      "evos": [
+        {
+          "method": "EVO_LETS_GO",
+          "param": 0,
+          "target": "SPECIES_BRAMBLEGHAST"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_RELLOR",
+      "evos": [
+        {
+          "method": "EVO_LETS_GO",
+          "param": 0,
+          "target": "SPECIES_RABSCA"
+        }
+      ]
     }
   ]
 }
