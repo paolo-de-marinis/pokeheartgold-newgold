@@ -75,6 +75,27 @@ def _palette(text):
             for r, g, b in zip(values[0::3], values[1::3], values[2::3])]
 
 
+# The frame list of every reference overworld of a width: retail's Bulbasaur's
+# for 32x32 frames and Lugia's for 64x64 ones.
+FRAME_LISTS = {32: "data/graphics/sprites/bulbasaur", 64: "data/graphics/sprites/lugia"}
+
+
+def frames_of(directory, width, reference=REFERENCE):
+    """The frames of the picture in directory, which is width wide.
+
+    Every overworld.json in the reference is one of two frame lists, the
+    32x32 one or the 64x64 one, and it is the picture's but for four:
+    Hydrapple's and Garden Vivillon's pictures are 32 wide with the 64x64
+    list, Hatterene's and Dondozo's 64 wide with the 32x32 one. The tool
+    sizes the texture by the list, so theirs came out a quarter or four
+    times the picture and Hydrapple walked as a shadow. Their size classes
+    in overworld_table.c are the pictures', so the list is too."""
+    frames = list(json.loads(show(f"{directory}/overworld.json", reference))["frames"].items())
+    if frames[0][1]["width"] != width:
+        frames = list(json.loads(show(f"{FRAME_LISTS[width]}/overworld.json", reference))["frames"].items())
+    return frames
+
+
 def nsbtx(directory, reference=REFERENCE):
     """tools/source/btx's BTX0 for the reference's overworld.png in directory:
     one TEX0 block, a 4bpp texture a frame, one 16-colour palette a
@@ -82,12 +103,12 @@ def nsbtx(directory, reference=REFERENCE):
     from PIL import Image
 
     meta = json.loads(show(f"{directory}/overworld.json", reference))
-    frames = list(meta["frames"].items())
     palettes = list(meta["palettes"].items())
-    width, height = frames[0][1]["width"], frames[0][1]["height"]
     picture = Image.open(io.BytesIO(show(f"{directory}/overworld.png", reference)))
     if picture.mode != "P":
         raise ValueError(f"{directory}: not an indexed picture")
+    frames = frames_of(directory, picture.width, reference)
+    width, height = frames[0][1]["width"], frames[0][1]["height"]
     pixels = picture.tobytes()
     if max(pixels) > 15:
         raise ValueError(f"{directory}: more than sixteen colours")
@@ -243,14 +264,17 @@ def plan(reference=REFERENCE):
 BOUNCE = {"OVERWORLD_BOUNCE_FAST": 0x00, "OVERWORLD_BOUNCE_MED": 0x10, "OVERWORLD_BOUNCE_SLOW": 0x11}
 
 
+PARAMETERS = {"OVERWORLD_SIZE_SMALL": (SMALL, 32), "OVERWORLD_SIZE_SMALL_NO_SHADOW": (SMALL_NO_SHADOW, 32),
+              "OVERWORLD_SIZE_LARGE": (LARGE, 64)}
+
+
 def sprite_parameter(name, width, reference_parameter):
-    """The size class the texture has. Four of the reference's entries name the
-    other one (Hydrapple and Garden Vivillon draw 64 wide and say small,
-    Hatterene and Dondozo draw 32 and say large); the class decides how much
-    texture memory the field gives the sprite, so it follows the texture."""
-    if width == 64:
-        return LARGE
-    return SMALL_NO_SHADOW if reference_parameter == "OVERWORLD_SIZE_SMALL_NO_SHADOW" else SMALL
+    """The reference's size class, which has to be the texture's: the class
+    decides how much texture memory the field gives the sprite."""
+    parameter, size = PARAMETERS[reference_parameter]
+    if size != width:
+        raise SystemExit(f"{name}: a {width}-wide texture and {reference_parameter}")
+    return parameter
 
 
 def replace_block(path, start, end, lines):
@@ -309,12 +333,10 @@ def main():
 
     models, lut = plan(args.reference)
     textures = {name: nsbtx(directory, args.reference) for name, directory, *_ in models}
-    fixed = [name for name, _d, _s, _b, parameter in models
-             if (sprite_parameter(name, texture_width(textures[name]), parameter) == LARGE)
-             != (parameter == "OVERWORLD_SIZE_LARGE")]
+    for name, _directory, _size, _bounce, parameter in models:
+        sprite_parameter(name, texture_width(textures[name]), parameter)
     shared = len(lut) - len(models)
     print(f"{len(models)} models for {len(lut)} added species; {shared} have none and take their base species'")
-    print(f"size class taken from the texture, not the reference's entry: {', '.join(fixed)}")
     if not args.write:
         print("nothing written; pass --write")
         return

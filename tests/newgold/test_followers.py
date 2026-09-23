@@ -18,6 +18,7 @@ certificates drew an NPC for it. Each of them now takes the species' own
 model, or its base species' where hg-engine draws none.
 """
 
+import io
 import re
 import sys
 import unittest
@@ -133,6 +134,20 @@ class FollowerTests(unittest.TestCase):
         rows = (ROOT / "files/fielddata/tsurepoke/tp_param.csv").read_text().splitlines()[1:]
         self.assertEqual(len(rows), 566 + len(added_models()))
         self.assertEqual(rows[566].split(",")[0], "FOLLOWER_MON_" + added_models()[0])
+
+    def test_each_texture_is_its_picture_s_size(self):
+        """A texture's frames are as wide as the reference's picture of them.
+        Four of its frame lists name the other size -- Hydrapple's and Garden
+        Vivillon's pictures are 32 wide, Hatterene's and Dondozo's 64 -- and
+        a texture sized by the list drew Hydrapple as a bare shadow."""
+        if not import_followers.REFERENCE.exists():
+            self.skipTest("no reference checkout")
+        from PIL import Image
+        models, _ = import_followers.plan()
+        for i, (name, directory, *_rest) in enumerate(models):
+            data = (import_followers.MMODEL_DIR / f"mmodel_{863 + i:08d}.NSBTX").read_bytes()
+            picture = Image.open(io.BytesIO(import_followers.show(f"{directory}/overworld.png")))
+            self.assertEqual(import_followers.texture_width(data), picture.width, name)
 
     def test_the_textures_are_the_reference_s(self):
         """Each added texture is what the reference's tool builds from its
