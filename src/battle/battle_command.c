@@ -849,9 +849,13 @@ static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, i
         modifier = QMul_RoundUp(modifier, UQ412__0_75);
     }
 
-    // The Metronome item: HeartGold's tenth more for each use in a row.
+    // The Metronome item: a fifth more for each use of the move in a row, up
+    // to double on the sixth, the reference's 1.2, 1.4, 1.6, 1.8 and 2.0.
+    // HeartGold's was a tenth, and double only on the eleventh.
     if (item == HOLD_EFFECT_BOOST_REPEATED) {
-        modifier = QMul_RoundUp(modifier, UQ412__1_0 * (10 + ctx->battleMons[battlerIdAttacker].unk88.metronomeTurns) / 10);
+        int turns = ctx->battleMons[battlerIdAttacker].unk88.metronomeTurns;
+
+        modifier = QMul_RoundUp(modifier, UQ412__1_0 * (10 + 2 * (turns < 5 ? turns : 5)) / 10);
     }
     if (effectiveness > 8 && item == HOLD_EFFECT_POWER_UP_SE) {
         modifier = QMul_RoundUp(modifier, UQ412__1_2);

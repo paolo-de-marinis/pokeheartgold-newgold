@@ -223,9 +223,13 @@ int main(void) {
     // 6.9.7 Friend Guard on the target's living ally: 34; a fainted one, 45.
     reset(); S.battleType = BATTLE_TYPE_DOUBLES; S.maxBattlers = 4; S.ability[3] = ABILITY_FRIEND_GUARD; EXPECT(calc(), 34);
     ctx.battleMons[3].hp = 0; EXPECT(calc(), 45);
-    // 6.9.9 the Metronome item after three uses in a row: HeartGold's 1.3, as
-    // 4096 * 13 / 10 = 5324; 45 * 5324 = 239580, + 2047 >> 12 = 58.
-    reset(); S.item[0] = HOLD_EFFECT_BOOST_REPEATED; ctx.battleMons[0].unk88.metronomeTurns = 3; EXPECT(calc(), 58);
+    // 6.9.9 the Metronome item: 1.2 a use in a row. Once, 4915: 45 * 4915 =
+    // 221175, + 2047 >> 12 = 54. Three times, 6553: 72. Five and past it,
+    // 2.0: 90. HeartGold's tenth a use would be 49, 58 and 67.
+    reset(); S.item[0] = HOLD_EFFECT_BOOST_REPEATED; ctx.battleMons[0].unk88.metronomeTurns = 1; EXPECT(calc(), 54);
+    ctx.battleMons[0].unk88.metronomeTurns = 3; EXPECT(calc(), 72);
+    ctx.battleMons[0].unk88.metronomeTurns = 5; EXPECT(calc(), 90);
+    ctx.battleMons[0].unk88.metronomeTurns = 10; EXPECT(calc(), 90);
     // 6.9.11 an Expert Belt on a super-effective hit: 90 * 4915 = 442350,
     // + 2047 >> 12 = 108. Nothing on a neutral one.
     reset(); S.types[1][0] = S.types[1][1] = TYPE_GRASS; S.item[0] = HOLD_EFFECT_POWER_UP_SE; EXPECT(calc(), 108);
