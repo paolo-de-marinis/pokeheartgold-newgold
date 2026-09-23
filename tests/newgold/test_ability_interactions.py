@@ -284,5 +284,32 @@ class AbilityCopyTableTests(unittest.TestCase):
         self.assertLess(entrainment.index("_FAILED\n    Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION"), entrainment.index("BMON_DATA_ABILITY, BSCRIPT_VAR_CALC_TEMP\n    // {0} acquired"))
 
 
+class EndOfTurnEntryAbilityTests(unittest.TestCase):
+    """Opportunist and Symbiosis act from the entry abilities' check, and the
+    end of a turn reaches it before the next turn's choices: TurnEnd sets the
+    trainer's message, which sets the send-out, which is PokemonAppear."""
+
+    def test_the_turn_s_end_asks_the_entry_abilities(self):
+        controller = CONTROLLER.read_text()
+        self.assertIn("[CONTROLLER_COMMAND_TRAINER_MESSAGE] = BattleControllerPlayer_TrainerMessage,", controller)
+        self.assertIn("[CONTROLLER_COMMAND_SEND_OUT] = BattleControllerPlayer_PokemonAppear,", controller)
+        turn_end = function(controller, "BattleControllerPlayer_TurnEnd")
+        self.assertTrue(turn_end.rstrip("}\n ").endswith("ctx->command = CONTROLLER_COMMAND_TRAINER_MESSAGE;"))
+        message = function(controller, "BattleControllerPlayer_TrainerMessage")
+        self.assertEqual(message.count("CONTROLLER_COMMAND_SEND_OUT;"), 2)
+        appear = function(controller, "BattleControllerPlayer_PokemonAppear")
+        self.assertLess(appear.index("TryAbilityOnEntry(battleSystem, ctx)"), appear.index("CONTROLLER_COMMAND_SELECTION_SCREEN_INIT"))
+        # What they act on is kept across the turn's end, and cleared only
+        # when a Pokemon is loaded into the slot.
+        overlay = OVERLAY.read_text()
+        for name in ("BattleContext_Init", "ov12_02251710"):
+            body = function(overlay, name)
+            self.assertNotIn("opportunistStages", body, name)
+            self.assertNotIn("symbiosisPending", body, name)
+        entry = function(overlay, "TryAbilityOnEntry")
+        self.assertIn("case 33: // Opportunist", entry)
+        self.assertIn("case 34: // Symbiosis", entry)
+
+
 if __name__ == "__main__":
     unittest.main()

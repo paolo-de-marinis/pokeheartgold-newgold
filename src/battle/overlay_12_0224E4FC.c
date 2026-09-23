@@ -6386,7 +6386,11 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
             // What the other side raised is copied after the move or the entry
             // that raised it, a stat at a time and at most two stages a step,
             // each with the ability's line. An Opportunist that has fainted or
-            // lost the ability since takes nothing.
+            // lost the ability since takes nothing. A raise at the end of a
+            // turn -- Speed Boost, Moody -- is copied once the turn's end is
+            // over and before anyone chooses a move: TurnEnd goes on through
+            // the trainer's message to PokemonAppear, which asks this again.
+            // The games copy it at once, among the turn's end effects.
             for (i = 0; i < maxBattlers; i++) {
                 battlerId = ctx->turnOrder[i];
                 for (j = STAT_ATK; j < NUM_BATTLE_STATS; j++) {
@@ -6421,7 +6425,9 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
         case 34: // Symbiosis
             // A Pokemon that has used up its held item is handed its partner's
             // by a partner with Symbiosis (Pokemon Central, Simbiosi), after
-            // the move or the entry in which it was used up. The reference
+            // the move or the entry in which it was used up, or, for a Berry
+            // eaten at the end of a turn, once the turn's end is over, as for
+            // Opportunist above. The reference
             // declares the ability and nothing reads it. Used up is what
             // BtlCmd_RemoveItem marks -- eaten, drunk, flung, popped, a Berry
             // plucked off it included -- and not an item knocked off, stolen,
