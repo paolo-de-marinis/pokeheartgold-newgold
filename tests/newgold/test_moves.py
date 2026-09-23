@@ -127,6 +127,12 @@ class MoveTests(unittest.TestCase):
         script = (ROOT / "files/battledata/script/effect_script/effect_script_0064.s").read_text()
         self.assertIn("MOVE_SUBSCRIPT_PTR_EVASION_DOWN_2_STAGES", script)
 
+    def test_howl_is_the_engine_s_rise_for_the_user_s_side(self):
+        ranges = import_moves.constants("include/constants/moves.h", "RANGE_")
+        effects = constants("include/constants/move_effects.h", "MOVE_EFFECT_")
+        record = struct.unpack(import_moves.RECORD, self.table[self.moves["MOVE_HOWL"]])
+        self.assertEqual((record[0], record[7]), (effects["MOVE_EFFECT_HOWL"], ranges["RANGE_USER_SIDE"]))
+
     def test_poison_gas_and_cotton_spore_hit_both_foes(self):
         ranges = import_moves.constants("include/constants/moves.h", "RANGE_")
         for name in ("POISON_GAS", "COTTON_SPORE"):
@@ -147,9 +153,6 @@ class MoveTests(unittest.TestCase):
     # 1..467 -- type, power, accuracy, PP, effect chance, priority, effect, and
     # the seven flag bits both games name -- is the engine's (d0380a487).
     RETAIL_EXCEPTIONS = {
-        ("HOWL", "effect"): "the engine's raises the ally through RANGE_USER_SIDE and its "
-                            "controller; this game's script would raise the user alone",
-        ("HOWL", "target"): "RANGE_USER_SIDE goes with the effect",
         ("CONVERSION_2", "target"): "the engine's aims at every adjacent Pokemon with Generation "
                                     "IV's command; Generation V's single target and command are "
                                     "not written",

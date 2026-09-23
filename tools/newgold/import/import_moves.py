@@ -290,8 +290,8 @@ def number(block, key):
 # A retail move keeps its number and its split, and takes hg-engine's
 # (d0380a487) type, power, accuracy, PP, effect chance, target and priority --
 # Protect, Detect and Endure at +4, Fake Out at +3, Extreme Speed and Follow
-# Me at +2, Teleport at -6, Poison Gas and Cotton Spore at both foes, as the
-# later games have them --
+# Me at +2, Teleport at -6, Poison Gas and Cotton Spore at both foes, Howl at
+# the user's side, as the later games have them --
 # konefr changed no retail move. Where the engine writes a value as a choice,
 # its config.h settles it, as for every other move: Growth is Grass, Crabhammer
 # hits at 95, Bone Rush is 30 a blow, Iron Head flinches one time in five. A
@@ -309,16 +309,15 @@ def number(block, key):
 # String Shot's two-stage speed drop (60), Tail Glow's three-stage Sp. Atk.
 # rise, Chatter's plain confusing hit (76), which with its chance of 100 always
 # confuses, Sweet Scent's two-stage evasion drop (64, retail's damage stub
-# until the engine's script replaced it). Not Howl's: its script raises the
-# user alone, and the ally is the engine's RANGE_USER_SIDE and the controller
-# behind it, which this game has not got.
-RETAIL_EFFECTS = ("STRING_SHOT", "TAIL_GLOW", "CHATTER", "SWEET_SCENT")
-# Two targets stay this game's. Howl's goes with its effect, above. Conversion
-# 2's is the engine's defect: it aims the move at every adjacent Pokemon and
-# keeps Generation IV's command, which reads the move that last hit the user;
-# from Generation V the move picks one Pokemon and reads the move that one
-# last used, and neither half of that is written yet.
-RETAIL_TARGETS_KEPT = ("HOWL", "CONVERSION_2")
+# until the engine's script replaced it), Howl's rise for the user's side
+# (387, with RANGE_USER_SIDE).
+RETAIL_EFFECTS = ("STRING_SHOT", "TAIL_GLOW", "CHATTER", "SWEET_SCENT", "HOWL")
+# One target stays this game's. Conversion 2's is the engine's defect: it aims
+# the move at every adjacent Pokemon and keeps Generation IV's command, which
+# reads the move that last hit the user; from Generation V the move picks one
+# Pokemon and reads the move that one last used, and neither half of that is
+# written yet.
+RETAIL_TARGETS_KEPT = ("CONVERSION_2",)
 
 
 def retail_moves(reference, last_vanilla, types, effect_id, table):
