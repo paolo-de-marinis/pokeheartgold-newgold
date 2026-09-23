@@ -979,5 +979,18 @@ class PsychUpTests(unittest.TestCase):
         self.assertNotIn("status2 |=", body)
 
 
+class Conversion2Tests(unittest.TestCase):
+    def test_it_reads_the_move_its_target_last_used(self):
+        # Pokemon Central, Conversione2, from Generation V: the target's last
+        # move, not the one that last hit the user; none or Struggle fails.
+        body = function(COMMANDS.read_text(), "BtlCmd_TryConversion2")
+        self.assertIn("ctx->conversion2Move[target] == MOVE_NONE || ctx->conversion2Move[target] == MOVE_STRUGGLE", body)
+        self.assertIn("ctx->conversion2Type[target]", body)
+        self.assertIn("type3 = TYPE_NONE", body)
+        record = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224DD74")
+        self.assertIn("ctx->conversion2Move[ctx->battlerIdAttacker] = ctx->moveNoCur;", record)
+        self.assertNotIn("conversion2Move[ctx->battlerIdTarget]", record)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -4478,7 +4478,6 @@ static void ov12_0224DC0C(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 
     ctx->moveNoHit[ctx->battlerIdAttacker] = 0;
-    ctx->conversion2Move[ctx->battlerIdAttacker] = 0;
 }
 
 static BOOL TryFaintMon(BattleContext *ctx, ControllerCommand commandNext, ControllerCommand command, int flag) {
@@ -4560,31 +4559,16 @@ static void ov12_0224DD74(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->moveNoHitType[ctx->battlerIdTarget] = 0;
                 ctx->moveNoPrev = 0;
             }
-
-            if (ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
-                switch (BattleMoveTbl(ctx, ctx->moveNoCur)->range) {
-                case RANGE_USER:
-                case RANGE_USER_SIDE:
-                case RANGE_FIELD:
-                case RANGE_OPPONENT_SIDE:
-                case RANGE_ALLY:
-                case RANGE_SINGLE_TARGET_USER_SIDE:
-                    ctx->conversion2Move[ctx->battlerIdTarget] = 0;
-                    ctx->conversion2BattlerId[ctx->battlerIdTarget] = BATTLER_NONE;
-                    ctx->conversion2Type[ctx->battlerIdTarget] = 0;
-                    break;
-                default:
-                    ctx->conversion2Move[ctx->battlerIdTarget] = ctx->moveNoCur;
-                    ctx->conversion2BattlerId[ctx->battlerIdTarget] = ctx->battlerIdAttacker;
-                    ctx->conversion2Type[ctx->battlerIdTarget] = moveType;
-                    break;
-                }
-            } else {
-                ctx->conversion2Move[ctx->battlerIdTarget] = 0;
-                ctx->conversion2BattlerId[ctx->battlerIdTarget] = BATTLER_NONE;
-                ctx->conversion2Type[ctx->battlerIdTarget] = 0;
-            }
         }
+    }
+
+    // The move the attacker used and its type as used, for a Conversion 2
+    // aimed at it later (BtlCmd_TryConversion2). It stays until the attacker
+    // uses another or leaves the field. Retail kept, on the target, the move
+    // that last hit it.
+    if (!(ctx->battleStatus & BATTLE_STATUS_NO_MOVE_SET) && ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {
+        ctx->conversion2Move[ctx->battlerIdAttacker] = ctx->moveNoCur;
+        ctx->conversion2Type[ctx->battlerIdAttacker] = moveType;
     }
 }
 

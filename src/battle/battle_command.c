@@ -3839,51 +3839,58 @@ BOOL BtlCmd_TryEncore(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// Conversion 2 from Generation V (Pokemon Central, Conversione2): the user
+// takes, at random, a type that resists or is immune to the type of the move
+// its target last used, and fails when the target has used none since it came
+// in, when that move was Struggle, or when no type the user lacks resists it.
+// Generation IV's read the move that last hit the user. The type is the
+// move's as it was used (ov12_0224DD74 keeps it), and it replaces all the
+// user's types, an added third one included.
+static BOOL Conversion2TypeFits(BattleContext *ctx, u8 typeMove, u8 typeMon, u8 val, int moveType) {
+    return typeMove == moveType && val <= 5
+        && GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) != typeMon
+        && GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) != typeMon;
+}
+
+// Retail's pick: a thousand random rows of the type chart, then the first row
+// that fits.
+static BOOL Conversion2PickType(BattleSystem *battleSystem, BattleContext *ctx, int moveType, u8 *type) {
+    int i;
+    u8 typeMove, val;
+
+    for (i = 0; i < 1000; i++) {
+        GetTypeEffectivnessData(battleSystem, 0xffff, &typeMove, type, &val);
+        if (Conversion2TypeFits(ctx, typeMove, *type, val, moveType)) {
+            return TRUE;
+        }
+    }
+    for (i = 0; GetTypeEffectivnessData(battleSystem, i, &typeMove, type, &val) == TRUE; i++) {
+        if (Conversion2TypeFits(ctx, typeMove, *type, val, moveType)) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 BOOL BtlCmd_TryConversion2(BattleSystem *battleSystem, BattleContext *ctx) {
-    int i, moveType;
+    u8 type;
 
     BattleScriptIncrementPointer(ctx, 1);
 
     int adrs = BattleScriptReadWord(ctx);
+    int target = ctx->battlerIdTarget;
 
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MULTITYPE) {
+    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MULTITYPE || target == BATTLER_NONE
+        || ctx->conversion2Move[target] == MOVE_NONE || ctx->conversion2Move[target] == MOVE_STRUGGLE
+        || !Conversion2PickType(battleSystem, ctx, ctx->conversion2Type[target], &type)) {
         BattleScriptIncrementPointer(ctx, adrs);
         return FALSE;
     }
 
-    if (ctx->conversion2Move[ctx->battlerIdAttacker] && (ctx->conversion2BattlerId[ctx->battlerIdAttacker] != 255)) {
-        if (BattleCtx_IsIdenticalToCurrentMove(ctx, ctx->conversion2Move[ctx->battlerIdAttacker]) && (ctx->battleMons[ctx->conversion2BattlerId[ctx->battlerIdAttacker]].status2 & STATUS2_LOCKED_INTO_MOVE)) {
-            BattleScriptIncrementPointer(ctx, adrs);
-            return FALSE;
-        } else {
-            u8 typeMove, typeMon, val;
-            moveType = ctx->conversion2Type[ctx->battlerIdAttacker];
-
-            for (i = 0; i < 1000; i++) {
-                GetTypeEffectivnessData(battleSystem, 0xffff, &typeMove, &typeMon, &val);
-                if (typeMove == moveType && val <= 5 && GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) != typeMon && GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) != typeMon) {
-                    ctx->battleMons[ctx->battlerIdAttacker].type1 = typeMon;
-                    ctx->battleMons[ctx->battlerIdAttacker].type2 = typeMon;
-                    ctx->msgTemp = typeMon;
-                    return FALSE;
-                }
-            }
-
-            i = 0;
-            while (GetTypeEffectivnessData(battleSystem, i, &typeMove, &typeMon, &val) == TRUE) {
-                if (typeMove == moveType && val <= 5 && GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) != typeMon && GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) != typeMon) {
-                    ctx->battleMons[ctx->battlerIdAttacker].type1 = typeMon;
-                    ctx->battleMons[ctx->battlerIdAttacker].type2 = typeMon;
-                    ctx->msgTemp = typeMon;
-                    return FALSE;
-                }
-                i++;
-            }
-        }
-    }
-
-    BattleScriptIncrementPointer(ctx, adrs);
-
+    ctx->battleMons[ctx->battlerIdAttacker].type1 = type;
+    ctx->battleMons[ctx->battlerIdAttacker].type2 = type;
+    ctx->battleMons[ctx->battlerIdAttacker].type3 = TYPE_NONE;
+    ctx->msgTemp = type;
     return FALSE;
 }
 

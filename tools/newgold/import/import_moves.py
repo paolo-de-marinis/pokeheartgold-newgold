@@ -312,12 +312,11 @@ def number(block, key):
 # until the engine's script replaced it), Howl's rise for the user's side
 # (387, with RANGE_USER_SIDE).
 RETAIL_EFFECTS = ("STRING_SHOT", "TAIL_GLOW", "CHATTER", "SWEET_SCENT", "HOWL")
-# One target stays this game's. Conversion 2's is the engine's defect: it aims
-# the move at every adjacent Pokemon and keeps Generation IV's command, which
-# reads the move that last hit the user; from Generation V the move picks one
-# Pokemon and reads the move that one last used, and neither half of that is
-# written yet.
-RETAIL_TARGETS_KEPT = ("CONVERSION_2",)
+# One target is neither side's. Conversion 2's is the engine's defect: it aims
+# the move at every adjacent Pokemon, while from Generation V the move picks one
+# and reads the move that one last used (Pokemon Central, Conversione2;
+# BtlCmd_TryConversion2), so it takes a single target. Retail's was the user.
+TARGETS_FIXED = {"CONVERSION_2": "RANGE_SINGLE_TARGET"}
 # Added moves the engine leaves as a bare MOVE_EFFECT_HIT under
 # FLAG_UNUSABLE_UNIMPLEMENTED, and this game gives their canonical effect
 # (Pokemon Central), so without the flag. Floral Healing is Heal Pulse's heal;
@@ -336,8 +335,7 @@ def retail_moves(reference, last_vanilla, types, effect_id, table):
         name = by_number[move]
         block = blocks[name]
         fields = list(struct.unpack(RECORD, table[move]))
-        if name not in RETAIL_TARGETS_KEPT:
-            fields[7] = ranges(block, rangesets)
+        fields[7] = rangesets[TARGETS_FIXED[name]] if name in TARGETS_FIXED else ranges(block, rangesets)
         fields[2] = number(block, "power")
         fields[3] = types[field(block, "type")]
         fields[4] = number(block, "accuracy")

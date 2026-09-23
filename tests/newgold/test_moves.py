@@ -145,6 +145,11 @@ class MoveTests(unittest.TestCase):
         self.assertRegex(script, r"_FloralHealing:\s*GotoIfTerrainOverlayIsType GRASSY_TERRAIN, (\w+)")
         self.assertIn("OPCODE_MUL, BSCRIPT_VAR_HP_CALC, 2732\n    UpdateVar OPCODE_DIV, BSCRIPT_VAR_HP_CALC, 4096", script)
 
+    def test_conversion_2_aims_at_one_pokemon(self):
+        ranges = import_moves.constants("include/constants/moves.h", "RANGE_")
+        record = struct.unpack(import_moves.RECORD, self.table[self.moves["MOVE_CONVERSION_2"]])
+        self.assertEqual(record[7], ranges["RANGE_SINGLE_TARGET"])
+
     def test_poison_gas_and_cotton_spore_hit_both_foes(self):
         ranges = import_moves.constants("include/constants/moves.h", "RANGE_")
         for name in ("POISON_GAS", "COTTON_SPORE"):
@@ -165,9 +170,8 @@ class MoveTests(unittest.TestCase):
     # 1..467 -- type, power, accuracy, PP, effect chance, priority, effect, and
     # the seven flag bits both games name -- is the engine's (d0380a487).
     RETAIL_EXCEPTIONS = {
-        ("CONVERSION_2", "target"): "the engine's aims at every adjacent Pokemon with Generation "
-                                    "IV's command; Generation V's single target and command are "
-                                    "not written",
+        ("CONVERSION_2", "target"): "the engine's aims at every adjacent Pokemon; from Generation V "
+                                    "it is one target, whose last move it reads (TARGETS_FIXED)",
     }
 
     @unittest.skipUnless(REFERENCE.exists(), "the reference checkout is not here")
