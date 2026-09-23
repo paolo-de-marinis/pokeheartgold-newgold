@@ -29,39 +29,6 @@
 
 	.text
 
-	thumb_func_start ov18_021F8850
-ov18_021F8850: ; 0x021F8850
-	push {r4, r5}
-	ldr r2, _021F8880 ; =0x000007B4
-	mov r4, #0
-	ldrh r5, [r0, r2]
-	add r3, r4, #0
-	cmp r5, #0
-	bls _021F8878
-_021F885E:
-	cmp r4, #0
-	bne _021F8864
-	ldrh r4, [r0]
-_021F8864:
-	ldrh r2, [r0]
-	cmp r1, r2
-	bne _021F8870
-	add r0, r1, #0
-	pop {r4, r5}
-	bx lr
-_021F8870:
-	add r3, r3, #1
-	add r0, r0, #4
-	cmp r3, r5
-	blo _021F885E
-_021F8878:
-	add r0, r4, #0
-	pop {r4, r5}
-	bx lr
-	nop
-_021F8880: .word 0x000007B4
-	thumb_func_end ov18_021F8850
-
 	thumb_func_start ov18_021F8884
 ov18_021F8884: ; 0x021F8884
 	push {r3, r4, r5, r6, r7, lr}
