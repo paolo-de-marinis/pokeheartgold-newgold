@@ -3215,12 +3215,19 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
     }
 
+    // Earthquake finds a Pokemon underground, Surf and Whirlpool one under
+    // the water, by the move (the reference's
+    // BattleController_CheckSemiInvulnerability) rather than by a flag their
+    // effect scripts set, as the other moves that reach them still do.
+    BOOL reachesDig = (ctx->battleStatus & BATTLE_STATUS_HIT_DIG) || move == MOVE_EARTHQUAKE;
+    BOOL reachesDive = (ctx->battleStatus & BATTLE_STATUS_HIT_DIVE) || move == MOVE_SURF || move == MOVE_WHIRLPOOL;
+
     if (!(ctx->moveStatusFlag & MOVE_STATUS_BYPASSED_ACCURACY)
         && BattleMoveTbl(ctx, ctx->moveNoCur)->range != RANGE_OPPONENT_SIDE
         && ((!(ctx->battleStatus & BATTLE_STATUS_HIT_FLY) && ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_FLY)
             || (!(ctx->battleStatus & BATTLE_STATUS_SHADOW_FORCE) && ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_PHANTOM_FORCE)
-            || (!(ctx->battleStatus & BATTLE_STATUS_HIT_DIG) && ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_DIG)
-            || (!(ctx->battleStatus & BATTLE_STATUS_HIT_DIVE) && ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_DIVE))) {
+            || (!reachesDig && ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_DIG)
+            || (!reachesDive && ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_DIVE))) {
         ctx->moveStatusFlag |= MOVE_STATUS_SEMI_INVULNERABLE;
     }
     return FALSE;

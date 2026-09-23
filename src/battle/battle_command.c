@@ -894,6 +894,15 @@ static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, i
     if ((ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_MINIMIZE) && BattleMoveStampsOnMinimize(moveNo)) {
         modifier = QMul_RoundUp(modifier, UQ412__2_0);
     }
+    // Earthquake against a Pokemon underground (6.9.14.2), Surf and Whirlpool
+    // against one under the water (6.9.14.3); retail doubled their power in
+    // the effect scripts instead.
+    if ((ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_DIG) && moveNo == MOVE_EARTHQUAKE) {
+        modifier = QMul_RoundUp(modifier, UQ412__2_0);
+    }
+    if ((ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_DIVE) && (moveNo == MOVE_SURF || moveNo == MOVE_WHIRLPOOL)) {
+        modifier = QMul_RoundUp(modifier, UQ412__2_0);
+    }
     // Collision Course and Electro Drift hit a third harder where they are
     // super effective (6.9.14.45), ahead of the screens.
     if (effectiveness > 8 && (moveNo == MOVE_COLLISION_COURSE || moveNo == MOVE_ELECTRO_DRIFT)) {

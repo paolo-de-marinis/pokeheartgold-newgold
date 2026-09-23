@@ -255,6 +255,14 @@ int main(void) {
     ctx.moveNoCur = MOVE_HEAVY_SLAM; EXPECT(calc(), 90);
     ctx.moveNoCur = MOVE_TACKLE; EXPECT(calc(), 45);
 
+    // 6.9.14.2 Earthquake into a Pokemon underground doubles, 90, and 6.9.14.3
+    // Surf and Whirlpool into one under the water; not the other way round.
+    reset(); ctx.battleMons[1].moveEffectFlags = MOVE_EFFECT_FLAG_DIG; ctx.moveNoCur = MOVE_EARTHQUAKE; EXPECT(calc(), 90);
+    ctx.moveNoCur = MOVE_SURF; EXPECT(calc(), 45);
+    reset(); ctx.battleMons[1].moveEffectFlags = MOVE_EFFECT_FLAG_DIVE; ctx.moveNoCur = MOVE_SURF; EXPECT(calc(), 90);
+    ctx.moveNoCur = MOVE_WHIRLPOOL; EXPECT(calc(), 90);
+    ctx.moveNoCur = MOVE_EARTHQUAKE; EXPECT(calc(), 45);
+
     // 6.9.14.45 Collision Course and Electro Drift, 5461 on a super-effective
     // hit: 90 * 5461 = 491490, + 2047 >> 12 = 120. Neutral, 45.
     reset(); ctx.moveNoCur = MOVE_COLLISION_COURSE; S.types[1][0] = S.types[1][1] = TYPE_GRASS; EXPECT(calc(), 120);
@@ -457,6 +465,19 @@ class DamageFormulaTests(unittest.TestCase):
         self.assertRegex(body, r"MOVE_EFFECT_FLAG_MINIMIZE\) && BattleMoveStampsOnMinimize\(move\)\) \{\n\s*ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;")
         stomp = (ROOT / "files/battledata/script/effect_script/effect_script_0150.s").read_text()
         self.assertNotIn("BSCRIPT_VAR_POWER_MULTI, 20", stomp)
+
+    def test_earthquake_and_surf_reach_dig_and_dive_by_the_move(self):
+        # BattleController_CheckSemiInvulnerability: by the move, and doubled
+        # only in the final modifier, so the scripts set neither.
+        body = function(CONTROLLER, "BattleSystem_CheckMoveEffect")
+        self.assertIn("BOOL reachesDig = (ctx->battleStatus & BATTLE_STATUS_HIT_DIG) || move == MOVE_EARTHQUAKE;", body)
+        self.assertIn("BOOL reachesDive = (ctx->battleStatus & BATTLE_STATUS_HIT_DIVE) || move == MOVE_SURF || move == MOVE_WHIRLPOOL;", body)
+        self.assertIn("(!reachesDig && ", body)
+        self.assertIn("(!reachesDive && ", body)
+        for effect in ("0147", "0257", "0261"):
+            script = (ROOT / f"files/battledata/script/effect_script/effect_script_{effect}.s").read_text()
+            self.assertNotIn("BSCRIPT_VAR_POWER_MULTI", script, effect)
+            self.assertNotIn("BATTLE_STATUS_HIT_", script, effect)
 
     def test_the_berry_is_eaten_before_the_bar_moves_and_halves_nothing_more(self):
         # The half is the chain's (6.9.13); subscript 264, called from UpdateHp

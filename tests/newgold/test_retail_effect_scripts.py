@@ -56,7 +56,6 @@ STILL_DIFFERENT = {
     132: "Mega Sol, which the recovery command here does not read",
     136: "the primal weathers and the engine's weather subscripts",
     137: "the primal weathers and the engine's weather subscripts",
-    147: IN_C.format("Earthquake against Dig, CalcBaseDamage.c"),
     148: "the engine runs the landing back through its before-move sequence; here it is subscript 121's, "
          "worked out by BattleContext_LandFutureSight, and the use keeps retail's flags",
     150: "the doubling against Minimize is the damage chain's here, for every stamping move (BattleMoveStampsOnMinimize), as battle_calc_damage.c 6.9.14.1 does it",
@@ -77,9 +76,8 @@ STILL_DIFFERENT = {
     241: CALLED_MOVE,
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     253: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
-    257: IN_C.format("Surf against Dive, CalcBaseDamage.c"),
     259: "the engine's Room Service subscript and its message wait",
-    261: IN_C.format("Whirlpool against Dive and the binding, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
+    261: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
     262: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     269: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     272: IN_C.format("the charge turn and the Power Herb, BattleController_BeforeMove.c"),
