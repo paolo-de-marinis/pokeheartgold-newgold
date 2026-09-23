@@ -542,5 +542,16 @@ class TintedLensTests(unittest.TestCase):
         self.assertRegex(body, r"== ABILITY_TINTED_LENS\) \{\n\s*damage \*= 2;")
 
 
+class IceScalesTests(unittest.TestCase):
+    def test_a_special_hit_is_halved_once(self):
+        # The reference halves inside its loop over the battlers
+        # (battle_calc_damage.c:788), so a quarter in a single battle and a
+        # sixteenth in a double; Paolo's rule (2026-09-23) keeps the one half.
+        body = function(OVERLAY.read_text(), "ov12_02251D28")
+        self.assertEqual(body.count("ABILITY_ICE_SCALES"), 1)
+        self.assertRegex(body, r"\n    if \(CheckBattlerAbilityIfNotIgnored\(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_SCALES\)"
+                               r" == TRUE && [^\n]*CATEGORY_SPECIAL\) \{\n        damage = DamageDivide\(damage, 2\);\n    \}")
+
+
 if __name__ == "__main__":
     unittest.main()
