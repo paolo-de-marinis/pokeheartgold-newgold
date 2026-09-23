@@ -238,6 +238,19 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(mail(raw), bytes(len(sv.MAIL_INIT)))
         self.assertEqual(mail(sv.edit_mon(raw, item=137)), sv.MAIL_INIT, "an all-zero one is mended on an edit")
 
+    def test_a_form_has_its_own_stats(self):
+        """CalcMonStats reads the form's record (ResolveMonForm): a Rotom
+        Wash is SPECIES_ROTOM in form 2, with Rotom Wash's base stats."""
+        n, records = sv.species_numbers(), sv.personal_records()
+        for base, form, row in (("ROTOM", 2, "ROTOM_WASH"), ("GIRATINA", 1, "GIRATINA_ORIGIN"),
+                                ("DEOXYS", 3, "DEOXYS_SPD"), ("ROTOM", 0, "ROTOM")):
+            mon = sv.open_mon(sv.new_mon(n[base], 50, sv.owner(self.open())))
+            mon["blocks"][1][0x18] |= form << 3
+            raw = sv.edit_mon(sv.seal_mon(mon), level=51)
+            got = sv.describe_mon(raw)
+            self.assertEqual(got["form"], form)
+            self.assertEqual(got["stats"], sv.stat_line(records[n[row]], 51, got["ivs"], got["evs"], got["nature"]), row)
+
     def test_a_nature_keeps_gender_and_shininess(self):
         shiny_one = ((0x1111 ^ 0x2222 ^ 0x3344 ^ 5) << 16) | 0x3344
         self.assertTrue(sv.is_shiny(shiny_one, 0x1111_2222))

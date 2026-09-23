@@ -1049,6 +1049,23 @@ def _set_ability(a, b, personality, species):
     struct.pack_into("<I", a, 8, (word & 0x7FFFFFFF) | ((ability >> 8) & 1) << 31)
 
 
+# ResolveMonForm: the five retail species whose forms have base stats of
+# their own, the row of form 1 and the number of forms (the *_FORM_MAX of
+# include/constants/pokemon.h). Every other form is a species of its own.
+FORM_ROWS = {"DEOXYS": ("DEOXYS_ATK", 4), "WORMADAM": ("WORMADAM_SANDY", 3), "GIRATINA": ("GIRATINA_ORIGIN", 2),
+             "SHAYMIN": ("SHAYMIN_SKY", 2), "ROTOM": ("ROTOM_HEAT", 6)}
+
+
+def personal_row(species, form):
+    """ResolveMonForm: the personal record CalcMonStats reads for a species
+    in this form."""
+    numbers = species_numbers()
+    for base, (first, count) in FORM_ROWS.items():
+        if species == numbers[base] and 0 < form < count:
+            return numbers[first] + form - 1
+    return species
+
+
 def _set_party_stats(mon, level):
     """CalcMonStats at this level, the nature a Mint gave if it gave one, and
     HP moved the way CalcMonStats moves it."""
@@ -1059,7 +1076,7 @@ def _set_party_stats(mon, level):
     ivs = [(ivword >> (5 * i)) & 31 for i in range(6)]
     mint = (struct.unpack_from("<H", b, 0x1A)[0] & MINT_MASK) >> 1
     nature = mint - 1 if mint else mon["personality"] % 25
-    stats = stat_line(personal_records()[species], level, ivs, list(a[0x10:0x16]), nature)
+    stats = stat_line(personal_records()[personal_row(species, b[0x18] >> 3)], level, ivs, list(a[0x10:0x16]), nature)
     shedinja = species == species_numbers()["SHEDINJA"]
     if shedinja:
         stats[0] = 1
