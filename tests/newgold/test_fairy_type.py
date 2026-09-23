@@ -147,6 +147,7 @@ static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return 
 static int GetNaturalGiftType(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return 0; }
 static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int a, int b, int c) { (void)bs; (void)ctx; (void)a; (void)b; (void)c; return 0; }
 static BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return TRUE; }
+static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)battlerId; return ctx->fieldCondition & FIELD_CONDITION_WEATHER; }
 @FUNCTIONS@
 int main(void) {
     BattleContext ctx = { 0 };

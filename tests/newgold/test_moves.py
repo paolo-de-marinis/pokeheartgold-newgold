@@ -261,7 +261,8 @@ class MoveTests(unittest.TestCase):
                 ("SUN_ALL", "hitChance = 50;", {"THUNDER", "HURRICANE"}),
                 ("RAIN_ALL", "ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;",
                  {"THUNDER", "HURRICANE", "BLEAKWIND_STORM", "WILDBOLT_STORM", "SANDSEAR_STORM"})):
-            found = re.findall(r"if \(\(?ctx->fieldCondition & FIELD_CONDITION_" + weather
+            # The weather is the one the attacker's move sees (BattlerMoveWeather).
+            found = re.findall(r"if \(\(?(?:weather|BattlerMoveWeather\(battleSystem, ctx, battlerIdAttacker\)) & FIELD_CONDITION_" + weather
                                + r"\)?\s*&&([^{]*)\{\s*" + re.escape(then), source)
             self.assertEqual(len(found), 1, weather)
             self.assertEqual(set(re.findall(r"MOVE_EFFECT_([A-Z_]+)", found[0])), want, weather)

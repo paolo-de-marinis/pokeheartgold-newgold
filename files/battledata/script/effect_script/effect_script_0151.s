@@ -3,6 +3,9 @@
     .data
 
 _000:
+    // Mega Sol's user fires at once whatever the weather, under Cloud Nine
+    // too (hg-engine's CheckChargeMoves reads the weather its move sees).
+    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_MEGA_SOL, _028
     CheckIgnoreWeather _006
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SUN_ALL, _028
 

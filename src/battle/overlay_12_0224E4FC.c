@@ -2741,6 +2741,22 @@ BOOL ov12_02251C74(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarge
     return ret;
 }
 
+// The weather a battler's move sees, hg-engine's GetWeather
+// (other_battle_calculators.c:792). Mega Sol (Pokemon Central, Megasolar)
+// makes its holder's moves behave as in harsh sunlight, whatever the field has
+// and Cloud Nine or Air Lock on it too; otherwise those two leave no weather,
+// and the field's is the rest. BATTLER_NONE asks for the field's alone, which
+// is what everything that is not a move of one battler's reads.
+u32 BattlerMoveWeather(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    if (battlerId != BATTLER_NONE && GetBattlerAbility(ctx, battlerId) == ABILITY_MEGA_SOL) {
+        return FIELD_CONDITION_SUN;
+    }
+    if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) || CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
+        return 0;
+    }
+    return ctx->fieldCondition & FIELD_CONDITION_WEATHER;
+}
+
 // Tera Shell (Pokemon Central, Teraguscio): while the Pokemon has all its HP,
 // a move that damages it is not very effective, whatever its type, unless the
 // chart makes it no effect at all; a multi-hit move keeps what its first hit
@@ -8718,6 +8734,7 @@ static const u16 sPulseMoves[] = {
 };
 
 int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u32 sideCondition, u32 fieldCondition, u16 power, u8 type, u8 battlerIdAttacker, u8 battlerIdTarget, u8 crit) {
+    u32 weather;
     int i;
     s32 dmg = 0;
     s32 dmg2 = 0;
@@ -9350,40 +9367,43 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower = movePower * 110 / 100;
     }
 
-    if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        if ((fieldCondition & FIELD_CONDITION_WEATHER_NO_SUN) && moveNo == MOVE_SOLAR_BEAM) {
-            movePower /= 2;
-        }
-        if ((fieldCondition & FIELD_CONDITION_SUN_ALL) && calcAttacker.ability == ABILITY_SOLAR_POWER) {
-            monSpAtk = monSpAtk * 15 / 10;
-        }
-        // Orichalcum Pulse works the sun harder than Solar Power does, and on
-        // the physical side. A Utility Umbrella on the one with the ability
-        // takes the Attack away -- but not the sentence the ability prints on
-        // its way in, which the reference has a note of its own about: the
-        // pulse still announces itself from under the umbrella.
-        if ((fieldCondition & FIELD_CONDITION_SUN_ALL) && calcAttacker.ability == ABILITY_ORICHALCUM_PULSE && calcAttacker.item != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
-            monAtk = monAtk * 4 / 3;
-        }
-        // Sand Force reads the weather from inside this block like everything
-        // else that reads weather, so Cloud Nine and Air Lock take it away.
-        if ((fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) && calcAttacker.ability == ABILITY_SAND_FORCE && (moveType == TYPE_GROUND || moveType == TYPE_ROCK || moveType == TYPE_STEEL)) {
-            movePower = movePower * 13 / 10;
-        }
-        if ((fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) && (calcTarget.type1 == TYPE_ROCK || calcTarget.type2 == TYPE_ROCK)) {
-            monSpDef = monSpDef * 15 / 10;
-        }
-        // What the sandstorm does for a Rock-type's Sp. Def, the snow does for
-        // an Ice-type's Defence. It is the whole of what snow is for.
-        if ((fieldCondition & FIELD_CONDITION_SNOW_ALL) && (calcTarget.type1 == TYPE_ICE || calcTarget.type2 == TYPE_ICE)) {
-            monDef = monDef * 15 / 10;
-        }
-        if ((fieldCondition & FIELD_CONDITION_SUN_ALL) && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_SAME_SIDE_HP, battlerIdAttacker, ABILITY_FLOWER_GIFT)) {
-            monAtk = monAtk * 15 / 10;
-        }
-        if ((fieldCondition & FIELD_CONDITION_SUN_ALL) && GetBattlerAbility(ctx, battlerIdAttacker) != ABILITY_MOLD_BREAKER && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_SAME_SIDE_HP, battlerIdTarget, ABILITY_FLOWER_GIFT)) {
-            monSpDef = monSpDef * 15 / 10;
-        }
+    // The weather as the attacker's move sees it (BattlerMoveWeather): Mega
+    // Sol's sunlight halves no Solar Beam and leaves the target the sand's and
+    // the snow's help. The confusion blow passes no field condition and asks
+    // for no weather.
+    weather = fieldCondition ? BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker) : 0;
+    if ((weather & FIELD_CONDITION_WEATHER_NO_SUN) && moveNo == MOVE_SOLAR_BEAM) {
+        movePower /= 2;
+    }
+    if ((weather & FIELD_CONDITION_SUN_ALL) && calcAttacker.ability == ABILITY_SOLAR_POWER) {
+        monSpAtk = monSpAtk * 15 / 10;
+    }
+    // Orichalcum Pulse works the sun harder than Solar Power does, and on
+    // the physical side. A Utility Umbrella on the one with the ability
+    // takes the Attack away -- but not the sentence the ability prints on
+    // its way in, which the reference has a note of its own about: the
+    // pulse still announces itself from under the umbrella.
+    if ((weather & FIELD_CONDITION_SUN_ALL) && calcAttacker.ability == ABILITY_ORICHALCUM_PULSE && calcAttacker.item != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
+        monAtk = monAtk * 4 / 3;
+    }
+    // Sand Force reads the same weather as everything here, so Cloud Nine
+    // and Air Lock take it away.
+    if ((weather & FIELD_CONDITION_SANDSTORM_ALL) && calcAttacker.ability == ABILITY_SAND_FORCE && (moveType == TYPE_GROUND || moveType == TYPE_ROCK || moveType == TYPE_STEEL)) {
+        movePower = movePower * 13 / 10;
+    }
+    if ((weather & FIELD_CONDITION_SANDSTORM_ALL) && (calcTarget.type1 == TYPE_ROCK || calcTarget.type2 == TYPE_ROCK)) {
+        monSpDef = monSpDef * 15 / 10;
+    }
+    // What the sandstorm does for a Rock-type's Sp. Def, the snow does for
+    // an Ice-type's Defence. It is the whole of what snow is for.
+    if ((weather & FIELD_CONDITION_SNOW_ALL) && (calcTarget.type1 == TYPE_ICE || calcTarget.type2 == TYPE_ICE)) {
+        monDef = monDef * 15 / 10;
+    }
+    if ((weather & FIELD_CONDITION_SUN_ALL) && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_SAME_SIDE_HP, battlerIdAttacker, ABILITY_FLOWER_GIFT)) {
+        monAtk = monAtk * 15 / 10;
+    }
+    if ((weather & FIELD_CONDITION_SUN_ALL) && GetBattlerAbility(ctx, battlerIdAttacker) != ABILITY_MOLD_BREAKER && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_SAME_SIDE_HP, battlerIdTarget, ABILITY_FLOWER_GIFT)) {
+        monSpDef = monSpDef * 15 / 10;
     }
 
     if (moveCategory == CATEGORY_PHYSICAL) {
@@ -10505,25 +10525,27 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
             type++;
         }
         break;
-    case MOVE_WEATHER_BALL:
-        if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-            if (ctx->fieldCondition & FIELD_CONDITION_WEATHER) {
-                if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
-                    type = TYPE_WATER;
-                }
-                if (ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) {
-                    type = TYPE_ROCK;
-                }
-                if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
-                    type = TYPE_FIRE;
-                }
-                if (ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL) {
-                    type = TYPE_ICE;
-                }
-                // BUG: If the weather is foggy, then type doesn't get set properly before being returned
+    case MOVE_WEATHER_BALL: {
+        // What the move will be, as BtlCmd_CalcWeatherBallParams decides it:
+        // under Mega Sol, Fire.
+        u32 weather = BattlerMoveWeather(battleSystem, ctx, battlerId);
+
+        if (weather) {
+            if (weather & FIELD_CONDITION_RAIN_ALL) {
+                type = TYPE_WATER;
             }
+            if (weather & FIELD_CONDITION_SANDSTORM_ALL) {
+                type = TYPE_ROCK;
+            }
+            if (weather & FIELD_CONDITION_SUN_ALL) {
+                type = TYPE_FIRE;
+            }
+            if (weather & FIELD_CONDITION_HAIL_ALL) {
+                type = TYPE_ICE;
+            }
+            // BUG: If the weather is foggy, then type doesn't get set properly before being returned
         }
-        break;
+    } break;
     // Terrain Pulse takes the colour of whatever is underfoot, and only if the
     // user is standing on it. With nothing down it stays Normal, which is what
     // the default below would have said anyway.

@@ -149,6 +149,11 @@ int main(void) {
     // Cloud Nine takes it away.
     reset(); ctx.moveType = TYPE_WATER; ctx.fieldCondition = FIELD_CONDITION_RAIN_ALL; EXPECT(calc(), 67);
     S.cloudNine = TRUE; EXPECT(calc(), 45);
+    // Mega Sol's user sees harsh sunlight whatever the field has, Cloud Nine
+    // included: its Fire move 67 and its Water move 22, in the rain too.
+    reset(); S.ability[0] = ABILITY_MEGA_SOL; EXPECT(calc(), 67);
+    ctx.moveType = TYPE_WATER; ctx.fieldCondition = FIELD_CONDITION_RAIN_ALL; EXPECT(calc(), 22);
+    S.cloudNine = TRUE; EXPECT(calc(), 22);
 
     // 6.3.5 Glaive Rush on the target: 90.
     reset(); ctx.moveConditions[1].glaiveRush = TRUE; EXPECT(calc(), 90);
@@ -301,13 +306,14 @@ def program():
     overlay = "\n".join([enum, table(OVERLAY, "sTypeEffectiveness")] + [
         function(OVERLAY, name) for name in (
             "QMul_RoundUp", "QMul_RoundDown", "ov12_02251C74", "ov12_022583B4", "TeraShellResists",
-            "CalcTypeEffectiveness")])
+            "CalcTypeEffectiveness", "BattlerMoveWeather")])
     commands = "\n".join(function(COMMANDS, name) for name in (
         "ScreenModifier", "FinalDamageModifier", "DamageCalcDefault"))
     return (FIXTURE.replace("@UQ412@", uq412)
             .replace("@OVERLAY@", overlay.replace("BOOL ov12_02251C74", "static BOOL ov12_02251C74")
                      .replace("int CalcTypeEffectiveness", "static int CalcTypeEffectiveness")
                      .replace("BOOL TeraShellResists", "static BOOL TeraShellResists")
+                     .replace("u32 BattlerMoveWeather", "static u32 BattlerMoveWeather")
                      .replace("u32 QMul_", "static u32 QMul_"))
             .replace("@COMMANDS@", commands))
 

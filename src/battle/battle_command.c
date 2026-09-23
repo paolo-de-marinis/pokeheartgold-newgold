@@ -891,6 +891,7 @@ static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BO
     u32 moveStatusFlag = 0;
     int effectiveness;
     u32 damage;
+    u32 weather;
 
     // Me First's copy is boosted only on the turn it was copied; the half
     // again itself is on the power, in CalcMoveDamage.
@@ -918,37 +919,37 @@ static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BO
         damage = QMul_RoundDown(damage, UQ412__0_25);
     }
 
-    if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
-            switch (type) {
-            case TYPE_FIRE:
-                damage = QMul_RoundDown(damage, UQ412__0_5);
-                break;
-            case TYPE_WATER:
-                damage = QMul_RoundDown(damage, UQ412__1_5);
-                break;
-            }
+    // The weather as the attacker's move sees it: under Mega Sol, the sun's.
+    weather = BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker);
+    if (weather & FIELD_CONDITION_RAIN_ALL) {
+        switch (type) {
+        case TYPE_FIRE:
+            damage = QMul_RoundDown(damage, UQ412__0_5);
+            break;
+        case TYPE_WATER:
+            damage = QMul_RoundDown(damage, UQ412__1_5);
+            break;
         }
-        if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
-            switch (type) {
-            case TYPE_FIRE:
+    }
+    if (weather & FIELD_CONDITION_SUN_ALL) {
+        switch (type) {
+        case TYPE_FIRE:
+            damage = QMul_RoundDown(damage, UQ412__1_5);
+            break;
+        case TYPE_WATER:
+            // Hydro Steam is the Water move the sun helps rather than
+            // hinders, and a Utility Umbrella on the one using it takes
+            // that away -- leaving the halving every other Water move
+            // gets, which is what the reference's else does. The item
+            // reaches no further than this in the reference: the rain and
+            // the sun are otherwise read with nobody's items in the
+            // question, and only Orichalcum Pulse excuses it too.
+            if (moveNo == MOVE_HYDRO_STEAM && GetBattlerHeldItemEffect(ctx, battlerIdAttacker) != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
                 damage = QMul_RoundDown(damage, UQ412__1_5);
-                break;
-            case TYPE_WATER:
-                // Hydro Steam is the Water move the sun helps rather than
-                // hinders, and a Utility Umbrella on the one using it takes
-                // that away -- leaving the halving every other Water move
-                // gets, which is what the reference's else does. The item
-                // reaches no further than this in the reference: the rain and
-                // the sun are otherwise read with nobody's items in the
-                // question, and only Orichalcum Pulse excuses it too.
-                if (moveNo == MOVE_HYDRO_STEAM && GetBattlerHeldItemEffect(ctx, battlerIdAttacker) != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
-                    damage = QMul_RoundDown(damage, UQ412__1_5);
-                } else {
-                    damage = QMul_RoundDown(damage, UQ412__0_5);
-                }
-                break;
+            } else {
+                damage = QMul_RoundDown(damage, UQ412__0_5);
             }
+            break;
         }
     }
 
@@ -4512,9 +4513,12 @@ BOOL BtlCmd_RapidSpin(BattleSystem *battleSystem, BattleContext *ctx) {
 BOOL BtlCmd_WeatherHPRecovery(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
-    if (!(ctx->fieldCondition & FIELD_CONDITION_WEATHER) || CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) || CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
+    // Under Mega Sol the user's always heals two thirds, as in the sun.
+    u32 weather = BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker);
+
+    if (!weather) {
         ctx->hpCalc = ctx->battleMons[ctx->battlerIdAttacker].maxHp / 2;
-    } else if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
+    } else if (weather & FIELD_CONDITION_SUN_ALL) {
         ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * 20, 30);
     } else {
         ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp, 4);
@@ -5074,29 +5078,32 @@ BOOL BtlCmd_CalcWeightBasedPower(BattleSystem *battleSystem, BattleContext *ctx)
 }
 
 BOOL BtlCmd_CalcWeatherBallParams(BattleSystem *battleSystem, BattleContext *ctx) {
+    // Under Mega Sol the user's is a Fire move of double power, whatever the
+    // weather. Under Cloud Nine or Air Lock there is none, and the power is
+    // the move's own, which is what an unset power reads as anyway.
+    u32 weather = BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker);
+
     BattleScriptIncrementPointer(ctx, 1);
 
-    if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        if (ctx->fieldCondition & FIELD_CONDITION_WEATHER) {
-            // Snow is weather this move does not answer to: the reference
-            // leaves both its power and its type alone under it, so there is
-            // no Ice-type branch below either.
-            ctx->movePower = BattleMoveTbl(ctx, ctx->moveNoCur)->power * ((ctx->fieldCondition & FIELD_CONDITION_SNOW_ALL) ? 1 : 2);
-            if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
-                ctx->moveType = TYPE_WATER;
-            }
-            if (ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) {
-                ctx->moveType = TYPE_ROCK;
-            }
-            if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
-                ctx->moveType = TYPE_FIRE;
-            }
-            if (ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL) {
-                ctx->moveType = TYPE_ICE;
-            }
-        } else {
-            ctx->movePower = BattleMoveTbl(ctx, ctx->moveNoCur)->power;
+    if (weather) {
+        // Snow is weather this move does not answer to: the reference
+        // leaves both its power and its type alone under it, so there is
+        // no Ice-type branch below either.
+        ctx->movePower = BattleMoveTbl(ctx, ctx->moveNoCur)->power * ((weather & FIELD_CONDITION_SNOW_ALL) ? 1 : 2);
+        if (weather & FIELD_CONDITION_RAIN_ALL) {
+            ctx->moveType = TYPE_WATER;
         }
+        if (weather & FIELD_CONDITION_SANDSTORM_ALL) {
+            ctx->moveType = TYPE_ROCK;
+        }
+        if (weather & FIELD_CONDITION_SUN_ALL) {
+            ctx->moveType = TYPE_FIRE;
+        }
+        if (weather & FIELD_CONDITION_HAIL_ALL) {
+            ctx->moveType = TYPE_ICE;
+        }
+    } else {
+        ctx->movePower = BattleMoveTbl(ctx, ctx->moveNoCur)->power;
     }
 
     return FALSE;

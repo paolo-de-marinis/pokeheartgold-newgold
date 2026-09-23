@@ -104,6 +104,7 @@ IMPLEMENTED = {
     "MAGICIAN",
     "MAGIC_BOUNCE",
     "MEGA_LAUNCHER",
+    "MEGA_SOL",
     "MERCILESS",
     "MINDS_EYE",
     "MIRROR_ARMOR",
@@ -224,8 +225,8 @@ IMPLEMENTED = {
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
     "AROMA_VEIL", "BALL_FETCH", "COSTAR", "CURIOUS_MEDICINE", "DELTA_STREAM",
-    "DESOLATE_LAND", "GUARD_DOG", "MEGA_SOL", "MIMICRY", "OPPORTUNIST",
-    "POWER_SPOT", "PRIMORDIAL_SEA", "STAKEOUT", "SUPREME_OVERLORD", "SYMBIOSIS",
+    "DESOLATE_LAND", "GUARD_DOG", "MIMICRY", "OPPORTUNIST", "POWER_SPOT",
+    "PRIMORDIAL_SEA", "STAKEOUT", "SUPREME_OVERLORD", "SYMBIOSIS",
     "TOXIC_CHAIN", "VICTORY_STAR"
 }
 
@@ -320,7 +321,8 @@ class AbilityEffectTests(unittest.TestCase):
     # Embody Aspect's four done. Tera Shift, Tera Shell and Teraform Zero done.
     # Shields Down done.
     # Shields Down and Battle Bond done.
-    STILL_TO_DO = 17
+    # Shields Down, Battle Bond and Mega Sol done.
+    STILL_TO_DO = 16
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

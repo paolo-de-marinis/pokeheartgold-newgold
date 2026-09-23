@@ -2402,7 +2402,8 @@ static BOOL ov12_0224B398(BattleSystem *battleSystem, BattleContext *ctx) {
         ret = TRUE;
     }
 
-    if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) && BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_151 && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
+    // Under Mega Sol the user's Solar Beam needs no charge, whatever the field.
+    if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_151 && (BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker) & FIELD_CONDITION_SUN_ALL)) {
         quickChargeFlag = TRUE;
     }
 
@@ -2809,6 +2810,7 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
     int itemMod;
     u8 moveType;
     u8 moveCategory;
+    u32 weather;
 
     if (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TUTORIAL) {
         return FALSE;
@@ -2873,13 +2875,15 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
         hitChance = 50;
     }
 
-    if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        // Hurricane is as bad in the sun as Thunder.
-        if ((ctx->fieldCondition & FIELD_CONDITION_SUN_ALL)
-            && (BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_THUNDER
-                || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_HURRICANE)) {
-            hitChance = 50;
-        }
+    // The weather as the attacker's move sees it: under Mega Sol, the sun's,
+    // whatever the field has, as hg-engine's CalcAccuracy reads it.
+    weather = BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker);
+
+    // Hurricane is as bad in the sun as Thunder.
+    if ((weather & FIELD_CONDITION_SUN_ALL)
+        && (BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_THUNDER
+            || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_HURRICANE)) {
+        hitChance = 50;
     }
 
     hitChance *= sHitChanceTable[var][0];
@@ -2889,18 +2893,16 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
         hitChance = hitChance * 130 / 100;
     }
 
-    if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        if ((ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SAND_VEIL) == TRUE) {
-            hitChance = hitChance * 80 / 100;
-        }
+    if ((weather & FIELD_CONDITION_SANDSTORM_ALL) && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SAND_VEIL) == TRUE) {
+        hitChance = hitChance * 80 / 100;
+    }
 
-        if (ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL) && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SNOW_CLOAK) == TRUE) {
-            hitChance = hitChance * 80 / 100;
-        }
+    if (weather & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL) && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SNOW_CLOAK) == TRUE) {
+        hitChance = hitChance * 80 / 100;
+    }
 
-        if (ctx->fieldCondition & FIELD_CONDITION_FOG) {
-            hitChance = hitChance * 6 / 10;
-        }
+    if (weather & FIELD_CONDITION_FOG) {
+        hitChance = hitChance * 6 / 10;
     }
 
     if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_HUSTLE && (moveCategory == CATEGORY_PHYSICAL)) {
@@ -3046,19 +3048,18 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         return FALSE;
     }
 
-    if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        // Hurricane and the three Storms never miss in the rain, as Thunder.
-        if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL
-            && (BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_THUNDER
-                || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_HURRICANE
-                || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_BLEAKWIND_STORM
-                || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_WILDBOLT_STORM
-                || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_SANDSEAR_STORM)) {
-            ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
-        }
-        if (ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL) && BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_BLIZZARD) {
-            ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
-        }
+    // Hurricane and the three Storms never miss in the rain, as Thunder. The
+    // weather is the one the attacker's move sees: a Mega Sol user's is sun.
+    if (BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker) & FIELD_CONDITION_RAIN_ALL
+        && (BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_THUNDER
+            || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_HURRICANE
+            || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_BLEAKWIND_STORM
+            || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_WILDBOLT_STORM
+            || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_SANDSEAR_STORM)) {
+        ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
+    }
+    if (BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker) & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL) && BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_BLIZZARD) {
+        ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
     }
 
     if (!(ctx->moveStatusFlag & MOVE_STATUS_BYPASSED_ACCURACY)
