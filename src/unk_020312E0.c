@@ -12,6 +12,10 @@ u32 sub_020312E0(SaveData *saveData, u32 *a1, u32 a2, u32 a3) {
     if (!Save_CheckExtraChunksExist(saveData)) {
         return 0;
     }
+    // Retail's tables stop at its own species; an added one has no record.
+    if (a3 >= BATTLE_HALL_SPECIES_RECORDS) {
+        return 0;
+    }
     switch (a2) {
     case 0:
         return hall->streaks[0][a3];
@@ -28,6 +32,9 @@ u32 sub_020312E0(SaveData *saveData, u32 *a1, u32 a2, u32 a3) {
 u32 sub_0203132C(u32 *a0, u32 a1, u32 a2, u16 a3) {
     struct UnkStruct_02030A98 *hall = (struct UnkStruct_02030A98 *)a0;
 
+    if (a2 >= BATTLE_HALL_SPECIES_RECORDS) {
+        return 0;
+    }
     if (a3 > BATTLE_HALL_MAX_STREAK) {
         a3 = BATTLE_HALL_MAX_STREAK;
     }
