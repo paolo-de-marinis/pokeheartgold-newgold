@@ -49,7 +49,6 @@ STILL_DIFFERENT = {
     97: CALLED_MOVE,
     104: IN_C.format("Triple Kick's rising power, CalcBaseDamage.c"),
     105: IN_C.format("the theft, ServerDoPostMoveEffects.c"),
-    112: "the entry-hazard queue, which nothing here reads yet",
     115: "the primal weathers and the engine's weather subscripts",
     121: IN_C.format("Return's power, CalcBaseDamage.c"),
     122: "Present asks for Parental Bond with CheckAbility, which a suppressed ability fails, where the "
@@ -82,13 +81,11 @@ STILL_DIFFERENT = {
     233: IN_C.format("the fling and the items that cannot be flung, BattleController_BeforeMove.c"),
     241: CALLED_MOVE,
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
-    249: "the entry-hazard queue, which nothing here reads yet",
     253: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     257: IN_C.format("Surf against Dive, CalcBaseDamage.c"),
     259: "the engine's Room Service subscript and its message wait",
     261: IN_C.format("Whirlpool against Dive and the binding, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
     262: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
-    266: "the entry-hazard queue, which nothing here reads yet",
     269: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     272: IN_C.format("the charge turn and the Power Herb, BattleController_BeforeMove.c"),
 }

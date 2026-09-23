@@ -67,6 +67,7 @@ _clearSpikes:
     CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_SPIKES_LAYERS, _clearPlayerSpikes
     CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_CLEAR, SIDE_COND_SPIKES_LAYERS, _clearPlayerSpikes
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_TARGET, SIDE_CONDITION_SPIKES
+    RemoveEntryHazardFromQueue BATTLER_CATEGORY_ENEMY, HAZARD_IDX_SPIKES
     // The spikes disappeared from around the opposing team!
     PrintMessage msg_0197_01553, TAG_NONE
     Wait
@@ -76,6 +77,7 @@ _clearPlayerSpikes:
     CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_SPIKES_LAYERS, _clearToxicSpikes
     CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_CLEAR, SIDE_COND_SPIKES_LAYERS, _clearToxicSpikes
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_ATTACKER, SIDE_CONDITION_SPIKES
+    RemoveEntryHazardFromQueue BATTLER_CATEGORY_PLAYER, HAZARD_IDX_SPIKES
     // The spikes disappeared from around your team!
     PrintMessage msg_0197_01552, TAG_NONE
     Wait
@@ -85,6 +87,7 @@ _clearToxicSpikes:
     CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_TOXIC_SPIKES_LAYERS, _clearPlayerToxicSpikes
     CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_CLEAR, SIDE_COND_TOXIC_SPIKES_LAYERS, _clearPlayerToxicSpikes
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_TARGET, SIDE_CONDITION_TOXIC_SPIKES
+    RemoveEntryHazardFromQueue BATTLER_CATEGORY_ENEMY, HAZARD_IDX_TOXIC_SPIKES
     // The poison spikes disappeared from around the opposing team!
     PrintMessage msg_0197_01066, TAG_NONE
     Wait
@@ -94,6 +97,7 @@ _clearPlayerToxicSpikes:
     CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_TOXIC_SPIKES_LAYERS, _clearStealthRock
     CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_CLEAR, SIDE_COND_TOXIC_SPIKES_LAYERS, _clearStealthRock
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_ATTACKER, SIDE_CONDITION_TOXIC_SPIKES
+    RemoveEntryHazardFromQueue BATTLER_CATEGORY_PLAYER, HAZARD_IDX_TOXIC_SPIKES
     // The poison spikes disappeared from around your team!
     PrintMessage msg_0197_01065, TAG_NONE
     Wait

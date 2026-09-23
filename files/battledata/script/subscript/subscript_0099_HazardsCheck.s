@@ -2,70 +2,96 @@
 
     .data
 
+// The hazards on the side a Pokemon comes out on, one at a time in the order
+// they were laid (the queue AddEntryHazardToQueue keeps), as the games do from
+// the fifth generation on and the reference's subscript 99 walks them. Each
+// hazard's own block ends by going back for the next; JumpToCurrentEntryHazard
+// falls through to the end once the queue is spent, which sets the walk back
+// to the start for the next Pokemon, so no way out of the walk skips it.
 _000:
-    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, ABILITY_MAGIC_GUARD, _105
-    // Only the Pokemon on the ground meets the spikes and the web: the battle's
-    // own test (BattlerIsGrounded), so an Air Balloon, Eelevate or a
-    // Baton-passed Ingrain answers here as everywhere else.
-    GotoIfGrounded BATTLER_CATEGORY_SWITCHED_MON, _037
-    GoTo _085
+    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, ABILITY_MAGIC_GUARD, _DRAIN
 
-_037:
-    CheckToxicSpikes BATTLER_CATEGORY_SWITCHED_MON, _065
-    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0x00000002, _063
-    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0x00000001, _059
+_NEXT:
+    // A Pokemon one hazard has made faint meets no more of them.
+    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_SWITCHED_MON, BMON_DATA_HP, 0, _DRAIN
+    JumpToCurrentEntryHazard BATTLER_CATEGORY_SWITCHED_MON, _SPIKES, _TOXIC_SPIKES, _STEALTH_ROCK, _STICKY_WEB, _NEXT
+    End
+
+// Walks the rest of the queue without meeting anything.
+_DRAIN:
+    JumpToCurrentEntryHazard BATTLER_CATEGORY_SWITCHED_MON, _DRAIN, _DRAIN, _DRAIN, _DRAIN, _DRAIN
+    End
+
+// Only the Pokemon on the ground meets the spikes and the web: the battle's
+// own test (BattlerIsGrounded).
+_TOXIC_SPIKES:
+    GotoIfGrounded BATTLER_CATEGORY_SWITCHED_MON, _TOXIC_SPIKES_GROUNDED
+    GoTo _NEXT
+
+_TOXIC_SPIKES_GROUNDED:
+    CheckToxicSpikes BATTLER_CATEGORY_SWITCHED_MON, _NEXT
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0x00000002, _BADLY_POISON
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0x00000001, _POISON
     // The poison spikes disappeared from around your team’s feet!
     PrintMessage msg_0197_01065, TAG_NONE_SIDE, BATTLER_CATEGORY_SWITCHED_MON
-    Wait 
+    Wait
     WaitButtonABTime 30
-    GoTo _065
+    RemoveEntryHazardFromQueue BATTLER_CATEGORY_SWITCHED_MON, HAZARD_IDX_TOXIC_SPIKES
+    GoTo _NEXT
 
-_059:
+_POISON:
     // Heavy-Duty Boots. The reference guards the poisoning and not the
     // absorbing above it, so a grounded Poison type in boots still soaks the
-    // spikes up, and it jumps clear to the end of the script rather than on to
-    // the next hazard -- which costs nothing, since the boots turn away every
-    // hazard left below.
-    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _105
+    // spikes up.
+    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _NEXT
     Call BATTLE_SUBSCRIPT_POISON
-    GoTo _065
+    GoTo _NEXT
 
-_063:
-    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _105
+_BADLY_POISON:
+    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _NEXT
     Call BATTLE_SUBSCRIPT_BADLY_POISON
+    GoTo _NEXT
 
-_065:
-    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _SPIKES
+_STICKY_WEB:
+    GotoIfGrounded BATTLER_CATEGORY_SWITCHED_MON, _STICKY_WEB_GROUNDED
+    GoTo _NEXT
+
+_STICKY_WEB_GROUNDED:
+    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _NEXT
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_STAT_CHANGE, BSCRIPT_VAR_BATTLER_SWITCH
-    CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_SIDE_CONDITION_STAT_CHANGE, SIDE_CONDITION_STICKY_WEB, _SPIKES
+    CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_SIDE_CONDITION_STAT_CHANGE, SIDE_CONDITION_STICKY_WEB, _NEXT
     // Mirror Armor sends a stat drop back where it came from, and a web has
     // nowhere to send it, so the mon simply keeps its Speed.
-    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, ABILITY_MIRROR_ARMOR, _SPIKES
+    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, ABILITY_MIRROR_ARMOR, _NEXT
     UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_PARAM, MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE
     UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_TYPE, SIDE_EFFECT_TYPE_INDIRECT
     Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE
+    GoTo _NEXT
 
 _SPIKES:
-    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _085
-    CheckSpikes BATTLER_CATEGORY_SWITCHED_MON, _085
+    GotoIfGrounded BATTLER_CATEGORY_SWITCHED_MON, _SPIKES_GROUNDED
+    GoTo _NEXT
+
+_SPIKES_GROUNDED:
+    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _NEXT
+    CheckSpikes BATTLER_CATEGORY_SWITCHED_MON, _NEXT
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_SWITCH
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_NO_BLINK
     Call BATTLE_SUBSCRIPT_UPDATE_HP
     // {0} is hurt by the spikes!
     PrintMessage msg_0197_00429, TAG_NICKNAME, BATTLER_CATEGORY_SWITCHED_MON
-    Wait 
+    Wait
     WaitButtonABTime 30
+    GoTo _NEXT
 
-_085:
-    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _105
-    CheckStealthRock BATTLER_CATEGORY_SWITCHED_MON, _105
+_STEALTH_ROCK:
+    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _NEXT
+    CheckStealthRock BATTLER_CATEGORY_SWITCHED_MON, _NEXT
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_SWITCH
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_NO_BLINK
     Call BATTLE_SUBSCRIPT_UPDATE_HP
     // Pointed stones dug into {0}!
     PrintMessage msg_0197_01079, TAG_NICKNAME, BATTLER_CATEGORY_SWITCHED_MON
-    Wait 
+    Wait
     WaitButtonABTime 30
-
-_105:
-    End 
+    GoTo _NEXT

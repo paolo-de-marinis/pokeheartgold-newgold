@@ -5,6 +5,7 @@
 // Sticky Web, laid the way Spikes are.
 _000:
     TryStickyWeb _FAILED
+    AddEntryHazardToQueue BATTLER_CATEGORY_DEFENDER, HAZARD_IDX_STICKY_WEB
     // A sticky web has been laid out beneath the opposing team's feet!
     BufferMessage msg_0197_01514, TAG_NONE_SIDE, BATTLER_CATEGORY_ATTACKER_ENEMY
     UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_FLAGS_INDIRECT, MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_PRINT_MESSAGE_AND_PLAY_ANIMATION

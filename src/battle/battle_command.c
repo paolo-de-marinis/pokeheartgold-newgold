@@ -4651,6 +4651,8 @@ BOOL BtlCmd_TryReplaceFaintedMon(BattleSystem *battleSystem, BattleContext *ctx)
     return FALSE;
 }
 
+static void EntryHazardQueueRemove(BattleContext *ctx, int side, int hazard);
+
 BOOL BtlCmd_RapidSpin(BattleSystem *battleSystem, BattleContext *ctx) {
     int side = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker);
 
@@ -4677,6 +4679,7 @@ BOOL BtlCmd_RapidSpin(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->fieldSideConditionFlags[side] &= ~SIDE_CONDITION_SPIKES;
         ctx->fieldSideConditionData[side].spikesLayers = 0;
         ctx->moveTemp = MOVE_SPIKES;
+        EntryHazardQueueRemove(ctx, side, HAZARD_IDX_SPIKES);
         BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_BLOW_AWAY_HAZARDS);
         return FALSE;
     }
@@ -4686,6 +4689,7 @@ BOOL BtlCmd_RapidSpin(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->fieldSideConditionFlags[side] &= ~SIDE_CONDITION_TOXIC_SPIKES;
         ctx->fieldSideConditionData[side].toxicSpikesLayers = 0;
         ctx->moveTemp = MOVE_TOXIC_SPIKES;
+        EntryHazardQueueRemove(ctx, side, HAZARD_IDX_TOXIC_SPIKES);
         BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_BLOW_AWAY_HAZARDS);
         return FALSE;
     }
@@ -4694,6 +4698,7 @@ BOOL BtlCmd_RapidSpin(BattleSystem *battleSystem, BattleContext *ctx) {
     if (ctx->fieldSideConditionFlags[side] & SIDE_CONDITION_STEALTH_ROCKS) {
         ctx->fieldSideConditionFlags[side] &= ~SIDE_CONDITION_STEALTH_ROCKS;
         ctx->moveTemp = MOVE_STEALTH_ROCK;
+        EntryHazardQueueRemove(ctx, side, HAZARD_IDX_STEALTH_ROCK);
         BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_BLOW_AWAY_HAZARDS);
         return FALSE;
     }
@@ -10567,16 +10572,23 @@ BOOL BtlCmd_GoToIfThirdType(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-// The hazards a side has, in the order something switching in meets them. The
-// queue is kept rather than derived so that the order is the order they were
-// laid in, which is what decides whether a Pokemon is poisoned before or after
-// the pointed stones have taken their share.
+// The hazards a side has, in the order something switching in meets them: the
+// order they were laid in, from the fifth generation on, which is what decides
+// whether a Pokemon is poisoned before or after the pointed stones have taken
+// their share. Another layer of a hazard already down keeps its place (the
+// reference's BattleContext_AddEntryHazardToQueue); a hazard is taken off the
+// queue where it is cleared away -- Rapid Spin, Defog, Tidy Up, a Poison type
+// soaking up toxic spikes -- so one laid again joins the back.
 static void EntryHazardQueueRemove(BattleContext *ctx, int side, int hazard) {
     int read, write = 0;
 
     for (read = 0; read < NUM_HAZARD_IDX; read++) {
         if (ctx->entryHazardQueue[side][read] != hazard) {
             ctx->entryHazardQueue[side][write++] = ctx->entryHazardQueue[side][read];
+        } else if (read < ctx->hazardQueueTracker) {
+            // Taken away by the walk itself: what came after it has moved into
+            // the place the walk has already passed.
+            ctx->hazardQueueTracker--;
         }
     }
     while (write < NUM_HAZARD_IDX) {
@@ -10591,8 +10603,10 @@ BOOL BtlCmd_AddEntryHazardToQueue(BattleSystem *battleSystem, BattleContext *ctx
     int hazard = BattleScriptReadWord(ctx);
     int fieldSide = BattleSystem_GetFieldSide(battleSystem, BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side));
 
-    EntryHazardQueueRemove(ctx, fieldSide, hazard);
     for (int i = 0; i < NUM_HAZARD_IDX; i++) {
+        if (ctx->entryHazardQueue[fieldSide][i] == hazard) {
+            break;
+        }
         if (ctx->entryHazardQueue[fieldSide][i] == HAZARD_IDX_NONE) {
             ctx->entryHazardQueue[fieldSide][i] = hazard;
             break;
