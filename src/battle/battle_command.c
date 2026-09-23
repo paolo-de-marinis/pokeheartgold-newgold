@@ -2590,6 +2590,8 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
             if (!(ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY && GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_OPPORTUNIST)) {
                 RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdStatChange, stat + 1, mon->statChanges[stat + 1] - stagesBefore);
             }
+            // For Burning Jealousy, for the rest of the turn.
+            ctx->turnData[ctx->battlerIdStatChange].statRaised = TRUE;
         }
     } else { // Stat Decrease
         if (!(ctx->statChangeFlag & (1 << 27))) {

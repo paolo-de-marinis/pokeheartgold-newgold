@@ -100,5 +100,23 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("ctx->moveNoCur == MOVE_UPPER_HAND", body)
         self.assertIn("BattlerMovePriority(ctx, ctx->battlerIdTarget, move) < 1 || BattlerMovePriority(ctx, ctx->battlerIdTarget, move) > 3", body)
 
+    def test_burning_jealousy_burns_only_a_target_whose_stats_rose(self):
+        # Pokemon Central (Fiamminvidia): the burn is only for a target whose
+        # stats rose this turn; the rest it only hurts.
+        self.assertImplemented("BURNING_JEALOUSY", "MOVE_EFFECT_BURN_HIT")
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        meets = function(overlay, "SecondaryEffectMeetsItsTarget")
+        self.assertIn("ctx->moveNoCur == MOVE_BURNING_JEALOUSY", meets)
+        self.assertIn("return ctx->turnData[ctx->battlerIdTarget].statRaised;", meets)
+        self.assertIn("} else if (ctx->unk_2174 && !SecondaryEffectMeetsItsTarget(ctx)) {\n        ctx->unk_2174 = 0;",
+                      function(overlay, "ov12_02250490"))
+        self.assertIn("ctx->turnData[ctx->battlerIdStatChange].statRaised = TRUE;",
+                      function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_ChangeStatStage"))
+        # A rise before the first turn -- an entry ability as the battle
+        # begins -- counts for the first, so the mark goes with TurnData at a
+        # turn's end and not where the next is chosen.
+        self.assertNotIn("statRaised", function((ROOT / "src/battle/battle_controller_player.c").read_text(),
+                                                "BattleControllerPlayer_SelectionScreenInit"))
+
 if __name__ == "__main__":
     unittest.main()

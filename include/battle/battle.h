@@ -88,7 +88,8 @@ typedef struct TurnData {
     u32 forceExecutionOrder : 2; // EXECUTION_ORDER_*: After You brings this battler forward, Quash sends it last
     u32 gainedProtectFlagFromAlly : 1; // protectFlag came from the ally's Wide Guard, Quick Guard, Mat Block or Crafty Shield
     u32 switchedIn : 1;                // came into the battle during this turn, so has not acted in it: Payback does not double
-    u32 unk0_A : 18;
+    u32 statRaised : 1; // a stat of its rose this turn, or before the first: Burning Jealousy burns it
+    u32 unk0_A : 17;
     int physicalDamage[4];
     int battlerIdPhysicalDamage;
     int battlerBitPhysicalDamage;

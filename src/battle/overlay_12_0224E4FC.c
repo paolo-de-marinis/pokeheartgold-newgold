@@ -1832,6 +1832,17 @@ BOOL TryFlungItemEffect(BattleSystem *battleSystem, BattleContext *ctx) {
     return TRUE;
 }
 
+// Burning Jealousy burns only a target whose stats rose during this turn, by
+// whatever means (Pokemon Central, Fiamminvidia); the rest it only hurts. The
+// chance is the move's 100 once it applies, and Sheer Force still takes it
+// away and pays the power for it either way, as the page has it.
+static BOOL SecondaryEffectMeetsItsTarget(BattleContext *ctx) {
+    if (ctx->moveNoCur == MOVE_BURNING_JEALOUSY) {
+        return ctx->turnData[ctx->battlerIdTarget].statRaised;
+    }
+    return TRUE;
+}
+
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     BOOL ret = FALSE;
     u16 effectChance;
@@ -1906,6 +1917,8 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         }
 
         ret = TRUE;
+    } else if (ctx->unk_2174 && !SecondaryEffectMeetsItsTarget(ctx)) {
+        ctx->unk_2174 = 0;
     } else if (ctx->unk_2174) {
         // the inclusion of serene grace here makes me think this function has to do with secondary move effects
         if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SERENE_GRACE) {

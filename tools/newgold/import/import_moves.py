@@ -338,6 +338,9 @@ IMPLEMENTED_HERE = {
     # Upper Hand flinches a target about to use an attack at +1 to +3, and
     # fails on any other (Pokemon Central, Colpo di Mano): effect script 410.
     "UPPER_HAND": "MOVE_EFFECT_UPPER_HAND",
+    # Burning Jealousy burns only a target whose stats rose this turn
+    # (Pokemon Central, Fiamminvidia): SecondaryEffectMeetsItsTarget asks.
+    "BURNING_JEALOUSY": "MOVE_EFFECT_BURN_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
