@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """Check the species-indexed picture tables against the archives they read.
 
+Retail's picture tables stop at Arceus, and the functions below index them
+by species with no bound of their own, so each archive has to reach the last
+species or the function has to send a species past it somewhere that does.
+
 Goldenrod Tunnel's dress-up (overlay 41) draws the chosen Pokemon through
 DP_GetMonSpriteCharAndPlttNarcIdsEx and sizes it with
-GetMonPicHeightBySpeciesGenderForm_PBR. The other game's archives stop at
-Arceus, so every added species read its picture and its height past their
-ends. hg-engine serves the main picture archive in pbr/pokegra's place; here
-the default case asks for that archive by name, and a species past the PBR
-heights takes the main height table, which is the one its picture matches.
+GetMonPicHeightBySpeciesGenderForm_PBR. hg-engine serves the main picture
+archive in pbr/pokegra's place; here the default case asks for that archive
+by name, and a species past the PBR heights takes the main height table,
+which is the one its picture matches. a/1/8/0 is carried whole from the
+reference, and its six readers share one bound.
 """
 
 import os
@@ -100,6 +104,54 @@ def run_native(test, program, prefix):
         print(result.stdout.strip())
 
 
+RECORDS = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int8_t s8;
+typedef struct NARC NARC;
+typedef struct { u8 bytes[4]; } PokepicAnimScript;
+struct UnkStruct_02072914_sub { u8 unk_0, unk_1, unk_2; PokepicAnimScript unk_3[10]; };
+struct UnkStruct_02072914 { struct UnkStruct_02072914_sub unk0[2]; s8 unk_56; s8 unk_57; u8 unk_58; };
+struct UnkStruct_0207294C { u16 unk_0; u16 unk_2; u8 unk_4; };
+_Static_assert(sizeof(struct UnkStruct_02072914) == 89, "a/1/8/0 records are 89 bytes");
+
+static u32 memberSize, lastPos;
+static void NARC_ReadFromMember(NARC *narc, u32 file, u32 pos, u32 size, void *dest) {
+    (void)narc;
+    assert(file == 0 && pos + size <= memberSize);
+    lastPos = pos;
+    for (u32 i = 0; i < size; i++) ((u8 *)dest)[i] = 0;
+}
+static void MI_CpuCopy8(const void *src, void *dest, u32 size) { (void)src; (void)dest; (void)size; }
+static void sub_02016F40(void *a, void *b, struct UnkStruct_0207294C *c, u8 d) { (void)a; (void)b; (void)c; (void)d; }
+@NATIVE@
+
+// Every reader, for one species, must read that species' record.
+static void readAll(u16 species, u32 want) {
+    PokepicAnimScript script[10];
+    u8 u; s8 s;
+    NARC_ReadPokepicAnimScript(0, script, species, 0); assert(lastPos == want);
+    sub_0207294C(0, 0, 0, species, 2, 0, 0); assert(lastPos == want);
+    sub_020729A4(0, &u, species, 1); assert(lastPos == want);
+    sub_020729D8(0, &s, species, 0); assert(lastPos == want);
+    sub_020729FC(0, &s, species, 0); assert(lastPos == want);
+    sub_02072A20(0, &u, species, 0); assert(lastPos == want);
+}
+
+int main(void) {
+    memberSize = @MEMBER@;
+    for (u16 species = 0; species <= NUM_SPECIES; species++) {
+        readAll(species, species * 89u);
+    }
+    // A number past the table takes the first record, as retail's clamp did.
+    readAll(NUM_SPECIES + 1, 0);
+    printf("PASS: the six readers take each of %d species' own record.\n", NUM_SPECIES + 1);
+    return 0;
+}
+"""
+
 class PictureTableTests(unittest.TestCase):
     def test_the_dress_up_reads_inside_its_archives(self):
         """Every species' picture and height, both genders, both facings."""
@@ -129,6 +181,16 @@ class PictureTableTests(unittest.TestCase):
         if not import_sprite_offsets.REFERENCE.exists():
             self.skipTest("no reference checkout")
         self.assertEqual(member, b"".join(import_sprite_offsets.records(import_sprite_offsets.REFERENCE)))
+
+    def test_every_picture_record_reader_reads_its_species(self):
+        """a/1/8/0 member 0 now has a record for every species; the six
+        functions that read it by species all take that record."""
+        member = read_narc((ROOT / "files/a/1/8/0").read_bytes())[0][0]
+        source = (ROOT / "src/pokemon.c").read_text()
+        native = "\n".join(function(source, name) for name in (
+            "PokepicAnimSpecies", "NARC_ReadPokepicAnimScript", "sub_0207294C", "sub_020729A4",
+            "sub_020729D8", "sub_020729FC", "sub_02072A20"))
+        run_native(self, RECORDS.replace("@MEMBER@", str(len(member))).replace("@NATIVE@", native), "newgold-records-")
 
 if __name__ == "__main__":
     unittest.main()

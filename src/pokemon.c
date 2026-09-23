@@ -4380,13 +4380,12 @@ void RestoreBoxMonPP(BoxPokemon *boxMon) {
     ReleaseBoxMonLock(boxMon, decry);
 }
 
-// The animation scripts are one record a species in a member the size of
-// retail's species count, so a species past it reads whatever follows the
-// archive. The added species have no animation of their own: they take the
-// first record, which is the one the game plays for a Pokemon with nothing
-// special about it.
+// a/1/8/0 member 0 is one record a species, 0 to NUM_SPECIES
+// (tools/newgold/import/import_sprite_offsets.py). All six readers go through
+// here, so a number past the table reads the first record, the one the game
+// plays for a Pokemon with nothing special about it, not what follows it.
 static u16 PokepicAnimSpecies(u16 species) {
-    return species < SPECIES_EGG ? species : 0;
+    return species <= NUM_SPECIES ? species : 0;
 }
 
 void NARC_ReadPokepicAnimScript(NARC *narc, PokepicAnimScript *dest, u16 species, u16 a3) {
@@ -4401,6 +4400,7 @@ void sub_0207294C(NARC *narc, void *a1, void *a2, u16 a3, int a4, int a5, int a6
     struct UnkStruct_02072914 spA;
     struct UnkStruct_0207294C sp4;
     int r4 = (a4 == 2 ? 0 : 1);
+    a3 = PokepicAnimSpecies(a3);
     NARC_ReadFromMember(narc, 0, a3 * sizeof(struct UnkStruct_02072914), sizeof(struct UnkStruct_02072914), &spA);
     sp4.unk_0 = spA.unk0[r4].unk_1;
     sp4.unk_2 = spA.unk0[r4].unk_2;
@@ -4411,24 +4411,28 @@ void sub_0207294C(NARC *narc, void *a1, void *a2, u16 a3, int a4, int a5, int a6
 void sub_020729A4(NARC *narc, u8 *ret, u16 species, u16 isFrontpic) {
     struct UnkStruct_02072914 sp4;
     int r5 = (isFrontpic & 1 ? 0 : 1);
+    species = PokepicAnimSpecies(species);
     NARC_ReadFromMember(narc, 0, species * sizeof(struct UnkStruct_02072914), sizeof(struct UnkStruct_02072914), &sp4);
     *ret = sp4.unk0[r5].unk_0;
 }
 
 void sub_020729D8(NARC *narc, s8 *ret, u16 a2, u16 a3) {
     struct UnkStruct_02072914 sp4;
+    a2 = PokepicAnimSpecies(a2);
     NARC_ReadFromMember(narc, 0, a2 * sizeof(struct UnkStruct_02072914), sizeof(struct UnkStruct_02072914), &sp4);
     *ret = sp4.unk_56;
 }
 
 void sub_020729FC(NARC *narc, s8 *ret, u16 a2, u16 a3) {
     struct UnkStruct_02072914 sp4;
+    a2 = PokepicAnimSpecies(a2);
     NARC_ReadFromMember(narc, 0, a2 * sizeof(struct UnkStruct_02072914), sizeof(struct UnkStruct_02072914), &sp4);
     *ret = sp4.unk_57;
 }
 
 void sub_02072A20(NARC *narc, u8 *ret, u16 a2, u16 a3) {
     struct UnkStruct_02072914 sp4;
+    a2 = PokepicAnimSpecies(a2);
     NARC_ReadFromMember(narc, 0, a2 * sizeof(struct UnkStruct_02072914), sizeof(struct UnkStruct_02072914), &sp4);
     *ret = sp4.unk_58;
 }
