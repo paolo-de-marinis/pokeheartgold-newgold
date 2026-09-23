@@ -860,7 +860,9 @@ class SwitchItemTests(unittest.TestCase):
         ask = body.index("CheckSwitchItemOnHit(battleSystem, ctx, ctx->turnOrder[walk % maxBattlers],")
         # The cards' walk, then the buttons', one of each.
         self.assertIn("card ? HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE : HOLD_EFFECT_SWITCH_OUT_WHEN_HIT", body)
-        self.assertIn("ctx->unk_34 = (card ? maxBattlers : 2 * maxBattlers) | SWITCH_ITEM_USED;", body)
+        # A card leaves the Eject Pack its turn; a button does not (Pokemon
+        # Central, Zainofuga and Pulsantefuga).
+        self.assertIn("ctx->unk_34 = card ? maxBattlers : (2 * maxBattlers | SWITCH_ITEM_USED);", body)
         # And a pivot move asks ahead.
         dispatch = function(OVERLAY.read_text(), "ov12_02250490")
         self.assertIn("SwitchItemWillAnswerPivot(battleSystem, ctx, ctx->battlerIdTarget)", dispatch)

@@ -4915,8 +4915,9 @@ static BOOL ov12_0224E130(BattleSystem *battleSystem, BattleContext *ctx) {
     return ret;
 }
 
-// Or'd into ov12_0224E1BC's battler walk once a held item has sent somebody
-// away, so that no Eject Pack answers the same move.
+// Or'd into ov12_0224E1BC's battler walk once an Eject Button or a Parting
+// Shot has sent somebody away, so that no Eject Pack answers the same move; a
+// Red Card leaves the Pack its turn.
 #define SWITCH_ITEM_USED 0x100
 
 static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
@@ -4947,7 +4948,9 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             // buttons the fastest holder's (Pokemon Central, Pulsantefuga).
             // unk_34 walks the battlers in the order they act, once for the
             // cards and once for the buttons; SWITCH_ITEM_USED remembers that
-            // somebody was sent away.
+            // a button sent somebody away. A card does not keep an Eject
+            // Pack from acting after it (Pokemon Central, Zainofuga: the
+            // card first, then the Pack, a second switch).
             while ((ctx->unk_34 & ~SWITCH_ITEM_USED) < 2 * maxBattlers) {
                 int walk = ctx->unk_34 & ~SWITCH_ITEM_USED;
                 int card = walk < maxBattlers;
@@ -4959,7 +4962,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                    ctx->unk_34 = (card ? maxBattlers : 2 * maxBattlers) | SWITCH_ITEM_USED;
+                    ctx->unk_34 = card ? maxBattlers : (2 * maxBattlers | SWITCH_ITEM_USED);
                     flag = 1;
                     break;
                 }
@@ -5082,8 +5085,10 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
         case 6:
             // An Eject Pack on anyone who had a stat lowered during the move,
             // after the user's own items, where the reference asks it; not
-            // once a Red Card or an Eject Button has sent somebody away, or
-            // after a Parting Shot.
+            // once an Eject Button has sent somebody away, or after a
+            // Parting Shot. After a Red Card it is asked, and answers the
+            // drops of the move and of the entry of the Pokemon the card
+            // dragged in -- Sticky Web on its way in.
             while (ctx->unk_34 < maxBattlers) {
                 int script = CheckEjectPack(ctx, ctx->turnOrder[ctx->unk_34++]);
 
