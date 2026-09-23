@@ -1634,11 +1634,11 @@ static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
 
 // Whether Sheer Force traded the attacker's move effect for power, for what
 // answers the hit: Emergency Exit's arming, Berserk, Anger Shell, Pickpocket,
-// the Red Card and the Eject Button. From the effect roll on, the flags
-// IsSuppressibleSecondaryEffect reads are gone -- ov12_02250490 clears them
-// as it rolls or gives the effect up -- so what it found then is kept for the
-// rest of the action.
-static BOOL SheerForceTradedEffect(BattleContext *ctx) {
+// the Red Card and the Eject Button, and the user's Shell Bell and Life Orb.
+// From the effect roll on, the flags IsSuppressibleSecondaryEffect reads are
+// gone -- ov12_02250490 clears them as it rolls or gives the effect up -- so
+// what it found then is kept for the rest of the action.
+BOOL SheerForceTradedEffect(BattleContext *ctx) {
     return GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE
         && (ctx->selfTurnData[ctx->battlerIdAttacker].sheerForceTraded || IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE);
 }

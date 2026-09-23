@@ -24,6 +24,7 @@ void BattleSystem_ClearExperienceEarnFlags(BattleContext *ctx, int battlerId);
 void BattleSystem_SetExperienceEarnFlags(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL ov12_022503EC(BattleSystem *battleSystem, BattleContext *ctx, int *out);
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out);
+BOOL SheerForceTradedEffect(BattleContext *ctx);
 int ov12_022506D4(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 move, int a4, int a5);
 void ov12_02250A18(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 a3);
 BOOL ov12_02250BBC(BattleSystem *battleSystem, BattleContext *ctx);

@@ -12,6 +12,7 @@ import unittest
 from pathlib import Path
 
 from test_battle_mechanics import COMMANDS, OVERLAY, subscript
+from test_retreat_abilities import CONTROLLER
 from test_level_cap import ROOT
 from test_repels import function
 
@@ -165,6 +166,13 @@ class SheerForceAftermathTests(unittest.TestCase):
             self.assertIn("!SheerForceTradedEffect(ctx)", case, ability)
             self.assertNotIn("IsSuppressibleSecondaryEffect", case, ability)
         self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "CheckSwitchItemOnHit"))
+
+    def test_the_users_shell_bell_and_life_orb_ask_it_too(self):
+        # Pokemon Central, Forzabruta: neither answers a boosted move.
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        for item in ("HOLD_EFFECT_HP_RESTORE_ON_DMG", "HOLD_EFFECT_HP_DRAIN_ON_ATK"):
+            condition = body[body.index(f"item == {item}"):]
+            self.assertIn("&& !SheerForceTradedEffect(ctx)", condition[:condition.index("{")], item)
 
 
 class OrichalcumPulseTests(unittest.TestCase):

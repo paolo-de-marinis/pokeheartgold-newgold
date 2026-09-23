@@ -4826,8 +4826,12 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         case 2:
+            // Neither the Shell Bell nor the Life Orb below answers a move
+            // Sheer Force powered (Pokemon Central, Forzabruta; the
+            // reference's ServerDoPostMoveEffects.c:1508 at d0380a487).
             if (ctx->battlerIdTarget != BATTLER_NONE
                 && item == HOLD_EFFECT_HP_RESTORE_ON_DMG
+                && !SheerForceTradedEffect(ctx)
                 && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
                 && ctx->battleStatus & BATTLE_STATUS_MOVE_SUCCESSFUL
                 && ctx->selfTurnData[ctx->battlerIdAttacker].shellBellDamage != 0
@@ -4846,6 +4850,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             break;
         case 3:
             if (item == HOLD_EFFECT_HP_DRAIN_ON_ATK
+                && !SheerForceTradedEffect(ctx)
                 && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD
                 && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
                 && ctx->battleStatus & BATTLE_STATUS_MOVE_SUCCESSFUL

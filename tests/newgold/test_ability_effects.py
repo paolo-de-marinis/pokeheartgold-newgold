@@ -473,7 +473,8 @@ class SheerForceTests(unittest.TestCase):
         self.assertEqual(source.count("IsSuppressibleSecondaryEffect(ctx,"), 4)
         self.assertEqual(source.count("static BOOL IsSuppressibleSecondaryEffect"), 1)
         # Emergency Exit's arming, Berserk, Anger Shell, Pickpocket, and the
-        # Red Card and Eject Button.
+        # Red Card and Eject Button; the controller asks it for the user's
+        # Shell Bell and Life Orb.
         self.assertEqual(source.count("SheerForceTradedEffect(ctx)"), 5)
 
     def test_the_guaranteed_effects_are_left_alone(self):
