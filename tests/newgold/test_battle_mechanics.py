@@ -594,5 +594,16 @@ class QuickDrawTests(unittest.TestCase):
         self.assertIn("BMON_DATA_QUICK_DRAW_FLAG, 0, _custap", subscript("CheckQuickClaw"))
 
 
+class SupersweetSyrupTests(unittest.TestCase):
+    def test_once_per_pokemon_per_battle(self):
+        # Its evasion drop is spent once per battle, not at every send-out: the
+        # BattleMon is rebuilt each time, so the party slot remembers it.
+        body = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        syrup = body[body.index("case 15: // Supersweet Syrup"):body.index("case 16:")]
+        self.assertIn("syrupDone = &ctx->onceOnlyEntryAbilityDone[", syrup)
+        self.assertIn("if (!*syrupDone && ", syrup)
+        self.assertIn("*syrupDone = TRUE;", syrup)
+
+
 if __name__ == "__main__":
     unittest.main()

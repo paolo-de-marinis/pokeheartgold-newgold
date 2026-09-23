@@ -4767,10 +4767,15 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         case 15: // Supersweet Syrup
+            // Once per Pokemon per battle, not once per send-out, so it is the
+            // party slot that remembers, as for Intrepid Sword below.
             for (i = 0; i < maxBattlers; i++) {
+                u8 *syrupDone;
+
                 battlerId = ctx->turnOrder[i];
-                if (!ctx->battleMons[battlerId].supersweetSyrupFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_SUPERSWEET_SYRUP) {
-                    ctx->battleMons[battlerId].supersweetSyrupFlag = TRUE;
+                syrupDone = &ctx->onceOnlyEntryAbilityDone[BattleSystem_GetFieldSide(battleSystem, battlerId)][ctx->selectedMonIndex[battlerId]];
+                if (!*syrupDone && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_SUPERSWEET_SYRUP) {
+                    *syrupDone = TRUE;
                     ctx->battlerIdTemp = battlerId;
                     script = BATTLE_SUBSCRIPT_SUPERSWEET_SYRUP;
                     flag = TRUE;
