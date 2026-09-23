@@ -600,7 +600,7 @@ void ov18_021F81D8(PokedexAppData_UnkSub0878 *list, Pokedex *pokedex, u16 *speci
 u32 ov18_021F8824(PokedexAppData *pokedexApp);
 u16 ov18_021F8838(PokedexAppData *pokedexApp);
 u32 ov18_021F8850(PokedexAppData_UnkSub0878 *a0, u16 a1);
-void ov18_021F8884(PokedexAppData *pokedexApp, int a1);
+void ov18_021F8884(PokedexAppData *pokedexApp, int layout);
 u16 ov18_021F891C(PokedexAppData *pokedexApp, BOOL a1);
 u32 ov18_021F8950(PokedexAppData *pokedexApp, int a1);
 

@@ -2,6 +2,8 @@
 
 #include "application/pokedex/pokedex_internal.h"
 
+#include "pokedex_util.h"
+
 // The species of the grid entry under the cursor.
 u16 ov18_021F8838(PokedexAppData *pokedexApp) {
     return pokedexApp->unk_1030[ov18_021F8824(pokedexApp)].unk_0;
@@ -22,4 +24,26 @@ u32 ov18_021F8850(PokedexAppData_UnkSub0878 *list, u16 species) {
         }
     }
     return first;
+}
+
+// Fills the grid list at 0x1030 from the Dex list at 0x878. Laid out by
+// number (layout 1), each species goes to the slot of its Dex number, so the
+// grid keeps the gaps; otherwise the list is copied in its order, from the
+// second slot.
+void ov18_021F8884(PokedexAppData *pokedexApp, int layout) {
+    u32 i;
+
+    MI_CpuClear32(pokedexApp->unk_1030, sizeof(pokedexApp->unk_1030));
+    if (layout == 1) {
+        for (i = 0; i < pokedexApp->unk_0878.unk_7B4; i++) {
+            u32 idx = Pokedex_ConvertToCurrentDexNo(pokedexApp->unk_1858, pokedexApp->unk_0878.unk_000[i][0]) - 1;
+            pokedexApp->unk_1030[idx].unk_0 = pokedexApp->unk_0878.unk_000[i][0];
+            pokedexApp->unk_1030[idx].unk_2 = pokedexApp->unk_0878.unk_000[i][1];
+        }
+    } else {
+        for (i = 0; i < pokedexApp->unk_0878.unk_7B4; i++) {
+            pokedexApp->unk_1030[i + 1].unk_0 = pokedexApp->unk_0878.unk_000[i][0];
+            pokedexApp->unk_1030[i + 1].unk_2 = pokedexApp->unk_0878.unk_000[i][1];
+        }
+    }
 }
