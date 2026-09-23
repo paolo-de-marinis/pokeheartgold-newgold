@@ -59,7 +59,7 @@ typedef struct { int range, category, effect, power; } MoveTbl;
 
 // The scenario every stub answers from.
 static struct {
-    u32 base; u32 battleType; int maxBattlers; int hitCount; u16 random; int cloudNine;
+    u32 base; u32 battleType; int maxBattlers; int hitCount; u16 random; int cloudNine; int secondStrike;
     int ability[4]; int item[4]; int types[4][2];
     MoveTbl move; int contact, sound;
 } S;
@@ -90,6 +90,7 @@ static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *dat
     (void)ctx; (void)data; return S.types[battlerId][varId == BMON_DATA_TYPE_2];
 }
 static int ov12_02258440(BattleContext *ctx, int moveNo) { (void)ctx; (void)moveNo; return TRUE; }
+static BOOL ParentalBond_IsSecondStrike(BattleContext *ctx) { (void)ctx; return S.secondStrike; }
 
 @OVERLAY@
 @COMMANDS@
@@ -137,6 +138,10 @@ int main(void) {
     // HeartGold's 3/4 truncated to 33.
     reset(); S.battleType = BATTLE_TYPE_DOUBLES; S.hitCount = 2; S.move.range = RANGE_ADJACENT_OPPONENTS;
     EXPECT(calc(), 34);
+
+    // 6.2 Parental Bond's second strike, 0.25 rounded down: 46080 + 2047 >> 12
+    // = 11.
+    reset(); S.secondStrike = TRUE; EXPECT(calc(), 11);
 
     // 6.3 weather: a Water move in the rain, 45 * 1.5 = 67.5, down to 67;
     // Cloud Nine takes it away.

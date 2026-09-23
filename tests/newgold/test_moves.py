@@ -224,6 +224,8 @@ class MoveTests(unittest.TestCase):
             static MoveTbl table = { 40 };
             static MoveTbl *BattleMoveTbl(BattleContext *ctx, int move) { (void)ctx; (void)move; return &table; }
             static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+            static int secondStrike;
+            static BOOL ParentalBond_IsSecondStrike(BattleContext *ctx) { (void)ctx; return secondStrike; }
         """ + command + """
             int main(void) {
                 static const int power[] = { 40, 80, 160, 160, 160, 160 };
@@ -232,6 +234,12 @@ class MoveTests(unittest.TestCase):
                     BtlCmd_CalcFuryCutterPower(0, &ctx);
                     assert(ctx.movePower == power[use]);
                 }
+                // Parental Bond's second strike is the same use: 40, 40.
+                ctx.battleMons[1].unk88.furyCutterCount = 0;
+                BtlCmd_CalcFuryCutterPower(0, &ctx);
+                secondStrike = 1;
+                BtlCmd_CalcFuryCutterPower(0, &ctx);
+                assert(ctx.movePower == 40);
                 return 0;
             }
         """

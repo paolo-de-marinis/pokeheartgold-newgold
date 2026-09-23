@@ -1657,6 +1657,29 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         }
     }
 
+    // What these do waits for Parental Bond's second strike (Pokemon Central,
+    // Amorefiliale): U-turn's switch, Dragon Tail's, the item Thief takes,
+    // Pluck eats or Knock Off knocks away, the cure Smelling Salts and Wake-Up
+    // Slap give -- so both strikes are doubled -- Smack Down's fall and Anchor
+    // Shot's trap. The reference does these after the move; here they come
+    // with the hit, so the first strike leaves them to the second, unless the
+    // first was the last.
+    if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {
+        switch (*out) {
+        case BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT:
+        case BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE:
+        case BATTLE_SUBSCRIPT_STEAL_ITEM:
+        case BATTLE_SUBSCRIPT_PLUCK:
+        case BATTLE_SUBSCRIPT_KNOCK_OFF:
+        case BATTLE_SUBSCRIPT_HEAL_TARGET_PARALYSIS:
+        case BATTLE_SUBSCRIPT_HEAL_TARGET_SLEEP:
+        case BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN:
+        case BATTLE_SUBSCRIPT_MEAN_LOOK:
+            ret = FALSE;
+            break;
+        }
+    }
+
     return ret;
 }
 
@@ -2141,8 +2164,10 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
     }
     MI_CpuClear8(&ctx->moveConditions[battlerId], sizeof(MoveConditions));
     // A Pokemon forced out by Dragon Tail before the move is over takes its
-    // Emergency Exit with it; what comes in was not hit.
+    // Emergency Exit with it; what comes in was not hit. Nor is it striking
+    // twice with Parental Bond, whatever went out after its second strike.
     ctx->selfTurnData[battlerId].retreatArmed = FALSE;
+    ctx->selfTurnData[battlerId].parentalBond = FALSE;
 
     if (ctx->battleStatus & BATTLE_STATUS_BATON_PASS) {
         ctx->battleMons[battlerId].unk88.substituteHp = unkStruct.substituteHp;
@@ -3714,6 +3739,214 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count) {
         }
     }
     return FALSE;
+}
+
+// Parental Bond (IsValidParentalBondMove, other_battle_calculators.c:2575 at
+// d0380a487; Pokemon Central, Amorefiliale): the holder's damaging moves
+// strike twice, the second strike a quarter of the first, and behave in all
+// else as a multi-strike move does -- one accuracy check, one PP, "Hit 2
+// times!". Not the moves that already strike more than once, nor these: the
+// one-hit KO moves, the moves that faint their user or lock it in, Fling,
+// Endeavor, Final Gambit, the moves with a charging turn, and the Z and Max
+// moves, which this game never lets anyone use. Both lists are the
+// reference's, sorted, and Tachyon Cutter, which strikes twice of itself and
+// which the reference left off, so that the ability took its second strike's
+// power away. Present is on the second list because its own script strikes
+// twice when it wounds and once when it heals.
+static const u16 sMultiStrikeMoves[] = {
+    MOVE_ARM_THRUST,
+    MOVE_BARRAGE,
+    MOVE_BEAT_UP,
+    MOVE_BONEMERANG,
+    MOVE_BONE_RUSH,
+    MOVE_BULLET_SEED,
+    MOVE_COMET_PUNCH,
+    MOVE_DOUBLE_HIT,
+    MOVE_DOUBLE_IRON_BASH,
+    MOVE_DOUBLE_KICK,
+    MOVE_DOUBLE_SLAP,
+    MOVE_DRAGON_DARTS,
+    MOVE_DUAL_CHOP,
+    MOVE_DUAL_WINGBEAT,
+    MOVE_FURY_ATTACK,
+    MOVE_FURY_SWIPES,
+    MOVE_GEAR_GRIND,
+    MOVE_ICICLE_SPEAR,
+    MOVE_PIN_MISSILE,
+    MOVE_POPULATION_BOMB,
+    MOVE_ROCK_BLAST,
+    MOVE_SCALE_SHOT,
+    MOVE_SPIKE_CANNON,
+    MOVE_SURGING_STRIKES,
+    MOVE_TACHYON_CUTTER,
+    MOVE_TAIL_SLAP,
+    MOVE_TRIPLE_AXEL,
+    MOVE_TRIPLE_DIVE,
+    MOVE_TRIPLE_KICK,
+    MOVE_TWINEEDLE,
+    MOVE_TWIN_BEAM,
+    MOVE_WATER_SHURIKEN,
+};
+static const u16 sParentalBondSingleStrikeMoves[] = {
+    MOVE_10_000_000_VOLT_THUNDERBOLT,
+    MOVE_ACID_DOWNPOUR_PHYSICAL,
+    MOVE_ACID_DOWNPOUR_SPECIAL,
+    MOVE_ALL_OUT_PUMMELING_PHYSICAL,
+    MOVE_ALL_OUT_PUMMELING_SPECIAL,
+    MOVE_BLACK_HOLE_ECLIPSE_PHYSICAL,
+    MOVE_BLACK_HOLE_ECLIPSE_SPECIAL,
+    MOVE_BLOOM_DOOM_PHYSICAL,
+    MOVE_BLOOM_DOOM_SPECIAL,
+    MOVE_BOUNCE,
+    MOVE_BREAKNECK_BLITZ_PHYSICAL,
+    MOVE_BREAKNECK_BLITZ_SPECIAL,
+    MOVE_CATASTROPIKA,
+    MOVE_CLANGOROUS_SOULBLAZE,
+    MOVE_CONTINENTAL_CRUSH_PHYSICAL,
+    MOVE_CONTINENTAL_CRUSH_SPECIAL,
+    MOVE_CORKSCREW_CRASH_PHYSICAL,
+    MOVE_CORKSCREW_CRASH_SPECIAL,
+    MOVE_DEVASTATING_DRAKE_PHYSICAL,
+    MOVE_DEVASTATING_DRAKE_SPECIAL,
+    MOVE_DIG,
+    MOVE_DIVE,
+    MOVE_DYNAMAX_CANNON,
+    MOVE_ELECTRO_SHOT,
+    MOVE_ENDEAVOR,
+    MOVE_EXPLOSION,
+    MOVE_EXTREME_EVOBOOST,
+    MOVE_FINAL_GAMBIT,
+    MOVE_FISSURE,
+    MOVE_FLING,
+    MOVE_FLY,
+    MOVE_FREEZE_SHOCK,
+    MOVE_GENESIS_SUPERNOVA,
+    MOVE_GEOMANCY,
+    MOVE_GIGAVOLT_HAVOC_PHYSICAL,
+    MOVE_GIGAVOLT_HAVOC_SPECIAL,
+    MOVE_GUARDIAN_OF_ALOLA,
+    MOVE_GUILLOTINE,
+    MOVE_HORN_DRILL,
+    MOVE_HYDRO_VORTEX_PHYSICAL,
+    MOVE_HYDRO_VORTEX_SPECIAL,
+    MOVE_ICE_BALL,
+    MOVE_ICE_BURN,
+    MOVE_INFERNO_OVERDRIVE_PHYSICAL,
+    MOVE_INFERNO_OVERDRIVE_SPECIAL,
+    MOVE_LETS_SNUGGLE_FOREVER,
+    MOVE_LIGHT_THAT_BURNS_THE_SKY,
+    MOVE_MALICIOUS_MOONSAULT,
+    MOVE_MAX_AIRSTREAM,
+    MOVE_MAX_DARKNESS,
+    MOVE_MAX_FLARE,
+    MOVE_MAX_FLUTTERBY,
+    MOVE_MAX_GEYSER,
+    MOVE_MAX_GUARD,
+    MOVE_MAX_HAILSTORM,
+    MOVE_MAX_KNUCKLE,
+    MOVE_MAX_LIGHTNING,
+    MOVE_MAX_MINDSTORM,
+    MOVE_MAX_OOZE,
+    MOVE_MAX_OVERGROWTH,
+    MOVE_MAX_PHANTASM,
+    MOVE_MAX_QUAKE,
+    MOVE_MAX_ROCKFALL,
+    MOVE_MAX_STARFALL,
+    MOVE_MAX_STEELSPIKE,
+    MOVE_MAX_STRIKE,
+    MOVE_MAX_WYRMWIND,
+    MOVE_MENACING_MOONRAZE_MAELSTROM,
+    MOVE_METEOR_BEAM,
+    MOVE_NEVER_ENDING_NIGHTMARE_PHYSICAL,
+    MOVE_NEVER_ENDING_NIGHTMARE_SPECIAL,
+    MOVE_OCEANIC_OPERETTA,
+    MOVE_PHANTOM_FORCE,
+    MOVE_PRESENT,
+    MOVE_PULVERIZING_PANCAKE,
+    MOVE_RAZOR_WIND,
+    MOVE_ROLLOUT,
+    MOVE_SAVAGE_SPIN_OUT_PHYSICAL,
+    MOVE_SAVAGE_SPIN_OUT_SPECIAL,
+    MOVE_SEARING_SUNRAZE_SMASH,
+    MOVE_SELF_DESTRUCT,
+    MOVE_SHADOW_FORCE,
+    MOVE_SHATTERED_PSYCHE_PHYSICAL,
+    MOVE_SHATTERED_PSYCHE_SPECIAL,
+    MOVE_SHEER_COLD,
+    MOVE_SINISTER_ARROW_RAID,
+    MOVE_SKULL_BASH,
+    MOVE_SKY_ATTACK,
+    MOVE_SKY_DROP,
+    MOVE_SOLAR_BEAM,
+    MOVE_SOLAR_BLADE,
+    MOVE_SOUL_STEALING_7_STAR_STRIKE,
+    MOVE_SPLINTERED_STORMSHARDS,
+    MOVE_STOKED_SPARKSURFER,
+    MOVE_SUBZERO_SLAMMER_PHYSICAL,
+    MOVE_SUBZERO_SLAMMER_SPECIAL,
+    MOVE_SUPERSONIC_SKYSTRIKE_PHYSICAL,
+    MOVE_SUPERSONIC_SKYSTRIKE_SPECIAL,
+    MOVE_TECTONIC_RAGE_PHYSICAL,
+    MOVE_TECTONIC_RAGE_SPECIAL,
+    MOVE_TWINKLE_TACKLE_PHYSICAL,
+    MOVE_TWINKLE_TACKLE_SPECIAL,
+    MOVE_UPROAR,
+};
+
+// A move that can hit more than one Pokemon strikes twice only when one is
+// there to hit (Pokemon Central). The reference refuses those moves in any
+// double battle, one target or two.
+BOOL ParentalBond_MoveApplies(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo) {
+    int range = BattleMoveTbl(ctx, moveNo)->range;
+    int targets = 0;
+
+    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_PARENTAL_BOND
+        || BattleMoveTbl(ctx, moveNo)->category == CATEGORY_STATUS
+        || MoveIsInList(moveNo, sMultiStrikeMoves, NELEMS(sMultiStrikeMoves))
+        || MoveIsInList(moveNo, sParentalBondSingleStrikeMoves, NELEMS(sParentalBondSingleStrikeMoves))) {
+        return FALSE;
+    }
+    if (range == RANGE_ADJACENT_OPPONENTS || range == RANGE_ALL_ADJACENT) {
+        for (int battlerId = 0; battlerId < BattleSystem_GetMaxBattlers(battleSystem); battlerId++) {
+            if (battlerId != ctx->battlerIdAttacker && ctx->battleMons[battlerId].hp
+                && (range == RANGE_ALL_ADJACENT || BattleSystem_GetFieldSide(battleSystem, battlerId) != BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker))) {
+                targets++;
+            }
+        }
+    }
+    return targets <= 1;
+}
+
+// Once, as the move begins, where the reference's before-move sequence ends:
+// for the move chosen, and again for a move Metronome or its kind calls. Not
+// for a spread move's later targets, which come round with PP already taken.
+void TryStartParentalBond(BattleSystem *battleSystem, BattleContext *ctx) {
+    if (ctx->multiHitCountTemp == 0
+        && !(ctx->unk_2184 & MULTIHIT_SKIP_PP_DECREMENT)
+        && ParentalBond_MoveApplies(battleSystem, ctx, ctx->moveNoCur)) {
+        ctx->multiHitCount = 2;
+        ctx->multiHitCountTemp = 2;
+        ctx->checkMultiHit = MULTIHIT_MULTI_HIT_MOVE;
+        ctx->unk_38 = AFTER_MOVE_MESSAGE_MULTI_HIT;
+        ctx->selfTurnData[ctx->battlerIdAttacker].parentalBond = TRUE;
+    }
+}
+
+BOOL ParentalBond_IsFirstStrike(BattleContext *ctx) {
+    return ctx->selfTurnData[ctx->battlerIdAttacker].parentalBond && ctx->multiHitCount == 2;
+}
+
+BOOL ParentalBond_IsSecondStrike(BattleContext *ctx) {
+    return ctx->selfTurnData[ctx->battlerIdAttacker].parentalBond && ctx->multiHitCount == 1;
+}
+
+// The first strike has landed and the second will follow: nothing the first
+// did stopped the move, as the multi-strike loop (ov12_0224CF14) asks it.
+BOOL ParentalBond_StrikeToCome(BattleContext *ctx) {
+    return ParentalBond_IsFirstStrike(ctx)
+        && ctx->battlerIdFainted == BATTLER_NONE
+        && !(ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_SLEEP)
+        && !(ctx->moveStatusFlag & MOVE_STATUS_MULTI_HIT_DISRUPTED);
 }
 
 // A stat once its stage has been applied. The table this reads is the one the

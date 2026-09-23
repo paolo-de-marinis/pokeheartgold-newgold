@@ -86,6 +86,11 @@ int Battler_GetRandomOpposingBattlerId(BattleSystem *battleSystem, BattleContext
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 void Battler_ArmRetreat(BattleContext *ctx, int battlerId);
 BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *script);
+BOOL ParentalBond_MoveApplies(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo);
+void TryStartParentalBond(BattleSystem *battleSystem, BattleContext *ctx);
+BOOL ParentalBond_IsFirstStrike(BattleContext *ctx);
+BOOL ParentalBond_IsSecondStrike(BattleContext *ctx);
+BOOL ParentalBond_StrikeToCome(BattleContext *ctx);
 BOOL CheckStatusHealAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int flag);
 BOOL CheckStatusHealSwitch(BattleContext *ctx, int ability, int status);
 BOOL TrySyncronizeStatus(BattleSystem *battleSystem, BattleContext *ctx, ControllerCommand command);

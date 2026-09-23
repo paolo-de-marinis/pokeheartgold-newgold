@@ -911,6 +911,13 @@ static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BO
         damage = QMul_RoundDown(damage, UQ412__0_75);
     }
 
+    // Parental Bond's second strike takes a quarter (6.2), as from Sun and
+    // Moon on; the moves that do fixed damage do not come through here, and
+    // strike twice for the same.
+    if (ParentalBond_IsSecondStrike(ctx)) {
+        damage = QMul_RoundDown(damage, UQ412__0_25);
+    }
+
     if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
         if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
             switch (type) {
@@ -1874,6 +1881,10 @@ BOOL BtlCmd_GoToMoveScript(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->commandNext = CONTROLLER_COMMAND_39;
         BattleScriptJump(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_NO_TARGET);
     } else {
+        // A move Metronome, Sleep Talk, Assist, Copycat, Me First or Nature
+        // Power calls strikes twice for Parental Bond as a chosen one does:
+        // the reference's subscript 353 from those effects' scripts.
+        TryStartParentalBond(battleSystem, ctx);
         BattleScriptJump(ctx, NARC_a_0_0_0, ctx->moveNoCur);
     }
 
@@ -2881,6 +2892,8 @@ BOOL BtlCmd_SetMirrorMove(BattleSystem *battleSystem, BattleContext *ctx) {
             BattleScriptJump(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_NO_TARGET);
         } else {
             ctx->playerActions[ctx->battlerIdAttacker].unk4 = ctx->battlerIdTarget;
+            // And one Mirror Move copies, which the reference leaves single.
+            TryStartParentalBond(battleSystem, ctx);
             BattleScriptJump(ctx, NARC_a_0_0_0, move);
         }
     } else {
@@ -4315,8 +4328,9 @@ BOOL BtlCmd_CalcFuryCutterPower(BattleSystem *battleSystem, BattleContext *ctx) 
     BattleScriptIncrementPointer(ctx, 1);
 
     // Three uses, as the engine counts them: its 40 doubles to 160 and stops,
-    // where retail's 10 doubled four times to the same 160.
-    if (ctx->battleMons[ctx->battlerIdAttacker].unk88.furyCutterCount < 3) {
+    // where retail's 10 doubled four times to the same 160. Parental Bond's
+    // second strike is the same use, and the reference does not count it.
+    if (ctx->battleMons[ctx->battlerIdAttacker].unk88.furyCutterCount < 3 && !ParentalBond_IsSecondStrike(ctx)) {
         ctx->battleMons[ctx->battlerIdAttacker].unk88.furyCutterCount++;
     }
 
@@ -9986,40 +10000,54 @@ BOOL BtlCmd_SetPsychicTerrainMoveUsedFlag(BattleSystem *battleSystem, BattleCont
     return FALSE;
 }
 
-// Parental Bond is an ability this game does not have, so no move is ever
-// struck twice by it: the first of these five never branches, the next three
-// never branch either, and there is no flag worth setting.
+// Parental Bond's strikes, as the scripts ask about them: the reference's
+// commands 0xEF to 0xF2 and 0xF4. The flag is set as the move begins
+// (TryStartParentalBond), or by a script that strikes twice itself, as
+// Present's does.
 BOOL BtlCmd_GotoIfFirstHitOfParentalBond(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
-    BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+    if (ParentalBond_IsFirstStrike(ctx)) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
     return FALSE;
 }
 
 BOOL BtlCmd_GotoIfSecondHitOfParentalBond(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
-    BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+    if (ParentalBond_IsSecondStrike(ctx)) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
     return FALSE;
 }
 
 BOOL BtlCmd_SetParentalBondFlag(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
+    ctx->selfTurnData[ctx->battlerIdAttacker].parentalBond = TRUE;
     return FALSE;
 }
 
+// The move a calling move is about to use, not the one running.
 BOOL BtlCmd_GotoIfCurrentMoveIsValidForParentalBond(BattleSystem *battleSystem, BattleContext *ctx) {
-#pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
-    BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+    if (ParentalBond_MoveApplies(battleSystem, ctx, ctx->moveTemp)) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
     return FALSE;
 }
 
 BOOL BtlCmd_GotoIfParentalBondIsActive(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
-    BattleScriptReadWord(ctx);
+    int adrs = BattleScriptReadWord(ctx);
+    if (ctx->selfTurnData[ctx->battlerIdAttacker].parentalBond) {
+        BattleScriptIncrementPointer(ctx, adrs);
+    }
     return FALSE;
 }
 

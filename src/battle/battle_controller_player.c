@@ -3230,6 +3230,7 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->command = CONTROLLER_COMMAND_26;
     } else {
         ctx->battleStatus2 |= BATTLE_STATUS2_MOVE_SUCCEEDED;
+        TryStartParentalBond(battleSystem, ctx);
         ReadBattleScriptFromNarc(ctx, NARC_a_0_0_0, ctx->moveNoCur);
         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
         ctx->commandNext = CONTROLLER_COMMAND_24;
@@ -3623,10 +3624,14 @@ void ov12_0224CC88(BattleSystem *battleSystem, BattleContext *ctx) {
 
         ctx->unk_40++;
 
-        // Check for unfreeze via move
+        // Check for unfreeze via move. Parental Bond's first strike leaves it
+        // to the second (Pokemon Central, Amorefiliale), so a frozen target
+        // cannot be burned by the strike that thawed it. The reference asks
+        // for no Parental Bond at all, and so never thaws on its strikes.
         if (ctx->battlerIdTarget != BATTLER_NONE
             && (ctx->battleMons[ctx->battlerIdTarget].status & STATUS_FREEZE)
             && !(ctx->moveStatusFlag & MOVE_STATUS_MULTI_HIT_DISRUPTED)
+            && !ParentalBond_StrikeToCome(ctx)
             && ctx->battlerIdTarget != ctx->battlerIdAttacker
             && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage != 0 || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage != 0)
             && ctx->battleMons[ctx->battlerIdTarget].hp != 0

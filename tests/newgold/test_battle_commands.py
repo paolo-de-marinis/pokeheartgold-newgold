@@ -103,17 +103,13 @@ class BattleCommandTests(unittest.TestCase):
         "ChangePermanentBackground": "the battle background Defog and a terrain's end redraw",
         "GoToIfTerastallized": "no script in the reference runs it either",
         "GotoIfCanApplyKnockOffBoost": "no script in the reference runs it either",
-        "GotoIfCurrentMoveIsValidForParentalBond": "Parental Bond",
-        "GotoIfFirstHitOfParentalBond": "Parental Bond",
-        "GotoIfParentalBondIsActive": "no script in the reference runs it either",
-        "GotoIfSecondHitOfParentalBond": "Parental Bond",
         "MakeTotem": "totems",
         # The reference's pending-switch ordering (subscripts 0009, 0091,
         # 0114, 0175, 0340, 0469, 0498, read in ServerDoPostMoveEffects.c):
-        # nothing here switches a Pokemon out after a move that way yet.
+        # nothing here switches a Pokemon out after a move that way yet;
+        # Wimp Out and Emergency Exit ask ahead of U-turn's switch instead.
         "SetCurrentMoveSwitchingStatus": "Parting Shot's switch, Eject Button and Eject Pack, "
-                                         "Wimp Out and Emergency Exit, none of them written",
-        "SetParentalBondFlag": "Parental Bond",
+                                         "none of them written",
         "TryActivateZeroToHero": "Zero to Hero, Palafin's form change",
         "TryMegaOrUltraBurstDuringPursuit": "mega and ultra burst",
     }
