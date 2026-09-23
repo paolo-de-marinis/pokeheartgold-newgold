@@ -143,7 +143,7 @@ class BattleMessageTests(unittest.TestCase):
         """Lines the port prints that the engine has no text for, and who
         prints them."""
         table = rows()
-        self.assertEqual(max(table) + 1, FIRST_PORT_ROW + 24)
+        self.assertEqual(max(table) + 1, FIRST_PORT_ROW + 27)
         expected = {
             "wandering spirit": (1787, "{STRVAR_1 1, 0, 0}’s Ability\\nbecame {STRVAR_1 5, 1, 0}!"),
             "belch": (1790, "{STRVAR_1 1, 0, 0} hasn’t eaten any held Berries,\\nso it can’t possibly belch!"),
@@ -166,6 +166,14 @@ class BattleMessageTests(unittest.TestCase):
         self.assertIn("msg_0197_01802, TAG_NICKNAME_ITEM", script("subscript_*_CudChew.s"))
         self.assertIn("msg_0197_01805, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP", script("subscript_*_TeraShell.s"))
         self.assertIn("msg_0197_01808, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP", script("subscript_*_BattleBond.s"))
+        # Rows added since, found by name so that a merge can renumber them.
+        for name, text, tag, where in (
+            ("supreme overlord", "{STRVAR_1 1, 0, 0} gained strength\\nfrom the fallen!",
+             "TAG_NICKNAME", "subscript_*_SupremeOverlord.s"),
+        ):
+            row = import_battle_messages.port_row(name)
+            self.assertEqual(table[row], text, name)
+            self.assertIn(f"msg_0197_{row:05d}, {tag}", script(where), name)
         self.assertIn("msg_0197_01790, TAG_NICKNAME", script("effect_script_0397.s"))
         battle = ROOT / "src/battle"
         self.assertIn("msg->id = msg_0197_01790;", (battle / "overlay_12_0224E4FC.c").read_text())

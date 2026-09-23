@@ -200,6 +200,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->boosterEnergyActivated[battlerId] = FALSE;
     ctx->iceFaceWeatherSeen &= ~MaskOfFlagNo(battlerId);
     ctx->cudChewBerry[battlerId] = ITEM_NONE;
+    ctx->supremeOverlordFallen[battlerId] = 0;
 
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
@@ -4993,6 +4994,23 @@ BOOL Battler_ShieldsUp(BattleContext *ctx, int battlerId) {
         && (species == SPECIES_MINIOR || (species >= SPECIES_MINIOR_METEOR_ORANGE && species <= SPECIES_MINIOR_METEOR_VIOLET));
 }
 
+// How many times a Pokemon of battlerId's own party has fainted since the
+// battle began. The faints are kept per battler slot, and in a double battle
+// both slots on a side draw from the one party, where in a multi battle each
+// partner has its own.
+static int BattlerPartyFaintCount(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int i;
+    int count = 0;
+
+    for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
+        if (BattleSystem_GetParty(battleSystem, i) == BattleSystem_GetParty(battleSystem, battlerId)) {
+            count += ctx->totalTimesFainted[i];
+        }
+    }
+
+    return count;
+}
+
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int j;
@@ -5897,7 +5915,32 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 29: // end
+        case 29: // Supreme Overlord
+            // The fallen are counted once, on the way in: every time a Pokemon
+            // of the holder's own party has fainted since the battle began,
+            // five at most (Pokemon Central, Generale Supremo). One revived
+            // since still counts; one that falls while the holder is out
+            // counts from its next entry. The send-out flag is the weather
+            // abilities' own, which a Pokemon with this one never needs.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].sendOutFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_SUPREME_OVERLORD) {
+                    ctx->battleMons[battlerId].sendOutFlag = TRUE;
+                    j = BattlerPartyFaintCount(battleSystem, ctx, battlerId);
+                    ctx->supremeOverlordFallen[battlerId] = j < 5 ? j : 5;
+                    if (ctx->supremeOverlordFallen[battlerId]) {
+                        ctx->battlerIdTemp = battlerId;
+                        script = BATTLE_SUBSCRIPT_SUPREME_OVERLORD;
+                        flag = TRUE;
+                        break;
+                    }
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 30: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;
@@ -9050,6 +9093,12 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 
     if (moveType == TYPE_STEEL && calcAttacker.ability == ABILITY_STEELY_SPIRIT) {
         movePower = movePower * 15 / 10;
+    }
+
+    // Supreme Overlord: a tenth more power for each of the fallen it counted
+    // on the way in, 4096 and 410 more each up to 6144 in the later games.
+    if (calcAttacker.ability == ABILITY_SUPREME_OVERLORD) {
+        movePower = movePower * (10 + ctx->supremeOverlordFallen[battlerIdAttacker]) / 10;
     }
 
     // The terrain laid over the battle, which the reference weighs here among

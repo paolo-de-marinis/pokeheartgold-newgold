@@ -103,6 +103,14 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} became fully charged\ndue to its bond with its Trainer!",
         r"The opposing {STRVAR_1 1, 0, 0} became fully\ncharged due to its bond with its Trainer!",
     ]),
+    # Supreme Overlord coming in with fallen to count. The reference gives the
+    # ability no effect; the later games show its popup and this line, which
+    # here has to say it all.
+    ("supreme overlord", [
+        r"{STRVAR_1 1, 0, 0} gained strength\nfrom the fallen!",
+        r"The wild {STRVAR_1 1, 0, 0} gained\nstrength from the fallen!",
+        r"The opposing {STRVAR_1 1, 0, 0} gained\nstrength from the fallen!",
+    ]),
 ]
 
 

@@ -680,6 +680,8 @@
 #define BATTLE_SUBSCRIPT_PRIMAL_WEATHER_STOPS_MOVE          420
 // Delta Stream's winds sheltering a Flying type. 372 there.
 #define BATTLE_SUBSCRIPT_STRONG_WINDS_WEAKEN                421
+// Supreme Overlord counting the fallen, which the reference has no script for.
+#define BATTLE_SUBSCRIPT_SUPREME_OVERLORD                   422
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

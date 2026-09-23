@@ -7244,4 +7244,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} became fully\ncharged due to its bond with its Trainer!</language>
 	</row>
+	<row id="msg_0197_01811" index="1811">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} gained strength\nfrom the fallen!</language>
+	</row>
+	<row id="msg_0197_01812" index="1812">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} gained\nstrength from the fallen!</language>
+	</row>
+	<row id="msg_0197_01813" index="1813">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} gained\nstrength from the fallen!</language>
+	</row>
 </body>

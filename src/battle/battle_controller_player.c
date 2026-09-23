@@ -169,9 +169,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // each battler's run of Protects by four, and Dancer's six bytes by four,
 // two of them padding it carried already; Tera Shell's byte by four, since
 // Dancer's had taken the padding it would have used, and the one for Delta
-// Stream's line went into what Tera Shell's left.
+// Stream's line went into what Tera Shell's left; Supreme Overlord's count
+// of the fallen by four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x31D4 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x31D8 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given

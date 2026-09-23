@@ -180,5 +180,49 @@ class StakeoutTests(unittest.TestCase):
 """))
 
 
+class SupremeOverlordTests(unittest.TestCase):
+    def test_a_tenth_more_power_for_each_of_the_fallen(self):
+        # Power 130: 59; power 150: (22 * 100 * 150 / 100) / 50 + 2 = 68.
+        run_c(self, damage_program(r"""
+    reset(4); S.ability[0] = ABILITY_SUPREME_OVERLORD; EXPECT(damage(0, 1), 46);
+    ctx.supremeOverlordFallen[0] = 3; EXPECT(damage(0, 1), 59);
+    ctx.supremeOverlordFallen[0] = 5; EXPECT(damage(0, 1), 68);
+    // The count is the holder's, read only while it has the ability.
+    S.ability[0] = ABILITY_NONE; EXPECT(damage(0, 1), 46);
+"""))
+
+    def test_the_fallen_are_its_own_party_s_counted_on_the_way_in(self):
+        program = HEADER + r"""
+typedef struct { int unused; } Party;
+typedef struct { int maxBattlers; Party *party[4]; } BattleSystem;
+typedef struct { int totalTimesFainted[4]; } BattleContext;
+static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { return bs->maxBattlers; }
+static Party *BattleSystem_GetParty(BattleSystem *bs, int battlerId) { return bs->party[battlerId]; }
+""" + function(OVERLAY, "BattlerPartyFaintCount") + r"""
+int main(void) {
+    Party mine, partner, foe;
+    BattleContext ctx = { { 2, 4, 1, 8 } };
+    // A double battle: both slots on a side are one party.
+    BattleSystem doubles = { 4, { &mine, &foe, &mine, &foe } };
+    EXPECT(BattlerPartyFaintCount(&doubles, &ctx, 0), 3);
+    EXPECT(BattlerPartyFaintCount(&doubles, &ctx, 3), 12);
+    // A multi battle: the partner's faints are not the player's.
+    BattleSystem multi = { 4, { &mine, &foe, &partner, &foe } };
+    EXPECT(BattlerPartyFaintCount(&multi, &ctx, 0), 2);
+    EXPECT(BattlerPartyFaintCount(&multi, &ctx, 2), 1);
+    return 0;
+}
+"""
+        run_c(self, program)
+        entry = function(OVERLAY, "TryAbilityOnEntry")
+        state = entry[entry.index("// Supreme Overlord"):]
+        state = state[:state.index("case ", 10)]
+        self.assertIn("!ctx->battleMons[battlerId].sendOutFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_SUPREME_OVERLORD", state)
+        self.assertIn("j = BattlerPartyFaintCount(battleSystem, ctx, battlerId);", state)
+        self.assertIn("ctx->supremeOverlordFallen[battlerId] = j < 5 ? j : 5;", state)
+        self.assertIn("script = BATTLE_SUBSCRIPT_SUPREME_OVERLORD;", state)
+        self.assertIn("ctx->supremeOverlordFallen[battlerId] = 0;", function(OVERLAY, "BattleSystem_GetBattleMon"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -583,6 +583,10 @@ typedef struct BattleContext {
     // now under way, a bit each, so a multi-hit move says it once. Cleared
     // when the next action begins.
     u8 strongWindsWeakened;
+    // How many of its own party had fainted when a Supreme Overlord came in,
+    // five at most: a tenth more power for each. Counted once, on the way in,
+    // and cleared when the Pokemon is loaded into its slot.
+    u8 supremeOverlordFallen[BATTLER_MAX];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.
