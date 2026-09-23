@@ -595,7 +595,7 @@ u32 ov18_021F7D00(PokedexAppData *pokedexApp, u32 *a1);
 u32 ov18_021F7D30(PokedexAppData *pokedexApp, u32 *a1);
 u32 ov18_021F7DCC(PokedexAppData *pokedexApp, u32 *a1);
 u32 ov18_021F7E70(PokedexAppData *pokedexApp, u32 *a1);
-void ov18_021F7ED4(PokedexAppData *pokedexApp, u8 a1, u32 a2, u32 a3, u32 a4, u32 a5, u32 a6, u32 a7, u32 a8, u32 a9, u32 a10, u32 a11);
+BOOL ov18_021F7ED4(PokedexAppData *pokedexApp, u8 natDex, u32 order, u32 letter, u32 type1, u32 type2, u32 heightMin, u32 heightMax, u32 weightMin, u32 weightMax, u32 area, u32 bodyType);
 u32 ov18_021F8824(PokedexAppData *pokedexApp);
 u16 ov18_021F8838(PokedexAppData *pokedexApp);
 u32 ov18_021F8850(PokedexAppData_UnkSub0878 *a0, u16 a1);
