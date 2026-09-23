@@ -263,15 +263,24 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "
 
 const TABS = [["trainer", "Allenatore"], ["party", "Squadra e box"], ["bag", "Borsa"],
               ["dex", "Pokédex"], ["pos", "Posizione"], ["flags", "Flag e variabili"], ["info", "Info"]];
-const JOHTO = ["Zefiro", "Alveare", "Piana", "Nebbia", "Tempesta", "Minerale", "Gelo", "Levante"];
-const KANTO = ["Sasso", "Cascata", "Tuono", "Arcobaleno", "Anima", "Palude", "Vulcano", "Terra"];
-const POCKET_NAMES = {items: "Strumenti", medicine: "Rimedi", balls: "Poké Ball", TMsHMs: "MT e MN",
-                      berries: "Bacche", mail: "Lettere", battleItems: "Strumenti lotta", keyItems: "Strumenti chiave"};
-const POCKET_ORDER = ["items", "medicine", "balls", "TMsHMs", "berries", "mail", "battleItems", "keyItems"];
-const STATS = ["PS", "Att", "Dif", "Vel", "AttSp", "DifSp"];
-const NAT_STATS = ["Att", "Dif", "Vel", "AttSp", "DifSp"];
-const DIRS = ["su", "giù", "sinistra", "destra"];
-const GENDER_MARK = ["♂", "♀", ""];
+// What the game has -- the badges, pockets, stats, directions, genders and
+// types, and every limit -- comes from the server (/api/data), read from the
+// tree. These are only the Italian names for them, by the tree's constants:
+// one the page has no name for shows by its constant.
+const BADGE_NAMES = {BADGE_ZEPHYR: "Zefiro", BADGE_HIVE: "Alveare", BADGE_PLAIN: "Piana", BADGE_FOG: "Nebbia",
+  BADGE_STORM: "Tempesta", BADGE_MINERAL: "Minerale", BADGE_GLACIER: "Gelo", BADGE_RISING: "Levante",
+  BADGE_BOULDER: "Sasso", BADGE_CASCADE: "Cascata", BADGE_THUNDER: "Tuono", BADGE_RAINBOW: "Arcobaleno",
+  BADGE_SOUL: "Anima", BADGE_MARSH: "Palude", BADGE_VOLCANO: "Vulcano", BADGE_EARTH: "Terra"};
+const POCKET_NAMES = {POCKET_ITEMS: "Strumenti", POCKET_MEDICINE: "Rimedi", POCKET_BALLS: "Poké Ball", POCKET_TMHMS: "MT e MN",
+  POCKET_BERRIES: "Bacche", POCKET_MAIL: "Lettere", POCKET_BATTLE_ITEMS: "Strumenti lotta", POCKET_KEY_ITEMS: "Strumenti chiave"};
+const STAT_NAMES = {STAT_HP: "PS", STAT_ATK: "Att", STAT_DEF: "Dif", STAT_SPEED: "Vel", STAT_SPATK: "AttSp", STAT_SPDEF: "DifSp"};
+const DIR_NAMES = {DIR_NORTH: "su", DIR_SOUTH: "giù", DIR_WEST: "sinistra", DIR_EAST: "destra"};
+const GENDER_MARKS = {MON_MALE: "♂", MON_FEMALE: "♀", MON_GENDERLESS: ""};
+const named = (names, prefix) => c => names[c] ?? c.slice(prefix.length).replace(/_/g, " ").toLowerCase();
+const badgeName = named(BADGE_NAMES, "BADGE_"), pocketName = named(POCKET_NAMES, "POCKET_"), dirName = named(DIR_NAMES, "DIR_");
+const stats = () => S.data.stats.map(s => named(STAT_NAMES, "STAT_")(s.const));
+const genderMark = g => GENDER_MARKS[S.data.genders.find(x => x.value === g)?.const] ?? "";
+const range = n => [...Array(n).keys()];
 // The types, as the Italian games name and colour them.
 const TYPES = {NORMAL: ["Normale", "#9a9a6b"], FIGHTING: ["Lotta", "#b8302a"], FLYING: ["Volante", "#8f7ad8"],
   POISON: ["Veleno", "#983d98"], GROUND: ["Terra", "#c9a54f"], ROCK: ["Roccia", "#a8902f"], BUG: ["Coleottero", "#95a31d"],
@@ -281,7 +290,7 @@ const TYPES = {NORMAL: ["Normale", "#9a9a6b"], FIGHTING: ["Lotta", "#b8302a"], F
 const typeBadges = types => (types || []).map(t => { const [name, colour] = TYPES[t] || [t, "#777"]; return `<span class="type" style="background:${colour}">${esc(name)}</span>`; }).join("");
 const typeNames = types => (types || []).map(t => (TYPES[t] || [t])[0]).join("/");
 
-const S = {data: null, lib: null, f: null, save: null, tab: "trainer", box: 0, pocket: "items",
+const S = {data: null, lib: null, f: null, save: null, tab: "trainer", box: 0, pocket: null,
            dex: {changes: new Map(), q: "", show: "all"}, melon: false, busy: 0};
 const store = {
   get(k) { try { return localStorage.getItem("saveui." + k); } catch { return null; } },
@@ -319,9 +328,11 @@ function parseRef(value, index) {
   const hit = index.get(value.toLowerCase());
   return hit === undefined ? null : hit;
 }
+// gNatureStatMods' row: 1 on the stat the nature raises, -1 on the one it lowers, over the stats after HP.
 function natureLabel(n) {
-  const name = S.data.natures[n], up = Math.floor(n / 5), down = n % 5;
-  return up === down ? `${name} (neutra)` : `${name} (+${NAT_STATS[up]} −${NAT_STATS[down]})`;
+  const name = S.data.natures[n], mods = S.data.nature_mods[n] || [], after = stats().slice(1);
+  const up = mods.indexOf(1), down = mods.indexOf(-1);
+  return up < 0 ? `${name} (neutra)` : `${name} (+${after[up]} −${after[down]})`;
 }
 function iconImg(m, size = 32) {
   if (!m || m.ok === false) return `<span class="badq" title="Checksum errato">?</span>`;
@@ -738,24 +749,25 @@ $("#tabs").addEventListener("click", ev => {
 // ---- Allenatore ----------------------------------------------------------
 function renderTrainer() {
   const p = S.save.profile;
-  const badge = (names, value, group) => names.map((n, i) => `<label><input type="checkbox" name="${group}${i}" ${(value >> i) & 1 ? "checked" : ""}> ${n}</label>`).join("");
+  const lim = S.data.limits;
+  const badge = field => S.data.badges.filter(b => b.field === field).map(b => `<label><input type="checkbox" name="${field}${b.bit}" ${(p[field] >> b.bit) & 1 ? "checked" : ""}> ${esc(badgeName(b.const))}</label>`).join("");
   $("#tab").innerHTML = `<form id="trainer">
     <div class="form">
-      <label class="f">Nome<input name="name" value="${esc(p.name)}" maxlength="7"></label>
+      <label class="f">Nome<input name="name" value="${esc(p.name)}" maxlength="${lim.name}"></label>
       <label class="f">Genere<select name="gender"><option value="0" ${p.gender === 0 ? "selected" : ""}>Ragazzo</option><option value="1" ${p.gender === 1 ? "selected" : ""}>Ragazza</option></select></label>
       <label class="f">ID allenatore<input type="number" name="id" min="0" max="65535" value="${p.id}"></label>
       <label class="f">ID segreto<input type="number" name="sid" min="0" max="65535" value="${p.sid}"></label>
-      <label class="f">Soldi<input type="number" name="money" min="0" max="999999" value="${p.money}"></label>
-      <label class="f">Gettoni<input type="number" name="coins" min="0" max="50000" value="${p.coins}"></label>
+      <label class="f">Soldi<input type="number" name="money" min="0" max="${lim.money}" value="${p.money}"></label>
+      <label class="f">Gettoni<input type="number" name="coins" min="0" max="${lim.coins}" value="${p.coins}"></label>
       <label class="f">Tempo di gioco (ore, minuti, secondi)
-        <span style="display:flex;gap:4px"><input type="number" name="h" min="0" max="999" value="${p.play_time[0]}" style="width:5em">
+        <span style="display:flex;gap:4px"><input type="number" name="h" min="0" max="${lim.hours}" value="${p.play_time[0]}" style="width:5em">
         <input type="number" name="m" min="0" max="59" value="${p.play_time[1]}" style="width:4em">
         <input type="number" name="s" min="0" max="59" value="${p.play_time[2]}" style="width:4em"></span></label>
     </div>
-    <p class="note">Il nome si scrive con i caratteri del gioco, ma savedit sa scrivere solo lettere (A–Z, a–z) e cifre, al massimo 7.
+    <p class="note">Il nome si scrive con i caratteri del gioco, ma savedit sa scrivere solo lettere (A–Z, a–z) e cifre, al massimo ${lim.name}.
       Un nome letto con altri caratteri si vede qui com'è, ma per cambiarlo servono solo lettere e cifre.</p>
-    <div class="box"><h3>Medaglie di Johto</h3><div class="badges">${badge(JOHTO, p.johto, "j")}</div></div>
-    <div class="box"><h3>Medaglie di Kanto</h3><div class="badges">${badge(KANTO, p.kanto, "k")}</div></div>
+    <div class="box"><h3>Medaglie di Johto</h3><div class="badges">${badge("johto")}</div></div>
+    <div class="box"><h3>Medaglie di Kanto</h3><div class="badges">${badge("kanto")}</div></div>
     <label style="display:flex;gap:8px;align-items:flex-start;margin-top:14px"><input type="checkbox" name="retag" checked>
       <span>Se cambiano nome, ID o genere, aggiorna anche l'allenatore originale dei Pokémon che erano del giocatore.
       <span class="muted">Altrimenti il gioco li considera scambiati, e oltre il livello concesso dalle medaglie non obbediscono. Un Pokémon cromatico può smettere di esserlo se cambia l'ID.</span></span></label>
@@ -763,9 +775,10 @@ function renderTrainer() {
   </form>`;
   $("#trainer").addEventListener("submit", ev => {
     ev.preventDefault();
-    const f = ev.target.elements, sum = (g) => [...Array(8)].reduce((a, _, i) => a | (f[g + i].checked ? 1 << i : 0), 0);
+    // A bit the page shows no badge for is kept as it was.
+    const f = ev.target.elements, sum = g => range(8).reduce((a, i) => f[g + i] ? (f[g + i].checked ? a | 1 << i : a) : a | (p[g] & 1 << i), 0);
     edit("trainer", {name: f.name.value, gender: +f.gender.value, id: +f.id.value, sid: +f.sid.value, money: +f.money.value,
-                     coins: +f.coins.value, play_time: [+f.h.value, +f.m.value, +f.s.value], johto: sum("j"), kanto: sum("k"),
+                     coins: +f.coins.value, play_time: [+f.h.value, +f.m.value, +f.s.value], johto: sum("johto"), kanto: sum("kanto"),
                      retag: f.retag.checked});
   });
 }
@@ -777,7 +790,7 @@ function monCard(m, i, count) {
     <div class="acts"><button class="small danger" type="button" data-remove="${i}">Togli dalla squadra</button></div></div>`;
   const hp = m.stats ? Math.round(100 * m.hp / Math.max(1, m.stats[0])) : null;
   return `<div class="mon" data-pos="party:${i}" data-mon title="Trascina per spostarlo">
-    <div class="head">${iconImg(m, 48)}<div><div class="nm">${esc(m.nickname || m.species_name)} ${GENDER_MARK[m.gender] || ""} ${m.shiny ? `<span class="star" title="Cromatico">★</span>` : ""}</div>
+    <div class="head">${iconImg(m, 48)}<div><div class="nm">${esc(m.nickname || m.species_name)} ${genderMark(m.gender)} ${m.shiny ? `<span class="star" title="Cromatico">★</span>` : ""}</div>
       <div class="sub">${esc(m.species_name)} · Lv. ${m.level}${m.egg ? " · uovo" : ""}</div>
       ${m.egg ? "" : `<div>${typeBadges(m.types)}</div>`}</div></div>
     ${hp !== null ? `<div class="hp" title="PS ${m.hp}/${m.stats[0]}"><i style="width:${hp}%"></i></div><div class="sub">PS ${m.hp}/${m.stats[0]}</div>` : ""}
@@ -791,8 +804,8 @@ function monCard(m, i, count) {
 }
 function renderParty() {
   const party = S.save.party;
-  const addable = party.length < 6;
-  $("#tab").innerHTML = `<div class="zonehead" style="margin-top:0"><h3>Squadra</h3><span class="muted">${party.length} di 6</span></div>
+  const addable = party.length < S.data.limits.party;
+  $("#tab").innerHTML = `<div class="zonehead" style="margin-top:0"><h3>Squadra</h3><span class="muted">${party.length} di ${S.data.limits.party}</span></div>
     <div class="grid" id="partyzone">${party.map((m, i) => monCard(m, i, party.length)).join("")}
       ${addable ? `<div class="addmon" data-pos="party:${party.length}"><button type="button" class="primary" id="addparty">Aggiungi un Pokémon</button></div>` : ""}</div>
     <p class="note">Trascina un Pokémon per spostarlo: su un altro, nella squadra o nei box, i due si scambiano; su un posto vuoto del box
@@ -820,7 +833,7 @@ function renderBoxArea() {
   $("#boxarea").innerHTML = `<div class="zonehead"><h3>Box</h3><span class="muted">Il gioco è aperto sul box ${boxes.current + 1}.</span></div>
     <div class="boxnav">
       <button type="button" class="small" data-boxnav="-1" aria-label="Box precedente">◀</button>
-      <select id="boxsel" aria-label="Box">${boxes.names.map((n, b) => `<option value="${b}" ${b === S.box ? "selected" : ""}>${b + 1}. ${esc(n)} (${count(b)}/30)</option>`).join("")}</select>
+      <select id="boxsel" aria-label="Box">${boxes.names.map((n, b) => `<option value="${b}" ${b === S.box ? "selected" : ""}>${b + 1}. ${esc(n)} (${count(b)}/${boxes.mons[b].length})</option>`).join("")}</select>
       <button type="button" class="small" data-boxnav="1" aria-label="Box successivo">▶</button>
     </div>
     <div class="pc">${mons.map((m, s) => `<button type="button" class="${m ? "full" : ""}" data-slot="${s}" data-pos="box:${S.box}:${s}" ${m ? "data-mon" : ""}
@@ -838,7 +851,7 @@ function renderBoxArea() {
     monDialog({kind: "box", box: S.box, slot}, m);
   };
 }
-function goBox(b) { S.box = (b + 30) % 30; store.set("box", S.box); renderBoxArea(); }
+function goBox(b) { const n = S.save.boxes.names.length; S.box = (b + n) % n; store.set("box", S.box); renderBoxArea(); }
 
 // ---- dragging Pokemon between the party and the boxes ---------------------
 // As in a sortable list: a pointer press on a Pokemon, then 6 px of movement,
@@ -957,27 +970,29 @@ const sourceTags = sources => sources.map(s => `<span class="tag src${s.from ? "
 // it opens again with it, not with the Pokemon's values, and with `why` on top.
 function monDialog(where, m, typed = null, version = S.save.version, why = "") {
   const isNew = !m;
-  const v = m || {species: 0, level: 5, nature: 0, item: 0, moves: [], ivs: [31, 31, 31, 31, 31, 31], evs: [0, 0, 0, 0, 0, 0], friendship: 70};
+  const lim = S.data.limits, six = range(S.data.stats.length);
+  // A new one's friendship is its species' own (personal.json), filled in when the species is chosen.
+  const v = m || {species: 0, level: 5, nature: 0, item: 0, moves: [], ivs: six.map(() => lim.iv), evs: six.map(() => 0), friendship: ""};
   const title = isNew ? (where.kind === "party" ? "Nuovo Pokémon in squadra" : `Nuovo Pokémon · box ${where.box + 1}, posto ${where.slot + 1}`)
                       : (where.kind === "party" ? `Squadra, posto ${where.slot + 1}` : `Box ${where.box + 1}, posto ${where.slot + 1}`);
-  const moves = [0, 1, 2, 3].map(i => v.moves[i]?.id ?? 0);
-  const six = (name, vals, max) => `<div class="stats6">${STATS.map((s, i) => `<label class="f">${s}<input type="number" name="${name}${i}" min="0" max="${max}" value="${vals[i]}"></label>`).join("")}</div>`;
+  const moves = range(lim.moves).map(i => v.moves[i]?.id ?? 0);
+  const perStat = (name, vals, max) => `<div class="stats6">${stats().map((s, i) => `<label class="f">${s}<input type="number" name="${name}${i}" min="0" max="${max}" value="${vals[i]}"></label>`).join("")}</div>`;
   const summary = isNew ? "" : `<div class="monsum">${iconImg(m, 64)}<dl class="kv">
       <dt>Soprannome</dt><dd>${esc(m.nickname)}${m.nicknamed ? "" : ` <span class="muted">(nome della specie)</span>`}</dd>
       ${m.egg ? "" : `<dt>Tipo</dt><dd>${typeBadges(m.types)}</dd>`}
       <dt>Allenatore</dt><dd>${esc(m.ot_name)} · ID ${String(m.ot_id).padStart(5, "0")}</dd>
       <dt>Abilità</dt><dd>${esc(m.ability_name)}${m.hidden_ability ? " (nascosta)" : ""}</dd>
       <dt>Personalità</dt><dd class="mono">${m.personality.toString(16).padStart(8, "0")}${m.shiny ? ` <span class="star">★ cromatico</span>` : ""}${m.mint !== null ? ` · menta: ${esc(S.data.natures[m.mint])}` : ""}</dd>
-      <dt>Esperienza</dt><dd>${m.exp}${m.stats ? ` · PS ${m.hp}/${m.stats[0]} · ${m.stats.slice(1).map((x, i) => `${STATS[i + 1]} ${x}`).join(" · ")}` : ""}</dd>
+      <dt>Esperienza</dt><dd>${m.exp}${m.stats ? ` · PS ${m.hp}/${m.stats[0]} · ${m.stats.slice(1).map((x, i) => `${stats()[i + 1]} ${x}`).join(" · ")}` : ""}</dd>
     </dl></div>`;
   const body = `${why ? `<p class="lock" style="margin:0 0 12px">${esc(why)}</p>` : ""}${summary}
     <div class="form">
       <label class="f" style="grid-column:1/-1">Specie<input name="species" list="dl-species" required value="${esc(speciesRef(v.species))}" placeholder="Cerca per nome…"></label>
-      <label class="f">Livello<input type="number" name="level" min="1" max="100" required value="${v.level}"></label>
+      <label class="f">Livello<input type="number" name="level" min="1" max="${lim.level}" required value="${v.level}"></label>
       <label class="f">Natura<select name="nature">${S.data.natures.map((_, n) => `<option value="${n}" ${n === v.nature ? "selected" : ""}>${esc(natureLabel(n))}</option>`).join("")}</select></label>
       <label class="f" id="abilitybox">Abilità<select name="ability" required><option value="">Scegli la specie</option></select></label>
       <label class="f">Strumento tenuto<input name="held" list="dl-items" value="${esc(itemRef(v.item))}" placeholder="Nessuno"></label>
-      <label class="f">Amicizia<input type="number" name="friendship" min="0" max="255" value="${v.friendship}"></label>
+      <label class="f">Amicizia<input type="number" name="friendship" min="0" max="255" value="${v.friendship}" placeholder="della specie"></label>
     </div>
     <div class="box" id="movesbox"><div class="sechead"><h3 style="margin:0">Mosse</h3><button type="button" class="small" id="learn">Mosse per livello</button></div>
       <div class="moves4">${moves.map((id, i) => `<div class="mvfield"><div class="mvin"><input name="move${i}" value="${esc(moveRef(id))}" placeholder="Mossa ${i + 1}" aria-label="Mossa ${i + 1}"
@@ -987,8 +1002,8 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
         MT, MN e DT, insegnanti, mosse uovo, e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
         (una mossa evento) resta finché non la cambi e non cambi specie. Una mossa che il Pokémon già conosce tiene i suoi PP; una nuova li ha pieni.
         "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie.</p></div>
-    <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="31">Tutti 31</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${six("iv", v.ivs, 31)}</div>
-    <div class="box"><div class="sechead"><h3 style="margin:0">EV</h3><span class="muted" id="evsum"></span></div>${six("ev", v.evs, 255)}</div>
+    <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="${lim.iv}">Tutti ${lim.iv}</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${perStat("iv", v.ivs, lim.iv)}</div>
+    <div class="box"><div class="sechead"><h3 style="margin:0">EV</h3><span class="muted" id="evsum"></span></div>${perStat("ev", v.evs, lim.ev)}</div>
     <p class="note">Cambiare specie sostituisce subito mosse e abilità con quelle che il gioco dà alla nuova specie: le mosse al livello scelto, l'abilità
       che il Pokémon avrebbe come quella specie (la nascosta se ha la nascosta e la specie ne ha una, altrimenti prima o seconda come la sua personalità);
       natura, livello, IV, EV e strumento restano, genere e nome (se non ha un soprannome) si ricalcolano. Cambiare natura cambia la personalità,
@@ -1001,15 +1016,15 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
   const st = {species: 0, moves: [], legal: new Map(), known: new Set()};
   return ask(title, body, buttons, d => {
     const form = $("form", d), evsum = () => {
-      const t = [0, 1, 2, 3, 4, 5].reduce((a, i) => a + (+form.elements["ev" + i].value || 0), 0);
-      $("#evsum", d).textContent = `totale ${t} / 510`; $("#evsum", d).style.color = t > 510 ? "var(--danger)" : "";
-      form.elements.ev0.setCustomValidity(t > 510 ? `Gli EV sono al massimo 510 in tutto (ora ${t})` : "");
+      const t = six.reduce((a, i) => a + (+form.elements["ev" + i].value || 0), 0);
+      $("#evsum", d).textContent = `totale ${t} / ${lim.ev_sum}`; $("#evsum", d).style.color = t > lim.ev_sum ? "var(--danger)" : "";
+      form.elements.ev0.setCustomValidity(t > lim.ev_sum ? `Gli EV sono al massimo ${lim.ev_sum} in tutto (ora ${t})` : "");
     };
     if (typed) for (const [k, v] of Object.entries(typed)) if (form.elements[k]) form.elements[k].value = v;
     evsum();
     form.addEventListener("input", ev => { if (ev.target.name?.startsWith("ev")) evsum(); });
-    $$("[data-iv]", d).forEach(b => b.onclick = () => [0, 1, 2, 3, 4, 5].forEach(i => form.elements["iv" + i].value = b.dataset.iv));
-    const inputs = [0, 1, 2, 3].map(i => form.elements["move" + i]), sel = form.elements.ability;
+    $$("[data-iv]", d).forEach(b => b.onclick = () => six.forEach(i => form.elements["iv" + i].value = b.dataset.iv));
+    const inputs = range(lim.moves).map(i => form.elements["move" + i]), sel = form.elements.ability;
     const tagLine = value => {
       const id = parseRef(value, S.moveIndex);
       if (!id || !st.species) return "";
@@ -1027,10 +1042,11 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       if (!r || st.species !== species) return;       // another species was picked meanwhile
       Object.assign(st, {moves: r.moves, legal: new Map(r.moves.map(x => [x.id, x.sources])), known: new Set(same ? m.moves.map(x => x.id) : [])});
       const was = sel.value;
-      sel.innerHTML = r.abilities.map(a => `<option value="${a.slot}">${esc(a.name)}${a.slot === 2 ? " (nascosta)" : ""}</option>`).join("");
+      sel.innerHTML = r.abilities.map(a => `<option value="${a.slot}">${esc(a.name)}${a.slot === lim.hidden_slot ? " (nascosta)" : ""}</option>`).join("");
       sel.value = mode === "all" ? r.ability : mode === "moves" ? was : ability || (same ? m.ability_slot : r.ability);
       if (!sel.value) sel.value = r.ability;
       const name = S.species.get(species)?.name ?? `#${species}`;
+      if (isNew && (mode === "all" || form.elements.friendship.value === "")) form.elements.friendship.value = r.friendship;
       if (mode) {
         inputs.forEach((el, i) => el.value = moveRef(r.preset[i] || 0));
         $("#presetnote", d).hidden = false;
@@ -1107,7 +1123,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     if (r.value === "withdraw") return edit("withdraw", base, "Spostato in squadra", version);
     const d = r.data, bad = [];
     const species = parseRef(d.species, S.speciesIndex), item = parseRef(d.held, S.itemIndex);
-    const mv = [0, 1, 2, 3].map(i => parseRef(d["move" + i], S.moveIndex));
+    const mv = range(lim.moves).map(i => parseRef(d["move" + i], S.moveIndex));
     if (!species) bad.push("specie");
     if (item === null) bad.push("strumento");
     mv.forEach((x, i) => x === null && bad.push(`mossa ${i + 1}`));
@@ -1116,9 +1132,9 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     const wrong = st.species === species ? mv.filter(x => x && !st.legal.has(x) && !st.known.has(x)) : [];
     if (wrong.length)
       return again(`${S.species.get(species)?.name ?? ""} non può imparare ${wrong.map(x => S.moves.get(x)?.name ?? x).join(", ")}: scegli dall'elenco delle sue mosse.`);
-    const args = {...base, species, level: +d.level, nature: +d.nature, item, friendship: +d.friendship,
+    const args = {...base, species, level: +d.level, nature: +d.nature, item, friendship: d.friendship === "" ? undefined : +d.friendship,
                   ability: d.ability === "" ? undefined : +d.ability,
-                  moves: mv.filter(Boolean), ivs: [0, 1, 2, 3, 4, 5].map(i => +d["iv" + i]), evs: [0, 1, 2, 3, 4, 5].map(i => +d["ev" + i])};
+                  moves: mv.filter(Boolean), ivs: six.map(i => +d["iv" + i]), evs: six.map(i => +d["ev" + i])};
     const op = isNew ? (where.kind === "party" ? "party_add" : "box_add") : (where.kind === "party" ? "party_edit" : "box_edit");
     if (!await edit(op, args, isNew ? "Pokémon aggiunto" : "Pokémon salvato", version) && refusal?.code !== "stale")
       return monDialog(where, m, d, version, refusal?.message);
@@ -1134,19 +1150,21 @@ async function dropUnreadable(op, args, where) {
 // ---- Box -----------------------------------------------------------------
 // ---- Borsa -----------------------------------------------------------------
 function renderBag() {
-  const bag = S.save.bag, cap = Object.fromEntries(S.data.pockets);
-  const rows = bag[S.pocket] || [];
-  $("#tab").innerHTML = `<div class="seg">${POCKET_ORDER.map(p => `<button type="button" data-pocket="${p}" class="${p === S.pocket ? "on" : ""}">${POCKET_NAMES[p]} <span class="muted">${bag[p].length}</span></button>`).join("")}</div>
+  const bag = S.save.bag, pockets = S.data.pockets;
+  const here = pockets.find(p => p.name === S.pocket) || pockets[0];
+  S.pocket = here.name;
+  const rows = bag[S.pocket] || [], limit = id => S.items.get(id)?.limit ?? 0;
+  $("#tab").innerHTML = `<div class="seg">${pockets.map(p => `<button type="button" data-pocket="${p.name}" class="${p.name === S.pocket ? "on" : ""}">${esc(pocketName(p.const))} <span class="muted">${(bag[p.name] || []).length}</span></button>`).join("")}</div>
     <form id="additem" class="bar" style="margin:0 0 12px">
       <input name="what" list="dl-items" placeholder="Aggiungi uno strumento…" required style="flex:1;min-width:200px" aria-label="Strumento">
-      <input type="number" name="quantity" min="1" max="999" value="1" aria-label="Quantità">
+      <input type="number" name="quantity" min="1" value="1" aria-label="Quantità">
       <button class="primary" type="submit">Aggiungi</button>
     </form>
-    <p class="note" style="margin-bottom:10px">Lo strumento va nella tasca che il gioco gli assegna. Le MT sono una ciascuna (New Gold non le consuma); le MN fino a 99, il resto fino a 999.</p>
+    <p class="note" style="margin-bottom:10px">Lo strumento va nella tasca che il gioco gli assegna, e al massimo quanti il gioco ne tiene: una MT è una sola (New Gold non le consuma).</p>
     <div class="scroll"><table>
-      <tr><th>${POCKET_NAMES[S.pocket]} <span class="muted">(${rows.length} di ${cap[S.pocket]} posti)</span></th><th class="num">Quantità</th><th></th></tr>
+      <tr><th>${esc(pocketName(here.const))} <span class="muted">(${rows.length} di ${here.slots} posti)</span></th><th class="num">Quantità</th><th></th></tr>
       ${rows.map(r => `<tr><td>${esc(r.name)}</td>
-        <td class="num"><input type="number" min="1" max="999" value="${r.quantity}" data-item="${r.item}" aria-label="Quantità di ${esc(r.name)}"></td>
+        <td class="num"><input type="number" min="1" max="${limit(r.item)}" value="${r.quantity}" data-item="${r.item}" aria-label="Quantità di ${esc(r.name)}"></td>
         <td class="num"><button type="button" class="small" data-set="${r.item}">Imposta</button> <button type="button" class="small danger" data-del="${r.item}">Togli</button></td></tr>`).join("")
         || `<tr><td colspan="3" class="muted">Tasca vuota.</td></tr>`}
     </table></div>`;
@@ -1229,7 +1247,7 @@ function renderPosition() {
   const pos = S.save.position, c = pos.current, place = S.maps.get(c.map);
   $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">
       <dt>Mappa</dt><dd><strong>${esc(place?.name || "?")}</strong> <span class="muted">${esc(place?.const || "")} · id ${c.map}</span></dd>
-      <dt>Coordinate</dt><dd>x ${c.x}, y ${c.y}, rivolto ${DIRS[c.direction] ?? c.direction}</dd>
+      <dt>Coordinate</dt><dd>x ${c.x}, y ${c.y}, rivolto ${esc(dirName(S.data.directions.find(x => x.value === c.direction)?.const ?? String(c.direction)))}</dd>
       <dt>Continua con warp</dt><dd>${pos.by_warp ? `sì, verso ${esc(S.maps.get(pos.warp.map)?.name || pos.warp.map)} (${pos.warp.x}, ${pos.warp.y})` : "no"}</dd>
     </dl>
     <form id="posform" class="box">
@@ -1238,7 +1256,7 @@ function renderPosition() {
         <label class="f" style="grid-column:1/-1">Mappa<input name="map" list="dl-maps" required value="${esc(place ? ref(mapLabel(place), c.map) : "")}" placeholder="Cerca per nome…"></label>
         <label class="f">x<input type="number" name="x" min="0" max="65535" required value="${c.x}"></label>
         <label class="f">y<input type="number" name="y" min="0" max="65535" required value="${c.y}"></label>
-        <label class="f">Rivolto verso<select name="dir">${DIRS.map((d, i) => `<option value="${i}" ${i === c.direction ? "selected" : ""}>${d}</option>`).join("")}</select></label>
+        <label class="f">Rivolto verso<select name="dir">${S.data.directions.map(x => `<option value="${x.value}" ${x.value === c.direction ? "selected" : ""}>${esc(dirName(x.const))}</option>`).join("")}</select></label>
       </div>
       <p class="note">Scrive la posizione come <span class="mono">savedit.py --where</span>: la posizione attuale e il warp dinamico, con FLAG_UNK_966,
         così Continua entra con un warp e il gioco ricostruisce giocatore, follower e persone della mappa dai dati di zona.
@@ -1334,7 +1352,7 @@ async function init() {
   buildLists();
   const saved = store.get("tab") === "box" ? "party" : store.get("tab");   // the Box tab is part of Squadra now
   S.tab = TABS.some(t => t[0] === saved) ? saved : "trainer";
-  S.box = Math.min(29, Math.max(0, +store.get("box") || 0));
+  S.box = Math.min(S.data.limits.boxes - 1, Math.max(0, +store.get("box") || 0));
   await loadLibrary();
   if (S.lib && (S.lib.missing || (!S.lib.configured && !S.lib.files.length))) openSettings(true);
   const last = store.get("f");

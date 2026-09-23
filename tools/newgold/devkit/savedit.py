@@ -46,6 +46,7 @@ import save_budget  # noqa: E402
 GENDER_RATIO = lambda frac: int(frac * 254.75) if frac <= 1 else 255   # GENDER_RATIO, constants/pokemon.h
 HALF = 0x40000                  # GetChunkOffsetFromCurrentSaveSlot
 FLASH = 2 * HALF                # the two halves the game saves in by turns
+MAX_PLAY_HOURS = 999            # where IGT_Add stops the clock, at 999:59:59
 # Every other size, offset and limit of the save is read from the headers
 # by _layout(), below, and set again when one changes.
 
@@ -981,6 +982,15 @@ def put_in_box(save, number, name, level):
 
 def set_trainer_id(save, value):
     struct.pack_into("<I", save.block("SAVE_PLAYERDATA"), TRAINER_ID, value)
+
+
+@tree_cache
+def badges():
+    """The badges by number (include/constants/badge.h), each with the
+    profile byte and bit PlayerProfile_SetBadgeFlag keeps it in: the first
+    eight in johtoBadges, the rest in kantoBadges."""
+    return [{"const": const, "number": number, "field": "johto" if number < 8 else "kanto", "bit": number % 8}
+            for const, number in sorted(constants("include/constants/badge.h", "BADGE_").items(), key=lambda kv: kv[1])]
 
 
 def set_badges(save, count):
@@ -2007,8 +2017,8 @@ def set_profile(save, money=None, gender=None, johto=None, kanto=None, coins=Non
         struct.pack_into("<H", block, COINS, coins)
     if play_time is not None:
         hours, minutes, seconds = play_time
-        if not (0 <= hours <= 999 and 0 <= minutes < 60 and 0 <= seconds < 60):
-            raise ValueError("play time is up to 999:59:59")
+        if not (0 <= hours <= MAX_PLAY_HOURS and 0 <= minutes < 60 and 0 <= seconds < 60):
+            raise ValueError(f"play time is up to {MAX_PLAY_HOURS}:59:59")
         struct.pack_into("<HBB", block, PLAY_TIME, hours, minutes, seconds)
 
 

@@ -14,6 +14,7 @@ the slots, and no slot written while melonDS runs.
 
 import json
 import os
+import re
 import struct
 import sys
 import tempfile
@@ -399,7 +400,28 @@ class SaveUiTests(unittest.TestCase):
         self.assertNotIn(moves["SURF"], offered)
         self.assertEqual([a["slot"] for a in out["abilities"]], [0, sv.HIDDEN_SLOT])
         self.assertEqual((out["ability"], out["preset"]), (sv.HIDDEN_SLOT, sv.preset_moves(n["CHARIZARD"], 5)))
+        self.assertEqual(out["friendship"], sv.personal_records()[n["CHARIZARD"]]["friendship"],
+                         "a new one's friendship is its species' own")
         self.assertEqual(self.ok(f"/api/species?species={n['CHARIZARD']}&bit=1")["ability"], 0, "no second: the first")
+
+    def test_the_page_takes_the_game_from_the_tree(self):
+        """What exists -- the badges, the pockets in the game's order, the
+        stats, directions and genders, every limit -- comes in /api/data from
+        the tree; the page's Italian names are keyed by the tree's constants,
+        so a key that names nothing there is a translation of something gone."""
+        data = self.ok("/api/data")
+        self.assertEqual([p["const"] for p in data["pockets"]][:2], ["POCKET_ITEMS", "POCKET_MEDICINE"], "sPockets' order")
+        self.assertEqual(data["limits"]["ev"], sv.MAX_EV_PER_STAT)
+        self.assertEqual([b["const"] for b in data["badges"] if b["field"] == "kanto"][0], "BADGE_BOULDER")
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        types = {name[len("TYPE_"):] for name in sv.constants("include/constants/pokemon.h", "TYPE_")}
+        for table, known in (("BADGE_NAMES", {b["const"] for b in data["badges"]}),
+                             ("POCKET_NAMES", {p["const"] for p in data["pockets"]}),
+                             ("STAT_NAMES", {s["const"] for s in data["stats"]}),
+                             ("DIR_NAMES", {d["const"] for d in data["directions"]}),
+                             ("GENDER_MARKS", {g["const"] for g in data["genders"]}), ("TYPES", types)):
+            keys = set(re.findall(r"(\w+):", re.search(rf"const {table} = \{{(.*?)\}};", page, re.S).group(1)))
+            self.assertLessEqual(keys, known, table)
 
     def test_only_what_the_species_can_have(self):
         """A move the species never learns, or an ability slot it lacks, is

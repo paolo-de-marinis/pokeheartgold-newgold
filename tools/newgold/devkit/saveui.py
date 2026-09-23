@@ -810,7 +810,7 @@ class Library:
             if not isinstance(a["play_time"], list) or len(a["play_time"]) != 3:
                 raise Refused("il tempo di gioco: ore, minuti e secondi")
             hours, minutes, seconds = a["play_time"]
-            values["play_time"] = [number(hours, 0, 999, "ore"), number(minutes, 0, 59, "minuti"),
+            values["play_time"] = [number(hours, 0, sv.MAX_PLAY_HOURS, "ore"), number(minutes, 0, 59, "minuti"),
                                    number(seconds, 0, 59, "secondi")]
         sv.set_profile(save, **values)
         if a.get("retag", True) and sv.owner(save) != before:
@@ -1174,15 +1174,35 @@ def species_rules(q):
     return {"moves": [{"id": m, "sources": moves[m]} for m in sorted(moves, key=lambda m: names[m]["name"])],
             "abilities": sv.species_abilities(species, form),
             "ability": sv.ability_slot(species, form, q.get("hidden") == "1", q.get("bit") == "1"),
-            "preset": sv.preset_moves(species, number(q.get("level", 1), 1, 100, "livello"), form)}
+            "preset": sv.preset_moves(species, number(q.get("level", 1), 1, sv.MAX_LEVEL, "livello"), form),
+            "friendship": sv.personal_records()[sv.personal_row(species, form)]["friendship"]}
 
 
 def tables():
-    """The names the page searches: species, moves, items, natures, maps."""
+    """What the page names and offers, as the tree has it: the species,
+    moves, items, natures (and the stat each raises and lowers), maps and
+    Dex pages; the pockets in the order the game shows them; the stats, the
+    badges, the directions and the genders by their constants, which the
+    page's Italian labels are keyed by; and the limits a field is held to."""
+    by_value = lambda header, prefix, below: [
+        {"const": const, "value": value} for const, value in sorted(sv.constants(header, prefix).items(),
+                                                                    key=lambda kv: kv[1]) if 0 <= value < below]
+    genders = {"MON_MALE": sv.MON_MALE, "MON_FEMALE": sv.MON_FEMALE, "MON_GENDERLESS": sv.MON_GENDERLESS}
     return {"species": sv.species_table(), "moves": sv.move_table(),
-            "items": list(sv.item_table().values()), "natures": sv.bank(sv.NATURE_NAMES),
+            "items": [{**row, "limit": sv.item_limit(row["id"])} if row["pocket"] else row
+                      for row in sv.item_table().values()],
+            "natures": sv.bank(sv.NATURE_NAMES), "nature_mods": sv.nature_mods(),
             "maps": [m for m in sv.map_table().values() if standable(m["id"])], "dex": sv.dex_species(),
-            "pockets": [[p["name"], p["slots"]] for p in sv.pockets()]}
+            "pockets": [{k: p[k] for k in ("name", "const", "slots")} for p in sv.pockets()],
+            "stats": by_value("include/constants/pokemon.h", "STAT_", sv.NUM_STATS),
+            "directions": by_value("include/constants/global_fieldmap.h", "DIR_", sv.DIR_MAX),
+            "genders": [{"const": const, "value": value} for const, value in genders.items()],
+            "badges": sv.badges(),
+            "limits": {"party": sv.PARTY_SIZE, "boxes": sv.NUM_BOXES, "box_slots": sv.MONS_PER_BOX,
+                       "name": sv.PLAYER_NAME_LENGTH, "money": sv.MAX_MONEY, "coins": sv.MAX_COINS,
+                       "hours": sv.MAX_PLAY_HOURS, "level": sv.MAX_LEVEL, "moves": sv.MAX_MON_MOVES,
+                       "iv": sv.MAX_IV, "ev": sv.MAX_EV_PER_STAT, "ev_sum": sv.MAX_EV_SUM,
+                       "hidden_slot": sv.HIDDEN_SLOT}}
 
 
 # ---------------------------------------------------------------------------
