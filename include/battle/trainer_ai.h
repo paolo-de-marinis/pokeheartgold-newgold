@@ -72,5 +72,7 @@ BOOL ov10_0221F7F0(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
 BOOL ov10_0221F62C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL ov10_0221FD34(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BOOL noRandom);
 BOOL ov10_0221FE8C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+BOOL ov10_02220010(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u32 checkEffectiveness, u8 randomDenominator);
+BOOL ov10_02220270(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 
 #endif

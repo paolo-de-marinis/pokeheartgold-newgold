@@ -667,7 +667,8 @@ Overlay OVY_10
     Object src/battle/trainer_ai_switch_ineffective.o
     Object asm/overlay_10_trainer_ai_0221FD34.o
     Object src/battle/trainer_ai_switch_absorb.o
-    Object asm/overlay_10_trainer_ai_02220010.o
+    Object src/battle/trainer_ai_switch_resist.o
+    Object asm/overlay_10_trainer_ai_0222036C.o
 }
 Overlay OVY_11
 {
