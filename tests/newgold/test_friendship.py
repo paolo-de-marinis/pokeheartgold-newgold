@@ -260,7 +260,10 @@ def run_check(source, vanilla, reference=""):
         "@HOUR_FUNCTION@": function(read("src/gf_rtc.c"), "GF_RTC_GetTimeOfDayByHour"),
         "@NIGHT_FUNCTION@": function(read("src/gf_rtc.c"), "IsNighttime"),
         "@VANILLA_FUNCTION@": function(vanilla, "GetMonEvolution").replace("GetMonEvolution(", "VanillaGetMonEvolution("),
-        "@NATIVE_FUNCTION@": function(source, "GetMonEvolution"),
+        # GetMonEvolution hands its result to EvolvedPassiveForm, which only
+        # changes a target none of these cases reaches.
+        "@NATIVE_FUNCTION@": (function(source, "EvolvedPassiveForm") + "\n" if "EvolvedPassiveForm(" in source else "")
+        + function(source, "GetMonEvolution"),
         "@REFERENCE@": reference,
     }
     program = FIXTURE

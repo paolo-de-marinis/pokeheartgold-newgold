@@ -2907,6 +2907,24 @@ BOOL Pokemon_TryLevelUp(Pokemon *mon) {
     return FALSE;
 }
 
+// hg-engine keeps a Pokemon's form through evolution, and a wild Dunsparce or
+// Tandemaus can carry form 1 (encounter_check.c, WildMon_SetPassiveForm). There
+// Dudunsparce and Maushold form 1 are the Three-Segment Form and the Family of
+// Three; here those are species of their own, so they are the target.
+static u16 EvolvedPassiveForm(Pokemon *mon, u16 target) {
+    if (GetMonData(mon, MON_DATA_FORM, NULL) != 1) {
+        return target;
+    }
+    switch (target) {
+    case SPECIES_DUDUNSPARCE:
+        return SPECIES_DUDUNSPARCE_THREE_SEGMENT;
+    case SPECIES_MAUSHOLD:
+        return SPECIES_MAUSHOLD_FAMILY_OF_THREE;
+    default:
+        return target;
+    }
+}
+
 u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *method_ret) {
     u16 species;
     u16 heldItem;
@@ -3152,7 +3170,7 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
         break;
     }
     Heap_Free(evoTable);
-    return target;
+    return EvolvedPassiveForm(mon, target);
 }
 
 u16 ReadFromPersonalPmsNarc(u16 species) {

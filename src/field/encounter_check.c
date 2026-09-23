@@ -787,6 +787,36 @@ static u8 EncounterSlot_WildMonLevelRoll(EncounterSlot *encSlot, EncounterGenSta
     return lo + lvl;
 }
 
+// hg-engine's UpdatePassiveForms (src/pokemon.c:907), for a wild Pokemon.
+// Half of all wild Unfezant, Frillish and Jellicent are the female form. The
+// form is a species of its own here, so it is chosen before the Pokemon is
+// made rather than set on it afterwards.
+static u16 WildMon_PassiveFormSpecies(u16 species) {
+    switch (species) {
+    case SPECIES_UNFEZANT:
+        return (LCRandom() & 1) ? SPECIES_UNFEZANT_FEMALE : species;
+    case SPECIES_FRILLISH:
+        return (LCRandom() & 1) ? SPECIES_FRILLISH_FEMALE : species;
+    case SPECIES_JELLICENT:
+        return (LCRandom() & 1) ? SPECIES_JELLICENT_FEMALE : species;
+    default:
+        return species;
+    }
+}
+
+// The rest of UpdatePassiveForms: one wild Dunsparce or Tandemaus in a hundred,
+// by its personality, carries form 1, which GetMonEvolution turns into
+// Dudunsparce's Three-Segment Form or Maushold's Family of Three.
+static void WildMon_SetPassiveForm(Pokemon *mon) {
+    u32 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    u8 form;
+
+    if (species == SPECIES_DUNSPARCE || species == SPECIES_TANDEMAUS) {
+        form = GetMonData(mon, MON_DATA_PERSONALITY, NULL) % 100 == 0;
+        SetMonData(mon, MON_DATA_FORM, &form);
+    }
+}
+
 static void generateWildShinyAndAddToParty(u16 species, u8 level, int battler, u32 otid, EncounterGenState *encounterGen, Pokemon *leadMon, BattleSetup *battleSetup) {
     u8 monGender;
     u8 monNature;
@@ -795,6 +825,7 @@ static void generateWildShinyAndAddToParty(u16 species, u8 level, int battler, u
     u32 personality;
 
     ZeroMonData(wildMon);
+    species = WildMon_PassiveFormSpecies(species);
 
     overrideGenderOrNature = FALSE;
     if (!encounterGen->isEgg) {
@@ -848,6 +879,7 @@ static void generateWildNonShinyAndAddToParty(u16 species, u8 level, int battler
     u8 canCoerceGender;
     Pokemon *wildMon = AllocMonZeroed(HEAP_ID_FIELD2);
     ZeroMonData(wildMon);
+    species = WildMon_PassiveFormSpecies(species);
 
     canCoerceGender = TRUE;
     switch (GetMonBaseStat(species, BASE_GENDER_RATIO)) {
@@ -1381,6 +1413,9 @@ static BOOL addGeneratedMonToBattleSetupParty(int battler, EncounterGenState *en
         u8 form = EncounterGen_ChooseUnownForm(encounterGen);
         SetMonData(pokemon, MON_DATA_FORM, &form);
     }
+    // The passive form first, then the hidden ability, in the reference's
+    // order (enemy_party.c: UpdatePassiveForms, then HIDDEN_ABILITIES_FLAG).
+    WildMon_SetPassiveForm(pokemon);
     Mon_TakeHiddenAbilityFlag(pokemon, FLAG_HIDDEN_ABILITIES);
     return Party_AddMon(battleSetup->party[battler], pokemon);
 }
