@@ -7886,14 +7886,6 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monSpAtk = monSpAtk * 150 / 100;
     }
 
-    if (calcAttacker.item == HOLD_EFFECT_LATI_SPECIAL && !(battleType & BATTLE_TYPE_FRONTIER) && (calcAttacker.species == SPECIES_LATIOS || calcAttacker.species == SPECIES_LATIAS)) {
-        monSpAtk = monSpAtk * 150 / 100;
-    }
-
-    if (calcTarget.item == HOLD_EFFECT_LATI_SPECIAL && !(battleType & BATTLE_TYPE_FRONTIER) && (calcTarget.species == SPECIES_LATIOS || calcTarget.species == SPECIES_LATIAS)) {
-        monSpDef = monSpDef * 150 / 100;
-    }
-
     if (calcTarget.item == HOLD_EFFECT_BOOST_IF_NOT_EVOLVED && ctx->battleMons[battlerIdTarget].canStillEvolve) {
         monDef = monDef * 150 / 100;
         monSpDef = monSpDef * 150 / 100;
@@ -7932,6 +7924,15 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 
     if (calcAttacker.item == HOLD_EFFECT_CUBONE_ATK_UP && (calcAttacker.species == SPECIES_CUBONE || calcAttacker.species == SPECIES_MAROWAK)) {
         monAtk *= 2;
+    }
+
+    // The Soul Dew as the reference has it, the rule from Sun and Moon on: a
+    // fifth more power on a Latios or Latias's Dragon and Psychic moves, and
+    // nothing to either special stat, in the Frontier or out of it. Its
+    // holdEffectParam is 0, so the fifth is written here rather than read from
+    // calcAttacker.mod.
+    if (calcAttacker.item == HOLD_EFFECT_LATI_SPECIAL && (moveType == TYPE_DRAGON || moveType == TYPE_PSYCHIC) && (calcAttacker.species == SPECIES_LATIOS || calcAttacker.species == SPECIES_LATIAS)) {
+        movePower = movePower * 120 / 100;
     }
 
     if (calcAttacker.item == HOLD_EFFECT_DIALGA_BOOST && (moveType == TYPE_DRAGON || moveType == TYPE_STEEL) && calcAttacker.species == SPECIES_DIALGA) {

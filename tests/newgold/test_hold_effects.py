@@ -115,5 +115,22 @@ class HoldEffectTests(unittest.TestCase):
                           f"Pokemon can ever have it")
 
 
+class SoulDew(unittest.TestCase):
+    def test_a_fifth_on_dragon_and_psychic_and_no_stat(self):
+        """The reference's Soul Dew (CalcBaseDamage.c at d0380a487): x1.2 to a
+        Latios or Latias's Dragon and Psychic moves, and nothing to either
+        special stat, in the Frontier or not."""
+        from test_terrain import overlay_function
+        body = overlay_function("CalcMoveDamage")
+        blocks = re.findall(r"if \(([^{]*HOLD_EFFECT_LATI_SPECIAL[^{]*)\) \{\n(.*?)\n    \}", body, re.S)
+        self.assertEqual(len(blocks), 1, blocks)
+        condition, action = blocks[0]
+        self.assertIn("calcAttacker.item == HOLD_EFFECT_LATI_SPECIAL", condition)
+        self.assertIn("moveType == TYPE_DRAGON || moveType == TYPE_PSYCHIC", condition)
+        self.assertIn("calcAttacker.species == SPECIES_LATIOS || calcAttacker.species == SPECIES_LATIAS", condition)
+        self.assertNotIn("BATTLE_TYPE_FRONTIER", condition)
+        self.assertEqual(action.strip(), "movePower = movePower * 120 / 100;")
+
+
 if __name__ == "__main__":
     unittest.main()
