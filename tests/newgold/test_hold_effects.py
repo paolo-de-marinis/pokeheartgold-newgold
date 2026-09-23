@@ -79,8 +79,9 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # The three origin items and Ogerpon's three masks took six.
 # The Gems took one, the Binding Band one, the Adrenaline Orb one, the
 # Blunder Policy one, the Red Card and the Eject Button two, the Eject Pack
-# one, the Mirror Herb one.
-IMPORTED_AND_UNREAD = 4
+# one, the Mirror Herb one. The Rusted Sword and Shield are read as items
+# (READ_AS_THE_ITEM) and took two.
+IMPORTED_AND_UNREAD = 2
 
 
 def effects_defined():
@@ -100,11 +101,28 @@ def effects_in_records():
     return {line.split(",")[2] for line in ITEM_DATA.read_text().splitlines()[1:] if line.strip()}
 
 
+# Two effects the game answers through the item rather than the effect: a
+# Zacian or Zamazenta holding its Rusted Sword or Shield is crowned when a
+# battle begins (Mon_ChangeToBattleForm), which asks for the item, as the
+# reference's ChangeToBattleForm does (src/pokemon.c:2240 at d0380a487).
+# Neither effect is named by any line of either tree. Each counts as read only
+# while its item is.
+READ_AS_THE_ITEM = {
+    "HOLD_EFFECT_TRANSFORM_ZACIAN": "ITEM_RUSTED_SWORD",
+    "HOLD_EFFECT_TRANSFORM_ZAMAZENTA": "ITEM_RUSTED_SHIELD",
+}
+
+
 def effects_read():
-    """Every hold effect named anywhere under src/ or in a battle script, by name."""
-    read = set()
+    """Every hold effect named anywhere under src/ or in a battle script, by
+    name, and those READ_AS_THE_ITEM whose item src/ names."""
+    read, items = set(), set()
     for path in list(SRC.rglob("*.c")) + list(SCRIPTS.rglob("*.s")):
-        read.update(re.findall(r"HOLD_EFFECT_[A-Z0-9_]+", path.read_text(errors="replace")))
+        text = path.read_text(errors="replace")
+        read.update(re.findall(r"HOLD_EFFECT_[A-Z0-9_]+", text))
+        if path.suffix == ".c":
+            items.update(re.findall(r"ITEM_[A-Z0-9_]+", text))
+    read.update(effect for effect, item in READ_AS_THE_ITEM.items() if item in items)
     return read
 
 
@@ -136,6 +154,11 @@ class HoldEffectTests(unittest.TestCase):
         self.assertEqual(len(unread), IMPORTED_AND_UNREAD,
                          "the unread hold effects are no longer the block konefr's item "
                          "range brought with it:\n" + "\n".join(unread))
+
+    def test_an_effect_read_as_its_item_is_that_items(self):
+        records = item_records()
+        for effect, item in READ_AS_THE_ITEM.items():
+            self.assertEqual(records[item][0], effect, item)
 
     def test_every_added_effect_is_carried_by_an_item(self):
         records = effects_in_records()
