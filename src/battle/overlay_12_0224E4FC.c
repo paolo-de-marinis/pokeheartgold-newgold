@@ -9870,6 +9870,12 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower *= 2;
     }
 
+    // Payback doubles against a Pokemon that has already acted this turn
+    // (the reference's CalcBaseDamage, asking the same IsMovingAfterClient).
+    if (moveNo == MOVE_PAYBACK && ov12_0225561C(ctx, battlerIdTarget) == TRUE) {
+        movePower *= 2;
+    }
+
     moveType = BattleMoveTypeForAbility(ctx, calcAttacker.ability, moveNo, type & 0x3F);
 
     GF_ASSERT(ctx->unk_2158 >= 10);

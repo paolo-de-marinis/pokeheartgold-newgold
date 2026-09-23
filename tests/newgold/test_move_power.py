@@ -132,6 +132,17 @@ class DoublingTests(unittest.TestCase):
         from test_repels import read
         self.assertNotIn("BSCRIPT_VAR_MOVE_POWER", read("files/battledata/script/effect_script/effect_script_0231.s"))
 
+    def test_payback_doubles_against_a_pokemon_that_has_acted(self):
+        run_c(self, damage_program(f"""
+    reset(4); EXPECT({hit("MOVE_PAYBACK")}, 46);
+    S.acted[1] = TRUE; EXPECT({hit("MOVE_PAYBACK")}, 90);
+    // The target's action, not the user's; and only Payback asks.
+    reset(4); S.acted[0] = TRUE; EXPECT({hit("MOVE_PAYBACK")}, 46);
+    reset(4); S.acted[1] = TRUE; EXPECT({hit("MOVE_TACKLE")}, 46);
+"""))
+        from test_repels import read
+        self.assertNotIn("CalcPaybackPower", read("files/battledata/script/effect_script/effect_script_0230.s"))
+
 
 if __name__ == "__main__":
     unittest.main()
