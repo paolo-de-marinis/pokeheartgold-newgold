@@ -69,7 +69,6 @@ STILL_DIFFERENT = {
     198: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     217: IN_C.format("Wake-Up Slap's doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
     222: IN_C.format("Natural Gift's type, power and berry, CalcBaseDamage.c"),
-    223: "Feint's hit on a target that is not protecting itself",
     224: IN_C.format("the berry eaten, ServerDoPostMoveEffects.c"),
     228: IN_C.format("the switch, ServerDoPostMoveEffects.c"),
     230: IN_C.format("Payback's power, CalcBaseDamage.c"),
@@ -204,6 +203,12 @@ class BroughtOverTests(unittest.TestCase):
         # A Pokemon given Ghost as a third type (Trick-or-Treat) curses the
         # Ghost way; retail looked at the first two types only.
         self.assertIn("GoToIfThirdType BATTLER_CATEGORY_ATTACKER, TYPE_GHOST", script(109))
+    def test_feint_hits_a_target_that_is_not_protecting(self):
+        # From Generation V Feint deals its damage whether or not there was a
+        # protection to break; retail failed.
+        text = script(223)
+        failure = re.search(r"TryFeint (\w+)", text).group(1)
+        self.assertRegex(text, failure + r":\s*CalcCrit\s*CalcDamage\s*End")
 
 
 if __name__ == "__main__":
