@@ -92,6 +92,8 @@ label.f input, label.f select { color: var(--text); font-size: 14px; }
 .note { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
 .box { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 14px; }
 .box > h3 { font-size: 14px; }
+.type { display: inline-block; padding: 1px 7px; border-radius: 9px; font-size: 11px; font-weight: 700; letter-spacing: .02em;
+        color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.35); margin-right: 3px; vertical-align: 1px; }
 .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px 12px; }
 .badges label { display: flex; gap: 6px; align-items: center; }
 .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
@@ -244,6 +246,14 @@ const STATS = ["PS", "Att", "Dif", "Vel", "AttSp", "DifSp"];
 const NAT_STATS = ["Att", "Dif", "Vel", "AttSp", "DifSp"];
 const DIRS = ["su", "giù", "sinistra", "destra"];
 const GENDER_MARK = ["♂", "♀", ""];
+// The types, as the Italian games name and colour them.
+const TYPES = {NORMAL: ["Normale", "#9a9a6b"], FIGHTING: ["Lotta", "#b8302a"], FLYING: ["Volante", "#8f7ad8"],
+  POISON: ["Veleno", "#983d98"], GROUND: ["Terra", "#c9a54f"], ROCK: ["Roccia", "#a8902f"], BUG: ["Coleottero", "#95a31d"],
+  GHOST: ["Spettro", "#6a5390"], STEEL: ["Acciaio", "#8f8fae"], MYSTERY: ["???", "#5f8f85"], FIRE: ["Fuoco", "#e5731f"],
+  WATER: ["Acqua", "#5a7fe0"], GRASS: ["Erba", "#5ea83a"], ELECTRIC: ["Elettro", "#d4a90f"], PSYCHIC: ["Psico", "#e8497b"],
+  ICE: ["Ghiaccio", "#6cb8b8"], DRAGON: ["Drago", "#6134e8"], DARK: ["Buio", "#6b5445"], FAIRY: ["Folletto", "#d97fa0"]};
+const typeBadges = types => (types || []).map(t => { const [name, colour] = TYPES[t] || [t, "#777"]; return `<span class="type" style="background:${colour}">${esc(name)}</span>`; }).join("");
+const typeNames = types => (types || []).map(t => (TYPES[t] || [t])[0]).join("/");
 
 const S = {data: null, lib: null, f: null, save: null, tab: "trainer", box: 0, pocket: "items",
            dex: {changes: new Map(), q: "", show: "all"}, melon: false, busy: 0};
@@ -743,7 +753,8 @@ function monCard(m, i, count) {
   const hp = m.stats ? Math.round(100 * m.hp / Math.max(1, m.stats[0])) : null;
   return `<div class="mon">
     <div class="head">${iconImg(m, 48)}<div><div class="nm">${esc(m.nickname || m.species_name)} ${GENDER_MARK[m.gender] || ""} ${m.shiny ? `<span class="star" title="Cromatico">★</span>` : ""}</div>
-      <div class="sub">${esc(m.species_name)} · Lv. ${m.level}${m.egg ? " · uovo" : ""}</div></div></div>
+      <div class="sub">${esc(m.species_name)} · Lv. ${m.level}${m.egg ? " · uovo" : ""}</div>
+      ${m.egg ? "" : `<div>${typeBadges(m.types)}</div>`}</div></div>
     ${hp !== null ? `<div class="hp" title="PS ${m.hp}/${m.stats[0]}"><i style="width:${hp}%"></i></div><div class="sub">PS ${m.hp}/${m.stats[0]}</div>` : ""}
     <div class="sub">${esc(m.nature_name)} · ${esc(m.ability_name)}${m.item ? ` · ${esc(m.item_name)}` : ""}</div>
     <ul>${m.moves.map(mv => `<li>${esc(mv.name)} <span class="muted">${mv.pp}/${mv.pp_max}</span></li>`).join("")}</ul>
@@ -782,6 +793,7 @@ function monDialog(where, m, typed = null, version = S.save.version) {
   const six = (name, vals, max) => `<div class="stats6">${STATS.map((s, i) => `<label class="f">${s}<input type="number" name="${name}${i}" min="0" max="${max}" value="${vals[i]}"></label>`).join("")}</div>`;
   const summary = isNew ? "" : `<div class="monsum">${iconImg(m, 64)}<dl class="kv">
       <dt>Soprannome</dt><dd>${esc(m.nickname)}${m.nicknamed ? "" : ` <span class="muted">(nome della specie)</span>`}</dd>
+      ${m.egg ? "" : `<dt>Tipo</dt><dd>${typeBadges(m.types)}</dd>`}
       <dt>Allenatore</dt><dd>${esc(m.ot_name)} · ID ${String(m.ot_id).padStart(5, "0")}</dd>
       <dt>Abilità</dt><dd>${esc(m.ability_name)}${m.hidden_ability ? " (nascosta)" : ""}</dd>
       <dt>Personalità</dt><dd class="mono">${m.personality.toString(16).padStart(8, "0")}${m.shiny ? ` <span class="star">★ cromatico</span>` : ""}${m.mint !== null ? ` · menta: ${esc(S.data.natures[m.mint])}` : ""}</dd>
@@ -862,7 +874,7 @@ function renderBox() {
       <button type="button" class="small" id="nextbox" aria-label="Box successivo">▶</button>
       <span class="muted">Il gioco è aperto sul box ${boxes.current + 1}.</span>
     </div>
-    <div class="pc">${mons.map((m, s) => `<button type="button" class="${m ? "full" : ""}" data-slot="${s}" title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
+    <div class="pc">${mons.map((m, s) => `<button type="button" class="${m ? "full" : ""}" data-slot="${s}" title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}${m.egg ? "" : " · " + typeNames(m.types)}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
     <p class="note">Clic su un posto occupato per modificarlo o spostarlo in squadra; su uno vuoto per aggiungere un Pokémon.</p>`;
   const go = b => { S.box = (b + 30) % 30; store.set("box", S.box); renderBox(); };
   $("#prevbox").onclick = () => go(S.box - 1);

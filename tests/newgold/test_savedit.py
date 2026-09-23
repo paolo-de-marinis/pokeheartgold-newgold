@@ -163,6 +163,20 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertTrue(again.legacy, "an edit keeps the layout the game will convert")
         self.assertEqual(sv.profile(again)["money"], 4242)
 
+    def test_a_pokemon_s_types_are_the_game_s(self):
+        """GetMonData's MON_DATA_TYPE_1/_2: the species' two, one when they
+        are the same; Arceus with Multitype its plate's, Silvally with RKS
+        System its memory's (src/pokemon.c)."""
+        n, ab = sv.species_numbers(), sv.constants("include/constants/abilities.h", "ABILITY_")
+        items = {v["const"]: k for k, v in sv.item_table().items()}
+        self.assertEqual(sv.mon_types(n["CHARIZARD"], 0, 0), ["FIRE", "FLYING"])
+        self.assertEqual(sv.mon_types(n["CLEFAIRY"], 0, 0), ["FAIRY"])
+        self.assertEqual(sv.mon_types(n["ARCEUS"], ab["ABILITY_MULTITYPE"], items["ITEM_FLAME_PLATE"]), ["FIRE"])
+        self.assertEqual(sv.mon_types(n["ARCEUS"], ab["ABILITY_MULTITYPE"], 0), ["NORMAL"])
+        self.assertEqual(sv.mon_types(n["SILVALLY"], ab["ABILITY_RKS_SYSTEM"], items["ITEM_WATER_MEMORY"]), ["WATER"])
+        self.assertEqual(sv.describe_mon(sv.party_raw(self.open())[0])["types"],
+                         sv.mon_types(sv.describe_mon(sv.party_raw(self.open())[0])["species"], 0, 0))
+
     def test_crc16_is_the_bitwise_one(self):
         data = bytes(range(256)) * 9
         self.assertEqual(sv.crc16(data), reference_crc16(data))

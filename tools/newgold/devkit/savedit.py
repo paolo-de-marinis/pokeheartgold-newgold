@@ -1255,6 +1255,52 @@ def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, 
     return raw if party else raw[:BOX_MON]
 
 
+@functools.cache
+def item_types():
+    """GetArceusTypeByHeldItemEffect and GetSilvallyTypeByHeldItemEffect as
+    src/pokemon.c writes them -- hold effect to type, "default" for the rest
+    -- and every item's hold effect from item_data.csv, by item id."""
+    source = (ROOT / "src/pokemon.c").read_text()
+    tables = {}
+    for fn in ("GetArceusTypeByHeldItemEffect", "GetSilvallyTypeByHeldItemEffect"):
+        start = source.index(f"u32 {fn}(")
+        table, waiting = {}, []
+        for line in source[start:source.index("\n}\n", start)].splitlines():
+            case = re.match(r"\s*(?:case (HOLD_EFFECT_\w+)|(default)):", line)
+            if case:
+                waiting.append(case.group(1) or "default")
+            ret = re.search(r"return (TYPE_\w+);", line)
+            if ret:
+                table.update({key: ret.group(1) for key in waiting})
+                waiting = []
+        tables[fn] = table
+    with (ROOT / "files/itemtool/itemdata/item_data.csv").open() as f:
+        effect = {row["item"]: row["holdEffect"] for row in csv.DictReader(f)}
+    held = {number: effect.get(row["const"], "HOLD_EFFECT_NONE") for number, row in item_table().items()}
+    return tables["GetArceusTypeByHeldItemEffect"], tables["GetSilvallyTypeByHeldItemEffect"], held
+
+
+def mon_types(species, ability, item):
+    """GetMonData's MON_DATA_TYPE_1 and _2: Arceus with Multitype is its
+    plate's type and Silvally with RKS System its memory's, the rest the
+    species' own (forms being species here). Names without TYPE_, one when
+    both are the same."""
+    numbers, abilities = species_numbers(), constants("include/constants/abilities.h", "ABILITY_")
+    arceus, silvally, held = item_types()
+    if species == numbers["ARCEUS"] and ability == abilities["ABILITY_MULTITYPE"]:
+        types = [arceus.get(held.get(item, "HOLD_EFFECT_NONE"), arceus.get("default", "TYPE_NORMAL"))] * 2
+    elif species == numbers.get("SILVALLY") and ability == abilities["ABILITY_RKS_SYSTEM"]:
+        types = [silvally.get(held.get(item, "HOLD_EFFECT_NONE"), silvally.get("default", "TYPE_NORMAL"))] * 2
+    else:
+        types = personal_records()[species]["types"]
+    out = []
+    for name in types:
+        name = name[len("TYPE_"):]
+        if name not in out:
+            out.append(name)
+    return out
+
+
 def describe_mon(raw):
     """Everything the page shows about one Pokemon; None for an empty slot,
     {"ok": False} for one whose checksum fails (the game's Bad Egg)."""
@@ -1288,6 +1334,7 @@ def describe_mon(raw):
            "ability": ability, "ability_name": abilities[ability] if ability < len(abilities) else str(ability),
            "hidden_ability": bool((b[0x19] >> 6) & HIDDEN_ABILITY_BIT),
            "item": item, "item_name": "" if not item else items[item]["name"] if item in items else f"#{item}",
+           "types": mon_types(species, ability, item),
            "friendship": a[0x0C], "moves": moves,
            "ivs": [(ivword >> (5 * i)) & 31 for i in range(6)], "evs": list(a[0x10:0x16]),
            "ot_name": decode_text(struct.unpack_from("<8H", d, 0)), "ot_id": ot_id & 0xFFFF,
