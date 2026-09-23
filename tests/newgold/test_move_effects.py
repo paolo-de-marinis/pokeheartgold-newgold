@@ -198,8 +198,6 @@ UNREAD_HERE = {
     "ATK_SP_ATK_SPEED_UP_2_DEF_SP_DEF_DOWN": "script: each stat change in subscript 349 refuses at the limit",
     "CONFUSE_HIT_CRASH_ON_MISS": "script: it sets the crash flag and Reckless's boost itself",
     "ATK_SP_ATK_UP": "script: subscript 346 refuses when both stats are at +6, the reference's up-front check",
-    "HIT_TWICE_AND_FLINCH": "not ported: King's Rock goes by the record's bit 5, set here, where the "
-                            "reference leaves out every flinching effect",
     "ATK_SP_ATK_SPEED_UP_2": "unused",
     "SHED_TAIL": "not ported: subscript 343 makes the decoy but the user never switches out",
     "QUASH": "not ported: a substitute does not stop it here (the reference's substitute list)",

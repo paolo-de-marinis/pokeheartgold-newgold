@@ -233,10 +233,15 @@ class TrainerTests(unittest.TestCase):
 
     @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
     def test_the_unimplemented_moves_are_the_engine_s(self):
-        """The table is the importer's reading of d0380a487's data/Moves.c;
-        konefr flags the same 79."""
-        listed = re.findall(r"MOVE_(\w+)", re.search(r"sUnimplementedMoves\[\] = \{(.*?)\};",
-                                                   (ROOT / "src/move.c").read_text(), re.S)[1])
+        """The flag in the move table is the importer's reading of d0380a487's
+        data/Moves.c; konefr flags the same 79."""
+        table = (ROOT / "files/poketool/waza/waza_tbl.narc").read_bytes()
+        count = struct.unpack_from("<H", table, 0x18)[0]
+        spans = [struct.unpack_from("<II", table, 0x1C + 8 * i) for i in range(count)]
+        base = table.index(b"GMIF") + 8
+        numbers = {int(v): n for n, v in re.findall(r"#define MOVE_(\w+)\s+(\d+)\b",
+                                                    (ROOT / "include/constants/moves.h").read_text())}
+        listed = [numbers[i] for i, (a, _) in enumerate(spans) if table[base + a + 11] & 0x20]
         for revision in (gmm.ENGINE, gmm.NEWGOLD):
             blocks = import_moves.records_in(gmm.git_show(revision, "data/Moves.c"))
             flagged = {name for name, block in blocks.items()
