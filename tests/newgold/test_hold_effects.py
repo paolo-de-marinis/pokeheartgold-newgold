@@ -78,8 +78,9 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # The Blank Plate's power took one more.
 # The three origin items and Ogerpon's three masks took six.
 # The Gems took one, the Binding Band one, the Adrenaline Orb one, the
-# Blunder Policy one, and the Red Card and the Eject Button two.
-IMPORTED_AND_UNREAD = 6
+# Blunder Policy one, the Red Card and the Eject Button two, the Eject Pack
+# one.
+IMPORTED_AND_UNREAD = 5
 
 
 def effects_defined():
@@ -491,7 +492,8 @@ def walk(script, answer):
             if (args[0] == "CHECK_OPCODE_HAVE") == bool(answer(args[2])):
                 i = labels[args[3]]
         elif op == "CompareMonDataToValue" and args[0] == "OPCODE_EQU":
-            if answer(args[2]) == int(args[3], 0):
+            value = int(args[3], 0) if args[3][0].isdigit() else args[3]
+            if answer(args[2]) == value:
                 i = labels[args[4]]
         elif op == "CompareMonDataToValue" and args[0] == "OPCODE_FLAG_SET":
             if answer(args[3]):
@@ -744,6 +746,67 @@ class SwitchItemTests(unittest.TestCase):
         self.assertIn("RemoveItem BATTLER_CATEGORY_ATTACKER", card)
         dragged = script[script.index("Call BATTLE_SUBSCRIPT_HAZARDS_CHECK"):script.index("_SUCTION_CUPS:")]
         self.assertIn("BATTLE_STATUS2_UTURN", dragged)
+
+
+EJECT_PACK_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/battle_subscript.h"
+#include "constants/items.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+typedef struct { int hp; } BattleMon;
+typedef struct { int battlerIdTemp; u8 statLoweredBattlers; BattleMon battleMons[4]; } BattleContext;
+static int sItem;
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return sItem; }
+static u32 MaskOfFlagNo(int flagNo) { return 1u << flagNo; }
+@FUNCTION@
+int main(void) {
+    BattleContext ctx = { -1, 1 << 2, { { 10 }, { 10 }, { 10 }, { 10 } } };
+    sItem = HOLD_EFFECT_SWITCH_OUT_ON_STAT_DROP;
+    assert(CheckEjectPack(&ctx, 2) == BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM && ctx.battlerIdTemp == 2);
+    assert(CheckEjectPack(&ctx, 1) == BATTLE_SUBSCRIPT_NONE);
+    ctx.battleMons[2].hp = 0;
+    assert(CheckEjectPack(&ctx, 2) == BATTLE_SUBSCRIPT_NONE);
+    ctx.battleMons[2].hp = 10;
+    sItem = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT;
+    assert(CheckEjectPack(&ctx, 2) == BATTLE_SUBSCRIPT_NONE);
+    return 0;
+}
+"""
+
+
+class EjectPackTests(unittest.TestCase):
+    """The Eject Pack (ServerDoPostMoveEffects.c:1755 and subscript 340 at
+    d0380a487; Pokemon Central's Zainofuga): a stat lowered during the move,
+    and once the move is over its holder goes back."""
+
+    def test_who_goes_back(self):
+        body = function(OVERLAY.read_text(), "CheckEjectPack")
+        run_c(EJECT_PACK_FIXTURE.replace("@FUNCTION@", body))
+
+    def test_a_lowered_stat_is_written_down_for_the_move(self):
+        change = function(COMMANDS.read_text(), "BtlCmd_ChangeStatStage")
+        decrease = change[change.index("} else { // Stat Decrease"):]
+        self.assertIn("ctx->statLoweredBattlers |= MaskOfFlagNo(ctx->battlerIdStatChange);", decrease)
+        self.assertIn("ctx->statLoweredBattlers = 0;", function(CONTROLLER.read_text(), "ov12_02249460"))
+        self.assertIn("ctx->statLoweredBattlers &= ~MaskOfFlagNo(battlerId);",
+                      function(OVERLAY.read_text(), "BattleSystem_GetBattleMon"))
+
+    def test_asked_after_the_users_items_and_not_after_another_switch(self):
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        ask = body.index("CheckEjectPack(ctx, ctx->turnOrder[ctx->unk_34++])")
+        self.assertLess(body.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"), ask)
+        self.assertLess(body.index("CheckSwitchItemOnHit"), ask)
+        self.assertIn("if (ctx->unk_34 != SWITCH_ITEM_USED) {\n                ctx->unk_34 = 0;", body)
+
+    def test_the_pack_has_its_own_line(self):
+        script = subscript_named("BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM")
+        self.assertEqual(walk(script, {"REPLACEMENT": True, "BMON_DATA_HELD_ITEM": "ITEM_EJECT_PACK"}.get),
+                         ["BATTLE_SUBSCRIPT_PURSUIT", "BATTLE_SUBSCRIPT_SHOW_PARTY_LIST"])
+        pack = script[script.index("_EJECT_PACK:"):script.index("_SWITCHED:")]
+        self.assertIn("PrintMessage msg_0197_01625, TAG_NICKNAME, BATTLER_CATEGORY_MSG_BATTLER_TEMP", pack)
+        self.assertIn("BMON_DATA_HELD_ITEM, ITEM_EJECT_PACK, _EJECT_PACK", script)
 
 
 if __name__ == "__main__":

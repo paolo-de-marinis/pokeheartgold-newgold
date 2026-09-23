@@ -967,6 +967,10 @@ static void ov12_02249460(BattleSystem *battleSystem, BattleContext *ctx) {
         return;
     }
 
+    // What the Eject Pack answers is a stat lowered during the action about
+    // to be taken, not one lowered on the way in before it or at the end of
+    // the last turn.
+    ctx->statLoweredBattlers = 0;
     // Before any action, and before the end of the turn: an Illusion whose
     // Pokemon no longer has the ability drops, whatever took it away.
     {
@@ -4794,8 +4798,31 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 flag = 1;
             }
             ctx->unk_30++;
+            if (ctx->unk_34 != SWITCH_ITEM_USED) {
+                ctx->unk_34 = 0;
+            }
             break;
-        case 5: {
+        case 5:
+            // An Eject Pack on anyone who had a stat lowered during the move,
+            // after the user's own items, where the reference asks it; not
+            // once a Red Card or an Eject Button has sent somebody away.
+            while (ctx->unk_34 < maxBattlers) {
+                int script = CheckEjectPack(ctx, ctx->turnOrder[ctx->unk_34++]);
+
+                if (script != BATTLE_SUBSCRIPT_NONE) {
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                    ctx->commandNext = ctx->command;
+                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                    ctx->unk_34 = SWITCH_ITEM_USED;
+                    flag = 1;
+                    break;
+                }
+            }
+            if (flag == 0) {
+                ctx->unk_30++;
+            }
+            break;
+        case 6: {
             // Emergency Exit and Wimp Out, one Pokemon at a time: this step
             // comes round again after each, until none is left to go.
             int script;
@@ -4810,7 +4837,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 6:
+        case 7:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;

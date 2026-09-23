@@ -2583,6 +2583,8 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
         if (mon->statChanges[stat + 1] < 0) {
             mon->statChanges[stat + 1] = 0;
         }
+        // For an Eject Pack, asked once the move is over.
+        ctx->statLoweredBattlers |= MaskOfFlagNo(ctx->battlerIdStatChange);
     }
 
     return FALSE;

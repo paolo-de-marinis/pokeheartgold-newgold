@@ -608,6 +608,12 @@ typedef struct BattleContext {
     // left in the move (hg-engine's gemBoostingMove). Cleared with the rest
     // of the move's state in BattleContext_Init.
     u8 gemBoostingMove;
+    // Which battlers have had a stat lowered during the action being taken, a
+    // bit each, for the Eject Pack once the move is over (the reference's
+    // anyStatLoweredThisTurn). Cleared as each action is dispatched, and for
+    // one battler when a Pokemon is loaded into its slot, so what comes in
+    // does not answer for what left.
+    u8 statLoweredBattlers;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

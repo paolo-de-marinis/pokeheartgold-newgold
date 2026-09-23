@@ -190,6 +190,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->battleMons[battlerId].imposterFlag = 0;
     ctx->battleMons[battlerId].hospitalityFlag = 0;
     ctx->battleMons[battlerId].neutralizingGasFlag = 0;
+    ctx->statLoweredBattlers &= ~MaskOfFlagNo(battlerId);
     // Kept off the BattleMon because that structure's size is pinned; cleared
     // here, which is where the reference clears its copy.
     ctx->psychicTerrainMoveUsed[battlerId] = 0;
@@ -8029,6 +8030,25 @@ int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int bat
         return BATTLE_SUBSCRIPT_RED_CARD;
     }
     return BATTLE_SUBSCRIPT_NONE;
+}
+
+// The Eject Pack, once the move is over: a holder that had a stat lowered
+// during it goes back, its trainer choosing who comes in, whoever lowered the
+// stat -- a foe's move, the holder's own Close Combat, Intimidate from a
+// Pokemon a pivot move brought in, Sticky Web on the way in
+// (ServerDoPostMoveEffects.c:1755 at d0380a487; its end-of-turn and switch-in
+// checks are commented out there, and are not here either). What only swaps or
+// resets stages lowers nothing and does not count. Subscript SWITCH_OUT_ITEM
+// finds out whether there is anyone to come in. Returns the subscript, with
+// the holder in battlerIdTemp, or BATTLE_SUBSCRIPT_NONE.
+int CheckEjectPack(BattleContext *ctx, int battlerId) {
+    if (GetBattlerHeldItemEffect(ctx, battlerId) != HOLD_EFFECT_SWITCH_OUT_ON_STAT_DROP
+        || ctx->battleMons[battlerId].hp == 0
+        || !(ctx->statLoweredBattlers & MaskOfFlagNo(battlerId))) {
+        return BATTLE_SUBSCRIPT_NONE;
+    }
+    ctx->battlerIdTemp = battlerId;
+    return BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM;
 }
 
 int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) {
