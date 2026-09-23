@@ -35,11 +35,38 @@ HAS_MOVES, HAS_ITEM, HAS_ABILITY = 0x01, 0x02, 0x04
 TYPE_NAMES = {0: "TRTYPE_MON", HAS_MOVES: "TRTYPE_MON_MOVES",
               HAS_ITEM: "TRTYPE_MON_ITEM", HAS_MOVES | HAS_ITEM: "TRTYPE_MON_ITEM_MOVES"}
 
-# A hidden ability is not one a personality can pick, so it is asked for by
-# name and written onto the Pokemon once it exists.
-ABILITY_SLOTS = {"TRAINER_POKEMON_ABILITY_1": "TRPOKE_ABILITY_OVERRIDE_FIRST",
-                 "TRAINER_POKEMON_ABILITY_2": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-                 "TRAINER_POKEMON_ABILITY_HIDDEN": "TRPOKE_ABILITY_OVERRIDE_HIDDEN"}
+# The reference's slot constants are the byte its MakeTrainerPokemonParty hands
+# to the retail personality code, TrMon_OverridePidGender here, before it
+# writes the ability outright. 0x00 leaves the personality alone; 0x20 is this
+# table's SECOND nibble and sets its low bit; 0x02 is the FEMALE gender nibble,
+# so a hidden slot also sets the personality modifier to the species' gender
+# ratio less two -- which carries over to the party members after it. Each is
+# translated into the gender and ability nibbles that do the same here: the
+# same effect on the personality, and TrMon_ApplyAbilitySlot writing the same
+# ability.
+ABILITY_SLOTS = {
+    "TRAINER_POKEMON_ABILITY_1": ("TRPOKE_GENDER_OVERRIDE_OFF", "TRPOKE_ABILITY_OVERRIDE_OFF"),
+    "TRAINER_POKEMON_ABILITY_2": ("TRPOKE_GENDER_OVERRIDE_OFF", "TRPOKE_ABILITY_OVERRIDE_SECOND"),
+    "TRAINER_POKEMON_ABILITY_HIDDEN": ("TRPOKE_GENDER_OVERRIDE_FEMALE", "TRPOKE_ABILITY_OVERRIDE_HIDDEN"),
+}
+
+# An ability named outright is written instead of the slot's, and the slot
+# still acts on the personality. So the nibble keeps the slot's effect on the
+# personality and writes the named ability: the second one on a slot that
+# leaves the personality alone is SECOND_BY_NAME. A slot whose effect no
+# nibble for the named ability shares is reported rather than approximated.
+NAMED = {"TRPOKE_ABILITY_OVERRIDE_FIRST": "TRPOKE_ABILITY_OVERRIDE_OFF",
+         "TRPOKE_ABILITY_OVERRIDE_SECOND": "TRPOKE_ABILITY_OVERRIDE_SECOND_BY_NAME",
+         "TRPOKE_ABILITY_OVERRIDE_HIDDEN": "TRPOKE_ABILITY_OVERRIDE_HIDDEN"}
+
+
+def named_override(slot, named):
+    """The ability nibble for an entry with this slot naming this ability."""
+    if slot != "TRAINER_POKEMON_ABILITY_2":
+        return NAMED[named]
+    if named != "TRPOKE_ABILITY_OVERRIDE_SECOND":
+        raise ValueError(f"{slot} with {named} named: no nibble does both")
+    return ABILITY_SLOTS[slot][1]
 
 DOUBLE = {"SINGLE_BATTLE": 0, "DOUBLE_BATTLE": 2, "NO_PARTNER_DOUBLE_BATTLE": 3}
 
@@ -64,9 +91,8 @@ def native(name):
 def personal_abilities():
     """Each species' first, second and hidden ability, from the personal data.
 
-    This is what a slot override resolves to at battle time: FIRST and SECOND
-    bias the personality so CreateMon picks abilities[0] or abilities[1], and
-    HIDDEN writes the hidden one on afterwards.
+    This is what a slot override resolves to at battle time:
+    TrMon_ApplyAbilitySlot writes the first, the second or the hidden one.
     """
     rows = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
     return {"SPECIES_" + row["species"]:
@@ -162,10 +188,11 @@ def translate(block, flags, types):
 
     party = []
     for member in party_members(block):
+        slot = re.search(r"\.abilitySlot\s*=\s*(\w+)", member).group(1)
         entry = {
             "difficulty": int(re.search(r"\.ivs\s*=\s*(\d+)", member).group(1)),
-            "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-            "abilityOverride": ABILITY_SLOTS[re.search(r"\.abilitySlot\s*=\s*(\w+)", member).group(1)],
+            "genderOverride": ABILITY_SLOTS[slot][0],
+            "abilityOverride": ABILITY_SLOTS[slot][1],
             "level": int(re.search(r"\.level\s*=\s*(\d+)", member).group(1)),
             "species": re.search(r"\.species\s*=\s*(SPECIES_[A-Z0-9_]+)", member).group(1),
         }
@@ -181,8 +208,8 @@ def translate(block, flags, types):
             # gives: the reference writes both and reads the name.
             named = re.search(r"\.ability\s*=\s*(ABILITY_[A-Z0-9_]+)", member)
             if named:
-                entry["abilityOverride"] = resolve_ability(
-                    personal_abilities(), entry["species"], native(named.group(1)))
+                entry["abilityOverride"] = named_override(slot, resolve_ability(
+                    personal_abilities(), entry["species"], native(named.group(1))))
         seal = re.search(r"\.ballSeal\s*=\s*(\d+)", member)
         entry["capsule"] = int(seal.group(1)) if seal else 0
         party.append(entry)

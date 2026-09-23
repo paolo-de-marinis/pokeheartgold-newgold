@@ -6,6 +6,7 @@ wrong quietly is a party that names something the ROM does not define, a level
 outside what the game accepts, or a party longer than a team can be.
 """
 
+import functools
 import json
 import os
 import re
@@ -25,6 +26,7 @@ import gmm  # noqa: E402
 import import_moves  # noqa: E402
 import import_species  # noqa: E402
 import import_trainer_text  # noqa: E402
+import import_trainers  # noqa: E402
 import wotbl  # noqa: E402
 
 TRAINERS = ROOT / "files/poketool/trainer/trainers.json"
@@ -39,7 +41,8 @@ def defined(path, prefix):
 # personality and its ability, the real ones out of src/trainer_data.c, run on
 # the host. Each line of input is either `t MODIFIER`, a trainer starting with
 # that personality modifier, or `m RATIO FIRST SECOND HIDDEN BYTE`, one of its
-# Pokemon: its species' gender ratio and three abilities, and its override
+# Pokemon: its species' gender ratio as personal.json writes it (a fraction,
+# through the real GENDER_RATIO) and three abilities, and its override
 # byte. For each Pokemon it prints the modifier after it and the ability it
 # was given.
 PARTY_FIXTURE = r"""
@@ -49,6 +52,7 @@ PARTY_FIXTURE = r"""
 #include "constants/abilities.h"
 #include "constants/pokemon.h"
 #include "constants/trainers.h"
+typedef uint8_t u8;
 typedef uint32_t u32;
 typedef struct { u32 ability; } Pokemon;
 static int stats[64];
@@ -62,15 +66,16 @@ static void SetMonData(Pokemon *mon, int attr, const void *value) {
 }
 @FUNCTIONS@
 int main(void) {
-    unsigned pid = 0, ratio, first, second, hidden, byte;
+    unsigned pid = 0, first, second, hidden, byte;
+    double ratio;
     char kind;
     while (scanf(" %c", &kind) == 1) {
         if (kind == 't') {
             assert(scanf("%u", &pid) == 1);
             continue;
         }
-        assert(kind == 'm' && scanf("%u %u %u %u %u", &ratio, &first, &second, &hidden, &byte) == 5);
-        stats[BASE_GENDER_RATIO] = ratio;
+        assert(kind == 'm' && scanf("%lf %u %u %u %u", &ratio, &first, &second, &hidden, &byte) == 5);
+        stats[BASE_GENDER_RATIO] = GENDER_RATIO(ratio);
         stats[BASE_ABILITY_1] = first;
         stats[BASE_ABILITY_2] = second;
         stats[BASE_HIDDEN_ABILITY] = hidden;
@@ -98,6 +103,31 @@ def run_parties(lines):
         output = subprocess.run([str(path / "test")], input="\n".join(lines) + "\n",
                                 capture_output=True, text=True, check=True).stdout
     return [tuple(map(int, line.split())) for line in output.splitlines()]
+
+
+@functools.lru_cache(maxsize=1)
+def personal():
+    return {"SPECIES_" + row["species"]: row for row in
+            json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]}
+
+
+@functools.lru_cache(maxsize=1)
+def abilities():
+    return {name: int(value) for name, value in re.findall(
+        r"#define (ABILITY_\w+)\s+(\d+)\b", (ROOT / "include/constants/abilities.h").read_text())}
+
+
+def party_lines(trainer, byte_of):
+    """The fixture's lines for a party, each Pokemon's byte from byte_of. Each
+    starts from 0x88, a male trainer's modifier; both sides of a comparison
+    start the same."""
+    lines = ["t 136"]
+    for member in trainer:
+        row = personal()[member["species"]]
+        first, second = row["abilities"]
+        lines.append(f"m {row['genderRatio']} {abilities()[first]} {abilities()[second]} "
+                     f"{abilities()[row.get('hiddenAbility') or 'ABILITY_NONE']} {byte_of(member)}")
+    return lines
 
 
 def override_constants():
@@ -221,13 +251,68 @@ class TrainerTests(unittest.TestCase):
             ("SECOND_BY_NAME", 0, 22, 33, 0x89, 22),
             ("HIDDEN", 0, 22, 33, 0x89, 33),
             ("HIDDEN", 0, 22, 0, 0x89, 11),
-            ("HIDDEN", female, 22, 33, 100 - 2, 33),
+            ("HIDDEN", female, 22, 33, 127 - 2, 33),
         ]
         lines = []
         for slot, gender, second, hidden, _, _ in cases:
             byte = gender | c["TRPOKE_ABILITY_OVERRIDE_" + slot] << 4
-            lines += ["t 137", f"m 100 11 {second} {hidden} {byte}"]
+            lines += ["t 137", f"m 0.5 11 {second} {hidden} {byte}"]
         self.assertEqual(run_parties(lines), [(pid, ability) for *_, pid, ability in cases])
+
+    def test_falkner_s_team_is_female_as_konefr_s_is(self):
+        """konefr's hidden slot is the FEMALE gender nibble to the personality
+        code, so Falkner's Hoothoot sets the modifier to its gender ratio less
+        two, 0x7D, and it stays there for all five: female, as in his build.
+        Translated as a plain ability override they were all 0x88, male."""
+        c = override_constants()
+        falkner = self.trainers[20]
+        self.assertEqual(falkner["name"], "{TRNAME}Falkner")
+        results = run_parties(party_lines(falkner["party"], lambda member: c[member["genderOverride"]]
+                                          | c[member["abilityOverride"]] << 4))
+        self.assertEqual([pid & 0xFF for pid, _ in results], [0x7D] * 5)
+
+    @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
+    def test_every_party_gets_konefr_s_personality_modifier_and_ability(self):
+        """For every Pokemon in konefr's table, the modifier the real
+        TrMon_OverridePidGender leaves after it, from this table's byte, is the
+        one it leaves from his slot byte, the byte hg-engine hands it; and the
+        ability TrMon_ApplyAbilitySlot writes is the one hg-engine writes: the
+        one named outright, or the slot's."""
+        source = gmm.git_show(gmm.NEWGOLD, "data/Trainers.c")
+        header = gmm.git_show(gmm.NEWGOLD, "include/trainer_data.h")
+        raw = {name: int(value, 16) for name, value in re.findall(
+            r"#define (TRAINER_POKEMON_ABILITY_\w+)\s+0x([0-9A-Fa-f]+)", header)}
+        blocks = re.split(r"\n\s*\[(\d+)\] = \{", source)
+        c = override_constants()
+        ours, theirs, expected, where = [], [], [], []
+        for index, block in ((int(blocks[i]), blocks[i + 1].split(".text = {", 1)[0])
+                             for i in range(1, len(blocks), 2)):
+            members = re.findall(r"\{[^{}]*\.abilitySlot[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", block)
+            party = self.trainers[index]["party"]
+            self.assertEqual(len(members), len(party), index)
+            slots = iter([re.search(r"\.abilitySlot\s*=\s*(\w+)", m)[1] for m in members])
+            ours += party_lines(party, lambda member: c[member["genderOverride"]]
+                                | c[member["abilityOverride"]] << 4)
+            theirs += party_lines(party, lambda member: raw[next(slots)])
+            for member, text in zip(party, members):
+                row = personal()[member["species"]]
+                slot = re.search(r"\.abilitySlot\s*=\s*(\w+)", text)[1]
+                named = re.search(r"\.ability\s*=\s*(ABILITY_\w+)", text)
+                if named:
+                    wanted = import_trainers.native(named[1])
+                elif slot == "TRAINER_POKEMON_ABILITY_2" and row["abilities"][1] != "ABILITY_NONE":
+                    wanted = row["abilities"][1]
+                elif slot == "TRAINER_POKEMON_ABILITY_HIDDEN":
+                    wanted = row["hiddenAbility"]
+                else:
+                    wanted = row["abilities"][0]
+                expected.append(abilities()[wanted])
+                where.append((index, member["species"]))
+        ours, theirs = run_parties(ours), run_parties(theirs)
+        for place, (pid, ability), (reference_pid, _), wanted in zip(where, ours, theirs, expected):
+            self.assertEqual((pid, ability), (reference_pid, wanted), place)
+        compared = len(ours)
+        self.assertEqual(compared, sum(len(t["party"]) for t in self.trainers))
 
     def test_added_species_reach_trainers(self):
         named = {member["species"] for trainer in self.trainers for member in trainer["party"]}

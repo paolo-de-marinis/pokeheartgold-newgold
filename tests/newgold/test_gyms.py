@@ -57,9 +57,18 @@ ALIASES = {
     "ABILITY_COMPOUND_EYES": "ABILITY_COMPOUNDEYES",
 }
 
-SLOTS = {"TRAINER_POKEMON_ABILITY_1": "TRPOKE_ABILITY_OVERRIDE_FIRST",
-         "TRAINER_POKEMON_ABILITY_2": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-         "TRAINER_POKEMON_ABILITY_HIDDEN": "TRPOKE_ABILITY_OVERRIDE_HIDDEN"}
+# konefr's slot is a byte hg-engine hands to the retail personality code before
+# it writes the ability: 0x00 does nothing to the personality, 0x20 sets its
+# low bit, 0x02 is the FEMALE gender nibble. The gender and ability nibbles
+# that do the same here.
+SLOTS = {"TRAINER_POKEMON_ABILITY_1": ("TRPOKE_GENDER_OVERRIDE_OFF", "TRPOKE_ABILITY_OVERRIDE_OFF"),
+         "TRAINER_POKEMON_ABILITY_2": ("TRPOKE_GENDER_OVERRIDE_OFF", "TRPOKE_ABILITY_OVERRIDE_SECOND"),
+         "TRAINER_POKEMON_ABILITY_HIDDEN": ("TRPOKE_GENDER_OVERRIDE_FEMALE", "TRPOKE_ABILITY_OVERRIDE_HIDDEN")}
+
+# What each ability nibble does to the personality's low bit.
+LOW_BIT = {"TRPOKE_ABILITY_OVERRIDE_OFF": None, "TRPOKE_ABILITY_OVERRIDE_FIRST": 0,
+           "TRPOKE_ABILITY_OVERRIDE_SECOND": 1, "TRPOKE_ABILITY_OVERRIDE_HIDDEN": None,
+           "TRPOKE_ABILITY_OVERRIDE_SECOND_BY_NAME": None}
 
 BATTLE_TYPES = {"SINGLE_BATTLE": 0, "DOUBLE_BATTLE": 2, "NO_PARTNER_DOUBLE_BATTLE": 3}
 
@@ -160,7 +169,7 @@ def resolved(slots, species, override):
     hidden slot the species does not fill falls back to the first.
     """
     first, second, hidden = slots[species]
-    if override == "TRPOKE_ABILITY_OVERRIDE_SECOND":
+    if override in ("TRPOKE_ABILITY_OVERRIDE_SECOND", "TRPOKE_ABILITY_OVERRIDE_SECOND_BY_NAME"):
         return second if second != "ABILITY_NONE" else first
     if override == "TRPOKE_ABILITY_OVERRIDE_HIDDEN":
         return hidden or first
@@ -240,10 +249,11 @@ def reference_record(body, slots):
     party = []
     for member in braced(group(body, "party")):
         species = re.search(r"\.species\s*=\s*(SPECIES_[A-Z0-9_]+)", member).group(1)
+        gender, nibble = SLOTS[re.search(r"\.abilitySlot\s*=\s*(\w+)", member).group(1)]
         entry = {
             "difficulty": int(re.search(r"\.ivs\s*=\s*(\d+)", member).group(1)),
-            "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-            "abilityOverride": SLOTS[re.search(r"\.abilitySlot\s*=\s*(\w+)", member).group(1)],
+            "genderOverride": gender,
+            "abilityOverride": nibble,
             "level": int(re.search(r"\.level\s*=\s*(\d+)", member).group(1)),
             "species": species,
         }
@@ -258,9 +268,11 @@ def reference_record(body, slots):
             named = re.search(r"\.ability\s*=\s*(ABILITY_[A-Z0-9_]+)", member)
             if named:
                 wanted = native(named.group(1))
-                entry["abilityOverride"] = next(
-                    override for override in SLOTS.values()
-                    if resolved(slots, species, override) == wanted)
+                # The named ability is written, and the slot still acts on
+                # the personality: the one nibble that does both.
+                [entry["abilityOverride"]] = [
+                    override for override in LOW_BIT
+                    if LOW_BIT[override] == LOW_BIT[nibble] and resolved(slots, species, override) == wanted]
         seal = re.search(r"\.ballSeal\s*=\s*(\d+)", member)
         entry["capsule"] = int(seal.group(1)) if seal else 0
         party.append(entry)
