@@ -45,6 +45,11 @@
 #define BATTLER_CATEGORY_SWITCHED_MON_AFTER 22
 #define BATTLER_CATEGORY_MSG_TEMP           0xFF
 
+// hg-engine's scripts can name the ally of any battler above by adding this
+// bit: BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_SIDE_EFFECT_MON is the partner of
+// the Pokemon a status is aimed at. Flower Veil's scripts need it.
+#define BATTLER_RELATIVE_ALLY               0x8000
+
 #ifndef PM_ASM
 
 typedef enum BattleBg {

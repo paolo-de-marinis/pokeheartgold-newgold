@@ -8237,6 +8237,9 @@ static s32 GetMonWeight(u16 species) {
 
 static int BattleSystem_GetBattlerIDBySide(BattleSystem *battleSystem, BattleContext *ctx, int side) {
     int battlerID;
+    BOOL ally = (side & BATTLER_RELATIVE_ALLY) != 0;
+
+    side &= ~BATTLER_RELATIVE_ALLY;
     switch (side) {
     default:
     case BATTLER_CATEGORY_ATTACKER:
@@ -8372,7 +8375,8 @@ static int BattleSystem_GetBattlerIDBySide(BattleSystem *battleSystem, BattleCon
         GF_AssertFail();
     }
 
-    return battlerID;
+    // The ally is the battler two over, as the reference's BATTLER_ALLY has it.
+    return ally ? (battlerID ^ 2) : battlerID;
 }
 
 static void InitBattleMsgData(BattleContext *ctx, BattleMessageData *msgData) {

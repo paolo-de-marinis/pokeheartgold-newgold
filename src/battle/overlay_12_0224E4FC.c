@@ -7988,9 +7988,9 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower /= 2;
     }
 
-    // Purifying Salt halves a Ghost move aimed at the holder. That is all of
-    // it in the reference: the status immunity the ability is better known
-    // for is not written anywhere there, so it is not written here either.
+    // Purifying Salt halves a Ghost move aimed at the holder. Its other half,
+    // the status immunity, is answered in the status subscripts, where the
+    // reference answers it too.
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_PURIFYING_SALT) == TRUE && moveType == TYPE_GHOST) {
         movePower /= 2;
     }

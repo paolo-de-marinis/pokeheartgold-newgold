@@ -159,5 +159,48 @@ class InfiltratorTests(unittest.TestCase):
         self.assertIn("ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY", mist)
 
 
+class StatusImmunityTests(unittest.TestCase):
+    # How many ways each status subscript can be entered -- a used move, a
+    # move's own effect, Toxic Spikes, a held item -- and so how many times
+    # each of these abilities has to be asked. The reference asks them on
+    # every one; Comatose raw wherever a used move could have Mold Breaker.
+    PATHS = {
+        #  name          paths  raw Comatose  ally Flower Veil
+        "FallAsleep":   (2,     2,            1),
+        "Poison":       (2,     1,            2),
+        "Burn":         (2,     1,            1),
+        "Freeze":       (1,     1,            1),
+        "Paralyze":     (1,     1,            1),
+        "BadPoison":    (3,     1,            3),
+    }
+
+    def test_every_path_refuses_comatose_and_purifying_salt(self):
+        for name, (paths, raw, _) in self.PATHS.items():
+            script = subscript(name)
+            self.assertEqual(len(re.findall(r"ABILITY_COMATOSE, _", script)), paths, name)
+            self.assertEqual(len(re.findall(
+                r"CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_ABILITY, ABILITY_COMATOSE", script)),
+                raw, name)
+            self.assertEqual(len(re.findall(r"ABILITY_PURIFYING_SALT, _", script)), paths, name)
+
+    def test_a_burn_is_also_refused_by_water_bubble_and_thermal_exchange(self):
+        script = subscript("Burn")
+        for ability in ("WATER_BUBBLE", "THERMAL_EXCHANGE"):
+            self.assertEqual(len(re.findall(rf"ABILITY_{ability}, _", script)), 2, ability)
+
+    def test_flower_veil_shelters_a_grass_type_from_its_ally_too(self):
+        for name, (_, _, allies) in self.PATHS.items():
+            script = subscript(name)
+            self.assertEqual(len(re.findall(
+                r"BATTLER_RELATIVE_ALLY\|BATTLER_CATEGORY_SIDE_EFFECT_MON, ABILITY_FLOWER_VEIL, _", script)), allies, name)
+            self.assertIn("BMON_DATA_TYPE_1, TYPE_GRASS", script, name)
+            self.assertIn("GoToIfThirdType BATTLER_CATEGORY_SIDE_EFFECT_MON, TYPE_GRASS", script, name)
+
+    def test_a_script_can_name_a_battler_s_ally(self):
+        body = function(COMMANDS.read_text(), "BattleSystem_GetBattlerIDBySide")
+        self.assertIn("side &= ~BATTLER_RELATIVE_ALLY;", body)
+        self.assertIn("return ally ? (battlerID ^ 2) : battlerID;", body)
+
+
 if __name__ == "__main__":
     unittest.main()
