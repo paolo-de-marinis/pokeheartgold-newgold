@@ -97,6 +97,47 @@ def base_species_of(reference):
     return dict(re.findall(r"\[SPECIES_([A-Z0-9_]+) - SPECIES_MEGA_START\]\s*=\s*SPECIES_([A-Z0-9_]+)", table))
 
 
+def dex_species_of(reference):
+    """Each form's Dex species: its base, followed to the end. Two Gigantamax
+    forms name another form as theirs (Low Key Toxtricity, Rapid Strike
+    Urshifu); PokeFormDataTbl lists them under Toxtricity and Urshifu, which
+    is the species the reference stores for them."""
+    bases = base_species_of(reference)
+
+    def root(name):
+        while name in bases:
+            name = bases[name]
+        return name
+    return {form: root(form) for form in bases}
+
+
+def write_form_bases(reference):
+    """Write the table src/pokedex.c credits a form to its base species with.
+
+    Every species past the last Dex species is a form here. The reference
+    stores a form as its base species and a form number, so its Dex credits
+    and numbers the base; the table is what lets this one do the same.
+    """
+    header = (ROOT / "include/constants/species.h").read_text()
+    numbered = {name: int(number) for name, number in
+                re.findall(r"#define SPECIES_([A-Z0-9_]+)\s+(\d+)", header)}
+    last = numbered[re.search(r"#define LAST_DEX_SPECIES\s+SPECIES_([A-Z0-9_]+)", header).group(1)]
+    forms = sorted((number, name) for name, number in numbered.items() if number > last)
+    dex = dex_species_of(reference)
+    wrong = [name for _, name in forms if numbered.get(dex.get(name), last + 1) > last]
+    if wrong:
+        raise SystemExit(f"no Dex species for: {', '.join(wrong)}")
+    rows = "\n".join(f"    [SPECIES_{name} - NATIONAL_DEX_COUNT - 1] = SPECIES_{dex[name]},"
+                     for _, name in forms)
+    path = ROOT / "src/pokedex.c"
+    source = path.read_text()
+    start = source.index("static const u16 sFormBaseSpecies[")
+    end = source.index("};", start) + len("};")
+    path.write_text(source[:start] + "static const u16 sFormBaseSpecies[NUM_SPECIES - NATIONAL_DEX_COUNT] = {\n"
+                    + rows + "\n};" + source[end:])
+    print(f"wrote {path.relative_to(ROOT)}: {len(forms)} forms and their base species")
+
+
 def species_to_add(reference):
     """Those of them this repository has not got yet: the base species first,
     then the forms, each in the reference's order."""
@@ -382,6 +423,7 @@ def main():
                         "\n" + constants + f"\n\n#define NUM_SPECIES SPECIES_{last}\n", header, count=1)
         headerPath.write_text(header)
         print(f"wrote {headerPath.relative_to(ROOT)}: NUM_SPECIES is SPECIES_{last}")
+    write_form_bases(args.reference)
     print(constants)
 
 

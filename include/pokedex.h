@@ -57,6 +57,7 @@ u16 Pokedex_CountJohtoOwned_ExcludeMythical(Pokedex *pokedex);
 u16 Pokedex_CountJohtoDexSeen(Pokedex *pokedex);
 void Pokedex_Copy(const Pokedex *src, Pokedex *dest);
 BOOL DexSpeciesIsInvalid(u16 species);
+u16 SpeciesToDexSpecies(u16 species);
 u16 Pokedex_CountDexOwned(Pokedex *pokedex);
 BOOL Pokedex_NationalDexIsComplete(Pokedex *pokedex);
 BOOL Pokedex_JohtoDexIsComplete(Pokedex *pokedex);
