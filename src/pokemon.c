@@ -3768,7 +3768,7 @@ u32 GetArceusTypeByHeldItemEffect(u16 heldEffect) {
 }
 
 // RKS System: Silvally is the type of the Memory it holds, Normal with none
-// (Pokemon Central, Sistema RKS). The reference reads the plates for it
+// (Pokemon Central, Sistema Primevo). The reference reads the plates for it
 // instead, Arceus's items, with a comment of its own saying it means to read
 // the Memories; Multi-Attack takes the same type from the same Memory.
 u32 GetSilvallyTypeByHeldItemEffect(u16 heldEffect) {

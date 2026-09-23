@@ -9185,7 +9185,7 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
         // Silvally follows its Memory the way Arceus follows its plate. The
         // reference copies the Arceus block for it verbatim, plates and all,
         // and says in its own comment that it means to read memories instead;
-        // RKS System reads the Memory (Pokemon Central, Sistema RKS).
+        // RKS System reads the Memory (Pokemon Central, Sistema Primevo).
         if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_SILVALLY && ctx->battleMons[ctx->battlerIdTemp].hp && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_RKS_SYSTEM) {
             form = GetSilvallyTypeByHeldItemEffect(GetItemAttr(ctx->battleMons[ctx->battlerIdTemp].item, ITEMATTR_HOLD_EFFECT, HEAP_ID_BATTLE));
             if (ctx->battleMons[ctx->battlerIdTemp].form != form) {

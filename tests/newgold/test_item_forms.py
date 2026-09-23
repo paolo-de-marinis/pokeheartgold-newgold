@@ -2,7 +2,7 @@
 """The forms and types a held item gives.
 
 RKS System makes Silvally the type of the Memory it holds (Pokemon Central,
-Sistema RKS), in battle and out of it, as Multitype does Arceus with a plate;
+Sistema Primevo), in battle and out of it, as Multitype does Arceus with a plate;
 the reference reads the plates for it, a defect its own comment admits.
 
 Genesect's Drives, Ogerpon's masks and Dialga's and Palkia's origin items
