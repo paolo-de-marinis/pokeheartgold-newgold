@@ -171,3 +171,12 @@
 .public gOverlayTemplate_PokemonSummary
 .public gSystem
 .public OS_IRQTable
+.public _020FFEC0
+.public _020FFED8
+.public _020FFF34
+.public _020FFF90
+.public _020FFFE4
+.public sub_02075E14
+.public sub_02076E64
+.public sub_020771A0
+.public sub_020771E8

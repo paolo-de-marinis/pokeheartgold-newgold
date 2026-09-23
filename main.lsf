@@ -274,6 +274,8 @@ Static main
     Object src/battle_regulation.o
     Object asm/unk_02074E5C.o
     Object asm/unk_020755E8.o
+    Object src/unk_02075E14.o
+    Object asm/unk_02076C90.o
     Object asm/unk_020773AC.o
     Object src/unk_02077678.o
     Object src/bag_view.o
