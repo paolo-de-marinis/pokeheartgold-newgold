@@ -434,6 +434,7 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("melonDS", self.refused("/api/load", {"f": "gyms/test.sav", "slot": "hg-diag"}))
         self.assertIn("melonDS", self.refused("/api/play", {"f": "gyms/test.sav", "slot": "hg-diag"}))
         self.assertIn("melonDS", self.refused("/api/edit", {"f": "emu:hg-diag", "op": "trainer", "args": {"money": 1}}))
+        self.assertIn("melonDS", self.refused("/api/take", {"slot": "hg-diag", "name": "presa"}))
         self.assertEqual(slot.read_bytes(), old)
         type(self).running = False
         # The slot holds a save no library file is (the edit moved the one it

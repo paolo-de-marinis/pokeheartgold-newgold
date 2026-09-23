@@ -351,14 +351,16 @@ function entryLine(e) {
 }
 function renderLibrary() {
   const lib = S.lib, q = $("#filter").value.trim().toLowerCase();
+  // While melonDS runs a slot is its: nothing goes in, and what is on disk may not be the game's last save yet.
+  const busy = S.melon ? `disabled title="Chiudi prima melonDS"` : "";
   $("#slots").innerHTML = lib.slots.map(e => `
     <div class="card ${S.f === e.f ? "sel" : ""}" data-f="${esc(e.f)}" data-open="${e.exists && e.valid ? 1 : ""}">
       <div class="row1"><span class="fname">${esc(e.label)}</span><span class="date">${e.exists ? fmtDate(e.mtime) : ""}</span></div>
       ${entryLine(e)}
       <div class="acts">
-        ${e.exists && e.valid && lib.playable.includes(e.slot) ? `<button class="small primary" data-act="resume" data-f="${esc(e.f)}" type="button" title="Apre melonDS su questo slot com'è, senza copiarci niente">Gioca</button>` : ""}
+        ${e.exists && e.valid && lib.playable.includes(e.slot) ? `<button class="small primary" data-act="resume" data-f="${esc(e.f)}" type="button" title="Apre melonDS su questo slot com'è, senza copiarci niente" ${busy}>Gioca</button>` : ""}
         ${e.exists && e.valid ? `<button class="small" data-act="open" data-f="${esc(e.f)}" type="button">Apri</button>` : ""}
-        ${e.exists ? `<button class="small" data-act="take" data-f="${esc(e.f)}" type="button">Prendi dall'emulatore</button>` : ""}
+        ${e.exists ? `<button class="small" data-act="take" data-f="${esc(e.f)}" type="button" ${busy}>Prendi dall'emulatore</button>` : ""}
       </div>
     </div>`).join("") || `<div class="meta">Nessuna ROM scelta: aggiungila in <a href="#" data-settings>Cartelle e ROM</a>.</div>`;
   const files = lib.files.filter(e => !q || `${e.f} ${e.name || ""} ${e.location || ""}`.toLowerCase().includes(q));
@@ -370,8 +372,8 @@ function renderLibrary() {
       ${entryLine(e)}
       <div class="acts">
         ${e.valid ? `<button class="small" data-act="open" data-f="${esc(e.f)}" type="button">Apri</button>` : ""}
-        ${e.valid && lib.playable.length ? `<button class="small primary" data-act="play" data-f="${esc(e.f)}" type="button">Gioca</button>` : ""}
-        ${e.valid && usableSlots().length ? `<button class="small" data-act="load" data-f="${esc(e.f)}" type="button">Carica nell'emulatore</button>` : ""}
+        ${e.valid && lib.playable.length ? `<button class="small primary" data-act="play" data-f="${esc(e.f)}" type="button" ${busy}>Gioca</button>` : ""}
+        ${e.valid && usableSlots().length ? `<button class="small" data-act="load" data-f="${esc(e.f)}" type="button" ${busy}>Carica nell'emulatore</button>` : ""}
         <button class="small" data-act="more" data-f="${esc(e.f)}" type="button">Altro…</button>
       </div>
     </div>`;
@@ -644,13 +646,20 @@ function showSave(detail) {
   $("#title").textContent = slot ? `${slot.label} (slot dell'emulatore)` : detail.f;
   const badges = bits(p.johto).concat(bits(p.kanto)).filter(Boolean).length;
   $("#subtitle").textContent = `${p.name} · ID ${String(p.id).padStart(5, "0")} · ${badges} medaglie · tempo ${fmtTime(p.play_time)} · salvataggio n. ${detail.info.counter} · modificato ${fmtDate(detail.mtime)}`;
-  $("#undo").disabled = !detail.backups.some(b => b.undo);
-  $("#lock").hidden = !(detail.slot && S.melon);
+  lockEditor();
   renderTabs();
 }
 // `version` is the file as the page showed it; the server refuses the edit
 // if the file has moved on since (melonDS, another tab), and the page reloads.
 let refusal = null;   // why the last edit() was turned down
+// An emulator slot cannot be written while melonDS runs: its tab is inert
+// and undo off, rather than every control failing when used.
+function lockEditor() {
+  const locked = !!(S.save?.slot && S.melon);
+  $("#lock").hidden = !locked;
+  $("#tab").inert = locked;
+  $("#undo").disabled = locked || !S.save?.backups.some(b => b.undo);
+}
 async function edit(op, args, ok = "Salvato (backup fatto)", version = S.save.version) {
   S.busy++;
   refusal = null;
@@ -1040,7 +1049,7 @@ function setMelon(on) {
   $("#melon").textContent = on ? "melonDS aperto" : "melonDS chiuso";
   $("#melon").classList.toggle("on", on);
   $("#banner").hidden = !on;
-  if (S.save) $("#lock").hidden = !(S.save.slot && on);
+  lockEditor();
 }
 function setDown(down) {
   $("#downbanner").hidden = !down;

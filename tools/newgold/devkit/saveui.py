@@ -673,6 +673,9 @@ class Library:
             source, _, _ = self.locate(f"emu:{slot}")
             if not source.exists():
                 raise Refused("lo slot è vuoto")
+            if melonds_running():
+                raise Refused("melonDS è aperto: il salvataggio fatto nel gioco arriva nello slot quando melonDS si "
+                              "chiude, quindi ora prenderesti quello di prima. Chiudi melonDS, poi prendi lo slot.")
             target = self.new_name(name)
             self.write(target.relative_to(self.root).as_posix(), source.read_bytes(), validate=False)
             return target.relative_to(self.root).as_posix()
