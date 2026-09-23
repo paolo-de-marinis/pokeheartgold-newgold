@@ -57,6 +57,18 @@ def game_like_save(path):
     Path(path).write_bytes(bytes(raw))
 
 
+def party_save(blank, path):
+    """The game-like save with a party of six and a boxed Mew, as a
+    player's save would have."""
+    save = sv.Save(blank)
+    me = sv.owner(save)
+    n = sv.species_numbers()
+    for name in ("CHIKORITA", "PIDGEY", "RAICHU", "EEVEE", "GEODUDE", "SHEDINJA"):
+        sv.add_party_mon(save, sv.new_mon(n[name], 20, me))
+    sv.set_box_mon(save, 2, 5, sv.new_mon(n["MEW"], 30, me, party=False))
+    Path(path).write_bytes(save.image())
+
+
 class SaveditLibraryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -65,15 +77,8 @@ class SaveditLibraryTests(unittest.TestCase):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.blank = Path(cls.tmp.name) / "blank.sav"
         game_like_save(cls.blank)
-        # A party of six and a boxed Pokemon, as a player's save would have.
         cls.path = Path(cls.tmp.name) / "party.sav"
-        save = sv.Save(cls.blank)
-        me = sv.owner(save)
-        n = sv.species_numbers()
-        for name in ("CHIKORITA", "PIDGEY", "RAICHU", "EEVEE", "GEODUDE", "SHEDINJA"):
-            sv.add_party_mon(save, sv.new_mon(n[name], 20, me))
-        sv.set_box_mon(save, 2, 5, sv.new_mon(n["MEW"], 30, me, party=False))
-        cls.path.write_bytes(save.image())
+        party_save(cls.blank, cls.path)
 
     @classmethod
     def tearDownClass(cls):

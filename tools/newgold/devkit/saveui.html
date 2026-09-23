@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor salvataggi</title>
+<style>
+:root {
+  --bg: #f4f2ee; --panel: #ffffff; --sunk: #f8f7f4; --text: #1f1d1a; --muted: #6b665e; --border: #e2ddd4;
+  --accent: #a15c07; --accent-soft: #fbf0dc; --accent-text: #ffffff; --danger: #b42318; --danger-soft: #fdecea;
+  --ok: #15803d; --ok-soft: #e7f5ec; --warn-soft: #fff4d6; --warn-border: #e8c46a; --focus: #d18a1c;
+  --shadow: 0 1px 2px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171614; --panel: #211f1c; --sunk: #1b1a17; --text: #ece8e1; --muted: #a39d93; --border: #37332d;
+    --accent: #e0a043; --accent-soft: #3a2c16; --accent-text: #1b1406; --danger: #f07a6c; --danger-soft: #3b1f1b;
+    --ok: #5fcf8a; --ok-soft: #173024; --warn-soft: #3a3119; --warn-border: #7a6224; --focus: #e0a043;
+    --shadow: none;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+button {
+  border: 1px solid var(--border); background: var(--panel); border-radius: 6px; padding: 5px 11px; cursor: pointer;
+}
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+button.danger { color: var(--danger); }
+button.small { padding: 2px 8px; font-size: 12.5px; }
+button:disabled { opacity: .5; cursor: default; }
+input, select { border: 1px solid var(--border); background: var(--sunk); border-radius: 6px; padding: 5px 8px; min-width: 0; }
+input[type=number] { width: 6.5em; }
+input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+h1, h2, h3 { margin: 0; font-weight: 650; }
+h1 { font-size: 19px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+h3 { font-size: 16px; margin-bottom: 10px; }
+.muted { color: var(--muted); }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; }
+
+.top { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.brand { font-size: 16px; }
+.brand span { color: var(--muted); margin-left: 4px; }
+.top .lib { color: var(--muted); font-size: 12.5px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.pill { border-radius: 999px; padding: 3px 10px; font-size: 12.5px; background: var(--ok-soft); color: var(--ok); white-space: nowrap; }
+.pill.on { background: var(--danger-soft); color: var(--danger); }
+.banner { background: var(--warn-soft); border-bottom: 1px solid var(--warn-border); padding: 8px 16px; }
+
+.layout { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 16px; padding: 16px; align-items: start; }
+.pane { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); min-width: 0; }
+aside.pane { padding: 12px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+aside section + section, aside details { margin-top: 16px; }
+.sechead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+#filter { width: 100%; margin-bottom: 8px; }
+
+.card { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; cursor: pointer; background: var(--panel); }
+.card:hover { border-color: var(--muted); }
+.card.sel { border-color: var(--accent); background: var(--accent-soft); }
+.card .row1 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.card .fname { font-weight: 600; overflow-wrap: anywhere; }
+.card .fname .dir { color: var(--muted); font-weight: 400; }
+.card .date { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.card .meta { color: var(--muted); font-size: 12.5px; }
+.card .icons { display: flex; gap: 0; min-height: 32px; margin: 2px 0; flex-wrap: wrap; }
+.card .acts { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.invalid { color: var(--danger); font-weight: 600; }
+.tag { display: inline-block; border-radius: 4px; padding: 0 6px; font-size: 11.5px; background: var(--sunk); border: 1px solid var(--border); color: var(--muted); }
+
+img.ic { image-rendering: pixelated; object-fit: cover; object-position: top; display: inline-block; vertical-align: middle; }
+.badq { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; color: var(--danger); font-weight: 700; }
+
+#editor { padding: 16px; min-height: 60vh; }
+.empty { color: var(--muted); padding: 60px 10px; text-align: center; }
+.edhead { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.edhead .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.lock { margin-top: 10px; background: var(--danger-soft); color: var(--danger); border-radius: 8px; padding: 8px 10px; }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin: 14px 0 16px; overflow-x: auto; }
+.tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 12px; white-space: nowrap; color: var(--muted); }
+.tabs button.on { border-bottom-color: var(--accent); color: var(--text); font-weight: 600; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.form { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 16px; align-items: end; }
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
+label.f input, label.f select { color: var(--text); font-size: 14px; }
+.note { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+.box { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 14px; }
+.box > h3 { font-size: 14px; }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px 12px; }
+.badges label { display: flex; gap: 6px; align-items: center; }
+.bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+
+.mon { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }
+.mon .head { display: flex; gap: 8px; align-items: center; }
+.mon .head .nm { font-weight: 650; }
+.mon .sub { color: var(--muted); font-size: 12.5px; }
+.mon ul { margin: 0; padding-left: 16px; font-size: 13px; }
+.mon .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+.hp { height: 5px; background: var(--sunk); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.hp i { display: block; height: 100%; background: var(--ok); }
+.addmon { border: 1px dashed var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 140px; }
+.star { color: var(--accent); }
+
+.boxnav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.pc { display: grid; grid-template-columns: repeat(6, minmax(0, 64px)); gap: 6px; }
+.pc button { height: 64px; padding: 0; display: flex; align-items: center; justify-content: center; background: var(--sunk); }
+.pc button.full { background: var(--panel); }
+.pc button .lv { position: absolute; }
+
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; }
+td.num, th.num { text-align: right; }
+.scroll { overflow-x: auto; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+.seg button.on { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+
+.dexlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px 14px; }
+.dexrow { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px; }
+.dexrow.dirty { background: var(--accent-soft); }
+.dexrow .n { width: 3.2em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dexrow .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dexrow label { display: flex; align-items: center; gap: 3px; font-size: 12px; color: var(--muted); }
+
+dialog { border: 1px solid var(--border); border-radius: 12px; background: var(--panel); color: var(--text); padding: 0; width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 32px); }
+dialog::backdrop { background: rgba(0,0,0,.35); }
+dialog form { display: flex; flex-direction: column; max-height: calc(100vh - 34px); }
+dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
+.dbody { padding: 0 16px 12px; overflow: auto; }
+.dfoot { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; padding: 12px 16px; border-top: 1px solid var(--border); }
+.dfoot .left { margin-right: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.stats6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.stats6 input { width: 100%; }
+.moves4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.monsum { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+
+#toasts { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 10; max-width: calc(100vw - 32px); }
+.toast { background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--ok); border-radius: 8px; padding: 8px 12px; box-shadow: var(--shadow); }
+.toast.err { border-left-color: var(--danger); }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; padding: 12px; }
+  aside.pane { position: static; max-height: 45vh; }
+  .stats6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .moves4 { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .top { padding: 8px 12px; }
+  .layout { padding: 8px; gap: 10px; }
+  #editor { padding: 12px; }
+  .pc { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px; }
+  .pc button { height: 52px; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><strong>Editor salvataggi</strong><span>HeartGold · New Gold</span></div>
+  <div class="lib" id="libpath"></div>
+  <div class="pill" id="melon">melonDS chiuso</div>
+</header>
+<div class="banner" id="banner" hidden>
+  <strong>melonDS è aperto.</strong> Riscrive il suo .sav quando si chiude, quindi gli slot dell'emulatore non si
+  possono scrivere finché non lo chiudi. I file della libreria si modificano normalmente.
+</div>
+
+<main class="layout">
+  <aside class="pane" id="library">
+    <section>
+      <div class="sechead"><h2>Emulatore</h2></div>
+      <div id="slots"></div>
+    </section>
+    <section>
+      <div class="sechead"><h2>Libreria</h2><button class="small" id="refresh" type="button">Aggiorna</button></div>
+      <input id="filter" type="search" placeholder="Cerca per nome, cartella, giocatore…" aria-label="Cerca nella libreria">
+      <div id="files"></div>
+    </section>
+    <details id="trashbox">
+      <summary><h2 style="display:inline">Cestino (<span id="trashcount">0</span>)</h2></summary>
+      <div id="trash" style="margin-top:8px"></div>
+    </details>
+  </aside>
+
+  <section class="pane" id="editor">
+    <div class="empty" id="empty">Scegli un salvataggio dalla libreria per aprirlo.</div>
+    <div id="opened" hidden>
+      <div class="edhead">
+        <div>
+          <h1 id="title"></h1>
+          <div class="muted" id="subtitle"></div>
+        </div>
+        <div class="actions">
+          <button type="button" id="undo" title="Rimette il file com'era prima dell'ultima modifica">Annulla ultima modifica</button>
+          <button type="button" id="history">Cronologia</button>
+          <button type="button" id="reload">Ricarica</button>
+        </div>
+      </div>
+      <div class="lock" id="lock" hidden>Questo è uno slot dell'emulatore e melonDS è aperto: le modifiche verranno rifiutate finché non lo chiudi.</div>
+      <nav class="tabs" id="tabs" role="tablist"></nav>
+      <div id="tab"></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlg"></dialog>
+<div id="toasts" aria-live="polite"></div>
+<datalist id="dl-species"></datalist>
+<datalist id="dl-moves"></datalist>
+<datalist id="dl-items"></datalist>
+<datalist id="dl-maps"></datalist>
+
+<script>
+"use strict";
+const $ = (sel, el = document) => el.querySelector(sel);
+const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+
+const TABS = [["trainer", "Allenatore"], ["party", "Squadra"], ["box", "Box"], ["bag", "Borsa"],
+              ["dex", "Pokédex"], ["pos", "Posizione"], ["flags", "Flag e variabili"], ["info", "Info"]];
+const JOHTO = ["Zefiro", "Alveare", "Piana", "Nebbia", "Tempesta", "Minerale", "Gelo", "Levante"];
+const KANTO = ["Sasso", "Cascata", "Tuono", "Arcobaleno", "Anima", "Palude", "Vulcano", "Terra"];
+const POCKET_NAMES = {items: "Strumenti", medicine: "Rimedi", balls: "Poké Ball", TMsHMs: "MT e MN",
+                      berries: "Bacche", mail: "Lettere", battleItems: "Strumenti lotta", keyItems: "Strumenti chiave"};
+const POCKET_ORDER = ["items", "medicine", "balls", "TMsHMs", "berries", "mail", "battleItems", "keyItems"];
+const STATS = ["PS", "Att", "Dif", "Vel", "AttSp", "DifSp"];
+const NAT_STATS = ["Att", "Dif", "Vel", "AttSp", "DifSp"];
+const DIRS = ["su", "giù", "sinistra", "destra"];
+const GENDER_MARK = ["♂", "♀", ""];
+
+const S = {data: null, lib: null, f: null, save: null, tab: "trainer", box: 0, pocket: "items",
+           dex: {changes: new Map(), q: "", show: "all"}, melon: false};
+const store = {
+  get(k) { try { return localStorage.getItem("saveui." + k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem("saveui." + k, v); } catch {} },
+};
+
+async function api(path, body) {
+  const init = body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)};
+  const r = await fetch(path, init);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `${r.status} ${r.statusText}`);
+  return j;
+}
+function toast(msg, err = false) {
+  const t = document.createElement("div");
+  t.className = "toast" + (err ? " err" : "");
+  t.textContent = msg;
+  $("#toasts").append(t);
+  setTimeout(() => t.remove(), err ? 7000 : 3500);
+}
+async function run(fn, ok) {
+  try { const r = await fn(); if (ok) toast(ok); return r; }
+  catch (e) { toast(e.message, true); return null; }
+}
+
+// ---- names -----------------------------------------------------------
+const ref = (label, id) => `${label} #${id}`;
+function parseRef(value, index) {
+  value = (value || "").trim();
+  if (!value) return 0;
+  const m = value.match(/#(\d+)\s*$/);
+  if (m) return +m[1];
+  const hit = index.get(value.toLowerCase());
+  return hit === undefined ? null : hit;
+}
+function natureLabel(n) {
+  const name = S.data.natures[n], up = Math.floor(n / 5), down = n % 5;
+  return up === down ? `${name} (neutra)` : `${name} (+${NAT_STATS[up]} −${NAT_STATS[down]})`;
+}
+function iconImg(m, size = 32) {
+  if (!m || m.ok === false) return `<span class="badq" title="Checksum errato">?</span>`;
+  return `<img class="ic" width="${size}" height="${size}" alt="" loading="lazy" src="/api/icon?species=${m.species}&form=${m.form || 0}&egg=${m.egg ? 1 : 0}">`;
+}
+const fmtDate = t => new Date(t * 1000).toLocaleString("it-IT", {dateStyle: "short", timeStyle: "short"});
+const fmtTime = pt => `${pt[0]}:${String(pt[1]).padStart(2, "0")}`;
+const bits = n => [...Array(8)].map((_, i) => (n >> i) & 1);
+
+function buildLists() {
+  const d = S.data;
+  S.species = new Map(d.species.map(r => [r.id, r]));
+  S.moves = new Map(d.moves.map(r => [r.id, r]));
+  S.items = new Map(d.items.map(r => [r.id, r]));
+  S.maps = new Map(d.maps.map(r => [r.id, r]));
+  S.speciesIndex = new Map(d.species.filter(r => !r.egg).map(r => [r.label.toLowerCase(), r.id]));
+  S.moveIndex = new Map(d.moves.filter(r => r.id).map(r => [r.name.toLowerCase(), r.id]));
+  S.itemIndex = new Map(d.items.filter(usableItem).map(r => [r.name.toLowerCase(), r.id]));
+  S.mapIndex = new Map(d.maps.map(r => [mapLabel(r).toLowerCase(), r.id]));
+  const opts = (rows, label) => rows.map(r => `<option value="${esc(ref(label(r), r.id))}">`).join("");
+  $("#dl-species").innerHTML = opts(d.species.filter(r => !r.egg), r => r.label);
+  $("#dl-moves").innerHTML = opts(d.moves.filter(r => r.id), r => r.name);
+  $("#dl-items").innerHTML = opts(d.items.filter(usableItem), r => r.name);
+  $("#dl-maps").innerHTML = opts(d.maps, mapLabel);
+}
+const usableItem = r => r.id && r.name && r.name !== "???" && !r.const.includes("UNUSED");
+const mapLabel = r => r.name ? `${r.name} · ${r.const.replace(/^MAP_/, "")}` : r.const.replace(/^MAP_/, "");
+const speciesRef = id => id ? ref(S.species.get(id)?.label ?? `#${id}`, id) : "";
+const moveRef = id => id ? ref(S.moves.get(id)?.name ?? `#${id}`, id) : "";
+const itemRef = id => id ? ref(S.items.get(id)?.name ?? `#${id}`, id) : "";
+
+// ---- library -----------------------------------------------------------
+async function loadLibrary() {
+  const lib = await run(() => api("/api/library"));
+  if (!lib) return;
+  S.lib = lib;
+  $("#libpath").textContent = lib.library;
+  setMelon(lib.melonds);
+  renderLibrary();
+}
+function entryLine(e) {
+  if (e.exists === false) return `<div class="meta">Nessun salvataggio in questo slot.</div>`;
+  if (!e.valid) return `<div class="meta"><span class="invalid">Non è un salvataggio valido</span> · ${esc(e.error)}</div>`;
+  const party = (e.party || []).map(m => iconImg(m)).join("");
+  return `<div class="icons">${party || `<span class="meta">Squadra vuota</span>`}</div>
+    <div class="meta">${esc(e.name)} · ${e.badges} ${e.badges === 1 ? "medaglia" : "medaglie"} · ${esc(e.location)}</div>
+    <div class="meta">Salvataggio n. ${e.counter} · tempo ${fmtTime(e.play_time)}</div>`;
+}
+function renderLibrary() {
+  const lib = S.lib, q = $("#filter").value.trim().toLowerCase();
+  $("#slots").innerHTML = lib.slots.map(e => `
+    <div class="card ${S.f === e.f ? "sel" : ""}" data-f="${esc(e.f)}" data-open="${e.exists && e.valid ? 1 : ""}">
+      <div class="row1"><span class="fname">${esc(e.label)}</span><span class="date">${e.exists ? fmtDate(e.mtime) : ""}</span></div>
+      ${entryLine(e)}
+      <div class="acts">
+        ${e.exists && e.valid ? `<button class="small" data-act="open" data-f="${esc(e.f)}" type="button">Apri</button>` : ""}
+        ${e.exists ? `<button class="small" data-act="take" data-f="${esc(e.f)}" type="button">Prendi dall'emulatore</button>` : ""}
+      </div>
+    </div>`).join("") || `<div class="meta">Nessuna ROM trovata nella cartella di build.</div>`;
+  const files = lib.files.filter(e => !q || `${e.f} ${e.name || ""} ${e.location || ""}`.toLowerCase().includes(q));
+  $("#files").innerHTML = files.map(e => {
+    const cut = e.f.lastIndexOf("/");
+    return `<div class="card ${S.f === e.f ? "sel" : ""}" data-f="${esc(e.f)}" data-open="${e.valid ? 1 : ""}">
+      <div class="row1"><span class="fname"><span class="dir">${esc(e.f.slice(0, cut + 1))}</span>${esc(e.f.slice(cut + 1))}</span>
+        <span class="date">${fmtDate(e.mtime)}</span></div>
+      ${entryLine(e)}
+      <div class="acts">
+        ${e.valid ? `<button class="small" data-act="open" data-f="${esc(e.f)}" type="button">Apri</button>` : ""}
+        ${e.valid && lib.playable.length ? `<button class="small primary" data-act="play" data-f="${esc(e.f)}" type="button">Gioca</button>` : ""}
+        ${e.valid && lib.slots.length ? `<button class="small" data-act="load" data-f="${esc(e.f)}" type="button">Carica nell'emulatore</button>` : ""}
+        <button class="small" data-act="more" data-f="${esc(e.f)}" type="button">Altro…</button>
+      </div>
+    </div>`;
+  }).join("") || `<div class="meta">${q ? "Nessun file corrisponde." : "La libreria è vuota."}</div>`;
+  $("#trashcount").textContent = lib.trash.length;
+  $("#trash").innerHTML = lib.trash.map(t => `
+    <div class="card" style="cursor:default">
+      <div class="row1"><span class="fname">${esc(t.f)}</span><span class="date">${esc(t.when.slice(0, 8).replace(/(\d{4})(\d\d)(\d\d)/, "$3/$2/$1"))} ${esc(t.when.slice(9, 13).replace(/(\d\d)(\d\d)/, "$1:$2"))}</span></div>
+      <div class="acts"><button class="small" data-act="untrash" data-t="${esc(t.t)}" type="button">Ripristina</button></div>
+    </div>`).join("") || `<div class="meta">Il cestino è vuoto.</div>`;
+}
+
+$("#library").addEventListener("click", async ev => {
+  const btn = ev.target.closest("button[data-act]");
+  if (btn) { ev.stopPropagation(); return libraryAction(btn.dataset.act, btn.dataset.f, btn.dataset.t); }
+  const card = ev.target.closest(".card[data-f]");
+  if (card && card.dataset.open) openSave(card.dataset.f);
+});
+$("#filter").addEventListener("input", renderLibrary);
+$("#refresh").addEventListener("click", loadLibrary);
+
+function slotOptions(keys) {
+  return keys.map(k => { const s = S.lib.slots.find(x => x.slot === k); return `<option value="${k}">${esc(s.label)}</option>`; }).join("");
+}
+function suggestName(f) {
+  const base = f.startsWith("emu:") ? `da-emulatore-${f.slice(4)}` : f.replace(/\.sav$/, "");
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  return `${base}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+}
+async function libraryAction(act, f, t) {
+  if (act === "open") return openSave(f);
+  if (act === "play") {
+    const r = await ask("Gioca", `<p>Il salvataggio <strong>${esc(f)}</strong> viene copiato nello slot scelto (quello che c'era finisce nei backup), poi si apre melonDS.</p>
+      <label class="f">Slot<select name="slot">${slotOptions(S.lib.playable)}</select></label>`,
+      [["go", "Carica e avvia melonDS", "primary"], ["", "Annulla"]]);
+    if (r.value !== "go") return;
+    await run(() => api("/api/play", {f, slot: r.data.slot}), "Caricato: melonDS si sta aprendo");
+    return loadLibrary();
+  }
+  if (act === "load") {
+    const r = await ask("Carica nell'emulatore", `<p>Copia <strong>${esc(f)}</strong> nello slot scelto. Quello che c'è ora nello slot viene salvato nei backup.</p>
+      <label class="f">Slot<select name="slot">${slotOptions(S.lib.slots.map(s => s.slot))}</select></label>`,
+      [["go", "Carica", "primary"], ["", "Annulla"]]);
+    if (r.value !== "go") return;
+    await run(() => api("/api/load", {f, slot: r.data.slot}), "Caricato nello slot");
+    return loadLibrary();
+  }
+  if (act === "take") {
+    const r = await ask("Prendi dall'emulatore", `<p>Copia lo slot nella libreria con questo nome (le cartelle con /).</p>
+      <label class="f">Nome<input name="name" required value="${esc(suggestName(f))}"></label>`,
+      [["go", "Copia nella libreria", "primary"], ["", "Annulla"]]);
+    if (r.value !== "go") return;
+    const out = await run(() => api("/api/take", {slot: f.slice(4), name: r.data.name}), "Copiato nella libreria");
+    await loadLibrary();
+    if (out) openSave(out.f);
+    return;
+  }
+  if (act === "untrash") {
+    const out = await run(() => api("/api/untrash", {t}), "Ripristinato dal cestino");
+    return loadLibrary().then(() => out && openSave(out.f));
+  }
+  if (act === "more") {
+    const r = await ask(f, `<label class="f">Nuovo nome (per Duplica e Rinomina)<input name="name" value="${esc(f.replace(/\.sav$/, ""))}"></label>
+      <p class="note">Duplica fa una copia; Rinomina sposta anche la sua cronologia. Il cestino è la cartella .trash della libreria: nulla viene cancellato.</p>`,
+      [["dup", "Duplica"], ["ren", "Rinomina"], ["hist", "Cronologia"], ["trash", "Sposta nel cestino", "danger"], ["", "Chiudi"]]);
+    if (r.value === "dup") {
+      const out = await run(() => api("/api/duplicate", {f, name: r.data.name}), "Copia creata");
+      await loadLibrary();
+      if (out) openSave(out.f);
+    } else if (r.value === "ren") {
+      const out = await run(() => api("/api/rename", {f, name: r.data.name}), "Rinominato");
+      if (out && S.f === f) S.f = out.f;
+      await loadLibrary();
+      if (out && S.f === out.f) openSave(out.f);
+    } else if (r.value === "trash") {
+      const ok = await ask("Sposta nel cestino", `<p>Spostare <strong>${esc(f)}</strong> nel cestino della libreria? Si può ripristinare.</p>`, [["yes", "Sposta nel cestino", "danger"], ["", "Annulla"]]);
+      if (ok.value !== "yes") return;
+      await run(() => api("/api/trash", {f}), "Spostato nel cestino");
+      if (S.f === f) closeSave();
+      await loadLibrary();
+    } else if (r.value === "hist") {
+      showHistory(f);
+    }
+  }
+}
+
+// ---- dialogs -----------------------------------------------------------
+function ask(title, body, buttons, setup) {
+  return new Promise(resolve => {
+    const d = $("#dlg");
+    const left = buttons.filter(b => b[3] === "left"), right = buttons.filter(b => b[3] !== "left");
+    const btn = b => `<button value="${b[0]}" class="${b[2] || ""}" ${b[0] ? "" : "formnovalidate"}>${esc(b[1])}</button>`;
+    d.innerHTML = `<form method="dialog"><h3>${esc(title)}</h3><div class="dbody">${body}</div>
+      <div class="dfoot"><div class="left">${left.map(btn).join("")}</div>${right.map(btn).join("")}</div></form>`;
+    d.returnValue = "";
+    d.onclose = () => {
+      const form = $("form", d), data = {};
+      for (const el of form.elements) if (el.name) data[el.name] = el.type === "checkbox" ? el.checked : el.value;
+      resolve({value: d.returnValue, data, form});
+    };
+    d.showModal();
+    if (setup) setup(d);
+  });
+}
+
+async function showHistory(f) {
+  const detail = S.f === f && S.save ? S.save : await run(() => api(`/api/save?f=${encodeURIComponent(f)}`));
+  const list = detail?.backups ?? [];
+  const r = await ask(`Cronologia · ${f}`, list.length ? `<p class="note">Ogni modifica fatta qui salva prima una copia del file. Ripristinarne una salva a sua volta lo stato attuale.</p>
+    <div class="scroll"><table><tr><th>Quando</th><th>Tipo</th><th></th></tr>${list.map(b => `<tr>
+      <td>${new Date(b.mtime * 1000).toLocaleString("it-IT", {dateStyle: "short", timeStyle: "medium"})}</td><td class="muted">${b.name.includes("ripristinato") ? "già ripristinato con Annulla" : b.name.includes("prima-di-annullare") ? "prima di un Annulla" : "prima di una modifica"}</td>
+      <td class="num"><button class="small" value="r:${esc(b.name)}">Ripristina</button></td></tr>`).join("")}</table></div>`
+    : `<p class="muted">Nessun backup per questo file: non è ancora stato modificato da qui.</p>`, [["", "Chiudi"]]);
+  if (r.value.startsWith("r:")) {
+    const out = await run(() => api("/api/restore", {f, backup: r.value.slice(2)}), "Backup ripristinato");
+    if (out && S.f === f) showSave(out);
+    loadLibrary();
+  }
+}
+
+// ---- the open save -------------------------------------------------------
+async function openSave(f) {
+  const detail = await run(() => api(`/api/save?f=${encodeURIComponent(f)}`));
+  if (!detail) return;
+  if (S.f !== f) S.dex.changes.clear();
+  S.f = f;
+  store.set("f", f);
+  showSave(detail);
+  renderLibrary();
+  if (window.matchMedia("(max-width: 900px)").matches) $("#editor").scrollIntoView({behavior: "smooth"});
+}
+function closeSave() {
+  S.f = null; S.save = null;
+  $("#opened").hidden = true; $("#empty").hidden = false;
+}
+function showSave(detail) {
+  S.save = detail;
+  $("#empty").hidden = true; $("#opened").hidden = false;
+  const p = detail.profile, slot = S.lib?.slots.find(s => s.f === detail.f);
+  $("#title").textContent = slot ? `${slot.label} (slot dell'emulatore)` : detail.f;
+  const badges = bits(p.johto).concat(bits(p.kanto)).filter(Boolean).length;
+  $("#subtitle").textContent = `${p.name} · ID ${String(p.id).padStart(5, "0")} · ${badges} medaglie · tempo ${fmtTime(p.play_time)} · salvataggio n. ${detail.info.counter} · modificato ${fmtDate(detail.mtime)}`;
+  $("#undo").disabled = !detail.backups.some(b => b.undo);
+  $("#lock").hidden = !(detail.slot && S.melon);
+  renderTabs();
+}
+async function edit(op, args, ok = "Salvato (backup fatto)") {
+  const out = await run(() => api("/api/edit", {f: S.f, op, args}), ok);
+  if (out) { showSave(out); loadLibrary(); }
+  return out;
+}
+$("#undo").addEventListener("click", async () => {
+  const out = await run(() => api("/api/undo", {f: S.f}), "Ultima modifica annullata");
+  if (out) { S.dex.changes.clear(); showSave(out); loadLibrary(); }
+});
+$("#history").addEventListener("click", () => S.f && showHistory(S.f));
+$("#reload").addEventListener("click", () => S.f && openSave(S.f));
+
+function renderTabs() {
+  $("#tabs").innerHTML = TABS.map(([k, label]) => `<button type="button" role="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-selected="${S.tab === k}">${label}</button>`).join("");
+  ({trainer: renderTrainer, party: renderParty, box: renderBox, bag: renderBag, dex: renderDex,
+    pos: renderPosition, flags: renderFlags, info: renderInfo})[S.tab]();
+}
+$("#tabs").addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-tab]");
+  if (!b) return;
+  S.tab = b.dataset.tab; store.set("tab", S.tab); renderTabs();
+});
+
+// ---- Allenatore ----------------------------------------------------------
+function renderTrainer() {
+  const p = S.save.profile;
+  const badge = (names, value, group) => names.map((n, i) => `<label><input type="checkbox" name="${group}${i}" ${(value >> i) & 1 ? "checked" : ""}> ${n}</label>`).join("");
+  $("#tab").innerHTML = `<form id="trainer">
+    <div class="form">
+      <label class="f">Nome<input name="name" value="${esc(p.name)}" maxlength="7"></label>
+      <label class="f">Genere<select name="gender"><option value="0" ${p.gender === 0 ? "selected" : ""}>Ragazzo</option><option value="1" ${p.gender === 1 ? "selected" : ""}>Ragazza</option></select></label>
+      <label class="f">ID allenatore<input type="number" name="id" min="0" max="65535" value="${p.id}"></label>
+      <label class="f">ID segreto<input type="number" name="sid" min="0" max="65535" value="${p.sid}"></label>
+      <label class="f">Soldi<input type="number" name="money" min="0" max="999999" value="${p.money}"></label>
+      <label class="f">Gettoni<input type="number" name="coins" min="0" max="50000" value="${p.coins}"></label>
+      <label class="f">Tempo di gioco (ore, minuti, secondi)
+        <span style="display:flex;gap:4px"><input type="number" name="h" min="0" max="999" value="${p.play_time[0]}" style="width:5em">
+        <input type="number" name="m" min="0" max="59" value="${p.play_time[1]}" style="width:4em">
+        <input type="number" name="s" min="0" max="59" value="${p.play_time[2]}" style="width:4em"></span></label>
+    </div>
+    <p class="note">Il nome si scrive con i caratteri del gioco, ma savedit sa scrivere solo lettere (A–Z, a–z) e cifre, al massimo 7.
+      Un nome letto con altri caratteri si vede qui com'è, ma per cambiarlo servono solo lettere e cifre.</p>
+    <div class="box"><h3>Medaglie di Johto</h3><div class="badges">${badge(JOHTO, p.johto, "j")}</div></div>
+    <div class="box"><h3>Medaglie di Kanto</h3><div class="badges">${badge(KANTO, p.kanto, "k")}</div></div>
+    <label style="display:flex;gap:8px;align-items:flex-start;margin-top:14px"><input type="checkbox" name="retag" checked>
+      <span>Se cambiano nome, ID o genere, aggiorna anche l'allenatore originale dei Pokémon che erano del giocatore.
+      <span class="muted">Altrimenti il gioco li considera scambiati, e oltre il livello concesso dalle medaglie non obbediscono. Un Pokémon cromatico può smettere di esserlo se cambia l'ID.</span></span></label>
+    <div class="bar"><button class="primary" type="submit">Salva allenatore</button></div>
+  </form>`;
+  $("#trainer").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const f = ev.target.elements, sum = (g) => [...Array(8)].reduce((a, _, i) => a | (f[g + i].checked ? 1 << i : 0), 0);
+    edit("trainer", {name: f.name.value, gender: +f.gender.value, id: +f.id.value, sid: +f.sid.value, money: +f.money.value,
+                     coins: +f.coins.value, play_time: [+f.h.value, +f.m.value, +f.s.value], johto: sum("j"), kanto: sum("k"),
+                     retag: f.retag.checked});
+  });
+}
+
+// ---- Squadra -------------------------------------------------------------
+function monCard(m, i, count) {
+  if (!m || !m.ok) return `<div class="mon"><div class="head">${iconImg(m)}<span class="invalid">Checksum errato</span></div>
+    <div class="sub">Questo Pokémon non si legge (nel gioco è un Uovo Difettoso).</div></div>`;
+  const hp = m.stats ? Math.round(100 * m.hp / Math.max(1, m.stats[0])) : null;
+  return `<div class="mon">
+    <div class="head">${iconImg(m, 48)}<div><div class="nm">${esc(m.nickname || m.species_name)} ${GENDER_MARK[m.gender] || ""} ${m.shiny ? `<span class="star" title="Cromatico">★</span>` : ""}</div>
+      <div class="sub">${esc(m.species_name)} · Lv. ${m.level}${m.egg ? " · uovo" : ""}</div></div></div>
+    ${hp !== null ? `<div class="hp" title="PS ${m.hp}/${m.stats[0]}"><i style="width:${hp}%"></i></div><div class="sub">PS ${m.hp}/${m.stats[0]}</div>` : ""}
+    <div class="sub">${esc(m.nature_name)} · ${esc(m.ability_name)}${m.item ? ` · ${esc(m.item_name)}` : ""}</div>
+    <ul>${m.moves.map(mv => `<li>${esc(mv.name)} <span class="muted">${mv.pp}/${mv.pp_max}</span></li>`).join("")}</ul>
+    <div class="acts">
+      <button class="small" type="button" data-edit="${i}">Modifica</button>
+      <button class="small" type="button" data-up="${i}" ${i === 0 ? "disabled" : ""} aria-label="Sposta su">↑</button>
+      <button class="small" type="button" data-down="${i}" ${i === count - 1 ? "disabled" : ""} aria-label="Sposta giù">↓</button>
+    </div></div>`;
+}
+function renderParty() {
+  const party = S.save.party;
+  $("#tab").innerHTML = `<div class="grid">${party.map((m, i) => monCard(m, i, party.length)).join("")}
+    ${party.length < 6 ? `<div class="addmon"><button type="button" class="primary" id="addparty">Aggiungi un Pokémon</button></div>` : ""}</div>
+    <p class="note">Un Pokémon aggiunto qui è del giocatore (allenatore originale, ID e genere), come quelli di savedit, così obbedisce.
+      "Sposta nel box" lo mette nel primo posto libero del box scelto nella scheda Box (ora il box ${S.box + 1}).</p>`;
+  $("#tab").onclick = ev => {
+    const b = ev.target.closest("button");
+    if (!b) return;
+    if (b.id === "addparty") return monDialog({kind: "party"}, null);
+    if (b.dataset.edit !== undefined) return monDialog({kind: "party", slot: +b.dataset.edit}, party[+b.dataset.edit]);
+    if (b.dataset.up !== undefined) return edit("party_swap", {a: +b.dataset.up, b: +b.dataset.up - 1}, "Ordine cambiato");
+    if (b.dataset.down !== undefined) return edit("party_swap", {a: +b.dataset.down, b: +b.dataset.down + 1}, "Ordine cambiato");
+  };
+}
+
+// ---- the Pokemon dialog -------------------------------------------------
+function monDialog(where, m) {
+  const isNew = !m;
+  const v = m || {species: 0, level: 5, nature: 0, item: 0, moves: [], ivs: [31, 31, 31, 31, 31, 31], evs: [0, 0, 0, 0, 0, 0], friendship: 70};
+  const title = isNew ? (where.kind === "party" ? "Nuovo Pokémon in squadra" : `Nuovo Pokémon · box ${where.box + 1}, posto ${where.slot + 1}`)
+                      : (where.kind === "party" ? `Squadra, posto ${where.slot + 1}` : `Box ${where.box + 1}, posto ${where.slot + 1}`);
+  const moves = [0, 1, 2, 3].map(i => v.moves[i]?.id ?? 0);
+  const six = (name, vals, max) => `<div class="stats6">${STATS.map((s, i) => `<label class="f">${s}<input type="number" name="${name}${i}" min="0" max="${max}" value="${vals[i]}"></label>`).join("")}</div>`;
+  const summary = isNew ? "" : `<div class="monsum">${iconImg(m, 64)}<dl class="kv">
+      <dt>Soprannome</dt><dd>${esc(m.nickname)}${m.nicknamed ? "" : ` <span class="muted">(nome della specie)</span>`}</dd>
+      <dt>Allenatore</dt><dd>${esc(m.ot_name)} · ID ${String(m.ot_id).padStart(5, "0")}</dd>
+      <dt>Abilità</dt><dd>${esc(m.ability_name)}${m.hidden_ability ? " (nascosta)" : ""}</dd>
+      <dt>Personalità</dt><dd class="mono">${m.personality.toString(16).padStart(8, "0")}${m.shiny ? ` <span class="star">★ cromatico</span>` : ""}${m.mint !== null ? ` · menta: ${esc(S.data.natures[m.mint])}` : ""}</dd>
+      <dt>Esperienza</dt><dd>${m.exp}${m.stats ? ` · PS ${m.hp}/${m.stats[0]} · ${m.stats.slice(1).map((x, i) => `${STATS[i + 1]} ${x}`).join(" · ")}` : ""}</dd>
+    </dl></div>`;
+  const body = `${summary}
+    <div class="form">
+      <label class="f" style="grid-column:1/-1">Specie<input name="species" list="dl-species" required value="${esc(speciesRef(v.species))}" placeholder="Cerca per nome…"></label>
+      <label class="f">Livello<input type="number" name="level" min="1" max="100" required value="${v.level}"></label>
+      <label class="f">Natura<select name="nature">${S.data.natures.map((_, n) => `<option value="${n}" ${n === v.nature ? "selected" : ""}>${esc(natureLabel(n))}</option>`).join("")}</select></label>
+      <label class="f">Strumento tenuto<input name="held" list="dl-items" value="${esc(itemRef(v.item))}" placeholder="Nessuno"></label>
+      <label class="f">Amicizia<input type="number" name="friendship" min="0" max="255" value="${v.friendship}"></label>
+    </div>
+    <div class="box"><div class="sechead"><h3 style="margin:0">Mosse</h3><button type="button" class="small" id="learn">Mosse per livello</button></div>
+      <div class="moves4">${moves.map((id, i) => `<input name="move${i}" list="dl-moves" value="${esc(moveRef(id))}" placeholder="Mossa ${i + 1}" aria-label="Mossa ${i + 1}">`).join("")}</div>
+      <p class="note">Una mossa che il Pokémon già conosce tiene i suoi PP; una nuova li ha pieni. "Mosse per livello" mette le ultime quattro che la specie impara entro il livello.</p></div>
+    <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="31">Tutti 31</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${six("iv", v.ivs, 31)}</div>
+    <div class="box"><div class="sechead"><h3 style="margin:0">EV</h3><span class="muted" id="evsum"></span></div>${six("ev", v.evs, 255)}</div>
+    <p class="note">Cambiare natura cambia la personalità, tenendo genere e cromaticità (una menta viene tolta). Cambiare specie ricalcola abilità, genere e nome se non ha un soprannome.</p>`;
+  const buttons = isNew ? [["save", "Aggiungi", "primary"], ["", "Annulla"]]
+    : [["save", "Salva", "primary"], ["", "Chiudi"],
+       [where.kind === "party" ? "deposit" : "withdraw", where.kind === "party" ? `Sposta nel box ${S.box + 1}` : "Sposta in squadra", "", "left"],
+       ["remove", where.kind === "party" ? "Togli dalla squadra" : "Libera", "danger", "left"]];
+  return ask(title, body, buttons, d => {
+    const form = $("form", d), evsum = () => { const t = [0, 1, 2, 3, 4, 5].reduce((a, i) => a + (+form.elements["ev" + i].value || 0), 0); $("#evsum", d).textContent = `totale ${t} / 510`; $("#evsum", d).style.color = t > 510 ? "var(--danger)" : ""; };
+    evsum();
+    form.addEventListener("input", ev => { if (ev.target.name?.startsWith("ev")) evsum(); });
+    $$("[data-iv]", d).forEach(b => b.onclick = () => [0, 1, 2, 3, 4, 5].forEach(i => form.elements["iv" + i].value = b.dataset.iv));
+    $("#learn", d).onclick = async () => {
+      const sp = parseRef(form.elements.species.value, S.speciesIndex), lv = +form.elements.level.value;
+      if (!sp) return toast("Scegli prima la specie", true);
+      const list = await run(() => api(`/api/learnset?species=${sp}&level=${lv}`));
+      if (list) [0, 1, 2, 3].forEach(i => form.elements["move" + i].value = moveRef(list[i] || 0));
+    };
+  }).then(async r => {
+    if (!r.value) return;
+    const base = where.kind === "party" ? {slot: where.slot} : {box: where.box, slot: where.slot};
+    if (r.value === "remove") {
+      const ok = await ask("Conferma", `<p>${where.kind === "party" ? "Togliere questo Pokémon dalla squadra" : "Liberare questo Pokémon"}? Resta nei backup: "Annulla ultima modifica" lo riporta.</p>`, [["yes", "Sì", "danger"], ["", "No"]]);
+      if (ok.value === "yes") edit(where.kind === "party" ? "party_remove" : "box_remove", base, "Pokémon tolto");
+      return;
+    }
+    if (r.value === "deposit") return edit("deposit", {slot: where.slot, box: S.box}, `Spostato nel box ${S.box + 1}`);
+    if (r.value === "withdraw") return edit("withdraw", base, "Spostato in squadra");
+    const d = r.data, bad = [];
+    const species = parseRef(d.species, S.speciesIndex), item = parseRef(d.held, S.itemIndex);
+    const mv = [0, 1, 2, 3].map(i => parseRef(d["move" + i], S.moveIndex));
+    if (!species) bad.push("specie");
+    if (item === null) bad.push("strumento");
+    mv.forEach((x, i) => x === null && bad.push(`mossa ${i + 1}`));
+    if (bad.length) { toast(`Non riconosco: ${bad.join(", ")}. Sceglili dall'elenco.`, true); return monDialog(where, m); }
+    const args = {...base, species, level: +d.level, nature: +d.nature, item, friendship: +d.friendship,
+                  moves: mv.filter(Boolean), ivs: [0, 1, 2, 3, 4, 5].map(i => +d["iv" + i]), evs: [0, 1, 2, 3, 4, 5].map(i => +d["ev" + i])};
+    const op = isNew ? (where.kind === "party" ? "party_add" : "box_add") : (where.kind === "party" ? "party_edit" : "box_edit");
+    edit(op, args, isNew ? "Pokémon aggiunto" : "Pokémon salvato");
+  });
+}
+
+// ---- Box -----------------------------------------------------------------
+function renderBox() {
+  const boxes = S.save.boxes, mons = boxes.mons[S.box];
+  const count = b => boxes.mons[b].filter(Boolean).length;
+  $("#tab").innerHTML = `<div class="boxnav">
+      <button type="button" class="small" id="prevbox" aria-label="Box precedente">◀</button>
+      <select id="boxsel" aria-label="Box">${boxes.names.map((n, b) => `<option value="${b}" ${b === S.box ? "selected" : ""}>${b + 1}. ${esc(n)} (${count(b)}/30)</option>`).join("")}</select>
+      <button type="button" class="small" id="nextbox" aria-label="Box successivo">▶</button>
+      <span class="muted">Il gioco è aperto sul box ${boxes.current + 1}.</span>
+    </div>
+    <div class="pc">${mons.map((m, s) => `<button type="button" class="${m ? "full" : ""}" data-slot="${s}" title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
+    <p class="note">Clic su un posto occupato per modificarlo o spostarlo in squadra; su uno vuoto per aggiungere un Pokémon.</p>`;
+  const go = b => { S.box = (b + 30) % 30; store.set("box", S.box); renderBox(); };
+  $("#prevbox").onclick = () => go(S.box - 1);
+  $("#nextbox").onclick = () => go(S.box + 1);
+  $("#boxsel").onchange = ev => go(+ev.target.value);
+  $(".pc").onclick = ev => {
+    const b = ev.target.closest("button[data-slot]");
+    if (!b) return;
+    const slot = +b.dataset.slot, m = mons[slot];
+    if (m && !m.ok) return toast("Questo posto contiene un Pokémon illeggibile (checksum errato).", true);
+    monDialog({kind: "box", box: S.box, slot}, m);
+  };
+}
+
+// ---- Borsa -----------------------------------------------------------------
+function renderBag() {
+  const bag = S.save.bag, cap = Object.fromEntries(S.data.pockets);
+  const rows = bag[S.pocket] || [];
+  $("#tab").innerHTML = `<div class="seg">${POCKET_ORDER.map(p => `<button type="button" data-pocket="${p}" class="${p === S.pocket ? "on" : ""}">${POCKET_NAMES[p]} <span class="muted">${bag[p].length}</span></button>`).join("")}</div>
+    <form id="additem" class="bar" style="margin:0 0 12px">
+      <input name="what" list="dl-items" placeholder="Aggiungi uno strumento…" required style="flex:1;min-width:200px" aria-label="Strumento">
+      <input type="number" name="quantity" min="1" max="999" value="1" aria-label="Quantità">
+      <button class="primary" type="submit">Aggiungi</button>
+    </form>
+    <p class="note" style="margin-bottom:10px">Lo strumento va nella tasca che il gioco gli assegna. Le MT sono una ciascuna (New Gold non le consuma); le MN fino a 99, il resto fino a 999.</p>
+    <div class="scroll"><table>
+      <tr><th>${POCKET_NAMES[S.pocket]} <span class="muted">(${rows.length} di ${cap[S.pocket]} posti)</span></th><th class="num">Quantità</th><th></th></tr>
+      ${rows.map(r => `<tr><td>${esc(r.name)}</td>
+        <td class="num"><input type="number" min="1" max="999" value="${r.quantity}" data-item="${r.item}" aria-label="Quantità di ${esc(r.name)}"></td>
+        <td class="num"><button type="button" class="small" data-set="${r.item}">Imposta</button> <button type="button" class="small danger" data-del="${r.item}">Togli</button></td></tr>`).join("")
+        || `<tr><td colspan="3" class="muted">Tasca vuota.</td></tr>`}
+    </table></div>`;
+  $(".seg").onclick = ev => { const b = ev.target.closest("[data-pocket]"); if (b) { S.pocket = b.dataset.pocket; renderBag(); } };
+  $("#additem").onsubmit = ev => {
+    ev.preventDefault();
+    const id = parseRef(ev.target.elements.what.value, S.itemIndex);
+    if (!id) return toast("Scegli lo strumento dall'elenco", true);
+    const pocket = S.items.get(id)?.pocket;
+    if (!pocket) return toast("Questo strumento non va in nessuna tasca", true);
+    const have = (bag[pocket] || []).find(r => r.item === id)?.quantity || 0;
+    S.pocket = pocket;
+    edit("item", {item: id, quantity: have + +ev.target.elements.quantity.value}, "Strumento aggiunto");
+  };
+  $("table", $("#tab")).onclick = ev => {
+    const b = ev.target.closest("button");
+    if (!b) return;
+    if (b.dataset.del) return edit("item", {item: +b.dataset.del, quantity: 0}, "Strumento tolto");
+    if (b.dataset.set) return edit("item", {item: +b.dataset.set, quantity: +$(`input[data-item="${b.dataset.set}"]`).value}, "Quantità cambiata");
+  };
+}
+
+// ---- Pokédex -------------------------------------------------------------
+function renderDex() {
+  const dex = S.save.dex, seen = new Set(dex.seen), caught = new Set(dex.caught), ch = S.dex.changes;
+  const state = id => ch.get(id) || {seen: seen.has(id), caught: caught.has(id)};
+  const q = S.dex.q.toLowerCase();
+  const rows = S.data.dex.filter(id => {
+    const s = state(id), name = S.species.get(id)?.name ?? "";
+    if (q && !name.toLowerCase().includes(q) && String(id) !== q) return false;
+    return S.dex.show === "all" || (S.dex.show === "seen" && s.seen) || (S.dex.show === "caught" && s.caught) || (S.dex.show === "missing" && !s.caught);
+  });
+  $("#tab").innerHTML = `<div class="bar" style="margin-top:0">
+      <strong>Visti ${dex.seen.length}</strong> · <strong>Catturati ${dex.caught.length}</strong> <span class="muted">su ${S.data.dex.length}</span>
+      <label style="display:flex;gap:6px;align-items:center;margin-left:12px"><input type="checkbox" id="dexon" ${dex.enabled ? "checked" : ""}> Pokédex ottenuto</label>
+      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="dexnat" ${dex.national ? "checked" : ""}> Pokédex Nazionale</label>
+    </div>
+    <div class="bar">
+      <button type="button" data-all="seen">Tutti visti</button><button type="button" data-all="caught">Tutti catturati</button>
+      <button type="button" data-all="clear" class="danger">Azzera</button>
+      <span style="flex:1"></span>
+      <button type="button" class="primary" id="dexsave" ${ch.size ? "" : "disabled"}>Salva modifiche (${ch.size})</button>
+      ${ch.size ? `<button type="button" id="dexdrop">Scarta</button>` : ""}
+    </div>
+    <div class="bar">
+      <input type="search" id="dexq" placeholder="Cerca per nome o numero…" value="${esc(S.dex.q)}" style="flex:1;min-width:180px" aria-label="Cerca nel Pokédex">
+      <select id="dexshow" aria-label="Mostra">${[["all", "Tutti"], ["seen", "Visti"], ["caught", "Catturati"], ["missing", "Non catturati"]].map(([k, l]) => `<option value="${k}" ${S.dex.show === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+    </div>
+    <p class="note">Le caselle cambiano solo qui finché non premi "Salva modifiche". Catturato vale solo se anche visto, come lo legge il gioco.</p>
+    <div class="dexlist" style="margin-top:10px">${rows.map(id => { const s = state(id); return `<div class="dexrow ${ch.has(id) ? "dirty" : ""}" data-id="${id}">
+      <span class="n">${id}</span><span class="nm">${esc(S.species.get(id)?.name ?? id)}</span>
+      <label><input type="checkbox" data-k="seen" ${s.seen ? "checked" : ""}> visto</label>
+      <label><input type="checkbox" data-k="caught" ${s.caught ? "checked" : ""}> preso</label></div>`; }).join("") || `<span class="muted">Nessuna specie.</span>`}</div>`;
+  $("#dexq").oninput = ev => { S.dex.q = ev.target.value; const pos = ev.target.selectionStart; renderDex(); const el = $("#dexq"); el.focus(); el.setSelectionRange(pos, pos); };
+  $("#dexshow").onchange = ev => { S.dex.show = ev.target.value; renderDex(); };
+  $(".dexlist").onchange = ev => {
+    const row = ev.target.closest(".dexrow"), id = +row.dataset.id, s = {...state(id)};
+    s[ev.target.dataset.k] = ev.target.checked;
+    if (ev.target.dataset.k === "caught" && s.caught) s.seen = true;
+    if (ev.target.dataset.k === "seen" && !s.seen) s.caught = false;
+    if (s.seen === seen.has(id) && s.caught === caught.has(id)) ch.delete(id); else ch.set(id, s);
+    renderDex();
+  };
+  $("#dexsave").onclick = async () => {
+    const changes = [...ch].map(([id, s]) => ({id, ...s}));
+    if (await edit("dex", {changes}, `Pokédex salvato (${changes.length} specie)`)) { ch.clear(); renderDex(); }
+  };
+  if ($("#dexdrop")) $("#dexdrop").onclick = () => { ch.clear(); renderDex(); };
+  $$("[data-all]").forEach(b => b.onclick = async () => {
+    const what = {seen: "segnare tutte le specie come viste", caught: "segnare tutte le specie come catturate", clear: "azzerare visti e catturati"}[b.dataset.all];
+    const r = await ask("Pokédex", `<p>Vuoi ${what}? Riguarda tutte le ${S.data.dex.length} specie del Pokédex Nazionale.</p>`, [["yes", "Sì", b.dataset.all === "clear" ? "danger" : "primary"], ["", "No"]]);
+    if (r.value === "yes" && await edit("dex_all", {mode: b.dataset.all})) { ch.clear(); renderDex(); }
+  });
+  $("#dexon").onchange = ev => edit("dex_switches", {enabled: ev.target.checked});
+  $("#dexnat").onchange = ev => edit("dex_switches", {national: ev.target.checked});
+}
+
+// ---- Posizione -------------------------------------------------------------
+function renderPosition() {
+  const pos = S.save.position, c = pos.current, place = S.maps.get(c.map);
+  $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">
+      <dt>Mappa</dt><dd><strong>${esc(place?.name || "?")}</strong> <span class="muted">${esc(place?.const || "")} · id ${c.map}</span></dd>
+      <dt>Coordinate</dt><dd>x ${c.x}, y ${c.y}, rivolto ${DIRS[c.direction] ?? c.direction}</dd>
+      <dt>Continua con warp</dt><dd>${pos.by_warp ? `sì, verso ${esc(S.maps.get(pos.warp.map)?.name || pos.warp.map)} (${pos.warp.x}, ${pos.warp.y})` : "no"}</dd>
+    </dl>
+    <form id="posform" class="box">
+      <h3>Sposta il giocatore</h3>
+      <div class="form">
+        <label class="f" style="grid-column:1/-1">Mappa<input name="map" list="dl-maps" required value="${esc(place ? ref(mapLabel(place), c.map) : "")}" placeholder="Cerca per nome…"></label>
+        <label class="f">x<input type="number" name="x" min="0" max="65535" required value="${c.x}"></label>
+        <label class="f">y<input type="number" name="y" min="0" max="65535" required value="${c.y}"></label>
+        <label class="f">Rivolto verso<select name="dir">${DIRS.map((d, i) => `<option value="${i}" ${i === c.direction ? "selected" : ""}>${d}</option>`).join("")}</select></label>
+      </div>
+      <p class="note">Scrive la posizione come <span class="mono">savedit.py --where</span>: la posizione attuale e il warp dinamico, con FLAG_UNK_966,
+        così Continua entra con un warp e il gioco ricostruisce giocatore, follower e persone della mappa dai dati di zona.
+        Le coordinate sono in caselle, come il gioco le salva: contate dall'angolo della matrice della mappa, quindi all'aperto
+        sono numeri grandi (Route 29 è sui 600, 400) e al chiuso partono da 0. Nelle palestre dei salvataggi gyms/ il leader è una casella sopra.</p>
+      <div class="bar"><button type="submit" class="primary">Sposta</button></div>
+    </form>`;
+  $("#posform").onsubmit = ev => {
+    ev.preventDefault();
+    const f = ev.target.elements, map = parseRef(f.map.value, S.mapIndex);
+    if (!map && map !== 0) return toast("Scegli la mappa dall'elenco", true);
+    edit("position", {map, x: +f.x.value, y: +f.y.value, direction: +f.dir.value}, "Posizione scritta");
+  };
+}
+
+// ---- Flag e variabili ------------------------------------------------------
+let flagTimer = null;
+function renderFlags() {
+  $("#tab").innerHTML = `<div class="bar" style="margin-top:0">
+      <input type="search" id="flagq" placeholder="Cerca per nome: UNK_076, 4079, GYM…" value="${esc(S.flagq || "")}" style="flex:1;min-width:200px" aria-label="Cerca flag e variabili">
+    </div>
+    <p class="note">Solo flag e variabili che il salvataggio conserva (include/constants/flags.h e vars.h). Ogni cambio si salva subito, con backup.</p>
+    <div id="flagres" class="scroll" style="margin-top:10px"></div>`;
+  const search = async () => {
+    const q = $("#flagq").value.trim();
+    S.flagq = q;
+    if (q.length < 2) { $("#flagres").innerHTML = `<p class="muted">Scrivi almeno due caratteri.</p>`; return; }
+    const rows = await run(() => api(`/api/flags?f=${encodeURIComponent(S.f)}&q=${encodeURIComponent(q)}`));
+    if (!rows) return;
+    $("#flagres").innerHTML = rows.length ? `<table><tr><th>Nome</th><th>Numero</th><th>Valore</th></tr>${rows.map(r => `<tr>
+      <td class="mono">${esc(r.name)}</td><td class="mono muted">0x${r.number.toString(16)}</td>
+      <td>${r.kind === "flag" ? `<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-flag="${r.number}" ${r.value ? "checked" : ""}> ${r.value ? "attivo" : "spento"}</label>`
+        : `<input type="number" min="0" max="65535" value="${r.value}" data-var="${r.number}" aria-label="${esc(r.name)}"> <button type="button" class="small" data-setvar="${r.number}">Imposta</button>`}</td></tr>`).join("")}</table>`
+      : `<p class="muted">Nessun risultato.</p>`;
+  };
+  $("#flagq").oninput = () => { clearTimeout(flagTimer); flagTimer = setTimeout(search, 250); };
+  $("#flagres").onchange = async ev => {
+    if (ev.target.dataset.flag) { await edit("flag", {number: +ev.target.dataset.flag, value: ev.target.checked}, "Flag scritto"); }
+  };
+  $("#flagres").onclick = async ev => {
+    const b = ev.target.closest("[data-setvar]");
+    if (b) await edit("var", {number: +b.dataset.setvar, value: +$(`input[data-var="${b.dataset.setvar}"]`).value}, "Variabile scritta");
+  };
+  search();
+}
+
+// ---- Info ------------------------------------------------------------------
+function renderInfo() {
+  const i = S.save.info, hx = n => "0x" + n.toString(16).padStart(6, "0");
+  $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">
+      <dt>File</dt><dd class="mono">${esc(S.save.path)}</dd>
+      <dt>Metà più recente</dt><dd>${hx(i.half)} · salvataggio n. ${i.counter}</dd>
+    </dl>
+    <div class="box"><h3>Le due metà della flash</h3><div class="scroll"><table><tr><th>Inizio</th><th>Valida</th><th class="num">Contatore</th></tr>
+      ${i.halves.map(h => `<tr><td class="mono">${hx(h.at)}</td><td>${h.valid ? "sì" : `<span class="invalid">no</span>`}</td><td class="num">${h.valid ? h.counter : "—"}</td></tr>`).join("")}</table></div>
+      <p class="note">Il gioco carica la metà valida col contatore più alto e salva nell'altra. Le modifiche fatte qui riscrivono solo la metà più recente: l'altra resta il salvataggio precedente.</p></div>
+    <div class="box"><h3>Blocchi</h3><div class="scroll"><table><tr><th>#</th><th>Blocco</th><th>Offset</th><th class="num">Byte</th><th>Slot</th></tr>
+      ${i.blocks.map(b => `<tr><td class="muted">${b.index}</td><td class="mono">${esc(b.id)}</td><td class="mono">${hx(b.offset)}</td><td class="num">${b.size}</td><td>${esc(b.slot)}</td></tr>`).join("")}</table></div></div>`;
+}
+
+// ---- melonDS -----------------------------------------------------------------
+function setMelon(on) {
+  S.melon = on;
+  $("#melon").textContent = on ? "melonDS aperto" : "melonDS chiuso";
+  $("#melon").classList.toggle("on", on);
+  $("#banner").hidden = !on;
+  if (S.save) $("#lock").hidden = !(S.save.slot && on);
+}
+async function poll() {
+  try { const s = await api("/api/state"); if (s.melonds !== S.melon) { setMelon(s.melonds); loadLibrary(); } } catch {}
+}
+
+async function init() {
+  S.data = await run(() => api("/api/data"));
+  if (!S.data) return;
+  buildLists();
+  S.tab = TABS.some(t => t[0] === store.get("tab")) ? store.get("tab") : "trainer";
+  S.box = Math.min(29, Math.max(0, +store.get("box") || 0));
+  await loadLibrary();
+  const last = store.get("f");
+  if (last && S.lib && (S.lib.files.some(e => e.f === last && e.valid) || S.lib.slots.some(e => e.f === last && e.valid))) openSave(last);
+  setInterval(poll, 4000);
+}
+init();
+</script>
+</body>
+</html>
