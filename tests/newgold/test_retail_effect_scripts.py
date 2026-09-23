@@ -43,7 +43,6 @@ STILL_DIFFERENT = {
     97: PARENTAL_BOND,
     104: IN_C.format("Triple Kick's rising power, CalcBaseDamage.c"),
     105: IN_C.format("the theft, ServerDoPostMoveEffects.c"),
-    109: "Curse by a Ghost given as a third type",
     112: "the entry-hazard queue, which nothing here reads yet",
     115: "the primal weathers and the engine's weather subscripts",
     121: IN_C.format("Return's power, CalcBaseDamage.c"),
@@ -200,6 +199,11 @@ class BroughtOverTests(unittest.TestCase):
                           r"HOLD_EFFECT_ARCEUS_FAIRY, (\w+)", text)
         self.assertIsNotNone(label)
         self.assertRegex(text, label.group(1) + r":\s*UpdateVar OPCODE_SET, BSCRIPT_VAR_MOVE_TYPE, TYPE_FAIRY")
+
+    def test_curse_asks_the_third_type(self):
+        # A Pokemon given Ghost as a third type (Trick-or-Treat) curses the
+        # Ghost way; retail looked at the first two types only.
+        self.assertIn("GoToIfThirdType BATTLER_CATEGORY_ATTACKER, TYPE_GHOST", script(109))
 
 
 if __name__ == "__main__":
