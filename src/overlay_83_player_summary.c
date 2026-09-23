@@ -46,7 +46,7 @@ void ov83_022421E0(Ov83PlayerSummaryStatePrefix *state, BOOL scheduleTransfer) {
     }
     ov83_02240C48(state, 0, state->summary.level, 3, PRINTING_MODE_LEFT_ALIGN);
     ov83_02241DD8(state, &state->windows[21], state->msgData, msg_0031_00094, 0, 0, 0, MAKE_TEXT_COLOR(1, 2, 0), 0);
-    BufferAbilityName(state->messageFormat, 0, state->summary.ability);
+    BufferAbilityName(state->messageFormat, 0, GetMonData(state->summary.mon, MON_DATA_ABILITY, NULL));
     ov83_02241DD8(state, &state->windows[23], state->msgData, msg_0031_00075, 0, 0, 0, MAKE_TEXT_COLOR(1, 2, 0), 0);
     BufferNatureName(state->messageFormat, 0, state->summary.nature);
     ov83_02241DD8(state, &state->windows[25], state->msgData, msg_0031_00073, 0, 0, 0, MAKE_TEXT_COLOR(1, 2, 0), 0);

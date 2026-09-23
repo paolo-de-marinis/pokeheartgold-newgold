@@ -55,7 +55,7 @@ void ov83_02246114(Ov83OpponentSummaryStatePrefix *state, BOOL scheduleTransfer)
     }
 
     if (state->statsVisible[monIndex] != 0) {
-        BufferAbilityName(state->messageFormat, 0, state->summary.ability);
+        BufferAbilityName(state->messageFormat, 0, GetMonData(state->summary.mon, MON_DATA_ABILITY, NULL));
         ov83_02245D08(state, &state->windows[17], state->msgData, msg_0033_00053, 0, 0, 0, MAKE_TEXT_COLOR(1, 2, 0), 0);
         BufferNatureName(state->messageFormat, 0, state->summary.nature);
         ov83_02245D08(state, &state->windows[19], state->msgData, msg_0033_00051, 0, 0, 0, MAKE_TEXT_COLOR(1, 2, 0), 0);
