@@ -216,6 +216,28 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual((edited["item"], edited["hp"]), (1, 3))
         self.assertEqual(sv.open_mon(sv.edit_mon(hurt, item=1))["party"], sv.open_mon(hurt)["party"])
 
+    def test_a_party_pokemon_has_the_games_empty_mail(self):
+        """The mail record Mail_Init leaves, which READ on a held Mail
+        needs; an all-zero one sends the game to its error screen."""
+        # A Chikorita the game made (fresh-newbark.sav); the third message's
+        # number is whatever the heap held, MailMsg_Init leaves it alone.
+        game = bytes.fromhex("00000000000207ff" + "ff" * 22 + "0000" + "ffff0000ffffffff" * 2 + "ffffed00ffffffff")
+        self.assertEqual((sv.MAIL_INIT[:0x32], sv.MAIL_INIT[0x34:]), (game[:0x32], game[0x34:]))
+
+        def mail(raw):
+            return bytes(sv.open_mon(raw)["party"][sv.MAIL_AT:sv.MAIL_AT + len(sv.MAIL_INIT)])
+        save = self.open()
+        self.assertEqual({mail(raw) for raw in sv.party_raw(save)}, {sv.MAIL_INIT})
+        sv.deposit(save, 0, 0, 0)
+        sv.withdraw(save, 0, 0)
+        self.assertEqual(mail(sv.party_raw(save)[-1]), sv.MAIL_INIT, "withdrawn as the box-to-party copy does")
+        old = sv.open_mon(sv.party_raw(save)[0])
+        old["party"][sv.MAIL_AT:sv.MAIL_AT + len(sv.MAIL_INIT)] = bytes(len(sv.MAIL_INIT))
+        cli_made = sv.mon_crypt(bytes(old["party"]), old["personality"])
+        raw = sv.party_raw(save)[0][:sv.BOX_MON] + cli_made
+        self.assertEqual(mail(raw), bytes(len(sv.MAIL_INIT)))
+        self.assertEqual(mail(sv.edit_mon(raw, item=137)), sv.MAIL_INIT, "an all-zero one is mended on an edit")
+
     def test_a_nature_keeps_gender_and_shininess(self):
         shiny_one = ((0x1111 ^ 0x2222 ^ 0x3344 ^ 5) << 16) | 0x3344
         self.assertTrue(sv.is_shiny(shiny_one, 0x1111_2222))

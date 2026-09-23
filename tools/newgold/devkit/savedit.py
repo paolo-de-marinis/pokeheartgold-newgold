@@ -931,6 +931,15 @@ MINT_MASK = 0x3E            # MON_MINT_NATURE_MASK in blockB->unused2
 SWAP_ABILITY_BIT = 1        # MON_SWAP_ABILITY_SLOT_BIT, the Ability Capsule's
 HIDDEN_ABILITY_BIT = 1      # MON_HIDDEN_ABILITY_BIT in blockB->unused1
 EXP_BITS = 0x1FFFFF         # PokemonDataBlockA.exp : 21
+# PartyPokemon.mail, after the status, the level, the capsule, the HP and
+# the five stats, as Mail_Init leaves it -- CreateMon and the box-to-party
+# copy both run it: no author (name all EOS), MAIL_NONE, no icons, and three
+# MailMsg_Init messages (bank MAILMSG_BANK_NONE, words EC_WORD_NULL). An
+# all-zero one has an author name with no EOS, and reading a Mail held on
+# it ends in CopyU16ArrayToString's assertion and the error screen.
+MAIL_AT = 0x14
+MAIL_INIT = (struct.pack("<IBBBB8H3HH", 0, 0, LANGUAGE_ENGLISH, VERSION_HEARTGOLD, 0xFF, *[0xFFFF] * 11, 0)
+             + struct.pack("<4H", 0xFFFF, 0, 0xFFFF, 0xFFFF) * 3)
 
 
 def open_mon(raw):
@@ -954,7 +963,8 @@ def open_mon(raw):
 
 def seal_mon(mon):
     """The blocks back in this personality's order, summed, and encrypted
-    under the sum; the party part under the personality."""
+    under the sum; the party part under the personality, its mail record
+    Mail_Init's if it was all zero (savedit's own before, never the game's)."""
     order = shuffle_order(mon["personality"])
     body = bytearray(4 * BLOCK)
     for which, block in enumerate(mon["blocks"]):
@@ -962,7 +972,10 @@ def seal_mon(mon):
     checksum = mon_checksum(body)
     out = struct.pack("<IHH", mon["personality"], mon["flags"], checksum) + mon_crypt(bytes(body), checksum)
     if mon["party"] is not None:
-        out += mon_crypt(bytes(mon["party"]), mon["personality"])
+        party = bytearray(mon["party"])
+        if not any(party[MAIL_AT:MAIL_AT + len(MAIL_INIT)]):
+            party[MAIL_AT:MAIL_AT + len(MAIL_INIT)] = MAIL_INIT
+        out += mon_crypt(bytes(party), mon["personality"])
     return out
 
 
