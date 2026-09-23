@@ -13,7 +13,10 @@ _013:
     IfSameSide BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_SIDE_EFFECT_MON, _038
     CheckSubstitute BATTLER_CATEGORY_SIDE_EFFECT_MON, _038
     CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_HP, 0, _038
+    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SIDE_EFFECT_MON, ABILITY_GUARD_DOG, _GUARD_DOG
     UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_PARAM, MOVE_SUBSCRIPT_PTR_ATTACK_DOWN_1_STAGE
+
+_CHANGE:
     UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_TYPE, SIDE_EFFECT_TYPE_ABILITY
     Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE
 
@@ -21,4 +24,15 @@ _038:
     UpdateVar OPCODE_ADD, BSCRIPT_VAR_BATTLER_SPEED_TEMP, 1
     GoToIfValidMon BSCRIPT_VAR_BATTLER_SPEED_TEMP, _013
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_ATTACKER, BSCRIPT_VAR_LAST_BATTLER_ID
-    End 
+    End
+
+// Guard Dog turns the Intimidate round and raises its Attack a stage, a Clear
+// Amulet or no, but not where the Intimidate would have been stopped anyway:
+// behind a substitute, as above, in Mist, or with its Attack already as low
+// as it goes (Pokemon Central, Cane da Guardia). The reference declares the
+// ability and nothing reads it.
+_GUARD_DOG:
+    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_SIDE_CONDITION_STAT_CHANGE, SIDE_CONDITION_MIST, _038
+    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_STAT_CHANGE_ATK, 0, _038
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_PARAM, MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE
+    GoTo _CHANGE

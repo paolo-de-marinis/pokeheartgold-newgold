@@ -81,6 +81,7 @@ IMPLEMENTED = {
     "GRASSY_SURGE",
     "GRASS_PELT",
     "GRIM_NEIGH",
+    "GUARD_DOG",
     "GULP_MISSILE",
     "HADRON_ENGINE",
     "HARVEST",
@@ -232,8 +233,8 @@ IMPLEMENTED = {
 # ability does nothing looks right on the summary screen and loses battles
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
-    "AROMA_VEIL", "BALL_FETCH", "COSTAR", "CURIOUS_MEDICINE", "GUARD_DOG",
-    "MIMICRY", "OPPORTUNIST", "SYMBIOSIS"
+    "AROMA_VEIL", "BALL_FETCH", "COSTAR", "CURIOUS_MEDICINE", "MIMICRY",
+    "OPPORTUNIST", "SYMBIOSIS"
 }
 
 # Numbers the engine keeps free rather than abilities. TEMP4 (317) sits
@@ -330,7 +331,7 @@ class AbilityEffectTests(unittest.TestCase):
     # Shields Down, Battle Bond and Mega Sol done.
     # Shields Down, Battle Bond and Mega Sol done. Desolate Land, Primordial
     # Sea and Delta Stream done.
-    STILL_TO_DO = 8
+    STILL_TO_DO = 7
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

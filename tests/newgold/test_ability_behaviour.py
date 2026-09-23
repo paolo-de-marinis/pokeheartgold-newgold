@@ -360,5 +360,43 @@ class VictoryStarTests(unittest.TestCase):
 """))
 
 
+SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
+
+
+def subscript(name):
+    matches = sorted(SUBSCRIPTS.glob(f"subscript_*_{name}.s"))
+    assert len(matches) == 1, f"{name}: {matches}"
+    return matches[0].read_text()
+
+
+def label(script, name):
+    """The lines of a script from `name:` to the next label."""
+    body = script[script.index(f"\n{name}:\n") + len(name) + 3:]
+    following = re.search(r"^\w+:$", body, re.M)
+    return body[:following.start()] if following else body
+
+
+class GuardDogTests(unittest.TestCase):
+    def test_intimidate_raises_its_attack_instead(self):
+        script = subscript("Intimidate")
+        loop = label(script, "_013")
+        # Asked after the substitute and the faint, before the drop is set up.
+        self.assertLess(loop.index("CheckSubstitute"), loop.index("ABILITY_GUARD_DOG, _GUARD_DOG"))
+        self.assertLess(loop.index("ABILITY_GUARD_DOG, _GUARD_DOG"), loop.index("MOVE_SUBSCRIPT_PTR_ATTACK_DOWN_1_STAGE"))
+        guard = label(script, "_GUARD_DOG")
+        # Not in Mist, nor at -6, where the Intimidate would have failed anyway.
+        self.assertIn("BSCRIPT_VAR_SIDE_CONDITION_STAT_CHANGE, SIDE_CONDITION_MIST, _038", guard)
+        self.assertIn("BMON_DATA_STAT_CHANGE_ATK, 0, _038", guard)
+        self.assertIn("BSCRIPT_VAR_SIDE_EFFECT_PARAM, MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE", guard)
+        self.assertIn("GoTo _CHANGE", guard)
+        self.assertIn("SIDE_EFFECT_TYPE_ABILITY", label(script, "_CHANGE"))
+
+    def test_it_is_not_dragged_out(self):
+        # Roar, Whirlwind, Dragon Tail and Circle Throw all run this subscript.
+        script = subscript("ForceSwitchOrFlee")
+        self.assertIn("CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, ABILITY_GUARD_DOG, _079", script)
+        self.assertLess(script.index("ABILITY_GUARD_DOG"), script.index("TryWhirlwind"))
+
+
 if __name__ == "__main__":
     unittest.main()

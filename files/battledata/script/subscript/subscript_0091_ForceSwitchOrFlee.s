@@ -5,6 +5,10 @@
 _000:
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_SEMI_INVULNERABLE, _074
     CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, ABILITY_SUCTION_CUPS, _079
+    // Guard Dog will not be made to leave the field either, and says so as
+    // Suction Cups does (Pokemon Central, Cane da Guardia). The reference
+    // declares the ability and nothing reads it.
+    CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, ABILITY_GUARD_DOG, _079
     CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_INGRAIN, _086
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_BATTLE_TYPE, BATTLE_TYPE_DOUBLES|BATTLE_TYPE_MULTI|BATTLE_TYPE_AI, _074
     TryWhirlwind _074
