@@ -139,6 +139,30 @@ class SaveditLibraryTests(unittest.TestCase):
         stray = [i for i in self.changed_bytes(before, after) if not any(lo <= i < hi for lo, hi in allowed)]
         self.assertEqual(stray[:8], [], f"bytes changed outside {names}")
 
+    def test_a_save_from_before_the_misc_block_grew(self):
+        """Save_GetLegacySlotSpecs' layout: the misc block at
+        SAVE_MISC_LEGACY_SIZE, every block after it and the PC's slot where
+        they were. It is read in that layout, and written back in it, for
+        the game to convert when it loads it."""
+        legacy = sv.blocks(legacy=True)
+        if legacy == sv.blocks():
+            self.skipTest("the ROM built here has the misc block at its old size")
+        region = bytearray(save_budget.REGION)
+        player = next(b for b in legacy if b["id"] == "SAVE_PLAYERDATA")
+        region[player["offset"] + sv.NAME:player["offset"] + sv.NAME + 4] = struct.pack("<HH", sv.charcode("A")[0], 0xFFFF)
+        seal_footers(region, legacy, 1)
+        path = Path(self.tmp.name) / "legacy.sav"
+        path.write_bytes(bytes(sv.build_save(region)))
+        save = sv.Save(path)
+        self.assertTrue(save.legacy)
+        self.assertEqual(save.table, legacy)
+        self.assertEqual(save.image(), path.read_bytes(), "unchanged, it stays byte for byte")
+        sv.set_profile(save, money=4242)
+        path.write_bytes(save.image())
+        again = sv.Save(path)
+        self.assertTrue(again.legacy, "an edit keeps the layout the game will convert")
+        self.assertEqual(sv.profile(again)["money"], 4242)
+
     def test_crc16_is_the_bitwise_one(self):
         data = bytes(range(256)) * 9
         self.assertEqual(sv.crc16(data), reference_crc16(data))

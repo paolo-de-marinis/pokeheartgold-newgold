@@ -445,17 +445,22 @@ BOX = 0x1000
 BOX_NAME_LENGTH = 20
 
 
-def blocks(build=None):
+def blocks(build=None, legacy=False):
     """Every block's id, size and slot, then where each one starts.
 
     This is SaveData_InitSubstructs: sizes come rounded up to a word with four
     bytes of checksum added, a slot's last block is followed by the chunk
-    footer, and the next slot starts on a 0x100 boundary.
+    footer, and the next slot starts on a 0x100 boundary. With `legacy`, the
+    layout of a save made before the misc block grew for the DNA Splicers
+    (Save_GetLegacySlotSpecs): the same blocks with SAVE_MISC at
+    SAVE_MISC_LEGACY_SIZE, laid out the same way.
     """
     inside, _ = measure(build)
     names = block_ids()
     out, offset = [], 0
     for index, (fn, size, slot) in enumerate(inside):
+        if legacy and names[index] == "SAVE_MISC":
+            size = constants("include/save_misc_data.h", "SAVE_MISC_LEGACY_")["SAVE_MISC_LEGACY_SIZE"]
         chunk = ((size + 3) & ~3) + save_budget.CRC
         out.append({"index": index, "id": names[index], "sizefn": fn,
                     "offset": offset, "size": chunk, "slot": slot})
@@ -494,6 +499,16 @@ class Save:
         self.raw = bytearray(self.path.read_bytes())
         self.table = blocks(build)
         self.specs = slot_specs(self.table)
+        # A save made before the misc block grew is read, and written, in its
+        # own layout: the game converts it when it loads it
+        # (Save_LoadLegacySlots), so it is left for the game to do.
+        self.legacy = False
+        if not any(self.valid(h) for h in (0, HALF)):
+            table = blocks(build, legacy=True)
+            if table != self.table:
+                self.table, self.specs, self.legacy = table, slot_specs(table), True
+                if not any(self.valid(h) for h in (0, HALF)):
+                    self.table, self.specs, self.legacy = blocks(build), slot_specs(blocks(build)), False
         self.half = self._newest_half()
         self.region = bytearray(self.raw[self.half:self.half + HALF])
         self.opened = bytes(self.region)
@@ -1624,7 +1639,7 @@ def find_flags(save, query):
 
 
 def info(save):
-    return {"half": save.half, "counter": save.counter(),
+    return {"half": save.half, "counter": save.counter(), "legacy": save.legacy,
             "halves": [{"at": h, "valid": save.valid(h), "counter": save.counter(h)} for h in (0, HALF)],
             "blocks": [{k: b[k] for k in ("index", "id", "offset", "size", "slot")} for b in save.table],
             "slots": save.specs}

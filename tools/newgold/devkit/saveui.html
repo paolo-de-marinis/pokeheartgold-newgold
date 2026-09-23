@@ -1037,6 +1037,7 @@ function renderInfo() {
   $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">
       <dt>File</dt><dd class="mono">${esc(S.save.path)}</dd>
       <dt>Metà più recente</dt><dd>${hx(i.half)} · salvataggio n. ${i.counter}</dd>
+      ${i.legacy ? `<dt>Formato</dt><dd>quello di prima dei DNA Splicers: il gioco lo converte da solo quando lo carica, e le modifiche fatte qui lo lasciano com'è</dd>` : ""}
     </dl>
     <div class="box"><h3>Le due metà della flash</h3><div class="scroll"><table><tr><th>Inizio</th><th>Valida</th><th class="num">Contatore</th></tr>
       ${i.halves.map(h => `<tr><td class="mono">${hx(h.at)}</td><td>${h.valid ? "sì" : `<span class="invalid">no</span>`}</td><td class="num">${h.valid ? h.counter : "—"}</td></tr>`).join("")}</table></div>
