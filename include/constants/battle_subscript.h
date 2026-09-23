@@ -636,6 +636,8 @@
 #define BATTLE_SUBSCRIPT_UNSEEN_FIST                        399
 #define BATTLE_SUBSCRIPT_TAKE_POWDER_DAMAGE                 400
 #define BATTLE_SUBSCRIPT_MOVE_FAIL_THROAT_CHOP              401
+// Spiky Shield pricking what touched it. 450 there.
+#define BATTLE_SUBSCRIPT_SPIKY_SHIELD                       402
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

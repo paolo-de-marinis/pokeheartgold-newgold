@@ -9433,12 +9433,91 @@ BOOL BtlCmd_ClearAuroraVeil(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-// Every move this answers for — King's Shield, Spiky Shield, Baneful Bunker,
-// Obstruct — belongs to a later generation than this game, so a Protect here
-// only ever protects and there is nothing to hand back.
+// What a shield hands back to a move that touched it, as the reference's
+// btl_scr_cmd_103_checkprotectcontactmoves (battle_script_commands.c): King's
+// Shield lowers Attack a stage (two before generation eight, and the
+// reference is nine), Spiky Shield takes an eighth of the attacker's HP,
+// Baneful Bunker poisons, Obstruct lowers Defence two stages, Silk Trap Speed
+// a stage, Burning Bulwark burns. Only when the move made contact, the
+// attacker is still standing, the shield is the target's own rather than a
+// team guard its ally lent, and the move is not on its charging turn.
+//
+// The reference sets attack_client to the Bunker's user before the poison, so
+// that the poison subscript asks the Bunker's user for Corrosion, and never
+// sets it back: the rest of the turn then runs with the defender as the
+// attacker. That is not copied. The attacker stays the attacker, so the
+// subscript would ask the attacker's own Corrosion; a Poison or Steel attacker
+// is simply not poisoned here. Only Mareanie and Toxapex learn the move and
+// neither can have Corrosion, so what that gives up is a Corrosion copied onto
+// a Bunker user in battle.
 BOOL BtlCmd_CheckProtectContactMoves(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
+    int attacker = ctx->battlerIdAttacker;
+    int target = ctx->battlerIdTarget;
+
     BattleScriptIncrementPointer(ctx, 1);
+
+    if (BattleMoveMakesContact(ctx, ctx->moveNoCur) != TRUE
+        || ctx->battleMons[attacker].hp == 0
+        || ctx->turnData[target].gainedProtectFlagFromAlly
+        || (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN)) {
+        return FALSE;
+    }
+
+    switch (ctx->moveNoProtect[target]) {
+    case MOVE_KINGS_SHIELD:
+        if (ctx->battleMons[attacker].statChanges[STAT_ATK] > 0) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_DOWN_1_STAGE;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_MOVE_EFFECT;
+            ctx->battlerIdStatChange = attacker;
+            BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
+        }
+        break;
+    case MOVE_SPIKY_SHIELD:
+        if (GetBattlerAbility(ctx, attacker) != ABILITY_MAGIC_GUARD) {
+            ctx->hpCalc = DamageDivide(ctx->battleMons[attacker].maxHp * -1, 8);
+            ctx->battlerIdTemp = attacker;
+            BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SPIKY_SHIELD);
+        }
+        break;
+    case MOVE_BANEFUL_BUNKER: {
+        BOOL poisonProof = GetBattlerVar(ctx, attacker, BMON_DATA_TYPE_1, NULL) == TYPE_POISON
+            || GetBattlerVar(ctx, attacker, BMON_DATA_TYPE_2, NULL) == TYPE_POISON
+            || GetBattlerVar(ctx, attacker, BMON_DATA_TYPE_1, NULL) == TYPE_STEEL
+            || GetBattlerVar(ctx, attacker, BMON_DATA_TYPE_2, NULL) == TYPE_STEEL;
+        if (ctx->battleMons[attacker].status == 0 && !poisonProof) {
+            ctx->statChangeType = SIDE_EFFECT_TYPE_MOVE_EFFECT;
+            ctx->battlerIdStatChange = attacker;
+            BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_POISON);
+        }
+        break;
+    }
+    case MOVE_OBSTRUCT:
+        if (ctx->battleMons[attacker].statChanges[STAT_DEF] > 0) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_DEFENSE_DOWN_2_STAGES;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_MOVE_EFFECT;
+            ctx->battlerIdStatChange = attacker;
+            BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
+        }
+        break;
+    case MOVE_SILK_TRAP:
+        if (ctx->battleMons[attacker].statChanges[STAT_SPEED] > 0) {
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_MOVE_EFFECT;
+            ctx->battlerIdStatChange = attacker;
+            BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
+        }
+        break;
+    case MOVE_BURNING_BULWARK:
+        if (ctx->battleMons[attacker].status == 0) {
+            ctx->statChangeType = SIDE_EFFECT_TYPE_MOVE_EFFECT;
+            ctx->battlerIdStatChange = attacker;
+            BattleScriptGotoSubscript(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_BURN);
+        }
+        break;
+    default:
+        break;
+    }
 
     return FALSE;
 }

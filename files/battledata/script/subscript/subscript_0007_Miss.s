@@ -32,11 +32,16 @@ _PROTECTED_MSG:
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MSG_MOVE_TEMP, 0, _PROTECTED_ITSELF
     // {1} protected {0}!
     PrintMessage msg_0197_01567, TAG_NICKNAME_MOVE, BATTLER_CATEGORY_DEFENDER, BATTLER_CATEGORY_MSG_TEMP
-    GoTo _PRINT_MSG
+    GoTo _PROTECT_CONTACT
 
 _PROTECTED_ITSELF:
     // {0} protected itself!
     PrintMessage msg_0197_00015, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
+
+_PROTECT_CONTACT:
+    // What the shield hands back to a move that touched it, as the
+    // reference's subscript 402 does straight after the same line.
+    CheckProtectContactMoves
     GoTo _PRINT_MSG
 
 _CHECK_LEVITATE:

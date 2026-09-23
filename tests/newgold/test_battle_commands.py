@@ -97,7 +97,7 @@ class BattleCommandTests(unittest.TestCase):
     STUBS = {
         "AddType", "BatchEffectivenessMessage", "BatchFollowupMessage", "BatchUpdateHealthBar",
         "BatchUpdateHealthBarValue", "CanClearPrimalWeather", "ChangePermanentBackground",
-        "CheckProtectContactMoves", "GoToIfTerastallized", "GotoIfCanApplyKnockOffBoost",
+        "GoToIfTerastallized", "GotoIfCanApplyKnockOffBoost",
         "GotoIfCurrentMoveIsValidForParentalBond", "GotoIfFirstHitOfParentalBond",
         "GotoIfParentalBondIsActive", "GotoIfSecondHitOfParentalBond", "MakeTotem",
         "SetCurrentMoveSwitchingStatus", "SetParentalBondFlag", "TryActivateZeroToHero",

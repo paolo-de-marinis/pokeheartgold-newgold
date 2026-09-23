@@ -3,7 +3,8 @@
 
 Wide Guard, Quick Guard, Mat Block and Crafty Shield (MOVE_EFFECT_PROTECT_USER_SIDE)
 used to set no flag at all, and King's Shield, Obstruct, Silk Trap and Burning
-Bulwark stopped status moves they let through in the reference. The real
+Bulwark stopped status moves they let through in the reference; none of the
+six shields handed anything back to a move that touched it. The real
 functions are extracted from src/battle and compiled natively.
 """
 
@@ -165,6 +166,112 @@ int main(void) {
 """
 
 
+CONTACT_FIXTURE = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+enum { NARC_a_0_0_1 = 1 };
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+
+typedef struct { u32 gainedProtectFlagFromAlly : 1; } TurnData;
+typedef struct { int hp, maxHp; u32 status; int statChanges[8]; int ability, type1, type2; } BattleMon;
+typedef struct {
+    int battlerIdAttacker, battlerIdTarget, battlerIdTemp, battlerIdStatChange;
+    int statChangeParam, statChangeType, hpCalc;
+    u32 battleStatus;
+    u16 moveNoCur;
+    u16 moveNoProtect[4];
+    BattleMon battleMons[4];
+    TurnData turnData[4];
+} BattleContext;
+typedef struct BattleSystem BattleSystem;
+
+static BOOL sContact;
+static int sSubscript;
+static BOOL BattleMoveMakesContact(BattleContext *ctx, u32 move) { (void)ctx; (void)move; return sContact; }
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *data) {
+    (void)data;
+    return varId == BMON_DATA_TYPE_1 ? ctx->battleMons[battlerId].type1 : ctx->battleMons[battlerId].type2;
+}
+static int DamageDivide(int num, int denom) { return num / denom; }
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static void BattleScriptGotoSubscript(BattleContext *ctx, int narc, int script) { (void)ctx; assert(narc == NARC_a_0_0_1); sSubscript = script; }
+
+@CONTACT@
+
+static int hit(u16 shield, BattleContext *ctx) {
+    ctx->moveNoProtect[1] = shield;
+    sSubscript = 0;
+    BtlCmd_CheckProtectContactMoves(0, ctx);
+    return sSubscript;
+}
+
+int main(void) {
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.battlerIdAttacker = 0;
+    ctx.battlerIdTarget = 1;
+    ctx.battleMons[0].hp = ctx.battleMons[0].maxHp = 80;
+    for (int i = 0; i < 8; i++) ctx.battleMons[0].statChanges[i] = 6;
+    sContact = TRUE;
+
+    assert(hit(MOVE_KINGS_SHIELD, &ctx) == BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
+    assert(ctx.statChangeParam == MOVE_SUBSCRIPT_PTR_ATTACK_DOWN_1_STAGE && ctx.battlerIdStatChange == 0);
+    assert(hit(MOVE_OBSTRUCT, &ctx) == BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
+    assert(ctx.statChangeParam == MOVE_SUBSCRIPT_PTR_DEFENSE_DOWN_2_STAGES);
+    assert(hit(MOVE_SILK_TRAP, &ctx) == BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
+    assert(ctx.statChangeParam == MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE);
+    assert(hit(MOVE_SPIKY_SHIELD, &ctx) == BATTLE_SUBSCRIPT_SPIKY_SHIELD);
+    assert(ctx.hpCalc == -10 && ctx.battlerIdTemp == 0);
+    assert(hit(MOVE_BANEFUL_BUNKER, &ctx) == BATTLE_SUBSCRIPT_POISON && ctx.battlerIdStatChange == 0);
+    assert(hit(MOVE_BURNING_BULWARK, &ctx) == BATTLE_SUBSCRIPT_BURN && ctx.battlerIdStatChange == 0);
+    assert(hit(MOVE_PROTECT, &ctx) == 0);
+
+    // Nothing at the bottom of the stat, nothing through Magic Guard, nothing
+    // for a Pokemon that is already poisoned, or poison-proof.
+    ctx.battleMons[0].statChanges[STAT_ATK] = 0;
+    assert(hit(MOVE_KINGS_SHIELD, &ctx) == 0);
+    ctx.battleMons[0].ability = ABILITY_MAGIC_GUARD;
+    assert(hit(MOVE_SPIKY_SHIELD, &ctx) == 0);
+    ctx.battleMons[0].ability = 0;
+    ctx.battleMons[0].type2 = TYPE_STEEL;
+    assert(hit(MOVE_BANEFUL_BUNKER, &ctx) == 0);
+    ctx.battleMons[0].type2 = 0;
+    ctx.battleMons[0].status = 1;
+    assert(hit(MOVE_BURNING_BULWARK, &ctx) == 0);
+    ctx.battleMons[0].status = 0;
+
+    // Nothing without contact, on a charging turn, through a guard the
+    // ally lent, or from a fainted attacker.
+    sContact = FALSE;
+    assert(hit(MOVE_SPIKY_SHIELD, &ctx) == 0);
+    sContact = TRUE;
+    ctx.battleStatus = BATTLE_STATUS_CHARGE_TURN;
+    assert(hit(MOVE_SPIKY_SHIELD, &ctx) == 0);
+    ctx.battleStatus = 0;
+    ctx.turnData[1].gainedProtectFlagFromAlly = 1;
+    assert(hit(MOVE_SPIKY_SHIELD, &ctx) == 0);
+    ctx.turnData[1].gainedProtectFlagFromAlly = 0;
+    ctx.battleMons[0].hp = 0;
+    assert(hit(MOVE_SPIKY_SHIELD, &ctx) == 0);
+    return 0;
+}
+"""
+
+
 class ProtectTests(unittest.TestCase):
     def test_the_real_guard_check_and_protection_command(self):
         controller = read("src/battle/battle_controller_player.c")
@@ -195,6 +302,24 @@ class ProtectTests(unittest.TestCase):
         self.assertIn("CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MSG_MOVE_TEMP, 0, _PROTECTED_ITSELF", miss)
         self.assertIn("PrintMessage msg_0197_01567, TAG_NICKNAME_MOVE, BATTLER_CATEGORY_DEFENDER, "
                       "BATTLER_CATEGORY_MSG_TEMP", miss)
+
+    def test_the_real_contact_penalties(self):
+        source = CONTACT_FIXTURE.replace(
+            "@CONTACT@", function(read("src/battle/battle_command.c"), "BtlCmd_CheckProtectContactMoves"))
+        with tempfile.TemporaryDirectory(prefix="newgold-protect-contact-") as directory:
+            path = Path(directory)
+            (path / "check.c").write_text(source)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+                str(path / "check.c"), "-o", str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_the_protected_path_runs_the_penalties(self):
+        miss = read("files/battledata/script/subscript/subscript_0007_Miss.s")
+        protected = miss[miss.index("_PROTECTED_MSG:"):miss.index("_CHECK_LEVITATE:")]
+        self.assertIn("CheckProtectContactMoves", protected)
 
     def test_mat_block_is_a_first_turn_move(self):
         script = read("files/battledata/script/effect_script/effect_script_0373.s")
