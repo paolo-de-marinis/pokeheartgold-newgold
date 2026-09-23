@@ -23,7 +23,8 @@ static void ov18_021E6070(void);
 static void ov18_021E60B4(void);
 static void ov18_021E60F8(void);
 static void ov18_021E6868(PokedexAppData *pokedexApp);
-static void PokedexApp_3DigitNumToTiles(u16 *a0, u16 a1, u16 a2);
+static void PokedexApp_DexNumToTiles(u16 *dest, u16 num, u16 baseTile);
+static void PokedexApp_GridCellToTiles(u16 *cell, u16 num, BOOL caught);
 static void ov18_021E7048(PokedexAppData *pokedexApp);
 static void ov18_021E7448(PokedexAppData *pokedexApp, const UnkStruct_ov18_021F9780 *a1, BOOL a2);
 static void ov18_021E7490(PokedexAppData *pokedexApp, const UnkStruct_ov18_021F9780 *a1, u32 *a2, int a3);
@@ -1041,16 +1042,34 @@ void ov18_021E6A70(PokedexAppData *pokedexApp) {
     }
 }
 
-static void PokedexApp_3DigitNumToTiles(u16 *dest, u16 num, u16 baseTile) {
-    u8 pow10s[3] = { 100, 10, 1 };
+// A grid cell is five tiles wide. Retail drew the caught mark in its first
+// tile and the Dex number in three digits after it, so 1000 on came out as
+// '?00'; the number takes the first four tiles now, as in the reference
+// (FormatDexNumberAnimationDigits, d0380a487), and a caught species' mark is
+// drawn three rows below, across the cell's bottom-left corner, in the two
+// tiles the reference adds to the grid's graphics for it (0x18, 0x19).
+#define GRID_ROW_TILES      32
+#define GRID_CAUGHT_MARK_L  0x1018
+#define GRID_CAUGHT_MARK_R  0x1019
+#define GRID_DIGITS_CAUGHT  3  // tiles 3..12, digits 0..9 of a caught species
+#define GRID_DIGITS_SEEN    14 // tiles 14..23, of a species only seen
 
-#ifdef BUGFIX
-    GF_ASSERT(num <= 999);
-#endif // BUGFIX
+static void PokedexApp_DexNumToTiles(u16 *dest, u16 num, u16 baseTile) {
+    static const u16 pow10s[DEX_NUMBER_DIGITS] = { 1000, 100, 10, 1 };
 
-    for (u8 i = 0; i < 3; ++i) {
+    for (u8 i = 0; i < DEX_NUMBER_DIGITS; ++i) {
         dest[i] = (baseTile + (num / pow10s[i])) | 0x1000;
         num %= pow10s[i];
+    }
+}
+
+static void PokedexApp_GridCellToTiles(u16 *cell, u16 num, BOOL caught) {
+    if (caught) {
+        PokedexApp_DexNumToTiles(cell, num, GRID_DIGITS_CAUGHT);
+        cell[3 * GRID_ROW_TILES - 1] = GRID_CAUGHT_MARK_L;
+        cell[3 * GRID_ROW_TILES] = GRID_CAUGHT_MARK_R;
+    } else {
+        PokedexApp_DexNumToTiles(cell, num, GRID_DIGITS_SEEN);
     }
 }
 
@@ -1066,12 +1085,7 @@ u16 *ov18_021E6AEC(PokedexAppData *pokedexApp, u32 a1) {
             if (r1 >= sp10) {
                 break;
             }
-            if (pokedexApp->unk_1030[r1].unk_2 == 2) {
-                ret[160 * i + 36 + 5 * j] = 0x1002;
-                PokedexApp_3DigitNumToTiles(&ret[160 * i + 37 + 5 * j], r1 + 1, 3);
-            } else {
-                PokedexApp_3DigitNumToTiles(&ret[160 * i + 37 + 5 * j], r1 + 1, 14);
-            }
+            PokedexApp_GridCellToTiles(&ret[160 * i + 36 + 5 * j], r1 + 1, pokedexApp->unk_1030[r1].unk_2 == 2);
         }
     }
 
@@ -1090,12 +1104,7 @@ u16 *ov18_021E6BB8(PokedexAppData *pokedexApp, u32 a1) {
                 continue;
             }
             u32 r1 = Pokedex_ConvertToCurrentDexNo(pokedexApp->unk_1858, pokedexApp->unk_1030[sp4].unk_0);
-            if (pokedexApp->unk_1030[sp4].unk_2 == 2) {
-                ret[160 * i + 36 + 5 * j] = 0x1002;
-                PokedexApp_3DigitNumToTiles(&ret[160 * i + 37 + 5 * j], r1, 3);
-            } else {
-                PokedexApp_3DigitNumToTiles(&ret[160 * i + 37 + 5 * j], r1, 14);
-            }
+            PokedexApp_GridCellToTiles(&ret[160 * i + 36 + 5 * j], r1, pokedexApp->unk_1030[sp4].unk_2 == 2);
         }
     }
 
