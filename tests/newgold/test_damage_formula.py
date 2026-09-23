@@ -189,10 +189,11 @@ int main(void) {
     // A critical hit goes through them: 67.
     reset(); ctx.fieldSideConditionFlags[1] = SIDE_CONDITION_REFLECT; EXPECT(calc(), 22);
     ctx.criticalMultiplier = 2; EXPECT(calc(), 67);
-    // Two on the target's side of a double battle: 2732, 45 * 2732 = 122940,
-    // + 2047 >> 12 = 30.
+    // A double battle: 2732, 45 * 2732 = 122940, + 2047 >> 12 = 30 -- with
+    // two on the target's side or with one, where HeartGold halved, 22.
     reset(); ctx.fieldSideConditionFlags[1] = SIDE_CONDITION_LIGHT_SCREEN; S.move.category = CATEGORY_SPECIAL;
     S.battleType = BATTLE_TYPE_DOUBLES; S.hitCount = 2; EXPECT(calc(), 30);
+    S.hitCount = 1; EXPECT(calc(), 30);
 
     // 6.9.4 Tinted Lens doubles a resisted hit: Fire into Water, 22 -> 44.
     reset(); S.types[1][0] = S.types[1][1] = TYPE_WATER; S.ability[0] = ABILITY_TINTED_LENS; EXPECT(calc(), 44);

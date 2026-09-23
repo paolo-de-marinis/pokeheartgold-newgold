@@ -764,15 +764,18 @@ static void ApplyCriticalHit(BattleContext *ctx) {
     }
 }
 
-// Reflect, Light Screen and Aurora Veil (battle_calc_damage.c, 6.9.1). Future
-// Sight asks too, for the damage it works out on the turn it is used.
-static u32 ScreenModifier(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u32 sideCondition, int crit, int battlerIdAttacker, int battlerIdTarget) {
+// Reflect, Light Screen and Aurora Veil (battle_calc_damage.c, 6.9.1): a half
+// in a single battle and 2732/4096 in any double one, however many are left
+// standing on the side. HeartGold took the two thirds only while two stood
+// there, and a half from a lone survivor. Future Sight asks too, for the
+// damage it works out on the turn it is used.
+static u32 ScreenModifier(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u32 sideCondition, int crit, int battlerIdAttacker) {
     u32 screen = BattleMoveTbl(ctx, moveNo)->category == CATEGORY_PHYSICAL ? SIDE_CONDITION_REFLECT : SIDE_CONDITION_LIGHT_SCREEN;
 
     if (!(sideCondition & (screen | SIDE_CONDITION_AURORA_VEIL)) || crit != 1 || BattleMoveTbl(ctx, moveNo)->effect == MOVE_EFFECT_REMOVE_SCREENS || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_INFILTRATOR) {
         return UQ412__1_0;
     }
-    if ((BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_DOUBLES) && GetMonsHitCount(battleSystem, ctx, 1, battlerIdTarget) == 2) {
+    if (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_DOUBLES) {
         return UQ412__0_6666;
     }
     return UQ412__0_5;
@@ -790,7 +793,7 @@ static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, i
     int ally = battlerIdTarget ^ 2;
     u32 moveNo = ctx->moveNoCur;
     int item = GetBattlerHeldItemEffect(ctx, battlerIdAttacker);
-    u32 modifier = ScreenModifier(battleSystem, ctx, moveNo, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerIdTarget)], ctx->criticalMultiplier, battlerIdAttacker, battlerIdTarget);
+    u32 modifier = ScreenModifier(battleSystem, ctx, moveNo, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerIdTarget)], ctx->criticalMultiplier, battlerIdAttacker);
 
     if (effectiveness != 0 && effectiveness < 8 && GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_TINTED_LENS) {
         modifier = QMul_RoundUp(modifier, UQ412__2_0);
@@ -4542,7 +4545,7 @@ BOOL BtlCmd_TryFutureSight(BattleSystem *battleSystem, BattleContext *ctx) {
         // Worked out in full now, on the turn it is used, as HeartGold did:
         // the base, the target's screens as they stand, and the roll.
         int damage = CalcMoveDamage(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[side], ctx->fieldCondition, 0, 0, ctx->battlerIdAttacker, ctx->battlerIdTarget, 1);
-        damage = QMul_RoundDown(damage, ScreenModifier(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[side], 1, ctx->battlerIdAttacker, ctx->battlerIdTarget));
+        damage = QMul_RoundDown(damage, ScreenModifier(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[side], 1, ctx->battlerIdAttacker));
         ctx->fieldConditionData.futureSightDamage[ctx->battlerIdTarget] = ApplyDamageRange(battleSystem, ctx, damage * -1);
         if (ctx->turnData[ctx->battlerIdAttacker].helpingHandFlag) {
             ctx->fieldConditionData.futureSightDamage[ctx->battlerIdTarget] = ctx->fieldConditionData.futureSightDamage[ctx->battlerIdTarget] * 15 / 10;
