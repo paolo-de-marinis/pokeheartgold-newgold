@@ -61,6 +61,7 @@ void ov10_0221E848(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221EB4C(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221EB6C(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221EB8C(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221EBAC(BattleSystem *battleSystem, BattleContext *ctx);
 u32 ov10_0221EEF0(BattleContext *ctx);
 void ov10_0221EF24(BattleContext *ctx, int offset);
 u8 ov10_0221EF34(BattleContext *ctx, u8 battler);
