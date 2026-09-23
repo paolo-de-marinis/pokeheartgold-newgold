@@ -368,13 +368,20 @@ typedef int BOOL;
 #define NELEMS(a) (sizeof(a) / sizeof(*(a)))
 #define MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED 1
 #define STATUS2_TRANSFORM 2
-typedef struct { u16 ability; int hp; u32 moveEffectFlags; u32 status2; } BattleMon;
+#define ITEM_VAR_HOLD_EFFECT 1
+#define HOLD_EFFECT_PREVENT_ABILITY_CHANGES 210
+#define ITEM_ABILITY_SHIELD 1892
+typedef struct { u16 ability; int hp; u32 moveEffectFlags; u32 status2; u16 item; } BattleMon;
 typedef struct { BattleMon battleMons[4]; } BattleContext;
+static int GetItemVar(BattleContext *ctx, u16 item, u16 var) { (void)ctx; (void)var; return item == ITEM_ABILITY_SHIELD ? HOLD_EFFECT_PREVENT_ABILITY_CHANGES : 0; }
 """ + function(source, "AbilityIsUnsuppressable") + "\n" + function(source, "BattlerGivesOffGas") + "\n" + function(source, "AbilitiesAreNeutralized") + r"""
 int main(void) {
     BattleContext ctx = { { { ABILITY_ZEN_MODE, 1, 0 }, { ABILITY_NEUTRALIZING_GAS, 1, 0 }, { ABILITY_INTIMIDATE, 1, 0 } } };
-    static const u16 kept[] = { ABILITY_ZEN_MODE, ABILITY_STANCE_CHANGE, ABILITY_SCHOOLING, ABILITY_DISGUISE,
-        ABILITY_ICE_FACE, ABILITY_POWER_CONSTRUCT, ABILITY_ZERO_TO_HERO, ABILITY_MULTITYPE, ABILITY_COMATOSE };
+    // The games' list (Pokemon Central, Gas Reagente), fifteen and the gas.
+    static const u16 kept[] = { ABILITY_STANCE_CHANGE, ABILITY_SCHOOLING, ABILITY_DISGUISE, ABILITY_ICE_FACE,
+        ABILITY_GULP_MISSILE, ABILITY_BATTLE_BOND, ABILITY_MULTITYPE, ABILITY_POWER_CONSTRUCT, ABILITY_SHIELDS_DOWN,
+        ABILITY_AS_ONE_GLASTRIER, ABILITY_AS_ONE_SPECTRIER, ABILITY_RKS_SYSTEM, ABILITY_COMATOSE, ABILITY_ZEN_MODE,
+        ABILITY_ZERO_TO_HERO, ABILITY_TERA_SHIFT };
     for (unsigned i = 0; i < NELEMS(kept); i++) {
         ctx.battleMons[0].ability = kept[i];
         assert(!AbilitiesAreNeutralized(&ctx, 0));
@@ -382,6 +389,13 @@ int main(void) {
     assert(AbilitiesAreNeutralized(&ctx, 2));
     ctx.battleMons[0].ability = ABILITY_HUNGER_SWITCH;
     assert(AbilitiesAreNeutralized(&ctx, 0));
+    ctx.battleMons[0].ability = ABILITY_COMMANDER;
+    assert(AbilitiesAreNeutralized(&ctx, 0));
+    ctx.battleMons[0].item = ITEM_ABILITY_SHIELD;
+    assert(!AbilitiesAreNeutralized(&ctx, 0));
+    ctx.battleMons[0].item = 0;
+    ctx.battleMons[1].status2 = STATUS2_TRANSFORM;
+    assert(!AbilitiesAreNeutralized(&ctx, 0));
     puts("PASS: Neutralizing Gas leaves the abilities nothing suppresses.");
     return 0;
 }

@@ -267,8 +267,16 @@ class AbilityEffectTests(unittest.TestCase):
         for name in sorted(IMPLEMENTED):
             self.assertIn(f"ABILITY_{name}", source, f"ABILITY_{name} is listed as done but nothing reads it")
 
+    # Pending abilities the C names only in the list of what Neutralizing Gas
+    # cannot touch -- a fact about them, not an effect of theirs.
+    NAMED_IN_THE_GAS_LIST_ONLY = {"BATTLE_BOND", "SHIELDS_DOWN", "TERA_SHIFT"}
+
     def test_a_pending_ability_is_not_quietly_half_wired(self):
         source = written_in_c()
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        start = overlay.index("static BOOL AbilityIsUnsuppressable(u16 ability) {")
+        gas_list = overlay[start:overlay.index("\n}\n", start)]
+        source = source.replace(gas_list, "")
         for name in sorted(PENDING):
             self.assertNotIn(f"ABILITY_{name}", source, f"ABILITY_{name} works now; move it to IMPLEMENTED")
 

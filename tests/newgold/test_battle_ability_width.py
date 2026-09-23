@@ -43,6 +43,11 @@ _Static_assert(sizeof(((MoveDamageCalc*)0)->ability)==2, "Damage calculation mus
 typedef struct { u32 fields[200]; } Pokemon;
 typedef struct { u32 type, random; int count; Pokemon party[6]; } BattleSystem;
 static u32 ov10_02220AAC[1];
+#ifndef ITEM_VAR_HOLD_EFFECT
+#define ITEM_VAR_HOLD_EFFECT 1
+#endif
+// No Ability Shield in these fixtures.
+static s32 GetItemVar(BattleContext *ctx,u16 itemNo,u16 var) { (void)ctx;(void)itemNo;(void)var;return 0; }
 static int scriptValues[2], scriptPos, queriedBattler;
 static int personalAbility1=319, personalAbility2=267;
 static u8 packet[44]; static unsigned packetSize; static int packetBattler;
@@ -173,11 +178,14 @@ int main(void) {
     ctx.battleMons[1].ability=ABILITY_NEUTRALIZING_GAS;ctx.battleMons[1].hp=1;
     ctx.battleMons[0].ability=ABILITY_INTIMIDATE;
     assert(GetBattlerAbility(&ctx,0)==ABILITY_NONE && GetBattlerAbility(&ctx,1)==ABILITY_NEUTRALIZING_GAS);
+    // The games' list (Pokemon Central, Gas Reagente); Commander is not on it.
     const u16 unsuppressible[]={ABILITY_MULTITYPE,ABILITY_COMATOSE,ABILITY_RKS_SYSTEM,ABILITY_GULP_MISSILE,
-                                ABILITY_AS_ONE_GLASTRIER,ABILITY_AS_ONE_SPECTRIER,ABILITY_COMMANDER};
+                                ABILITY_AS_ONE_GLASTRIER,ABILITY_AS_ONE_SPECTRIER,ABILITY_SHIELDS_DOWN,
+                                ABILITY_BATTLE_BOND,ABILITY_TERA_SHIFT};
     for(unsigned i=0;i<sizeof(unsuppressible)/sizeof(*unsuppressible);i++) {
         ctx.battleMons[0].ability=unsuppressible[i];assert(GetBattlerAbility(&ctx,0)==unsuppressible[i]);
     }
+    ctx.battleMons[0].ability=ABILITY_COMMANDER;assert(GetBattlerAbility(&ctx,0)==ABILITY_NONE);
     ctx.battleMons[0].ability=ABILITY_INTIMIDATE;ctx.battleMons[1].status2=STATUS2_TRANSFORM;
     assert(GetBattlerAbility(&ctx,0)==ABILITY_INTIMIDATE);
     puts("PASS: 2048 full-ID battle/cache/packet cases, suppression/guess/reset, absorbing aliases, 512 reward cases and the gas.");

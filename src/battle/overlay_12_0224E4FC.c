@@ -3035,27 +3035,32 @@ BOOL WhirlwindCheck(BattleSystem *battleSystem, BattleContext *ctx) {
 // Neutralizing Gas does not act, it stops everything else acting, so the only
 // place it can live is where an ability is read. The gas itself is read raw
 // rather than through this function, which would ask the question again.
-// The abilities nothing suppresses, Neutralizing Gas included: the gas itself,
-// Multitype and RKS System, and the ones that hold a form or a state the
-// Pokemon lives by -- Zen Mode, Stance Change, Schooling, Disguise, Ice Face,
-// Power Construct, Zero to Hero, Comatose, Gulp Missile, As One, Commander.
+//
+// The abilities Neutralizing Gas does not touch: the gas itself, and the ones
+// that are a Pokemon's form or its nature -- Stance Change, Schooling,
+// Disguise, Ice Face, Gulp Missile, Battle Bond, Multitype, Power Construct,
+// Shields Down, As One, RKS System, Comatose, Zen Mode, Zero to Hero and Tera
+// Shift, the list the games give (Pokemon Central's Gas Reagente, which Paolo
+// named as the spec, 2026-09-23). Commander is not among them.
 static BOOL AbilityIsUnsuppressable(u16 ability) {
     switch (ability) {
     case ABILITY_NEUTRALIZING_GAS:
-    case ABILITY_MULTITYPE:
-    case ABILITY_RKS_SYSTEM:
-    case ABILITY_ZEN_MODE:
     case ABILITY_STANCE_CHANGE:
     case ABILITY_SCHOOLING:
     case ABILITY_DISGUISE:
     case ABILITY_ICE_FACE:
-    case ABILITY_POWER_CONSTRUCT:
-    case ABILITY_ZERO_TO_HERO:
-    case ABILITY_COMATOSE:
     case ABILITY_GULP_MISSILE:
+    case ABILITY_BATTLE_BOND:
+    case ABILITY_MULTITYPE:
+    case ABILITY_POWER_CONSTRUCT:
+    case ABILITY_SHIELDS_DOWN:
     case ABILITY_AS_ONE_GLASTRIER:
     case ABILITY_AS_ONE_SPECTRIER:
-    case ABILITY_COMMANDER:
+    case ABILITY_RKS_SYSTEM:
+    case ABILITY_COMATOSE:
+    case ABILITY_ZEN_MODE:
+    case ABILITY_ZERO_TO_HERO:
+    case ABILITY_TERA_SHIFT:
         return TRUE;
     }
     return FALSE;
@@ -3072,6 +3077,11 @@ static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId) {
     int i;
 
     if (AbilityIsUnsuppressable(ctx->battleMons[battlerId].ability)) {
+        return FALSE;
+    }
+    // An Ability Shield keeps its holder's ability through the gas. Read from
+    // the item itself: GetBattlerHeldItem asks for Klutz, which would ask this.
+    if (GetItemVar(ctx, ctx->battleMons[battlerId].item, ITEM_VAR_HOLD_EFFECT) == HOLD_EFFECT_PREVENT_ABILITY_CHANGES) {
         return FALSE;
     }
     for (i = 0; i < (int)NELEMS(ctx->battleMons); i++) {
