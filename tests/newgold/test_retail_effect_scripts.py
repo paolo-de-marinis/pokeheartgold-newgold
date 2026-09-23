@@ -48,7 +48,7 @@ STILL_DIFFERENT = {
     34: "Pay Day scatters its coins on the first strike or the only one; the engine's branch scatters "
          "them only on a first strike of Parental Bond, never without the ability (a6ee2c81c)",
     42: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
-    48: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
+    48: IN_C.format("the recoil, ServerDoPostMoveEffects.c"),
     83: CALLED_MOVE + BACK_TO_BEFORE_MOVE + ", and prints the move the finger picked (message 1483), "
          "which retail's Metronome does not",
     97: CALLED_MOVE,
@@ -75,7 +75,7 @@ STILL_DIFFERENT = {
     178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
     180: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     188: IN_C.format("the knocking off, ServerDoPostMoveEffects.c"),
-    198: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
+    198: IN_C.format("the recoil, ServerDoPostMoveEffects.c"),
     217: IN_C.format("Wake-Up Slap's doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
     222: IN_C.format("Natural Gift's type, power and berry, CalcBaseDamage.c"),
     224: IN_C.format("the berry eaten, ServerDoPostMoveEffects.c"),
@@ -83,12 +83,12 @@ STILL_DIFFERENT = {
     233: IN_C.format("the fling and the items that cannot be flung, BattleController_BeforeMove.c"),
     241: CALLED_MOVE,
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
-    253: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
+    253: IN_C.format("the recoil, ServerDoPostMoveEffects.c"),
     259: "the engine waits for a button after only buffering the line that restores the dimensions, "
          "which waits on nothing, and calls its Room Service subscript by another name (395 here)",
     261: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
-    262: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
-    269: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
+    262: IN_C.format("the recoil, ServerDoPostMoveEffects.c"),
+    269: IN_C.format("the recoil, ServerDoPostMoveEffects.c"),
     272: IN_C.format("the charge turn and the Power Herb, BattleController_BeforeMove.c"),
 }
 
@@ -300,6 +300,19 @@ class BroughtOverTests(unittest.TestCase):
         table = table[:table.index("};")]
         entries = [line.strip().rstrip(",") for line in table.splitlines()[1:] if line.strip()]
         self.assertEqual(entries[constant("MOVE_SUBSCRIPT_PTR_HANDLE_GROWTH")], "BATTLE_SUBSCRIPT_HANDLE_GROWTH")
+
+    def test_reckless_is_the_damage_calculations(self):
+        # The engine pays Reckless's fifth in CalcBaseDamage, not in the
+        # recoil moves' scripts; the AI's damage estimate sees it too.
+        body = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CalcMoveDamage")
+        reckless = body[body.index("if (calcAttacker.ability == ABILITY_RECKLESS)"):]
+        reckless = reckless[:reckless.index("break;")]
+        for effect in ("RECOIL_QUARTER_DAMAGE_DELT", "RECOIL_THIRD", "RECOIL_BURN_HIT", "RECOIL_PARALYZE_HIT",
+                       "RECOIL_HALF", "RECOIL_HALF_MAX_HP"):
+            self.assertIn(f"case MOVE_EFFECT_{effect}:", reckless)
+        self.assertIn("movePower = movePower * 12 / 10;", reckless)
+        for effect in (48, 198, 253, 262, 269, 404):
+            self.assertNotIn("ABILITY_RECKLESS", script(effect), effect)
 
     def test_howl_raises_the_allies_too(self):
         # The reference raises Howl's user alone; from Generation VIII the

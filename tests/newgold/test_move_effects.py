@@ -229,14 +229,13 @@ UNREAD_HERE = {
     "DECORATE": "script: subscript 314 does not affect a target behind a substitute, the reference's stat-drop list",
     "FORCE_SWITCH_HIT": "script: a CHECK_HP_AND_SUBSTITUTE side effect runs Whirlwind's subscript after the damage",
     "STUFF_CHEEKS": "script: effect script 398 fails it without a berry and subscript 311 refuses it at +6 Defense",
-    "RECOIL_HALF_MAX_HP": "script: Reckless's boost and the half-HP recoil are effect script 404's",
     "IGNORE_PROTECT": "data: Mighty Cleave's record has the protect bit clear, which is what Protect reads here",
 }
 
 
 class WhatIsStillMissingTests(unittest.TestCase):
     # A ratchet, not a target: the table above may only shrink.
-    STILL_UNREAD = 42
+    STILL_UNREAD = 41
 
     def test_the_table_only_ever_shrinks(self):
         self.assertLessEqual(

@@ -10195,6 +10195,25 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower = movePower * 15 / 10;
     }
 
+    // Reckless: a fifth more power for a move that costs its user recoil
+    // (Pokemon Central, Temerarieta), among the ability modifiers, where the
+    // engine has it (CalcBaseDamage.c:691 at d0380a487). The engine's list
+    // also names the moves that crash on a miss; their scripts still ask for
+    // the fifth through POWER_MULTI, here as in the engine (whose
+    // CalcBaseDamage no longer reads it), so they are left to the scripts.
+    if (calcAttacker.ability == ABILITY_RECKLESS) {
+        switch (BattleMoveTbl(ctx, moveNo)->effect) {
+        case MOVE_EFFECT_RECOIL_QUARTER_DAMAGE_DELT:
+        case MOVE_EFFECT_RECOIL_THIRD:
+        case MOVE_EFFECT_RECOIL_BURN_HIT:
+        case MOVE_EFFECT_RECOIL_PARALYZE_HIT:
+        case MOVE_EFFECT_RECOIL_HALF:
+        case MOVE_EFFECT_RECOIL_HALF_MAX_HP:
+            movePower = movePower * 12 / 10;
+            break;
+        }
+    }
+
     if (calcAttacker.ability == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, moveNo) == TRUE) {
         movePower = movePower * 13 / 10;
     }
