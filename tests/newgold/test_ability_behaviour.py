@@ -671,6 +671,28 @@ class SymbiosisTests(unittest.TestCase):
                       subscript("Symbiosis"))
 
 
+class PoisonPuppeteerTests(unittest.TestCase):
+    """A Pokemon that Poison Puppeteer's Pokemon poisons with a move is
+    confused as well (Pokemon Central, Malia Tossica)."""
+
+    def test_a_move_s_poison_confuses(self):
+        script = subscript("PoisonPuppeteer")
+        body = script[script.index("_000:"):]
+        confused = body.index("UpdateMonDataFromVar OPCODE_FLAG_ON, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_STATUS2, BSCRIPT_VAR_CALC_TEMP")
+        for check in ("SIDE_EFFECT_TYPE_ABILITY, _END", "SIDE_EFFECT_TYPE_HELD_ITEM, _END", "SIDE_EFFECT_TYPE_TOXIC_SPIKES, _END",
+                      "CheckAbility CHECK_OPCODE_NOT_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_POISON_PUPPETEER, _END",
+                      "BMON_DATA_STATUS2, STATUS2_CONFUSION, _END", "ABILITY_OWN_TEMPO, _END", "SIDE_CONDITION_SAFEGUARD, _END"):
+            self.assertLess(body.index(check), confused, check)
+        self.assertIn("Random 3, 2", body)
+        self.assertIn("PrintMessage msg_0197_00156, TAG_NICKNAME, BATTLER_CATEGORY_SIDE_EFFECT_MON", body)
+        # After the poison has taken, in both poison subscripts.
+        for name, status in (("Poison", "STATUS_POISON"), ("BadPoison", "STATUS_BAD_POISON")):
+            text = subscript(name)
+            self.assertLess(text.index(f"UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_STATUS, {status}"),
+                            text.index("Call BATTLE_SUBSCRIPT_POISON_PUPPETEER"), name)
+            self.assertEqual(text.count("Call BATTLE_SUBSCRIPT_POISON_PUPPETEER"), 1, name)
+
+
 class BallFetchTests(unittest.TestCase):
     def test_the_first_ball_that_failed_is_picked_up_once(self):
         commands = (ROOT / "src/battle/battle_command.c").read_text()

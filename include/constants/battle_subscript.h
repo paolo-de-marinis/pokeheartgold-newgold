@@ -720,6 +720,9 @@
 #define BATTLE_SUBSCRIPT_RECEIVER                           437
 // Parting Shot's user going back once the move is over. 469 there.
 #define BATTLE_SUBSCRIPT_HANDLE_PARTING_SHOT                438
+// Poison Puppeteer confusing what its Pokemon's move poisoned, which the
+// reference has no script for.
+#define BATTLE_SUBSCRIPT_POISON_PUPPETEER                   439
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
