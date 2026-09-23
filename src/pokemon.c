@@ -9,6 +9,7 @@
 #include "constants/flags.h"
 #include "constants/items.h"
 #include "constants/map_sections.h"
+#include "constants/maps.h"
 #include "constants/moves.h"
 #include "constants/trainer_class.h"
 
@@ -22,6 +23,7 @@
 #include "party.h"
 #include "player_data.h"
 #include "save.h"
+#include "save_local_field_data.h"
 #include "save_vars_flags.h"
 #include "seal_case.h"
 #include "sound_02004A44.h"
@@ -3120,12 +3122,16 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     *method_ret = EVO_LEVEL_FEMALE;
                 }
                 break;
-            case EVO_CORONET:
-                if (usedItem == evoTable[i].method) {
+            case EVO_MAGNETIC_FIELD: {
+                // hg-engine at d0380a487 reads the map the player stands on.
+                // The field system is not to hand here, and its location is
+                // the save's current position.
+                int mapId = LocalFieldData_GetCurrentPosition(Save_LocalFieldData_Get(SaveData_Get()))->mapId;
+                if (mapId == MAP_ROUTE_43 || mapId == MAP_ROUTE_10) {
                     target = evoTable[i].target;
-                    *method_ret = EVO_CORONET;
+                    *method_ret = EVO_MAGNETIC_FIELD;
                 }
-                break;
+            } break;
             case EVO_ETERNA:
                 if (usedItem == evoTable[i].method) {
                     target = evoTable[i].target;

@@ -537,6 +537,11 @@
           "method": "EVO_STONE",
           "param": "ITEM_THUNDERSTONE",
           "target": "SPECIES_MAGNEZONE"
+        },
+        {
+          "method": "EVO_MAGNETIC_FIELD",
+          "param": 0,
+          "target": "SPECIES_MAGNEZONE"
         }
       ]
     },
@@ -1621,6 +1626,11 @@
         {
           "method": "EVO_STONE",
           "param": "ITEM_THUNDERSTONE",
+          "target": "SPECIES_PROBOPASS"
+        },
+        {
+          "method": "EVO_MAGNETIC_FIELD",
+          "param": 0,
           "target": "SPECIES_PROBOPASS"
         }
       ]
@@ -4931,6 +4941,11 @@
         {
           "method": "EVO_STONE",
           "param": "ITEM_THUNDERSTONE",
+          "target": "SPECIES_VIKAVOLT"
+        },
+        {
+          "method": "EVO_MAGNETIC_FIELD",
+          "param": 0,
           "target": "SPECIES_VIKAVOLT"
         }
       ]

@@ -46,6 +46,14 @@ KONEFR_MOVES = {
     ("SPECIES_STANTLER", "SPECIES_WYRDEER"): "MOVE_PSYSHIELD_BASH",
 }
 
+# Rows by a method hg-engine added, one entry a row, as data/Evolutions.c
+# writes them at d0380a487.
+ENGINE_METHOD_ROWS = [
+    ("SPECIES_MAGNETON", ("EVO_MAGNETIC_FIELD", 0, "SPECIES_MAGNEZONE")),
+    ("SPECIES_NOSEPASS", ("EVO_MAGNETIC_FIELD", 0, "SPECIES_PROBOPASS")),
+    ("SPECIES_CHARJABUG", ("EVO_MAGNETIC_FIELD", 0, "SPECIES_VIKAVOLT")),
+]
+
 VANILLA_EEVEE = {
     "SPECIES_VAPOREON", "SPECIES_JOLTEON", "SPECIES_FLAREON",
     "SPECIES_ESPEON", "SPECIES_UMBREON", "SPECIES_LEAFEON", "SPECIES_GLACEON",
@@ -128,8 +136,12 @@ class EvolutionTests(unittest.TestCase):
                                    ("EEVEE", "LEAF_STONE", "LEAFEON"), ("EEVEE", "ICE_STONE", "GLACEON")]:
             self.assertIn((f"SPECIES_{base}", "EVO_STONE", f"ITEM_{item}", f"SPECIES_{target}"), rows)
         self.assertIn(("SPECIES_FEEBAS", "EVO_TRADE_ITEM", "ITEM_PRISM_SCALE", "SPECIES_MILOTIC"), rows)
+        # Beside the Thunder Stone, the engine's magnetic field: Route 43 and
+        # Route 10 stand in for Mt. Coronet.
+        for base, target in [("MAGNETON", "MAGNEZONE"), ("NOSEPASS", "PROBOPASS")]:
+            self.assertIn((f"SPECIES_{base}", "EVO_MAGNETIC_FIELD", 0, f"SPECIES_{target}"), rows)
         # The places they replace were never reachable in Johto.
-        self.assertFalse({row for row in rows if row[1] in ("EVO_CORONET", "EVO_ETERNA", "EVO_ROUTE217")})
+        self.assertFalse({row for row in rows if row[1] in ("EVO_ETERNA", "EVO_ROUTE217")})
 
     def test_spritzee_and_swirlix_want_their_items_held(self):
         """hg-engine's Evolutions.c at d0380a487 evolves both by any trade; the
@@ -144,6 +156,13 @@ class EvolutionTests(unittest.TestCase):
                          ("EVO_TRADE_ITEM", "ITEM_WHIPPED_DREAM", "SPECIES_SLURPUFF"))
         self.assertEqual(import_evolutions.CANONICAL_ROWS[("SPECIES_SPRITZEE", "EVO_TRADE", "0", "SPECIES_AROMATISSE")],
                          ("EVO_TRADE_ITEM", "ITEM_SACHET", "SPECIES_AROMATISSE"))
+
+    def test_rows_by_the_engines_own_methods(self):
+        """The rows by a method hg-engine added at d0380a487, which this
+        engine has now; tests/newgold/test_evolution_methods.py runs each
+        method on the host."""
+        for base, row in ENGINE_METHOD_ROWS:
+            self.assertIn(dict(zip(("method", "param", "target"), row)), self.byBase.get(base, []), base)
 
     def test_every_name_is_defined(self):
         known = (constants("include/constants/pokemon.h", "EVO_")

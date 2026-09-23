@@ -26,6 +26,7 @@ FIXTURE = r"""
 #include <string.h>
 #include "constants/heap.h"
 #include "constants/items.h"
+#include "constants/maps.h"
 #include "constants/moves.h"
 #include "constants/pokemon.h"
 #include "constants/species.h"
@@ -48,6 +49,13 @@ typedef struct {
     u32 pid;
 } Pokemon;
 typedef struct { u16 species; } Party;
+typedef struct { int mapId; } Location;
+typedef struct SaveData SaveData;
+typedef struct LocalFieldData LocalFieldData;
+// Nowhere magnetic: the magnetic field has its own test.
+static Location location = { MAP_NEW_BARK };
+// The baseline's name for what hg-engine made the magnetic field.
+#define EVO_CORONET EVO_MAGNETIC_FIELD
 static struct Evolution table[MAX_EVOS_PER_POKE];
 static int hour, allocations;
 
@@ -86,6 +94,9 @@ static void LoadMonEvolutionTable(u16 species, struct Evolution *dest) {
 static BOOL MonHasMove(Pokemon *mon, u16 move) { return mon->move == move; }
 static inline BOOL MonHasMoveOfType(Pokemon *mon, u8 type) { return mon->moveType == type; }
 static BOOL Party_HasMon(Party *party, u16 species) { return party->species == species; }
+static inline SaveData *SaveData_Get(void) { return (SaveData *)&location; }
+static inline LocalFieldData *Save_LocalFieldData_Get(SaveData *save) { return (LocalFieldData *)save; }
+static inline Location *LocalFieldData_GetCurrentPosition(LocalFieldData *field) { return (Location *)field; }
 @HOUR_FUNCTION@
 static TIMEOFDAY GF_RTC_GetTimeOfDay(void) { return GF_RTC_GetTimeOfDayByHour(hour); }
 @NIGHT_FUNCTION@
@@ -182,6 +193,9 @@ static void check_unrelated_methods(void) {
     Party party = { .species = SPECIES_PIKACHU };
     for (int method = EVO_NONE; method <= EVO_ROUTE217; method++) {
         if (method >= EVO_FRIENDSHIP && method <= EVO_FRIENDSHIP_NIGHT) continue;
+        // HeartGold's Mt. Coronet matched a map evolution method no map has;
+        // hg-engine's magnetic field reads the map (test_evolution_methods.py).
+        if (method == EVO_MAGNETIC_FIELD) continue;
         for (unsigned p = 0; p < sizeof(parameters) / sizeof(parameters[0]); p++) {
             one_row(method, parameters[p]);
             for (int context = EVOCTX_LEVELUP; context <= EVOCTX_ITEM_USE; context++) {

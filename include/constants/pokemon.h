@@ -606,7 +606,9 @@ typedef enum EvoMethod {
     EVO_OTHER_PARTY_MON,
     EVO_LEVEL_MALE,
     EVO_LEVEL_FEMALE,
-    EVO_CORONET,
+    // hg-engine: Route 43 and Route 10, by the Power Plant, in place of the
+    // Mt. Coronet this game has not got.
+    EVO_MAGNETIC_FIELD,
     EVO_ETERNA,
     EVO_ROUTE217,
     // New Gold needs Eevee to notice it knows a Fairy move.
