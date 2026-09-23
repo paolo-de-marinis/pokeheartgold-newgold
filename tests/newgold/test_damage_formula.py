@@ -39,6 +39,7 @@ typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int32_t 
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
 @UQ412@
 
 typedef struct { int unused; } BattleSystem;
@@ -231,6 +232,12 @@ int main(void) {
     S.battleType = BATTLE_TYPE_DOUBLES; S.hitCount = 2; EXPECT(calc(), 30);
     S.hitCount = 1; EXPECT(calc(), 30);
 
+    // 6.9.14.1 a stamping move into a Minimized target doubles: 90. Any
+    // other move, 45.
+    reset(); ctx.battleMons[1].moveEffectFlags = MOVE_EFFECT_FLAG_MINIMIZE; ctx.moveNoCur = MOVE_BODY_SLAM; EXPECT(calc(), 90);
+    ctx.moveNoCur = MOVE_HEAVY_SLAM; EXPECT(calc(), 90);
+    ctx.moveNoCur = MOVE_TACKLE; EXPECT(calc(), 45);
+
     // 6.9.14.45 Collision Course and Electro Drift, 5461 on a super-effective
     // hit: 90 * 5461 = 491490, + 2047 >> 12 = 120. Neutral, 45.
     reset(); ctx.moveNoCur = MOVE_COLLISION_COURSE; S.types[1][0] = S.types[1][1] = TYPE_GRASS; EXPECT(calc(), 120);
@@ -315,14 +322,18 @@ def table(source, name):
     return match.group(0)
 
 
+def move_list(source, name):
+    return re.search(r"^static const u16 " + name + r"\[\] = \{.*?^\};", source, re.M | re.S).group(0)
+
+
 def program():
     uq412 = "\n".join(re.findall(r"^#define UQ412__\w+\s+\d+$", HEADER, re.M))
     enum = re.search(r"^enum \{\n    TYPETABLE_ATTACKER,.*?^\};", OVERLAY, re.M | re.S).group(0)
-    overlay = "\n".join([enum, table(OVERLAY, "sTypeEffectiveness")] + [
+    overlay = "\n".join([enum, table(OVERLAY, "sTypeEffectiveness"), move_list(OVERLAY, "sMinimizeVulnerableMoves")] + [
         function(OVERLAY, name) for name in (
             "QMul_RoundUp", "QMul_RoundDown", "ov12_02251C74", "ov12_022583B4", "TeraShellResists",
             "BattlerMoveWeather", "StrongWindsShelterRow", "StrongWindsFor", "StrongWindsWeakenMove",
-            "CalcTypeEffectiveness")])
+            "CalcTypeEffectiveness", "MoveIsInList", "BattleMoveStampsOnMinimize")])
     commands = "\n".join(function(COMMANDS, name) for name in (
         "ScreenModifier", "FinalDamageModifier", "DamageCalcDefault"))
     return (FIXTURE.replace("@UQ412@", uq412)
@@ -331,7 +342,8 @@ def program():
                      .replace("BOOL TeraShellResists", "static BOOL TeraShellResists")
                      .replace("u32 BattlerMoveWeather", "static u32 BattlerMoveWeather")
                      .replace("BOOL StrongWindsWeakenMove", "static BOOL StrongWindsWeakenMove")
-                     .replace("u32 QMul_", "static u32 QMul_"))
+                     .replace("u32 QMul_", "static u32 QMul_")
+                     .replace("BOOL BattleMoveStampsOnMinimize", "static BOOL BattleMoveStampsOnMinimize"))
             .replace("@COMMANDS@", commands))
 
 
@@ -372,6 +384,14 @@ class DamageFormulaTests(unittest.TestCase):
         for body in (function(CONTROLLER, "ov12_0224B498"), function(COMMANDS, "BtlCmd_ApplyTypeEffectiveness")):
             self.assertIn("ov12_02251D28(", body)
             self.assertNotIn("ctx->damage = ov12_02251D28(", body)
+
+    def test_a_stamping_move_never_misses_a_minimized_target(self):
+        # other_battle_calculators.c:2892: sure to hit, and doubled only in the
+        # final modifier, so Stomp's script no longer doubles its power too.
+        body = function(CONTROLLER, "BattleSystem_CheckMoveEffect")
+        self.assertRegex(body, r"MOVE_EFFECT_FLAG_MINIMIZE\) && BattleMoveStampsOnMinimize\(move\)\) \{\n\s*ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;")
+        stomp = (ROOT / "files/battledata/script/effect_script/effect_script_0150.s").read_text()
+        self.assertNotIn("BSCRIPT_VAR_POWER_MULTI, 20", stomp)
 
     def test_future_sight_keeps_the_screens(self):
         # Its damage is still worked out whole on the turn it is used, as

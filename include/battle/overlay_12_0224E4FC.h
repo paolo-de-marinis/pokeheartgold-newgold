@@ -78,6 +78,7 @@ void Battler_MimicryRestoreTypes(BattleSystem *battleSystem, BattleContext *ctx,
 void Battler_OpportunistNotesRaise(BattleSystem *battleSystem, BattleContext *ctx, int stat, int stages);
 int BattleContext_ActivateParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL BattleMoveIsSoundBased(u32 moveNo);
+BOOL BattleMoveStampsOnMinimize(u32 moveNo);
 BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo);
 s8 BattlerMovePriority(BattleContext *ctx, int battlerId, u16 moveNo);
 u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo);

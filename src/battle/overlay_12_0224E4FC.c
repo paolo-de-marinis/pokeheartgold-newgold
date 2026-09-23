@@ -3881,6 +3881,20 @@ static const u16 sWindMoves[] = {
     MOVE_WILDBOLT_STORM,
 };
 
+// The moves that stamp: against a Pokemon that has used Minimize they never
+// miss and do double (the reference's MinimizeVulnerabilityMovesList).
+static const u16 sMinimizeVulnerableMoves[] = {
+    MOVE_BODY_SLAM,
+    MOVE_STOMP,
+    MOVE_DRAGON_RUSH,
+    MOVE_STEAMROLLER,
+    MOVE_HEAT_CRASH,
+    MOVE_HEAVY_SLAM,
+    MOVE_FLYING_PRESS,
+    MOVE_MALICIOUS_MOONSAULT,
+    MOVE_SUPERCELL_SLAM,
+};
+
 // What a pair of Safety Goggles keeps out. The reference's list, in its order,
 // which is why Powder and Rage Powder are on it beside the four that put a
 // status on: a powder is a powder whatever it does when it lands.
@@ -4353,6 +4367,10 @@ const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) {
 // tables they read.
 BOOL BattleMoveIsSoundBased(u32 moveNo) {
     return MoveIsInList(moveNo, sSoundMoves, NELEMS(sSoundMoves));
+}
+
+BOOL BattleMoveStampsOnMinimize(u32 moveNo) {
+    return MoveIsInList(moveNo, sMinimizeVulnerableMoves, NELEMS(sMinimizeVulnerableMoves));
 }
 
 // Long Reach ends the attacker's moves before they touch anything, so the

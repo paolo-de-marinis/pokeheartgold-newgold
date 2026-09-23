@@ -3129,6 +3129,12 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
     }
 
+    // A stamping move never misses a Pokemon that has used Minimize
+    // (other_battle_calculators.c:2892).
+    if ((ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_MINIMIZE) && BattleMoveStampsOnMinimize(move)) {
+        ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
+    }
+
     if (!(ctx->moveStatusFlag & MOVE_STATUS_BYPASSED_ACCURACY)
         && BattleMoveTbl(ctx, ctx->moveNoCur)->range != RANGE_OPPONENT_SIDE
         && ((!(ctx->battleStatus & BATTLE_STATUS_HIT_FLY) && ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_FLY)

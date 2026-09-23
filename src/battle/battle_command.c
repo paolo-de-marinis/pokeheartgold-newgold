@@ -793,6 +793,12 @@ static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, i
     int item = GetBattlerHeldItemEffect(ctx, battlerIdAttacker);
     u32 modifier = UQ412__1_0;
 
+    // Body Slam, Stomp and the other stamping moves do double against a
+    // Pokemon that has used Minimize (6.9.14.1); HeartGold doubled Stomp's
+    // power in its script and nothing else.
+    if ((ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_MINIMIZE) && BattleMoveStampsOnMinimize(moveNo)) {
+        modifier = QMul_RoundUp(modifier, UQ412__2_0);
+    }
     // Collision Course and Electro Drift hit a third harder where they are
     // super effective (6.9.14.45), ahead of the screens.
     if (effectiveness > 8 && (moveNo == MOVE_COLLISION_COURSE || moveNo == MOVE_ELECTRO_DRIFT)) {
