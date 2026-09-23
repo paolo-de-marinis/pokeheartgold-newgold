@@ -306,6 +306,8 @@ Static main
     Object asm/unk_0208C3E4.o
     Object src/pokemon_summary_stat_name.o
     Object asm/unk_0208C87C.o
+    Object src/pokemon_summary_info.o
+    Object asm/unk_0208CFB4.o
     Object src/pokemon_summary_stats.o
     Object asm/unk_0208D474.o
     Object asm/unk_0208DE40.o
