@@ -3122,6 +3122,19 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         }
     }
 
+    // Toxic never misses when a Poison type uses it, from the sixth
+    // generation on -- a target in the air or underground included, which is
+    // why the return comes before the semi-invulnerability check below. The
+    // reference asks this first of its sure hits (CalcAccuracy), and counts a
+    // Poison type given as a third type.
+    if (move == MOVE_TOXIC
+        && (ctx->battleMons[battlerIdAttacker].type1 == TYPE_POISON
+            || ctx->battleMons[battlerIdAttacker].type2 == TYPE_POISON
+            || ctx->battleMons[battlerIdAttacker].type3 == TYPE_POISON)) {
+        ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
+        return FALSE;
+    }
+
     if (!(ctx->battleStatus & BATTLE_STATUS_FLAT_HIT_RATE) // TODO: Is this flag a debug flag to ignore hit rates..?
         && ((ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_LOCK_ON
                 && ctx->battleMons[battlerIdTarget].unk88.battlerIdLockOn == battlerIdAttacker)

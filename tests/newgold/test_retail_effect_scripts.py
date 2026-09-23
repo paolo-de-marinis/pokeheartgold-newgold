@@ -19,7 +19,7 @@ import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT
-from test_repels import REFERENCE
+from test_repels import REFERENCE, function
 
 sys.path.insert(0, str(ROOT / "tools/newgold/import"))
 import import_moves  # noqa: E402
@@ -35,7 +35,6 @@ PARENTAL_BOND = "Parental Bond, whose commands are stubs here (test_battle_comma
 STILL_DIFFERENT = {
     7: IN_C.format("Damp and the user's fainting, BattleController_BeforeMove.c"),
     13: "Growth's two stages in sunshine: the engine's subscript HANDLE_GROWTH",
-    33: "Toxic from a Poison type: the engine's sure hit, in its accuracy check",
     34: PARENTAL_BOND,
     42: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
     48: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
@@ -116,8 +115,8 @@ def defines():
 
 def normalised(text, value):
     """The script's commands, with labels numbered by where they appear,
-    messages given by number and every argument that is a constant or an or
-    of constants given as its value."""
+    command names in either case, messages given by number and every argument
+    that is a constant or an or of constants given as its value."""
     lines = []
     for line in text.splitlines():
         line = line.split("//")[0].strip()
@@ -131,6 +130,7 @@ def normalised(text, value):
             out.append(labels[line[:-1]] + ":")
             continue
         command, _, rest = line.partition(" ")
+        command = command.lower()  # the engine writes Goto where this tree's macro is GoTo
         arguments = []
         for argument in (a.strip() for a in rest.split(",") if a.strip()):
             argument = labels.get(argument, argument)
@@ -221,7 +221,18 @@ class BroughtOverTests(unittest.TestCase):
         branch = text[text.index(trainer + ":"):]
         self.assertIn("TryReplaceFaintedMon BATTLER_CATEGORY_ATTACKER, TRUE", branch)
         self.assertIn("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST", branch)
-
+    def test_toxic_from_a_poison_type_never_misses(self):
+        # Generation VI: the script lets it reach a target that is flying,
+        # digging, diving or vanished, and the hit check never lets it miss.
+        text = script(33)
+        for flag in ("BATTLE_STATUS_HIT_DIG", "BATTLE_STATUS_HIT_FLY", "BATTLE_STATUS_SHADOW_FORCE",
+                     "BATTLE_STATUS_HIT_DIVE"):
+            self.assertIn(flag, text)
+        body = function((ROOT / "src/battle/battle_controller_player.c").read_text(),
+                        "BattleSystem_CheckMoveEffect")
+        self.assertRegex(body, r"move == MOVE_TOXIC\s*&& \(ctx->battleMons\[battlerIdAttacker\]\.type1 == TYPE_POISON"
+                               r"[^{]*type3 == TYPE_POISON\)\) \{\s*ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;\s*return FALSE;")
+        self.assertLess(body.index("MOVE_TOXIC"), body.index("ABILITY_NO_GUARD"))
 
 if __name__ == "__main__":
     unittest.main()
