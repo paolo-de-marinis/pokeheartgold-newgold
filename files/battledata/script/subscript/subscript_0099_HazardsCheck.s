@@ -9,8 +9,6 @@
 // falls through to the end once the queue is spent, which sets the walk back
 // to the start for the next Pokemon, so no way out of the walk skips it.
 _000:
-    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, ABILITY_MAGIC_GUARD, _DRAIN
-
 _NEXT:
     // A Pokemon one hazard has made faint meets no more of them.
     CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_SWITCHED_MON, BMON_DATA_HP, 0, _DRAIN
@@ -73,6 +71,9 @@ _SPIKES:
     GoTo _NEXT
 
 _SPIKES_GROUNDED:
+    // Magic Guard keeps the damage off, the spikes' and the stones'; from the
+    // fifth generation it no longer turns the poison spikes and the web away.
+    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, ABILITY_MAGIC_GUARD, _NEXT
     CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _NEXT
     CheckSpikes BATTLER_CATEGORY_SWITCHED_MON, _NEXT
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_SWITCH
@@ -85,6 +86,7 @@ _SPIKES_GROUNDED:
     GoTo _NEXT
 
 _STEALTH_ROCK:
+    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, ABILITY_MAGIC_GUARD, _NEXT
     CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _NEXT
     CheckStealthRock BATTLER_CATEGORY_SWITCHED_MON, _NEXT
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_SWITCH

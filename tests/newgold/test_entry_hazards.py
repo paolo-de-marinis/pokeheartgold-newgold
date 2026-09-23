@@ -6,6 +6,7 @@ spikes, the web and the pointed stones laid on its side.
 """
 
 import os
+import re
 from pathlib import Path
 import shlex
 import subprocess
@@ -15,6 +16,12 @@ import unittest
 from test_repels import ROOT, function, read
 
 HAZARDS = "files/battledata/script/subscript/subscript_0099_HazardsCheck.s"
+
+
+def block(text, label):
+    """The lines under a label, up to the blank line that ends them."""
+    start = re.search(rf"^{label}\n", text, re.M).end()
+    return (text[start:] + "\n\n").split("\n\n")[0]
 
 
 class GroundedTests(unittest.TestCase):
@@ -159,13 +166,20 @@ class QueueTests(unittest.TestCase):
         self.assertIn("JumpToCurrentEntryHazard BATTLER_CATEGORY_SWITCHED_MON, _SPIKES, _TOXIC_SPIKES, "
                       "_STEALTH_ROCK, _STICKY_WEB, _NEXT", text)
         # Every hazard's block goes back for the next, and a fainted Pokemon
-        # or Magic Guard drains the walk rather than leaving it half done.
+        # drains the walk rather than leaving it half done.
         for label in ("_SPIKES_GROUNDED:", "_TOXIC_SPIKES_GROUNDED:", "_STEALTH_ROCK:", "_STICKY_WEB_GROUNDED:"):
-            block = text[text.index(label):] + "\n\n"
-            block = block[:block.index("\n\n")]
-            self.assertTrue(block.rstrip().endswith("GoTo _NEXT"), label)
+            self.assertTrue(block(text, label).rstrip().endswith("GoTo _NEXT"), label)
         self.assertIn("BMON_DATA_HP, 0, _DRAIN", text)
         self.assertIn("RemoveEntryHazardFromQueue BATTLER_CATEGORY_SWITCHED_MON, HAZARD_IDX_TOXIC_SPIKES", text)
+
+    def test_magic_guard_turns_away_the_damage_only(self):
+        # Pokemon Central (Magicscudo): the fourth generation's Magic Guard
+        # kept the poison spikes off, the fifth's on only stops the damage.
+        text = read(HAZARDS)
+        guarded = [label for label in ("_SPIKES_GROUNDED:", "_TOXIC_SPIKES_GROUNDED:", "_STEALTH_ROCK:",
+                                       "_STICKY_WEB_GROUNDED:", "_000:")
+                   if "ABILITY_MAGIC_GUARD" in block(text, label)]
+        self.assertEqual(guarded, ["_SPIKES_GROUNDED:", "_STEALTH_ROCK:"])
 
     def test_what_clears_a_hazard_takes_it_off(self):
         defog = read("files/battledata/script/subscript/subscript_0171_Defog.s")
