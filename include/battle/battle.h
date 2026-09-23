@@ -485,7 +485,10 @@ typedef struct BattleContext {
     u8 unk_314C[4];
     int battlersOnField;
     u32 battleContinueFlag : 1;
-    u32 unused : 31;
+    // Whether Ball Fetch has picked up a ball already this battle; it only
+    // ever picks up the first that failed.
+    u32 ballFetched : 1;
+    u32 unused : 30;
     // Keep existing context offsets stable for untouched battle assembly.
     u16 trainerAIAbilities[BATTLER_MAX];
     // Whether the move being used is one that switches its user out, which a
@@ -597,6 +600,9 @@ typedef struct BattleContext {
     // were last looked at, for its partner's Symbiosis. Cleared when the
     // Pokemon is loaded into its slot.
     u8 symbiosisPending[BATTLER_MAX];
+    // The first of the player's balls that failed to catch this battle, while
+    // it waits for a Pokemon with Ball Fetch and empty hands to pick it up.
+    u16 ballFetchBall;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

@@ -6211,7 +6211,34 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 35: // end
+        case 35: // Ball Fetch
+            // In a wild battle a Pokemon of the player's with Ball Fetch and
+            // nothing in its hands picks up the first ball that failed to
+            // catch, once in the battle (Pokemon Central, Raccattapalle). The
+            // reference declares the ability and nothing reads it; its note in
+            // ServerBeforeAct means to look after the ball was used, which is
+            // where the throw's subscript now asks.
+            if (ctx->ballFetchBall != ITEM_NONE) {
+                for (i = 0; i < maxBattlers; i++) {
+                    battlerId = ctx->turnOrder[i];
+                    if (BattleSystem_GetFieldSide(battleSystem, battlerId) == 0 && ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].item == ITEM_NONE && GetBattlerAbility(ctx, battlerId) == ABILITY_BALL_FETCH) {
+                        ctx->battleMons[battlerId].item = ctx->ballFetchBall;
+                        CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
+                        ctx->itemTemp = ctx->ballFetchBall;
+                        ctx->ballFetchBall = ITEM_NONE;
+                        ctx->ballFetched = TRUE;
+                        ctx->battlerIdTemp = battlerId;
+                        script = BATTLE_SUBSCRIPT_BALL_FETCH;
+                        flag = TRUE;
+                        break;
+                    }
+                }
+            }
+            if (flag == FALSE) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 36: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;

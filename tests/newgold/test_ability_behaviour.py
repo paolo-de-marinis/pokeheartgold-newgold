@@ -664,5 +664,30 @@ class SymbiosisTests(unittest.TestCase):
                       subscript("Symbiosis"))
 
 
+class BallFetchTests(unittest.TestCase):
+    def test_the_first_ball_that_failed_is_picked_up_once(self):
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        task = function(commands, "Task_GetPokemon")
+        kept = task[task.index("BattleSystem_CalculateBallShakes"):]
+        kept = kept[:kept.index("data->ctx->ballFetchBall = data->ctx->itemTemp;")]
+        self.assertIn("data->tempData[DATA_GET_POKEMON_BALL_SHAKES_TOTAL] < BALL_SHAKE_MAX", kept)
+        self.assertIn("data->ctx->ballFetchBall == ITEM_NONE && !data->ctx->ballFetched", kept)
+        self.assertIn("BATTLE_TYPE_BUG_CONTEST | BATTLE_TYPE_SAFARI | BATTLE_TYPE_PAL_PARK", kept)
+        entry = function(OVERLAY, "TryAbilityOnEntry")
+        state = entry[entry.index("// Ball Fetch"):]
+        state = state[:state.index("case ", 10)]
+        self.assertIn("BattleSystem_GetFieldSide(battleSystem, battlerId) == 0 && ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].item == ITEM_NONE && GetBattlerAbility(ctx, battlerId) == ABILITY_BALL_FETCH", state)
+        self.assertIn("ctx->battleMons[battlerId].item = ctx->ballFetchBall;", state)
+        self.assertIn("ctx->ballFetched = TRUE;", state)
+        self.assertIn("script = BATTLE_SUBSCRIPT_BALL_FETCH;", state)
+        self.assertIn("msg_0197_00589, TAG_NICKNAME_ITEM, BATTLER_CATEGORY_MSG_BATTLER_TEMP, BATTLER_CATEGORY_MSG_TEMP", subscript("BallFetch"))
+        # Asked straight after a ball that did not catch.
+        throw = sorted(SUBSCRIPTS.glob("subscript_0011_*.s"))[0].read_text()
+        after = label(throw, "_060")
+        self.assertIn("BATTLE_RESULT_CAPTURED_MON, _END", after)
+        self.assertIn("SwitchInAbilityCheck _END", after)
+        self.assertIn("CallFromVar BSCRIPT_VAR_TEMP_DATA", after)
+
+
 if __name__ == "__main__":
     unittest.main()

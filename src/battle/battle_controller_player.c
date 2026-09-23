@@ -172,6 +172,7 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // Stream's line went into what Tera Shell's left; Supreme Overlord's count of
 // the fallen by four, and Mimicry's terrain by four and Opportunist's stages
 // by thirty-two and Symbiosis's marks by four.
+// Ball Fetch's two-byte ball went into padding and grew it by nothing.
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x3200 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 

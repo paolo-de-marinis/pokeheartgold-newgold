@@ -693,6 +693,8 @@
 #define BATTLE_SUBSCRIPT_MIMICRY                            425
 // Symbiosis handing its item over, which the reference has no script for.
 #define BATTLE_SUBSCRIPT_SYMBIOSIS                          426
+// Ball Fetch picking a ball up, which the reference has no script for.
+#define BATTLE_SUBSCRIPT_BALL_FETCH                         427
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

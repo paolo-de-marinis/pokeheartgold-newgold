@@ -37,4 +37,12 @@ _CATCHING_CONTEST_OUT_OF_BALLS:
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_OUTCOME, BATTLE_RESULT_PLAYER_FLED
 
 _060:
+    // A Pokemon with Ball Fetch picks up a ball that failed. That is the
+    // entry abilities' check to make, and it is asked here, straight after
+    // the ball, as the reference's note in ServerBeforeAct means it to be.
+    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_BATTLE_OUTCOME, BATTLE_RESULT_CAPTURED_MON, _END
+    SwitchInAbilityCheck _END
+    CallFromVar BSCRIPT_VAR_TEMP_DATA
+
+_END:
     End 

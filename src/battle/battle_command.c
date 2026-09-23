@@ -7636,6 +7636,13 @@ static void Task_GetPokemon(SysTask *task, void *inData) {
         if (data->tempData[DATA_GET_POKEMON_FRAME_COUNTER] == 0) { // After 23 frames have passed...
             ov12_022628A0(data->battleSystem, battlerId, data->ballID);
             data->tempData[DATA_GET_POKEMON_BALL_SHAKES_TOTAL] = BattleSystem_CalculateBallShakes(data->battleSystem, data->ctx);
+            // The first ball of the battle to fail is kept for Ball Fetch.
+            // The contest's and the Safari Zone's balls are not the player's
+            // to keep, and a trainer's Pokemon never gets this far.
+            if (data->tempData[DATA_GET_POKEMON_BALL_SHAKES_TOTAL] < BALL_SHAKE_MAX && data->ctx->ballFetchBall == ITEM_NONE && !data->ctx->ballFetched
+                && !(BattleSystem_GetBattleType(data->battleSystem) & (BATTLE_TYPE_BUG_CONTEST | BATTLE_TYPE_SAFARI | BATTLE_TYPE_PAL_PARK))) {
+                data->ctx->ballFetchBall = data->ctx->itemTemp;
+            }
 
             if (data->ctx->criticalCapture) {
                 data->tempData[DATA_GET_POKEMON_BALL_SHAKE_ANIMATIONS] = 1; // A critical throw shakes once whatever it is going to do.
