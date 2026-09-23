@@ -2100,7 +2100,11 @@ void ov12_02250A18(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
         return;
     }
 
-    if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_NORMALIZE || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_MOLD_BREAKER) {
+    // Mold Breaker, Teravolt and Turboblaze -- and Mycelium Might, for a status
+    // move -- pass a Lightning Rod or Storm Drain by, as the reference's
+    // CLIENT_HAS_MOLD_BREAKER_VARIATION does: the holders below are asked
+    // through CheckBattlerAbilityIfNotIgnored.
+    if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_NORMALIZE) {
         return;
     }
 
@@ -2128,22 +2132,22 @@ void ov12_02250A18(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     if (moveType == TYPE_ELECTRIC && (BattleMoveTbl(ctx, moveNo)->range == RANGE_SINGLE_TARGET || BattleMoveTbl(ctx, moveNo)->range == RANGE_RANDOM_OPPONENT) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP_NOT_USER, battlerIdAttacker, ABILITY_LIGHTNINGROD)) {
         for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
             battlerIdTarget = ctx->turnOrder[battlerId];
-            if (GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_LIGHTNINGROD && ctx->battleMons[battlerIdTarget].hp && battlerIdAttacker != battlerIdTarget) {
+            if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_LIGHTNINGROD) == TRUE && ctx->battleMons[battlerIdTarget].hp && battlerIdAttacker != battlerIdTarget) {
                 break;
             }
         }
-        if (battlerIdTarget != ctx->battlerIdTarget) {
+        if (battlerId < maxBattlers && battlerIdTarget != ctx->battlerIdTarget) {
             ctx->selfTurnData[battlerIdTarget].lightningRodFlag = TRUE;
             ctx->battlerIdTarget = battlerIdTarget;
         }
     } else if (moveType == TYPE_WATER && (BattleMoveTbl(ctx, moveNo)->range == RANGE_SINGLE_TARGET || BattleMoveTbl(ctx, moveNo)->range == RANGE_RANDOM_OPPONENT) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP_NOT_USER, battlerIdAttacker, ABILITY_STORM_DRAIN)) {
         for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
             battlerIdTarget = ctx->turnOrder[battlerId];
-            if (GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_STORM_DRAIN && ctx->battleMons[battlerIdTarget].hp && battlerIdAttacker != battlerIdTarget) {
+            if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_STORM_DRAIN) == TRUE && ctx->battleMons[battlerIdTarget].hp && battlerIdAttacker != battlerIdTarget) {
                 break;
             }
         }
-        if (battlerIdTarget != ctx->battlerIdTarget) {
+        if (battlerId < maxBattlers && battlerIdTarget != ctx->battlerIdTarget) {
             ctx->selfTurnData[battlerIdTarget].stormDrainFlag = TRUE;
             ctx->battlerIdTarget = battlerIdTarget;
         }
@@ -3176,6 +3180,14 @@ int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, in
     return CalcTypeEffectiveness(battleSystem, ctx, moveNo, moveTypeDefault, battlerIdAttacker, battlerIdTarget, damage, moveStatusFlag, &effectiveness);
 }
 
+// The abilities that pass a target's ability by whatever the move: Teravolt
+// and Turboblaze as Mold Breaker (the reference's
+// CLIENT_HAS_MOLD_BREAKER_VARIATION), for the AI's question below, which has
+// the abilities and not the battlers.
+static BOOL AbilityBreaksMolds(int ability) {
+    return ability == ABILITY_MOLD_BREAKER || ability == ABILITY_TERAVOLT || ability == ABILITY_TURBOBLAZE;
+}
+
 void ov12_02252054(BattleContext *ctx, int moveNo, int moveTypeDefault, int abilityAttacker, int abilityTarget, int item, int type1, int type2, u32 *moveStatusFlag) {
     int i;
     u8 moveType;
@@ -3186,7 +3198,7 @@ void ov12_02252054(BattleContext *ctx, int moveNo, int moveTypeDefault, int abil
 
     moveType = BattleMoveTypeForAbility(ctx, abilityAttacker, moveNo, moveTypeDefault);
 
-    if (abilityAttacker != ABILITY_MOLD_BREAKER && abilityTarget == ABILITY_LEVITATE && moveType == TYPE_GROUND && !(ctx->fieldCondition & FIELD_CONDITION_GRAVITY) && item != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
+    if (!AbilityBreaksMolds(abilityAttacker) && abilityTarget == ABILITY_LEVITATE && moveType == TYPE_GROUND && !(ctx->fieldCondition & FIELD_CONDITION_GRAVITY) && item != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
         *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
     } else if (item == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT && moveType == TYPE_GROUND && !(ctx->fieldCondition & FIELD_CONDITION_GRAVITY)) {
         // What the AI is told about an Air Balloon: a Ground move does
@@ -3217,7 +3229,7 @@ void ov12_02252054(BattleContext *ctx, int moveNo, int moveTypeDefault, int abil
         } while (sTypeEffectiveness[i][0] != TYPE_ENDTABLE);
     }
 
-    if (abilityAttacker != ABILITY_MOLD_BREAKER && abilityTarget == ABILITY_WONDER_GUARD && ov12_02258440(ctx, moveNo) && (!(*moveStatusFlag & MOVE_STATUS_SUPER_EFFECTIVE) || (*moveStatusFlag & MOVE_STATUS_ANY_EFFECTIVE) == MOVE_STATUS_ANY_EFFECTIVE)) {
+    if (!AbilityBreaksMolds(abilityAttacker) && abilityTarget == ABILITY_WONDER_GUARD && ov12_02258440(ctx, moveNo) && (!(*moveStatusFlag & MOVE_STATUS_SUPER_EFFECTIVE) || (*moveStatusFlag & MOVE_STATUS_ANY_EFFECTIVE) == MOVE_STATUS_ANY_EFFECTIVE)) {
         *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
     }
 }
@@ -3682,6 +3694,19 @@ BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int battlerIdAttacker, 
     }
 
     return ret;
+}
+
+// Whether a standing Pokemon on the target's side has the ability, where the
+// attacker's move does not ignore it (CheckBattlerAbilityIfNotIgnored).
+static BOOL SideAbilityNotIgnored(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int ability) {
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+    for (int i = 0; i < maxBattlers; i++) {
+        if (BattleSystem_GetFieldSide(battleSystem, i) == BattleSystem_GetFieldSide(battleSystem, battlerIdTarget) && ctx->battleMons[i].hp && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, i, ability) == TRUE) {
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 BOOL CanSwitchMon(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
@@ -10590,7 +10615,10 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     if ((weather & FIELD_CONDITION_SUN_ALL) && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_SAME_SIDE_HP, battlerIdAttacker, ABILITY_FLOWER_GIFT)) {
         monAtk = monAtk * 15 / 10;
     }
-    if ((weather & FIELD_CONDITION_SUN_ALL) && GetBattlerAbility(ctx, battlerIdAttacker) != ABILITY_MOLD_BREAKER && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_SAME_SIDE_HP, battlerIdTarget, ABILITY_FLOWER_GIFT)) {
+    // The target's side's Flower Gift is lost on Mold Breaker, Teravolt and
+    // Turboblaze alike, as the reference asks it (MoldBreakerAbilityCheck,
+    // CalcBaseDamage.c:1435 at d0380a487).
+    if ((weather & FIELD_CONDITION_SUN_ALL) && SideAbilityNotIgnored(battleSystem, ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLOWER_GIFT)) {
         monSpDef = monSpDef * 15 / 10;
     }
 

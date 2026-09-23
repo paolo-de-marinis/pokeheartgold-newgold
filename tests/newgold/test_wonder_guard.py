@@ -14,6 +14,7 @@ import tempfile
 import unittest
 
 from test_battle_regressions import ROOT, function
+from test_repels import function as repels_function
 
 
 BASELINE = "e97c7fc975a7447f288c42acc2e155f5a673e30f"
@@ -28,6 +29,7 @@ FIXTURE = r"""
 #include "constants/move_effects.h"
 
 enum { TRUE = 1 };
+typedef int BOOL;
 typedef uint32_t u32;
 typedef struct {
     struct { struct { int effect; } moveData[1]; } trainerAIData;
@@ -108,10 +110,12 @@ int main(void) {
 
 def program(source, vanilla):
     predicates = re.findall(r"    if \(([^\n]*ABILITY_WONDER_GUARD[^\n]*ov12_02258440[^\n]*)\) \{", source)
-    if len(predicates) != 2 or not predicates[0].startswith("CheckBattlerAbilityIfNotIgnored") or not predicates[1].startswith("abilityAttacker"):
+    if len(predicates) != 2 or not predicates[0].startswith("CheckBattlerAbilityIfNotIgnored") or not predicates[1].startswith(("abilityAttacker", "!AbilityBreaksMolds(abilityAttacker)")):
         raise ValueError("Expected the live and AI Wonder Guard predicates")
+    # The AI's own Mold Breaker question, where the source has one.
+    breaks = repels_function(source, "AbilityBreaksMolds") if "static BOOL AbilityBreaksMolds(" in source else ""
     return (FIXTURE.replace("@VANILLA_HELPER@", function(vanilla, HELPER).replace(HELPER, "vanilla_" + HELPER))
-            .replace("@HELPER@", function(source, HELPER))
+            .replace("@HELPER@", breaks + "\n" + function(source, HELPER))
             .replace("@LIVE_PREDICATE@", predicates[0])
             .replace("@AI_PREDICATE@", predicates[1]))
 

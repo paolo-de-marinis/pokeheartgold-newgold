@@ -112,6 +112,7 @@ static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, in
     (void)bs; (void)ctx; (void)flag; (void)battlerId; (void)ability; return 0;
 }
 static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int a, int t, int ability) { (void)ctx; (void)a; (void)t; (void)ability; return FALSE; }
+static BOOL SideAbilityNotIgnored(BattleSystem *bs, BattleContext *ctx, int a, int t, int ability) { (void)bs; (void)ctx; (void)a; (void)t; (void)ability; return FALSE; }
 static int CheckMoveEffectOnField(BattleSystem *bs, BattleContext *ctx, u32 flag) { (void)bs; (void)ctx; (void)flag; return 0; }
 static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return S.weather; }
 static int ov12_022581D4(BattleSystem *bs, BattleContext *ctx, int var, int battlerId) { (void)bs; (void)ctx; (void)var; (void)battlerId; return 0; }
