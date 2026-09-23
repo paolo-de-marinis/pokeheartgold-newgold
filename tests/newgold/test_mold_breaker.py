@@ -38,7 +38,7 @@ typedef struct { int hp; u16 item; } BattleMon;
 typedef struct { u32 lightningRodFlag : 1, stormDrainFlag : 1, moldBreakerFlag : 1; } SelfTurnData;
 typedef struct { u32 followMeFlag : 1; u8 battlerIdFollowMe; } FieldSideConditionData;
 typedef struct {
-    int battlerIdTarget; u32 battleStatus; u32 moveNoCur;
+    int battlerIdAttacker; int battlerIdTarget; u32 battleStatus; u32 moveNoCur; u32 moveNoTemp;
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
     FieldSideConditionData fieldSideConditionData[2]; u8 turnOrder[4];
 } BattleContext;

@@ -277,7 +277,11 @@ BLOCK_LIST_SCRIPTS = {
     "subscript_0167_WorrySeed.s",
     "subscript_0316_Entrainment.s",
     "subscript_0338_GiveTargetSimple.s",
+    "subscript_0445_CoreEnforcer.s",
+    "subscript_0457_Doodle.s",
 }
+# A hit's added effect has no failure to give: its list passes over to the end.
+BLOCK_LIST_SKIPS = {"subscript_0445_CoreEnforcer.s": "_END"}
 
 
 def without_block_lists(path):
@@ -346,7 +350,8 @@ class AbilityEffectTests(unittest.TestCase):
 
     def test_a_block_list_alone_is_not_a_reading(self):
         # What the strict reading strips is block lists and nothing else: the
-        # stripped scripts read an added ability only to fail the move, and
+        # stripped scripts read an added ability only to fail the move (or to
+        # pass over a hit's added effect, BLOCK_LIST_SKIPS), and
         # the stripped C is where the table, the gas's list and Mummy's
         # refusals live.
         names = added()
@@ -354,7 +359,7 @@ class AbilityEffectTests(unittest.TestCase):
             if path.name not in BLOCK_LIST_SCRIPTS:
                 continue
             text = path.read_text()
-            failure = re.search(r"^(_\w+):\n    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED$", text, re.M).group(1)
+            failure = BLOCK_LIST_SKIPS.get(path.name) or re.search(r"^(_\w+):\n    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED$", text, re.M).group(1)
             for line in text.splitlines():
                 if any(name in names for name in re.findall(r"\bABILITY_(\w+)", line)) and not line.strip().startswith("//"):
                     self.assertTrue(line.endswith(f", {failure}"), (path.name, line))
