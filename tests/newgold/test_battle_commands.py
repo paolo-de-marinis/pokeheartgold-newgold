@@ -90,18 +90,32 @@ class BattleCommandTests(unittest.TestCase):
 
     # An added command that reads its operands and does nothing else is a
     # stub, and a script that runs one carries on as if the command worked.
-    # These are the ones still waiting on a system this tree has not got --
-    # mega and ultra burst, tera, totems, primal weather, Parental Bond, the
-    # batched messages of a spread move -- and no script here runs any of
-    # them. A ratchet: the set may only shrink.
+    # No script here runs any of these, and each waits on what is named beside
+    # it. The listing is exact -- a command written here leaves it -- and it
+    # may only shrink.
     STUBS = {
-        "AddType", "BatchEffectivenessMessage", "BatchFollowupMessage", "BatchUpdateHealthBar",
-        "BatchUpdateHealthBarValue", "CanClearPrimalWeather", "ChangePermanentBackground",
-        "GoToIfTerastallized", "GotoIfCanApplyKnockOffBoost",
-        "GotoIfCurrentMoveIsValidForParentalBond", "GotoIfFirstHitOfParentalBond",
-        "GotoIfParentalBondIsActive", "GotoIfSecondHitOfParentalBond", "MakeTotem",
-        "SetCurrentMoveSwitchingStatus", "SetParentalBondFlag", "TryActivateZeroToHero",
-        "TryMegaOrUltraBurstDuringPursuit",
+        "AddType": "no script in the reference runs it either",
+        "BatchEffectivenessMessage": "the batched messages of a spread move",
+        "BatchFollowupMessage": "the batched messages of a spread move",
+        "BatchUpdateHealthBar": "the batched messages of a spread move",
+        "BatchUpdateHealthBarValue": "the batched messages of a spread move",
+        "CanClearPrimalWeather": "primal weather",
+        "ChangePermanentBackground": "the battle background Defog and a terrain's end redraw",
+        "GoToIfTerastallized": "no script in the reference runs it either",
+        "GotoIfCanApplyKnockOffBoost": "no script in the reference runs it either",
+        "GotoIfCurrentMoveIsValidForParentalBond": "Parental Bond",
+        "GotoIfFirstHitOfParentalBond": "Parental Bond",
+        "GotoIfParentalBondIsActive": "no script in the reference runs it either",
+        "GotoIfSecondHitOfParentalBond": "Parental Bond",
+        "MakeTotem": "totems",
+        # The reference's pending-switch ordering (subscripts 0009, 0091,
+        # 0114, 0175, 0340, 0469, 0498, read in ServerDoPostMoveEffects.c):
+        # nothing here switches a Pokemon out after a move that way yet.
+        "SetCurrentMoveSwitchingStatus": "Parting Shot's switch, Eject Button and Eject Pack, "
+                                         "Wimp Out and Emergency Exit, none of them written",
+        "SetParentalBondFlag": "Parental Bond",
+        "TryActivateZeroToHero": "Zero to Hero, Palafin's form change",
+        "TryMegaOrUltraBurstDuringPursuit": "mega and ultra burst",
     }
 
     def test_no_added_command_is_a_stub_unless_listed(self):
@@ -119,7 +133,8 @@ class BattleCommandTests(unittest.TestCase):
                                              or l in ("return FALSE;", "return TRUE;"))]
             if not work:
                 stubs.add(name[len("BtlCmd_"):])
-        self.assertEqual(stubs - self.STUBS, set(), "commands that only read their operands and are not listed above")
+        self.assertEqual(stubs - set(self.STUBS), set(), "commands that only read their operands and are not listed above")
+        self.assertEqual(set(self.STUBS) - stubs, set(), "commands listed as stubs that do something now; take them off")
         for name in sorted(stubs):
             macro = next((m for m, code in self.macros.items() if code == self.table.index("BtlCmd_" + name)), None)
             self.assertIsNotNone(macro, name)

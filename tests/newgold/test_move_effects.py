@@ -7,20 +7,26 @@ animation. Any one of them missing gives a move that exists on the summary
 screen and then does nothing, or worse, runs whatever happens to sit at that
 index. Those are the assertions below.
 
-The last part is not structural. Some of the imported effect scripts are a
-plain hit and nothing else, because in the reference what makes the move
-special lives in C rather than in the script -- Smack Down grounds the target,
-Heavy Slam weighs it -- and that C is not here yet. Others reach for a terrain
-or a Drive this game has no items or field conditions for. Both are listed,
-and the count only ever comes down.
+The last part is not structural. In the reference much of what makes an
+added move special lives in C rather than in its script -- a list the move is
+failed by, a check after it lands, a critical hit it cannot miss -- and a
+script imported without that C looks finished. Every added effect the
+reference's C reads by name is either read by the C here or named in
+UNREAD_HERE with the reason, and that table only ever shrinks.
 """
 
+import io
 import re
 import struct
+import subprocess
+import tarfile
 import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT
+from test_repels import REFERENCE
+
+NEWGOLD = "ccf2c9f5"  # konefr's tip, the engine under it included
 
 MOVES_H = ROOT / "include/constants/moves.h"
 EFFECTS_H = ROOT / "include/constants/move_effects.h"
@@ -32,8 +38,7 @@ RECORD = "<HBBBBBBHbBBBH"
 RECORD_SIZE = 16
 
 # The last effect this game had before the reference's were imported. Below
-# it a plain-hit script is not a gap: it is a retail move whose special part
-# is written in C that is here.
+# it an effect is retail's, and whatever C it needs is retail's C, here.
 LAST_BEFORE_IMPORT = 286
 
 
@@ -130,22 +135,6 @@ class EffectScriptTests(unittest.TestCase):
                                 f"move {number} wants effect script {fields[0]}")
 
 
-def plain_hit():
-    """The effects whose script is the plain hit and nothing else.
-
-    In the reference what makes these moves special is written in C, not in
-    the script, so importing the script alone gives a move that hits for its
-    damage and does none of the rest.
-    """
-    def body(path):
-        text = re.sub(r"^\s*(\.include|//).*$", "", path.read_text(), flags=re.M)
-        return re.sub(r"\s+", " ", text).strip()
-    scripts = by_number(EFFECT_SCRIPTS)
-    hit = body(scripts[0])
-    return {number for number, path in scripts.items()
-            if number > LAST_BEFORE_IMPORT and body(path) == hit}
-
-
 def reaches_for_what_is_not_here():
     """The effects whose script mentions something only the imports header
     names -- a terrain, a Drive, a Memory -- so the branch never fires."""
@@ -157,33 +146,142 @@ def reaches_for_what_is_not_here():
             and names & set(re.findall(r"\b[A-Z][A-Z0-9_]{3,}\b", path.read_text()))}
 
 
-# Effects whose script is a bare hit in the reference too, and which need
-# nothing here. They match plain_hit() by shape and would be counted as work
-# for ever, so each one is named with the reason it is finished.
-NOTHING_TO_WRITE = {
-    # Mighty Cleave. This engine's only Protect gate reads the move record's
-    # flag bit, and that move's record has it clear -- like Feint, Shadow
-    # Force and Hyperspace Fury, which go through Protect the same way. The
-    # reference's extra effect check is belt and braces over the same record.
-    406,
+def without_comments(source):
+    return re.sub(r"//[^\n]*|/\*.*?\*/", "", source, flags=re.S)
+
+
+def effects_read_in(sources):
+    """Every MOVE_EFFECT_ name a body of C reads, comments left out."""
+    return {name for source in sources
+            for name in re.findall(r"\bMOVE_EFFECT_([A-Z0-9_]+)\b", without_comments(source))}
+
+
+def added_effects():
+    return {name for name, number in re.findall(
+        r"#define MOVE_EFFECT_([A-Z0-9_]+)\s+(\d+)\s*$", EFFECTS_H.read_text(), re.M)
+        if int(number) > LAST_BEFORE_IMPORT}
+
+
+def read_here():
+    return effects_read_in(path.read_text(errors="replace") for path in sorted((ROOT / "src").rglob("*.c")))
+
+
+def read_in_the_reference():
+    """The same question of konefr's tip, read with git rather than from the
+    working checkout, so it does not move with whatever is checked out."""
+    archive = subprocess.run(["git", "-C", str(REFERENCE), "archive", NEWGOLD, "src"],
+                             capture_output=True, check=True).stdout
+    with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+        return effects_read_in(tar.extractfile(member).read().decode(errors="replace")
+                               for member in tar.getmembers()
+                               if member.isfile() and member.name.endswith(".c"))
+
+
+# Every added effect the reference's C reads by name and no C here does, with
+# why. The shape of a script used to stand in for this -- an effect whose
+# script was more than a bare hit counted as done -- and that is not a
+# question about the effect: removing every line of C behind a script left
+# the count at zero. So these are named, one by one, against the reference's
+# own reads. What the reasons mean:
+#   script      the effect script or its subscript does what that C does
+#   data        the move record answers it in this engine
+#   unused      no move here has the effect
+#   not ported  it is not here; what the game does instead is said
+# An effect whose C gets written here leaves the table; nothing may join it.
+UNREAD_HERE = {
+    "ATK_ACC_UP": "script: subscript 355 refuses when both stats are at +6, the reference's up-front check",
+    "GUARD_SPLIT": "not ported: a substitute does not stop it here (the reference's substitute list)",
+    "POWER_SPLIT": "not ported: a substitute does not stop it here (the reference's substitute list)",
+    "ALWAYS_CRITICAL": "script: it asks for CRITICAL_STAGE_ALWAYS, which CalcCrit reads as a sure critical",
+    "CHANGE_TO_WATER_TYPE": "not ported: a substitute does not stop Soak here (the reference's substitute list)",
+    "SPEED_UP_2_ATK_UP": "script: subscript 350 refuses when both stats are at +6, the reference's up-front check",
+    "ATK_SP_ATK_SPEED_UP_2_DEF_SP_DEF_DOWN": "script: each stat change in subscript 349 refuses at the limit",
+    "CONFUSE_HIT_CRASH_ON_MISS": "script: it sets the crash flag and Reckless's boost itself",
+    "ATK_SP_ATK_UP": "script: subscript 346 refuses when both stats are at +6, the reference's up-front check",
+    "HIT_TWICE_AND_FLINCH": "not ported: King's Rock goes by the record's bit 5, set here, where the "
+                            "reference leaves out every flinching effect",
+    "ATK_SP_ATK_SPEED_UP_2": "unused",
+    "SHED_TAIL": "not ported: subscript 343 makes the decoy but the user never switches out",
+    "QUASH": "not ported: a substitute does not stop it here (the reference's substitute list)",
+    "RECOVER_FULL_DAMAGE_DEALT": "not ported: Heal Block does not stop it; this game's list is retail's moves",
+    "CHARGE_TURN_ATK_SP_ATK_SPEED_UP_2": "script: the charge turn, Power Herb and the +6 refusal are effect script 323's",
+    "PREVENT_HEALING_HIT": "not ported: Sheer Force neither boosts Psychic Noise nor drops its Heal Block",
+    "SET_ABILITY_TO_SIMPLE": "script: subscript 338 fails behind a substitute itself",
+    "CHARGE_TURN_SP_ATK_UP": "script: the charge turn and Power Herb are effect script 329's",
+    "CHARGE_TURN_SP_ATK_UP_RAIN_SKIPS": "script: the charge turn, Power Herb and the rain are effect script 330's",
+    "ATK_UP_3": "unused",
+    "DEF_UP_3": "script: the stat-stage subscript refuses at +6",
+    "SPEED_UP_3": "unused",
+    "SP_ATK_UP_3": "script: the stat-stage subscript refuses at +6",
+    "SP_DEF_UP_3": "unused",
+    "ATK_DOWN_3": "unused",
+    "DEF_DOWN_3": "unused",
+    "SPEED_DOWN_3": "unused",
+    "SP_ATK_DOWN_3": "unused",
+    "SP_DEF_DOWN_3": "unused",
+    "RECOVER_THREE_QUARTERS_DAMAGE_DEALT": "not ported: Heal Block does not stop it; this game's list is retail's moves",
+    "RECOVER_HALF_DAMAGE_DEALT_BURN_HIT": "not ported: Matcha Gotcha neither thaws its frozen user nor is "
+                                          "stopped by Heal Block",
+    "PREVENT_ESCAPE_HIT": "not ported: Sheer Force neither boosts it nor drops the trap; the trap is the script's",
+    "PREVENT_ESCAPE_BOTH_HIT": "script: the side effect runs Jaw Lock's subscript after the damage",
+    "STEALTH_ROCK_HIT": "script: an ON_HIT side effect lays the stones after the damage",
+    "SET_SPIKES_HIT": "script: an ON_HIT side effect lays the spikes after the damage",
+    "CHARGE_TURN_PARALYZE_HIT": "script: the charge turn, Power Herb and the paralysis are effect script 365's",
+    "CHARGE_TURN_BURN_HIT": "script: the charge turn, Power Herb and the burn are effect script 366's",
+    "HIT_THREE_TIMES_ALWAYS_CRITICAL": "not ported: Surging Strikes rolls for its criticals like any move",
+    "MORTAL_SPIN": "not ported: it poisons but clears neither hazards nor binding, Rapid Spin's half",
+    "ADD_TYPE_GRASS": "not ported: a substitute does not stop it here (the reference's substitute list)",
+    "ADD_TYPE_GHOST": "not ported: a substitute does not stop it here (the reference's substitute list)",
+    "CHANGE_TO_PSYCHIC_TYPE": "not ported: a substitute does not stop it here (the reference's substitute list)",
+    "HEAL_TARGET": "not ported: neither a substitute nor Heal Block stops Heal Pulse here",
+    "COACHING": "not ported: the reference's failure with no partner to coach is not here",
+    "LIFE_DEW": "not ported: Heal Block does not stop it; this game's list is retail's moves",
+    "DECORATE": "not ported: a substitute does not stop it here (the reference's substitute list)",
+    "PARTING_SHOT": "not ported: it lowers the two stats but the user never switches out",
+    "FORCE_SWITCH_HIT": "script: a CHECK_HP_AND_SUBSTITUTE side effect runs Whirlwind's subscript after the damage",
+    "STUFF_CHEEKS": "not ported: at +6 Defense the reference fails the move; here the berry is still eaten",
+    "THROAT_CHOP": "not ported: Sheer Force neither boosts it nor drops the silence, SetMoveConditionFlag's",
+    "RECOIL_HALF_MAX_HP": "script: Reckless's boost and the half-HP recoil are effect script 404's",
+    "IGNORE_PROTECT": "data: Mighty Cleave's record has the protect bit clear, which is what Protect reads here",
 }
 
 
 class WhatIsStillMissingTests(unittest.TestCase):
-    # A ratchet, not a target. Every added move has a record, a name, a script
-    # and an animation; these are the ones whose script cannot do the whole
-    # job on its own, because the reference does the rest in C this port has
-    # not written yet. The number may only come down.
-    STILL_TO_DO = 0
+    # A ratchet, not a target: the table above may only shrink.
+    STILL_UNREAD = 52
 
-    def test_the_list_only_ever_shrinks(self):
-        pending = (plain_hit() | reaches_for_what_is_not_here()) - NOTHING_TO_WRITE
+    def test_the_table_only_ever_shrinks(self):
         self.assertLessEqual(
-            len(pending), self.STILL_TO_DO,
-            f"{len(pending)} effects are scripted but not finished and the "
-            f"ledger allows {self.STILL_TO_DO}; write the C the script is "
-            f"missing, or say here why it has none")
+            len(UNREAD_HERE), self.STILL_UNREAD,
+            "an added effect joined UNREAD_HERE; write the C the reference has, "
+            "or lower nothing and say here why the table grew")
 
+    def test_every_entry_says_why(self):
+        for name, reason in UNREAD_HERE.items():
+            self.assertRegex(reason, r"^(script|data|unused|not ported)\b", name)
+            self.assertIn(name, added_effects(), f"MOVE_EFFECT_{name} is not an added effect")
+
+    def test_an_effect_read_here_leaves_the_table(self):
+        here = read_here()
+        for name in sorted(UNREAD_HERE):
+            self.assertNotIn(name, here, f"MOVE_EFFECT_{name} is read by the C here now; take it out of UNREAD_HERE")
+
+    def test_an_unused_effect_is_unused(self):
+        used = {fields[0] for number, fields in enumerate(records()) if 0 < number <= bounds()[1]}
+        numbers = {name: int(number) for name, number in re.findall(
+            r"#define MOVE_EFFECT_([A-Z0-9_]+)\s+(\d+)\s*$", EFFECTS_H.read_text(), re.M)}
+        for name, reason in UNREAD_HERE.items():
+            if reason == "unused":
+                self.assertNotIn(numbers[name], used, f"a move has MOVE_EFFECT_{name} now")
+
+    @unittest.skipIf(REFERENCE is None, "behaviour reference not present")
+    def test_every_effect_the_reference_reads_is_read_here_or_named(self):
+        missing = (added_effects() & read_in_the_reference()) - read_here()
+        self.assertEqual(missing, set(UNREAD_HERE),
+                         "the reference's C reads these added effects and the C here does not")
+
+    def test_no_script_reaches_for_a_placeholder(self):
+        self.assertEqual(reaches_for_what_is_not_here(), set())
 
 
 class PriorityTests(unittest.TestCase):
