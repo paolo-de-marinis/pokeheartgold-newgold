@@ -11025,7 +11025,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_RECOIL_HALF_MAX_HP,
     BATTLE_SUBSCRIPT_CLEAR_SMOG,
     BATTLE_SUBSCRIPT_INCINERATE,
-    BATTLE_SUBSCRIPT_MORTAL_SPIN
+    BATTLE_SUBSCRIPT_MORTAL_SPIN,
+    BATTLE_SUBSCRIPT_HANDLE_GROWTH
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

@@ -708,6 +708,8 @@
 // A Mirror Herb spent on the other side's stat stages, which the reference
 // has no script for.
 #define BATTLE_SUBSCRIPT_MIRROR_HERB                        433
+// Growth: Attack and Sp. Atk, by two in the sun. 331 there.
+#define BATTLE_SUBSCRIPT_HANDLE_GROWTH                      434
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -780,6 +782,7 @@
 #define MOVE_SUBSCRIPT_PTR_CLEAR_SMOG                       214
 #define MOVE_SUBSCRIPT_PTR_INCINERATE                       215
 #define MOVE_SUBSCRIPT_PTR_MORTAL_SPIN                      216
+#define MOVE_SUBSCRIPT_PTR_HANDLE_GROWTH                    217
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

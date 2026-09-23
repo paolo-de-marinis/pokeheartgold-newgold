@@ -34,7 +34,6 @@ PARENTAL_BOND = "Parental Bond, whose commands are stubs here (test_battle_comma
 
 STILL_DIFFERENT = {
     7: IN_C.format("Damp and the user's fainting, BattleController_BeforeMove.c"),
-    13: "Growth's two stages in sunshine: the engine's subscript HANDLE_GROWTH",
     34: PARENTAL_BOND,
     42: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
     48: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
@@ -247,6 +246,20 @@ class BroughtOverTests(unittest.TestCase):
         text = subscript("RAPID_SPIN")
         self.assertRegex(text, r"BMON_DATA_HP, 0, (\w+)[^:]*MOVE_SUBSCRIPT_PTR_SPEED_UP_1_STAGE\s*"
                                r"Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE\s*RapidSpin")
+
+    def test_growth_raises_both_attacks_and_twice_in_the_sun(self):
+        # Retail's Growth (13) raised Sp. Atk alone.
+        self.assertIn("MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_HANDLE_GROWTH", script(13))
+        text = subscript("HANDLE_GROWTH")
+        for needed in ("CheckIgnoreWeather", "FIELD_CONDITION_SUN_ALL", "HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN",
+                       "MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES", "MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_2_STAGES",
+                       "GoToSubscript BATTLE_SUBSCRIPT_ATK_SP_ATK_UP"):
+            self.assertIn(needed, text)
+        table = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        table = table[table.index("static const int sMoveStatusChangeScripts[] = {"):]
+        table = table[:table.index("};")]
+        entries = [line.strip().rstrip(",") for line in table.splitlines()[1:] if line.strip()]
+        self.assertEqual(entries[constant("MOVE_SUBSCRIPT_PTR_HANDLE_GROWTH")], "BATTLE_SUBSCRIPT_HANDLE_GROWTH")
 
 
 if __name__ == "__main__":
