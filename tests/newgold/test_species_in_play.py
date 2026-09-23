@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Check that every species the game can reach is a whole Pokemon.
 
-The ledger's "1041 species in play" row asks for six things at once: a sprite,
-an icon, a cry, a name, a Dex page and an ability that does something. Each of
-the six already has a test of its own, and each of those tests asks its own
-question -- is the sprite tree dense, is the cry table the right length, does
-the name bank reach the end. None of them asks the row's question, which is
-about a *species*: pick one of the 1027 the game can put in a party and follow
-all six of its numbers out to the data they index.
+The ledger's "1041 species in play" row -- 1423 since the forms became species
+-- asks for six things at once: a sprite, an icon, a cry, a name, a Dex page
+and an ability that does something. Each of the six already has a test of its
+own, and each of those tests asks its own question -- is the sprite tree
+dense, is the cry table the right length, does the name bank reach the end.
+None of them asks the row's question, which is about a *species*: pick one of
+the 1423 the game can put in a party and follow all six of its numbers out to
+the data they index.
 
 That distinction is not pedantry. Five of the six are reached by arithmetic on
 the species number -- pokegra member species * 6, icon member species - 508 +
@@ -16,8 +17,8 @@ row species -- and arithmetic fails one species at a time. A table that is the
 right length and starts one entry late passes every length check in the tree
 and makes Lillipup cry as Karrablast, which is exactly what happened.
 
-So this walks all 1027 and names the one that fails. It is not a substitute for
-the row: nobody has looked at 1027 sprites, and a member that exists is not a
+So this walks all 1423 and names the one that fails. It is not a substitute for
+the row: nobody has looked at 1423 sprites, and a member that exists is not a
 picture that is drawn. What a machine can answer is whether the number lands on
 something, and that is what this answers.
 
@@ -65,11 +66,12 @@ SPECIES_HEADER = ROOT / "include/constants/species.h"
 PICTURES_PER_SPECIES = 6
 FOOTPRINT_OFFSET = import_footprints.MEMBER_OFFSET
 
-# HeartGold's own 493 and New Gold's 534. The fourteen between them -- the egg,
-# the bad egg and the twelve alternate forms -- are species numbers but not
-# Pokemon: nothing can put one in a party, they have no Dex page of their own,
-# and their sprites come from otherpoke.narc. They are checked by the tests
-# that own those tables, not here.
+# HeartGold's own 493, New Gold's 534 and the reference's 396 forms numbered
+# as species (1042..1437): 493 + 534 + 396 = 1423. The fourteen between the
+# first two -- the egg, the bad egg and the twelve alternate forms -- are
+# species numbers but not Pokemon: nothing can put one in a party, they have
+# no Dex page of their own, and their sprites come from otherpoke.narc. They
+# are checked by the tests that own those tables, not here.
 SPECIES_IN_PLAY = 1423
 
 # The two the reference ships with an empty Pokedex entry and placeholder
@@ -82,6 +84,11 @@ BLANK_IN_THE_REFERENCE = set()  # a form carries its base's text, the two Galari
 # looks right on the summary screen and does nothing. This is the ledger's
 # number for the row, not a pass or a fail -- it comes down as the abilities
 # get their effects, and it may only come down.
+#
+# It was 18 before the forms import (00e38ed6a) and went to 58 with it, one
+# raise with its reason: 58 = the 18 base species plus 40 form species
+# (1042..1437) whose only abilities are pending -- a form is a species of its
+# own here and brings its own ability record.
 SPECIES_WITH_NOTHING_TO_DO = 58
 
 
