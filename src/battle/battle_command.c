@@ -1962,16 +1962,21 @@ BOOL BtlCmd_SetMultiHit(BattleSystem *battleSystem, BattleContext *ctx) {
             // from Black and White on, rolled the way the reference rolls them.
             if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SKILL_LINK) {
                 cnt = 5;
+            } else if (ctx->battleMons[ctx->battlerIdAttacker].species == SPECIES_GRENINJA_ASH && ctx->moveNoCur == MOVE_WATER_SHURIKEN) {
+                // Ash-Greninja's Water Shuriken lands three times, and no
+                // Loaded Dice changes that. The reference asks for Greninja's
+                // form 1, which in its own numbering is the Battle Bond form
+                // and not Ash, so the species is named here instead.
+                cnt = 3;
             } else {
                 cnt = BattleSystem_Random(battleSystem) % 100;
                 cnt = cnt < 35 ? 2 : cnt < 70 ? 3 : cnt < 85 ? 4 : 5;
-            }
-            // Loaded Dice rolls the two-to-five count again as four or five,
-            // and leaves a roll that already came up four or five alone. That
-            // same condition is what keeps it off a Skill Link's five above,
-            // which is why the reference needs no separate guard for it.
-            if (loadedDice && cnt != 4 && cnt != 5) {
-                cnt = 5 - (BattleSystem_Random(battleSystem) % 2);
+                // Loaded Dice rolls the two-to-five count again as four or
+                // five, and leaves a roll that already came up four or five
+                // alone.
+                if (loadedDice && cnt != 4 && cnt != 5) {
+                    cnt = 5 - (BattleSystem_Random(battleSystem) % 2);
+                }
             }
         }
         // Population Bomb is the move that asks for ten, and is the reason the

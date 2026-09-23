@@ -25,6 +25,8 @@ PREFIX = r'''
 #include "constants/abilities.h"
 #include "constants/battle.h"
 #include "constants/items.h"
+#include "constants/moves.h"
+#include "constants/species.h"
 typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
 typedef int BOOL;
 #define TRUE 1
@@ -33,6 +35,8 @@ typedef int BOOL;
 typedef struct { int unused; } BattleSystem;
 typedef struct {
     int battlerIdAttacker;
+    int moveNoCur;
+    struct { u16 species; } battleMons[4];
     u8 multiHitCount;
     u8 multiHitCountTemp;
     u32 checkMultiHit;
@@ -51,9 +55,13 @@ static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; assert(rollCount < 
 
 // The count a rolled multi-hit move lands, when the first random number is
 // `roll` and any second one is `again`.
+static u16 species, move;
+
 static int hits(u16 roll, u16 again) {
     BattleSystem bs = {0};
     BattleContext ctx = {0};
+    ctx.battleMons[0].species = species;
+    ctx.moveNoCur = move;
     script[0] = 0;
     script[1] = MULTIHIT_MULTI_HIT_MOVE;
     scriptPos = 0;
@@ -92,6 +100,21 @@ int main(void) {
     assert(hits(0, 0) == 5 && hits(0, 1) == 4 && hits(69, 1) == 4);
     assert(hits(70, 0) == 4);
     heldEffect = 0;
+
+    // Ash-Greninja's Water Shuriken lands three, dice or no dice; a Greninja
+    // in its Battle Bond form rolls like anyone.
+    species = SPECIES_GRENINJA_ASH;
+    move = MOVE_WATER_SHURIKEN;
+    assert(hits(0, 0) == 3 && hits(99, 0) == 3);
+    heldEffect = HOLD_EFFECT_INCREASE_MULTI_STRIKE_MINIMUM;
+    assert(hits(0, 0) == 3);
+    heldEffect = 0;
+    species = SPECIES_GRENINJA_BATTLE_BOND;
+    assert(hits(0, 0) == 2 && hits(99, 0) == 5);
+    species = SPECIES_GRENINJA_ASH;
+    move = MOVE_BUBBLE;
+    assert(hits(0, 0) == 2);
+    species = move = 0;
     return 0;
 }
 '''
@@ -130,6 +153,14 @@ class MultiHitScripts(unittest.TestCase):
         self.assertEqual(set_multi_hit(script), ("3", "MULTIHIT_MULTI_HIT_MOVE"))
         self.assertIn("BSCRIPT_VAR_CRITICAL_BOOSTS, CRITICAL_STAGE_ALWAYS", script)
         self.assertLess(script.index("BSCRIPT_VAR_CRITICAL_BOOSTS, CRITICAL_STAGE_ALWAYS"), script.index("\n    CalcCrit"))
+
+
+class WaterShuriken(unittest.TestCase):
+    def test_ash_greninja_throws_it_at_twenty(self):
+        """CalcBaseDamage.c:316-320 at d0380a487, for the Ash form here."""
+        body = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CalcMoveDamage")
+        self.assertRegex(body, r"moveNo == MOVE_WATER_SHURIKEN && ctx->battleMons\[battlerIdAttacker\]\.species == "
+                               r"SPECIES_GRENINJA_ASH\) \{\n\s*movePower = 20;")
 
 
 class RolledCount(unittest.TestCase):

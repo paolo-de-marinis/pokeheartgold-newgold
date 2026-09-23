@@ -7772,6 +7772,11 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     if (moveNo == MOVE_TERRAIN_PULSE && ctx->terrainOverlayType != TERRAIN_NONE && BattlerIsGrounded(ctx, battlerIdAttacker) == TRUE) {
         movePower *= 2;
     }
+    // Ash-Greninja's Water Shuriken is 20 a hit. The reference asks for
+    // Greninja's form 1, the Battle Bond form in its numbering, not Ash.
+    if (moveNo == MOVE_WATER_SHURIKEN && ctx->battleMons[battlerIdAttacker].species == SPECIES_GRENINJA_ASH) {
+        movePower = 20;
+    }
 
     // Wake-Up Slap already doubles against a sleeping target, in its own
     // effect script, which asks the status word directly. Comatose does not
