@@ -44,51 +44,51 @@ Pokemon it makes are the game's in the details that bite: the moves
 of the form's own record (`ResolveMonForm`).
 
 It holds a Pokemon to what its species can have. `learnable_moves` is every
-move a species can know at any level, each with every way it is learnt:
-its level-up learnset (`wotbl.narc`; level 0 is on evolving) without the
-moves `IsMoveUnimplemented` flags, which `LoadLevelUpLearnset_HandleAlternateForm`
-drops for every reader, the TMs, HMs
-and TRs its `personal.json` record is compatible with (`sTMHMMoves` and
-`ItemToTMHMId` in `src/item.c`), the move tutors (`waza_oshie.json` through
-`sTutorMoves`, at the record `GetMoveTutorLearnsetIndex` reads; and the
-Blackthorn tutor's script, `scr_seq_0948_T30R0601.s`, which teaches its
-move to a Pokemon of the type its `GetMonTypes` tests name), its own egg
-moves (`kowaza_list.narc`) -- an egg's, for a species an egg hatches as
-(`pms.narc`, `Daycare_GetEggSpecies`, `sIncenseMons`), with the one
-`Daycare_LightBallCheck` adds for a parent's Light Ball, or, for a species
-no egg hatches as, the Day-Care's (`Daycare_LearnEggMovesFrom`: a Mirror
-Herb, or two of the same species) -- a Rotom
-form's own move (`sRotomFormMoves`, which the Rotom Catalog teaches), and the same
-for its pre-evolutions (`evo.json`, and `EvolvedPassiveForm`'s two form
-species: a form the game never evolves into has none). `species_abilities` is its first, second and
-hidden ability by the slot the game keeps each in: the personality's low
-bit (an Ability Capsule turns it over) or `MON_HIDDEN_ABILITY_BIT`, which
+move a species can know at any level, each with every way it is learnt: its
+level-up learnset (`wotbl.narc`; level 0 is on evolving) without the moves
+`IsMoveUnimplemented` flags, which `LoadLevelUpLearnset_HandleAlternateForm`
+drops for every reader, the TMs, HMs and TRs its `personal.json` record is
+compatible with (`sTMHMMoves` and `ItemToTMHMId` in `src/item.c`), the move
+tutors (`waza_oshie.json` through `sTutorMoves`, at the record
+`GetMoveTutorLearnsetIndex` reads; and the Blackthorn tutor's script,
+`scr_seq_0948_T30R0601.s`, which teaches its move to a Pokemon of the type
+its `GetMonTypes` tests name), its own egg moves (`kowaza_list.narc`) -- an
+egg's, for a species an egg hatches as (`pms.narc`, `Daycare_GetEggSpecies`,
+`sIncenseMons`), with the one `Daycare_LightBallCheck` adds for a parent's
+Light Ball, or, for a species no egg hatches as, the Day-Care's
+(`Daycare_LearnEggMovesFrom`: a Mirror Herb, or two of the same species) --
+a Rotom form's own move (`sRotomFormMoves`, which the Rotom Catalog
+teaches), and the same for its pre-evolutions (`evo.json`, and
+`EvolvedPassiveForm`'s two form species: a form the game never evolves into
+has none). `species_abilities` is its first, second and hidden ability by
+the slot the game keeps each in: the personality's low bit (an Ability
+Capsule turns it over) or `MON_HIDDEN_ABILITY_BIT`, which
 `UpdateBoxMonAbility` reads again on evolving. `edit_mon` and `new_mon`
-refuse anything else (`Illegal`). The level is not checked: a level-up
-move is allowed at any level, as an egg inherits one both its parents know
+refuse anything else (`Illegal`). The level is not checked: a level-up move
+is allowed at any level, as an egg inherits one both its parents know
 whatever the level it is learnt at (`InheritMoves`); for a species no egg
 hatches as, a move above its level is for the user to avoid. A species
-change brings the new species' moves at that level (`preset_moves`) and the ability the game gives it,
-and only a Pokemon keeping its species keeps a move it already knew that
-no rule lists, an event's. The moves a script gives one Pokemon only --
-Brock's traded Rhyhorn's Thunder Fang (`SetMonMove`), the spiky-eared
-Pichu's Volt Tackle and Pain Split -- are such moves: kept on the Pokemon
-that has them, never added to another.
+change brings the new species' moves at that level (`preset_moves`) and the
+ability the game gives it, and only a Pokemon keeping its species keeps a
+move it already knew that no rule lists, an event's. The moves a script
+gives one Pokemon only -- Brock's traded Rhyhorn's Thunder Fang
+(`SetMonMove`), the spiky-eared Pichu's Volt Tackle and Pain Split -- are
+such moves: kept on the Pokemon that has them, never added to another.
 
 Nothing the game has is typed into it: all of it is read from the tree as
 the build would compile it, and read again once a file it came from has
 changed (`fresh()`, which saveui calls before every request; a reading is
 kept only while its files are unchanged). The save's layout -- every size,
-offset and limit, from the Pokemon's size and the Dex's offsets to the
-party size, `MAX_EV_PER_STAT` and `Mail_Init`'s values -- is what the host
+offset and limit, from the Pokemon's size and the Dex's offsets to the party
+size, `MAX_EV_PER_STAT` and `Mail_Init`'s values -- is what the host
 compiler makes of the headers with `config.mk`'s defines, 32-bit pointers
 and signed char (`_layout`, `compile_c`: nothing is run, the numbers are
-read out of the assembly). The learnsets' entries and the move records are laid out as
-`include/pokemon.h`'s `LEVEL_UP_LEARNSET_` macros and `struct MoveTbl` say.
-The tables are read out of the C that has them:
-the block order (`GetSubstruct`), `gNatureStatMods`, `ResolveMonForm`'s
-forms, the pockets (`struct Bag`, `Bag_GetItemPocket`, `sPockets`), which
-items are TMs, HMs and TRs (`ItemIsTM` and the rest), the message banks
+read out of the assembly). The learnsets' entries and the move records are
+laid out as `include/pokemon.h`'s `LEVEL_UP_LEARNSET_` macros and
+`struct MoveTbl` say. The tables are read out of the C that has them: the block
+order (`GetSubstruct`), `gNatureStatMods`, `ResolveMonForm`'s forms, the
+pockets (`struct Bag`, `Bag_GetItemPocket`, `sPockets`), which items are
+TMs, HMs and TRs (`ItemIsTM` and the rest), the message banks
 (`message_format.c`'s Buffer functions), the icons' numbers
 (`GetMonIconNaixEx`). The blocks' sizes are the one thing measured from the
 build, since the game's `Save_*_sizeof` exist in no other form; the page
@@ -96,12 +96,12 @@ says when a header the layout is read from is newer than that build.
 
 What the game has only as code -- a Pokemon's byte offsets and bits, the
 footers, the encryption's generator, `SHINY_CHECK`, the nature as
-`pid % 25`, `GENDER_RATIO`, the flash's halves, the clock's 999 hours, the
-tutor record's index, the badges' two bytes, a TM's one copy, the machines'
-sort, `UpdateBoxMonAbility`, `InitBoxMonMoveset`, `LoadEggMoves`,
-`DexSpeciesIsInvalid`, where the personal template packs the machines --
-stays code in savedit, and `TheCodeSaveditKeeps` in `test_savedit.py`
-reads each from the tree and fails the day they differ.
+`pid % 25`, `GENDER_RATIO`, the flash's halves, the clock's 999 hours, the tutor
+record's index, the badges' two bytes, a TM's one copy, the machines' sort,
+`CalcMonStats`, `UpdateBoxMonAbility`, `InitBoxMonMoveset`, `LoadEggMoves`,
+the learnsets' filter, the Day-Care's egg moves, `DexSpeciesIsInvalid` --
+stays code in savedit, and `TheCodeSaveditKeeps` in `test_savedit.py` reads
+each from the tree and fails the day they differ.
 
 ## saveui.py
 
@@ -163,13 +163,17 @@ In the Pokemon dialog a move is picked only from the species'
 `learnable_moves`, each shown with all its sources as tags (Lv. 36, MT 035,
 Insegnante, Mossa uovo, da Ponyta Lv. 20...), and the ability from its
 `species_abilities`. Changing the species puts in, at once, the moves the
-game gives the new species at that level and the ability it would give
-this Pokemon as that species; "Mosse per livello" puts in the same moves,
-and moves put in this way follow the level while they are left alone.
-The server refuses in Italian a move or an ability the species cannot
-have, whatever sent it; a move the Pokemon already knew that the species
-does not learn (an event's) stays while it is left alone and the species
-is kept. A new Pokemon's friendship is its species' own.
+game gives the new species at that level and the ability it would give this
+Pokemon as that species; typing its own species back puts back its own.
+"Mosse per livello" puts in the same moves, and moves put in this way follow
+the level while they are left alone. The server refuses in Italian a move or
+an ability the species cannot have, whatever sent it; a move the Pokemon
+already knew that the species does not learn (an event's, or one the data no
+longer gives it) stays while it is left alone and the species is kept, and
+the card marks it "non la impara". An ability that is not the one the game
+would give the Pokemon (its species written alone by an older editor) is
+marked "non sua", and the dialog has it chosen again. A new Pokemon's
+friendship is its species' own.
 
 The page has no game data of its own. What exists and every limit -- the
 badges and the byte each is kept in, the pockets in the game's order, the
