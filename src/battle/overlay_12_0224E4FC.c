@@ -7636,19 +7636,30 @@ void RecordMirrorHerbStages(BattleSystem *battleSystem, BattleContext *ctx, int 
     }
 }
 
+// A holder with Contrary copies the gains as drops, down to -6, and nothing
+// when every stat it would copy is already there (Pokemon Central, Foglia
+// carbone: Contrary and Simple change the herb's effect as any other; Simple
+// doubles stages as they are read here, so its copy is doubled already).
+// tempData says which of the two animations subscript 433 plays.
 static BOOL MirrorHerbCopiesStages(BattleContext *ctx, int battlerId) {
     BOOL copied = FALSE;
+    BOOL contrary = GetBattlerAbility(ctx, battlerId) == ABILITY_CONTRARY;
     int stat;
 
     for (stat = STAT_ATK; stat < NUM_BATTLE_STATS; stat++) {
-        int stage = ctx->battleMons[battlerId].statChanges[stat] + ctx->mirrorHerbStages[battlerId][stat];
+        int stages = contrary ? -ctx->mirrorHerbStages[battlerId][stat] : ctx->mirrorHerbStages[battlerId][stat];
+        int stage = ctx->battleMons[battlerId].statChanges[stat] + stages;
 
-        if (ctx->mirrorHerbStages[battlerId][stat] != 0 && ctx->battleMons[battlerId].statChanges[stat] < 12) {
+        if (stages > 0 && ctx->battleMons[battlerId].statChanges[stat] < 12) {
             ctx->battleMons[battlerId].statChanges[stat] = stage > 12 ? 12 : stage;
+            copied = TRUE;
+        } else if (stages < 0 && ctx->battleMons[battlerId].statChanges[stat] > 0) {
+            ctx->battleMons[battlerId].statChanges[stat] = stage < 0 ? 0 : stage;
             copied = TRUE;
         }
         ctx->mirrorHerbStages[battlerId][stat] = 0;
     }
+    ctx->tempData = contrary ? BATTLE_ANIMATION_STAT_DROP : BATTLE_ANIMATION_STAT_BOOST;
     return copied;
 }
 

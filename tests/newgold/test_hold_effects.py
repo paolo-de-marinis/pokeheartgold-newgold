@@ -957,6 +957,8 @@ class EjectPackTests(unittest.TestCase):
 MIRROR_HERB_FIXTURE = r"""
 #include <assert.h>
 #include <stdint.h>
+#include "constants/abilities.h"
+#include "constants/battle_subscript.h"
 #include "constants/items.h"
 #include "constants/pokemon.h"
 typedef uint8_t u8; typedef int8_t s8; typedef uint16_t u16; typedef uint32_t u32;
@@ -965,11 +967,12 @@ typedef int BOOL;
 #define FALSE 0
 typedef struct { int unused; } BattleSystem;
 typedef struct { int hp; s8 statChanges[NUM_BATTLE_STATS]; } BattleMon;
-typedef struct { BattleMon battleMons[4]; u8 mirrorHerbStages[4][NUM_BATTLE_STATS]; } BattleContext;
-static int sItem[4];
+typedef struct { BattleMon battleMons[4]; u8 mirrorHerbStages[4][NUM_BATTLE_STATS]; int tempData; } BattleContext;
+static int sItem[4], sAbility[4];
 static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 4; }
 static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return sItem[battlerId]; }
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return sAbility[battlerId]; }
 @FUNCTIONS@
 int main(void) {
     BattleSystem bs;
@@ -996,6 +999,19 @@ int main(void) {
     assert(MirrorHerbCopiesStages(&ctx, 1) == TRUE && ctx.battleMons[1].statChanges[STAT_DEF] == 12);
     ctx.mirrorHerbStages[1][STAT_DEF] = 2;
     assert(MirrorHerbCopiesStages(&ctx, 1) == FALSE && ctx.mirrorHerbStages[1][STAT_DEF] == 0);
+    assert(ctx.tempData == BATTLE_ANIMATION_STAT_BOOST);
+    // Contrary copies the gains as drops, down to -6, with a drop's animation.
+    sAbility[1] = ABILITY_CONTRARY;
+    ctx.battleMons[1].statChanges[STAT_SPDEF] = 7;
+    ctx.mirrorHerbStages[1][STAT_SPDEF] = 2;
+    assert(MirrorHerbCopiesStages(&ctx, 1) == TRUE && ctx.battleMons[1].statChanges[STAT_SPDEF] == 5);
+    assert(ctx.tempData == BATTLE_ANIMATION_STAT_DROP);
+    ctx.battleMons[1].statChanges[STAT_SPDEF] = 1;
+    ctx.mirrorHerbStages[1][STAT_SPDEF] = 3;
+    assert(MirrorHerbCopiesStages(&ctx, 1) == TRUE && ctx.battleMons[1].statChanges[STAT_SPDEF] == 0);
+    ctx.mirrorHerbStages[1][STAT_SPDEF] = 1;
+    assert(MirrorHerbCopiesStages(&ctx, 1) == FALSE);
+    sAbility[1] = ABILITY_NONE;
     // A fainted holder is not told.
     ctx.battleMons[1].hp = 0;
     RecordMirrorHerbStages(&bs, &ctx, 0, STAT_SPATK, 1);
@@ -1031,6 +1047,7 @@ class MirrorHerbTests(unittest.TestCase):
         script = subscript_named("BATTLE_SUBSCRIPT_MIRROR_HERB")
         self.assertIn("PrintMessage msg_0197_01824, TAG_NICKNAME_ITEM, BATTLER_CATEGORY_MSG_TEMP, BATTLER_CATEGORY_MSG_TEMP", script)
         self.assertIn("RemoveItem BATTLER_CATEGORY_MSG_TEMP", script)
+        self.assertIn("PlayBattleAnimationFromVar BATTLER_CATEGORY_MSG_TEMP, BSCRIPT_VAR_TEMP_DATA", script)
 
 
 if __name__ == "__main__":
