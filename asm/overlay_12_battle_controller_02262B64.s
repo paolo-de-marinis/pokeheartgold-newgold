@@ -1,0 +1,2099 @@
+	.include "asm/macros.inc"
+	.include "overlay_12_battle_controller.inc"
+	.include "global.inc"
+
+	.text
+
+	thumb_func_start BattleController_EmitHealthbarSlideOut
+BattleController_EmitHealthbarSlideOut: ; 0x02262B64
+	push {r3, lr}
+	sub sp, #8
+	add r2, r1, #0
+	mov r1, #0xd
+	str r1, [sp, #4]
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #1
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r3, pc}
+	.balign 4, 0
+	thumb_func_end BattleController_EmitHealthbarSlideOut
+
+	thumb_func_start ov12_02262B80
+ov12_02262B80: ; 0x02262B80
+	push {r4, r5, r6, r7, lr}
+	sub sp, #0x54
+	str r0, [sp, #4]
+	str r1, [sp, #8]
+	str r2, [sp, #0xc]
+	mov r0, #0
+	add r1, sp, #0x28
+	mov r2, #0x2c
+	add r6, r3, #0
+	bl MIi_CpuClearFast
+	ldr r0, [sp, #4]
+	bl BattleSystem_GetBattleContext
+	ldr r1, [sp, #0xc]
+	bl BattleBuffer_Clear
+	mov r5, #0
+	ldr r0, [sp, #4]
+	add r4, r5, #0
+	bl BattleSystem_GetMaxBattlers
+	cmp r0, #0
+	ble _02262BD0
+_02262BB0:
+	ldr r0, [sp, #8]
+	add r1, r4, #0
+	bl Battler_CanSelectAction
+	cmp r0, #0
+	bne _02262BC4
+	add r0, r4, #0
+	bl MaskOfFlagNo
+	orr r5, r0
+_02262BC4:
+	ldr r0, [sp, #4]
+	add r4, r4, #1
+	bl BattleSystem_GetMaxBattlers
+	cmp r4, r0
+	blt _02262BB0
+_02262BD0:
+	mov r1, #0xe
+	add r0, sp, #0x28
+	strb r1, [r0]
+	strb r6, [r0, #1]
+	ldr r1, _02262ED0 ; =0x00003108
+	ldr r0, [sp, #8]
+	ldrb r0, [r0, r1]
+	add r1, r0, #0
+	orr r1, r5
+	add r0, sp, #0x48
+	strb r1, [r0, #9]
+	ldr r0, [sp, #4]
+	bl BattleSystem_GetBattleType
+	mov r1, #2
+	str r0, [sp, #0x20]
+	tst r0, r1
+	beq _02262C06
+	ldr r0, [sp, #0x20]
+	mov r1, #8
+	tst r0, r1
+	bne _02262C06
+	ldr r0, [sp, #0xc]
+	mov r1, #1
+	add r4, r0, #0
+	and r4, r1
+	b _02262C08
+_02262C06:
+	ldr r4, [sp, #0xc]
+_02262C08:
+	ldr r0, [sp, #4]
+	add r1, r4, #0
+	bl BattleSystem_GetParty
+	str r0, [sp, #0x24]
+	mov r7, #0
+	bl Party_GetCount
+	cmp r0, #0
+	ble _02262C9E
+	mov r0, #6
+	add r1, r4, #0
+	mul r1, r0
+	ldr r0, [sp, #8]
+	add r5, sp, #0x28
+	add r6, r0, r1
+	mov r1, #0xa9
+	ldr r0, [sp, #0x20]
+	lsl r1, r1, #2
+	and r0, r1
+	str r0, [sp, #0x1c]
+_02262C32:
+	ldr r1, _02262ED4 ; =0x0000312C
+	ldr r0, [sp, #0x24]
+	ldrb r1, [r6, r1]
+	bl Party_GetMonByIndex
+	mov r1, #0xae
+	mov r2, #0
+	add r4, r0, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262C90
+	ldr r1, _02262ED8 ; =0x000001EE
+	cmp r0, r1
+	beq _02262C90
+	add r0, r4, #0
+	mov r1, #0xa3
+	mov r2, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262C78
+	add r0, r4, #0
+	mov r1, #0xa0
+	mov r2, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262C72
+	mov r0, #3
+	strb r0, [r5, #8]
+	b _02262C7C
+_02262C72:
+	mov r0, #1
+	strb r0, [r5, #8]
+	b _02262C7C
+_02262C78:
+	mov r0, #2
+	strb r0, [r5, #8]
+_02262C7C:
+	ldr r0, [sp, #0x1c]
+	cmp r0, #0
+	beq _02262C86
+	mov r0, #0
+	b _02262C8C
+_02262C86:
+	add r0, r4, #0
+	bl GetPercentProgressTowardsNextLevel
+_02262C8C:
+	strb r0, [r5, #2]
+	add r5, r5, #1
+_02262C90:
+	ldr r0, [sp, #0x24]
+	add r6, r6, #1
+	add r7, r7, #1
+	bl Party_GetCount
+	cmp r7, r0
+	blt _02262C32
+_02262C9E:
+	ldr r0, [sp, #0x20]
+	mov r1, #0xc
+	and r0, r1
+	cmp r0, #0xc
+	beq _02262CBC
+	ldr r0, [sp, #0x20]
+	mov r1, #0x10
+	tst r0, r1
+	bne _02262CBC
+	ldr r0, [sp, #0x20]
+	cmp r0, #0x4b
+	beq _02262CBC
+	cmp r0, #0xcb
+	beq _02262CBC
+	b _02262DF4
+_02262CBC:
+	ldr r0, [sp, #4]
+	ldr r1, [sp, #0xc]
+	bl BattleSystem_GetFieldSide
+	cmp r0, #0
+	beq _02262CD2
+	ldr r0, [sp, #4]
+	mov r1, #2
+	bl BattleSystem_GetBattlerFromBattlerType
+	b _02262CDA
+_02262CD2:
+	ldr r0, [sp, #4]
+	mov r1, #3
+	bl BattleSystem_GetBattlerFromBattlerType
+_02262CDA:
+	add r4, r0, #0
+	ldr r0, [sp, #4]
+	add r1, r4, #0
+	bl BattleSystem_GetParty
+	str r0, [sp, #0x10]
+	mov r7, #0
+	bl Party_GetCount
+	cmp r0, #0
+	ble _02262D56
+	mov r0, #6
+	add r1, r4, #0
+	mul r1, r0
+	ldr r0, [sp, #8]
+	add r5, sp, #0x28
+	add r4, r0, r1
+_02262CFC:
+	ldr r1, _02262ED4 ; =0x0000312C
+	ldr r0, [sp, #0x10]
+	ldrb r1, [r4, r1]
+	bl Party_GetMonByIndex
+	mov r1, #0xae
+	mov r2, #0
+	add r6, r0, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262D48
+	ldr r1, _02262ED8 ; =0x000001EE
+	cmp r0, r1
+	beq _02262D48
+	add r0, r6, #0
+	mov r1, #0xa3
+	mov r2, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262D42
+	add r0, r6, #0
+	mov r1, #0xa0
+	mov r2, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262D3C
+	mov r0, #3
+	strb r0, [r5, #0xe]
+	b _02262D46
+_02262D3C:
+	mov r0, #1
+	strb r0, [r5, #0xe]
+	b _02262D46
+_02262D42:
+	mov r0, #2
+	strb r0, [r5, #0xe]
+_02262D46:
+	add r5, r5, #1
+_02262D48:
+	ldr r0, [sp, #0x10]
+	add r4, r4, #1
+	add r7, r7, #1
+	bl Party_GetCount
+	cmp r7, r0
+	blt _02262CFC
+_02262D56:
+	ldr r0, [sp, #4]
+	ldr r1, [sp, #0xc]
+	bl BattleSystem_GetFieldSide
+	cmp r0, #0
+	beq _02262D6C
+	ldr r0, [sp, #4]
+	mov r1, #4
+	bl BattleSystem_GetBattlerFromBattlerType
+	b _02262D74
+_02262D6C:
+	ldr r0, [sp, #4]
+	mov r1, #5
+	bl BattleSystem_GetBattlerFromBattlerType
+_02262D74:
+	add r4, r0, #0
+	ldr r0, [sp, #4]
+	add r1, r4, #0
+	bl BattleSystem_GetParty
+	str r0, [sp, #0x14]
+	mov r7, #0
+	bl Party_GetCount
+	cmp r0, #0
+	ble _02262E7A
+	mov r0, #6
+	add r1, r4, #0
+	mul r1, r0
+	ldr r0, [sp, #8]
+	add r5, sp, #0x28
+	add r4, r0, r1
+	add r5, #3
+_02262D98:
+	ldr r1, _02262ED4 ; =0x0000312C
+	ldr r0, [sp, #0x14]
+	ldrb r1, [r4, r1]
+	bl Party_GetMonByIndex
+	mov r1, #0xae
+	mov r2, #0
+	add r6, r0, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262DE4
+	ldr r1, _02262ED8 ; =0x000001EE
+	cmp r0, r1
+	beq _02262DE4
+	add r0, r6, #0
+	mov r1, #0xa3
+	mov r2, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262DDE
+	add r0, r6, #0
+	mov r1, #0xa0
+	mov r2, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262DD8
+	mov r0, #3
+	strb r0, [r5, #0xe]
+	b _02262DE2
+_02262DD8:
+	mov r0, #1
+	strb r0, [r5, #0xe]
+	b _02262DE2
+_02262DDE:
+	mov r0, #2
+	strb r0, [r5, #0xe]
+_02262DE2:
+	add r5, r5, #1
+_02262DE4:
+	ldr r0, [sp, #0x14]
+	add r4, r4, #1
+	add r7, r7, #1
+	bl Party_GetCount
+	cmp r7, r0
+	blt _02262D98
+	b _02262E7A
+_02262DF4:
+	ldr r0, [sp, #4]
+	ldr r1, [sp, #0xc]
+	mov r2, #2
+	bl ov12_0223ABB8
+	add r4, r0, #0
+	ldr r0, [sp, #4]
+	add r1, r4, #0
+	bl BattleSystem_GetParty
+	str r0, [sp, #0x18]
+	mov r7, #0
+	bl Party_GetCount
+	cmp r0, #0
+	ble _02262E7A
+	mov r0, #6
+	add r1, r4, #0
+	mul r1, r0
+	ldr r0, [sp, #8]
+	add r5, sp, #0x28
+	add r4, r0, r1
+_02262E20:
+	ldr r1, _02262ED4 ; =0x0000312C
+	ldr r0, [sp, #0x18]
+	ldrb r1, [r4, r1]
+	bl Party_GetMonByIndex
+	mov r1, #0xae
+	mov r2, #0
+	add r6, r0, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262E6C
+	ldr r1, _02262ED8 ; =0x000001EE
+	cmp r0, r1
+	beq _02262E6C
+	add r0, r6, #0
+	mov r1, #0xa3
+	mov r2, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262E66
+	add r0, r6, #0
+	mov r1, #0xa0
+	mov r2, #0
+	bl GetMonData
+	cmp r0, #0
+	beq _02262E60
+	mov r0, #3
+	strb r0, [r5, #0xe]
+	b _02262E6A
+_02262E60:
+	mov r0, #1
+	strb r0, [r5, #0xe]
+	b _02262E6A
+_02262E66:
+	mov r0, #2
+	strb r0, [r5, #0xe]
+_02262E6A:
+	add r5, r5, #1
+_02262E6C:
+	ldr r0, [sp, #0x18]
+	add r4, r4, #1
+	add r7, r7, #1
+	bl Party_GetCount
+	cmp r7, r0
+	blt _02262E20
+_02262E7A:
+	mov r5, #0
+	add r6, sp, #0x28
+	add r4, r6, #0
+	add r7, r5, #0
+_02262E82:
+	ldr r0, [sp, #8]
+	ldr r1, [sp, #0xc]
+	add r2, r5, #6
+	add r3, r7, #0
+	bl GetBattlerVar
+	strh r0, [r6, #0x14]
+	add r2, r5, #0
+	ldr r0, [sp, #8]
+	ldr r1, [sp, #0xc]
+	add r2, #0x1f
+	mov r3, #0
+	bl GetBattlerVar
+	strb r0, [r4, #0x1c]
+	add r2, r5, #0
+	ldr r0, [sp, #8]
+	ldr r1, [sp, #0xc]
+	add r2, #0x27
+	mov r3, #0
+	bl GetBattlerVar
+	add r1, r4, #0
+	add r1, #0x20
+	add r5, r5, #1
+	strb r0, [r1]
+	add r6, r6, #2
+	add r4, r4, #1
+	cmp r5, #4
+	blt _02262E82
+	ldr r0, [sp, #0xc]
+	mov r1, #0xc0
+	mul r1, r0
+	ldr r0, [sp, #8]
+	add r3, sp, #0x28
+	add r0, r0, r1
+	ldr r1, _02262EDC ; =0x00002D8C
+	b _02262EE0
+	nop
+_02262ED0: .word 0x00003108
+_02262ED4: .word 0x0000312C
+_02262ED8: .word 0x000001EE
+_02262EDC: .word 0x00002D8C
+_02262EE0:
+	ldr r2, [r0, r1]
+	strh r2, [r3, #0x24]
+	add r2, r1, #4
+	ldr r2, [r0, r2]
+	strh r2, [r3, #0x26]
+	mov r2, #0x24
+	ldrsh r2, [r3, r2]
+	cmp r2, #0
+	beq _02262F08
+	add r1, #0x20
+	ldr r0, [r0, r1]
+	cmp r0, #0
+	add r0, sp, #0x48
+	beq _02262F02
+	mov r1, #3
+	strb r1, [r0, #8]
+	b _02262F0E
+_02262F02:
+	mov r1, #1
+	strb r1, [r0, #8]
+	b _02262F0E
+_02262F08:
+	mov r1, #2
+	add r0, sp, #0x48
+	strb r1, [r0, #8]
+_02262F0E:
+	mov r0, #0x2c
+	str r0, [sp]
+	ldr r0, [sp, #4]
+	ldr r2, [sp, #0xc]
+	mov r1, #1
+	add r3, sp, #0x28
+	bl ov12_02262240
+	add sp, #0x54
+	pop {r4, r5, r6, r7, pc}
+	.balign 4, 0
+	thumb_func_end ov12_02262B80
+
+	thumb_func_start ov12_02262F24
+ov12_02262F24: ; 0x02262F24
+	push {r0, r1, r2, r3}
+	push {r3, lr}
+	add r2, r1, #0
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #0
+	add r3, sp, #0x10
+	bl ov12_02262240
+	pop {r3}
+	pop {r3}
+	add sp, #0x10
+	bx r3
+	.balign 4, 0
+	thumb_func_end ov12_02262F24
+
+	thumb_func_start ov12_02262F40
+ov12_02262F40: ; 0x02262F40
+	push {r3, r4, r5, r6, r7, lr}
+	sub sp, #0x28
+	str r2, [sp, #0xc]
+	str r0, [sp, #4]
+	str r1, [sp, #8]
+	bl BattleSystem_GetBattleContext
+	ldr r1, [sp, #0xc]
+	bl BattleBuffer_Clear
+	mov r0, #0xf
+	add r2, sp, #0x14
+	strb r0, [r2]
+	add r7, sp, #0x14
+	ldr r1, [sp, #8]
+	ldr r0, [sp, #0xc]
+	add r5, r7, #0
+	add r1, r1, r0
+	ldr r0, _02262FD0 ; =0x0000219C
+	ldrb r0, [r1, r0]
+	mov r1, #0xc0
+	strb r0, [r2, #1]
+	mov r0, #0
+	str r0, [sp, #0x10]
+	ldr r0, [sp, #0xc]
+	mul r1, r0
+	ldr r0, [sp, #8]
+	add r6, r0, r1
+	add r4, r6, #0
+_02262F7A:
+	ldr r0, _02262FD4 ; =0x00002D4C
+	ldr r1, _02262FD8 ; =0x00002D70
+	ldrh r0, [r6, r0]
+	strh r0, [r7, #4]
+	ldr r0, _02262FDC ; =0x00002D6C
+	ldrb r0, [r4, r0]
+	strb r0, [r5, #0xc]
+	ldr r0, _02262FD4 ; =0x00002D4C
+	ldrb r1, [r4, r1]
+	ldrh r0, [r6, r0]
+	bl GetMoveMaxPP
+	strb r0, [r5, #0x10]
+	ldr r0, [sp, #0x10]
+	add r6, r6, #2
+	add r0, r0, #1
+	add r7, r7, #2
+	add r4, r4, #1
+	add r5, r5, #1
+	str r0, [sp, #0x10]
+	cmp r0, #4
+	blt _02262F7A
+	mov r0, #0
+	mvn r0, r0
+	str r0, [sp]
+	ldr r0, [sp, #4]
+	ldr r1, [sp, #8]
+	ldr r2, [sp, #0xc]
+	mov r3, #0
+	bl StruggleCheck
+	add r1, sp, #0x14
+	strh r0, [r1, #2]
+	mov r0, #0x14
+	str r0, [sp]
+	ldr r0, [sp, #4]
+	ldr r2, [sp, #0xc]
+	mov r1, #1
+	add r3, sp, #0x14
+	bl ov12_02262240
+	add sp, #0x28
+	pop {r3, r4, r5, r6, r7, pc}
+	.balign 4, 0
+_02262FD0: .word 0x0000219C
+_02262FD4: .word 0x00002D4C
+_02262FD8: .word 0x00002D70
+_02262FDC: .word 0x00002D6C
+	thumb_func_end ov12_02262F40
+
+	thumb_func_start ov12_02262FE0
+ov12_02262FE0: ; 0x02262FE0
+	push {r0, r1, r2, r3}
+	push {r3, lr}
+	add r2, r1, #0
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #0
+	add r3, sp, #0x10
+	bl ov12_02262240
+	pop {r3}
+	pop {r3}
+	add sp, #0x10
+	bx r3
+	.balign 4, 0
+	thumb_func_end ov12_02262FE0
+
+	thumb_func_start ov12_02262FFC
+ov12_02262FFC: ; 0x02262FFC
+	push {r3, r4, r5, r6, r7, lr}
+	sub sp, #0x40
+	str r0, [sp, #4]
+	str r1, [sp, #8]
+	add r0, r1, #0
+	add r1, r3, #0
+	add r4, r2, #0
+	str r3, [sp, #0xc]
+	bl BattleBuffer_Clear
+	ldr r0, [sp, #4]
+	bl BattleSystem_GetBattleType
+	mov r2, #0x10
+	add r1, sp, #0x1c
+	strb r2, [r1]
+	strh r4, [r1, #2]
+	mov r1, #2
+	add r2, r0, #0
+	and r2, r1
+	beq _02263036
+	mov r1, #8
+	tst r0, r1
+	bne _02263036
+	cmp r2, #0
+	beq _0226303E
+	ldr r0, [sp, #0xc]
+	cmp r0, #2
+	blt _0226303E
+_02263036:
+	mov r1, #1
+	add r0, sp, #0x1c
+	strb r1, [r0, #1]
+	b _02263044
+_0226303E:
+	mov r1, #0
+	add r0, sp, #0x1c
+	strb r1, [r0, #1]
+_02263044:
+	ldr r2, [sp, #8]
+	mov r0, #0
+	str r0, [sp, #0x18]
+	ldr r1, _02263108 ; =0x00002D54
+	add r0, r2, #0
+	add r7, r0, r1
+	add r1, #0x6a
+	add r5, r0, r1
+	mov r0, #3
+	add r4, sp, #0x20
+	str r0, [sp, #0x14]
+	str r0, [sp, #0x10]
+	mov r0, #4
+	add r3, sp, #0x1c
+	add r4, #1
+	mov ip, r0
+_02263064:
+	ldr r0, _0226310C ; =0x00002D8C
+	ldr r0, [r2, r0]
+	cmp r0, #0
+	beq _022630D2
+	strh r0, [r3, #8]
+	ldr r0, _02263110 ; =0x00002D90
+	ldr r0, [r2, r0]
+	strh r0, [r3, #0xa]
+	ldrb r1, [r4]
+	mov r0, #4
+	orr r0, r1
+	strb r0, [r4]
+	mov r0, #0xb5
+	lsl r0, r0, #6
+	ldrh r0, [r2, r0]
+	cmp r0, #0x1d
+	beq _0226308A
+	cmp r0, #0x20
+	bne _0226309E
+_0226308A:
+	ldr r0, [r7]
+	lsr r0, r0, #0x1f
+	bne _0226309E
+	ldrb r0, [r4]
+	ldr r1, [sp, #0x10]
+	bic r0, r1
+	mov r1, #2
+	orr r0, r1
+	strb r0, [r4]
+	b _022630B2
+_0226309E:
+	ldrb r6, [r4]
+	ldr r0, [sp, #0x14]
+	bic r6, r0
+	ldrb r0, [r5]
+	lsl r0, r0, #0x1c
+	lsr r1, r0, #0x1c
+	mov r0, #3
+	and r0, r1
+	orr r0, r6
+	strb r0, [r4]
+_022630B2:
+	ldr r1, [sp, #8]
+	ldr r0, [sp, #0x18]
+	add r1, r1, r0
+	ldr r0, _02263114 ; =0x0000219C
+	ldrb r0, [r1, r0]
+	strb r0, [r3, #4]
+	ldr r0, _02263118 ; =0x00002DAC
+	ldr r0, [r2, r0]
+	cmp r0, #0
+	beq _022630CC
+	mov r0, #3
+	strb r0, [r3, #6]
+	b _022630DE
+_022630CC:
+	mov r0, #1
+	strb r0, [r3, #6]
+	b _022630DE
+_022630D2:
+	ldrb r1, [r4]
+	mov r0, ip
+	bic r1, r0
+	strb r1, [r4]
+	mov r0, #2
+	strb r0, [r3, #6]
+_022630DE:
+	ldr r0, [sp, #0x18]
+	add r2, #0xc0
+	add r0, r0, #1
+	add r3, #8
+	add r4, #8
+	add r7, #0xc0
+	add r5, #0xc0
+	str r0, [sp, #0x18]
+	cmp r0, #4
+	blt _02263064
+	mov r0, #0x24
+	str r0, [sp]
+	ldr r0, [sp, #4]
+	ldr r2, [sp, #0xc]
+	mov r1, #1
+	add r3, sp, #0x1c
+	bl ov12_02262240
+	add sp, #0x40
+	pop {r3, r4, r5, r6, r7, pc}
+	nop
+_02263108: .word 0x00002D54
+_0226310C: .word 0x00002D8C
+_02263110: .word 0x00002D90
+_02263114: .word 0x0000219C
+_02263118: .word 0x00002DAC
+	thumb_func_end ov12_02262FFC
+
+	thumb_func_start ov12_0226311C
+ov12_0226311C: ; 0x0226311C
+	push {r0, r1, r2, r3}
+	push {r3, lr}
+	add r2, r1, #0
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #0
+	add r3, sp, #0x10
+	bl ov12_02262240
+	pop {r3}
+	pop {r3}
+	add sp, #0x10
+	bx r3
+	.balign 4, 0
+	thumb_func_end ov12_0226311C
+
+	thumb_func_start ov12_02263138
+ov12_02263138: ; 0x02263138
+	push {r4, r5, r6, r7, lr}
+	sub sp, #0x34
+	str r0, [sp, #4]
+	str r1, [sp, #8]
+	add r0, r1, #0
+	add r1, r2, #0
+	str r2, [sp, #0xc]
+	bl BattleBuffer_Clear
+	add r6, sp, #0x10
+	mov r1, #0x11
+	add r0, sp, #0x10
+	strb r1, [r0]
+	mov r0, #0
+	ldr r4, [sp, #8]
+	mov ip, r0
+	ldr r1, _022632AC ; =0x00002DCC
+	add r0, r4, #0
+	add r7, r0, r1
+	ldr r0, _022632B0 ; =0x0000312C
+	add r5, r6, #0
+_02263162:
+	ldr r2, [sp, #8]
+	mov r1, ip
+	add r2, r2, r1
+	ldr r1, _022632B4 ; =0x0000219C
+	mov r3, #0
+	ldrb r1, [r2, r1]
+	strb r1, [r6, #4]
+_02263170:
+	add r1, r4, r3
+	ldrb r2, [r1, r0]
+	add r1, r5, r3
+	add r3, r3, #1
+	strb r2, [r1, #8]
+	cmp r3, #6
+	blt _02263170
+	ldr r1, [r7]
+	add r4, r4, #6
+	lsl r1, r1, #0xa
+	lsr r2, r1, #0x1d
+	add r1, r6, #0
+	add r1, #0x20
+	strb r2, [r1]
+	mov r1, ip
+	add r1, r1, #1
+	add r6, r6, #1
+	add r5, r5, #6
+	add r7, #0xc0
+	mov ip, r1
+	cmp r1, #4
+	blt _02263162
+	ldr r0, [sp, #4]
+	bl BattleSystem_GetBattleType
+	cmp r0, #0x4a
+	bne _0226324E
+	mov r0, #1
+	bl MaskOfFlagNo
+	ldr r2, _022632B8 ; =0x00003108
+	ldr r1, [sp, #8]
+	ldrb r1, [r1, r2]
+	tst r0, r1
+	bne _022631D4
+	mov r0, #3
+	bl MaskOfFlagNo
+	ldr r2, _022632B8 ; =0x00003108
+	ldr r1, [sp, #8]
+	ldrb r1, [r1, r2]
+	tst r0, r1
+	bne _022631D4
+	mov r1, #1
+	add r0, sp, #0x10
+	strb r1, [r0, #1]
+	mov r1, #0
+	strb r1, [r0, #2]
+	strb r1, [r0, #3]
+	b _02263298
+_022631D4:
+	mov r0, #1
+	bl MaskOfFlagNo
+	ldr r2, _022632B8 ; =0x00003108
+	ldr r1, [sp, #8]
+	add r3, sp, #0x10
+	ldrb r1, [r1, r2]
+	tst r0, r1
+	bne _0226321A
+	mov r0, #0
+	mov r2, #0xba
+	ldr r1, [sp, #8]
+	strb r0, [r3, #1]
+	lsl r2, r2, #6
+	ldr r4, [r1, r2]
+	ldr r1, _022632BC ; =0x200400C0
+	tst r1, r4
+	beq _02263200
+	mov r1, #1
+	strb r1, [r3, #2]
+	strb r0, [r3, #3]
+	b _02263298
+_02263200:
+	ldr r1, [sp, #8]
+	sub r2, #0x10
+	ldr r2, [r1, r2]
+	mov r1, #1
+	lsl r1, r1, #0x18
+	tst r1, r2
+	strb r0, [r3, #2]
+	beq _02263216
+	mov r0, #1
+	strb r0, [r3, #3]
+	b _02263298
+_02263216:
+	strb r0, [r3, #3]
+	b _02263298
+_0226321A:
+	mov r0, #0
+	mov r2, #3
+	ldr r1, [sp, #8]
+	strb r0, [r3, #1]
+	lsl r2, r2, #0xc
+	ldr r4, [r1, r2]
+	ldr r1, _022632BC ; =0x200400C0
+	tst r1, r4
+	beq _02263234
+	mov r1, #1
+	strb r1, [r3, #2]
+	strb r0, [r3, #3]
+	b _02263298
+_02263234:
+	ldr r1, [sp, #8]
+	sub r2, #0x10
+	ldr r2, [r1, r2]
+	mov r1, #1
+	lsl r1, r1, #0x18
+	tst r1, r2
+	strb r0, [r3, #2]
+	beq _0226324A
+	mov r0, #1
+	strb r0, [r3, #3]
+	b _02263298
+_0226324A:
+	strb r0, [r3, #3]
+	b _02263298
+_0226324E:
+	ldr r0, [sp, #4]
+	bl BattleSystem_GetBattleType
+	cmp r0, #0
+	bne _0226328E
+	mov r2, #0xba
+	mov r0, #0
+	add r3, sp, #0x10
+	ldr r1, [sp, #8]
+	strb r0, [r3, #1]
+	lsl r2, r2, #6
+	ldr r4, [r1, r2]
+	ldr r1, _022632BC ; =0x200400C0
+	tst r1, r4
+	beq _02263274
+	mov r1, #1
+	strb r1, [r3, #2]
+	strb r0, [r3, #3]
+	b _02263298
+_02263274:
+	ldr r1, [sp, #8]
+	sub r2, #0x10
+	ldr r2, [r1, r2]
+	mov r1, #1
+	lsl r1, r1, #0x18
+	tst r1, r2
+	strb r0, [r3, #2]
+	beq _0226328A
+	mov r0, #1
+	strb r0, [r3, #3]
+	b _02263298
+_0226328A:
+	strb r0, [r3, #3]
+	b _02263298
+_0226328E:
+	mov r1, #0
+	add r0, sp, #0x10
+	strb r1, [r0, #1]
+	strb r1, [r0, #2]
+	strb r1, [r0, #3]
+_02263298:
+	mov r0, #0x24
+	str r0, [sp]
+	ldr r0, [sp, #4]
+	ldr r2, [sp, #0xc]
+	mov r1, #1
+	add r3, sp, #0x10
+	bl ov12_02262240
+	add sp, #0x34
+	pop {r4, r5, r6, r7, pc}
+	.balign 4, 0
+_022632AC: .word 0x00002DCC
+_022632B0: .word 0x0000312C
+_022632B4: .word 0x0000219C
+_022632B8: .word 0x00003108
+_022632BC: .word 0x200400C0
+	thumb_func_end ov12_02263138
+
+	thumb_func_start ov12_022632C0
+ov12_022632C0: ; 0x022632C0
+	push {r0, r1, r2, r3}
+	push {r3, lr}
+	add r2, r1, #0
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #0
+	add r3, sp, #0x10
+	bl ov12_02262240
+	pop {r3}
+	pop {r3}
+	add sp, #0x10
+	bx r3
+	.balign 4, 0
+	thumb_func_end ov12_022632C0
+
+	thumb_func_start BattleController_EmitShowMonList
+BattleController_EmitShowMonList: ; 0x022632DC
+	push {r3, r4, r5, r6, r7, lr}
+	sub sp, #0x38
+	str r0, [sp, #4]
+	str r1, [sp, #8]
+	add r0, r1, #0
+	add r1, r2, #0
+	str r2, [sp, #0xc]
+	add r4, r3, #0
+	bl BattleBuffer_Clear
+	mov r0, #0x12
+	add r1, sp, #0x10
+	strb r0, [r1]
+	ldr r0, [sp, #0xc]
+	add r7, sp, #0x10
+	strb r0, [r1, #1]
+	ldr r0, [sp, #0x50]
+	strb r4, [r1, #2]
+	str r0, [sp, #0x30]
+	ldr r0, [sp, #0x54]
+	ldr r5, [sp, #8]
+	strb r0, [r1, #3]
+	ldr r1, _02263354 ; =0x00003108
+	ldr r0, [sp, #8]
+	mov r3, #0
+	ldrb r1, [r0, r1]
+	add r0, sp, #0x30
+	add r6, r7, #0
+	strb r1, [r0, #4]
+	ldr r0, _02263358 ; =0x0000312C
+_02263318:
+	ldr r1, [sp, #8]
+	mov r4, #0
+	add r2, r1, r3
+	ldr r1, _0226335C ; =0x0000219C
+	ldrb r1, [r2, r1]
+	strb r1, [r7, #4]
+_02263324:
+	add r1, r5, r4
+	ldrb r2, [r1, r0]
+	add r1, r6, r4
+	add r4, r4, #1
+	strb r2, [r1, #8]
+	cmp r4, #6
+	blt _02263324
+	add r3, r3, #1
+	add r7, r7, #1
+	add r5, r5, #6
+	add r6, r6, #6
+	cmp r3, #4
+	blt _02263318
+	mov r0, #0x28
+	str r0, [sp]
+	ldr r0, [sp, #4]
+	ldr r2, [sp, #0xc]
+	mov r1, #1
+	add r3, sp, #0x10
+	bl ov12_02262240
+	add sp, #0x38
+	pop {r3, r4, r5, r6, r7, pc}
+	nop
+_02263354: .word 0x00003108
+_02263358: .word 0x0000312C
+_0226335C: .word 0x0000219C
+	thumb_func_end BattleController_EmitShowMonList
+
+	thumb_func_start ov12_02263360
+ov12_02263360: ; 0x02263360
+	push {r0, r1, r2, r3}
+	push {r3, lr}
+	add r2, r1, #0
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #0
+	add r3, sp, #0x10
+	bl ov12_02262240
+	pop {r3}
+	pop {r3}
+	add sp, #0x10
+	bx r3
+	.balign 4, 0
+	thumb_func_end ov12_02263360
+
+	thumb_func_start BattleController_EmitDrawYesNoBox
+BattleController_EmitDrawYesNoBox: ; 0x0226337C
+	push {r4, r5, r6, lr}
+	sub sp, #0x10
+	add r5, r2, #0
+	add r6, r0, #0
+	add r0, r1, #0
+	add r1, r5, #0
+	add r4, r3, #0
+	bl BattleBuffer_Clear
+	mov r1, #0x13
+	add r0, sp, #4
+	strb r1, [r0]
+	ldr r1, [sp, #0x20]
+	strh r4, [r0, #2]
+	strb r1, [r0, #1]
+	ldr r0, [sp, #0x24]
+	mov r1, #1
+	str r0, [sp, #8]
+	ldr r0, [sp, #0x28]
+	add r2, r5, #0
+	str r0, [sp, #0xc]
+	mov r0, #0xc
+	str r0, [sp]
+	add r0, r6, #0
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #0x10
+	pop {r4, r5, r6, pc}
+	.balign 4, 0
+	thumb_func_end BattleController_EmitDrawYesNoBox
+
+	thumb_func_start BattleController_EmitPrintAttackMessage
+BattleController_EmitPrintAttackMessage: ; 0x022633B8
+	push {r4, lr}
+	sub sp, #8
+	add r2, r1, #0
+	mov r1, #0x14
+	add r3, sp, #4
+	strb r1, [r3]
+	ldr r1, [r2, #0x64]
+	add r4, r2, r1
+	ldr r1, _022633E8 ; =0x0000219C
+	ldrb r1, [r4, r1]
+	strb r1, [r3, #1]
+	ldr r1, _022633EC ; =0x00003044
+	ldr r1, [r2, r1]
+	strh r1, [r3, #2]
+	mov r1, #4
+	str r1, [sp]
+	ldr r2, [r2, #0x64]
+	mov r1, #1
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r4, pc}
+	nop
+_022633E8: .word 0x0000219C
+_022633EC: .word 0x00003044
+	thumb_func_end BattleController_EmitPrintAttackMessage
+
+	thumb_func_start BattleController_EmitPrintMessage
+BattleController_EmitPrintMessage: ; 0x022633F0
+	push {r3, r4, lr}
+	sub sp, #4
+	add r4, r1, #0
+	add r3, r2, #0
+	mov r1, #0x15
+	strb r1, [r3]
+	mov r1, #0x24
+	str r1, [sp]
+	ldr r2, [r4, #0x64]
+	mov r1, #1
+	bl ov12_02262240
+	add sp, #4
+	pop {r3, r4, pc}
+	thumb_func_end BattleController_EmitPrintMessage
+
+	thumb_func_start BattleController_SetMoveAnimation
+BattleController_SetMoveAnimation: ; 0x0226340C
+	push {r4, r5, r6, lr}
+	sub sp, #0x68
+	mov r3, #0
+	add r4, r1, #0
+	str r3, [sp]
+	ldr r6, [r4, #0x64]
+	add r5, r0, #0
+	str r6, [sp, #4]
+	ldr r6, [r4, #0x6c]
+	str r6, [sp, #8]
+	str r2, [sp, #0xc]
+	add r2, sp, #0x10
+	bl ov12_022643C8
+	mov r0, #0x58
+	str r0, [sp]
+	ldr r2, [r4, #0x64]
+	add r0, r5, #0
+	mov r1, #1
+	add r3, sp, #0x10
+	bl ov12_02262240
+	add sp, #0x68
+	pop {r4, r5, r6, pc}
+	thumb_func_end BattleController_SetMoveAnimation
+
+	thumb_func_start ov12_0226343C
+ov12_0226343C: ; 0x0226343C
+	push {r4, r5, r6, lr}
+	sub sp, #0x68
+	add r4, r3, #0
+	mov r3, #0
+	str r3, [sp]
+	ldr r6, [sp, #0x78]
+	str r4, [sp, #4]
+	str r6, [sp, #8]
+	str r2, [sp, #0xc]
+	add r2, sp, #0x10
+	add r5, r0, #0
+	bl ov12_022643C8
+	mov r0, #0x58
+	str r0, [sp]
+	add r0, r5, #0
+	mov r1, #1
+	add r2, r4, #0
+	add r3, sp, #0x10
+	bl ov12_02262240
+	add sp, #0x68
+	pop {r4, r5, r6, pc}
+	.balign 4, 0
+	thumb_func_end ov12_0226343C
+
+	thumb_func_start BattleController_EmitMonFlicker
+BattleController_EmitMonFlicker: ; 0x0226346C
+	push {r3, lr}
+	sub sp, #8
+	add r2, r1, #0
+	mov r1, #0x17
+	str r1, [sp, #4]
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #1
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r3, pc}
+	.balign 4, 0
+	thumb_func_end BattleController_EmitMonFlicker
+
+	thumb_func_start BattleController_EmitHealthbarUpdate
+BattleController_EmitHealthbarUpdate: ; 0x02263488
+	push {r3, r4, r5, r6, r7, lr}
+	sub sp, #0x20
+	add r5, r1, #0
+	str r2, [sp, #8]
+	add r1, r2, #0
+	add r3, r5, r2
+	ldr r2, _0226354C ; =0x0000219C
+	str r0, [sp, #4]
+	ldrb r2, [r3, r2]
+	bl BattleSystem_GetPartyMon
+	add r4, r0, #0
+	mov r1, #5
+	mov r2, #0
+	bl GetMonData
+	add r7, r0, #0
+	add r0, r4, #0
+	mov r1, #0xa1
+	mov r2, #0
+	bl GetMonData
+	add r6, r0, #0
+	mov r0, #0x18
+	add r3, sp, #0xc
+	strb r0, [r3]
+	ldr r0, [sp, #8]
+	mov r1, #0xc0
+	add r4, r0, #0
+	mul r4, r1
+	ldr r0, _02263550 ; =0x00002D74
+	add r1, r5, r4
+	ldrb r2, [r1, r0]
+	strb r2, [r3, #1]
+	add r2, r0, #0
+	add r2, #0x18
+	ldr r2, [r1, r2]
+	strh r2, [r3, #2]
+	add r2, r0, #0
+	add r2, #0x1c
+	ldr r2, [r1, r2]
+	sub r0, #0x34
+	strh r2, [r3, #4]
+	ldr r2, _02263554 ; =0x0000215C
+	ldr r2, [r5, r2]
+	str r2, [sp, #0x14]
+	ldrh r0, [r1, r0]
+	cmp r0, #0x1d
+	beq _022634EE
+	cmp r0, #0x20
+	bne _02263500
+_022634EE:
+	ldr r0, _02263558 ; =0x00002D54
+	add r1, r5, r4
+	ldr r0, [r1, r0]
+	lsr r0, r0, #0x1f
+	bne _02263500
+	mov r1, #2
+	add r0, sp, #0xc
+	strb r1, [r0, #7]
+	b _0226350E
+_02263500:
+	ldr r0, _0226355C ; =0x00002DBE
+	add r1, r5, r4
+	ldrb r0, [r1, r0]
+	lsl r0, r0, #0x1c
+	lsr r1, r0, #0x1c
+	add r0, sp, #0xc
+	strb r1, [r0, #7]
+_0226350E:
+	add r0, r7, #0
+	add r1, r6, #0
+	bl GetMonExpBySpeciesAndLevel
+	ldr r1, _02263560 ; =0x00002DA4
+	add r2, r5, r4
+	ldr r1, [r2, r1]
+	sub r0, r1, r0
+	str r0, [sp, #0x18]
+	add r0, r7, #0
+	add r1, r6, #1
+	bl GetMonExpBySpeciesAndLevel
+	add r4, r0, #0
+	add r0, r7, #0
+	add r1, r6, #0
+	bl GetMonExpBySpeciesAndLevel
+	sub r0, r4, r0
+	str r0, [sp, #0x1c]
+	mov r0, #0x14
+	str r0, [sp]
+	ldr r0, [sp, #4]
+	ldr r2, [sp, #8]
+	mov r1, #1
+	add r3, sp, #0xc
+	bl ov12_02262240
+	add sp, #0x20
+	pop {r3, r4, r5, r6, r7, pc}
+	nop
+_0226354C: .word 0x0000219C
+_02263550: .word 0x00002D74
+_02263554: .word 0x0000215C
+_02263558: .word 0x00002D54
+_0226355C: .word 0x00002DBE
+_02263560: .word 0x00002DA4
+	thumb_func_end BattleController_EmitHealthbarUpdate
+
+	thumb_func_start ov12_02263564
+ov12_02263564: ; 0x02263564
+	push {r4, r5, r6, r7, lr}
+	sub sp, #0x1c
+	add r4, r2, #0
+	add r5, r1, #0
+	str r3, [sp, #8]
+	ldr r2, _022635E0 ; =0x0000219C
+	add r3, r5, r4
+	ldrb r2, [r3, r2]
+	add r1, r4, #0
+	str r0, [sp, #4]
+	bl BattleSystem_GetPartyMon
+	add r6, r0, #0
+	mov r1, #5
+	mov r2, #0
+	bl GetMonData
+	add r7, r0, #0
+	add r0, r6, #0
+	mov r1, #0xa1
+	mov r2, #0
+	bl GetMonData
+	add r6, r0, #0
+	mov r1, #0x19
+	add r0, sp, #0xc
+	strb r1, [r0]
+	ldr r0, [sp, #8]
+	add r1, r6, #0
+	str r0, [sp, #0x10]
+	add r0, r7, #0
+	bl GetMonExpBySpeciesAndLevel
+	mov r1, #0xc0
+	mul r1, r4
+	add r2, r5, r1
+	ldr r1, _022635E4 ; =0x00002DA4
+	ldr r1, [r2, r1]
+	sub r0, r1, r0
+	str r0, [sp, #0x14]
+	add r0, r7, #0
+	add r1, r6, #1
+	bl GetMonExpBySpeciesAndLevel
+	add r5, r0, #0
+	add r0, r7, #0
+	add r1, r6, #0
+	bl GetMonExpBySpeciesAndLevel
+	sub r0, r5, r0
+	str r0, [sp, #0x18]
+	mov r0, #0x10
+	str r0, [sp]
+	ldr r0, [sp, #4]
+	mov r1, #1
+	add r2, r4, #0
+	add r3, sp, #0xc
+	bl ov12_02262240
+	add sp, #0x1c
+	pop {r4, r5, r6, r7, pc}
+	nop
+_022635E0: .word 0x0000219C
+_022635E4: .word 0x00002DA4
+	thumb_func_end ov12_02263564
+
+	thumb_func_start BattleController_EmitPlayFaintAnimation
+BattleController_EmitPlayFaintAnimation: ; 0x022635E8
+	push {r4, r5, r6, r7, lr}
+	sub sp, #0x3c
+	str r0, [sp, #4]
+	add r0, r1, #0
+	mov ip, r2
+	mov r5, #0xb5
+	mov r2, #0x1a
+	add r1, sp, #0xc
+	strb r2, [r1]
+	mov r3, #0xc0
+	mov r2, ip
+	mul r3, r2
+	add r2, r0, r3
+	lsl r5, r5, #6
+	ldrh r4, [r2, r5]
+	strh r4, [r1, #2]
+	add r4, r5, #0
+	add r4, #0x26
+	ldrb r2, [r2, r4]
+	add r5, #0x70
+	lsl r2, r2, #0x1b
+	lsr r2, r2, #0x1b
+	strb r2, [r1, #8]
+	add r2, r0, r5
+	mov r1, #1
+	ldr r4, [r2, r3]
+	lsl r1, r1, #0x18
+	tst r1, r4
+	beq _02263626
+	mov r4, #1
+	b _02263628
+_02263626:
+	mov r4, #0
+_02263628:
+	add r1, sp, #0xc
+	strb r4, [r1, #9]
+	mov r1, #2
+	ldr r4, [r2, r3]
+	lsl r1, r1, #0x14
+	tst r1, r4
+	beq _0226363A
+	mov r4, #1
+	b _0226363C
+_0226363A:
+	mov r4, #0
+_0226363C:
+	add r1, sp, #0xc
+	strb r4, [r1, #0xa]
+	ldr r4, [r2, r3]
+	mov r2, #2
+	lsl r2, r2, #0x14
+	tst r2, r4
+	beq _0226365A
+	ldr r2, _022636E4 ; =0x00002DFA
+	add r4, r0, r3
+	ldrh r3, [r4, r2]
+	sub r2, #0x16
+	strb r3, [r1, #1]
+	ldr r1, [r4, r2]
+	str r1, [sp, #0x10]
+	b _0226366C
+_0226365A:
+	ldr r2, _022636E8 ; =0x00002DBE
+	add r4, r0, r3
+	ldrb r3, [r4, r2]
+	sub r2, #0x16
+	lsl r3, r3, #0x1c
+	lsr r3, r3, #0x1c
+	strb r3, [r1, #1]
+	ldr r1, [r4, r2]
+	str r1, [sp, #0x10]
+_0226366C:
+	mov r1, #0
+	str r1, [sp, #8]
+	ldr r1, _022636EC ; =0x00002D66
+	add r7, sp, #0xc
+	add r3, r0, r1
+	add r1, #0x58
+	add r4, r7, #0
+	add r5, r7, #0
+	add r6, r0, r1
+_0226367E:
+	mov r1, #0xb5
+	lsl r1, r1, #6
+	ldrh r1, [r0, r1]
+	strh r1, [r7, #0xc]
+	ldrb r1, [r3]
+	lsl r1, r1, #0x1a
+	lsr r1, r1, #0x1f
+	strb r1, [r4, #0x18]
+	ldrb r1, [r3]
+	lsl r1, r1, #0x1b
+	lsr r1, r1, #0x1b
+	strb r1, [r4, #0x1c]
+	ldr r1, _022636F0 ; =0x00002DB0
+	ldr r2, [r0, r1]
+	mov r1, #2
+	lsl r1, r1, #0x14
+	tst r1, r2
+	beq _022636AC
+	ldr r1, _022636E4 ; =0x00002DFA
+	ldrh r1, [r0, r1]
+	strb r1, [r4, #0x14]
+	ldr r1, _022636F4 ; =0x00002DE4
+	b _022636B6
+_022636AC:
+	ldrb r1, [r6]
+	lsl r1, r1, #0x1c
+	lsr r1, r1, #0x1c
+	strb r1, [r4, #0x14]
+	ldr r1, _022636F8 ; =0x00002DA8
+_022636B6:
+	ldr r1, [r0, r1]
+	add r0, #0xc0
+	str r1, [r5, #0x20]
+	ldr r1, [sp, #8]
+	add r7, r7, #2
+	add r1, r1, #1
+	add r3, #0xc0
+	add r4, r4, #1
+	add r5, r5, #4
+	add r6, #0xc0
+	str r1, [sp, #8]
+	cmp r1, #4
+	blt _0226367E
+	mov r0, #0x30
+	str r0, [sp]
+	ldr r0, [sp, #4]
+	mov r1, #1
+	mov r2, ip
+	add r3, sp, #0xc
+	bl ov12_02262240
+	add sp, #0x3c
+	pop {r4, r5, r6, r7, pc}
+	.balign 4, 0
+_022636E4: .word 0x00002DFA
+_022636E8: .word 0x00002DBE
+_022636EC: .word 0x00002D66
+_022636F0: .word 0x00002DB0
+_022636F4: .word 0x00002DE4
+_022636F8: .word 0x00002DA8
+	thumb_func_end BattleController_EmitPlayFaintAnimation
+
+	thumb_func_start BattleController_EmitPlaySE
+BattleController_EmitPlaySE: ; 0x022636FC
+	push {r4, lr}
+	sub sp, #8
+	mov r4, #0x1b
+	add r1, sp, #4
+	strb r4, [r1]
+	strh r2, [r1, #2]
+	mov r1, #4
+	str r1, [sp]
+	add r2, r3, #0
+	mov r1, #1
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r4, pc}
+	.balign 4, 0
+	thumb_func_end BattleController_EmitPlaySE
+
+	thumb_func_start BattleController_EmitFadeOutBattle
+BattleController_EmitFadeOutBattle: ; 0x0226371C
+	push {r3, lr}
+	sub sp, #8
+	mov r1, #0x1c
+	str r1, [sp, #4]
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #1
+	mov r2, #0
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r3, pc}
+	.balign 4, 0
+	thumb_func_end BattleController_EmitFadeOutBattle
+
+	thumb_func_start BattleController_EmitToggleVanish
+BattleController_EmitToggleVanish: ; 0x02263738
+	push {r3, r4, r5, r6, r7, lr}
+	sub sp, #0x30
+	mov ip, r1
+	mov r3, #0x1d
+	add r1, sp, #8
+	strb r3, [r1]
+	strb r2, [r1, #1]
+	ldr r3, [r0, #0x30]
+	mov r2, #0xc0
+	mov r1, ip
+	mul r2, r1
+	ldr r1, _022637F0 ; =0x00002DB0
+	add r2, r3, r2
+	ldr r2, [r2, r1]
+	mov r1, #1
+	lsl r1, r1, #0x18
+	tst r1, r2
+	beq _02263760
+	mov r2, #1
+	b _02263762
+_02263760:
+	mov r2, #0
+_02263762:
+	add r7, sp, #8
+	add r1, sp, #8
+	mov r3, #0
+	strb r2, [r1, #2]
+	str r3, [sp, #4]
+	add r4, r7, #0
+	add r5, r7, #0
+_02263770:
+	ldr r1, [r0, #0x30]
+	add r2, r1, r3
+	mov r1, #0xb5
+	lsl r1, r1, #6
+	ldrh r1, [r2, r1]
+	strh r1, [r7, #4]
+	ldr r1, [r0, #0x30]
+	add r2, r1, r3
+	ldr r1, _022637F4 ; =0x00002D66
+	ldrb r1, [r2, r1]
+	lsl r1, r1, #0x1a
+	lsr r1, r1, #0x1f
+	strb r1, [r4, #0x10]
+	ldr r1, [r0, #0x30]
+	add r2, r1, r3
+	ldr r1, _022637F4 ; =0x00002D66
+	ldrb r1, [r2, r1]
+	lsl r1, r1, #0x1b
+	lsr r1, r1, #0x1b
+	strb r1, [r4, #0x14]
+	ldr r1, [r0, #0x30]
+	add r6, r1, r3
+	ldr r1, _022637F0 ; =0x00002DB0
+	ldr r2, [r6, r1]
+	mov r1, #2
+	lsl r1, r1, #0x14
+	tst r1, r2
+	beq _022637B6
+	ldr r1, _022637F8 ; =0x00002DFA
+	ldrh r1, [r6, r1]
+	strb r1, [r4, #0xc]
+	ldr r1, [r0, #0x30]
+	add r2, r1, r3
+	ldr r1, _022637FC ; =0x00002DE4
+	b _022637C6
+_022637B6:
+	ldr r1, _02263800 ; =0x00002DBE
+	ldrb r1, [r6, r1]
+	lsl r1, r1, #0x1c
+	lsr r1, r1, #0x1c
+	strb r1, [r4, #0xc]
+	ldr r1, [r0, #0x30]
+	add r2, r1, r3
+	ldr r1, _02263804 ; =0x00002DA8
+_022637C6:
+	ldr r1, [r2, r1]
+	add r3, #0xc0
+	str r1, [r5, #0x18]
+	ldr r1, [sp, #4]
+	add r7, r7, #2
+	add r1, r1, #1
+	add r4, r4, #1
+	add r5, r5, #4
+	str r1, [sp, #4]
+	cmp r1, #4
+	blt _02263770
+	mov r1, #0x28
+	str r1, [sp]
+	mov r1, #1
+	mov r2, ip
+	add r3, sp, #8
+	bl ov12_02262240
+	add sp, #0x30
+	pop {r3, r4, r5, r6, r7, pc}
+	nop
+_022637F0: .word 0x00002DB0
+_022637F4: .word 0x00002D66
+_022637F8: .word 0x00002DFA
+_022637FC: .word 0x00002DE4
+_02263800: .word 0x00002DBE
+_02263804: .word 0x00002DA8
+	thumb_func_end BattleController_EmitToggleVanish
+
+	thumb_func_start BattleController_EmitHealthbarStatus
+BattleController_EmitHealthbarStatus: ; 0x02263808
+	push {r4, lr}
+	sub sp, #8
+	add r4, r1, #0
+	mov r3, #0x1e
+	add r1, sp, #4
+	strb r3, [r1]
+	strb r2, [r1, #1]
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #1
+	add r2, r4, #0
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r4, pc}
+	thumb_func_end BattleController_EmitHealthbarStatus
+
+	thumb_func_start BattleController_EmitPrintTrainerMessage
+BattleController_EmitPrintTrainerMessage: ; 0x02263828
+	push {r4, lr}
+	sub sp, #8
+	add r4, r1, #0
+	mov r3, #0x1f
+	add r1, sp, #4
+	strb r3, [r1]
+	strb r2, [r1, #1]
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #1
+	add r2, r4, #0
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r4, pc}
+	thumb_func_end BattleController_EmitPrintTrainerMessage
+
+	thumb_func_start BattleController_EmitSetStatus2Effect
+BattleController_EmitSetStatus2Effect: ; 0x02263848
+	push {r3, r4, r5, lr}
+	sub sp, #0x68
+	add r4, r2, #0
+	str r3, [sp]
+	str r4, [sp, #4]
+	str r4, [sp, #8]
+	mov r2, #0
+	str r2, [sp, #0xc]
+	add r2, sp, #0x10
+	mov r3, #1
+	add r5, r0, #0
+	bl ov12_022643C8
+	mov r0, #0x58
+	str r0, [sp]
+	add r0, r5, #0
+	mov r1, #1
+	add r2, r4, #0
+	add r3, sp, #0x10
+	bl ov12_02262240
+	add sp, #0x68
+	pop {r3, r4, r5, pc}
+	.balign 4, 0
+	thumb_func_end BattleController_EmitSetStatus2Effect
+
+	thumb_func_start BattleController_EmitCopyStatus2Effect
+BattleController_EmitCopyStatus2Effect: ; 0x02263878
+	push {r3, r4, r5, lr}
+	sub sp, #0x68
+	add r4, r2, #0
+	ldr r2, [sp, #0x78]
+	add r5, r0, #0
+	str r2, [sp]
+	str r4, [sp, #4]
+	str r3, [sp, #8]
+	mov r2, #0
+	str r2, [sp, #0xc]
+	add r2, sp, #0x10
+	mov r3, #1
+	bl ov12_022643C8
+	mov r0, #0x58
+	str r0, [sp]
+	add r0, r5, #0
+	mov r1, #1
+	add r2, r4, #0
+	add r3, sp, #0x10
+	bl ov12_02262240
+	add sp, #0x68
+	pop {r3, r4, r5, pc}
+	thumb_func_end BattleController_EmitCopyStatus2Effect
+
+	thumb_func_start BattleController_EmitPrintReturnMessage
+BattleController_EmitPrintReturnMessage: ; 0x022638A8
+	push {r3, r4, r5, lr}
+	sub sp, #8
+	add r5, r0, #0
+	add r4, r2, #0
+	mov r2, #0x20
+	add r0, sp, #4
+	strb r2, [r0]
+	strb r3, [r0, #1]
+	ldr r0, _022638E4 ; =0x00003122
+	ldrsh r2, [r1, r0]
+	ldr r0, _022638E8 ; =0x00002E4C
+	ldr r0, [r1, r0]
+	sub r1, r2, r0
+	mov r0, #0x64
+	mul r0, r1
+	add r1, r2, #0
+	bl _s32_div_f
+	add r1, sp, #4
+	strh r0, [r1, #2]
+	mov r0, #4
+	str r0, [sp]
+	add r0, r5, #0
+	mov r1, #1
+	add r2, r4, #0
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r3, r4, r5, pc}
+	.balign 4, 0
+_022638E4: .word 0x00003122
+_022638E8: .word 0x00002E4C
+	thumb_func_end BattleController_EmitPrintReturnMessage
+
+	thumb_func_start BattleController_EmitPrintSendOutMessage
+BattleController_EmitPrintSendOutMessage: ; 0x022638EC
+	push {r4, r5, r6, lr}
+	sub sp, #8
+	add r5, r0, #0
+	add r6, r1, #0
+	add r4, r2, #0
+	mov r1, #0x21
+	add r0, sp, #4
+	strb r1, [r0]
+	ldr r2, _02263934 ; =0x00002E4C
+	strb r3, [r0, #1]
+	ldr r1, [r6, r2]
+	cmp r1, #0
+	bne _0226390E
+	mov r1, #0xfa
+	lsl r1, r1, #2
+	strh r1, [r0, #2]
+	b _02263920
+_0226390E:
+	mov r0, #0xfa
+	lsl r0, r0, #2
+	mul r0, r1
+	add r1, r2, #4
+	ldr r1, [r6, r1]
+	bl _u32_div_f
+	add r1, sp, #4
+	strh r0, [r1, #2]
+_02263920:
+	mov r0, #4
+	str r0, [sp]
+	add r0, r5, #0
+	mov r1, #1
+	add r2, r4, #0
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r4, r5, r6, pc}
+	.balign 4, 0
+_02263934: .word 0x00002E4C
+	thumb_func_end BattleController_EmitPrintSendOutMessage
+
+	thumb_func_start BattleController_EmitPrintEncounterMessage
+BattleController_EmitPrintEncounterMessage: ; 0x02263938
+	push {r3, lr}
+	sub sp, #8
+	mov r1, #0x22
+	str r1, [sp, #4]
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #1
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r3, pc}
+	thumb_func_end BattleController_EmitPrintEncounterMessage
+
+	thumb_func_start BattleController_EmitPrintFirstSendOutMessage
+BattleController_EmitPrintFirstSendOutMessage: ; 0x02263950
+	push {r3, r4, r5, r6, r7, lr}
+	sub sp, #0x10
+	add r7, r1, #0
+	str r2, [sp, #4]
+	mov r2, #0x23
+	add r1, sp, #8
+	add r6, r0, #0
+	strb r2, [r1]
+	mov r4, #0
+	bl BattleSystem_GetMaxBattlers
+	cmp r0, #0
+	ble _02263982
+	add r5, sp, #8
+_0226396C:
+	ldr r0, _02263998 ; =0x0000219C
+	add r1, r7, r4
+	ldrb r0, [r1, r0]
+	add r4, r4, #1
+	strb r0, [r5, #4]
+	add r0, r6, #0
+	add r5, r5, #1
+	bl BattleSystem_GetMaxBattlers
+	cmp r4, r0
+	blt _0226396C
+_02263982:
+	mov r0, #8
+	str r0, [sp]
+	ldr r2, [sp, #4]
+	add r0, r6, #0
+	mov r1, #1
+	add r3, sp, #8
+	bl ov12_02262240
+	add sp, #0x10
+	pop {r3, r4, r5, r6, r7, pc}
+	nop
+_02263998: .word 0x0000219C
+	thumb_func_end BattleController_EmitPrintFirstSendOutMessage
+
+	thumb_func_start ov12_0226399C
+ov12_0226399C: ; 0x0226399C
+	push {r3, lr}
+	sub sp, #8
+	add r2, r1, #0
+	mov r1, #0x24
+	str r1, [sp, #4]
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #1
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r3, pc}
+	.balign 4, 0
+	thumb_func_end ov12_0226399C
+
+	thumb_func_start ov12_022639B8
+ov12_022639B8: ; 0x022639B8
+	push {r0, r1, r2, r3}
+	push {r3, r4, r5, r6, lr}
+	sub sp, #0x2c
+	add r4, r1, #0
+	add r5, r0, #0
+	bl BattleSystem_GetBattleContext
+	add r1, r4, #0
+	bl BattleBuffer_Clear
+	mov r1, #0x25
+	add r0, sp, #4
+	strb r1, [r0]
+	add r6, sp, #0x48
+	add r3, sp, #8
+	mov r2, #4
+_022639D8:
+	ldmia r6!, {r0, r1}
+	stmia r3!, {r0, r1}
+	sub r2, r2, #1
+	bne _022639D8
+	ldr r0, [r6]
+	mov r1, #1
+	str r0, [r3]
+	mov r0, #0x28
+	str r0, [sp]
+	add r0, r5, #0
+	add r2, r4, #0
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #0x2c
+	pop {r3, r4, r5, r6}
+	pop {r3}
+	add sp, #0x10
+	bx r3
+	.balign 4, 0
+	thumb_func_end ov12_022639B8
+
+	thumb_func_start ov12_02263A00
+ov12_02263A00: ; 0x02263A00
+	push {r3, lr}
+	sub sp, #8
+	add r2, r1, #0
+	mov r1, #1
+	str r1, [sp, #4]
+	mov r1, #4
+	str r1, [sp]
+	mov r1, #0
+	add r3, sp, #4
+	bl ov12_02262240
+	add sp, #8
+	pop {r3, pc}
+	.balign 4, 0
+	thumb_func_end ov12_02263A00
+
+	thumb_func_start ov12_02263A1C
+ov12_02263A1C: ; 0x02263A1C
+	push {r4, r5, r6, r7, lr}
+	sub sp, #0x24
+	add r5, r1, #0
+	ldr r1, _02263B38 ; =0x0000219C
+	add r4, r2, #0
+	add r7, r5, r1
+	ldrb r2, [r7, r4]
+	add r1, r4, #0
+	str r0, [sp, #4]
+	bl BattleSystem_GetPartyMon
+	add r6, r0, #0
+	mov r1, #5
+	mov r2, #0
+	bl GetMonData
+	str r0, [sp, #0xc]
+	add r0, r6, #0
+	mov r1, #0xa1
+	mov r2, #0
+	bl GetMonData
+	str r0, [sp, #8]
+	mov r0, #0x26
+	add r3, sp, #0x10
+	strb r0, [r3]
+	mov r0, #0xc0
+	add r6, r4, #0
+	mul r6, r0
+	ldr r2, _02263B3C ; =0x00002D74
+	add r0, r5, r6
+	ldrb r1, [r0, r2]
+	strb r1, [r3, #1]
+	add r1, r2, #0
+	add r1, #0x18
+	ldr r1, [r0, r1]
+	add r2, #0x1c
+	strh r1, [r3, #2]
+	ldr r0, [r0, r2]
+	add r1, r4, #0
+	strh r0, [r3, #4]
+	ldrb r0, [r7, r4]
+	strb r0, [r3, #6]
+	add r0, r5, #0
+	bl GetBattlerStatusCondition
+	add r1, sp, #0x10
+	ldrb r2, [r1, #7]
+	mov r3, #0x1f
+	lsl r0, r0, #0x18
+	bic r2, r3
+	lsr r3, r0, #0x18
+	mov r0, #0x1f
+	and r0, r3
+	orr r0, r2
+	strb r0, [r1, #7]
+	mov r0, #0xb5
+	lsl r0, r0, #6
+	add r7, r5, r0
+	ldrh r0, [r7, r6]
+	cmp r0, #0x1d
+	beq _02263A9C
+	cmp r0, #0x20
+	bne _02263AB6
+_02263A9C:
+	ldr r0, _02263B40 ; =0x00002D54
+	add r1, r5, r6
+	ldr r0, [r1, r0]
+	lsr r0, r0, #0x1f
+	bne _02263AB6
+	add r0, sp, #0x10
+	ldrb r1, [r0, #7]
+	mov r2, #0x60
+	bic r1, r2
+	mov r2, #0x40
+	orr r1, r2
+	strb r1, [r0, #7]
+	b _02263AD0
+_02263AB6:
+	add r3, sp, #0x10
+	ldrb r2, [r3, #7]
+	mov r0, #0x60
+	add r1, r5, r6
+	bic r2, r0
+	ldr r0, _02263B44 ; =0x00002DBE
+	ldrb r0, [r1, r0]
+	lsl r0, r0, #0x1c
+	lsr r0, r0, #0x1c
+	lsl r0, r0, #0x1e
+	lsr r0, r0, #0x19
+	orr r0, r2
+	strb r0, [r3, #7]
+_02263AD0:
+	ldr r0, [sp, #0xc]
+	ldr r1, [sp, #8]
+	bl GetMonExpBySpeciesAndLevel
+	mov r1, #0xc0
+	mul r1, r4
+	add r2, r5, r1
+	ldr r1, _02263B48 ; =0x00002DA4
+	ldr r1, [r2, r1]
+	sub r0, r1, r0
+	ldr r1, [sp, #8]
+	str r0, [sp, #0x18]
+	ldr r0, [sp, #0xc]
+	add r1, r1, #1
+	bl GetMonExpBySpeciesAndLevel
+	add r5, r0, #0
+	ldr r0, [sp, #0xc]
+	ldr r1, [sp, #8]
+	bl GetMonExpBySpeciesAndLevel
+	sub r0, r5, r0
+	str r0, [sp, #0x1c]
+	ldrh r1, [r7, r6]
+	ldr r0, [sp, #4]
+	bl BattleSystem_CheckMonCaught
+	add r3, sp, #0x10
+	lsl r0, r0, #0x18
+	lsr r0, r0, #0x18
+	lsl r0, r0, #0x1f
+	ldrb r1, [r3, #7]
+	mov r2, #0x80
+	lsr r0, r0, #0x18
+	bic r1, r2
+	orr r0, r1
+	strb r0, [r3, #7]
+	ldr r0, [sp, #4]
+	bl BattleSystem_GetSafariBallCount
+	str r0, [sp, #0x20]
+	mov r0, #0x14
+	str r0, [sp]
+	ldr r0, [sp, #4]
+	mov r1, #1
+	add r2, r4, #0
+	add r3, sp, #0x10
+	bl ov12_02262240
+	add sp, #0x24
+	pop {r4, r5, r6, r7, pc}
+	nop
+_02263B38: .word 0x0000219C
+_02263B3C: .word 0x00002D74
+_02263B40: .word 0x00002D54
+_02263B44: .word 0x00002DBE
+_02263B48: .word 0x00002DA4
+	thumb_func_end ov12_02263A1C
