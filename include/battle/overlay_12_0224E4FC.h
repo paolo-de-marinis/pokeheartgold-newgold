@@ -132,6 +132,7 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
 #define UQ412__1_2           4915
 #define UQ412__1_25          5120
 #define UQ412__1_3_BUT_LOWER 5324
+#define UQ412__1_3333        5461
 #define UQ412__1_5           6144
 #define UQ412__2_0           8192
 

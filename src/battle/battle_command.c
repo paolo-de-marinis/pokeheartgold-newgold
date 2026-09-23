@@ -793,7 +793,14 @@ static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, i
     int ally = battlerIdTarget ^ 2;
     u32 moveNo = ctx->moveNoCur;
     int item = GetBattlerHeldItemEffect(ctx, battlerIdAttacker);
-    u32 modifier = ScreenModifier(battleSystem, ctx, moveNo, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerIdTarget)], ctx->criticalMultiplier, battlerIdAttacker);
+    u32 modifier = UQ412__1_0;
+
+    // Collision Course and Electro Drift hit a third harder where they are
+    // super effective (6.9.14.45), ahead of the screens.
+    if (effectiveness > 8 && (moveNo == MOVE_COLLISION_COURSE || moveNo == MOVE_ELECTRO_DRIFT)) {
+        modifier = QMul_RoundUp(modifier, UQ412__1_3333);
+    }
+    modifier = QMul_RoundUp(modifier, ScreenModifier(battleSystem, ctx, moveNo, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerIdTarget)], ctx->criticalMultiplier, battlerIdAttacker));
 
     if (effectiveness != 0 && effectiveness < 8 && GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_TINTED_LENS) {
         modifier = QMul_RoundUp(modifier, UQ412__2_0);

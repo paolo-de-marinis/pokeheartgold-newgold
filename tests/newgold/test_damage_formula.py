@@ -197,6 +197,15 @@ int main(void) {
     S.battleType = BATTLE_TYPE_DOUBLES; S.hitCount = 2; EXPECT(calc(), 30);
     S.hitCount = 1; EXPECT(calc(), 30);
 
+    // 6.9.14.45 Collision Course and Electro Drift, 5461 on a super-effective
+    // hit: 90 * 5461 = 491490, + 2047 >> 12 = 120. Neutral, 45.
+    reset(); ctx.moveNoCur = MOVE_COLLISION_COURSE; S.types[1][0] = S.types[1][1] = TYPE_GRASS; EXPECT(calc(), 120);
+    reset(); ctx.moveNoCur = MOVE_ELECTRO_DRIFT; EXPECT(calc(), 45);
+    // Over Reflect the two are one factor, 5461 * 2048 rounded up = 2731:
+    // 90 * 2731 = 245790, + 2047 >> 12 = 60.
+    reset(); ctx.moveNoCur = MOVE_COLLISION_COURSE; S.types[1][0] = S.types[1][1] = TYPE_GRASS;
+    ctx.fieldSideConditionFlags[1] = SIDE_CONDITION_REFLECT; EXPECT(calc(), 60);
+
     // 6.9.4 Tinted Lens doubles a resisted hit: Fire into Water, 22 -> 44.
     reset(); S.types[1][0] = S.types[1][1] = TYPE_WATER; S.ability[0] = ABILITY_TINTED_LENS; EXPECT(calc(), 44);
     // 6.9.2 Neuroforce, 1.25 on a super-effective one: 90 -> 112.
