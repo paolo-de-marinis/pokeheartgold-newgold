@@ -354,6 +354,7 @@ typedef struct MoveConditions {
     u8 syrupBombUser : 2;          // Syrup Bomb: whose; it ends when that Pokemon leaves
     u8 tarShot : 1;                // Tar Shot: Fire moves are twice as effective on it
     u8 dragonCheer : 2;            // Dragon Cheer: critical stages more, two for a Dragon-type when cheered
+    u8 telekinesisTurns : 2;       // Telekinesis: the turns' ends left in the air, where every move but a one-hit KO hits it
 } MoveConditions;
 
 #define BATTLE_SCRIPT_BUFFER_WORDS 650

@@ -1499,6 +1499,7 @@ typedef enum UpdateMonConditionState {
     UMC_STATE_CHARGE,
     UMC_STATE_TAUNT,
     UMC_STATE_MAGNET_RISE,
+    UMC_STATE_TELEKINESIS,
     UMC_STATE_HEALBLOCK,
     UMC_STATE_EMBARGO,
     UMC_STATE_YAWN,
@@ -1929,6 +1930,20 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                     flag = 1;
                 }
+            }
+            ctx->stateUpdateMonCondition++;
+            break;
+        case UMC_STATE_TELEKINESIS:
+            // Telekinesis lets its Pokemon down after three turns' ends, with
+            // the later games' line.
+            if (ctx->moveConditions[battlerId].telekinesisTurns && --ctx->moveConditions[battlerId].telekinesisTurns == 0) {
+                ctx->buffMsg.id = msg_0197_01882; // {0} was freed from the telekinesis!
+                ctx->buffMsg.tag = TAG_NICKNAME;
+                ctx->buffMsg.param[0] = CreateNicknameTag(ctx, battlerId);
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SHOW_PREPARED_MESSAGE);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
             }
             ctx->stateUpdateMonCondition++;
             break;
@@ -3133,6 +3148,12 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
     hitChance = BattleMoveTbl(ctx, move)->accuracy;
 
     if (hitChance == 0) {
+        return FALSE;
+    }
+
+    // Nothing misses a Pokemon Telekinesis holds up but a one-hit KO move
+    // (Pokemon Central, Telecinesi).
+    if (ctx->moveConditions[battlerIdTarget].telekinesisTurns && BattleMoveTbl(ctx, move)->effect != MOVE_EFFECT_ONE_HIT_KO) {
         return FALSE;
     }
 

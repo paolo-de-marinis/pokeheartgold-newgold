@@ -446,5 +446,6 @@
 #define MOVE_EFFECT_SNOW_AND_SWITCH                              436
 #define MOVE_EFFECT_DOODLE                                       437
 #define MOVE_EFFECT_COURT_CHANGE                                 438
+#define MOVE_EFFECT_TELEKINESIS                                  439
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

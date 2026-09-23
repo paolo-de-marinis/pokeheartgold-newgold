@@ -299,6 +299,7 @@ typedef struct {
 } BattleMon;
 typedef struct {
     u32 battleStatus; u32 fieldCondition; u32 moveStatusFlag; BattleMon battleMons[4];
+    struct { int telekinesisTurns; } moveConditions[4];
 } BattleContext;
 typedef struct { int accuracy, category, effect; } MoveTbl;
 

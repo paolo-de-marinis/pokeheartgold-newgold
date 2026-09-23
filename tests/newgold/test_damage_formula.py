@@ -54,7 +54,7 @@ typedef struct {
     u32 fieldCondition; u32 fieldSideConditionFlags[2];
     int criticalMultiplier; int damage; int meFirstTotal; u32 battleStatus;
     BattleMon battleMons[4];
-    struct { int glaiveRush; int tarShot; } moveConditions[4];
+    struct { int glaiveRush; int tarShot; int telekinesisTurns; } moveConditions[4];
     struct { int protectFlag, roostFlag; } turnData[4];
     u8 teraShellResisting;
     struct { u32 unk14; } selfTurnData[4];
@@ -73,6 +73,7 @@ static struct {
 
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &S.move; }
 static int BattleMoveCategory(BattleContext *ctx, u32 moveNo, int battlerIdAttacker) { (void)ctx; (void)moveNo; (void)battlerIdAttacker; return S.move.category; }
+static BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) { return !ctx->moveConditions[battlerId].telekinesisTurns; }
 static int CalcMoveDamage(BattleSystem *bs, BattleContext *ctx, u32 moveNo, u32 side, u32 field, u16 power, u8 type, u8 a, u8 t, u8 crit) {
     (void)bs; (void)ctx; (void)moveNo; (void)side; (void)field; (void)power; (void)type; (void)a; (void)t; (void)crit;
     return S.base;

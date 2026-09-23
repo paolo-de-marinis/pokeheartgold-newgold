@@ -258,6 +258,18 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} swapped the battle\neffects affecting each side of the field!",
         r"The opposing {STRVAR_1 1, 0, 0} swapped the\nbattle effects affecting each side\fof the field!",
     ]),
+    # Telekinesis lifting its target and letting it down. The engine leaves
+    # the move unimplemented; the later games' lines.
+    ("telekinesis", [
+        r"{STRVAR_1 1, 0, 0} was hurled\ninto the air!",
+        r"The wild {STRVAR_1 1, 0, 0} was hurled\ninto the air!",
+        r"The opposing {STRVAR_1 1, 0, 0} was hurled\ninto the air!",
+    ]),
+    ("telekinesis ends", [
+        r"{STRVAR_1 1, 0, 0} was freed\nfrom the telekinesis!",
+        r"The wild {STRVAR_1 1, 0, 0} was freed\nfrom the telekinesis!",
+        r"The opposing {STRVAR_1 1, 0, 0} was freed\nfrom the telekinesis!",
+    ]),
 ]
 
 

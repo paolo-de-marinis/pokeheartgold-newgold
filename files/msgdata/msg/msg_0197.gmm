@@ -7516,4 +7516,28 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} swapped the\nbattle effects affecting each side\fof the field!</language>
 	</row>
+	<row id="msg_0197_01879" index="1879">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} was hurled\ninto the air!</language>
+	</row>
+	<row id="msg_0197_01880" index="1880">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} was hurled\ninto the air!</language>
+	</row>
+	<row id="msg_0197_01881" index="1881">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} was hurled\ninto the air!</language>
+	</row>
+	<row id="msg_0197_01882" index="1882">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} was freed\nfrom the telekinesis!</language>
+	</row>
+	<row id="msg_0197_01883" index="1883">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} was freed\nfrom the telekinesis!</language>
+	</row>
+	<row id="msg_0197_01884" index="1884">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} was freed\nfrom the telekinesis!</language>
+	</row>
 </body>

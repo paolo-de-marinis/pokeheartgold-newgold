@@ -3159,6 +3159,11 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
 
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_LEVITATE) == TRUE && moveType == TYPE_GROUND && itemTarget != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
         *moveStatusFlag |= MOVE_STATUS_LEVITATE_IMMUNE;
+    } else if (ctx->moveConditions[battlerIdTarget].telekinesisTurns && moveType == TYPE_GROUND && BattlerIsGrounded(ctx, battlerIdTarget) == FALSE && moveNo != MOVE_THOUSAND_ARROWS) {
+        // A Pokemon Telekinesis has lifted is out of the ground's reach, as
+        // long as nothing has brought it down -- Gravity, an Iron Ball --
+        // and Thousand Arrows aside (Pokemon Central, Telecinesi).
+        *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
     } else if ((ctx->battleMons[battlerIdTarget].unk88.magnetRiseTurns || itemTarget == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT) && !(ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN) && moveType == TYPE_GROUND && itemTarget != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
         // An Air Balloon rides out a Ground move the same way Magnet Rise
         // does, and the reference answers both from one place too. It leaves
@@ -4581,6 +4586,7 @@ BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) {
         || ctx->battleMons[battlerId].type1 == TYPE_FLYING
         || ctx->battleMons[battlerId].type2 == TYPE_FLYING
         || ctx->battleMons[battlerId].unk88.magnetRiseTurns != 0
+        || ctx->moveConditions[battlerId].telekinesisTurns != 0
         || holdEffect == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT;
     BOOL pulledDown = holdEffect == HOLD_EFFECT_SPEED_DOWN_GROUNDED
         || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
@@ -11907,7 +11913,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_EERIE_SPELL,
     BATTLE_SUBSCRIPT_DRAGON_CHEER,
     BATTLE_SUBSCRIPT_CORROSIVE_GAS,
-    BATTLE_SUBSCRIPT_DOODLE
+    BATTLE_SUBSCRIPT_DOODLE,
+    BATTLE_SUBSCRIPT_TELEKINESIS
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

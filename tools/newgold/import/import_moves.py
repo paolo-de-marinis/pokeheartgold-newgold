@@ -475,6 +475,9 @@ IMPLEMENTED_HERE = {
     # Court Change swaps the two sides' screens, winds and hazards (Pokemon
     # Central, Cambiocampo): effect script 438.
     "COURT_CHANGE": "MOVE_EFFECT_COURT_CHANGE",
+    # Telekinesis lifts its target for three turns, out of the ground's reach
+    # and into every move's (Pokemon Central, Telecinesi): effect script 439.
+    "TELEKINESIS": "MOVE_EFFECT_TELEKINESIS",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

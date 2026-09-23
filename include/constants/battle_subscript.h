@@ -773,6 +773,8 @@
 // Spectral Thief taking its target's raised stages, which the reference has
 // no script for.
 #define BATTLE_SUBSCRIPT_SPECTRAL_THIEF                     458
+// Telekinesis lifting its target, which the reference has no script for.
+#define BATTLE_SUBSCRIPT_TELEKINESIS                        459
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -862,6 +864,7 @@
 #define MOVE_SUBSCRIPT_PTR_DRAGON_CHEER                     231
 #define MOVE_SUBSCRIPT_PTR_CORROSIVE_GAS                    232
 #define MOVE_SUBSCRIPT_PTR_DOODLE                           233
+#define MOVE_SUBSCRIPT_PTR_TELEKINESIS                      234
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

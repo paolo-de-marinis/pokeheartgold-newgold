@@ -10345,6 +10345,14 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         }
         break;
     }
+    // Three turns in the air; not twice over (CALC_TEMP says whether it
+    // took).
+    case MOVE_TELEKINESIS:
+        ctx->calcTemp = !ctx->moveConditions[battlerId].telekinesisTurns;
+        if (ctx->calcTemp) {
+            ctx->moveConditions[battlerId].telekinesisTurns = 3;
+        }
+        break;
     // The field is locked till the next turn's end; not twice over (CALC_TEMP
     // says whether it took).
     case MOVE_FAIRY_LOCK:

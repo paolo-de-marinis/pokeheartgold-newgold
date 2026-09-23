@@ -782,5 +782,38 @@ int main(void) {
 }
 """)
 
+    def test_telekinesis_lifts_its_target_for_three_turns(self):
+        # Pokemon Central (Telecinesi): out of the ground's reach, into every
+        # move's but a one-hit KO's; not under Gravity, on the rooted, the
+        # downed or the heavy, nor on the Pokemon the ground always holds.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("TELEKINESIS", "MOVE_EFFECT_TELEKINESIS")
+        script = effect_script("MOVE_EFFECT_TELEKINESIS")
+        for check in ("FIELD_CONDITION_GRAVITY, _FAILED", "MOVE_EFFECT_FLAG_INGRAIN, _FAILED", "MOVE_EFFECT_FLAG_SMACK_DOWN, _FAILED",
+                      "HOLD_EFFECT_SPEED_DOWN_GROUNDED, _FAILED", "SPECIES_DIGLETT_ALOLAN, _FAILED", "SPECIES_MEGA_GENGAR, _FAILED"):
+            self.assertIn(check, script)
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_TELEKINESIS"), "BATTLE_SUBSCRIPT_TELEKINESIS")
+        lifting = subscript_named("BATTLE_SUBSCRIPT_TELEKINESIS")
+        self.assertIn("SetMoveConditionFlag MOVE_TELEKINESIS, BATTLER_CATEGORY_DEFENDER", lifting)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('telekinesis'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER", lifting)
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        self.assertIn("|| ctx->moveConditions[battlerId].telekinesisTurns != 0", function(overlay, "BattlerIsGrounded"))
+        self.assertIn("ctx->moveConditions[battlerIdTarget].telekinesisTurns && moveType == TYPE_GROUND && BattlerIsGrounded(ctx, battlerIdTarget) == FALSE",
+                      function(overlay, "CalcTypeEffectiveness"))
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        self.assertIn("if (ctx->moveConditions[battlerIdTarget].telekinesisTurns && BattleMoveTbl(ctx, move)->effect != MOVE_EFFECT_ONE_HIT_KO) {\n        return FALSE;",
+                      function(controller, "BattleSystem_CheckMoveHit"))
+        from test_ability_behaviour import accuracy_program, run_c
+        run_c(self, accuracy_program(r"""
+    // A 50% move lands on a Pokemon held up by Telekinesis whatever the roll,
+    // a one-hit KO move does not.
+    reset(4); ctx.moveConditions[1].telekinesisTurns = 3; EXPECT(lands(99), 1);
+    S.move.effect = MOVE_EFFECT_ONE_HIT_KO; EXPECT(lands(50), 0);
+"""))
+        umc = function(controller, "BattleControllerPlayer_UpdateMonCondition")
+        step = umc[umc.index("case UMC_STATE_TELEKINESIS:"):umc.index("case UMC_STATE_HEALBLOCK:")]
+        self.assertIn(f"ctx->buffMsg.id = msg_0197_{import_battle_messages.port_row('telekinesis ends'):05d};", step)
+
 if __name__ == "__main__":
     unittest.main()
