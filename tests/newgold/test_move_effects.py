@@ -221,7 +221,7 @@ UNREAD_HERE = {
     "CHARGE_TURN_PARALYZE_HIT": "script: the charge turn, Power Herb and the paralysis are effect script 365's",
     "CHARGE_TURN_BURN_HIT": "script: the charge turn, Power Herb and the burn are effect script 366's",
     "HIT_THREE_TIMES_ALWAYS_CRITICAL": "script: it asks for CRITICAL_STAGE_ALWAYS on every hit, which CalcCrit reads as a sure critical",
-    "MORTAL_SPIN": "not ported: it poisons but clears neither hazards nor binding, Rapid Spin's half",
+    "MORTAL_SPIN": "script: an ON_HIT side effect runs subscript 403, the poison and then Rapid Spin's clearing",
     "ADD_TYPE_GRASS": "script: subscript 325 fails behind a substitute, as the reference's substitute list does",
     "ADD_TYPE_GHOST": "script: subscript 324 fails behind a substitute, as the reference's substitute list does",
     "CHANGE_TO_PSYCHIC_TYPE": "script: subscript 323 fails behind a substitute, as the reference's substitute list does",

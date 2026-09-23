@@ -638,6 +638,8 @@
 #define BATTLE_SUBSCRIPT_MOVE_FAIL_THROAT_CHOP              401
 // Spiky Shield pricking what touched it. 450 there.
 #define BATTLE_SUBSCRIPT_SPIKY_SHIELD                       402
+// Mortal Spin: its poison, then Rapid Spin's clearing. 444 there.
+#define BATTLE_SUBSCRIPT_MORTAL_SPIN                        403
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -709,6 +711,7 @@
 #define MOVE_SUBSCRIPT_PTR_RECOIL_HALF_MAX_HP               213
 #define MOVE_SUBSCRIPT_PTR_CLEAR_SMOG                       214
 #define MOVE_SUBSCRIPT_PTR_INCINERATE                       215
+#define MOVE_SUBSCRIPT_PTR_MORTAL_SPIN                      216
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H
