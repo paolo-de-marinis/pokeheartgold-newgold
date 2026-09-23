@@ -458,5 +458,25 @@ class RetreatOutsideMoveTests(unittest.TestCase):
         self.assertIn("ctx->selfTurnData[battlerId].retreatArmedOutsideMove = FALSE;", function(OVERLAY.read_text(), "InitSwitchWork"))
 
 
+class ReceiverTests(unittest.TestCase):
+    """Receiver and Power of Alchemy take over a fallen ally's ability, but not
+    one the ability table keeps from them (Pokemon Central, Ricezione)."""
+
+    def test_a_faint_hands_the_ability_to_the_ally(self):
+        header = (ROOT / "include/constants/battle_subscript.h").read_text()
+        number = int(re.search(r"#define BATTLE_SUBSCRIPT_RECEIVER\s+(\d+)", header).group(1))
+        self.assertTrue((ROOT / f"files/battledata/script/subscript/subscript_{number:04d}_Receiver.s").exists())
+        faint = subscript("FaintMon")
+        self.assertLess(faint.index("Call BATTLE_SUBSCRIPT_SOUL_HEART"), faint.index("Call BATTLE_SUBSCRIPT_RECEIVER"))
+        script = subscript("Receiver")
+        ally = "BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_FAINTED_MON"
+        self.assertIn(f"CompareMonDataToValue OPCODE_EQU, {ally}, BMON_DATA_HP, 0, _END", script)
+        for ability in ("RECEIVER", "POWER_OF_ALCHEMY"):
+            self.assertIn(f"CheckAbility CHECK_OPCODE_HAVE, {ally}, ABILITY_{ability}, _TAKE_OVER", script)
+        take = label_body(script, "_TAKE_OVER")
+        refusal = take.index("BMON_DATA_ABILITY_FLAGS, ABILITY_FLAG_FAILS_RECEIVER, _END")
+        self.assertLess(refusal, take.index(f"UpdateMonDataFromVar OPCODE_SET, {ally}, BMON_DATA_ABILITY, BSCRIPT_VAR_CALC_TEMP"))
+
+
 if __name__ == "__main__":
     unittest.main()

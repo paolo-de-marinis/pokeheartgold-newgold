@@ -715,6 +715,9 @@
 #define BATTLE_SUBSCRIPT_DANCE_FAILED                       435
 // Orichalcum Pulse's sun on entry. 487 there.
 #define BATTLE_SUBSCRIPT_ORICHALCUM_PULSE                   436
+// Receiver and Power of Alchemy taking over a fallen ally's ability, which
+// the reference has no script for.
+#define BATTLE_SUBSCRIPT_RECEIVER                           437
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
