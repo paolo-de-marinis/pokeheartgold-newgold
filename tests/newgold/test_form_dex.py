@@ -158,16 +158,16 @@ static u16 SpeciesToJohtoDexNo(u16 species) { return species < SPECIES_EGG ? spe
 
 int main(void) {
     // The summary and the PC print this with three digits: 1312 came out
-    // as ?12. A female Pyroar is Pyroar, 549 here.
-    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_PYROAR_FEMALE) == SPECIES_PYROAR);
-    assert(SPECIES_PYROAR == 549);
+    // as ?12. A female Pyroar is Pyroar, species 549 here and No. 668.
+    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_PYROAR_FEMALE) == 668);
+    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_PYROAR) == 668);
     // Before the National Dex, a form of a Johto species is that species.
     assert(Pokedex_ConvertToCurrentDexNo(FALSE, SPECIES_MEGA_AMPHAROS) == SpeciesToJohtoDexNo(SPECIES_AMPHAROS));
     for (u16 species = NATIONAL_DEX_COUNT + 1; species <= NUM_SPECIES; species++) {
-        assert(Pokedex_ConvertToCurrentDexNo(TRUE, species) <= NATIONAL_DEX_COUNT);
+        assert(Pokedex_ConvertToCurrentDexNo(TRUE, species) == SpeciesToNationalDexNo(SpeciesToDexSpecies(species)));
     }
     for (u16 species = 1; species <= NATIONAL_DEX_COUNT; species++) {
-        assert(Pokedex_ConvertToCurrentDexNo(TRUE, species) == species);
+        assert(Pokedex_ConvertToCurrentDexNo(TRUE, species) == SpeciesToNationalDexNo(species));
     }
     puts("PASS: every form prints its base species' Dex number.");
     return 0;
@@ -255,7 +255,9 @@ class FormDexTests(unittest.TestCase):
 
     def test_a_form_prints_its_base_number(self):
         source = (ROOT / "src/pokedex.c").read_text()
-        native = (form_table(source) + "\n" + definition(source, "SpeciesToDexSpecies") + "\n"
+        numbers = re.search(r"static const u16 sNationalDexNumbers\[.*?\n\};", source, re.S).group(0)
+        native = (form_table(source) + "\n" + numbers + "\n" + definition(source, "SpeciesToDexSpecies") + "\n"
+                  + definition(source, "SpeciesToNationalDexNo") + "\n"
                   + definition((ROOT / "src/pokedex_util.c").read_text(), "Pokedex_ConvertToCurrentDexNo"))
         print(run(NUMBER.replace("@NATIVE@", native), "newgold-form-number-"))
 

@@ -9,7 +9,7 @@ BOOL SaveArray_IsNatDexEnabled(SaveData *saveData);
 u32 Pokedex_ConvertToCurrentDexNo(BOOL natDexFlag, u32 species);
 
 // The digits a Dex number is printed with. Retail's three stop at 999 and the
-// National Dex here reaches 1041 (Pecharunt); hg-engine prints four in every
+// National Dex here reaches 1025 (Pecharunt); hg-engine prints four in every
 // place retail printed three, and so does this tree: "No. 0025".
 #define DEX_NUMBER_DIGITS 4
 

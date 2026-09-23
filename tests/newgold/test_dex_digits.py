@@ -11,7 +11,7 @@ that print it in text are C, and each must take DEX_NUMBER_DIGITS.
 import re
 import unittest
 
-from test_dex_range import c_function
+from test_dex_range import c_function, run_native
 from test_level_cap import ROOT
 
 # Every routine that turns Pokedex_ConvertToCurrentDexNo's answer into text.
@@ -22,6 +22,50 @@ PRINTERS = {
     "src/application/pokedex/ov18_021EEC34.c": "ov18_021EEC34",  # an entry's pages
     "src/application/pokedex/ov18_021F8CCC.c": "ov18_021F8CCC",  # a new catch's page
 }
+
+
+NATIONAL = r"""
+#include <assert.h>
+#include <stdio.h>
+#include "constants/species.h"
+typedef unsigned short u16;
+typedef unsigned int u32;
+typedef int BOOL;
+#define FALSE 0
+#define TRUE 1
+u16 SpeciesToJohtoDexNo(u16 species) { return species; }
+@NATIVE@
+int main(void) {
+    static int seen[1026];
+    /* Every Dex species outside the gap is one National Dex number, 1..1025,
+       apart from the two Galarian forms kept as species, which share
+       Slowpoke's and Slowbro's. */
+    for (u32 species = 1; species <= NATIONAL_DEX_COUNT; species++) {
+        if (species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP) {
+            continue;
+        }
+        u32 number = Pokedex_ConvertToCurrentDexNo(TRUE, species);
+        assert(number >= 1 && number <= 1025);
+        if (species == SPECIES_SLOWPOKE_GALARIAN || species == SPECIES_SLOWBRO_GALARIAN) {
+            continue;
+        }
+        assert(!seen[number]);
+        seen[number] = 1;
+    }
+    for (u32 number = 1; number <= 1025; number++) {
+        assert(seen[number]);
+    }
+    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_ARCEUS) == 493);
+    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_VICTINI) == 494);
+    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_LILLIPUP) == 506);
+    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_PECHARUNT) == 1025);
+    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_SLOWPOKE_GALARIAN) == 79);
+    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_MEGA_VENUSAUR) == 3);
+    assert(Pokedex_ConvertToCurrentDexNo(FALSE, SPECIES_CHIKORITA) == SPECIES_CHIKORITA);
+    printf("PASS: the Dex prints National Dex numbers 1..1025: Lillipup 506, Pecharunt 1025.\n");
+    return 0;
+}
+"""
 
 
 class DexDigitTests(unittest.TestCase):
@@ -51,6 +95,18 @@ class DexDigitTests(unittest.TestCase):
             if re.search(r"dexNo = Pokedex_ConvertToCurrentDexNo", text):
                 found.add(str(path.relative_to(ROOT)))
         self.assertEqual(found, set(PRINTERS))
+
+    def test_an_added_species_prints_its_national_number(self):
+        """The species New Gold adds were appended after the gap, so their
+        identifier is not their number: Lillipup is species 508 and No. 506.
+        The reference prints National Dex numbers."""
+        pokedex = (ROOT / "src/pokedex.c").read_text()
+        tables = "\n".join(pokedex[pokedex.index(f"static const u16 {name}["):][:pokedex[pokedex.index(f"static const u16 {name}["):].index("};") + 2]
+                           for name in ("sFormBaseSpecies", "sNationalDexNumbers"))
+        util = (ROOT / "src/pokedex_util.c").read_text()
+        native = "\n".join([tables, c_function(pokedex, "SpeciesToDexSpecies"), c_function(pokedex, "SpeciesToNationalDexNo"),
+                            c_function(util, "Pokedex_ConvertToCurrentDexNo")])
+        run_native(self, NATIONAL.replace("@NATIVE@", native), "newgold-dex-national-")
 
 
 if __name__ == "__main__":

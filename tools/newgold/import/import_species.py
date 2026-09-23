@@ -138,6 +138,53 @@ def write_form_bases(reference):
     print(f"wrote {path.relative_to(ROOT)}: {len(forms)} forms and their base species")
 
 
+def national_numbers(reference):
+    """Each species' National Dex number, by name, from the reference.
+
+    The reference numbers a species by its National Dex number below 494 and
+    by that number plus fifty from 544 on (FORM_BLOCK); a form it numbers
+    past SPECIES_MEGA_START has its base species' number.
+    """
+    header = (reference / "include/constants/species.h").read_text()
+    numbered = {name: int(number) for name, number in
+                re.findall(r"^#define SPECIES_([A-Z0-9_]+)\s+(\d+)\b", header, re.M)}
+    out = {name: number if number < FORM_BLOCK.start else number - len(FORM_BLOCK)
+           for name, number in numbered.items()
+           if 1 <= number <= LAST_BASE and number not in FORM_BLOCK}
+    for form, base in dex_species_of(reference).items():
+        if base in out:
+            out.setdefault(form, out[base])
+    return out
+
+
+def write_national_numbers(reference):
+    """Write the table src/pokedex.c gives an added species' National Dex
+    number with.
+
+    Only the species after the Dex gap need it: HeartGold's own are their
+    number, and the added ones were appended rather than placed at theirs.
+    """
+    header = (ROOT / "include/constants/species.h").read_text()
+    numbered = {name: int(number) for name, number in
+                re.findall(r"#define SPECIES_([A-Z0-9_]+)\s+(\d+)", header)}
+    first = numbered[re.search(r"#define LAST_DEX_GAP\s+SPECIES_([A-Z0-9_]+)", header).group(1)] + 1
+    last = numbered[re.search(r"#define LAST_DEX_SPECIES\s+SPECIES_([A-Z0-9_]+)", header).group(1)]
+    names = {number: name for name, number in numbered.items() if first <= number <= last}
+    national = national_numbers(reference)
+    missing = [names[n] for n in range(first, last + 1) if national.get(names.get(n)) is None]
+    if missing:
+        raise SystemExit(f"no National Dex number for: {', '.join(missing)}")
+    rows = "\n".join(f"    [SPECIES_{names[n]} - LAST_DEX_GAP - 1] = {national[names[n]]},"
+                     for n in range(first, last + 1))
+    path = ROOT / "src/pokedex.c"
+    source = path.read_text()
+    start = source.index("static const u16 sNationalDexNumbers[")
+    end = source.index("};", start) + len("};")
+    path.write_text(source[:start] + "static const u16 sNationalDexNumbers[NATIONAL_DEX_COUNT - LAST_DEX_GAP] = {\n"
+                    + rows + "\n};" + source[end:])
+    print(f"wrote {path.relative_to(ROOT)}: {last - first + 1} National Dex numbers")
+
+
 def species_to_add(reference):
     """Those of them this repository has not got yet: the base species first,
     then the forms, each in the reference's order."""
@@ -436,6 +483,7 @@ def main():
         headerPath.write_text(header)
         print(f"wrote {headerPath.relative_to(ROOT)}: NUM_SPECIES is SPECIES_{last}")
     write_form_bases(args.reference)
+    write_national_numbers(args.reference)
     print(constants)
 
 
