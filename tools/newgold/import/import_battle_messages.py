@@ -237,6 +237,13 @@ PORT_ROWS = [
         r"The opposing {STRVAR_1 1, 0, 0} corroded\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!",
         r"The opposing {STRVAR_1 1, 0, 0} corroded\nthe opposing {STRVAR_1 1, 1, 0}’s\f{STRVAR_1 8, 2, 0}!",
     ]),
+    # Chilly Reception's user, before it is said to use the move. The engine
+    # leaves the move unimplemented; the later games' line.
+    ("chilly reception", [
+        r"{STRVAR_1 1, 0, 0} is preparing to tell\na chillingly bad joke!",
+        r"The wild {STRVAR_1 1, 0, 0} is preparing to\ntell a chillingly bad joke!",
+        r"The opposing {STRVAR_1 1, 0, 0} is preparing\nto tell a chillingly bad joke!",
+    ]),
 ]
 
 

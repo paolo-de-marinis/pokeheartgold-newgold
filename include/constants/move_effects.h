@@ -443,5 +443,6 @@
 #define MOVE_EFFECT_DRAGON_CHEER                                 433
 #define MOVE_EFFECT_FAIRY_LOCK                                   434
 #define MOVE_EFFECT_CORROSIVE_GAS                                435
+#define MOVE_EFFECT_SNOW_AND_SWITCH                              436
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

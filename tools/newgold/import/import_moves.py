@@ -458,6 +458,9 @@ IMPLEMENTED_HERE = {
     # Corrosive Gas melts the items of the Pokemon next to its user for the
     # rest of the battle (Pokemon Central, Gas Corrosivo): effect script 435.
     "CORROSIVE_GAS": "MOVE_EFFECT_CORROSIVE_GAS",
+    # Chilly Reception brings snow and sends its user back (Pokemon Central,
+    # Freddura): effect script 436.
+    "CHILLY_RECEPTION": "MOVE_EFFECT_SNOW_AND_SWITCH",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -504,6 +507,9 @@ FIELDS_HERE = {
     # The field's: Protect and Magic Coat have nothing to do with it (Pokemon
     # Central, Blocco Fatato).
     "FAIRY_LOCK": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
+    # The field's weather and the user's switch: Protect and Magic Coat have
+    # nothing to do with it (Pokemon Central, Freddura).
+    "CHILLY_RECEPTION": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
 }
 
 # The effects written here for those moves follow the reference's in

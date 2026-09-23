@@ -676,5 +676,17 @@ int main(void) {
         self.assertIn(f"ctx->buffMsg.id = ctx->moveNoCur == MOVE_CORROSIVE_GAS ? msg_0197_{row:05d} : msg_0197_00552;",
                       function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TryKnockOff"))
 
+    def test_chilly_reception_brings_snow_and_goes_back(self):
+        # Pokemon Central (Freddura): snow, then the user switches out, snow
+        # or no snow; with nobody to come in, the snow alone.
+        import import_battle_messages
+        self.assertImplemented("CHILLY_RECEPTION", "MOVE_EFFECT_SNOW_AND_SWITCH")
+        self.assertFalse(record("CHILLY_RECEPTION")[9] & (1 << 1 | 1 << 2), "FLAG_PROTECT, FLAG_MAGIC_COAT")
+        script = effect_script("MOVE_EFFECT_SNOW_AND_SWITCH")
+        self.assertIn(f"PrintMessage msg_0197_{import_battle_messages.port_row('chilly reception'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER", script)
+        self.assertIn("FIELD_CONDITION_SNOW_TEMP, _SWITCH\n    Call BATTLE_SUBSCRIPT_HANDLE_SNOW_TEMPORARY", script)
+        self.assertLess(script.index("HANDLE_SNOW_TEMPORARY"), script.index("TryReplaceFaintedMon BATTLER_CATEGORY_ATTACKER, TRUE, _END"))
+        self.assertIn("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST", script)
+
 if __name__ == "__main__":
     unittest.main()
