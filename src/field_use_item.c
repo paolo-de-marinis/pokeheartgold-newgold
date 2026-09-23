@@ -143,6 +143,7 @@ static const struct ItemUseFuncDat sItemFieldUseFuncs[] = {
     { NULL,                        NULL,                         ItemCheckUseFunc_Dummy      },
     { NULL,                        NULL,                         ItemCheckUseFunc_Dummy      },
     { ItemMenuUseFunc_FormChange,  NULL,                         NULL                        }, // Nectars
+    { ItemMenuUseFunc_FormChange,  NULL,                         NULL                        }, // Rotom Catalog
 };
 
 void *GetItemFieldUseFunc(int funcType, u16 itemType) {

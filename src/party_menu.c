@@ -2511,6 +2511,79 @@ static u16 ItemFormChangeSpecies(u16 itemId, u16 species) {
     return SPECIES_NONE;
 }
 
+// The Rotom Catalog's appliances in the order its list shows them, and the
+// form each gives (hg-engine's sPartyMenuRotomCatalogFormOrder). In a list of
+// seven the party menu's fourth button is the small one in the corner, where
+// QUIT always is, so the fourth entry is QUIT.
+#define ROTOM_CATALOG_QUIT 0
+static const u16 sRotomCatalogMessages[] = {
+    msg_0300_00221, // Refrigerator
+    msg_0300_00222, // Electric Fan
+    msg_0300_00223, // Lawn Mower
+    ROTOM_CATALOG_QUIT,
+    msg_0300_00224, // Light Bulb
+    msg_0300_00225, // Microwave Oven
+    msg_0300_00226, // Washing Machine
+};
+static const u8 sRotomCatalogForms[] = {
+    ROTOM_FROST,
+    ROTOM_FAN,
+    ROTOM_MOW,
+    ROTOM_NORMAL,
+    ROTOM_NORMAL,
+    ROTOM_HEAT,
+    ROTOM_WASH,
+};
+
+static void PartyMonContextMenuAction_RotomCatalog(PartyMenu *partyMenu, int *pState) {
+    // The form change scene takes the form from here, as it takes Shaymin's.
+    partyMenu->args->species = sRotomCatalogForms[partyMenu->contextMenuButtonAnim.selection];
+    PartyMenu_SetTopScreenSelectionPanelVisibility(partyMenu, FALSE);
+    ClearFrameAndWindow2(&partyMenu->windows[PARTY_MENU_WINDOW_ID_33], TRUE);
+    PartyMenu_DeleteContextMenuAndList(partyMenu);
+    PartyMenu_DisableMainScreenBlend_AfterYesNo();
+    thunk_Sprite_SetPaletteOverride(partyMenu->sprites[PARTY_MENU_SPRITE_ID_CURSOR], 0);
+    PartyMenu_FormChangeScene_Begin(partyMenu);
+    *pState = PARTY_MENU_STATE_FORM_CHANGE_ANIM;
+}
+
+// hg-engine's PartyMenu_ShowRotomCatalogList, laid out as the party menu lays
+// out any other list of seven: "Order which appliance?" where "Do what with"
+// goes, QUIT on the corner button, which cancels back to choosing a Pokemon.
+static void PartyMenu_ShowRotomCatalog(PartyMenu *partyMenu) {
+    PartyMenuContextMenu contextMenu;
+    String *string;
+    int i;
+
+    ClearFrameAndWindow2(&partyMenu->windows[PARTY_MENU_WINDOW_ID_32], TRUE);
+    sub_0207E068(partyMenu);
+    PartyMenu_SetTopScreenMonIconSprite(partyMenu, partyMenu->partyMonIndex);
+    PartyMenu_SetTopScreenSelectionPanelVisibility(partyMenu, TRUE);
+    partyMenu->listMenuItems = ListMenuItems_New(NELEMS(sRotomCatalogForms), HEAP_ID_PARTY_MENU);
+    for (i = 0; i < NELEMS(sRotomCatalogForms); i++) {
+        if (sRotomCatalogMessages[i] == ROTOM_CATALOG_QUIT) {
+            ListMenuItems_AddItem(partyMenu->listMenuItems, partyMenu->contextMenuStrings[PARTY_MON_CONTEXT_MENU_QUIT], GetPartyMenuContextMenuActionFunc(PARTY_MON_CONTEXT_MENU_QUIT));
+        } else {
+            string = NewString_ReadMsgData(partyMenu->msgData, sRotomCatalogMessages[i]);
+            ListMenuItems_AddItem(partyMenu->listMenuItems, string, (u32)PartyMonContextMenuAction_RotomCatalog);
+            String_Delete(string);
+        }
+    }
+    contextMenu.items = partyMenu->listMenuItems;
+    contextMenu.window = &partyMenu->levelUpStatsWindow[0];
+    contextMenu.unk_08 = 0;
+    contextMenu.unk_09 = 1;
+    contextMenu.numItems = NELEMS(sRotomCatalogForms);
+    contextMenu.unk_0B_0 = 0;
+    contextMenu.unk_0B_4 = 0;
+    contextMenu.scrollEnabled = 1;
+    sub_0207E54C(partyMenu, contextMenu.numItems, 0, 0);
+    partyMenu->contextMenuCursor = PartyMenu_CreateContextMenuCursor(partyMenu, &contextMenu, 0, HEAP_ID_PARTY_MENU, 0);
+    ReadMsgDataIntoString(partyMenu->msgData, msg_0300_00220, partyMenu->formattedStrBuf);
+    PartyMenu_PrintMessageOnWindow33(partyMenu, -1, TRUE);
+    thunk_Sprite_SetPaletteOverride(partyMenu->sprites[PARTY_MENU_SPRITE_ID_CURSOR], 1);
+}
+
 static int PartyMenu_HandleUseItemOnMon(PartyMenu *partyMenu) {
     ItemData *itemData = LoadItemDataOrGfx(partyMenu->args->itemId, ITEMNARC_PARAM, HEAP_ID_PARTY_MENU);
     u16 formSpecies;
@@ -2525,6 +2598,14 @@ static int PartyMenu_HandleUseItemOnMon(PartyMenu *partyMenu) {
         Heap_Free(itemData);
         PartyMenu_FormChangeScene_Begin(partyMenu);
         return PARTY_MENU_STATE_FORM_CHANGE_ANIM;
+    }
+
+    // An egg's contents are not asked, which hg-engine's CanUseRotomCatalog
+    // does: an egg is not a Rotom yet.
+    if (partyMenu->args->itemId == ITEM_ROTOM_CATALOG && GetMonData(Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex), MON_DATA_SPECIES_OR_EGG, NULL) == SPECIES_ROTOM) {
+        Heap_Free(itemData);
+        PartyMenu_ShowRotomCatalog(partyMenu);
+        return PARTY_MENU_STATE_HANDLE_CONTEXT_MENU_INPUT;
     }
 
     formSpecies = ItemFormChangeSpecies(partyMenu->args->itemId, GetMonData(Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex), MON_DATA_SPECIES_OR_EGG, NULL));

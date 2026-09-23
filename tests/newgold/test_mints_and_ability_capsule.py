@@ -209,9 +209,9 @@ int main(void) {
 
 # The records konefr give one of the six routines. Two of those routines open
 # the party menu, which is routine 1 here. The other four change a form --
-# Reveal Glass, DNA Splicers, the Nectars, the Rotom Catalog. The Reveal Glass
-# and the Nectars are ported (test_form_change_items.py); the ones still at
-# routine 0 are STILL_INERT. DNA Splicers needs save space for the Reshiram or
+# Reveal Glass, DNA Splicers, the Nectars, the Rotom Catalog. The Reveal Glass,
+# the Nectars and the Rotom Catalog are ported (test_form_change_items.py); the
+# ones still at routine 0 are STILL_INERT. DNA Splicers needs save space for the Reshiram or
 # Zekrom it absorbs. Porting one takes it out of STILL_INERT; the list may only
 # shrink.
 PARTY_MENU_FIELD_USE = 1
@@ -221,7 +221,7 @@ MINTS = [f"ITEM_{name}_MINT" for name in (
     "QUIET CALM GENTLE CAREFUL SASSY TIMID HASTY JOLLY NAIVE SERIOUS").split()]
 FORM_CHANGE_ITEMS = ["ITEM_REVEAL_GLASS", "ITEM_DNA_SPLICERS_FUSE", "ITEM_ROTOM_CATALOG",
                      "ITEM_RED_NECTAR", "ITEM_YELLOW_NECTAR", "ITEM_PINK_NECTAR", "ITEM_PURPLE_NECTAR"]
-STILL_INERT = ["ITEM_DNA_SPLICERS_FUSE", "ITEM_ROTOM_CATALOG"]
+STILL_INERT = ["ITEM_DNA_SPLICERS_FUSE"]
 
 
 def records():
@@ -248,7 +248,7 @@ class ItemRecords(unittest.TestCase):
         inert = [item for item in FORM_CHANGE_ITEMS
                  if int(rows[item]["fieldUseFunc"]) == GENERIC_FIELD_USE]
         self.assertEqual(inert, STILL_INERT)
-        self.assertLessEqual(len(STILL_INERT), 2)
+        self.assertLessEqual(len(STILL_INERT), 1)
 
     def test_the_mint_ids_are_one_unbroken_run(self):
         """src/party_menu.c indexes sMintNatures by itemId - ITEM_LONELY_MINT."""

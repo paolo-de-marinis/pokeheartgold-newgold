@@ -215,7 +215,7 @@ FIELD_USE_ROUTINES = {
     32: PARTY_MENU_FIELD_USE,  # Ability Capsule
     33: PARTY_MENU_FIELD_USE,  # Mint
     34: 34,                    # Nectar
-    35: GENERIC_FIELD_USE,     # Rotom Catalog -- needs the appliance list menu
+    35: 35,                    # Rotom Catalog
 }
 
 FIELD_USE_FUNCS = field_use_funcs()

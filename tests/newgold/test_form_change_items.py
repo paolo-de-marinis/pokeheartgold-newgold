@@ -47,9 +47,30 @@ class FormChangeRoutines(unittest.TestCase):
             self.assertEqual(int(rows[item]["fieldUseFunc"]), routine, item)
             self.assertEqual(table[routine], "ItemMenuUseFunc_FormChange", item)
 
+    def test_the_rotom_catalog_opens_the_party_menu(self):
+        self.assertEqual(int(records()["ITEM_ROTOM_CATALOG"]["fieldUseFunc"]), 35)
+        self.assertEqual(routines()[35], "ItemMenuUseFunc_FormChange")
+
+    def test_the_catalog_lists_each_appliance_with_its_form(self):
+        """Refrigerator Frost, fan Fan, mower Mow, QUIT on the corner button,
+        light bulb back to Rotom, microwave Heat, washing machine Wash."""
+        source = (ROOT / "src/party_menu.c").read_text()
+        body = source[source.index("sRotomCatalogMessages[] = {"):]
+        messages = re.findall(r"(msg_0300_\d+|ROTOM_CATALOG_QUIT)", body[:body.index("};")])
+        body = source[source.index("sRotomCatalogForms[] = {"):]
+        forms = re.findall(r"(ROTOM_\w+)", body[:body.index("};")])
+        gmm = (ROOT / "files/msgdata/msg/msg_0300.gmm").read_text()
+        text = dict(re.findall(r'<row id="(msg_0300_\d+)".*?<language name="English">(.*?)</language>', gmm, re.S))
+        listed = [(text.get(message, "QUIT"), form) for message, form in zip(messages, forms)]
+        self.assertEqual(listed, [
+            ("Refrigerator", "ROTOM_FROST"), ("Electric Fan", "ROTOM_FAN"), ("Lawn Mower", "ROTOM_MOW"),
+            ("QUIT", "ROTOM_NORMAL"), ("Light Bulb", "ROTOM_NORMAL"), ("Microwave Oven", "ROTOM_HEAT"),
+            ("Washing Machine", "ROTOM_WASH")])
+
     def test_the_scene_changes_the_species_it_is_given(self):
         scene = function((ROOT / "src/overlay_94.c").read_text(), "PartyMenu_AnimateIconFormChange")
         self.assertIn("Mon_ChangeFormSpecies(mon, partyMenu->args->species);", scene)
+        self.assertIn("Mon_UpdateRotomForm(mon, partyMenu->args->species, 0);", scene)
 
 
 NATIVE = r"""
