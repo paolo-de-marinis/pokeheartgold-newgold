@@ -9,9 +9,9 @@ the save is decompiled here, so it can be prepared instead.
 Nothing here is a guessed offset. The block table is the one
 SaveData_InitSubstructs builds, measured out of the built ROM by save_budget;
 the flash mapping is GetChunkOffsetFromCurrentSaveSlot; the two checksums are
-SaveSubstruct_UpdateCRC and SaveSlot_BuildFooter; and every field offset is
-computed by the host compiler from this repository's headers, then checked
-against the size the ROM itself reports. Where a field is packed rather than
+SaveSubstruct_UpdateCRC and SaveSlot_BuildFooter; and every size, offset
+and limit of the save is what the host compiler makes of this repository's
+headers as they are now (_layout). Where a field is packed rather than
 declared -- the badges are the case -- the code that packs it is named.
 
 Usage:
@@ -43,34 +43,11 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parent / "harness"))
 import save_budget  # noqa: E402
 
-LANGUAGE_ENGLISH = 2            # include/config.h
-VERSION_HEARTGOLD = 7           # include/config.h
-GENDER_RATIO = lambda frac: int(frac * 254.75) if frac <= 1 else 255
-PLAYER_NAME_LENGTH = 7          # include/constants/global.h
-POKEMON_NAME_LENGTH = 10        # include/constants/global.h
-PARTY_SIZE = 6                  # include/constants/pokemon.h
-BOX_MON = 0x88                  # sizeof(BoxPokemon)
-PARTY_MON = 0xEC                # sizeof(Pokemon)
-BLOCK = 0x20                    # sizeof(PokemonDataBlockA), and of B, C and D
+GENDER_RATIO = lambda frac: int(frac * 254.75) if frac <= 1 else 255   # GENDER_RATIO, constants/pokemon.h
 HALF = 0x40000                  # GetChunkOffsetFromCurrentSaveSlot
-LOCATION = 20                   # sizeof(Location): mapId, warpId, x, y, direction
-NUM_VARS = 0x170                # include/constants/vars.h; the flags follow the vars
-FLAG_CONTINUE_BY_WARP = 0x966   # FLAG_UNK_966, read by CallFieldTask_ContinueGame_Normal
-CHUNK_MAGIC = 0x20060623        # SAVE_CHUNK_MAGIC
-CHUNK_FOOTER = 16               # sizeof(struct SaveChunkFooter)
-ARRAY_FOOTER = 16               # sizeof(struct SaveArrayFooter)
-FOOTER_CRC_AT = 14              # offsetof(struct SaveArrayFooter, crc)
-FLASH = 512 * 1024
-PAGES_PER_HALF = 64             # the flash is erased in two halves
-# PLAYERDATA is { Options options; PlayerProfile profile; ... } and
-# Save_PlayerData_GetProfile is "adds r0, #4" after fetching the block, so
-# the profile starts four bytes in. PlayerProfile then begins with
-# name[PLAYER_NAME_LENGTH + 1] and PlayerProfile_GetNamePtr is a bare
-# "bx lr", so the name is at the profile's own start.
-PROFILE = 4
-NAME = PROFILE
-TRAINER_ID = PROFILE + 2 * (PLAYER_NAME_LENGTH + 1)
-JOHTO_BADGES = TRAINER_ID + 4 + 4 + 2
+FLASH = 2 * HALF                # the two halves the game saves in by turns
+# Every other size, offset and limit of the save is read from the headers
+# by _layout(), below, and set again when one changes.
 
 
 # What the game data is, read from the tree as it is now. A reader's result
@@ -107,6 +84,7 @@ def fresh():
         _READ.clear()
         for fn in _CACHES:
             fn.cache_clear()
+        globals().update(_layout())
 
 
 @tree_cache
@@ -114,6 +92,156 @@ def constants(header, prefix):
     """Every #define with the prefix, by name."""
     text = source(header).read_text()
     return {m.group(1): int(m.group(2), 0) for m in re.finditer(rf"#define ({prefix}\w+)\s+(0x[0-9A-Fa-f]+|\d+)", text)}
+
+
+# ---------------------------------------------------------------------------
+# The save's layout, as this tree's headers give it: the host compiler reads
+# them the way config.mk has the game's read -- its defines, 32-bit pointers,
+# signed char, C89 -- and says what each size, offset and constant comes to.
+# _layout() puts them in this module's names; fresh() does it again when a
+# header has changed since.
+
+LAYOUT_HEADERS = ("global.h", "constants/global.h", "constants/pokemon.h", "constants/species.h",
+                  "constants/items.h", "constants/vars.h", "constants/flags.h", "constants/mail.h",
+                  "constants/easy_chat.h", "constants/charcode.h", "pokemon_types_def.h", "bag_types_def.h",
+                  "pokedex.h", "player_data.h", "pokemon_storage_system.h", "save.h", "save_vars_flags.h",
+                  "field_types_def.h", "terrain_attributes.h")
+
+
+@tree_cache
+def build_defines():
+    """The -D flags config.mk gives the compiler, for the game it builds
+    when nothing else is said (its ?= defaults)."""
+    mk = source("config.mk").read_text()
+    defaults = dict(re.findall(r"^(\w+)\s*\?=\s*(\S+)", mk, re.M))
+    flags = []
+    for var in ("GF_DEFINES", "GLB_DEFINES"):
+        line = re.search(rf"^{var}\s*:=\s*(.*)$", mk, re.M).group(1)
+        flags += re.sub(r"\$\((\w+)\)", lambda m: defaults[m.group(1)], line).split()
+    return flags
+
+
+@tree_cache
+def compile_c(exprs=(), inits=(), headers=LAYOUT_HEADERS):
+    """What the host compiler makes of the headers: each of `exprs`, a C
+    constant expression, as a number, and each of `inits`, a (type,
+    designated initializer) pair, as the bytes of that value -- which is
+    where a bitfield sits. Nothing is run: the values are read out of the
+    assembly the compiler writes. Every header it read is noted for fresh()."""
+    lines = [f'#include "{h}"' for h in headers]
+    lines.append(f"const unsigned int probe_values[] = {{ {', '.join(f'(unsigned int)({e})' for e in exprs) or 0} }};")
+    for i, (kind, init) in enumerate(inits):
+        lines.append(f"const union {{ {kind} v; unsigned char raw[sizeof({kind})]; }} probe_init_{i} = "
+                     f"{{ .v = {{ {init} }} }};")
+    with tempfile.TemporaryDirectory() as tmp:
+        c = Path(tmp) / "probe.c"
+        c.write_text("\n".join(lines) + "\n")
+        run = subprocess.run(["cc", "-std=gnu89", "-m32", "-fsigned-char", "-w", "-S", "-o", "-", "-MD", "-MF",
+                              str(Path(tmp) / "probe.d"), *build_defines(), str(c),
+                              *(f"-I{ROOT / d}" for d in ("include", "include/library", "files", "lib/include"))],
+                             capture_output=True, text=True)
+        if run.returncode:
+            raise SystemExit(f"the host compiler could not read the headers:\n{run.stderr[:1200]}")
+        for dep in (Path(tmp) / "probe.d").read_text().replace("\\\n", " ").split()[1:]:
+            if Path(dep).resolve().is_relative_to(ROOT):
+                source(Path(dep).resolve().relative_to(ROOT))
+    data, symbol = {}, None
+    for line in run.stdout.splitlines():
+        label = re.fullmatch(r"(probe_\w+):", line)
+        if label:
+            symbol = data.setdefault(label.group(1), bytearray())
+            continue
+        directive = re.fullmatch(r"\s*\.(long|value|short|byte|zero|quad)\s+(-?\w+)", line)
+        if symbol is not None and directive:
+            kind, value = directive.group(1), int(directive.group(2), 0)
+            if kind == "zero":
+                symbol += bytes(value)
+            else:
+                size = {"long": 4, "value": 2, "short": 2, "byte": 1, "quad": 8}[kind]
+                symbol += (value % (1 << 8 * size)).to_bytes(size, "little")
+        elif not line.startswith("\t."):
+            symbol = None
+    values = list(struct.unpack(f"<{len(exprs)}I", bytes(data["probe_values"][:4 * len(exprs)])))
+    return values, [bytes(data[f"probe_init_{i}"]) for i in range(len(inits))]
+
+
+def set_bit(raw):
+    """(byte, bit) of the first bit set in an initialized value's bytes."""
+    at = next(i for i, b in enumerate(raw) if b)
+    return at, (raw[at] & -raw[at]).bit_length() - 1
+
+
+def _layout():
+    """The save's layout, by the names this module uses for it."""
+    offset = "__builtin_offsetof"
+    names = {
+        "GAME_VERSION": "GAME_VERSION", "GAME_LANGUAGE": "GAME_LANGUAGE",
+        "PLAYER_NAME_LENGTH": "PLAYER_NAME_LENGTH", "POKEMON_NAME_LENGTH": "POKEMON_NAME_LENGTH",
+        "PARTY_SIZE": "PARTY_SIZE", "EOS": "EOS",
+        "BOX_MON": "sizeof(BoxPokemon)", "PARTY_MON": "sizeof(Pokemon)", "BLOCK": "sizeof(PokemonDataBlock)",
+        "LOCATION": "sizeof(Location)",
+        "CHUNK_MAGIC": "SAVE_CHUNK_MAGIC", "CHUNK_FOOTER": "sizeof(struct SaveChunkFooter)",
+        "CHUNK_CRC_AT": f"{offset}(struct SaveChunkFooter, crc)",
+        "ARRAY_FOOTER": "sizeof(struct SaveArrayFooter)", "FOOTER_CRC_AT": f"{offset}(struct SaveArrayFooter, crc)",
+        # SAVE_PLAYERDATA: the options, the profile, the coins, the play time.
+        "PROFILE": f"{offset}(PLAYERDATA, profile)", "NAME_IN_PROFILE": f"{offset}(PlayerProfile, name)",
+        "ID_IN_PROFILE": f"{offset}(PlayerProfile, id)", "MONEY_IN_PROFILE": f"{offset}(PlayerProfile, money)",
+        "GENDER_IN_PROFILE": f"{offset}(PlayerProfile, gender)",
+        "JOHTO_IN_PROFILE": f"{offset}(PlayerProfile, johtoBadges)",
+        "KANTO_IN_PROFILE": f"{offset}(PlayerProfile, kantoBadges)",
+        "COINS": f"{offset}(PLAYERDATA, coins)", "PLAY_TIME": f"{offset}(PLAYERDATA, igt)",
+        "MAX_MONEY": "MAX_MONEY", "MAX_COINS": "MAX_COINS",
+        # SAVE_FLAGS: the variables, then the flags. FLAG_UNK_966 is the one
+        # CallFieldTask_ContinueGame_Normal reads: Continue warps in.
+        "NUM_VARS": "NUM_VARS", "VAR_BASE": "VAR_BASE", "FLAGS_AT": f"{offset}(SaveVarsFlags, flags)",
+        "FLAG_CONTINUE_BY_WARP": "FLAG_UNK_966",
+        # SAVE_POKEDEX, whose flag words NATIONAL_DEX_COUNT sizes.
+        "NATIONAL_DEX_COUNT": "NATIONAL_DEX_COUNT", "FIRST_DEX_GAP": "FIRST_DEX_GAP", "LAST_DEX_GAP": "LAST_DEX_GAP",
+        "DEX_CAUGHT": f"{offset}(Pokedex, caughtSpecies)", "DEX_SEEN": f"{offset}(Pokedex, seenSpecies)",
+        "DEX_ENABLED": f"{offset}(Pokedex, dexEnabled)", "DEX_NATIONAL": f"{offset}(Pokedex, nationalDex)",
+        "UNOWN_SEEN": f"{offset}(Pokedex, unownSeenOrder)", "UNOWN_CAUGHT": f"{offset}(Pokedex, unownCaughtOrder)",
+        # SAVE_PCSTORAGE.
+        "NUM_BOXES": "NUM_BOXES", "MONS_PER_BOX": "MONS_PER_BOX", "BOX_NAME_LENGTH": "BOX_NAME_LENGTH",
+        "BOX": "sizeof(PC_BOX)", "CURRENT_BOX": f"{offset}(struct PokemonStorageSystem, curBox)",
+        "BOX_MODIFIED": f"{offset}(struct PokemonStorageSystem, boxModifiedFlag)",
+        "BOX_NAMES": f"{offset}(struct PokemonStorageSystem, box_names)",
+        # SAVE_PARTY: PartyCore's counts and Pokemon, then PartyExtra's
+        # Apricorn juice records.
+        "PARTY_COUNT_AT": f"{offset}(PartyCore, curCount)", "PARTY_AT": f"{offset}(PartyCore, mons)",
+        "PARTY_EXTRA": f"{offset}(Party, extra)", "PERFORMANCE_MAX": "sizeof(PartyExtraSub)",
+        "MAIL_AT": f"{offset}(PartyPokemon, mail)",
+        # Mail_Init's values, and the ball a Pokemon made here comes in.
+        "PLAYER_GENDER_MALE": "PLAYER_GENDER_MALE", "MAIL_NONE": "MAIL_NONE", "MAILMSG_BANK_NONE": "MAILMSG_BANK_NONE",
+        "MAILMSG_FIELDS_MAX": "MAILMSG_FIELDS_MAX", "EC_WORD_NULL": "EC_WORD_NULL", "ITEM_POKE_BALL": "ITEM_POKE_BALL",
+        # The bits a Pokemon keeps its hidden ability and its Capsule in.
+        "HIDDEN_ABILITY_BIT": "MON_HIDDEN_ABILITY_BIT", "SWAP_ABILITY_BIT": "MON_SWAP_ABILITY_SLOT_BIT",
+        "CHUNK_TILES": "MAP_TILES_COUNT_X",
+    }
+    values, (natdex,) = compile_c(tuple(names.values()), (("PlayerProfile", ".natDex = 1"),))
+    out = dict(zip(names, values))
+    at = out["PROFILE"]
+    out.update(NAME=at + out["NAME_IN_PROFILE"], TRAINER_ID=at + out["ID_IN_PROFILE"], MONEY=at + out["MONEY_IN_PROFILE"],
+               GENDER=at + out["GENDER_IN_PROFILE"], JOHTO_BADGES=at + out["JOHTO_IN_PROFILE"],
+               KANTO_BADGES=at + out["KANTO_IN_PROFILE"])
+    byte, bit = set_bit(natdex)
+    out.update(PROFILE_FLAGS=at + byte, NATDEX_MASK=1 << bit)
+    out["MINT_MASK"] = constants("src/pokemon.c", "MON_MINT_")["MON_MINT_NATURE_MASK"]   # pokemon.c's own
+    out["PAGES_PER_HALF"] = HALF // save_budget.SAVE_SECTOR_SIZE
+    # ZeroMonData: zeroes, "encrypted" under a checksum and a personality of 0.
+    out["EMPTY_BOX_MON"] = bytes(8) + mon_crypt(bytes(out["BOX_MON"] - 8), 0)
+    out["EMPTY_PARTY_MON"] = out["EMPTY_BOX_MON"] + mon_crypt(bytes(out["PARTY_MON"] - out["BOX_MON"]), 0)
+    # PartyPokemon.mail as Mail_Init leaves it -- CreateMon and the
+    # box-to-party copy both run it: no author (a name all EOS), MAIL_NONE,
+    # no icons, and three MailMsg_Init messages (MAILMSG_BANK_NONE, the words
+    # EC_WORD_NULL, the number left alone). An all-zero one has an author
+    # name with no EOS, and reading a Mail held on it ends in
+    # CopyU16ArrayToString's assertion and the error screen.
+    name, fields = out["PLAYER_NAME_LENGTH"] + 1, out["MAILMSG_FIELDS_MAX"]
+    message = struct.pack(f"<HH{fields}H", out["MAILMSG_BANK_NONE"], 0, *[out["EC_WORD_NULL"]] * fields)
+    out["MAIL_INIT"] = struct.pack(f"<IBBBB{name}H3HH", 0, out["PLAYER_GENDER_MALE"], out["GAME_LANGUAGE"],
+                                   out["GAME_VERSION"], out["MAIL_NONE"], *[out["EOS"]] * name, *[0xFFFF] * 3,
+                                   0) + message * 3
+    return out
 
 
 def crc16(data, crc=0xFFFF):
@@ -352,7 +480,7 @@ def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
     struct.pack_into("<I", a, 8, (exp & 0x1FFFFF) | ((ability >> 8) << 31))
     a[0x0C] = record["friendship"]
     a[0x0D] = ability & 0xFF
-    a[0x0F] = LANGUAGE_ENGLISH
+    a[0x0F] = GAME_LANGUAGE
     for i in range(6):
         a[0x10 + i] = evs[i] if isinstance(evs, (list, tuple)) else evs
 
@@ -370,7 +498,7 @@ def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
     c = bytearray(BLOCK)
     for i, code in enumerate(charcode(species_name.replace("_", ""))[:POKEMON_NAME_LENGTH + 1]):
         struct.pack_into("<H", c, 2 * i, code)
-    c[0x17] = VERSION_HEARTGOLD
+    c[0x17] = GAME_VERSION
 
     d = bytearray(BLOCK)
     # The original trainer is who the game compares with the player to decide
@@ -379,9 +507,9 @@ def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
     # the party is the player's.
     for i, code in enumerate(ot_codes if ot_codes is not None else charcode(ot_name)):
         struct.pack_into("<H", d, 2 * i, code)
-    d[0x1B] = 4                             # ITEM_POKE_BALL
+    d[0x1B] = ITEM_POKE_BALL
     d[0x1C] = (level & 0x7F) | ((ot_gender & 1) << 7)
-    d[0x1E] = 4
+    d[0x1E] = ITEM_POKE_BALL
 
     order = shuffle_order(personality)
     blocks_in_place = [None] * 4
@@ -452,38 +580,10 @@ def put_in_pocket(block, pocket, item, quantity):
     raise SystemExit(f"the {pocket} pocket is full")
 
 
-# struct Pokedex. NUM_DEX_FLAG_WORDS is CEILDIV(NATIONAL_DEX_COUNT + 8, 32),
-# and the offsets below follow include/pokedex.h. The count is read from the
-# header, since it has moved twice: it was 574 when this was first written,
-# and a number typed here would put every Dex flag in the wrong word.
-def _national_dex_count():
-    header = (ROOT / "include/constants/species.h").read_text()
-    name = re.search(r"#define NATIONAL_DEX_COUNT\s+(\w+)", header).group(1)
-    while not name.startswith("SPECIES_"):
-        name = re.search(rf"#define {name}\s+(\w+)", header).group(1)
-    return int(re.search(rf"#define {name}\s+(\d+)", header).group(1))
-
-
-NATIONAL_DEX_COUNT = _national_dex_count()
-DEX_WORDS = (NATIONAL_DEX_COUNT + 8 + 31) // 32
-DEX_CAUGHT = 4
-DEX_SEEN = DEX_CAUGHT + 4 * DEX_WORDS
-DEX_GENDERS = DEX_SEEN + 4 * DEX_WORDS
-DEX_ENABLED = (4 + 4 * DEX_WORDS * 4 + 4 + 4 + 28 + 28
-               + ((NATIONAL_DEX_COUNT + 3) & ~3) + 2)
-DEX_NATIONAL = DEX_ENABLED + 1
-
-
 def set_dex_flag(block, at, species):
     """SetDexFlag: the species number, counted from one."""
     flag = species - 1
     block[at + (flag >> 3)] |= 1 << (flag & 7)
-
-
-# struct PokemonStorageSystem. A box is thirty BoxPokemon and sixteen spare
-# bytes, which is exactly 0x1000, so thirty boxes end at 0x1E000.
-BOX = 0x1000
-BOX_NAME_LENGTH = 20
 
 
 def blocks(build=None, legacy=False):
@@ -642,7 +742,7 @@ class Save:
         for spec in self.specs:
             if spec["slot"] in slots:
                 at = spec["offset"] + spec["size"] - CHUNK_FOOTER
-                struct.pack_into("<H", region, at + 14, crc16(region[spec["offset"]:at]))
+                struct.pack_into("<H", region, at + CHUNK_CRC_AT, crc16(region[spec["offset"]:at]))
         raw = bytearray(self.raw)
         raw[self.half:self.half + HALF] = region
         return bytes(raw)
@@ -783,7 +883,7 @@ def set_party(save, wanted):
     for slot, (name, level, nature, moves) in enumerate(wanted):
         mon = build_mon(name, level, nature=nature, moves=moves,
                         ot_codes=me["codes"], ot_id=me["id"], ot_gender=me["gender"])
-        block[8 + slot * PARTY_MON:8 + (slot + 1) * PARTY_MON] = mon
+        block[PARTY_AT + slot * PARTY_MON:PARTY_AT + (slot + 1) * PARTY_MON] = mon
 
 
 def add_machines(save, machines):
@@ -809,8 +909,8 @@ def mark_dex(save, names):
 
 def put_in_box(save, number, name, level):
     """--box: the first slot of box `number`, counted from one."""
-    if not 1 <= number <= 30:
-        raise SystemExit("boxes are numbered one to thirty")
+    if not 1 <= number <= NUM_BOXES:
+        raise SystemExit(f"boxes are numbered 1 to {NUM_BOXES}")
     block = save.block("SAVE_PCSTORAGE")
     at = (number - 1) * BOX
     block[at:at + BOX_MON] = build_mon(name.upper(), int(level))[:BOX_MON]
@@ -844,7 +944,7 @@ def set_flag(save, name):
     number = constants("include/constants/flags.h", "FLAG_").get(name)
     if number is None:
         raise SystemExit(f"there is no {name} in include/constants/flags.h")
-    flags[NUM_VARS * 2 + number // 8] |= 1 << (number % 8)
+    flags[FLAGS_AT + number // 8] |= 1 << (number % 8)
     return number
 
 
@@ -863,7 +963,7 @@ def set_position(save, map_id, x, y, direction=0):
     # the follower and the map's objects from the zone data instead.
     struct.pack_into("<iiiii", block, 3 * LOCATION, map_id, -1, x, y, direction)
     flags = save.block("SAVE_FLAGS")
-    flags[NUM_VARS * 2 + FLAG_CONTINUE_BY_WARP // 8] |= 1 << (FLAG_CONTINUE_BY_WARP % 8)
+    flags[FLAGS_AT + FLAG_CONTINUE_BY_WARP // 8] |= 1 << (FLAG_CONTINUE_BY_WARP % 8)
 
 
 # ---------------------------------------------------------------------------
@@ -952,7 +1052,7 @@ def species_table():
     by_id = {}
     for name, number in numbers.items():
         by_id.setdefault(number, name)
-    gap = range(numbers["EGG"], numbers["ROTOM_MOW"] + 1)
+    gap = range(FIRST_DEX_GAP, LAST_DEX_GAP + 1)
     out, named = [], set()
     for number in range(1, min(len(bank(SPECIES_NAMES)), len(personal_records()))):
         const, name = by_id.get(number, ""), species_name(number)
@@ -1015,7 +1115,6 @@ def map_table():
 
 
 MATRICES = ROOT / "files/fielddata/mapmatrix/map_matrix"
-CHUNK_TILES = 32                # a map chunk is 32 by 32 tiles
 
 
 @tree_cache
@@ -1060,22 +1159,7 @@ def on_map(map_id, x, y):
 # One Pokemon, opened and closed the way AcquireBoxMonLock and
 # ReleaseBoxMonLock do it.
 
-# ZeroMonData: zeroes, "encrypted" under a checksum and a personality of 0.
-EMPTY_BOX_MON = bytes(8) + mon_crypt(bytes(4 * BLOCK), 0)
-EMPTY_PARTY_MON = EMPTY_BOX_MON + mon_crypt(bytes(PARTY_MON - BOX_MON), 0)
-MINT_MASK = 0x3E            # MON_MINT_NATURE_MASK in blockB->unused2
-SWAP_ABILITY_BIT = 1        # MON_SWAP_ABILITY_SLOT_BIT, the Ability Capsule's
-HIDDEN_ABILITY_BIT = 1      # MON_HIDDEN_ABILITY_BIT in blockB->unused1
 EXP_BITS = 0x1FFFFF         # PokemonDataBlockA.exp : 21
-# PartyPokemon.mail, after the status, the level, the capsule, the HP and
-# the five stats, as Mail_Init leaves it -- CreateMon and the box-to-party
-# copy both run it: no author (name all EOS), MAIL_NONE, no icons, and three
-# MailMsg_Init messages (bank MAILMSG_BANK_NONE, words EC_WORD_NULL). An
-# all-zero one has an author name with no EOS, and reading a Mail held on
-# it ends in CopyU16ArrayToString's assertion and the error screen.
-MAIL_AT = 0x14
-MAIL_INIT = (struct.pack("<IBBBB8H3HH", 0, 0, LANGUAGE_ENGLISH, VERSION_HEARTGOLD, 0xFF, *[0xFFFF] * 11, 0)
-             + struct.pack("<4H", 0xFFFF, 0, 0xFFFF, 0xFFFF) * 3)
 
 
 def open_mon(raw):
@@ -1643,24 +1727,16 @@ def describe_mon(raw):
 # ---------------------------------------------------------------------------
 # The party and the boxes.
 
-PARTY_EXTRA = 8 + PARTY_SIZE * PARTY_MON      # PartyExtra, after PartyCore
-PERFORMANCE_MAX = 5                           # sizeof(PartyExtraSub)
-NUM_BOXES = MONS_PER_BOX = 30                 # include/constants/pokemon.h
-CURRENT_BOX = NUM_BOXES * BOX                 # PokemonStorageSystem.curBox
-BOX_MODIFIED = CURRENT_BOX + 4                # .boxModifiedFlag, a bit a box
-BOX_NAMES = CURRENT_BOX + 8                   # .box_names, after boxModifiedFlag
-
-
 def party_raw(save):
     block = save.block("SAVE_PARTY")
-    count = struct.unpack_from("<i", block, 4)[0]
-    return [bytes(block[8 + i * PARTY_MON:8 + (i + 1) * PARTY_MON]) for i in range(max(0, min(count, PARTY_SIZE)))]
+    count = struct.unpack_from("<i", block, PARTY_COUNT_AT)[0]
+    return [bytes(block[PARTY_AT + i * PARTY_MON:PARTY_AT + (i + 1) * PARTY_MON]) for i in range(max(0, min(count, PARTY_SIZE)))]
 
 
 def set_party_mon(save, slot, raw):
     if not 0 <= slot < len(party_raw(save)):
         raise ValueError(f"the party has no slot {slot + 1}")
-    save.block("SAVE_PARTY")[8 + slot * PARTY_MON:8 + (slot + 1) * PARTY_MON] = raw
+    save.block("SAVE_PARTY")[PARTY_AT + slot * PARTY_MON:PARTY_AT + (slot + 1) * PARTY_MON] = raw
 
 
 def add_party_mon(save, raw):
@@ -1669,10 +1745,10 @@ def add_party_mon(save, raw):
     count = len(party_raw(save))
     if count >= PARTY_SIZE:
         raise ValueError(f"a party holds {PARTY_SIZE}")
-    block[8 + count * PARTY_MON:8 + (count + 1) * PARTY_MON] = raw
+    block[PARTY_AT + count * PARTY_MON:PARTY_AT + (count + 1) * PARTY_MON] = raw
     extra = PARTY_EXTRA + count * PERFORMANCE_MAX
     block[extra:extra + PERFORMANCE_MAX] = bytes(PERFORMANCE_MAX)
-    struct.pack_into("<i", block, 4, count + 1)
+    struct.pack_into("<i", block, PARTY_COUNT_AT, count + 1)
 
 
 def remove_party_mon(save, slot):
@@ -1685,14 +1761,15 @@ def remove_party_mon(save, slot):
     if count == 1:
         raise ValueError("the party cannot be left empty")
     for i in range(slot, count - 1):
-        block[8 + i * PARTY_MON:8 + (i + 1) * PARTY_MON] = bytes(block[8 + (i + 1) * PARTY_MON:8 + (i + 2) * PARTY_MON])
+        block[PARTY_AT + i * PARTY_MON:PARTY_AT + (i + 1) * PARTY_MON] = bytes(
+            block[PARTY_AT + (i + 1) * PARTY_MON:PARTY_AT + (i + 2) * PARTY_MON])
         extra = PARTY_EXTRA + i * PERFORMANCE_MAX
         block[extra:extra + PERFORMANCE_MAX] = bytes(block[extra + PERFORMANCE_MAX:extra + 2 * PERFORMANCE_MAX])
     last = count - 1
-    block[8 + last * PARTY_MON:8 + count * PARTY_MON] = EMPTY_PARTY_MON
+    block[PARTY_AT + last * PARTY_MON:PARTY_AT + count * PARTY_MON] = EMPTY_PARTY_MON
     extra = PARTY_EXTRA + last * PERFORMANCE_MAX
     block[extra:extra + PERFORMANCE_MAX] = bytes(PERFORMANCE_MAX)
-    struct.pack_into("<i", block, 4, count - 1)
+    struct.pack_into("<i", block, PARTY_COUNT_AT, count - 1)
 
 
 def swap_party_mons(save, one, other):
@@ -1701,7 +1778,7 @@ def swap_party_mons(save, one, other):
     count = len(party_raw(save))
     if not (0 <= one < count and 0 <= other < count):
         raise ValueError("no such party slot")
-    for at, size in ((8, PARTY_MON), (PARTY_EXTRA, PERFORMANCE_MAX)):
+    for at, size in ((PARTY_AT, PARTY_MON), (PARTY_EXTRA, PERFORMANCE_MAX)):
         x, y = at + one * size, at + other * size
         block[x:x + size], block[y:y + size] = bytes(block[y:y + size]), bytes(block[x:x + size])
 
@@ -1827,16 +1904,6 @@ def boxes(save):
 # ---------------------------------------------------------------------------
 # The rest of the save, read and written.
 
-MONEY = TRAINER_ID + 4          # PlayerProfile: id, money, gender, language,
-GENDER = TRAINER_ID + 8         # johtoBadges, avatar, version, the
-PROFILE_FLAGS = TRAINER_ID + 13  # gameClear/natDex bits, dummy, kantoBadges
-KANTO_BADGES = TRAINER_ID + 15
-COINS = PROFILE + 32            # PLAYERDATA.coins, after the 32-byte profile
-PLAY_TIME = COINS + 2           # IGT: u16 hours, u8 minutes, u8 seconds
-MAX_MONEY = 999999              # include/player_data.h
-MAX_COINS = 50000               # include/coins.h
-
-
 def profile(save):
     block = save.block("SAVE_PLAYERDATA")
     ident = struct.unpack_from("<I", block, TRAINER_ID)[0]
@@ -1929,17 +1996,12 @@ def set_item(save, item, quantity):
         struct.pack_into("<HH", block, at + 4 * s, got, many)
 
 
-UNOWN_SEEN = DEX_GENDERS + 8 * DEX_WORDS + 8   # after spindaPersonality and four form orders
-UNOWN_CAUGHT = UNOWN_SEEN + 28
-
-
 @tree_cache
 def dex_species():
     """The species with a Dex page: 1 to NATIONAL_DEX_COUNT but the egg and
     the retail forms numbered between Arceus and the species New Gold adds
     (DexSpeciesIsInvalid)."""
-    numbers = species_numbers()
-    return [s for s in range(1, NATIONAL_DEX_COUNT + 1) if not numbers["EGG"] <= s <= numbers["ROTOM_MOW"]]
+    return [s for s in range(1, NATIONAL_DEX_COUNT + 1) if not FIRST_DEX_GAP <= s <= LAST_DEX_GAP]
 
 
 def _dex_bit(block, at, species):
@@ -1990,7 +2052,7 @@ def set_dex_switches(save, enabled=None, national=None):
     if national is not None:
         block[DEX_NATIONAL] = int(bool(national))
         player = save.block("SAVE_PLAYERDATA")
-        player[PROFILE_FLAGS] = (player[PROFILE_FLAGS] & ~2) | (2 if national else 0)
+        player[PROFILE_FLAGS] = (player[PROFILE_FLAGS] & ~NATDEX_MASK) | (NATDEX_MASK if national else 0)
 
 
 def position(save):
@@ -2001,22 +2063,19 @@ def position(save):
             "by_warp": flag_is_set(save, FLAG_CONTINUE_BY_WARP)}
 
 
-VAR_BASE = 0x4000               # include/constants/vars.h
-
-
 def num_flags():
     return constants("include/constants/flags.h", "NUM_")["NUM_FLAGS"]
 
 
 def flag_is_set(save, number):
-    return bool((save.block("SAVE_FLAGS")[NUM_VARS * 2 + number // 8] >> (number % 8)) & 1)
+    return bool((save.block("SAVE_FLAGS")[FLAGS_AT + number // 8] >> (number % 8)) & 1)
 
 
 def write_flag(save, number, on):
     if not 0 < number < num_flags():
         raise ValueError(f"flag {number:#x} is not one the save keeps")
     flags = save.block("SAVE_FLAGS")
-    at = NUM_VARS * 2 + number // 8
+    at = FLAGS_AT + number // 8
     flags[at] = flags[at] | (1 << (number % 8)) if on else flags[at] & ~(1 << (number % 8))
 
 
@@ -2154,6 +2213,9 @@ def main():
             print(f"  {b['index']:2d} {b['id']:<36s} {b['offset']:#08x} {b['size']:6d} {b['slot']}")
         for spec in save.specs:
             print(f"  slot {spec['slot']:<2} {spec['offset']:#08x} {spec['size']:7d}")
+
+
+globals().update(_layout())     # fresh() sets it again when a header changes
 
 
 if __name__ == "__main__":

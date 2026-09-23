@@ -177,6 +177,21 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(sv.describe_mon(sv.party_raw(self.open())[0])["types"],
                          sv.mon_types(sv.describe_mon(sv.party_raw(self.open())[0])["species"], 0, 0))
 
+    def test_the_layout_is_the_headers_as_they_are(self):
+        """The save's sizes and offsets are what the host compiler makes of
+        the headers: one saved since they were read is read again, and the
+        module's names follow it."""
+        header = sv.ROOT / "include/constants/pokemon.h"
+        self.assertIn(header, sv._READ, "the layout watches every header the compiler read")
+        kept, dex = sv.NUM_BOXES, sv.DEX_ENABLED
+        self.addCleanup(lambda: vars(sv).update(sv._layout()))
+        sv.NUM_BOXES = sv.DEX_ENABLED = 0
+        sv.fresh()
+        self.assertEqual(sv.NUM_BOXES, 0, "nothing changed, nothing read")
+        sv._READ[header] -= 1   # as if saved since
+        sv.fresh()
+        self.assertEqual((sv.NUM_BOXES, sv.DEX_ENABLED), (kept, dex))
+
     def test_an_edited_table_is_read_again(self):
         """Paolo's data is the tree as it is: a file changed since a reader
         read it is read again, one left alone is not."""
