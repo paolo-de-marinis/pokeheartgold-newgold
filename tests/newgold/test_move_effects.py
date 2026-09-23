@@ -284,7 +284,7 @@ class PartingShotTests(unittest.TestCase):
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
         step = body[body.index("MOVE_EFFECT_PARTING_SHOT"):]
         step = step[:step.index("break;")]
-        self.assertIn("((ctx->statLoweredBattlers | ctx->statRaisedBattlers) & MaskOfFlagNo(ctx->battlerIdTarget))", step)
+        self.assertIn("((ctx->statLoweredBattlers | ctx->statRaisedBattlers) & MaskOfFlagNo(lowered))", step)
         self.assertIn("!(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)", step)
         self.assertIn("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HANDLE_PARTING_SHOT);", step)
         # A user that left with its move does not spray its throat, and a
@@ -292,6 +292,21 @@ class PartingShotTests(unittest.TestCase):
         self.assertIn("ctx->unk_34 = SWITCH_ITEM_USED;", step)
         self.assertLess(body.index("MOVE_EFFECT_PARTING_SHOT"), body.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"))
         self.assertLess(body.index("MOVE_EFFECT_PARTING_SHOT"), body.index("CheckEjectPack"))
+
+    def test_a_bounced_parting_shot_sends_the_bouncer_back(self):
+        # Pokemon Central (Monito) and the reference's own battle test
+        # (parting_shot/magic_bounce.c): Magic Coat or Magic Bounce turns the
+        # drops on the user and switches the bouncer out. Who goes is passed
+        # to the script, which switches that Pokemon rather than the attacker.
+        from test_hold_effects import CONTROLLER
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        step = body[body.index("MOVE_EFFECT_PARTING_SHOT"):]
+        step = step[:step.index("break;")]
+        self.assertRegex(step, r"if \(ctx->battlerIdMagicCoat != BATTLER_NONE\) \{\s*leaver = ctx->battlerIdTarget;\s*lowered = ctx->battlerIdAttacker;")
+        self.assertIn("ctx->battleMons[leaver].hp != 0", step)
+        self.assertIn("ctx->battlerIdTemp = leaver;", step)
+        self.assertIn("ctx->battlerIdMagicCoat = BATTLER_NONE;", function(CONTROLLER.read_text(), "ov12_02249460"))
+        self.assertIn("ctx->battlerIdMagicCoat = battlerId;", function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_MagicCoat"))
 
     def test_a_contrary_target_s_rise_counts_as_a_change(self):
         # Pokemon Central (Monito): the user stays only when the move changed
@@ -313,9 +328,17 @@ class PartingShotTests(unittest.TestCase):
         self.assertEqual(walk(script, {"REPLACEMENT": True}.get),
                          ["BATTLE_SUBSCRIPT_PURSUIT", "BATTLE_SUBSCRIPT_SHOW_PARTY_LIST"])
         self.assertEqual(walk(script, {"REPLACEMENT": True, "BMON_DATA_HP": 0}.get), ["BATTLE_SUBSCRIPT_PURSUIT"])
-        self.assertIn("BSCRIPT_VAR_BATTLER_SWITCH, BSCRIPT_VAR_BATTLER_ATTACKER", script)
-        gone = script[script.index("DeletePokemon BATTLER_CATEGORY_ATTACKER"):script.index("GoToSubscript")]
+        # Who goes is passed in MSG_BATTLER_TEMP and named as the switched
+        # Pokemon before anything else, Pursuit's hit taking the temp over.
+        self.assertTrue(script.split("_000:")[1].lstrip().startswith(
+            "UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_SWITCH, BSCRIPT_VAR_MSG_BATTLER_TEMP"))
+        self.assertNotIn("BATTLER_CATEGORY_ATTACKER", script)
+        self.assertNotIn("BATTLER_CATEGORY_MSG_BATTLER_TEMP", script)
+        gone = script[script.index("DeletePokemon BATTLER_CATEGORY_SWITCHED_MON"):script.index("GoToSubscript")]
         self.assertIn("BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_UTURN", gone)
+        # Only the attacker leaving is U-turn's case.
+        self.assertLess(gone.index("CompareVarToVar OPCODE_NEQ, BSCRIPT_VAR_BATTLER_SWITCH, BSCRIPT_VAR_BATTLER_ATTACKER, _NOT_THE_ATTACKER"),
+                        gone.index("BATTLE_STATUS2_UTURN"))
 
 
 class PriorityTests(unittest.TestCase):

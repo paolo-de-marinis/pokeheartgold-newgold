@@ -977,6 +977,9 @@ static void ov12_02249460(BattleSystem *battleSystem, BattleContext *ctx) {
     // the last turn.
     ctx->statLoweredBattlers = 0;
     ctx->statRaisedBattlers = 0;
+    // Nothing has bounced the move about to be used; BtlCmd_MagicCoat says
+    // who does.
+    ctx->battlerIdMagicCoat = BATTLER_NONE;
     // Before any action, and before the end of the turn: an Illusion whose
     // Pokemon no longer has the ability drops, whatever took it away.
     {
@@ -4988,17 +4991,33 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             // Throat Spray, which a user that left with its move does not use,
             // and a target's Eject Pack does not answer a Parting Shot: unk_34
             // says so to the step that asks it.
+            //
+            // Bounced by Magic Coat or Magic Bounce, the move is the
+            // bouncer's: the user takes the drops and the bouncer goes back
+            // (Pokemon Central, Monito; the reference's own battle test,
+            // data/battle_tests/moves/parting_shot/magic_bounce.c). By now the
+            // attacker and the target are the user and the bouncer again
+            // (ov12_0224D03C), so the two trade places here.
             if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_PARTING_SHOT
                 && ctx->battlerIdTarget != BATTLER_NONE
-                && ctx->battlerIdTarget != ctx->battlerIdAttacker
-                && ((ctx->statLoweredBattlers | ctx->statRaisedBattlers) & MaskOfFlagNo(ctx->battlerIdTarget))
-                && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
-                && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HANDLE_PARTING_SHOT);
-                ctx->commandNext = ctx->command;
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                ctx->unk_34 = SWITCH_ITEM_USED;
-                flag = 1;
+                && ctx->battlerIdTarget != ctx->battlerIdAttacker) {
+                int leaver = ctx->battlerIdAttacker;
+                int lowered = ctx->battlerIdTarget;
+
+                if (ctx->battlerIdMagicCoat != BATTLER_NONE) {
+                    leaver = ctx->battlerIdTarget;
+                    lowered = ctx->battlerIdAttacker;
+                }
+                if (((ctx->statLoweredBattlers | ctx->statRaisedBattlers) & MaskOfFlagNo(lowered))
+                    && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
+                    && ctx->battleMons[leaver].hp != 0) {
+                    ctx->battlerIdTemp = leaver;
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HANDLE_PARTING_SHOT);
+                    ctx->commandNext = ctx->command;
+                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                    ctx->unk_34 = SWITCH_ITEM_USED;
+                    flag = 1;
+                }
             }
             ctx->unk_30++;
             break;
