@@ -1500,6 +1500,13 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
             ctx->updateMonConditionData++;
             continue;
         }
+        // No move is being used at the end of the turn, but the scripts run
+        // here still ask the attacker -- whether its Mold Breaker ignores an
+        // ability, whether its Infiltrator or its sound move goes round a
+        // substitute -- and the attacker was whoever moved last. The Pokemon
+        // whose condition is running stands in, which answers every one of
+        // those questions with no: none of them asks about a Pokemon's own.
+        ctx->battlerIdAttacker = battlerId;
         switch (ctx->stateUpdateMonCondition) {
         case UMC_STATE_INGRAIN:
             if ((ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN) && ctx->battleMons[battlerId].hp != ctx->battleMons[battlerId].maxHp && ctx->battleMons[battlerId].hp != 0) {

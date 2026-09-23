@@ -1037,6 +1037,18 @@ int main(void) {
 """
 
 
+class EndOfTurnAttackerTests(unittest.TestCase):
+    """The scripts of the end of the turn ask the attacker -- Mold Breaker's
+    question in the status subscripts an Orb runs, Infiltrator's and a sound
+    move's in CheckSubstitute -- and nothing moves then: the Pokemon whose
+    condition is running stands in, instead of whoever moved last."""
+
+    def test_each_pokemon_s_conditions_run_as_its_own(self):
+        body = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_UpdateMonCondition")
+        loop = body[body.index("while (ctx->updateMonConditionData < maxBattlers) {"):]
+        self.assertLess(loop.index("ctx->battlerIdAttacker = battlerId;"), loop.index("switch (ctx->stateUpdateMonCondition) {"))
+        self.assertGreater(loop.index("ctx->battlerIdAttacker = battlerId;"), loop.index("battlerId = ctx->turnOrder[ctx->updateMonConditionData];"))
+
 class BattleBondTests(unittest.TestCase):
     def test_a_knockout_raises_three_stats_once_a_battle(self):
         source = OVERLAY.read_text()
