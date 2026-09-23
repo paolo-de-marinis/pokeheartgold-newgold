@@ -4,7 +4,7 @@ SAFARI_ENC_NARC := files/arc/safari_enc.narc
 $(SAFARI_ENC_NARC): include/constants/species.h include/constants/safari.h
 
 $(SAFARI_ENC_NARC): %.narc: %.json %.json.txt
-	$(JSONPROC) $(filter-out %.h,$^) $*.s
+	$(JSONPROC) $(filter-out %.h $(O2NARC),$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -o $*.o $*.s
 	$(O2NARC) $*.o $@
 	@$(RM) $*.s $*.o

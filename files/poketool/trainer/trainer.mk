@@ -9,13 +9,13 @@ $(TRDATA_NARC): include/trainer_data.h include/constants/items.h include/constan
 $(TRPOKE_NARC): include/trainer_data.h include/constants/species.h include/constants/moves.h include/constants/items.h
 
 $(TRDATA_NARC): %.narc: $(TRAINER_JSON) $(TRDATA_TEMPLATE)
-	$(JSONPROC) $(filter-out %.h,$^) $*.c
+	$(JSONPROC) $(filter-out %.h $(O2NARC),$^) $*.c
 	$(WINE) $(MWCC) $(MWCFLAGS) -c -o $*.o $*.c
 	$(O2NARC) $*.o $@ -n
 	@$(RM) $*.o $*.c
 
 $(TRPOKE_NARC): %.narc: $(TRAINER_JSON) $(TRPOKE_TEMPLATE)
-	$(JSONPROC) $(filter-out %.h,$^) $*.s
+	$(JSONPROC) $(filter-out %.h $(O2NARC),$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -DPM_ASM -o $*.o $*.s
 	$(O2NARC) $*.o $@ -n -p 0x00
 	@$(RM) $*.o $*.s

@@ -546,6 +546,13 @@ include files/data/namein.mk
 include files/data/sbox_gra.mk
 include files/arc/safari_enc.mk
 
+# An archive is only as current as the o2narc that laid it out: f9de102b7
+# changed where o2narc puts each member, and the Dex archives it had already
+# built kept the old layout until they were deleted by hand.
+$(ZUKAN_DATA_NARC) $(ZUKAN_ENC_NARC) $(PPARK_NARC) $(SAFARI_ENC_NARC) $(HEADBUTT_NARC) \
+	$(PHOTO_DATA_NARC) $(DATA_RESDAT_BIN) $(ENCDATA_NARCS) $(EVO_NARC) $(PERSONAL_NARC) \
+	$(TRDATA_NARC) $(TRPOKE_NARC): $(O2NARC)
+
 $(filter-out $(DIFF_ARCS) $(FS_RULE_OVERRIDES),$(NITROFS_FILES)): ;
 
 # This must come after the above includes

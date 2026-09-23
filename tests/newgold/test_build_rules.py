@@ -93,6 +93,28 @@ class BuildRuleTests(unittest.TestCase):
                 self.assertEqual(second.returncode, 0, second.stderr)
                 self.assertIn("touch x.o", second.stdout)
 
+    def test_what_o2narc_builds_depends_on_o2narc(self):
+        """f9de102b7 changed where o2narc puts an archive's members, and the
+        Dex archives it had already built kept the old layout until they
+        were deleted by hand: nothing o2narc builds depended on it. Every
+        target whose recipe runs it now does, and jsonproc, handed the rest
+        of $^, still gets only the json and the template."""
+        rules = re.findall(r"^([^#\s%][^:\n]*):(?!=)([^\n]*)\n(?:#[^\n]*\n)*((?:\t[^\n]*\n)+)", database(), re.M)
+        users = {target: prerequisites.split() for target, prerequisites, recipe in rules if "$(O2NARC)" in recipe}
+        self.assertIn("files/application/zukanlist/zkn_data/zukan_data.narc", users)
+        tool = None
+        for target, prerequisites in users.items():
+            found = [p for p in prerequisites if p.endswith("/tools/o2narc/o2narc")]
+            self.assertTrue(found, f"{target} does not depend on o2narc")
+            tool = found[0]
+        result = run_make("-n", "-W", tool, *sorted(users))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        jsonproc = [line for line in result.stdout.splitlines() if "/jsonproc " in line]
+        self.assertEqual(len(jsonproc), len(users), result.stdout)
+        for line in jsonproc:
+            self.assertNotIn("o2narc", line)
+            self.assertEqual(len(line.split()), 4, line)
+
     def test_a_naix_is_made_by_making_its_archive(self):
         """nitroarc writes an archive's .naix beside it. A pattern rule with
         no recipe is no rule at all, so a .naix a dependency file named was

@@ -5,7 +5,7 @@ HEADBUTT_NARC := $(HEADBUTT_DIR).$(buildname).narc
 $(HEADBUTT_NARC): include/constants/maps.h include/constants/species.h
 
 $(HEADBUTT_NARC): %.$(buildname).narc: %.json %.json.txt
-	$(JSONPROC) $(filter-out %.h,$^) $*.s
+	$(JSONPROC) $(filter-out %.h $(O2NARC),$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -o $*.o $*.s
 	$(O2NARC) $*.o $@ -n
 	@$(RM) -f $*.s $*.o

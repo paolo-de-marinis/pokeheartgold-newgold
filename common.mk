@@ -222,7 +222,11 @@ $(BUILD_DIR)/%.o: %.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -o $@ $<
 endif
 
-$(NATIVE_TOOLS): tools
+# Each tool is made by its own directory's makefile, so what depends on one
+# tool waits for that one alone, and a build never remakes a tool while
+# another rule is running it. The empty recipe keeps make's built-in rules
+# away: without one they compiled and linked the tool here themselves.
+$(foreach tool,$(NATIVE_TOOLS),$(eval $(tool): $(dir $(tool)) ;))
 
 tools: $(TOOLDIRS) $(MWAS)
 
