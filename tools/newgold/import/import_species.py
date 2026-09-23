@@ -185,13 +185,13 @@ def reference_machines(reference):
     return set(re.findall(r"MOVE_[A-Z0-9_]+", table[:table.index("};")]))
 
 
-def machine_moves(reference, level_up=True):
+def machine_moves(reference):
     """Each species' machine moves, by the reference's rule (hg-engine's
     scripts/build_learnsets.py, write_machine_data): a species can be taught a
     machine's move if its MachineMoves list names it or it learns it by
     level-up. A form with no list of its own takes its base species' -- the
     reference reads the base's for it -- so 324 forms do not come out unable
-    to learn any TM. level_up=False leaves the level-up half out."""
+    to learn any TM."""
     learnsets = json.loads((reference / "data/learnsets/learnsets.json").read_text())
     bases = base_species_of(reference)
 
@@ -204,9 +204,8 @@ def machine_moves(reference, level_up=True):
     machines = reference_machines(reference)
     moves = {}
     for name in {key[len("SPECIES_"):] for key in learnsets} | set(bases):
-        taught = set(listed(name, "MachineMoves"))
-        if level_up:
-            taught |= {entry["Move"] for entry in listed(name, "LevelMoves") if "Move" in entry}
+        taught = set(listed(name, "MachineMoves")) | {
+            entry["Move"] for entry in listed(name, "LevelMoves") if "Move" in entry}
         moves[name] = taught & machines
     return moves
 
