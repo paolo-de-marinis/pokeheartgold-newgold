@@ -5363,8 +5363,9 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         break;
     case ABILITY_THERMAL_EXCHANGE:
         // The substitute test the reference makes here is already answered at
-        // the top of this function; the burn half of the ability is not read
-        // at this site at all and is still missing.
+        // the top of this function. The burn half of the ability is not read
+        // here: the status subscripts refuse a burn, and CheckStatusHealAbility
+        // and CheckStatusHealSwitch cure one.
         if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur) == TYPE_FIRE) {
             ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE;
             ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
@@ -5547,9 +5548,20 @@ BOOL CheckStatusHealAbility(BattleSystem *battleSystem, BattleContext *ctx, int 
             ret = TRUE;
         }
         break;
+    // Water Bubble and Thermal Exchange cure a burn, and Pastel Veil poison,
+    // as Water Veil and Immunity do; the reference's
+    // Activate_AbilityHealingStatusCondition adds the three.
     case ABILITY_WATER_VEIL:
+    case ABILITY_WATER_BUBBLE:
+    case ABILITY_THERMAL_EXCHANGE:
         if (ctx->battleMons[battlerId].status & STATUS_BURN) {
             ctx->msgTemp = 2;
+            ret = TRUE;
+        }
+        break;
+    case ABILITY_PASTEL_VEIL:
+        if (ctx->battleMons[battlerId].status & STATUS_POISON_ALL) {
+            ctx->msgTemp = 1;
             ret = TRUE;
         }
         break;
@@ -5606,6 +5618,8 @@ BOOL CheckStatusHealSwitch(BattleContext *ctx, int ability, int status) {
         }
         break;
     case ABILITY_WATER_VEIL:
+    case ABILITY_WATER_BUBBLE:
+    case ABILITY_THERMAL_EXCHANGE:
         if (status & STATUS_BURN) {
             ret = TRUE;
         }

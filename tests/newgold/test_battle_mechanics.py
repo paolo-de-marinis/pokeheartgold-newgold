@@ -238,5 +238,61 @@ class StatusMoveRefusalTests(unittest.TestCase):
             self.assertIn(f"BMON_DATA_TYPE_{slot}, NULL) == TYPE_GRASS", guard)
 
 
+CURE_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1, NARC_a_0_0_1 = 0 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+typedef struct { int dummy; } BattleSystem;
+typedef struct {
+    struct { u32 status, status2; int item, ability; struct { int knockOffFlag; } unk88; } battleMons[4];
+    int msgTemp, battlerIdTemp, abilityTemp, commandNext, command;
+} BattleContext;
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static void ReadBattleScriptFromNarc(BattleContext *ctx, int narc, int script) { (void)ctx; (void)narc; (void)script; }
+@FUNCTIONS@
+static int cure(int ability, u32 status) {
+    BattleSystem bs;
+    BattleContext ctx = { 0 };
+    ctx.battleMons[0].ability = ability;
+    ctx.battleMons[0].status = status;
+    ctx.msgTemp = -1;
+    return CheckStatusHealAbility(&bs, &ctx, 0, 1) ? ctx.msgTemp : -1;
+}
+int main(void) {
+    assert(cure(ABILITY_WATER_BUBBLE, STATUS_BURN) == 2);
+    assert(cure(ABILITY_THERMAL_EXCHANGE, STATUS_BURN) == 2);
+    assert(cure(ABILITY_PASTEL_VEIL, STATUS_POISON) == 1);
+    assert(cure(ABILITY_PASTEL_VEIL, STATUS_BAD_POISON) == 1);
+    assert(cure(ABILITY_WATER_BUBBLE, STATUS_PARALYSIS) == -1);
+    assert(CheckStatusHealSwitch(0, ABILITY_WATER_BUBBLE, STATUS_BURN));
+    assert(CheckStatusHealSwitch(0, ABILITY_THERMAL_EXCHANGE, STATUS_BURN));
+    assert(CheckStatusHealSwitch(0, ABILITY_PASTEL_VEIL, STATUS_BAD_POISON));
+    assert(!CheckStatusHealSwitch(0, ABILITY_THERMAL_EXCHANGE, STATUS_FREEZE));
+    return 0;
+}
+"""
+
+
+class StatusCureTests(unittest.TestCase):
+    def test_the_three_abilities_cure_their_status_in_battle_and_on_the_bench(self):
+        # ServerDoPostMoveEffects.c's Activate_AbilityHealingStatusCondition
+        # and battle_script_commands.c's CheckStatusRecoverFromAbilityOnSwitch-
+        # Wrapper: Water Bubble and Thermal Exchange cure a burn, Pastel Veil
+        # poison.
+        source = OVERLAY.read_text()
+        functions = "\n".join(function(source, name) for name in ("CheckStatusHealAbility", "CheckStatusHealSwitch"))
+        with tempfile.TemporaryDirectory(prefix="newgold-cure-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(CURE_FIXTURE.replace("@FUNCTIONS@", functions))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
+                str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+
+
 if __name__ == "__main__":
     unittest.main()
