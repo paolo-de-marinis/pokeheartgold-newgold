@@ -7536,6 +7536,38 @@ static u16 Battler_RelicSongForm(BattleContext *ctx, int battlerId) {
     return SPECIES_NONE;
 }
 
+// Genesect (BattleFormChangeCheck.c:248): the Drive it holds decides its form.
+// hg-engine changes the battler's form alone, not the Pokemon's, and the
+// forms' stats are the same, so here it is the battler's species alone. Not a
+// transformed battler.
+static u16 Battler_GenesectForm(BattleContext *ctx, int battlerId) {
+    u16 species = ctx->battleMons[battlerId].species;
+    u16 form;
+
+    if (!ctx->battleMons[battlerId].hp || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)
+        || (species != SPECIES_GENESECT && (species < SPECIES_GENESECT_DOUSE_DRIVE || species > SPECIES_GENESECT_CHILL_DRIVE))) {
+        return SPECIES_NONE;
+    }
+    switch (ctx->battleMons[battlerId].item) {
+    case ITEM_DOUSE_DRIVE:
+        form = SPECIES_GENESECT_DOUSE_DRIVE;
+        break;
+    case ITEM_SHOCK_DRIVE:
+        form = SPECIES_GENESECT_SHOCK_DRIVE;
+        break;
+    case ITEM_BURN_DRIVE:
+        form = SPECIES_GENESECT_BURN_DRIVE;
+        break;
+    case ITEM_CHILL_DRIVE:
+        form = SPECIES_GENESECT_CHILL_DRIVE;
+        break;
+    default:
+        form = SPECIES_GENESECT;
+        break;
+    }
+    return form == species ? SPECIES_NONE : form;
+}
+
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int form;
@@ -7687,6 +7719,13 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
         if (form != SPECIES_NONE) {
             ctx->relicSongTracker &= ~MaskOfFlagNo(ctx->battlerIdTemp);
             BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, form, TRUE);
+            *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
+            ret = TRUE;
+            break;
+        }
+        form = Battler_GenesectForm(ctx, ctx->battlerIdTemp);
+        if (form != SPECIES_NONE) {
+            ctx->battleMons[ctx->battlerIdTemp].species = form;
             *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
             ret = TRUE;
             break;

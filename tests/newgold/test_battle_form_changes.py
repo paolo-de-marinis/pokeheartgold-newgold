@@ -24,6 +24,7 @@ PREFIX = r"""
 #include <stdio.h>
 #include "constants/abilities.h"
 #include "constants/battle.h"
+#include "constants/items.h"
 #include "constants/moves.h"
 #include "constants/species.h"
 typedef uint8_t u8;
@@ -42,6 +43,7 @@ typedef struct {
     u32 maxHp;
     u32 status2;
     u8 level;
+    u16 item;
 } BattleMon;
 typedef struct {
     BattleMon battleMons[4];
@@ -303,6 +305,26 @@ class FormChangeTests(unittest.TestCase):
         self.assertIn("ctx->relicSongTracker |= MaskOfFlagNo(battlerIdAttacker);",
                       function(overlay, "BattleContext_CheckMoveImmunityFromAbility"))
         self.assertIn("form = Battler_RelicSongForm(ctx, ctx->battlerIdTemp);", self.check)
+
+    def test_genesect(self):
+        """Genesect takes the form of the Drive it holds, and goes back to its
+        own without one; the battler changes, the Pokemon does not."""
+        print(run(["Battler_GenesectForm"], r"""
+    set(SPECIES_GENESECT, ABILITY_DOWNLOAD, 1, 1);
+    assert(Battler_GenesectForm(&ctx, 0) == SPECIES_NONE);
+    ctx.battleMons[0].item = ITEM_DOUSE_DRIVE;
+    assert(Battler_GenesectForm(&ctx, 0) == SPECIES_GENESECT_DOUSE_DRIVE);
+    ctx.battleMons[0].item = ITEM_CHILL_DRIVE;
+    assert(Battler_GenesectForm(&ctx, 0) == SPECIES_GENESECT_CHILL_DRIVE);
+    ctx.battleMons[0].species = SPECIES_GENESECT_CHILL_DRIVE;
+    assert(Battler_GenesectForm(&ctx, 0) == SPECIES_NONE);
+    ctx.battleMons[0].item = ITEM_NONE;
+    assert(Battler_GenesectForm(&ctx, 0) == SPECIES_GENESECT);
+    set(SPECIES_PIKACHU, ABILITY_STATIC, 1, 1);
+    ctx.battleMons[0].item = ITEM_BURN_DRIVE;
+    assert(Battler_GenesectForm(&ctx, 0) == SPECIES_NONE);
+    puts("PASS: Genesect follows its Drive.");""", "newgold-genesect-"))
+        self.assertIn("form = Battler_GenesectForm(ctx, ctx->battlerIdTemp);", self.check)
 
 
 if __name__ == "__main__":
