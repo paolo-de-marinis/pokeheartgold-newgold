@@ -361,6 +361,18 @@ class SaveditLibraryTests(unittest.TestCase):
         heat = sv.edit_mon(sv.seal_mon(mon), moves=[moves["OVERHEAT"], moves["THUNDER_SHOCK"]])
         self.assertEqual([m["name"] for m in sv.describe_mon(heat)["moves"]], ["Overheat", "Thunder Shock"])
 
+    def test_the_blackthorn_tutor_teaches_a_type(self):
+        """scr_seq_0948_T30R0601.s teaches Draco Meteor to a Pokemon that
+        GetMonTypes calls Dragon: Druddigon and Applin, with no tutor bit of
+        their own for it, and Silvally, Dragon with the Dragon Memory; not
+        Charizard."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        taught = {"how": "tutor", "type": "DRAGON"}
+        for name in ("DRUDDIGON", "APPLIN", "SILVALLY"):
+            self.assertIn(taught, sv.learnable_moves(n[name]).get(moves["DRACO_METEOR"], []), name)
+        self.assertNotIn(moves["DRACO_METEOR"], sv.learnable_moves(n["CHARIZARD"]))
+        sv.new_mon(n["DRUDDIGON"], 30, sv.owner(self.open()), moves=[moves["DRACO_METEOR"]])
+
     def test_an_event_move_stays_while_untouched(self):
         """A Pokemon the game made may know a move no rule lists: it keeps it
         while it keeps its species and the move, and loses nothing else."""

@@ -50,7 +50,9 @@ moves `IsMoveUnimplemented` flags, which `LoadLevelUpLearnset_HandleAlternateFor
 drops for every reader, the TMs, HMs
 and TRs its `personal.json` record is compatible with (`sTMHMMoves` and
 `ItemToTMHMId` in `src/item.c`), the move tutors (`waza_oshie.json` through
-`sTutorMoves`, at the record `GetMoveTutorLearnsetIndex` reads), the egg
+`sTutorMoves`, at the record `GetMoveTutorLearnsetIndex` reads; and the
+Blackthorn tutor's script, `scr_seq_0948_T30R0601.s`, which teaches its
+move to a Pokemon of the type its `GetMonTypes` tests name), the egg
 moves (`kowaza_list.narc`) of the species its line hatches as, a Rotom
 form's own move (`sRotomFormMoves`, which the Rotom Catalog teaches), and the same
 for its pre-evolutions (`evo.json`; a form without one of its own takes its

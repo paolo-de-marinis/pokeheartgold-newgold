@@ -1506,6 +1506,39 @@ def incense_parents():
             re.findall(r"\{\s*SPECIES_\w+,\s*ITEM_\w+,\s*SPECIES_(\w+)\s*\}", text[:text.index("};")])}
 
 
+# The Blackthorn move tutor's script: Draco Meteor, for a Pokemon of a type.
+TYPE_TUTOR = "files/fielddata/script/scr_seq/scr_seq_0948_T30R0601.s"
+
+
+@tree_cache
+def type_tutors():
+    """What the Blackthorn tutor's script teaches for a type: the move its
+    MoveTutorInit names, to a Pokemon whose GetMonTypes gives a type its
+    tests compare with (include/constants/pokemon.h's TYPE_ by number).
+    [(move, type name without TYPE_)]."""
+    text = source(TYPE_TUTOR).read_text()
+    names = {}
+    for name, number in constants("include/constants/pokemon.h", "TYPE_").items():
+        names.setdefault(number, name[len("TYPE_"):])      # the types come first, TYPE_MUL_ after
+    types = {names[int(n)] for _, n in re.findall(r"GetMonTypes (VAR_\w+), (?:VAR_\w+), \w+\s+Compare \1, (\d+)", text)}
+    moves = [move_numbers()[name] for name in re.findall(r"MoveTutorInit VAR_\w+, MOVE_(\w+)", text)]
+    return [(move, kind) for move in moves for kind in sorted(types)]
+
+
+def possible_types(species, form=0):
+    """Every type GetMonData can give a Pokemon of this species (mon_types):
+    its form's record's, and for Arceus with Multitype and Silvally with RKS
+    System every type a held plate or memory makes it."""
+    out = set(mon_types(species, 0, 0, form))
+    numbers, abilities = species_numbers(), constants("include/constants/abilities.h", "ABILITY_")
+    has = {entry["id"] for entry in species_abilities(species, form)}
+    arceus, silvally, _ = item_types()
+    for table, name, ability in ((arceus, "ARCEUS", "ABILITY_MULTITYPE"), (silvally, "SILVALLY", "ABILITY_RKS_SYSTEM")):
+        if species == numbers.get(name) and abilities[ability] in has:
+            out |= {kind[len("TYPE_"):] for kind in table.values()}
+    return out
+
+
 @tree_cache
 def form_moves():
     """sRotomFormMoves (src/pokemon.c): the move each form of the species
@@ -1537,7 +1570,8 @@ def learnable_moves(species, form=0):
     """Every move this species can know, whatever its level, with every way
     it is learnt, never only the first: {move: [source, ...]}. A source is
     {"how": "level", "level": n} (0: on evolving), {"how": "machine",
-    "item": the TM, HM or TR}, {"how": "tutor"}, {"how": "egg"} or
+    "item": the TM, HM or TR}, {"how": "tutor"} ("type": the type the
+    Blackthorn tutor teaches it for, type_tutors), {"how": "egg"} or
     {"how": "form"} (the move a Rotom form has of its own), with
     "from": the species when it is a pre-evolution's -- a move learnt
     before evolving is kept. Its own form's row (ResolveMonForm) for its
@@ -1551,6 +1585,8 @@ def learnable_moves(species, form=0):
         found += [(machines()[place][0], {"how": "machine", "item": machines()[place][1]})
                   for place in machine_places(personal_records()[row]) if place < len(machines())]
         found += [(move, {"how": "tutor"}) for move in tutor_moves(row)]
+        kinds = possible_types(s, form if s == species else 0)
+        found += [(move, {"how": "tutor", "type": kind}) for move, kind in type_tutors() if kind in kinds]
         own = form_moves().get(s, []) if s == species else []
         found += [(own[form], {"how": "form"})] if form < len(own) else []
         found += [(move, {"how": "egg"}) for move in (egg_moves()[s] if hatches and s < len(egg_moves()) else [])]
