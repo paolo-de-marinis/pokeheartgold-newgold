@@ -16,7 +16,7 @@ from pathlib import Path
 from test_level_cap import ROOT
 
 MACROS = ROOT / "asm/macros/btlcmd.inc"
-TABLE = ROOT / "asm/overlay_12_battle_command.s"
+TABLE = ROOT / "src/battle/overlay_12_0226C3E8.c"
 HEADER = ROOT / "include/battle/battle_command.h"
 SOURCE = ROOT / "src/battle/battle_command.c"
 LAST_RETAIL = 224
@@ -36,9 +36,9 @@ def opcodes(text):
 
 def table():
     body = TABLE.read_text()
-    start = body.index("sBattleScriptCommandTable:")
-    end = body.index(".public", start)
-    return re.findall(r"^\t\.word (BtlCmd_\w+)", body[start:end], re.M)
+    start = body.index("const BtlCmdFunc sBattleScriptCommandTable[] = {")
+    end = body.index("\n};", start)
+    return re.findall(r"^    (BtlCmd_\w+),", body[start:end], re.M)
 
 
 class BattleCommandTests(unittest.TestCase):

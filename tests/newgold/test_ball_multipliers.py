@@ -366,12 +366,16 @@ class BallMultiplierTests(unittest.TestCase):
         self.assertEqual(shake_table(), [int(v) for _, v in entries])
 
     def test_moon_ball_follows_the_moon_stone(self):
-        table = (ROOT / "asm/overlay_12_battle_command.s").read_text()
-        table = table[table.index("sMoonBallPokemon:"):]
-        table = table[:table.index(".public")]
+        source = (ROOT / "src/battle/overlay_12_0226C3E8.c").read_text()
+        table = source[source.index("const u16 sMoonBallPokemon["):]
+        table = table[:table.index("};")]
         self.assertEqual(re.findall(r"SPECIES_\w+", table), MOON_BALL_SPECIES)
-        # NELEMS walks the extern, so its declared length has to follow.
-        self.assertIn(f"extern u16 sMoonBallPokemon[{len(MOON_BALL_SPECIES)}];", SOURCE.read_text())
+        # NELEMS walks the declaration in the header, which the definition
+        # includes, so the compiler holds the two to one length.
+        self.assertIn(f"const u16 sMoonBallPokemon[{len(MOON_BALL_SPECIES)}] = {{", source)
+        self.assertIn('#include "battle/battle_command.h"', source)
+        self.assertIn(f"extern const u16 sMoonBallPokemon[{len(MOON_BALL_SPECIES)}];",
+                      (ROOT / "include/battle/battle_command.h").read_text())
 
     def test_moon_ball_matches_the_reference(self):
         if REFERENCE is None:

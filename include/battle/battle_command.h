@@ -4,7 +4,7 @@
 #include "battle/battle.h"
 #include "battle/battle_system.h"
 
-// Realistically these should all be static in battle_command.c, but there's an array in battle_command_data.s that needs these functions so we have to keep them public until that can be decompiled, and at the same time we don't want the compiler to allow for functions without declarations, hence the existance of this header file
+// Realistically these should all be static in battle_command.c, but the command table that needs them is in src/battle/overlay_12_0226C3E8.c, a file of its own for the layout of retail's read-only data, so they stay public, and declared here so the compiler does not allow a function without a declaration
 
 BOOL RunBattleScript(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_PlayEncounterAnimation(BattleSystem *battleSystem, BattleContext *ctx);
@@ -304,5 +304,35 @@ BOOL BtlCmd_GotoIfSoundMove(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_CheckTargetIsPartner(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_DivideVarByValueRoundUp(BattleSystem *battleSystem, BattleContext *ctx);
 int BattleScriptReadWord(BattleContext *ctx);
+
+// battle_command.c's read-only tables, defined in asm/overlay_12_battle_command.s,
+// src/battle/overlay_12_0226C2F8.c, asm/overlay_12_0226C324.s,
+// src/battle/overlay_12_0226C3E8.c and src/battle/overlay_12_0226CA4C.c, in
+// that order, which is retail's.
+typedef struct TempStatsStruct {
+    u32 stats[6];
+} TempStatsStruct;
+
+extern const u8 sTrumpCardPowerTable[5];
+extern const u16 sProtectSuccessChance[4];
+extern const u8 sFlailDamageTable[6][2];
+extern const u16 sPickupTable2[11];
+extern const TempStatsStruct ov12_0226C33C;
+extern const TempStatsStruct ov12_0226C354;
+extern const TempStatsStruct ov12_0226C36C;
+extern const TempStatsStruct ov12_0226C384;
+extern const u16 sLowKickDamageTable[6][2];
+extern const u16 sNaturePowerMoveTable[13];
+extern const u8 sSafariCatchRateStages[13][2];
+extern const u16 sMoonBallPokemon[6];
+extern const u16 sPickupTable1[18];
+extern const ManagedSpriteTemplate sLevelUpNameplateTemplate;
+extern const ManagedSpriteTemplate sPokeIconTemplate;
+extern const u32 sSecretPowerEffectTable[13];
+extern const u16 sPrizeMoneyTbl[0x81][2];
+extern const BtlCmdFunc sBattleScriptCommandTable[];
+extern const u8 sPickupWeightTable[9];
+extern const u8 sHoneyGatherChanceTable[10];
+extern const u8 sCamouflageTypeTable[13];
 
 #endif

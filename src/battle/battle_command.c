@@ -84,8 +84,6 @@ static void UpdateFriendshipFainted(BattleSystem *battleSystem, BattleContext *c
 static void BattleSystem_LoadLevelUpNameplate(BattleSystem *battleSystem, GetterWork *data, Pokemon *mon);
 static void BattleSystem_UnloadLevelUpNameplate(BattleSystem *battleSystem, GetterWork *data);
 
-extern BtlCmdFunc sBattleScriptCommandTable[];
-
 BOOL RunBattleScript(BattleSystem *battleSystem, BattleContext *ctx) {
     BOOL ret;
 
@@ -2947,8 +2945,6 @@ BOOL BtlCmd_PrintTrainerMessage(BattleSystem *battleSystem, BattleContext *ctx) 
     return FALSE;
 }
 
-extern u16 sPrizeMoneyTbl[0x81][2];
-
 u32 CalcPrizeMoney(BattleSystem *battleSystem, BattleContext *ctx, int trainerIndex) {
     int i;
     TRPOKE *trPoke;
@@ -3780,8 +3776,6 @@ BOOL BtlCmd_TrySleepTalk(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-extern u8 sFlailDamageTable[6][2];
-
 BOOL BtlCmd_CalcFlailPower(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int hpBarPixels;
@@ -3907,8 +3901,6 @@ BOOL BtlCmd_TryStealItem(BattleSystem *battleSystem, BattleContext *ctx) {
 
     return FALSE;
 }
-
-extern u16 sProtectSuccessChance[4];
 
 // Wide Guard, Quick Guard, Mat Block and Crafty Shield: the four that guard
 // the user's whole side (MOVE_EFFECT_PROTECT_USER_SIDE).
@@ -5005,8 +4997,6 @@ BOOL BtlCmd_TrySnatch(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-extern u16 sLowKickDamageTable[6][2];
-
 // Heavy Metal doubles the weight a move asks after and Light Metal halves it.
 // Mold Breaker switches either off, except when the Pokemon asking is the one
 // being weighed: there is no mold to break against yourself.
@@ -5296,8 +5286,6 @@ BOOL BtlCmd_CalcPaybackPower(BattleSystem *battleSystem, BattleContext *ctx) {
 
     return FALSE;
 }
-
-extern u8 sTrumpCardPowerTable[];
 
 BOOL BtlCmd_CalcTrumpCardPower(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
@@ -5631,10 +5619,6 @@ BOOL BtlCmd_IfSameSide(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-extern const u16 sPickupTable1[18];
-extern const u16 sPickupTable2[11];
-extern const u8 sPickupWeightTable[9];
-extern const u8 sHoneyGatherChanceTable[10];
 
 BOOL BtlCmd_GenerateEndOfBattleItem(BattleSystem *battleSystem, BattleContext *ctx) {
     int rnd, i, j, k;
@@ -5763,8 +5747,6 @@ BOOL BtlCmd_GetItemEffectParam(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-extern const u8 sCamouflageTypeTable[13];
-
 BOOL BtlCmd_TryCamouflage(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
@@ -5792,8 +5774,6 @@ BOOL BtlCmd_TryCamouflage(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-extern u16 sNaturePowerMoveTable[];
-
 BOOL BtlCmd_GetTerrainMove(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
@@ -5805,8 +5785,6 @@ BOOL BtlCmd_GetTerrainMove(BattleSystem *battleSystem, BattleContext *ctx) {
 
     return FALSE;
 }
-
-extern u32 sSecretPowerEffectTable[];
 
 BOOL BtlCmd_GetTerrainSecondaryEffect(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
@@ -6883,17 +6861,6 @@ enum {
     STATE_GET_EXP_CHECK_DONE,
     STATE_GET_EXP_DONE,
 };
-
-// Note: these structs are needed to match *only as long as the data is in the assembly*
-// when the data gets decompiled, they should be embeded in the function as arrays
-typedef struct TempStatsStruct {
-    u32 stats[6];
-} TempStatsStruct;
-
-extern TempStatsStruct ov12_0226C354;
-extern TempStatsStruct ov12_0226C36C;
-extern TempStatsStruct ov12_0226C384;
-extern TempStatsStruct ov12_0226C33C;
 
 static void Task_GetExp(SysTask *task, void *inData) {
     int i;
@@ -8060,9 +8027,6 @@ static void Task_GetPokemon(SysTask *task, void *inData) {
     }
 }
 
-extern u8 sSafariCatchRateStages[13][2];
-extern u16 sMoonBallPokemon[6];
-
 #define CP_SQRT_32BIT_MODE (0UL << REG_CP_SQRTCNT_MODE_SHIFT)
 
 static inline void CP_SetSqrtImm32_NS_(u32 param) {
@@ -9096,9 +9060,6 @@ static int ov12_02248218(BattleSystem *battleSystem, BattleContext *ctx, int sid
 static int ov12_02248220(BattleSystem *battleSystem, BattleContext *ctx, int side) {
     return BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side);
 }
-
-extern ManagedSpriteTemplate sLevelUpNameplateTemplate;
-extern ManagedSpriteTemplate sPokeIconTemplate;
 
 enum {
     POINTER_LEVEL_UP_NAMEPLATE_FONT_SYSTEM = 0,

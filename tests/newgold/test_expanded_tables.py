@@ -59,11 +59,11 @@ needs_reference = unittest.skipUnless(REFERENCE.exists(), "the reference checkou
 
 class PrizeMoneyTests(unittest.TestCase):
     def rows(self):
-        return re.findall(r"\.short\s+(TRAINERCLASS_\w+),\s*(\d+)",
-                          body(ours("asm/overlay_12_battle_command.s"), "sPrizeMoneyTbl: ", "\n\n"))
+        return re.findall(r"\{ (TRAINERCLASS_\w+),\s*(\d+) \}",
+                          body(ours("src/battle/overlay_12_0226C3E8.c"), "const u16 sPrizeMoneyTbl[0x81][2] = {"))
 
     def test_the_table_is_the_length_the_code_reads(self):
-        # extern u16 sPrizeMoneyTbl[0x81][2] in src/battle/battle_command.c.
+        # The definition's declared length, which CalcPrizeMoney walks.
         self.assertEqual(len(self.rows()), 0x81)
 
     @needs_reference
