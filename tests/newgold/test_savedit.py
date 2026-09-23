@@ -403,6 +403,19 @@ class SaveditLibraryTests(unittest.TestCase):
         back = sv.describe_mon(sv.edit_mon(hidden, ability=0))
         self.assertEqual((back["ability_name"], back["hidden_ability"]), ("Run Away", False))
 
+    def test_no_level_up_move_the_engine_never_implemented(self):
+        """LoadLevelUpLearnset_HandleAlternateForm drops the moves whose
+        waza_tbl flag says unimplemented: Jigglypuff learns Echoed Voice and
+        Round by level and is never given either, so a new one at 22 knows
+        Stockpile, Spit Up, Swallow and Rest, as the game makes it."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        unimplemented = sv.unimplemented_moves()
+        self.assertIn(moves["ECHOED_VOICE"], unimplemented)
+        self.assertEqual([m for row in sv.learnsets() for _, m in row if m in unimplemented], [])
+        self.assertEqual(sv.preset_moves(n["JIGGLYPUFF"], 22), [moves[m] for m in ("STOCKPILE", "SPIT_UP", "SWALLOW", "REST")])
+        levels = [s for s in sv.learnable_moves(n["JIGGLYPUFF"]).get(moves["ECHOED_VOICE"], []) if s["how"] == "level"]
+        self.assertEqual(levels, [], "not offered as a level-up move either")
+
     def test_a_new_pokemon_knows_each_move_once(self):
         """InitBoxMonMoveset skips a move already known: Metapod learns
         Harden twice and knows it once, Pidgeotto keeps Sand Attack once."""
@@ -722,6 +735,9 @@ class TheCodeSaveditKeeps(unittest.TestCase):
         eggs = sv.c_function("src/get_egg.c", "u8 LoadEggMoves(")
         self.assertIn("species * MAX_EGG_MOVES * sizeof(u16), MAX_EGG_MOVES * sizeof(u16)", eggs)
         self.assertIn("dest[numEggMoves] != 0xFFFF", eggs)
+        self.assertRegex(sv.c_function("src/pokemon.c", "void LoadLevelUpLearnset_HandleAlternateForm("),
+                         r"if \(!IsMoveUnimplemented\(LEVEL_UP_LEARNSET_MOVE\(levelUpLearnset\[i\]\)\)\) \{\s*"
+                         r"levelUpLearnset\[j\+\+\] = levelUpLearnset\[i\];", "learnsets(): every reader gets it filtered")
 
     def test_the_machines_sit_where_the_template_packs_them(self):
         """machine_places: TM n at n - 1, HM n after the NUM_TMS TMs, the

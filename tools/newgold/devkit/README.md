@@ -45,7 +45,9 @@ of the form's own record (`ResolveMonForm`).
 
 It holds a Pokemon to what its species can have. `learnable_moves` is every
 move a species can know at any level, each with every way it is learnt:
-its level-up learnset (`wotbl.narc`; level 0 is on evolving), the TMs, HMs
+its level-up learnset (`wotbl.narc`; level 0 is on evolving) without the
+moves `IsMoveUnimplemented` flags, which `LoadLevelUpLearnset_HandleAlternateForm`
+drops for every reader, the TMs, HMs
 and TRs its `personal.json` record is compatible with (`sTMHMMoves` and
 `ItemToTMHMId` in `src/item.c`), the move tutors (`waza_oshie.json` through
 `sTutorMoves`, at the record `GetMoveTutorLearnsetIndex` reads), the egg

@@ -438,8 +438,41 @@ def level_for(growth_rate, exp):
 
 
 @tree_cache
+def move_records():
+    """waza_tbl.narc's records, a move each (LoadMoveEntry)."""
+    sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+    import import_moves
+    source(import_moves.TABLE)
+    return import_moves.read_table()
+
+
+@tree_cache
+def move_attr(attr):
+    """Every move's value of one MoveAttr, as GetMoveTblAttr (src/move.c)
+    reads it: the MoveTbl field its case returns, where and how wide the
+    compiler makes that field (include/move.h)."""
+    field = re.search(rf"case {attr}:\s*return moveTbl->(\w+);", c_function("src/move.c", "u32 GetMoveTblAttr(")).group(1)
+    (at, width), _ = compile_c((f"__builtin_offsetof(MoveTbl, {field})", f"sizeof(((MoveTbl *)0)->{field})"),
+                               headers=LAYOUT_HEADERS + ("move.h",))
+    return [int.from_bytes(record[at:at + width], "little") for record in move_records()]
+
+
+@tree_cache
+def unimplemented_moves():
+    """The moves IsMoveUnimplemented (src/move.c) says yes to: the bit it
+    tests set in the MoveAttr it reads."""
+    attr, flag = re.search(r"GetMoveAttr\(moveId, (MOVEATTR_\w+)\) & (\w+)",
+                           c_function("src/move.c", "BOOL IsMoveUnimplemented(")).groups()
+    (bit,), _ = compile_c((flag,), headers=LAYOUT_HEADERS + ("move.h",))
+    return frozenset(move for move, value in enumerate(move_attr(attr)) if value & bit)
+
+
+@tree_cache
 def learnsets():
-    """Every species' level-up moves, as (level, move).
+    """Every species' level-up moves, as (level, move), as
+    LoadLevelUpLearnset_HandleAlternateForm gives them to every reader --
+    a new Pokemon's moves, a level-up, the Move Relearner, an egg's
+    inheritance: without the moves IsMoveUnimplemented says yes to.
 
     wotbl.py already decodes the archive and refuses to touch it unless the
     round trip is byte for byte, so the reading is borrowed rather than
@@ -448,7 +481,9 @@ def learnsets():
     sys.path.insert(0, str(ROOT / "tools/newgold/import"))
     import wotbl
     files, _, _ = wotbl.read_narc(source(wotbl.ARCHIVE).read_bytes())
-    return [[(entry["level"], entry["move"]) for entry in wotbl.decode(f)] for f in files]
+    unimplemented = unimplemented_moves()
+    return [[(entry["level"], entry["move"]) for entry in wotbl.decode(f) if entry["move"] not in unimplemented]
+            for f in files]
 
 
 def learnset(index, level):
