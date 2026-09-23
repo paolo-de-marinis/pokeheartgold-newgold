@@ -117,6 +117,7 @@ BOOL CheckItemGradualHPRestore(BattleSystem *battleSystem, BattleContext *ctx, i
 BOOL CheckUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u32 *scriptOut);
 BOOL TryHeldItemNegativeEffect(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 u16 GetBattlerHeldItem(BattleContext *ctx, int battlerId);
+u8 *Battler_RageFistHits(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL ov12_0225561C(BattleContext *ctx, int battlerId);
 BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int holdEffect);

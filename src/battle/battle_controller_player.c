@@ -182,9 +182,11 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // leaves to the second grew it by four. Echoed Voice's two bytes, after
 // Parental Bond's four, grew it by four. Round's byte went into the padding
 // after them. The two moves used last this turn, for Fusion Flare and Fusion
-// Bolt, grew it by four. The Rooms' two bytes grew it by four.
+// Bolt, grew it by four. The Rooms' two bytes grew it by four. Rage Fist's
+// count by party, two of its bytes in the padding the Rooms' left, grew it by
+// twenty-four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3240 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3258 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -3797,6 +3799,17 @@ static void BattleControllerPlayer_HpCalc(BattleSystem *battleSystem, BattleCont
 
             if (ctx->battleMons[ctx->battlerIdTarget].hitCount < 255) {
                 ctx->battleMons[ctx->battlerIdTarget].hitCount++;
+            }
+            // Rage Fist counts every hit taken, each strike of a multi-hit
+            // move one, whoever landed it; not a substitute's, and not what
+            // confusion, recoil, the weather or a status costs, none of which
+            // comes here (Pokemon Central, Pugno Furibondo).
+            {
+                u8 *hits = Battler_RageFistHits(battleSystem, ctx, ctx->battlerIdTarget);
+
+                if (*hits < 6) {
+                    (*hits)++;
+                }
             }
 
             if (BattleMoveTbl(ctx, ctx->moveNoCur)->category == CATEGORY_PHYSICAL) {

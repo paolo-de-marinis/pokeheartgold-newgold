@@ -5635,6 +5635,15 @@ int TryOpportunistOrSymbiosis(BattleSystem *battleSystem, BattleContext *ctx) {
     return script;
 }
 
+// Where Rage Fist's count is kept for this battler's Pokemon: its slot in the
+// party it was sent out from, as for the once-per-battle entry abilities
+// above, so the count goes out and comes back in with it.
+u8 *Battler_RageFistHits(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int party = BattleSystem_GetParty(battleSystem, battlerId) == BattleSystem_GetParty(battleSystem, battlerId & 1) ? (battlerId & 1) : battlerId;
+
+    return &ctx->rageFistHits[party][ctx->selectedMonIndex[battlerId]];
+}
+
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int j;
@@ -10185,6 +10194,12 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     // Every Round in a turn but the first is 120 (Pokemon Central, Coro).
     if (moveNo == MOVE_ROUND && (ctx->roundUsers & ~MaskOfFlagNo(battlerIdAttacker))) {
         movePower *= 2;
+    }
+
+    // Rage Fist is 50 more for each hit its user has taken in this battle, 350
+    // at most after six (Pokemon Central, Pugno Furibondo).
+    if (moveNo == MOVE_RAGE_FIST) {
+        movePower = movePower * (1 + *Battler_RageFistHits(battleSystem, ctx, battlerIdAttacker));
     }
 
     // Last Respects is 50 more for each time a Pokemon of the user's own party

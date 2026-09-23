@@ -674,6 +674,10 @@ typedef struct BattleContext {
     // The turns Wonder Room and Magic Room have left, 0 when they are down.
     u8 wonderRoomTurns;
     u8 magicRoomTurns;
+    // Rage Fist: the hits each Pokemon has taken this battle, six at most,
+    // by the party slot it was sent out from (Battler_RageFistHits); switching
+    // out and fainting keep the count.
+    u8 rageFistHits[BATTLER_MAX][PARTY_SIZE];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

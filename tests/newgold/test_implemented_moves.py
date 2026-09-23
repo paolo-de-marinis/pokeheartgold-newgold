@@ -331,5 +331,18 @@ class ImplementedMoveTests(unittest.TestCase):
         calc = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CalcMoveDamage")
         self.assertIn("int fallen = BattlerPartyFaintCount(battleSystem, ctx, battlerIdAttacker);", calc)
 
+    def test_rage_fist_counts_the_hits_its_user_takes(self):
+        # Pokemon Central (Pugno Furibondo): every hit that lands on the user,
+        # not on its substitute, six at most, kept through a switch and a
+        # faint by party slot; the power is test_move_power's RageFistTests.
+        self.assertImplemented("RAGE_FIST", "MOVE_EFFECT_HIT")
+        hp_calc = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_HpCalc")
+        counting = "u8 *hits = Battler_RageFistHits(battleSystem, ctx, ctx->battlerIdTarget);"
+        self.assertIn(counting, hp_calc)
+        self.assertIn("if (*hits < 6) {\n                    (*hits)++;", hp_calc)
+        self.assertLess(hp_calc.index("BATTLE_SUBSCRIPT_HIT_SUBSTITUTE"), hp_calc.index(counting))
+        where = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "Battler_RageFistHits")
+        self.assertIn("return &ctx->rageFistHits[party][ctx->selectedMonIndex[battlerId]];", where)
+
 if __name__ == "__main__":
     unittest.main()

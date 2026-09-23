@@ -148,6 +148,23 @@ class LastRespectsTests(unittest.TestCase):
 """))
 
 
+class RageFistTests(unittest.TestCase):
+    def test_it_grows_50_for_each_hit_taken(self):
+        """50 times one more than the hits its user has taken, which the
+        controller stops at six: 50, 100, 350 are 24, 46, 156 (Pokemon Central,
+        Pugno Furibondo). The count is stubbed by battler."""
+        run_c(self, damage_program(r"""
+#define FIST(move, attacker) CalcMoveDamage(&bs, &ctx, move, 0, 0, 0, TYPE_GHOST, attacker, 1, 1)
+    reset(4); S.move.power = 50;
+    EXPECT(FIST(MOVE_RAGE_FIST, 0), 24);
+    S.rageFist[0] = 1; EXPECT(FIST(MOVE_RAGE_FIST, 0), 46);
+    S.rageFist[0] = 6; EXPECT(FIST(MOVE_RAGE_FIST, 0), 156);
+    // The user's hits, not the target's; and only Rage Fist asks.
+    S.rageFist[0] = 0; S.rageFist[1] = 6; EXPECT(FIST(MOVE_RAGE_FIST, 0), 24);
+    S.rageFist[0] = 6; EXPECT(FIST(MOVE_DRAIN_PUNCH, 0), 24);
+"""))
+
+
 if __name__ == "__main__":
     unittest.main()
 

@@ -395,6 +395,9 @@ IMPLEMENTED_HERE = {
     # Last Respects is 50 more for each faint in the user's party (Pokemon
     # Central, Omaggio ai KO): CalcMoveDamage counts them.
     "LAST_RESPECTS": "MOVE_EFFECT_HIT",
+    # Rage Fist is 50 more for each hit its user has taken, to 350 (Pokemon
+    # Central, Pugno Furibondo): the controller counts, CalcMoveDamage reads.
+    "RAGE_FIST": "MOVE_EFFECT_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
