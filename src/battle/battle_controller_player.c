@@ -2499,6 +2499,22 @@ static BOOL ov12_0224B498(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// Heal Block's other half, on the one a move would heal
+// (BattleController_CheckHealBlock at d0380a487): Heal Pulse is refused on a
+// Pokemon under it, and Pollen Puff on an ally under it, where the move heals
+// rather than hits. The user is told it cannot use the move, as for its own.
+static BOOL TargetIsHealBlocked(BattleContext *ctx) {
+    int target = ctx->battlerIdTarget;
+
+    if (target == BATTLER_NONE || !ctx->battleMons[target].unk88.healBlockTurns) {
+        return FALSE;
+    }
+    if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_HEAL_TARGET) {
+        return TRUE;
+    }
+    return ctx->moveNoCur == MOVE_POLLEN_PUFF && target == (ctx->battlerIdAttacker ^ 2);
+}
+
 static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
     int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
     int ret = 0;
@@ -2641,7 +2657,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_50++;
             break;
         case 10:
-            if (BattleContext_CheckMoveHealBlocked(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoCur)) {
+            if (BattleContext_CheckMoveHealBlocked(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoCur) || TargetIsHealBlocked(ctx)) {
                 ctx->moveFail[ctx->battlerIdAttacker].healBlock = TRUE;
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_MOVE_IS_HEAL_BLOCKED);
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;

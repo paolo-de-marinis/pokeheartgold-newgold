@@ -642,6 +642,55 @@ class HealBlockTests(unittest.TestCase):
         body = function(source, "BattleContext_CheckMoveHealBlocked")
         self.assertIn("sHealBlockUnusableMoveEffects[i] == effect", body)
 
+    TARGET_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/moves.h"
+#include "constants/move_effects.h"
+typedef struct { int effect; } MoveTbl;
+typedef struct {
+    struct { struct { int healBlockTurns; } unk88; } battleMons[4];
+    int battlerIdAttacker, battlerIdTarget; u32 moveNoCur;
+} BattleContext;
+static MoveTbl heal = { MOVE_EFFECT_HEAL_TARGET }, other = { MOVE_EFFECT_HIT };
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; return moveNo == MOVE_HEAL_PULSE ? &heal : &other; }
+@FUNCTION@
+static int refused(u32 move, int target, int blocked) {
+    BattleContext ctx = { 0 };
+    ctx.battlerIdAttacker = 0;
+    ctx.battlerIdTarget = target;
+    ctx.moveNoCur = move;
+    ctx.battleMons[target].unk88.healBlockTurns = blocked;
+    return TargetIsHealBlocked(&ctx);
+}
+int main(void) {
+    assert(refused(MOVE_HEAL_PULSE, 1, 5));
+    assert(!refused(MOVE_HEAL_PULSE, 1, 0));
+    assert(refused(MOVE_POLLEN_PUFF, 2, 5));
+    assert(!refused(MOVE_POLLEN_PUFF, 1, 5));
+    assert(!refused(MOVE_TACKLE, 1, 5));
+    return 0;
+}
+"""
+
+    def test_heal_pulse_and_a_partner_s_pollen_puff_are_refused_on_a_heal_blocked_target(self):
+        # BattleController_CheckHealBlock at d0380a487.
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        fixture = self.TARGET_FIXTURE.replace("@FUNCTION@", function(controller, "TargetIsHealBlocked"))
+        with tempfile.TemporaryDirectory(prefix="newgold-heal-block-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(fixture)
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
+                str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+        self.assertIn("|| TargetIsHealBlocked(ctx)) {", function(controller, "ov12_0224B528"))
+
+
 class TintedLensTests(unittest.TestCase):
     def test_a_resisted_hit_is_doubled(self):
         # The reference multiplies by 1.25 (battle_calc_damage.c:677, UQ412__1_25),
