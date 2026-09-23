@@ -99,6 +99,27 @@ class FormChangeTests(unittest.TestCase):
     puts("PASS: Zen Mode comes at half HP and goes above it or without the ability.");""", "newgold-zen-"))
         self.assertIn("form = Battler_ZenModeForm(ctx, ctx->battlerIdTemp);", self.check)
 
+    def test_schooling(self):
+        """A Wishiwashi of level 20 or more schools above a quarter of its HP
+        and breaks up at a quarter; below 20, or without the ability, it does
+        not school."""
+        print(run(["Battler_SchoolingForm"], r"""
+    set(SPECIES_WISHIWASHI, ABILITY_SCHOOLING, 26, 100);
+    assert(Battler_SchoolingForm(&ctx, 0) == SPECIES_WISHIWASHI_SCHOOL);
+    set(SPECIES_WISHIWASHI, ABILITY_SCHOOLING, 25, 100);
+    assert(Battler_SchoolingForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_WISHIWASHI_SCHOOL, ABILITY_SCHOOLING, 25, 100);
+    assert(Battler_SchoolingForm(&ctx, 0) == SPECIES_WISHIWASHI);
+    set(SPECIES_WISHIWASHI_SCHOOL, ABILITY_SCHOOLING, 26, 100);
+    assert(Battler_SchoolingForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_WISHIWASHI, ABILITY_SCHOOLING, 100, 100);
+    ctx.battleMons[0].level = 19;
+    assert(Battler_SchoolingForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_WISHIWASHI, ABILITY_NONE, 100, 100);
+    assert(Battler_SchoolingForm(&ctx, 0) == SPECIES_NONE);
+    puts("PASS: Schooling above a quarter of the HP, from level 20.");""", "newgold-schooling-"))
+        self.assertIn("form = Battler_SchoolingForm(ctx, ctx->battlerIdTemp);", self.check)
+
 
 if __name__ == "__main__":
     unittest.main()

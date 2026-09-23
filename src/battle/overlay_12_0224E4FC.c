@@ -7424,6 +7424,24 @@ static u16 Battler_ZenModeForm(BattleContext *ctx, int battlerId) {
     return SPECIES_NONE;
 }
 
+// Schooling (BattleFormChangeCheck.c:290): a Wishiwashi schools while its HP
+// is above a quarter and breaks up at a quarter or less. hg-engine asks neither
+// for the ability nor for the level, so a Wishiwashi below 20, or one that has
+// lost the ability, schooled all the same; the ability says it cannot.
+static u16 Battler_SchoolingForm(BattleContext *ctx, int battlerId) {
+    BOOL school = GetBattlerAbility(ctx, battlerId) == ABILITY_SCHOOLING
+        && ctx->battleMons[battlerId].level >= 20
+        && ctx->battleMons[battlerId].hp > (s32)(ctx->battleMons[battlerId].maxHp / 4);
+
+    switch (ctx->battleMons[battlerId].species) {
+    case SPECIES_WISHIWASHI:
+        return school ? SPECIES_WISHIWASHI_SCHOOL : SPECIES_NONE;
+    case SPECIES_WISHIWASHI_SCHOOL:
+        return school ? SPECIES_NONE : SPECIES_WISHIWASHI;
+    }
+    return SPECIES_NONE;
+}
+
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int form;
@@ -7580,6 +7598,15 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
             *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
             ret = TRUE;
             break;
+        }
+        if (ctx->battleMons[ctx->battlerIdTemp].hp && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {
+            form = Battler_SchoolingForm(ctx, ctx->battlerIdTemp);
+            if (form != SPECIES_NONE) {
+                BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, form, FALSE);
+                *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
+                ret = TRUE;
+                break;
+            }
         }
     }
 

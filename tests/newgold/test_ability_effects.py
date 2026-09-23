@@ -134,6 +134,7 @@ IMPLEMENTED = {
     "SAND_RUSH",
     "SAND_SPIT",
     "SAP_SIPPER",
+    "SCHOOLING",
     "SCREEN_CLEANER",
     "SEED_SOWER",
     "SHADOW_SHIELD",
@@ -191,8 +192,8 @@ IMPLEMENTED = {
 # are read here -- but only in the blocklists of Skill Swap, Role Play, Worry
 # Seed, Gastro Acid and Simple Beam. The reference never reads either by name
 # in C: its form changes key on SPECIES_WISHIWASHI and SPECIES_ZYGARDE
-# (BattleFormChangeCheck.c), and this tree has no in-battle form change yet,
-# so both do nothing here. They move out when that machinery comes in.
+# (BattleFormChangeCheck.c). Schooling is done now, and asks for its ability
+# by name, which the reference forgets to; Power Construct is still to come.
 #
 # They are listed rather than waved through because the danger is not that
 # they are unfinished, it is finishing without noticing: a Pokemon whose
@@ -204,7 +205,7 @@ PENDING = {
     "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4", "EMERGENCY_EXIT",
     "GUARD_DOG", "HUNGER_SWITCH", "ICE_FACE", "ILLUSION", "MEGA_SOL", "MIMICRY",
     "OPPORTUNIST", "PARENTAL_BOND", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN",
-    "SCHOOLING", "POWER_CONSTRUCT",
+    "POWER_CONSTRUCT",
     "STAKEOUT", "STANCE_CHANGE", "SUPREME_OVERLORD", "SYMBIOSIS", "TEMP4",
     "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR",
     "WIMP_OUT", "ZERO_TO_HERO"
@@ -273,7 +274,7 @@ class AbilityEffectTests(unittest.TestCase):
     #
     # 39 -> 41: Schooling and Power Construct had been counted done on their
     # blocklist reads alone; see the note above PENDING.
-    STILL_TO_DO = 40
+    STILL_TO_DO = 39
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
