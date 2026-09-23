@@ -40,7 +40,6 @@ IMPLEMENTED = {
     "CHEEK_POUCH",
     "CHILLING_NEIGH",
     "COMATOSE",
-    "COMMANDER",
     "COMPETITIVE",
     "CONTRARY",
     "CORROSION",
@@ -236,11 +235,20 @@ IMPLEMENTED = {
 # (BattleFormChangeCheck.c). Both are done now, and ask for their ability by
 # name, which the reference forgets to.
 #
+# Commander, Gulp Missile and Poison Puppeteer were counted done the same way:
+# every read of them was a block list -- the ability table, the gas's list of
+# what nothing suppresses, Mummy's refusals and the copy and suppress
+# scripts' lists. The check below no longer takes such a read for one. Gulp
+# Missile and Poison Puppeteer have their effects now; Commander is pending:
+# Tatsugiri going into its Dondozo's mouth wants a double battle's selection,
+# targeting, switching and forced-switch paths each to know of it (Pokemon
+# Central, Torre di Comando).
+#
 # They are listed rather than waved through because the danger is not that
 # they are unfinished, it is finishing without noticing: a Pokemon whose
 # ability does nothing looks right on the summary screen and loses battles
 # quietly. This test fails the moment one is added and not accounted for.
-PENDING = set()
+PENDING = {"COMMANDER"}
 
 # Numbers the engine keeps free rather than abilities. TEMP4 (317) sits
 # between Fire Mane and Spicy Spray, where the engine reserved a slot for an
@@ -255,28 +263,58 @@ def added():
             if int(m.group(2)) > LAST_VANILLA}
 
 
+# The block lists: reads of an ability that only say it cannot be copied,
+# swapped, overwritten, wrapped or suppressed, and do nothing for it. The C's
+# are the ability table, the gas's list of what nothing suppresses and
+# Mummy's refusals; the scripts' are the moves that copy, swap, overwrite or
+# suppress an ability, every ability read in which is such a list.
+BLOCK_LIST_FUNCTIONS = ("AbilityIsUnsuppressable", "WrappingRefuses")
+BLOCK_LIST_SCRIPTS = {
+    "effect_script_0178.s",               # Role Play
+    "subscript_0135_CopyAbility.s",
+    "subscript_0143_SwapAbility.s",
+    "subscript_0163_GastroAcid.s",
+    "subscript_0167_WorrySeed.s",
+    "subscript_0316_Entrainment.s",
+    "subscript_0338_GiveTargetSimple.s",
+}
+
+
+def without_block_lists(path):
+    text = path.read_text(errors="replace")
+    if path.name in BLOCK_LIST_SCRIPTS:
+        return ""
+    if path.name == "overlay_12_0224E4FC.c":
+        start = text.index("static const u8 sAbilityFlags[] = {")
+        text = text[:start] + text[text.index("};", start):]
+        for name in BLOCK_LIST_FUNCTIONS:
+            text = text.replace(function(text, name), "")
+    return text
+
+
 def battle_source():
-    """Everywhere the game can read an ability: the C, and the battle scripts.
+    """Everywhere the game can read an ability, less the block lists: the C,
+    and the battle scripts.
 
     Some abilities are answered in a script rather than in C, and that is
     where the reference answers them too -- Corrosion in the poison
     subscripts, Soul-Heart in the one that faints a Pokemon, Mirror Armor in
-    the hazards check, Good as Gold in Transform's, and five -- Commander,
-    Gulp Missile, Poison Puppeteer, Power of Alchemy, Receiver -- whose every
-    read in the reference is a blocklist saying they cannot be copied,
-    swapped or suppressed. A script is source here as much as a .c is.
+    the hazards check, Good as Gold in Transform's; Power of Alchemy and
+    Receiver in the Receiver subscript. A script is source here as much as a
+    .c is.
 
-    A blocklist read is not always the whole of an ability, though: Schooling
-    and Power Construct are blocklist-only by name in the reference too, and
-    still do something there, because their form changes are keyed on the
-    species. That is why they are pending and not counted by this."""
+    A block-list read is not an effect: Commander, Gulp Missile and Poison
+    Puppeteer were once counted done on nothing else (see PENDING). Nor is
+    it always the whole of one, though: Schooling and Power Construct are
+    read by name only in the reference's block lists, and still do something
+    there, because their form changes are keyed on the species."""
     paths = sorted((ROOT / "src").rglob("*.c"))
     paths += sorted((ROOT / "files/battledata").rglob("*.s"))
-    return "\n".join(path.read_text(errors="replace") for path in paths)
+    return "\n".join(without_block_lists(path) for path in paths)
 
 
 def written_in_c():
-    """Only the C.
+    """Only the C, less its block lists.
 
     The two questions are not the same one. "Is it read" has to count the
     scripts, or ten finished abilities read as unfinished. "Did someone write
@@ -284,7 +322,7 @@ def written_in_c():
     blocklist the moment somebody else's script imports one, and Zen Mode
     sitting in Simple Beam's list of abilities it may not overwrite says
     nothing about whether Zen Mode changes a form."""
-    return "\n".join(path.read_text(errors="replace")
+    return "\n".join(without_block_lists(path)
                      for path in sorted((ROOT / "src").rglob("*.c")))
 
 
@@ -306,12 +344,31 @@ class AbilityEffectTests(unittest.TestCase):
             self.assertIn(f"ABILITY_{name}", source, f"ABILITY_{name} is listed as done but nothing reads it")
 
 
+    def test_a_block_list_alone_is_not_a_reading(self):
+        # What the strict reading strips is block lists and nothing else: the
+        # stripped scripts read an added ability only to fail the move, and
+        # the stripped C is where the table, the gas's list and Mummy's
+        # refusals live.
+        names = added()
+        for path in sorted((ROOT / "files/battledata/script").rglob("*.s")):
+            if path.name not in BLOCK_LIST_SCRIPTS:
+                continue
+            text = path.read_text()
+            failure = re.search(r"^(_\w+):\n    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED$", text, re.M).group(1)
+            for line in text.splitlines():
+                if any(name in names for name in re.findall(r"\bABILITY_(\w+)", line)) and not line.strip().startswith("//"):
+                    self.assertTrue(line.endswith(f", {failure}"), (path.name, line))
+        stripped = without_block_lists(ROOT / "src/battle/overlay_12_0224E4FC.c")
+        for name in ("sAbilityFlags[] = {", "static BOOL AbilityIsUnsuppressable(", "static BOOL WrappingRefuses("):
+            self.assertNotIn(name, stripped)
+        # A list alone would not have been enough for these three.
+        source = battle_source()
+        for name in ("GULP_MISSILE", "POISON_PUPPETEER"):
+            self.assertIn(f"ABILITY_{name}", source)
+        self.assertNotIn("ABILITY_COMMANDER", source)
+
     def test_a_pending_ability_is_not_quietly_half_wired(self):
         source = written_in_c()
-        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
-        start = overlay.index("static BOOL AbilityIsUnsuppressable(u16 ability) {")
-        gas_list = overlay[start:overlay.index("\n}\n", start)]
-        source = source.replace(gas_list, "")
         for name in sorted(PENDING):
             self.assertNotIn(f"ABILITY_{name}", source, f"ABILITY_{name} works now; move it to IMPLEMENTED")
 
@@ -336,7 +393,9 @@ class AbilityEffectTests(unittest.TestCase):
     # Shields Down, Battle Bond and Mega Sol done.
     # Shields Down, Battle Bond and Mega Sol done. Desolate Land, Primordial
     # Sea and Delta Stream done.
-    STILL_TO_DO = 0
+    # 0 -> 1: Commander had been counted done on its block-list reads alone;
+    # see the note above PENDING.
+    STILL_TO_DO = 1
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
