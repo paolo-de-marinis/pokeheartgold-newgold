@@ -202,5 +202,41 @@ class StatusImmunityTests(unittest.TestCase):
         self.assertIn("return ally ? (battlerID ^ 2) : battlerID;", body)
 
 
+class StatusMoveRefusalTests(unittest.TestCase):
+    # BattleController_CheckAbilityFailures4_StatusBasedFailures: a status
+    # move is refused before it lands when its target cannot take the status.
+    STATUSES = ("SLEEP", "SLEEP_NEXT_TURN", "PARALYZE", "POISON", "BADLY_POISON", "BURN")
+
+    def setUp(self):
+        self.body = function(OVERLAY.read_text(), "BattleContext_CheckMoveImmunityFromAbility")
+
+    def guard(self, needle):
+        """The `if (...)` that leads to the needle."""
+        head = self.body[:self.body.index(needle)]
+        return head[head.rindex("if ("):]
+
+    def test_the_six_statuses_are_the_ones_asked_about(self):
+        gives = re.search(r"BOOL givesStatus = (.*?);", self.body, re.S).group(1)
+        self.assertEqual(sorted(re.findall(r"MOVE_EFFECT_STATUS_(\w+)", gives)), sorted(self.STATUSES))
+
+    def test_comatose_takes_none_of_them(self):
+        guard = self.guard("ABILITY_COMATOSE")
+        self.assertIn("givesStatus", guard)
+        self.assertIn("BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY", self.body[self.body.index("ABILITY_COMATOSE"):][:200])
+
+    def test_pastel_veil_keeps_poison_off_its_side(self):
+        self.assertIn("BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_PASTEL_VEIL)", self.body)
+        guard = self.guard("ABILITY_PASTEL_VEIL")
+        self.assertIn("MOVE_EFFECT_STATUS_POISON", guard)
+        self.assertIn("MOVE_EFFECT_STATUS_BADLY_POISON", guard)
+
+    def test_flower_veil_keeps_them_off_a_grass_type_on_its_side(self):
+        self.assertIn("BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLOWER_VEIL)", self.body)
+        guard = self.guard("ABILITY_FLOWER_VEIL")
+        self.assertIn("givesStatus", guard)
+        for slot in (1, 2, 3):
+            self.assertIn(f"BMON_DATA_TYPE_{slot}, NULL) == TYPE_GRASS", guard)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -4024,13 +4024,42 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
     if (GetBattlerHeldItemEffect(ctx, battlerIdTarget) == HOLD_EFFECT_SPORE_POWDER_IMMUNITY && MoveIsInList(ctx->moveNoCur, sPowderMoves, NELEMS(sPowderMoves)) == TRUE && battlerIdAttacker != battlerIdTarget) {
         script = BATTLE_SUBSCRIPT_SAFETY_GOGGLES;
     }
+    // A status move aimed at a Pokemon that cannot take the status is turned
+    // away before it lands, as the reference's status-based ability failures
+    // do; the status subscripts refuse the same abilities for everything that
+    // arrives another way. Where two of these apply, the one the reference
+    // asks first names itself: Flower Veil, then Sweet Veil, then these two.
+    int moveEffect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
+    BOOL givesStatus = moveEffect == MOVE_EFFECT_STATUS_SLEEP || moveEffect == MOVE_EFFECT_STATUS_SLEEP_NEXT_TURN || moveEffect == MOVE_EFFECT_STATUS_PARALYZE
+        || moveEffect == MOVE_EFFECT_STATUS_POISON || moveEffect == MOVE_EFFECT_STATUS_BADLY_POISON || moveEffect == MOVE_EFFECT_STATUS_BURN;
+    // Comatose is already asleep, and so takes none of them.
+    if (givesStatus && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_COMATOSE) == TRUE) {
+        ctx->battlerIdTemp = battlerIdTarget;
+        script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
+    }
+    // Pastel Veil keeps poison off its side.
+    if (moveEffect == MOVE_EFFECT_STATUS_POISON || moveEffect == MOVE_EFFECT_STATUS_BADLY_POISON) {
+        int veiled = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_PASTEL_VEIL);
+        if (veiled != BATTLER_NONE) {
+            ctx->battlerIdTemp = veiled;
+            script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
+        }
+    }
     // Sweet Veil keeps its side awake: the moves that put a Pokemon to sleep,
     // Yawn, and Rest. Rest aims at its user, so a Pokemon under Sweet Veil
     // cannot rest either, which is the reference's behaviour and reads as a
     // bug until you know that.
-    int moveEffect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
     if (moveEffect == MOVE_EFFECT_STATUS_SLEEP || moveEffect == MOVE_EFFECT_STATUS_SLEEP_NEXT_TURN || moveEffect == MOVE_EFFECT_RECOVER_HEALTH_AND_SLEEP) {
         int veiled = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SWEET_VEIL);
+        if (veiled != BATTLER_NONE) {
+            ctx->battlerIdTemp = veiled;
+            script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
+        }
+    }
+    // Flower Veil keeps every one of them off a Grass type on its side.
+    if (givesStatus
+        && (GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL) == TYPE_GRASS || GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL) == TYPE_GRASS || GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_3, NULL) == TYPE_GRASS)) {
+        int veiled = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLOWER_VEIL);
         if (veiled != BATTLER_NONE) {
             ctx->battlerIdTemp = veiled;
             script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
