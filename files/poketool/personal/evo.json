@@ -3554,8 +3554,8 @@
       "baseSpecies": "SPECIES_SPRITZEE",
       "evos": [
         {
-          "method": "EVO_TRADE",
-          "param": 0,
+          "method": "EVO_TRADE_ITEM",
+          "param": "ITEM_SACHET",
           "target": "SPECIES_AROMATISSE"
         }
       ]
@@ -3564,8 +3564,8 @@
       "baseSpecies": "SPECIES_SWIRLIX",
       "evos": [
         {
-          "method": "EVO_TRADE",
-          "param": 0,
+          "method": "EVO_TRADE_ITEM",
+          "param": "ITEM_WHIPPED_DREAM",
           "target": "SPECIES_SLURPUFF"
         }
       ]

@@ -131,6 +131,20 @@ class EvolutionTests(unittest.TestCase):
         # The places they replace were never reachable in Johto.
         self.assertFalse({row for row in rows if row[1] in ("EVO_CORONET", "EVO_ETERNA", "EVO_ROUTE217")})
 
+    def test_spritzee_and_swirlix_want_their_items_held(self):
+        """hg-engine's Evolutions.c at d0380a487 evolves both by any trade; the
+        games, and the Sachet's and the Whipped Dream's hold effects, want the
+        item held. The importer writes the games' row over the engine's, so a
+        re-import keeps it (Paolo, 2026-09-23: reference defects are fixed)."""
+        self.assertEqual(self.byBase["SPECIES_SPRITZEE"],
+                         [{"method": "EVO_TRADE_ITEM", "param": "ITEM_SACHET", "target": "SPECIES_AROMATISSE"}])
+        self.assertEqual(self.byBase["SPECIES_SWIRLIX"],
+                         [{"method": "EVO_TRADE_ITEM", "param": "ITEM_WHIPPED_DREAM", "target": "SPECIES_SLURPUFF"}])
+        self.assertEqual(import_evolutions.CANONICAL_ROWS[("SPECIES_SWIRLIX", "EVO_TRADE", "0", "SPECIES_SLURPUFF")],
+                         ("EVO_TRADE_ITEM", "ITEM_WHIPPED_DREAM", "SPECIES_SLURPUFF"))
+        self.assertEqual(import_evolutions.CANONICAL_ROWS[("SPECIES_SPRITZEE", "EVO_TRADE", "0", "SPECIES_AROMATISSE")],
+                         ("EVO_TRADE_ITEM", "ITEM_SACHET", "SPECIES_AROMATISSE"))
+
     def test_every_name_is_defined(self):
         known = (constants("include/constants/pokemon.h", "EVO_")
                  | constants("include/constants/pokemon.h", "TYPE_")

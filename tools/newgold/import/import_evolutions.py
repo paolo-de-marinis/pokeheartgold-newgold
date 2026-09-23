@@ -59,6 +59,19 @@ FORM_TARGETS = {
 }
 
 
+# Where the engine's table is not the games' and the port writes the games'
+# row instead (Paolo, 2026-09-23: a defect of the reference is fixed to the
+# canonical behaviour, never copied). hg-engine's Evolutions.c at d0380a487
+# evolves Spritzee and Swirlix by any trade; in the games they evolve traded
+# while holding a Sachet or a Whipped Dream, which is what the two items'
+# own hold effects, HOLD_EFFECT_EVOLVE_SPRITZEE and _SWIRLIX, stand for.
+# Keyed by the engine's row as ROW reads it; the value is the row written.
+CANONICAL_ROWS = {
+    ("SPECIES_SPRITZEE", "EVO_TRADE", "0", "SPECIES_AROMATISSE"): ("EVO_TRADE_ITEM", "ITEM_SACHET", "SPECIES_AROMATISSE"),
+    ("SPECIES_SWIRLIX", "EVO_TRADE", "0", "SPECIES_SLURPUFF"): ("EVO_TRADE_ITEM", "ITEM_WHIPPED_DREAM", "SPECIES_SLURPUFF"),
+}
+
+
 FORMS_OF = {}
 
 
@@ -218,6 +231,7 @@ def main():
     for base, body in table.items():
         rows = [(method, param, carried_form(base, native_target(target))) for method, param, target in ROW.findall(body)]
         rows = [(method, param, target) for method, param, target in rows if target != "SPECIES_NONE"]
+        rows = [CANONICAL_ROWS.get((base, *row), row) for row in rows]
         # Only lines that touch a new species: either it evolves, or something
         # already here gains a way to become one.
         rows = [row for row in rows if base in wanted or row[2] in wanted]

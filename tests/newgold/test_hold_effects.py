@@ -80,8 +80,9 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # The Gems took one, the Binding Band one, the Adrenaline Orb one, the
 # Blunder Policy one, the Red Card and the Eject Button two, the Eject Pack
 # one, the Mirror Herb one. The Rusted Sword and Shield are read as items
-# (READ_AS_THE_ITEM) and took two.
-IMPORTED_AND_UNREAD = 2
+# (READ_AS_THE_ITEM) and took two, and the Sachet and the Whipped Dream, once
+# the evolution table asked for them, the last two.
+IMPORTED_AND_UNREAD = 0
 
 
 def effects_defined():
@@ -101,16 +102,21 @@ def effects_in_records():
     return {line.split(",")[2] for line in ITEM_DATA.read_text().splitlines()[1:] if line.strip()}
 
 
-# Two effects the game answers through the item rather than the effect: a
-# Zacian or Zamazenta holding its Rusted Sword or Shield is crowned when a
-# battle begins (Mon_ChangeToBattleForm), which asks for the item, as the
-# reference's ChangeToBattleForm does (src/pokemon.c:2240 at d0380a487).
-# Neither effect is named by any line of either tree. Each counts as read only
-# while its item is.
+# Effects the game answers through the item rather than the effect: a Zacian
+# or Zamazenta holding its Rusted Sword or Shield is crowned when a battle
+# begins (Mon_ChangeToBattleForm), which asks for the item, as the reference's
+# ChangeToBattleForm does (src/pokemon.c:2240 at d0380a487); a Spritzee or a
+# Swirlix traded holding a Sachet or a Whipped Dream evolves, which the
+# evolution table asks, as retail's evolution items are asked. None of the
+# four effects is named by any line of either tree. Each counts as read only
+# while its item is, by the C or by the evolution table.
 READ_AS_THE_ITEM = {
     "HOLD_EFFECT_TRANSFORM_ZACIAN": "ITEM_RUSTED_SWORD",
     "HOLD_EFFECT_TRANSFORM_ZAMAZENTA": "ITEM_RUSTED_SHIELD",
+    "HOLD_EFFECT_EVOLVE_SPRITZEE": "ITEM_SACHET",
+    "HOLD_EFFECT_EVOLVE_SWIRLIX": "ITEM_WHIPPED_DREAM",
 }
+EVOLUTIONS = ROOT / "files/poketool/personal/evo.json"
 
 
 def effects_read():
@@ -122,6 +128,7 @@ def effects_read():
         read.update(re.findall(r"HOLD_EFFECT_[A-Z0-9_]+", text))
         if path.suffix == ".c":
             items.update(re.findall(r"ITEM_[A-Z0-9_]+", text))
+    items.update(re.findall(r"ITEM_[A-Z0-9_]+", EVOLUTIONS.read_text()))
     read.update(effect for effect, item in READ_AS_THE_ITEM.items() if item in items)
     return read
 
