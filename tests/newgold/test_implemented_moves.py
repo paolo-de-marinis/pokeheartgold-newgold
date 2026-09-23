@@ -118,5 +118,13 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertNotIn("statRaised", function((ROOT / "src/battle/battle_controller_player.c").read_text(),
                                                 "BattleControllerPlayer_SelectionScreenInit"))
 
+    def test_alluring_voice_confuses_only_a_target_whose_stats_rose(self):
+        # Pokemon Central (Ammaliavoce): Burning Jealousy's condition, with
+        # confusion; sure once it holds.
+        self.assertImplemented("ALLURING_VOICE", "MOVE_EFFECT_CONFUSE_HIT")
+        self.assertEqual(record("ALLURING_VOICE")[6], 100)
+        meets = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "SecondaryEffectMeetsItsTarget")
+        self.assertIn("ctx->moveNoCur == MOVE_ALLURING_VOICE", meets)
+
 if __name__ == "__main__":
     unittest.main()

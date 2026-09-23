@@ -1833,11 +1833,12 @@ BOOL TryFlungItemEffect(BattleSystem *battleSystem, BattleContext *ctx) {
 }
 
 // Burning Jealousy burns only a target whose stats rose during this turn, by
-// whatever means (Pokemon Central, Fiamminvidia); the rest it only hurts. The
-// chance is the move's 100 once it applies, and Sheer Force still takes it
-// away and pays the power for it either way, as the page has it.
+// whatever means (Pokemon Central, Fiamminvidia), and Alluring Voice confuses
+// only such a target (Ammaliavoce); the rest they only hurt. The chance is
+// the move's 100 once it applies, and Sheer Force still takes it away and pays
+// the power for it either way, as the pages have it.
 static BOOL SecondaryEffectMeetsItsTarget(BattleContext *ctx) {
-    if (ctx->moveNoCur == MOVE_BURNING_JEALOUSY) {
+    if (ctx->moveNoCur == MOVE_BURNING_JEALOUSY || ctx->moveNoCur == MOVE_ALLURING_VOICE) {
         return ctx->turnData[ctx->battlerIdTarget].statRaised;
     }
     return TRUE;

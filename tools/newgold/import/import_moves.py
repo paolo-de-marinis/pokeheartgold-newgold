@@ -341,6 +341,9 @@ IMPLEMENTED_HERE = {
     # Burning Jealousy burns only a target whose stats rose this turn
     # (Pokemon Central, Fiamminvidia): SecondaryEffectMeetsItsTarget asks.
     "BURNING_JEALOUSY": "MOVE_EFFECT_BURN_HIT",
+    # Alluring Voice confuses only a target whose stats rose this turn
+    # (Pokemon Central, Ammaliavoce): Psybeam's effect, asked the same way.
+    "ALLURING_VOICE": "MOVE_EFFECT_CONFUSE_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -350,6 +353,8 @@ FIELDS_HERE = {
     "HARD_PRESS": {"power": 1},
     # A flinch that always comes, as a side effect the chance is read for.
     "UPPER_HAND": {"effectChance": 100},
+    # Sure, once the target's stats have risen this turn.
+    "ALLURING_VOICE": {"effectChance": 100},
 }
 
 # The effects written here for those moves follow the reference's in
