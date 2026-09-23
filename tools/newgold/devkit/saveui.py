@@ -58,9 +58,12 @@ GAME_LABELS = {"HEARTGOLD": "HeartGold", "SOULSILVER": "SoulSilver"}
 NAME = re.compile(r"[\w\- .]+")
 APP = "net.kuribo64.melonDS"    # diag/play.py's
 LAUNCHED = []                   # what a dry run would have started
-# What this editor's code is: a server running older code answers with
-# another, and a new start replaces it instead of opening its page.
-CODE = hashlib.sha1(b"".join(f.read_bytes() for f in (Path(__file__).resolve(), HERE / "saveui.html", HERE / "savedit.py"))).hexdigest()[:12]
+# What this editor's code is -- its own files and the tools' modules savedit
+# borrows: a server running older code answers with another, and a new start
+# replaces it instead of opening its page.
+CODE = hashlib.sha1(b"".join(f.read_bytes() for f in (
+    Path(__file__).resolve(), HERE / "saveui.html", HERE / "savedit.py", HERE / "harness/save_budget.py",
+    *(ROOT / "tools/newgold/import" / f"{name}.py" for name in ("wotbl", "import_moves", "gmm"))))).hexdigest()[:12]
 CONFIG = Path(os.environ.get("SAVEUI_CONFIG") or
               Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "newgold-saveui/settings.json")
 LAUNCH_LOG = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "newgold-saveui/melonds.log"

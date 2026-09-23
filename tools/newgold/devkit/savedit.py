@@ -493,16 +493,28 @@ def learnsets():
     a new Pokemon's moves, a level-up, the Move Relearner, an egg's
     inheritance: without the moves IsMoveUnimplemented says yes to.
 
-    wotbl.py already decodes the archive and refuses to touch it unless the
-    round trip is byte for byte, so the reading is borrowed rather than
-    repeated.
+    An entry is what the loader's array holds (its element type), the move
+    and the level taken out of it with include/pokemon.h's
+    LEVEL_UP_LEARNSET_ masks and shifts, up to LEVEL_UP_LEARNSET_END. The
+    archive itself is wotbl.py's to read.
     """
     sys.path.insert(0, str(ROOT / "tools/newgold/import"))
     import wotbl
+    element = re.search(r"LoadLevelUpLearnset_HandleAlternateForm\(int species, int form, (\w+) \*levelUpLearnset\)",
+                        source("include/pokemon.h").read_text()).group(1)
+    (width, move_mask, move_shift, level_mask, level_shift, end), _ = compile_c(
+        (f"sizeof({element})", "LEVEL_UP_LEARNSET_MOVEID_MASK", "LEVEL_UP_LEARNSET_MOVEID_SHIFT",
+         "LEVEL_UP_LEARNSET_LEVEL_MASK", "LEVEL_UP_LEARNSET_LEVEL_SHIFT", "LEVEL_UP_LEARNSET_END"),
+        headers=LAYOUT_HEADERS + ("pokemon.h",))
     files, _, _ = wotbl.read_narc(source(wotbl.ARCHIVE).read_bytes())
     unimplemented = unimplemented_moves()
-    return [[(entry["level"], entry["move"]) for entry in wotbl.decode(f) if entry["move"] not in unimplemented]
-            for f in files]
+    out = []
+    for member in files:
+        entries = [int.from_bytes(member[at:at + width], "little") for at in range(0, len(member) - width + 1, width)]
+        entries = itertools.takewhile(lambda entry: entry != end, entries)
+        out.append([((entry & level_mask) >> level_shift, (entry & move_mask) >> move_shift) for entry in entries
+                    if (entry & move_mask) >> move_shift not in unimplemented])
+    return out
 
 
 def preset_moves(species, level, form=0):
@@ -1246,14 +1258,10 @@ def item_table():
 
 @tree_cache
 def move_table():
-    """Every move's name and base PP, the PP out of waza_tbl.narc."""
-    sys.path.insert(0, str(ROOT / "tools/newgold/import"))
-    import import_moves
-    source(import_moves.TABLE)
-    records = import_moves.read_table()
-    return [{"id": n, "name": name,
-             "pp": struct.unpack(import_moves.RECORD, records[n])[5] if n < len(records) else 0}
-            for n, name in enumerate(bank(MOVE_NAMES))]
+    """Every move's name and base PP, the PP out of waza_tbl.narc where
+    GetMoveMaxPP's MOVEATTR_PP reads it."""
+    pp = move_attr("MOVEATTR_PP")
+    return [{"id": n, "name": name, "pp": pp[n] if n < len(pp) else 0} for n, name in enumerate(bank(MOVE_NAMES))]
 
 
 @tree_cache

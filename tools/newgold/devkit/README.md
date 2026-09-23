@@ -80,7 +80,9 @@ offset and limit, from the Pokemon's size and the Dex's offsets to the
 party size, `MAX_EV_PER_STAT` and `Mail_Init`'s values -- is what the host
 compiler makes of the headers with `config.mk`'s defines, 32-bit pointers
 and signed char (`_layout`, `compile_c`: nothing is run, the numbers are
-read out of the assembly). The tables are read out of the C that has them:
+read out of the assembly). The learnsets' entries and the move records are laid out as
+`include/pokemon.h`'s `LEVEL_UP_LEARNSET_` macros and `struct MoveTbl` say.
+The tables are read out of the C that has them:
 the block order (`GetSubstruct`), `gNatureStatMods`, `ResolveMonForm`'s
 forms, the pockets (`struct Bag`, `Bag_GetItemPocket`, `sPockets`), which
 items are TMs, HMs and TRs (`ItemIsTM` and the rest), the message banks
