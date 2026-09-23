@@ -2,9 +2,10 @@
 """Check what a Pokeathlon course record keeps of the team that set it.
 
 The record (Pokeathlon_CourseRecord, in the save) keeps each Pokemon's
-species in nine bits, and the course-record screen asserts it is at most
-493. ov96_021E786C, which writes it, is compiled on the host with the
-structures as the headers and the file declare them.
+species in nine bits, and the course-record screen names only 1..493.
+ov96_021E786C, which writes it, and ov98_0221EE28, which prints it, are
+compiled on the host with the structures as the headers and the files
+declare them.
 """
 
 import re
@@ -61,6 +62,48 @@ int main(void) {
 """
 
 
+SCREEN = r"""
+#include <assert.h>
+#include <stdio.h>
+typedef unsigned char u8;
+typedef unsigned short u16;
+typedef unsigned int u32;
+typedef struct Window { u8 filler[16]; } Window;
+typedef struct MsgData MsgData;
+typedef struct MessageFormat MessageFormat;
+typedef struct String String;
+typedef void *PrinterCallback_t;
+#define MAX_SPECIES 493
+#define SPECIES_NONE 0
+#define NULL 0
+#define TEXT_SPEED_NOTRANSFER 0xFF
+#define MAKE_TEXT_COLOR(fg, sh, bg) (((fg) << 16) | ((sh) << 8) | (bg))
+/* A failed assertion resets the console; here it is only counted. */
+static int assertions;
+#define GF_ASSERT(expr) ((expr) ? (void)0 : (void)assertions++)
+static int nameRead = -1;
+void ReadMsgDataIntoString(MsgData *msgData, int strno, String *dest) { (void)msgData; (void)dest; nameRead = strno; }
+void FillWindowPixelBuffer(Window *window, u8 fill) { (void)window; (void)fill; }
+u8 AddTextPrinterParameterizedWithColor(Window *window, int fontId, String *string, u32 x, u32 y, u32 speed, u32 color, PrinterCallback_t cb) { (void)window; (void)fontId; (void)string; (void)x; (void)y; (void)speed; (void)color; (void)cb; return 0; }
+void ScheduleWindowCopyToVram(Window *window) { (void)window; }
+@TYPES@
+@PRINTER@
+int main(void) {
+    static Window windows[20];
+    Ov98Screen screen = { { 0 }, windows, 0, 0, 0, 0 };
+    /* nine bits hold 0..511: a record saved before bb0a9def3 can carry any of them */
+    for (int species = 0; species < 512; species++) {
+        assertions = 0;
+        ov98_0221EE28(&screen, 14, species);
+        assert(assertions == 0);
+        assert(nameRead == (species <= MAX_SPECIES ? species : SPECIES_NONE));
+    }
+    printf("PASS: the course-record screen names 1..493 and shows 494..511 as none.\n");
+    return 0;
+}
+"""
+
+
 class PokeathlonRecordTests(unittest.TestCase):
     def test_a_record_keeps_only_species_its_screen_can_print(self):
         header = (ROOT / "include/pokeathlon/pokeathlon_save.h").read_text()
@@ -71,6 +114,14 @@ class PokeathlonRecordTests(unittest.TestCase):
                           for name in ("PokeathlonCourseMon", "PokeathlonCourseResult"))
         program = PROGRAM.replace("@RECORD@", record).replace("@TYPES@", types)
         run_native(self, program.replace("@WRITER@", c_function(source, "ov96_021E786C")), "newgold-course-record-")
+
+    def test_the_record_screen_shows_what_it_cannot_name_as_none(self):
+        """A record saved before bb0a9def3 can hold 494..511, which the
+        screen's printer, ov98_0221EE28, asserted against: a reset."""
+        source = (ROOT / "src/pokeathlon/overlay_98_0221EE28.c").read_text()
+        types = re.search(r"typedef struct Ov98Screen \{.*?\} Ov98Screen;", source, re.S).group(0)
+        program = SCREEN.replace("@TYPES@", types).replace("@PRINTER@", c_function(source, "ov98_0221EE28"))
+        run_native(self, program, "newgold-course-record-screen-")
 
 
 if __name__ == "__main__":
