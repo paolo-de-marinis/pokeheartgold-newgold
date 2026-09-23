@@ -1,6 +1,8 @@
 #ifndef POKEHEARTGOLD_OVY_14_H
 #define POKEHEARTGOLD_OVY_14_H
 
+#include "constants/pokemon.h"
+
 #include "menu_input_state.h"
 #include "overlay_manager.h"
 #include "save.h"
@@ -11,6 +13,8 @@ typedef struct PCBoxArgs {
     MenuInputStateMgr *menuInputStatePtr;
     int unk8;
 } PCBoxArgs;
+
+#define PC_BOX_THUMBNAIL_SIZE 0x400
 
 // The prefix of the PC box application's graphics state that the routines
 // decompiled so far read. The rest is still addressed by offset in the
@@ -24,6 +28,9 @@ typedef struct PCBoxAppGraphics {
     int lastGridInput; // 0x43C
     u8 unk440[0xB];
     u8 unk44B;
+    u8 unk44C[0x3C7C];
+    // What a box looks like in the box list, one picture per box.
+    u8 boxThumbnails[NUM_BOXES][PC_BOX_THUMBNAIL_SIZE]; // 0x40C8
 } PCBoxAppGraphics;
 
 // The same for the application itself.
@@ -42,7 +49,7 @@ BOOL PCBox_Main(OverlayManager *man, int *state);
 BOOL PCBox_Exit(OverlayManager *man, int *state);
 
 void ov14_021E783C(PCBoxApp *app, void *boxData, int direction);
-void *ov14_021E7930(PCBoxApp *app, u8 box);
+void *ov14_021E7930(PCBoxApp *app, int box);
 void ov14_021E8248(void *a0);
 void ov14_021E82A8(void *a0);
 void ov14_021E84A4(void *a0);
@@ -54,10 +61,16 @@ void ov14_021F028C(PCBoxApp *app, int a1);
 void ov14_021F0314(PCBoxApp *app, int a1);
 void ov14_021F1004(PCBoxApp *app, int direction);
 void ov14_021F29E4(PCBoxAppGraphics *graphics, int a1, int a2);
-void ov14_021F2DE8(PCBoxApp *app, u8 box);
+void ov14_021F2C1C(PCBoxAppGraphics *graphics, int a1, void *src, u32 size);
+void ov14_021F2DE8(PCBoxApp *app, int box);
 void ov14_021F4848(PCBoxApp *app);
 void ov14_021F48B4(PCBoxApp *app);
+void ov14_021F46B0(PCBoxApp *app, void *dest, void *boxData, int a3, u32 size);
+void ov14_021F4958(PCBoxApp *app, u32 box);
+void ov14_021F49C8(PCBoxApp *app);
 void ov14_021F49E0(PCBoxApp *app);
+void ov14_021F4A20(PCBoxApp *app, u32 box);
+void ov14_021F4A64(PCBoxApp *app, u32 box, void *dest);
 void ov14_021F57B8(PCBoxApp *app);
 
 #endif // POKEHEARTGOLD_OVY_14_H

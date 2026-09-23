@@ -854,3 +854,10 @@
 .public ov14_021F1100
 .public ov14_021F30B0
 .public ov14_021F311C
+.public ov14_021F2A60
+.public ov14_021F2C1C
+.public ov14_021F46B0
+.public ov14_021F46F4
+.public ov14_021F4A64
+.public ov14_021F4D10
+.public ov14_021F4E68
