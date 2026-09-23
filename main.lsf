@@ -1085,6 +1085,8 @@ Overlay OVY_65
 {
     After OVY_6
     Object asm/overlay_65.o
+    Object src/trade_select_mon_panel.o
+    Object asm/overlay_65_0221D8C4.o
 }
 Overlay OVY_66
 {
