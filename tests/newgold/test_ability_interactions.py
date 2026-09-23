@@ -271,6 +271,8 @@ class AbilityCopyTableTests(unittest.TestCase):
         hit = function(source, "CheckAbilityEffectOnHit")
         wandering = hit[hit.index("case ABILITY_WANDERING_SPIRIT:"):]
         self.assertIn("AbilityFlags(ctx->battleMons[ctx->battlerIdAttacker].ability) & ABILITY_FLAG_FAILS_SWAP", wandering[:wandering.index("break;")])
+        mummy = hit[hit.index("case ABILITY_MUMMY:"):]
+        self.assertIn("AbilityFlags(ctx->battleMons[ctx->battlerIdAttacker].ability) & ABILITY_FLAG_FAILS_SUPPRESS", mummy[:mummy.index("break;")])
         scripts = ROOT / "files/battledata/script"
         asked = {
             "effect_script/effect_script_0178.s": [("ATTACKER", "FAILS_SUPPRESS")],
