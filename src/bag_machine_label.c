@@ -20,28 +20,60 @@ typedef char BagAppStateStringCheck[offsetof(BagAppStatePrefix, unk5EC) == 0x5EC
 
 // HeartGold has a badge only for HMs, and marks a TM with a "No." glyph and
 // two digits instead. New Gold gives TMs a badge of their own and room for
-// three digits, which is what a machine list has looked like since.
+// three digits, which is what a machine list has looked like since, and the
+// TRs hg-engine adds a TR badge and two digits, as its bag draws them.
 #define BAG_HM_BADGE NARC_bag_gra_bag_gra_00000037_NCGR
 #define BAG_TM_BADGE NARC_bag_gra_bag_gra_00000095_NCGR
+#define BAG_TR_BADGE NARC_bag_gra_bag_gra_00000096_NCGR
 #define HM_DIGITS    2
 #define TM_DIGITS    3
+#define TR_DIGITS    2
 
 // The number sits immediately right of the badge.
 #define NUMBER_X 24
 #define NUMBER_Y 5
 
+// The number a machine goes by, hg-engine's GetMachineMoveNumber: the games
+// that added machines numbered them on from TM92, started the TRs at 00, and
+// Scarlet and Violet began again at TM100, so the number is not the place.
+static u16 MachineNumber(u16 itemId) {
+    if (itemId == ITEM_HM07_ORAS) {
+        return 7;
+    }
+    if (itemId >= ITEM_HM01 && itemId <= ITEM_HM08) {
+        return itemId - ITEM_HM01 + 1;
+    }
+    if (itemId >= ITEM_TM01 && itemId <= ITEM_TM92) {
+        return itemId - ITEM_TM01 + 1;
+    }
+    if (itemId >= ITEM_TM093 && itemId <= ITEM_TM095) {
+        return itemId - ITEM_TM093 + 93;
+    }
+    if (itemId >= ITEM_TM096 && itemId <= ITEM_TM100) {
+        return itemId - ITEM_TM096 + 96;
+    }
+    if (itemId >= ITEM_TM100_SV && itemId <= ITEM_TM229) {
+        return itemId - ITEM_TM100_SV + 100;
+    }
+    if (itemId >= ITEM_TR00 && itemId <= ITEM_TR99) {
+        return itemId - ITEM_TR00;
+    }
+    return 0; // TM00
+}
+
 void ov15_021FE914(BagAppStatePrefix *state, Window *window, ItemSlot *slot, u32 y) {
     u32 badge = BAG_HM_BADGE;
     u32 digits = HM_DIGITS;
-    u16 number = slot->id - (ITEM_HM01 - 1);
 
-    if (slot->id < ITEM_HM01) {
+    if (ItemIsTM(slot->id)) {
         badge = BAG_TM_BADGE;
         digits = TM_DIGITS;
-        number = slot->id - (ITEM_TM01 - 1);
+    } else if (ItemIsTR(slot->id)) {
+        badge = BAG_TR_BADGE;
+        digits = TR_DIGITS;
     }
 
-    PrintUIntOnWindow(state->msgPrinter, number, digits, PRINTING_MODE_LEADING_ZEROS, window, NUMBER_X, y + NUMBER_Y);
+    PrintUIntOnWindow(state->msgPrinter, MachineNumber(slot->id), digits, PRINTING_MODE_LEADING_ZEROS, window, NUMBER_X, y + NUMBER_Y);
     ov15_021FE9B0(state, window, badge, y);
 }
 

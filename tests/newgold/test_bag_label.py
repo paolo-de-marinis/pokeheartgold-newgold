@@ -66,6 +66,19 @@ class BagLabelTests(unittest.TestCase):
         used = {row[x] for row in tm for x in LETTER_CELL}
         self.assertLessEqual(used, {0, make_tm_label.BOX, make_tm_label.LETTER, make_tm_label.SHADOW})
 
+    def test_the_tr_badge_is_the_tm_badge_with_an_r(self):
+        """Member 96: the TM badge's T, and an R where the M stood."""
+        width, height, tr = grid(make_tm_label.TR_BADGE.read_bytes())
+        _, _, tm = self.tm
+        self.assertEqual((width, height), (104, 16))
+        for y in range(height):
+            for x in range(width):
+                if x not in make_tm_label.SECOND_CELL:
+                    self.assertEqual(tr[y][x], tm[y][x], f"the TR badge differs at {x},{y}")
+        for y, columns in zip(range(make_tm_label.TOP, make_tm_label.BOTTOM + 1), make_tm_label.R_ROWS):
+            letter = [x - make_tm_label.R_LEFT for x in make_tm_label.SECOND_CELL if tr[y][x] == make_tm_label.LETTER]
+            self.assertEqual(letter, list(columns), f"row {y} of the R")
+
     def test_the_t_stands_on_its_bar(self):
         _, _, tm = self.tm
         self.assertEqual([tm[make_tm_label.TOP][x] for x in make_tm_label.BAR],
@@ -91,8 +104,14 @@ typedef enum { PRINTING_MODE_LEFT_ALIGN, PRINTING_MODE_RIGHT_ALIGN, PRINTING_MOD
 
 #define BAG_HM_BADGE NARC_bag_gra_bag_gra_00000037_NCGR
 #define BAG_TM_BADGE NARC_bag_gra_bag_gra_00000095_NCGR
+#define BAG_TR_BADGE NARC_bag_gra_bag_gra_00000096_NCGR
 #define HM_DIGITS 2
 #define TM_DIGITS 3
+#define TR_DIGITS 2
+typedef int BOOL;
+BOOL ItemIsTM(u16 itemId);
+BOOL ItemIsHM(u16 itemId);
+BOOL ItemIsTR(u16 itemId);
 #define NUMBER_X 24
 #define NUMBER_Y 5
 
@@ -138,7 +157,26 @@ int main(void) {
         assert(drawn.x == 24 && drawn.y == 21 && drawn.badgeY == 16);
     }
 
-    puts("PASS: 100 machine labels, badge choice, digits and placement.");
+    // The machines past HM08 go by the numbers their games gave them.
+    draw(ITEM_TM093);
+    assert(drawn.badge == BAG_TM_BADGE && drawn.digits == 3 && drawn.number == 93);
+    draw(ITEM_TM100);
+    assert(drawn.badge == BAG_TM_BADGE && drawn.number == 100);
+    draw(ITEM_TM100_SV);
+    assert(drawn.badge == BAG_TM_BADGE && drawn.number == 100);
+    draw(ITEM_TM229);
+    assert(drawn.badge == BAG_TM_BADGE && drawn.number == 229);
+    draw(ITEM_TM00);
+    assert(drawn.badge == BAG_TM_BADGE && drawn.number == 0);
+    draw(ITEM_HM07_ORAS);
+    assert(drawn.badge == BAG_HM_BADGE && drawn.digits == 2 && drawn.number == 7);
+    for (u16 item = ITEM_TR00; item <= ITEM_TR99; item++) {
+        draw(item);
+        assert(drawn.badge == BAG_TR_BADGE && drawn.digits == 2 && drawn.number == item - ITEM_TR00);
+        assert(drawn.mode == PRINTING_MODE_LEADING_ZEROS && drawn.x == 24 && drawn.y == 21);
+    }
+
+    puts("PASS: 340 machine labels, badge choice, digits and placement.");
     return 0;
 }
 """
@@ -147,7 +185,10 @@ int main(void) {
 class NativeLabelTests(unittest.TestCase):
     def test_native_machine_label(self):
         source = (ROOT / "src/bag_machine_label.c").read_text()
-        program = NATIVE.replace("@NATIVE@", function(source, "ov15_021FE914"))
+        item = (ROOT / "src/item.c").read_text()
+        native = [function(item, name) for name in ("ItemIsTM", "ItemIsHM", "ItemIsTR")]
+        native += [function(source, "MachineNumber"), function(source, "ov15_021FE914")]
+        program = NATIVE.replace("@NATIVE@", "\n".join(native))
         with tempfile.TemporaryDirectory(prefix="newgold-bag-label-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"
             c.write_text(program)

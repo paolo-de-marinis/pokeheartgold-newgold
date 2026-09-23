@@ -210,23 +210,76 @@ class PocketSizeTests(unittest.TestCase):
             self.assertEqual(int(match.group(1)), value, name)
 
 
+ROW = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#include "constants/items.h"
+#define TEXT_SPEED_NOTRANSFER 0xFF
+#define MAKE_TEXT_COLOR(a, b, c) (((a) << 16) | ((b) << 8) | (c))
+typedef struct { u16 id, quantity; } ItemSlot;
+typedef struct { int unused; } Window, String, MessageFormat, MsgData, Bag;
+typedef struct { Bag *bag; MessageFormat *messageFormat; MsgData *msgData; } BagAppStatePrefix;
+typedef struct BagItemListPrefix { ItemSlot *slots; u32 unk04; u8 pocket; } BagItemListPrefix;
+BOOL ItemIsTM(u16 itemId);
+BOOL ItemIsHM(u16 itemId);
+BOOL ItemIsTR(u16 itemId);
+static int counted, labelled;
+static void AddTextPrinterParameterizedWithColor(Window *w, int f, String *s, int x, int y, int speed, u32 c, void *cb) {}
+static void ov15_021FE914(BagAppStatePrefix *state, Window *window, ItemSlot *slot, u32 y) { labelled++; }
+static void ov15_021FE9F0(BagAppStatePrefix *state, Window *window, u32 y, u32 which) {}
+static void ov15_021FF66C(MessageFormat *f, MsgData *m, Window *window, u32 quantity) { counted++; }
+static u16 Bag_GetRegisteredItem1(Bag *bag) { return ITEM_NONE; }
+static u16 Bag_GetRegisteredItem2(Bag *bag) { return ITEM_NONE; }
+#define ROW_Y 0x10
+@NATIVE@
+static int row(u8 pocket, u16 item) {
+    ItemSlot slot = { item, 5 };
+    BagItemListPrefix list = { &slot, 0, pocket };
+    BagAppStatePrefix state = { 0 };
+    Window window;
+    counted = labelled = 0;
+    ov15_021FF570(&state, &window, NULL, &list, 0);
+    return counted;
+}
+int main(void) {
+    assert(row(POCKET_TMHMS, ITEM_TM01) == 0 && labelled == 1);
+    assert(row(POCKET_TMHMS, ITEM_TM100_SV) == 0);
+    assert(row(POCKET_TMHMS, ITEM_HM01) == 0);
+    assert(row(POCKET_TMHMS, ITEM_TR00) == 1 && labelled == 1);
+    assert(row(POCKET_TMHMS, ITEM_TR99) == 1);
+    assert(row(POCKET_ITEMS, ITEM_POTION) == 1 && labelled == 0);
+    puts("PASS: a TM or HM row has no count, a TR row and every other pocket have one.");
+    return 0;
+}
+"""
+
+
 class BagDisplayTests(unittest.TestCase):
-    """A TM that is never spent has no quantity worth showing.
+    """A TM that is never spent has no quantity worth showing; a TR does.
 
     HeartGold prints a count beside every TM in the bag. With reusable TMs the
     number is whatever the player happened to buy and never changes, so it says
-    nothing; HMs never had one for the same reason.
+    nothing; HMs never had one for the same reason. A TR is used up, so its
+    count is worth showing, as hg-engine shows it.
     """
 
-    def test_the_machine_row_prints_no_quantity(self):
-        row = (ROOT / "src/bag_item_row.c").read_text()
-        start = row.index("case POCKET_TMHMS:")
-        block = row[start:row.index("case POCKET_KEY_ITEMS:", start)]
-        self.assertNotIn("ov15_021FF66C", block, "the TM row still prints a count")
-
-    def test_every_other_pocket_still_does(self):
-        row = (ROOT / "src/bag_item_row.c").read_text()
-        self.assertIn("ov15_021FF66C", row[row.index("default:"):])
+    def test_the_machine_row_counts_only_trs(self):
+        item = (ROOT / "src/item.c").read_text()
+        native = [function(item, name) for name in ("ItemIsTM", "ItemIsHM", "ItemIsTR")]
+        native.append(function((ROOT / "src/bag_item_row.c").read_text(), "ov15_021FF570"))
+        with tempfile.TemporaryDirectory(prefix="newgold-bag-row-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            c.write_text(ROW.replace("@NATIVE@", "\n".join(native)))
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + ["-std=c11", "-O1", "-g", "-w", "-fsanitize=address,undefined", "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(exe)], capture_output=True, text=True, env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(result.returncode, 0, result.stderr)
+            print(result.stdout.strip())
 
 
 if __name__ == "__main__":

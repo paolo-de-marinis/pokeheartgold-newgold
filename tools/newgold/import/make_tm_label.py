@@ -11,6 +11,10 @@ The letter shapes follow the reference's own TM badge, which keeps the box and
 the M untouched and centres a T over five pixels. Its copy lost the shadow
 colour in conversion; this one keeps HeartGold's.
 
+The TRs hg-engine adds get the third badge it has, member 96: the same T, and
+an R where the M stood, as wide as the M, with the shadow falling to the right
+of every run of letter the way HeartGold's does.
+
 Usage: make_tm_label.py [--check]
 """
 
@@ -27,6 +31,7 @@ BAG = ROOT / "files/graphic/bag_gra"
 HM_BADGE = BAG / "bag_gra_00000037.NCGR"
 PALETTE = BAG / "bag_gra_00000038.NCLR"
 TM_BADGE = BAG / "bag_gra_00000095.png"
+TR_BADGE = BAG / "bag_gra_00000096.png"
 GFX = ROOT / "tools/nitrogfx/nitrogfx"
 
 BOX, LETTER, SHADOW = 9, 0xB, 8
@@ -36,6 +41,12 @@ BOX, LETTER, SHADOW = 9, 0xB, 8
 TOP, BOTTOM = 5, 10
 BAR = range(5, 10)
 STEM = 7
+
+# The M stands in columns 13 to 18 with its shadow in 19; the R takes the same
+# six columns. Each row is the columns of letter in it, top to bottom.
+SECOND_CELL = range(12, 21)
+R_LEFT = 13
+R_ROWS = [range(0, 5), (0, 5), (0, 5), range(0, 5), (0, 4), (0, 5)]
 
 
 def chunks(data):
@@ -97,6 +108,19 @@ def draw_t(rows):
     return rows
 
 
+def draw_r(rows):
+    for y in range(TOP, BOTTOM + 1):
+        for x in SECOND_CELL:
+            rows[y][x] = BOX
+    for y, columns in zip(range(TOP, BOTTOM + 1), R_ROWS):
+        for column in columns:
+            rows[y][R_LEFT + column] = LETTER
+        for column in columns:
+            if R_LEFT + column + 1 not in [R_LEFT + c for c in columns]:
+                rows[y][R_LEFT + column + 1] = SHADOW
+    return rows
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="compare, do not write")
@@ -116,15 +140,19 @@ def main():
     if (depth, colour) != (4, 3):
         raise SystemExit(f"the HM badge came back {depth}-bit type {colour}, not a 4-bit palette")
 
-    wanted = rebuild(rendered, draw_t(unfilter(zlib.decompress(idat), width, height)), width)
-    if args.check:
-        have = TM_BADGE.read_bytes() if TM_BADGE.exists() else b""
-        if have != wanted:
-            sys.exit(f"{TM_BADGE.relative_to(ROOT)} is not what the HM badge redraws to")
-        print(f"{TM_BADGE.relative_to(ROOT)} matches")
-        return
-    TM_BADGE.write_bytes(wanted)
-    print(f"wrote {TM_BADGE.relative_to(ROOT)}")
+    badges = {
+        TM_BADGE: rebuild(rendered, draw_t(unfilter(zlib.decompress(idat), width, height)), width),
+        TR_BADGE: rebuild(rendered, draw_r(draw_t(unfilter(zlib.decompress(idat), width, height))), width),
+    }
+    for path, wanted in badges.items():
+        if args.check:
+            have = path.read_bytes() if path.exists() else b""
+            if have != wanted:
+                sys.exit(f"{path.relative_to(ROOT)} is not what the HM badge redraws to")
+            print(f"{path.relative_to(ROOT)} matches")
+            continue
+        path.write_bytes(wanted)
+        print(f"wrote {path.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
