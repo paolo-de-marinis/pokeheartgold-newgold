@@ -145,13 +145,13 @@ what the game reaches*. That rule was right while this was a port of a fixed
 piece of content, and it is what got the first phase done at a sane size. It
 stops being right the moment the content starts growing here.
 
-The target is hg-engine's own range, in full:
-
-| Kind | Here now | Target | To add |
-| --- | ---: | ---: | ---: |
-| Species | 574 | 1075 | **501** |
-| Moves | 495 | 922 | **427** |
-| Abilities | 150 | 319 | **169** |
+The target is hg-engine's own range, in full: every species, move, ability
+and item the reference names. How far the tree has got is not written here,
+because a number typed into this file goes stale the day after: the counters
+at the top of `LEDGER.md` are generated from the tree by
+`tools/newgold/ledger.py` and say it. At the time of writing all four ranges
+are imported -- species with their forms, moves, abilities, items -- and what
+does not work yet is a row of the ledger or of the audit.
 
 ### The scope that was measured, and why it is kept
 
@@ -255,101 +255,29 @@ this sweep rather than by the commit list — critical captures, the items
 handed back, the friendship effects, Trick — which is why the sweep was worth
 doing and why it is recorded as finished here.
 
-**What is left.**
+**What is left** is kept in two places, and not in this file: the rows of
+`LEDGER.md` that are not done, and the rows of `docs/newgold/AUDIT-*.md` that
+are still open. The ledger's summary counts both -- the audit's open rows
+too, since 2026-09-23 -- from the files themselves. The port is finished when
+the ledger has nothing partial or still to do and the audit has no open row,
+or when each one left is closed with a written reason.
 
-The four items the expansion's precondition named are implemented: the
-interface the engine turns on, the Dex for the added species, the pockets, and
-thirty boxes. `VALIDATION.md` records the emulator session for them, and it
-records honestly that the session is boot and menu evidence — both ROMs start,
-keep running and take scripted button and touch input through the controls
-tutorial, which is past everything the save region and the heaps have to
-survive, and no further. None of the four has been exercised in play.
+## The whole range
 
-So two things stand between here and the expansion:
-
-1. The rest of the play session. **The EV and IV viewer is done** — seen on a
-   running ROM, six and a quarter minutes from a cold boot: L shows every
-   effort value at zero, R shows individual values that agree with the stats
-   they produce, Select puts the stats back, and the nature's mark on a stat
-   name is finally legible in the same captures. `VALIDATION.md` has the
-   numbers and `validation/` has the pictures.
-
-   The other three want the game played further, and the route can be extended
-   to each: `tools/newgold/devkit/harness/smoke.py --to skills` gets to a Pokemon and its
-   summary, and `tools/newgold/devkit/harness/where.py` reads the player's tile and the party
-   count out of a memory dump through the game's own structs, so a walk can be
-   aimed and its result checked without looking at the screen. The machine
-   badges want a TM, a Dex entry wants a species caught, and the thirtieth box
-   wants a Pokemon Centre — Cherrygrove has both of the last two, one route
-   west.
-2. Two things the Dex screen is known to owe, which that session should look
-   at rather than guess: it prints the species identifier rather than a
-   National Dex number for an added species, and the area screen has nothing
-   to say about a species no map places.
-
-## Next phase: the whole range
-
-The numbers are in *The criterion* above — 501 species, 427 moves, 169
-abilities. This is affordable, and the reason is that the infrastructure is
-already here. Nothing restarts and no tool is rewritten; the existing ones are
-widened.
-
-* Seventeen importers in `tools/newgold/`, all idempotent — run again over an
-  imported tree they answer "0 to change". For the species this is widening a
-  range, not writing code: `import_species.py`, `import_sprites.py` and
-  `import_icons.py` (which copy rather than convert), `heights.py`,
-  `import_evolutions.py`, `import_hidden_abilities.py`, `import_moves.py`,
-  `import_cries.py` with `sdat.py` for the sound archive, and `wotbl.py`,
-  which round-trips the learnset archive and checks it before appending.
-* The battle script command set is **complete**: 295 defined against the 278
-  the reference uses, 96% overlapping. The remaining 427 moves are effect
-  script translation, not engine work.
-* The ability dispatch points are already ported — 222 call sites across
-  `src/battle/overlay_12_0224E4FC.c` and its neighbours. The median ability is
-  **one line** in one of them. The remaining 169 are insertions, not
-  architecture.
-* Animations are borrowed by number and `import_moves.py` already does it.
-* The cries are solved at the root: `PlayCryEx` is decompiled in
-  `src/unk_02005D10.c` and `main.lsf` links the object, so there is no longer a
-  ceiling at 495. Extending the sound archive is running the same two tools
-  over a wider range.
-* Thirty-six tests in `tests/newgold/`, one per area, so a regression shows up
-  the same day.
-* Of hg-engine's 349 hook targets, 307 are already C in pokeheartgold. The 37
-  still in assembly are not on this path.
-
-**First step: expand the ROM.** `rom.rsf`, `RomSize 1G` to `RomSize 2G`.
-128,766,012 bytes of 134,217,728 are used today, about 5.2 MiB free.
-`pokegra.narc` is 12,838,796 bytes for 574 species, 21.8 KiB each, so 501 more
-species is about 10.7 MiB of battle sprites alone before icons and cries. It
-does not fit otherwise. If more room is wanted later, `pokegra.narc` is not
-compressed today — there is no LZ step in its `.mk`.
-
-Then, in order:
-
-1. Every species' data: personal records, learnsets, evolutions, names, hidden
-   abilities. This is the free part, roughly 130 bytes a species.
-2. The remaining 169 abilities.
-3. The remaining 427 moves: records, effect scripts, animations by number.
-4. Graphics: battle sprites, heights, icons.
-5. Cries for every species, not only the ones in play today.
-6. Dex entries and footprints across the new range, consistent with what the
-   phase before did for the species it added.
-
-**Steps 2 and 3 are not optional.** Importing species without their abilities
-and moves is worse than not importing them: konefr would have hundreds of
-Pokemon whose abilities do nothing and whose moves cannot be learnt, and no
-sign of it until he played.
+Done, in the order this file set out on 2026-09-21: the ROM first, 1G to 2G
+in `rom.rsf`, because the battle sprites alone of five hundred more species
+did not fit in what was left; then every species' data, the abilities, the
+moves with their effect scripts and borrowed animations, the graphics, the
+cries -- the sound archive has a reader and writer, and `PlayCryEx` is C --
+and the Dex text, all written by importers that are idempotent and, since
+the two-layer rule, take a revision. The abilities and moves were not
+optional: species whose abilities do nothing and whose moves cannot be
+learnt would have been worse than no species.
 
 The discipline does not change. A matching decompilation stays in its own
 commit, separate from the behaviour change, and that commit does not alter a
 byte of either ROM. HeartGold and SoulSilver both build and `tests/newgold/`
 passes at every step.
-
-It closes with another melonDS session, aimed at the expansion: one species
-taken at random from each generation added, with its sprite, icon, cry, name
-and Dex entry, and one new ability and one new move working in a battle.
-`VALIDATION.md` is updated with it.
 
 ## Method
 

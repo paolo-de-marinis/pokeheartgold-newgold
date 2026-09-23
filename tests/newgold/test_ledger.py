@@ -128,5 +128,16 @@ class LedgerTests(unittest.TestCase):
                          "run tools/newgold/ledger.py:\n" + result.stdout + result.stderr)
 
 
+
+class AuditTests(unittest.TestCase):
+    def test_every_audit_row_has_a_state(self):
+        """The summary counts the audit's open rows; a row without a state
+        after its last ' -- ' would count as neither open nor closed."""
+        sys.path.insert(0, str(ROOT / "tools/newgold"))
+        import ledger
+        rows = ledger.audit_rows()
+        self.assertGreater(len(rows), 100)
+        self.assertEqual([text[:80] for state, text in rows if not state], [])
+
 if __name__ == "__main__":
     unittest.main()

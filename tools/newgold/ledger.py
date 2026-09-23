@@ -135,6 +135,27 @@ def rewrite_why(text):
     return WHY.sub(f"## Why {overall}% and not {built}%", text)
 
 
+def audit_rows():
+    """Every row of docs/newgold/AUDIT-*.md as (state, text): a bullet at the
+    start of a line, its continuation lines, and the state after its last
+    " -- ". A row is open until a commit closes it with a written state."""
+    rows = []
+    for path in sorted((ROOT / "docs/newgold").glob("AUDIT-*.md")):
+        bullet = None
+        for line in path.read_text().splitlines() + [""]:
+            if line.startswith("- "):
+                if bullet:
+                    rows.append(bullet)
+                bullet = line
+            elif bullet and line.startswith("  ") and line.strip():
+                bullet += " " + line.strip()
+            else:
+                if bullet:
+                    rows.append(bullet)
+                bullet = None
+    return [(row.rsplit(" -- ", 1)[1].strip() if " -- " in row else "", row) for row in rows]
+
+
 def summary():
     rows = [(section, state) for section, _, _, state in ledger_rows()]
     counts = [sum(1 for r in rows if bucket_of(*r) == i) for i in range(len(BUCKETS))]
@@ -155,7 +176,13 @@ def summary():
     lines.append("")
     lines.append(f"{'Implementation':<{width + 2}}{bar(built, 100)} {built:>3}%")
     lines.append(f"{'Verified in play':<{width + 2}}{bar(played, 100)} {played:>3}%")
+    audit = audit_rows()
+    still = sum(1 for state, _ in audit if state.startswith("open"))
+    closed = round(100 * (len(audit) - still) / len(audit)) if audit else 100
+    lines.append(f"{'Audit rows closed':<{width + 2}}{bar(closed, 100)} {closed:>3}%")
     lines.append("")
+    lines.append(f"Audit: {still} of {len(audit)} rows in docs/newgold/AUDIT-*.md still open.")
+    lines.append("The port is finished when none is, or each is closed with a reason.")
     lines.append("Overall and Implementation: done 1, partial a half, deferred rows")
     lines.append("out of the denominator. Verified in play: of the rows that are done,")
     lines.append("the share seen running. All three from the states in the tables.")

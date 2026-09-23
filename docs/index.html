@@ -122,7 +122,7 @@
 <header>
   <h1>New Gold port ledger</h1>
   <p class="sub">Everything hg-engine and konefr change against vanilla HeartGold, and where the native port stands on each. The one thing written by hand is the state on each row, in the commit that moves it. Everything else — the counters, the percentages at the top, <code>README.md</code>'s copy of both, and <code>docs/index.html</code> — is generated from this file by <code>tools/newgold/ledger.py</code>. The summary was the last part kept by hand and it was the part that was wrong, which is the whole argument.</p>
-  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 232 commits</span><span><b>generated</b> 2026-09-23 03:03</span></div>
+  <div class="pins"><span><b>base</b> <code>e97c7fc9</code> — pret/pokeheartgold</span><span><b>reference</b> <code>ccf2c9f5</code> — konefr/hg-engine-newgold, <code>heartgold-modern</code></span><span><b>port</b> 234 commits</span><span><b>generated</b> 2026-09-23 03:11</span></div>
 </header>
 
 <div class="total">
@@ -134,8 +134,8 @@
   <div class="legend"><span><i style="background:var(--done)"></i>done, seen running <b>8%</b></span><span><i style="background:var(--part)"></i>done, never played <b>61%</b></span><span><i style="background:var(--accent)"></i>partial <b>8%</b></span><span><i style="background:var(--gap)"></i>still to do <b>2%</b></span><span><i style="background:var(--rule-2)"></i>deferred / no scope <b>20%</b></span></div>
 </div>
 
-<div class="split"><div class="half"><h3>Implementation</h3><div class="n" style="color:var(--done)">96%</div></div><div class="half"><h3>Verified in play</h3><div class="n" style="color:var(--gap)">12%</div></div></div>
-<p style="margin:10px 0 0;font-size:12.5px;color:var(--muted)">Overall and Implementation: done 1, partial a half, deferred rows out of the denominator. Verified in play: of the rows that are done, the share seen running. All three from the states in the tables.</p>
+<div class="split"><div class="half"><h3>Implementation</h3><div class="n" style="color:var(--done)">96%</div></div><div class="half"><h3>Verified in play</h3><div class="n" style="color:var(--gap)">12%</div></div><div class="half"><h3>Audit rows closed</h3><div class="n" style="color:var(--gap)">13%</div></div></div>
+<p style="margin:10px 0 0;font-size:12.5px;color:var(--muted)">Audit: 130 of 150 rows in docs/newgold/AUDIT-*.md still open. The port is finished when none is, or each is closed with a reason. Overall and Implementation: done 1, partial a half, deferred rows out of the denominator. Verified in play: of the rows that are done, the share seen running. All three from the states in the tables.</p>
 
 <section>
   <div class="shead">
