@@ -947,7 +947,7 @@ def standable(map_id):
     """A map the player can be put on: not MAP_EVERYWHERE, which is the
     header of no place, and one with chunks of its own (the unused ones
     have none)."""
-    return map_id != 0 and bool(sv.map_chunks(map_id))
+    return map_id != sv.constants("include/constants/maps.h", "MAP_")["MAP_EVERYWHERE"] and bool(sv.map_chunks(map_id))
 
 
 def last_one(save):
