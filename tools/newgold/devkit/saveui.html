@@ -799,6 +799,8 @@ function renderTrainer() {
 }
 
 // ---- Squadra -------------------------------------------------------------
+// A move the Pokemon knows that its species does not learn: an event's, or one the data (or an older editor) left.
+const NOT_LEARNT = "la specie non la impara (nei dati attuali): resta finché non la cambi o non cambi specie";
 const STALE_ABILITY = "Non è l'abilità che il gioco darebbe a questa specie (la specie è stata cambiata senza l'abilità, "
   + "o i dati della specie sono cambiati)";
 function monCard(m, i, count) {
@@ -812,7 +814,7 @@ function monCard(m, i, count) {
       ${m.egg ? "" : `<div>${typeBadges(m.types)}</div>`}</div></div>
     ${hp !== null ? `<div class="hp" title="PS ${m.hp}/${m.stats[0]}"><i style="width:${hp}%"></i></div><div class="sub">PS ${m.hp}/${m.stats[0]}</div>` : ""}
     <div class="sub">${esc(m.nature_name)} · ${esc(m.ability_name)}${m.ability_ok ? "" : ` <span class="tag warn" title="${esc(STALE_ABILITY)}: aprilo, scegli l'abilità e salva.">non sua</span>`}${m.item ? ` · ${esc(m.item_name)}` : ""}</div>
-    <ul>${m.moves.map(mv => `<li>${esc(mv.name)} <span class="muted">${mv.pp}/${mv.pp_max}</span></li>`).join("")}</ul>
+    <ul>${m.moves.map(mv => `<li>${esc(mv.name)} <span class="muted">${mv.pp}/${mv.pp_max}</span>${mv.learnable ? "" : ` <span class="tag warn" title="${esc(NOT_LEARNT)}">non la impara</span>`}</li>`).join("")}</ul>
     <div class="acts">
       <button class="small" type="button" data-edit="${i}">Modifica</button>
       <button class="small" type="button" data-up="${i}" ${i === 0 ? "disabled" : ""} aria-label="Sposta su">↑</button>
@@ -844,6 +846,10 @@ function renderParty() {
   $("#tab").ondragstart = ev => ev.preventDefault();
 }
 
+const unlearnt = m => {
+  const odd = m.moves.filter(mv => !mv.learnable).map(mv => mv.name);
+  return (odd.length ? ` · ${m.species_name} non impara ${odd.join(", ")}` : "") + (m.ability_ok ? "" : ` · abilità non sua`);
+};
 function renderBoxArea() {
   const boxes = S.save.boxes, mons = boxes.mons[S.box];
   const count = b => boxes.mons[b].filter(Boolean).length;
@@ -854,7 +860,7 @@ function renderBoxArea() {
       <button type="button" class="small" data-boxnav="1" aria-label="Box successivo">▶</button>
     </div>
     <div class="pc">${mons.map((m, s) => `<button type="button" class="${m ? "full" : ""}" data-slot="${s}" data-pos="box:${S.box}:${s}" ${m ? "data-mon" : ""}
-      title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}${m.egg ? "" : " · " + typeNames(m.types)}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere, o trascina qui un Pokémon`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
+      title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}${m.egg ? "" : " · " + typeNames(m.types)}${unlearnt(m)}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere, o trascina qui un Pokémon`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
     <p class="note">Clic su un posto occupato per modificarlo; su uno vuoto per aggiungere un Pokémon.</p>`;
   $("#boxsel").onchange = ev => goBox(+ev.target.value);
   $("#boxarea").onclick = ev => {
@@ -1018,7 +1024,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       <p class="note" id="presetnote" hidden></p>
       <p class="note">Si sceglie solo tra le mosse che la specie può imparare, a qualsiasi livello, ognuna con tutte le sue fonti: livello (Evoluzione: quando si evolve),
         MT, MN e DT, insegnanti, mosse uovo, la mossa della forma (Rotom), e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
-        (una mossa evento) resta finché non la cambi e non cambi specie. Una mossa che il Pokémon già conosce tiene i suoi PP; una nuova li ha pieni.
+        (una mossa evento, o una che i dati attuali non le danno più) resta finché non la cambi e non cambi specie. Una mossa che il Pokémon già conosce tiene i suoi PP; una nuova li ha pieni.
         "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie; finché
         non le tocchi, seguono il livello se lo cambi.</p></div>
     <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="${lim.iv}">Tutti ${lim.iv}</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${perStat("iv", v.ivs, lim.iv)}</div>
@@ -1048,9 +1054,10 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     const inputs = range(lim.moves).map(i => form.elements["move" + i]), sel = form.elements.ability;
     const tagLine = value => {
       const id = moveOf(value);
+      if (id === null) return `<span class="tag bad">nome sconosciuto: sceglila dall'elenco</span>`;
       if (!id || !st.species) return "";
       if (st.legal.has(id)) return sourceTags(st.legal.get(id));
-      if (st.known.has(id)) return `<span class="tag warn">fuori elenco (mossa evento?): resta finché non la cambi</span>`;
+      if (st.known.has(id)) return `<span class="tag warn">${esc(NOT_LEARNT)}</span>`;
       return `<span class="tag bad">${esc(S.species.get(st.species)?.name ?? "")} non la impara</span>`;
     };
     const showTags = () => inputs.forEach((el, i) => { $(`#mvtags${i}`, d).innerHTML = tagLine(el.value); });

@@ -518,7 +518,8 @@ class SaveUiTests(unittest.TestCase):
         sv.set_box_mon(save, 0, 0, sv.build_mon("CHARIZARD", 40, moves=[moves["SURF"], moves["EMBER"]])[:sv.BOX_MON])
         self.save.write_bytes(save.image())
         out = self.edit("box_edit", {"box": 0, "slot": 0, "level": 41, "moves": [moves["SURF"], moves["FLAMETHROWER"]]})
-        self.assertEqual([m["name"] for m in out["boxes"]["mons"][0][0]["moves"]], ["Surf", "Flamethrower"])
+        self.assertEqual([(m["name"], m["learnable"]) for m in out["boxes"]["mons"][0][0]["moves"]],
+                         [("Surf", False), ("Flamethrower", True)], "the page marks the one the species does not learn")
         self.assertIn("Charizard non può imparare Waterfall", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "box_edit",
             "args": {"box": 0, "slot": 0, "moves": [moves["WATERFALL"], moves["FLAMETHROWER"]]}}))
 

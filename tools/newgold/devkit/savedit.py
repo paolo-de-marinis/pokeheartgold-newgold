@@ -1628,6 +1628,7 @@ def evolution_line(species):
     return line
 
 
+@tree_cache
 def learnable_moves(species, form=0):
     """Every move this species can know, whatever its level, with every way
     it is learnt, never only the first: {move: [source, ...]}. A source is
@@ -1944,7 +1945,9 @@ def describe_mon(raw):
     {"ok": False} for one whose checksum fails (the game's Bad Egg).
     "ability_ok" is whether its ability is the one UpdateBoxMonAbility
     would give it (in "ability_slot"): not, when its species was written
-    without it (an older editor) or the species' abilities changed since."""
+    without it (an older editor) or the species' abilities changed since.
+    A move's "learnable" is whether the species learns it (learnable_moves):
+    not, for an event's, or one the data no longer gives it."""
     mon = open_mon(raw)
     if mon is None:
         return None
@@ -1964,7 +1967,8 @@ def describe_mon(raw):
         if move:
             row = move_table()[move] if move < len(move_table()) else {"name": f"#{move}", "pp": 0}
             moves.append({"id": move, "name": row["name"], "pp": b[8 + i], "pp_ups": b[12 + i],
-                          "pp_max": row["pp"] + row["pp"] * b[12 + i] // 5})
+                          "pp_max": row["pp"] + row["pp"] * b[12 + i] // 5,
+                          "learnable": move in learnable_moves(species, b[0x18] >> 3)})
     items, abilities, natures = item_table(), bank(ABILITY_NAMES), bank(NATURE_NAMES)
     slot = ability_slot(species, b[0x18] >> 3, *_ability_bits(mon))
     given = next((entry["id"] for entry in species_abilities(species, b[0x18] >> 3) if entry["slot"] == slot), 0)
