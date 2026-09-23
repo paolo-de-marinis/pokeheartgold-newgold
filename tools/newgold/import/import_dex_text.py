@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Give the added species rows in the Dex's foreign-language banks.
 
-The Dex keeps a species' entry, name and category once per language: 804..810
+The Dex keeps a species' entry, name and category once per language: 805..810
 the entries, 818..822 the names, 824..828 the categories. It reads them only
 for a Pokemon from another language's game, and one of the added species
 cannot arrive that way, but the banks are indexed by species, so each of them
-has to reach the last one. hg-engine leaves these banks as retail's; the rows
-past 493 are this port's own, in English:
+has to reach the last one. 804, written here with them, is not another
+language's: it is SoulSilver's own entries, as 803 is HeartGold's
+(ZUKAN_FLAVOR_GMM in ov18_021E590C.c), printed for every species. hg-engine
+leaves these banks as retail's; the rows past 493 are this port's own, in
+English:
 
 - an added species takes the reference's entry and category (a form, which has
   none of its own there, takes its base's), and its name as msg_0237 has it;
