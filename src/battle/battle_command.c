@@ -6672,8 +6672,10 @@ static void Task_GetExp(SysTask *task, void *inData) {
 
         // At the cap there is no experience to gain, so the bar does not
         // move; the effort values still come, as the reference hands them to
-        // a Pokemon exactly at the cap in a step of its own.
-        if (GetMonData(mon, MON_DATA_HP, NULL) && GetMonData(mon, MON_DATA_LEVEL, NULL) == cap && cap != MAX_LEVEL) {
+        // a Pokemon exactly at the cap in a step of its own. That step asks
+        // nothing else: a fainted participant or Exp. Share holder gets them,
+        // and so does level 100 once the cap is 100.
+        if (GetMonData(mon, MON_DATA_LEVEL, NULL) == cap) {
             BattleScript_CalcEffortValues(BattleSystem_GetParty(data->battleSystem, expBattler),
                 slot,
                 data->ctx->battleMons[data->ctx->battlerIdFainted].species,

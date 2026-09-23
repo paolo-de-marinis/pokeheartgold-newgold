@@ -195,6 +195,17 @@ class LevelCapTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             print(result.stdout.strip())
 
+    def test_effort_values_at_the_cap_ask_only_the_level(self):
+        # Task_GetExp is a battle task with a message printer and a gauge, so
+        # this reads its at-cap branch rather than running it. The reference's
+        # step (battle_script_commands.c, Task_DistributeExp_Extend) hands the
+        # effort values to a Pokemon whose level equals GetLevelCap() and asks
+        # nothing else -- not its HP, not whether the cap is 100.
+        task = function((ROOT / "src/battle/battle_command.c").read_text(), "Task_GetExp")
+        branch = re.search(r"if \((.*)\) \{\s*BattleScript_CalcEffortValues", task)
+        self.assertIsNotNone(branch)
+        self.assertEqual(branch.group(1), "GetMonData(mon, MON_DATA_LEVEL, NULL) == cap")
+
 
 if __name__ == "__main__":
     unittest.main()
