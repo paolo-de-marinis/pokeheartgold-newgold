@@ -3154,6 +3154,17 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     }
                 }
                 break;
+            case EVO_HURT_IN_BATTLE_AMOUNT: {
+                // The games count the damage Yamask takes without fainting and
+                // evolve it under Dusty Bowl's stone arch; the engine asks at
+                // a level-up that it be down this much HP and not fainted.
+                u32 hp = GetMonData(mon, MON_DATA_HP, NULL);
+                u32 maxHp = GetMonData(mon, MON_DATA_MAX_HP, NULL);
+                if (hp != 0 && maxHp - hp >= evoTable[i].param) {
+                    target = evoTable[i].target;
+                    *method_ret = EVO_HURT_IN_BATTLE_AMOUNT;
+                }
+            } break;
             case EVO_OTHER_PARTY_MON:
                 if (party != NULL && Party_HasMon(party, evoTable[i].param) == 1) {
                     target = evoTable[i].target;

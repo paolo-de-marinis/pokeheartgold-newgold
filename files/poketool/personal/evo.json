@@ -5094,6 +5094,16 @@
           "target": "SPECIES_TOXTRICITY_LOW_KEY"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_YAMASK_GALARIAN",
+      "evos": [
+        {
+          "method": "EVO_HURT_IN_BATTLE_AMOUNT",
+          "param": 49,
+          "target": "SPECIES_RUNERIGUS"
+        }
+      ]
     }
   ]
 }

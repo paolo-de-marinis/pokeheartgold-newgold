@@ -48,7 +48,7 @@ typedef struct { int hour, minute, second; } RTCTime;
 typedef struct {
     u16 species, heldItem, friendship;
     u8 level, form, type1, type2;
-    u32 pid;
+    u32 pid, hp, maxHp;
 } Pokemon;
 typedef struct { int count; Pokemon mons[6]; } Party;
 typedef struct { int mapId; } Location;
@@ -72,6 +72,8 @@ static u32 GetMonData(Pokemon *mon, int field, void *dest) {
     case MON_DATA_PERSONALITY: return mon->pid;
     case MON_DATA_TYPE_1: return mon->type1;
     case MON_DATA_TYPE_2: return mon->type2;
+    case MON_DATA_HP: return mon->hp;
+    case MON_DATA_MAX_HP: return mon->maxHp;
     default: assert(0 && "Unexpected field"); return 0;
     }
 }
@@ -222,12 +224,29 @@ static void check_nature(void) {
     }
 }
 
+static void check_hurt(void) {
+    // hg-engine: at a level-up, 49 HP or more below its maximum and not
+    // fainted. At any level.
+    Pokemon mon = { .species = SPECIES_YAMASK_GALARIAN, .level = 1, .maxHp = 100 };
+    one_row(EVO_HURT_IN_BATTLE_AMOUNT, 49, SPECIES_RUNERIGUS);
+    for (mon.hp = 0; mon.hp <= mon.maxHp; mon.hp++) {
+        u16 expected = mon.hp != 0 && mon.maxHp - mon.hp >= 49 ? SPECIES_RUNERIGUS : SPECIES_NONE;
+        assert(evolve(&mon, NULL, EVO_HURT_IN_BATTLE_AMOUNT) == expected);
+    }
+    // With less than 49 HP to lose, it never can.
+    mon.maxHp = 49;
+    for (mon.hp = 0; mon.hp <= mon.maxHp; mon.hp++) {
+        assert(evolve(&mon, NULL, EVO_HURT_IN_BATTLE_AMOUNT) == SPECIES_NONE);
+    }
+}
+
 int main(void) {
     check_magnetic_field();
     check_time_of_day();
     check_rain();
     check_dark_type_in_party();
     check_nature();
+    check_hurt();
     return 0;
 }
 """

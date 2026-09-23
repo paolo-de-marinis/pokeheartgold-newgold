@@ -624,6 +624,9 @@ typedef enum EvoMethod {
     // hg-engine: a level, Toxel's form by its nature.
     EVO_LEVEL_NATURE_AMPED,
     EVO_LEVEL_NATURE_LOW_KEY,
+    // hg-engine: a level with this much HP gone and some left, for the
+    // Galarian Yamask's 49 -- the games' damage taken without fainting.
+    EVO_HURT_IN_BATTLE_AMOUNT,
 } EvoMethod;
 
 typedef enum {
