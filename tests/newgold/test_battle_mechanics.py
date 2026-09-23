@@ -44,6 +44,22 @@ class ParalysisTests(unittest.TestCase):
         halvings = re.findall(r"STATUS_PARALYSIS\) \{\n(?:\s*//[^\n]*\n)*\s*(speed\d) = \(\1 \+ 1\) / 2;", body)
         self.assertEqual(halvings, ["speed1", "speed2"])
 
+    def test_an_electric_type_is_not_affected(self):
+        # The reference asks all three type slots after "already paralysed"
+        # and before any other status sends the Pokemon to the failure line.
+        script = subscript("Paralyze")
+        for slot in ("TYPE_1", "TYPE_2"):
+            self.assertIn(f"BMON_DATA_{slot}, TYPE_ELECTRIC, _ELECTRIC_TYPE", script)
+        self.assertIn("GoToIfThirdType BATTLER_CATEGORY_SIDE_EFFECT_MON, TYPE_ELECTRIC, _ELECTRIC_TYPE", script)
+        self.assertLess(script.index("STATUS_PARALYSIS, _"), script.index("TYPE_ELECTRIC"))
+        self.assertLess(script.index("TYPE_ELECTRIC"), script.index("BMON_DATA_STATUS, STATUS_NONE"))
+        block = script[script.index("\n_ELECTRIC_TYPE:"):]
+        block = block[:block.index("GoTo")]
+        # A secondary effect or Static says nothing; a used move is told.
+        self.assertIn("SIDE_EFFECT_TYPE_INDIRECT, _", block)
+        self.assertIn("SIDE_EFFECT_TYPE_ABILITY, _", block)
+        self.assertIn("msg_0197_00027", block)
+
 
 class CriticalHitTests(unittest.TestCase):
     def test_the_odds_at_each_stage_are_the_reference_s(self):
