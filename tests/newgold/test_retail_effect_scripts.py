@@ -48,7 +48,6 @@ STILL_DIFFERENT = {
     34: "Pay Day scatters its coins on the first strike or the only one; the engine's branch scatters "
          "them only on a first strike of Parental Bond, never without the ability (a6ee2c81c)",
     42: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
-    48: IN_C.format("the recoil, ServerDoPostMoveEffects.c"),
     83: CALLED_MOVE + BACK_TO_BEFORE_MOVE + ", and prints the move the finger picked (message 1483), "
          "which retail's Metronome does not",
     97: CALLED_MOVE,
@@ -75,7 +74,6 @@ STILL_DIFFERENT = {
     178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
     180: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     188: IN_C.format("the knocking off, ServerDoPostMoveEffects.c"),
-    198: IN_C.format("the recoil, ServerDoPostMoveEffects.c"),
     217: IN_C.format("Wake-Up Slap's doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
     222: IN_C.format("Natural Gift's type, power and berry, CalcBaseDamage.c"),
     224: IN_C.format("the berry eaten, ServerDoPostMoveEffects.c"),
@@ -83,12 +81,9 @@ STILL_DIFFERENT = {
     233: IN_C.format("the fling and the items that cannot be flung, BattleController_BeforeMove.c"),
     241: CALLED_MOVE,
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
-    253: IN_C.format("the recoil, ServerDoPostMoveEffects.c"),
     259: "the engine waits for a button after only buffering the line that restores the dimensions, "
          "which waits on nothing, and calls its Room Service subscript by another name (395 here)",
     261: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
-    262: IN_C.format("the recoil, ServerDoPostMoveEffects.c"),
-    269: IN_C.format("the recoil, ServerDoPostMoveEffects.c"),
     272: IN_C.format("the charge turn and the Power Herb, BattleController_BeforeMove.c"),
 }
 
@@ -313,6 +308,29 @@ class BroughtOverTests(unittest.TestCase):
         self.assertIn("movePower = movePower * 12 / 10;", reckless)
         for effect in (48, 198, 253, 262, 269, 404):
             self.assertNotIn("ABILITY_RECKLESS", script(effect), effect)
+
+    def test_recoil_comes_once_the_move_is_over(self):
+        # The engine's Activate_RecoilDamage: a post-move step, after the
+        # fainting and before the Red Card, from all the damage dealt. Not a
+        # side effect, so neither Sheer Force nor a Covert Cloak, which eat
+        # side effects in ov12_02250490, takes it away (Pokemon Central,
+        # Contraccolpo); retail's Flare Blitz and Volt Tackle lost it to both.
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        recoil = function(controller, "TryRecoil")
+        for effect, script_name in (("RECOIL_QUARTER_DAMAGE_DELT", "RECOIL_1_4"), ("RECOIL_PARALYZE_HIT", "RECOIL_1_3"),
+                                    ("RECOIL_HALF", "RECOIL_1_2"), ("RECOIL_HALF_MAX_HP", "RECOIL_HALF_MAX_HP")):
+            case = recoil[recoil.index(f"case MOVE_EFFECT_{effect}:"):]
+            self.assertIn(f"script = BATTLE_SUBSCRIPT_{script_name};", case[:case.index("break;")], effect)
+        self.assertIn("ctx->selfTurnData[attacker].shellBellDamage == 0", recoil)
+        self.assertIn("ability == ABILITY_ROCK_HEAD || ability == ABILITY_MAGIC_GUARD", recoil)
+        self.assertNotIn("SHEER_FORCE", recoil)
+        body = function(controller, "ov12_0224E1BC")
+        self.assertLess(body.index("TryFaintMon"), body.index("TryRecoil(ctx)"))
+        self.assertLess(body.index("TryRecoil(ctx)"), body.index("CheckSwitchItemOnHit"))
+        for effect in (48, 198, 269, 404):
+            self.assertNotIn("SIDE_EFFECT", script(effect), effect)
+        self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_BURN\n", script(253))
+        self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_PARALYZE\n", script(262))
 
     def test_howl_raises_the_allies_too(self):
         # The reference raises Howl's user alone; from Generation VIII the

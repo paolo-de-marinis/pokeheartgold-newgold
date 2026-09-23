@@ -291,16 +291,17 @@ class ParentalBondTests(unittest.TestCase):
     def test_recoil_comes_once_for_both_strikes(self):
         # Pokemon Central, Amorefiliale: the recoil is worked out from both
         # strikes' damage and taken after the second; a first strike that
-        # fells the target is the last, and takes it.
+        # fells the target is the last, and takes it. The recoil comes once
+        # the move is over (TryRecoil, from the post-move steps), so the
+        # subscripts need not ask which strike it is.
         subscripts = ROOT / "files/battledata/script/subscript"
         for number in (63, 147, 246, 389):
             script = next(subscripts.glob(f"subscript_{number:04d}_*.s")).read_text()
-            self.assertIn("GotoIfFirstHitOfParentalBond _FIRST_STRIKE", script, number)
-            self.assertRegex(script, r"_FIRST_STRIKE:\s*CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_DEFENDER, "
-                                     r"BMON_DATA_HP, 0, (\w+)\s*GoTo _RECOIL", number)
+            self.assertNotIn("ParentalBond", script, number)
             if number != 389:
                 self.assertIn("BSCRIPT_VAR_HP_CALC, BSCRIPT_VAR_ATTACKER_SHELL_BELL_DAMAGE_DEALT", script, number)
                 self.assertNotIn("BSCRIPT_VAR_HIT_DAMAGE", script, number)
+        self.assertIn("TryRecoil(ctx)", function(CONTROLLER.read_text(), "ov12_0224E1BC"))
 
 
 if __name__ == "__main__":

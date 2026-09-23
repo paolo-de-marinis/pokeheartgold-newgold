@@ -4938,6 +4938,52 @@ static BOOL ov12_0224E130(BattleSystem *battleSystem, BattleContext *ctx) {
 // Red Card leaves the Pack its turn.
 #define SWITCH_ITEM_USED 0x100
 
+static void RunPostMoveScript(BattleContext *ctx, int script) {
+    ctx->statChangeType = SIDE_EFFECT_TYPE_MOVE_EFFECT;
+    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+    ctx->commandNext = ctx->command;
+    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+}
+
+// The recoil a move costs its user: the engine's Activate_RecoilDamage
+// (ServerDoPostMoveEffects.c:2075 at d0380a487), step 15 of its post-move
+// steps, once the move is over and whatever it felled has fainted. It is a
+// share of all the damage the move dealt, so Parental Bond's two strikes
+// cost one recoil (Pokemon Central, Amorefiliale), and it is no additional
+// effect: Sheer Force boosts the move and the recoil stays (Pokemon Central,
+// Contraccolpo), as it stays against a Covert Cloak. A move that dealt
+// nothing costs nothing; Rock Head and Magic Guard spare the user.
+static BOOL TryRecoil(BattleContext *ctx) {
+    int attacker = ctx->battlerIdAttacker;
+    int ability = GetBattlerAbility(ctx, attacker);
+    int script;
+
+    if (ctx->battleMons[attacker].hp == 0 || ctx->selfTurnData[attacker].shellBellDamage == 0
+        || ability == ABILITY_ROCK_HEAD || ability == ABILITY_MAGIC_GUARD) {
+        return FALSE;
+    }
+    switch (BattleMoveTbl(ctx, ctx->moveNoCur)->effect) {
+    case MOVE_EFFECT_RECOIL_QUARTER_DAMAGE_DELT:
+        script = BATTLE_SUBSCRIPT_RECOIL_1_4;
+        break;
+    case MOVE_EFFECT_RECOIL_THIRD:
+    case MOVE_EFFECT_RECOIL_BURN_HIT:
+    case MOVE_EFFECT_RECOIL_PARALYZE_HIT:
+        script = BATTLE_SUBSCRIPT_RECOIL_1_3;
+        break;
+    case MOVE_EFFECT_RECOIL_HALF:
+        script = BATTLE_SUBSCRIPT_RECOIL_1_2;
+        break;
+    case MOVE_EFFECT_RECOIL_HALF_MAX_HP:
+        script = BATTLE_SUBSCRIPT_RECOIL_HALF_MAX_HP;
+        break;
+    default:
+        return FALSE;
+    }
+    RunPostMoveScript(ctx, script);
+    return TRUE;
+}
+
 static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
     int flag = 0;
 
@@ -4958,6 +5004,12 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_30++;
             break;
         case 1:
+            ctx->unk_30++;
+            if (TryRecoil(ctx) == TRUE) {
+                flag = 1;
+            }
+            break;
+        case 2:
             // A Red Card, then an Eject Button, on anything the move hurt,
             // once the move is over and before the user's own Shell Bell and
             // Life Orb, which is where the reference asks them. The card goes
@@ -5011,7 +5063,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 2:
+        case 3:
             // Neither the Shell Bell nor the Life Orb below answers a move
             // Sheer Force powered (Pokemon Central, Forzabruta; the
             // reference's ServerDoPostMoveEffects.c:1508 at d0380a487).
@@ -5034,7 +5086,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 3:
+        case 4:
             if (item == HOLD_EFFECT_HP_DRAIN_ON_ATK
                 && !SheerForceTradedEffect(ctx)
                 && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD
@@ -5052,7 +5104,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 4:
+        case 5:
             // Parting Shot's user goes back once the move is over, if the
             // move changed a stat of its target (Pokemon Central, Monito; the
             // reference's Activate_Switch, ServerDoPostMoveEffects.c:2149 at
@@ -5094,7 +5146,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 5:
+        case 6:
             // A Throat Spray answers the attacker using a sound move, and that
             // is the whole of the reference's condition: not that the move hit,
             // not that there was anything to hit, and not that Sp. Atk had room
@@ -5123,7 +5175,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_34 = 0;
             }
             break;
-        case 6:
+        case 7:
             // An Eject Pack on anyone who had a stat lowered during the move,
             // after the user's own items, where the reference asks it; not
             // once an Eject Button has sent somebody away, or after a
@@ -5147,7 +5199,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 7: {
+        case 8: {
             // Emergency Exit and Wimp Out, one Pokemon at a time: this step
             // comes round again after each, until none is left to go.
             int script;
@@ -5162,7 +5214,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 8:
+        case 9:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;
