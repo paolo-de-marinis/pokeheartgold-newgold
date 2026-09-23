@@ -93,7 +93,8 @@ typedef struct TurnData {
     u32 beakBlastCharging : 1; // heating its beak for Beak Blast: what touches it before it moves is burned
     u32 shellTrapSet : 1; // Shell Trap set as the turn began
     u32 shellTrapSprung : 1; // and sprung by a foe's physical hit: it goes next
-    u32 unk0_A : 13;
+    u32 instructed : 1; // Instruct landed on it: it uses its last move again once the action is over
+    u32 unk0_A : 12;
     int physicalDamage[4];
     int battlerIdPhysicalDamage;
     int battlerBitPhysicalDamage;

@@ -875,5 +875,28 @@ int main(void) {
         flag = function(commands, "BtlCmd_SetMoveConditionFlag")
         self.assertIn("ItemIdIsBerry(ctx->battleMons[i].item) == TRUE", flag[flag.index("case MOVE_TEATIME:"):])
 
+    def test_instruct_has_its_target_use_its_last_move_again(self):
+        # Pokemon Central (Imposizione): straight after, PP spent, not the
+        # moves that wait, charge, recharge, copy or call another.
+        from test_hold_effects import subscript_named
+        self.assertImplemented("INSTRUCT", "MOVE_EFFECT_INSTRUCT")
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_INSTRUCT", effect_script("MOVE_EFFECT_INSTRUCT"))
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_INSTRUCT"), "BATTLE_SUBSCRIPT_INSTRUCT")
+        self.assertIn("SetMoveConditionFlag MOVE_INSTRUCT, BATTLER_CATEGORY_DEFENDER", subscript_named("BATTLE_SUBSCRIPT_INSTRUCT"))
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        banned = re.search(r"sMovesInstructCannotRepeat\[\] = \{(.*?)\};", commands, re.S).group(1)
+        for move in ("INSTRUCT", "BIDE", "FOCUS_PUNCH", "BEAK_BLAST", "SHELL_TRAP", "SKETCH", "TRANSFORM", "MIMIC", "KINGS_SHIELD", "STRUGGLE"):
+            self.assertIn(f"MOVE_{move},", banned)
+        effects = re.search(r"sEffectsInstructCannotRepeat\[\] = \{(.*?)\};", commands, re.S).group(1)
+        for effect in ("RECHARGE_AFTER", "FLY", "DIG", "DIVE", "SHADOW_FORCE", "151"):
+            self.assertIn(f"MOVE_EFFECT_{effect},", effects)
+        self.assertIn("CheckMoveCallsOtherMove(move) == TRUE", function(commands, "MoveCanBeInstructed"))
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        instructing = function(controller, "TryInstruct")
+        self.assertIn("ctx->battleMons[battlerId].movePPCur[index]--;", instructing)
+        self.assertIn("ctx->unk_2184 = MULTIHIT_SKIP_OBEDIENCE_CHECK | MULTIHIT_SKIP_PP_DECREMENT;", instructing)
+        end = function(controller, "ov12_0224D368")
+        self.assertLess(end.index("TryInstruct(battleSystem, ctx)"), end.index("TryDancer(battleSystem, ctx)"))
+
 if __name__ == "__main__":
     unittest.main()

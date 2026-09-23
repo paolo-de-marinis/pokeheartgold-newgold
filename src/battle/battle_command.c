@@ -10230,6 +10230,59 @@ BOOL BtlCmd_AbilityPopup(BattleSystem *battleSystem, BattleContext *ctx) {
 // Powder, Laser Focus, Glaive Rush and Throat Chop are the moves this records
 // something for, and this game has none of them, so there is never anything
 // to record. The arguments are still read: the script has written them.
+// The moves Instruct cannot have used again: itself, the ones that wait for
+// something or call another, the ones that charge or must recharge, and
+// those that copy (Pokemon Central, Imposizione).
+static const u16 sMovesInstructCannotRepeat[] = {
+    MOVE_INSTRUCT,
+    MOVE_BIDE,
+    MOVE_FOCUS_PUNCH,
+    MOVE_BEAK_BLAST,
+    MOVE_SHELL_TRAP,
+    MOVE_SKETCH,
+    MOVE_TRANSFORM,
+    MOVE_MIMIC,
+    MOVE_KINGS_SHIELD,
+    MOVE_STRUGGLE,
+};
+
+static const u16 sEffectsInstructCannotRepeat[] = {
+    MOVE_EFFECT_CHARGE_TURN_HIGH_CRIT,
+    MOVE_EFFECT_CHARGE_TURN_HIGH_CRIT_FLINCH,
+    MOVE_EFFECT_RECHARGE_AFTER,
+    MOVE_EFFECT_CHARGE_TURN_DEF_UP,
+    MOVE_EFFECT_151,
+    MOVE_EFFECT_FLY,
+    MOVE_EFFECT_DIVE,
+    MOVE_EFFECT_DIG,
+    MOVE_EFFECT_BOUNCE,
+    MOVE_EFFECT_SHADOW_FORCE,
+    MOVE_EFFECT_CHARGE_TURN_ATK_SP_ATK_SPEED_UP_2,
+    MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP,
+    MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP_RAIN_SKIPS,
+    MOVE_EFFECT_CHARGE_TURN_PARALYZE_HIT,
+    MOVE_EFFECT_CHARGE_TURN_BURN_HIT,
+};
+
+static BOOL MoveCanBeInstructed(BattleContext *ctx, u16 move) {
+    int i;
+
+    if (move == MOVE_NONE || CheckMoveCallsOtherMove(move) == TRUE) {
+        return FALSE;
+    }
+    for (i = 0; i < NELEMS(sMovesInstructCannotRepeat); i++) {
+        if (move == sMovesInstructCannotRepeat[i]) {
+            return FALSE;
+        }
+    }
+    for (i = 0; i < NELEMS(sEffectsInstructCannotRepeat); i++) {
+        if (BattleMoveTbl(ctx, move)->effect == sEffectsInstructCannotRepeat[i]) {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
 BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx) {
     int move;
     int battlerId;
@@ -10373,6 +10426,19 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
             if (ctx->battleMons[i].hp && !(ctx->battleMons[i].moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE) && ItemIdIsBerry(ctx->battleMons[i].item) == TRUE) {
                 ctx->calcTemp = TRUE;
             }
+        }
+        break;
+    }
+    // Instruct: the battler is to use its last move again, if that move can
+    // be repeated and it still has it and its PP (CALC_TEMP says whether).
+    case MOVE_INSTRUCT: {
+        u16 move = ctx->moveNoBattlerPrev[battlerId];
+        int index = BattleMon_GetMoveIndex(&ctx->battleMons[battlerId], move);
+
+        ctx->calcTemp = MoveCanBeInstructed(ctx, move) && index < MAX_MON_MOVES && ctx->battleMons[battlerId].movePPCur[index]
+            && !(ctx->battleMons[battlerId].status2 & (STATUS2_RECHARGE | STATUS2_LOCKED_INTO_MOVE | STATUS2_RAMPAGE | STATUS2_BIDE));
+        if (ctx->calcTemp) {
+            ctx->turnData[battlerId].instructed = TRUE;
         }
         break;
     }

@@ -4566,6 +4566,44 @@ static BOOL TryDancer(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// Instruct's target uses its last move again once the Instruct is over, at a
+// target chosen afresh, with the move's PP spent -- Pressure aside -- and
+// before anything else is asked (Pokemon Central, Imposizione). The move runs
+// as a Dancer's copy does, as an action of its own in the Instruct's place.
+static BOOL TryInstruct(BattleSystem *battleSystem, BattleContext *ctx) {
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+    int battlerId;
+
+    for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
+        u16 move;
+        int index;
+
+        if (!ctx->turnData[battlerId].instructed) {
+            continue;
+        }
+        ctx->turnData[battlerId].instructed = FALSE;
+        move = ctx->moveNoBattlerPrev[battlerId];
+        index = BattleMon_GetMoveIndex(&ctx->battleMons[battlerId], move);
+        if (ctx->battleMons[battlerId].hp == 0 || index >= MAX_MON_MOVES || ctx->battleMons[battlerId].movePPCur[index] == 0) {
+            continue;
+        }
+        ctx->battleMons[battlerId].movePPCur[index]--;
+        CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
+        BattleContext_Init(ctx);
+        ctx->battlerIdAttacker = battlerId;
+        ctx->moveNoTemp = move;
+        ctx->moveNoCur = move;
+        ctx->battlerIdTarget = ov12_022506D4(battleSystem, ctx, battlerId, move, 1, 0);
+        // Past the Quick Claw's line, the disobedience roll and the PP.
+        ctx->unk_48 = 1;
+        ctx->unk_2184 = MULTIHIT_SKIP_OBEDIENCE_CHECK | MULTIHIT_SKIP_PP_DECREMENT;
+        ctx->command = CONTROLLER_COMMAND_23;
+        BattleController_EmitBlankMessage(battleSystem);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
     int script;
     int i;
@@ -4621,6 +4659,9 @@ static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
             return;
         }
         ov12_0224DC0C(battleSystem, ctx);
+        if (TryInstruct(battleSystem, ctx) == TRUE) {
+            return;
+        }
         if (TryDancer(battleSystem, ctx) == TRUE) {
             return;
         }

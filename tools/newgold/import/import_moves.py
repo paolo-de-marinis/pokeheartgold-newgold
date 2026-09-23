@@ -489,6 +489,9 @@ IMPLEMENTED_HERE = {
     # Teatime has every Pokemon on the field eat its Berry (Pokemon Central,
     # Ora del Te): effect script 441.
     "TEATIME": "MOVE_EFFECT_TEATIME",
+    # Instruct has its target use its last move again straight away (Pokemon
+    # Central, Imposizione): effect script 442.
+    "INSTRUCT": "MOVE_EFFECT_INSTRUCT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
