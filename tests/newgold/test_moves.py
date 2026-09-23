@@ -112,6 +112,15 @@ class MoveTests(unittest.TestCase):
                          "NIGHT_SLASH": dict(pp=15)}
     FIELD = {"power": 2, "type": 3, "accuracy": 4, "pp": 5, "effectChance": 6}
 
+    def test_retail_priorities_are_the_later_games(self):
+        """Pinned without the reference: what hg-engine gives the seven retail
+        moves whose bracket changed after Generation IV."""
+        wanted = {"PROTECT": 4, "DETECT": 4, "ENDURE": 4, "FAKE_OUT": 3,
+                  "EXTREME_SPEED": 2, "FOLLOW_ME": 2, "TELEPORT": -6}
+        for name, priority in wanted.items():
+            record = struct.unpack(import_moves.RECORD, self.table[self.moves[f"MOVE_{name}"]])
+            self.assertEqual(record[8], priority, name)
+
     def test_the_four_retail_moves_the_settings_move(self):
         """CHAMPIONS_PP_CHANGES is off and the other four are on, so of the
         seven retail moves the reference writes as a choice, four take a value
@@ -123,8 +132,8 @@ class MoveTests(unittest.TestCase):
                 self.assertEqual(record[self.FIELD[key]], value, f"{name} {key}")
 
     # Where a retail record is not hg-engine's, and why. Everything else in
-    # 1..467 -- type, power, accuracy, PP, effect chance, effect, and the
-    # seven flag bits both games name -- is the engine's (d0380a487).
+    # 1..467 -- type, power, accuracy, PP, effect chance, priority, effect, and
+    # the seven flag bits both games name -- is the engine's (d0380a487).
     RETAIL_EXCEPTIONS = {
         ("BEAT_UP", "power"): "the engine's 1 is a placeholder for 5 + base Attack / 10; "
                               "BtlCmd_BeatUp multiplies base Attack by the table's power",
@@ -164,6 +173,7 @@ class MoveTests(unittest.TestCase):
                 "accuracy": (record[4], import_moves.number(block, "accuracy")),
                 "pp": (record[5], import_moves.number(block, "pp")),
                 "effectChance": (record[6], import_moves.number(block, "effectChance")),
+                "priority": (record[8], import_moves.number(block, "priority")),
                 "flags": (record[9] & named, sum(1 << import_moves.FLAG_BITS[flag]
                                                  for flag in import_moves.named_flags(block))),
             }

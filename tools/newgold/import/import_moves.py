@@ -284,8 +284,10 @@ def number(block, key):
 
 # THE RETAIL MOVES
 #
-# A retail move keeps its number, its split, its target and its priority, and
-# takes hg-engine's (d0380a487) type, power, accuracy, PP and effect chance --
+# A retail move keeps its number, its split and its target, and takes
+# hg-engine's (d0380a487) type, power, accuracy, PP, effect chance and
+# priority -- Protect, Detect and Endure at +4, Fake Out at +3, Extreme Speed
+# and Follow Me at +2, Teleport at -6, as the later games have them --
 # konefr changed no retail move. Where the engine writes a value as a choice,
 # its config.h settles it, as for every other move: Growth is Grass, Crabhammer
 # hits at 95, Bone Rush is 30 a blow, Iron Head flinches one time in five. A
@@ -333,6 +335,7 @@ def retail_moves(reference, last_vanilla, types, effect_id, table):
         fields[4] = number(block, "accuracy")
         fields[5] = number(block, "pp")
         fields[6] = number(block, "effectChance")
+        fields[8] = number(block, "priority")
         if name in RETAIL_EFFECTS:
             fields[0] = effect_id[field(block, "effect")]
         fields[9] = sum(1 << bit for flag, bit in FLAG_BITS.items() if flag in named_flags(block))
@@ -617,6 +620,8 @@ def main():
                         help="write banks 749, 750, 751, 003 and 735 whole, at --revision")
     parser.add_argument("--unimplemented", action="store_true",
                         help="write the table of moves the engine has no effect for, at --revision")
+    parser.add_argument("--retail", action="store_true",
+                        help="rewrite the retail records (1..467) and nothing else")
     parser.add_argument("--revision", default=gmm.ENGINE)
     args = parser.parse_args()
     if args.text:
@@ -680,6 +685,16 @@ def main():
                              "give it a name of its own in COLLIDING_EFFECTS")
         effect_id[name] = first_effect + len(new_effects)
         new_effects.append((effect_id[name], theirs, renamed))
+
+    if args.retail:
+        before = list(table)
+        retail_moves(reference, last_vanilla, types, effect_id, table)
+        changed = [move for move in range(1, last_vanilla + 1) if table[move] != before[move]]
+        print(f"{len(changed)} retail records change")
+        if args.write:
+            TABLE.write_bytes(write_table(table))
+            print("written")
+        return
 
     # Subscripts line up the way the effects do, and so does the table of
     # side effects that points into them: the two trees agree up to where
