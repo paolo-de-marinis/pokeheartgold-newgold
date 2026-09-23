@@ -1275,6 +1275,8 @@ Overlay OVY_98
 {
     After OVY_96
     Object asm/overlay_98.o
+    Object src/pokeathlon/overlay_98_0221EE28.o
+    Object asm/overlay_98_0221EE84.o
 }
 Overlay OVY_99
 {
