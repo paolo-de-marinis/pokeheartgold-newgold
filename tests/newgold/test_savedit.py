@@ -468,6 +468,12 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual((evolved["ability_name"], evolved["hidden_ability"]), ("Flame Body", True))
         back = sv.describe_mon(sv.edit_mon(hidden, ability=0))
         self.assertEqual((back["ability_name"], back["hidden_ability"]), ("Run Away", False))
+        # Phanpy has one ability, Donphan two: Phanpy's first chosen is Donphan's first.
+        odd = sv.build_mon("PHANPY", 20, personality=0x5A5A0073, ot_id=0x00010002)
+        first = sv.edit_mon(odd, ability=0)
+        self.assertEqual(sv.describe_mon(first)["ability_bit"], 0)
+        self.assertEqual(sv.describe_mon(sv.edit_mon(first, species=n["DONPHAN"]))["ability_slot"], 0)
+        self.assertEqual(sv.describe_mon(sv.edit_mon(odd, species=n["DONPHAN"]))["ability_slot"], 1, "left alone, the bit")
 
     def test_no_level_up_move_the_engine_never_implemented(self):
         """LoadLevelUpLearnset_HandleAlternateForm drops the moves whose

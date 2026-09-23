@@ -1714,7 +1714,9 @@ def _choose_ability(mon, slot):
     """The bits that make UpdateBoxMonAbility give this slot, so the game
     keeps it, through evolution too: the hidden-ability bit, or for the
     first two a personality whose low bit (turned by a Capsule's) picks it
-    -- personality_for_bit, nature, gender and shininess kept."""
+    -- personality_for_bit, nature, gender and shininess kept. The first
+    sets the bit even for a species with no second: the one it evolves
+    into may have one."""
     a, b = mon["blocks"][:2]
     species, form = struct.unpack_from("<H", a, 0)[0], b[0x18] >> 3
     have = {entry["slot"] for entry in species_abilities(species, form)}
@@ -1722,7 +1724,7 @@ def _choose_ability(mon, slot):
         raise Illegal(species, ability=slot)
     b[0x19] = (b[0x19] & ~(HIDDEN_ABILITY_BIT << 6) & 0xFF) | (HIDDEN_ABILITY_BIT << 6 if slot == HIDDEN_SLOT else 0)
     swap = struct.unpack_from("<H", b, 0x1A)[0] & SWAP_ABILITY_BIT
-    if slot != HIDDEN_SLOT and 1 in have and _ability_bits(mon)[1] != slot:
+    if slot != HIDDEN_SLOT and _ability_bits(mon)[1] != slot:
         mon["personality"] = personality_for_bit(mon["personality"], slot ^ swap, struct.unpack_from("<I", a, 4)[0],
                                                  personal_records()[personal_row(species, form)])
     _set_ability(mon)
