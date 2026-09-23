@@ -970,5 +970,14 @@ class BattleBondTests(unittest.TestCase):
             self.assertIn(f"MOVE_SUBSCRIPT_PTR_{stat}_UP_1_STAGE\n    Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE", script)
 
 
+class PsychUpTests(unittest.TestCase):
+    def test_focus_energy_is_copied_not_added(self):
+        # Pokemon Central, Psicamisu: from Generation VI the user takes the
+        # target's critical-hit rise, and loses its own if the target has none.
+        body = function(COMMANDS.read_text(), "BtlCmd_CopyStatStages")
+        self.assertIn("status2 & ~STATUS2_FOCUS_ENERGY)", body)
+        self.assertNotIn("status2 |=", body)
+
+
 if __name__ == "__main__":
     unittest.main()
