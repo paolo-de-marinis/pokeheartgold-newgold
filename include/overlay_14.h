@@ -8,6 +8,7 @@
 #include "filesystem.h"
 #include "pokemon_types_def.h"
 #include "save.h"
+#include "sprite.h"
 #include "sys_task_api.h"
 #include "unk_02019BA4.h"
 
@@ -28,7 +29,9 @@ typedef struct PCBoxAppGraphics {
     GridInputHandler *gridInput; // 0x2C
     u8 unk30[0x2C0];
     void *unk2F0;
-    u8 unk2F4[0x148];
+    u8 unk2F4[8];
+    ManagedSprite *sprites[15]; // 0x2FC; 13 and 14 the type icons of the Pokemon shown
+    u8 unk338[0x104];
     int lastGridInput; // 0x43C
     u8 unk440[0xB];
     u8 unk44B;

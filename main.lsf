@@ -749,6 +749,8 @@ Overlay OVY_14
     Object asm/overlay_14_021F039C.o
     Object src/overlay_14_021F1004.o
     Object asm/overlay_14_021F1058.o
+    Object src/overlay_14_021F3D70.o
+    Object asm/overlay_14_021F3DE8.o
     Object src/overlay_14_021F4958.o
     Object asm/overlay_14_021F4A64.o
     Object src/pc_box_display_ability.o
