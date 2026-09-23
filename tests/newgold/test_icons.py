@@ -84,6 +84,23 @@ class IconTests(unittest.TestCase):
             # the CHAR block's depth field: 3 is 4bpp; a 32x64 icon is 1024 bytes
             self.assertEqual((data[0x1C], len(data) - 0x30), (3, 1024), path.name)
 
+    def test_an_icon_takes_the_palette_it_is_drawn_in(self):
+        # The reference names palette 0 for Iron Leaves and twenty others
+        # whose PNG carries another of the three shared palettes' colours;
+        # Iron Leaves showed yellow and orange.
+        from import_icons import drawn_in, shared_palettes
+        shared = shared_palettes()
+        table = [int(v) for v in palette_table()]
+        checked = 0
+        for offset, name in enumerate(import_species.added_species()):
+            drawn = drawn_in(ICONS / f"poke_icon_{self.firstIcon + offset:08d}.png", shared)
+            if drawn is not None:
+                self.assertEqual(table[self.firstPalette + offset], drawn, name)
+                checked += 1
+        self.assertGreater(checked, 100)
+        offset = import_species.added_species().index("IRON_LEAVES")
+        self.assertEqual(table[self.firstPalette + offset], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

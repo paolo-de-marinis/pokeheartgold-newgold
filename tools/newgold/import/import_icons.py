@@ -7,6 +7,14 @@ the entries just past the last species are already taken by the alternate form
 icons. The new species are given the range after all of those instead, which
 GetMonIconNaixEx has to be told about.
 
+An icon is drawn in one of three palettes the icons share
+(poke_icon_00000000.pal), and each species names its own in the reference's
+data/IconPaletteTable.c. For 21 of the added species that number is not the
+palette the icon was drawn in -- Iron Leaves, green and pink, is given the
+yellow and orange palette 0 -- while the icon's PNG carries its palette's
+colours: where the PNG's palette is one of the three on every colour it
+uses, that one is the icon's.
+
 Usage: import_icons.py REFERENCE_CHECKOUT [--write]
 """
 
@@ -14,6 +22,8 @@ import argparse
 import re
 import shutil
 from pathlib import Path
+
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[3]
 ICONS = ROOT / "files/poketool/icongra/poke_icon"
@@ -33,8 +43,25 @@ def first_added_icon():
     another species' picture. The number comes from the C now, and a species
     is always written at the same entry.
     """
-    source = (ROOT / "src/pokemon_icon_idx.c").read_text()
+    source = (ROOT / "include/pokemon_icon_idx.h").read_text()
     return int(re.search(r"#define FIRST_ADDED_ICON\s+(\d+)", source).group(1))
+
+
+def shared_palettes():
+    """The three palettes the icons share, sixteen colours each."""
+    lines = (ICONS / "poke_icon_00000000.pal").read_text().split("\n")[3:]
+    colours = [tuple(int(v) for v in line.split()) for line in lines if line.strip()]
+    return [colours[16 * k:16 * k + 16] for k in range(3)]
+
+
+def drawn_in(png, shared):
+    """The shared palette an icon's PNG has on every colour it uses, if one."""
+    image = Image.open(png)
+    own = image.getpalette() or []
+    used = {pixel for pixel in image.getdata() if pixel}
+    found = [k for k, palette in enumerate(shared)
+             if all(tuple(own[3 * i:3 * i + 3]) == palette[i] for i in used)]
+    return found[0] if len(found) == 1 else None
 
 
 def palette_numbers(reference):
@@ -67,7 +94,13 @@ def main():
     if unknown:
         raise SystemExit(f"no palette number for: {', '.join(unknown)}")
 
-    numbers = [palettes[name] for name in import_species.added_species()]
+    shared = shared_palettes()
+    numbers = []
+    for name in import_species.added_species():
+        drawn = drawn_in(sprites / name.lower() / "icon.png", shared)
+        if drawn is not None and drawn != palettes[name]:
+            print(f"{name}: drawn in palette {drawn}, the reference says {palettes[name]}")
+        numbers.append(palettes[name] if drawn is None else drawn)
     print("palette numbers:", ", ".join(str(n) for n in sorted(set(numbers))))
 
     if not args.write:
