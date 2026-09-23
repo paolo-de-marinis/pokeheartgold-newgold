@@ -5037,6 +5037,16 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         }
         script = BATTLE_SUBSCRIPT_KNOCK_OFF;
         break;
+    // Thief and Covet take the target's item once the move is over, on the
+    // same terms (Pokemon Central, Furto: not once the user has fainted to
+    // Rough Skin, recoil or Aftermath). Subscript 85 asks the rest, the Gem
+    // among it.
+    case MOVE_EFFECT_STEAL_HELD_ITEM:
+        if (!ctx->battleMons[ctx->battlerIdAttacker].hp || BattlerCheckSubstitute(ctx, target)) {
+            return FALSE;
+        }
+        script = BATTLE_SUBSCRIPT_STEAL_ITEM;
+        break;
     default:
         return FALSE;
     }
