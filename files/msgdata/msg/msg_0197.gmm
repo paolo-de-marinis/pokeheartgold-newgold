@@ -7552,4 +7552,28 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} started\nheating up its beak!</language>
 	</row>
+	<row id="msg_0197_01888" index="1888">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} set a shell trap!</language>
+	</row>
+	<row id="msg_0197_01889" index="1889">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} set\na shell trap!</language>
+	</row>
+	<row id="msg_0197_01890" index="1890">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} set\na shell trap!</language>
+	</row>
+	<row id="msg_0197_01891" index="1891">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s shell trap\ndidn’t work!</language>
+	</row>
+	<row id="msg_0197_01892" index="1892">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s shell trap\ndidn’t work!</language>
+	</row>
+	<row id="msg_0197_01893" index="1893">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s shell\ntrap didn’t work!</language>
+	</row>
 </body>

@@ -482,6 +482,10 @@ IMPLEMENTED_HERE = {
     # touches it before it strikes (Pokemon Central, Cannonbecco): the
     # controller's turn start and CheckAbilityEffectOnHit.
     "BEAK_BLAST": "MOVE_EFFECT_HIT",
+    # Shell Trap is set as the turn begins, springs on a foe's physical hit and
+    # strikes straight after it, or fails (Pokemon Central, Gusciotrappola):
+    # effect script 440.
+    "SHELL_TRAP": "MOVE_EFFECT_SHELL_TRAP",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

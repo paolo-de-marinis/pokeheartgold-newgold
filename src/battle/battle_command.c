@@ -10353,6 +10353,10 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
             ctx->moveConditions[battlerId].telekinesisTurns = 3;
         }
         break;
+    // Whether the battler's Shell Trap was sprung, for its script to ask.
+    case MOVE_SHELL_TRAP:
+        ctx->calcTemp = ctx->turnData[battlerId].shellTrapSprung;
+        break;
     // The field is locked till the next turn's end; not twice over (CALC_TEMP
     // says whether it took).
     case MOVE_FAIRY_LOCK:

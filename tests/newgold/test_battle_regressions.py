@@ -47,7 +47,7 @@ typedef struct {
     int stateBeforeTurn, beforeTurnData, executionOrder[BATTLER_MAX];
     u32 switchInFlag;
     struct { u32 status, status2; } battleMons[BATTLER_MAX];
-    struct { int struggleFlag, beakBlastCharging; } turnData[BATTLER_MAX];
+    struct { int struggleFlag, beakBlastCharging, shellTrapSet; } turnData[BATTLER_MAX];
     struct { int id, tag, param[6]; } buffMsg;
     int battlerIdTemp, commandNext, command;
     u32 unk_310C[BATTLER_MAX];

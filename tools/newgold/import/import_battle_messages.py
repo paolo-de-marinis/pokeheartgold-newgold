@@ -277,6 +277,18 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} started heating\nup its beak!",
         r"The opposing {STRVAR_1 1, 0, 0} started\nheating up its beak!",
     ]),
+    # Shell Trap set as the turn begins, and left unsprung. The engine leaves
+    # the move unimplemented; the later games' lines.
+    ("shell trap", [
+        r"{STRVAR_1 1, 0, 0} set a shell trap!",
+        r"The wild {STRVAR_1 1, 0, 0} set\na shell trap!",
+        r"The opposing {STRVAR_1 1, 0, 0} set\na shell trap!",
+    ]),
+    ("shell trap failed", [
+        r"{STRVAR_1 1, 0, 0}’s shell trap\ndidn’t work!",
+        r"The wild {STRVAR_1 1, 0, 0}’s shell trap\ndidn’t work!",
+        r"The opposing {STRVAR_1 1, 0, 0}’s shell\ntrap didn’t work!",
+    ]),
 ]
 
 

@@ -91,7 +91,9 @@ typedef struct TurnData {
     u32 statRaised : 1; // a stat of its rose this turn, or before the first: Burning Jealousy burns it
     u32 electrified : 1; // Electrify landed on it: its move this turn is Electric
     u32 beakBlastCharging : 1; // heating its beak for Beak Blast: what touches it before it moves is burned
-    u32 unk0_A : 15;
+    u32 shellTrapSet : 1; // Shell Trap set as the turn began
+    u32 shellTrapSprung : 1; // and sprung by a foe's physical hit: it goes next
+    u32 unk0_A : 13;
     int physicalDamage[4];
     int battlerIdPhysicalDamage;
     int battlerBitPhysicalDamage;

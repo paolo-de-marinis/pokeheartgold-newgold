@@ -833,5 +833,27 @@ int main(void) {
         self.assertIn("BattleMoveMakesContact(ctx, ctx->moveNoCur)", burning)
         self.assertIn("*script = BATTLE_SUBSCRIPT_BURN;", burning)
 
+    def test_shell_trap_springs_on_a_foe_s_physical_hit(self):
+        # Pokemon Central (Gusciotrappola): set as the turn begins; a foe's
+        # physical hit, not Sheer Force's, springs it and it goes next;
+        # unsprung, it fails when its turn comes.
+        import import_battle_messages
+        self.assertImplemented("SHELL_TRAP", "MOVE_EFFECT_SHELL_TRAP")
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        before = function(controller, "BattleControllerPlayer_BeforeTurn")
+        setting = before[before.index("MOVE_SHELL_TRAP"):]
+        self.assertIn("ctx->turnData[battlerId].shellTrapSet = TRUE;", setting)
+        self.assertIn(f"ctx->buffMsg.id = msg_0197_{import_battle_messages.port_row('shell trap'):05d};", setting)
+        hp = function(controller, "BattleControllerPlayer_HpCalc")
+        springing = hp[hp.index("shellTrapSet"):]
+        springing = springing[:springing.index("}")]
+        for part in ("ov12_0225561C(ctx, ctx->battlerIdTarget) == FALSE", "BattleSystem_GetFieldSide", "CATEGORY_PHYSICAL",
+                     "!SheerForceTradedEffect(ctx)", "shellTrapSprung = TRUE;", "forceExecutionOrder = EXECUTION_ORDER_AFTER_YOU;"):
+            self.assertIn(part, springing)
+        self.assertLess(hp.index("BATTLE_SUBSCRIPT_HIT_SUBSTITUTE"), hp.index("shellTrapSet"))
+        script = effect_script("MOVE_EFFECT_SHELL_TRAP")
+        self.assertIn("SetMoveConditionFlag MOVE_SHELL_TRAP, BATTLER_CATEGORY_ATTACKER", script)
+        self.assertIn(f"PrintMessage msg_0197_{import_battle_messages.port_row('shell trap failed'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER", script)
+
 if __name__ == "__main__":
     unittest.main()

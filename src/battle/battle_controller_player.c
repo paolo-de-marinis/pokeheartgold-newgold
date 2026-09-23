@@ -948,10 +948,16 @@ static void BattleControllerPlayer_BeforeTurn(BattleSystem *battleSystem, Battle
                 // frozen or confused as it may be, and until it moves what
                 // touches it is burned (Pokemon Central, Cannonbecco;
                 // CheckAbilityEffectOnHit).
-                if (GetBattlerSelectedMove(ctx, battlerId) == MOVE_BEAK_BLAST && !ctx->turnData[battlerId].struggleFlag) {
+                // Shell Trap is set the same way, and sprung in HpCalc.
+                if ((GetBattlerSelectedMove(ctx, battlerId) == MOVE_SHELL_TRAP || GetBattlerSelectedMove(ctx, battlerId) == MOVE_BEAK_BLAST) && !ctx->turnData[battlerId].struggleFlag) {
                     BattleController_EmitBlankMessage(battleSystem);
-                    ctx->turnData[battlerId].beakBlastCharging = TRUE;
-                    ctx->buffMsg.id = msg_0197_01885; // {0} started heating up its beak!
+                    if (GetBattlerSelectedMove(ctx, battlerId) == MOVE_SHELL_TRAP) {
+                        ctx->turnData[battlerId].shellTrapSet = TRUE;
+                        ctx->buffMsg.id = msg_0197_01888; // {0} set a shell trap!
+                    } else {
+                        ctx->turnData[battlerId].beakBlastCharging = TRUE;
+                        ctx->buffMsg.id = msg_0197_01885; // {0} started heating up its beak!
+                    }
                     ctx->buffMsg.tag = TAG_NICKNAME;
                     ctx->buffMsg.param[0] = CreateNicknameTag(ctx, battlerId);
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SHOW_PREPARED_MESSAGE);
@@ -3957,6 +3963,16 @@ static void BattleControllerPlayer_HpCalc(BattleSystem *battleSystem, BattleCont
 
             ctx->turnData[ctx->battlerIdTarget].unk34 = ctx->damage;
             ctx->turnData[ctx->battlerIdTarget].unk38 = ctx->battlerIdAttacker;
+            // A foe's physical hit springs a Shell Trap set this turn before
+            // its Pokemon has moved, which then goes straight after this move,
+            // After You's way; not a hit Sheer Force boosted, nor one on a
+            // substitute (Pokemon Central, Gusciotrappola).
+            if (ctx->turnData[ctx->battlerIdTarget].shellTrapSet && ov12_0225561C(ctx, ctx->battlerIdTarget) == FALSE
+                && BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker) != BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget)
+                && BattleMoveCategory(ctx, ctx->moveNoCur, ctx->battlerIdAttacker) == CATEGORY_PHYSICAL && !SheerForceTradedEffect(ctx)) {
+                ctx->turnData[ctx->battlerIdTarget].shellTrapSprung = TRUE;
+                ctx->turnData[ctx->battlerIdTarget].forceExecutionOrder = EXECUTION_ORDER_AFTER_YOU;
+            }
             Battler_ArmRetreat(ctx, ctx->battlerIdTarget);
             // The user too, for what its own hit costs it -- recoil, a Life
             // Orb, a Rocky Helmet or Rough Skin on the other side (Pokemon
