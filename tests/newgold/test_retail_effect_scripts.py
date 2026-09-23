@@ -76,7 +76,6 @@ STILL_DIFFERENT = {
     241: PARENTAL_BOND,
     242: PARENTAL_BOND,
     249: "the entry-hazard queue, which nothing here reads yet",
-    252: "Magnet Rise refused to an Eelevate holder",
     253: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     257: IN_C.format("Surf against Dive, CalcBaseDamage.c"),
     259: "the engine's Room Service subscript and its message wait",
@@ -211,6 +210,10 @@ class BroughtOverTests(unittest.TestCase):
     def test_role_play_is_not_refused_to_a_griseous_orb(self):
         # Retail failed Role Play for any user holding a Griseous Orb.
         self.assertNotIn("ITEM_GRISEOUS_ORB", script(178))
+    def test_magnet_rise_is_refused_to_an_eelevate_holder(self):
+        # Eelevate lifts a Pokemon the way Levitate does (BattlerIsGrounded),
+        # and Magnet Rise fails for either.
+        self.assertIn("CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_EELEVATE", script(252))
 
 
 if __name__ == "__main__":
