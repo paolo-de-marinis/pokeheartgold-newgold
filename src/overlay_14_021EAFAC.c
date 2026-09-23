@@ -4,6 +4,10 @@
 #include "system.h"
 #include "unk_020210A0.h"
 
+// Retail's state was 0x88E0 bytes; the box pictures now follow it.
+typedef char PCBoxAppGraphicsPicturesCheck[offsetof(PCBoxAppGraphics, boxThumbnails) == 0x88E0 ? 1 : -1];
+typedef char PCBoxAppGraphicsFieldsCheck[offsetof(PCBoxAppGraphics, narc454) == 0x454 && offsetof(PCBoxAppGraphics, lastGridInput) == 0x43C ? 1 : -1];
+
 // Sets the PC box application's screens up and allocates its graphics state.
 int ov14_021EAFAC(PCBoxApp *app) {
     Main_SetVBlankIntrCB(NULL, NULL);
@@ -16,8 +20,8 @@ int ov14_021EAFAC(PCBoxApp *app) {
     sub_02021148(4);
     GX_SetDispSelect(GX_DISP_SELECT_SUB_MAIN);
     Heap_Create(HEAP_ID_3, HEAP_ID_10, 0x80000);
-    app->graphics = Heap_Alloc(HEAP_ID_10, 0x88E0);
-    MI_CpuFill8(app->graphics, 0, 0x88E0);
+    app->graphics = Heap_Alloc(HEAP_ID_10, sizeof(PCBoxAppGraphics));
+    MI_CpuFill8(app->graphics, 0, sizeof(PCBoxAppGraphics));
     app->graphics->narc450 = NARC_New(NARC_poketool_personal_personal, HEAP_ID_10);
     app->graphics->narc454 = NARC_New(NARC_poketool_icongra_poke_icon, HEAP_ID_10);
     ov14_021E5A60();

@@ -18,9 +18,9 @@ typedef struct PCBoxArgs {
 
 #define PC_BOX_THUMBNAIL_SIZE 0x400
 
-// The prefix of the PC box application's graphics state that the routines
-// decompiled so far read. The rest is still addressed by offset in the
-// assembly; nothing may allocate or copy this by its size.
+// The PC box application's graphics state. Only the fields the routines
+// decompiled so far read are named; the rest is still addressed by offset in
+// the assembly. Its size is the whole state, which ov14_021EAFAC allocates.
 typedef struct PCBoxAppGraphics {
     SysTask *vblankTask;
     u8 unk4[0x28];
@@ -35,11 +35,18 @@ typedef struct PCBoxAppGraphics {
     NARC *narc450;
     NARC *narc454;
     u8 unk458[0x3C70];
-    // What a box looks like in the box list, one picture per box.
-    u8 boxThumbnails[NUM_BOXES][PC_BOX_THUMBNAIL_SIZE]; // 0x40C8
+    // Retail's eighteen box pictures, from 0x40C8 to the fields at 0x88C8.
+    // Thirty do not fit there, so the pictures are at the end instead, as in
+    // hg-engine, and this is left unused.
+    u8 unk40C8[18 * PC_BOX_THUMBNAIL_SIZE];
+    u8 unk88C8[0x18];
+    // What a box looks like in the box list, one picture per box, past the
+    // end of retail's 0x88E0 bytes.
+    u8 boxThumbnails[NUM_BOXES][PC_BOX_THUMBNAIL_SIZE]; // 0x88E0
 } PCBoxAppGraphics;
 
-// The same for the application itself.
+// The prefix of the application itself that those routines read; nothing may
+// allocate or copy this by its size.
 typedef struct PCBoxApp {
     PCBoxArgs *args;
     u8 unk4[0x1B];
