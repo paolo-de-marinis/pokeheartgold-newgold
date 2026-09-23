@@ -855,6 +855,13 @@ class SwitchItemTests(unittest.TestCase):
             "SwitchItemWillAnswerPivot"))
         run_c(SWITCH_ITEM_FIXTURE.replace("@FUNCTION@", body))
 
+    def test_a_red_card_holder_s_own_pivot_move_keeps_it_in(self):
+        """Pokemon Central (Cartelrosso) and Bulbapedia's U-turn, Volt Switch
+        and Flip Turn: the three do not switch a user holding a Red Card."""
+        dispatch = function(OVERLAY.read_text(), "ov12_02250490")
+        self.assertIn("if (*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {\n"
+                      "            ret = FALSE;", dispatch)
+
     def test_asked_after_the_move_before_the_users_own_items(self):
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
         ask = body.index("CheckSwitchItemOnHit(battleSystem, ctx, ctx->turnOrder[walk % maxBattlers],")

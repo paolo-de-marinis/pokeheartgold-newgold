@@ -1876,6 +1876,12 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
             && (Battler_Retreats(battleSystem, ctx, ctx->battlerIdTarget) || SwitchItemWillAnswerPivot(battleSystem, ctx, ctx->battlerIdTarget))) {
             ret = FALSE;
         }
+        // Nor when their user holds a Red Card itself (Pokemon Central,
+        // Cartelrosso; Bulbapedia's U-turn, Volt Switch and Flip Turn); the
+        // reference switches it.
+        if (*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {
+            ret = FALSE;
+        }
     } else if (ctx->unk_2174 & (1 << 24)) {
         *out = GetMoveStatusChangeScript(ctx, 2, ctx->unk_2174);
         ctx->unk_2174 = 0;
