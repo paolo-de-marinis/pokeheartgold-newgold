@@ -244,6 +244,14 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(refused.exception.code, "build")
         self.assertIsNone(self.ok("/api/library")["build"])
 
+    def test_a_pokemon_is_held_to_the_headers_limits(self):
+        """New Gold's MAX_EV_PER_STAT is 252, not the byte's 255, and a
+        level is at most MAX_LEVEL: what the headers say, not the editor."""
+        edit = {"f": "gyms/test.sav", "op": "party_edit"}
+        self.assertEqual(sv.MAX_EV_PER_STAT, 252)
+        self.assertIn("da 0 a 252", self.refused("/api/edit", {**edit, "args": {"slot": 0, "evs": [253, 0, 0, 0, 0, 0]}}))
+        self.assertIn(f"da 1 a {sv.MAX_LEVEL}", self.refused("/api/edit", {**edit, "args": {"slot": 0, "level": 101}}))
+
     def test_an_icon_has_the_games_palette(self):
         status, png = self.call(f"/api/icon?species={sv.species_numbers()['PIKACHU']}")
         self.assertEqual(status, 200)

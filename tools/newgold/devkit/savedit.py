@@ -235,8 +235,13 @@ def _layout():
         "MON_RATIO_UNKNOWN": "MON_RATIO_UNKNOWN", "MON_MALE": "MON_MALE", "MON_FEMALE": "MON_FEMALE",
         "MON_GENDERLESS": "MON_GENDERLESS",
         "BAG_SLOT_QUANTITY_MAX": "BAG_SLOT_QUANTITY_MAX", "BAG_TMHM_QUANTITY_MAX": "BAG_TMHM_QUANTITY_MAX",
+        # What a Pokemon can be: its level, nature, moves, stats and EVs.
+        "MAX_LEVEL": "MAX_LEVEL", "NATURE_NUM": "NATURE_NUM", "MAX_MON_MOVES": "MAX_MON_MOVES",
+        "NUM_STATS": "NUM_STATS", "MAX_EV_PER_STAT": "MAX_EV_PER_STAT", "MAX_EV_SUM": "MAX_EV_SUM",
+        "DIR_MAX": "DIR_MAX",   # the directions the player can face
     }
-    values, (natdex,) = compile_c(tuple(names.values()), (("PlayerProfile", ".natDex = 1"),))
+    values, (natdex, ivs) = compile_c(tuple(names.values()), (("PlayerProfile", ".natDex = 1"),
+                                                              ("PokemonDataBlockB", ".hpIV = ~0u")))
     out = dict(zip(names, values))
     at = out["PROFILE"]
     out.update(NAME=at + out["NAME_IN_PROFILE"], TRAINER_ID=at + out["ID_IN_PROFILE"], MONEY=at + out["MONEY_IN_PROFILE"],
@@ -244,6 +249,8 @@ def _layout():
                KANTO_BADGES=at + out["KANTO_IN_PROFILE"])
     byte, bit = set_bit(natdex)
     out.update(PROFILE_FLAGS=at + byte, NATDEX_MASK=1 << bit)
+    byte, bit = set_bit(ivs)
+    out["MAX_IV"] = int.from_bytes(ivs[byte:byte + 4], "little") >> bit   # the most an IV's field holds
     out["MINT_MASK"] = constants("src/pokemon.c", "MON_MINT_")["MON_MINT_NATURE_MASK"]   # pokemon.c's own
     out["PAGES_PER_HALF"] = HALF // save_budget.SAVE_SECTOR_SIZE
     # ZeroMonData: zeroes, "encrypted" under a checksum and a personality of 0.
@@ -1613,8 +1620,8 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
     current = mon["party"][4] if mon["party"] is not None else level_for(records[old_species]["growthRate"], exp)
     restat = any(v is not None for v in (level, nature, ivs, evs)) or (species not in (None, old_species))
     knew = [struct.unpack_from("<H", b, 2 * i)[0] for i in range(4)]
-    if level is not None and not 1 <= level <= 100:
-        raise ValueError("a level is 1 to 100")
+    if level is not None and not 1 <= level <= MAX_LEVEL:
+        raise ValueError(f"a level is 1 to {MAX_LEVEL}")
     if nature is not None:
         mon["personality"] = personality_for_nature(mon["personality"], nature, ot_id)
         struct.pack_into("<H", b, 0x1A, struct.unpack_from("<H", b, 0x1A)[0] & ~MINT_MASK)

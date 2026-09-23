@@ -53,21 +53,14 @@ import savedit as sv  # noqa: E402
 
 PAGE = HERE / "saveui.html"
 ICONS = ROOT / "files/poketool/icongra/poke_icon"
-# key: (build folder, ROM stem, label). melonDS's SaveFilePath is empty, so
-# it reads and writes the .sav beside the ROM.
-SLOTS = {
-    "hg-diag": ("heartgold.us.diag", "pokeheartgold.us", "HeartGold diagnostica"),
-    "hg": ("heartgold.us", "pokeheartgold.us", "HeartGold"),
-    "ss-diag": ("soulsilver.us.diag", "pokesoulsilver.us", "SoulSilver diagnostica"),
-    "ss": ("soulsilver.us", "pokesoulsilver.us", "SoulSilver"),
-}
+# The page's names for the games config.mk builds, by their GAME_VERSION.
+GAME_LABELS = {"HEARTGOLD": "HeartGold", "SOULSILVER": "SoulSilver"}
 NAME = re.compile(r"[\w\- .]+")
 APP = "net.kuribo64.melonDS"    # diag/play.py's
 LAUNCHED = []                   # what a dry run would have started
 # What this editor's code is: a server running older code answers with
 # another, and a new start replaces it instead of opening its page.
 CODE = hashlib.sha1(b"".join(f.read_bytes() for f in (Path(__file__).resolve(), HERE / "saveui.html", HERE / "savedit.py"))).hexdigest()[:12]
-HEARTGOLD = b"IPK"              # the cartridge's game code, IPKE for the American HeartGold
 CONFIG = Path(os.environ.get("SAVEUI_CONFIG") or
               Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "newgold-saveui/settings.json")
 LAUNCH_LOG = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "newgold-saveui/melonds.log"
@@ -220,42 +213,93 @@ def stamp():
     return datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
 
 
+@sv.tree_cache
+def built_roms():
+    """The ROMs this tree's make builds, as config.mk and the Makefile name
+    them: for each GAME_VERSION config.mk knows, its buildname (with the
+    language's suffix) as the folder under the build, NEWGOLD_DIAG's folder
+    beside it, the ROM poke<buildname>.nds, and the cartridge's game code.
+    melonDS's SaveFilePath is empty, so it reads and writes the .sav beside
+    the ROM. {slot: (folder, ROM stem, label, GAME_VERSION, game code)}, the
+    slot named by the TITLE_NAME's last word."""
+    mk, make = sv.source("config.mk").read_text(), sv.source("Makefile").read_text()
+
+    def block(condition):
+        found = re.search(rf"ifeq \({re.escape(condition)}\)(.*?)\n(?:else|endif)", mk, re.S)
+        return lambda var: re.search(rf"^{var}\s*:=\s*(.+?)\s*$", found.group(1), re.M).group(1)
+    default = re.search(r"^GAME_LANGUAGE\s*\?=\s*(\w+)", mk, re.M).group(1)
+    language = block(f"$(GAME_LANGUAGE),{default}")
+    suffix = language("buildname").replace("$(buildname)", "")
+    diag = block("$(NEWGOLD_DIAG),1")("BUILD_DIR").replace("$(BUILD_DIR)", "")
+    prefix = re.search(r"^ROM\s*:=\s*\$\(BUILD_DIR\)/(\S*)\$\(buildname\)\.nds\s*$", make, re.M).group(1)
+    out = {}
+    for version in re.findall(r"ifeq \(\$\(GAME_VERSION\),(\w+)\)", mk):
+        game = block(f"$(GAME_VERSION),{version}")
+        name, key = game("buildname") + suffix, game("TITLE_NAME").split()[-1].lower()
+        label = GAME_LABELS.get(version, version.title())
+        out[f"{key}-diag"] = (name + diag, prefix + name, f"{label} diagnostica", version, game("GAME_CODE"))
+        out[key] = (name, prefix + name, label, version, game("GAME_CODE"))
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Party icons: GetMonIconNaixEx and GetMonIconPaletteEx, the PNG given the
 # palette the game gives it.
 
-# species: (first icon, first palette entry, forms) for the forms with icons.
-ICON_FORMS = {"DEOXYS": (503, 496, 4), "UNOWN": (507, 499, 28), "BURMY": (534, 527, 3),
-              "WORMADAM": (536, 529, 3), "SHELLOS": (538, 531, 2), "GASTRODON": (539, 532, 2),
-              "GIRATINA": (540, 533, 2), "SHAYMIN": (541, 534, 2), "ROTOM": (542, 535, 6)}
+@sv.tree_cache
+def icon_rules():
+    """GetMonIconNaixEx and GetMonIconPaletteEx (src/pokemon_icon_idx.c),
+    their numbers read out of them: the egg's icon and palette entry and
+    the other egg's (Manaphy's), for each species with form icons its first
+    form's icon and palette entry and -- sub_02070438's bound -- how many
+    forms it has, how far a species' own icon is from its number, and the
+    range of the species New Gold adds, after the retail ones' icons."""
+    naix = sv.c_function("src/pokemon_icon_idx.c", "u32 GetMonIconNaixEx(")
+    pal = sv.c_function("src/pokemon_icon_idx.c", "const u8 GetMonIconPaletteEx(")
+    n = sv.species_numbers()
+    egg = re.search(r"if \(species == SPECIES_(\w+)\) \{\s*return (\d+);\s*\} else \{\s*return (\d+);", naix)
+    egg_pal = re.search(r"if \(species == SPECIES_(\w+)\) \{\s*species = (\d+);\s*\} else \{\s*species = (\d+);", pal)
+    icons = dict(re.findall(r"species == SPECIES_(\w+)\) \{\s*return form \+ (\d+) - 1;", naix))
+    palettes = dict(re.findall(r"species == SPECIES_(\w+)\) \{\s*species = (\d+) \+ form - 1;", pal))
+    bounds = re.findall(r"case SPECIES_(\w+):\s*if \(form >=? (\w+)", sv.c_function("src/pokemon.c", "u8 sub_02070438("))
+    added = re.search(r"species >= (\w+) && species <= (\w+)\) \{\s*return species - \w+ \+ (\w+);", naix).groups()
+    named = ("MAX_SPECIES", *added, "FIRST_ADDED_PALETTE", *(bound for _, bound in bounds))
+    values, _ = sv.compile_c(named, headers=sv.LAYOUT_HEADERS + ("pokemon_icon_idx.h",))
+    value = dict(zip(named, values))
+    count = {n[s]: value[bound] for s, bound in bounds}
+    return {"egg": {n[egg.group(1)]: (int(egg.group(2)), int(egg_pal.group(2))), None: (int(egg.group(3)), int(egg_pal.group(3)))},
+            "forms": {n[s]: (int(icons[s]), int(palettes[s]), count[n[s]]) for s in icons},
+            "own": int(re.search(r"return species \+ (\d+);", naix).group(1)),
+            "retail": value["MAX_SPECIES"], "added": (value[added[0]], value[added[1]]),
+            "first_added": (value[added[2]], value["FIRST_ADDED_PALETTE"])}
 
 
 @sv.tree_cache
-def _icon_tables():
+def _icon_colours():
     text = sv.source("src/pokemon_icon_idx.c").read_text()
     start = text.index("sPokemonPalNoBySpeciesAndForm[] = {")
     palette_of = [int(n) for n in re.findall(r"^\s*(\d+),", text[start:text.index("\n};", start)], re.M)]
     lines = sv.source(ICONS / "poke_icon_00000000.pal").read_text().split("\n")[3:]
     colours = [tuple(int(v) for v in line.split()) for line in lines if line.strip()]
-    first = sv.constants("include/pokemon_icon_idx.h", "FIRST_ADDED_")
-    return palette_of, colours, first["FIRST_ADDED_ICON"], first["FIRST_ADDED_PALETTE"]
+    return palette_of, colours
 
 
 def icon(species, form=0, egg=False):
-    palette_of, colours, first_icon, first_palette = _icon_tables()
-    n = sv.species_numbers()
-    by_id = {n[name]: value for name, value in ICON_FORMS.items()}
+    """GetMonIconNaixEx's icon for the Pokemon, with GetMonIconPaletteEx's palette."""
+    palette_of, colours = _icon_colours()
+    rules = icon_rules()
+    first, last = rules["added"]
     if egg:
-        index, pal = (502, 495) if species == n["MANAPHY"] else (501, 494)
-    elif species > n["ARCEUS"]:
-        if n["LILLIPUP"] <= species < len(sv.personal_records()):
-            index, pal = species - n["LILLIPUP"] + first_icon, species - n["LILLIPUP"] + first_palette
+        index, pal = rules["egg"].get(species, rules["egg"][None])
+    elif species > rules["retail"]:
+        if first <= species <= last:
+            index, pal = (species - first + start for start in rules["first_added"])
         else:
-            index, pal = 7, 0
-    elif species in by_id and 0 < form < by_id[species][2]:
-        index, pal = by_id[species][0] + form - 1, by_id[species][1] + form - 1
+            index, pal = rules["own"], 0
+    elif species in rules["forms"] and 0 < form < rules["forms"][species][2]:
+        index, pal = (start + form - 1 for start in rules["forms"][species][:2])
     else:
-        index, pal = species + 7, species
+        index, pal = species + rules["own"], species
     png = (ICONS / f"poke_icon_{index:08d}.png").read_bytes()
     number = palette_of[pal] if pal < len(palette_of) else 0
     return recolour(png, colours[16 * number:16 * number + 16])
@@ -288,7 +332,7 @@ def default_roms(build):
     list them."""
     build = Path(build).expanduser().resolve()
     return [{"id": key, "label": label, "rom": str(build / folder / f"{stem}.nds")}
-            for key, (folder, stem, label) in SLOTS.items() if (build / folder / f"{stem}.nds").exists()]
+            for key, (folder, stem, label, _, _) in built_roms().items() if (build / folder / f"{stem}.nds").exists()]
 
 
 def rom_id(rom):
@@ -347,9 +391,11 @@ class Library:
         return [r["id"] for r in self.roms]
 
     def playable(self, key):
-        """A HeartGold ROM melonDS can open: the saves here are HeartGold's."""
+        """A HeartGold ROM melonDS can open: the saves here are HeartGold's
+        (the game code config.mk gives HEARTGOLD, whatever the language)."""
         rom, sav = self.slot_paths(key)
-        return rom_problem(rom, sav) is None and game_code(rom).startswith(HEARTGOLD)
+        code = next(code for _, _, _, version, code in built_roms().values() if version == "HEARTGOLD")
+        return rom_problem(rom, sav) is None and game_code(rom).startswith(code.encode())
 
     def inside(self, rel, base=None, sav=True):
         """A path under the library (or `base`), refused if it climbs out,
@@ -751,8 +797,8 @@ class Library:
         now, before = sv.profile(save), sv.owner(save)
         if "name" in a and a["name"] != now["name"]:
             # savedit's charcode writes letters and digits and nothing else.
-            if not re.fullmatch(r"[A-Za-z0-9]{1,7}", a["name"]):
-                raise Refused("il nome: da 1 a 7 lettere o cifre (A-Z, a-z, 0-9)")
+            if not re.fullmatch(rf"[A-Za-z0-9]{{1,{sv.PLAYER_NAME_LENGTH}}}", a["name"]):
+                raise Refused(f"il nome: da 1 a {sv.PLAYER_NAME_LENGTH} lettere o cifre (A-Z, a-z, 0-9)")
             sv.set_name(save, a["name"])
         ident = number(a.get("id", now["id"]), 0, 0xFFFF, "ID"), number(a.get("sid", now["sid"]), 0, 0xFFFF, "ID segreto")
         if ident != (now["id"], now["sid"]):
@@ -771,7 +817,7 @@ class Library:
             retag(save, before, sv.owner(save))
 
     def op_party_edit(self, save, a):
-        slot = number(a["slot"], 0, 5, "posto")
+        slot = number(a["slot"], 0, sv.PARTY_SIZE - 1, "posto")
         raw = sv.party_raw(save)[slot]
         changes = storable(changed(checked_mon(a), sv.describe_mon(raw)))
         if changes:
@@ -779,46 +825,46 @@ class Library:
 
     def op_party_add(self, save, a):
         if len(sv.party_raw(save)) >= sv.PARTY_SIZE:
-            raise Refused("la squadra ha già sei Pokémon")
+            raise Refused(f"la squadra è piena: sei già a {sv.PARTY_SIZE} Pokémon")
         sv.add_party_mon(save, created(save, a, party=True))
 
     def op_party_remove(self, save, a):
-        slot = number(a["slot"], 0, 5, "posto")
+        slot = number(a["slot"], 0, sv.PARTY_SIZE - 1, "posto")
         last_one(save)
         sv.remove_party_mon(save, slot)
 
     def op_party_swap(self, save, a):
-        sv.swap_party_mons(save, number(a["a"], 0, 5, "posto"), number(a["b"], 0, 5, "posto"))
+        sv.swap_party_mons(save, number(a["a"], 0, sv.PARTY_SIZE - 1, "posto"), number(a["b"], 0, sv.PARTY_SIZE - 1, "posto"))
 
     def op_box_edit(self, save, a):
-        box, slot = number(a["box"], 0, 29, "box"), number(a["slot"], 0, 29, "posto")
+        box, slot = number(a["box"], 0, sv.NUM_BOXES - 1, "box"), number(a["slot"], 0, sv.MONS_PER_BOX - 1, "posto")
         raw = sv.box_raw(save, box, slot)
         changes = storable(changed(checked_mon(a), sv.describe_mon(raw)))
         if changes:
             sv.set_box_mon(save, box, slot, sv.edit_mon(raw, **changes))
 
     def op_box_add(self, save, a):
-        box, slot = number(a["box"], 0, 29, "box"), number(a["slot"], 0, 29, "posto")
+        box, slot = number(a["box"], 0, sv.NUM_BOXES - 1, "box"), number(a["slot"], 0, sv.MONS_PER_BOX - 1, "posto")
         if sv.open_mon(sv.box_raw(save, box, slot)) is not None:
             raise Refused(f"box {box + 1}, posto {slot + 1}: è occupato")
         sv.set_box_mon(save, box, slot, created(save, a, party=False))
 
     def op_box_remove(self, save, a):
-        sv.set_box_mon(save, number(a["box"], 0, 29, "box"), number(a["slot"], 0, 29, "posto"), sv.EMPTY_BOX_MON)
+        sv.set_box_mon(save, number(a["box"], 0, sv.NUM_BOXES - 1, "box"), number(a["slot"], 0, sv.MONS_PER_BOX - 1, "posto"), sv.EMPTY_BOX_MON)
 
     def op_deposit(self, save, a):
-        box = number(a["box"], 0, 29, "box")
-        free = [s for s in range(30) if sv.open_mon(sv.box_raw(save, box, s)) is None]
+        box = number(a["box"], 0, sv.NUM_BOXES - 1, "box")
+        free = [s for s in range(sv.MONS_PER_BOX) if sv.open_mon(sv.box_raw(save, box, s)) is None]
         if not free:
             raise Refused(f"il box {box + 1} è pieno")
-        slot = number(a["slot"], 0, 5, "posto")
+        slot = number(a["slot"], 0, sv.PARTY_SIZE - 1, "posto")
         last_one(save)
         sv.deposit(save, slot, box, free[0])
 
     def op_withdraw(self, save, a):
         if len(sv.party_raw(save)) >= sv.PARTY_SIZE:
-            raise Refused("la squadra ha già sei Pokémon")
-        sv.withdraw(save, number(a["box"], 0, 29, "box"), number(a["slot"], 0, 29, "posto"))
+            raise Refused(f"la squadra è piena: sei già a {sv.PARTY_SIZE} Pokémon")
+        sv.withdraw(save, number(a["box"], 0, sv.NUM_BOXES - 1, "box"), number(a["slot"], 0, sv.MONS_PER_BOX - 1, "posto"))
 
     def op_move(self, save, a):
         """A Pokemon dragged in the page, from one place to another."""
@@ -826,8 +872,8 @@ class Library:
             if not isinstance(p, dict) or p.get("kind") not in ("party", "box"):
                 raise Refused("posizione non valida")
             if p["kind"] == "party":
-                return ("party", number(p.get("slot"), 0, 5, "posto in squadra"))
-            return ("box", number(p.get("box"), 0, 29, "box"), number(p.get("slot"), 0, 29, "posto nel box"))
+                return ("party", number(p.get("slot"), 0, sv.PARTY_SIZE - 1, "posto in squadra"))
+            return ("box", number(p.get("box"), 0, sv.NUM_BOXES - 1, "box"), number(p.get("slot"), 0, sv.MONS_PER_BOX - 1, "posto nel box"))
         src, dst = place(a.get("from")), place(a.get("to"))
         count = len(sv.party_raw(save))
         if src[0] == "party" and src[1] >= count:
@@ -835,7 +881,7 @@ class Library:
         if src[0] == "box" and sv.open_mon(sv.box_raw(save, src[1], src[2])) is None:
             raise Refused(f"box {src[1] + 1}, posto {src[2] + 1}: è vuoto")
         if src[0] == "box" and dst[0] == "party" and dst[1] >= count and count >= sv.PARTY_SIZE:
-            raise Refused("la squadra ha già sei Pokémon: trascinalo su uno di loro per scambiarli")
+            raise Refused(f"la squadra è piena, sei già a {sv.PARTY_SIZE} Pokémon: trascinalo su uno di loro per scambiarli")
         if src[0] == "box" and not (sv.open_mon(sv.box_raw(save, src[1], src[2])) or {}).get("ok"):
             if dst[0] == "party":
                 raise Refused("un Pokémon che non si legge (Uovo Difettoso) non va in squadra")
@@ -885,7 +931,7 @@ class Library:
             span = lambda i: f"{min(c[i] for c in chunks) * 32}–{max(c[i] for c in chunks) * 32 + 31}"
             raise Refused(f"({x}, {y}) è fuori da {sv.map_table()[where]['name'] or where}: lì il gioco lascerebbe "
                           f"il giocatore nel nero. La mappa sta tra x {span(0)} e y {span(1)}.")
-        sv.set_position(save, where, x, y, number(a.get("direction", 0), 0, 3, "direzione"))
+        sv.set_position(save, where, x, y, number(a.get("direction", 0), 0, sv.DIR_MAX - 1, "direzione"))
 
     def op_flag(self, save, a):
         sv.write_flag(save, number(a["number"], 1, sv.num_flags() - 1, "flag"), bool(a["value"]))
@@ -932,9 +978,9 @@ def checked_mon(a):
         if out["species"] not in {row["id"] for row in sv.species_table()}:
             raise Refused(f"non c'è la specie {out['species']}")
     if "level" in a:
-        out["level"] = number(a["level"], 1, 100, "livello")
+        out["level"] = number(a["level"], 1, sv.MAX_LEVEL, "livello")
     if "nature" in a:
-        out["nature"] = number(a["nature"], 0, 24, "natura")
+        out["nature"] = number(a["nature"], 0, sv.NATURE_NUM - 1, "natura")
     if "item" in a:
         out["item"] = number(a["item"], 0, 0xFFFF, "strumento")
         if out["item"] and out["item"] not in sv.item_table():
@@ -942,24 +988,25 @@ def checked_mon(a):
     if "moves" in a:
         moves = [number(m, 0, len(sv.move_table()) - 1, "mossa") for m in a["moves"]]
         moves = [m for m in moves if m]
-        if len(moves) > 4 or len(set(moves)) != len(moves):
-            raise Refused("al massimo quattro mosse, tutte diverse")
+        if len(moves) > sv.MAX_MON_MOVES or len(set(moves)) != len(moves):
+            raise Refused(f"al massimo {sv.MAX_MON_MOVES} mosse, tutte diverse")
         if not moves:
             raise Refused("un Pokémon senza mosse non può lottare: serve almeno una mossa")
         out["moves"] = moves
     if "ivs" in a:
-        out["ivs"] = [number(v, 0, 31, "IV") for v in a["ivs"]]
+        out["ivs"] = [number(v, 0, sv.MAX_IV, "IV") for v in a["ivs"]]
     if "evs" in a:
-        out["evs"] = [number(v, 0, 255, "EV") for v in a["evs"]]
-        if sum(out["evs"]) > 510:
-            raise Refused("gli EV sono al massimo 510 in tutto")
+        evs = [number(v, 0, 0xFF, "EV") for v in a["evs"]]
+        if sum(evs) > sv.MAX_EV_SUM:
+            raise Refused(f"gli EV sono al massimo {sv.MAX_EV_SUM} in tutto")
+        out["evs"] = [number(v, 0, sv.MAX_EV_PER_STAT, "EV") for v in evs]
     if "friendship" in a:
         out["friendship"] = number(a["friendship"], 0, 255, "amicizia")
     if "ability" in a:
         out["ability"] = number(a["ability"], 0, sv.HIDDEN_SLOT, "abilità")
     for key in ("ivs", "evs"):
-        if key in out and len(out[key]) != 6:
-            raise Refused(f"{key}: sei valori")
+        if key in out and len(out[key]) != sv.NUM_STATS:
+            raise Refused(f"{key}: {sv.NUM_STATS} valori")
     return out
 
 
