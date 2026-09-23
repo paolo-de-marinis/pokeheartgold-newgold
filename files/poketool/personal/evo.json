@@ -5069,6 +5069,16 @@
           "target": "SPECIES_GOODRA_HISUIAN"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_PANCHAM",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_DARK_TYPE_MON_IN_PARTY",
+          "param": 32,
+          "target": "SPECIES_PANGORO"
+        }
+      ]
     }
   ]
 }

@@ -69,6 +69,10 @@ FORM_TARGETS = {
 CANONICAL_ROWS = {
     ("SPECIES_SPRITZEE", "EVO_TRADE", "0", "SPECIES_AROMATISSE"): ("EVO_TRADE_ITEM", "ITEM_SACHET", "SPECIES_AROMATISSE"),
     ("SPECIES_SWIRLIX", "EVO_TRADE", "0", "SPECIES_SLURPUFF"): ("EVO_TRADE_ITEM", "ITEM_WHIPPED_DREAM", "SPECIES_SLURPUFF"),
+    # Not a defect but a spelling: the engine writes Pancham's level, 32, as
+    # SPECIES_NIDORAN_M, which is 32 in both trees. The level is written as
+    # the level.
+    ("SPECIES_PANCHAM", "EVO_LEVEL_DARK_TYPE_MON_IN_PARTY", "SPECIES_NIDORAN_M", "SPECIES_PANGORO"): ("EVO_LEVEL_DARK_TYPE_MON_IN_PARTY", "32", "SPECIES_PANGORO"),
 }
 
 

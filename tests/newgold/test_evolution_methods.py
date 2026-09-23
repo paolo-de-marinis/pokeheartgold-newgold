@@ -47,7 +47,7 @@ typedef struct { int hour, minute, second; } RTCTime;
 
 typedef struct {
     u16 species, heldItem, friendship;
-    u8 level, form;
+    u8 level, form, type1, type2;
     u32 pid;
 } Pokemon;
 typedef struct { int count; Pokemon mons[6]; } Party;
@@ -70,6 +70,8 @@ static u32 GetMonData(Pokemon *mon, int field, void *dest) {
     case MON_DATA_FORM: return mon->form;
     case MON_DATA_BEAUTY: return 0;
     case MON_DATA_PERSONALITY: return mon->pid;
+    case MON_DATA_TYPE_1: return mon->type1;
+    case MON_DATA_TYPE_2: return mon->type2;
     default: assert(0 && "Unexpected field"); return 0;
     }
 }
@@ -90,6 +92,8 @@ static void LoadMonEvolutionTable(u16 species, struct Evolution *dest) {
 static inline BOOL MonHasMove(Pokemon *mon, u16 move) { (void)mon; (void)move; return FALSE; }
 static inline BOOL MonHasMoveOfType(Pokemon *mon, u8 type) { (void)mon; (void)type; return FALSE; }
 static inline BOOL Party_HasMon(Party *party, u16 species) { (void)party; (void)species; return FALSE; }
+static inline int Party_GetCount(Party *party) { return party->count; }
+static inline Pokemon *Party_GetMonByIndex(Party *party, int slot) { assert(slot < party->count); return &party->mons[slot]; }
 static inline SaveData *SaveData_Get(void) { return (SaveData *)&location; }
 static inline LocalFieldData *Save_LocalFieldData_Get(SaveData *save) { return (LocalFieldData *)save; }
 static inline Location *LocalFieldData_GetCurrentPosition(LocalFieldData *field) { return (Location *)field; }
@@ -172,10 +176,37 @@ static void check_rain(void) {
     weather = WEATHER_SUNNY;
 }
 
+static void check_dark_type_in_party(void) {
+    // hg-engine: the level, and a Dark type anywhere else in the party --
+    // either of its types. No party (a trade, say), no evolution.
+    Party party = { .count = 3 };
+    party.mons[0] = (Pokemon){ .species = SPECIES_PANCHAM, .type1 = TYPE_FIGHTING, .type2 = TYPE_FIGHTING };
+    party.mons[1] = (Pokemon){ .species = SPECIES_PIKACHU, .type1 = TYPE_ELECTRIC, .type2 = TYPE_ELECTRIC };
+    Pokemon *pancham = &party.mons[0];
+    one_row(EVO_LEVEL_DARK_TYPE_MON_IN_PARTY, 32, SPECIES_PANGORO);
+    const u8 types[][2] = { { TYPE_NORMAL, TYPE_NORMAL }, { TYPE_DARK, TYPE_DARK }, { TYPE_POISON, TYPE_DARK }, { TYPE_DARK, TYPE_FLYING } };
+    for (unsigned t = 0; t < sizeof(types) / sizeof(types[0]); t++) {
+        party.mons[2] = (Pokemon){ .species = SPECIES_SNEASEL, .type1 = types[t][0], .type2 = types[t][1] };
+        for (pancham->level = 31; pancham->level <= 33; pancham->level++) {
+            u16 expected = t != 0 && pancham->level >= 32 ? SPECIES_PANGORO : SPECIES_NONE;
+            assert(evolve(pancham, &party, EVO_LEVEL_DARK_TYPE_MON_IN_PARTY) == expected);
+            assert(evolve(pancham, NULL, EVO_LEVEL_DARK_TYPE_MON_IN_PARTY) == SPECIES_NONE);
+        }
+    }
+    // Only the Pokemon in the party: a Dark type past its count is not there.
+    party.count = 2;
+    assert(evolve(pancham, &party, EVO_LEVEL_DARK_TYPE_MON_IN_PARTY) == SPECIES_NONE);
+    // And not the evolving Pokemon itself, were it Dark.
+    party.count = 1;
+    pancham->type2 = TYPE_DARK;
+    assert(evolve(pancham, &party, EVO_LEVEL_DARK_TYPE_MON_IN_PARTY) == SPECIES_NONE);
+}
+
 int main(void) {
     check_magnetic_field();
     check_time_of_day();
     check_rain();
+    check_dark_type_in_party();
     return 0;
 }
 """

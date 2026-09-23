@@ -95,6 +95,9 @@ static void LoadMonEvolutionTable(u16 species, struct Evolution *dest) {
 static BOOL MonHasMove(Pokemon *mon, u16 move) { return mon->move == move; }
 static inline BOOL MonHasMoveOfType(Pokemon *mon, u8 type) { return mon->moveType == type; }
 static BOOL Party_HasMon(Party *party, u16 species) { return party->species == species; }
+// No Dark type in this party: the one Pokemon it has is not asked its type.
+static inline int Party_GetCount(Party *party) { (void)party; return 0; }
+static inline Pokemon *Party_GetMonByIndex(Party *party, int slot) { (void)party; (void)slot; return NULL; }
 static inline SaveData *SaveData_Get(void) { return (SaveData *)&location; }
 static inline LocalFieldData *Save_LocalFieldData_Get(SaveData *save) { return (LocalFieldData *)save; }
 static inline Location *LocalFieldData_GetCurrentPosition(LocalFieldData *field) { return (Location *)field; }

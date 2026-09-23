@@ -3105,6 +3105,22 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     *method_ret = EVO_HAS_MOVE_TYPE;
                 }
                 break;
+            case EVO_LEVEL_DARK_TYPE_MON_IN_PARTY:
+                if (evoTable[i].param <= level && party != NULL) {
+                    int k;
+                    // The engine reads all six slots; the empty ones are not
+                    // Pokemon to ask the type of. Nor does the Pokemon that is
+                    // evolving count, as in the engine.
+                    for (k = 0; k < Party_GetCount(party); k++) {
+                        Pokemon *partyMon = Party_GetMonByIndex(party, k);
+                        if (partyMon != mon && (GetMonData(partyMon, MON_DATA_TYPE_1, NULL) == TYPE_DARK || GetMonData(partyMon, MON_DATA_TYPE_2, NULL) == TYPE_DARK)) {
+                            target = evoTable[i].target;
+                            *method_ret = EVO_LEVEL_DARK_TYPE_MON_IN_PARTY;
+                            break;
+                        }
+                    }
+                }
+                break;
             case EVO_OTHER_PARTY_MON:
                 if (party != NULL && Party_HasMon(party, evoTable[i].param) == 1) {
                     target = evoTable[i].target;

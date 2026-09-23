@@ -619,6 +619,8 @@ typedef enum EvoMethod {
     EVO_LEVEL_RAIN,
     // New Gold needs Eevee to notice it knows a Fairy move.
     EVO_HAS_MOVE_TYPE,
+    // hg-engine: a level with a Dark-type Pokemon in the party.
+    EVO_LEVEL_DARK_TYPE_MON_IN_PARTY,
 } EvoMethod;
 
 typedef enum {
