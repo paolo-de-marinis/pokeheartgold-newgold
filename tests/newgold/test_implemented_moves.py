@@ -251,5 +251,24 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_SPEED, BSCRIPT_VAR_CALC_TEMP", script)
         self.assertIn(f"msg_0197_{import_battle_messages.port_row('speed swap'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER", script)
 
+    def test_topsy_turvy_turns_the_stages_about(self):
+        # Pokemon Central (Sottosopra): each stage the other way, all seven;
+        # it fails with none changed.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("TOPSY_TURVY", "MOVE_EFFECT_TOPSY_TURVY")
+        script = effect_script("MOVE_EFFECT_TOPSY_TURVY")
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_TOPSY_TURVY", script[script.index("_CHANGED:"):])
+        self.assertLess(script.index("MOVE_STATUS_FAILED"), script.index("_CHANGED:"))
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_TOPSY_TURVY"), "BATTLE_SUBSCRIPT_TOPSY_TURVY")
+        turning = subscript_named("BATTLE_SUBSCRIPT_TOPSY_TURVY")
+        for stat in ("ATK", "DEF", "SPEED", "SPATK", "SPDEF", "ACC", "EVASION"):
+            self.assertIn(f"BMON_DATA_STAT_CHANGE_{stat}, 6, _CHANGED", script)
+            self.assertIn(f"UpdateVar OPCODE_SET, BSCRIPT_VAR_CALC_TEMP, 12\n"
+                          f"    UpdateMonDataFromVar OPCODE_GET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_STAT_CHANGE_{stat}, BSCRIPT_VAR_TEMP_DATA\n"
+                          f"    UpdateVarFromVar OPCODE_SUB, BSCRIPT_VAR_CALC_TEMP, BSCRIPT_VAR_TEMP_DATA\n"
+                          f"    UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_STAT_CHANGE_{stat}, BSCRIPT_VAR_CALC_TEMP", turning)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('topsy-turvy'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER", turning)
+
 if __name__ == "__main__":
     unittest.main()

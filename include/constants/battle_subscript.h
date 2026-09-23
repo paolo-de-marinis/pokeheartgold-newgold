@@ -728,6 +728,9 @@
 #define BATTLE_SUBSCRIPT_GULP_MISSILE                       440
 // Speed Swap trading the two Speeds, which the reference has no script for.
 #define BATTLE_SUBSCRIPT_SPEED_SWAP                         441
+// Topsy-Turvy turning the target's stages about, which the reference has no
+// script for.
+#define BATTLE_SUBSCRIPT_TOPSY_TURVY                        442
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -802,6 +805,7 @@
 #define MOVE_SUBSCRIPT_PTR_MORTAL_SPIN                      216
 #define MOVE_SUBSCRIPT_PTR_HANDLE_GROWTH                    217
 #define MOVE_SUBSCRIPT_PTR_SPEED_SWAP                       218
+#define MOVE_SUBSCRIPT_PTR_TOPSY_TURVY                      219
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

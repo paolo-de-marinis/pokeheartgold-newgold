@@ -7336,4 +7336,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} switched\nSpeed with its target!</language>
 	</row>
+	<row id="msg_0197_01834" index="1834">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s stat changes\nwere all reversed!</language>
+	</row>
+	<row id="msg_0197_01835" index="1835">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s stat\nchanges were all reversed!</language>
+	</row>
+	<row id="msg_0197_01836" index="1836">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s stat\nchanges were all reversed!</language>
+	</row>
 </body>

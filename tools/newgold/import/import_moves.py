@@ -376,6 +376,9 @@ IMPLEMENTED_HERE = {
     # Speed Swap trades the two Speeds, not their stages (Pokemon Central,
     # Velociscambio): effect script 417.
     "SPEED_SWAP": "MOVE_EFFECT_SPEED_SWAP",
+    # Topsy-Turvy turns every stat stage of the target about, and fails with
+    # none changed (Pokemon Central, Sottosopra): effect script 418.
+    "TOPSY_TURVY": "MOVE_EFFECT_TOPSY_TURVY",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

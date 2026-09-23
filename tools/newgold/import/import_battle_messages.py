@@ -163,6 +163,13 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} switched\nSpeed with its target!",
         r"The opposing {STRVAR_1 1, 0, 0} switched\nSpeed with its target!",
     ]),
+    # Topsy-Turvy. The engine leaves the move unimplemented; the later games'
+    # line, about the target.
+    ("topsy-turvy", [
+        r"{STRVAR_1 1, 0, 0}’s stat changes\nwere all reversed!",
+        r"The wild {STRVAR_1 1, 0, 0}’s stat\nchanges were all reversed!",
+        r"The opposing {STRVAR_1 1, 0, 0}’s stat\nchanges were all reversed!",
+    ]),
 ]
 
 
