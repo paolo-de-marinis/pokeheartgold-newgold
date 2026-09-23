@@ -538,7 +538,7 @@ static void ov03_022573D4(MartData *data, u32 arg1) {
         FillWindowPixelBuffer(&data->windows[1], 0);
         if (data->unk290 + data->unk271 < data->unk270) {
             if (data->martType == MART_TYPE_NORMAL || data->martType == MART_TYPE_3 || data->martType == MART_TYPE_4) {
-                string = String_New(130, HEAP_ID_FIELD2);
+                string = String_New(ITEM_DESCRIPTION_LENGTH, HEAP_ID_FIELD2);
                 GetItemDescIntoString(string, itemID, HEAP_ID_FIELD2);
             } else if (data->martType == MART_TYPE_1) {
                 msgData = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0737_bin, HEAP_ID_FIELD2);

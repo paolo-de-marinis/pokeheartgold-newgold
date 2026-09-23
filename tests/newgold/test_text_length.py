@@ -8,9 +8,9 @@ which does nothing in this build, and the String keeps what it held before: a
 blank or somebody else's text, and nothing at build time says so. The lengths
 are read from the banks msgenc built, which store them.
 
-Item descriptions are checked only for the items a player can come by, read
-from the data that hands items out. Names and plurals are checked for every
-item; the plurals against MessageFormat_New, which the bag reads them into.
+Names, plurals and descriptions are checked for every item; the plurals
+against MessageFormat_New, which the bag reads them into, and the descriptions
+against the strings the bag, the battle bag and the shop read them into.
 The bag's list strings (ov15_021FA008, BAG_LIST_NAME_LENGTH) are sized for
 the longest name hg-engine has, which run to 22 with the terminator where
 HeartGold's fitted 18.
@@ -32,21 +32,12 @@ SPECIES_NAME_CAPACITY = 11      # POKEMON_NAME_LENGTH + 1: GetSpeciesNameIntoArr
 MESSAGE_FORMAT_CAPACITY = 32    # MessageFormat_New_Custom(_, 32) callers: ability names, items with article
 ITEM_NAME_CAPACITY = int(re.search(r"#define BAG_LIST_NAME_LENGTH (\d+)",
                                     (ROOT / "include/bag_app_state.h").read_text()).group(1))  # ov15_021FA008
-ITEM_DESCRIPTION_CAPACITY = 130  # bag, battle bag and shop String_New(130)
+ITEM_DESCRIPTION_CAPACITY = int(re.search(r"#define ITEM_DESCRIPTION_LENGTH (\d+)",
+                                           (ROOT / "include/item.h").read_text()).group(1))  # bag, battle bag, shop
+DESCRIPTION_READERS = ["src/bag_item_description.c", "src/battle_bag_description.c", "src/overlay_03/shop_menu.c"]
 
 MOVE_NAMES, ITEM_DESCRIPTIONS, ITEM_NAMES, ITEM_ARTICLES, ITEM_PLURALS, SPECIES_NAMES, ABILITY_NAMES = (
     750, 221, 222, 223, 224, 237, 720)
-
-# Where an item enters the game: every script (item balls, gifts, prizes, give-items), the marts,
-# hidden items, wild held items, trainers' held and bag items, and the C tables that give items.
-# ponytail: item tables still in assembly (Pickup, the exchange counters) are not read; add one here
-# if the port ever puts an item in it.
-ITEM_SOURCES = [
-    "src/scrcmd_mart.c", "src/data/fieldmap/hidden_items.h",
-    "files/poketool/personal/personal.json", "files/poketool/trainer/trainers.json",
-    "src/mom_gift.c", "src/field/rock_smash_item.c", "src/overlay_bug_contest.c", "src/scrcmd_fossils.c",
-    "src/scrcmd_dppl_prizes.c", "src/application/pokegear/phone/phone_script_defs.c", "files/tel/pmtel_book.json",
-]
 
 
 def item_plural_capacity():
@@ -77,22 +68,8 @@ def items():
     return {name: int(value) for name, value in re.findall(r"#define (ITEM_\w+)\s+(\d+)\b", text)}
 
 
-def obtainable_items():
-    paths = sorted((ROOT / "files/fielddata/script/scr_seq").glob("*.s")) + [ROOT / p for p in ITEM_SOURCES]
-    names = set()
-    for path in paths:
-        names |= set(re.findall(r"\bITEM_\w+", path.read_text(encoding="utf-8")))
-    ids = items()
-    return {name: ids[name] for name in names - {"ITEM_NONE"}}
-
-
 def over(bank, capacity):
     return {row: n for row, n in enumerate(row_lengths(bank)) if n > capacity}
-
-
-def items_over(bank, capacity):
-    lengths = row_lengths(bank)
-    return {name: lengths[row] for name, row in obtainable_items().items() if lengths[row] > capacity}
 
 
 class TextLengthTests(unittest.TestCase):
@@ -119,9 +96,15 @@ class TextLengthTests(unittest.TestCase):
         # hg-engine's plurals run to 40 (Twice-Spiced Radish, Bitter Herba Mystica).
         self.assertEqual(over(ITEM_PLURALS, item_plural_capacity()), {})
 
-    def test_obtainable_item_descriptions_fit(self):
-        self.assertEqual(items_over(ITEM_DESCRIPTIONS, ITEM_DESCRIPTION_CAPACITY), {},
-                         "obtainable items described longer than 130")
+    def test_every_item_description_fits(self):
+        self.assertEqual(over(ITEM_DESCRIPTIONS, ITEM_DESCRIPTION_CAPACITY), {},
+                         "item descriptions longer than the screens' strings")
+
+    def test_the_screens_read_descriptions_at_that_length(self):
+        for path in DESCRIPTION_READERS:
+            source = (ROOT / path).read_text()
+            self.assertIn("String_New(ITEM_DESCRIPTION_LENGTH", source, path)
+            self.assertNotIn("String_New(130", source, path)
 
     def test_lengths_are_read_as_msgenc_writes_them(self):
         """Characters, 4 u16 per {COLOR n}, 1 for the terminator."""

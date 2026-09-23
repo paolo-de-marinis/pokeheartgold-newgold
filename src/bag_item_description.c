@@ -12,7 +12,7 @@ void ov15_021FE5C4(BagAppState *bagApp, u16 itemId) {
     String *string;
 
     if (itemId != BAG_NO_ITEM) {
-        string = String_New(130, HEAP_ID_6);
+        string = String_New(ITEM_DESCRIPTION_LENGTH, HEAP_ID_6);
         GetItemDescIntoString(string, itemId, HEAP_ID_6);
     } else {
         string = NewString_ReadMsgData(bagApp->msgData, 97);

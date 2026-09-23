@@ -226,6 +226,11 @@ s32 GetItemAttr(u16 itemId, u16 attrno, enum HeapID heapID);
  */
 s32 GetItemAttr_PreloadedItemData(ItemData *itemData, u16 attrno);
 
+// An item description read into a String, line breaks and terminator
+// included. HeartGold's screens made 130; hg-engine's descriptions run to 177
+// (Grit Pebble), and a row that does not fit is not copied at all.
+#define ITEM_DESCRIPTION_LENGTH 177
+
 /*
  * u16 TMHMGetMove(u16 itemId)
  *
