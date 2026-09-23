@@ -500,7 +500,7 @@ class GemTests(unittest.TestCase):
     def test_no_theft_on_a_move_a_gem_powered(self):
         thief = function(COMMANDS.read_text(), "BtlCmd_TryStealItem")
         self.assertRegex(thief, r"\} else if \(ctx->gemBoostingMove\) \{\n(?:\s*//[^\n]*\n)*\s*BattleScriptIncrementPointer\(ctx, adrs1\);")
-        self.assertRegex(OVERLAY.read_text(), r"== ABILITY_MAGICIAN && !ctx->gemBoostingMove &&")
+        self.assertIn("!= ABILITY_MAGICIAN || ctx->gemBoostingMove ||", function(OVERLAY.read_text(), "TryMagician"))
 
 
 BIND_FIXTURE = r"""

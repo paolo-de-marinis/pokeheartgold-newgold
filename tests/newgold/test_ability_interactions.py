@@ -181,6 +181,105 @@ class SheerForceAftermathTests(unittest.TestCase):
             self.assertIn("&& !SheerForceTradedEffect(ctx)", condition[:condition.index("{")], item)
 
 
+MAGICIAN = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+#include "constants/moves.h"
+typedef struct { int maxBattlers; } BattleSystem;
+typedef struct { u16 category; } MoveTbl;
+typedef struct { int physicalDamage, specialDamage; } SelfTurnData;
+typedef struct { int ability, hp, item, substitute, cameIn; } Mon;
+typedef struct {
+    Mon battleMons[4]; SelfTurnData selfTurnData[4]; u8 turnOrder[4];
+    int battlerIdAttacker, battlerIdStatChange, battlerIdTemp;
+    u32 moveNoCur, battleStatus, battleStatus2; u8 gemBoostingMove;
+} BattleContext;
+static MoveTbl move;
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &move; }
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static int BattleSystem_GetMaxBattlers(BattleSystem *battleSystem) { return battleSystem->maxBattlers; }
+static int BattleSystem_GetFieldSide(BattleSystem *battleSystem, int battlerId) { (void)battleSystem; return battlerId & 1; }
+static BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].substitute; }
+static BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].cameIn; }
+static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int taker, int loser) {
+    (void)battleSystem;
+    return !ctx->battleMons[taker].item && ctx->battleMons[loser].item;
+}
+@FUNCTIONS@
+static BattleSystem bs = { 4 };
+static BattleContext ctx;
+static void reset(void) {
+    // A double battle: the user 0 and its ally 2 against 1 and 3; the ally
+    // is the fastest, then 3, the user, 1. Everybody was hit and holds an
+    // item but the user.
+    static const u8 order[4] = { 2, 3, 0, 1 };
+    for (int i = 0; i < 4; i++) {
+        ctx.battleMons[i] = (Mon){ ABILITY_NONE, 100, 1, FALSE, FALSE };
+        ctx.selfTurnData[i] = (SelfTurnData){ 10, 0 };
+        ctx.turnOrder[i] = order[i];
+    }
+    ctx.battleMons[0] = (Mon){ ABILITY_MAGICIAN, 100, 0, FALSE, FALSE };
+    ctx.selfTurnData[0] = (SelfTurnData){ 0, 0 };
+    ctx.battlerIdAttacker = 0; ctx.battleStatus = 0; ctx.battleStatus2 = 0; ctx.gemBoostingMove = FALSE;
+    ctx.battlerIdTemp = ctx.battlerIdStatChange = 0xFF;
+    move.category = CATEGORY_PHYSICAL;
+}
+static int takes(void) {
+    int script = 0;
+    if (TryMagician(&bs, &ctx, &script) == FALSE) {
+        return -1;
+    }
+    assert(script == BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM && ctx.battlerIdStatChange == 0);
+    return ctx.battlerIdTemp;
+}
+int main(void) {
+    // The fastest foe first, the ally last.
+    reset(); assert(takes() == 3);
+    reset(); ctx.battleMons[3].ability = ABILITY_STICKY_HOLD; assert(takes() == 1);
+    reset(); ctx.battleMons[3].ability = ABILITY_STICKY_HOLD; ctx.battleMons[3].hp = 0; assert(takes() == 3);
+    reset(); ctx.battleMons[3].substitute = TRUE; ctx.selfTurnData[1].physicalDamage = 0; assert(takes() == 2);
+    reset(); ctx.battleMons[3].cameIn = TRUE; ctx.battleMons[1].item = 0; assert(takes() == 2);
+    reset(); ctx.selfTurnData[1].physicalDamage = 0; ctx.selfTurnData[3].physicalDamage = 0;
+    ctx.selfTurnData[2].physicalDamage = 0; ctx.selfTurnData[2].specialDamage = 10; assert(takes() == 2);
+    // Nothing for a user that fainted, left, holds something, used a status
+    // move, is charging, or had a Gem power the move; nor without the ability.
+    reset(); ctx.battleMons[0].hp = 0; assert(takes() == -1);
+    reset(); ctx.battleStatus2 = BATTLE_STATUS2_UTURN; assert(takes() == -1);
+    reset(); ctx.battleMons[0].item = 1; assert(takes() == -1);
+    reset(); move.category = CATEGORY_STATUS; assert(takes() == -1);
+    reset(); ctx.battleStatus = BATTLE_STATUS_CHARGE_TURN; assert(takes() == -1);
+    reset(); ctx.gemBoostingMove = TRUE; assert(takes() == -1);
+    reset(); ctx.battleMons[0].ability = ABILITY_PICKPOCKET; assert(takes() == -1);
+    return 0;
+}
+"""
+
+
+class MagicianTests(unittest.TestCase):
+    """Pokemon Central, Prestigiatore; the engine's Magician step,
+    ServerDoPostMoveEffects.c:1556 at d0380a487."""
+
+    def test_what_it_takes_and_from_whom(self):
+        run_c(MAGICIAN.replace("@FUNCTIONS@", function(OVERLAY.read_text(), "TryMagician")))
+
+    def test_it_takes_once_the_move_is_over(self):
+        # After the move's own taking (Thief, Covet, Knock Off), before a Red
+        # Card or an Eject Button answers the hit; no longer one of the answers
+        # to each hit.
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        self.assertLess(body.index("TryAdditionalMoveEffect(ctx)"), body.index("TryMagician(battleSystem, ctx, &script)"))
+        self.assertLess(body.index("TryMagician(battleSystem, ctx, &script)"), body.index("CheckSwitchItemOnHit"))
+        self.assertNotIn("ABILITY_MAGICIAN", function(OVERLAY.read_text(), "CheckAbilityEffectOnHit"))
+
+
 class OrichalcumPulseTests(unittest.TestCase):
     """Pokemon Central, Ritmo d'Oricalco: the sun on entry, five turns, eight
     with a Heat Rock; the reference's switch-in step and subscript 487."""

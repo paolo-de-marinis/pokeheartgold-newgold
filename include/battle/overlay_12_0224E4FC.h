@@ -93,6 +93,7 @@ int TryOpportunistOrSymbiosis(BattleSystem *battleSystem, BattleContext *ctx);
 int Battler_GetRandomOpposingBattlerId(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId);
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script);
+BOOL TryMagician(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 void Battler_ArmRetreat(BattleContext *ctx, int battlerId);
 BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 void Battler_ArmRetreatOutsideMove(BattleContext *ctx, int battlerId);

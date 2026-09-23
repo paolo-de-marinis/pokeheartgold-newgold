@@ -5065,7 +5065,19 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 flag = 1;
             }
             break;
-        case 3:
+        case 3: {
+            int script;
+
+            ctx->unk_30++;
+            if (TryMagician(battleSystem, ctx, &script) == TRUE) {
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            break;
+        }
+        case 4:
             // A Red Card, then an Eject Button, on anything the move hurt,
             // once the move is over and before the user's own Shell Bell and
             // Life Orb, which is where the reference asks them. The card goes
@@ -5119,7 +5131,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 4:
+        case 5:
             // Neither the Shell Bell nor the Life Orb below answers a move
             // Sheer Force powered (Pokemon Central, Forzabruta; the
             // reference's ServerDoPostMoveEffects.c:1508 at d0380a487).
@@ -5142,7 +5154,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 5:
+        case 6:
             if (item == HOLD_EFFECT_HP_DRAIN_ON_ATK
                 && !SheerForceTradedEffect(ctx)
                 && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD
@@ -5160,7 +5172,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 6:
+        case 7:
             // Parting Shot's user goes back once the move is over, if the
             // move changed a stat of its target (Pokemon Central, Monito; the
             // reference's Activate_Switch, ServerDoPostMoveEffects.c:2149 at
@@ -5202,7 +5214,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 7:
+        case 8:
             // A Throat Spray answers the attacker using a sound move, and that
             // is the whole of the reference's condition: not that the move hit,
             // not that there was anything to hit, and not that Sp. Atk had room
@@ -5231,7 +5243,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_34 = 0;
             }
             break;
-        case 8:
+        case 9:
             // An Eject Pack on anyone who had a stat lowered during the move,
             // after the user's own items, where the reference asks it; not
             // once an Eject Button has sent somebody away, or after a
@@ -5255,7 +5267,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 9: {
+        case 10: {
             // Emergency Exit and Wimp Out, one Pokemon at a time: this step
             // comes round again after each, until none is left to go.
             int script;
@@ -5270,7 +5282,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 10:
+        case 11:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;

@@ -7303,10 +7303,10 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         return ret;
     }
 
-    // The last two belong to the attacker rather than to the Pokemon that was
-    // hit, and they are asked after the switch because the reference answers
-    // them in a later pass than the ones above. Only one script runs per hit,
-    // so whichever is asked first is the one that happens.
+    // The last one belongs to the attacker rather than to the Pokemon that was
+    // hit, and it is asked after the switch because the reference answers it
+    // in a later pass than the ones above. Only one script runs per hit, so
+    // whichever is asked first is the one that happens.
     //
     // A knockout is answered by the attacker's ability rather than by the
     // fallen one's. Aftermath reads the same pair to know the target is down.
@@ -7355,19 +7355,49 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         }
     }
 
-    // Magician palms what it has just hurt, if its own hands are empty. The
-    // reference walks every battler looking for one it damaged; this chain
-    // already runs once per target, so the target in hand is that one.
-    // Nor does Magician take anything with a move a Gem powered
-    // (ServerDoPostMoveEffects.c:1570 at d0380a487).
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MAGICIAN && !ctx->gemBoostingMove && ctx->battleMons[ctx->battlerIdAttacker].hp && BattleMoveTbl(ctx, ctx->moveNoCur)->category != CATEGORY_STATUS && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(GetBattlerAbility(ctx, ctx->battlerIdTarget) == ABILITY_STICKY_HOLD && ctx->battleMons[ctx->battlerIdTarget].hp) && CanAbilityTakeHeldItem(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget) == TRUE) {
-        ctx->battlerIdStatChange = ctx->battlerIdAttacker;
-        ctx->battlerIdTemp = ctx->battlerIdTarget;
-        *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
-        return TRUE;
-    }
-
     return ret;
+}
+
+// Magician palms what its move has just hurt, if its own hands are empty:
+// once the move is over, after what the move itself does -- Thief's, Covet's
+// and Knock Off's taking go first -- and before a Red Card or an Eject Button
+// answers the hit (Activate_Moxie_BeastBoost_Others, ServerDoPostMoveEffects.c:1556
+// at d0380a487, a step of its own after the move's additional effects;
+// Pokemon Central, Prestigiatore). Not from a Pokemon that a substitute kept
+// the hit off, holds on with Sticky Hold, or was dragged in after it; not if
+// the user has fainted or gone, nor with a move a Gem powered. Of several it
+// hit, the fastest foe first and the ally last (Prestigiatore); the reference
+// walks all of them in speed order. It asked once per hit before, where the
+// target's own answer to the hit came first and left it none.
+BOOL TryMagician(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+    int attacker = ctx->battlerIdAttacker;
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+    if (GetBattlerAbility(ctx, attacker) != ABILITY_MAGICIAN || ctx->gemBoostingMove || !ctx->battleMons[attacker].hp
+        || BattleMoveTbl(ctx, ctx->moveNoCur)->category == CATEGORY_STATUS
+        || (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)) {
+        return FALSE;
+    }
+    for (int ally = 0; ally < 2; ally++) {
+        for (int i = 0; i < maxBattlers; i++) {
+            int battlerId = ctx->turnOrder[i];
+
+            if (battlerId == attacker
+                || (BattleSystem_GetFieldSide(battleSystem, battlerId) == BattleSystem_GetFieldSide(battleSystem, attacker)) != ally
+                || !(ctx->selfTurnData[battlerId].physicalDamage || ctx->selfTurnData[battlerId].specialDamage)
+                || BattlerCheckSubstitute(ctx, battlerId)
+                || Battler_CameInAfterTheHit(ctx, battlerId)
+                || (GetBattlerAbility(ctx, battlerId) == ABILITY_STICKY_HOLD && ctx->battleMons[battlerId].hp)
+                || !CanAbilityTakeHeldItem(battleSystem, ctx, attacker, battlerId)) {
+                continue;
+            }
+            ctx->battlerIdStatChange = attacker;
+            ctx->battlerIdTemp = battlerId;
+            *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 BOOL CheckStatusHealAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int flag) {
