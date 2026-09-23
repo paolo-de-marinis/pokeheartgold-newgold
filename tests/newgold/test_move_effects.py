@@ -203,7 +203,6 @@ UNREAD_HERE = {
     "QUASH": "not ported: a substitute does not stop it here (the reference's substitute list)",
     "RECOVER_FULL_DAMAGE_DEALT": "not ported: Heal Block does not stop it; this game's list is retail's moves",
     "CHARGE_TURN_ATK_SP_ATK_SPEED_UP_2": "script: the charge turn, Power Herb and the +6 refusal are effect script 323's",
-    "PREVENT_HEALING_HIT": "not ported: Sheer Force neither boosts Psychic Noise nor drops its Heal Block",
     "SET_ABILITY_TO_SIMPLE": "script: subscript 338 fails behind a substitute itself",
     "CHARGE_TURN_SP_ATK_UP": "script: the charge turn and Power Herb are effect script 329's",
     "CHARGE_TURN_SP_ATK_UP_RAIN_SKIPS": "script: the charge turn, Power Herb and the rain are effect script 330's",
@@ -220,7 +219,6 @@ UNREAD_HERE = {
     "RECOVER_THREE_QUARTERS_DAMAGE_DEALT": "not ported: Heal Block does not stop it; this game's list is retail's moves",
     "RECOVER_HALF_DAMAGE_DEALT_BURN_HIT": "not ported: Matcha Gotcha neither thaws its frozen user nor is "
                                           "stopped by Heal Block",
-    "PREVENT_ESCAPE_HIT": "not ported: Sheer Force neither boosts it nor drops the trap; the trap is the script's",
     "PREVENT_ESCAPE_BOTH_HIT": "script: the side effect runs Jaw Lock's subscript after the damage",
     "STEALTH_ROCK_HIT": "script: an ON_HIT side effect lays the stones after the damage",
     "SET_SPIKES_HIT": "script: an ON_HIT side effect lays the spikes after the damage",
@@ -238,7 +236,6 @@ UNREAD_HERE = {
     "PARTING_SHOT": "not ported: it lowers the two stats but the user never switches out",
     "FORCE_SWITCH_HIT": "script: a CHECK_HP_AND_SUBSTITUTE side effect runs Whirlwind's subscript after the damage",
     "STUFF_CHEEKS": "not ported: at +6 Defense the reference fails the move; here the berry is still eaten",
-    "THROAT_CHOP": "not ported: Sheer Force neither boosts it nor drops the silence, SetMoveConditionFlag's",
     "RECOIL_HALF_MAX_HP": "script: Reckless's boost and the half-HP recoil are effect script 404's",
     "IGNORE_PROTECT": "data: Mighty Cleave's record has the protect bit clear, which is what Protect reads here",
 }
@@ -246,7 +243,7 @@ UNREAD_HERE = {
 
 class WhatIsStillMissingTests(unittest.TestCase):
     # A ratchet, not a target: the table above may only shrink.
-    STILL_UNREAD = 52
+    STILL_UNREAD = 49
 
     def test_the_table_only_ever_shrinks(self):
         self.assertLessEqual(

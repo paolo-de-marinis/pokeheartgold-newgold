@@ -413,3 +413,16 @@ class SheerForceTests(unittest.TestCase):
                      "MOVE_SIDE_EFFECT_CHECK_HP_AND_SUBSTITUTE", "MOVE_SIDE_EFFECT_CHECK_HP"):
             self.assertIn(flag, body)
         self.assertIn("effectChance != 0", body)
+
+    def test_the_reference_s_unrolled_effects_are_given_up_too(self):
+        # btl_scr_cmd_24_jumptocurmoveeffectscript lists Psychic Noise's,
+        # the three trapping moves' and Throat Chop's effects by name.
+        body = re.search(r"static BOOL IsSuppressibleSecondaryEffect.*?\n\}", self.SOURCE.read_text(), re.S).group(0)
+        for effect in ("PREVENT_HEALING_HIT", "PREVENT_ESCAPE_HIT", "THROAT_CHOP"):
+            self.assertIn(f"case MOVE_EFFECT_{effect}:", body)
+        # Throat Chop sets its silence in its own script, before the damage.
+        script = (ROOT / "files/battledata/script/effect_script/effect_script_0402.s").read_text()
+        setting = script.index("SetMoveConditionFlag MOVE_THROAT_CHOP")
+        for guard in ("ABILITY_SHEER_FORCE, _DAMAGE", "HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS, _DAMAGE"):
+            self.assertLess(script.index(guard), setting)
+        self.assertLess(setting, script.index("_DAMAGE:"))

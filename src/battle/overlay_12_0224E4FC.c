@@ -1461,7 +1461,18 @@ BOOL ov12_022503EC(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
 // those happen come what may and are not secondary effects at all. The effect
 // script sets this before it asks for the damage, so both halves of the
 // ability can ask the same question.
+//
+// Three effects the reference lists by name are not rolled: Psychic Noise's
+// Heal Block and the trap of Thousand Waves, Anchor Shot and Spirit Shackle
+// land after the hit with no chance to roll, and Throat Chop's silence is set
+// by its effect script itself, which asks the ability and the cloak there.
 static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
+    switch (BattleMoveTbl(ctx, moveNo)->effect) {
+    case MOVE_EFFECT_PREVENT_HEALING_HIT:
+    case MOVE_EFFECT_PREVENT_ESCAPE_HIT:
+    case MOVE_EFFECT_THROAT_CHOP:
+        return TRUE;
+    }
     return ctx->unk_2174 != 0 && BattleMoveTbl(ctx, moveNo)->effectChance != 0 && !(ctx->unk_2174 & (MOVE_SIDE_EFFECT_ON_HIT | MOVE_SIDE_EFFECT_CHECK_SUBSTITUTE | MOVE_SIDE_EFFECT_CHECK_HP_AND_SUBSTITUTE | MOVE_SIDE_EFFECT_CHECK_HP));
 }
 
