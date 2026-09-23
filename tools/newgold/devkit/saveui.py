@@ -537,8 +537,10 @@ class Library:
             for path in sorted(self.trash.rglob("*.sav"), reverse=True):
                 rel = path.relative_to(self.trash).as_posix()
                 trash.append({"t": rel, "f": rel.split("/", 1)[-1], "when": rel.split("/", 1)[0]})
+        problem = self.layout_problem()
         return {"library": str(self.root), "files": files, "slots": slots, "trash": trash,
-                "build": self.layout_problem(), "missing": not self.root.is_dir(),
+                "build": problem, "missing": not self.root.is_dir(),
+                "behind": [] if problem else sv.build_behind(self.layout),
                 "playable": [s["slot"] for s in slots if not s["problem"] and self.playable(s["slot"])],
                 "configured": CONFIG.exists(),
                 "melonds": melonds_running()}

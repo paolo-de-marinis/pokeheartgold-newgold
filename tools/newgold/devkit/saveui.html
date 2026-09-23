@@ -381,8 +381,14 @@ async function loadLibrary() {
   if (!lib) return;
   S.lib = lib;
   $("#libpath").textContent = lib.library;
-  $("#buildbanner").hidden = !lib.build;
-  $("#buildbanner").textContent = lib.build ? `I salvataggi non si possono leggere: ${lib.build}` : "";
+  // The blocks' sizes are measured from the build, the fields in them read from the headers: a header
+  // saved after the build was linked may have changed what make has not built yet.
+  const behind = lib.behind || [];
+  $("#buildbanner").hidden = !lib.build && !behind.length;
+  $("#buildbanner").textContent = lib.build ? `I salvataggi non si possono leggere: ${lib.build}`
+    : behind.length ? `La build è più vecchia di ${behind.length === 1 ? "un header" : behind.length + " header"} da cui leggo il formato del salvataggio `
+      + `(${behind.slice(0, 3).join(", ")}${behind.length > 3 ? "…" : ""}): le dimensioni dei blocchi vengono dalla build, i campi dagli header. `
+      + `Se hai cambiato una struttura del salvataggio, ricompila (make) prima di modificare.` : "";
   setMelon(lib.melonds);
   renderLibrary();
 }

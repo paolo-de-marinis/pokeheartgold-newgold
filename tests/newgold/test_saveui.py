@@ -257,6 +257,18 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(refused.exception.code, "build")
         self.assertIsNone(self.ok("/api/library")["build"])
 
+    def test_a_build_older_than_the_headers_is_said(self):
+        """The blocks are measured from the build, their fields read from
+        the headers: a header saved after the build was linked is named, a
+        build linked after them names none."""
+        old = Path(tempfile.mkdtemp(dir=self.tmp.name))
+        (old / "main.elf").write_bytes(b"")
+        os.utime(old / "main.elf", ns=(0, 0))
+        self.assertIn("include/constants/pokemon.h", sv.build_behind(old))
+        os.utime(old / "main.elf", ns=(1 << 62, 1 << 62))
+        self.assertEqual(sv.build_behind(old), [])
+        self.assertIsInstance(self.ok("/api/library")["behind"], list)
+
     def test_a_pokemon_is_held_to_the_headers_limits(self):
         """New Gold's MAX_EV_PER_STAT is 252, not the byte's 255, and a
         level is at most MAX_LEVEL: what the headers say, not the editor."""

@@ -296,6 +296,23 @@ def measure(build=None):
                                        for name in ("main.sbin", "main.elf")))
 
 
+def build_behind(build=None):
+    """The headers the save's layout is read from (_layout) saved after the
+    build was linked. The blocks' sizes are measured from the build -- the
+    game's Save_*_sizeof functions exist in no other form -- and the fields
+    inside them are read from the headers: until make runs again, a
+    changed struct can make the two disagree."""
+    linked = (Path(build or ROOT / "build/heartgold.us") / "main.elf").stat().st_mtime_ns
+    newer = []
+    for path in list(_READ):
+        try:
+            if path.suffix == ".h" and path.stat().st_mtime_ns > linked:
+                newer.append(str(path.relative_to(ROOT)))
+        except OSError:
+            continue
+    return sorted(newer)
+
+
 def extra_chunks(build=None):
     """The chunks written past the region, with the sector each one lives in.
 
