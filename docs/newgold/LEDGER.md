@@ -12,20 +12,20 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 223 commits |
-| generated | 2026-09-23 02:49 |
+| port | 231 commits |
+| generated | 2026-09-23 02:55 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    92%
-  done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
-  done, never played   ██████████████████████████████░░░░░░░░░░░░░░░░░░░░  60%
-  partial              ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
-  still to do          █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
-  deferred / no scope  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  21%
+Overall                                                                    90%
+  done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
+  done, never played   ██████████████████████████████░░░░░░░░░░░░░░░░░░░░  59%
+  partial              ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
+  still to do          ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   3%
+  deferred / no scope  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  20%
 
-Implementation         ████████████████████████████████████████████████░░  96%
-Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%
+Implementation         ███████████████████████████████████████████████░░░  94%
+Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  12%
 
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
@@ -40,8 +40,8 @@ Moves       ██████████████████████�
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████████████████████████████████████████████  2685 / 2685
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       66 files
-ROM         162.2 MB of 268.4 MB   (2G card, 60% used)
+Tests       67 files
+ROM         162.6 MB of 268.4 MB   (2G card, 61% used)
 ```
 <!-- LEDGER:COUNTS:END -->
 
@@ -94,6 +94,7 @@ konefr *could* reach, not only what the game reaches today.
 | Items | 2685 of 2685: every item konefr's tree defines has a counterpart here. They are imported by name and renumbered densely from where this tree was -- their Black Augurite is 1691 and this one's is 537, because taking their ids would renumber every item in Paolo's save, his bag and every held item in the data -- and `tools/newgold/import/item_map.csv` is the mapping, 2685 of their names against 2685 ids here. This pass brought 2129 of them: ITEMS_COUNT 564 to 2693, the eight over their range being the slots HeartGold left empty that konefr filled with real items, so the gap stays here and their item is numbered beside it. 518 icons are built from konefr's PNGs, resolved by archive member and never by name; the other 1611 take ITEM_NONE's question mark knowingly, because konefr's art for them is byte-identical to `none.png`. 84 of their constants are reserved gaps with no name in 222.txt and are written the way this game already writes an empty slot. Descriptions are konefr's own single line, "Custom item description", for everything but the eighteen the pass before wrote prose for -- their description bank is that one line for the whole game. The 556 records both trees share now carry konefr's numbers rather than Game Freak's -- 277 prices, an Amulet Coin among them at 30000 against 100, and all 64 of Natural Gift's sixth-generation powers; Prism Scale keeps this engine's party-use evolution instead of the reference's hold effect, which is the one disagreement left and it is deliberate. What is not true yet: 64 hold effects came in with the range and no line in src/ reads one, so those items are an ordinary rock to carry, Ability Shield included; 29 records name one of the six field-use routines konefr has and this game has not -- the twenty Mints, the four Nectars, Ability Capsule, Reveal Glass, DNA Splicers, Rotom Catalog -- and were given routine 0, so they sit in the bag and do nothing rather than jumping past the end of `sItemFieldUseFuncs`; and nothing puts any of the 2129 in the world -- no mart, no hidden item, no wild Pokemon carrying one beyond the nine already imported | ✅ 2685 / 2685 |
 | Evolutions | 473 species evolve: every line the reference draws between two species this tree names, the forms included now that they are species -- Kubfu takes the Scroll of Waters to Rapid Strike Urshifu, Galarian Slowpoke the Galarica Wreath to Galarian Slowking, the Antique Sinistea and Masterpiece Poltchageist take the chipped pot, and a form that evolves keeps its form, an Antique Sinistea becoming an Antique Polteageist as the reference carries the number over. What is still not here: 29 rows by a method this engine has not got -- level by time of day, in rain, by nature, with a Dark type in the party, after a move used twenty times, the Let's Go and specific-partner trades, the magnetic field, Alcremie's spins -- and a female-form target (Unfezant, Pyroar) is a species of its own here, outside the Dex. `import_evolutions.py` reports every row it cannot express. hg-engine's own changes to eight of HeartGold's species are in as well, read at `d0380a487` with `--engine-reworks`: the Linking Cord for Kadabra, Machoke, Graveler and Haunter, the Thunder Stone for Magneton and Nosepass, the Leaf and Ice Stones for Eevee, a Prism Scale trade for Feebas. Until 2026-09-23 they were left out as a rework rather than a change, and Magnezone, Probopass, Leafeon and Glaceon could not be had: their retail rows name Mt. Coronet, Eterna and Route 217 | 🟠 partial |
 | Evolution archive | evo.narc's row stopped being a multiple of four when Sylveon made it eight evolutions, and o2narc wrote each member's padding over the next member instead of after this one: the allocation table strode 52 bytes through a 50-byte image, so every Pokemon from Ivysaur on read another one's evolutions. Fixed in `tools/o2narc/Options.cpp`; `tests/newgold/test_narc_alignment.py` checks all 115 built archives | ✅ fixed |
+| Text, as hg-engine writes it | every bank hg-engine d0380a487 writes or generates, row for row, in this tree's numbering: battle messages (197, 1787 rows as the engine has them, the port's own lines after it and every script and C reference moved to the engine's rows and tags), the "X used Y!" lines and move names, descriptions and capitals (003, 749-751), type names (735), item names, descriptions, articles and plurals (221-224, from the engine's per-generation banks 830-853 through `item_map.csv`), species names, Dex entries, classifications and measures (237, 238, 803, 811-817, 823), the bag, PC, field, blackout, party, summary and shop banks (010, 024, 040, 203, 300, 302, 435), ability text (720-722) and trainer names and lines (728, 729). Each is written by an importer that takes a revision. Found on the way and fixed: 2045 item descriptions read "Custom item description", because the importer had taken hg-engine's one-row custom-item bank for the real one; 27 banks were out of order from Victini on, so the Dex showed the species two along; trainer names never reached the ROM, because the rule that makes their bank had no prerequisites. Forms are species here, and a form's rows take its base species' text, which is what hg-engine shows | ✅ done |
 | Effects with a script but no C | none. The last two were Techno Blast and Multi-Attack, and the whole-range item import finished them: their scripts already read a held Drive or Memory and set the move's type from it, and what those scripts were reading were placeholders in `battle_script_imports.h` carrying konefr's hold-effect numbers 147 to 150 -- which in this game are Eviolite, Air Balloon, Absorb Bulb and Cell Battery, so Techno Blast was taking its type off those four. The Drives and the Memories are real items with real hold effects now and the placeholders are gone | ✅ done |
 
 ---
@@ -114,6 +115,7 @@ konefr *could* reach, not only what the game reaches today.
 | Bug-Catching Contest | Butterfree through Escavalier, levels 20-30, evolution-item prizes | ✅ done |
 | Cherrygrove vendor and EV presets | his debug vendor, patched into a built script file — excluded in `SCOPE.md` | ⬜ out of scope |
 | Linking Cord for any trade | his `e26576dd1`: a Pokemon that evolves by trading alone evolves when a Linking Cord is used on it -- Phantump, Pumpkaboo and the rest. It sits ahead of the engine's own case, the trade with a held item, as in his code; the engine's stone rows for Kadabra and the other three are on the Evolutions row, not this one | ✅ done |
+| konefr's text | what `d0380a487..ccf2c9f5` changes in the text: Irrigation, Eelevate and Evaporate's names and descriptions, Solar Seeds' name, description and "used" lines, the three Galarian names, the lines and names of trainers 47, 383 and Proton, and bank 550's vendor lines | 🔴 to do |
 | Water Absorb and Leaf Guard fixes | the row had it backwards. Leaf Guard's sunshine is HGSS's own and was never port work — but it left Rest out, and the Rest subscript now asks the same two questions the other six statuses ask. Water Absorb had the damaging-move guard and not the no-self-trigger one; it has both. Dry Skin keeps only the power check, in the reference as here | ✅ done |
 
 ---
@@ -151,7 +153,7 @@ This is the section that holds the overall number down.
 
 ---
 
-## Why 92% and not 96%
+## Why 90% and not 94%
 
 The points between the two numbers are the verification column, and the reason
 it is not a formality is that four silent bugs surfaced in one evening, on
