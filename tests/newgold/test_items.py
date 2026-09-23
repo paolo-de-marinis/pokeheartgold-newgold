@@ -174,6 +174,24 @@ class ItemRangeTests(unittest.TestCase):
             self.assertEqual(members.get(ncgr), "NCGR", f"{name} tiles, member {ncgr}")
             self.assertEqual(members.get(nclr), "NCLR", f"{name} palette, member {nclr}")
 
+    def test_the_icon_archive_holds_each_member_at_its_number(self):
+        """The item data names an icon by its member number, and nitroarc packs a
+        directory by name: past item_icon_999 that is not number order (1000
+        sorts before 101), and every imported item read another file's tiles and
+        palette -- a palette as tiles for the DNA Splicers, which stopped the bag.
+        .narcorder lists the members in number order; the index the build writes
+        beside the archive says where each one went."""
+        order = (ICON_DIR / ".narcorder").read_text().split()
+        members = icon_members()
+        self.assertEqual(len(order), len(members))
+        for number, name in enumerate(order):
+            found = re.match(r"item_icon_(\d+)\.(\w+)$", name)
+            self.assertEqual((int(found.group(1)), found.group(2)), (number, members.get(number)), name)
+        naix = ICON_DIR.with_suffix(".naix")
+        if naix.exists():
+            for name, member in re.findall(r"#define NARC_item_icon_item_icon_(\d+)_\w+ (\d+)", naix.read_text()):
+                self.assertEqual(int(name), int(member), f"item_icon_{name} is member {member}")
+
     def test_every_bank_an_item_id_indexes_reaches_the_last_item(self):
         for path in ITEM_BANKS:
             rows = message_rows(path)

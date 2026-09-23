@@ -575,6 +575,24 @@ def check(reference, pairs, effects, fields, here_rows, report):
 # --- writing -------------------------------------------------------------
 
 
+def write_icon_order(makefile):
+    """nitroarc packs a directory in name order, and past item_icon_999 name
+    order is not number order: item_icon_1000 comes before item_icon_101. The
+    item data names icons by number (sItemNarcIds through the index, and
+    sImportedItemIcons directly), so the archive lists them in number order in
+    .narcorder, the committed files and the ones item_data.mk builds from PNGs
+    alike."""
+    members = {}
+    for path in ICON_DIR.iterdir():
+        found = re.match(r"item_icon_(\d+)\.(NANR|NCER|NCGR|NCLR)$", path.name)
+        if found:
+            members[int(found.group(1))] = path.name
+    for tiles, palette in re.findall(r"ITEMICON_FROM_PNG,(\d+),(\d+),", makefile):
+        members[int(tiles)] = f"item_icon_{tiles}.NCGR"
+        members[int(palette)] = f"item_icon_{palette}.NCLR"
+    (ICON_DIR / ".narcorder").write_text("".join(f"{members[n]}\n" for n in sorted(members)))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("reference", type=Path)
@@ -758,6 +776,7 @@ def main():
         lines.append("")
         makefile = makefile.replace("\n$(ITEMICON_NARC)", "\n" + "\n".join(lines) + "\n$(ITEMICON_NARC)", 1)
     ITEM_MK.write_text(makefile)
+    write_icon_order(makefile)
 
     for source, destination in icons:
         shutil.copyfile(source, destination)

@@ -567,7 +567,9 @@ $(eval $(call ITEMICON_FROM_PNG,1863,1864,baxcalibrite))
 $(eval $(call ITEMICON_FROM_PNG,1865,1866,tatsugirinite))
 $(eval $(call ITEMICON_FROM_PNG,1867,1868,glimmoranite))
 
-$(ITEMICON_NARC): $(wildcard files/itemtool/itemdata/item_icon/*.{NANR,NCLR,NCGR,NCER}) $(ITEMICON_OBJS)
+$(ITEMICON_NARC): $(wildcard files/itemtool/itemdata/item_icon/*.{NANR,NCLR,NCGR,NCER}) $(ITEMICON_OBJS) $(ITEMICON_DIR)/.narcorder
+# The members go in the order .narcorder lists them, which is their numbers':
+# nitroarc's own order is by name, and item_icon_1000 sorts before item_icon_101.
 
 clean-itemdata:
 	$(RM) $(ITEMDATA_NARC) $(ITEMICON_NARC) $(ITEMICON_OBJS)
