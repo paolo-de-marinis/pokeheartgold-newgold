@@ -94,5 +94,20 @@ class FightButtonTests(unittest.TestCase):
         self.assertIn("[TYPE_FAIRY] = sFightButtonPalette_Fairy", table)
         self.assertEqual(len(re.findall(r"^\s+(?:\[\w+\] = )?\w+,$", table, re.M)), 19)
 
+
+class DexTypeIconTests(unittest.TestCase):
+    def test_a_fairy_species_has_a_dex_type_icon(self):
+        """ov18_021F967C and ov18_021F9688 give the Pokedex a type's icon and
+        palette with no bound; at eighteen entries a Fairy species loaded
+        zukan_gra member 0, a screen file, as its icon."""
+        source = (ROOT / "src/application/pokedex/ov18_021F967C.c").read_text()
+        self.assertIn("ov18_021FBDFC[NUMBER_OF_MON_TYPES]", source)
+        self.assertIn("ov18_021FBE10[NUMBER_OF_MON_TYPES]", source)
+        self.assertIn("[TYPE_FAIRY] = 123", source)
+        self.assertIn("[TYPE_FAIRY] = 3", source)
+        rules = (ROOT / "files/graphic/zukan_gra.mk").read_text()
+        self.assertIn("zukan_gra_00000123.NCGR.lz", rules)
+        self.assertTrue((ROOT / "files/graphic/zukan_gra/zukan_gra_00000123.png").exists())
+
 if __name__ == "__main__":
     unittest.main()
