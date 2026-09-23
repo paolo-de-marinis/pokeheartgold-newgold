@@ -300,7 +300,7 @@ def icon(species, form=0, egg=False):
         index, pal = (start + form - 1 for start in rules["forms"][species][:2])
     else:
         index, pal = species + rules["own"], species
-    png = (ICONS / f"poke_icon_{index:08d}.png").read_bytes()
+    png = sv.source(ICONS / f"poke_icon_{index:08d}.png").read_bytes()     # watched: a new icon moves the tree on
     number = palette_of[pal] if pal < len(palette_of) else 0
     return recolour(png, colours[16 * number:16 * number + 16])
 

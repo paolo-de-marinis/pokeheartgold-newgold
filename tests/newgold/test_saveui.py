@@ -283,6 +283,8 @@ class SaveUiTests(unittest.TestCase):
         self.assertTrue(png.startswith(b"\x89PNG"))
         self.assertIn(b"tRNS", png)
         self.assertEqual(self.call("/api/icon?species=1&egg=1")[0], 200)
+        self.assertIn(saveui.ICONS / f"poke_icon_{sv.species_numbers()['PIKACHU'] + 7:08d}.png", sv._READ,
+                      "an icon served is watched: a new one moves the tree on, and the page asks again")
 
     # -- writing ------------------------------------------------------------
 
