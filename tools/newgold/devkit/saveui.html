@@ -294,15 +294,21 @@ function buildLists() {
   S.moves = new Map(d.moves.map(r => [r.id, r]));
   S.items = new Map(d.items.map(r => [r.id, r]));
   S.maps = new Map(d.maps.map(r => [r.id, r]));
-  S.speciesIndex = new Map(d.species.filter(r => !r.egg).map(r => [r.label.toLowerCase(), r.id]));
+  S.speciesIndex = firstWins(d.species.filter(r => r.pick), r => r.label);
   S.moveIndex = new Map(d.moves.filter(r => r.id).map(r => [r.name.toLowerCase(), r.id]));
   S.itemIndex = new Map(d.items.filter(usableItem).map(r => [r.name.toLowerCase(), r.id]));
   S.mapIndex = new Map(d.maps.map(r => [mapLabel(r).toLowerCase(), r.id]));
   const opts = (rows, label) => rows.map(r => `<option value="${esc(ref(label(r), r.id))}">`).join("");
-  $("#dl-species").innerHTML = opts(d.species.filter(r => !r.egg), r => r.label);
+  $("#dl-species").innerHTML = opts(d.species.filter(r => r.pick), r => r.label);
   $("#dl-moves").innerHTML = opts(d.moves.filter(r => r.id), r => r.name);
   $("#dl-items").innerHTML = opts(d.items.filter(usableItem), r => r.name);
   $("#dl-maps").innerHTML = opts(d.maps, mapLabel);
+}
+// A typed name to its id; where two rows print the same, the lower number.
+function firstWins(rows, label) {
+  const index = new Map();
+  for (const r of rows) if (!index.has(label(r).toLowerCase())) index.set(label(r).toLowerCase(), r.id);
+  return index;
 }
 const usableItem = r => r.id && r.name && r.name !== "???" && !r.const.includes("UNUSED");
 const mapLabel = r => r.name ? `${r.name} · ${r.const.replace(/^MAP_/, "")}` : r.const.replace(/^MAP_/, "");

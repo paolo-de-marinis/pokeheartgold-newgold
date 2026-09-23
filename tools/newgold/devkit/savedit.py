@@ -853,22 +853,39 @@ def species_name(species):
 
 
 @functools.cache
+def battle_forms():
+    """The species a battle turns into and back (Megas, Gigantamax and the
+    like): src/data/form_reversion.h, hg-engine's FormReversionMapping."""
+    numbers = species_numbers()
+    text = (ROOT / "src/data/form_reversion.h").read_text()
+    return {numbers[name] for name in re.findall(r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_", text)}
+
+
+@functools.cache
 def species_table():
-    """Every species with the name the game prints. A form prints its base's
-    name, so it carries its constant as well to tell it apart."""
+    """Every species with the name the game prints. A form, or any species
+    whose name a lower number already prints (the Galarian Slowpoke), carries
+    its constant as well to tell it apart.
+
+    "pick" is whether a Pokemon may be made as that species. Not the egg, the
+    bad egg and the retail forms between them (FIRST_DEX_GAP to LAST_DEX_GAP):
+    those numbers are rows of the form table ResolveMonForm reads, and the
+    game keeps a Rotom Wash as SPECIES_ROTOM with form 2 -- stored as 504 it
+    is a nameless '-----' with a '?' icon. Nor a form only a battle has."""
     numbers = species_numbers()
     by_id = {}
     for name, number in numbers.items():
         by_id.setdefault(number, name)
     gap = range(numbers["EGG"], numbers["ROTOM_MOW"] + 1)
-    out = []
+    out, named = [], set()
     for number in range(1, min(len(bank(SPECIES_NAMES)), len(personal_records()))):
-        const = by_id.get(number, "")
+        const, name = by_id.get(number, ""), species_name(number)
         form = number in gap or number > NATIONAL_DEX_COUNT
-        out.append({"id": number, "name": species_name(number), "const": const,
-                    "label": f"{species_name(number)} ({const.replace('_', ' ').title()})"
-                             if form else species_name(number),
-                    "dex": not form, "egg": number in (numbers["EGG"], numbers["BAD_EGG"])})
+        out.append({"id": number, "name": name, "const": const,
+                    "label": f"{name} ({const.replace('_', ' ').title()})" if form or name in named else name,
+                    "dex": not form, "egg": number in (numbers["EGG"], numbers["BAD_EGG"]),
+                    "pick": number not in gap and number not in battle_forms()})
+        named.add(name)
     return out
 
 
@@ -1128,7 +1145,7 @@ def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, 
     """A Pokemon of the player's own, the way build_mon makes one, with a
     personality of its own (not shiny), full PP, the species' name as the
     game prints it and the stats CalcMonStats gives."""
-    const = next((row["const"] for row in species_table() if row["id"] == species and not row["egg"]), None)
+    const = next((row["const"] for row in species_table() if row["id"] == species and row["pick"]), None)
     if const is None:
         raise ValueError(f"there is no species {species}")
     personality = random.getrandbits(32)

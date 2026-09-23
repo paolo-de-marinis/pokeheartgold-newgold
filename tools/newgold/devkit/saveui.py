@@ -656,7 +656,7 @@ class Library:
     def op_party_edit(self, save, a):
         slot = number(a["slot"], 0, 5, "posto")
         raw = sv.party_raw(save)[slot]
-        changes = changed(checked_mon(a), sv.describe_mon(raw))
+        changes = storable(changed(checked_mon(a), sv.describe_mon(raw)))
         if changes:
             sv.set_party_mon(save, slot, sv.edit_mon(raw, **changes))
 
@@ -676,7 +676,7 @@ class Library:
     def op_box_edit(self, save, a):
         box, slot = number(a["box"], 0, 29, "box"), number(a["slot"], 0, 29, "posto")
         raw = sv.box_raw(save, box, slot)
-        changes = changed(checked_mon(a), sv.describe_mon(raw))
+        changes = storable(changed(checked_mon(a), sv.describe_mon(raw)))
         if changes:
             sv.set_box_mon(save, box, slot, sv.edit_mon(raw, **changes))
 
@@ -769,7 +769,7 @@ def checked_mon(a):
     out = {}
     if "species" in a:
         out["species"] = number(a["species"], 1, 0xFFFF, "specie")
-        if out["species"] not in {row["id"] for row in sv.species_table() if not row["egg"]}:
+        if out["species"] not in {row["id"] for row in sv.species_table()}:
             raise Refused(f"non c'è la specie {out['species']}")
     if "level" in a:
         out["level"] = number(a["level"], 1, 100, "livello")
@@ -810,8 +810,18 @@ def changed(fields, now):
     return {k: v for k, v in fields.items() if v != current[k]}
 
 
+def storable(fields):
+    """A species a Pokemon may be made as or turned into (species_table's
+    "pick"); one it already is stays, whatever it is."""
+    if "species" in fields and not next(r for r in sv.species_table() if r["id"] == fields["species"])["pick"]:
+        raise Refused(f"{sv.species_name(fields['species'])} (specie {fields['species']}) non si può scegliere: "
+                      "è l'uovo, una forma che il gioco tiene come specie base più forma, o una forma che "
+                      "esiste solo in lotta")
+    return fields
+
+
 def created(save, a, party):
-    fields = checked_mon(a)
+    fields = storable(checked_mon(a))
     if "species" not in fields or "level" not in fields:
         raise Refused("servono specie e livello")
     raw = sv.new_mon(fields["species"], fields["level"], sv.owner(save), nature=fields.get("nature"),

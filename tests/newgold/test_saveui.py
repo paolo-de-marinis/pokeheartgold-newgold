@@ -298,6 +298,28 @@ class SaveUiTests(unittest.TestCase):
         out = self.edit("box_remove", {"box": 29, "slot": 29})
         self.assertIsNone(out["boxes"]["mons"][29][29])
 
+    def test_only_species_a_pokemon_can_be(self):
+        """504 is a row of the form table, not Rotom Wash; a Mega is a
+        battle's. Neither is offered or made; one already there is kept."""
+        n = sv.species_numbers()
+        rows = {r["id"]: r for r in self.ok("/api/data")["species"]}
+        self.assertEqual([i for i in range(n["EGG"], n["ROTOM_MOW"] + 1) if rows[i]["pick"]], [])
+        self.assertFalse(rows[n["MEGA_VENUSAUR"]]["pick"])
+        self.assertEqual(rows[n["SLOWPOKE_GALARIAN"]]["label"], "Slowpoke (Slowpoke Galarian)")
+        self.assertTrue(rows[n["SLOWPOKE_GALARIAN"]]["pick"])
+        for species in (n["ROTOM_WASH"], n["MEGA_VENUSAUR"]):
+            self.assertIn("non si può scegliere", self.refused("/api/edit", {
+                "f": "gyms/test.sav", "op": "box_add", "args": {"box": 0, "slot": 0, "species": species, "level": 40}}))
+            self.assertIn("non si può scegliere", self.refused("/api/edit", {
+                "f": "gyms/test.sav", "op": "party_edit", "args": {"slot": 0, "species": species}}))
+        with self.assertRaises(ValueError):
+            sv.new_mon(n["ROTOM_WASH"], 40, sv.owner(sv.Save(self.save)))
+        save = sv.Save(self.save)
+        sv.set_box_mon(save, 0, 0, sv.build_mon("ROTOM_WASH", 40)[:sv.BOX_MON])
+        self.save.write_bytes(save.image())
+        out = self.edit("box_edit", {"box": 0, "slot": 0, "species": n["ROTOM_WASH"], "item": 234})
+        self.assertEqual((out["boxes"]["mons"][0][0]["species"], out["boxes"]["mons"][0][0]["item"]), (n["ROTOM_WASH"], 234))
+
     def test_bag_dex_position_flags(self):
         items = {row["const"]: row["id"] for row in sv.item_table().values()}
         out = self.edit("item", {"item": items["ITEM_POTION"], "quantity": 7})
