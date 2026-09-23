@@ -533,7 +533,8 @@ Overlay field
     Object asm/overlay_01_021F6830.o
     Object asm/overlay_01_021F6CFC.o
     Object asm/overlay_01_sprite_data.o
-    Object asm/overlay_01_021F72DC.o
+    Object src/field/overlay_01_021F72DC.o
+    Object asm/overlay_01_021F73CC.o
     Object asm/overlay_01_021F8D80.o
     Object asm/overlay_01_021F944C.o
     Object asm/overlay_01_021FAC44.o
