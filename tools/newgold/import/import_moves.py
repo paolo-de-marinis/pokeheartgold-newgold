@@ -994,6 +994,18 @@ def main():
             table[identifier] = record
         else:
             table.append(record)
+    # The moves numbered by hand keep their records, bar what IMPLEMENTED_HERE
+    # and FIELDS_HERE give them: their effect, no unimplemented flag, and the
+    # power or chance written here.
+    for identifier in range(last_vanilla + 1, first_move):
+        name = by_number[identifier]
+        if name in IMPLEMENTED_HERE:
+            fields = list(struct.unpack(RECORD, table[identifier]))
+            fields[0] = ours_now[IMPLEMENTED_HERE[name]]
+            fields[9] &= ~(1 << FLAG_BITS["FLAG_UNUSABLE_UNIMPLEMENTED"])
+            fields[2] = FIELDS_HERE.get(name, {}).get("power", fields[2])
+            fields[6] = FIELDS_HERE.get(name, {}).get("effectChance", fields[6])
+            table[identifier] = struct.pack(RECORD, *fields)
     TABLE.write_bytes(write_table(table))
     append_rows(NAMES, "msg_0750", names, first_move, True)
     append_rows(CAPS, "msg_0751", caps, first_move, True)
