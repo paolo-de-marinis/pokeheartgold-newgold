@@ -69,12 +69,10 @@ STILL_DIFFERENT = {
          "Bond's second strike, the stockpile spent, falls back on damage_power, which its script never "
          "sets; the script here sets the power before the stockpile goes, for both strikes",
     164: WEATHER,
-    171: IN_C.format("Smelling Salts' doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
     173: CALLED_MOVE,
     178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
     180: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     188: IN_C.format("the knocking off, ServerDoPostMoveEffects.c"),
-    217: IN_C.format("Wake-Up Slap's doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
     222: IN_C.format("Natural Gift's type, power and berry, CalcBaseDamage.c"),
     224: IN_C.format("the berry eaten, ServerDoPostMoveEffects.c"),
     228: IN_C.format("the switch, ServerDoPostMoveEffects.c"),
@@ -331,6 +329,25 @@ class BroughtOverTests(unittest.TestCase):
             self.assertNotIn("SIDE_EFFECT", script(effect), effect)
         self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_BURN\n", script(253))
         self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_PARALYZE\n", script(262))
+
+    def test_smelling_salts_and_wake_up_slap_cure_once_the_move_is_over(self):
+        # The engine's post-move step cures what they doubled against; the
+        # doubling is the damage calculation's (test_move_power).
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        step = function(controller, "TryAdditionalMoveEffect")
+        self.assertIn("(ctx->moveStatusFlag & MOVE_STATUS_FAIL)", step)
+        for effect, status, script_name in (("DOUBLE_POWER_AND_CURE_PARALYSIS", "STATUS_PARALYSIS", "HEAL_TARGET_PARALYSIS"),
+                                            ("DOUBLE_POWER_HEAL_SLEEP", "STATUS_SLEEP", "HEAL_TARGET_SLEEP")):
+            case = step[step.index(f"case MOVE_EFFECT_{effect}:"):]
+            case = case[:case.index("break;")]
+            self.assertIn(f"!(ctx->battleMons[target].status & {status}) || BattlerCheckSubstitute(ctx, target)", case)
+            self.assertIn(f"script = BATTLE_SUBSCRIPT_{script_name};", case)
+        body = function(controller, "ov12_0224E1BC")
+        self.assertLess(body.index("TryRecoil(ctx)"), body.index("TryAdditionalMoveEffect(ctx)"))
+        self.assertLess(body.index("TryAdditionalMoveEffect(ctx)"), body.index("CheckSwitchItemOnHit"))
+        for effect in (171, 217):
+            self.assertNotIn("POWER_MULTI", script(effect), effect)
+            self.assertNotIn("SIDE_EFFECT", script(effect), effect)
 
     def test_howl_raises_the_allies_too(self):
         # The reference raises Howl's user alone; from Generation VIII the

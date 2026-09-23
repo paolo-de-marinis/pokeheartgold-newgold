@@ -1950,21 +1950,20 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
 
     // What these do waits for Parental Bond's second strike (Pokemon Central,
     // Amorefiliale): U-turn's switch, Dragon Tail's, the item Thief takes,
-    // Pluck eats or Knock Off knocks away, the cure Smelling Salts and Wake-Up
-    // Slap give -- so both strikes are doubled -- Smack Down's fall and Anchor
-    // Shot's trap, and the terrain Steel Roller and Ice Spinner tear up, which
-    // Steel Roller needs for its second strike. The reference does these after
-    // the move; here they come with the hit, so the first strike leaves them
-    // to the second, unless the first was the last.
+    // Pluck eats or Knock Off knocks away, Smack Down's fall and Anchor Shot's
+    // trap, and the terrain Steel Roller and Ice Spinner tear up, which Steel
+    // Roller needs for its second strike. The reference does these after the
+    // move; here they come with the hit, so the first strike leaves them to
+    // the second, unless the first was the last. (The cure Smelling Salts and
+    // Wake-Up Slap give is a post-move step here too, TryAdditionalMoveEffect.)
     //
     // The first strike can still prove the last once these have been asked:
     // Effect Spore puts the user to sleep, and the move ends there (Pokemon
     // Central, Spargispora). What was left to the second strike is then done
     // after all, as after the last strike, by the multi-strike loop
-    // (ov12_0224CF14), which parentalBondDeferred tells what it was. So is
-    // the recoil, which the recoil subscripts leave to the second strike
-    // themselves; of Flare Blitz's and Volt Tackle's the recoil alone, their
-    // burn and paralysis having had their chance with the strike.
+    // (ov12_0224CF14), which parentalBondDeferred tells what it was. The
+    // recoil is no side effect: it comes once the move is over (TryRecoil),
+    // from the damage of the strikes there were.
     if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {
         switch (*out) {
         case BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT:
@@ -1972,23 +1971,11 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         case BATTLE_SUBSCRIPT_STEAL_ITEM:
         case BATTLE_SUBSCRIPT_PLUCK:
         case BATTLE_SUBSCRIPT_KNOCK_OFF:
-        case BATTLE_SUBSCRIPT_HEAL_TARGET_PARALYSIS:
-        case BATTLE_SUBSCRIPT_HEAL_TARGET_SLEEP:
         case BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN:
         case BATTLE_SUBSCRIPT_MEAN_LOOK:
         case BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END:
             ctx->parentalBondDeferred = sideEffect;
             ret = FALSE;
-            break;
-        case BATTLE_SUBSCRIPT_RECOIL_1_4:
-        case BATTLE_SUBSCRIPT_RECOIL_1_3:
-        case BATTLE_SUBSCRIPT_RECOIL_1_2:
-        case BATTLE_SUBSCRIPT_RECOIL_HALF_MAX_HP:
-            ctx->parentalBondDeferred = sideEffect;
-            break;
-        case BATTLE_SUBSCRIPT_RECOIL_1_3_CHANCE_TO_BURN:
-        case BATTLE_SUBSCRIPT_RECOIL_1_3_CHANCE_TO_PARALYZE:
-            ctx->parentalBondDeferred = MOVE_SIDE_EFFECT_ON_HIT | MOVE_SUBSCRIPT_PTR_RECOIL_1_3;
             break;
         }
     }
@@ -10152,14 +10139,24 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower = 20;
     }
 
-    // Wake-Up Slap already doubles against a sleeping target, in its own
-    // effect script, which asks the status word directly. Comatose does not
-    // set that word, so the ability is answered here instead -- and only when
-    // the target is not also genuinely asleep, or the two would compound. The
-    // reference reads the target's ability against itself, so no Mold Breaker
-    // gate, but it does let a substitute take the slap the gentler way.
-    if (moveNo == MOVE_WAKE_UP_SLAP && calcTarget.ability == ABILITY_COMATOSE && !(calcTarget.status & STATUS_SLEEP) && BattlerCheckSubstitute(ctx, battlerIdTarget) == FALSE) {
-        movePower *= 2;
+    // Smelling Salts doubles against a paralysed target and Wake-Up Slap
+    // against a sleeping one, or one with Comatose, which the reference reads
+    // against the target itself, so with no Mold Breaker gate; neither against
+    // a substitute that takes the hit (CalcBaseDamage.c:294 and 305 at
+    // d0380a487). The cure is a post-move step (TryAdditionalMoveEffect).
+    if (!SubstituteTakesHit(ctx, battlerIdTarget) && !BattlerCheckSubstitute(ctx, battlerIdTarget)) {
+        switch (BattleMoveTbl(ctx, moveNo)->effect) {
+        case MOVE_EFFECT_DOUBLE_POWER_AND_CURE_PARALYSIS:
+            if (calcTarget.status & STATUS_PARALYSIS) {
+                movePower *= 2;
+            }
+            break;
+        case MOVE_EFFECT_DOUBLE_POWER_HEAL_SLEEP:
+            if ((calcTarget.status & STATUS_SLEEP) || calcTarget.ability == ABILITY_COMATOSE) {
+                movePower *= 2;
+            }
+            break;
+        }
     }
 
     // Lash Out doubles when a stat of the user's has been lowered this turn

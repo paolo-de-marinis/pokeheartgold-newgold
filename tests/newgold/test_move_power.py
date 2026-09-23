@@ -120,6 +120,24 @@ class RisingPowerTests(unittest.TestCase):
 
 
 class DoublingTests(unittest.TestCase):
+    def test_smelling_salts_and_wake_up_slap_double_against_what_they_cure(self):
+        # The engine's CalcBaseDamage, not the effect scripts: 46, doubled 90,
+        # against a paralysed or a sleeping or Comatose target, not behind a
+        # substitute that takes the hit.
+        run_c(self, damage_program(f"""
+    reset(4); S.move.effect = MOVE_EFFECT_DOUBLE_POWER_AND_CURE_PARALYSIS; EXPECT({hit("MOVE_SMELLING_SALTS")}, 46);
+    S.status[1] = STATUS_PARALYSIS; EXPECT({hit("MOVE_SMELLING_SALTS")}, 90);
+    S.substitute[1] = TRUE; EXPECT({hit("MOVE_SMELLING_SALTS")}, 46);
+    reset(4); S.move.effect = MOVE_EFFECT_DOUBLE_POWER_AND_CURE_PARALYSIS; S.status[0] = STATUS_PARALYSIS;
+    EXPECT({hit("MOVE_SMELLING_SALTS")}, 46);
+    reset(4); S.move.effect = MOVE_EFFECT_DOUBLE_POWER_HEAL_SLEEP; S.status[1] = STATUS_PARALYSIS;
+    EXPECT({hit("MOVE_WAKE_UP_SLAP")}, 46);
+    S.status[1] = STATUS_SLEEP; EXPECT({hit("MOVE_WAKE_UP_SLAP")}, 90);
+    S.status[1] = 0; S.ability[1] = ABILITY_COMATOSE; EXPECT({hit("MOVE_WAKE_UP_SLAP")}, 90);
+    S.status[1] = STATUS_SLEEP; EXPECT({hit("MOVE_WAKE_UP_SLAP")}, 90);
+    reset(4); S.move.effect = MOVE_EFFECT_HIT; S.status[1] = STATUS_SLEEP | STATUS_PARALYSIS; EXPECT({hit("MOVE_TACKLE")}, 46);
+"""))
+
     def test_assurance_doubles_against_a_pokemon_hurt_this_turn(self):
         # Power 100 from the stubbed table: 46; doubled, 200: 90.
         run_c(self, damage_program(f"""

@@ -79,7 +79,7 @@ typedef struct {
 } BattleContext;
 typedef struct { int power, type, category, effect; } MoveTbl;
 
-static struct { int maxBattlers; int ability[4]; MoveTbl move; u32 weather; BOOL acted[4]; } S;
+static struct { int maxBattlers; int ability[4]; MoveTbl move; u32 weather; BOOL acted[4]; u32 status[4]; BOOL substitute[4]; } S;
 
 static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *data) {
     (void)data;
@@ -93,6 +93,7 @@ static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *dat
     case BMON_DATA_MAXHP: return 100;
     case BMON_DATA_GENDER: return MON_GENDERLESS;
     case BMON_DATA_TYPE_1: case BMON_DATA_TYPE_2: return TYPE_NORMAL;
+    case BMON_DATA_STATUS: return S.status[battlerId];
     default: return 0;
     }
 }
@@ -104,6 +105,7 @@ static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx;
 static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int type) { (void)ctx; (void)ability; (void)moveNo; return type; }
 static BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return TRUE; }
 static BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
+static BOOL SubstituteTakesHit(BattleContext *ctx, int battlerId) { (void)ctx; return S.substitute[battlerId]; }
 static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return FALSE; }
 static BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return FALSE; }
 static BOOL BattleMoveIsSoundBased(u32 moveNo) { (void)moveNo; return FALSE; }

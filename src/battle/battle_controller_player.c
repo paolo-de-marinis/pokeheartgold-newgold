@@ -4984,6 +4984,45 @@ static BOOL TryRecoil(BattleContext *ctx) {
     return TRUE;
 }
 
+// What a move does to its target once it is over, besides its damage: the
+// engine's Activate_AdditionalMoveEffects (ServerDoPostMoveEffects.c:1095 at
+// d0380a487), the step after the recoil. The engine runs these steps only for
+// a move that hit, so they wait on that here, on its last strike when there
+// were two: Parental Bond's strikes are both over by now (Pokemon Central,
+// Amorefiliale, for what waits for the second).
+static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
+    int target = ctx->battlerIdTarget;
+    int script;
+
+    if (target == BATTLER_NONE || (ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
+        return FALSE;
+    }
+    switch (BattleMoveTbl(ctx, ctx->moveNoCur)->effect) {
+    // Smelling Salts and Wake-Up Slap cure what they doubled against, if the
+    // hit reached the Pokemon (Pokemon Central, Maniereforti: even for no
+    // damage). A substitute that took it keeps the Pokemon behind it as it
+    // was, as this game's scripts had it; the reference cures it anyway, and
+    // asks as well that the user still stands, which the cure, part of the
+    // hit, does not wait on here.
+    case MOVE_EFFECT_DOUBLE_POWER_AND_CURE_PARALYSIS:
+        if (!ctx->battleMons[target].hp || !(ctx->battleMons[target].status & STATUS_PARALYSIS) || BattlerCheckSubstitute(ctx, target)) {
+            return FALSE;
+        }
+        script = BATTLE_SUBSCRIPT_HEAL_TARGET_PARALYSIS;
+        break;
+    case MOVE_EFFECT_DOUBLE_POWER_HEAL_SLEEP:
+        if (!ctx->battleMons[target].hp || !(ctx->battleMons[target].status & STATUS_SLEEP) || BattlerCheckSubstitute(ctx, target)) {
+            return FALSE;
+        }
+        script = BATTLE_SUBSCRIPT_HEAL_TARGET_SLEEP;
+        break;
+    default:
+        return FALSE;
+    }
+    RunPostMoveScript(ctx, script);
+    return TRUE;
+}
+
 static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
     int flag = 0;
 
@@ -5010,6 +5049,12 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         case 2:
+            ctx->unk_30++;
+            if (TryAdditionalMoveEffect(ctx) == TRUE) {
+                flag = 1;
+            }
+            break;
+        case 3:
             // A Red Card, then an Eject Button, on anything the move hurt,
             // once the move is over and before the user's own Shell Bell and
             // Life Orb, which is where the reference asks them. The card goes
@@ -5063,7 +5108,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 3:
+        case 4:
             // Neither the Shell Bell nor the Life Orb below answers a move
             // Sheer Force powered (Pokemon Central, Forzabruta; the
             // reference's ServerDoPostMoveEffects.c:1508 at d0380a487).
@@ -5086,7 +5131,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 4:
+        case 5:
             if (item == HOLD_EFFECT_HP_DRAIN_ON_ATK
                 && !SheerForceTradedEffect(ctx)
                 && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD
@@ -5104,7 +5149,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 5:
+        case 6:
             // Parting Shot's user goes back once the move is over, if the
             // move changed a stat of its target (Pokemon Central, Monito; the
             // reference's Activate_Switch, ServerDoPostMoveEffects.c:2149 at
@@ -5146,7 +5191,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 6:
+        case 7:
             // A Throat Spray answers the attacker using a sound move, and that
             // is the whole of the reference's condition: not that the move hit,
             // not that there was anything to hit, and not that Sp. Atk had room
@@ -5175,7 +5220,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_34 = 0;
             }
             break;
-        case 7:
+        case 8:
             // An Eject Pack on anyone who had a stat lowered during the move,
             // after the user's own items, where the reference asks it; not
             // once an Eject Button has sent somebody away, or after a
@@ -5199,7 +5244,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 8: {
+        case 9: {
             // Emergency Exit and Wimp Out, one Pokemon at a time: this step
             // comes round again after each, until none is left to go.
             int script;
@@ -5214,7 +5259,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 9:
+        case 10:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;
