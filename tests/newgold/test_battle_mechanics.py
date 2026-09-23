@@ -1153,6 +1153,19 @@ class SleepTalkMultiStrikeTests(unittest.TestCase):
         self.assertIn("!MultiHit_StoppedBySleep(ctx)", function(OVERLAY.read_text(), "ParentalBond_StrikeToCome"))
 
 
+class TypeChangeTests(unittest.TestCase):
+    def test_a_type_change_takes_an_added_type_away(self):
+        # Pokemon Central (Inondazione, Magipolvere): Soak and Magic Powder
+        # leave the target purely Water or Psychic, ending Trick-or-Treat and
+        # Forest's Curse; Camouflage and Conversion set the user's type the
+        # same way. Burn Up and Double Shock only take a type away.
+        commands = COMMANDS.read_text()
+        self.assertIn("ctx->battleMons[battlerId].type3 = TYPE_NONE;", function(commands, "MakeBattlerPureType"))
+        self.assertNotIn("type3", function(commands, "RemoveBattlerType"))
+        for command in ("BtlCmd_TryCamouflage", "BtlCmd_TryConversion"):
+            self.assertIn("ctx->battleMons[ctx->battlerIdAttacker].type3 = TYPE_NONE;", function(commands, command), command)
+
+
 class PaybackTests(unittest.TestCase):
     def test_it_does_not_double_against_what_came_in_this_turn(self):
         # Pokemon Central, Rivincita: from Generation V a Pokemon that switched

@@ -3395,6 +3395,7 @@ BOOL BtlCmd_TryConversion(BattleSystem *battleSystem, BattleContext *ctx) {
         } while (GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) == moveType || GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) == moveType);
         ctx->battleMons[ctx->battlerIdAttacker].type1 = moveType;
         ctx->battleMons[ctx->battlerIdAttacker].type2 = moveType;
+        ctx->battleMons[ctx->battlerIdAttacker].type3 = TYPE_NONE;
         ctx->msgTemp = moveType;
     }
 
@@ -6090,9 +6091,12 @@ BOOL BtlCmd_TryCamouflage(BattleSystem *battleSystem, BattleContext *ctx) {
     }
     int type = sCamouflageTypeTable[terrain];
 
+    // The user becomes that type and nothing else, an added third type
+    // included, as with every move that sets a Pokemon's type.
     if (GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) != type && GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) != type) {
         ctx->battleMons[ctx->battlerIdAttacker].type1 = type;
         ctx->battleMons[ctx->battlerIdAttacker].type2 = type;
+        ctx->battleMons[ctx->battlerIdAttacker].type3 = TYPE_NONE;
         ctx->msgTemp = type;
     } else {
         BattleScriptIncrementPointer(ctx, adrs);
@@ -9873,18 +9877,23 @@ BOOL BtlCmd_HandleRoost(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-// Soak and Magic Powder leave the target one type and nothing else.
+// Soak and Magic Powder leave the target one type and nothing else: a type
+// Forest's Curse or Trick-or-Treat added goes too (Pokemon Central,
+// Inondazione, Magipolvere).
 static void MakeBattlerPureType(BattleContext *ctx, int battlerId, u8 type) {
     ctx->battleMons[battlerId].type1 = type;
     ctx->battleMons[battlerId].type2 = type;
+    ctx->battleMons[battlerId].type3 = TYPE_NONE;
 }
 
 // Burn Up and Double Shock spend a type to use the move. What is left of a
 // Pokemon that was only that type is nothing, which the chart reads as a
-// typeless Pokemon rather than as an error.
+// typeless Pokemon rather than as an error. An added type is not theirs to
+// take.
 static void RemoveBattlerType(BattleContext *ctx, int battlerId, u8 type) {
     if (ctx->battleMons[battlerId].type1 == type && ctx->battleMons[battlerId].type2 == type) {
-        MakeBattlerPureType(ctx, battlerId, TYPE_NORMAL);
+        ctx->battleMons[battlerId].type1 = TYPE_NORMAL;
+        ctx->battleMons[battlerId].type2 = TYPE_NORMAL;
     } else if (ctx->battleMons[battlerId].type1 == type) {
         ctx->battleMons[battlerId].type1 = ctx->battleMons[battlerId].type2;
     } else if (ctx->battleMons[battlerId].type2 == type) {
