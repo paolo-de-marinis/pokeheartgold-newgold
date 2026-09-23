@@ -666,7 +666,8 @@ Overlay OVY_10
     Object src/battle/trainer_ai_0221EB4C.o
     Object asm/overlay_10_trainer_ai_0221EC08.o
     Object src/battle/trainer_ai_0221EF7C.o
-    Object asm/overlay_10_trainer_ai_0221F084.o
+    Object src/battle/trainer_ai_0221F084.o
+    Object asm/overlay_10_trainer_ai_0221F5F4.o
     Object src/battle/trainer_ai_switch_wonder_guard.o
     Object src/battle/trainer_ai_switch_ineffective.o
     Object asm/overlay_10_trainer_ai_0221FD34.o

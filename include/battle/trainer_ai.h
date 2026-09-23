@@ -14,6 +14,10 @@ enum {
 void ov10_0221BE20(BattleSystem *battleSystem, BattleContext *ctx, u8 battlerId, u8 a3);
 u8 ov10_0221BEF4(BattleSystem *battleSystem, u8 battlerId);
 
+// Low Kick's and Grass Knot's power by the target's weight, in tenths of a
+// kilogram, up to a weight of 0xFFFF; past the last the power is 120.
+extern const u16 ov10_0222B068[][2];
+
 // Effect lists in the AI's read-only data, each ended by 0xFFFF: the effects
 // whose damage the AI estimates whatever their listed power (0222B080), and
 // the ones it never compares by damage (0222B098).
