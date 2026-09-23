@@ -2899,8 +2899,8 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
     moveType = BattleMoveTypeForAbility(ctx, GetBattlerAbility(ctx, battlerIdAttacker), moveNo, moveTypeDefault);
 
     movePower = BattleMoveTbl(ctx, moveNo)->power;
-    // Anticipation asks this chart too, and so no longer shudders at such a
-    // move in the winds, where the later games still have it shudder.
+    // Anticipation asks this chart too, with the winds taken off the field
+    // for the question: they weaken the hit, not the danger it shudders at.
     winds = StrongWindsFor(battleSystem, ctx, battlerIdAttacker, moveNo);
 
     // STAB
@@ -5577,13 +5577,22 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                     int index;
                     u16 moveNo;
                     u32 moveStatus;
+                    u32 fieldCondition;
                     for (battlerIdCheck = 0; battlerIdCheck < maxBattlers; battlerIdCheck++) {
                         if (BattleSystem_GetFieldSide(battleSystem, battlerId) != BattleSystem_GetFieldSide(battleSystem, battlerIdCheck) && ctx->battleMons[battlerIdCheck].hp) {
                             for (index = 0; index < MAX_MON_MOVES; index++) {
                                 moveNo = ctx->battleMons[battlerIdCheck].moves[index];
                                 if (moveNo) {
                                     moveStatus = 0;
+                                    // The later games still shudder at a move
+                                    // super effective on a Flying type in the
+                                    // strong winds, which shelter it from the
+                                    // hit and not from the chart; the
+                                    // reference asks the chart with the winds.
+                                    fieldCondition = ctx->fieldCondition;
+                                    ctx->fieldCondition &= ~FIELD_CONDITION_STRONG_WINDS;
                                     ctx->damage = ov12_02251D28(battleSystem, ctx, moveNo, 0, battlerIdCheck, battlerId, ctx->damage, &moveStatus);
+                                    ctx->fieldCondition = fieldCondition;
                                     if (!(moveStatus & MOVE_STATUS_NO_EFFECT) && !ov12_0225865C(ctx, moveNo) && ((moveStatus & MOVE_STATUS_SUPER_EFFECTIVE) || (BattleMoveTbl(ctx, moveNo)->effect == MOVE_EFFECT_ONE_HIT_KO && ctx->battleMons[battlerId].level <= ctx->battleMons[battlerIdCheck].level))) {
                                         flag = TRUE;
                                         break;

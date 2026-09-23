@@ -96,5 +96,17 @@ class AsOneTests(unittest.TestCase):
         run_c(AS_ONE.replace("@FUNCTIONS@", functions))
 
 
+class AnticipationTests(unittest.TestCase):
+    def test_anticipation_asks_the_chart_without_the_strong_winds(self):
+        # The winds shelter a Flying type from the hit, not from the chart the
+        # later games have Anticipation read.
+        body = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        start = body.index("case 5: // Anticipation")
+        case = body[start:body.index("case 6:", start)]
+        ask = case.index("ov12_02251D28(")
+        self.assertLess(case.index("ctx->fieldCondition &= ~FIELD_CONDITION_STRONG_WINDS;"), ask)
+        self.assertGreater(case.index("ctx->fieldCondition = fieldCondition;"), ask)
+
+
 if __name__ == "__main__":
     unittest.main()
