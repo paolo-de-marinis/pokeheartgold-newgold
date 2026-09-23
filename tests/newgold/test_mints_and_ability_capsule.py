@@ -168,14 +168,23 @@ int main(void) {
 }
 """
 
-# The records konefr give one of the six routines. Four of those routines change
-# a form this game has no species record and no sprite for, so their records
-# stay inert; the other two open the party menu, which is routine 1 here.
+# The records konefr give one of the six routines. Two of those routines open
+# the party menu, which is routine 1 here. The other four change a form --
+# Reveal Glass, DNA Splicers, the Nectars, the Rotom Catalog -- and the forms
+# are species here now (the Therian trio 1171-1173, Enamorus Therian 1287,
+# Kyurem White and Black 1174/1175, Oricorio 1239-1241, Rotom 503-507). They
+# are not ported because nothing reaches them: none of the seven items is
+# placed anywhere, in this tree or in the reference's scripts, and none of the
+# species is in New Gold's encounters or trainers. DNA Splicers would also
+# need save space for the Reshiram or Zekrom it absorbs. Porting one takes it
+# out of STILL_INERT; the list may only shrink.
 PARTY_MENU_FIELD_USE = 1
 GENERIC_FIELD_USE = 0
 MINTS = [f"ITEM_{name}_MINT" for name in (
     "LONELY ADAMANT NAUGHTY BRAVE BOLD IMPISH LAX RELAXED MODEST MILD RASH "
     "QUIET CALM GENTLE CAREFUL SASSY TIMID HASTY JOLLY NAIVE SERIOUS").split()]
+FORM_CHANGE_ITEMS = ["ITEM_REVEAL_GLASS", "ITEM_DNA_SPLICERS_FUSE", "ITEM_ROTOM_CATALOG",
+                     "ITEM_RED_NECTAR", "ITEM_YELLOW_NECTAR", "ITEM_PINK_NECTAR", "ITEM_PURPLE_NECTAR"]
 STILL_INERT = ["ITEM_REVEAL_GLASS", "ITEM_DNA_SPLICERS_FUSE", "ITEM_ROTOM_CATALOG",
                "ITEM_RED_NECTAR", "ITEM_YELLOW_NECTAR", "ITEM_PINK_NECTAR", "ITEM_PURPLE_NECTAR"]
 
@@ -195,13 +204,16 @@ class ItemRecords(unittest.TestCase):
             self.assertEqual(int(rows[item]["fieldUseFunc"]), PARTY_MENU_FIELD_USE, item)
             self.assertEqual(int(rows[item]["partyUse"]), 1, item)
 
-    def test_the_four_that_need_a_missing_form_still_do_nothing(self):
-        """Reveal Glass, DNA Splicers, the Nectars and the Rotom Catalog. Giving
-        one of these a routine before the form exists is a menu that leads
-        nowhere, so they are left at 0 on purpose."""
+    def test_the_inert_form_changers_are_the_ones_listed(self):
+        """Reveal Glass, DNA Splicers, the Nectars and the Rotom Catalog: the
+        ones still at routine 0 are exactly STILL_INERT, and that list only
+        shrinks. A ported item leaves the list; one given a routine while it
+        is still listed fails here, and so does the list growing."""
         rows = records()
-        for item in STILL_INERT:
-            self.assertEqual(int(rows[item]["fieldUseFunc"]), GENERIC_FIELD_USE, item)
+        inert = [item for item in FORM_CHANGE_ITEMS
+                 if int(rows[item]["fieldUseFunc"]) == GENERIC_FIELD_USE]
+        self.assertEqual(inert, STILL_INERT)
+        self.assertLessEqual(len(STILL_INERT), 7)
 
     def test_the_mint_ids_are_one_unbroken_run(self):
         """src/party_menu.c indexes sMintNatures by itemId - ITEM_LONELY_MINT."""
