@@ -101,11 +101,23 @@ typedef struct TrainerData {
     /*010*/ u32 doubleBattle;
 } TrainerData;
 
+// A name from the trainer table (bank 729) is packed: a marker, then nine bits
+// a character. Retail gave it the player's eight units, ten characters, and
+// konefr's Pietro Pacciani is ten units and the terminator. The name runs on
+// over the win message, which only the Frontier writes and never with a name
+// longer than a player's: twelve units, sixteen characters.
+#define TRAINER_NAME_LENGTH 11
+
 typedef struct Trainer {
     struct TrainerData data;
-    /*014*/ u16 name[PLAYER_NAME_LENGTH + 1];
-    // Used in the Frontier
-    /*024*/ MailMessage winMessage;
+    union {
+        /*014*/ u16 name[TRAINER_NAME_LENGTH + 1];
+        struct {
+            u16 playerName[PLAYER_NAME_LENGTH + 1];
+            // Used in the Frontier
+            /*024*/ MailMessage winMessage;
+        };
+    };
     /*02C*/ MailMessage loseMessage;
 } Trainer; // size=0x34
 

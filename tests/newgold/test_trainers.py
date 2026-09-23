@@ -144,6 +144,49 @@ def lcrng(seed, rolls):
     return value
 
 
+# The Trainer record as include/trainer_data.h declares it, laid out on the
+# host: the units its name holds, and where the Frontier's messages sit.
+TRAINER_LAYOUT = r"""
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef struct { u16 msg_bank, msg_no, fields[2]; } MailMessage;
+@PLAYER_NAME_LENGTH@
+@DECLARATIONS@
+int main(void) {
+    Trainer trainer;
+    printf("%u %u %u %u\n", (unsigned)(sizeof(trainer.name) / sizeof(*trainer.name)),
+           (unsigned)offsetof(Trainer, name), (unsigned)offsetof(Trainer, winMessage), (unsigned)sizeof(Trainer));
+    return 0;
+}
+"""
+
+
+def trainer_layout():
+    header = (ROOT / "include/trainer_data.h").read_text()
+    declarations = re.search(r"typedef struct TrainerData \{.*?\} Trainer;", header, re.S)[0]
+    player = re.search(r"#define PLAYER_NAME_LENGTH\s+\d+", (ROOT / "include/constants/global.h").read_text())[0]
+    with tempfile.TemporaryDirectory(prefix="newgold-trainer-") as directory:
+        path = Path(directory)
+        (path / "test.c").write_text(TRAINER_LAYOUT.replace("@DECLARATIONS@", declarations)
+                                     .replace("@PLAYER_NAME_LENGTH@", player))
+        subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+            "-std=c11", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+            str(path / "test.c"), "-o", str(path / "test")], check=True)
+        return tuple(map(int, subprocess.run([str(path / "test")], capture_output=True, text=True,
+                                             check=True).stdout.split()))
+
+
+def packed_units(name):
+    """The units tools/msgenc makes of a {TRNAME} name, terminator included:
+    the marker, nine bits a character in fifteen-bit units, and 0xFFFF."""
+    bits = 9 * len(name)
+    return 1 + bits // 15 + (bits % 15 > 1) + 1
+
+
 def run_parties(lines):
     """[(modifier, ability)] for each `m` line, through the real functions."""
     source = (ROOT / "src/trainer_data.c").read_text()
@@ -406,6 +449,23 @@ class TrainerTests(unittest.TestCase):
         seed = member["difficulty"] + member["level"] + seed_species([ours["SPECIES_ANNIHILAPE"]])[0] + morty
         personality = (lcrng(seed, rolls) << 8) + modifiers[k][0]
         self.assertEqual(personality % 25, 18)  # Bashful
+
+    def test_every_name_fits_the_record_it_is_copied_into(self):
+        """EnemyTrainerSet_Init copies a name from bank 729 into Trainer.name,
+        and one that does not fit is not copied at all: 'You defeated' then
+        read whatever the stack held. Retail's eight units hold ten packed
+        characters; konefr's Pippo Franco is nine units and the terminator,
+        Pietro Pacciani ten and it. The record keeps retail's layout."""
+        units, name, win, size = trainer_layout()
+        self.assertEqual((name, win, size), (0x14, 0x24, 0x34))
+        init = function((ROOT / "src/trainer_data.c").read_text(), "EnemyTrainerSet_Init")
+        self.assertIn("battleSetup->trainer[i].name, TRAINER_NAME_LENGTH + 1);", init)
+        self.assertEqual(units, int(re.search(r"#define TRAINER_NAME_LENGTH\s+(\d+)",
+                                              (ROOT / "include/trainer_data.h").read_text())[1]) + 1)
+        for index, trainer in enumerate(self.trainers):
+            self.assertTrue(trainer["name"].startswith("{TRNAME}"), index)
+            self.assertLessEqual(packed_units(trainer["name"][len("{TRNAME}"):]), units, trainer["name"])
+        self.assertEqual(packed_units("Pietro Pacciani"), 11)
 
     def test_added_species_reach_trainers(self):
         named = {member["species"] for trainer in self.trainers for member in trainer["party"]}
