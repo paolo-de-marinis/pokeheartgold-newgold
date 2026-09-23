@@ -743,17 +743,21 @@
 
 #define LAST_TRAINER_INDEX 740
 
-// Pokemon gender and ability override flags
+// Pokemon gender and ability override flags. The byte is gender | ability << 4.
+// TrMon_OverridePidGender acts on the personality with the whole byte, as
+// retail did; TrMon_ApplyAbilitySlot then writes the ability outright, as
+// hg-engine does, so the ability does not depend on the personality: OFF and
+// FIRST give the first ability, SECOND the second, HIDDEN the hidden one.
 #define TRPOKE_GENDER_OVERRIDE_OFF    0
 #define TRPOKE_GENDER_OVERRIDE_MALE   1
 #define TRPOKE_GENDER_OVERRIDE_FEMALE 2
 
 #define TRPOKE_ABILITY_OVERRIDE_OFF    0
-#define TRPOKE_ABILITY_OVERRIDE_FIRST  1
-#define TRPOKE_ABILITY_OVERRIDE_SECOND 2
-// The ability no personality picks. Unlike the other two this cannot be
-// arranged by choosing a personality, so it is set on the Pokemon afterwards.
-#define TRPOKE_ABILITY_OVERRIDE_HIDDEN 3
+#define TRPOKE_ABILITY_OVERRIDE_FIRST  1 // also clears the personality's low bit
+#define TRPOKE_ABILITY_OVERRIDE_SECOND 2 // also sets the personality's low bit
+// Neither of these two touches the personality.
+#define TRPOKE_ABILITY_OVERRIDE_HIDDEN         3
+#define TRPOKE_ABILITY_OVERRIDE_SECOND_BY_NAME 4
 
 // What a trainer's doubleBattle field says. Two is HeartGold's own double
 // battle, where a second trainer walks up and the player brings a partner.

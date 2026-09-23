@@ -281,7 +281,7 @@ TrainerGender TrainerClass_GetGenderOrTrainerCount(int trainerClass) {
 }
 
 void TrMon_OverridePidGender(int species, int form, int overrideParam, u32 *pid);
-void TrMon_ApplyHiddenAbility(Pokemon *mon, int species, int form, int overrideParam);
+void TrMon_ApplyAbilitySlot(Pokemon *mon, int species, int form, int overrideParam);
 void TrMon_FrustrationCheckAndSetFriendship(Pokemon *mon);
 
 void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID heapID) {
@@ -357,7 +357,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             // personalized ball capsules.
             SetTrMonCapsule(monSpecies[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
-            TrMon_ApplyHiddenAbility(mon, species, form, monSpecies[i].genderAbilityOverride);
+            TrMon_ApplyAbilitySlot(mon, species, form, monSpecies[i].genderAbilityOverride);
             // Starting in HGSS, an AI Pokemon with Frustration
             // will have minimum friendship.
             TrMon_FrustrationCheckAndSetFriendship(mon);
@@ -389,7 +389,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             }
             SetTrMonCapsule(monSpeciesMoves[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
-            TrMon_ApplyHiddenAbility(mon, species, form, monSpeciesMoves[i].genderAbilityOverride);
+            TrMon_ApplyAbilitySlot(mon, species, form, monSpeciesMoves[i].genderAbilityOverride);
             TrMon_FrustrationCheckAndSetFriendship(mon);
             Party_AddMon(enemies->party[partyIndex], mon);
         }
@@ -415,7 +415,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             SetMonData(mon, MON_DATA_HELD_ITEM, &monSpeciesItem[i].item);
             SetTrMonCapsule(monSpeciesItem[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
-            TrMon_ApplyHiddenAbility(mon, species, form, monSpeciesItem[i].genderAbilityOverride);
+            TrMon_ApplyAbilitySlot(mon, species, form, monSpeciesItem[i].genderAbilityOverride);
             TrMon_FrustrationCheckAndSetFriendship(mon);
             Party_AddMon(enemies->party[partyIndex], mon);
         }
@@ -445,7 +445,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             }
             SetTrMonCapsule(monSpeciesItemMoves[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
-            TrMon_ApplyHiddenAbility(mon, species, form, monSpeciesItemMoves[i].genderAbilityOverride);
+            TrMon_ApplyAbilitySlot(mon, species, form, monSpeciesItemMoves[i].genderAbilityOverride);
             TrMon_FrustrationCheckAndSetFriendship(mon);
             Party_AddMon(enemies->party[partyIndex], mon);
         }
@@ -489,16 +489,26 @@ void TrMon_FrustrationCheckAndSetFriendship(Pokemon *mon) {
     SetMonData(mon, MON_DATA_FRIENDSHIP, &friendship);
 }
 
-// The first two ability overrides work by choosing a personality, because the
-// personality is what picks between a species' two abilities. A hidden one is
-// not among them, so it has to be written onto the Pokemon once it exists.
-void TrMon_ApplyHiddenAbility(Pokemon *mon, int species, int form, int overrideParam) {
-    if (((overrideParam & 0xF0) >> 4) != TRPOKE_ABILITY_OVERRIDE_HIDDEN) {
-        return;
-    }
+// The ability is written outright once the Pokemon exists, as hg-engine's
+// MakeTrainerPokemonParty does (src/field/enemy_party.c:287-306), rather than
+// left to the personality CreateMon picked it by: an entry that leaves the
+// personality alone keeps whatever low bit the entry before it left there. A
+// species without the ability asked for gets its first.
+void TrMon_ApplyAbilitySlot(Pokemon *mon, int species, int form, int overrideParam) {
+    u32 ability = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_1);
+    u32 other = ABILITY_NONE;
 
-    u32 ability = GetMonBaseStat_HandleAlternateForm(species, form, BASE_HIDDEN_ABILITY);
-    if (ability != ABILITY_NONE) {
-        SetMonData(mon, MON_DATA_ABILITY, &ability);
+    switch ((overrideParam & 0xF0) >> 4) {
+    case TRPOKE_ABILITY_OVERRIDE_SECOND:
+    case TRPOKE_ABILITY_OVERRIDE_SECOND_BY_NAME:
+        other = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_2);
+        break;
+    case TRPOKE_ABILITY_OVERRIDE_HIDDEN:
+        other = GetMonBaseStat_HandleAlternateForm(species, form, BASE_HIDDEN_ABILITY);
+        break;
     }
+    if (other != ABILITY_NONE) {
+        ability = other;
+    }
+    SetMonData(mon, MON_DATA_ABILITY, &ability);
 }

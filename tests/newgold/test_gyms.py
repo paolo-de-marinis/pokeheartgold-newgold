@@ -156,10 +156,8 @@ def abilities():
 def resolved(slots, species, override):
     """The ability a slot override actually reaches, the way the game does it.
 
-    TrMon_OverridePidGender biases the personality so CreateMon picks
-    abilities[0] or abilities[1]; TrMon_ApplyHiddenAbility writes the hidden
-    one on afterwards. A second slot the species does not fill falls back to
-    the first, which is what the personal record does.
+    TrMon_ApplyAbilitySlot writes it on once the Pokemon exists. A second or
+    hidden slot the species does not fill falls back to the first.
     """
     first, second, hidden = slots[species]
     if override == "TRPOKE_ABILITY_OVERRIDE_SECOND":

@@ -7,9 +7,13 @@ outside what the game accepts, or a party longer than a team can be.
 """
 
 import json
+import os
 import re
+import shlex
 import struct
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -29,6 +33,76 @@ PARTY_MAX = 6
 
 def defined(path, prefix):
     return set(re.findall(r"\b(" + prefix + r"[A-Z0-9_]+)", (ROOT / path).read_text()))
+
+
+# The two functions that turn a party entry's override byte into its
+# personality and its ability, the real ones out of src/trainer_data.c, run on
+# the host. Each line of input is either `t MODIFIER`, a trainer starting with
+# that personality modifier, or `m RATIO FIRST SECOND HIDDEN BYTE`, one of its
+# Pokemon: its species' gender ratio and three abilities, and its override
+# byte. For each Pokemon it prints the modifier after it and the ability it
+# was given.
+PARTY_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/abilities.h"
+#include "constants/pokemon.h"
+#include "constants/trainers.h"
+typedef uint32_t u32;
+typedef struct { u32 ability; } Pokemon;
+static int stats[64];
+static int GetMonBaseStat_HandleAlternateForm(int species, int form, int stat) {
+    assert(species == 1 && form == 0 && stat >= 0 && stat < 64);
+    return stats[stat];
+}
+static void SetMonData(Pokemon *mon, int attr, const void *value) {
+    assert(attr == MON_DATA_ABILITY);
+    mon->ability = *(const u32 *)value;
+}
+@FUNCTIONS@
+int main(void) {
+    unsigned pid = 0, ratio, first, second, hidden, byte;
+    char kind;
+    while (scanf(" %c", &kind) == 1) {
+        if (kind == 't') {
+            assert(scanf("%u", &pid) == 1);
+            continue;
+        }
+        assert(kind == 'm' && scanf("%u %u %u %u %u", &ratio, &first, &second, &hidden, &byte) == 5);
+        stats[BASE_GENDER_RATIO] = ratio;
+        stats[BASE_ABILITY_1] = first;
+        stats[BASE_ABILITY_2] = second;
+        stats[BASE_HIDDEN_ABILITY] = hidden;
+        Pokemon mon = { 0xFFFF };
+        TrMon_OverridePidGender(1, 0, byte, &pid);
+        TrMon_ApplyAbilitySlot(&mon, 1, 0, byte);
+        printf("%u %u\n", pid, mon.ability);
+    }
+    return 0;
+}
+"""
+
+
+def run_parties(lines):
+    """[(modifier, ability)] for each `m` line, through the real functions."""
+    source = (ROOT / "src/trainer_data.c").read_text()
+    program = PARTY_FIXTURE.replace("@FUNCTIONS@", function(source, "TrMon_OverridePidGender")
+                                    + "\n" + function(source, "TrMon_ApplyAbilitySlot"))
+    with tempfile.TemporaryDirectory(prefix="newgold-trpoke-") as directory:
+        path = Path(directory)
+        (path / "test.c").write_text(program)
+        subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+            "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+            str(path / "test.c"), "-o", str(path / "test")], check=True)
+        output = subprocess.run([str(path / "test")], input="\n".join(lines) + "\n",
+                                capture_output=True, text=True, check=True).stdout
+    return [tuple(map(int, line.split())) for line in output.splitlines()]
+
+
+def override_constants():
+    text = (ROOT / "include/constants/trainers.h").read_text()
+    return {name: int(value) for name, value in re.findall(r"#define (TRPOKE_\w+_OVERRIDE_\w+)\s+(\d+)", text)}
 
 
 class TrainerTests(unittest.TestCase):
@@ -131,6 +205,29 @@ class TrainerTests(unittest.TestCase):
             flagged = {name for name, block in blocks.items()
                        if "FLAG_UNUSABLE_UNIMPLEMENTED" in import_moves.named_flags(block)}
             self.assertEqual(set(listed), flagged, revision)
+
+    def test_the_override_byte_gives_the_slot_it_names(self):
+        """The ability is written outright, as hg-engine writes it, and not left
+        to the personality, whose low bit an entry that leaves it alone carries
+        over from the one before. SECOND sets that bit and SECOND_BY_NAME does
+        not; the FEMALE nibble sets the modifier to the gender ratio less two."""
+        c = override_constants()
+        female = c["TRPOKE_GENDER_OVERRIDE_FEMALE"]
+        cases = [  # (ability nibble, gender nibble, second, hidden) -> (modifier, ability)
+            ("OFF", 0, 22, 33, 0x89, 11),
+            ("FIRST", 0, 22, 33, 0x88, 11),
+            ("SECOND", 0, 22, 33, 0x89, 22),
+            ("SECOND", 0, 0, 33, 0x89, 11),
+            ("SECOND_BY_NAME", 0, 22, 33, 0x89, 22),
+            ("HIDDEN", 0, 22, 33, 0x89, 33),
+            ("HIDDEN", 0, 22, 0, 0x89, 11),
+            ("HIDDEN", female, 22, 33, 100 - 2, 33),
+        ]
+        lines = []
+        for slot, gender, second, hidden, _, _ in cases:
+            byte = gender | c["TRPOKE_ABILITY_OVERRIDE_" + slot] << 4
+            lines += ["t 137", f"m 100 11 {second} {hidden} {byte}"]
+        self.assertEqual(run_parties(lines), [(pid, ability) for *_, pid, ability in cases])
 
     def test_added_species_reach_trainers(self):
         named = {member["species"] for trainer in self.trainers for member in trainer["party"]}
