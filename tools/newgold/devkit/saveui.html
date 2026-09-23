@@ -1012,7 +1012,8 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       <p class="note">Si sceglie solo tra le mosse che la specie può imparare, a qualsiasi livello, ognuna con tutte le sue fonti: livello (Evoluzione: quando si evolve),
         MT, MN e DT, insegnanti, mosse uovo, la mossa della forma (Rotom), e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
         (una mossa evento) resta finché non la cambi e non cambi specie. Una mossa che il Pokémon già conosce tiene i suoi PP; una nuova li ha pieni.
-        "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie.</p></div>
+        "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie; finché
+        non le tocchi, seguono il livello se lo cambi.</p></div>
     <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="${lim.iv}">Tutti ${lim.iv}</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${perStat("iv", v.ivs, lim.iv)}</div>
     <div class="box"><div class="sechead"><h3 style="margin:0">EV</h3><span class="muted" id="evsum"></span></div>${perStat("ev", v.evs, lim.ev)}</div>
     <p class="note">Cambiare specie sostituisce subito mosse e abilità con quelle che il gioco dà alla nuova specie: le mosse al livello scelto, l'abilità
@@ -1024,7 +1025,9 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
        [where.kind === "party" ? "deposit" : "withdraw", where.kind === "party" ? `Sposta nel box ${S.box + 1}` : "Sposta in squadra", "", "left"],
        ["remove", where.kind === "party" ? "Togli dalla squadra" : "Libera", "danger", "left"]];
   // The species whose rules the dialog holds: its moves (with their sources), and those the Pokemon knows already.
-  const st = {species: 0, moves: [], legal: new Map(), known: new Set()};
+  // `preset`: the move fields hold the game's moves for the species at the level, untouched since; `asked`: the
+  // last request, so an older answer arriving late is dropped.
+  const st = {species: 0, moves: [], legal: new Map(), known: new Set(), preset: false, asked: 0};
   return ask(title, body, buttons, d => {
     const form = $("form", d), evsum = () => {
       const t = six.reduce((a, i) => a + (+form.elements["ev" + i].value || 0), 0);
@@ -1048,9 +1051,10 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     // mode: null keeps what the fields hold, "moves" puts the preset in, "all" the preset and the ability.
     async function load(species, mode, ability) {
       st.species = species;
+      const asked = ++st.asked;
       const same = !!m && species === m.species, lv = Math.min(100, Math.max(1, +form.elements.level.value || 1));
       const r = await run(() => api(`/api/species?species=${species}&form=${same ? m.form : 0}&level=${lv}&hidden=${m?.hidden_ability ? 1 : 0}&bit=${m?.ability_bit ?? 0}`));
-      if (!r || st.species !== species) return;       // another species was picked meanwhile
+      if (!r || asked !== st.asked) return;           // another species or level was asked for meanwhile
       Object.assign(st, {moves: r.moves, legal: new Map(r.moves.map(x => [x.id, x.sources])), known: new Set(same ? m.moves.map(x => x.id) : [])});
       const was = sel.value;
       // An ability the species would not give (m.ability_ok false) is not silently replaced: one is chosen here.
@@ -1063,6 +1067,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       if (isNew && (mode === "all" || form.elements.friendship.value === "")) form.elements.friendship.value = r.friendship;
       if (mode) {
         inputs.forEach((el, i) => el.value = moveRef(r.preset[i] || 0));
+        st.preset = true;
         $("#presetnote", d).hidden = false;
         $("#presetnote", d).textContent = mode === "all" ? `Mosse e abilità sostituite con quelle che il gioco dà a ${name} al livello ${lv}.`
                                                          : `Mosse sostituite con quelle che il gioco dà a ${name} al livello ${lv}.`;
@@ -1077,6 +1082,8 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       const sp = parseRef(form.elements.species.value, S.speciesIndex);
       if (sp && sp !== st.species) load(sp, "all");
     });
+    // Moves the game gave for one level follow the level while they are left alone.
+    form.elements.level.addEventListener("input", () => { if (st.preset && st.species) load(st.species, "moves"); });
     $("#learn", d).onclick = () => {
       const sp = parseRef(form.elements.species.value, S.speciesIndex);
       if (!sp) return toast("Scegli prima la specie", true);
@@ -1104,11 +1111,11 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       o.classList.add("on"); o.scrollIntoView({block: "nearest"});
       cur.setAttribute("aria-activedescendant", o.id);
     };
-    const pick = i => { cur.value = moveRef(shown[i].id); close(); showTags(); };
+    const pick = i => { cur.value = moveRef(shown[i].id); st.preset = false; close(); showTags(); };
     list.addEventListener("mousedown", ev => { ev.preventDefault(); const o = ev.target.closest("[data-i]"); if (o) pick(+o.dataset.i); });
     for (const el of inputs) {
       el.addEventListener("focus", () => open(el, ""));
-      el.addEventListener("input", () => { open(el, el.value.replace(/\s*#\d+\s*$/, "").trim()); showTags(); });
+      el.addEventListener("input", () => { st.preset = false; open(el, el.value.replace(/\s*#\d+\s*$/, "").trim()); showTags(); });
       el.addEventListener("blur", close);
       el.addEventListener("keydown", ev => {
         if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {

@@ -159,7 +159,8 @@ In the Pokemon dialog a move is picked only from the species'
 Insegnante, Mossa uovo, da Ponyta Lv. 20...), and the ability from its
 `species_abilities`. Changing the species puts in, at once, the moves the
 game gives the new species at that level and the ability it would give
-this Pokemon as that species; "Mosse per livello" puts in the same moves.
+this Pokemon as that species; "Mosse per livello" puts in the same moves,
+and moves put in this way follow the level while they are left alone.
 The server refuses in Italian a move or an ability the species cannot
 have, whatever sent it; a move the Pokemon already knew that the species
 does not learn (an event's) stays while it is left alone and the species
