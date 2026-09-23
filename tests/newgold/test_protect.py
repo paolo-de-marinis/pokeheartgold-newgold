@@ -299,6 +299,58 @@ int main(void) {
 """
 
 
+AI_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
+#include "constants/moves.h"
+#include "constants/move_effects.h"
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+
+typedef struct { u16 effect; } MoveTbl;
+typedef struct {
+    u16 moveNoProtect[4];
+    u8 protectSuccessTurns[4];
+    struct { int unk8; } trainerAIData;
+} BattleContext;
+typedef struct BattleSystem BattleSystem;
+
+static MoveTbl sMoves[MOVE_BURNING_BULWARK + 1];
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 move) { (void)ctx; return &sMoves[move]; }
+static void ov10_0221EF24(BattleContext *ctx, int offset) { (void)ctx; assert(offset == 1); }
+static u32 ov10_0221EEF0(BattleContext *ctx) { (void)ctx; return 7; }
+static u8 ov10_0221EF34(BattleContext *ctx, u8 battler) { (void)ctx; assert(battler == 7); return 1; }
+
+@CHAIN@
+
+static int chain(BattleContext *ctx, u16 lastMove) {
+    ctx->moveNoProtect[1] = lastMove;
+    ctx->trainerAIData.unk8 = -1;
+    ov10_0221EBAC(0, ctx);
+    return ctx->trainerAIData.unk8;
+}
+
+int main(void) {
+    sMoves[MOVE_PROTECT].effect = sMoves[MOVE_KINGS_SHIELD].effect = MOVE_EFFECT_PROTECT;
+    sMoves[MOVE_WIDE_GUARD].effect = MOVE_EFFECT_PROTECT_USER_SIDE;
+    sMoves[MOVE_ENDURE].effect = MOVE_EFFECT_SURVIVE_WITH_1_HP;
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.protectSuccessTurns[1] = 5;
+    // The run the battle keeps, after any of Protect's family.
+    assert(chain(&ctx, MOVE_PROTECT) == 5);
+    assert(chain(&ctx, MOVE_KINGS_SHIELD) == 5);
+    assert(chain(&ctx, MOVE_WIDE_GUARD) == 5);
+    assert(chain(&ctx, MOVE_ENDURE) == 5);
+    // None after anything else.
+    assert(chain(&ctx, MOVE_TACKLE) == 0);
+    return 0;
+}
+"""
+
+
 class ProtectTests(unittest.TestCase):
     def test_the_real_guard_check_and_protection_command(self):
         controller = read("src/battle/battle_controller_player.c")
@@ -316,6 +368,21 @@ class ProtectTests(unittest.TestCase):
         }.items():
             source = source.replace(token, replacement)
         with tempfile.TemporaryDirectory(prefix="newgold-protect-") as directory:
+            path = Path(directory)
+            (path / "check.c").write_text(source)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
+                str(path / "check.c"), "-o", str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_the_ai_reads_the_run_after_any_guard(self):
+        """The trainer AI's protect-chain command loads the run the battle
+        keeps, after a shield or a team guard as after Protect."""
+        source = AI_FIXTURE.replace(
+            "@CHAIN@", function(read("src/battle/trainer_ai_0221EB4C.c"), "ov10_0221EBAC"))
+        with tempfile.TemporaryDirectory(prefix="newgold-protect-ai-") as directory:
             path = Path(directory)
             (path / "check.c").write_text(source)
             result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
