@@ -530,5 +530,21 @@ class ImplementedMoveTests(unittest.TestCase):
                       "            ov12_022583B4(TYPE_MUL_SUPER_EFFECTIVE, movePower, moveStatusFlag);\n"
                       "            typeMul *= 2;", effectiveness)
 
+    def test_triple_arrows_rolls_its_two_added_effects_apart(self):
+        # Pokemon Central (Triplodardo): high critical-hit ratio, 50% Defense
+        # down, 30% flinch, Serene Grace doubling each.
+        from test_hold_effects import subscript_named
+        self.assertImplemented("TRIPLE_ARROWS", "MOVE_EFFECT_TRIPLE_ARROWS")
+        self.assertEqual(record("TRIPLE_ARROWS")[6], 100)
+        script = effect_script("MOVE_EFFECT_TRIPLE_ARROWS")
+        self.assertIn("UpdateVar OPCODE_ADD, BSCRIPT_VAR_CRITICAL_BOOSTS, 1", script)
+        self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_TRIPLE_ARROWS", script)
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_TRIPLE_ARROWS"), "BATTLE_SUBSCRIPT_TRIPLE_ARROWS")
+        rolling = subscript_named("BATTLE_SUBSCRIPT_TRIPLE_ARROWS")
+        for threshold in (49, 99, 29, 59):
+            self.assertIn(f"CompareVarToValue OPCODE_GT, BSCRIPT_VAR_CALC_TEMP, {threshold},", rolling)
+        self.assertEqual(rolling.count("Random 99, 0"), 2)
+        self.assertLess(rolling.index("MOVE_SUBSCRIPT_PTR_DEFENSE_DOWN_1_STAGE"), rolling.index("Call BATTLE_SUBSCRIPT_FLINCH_MON"))
+
 if __name__ == "__main__":
     unittest.main()

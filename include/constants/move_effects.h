@@ -437,5 +437,6 @@
 #define MOVE_EFFECT_SALT_CURE                                    427
 #define MOVE_EFFECT_SYRUP_BOMB                                   428
 #define MOVE_EFFECT_TAR_SHOT                                     429
+#define MOVE_EFFECT_TRIPLE_ARROWS                                430
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

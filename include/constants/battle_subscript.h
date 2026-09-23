@@ -757,6 +757,8 @@
 // Tar Shot slowing and tarring its target, which the reference has no
 // script for.
 #define BATTLE_SUBSCRIPT_TAR_SHOT                           452
+// Triple Arrows' two added effects, which the reference has no script for.
+#define BATTLE_SUBSCRIPT_TRIPLE_ARROWS                      453
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -841,6 +843,7 @@
 #define MOVE_SUBSCRIPT_PTR_SALT_CURE                        226
 #define MOVE_SUBSCRIPT_PTR_SYRUP_BOMB                       227
 #define MOVE_SUBSCRIPT_PTR_TAR_SHOT                         228
+#define MOVE_SUBSCRIPT_PTR_TRIPLE_ARROWS                    229
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

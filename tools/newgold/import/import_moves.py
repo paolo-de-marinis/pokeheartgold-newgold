@@ -435,6 +435,10 @@ IMPLEMENTED_HERE = {
     # Tar Shot lowers the target's Speed and makes Fire moves twice as
     # effective on it (Pokemon Central, Colpocatrame): effect script 429.
     "TAR_SHOT": "MOVE_EFFECT_TAR_SHOT",
+    # Triple Arrows: a high critical-hit ratio, a half chance of a stage less
+    # Defense and three in ten of a flinch (Pokemon Central, Triplodardo):
+    # effect script 430.
+    "TRIPLE_ARROWS": "MOVE_EFFECT_TRIPLE_ARROWS",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -472,6 +476,8 @@ FIELDS_HERE = {
     "NO_RETREAT": {"flagsOn": ("FLAG_SNATCH",), "flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT", "FLAG_MIRROR_MOVE")},
     # An added effect that always comes, so one Sheer Force can trade.
     "SALT_CURE": {"effectChance": 100},
+    # The side effect that carries the two rolled ones, so Sheer Force sees it.
+    "TRIPLE_ARROWS": {"effectChance": 100},
 }
 
 # The effects written here for those moves follow the reference's in
