@@ -747,12 +747,26 @@ BOOL BtlCmd_Wait(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// criticalMultiplier is 1, 2, or 3 for a Sniper's critical hit, and it is also
+// the flag the scripts and the screen and stat-stage tests read, so those
+// values stay. What a critical hit does to the damage is the reference's
+// (battle_calc_damage.c, 6.4 and 6.9.3): x1.5, and x1.5 again for Sniper.
+// HeartGold doubled it, and tripled it for Sniper.
+static void ApplyCriticalHit(BattleContext *ctx) {
+    if (ctx->criticalMultiplier > 1) {
+        ctx->damage = ctx->damage * 15 / 10;
+    }
+    if (ctx->criticalMultiplier == 3) {
+        ctx->damage = ctx->damage * 15 / 10;
+    }
+}
+
 static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx) {
     int type = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
 
     ctx->damage = CalcMoveDamage(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget)], ctx->fieldCondition, ctx->movePower, type, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->criticalMultiplier);
 
-    ctx->damage *= ctx->criticalMultiplier;
+    ApplyCriticalHit(ctx);
 
     if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_HP_DRAIN_ON_ATK) {
         ctx->damage = ctx->damage * (100 + GetHeldItemModifier(ctx, ctx->battlerIdAttacker, 0)) / 100;
@@ -4384,7 +4398,7 @@ BOOL BtlCmd_BeatUp(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->damage /= (u32)GetMonBaseStat_HandleAlternateForm(ctx->battleMons[ctx->battlerIdTarget].species, ctx->battleMons[ctx->battlerIdTarget].form, BASE_DEF);
     ctx->damage /= 50;
     ctx->damage += 2;
-    ctx->damage *= ctx->criticalMultiplier;
+    ApplyCriticalHit(ctx);
     if (ctx->turnData[ctx->battlerIdAttacker].helpingHandFlag) {
         ctx->damage = ctx->damage * 15 / 10;
     }

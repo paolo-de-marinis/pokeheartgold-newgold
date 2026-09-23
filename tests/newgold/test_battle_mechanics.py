@@ -6,13 +6,19 @@ later ones, and konefr's New Gold keeps those. Each class here pins one number
 the port changed to match, so turning it back to HeartGold's fails here.
 """
 
+import os
 import re
+import shlex
+import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 
 from test_level_cap import ROOT
 from test_repels import function
 
 OVERLAY = ROOT / "src/battle/overlay_12_0224E4FC.c"
+COMMANDS = ROOT / "src/battle/battle_command.c"
 SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
 
 
@@ -45,6 +51,39 @@ class CriticalHitTests(unittest.TestCase):
         # 16, 8, 4, 3, 2.
         table = re.search(r"sCritChance\[\] = \{([^}]*)\}", OVERLAY.read_text()).group(1)
         self.assertEqual([int(n) for n in table.split(",")], [24, 8, 2, 1, 1])
+
+
+    def test_a_critical_hit_is_half_again_and_sniper_half_again_on_that(self):
+        # battle_calc_damage.c: 6.4 multiplies by 150/100, and 6.9.3 gives
+        # Sniper another 1.5. HeartGold multiplied by 2, and by 3 for Sniper.
+        program = "typedef struct { int damage, criticalMultiplier; } BattleContext;\n"
+        program += function(COMMANDS.read_text(), "ApplyCriticalHit")
+        program += """
+#include <assert.h>
+int main(void) {
+    int expected[] = { 0, 100, 150, 225 };
+    for (int crit = 1; crit <= 3; crit++) {
+        BattleContext ctx = { 100, crit };
+        ApplyCriticalHit(&ctx);
+        assert(ctx.damage == expected[crit]);
+    }
+    return 0;
+}
+"""
+        with tempfile.TemporaryDirectory(prefix="newgold-crit-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(program)
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+
+    def test_both_damage_paths_take_it(self):
+        # The ordinary calculation and Beat Up's own; neither multiplies by
+        # the stored number any more.
+        source = COMMANDS.read_text()
+        self.assertNotIn("*= ctx->criticalMultiplier", source)
+        for name in ("DamageCalcDefault", "BtlCmd_BeatUp"):
+            self.assertIn("ApplyCriticalHit(ctx);", function(source, name), name)
 
 
 if __name__ == "__main__":
