@@ -261,6 +261,14 @@ class BroughtOverTests(unittest.TestCase):
         entries = [line.strip().rstrip(",") for line in table.splitlines()[1:] if line.strip()]
         self.assertEqual(entries[constant("MOVE_SUBSCRIPT_PTR_HANDLE_GROWTH")], "BATTLE_SUBSCRIPT_HANDLE_GROWTH")
 
+    def test_howl_raises_the_allies_too(self):
+        # The reference raises Howl's user alone; from Generation VIII the
+        # allies rise with it.
+        text = subscript("HOWL")
+        self.assertIn("IfSameSide BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_SIDE_EFFECT_MON", text)
+        self.assertIn("CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SIDE_EFFECT_MON, ABILITY_SOUNDPROOF", text)
+        self.assertEqual(text.count("Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE"), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
