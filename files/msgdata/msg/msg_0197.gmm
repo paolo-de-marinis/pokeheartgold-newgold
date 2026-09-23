@@ -7452,4 +7452,32 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">No one will be able to run away\nduring the next turn!</language>
 	</row>
+	<row id="msg_0197_01863" index="1863">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} corroded\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01864" index="1864">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} corroded the wild\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01865" index="1865">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} corroded the opposing\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01866" index="1866">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} corroded\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01867" index="1867">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} corroded the\nwild {STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01868" index="1868">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} corroded\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01869" index="1869">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} corroded\nthe opposing {STRVAR_1 1, 1, 0}’s\f{STRVAR_1 8, 2, 0}!</language>
+	</row>
 </body>

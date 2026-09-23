@@ -661,5 +661,20 @@ int main(void) {
         self.assertIn("if (ctx->fairyLockTurns) {\n        ctx->fairyLockTurns--;",
                       function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_TurnEnd"))
 
+    def test_corrosive_gas_melts_the_items_next_to_it(self):
+        # Pokemon Central (Gas Corrosivo): every adjacent Pokemon's item, gone
+        # for the battle as Knock Off's; Sticky Hold and a substitute keep it.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("CORROSIVE_GAS", "MOVE_EFFECT_CORROSIVE_GAS")
+        self.assertEqual(record("CORROSIVE_GAS")[7], 1 << 3, "RANGE_ALL_ADJACENT")
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_CORROSIVE_GAS", effect_script("MOVE_EFFECT_CORROSIVE_GAS"))
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_CORROSIVE_GAS"), "BATTLE_SUBSCRIPT_CORROSIVE_GAS")
+        melting = subscript_named("BATTLE_SUBSCRIPT_CORROSIVE_GAS")
+        self.assertLess(melting.index("CheckSubstitute BATTLER_CATEGORY_DEFENDER, _END"), melting.index("TryKnockOff _END"))
+        row = import_battle_messages.port_row("corrosive gas")
+        self.assertIn(f"ctx->buffMsg.id = ctx->moveNoCur == MOVE_CORROSIVE_GAS ? msg_0197_{row:05d} : msg_0197_00552;",
+                      function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TryKnockOff"))
+
 if __name__ == "__main__":
     unittest.main()

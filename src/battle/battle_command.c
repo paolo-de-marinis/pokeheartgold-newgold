@@ -5222,8 +5222,11 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->buffMsg.param[1] = ctx->battleMons[ctx->battlerIdTarget].ability;
         ctx->buffMsg.param[2] = ctx->moveNoCur;
     } else if (KnockOffCanRemoveItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)) {
-        // "{0} knocked off {1}'s {2}!"
-        ctx->buffMsg.id = msg_0197_00552;
+        // "{0} knocked off {1}'s {2}!", or Corrosive Gas's "{0} corroded
+        // {1}'s {2}!": the item is gone for the rest of the battle either way,
+        // out of Recycle's and Harvest's reach (Pokemon Central, Gas
+        // Corrosivo).
+        ctx->buffMsg.id = ctx->moveNoCur == MOVE_CORROSIVE_GAS ? msg_0197_01863 : msg_0197_00552;
         ctx->buffMsg.tag = TAG_NICKNAME_NICKNAME_ITEM;
         ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdAttacker);
         ctx->buffMsg.param[1] = CreateNicknameTag(ctx, ctx->battlerIdTarget);

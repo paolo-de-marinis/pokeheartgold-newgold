@@ -455,6 +455,9 @@ IMPLEMENTED_HERE = {
     # Fairy Lock holds every Pokemon but a Ghost-type till the next turn's
     # end (Pokemon Central, Blocco Fatato): effect script 434.
     "FAIRY_LOCK": "MOVE_EFFECT_FAIRY_LOCK",
+    # Corrosive Gas melts the items of the Pokemon next to its user for the
+    # rest of the battle (Pokemon Central, Gas Corrosivo): effect script 435.
+    "CORROSIVE_GAS": "MOVE_EFFECT_CORROSIVE_GAS",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

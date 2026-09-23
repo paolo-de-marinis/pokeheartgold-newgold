@@ -11899,7 +11899,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_TAR_SHOT,
     BATTLE_SUBSCRIPT_TRIPLE_ARROWS,
     BATTLE_SUBSCRIPT_EERIE_SPELL,
-    BATTLE_SUBSCRIPT_DRAGON_CHEER
+    BATTLE_SUBSCRIPT_DRAGON_CHEER,
+    BATTLE_SUBSCRIPT_CORROSIVE_GAS
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

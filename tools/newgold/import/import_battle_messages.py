@@ -226,6 +226,17 @@ PORT_ROWS = [
     ("fairy lock", [
         r"No one will be able to run away\nduring the next turn!",
     ]),
+    # Corrosive Gas. The engine leaves the move unimplemented; the later
+    # games' line, in the seven rows of Knock Off's 552 to 558.
+    ("corrosive gas", [
+        r"{STRVAR_1 1, 0, 0} corroded\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!",
+        r"{STRVAR_1 1, 0, 0} corroded the wild\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!",
+        r"{STRVAR_1 1, 0, 0} corroded the opposing\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!",
+        r"The wild {STRVAR_1 1, 0, 0} corroded\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!",
+        r"The wild {STRVAR_1 1, 0, 0} corroded the\nwild {STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!",
+        r"The opposing {STRVAR_1 1, 0, 0} corroded\n{STRVAR_1 1, 1, 0}’s {STRVAR_1 8, 2, 0}!",
+        r"The opposing {STRVAR_1 1, 0, 0} corroded\nthe opposing {STRVAR_1 1, 1, 0}’s\f{STRVAR_1 8, 2, 0}!",
+    ]),
 ]
 
 

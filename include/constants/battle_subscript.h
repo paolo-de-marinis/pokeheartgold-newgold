@@ -764,6 +764,9 @@
 // Dragon Cheer raising its ally's critical-hit ratio, which the reference
 // has no script for.
 #define BATTLE_SUBSCRIPT_DRAGON_CHEER                       455
+// Corrosive Gas melting a target's item, which the reference has no script
+// for.
+#define BATTLE_SUBSCRIPT_CORROSIVE_GAS                      456
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -851,6 +854,7 @@
 #define MOVE_SUBSCRIPT_PTR_TRIPLE_ARROWS                    229
 #define MOVE_SUBSCRIPT_PTR_EERIE_SPELL                      230
 #define MOVE_SUBSCRIPT_PTR_DRAGON_CHEER                     231
+#define MOVE_SUBSCRIPT_PTR_CORROSIVE_GAS                    232
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H
