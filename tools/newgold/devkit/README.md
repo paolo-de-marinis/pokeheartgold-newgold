@@ -35,7 +35,13 @@ the bag, the Dex, the position, any flag or variable by name -- with the
 game's own names out of its message banks. `Save.image()` writes back only
 the newest half and only the blocks that changed, so a save opened and
 written back unchanged is the same bytes; `tests/newgold/test_savedit.py`
-holds it to that.
+holds it to that. The game's next save goes into the other half and writes
+only the PC boxes `boxModifiedFlag` names, so `image()` adds every box it
+changed to that flag -- otherwise the next boot would call the save corrupt
+and load the one before; the test replays the game's save to check it.
+Pokemon it makes are the game's in the details that bite: the moves
+`InitBoxMonMoveset` would give, `Mail_Init`'s empty mail record, the stats
+of the form's own record (`ResolveMonForm`).
 
 ## saveui.py
 
@@ -56,10 +62,13 @@ page, "Cartelle e ROM", browsing the disk from the home folder, and kept in
 is chosen the folder is `~/hgss-saves` and the ROMs are the ones built under
 `--build` (this tree's `build/`); every ROM is an emulator slot, the `.sav`
 of the same name beside it, and "Gioca" wants a HeartGold one (the cartridge
-header's game code) since the saves are HeartGold's. `--library DIR` sets
-the folder for one run; `--build DIR` is also where the save layout is
-measured (`heartgold.us`); `--no-browser` only prints the address. Standard
-library only; the page is `saveui.html` next to it.
+header's game code) since the saves are HeartGold's. With no folder there
+the page opens on "Cartelle e ROM" and nothing is read or written until one
+is chosen. `--library DIR` sets the folder for one run; `--build DIR` is
+also where the save layout is measured (`heartgold.us`: without its
+`main.sbin` and `main.elf`, during a `make clean` for one, the page says so
+instead of reading any save); `--no-browser` only prints the address.
+Standard library only; the page is `saveui.html` next to it.
 
 On the left, the library: every `.sav` under the folder and every emulator
 slot (the `.sav` melonDS reads beside each ROM), each with the player, the
@@ -72,6 +81,10 @@ into the library, and "Gioca" loads it into HeartGold's slot, normal or
 diagnostics or any HeartGold ROM chosen, and starts melonDS the way
 `diag/play.py launch` does -- then waits for its window, and if none comes
 the page shows what flatpak said (`~/.cache/newgold-saveui/melonds.log`).
+A slot holding a save that no library file is -- what was played there
+since it was loaded -- is not loaded over without asking: the page offers
+to take it into the library first. A slot's own "Gioca" starts melonDS on
+it as it is.
 
 On the right, the open save, in tabs: Allenatore (name, ids, money, gender,
 the sixteen badges, coins, play time), Squadra and Box (every Pokemon, a
@@ -81,16 +94,26 @@ removing, reordering, moving between box and party), Borsa, Pokedex (per
 species, all at once, and the two switches), Posizione (the `--where`
 write), Flag e variabili (by name) and Info (the two halves and the block
 table). The name can only be written in letters and digits: that is all
-`savedit.charcode` knows, although the game's character set has more.
+`savedit.charcode` knows, although the game's character set has more. The
+species list leaves out what a Pokemon cannot be (the egg, the retail form
+rows 496-507, the forms only a battle has); a position must be a tile of
+the map, not the black around it.
 
 Nothing is deleted. Before every write the file is copied to
 `LIBRARY/.backups/<its path>/<timestamp>.sav` -- an emulator slot to
 `.backups/emulatore/<slot>/` -- the new bytes go to a temporary file that
 has to open with `savedit.Save`, and a rename puts it in place. "Annulla
 ultima modifica" restores the newest backup, keeping the state it replaces
-as a backup too. The bin is `LIBRARY/.trash/<timestamp>/<its path>`. melonDS
-writes its `.sav` back when it closes, so while it runs the page says so and
-refuses every write to a slot. A slot is loaded or played only beside a
+as a backup too -- unless the file has changed since that edit (a session in
+melonDS), which going back would throw away; Cronologia restores any backup
+on purpose. The page sends the version of the file it shows with every
+edit, and a file that has moved on since is reloaded rather than written
+with the old values. The bin is `LIBRARY/.trash/<timestamp>/<its path>`,
+and a file's backups go with it (`.backups/.cestino/`); a new file never
+inherits the history of an old one of the same name (that is set aside in
+`.backups/.vecchie/`). melonDS writes its `.sav` back when it closes, so
+while it runs the page says so and refuses every write to a slot, and
+taking one, however the slot is reached. A slot is loaded or played only beside a
 real ROM -- a Nintendo DS header whose two checksums hold, and a file as
 long as the header says -- in a folder the melonDS flatpak can write to
 (`flatpak info --show-permissions` says `home` here; never `/tmp`, which the
