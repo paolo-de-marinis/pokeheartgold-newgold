@@ -546,5 +546,17 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertEqual(rolling.count("Random 99, 0"), 2)
         self.assertLess(rolling.index("MOVE_SUBSCRIPT_PTR_DEFENSE_DOWN_1_STAGE"), rolling.index("Call BATTLE_SUBSCRIPT_FLINCH_MON"))
 
+    def test_eerie_spell_takes_three_pp(self):
+        # Pokemon Central (Inquietantesimo): three PP off the target's last
+        # move, an added effect, not from a fainted target.
+        from test_hold_effects import subscript_named
+        self.assertImplemented("EERIE_SPELL", "MOVE_EFFECT_EERIE_SPELL")
+        self.assertEqual(record("EERIE_SPELL")[6], 100)
+        self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_EERIE_SPELL", effect_script("MOVE_EFFECT_EERIE_SPELL"))
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_EERIE_SPELL"), "BATTLE_SUBSCRIPT_EERIE_SPELL")
+        self.assertIn("TrySpite _END", subscript_named("BATTLE_SUBSCRIPT_EERIE_SPELL"))
+        self.assertIn("ppLoss = ctx->moveNoCur == MOVE_EERIE_SPELL ? 3 : 4;",
+                      function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TrySpite"))
+
 if __name__ == "__main__":
     unittest.main()

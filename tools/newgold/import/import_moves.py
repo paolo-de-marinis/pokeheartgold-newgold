@@ -439,6 +439,9 @@ IMPLEMENTED_HERE = {
     # Defense and three in ten of a flinch (Pokemon Central, Triplodardo):
     # effect script 430.
     "TRIPLE_ARROWS": "MOVE_EFFECT_TRIPLE_ARROWS",
+    # Eerie Spell takes three PP from the target's last move, an added effect
+    # (Pokemon Central, Inquietantesimo): effect script 431.
+    "EERIE_SPELL": "MOVE_EFFECT_EERIE_SPELL",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -478,6 +481,7 @@ FIELDS_HERE = {
     "SALT_CURE": {"effectChance": 100},
     # The side effect that carries the two rolled ones, so Sheer Force sees it.
     "TRIPLE_ARROWS": {"effectChance": 100},
+    "EERIE_SPELL": {"effectChance": 100},
 }
 
 # The effects written here for those moves follow the reference's in

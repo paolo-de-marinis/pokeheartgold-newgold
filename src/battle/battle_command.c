@@ -4016,7 +4016,9 @@ BOOL BtlCmd_TrySpite(BattleSystem *battleSystem, BattleContext *ctx) {
         if (moveIndex == MAX_MON_MOVES || ctx->battleMons[ctx->battlerIdTarget].movePPCur[moveIndex] == 0) {
             BattleScriptIncrementPointer(ctx, adrs);
         } else {
-            ppLoss = 4;
+            // Eerie Spell's added effect takes three where Spite takes four
+            // (Pokemon Central, Inquietantesimo).
+            ppLoss = ctx->moveNoCur == MOVE_EERIE_SPELL ? 3 : 4;
             if (ctx->battleMons[ctx->battlerIdTarget].movePPCur[moveIndex] < ppLoss) {
                 ppLoss = ctx->battleMons[ctx->battlerIdTarget].movePPCur[moveIndex];
             }
