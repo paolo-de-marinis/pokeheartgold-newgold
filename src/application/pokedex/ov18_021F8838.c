@@ -33,7 +33,7 @@ u32 ov18_021F8850(PokedexAppData_UnkSub0878 *list, u16 species) {
 void ov18_021F8884(PokedexAppData *pokedexApp, int layout) {
     u32 i;
 
-    MI_CpuClear32(pokedexApp->unk_1030, sizeof(pokedexApp->unk_1030));
+    MI_CpuClear32(pokedexApp->unk_1030, POKEDEX_GRID_LIST_LEN * sizeof(*pokedexApp->unk_1030));
     if (layout == 1) {
         for (i = 0; i < pokedexApp->unk_0878.unk_7B4; i++) {
             u32 idx = Pokedex_ConvertToCurrentDexNo(pokedexApp->unk_1858, pokedexApp->unk_0878.unk_000[i][0]) - 1;

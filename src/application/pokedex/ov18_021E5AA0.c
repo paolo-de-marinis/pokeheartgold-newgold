@@ -23,6 +23,10 @@ BOOL Pokedex_Init(OverlayManager *man, int *state) {
     Heap_Create(HEAP_ID_3, HEAP_ID_POKEDEX_APP, 0x67000);
     appData = OverlayManager_CreateAndGetData(man, sizeof(PokedexAppData), HEAP_ID_POKEDEX_APP);
     MI_CpuClear8(appData, sizeof(PokedexAppData));
+    appData->unk_0878.unk_000 = Heap_Alloc(HEAP_ID_POKEDEX_APP, POKEDEX_LIST_LEN * sizeof(*appData->unk_0878.unk_000));
+    MI_CpuClear8(appData->unk_0878.unk_000, POKEDEX_LIST_LEN * sizeof(*appData->unk_0878.unk_000));
+    appData->unk_1030 = Heap_Alloc(HEAP_ID_POKEDEX_APP, POKEDEX_GRID_LIST_LEN * sizeof(*appData->unk_1030));
+    MI_CpuClear8(appData->unk_1030, POKEDEX_GRID_LIST_LEN * sizeof(*appData->unk_1030));
     appData->args = OverlayManager_GetArgs(man);
     appData->unk_085C = 5;
     appData->unk_1858 = UnkStruct_02092BB8_GetUnk2(appData->args->unk_08);
@@ -65,6 +69,8 @@ BOOL Pokedex_Exit(OverlayManager *man, int *state) {
         Heap_AllocAtEnd(HEAP_ID_3, 1000);
     }
     UnkStruct_02092BB8_Set(appData->args->unk_08, ov18_021F8838(appData), appData->unk_1858);
+    Heap_Free(appData->unk_1030);
+    Heap_Free(appData->unk_0878.unk_000);
     if (DSProt_DetectFlashcart(ov18_021E5C2C)) {
         Heap_AllocAtEnd(HEAP_ID_3, 1000);
     }

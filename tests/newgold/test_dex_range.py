@@ -183,6 +183,7 @@ LAYOUT = r"""
 #include <stdint.h>
 #include <stdio.h>
 #include "constants/species.h"
+typedef uint8_t u8;
 typedef uint16_t u16;
 @STRUCT@
 
@@ -234,11 +235,16 @@ class DexRangeTests(unittest.TestCase):
         """overlay_18.s, still assembly, addresses PokedexAppData at retail's
         offsets. The list at 0x878 was sized with the Dex count, so from 0x1030
         on the C and the assembly disagreed about every field: C wrote the Dex
-        mode at 0x20E8, the assembly read it at 0x1858."""
+        mode at 0x20E8, the assembly read it at 0x1858. The two lists are on
+        the heap now, and a pointer and retail's room stand where each was."""
         header = (ROOT / "include/application/pokedex/pokedex_internal.h").read_text()
         struct_ = re.search(r"typedef struct PokedexAppData_UnkSub0878 \{.*?\} PokedexAppData_UnkSub0878;", header, re.S).group(0)
+        # a pointer is four bytes on the DS
+        struct_ = struct_.replace("u16 (*unk_000)[2];", "uint32_t unk_000;")
         start = int(re.search(r"PokedexAppData_UnkSub0878 unk_0878;\s+// (0x[0-9A-F]+)", header).group(1), 16)
-        end = int(re.search(r"PokedexAppData_UnkSub1030 unk_1030\[\d+\];\s+// (0x[0-9A-F]+)", header).group(1), 16)
+        end = int(re.search(r"PokedexAppData_UnkSub1030 \*unk_1030;\s+// (0x[0-9A-F]+)", header).group(1), 16)
+        grid = int(re.search(r"u8 filler_1034\[(0x[0-9A-F]+)\];", header).group(1), 16)
+        self.assertEqual(4 + grid, 518 * 4, "retail's grid list is 518 entries")
         asm = "".join(path.read_text() for path in sorted((ROOT / "asm").glob("overlay_18*.s")))
         # The grid list's readers are C now; what is still assembly finds the
         # list's count and the fields after the grid list (the Dex mode at

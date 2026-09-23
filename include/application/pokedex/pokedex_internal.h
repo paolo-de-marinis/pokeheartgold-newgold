@@ -205,12 +205,19 @@ typedef union PokedexAppData_UnkSub0868 {
     u8 padding[16];
 } PokedexAppData_UnkSub0868;
 
+// The Dex list and the grid list hold every Dex species. Retail kept them
+// inside PokedexAppData at 493 species; they are on the Dex's heap now, as in
+// the reference (armips/asm/pokedex.s), and pointers sit where they were:
+// overlay_18.s, still assembly, reads the counts and every field after the
+// lists at retail's offsets, so the struct keeps retail's layout. The grid
+// list is read up to fifty entries past the Dex number of its last species
+// (ov18_021E6BB8 draws ten rows of five from the page's first entry).
+#define POKEDEX_LIST_LEN      NATIONAL_DEX_COUNT
+#define POKEDEX_GRID_LIST_LEN (NATIONAL_DEX_COUNT + 50)
+
 typedef struct PokedexAppData_UnkSub0878 {
-    // Retail's 493, not the Dex count: overlay_18.s, still assembly, fills
-    // this list for 493 species and addresses every field after it at
-    // retail's offsets. hg-engine lists the added species by moving this
-    // list and unk_1030 to the heap; that waits for the list code in C.
-    u16 unk_000[MAX_SPECIES][2];
+    u16 (*unk_000)[2];     // POKEDEX_LIST_LEN entries: species, 1 seen or 2 caught
+    u8 filler_004[0x7B0];  // retail's list
     u16 unk_7B4;
     u16 unk_7B6;
 } PokedexAppData_UnkSub0878;
@@ -287,7 +294,8 @@ struct PokedexAppData {
     u32 unk_0864;                                   // 0x0864
     PokedexAppData_UnkSub0868 unk_0868;             // 0x0868
     PokedexAppData_UnkSub0878 unk_0878;             // 0x0878
-    PokedexAppData_UnkSub1030 unk_1030[518];        // 0x1030
+    PokedexAppData_UnkSub1030 *unk_1030;            // 0x1030, POKEDEX_GRID_LIST_LEN entries
+    u8 filler_1034[0x814];                          // 0x1034, retail's grid list
     void *heights;                                  // 0x1848
     void *weights;                                  // 0x184C
     PokedexAppData_UnkSub1850 *unk_1850;            // 0x1850

@@ -19,8 +19,8 @@ void ov18_021F86D0(PokedexAppData *pokedexApp, u16 min, u16 max, u16 *dest, u32 
 // turn -- order, first letter, the two types, body type, area, height and
 // weight -- each keeping what the previous one let through; the list stops
 // empty as soon as a filter leaves nothing. What is left becomes the list at
-// 0x878, with its caught marks and counts. The two scratch lists hold
-// retail's 493 species.
+// 0x878, with its caught marks and counts. The two scratch lists hold every
+// Dex species, as the list does (retail's held 493).
 BOOL ov18_021F7ED4(PokedexAppData *pokedexApp, u8 natDex, u32 order, u32 letter, u32 type1, u32 type2, u32 heightMin, u32 heightMax, u32 weightMin, u32 weightMax, u32 area, u32 bodyType) {
     u16 *list;
     u16 *filtered;
@@ -29,14 +29,16 @@ BOOL ov18_021F7ED4(PokedexAppData *pokedexApp, u8 natDex, u32 order, u32 letter,
     u32 count;
     u32 filteredCount;
 
-    MI_CpuClear32(&pokedexApp->unk_0878, sizeof(PokedexAppData_UnkSub0878));
-    list = Heap_AllocAtEnd(HEAP_ID_POKEDEX_APP, MAX_SPECIES * sizeof(u16));
+    MI_CpuClear32(pokedexApp->unk_0878.unk_000, POKEDEX_LIST_LEN * sizeof(*pokedexApp->unk_0878.unk_000));
+    pokedexApp->unk_0878.unk_7B4 = 0;
+    pokedexApp->unk_0878.unk_7B6 = 0;
+    list = Heap_AllocAtEnd(HEAP_ID_POKEDEX_APP, POKEDEX_LIST_LEN * sizeof(u16));
     GF_ASSERT(list != NULL);
-    memset(list, 0, MAX_SPECIES * sizeof(u16));
+    memset(list, 0, POKEDEX_LIST_LEN * sizeof(u16));
     count = 0;
-    filtered = Heap_AllocAtEnd(HEAP_ID_POKEDEX_APP, MAX_SPECIES * sizeof(u16));
+    filtered = Heap_AllocAtEnd(HEAP_ID_POKEDEX_APP, POKEDEX_LIST_LEN * sizeof(u16));
     GF_ASSERT(filtered != NULL);
-    memset(filtered, 0, MAX_SPECIES * sizeof(u16));
+    memset(filtered, 0, POKEDEX_LIST_LEN * sizeof(u16));
     filteredCount = 0;
     if (natDex == FALSE) {
         dexOrder = ov18_021F8168(1, &dexOrderCount);
