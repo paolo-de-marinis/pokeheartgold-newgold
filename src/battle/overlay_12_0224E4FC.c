@@ -11083,6 +11083,89 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
             }
         }
         break;
+    // Techno Blast takes the Drive's type and Multi-Attack the Memory's, for
+    // whoever holds one, as the reference's GetDynamicMoveType has it
+    // (other_battle_calculators.c:3434 and 3466 at d0380a487). The damage
+    // already had them from effect scripts 312 and 313; this is the type the
+    // redirecting abilities are asked about, so a Shock Drive's Techno Blast
+    // goes to a Lightning Rod and a Water Memory's Multi-Attack to Storm Drain.
+    case MOVE_TECHNO_BLAST:
+        switch (GetBattlerHeldItemEffect(ctx, battlerId)) {
+        case HOLD_EFFECT_BURN_DRIVE:
+            type = TYPE_FIRE;
+            break;
+        case HOLD_EFFECT_DOUSE_DRIVE:
+            type = TYPE_WATER;
+            break;
+        case HOLD_EFFECT_SHOCK_DRIVE:
+            type = TYPE_ELECTRIC;
+            break;
+        case HOLD_EFFECT_CHILL_DRIVE:
+            type = TYPE_ICE;
+            break;
+        default:
+            type = TYPE_NORMAL;
+            break;
+        }
+        break;
+    case MOVE_MULTI_ATTACK:
+        switch (GetBattlerHeldItemEffect(ctx, battlerId)) {
+        case HOLD_EFFECT_FIGHTING_MEMORY:
+            type = TYPE_FIGHTING;
+            break;
+        case HOLD_EFFECT_FLYING_MEMORY:
+            type = TYPE_FLYING;
+            break;
+        case HOLD_EFFECT_POISON_MEMORY:
+            type = TYPE_POISON;
+            break;
+        case HOLD_EFFECT_GROUND_MEMORY:
+            type = TYPE_GROUND;
+            break;
+        case HOLD_EFFECT_ROCK_MEMORY:
+            type = TYPE_ROCK;
+            break;
+        case HOLD_EFFECT_BUG_MEMORY:
+            type = TYPE_BUG;
+            break;
+        case HOLD_EFFECT_GHOST_MEMORY:
+            type = TYPE_GHOST;
+            break;
+        case HOLD_EFFECT_STEEL_MEMORY:
+            type = TYPE_STEEL;
+            break;
+        case HOLD_EFFECT_FIRE_MEMORY:
+            type = TYPE_FIRE;
+            break;
+        case HOLD_EFFECT_WATER_MEMORY:
+            type = TYPE_WATER;
+            break;
+        case HOLD_EFFECT_GRASS_MEMORY:
+            type = TYPE_GRASS;
+            break;
+        case HOLD_EFFECT_ELECTRIC_MEMORY:
+            type = TYPE_ELECTRIC;
+            break;
+        case HOLD_EFFECT_PSYCHIC_MEMORY:
+            type = TYPE_PSYCHIC;
+            break;
+        case HOLD_EFFECT_ICE_MEMORY:
+            type = TYPE_ICE;
+            break;
+        case HOLD_EFFECT_DRAGON_MEMORY:
+            type = TYPE_DRAGON;
+            break;
+        case HOLD_EFFECT_DARK_MEMORY:
+            type = TYPE_DARK;
+            break;
+        case HOLD_EFFECT_FAIRY_MEMORY:
+            type = TYPE_FAIRY;
+            break;
+        default:
+            type = TYPE_NORMAL;
+            break;
+        }
+        break;
     default:
         type = TYPE_NORMAL;
         break;

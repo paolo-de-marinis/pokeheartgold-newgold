@@ -32,15 +32,34 @@ the scripts under files/battledata are read alongside src/, the way
 test_ability_effects.py reads them for abilities.
 """
 
+import os
 import re
+import shlex
+import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 
 from test_level_cap import ROOT
+from test_repels import function
 
 HEADER = ROOT / "include/constants/items.h"
 ITEM_DATA = ROOT / "files/itemtool/itemdata/item_data.csv"
 SRC = ROOT / "src"
 SCRIPTS = ROOT / "files/battledata"
+OVERLAY = ROOT / "src/battle/overlay_12_0224E4FC.c"
+
+
+def run_c(program):
+    """Compile a fixture against the port's constants and run it; its stdout."""
+    with tempfile.TemporaryDirectory(prefix="newgold-items-") as directory:
+        path = Path(directory)
+        (path / "test.c").write_text(program)
+        subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+            "-std=c99", "-Wall", "-Wextra", "-Werror", "-Wno-unused-function", "-Wno-unused-parameter",
+            "-iquote", str(ROOT / "include"), str(path / "test.c"), "-o", str(path / "test"),
+        ], check=True)
+        return subprocess.run([str(path / "test")], capture_output=True, text=True, check=True).stdout
 
 # Eviolite's, the first effect this port added. Everything at or above it is
 # New Gold's.
@@ -136,6 +155,78 @@ class SoulDew(unittest.TestCase):
         self.assertIn("calcAttacker.species == SPECIES_LATIOS || calcAttacker.species == SPECIES_LATIAS", condition)
         self.assertNotIn("BATTLE_TYPE_FRONTIER", condition)
         self.assertEqual(action.strip(), "movePower = movePower * 120 / 100;")
+
+
+REDIRECT_TYPE_FIXTURE = r"""
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { int unused; } BattleSystem;
+typedef struct { u32 hpIV, atkIV, defIV, speedIV, spAtkIV, spDefIV; } BattleMon;
+typedef struct { u32 fieldCondition; int terrainOverlayType; BattleMon battleMons[4]; } BattleContext;
+static int sItem;
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return sItem; }
+static int GetNaturalGiftType(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return TYPE_NORMAL; }
+static BOOL CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, int battlerId, int ability) {
+    (void)bs; (void)ctx; (void)flag; (void)battlerId; (void)ability; return FALSE;
+}
+static BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return TRUE; }
+@FUNCTION@
+int main(void) {
+    static const int items[] = { @ITEMS@ };
+    static const int moves[] = { MOVE_TECHNO_BLAST, MOVE_MULTI_ATTACK };
+    BattleSystem bs; BattleContext ctx = { 0 };
+    for (unsigned m = 0; m < 2; m++) {
+        for (unsigned i = 0; i < sizeof(items) / sizeof(items[0]); i++) {
+            sItem = items[i];
+            printf("%d %d %d\n", moves[m], items[i], GetDynamicMoveType(&bs, &ctx, 0, moves[m]));
+        }
+    }
+    return 0;
+}
+"""
+
+DRIVES = {"BURN": "FIRE", "DOUSE": "WATER", "SHOCK": "ELECTRIC", "CHILL": "ICE"}
+MEMORIES = ["FIGHTING", "FLYING", "POISON", "GROUND", "ROCK", "BUG", "GHOST", "STEEL", "FIRE",
+            "WATER", "GRASS", "ELECTRIC", "PSYCHIC", "ICE", "DRAGON", "DARK", "FAIRY"]
+
+
+class RedirectTypeTests(unittest.TestCase):
+    """GetDynamicMoveType is the type Lightning Rod and Storm Drain are asked
+    about. The reference's (other_battle_calculators.c:3434, 3466 at
+    d0380a487) answers Techno Blast with the held Drive's type and
+    Multi-Attack with the held Memory's; a hold effect of the other kind, or
+    none, leaves both Normal."""
+
+    def test_the_drives_and_the_memories_type_their_moves(self):
+        items = ["HOLD_EFFECT_NONE"] + [f"HOLD_EFFECT_{d}_DRIVE" for d in DRIVES] + \
+            [f"HOLD_EFFECT_{m}_MEMORY" for m in MEMORIES]
+        program = REDIRECT_TYPE_FIXTURE.replace("@FUNCTION@", function(OVERLAY.read_text(), "GetDynamicMoveType"))
+        program = program.replace("@ITEMS@", ", ".join(items))
+        out = [tuple(map(int, line.split())) for line in run_c(program).splitlines()]
+        defined = effects_defined()
+        header = (ROOT / "include/constants/pokemon.h").read_text()
+        types = {name: int(value) for name, value in re.findall(r"#define TYPE_(\w+)\s+(\d+)", header)}
+        moves = {name: int(value) for name, value
+                 in re.findall(r"#define (MOVE_\w+)\s+(\d+)", (ROOT / "include/constants/moves.h").read_text())}
+        got = {(move, item): kind for move, item, kind in out}
+        effect = {name: defined.get(name, 0) for name in items}
+        for drive, kind in DRIVES.items():
+            self.assertEqual(got[moves["MOVE_TECHNO_BLAST"], effect[f"HOLD_EFFECT_{drive}_DRIVE"]], types[kind], drive)
+            self.assertEqual(got[moves["MOVE_MULTI_ATTACK"], effect[f"HOLD_EFFECT_{drive}_DRIVE"]], types["NORMAL"], drive)
+        for memory in MEMORIES:
+            self.assertEqual(got[moves["MOVE_MULTI_ATTACK"], effect[f"HOLD_EFFECT_{memory}_MEMORY"]], types[memory], memory)
+            self.assertEqual(got[moves["MOVE_TECHNO_BLAST"], effect[f"HOLD_EFFECT_{memory}_MEMORY"]], types["NORMAL"], memory)
+        self.assertEqual(got[moves["MOVE_TECHNO_BLAST"], 0], types["NORMAL"])
+        self.assertEqual(got[moves["MOVE_MULTI_ATTACK"], 0], types["NORMAL"])
 
 
 if __name__ == "__main__":
