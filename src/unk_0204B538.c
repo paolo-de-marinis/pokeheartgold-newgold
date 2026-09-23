@@ -281,8 +281,8 @@ static u32 sub_0204B834(FrontierFieldSystem *frontierFsys, FrontierMon *frontier
         }
     }
     ev = MAX_EV_SUM / ev;
-    if (ev > 255) {
-        ev = 255;
+    if (ev > MAX_EV_PER_STAT) {
+        ev = MAX_EV_PER_STAT;
     }
     for (i = 0; i < NUM_STATS; i++) {
         if (frontierMonNarcData.evs & MaskOfFlagNo(i)) {

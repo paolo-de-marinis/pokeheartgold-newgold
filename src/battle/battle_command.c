@@ -7200,8 +7200,7 @@ static void BattleScript_CalcEffortValues(Party *party, int partySlot, u32 speci
             gainedEVs -= projectedTotalEVs - MAX_EV_SUM;
         }
 
-        // If EVs added to a specific stat would cause the total to exceed 255, reduce the gain to have the total at 255.
-        // The maximum practical value for any stat EV total is 252, but the value's maximum was not limited to 252 until Generation VI.
+        // If EVs added to a specific stat would cause the total to exceed MAX_EV_PER_STAT, reduce the gain to have the total at it.
         s32 projectedStatEVs = stat_evs[stat] + gainedEVs;
         if (projectedStatEVs > MAX_EV_PER_STAT) {
             gainedEVs -= projectedStatEVs - MAX_EV_PER_STAT;

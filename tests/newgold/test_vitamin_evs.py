@@ -27,7 +27,8 @@ MAIN = r'''
 int main(void) {
     // A vitamin now trains a stat to the competitive maximum, not to 100.
     assert(MAX_EV_VITAMINS == 252);
-    assert(MAX_EV_VITAMINS < MAX_EV_PER_STAT);
+    // Battles stop at the same 252 now, so a vitamin and a battle agree.
+    assert(MAX_EV_VITAMINS == MAX_EV_PER_STAT);
 
     // Ten at a time, from nothing, with room to spare in the total.
     s32 ev = 0;
@@ -53,9 +54,9 @@ int main(void) {
     assert(TryModEV(5, 0, -10) == 0);
     assert(TryModEV(0, 0, -10) == -1);
 
-    // A stat trained past the vitamin ceiling in battle is pulled back to it
-    // rather than being pushed further, exactly as before the ceiling moved.
-    assert(TryModEV(MAX_EV_PER_STAT, 0, -1) == MAX_EV_VITAMINS);
+    // A stat at 255 from before battles stopped at 252 -- an old save or a
+    // trade -- is pulled back to the ceiling by a berry, not pushed further.
+    assert(TryModEV(255, 0, -1) == MAX_EV_VITAMINS);
 
     puts("PASS: vitamin ceiling 252, 510 total, berry decrements and overshoot.");
 }

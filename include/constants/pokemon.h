@@ -5,7 +5,7 @@
 #define MAX_LEVEL         100
 #define MAX_MON_MOVES     4
 #define MAX_EV_VITAMINS   252 // New Gold: vitamins train a stat fully, not to 100
-#define MAX_EV_PER_STAT   255
+#define MAX_EV_PER_STAT   252 // New Gold: battles stop at 252 as hg-engine's do, not 255
 #define MAX_EV_SUM        510
 
 // HeartGold has eighteen boxes; New Gold has thirty, which is what every
