@@ -1438,21 +1438,88 @@ def deposit(save, slot, box, box_slot):
     remove_party_mon(save, slot)
 
 
-def withdraw(save, box, box_slot):
-    """A boxed Pokemon to the end of the party: the party part built the
-    way CalcMonLevelAndStats builds it, at full HP."""
-    mon = open_mon(box_raw(save, box, box_slot))
+def party_from_box(raw):
+    """A BoxPokemon as a party Pokemon: the party part built the way
+    CalcMonLevelAndStats builds it, at full HP."""
+    mon = open_mon(raw)
     if mon is None or not mon["ok"]:
-        raise ValueError(f"box {box + 1} slot {box_slot + 1} holds nothing that can be taken")
-    if len(party_raw(save)) >= PARTY_SIZE:
-        raise ValueError(f"a party holds {PARTY_SIZE}")
+        raise ValueError("that slot holds nothing that can be taken")
     a = mon["blocks"][0]
     species = struct.unpack_from("<H", a, 0)[0]
     exp = struct.unpack_from("<I", a, 8)[0] & EXP_BITS
     mon["party"] = bytearray(PARTY_MON - BOX_MON)
     _set_party_stats(mon, level_for(personal_records()[species]["growthRate"], exp))
-    add_party_mon(save, seal_mon(mon))
+    return seal_mon(mon)
+
+
+def withdraw(save, box, box_slot):
+    """A boxed Pokemon to the end of the party, at full HP."""
+    raw = box_raw(save, box, box_slot)
+    if len(party_raw(save)) >= PARTY_SIZE:
+        raise ValueError(f"a party holds {PARTY_SIZE}")
+    add_party_mon(save, party_from_box(raw))
     set_box_mon(save, box, box_slot, EMPTY_BOX_MON)
+
+
+def can_battle(raw):
+    """A party Pokemon that is not an egg and has HP: what the PC counts
+    before it lets the party's last one go."""
+    mon = describe_mon(raw)
+    return bool(mon and mon.get("ok") and not mon["egg"] and mon.get("hp", 0) > 0)
+
+
+def move_mon(save, src, dst):
+    """Where a dragged Pokemon goes. A place is ("party", slot) or
+    ("box", box, slot). Onto another Pokemon the two swap, as the PC's own
+    move does; onto an empty box slot, or past the party's last, it moves
+    there (a party Pokemon moved past the last goes to the end, the others
+    closing up). A box Pokemon joins the party at full HP. Nothing is done,
+    and ValueError says why, if the party would be left with no Pokemon
+    able to battle."""
+    if tuple(src) == tuple(dst):
+        return
+    party = party_raw(save)
+    count = len(party)
+
+    def box_of(place):
+        return box_raw(save, place[1], place[2])
+
+    if src[0] == "party" and not 0 <= src[1] < count:
+        raise ValueError(f"the party has no slot {src[1] + 1}")
+    if src[0] == "box" and open_mon(box_of(src)) is None:
+        raise ValueError(f"box {src[1] + 1} slot {src[2] + 1} is empty")
+    if src[0] == "party" and dst[0] == "party":
+        if dst[1] >= count:
+            for k in range(src[1], count - 1):
+                swap_party_mons(save, k, k + 1)
+        else:
+            swap_party_mons(save, src[1], dst[1])
+    elif src[0] == "box" and dst[0] == "box":
+        one, other = box_of(src), box_of(dst)
+        set_box_mon(save, src[1], src[2], other)
+        set_box_mon(save, dst[1], dst[2], one)
+    elif src[0] == "party":
+        held = box_of(dst)
+        if open_mon(held) is None:
+            if count == 1:
+                raise ValueError("the party cannot be left empty")
+            set_box_mon(save, dst[1], dst[2], party[src[1]])
+            remove_party_mon(save, src[1])
+        else:
+            set_party_mon(save, src[1], party_from_box(held))
+            set_box_mon(save, dst[1], dst[2], party[src[1]])
+    else:
+        raw = box_of(src)
+        if dst[1] >= count:
+            if count >= PARTY_SIZE:
+                raise ValueError(f"a party holds {PARTY_SIZE}")
+            add_party_mon(save, party_from_box(raw))
+            set_box_mon(save, src[1], src[2], EMPTY_BOX_MON)
+        else:
+            set_party_mon(save, dst[1], party_from_box(raw))
+            set_box_mon(save, src[1], src[2], party[dst[1]])
+    if not any(can_battle(raw) for raw in party_raw(save)):
+        raise ValueError("the party would have no Pokemon able to battle")
 
 
 def boxes(save):

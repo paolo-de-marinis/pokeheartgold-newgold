@@ -121,6 +121,32 @@ class SaveUiTests(unittest.TestCase):
         folder = self.library / ".backups" / key
         return sorted(folder.iterdir()) if folder.is_dir() else []
 
+    def test_dragging_a_pokemon(self):
+        """op "move": the page's drag. Onto another the two swap; onto an
+        empty box slot or past the party's last it goes there; the party
+        keeps one Pokemon able to battle, and every box it touched is marked
+        for the game's next save."""
+        names = lambda out: [m["species_name"] for m in out["party"]]
+        start = names(self.ok(f"/api/save?f=gyms/test.sav"))
+        out = self.edit("move", {"from": {"kind": "party", "slot": 0}, "to": {"kind": "party", "slot": 1}})
+        self.assertEqual(names(out)[:2], [start[1], start[0]])
+        out = self.edit("move", {"from": {"kind": "party", "slot": 0}, "to": {"kind": "box", "box": 29, "slot": 29}})
+        self.assertEqual(out["boxes"]["mons"][29][29]["species_name"], start[1])
+        self.assertEqual(len(out["party"]), len(start) - 1)
+        out = self.edit("move", {"from": {"kind": "box", "box": 29, "slot": 29}, "to": {"kind": "party", "slot": len(out["party"])}})
+        self.assertEqual(names(out)[-1], start[1], "past the last: it joins at the end")
+        self.assertIsNone(out["boxes"]["mons"][29][29])
+        self.assertEqual(out["party"][-1]["hp"], out["party"][-1]["stats"][0], "at full HP")
+        save = sv.Save(self.save)
+        pc = save.entry("SAVE_PCSTORAGE")["offset"]
+        self.assertTrue(struct.unpack_from("<I", save.region, pc + sv.BOX_MODIFIED)[0] >> 29 & 1, "box 30 marked for the game")
+        for n in range(len(out["party"]) - 1):   # all but one into box 29
+            self.edit("move", {"from": {"kind": "party", "slot": 0}, "to": {"kind": "box", "box": 28, "slot": n}})
+        self.assertIn("almeno un Pokémon", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "move", "args": {
+            "from": {"kind": "party", "slot": 0}, "to": {"kind": "box", "box": 1, "slot": 0}}}))
+        self.assertIn("posizione non valida", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "move", "args": {
+            "from": {"kind": "shelf"}, "to": {"kind": "box", "box": 1, "slot": 0}}}))
+
     def test_a_start_replaces_an_editor_running_older_code(self):
         self.assertEqual(saveui.already_serving(self.port), saveui.CODE, "the running one says what code it is")
         self.assertIsNone(saveui.already_serving(1), "nothing answers there")

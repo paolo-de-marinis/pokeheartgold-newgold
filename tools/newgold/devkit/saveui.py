@@ -819,6 +819,32 @@ class Library:
             raise Refused("la squadra ha già sei Pokémon")
         sv.withdraw(save, number(a["box"], 0, 29, "box"), number(a["slot"], 0, 29, "posto"))
 
+    def op_move(self, save, a):
+        """A Pokemon dragged in the page, from one place to another."""
+        def place(p):
+            if not isinstance(p, dict) or p.get("kind") not in ("party", "box"):
+                raise Refused("posizione non valida")
+            if p["kind"] == "party":
+                return ("party", number(p.get("slot"), 0, 5, "posto in squadra"))
+            return ("box", number(p.get("box"), 0, 29, "box"), number(p.get("slot"), 0, 29, "posto nel box"))
+        src, dst = place(a.get("from")), place(a.get("to"))
+        count = len(sv.party_raw(save))
+        if src[0] == "party" and src[1] >= count:
+            raise Refused(f"la squadra non ha il posto {src[1] + 1}")
+        if src[0] == "box" and sv.open_mon(sv.box_raw(save, src[1], src[2])) is None:
+            raise Refused(f"box {src[1] + 1}, posto {src[2] + 1}: è vuoto")
+        if src[0] == "box" and dst[0] == "party" and dst[1] >= count and count >= sv.PARTY_SIZE:
+            raise Refused("la squadra ha già sei Pokémon: trascinalo su uno di loro per scambiarli")
+        if src[0] == "box" and not (sv.open_mon(sv.box_raw(save, src[1], src[2])) or {}).get("ok"):
+            if dst[0] == "party":
+                raise Refused("un Pokémon che non si legge (Uovo Difettoso) non va in squadra")
+        try:
+            sv.move_mon(save, src, dst)
+        except ValueError as e:
+            if "able to battle" in str(e) or "left empty" in str(e):
+                raise Refused("in squadra deve restare almeno un Pokémon che possa lottare (non un uovo e non esausto)")
+            raise Refused(str(e))
+
     def op_item(self, save, a):
         item, quantity = number(a["item"], 1, 0xFFFF, "strumento"), number(a["quantity"], 0, 999, "quantità")
         entry = sv.item_table().get(item)

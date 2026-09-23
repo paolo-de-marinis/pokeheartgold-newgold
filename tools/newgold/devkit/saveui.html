@@ -109,6 +109,18 @@ label.f input, label.f select { color: var(--text); font-size: 14px; }
 .addmon { border: 1px dashed var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 140px; }
 .star { color: var(--accent); }
 
+.mon[data-mon], .pc button[data-mon] { touch-action: none; cursor: grab; }
+/* The browser's own image drag would take the press and cancel ours. */
+.mon[data-mon] img, .pc button[data-mon] img { -webkit-user-drag: none; user-select: none; pointer-events: none; }
+.mon[data-mon] button { touch-action: manipulation; cursor: pointer; }
+.is-dragging { opacity: .4; outline: 2px dashed var(--muted); outline-offset: 1px; }
+.drop-target { outline: 3px solid var(--accent) !important; outline-offset: 2px; background: var(--accent-soft) !important; }
+.dragghost { position: fixed; z-index: 1000; pointer-events: none; width: 64px; height: 64px;
+             transform: translate(-50%, -50%) scale(1.1) rotate(-4deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.35)); }
+body.dragging-mon, body.dragging-mon * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+.boxnav button.hovernav { background: var(--accent-soft); border-color: var(--accent); }
+.zonehead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 20px 0 10px; }
+.zonehead h3 { margin: 0; }
 .boxnav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
 .pc { display: grid; grid-template-columns: repeat(6, minmax(0, 64px)); gap: 6px; }
 .pc button { height: 64px; padding: 0; display: flex; align-items: center; justify-content: center; background: var(--sunk); }
@@ -235,7 +247,7 @@ const $ = (sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 
-const TABS = [["trainer", "Allenatore"], ["party", "Squadra"], ["box", "Box"], ["bag", "Borsa"],
+const TABS = [["trainer", "Allenatore"], ["party", "Squadra e box"], ["bag", "Borsa"],
               ["dex", "Pokédex"], ["pos", "Posizione"], ["flags", "Flag e variabili"], ["info", "Info"]];
 const JOHTO = ["Zefiro", "Alveare", "Piana", "Nebbia", "Tempesta", "Minerale", "Gelo", "Levante"];
 const KANTO = ["Sasso", "Cascata", "Tuono", "Arcobaleno", "Anima", "Palude", "Vulcano", "Terra"];
@@ -701,7 +713,7 @@ $("#reload").addEventListener("click", () => S.f && openSave(S.f));
 
 function renderTabs() {
   $("#tabs").innerHTML = TABS.map(([k, label]) => `<button type="button" role="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-selected="${S.tab === k}">${label}</button>`).join("");
-  ({trainer: renderTrainer, party: renderParty, box: renderBox, bag: renderBag, dex: renderDex,
+  ({trainer: renderTrainer, party: renderParty, bag: renderBag, dex: renderDex,
     pos: renderPosition, flags: renderFlags, info: renderInfo})[S.tab]();
 }
 $("#tabs").addEventListener("click", ev => {
@@ -747,11 +759,11 @@ function renderTrainer() {
 
 // ---- Squadra -------------------------------------------------------------
 function monCard(m, i, count) {
-  if (!m || !m.ok) return `<div class="mon"><div class="head">${iconImg(m)}<span class="invalid">Checksum errato</span></div>
+  if (!m || !m.ok) return `<div class="mon" data-pos="party:${i}"><div class="head">${iconImg(m)}<span class="invalid">Checksum errato</span></div>
     <div class="sub">Questo Pokémon non si legge (nel gioco è un Uovo Difettoso).</div>
     <div class="acts"><button class="small danger" type="button" data-remove="${i}">Togli dalla squadra</button></div></div>`;
   const hp = m.stats ? Math.round(100 * m.hp / Math.max(1, m.stats[0])) : null;
-  return `<div class="mon">
+  return `<div class="mon" data-pos="party:${i}" data-mon title="Trascina per spostarlo">
     <div class="head">${iconImg(m, 48)}<div><div class="nm">${esc(m.nickname || m.species_name)} ${GENDER_MARK[m.gender] || ""} ${m.shiny ? `<span class="star" title="Cromatico">★</span>` : ""}</div>
       <div class="sub">${esc(m.species_name)} · Lv. ${m.level}${m.egg ? " · uovo" : ""}</div>
       ${m.egg ? "" : `<div>${typeBadges(m.types)}</div>`}</div></div>
@@ -766,11 +778,17 @@ function monCard(m, i, count) {
 }
 function renderParty() {
   const party = S.save.party;
-  $("#tab").innerHTML = `<div class="grid">${party.map((m, i) => monCard(m, i, party.length)).join("")}
-    ${party.length < 6 ? `<div class="addmon"><button type="button" class="primary" id="addparty">Aggiungi un Pokémon</button></div>` : ""}</div>
-    <p class="note">Un Pokémon aggiunto qui è del giocatore (allenatore originale, ID e genere), come quelli di savedit, così obbedisce.
-      "Sposta nel box" lo mette nel primo posto libero del box scelto nella scheda Box (ora il box ${S.box + 1}).</p>`;
-  $("#tab").onclick = ev => {
+  const addable = party.length < 6;
+  $("#tab").innerHTML = `<div class="zonehead" style="margin-top:0"><h3>Squadra</h3><span class="muted">${party.length} di 6</span></div>
+    <div class="grid" id="partyzone">${party.map((m, i) => monCard(m, i, party.length)).join("")}
+      ${addable ? `<div class="addmon" data-pos="party:${party.length}"><button type="button" class="primary" id="addparty">Aggiungi un Pokémon</button></div>` : ""}</div>
+    <p class="note">Trascina un Pokémon per spostarlo: su un altro, nella squadra o nei box, i due si scambiano; su un posto vuoto del box
+      o sul riquadro "Aggiungi" della squadra, ci va. Tenendolo sopra ◀ o ▶ cambi box mentre lo trascini. Un Pokémon aggiunto qui è del
+      giocatore (allenatore originale, ID e genere), così obbedisce.</p>
+    <div id="boxarea"></div>`;
+  renderBoxArea();
+  $("#partyzone").onclick = ev => {
+    if (DRAG.suppress) return;
     const b = ev.target.closest("button");
     if (!b) return;
     if (b.id === "addparty") return monDialog({kind: "party"}, null);
@@ -779,7 +797,133 @@ function renderParty() {
     if (b.dataset.up !== undefined) return edit("party_swap", {a: +b.dataset.up, b: +b.dataset.up - 1}, "Ordine cambiato");
     if (b.dataset.down !== undefined) return edit("party_swap", {a: +b.dataset.down, b: +b.dataset.down + 1}, "Ordine cambiato");
   };
+  $("#tab").onpointerdown = onDragStart;
+  $("#tab").ondragstart = ev => ev.preventDefault();
 }
+
+function renderBoxArea() {
+  const boxes = S.save.boxes, mons = boxes.mons[S.box];
+  const count = b => boxes.mons[b].filter(Boolean).length;
+  $("#boxarea").innerHTML = `<div class="zonehead"><h3>Box</h3><span class="muted">Il gioco è aperto sul box ${boxes.current + 1}.</span></div>
+    <div class="boxnav">
+      <button type="button" class="small" data-boxnav="-1" aria-label="Box precedente">◀</button>
+      <select id="boxsel" aria-label="Box">${boxes.names.map((n, b) => `<option value="${b}" ${b === S.box ? "selected" : ""}>${b + 1}. ${esc(n)} (${count(b)}/30)</option>`).join("")}</select>
+      <button type="button" class="small" data-boxnav="1" aria-label="Box successivo">▶</button>
+    </div>
+    <div class="pc">${mons.map((m, s) => `<button type="button" class="${m ? "full" : ""}" data-slot="${s}" data-pos="box:${S.box}:${s}" ${m ? "data-mon" : ""}
+      title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}${m.egg ? "" : " · " + typeNames(m.types)}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere, o trascina qui un Pokémon`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
+    <p class="note">Clic su un posto occupato per modificarlo; su uno vuoto per aggiungere un Pokémon.</p>`;
+  $("#boxsel").onchange = ev => goBox(+ev.target.value);
+  $("#boxarea").onclick = ev => {
+    if (DRAG.suppress) return;
+    const nav = ev.target.closest("[data-boxnav]");
+    if (nav) return goBox(S.box + +nav.dataset.boxnav);
+    const b = ev.target.closest("button[data-slot]");
+    if (!b) return;
+    const slot = +b.dataset.slot, m = mons[slot];
+    if (m && !m.ok) return dropUnreadable("box_remove", {box: S.box, slot}, `box ${S.box + 1}, posto ${slot + 1}`);
+    monDialog({kind: "box", box: S.box, slot}, m);
+  };
+}
+function goBox(b) { S.box = (b + 30) % 30; store.set("box", S.box); renderBoxArea(); }
+
+// ---- dragging Pokemon between the party and the boxes ---------------------
+// As in a sortable list: a pointer press on a Pokemon, then 6 px of movement,
+// lifts it; a copy of its icon follows the pointer, the place under it is lit,
+// the page scrolls near the edges, and resting on ◀ or ▶ turns the box. Let go
+// on another place and the server moves it (op "move": onto a Pokemon the two
+// swap). A press that does not move is a click, as before.
+const DRAG = {from: null, el: null, start: null, active: false, ghost: null, target: null, nav: null, navTimer: 0, suppress: false};
+function placeOf(el) {
+  const [kind, a, b] = (el?.dataset.pos || "").split(":");
+  if (kind === "party") return {kind, slot: +a};
+  if (kind === "box") return {kind, box: +a, slot: +b};
+  return null;
+}
+const samePlace = (p, q) => !!(p && q && p.kind === q.kind && p.slot === q.slot && (p.kind === "party" || p.box === q.box));
+function dragScroller() {
+  for (let el = $("#tab"); el && el !== document.body; el = el.parentElement) {
+    const style = getComputedStyle(el);
+    if (/(auto|scroll)/.test(style.overflowY) && el.scrollHeight > el.clientHeight) return el;
+  }
+  return document.scrollingElement;
+}
+function onDragStart(ev) {
+  if (!ev.isPrimary || ev.button !== 0 || DRAG.from || S.melon && S.save?.slot) return;
+  const el = ev.target.closest("[data-pos][data-mon]");
+  if (!el) return;
+  const button = ev.target.closest("button");
+  if (button && button !== el) return;          // a card's own buttons stay buttons
+  Object.assign(DRAG, {el, from: placeOf(el), start: {x: ev.clientX, y: ev.clientY}, active: false});
+  window.addEventListener("pointermove", onDragMove, {passive: false});
+  window.addEventListener("pointerup", onDragEnd);
+  window.addEventListener("pointercancel", onDragCancel);
+  window.addEventListener("keydown", onDragKey);
+}
+function liftMon() {
+  DRAG.active = true;
+  const img = DRAG.el.querySelector("img.ic");
+  DRAG.ghost = img ? img.cloneNode() : document.createElement("span");
+  DRAG.ghost.className = "dragghost";
+  document.body.append(DRAG.ghost);
+  DRAG.el.classList.add("is-dragging");
+  document.body.classList.add("dragging-mon");
+}
+function onDragMove(ev) {
+  if (!DRAG.from) return;
+  if (!DRAG.active) {
+    if (Math.hypot(ev.clientX - DRAG.start.x, ev.clientY - DRAG.start.y) < 6) return;
+    liftMon();
+  }
+  ev.preventDefault();
+  Object.assign(DRAG.ghost.style, {left: `${ev.clientX}px`, top: `${ev.clientY}px`});
+  const under = document.elementFromPoint(ev.clientX, ev.clientY);
+  let target = under?.closest("[data-pos]");
+  if (target && samePlace(placeOf(target), DRAG.from)) target = null;
+  if (target !== DRAG.target) {
+    DRAG.target?.classList.remove("drop-target");
+    DRAG.target = target;
+    target?.classList.add("drop-target");
+  }
+  const nav = under?.closest("[data-boxnav]") || null;
+  if (nav !== DRAG.nav) {
+    clearTimeout(DRAG.navTimer);
+    DRAG.nav?.classList.remove("hovernav");
+    DRAG.nav = nav;
+    if (nav) {
+      nav.classList.add("hovernav");
+      const step = +nav.dataset.boxnav;
+      DRAG.navTimer = setTimeout(() => { DRAG.nav = null; DRAG.target = null; goBox(S.box + step); }, 550);
+    }
+  }
+  const sc = dragScroller(), r = sc === document.scrollingElement ? {top: 0, bottom: innerHeight} : sc.getBoundingClientRect();
+  if (ev.clientY < r.top + 60) sc.scrollTop -= 16;
+  else if (ev.clientY > r.bottom - 60) sc.scrollTop += 16;
+}
+function stopDrag() {
+  window.removeEventListener("pointermove", onDragMove);
+  window.removeEventListener("pointerup", onDragEnd);
+  window.removeEventListener("pointercancel", onDragCancel);
+  window.removeEventListener("keydown", onDragKey);
+  clearTimeout(DRAG.navTimer);
+  DRAG.ghost?.remove();
+  DRAG.el?.classList.remove("is-dragging");
+  DRAG.target?.classList.remove("drop-target");
+  DRAG.nav?.classList.remove("hovernav");
+  document.body.classList.remove("dragging-mon");
+  const was = {from: DRAG.from, to: placeOf(DRAG.target), active: DRAG.active};
+  Object.assign(DRAG, {from: null, el: null, start: null, active: false, ghost: null, target: null, nav: null});
+  return was;
+}
+async function onDragEnd() {
+  const {from, to, active} = stopDrag();
+  if (!active) return;
+  DRAG.suppress = true;                         // the click that follows the drop is not a click
+  setTimeout(() => { DRAG.suppress = false; }, 0);
+  if (to && !samePlace(from, to)) await edit("move", {from, to}, "Spostato");
+}
+function onDragCancel() { stopDrag(); }
+function onDragKey(ev) { if (ev.key === "Escape") stopDrag(); }
 
 // ---- the Pokemon dialog -------------------------------------------------
 // `typed` is what the user had entered when the dialog was turned down:
@@ -865,30 +1009,6 @@ async function dropUnreadable(op, args, where) {
 }
 
 // ---- Box -----------------------------------------------------------------
-function renderBox() {
-  const boxes = S.save.boxes, mons = boxes.mons[S.box];
-  const count = b => boxes.mons[b].filter(Boolean).length;
-  $("#tab").innerHTML = `<div class="boxnav">
-      <button type="button" class="small" id="prevbox" aria-label="Box precedente">◀</button>
-      <select id="boxsel" aria-label="Box">${boxes.names.map((n, b) => `<option value="${b}" ${b === S.box ? "selected" : ""}>${b + 1}. ${esc(n)} (${count(b)}/30)</option>`).join("")}</select>
-      <button type="button" class="small" id="nextbox" aria-label="Box successivo">▶</button>
-      <span class="muted">Il gioco è aperto sul box ${boxes.current + 1}.</span>
-    </div>
-    <div class="pc">${mons.map((m, s) => `<button type="button" class="${m ? "full" : ""}" data-slot="${s}" title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}${m.egg ? "" : " · " + typeNames(m.types)}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
-    <p class="note">Clic su un posto occupato per modificarlo o spostarlo in squadra; su uno vuoto per aggiungere un Pokémon.</p>`;
-  const go = b => { S.box = (b + 30) % 30; store.set("box", S.box); renderBox(); };
-  $("#prevbox").onclick = () => go(S.box - 1);
-  $("#nextbox").onclick = () => go(S.box + 1);
-  $("#boxsel").onchange = ev => go(+ev.target.value);
-  $(".pc").onclick = ev => {
-    const b = ev.target.closest("button[data-slot]");
-    if (!b) return;
-    const slot = +b.dataset.slot, m = mons[slot];
-    if (m && !m.ok) return dropUnreadable("box_remove", {box: S.box, slot}, `box ${S.box + 1}, posto ${slot + 1}`);
-    monDialog({kind: "box", box: S.box, slot}, m);
-  };
-}
-
 // ---- Borsa -----------------------------------------------------------------
 function renderBag() {
   const bag = S.save.bag, cap = Object.fromEntries(S.data.pockets);
@@ -1089,7 +1209,8 @@ async function init() {
   S.data = await run(() => api("/api/data"));
   if (!S.data) return;
   buildLists();
-  S.tab = TABS.some(t => t[0] === store.get("tab")) ? store.get("tab") : "trainer";
+  const saved = store.get("tab") === "box" ? "party" : store.get("tab");   // the Box tab is part of Squadra now
+  S.tab = TABS.some(t => t[0] === saved) ? saved : "trainer";
   S.box = Math.min(29, Math.max(0, +store.get("box") || 0));
   await loadLibrary();
   if (S.lib && (S.lib.missing || (!S.lib.configured && !S.lib.files.length))) openSettings(true);
