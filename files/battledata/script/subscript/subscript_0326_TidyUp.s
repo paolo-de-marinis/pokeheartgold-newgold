@@ -66,7 +66,6 @@ _clearPlayerSubstitutePartner:
 _clearSpikes:
     CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_SPIKES_LAYERS, _clearPlayerSpikes
     CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_CLEAR, SIDE_COND_SPIKES_LAYERS, _clearPlayerSpikes
-    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_TARGET, SIDE_CONDITION_SPIKES
     RemoveEntryHazardFromQueue BATTLER_CATEGORY_ENEMY, HAZARD_IDX_SPIKES
     // The spikes disappeared from around the opposing team!
     PrintMessage msg_0197_01553, TAG_NONE
@@ -76,7 +75,6 @@ _clearSpikes:
 _clearPlayerSpikes:
     CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_SPIKES_LAYERS, _clearToxicSpikes
     CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_CLEAR, SIDE_COND_SPIKES_LAYERS, _clearToxicSpikes
-    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_ATTACKER, SIDE_CONDITION_SPIKES
     RemoveEntryHazardFromQueue BATTLER_CATEGORY_PLAYER, HAZARD_IDX_SPIKES
     // The spikes disappeared from around your team!
     PrintMessage msg_0197_01552, TAG_NONE
@@ -86,7 +84,6 @@ _clearPlayerSpikes:
 _clearToxicSpikes:
     CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_TOXIC_SPIKES_LAYERS, _clearPlayerToxicSpikes
     CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_CLEAR, SIDE_COND_TOXIC_SPIKES_LAYERS, _clearPlayerToxicSpikes
-    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_TARGET, SIDE_CONDITION_TOXIC_SPIKES
     RemoveEntryHazardFromQueue BATTLER_CATEGORY_ENEMY, HAZARD_IDX_TOXIC_SPIKES
     // The poison spikes disappeared from around the opposing team!
     PrintMessage msg_0197_01066, TAG_NONE
@@ -96,40 +93,46 @@ _clearToxicSpikes:
 _clearPlayerToxicSpikes:
     CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_TOXIC_SPIKES_LAYERS, _clearStealthRock
     CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_CLEAR, SIDE_COND_TOXIC_SPIKES_LAYERS, _clearStealthRock
-    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_ATTACKER, SIDE_CONDITION_TOXIC_SPIKES
     RemoveEntryHazardFromQueue BATTLER_CATEGORY_PLAYER, HAZARD_IDX_TOXIC_SPIKES
     // The poison spikes disappeared from around your team!
     PrintMessage msg_0197_01065, TAG_NONE
     Wait
     WaitButtonABTime 30
 
+// Stealth Rock and Sticky Web by the side the message names, as the spikes
+// above: the reference's 445 tests the battler ids for them, which never
+// hold the flags, so neither was ever cleared.
 _clearStealthRock:
-    CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_BATTLER_TARGET, SIDE_CONDITION_STEALTH_ROCKS, _clearPlayerStealthRock
-    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLER_TARGET, SIDE_CONDITION_STEALTH_ROCKS
+    CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_STEALTH_ROCK, _clearPlayerStealthRock
+    CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_CLEAR, SIDE_COND_STEALTH_ROCK, _clearPlayerStealthRock
+    RemoveEntryHazardFromQueue BATTLER_CATEGORY_ENEMY, HAZARD_IDX_STEALTH_ROCK
     // The pointed stones disappeared from the ground around the opposing team!
     PrintMessage msg_0197_01551, TAG_NONE
     Wait
     WaitButtonABTime 30
 
 _clearPlayerStealthRock:
-    CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_BATTLER_ATTACKER, SIDE_CONDITION_STEALTH_ROCKS, _clearStickyWeb
-    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLER_ATTACKER, SIDE_CONDITION_STEALTH_ROCKS
+    CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_STEALTH_ROCK, _clearStickyWeb
+    CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_CLEAR, SIDE_COND_STEALTH_ROCK, _clearStickyWeb
+    RemoveEntryHazardFromQueue BATTLER_CATEGORY_PLAYER, HAZARD_IDX_STEALTH_ROCK
     // The pointed stones disappeared from the ground around your team!
     PrintMessage msg_0197_01550, TAG_NONE
     Wait
     WaitButtonABTime 30
 
 _clearStickyWeb:
-    CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_BATTLER_TARGET, SIDE_CONDITION_STICKY_WEB, _clearPlayerStickyWeb
-    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLER_TARGET, SIDE_CONDITION_STICKY_WEB
+    CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_STICKY_WEB, _clearPlayerStickyWeb
+    CheckSideCondition BATTLER_CATEGORY_ENEMY, CHECK_SIDE_COND_CLEAR, SIDE_COND_STICKY_WEB, _clearPlayerStickyWeb
+    RemoveEntryHazardFromQueue BATTLER_CATEGORY_ENEMY, HAZARD_IDX_STICKY_WEB
     // The sticky web has disappeared from the ground around the opposing team!
     PrintMessage msg_0197_01555, TAG_NONE
     Wait
     WaitButtonABTime 30
 
 _clearPlayerStickyWeb:
-    CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_BATTLER_ATTACKER, SIDE_CONDITION_STICKY_WEB, _boosts
-    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLER_ATTACKER, SIDE_CONDITION_STICKY_WEB
+    CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_VAL_ZERO, SIDE_COND_STICKY_WEB, _boosts
+    CheckSideCondition BATTLER_CATEGORY_PLAYER, CHECK_SIDE_COND_CLEAR, SIDE_COND_STICKY_WEB, _boosts
+    RemoveEntryHazardFromQueue BATTLER_CATEGORY_PLAYER, HAZARD_IDX_STICKY_WEB
     // The sticky web has disappeared from the ground around you!
     PrintMessage msg_0197_01554, TAG_NONE
     Wait

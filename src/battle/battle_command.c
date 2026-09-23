@@ -5735,6 +5735,14 @@ BOOL BtlCmd_CheckSideCondition(BattleSystem *battleSystem, BattleContext *ctx) {
         case 5:
             var = ctx->fieldSideConditionData[fieldSide].toxicSpikesLayers;
             break;
+        // The two hazards that are only a flag, for a script that names the
+        // side by category (Tidy Up clears both sides').
+        case SIDE_COND_STEALTH_ROCK:
+            var = ctx->fieldSideConditionFlags[fieldSide] & SIDE_CONDITION_STEALTH_ROCKS;
+            break;
+        case SIDE_COND_STICKY_WEB:
+            var = ctx->fieldSideConditionFlags[fieldSide] & SIDE_CONDITION_STICKY_WEB;
+            break;
         }
         break;
     case 2:
@@ -5762,6 +5770,12 @@ BOOL BtlCmd_CheckSideCondition(BattleSystem *battleSystem, BattleContext *ctx) {
         case 5:
             ctx->fieldSideConditionData[fieldSide].toxicSpikesLayers = 0;
             ctx->fieldSideConditionFlags[fieldSide] &= ~(1 << 10);
+            break;
+        case SIDE_COND_STEALTH_ROCK:
+            ctx->fieldSideConditionFlags[fieldSide] &= ~SIDE_CONDITION_STEALTH_ROCKS;
+            break;
+        case SIDE_COND_STICKY_WEB:
+            ctx->fieldSideConditionFlags[fieldSide] &= ~SIDE_CONDITION_STICKY_WEB;
             break;
         }
         break;

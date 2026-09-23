@@ -356,6 +356,12 @@ typedef enum Terrain {
 #define SIDE_COND_SAFEGUARD_TURNS     3
 #define SIDE_COND_SPIKES_LAYERS       4
 #define SIDE_COND_TOXIC_SPIKES_LAYERS 5
+// The hazards that are a flag and nothing more, so that a script can ask about
+// a side named by category -- the player's, the enemy's -- and not only the
+// attacker's or the target's through their side-condition variables. 6 is
+// the reference's Aurora Veil count, which nothing here asks.
+#define SIDE_COND_STEALTH_ROCK        7
+#define SIDE_COND_STICKY_WEB          8
 
 // Status
 #define STATUS_NONE         0

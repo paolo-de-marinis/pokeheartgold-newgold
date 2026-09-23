@@ -210,8 +210,26 @@ class QueueTests(unittest.TestCase):
             self.assertIn(f"EntryHazardQueueRemove(ctx, side, HAZARD_IDX_{hazard});", spin)
         tidy = read("files/battledata/script/subscript/subscript_0326_TidyUp.s")
         for side in ("ENEMY", "PLAYER"):
-            for hazard in ("SPIKES", "TOXIC_SPIKES"):
+            for hazard in ("SPIKES", "TOXIC_SPIKES", "STEALTH_ROCK", "STICKY_WEB"):
                 self.assertIn(f"RemoveEntryHazardFromQueue BATTLER_CATEGORY_{side}, HAZARD_IDX_{hazard}", tidy)
+
+    def test_tidy_up_asks_each_side_for_the_stones_and_the_web(self):
+        # Pokemon Central (Pulizie): Tidy Up clears the pointed stones and the
+        # web from both sides. The reference's 445 tested the battler ids for
+        # their flags, which never hold them, so it cleared neither; here the
+        # side is named by category, as for the spikes, and the command asks
+        # that side's flags.
+        tidy = read("files/battledata/script/subscript/subscript_0326_TidyUp.s")
+        self.assertNotIn("BSCRIPT_VAR_BATTLER_", tidy)
+        for side in ("ENEMY", "PLAYER"):
+            for cond in ("STEALTH_ROCK", "STICKY_WEB"):
+                for check in ("VAL_ZERO", "CLEAR"):
+                    self.assertIn(f"CheckSideCondition BATTLER_CATEGORY_{side}, CHECK_SIDE_COND_{check}, SIDE_COND_{cond},", tidy)
+        command = function(read("src/battle/battle_command.c"), "BtlCmd_CheckSideCondition")
+        self.assertEqual(command.count("case SIDE_COND_STEALTH_ROCK:"), 2)
+        self.assertEqual(command.count("case SIDE_COND_STICKY_WEB:"), 2)
+        self.assertIn("&= ~SIDE_CONDITION_STEALTH_ROCKS;", command)
+        self.assertIn("&= ~SIDE_CONDITION_STICKY_WEB;", command)
 
 
 if __name__ == "__main__":
