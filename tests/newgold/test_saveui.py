@@ -339,6 +339,27 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(out["profile"]["money"], sv.profile(sv.Save(self.template))["money"])
         self.assertEqual(len(self.backups("gyms/nuovo.sav")), 2)
 
+    def test_a_new_file_has_no_history(self):
+        """A history is the file's, through the bin and back: a new file
+        under a name that had one must not undo into the old file."""
+        self.ok("/api/duplicate", {"f": "gyms/test.sav", "name": "storia/a"})
+        self.edit("trainer", {"money": 777}, f="storia/a.sav")
+        self.ok("/api/trash", {"f": "storia/a.sav"})
+        self.assertIn("non c'è più", self.refused("/api/trash", {"f": "storia/a.sav"}))
+        self.ok("/api/duplicate", {"f": "junk.sav", "name": "storia/a"})
+        self.assertIn("storia/a.sav", [e["f"] for e in self.ok("/api/library")["files"]])
+        self.assertIn("nulla da annullare", self.refused("/api/undo", {"f": "storia/a.sav"}))
+        trash = self.ok("/api/library")["trash"]
+        self.assertEqual(self.ok("/api/untrash", {"t": trash[0]["t"], "name": "storia/b"})["f"], "storia/b.sav")
+        self.assertEqual(len(self.backups("storia/b.sav")), 1, "its own history came back with it")
+        self.ok("/api/undo", {"f": "storia/b.sav"})
+        self.assertEqual(self.save.read_bytes(), (self.library / "storia/b.sav").read_bytes())
+        # Renamed away, then the name used again.
+        self.ok("/api/rename", {"f": "storia/b.sav", "name": "storia/c"})
+        self.assertEqual(len(self.backups("storia/c.sav")), 2)
+        self.ok("/api/duplicate", {"f": "junk.sav", "name": "storia/b"})
+        self.assertEqual(self.backups("storia/b.sav"), [])
+
     def test_the_emulator_slots(self):
         slot = self.build / "heartgold.us.diag/pokeheartgold.us.sav"
         old = slot.read_bytes()

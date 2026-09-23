@@ -365,7 +365,10 @@ class Library:
         return self.inside(f), f, False
 
     def new_name(self, name):
-        """A library path for a file that does not exist yet."""
+        """A library path for a file that does not exist yet. Backups kept
+        under that name belonged to a file that is gone (renamed away before
+        its history could follow): they are set aside, never handed to the
+        new file, whose Annulla would otherwise swap the old one in."""
         name = (name or "").strip()
         if not name.endswith(".sav"):
             name += ".sav"
@@ -374,7 +377,16 @@ class Library:
         path = self.inside(name)
         if path.exists():
             raise Refused(f"{name} esiste già")
+        self.move_history(name, f".vecchie/{stamp()}/{name}")
         return path
+
+    def move_history(self, key, to):
+        """A file's backups follow it: renamed, into the bin (.cestino) and
+        back. The keys starting with a dot are names no library file can
+        have."""
+        if (self.backups / key).is_dir():
+            (self.backups / to).parent.mkdir(parents=True, exist_ok=True)
+            os.rename(self.backups / key, self.backups / to)
 
     def open(self, path):
         try:
@@ -549,9 +561,7 @@ class Library:
             new = target.relative_to(self.root).as_posix()
             target.parent.mkdir(parents=True, exist_ok=True)
             os.rename(source, target)
-            if (self.backups / key).is_dir() and not (self.backups / new).exists():
-                (self.backups / new).parent.mkdir(parents=True, exist_ok=True)
-                os.rename(self.backups / key, self.backups / new)
+            self.move_history(key, new)
             return new
 
     def throw(self, f):
@@ -559,9 +569,13 @@ class Library:
             source, _, is_slot = self.locate(f)
             if is_slot:
                 raise Refused("uno slot dell'emulatore non va nel cestino")
-            target = self.trash / stamp() / f
+            if not source.is_file():
+                raise Refused(f"{f} non c'è più")
+            when = stamp()
+            target = self.trash / when / f
             target.parent.mkdir(parents=True, exist_ok=True)
             os.rename(source, target)
+            self.move_history(f, f".cestino/{when}/{f}")
 
     def untrash(self, t, name=None):
         with self.lock:
@@ -569,9 +583,11 @@ class Library:
             if not source.is_file():
                 raise Refused(f"non c'è {t} nel cestino")
             target = self.new_name(name or t.split("/", 1)[-1])
+            new = target.relative_to(self.root).as_posix()
             target.parent.mkdir(parents=True, exist_ok=True)
             os.rename(source, target)
-            return target.relative_to(self.root).as_posix()
+            self.move_history(f".cestino/{t}", new)
+            return new
 
     def load(self, f, slot):
         """'Carica nell'emulatore': a valid save copied into a slot, beside
