@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Editor salvataggi
+Name[it]=Editor salvataggi
+Comment=I salvataggi di HeartGold New Gold: modificali, caricali in melonDS e gioca
+Exec=sh -c "exec python3 \\"\\$(dirname \\"\\$1\\")/saveui.py\\"" sh %k
+Icon=applications-games
+Terminal=false
+Categories=Game;

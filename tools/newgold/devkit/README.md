@@ -39,15 +39,27 @@ holds it to that.
 
 ## saveui.py
 
+A double click on `Editor salvataggi` in this folder (`Editor
+salvataggi.desktop`) starts the save editor and opens it in the browser; a
+second double click while it runs only opens the page again, and "Chiudi
+l'editor" in the page stops it. From a terminal it is
+
     python3 tools/newgold/devkit/saveui.py
 
-opens the save editor in the browser, on http://127.0.0.1:8765 (this
-machine only; the next free port if that one is taken). `--library DIR`
-picks the folder of saves, `~/hgss-saves` by default; `--build DIR` the
-folder holding `heartgold.us`, `heartgold.us.diag` and the rest, this tree's
-`build/` by default, which is where the save layout is measured and where
-the emulator slots are; `--no-browser` only prints the address. Ctrl+C
-stops it. Standard library only; the page is `saveui.html` next to it.
+on http://127.0.0.1:8765 (this machine only; the next free port if that one
+is taken). `python3 tools/newgold/devkit/saveui.py --install-launcher` also
+puts it in the desktop's application menu.
+
+Which folder holds the saves and which ROMs melonDS plays are chosen in the
+page, "Cartelle e ROM", browsing the disk from the home folder, and kept in
+`~/.config/newgold-saveui/settings.json` for the next start. Until something
+is chosen the folder is `~/hgss-saves` and the ROMs are the ones built under
+`--build` (this tree's `build/`); every ROM is an emulator slot, the `.sav`
+of the same name beside it, and "Gioca" wants a HeartGold one (the cartridge
+header's game code) since the saves are HeartGold's. `--library DIR` sets
+the folder for one run; `--build DIR` is also where the save layout is
+measured (`heartgold.us`); `--no-browser` only prints the address. Standard
+library only; the page is `saveui.html` next to it.
 
 On the left, the library: every `.sav` under the folder and every emulator
 slot (the `.sav` melonDS reads beside each ROM), each with the player, the
@@ -57,7 +69,9 @@ file is opened, duplicated, renamed, put in the bin or taken back out of it,
 its history of backups shown and any of them restored; "Carica
 nell'emulatore" copies it into a slot, "Prendi dall'emulatore" copies a slot
 into the library, and "Gioca" loads it into HeartGold's slot, normal or
-diagnostics, and starts melonDS the way `diag/play.py launch` does.
+diagnostics or any HeartGold ROM chosen, and starts melonDS the way
+`diag/play.py launch` does -- then waits for its window, and if none comes
+the page shows what flatpak said (`~/.cache/newgold-saveui/melonds.log`).
 
 On the right, the open save, in tabs: Allenatore (name, ids, money, gender,
 the sixteen badges, coins, play time), Squadra and Box (every Pokemon, a
