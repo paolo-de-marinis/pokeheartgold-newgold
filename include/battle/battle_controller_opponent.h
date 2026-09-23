@@ -4,6 +4,7 @@
 #include "battle/battle.h"
 
 int ov12_02258800(BattleSystem *battleSystem, int battlerId);
+u8 ov12_02258BA0(BattleSystem *battleSystem, int battlerId);
 int ov12_02258BB4(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon, int move);
 
 u8 ov12_02261258(OpponentData *opponentData);

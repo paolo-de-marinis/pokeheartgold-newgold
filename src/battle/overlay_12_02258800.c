@@ -1,3 +1,7 @@
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/items.h"
+#include "constants/moves.h"
 #include "constants/species.h"
 
 #include "battle/battle_controller_opponent.h"
@@ -127,4 +131,111 @@ int ov12_02258800(BattleSystem *battleSystem, int battlerId) {
     }
 
     return picked;
+}
+
+u8 ov12_02258BA0(BattleSystem *battleSystem, int battlerId) {
+    return BattleSystem_GetBattleContext(battleSystem)->unk_21A4[battlerId];
+}
+
+// The type of a party Pokemon's move, for the trainer AI: GetDynamicMoveType's
+// cases, worked out from the Pokemon rather than a battler.
+int ov12_02258BB4(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon, int moveNo) {
+    int type;
+
+    switch (moveNo) {
+    case MOVE_NATURAL_GIFT:
+        type = GetItemVar(ctx, GetMonData(mon, MON_DATA_HELD_ITEM, NULL), ITEMATTR_NATURAL_GIFT_TYPE);
+        break;
+    case MOVE_JUDGMENT:
+        switch (GetItemVar(ctx, GetMonData(mon, MON_DATA_HELD_ITEM, NULL), ITEMATTR_HOLD_EFFECT)) {
+        case HOLD_EFFECT_ARCEUS_FIGHTING:
+            type = TYPE_FIGHTING;
+            break;
+        case HOLD_EFFECT_ARCEUS_FLYING:
+            type = TYPE_FLYING;
+            break;
+        case HOLD_EFFECT_ARCEUS_POISON:
+            type = TYPE_POISON;
+            break;
+        case HOLD_EFFECT_ARCEUS_GROUND:
+            type = TYPE_GROUND;
+            break;
+        case HOLD_EFFECT_ARCEUS_ROCK:
+            type = TYPE_ROCK;
+            break;
+        case HOLD_EFFECT_ARCEUS_BUG:
+            type = TYPE_BUG;
+            break;
+        case HOLD_EFFECT_ARCEUS_GHOST:
+            type = TYPE_GHOST;
+            break;
+        case HOLD_EFFECT_ARCEUS_STEEL:
+            type = TYPE_STEEL;
+            break;
+        case HOLD_EFFECT_ARCEUS_FIRE:
+            type = TYPE_FIRE;
+            break;
+        case HOLD_EFFECT_ARCEUS_WATER:
+            type = TYPE_WATER;
+            break;
+        case HOLD_EFFECT_ARCEUS_GRASS:
+            type = TYPE_GRASS;
+            break;
+        case HOLD_EFFECT_ARCEUS_ELECTRIC:
+            type = TYPE_ELECTRIC;
+            break;
+        case HOLD_EFFECT_ARCEUS_PSYCHIC:
+            type = TYPE_PSYCHIC;
+            break;
+        case HOLD_EFFECT_ARCEUS_ICE:
+            type = TYPE_ICE;
+            break;
+        case HOLD_EFFECT_ARCEUS_DRAGON:
+            type = TYPE_DRAGON;
+            break;
+        case HOLD_EFFECT_ARCEUS_DARK:
+            type = TYPE_DARK;
+            break;
+        default:
+            type = TYPE_NORMAL;
+            break;
+        }
+        break;
+    case MOVE_HIDDEN_POWER:
+        type = (GetMonData(mon, MON_DATA_HP_IV, NULL) & 1) | ((GetMonData(mon, MON_DATA_ATK_IV, NULL) & 1) << 1) | ((GetMonData(mon, MON_DATA_DEF_IV, NULL) & 1) << 2) | ((GetMonData(mon, MON_DATA_SPEED_IV, NULL) & 1) << 3) | ((GetMonData(mon, MON_DATA_SPATK_IV, NULL) & 1) << 4) | ((GetMonData(mon, MON_DATA_SPDEF_IV, NULL) & 1) << 5);
+
+        type = (type * 15 / 63) + 1;
+
+        if (type >= TYPE_MYSTERY) {
+            type++;
+        }
+        break;
+    case MOVE_WEATHER_BALL:
+        if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
+            // Retail's weather: snow, which FIELD_CONDITION_WEATHER takes in
+            // now, is not asked after here.
+            if (ctx->fieldCondition & (FIELD_CONDITION_WEATHER & ~FIELD_CONDITION_SNOW_ALL)) {
+                if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
+                    type = TYPE_WATER;
+                }
+                if (ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) {
+                    type = TYPE_ROCK;
+                }
+                if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
+                    type = TYPE_FIRE;
+                }
+                if (ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL) {
+                    type = TYPE_ICE;
+                }
+                // BUG: as in GetDynamicMoveType, fog leaves type unset, and so
+                // does Cloud Nine or Air Lock above.
+            }
+        }
+        break;
+    default:
+        type = TYPE_NORMAL;
+        break;
+    }
+
+    return type;
 }
