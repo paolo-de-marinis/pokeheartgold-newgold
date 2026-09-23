@@ -449,8 +449,22 @@ async function libraryAction(act, f, t) {
     return;
   }
   if (act === "untrash") {
-    const out = await run(() => api("/api/untrash", {t}), "Ripristinato dal cestino");
-    return loadLibrary().then(() => out && openSave(out.f));
+    let name;   // the file's own name, then one chosen here if that is taken
+    for (;;) {
+      try {
+        const out = await api("/api/untrash", {t, name});
+        toast("Ripristinato dal cestino");
+        await loadLibrary();
+        return openSave(out.f);
+      } catch (e) {
+        if (e.code !== "exists") { toast(e.message, true); return loadLibrary(); }
+        const r = await ask("Il nome è già preso", `<p>${esc(e.message)}: il file ripristinato ha bisogno di un altro nome (le cartelle con /).</p>
+          <label class="f">Nome<input name="name" required value="${esc(suggestName(t.split("/").slice(1).join("/")))}"></label>`,
+          [["go", "Ripristina", "primary"], ["", "Annulla"]]);
+        if (r.value !== "go") return;
+        name = r.data.name;
+      }
+    }
   }
   if (act === "more") {
     const r = await ask(f, `<label class="f">Nuovo nome (per Duplica e Rinomina)<input name="name" value="${esc(f.replace(/\.sav$/, ""))}"></label>

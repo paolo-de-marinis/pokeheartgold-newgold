@@ -398,6 +398,7 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("storia/a.sav", [e["f"] for e in self.ok("/api/library")["files"]])
         self.assertIn("nulla da annullare", self.refused("/api/undo", {"f": "storia/a.sav"}))
         trash = self.ok("/api/library")["trash"]
+        self.assertEqual(self.call("/api/untrash", {"t": trash[0]["t"]})[1]["code"], "exists", "storia/a.sav is taken")
         self.assertEqual(self.ok("/api/untrash", {"t": trash[0]["t"], "name": "storia/b"})["f"], "storia/b.sav")
         self.assertEqual(len(self.backups("storia/b.sav")), 1, "its own history came back with it")
         self.ok("/api/undo", {"f": "storia/b.sav"})

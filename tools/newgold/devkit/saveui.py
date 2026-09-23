@@ -377,7 +377,7 @@ class Library:
             raise Refused("nel nome solo lettere, cifre, spazi, - _ . e / per le cartelle")
         path = self.inside(name)
         if path.exists():
-            raise Refused(f"{name} esiste già")
+            raise Refused(f"{name} esiste già", "exists")
         self.move_history(name, f".vecchie/{stamp()}/{name}")
         return path
 
