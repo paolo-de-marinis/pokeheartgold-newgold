@@ -138,6 +138,18 @@ class DoublingTests(unittest.TestCase):
     reset(4); S.move.effect = MOVE_EFFECT_HIT; S.status[1] = STATUS_SLEEP | STATUS_PARALYSIS; EXPECT({hit("MOVE_TACKLE")}, 46);
 """))
 
+    def test_reckless_pays_for_the_recoil_moves(self):
+        # 100 is 46; a fifth more, 120, is 54. The crash moves' fifth is their
+        # scripts' POWER_MULTI.
+        run_c(self, damage_program(f"""
+    reset(4); S.ability[0] = ABILITY_RECKLESS; S.move.effect = MOVE_EFFECT_RECOIL_THIRD; EXPECT({hit("MOVE_DOUBLE_EDGE")}, 54);
+    S.move.effect = MOVE_EFFECT_RECOIL_QUARTER_DAMAGE_DELT; EXPECT({hit("MOVE_TAKE_DOWN")}, 54);
+    S.move.effect = MOVE_EFFECT_RECOIL_HALF_MAX_HP; EXPECT({hit("MOVE_CHLOROBLAST")}, 54);
+    S.move.effect = MOVE_EFFECT_CRASH_ON_MISS; EXPECT({hit("MOVE_JUMP_KICK")}, 46);
+    S.move.effect = MOVE_EFFECT_HIT; EXPECT({hit("MOVE_TACKLE")}, 46);
+    reset(4); S.move.effect = MOVE_EFFECT_RECOIL_THIRD; EXPECT({hit("MOVE_DOUBLE_EDGE")}, 46);
+"""))
+
     def test_assurance_doubles_against_a_pokemon_hurt_this_turn(self):
         # Power 100 from the stubbed table: 46; doubled, 200: 90.
         run_c(self, damage_program(f"""
