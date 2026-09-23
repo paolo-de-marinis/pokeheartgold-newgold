@@ -1087,7 +1087,14 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     if (first) load(first, null, typed?.ability);
     form.elements.species.addEventListener("input", () => {
       const sp = speciesOf(form.elements.species.value);
-      if (sp && sp !== st.species) load(sp, "all");
+      if (!sp || sp === st.species) return;
+      if (!m || sp !== m.species) return load(sp, "all");
+      // Back to the Pokemon's own species: its own moves and ability again, not the species' preset.
+      inputs.forEach((el, i) => el.value = moveRef(m.moves[i]?.id ?? 0));
+      st.preset = false;
+      $("#presetnote", d).hidden = false;
+      $("#presetnote", d).textContent = `Di nuovo ${S.species.get(sp)?.name ?? ""}: mosse e abilità sono tornate quelle del Pokémon.`;
+      load(sp, null);
     });
     // Moves the game gave for one level follow the level while they are left alone.
     form.elements.level.addEventListener("input", () => { if (st.preset && st.species) load(st.species, "moves"); });
