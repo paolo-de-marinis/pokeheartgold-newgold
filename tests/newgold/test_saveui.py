@@ -31,10 +31,13 @@ import savedit as sv  # noqa: E402
 import saveui  # noqa: E402
 
 
-def header_only():
-    """The built ROM's cartridge header, saying it is all there is."""
+def header_only(code=None):
+    """The built ROM's cartridge header, saying it is all there is (and,
+    given a game code, saying it is that game)."""
     with open(BUILD / "pokeheartgold.us.nds", "rb") as f:
         header = bytearray(f.read(0x200))
+    if code:
+        header[0x0C:0x10] = code
     struct.pack_into("<I", header, 0x80, 0x200)
     struct.pack_into("<H", header, 0x15E, saveui.nds_crc(header[:0x15E]))
     return bytes(header)
@@ -117,6 +120,48 @@ class SaveUiTests(unittest.TestCase):
     def backups(self, key="gyms/test.sav"):
         folder = self.library / ".backups" / key
         return sorted(folder.iterdir()) if folder.is_dir() else []
+
+    # -- the settings: the folder and the ROMs the page chooses -------------------
+
+    def test_the_settings(self):
+        base = Path(tempfile.mkdtemp(dir=self.tmp.name))
+        saved = saveui.CONFIG, saveui.BROWSE_ROOTS, saveui.Handler.persist
+        saveui.CONFIG, saveui.BROWSE_ROOTS, saveui.Handler.persist = base / "cfg/settings.json", [base], True
+        try:
+            out = self.ok("/api/settings")
+            self.assertEqual(out["library"], str(self.library.resolve()))
+            self.assertEqual([r["id"] for r in out["roms"]], ["hg-diag", "hg"])
+            other = base / "altri salvataggi"
+            other.mkdir()
+            (other / "mio.sav").write_bytes(self.template.read_bytes())
+            (base / "ss").mkdir()
+            silver = base / "ss/silver.nds"
+            silver.write_bytes(header_only(b"IPGE"))
+            hg = out["roms"][0]["rom"]
+            self.assertIn("non esiste", self.refused("/api/settings", {"library": str(base / "nuova"), "roms": []}))
+            self.assertIn("non esiste", self.refused("/api/settings", {"library": str(other), "roms": [{"rom": str(base / "no.nds")}]}))
+            self.assertIn(".nds", self.refused("/api/settings", {"library": str(other), "roms": [{"rom": str(other / "mio.sav")}]}))
+            out = self.ok("/api/settings", {"library": str(other), "roms": [
+                {"label": "La mia HG", "rom": hg}, {"label": "", "rom": str(silver)}, {"rom": hg}]})
+            self.assertEqual([(r["id"], r["label"]) for r in out["roms"]], [("hg-diag", "La mia HG"), (saveui.rom_id(silver), "silver")])
+            self.assertEqual(json.loads(saveui.CONFIG.read_text())["library"], str(other.resolve()), "kept for the next start")
+            listing = self.ok("/api/library")
+            self.assertEqual([e["f"] for e in listing["files"]], ["mio.sav"])
+            self.assertEqual(listing["playable"], ["hg-diag"], "a SoulSilver ROM is a slot, not a game for these saves")
+            key = saveui.rom_id(silver)
+            self.assertIn("HeartGold", self.refused("/api/play", {"f": "mio.sav", "slot": key}))
+            self.ok("/api/load", {"f": "mio.sav", "slot": key})
+            self.assertEqual((base / "ss/silver.sav").read_bytes(), self.template.read_bytes(), "the .sav beside the ROM")
+            created = self.ok("/api/settings", {"library": str(base / "nuova"), "roms": [], "create": True})
+            self.assertTrue((base / "nuova").is_dir())
+            self.assertEqual(created["roms"], [])
+            # Browsing: folders, and ROMs when a ROM is wanted; nothing outside the roots.
+            found = self.ok(f"/api/browse?want=nds&path={urllib.request.quote(str(base / 'ss'))}")
+            self.assertEqual([f["name"] for f in found["files"]], ["silver.nds"])
+            self.assertIn("altri salvataggi", self.ok(f"/api/browse?want=dir&path={urllib.request.quote(str(base))}")["dirs"])
+            self.assertIn("si sfoglia solo", self.refused("/api/browse?want=dir&path=/etc"))
+        finally:
+            saveui.CONFIG, saveui.BROWSE_ROOTS, saveui.Handler.persist = saved
 
     # -- reading ------------------------------------------------------------
 
@@ -272,7 +317,7 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(self.backups("emulatore/hg-diag")[0].read_bytes(), old)
         self.ok("/api/play", {"f": "gyms/test.sav", "slot": "hg"})
         self.assertEqual(saveui.LAUNCHED[-1], (self.build / "heartgold.us/pokeheartgold.us.nds").resolve())
-        self.assertIn("HeartGold", self.refused("/api/play", {"f": "gyms/test.sav", "slot": "ss"}))
+        self.assertIn("non c'è lo slot", self.refused("/api/play", {"f": "gyms/test.sav", "slot": "ss"}))
         self.assertEqual(self.ok("/api/take", {"slot": "hg-diag", "name": "dal-gioco"})["f"], "dal-gioco.sav")
         self.assertEqual((self.library / "dal-gioco.sav").read_bytes(), slot.read_bytes())
         self.assertIn("non è un salvataggio valido", self.refused("/api/load", {"f": "junk.sav", "slot": "hg-diag"}))

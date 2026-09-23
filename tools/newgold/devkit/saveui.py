@@ -4,10 +4,14 @@
     saveui.py [--library DIR] [--port N] [--no-browser] [--build DIR]
 
 Serves saveui.html on http://127.0.0.1:PORT (8765 by default) and opens it
-in the browser. The library is a folder of .sav files, ~/hgss-saves by
-default; the emulator slots are the .sav melonDS reads beside each ROM under
-the build folder (--build, this tree's build/ by default). Everything is read
-and written through savedit.py.
+in the browser. The library is a folder of .sav files; the emulator slots are
+the .sav melonDS reads beside each ROM. Both are chosen in the page ("Cartelle
+e ROM") and kept in ~/.config/newgold-saveui/settings.json (SAVEUI_CONFIG
+elsewhere); until something is chosen the library is ~/hgss-saves and the ROMs
+are the ones built under --build (this tree's build/). --library on the command
+line wins over the settings for that run. --build also says where the save's
+layout is measured (build/heartgold.us). Everything is read and written
+through savedit.py.
 
 Nothing is ever deleted. Before any write the file is copied to
 LIBRARY/.backups/<its path>/<timestamp>.sav (an emulator slot to
@@ -26,6 +30,7 @@ instead of running it; the tests use it.
 import argparse
 import datetime
 import functools
+import hashlib
 import http.server
 import json
 import os
@@ -35,6 +40,7 @@ import struct
 import subprocess
 import sys
 import threading
+import time
 import urllib.parse
 import webbrowser
 import zlib
@@ -46,7 +52,6 @@ sys.path.insert(0, str(HERE))
 import savedit as sv  # noqa: E402
 
 PAGE = HERE / "saveui.html"
-PLAY = HERE / "diag/play.py"
 ICONS = ROOT / "files/poketool/icongra/poke_icon"
 # key: (build folder, ROM stem, label). melonDS's SaveFilePath is empty, so
 # it reads and writes the .sav beside the ROM.
@@ -56,10 +61,15 @@ SLOTS = {
     "ss-diag": ("soulsilver.us.diag", "pokesoulsilver.us", "SoulSilver diagnostica"),
     "ss": ("soulsilver.us", "pokesoulsilver.us", "SoulSilver"),
 }
-PLAYABLE = ("hg-diag", "hg")
 NAME = re.compile(r"[\w\- .]+")
 APP = "net.kuribo64.melonDS"    # diag/play.py's
 LAUNCHED = []                   # what a dry run would have started
+HEARTGOLD = b"IPK"              # the cartridge's game code, IPKE for the American HeartGold
+CONFIG = Path(os.environ.get("SAVEUI_CONFIG") or
+              Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "newgold-saveui/settings.json")
+LAUNCH_LOG = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "newgold-saveui/melonds.log"
+# The folders the page may list when choosing a folder or a ROM.
+BROWSE_ROOTS = [Path.home(), Path("/run/media"), Path("/media"), Path("/mnt")]
 
 
 class Refused(Exception):
@@ -74,14 +84,37 @@ def dry_run():
     return os.environ.get("SAVEUI_DRY_RUN") == "1"
 
 
-def launch(rom):
-    """play.py's own launch: the flatpak on this ROM, detached."""
-    command = [sys.executable, str(PLAY), "launch", str(rom)]
+def launch(rom, wait=8.0):
+    """play.py's launch -- the flatpak on this ROM, detached -- and then a
+    look that melonDS really came up: its window appears within a few
+    seconds, or what flatpak said is the error."""
+    command = ["flatpak", "run", APP, str(rom)]
     if dry_run():
         LAUNCHED.append(rom)
         print("avvio simulato:", " ".join(command))
         return
-    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    LAUNCH_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with open(LAUNCH_LOG, "wb") as log:
+        process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                   stderr=log, start_new_session=True)
+    deadline = time.monotonic() + wait
+    while time.monotonic() < deadline:
+        if melonds_running():
+            return
+        if process.poll() is not None:
+            break
+        time.sleep(0.2)
+    said = LAUNCH_LOG.read_text(errors="replace").strip()[-500:]
+    why = f"flatpak è uscito con codice {process.returncode}" if process.poll() is not None else \
+        f"nessuna finestra dopo {wait:.0f} secondi"
+    raise Refused(f"melonDS non si è aperto ({why}). {said or 'flatpak non ha scritto nulla'} "
+                  f"-- il comando era: {' '.join(command)}")
+
+
+def game_code(rom):
+    with open(rom, "rb") as f:
+        f.seek(0x0C)
+        return f.read(4)
 
 
 def nds_crc(data):
@@ -218,23 +251,67 @@ def recolour(png, colours):
 # The library: files, the emulator slots, backups and the bin.
 
 
+def default_roms(build):
+    """The ROMs this tree builds, the ones that are there, as the settings
+    list them."""
+    build = Path(build).expanduser().resolve()
+    return [{"id": key, "label": label, "rom": str(build / folder / f"{stem}.nds")}
+            for key, (folder, stem, label) in SLOTS.items() if (build / folder / f"{stem}.nds").exists()]
+
+
+def rom_id(rom):
+    return "r" + hashlib.sha1(str(rom).encode()).hexdigest()[:10]
+
+
+def load_settings():
+    try:
+        settings = json.loads(CONFIG.read_text())
+        return settings if isinstance(settings, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def store_settings(settings):
+    """Atomically, as the saves are."""
+    CONFIG.parent.mkdir(parents=True, exist_ok=True)
+    temporary = CONFIG.with_name(f".{CONFIG.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(settings, indent=2, ensure_ascii=False) + "\n")
+    os.replace(temporary, CONFIG)
+
+
 class Library:
-    def __init__(self, library, build):
+    def __init__(self, library, build, roms=None):
         self.root = Path(library).expanduser().resolve()
         self.build = Path(build).expanduser().resolve()
         self.layout = self.build / "heartgold.us"
+        self.roms = [dict(r) for r in (default_roms(build) if roms is None else roms)]
         self.backups = self.root / ".backups"
         self.trash = self.root / ".trash"
         self.lock = threading.RLock()
 
     # -- where things are ---------------------------------------------------
 
+    def rom_entry(self, key):
+        found = next((r for r in self.roms if r["id"] == key), None)
+        if found is None:
+            raise Refused(f"non c'è lo slot {key}")
+        return found
+
     def slot_paths(self, key):
-        folder, stem, _ = SLOTS[key]
-        return self.build / folder / f"{stem}.nds", self.build / folder / f"{stem}.sav"
+        """The ROM and the .sav melonDS keeps beside it, under the same name."""
+        rom = Path(self.rom_entry(key)["rom"])
+        return rom, rom.with_suffix(".sav")
+
+    def label(self, key):
+        return self.rom_entry(key)["label"]
 
     def slots(self):
-        return [key for key in SLOTS if self.slot_paths(key)[0].exists()]
+        return [r["id"] for r in self.roms]
+
+    def playable(self, key):
+        """A HeartGold ROM melonDS can open: the saves here are HeartGold's."""
+        rom, sav = self.slot_paths(key)
+        return rom_problem(rom, sav) is None and game_code(rom).startswith(HEARTGOLD)
 
     def inside(self, rel, base=None, sav=True):
         """A path under the library (or `base`), refused if it climbs out,
@@ -261,7 +338,7 @@ class Library:
         path in the library."""
         if isinstance(f, str) and f.startswith("emu:"):
             key = f[4:]
-            if key not in SLOTS or key not in self.slots():
+            if key not in self.slots():
                 raise Refused(f"non c'è lo slot {key}")
             path = self.slot_paths(key)[1]
             if path.is_symlink():
@@ -318,7 +395,7 @@ class Library:
         slots = []
         for key in self.slots():
             rom, path = self.slot_paths(key)
-            slots.append({"f": f"emu:{key}", "slot": key, "label": SLOTS[key][2], "path": str(path),
+            slots.append({"f": f"emu:{key}", "slot": key, "label": self.label(key), "path": str(path),
                           "rom": str(rom), "problem": rom_problem(rom, path),
                           "exists": path.exists(), **(self.summary(path) if path.exists() else {})})
         trash = []
@@ -327,7 +404,8 @@ class Library:
                 rel = path.relative_to(self.trash).as_posix()
                 trash.append({"t": rel, "f": rel.split("/", 1)[-1], "when": rel.split("/", 1)[0]})
         return {"library": str(self.root), "files": files, "slots": slots, "trash": trash,
-                "playable": [s["slot"] for s in slots if s["slot"] in PLAYABLE and not s["problem"]],
+                "playable": [s["slot"] for s in slots if not s["problem"] and self.playable(s["slot"])],
+                "configured": CONFIG.exists(),
                 "melonds": melonds_running()}
 
     def detail(self, f):
@@ -458,7 +536,7 @@ class Library:
             target, _, _ = self.locate(f"emu:{slot}")
             problem = rom_problem(self.slot_paths(slot)[0], target)
             if problem:
-                raise Refused(f"{SLOTS[slot][2]}: {problem}")
+                raise Refused(f"{self.label(slot)}: {problem}")
             self.open(source)
             self.write(f"emu:{slot}", source.read_bytes())
 
@@ -473,10 +551,23 @@ class Library:
             return target.relative_to(self.root).as_posix()
 
     def play(self, f, slot):
-        if slot not in PLAYABLE:
-            raise Refused("si gioca su HeartGold, normale o diagnostica")
+        if not isinstance(slot, str) or slot not in self.slots():
+            raise Refused(f"non c'è lo slot {slot}")
+        rom, sav = self.slot_paths(slot)
+        if rom_problem(rom, sav) is None and not self.playable(slot):
+            raise Refused(f"{self.label(slot)}: si gioca su una ROM di HeartGold, i salvataggi qui sono di HeartGold")
+        if melonds_running():
+            raise Refused("melonDS è già aperto: chiudilo prima, poi premi di nuovo Gioca")
         self.load(f, slot)
-        launch(self.slot_paths(slot)[0].resolve())
+        launch(rom.resolve())
+
+    # -- the settings: which folder, which ROMs -------------------------------
+
+    def settings(self):
+        return {"library": str(self.root), "layout": str(self.layout), "config": str(CONFIG),
+                "roms": [{**r, "sav": str(Path(r["rom"]).with_suffix(".sav")),
+                          "problem": rom_problem(r["rom"], Path(r["rom"]).with_suffix(".sav"))} for r in self.roms],
+                "defaults": default_roms(self.build)}
 
     # -- the edits the page sends -------------------------------------------
 
@@ -700,6 +791,74 @@ def retag(save, before, after):
                 sv.set_box_mon(save, box, slot, new)
 
 
+def checked_settings(body, build):
+    """The folder and the ROMs the page sent, checked; refused with the
+    reason otherwise."""
+    if not isinstance(body, dict):
+        raise Refused("impostazioni non valide")
+    library = body.get("library")
+    if not isinstance(library, str) or not library.strip():
+        raise Refused("scegli la cartella dei salvataggi")
+    folder = Path(library.strip()).expanduser()
+    if not folder.is_absolute():
+        raise Refused("la cartella dei salvataggi va indicata per intero, da /")
+    if not folder.exists():
+        if not body.get("create"):
+            raise Refused(f"la cartella {folder} non esiste")
+        folder.mkdir(parents=True)
+    if not folder.is_dir():
+        raise Refused(f"{folder} non è una cartella")
+    roms, seen = [], set()
+    defaults = {r["rom"]: r for r in default_roms(build)}
+    for entry in body.get("roms") or []:
+        if not isinstance(entry, dict) or not isinstance(entry.get("rom"), str):
+            raise Refused("una ROM senza percorso")
+        rom = Path(entry["rom"].strip()).expanduser()
+        if not rom.is_absolute() or rom.suffix.lower() != ".nds":
+            raise Refused(f"{rom}: una ROM è un file .nds indicato per intero")
+        if not rom.is_file():
+            raise Refused(f"la ROM {rom} non esiste")
+        if str(rom) in seen:
+            continue
+        seen.add(str(rom))
+        label = str(entry.get("label") or "").strip()[:60] or defaults.get(str(rom), {}).get("label") or rom.stem
+        key = defaults[str(rom)]["id"] if str(rom) in defaults else rom_id(rom)
+        roms.append({"id": key, "label": label, "rom": str(rom)})
+    return {"library": str(folder.resolve()), "roms": roms}
+
+
+def browse(path, want):
+    """One folder's subfolders, and its .nds files when a ROM is wanted; only
+    under the home and the usual mount points."""
+    here = Path(path).expanduser() if path else Path.home()
+    try:
+        here = here.resolve(strict=True)
+    except OSError:
+        raise Refused(f"{here} non esiste")
+    if not here.is_dir():
+        here = here.parent
+    if not any(here == r or here.is_relative_to(r) for r in BROWSE_ROOTS if r.exists()):
+        raise Refused(f"si sfoglia solo sotto {Path.home()} e i dischi montati")
+    dirs, files = [], []
+    try:
+        for child in sorted(here.iterdir(), key=lambda c: c.name.lower()):
+            if child.name.startswith("."):
+                continue
+            try:
+                if child.is_dir():
+                    dirs.append(child.name)
+                elif want == "nds" and child.suffix.lower() == ".nds" and child.is_file():
+                    files.append({"name": child.name, "size": child.stat().st_size})
+            except OSError:
+                continue
+    except PermissionError:
+        raise Refused(f"non posso leggere {here}")
+    parent = here.parent if here != here.parent and any(
+        here.parent == r or here.parent.is_relative_to(r) for r in BROWSE_ROOTS if r.exists()) else None
+    return {"path": str(here), "parent": str(parent) if parent else None, "dirs": dirs, "files": files,
+            "saves": sum(1 for _ in here.glob("*.sav")) if want == "dir" else None}
+
+
 def tables():
     """The names the page searches: species, moves, items, natures, maps."""
     return {"species": sv.species_table(), "moves": sv.move_table(),
@@ -715,6 +874,8 @@ def tables():
 class Handler(http.server.BaseHTTPRequestHandler):
     library = None
     port = None
+    persist = False     # whether the page's choices are written to CONFIG
+    server = None
 
     def log_message(self, fmt, *args):
         pass
@@ -746,6 +907,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.reply(200, PAGE.read_bytes(), "text/html; charset=utf-8")
             if url.path == "/api/state":
                 return self.reply(200, {"melonds": melonds_running()})
+            if url.path == "/api/settings":
+                return self.reply(200, self.library.settings())
+            if url.path == "/api/browse":
+                return self.reply(200, browse(q.get("path"), q.get("want", "dir")))
             if url.path == "/api/library":
                 return self.reply(200, self.library.listing())
             if url.path == "/api/data":
@@ -797,6 +962,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if path == "/api/play":
                 lib.play(body.get("f"), body.get("slot"))
                 return self.reply(200, {})
+            if path == "/api/quit":
+                # The page's "Chiudi l'editor": started with a double click,
+                # the server has no terminal to press Ctrl+C in.
+                threading.Thread(target=Handler.server.shutdown, daemon=True).start()
+                return self.reply(200, {})
+            if path == "/api/settings":
+                chosen = checked_settings(body, lib.build)
+                with lib.lock:
+                    Handler.library = Library(chosen["library"], lib.build, chosen["roms"])
+                    if Handler.persist:
+                        store_settings(chosen)
+                return self.reply(200, Handler.library.settings())
             return self.reply(404, {"error": "non trovato"})
         except Refused as e:
             return self.reply(400, {"error": str(e)})
@@ -804,7 +981,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self.reply(500, {"error": f"{type(e).__name__}: {e}"})
 
 
-def serve(library, build, port):
+def serve(library, build, port, roms=None, persist=False):
     """The server on 127.0.0.1, on `port` or the next free one of ten."""
     for candidate in range(port, port + 10) if port else [0]:
         try:
@@ -814,15 +991,18 @@ def serve(library, build, port):
             continue
     else:
         raise SystemExit(f"no free port from {port} to {port + 9}")
-    Handler.library = Library(library, build)
+    Handler.library = Library(library, build, roms)
     Handler.port = server.server_address[1]
+    Handler.persist = persist
+    Handler.server = server
     return server
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--library", type=Path, default=Path.home() / "hgss-saves",
-                        help="the folder of .sav files, ~/hgss-saves by default")
+    parser.add_argument("--library", type=Path, default=None,
+                        help="the folder of .sav files for this run; otherwise the one chosen in the page, "
+                             "or ~/hgss-saves")
     parser.add_argument("--port", type=int, default=8765,
                         help="8765 by default; if it is taken, the next free one of ten")
     parser.add_argument("--no-browser", action="store_true", help="print the address instead of opening it")
@@ -830,12 +1010,28 @@ def main():
                         help="the folder holding heartgold.us, heartgold.us.diag and the rest")
     parser.add_argument("--dry-run-launch", action="store_true",
                         help="Gioca prints the melonDS command instead of running it (or SAVEUI_DRY_RUN=1)")
+    parser.add_argument("--install-launcher", action="store_true",
+                        help="add 'Editor salvataggi New Gold' to the desktop's application menu and stop")
     args = parser.parse_args()
+    if args.install_launcher:
+        return install_launcher()
     if args.dry_run_launch:
         os.environ["SAVEUI_DRY_RUN"] = "1"
-    if not args.library.is_dir():
-        raise SystemExit(f"{args.library} is not a folder")
-    server = serve(args.library, args.build, args.port)
+    if not args.no_browser and args.port and already_serving(args.port):
+        # A second start -- a double click on the launcher while the editor
+        # runs -- opens the page on the one that is there.
+        url = f"http://127.0.0.1:{args.port}/"
+        print(f"the save editor is already running on {url}")
+        webbrowser.open(url)
+        return
+    settings = load_settings()
+    library = args.library or Path(settings.get("library") or Path.home() / "hgss-saves")
+    if not library.is_dir():
+        if args.library:
+            raise SystemExit(f"{args.library} is not a folder")
+        library = Path.home()   # the page opens on the settings to choose one
+    roms = settings.get("roms") if isinstance(settings.get("roms"), list) else None
+    server = serve(library, args.build, args.port, roms, persist=True)
     url = f"http://127.0.0.1:{Handler.port}/"
     print(f"save editor on {url} -- library {Handler.library.root}, build {Handler.library.build}"
           f"{' (launches simulated)' if dry_run() else ''}; Ctrl+C to stop")
@@ -845,6 +1041,27 @@ def main():
         server.serve_forever()
     except KeyboardInterrupt:
         pass
+
+
+def already_serving(port):
+    """Whether this editor answers on the port already."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/state", timeout=1) as reply:
+            return "melonds" in json.load(reply)
+    except (OSError, ValueError):
+        return False
+
+
+def install_launcher():
+    """A .desktop entry, so the editor starts from the application menu."""
+    entry = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share") / "applications/newgold-saveui.desktop"
+    entry.parent.mkdir(parents=True, exist_ok=True)
+    entry.write_text("[Desktop Entry]\nType=Application\nName=Editor salvataggi New Gold\n"
+                     "Comment=I salvataggi di HeartGold New Gold: modificali, caricali in melonDS e gioca\n"
+                     f"Exec={sys.executable} {Path(__file__).resolve()}\nIcon=applications-games\n"
+                     "Terminal=false\nCategories=Game;Utility;\n")
+    print(f"wrote {entry}")
 
 
 if __name__ == "__main__":

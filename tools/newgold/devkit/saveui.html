@@ -159,12 +159,17 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
   .pc { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px; }
   .pc button { height: 52px; }
 }
+.wide { display: block; width: 100%; text-align: left; margin: 2px 0; }
+.browse { max-height: 50vh; }
+#libpath { cursor: pointer; }
 </style>
 </head>
 <body>
 <header class="top">
   <div class="brand"><strong>Editor salvataggi</strong><span>HeartGold · New Gold</span></div>
-  <div class="lib" id="libpath"></div>
+  <div class="lib" id="libpath" title="Cambia in Cartelle e ROM"></div>
+  <button type="button" class="small" id="settingsbtn">Cartelle e ROM</button>
+  <button type="button" class="small" id="quitbtn" title="Spegne il server dell'editor; si riapre con un doppio clic sul lanciatore">Chiudi l'editor</button>
   <div class="pill" id="melon">melonDS chiuso</div>
 </header>
 <div class="banner" id="banner" hidden>
@@ -332,7 +337,7 @@ function renderLibrary() {
         ${e.exists && e.valid ? `<button class="small" data-act="open" data-f="${esc(e.f)}" type="button">Apri</button>` : ""}
         ${e.exists ? `<button class="small" data-act="take" data-f="${esc(e.f)}" type="button">Prendi dall'emulatore</button>` : ""}
       </div>
-    </div>`).join("") || `<div class="meta">Nessuna ROM trovata nella cartella di build.</div>`;
+    </div>`).join("") || `<div class="meta">Nessuna ROM scelta: aggiungila in <a href="#" data-settings>Cartelle e ROM</a>.</div>`;
   const files = lib.files.filter(e => !q || `${e.f} ${e.name || ""} ${e.location || ""}`.toLowerCase().includes(q));
   $("#files").innerHTML = files.map(e => {
     const cut = e.f.lastIndexOf("/");
@@ -370,7 +375,8 @@ function slotOptions(keys) {
   return keys.map(k => { const s = S.lib.slots.find(x => x.slot === k); return `<option value="${k}">${esc(s.label)}</option>`; }).join("");
 }
 function suggestName(f) {
-  const base = f.startsWith("emu:") ? `da-emulatore-${f.slice(4)}` : f.replace(/\.sav$/, "");
+  const slot = f.startsWith("emu:") && S.lib.slots.find(s => s.f === f);
+  const base = slot ? `da-emulatore-${slot.label.replace(/[^\w\- .]+/g, "-")}` : f.replace(/\.sav$/, "");
   const d = new Date(), p = n => String(n).padStart(2, "0");
   return `${base}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
 }
@@ -381,7 +387,8 @@ async function libraryAction(act, f, t) {
       <label class="f">Slot<select name="slot">${slotOptions(S.lib.playable)}</select></label>`,
       [["go", "Carica e avvia melonDS", "primary"], ["", "Annulla"]]);
     if (r.value !== "go") return;
-    await run(() => api("/api/play", {f, slot: r.data.slot}), "Caricato: melonDS si sta aprendo");
+    toast("Carico il salvataggio e apro melonDS…");
+    await run(() => api("/api/play", {f, slot: r.data.slot}), "melonDS è aperto");
     return loadLibrary();
   }
   if (act === "load") {
@@ -430,6 +437,98 @@ async function libraryAction(act, f, t) {
     }
   }
 }
+
+// ---- settings: the saves' folder and the ROMs ----------------------------
+async function browseFor(want, start) {
+  let here = start || "";
+  for (;;) {
+    const b = await run(() => api(`/api/browse?want=${want}&path=${encodeURIComponent(here)}`));
+    if (!b) { if (here) { here = ""; continue; } return null; }
+    const join = name => (b.path.endsWith("/") ? b.path : b.path + "/") + name;
+    const r = await ask(want === "dir" ? "Scegli la cartella dei salvataggi" : "Scegli una ROM (.nds)", `
+      <div class="bar" style="margin:0 0 8px"><input name="jump" value="${esc(b.path)}" style="flex:1" aria-label="Percorso"><button value="go" class="small">Vai</button></div>
+      <div class="scroll browse">
+        ${b.parent ? `<button type="submit" class="small wide" value="d:${esc(b.parent)}">⬆ Cartella superiore</button>` : ""}
+        ${b.dirs.map(d => `<button type="submit" class="small wide" value="d:${esc(join(d))}">📁 ${esc(d)}</button>`).join("")}
+        ${b.files.map(f => `<button type="submit" class="small wide primary" value="f:${esc(join(f.name))}">🎮 ${esc(f.name)} · ${(f.size / 1048576).toFixed(0)} MB</button>`).join("")}
+        ${!b.dirs.length && !b.files.length ? `<p class="muted">${want === "dir" ? "Nessuna sottocartella." : "Nessuna ROM (.nds) e nessuna sottocartella."}</p>` : ""}
+      </div>
+      ${want === "dir" ? `<p class="note">In questa cartella ci sono ${b.saves} salvataggi (.sav); anche le sottocartelle fanno parte della libreria.</p>`
+                       : `<p class="note">melonDS legge e scrive il salvataggio accanto alla ROM, con lo stesso nome e .sav.</p>`}`,
+      want === "dir" ? [["pick", "Usa questa cartella", "primary"], ["", "Annulla"]] : [["", "Annulla"]]);
+    if (!r.value) return null;
+    if (r.value === "pick") return b.path;
+    if (r.value === "go") { here = r.data.jump; continue; }
+    if (r.value.startsWith("d:")) { here = r.value.slice(2); continue; }
+    if (r.value.startsWith("f:")) return r.value.slice(2);
+  }
+}
+
+async function openSettings(first = false) {
+  let st = await run(() => api("/api/settings"));
+  if (!st) return;
+  const draft = {library: st.library, roms: st.roms.map(r => ({label: r.label, rom: r.rom}))};
+  const checked = new Map(st.roms.map(r => [r.rom, r.problem]));
+  for (;;) {
+    const romCard = (r, i) => `<div class="card" style="cursor:default">
+        <label class="f">Nome<input name="label${i}" value="${esc(r.label)}"></label>
+        <div class="meta">${esc(r.rom)}</div>
+        ${!checked.has(r.rom) ? `<div class="meta">Verrà controllata quando salvi.</div>`
+          : checked.get(r.rom) ? `<div class="meta invalid">Non usabile: ${esc(checked.get(r.rom))}</div>` : `<div class="meta">Pronta per melonDS.</div>`}
+        <div class="acts"><button class="small" value="rm:${i}">Togli</button></div></div>`;
+    const r = await ask("Cartelle e ROM", `${first ? `<p>Scegli dove sono i tuoi salvataggi e quali ROM usare con melonDS. Le scelte restano salvate per le prossime volte.</p>` : ""}
+      <h3 style="margin:0 0 6px">Cartella dei salvataggi</h3>
+      <div class="bar" style="margin:0"><input name="library" value="${esc(draft.library)}" style="flex:1" aria-label="Cartella dei salvataggi"><button value="pickdir" class="small">Sfoglia…</button></div>
+      <p class="note">Tutti i .sav della cartella e delle sue sottocartelle. I backup vanno in .backups e il cestino in .trash, dentro la stessa cartella.</p>
+      <h3 style="margin:14px 0 6px">ROM per melonDS</h3>
+      <p class="note">Ogni ROM è uno slot dell'emulatore: melonDS legge e scrive il salvataggio accanto alla ROM (stesso nome, .sav). "Gioca" copia lì il salvataggio scelto e apre melonDS; serve una ROM di HeartGold.</p>
+      ${draft.roms.map(romCard).join("") || `<p class="muted">Nessuna ROM: aggiungine una per poter giocare.</p>`}
+      <div class="bar" style="margin:8px 0 0"><button value="addrom" class="small">Aggiungi ROM…</button>
+        ${st.defaults.some(d => !draft.roms.some(x => x.rom === d.rom)) ? `<button value="defaults" class="small">Aggiungi le ROM della build</button>` : ""}</div>
+      <p class="note">Le scelte sono salvate in ${esc(st.config)}.</p>`,
+      [["save", "Salva", "primary"], ["", "Annulla"]]);
+    if (r.data.library !== undefined) draft.library = r.data.library;
+    draft.roms.forEach((x, i) => { if (r.data["label" + i] !== undefined) x.label = r.data["label" + i]; });
+    if (!r.value) return;
+    if (r.value === "pickdir") { const p = await browseFor("dir", draft.library); if (p) draft.library = p; continue; }
+    if (r.value === "addrom") {
+      const last = draft.roms.at(-1)?.rom;
+      const p = await browseFor("nds", last ? last.replace(/\/[^/]*$/, "") : "");
+      if (p && !draft.roms.some(x => x.rom === p)) draft.roms.push({label: p.split("/").pop().replace(/\.nds$/i, ""), rom: p});
+      continue;
+    }
+    if (r.value === "defaults") { for (const d of st.defaults) if (!draft.roms.some(x => x.rom === d.rom)) draft.roms.push({label: d.label, rom: d.rom}); continue; }
+    if (r.value.startsWith("rm:")) { draft.roms.splice(+r.value.slice(3), 1); continue; }
+    if (r.value === "save") {
+      let out = null;
+      try {
+        out = await api("/api/settings", draft);
+      } catch (e) {
+        if (/^la cartella .* non esiste$/.test(e.message)) {
+          const c = await ask("Cartella inesistente", `<p>${esc(e.message)}. Vuoi crearla?</p>`, [["yes", "Creala", "primary"], ["", "No"]]);
+          if (c.value === "yes") out = await run(() => api("/api/settings", {...draft, create: true}));
+        } else toast(e.message, true);
+      }
+      if (!out) continue;
+      out.roms.forEach(x => checked.set(x.rom, x.problem));
+      toast("Impostazioni salvate");
+      closeSave();
+      await loadLibrary();
+      const bad = out.roms.filter(x => x.problem);
+      if (bad.length) { st = out; toast(`${bad.length === 1 ? "Una ROM non è usabile" : bad.length + " ROM non sono usabili"}: vedi Cartelle e ROM`, true); }
+      return;
+    }
+  }
+}
+$("#settingsbtn").addEventListener("click", () => openSettings());
+$("#quitbtn").addEventListener("click", async () => {
+  const r = await ask("Chiudi l'editor", `<p>Spegne l'editor. I salvataggi sono già scritti: non c'è niente da salvare. Per riaprirlo, doppio clic su <strong>Editor salvataggi</strong> nella cartella devkit.</p>`,
+    [["yes", "Chiudi l'editor", "danger"], ["", "Annulla"]]);
+  if (r.value !== "yes" || !(await run(() => api("/api/quit", {})))) return;
+  document.body.innerHTML = `<main style="padding:48px;text-align:center"><h1>Editor chiuso</h1><p>Puoi chiudere questa scheda. Per riaprirlo, doppio clic su <strong>Editor salvataggi</strong> nella cartella devkit.</p></main>`;
+});
+$("#libpath").addEventListener("click", () => openSettings());
+document.addEventListener("click", ev => { if (ev.target.closest("[data-settings]")) { ev.preventDefault(); openSettings(); } });
 
 // ---- dialogs -----------------------------------------------------------
 function ask(title, body, buttons, setup) {
@@ -861,6 +960,7 @@ async function init() {
   S.tab = TABS.some(t => t[0] === store.get("tab")) ? store.get("tab") : "trainer";
   S.box = Math.min(29, Math.max(0, +store.get("box") || 0));
   await loadLibrary();
+  if (S.lib && !S.lib.configured && !S.lib.files.length) openSettings(true);
   const last = store.get("f");
   if (last && S.lib && (S.lib.files.some(e => e.f === last && e.valid) || S.lib.slots.some(e => e.f === last && e.valid))) openSave(last);
   setInterval(poll, 4000);
