@@ -139,6 +139,9 @@ class DoublingTests(unittest.TestCase):
     // The target's action, not the user's; and only Payback asks.
     reset(4); S.acted[0] = TRUE; EXPECT({hit("MOVE_PAYBACK")}, 46);
     reset(4); S.acted[1] = TRUE; EXPECT({hit("MOVE_TACKLE")}, 46);
+    // A Pokemon that came in during the turn has not acted, from Generation V
+    // (Pokemon Central, Rivincita), though it has no action left either.
+    reset(4); S.acted[1] = TRUE; ctx.turnData[1].switchedIn = TRUE; EXPECT({hit("MOVE_PAYBACK")}, 46);
 """))
         from test_repels import read
         self.assertNotIn("CalcPaybackPower", read("files/battledata/script/effect_script/effect_script_0230.s"))

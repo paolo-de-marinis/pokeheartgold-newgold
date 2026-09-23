@@ -74,7 +74,7 @@ typedef struct {
     int totalTimesFainted[4];
     u8 gemBoostingMove; int battlerIdAttacker; u8 multiHitCount;
     BattleMon battleMons[4];
-    struct { int helpingHandFlag; int unk3C; } turnData[4];
+    struct { int helpingHandFlag; int unk3C; int switchedIn; } turnData[4];
     struct { u8 statLoweredThisTurn; } moveConditions[4];
 } BattleContext;
 typedef struct { int power, type, category, effect; } MoveTbl;

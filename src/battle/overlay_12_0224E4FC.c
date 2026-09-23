@@ -2407,6 +2407,10 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
     maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
     BattleSystem_GetBattleType(battleSystem);
     ctx->playerActions[battlerId].command = CONTROLLER_COMMAND_40;
+    // What comes in during a turn has no action left in it, and has not
+    // acted either. The mark goes with the rest of the turn's data as the
+    // next turn begins, so a Pokemon sent out between turns does not keep it.
+    ctx->turnData[battlerId].switchedIn = TRUE;
 
     if (!(ctx->battleStatus & BATTLE_STATUS_BATON_PASS)) {
         for (i = 0; i < maxBattlers; i++) {
@@ -10023,8 +10027,12 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     }
 
     // Payback doubles against a Pokemon that has already acted this turn
-    // (the reference's CalcBaseDamage, asking the same IsMovingAfterClient).
-    if (moveNo == MOVE_PAYBACK && ov12_0225561C(ctx, battlerIdTarget) == TRUE) {
+    // (the reference's CalcBaseDamage, asking the same IsMovingAfterClient),
+    // but not against one that came in during it: from the fifth generation a
+    // switch is no longer an action it answers (Pokemon Central, Rivincita).
+    // The reference's comment says as much, but the question it asks is
+    // retail's, which a switch-in answers yes.
+    if (moveNo == MOVE_PAYBACK && ov12_0225561C(ctx, battlerIdTarget) == TRUE && !ctx->turnData[battlerIdTarget].switchedIn) {
         movePower *= 2;
     }
 

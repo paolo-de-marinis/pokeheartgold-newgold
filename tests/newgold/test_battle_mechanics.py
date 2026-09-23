@@ -1153,5 +1153,16 @@ class SleepTalkMultiStrikeTests(unittest.TestCase):
         self.assertIn("!MultiHit_StoppedBySleep(ctx)", function(OVERLAY.read_text(), "ParentalBond_StrikeToCome"))
 
 
+class PaybackTests(unittest.TestCase):
+    def test_it_does_not_double_against_what_came_in_this_turn(self):
+        # Pokemon Central, Rivincita: from Generation V a Pokemon that switched
+        # in is no longer one that acted. What comes in during a turn is marked
+        # so, and the mark goes with the turn's data as the next one begins.
+        calc = function(OVERLAY.read_text(), "CalcMoveDamage")
+        self.assertIn("moveNo == MOVE_PAYBACK && ov12_0225561C(ctx, battlerIdTarget) == TRUE && !ctx->turnData[battlerIdTarget].switchedIn", calc)
+        self.assertIn("ctx->turnData[battlerId].switchedIn = TRUE;", function(OVERLAY.read_text(), "InitSwitchWork"))
+        self.assertIn("MI_CpuClearFast((u32 *)&ctx->turnData[battlerId], sizeof(TurnData));", function(OVERLAY.read_text(), "ov12_02251710"))
+
+
 if __name__ == "__main__":
     unittest.main()
