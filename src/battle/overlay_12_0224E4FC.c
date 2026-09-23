@@ -3075,10 +3075,36 @@ BOOL WhirlwindCheck(BattleSystem *battleSystem, BattleContext *ctx) {
 // Neutralizing Gas does not act, it stops everything else acting, so the only
 // place it can live is where an ability is read. The gas itself is read raw
 // rather than through this function, which would ask the question again.
+// The abilities nothing suppresses, Neutralizing Gas included: the gas itself,
+// Multitype and RKS System, and the ones that hold a form or a state the
+// Pokemon lives by -- Zen Mode, Stance Change, Schooling, Disguise, Ice Face,
+// Power Construct, Zero to Hero, Comatose, Gulp Missile, As One, Commander.
+static BOOL AbilityIsUnsuppressable(u16 ability) {
+    switch (ability) {
+    case ABILITY_NEUTRALIZING_GAS:
+    case ABILITY_MULTITYPE:
+    case ABILITY_RKS_SYSTEM:
+    case ABILITY_ZEN_MODE:
+    case ABILITY_STANCE_CHANGE:
+    case ABILITY_SCHOOLING:
+    case ABILITY_DISGUISE:
+    case ABILITY_ICE_FACE:
+    case ABILITY_POWER_CONSTRUCT:
+    case ABILITY_ZERO_TO_HERO:
+    case ABILITY_COMATOSE:
+    case ABILITY_GULP_MISSILE:
+    case ABILITY_AS_ONE_GLASTRIER:
+    case ABILITY_AS_ONE_SPECTRIER:
+    case ABILITY_COMMANDER:
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId) {
     int i;
 
-    if (ctx->battleMons[battlerId].ability == ABILITY_NEUTRALIZING_GAS || ctx->battleMons[battlerId].ability == ABILITY_MULTITYPE) {
+    if (AbilityIsUnsuppressable(ctx->battleMons[battlerId].ability)) {
         return FALSE;
     }
     for (i = 0; i < (int)NELEMS(ctx->battleMons); i++) {

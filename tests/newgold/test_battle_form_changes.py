@@ -349,6 +349,51 @@ class FormChangeTests(unittest.TestCase):
         for line in ("PrintMessage msg_0197_01360", "Call BATTLE_SUBSCRIPT_UPDATE_HP", "PrintMessage msg_0197_01361"):
             self.assertIn(line, script)
 
+    def test_neutralizing_gas_leaves_the_form_abilities_alone(self):
+        """Neutralizing Gas suppresses every ability on the field but the ones
+        nothing suppresses: a Darmanitan keeps its Zen Mode under the gas,
+        where an Intimidate is gone."""
+        source = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        program = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/abilities.h"
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
+#define MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED 1
+typedef struct { u16 ability; int hp; u32 moveEffectFlags; } BattleMon;
+typedef struct { BattleMon battleMons[4]; } BattleContext;
+""" + function(source, "AbilityIsUnsuppressable") + "\n" + function(source, "AbilitiesAreNeutralized") + r"""
+int main(void) {
+    BattleContext ctx = { { { ABILITY_ZEN_MODE, 1, 0 }, { ABILITY_NEUTRALIZING_GAS, 1, 0 }, { ABILITY_INTIMIDATE, 1, 0 } } };
+    static const u16 kept[] = { ABILITY_ZEN_MODE, ABILITY_STANCE_CHANGE, ABILITY_SCHOOLING, ABILITY_DISGUISE,
+        ABILITY_ICE_FACE, ABILITY_POWER_CONSTRUCT, ABILITY_ZERO_TO_HERO, ABILITY_MULTITYPE, ABILITY_COMATOSE };
+    for (unsigned i = 0; i < NELEMS(kept); i++) {
+        ctx.battleMons[0].ability = kept[i];
+        assert(!AbilitiesAreNeutralized(&ctx, 0));
+    }
+    assert(AbilitiesAreNeutralized(&ctx, 2));
+    ctx.battleMons[0].ability = ABILITY_HUNGER_SWITCH;
+    assert(AbilitiesAreNeutralized(&ctx, 0));
+    puts("PASS: Neutralizing Gas leaves the abilities nothing suppresses.");
+    return 0;
+}
+"""
+        with tempfile.TemporaryDirectory(prefix="newgold-gas-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(program)
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+                str(path / "test.c"), "-o", str(path / "test")], check=True)
+            result = subprocess.run([str(path / "test")], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        print(result.stdout.strip())
+
 
 if __name__ == "__main__":
     unittest.main()

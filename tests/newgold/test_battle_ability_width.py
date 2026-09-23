@@ -186,7 +186,7 @@ class BattleAbilityWidthTests(unittest.TestCase):
         ai_header = (ROOT / "include/battle/trainer_ai.h").read_text()
         types += ai_header[ai_header.index("enum {"):ai_header.index("};")+2]
         native = [selected_cases(pokemon, name, {"BMON_DATA_ABILITY"}, "id") for name in ("GetBattlerVar", "SetBattlerVar")]
-        native += [function(pokemon, name) for name in ("AbilitiesAreNeutralized", "BattleMoveTbl", "GetBattlerAbility", "ov12_0225859C")]
+        native += [function(pokemon, name) for name in ("AbilityIsUnsuppressable", "AbilitiesAreNeutralized", "BattleMoveTbl", "GetBattlerAbility", "ov12_0225859C")]
         native += [function(command, name) for name in ("BattlerSetAbility", "ov12_0224819C", "BtlCmd_GenerateEndOfBattleItem")]
         native += [function(ai, name) for name in ("ov10_0221D0A8", "ov10_0221D188")]
         native += [function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224E384")]
