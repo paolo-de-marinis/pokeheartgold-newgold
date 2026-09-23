@@ -479,5 +479,50 @@ int main(void) {
         self.assertIn("script = BATTLE_SUBSCRIPT_CURIOUS_MEDICINE;", state)
 
 
+class CostarTests(unittest.TestCase):
+    def test_the_ally_s_stages_and_critical_odds_become_its_own(self):
+        program = HEADER + r"""
+typedef struct { s8 statChanges[NUM_BATTLE_STATS]; u32 status2; } BattleMon;
+typedef struct { u8 laserFocusTimer; } MoveConditions;
+typedef struct { BattleMon battleMons[4]; MoveConditions moveConditions[4]; } BattleContext;
+""" + function(OVERLAY, "CostarCopiesAlly") + r"""
+int main(void) {
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    memset(ctx.battleMons[0].statChanges, 6, NUM_BATTLE_STATS);
+    memset(ctx.battleMons[2].statChanges, 6, NUM_BATTLE_STATS);
+    // The holder's own +2 Speed goes; the ally's +2 Attack and -1 Defense come.
+    ctx.battleMons[0].statChanges[STAT_SPEED] = 8;
+    ctx.battleMons[0].status2 = STATUS2_FOCUS_ENERGY | STATUS2_CONFUSION;
+    ctx.battleMons[2].statChanges[STAT_ATK] = 8;
+    ctx.battleMons[2].statChanges[STAT_DEF] = 5;
+    ctx.moveConditions[2].laserFocusTimer = 2;
+    CostarCopiesAlly(&ctx, 0, 2);
+    EXPECT(ctx.battleMons[0].statChanges[STAT_ATK], 8);
+    EXPECT(ctx.battleMons[0].statChanges[STAT_DEF], 5);
+    EXPECT(ctx.battleMons[0].statChanges[STAT_SPEED], 6);
+    // An ally without Focus Energy takes the holder's away; the rest of the
+    // holder's conditions stay.
+    EXPECT(ctx.battleMons[0].status2, STATUS2_CONFUSION);
+    EXPECT(ctx.moveConditions[0].laserFocusTimer, 2);
+    ctx.battleMons[2].status2 = STATUS2_FOCUS_ENERGY;
+    CostarCopiesAlly(&ctx, 0, 2);
+    EXPECT(ctx.battleMons[0].status2, STATUS2_CONFUSION | STATUS2_FOCUS_ENERGY);
+    // The ally is not touched.
+    EXPECT(ctx.battleMons[2].statChanges[STAT_ATK], 8);
+    return 0;
+}
+"""
+        run_c(self, program)
+        entry = function(OVERLAY, "TryAbilityOnEntry")
+        state = entry[entry.index("// Costar"):]
+        state = state[:state.index("case ", 10)]
+        self.assertIn("!ctx->battleMons[battlerId].sendOutFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_COSTAR", state)
+        self.assertIn("if (j != battlerId && ctx->battleMons[j].hp) {\n                        CostarCopiesAlly(ctx, battlerId, j);", state)
+        self.assertIn("script = BATTLE_SUBSCRIPT_COSTAR;", state)
+        self.assertIn("msg_0197_00452, TAG_NICKNAME_NICKNAME, BATTLER_CATEGORY_MSG_BATTLER_TEMP, BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_MSG_BATTLER_TEMP",
+                      subscript("Costar"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -685,6 +685,9 @@
 // Curious Medicine clearing its ally's stat changes, which the reference has
 // no script for.
 #define BATTLE_SUBSCRIPT_CURIOUS_MEDICINE                   423
+// Costar copying its ally's stat changes, which the reference has no script
+// for.
+#define BATTLE_SUBSCRIPT_COSTAR                             424
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

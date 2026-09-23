@@ -5064,6 +5064,21 @@ static BOOL BattlerClearStatChanges(BattleContext *ctx, int battlerId) {
     return cleared;
 }
 
+// Costar: the ally's stat stages become the holder's, and so does what
+// raises the ally's critical-hit odds -- Focus Energy and Laser Focus, this
+// game having no Dragon Cheer -- the holder's own going first. Psych Up copies
+// the same things, but adds a Focus Energy to one already there rather than
+// taking its place.
+static void CostarCopiesAlly(BattleContext *ctx, int battlerId, int ally) {
+    int stat;
+
+    for (stat = 0; stat < NUM_BATTLE_STATS; stat++) {
+        ctx->battleMons[battlerId].statChanges[stat] = ctx->battleMons[ally].statChanges[stat];
+    }
+    ctx->battleMons[battlerId].status2 = (ctx->battleMons[battlerId].status2 & ~STATUS2_FOCUS_ENERGY) | (ctx->battleMons[ally].status2 & STATUS2_FOCUS_ENERGY);
+    ctx->moveConditions[battlerId].laserFocusTimer = ctx->moveConditions[ally].laserFocusTimer;
+}
+
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int j;
@@ -6016,7 +6031,30 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 31: // end
+        case 31: // Costar
+            // On the way in, the holder takes its ally's stat stages and what
+            // raises its critical-hit odds for its own, over whatever it had
+            // (Pokemon Central, Coprotagonismo). With no ally standing there
+            // is nothing to copy and nothing is said.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].sendOutFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_COSTAR) {
+                    ctx->battleMons[battlerId].sendOutFlag = TRUE;
+                    j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
+                    if (j != battlerId && ctx->battleMons[j].hp) {
+                        CostarCopiesAlly(ctx, battlerId, j);
+                        ctx->battlerIdTemp = battlerId;
+                        script = BATTLE_SUBSCRIPT_COSTAR;
+                        flag = TRUE;
+                        break;
+                    }
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 32: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;
