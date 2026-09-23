@@ -547,6 +547,12 @@ typedef struct BattleContext {
     // Which battlers' Relic Song has reached a target this move, a bit each:
     // Meloetta changes form only then (hg-engine's relic_song_tracker).
     u8 relicSongTracker;
+    // Cud Chew brings a Berry back up at the end of the turn after the one it
+    // was eaten in, and eats it again: which Berry, and at the end of which
+    // turn. Cleared when the Pokemon is loaded into its slot, so the Berry
+    // does not follow it out and back in.
+    u16 cudChewBerry[BATTLER_MAX];
+    u16 cudChewTurn[BATTLER_MAX];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

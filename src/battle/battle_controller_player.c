@@ -164,9 +164,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // those, for the Paradox abilities, grew it by four, and the twenty-four for
 // Belch's eaten-a-Berry flags grew it by twenty-four. The four after those,
 // for whose Paradox ability a Booster Energy switched on, grew it by four.
-// The byte for which battlers saw hail or snow, for Ice Face, grew it by four.
+// The byte for which battlers saw hail or snow, for Ice Face, and the one
+// for Relic Song, grew it by four; Cud Chew's Berry and turn by sixteen more.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x31B8 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x31C8 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given

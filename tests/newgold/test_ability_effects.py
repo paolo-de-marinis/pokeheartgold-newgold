@@ -40,6 +40,7 @@ IMPLEMENTED = {
     "CONTRARY",
     "CORROSION",
     "COTTON_DOWN",
+    "CUD_CHEW",
     "CURSED_BODY",
     "DARK_AURA",
     "DAUNTLESS_SHIELD",
@@ -185,11 +186,12 @@ IMPLEMENTED = {
 }
 
 
-# Cud Chew is a name in New Gold too: the reference declares it and nothing
-# reads it, so a Farigiraf there does not bring its berry back up either.
-# Giving it an effect here would be a change to the game, not a port of it.
+# Cud Chew, Neutralizing Gas, Quick Draw and Supersweet Syrup are names in New
+# Gold: the reference declares them and gives them nothing to do. They have
+# the later games' effects here all the same, by Paolo's decision of
+# 2026-09-23, and so are in IMPLEMENTED.
 #
-# The rest are the abilities that came in with the whole species range. Every
+# These are the abilities that came in with the whole species range. Every
 # one of them is read somewhere in the reference -- none is a name there --
 # so every one is real work, and this list is the ledger of it. An ability
 # moves out of here and into IMPLEMENTED when the battle actually reads it.
@@ -206,7 +208,7 @@ IMPLEMENTED = {
 # ability does nothing looks right on the summary screen and loses battles
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
-    "CUD_CHEW", "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE",
+    "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE",
     "DANCER", "DELTA_STREAM", "DESOLATE_LAND", "EMBODY_ASPECT",
     "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4", "EMERGENCY_EXIT",
     "GUARD_DOG", "ILLUSION", "MEGA_SOL", "MIMICRY",
@@ -278,8 +280,8 @@ class AbilityEffectTests(unittest.TestCase):
     # work, raising it needs a reason written next to it.
     #
     # 39 -> 41: Schooling and Power Construct had been counted done on their
-    # blocklist reads alone; see the note above PENDING.
-    STILL_TO_DO = 33
+    # blocklist reads alone; see the note above PENDING. Cud Chew done.
+    STILL_TO_DO = 32
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
@@ -287,7 +289,6 @@ class AbilityEffectTests(unittest.TestCase):
             f"{len(PENDING)} abilities are pending and the ledger allows "
             f"{self.STILL_TO_DO}; an added ability needs its effect, or a "
             f"reason here for why it has none")
-        self.assertIn("CUD_CHEW", PENDING)
 
 
 class SubscriptNumberingTests(unittest.TestCase):

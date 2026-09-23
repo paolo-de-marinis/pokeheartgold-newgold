@@ -7208,4 +7208,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The effects of the neutralizing gas\nwore off!</language>
 	</row>
+	<row id="msg_0197_01802" index="1802">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} ate its\n{STRVAR_1 8, 1, 0} again!</language>
+	</row>
+	<row id="msg_0197_01803" index="1803">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} ate its\n{STRVAR_1 8, 1, 0} again!</language>
+	</row>
+	<row id="msg_0197_01804" index="1804">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} ate its\n{STRVAR_1 8, 1, 0} again!</language>
+	</row>
 </body>

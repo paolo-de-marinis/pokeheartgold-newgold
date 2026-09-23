@@ -79,6 +79,14 @@ PORT_ROWS = [
     ("neutralizing gas ends", [
         r"The effects of the neutralizing gas\nwore off!",
     ]),
+    # Cud Chew eating a Berry again. The reference gives the ability no effect;
+    # the later games show its popup, which this game has not, so the line says
+    # what happened, as Harvest's "found one" does.
+    ("cud chew", [
+        r"{STRVAR_1 1, 0, 0} ate its\n{STRVAR_1 8, 1, 0} again!",
+        r"The wild {STRVAR_1 1, 0, 0} ate its\n{STRVAR_1 8, 1, 0} again!",
+        r"The opposing {STRVAR_1 1, 0, 0} ate its\n{STRVAR_1 8, 1, 0} again!",
+    ]),
 ]
 
 

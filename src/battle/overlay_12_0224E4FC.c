@@ -136,6 +136,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->paradoxBoostedStat[battlerId] = 0;
     ctx->boosterEnergyActivated[battlerId] = FALSE;
     ctx->iceFaceWeatherSeen &= ~MaskOfFlagNo(battlerId);
+    ctx->cudChewBerry[battlerId] = ITEM_NONE;
 
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
@@ -4284,6 +4285,25 @@ BOOL ov12_02253068(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
             ret = TRUE;
         }
         break;
+    // Cud Chew eats the Berry again, whatever the moment: the Berry is put
+    // back in the mouth only long enough for Pluck's routine, which applies a
+    // Berry whether or not it was called for, to read it, and the Pokemon is
+    // made the attacker because that routine feeds the attacker. The second
+    // meal is the last, so what that routine notes of it is wiped.
+    case ABILITY_CUD_CHEW:
+        if (ctx->battleMons[battlerId].hp && ctx->cudChewBerry[battlerId] && ctx->cudChewTurn[battlerId] == (u16)ctx->totalTurns) {
+            u16 held = ctx->battleMons[battlerId].item;
+
+            ctx->battleMons[battlerId].item = ctx->cudChewBerry[battlerId];
+            ctx->battlerIdAttacker = battlerId;
+            TryEatOpponentBerry(battleSystem, ctx, battlerId);
+            ctx->battleMons[battlerId].item = held;
+            ctx->cudChewBerry[battlerId] = ITEM_NONE;
+            ctx->battlerIdTemp = battlerId;
+            script = BATTLE_SUBSCRIPT_CUD_CHEW;
+            ret = TRUE;
+        }
+        break;
     // One stat up two stages, a different one down one. Both are picked as
     // offsets from Attack, because that is how the script spends them -- it
     // adds each to the first pointer of its group. The stage each offset is
@@ -5899,6 +5919,15 @@ static BOOL BattlerHoldsBerry(BattleContext *ctx, int battlerId) {
     return item >= FIRST_BERRY_IDX && item <= LAST_BERRY_IDX;
 }
 
+// Cud Chew keeps a Berry it has eaten, its own or one plucked off a foe, to
+// eat again at the end of the next turn.
+static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item) {
+    if (ItemIdIsBerry(item) == TRUE && GetBattlerAbility(ctx, eater) == ABILITY_CUD_CHEW) {
+        ctx->cudChewBerry[eater] = item;
+        ctx->cudChewTurn[eater] = ctx->totalTurns + 1;
+    }
+}
+
 // Unnerve on the far side is enough to put a Pokemon off its food; Ripen on
 // this one makes what it does eat go twice as far.
 static BOOL BerryCanBeEaten(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int *boost) {
@@ -6220,6 +6249,7 @@ BOOL TryUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
             if (BattlerHoldsBerry(ctx, battlerId) == TRUE && GetBattlerAbility(ctx, battlerId) == ABILITY_CHEEK_POUCH) {
                 ctx->battleMons[battlerId].cheekPouchPending = TRUE;
             }
+            CudChewKeepsBerry(ctx, battlerId, ctx->battleMons[battlerId].item);
             ctx->battlerIdTemp = battlerId;
             ctx->itemTemp = GetBattlerHeldItem(ctx, battlerId);
             ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
@@ -6571,6 +6601,7 @@ BOOL CheckUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battle
             if (BattlerHoldsBerry(ctx, battlerId) == TRUE && GetBattlerAbility(ctx, battlerId) == ABILITY_CHEEK_POUCH) {
                 ctx->battleMons[battlerId].cheekPouchPending = TRUE;
             }
+            CudChewKeepsBerry(ctx, battlerId, ctx->battleMons[battlerId].item);
             ctx->itemTemp = GetBattlerHeldItem(ctx, battlerId);
         }
     }
@@ -6876,10 +6907,6 @@ BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int bat
     int item = GetHeldItemStealBerryEffect(ctx, battlerId);
     int mod = GetHeldItemModifier(ctx, battlerId, 1);
 
-    if (BattlerCheckSubstitute(ctx, ctx->battlerIdTarget) == TRUE) {
-        return FALSE;
-    }
-
     switch (item) {
     case STEAL_EFFECT_RESTORE_HP: // oran berry
         if (ctx->battleMons[ctx->battlerIdAttacker].hp != ctx->battleMons[ctx->battlerIdAttacker].maxHp) {
@@ -7117,6 +7144,7 @@ BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int bat
         }
         ctx->itemTemp = ctx->battleMons[battlerId].item;
         ctx->selfTurnData[ctx->battlerIdAttacker].unk14 |= (1 << 1);
+        CudChewKeepsBerry(ctx, ctx->battlerIdAttacker, ctx->battleMons[battlerId].item);
     }
 
     return ret;

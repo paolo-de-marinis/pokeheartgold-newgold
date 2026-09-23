@@ -627,5 +627,28 @@ class NeutralizingGasTests(unittest.TestCase):
         self.assertLess(first.index("NEUTRALIZING_GAS"), first.index("weatherCheckFlag"))
 
 
+class CudChewTests(unittest.TestCase):
+    def test_a_berry_eaten_is_eaten_again_at_the_end_of_the_next_turn(self):
+        source = OVERLAY.read_text()
+        # Kept whenever a Berry goes down: from the hand, and plucked off a foe.
+        for name in ("TryUseHeldItem", "CheckUseHeldItem"):
+            self.assertIn("CudChewKeepsBerry(ctx, battlerId, ctx->battleMons[battlerId].item);", function(source, name), name)
+        self.assertIn("CudChewKeepsBerry(ctx, ctx->battlerIdAttacker, ctx->battleMons[battlerId].item);",
+                      function(source, "TryEatOpponentBerry"))
+        self.assertIn("ctx->cudChewTurn[eater] = ctx->totalTurns + 1;", function(source, "CudChewKeepsBerry"))
+        # Not across a switch.
+        self.assertIn("ctx->cudChewBerry[battlerId] = ITEM_NONE;", function(source, "BattleSystem_GetBattleMon"))
+        # Eaten by Pluck's routine, which applies a Berry whatever the moment,
+        # at the end of the turn it was kept for, and only the once.
+        end = function(source, "ov12_02253068")
+        chew = end[end.index("case ABILITY_CUD_CHEW:"):]
+        chew = chew[:chew.index("break;")]
+        self.assertIn("ctx->cudChewTurn[battlerId] == (u16)ctx->totalTurns", chew)
+        self.assertLess(chew.index("TryEatOpponentBerry(battleSystem, ctx, battlerId);"),
+                        chew.index("ctx->cudChewBerry[battlerId] = ITEM_NONE;"))
+        self.assertIn("script = BATTLE_SUBSCRIPT_CUD_CHEW;", chew)
+        self.assertIn("CallFromVar BSCRIPT_VAR_TEMP_DATA", subscript("CudChew"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -143,7 +143,7 @@ class BattleMessageTests(unittest.TestCase):
         """Lines the port prints that the engine has no text for, and who
         prints them."""
         table = rows()
-        self.assertEqual(max(table) + 1, FIRST_PORT_ROW + 15)
+        self.assertEqual(max(table) + 1, FIRST_PORT_ROW + 18)
         expected = {
             "wandering spirit": (1787, "{STRVAR_1 1, 0, 0}’s Ability\\nbecame {STRVAR_1 5, 1, 0}!"),
             "belch": (1790, "{STRVAR_1 1, 0, 0} hasn’t eaten any held Berries,\\nso it can’t possibly belch!"),
@@ -152,6 +152,7 @@ class BattleMessageTests(unittest.TestCase):
             "quick draw": (1797, "{STRVAR_1 1, 0, 0}\\ncan act faster than normal,\\fthanks to its {STRVAR_1 5, 1, 0}!"),
             "neutralizing gas": (1800, "Neutralizing gas filled the area!"),
             "neutralizing gas ends": (1801, "The effects of the neutralizing gas\\nwore off!"),
+            "cud chew": (1802, "{STRVAR_1 1, 0, 0} ate its\\n{STRVAR_1 8, 1, 0} again!"),
         }
         for name, (row, text) in expected.items():
             self.assertEqual(import_battle_messages.port_row(name), row, name)
@@ -160,6 +161,7 @@ class BattleMessageTests(unittest.TestCase):
         self.assertIn("msg_0197_01797, TAG_NICKNAME_ABILITY", script("subscript_0278_CheckQuickClaw.s"))
         self.assertIn("msg_0197_01800, TAG_NONE", script("subscript_0403_NeutralizingGas.s"))
         self.assertIn("msg_0197_01801, TAG_NONE", script("subscript_0404_NeutralizingGasEnd.s"))
+        self.assertIn("msg_0197_01802, TAG_NICKNAME_ITEM", script("subscript_0405_CudChew.s"))
         self.assertIn("msg_0197_01790, TAG_NICKNAME", script("effect_script_0397.s"))
         battle = ROOT / "src/battle"
         self.assertIn("msg->id = msg_0197_01790;", (battle / "overlay_12_0224E4FC.c").read_text())
