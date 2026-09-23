@@ -86,7 +86,6 @@ STILL_DIFFERENT = {
     261: IN_C.format("Whirlpool against Dive and the binding, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
     262: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     266: "the entry-hazard queue, which nothing here reads yet",
-    268: "Judgment with a Pixie Plate",
     269: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
     272: IN_C.format("the charge turn and the Power Herb, BattleController_BeforeMove.c"),
 }
@@ -192,6 +191,15 @@ class BroughtOverTests(unittest.TestCase):
             text = script(effect)
             self.assertIn(f"MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_{pointer}", text, effect)
             self.assertNotIn("CalcDamage", text, effect)
+
+    def test_judgment_reads_the_pixie_plate(self):
+        # Retail's Judgment knew sixteen plates, so with a Pixie Plate it
+        # stayed Normal.
+        text = script(268)
+        label = re.search(r"CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, "
+                          r"HOLD_EFFECT_ARCEUS_FAIRY, (\w+)", text)
+        self.assertIsNotNone(label)
+        self.assertRegex(text, label.group(1) + r":\s*UpdateVar OPCODE_SET, BSCRIPT_VAR_MOVE_TYPE, TYPE_FAIRY")
 
 
 if __name__ == "__main__":
