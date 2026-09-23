@@ -468,9 +468,11 @@ class DamageFormulaTests(unittest.TestCase):
 
     def test_earthquake_and_surf_reach_dig_and_dive_by_the_move(self):
         # BattleController_CheckSemiInvulnerability: by the move, and doubled
-        # only in the final modifier, so the scripts set neither.
+        # only in the final modifier, so the scripts set neither. Fissure
+        # reaches Dig too, undoubled (Pokemon Central, Abisso); its script is
+        # every one-hit move's.
         body = function(CONTROLLER, "BattleSystem_CheckMoveEffect")
-        self.assertIn("BOOL reachesDig = (ctx->battleStatus & BATTLE_STATUS_HIT_DIG) || move == MOVE_EARTHQUAKE;", body)
+        self.assertIn("BOOL reachesDig = (ctx->battleStatus & BATTLE_STATUS_HIT_DIG) || move == MOVE_EARTHQUAKE || move == MOVE_FISSURE;", body)
         self.assertIn("BOOL reachesDive = (ctx->battleStatus & BATTLE_STATUS_HIT_DIVE) || move == MOVE_SURF || move == MOVE_WHIRLPOOL;", body)
         self.assertIn("(!reachesDig && ", body)
         self.assertIn("(!reachesDive && ", body)

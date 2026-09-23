@@ -3247,11 +3247,13 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
     }
 
-    // Earthquake finds a Pokemon underground, Surf and Whirlpool one under
-    // the water, by the move (the reference's
+    // Earthquake and Fissure find a Pokemon underground, Surf and Whirlpool
+    // one under the water, by the move (the reference's
     // BattleController_CheckSemiInvulnerability) rather than by a flag their
     // effect scripts set, as the other moves that reach them still do.
-    BOOL reachesDig = (ctx->battleStatus & BATTLE_STATUS_HIT_DIG) || move == MOVE_EARTHQUAKE;
+    // Fissure shares its script with the other one-hit moves, which do not
+    // reach it (Pokemon Central, Abisso, from the second generation).
+    BOOL reachesDig = (ctx->battleStatus & BATTLE_STATUS_HIT_DIG) || move == MOVE_EARTHQUAKE || move == MOVE_FISSURE;
     BOOL reachesDive = (ctx->battleStatus & BATTLE_STATUS_HIT_DIVE) || move == MOVE_SURF || move == MOVE_WHIRLPOOL;
 
     if (!(ctx->moveStatusFlag & MOVE_STATUS_BYPASSED_ACCURACY)
