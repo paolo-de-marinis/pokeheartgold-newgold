@@ -1,8 +1,6 @@
 PERSONAL_DIR := files/poketool/personal/personal
 PERSONAL_NARC := $(PERSONAL_DIR).narc
 
-$(PERSONAL_JSON): lib/include/nitro/fx/fx_const.h
-
 # The headers the template includes: a change to one changes what it compiles to.
 $(PERSONAL_NARC): include/pokemon.h include/pokemon_types_def.h include/constants/pokemon.h \
 	include/constants/moves.h include/constants/abilities.h include/constants/items.h
