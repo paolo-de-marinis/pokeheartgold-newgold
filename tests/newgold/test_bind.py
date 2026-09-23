@@ -39,7 +39,9 @@ typedef struct {
     int skipped;
     BattleMon battleMons[4];
     MoveConditions moveConditions[4];
+    u8 bindingBandBinds;
 } BattleContext;
+static int MaskOfFlagNo(int n) { return 1 << n; }
 static int sItem;
 static u16 sRandom;
 static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { if (n == 5) ctx->skipped = 1; }

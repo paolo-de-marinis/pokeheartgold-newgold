@@ -9774,6 +9774,13 @@ BOOL BtlCmd_SetBindingTurns(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->battleMons[ctx->battlerIdTarget].status2 |= turns << STATUS2_BINDING_SHIFT;
     ctx->battleMons[ctx->battlerIdTarget].unk88.battlerIdBinding = ctx->battlerIdAttacker;
     ctx->battleMons[ctx->battlerIdTarget].unk88.bindingMove = ctx->moveNoCur;
+    // A Binding Band held as the bind begins makes every turn of it hurt more,
+    // whatever becomes of the band afterwards (BindDamageDivisor).
+    if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_TRAPPING_DAMAGE_UP) {
+        ctx->bindingBandBinds |= MaskOfFlagNo(ctx->battlerIdTarget);
+    } else {
+        ctx->bindingBandBinds &= ~MaskOfFlagNo(ctx->battlerIdTarget);
+    }
 
     return FALSE;
 }

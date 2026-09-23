@@ -644,6 +644,11 @@ typedef struct BattleContext {
     // target's Contrary turned the drops into rises has changed its stats all
     // the same. Cleared with statLoweredBattlers.
     u8 statRaisedBattlers;
+    // Which battlers are held by a bind that a Binding Band holder began, a
+    // bit each: the band is read when the bind starts, not as each turn's
+    // damage is dealt. Written for the target whenever a bind begins
+    // (BtlCmd_SetBindingTurns), which is the only way into one.
+    u8 bindingBandBinds;
     // What Parental Bond's first strike left to the second -- the side
     // effect ov12_02250490 held back, or the recoil -- as the side-effect
     // flags that ask for it, until the multi-strike loop knows whether the

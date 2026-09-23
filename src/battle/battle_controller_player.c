@@ -175,8 +175,8 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // into padding and grew it by nothing; the Gem's byte by four, the Eject
 // Pack's byte into what the Gem's left, and the Mirror Herb's stages by
 // thirty-two The once-per-battle entry abilities, remembered by party rather
-// than by side, grew it by twelve. What Parental Bond's first strike leaves
-// to the second grew it by four.
+// than by side, grew it by twelve. The Binding Band's byte went into padding.
+// What Parental Bond's first strike leaves to the second grew it by four.
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x3234 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
@@ -1498,13 +1498,14 @@ typedef enum UpdateMonConditionState {
 // the bound Pokemon's maximum HP, as the reference has it
 // (ServerFieldConditionCheck.c:870 at d0380a487). HeartGold took a sixteenth.
 //
-// A sixth when the Pokemon that bound it holds a Binding Band. The reference
-// leaves the band unread, so this follows Pokemon Central (Legafascia): from
-// the sixth generation on, a sixth of the bound Pokemon's maximum HP instead
-// of an eighth. The band is asked of the binder as the damage is dealt; the
-// bind ends when the binder leaves, so the binder is still there to ask.
+// A sixth when the Pokemon that bound it held a Binding Band as it did. The
+// reference leaves the band unread, so this follows Pokemon Central
+// (Legafascia): from the sixth generation on, the binding moves used by the
+// band's holder take a sixth of the bound Pokemon's maximum HP instead of an
+// eighth. The band is read as the bind begins (BtlCmd_SetBindingTurns), so
+// a band knocked off, stolen or given afterwards changes nothing.
 static int BindDamageDivisor(BattleContext *ctx, int battlerId) {
-    if (GetBattlerHeldItemEffect(ctx, ctx->battleMons[battlerId].unk88.battlerIdBinding) == HOLD_EFFECT_TRAPPING_DAMAGE_UP) {
+    if (ctx->bindingBandBinds & MaskOfFlagNo(battlerId)) {
         return 6;
     }
     return 8;

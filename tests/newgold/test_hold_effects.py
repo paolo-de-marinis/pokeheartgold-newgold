@@ -506,17 +506,29 @@ class GemTests(unittest.TestCase):
 BIND_FIXTURE = r"""
 #include <assert.h>
 #include <stdint.h>
+#include <stddef.h>
+#include "constants/battle.h"
 #include "constants/items.h"
 typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
 typedef int BOOL;
-typedef struct { struct { u32 battlerIdBinding : 2; } unk88; } BattleMon;
-typedef struct { BattleMon battleMons[4]; } BattleContext;
+#define FALSE 0
+#define TRUE 1
+typedef struct BattleSystem BattleSystem;
+typedef struct { u32 status2; struct { u32 battlerIdBinding : 2; u16 bindingMove; } unk88; } BattleMon;
+typedef struct { u8 bindEighthTurn : 1; } MoveConditions;
+typedef struct {
+    BattleMon battleMons[4]; MoveConditions moveConditions[4];
+    int battlerIdAttacker, battlerIdTarget, moveNoCur; u8 bindingBandBinds;
+} BattleContext;
 static int sItem[4];
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return sItem[battlerId]; }
+static int MaskOfFlagNo(int n) { return 1 << n; }
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return 0; }
+static int BattleSystem_Random(BattleSystem *bs) { (void)bs; return 0; }
 @FUNCTION@
 int main(void) {
     BattleContext ctx = { 0 };
-    ctx.battleMons[0].unk88.battlerIdBinding = 1;
     @CHECKS@
     return 0;
 }
@@ -525,23 +537,31 @@ int main(void) {
 
 class BindingTests(unittest.TestCase):
     def run_divisor(self, checks):
-        body = function(CONTROLLER.read_text(), "BindDamageDivisor")
+        body = function(CONTROLLER.read_text(), "BindDamageDivisor") + "\n" + function(COMMANDS.read_text(), "BtlCmd_SetBindingTurns")
         run_c(BIND_FIXTURE.replace("@FUNCTION@", body).replace("@CHECKS@", checks))
 
     def test_a_binding_move_takes_an_eighth(self):
         """ServerFieldConditionCheck.c:870 at d0380a487 divides by 8;
         HeartGold divided by 16."""
-        self.run_divisor("assert(BindDamageDivisor(&ctx, 0) == 8);")
+        self.run_divisor("ctx.battlerIdAttacker = 1; BtlCmd_SetBindingTurns(NULL, &ctx);"
+                         "assert(BindDamageDivisor(&ctx, 0) == 8);")
         self.assertIn("DamageDivide(ctx->battleMons[battlerId].maxHp * -1, BindDamageDivisor(ctx, battlerId))",
                       function(CONTROLLER.read_text(), "BattleControllerPlayer_UpdateMonCondition"))
 
     def test_a_binding_band_on_the_binder_makes_it_a_sixth(self):
         """The reference reads no Binding Band; Pokemon Central (Legafascia):
-        a sixth instead of an eighth from the sixth generation on.
-        The binder's band counts, not one on the bound Pokemon."""
-        self.run_divisor("sItem[1] = HOLD_EFFECT_TRAPPING_DAMAGE_UP; assert(BindDamageDivisor(&ctx, 0) == 6);"
-                         "sItem[1] = HOLD_EFFECT_NONE; sItem[0] = HOLD_EFFECT_TRAPPING_DAMAGE_UP;"
-                         "assert(BindDamageDivisor(&ctx, 0) == 8);")
+        a sixth instead of an eighth from the sixth generation on, for the
+        binding moves the band's holder uses. The band is read as the bind
+        begins: the binder losing it later keeps the sixth, and one on the
+        bound Pokemon counts for nothing."""
+        self.run_divisor("ctx.battlerIdAttacker = 1; sItem[1] = HOLD_EFFECT_TRAPPING_DAMAGE_UP;"
+                         "BtlCmd_SetBindingTurns(NULL, &ctx);"
+                         "assert(BindDamageDivisor(&ctx, 0) == 6);"
+                         "sItem[1] = HOLD_EFFECT_NONE; assert(BindDamageDivisor(&ctx, 0) == 6);"
+                         "ctx.battlerIdTarget = 2; sItem[2] = HOLD_EFFECT_TRAPPING_DAMAGE_UP;"
+                         "BtlCmd_SetBindingTurns(NULL, &ctx);"
+                         "assert(BindDamageDivisor(&ctx, 2) == 8 && BindDamageDivisor(&ctx, 0) == 6);"
+                         "sItem[1] = HOLD_EFFECT_TRAPPING_DAMAGE_UP; assert(BindDamageDivisor(&ctx, 2) == 8);")
 
 
 def subscript_named(define):
