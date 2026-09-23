@@ -7568,6 +7568,24 @@ static u16 Battler_GenesectForm(BattleContext *ctx, int battlerId) {
     return form == species ? SPECIES_NONE : form;
 }
 
+// Power Construct (BattleFormChangeCheck.c:273): a Zygarde of the Power
+// Construct forms at half its HP or less becomes its Complete Forme. hg-engine
+// keys it on the form alone; the ability is asked here, read off the battler as
+// nothing can suppress it. Not a transformed battler.
+static u16 Battler_PowerConstructForm(BattleContext *ctx, int battlerId) {
+    if (!ctx->battleMons[battlerId].hp || ctx->battleMons[battlerId].hp > (s32)(ctx->battleMons[battlerId].maxHp / 2)
+        || ctx->battleMons[battlerId].ability != ABILITY_POWER_CONSTRUCT || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+        return SPECIES_NONE;
+    }
+    switch (ctx->battleMons[battlerId].species) {
+    case SPECIES_ZYGARDE_10_POWER_CONSTRUCT:
+        return SPECIES_ZYGARDE_10_COMPLETE;
+    case SPECIES_ZYGARDE_50_POWER_CONSTRUCT:
+        return SPECIES_ZYGARDE_50_COMPLETE;
+    }
+    return SPECIES_NONE;
+}
+
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int form;
@@ -7737,6 +7755,20 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
             && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {
             BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, SPECIES_XERNEAS_ACTIVE, FALSE);
             *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
+            ret = TRUE;
+            break;
+        }
+        // The Complete Forme's maximum HP is higher, and so is its HP, by as
+        // much: the subscript gives the difference. hg-engine gives it the
+        // attacker's missing HP instead.
+        form = Battler_PowerConstructForm(ctx, ctx->battlerIdTemp);
+        if (form != SPECIES_NONE) {
+            u32 maxHp = ctx->battleMons[ctx->battlerIdTemp].maxHp;
+
+            BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, form, FALSE);
+            ctx->battleMons[ctx->battlerIdTemp].maxHp = GetMonData(BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdTemp, ctx->selectedMonIndex[ctx->battlerIdTemp]), MON_DATA_MAX_HP, NULL);
+            ctx->hpCalc = ctx->battleMons[ctx->battlerIdTemp].maxHp - maxHp;
+            *script = BATTLE_SUBSCRIPT_POWER_CONSTRUCT;
             ret = TRUE;
             break;
         }

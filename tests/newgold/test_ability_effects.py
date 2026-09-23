@@ -114,6 +114,7 @@ IMPLEMENTED = {
     "PIXILATE",
     "POISON_PUPPETEER",
     "POISON_TOUCH",
+    "POWER_CONSTRUCT",
     "POWER_OF_ALCHEMY",
     "PRANKSTER",
     "PRISM_ARMOR",
@@ -197,8 +198,8 @@ IMPLEMENTED = {
 # are read here -- but only in the blocklists of Skill Swap, Role Play, Worry
 # Seed, Gastro Acid and Simple Beam. The reference never reads either by name
 # in C: its form changes key on SPECIES_WISHIWASHI and SPECIES_ZYGARDE
-# (BattleFormChangeCheck.c). Schooling is done now, and asks for its ability
-# by name, which the reference forgets to; Power Construct is still to come.
+# (BattleFormChangeCheck.c). Both are done now, and ask for their ability by
+# name, which the reference forgets to.
 #
 # They are listed rather than waved through because the danger is not that
 # they are unfinished, it is finishing without noticing: a Pokemon whose
@@ -210,7 +211,6 @@ PENDING = {
     "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4", "EMERGENCY_EXIT",
     "GUARD_DOG", "ILLUSION", "MEGA_SOL", "MIMICRY",
     "OPPORTUNIST", "PARENTAL_BOND", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN",
-    "POWER_CONSTRUCT",
     "STAKEOUT", "SUPREME_OVERLORD", "SYMBIOSIS", "TEMP4",
     "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR",
     "WIMP_OUT"
@@ -279,7 +279,7 @@ class AbilityEffectTests(unittest.TestCase):
     #
     # 39 -> 41: Schooling and Power Construct had been counted done on their
     # blocklist reads alone; see the note above PENDING.
-    STILL_TO_DO = 34
+    STILL_TO_DO = 33
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

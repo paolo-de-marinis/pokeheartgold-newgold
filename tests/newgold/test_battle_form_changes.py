@@ -326,6 +326,29 @@ class FormChangeTests(unittest.TestCase):
     puts("PASS: Genesect follows its Drive.");""", "newgold-genesect-"))
         self.assertIn("form = Battler_GenesectForm(ctx, ctx->battlerIdTemp);", self.check)
 
+    def test_power_construct(self):
+        """A Power Construct Zygarde at half its HP or less becomes its
+        Complete Forme, and gains what its maximum HP grew by."""
+        print(run(["Battler_PowerConstructForm"], r"""
+    set(SPECIES_ZYGARDE_10_POWER_CONSTRUCT, ABILITY_POWER_CONSTRUCT, 50, 100);
+    assert(Battler_PowerConstructForm(&ctx, 0) == SPECIES_ZYGARDE_10_COMPLETE);
+    set(SPECIES_ZYGARDE_50_POWER_CONSTRUCT, ABILITY_POWER_CONSTRUCT, 50, 100);
+    assert(Battler_PowerConstructForm(&ctx, 0) == SPECIES_ZYGARDE_50_COMPLETE);
+    set(SPECIES_ZYGARDE_50_POWER_CONSTRUCT, ABILITY_POWER_CONSTRUCT, 51, 100);
+    assert(Battler_PowerConstructForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_ZYGARDE_50_COMPLETE, ABILITY_POWER_CONSTRUCT, 10, 100);
+    assert(Battler_PowerConstructForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_ZYGARDE, ABILITY_AURA_BREAK, 10, 100);
+    assert(Battler_PowerConstructForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_ZYGARDE_10_POWER_CONSTRUCT, ABILITY_POWER_CONSTRUCT, 0, 100);
+    assert(Battler_PowerConstructForm(&ctx, 0) == SPECIES_NONE);
+    puts("PASS: Power Construct at half HP.");""", "newgold-construct-"))
+        self.assertIn("form = Battler_PowerConstructForm(ctx, ctx->battlerIdTemp);", self.check)
+        self.assertIn("ctx->hpCalc = ctx->battleMons[ctx->battlerIdTemp].maxHp - maxHp;", self.check)
+        script = (ROOT / "files/battledata/script/subscript/subscript_0405_PowerConstruct.s").read_text()
+        for line in ("PrintMessage msg_0197_01360", "Call BATTLE_SUBSCRIPT_UPDATE_HP", "PrintMessage msg_0197_01361"):
+            self.assertIn(line, script)
+
 
 if __name__ == "__main__":
     unittest.main()
