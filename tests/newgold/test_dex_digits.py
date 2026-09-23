@@ -268,6 +268,9 @@ int main(void) {
         run_native(self, program.replace("@STRUCT@", struct_).replace("@NATIVE@", native), "newgold-dex-count-")
         card = c_function((ROOT / "src/ov51_021E6F18.c").read_text(), "ov51_021E6F18")
         self.assertIn("card->dexCount, DEX_NUMBER_DIGITS,", card)
+        # the search's results heading, "RESULTS 1025"
+        heading = c_function((ROOT / "src/application/pokedex/ov18_021EEED0.c").read_text(), "ov18_021EEED0")
+        self.assertIn("unk_0878.unk_7B4, DEX_NUMBER_DIGITS,", heading)
         oak = (ROOT / "src/application/pokegear/phone/scripts/phone_scripts_prof_oak.c").read_text()
         self.assertEqual(len(re.findall(r"BufferIntegerAsString\(ctx->msgFormat, [56], \w+, DEX_NUMBER_DIGITS,", oak)), 2)
 

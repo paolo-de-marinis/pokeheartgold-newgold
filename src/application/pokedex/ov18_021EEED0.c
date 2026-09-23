@@ -4,6 +4,7 @@
 
 #include "bg_window.h"
 #include "message_format.h"
+#include "pokedex_util.h"
 #include "text.h"
 
 void ov18_021F9648(Window *window, MsgData *msgData, int msgId, int x, int y, FontID fontId, u32 color, int alignment);
@@ -21,7 +22,9 @@ void ov18_021EEED0(PokedexAppData *pokedexApp, int page) {
         break;
     case 1:
         ov18_021F9648(window, pokedexApp->msgData, 14, 112, 6, 0, MAKE_TEXT_COLOR(2, 1, 0), 2);
-        BufferIntegerAsString(pokedexApp->msgFormat, 0, pokedexApp->unk_0878.unk_7B4, 3, PRINTING_MODE_LEADING_ZEROS, TRUE);
+        // four digits, as the Dex prints its own counts: retail's three
+        // printed a search that finds 1025 species as '?25'
+        BufferIntegerAsString(pokedexApp->msgFormat, 0, pokedexApp->unk_0878.unk_7B4, DEX_NUMBER_DIGITS, PRINTING_MODE_LEADING_ZEROS, TRUE);
         ov18_021EE3AC(pokedexApp, pokedexApp->msgData, 0, 15, 112, 22, 0, MAKE_TEXT_COLOR(2, 1, 0), 2);
         break;
     case 2:
