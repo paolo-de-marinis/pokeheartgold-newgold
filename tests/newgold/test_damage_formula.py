@@ -72,6 +72,7 @@ static struct {
 } S;
 
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &S.move; }
+static int BattleMoveCategory(BattleContext *ctx, u32 moveNo, int battlerIdAttacker) { (void)ctx; (void)moveNo; (void)battlerIdAttacker; return S.move.category; }
 static int CalcMoveDamage(BattleSystem *bs, BattleContext *ctx, u32 moveNo, u32 side, u32 field, u16 power, u8 type, u8 a, u8 t, u8 crit) {
     (void)bs; (void)ctx; (void)moveNo; (void)side; (void)field; (void)power; (void)type; (void)a; (void)t; (void)crit;
     return S.base;

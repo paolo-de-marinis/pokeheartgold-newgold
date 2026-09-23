@@ -442,6 +442,10 @@ IMPLEMENTED_HERE = {
     # Eerie Spell takes three PP from the target's last move, an added effect
     # (Pokemon Central, Inquietantesimo): effect script 431.
     "EERIE_SPELL": "MOVE_EFFECT_EERIE_SPELL",
+    # Shell Side Arm poisons one time in five and goes in physically, making
+    # contact, when that would hurt more (Pokemon Central, Armaguscio):
+    # ShellSideArm_ChooseCategory and BattleMoveCategory.
+    "SHELL_SIDE_ARM": "MOVE_EFFECT_POISON_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

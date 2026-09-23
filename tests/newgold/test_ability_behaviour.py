@@ -124,6 +124,7 @@ static BOOL ov12_0225561C(BattleContext *ctx, int battlerId) { (void)ctx; return
 static u32 MaskOfFlagNo(int flagno) { return 1u << flagno; }
 static int BattlerPartyFaintCount(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; return ctx->totalTimesFainted[battlerId]; }
 static u8 *Battler_RageFistHits(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; return &S.rageFist[battlerId]; }
+static int BattleMoveCategory(BattleContext *ctx, u32 moveNo, int battlerIdAttacker) { (void)ctx; (void)moveNo; (void)battlerIdAttacker; return S.move.category; }
 @MOVE_IS_IN_LIST@
 @SLICING@
 @CALC@

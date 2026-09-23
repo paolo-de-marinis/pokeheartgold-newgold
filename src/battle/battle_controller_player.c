@@ -3501,6 +3501,7 @@ static void NoteMoveUsed(BattleSystem *battleSystem, BattleContext *ctx) {
     }
     ctx->moveUsedBefore = ctx->moveUsedLast;
     ctx->moveUsedLast = ctx->moveNoCur;
+    ShellSideArm_ChooseCategory(battleSystem, ctx);
     // Echoed Voice counts a turn a move of it was used in, failed or not;
     // one the user could not act in does not count (Pokemon Central,
     // Echeggiavoce).
@@ -3873,13 +3874,13 @@ static void BattleControllerPlayer_HpCalc(BattleSystem *battleSystem, BattleCont
                 }
             }
 
-            if (BattleMoveTbl(ctx, ctx->moveNoCur)->category == CATEGORY_PHYSICAL) {
+            if (BattleMoveCategory(ctx, ctx->moveNoCur, ctx->battlerIdAttacker) == CATEGORY_PHYSICAL) {
                 ctx->turnData[ctx->battlerIdTarget].physicalDamage[ctx->battlerIdAttacker] = ctx->damage;
                 ctx->turnData[ctx->battlerIdTarget].battlerIdPhysicalDamage = ctx->battlerIdAttacker;
                 ctx->turnData[ctx->battlerIdTarget].battlerBitPhysicalDamage |= MaskOfFlagNo(ctx->battlerIdAttacker);
                 ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage = ctx->damage;
                 ctx->selfTurnData[ctx->battlerIdTarget].battlerIdPhysicalAttacker = ctx->battlerIdAttacker;
-            } else if (BattleMoveTbl(ctx, ctx->moveNoCur)->category == CATEGORY_SPECIAL) {
+            } else if (BattleMoveCategory(ctx, ctx->moveNoCur, ctx->battlerIdAttacker) == CATEGORY_SPECIAL) {
                 ctx->turnData[ctx->battlerIdTarget].specialDamage[ctx->battlerIdAttacker] = ctx->damage;
                 ctx->turnData[ctx->battlerIdTarget].battlerIdSpecialDamage = ctx->battlerIdAttacker;
                 ctx->turnData[ctx->battlerIdTarget].battlerBitSpecialDamage |= MaskOfFlagNo(ctx->battlerIdAttacker);

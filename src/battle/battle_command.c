@@ -751,7 +751,7 @@ BOOL BtlCmd_Wait(BattleSystem *battleSystem, BattleContext *ctx) {
 // there, and a half from a lone survivor. Future Sight asks too, for the
 // damage it works out on the turn it is used.
 static u32 ScreenModifier(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u32 sideCondition, int crit, int battlerIdAttacker) {
-    u32 screen = BattleMoveTbl(ctx, moveNo)->category == CATEGORY_PHYSICAL ? SIDE_CONDITION_REFLECT : SIDE_CONDITION_LIGHT_SCREEN;
+    u32 screen = BattleMoveCategory(ctx, moveNo, battlerIdAttacker) == CATEGORY_PHYSICAL ? SIDE_CONDITION_REFLECT : SIDE_CONDITION_LIGHT_SCREEN;
 
     if (!(sideCondition & (screen | SIDE_CONDITION_AURORA_VEIL)) || crit != 1 || BattleMoveTbl(ctx, moveNo)->effect == MOVE_EFFECT_REMOVE_SCREENS || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_INFILTRATOR) {
         return UQ412__1_0;
@@ -960,7 +960,7 @@ static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, i
         // this one test lacks the "is this battler the target" the rest of
         // the loop has. Once, as its own comment and the published ability
         // say.
-        if (battlerId == battlerIdTarget && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_SCALES) == TRUE && BattleMoveTbl(ctx, moveNo)->category == CATEGORY_SPECIAL) {
+        if (battlerId == battlerIdTarget && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_SCALES) == TRUE && BattleMoveCategory(ctx, moveNo, battlerIdAttacker) == CATEGORY_SPECIAL) {
             modifier = QMul_RoundUp(modifier, UQ412__0_5);
         }
     }
@@ -1087,7 +1087,7 @@ static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BO
     // A burn halves a physical move, unless Guts has made use of it or the
     // move is Facade, which the burn powers instead (the reference's 6.8, the
     // rule from X and Y on). HeartGold halved Facade too.
-    if (BattleMoveTbl(ctx, moveNo)->category == CATEGORY_PHYSICAL && (ctx->battleMons[battlerIdAttacker].status & STATUS_BURN) && GetBattlerAbility(ctx, battlerIdAttacker) != ABILITY_GUTS && moveNo != MOVE_FACADE) {
+    if (BattleMoveCategory(ctx, moveNo, battlerIdAttacker) == CATEGORY_PHYSICAL && (ctx->battleMons[battlerIdAttacker].status & STATUS_BURN) && GetBattlerAbility(ctx, battlerIdAttacker) != ABILITY_GUTS && moveNo != MOVE_FACADE) {
         damage = QMul_RoundDown(damage, UQ412__0_5);
     }
 

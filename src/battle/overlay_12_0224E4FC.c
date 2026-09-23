@@ -4794,6 +4794,11 @@ BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo) {
     if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_INCREASE_PUNCHING_MOVE_DMG && BattleMoveIsPunching(moveNo) == TRUE) {
         return FALSE;
     }
+    // Shell Side Arm touches its target when it goes in physically (Pokemon
+    // Central, Armaguscio).
+    if (moveNo == MOVE_SHELL_SIDE_ARM) {
+        return BattleMoveCategory(ctx, moveNo, ctx->battlerIdAttacker) == CATEGORY_PHYSICAL;
+    }
     return (BattleMoveTbl(ctx, moveNo)->unkB & 1) != 0;
 }
 
@@ -10480,7 +10485,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         break;
     }
 
-    moveCategory = BattleMoveTbl(ctx, moveNo)->category;
+    moveCategory = BattleMoveCategory(ctx, moveNo, battlerIdAttacker);
 
     // Three base-power abilities belong to the attacker's ALLY, so they exist
     // only in a double battle -- the slot two over is stale rather than empty
@@ -11027,6 +11032,43 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     // the reference's order. The AI's two callers get the same base the
     // reference's AI does from its CalcBaseDamage.
     return dmg + 2;
+}
+
+// Shell Side Arm is physical when it would hurt the target more so, and
+// special otherwise, a tie going either way at random (Pokemon Central,
+// Armaguscio). The forecast is made once, as the move is used, from the stats
+// and their stages alone -- no item or ability -- with Wonder Room swapping
+// the target's two stages but not its two stats, as the page has it; what it
+// decides is kept for the rest of the action.
+void ShellSideArm_ChooseCategory(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleMon *attacker = &ctx->battleMons[ctx->battlerIdAttacker];
+    BattleMon *target;
+    int defStage;
+    int spDefStage;
+    s32 base;
+    s32 physical;
+    s32 special;
+
+    ctx->selfTurnData[ctx->battlerIdAttacker].shellSideArmPhysical = FALSE;
+    if (ctx->moveNoCur != MOVE_SHELL_SIDE_ARM || ctx->battlerIdTarget == BATTLER_NONE) {
+        return;
+    }
+    target = &ctx->battleMons[ctx->battlerIdTarget];
+    defStage = target->statChanges[ctx->wonderRoomTurns ? STAT_SPDEF : STAT_DEF];
+    spDefStage = target->statChanges[ctx->wonderRoomTurns ? STAT_DEF : STAT_SPDEF];
+    base = (attacker->level * 2 / 5 + 2) * BattleMoveTbl(ctx, MOVE_SHELL_SIDE_ARM)->power;
+    physical = base * (s32)BattleStatWithStage(attacker->atk, attacker->statChanges[STAT_ATK]) / (s32)BattleStatWithStage(target->def, defStage) / 50;
+    special = base * (s32)BattleStatWithStage(attacker->spAtk, attacker->statChanges[STAT_SPATK]) / (s32)BattleStatWithStage(target->spDef, spDefStage) / 50;
+    ctx->selfTurnData[ctx->battlerIdAttacker].shellSideArmPhysical = physical > special || (physical == special && (BattleSystem_Random(battleSystem) & 1));
+}
+
+// The category a move has as this attacker uses it: the table's, but for a
+// Shell Side Arm forecast to be physical.
+int BattleMoveCategory(BattleContext *ctx, u32 moveNo, int battlerIdAttacker) {
+    if (moveNo == MOVE_SHELL_SIDE_ARM && battlerIdAttacker < BATTLER_MAX && ctx->selfTurnData[battlerIdAttacker].shellSideArmPhysical) {
+        return CATEGORY_PHYSICAL;
+    }
+    return BattleMoveTbl(ctx, moveNo)->category;
 }
 
 int ApplyDamageRange(BattleSystem *battleSystem, BattleContext *ctx, int damage) {
