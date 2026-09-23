@@ -10311,6 +10311,40 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         }
         break;
     }
+    // Court Change swaps what lies on each side of the field: the screens,
+    // Mist, Safeguard, Tailwind and the entry hazards, with their turns, their
+    // layers and the order a Pokemon meets them in (Pokemon Central,
+    // Cambiocampo). What belongs to a Pokemon rather than to the ground -- a
+    // Future Sight on its way, a Wish, Lucky Chant, the items knocked off --
+    // stays where it is.
+    case MOVE_COURT_CHANGE: {
+        u32 courtFlags = SIDE_CONDITION_REFLECT | SIDE_CONDITION_LIGHT_SCREEN | SIDE_CONDITION_AURORA_VEIL | SIDE_CONDITION_MIST | SIDE_CONDITION_SAFEGUARD
+            | SIDE_CONDITION_TAILWIND | SIDE_CONDITION_SPIKES | SIDE_CONDITION_TOXIC_SPIKES | SIDE_CONDITION_STEALTH_ROCKS | SIDE_CONDITION_STICKY_WEB;
+        u32 swapped = (ctx->fieldSideConditionFlags[0] ^ ctx->fieldSideConditionFlags[1]) & courtFlags;
+        SideConditionData data0 = ctx->fieldSideConditionData[0];
+        SideConditionData *data = ctx->fieldSideConditionData;
+        u8 hazard;
+        int i;
+
+        ctx->fieldSideConditionFlags[0] ^= swapped;
+        ctx->fieldSideConditionFlags[1] ^= swapped;
+        // The sides' data change places whole, and then Follow Me and the
+        // items knocked off go back to the side they belong to.
+        data[0] = data[1];
+        data[1] = data0;
+        data[1].followMeFlag = data[0].followMeFlag;
+        data[1].battlerIdFollowMe = data[0].battlerIdFollowMe;
+        data[1].battlerBitKnockedOffItem = data[0].battlerBitKnockedOffItem;
+        data[0].followMeFlag = data0.followMeFlag;
+        data[0].battlerIdFollowMe = data0.battlerIdFollowMe;
+        data[0].battlerBitKnockedOffItem = data0.battlerBitKnockedOffItem;
+        for (i = 0; i < NUM_HAZARD_IDX; i++) {
+            hazard = ctx->entryHazardQueue[0][i];
+            ctx->entryHazardQueue[0][i] = ctx->entryHazardQueue[1][i];
+            ctx->entryHazardQueue[1][i] = hazard;
+        }
+        break;
+    }
     // The field is locked till the next turn's end; not twice over (CALC_TEMP
     // says whether it took).
     case MOVE_FAIRY_LOCK:

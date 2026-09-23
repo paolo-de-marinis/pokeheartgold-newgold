@@ -251,6 +251,13 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} stole the\ntarget’s boosted stats!",
         r"The opposing {STRVAR_1 1, 0, 0} stole the\ntarget’s boosted stats!",
     ]),
+    # Court Change. The engine leaves the move unimplemented; the later
+    # games' line.
+    ("court change", [
+        r"{STRVAR_1 1, 0, 0} swapped the battle effects\naffecting each side of the field!",
+        r"The wild {STRVAR_1 1, 0, 0} swapped the battle\neffects affecting each side of the field!",
+        r"The opposing {STRVAR_1 1, 0, 0} swapped the\nbattle effects affecting each side\fof the field!",
+    ]),
 ]
 
 

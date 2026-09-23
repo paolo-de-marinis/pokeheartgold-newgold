@@ -7504,4 +7504,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} stole the\ntarget’s boosted stats!</language>
 	</row>
+	<row id="msg_0197_01876" index="1876">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} swapped the battle effects\naffecting each side of the field!</language>
+	</row>
+	<row id="msg_0197_01877" index="1877">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} swapped the battle\neffects affecting each side of the field!</language>
+	</row>
+	<row id="msg_0197_01878" index="1878">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} swapped the\nbattle effects affecting each side\fof the field!</language>
+	</row>
 </body>

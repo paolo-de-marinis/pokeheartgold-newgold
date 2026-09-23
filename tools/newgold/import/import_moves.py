@@ -472,6 +472,9 @@ IMPLEMENTED_HERE = {
     # round a substitute (Pokemon Central, Ombrafurto): the controller's
     # command 27 and subscript 458.
     "SPECTRAL_THIEF": "MOVE_EFFECT_HIT",
+    # Court Change swaps the two sides' screens, winds and hazards (Pokemon
+    # Central, Cambiocampo): effect script 438.
+    "COURT_CHANGE": "MOVE_EFFECT_COURT_CHANGE",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -524,6 +527,9 @@ FIELDS_HERE = {
     # Protect does not stop it, Magic Coat does not send it back and Mirror
     # Move cannot copy it (Pokemon Central, Ricalco).
     "DOODLE": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT", "FLAG_MIRROR_MOVE")},
+    # The field's: Protect and Magic Coat have nothing to do with it (Pokemon
+    # Central, Cambiocampo).
+    "COURT_CHANGE": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
 }
 
 # The effects written here for those moves follow the reference's in

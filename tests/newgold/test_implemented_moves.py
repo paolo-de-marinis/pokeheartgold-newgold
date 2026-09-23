@@ -732,5 +732,55 @@ int main(void) {
         self.assertIn("ctx->moveNoCur == MOVE_SPECTRAL_THIEF", function(overlay, "MoveGoesRoundSubstitute"))
         self.assertIn("ctx->moveNoCur != MOVE_SPECTRAL_THIEF", function(overlay, "SubstituteTakesHit"))
 
+    def test_court_change_swaps_the_two_sides(self):
+        # Pokemon Central (Cambiocampo): screens, Mist, Safeguard, Tailwind,
+        # the hazards and their order; not a Pokemon's own Wish or Lucky Chant.
+        import import_battle_messages
+        self.assertImplemented("COURT_CHANGE", "MOVE_EFFECT_COURT_CHANGE")
+        self.assertFalse(record("COURT_CHANGE")[9] & (1 << 1 | 1 << 2), "FLAG_PROTECT, FLAG_MAGIC_COAT")
+        script = effect_script("MOVE_EFFECT_COURT_CHANGE")
+        self.assertIn("SetMoveConditionFlag MOVE_COURT_CHANGE, BATTLER_CATEGORY_ATTACKER", script)
+        self.assertIn(f"BufferMessage msg_0197_{import_battle_messages.port_row('court change'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER", script)
+        flag = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SetMoveConditionFlag")
+        court = flag[flag.index("case MOVE_COURT_CHANGE:"):]
+        court = court[:court.index("break;")]
+        for condition in ("REFLECT", "LIGHT_SCREEN", "AURORA_VEIL", "MIST", "SAFEGUARD", "TAILWIND", "SPIKES", "TOXIC_SPIKES", "STEALTH_ROCKS", "STICKY_WEB"):
+            self.assertIn(f"SIDE_CONDITION_{condition}", court)
+        for condition in ("LUCKY_CHANT", "WISH", "FUTURE_SIGHT"):
+            self.assertNotIn(f"SIDE_CONDITION_{condition}", court)
+        # Run the case: the ground's conditions change sides, Follow Me and the
+        # items knocked off stay where they were.
+        from test_ability_behaviour import HEADER, run_c
+        battle = (ROOT / "include/battle/battle.h").read_text()
+        data = re.search(r"typedef struct SideConditionData \{.*?\} SideConditionData;", battle, re.S).group(0)
+        body = flag[flag.index("case MOVE_COURT_CHANGE: {") + len("case MOVE_COURT_CHANGE:"):]
+        body = body[:body.index("\n    }\n") + len("\n    }\n")].replace("break;", "")
+        run_c(self, HEADER + data + r"""
+typedef struct { u32 fieldSideConditionFlags[2]; SideConditionData fieldSideConditionData[2]; u8 entryHazardQueue[2][NUM_HAZARD_IDX]; } Ctx;
+int main(void) {
+    Ctx c = {0}, *ctx = &c;
+    ctx->fieldSideConditionFlags[0] = SIDE_CONDITION_REFLECT | SIDE_CONDITION_LUCKY_CHANT;
+    ctx->fieldSideConditionFlags[1] = SIDE_CONDITION_SPIKES | SIDE_CONDITION_WISH;
+    ctx->fieldSideConditionData[0].reflectTurns = 4;
+    ctx->fieldSideConditionData[0].reflectBattler = 2;
+    ctx->fieldSideConditionData[0].followMeFlag = 1;
+    ctx->fieldSideConditionData[0].battlerIdFollowMe = 2;
+    ctx->fieldSideConditionData[1].spikesLayers = 3;
+    ctx->fieldSideConditionData[1].battlerBitKnockedOffItem = 5;
+    ctx->entryHazardQueue[1][0] = 7;
+    """ + body + r"""
+    assert(ctx->fieldSideConditionFlags[0] == (SIDE_CONDITION_SPIKES | SIDE_CONDITION_LUCKY_CHANT));
+    assert(ctx->fieldSideConditionFlags[1] == (SIDE_CONDITION_REFLECT | SIDE_CONDITION_WISH));
+    assert(ctx->fieldSideConditionData[1].reflectTurns == 4 && ctx->fieldSideConditionData[1].reflectBattler == 2);
+    assert(ctx->fieldSideConditionData[0].reflectTurns == 0 && ctx->fieldSideConditionData[0].spikesLayers == 3);
+    assert(ctx->fieldSideConditionData[1].spikesLayers == 0);
+    assert(ctx->fieldSideConditionData[0].followMeFlag == 1 && ctx->fieldSideConditionData[0].battlerIdFollowMe == 2);
+    assert(ctx->fieldSideConditionData[1].followMeFlag == 0 && ctx->fieldSideConditionData[1].battlerBitKnockedOffItem == 5);
+    assert(ctx->fieldSideConditionData[0].battlerBitKnockedOffItem == 0);
+    assert(ctx->entryHazardQueue[0][0] == 7 && ctx->entryHazardQueue[1][0] == 0);
+    return 0;
+}
+""")
+
 if __name__ == "__main__":
     unittest.main()

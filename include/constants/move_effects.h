@@ -445,5 +445,6 @@
 #define MOVE_EFFECT_CORROSIVE_GAS                                435
 #define MOVE_EFFECT_SNOW_AND_SWITCH                              436
 #define MOVE_EFFECT_DOODLE                                       437
+#define MOVE_EFFECT_COURT_CHANGE                                 438
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H
