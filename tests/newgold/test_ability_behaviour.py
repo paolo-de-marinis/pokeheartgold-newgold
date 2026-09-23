@@ -224,5 +224,52 @@ int main(void) {
         self.assertIn("ctx->supremeOverlordFallen[battlerId] = 0;", function(OVERLAY, "BattleSystem_GetBattleMon"))
 
 
+class ToxicChainTests(unittest.TestCase):
+    def test_three_in_ten_of_any_damaging_hit_badly_poison(self):
+        program = HEADER + r"""
+typedef struct { u16 random; int draws; } BattleSystem;
+typedef struct { int hp; u32 status; } BattleMon;
+typedef struct { int physicalDamage, specialDamage; } SelfTurnData;
+typedef struct {
+    int battlerIdAttacker, battlerIdTarget; u32 moveStatusFlag, battleStatus, battleStatus2;
+    BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
+} BattleContext;
+static int ability[4], item[4];
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return ability[battlerId]; }
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return item[battlerId]; }
+static u16 BattleSystem_Random(BattleSystem *bs) { bs->draws++; return bs->random; }
+""" + function(OVERLAY, "ToxicChainTakesHold") + r"""
+int main(void) {
+    BattleSystem bs = { 0, 0 };
+    BattleContext ctx = { 0, 1 };
+    ctx.battleMons[1].hp = 50;
+    ctx.selfTurnData[1].specialDamage = 20;
+    ability[0] = ABILITY_TOXIC_CHAIN;
+    // A special hit, no contact asked: rolls of 0 to 2 poison, 3 to 9 do not.
+    bs.random = 12; EXPECT(ToxicChainTakesHold(&bs, &ctx), 1);
+    bs.random = 13; EXPECT(ToxicChainTakesHold(&bs, &ctx), 0);
+    bs.random = 2;
+    // Not through a Covert Cloak, not onto a status, not with a miss.
+    item[1] = HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS; EXPECT(ToxicChainTakesHold(&bs, &ctx), 0); item[1] = 0;
+    ctx.battleMons[1].status = STATUS_BURN; EXPECT(ToxicChainTakesHold(&bs, &ctx), 0); ctx.battleMons[1].status = 0;
+    ctx.moveStatusFlag = MOVE_STATUS_MISSED; EXPECT(ToxicChainTakesHold(&bs, &ctx), 0); ctx.moveStatusFlag = 0;
+    // Nothing without damage, and nothing drawn for a hit that could not poison.
+    ctx.selfTurnData[1].specialDamage = 0; bs.draws = 0;
+    EXPECT(ToxicChainTakesHold(&bs, &ctx), 0); EXPECT(bs.draws, 0);
+    ctx.selfTurnData[1].physicalDamage = 20; EXPECT(ToxicChainTakesHold(&bs, &ctx), 1);
+    // It is the attacker's ability, not the target's.
+    ability[0] = 0; ability[1] = ABILITY_TOXIC_CHAIN; EXPECT(ToxicChainTakesHold(&bs, &ctx), 0);
+    return 0;
+}
+"""
+        run_c(self, program)
+        hit = function(OVERLAY, "CheckAbilityEffectOnHit")
+        branch = hit[hit.index("if (ToxicChainTakesHold(battleSystem, ctx) == TRUE) {"):]
+        branch = branch[:branch.index("return TRUE;")]
+        self.assertIn("ctx->statChangeType = SIDE_EFFECT_TYPE_INDIRECT;", branch)
+        self.assertIn("ctx->battlerIdStatChange = ctx->battlerIdTarget;", branch)
+        self.assertIn("*script = BATTLE_SUBSCRIPT_BADLY_POISON;", branch)
+
+
 if __name__ == "__main__":
     unittest.main()

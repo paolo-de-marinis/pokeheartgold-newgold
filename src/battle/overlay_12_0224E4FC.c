@@ -6055,6 +6055,27 @@ static BOOL BattlerBattleBondBoosts(BattleContext *ctx, int battlerId, BOOL spen
             || ctx->battleMons[battlerId].statChanges[STAT_SPEED] < 12);
 }
 
+// Toxic Chain: three in ten that any move of the holder's that deals damage,
+// contact or not, leaves the target badly poisoned (Pokemon Central, Catena
+// Tossica). The reference declares it and nothing reads it. It is not a
+// move's own effect, but it is stopped by what stops one: a Covert Cloak
+// here, and in the subscript Shield Dust, a substitute, Safeguard and
+// whatever cannot be poisoned, all without a word, as a move's chance of
+// poison is. The later games put the ability's popup above the line that
+// says so, and this game has none. The roll is last, so it is only drawn for
+// a hit that could poison.
+static BOOL ToxicChainTakesHold(BattleSystem *battleSystem, BattleContext *ctx) {
+    return GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) != HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS
+        && GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_TOXIC_CHAIN
+        && ctx->battleMons[ctx->battlerIdTarget].hp
+        && !ctx->battleMons[ctx->battlerIdTarget].status
+        && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)
+        && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN)
+        && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
+        && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)
+        && BattleSystem_Random(battleSystem) % 10 < 3;
+}
+
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     BOOL ret = FALSE;
     u16 form;
@@ -6100,7 +6121,17 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         return TRUE;
     }
 
-    // The other ability of the attacker's that is answered here rather than in
+    // Toxic Chain is the attacker's too, and badly poisons; see
+    // ToxicChainTakesHold for when.
+    if (ToxicChainTakesHold(battleSystem, ctx) == TRUE) {
+        ctx->statChangeType = SIDE_EFFECT_TYPE_INDIRECT;
+        ctx->battlerIdStatChange = ctx->battlerIdTarget;
+        ctx->battlerIdTemp = ctx->battlerIdAttacker;
+        *script = BATTLE_SUBSCRIPT_BADLY_POISON;
+        return TRUE;
+    }
+
+    // Another ability of the attacker's that is answered here rather than in
     // the switch. A contact move that went through a Protect says so, once the
     // quarter damage has been dealt. The reference asks only about Unseen
     // Fist, not about Piercing Drill, even though both punch through: the
