@@ -217,6 +217,42 @@ def run_native(test, program, prefix, flags=()):
         test.assertEqual(result.returncode, 0, result.stderr)
         print(result.stdout.strip())
 
+GALARIAN = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define GF_ASSERT(expr) assert(expr)
+#define ASSERT_POKEDEX(pokedex) ((void)(pokedex))
+@DEFINES@
+typedef struct { u32 caughtSpecies[NUM_DEX_FLAG_WORDS]; u32 seenSpecies[NUM_DEX_FLAG_WORDS]; } Pokedex;
+@NATIVE@
+
+int main(void) {
+    Pokedex dex = { 0 };
+    assert(SpeciesToDexSpecies(SPECIES_SLOWPOKE_GALARIAN) == SPECIES_SLOWPOKE);
+    assert(SpeciesToDexSpecies(SPECIES_SLOWBRO_GALARIAN) == SPECIES_SLOWBRO);
+    /* a caught Galarian Slowpoke is a caught Slowpoke, counted once */
+    SetDexFlag((u8 *)dex.caughtSpecies, SpeciesToDexSpecies(SPECIES_SLOWPOKE_GALARIAN));
+    SetDexFlag((u8 *)dex.seenSpecies, SpeciesToDexSpecies(SPECIES_SLOWPOKE_GALARIAN));
+    assert(Pokedex_CheckMonCaughtFlag(&dex, SPECIES_SLOWPOKE));
+    assert(Pokedex_CountNationalDexOwned(&dex) == 1 && Pokedex_CountNationalDexSeen(&dex) == 1);
+    /* every flag set: the 1025 entries, the pair's own bits not counted */
+    for (u16 species = 1; species <= NATIONAL_DEX_COUNT; species++) {
+        SetDexFlag((u8 *)dex.caughtSpecies, species);
+        SetDexFlag((u8 *)dex.seenSpecies, species);
+    }
+    assert(Pokedex_CountNationalDexOwned(&dex) == 1025);
+    assert(Pokedex_CountNationalDexSeen(&dex) == 1025);
+    printf("PASS: Galarian Slowpoke and Slowbro count as Slowpoke and Slowbro; a full Dex is 1025.\n");
+    return 0;
+}
+"""
+
 
 class DexRangeTests(unittest.TestCase):
     def test_the_johto_counts_stay_inside_the_johto_table(self):
@@ -280,6 +316,24 @@ class DexRangeTests(unittest.TestCase):
         run_native(self, DEOXYS.replace("@DEFINES@", defines).replace("@NATIVE@", native), "newgold-deoxys-",
                    # 15 << 28 overflows int in the host's C; on the ARM it is the bits it says.
                    ("-fno-sanitize=shift-base",))
+
+    def test_the_galarian_pair_counts_as_its_base(self):
+        """Galarian Slowpoke and Slowbro are species inside the Dex's range
+        here (forms in hg-engine, whose Dex credits the base). They had Dex
+        flags of their own that no sort list could show, yet the counts took
+        them: a full Dex counted 1027. They are credited to Slowpoke and
+        Slowbro, and the counts walk only the species that are their own
+        entry."""
+        source = (ROOT / "src/pokedex.c").read_text()
+        header = (ROOT / "include/pokedex.h").read_text()
+        defines = "\n".join(line for line in header.splitlines() if line.startswith(("#define CEILDIV", "#define NUM_DEX_FLAG_WORDS")))
+        form_table = source[source.index("static const u16 sFormBaseSpecies["):]
+        form_table = form_table[:form_table.index("};") + 2]
+        native = "\n".join([form_table] + [c_function(source, name) for name in (
+            "DexSpeciesIsInvalid", "SpeciesToDexSpecies", "Pokedex_IsOwnDexEntry", "CheckDexFlag", "SetDexFlag",
+            "Pokedex_CheckMonCaughtFlag", "Pokedex_CheckMonSeenFlag",
+            "Pokedex_CountNationalDexOwned", "Pokedex_CountNationalDexSeen")])
+        run_native(self, GALARIAN.replace("@DEFINES@", defines).replace("@NATIVE@", native), "newgold-dex-galarian-")
 
     def test_new_species_do_not_reset_the_game(self):
         native = function((ROOT / "src/pokedex.c").read_text(), "DexSpeciesIsInvalid")

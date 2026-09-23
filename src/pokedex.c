@@ -452,11 +452,27 @@ static const u16 sFormBaseSpecies[NUM_SPECIES - NATIONAL_DEX_COUNT] = {
 // Every species past the last Dex species is a form here, a female Pyroar or
 // a Mega Venusaur. hg-engine stores a form as its base species and a form
 // number, so its Dex credits and numbers the base; this is how ours does.
+// Galarian Slowpoke and Slowbro are forms in hg-engine too, kept here as
+// species inside the Dex's range (the trainer table names them): they are
+// credited to Slowpoke and Slowbro in the same way, and have no Dex entry of
+// their own to count (Pokedex_IsOwnDexEntry).
 u16 SpeciesToDexSpecies(u16 species) {
     if (species > NATIONAL_DEX_COUNT && species <= NUM_SPECIES) {
         return sFormBaseSpecies[species - NATIONAL_DEX_COUNT - 1];
     }
+    if (species == SPECIES_SLOWPOKE_GALARIAN) {
+        return SPECIES_SLOWPOKE;
+    }
+    if (species == SPECIES_SLOWBRO_GALARIAN) {
+        return SPECIES_SLOWBRO;
+    }
     return species;
+}
+
+// The National Dex counts walk the species up to the last Dex species; a
+// species credited to another is counted as that one, not again.
+static BOOL Pokedex_IsOwnDexEntry(u16 species) {
+    return SpeciesToDexSpecies(species) == species;
 }
 
 // The National Dex number of each species after the Dex gap. Those species
@@ -1517,7 +1533,7 @@ u16 Pokedex_CountNationalDexOwned(Pokedex *pokedex) {
     ASSERT_POKEDEX(pokedex);
     n = 0;
     for (i = 1; i <= NATIONAL_DEX_COUNT; i++) {
-        if (Pokedex_CheckMonCaughtFlag(pokedex, i) == TRUE) {
+        if (Pokedex_IsOwnDexEntry(i) && Pokedex_CheckMonCaughtFlag(pokedex, i) == TRUE) {
             n++;
         }
     }
@@ -1529,7 +1545,7 @@ u16 Pokedex_CountNationalDexSeen(Pokedex *pokedex) {
     ASSERT_POKEDEX(pokedex);
     n = 0;
     for (i = 1; i <= NATIONAL_DEX_COUNT; i++) {
-        if (Pokedex_CheckMonSeenFlag(pokedex, i) == TRUE) {
+        if (Pokedex_IsOwnDexEntry(i) && Pokedex_CheckMonSeenFlag(pokedex, i) == TRUE) {
             n++;
         }
     }
@@ -1593,7 +1609,7 @@ u16 Pokedex_CountNationalOwned_ExcludeMythical(Pokedex *pokedex) {
 
     n = 0;
     for (i = 1; i <= NATIONAL_DEX_COUNT; i++) {
-        if (Pokedex_CheckMonCaughtFlag(pokedex, i) == TRUE && SpeciesIsNotNationalMythical(i) == TRUE) {
+        if (Pokedex_IsOwnDexEntry(i) && Pokedex_CheckMonCaughtFlag(pokedex, i) == TRUE && SpeciesIsNotNationalMythical(i) == TRUE) {
             n++;
         }
     }

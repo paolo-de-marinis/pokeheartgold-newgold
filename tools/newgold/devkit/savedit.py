@@ -2270,8 +2270,12 @@ def set_item(save, item, quantity):
 def dex_species():
     """The species with a Dex page: 1 to NATIONAL_DEX_COUNT but the egg and
     the retail forms numbered between Arceus and the species New Gold adds
-    (DexSpeciesIsInvalid)."""
-    return [s for s in range(1, NATIONAL_DEX_COUNT + 1) if not FIRST_DEX_GAP <= s <= LAST_DEX_GAP]
+    (DexSpeciesIsInvalid), and the two Galarian forms kept as species, which
+    the Dex credits to Slowpoke and Slowbro (SpeciesToDexSpecies)."""
+    numbers = species_numbers()
+    credited = {numbers["SLOWPOKE_GALARIAN"], numbers["SLOWBRO_GALARIAN"]}
+    return [s for s in range(1, NATIONAL_DEX_COUNT + 1)
+            if not FIRST_DEX_GAP <= s <= LAST_DEX_GAP and s not in credited]
 
 
 def _dex_bit(block, at, species):

@@ -142,9 +142,16 @@ int main(void) {
         Pokedex_SetMonSeenFlag(&dex, &mon);
         assert(Pokedex_CheckMonSeenFlag(&dex, species));
     }
+    // Galarian Slowpoke and Slowbro, forms kept as species inside the Dex's
+    // range, land on Slowpoke's and Slowbro's too; nothing else moves.
     for (u16 species = 1; species <= NATIONAL_DEX_COUNT; species++) {
+        if (species == SPECIES_SLOWPOKE_GALARIAN || species == SPECIES_SLOWBRO_GALARIAN) {
+            continue;
+        }
         assert(SpeciesToDexSpecies(species) == species);
     }
+    assert(SpeciesToDexSpecies(SPECIES_SLOWPOKE_GALARIAN) == SPECIES_SLOWPOKE);
+    assert(SpeciesToDexSpecies(SPECIES_SLOWBRO_GALARIAN) == SPECIES_SLOWBRO);
     printf("PASS: %d forms register as their base species.\n", NUM_SPECIES - NATIONAL_DEX_COUNT);
     return 0;
 }
