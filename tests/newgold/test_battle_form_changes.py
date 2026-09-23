@@ -145,6 +145,28 @@ class FormChangeTests(unittest.TestCase):
         before = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224C38C")
         self.assertLess(before.index("TryStanceChange(battleSystem, ctx)"), before.index("ov12_0224B1FC(battleSystem, ctx)"))
 
+    def test_hunger_switch(self):
+        """At the end of every turn a Morpeko turns Hangry, or back; not a
+        fainted one, a transformed one or one that has lost the ability. The
+        change is the last thing at the end of the turn."""
+        print(run(["Battler_HungerSwitchForm"], r"""
+    set(SPECIES_MORPEKO, ABILITY_HUNGER_SWITCH, 1, 1);
+    assert(Battler_HungerSwitchForm(&ctx, 0) == SPECIES_MORPEKO_HANGRY);
+    set(SPECIES_MORPEKO_HANGRY, ABILITY_HUNGER_SWITCH, 1, 1);
+    assert(Battler_HungerSwitchForm(&ctx, 0) == SPECIES_MORPEKO);
+    set(SPECIES_MORPEKO, ABILITY_HUNGER_SWITCH, 0, 1);
+    assert(Battler_HungerSwitchForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_MORPEKO, ABILITY_NONE, 1, 1);
+    assert(Battler_HungerSwitchForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_MORPEKO, ABILITY_HUNGER_SWITCH, 1, 1);
+    ctx.battleMons[0].status2 = STATUS2_TRANSFORM;
+    assert(Battler_HungerSwitchForm(&ctx, 0) == SPECIES_NONE);
+    puts("PASS: Hunger Switch at the end of every turn.");""",
+                  "newgold-hunger-", "src/battle/battle_controller_player.c"))
+        extra = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_UpdateFieldConditionExtra")
+        self.assertLess(extra.index("case UFCE_STATE_TRICK_ROOM:"), extra.index("case UFCE_STATE_HUNGER_SWITCH:"))
+        self.assertIn("form = Battler_HungerSwitchForm(ctx, battlerId);", extra)
+
 
 if __name__ == "__main__":
     unittest.main()

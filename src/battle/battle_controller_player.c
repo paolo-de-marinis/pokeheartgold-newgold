@@ -1815,8 +1815,25 @@ typedef enum UpdateFieldConditionExtraState {
     UFCE_STATE_FUTURE_SIGHT,
     UFCE_STATE_PERISH_SONG,
     UFCE_STATE_TRICK_ROOM,
+    UFCE_STATE_HUNGER_SWITCH,
     UFCE_STATE_END
 } UpdateFieldConditionExtraState;
+
+// Hunger Switch (ServerFieldConditionCheck.c:1841): at the end of every turn a
+// Morpeko goes from its Full Belly Mode to its Hangry Mode or back. The
+// species to become, or SPECIES_NONE; not for a transformed battler.
+static u16 Battler_HungerSwitchForm(BattleContext *ctx, int battlerId) {
+    if (!ctx->battleMons[battlerId].hp || GetBattlerAbility(ctx, battlerId) != ABILITY_HUNGER_SWITCH || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+        return SPECIES_NONE;
+    }
+    switch (ctx->battleMons[battlerId].species) {
+    case SPECIES_MORPEKO:
+        return SPECIES_MORPEKO_HANGRY;
+    case SPECIES_MORPEKO_HANGRY:
+        return SPECIES_MORPEKO;
+    }
+    return SPECIES_NONE;
+}
 
 // Future sight and doom desire are here due to mons being able to faint simulataneously, which means exp shouldn't be awarded like when a mon faints due to burn
 // Trick room is here due to every other update function being reliant on turn order, meaning it must be updated last
@@ -1891,6 +1908,26 @@ static void BattleControllerPlayer_UpdateFieldConditionExtra(BattleSystem *battl
             ctx->fieldCondition -= 1 << FIELD_CONDITION_TRICK_ROOM_SHIFT;
             if (!(ctx->fieldCondition & FIELD_CONDITION_TRICK_ROOM)) {
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, 251);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                return;
+            }
+        }
+        ctx->stateUpdateFieldConditionExtra++;
+        ctx->updateFieldConditionExtraData = 0;
+        // fallthrough
+    case UFCE_STATE_HUNGER_SWITCH:
+        // The last thing at the end of a turn, as it is in hg-engine's.
+        while (ctx->updateFieldConditionExtraData < maxBattlers) {
+            u16 form;
+
+            battlerId = ctx->turnOrder[ctx->updateFieldConditionExtraData];
+            ctx->updateFieldConditionExtraData++;
+            form = Battler_HungerSwitchForm(ctx, battlerId);
+            if (form != SPECIES_NONE) {
+                ctx->battlerIdTemp = battlerId;
+                BattleSystem_ChangeBattlerForm(battleSystem, ctx, battlerId, form, FALSE);
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FORM_CHANGE);
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 return;
