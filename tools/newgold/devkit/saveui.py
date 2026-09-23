@@ -1169,7 +1169,7 @@ def species_rules(q):
     moves the game gives it at the level (the preset); and the ability slot
     the game gives a Pokemon with these bits (hidden, bit) as this species."""
     species = number(q.get("species"), 1, len(sv.personal_records()) - 1, "specie")
-    form = number(q.get("form", 0), 0, 31, "forma")
+    form = number(q.get("form", 0), 0, sv.MAX_FORM, "forma")
     moves, names = sv.learnable_moves(species, form), sv.move_table()
     return {"moves": [{"id": m, "sources": moves[m]} for m in sorted(moves, key=lambda m: names[m]["name"])],
             "abilities": sv.species_abilities(species, form),

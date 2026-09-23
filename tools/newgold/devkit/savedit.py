@@ -243,9 +243,11 @@ def _layout():
         "MAX_LEVEL": "MAX_LEVEL", "NATURE_NUM": "NATURE_NUM", "MAX_MON_MOVES": "MAX_MON_MOVES",
         "NUM_STATS": "NUM_STATS", "MAX_EV_PER_STAT": "MAX_EV_PER_STAT", "MAX_EV_SUM": "MAX_EV_SUM",
         "DIR_MAX": "DIR_MAX",   # the directions the player can face
+        "DYNAMIC_REGION": f"{offset}(SaveData, dynamic_region)",   # where the region sits in RAM's SaveData
     }
-    values, (natdex, ivs) = compile_c(tuple(names.values()), (("PlayerProfile", ".natDex = 1"),
-                                                              ("PokemonDataBlockB", ".hpIV = ~0u")))
+    values, (natdex, ivs, forms) = compile_c(tuple(names.values()), (("PlayerProfile", ".natDex = 1"),
+                                                                     ("PokemonDataBlockB", ".hpIV = ~0u"),
+                                                                     ("PokemonDataBlockB", ".form = ~0u")))
     out = dict(zip(names, values))
     at = out["PROFILE"]
     out.update(NAME=at + out["NAME_IN_PROFILE"], TRAINER_ID=at + out["ID_IN_PROFILE"], MONEY=at + out["MONEY_IN_PROFILE"],
@@ -255,6 +257,8 @@ def _layout():
     out.update(PROFILE_FLAGS=at + byte, NATDEX_MASK=1 << bit)
     byte, bit = set_bit(ivs)
     out["MAX_IV"] = int.from_bytes(ivs[byte:byte + 4], "little") >> bit   # the most an IV's field holds
+    byte, bit = set_bit(forms)
+    out["MAX_FORM"] = forms[byte] >> bit                                   # and a form's
     out["MINT_MASK"] = constants("src/pokemon.c", "MON_MINT_")["MON_MINT_NATURE_MASK"]   # pokemon.c's own
     out["PAGES_PER_HALF"] = HALF // save_budget.SAVE_SECTOR_SIZE
     # ZeroMonData: zeroes, "encrypted" under a checksum and a personality of 0.
@@ -399,7 +403,7 @@ def personal(species_name):
 def growth_curves():
     """growtbl.csv: every curve's experience at levels 0 to 100."""
     with source("files/poketool/personal/growtbl.csv").open() as f:
-        return {row["rate"][len("GROWTH_"):]: [int(row[f"lv{level:03d}"]) for level in range(101)]
+        return {row["rate"][len("GROWTH_"):]: [int(row[f"lv{level:03d}"]) for level in range(MAX_LEVEL + 1)]
                 for row in csv.DictReader(f)}
 
 
@@ -413,7 +417,7 @@ def experience_for(growth_rate, level):
 def level_for(growth_rate, exp):
     """CalcLevelBySpeciesAndExp: the last level whose experience is reached."""
     curve = growth_curves()[growth_rate]
-    return next((level - 1 for level in range(1, 101) if curve[level] > exp), 100)
+    return next((level - 1 for level in range(1, MAX_LEVEL + 1) if curve[level] > exp), MAX_LEVEL)
 
 
 @tree_cache
@@ -434,7 +438,7 @@ def learnset(index, level):
     """The moves this species knows at this level: the last four it learns.
     The CLI's --party default, kept as it was; preset_moves() is the game's."""
     known = [move for learned, move in learnsets()[index] if learned <= level]
-    return known[-4:]
+    return known[-MAX_MON_MOVES:]
 
 
 def preset_moves(species, level, form=0):
@@ -449,7 +453,7 @@ def preset_moves(species, level, form=0):
         if learned > level:
             break
         if move not in moves:
-            moves = (moves + [move])[-4:]
+            moves = (moves + [move])[-MAX_MON_MOVES:]
     return moves
 
 
@@ -512,17 +516,17 @@ def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
     a[0x0C] = record["friendship"]
     a[0x0D] = ability & 0xFF
     a[0x0F] = GAME_LANGUAGE
-    for i in range(6):
+    for i in range(NUM_STATS):
         a[0x10 + i] = evs[i] if isinstance(evs, (list, tuple)) else evs
 
     b = bytearray(BLOCK)
     for i, move in enumerate(moves):
         struct.pack_into("<H", b, 2 * i, move)
         b[8 + i] = 40                       # plenty of PP for a test battle
-    iv = ivs if isinstance(ivs, (list, tuple)) else [ivs] * 6
+    iv = ivs if isinstance(ivs, (list, tuple)) else [ivs] * NUM_STATS
     packed = 0
-    for i in range(6):
-        packed |= (iv[i] & 0x1F) << (5 * i)
+    for i in range(NUM_STATS):
+        packed |= (iv[i] & MAX_IV) << (5 * i)
     struct.pack_into("<I", b, 0x10, packed)
     b[0x18] = (gender & 3) << 1
 
@@ -564,12 +568,12 @@ def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
 
 def stat_line(record, level, iv, evs, nature):
     """CalcMonStats, including the nature's ten per cent either way."""
-    ev = evs if isinstance(evs, (list, tuple)) else [evs] * 6
+    ev = evs if isinstance(evs, (list, tuple)) else [evs] * NUM_STATS
     base = [record["hp"], record["atk"], record["def"],
             record["speed"], record["spatk"], record["spdef"]]
     hp = (base[0] * 2 + iv[0] + ev[0] // 4) * level // 100 + level + 10
     out = [hp]
-    for i in range(1, 6):
+    for i in range(1, NUM_STATS):
         value = (base[i] * 2 + iv[i] + ev[i] // 4) * level // 100 + 5
         mod = nature_mods()[nature][i - 1]
         if mod > 0:
@@ -885,7 +889,7 @@ def seal_from_ram(dump_path, save_path):
     pointer = struct.unpack_from("<I", dump, where.symbol("sSaveDataPtr") - where.MAIN_RAM)[0]
     if not where.MAIN_RAM <= pointer < where.MAIN_RAM + len(dump):
         raise SystemExit("sSaveDataPtr is not set in that dump")
-    at = pointer - where.MAIN_RAM + 0x10          # SaveData.dynamic_region
+    at = pointer - where.MAIN_RAM + DYNAMIC_REGION
     region = bytearray(dump[at:at + save_budget.REGION])
     table = blocks()
     holder = type("_", (), {"region": region, "table": table,
@@ -1009,7 +1013,7 @@ def set_var(save, name, value):
     if number is None:
         raise SystemExit(f"there is no {name} in include/constants/vars.h")
     value = int(value, 0) if isinstance(value, str) else value
-    struct.pack_into("<H", save.block("SAVE_FLAGS"), 2 * (number - 0x4000), value)
+    struct.pack_into("<H", save.block("SAVE_FLAGS"), 2 * (number - VAR_BASE), value)
     return number
 
 
@@ -1582,7 +1586,7 @@ def _set_party_stats(mon, level):
     party = mon["party"]
     species = struct.unpack_from("<H", a, 0)[0]
     ivword = struct.unpack_from("<I", b, 0x10)[0]
-    ivs = [(ivword >> (5 * i)) & 31 for i in range(6)]
+    ivs = [(ivword >> (5 * i)) & MAX_IV for i in range(NUM_STATS)]
     mint = (struct.unpack_from("<H", b, 0x1A)[0] & MINT_MASK) >> 1
     nature = mint - 1 if mint else mon["personality"] % 25
     stats = stat_line(personal_records()[personal_row(species, b[0x18] >> 3)], level, ivs, list(a[0x10:0x16]), nature)
@@ -1632,7 +1636,7 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
     exp = struct.unpack_from("<I", a, 8)[0] & EXP_BITS
     current = mon["party"][4] if mon["party"] is not None else level_for(records[old_species]["growthRate"], exp)
     restat = any(v is not None for v in (level, nature, ivs, evs)) or (species not in (None, old_species))
-    knew = [struct.unpack_from("<H", b, 2 * i)[0] for i in range(4)]
+    knew = [struct.unpack_from("<H", b, 2 * i)[0] for i in range(MAX_MON_MOVES)]
     if level is not None and not 1 <= level <= MAX_LEVEL:
         raise ValueError(f"a level is 1 to {MAX_LEVEL}")
     if nature is not None:
@@ -1662,10 +1666,10 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
         struct.pack_into("<H", a, 2, item)
     if moves is not None:
         check_moves(struct.unpack_from("<H", a, 0)[0], moves, b[0x18] >> 3, kept=knew)
-        known = [(struct.unpack_from("<H", b, 2 * i)[0], b[8 + i], b[12 + i]) for i in range(4)]
-        wanted = [move for move in moves if move][:4]
+        known = [(struct.unpack_from("<H", b, 2 * i)[0], b[8 + i], b[12 + i]) for i in range(MAX_MON_MOVES)]
+        wanted = [move for move in moves if move][:MAX_MON_MOVES]
         table = move_table()
-        for i in range(4):
+        for i in range(MAX_MON_MOVES):
             move = wanted[i] if i < len(wanted) else 0
             kept = next((k for k in known if move and k[0] == move), None)
             pp, ups = (kept[1], kept[2]) if kept else ((table[move]["pp"], 0) if move else (0, 0))
@@ -1673,7 +1677,7 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
             b[8 + i], b[12 + i] = pp, ups
     if ivs is not None:
         word = struct.unpack_from("<I", b, 0x10)[0] & 0xC0000000
-        struct.pack_into("<I", b, 0x10, word | sum((iv & 31) << (5 * i) for i, iv in enumerate(ivs)))
+        struct.pack_into("<I", b, 0x10, word | sum((iv & MAX_IV) << (5 * i) for i, iv in enumerate(ivs)))
     if evs is not None:
         a[0x10:0x16] = bytes(evs)
     if friendship is not None:
@@ -1706,7 +1710,7 @@ def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, 
         _choose_ability(mon, ability)
     _, b, c, _ = mon["blocks"]
     table = move_table()
-    for i in range(4):
+    for i in range(MAX_MON_MOVES):
         b[8 + i] = table[struct.unpack_from("<H", b, 2 * i)[0]]["pp"]
     codes = encode_text(species_name(species), POKEMON_NAME_LENGTH)
     c[0:2 * (POKEMON_NAME_LENGTH + 1)] = struct.pack(f"<{POKEMON_NAME_LENGTH + 1}H",
@@ -1779,7 +1783,7 @@ def describe_mon(raw):
     nature = mint - 1 if mint else p % 25
     ability = a[0x0D] | (word >> 31) << 8
     moves = []
-    for i in range(4):
+    for i in range(MAX_MON_MOVES):
         move = struct.unpack_from("<H", b, 2 * i)[0]
         if move:
             row = move_table()[move] if move < len(move_table()) else {"name": f"#{move}", "pp": 0}
@@ -1798,7 +1802,7 @@ def describe_mon(raw):
            "item": item, "item_name": "" if not item else items[item]["name"] if item in items else f"#{item}",
            "types": mon_types(species, ability, item),
            "friendship": a[0x0C], "moves": moves,
-           "ivs": [(ivword >> (5 * i)) & 31 for i in range(6)], "evs": list(a[0x10:0x16]),
+           "ivs": [(ivword >> (5 * i)) & MAX_IV for i in range(NUM_STATS)], "evs": list(a[0x10:0x10 + NUM_STATS]),
            "ot_name": decode_text(struct.unpack_from("<8H", d, 0)), "ot_id": ot_id & 0xFFFF,
            "ot_sid": ot_id >> 16, "ot_gender": d[0x1C] >> 7, "gender": (b[0x18] >> 1) & 3,
            "shiny": is_shiny(p, ot_id), "ball": d[0x1B], "met_level": d[0x1C] & 0x7F}
@@ -1869,7 +1873,7 @@ def swap_party_mons(save, one, other):
 
 def box_raw(save, box, slot):
     if not (0 <= box < NUM_BOXES and 0 <= slot < MONS_PER_BOX):
-        raise ValueError("boxes and their slots are 1 to 30")
+        raise ValueError(f"the boxes are 1 to {NUM_BOXES}, their slots 1 to {MONS_PER_BOX}")
     at = box * BOX + slot * BOX_MON
     return bytes(save.block("SAVE_PCSTORAGE")[at:at + BOX_MON])
 

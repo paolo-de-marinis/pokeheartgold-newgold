@@ -676,6 +676,10 @@ class TheCodeSaveditKeeps(unittest.TestCase):
         nature = sv.c_function("src/pokemon.c", "u16 ModifyStatByNature(")
         self.assertRegex(nature, r"(?s)case 1:.*retVal = n \* 110;\s*retVal /= 100;.*case -1:.*retVal = n \* 90;\s*retVal /= 100;")
         self.assertIn(f"adrs = {sv.HALF:#x};", sv.c_function("src/save.c", "static u32 GetChunkOffsetFromCurrentSaveSlot("))
+        self.assertIn("adrs += 0x100 - (adrs % 0x100);", sv.c_function("src/save.c", "static void SaveData_InitSubstructs("),
+                      "blocks(): a slot's first block on a 0x100 boundary")
+        self.assertIn("adrs += (0x100 - (adrs % 0x100));", sv.c_function("src/save.c", "static void SaveData_InitSlotSpecs("),
+                      "slot_specs(): and the next slot too")
         self.assertIn(f"hours = {sv.MAX_PLAY_HOURS};", sv.c_function("src/igt.c", "void AddIGTSeconds("))
         tutor = sv.c_function("src/field/scrcmd_move_tutor.c", "static u16 GetMoveTutorLearnsetIndex(")
         self.assertIn("u16 index = species > SPECIES_ARCEUS ? species - 2 : species;", tutor, "tutor_moves")
