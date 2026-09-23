@@ -215,9 +215,16 @@ class TrainerTests(unittest.TestCase):
         Whismur without Echoed Voice."""
         party = function((ROOT / "src/trainer_data.c").read_text(), "CreateNPCTrainerParty")
         self.assertEqual(re.findall(r"MonSetMoveInSlot\(mon, ([^;]*)\);", party),
-                         ["MoveIsUnimplemented(move) ? MOVE_NONE : move, (u8)j"] * 2)
-        listed = re.findall(r"MOVE_\w+", re.search(r"sUnimplementedMoves\[\] = \{(.*?)\};",
-                                                   (ROOT / "src/move.c").read_text(), re.S)[1])
+                         ["TrMon_UsableMove(monSpeciesMoves[i].moves[j]), (u8)j", "TrMon_UsableMove(monSpeciesItemMoves[i].moves[j]), (u8)j"])
+        # The flag is bit 5 of each record's flag byte (offset 11), written from
+        # the engine's move data by import_moves.py.
+        table = (ROOT / "files/poketool/waza/waza_tbl.narc").read_bytes()
+        count = struct.unpack_from("<H", table, 0x18)[0]
+        spans = [struct.unpack_from("<II", table, 0x1C + 8 * i) for i in range(count)]
+        base = table.index(b"GMIF") + 8
+        numbers = {int(v): n for n, v in re.findall(r"#define (MOVE_\w+)\s+(\d+)\b",
+                                                    (ROOT / "include/constants/moves.h").read_text())}
+        listed = [numbers[i] for i, (a, _) in enumerate(spans) if table[base + a + 11] & 0x20]
         self.assertEqual(len(listed), 79)
         carried = {(index, member["species"], move) for index, trainer in enumerate(self.trainers)
                    for member in trainer["party"] for move in member.get("moves", []) if move in listed}

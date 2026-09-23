@@ -36,12 +36,16 @@ typedef enum MoveAttr {
     MOVEATTR_CONTEST_TYPE,
 } MoveAttr;
 
+// Bit 5 of the flag byte: the engine's FLAG_UNUSABLE_UNIMPLEMENTED, on the moves
+// it never implemented.
+#define MOVE_FLAG_UNUSABLE_UNIMPLEMENTED (1 << 5)
+
 void LoadAddedMoveTbl(MoveTbl *dest);
 u32 GetMoveAttr(u16 moveId, MoveAttr attrno);
 u8 GetMoveMaxPP(u16 moveId, u8 ppUps);
 void LoadMoveTbl(MoveTbl *dest);
 u32 GetMoveTblAttr(const MoveTbl *moveTbl, MoveAttr attr);
 void LoadMoveEntry(u16 moveId, MoveTbl *moveTbl);
-BOOL MoveIsUnimplemented(u16 moveId);
+BOOL IsMoveUnimplemented(u16 moveId);
 
 #endif // POKEHEARTGOLD_MOVE_H

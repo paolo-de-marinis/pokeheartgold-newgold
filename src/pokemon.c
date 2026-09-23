@@ -3884,8 +3884,19 @@ BOOL Mon_UpdateRotomForm(Pokemon *mon, int form, int defaultSlot) {
     return TRUE;
 }
 
+// The moves the engine never implemented are dropped from the list as it is
+// read, as the reference does, so a new Pokemon's moveset, a level-up and the
+// Move Relearner never see them.
 void LoadLevelUpLearnset_HandleAlternateForm(int species, int form, u32 *levelUpLearnset) {
+    int i, j;
+
     ReadWholeNarcMemberByIdPair(levelUpLearnset, NARC_poketool_personal_wotbl, ResolveMonForm(species, form));
+    for (i = 0, j = 0; levelUpLearnset[i] != LEVEL_UP_LEARNSET_END; i++) {
+        if (!IsMoveUnimplemented(LEVEL_UP_LEARNSET_MOVE(levelUpLearnset[i]))) {
+            levelUpLearnset[j++] = levelUpLearnset[i];
+        }
+    }
+    levelUpLearnset[j] = LEVEL_UP_LEARNSET_END;
 }
 
 void sub_02071FDC(SOUND_CHATOT *r6, u32 r5, u16 r4, s32 unused, s32 sp18, u32 sp1C, u32 sp20, u32 sp24) {

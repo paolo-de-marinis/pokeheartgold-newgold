@@ -284,6 +284,13 @@ void TrMon_OverridePidGender(int species, int form, int overrideParam, u32 *pid)
 void TrMon_ApplyAbilitySlot(Pokemon *mon, int species, int form, int overrideParam);
 void TrMon_FrustrationCheckAndSetFriendship(Pokemon *mon);
 
+// The engine gives a trainer's Pokemon MOVE_NONE for a move it never
+// implemented (enemy_party.c at d0380a487), so it has one move fewer rather
+// than one that does nothing.
+static u16 TrMon_UsableMove(u16 move) {
+    return IsMoveUnimplemented(move) ? MOVE_NONE : move;
+}
+
 void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID heapID) {
     TRPOKE *data; // sp74
     int i;
@@ -383,9 +390,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             iv = (u8)((monSpeciesMoves[i].difficulty * 31) / 255);
             CreateMon(mon, species, monSpeciesMoves[i].level, iv, TRUE, (s32)personality, OT_ID_RANDOM_NO_SHINY, 0);
             for (j = 0; j < MAX_MON_MOVES; j++) {
-                // A move the engine has no effect for leaves its slot empty.
-                u16 move = monSpeciesMoves[i].moves[j];
-                MonSetMoveInSlot(mon, MoveIsUnimplemented(move) ? MOVE_NONE : move, (u8)j);
+                MonSetMoveInSlot(mon, TrMon_UsableMove(monSpeciesMoves[i].moves[j]), (u8)j);
             }
             SetTrMonCapsule(monSpeciesMoves[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
@@ -440,8 +445,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             CreateMon(mon, species, monSpeciesItemMoves[i].level, iv, TRUE, (s32)personality, OT_ID_RANDOM_NO_SHINY, 0);
             SetMonData(mon, MON_DATA_HELD_ITEM, &monSpeciesItemMoves[i].item);
             for (j = 0; j < MAX_MON_MOVES; j++) {
-                u16 move = monSpeciesItemMoves[i].moves[j];
-                MonSetMoveInSlot(mon, MoveIsUnimplemented(move) ? MOVE_NONE : move, (u8)j);
+                MonSetMoveInSlot(mon, TrMon_UsableMove(monSpeciesItemMoves[i].moves[j]), (u8)j);
             }
             SetTrMonCapsule(monSpeciesItemMoves[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);

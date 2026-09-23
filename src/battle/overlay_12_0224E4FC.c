@@ -2343,6 +2343,13 @@ BOOL ov12_02251A28(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
         msg->tag = TAG_NONE;
         msg->id = msg_0197_00823;
         ret = FALSE;
+    } else if (BattleMoveTbl(ctx, ctx->battleMons[battlerId].moves[movePos])->unkB & MOVE_FLAG_UNUSABLE_UNIMPLEMENTED) {
+        // A move the engine never implemented, which a Pokemon can still know
+        // from before the learnsets left it out. Last, as in the reference.
+        // "You can't use this move!"
+        msg->tag = TAG_NONE;
+        msg->id = msg_0197_00620;
+        ret = FALSE;
     }
 
     return ret;
