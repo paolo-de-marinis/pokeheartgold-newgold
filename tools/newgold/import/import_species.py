@@ -177,16 +177,37 @@ def base_exp_yields(reference):
     return {m[1]: int(m[2]) for m in re.finditer(r"\[SPECIES_([A-Z0-9_]+)\s*\]\s*=\s*(\d+)", table)}
 
 
-def machine_moves(reference):
-    """Each species' TM and HM moves. A form the reference gives none of its
-    own learns its base species' -- the reference reads the base's list for
-    it at run time -- so 324 forms do not come out unable to learn any TM."""
+def reference_machines(reference):
+    """The moves the reference has a machine for: TM01 to HM08 as here, then
+    the later games' TMs and TRs, which have no machine in this game."""
+    source = (reference / "src/item.c").read_text(errors="replace")
+    table = source[source.index("sMachineMoves[] = {"):]
+    return set(re.findall(r"MOVE_[A-Z0-9_]+", table[:table.index("};")]))
+
+
+def machine_moves(reference, level_up=True):
+    """Each species' machine moves, by the reference's rule (hg-engine's
+    scripts/build_learnsets.py, write_machine_data): a species can be taught a
+    machine's move if its MachineMoves list names it or it learns it by
+    level-up. A form with no list of its own takes its base species' -- the
+    reference reads the base's for it -- so 324 forms do not come out unable
+    to learn any TM. level_up=False leaves the level-up half out."""
     learnsets = json.loads((reference / "data/learnsets/learnsets.json").read_text())
-    moves = {name[len("SPECIES_"):]: set(entry.get("MachineMoves", []))
-             for name, entry in learnsets.items()}
-    for form, base in base_species_of(reference).items():
-        if not moves.get(form):
-            moves[form] = set(moves.get(base, set()))
+    bases = base_species_of(reference)
+
+    def listed(name, key):
+        found = learnsets.get("SPECIES_" + name, {}).get(key, [])
+        if not found and name in bases:
+            found = learnsets.get("SPECIES_" + bases[name], {}).get(key, [])
+        return found
+
+    machines = reference_machines(reference)
+    moves = {}
+    for name in {key[len("SPECIES_"):] for key in learnsets} | set(bases):
+        taught = set(listed(name, "MachineMoves"))
+        if level_up:
+            taught |= {entry["Move"] for entry in listed(name, "LevelMoves") if "Move" in entry}
+        moves[name] = taught & machines
     return moves
 
 
@@ -329,6 +350,14 @@ def main():
                 entry["tms"], entry["hms"] = fresh
                 refreshed += 1
     print(f"{refreshed} records already written take new machine moves")
+
+    # This game has TM01 to HM08 only; the reference's other machines have no
+    # item here, so a species' compatibility with them has nowhere to go.
+    dropped = {name: learnsets.get(name, set()) - tms.keys() - hms.keys() for name in wanted_all}
+    past = sorted(set().union(*dropped.values()))
+    print(f"{sum(map(len, dropped.values()))} machine compatibilities dropped from "
+          f"{sum(1 for moves in dropped.values() if moves)} species, {len(past)} moves "
+          f"with no machine past HM08: {', '.join(past[:6])}" + (" ..." if len(past) > 6 else ""))
 
     first = len(personal["baseStats"])
     print(f"{len(added)} species to append, identifiers {first} to {first + len(added) - 1}")

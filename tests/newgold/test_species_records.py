@@ -94,6 +94,26 @@ class SpeciesRecordTests(unittest.TestCase):
             self.assertEqual(record["expYieldFull"], yieldValue, name)
             self.assertEqual(record["expYield"], min(yieldValue, 255), name)
 
+    def test_a_move_learnt_by_level_up_can_be_taught_by_its_machine(self):
+        """hg-engine's build_learnsets.py sets a species' machine bit when it
+        learns the move by level-up, whatever its machine list says: Pansage
+        can be taught Natural Gift (TM83) and Recycle (TM67), Blitzle Shock
+        Wave (TM34). Checked against this game's own level-up archive."""
+        import wotbl
+        learnsets, _, _ = wotbl.read_narc(wotbl.ARCHIVE.read_bytes())
+        numbers = wotbl.move_names()
+        tms, hms = import_species.machine_numbers()
+        machines = {numbers[move]: ("tms", n) for move, n in tms.items()}
+        machines.update({numbers[move]: ("hms", n) for move, n in hms.items()})
+        missing = []
+        for name in import_species.added_species():
+            index = self.constants[name]
+            for entry in wotbl.decode(learnsets[index]):
+                field, number = machines.get(entry["move"], (None, None))
+                if field and number not in self.records[index][field]:
+                    missing.append(f"{name} {field} {number}")
+        self.assertEqual(missing, [])
+
     @unittest.skipIf(REFERENCE is None, "behaviour reference not present")
     def test_records_still_match_the_reference(self):
         reference = Path(REFERENCE)
@@ -102,6 +122,7 @@ class SpeciesRecordTests(unittest.TestCase):
         for form, base in self.bases.items():
             yields.setdefault(form, yields.get(base, 0))  # as the import gives a form its base's yield
         learnsets = import_species.machine_moves(reference)
+        retail = import_species.machine_moves(reference, level_up=False)  # as update_vanilla_species
         tms, hms = import_species.machine_numbers()
         # The hidden ability lives in a table of its own in the reference, and
         # an ability this game has not got leaves the species without one.
@@ -121,8 +142,9 @@ class SpeciesRecordTests(unittest.TestCase):
                 continue
             if name not in blocks:
                 continue
+            taught = (retail if index <= 493 else learnsets).get(name, set())
             regenerated = import_species.record(name, blocks[name], yields.get(name, 0),
-                                                learnsets.get(name, set()), tms, hms,
+                                                taught, tms, hms,
                                                 hidden.get("SPECIES_" + name, "ABILITY_NONE"))
             self.assertEqual(self.records[index], regenerated, name)
             checked += 1

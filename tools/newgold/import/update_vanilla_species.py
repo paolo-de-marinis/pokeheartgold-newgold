@@ -33,7 +33,10 @@ def pending(reference):
     differ), and the species left alone."""
     blocks = import_species.species_entries(reference)
     yields = import_species.base_exp_yields(reference)
-    learnsets = import_species.machine_moves(reference)
+    # Without the level-up half of the machine rule: the only two species
+    # here it would change, Sudowoodo and Delibird, learn the move by
+    # level-up in konefr's learnsets, not in hg-engine's.
+    learnsets = import_species.machine_moves(reference, level_up=False)
     tms, hms = import_species.machine_numbers()
 
     personal = json.loads(PERSONAL.read_text())
