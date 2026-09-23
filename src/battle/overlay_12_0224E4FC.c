@@ -10510,7 +10510,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     // punch, which is asked in BattleMoveMakesContact rather than here.
     for (i = 0; i < NELEMS(sPunchingMoves); i++) {
         if (sPunchingMoves[i] == moveNo && calcAttacker.ability == ABILITY_IRON_FIST) {
-            movePower = movePower * BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE / 10;
+            movePower = movePower * 12 / 10;
             break;
         }
     }
