@@ -49,5 +49,22 @@ void ov12_02263A1C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     data.caught = BattleSystem_CheckMonCaught(battleSystem, ctx->battleMons[battlerId].species);
     data.safariBalls = BattleSystem_GetSafariBallCount(battleSystem);
 
+    // Illusion: as EmitHealthbarSlideIn has it, the box goes on naming the
+    // Pokemon the battler is made up as, with its sex and whether its species
+    // is caught; the level and the experience are the battler's own. The
+    // reference redraws it as the battler.
+    if (ctx->battleMons[battlerId].illusionMon) {
+        Pokemon *disguise = Battler_IllusionMon(battleSystem, battlerId);
+        int disguiseSpecies = GetMonData(disguise, MON_DATA_SPECIES, NULL);
+
+        data.selectedMonIndex = ctx->battleMons[battlerId].illusionMon - 1;
+        if ((disguiseSpecies == SPECIES_NIDORAN_F || disguiseSpecies == SPECIES_NIDORAN_M) && !GetMonData(disguise, MON_DATA_HAS_NICKNAME, NULL)) {
+            data.gender = MON_GENDERLESS;
+        } else {
+            data.gender = GetMonGender(disguise);
+        }
+        data.caught = BattleSystem_CheckMonCaught(battleSystem, disguiseSpecies);
+    }
+
     ov12_02262240(battleSystem, 1, battlerId, &data, sizeof(HealthbarRefreshCommand));
 }

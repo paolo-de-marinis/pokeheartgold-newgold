@@ -127,6 +127,23 @@ class IllusionTests(unittest.TestCase):
         for name in ("BattleMessage_BufferNickname", "BattleMessage_BufferPokemon"):
             self.assertIn("BattleMessage_GetMon(battleSystem, param)", function(names, name))
 
+    def test_the_faint_the_substitute_and_the_level_up_box_show_it(self):
+        # A faint without a hit, the sprite a substitute gives back and the
+        # health box after a level-up read the disguise too.
+        battle = ROOT / "src/battle"
+        for path, name in (("battle_controller_faint.c", "BattleController_EmitPlayFaintAnimation"),
+                           ("battle_controller_substitute.c", "BattleController_EmitSwapToSubstituteSprite")):
+            body = function((battle / path).read_text(), name)
+            self.assertIn("disguise = Battler_IllusionMon(battleSystem, i);", body, name)
+            for field in ("Species", "Shiny", "Form", "Gender", "Personality"):
+                self.assertIn(f"data.battler{field}[i] = ", body[body.index("Battler_IllusionMon(battleSystem, i)"):], name)
+        faint = function((battle / "battle_controller_faint.c").read_text(), "BattleController_EmitPlayFaintAnimation")
+        self.assertIn("disguise = Battler_IllusionMon(battleSystem, battlerId);", faint)
+        self.assertIn("data.species = GetMonData(disguise, MON_DATA_SPECIES, NULL);", faint)
+        box = function((battle / "battle_controller_healthbar_refresh.c").read_text(), "ov12_02263A1C")
+        self.assertIn("data.selectedMonIndex = ctx->battleMons[battlerId].illusionMon - 1;", box)
+        self.assertLess(box.index("illusionMon)"), box.index("ov12_02262240("))
+
     def test_it_drops_on_damage_and_when_the_ability_goes(self):
         overlay = OVERLAY.read_text()
         hit = function(overlay, "CheckAbilityEffectOnHit")

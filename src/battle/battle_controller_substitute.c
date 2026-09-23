@@ -1,5 +1,8 @@
 #include "battle/battle_controller.h"
 #include "battle/battle_system.h"
+#include "battle/overlay_12_0224E4FC.h"
+
+#include "pokemon.h"
 
 // What the opponent controller swaps a battler's sprite for its substitute's
 // from, or back: how every battler on the field looks. The packet is the
@@ -18,8 +21,13 @@ typedef struct SubstituteSpriteCommand {
 // The opponent controller reads this packet by offset.
 typedef char SubstituteSpriteCommandSizeCheck[sizeof(SubstituteSpriteCommand) == 0x58 ? 1 : -1];
 
+// Illusion: a battler made up as another Pokemon is drawn back as it when its
+// substitute goes (Pokemon Central, Illusione: the disguise stays until a
+// move's damage or the ability's loss drops it). The reference draws every
+// battler as itself.
 void BattleController_EmitSwapToSubstituteSprite(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     SubstituteSpriteCommand data;
+    Pokemon *disguise;
     int i;
 
     data.command = 62;
@@ -35,6 +43,15 @@ void BattleController_EmitSwapToSubstituteSprite(BattleSystem *battleSystem, Bat
         } else {
             data.battlerGender[i] = ctx->battleMons[i].gender;
             data.battlerPersonality[i] = ctx->battleMons[i].personality;
+        }
+
+        disguise = Battler_IllusionMon(battleSystem, i);
+        if (disguise != NULL) {
+            data.battlerSpecies[i] = GetMonData(disguise, MON_DATA_SPECIES, NULL);
+            data.battlerShiny[i] = MonIsShiny(disguise);
+            data.battlerForm[i] = GetMonData(disguise, MON_DATA_FORM, NULL);
+            data.battlerGender[i] = GetMonGender(disguise);
+            data.battlerPersonality[i] = GetMonData(disguise, MON_DATA_PERSONALITY, NULL);
         }
     }
 
