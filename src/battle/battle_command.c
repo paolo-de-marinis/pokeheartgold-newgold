@@ -4067,16 +4067,12 @@ BOOL BtlCmd_TryStealItem(BattleSystem *battleSystem, BattleContext *ctx) {
         BattleScriptIncrementPointer(ctx, adrs1);
     } else if (ctx->fieldSideConditionData[fieldSide].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdAttacker])) {
         BattleScriptIncrementPointer(ctx, adrs1);
-    } else if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MULTITYPE || GetBattlerAbility(ctx, ctx->battlerIdTarget) == ABILITY_MULTITYPE) {
-        BattleScriptIncrementPointer(ctx, adrs1);
-    } else if (ctx->battleMons[ctx->battlerIdTarget].item == ITEM_GRISEOUS_ORB) {
-        BattleScriptIncrementPointer(ctx, adrs1);
     } else if (ctx->battleMons[ctx->battlerIdTarget].unk88.custapBerryFlag || ctx->battleMons[ctx->battlerIdTarget].unk88.quickClawFlag) {
         BattleScriptIncrementPointer(ctx, adrs1);
     } else {
         if (ctx->battleMons[ctx->battlerIdTarget].item && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
             BattleScriptIncrementPointer(ctx, adrs2);
-        } else if (ctx->battleMons[ctx->battlerIdAttacker].item || CanStealHeldItem(battleSystem, ctx, ctx->battlerIdTarget) == FALSE) {
+        } else if (ctx->battleMons[ctx->battlerIdAttacker].item || CanStealHeldItem(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget) == FALSE) {
             BattleScriptIncrementPointer(ctx, adrs1);
         } else if (ctx->gemBoostingMove) {
             // A Thief or a Covet a Gem powered takes nothing, though the Gem
@@ -4921,7 +4917,7 @@ BOOL BtlCmd_TrySwapItems(BattleSystem *battleSystem, BattleContext *ctx) {
     // back when the battle ends, so the item is not gone for good.
     if ((ctx->fieldSideConditionData[sideAttacker].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdAttacker])) || (ctx->fieldSideConditionData[sideTarget].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]))) {
         BattleScriptIncrementPointer(ctx, adrsA);
-    } else if ((ctx->battleMons[ctx->battlerIdAttacker].item == 0 && ctx->battleMons[ctx->battlerIdTarget].item == 0) || !CanTrickHeldItem(ctx, ctx->battlerIdAttacker) || !CanTrickHeldItem(ctx, ctx->battlerIdTarget)) {
+    } else if ((ctx->battleMons[ctx->battlerIdAttacker].item == 0 && ctx->battleMons[ctx->battlerIdTarget].item == 0) || !CanTrickHeldItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)) {
         BattleScriptIncrementPointer(ctx, adrsA);
     } else if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
         BattleScriptIncrementPointer(ctx, adrsB);
@@ -5082,7 +5078,7 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdTarget);
         ctx->buffMsg.param[1] = ctx->battleMons[ctx->battlerIdTarget].ability;
         ctx->buffMsg.param[2] = ctx->moveNoCur;
-    } else if (KnockOffCanRemoveItem(ctx, ctx->battlerIdTarget)) {
+    } else if (KnockOffCanRemoveItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)) {
         // "{0} knocked off {1}'s {2}!"
         ctx->buffMsg.id = msg_0197_00552;
         ctx->buffMsg.tag = TAG_NICKNAME_NICKNAME_ITEM;
@@ -10275,7 +10271,7 @@ BOOL BtlCmd_GotoIfCanApplyKnockOffBoost(BattleSystem *battleSystem, BattleContex
 
     int adrs = BattleScriptReadWord(ctx);
 
-    if (!KnockOffCanRemoveItem(ctx, ctx->battlerIdTarget)) {
+    if (!KnockOffCanRemoveItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)) {
         BattleScriptIncrementPointer(ctx, adrs);
     }
 

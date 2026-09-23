@@ -175,20 +175,23 @@ class BoosterEnergyTests(unittest.TestCase):
 
     def block(self):
         text = source("src/battle/overlay_12_0224E4FC.c")
-        at = text.index("static BOOL ItemIsWeldedToTheSpecies(")
-        return text[at:text.index("\n}", at)]
+        at = text.index("static BOOL SpeciesKeepsItem(")
+        block = text[at:text.index("\n}", at)]
+        # The Paradox cases are the ones that fall through to the energy.
+        at = block.index("case SPECIES_OGERPON:")
+        return block[block.index("\n", block.index("return", at)):]
 
     def test_the_sixteen_paradox_species_keep_their_booster_energy(self):
         named = set(re.findall(r"SPECIES_(\w+)", self.block()))
         self.assertEqual(named, self.PARADOX)
         self.assertEqual(named & self.DLC, set())
-        self.assertIn("ITEM_BOOSTER_ENERGY", self.block())
+        self.assertIn("return item == ITEM_BOOSTER_ENERGY;", self.block())
 
     def test_every_way_of_taking_an_item_asks(self):
         text = source("src/battle/overlay_12_0224E4FC.c")
-        for function in ("CanStealHeldItem", "CanTrickHeldItem"):
+        for function in ("CanStealHeldItem", "CanTrickHeldItem", "KnockOffCanRemoveItem"):
             at = text.index(f"BOOL {function}(")
-            self.assertIn("ItemIsWeldedToTheSpecies", text[at:text.index("\n}", at)], function)
+            self.assertIn("ItemCanChangeHands", text[at:text.index("\n}", at)], function)
 
 
 class CorrosiveGasTests(unittest.TestCase):

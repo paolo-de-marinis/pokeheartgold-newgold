@@ -26,6 +26,7 @@
 #include "filesystem.h"
 #include "item.h"
 #include "party.h"
+#include "pokedex.h"
 #include "pokemon.h"
 #include "unk_02037C94.h"
 #include "unk_0208805C.h"
@@ -3247,26 +3248,53 @@ BOOL CurseUserIsGhost(BattleContext *ctx, u16 moveNo, int battlerId) {
     return moveNo == MOVE_CURSE && (GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) == TYPE_GHOST || GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL) == TYPE_GHOST);
 }
 
-// A Paradox Pokemon cannot be parted from its Booster Energy -- not by Thief,
-// not by Trick, not by an ability that helps itself to what it has just hit.
+// The items a species keeps (the reference's CanItemBeRemovedFromSpecies,
+// other_battle_calculators.c:4284 at d0380a487): nothing takes one from that
+// species or hands one to it -- Thief, Covet, Trick, Switcheroo, Knock Off,
+// Fling, Magician, Pickpocket, Symbiosis. Mail stays with whoever holds it.
+// A form is a species of its own here, so it is asked as its base species.
 //
-// This is the one clause of the reference's CanItemBeRemovedFromSpecies that
-// this game can read today. The other nine are the items welded to Zacian,
-// Zamazenta, Genesect, Kyogre, Groudon, Giratina, Silvally, Ogerpon and
-// Arceus: those came over as hold effects no line in this tree reads yet, and
-// they are the item range's debt rather than this row's.
+// Pokemon Central's list (Furto, Raggiro, Privazione) is the reference's with
+// two more: Dialga's Adamant Crystal and Palkia's Lustrous Globe, which the
+// reference forgets. The Griseous Orb stays Giratina's, as it did up to the
+// eighth generation: here it is still what gives Giratina its Origin Forme,
+// the part the ninth generation handed to the Griseous Core before letting
+// the Orb go. Mega Stones and Z-Crystals are left out with the mechanics they
+// belong to, which this game does not have.
 //
-// Four Paradox species are deliberately not on the list. The reference defines
-// VANILLA_PARADOX_BOOSTER_ENERGY_BEHAVIOUR, and that define is exactly what
-// takes Gouging Fire, Raging Bolt, Iron Boulder and Iron Crown off it -- in
-// New Gold those four can be tricked out of a Booster Energy and the sixteen
-// below cannot.
-static BOOL ItemIsWeldedToTheSpecies(BattleContext *ctx, int battlerId) {
-    if (ctx->battleMons[battlerId].item != ITEM_BOOSTER_ENERGY) {
-        return FALSE;
+// Four Paradox species are deliberately not on the Booster Energy list. The
+// reference defines VANILLA_PARADOX_BOOSTER_ENERGY_BEHAVIOUR, and that define
+// is exactly what takes Gouging Fire, Raging Bolt, Iron Boulder and Iron Crown
+// off it -- in New Gold those four can be tricked out of a Booster Energy and
+// the sixteen below cannot.
+static BOOL SpeciesKeepsItem(u16 species, u16 item) {
+    if (ItemIdIsMail(item)) {
+        return TRUE;
     }
 
-    switch (ctx->battleMons[battlerId].species) {
+    switch (SpeciesToDexSpecies(species)) {
+    case SPECIES_KYOGRE:
+        return item == ITEM_BLUE_ORB;
+    case SPECIES_GROUDON:
+        return item == ITEM_RED_ORB;
+    case SPECIES_DIALGA:
+        return item == ITEM_ADAMANT_CRYSTAL;
+    case SPECIES_PALKIA:
+        return item == ITEM_LUSTROUS_GLOBE;
+    case SPECIES_GIRATINA:
+        return item == ITEM_GRISEOUS_ORB || item == ITEM_GRISEOUS_CORE;
+    case SPECIES_ARCEUS:
+        return (item >= ITEM_FLAME_PLATE && item <= ITEM_IRON_PLATE) || item == ITEM_PIXIE_PLATE || item == ITEM_BLANK_PLATE;
+    case SPECIES_GENESECT:
+        return item >= ITEM_DOUSE_DRIVE && item <= ITEM_CHILL_DRIVE;
+    case SPECIES_SILVALLY:
+        return item >= ITEM_FIGHTING_MEMORY && item <= ITEM_FAIRY_MEMORY;
+    case SPECIES_ZACIAN:
+        return item == ITEM_RUSTED_SWORD;
+    case SPECIES_ZAMAZENTA:
+        return item == ITEM_RUSTED_SHIELD;
+    case SPECIES_OGERPON:
+        return item >= ITEM_CORNERSTONE_MASK && item <= ITEM_HEARTHFLAME_MASK;
     case SPECIES_GREAT_TUSK:
     case SPECIES_SCREAM_TAIL:
     case SPECIES_BRUTE_BONNET:
@@ -3283,37 +3311,46 @@ static BOOL ItemIsWeldedToTheSpecies(BattleContext *ctx, int battlerId) {
     case SPECIES_IRON_VALIANT:
     case SPECIES_WALKING_WAKE:
     case SPECIES_IRON_LEAVES:
-        return TRUE;
-    default:
-        return FALSE;
+        return item == ITEM_BOOSTER_ENERGY;
     }
+    return FALSE;
 }
 
-BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
-    BOOL ret = FALSE;
-    int side = BattleSystem_GetFieldSide(battleSystem, battlerId);
+// Whether an item can go from one of the two Pokemon to the other: neither
+// species keeps it. The games ask it of both, "if the target or the user is
+// Giratina", so an Arceus cannot take a plate either.
+static BOOL ItemCanChangeHands(BattleContext *ctx, u16 item, int battlerIdA, int battlerIdB) {
+    return !SpeciesKeepsItem(ctx->battleMons[battlerIdA].species, item) && !SpeciesKeepsItem(ctx->battleMons[battlerIdB].species, item);
+}
 
-    if (ctx->battleMons[battlerId].item && !(ctx->fieldSideConditionData[side].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[battlerId])) && !ItemIdIsMail(ctx->battleMons[battlerId].item) && !ItemIsWeldedToTheSpecies(ctx, battlerId)) {
+// Whether battlerIdTaker can take battlerIdLoser's item: there is one, it was
+// not knocked off, and it can change hands between the two.
+BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTaker, int battlerIdLoser) {
+    BOOL ret = FALSE;
+    int side = BattleSystem_GetFieldSide(battleSystem, battlerIdLoser);
+
+    if (ctx->battleMons[battlerIdLoser].item && !(ctx->fieldSideConditionData[side].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[battlerIdLoser])) && ItemCanChangeHands(ctx, ctx->battleMons[battlerIdLoser].item, battlerIdTaker, battlerIdLoser)) {
         ret = TRUE;
     }
 
     return ret;
 }
 
-// Whether Knock Off would take the Pokemon's item: it holds one, and neither
-// of the refusals of Knock Off's own subscript (142) -- Multitype, a Griseous
-// Orb -- nor a species the item is welded to keeps it on. Sticky Hold and a
-// substitute keep the item too, but not the move's power: the reference
-// (CanKnockOffApply) leaves both out of this question.
-BOOL KnockOffCanRemoveItem(BattleContext *ctx, int battlerId) {
-    return ctx->battleMons[battlerId].item != ITEM_NONE
-        && ctx->battleMons[battlerId].ability != ABILITY_MULTITYPE
-        && ctx->battleMons[battlerId].item != ITEM_GRISEOUS_ORB
-        && !ItemIsWeldedToTheSpecies(ctx, battlerId);
+// Whether Knock Off would take the target's item: it holds one, and neither
+// the target's species nor the user's keeps it -- the games' rule, where
+// retail's subscript 142 refused any Multitype holder and any Griseous Orb.
+// Sticky Hold and a substitute keep the item too, but not the move's power:
+// the reference (CanKnockOffApply) leaves both out of this question.
+BOOL KnockOffCanRemoveItem(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget) {
+    return ctx->battleMons[battlerIdTarget].item != ITEM_NONE
+        && ItemCanChangeHands(ctx, ctx->battleMons[battlerIdTarget].item, battlerIdAttacker, battlerIdTarget);
 }
 
-BOOL CanTrickHeldItem(BattleContext *ctx, int battlerId) {
-    return !ItemIdIsMail(ctx->battleMons[battlerId].item) && !ItemIsWeldedToTheSpecies(ctx, battlerId);
+// Trick and Switcheroo: each item can change hands between the two (the
+// reference's CanTrickHeldItem, which asks the four pairs).
+BOOL CanTrickHeldItem(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget) {
+    return ItemCanChangeHands(ctx, ctx->battleMons[battlerIdAttacker].item, battlerIdAttacker, battlerIdTarget)
+        && ItemCanChangeHands(ctx, ctx->battleMons[battlerIdTarget].item, battlerIdAttacker, battlerIdTarget);
 }
 
 BOOL WhirlwindCheck(BattleSystem *battleSystem, BattleContext *ctx) {
@@ -6276,7 +6313,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->symbiosisPending[battlerId] = FALSE;
                 j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
                 if (j != battlerId && ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].item == ITEM_NONE
-                    && ctx->battleMons[j].hp && GetBattlerAbility(ctx, j) == ABILITY_SYMBIOSIS && CanStealHeldItem(battleSystem, ctx, j) == TRUE) {
+                    && ctx->battleMons[j].hp && GetBattlerAbility(ctx, j) == ABILITY_SYMBIOSIS && CanStealHeldItem(battleSystem, ctx, battlerId, j) == TRUE) {
                     ctx->itemTemp = ctx->battleMons[j].item;
                     ctx->battleMons[battlerId].item = ctx->battleMons[j].item;
                     ctx->battleMons[j].item = ITEM_NONE;
@@ -6384,13 +6421,7 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
     if (ctx->battleMons[battlerIdTaker].item != ITEM_NONE) {
         return FALSE;
     }
-    if (ctx->battleMons[battlerIdLoser].item == ITEM_GRISEOUS_ORB) {
-        return FALSE;
-    }
-    if (GetBattlerAbility(ctx, battlerIdTaker) == ABILITY_MULTITYPE || GetBattlerAbility(ctx, battlerIdLoser) == ABILITY_MULTITYPE) {
-        return FALSE;
-    }
-    return CanStealHeldItem(battleSystem, ctx, battlerIdLoser);
+    return CanStealHeldItem(battleSystem, ctx, battlerIdTaker, battlerIdLoser);
 }
 
 // Disguise and Ice Face (battle_calc_damage.c:254): a Mimikyu in its disguise
@@ -8516,7 +8547,9 @@ BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     ctx->flingScript = 0;
     ctx->statChangeType = 0;
 
-    if (!ctx->movePower) {
+    // Nothing its species keeps is thrown (the reference's Fling check,
+    // BattleController_BeforeMove.c:1954 at d0380a487).
+    if (!ctx->movePower || SpeciesKeepsItem(ctx->battleMons[battlerId].species, ctx->battleMons[battlerId].item)) {
         return FALSE;
     }
 
@@ -9573,7 +9606,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     // Knock Off hits half again as hard when there is an item it could knock
     // off, from the sixth generation on: 65 becomes 97. The reference
     // multiplies it in with Helping Hand's among its base-power modifiers.
-    if (moveNo == MOVE_KNOCK_OFF && KnockOffCanRemoveItem(ctx, battlerIdTarget)) {
+    if (moveNo == MOVE_KNOCK_OFF && KnockOffCanRemoveItem(ctx, battlerIdAttacker, battlerIdTarget)) {
         movePower = movePower * 15 / 10;
     }
 

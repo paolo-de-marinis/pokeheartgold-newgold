@@ -106,7 +106,7 @@ static BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) { (void)ct
 static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return FALSE; }
 static BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return FALSE; }
 static BOOL BattleMoveIsSoundBased(u32 moveNo) { (void)moveNo; return FALSE; }
-static BOOL KnockOffCanRemoveItem(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
+static BOOL KnockOffCanRemoveItem(BattleContext *ctx, int a, int t) { (void)ctx; (void)a; (void)t; return FALSE; }
 static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, int battlerId, int ability) {
     (void)bs; (void)ctx; (void)flag; (void)battlerId; (void)ability; return 0;
 }
@@ -659,7 +659,7 @@ class SymbiosisTests(unittest.TestCase):
         self.assertIn("j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);", state)
         for condition in ("j != battlerId", "ctx->battleMons[battlerId].hp", "ctx->battleMons[battlerId].item == ITEM_NONE",
                           "ctx->battleMons[j].hp", "GetBattlerAbility(ctx, j) == ABILITY_SYMBIOSIS",
-                          "CanStealHeldItem(battleSystem, ctx, j) == TRUE"):
+                          "CanStealHeldItem(battleSystem, ctx, battlerId, j) == TRUE"):
             self.assertIn(condition, state)
         self.assertIn("ctx->battleMons[battlerId].item = ctx->battleMons[j].item;\n                    ctx->battleMons[j].item = ITEM_NONE;", state)
         self.assertIn("script = BATTLE_SUBSCRIPT_SYMBIOSIS;", state)
