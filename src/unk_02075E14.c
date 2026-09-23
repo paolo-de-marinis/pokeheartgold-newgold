@@ -1,14 +1,18 @@
 #include "global.h"
 
 #include "constants/game_stats.h"
+#include "constants/items.h"
 
+#include "bag.h"
 #include "game_stats.h"
 #include "gf_3d_vramman.h"
 #include "heap.h"
+#include "mail.h"
 #include "message_format.h"
 #include "msgdata.h"
 #include "overlay_manager.h"
 #include "palette.h"
+#include "party.h"
 #include "pokedex.h"
 #include "pokemon.h"
 #include "pokepic.h"
@@ -69,7 +73,7 @@ struct EvolutionTaskData {
     u8 unk73;                        // 0x73
     u8 unk74;                        // 0x74
     u8 unk75;                        // 0x75
-    u32 evolutionCondition;          // 0x78
+    int evolutionCondition;          // 0x78
     u32 unk7C;                       // 0x7C
     u8 form;                         // 0x80
     NARC *narc;                      // 0x84
@@ -554,6 +558,75 @@ void sub_02075E14(EvolutionTaskData *data) {
         if (PaletteData_GetSelectedBuffersBitmask(data->palette) == 0) {
             data->done = TRUE;
         }
+        break;
+    }
+}
+
+// What an evolution leaves behind once the species is written: the item it
+// was holding when it evolved by holding one, and Ninjask's Shedinja in the
+// next free slot, if a Poke Ball is there to put it in -- a copy of the
+// Pokemon with the species, the ball and a fresh record.
+void sub_02076C90(EvolutionTaskData *data) {
+    int i;
+    u32 value;
+    Pokemon *shedinja;
+    Mail *mail;
+    u8 ballCapsule[0x18];
+
+    switch (data->evolutionCondition) {
+    case EVO_LEVEL_NINJASK:
+    case EVO_LEVEL_SHEDINJA:
+        if (Bag_GetQuantity(data->bag, ITEM_POKE_BALL, data->heapID) == 0 || Party_GetCount(data->party) >= Party_GetMaxCount(data->party)) {
+            break;
+        }
+        shedinja = AllocMonZeroed(data->heapID);
+        CopyPokemonToPokemon(data->mon, shedinja);
+        value = SPECIES_SHEDINJA;
+        SetMonData(shedinja, MON_DATA_SPECIES, &value);
+        value = ITEM_POKE_BALL;
+        SetMonData(shedinja, MON_DATA_POKEBALL, &value);
+        value = ITEM_NONE;
+        SetMonData(shedinja, MON_DATA_HELD_ITEM, &value);
+        SetMonData(shedinja, MON_DATA_MARKINGS, &value);
+        for (i = MON_DATA_SINNOH_CHAMP_RIBBON; i < MON_DATA_MOVE1; i++) {
+            SetMonData(shedinja, i, &value);
+        }
+        for (i = MON_DATA_COOL_RIBBON; i < MON_DATA_FATEFUL_ENCOUNTER; i++) {
+            SetMonData(shedinja, i, &value);
+        }
+        for (i = MON_DATA_SUPER_COOL_RIBBON; i < MON_DATA_OT_NAME; i++) {
+            SetMonData(shedinja, i, &value);
+        }
+        SetMonData(shedinja, MON_DATA_SHINY_LEAF_A, &value);
+        SetMonData(shedinja, MON_DATA_SHINY_LEAF_B, &value);
+        SetMonData(shedinja, MON_DATA_SHINY_LEAF_C, &value);
+        SetMonData(shedinja, MON_DATA_SHINY_LEAF_D, &value);
+        SetMonData(shedinja, MON_DATA_SHINY_LEAF_E, &value);
+        SetMonData(shedinja, MON_DATA_SHINY_LEAF_CROWN, &value);
+        SetMonData(shedinja, MON_DATA_MOOD, &value);
+        SetMonData(shedinja, MON_DATA_SPECIES_NAME, NULL);
+        SetMonData(shedinja, MON_DATA_HAS_NICKNAME, &value);
+        SetMonData(shedinja, MON_DATA_STATUS, &value);
+        mail = Mail_New(data->heapID);
+        SetMonData(shedinja, MON_DATA_MAIL, mail);
+        Heap_Free(mail);
+        SetMonData(shedinja, MON_DATA_BALL_CAPSULE_ID, &value);
+        MI_CpuClearFast(ballCapsule, sizeof(ballCapsule));
+        SetMonData(shedinja, MON_DATA_BALL_CAPSULE, ballCapsule);
+        UpdateMonAbility(shedinja);
+        CalcMonLevelAndStats(shedinja);
+        Party_AddMon(data->party, shedinja);
+        Pokedex_SetMonCaughtFlag(data->pokedex, shedinja);
+        GameStats_Inc(data->gameStats, GAME_STAT_UNIQUE_MONS_CAUGHT);
+        GameStats_AddScore(data->gameStats, SCORE_EVENT_REGISTER_SPECIES_CAUGHT);
+        Heap_Free(shedinja);
+        Bag_TakeItem(data->bag, ITEM_POKE_BALL, 1, data->heapID);
+        break;
+    case EVO_TRADE_ITEM:
+    case EVO_ITEM_DAY:
+    case EVO_ITEM_NIGHT:
+        i = ITEM_NONE;
+        SetMonData(data->mon, MON_DATA_HELD_ITEM, &i);
         break;
     }
 }
