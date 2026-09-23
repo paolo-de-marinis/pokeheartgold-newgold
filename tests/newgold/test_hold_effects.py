@@ -733,6 +733,8 @@ int main(void) {
     assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && S.picked == 0);
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; ctx.battleMons[0].moveEffectFlags = MOVE_EFFECT_FLAG_INGRAIN; S.replacements = 0;
     assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && S.picked == 0);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.ability[0] = ABILITY_GUARD_DOG; S.replacements = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && S.picked == 0);
     return 0;
 }
 """
@@ -775,6 +777,7 @@ class SwitchItemTests(unittest.TestCase):
         self.assertEqual(walk(script, {}.get),
                          [push, "SwitchAndUpdateMon BATTLER_CATEGORY_FORCED_OUT", "BATTLE_SUBSCRIPT_HAZARDS_CHECK", pop])
         self.assertEqual(walk(script, {"ABILITY_SUCTION_CUPS": True}.get), [push, pop])
+        self.assertEqual(walk(script, {"ABILITY_GUARD_DOG": True}.get), [push, pop])
         self.assertEqual(walk(script, {"MOVE_EFFECT_FLAG_INGRAIN": True}.get), [push, pop])
         card = script[:script.index("CheckAbility")]
         self.assertIn("BSCRIPT_VAR_BATTLER_TARGET, BSCRIPT_VAR_BATTLER_ATTACKER", card)

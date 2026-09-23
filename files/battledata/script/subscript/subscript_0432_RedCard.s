@@ -3,11 +3,11 @@
     .data
 
 // A Red Card dragging out the Pokemon that hit its holder, once the move is
-// over (the reference's subscript_0508_HANDLE_RED_CARD at d0380a487). The
+// over (the reference's subscript_0509_HANDLE_RED_CARD at d0380a487). The
 // holder is in MSG_BATTLER_TEMP; CheckSwitchItemOnHit has asked everything
-// else and, unless Suction Cups or Ingrain hold the attacker, chosen who comes
-// in. The card is spent either way -- Pokemon Central's Cartelrosso; the
-// reference keeps it when the attacker is anchored. The switch commands work
+// else and, unless Suction Cups, Guard Dog or Ingrain hold the attacker,
+// chosen who comes in. The card is spent either way -- Pokemon Central's
+// Cartelrosso; the reference keeps it when the attacker is anchored. The switch commands work
 // on the defender, so the attacker and the holder change places for them and
 // are put back at the end. Once the attacker has gone, nothing of its own
 // answers its move: U-turn's flag says so to the steps after this one.
@@ -24,6 +24,7 @@ _000:
     WaitButtonABTime 30
     RemoveItem BATTLER_CATEGORY_ATTACKER
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, ABILITY_SUCTION_CUPS, _SUCTION_CUPS
+    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, ABILITY_GUARD_DOG, _SUCTION_CUPS
     CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_INGRAIN, _INGRAIN
     TryRestoreStatusOnSwitch BATTLER_CATEGORY_DEFENDER, _DRAG_OUT
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_STATUS, STATUS_NONE
@@ -48,6 +49,7 @@ _DRAG_OUT:
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_UTURN
     GoTo _END
 
+// Suction Cups or Guard Dog, named by the line.
 _SUCTION_CUPS:
     // {0} anchors itself with {1}!
     PrintMessage msg_0197_00659, TAG_NICKNAME_ABILITY, BATTLER_CATEGORY_DEFENDER, BATTLER_CATEGORY_DEFENDER

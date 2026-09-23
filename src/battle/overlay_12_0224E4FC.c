@@ -8156,9 +8156,9 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
 // Cartelrosso does for a wild Pokemon, and uses Whirlwind's choice; it is
 // chosen here, without Whirlwind's level test, which a card does not make, and
 // with nobody to bring in the card is not used. Pokemon Central (the reference
-// keeps the card instead): Suction Cups or Ingrain on the attacker spend the
-// card and keep the attacker where it is. Guard Dog does the same there, and
-// belongs with Guard Dog's own effect, which is not written yet.
+// keeps the card instead): Suction Cups, Guard Dog or Ingrain on the attacker
+// spend the card and keep the attacker where it is (Cartelrosso; Cane da
+// Guardia, which no item or move of another Pokemon makes leave the field).
 int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int attacker = ctx->battlerIdAttacker;
 
@@ -8184,6 +8184,7 @@ int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int bat
             return BATTLE_SUBSCRIPT_NONE;
         }
         if (GetBattlerAbility(ctx, attacker) != ABILITY_SUCTION_CUPS
+            && GetBattlerAbility(ctx, attacker) != ABILITY_GUARD_DOG
             && !(ctx->battleMons[attacker].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
             && TryPickForcedSwitchIn(battleSystem, ctx, attacker, FALSE) == FALSE) {
             return BATTLE_SUBSCRIPT_NONE;
