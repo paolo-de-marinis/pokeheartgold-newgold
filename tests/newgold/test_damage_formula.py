@@ -440,7 +440,7 @@ class DamageFormulaTests(unittest.TestCase):
         # What moved into the base is where the reference has it: Me First and
         # Solar Beam on the power, Flash Fire on the attacking stat.
         self.assertRegex(body, r"meFirstFlag[^\n]*\) \{\n\s*movePower = movePower \* 15 / 10;")
-        self.assertRegex(body, r"MOVE_SOLAR_BEAM\) \{\n\s*movePower /= 2;")
+        self.assertRegex(body, r"MOVE_SOLAR_BLADE\)\) \{\n\s*movePower /= 2;")
         self.assertRegex(body, r"BMON_DATA_FLASH_FIRE[^\n]*\) \{\n\s*monAtk = monAtk \* 150 / 100;\n\s*monSpAtk = monSpAtk \* 150 / 100;")
 
     def test_the_controller_takes_only_the_flags(self):

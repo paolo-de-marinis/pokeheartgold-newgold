@@ -10479,9 +10479,10 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     // The weather as the attacker's move sees it (BattlerMoveWeather): Mega
     // Sol's sunlight halves no Solar Beam and leaves the target the sand's and
     // the snow's help. The confusion blow passes no field condition and asks
-    // for no weather.
+    // for no weather. Solar Blade gathers its light as Solar Beam does and is
+    // halved in the same weathers (CalcBaseDamage.c:535 at d0380a487).
     weather = fieldCondition ? BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker) : 0;
-    if ((weather & FIELD_CONDITION_WEATHER_NO_SUN) && moveNo == MOVE_SOLAR_BEAM) {
+    if ((weather & FIELD_CONDITION_WEATHER_NO_SUN) && (moveNo == MOVE_SOLAR_BEAM || moveNo == MOVE_SOLAR_BLADE)) {
         movePower /= 2;
     }
     if ((weather & FIELD_CONDITION_SUN_ALL) && calcAttacker.ability == ABILITY_SOLAR_POWER) {

@@ -78,7 +78,7 @@ typedef struct {
 } BattleContext;
 typedef struct { int power, type, category; } MoveTbl;
 
-static struct { int maxBattlers; int ability[4]; MoveTbl move; } S;
+static struct { int maxBattlers; int ability[4]; MoveTbl move; u32 weather; } S;
 
 static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *data) {
     (void)data;
@@ -112,7 +112,7 @@ static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, in
 }
 static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int a, int t, int ability) { (void)ctx; (void)a; (void)t; (void)ability; return FALSE; }
 static int CheckMoveEffectOnField(BattleSystem *bs, BattleContext *ctx, u32 flag) { (void)bs; (void)ctx; (void)flag; return 0; }
-static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return 0; }
+static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return S.weather; }
 static int ov12_022581D4(BattleSystem *bs, BattleContext *ctx, int var, int battlerId) { (void)bs; (void)ctx; (void)var; (void)battlerId; return 0; }
 @MOVE_IS_IN_LIST@
 @SLICING@
