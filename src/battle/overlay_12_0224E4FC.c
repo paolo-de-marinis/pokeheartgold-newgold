@@ -1834,15 +1834,20 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     // item and buys the attacker nothing, so the power boost in CalcMoveDamage
     // stays the ability's alone.
     //
-    // The reference's list is Sheer Force's list, self-targeting effects
-    // included, so a cloak also swallows the attacker's own Power-Up Punch
-    // boost. That is its behaviour rather than an oversight here.
+    // Nor does the cloak stop what the move does to its own user: it keeps its
+    // holder from the additional effects of others' moves (Pokemon Central,
+    // Anonimanto), and Power-Up Punch's boost, Flame Charge's or Rapid Spin's
+    // rise lands on the attacker. The reference's cloak list is Sheer Force's,
+    // self-targeting effects included, and swallows those too. Rapid Spin's
+    // clearing, which the cloak does stop, asks for it in subscript 115.
     if (IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE && GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE) {
         ctx->selfTurnData[ctx->battlerIdAttacker].sheerForceTraded = TRUE;
     }
     if (IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE
         && (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE
-            || (ctx->battlerIdTarget != BATTLER_NONE && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) == HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS))) {
+            || (ctx->battlerIdTarget != BATTLER_NONE
+                && !(ctx->unk_2174 & MOVE_SIDE_EFFECT_TO_ATTACKER)
+                && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) == HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS))) {
         ctx->unk_2174 = 0;
         return FALSE;
     }

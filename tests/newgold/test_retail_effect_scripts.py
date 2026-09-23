@@ -270,7 +270,15 @@ class BroughtOverTests(unittest.TestCase):
         text = subscript("RAPID_SPIN")
         self.assertRegex(text, r"BMON_DATA_HP, 0, (\w+)[^:]*MOVE_SUBSCRIPT_PTR_SPEED_UP_1_STAGE\s*"
                                r"Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE\s*"
-                               r"CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, ABILITY_SHIELD_DUST, \1\s*RapidSpin")
+                               r"CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, ABILITY_SHIELD_DUST, \1\s*"
+                               r"CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS, \1\s*RapidSpin")
+
+    def test_a_covert_cloak_leaves_the_user_s_own_effects_alone(self):
+        # Pokemon Central (Anonimanto): the cloak keeps its holder from the
+        # additional effects of others' moves; a rise on the attacker is not
+        # one. Sheer Force still gives them all up.
+        body = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "ov12_02250490")
+        self.assertIn("&& !(ctx->unk_2174 & MOVE_SIDE_EFFECT_TO_ATTACKER)\n                && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) == HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS", body)
 
     def test_rapid_spin_is_an_additional_effect(self):
         # Pokemon Central, Rapigiro: the rise (Generation VIII) and the clearing
