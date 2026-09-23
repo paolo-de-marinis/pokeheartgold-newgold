@@ -273,6 +273,7 @@ class AbilityCopyTableTests(unittest.TestCase):
         self.assertIn("AbilityFlags(ctx->battleMons[ctx->battlerIdAttacker].ability) & ABILITY_FLAG_FAILS_SWAP", wandering[:wandering.index("break;")])
         mummy = hit[hit.index("case ABILITY_MUMMY:"):]
         self.assertIn("AbilityFlags(ctx->battleMons[ctx->battlerIdAttacker].ability) & ABILITY_FLAG_FAILS_SUPPRESS", mummy[:mummy.index("break;")])
+        self.assertIn("WrappingRefuses(GetBattlerAbility(ctx, ctx->battlerIdTarget), ctx->battleMons[ctx->battlerIdAttacker].ability) == FALSE", mummy[:mummy.index("break;")])
         scripts = ROOT / "files/battledata/script"
         asked = {
             "effect_script/effect_script_0178.s": [("ATTACKER", "FAILS_SUPPRESS")],
@@ -478,6 +479,31 @@ class ReceiverTests(unittest.TestCase):
         take = label_body(script, "_TAKE_OVER")
         refusal = take.index("BMON_DATA_ABILITY_FLAGS, ABILITY_FLAG_FAILS_RECEIVER, _END")
         self.assertLess(refusal, take.index(f"UpdateMonDataFromVar OPCODE_SET, {ally}, BMON_DATA_ABILITY, BSCRIPT_VAR_CALC_TEMP"))
+
+
+WRAPPING = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint16_t u16;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+@FUNCTION@
+int main(void) {
+    // Pokemon Central's Mummia and Odore Tenace.
+    assert(WrappingRefuses(ABILITY_MUMMY, ABILITY_COMMANDER) && WrappingRefuses(ABILITY_LINGERING_AROMA, ABILITY_COMMANDER));
+    assert(WrappingRefuses(ABILITY_MUMMY, ABILITY_LINGERING_AROMA) && WrappingRefuses(ABILITY_LINGERING_AROMA, ABILITY_MUMMY));
+    assert(WrappingRefuses(ABILITY_LINGERING_AROMA, ABILITY_PROTOSYNTHESIS) && !WrappingRefuses(ABILITY_MUMMY, ABILITY_PROTOSYNTHESIS));
+    assert(WrappingRefuses(ABILITY_LINGERING_AROMA, ABILITY_HADRON_ENGINE) && !WrappingRefuses(ABILITY_MUMMY, ABILITY_ORICHALCUM_PULSE));
+    assert(!WrappingRefuses(ABILITY_MUMMY, ABILITY_INTIMIDATE) && !WrappingRefuses(ABILITY_LINGERING_AROMA, ABILITY_INTIMIDATE));
+    return 0;
+}
+"""
+
+
+class WrappingTests(unittest.TestCase):
+    def test_what_the_pages_add(self):
+        run_c(WRAPPING.replace("@FUNCTION@", function(OVERLAY.read_text(), "WrappingRefuses")))
 
 
 if __name__ == "__main__":

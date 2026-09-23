@@ -454,6 +454,26 @@ static u8 AbilityFlags(u16 ability) {
     return ability < NELEMS(sAbilityFlags) ? sAbilityFlags[ability] : 0;
 }
 
+// What Pokemon Central's pages add for Mummy and Lingering Aroma (Mummia,
+// Odore Tenace) to what the table keeps from being written over: neither
+// wraps Commander, nor the other of the two, and Lingering Aroma leaves the
+// four Paradox and legend abilities its page names. The reference asks the
+// table alone.
+static BOOL WrappingRefuses(u16 wrapper, u16 ability) {
+    switch (ability) {
+    case ABILITY_COMMANDER:
+    case ABILITY_MUMMY:
+    case ABILITY_LINGERING_AROMA:
+        return TRUE;
+    case ABILITY_ORICHALCUM_PULSE:
+    case ABILITY_HADRON_ENGINE:
+    case ABILITY_PROTOSYNTHESIS:
+    case ABILITY_QUARK_DRIVE:
+        return wrapper == ABILITY_LINGERING_AROMA;
+    }
+    return FALSE;
+}
+
 int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
     BattleMon *mon = &ctx->battleMons[battlerId];
 
@@ -6917,11 +6937,12 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // The wrapping does not take an ability nothing writes over -- the
         // table's, which the reference asks here (AbilityCantSupress,
         // MoveHitDefenderAbilityCheck.c:243 at d0380a487); the list here was
-        // Multitype alone. The refusal is against the holder's own ability
+        // Multitype alone -- nor what Pokemon Central adds for the two (see
+        // WrappingRefuses). The refusal is against the holder's own ability
         // rather than against Mummy by name, so Lingering Aroma shares the
         // branch and neither re-wraps its own. An Ability Shield on the attacker
         // keeps its ability; the reference asks it only for Wandering Spirit below.
-        if (ctx->battleMons[ctx->battlerIdAttacker].hp && !BattlerHasAbilityShield(ctx, ctx->battlerIdAttacker) && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != GetBattlerAbility(ctx, ctx->battlerIdTarget) && !(AbilityFlags(ctx->battleMons[ctx->battlerIdAttacker].ability) & ABILITY_FLAG_FAILS_SUPPRESS) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+        if (ctx->battleMons[ctx->battlerIdAttacker].hp && !BattlerHasAbilityShield(ctx, ctx->battlerIdAttacker) && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != GetBattlerAbility(ctx, ctx->battlerIdTarget) && !(AbilityFlags(ctx->battleMons[ctx->battlerIdAttacker].ability) & ABILITY_FLAG_FAILS_SUPPRESS) && WrappingRefuses(GetBattlerAbility(ctx, ctx->battlerIdTarget), ctx->battleMons[ctx->battlerIdAttacker].ability) == FALSE && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
             ctx->abilityTemp = GetBattlerAbility(ctx, ctx->battlerIdTarget);
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_MUMMY;
