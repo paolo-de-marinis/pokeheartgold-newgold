@@ -666,7 +666,7 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 typedef struct { int unused; } BattleSystem;
-typedef struct { int hp; u32 moveEffectFlags; } BattleMon;
+typedef struct { int hp; u32 moveEffectFlags; u8 hitCount; } BattleMon;
 typedef struct { int physicalDamage, specialDamage; } SelfTurnData;
 typedef struct {
     int battlerIdAttacker, battlerIdTemp; u32 moveNoCur; u32 battleStatus2;
@@ -688,7 +688,7 @@ static void reset(void) {
     S.battleType = BATTLE_TYPE_TRAINER; S.suppressible = 0; S.replacements = 1; S.picked = 0; S.pickedLevel = -1;
     ctx = (BattleContext){ 0 };
     ctx.battlerIdAttacker = 0; ctx.battlerIdTemp = -1;
-    for (int i = 0; i < 4; i++) ctx.battleMons[i].hp = 50;
+    for (int i = 0; i < 4; i++) { ctx.battleMons[i].hp = 50; ctx.battleMons[i].hitCount = 1; }
     ctx.selfTurnData[1].physicalDamage = -20;
 }
 static int ask(int battlerId) { return CheckSwitchItemOnHit(&bs, &ctx, battlerId); }
@@ -710,6 +710,11 @@ int main(void) {
     assert(ask(1) == BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM);
     reset(); S.item[0] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.selfTurnData[0].physicalDamage = -5;
     assert(ask(0) == BATTLE_SUBSCRIPT_NONE);
+    // Dragged in by the move after its predecessor took the hit.
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.battleMons[1].hitCount = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; ctx.battleMons[1].hitCount = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     // Red Card: the attacker is dragged out for someone chosen without the level test.
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE;
     assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.battlerIdTemp == 1 && S.picked == 1 && S.pickedLevel == FALSE);

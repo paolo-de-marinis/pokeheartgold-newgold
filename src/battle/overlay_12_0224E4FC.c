@@ -8054,9 +8054,14 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
 int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int attacker = ctx->battlerIdAttacker;
 
+    // hitCount is zeroed when a Pokemon is loaded into a slot and counts the
+    // hits it takes there, so a slot whose damage is on record but whose
+    // Pokemon has none came in after the hit: Dragon Tail, Circle Throw or
+    // Roar dragged it out in the middle of the move. It did not take the hit.
     if (battlerId == attacker
         || ctx->battleMons[battlerId].hp == 0
         || (ctx->selfTurnData[battlerId].physicalDamage == 0 && ctx->selfTurnData[battlerId].specialDamage == 0)
+        || ctx->battleMons[battlerId].hitCount == 0
         || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
         || (GetBattlerAbility(ctx, attacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE)) {
         return BATTLE_SUBSCRIPT_NONE;
