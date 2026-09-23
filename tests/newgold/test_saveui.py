@@ -218,6 +218,24 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual([b.name.count("-") > 2 for b in self.backups()], [True, True], "nothing deleted")
         self.assertIn("nulla da annullare", self.refused("/api/undo", {"f": "gyms/test.sav"}))
 
+    def test_a_page_that_is_behind_the_file(self):
+        """The page read the file, then melonDS (here savedit) moved it on:
+        the page's form, sent whole, must not put the old values back."""
+        seen = self.ok("/api/save?f=gyms/test.sav")["version"]
+        save = sv.Save(self.save)
+        sv.set_profile(save, money=7777, johto=0b111)
+        self.save.write_bytes(save.image())
+        moved = self.save.read_bytes()
+        got, out = self.call("/api/edit", {"f": "gyms/test.sav", "op": "trainer", "version": seen,
+                                           "args": {"name": "Paola", "money": 3000, "johto": 0}})
+        self.assertEqual((got, out["code"]), (400, "stale"))
+        self.assertEqual(self.save.read_bytes(), moved)
+        now = self.ok("/api/state?f=gyms/test.sav")["version"]
+        self.assertNotEqual(now, seen)
+        self.assertEqual(now, self.ok("/api/save?f=gyms/test.sav")["version"])
+        out = self.ok("/api/edit", {"f": "gyms/test.sav", "op": "trainer", "version": now, "args": {"name": "Paola"}})
+        self.assertEqual((out["profile"]["name"], out["profile"]["money"]), ("Paola", 7777))
+
     def test_nothing_changed_writes_nothing(self):
         now = self.ok("/api/save?f=gyms/test.sav")["party"][0]
         self.edit("party_edit", {"slot": 0, "species": now["species"], "level": now["level"],

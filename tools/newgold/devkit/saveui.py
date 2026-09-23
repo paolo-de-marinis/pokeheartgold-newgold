@@ -73,7 +73,21 @@ BROWSE_ROOTS = [Path.home(), Path("/run/media"), Path("/media"), Path("/mnt")]
 
 
 class Refused(Exception):
-    """A request the editor turns down; the message is shown as it is."""
+    """A request the editor turns down; the message is shown as it is, and
+    `code` tells the page when it has something to do about it."""
+
+    def __init__(self, message, code=None):
+        super().__init__(message)
+        self.code = code
+
+
+STALE = ("il file è cambiato su disco da quando la pagina l'ha letto (melonDS, un'altra scheda o "
+         "savedit): l'ho ricaricato, rifai la modifica")
+
+
+def version(path):
+    """What the page read, to tell whether the file has moved on since."""
+    return hashlib.sha1(Path(path).read_bytes()).hexdigest()
 
 
 def melonds_running():
@@ -413,7 +427,7 @@ class Library:
         if not path.exists():
             raise Refused("il file non c'è")
         save = self.open(path)
-        return {"f": f, "path": str(path), "slot": is_slot, "mtime": path.stat().st_mtime,
+        return {"f": f, "path": str(path), "slot": is_slot, "mtime": path.stat().st_mtime, "version": version(path),
                 "profile": sv.profile(save), "party": [sv.describe_mon(raw) for raw in sv.party_raw(save)],
                 "boxes": sv.boxes(save), "bag": sv.bag(save), "dex": sv.dex(save),
                 "position": sv.position(save), "info": sv.info(save), "backups": self.history(key)}
@@ -450,12 +464,27 @@ class Library:
         finally:
             temporary.unlink(missing_ok=True)
 
-    def edit(self, f, op, args):
+    def current(self, f):
+        """The version of a file, None when there is no such file."""
+        try:
+            path, _, _ = self.locate(f)
+            return version(path) if path.is_file() else None
+        except Refused:
+            return None
+
+    def edit(self, f, op, args, seen=None):
+        """One change, applied to the file as it is on disk. `seen` is the
+        version the page showed: the page sends every field of a form and
+        addresses a Pokemon by its slot, so a file that has moved on since --
+        a session in melonDS, another tab -- would get the old values back,
+        or the edit would land on another Pokemon."""
         handler = getattr(self, f"op_{op}", None) if re.fullmatch(r"[a-z_]+", op or "") else None
         if handler is None:
             raise Refused(f"operazione sconosciuta: {op}")
         with self.lock:
             path, _, _ = self.locate(f)
+            if seen is not None and seen != self.current(f):
+                raise Refused(STALE, "stale")
             save = self.open(path)
             try:
                 handler(save, args)
@@ -906,7 +935,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if url.path in ("/", "/index.html"):
                 return self.reply(200, PAGE.read_bytes(), "text/html; charset=utf-8")
             if url.path == "/api/state":
-                return self.reply(200, {"melonds": melonds_running()})
+                return self.reply(200, {"melonds": melonds_running(),
+                                        "version": self.library.current(q["f"]) if q.get("f") else None})
             if url.path == "/api/settings":
                 return self.reply(200, self.library.settings())
             if url.path == "/api/browse":
@@ -929,7 +959,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.reply(200, png, "image/png", cache=True)
             return self.reply(404, {"error": "non trovato"})
         except Refused as e:
-            return self.reply(400, {"error": str(e)})
+            return self.reply(400, {"error": str(e), "code": e.code})
         except Exception as e:
             return self.reply(500, {"error": f"{type(e).__name__}: {e}"})
 
@@ -940,7 +970,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
             lib, path = self.library, urllib.parse.urlsplit(self.path).path
             if path == "/api/edit":
-                return self.reply(200, lib.edit(body.get("f"), body.get("op"), body.get("args") or {}))
+                return self.reply(200, lib.edit(body.get("f"), body.get("op"), body.get("args") or {},
+                                                body.get("version")))
             if path == "/api/undo":
                 return self.reply(200, lib.undo(body.get("f")))
             if path == "/api/restore":
@@ -976,7 +1007,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.reply(200, Handler.library.settings())
             return self.reply(404, {"error": "non trovato"})
         except Refused as e:
-            return self.reply(400, {"error": str(e)})
+            return self.reply(400, {"error": str(e), "code": e.code})
         except Exception as e:
             return self.reply(500, {"error": f"{type(e).__name__}: {e}"})
 

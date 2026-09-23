@@ -241,7 +241,7 @@ const DIRS = ["su", "giù", "sinistra", "destra"];
 const GENDER_MARK = ["♂", "♀", ""];
 
 const S = {data: null, lib: null, f: null, save: null, tab: "trainer", box: 0, pocket: "items",
-           dex: {changes: new Map(), q: "", show: "all"}, melon: false};
+           dex: {changes: new Map(), q: "", show: "all"}, melon: false, busy: 0};
 const store = {
   get(k) { try { return localStorage.getItem("saveui." + k); } catch { return null; } },
   set(k, v) { try { localStorage.setItem("saveui." + k, v); } catch {} },
@@ -251,7 +251,7 @@ async function api(path, body) {
   const init = body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)};
   const r = await fetch(path, init);
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || `${r.status} ${r.statusText}`);
+  if (!r.ok) throw Object.assign(new Error(j.error || `${r.status} ${r.statusText}`), {code: j.code});
   return j;
 }
 function toast(msg, err = false) {
@@ -590,10 +590,19 @@ function showSave(detail) {
   $("#lock").hidden = !(detail.slot && S.melon);
   renderTabs();
 }
-async function edit(op, args, ok = "Salvato (backup fatto)") {
-  const out = await run(() => api("/api/edit", {f: S.f, op, args}), ok);
-  if (out) { showSave(out); loadLibrary(); }
-  return out;
+// `version` is the file as the page showed it; the server refuses the edit
+// if the file has moved on since (melonDS, another tab), and the page reloads.
+async function edit(op, args, ok = "Salvato (backup fatto)", version = S.save.version) {
+  S.busy++;
+  try {
+    const out = await api("/api/edit", {f: S.f, op, args, version});
+    toast(ok); showSave(out); loadLibrary();
+    return out;
+  } catch (e) {
+    toast(e.message, true);
+    if (e.code === "stale") await openSave(S.f);
+    return null;
+  } finally { S.busy--; }
 }
 $("#undo").addEventListener("click", async () => {
   const out = await run(() => api("/api/undo", {f: S.f}), "Ultima modifica annullata");
@@ -683,7 +692,7 @@ function renderParty() {
 
 // ---- the Pokemon dialog -------------------------------------------------
 function monDialog(where, m) {
-  const isNew = !m;
+  const isNew = !m, version = S.save.version;
   const v = m || {species: 0, level: 5, nature: 0, item: 0, moves: [], ivs: [31, 31, 31, 31, 31, 31], evs: [0, 0, 0, 0, 0, 0], friendship: 70};
   const title = isNew ? (where.kind === "party" ? "Nuovo Pokémon in squadra" : `Nuovo Pokémon · box ${where.box + 1}, posto ${where.slot + 1}`)
                       : (where.kind === "party" ? `Squadra, posto ${where.slot + 1}` : `Box ${where.box + 1}, posto ${where.slot + 1}`);
@@ -730,11 +739,11 @@ function monDialog(where, m) {
     const base = where.kind === "party" ? {slot: where.slot} : {box: where.box, slot: where.slot};
     if (r.value === "remove") {
       const ok = await ask("Conferma", `<p>${where.kind === "party" ? "Togliere questo Pokémon dalla squadra" : "Liberare questo Pokémon"}? Resta nei backup: "Annulla ultima modifica" lo riporta.</p>`, [["yes", "Sì", "danger"], ["", "No"]]);
-      if (ok.value === "yes") edit(where.kind === "party" ? "party_remove" : "box_remove", base, "Pokémon tolto");
+      if (ok.value === "yes") edit(where.kind === "party" ? "party_remove" : "box_remove", base, "Pokémon tolto", version);
       return;
     }
-    if (r.value === "deposit") return edit("deposit", {slot: where.slot, box: S.box}, `Spostato nel box ${S.box + 1}`);
-    if (r.value === "withdraw") return edit("withdraw", base, "Spostato in squadra");
+    if (r.value === "deposit") return edit("deposit", {slot: where.slot, box: S.box}, `Spostato nel box ${S.box + 1}`, version);
+    if (r.value === "withdraw") return edit("withdraw", base, "Spostato in squadra", version);
     const d = r.data, bad = [];
     const species = parseRef(d.species, S.speciesIndex), item = parseRef(d.held, S.itemIndex);
     const mv = [0, 1, 2, 3].map(i => parseRef(d["move" + i], S.moveIndex));
@@ -745,7 +754,7 @@ function monDialog(where, m) {
     const args = {...base, species, level: +d.level, nature: +d.nature, item, friendship: +d.friendship,
                   moves: mv.filter(Boolean), ivs: [0, 1, 2, 3, 4, 5].map(i => +d["iv" + i]), evs: [0, 1, 2, 3, 4, 5].map(i => +d["ev" + i])};
     const op = isNew ? (where.kind === "party" ? "party_add" : "box_add") : (where.kind === "party" ? "party_edit" : "box_edit");
-    edit(op, args, isNew ? "Pokémon aggiunto" : "Pokémon salvato");
+    edit(op, args, isNew ? "Pokémon aggiunto" : "Pokémon salvato", version);
   });
 }
 
@@ -950,7 +959,15 @@ function setMelon(on) {
   if (S.save) $("#lock").hidden = !(S.save.slot && on);
 }
 async function poll() {
-  try { const s = await api("/api/state"); if (s.melonds !== S.melon) { setMelon(s.melonds); loadLibrary(); } } catch {}
+  try {
+    const s = await api(`/api/state${S.f ? `?f=${encodeURIComponent(S.f)}` : ""}`);
+    if (s.melonds !== S.melon) { setMelon(s.melonds); loadLibrary(); }
+    if (S.save && !S.busy && s.version && s.version !== S.save.version) {
+      toast("Il salvataggio aperto è cambiato su disco: l'ho ricaricato");
+      await openSave(S.f);
+      loadLibrary();
+    }
+  } catch {}
 }
 
 async function init() {
