@@ -2,8 +2,9 @@
 """Check the level-up learnset archive.
 
 The archive is a binary pret ships, so the risk in extending it is silently
-rewriting what was already there. This compares the first 508 learnsets against
-the blob on upstream/master and checks that every new species has a usable one.
+rewriting what was already there. HeartGold's own species are compared against
+the reference's learnsets, the egg and the retail forms after them against the
+blob on upstream/master, and every new species is checked for a usable one.
 """
 
 import subprocess
@@ -13,6 +14,7 @@ import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT
+from test_repels import REFERENCE
 
 sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import wotbl  # noqa: E402
@@ -39,31 +41,40 @@ class LearnsetTests(unittest.TestCase):
         for index, raw in enumerate(self.files):
             self.assertEqual(wotbl.encode(wotbl.decode(raw)), raw, self.names.get(index, index))
 
-    # The vanilla learnsets New Gold changes, and the only ones it changes.
-    # hg-engine replaces every learnset with a modern one; konefr changed
-    # fifteen of them himself, and those fifteen are what is ported.
-    KONEFR_LEARNSETS = {
-        "CHIKORITA", "QUILAVA", "CROCONAW", "ARIADOS", "SUDOWOODO", "POLITOED",
-        "SKIPLOOM", "JUMPLUFF", "SUNFLORA", "QUAGSIRE", "GIRAFARIG", "DELIBIRD",
-        "STANTLER", "AMBIPOM", "FARIGIRAF",
-    }
+    # HeartGold's own species learn what hg-engine teaches them at the
+    # revision New Gold forked from: the latest games' learnsets, not pret's
+    # Generation IV ones.
+    LEARNSETS_REVISION = wotbl.ENGINE_BASE
 
-    def test_pret_data_is_untouched_but_for_the_fifteen(self):
+    @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
+    def test_retail_species_learn_the_reference_s_moves(self):
+        reference = wotbl.reference_learnsets(REFERENCE, self.LEARNSETS_REVISION)
+        moves = wotbl.move_names()
+        for index in range(1, wotbl.LAST_RETAIL_SPECIES + 1):
+            name = self.names[index]
+            wanted = [{"level": step["Level"], "move": moves[step["Move"]]}
+                      for step in reference["SPECIES_" + name]["LevelMoves"]]
+            self.assertEqual(wotbl.decode(self.files[index]), wanted, name)
+
+    def test_dunsparce_learns_hyper_drill(self):
+        # The one way to Dudunsparce: it evolves knowing Hyper Drill.
+        moves = wotbl.move_names()
+        dunsparce = next(i for i, n in self.names.items() if n == "DUNSPARCE")
+        self.assertIn({"level": 32, "move": moves["MOVE_HYPER_DRILL"]},
+                      wotbl.decode(self.files[dunsparce]))
+
+    def test_the_egg_and_the_retail_forms_are_pret_s(self):
         original = upstream_archive()
         if original is None:
             self.skipTest("upstream/master is not fetched")
         theirs, _, _ = wotbl.read_narc(original)
         self.assertEqual(len(theirs), 508)
-        names = wotbl.species_names()
         # Not byte for byte: the entry is a word now, because a move numbered
         # past 511 does not fit the halfword pret packed it into. What has to
         # match is what the entries say.
-        differing = {names.get(i, str(i)) for i, (a, b)
-                     in enumerate(zip(self.files[:len(theirs)], theirs))
-                     if wotbl.decode(a) != wotbl.decode_retail(b)}
-        # Farigiraf is one of the added species, past the end of pret's data.
-        vanilla = {name for index, name in names.items() if index < len(theirs)}
-        self.assertEqual(differing, self.KONEFR_LEARNSETS & vanilla)
+        for index in range(wotbl.LAST_RETAIL_SPECIES + 1, len(theirs)):
+            self.assertEqual(wotbl.decode(self.files[index]), wotbl.decode_retail(theirs[index]),
+                             self.names.get(index, index))
 
     def test_new_species_can_fight(self):
         for name in import_species.added_species():

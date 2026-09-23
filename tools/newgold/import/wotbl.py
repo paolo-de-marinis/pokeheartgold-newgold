@@ -9,6 +9,8 @@ either unless the round trip reproduces the original byte for byte.
     wotbl.py extend REFERENCE       append the new species' learnsets
     wotbl.py rebuild REFERENCE      rewrite the added species' learnsets, for
                                     when a move they wanted has since arrived
+    wotbl.py engine REFERENCE       rewrite HeartGold's own species with
+                                    hg-engine's learnsets at d0380a487
     wotbl.py konefr REFERENCE       rewrite the learnsets konefr himself
                                     changed, and only those
 
@@ -31,6 +33,11 @@ ARCHIVE = ROOT / "files/poketool/personal/wotbl.narc"
 # The hg-engine commit New Gold was forked from. Everything the reference's
 # learnsets say that this does not is konefr's own work.
 ENGINE_BASE = "d0380a487"
+# konefr's tip: what New Gold's learnsets are.
+KONEFR_TIP = "ccf2c9f5"
+# HeartGold's own species. The egg, the bad egg and the twelve retail forms
+# after them are not in the reference's learnsets under names this game uses.
+LAST_RETAIL_SPECIES = 493
 
 ENTRY_SIZE = 4
 MOVE_BITS = 16
@@ -138,7 +145,7 @@ def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("verify")
-    for name in ("extend", "rebuild", "konefr"):
+    for name in ("extend", "rebuild", "engine", "konefr"):
         command = sub.add_parser(name)
         command.add_argument("reference", type=Path)
         command.add_argument("--write", action="store_true")
@@ -169,7 +176,61 @@ def main():
         konefr(args, files)
         return
 
+    if args.command == "engine":
+        engine(args, files)
+        return
+
     extend(args, files, rebuild=args.command == "rebuild")
+
+
+def reference_learnsets(reference, rev):
+    """The reference's learnsets.json as it was at a revision."""
+    import subprocess
+
+    result = subprocess.run(["git", "-C", str(reference), "show",
+                             f"{rev}:data/learnsets/learnsets.json"],
+                            capture_output=True, text=True)
+    if result.returncode:
+        raise SystemExit(f"cannot read the learnsets at {rev}")
+    return json.loads(result.stdout)
+
+
+def engine(args, files):
+    """Rewrite HeartGold's own species with hg-engine's learnsets.
+
+    pret's learnsets are Generation IV's. hg-engine replaced every one of them
+    with the latest games' (Dunsparce learns Hyper Drill at 32 there, which is
+    how Dudunsparce is had), and what the engine has at the revision New Gold
+    forked from is the engine layer's. konefr's own changes go over these
+    afterwards, with the konefr command.
+    """
+    names = species_names()
+    moves = move_names()
+    reference = reference_learnsets(args.reference, ENGINE_BASE)
+
+    files = list(files)
+    rewritten = 0
+    for index in range(1, LAST_RETAIL_SPECIES + 1):
+        entry = reference.get("SPECIES_" + names[index])
+        if entry is None:
+            raise SystemExit(f"the reference has no learnset for {names[index]}")
+        learned = []
+        for step in entry["LevelMoves"]:
+            number = moves.get(step["Move"])
+            if number is None:
+                raise SystemExit(f"{names[index]}: this game has no {step['Move']}")
+            learned.append({"level": step["Level"], "move": number})
+        raw = encode(learned)
+        if raw != files[index]:
+            files[index] = raw
+            rewritten += 1
+
+    print(f"{rewritten} of {LAST_RETAIL_SPECIES} learnsets differ from hg-engine's at {ENGINE_BASE}")
+    if not args.write:
+        print("nothing written; pass --write")
+        return
+    ARCHIVE.write_bytes(build_narc(files))
+    print(f"wrote {ARCHIVE.relative_to(ROOT)}")
 
 
 def konefr(args, files):
@@ -180,21 +241,12 @@ def konefr(args, files):
     the revision the hack was forked from — fifteen species, at the time of
     writing — so that difference is what is taken.
     """
-    import subprocess
-
     names = species_names()
     moves = move_names()
     byName = {name: index for index, name in names.items()}
 
-    def revision(rev):
-        result = subprocess.run(["git", "-C", str(args.reference), "show",
-                                 f"{rev}:data/learnsets/learnsets.json"],
-                                capture_output=True, text=True)
-        if result.returncode:
-            raise SystemExit(f"cannot read the learnsets at {rev}")
-        return json.loads(result.stdout)
-
-    before, after = revision(args.base), revision("HEAD")
+    before = reference_learnsets(args.reference, args.base)
+    after = reference_learnsets(args.reference, KONEFR_TIP)
     changed = [key for key in after if before.get(key) != after[key]]
 
     files = list(files)
