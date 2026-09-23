@@ -9203,7 +9203,7 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
             }
         }
         if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_GIRATINA && ctx->battleMons[ctx->battlerIdTemp].hp && ctx->battleMons[ctx->battlerIdTemp].form == GIRATINA_ORIGIN) {
-            if ((ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM) || (!(BattleSystem_GetBattleSpecial(battleSystem) & BATTLE_SPECIAL_DISTORTION_WORLD) && ctx->battleMons[ctx->battlerIdTemp].item != ITEM_GRISEOUS_ORB)) {
+            if ((ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM) || (!(BattleSystem_GetBattleSpecial(battleSystem) & BATTLE_SPECIAL_DISTORTION_WORLD) && !ItemGivesGiratinaOriginForm(ctx->battleMons[ctx->battlerIdTemp].item))) {
                 if (ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM) {
                     Pokemon *mon2;
                     int battlerIdTarget;

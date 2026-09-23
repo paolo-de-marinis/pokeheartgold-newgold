@@ -145,7 +145,7 @@ static void PartyMonContextMenuAction_Take(PartyMenu *partyMenu, int *pState) {
             Pokemon_UpdateArceusForm(mon);
             griseousOrbResult = Mon_UpdateGiratinaForm(mon);
             PartyMenu_UpdateHeldItemForm(partyMenu, mon);
-            if (partyMenu->monsDrawState[partyMenu->partyMonIndex].heldItem == ITEM_GRISEOUS_ORB && griseousOrbResult == FALSE) {
+            if (ItemGivesGiratinaOriginForm(partyMenu->monsDrawState[partyMenu->partyMonIndex].heldItem) && griseousOrbResult == FALSE) {
                 newState = PARTY_MENU_STATE_PRINT_TAKE_GRISEOUS_ORB_MESSAGE;
             }
             ReadMsgDataIntoString(partyMenu->msgData, msg_0300_00083, partyMenu->unformattedStrBuf);

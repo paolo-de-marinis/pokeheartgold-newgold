@@ -145,6 +145,7 @@ BOOL BoxMon_IsImmuneToPokerus(BoxPokemon *boxMon);
 void Pokemon_UpdateArceusForm(Pokemon *mon);
 void BoxMon_UpdateArceusForm(BoxPokemon *boxMon);
 s32 Mon_UpdateGiratinaForm(Pokemon *mon);
+BOOL ItemGivesGiratinaOriginForm(u16 item);
 s32 BoxMon_UpdateGiratinaForm(BoxPokemon *boxMon);
 void Mon_UpdateShayminForm(Pokemon *mon, int form);
 void BoxMon_UpdateShayminForm(BoxPokemon *boxMon, int form);

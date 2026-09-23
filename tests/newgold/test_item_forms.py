@@ -178,5 +178,26 @@ class HeldItemFormTests(unittest.TestCase):
         self.assertIn("PartyMenu_UpdateHeldItemForm(partyMenu, mon);", take)
 
 
+class GriseousCoreTests(unittest.TestCase):
+    """The Griseous Core gives Giratina its Origin Forme as the Orb does
+    (Pokemon Central, Grigiosferoide: held, in Scarlet and Violet)."""
+
+    def test_both_items_give_the_origin_forme(self):
+        source = read("src/pokemon.c")
+        self.assertIn("return item == ITEM_GRISEOUS_ORB || item == ITEM_GRISEOUS_CORE;",
+                      function(source, "ItemGivesGiratinaOriginForm"))
+        self.assertIn("if (ItemGivesGiratinaOriginForm(heldItem)) {", function(source, "BoxMon_UpdateGiratinaForm"))
+
+    def test_the_battle_keeps_the_origin_forme_with_either(self):
+        self.assertIn("!ItemGivesGiratinaOriginForm(ctx->battleMons[ctx->battlerIdTemp].item)",
+                      function(read(OVERLAY), "Battler_CheckWeatherFormChange"))
+
+    def test_the_party_menu_plays_the_change_for_either(self):
+        menu = read("src/party_menu.c") + read("src/party_menu_list_items.c")
+        self.assertEqual(menu.count("ItemGivesGiratinaOriginForm("), 7)
+        # Only the Orb is kept from other species, as retail has it.
+        self.assertIn("if (partyMenu->args->itemId == ITEM_GRISEOUS_ORB) {", menu)
+
+
 if __name__ == "__main__":
     unittest.main()

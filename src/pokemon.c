@@ -3820,12 +3820,20 @@ s32 Mon_UpdateGiratinaForm(Pokemon *mon) {
     return ret;
 }
 
+// The items that give Giratina its Origin Forme: the Griseous Orb, as in this
+// game, and the Griseous Core, which does it while held in Scarlet and Violet
+// (Pokemon Central, Grigiosferoide); the reference only powers Giratina up
+// with the Core.
+BOOL ItemGivesGiratinaOriginForm(u16 item) {
+    return item == ITEM_GRISEOUS_ORB || item == ITEM_GRISEOUS_CORE;
+}
+
 s32 BoxMon_UpdateGiratinaForm(BoxPokemon *boxMon) {
     int species = GetBoxMonData(boxMon, MON_DATA_SPECIES, NULL);
     int heldItem = GetBoxMonData(boxMon, MON_DATA_HELD_ITEM, NULL);
     int form;
     if (species == SPECIES_GIRATINA) {
-        if (heldItem == ITEM_GRISEOUS_ORB) {
+        if (ItemGivesGiratinaOriginForm(heldItem)) {
             form = GIRATINA_ORIGIN;
         } else {
             form = GIRATINA_ALTERED;

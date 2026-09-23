@@ -2826,7 +2826,7 @@ static int PartyMenu_GiveItemToMon_HandleGriseousOrb(PartyMenu *partyMenu, Pokem
     PartyMenu_UpdateHeldItemForm(partyMenu, mon);
     partyMenu->monsDrawState[partyMenu->partyMonIndex].heldItem = partyMenu->args->itemId;
     PartyMenu_DrawMonHeldItemIcon(partyMenu, partyMenu->partyMonIndex, partyMenu->monsDrawState[partyMenu->partyMonIndex].heldItem);
-    if (itemToBeHeld == ITEM_GRISEOUS_ORB && *transformResult != -1) {
+    if (ItemGivesGiratinaOriginForm(itemToBeHeld) && *transformResult != -1) {
         return PARTY_MENU_STATE_PRINT_GIVE_GRISEOUS_ORB_MESSAGE;
     } else {
         return PARTY_MENU_STATE_PRINT_ITEM_SWAP_MESSAGE;
@@ -2904,9 +2904,9 @@ static int PartyMenu_Subtask_SwitchItemsHandleYesNoInput(PartyMenu *partyMenu) {
             BufferItemName(partyMenu->msgFormat, 1, oldItemId);
             BufferItemName(partyMenu->msgFormat, 2, newItemId);
             StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, partyMenu->unformattedStrBuf);
-            if (newItemId != ITEM_GRISEOUS_ORB && oldItemId == ITEM_GRISEOUS_ORB && giratinaResult != -1) {
+            if (!ItemGivesGiratinaOriginForm(newItemId) && ItemGivesGiratinaOriginForm(oldItemId) && giratinaResult != -1) {
                 result = PARTY_MENU_STATE_PRINT_GIVE_GRISEOUS_ORB_MESSAGE;
-            } else if (newItemId == ITEM_GRISEOUS_ORB && oldItemId == ITEM_GRISEOUS_ORB) {
+            } else if (ItemGivesGiratinaOriginForm(newItemId) && ItemGivesGiratinaOriginForm(oldItemId)) {
                 result = PARTY_MENU_STATE_PRINT_ITEM_SWAP_MESSAGE;
             }
         }
@@ -2945,7 +2945,7 @@ static int PartyMenu_GiveOrSwapHeldItems(PartyMenu *partyMenu) {
     int newItem = partyMenu->args->itemId;
     int oldItem = partyMenu->monsDrawState[partyMenu->partyMonIndex].heldItem;
     int manipulateItemResult = PartyMenu_GiveItemToMon_HandleGriseousOrb(partyMenu, mon, &giratinaResult);
-    if (oldItem == ITEM_GRISEOUS_ORB && manipulateItemResult == PARTY_MENU_STATE_PRINT_ITEM_SWAP_MESSAGE && giratinaResult == 0) {
+    if (ItemGivesGiratinaOriginForm(oldItem) && manipulateItemResult == PARTY_MENU_STATE_PRINT_ITEM_SWAP_MESSAGE && giratinaResult == 0) {
         manipulateItemResult = PARTY_MENU_STATE_PRINT_GIVE_GRISEOUS_ORB_MESSAGE;
     }
     if (oldItem == ITEM_NONE) {
