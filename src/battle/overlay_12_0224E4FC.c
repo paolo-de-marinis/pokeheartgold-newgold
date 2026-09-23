@@ -8308,11 +8308,12 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
         // The class of the damage and nothing else: no type, and -- this being
         // the reference's condition rather than an omission -- no check that
         // the move touched, so a physical hit from across the field still
-        // feeds it.
-        ret = ItemRaisesStatOnHit(ctx, physical, STAT_DEF, script);
+        // feeds it. Not a move Sheer Force powered, for either Berry
+        // (Pokemon Central, Forzabruta), which the reference does not ask.
+        ret = ItemRaisesStatOnHit(ctx, physical && !SheerForceTradedEffect(ctx), STAT_DEF, script);
         break;
     case HOLD_EFFECT_BOOST_SPDEF_ON_SPECIAL_HIT: // maranga berry
-        ret = ItemRaisesStatOnHit(ctx, special, STAT_SPDEF, script);
+        ret = ItemRaisesStatOnHit(ctx, special && !SheerForceTradedEffect(ctx), STAT_SPDEF, script);
         break;
     case HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE: // weakness policy
         // A super effective hit, the holder still standing, and nothing else:

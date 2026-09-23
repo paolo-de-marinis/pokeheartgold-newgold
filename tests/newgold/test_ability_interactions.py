@@ -167,6 +167,12 @@ class SheerForceAftermathTests(unittest.TestCase):
             self.assertNotIn("IsSuppressibleSecondaryEffect", case, ability)
         self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "CheckSwitchItemOnHit"))
 
+    def test_the_kee_and_maranga_berries_ask_it(self):
+        # Pokemon Central, Forzabruta: Baccalighia and Baccapane.
+        hit = function(OVERLAY.read_text(), "CheckItemEffectOnHit")
+        self.assertIn("ItemRaisesStatOnHit(ctx, physical && !SheerForceTradedEffect(ctx), STAT_DEF, script)", hit)
+        self.assertIn("ItemRaisesStatOnHit(ctx, special && !SheerForceTradedEffect(ctx), STAT_SPDEF, script)", hit)
+
     def test_the_users_shell_bell_and_life_orb_ask_it_too(self):
         # Pokemon Central, Forzabruta: neither answers a boosted move.
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
