@@ -41,10 +41,10 @@ class LearnsetTests(unittest.TestCase):
         for index, raw in enumerate(self.files):
             self.assertEqual(wotbl.encode(wotbl.decode(raw)), raw, self.names.get(index, index))
 
-    # HeartGold's own species learn what hg-engine teaches them at the
-    # revision New Gold forked from: the latest games' learnsets, not pret's
-    # Generation IV ones.
-    LEARNSETS_REVISION = wotbl.ENGINE_BASE
+    # HeartGold's own species learn what New Gold teaches them: hg-engine's
+    # learnsets from the revision it forked from -- the latest games', not
+    # pret's Generation IV ones -- with the fifteen konefr changed on top.
+    LEARNSETS_REVISION = wotbl.KONEFR_TIP
 
     @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
     def test_retail_species_learn_the_reference_s_moves(self):
