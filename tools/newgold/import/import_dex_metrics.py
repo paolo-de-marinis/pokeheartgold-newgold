@@ -16,11 +16,14 @@ Dex listed no added species. They are written here from this tree's own data,
 for every Dex species: the National Dex order (the reference's numbering),
 the name order (the species names, as retail sorts them), the four size
 orders from the entries above, the first letters and the letter groups, and
-the seventeen types the search offers, from the reference's types. The
-fourteen body styles keep HeartGold's species, as the reference has none
-for the others. The Johto order is retail's and stays. And the Dex's area
-filter reads one byte per species (zukan_hw_data_1, retail's 494); an added
-species is "area unknown" there, as its area page has no map.
+the seventeen types the search offers, from the reference's types, and the
+fourteen body styles. The reference has no body style past Arceus (its
+placeholder, quadruped, for every added species), so an added species takes
+its shape from body_shapes.csv, the games' own (body_shapes.py says where
+from); a form takes its base species'. The Johto order is retail's and
+stays. And the Dex's area filter reads one byte per species
+(zukan_hw_data_1, retail's 494); an added species is "area unknown" there,
+as its area page has no map.
 
     import_dex_metrics.py REFERENCE [--write]
 """
@@ -30,6 +33,7 @@ import re
 from pathlib import Path
 
 import gmm
+from body_shapes import styles as shape_styles
 from import_species import national_numbers
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -166,14 +170,8 @@ def sort_lists(data, numbers, national, types):
                 -variants(stats[s][field])[variant] if descending else variants(stats[s][field])[variant], number[s]))))
         return orders[0] if orders[0] == orders[1] else {"altered": orders[0], "origin": orders[1]}
 
-    # The reference gives every species past Arceus the first body style,
-    # quadruped, as a placeholder (data/Species.c, bodyType), so only
-    # HeartGold's own species have a body style to be searched by: an added
-    # species is listed under none rather than under the wrong one.
-    shaped = [s for s in by_number if s <= RETAIL_LAST]
-
     def styled(style):
-        orders = [listed([s for s in shaped if variants(stats[s]["body_style"])[variant] == style]) for variant in (0, 1)]
+        orders = [listed([s for s in by_number if variants(stats[s]["body_style"])[variant] == style]) for variant in (0, 1)]
         return orders[0] if orders[0] == orders[1] else {"altered": orders[0], "origin": orders[1]}
 
     out = []
@@ -246,6 +244,13 @@ def main():
         elif any(row.get(k) != v for k, v in want.items()):
             row.update(want)
             changed += 1
+    # The reference's bodyType past Arceus is a placeholder: the games' shape
+    # instead, by National Dex number, so a form takes its base's.
+    national = national_numbers(args.reference)
+    shapes = shape_styles()
+    for name, number in numbers.items():
+        if number > RETAIL_LAST and number in by_number and name in national:
+            by_number[number]["body_style"] = shapes[national[name]]
     giratina = by_number[numbers["GIRATINA"]]
     for field, origin in GIRATINA_ORIGIN.items():
         giratina[field] = {"altered": origin, "origin": variants(giratina[field])[1]}
@@ -265,7 +270,7 @@ def main():
 
     print(f"entries: {len(rows)} -> {len(filled)}")
     print(f"added {added}, updated {changed}, species the reference has no metrics for: {missing}")
-    data["sorting"] = sort_lists(data, numbers, national_numbers(args.reference), reference_types(args.reference, numbers))
+    data["sorting"] = sort_lists(data, numbers, national, reference_types(args.reference, numbers))
     national = next(o["mons"] for g in data["sorting"] if g["type"] == "dex_order" for o in g["options"] if o["id"] == "national")
     print(f"sort lists: {len(national)} species in National Dex order")
     flags = area_flags(numbers)

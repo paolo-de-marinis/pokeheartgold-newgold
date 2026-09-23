@@ -130,6 +130,30 @@ class DexSortListContentTests(unittest.TestCase):
             # an added species has no area of its own: "unknown", and any
             self.assertEqual(flags[self.ids["SPECIES_LILLIPUP"]], 8 | 4, path.name)
 
+    def test_every_dex_species_has_its_body_style(self):
+        """The reference gives every species past Arceus the placeholder
+        quadruped, so the body-style search listed only HeartGold's 493.
+        Each Dex species is in one body-style list, an added one under the
+        games' shape (body_shapes.csv), and the shapes' order maps onto
+        retail's but for the nine the later games moved."""
+        from body_shapes import styles
+        shapes = styles()
+        lists = [o["mons"] for g in self.data["sorting"] if g["type"] == "body_style" for o in g["options"]]
+        self.assertEqual(len(lists), 14)
+        for forme in ("altered", "origin"):
+            listed = [self.ids[name] for mons in lists for name in (mons if isinstance(mons, list) else mons[forme])]
+            self.assertEqual(sorted(listed), sorted(self.dex), forme)
+        stats = self.data["mon_stats"]
+        style = lambda s: (lambda v: v if isinstance(v, int) else v["origin"])(stats[s]["body_style"])  # noqa: E731
+        for species in self.dex:
+            if species > self.ids["SPECIES_ARCEUS"]:
+                self.assertEqual(style(species), shapes[self.numbers[species]], species)
+        moved = {n for n in range(1, self.ids["SPECIES_ARCEUS"] + 1) if style(n) != shapes[n]}
+        self.assertEqual(moved, {10, 13, 265, 412, 413, 416, 422, 423, 488})
+        self.assertEqual(style(self.ids["SPECIES_LILLIPUP"]), 0)     # quadruped
+        self.assertEqual(style(self.ids["SPECIES_BAXCALIBUR"]), 2)   # bipedal, tailed
+        self.assertEqual(style(self.ids["SPECIES_PECHARUNT"]), 12)   # a head only
+
 
 class GiratinaFormeTests(unittest.TestCase):
     """The Dex shows each of Giratina's Formes its own height, weight and

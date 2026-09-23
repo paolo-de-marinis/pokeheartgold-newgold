@@ -433,11 +433,13 @@ class SpeciesInPlayTests(unittest.TestCase):
         rows = json.loads((ROOT / "files/application/zukanlist/zkn_data/zukan_data.json")
                           .read_text())["mon_stats"]
         checked = 0
-        for row in rows:
+        for number, row in enumerate(rows):
             name = row["species"][len("SPECIES_"):]
             if name not in theirs:
                 continue
             for field, want in theirs[name].items():
+                if field == "body_style" and number > 493:
+                    continue  # the reference's placeholder; the games' shape (test_dex_sort_lists)
                 have = row[field]
                 if isinstance(have, dict):
                     # Giratina: the reference has the Altered Forme's figures,
