@@ -1052,7 +1052,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     async function load(species, mode, ability) {
       st.species = species;
       const asked = ++st.asked;
-      const same = !!m && species === m.species, lv = Math.min(100, Math.max(1, +form.elements.level.value || 1));
+      const same = !!m && species === m.species, lv = Math.min(lim.level, Math.max(1, +form.elements.level.value || 1));
       const r = await run(() => api(`/api/species?species=${species}&form=${same ? m.form : 0}&level=${lv}&hidden=${m?.hidden_ability ? 1 : 0}&bit=${m?.ability_bit ?? 0}`));
       if (!r || asked !== st.asked) return;           // another species or level was asked for meanwhile
       Object.assign(st, {moves: r.moves, legal: new Map(r.moves.map(x => [x.id, x.sources])), known: new Set(same ? m.moves.map(x => x.id) : [])});
