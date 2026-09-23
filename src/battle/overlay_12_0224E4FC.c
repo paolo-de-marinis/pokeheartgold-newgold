@@ -9041,9 +9041,12 @@ BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     ctx->flingScript = 0;
     ctx->statChangeType = 0;
 
-    // Nothing its species keeps is thrown (the reference's Fling check,
-    // BattleController_BeforeMove.c:1954 at d0380a487).
-    if (!ctx->movePower || SpeciesKeepsItem(ctx->battleMons[battlerId].species, ctx->battleMons[battlerId].item)) {
+    // Nothing its species keeps is thrown, and nothing by a Klutz holder (the
+    // reference's Fling check, BattleController_BeforeMove.c:1954 at
+    // d0380a487; Pokemon Central, Lancio: it fails under Klutz, Embargo or
+    // Magic Room, and GetHeldItemFlingPower answers Embargo).
+    if (!ctx->movePower || GetBattlerAbility(ctx, battlerId) == ABILITY_KLUTZ
+        || SpeciesKeepsItem(ctx->battleMons[battlerId].species, ctx->battleMons[battlerId].item)) {
         return FALSE;
     }
 
