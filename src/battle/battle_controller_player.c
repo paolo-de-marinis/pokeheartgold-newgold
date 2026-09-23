@@ -2925,6 +2925,17 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
         hitChance = hitChance * 130 / 100;
     }
 
+    // Victory Star makes the moves of its holder and of the holder's ally a
+    // tenth surer, 4506/4096 in the later games, and two holders stack
+    // (Pokemon Central, Vittorstella). The reference asks only whether the
+    // attacker's ally has it, so a Victini's own moves were never helped.
+    if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_VICTORY_STAR) {
+        hitChance = hitChance * 110 / 100;
+    }
+    if ((battlerIdAttacker ^ 2) < BattleSystem_GetMaxBattlers(battleSystem) && ctx->battleMons[battlerIdAttacker ^ 2].hp && GetBattlerAbility(ctx, battlerIdAttacker ^ 2) == ABILITY_VICTORY_STAR) {
+        hitChance = hitChance * 110 / 100;
+    }
+
     if ((weather & FIELD_CONDITION_SANDSTORM_ALL) && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SAND_VEIL) == TRUE) {
         hitChance = hitChance * 80 / 100;
     }

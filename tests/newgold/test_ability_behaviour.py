@@ -271,5 +271,94 @@ int main(void) {
         self.assertIn("*script = BATTLE_SUBSCRIPT_BADLY_POISON;", branch)
 
 
+
+CONTROLLER = (ROOT / "src/battle/battle_controller_player.c").read_text()
+
+# BattleSystem_CheckMoveHit with the battle stubbed: no stages, no weather, no
+# item, and a random number the scenario picks, so that whether the move
+# missed says which side of it the hit chance fell.
+ACCURACY = HEADER + r"""
+typedef struct { int unused; } BattleSystem;
+typedef struct {
+    s8 statChanges[8]; int hp; u8 friendship; u32 status2; u32 moveEffectFlags;
+    struct { int micleBerryFlag; } unk88;
+} BattleMon;
+typedef struct {
+    u32 battleStatus; u32 fieldCondition; u32 moveStatusFlag; BattleMon battleMons[4];
+} BattleContext;
+typedef struct { int accuracy, category, effect; } MoveTbl;
+
+static struct { int maxBattlers; int ability[4]; MoveTbl move; u16 random; } S;
+
+static u32 BattleSystem_GetBattleType(BattleSystem *bs) { (void)bs; return S.maxBattlers == 4 ? BATTLE_TYPE_DOUBLES : 0; }
+static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return S.maxBattlers; }
+static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
+static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; return S.random; }
+static u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) { (void)ctx; (void)battlerId; (void)moveNo; return TYPE_NORMAL; }
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &S.move; }
+static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, int battlerId, int ability) {
+    (void)bs; (void)ctx; (void)flag; (void)battlerId; (void)ability; return 0;
+}
+static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int a, int t, int ability) { (void)ctx; (void)a; return S.ability[t] == ability; }
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return S.ability[battlerId]; }
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return 0; }
+static int GetHeldItemModifier(BattleContext *ctx, int battlerId, int a) { (void)ctx; (void)battlerId; (void)a; return 0; }
+static BOOL ov12_0225561C(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
+@TABLE@
+@CHECK@
+
+static BattleSystem bs;
+static BattleContext ctx;
+
+static void reset(int maxBattlers) {
+    memset(&S, 0, sizeof(S));
+    memset(&ctx, 0, sizeof(ctx));
+    S.maxBattlers = maxBattlers;
+    S.move = (MoveTbl){ 50, CATEGORY_SPECIAL, 0 };
+    for (int i = 0; i < 4; i++) {
+        ctx.battleMons[i].hp = 100;
+        memset(ctx.battleMons[i].statChanges, 6, 8);
+    }
+}
+
+// Whether a move from battler 0 at battler 1 lands when the roll is `roll`,
+// which it does when roll + 1 is no more than the hit chance.
+static int lands(u16 roll) {
+    S.random = roll;
+    ctx.moveStatusFlag = 0;
+    BattleSystem_CheckMoveHit(&bs, &ctx, 0, 1, MOVE_TACKLE);
+    return !(ctx.moveStatusFlag & MOVE_STATUS_MISSED);
+}
+
+int main(void) {
+    // A 50% move: roll 49 lands, 50 does not.
+    reset(4); EXPECT(lands(49), 1); EXPECT(lands(50), 0);
+@CHECKS@
+    return 0;
+}
+"""
+
+
+def accuracy_program(checks):
+    table = re.search(r"static const u8 sHitChanceTable\[13\]\[2\] = \{.*?\};", CONTROLLER, re.S).group(0)
+    return (ACCURACY.replace("@TABLE@", table)
+            .replace("@CHECK@", function(CONTROLLER, "BattleSystem_CheckMoveHit")).replace("@CHECKS@", checks))
+
+
+class VictoryStarTests(unittest.TestCase):
+    def test_the_holder_and_its_ally_are_a_tenth_surer(self):
+        run_c(self, accuracy_program(r"""
+    // 50 * 110 / 100 = 55: roll 54 lands, 55 does not.
+    reset(4); S.ability[0] = ABILITY_VICTORY_STAR; EXPECT(lands(54), 1); EXPECT(lands(55), 0);
+    reset(4); S.ability[2] = ABILITY_VICTORY_STAR; EXPECT(lands(54), 1); EXPECT(lands(55), 0);
+    // Two holders: 55 * 110 / 100 = 60.
+    reset(4); S.ability[0] = S.ability[2] = ABILITY_VICTORY_STAR; EXPECT(lands(59), 1); EXPECT(lands(60), 0);
+    // Not a foe's, not a fainted ally's, not the stale slot of a single battle.
+    reset(4); S.ability[1] = S.ability[3] = ABILITY_VICTORY_STAR; EXPECT(lands(50), 0);
+    reset(4); S.ability[2] = ABILITY_VICTORY_STAR; ctx.battleMons[2].hp = 0; EXPECT(lands(50), 0);
+    reset(2); S.ability[2] = ABILITY_VICTORY_STAR; EXPECT(lands(50), 0);
+"""))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -195,6 +195,7 @@ IMPLEMENTED = {
     "UNNERVE",
     "UNSEEN_FIST",
     "VESSEL_OF_RUIN",
+    "VICTORY_STAR",
     "WANDERING_SPIRIT",
     "WATER_BUBBLE",
     "WATER_COMPACTION",
@@ -232,7 +233,7 @@ IMPLEMENTED = {
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
     "AROMA_VEIL", "BALL_FETCH", "COSTAR", "CURIOUS_MEDICINE", "GUARD_DOG",
-    "MIMICRY", "OPPORTUNIST", "SYMBIOSIS", "VICTORY_STAR"
+    "MIMICRY", "OPPORTUNIST", "SYMBIOSIS"
 }
 
 # Numbers the engine keeps free rather than abilities. TEMP4 (317) sits
@@ -329,7 +330,7 @@ class AbilityEffectTests(unittest.TestCase):
     # Shields Down, Battle Bond and Mega Sol done.
     # Shields Down, Battle Bond and Mega Sol done. Desolate Land, Primordial
     # Sea and Delta Stream done.
-    STILL_TO_DO = 9
+    STILL_TO_DO = 8
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
