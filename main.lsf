@@ -642,6 +642,8 @@ Overlay OVY_8
 {
     After OVY_6
     Object asm/overlay_08.o
+    Object src/overlay_08_02222B8C.o
+    Object asm/overlay_08_02222D78.o
 }
 Overlay OVY_9
 {
