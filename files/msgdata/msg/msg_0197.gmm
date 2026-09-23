@@ -7256,4 +7256,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} gained\nstrength from the fallen!</language>
 	</row>
+	<row id="msg_0197_01814" index="1814">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s stat changes\nwere removed!</language>
+	</row>
+	<row id="msg_0197_01815" index="1815">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s stat\nchanges were removed!</language>
+	</row>
+	<row id="msg_0197_01816" index="1816">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s stat\nchanges were removed!</language>
+	</row>
 </body>

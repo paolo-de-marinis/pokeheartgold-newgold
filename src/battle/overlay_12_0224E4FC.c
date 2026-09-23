@@ -5048,6 +5048,22 @@ static int BattlerPartyFaintCount(BattleSystem *battleSystem, BattleContext *ctx
     return count;
 }
 
+// Puts every stat stage of battlerId back at zero, and says whether any was
+// not there already.
+static BOOL BattlerClearStatChanges(BattleContext *ctx, int battlerId) {
+    BOOL cleared = FALSE;
+    int stat;
+
+    for (stat = STAT_ATK; stat < NUM_BATTLE_STATS; stat++) {
+        if (ctx->battleMons[battlerId].statChanges[stat] != 6) {
+            ctx->battleMons[battlerId].statChanges[stat] = 6;
+            cleared = TRUE;
+        }
+    }
+
+    return cleared;
+}
+
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int j;
@@ -5977,7 +5993,30 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 30: // end
+        case 30: // Curious Medicine
+            // On the way in, the holder's ally loses every stat change it has,
+            // raised or lowered, behind a substitute or a Clear Body all the
+            // same (Pokemon Central, Stranofarmaco). The line is printed only
+            // when there was something to clear. The send-out flag is the
+            // weather abilities' again.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].sendOutFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_CURIOUS_MEDICINE) {
+                    ctx->battleMons[battlerId].sendOutFlag = TRUE;
+                    j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
+                    if (j != battlerId && ctx->battleMons[j].hp && BattlerClearStatChanges(ctx, j) == TRUE) {
+                        ctx->battlerIdTemp = j;
+                        script = BATTLE_SUBSCRIPT_CURIOUS_MEDICINE;
+                        flag = TRUE;
+                        break;
+                    }
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 31: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;

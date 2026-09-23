@@ -682,6 +682,9 @@
 #define BATTLE_SUBSCRIPT_STRONG_WINDS_WEAKEN                421
 // Supreme Overlord counting the fallen, which the reference has no script for.
 #define BATTLE_SUBSCRIPT_SUPREME_OVERLORD                   422
+// Curious Medicine clearing its ally's stat changes, which the reference has
+// no script for.
+#define BATTLE_SUBSCRIPT_CURIOUS_MEDICINE                   423
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

@@ -111,6 +111,14 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} gained\nstrength from the fallen!",
         r"The opposing {STRVAR_1 1, 0, 0} gained\nstrength from the fallen!",
     ]),
+    # Curious Medicine clearing its ally's stat changes on the way in. The
+    # reference gives the ability no effect; the later games show its popup
+    # and this line.
+    ("curious medicine", [
+        r"{STRVAR_1 1, 0, 0}’s stat changes\nwere removed!",
+        r"The wild {STRVAR_1 1, 0, 0}’s stat\nchanges were removed!",
+        r"The opposing {STRVAR_1 1, 0, 0}’s stat\nchanges were removed!",
+    ]),
 ]
 
 

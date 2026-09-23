@@ -449,5 +449,35 @@ int main(void) {
             self.assertEqual(label(script, done).strip(), "End", name)
 
 
+class CuriousMedicineTests(unittest.TestCase):
+    def test_the_ally_s_stat_changes_are_cleared_on_the_way_in(self):
+        program = HEADER + r"""
+typedef struct { s8 statChanges[NUM_BATTLE_STATS]; } BattleMon;
+typedef struct { BattleMon battleMons[4]; } BattleContext;
+""" + function(OVERLAY, "BattlerClearStatChanges") + r"""
+int main(void) {
+    BattleContext ctx;
+    memset(ctx.battleMons[2].statChanges, 6, NUM_BATTLE_STATS);
+    EXPECT(BattlerClearStatChanges(&ctx, 2), 0);
+    // A raise and a drop both go, and every stage ends at zero.
+    ctx.battleMons[2].statChanges[STAT_ATK] = 8;
+    ctx.battleMons[2].statChanges[STAT_EVASION] = 4;
+    EXPECT(BattlerClearStatChanges(&ctx, 2), 1);
+    for (int stat = STAT_ATK; stat < NUM_BATTLE_STATS; stat++) {
+        EXPECT(ctx.battleMons[2].statChanges[stat], 6);
+    }
+    return 0;
+}
+"""
+        run_c(self, program)
+        entry = function(OVERLAY, "TryAbilityOnEntry")
+        state = entry[entry.index("// Curious Medicine"):]
+        state = state[:state.index("case ", 10)]
+        self.assertIn("!ctx->battleMons[battlerId].sendOutFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_CURIOUS_MEDICINE", state)
+        self.assertIn("j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);", state)
+        self.assertIn("j != battlerId && ctx->battleMons[j].hp && BattlerClearStatChanges(ctx, j) == TRUE", state)
+        self.assertIn("script = BATTLE_SUBSCRIPT_CURIOUS_MEDICINE;", state)
+
+
 if __name__ == "__main__":
     unittest.main()
