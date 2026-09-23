@@ -110,7 +110,7 @@ int ov12_02258800(BattleSystem *battleSystem, int battlerId) {
             for (j = 0; j < MAX_MON_MOVES; j++) {
                 move = GetMonData(mon, MON_DATA_MOVE1 + j, NULL);
                 moveType = ov12_02258BB4(battleSystem, ctx, mon, move);
-                if (move != MOVE_NONE && ctx->trainerAIData.moveData[move].power != 1) {
+                if (move != MOVE_NONE && BattleMoveTbl(ctx, move)->power != 1) {
                     score = CalcMoveDamage(battleSystem, ctx, move, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, defender)], ctx->fieldCondition, 0, 0, battlerId, defender, 1);
                     moveStatus = 0;
                     score = ov12_02251D28(battleSystem, ctx, move, moveType, battlerId, defender, score, &moveStatus);
