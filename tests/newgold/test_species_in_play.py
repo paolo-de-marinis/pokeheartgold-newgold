@@ -84,10 +84,6 @@ BLANK_IN_THE_REFERENCE = set()  # a form carries its base's text, the two Galari
 # get their effects, and it may only come down.
 SPECIES_WITH_NOTHING_TO_DO = 58
 
-# Two tables indexed by species that never grew past Arceus. See the test that
-# pins them; the number is 494 entries, species 0 to 493.
-STOPPED_AT_ARCEUS = 494
-
 
 def constant(source, name):
     return int(re.search(rf"#define {name}\s+(\d+)", source).group(1))
@@ -432,17 +428,6 @@ class SpeciesInPlayTests(unittest.TestCase):
                 self.assertEqual(row[field], want, f"{row['species']}.{field}")
             checked += 1
         self.assertGreater(checked, 1000)
-
-    def test_the_dp_sprite_archive_is_still_the_old_range(self):
-        """pbr/pokegra.narc is 494 species at six apiece, and
-        DP_GetMonSpriteCharAndPlttNarcIdsEx indexes it at species * 6 like the
-        main archive. No C in this tree calls it; overlay 41, still assembly,
-        does. Pinned rather than fixed: whether an added species can reach that
-        screen at all is a question for the emulator."""
-        pbr, _, _ = wotbl.read_narc((ROOT / "files/pbr/pokegra.narc").read_bytes())
-        self.assertEqual(len(pbr) // PICTURES_PER_SPECIES, STOPPED_AT_ARCEUS,
-                         "the DP sprite archive grew; if an added species can reach "
-                         "overlay 41 this is now a real read off the end")
 
 
 if __name__ == "__main__":

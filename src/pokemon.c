@@ -2436,8 +2436,11 @@ u8 sub_02070438(u16 species, u8 form) {
     return form;
 }
 
+// pbr/pokegra is retail's, six members a species up to Arceus. hg-engine
+// serves the main picture archive in its place, which has the same layout and
+// every species; this asks for that archive by name.
 void sub_02070560(PokepicTemplate *pokepicTemplate, u16 species, u8 whichFacing, u8 gender, u32 shiny) {
-    pokepicTemplate->narcID = NARC_pbr_pokegra;
+    pokepicTemplate->narcID = NARC_poketool_pokegra_pokegra;
     pokepicTemplate->charDataID = (u16)(species * 6 + whichFacing + (gender == MON_FEMALE ? 0 : 1));
     pokepicTemplate->palDataID = (u16)(shiny + (species * 6 + 4));
 }
@@ -2667,13 +2670,6 @@ u8 GetMonPicHeightBySpeciesGenderForm_PBR(u16 species, u8 gender, u8 whichFacing
     s32 fileId;
     u8 ret;
 
-    // Four records a species, and the archive is retail's: this is the other
-    // game's picture data, which the species New Gold adds have no entry in.
-    // Reading past it gave a height out of whatever followed the archive.
-    if (species >= SPECIES_EGG) {
-        return 0;
-    }
-
     form = sub_02070438(species, form);
     switch (species) {
     case SPECIES_BURMY:
@@ -2757,6 +2753,12 @@ u8 GetMonPicHeightBySpeciesGenderForm_PBR(u16 species, u8 gender, u8 whichFacing
         //        }
         //        break;
     default:
+        // pbr/dp_height is retail's, four records a species up to Arceus. A
+        // species past it is drawn from the main archive (sub_02070560), so
+        // it takes its height from the main archive's table.
+        if (species > SPECIES_ARCEUS) {
+            return GetMonPicHeightBySpeciesGenderForm(species, gender, whichFacing, form, pid);
+        }
         narcId = NARC_pbr_dp_height;
         fileId = species * 4 + whichFacing + (gender != MON_FEMALE ? 1 : 0);
         break;
