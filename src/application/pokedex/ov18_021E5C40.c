@@ -322,7 +322,9 @@ static const UnkStruct_ov18_021F9780 ov18_021F9780[] = {
     { 18, 14, 11, 2 },
 };
 
-static const UnkStruct_ov18_021F9780 ov18_021F990C[18] = {
+// The type page's buttons by DEX_SEARCH_TYPE_*: the eighteen types, then
+// "----" beside Fairy.
+static const UnkStruct_ov18_021F9780 ov18_021F990C[DEX_SEARCH_TYPE_ALL + 1] = {
     { 0,  5,  8, 2 },
     { 8,  5,  8, 2 },
     { 16, 5,  8, 2 },
@@ -341,6 +343,7 @@ static const UnkStruct_ov18_021F9780 ov18_021F990C[18] = {
     { 24, 14, 8, 2 },
     { 0,  17, 8, 2 },
     { 8,  17, 8, 2 },
+    { 16, 17, 8, 2 },
 };
 
 static const UnkStruct_ov18_021F9780 ov18_021F9770[] = {

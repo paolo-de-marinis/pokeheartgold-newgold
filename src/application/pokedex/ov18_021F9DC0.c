@@ -3,7 +3,8 @@
 #include "msgdata/msg/msg_0802.h"
 
 // The names the type search shows for each DEX_SEARCH_TYPE_*: its buttons
-// (ov18_021EF848) and the types chosen (ov18_021EFC9C).
+// (ov18_021EF848) and the types chosen (ov18_021EFC9C). Fairy's is added to
+// msg_0802, as its last row.
 const u16 ov18_021F9DC0[] = {
     msg_0802_00058, // Normal
     msg_0802_00050, // Fighting
@@ -22,5 +23,6 @@ const u16 ov18_021F9DC0[] = {
     msg_0802_00052, // Ice
     msg_0802_00057, // Dragon
     msg_0802_00047, // Dark
+    msg_0802_00176, // Fairy
     msg_0802_00064, // "----"
 };

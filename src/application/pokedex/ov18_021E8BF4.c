@@ -1413,20 +1413,24 @@ static int PokedexApp_MainSeq_35(PokedexAppData *pokedexApp) {
     case -3:
     case -1:
         break;
-    case DEX_SEARCH_TYPE_SUBMIT:
+    case DEX_SEARCH_TYPE_BUTTON_SUBMIT:
         if (pokedexApp->dexSearchCriteria[DEX_SEARCH_CRITERIA_TYPE1] == pokedexApp->dexSearchCriteria[DEX_SEARCH_CRITERIA_TYPE2]) {
             pokedexApp->dexSearchCriteria[DEX_SEARCH_CRITERIA_TYPE2] = DEX_SEARCH_TYPE_ALL;
         }
         (void)MenuInputStateMgr_GetState(pokedexApp->args->menuInputStatePtr);
         PlaySE(SEQ_SE_GS_ZKN04);
         return ov18_021EDBDC(pokedexApp, 0, 10, POKEDEXAPP_MAINSEQ_36);
-    case DEX_SEARCH_TYPE_CANCEL:
+    case DEX_SEARCH_TYPE_BUTTON_CANCEL:
     case -2:
         pokedexApp->dexSearchCriteria[DEX_SEARCH_CRITERIA_TYPE1] = pokedexApp->dexSearchCriteriaBak[0];
         pokedexApp->dexSearchCriteria[DEX_SEARCH_CRITERIA_TYPE2] = pokedexApp->dexSearchCriteriaBak[1];
         PlaySE(SEQ_SE_GS_GEARCANCEL);
         return ov18_021EDBDC(pokedexApp, 22, 10, POKEDEXAPP_MAINSEQ_36);
     default:
+        // a type's button is its type; "----"'s comes after OK and Cancel
+        if (r0 == DEX_SEARCH_TYPE_BUTTON_ALL) {
+            r0 = DEX_SEARCH_TYPE_ALL;
+        }
         if (r0 == DEX_SEARCH_TYPE_ALL) {
             if (pokedexApp->dexSearchCriteria[DEX_SEARCH_CRITERIA_TYPE2] != DEX_SEARCH_TYPE_ALL) {
                 pokedexApp->dexSearchCriteria[DEX_SEARCH_CRITERIA_TYPE2] = r0;

@@ -730,4 +730,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">{STRVAR_1 51, 0, 0}’{STRVAR_1 51, 1, 0}”</language>
 	</row>
+	<row id="msg_0802_00176" index="176">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fairy</language>
+	</row>
 </body>

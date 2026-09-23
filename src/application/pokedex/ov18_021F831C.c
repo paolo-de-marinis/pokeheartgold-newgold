@@ -12,7 +12,7 @@ u32 ov18_021F8970(u32 type);
 void ov18_021F831C(u32 type, u16 *dest, u32 *destCount, u16 *src, int srcCount, Pokedex *pokedex);
 
 // The search by type: the species of src that the type's sort list holds, or
-// all of them for DEX_SEARCH_TYPE_ALL.
+// all of them for DEX_SEARCH_TYPE_ALL. Fairy's list is the archive's last.
 void ov18_021F831C(u32 type, u16 *dest, u32 *destCount, u16 *src, int srcCount, Pokedex *pokedex) {
     u16 *list;
     u32 count;
@@ -72,6 +72,9 @@ void ov18_021F831C(u32 type, u16 *dest, u32 *destCount, u16 *src, int srcCount, 
         break;
     case DEX_SEARCH_TYPE_DARK:
         list = ov18_021F8168(67, &count);
+        break;
+    case DEX_SEARCH_TYPE_FAIRY:
+        list = ov18_021F8168(NARC_zukan_data_sort_order_types_fairy - NARC_zukan_data_sort_order_dex_order_national, &count);
         break;
     default:
         GF_ASSERT(FALSE);

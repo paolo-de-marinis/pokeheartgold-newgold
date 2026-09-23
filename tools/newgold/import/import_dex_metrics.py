@@ -15,9 +15,10 @@ The sort lists the Dex builds its list from stopped at Arceus too, so the
 Dex listed no added species. They are written here from this tree's own data,
 for every Dex species: the National Dex order (the reference's numbering),
 the name order (the species names, as retail sorts them), the four size
-orders from the entries above, the first letters and the letter groups, and
-the seventeen types the search offers, from the reference's types, and the
-fourteen body styles. The reference has no body style past Arceus (its
+orders from the entries above, the first letters and the letter groups, the
+eighteen types the search offers, from the reference's types (retail's
+seventeen, and Fairy's list as the archive's last member, so that no list
+the Dex's routines number moves), and the fourteen body styles. The reference has no body style past Arceus (its
 placeholder, quadruped, for every added species), so an added species takes
 its shape from body_shapes.csv, the games' own (body_shapes.py says where
 from); a form takes its base species'. The Johto order is retail's and
@@ -270,6 +271,8 @@ def main():
 
     print(f"entries: {len(rows)} -> {len(filled)}")
     print(f"added {added}, updated {changed}, species the reference has no metrics for: {missing}")
+    if not any(o["id"] == "fairy" for g in data["sorting"] if g["type"] == "types" for o in g["options"]):
+        data["sorting"].append({"type": "types", "options": [{"id": "fairy", "mons": []}]})
     data["sorting"] = sort_lists(data, numbers, national, reference_types(args.reference, numbers))
     national = next(o["mons"] for g in data["sorting"] if g["type"] == "dex_order" for o in g["options"] if o["id"] == "national")
     print(f"sort lists: {len(national)} species in National Dex order")

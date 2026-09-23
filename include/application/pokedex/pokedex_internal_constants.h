@@ -71,9 +71,17 @@
 #define DEX_SEARCH_TYPE_ICE      (NARC_zukan_data_sort_order_types_ice - NARC_zukan_data_sort_order_types_normal)
 #define DEX_SEARCH_TYPE_DRAGON   (NARC_zukan_data_sort_order_types_dragon - NARC_zukan_data_sort_order_types_normal)
 #define DEX_SEARCH_TYPE_DARK     (NARC_zukan_data_sort_order_types_dark - NARC_zukan_data_sort_order_types_normal)
-#define DEX_SEARCH_TYPE_ALL      ((DEX_SEARCH_TYPE_DARK) + 1)
-#define DEX_SEARCH_TYPE_SUBMIT   ((DEX_SEARCH_TYPE_DARK) + 2)
-#define DEX_SEARCH_TYPE_CANCEL   ((DEX_SEARCH_TYPE_DARK) + 3)
+// Fairy's list is the archive's last, so that the lists the Dex's routines
+// number keep their members; as a search type it follows Dark.
+#define DEX_SEARCH_TYPE_FAIRY    ((DEX_SEARCH_TYPE_DARK) + 1)
+#define DEX_SEARCH_TYPE_ALL      ((DEX_SEARCH_TYPE_FAIRY) + 1)
+
+// The type page's buttons (ov18_021FBA40), a type's being its
+// DEX_SEARCH_TYPE_*: OK and Cancel keep retail's places after Fairy's (the
+// place of retail's "----"), and "----" comes after them.
+#define DEX_SEARCH_TYPE_BUTTON_SUBMIT ((DEX_SEARCH_TYPE_FAIRY) + 1)
+#define DEX_SEARCH_TYPE_BUTTON_CANCEL ((DEX_SEARCH_TYPE_FAIRY) + 2)
+#define DEX_SEARCH_TYPE_BUTTON_ALL    ((DEX_SEARCH_TYPE_FAIRY) + 3)
 
 #define DEX_SEARCH_BODYTYPE_QUADRUPED        (NARC_zukan_data_sort_order_body_style_quadruped - NARC_zukan_data_sort_order_body_style_quadruped)
 #define DEX_SEARCH_BODYTYPE_BIPEDAL_TAILLESS (NARC_zukan_data_sort_order_body_style_bipedal_tailless - NARC_zukan_data_sort_order_body_style_quadruped)
