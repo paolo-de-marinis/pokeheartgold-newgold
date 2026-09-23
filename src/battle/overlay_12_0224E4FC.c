@@ -9841,6 +9841,17 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower = power;
     }
 
+    // Return and Frustration are worth what the Pokemon thinks of its
+    // trainer, worked out here as the reference's CalcBaseDamage does rather
+    // than in their effect scripts. Asked by effect, not by move as the
+    // reference does: Pika Papow and Veevee Volley share Return's, with a
+    // table power of 0 the reference then uses.
+    if (BattleMoveTbl(ctx, moveNo)->effect == MOVE_EFFECT_POWER_BASED_ON_FRIENDSHIP) {
+        movePower = ctx->battleMons[battlerIdAttacker].friendship * 10 / 25;
+    } else if (BattleMoveTbl(ctx, moveNo)->effect == MOVE_EFFECT_POWER_BASED_ON_LOW_FRIENDSHIP) {
+        movePower = (255 - ctx->battleMons[battlerIdAttacker].friendship) * 10 / 25;
+    }
+
     moveType = BattleMoveTypeForAbility(ctx, calcAttacker.ability, moveNo, type & 0x3F);
 
     GF_ASSERT(ctx->unk_2158 >= 10);

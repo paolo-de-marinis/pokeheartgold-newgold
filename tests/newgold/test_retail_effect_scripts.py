@@ -50,10 +50,8 @@ STILL_DIFFERENT = {
     104: IN_C.format("Triple Kick's rising power, CalcBaseDamage.c"),
     105: IN_C.format("the theft, ServerDoPostMoveEffects.c"),
     115: "the primal weathers and the engine's weather subscripts",
-    121: IN_C.format("Return's power, CalcBaseDamage.c"),
     122: "Present asks for Parental Bond with CheckAbility, which a suppressed ability fails, where the "
           "engine reads the raw ability (BMON_DATA_ABILITY)",
-    123: IN_C.format("Frustration's power, CalcBaseDamage.c"),
     129: "the engine raises Rapid Spin's Speed here and clears the field in "
          "ServerDoPostMoveEffects.c; here both are the move's additional effect, subscript 115",
     132: "Mega Sol, which the recovery command here does not read",

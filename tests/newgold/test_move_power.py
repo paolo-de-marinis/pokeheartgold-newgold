@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Moves whose power the battle changes, run on the host.
+"""The power of the moves whose power the battle works out rather than reads
+from the table, run on the host.
 
-CalcMoveDamage takes test_ability_behaviour's stubbed battle: every stat 100,
-level 50, no item and no stage, so a physical move of power P from battler 0
-into battler 1 does (22 * 100 * P / 100) / 50 + 2.
+The reference works these out in CalcBaseDamage, so every caller of the damage
+calculation sees them; retail worked most of them out in the move's effect
+script, which only the move itself runs. CalcMoveDamage takes
+test_ability_behaviour's stubbed battle: every stat 100, level 50, no item and
+no stage, so a physical move of power P from battler 0 into battler 1 does
+(22 * 100 * P / 100) / 50 + 2.
 """
 
 import unittest
@@ -61,6 +65,37 @@ class LashOutTests(unittest.TestCase):
                       function(commands, "BtlCmd_ChangeStatStage"))
         self.assertIn("ctx->moveConditions[battlerId].statLoweredThisTurn = FALSE;",
                       function(controller, "BattleControllerPlayer_SelectionScreenInit"))
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+def hit(move):
+    return f"CalcMoveDamage(&bs, &ctx, {move}, 0, 0, 0, TYPE_NORMAL, 0, 1, 1)"
+
+
+class FriendshipTests(unittest.TestCase):
+    def test_return_and_frustration_read_the_friendship(self):
+        # Power 50: (22 * 100 * 50 / 100) / 50 + 2 = 24; power 100: 46.
+        # Asked by effect: Pika Papow and Veevee Volley share Return's.
+        run_c(self, damage_program(f"""
+    reset(4); S.move.effect = MOVE_EFFECT_POWER_BASED_ON_FRIENDSHIP;
+    ctx.battleMons[0].friendship = 125; EXPECT({hit("MOVE_RETURN")}, 24);
+    ctx.battleMons[0].friendship = 250; EXPECT({hit("MOVE_PIKA_PAPOW")}, 46);
+    // The target's friendship is not asked.
+    ctx.battleMons[1].friendship = 0; ctx.battleMons[0].friendship = 125; EXPECT({hit("MOVE_RETURN")}, 24);
+    S.move.effect = MOVE_EFFECT_POWER_BASED_ON_LOW_FRIENDSHIP;
+    ctx.battleMons[0].friendship = 5; EXPECT({hit("MOVE_FRUSTRATION")}, 46);
+    ctx.battleMons[0].friendship = 130; EXPECT({hit("MOVE_FRUSTRATION")}, 24);
+    // Any other effect keeps its table's power.
+    S.move.effect = MOVE_EFFECT_HIT; EXPECT({hit("MOVE_RETURN")}, 46);
+"""))
+
+    def test_the_effect_scripts_leave_the_power_alone(self):
+        from test_repels import read
+        for effect in ("0121", "0123"):
+            self.assertNotIn("BSCRIPT_VAR_MOVE_POWER", read(f"files/battledata/script/effect_script/effect_script_{effect}.s"))
 
 
 if __name__ == "__main__":

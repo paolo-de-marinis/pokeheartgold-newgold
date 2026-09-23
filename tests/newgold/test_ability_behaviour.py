@@ -65,7 +65,7 @@ typedef int BOOL;
 DAMAGE = HEADER + r"""
 typedef struct { int unused; } BattleSystem;
 typedef struct {
-    int hp; u16 species; u32 moveEffectFlags; u8 canStillEvolve;
+    int hp; u16 species; u32 moveEffectFlags; u8 canStillEvolve; u8 friendship;
     struct { int meFirstFlag, meFirstCount, fakeOutCount; } unk88;
 } BattleMon;
 typedef struct {
@@ -77,7 +77,7 @@ typedef struct {
     struct { int helpingHandFlag; } turnData[4];
     struct { u8 statLoweredThisTurn; } moveConditions[4];
 } BattleContext;
-typedef struct { int power, type, category; } MoveTbl;
+typedef struct { int power, type, category, effect; } MoveTbl;
 
 static struct { int maxBattlers; int ability[4]; MoveTbl move; u32 weather; } S;
 
