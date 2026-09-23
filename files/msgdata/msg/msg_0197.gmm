@@ -7324,4 +7324,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Magic Room wore off, and held items’\neffects returned to normal!</language>
 	</row>
+	<row id="msg_0197_01831" index="1831">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} switched Speed\nwith its target!</language>
+	</row>
+	<row id="msg_0197_01832" index="1832">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} switched\nSpeed with its target!</language>
+	</row>
+	<row id="msg_0197_01833" index="1833">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} switched\nSpeed with its target!</language>
+	</row>
 </body>

@@ -156,6 +156,13 @@ PORT_ROWS = [
     ("magic room ends", [
         r"Magic Room wore off, and held items’\neffects returned to normal!",
     ]),
+    # Speed Swap. The engine leaves the move unimplemented; the later games'
+    # line.
+    ("speed swap", [
+        r"{STRVAR_1 1, 0, 0} switched Speed\nwith its target!",
+        r"The wild {STRVAR_1 1, 0, 0} switched\nSpeed with its target!",
+        r"The opposing {STRVAR_1 1, 0, 0} switched\nSpeed with its target!",
+    ]),
 ]
 
 

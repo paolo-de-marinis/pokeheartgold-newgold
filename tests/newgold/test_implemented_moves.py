@@ -35,6 +35,14 @@ def record(move):
     return struct.unpack(import_moves.RECORD, import_moves.read_table()[MOVES[f"MOVE_{move}"]])
 
 
+def side_effect_subscript(pointer):
+    """The subscript sMoveStatusChangeScripts gives a MOVE_SUBSCRIPT_PTR_."""
+    overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+    body = re.search(r"sMoveStatusChangeScripts\[\] = \{(.*?)\};", overlay, re.S).group(1)
+    entries = re.findall(r"BATTLE_SUBSCRIPT_\w+", re.sub(r"//[^\n]*", "", body))
+    return entries[defines("include/constants/battle_subscript.h", "MOVE_SUBSCRIPT_PTR_")[pointer]]
+
+
 def effect_script(effect):
     return (SCRIPTS / f"effect_script/effect_script_{EFFECTS[effect]:04d}.s").read_text()
 
@@ -227,6 +235,21 @@ class ImplementedMoveTests(unittest.TestCase):
             self.assertEqual(script[raised:].count("MOVE_SUBSCRIPT_PTR_"), len(stats))
             for stat in stats:
                 self.assertIn(f"MOVE_SUBSCRIPT_PTR_{stat}_UP_1_STAGE", script[raised:])
+
+    def test_speed_swap_trades_the_speeds(self):
+        # Pokemon Central (Velociscambio): the stats, not the stages; through
+        # a substitute, not through Protect, and not sent back by Magic Coat.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("SPEED_SWAP", "MOVE_EFFECT_SPEED_SWAP")
+        self.assertFalse(record("SPEED_SWAP")[9] & 1 << 2, "FLAG_MAGIC_COAT")
+        self.assertTrue(record("SPEED_SWAP")[9] & 1 << 1, "FLAG_PROTECT")
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_SPEED_SWAP", effect_script("MOVE_EFFECT_SPEED_SWAP"))
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_SPEED_SWAP"), "BATTLE_SUBSCRIPT_SPEED_SWAP")
+        script = subscript_named("BATTLE_SUBSCRIPT_SPEED_SWAP")
+        self.assertIn("UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_SPEED, BSCRIPT_VAR_TEMP_DATA", script)
+        self.assertIn("UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_SPEED, BSCRIPT_VAR_CALC_TEMP", script)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('speed swap'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER", script)
 
 if __name__ == "__main__":
     unittest.main()

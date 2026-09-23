@@ -373,6 +373,9 @@ IMPLEMENTED_HERE = {
     # and 416.
     "FLOWER_SHIELD": "MOVE_EFFECT_GRASS_TYPES_DEF_UP",
     "ROTOTILLER": "MOVE_EFFECT_GROUNDED_GRASS_TYPES_ATK_SP_ATK_UP",
+    # Speed Swap trades the two Speeds, not their stages (Pokemon Central,
+    # Velociscambio): effect script 417.
+    "SPEED_SWAP": "MOVE_EFFECT_SPEED_SWAP",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -389,6 +392,9 @@ FIELDS_HERE = {
     # the effect scripts walk the field themselves.
     "FLOWER_SHIELD": {"target": "RANGE_FIELD"},
     "ROTOTILLER": {"target": "RANGE_FIELD"},
+    # Magic Coat and Magic Bounce do not send it back (Pokemon Central,
+    # Velociscambio); the reference flags it as though they did.
+    "SPEED_SWAP": {"flagsOff": ("FLAG_MAGIC_COAT",)},
 }
 
 # The effects written here for those moves follow the reference's in
@@ -875,7 +881,8 @@ def main():
             raise SystemExit(f"{name} has effect {effect}, which the reference does not define")
         split = SPLITS[field(block, "split")]
         flags = sum(1 << bit for flag, bit in FLAG_BITS.items() if flag in named_flags(block)
-                    and not (name in IMPLEMENTED_HERE and flag == "FLAG_UNUSABLE_UNIMPLEMENTED"))
+                    and not (name in IMPLEMENTED_HERE and flag == "FLAG_UNUSABLE_UNIMPLEMENTED")
+                    and flag not in FIELDS_HERE.get(name, {}).get("flagsOff", ()))
         added.append((first_move + offset, name, struct.pack(
             RECORD,
             effect_number,
