@@ -6198,6 +6198,16 @@ BOOL BtlCmd_TryPluck(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrs1 = BattleScriptReadWord(ctx);
     int adrs2 = BattleScriptReadWord(ctx);
 
+    // Teatime has each Pokemon eat its own Berry, the one it is asking about
+    // standing as the attacker too: nothing -- Sticky Hold, a substitute,
+    // Unnerve -- keeps a Pokemon from its own (Pokemon Central, Ora del Te).
+    if (ctx->moveNoCur == MOVE_TEATIME) {
+        if (TryEatOpponentBerry(battleSystem, ctx, ctx->battlerIdTarget) != TRUE) {
+            BattleScriptIncrementPointer(ctx, adrs2);
+        }
+        return FALSE;
+    }
+
     // Sticky Hold keeps nothing for a holder the move has felled (Pokemon
     // Central, Antifurto, from the fifth generation).
     if (ctx->battleMons[ctx->battlerIdTarget].item && ctx->battleMons[ctx->battlerIdTarget].hp && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
@@ -10353,6 +10363,19 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
             ctx->moveConditions[battlerId].telekinesisTurns = 3;
         }
         break;
+    // Whether any Pokemon on the field that Teatime can reach -- standing, not
+    // in the air or underground -- holds a Berry.
+    case MOVE_TEATIME: {
+        int i;
+
+        ctx->calcTemp = FALSE;
+        for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
+            if (ctx->battleMons[i].hp && !(ctx->battleMons[i].moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE) && ItemIdIsBerry(ctx->battleMons[i].item) == TRUE) {
+                ctx->calcTemp = TRUE;
+            }
+        }
+        break;
+    }
     // Whether the battler's Shell Trap was sprung, for its script to ask.
     case MOVE_SHELL_TRAP:
         ctx->calcTemp = ctx->turnData[battlerId].shellTrapSprung;

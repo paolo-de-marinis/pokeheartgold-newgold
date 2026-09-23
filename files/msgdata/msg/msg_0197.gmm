@@ -7576,4 +7576,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s shell\ntrap didn’t work!</language>
 	</row>
+	<row id="msg_0197_01894" index="1894">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It’s teatime! Everyone dug in to\ntheir Berries!</language>
+	</row>
 </body>

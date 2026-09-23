@@ -486,6 +486,9 @@ IMPLEMENTED_HERE = {
     # strikes straight after it, or fails (Pokemon Central, Gusciotrappola):
     # effect script 440.
     "SHELL_TRAP": "MOVE_EFFECT_SHELL_TRAP",
+    # Teatime has every Pokemon on the field eat its Berry (Pokemon Central,
+    # Ora del Te): effect script 441.
+    "TEATIME": "MOVE_EFFECT_TEATIME",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -541,6 +544,10 @@ FIELDS_HERE = {
     # The field's: Protect and Magic Coat have nothing to do with it (Pokemon
     # Central, Cambiocampo).
     "COURT_CHANGE": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
+    # The whole field, as the effect script walks it (Pokemon Central, Ora
+    # del Te); the reference's adjacent Pokemon and the user would have the
+    # controller walk them again.
+    "TEATIME": {"target": "RANGE_FIELD", "flagsOff": ("FLAG_MAGIC_COAT",)},
 }
 
 # The effects written here for those moves follow the reference's in

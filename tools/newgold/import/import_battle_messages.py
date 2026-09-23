@@ -289,6 +289,11 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0}’s shell trap\ndidn’t work!",
         r"The opposing {STRVAR_1 1, 0, 0}’s shell\ntrap didn’t work!",
     ]),
+    # Teatime. The engine leaves the move unimplemented; the later games'
+    # line, about the field, so one row.
+    ("teatime", [
+        r"It’s teatime! Everyone dug in to\ntheir Berries!",
+    ]),
 ]
 
 

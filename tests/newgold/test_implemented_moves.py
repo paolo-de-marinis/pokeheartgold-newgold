@@ -855,5 +855,25 @@ int main(void) {
         self.assertIn("SetMoveConditionFlag MOVE_SHELL_TRAP, BATTLER_CATEGORY_ATTACKER", script)
         self.assertIn(f"PrintMessage msg_0197_{import_battle_messages.port_row('shell trap failed'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER", script)
 
+    def test_teatime_has_everyone_eat_their_berry(self):
+        # Pokemon Central (Ora del Te): every Pokemon on the field but one in
+        # the air or underground eats its own Berry, whatever would keep it
+        # from another's; no Berry, and nothing happens.
+        import import_battle_messages
+        self.assertImplemented("TEATIME", "MOVE_EFFECT_TEATIME")
+        self.assertEqual(record("TEATIME")[7], 1 << 6, "RANGE_FIELD")
+        script = effect_script("MOVE_EFFECT_TEATIME")
+        self.assertIn(f"PrintMessage msg_0197_{import_battle_messages.port_row('teatime'):05d}, TAG_NONE", script)
+        self.assertIn("UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_ATTACKER, BSCRIPT_VAR_BATTLER_STAT_CHANGE\n"
+                      "    UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_TARGET, BSCRIPT_VAR_BATTLER_STAT_CHANGE\n"
+                      "    TryPluck _NEXT, _NEXT", script)
+        self.assertIn("UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_ATTACKER, BSCRIPT_VAR_BATTLER_ATTACKER_TEMP", script)
+        self.assertIn("msg_0197_00795", script[script.index("_NOTHING:"):])
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        pluck = function(commands, "BtlCmd_TryPluck")
+        self.assertLess(pluck.index("MOVE_TEATIME"), pluck.index("ABILITY_STICKY_HOLD"))
+        flag = function(commands, "BtlCmd_SetMoveConditionFlag")
+        self.assertIn("ItemIdIsBerry(ctx->battleMons[i].item) == TRUE", flag[flag.index("case MOVE_TEATIME:"):])
+
 if __name__ == "__main__":
     unittest.main()

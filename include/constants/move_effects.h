@@ -448,5 +448,6 @@
 #define MOVE_EFFECT_COURT_CHANGE                                 438
 #define MOVE_EFFECT_TELEKINESIS                                  439
 #define MOVE_EFFECT_SHELL_TRAP                                   440
+#define MOVE_EFFECT_TEATIME                                      441
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H
