@@ -411,6 +411,9 @@ IMPLEMENTED_HERE = {
     # Purify cures the target's status and gives its user half its HP (Pokemon
     # Central, Purificazione): effect script 422.
     "PURIFY": "MOVE_EFFECT_PURIFY",
+    # Core Enforcer suppresses the ability of a target that has already acted
+    # this turn (Pokemon Central, Nucleocastigo): effect script 423.
+    "CORE_ENFORCER": "MOVE_EFFECT_CORE_ENFORCER",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

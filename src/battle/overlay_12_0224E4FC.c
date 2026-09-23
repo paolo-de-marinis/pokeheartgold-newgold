@@ -11802,7 +11802,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_SPEED_SWAP,
     BATTLE_SUBSCRIPT_TOPSY_TURVY,
     BATTLE_SUBSCRIPT_REFLECT_TYPE,
-    BATTLE_SUBSCRIPT_PURIFY
+    BATTLE_SUBSCRIPT_PURIFY,
+    BATTLE_SUBSCRIPT_CORE_ENFORCER
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

@@ -430,5 +430,6 @@
 #define MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP                         420
 #define MOVE_EFFECT_HEAL_SIDE_QUARTER_CURE_STATUS                421
 #define MOVE_EFFECT_PURIFY                                       422
+#define MOVE_EFFECT_CORE_ENFORCER                                423
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

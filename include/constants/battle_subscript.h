@@ -737,6 +737,9 @@
 // Purify curing its target and healing its user, which the reference has no
 // script for.
 #define BATTLE_SUBSCRIPT_PURIFY                             444
+// Core Enforcer suppressing a target that has acted, which the reference has
+// no script for.
+#define BATTLE_SUBSCRIPT_CORE_ENFORCER                      445
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -814,6 +817,7 @@
 #define MOVE_SUBSCRIPT_PTR_TOPSY_TURVY                      219
 #define MOVE_SUBSCRIPT_PTR_REFLECT_TYPE                     220
 #define MOVE_SUBSCRIPT_PTR_PURIFY                           221
+#define MOVE_SUBSCRIPT_PTR_CORE_ENFORCER                    222
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

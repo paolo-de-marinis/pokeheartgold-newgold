@@ -387,5 +387,22 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertLess(purifying.index("BATTLER_CATEGORY_DEFENDER, BMON_DATA_STATUS, STATUS_NONE"),
                         purifying.index("DivideVarByValue BSCRIPT_VAR_HP_CALC, 2\n    Call BATTLE_SUBSCRIPT_UPDATE_HP"))
 
+    def test_core_enforcer_suppresses_a_target_that_has_acted(self):
+        # Pokemon Central (Nucleocastigo): on the hit, not as a side effect;
+        # only a target that has acted this turn; through a substitute; not
+        # the abilities Gastro Acid cannot touch.
+        from test_hold_effects import subscript_named
+        self.assertImplemented("CORE_ENFORCER", "MOVE_EFFECT_CORE_ENFORCER")
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_CORE_ENFORCER", effect_script("MOVE_EFFECT_CORE_ENFORCER"))
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_CORE_ENFORCER"), "BATTLE_SUBSCRIPT_CORE_ENFORCER")
+        enforcing = subscript_named("BATTLE_SUBSCRIPT_CORE_ENFORCER")
+        gastro = subscript_named("BATTLE_SUBSCRIPT_SUPPRESS_TARGET_ABILITY")
+        self.assertIn("IfMovedThisTurn BATTLER_CATEGORY_DEFENDER, _ACTED", enforcing)
+        self.assertNotIn("CheckSubstitute", enforcing)
+        self.assertEqual(set(re.findall(r"BMON_DATA_ABILITY, (ABILITY_\w+)", enforcing)),
+                         set(re.findall(r"BMON_DATA_ABILITY, (ABILITY_\w+)", gastro)))
+        self.assertIn("ITEM_ABILITY_SHIELD, _END", enforcing)
+        self.assertIn("UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_DEFENDER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED", enforcing)
+
 if __name__ == "__main__":
     unittest.main()
