@@ -81,6 +81,27 @@ class TrainerTests(unittest.TestCase):
         self.assertIn("ITEM_STICK", held)
         self.assertIn("ITEM_EVIOLITE", held)
 
+    def test_a_party_entry_can_name_every_species(self):
+        """The species field is 11 bits of species and 5 of form, hg-engine's
+        split. Platinum's was 10 and 6, which wrapped every species from 1024
+        on: Koraidon (1025) was read as species 1, form 1."""
+        header = (ROOT / "include/trainer_data.h").read_text()
+        mask = int(re.search(r"#define TRPOKE_SPECIES_MASK\s+(0x[0-9A-Fa-f]+)", header)[1], 16)
+        shift = int(re.search(r"#define TRPOKE_FORM_SHIFT\s+(\d+)", header)[1])
+        self.assertEqual(mask + 1, 1 << shift)
+        numbers = re.findall(r"#define SPECIES_\w+\s+(\d+)\b", (ROOT / "include/constants/species.h").read_text())
+        self.assertLessEqual(max(map(int, numbers)), mask)
+        # Every place that unpacks the field, and the one that packs it.
+        for path in ("src/trainer_data.c", "src/application/pokegear/phone/scripts/phone_scripts_generic.c"):
+            text = (ROOT / path).read_text()
+            self.assertEqual(text.count("species & TRPOKE_SPECIES_MASK"), 4, path)
+            self.assertNotRegex(text, r"species & 0x3FF|>> 10\b", path)
+        template = (ROOT / "files/poketool/trainer/trpoke.json.txt").read_text()
+        self.assertIn("<< TRPOKE_FORM_SHIFT)", template)
+        for index, trainer in enumerate(self.trainers):
+            for member in trainer["party"]:
+                self.assertLess(member.get("form", 0), 1 << (16 - shift), index)
+
     def test_added_species_reach_trainers(self):
         named = {member["species"] for trainer in self.trainers for member in trainer["party"]}
         added = {f"SPECIES_{name}" for name in import_species.added_species()}

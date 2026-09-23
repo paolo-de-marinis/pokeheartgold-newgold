@@ -323,9 +323,9 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
         monSpecies = &data->species;
         for (i = 0; i < enemies->trainer[partyIndex].data.npoke; i++) {
             // Starting in Platinum, the Pokemon's form was encoded
-            // in the upper 6 bits of the species.
-            species = monSpecies[i].species & 0x3FF;
-            form = (monSpecies[i].species & 0xFC00) >> 10;
+            // in the upper bits of the species.
+            species = monSpecies[i].species & TRPOKE_SPECIES_MASK;
+            form = (monSpecies[i].species & ~TRPOKE_SPECIES_MASK) >> TRPOKE_FORM_SHIFT;
             // Starting in HGSS, additional checks are performed to
             // rand each Pokemon's personality.
             TrMon_OverridePidGender(species, form, monSpecies[i].genderAbilityOverride, &pidGender);
@@ -370,8 +370,8 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
         u8 form;
         monSpeciesMoves = &data->species_moves;
         for (i = 0; i < enemies->trainer[partyIndex].data.npoke; i++) {
-            species = monSpeciesMoves[i].species & 0x3FF;
-            form = (monSpeciesMoves[i].species & 0xFC00) >> 10;
+            species = monSpeciesMoves[i].species & TRPOKE_SPECIES_MASK;
+            form = (monSpeciesMoves[i].species & ~TRPOKE_SPECIES_MASK) >> TRPOKE_FORM_SHIFT;
             TrMon_OverridePidGender(species, form, monSpeciesMoves[i].genderAbilityOverride, &pidGender);
             personality = monSpeciesMoves[i].difficulty + monSpeciesMoves[i].level + species + enemies->trainerId[partyIndex];
             SetLCRNGSeed(personality);
@@ -398,8 +398,8 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
         u8 form;
         monSpeciesItem = &data->species_item;
         for (i = 0; i < enemies->trainer[partyIndex].data.npoke; i++) {
-            species = monSpeciesItem[i].species & 0x3FF;
-            form = (monSpeciesItem[i].species & 0xFC00) >> 10;
+            species = monSpeciesItem[i].species & TRPOKE_SPECIES_MASK;
+            form = (monSpeciesItem[i].species & ~TRPOKE_SPECIES_MASK) >> TRPOKE_FORM_SHIFT;
             TrMon_OverridePidGender(species, form, monSpeciesItem[i].genderAbilityOverride, &pidGender);
             personality = monSpeciesItem[i].difficulty + monSpeciesItem[i].level + species + enemies->trainerId[partyIndex];
             SetLCRNGSeed(personality);
@@ -424,8 +424,8 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
         u8 form;
         monSpeciesItemMoves = &data->species_item_moves;
         for (i = 0; i < enemies->trainer[partyIndex].data.npoke; i++) {
-            species = monSpeciesItemMoves[i].species & 0x3FF;
-            form = (monSpeciesItemMoves[i].species & 0xFC00) >> 10;
+            species = monSpeciesItemMoves[i].species & TRPOKE_SPECIES_MASK;
+            form = (monSpeciesItemMoves[i].species & ~TRPOKE_SPECIES_MASK) >> TRPOKE_FORM_SHIFT;
             TrMon_OverridePidGender(species, form, monSpeciesItemMoves[i].genderAbilityOverride, &pidGender);
             personality = monSpeciesItemMoves[i].difficulty + monSpeciesItemMoves[i].level + species + enemies->trainerId[partyIndex];
             SetLCRNGSeed(personality);

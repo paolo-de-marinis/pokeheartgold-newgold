@@ -208,28 +208,28 @@ static u16 getRandomTrainerMon(u16 trainerID, enum HeapID a1) {
     case 0: {
         TRPOKE_NOITEM_DFLTMOVES *trpoke_ = &trpoke->species;
         for (i = 0; i < trdata.data.npoke; ++i) {
-            teamSpecies[i] = trpoke_[i].species;
+            teamSpecies[i] = trpoke_[i].species & TRPOKE_SPECIES_MASK;
         }
         break;
     }
     case 1: {
         TRPOKE_NOITEM_CUSTMOVES *trpoke_ = &trpoke->species_moves;
         for (i = 0; i < trdata.data.npoke; ++i) {
-            teamSpecies[i] = trpoke_[i].species;
+            teamSpecies[i] = trpoke_[i].species & TRPOKE_SPECIES_MASK;
         }
         break;
     }
     case 2: {
         TRPOKE_ITEM_DFLTMOVES *trpoke_ = &trpoke->species_item;
         for (i = 0; i < trdata.data.npoke; ++i) {
-            teamSpecies[i] = trpoke_[i].species;
+            teamSpecies[i] = trpoke_[i].species & TRPOKE_SPECIES_MASK;
         }
         break;
     }
     case 3: {
         TRPOKE_ITEM_CUSTMOVES *trpoke_ = &trpoke->species_item_moves;
         for (i = 0; i < trdata.data.npoke; ++i) {
-            teamSpecies[i] = trpoke_[i].species;
+            teamSpecies[i] = trpoke_[i].species & TRPOKE_SPECIES_MASK;
         }
         break;
     }

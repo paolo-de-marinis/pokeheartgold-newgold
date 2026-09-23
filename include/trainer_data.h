@@ -5,6 +5,12 @@
 #include "constants/trainer_class.h"
 #include "constants/trainers.h"
 
+// A party entry's species field: the species in the low 11 bits and the form
+// above them, as hg-engine packs it. Platinum split it 10 and 6, and 10 bits
+// end at species 1023, short of the ones this game has.
+#define TRPOKE_SPECIES_MASK 0x7FF
+#define TRPOKE_FORM_SHIFT   11
+
 #ifndef PM_ASM
 #include "global.h"
 
@@ -44,8 +50,8 @@ typedef struct TrainerMonSpecies {
     u8 genderAbilityOverride;
     u16 level;
 
-    // Bits 0-9: species
-    // Bits 10-15: form
+    // Bits 0-10: species (TRPOKE_SPECIES_MASK)
+    // Bits 11-15: form
     u16 species;
     u16 capsule;
 } TRPOKE_NOITEM_DFLTMOVES;
