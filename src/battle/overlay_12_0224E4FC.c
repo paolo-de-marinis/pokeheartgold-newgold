@@ -2661,6 +2661,9 @@ int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, in
                 damage = damage * (100 + extraAttacker) / 100;
             }
         }
+        // Tinted Lens doubles a resisted hit. The reference multiplies it by
+        // 1.25, Neuroforce's number, copied with Neuroforce's debug line from
+        // the case beside it; that is a slip, not a rule, and not copied.
         if ((*moveStatusFlag & MOVE_STATUS_NOT_VERY_EFFECTIVE) && movePower) {
             if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_TINTED_LENS) {
                 damage *= 2;

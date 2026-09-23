@@ -534,6 +534,13 @@ class HealBlockTests(unittest.TestCase):
         body = function(source, "BattleContext_CheckMoveHealBlocked")
         self.assertIn("sHealBlockUnusableMoveEffects[i] == effect", body)
 
+class TintedLensTests(unittest.TestCase):
+    def test_a_resisted_hit_is_doubled(self):
+        # The reference multiplies by 1.25 (battle_calc_damage.c:677, UQ412__1_25),
+        # Neuroforce's number; Paolo's rule (2026-09-23) keeps the canonical 2.
+        body = function(OVERLAY.read_text(), "ov12_02251D28")
+        self.assertRegex(body, r"== ABILITY_TINTED_LENS\) \{\n\s*damage \*= 2;")
+
 
 if __name__ == "__main__":
     unittest.main()
