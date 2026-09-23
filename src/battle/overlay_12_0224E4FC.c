@@ -117,6 +117,15 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     // An Air Balloon announces itself once per appearance, so the same goes
     // for its flag. The reference clears it alongside these.
     ctx->battleMons[battlerId].airBalloonFlag = 0;
+    // Unnerve, Screen Cleaner, Imposter and Hospitality act at every entry
+    // too. The reference gates the first, second and fourth on the flag just
+    // cleared above and Imposter on imposter_flag, and clears both in
+    // ClearBattleMonFlags; left set, they spoke for the first Pokemon to
+    // stand in this slot and never again.
+    ctx->battleMons[battlerId].unnerveFlag = 0;
+    ctx->battleMons[battlerId].screenCleanerFlag = 0;
+    ctx->battleMons[battlerId].imposterFlag = 0;
+    ctx->battleMons[battlerId].hospitalityFlag = 0;
     // Kept off the BattleMon because that structure's size is pinned; cleared
     // here, which is where the reference clears its copy.
     ctx->psychicTerrainMoveUsed[battlerId] = 0;

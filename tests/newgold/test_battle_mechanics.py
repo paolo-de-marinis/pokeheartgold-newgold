@@ -605,5 +605,16 @@ class SupersweetSyrupTests(unittest.TestCase):
         self.assertIn("*syrupDone = TRUE;", syrup)
 
 
+class EntryAbilityFlagTests(unittest.TestCase):
+    def test_every_entry_ability_flag_is_cleared_when_a_pokemon_comes_in(self):
+        # A flag that TryAbilityOnEntry sets and loading a Pokemon does not
+        # clear makes its ability speak for the first Pokemon in that slot only.
+        source = OVERLAY.read_text()
+        load = function(source, "BattleSystem_GetBattleMon")
+        entry = function(source, "TryAbilityOnEntry")
+        for flag in sorted(set(re.findall(r"ctx->battleMons\[battlerId\]\.(\w+Flag) = TRUE;", entry))):
+            self.assertIn(f"ctx->battleMons[battlerId].{flag} = 0;", load, flag)
+
+
 if __name__ == "__main__":
     unittest.main()
