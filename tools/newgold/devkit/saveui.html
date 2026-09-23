@@ -50,6 +50,7 @@ h3 { font-size: 16px; margin-bottom: 10px; }
 .top .lib { color: var(--muted); font-size: 12.5px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .pill { border-radius: 999px; padding: 3px 10px; font-size: 12.5px; background: var(--ok-soft); color: var(--ok); white-space: nowrap; }
 .pill.on { background: var(--danger-soft); color: var(--danger); }
+.pill.off { background: var(--sunk); color: var(--muted); }
 .banner { background: var(--warn-soft); border-bottom: 1px solid var(--warn-border); padding: 8px 16px; }
 
 .layout { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 16px; padding: 16px; align-items: start; }
@@ -178,6 +179,8 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 </div>
 
 <div class="banner" id="buildbanner" hidden></div>
+<div class="banner" id="downbanner" hidden><strong>L'editor non risponde.</strong> Il server si è fermato: riaprilo
+  (doppio clic su Editor salvataggi), poi ricarica questa pagina. Finché è fermo non si legge né si salva niente.</div>
 
 <main class="layout">
   <aside class="pane" id="library">
@@ -1038,16 +1041,23 @@ function setMelon(on) {
   $("#banner").hidden = !on;
   if (S.save) $("#lock").hidden = !(S.save.slot && on);
 }
+function setDown(down) {
+  $("#downbanner").hidden = !down;
+  $("#melon").classList.toggle("off", down);
+  if (down) $("#melon").textContent = "editor fermo";
+  else setMelon(S.melon);
+}
 async function poll() {
-  try {
-    const s = await api(`/api/state${S.f ? `?f=${encodeURIComponent(S.f)}` : ""}`);
-    if (s.melonds !== S.melon) { setMelon(s.melonds); loadLibrary(); }
-    if (S.save && !S.busy && s.version && s.version !== S.save.version) {
-      toast("Il salvataggio aperto è cambiato su disco: l'ho ricaricato");
-      await openSave(S.f);
-      loadLibrary();
-    }
-  } catch {}
+  let s;
+  try { s = await api(`/api/state${S.f ? `?f=${encodeURIComponent(S.f)}` : ""}`); }
+  catch (e) { if (e.code === "down") setDown(true); return; }
+  if (!$("#downbanner").hidden) { setDown(false); loadLibrary(); }
+  if (s.melonds !== S.melon) { setMelon(s.melonds); loadLibrary(); }
+  if (S.save && !S.busy && s.version && s.version !== S.save.version) {
+    toast("Il salvataggio aperto è cambiato su disco: l'ho ricaricato");
+    await openSave(S.f);
+    loadLibrary();
+  }
 }
 
 async function init() {
