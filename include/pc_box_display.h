@@ -3,6 +3,7 @@
 
 #include "bg_window.h"
 #include "message_format.h"
+#include "message_printer.h"
 #include "msgdata.h"
 #include "pokemon_types_def.h"
 
@@ -30,7 +31,8 @@ typedef struct PCBoxDisplayMon {
 // Only the prefix of the existing PC graphics allocation is identified here.
 // Do not allocate or copy the complete graphics state using this type's size.
 typedef struct PCBoxGraphicsStatePrefix {
-    u8 unk0[0x20];
+    u8 unk0[0x1C];
+    MessagePrinter *messagePrinter;
     MsgData *msgData;
     MessageFormat *messageFormat;
     String *messageBuffer;
@@ -40,6 +42,9 @@ typedef struct PCBoxGraphicsStatePrefix {
 } PCBoxGraphicsStatePrefix;
 
 PCBoxDisplayMon *ov14_021E7358(BoxPokemon *mon);
+struct PCBoxApp;
+void ov14_021F5190(struct PCBoxApp *app, PCBoxDisplayMon *mon, int windowID);
+void ov14_021F521C(PCBoxGraphicsStatePrefix *state, PCBoxDisplayMon *mon, int windowID);
 void ov14_021F528C(PCBoxGraphicsStatePrefix *state, PCBoxDisplayMon *mon, int windowID);
 
 #endif // POKEHEARTGOLD_PC_BOX_DISPLAY_H
