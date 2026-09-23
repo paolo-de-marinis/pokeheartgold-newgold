@@ -582,6 +582,17 @@ typedef enum Terrain {
 // Whether Cheek Pouch has a Berry to answer for: set when the Pokemon eats
 // one, spent the next time its items are asked (TryUseHeldItem).
 #define BMON_DATA_CHEEK_POUCH_PENDING     106
+// What the effects that copy, give or swap an ability may do with the one a
+// Pokemon has (its own, not what Neutralizing Gas leaves of it): the flags of
+// the reference's data/AbilityFlags.c, which nothing there reads. Read only.
+#define BMON_DATA_ABILITY_FLAGS           107
+
+#define ABILITY_FLAG_FAILS_TRACE          (1 << 0) // Trace does not copy it
+#define ABILITY_FLAG_FAILS_SWAP           (1 << 1) // Skill Swap and Wandering Spirit do not swap it
+#define ABILITY_FLAG_FAILS_SUPPRESS       (1 << 2) // nothing writes over it
+#define ABILITY_FLAG_FAILS_RECEIVER       (1 << 3) // Receiver and Power of Alchemy do not take it over
+#define ABILITY_FLAG_FAILS_ENTRAINMENT    (1 << 4) // Entrainment does not pass it on
+#define ABILITY_FLAG_FAILS_ROLE_PLAY      (1 << 5) // Role Play does not copy it
 
 // The order entry hazards are worked through when something switches in.
 #define HAZARD_IDX_NONE         0

@@ -59,6 +59,7 @@ STILL_DIFFERENT = {
     164: "the primal weathers and the engine's weather subscripts",
     171: IN_C.format("Smelling Salts' doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
     173: PARENTAL_BOND,
+    178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
     180: PARENTAL_BOND,
     188: IN_C.format("the knocking off, ServerDoPostMoveEffects.c"),
     198: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),

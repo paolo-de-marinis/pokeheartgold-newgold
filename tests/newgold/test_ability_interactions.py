@@ -214,5 +214,65 @@ class IntimidateTests(unittest.TestCase):
         self.assertLess(script.index("Call BATTLE_SUBSCRIPT_ADRENALINE_ORB"), script.index("\n_RATTLED:"))
 
 
+FLAG_NAMES = {"failsTrace": "ABILITY_FLAG_FAILS_TRACE", "failsSwap": "ABILITY_FLAG_FAILS_SWAP",
+              "failsSuppress": "ABILITY_FLAG_FAILS_SUPPRESS", "failsReceiver": "ABILITY_FLAG_FAILS_RECEIVER",
+              "failsEntrainment": "ABILITY_FLAG_FAILS_ENTRAINMENT", "failsRolePlay": "ABILITY_FLAG_FAILS_ROLE_PLAY"}
+
+# What this port adds to the reference's flags, from Pokemon Central.
+ADDED_FLAGS = {}
+
+
+def ability_flag_table():
+    """The port's sAbilityFlags as {ability: {flag, ...}}."""
+    source = OVERLAY.read_text()
+    table = source[source.index("static const u8 sAbilityFlags[] = {"):]
+    table = table[:table.index("};")]
+    return {m.group(1): set(m.group(2).split(" | ")) for m in re.finditer(r"\[(ABILITY_\w+)\] = ([^,]+),", table)}
+
+
+class AbilityCopyTableTests(unittest.TestCase):
+    """The effects that copy, give or swap an ability ask one table, the
+    reference's data/AbilityFlags.c."""
+
+    def test_the_table_is_the_reference_s(self):
+        from test_repels import REFERENCE, revision
+        if REFERENCE is None:
+            self.skipTest("no reference checkout")
+        theirs = {}
+        for m in re.finditer(r"\[(ABILITY_\w+)\] = \{([^}]*)\}", revision(REFERENCE, "d0380a487", "data/AbilityFlags.c")):
+            flags = {name for field, name in FLAG_NAMES.items() if f"{field} = TRUE" in m.group(2)}
+            if flags:
+                theirs[m.group(1)] = flags
+        for ability, flags in ADDED_FLAGS.items():
+            theirs[ability] = theirs.get(ability, set()) | flags
+        self.assertEqual(ability_flag_table(), theirs)
+
+    def test_every_copier_asks_it(self):
+        source = OVERLAY.read_text()
+        self.assertIn("case BMON_DATA_ABILITY_FLAGS:\n        return AbilityFlags(mon->ability);", function(source, "GetBattlerVar"))
+        self.assertIn("ABILITY_FLAG_FAILS_TRACE", function(source, "Battler_Traceable"))
+        self.assertEqual(function(source, "ov12_022585B8").count("Battler_Traceable("), 4)
+        hit = function(source, "CheckAbilityEffectOnHit")
+        wandering = hit[hit.index("case ABILITY_WANDERING_SPIRIT:"):]
+        self.assertIn("AbilityFlags(ctx->battleMons[ctx->battlerIdAttacker].ability) & ABILITY_FLAG_FAILS_SWAP", wandering[:wandering.index("break;")])
+        scripts = ROOT / "files/battledata/script"
+        asked = {
+            "effect_script/effect_script_0178.s": [("ATTACKER", "FAILS_SUPPRESS")],
+            "subscript/subscript_0135_CopyAbility.s": [("DEFENDER", "FAILS_ROLE_PLAY")],
+            "subscript/subscript_0143_SwapAbility.s": [("ATTACKER", "FAILS_SWAP"), ("DEFENDER", "FAILS_SWAP")],
+            "subscript/subscript_0316_Entrainment.s": [("ATTACKER", "FAILS_ENTRAINMENT"), ("DEFENDER", "FAILS_SUPPRESS")],
+        }
+        for name, questions in asked.items():
+            text = (scripts / name).read_text()
+            for battler, flag in questions:
+                self.assertIn(f"CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_{battler}, BMON_DATA_ABILITY_FLAGS, ABILITY_FLAG_{flag}, _", text, name)
+            # No list of its own beside it.
+            self.assertNotRegex(text, r"BMON_DATA_ABILITY, ABILITY_(?!NONE|TRUANT)\w+, _", name)
+        entrainment = (scripts / "subscript/subscript_0316_Entrainment.s").read_text()
+        self.assertIn("CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, ABILITY_TRUANT, _FAILED", entrainment)
+        self.assertIn("CompareMonDataToVar OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, BSCRIPT_VAR_CALC_TEMP, _FAILED", entrainment)
+        self.assertLess(entrainment.index("_FAILED\n    Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION"), entrainment.index("BMON_DATA_ABILITY, BSCRIPT_VAR_CALC_TEMP\n    // {0} acquired"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -400,6 +400,56 @@ void BattleBuffer_Clear(BattleContext *ctx, int battlerId) {
     }
 }
 
+// The copying flags of the reference's data/AbilityFlags.c at d0380a487: the
+// abilities Trace, Skill Swap, Wandering Spirit, Role Play, Entrainment and
+// Receiver leave alone, and those nothing writes over. The reference reads
+// them through GetAbilityFlags for Trace, Wandering Spirit, Entrainment and
+// Skill Swap; here every copier asks this table, scripts through
+// BMON_DATA_ABILITY_FLAGS. konefr's two abilities, Irrigation and Evaporate,
+// carry none of these flags there.
+static const u8 sAbilityFlags[] = {
+    [ABILITY_WONDER_GUARD] = ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_TRACE] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_FORECAST] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_MULTITYPE] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_FLOWER_GIFT] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_ILLUSION] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_IMPOSTER] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_ZEN_MODE] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_STANCE_CHANGE] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_SHIELDS_DOWN] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_SCHOOLING] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_DISGUISE] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_BATTLE_BOND] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_POWER_CONSTRUCT] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_COMATOSE] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_RECEIVER] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_POWER_OF_ALCHEMY] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_RKS_SYSTEM] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_GULP_MISSILE] = ABILITY_FLAG_FAILS_SUPPRESS,
+    [ABILITY_ICE_FACE] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_NEUTRALIZING_GAS] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_HUNGER_SWITCH] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_AS_ONE_GLASTRIER] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_AS_ONE_SPECTRIER] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_ZERO_TO_HERO] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_COMMANDER] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_PROTOSYNTHESIS] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_QUARK_DRIVE] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_EMBODY_ASPECT] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_EMBODY_ASPECT_2] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_EMBODY_ASPECT_3] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_EMBODY_ASPECT_4] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_TERA_SHIFT] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_SUPPRESS | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_TERA_SHELL] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_TERAFORM_ZERO] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+    [ABILITY_POISON_PUPPETEER] = ABILITY_FLAG_FAILS_TRACE | ABILITY_FLAG_FAILS_SWAP | ABILITY_FLAG_FAILS_RECEIVER | ABILITY_FLAG_FAILS_ENTRAINMENT | ABILITY_FLAG_FAILS_ROLE_PLAY,
+};
+
+static u8 AbilityFlags(u16 ability) {
+    return ability < NELEMS(sAbilityFlags) ? sAbilityFlags[ability] : 0;
+}
+
 int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
     BattleMon *mon = &ctx->battleMons[battlerId];
 
@@ -463,6 +513,8 @@ int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         return Battler_ShieldsUp(ctx, battlerId);
     case BMON_DATA_CHEEK_POUCH_PENDING:
         return mon->cheekPouchPending;
+    case BMON_DATA_ABILITY_FLAGS:
+        return AbilityFlags(mon->ability);
     case BMON_DATA_GENDER:
         return mon->gender;
     case BMON_DATA_IS_SHINY:
@@ -6805,13 +6857,14 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         break;
     case ABILITY_WANDERING_SPIRIT:
         // Mummy above takes; this one gives back in exchange, so it refuses
-        // the same abilities Skill Swap refuses.
+        // the same abilities Skill Swap refuses, the table's, as the
+        // reference does (the list here was Multitype and Wonder Guard).
         //
         // An Ability Shield on either of the two stops the swap, and this is
         // the only thing in the reference that reads that item: it guards the
         // exchange, not the taking, so a Mummy above still wraps an ability
         // that is standing behind a shield. Odd, and the reference's.
-        if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) != HOLD_EFFECT_PREVENT_ABILITY_CHANGES && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) != HOLD_EFFECT_PREVENT_ABILITY_CHANGES && ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_WANDERING_SPIRIT && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MULTITYPE && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_WONDER_GUARD && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+        if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) != HOLD_EFFECT_PREVENT_ABILITY_CHANGES && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) != HOLD_EFFECT_PREVENT_ABILITY_CHANGES && ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_WANDERING_SPIRIT && !(AbilityFlags(ctx->battleMons[ctx->battlerIdAttacker].ability) & ABILITY_FLAG_FAILS_SWAP) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
             *script = BATTLE_SUBSCRIPT_WANDERING_SPIRIT;
             ret = TRUE;
         }
@@ -11398,18 +11451,25 @@ static void ov12_022585A8(BattleContext *ctx, u8 battlerId) {
     ctx->trainerAIData.heldItems[battlerId] = ITEM_NONE;
 }
 
+// A foe Trace can copy from: standing, and with an ability the table does
+// not keep from Trace (the reference's GetTraceClient). Retail's refused
+// Forecast, Trace and Multitype.
+static BOOL Battler_Traceable(BattleContext *ctx, int battlerId) {
+    return ctx->battleMons[battlerId].hp && !(AbilityFlags(ctx->battleMons[battlerId].ability) & ABILITY_FLAG_FAILS_TRACE);
+}
+
 static int ov12_022585B8(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTarget1, int battlerIdTarget2) {
     int ret = BATTLER_NONE;
 
-    if (ctx->battleMons[battlerIdTarget1].ability != ABILITY_FORECAST && ctx->battleMons[battlerIdTarget1].ability != ABILITY_TRACE && ctx->battleMons[battlerIdTarget1].ability != ABILITY_MULTITYPE && ctx->battleMons[battlerIdTarget1].hp && ctx->battleMons[battlerIdTarget2].hp && ctx->battleMons[battlerIdTarget2].ability != ABILITY_FORECAST && ctx->battleMons[battlerIdTarget2].ability != ABILITY_TRACE && ctx->battleMons[battlerIdTarget2].ability != ABILITY_MULTITYPE) {
+    if (Battler_Traceable(ctx, battlerIdTarget1) && Battler_Traceable(ctx, battlerIdTarget2)) {
         if (BattleSystem_Random(battleSystem) & 1) {
             ret = battlerIdTarget2;
         } else {
             ret = battlerIdTarget1;
         }
-    } else if (ctx->battleMons[battlerIdTarget1].ability != ABILITY_FORECAST && ctx->battleMons[battlerIdTarget1].ability != ABILITY_TRACE && ctx->battleMons[battlerIdTarget1].hp && ctx->battleMons[battlerIdTarget1].ability != ABILITY_MULTITYPE) {
+    } else if (Battler_Traceable(ctx, battlerIdTarget1)) {
         ret = battlerIdTarget1;
-    } else if (ctx->battleMons[battlerIdTarget2].ability != ABILITY_FORECAST && ctx->battleMons[battlerIdTarget2].ability != ABILITY_TRACE && ctx->battleMons[battlerIdTarget2].hp && ctx->battleMons[battlerIdTarget2].ability != ABILITY_MULTITYPE) {
+    } else if (Battler_Traceable(ctx, battlerIdTarget2)) {
         ret = battlerIdTarget2;
     }
 

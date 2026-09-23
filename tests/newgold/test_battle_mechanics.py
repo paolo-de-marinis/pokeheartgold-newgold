@@ -441,13 +441,11 @@ class HexTests(unittest.TestCase):
 
 
 class AbilityBlockListTests(unittest.TestCase):
-    # Role Play (its effect script and its subscript), Skill Swap, Gastro Acid
-    # and Worry Seed each refuse a list of abilities; the lists are the
-    # reference's, Comatose among them, with retail's Griseous Orb kept.
+    # Gastro Acid and Worry Seed each refuse a list of abilities; the lists
+    # are the reference's, Comatose among them, with retail's Griseous Orb
+    # kept. Role Play and Skill Swap ask the ability table instead
+    # (test_ability_interactions).
     SCRIPTS = {
-        "effect_script/effect_script_0178.s": "effects/effect_script_0178_COPY_ABILITY.s",
-        "subscript/subscript_0135_CopyAbility.s": "subscripts/subscript_0135_COPY_ABILITY.s",
-        "subscript/subscript_0143_SwapAbility.s": "subscripts/subscript_0143_EXCHANGE_ABILITIES.s",
         "subscript/subscript_0163_GastroAcid.s": "subscripts/subscript_0163_SUPPRESS_TARGET_ABILITY.s",
         "subscript/subscript_0167_WorrySeed.s": "subscripts/subscript_0167_GIVE_TARGET_INSOMNIA.s",
     }
@@ -459,9 +457,6 @@ class AbilityBlockListTests(unittest.TestCase):
 
     def test_comatose_is_refused(self):
         expected = {
-            "effect_script/effect_script_0178.s": {"ATTACKER"},
-            "subscript/subscript_0135_CopyAbility.s": {"ATTACKER", "DEFENDER"},
-            "subscript/subscript_0143_SwapAbility.s": {"ATTACKER", "DEFENDER"},
             "subscript/subscript_0163_GastroAcid.s": {"DEFENDER"},
             "subscript/subscript_0167_WorrySeed.s": {"DEFENDER"},
         }
