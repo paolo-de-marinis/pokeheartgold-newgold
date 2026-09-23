@@ -121,6 +121,12 @@ class MoveTests(unittest.TestCase):
             record = struct.unpack(import_moves.RECORD, self.table[self.moves[f"MOVE_{name}"]])
             self.assertEqual(record[8], priority, name)
 
+    def test_sweet_scent_lowers_evasion_by_two(self):
+        record = struct.unpack(import_moves.RECORD, self.table[self.moves["MOVE_SWEET_SCENT"]])
+        self.assertEqual(record[0], 64)
+        script = (ROOT / "files/battledata/script/effect_script/effect_script_0064.s").read_text()
+        self.assertIn("MOVE_SUBSCRIPT_PTR_EVASION_DOWN_2_STAGES", script)
+
     def test_poison_gas_and_cotton_spore_hit_both_foes(self):
         ranges = import_moves.constants("include/constants/moves.h", "RANGE_")
         for name in ("POISON_GAS", "COTTON_SPORE"):
@@ -143,8 +149,6 @@ class MoveTests(unittest.TestCase):
     RETAIL_EXCEPTIONS = {
         ("BEAT_UP", "power"): "the engine's 1 is a placeholder for 5 + base Attack / 10; "
                               "BtlCmd_BeatUp multiplies base Attack by the table's power",
-        ("SWEET_SCENT", "effect"): "the engine's 64 lowers evasion by two; this game's 64 and "
-                                   "its EVA_DOWN_2 (63) are retail's unused damage stubs",
         ("HOWL", "effect"): "the engine's raises the ally through RANGE_USER_SIDE and its "
                             "controller; this game's script would raise the user alone",
         ("HOWL", "target"): "RANGE_USER_SIDE goes with the effect",

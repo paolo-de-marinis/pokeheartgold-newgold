@@ -316,11 +316,11 @@ RETAIL_POWER_KEPT = {
 # effect is the engine's only where this game's script for it is the engine's:
 # String Shot's two-stage speed drop (60), Tail Glow's three-stage Sp. Atk.
 # rise, Chatter's plain confusing hit (76), which with its chance of 100 always
-# confuses. Not Sweet Scent's: the engine's 64 lowers evasion by two, and this
-# game's 64 and its EVA_DOWN_2 (63) are still retail's unused damage stubs.
-# Not Howl's: its script raises the user alone, and the ally is the engine's
-# RANGE_USER_SIDE and the controller behind it, which this game has not got.
-RETAIL_EFFECTS = ("STRING_SHOT", "TAIL_GLOW", "CHATTER")
+# confuses, Sweet Scent's two-stage evasion drop (64, retail's damage stub
+# until the engine's script replaced it). Not Howl's: its script raises the
+# user alone, and the ally is the engine's RANGE_USER_SIDE and the controller
+# behind it, which this game has not got.
+RETAIL_EFFECTS = ("STRING_SHOT", "TAIL_GLOW", "CHATTER", "SWEET_SCENT")
 # Two targets stay this game's. Howl's goes with its effect, above. Conversion
 # 2's is the engine's defect: it aims the move at every adjacent Pokemon and
 # keeps Generation IV's command, which reads the move that last hit the user;
