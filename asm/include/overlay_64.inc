@@ -119,3 +119,4 @@
 .public HallOfFameShowcase_Init
 .public HallOfFameShowcase_Exit
 .public HallOfFameShowcase_Main
+.public ov64_021E6E30

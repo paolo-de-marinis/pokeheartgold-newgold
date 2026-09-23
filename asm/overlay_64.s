@@ -2602,48 +2602,6 @@ _021E6E28: .word ov64_021E6ECE
 _021E6E2C: .word 0x0000FF9E
 	thumb_func_end ov64_021E6C1C
 
-	thumb_func_start ov64_021E6E30
-ov64_021E6E30: ; 0x021E6E30
-	push {r3, r4, r5, r6, r7, lr}
-	add r5, r0, #0
-	add r6, r1, #0
-	add r7, r2, #0
-	cmp r5, #0
-	ble _021E6E42
-	ldr r1, _021E6E74 ; =0x000001ED
-	cmp r5, r1
-	ble _021E6E46
-_021E6E42:
-	mov r4, #1
-	b _021E6E6E
-_021E6E46:
-	bl SpeciesToOverworldModelIndexOffset
-	ldr r1, _021E6E78 ; =0x00000129
-	add r4, r0, r1
-	add r0, r5, #0
-	bl OverworldModelLookupHasFemaleForm
-	cmp r0, #0
-	beq _021E6E60
-	cmp r7, #1
-	bne _021E6E6E
-	add r4, r4, #1
-	b _021E6E6E
-_021E6E60:
-	add r0, r5, #0
-	bl OverworldModelLookupFormCount
-	cmp r6, r0
-	ble _021E6E6C
-	mov r6, #0
-_021E6E6C:
-	add r4, r4, r6
-_021E6E6E:
-	add r0, r4, #0
-	pop {r3, r4, r5, r6, r7, pc}
-	nop
-_021E6E74: .word 0x000001ED
-_021E6E78: .word 0x00000129
-	thumb_func_end ov64_021E6E30
-
 	.rodata
 
 _021E6E7C:
