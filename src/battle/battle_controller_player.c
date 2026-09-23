@@ -5016,6 +5016,17 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         }
         script = BATTLE_SUBSCRIPT_HEAL_TARGET_SLEEP;
         break;
+    // Wrap, Fire Spin, Whirlpool, Magma Storm and the rest hold the target
+    // once the move is over, if both it and the user still stand. Subscript 58
+    // asks the side-effect battler for a substitute that took the hit.
+    case MOVE_EFFECT_BIND_HIT:
+    case MOVE_EFFECT_WHIRLPOOL:
+        if (!ctx->battleMons[ctx->battlerIdAttacker].hp || !ctx->battleMons[target].hp) {
+            return FALSE;
+        }
+        ctx->battlerIdStatChange = target;
+        script = BATTLE_SUBSCRIPT_BIND_START;
+        break;
     default:
         return FALSE;
     }

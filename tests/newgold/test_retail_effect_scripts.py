@@ -47,7 +47,6 @@ STILL_DIFFERENT = {
     7: IN_C.format("Damp and the user's fainting, BattleController_BeforeMove.c"),
     34: "Pay Day scatters its coins on the first strike or the only one; the engine's branch scatters "
          "them only on a first strike of Parental Bond, never without the ability (a6ee2c81c)",
-    42: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
     83: CALLED_MOVE + BACK_TO_BEFORE_MOVE + ", and prints the move the finger picked (message 1483), "
          "which retail's Metronome does not",
     97: CALLED_MOVE,
@@ -81,7 +80,6 @@ STILL_DIFFERENT = {
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     259: "the engine waits for a button after only buffering the line that restores the dimensions, "
          "which waits on nothing, and calls its Room Service subscript by another name (395 here)",
-    261: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
     272: IN_C.format("the charge turn and the Power Herb, BattleController_BeforeMove.c"),
 }
 
@@ -347,6 +345,20 @@ class BroughtOverTests(unittest.TestCase):
         self.assertLess(body.index("TryAdditionalMoveEffect(ctx)"), body.index("CheckSwitchItemOnHit"))
         for effect in (171, 217):
             self.assertNotIn("POWER_MULTI", script(effect), effect)
+            self.assertNotIn("SIDE_EFFECT", script(effect), effect)
+
+    def test_the_binding_comes_once_the_move_is_over(self):
+        # The engine's post-move step binds the target, both still standing;
+        # retail's scripts bound it with the hit, as a side effect.
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        step = function(controller, "TryAdditionalMoveEffect")
+        case = step[step.index("case MOVE_EFFECT_BIND_HIT:\n    case MOVE_EFFECT_WHIRLPOOL:"):]
+        case = case[:case.index("break;")]
+        self.assertIn("!ctx->battleMons[ctx->battlerIdAttacker].hp || !ctx->battleMons[target].hp", case)
+        self.assertIn("ctx->battlerIdStatChange = target;", case)
+        self.assertIn("script = BATTLE_SUBSCRIPT_BIND_START;", case)
+        self.assertIn("CheckSubstitute BATTLER_CATEGORY_SIDE_EFFECT_MON", subscript("BIND_START"))
+        for effect in (42, 261):
             self.assertNotIn("SIDE_EFFECT", script(effect), effect)
 
     def test_howl_raises_the_allies_too(self):
