@@ -154,6 +154,7 @@ IMPLEMENTED = {
     "SHADOW_SHIELD",
     "SHARPNESS",
     "SHEER_FORCE",
+    "SHIELDS_DOWN",
     "SLUSH_RUSH",
     "SOUL_HEART",
     "STANCE_CHANGE",
@@ -223,7 +224,7 @@ IMPLEMENTED = {
 PENDING = {
     "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE",
     "DELTA_STREAM", "DESOLATE_LAND", "GUARD_DOG", "MEGA_SOL", "MIMICRY",
-    "OPPORTUNIST", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN", "STAKEOUT",
+    "OPPORTUNIST", "POWER_SPOT", "PRIMORDIAL_SEA", "STAKEOUT",
     "SUPREME_OVERLORD", "SYMBIOSIS", "TOXIC_CHAIN", "VICTORY_STAR"
 }
 
@@ -292,7 +293,7 @@ class AbilityEffectTests(unittest.TestCase):
 
     # Pending abilities the C names only in the list of what Neutralizing Gas
     # cannot touch -- a fact about them, not an effect of theirs.
-    NAMED_IN_THE_GAS_LIST_ONLY = {"BATTLE_BOND", "SHIELDS_DOWN"}
+    NAMED_IN_THE_GAS_LIST_ONLY = {"BATTLE_BOND"}
 
     def test_a_pending_ability_is_not_quietly_half_wired(self):
         source = written_in_c()
@@ -319,7 +320,8 @@ class AbilityEffectTests(unittest.TestCase):
     # Embody Aspect's four done. Tera Shift done.
     # Embody Aspect's four done. Tera Shift and Tera Shell done.
     # Embody Aspect's four done. Tera Shift, Tera Shell and Teraform Zero done.
-    STILL_TO_DO = 19
+    # Shields Down done.
+    STILL_TO_DO = 18
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

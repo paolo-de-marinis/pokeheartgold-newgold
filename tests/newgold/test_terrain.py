@@ -139,9 +139,10 @@ class TerrainRulesTests(unittest.TestCase):
             self.assertIn(f"BATTLE_SUBSCRIPT_{name}", body,
                           f"nothing ever runs {name}")
         # Rest is the effect the reference counts alongside the sleep moves, in
-        # both the Electric and the Misty refusal.
-        self.assertEqual(body.count("MOVE_EFFECT_RECOVER_HEALTH_AND_SLEEP"), 3,
-                         "Sweet Veil and the two terrains should each count Rest")
+        # both the Electric and the Misty refusal; Sweet Veil and a Minior's
+        # shell refuse it too.
+        self.assertEqual(body.count("MOVE_EFFECT_RECOVER_HEALTH_AND_SLEEP"), 4,
+                         "Sweet Veil, Shields Down and the two terrains should each count Rest")
 
     def test_psyblade_asks_the_terrain_for_its_power(self):
         text = effect_script_of("PSYBLADE")

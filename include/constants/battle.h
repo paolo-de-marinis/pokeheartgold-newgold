@@ -564,6 +564,10 @@ typedef enum Terrain {
 // one. Read only.
 #define BMON_DATA_ILLUSION_MON            104
 
+// Whether this Pokemon is a Minior with its shell on, Shields Down's Meteor
+// Form, which takes no status (Battler_ShieldsUp). Read only.
+#define BMON_DATA_SHIELDS_UP              105
+
 // The order entry hazards are worked through when something switches in.
 #define HAZARD_IDX_NONE         0
 #define HAZARD_IDX_SPIKES       1

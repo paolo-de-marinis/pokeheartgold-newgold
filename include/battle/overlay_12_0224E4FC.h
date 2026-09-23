@@ -126,6 +126,8 @@ BOOL ov12_022568B0(BattleSystem *battleSystem, Pokemon *mon);
 void BattleSystem_ChangeBattlerForm(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 species, BOOL switchAbility);
 u16 Battler_BrokenFaceForm(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u16 move);
 BOOL TeraShellResists(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u32 moveNo);
+u16 Battler_ShieldsDownForm(BattleContext *ctx, int battlerId);
+BOOL Battler_ShieldsUp(BattleContext *ctx, int battlerId);
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 void ov12_02256F28(BattleSystem *battleSystem, BattleContext *ctx);
 void ov12_02256F78(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u8 selectedMonIndex);

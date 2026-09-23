@@ -1941,7 +1941,12 @@ static void BattleControllerPlayer_UpdateFieldConditionExtra(BattleSystem *battl
 
             battlerId = ctx->turnOrder[ctx->updateFieldConditionExtraData];
             ctx->updateFieldConditionExtraData++;
+            // Shields Down's end-of-turn check is here too: a Minior has one
+            // ability and Hunger Switch is Morpeko's.
             form = Battler_HungerSwitchForm(ctx, battlerId);
+            if (form == SPECIES_NONE) {
+                form = Battler_ShieldsDownForm(ctx, battlerId);
+            }
             if (form != SPECIES_NONE) {
                 ctx->battlerIdTemp = battlerId;
                 BattleSystem_ChangeBattlerForm(battleSystem, ctx, battlerId, form, FALSE);

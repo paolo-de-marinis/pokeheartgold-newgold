@@ -446,6 +446,8 @@ int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
     case BMON_DATA_BERRY_EATEN:
         // Not on the BattleMon: see the constant.
         return ctx->berryEaten[battlerId][ctx->selectedMonIndex[battlerId]];
+    case BMON_DATA_SHIELDS_UP:
+        return Battler_ShieldsUp(ctx, battlerId);
     case BMON_DATA_GENDER:
         return mon->gender;
     case BMON_DATA_IS_SHINY:
@@ -4512,6 +4514,11 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
         ctx->battlerIdTemp = battlerIdTarget;
         script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
     }
+    // Nor does a Minior with its shell on, nor can it Rest.
+    if ((givesStatus || moveEffect == MOVE_EFFECT_RECOVER_HEALTH_AND_SLEEP) && Battler_ShieldsUp(ctx, battlerIdTarget) == TRUE) {
+        ctx->battlerIdTemp = battlerIdTarget;
+        script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
+    }
     // Pastel Veil keeps poison off its side.
     if (moveEffect == MOVE_EFFECT_STATUS_POISON || moveEffect == MOVE_EFFECT_STATUS_BADLY_POISON) {
         int veiled = BattlerOrAllyWithAbility(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_PASTEL_VEIL);
@@ -4836,6 +4843,57 @@ static u16 Battler_TeraShiftForm(BattleContext *ctx, int battlerId) {
     return SPECIES_NONE;
 }
 
+// Shields Down (Pokemon Central, Scudosoglia): a Minior with more than half its
+// HP wears its shell, the Meteor Form, and at half or less loses it, the Core
+// Form of its colour. The form is checked when it comes in and at the end of
+// each turn, not as the HP moves. The Meteor Forms are SPECIES_MINIOR (red)
+// and the six after it from orange, the Core Forms seven more in the same
+// order. The ability is read off the battler, as nothing suppresses it, and a
+// Pokemon that has it through Transform does not change. hg-engine
+// (d0380a487) leaves both of its switch-in and form steps for the ability
+// empty. The species to become, or SPECIES_NONE.
+u16 Battler_ShieldsDownForm(BattleContext *ctx, int battlerId) {
+    u16 species = ctx->battleMons[battlerId].species;
+    BOOL meteor;
+    BOOL shell;
+    int colour;
+
+    if (!ctx->battleMons[battlerId].hp || ctx->battleMons[battlerId].ability != ABILITY_SHIELDS_DOWN
+        || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+        return SPECIES_NONE;
+    }
+    if (species == SPECIES_MINIOR) {
+        colour = 0;
+        meteor = TRUE;
+    } else if (species >= SPECIES_MINIOR_METEOR_ORANGE && species <= SPECIES_MINIOR_METEOR_VIOLET) {
+        colour = species - SPECIES_MINIOR_METEOR_ORANGE + 1;
+        meteor = TRUE;
+    } else if (species >= SPECIES_MINIOR_CORE_RED && species <= SPECIES_MINIOR_CORE_VIOLET) {
+        colour = species - SPECIES_MINIOR_CORE_RED;
+        meteor = FALSE;
+    } else {
+        return SPECIES_NONE;
+    }
+    shell = ctx->battleMons[battlerId].hp > (s32)(ctx->battleMons[battlerId].maxHp / 2);
+    if (shell == meteor) {
+        return SPECIES_NONE;
+    }
+    if (!shell) {
+        return SPECIES_MINIOR_CORE_RED + colour;
+    }
+    return colour == 0 ? SPECIES_MINIOR : SPECIES_MINIOR_METEOR_ORANGE + colour - 1;
+}
+
+// While its shell is on, a Minior takes no status and cannot be made drowsy or
+// put to sleep by Rest; one Transformed into it is not protected. Mold Breaker
+// does not get past it. BMON_DATA_SHIELDS_UP is this, for the scripts.
+BOOL Battler_ShieldsUp(BattleContext *ctx, int battlerId) {
+    u16 species = ctx->battleMons[battlerId].species;
+
+    return ctx->battleMons[battlerId].ability == ABILITY_SHIELDS_DOWN && !(ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)
+        && (species == SPECIES_MINIOR || (species >= SPECIES_MINIOR_METEOR_ORANGE && species <= SPECIES_MINIOR_METEOR_VIOLET));
+}
+
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int j;
@@ -4849,7 +4907,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
 
     do {
         switch (ctx->sendOutState) {
-        case 0: // Neutralizing Gas, Tera Shift, and then the field weather
+        case 0: // Neutralizing Gas, Tera Shift, Shields Down, and then the field weather
             // The gas goes before every other entry ability, as it does in the
             // later games, and says when it has gone as well as when it came:
             // once it has, the abilities it held back find their flags unset
@@ -4897,6 +4955,29 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                     ctx->battlerIdTemp = battlerId;
                     script = BATTLE_SUBSCRIPT_TERA_SHIFT;
                     flag = TRUE;
+                    break;
+                }
+            }
+            if (flag == TRUE) {
+                break;
+            }
+            // Shields Down, once on the way in: after that its form waits for
+            // the end of the turn, and the flag, which a form change clears,
+            // is set again after the change.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (ctx->battleMons[battlerId].abilityActivatedFlag || ctx->battleMons[battlerId].ability != ABILITY_SHIELDS_DOWN) {
+                    continue;
+                }
+                j = Battler_ShieldsDownForm(ctx, battlerId);
+                if (j != SPECIES_NONE) {
+                    BattleSystem_ChangeBattlerForm(battleSystem, ctx, battlerId, j, FALSE);
+                    ctx->battlerIdTemp = battlerId;
+                    script = BATTLE_SUBSCRIPT_FORM_CHANGE;
+                    flag = TRUE;
+                }
+                ctx->battleMons[battlerId].abilityActivatedFlag = TRUE;
+                if (flag == TRUE) {
                     break;
                 }
             }

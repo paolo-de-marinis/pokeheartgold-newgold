@@ -427,5 +427,60 @@ int main(void) {
         self.assertLess(script.index("PrintMessage msg_0197_00797"), script.index("Call BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE"))
 
 
+class ShieldsDownTests(unittest.TestCase):
+    def test_the_shell_is_on_above_half_and_off_at_half(self):
+        """Every colour's Meteor Form breaks into its own Core Form at half its
+        HP, and back above it; not without the ability, nor Transformed."""
+        print(run(["Battler_ShieldsDownForm", "Battler_ShieldsUp"], r"""
+    set(SPECIES_MINIOR, ABILITY_SHIELDS_DOWN, 51, 100);
+    assert(Battler_ShieldsDownForm(&ctx, 0) == SPECIES_NONE);
+    assert(Battler_ShieldsUp(&ctx, 0));
+    set(SPECIES_MINIOR, ABILITY_SHIELDS_DOWN, 50, 100);
+    assert(Battler_ShieldsDownForm(&ctx, 0) == SPECIES_MINIOR_CORE_RED);
+    set(SPECIES_MINIOR_CORE_RED, ABILITY_SHIELDS_DOWN, 51, 100);
+    assert(Battler_ShieldsDownForm(&ctx, 0) == SPECIES_MINIOR);
+    assert(!Battler_ShieldsUp(&ctx, 0));
+    set(SPECIES_MINIOR_METEOR_ORANGE, ABILITY_SHIELDS_DOWN, 1, 100);
+    assert(Battler_ShieldsDownForm(&ctx, 0) == SPECIES_MINIOR_CORE_ORANGE);
+    set(SPECIES_MINIOR_METEOR_VIOLET, ABILITY_SHIELDS_DOWN, 1, 100);
+    assert(Battler_ShieldsDownForm(&ctx, 0) == SPECIES_MINIOR_CORE_VIOLET);
+    assert(Battler_ShieldsUp(&ctx, 0));
+    set(SPECIES_MINIOR_CORE_INDIGO, ABILITY_SHIELDS_DOWN, 100, 100);
+    assert(Battler_ShieldsDownForm(&ctx, 0) == SPECIES_MINIOR_METEOR_INDIGO);
+    set(SPECIES_MINIOR_CORE_INDIGO, ABILITY_SHIELDS_DOWN, 50, 100);
+    assert(Battler_ShieldsDownForm(&ctx, 0) == SPECIES_NONE);
+    set(SPECIES_MINIOR, ABILITY_NONE, 1, 100);
+    assert(Battler_ShieldsDownForm(&ctx, 0) == SPECIES_NONE);
+    assert(!Battler_ShieldsUp(&ctx, 0));
+    set(SPECIES_MINIOR, ABILITY_SHIELDS_DOWN, 1, 100);
+    ctx.battleMons[0].status2 = STATUS2_TRANSFORM;
+    assert(Battler_ShieldsDownForm(&ctx, 0) == SPECIES_NONE);
+    assert(!Battler_ShieldsUp(&ctx, 0));
+    puts("PASS: Shields Down: Meteor above half, Core at half, for each colour.");""", "newgold-shields-"))
+
+    def test_on_the_way_in_and_at_the_end_of_the_turn(self):
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        entry = function(overlay, "TryAbilityOnEntry")
+        first = entry[entry.index("case 0:"):entry.index("case 1:")]
+        self.assertIn("j = Battler_ShieldsDownForm(ctx, battlerId);", first)
+        # Once per entry: set after the change, which clears it.
+        self.assertLess(first.index("BattleSystem_ChangeBattlerForm(battleSystem, ctx, battlerId, j, FALSE);"),
+                        first.index("ctx->battleMons[battlerId].abilityActivatedFlag = TRUE;"))
+        # Not after every action, where the other HP forms are checked.
+        self.assertNotIn("Battler_ShieldsDownForm", function(overlay, "Battler_CheckWeatherFormChange"))
+        extra = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_UpdateFieldConditionExtra")
+        self.assertIn("form = Battler_ShieldsDownForm(ctx, battlerId);", extra)
+
+    def test_no_status_reaches_the_shell(self):
+        subscripts = ROOT / "files/battledata/script/subscript"
+        for name, paths in (("FallAsleep", 2), ("Poison", 2), ("Burn", 2), ("Freeze", 1), ("Paralyze", 1), ("BadPoison", 3)):
+            script = next(subscripts.glob(f"subscript_*_{name}.s")).read_text()
+            self.assertEqual(script.count("BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_SHIELDS_UP, 1, _"), paths, name)
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        self.assertIn("case BMON_DATA_SHIELDS_UP:\n        return Battler_ShieldsUp(ctx, battlerId);", function(overlay, "GetBattlerVar"))
+        refusal = function(overlay, "BattleContext_CheckMoveImmunityFromAbility")
+        self.assertIn("(givesStatus || moveEffect == MOVE_EFFECT_RECOVER_HEALTH_AND_SLEEP) && Battler_ShieldsUp(ctx, battlerIdTarget) == TRUE", refusal)
+
+
 if __name__ == "__main__":
     unittest.main()
