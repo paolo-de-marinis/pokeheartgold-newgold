@@ -9,8 +9,8 @@
 #include "constants/map_sections.h"
 #include "constants/moves.h"
 
+#include "filesystem.h"
 #include "game_stats.h"
-#include "gf_gfx_loader.h"
 #include "item.h"
 #include "map_section.h"
 #include "math_util.h"
@@ -355,28 +355,16 @@ static void InheritIVs(Pokemon *egg, Daycare *dayCare) {
     }
 }
 
+// hg-engine's layout: MAX_EGG_MOVES halfwords a species, through NUM_SPECIES,
+// the list ended by 0xFFFF where it is shorter. Written with MAX_EGG_MOVES by
+// tools/newgold/import/import_egg_moves.py.
 static u8 LoadEggMoves(Pokemon *mon, u16 *dest) {
-    u16 numEggMoves;
-    u16 i;
-    u16 *eggMoveList = GfGfxLoader_LoadFromNarc(NARC_fielddata_breeding_egg_move_list, 0, FALSE, HEAP_ID_FIELD1, TRUE);
-    numEggMoves = 0;
-    u16 offset = 0;
-
+    u8 numEggMoves = 0;
     u16 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
-    for (i = 0; i < 2045; i++) {
-        if (species + 20000 == eggMoveList[i]) {
-            offset = i + 1;
-            break;
-        }
-    }
-    for (i = 0; i < MAX_EGG_MOVES; i++) {
-        if (eggMoveList[offset + i] > 20000) {
-            break;
-        }
-        dest[i] = eggMoveList[offset + i];
+    ReadFromNarcMemberByIdPair(dest, NARC_fielddata_breeding_egg_move_list, 0, species * MAX_EGG_MOVES * sizeof(u16), MAX_EGG_MOVES * sizeof(u16));
+    while (numEggMoves < MAX_EGG_MOVES && dest[numEggMoves] != 0xFFFF) {
         numEggMoves++;
     }
-    Heap_Free(eggMoveList);
     return numEggMoves;
 }
 
