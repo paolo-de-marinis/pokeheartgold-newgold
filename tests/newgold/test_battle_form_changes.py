@@ -62,6 +62,7 @@ typedef struct { u16 power; u8 category; } MoveTbl;
 static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
 static MoveTbl sMoves[] = {
     [MOVE_TACKLE] = { 40, CATEGORY_PHYSICAL }, [MOVE_EMBER] = { 40, CATEGORY_SPECIAL },
+    [MOVE_STRUGGLE] = { 50, CATEGORY_PHYSICAL },
     [MOVE_SWORDS_DANCE] = { 0, CATEGORY_STATUS }, [MOVE_KINGS_SHIELD] = { 0, CATEGORY_STATUS } };
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u16 move) { (void)ctx; return &sMoves[move]; }
 static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int attacker, int target, int ability) {
@@ -393,6 +394,22 @@ int main(void) {
             result = subprocess.run([str(path / "test")], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         print(result.stdout.strip())
+
+    def test_confusion_into_a_disguise(self):
+        """A confused Mimikyu or Eiscue that hits itself breaks its own face
+        and takes nothing (btl_scr_cmd_FE_calcconfusiondamage)."""
+        print(run(["Battler_BrokenFaceForm"], r"""
+    set(SPECIES_MIMIKYU, ABILITY_DISGUISE, 1, 1);
+    assert(Battler_BrokenFaceForm(&ctx, 0, 0, MOVE_STRUGGLE) == SPECIES_MIMIKYU_BUSTED);
+    set(SPECIES_EISCUE, ABILITY_ICE_FACE, 1, 1);
+    assert(Battler_BrokenFaceForm(&ctx, 0, 0, MOVE_STRUGGLE) == SPECIES_EISCUE_NOICE_FACE);
+    puts("PASS: a confusion self-hit breaks a face.");""", "newgold-confusion-"))
+        status = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224B528")
+        self.assertRegex(status, r"form = Battler_BrokenFaceForm\(ctx, ctx->battlerIdAttacker, ctx->battlerIdAttacker, MOVE_STRUGGLE\);\s*"
+                                 r"if \(form != SPECIES_NONE\) \{\s*ctx->hpCalc = 0;")
+        self.assertIn("BATTLE_SUBSCRIPT_HURT_SELF_DISGUISED", status)
+        script = (ROOT / "files/battledata/script/subscript/subscript_0406_HurtSelfDisguised.s").read_text()
+        self.assertLess(script.index("PrintMessage msg_0197_00797"), script.index("Call BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE"))
 
 
 if __name__ == "__main__":

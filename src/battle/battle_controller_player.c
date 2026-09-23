@@ -2410,6 +2410,7 @@ static BOOL ov12_0224B498(BattleSystem *battleSystem, BattleContext *ctx) {
 static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
     int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
     int ret = 0;
+    u16 form;
 
     do {
         switch (ctx->unk_50) {
@@ -2574,7 +2575,16 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
                         ctx->hpCalc = CalcMoveDamage(battleSystem, ctx, MOVE_STRUGGLE, 0, 0, 40, 0, ctx->battlerIdAttacker, ctx->battlerIdAttacker, 1);
                         ctx->hpCalc = ApplyDamageRange(battleSystem, ctx, ctx->hpCalc);
                         ctx->hpCalc *= -1;
-                        ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HURT_SELF_IN_CONFUSION);
+                        // A Disguise or an Ice Face takes this blow too, and
+                        // breaks (btl_scr_cmd_FE_calcconfusiondamage).
+                        form = Battler_BrokenFaceForm(ctx, ctx->battlerIdAttacker, ctx->battlerIdAttacker, MOVE_STRUGGLE);
+                        if (form != SPECIES_NONE) {
+                            ctx->hpCalc = 0;
+                            BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdAttacker, form, TRUE);
+                            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HURT_SELF_DISGUISED);
+                        } else {
+                            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HURT_SELF_IN_CONFUSION);
+                        }
                         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                         ctx->commandNext = CONTROLLER_COMMAND_34;
                         ret = 1;

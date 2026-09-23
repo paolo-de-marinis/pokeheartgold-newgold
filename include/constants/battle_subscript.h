@@ -646,6 +646,8 @@
 #define BATTLE_SUBSCRIPT_ZERO_TO_HERO                       405
 // Power Construct's Complete Forme. 334 there.
 #define BATTLE_SUBSCRIPT_POWER_CONSTRUCT                    406
+// A confusion self-hit a Disguise or an Ice Face took. The end of 39 there.
+#define BATTLE_SUBSCRIPT_HURT_SELF_DISGUISED                407
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
