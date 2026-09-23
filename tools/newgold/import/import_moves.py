@@ -332,7 +332,15 @@ IMPLEMENTED_HERE = {
     # Aromatic Mist raises the ally's Sp. Def a stage and fails with no ally
     # (Pokemon Central, Nebularoma): effect script 409.
     "AROMATIC_MIST": "MOVE_EFFECT_RAISE_ALLY_SP_DEF",
+    # Hard Press is Wring Out's effect on a scale of 100, never under 1
+    # (Pokemon Central, Pressa d'Acciaio): BtlCmd_CalcWringOutPower asks for it.
+    "HARD_PRESS": "MOVE_EFFECT_INCREASE_POWER_WITH_MORE_HP",
 }
+
+# What else those moves' records need and the engine's leave out, by field. A
+# power of 1 is what every move whose power is worked out has, retail's and
+# the engine's: Me First, the AI and the damage check ask for one above 0.
+FIELDS_HERE = {"HARD_PRESS": {"power": 1}}
 
 # The effects written here for those moves follow the reference's in
 # move_effects.h, under this line. A run keeps them where they are and numbers
@@ -823,11 +831,11 @@ def main():
             RECORD,
             effect_number,
             split,
-            number(block, "power"),
+            FIELDS_HERE.get(name, {}).get("power", number(block, "power")),
             types[field(block, "type")],
             number(block, "accuracy"),
             number(block, "pp"),
-            number(block, "effectChance"),
+            FIELDS_HERE.get(name, {}).get("effectChance", number(block, "effectChance")),
             ranges(block, rangesets),
             number(block, "priority"),
             flags,

@@ -5639,6 +5639,17 @@ BOOL BtlCmd_CalcTrumpCardPower(BattleSystem *battleSystem, BattleContext *ctx) {
 BOOL BtlCmd_CalcWringOutPower(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
+    // Hard Press shares the effect with a scale of its own: 100 times the
+    // share of HP the target has left, and never less than 1 (Pokemon
+    // Central, Pressa d'Acciaio).
+    if (ctx->moveNoCur == MOVE_HARD_PRESS) {
+        ctx->movePower = (100 * ctx->battleMons[ctx->battlerIdTarget].hp) / ctx->battleMons[ctx->battlerIdTarget].maxHp;
+        if (ctx->movePower == 0) {
+            ctx->movePower = 1;
+        }
+        return FALSE;
+    }
+
     ctx->movePower = 1 + (120 * ctx->battleMons[ctx->battlerIdTarget].hp) / ctx->battleMons[ctx->battlerIdTarget].maxHp;
 
     return FALSE;

@@ -14,7 +14,7 @@ import struct
 import sys
 import unittest
 
-from test_level_cap import ROOT
+from test_level_cap import ROOT, function
 
 sys.path[:0] = [str(ROOT / "tools/newgold/import")]
 import import_moves  # noqa: E402
@@ -78,6 +78,16 @@ class ImplementedMoveTests(unittest.TestCase):
         kept = import_moves.original("include/constants/move_effects.h")
         self.assertIn("#define MOVE_EFFECT_RAISE_ALLY_SP_DEF", kept)
         self.assertNotIn("MOVE_EFFECT_HIT_THREE_TIMES_FLAT", kept)
+
+    def test_hard_press_is_worth_the_share_of_hp_left(self):
+        # Pokemon Central (Pressa d'Acciaio): 100 times the target's HP over
+        # its maximum, 1 at the least; Wring Out's effect, asked for the move.
+        self.assertImplemented("HARD_PRESS", "MOVE_EFFECT_INCREASE_POWER_WITH_MORE_HP")
+        self.assertEqual(record("HARD_PRESS")[2], 1)
+        body = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_CalcWringOutPower")
+        hard = body[body.index("MOVE_HARD_PRESS"):body.index("return FALSE;")]
+        self.assertIn("(100 * ctx->battleMons[ctx->battlerIdTarget].hp) / ctx->battleMons[ctx->battlerIdTarget].maxHp", hard)
+        self.assertIn("if (ctx->movePower == 0) {\n            ctx->movePower = 1;", hard)
 
 if __name__ == "__main__":
     unittest.main()
