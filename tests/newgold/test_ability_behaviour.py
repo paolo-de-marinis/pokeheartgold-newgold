@@ -636,13 +636,13 @@ int main(void) {
         self.assertIn("Battler_OpportunistNotesRaise(battleSystem, ctx, stat + 1, mon->statChanges[stat + 1] - stagesBefore);", change)
         self.assertLess(change.index("int stagesBefore = mon->statChanges[stat + 1];"), change.index("mon->statChanges[stat + 1] += change;"))
         entry = function(OVERLAY, "TryAbilityOnEntry")
-        state = entry[entry.index("// Opportunist"):]
-        state = state[:state.index("case ", 10)]
+        self.assertIn("case 33: // Opportunist\n            flag = TryOpportunistCopy(battleSystem, ctx, &script);", entry)
+        state = function(OVERLAY, "TryOpportunistCopy")
         self.assertIn("GetBattlerAbility(ctx, battlerId) != ABILITY_OPPORTUNIST", state)
         self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES + j - STAT_ATK;", state)
         self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;", state)
         self.assertIn("ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;", state)
-        self.assertIn("script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;", state)
+        self.assertIn("*script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;", state)
         self.assertIn("MI_CpuClear8(ctx->opportunistStages[battlerId], NUM_BATTLE_STATS);", function(OVERLAY, "BattleSystem_GetBattleMon"))
 
 
@@ -656,16 +656,16 @@ class SymbiosisTests(unittest.TestCase):
             if re.search(r"\nBOOL " + other + r"\(", commands):
                 self.assertNotIn("symbiosisPending", function(commands, other), other)
         entry = function(OVERLAY, "TryAbilityOnEntry")
-        state = entry[entry.index("// Symbiosis"):]
-        state = state[:state.index("case ", 10)]
+        self.assertIn("case 34: // Symbiosis\n            flag = TrySymbiosisHandOver(battleSystem, ctx, &script);", entry)
+        state = function(OVERLAY, "TrySymbiosisHandOver")
         self.assertIn("ctx->symbiosisPending[battlerId] = FALSE;", state)
         self.assertIn("j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);", state)
         for condition in ("j != battlerId", "ctx->battleMons[battlerId].hp", "ctx->battleMons[battlerId].item == ITEM_NONE",
                           "ctx->battleMons[j].hp", "GetBattlerAbility(ctx, j) == ABILITY_SYMBIOSIS",
                           "CanStealHeldItem(battleSystem, ctx, battlerId, j) == TRUE"):
             self.assertIn(condition, state)
-        self.assertIn("ctx->battleMons[battlerId].item = ctx->battleMons[j].item;\n                    ctx->battleMons[j].item = ITEM_NONE;", state)
-        self.assertIn("script = BATTLE_SUBSCRIPT_SYMBIOSIS;", state)
+        self.assertIn("ctx->battleMons[battlerId].item = ctx->battleMons[j].item;\n            ctx->battleMons[j].item = ITEM_NONE;", state)
+        self.assertIn("*script = BATTLE_SUBSCRIPT_SYMBIOSIS;", state)
         self.assertIn("ctx->symbiosisPending[battlerId] = FALSE;", function(OVERLAY, "BattleSystem_GetBattleMon"))
         self.assertIn("TAG_NICKNAME_ITEM_NICKNAME, BATTLER_CATEGORY_MSG_BATTLER_TEMP, BATTLER_CATEGORY_MSG_TEMP, BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_MSG_BATTLER_TEMP",
                       subscript("Symbiosis"))

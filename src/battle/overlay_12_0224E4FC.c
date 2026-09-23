@@ -5499,6 +5499,94 @@ static u8 *OnceOnlyEntryAbilityDone(BattleSystem *battleSystem, BattleContext *c
     return &ctx->onceOnlyEntryAbilityDone[party][ctx->selectedMonIndex[battlerId]];
 }
 
+// Opportunist copies what the other side raised (Battler_OpportunistNotesRaise)
+// a stat at a time and at most two stages a step, each with the ability's
+// line. An Opportunist that has fainted or lost the ability since takes
+// nothing. TRUE with the script to run.
+static BOOL TryOpportunistCopy(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+    int i;
+    int j;
+    int battlerId;
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+    for (i = 0; i < maxBattlers; i++) {
+        battlerId = ctx->turnOrder[i];
+        for (j = STAT_ATK; j < NUM_BATTLE_STATS; j++) {
+            if (ctx->opportunistStages[battlerId][j]) {
+                break;
+            }
+        }
+        if (j == NUM_BATTLE_STATS) {
+            continue;
+        }
+        if (!ctx->battleMons[battlerId].hp || GetBattlerAbility(ctx, battlerId) != ABILITY_OPPORTUNIST) {
+            MI_CpuClear8(ctx->opportunistStages[battlerId], NUM_BATTLE_STATS);
+            continue;
+        }
+        if (ctx->opportunistStages[battlerId][j] >= 2) {
+            ctx->opportunistStages[battlerId][j] -= 2;
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES + j - STAT_ATK;
+        } else {
+            ctx->opportunistStages[battlerId][j]--;
+            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;
+        }
+        ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+        ctx->battlerIdStatChange = battlerId;
+        *script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+// A Pokemon that has used up its held item is handed its partner's by a
+// partner with Symbiosis (Pokemon Central, Simbiosi). The reference declares
+// the ability and nothing reads it. Used up is what BtlCmd_RemoveItem marks --
+// eaten, drunk, flung, popped, a Berry plucked off it included -- and not an
+// item knocked off, stolen, swapped or burnt. The partner's item has to be one
+// that can change hands. TRUE with the script to run.
+static BOOL TrySymbiosisHandOver(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+    int i;
+    int j;
+    int battlerId;
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+    for (i = 0; i < maxBattlers; i++) {
+        battlerId = ctx->turnOrder[i];
+        if (!ctx->symbiosisPending[battlerId]) {
+            continue;
+        }
+        ctx->symbiosisPending[battlerId] = FALSE;
+        j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
+        if (j != battlerId && ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].item == ITEM_NONE
+            && ctx->battleMons[j].hp && GetBattlerAbility(ctx, j) == ABILITY_SYMBIOSIS && CanStealHeldItem(battleSystem, ctx, battlerId, j) == TRUE) {
+            ctx->itemTemp = ctx->battleMons[j].item;
+            ctx->battleMons[battlerId].item = ctx->battleMons[j].item;
+            ctx->battleMons[j].item = ITEM_NONE;
+            CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
+            CopyBattleMonToPartyMon(battleSystem, ctx, j);
+            ctx->battlerIdTemp = j;
+            *script = BATTLE_SUBSCRIPT_SYMBIOSIS;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+// Opportunist and Symbiosis answer at once, among whatever set them off
+// (Pokemon Central, Scrocco, Simbiosi): after a move or an entry the entry
+// abilities' check below asks them, and between one end-of-turn effect and the
+// next the turn's end does, so a Speed Boost or Moody raise is copied and a
+// Berry eaten there replaced before the next effect. The script to run, or
+// BATTLE_SUBSCRIPT_NONE.
+int TryOpportunistOrSymbiosis(BattleSystem *battleSystem, BattleContext *ctx) {
+    int script = BATTLE_SUBSCRIPT_NONE;
+
+    if (TryOpportunistCopy(battleSystem, ctx, &script) == FALSE) {
+        TrySymbiosisHandOver(battleSystem, ctx, &script);
+    }
+    return script;
+}
+
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int j;
@@ -6527,77 +6615,14 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         case 33: // Opportunist
-            // What the other side raised is copied after the move or the entry
-            // that raised it, a stat at a time and at most two stages a step,
-            // each with the ability's line. An Opportunist that has fainted or
-            // lost the ability since takes nothing. A raise at the end of a
-            // turn -- Speed Boost, Moody -- is copied once the turn's end is
-            // over and before anyone chooses a move: TurnEnd goes on through
-            // the trainer's message to PokemonAppear, which asks this again.
-            // The games copy it at once, among the turn's end effects.
-            for (i = 0; i < maxBattlers; i++) {
-                battlerId = ctx->turnOrder[i];
-                for (j = STAT_ATK; j < NUM_BATTLE_STATS; j++) {
-                    if (ctx->opportunistStages[battlerId][j]) {
-                        break;
-                    }
-                }
-                if (j == NUM_BATTLE_STATS) {
-                    continue;
-                }
-                if (!ctx->battleMons[battlerId].hp || GetBattlerAbility(ctx, battlerId) != ABILITY_OPPORTUNIST) {
-                    MI_CpuClear8(ctx->opportunistStages[battlerId], NUM_BATTLE_STATS);
-                    continue;
-                }
-                if (ctx->opportunistStages[battlerId][j] >= 2) {
-                    ctx->opportunistStages[battlerId][j] -= 2;
-                    ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES + j - STAT_ATK;
-                } else {
-                    ctx->opportunistStages[battlerId][j]--;
-                    ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;
-                }
-                ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
-                ctx->battlerIdStatChange = battlerId;
-                script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;
-                flag = TRUE;
-                break;
-            }
-            if (i == maxBattlers) {
+            flag = TryOpportunistCopy(battleSystem, ctx, &script);
+            if (flag == FALSE) {
                 ctx->sendOutState++;
             }
             break;
         case 34: // Symbiosis
-            // A Pokemon that has used up its held item is handed its partner's
-            // by a partner with Symbiosis (Pokemon Central, Simbiosi), after
-            // the move or the entry in which it was used up, or, for a Berry
-            // eaten at the end of a turn, once the turn's end is over, as for
-            // Opportunist above. The reference
-            // declares the ability and nothing reads it. Used up is what
-            // BtlCmd_RemoveItem marks -- eaten, drunk, flung, popped, a Berry
-            // plucked off it included -- and not an item knocked off, stolen,
-            // swapped or burnt. The partner's item has to be one that can
-            // change hands.
-            for (i = 0; i < maxBattlers; i++) {
-                battlerId = ctx->turnOrder[i];
-                if (!ctx->symbiosisPending[battlerId]) {
-                    continue;
-                }
-                ctx->symbiosisPending[battlerId] = FALSE;
-                j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
-                if (j != battlerId && ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].item == ITEM_NONE
-                    && ctx->battleMons[j].hp && GetBattlerAbility(ctx, j) == ABILITY_SYMBIOSIS && CanStealHeldItem(battleSystem, ctx, battlerId, j) == TRUE) {
-                    ctx->itemTemp = ctx->battleMons[j].item;
-                    ctx->battleMons[battlerId].item = ctx->battleMons[j].item;
-                    ctx->battleMons[j].item = ITEM_NONE;
-                    CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
-                    CopyBattleMonToPartyMon(battleSystem, ctx, j);
-                    ctx->battlerIdTemp = j;
-                    script = BATTLE_SUBSCRIPT_SYMBIOSIS;
-                    flag = TRUE;
-                    break;
-                }
-            }
-            if (i == maxBattlers) {
+            flag = TrySymbiosisHandOver(battleSystem, ctx, &script);
+            if (flag == FALSE) {
                 ctx->sendOutState++;
             }
             break;

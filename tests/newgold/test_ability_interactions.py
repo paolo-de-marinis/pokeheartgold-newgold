@@ -294,9 +294,11 @@ class AbilityCopyTableTests(unittest.TestCase):
 
 
 class EndOfTurnEntryAbilityTests(unittest.TestCase):
-    """Opportunist and Symbiosis act from the entry abilities' check, and the
-    end of a turn reaches it before the next turn's choices: TurnEnd sets the
-    trainer's message, which sets the send-out, which is PokemonAppear."""
+    """Opportunist and Symbiosis act from the entry abilities' check after a
+    move or an entry, and from each of the turn's end steps between one effect
+    and the next; the end of a turn also reaches the entry check before the
+    next turn's choices: TurnEnd sets the trainer's message, which sets the
+    send-out, which is PokemonAppear."""
 
     def test_the_turn_s_end_asks_the_entry_abilities(self):
         controller = CONTROLLER.read_text()
@@ -318,6 +320,23 @@ class EndOfTurnEntryAbilityTests(unittest.TestCase):
         entry = function(overlay, "TryAbilityOnEntry")
         self.assertIn("case 33: // Opportunist", entry)
         self.assertIn("case 34: // Symbiosis", entry)
+
+    def test_the_turn_s_end_steps_ask_them_at_once(self):
+        # Between one end-of-turn effect and the next, not after the turn's
+        # end: each step asks, when it is entered again after a script,
+        # before it goes on to its next effect.
+        controller = CONTROLLER.read_text()
+        answers = function(controller, "TryEndOfTurnAnswers")
+        self.assertIn("int script = TryOpportunistOrSymbiosis(battleSystem, ctx);", answers)
+        self.assertIn("ctx->commandNext = ctx->command;\n    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;", answers)
+        for name, before in (("BattleControllerPlayer_UpdateFieldCondition", "switch (ctx->stateFieldConditionUpdate) {"),
+                             ("BattleControllerPlayer_UpdateMonCondition", "while (ctx->updateMonConditionData < maxBattlers) {"),
+                             ("BattleControllerPlayer_UpdateFieldConditionExtra", "switch (ctx->stateUpdateFieldConditionExtra) {")):
+            body = function(controller, name)
+            self.assertLess(body.index("if (TryEndOfTurnAnswers(battleSystem, ctx) == TRUE) {\n"), body.index(before), name)
+            self.assertLess(body.index("TryFaintMon("), body.index("TryEndOfTurnAnswers("), name)
+        both = function(OVERLAY.read_text(), "TryOpportunistOrSymbiosis")
+        self.assertLess(both.index("TryOpportunistCopy(battleSystem, ctx, &script)"), both.index("TrySymbiosisHandOver(battleSystem, ctx, &script)"))
 
 
 class PivotRetreatTests(unittest.TestCase):

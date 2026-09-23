@@ -1033,6 +1033,23 @@ typedef enum UpdateFieldConditionState {
     UFC_STATE_END
 } UpdateFieldConditionState;
 
+// Opportunist and Symbiosis answer an end-of-turn effect as soon as it is over
+// -- a Speed Boost or Moody raise copied, a Berry eaten replaced from the
+// partner's hands -- rather than after the turn's end, where the entry
+// abilities' check would otherwise first find them. Each of the turn's end
+// steps asks this when it is entered again after an effect's script.
+static BOOL TryEndOfTurnAnswers(BattleSystem *battleSystem, BattleContext *ctx) {
+    int script = TryOpportunistOrSymbiosis(battleSystem, ctx);
+
+    if (script == BATTLE_SUBSCRIPT_NONE) {
+        return FALSE;
+    }
+    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+    ctx->commandNext = ctx->command;
+    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+    return TRUE;
+}
+
 static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSystem, BattleContext *ctx) {
     int flag = 0;
     int side;
@@ -1046,6 +1063,9 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
             return;
         }
         if (ov12_0224D7EC(battleSystem, ctx) == TRUE) {
+            return;
+        }
+        if (TryEndOfTurnAnswers(battleSystem, ctx) == TRUE) {
             return;
         }
 
@@ -1516,6 +1536,10 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
         return;
     }
 
+    if (TryEndOfTurnAnswers(battleSystem, ctx) == TRUE) {
+        return;
+    }
+
     while (ctx->updateMonConditionData < maxBattlers) {
         battlerId = ctx->turnOrder[ctx->updateMonConditionData];
         if (ctx->switchInFlag & MaskOfFlagNo(battlerId)) {
@@ -1934,6 +1958,10 @@ static void BattleControllerPlayer_UpdateFieldConditionExtra(BattleSystem *battl
     int battlerId;
 
     if (TryFaintMon(ctx, ctx->command, ctx->command, 1) == TRUE) {
+        return;
+    }
+
+    if (TryEndOfTurnAnswers(battleSystem, ctx) == TRUE) {
         return;
     }
 

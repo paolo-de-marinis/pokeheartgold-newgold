@@ -88,6 +88,7 @@ u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo);
 BOOL ov12_02253068(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 int DamageDivide(int num, int denom);
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx);
+int TryOpportunistOrSymbiosis(BattleSystem *battleSystem, BattleContext *ctx);
 int Battler_GetRandomOpposingBattlerId(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId);
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script);
