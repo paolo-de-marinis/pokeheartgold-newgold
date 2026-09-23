@@ -701,6 +701,10 @@
 #define BATTLE_SUBSCRIPT_ADRENALINE_ORB                     429
 // A miss spending a Blunder Policy, which the reference has no script for.
 #define BATTLE_SUBSCRIPT_BLUNDER_POLICY                     430
+// A held item sending its holder back: the Eject Button. 340 there.
+#define BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM                    431
+// A Red Card dragging the attacker out. 491 there.
+#define BATTLE_SUBSCRIPT_RED_CARD                           432
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

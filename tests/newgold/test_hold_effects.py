@@ -78,8 +78,8 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # The Blank Plate's power took one more.
 # The three origin items and Ogerpon's three masks took six.
 # The Gems took one, the Binding Band one, the Adrenaline Orb one, the
-# Blunder Policy one.
-IMPORTED_AND_UNREAD = 8
+# Blunder Policy one, and the Red Card and the Eject Button two.
+IMPORTED_AND_UNREAD = 6
 
 
 def effects_defined():
@@ -467,8 +467,11 @@ def walk(script, answer):
 
     Only the commands that choose a path are understood: a CheckAbility or
     CheckItemHoldEffect jumps when answer(...) says so, a CompareMonDataToValue
-    OPCODE_EQU jumps when answer(field) equals the value, GoTo jumps, Call is
-    recorded, End stops. Everything else is walked past."""
+    jumps when answer(field) equals the value (OPCODE_EQU) or answer(flag) is
+    true (OPCODE_FLAG_SET), TryReplaceFaintedMon jumps unless
+    answer("REPLACEMENT"), GoTo jumps, End stops. Call, GoToSubscript (which
+    also stops) and SwitchAndUpdateMon are recorded. Everything else is walked
+    past."""
     lines = [line.split("//")[0].strip() for line in script.splitlines()]
     labels = {line[:-1]: i for i, line in enumerate(lines) if line.endswith(":")}
     calls, i = [], 0
@@ -490,6 +493,17 @@ def walk(script, answer):
         elif op == "CompareMonDataToValue" and args[0] == "OPCODE_EQU":
             if answer(args[2]) == int(args[3], 0):
                 i = labels[args[4]]
+        elif op == "CompareMonDataToValue" and args[0] == "OPCODE_FLAG_SET":
+            if answer(args[3]):
+                i = labels[args[4]]
+        elif op == "TryReplaceFaintedMon":
+            if not answer("REPLACEMENT"):
+                i = labels[args[2]]
+        elif op == "GoToSubscript":
+            calls.append(args[0])
+            break
+        elif op == "SwitchAndUpdateMon":
+            calls.append(f"{op} {args[0]}")
     return calls
 
 
@@ -605,6 +619,131 @@ class BlunderPolicyTests(unittest.TestCase):
                      "BMON_DATA_HELD_ITEM, BSCRIPT_VAR_MSG_ITEM_TEMP"):
             self.assertIn(line, script[:raise_at])
         self.assertIn("RemoveItem BATTLER_CATEGORY_ATTACKER", script[raise_at:])
+
+
+SWITCH_ITEM_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { int unused; } BattleSystem;
+typedef struct { int hp; u32 moveEffectFlags; } BattleMon;
+typedef struct { int physicalDamage, specialDamage; } SelfTurnData;
+typedef struct {
+    int battlerIdAttacker, battlerIdTemp; u32 moveNoCur; u32 battleStatus2;
+    BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
+} BattleContext;
+static struct { int item[4], ability[4]; u32 battleType; int suppressible, replacements, picked, pickedLevel; } S;
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return S.item[battlerId]; }
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return S.ability[battlerId]; }
+static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return S.suppressible; }
+static u32 BattleSystem_GetBattleType(BattleSystem *bs) { (void)bs; return S.battleType; }
+static BOOL TryPickForcedSwitchIn(BattleSystem *bs, BattleContext *ctx, int battlerId, BOOL checkLevel) {
+    (void)bs; (void)ctx; S.picked = battlerId + 1; S.pickedLevel = checkLevel; return S.replacements;
+}
+@FUNCTION@
+static BattleContext ctx;
+static BattleSystem bs;
+static void reset(void) {
+    for (int i = 0; i < 4; i++) { S.item[i] = HOLD_EFFECT_NONE; S.ability[i] = ABILITY_NONE; }
+    S.battleType = BATTLE_TYPE_TRAINER; S.suppressible = 0; S.replacements = 1; S.picked = 0; S.pickedLevel = -1;
+    ctx = (BattleContext){ 0 };
+    ctx.battlerIdAttacker = 0; ctx.battlerIdTemp = -1;
+    for (int i = 0; i < 4; i++) ctx.battleMons[i].hp = 50;
+    ctx.selfTurnData[1].physicalDamage = -20;
+}
+static int ask(int battlerId) { return CheckSwitchItemOnHit(&bs, &ctx, battlerId); }
+int main(void) {
+    // Eject Button: a battler the move hurt, standing, goes back.
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT;
+    assert(ask(1) == BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM && ctx.battlerIdTemp == 1);
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.selfTurnData[1].physicalDamage = 0; ctx.selfTurnData[1].specialDamage = -3;
+    assert(ask(1) == BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM);
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.selfTurnData[1].physicalDamage = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.battleMons[1].hp = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.battleStatus2 = BATTLE_STATUS2_UTURN;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; S.ability[0] = ABILITY_SHEER_FORCE; S.suppressible = 1;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; S.ability[0] = ABILITY_SHEER_FORCE;
+    assert(ask(1) == BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM);
+    reset(); S.item[0] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.selfTurnData[0].physicalDamage = -5;
+    assert(ask(0) == BATTLE_SUBSCRIPT_NONE);
+    // Red Card: the attacker is dragged out for someone chosen without the level test.
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE;
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.battlerIdTemp == 1 && S.picked == 1 && S.pickedLevel == FALSE);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.replacements = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.battleType = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; ctx.battleMons[0].hp = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; ctx.battleMons[1].hp = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    // Anchored: the card is still played, and nobody is chosen.
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.ability[0] = ABILITY_SUCTION_CUPS; S.replacements = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && S.picked == 0);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; ctx.battleMons[0].moveEffectFlags = MOVE_EFFECT_FLAG_INGRAIN; S.replacements = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && S.picked == 0);
+    return 0;
+}
+"""
+
+
+class SwitchItemTests(unittest.TestCase):
+    """Red Card and Eject Button (ServerDoPostMoveEffects.c:1799-1850 and
+    subscripts 340 and 491 at d0380a487; Pokemon Central's Cartelrosso and
+    Pulsantefuga for the card spent on an anchored attacker)."""
+
+    def test_who_answers_a_hit(self):
+        body = function(OVERLAY.read_text(), "CheckSwitchItemOnHit")
+        run_c(SWITCH_ITEM_FIXTURE.replace("@FUNCTION@", body))
+
+    def test_asked_after_the_move_before_the_users_own_items(self):
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        ask = body.index("CheckSwitchItemOnHit(battleSystem, ctx, ctx->turnOrder[ctx->unk_34++])")
+        self.assertLess(ask, body.index("HOLD_EFFECT_HP_RESTORE_ON_DMG"))
+        self.assertLess(ask, body.index("HOLD_EFFECT_HP_DRAIN_ON_ATK"))
+        self.assertIn("ctx->unk_34 = SWITCH_ITEM_USED;", body)
+        spray = body[body.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"):]
+        self.assertIn("!(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)", spray[:spray.index("{")])
+        self.assertIn("TryPickForcedSwitchIn(battleSystem, ctx, ctx->battlerIdTarget, TRUE)",
+                      function(COMMANDS.read_text(), "BtlCmd_TryWhirlwind"))
+
+    def test_the_eject_button_sends_its_holder_back(self):
+        script = subscript_named("BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM")
+        self.assertEqual(walk(script, {}.get), [])
+        self.assertEqual(walk(script, {"REPLACEMENT": True}.get),
+                         ["BATTLE_SUBSCRIPT_PURSUIT", "BATTLE_SUBSCRIPT_SHOW_PARTY_LIST"])
+        self.assertEqual(walk(script, {"REPLACEMENT": True, "BMON_DATA_HP": 0}.get), ["BATTLE_SUBSCRIPT_PURSUIT"])
+        before = script[:script.index("Call BATTLE_SUBSCRIPT_PURSUIT")]
+        self.assertIn("PrintMessage msg_0197_01622, TAG_NICKNAME, BATTLER_CATEGORY_MSG_BATTLER_TEMP", before)
+        self.assertIn("RemoveItem BATTLER_CATEGORY_MSG_BATTLER_TEMP", before)
+        self.assertIn("BSCRIPT_VAR_BATTLER_SWITCH, BSCRIPT_VAR_MSG_BATTLER_TEMP", before)
+
+    def test_the_red_card_drags_the_attacker_out(self):
+        script = subscript_named("BATTLE_SUBSCRIPT_RED_CARD")
+        push, pop = "BATTLE_SUBSCRIPT_PUSH_ATTACKER_AND_DEFENDER", "BATTLE_SUBSCRIPT_POP_ATTACKER_AND_DEFENDER"
+        self.assertEqual(walk(script, {}.get),
+                         [push, "SwitchAndUpdateMon BATTLER_CATEGORY_FORCED_OUT", "BATTLE_SUBSCRIPT_HAZARDS_CHECK", pop])
+        self.assertEqual(walk(script, {"ABILITY_SUCTION_CUPS": True}.get), [push, pop])
+        self.assertEqual(walk(script, {"MOVE_EFFECT_FLAG_INGRAIN": True}.get), [push, pop])
+        card = script[:script.index("CheckAbility")]
+        self.assertIn("BSCRIPT_VAR_BATTLER_TARGET, BSCRIPT_VAR_BATTLER_ATTACKER", card)
+        self.assertIn("BSCRIPT_VAR_BATTLER_ATTACKER, BSCRIPT_VAR_MSG_BATTLER_TEMP", card)
+        self.assertIn("PrintMessage msg_0197_01716, TAG_NICKNAME_NICKNAME, BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_DEFENDER", card)
+        self.assertIn("RemoveItem BATTLER_CATEGORY_ATTACKER", card)
+        dragged = script[script.index("Call BATTLE_SUBSCRIPT_HAZARDS_CHECK"):script.index("_SUCTION_CUPS:")]
+        self.assertIn("BATTLE_STATUS2_UTURN", dragged)
 
 
 if __name__ == "__main__":

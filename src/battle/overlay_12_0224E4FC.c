@@ -16,6 +16,7 @@
 #include "constants/trainers.h"
 
 #include "battle/battle.h"
+#include "battle/battle_command.h"
 #include "battle/battle_controller.h"
 #include "battle/battle_controller_opponent.h"
 #include "battle/battle_system.h"
@@ -7975,6 +7976,59 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
     }
 
     return ret;
+}
+
+// The two items that answer a hit by sending somebody away, asked once the
+// move is over rather than after each hit, so a multi-hit move lands every
+// hit first (the reference's Activate_KeeMarangaBerry_RedCard_EjectButton,
+// ServerDoPostMoveEffects.c:1799 at d0380a487, run from its post-move steps).
+// battlerId is any battler; it has to be one the move damaged -- not through
+// a substitute, which records no damage -- and still be standing. Nothing
+// answers a move Sheer Force powered, or one after which the user has
+// already gone (U-turn and its kind leave in the middle of the move here, so
+// the Eject Button they should have beaten is not asked; the reference's
+// order has the button win). Returns the subscript to run, with the holder in
+// battlerIdTemp, or BATTLE_SUBSCRIPT_NONE.
+//
+// Eject Button: the holder goes back and its trainer chooses who comes in;
+// subscript SWITCH_OUT_ITEM finds out whether there is anyone.
+//
+// Red Card: the attacker is dragged out for a Pokemon at random. The
+// reference asks it only in a trainer battle, as Pokemon Central's
+// Cartelrosso does for a wild Pokemon, and uses Whirlwind's choice; it is
+// chosen here, without Whirlwind's level test, which a card does not make, and
+// with nobody to bring in the card is not used. Pokemon Central (the reference
+// keeps the card instead): Suction Cups or Ingrain on the attacker spend the
+// card and keep the attacker where it is. Guard Dog does the same there, and
+// belongs with Guard Dog's own effect, which is not written yet.
+int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int attacker = ctx->battlerIdAttacker;
+
+    if (battlerId == attacker
+        || ctx->battleMons[battlerId].hp == 0
+        || (ctx->selfTurnData[battlerId].physicalDamage == 0 && ctx->selfTurnData[battlerId].specialDamage == 0)
+        || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
+        || (GetBattlerAbility(ctx, attacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE)) {
+        return BATTLE_SUBSCRIPT_NONE;
+    }
+
+    switch (GetBattlerHeldItemEffect(ctx, battlerId)) {
+    case HOLD_EFFECT_SWITCH_OUT_WHEN_HIT:
+        ctx->battlerIdTemp = battlerId;
+        return BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM;
+    case HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE:
+        if (ctx->battleMons[attacker].hp == 0 || !(BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER)) {
+            return BATTLE_SUBSCRIPT_NONE;
+        }
+        if (GetBattlerAbility(ctx, attacker) != ABILITY_SUCTION_CUPS
+            && !(ctx->battleMons[attacker].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
+            && TryPickForcedSwitchIn(battleSystem, ctx, attacker, FALSE) == FALSE) {
+            return BATTLE_SUBSCRIPT_NONE;
+        }
+        ctx->battlerIdTemp = battlerId;
+        return BATTLE_SUBSCRIPT_RED_CARD;
+    }
+    return BATTLE_SUBSCRIPT_NONE;
 }
 
 int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) {

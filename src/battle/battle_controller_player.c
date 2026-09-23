@@ -4687,6 +4687,10 @@ static BOOL ov12_0224E130(BattleSystem *battleSystem, BattleContext *ctx) {
     return ret;
 }
 
+// ov12_0224E1BC's battler walk once a held item has sent somebody away: one
+// such item a move, as the reference's "switch pending" status makes it.
+#define SWITCH_ITEM_USED 0xFF
+
 static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
     int flag = 0;
 
@@ -4707,6 +4711,29 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_30++;
             break;
         case 1:
+            // A Red Card or an Eject Button on anything the move hurt, once
+            // the move is over and before the user's own Shell Bell and Life
+            // Orb, which is where the reference asks them. unk_34 walks the
+            // battlers in the order they act; the first item that answers is
+            // the only one, and unk_34 then says so for the rest of the
+            // sequence.
+            while (ctx->unk_34 < maxBattlers) {
+                int script = CheckSwitchItemOnHit(battleSystem, ctx, ctx->turnOrder[ctx->unk_34++]);
+
+                if (script != BATTLE_SUBSCRIPT_NONE) {
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                    ctx->commandNext = ctx->command;
+                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                    ctx->unk_34 = SWITCH_ITEM_USED;
+                    flag = 1;
+                    break;
+                }
+            }
+            if (flag == 0) {
+                ctx->unk_30++;
+            }
+            break;
+        case 2:
             if (ctx->battlerIdTarget != BATTLER_NONE
                 && item == HOLD_EFFECT_HP_RESTORE_ON_DMG
                 && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
@@ -4725,7 +4752,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 2:
+        case 3:
             if (item == HOLD_EFFECT_HP_DRAIN_ON_ATK
                 && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD
                 && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
@@ -4742,7 +4769,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 3:
+        case 4:
             // A Throat Spray answers the attacker using a sound move, and that
             // is the whole of the reference's condition: not that the move hit,
             // not that there was anything to hit, and not that Sp. Atk had room
@@ -4750,8 +4777,12 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             // all the same. It sits here because this is where the attacker's
             // own items are read after its move, beside the Shell Bell and the
             // Life Orb.
+            //
+            // Not once the user has gone: what stands in its place now holds
+            // its own items, and did not use the move.
             if (item == HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE
                 && BattleMoveIsSoundBased(ctx->moveNoCur) == TRUE
+                && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
                 && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {
 
                 ctx->msgTemp = STAT_SPATK;
@@ -4764,7 +4795,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 4: {
+        case 5: {
             // Emergency Exit and Wimp Out, one Pokemon at a time: this step
             // comes round again after each, until none is left to go.
             int script;
@@ -4779,7 +4810,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 5:
+        case 6:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;
