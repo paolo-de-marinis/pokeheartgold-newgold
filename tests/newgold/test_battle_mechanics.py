@@ -1147,7 +1147,7 @@ class SleepTalkMultiStrikeTests(unittest.TestCase):
         self.assertIn("(ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_SLEEP) && ctx->moveNoTemp != MOVE_SLEEP_TALK",
                       function(OVERLAY.read_text(), "MultiHit_StoppedBySleep"))
         loop = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224CF14")
-        self.assertEqual(loop.count("MultiHit_StoppedBySleep(ctx)"), 2)
+        self.assertEqual(loop.count("MultiHit_StoppedBySleep(ctx)"), 3)
         self.assertNotIn("STATUS_SLEEP", loop)
         # Parental Bond's wait for its second strike asks the same.
         self.assertIn("!MultiHit_StoppedBySleep(ctx)", function(OVERLAY.read_text(), "ParentalBond_StrikeToCome"))

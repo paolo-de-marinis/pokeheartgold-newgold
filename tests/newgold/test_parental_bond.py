@@ -247,6 +247,28 @@ class ParentalBondTests(unittest.TestCase):
         self.assertIn("!ParentalBond_StrikeToCome(ctx)", function(CONTROLLER.read_text(), "ov12_0224CC88"))
         self.assertIn("!ParentalBond_IsSecondStrike(ctx)", function(COMMANDS.read_text(), "BtlCmd_CalcFuryCutterPower"))
 
+    def test_a_first_strike_that_proves_the_last_does_what_it_left(self):
+        # Pokemon Central (Spargispora, Mossa multicolpo): Effect Spore's
+        # sleep ends a multi-strike move at once. Parental Bond's first strike
+        # has left its switch, its theft or its recoil to the second by then;
+        # the loop does them when the second will not come.
+        body = function(OVERLAY.read_text(), "ov12_02250490")
+        self.assertIn("u32 sideEffect = ctx->unk_2174;", body)
+        waiting = body[body.index("if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {"):]
+        held = waiting[:waiting.index("ret = FALSE;")]
+        self.assertIn("ctx->parentalBondDeferred = sideEffect;", held)
+        recoil = waiting[waiting.index("case BATTLE_SUBSCRIPT_RECOIL_1_4:"):]
+        for script in ("RECOIL_1_3", "RECOIL_1_2", "RECOIL_HALF_MAX_HP"):
+            self.assertIn(f"case BATTLE_SUBSCRIPT_{script}:", recoil[:recoil.index("break;")])
+        self.assertRegex(waiting, r"case BATTLE_SUBSCRIPT_RECOIL_1_3_CHANCE_TO_BURN:\s*case BATTLE_SUBSCRIPT_RECOIL_1_3_CHANCE_TO_PARALYZE:\s*"
+                                  r"ctx->parentalBondDeferred = MOVE_SIDE_EFFECT_ON_HIT \| MOVE_SUBSCRIPT_PTR_RECOIL_1_3;")
+        loop = function(CONTROLLER.read_text(), "ov12_0224CF14")
+        deferred = loop[:loop.index("if (ctx->multiHitCountTemp != 0) {")]
+        self.assertIn("if (ParentalBond_IsFirstStrike(ctx) && MultiHit_StoppedBySleep(ctx) && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {", deferred)
+        self.assertLess(deferred.index("parentalBond = FALSE;"), deferred.index("ov12_02250490(battleSystem, ctx, &script)"))
+        self.assertIn("ctx->unk_2174 = deferred;", deferred)
+        self.assertIn("ctx->parentalBondDeferred = 0;", function(CONTROLLER.read_text(), "ov12_02249460"))
+
     def test_the_scripts_that_ask(self):
         pay_day = (EFFECTS / "effect_script_0034.s").read_text()
         self.assertLess(pay_day.index("GotoIfSecondHitOfParentalBond _NO_COINS"), pay_day.index("MOVE_SUBSCRIPT_PTR_PAY_DAY"))

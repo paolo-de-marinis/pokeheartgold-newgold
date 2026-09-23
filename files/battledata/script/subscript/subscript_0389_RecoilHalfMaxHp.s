@@ -14,7 +14,8 @@
 //
 // With Parental Bond it comes once, after the last strike: the first strike
 // leaves it to the second unless it felled the target (Pokemon Central,
-// Amorefiliale, for the recoil of both strikes).
+// Amorefiliale, for the recoil of both strikes), or the multi-strike loop
+// runs it again once Effect Spore has put the user to sleep (ov12_0224CF14).
 _000:
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_ROCK_HEAD, _END
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_MAGIC_GUARD, _END

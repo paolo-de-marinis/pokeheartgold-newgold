@@ -1827,6 +1827,7 @@ BOOL TryPivotTargetHeldItem(BattleSystem *battleSystem, BattleContext *ctx) {
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     BOOL ret = FALSE;
     u16 effectChance;
+    u32 sideEffect = ctx->unk_2174;
 
     // A Covert Cloak on whoever was hit eats the same effects Sheer Force
     // gives up, and the reference asks the two in one condition here. What it
@@ -1944,6 +1945,15 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     // Steel Roller needs for its second strike. The reference does these after
     // the move; here they come with the hit, so the first strike leaves them
     // to the second, unless the first was the last.
+    //
+    // The first strike can still prove the last once these have been asked:
+    // Effect Spore puts the user to sleep, and the move ends there (Pokemon
+    // Central, Spargispora). What was left to the second strike is then done
+    // after all, as after the last strike, by the multi-strike loop
+    // (ov12_0224CF14), which parentalBondDeferred tells what it was. So is
+    // the recoil, which the recoil subscripts leave to the second strike
+    // themselves; of Flare Blitz's and Volt Tackle's the recoil alone, their
+    // burn and paralysis having had their chance with the strike.
     if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {
         switch (*out) {
         case BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT:
@@ -1956,7 +1966,18 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         case BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN:
         case BATTLE_SUBSCRIPT_MEAN_LOOK:
         case BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END:
+            ctx->parentalBondDeferred = sideEffect;
             ret = FALSE;
+            break;
+        case BATTLE_SUBSCRIPT_RECOIL_1_4:
+        case BATTLE_SUBSCRIPT_RECOIL_1_3:
+        case BATTLE_SUBSCRIPT_RECOIL_1_2:
+        case BATTLE_SUBSCRIPT_RECOIL_HALF_MAX_HP:
+            ctx->parentalBondDeferred = sideEffect;
+            break;
+        case BATTLE_SUBSCRIPT_RECOIL_1_3_CHANCE_TO_BURN:
+        case BATTLE_SUBSCRIPT_RECOIL_1_3_CHANCE_TO_PARALYZE:
+            ctx->parentalBondDeferred = MOVE_SIDE_EFFECT_ON_HIT | MOVE_SUBSCRIPT_PTR_RECOIL_1_3;
             break;
         }
     }

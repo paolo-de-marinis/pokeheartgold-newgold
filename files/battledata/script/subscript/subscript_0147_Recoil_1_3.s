@@ -8,8 +8,9 @@
 // damage so far is what the attacker has dealt since the move began
 // (shellBellDamage, cleared with the move's state): this strike's without
 // the ability, both strikes' with it.
-// A first strike that Effect Spore answers with sleep also ends the move
-// and leaves no recoil: telling would take the multi-strike loop's own check.
+// A first strike that Effect Spore answers with sleep ends the move too, once
+// this has been passed; the multi-strike loop runs it again then, with the
+// move striking once (ov12_0224CF14).
 _000:
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_ROCK_HEAD, _038
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_MAGIC_GUARD, _038
