@@ -272,10 +272,13 @@ class SaveUiTests(unittest.TestCase):
                          ("Garchomp", 55, 234))
         self.assertIn("510", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "party_edit",
                                                         "args": {"slot": 0, "evs": [255, 255, 1, 0, 0, 0]}}))
+        self.assertIn("almeno una mossa", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "party_edit",
+                                                                     "args": {"slot": 0, "moves": [0, 0]}}))
         self.edit("party_swap", {"a": 0, "b": 1})
         self.edit("party_remove", {"slot": 5})
-        out = self.edit("party_add", {"species": n["MEW"], "level": 12, "nature": 3})
+        out = self.edit("party_add", {"species": n["MEW"], "level": 12, "nature": 3, "moves": []})
         self.assertEqual((out["party"][5]["species_name"], out["party"][5]["nature"]), ("Mew", 3))
+        self.assertTrue(out["party"][5]["moves"], "no moves given: the species' own")
         self.assertEqual(out["party"][0]["species_name"], "Pidgey")
         self.assertIn("sei", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "party_add",
                                                         "args": {"species": 1, "level": 5}}))

@@ -830,6 +830,8 @@ def checked_mon(a):
         moves = [m for m in moves if m]
         if len(moves) > 4 or len(set(moves)) != len(moves):
             raise Refused("al massimo quattro mosse, tutte diverse")
+        if not moves:
+            raise Refused("un Pokémon senza mosse non può lottare: serve almeno una mossa")
         out["moves"] = moves
     if "ivs" in a:
         out["ivs"] = [number(v, 0, 31, "IV") for v in a["ivs"]]
@@ -867,11 +869,13 @@ def storable(fields):
 
 
 def created(save, a, party):
-    fields = storable(checked_mon(a))
+    """A new Pokemon; with no moves given, the ones the species knows at
+    that level."""
+    fields = storable(checked_mon({k: v for k, v in a.items() if k != "moves" or v}))
     if "species" not in fields or "level" not in fields:
         raise Refused("servono specie e livello")
     raw = sv.new_mon(fields["species"], fields["level"], sv.owner(save), nature=fields.get("nature"),
-                     moves=fields.get("moves") or None, item=fields.get("item", 0),
+                     moves=fields.get("moves"), item=fields.get("item", 0),
                      ivs=fields.get("ivs", 31), evs=fields.get("evs", 0), party=party)
     if "friendship" in fields:
         raw = sv.edit_mon(raw, friendship=fields["friendship"])
