@@ -681,6 +681,13 @@ static int PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop(PartyMenu *partyMenu) {
         mapEvoMethod = MapHeader_GetMapEvolutionMethod(partyMenu->args->fieldSystem->location->mapId);
         partyMenu->args->species = GetMonEvolution(partyMenu->args->party, mon, EVOCTX_LEVELUP, mapEvoMethod, &partyMenu->args->evoMethod);
         partyMenu->args->selectedAction = partyMenu->args->species != SPECIES_NONE ? PARTY_MENU_ACTION_RETURN_EVO_RARE_CANDY : PARTY_MENU_ACTION_RETURN_0;
+        // With no evolution to run and candies left, the menu stays on "Use on
+        // which Pokemon?" for the next one instead of going back to the bag.
+        if (partyMenu->args->species == SPECIES_NONE && Bag_HasItem(partyMenu->args->bag, partyMenu->args->itemId, 1, HEAP_ID_PARTY_MENU)) {
+            ClearFrameAndWindow2(&partyMenu->windows[PARTY_MENU_WINDOW_ID_34], TRUE);
+            PartyMenu_PrintMessageOnWindow32(partyMenu, msg_0300_00033, TRUE);
+            return PARTY_MENU_STATE_USE_ITEM_SELECT_MON;
+        }
         return PARTY_MENU_STATE_BEGIN_EXIT;
     }
 

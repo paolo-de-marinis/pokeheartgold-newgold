@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Run the native Rare Candy item effect with host sanitizers.
+"""Run the native Rare Candy item effect and party-menu step with host sanitizers.
 
-UseItemOnPokemon is extracted from src/use_item_on_mon.c and compiled against
-the repository's own item and Pokemon constants. The item data, the Pokemon
-and the helpers it calls are controlled stand-ins, so this checks what the
-candy does to the Pokemon it is used on, not the party menu around it.
+UseItemOnPokemon is extracted from src/use_item_on_mon.c and
+PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop from src/party_menu_items.c, and
+compiled against the repository's own item and Pokemon constants. The item
+data, the Pokemon, the bag, the message windows and the evolution lookup are
+controlled stand-ins, so this checks what the candy does to the Pokemon and
+which state the menu's last level-up step returns, not the drawing.
 """
 
 import os
@@ -92,6 +94,119 @@ int main(void) {
 '''
 
 
+MENU_PREFIX = r'''
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/items.h"
+#include "constants/pokemon.h"
+#include "constants/species.h"
+#include "msgdata/msg/msg_0300.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define HEAP_ID_PARTY_MENU 0
+#define PAD_BUTTON_A 1
+#define PAD_BUTTON_B 2
+#define SEQ_SE_DP_SELECT 1
+#define MOVE_NONE 0
+#define MOVE_APPEND_FULL 0xFFFFu
+#define MOVE_APPEND_KNOWN 0xFFFEu
+enum { PARTY_MENU_STATE_USE_ITEM_SELECT_MON = 4, PARTY_MENU_STATE_ITEM_USE_CB, PARTY_MENU_STATE_WAIT_TEXT_PRINTER, PARTY_MENU_STATE_YES_NO_INIT, PARTY_MENU_STATE_BEGIN_EXIT };
+enum { PARTY_MENU_ACTION_RETURN_0, PARTY_MENU_ACTION_RETURN_EVO_RARE_CANDY = 9 };
+enum { PARTY_MENU_WINDOW_ID_32 = 32, PARTY_MENU_WINDOW_ID_34 = 34, PARTY_MENU_WINDOW_COUNT = 40 };
+
+typedef struct { int unused; } Pokemon, Bag, Window, String, MsgData, MessageFormat, BoxPokemon;
+typedef struct { u32 mapId; } Location;
+typedef struct { Location *location; } FieldSystem;
+typedef struct {
+    void *party; Bag *bag; FieldSystem *fieldSystem;
+    u16 itemId, moveId, species; int evoMethod, selectedAction, levelUpMoveSearchState, selectedMoveIdx;
+} PartyMenuArgs;
+typedef struct PartyMenu PartyMenu;
+struct PartyMenu {
+    PartyMenuArgs *args; int partyMonIndex, levelUpLearnMovesLoopState, textPrinterId, afterTextPrinterState;
+    Window windows[PARTY_MENU_WINDOW_COUNT]; MsgData *msgData; MessageFormat *msgFormat; String *formattedStrBuf;
+    int (*yesCallback)(PartyMenu *); int (*noCallback)(PartyMenu *);
+};
+static struct { u16 newKeys; } gSystem;
+
+static Pokemon theMon;
+static u16 evolvesInto;
+static unsigned candiesLeft;
+static Window *cleared;
+static int printedOn32 = -1;
+
+static Pokemon *Party_GetMonByIndex(void *party, int slot) { (void)party; (void)slot; return &theMon; }
+static u32 MapHeader_GetMapEvolutionMethod(u32 mapId) { (void)mapId; return 0; }
+static u16 GetMonEvolution(void *party, Pokemon *mon, int context, u16 method, int *ret) { (void)party; (void)mon; (void)method; assert(context == EVOCTX_LEVELUP); *ret = 0; return evolvesInto; }
+static BOOL Bag_HasItem(Bag *bag, u16 item, u16 quantity, int heap) { (void)bag; (void)heap; assert(item == ITEM_RARE_CANDY && quantity == 1); return candiesLeft >= quantity; }
+static void ClearFrameAndWindow2(Window *window, BOOL dontCopy) { (void)dontCopy; cleared = window; }
+static void PartyMenu_PrintMessageOnWindow32(PartyMenu *menu, int msg, BOOL frame) { (void)menu; assert(frame); printedOn32 = msg; }
+// The steps before the last one: not reached here.
+static BOOL TextPrinterCheckActive(int id) { (void)id; assert(0); return FALSE; }
+static BOOL System_GetTouchNew(void) { assert(0); return FALSE; }
+static void PlaySE(int se) { (void)se; assert(0); }
+static void PartyMenu_LevelUpPrintStatsChange(PartyMenu *m) { (void)m; assert(0); }
+static void sub_0207DF98(PartyMenu *m) { (void)m; assert(0); }
+static void sub_0207E04C(PartyMenu *m) { (void)m; assert(0); }
+static u16 MonTryLearnMoveOnLevelUp(Pokemon *mon, int *state, u16 *move) { (void)mon; (void)state; (void)move; assert(0); return 0; }
+static BoxPokemon *Mon_GetBoxMon(Pokemon *mon) { (void)mon; assert(0); return NULL; }
+static void BufferBoxMonNickname(MessageFormat *f, int i, BoxPokemon *b) { (void)f; (void)i; (void)b; assert(0); }
+static void BufferMoveName(MessageFormat *f, int i, u16 move) { (void)f; (void)i; (void)move; assert(0); }
+static String *NewString_ReadMsgData(MsgData *d, int msg) { (void)d; (void)msg; assert(0); return NULL; }
+static void StringExpandPlaceholders(MessageFormat *f, String *dst, String *src) { (void)f; (void)dst; (void)src; assert(0); }
+static void String_Delete(String *s) { (void)s; assert(0); }
+static void PartyMenu_PrintMessageOnWindow34(PartyMenu *m, int msg, BOOL frame) { (void)m; (void)msg; (void)frame; assert(0); }
+static void PartyMenu_LearnMoveToSlot(PartyMenu *m, Pokemon *mon, int slot) { (void)m; (void)mon; (void)slot; assert(0); }
+static int PartyMenu_ItemUseFunc_LevelUpPromptForgetMove(PartyMenu *m) { (void)m; assert(0); return 0; }
+static int PartyMenu_ItemUseFunc_LevelUpAskStopTryingToLearn(PartyMenu *m) { (void)m; assert(0); return 0; }
+@NATIVE@
+'''
+
+MENU_MAIN = r'''
+static int lastStep(PartyMenu *menu) {
+    cleared = NULL;
+    printedOn32 = -1;
+    menu->levelUpLearnMovesLoopState = 6;
+    return PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop(menu);
+}
+
+int main(void) {
+    Location location = { 0 };
+    FieldSystem fieldSystem = { &location };
+    PartyMenuArgs args = { .itemId = ITEM_RARE_CANDY, .fieldSystem = &fieldSystem };
+    PartyMenu menu = { .args = &args };
+
+    // More candies and no evolution: the menu stays on "Use on which
+    // Pokemon?" for the next one, the level-up message cleared.
+    evolvesInto = SPECIES_NONE;
+    candiesLeft = 3;
+    assert(lastStep(&menu) == PARTY_MENU_STATE_USE_ITEM_SELECT_MON);
+    assert(args.selectedAction == PARTY_MENU_ACTION_RETURN_0);
+    assert(cleared == &menu.windows[PARTY_MENU_WINDOW_ID_34]);
+    assert(printedOn32 == msg_0300_00033);
+
+    // The last candy goes back to the bag, as before.
+    candiesLeft = 0;
+    assert(lastStep(&menu) == PARTY_MENU_STATE_BEGIN_EXIT);
+    assert(args.selectedAction == PARTY_MENU_ACTION_RETURN_0);
+    assert(cleared == NULL && printedOn32 == -1);
+
+    // An evolution always leaves to run it, candies or not.
+    evolvesInto = SPECIES_MEGANIUM;
+    candiesLeft = 3;
+    assert(lastStep(&menu) == PARTY_MENU_STATE_BEGIN_EXIT);
+    assert(args.selectedAction == PARTY_MENU_ACTION_RETURN_EVO_RARE_CANDY);
+    assert(args.species == SPECIES_MEGANIUM);
+    assert(cleared == NULL && printedOn32 == -1);
+
+    puts("PASS: candies left keep the menu open, the last candy and an evolution leave it.");
+}
+'''
+
+
 class RareCandyTests(unittest.TestCase):
     def test_native_candy_at_the_top_level(self):
         native = function((ROOT / "src/use_item_on_mon.c").read_text(), "UseItemOnPokemon")
@@ -100,6 +215,19 @@ class RareCandyTests(unittest.TestCase):
             c, exe = Path(temp) / "check.c", Path(temp) / "check"
             c.write_text(program)
             result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + ["-std=c11", "-O1", "-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer", "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(exe)], capture_output=True, text=True, env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(result.returncode, 0, result.stderr)
+            print(result.stdout.strip())
+
+
+    def test_native_candy_menu_stays_open(self):
+        native = function((ROOT / "src/party_menu_items.c").read_text(), "PartyMenu_ItemUseFunc_LevelUpLearnMovesLoop")
+        program = MENU_PREFIX.replace("@NATIVE@", native) + MENU_MAIN
+        with tempfile.TemporaryDirectory(prefix="newgold-rare-candy-menu-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            c.write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + ["-std=c11", "-O1", "-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer", "-iquote", str(ROOT / "include"), "-iquote", str(ROOT / "files"), str(c), "-o", str(exe)], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             result = subprocess.run([str(exe)], capture_output=True, text=True, env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
             self.assertEqual(result.returncode, 0, result.stderr)
