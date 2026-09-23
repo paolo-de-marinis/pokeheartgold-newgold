@@ -228,7 +228,7 @@ u16 sub_0202B404(Mail *mail, u8 r1, u8 r4, u16 r3) {
                 break;
             }
         }
-        if (sp0.icon > 546) {
+        if (sp0.icon > LAST_MON_ICON) {
             sp0.icon = 7;
             sp0.pal = 0;
         }

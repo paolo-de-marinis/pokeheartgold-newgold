@@ -58,6 +58,7 @@ FOOTPRINTS = ROOT / "files/poketool/pokefoot/pokefoot"
 MESSAGES = ROOT / "files/msgdata/msg"
 PERSONAL = ROOT / "files/poketool/personal/personal.json"
 ICON_SOURCE = ROOT / "src/pokemon_icon_idx.c"
+ICON_HEADER = ROOT / "include/pokemon_icon_idx.h"
 CRY_SOURCE = ROOT / "src/unk_02005D10.c"
 SPECIES_HEADER = ROOT / "include/constants/species.h"
 
@@ -187,8 +188,8 @@ class SpeciesInPlayTests(unittest.TestCase):
         """Both lookups, run the way GetMonIconNaixEx and GetMonIconPaletteEx
         run them, with their own constants read out of the source."""
         source = ICON_SOURCE.read_text()
-        firstIcon = constant(source, "FIRST_ADDED_ICON")
-        firstPalette = constant(source, "FIRST_ADDED_PALETTE")
+        firstIcon = constant(ICON_HEADER.read_text(), "FIRST_ADDED_ICON")
+        firstPalette = constant(ICON_HEADER.read_text(), "FIRST_ADDED_PALETTE")
         pictures = {int(m.group(1)) for m in
                     (re.match(r"poke_icon_0*(\d+)\.png$", p.name) for p in ICONS.iterdir()) if m}
         start = source.index("sPokemonPalNoBySpeciesAndForm[] = {")

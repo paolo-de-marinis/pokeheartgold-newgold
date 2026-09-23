@@ -21,7 +21,8 @@ SOURCE = (ROOT / "src/pokemon_icon_idx.c").read_text()
 
 
 def constant(name):
-    return int(re.search(rf"#define {name}\s+(\d+)", SOURCE).group(1))
+    header = (ROOT / "include/pokemon_icon_idx.h").read_text()
+    return int(re.search(rf"#define {name}\s+(\d+)", header).group(1))
 
 
 def species_id(name):

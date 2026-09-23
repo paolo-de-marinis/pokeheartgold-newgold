@@ -30,7 +30,7 @@ if REFERENCE is None:
 
 class IconPlaceTests(unittest.TestCase):
     def setUp(self):
-        source = (ROOT / "src/pokemon_icon_idx.c").read_text()
+        source = (ROOT / "include/pokemon_icon_idx.h").read_text()
         self.first = int(re.search(r"#define FIRST_ADDED_ICON\s+(\d+)", source).group(1))
         self.added = import_species.added_species()
 

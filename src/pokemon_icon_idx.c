@@ -6,13 +6,6 @@
 
 #include "pokemon.h"
 
-// HGSS reads a species' icon at species + 7, and the entries just past the
-// last species are taken by the alternate form icons, so the species New Gold
-// adds are given the range after all of them. Their palette numbers follow the
-// form entries in the table below for the same reason.
-#define FIRST_ADDED_ICON    551
-#define FIRST_ADDED_PALETTE 544
-
 static u16 BoxMonGetForm(BoxPokemon *boxMon);
 
 u32 Boxmon_GetIconNaix(BoxPokemon *boxMon) {
