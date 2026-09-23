@@ -92,6 +92,47 @@ class MortalSpinTests(unittest.TestCase):
         self.assertTrue((SUBSCRIPTS / f"subscript_{number:04d}_MortalSpin.s").exists())
 
 
+class StuffCheeksTests(unittest.TestCase):
+    @staticmethod
+    def items():
+        text = (ROOT / "include/constants/items.h").read_text()
+        values = {name: int(number) for name, number in re.findall(r"#define (ITEM_\w+)\s+(\d+)", text)}
+        for name, alias in re.findall(r"#define (\w+_BERRY_IDX)\s+(ITEM_\w+)", text):
+            values[name] = values[alias]
+        return values
+
+    def test_it_fails_without_a_berry(self):
+        # BattleController_BeforeMove.c:1939 at d0380a487 and its IS_ITEM_BERRY.
+        items = self.items()
+        script = (ROOT / "files/battledata/script/effect_script/effect_script_0398.s").read_text()
+        tests = re.findall(r"CompareMonDataToValue OPCODE_(LTE|GT), BATTLER_CATEGORY_ATTACKER, BMON_DATA_HELD_ITEM, "
+                           r"(\w+)(?: - (\d+))?, (_\w+)", script)
+        self.assertTrue(tests)
+
+        def refused(item):
+            for opcode, name, minus, label in tests:
+                bound = items[name] - int(minus or 0)
+                if (item <= bound) if opcode == "LTE" else (item > bound):
+                    return label == "_NO_BERRY"
+            return False
+
+        for item, berry in ((0, False), (items["ITEM_LEFTOVERS"], False), (items["ITEM_CHERI_BERRY"], True),
+                            (items["ITEM_ROWAP_BERRY"], True), (items["ITEM_ROWAP_BERRY"] + 1, False),
+                            (items["ITEM_ROSELI_BERRY"] - 1, False), (items["ITEM_ROSELI_BERRY"], True),
+                            (items["ITEM_MARANGA_BERRY"], True), (items["ITEM_MARANGA_BERRY"] + 1, False)):
+            self.assertEqual(refused(item), not berry, item)
+        self.assertIn("MOVE_STATUS_FAILED", script[script.index("\n_NO_BERRY:"):])
+
+    def test_it_is_refused_at_plus_six_defense_and_the_berry_stays(self):
+        # BattleController_BeforeMove.c:3228: the stat's line, not the berry.
+        script = subscript("StuffCheeks")
+        self.assertLess(script.index("BMON_DATA_STAT_CHANGE_DEF, 12, _DEFENSE_MAXED"), script.index("PrintAttackMessage"))
+        maxed = script[script.index("\n_DEFENSE_MAXED:"):]
+        self.assertIn("Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE", maxed)
+        self.assertNotIn("StuffCheeks", maxed)
+        self.assertNotIn("RemoveItem", maxed)
+
+
 class CriticalHitTests(unittest.TestCase):
     def test_the_odds_at_each_stage_are_the_reference_s(self):
         # other_battle_calculators.c's CriticalRateTable. HeartGold's was

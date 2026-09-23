@@ -229,7 +229,7 @@ UNREAD_HERE = {
     "DECORATE": "script: subscript 314 does not affect a target behind a substitute, the reference's stat-drop list",
     "PARTING_SHOT": "not ported: it lowers the two stats but the user never switches out",
     "FORCE_SWITCH_HIT": "script: a CHECK_HP_AND_SUBSTITUTE side effect runs Whirlwind's subscript after the damage",
-    "STUFF_CHEEKS": "not ported: at +6 Defense the reference fails the move; here the berry is still eaten",
+    "STUFF_CHEEKS": "script: effect script 398 fails it without a berry and subscript 311 refuses it at +6 Defense",
     "RECOIL_HALF_MAX_HP": "script: Reckless's boost and the half-HP recoil are effect script 404's",
     "IGNORE_PROTECT": "data: Mighty Cleave's record has the protect bit clear, which is what Protect reads here",
 }
