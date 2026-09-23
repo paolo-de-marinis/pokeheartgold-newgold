@@ -167,5 +167,25 @@ class SheerForceAftermathTests(unittest.TestCase):
         self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "CheckSwitchItemOnHit"))
 
 
+class OrichalcumPulseTests(unittest.TestCase):
+    """Pokemon Central, Ritmo d'Oricalco: the sun on entry, five turns, eight
+    with a Heat Rock; the reference's switch-in step and subscript 487."""
+
+    def test_the_entry_brings_the_sun(self):
+        header = (ROOT / "include/constants/battle_subscript.h").read_text()
+        number = int(re.search(r"#define BATTLE_SUBSCRIPT_ORICHALCUM_PULSE\s+(\d+)", header).group(1))
+        script = subscript("OrichalcumPulse")
+        self.assertTrue((ROOT / f"files/battledata/script/subscript/subscript_{number:04d}_OrichalcumPulse.s").exists())
+        sun = script[:script.index("\n_AlreadySunny:")]
+        self.assertIn("UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SUN\n", sun)
+        self.assertIn("UpdateVar OPCODE_SET, BSCRIPT_VAR_WEATHER_TURNS, 5", sun)
+        self.assertIn("HOLD_EFFECT_EXTEND_SUN", sun)
+        self.assertIn("msg_0197_01695", sun)
+        self.assertIn("msg_0197_01698", label_body(script, "_AlreadySunny"))
+        entry = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        case = entry[entry.index("case ABILITY_ORICHALCUM_PULSE:"):]
+        self.assertIn("script = BATTLE_SUBSCRIPT_ORICHALCUM_PULSE;", case[:case.index("break;")])
+
+
 if __name__ == "__main__":
     unittest.main()

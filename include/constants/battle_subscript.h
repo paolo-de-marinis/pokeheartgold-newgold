@@ -713,6 +713,8 @@
 // A Dancer locked into another move failing the dance, which the reference
 // has no script for.
 #define BATTLE_SUBSCRIPT_DANCE_FAILED                       435
+// Orichalcum Pulse's sun on entry. 487 there.
+#define BATTLE_SUBSCRIPT_ORICHALCUM_PULSE                   436
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

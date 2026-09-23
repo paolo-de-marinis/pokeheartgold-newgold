@@ -5467,10 +5467,10 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 battlerId = ctx->turnOrder[i];
                 if (!ctx->battleMons[battlerId].sendOutFlag && ctx->battleMons[battlerId].hp) {
                     j = GetBattlerAbility(ctx, battlerId);
-                    // Under a strong weather the other four weather abilities
+                    // Under a strong weather the other five weather abilities
                     // say that nothing changes, and change nothing.
                     if ((ctx->fieldCondition & FIELD_CONDITION_PRIMAL_WEATHER)
-                        && (j == ABILITY_DRIZZLE || j == ABILITY_SAND_STREAM || j == ABILITY_DROUGHT || j == ABILITY_SNOW_WARNING)) {
+                        && (j == ABILITY_DRIZZLE || j == ABILITY_SAND_STREAM || j == ABILITY_DROUGHT || j == ABILITY_SNOW_WARNING || j == ABILITY_ORICHALCUM_PULSE)) {
                         ctx->battleMons[battlerId].sendOutFlag = TRUE;
                         script = BATTLE_SUBSCRIPT_PRIMAL_WEATHER_HOLDS;
                         flag = TRUE;
@@ -5497,6 +5497,15 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                             script = BATTLE_SUBSCRIPT_DROUGHT;
                             flag = TRUE;
                         }
+                        break;
+                    // Orichalcum Pulse brings the sun in with it, and speaks
+                    // even when the sun is already out, to bask in it; the
+                    // reference's switch-in step (SwitchInAbilityCheck.c:773
+                    // at d0380a487) asks nothing more than the ability.
+                    case ABILITY_ORICHALCUM_PULSE:
+                        ctx->battleMons[battlerId].sendOutFlag = TRUE;
+                        script = BATTLE_SUBSCRIPT_ORICHALCUM_PULSE;
+                        flag = TRUE;
                         break;
                     case ABILITY_SNOW_WARNING:
                         ctx->battleMons[battlerId].sendOutFlag = TRUE;
