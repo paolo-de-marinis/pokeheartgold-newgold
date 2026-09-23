@@ -2404,10 +2404,12 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdStatChange);
                 ctx->buffMsg.param[1] = stat + 1;
             }
+            int stagesBefore = mon->statChanges[stat + 1];
             mon->statChanges[stat + 1] += change;
             if (mon->statChanges[stat + 1] > 12) {
                 mon->statChanges[stat + 1] = 12;
             }
+            Battler_OpportunistNotesRaise(battleSystem, ctx, stat + 1, mon->statChanges[stat + 1] - stagesBefore);
         }
     } else { // Stat Decrease
         if (!(ctx->statChangeFlag & (1 << 27))) {

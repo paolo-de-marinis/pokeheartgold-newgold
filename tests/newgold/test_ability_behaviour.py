@@ -576,5 +576,68 @@ int main(void) {
         self.assertIn("Battler_MimicryRestoreTypes(battleSystem, ctx, battlerId);", ending)
 
 
+class OpportunistTests(unittest.TestCase):
+    def test_what_the_other_side_gains_is_kept_for_the_holder(self):
+        program = HEADER + r"""
+typedef struct { int maxBattlers; } BattleSystem;
+typedef struct { int hp; } BattleMon;
+typedef struct {
+    int statChangeType, battlerIdStatChange; BattleMon battleMons[4];
+    u8 opportunistStages[4][NUM_BATTLE_STATS];
+} BattleContext;
+static int ability[4];
+static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { return bs->maxBattlers; }
+static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return ability[battlerId]; }
+""" + function(OVERLAY, "Battler_OpportunistNotesRaise") + r"""
+int main(void) {
+    BattleSystem bs = { 4 };
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    for (int i = 0; i < 4; i++) ctx.battleMons[i].hp = 50;
+    ability[1] = ABILITY_OPPORTUNIST;
+    // A Swords Dance on the other side: two stages of Attack kept for it.
+    ctx.battlerIdStatChange = 0; ctx.statChangeType = SIDE_EFFECT_TYPE_DIRECT;
+    Battler_OpportunistNotesRaise(&bs, &ctx, STAT_ATK, 2);
+    EXPECT(ctx.opportunistStages[1][STAT_ATK], 2);
+    // Its own side's raises are not its to copy, nor a raise that did not
+    // happen, nor a fainted holder's.
+    ctx.battlerIdStatChange = 3;
+    Battler_OpportunistNotesRaise(&bs, &ctx, STAT_SPEED, 1);
+    ctx.battlerIdStatChange = 2;
+    Battler_OpportunistNotesRaise(&bs, &ctx, STAT_SPEED, 0);
+    EXPECT(ctx.opportunistStages[1][STAT_SPEED], 0);
+    ctx.battleMons[1].hp = 0;
+    Battler_OpportunistNotesRaise(&bs, &ctx, STAT_SPEED, 1);
+    EXPECT(ctx.opportunistStages[1][STAT_SPEED], 0);
+    ctx.battleMons[1].hp = 50;
+    // Two Opportunists do not copy each other's copying for ever.
+    ability[0] = ABILITY_OPPORTUNIST;
+    ctx.battlerIdStatChange = 0; ctx.statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+    Battler_OpportunistNotesRaise(&bs, &ctx, STAT_DEF, 1);
+    EXPECT(ctx.opportunistStages[1][STAT_DEF], 0);
+    // What is kept stops at six stages.
+    ctx.statChangeType = SIDE_EFFECT_TYPE_DIRECT;
+    for (int i = 0; i < 4; i++) Battler_OpportunistNotesRaise(&bs, &ctx, STAT_ATK, 6);
+    EXPECT(ctx.opportunistStages[1][STAT_ATK], 12);
+    return 0;
+}
+"""
+        run_c(self, program)
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        change = function(commands, "BtlCmd_ChangeStatStage")
+        self.assertIn("Battler_OpportunistNotesRaise(battleSystem, ctx, stat + 1, mon->statChanges[stat + 1] - stagesBefore);", change)
+        self.assertLess(change.index("int stagesBefore = mon->statChanges[stat + 1];"), change.index("mon->statChanges[stat + 1] += change;"))
+        entry = function(OVERLAY, "TryAbilityOnEntry")
+        state = entry[entry.index("// Opportunist"):]
+        state = state[:state.index("case ", 10)]
+        self.assertIn("GetBattlerAbility(ctx, battlerId) != ABILITY_OPPORTUNIST", state)
+        self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES + j - STAT_ATK;", state)
+        self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;", state)
+        self.assertIn("ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;", state)
+        self.assertIn("script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;", state)
+        self.assertIn("MI_CpuClear8(ctx->opportunistStages[battlerId], NUM_BATTLE_STATS);", function(OVERLAY, "BattleSystem_GetBattleMon"))
+
+
 if __name__ == "__main__":
     unittest.main()

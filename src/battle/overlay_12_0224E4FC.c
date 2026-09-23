@@ -202,6 +202,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->cudChewBerry[battlerId] = ITEM_NONE;
     ctx->supremeOverlordFallen[battlerId] = 0;
     ctx->mimicryTerrain[battlerId] = TERRAIN_NONE;
+    MI_CpuClear8(ctx->opportunistStages[battlerId], NUM_BATTLE_STATS);
 
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
@@ -5061,6 +5062,31 @@ BOOL Battler_ShieldsUp(BattleContext *ctx, int battlerId) {
         && (species == SPECIES_MINIOR || (species >= SPECIES_MINIOR_METEOR_ORANGE && species <= SPECIES_MINIOR_METEOR_VIOLET));
 }
 
+// Opportunist copies the stat raises of the other side (Pokemon Central,
+// Scrocco). The reference declares the ability and nothing reads it. Every
+// stage a foe of a standing holder actually gains -- what the cap let
+// through -- is kept for the holder here, and the holder takes them all after
+// the move or the entry that raised them, so a multi-stat or multi-hit raise
+// is copied whole. The holder's own copying is not copied back, which would
+// set two Opportunists copying each other for ever; Costar copies without
+// raising anything, so nothing comes of it either.
+void Battler_OpportunistNotesRaise(BattleSystem *battleSystem, BattleContext *ctx, int stat, int stages) {
+    int battlerId;
+
+    if (stages <= 0 || (ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY && GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_OPPORTUNIST)) {
+        return;
+    }
+    for (battlerId = 0; battlerId < BattleSystem_GetMaxBattlers(battleSystem); battlerId++) {
+        if (BattleSystem_GetFieldSide(battleSystem, battlerId) != BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdStatChange)
+            && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_OPPORTUNIST) {
+            ctx->opportunistStages[battlerId][stat] += stages;
+            if (ctx->opportunistStages[battlerId][stat] > 12) {
+                ctx->opportunistStages[battlerId][stat] = 12;
+            }
+        }
+    }
+}
+
 // How many times a Pokemon of battlerId's own party has fainted since the
 // battle began. The faints are kept per battler slot, and in a double battle
 // both slots on a side draw from the one party, where in a multi battle each
@@ -6115,7 +6141,43 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 33: // end
+        case 33: // Opportunist
+            // What the other side raised is copied after the move or the entry
+            // that raised it, a stat at a time and at most two stages a step,
+            // each with the ability's line. An Opportunist that has fainted or
+            // lost the ability since takes nothing.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                for (j = STAT_ATK; j < NUM_BATTLE_STATS; j++) {
+                    if (ctx->opportunistStages[battlerId][j]) {
+                        break;
+                    }
+                }
+                if (j == NUM_BATTLE_STATS) {
+                    continue;
+                }
+                if (!ctx->battleMons[battlerId].hp || GetBattlerAbility(ctx, battlerId) != ABILITY_OPPORTUNIST) {
+                    MI_CpuClear8(ctx->opportunistStages[battlerId], NUM_BATTLE_STATS);
+                    continue;
+                }
+                if (ctx->opportunistStages[battlerId][j] >= 2) {
+                    ctx->opportunistStages[battlerId][j] -= 2;
+                    ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES + j - STAT_ATK;
+                } else {
+                    ctx->opportunistStages[battlerId][j]--;
+                    ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;
+                }
+                ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+                ctx->battlerIdStatChange = battlerId;
+                script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;
+                flag = TRUE;
+                break;
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 34: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;
