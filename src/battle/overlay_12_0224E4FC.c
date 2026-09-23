@@ -11673,6 +11673,7 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
         // -- a clear sky, the fog, the strong winds, Cloud Nine or Air Lock --
         // which retail left unset for Lightning Rod to read (Pokemon Central,
         // Palla Clima; the reference's BUGFIX, other_battle_calculators.c:3326).
+        // Ice in the snow as in the hail.
         u32 weather = BattlerMoveWeather(battleSystem, ctx, battlerId);
 
         type = TYPE_NORMAL;
@@ -11686,7 +11687,7 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
             if (weather & FIELD_CONDITION_SUN_ALL) {
                 type = TYPE_FIRE;
             }
-            if (weather & FIELD_CONDITION_HAIL_ALL) {
+            if (weather & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {
                 type = TYPE_ICE;
             }
         }

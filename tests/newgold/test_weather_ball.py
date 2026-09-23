@@ -91,6 +91,67 @@ class WeatherBallTypeTests(unittest.TestCase):
             with self.subTest(name):
                 run(self, prelude, functions(), call, "")
 
+    def test_snow_makes_it_ice(self):
+        """The ninth generation's snow makes Weather Ball an Ice move, as
+        hail did (Pokemon Central, Palla Clima)."""
+        for name, prelude, functions, call in SITES:
+            with self.subTest(name):
+                run(self, prelude, functions(), call, "        { FIELD_CONDITION_SNOW_TEMP, TYPE_ICE },")
+
+
+# BtlCmd_CalcWeatherBallParams, which sets the move's power and type as it
+# is used, with the weather the user's move sees and a 50-power move.
+COMMAND = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/battle.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define FALSE 0
+typedef struct BattleSystem BattleSystem;
+typedef struct { u32 weather; u32 moveNoCur; int battlerIdAttacker; u16 movePower; int moveType; } BattleContext;
+typedef struct { u16 power; } MoveTbl;
+static const MoveTbl sWeatherBall = { 50 };
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &sWeatherBall; }
+static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)battlerId; return ctx->weather; }
+@FUNCTION@
+int main(void) {
+    BattleContext ctx = { FIELD_CONDITION_SNOW_TEMP, 0, 0, 0, TYPE_NORMAL };
+    BtlCmd_CalcWeatherBallParams(0, &ctx);
+    assert(ctx.movePower == 100 && ctx.moveType == TYPE_ICE);
+    ctx = (BattleContext){ FIELD_CONDITION_SNOW_PERMANENT, 0, 0, 0, TYPE_NORMAL };
+    BtlCmd_CalcWeatherBallParams(0, &ctx);
+    assert(ctx.movePower == 100 && ctx.moveType == TYPE_ICE);
+    ctx = (BattleContext){ FIELD_CONDITION_HAIL, 0, 0, 0, TYPE_NORMAL };
+    BtlCmd_CalcWeatherBallParams(0, &ctx);
+    assert(ctx.movePower == 100 && ctx.moveType == TYPE_ICE);
+    ctx = (BattleContext){ 0, 0, 0, 0, TYPE_NORMAL };
+    BtlCmd_CalcWeatherBallParams(0, &ctx);
+    assert(ctx.movePower == 50 && ctx.moveType == TYPE_NORMAL);
+    ctx = (BattleContext){ FIELD_CONDITION_STRONG_WINDS, 0, 0, 0, TYPE_NORMAL };
+    BtlCmd_CalcWeatherBallParams(0, &ctx);
+    assert(ctx.movePower == 50 && ctx.moveType == TYPE_NORMAL);
+    return 0;
+}
+"""
+
+
+class WeatherBallCommandTests(unittest.TestCase):
+    def test_snow_doubles_it_and_makes_it_ice(self):
+        program = COMMAND.replace("@FUNCTION@", function((ROOT / "src/battle/battle_command.c").read_text(),
+                                                         "BtlCmd_CalcWeatherBallParams"))
+        with tempfile.TemporaryDirectory(prefix="newgold-weather-ball-command-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+                str(path / "test.c"), "-o", str(path / "test")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(path / "test")], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -220,9 +220,7 @@ int ov12_02258BB4(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon, 
         // GetDynamicMoveType.
         type = TYPE_NORMAL;
         if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-            // Retail's weather: snow, which FIELD_CONDITION_WEATHER takes in
-            // now, is not asked after here.
-            if (ctx->fieldCondition & (FIELD_CONDITION_WEATHER & ~FIELD_CONDITION_SNOW_ALL)) {
+            if (ctx->fieldCondition & FIELD_CONDITION_WEATHER) {
                 if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
                     type = TYPE_WATER;
                 }
@@ -232,7 +230,7 @@ int ov12_02258BB4(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon, 
                 if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
                     type = TYPE_FIRE;
                 }
-                if (ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL) {
+                if (ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {
                     type = TYPE_ICE;
                 }
             }

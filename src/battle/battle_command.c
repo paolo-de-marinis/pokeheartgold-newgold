@@ -5277,10 +5277,10 @@ BOOL BtlCmd_CalcWeatherBallParams(BattleSystem *battleSystem, BattleContext *ctx
     BattleScriptIncrementPointer(ctx, 1);
 
     if (weather && !(weather & FIELD_CONDITION_STRONG_WINDS)) {
-        // Snow is weather this move does not answer to: the reference
-        // leaves both its power and its type alone under it, so there is
-        // no Ice-type branch below either.
-        ctx->movePower = BattleMoveTbl(ctx, ctx->moveNoCur)->power * ((weather & FIELD_CONDITION_SNOW_ALL) ? 1 : 2);
+        // Snow makes it an Ice move of double power, as hail did, from the
+        // ninth generation (Pokemon Central, Palla Clima); the reference
+        // leaves the move alone under it.
+        ctx->movePower = BattleMoveTbl(ctx, ctx->moveNoCur)->power * 2;
         if (weather & FIELD_CONDITION_RAIN_ALL) {
             ctx->moveType = TYPE_WATER;
         }
@@ -5290,7 +5290,7 @@ BOOL BtlCmd_CalcWeatherBallParams(BattleSystem *battleSystem, BattleContext *ctx
         if (weather & FIELD_CONDITION_SUN_ALL) {
             ctx->moveType = TYPE_FIRE;
         }
-        if (weather & FIELD_CONDITION_HAIL_ALL) {
+        if (weather & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {
             ctx->moveType = TYPE_ICE;
         }
     } else {

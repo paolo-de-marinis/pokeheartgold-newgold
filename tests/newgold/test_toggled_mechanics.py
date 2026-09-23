@@ -118,8 +118,8 @@ class SnowTests(unittest.TestCase):
         # Ice Body feeds on it; nothing else does, because nothing falls.
         self.assertIn("FIELD_CONDITION_SNOW_ALL", command)
         self.assertIn("ABILITY_ICE_BODY", command)
-        # Weather Ball is not doubled by snow, and takes no type from it.
-        self.assertIn("(weather & FIELD_CONDITION_SNOW_ALL) ? 1 : 2", command)
+        # Weather Ball is an Ice move in it, as in hail (test_weather_ball).
+        self.assertIn("(FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {\n            ctx->moveType = TYPE_ICE;", command)
 
     def test_the_five_turns_are_counted_and_end_with_a_line(self):
         player = source("src/battle/battle_controller_player.c")
