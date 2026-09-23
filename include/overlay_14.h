@@ -4,6 +4,7 @@
 #include "menu_input_state.h"
 #include "overlay_manager.h"
 #include "save.h"
+#include "unk_02019BA4.h"
 
 typedef struct PCBoxArgs {
     SaveData *saveData;
@@ -11,8 +12,47 @@ typedef struct PCBoxArgs {
     int unk8;
 } PCBoxArgs;
 
+// The prefix of the PC box application's graphics state that the routines
+// decompiled so far read. The rest is still addressed by offset in the
+// assembly; nothing may allocate or copy this by its size.
+typedef struct PCBoxAppGraphics {
+    u8 unk0[0x2C];
+    GridInputHandler *gridInput; // 0x2C
+    u8 unk30[0x2C0];
+    void *unk2F0;
+    u8 unk2F4[0x148];
+    int lastGridInput; // 0x43C
+    u8 unk440[0xB];
+    u8 unk44B;
+} PCBoxAppGraphics;
+
+// The same for the application itself.
+typedef struct PCBoxApp {
+    PCBoxArgs *args;
+    u8 unk4[0x1B];
+    u8 curBox; // 0x1F
+    u8 unk20[5];
+    u8 listBox; // 0x25, the box the cursor is on in the box list
+    u8 unk26[0xE];
+    PCBoxAppGraphics *graphics; // 0x34
+} PCBoxApp;
+
 BOOL PCBox_Init(OverlayManager *man, int *state);
 BOOL PCBox_Main(OverlayManager *man, int *state);
 BOOL PCBox_Exit(OverlayManager *man, int *state);
+
+void ov14_021E783C(PCBoxApp *app, void *boxData, int direction);
+void *ov14_021E7930(PCBoxApp *app, u8 box);
+void ov14_021E8248(void *a0);
+void ov14_021E82A8(void *a0);
+void ov14_021E84A4(void *a0);
+int ov14_021E8544(void *a0);
+void ov14_021E92AC(PCBoxApp *app);
+void ov14_021E9370(PCBoxApp *app);
+void ov14_021F0234(PCBoxApp *app, void (*func)(PCBoxApp *app), int a2);
+void ov14_021F028C(PCBoxApp *app, int a1);
+void ov14_021F0314(PCBoxApp *app, int a1);
+void ov14_021F29E4(PCBoxAppGraphics *graphics, int a1, int a2);
+void ov14_021F2DE8(PCBoxApp *app, u8 box);
 
 #endif // POKEHEARTGOLD_OVY_14_H
