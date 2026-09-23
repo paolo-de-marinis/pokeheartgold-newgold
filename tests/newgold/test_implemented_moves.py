@@ -399,6 +399,8 @@ class ImplementedMoveTests(unittest.TestCase):
         gastro = subscript_named("BATTLE_SUBSCRIPT_SUPPRESS_TARGET_ABILITY")
         self.assertIn("IfMovedThisTurn BATTLER_CATEGORY_DEFENDER, _ACTED", enforcing)
         self.assertNotIn("CheckSubstitute", enforcing)
+        self.assertIn("BMON_DATA_ABILITY_FLAGS, ABILITY_FLAG_FAILS_SUPPRESS, _END", enforcing)
+        self.assertIn("BMON_DATA_ABILITY_FLAGS, ABILITY_FLAG_FAILS_SUPPRESS,", gastro)
         self.assertEqual(set(re.findall(r"BMON_DATA_ABILITY, (ABILITY_\w+)", enforcing)),
                          set(re.findall(r"BMON_DATA_ABILITY, (ABILITY_\w+)", gastro)))
         self.assertIn("ITEM_ABILITY_SHIELD, _END", enforcing)
