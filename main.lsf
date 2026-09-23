@@ -1018,6 +1018,8 @@ Overlay trainer_card_main
 {
     After trainer_card
     Object asm/overlay_trainer_card_main.o
+    Object src/ov51_021E6F18.o
+    Object asm/overlay_trainer_card_main_021E71D0.o
 }
 Overlay trainer_card_signature
 {
