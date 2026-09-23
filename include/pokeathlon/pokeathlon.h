@@ -191,6 +191,7 @@ BOOL ov96_021E8828(void *);
 u8 *ov96_021E8A20(void *ptr);
 int ov96_021E8A24(void);
 int ov96_021E8A2C(void);
+u32 ov96_021E91B8(int species, int form, int gender);
 void *ov96_021E92E0(enum HeapID heapId);
 void ov96_021E9320(void *ptr);
 void *ov96_021E9A14(void);
