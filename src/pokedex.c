@@ -486,13 +486,16 @@ static inline void SetDex2FlagState(u8 *array, u8 state, u16 _2flagId) {
     array[_2flagId >> 2] |= (state << (2 * (_2flagId % 4u)));
 }
 
+// Deoxys's form order lives in the top byte of the last flag word, which the
+// + 8 in NUM_DEX_FLAG_WORDS keeps past the last Dex species. Retail wrote word
+// 15, the last word at 493; with the Dex wider, word 15 holds real species.
 static inline int CheckDex4Flag(u32 *flags, u8 idx) {
-    return (flags[15] >> (24 + 4 * idx)) & 15;
+    return (flags[NUM_DEX_FLAG_WORDS - 1] >> (24 + 4 * idx)) & 15;
 }
 
 static inline void SetDex4Flag(u32 *flags, u8 form, u8 idx) {
-    flags[15] &= ~(15 << (24 + 4 * idx));
-    flags[15] |= (form << (24 + 4 * idx));
+    flags[NUM_DEX_FLAG_WORDS - 1] &= ~(15 << (24 + 4 * idx));
+    flags[NUM_DEX_FLAG_WORDS - 1] |= (form << (24 + 4 * idx));
 }
 
 static inline int CheckDex3Flag(const u32 *arr, u32 idx) {

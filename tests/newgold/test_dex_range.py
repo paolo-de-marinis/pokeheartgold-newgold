@@ -103,7 +103,80 @@ int main(void) {
 }
 '''
 
+DEOXYS = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define GF_ASSERT(expr) assert(expr)
+@DEFINES@
+typedef struct { u32 caughtSpecies[NUM_DEX_FLAG_WORDS]; u32 seenSpecies[NUM_DEX_FLAG_WORDS]; } Pokedex;
+@NATIVE@
+
+int main(void) {
+    Pokedex dex = { 0 };
+    // What Save_Pokedex_Init does to a new game: four empty form slots.
+    Pokedex_InitDeoxysFormOrder(&dex);
+    for (u16 species = 1; species <= NATIONAL_DEX_COUNT; species++) {
+        assert(!CheckDexFlag((const u8 *)dex.caughtSpecies, species));
+        assert(!CheckDexFlag((const u8 *)dex.seenSpecies, species));
+    }
+    // Seeing and catching every Dex species leaves the form order alone.
+    for (u16 species = 1; species <= NATIONAL_DEX_COUNT; species++) {
+        SetDexFlag((u8 *)dex.caughtSpecies, species);
+        SetDexFlag((u8 *)dex.seenSpecies, species);
+    }
+    for (u8 i = 0; i < 4; i++) {
+        assert(Pokedex_GetSeenDeoxysFormByIndex(&dex, i) == 15);
+    }
+    printf("PASS: a new game has seen none of the %d Dex species; the Deoxys forms sit past them.\n", NATIONAL_DEX_COUNT);
+    return 0;
+}
+"""
+
+
+def c_function(source, name):
+    """Like test_level_cap.function, but for any storage class and return type."""
+    match = re.search(r"^[\w \*]*\b" + name + r"\([^;]*?\) \{", source, re.M)
+    if match is None:
+        raise ValueError(f"Function definition not found: {name}")
+    depth, end = 1, match.end()
+    while depth:
+        depth += (source[end] == "{") - (source[end] == "}")
+        end += 1
+    return source[match.start():end]
+
+
+def run_native(test, program, prefix, flags=()):
+    with tempfile.TemporaryDirectory(prefix=prefix) as temp:
+        c, exe = Path(temp) / "check.c", Path(temp) / "check"
+        c.write_text(program)
+        result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + ["-std=c11", "-O1", "-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer", *flags, "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)], capture_output=True, text=True)
+        test.assertEqual(result.returncode, 0, result.stderr)
+        result = subprocess.run([str(exe)], capture_output=True, text=True, env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+        test.assertEqual(result.returncode, 0, result.stderr)
+        print(result.stdout.strip())
+
+
 class DexRangeTests(unittest.TestCase):
+    def test_the_deoxys_forms_are_not_dex_flags(self):
+        """Retail kept Deoxys's form order in the top byte of flag word 15,
+        free at 493. With the Dex wider that byte is the seen and caught flags
+        of species 505..512, so a new game started with Lillipup through
+        Liepard caught."""
+        source = (ROOT / "src/pokedex.c").read_text()
+        header = (ROOT / "include/pokedex.h").read_text()
+        defines = "\n".join(line for line in header.splitlines() if line.startswith(("#define CEILDIV", "#define NUM_DEX_FLAG_WORDS")))
+        native = "\n".join(c_function(source, name) for name in (
+            "CheckDexFlag", "SetDexFlag", "CheckDex4Flag", "SetDex4Flag",
+            "Pokedex_DeoxysFormFlagActionInternal", "Pokedex_DeoxysFormFlagAction",
+            "Pokedex_GetSeenDeoxysFormByIndex", "Pokedex_InitDeoxysFormOrder"))
+        run_native(self, DEOXYS.replace("@DEFINES@", defines).replace("@NATIVE@", native), "newgold-deoxys-",
+                   # 15 << 28 overflows int in the host's C; on the ARM it is the bits it says.
+                   ("-fno-sanitize=shift-base",))
+
     def test_new_species_do_not_reset_the_game(self):
         native = function((ROOT / "src/pokedex.c").read_text(), "DexSpeciesIsInvalid")
         program = PREFIX.replace("@NATIVE@", native) + MAIN
