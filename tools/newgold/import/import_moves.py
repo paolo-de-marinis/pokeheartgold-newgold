@@ -398,6 +398,11 @@ IMPLEMENTED_HERE = {
     # Rage Fist is 50 more for each hit its user has taken, to 350 (Pokemon
     # Central, Pugno Furibondo): the controller counts, CalcMoveDamage reads.
     "RAGE_FIST": "MOVE_EFFECT_HIT",
+    # Tera Starstorm is a Normal special hit at one target; it turns Stellar,
+    # hits both foes and may go physical only for Terapagos in its Stellar
+    # Form, which is Terapagos terastallized and so never stands on the field
+    # here (Pokemon Central, Teracluster).
+    "TERA_STARSTORM": "MOVE_EFFECT_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -420,6 +425,9 @@ FIELDS_HERE = {
     # Protect stops it and Snatch cannot take it (Pokemon Central,
     # Riflettipo); the reference flags it the other way about.
     "REFLECT_TYPE": {"flagsOn": ("FLAG_PROTECT",), "flagsOff": ("FLAG_SNATCH",)},
+    # One target: both foes are the Stellar Form's alone (Pokemon Central,
+    # Teracluster); the reference gives every user both.
+    "TERA_STARSTORM": {"target": "RANGE_SINGLE_TARGET"},
 }
 
 # The effects written here for those moves follow the reference's in

@@ -344,5 +344,12 @@ class ImplementedMoveTests(unittest.TestCase):
         where = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "Battler_RageFistHits")
         self.assertIn("return &ctx->rageFistHits[party][ctx->selectedMonIndex[battlerId]];", where)
 
+    def test_tera_starstorm_is_a_single_target_hit_without_the_stellar_form(self):
+        # Pokemon Central (Teracluster): Normal, special, 120, one foe; the
+        # Stellar Form's version needs a terastallized Terapagos.
+        self.assertImplemented("TERA_STARSTORM", "MOVE_EFFECT_HIT")
+        fields = record("TERA_STARSTORM")
+        self.assertEqual((fields[1], fields[2], fields[7]), (1, 120, 0), "special, 120, RANGE_SINGLE_TARGET")
+
 if __name__ == "__main__":
     unittest.main()
