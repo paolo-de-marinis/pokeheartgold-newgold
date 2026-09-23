@@ -695,6 +695,8 @@
 #define BATTLE_SUBSCRIPT_SYMBIOSIS                          426
 // Ball Fetch picking a ball up, which the reference has no script for.
 #define BATTLE_SUBSCRIPT_BALL_FETCH                         427
+// A Gem spent on the move it powers. 452 there.
+#define BATTLE_SUBSCRIPT_GEM                                428
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

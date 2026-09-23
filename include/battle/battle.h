@@ -603,6 +603,11 @@ typedef struct BattleContext {
     // The first of the player's balls that failed to catch this battle, while
     // it waits for a Pokemon with Ball Fetch and empty hands to pick it up.
     u16 ballFetchBall;
+    // A Gem is powering the move being used: set where its damage is worked
+    // out, spent once the move connects, and kept for every hit and target
+    // left in the move (hg-engine's gemBoostingMove). Cleared with the rest
+    // of the move's state in BattleContext_Init.
+    u8 gemBoostingMove;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

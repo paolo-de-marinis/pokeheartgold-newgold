@@ -992,9 +992,34 @@ static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BO
     ctx->damage = damage % 65536;
 }
 
+// A Gem powers the first damaging move of its own type its holder uses, by
+// three tenths, and is spent. The reference decides it before the move runs
+// (BattleController_BeforeMove.c:1103 at d0380a487): not a status move, not
+// Struggle, not one of the Pledges, and the Gem's type -- its holdEffectParam
+// -- the move's type after everything that changes it. Here the damage is
+// worked out in the move's script, before anyone knows whether the move hits,
+// so it is decided here, where the type is final; the Gem is spent in
+// ov12_0224C678 once the move connects, which is the reference's "only if it
+// hits something". Once set the boost stays for the rest of the move, the
+// other hits and targets included, with the Gem already gone.
+static BOOL BattlerGemPowersMove(BattleContext *ctx, int battlerId, u32 moveNo, int type) {
+    return GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_POWERING_UP_MOVE_ONCE
+        && GetHeldItemModifier(ctx, battlerId, 0) == type
+        && BattleMoveTbl(ctx, moveNo)->category != CATEGORY_STATUS
+        && moveNo != MOVE_STRUGGLE
+        && moveNo != MOVE_WATER_PLEDGE && moveNo != MOVE_FIRE_PLEDGE && moveNo != MOVE_GRASS_PLEDGE;
+}
+
+static void TrySetGemBoost(BattleContext *ctx) {
+    if (BattlerGemPowersMove(ctx, ctx->battlerIdAttacker, ctx->moveNoCur, BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur))) {
+        ctx->gemBoostingMove = TRUE;
+    }
+}
+
 BOOL BtlCmd_CalcDamage(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
+    TrySetGemBoost(ctx);
     DamageCalcDefault(battleSystem, ctx, TRUE);
     ctx->damage *= -1;
 
@@ -1004,6 +1029,7 @@ BOOL BtlCmd_CalcDamage(BattleSystem *battleSystem, BattleContext *ctx) {
 BOOL BtlCmd_CalcDamageRaw(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
+    TrySetGemBoost(ctx);
     DamageCalcDefault(battleSystem, ctx, FALSE);
     ctx->damage *= -1;
 
@@ -3918,6 +3944,10 @@ BOOL BtlCmd_TryStealItem(BattleSystem *battleSystem, BattleContext *ctx) {
         if (ctx->battleMons[ctx->battlerIdTarget].item && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
             BattleScriptIncrementPointer(ctx, adrs2);
         } else if (ctx->battleMons[ctx->battlerIdAttacker].item || CanStealHeldItem(battleSystem, ctx, ctx->battlerIdTarget) == FALSE) {
+            BattleScriptIncrementPointer(ctx, adrs1);
+        } else if (ctx->gemBoostingMove) {
+            // A Thief or a Covet a Gem powered takes nothing, though the Gem
+            // has left the hand empty (ServerDoPostMoveEffects.c:1242).
             BattleScriptIncrementPointer(ctx, adrs1);
         }
     }

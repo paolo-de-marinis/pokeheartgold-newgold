@@ -2161,6 +2161,7 @@ void BattleContext_Init(BattleContext *ctx) {
     ctx->magnitude = 0;
     ctx->teraShellResisting = 0;
     ctx->strongWindsWeakened = 0;
+    ctx->gemBoostingMove = FALSE;
 
     for (battlerId = 0; battlerId < 4; battlerId++) {
         MI_CpuClearFast((u32 *)&ctx->selfTurnData[battlerId], sizeof(SelfTurnData));
@@ -6841,7 +6842,9 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
     // Magician palms what it has just hurt, if its own hands are empty. The
     // reference walks every battler looking for one it damaged; this chain
     // already runs once per target, so the target in hand is that one.
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MAGICIAN && ctx->battleMons[ctx->battlerIdAttacker].hp && BattleMoveTbl(ctx, ctx->moveNoCur)->category != CATEGORY_STATUS && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(GetBattlerAbility(ctx, ctx->battlerIdTarget) == ABILITY_STICKY_HOLD && ctx->battleMons[ctx->battlerIdTarget].hp) && CanAbilityTakeHeldItem(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget) == TRUE) {
+    // Nor does Magician take anything with a move a Gem powered
+    // (ServerDoPostMoveEffects.c:1570 at d0380a487).
+    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MAGICIAN && !ctx->gemBoostingMove && ctx->battleMons[ctx->battlerIdAttacker].hp && BattleMoveTbl(ctx, ctx->moveNoCur)->category != CATEGORY_STATUS && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(GetBattlerAbility(ctx, ctx->battlerIdTarget) == ABILITY_STICKY_HOLD && ctx->battleMons[ctx->battlerIdTarget].hp) && CanAbilityTakeHeldItem(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget) == TRUE) {
         ctx->battlerIdStatChange = ctx->battlerIdAttacker;
         ctx->battlerIdTemp = ctx->battlerIdTarget;
         *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
@@ -9653,6 +9656,14 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         || (calcAttacker.item == HOLD_EFFECT_HEARTHFLAME_MASK && (calcAttacker.species == SPECIES_OGERPON_HEARTHFLAME_MASK || calcAttacker.species == SPECIES_OGERPON_HEARTHFLAME_MASK_TERASTAL))
         || (calcAttacker.item == HOLD_EFFECT_CORNERSTONE_MASK && (calcAttacker.species == SPECIES_OGERPON_CORNERSTONE_MASK || calcAttacker.species == SPECIES_OGERPON_CORNERSTONE_MASK_TERASTAL))) {
         movePower = movePower * (100 + calcAttacker.mod) / 100;
+    }
+
+    // A Gem's three tenths (CalcBaseDamage.c:913). The Gem has been decided
+    // for this move by the time its damage is asked for, and may already be
+    // spent, so the flag is the question, not the item; the AI's estimates
+    // are made outside a move and never see it.
+    if (ctx->gemBoostingMove && battlerIdAttacker == ctx->battlerIdAttacker) {
+        movePower = movePower * 13 / 10;
     }
 
     if (calcAttacker.item == HOLD_EFFECT_POWER_UP_PHYS && moveCategory == CATEGORY_PHYSICAL) {

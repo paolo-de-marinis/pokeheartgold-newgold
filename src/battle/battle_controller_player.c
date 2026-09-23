@@ -172,9 +172,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // Stream's line went into what Tera Shell's left; Supreme Overlord's count of
 // the fallen by four, and Mimicry's terrain by four and Opportunist's stages
 // by thirty-two and Symbiosis's marks by four.
-// Ball Fetch's two-byte ball went into padding and grew it by nothing.
+// Ball Fetch's two-byte ball went into padding and grew it by nothing; the
+// Gem's byte by four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3200 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3204 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -3417,6 +3418,19 @@ static void ov12_0224C5F8(BattleSystem *battleSystem, BattleContext *ctx) {
 }
 
 static void ov12_0224C678(BattleSystem *battleSystem, BattleContext *ctx) {
+    // The move is about to connect, so a Gem that is powering it is spent
+    // now, before the move's animation: "The Fire Gem strengthened Ember's
+    // power!" after the attack message, as the reference's gem subscript has
+    // it (BattleController_BeforeMove.c:1103 at d0380a487, which spends it
+    // only when the move hits something). The command comes back here with
+    // the Gem gone and goes on; a second target or hit finds no Gem to spend
+    // and keeps the boost.
+    if (ctx->gemBoostingMove && GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_POWERING_UP_MOVE_ONCE) {
+        ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_GEM);
+        ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+        ctx->commandNext = CONTROLLER_COMMAND_27;
+        return;
+    }
     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_USE_MOVE);
     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
     ctx->commandNext = CONTROLLER_COMMAND_HP_CALC;

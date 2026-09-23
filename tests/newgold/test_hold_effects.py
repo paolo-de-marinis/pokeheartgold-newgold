@@ -77,7 +77,8 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # seventeen Memories, the Roseli Berry and Heavy-Duty Boots.
 # The Blank Plate's power took one more.
 # The three origin items and Ogerpon's three masks took six.
-IMPORTED_AND_UNREAD = 12
+# The Gems took one.
+IMPORTED_AND_UNREAD = 11
 
 
 def effects_defined():
@@ -302,6 +303,112 @@ class OriginItemsAndMasksTests(unittest.TestCase):
             if not types:
                 self.assertNotIn("moveType", clause, effect)
             self.assertEqual(sorted(re.findall(r"calcAttacker\.species == (SPECIES_\w+)", clause)), sorted(species), effect)
+
+
+COMMANDS = ROOT / "src/battle/battle_command.c"
+CONTROLLER = ROOT / "src/battle/battle_controller_player.c"
+SUBSCRIPTS = SCRIPTS / "script/subscript"
+
+GEM_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/battle.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { u8 category; } MoveTbl;
+typedef struct { int battlerIdAttacker; u32 moveNoCur; u8 gemBoostingMove; } BattleContext;
+static int sEffect, sParam, sType;
+static MoveTbl sMove;
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return sEffect; }
+static int GetHeldItemModifier(BattleContext *ctx, int battlerId, int flag) { (void)ctx; (void)battlerId; (void)flag; return sParam; }
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &sMove; }
+static u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) { (void)ctx; (void)battlerId; (void)moveNo; return sType; }
+@FUNCTIONS@
+static int boosted(int effect, int param, int type, int category, u32 move) {
+    BattleContext ctx = { 0, move, FALSE };
+    sEffect = effect; sParam = param; sType = type; sMove.category = category;
+    TrySetGemBoost(&ctx);
+    return ctx.gemBoostingMove;
+}
+int main(void) {
+    int gem = HOLD_EFFECT_POWERING_UP_MOVE_ONCE;
+    assert(boosted(gem, TYPE_FIRE, TYPE_FIRE, CATEGORY_SPECIAL, MOVE_EMBER));
+    assert(boosted(gem, TYPE_NORMAL, TYPE_NORMAL, CATEGORY_PHYSICAL, MOVE_TACKLE));
+    assert(!boosted(gem, TYPE_WATER, TYPE_FIRE, CATEGORY_SPECIAL, MOVE_EMBER));
+    assert(!boosted(gem, TYPE_FIRE, TYPE_FIRE, CATEGORY_STATUS, MOVE_WILL_O_WISP));
+    assert(!boosted(gem, TYPE_NORMAL, TYPE_NORMAL, CATEGORY_PHYSICAL, MOVE_STRUGGLE));
+    assert(!boosted(gem, TYPE_WATER, TYPE_WATER, CATEGORY_SPECIAL, MOVE_WATER_PLEDGE));
+    assert(!boosted(gem, TYPE_FIRE, TYPE_FIRE, CATEGORY_SPECIAL, MOVE_FIRE_PLEDGE));
+    assert(!boosted(gem, TYPE_GRASS, TYPE_GRASS, CATEGORY_SPECIAL, MOVE_GRASS_PLEDGE));
+    assert(!boosted(HOLD_EFFECT_STRENGTHEN_FIRE, TYPE_FIRE, TYPE_FIRE, CATEGORY_SPECIAL, MOVE_EMBER));
+    // Once set, a later hit with the Gem gone keeps the boost.
+    BattleContext ctx = { 0, MOVE_EMBER, TRUE };
+    sEffect = HOLD_EFFECT_NONE;
+    TrySetGemBoost(&ctx);
+    assert(ctx.gemBoostingMove);
+    return 0;
+}
+"""
+
+
+class GemTests(unittest.TestCase):
+    """The Gems (BattleController_BeforeMove.c:1103, CalcBaseDamage.c:913 and
+    subscript_0452 at d0380a487): x1.3 to the holder's first damaging move of
+    the Gem's type that hits, not Struggle or a Pledge, the Gem spent with a
+    line when the move connects, and no Thief, Covet or Magician theft on a
+    move a Gem powered."""
+
+    def test_which_moves_a_gem_powers(self):
+        source = COMMANDS.read_text()
+        functions = "\n".join(function(source, name) for name in ("BattlerGemPowersMove", "TrySetGemBoost"))
+        run_c(GEM_FIXTURE.replace("@FUNCTIONS@", functions))
+        for command in ("BtlCmd_CalcDamage", "BtlCmd_CalcDamageRaw"):
+            body = function(source, command)
+            self.assertLess(body.index("TrySetGemBoost(ctx);"), body.index("DamageCalcDefault("), command)
+
+    def test_every_gem_names_its_type(self):
+        types = {name: int(value) for name, value
+                 in re.findall(r"#define (TYPE_\w+)\s+(\d+)", (ROOT / "include/constants/pokemon.h").read_text())}
+        gems = {item: param for item, (effect, param) in item_records().items()
+                if effect == "HOLD_EFFECT_POWERING_UP_MOVE_ONCE"}
+        self.assertEqual(len(gems), 18)
+        for item, param in gems.items():
+            kind = item[len("ITEM_"):-len("_GEM")]
+            self.assertEqual(param, types[f"TYPE_{kind}"], item)
+
+    def test_three_tenths_on_the_power(self):
+        blocks = power_blocks("ctx->gemBoostingMove")
+        self.assertEqual(len(blocks), 1)
+        self.assertIn("battlerIdAttacker == ctx->battlerIdAttacker", blocks[0][0])
+        self.assertEqual(blocks[0][1], "movePower = movePower * 13 / 10;")
+        self.assertIn("ctx->gemBoostingMove = FALSE;", function(OVERLAY.read_text(), "BattleContext_Init"))
+
+    def test_the_gem_is_spent_as_the_move_connects(self):
+        body = function(CONTROLLER.read_text(), "ov12_0224C678")
+        spend = body.index("BATTLE_SUBSCRIPT_GEM")
+        self.assertLess(body.index("ctx->gemBoostingMove && GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_POWERING_UP_MOVE_ONCE"), spend)
+        self.assertLess(spend, body.index("BATTLE_SUBSCRIPT_USE_MOVE"))
+        self.assertIn("ctx->commandNext = CONTROLLER_COMMAND_27;", body[spend:body.index("BATTLE_SUBSCRIPT_USE_MOVE")])
+        number = int(re.search(r"#define BATTLE_SUBSCRIPT_GEM\s+(\d+)",
+                               (ROOT / "include/constants/battle_subscript.h").read_text()).group(1))
+        script = (SUBSCRIPTS / f"subscript_{number:04d}_Gem.s").read_text()
+        order = ["PrintAttackMessage", "BATTLE_ANIMATION_HELD_ITEM",
+                 "PrintMessage msg_0197_01570, TAG_ITEM_MOVE, BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_ATTACKER",
+                 "RemoveItem BATTLER_CATEGORY_ATTACKER"]
+        self.assertEqual(sorted(order, key=script.index), order)
+        gmm = (ROOT / "files/msgdata/msg/msg_0197.gmm").read_text()
+        row = gmm[gmm.index('<row id="msg_0197_01570"'):]
+        self.assertIn("strengthened", row[:row.index("</row>")])
+
+    def test_no_theft_on_a_move_a_gem_powered(self):
+        thief = function(COMMANDS.read_text(), "BtlCmd_TryStealItem")
+        self.assertRegex(thief, r"\} else if \(ctx->gemBoostingMove\) \{\n(?:\s*//[^\n]*\n)*\s*BattleScriptIncrementPointer\(ctx, adrs1\);")
+        self.assertRegex(OVERLAY.read_text(), r"== ABILITY_MAGICIAN && !ctx->gemBoostingMove &&")
 
 
 if __name__ == "__main__":
