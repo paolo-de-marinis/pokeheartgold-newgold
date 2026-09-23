@@ -93,6 +93,9 @@ static void ItemMenuUseFunc_Gracidea(struct ItemMenuUseData *data, const struct 
 static BOOL ItemFieldUseFunc_Gracidea(struct ItemFieldUseData *data);
 static PartyMenuArgs *_CreateGracideaWork(FieldSystem *fieldSystem);
 static void ItemMenuUseFunc_VSRecorder(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2);
+static void ItemMenuUseFunc_FormChange(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2);
+static BOOL ItemFieldUseFunc_RevealGlass(struct ItemFieldUseData *data);
+static PartyMenuArgs *_CreateRevealGlassWork(FieldSystem *fieldSystem);
 static BOOL ItemFieldUseFunc_VSRecorder(struct ItemFieldUseData *data);
 static void *_VsRecorderInit(FieldSystem *fieldSystem);
 static BOOL KeyItemIdSpawnsSubprocess(FieldSystem *fieldSystem, u16 itemId);
@@ -131,6 +134,15 @@ static const struct ItemUseFuncDat sItemFieldUseFuncs[] = {
     { NULL,                        ItemFieldUseFunc_GbSounds,    NULL                        },
     { ItemMenuUseFunc_Gracidea,    ItemFieldUseFunc_Gracidea,    NULL                        },
     { ItemMenuUseFunc_VSRecorder,  ItemFieldUseFunc_VSRecorder,  NULL                        },
+    // hg-engine's routines after HeartGold's thirty (sNewItemFieldUseFuncs in
+    // its src/item.c), numbered as its item data numbers them.
+    { ItemMenuUseFunc_FormChange,  ItemFieldUseFunc_RevealGlass, NULL                        }, // Reveal Glass
+    { NULL,                        NULL,                         ItemCheckUseFunc_Dummy      }, // DNA Splicers
+    // The Ability Capsule and the Mints take routine 1 here, which opens the
+    // party menu on the item just as these two would.
+    { NULL,                        NULL,                         ItemCheckUseFunc_Dummy      },
+    { NULL,                        NULL,                         ItemCheckUseFunc_Dummy      },
+    { ItemMenuUseFunc_FormChange,  NULL,                         NULL                        }, // Nectars
 };
 
 void *GetItemFieldUseFunc(int funcType, u16 itemType) {
@@ -709,6 +721,24 @@ static BOOL ItemFieldUseFunc_Gracidea(struct ItemFieldUseData *data) {
 
 static PartyMenuArgs *_CreateGracideaWork(FieldSystem *fieldSystem) {
     return PartyMenu_LaunchApp_Gracidea(fieldSystem, HEAP_ID_FIELD2, ITEM_GRACIDEA);
+}
+
+// An item that changes a Pokemon's form opens the party menu on itself, as the
+// Gracidea does; src/party_menu.c decides what it does to whom.
+static void ItemMenuUseFunc_FormChange(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2) {
+    FieldSystem *fieldSystem = TaskManager_GetFieldSystem(data->taskManager);
+    StartMenuTaskData *env = TaskManager_GetEnvironment(data->taskManager);
+    env->exitTaskEnvironment = PartyMenu_LaunchApp_Gracidea(fieldSystem, HEAP_ID_FIELD2, data->itemId);
+    StartMenu_SetExitTaskFunc(env, Task_StartMenu_HandleReturn_Pokemon);
+}
+
+static BOOL ItemFieldUseFunc_RevealGlass(struct ItemFieldUseData *data) {
+    RegisteredItem_CreateGoToAppTask(data, (FieldApplicationWorkCtor)_CreateRevealGlassWork, FALSE);
+    return TRUE;
+}
+
+static PartyMenuArgs *_CreateRevealGlassWork(FieldSystem *fieldSystem) {
+    return PartyMenu_LaunchApp_Gracidea(fieldSystem, HEAP_ID_FIELD2, ITEM_REVEAL_GLASS);
 }
 
 static void ItemMenuUseFunc_VSRecorder(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2) {

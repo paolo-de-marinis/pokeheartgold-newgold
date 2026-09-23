@@ -202,19 +202,19 @@ GENERIC_FIELD_USE = 0
 # it does there. It is what every medicine uses, konefr's Ability Patch included.
 PARTY_MENU_FIELD_USE = 1
 
-# What each of konefr's six becomes here. Four of them change a form this game
-# has no species record and no sprite for, so those records really do have
-# nothing to do and stay at routine 0. The Ability Capsule and the twenty-one
-# Mints need no form at all, and all their routine ever did was open the party
-# menu on the item -- so they get routine 1, the same one konefr give the
-# Ability Patch, and src/party_menu.c answers them the way it answers the
-# Gracidea.
+# What each of konefr's six becomes here. The Reveal Glass and the Nectars keep
+# their routines, which src/field_use_item.c has in the same places. The
+# Ability Capsule and the twenty-one Mints need no form at all, and all their
+# routine ever did was open the party menu on the item -- so they get routine
+# 1, the same one konefr give the Ability Patch, and src/party_menu.c answers
+# them the way it answers the Gracidea. The others are not ported yet and stay
+# at routine 0.
 FIELD_USE_ROUTINES = {
-    30: GENERIC_FIELD_USE,     # Reveal Glass -- no Therian forms here
-    31: GENERIC_FIELD_USE,     # DNA Splicers -- no Kyurem Black or White here
+    30: 30,                    # Reveal Glass
+    31: GENERIC_FIELD_USE,     # DNA Splicers -- needs somewhere to keep the Reshiram or Zekrom
     32: PARTY_MENU_FIELD_USE,  # Ability Capsule
     33: PARTY_MENU_FIELD_USE,  # Mint
-    34: GENERIC_FIELD_USE,     # Nectar -- no Oricorio forms here
+    34: 34,                    # Nectar
     35: GENERIC_FIELD_USE,     # Rotom Catalog -- needs the appliance list menu
 }
 
@@ -436,13 +436,12 @@ def record(reference, name, fields, effects, report):
         elif field == "naturalGiftType":
             row.append(reference.natural_gift_type(values[field]))
         elif field == "fieldUseFunc":
-            routine = reference.number(values[field])
+            theirs = reference.number(values[field])
+            routine = FIELD_USE_ROUTINES.get(theirs, theirs)
             if routine >= FIELD_USE_FUNCS:
-                here = FIELD_USE_ROUTINES.get(routine, GENERIC_FIELD_USE)
-                if here == GENERIC_FIELD_USE:
-                    report.setdefault("field use routines this game has not got", []).append(
-                        (name, routine))
-                routine = here
+                routine = GENERIC_FIELD_USE
+            if routine == GENERIC_FIELD_USE != theirs:
+                report.setdefault("field use routines this game has not got", []).append((name, theirs))
             row.append(str(routine))
         elif field in BOOLEANS:
             row.append("true" if values[field] == "TRUE" else "false")

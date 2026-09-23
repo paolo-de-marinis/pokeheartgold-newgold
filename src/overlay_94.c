@@ -67,8 +67,16 @@ BOOL PartyMenu_AnimateIconFormChange(PartyMenu *partyMenu) {
             work->fileId = NARC_particle_shaymin;
             break;
         case SPECIES_ROTOM:
-        default:
             GF_ASSERT(FALSE);
+            break;
+        default:
+            // A form that is a species of its own here, named by the party
+            // menu: the Reveal Glass, the Nectars. hg-engine gives these no
+            // particles (LoadIconChangeAnim); the icon is redrawn on the
+            // first frame.
+            Mon_ChangeFormSpecies(mon, partyMenu->args->species);
+            work->duration = 1;
+            work->fileId = NARC_particle_giratina;
             break;
         }
         Pokedex_SetMonCaughtFlag(Save_Pokedex_Get(FieldSystem_GetSaveData(partyMenu->args->fieldSystem)), mon);

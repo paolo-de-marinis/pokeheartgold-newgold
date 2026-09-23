@@ -2467,8 +2467,53 @@ static BOOL PartyMenu_TryUseMintOrAbilityCapsule(PartyMenu *partyMenu) {
     return TRUE;
 }
 
+// The Forces of Nature and their Therian forms, which the Reveal Glass turns
+// into one another. hg-engine's CanUseRevealGlass stops at Landorus though its
+// comment names Enamorus; since Scarlet and Violet the glass changes all four
+// (Pokemon Central, Verispecchio).
+static const u16 sRevealGlassForms[][2] = {
+    { SPECIES_TORNADUS,  SPECIES_TORNADUS_THERIAN  },
+    { SPECIES_THUNDURUS, SPECIES_THUNDURUS_THERIAN },
+    { SPECIES_LANDORUS,  SPECIES_LANDORUS_THERIAN  },
+    { SPECIES_ENAMORUS,  SPECIES_ENAMORUS_THERIAN  },
+};
+
+// Oricorio's styles by Nectar: red, yellow, pink, purple.
+static const u16 sNectarForms[] = {
+    SPECIES_ORICORIO,
+    SPECIES_ORICORIO_POM_POM,
+    SPECIES_ORICORIO_PAU,
+    SPECIES_ORICORIO_SENSU,
+};
+
+// The species an item turns a Pokemon of this species into, or SPECIES_NONE.
+// A form is a species of its own here, so this is hg-engine's form change
+// (UseItemMonAttrChangeCheck) as a change of species.
+static u16 ItemFormChangeSpecies(u16 itemId, u16 species) {
+    int i;
+
+    if (itemId == ITEM_REVEAL_GLASS) {
+        for (i = 0; i < NELEMS(sRevealGlassForms); i++) {
+            if (species == sRevealGlassForms[i][0]) {
+                return sRevealGlassForms[i][1];
+            }
+            if (species == sRevealGlassForms[i][1]) {
+                return sRevealGlassForms[i][0];
+            }
+        }
+    } else if (itemId >= ITEM_RED_NECTAR && itemId <= ITEM_PURPLE_NECTAR) {
+        for (i = 0; i < NELEMS(sNectarForms); i++) {
+            if (species == sNectarForms[i] && species != sNectarForms[itemId - ITEM_RED_NECTAR]) {
+                return sNectarForms[itemId - ITEM_RED_NECTAR];
+            }
+        }
+    }
+    return SPECIES_NONE;
+}
+
 static int PartyMenu_HandleUseItemOnMon(PartyMenu *partyMenu) {
     ItemData *itemData = LoadItemDataOrGfx(partyMenu->args->itemId, ITEMNARC_PARAM, HEAP_ID_PARTY_MENU);
+    u16 formSpecies;
 
     if (PartyMenu_TryUseMintOrAbilityCapsule(partyMenu) == TRUE) {
         Heap_Free(itemData);
@@ -2477,6 +2522,18 @@ static int PartyMenu_HandleUseItemOnMon(PartyMenu *partyMenu) {
 
     if (partyMenu->args->itemId == ITEM_GRACIDEA && Mon_CanUseGracidea(Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex)) == TRUE) {
         partyMenu->args->species = SHAYMIN_SKY; // SPECIES_BULBASAUR
+        Heap_Free(itemData);
+        PartyMenu_FormChangeScene_Begin(partyMenu);
+        return PARTY_MENU_STATE_FORM_CHANGE_ANIM;
+    }
+
+    formSpecies = ItemFormChangeSpecies(partyMenu->args->itemId, GetMonData(Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex), MON_DATA_SPECIES_OR_EGG, NULL));
+    if (formSpecies != SPECIES_NONE) {
+        // A Nectar is used up; the Reveal Glass is a key item.
+        if (partyMenu->args->itemId != ITEM_REVEAL_GLASS) {
+            Bag_TakeItem(partyMenu->args->bag, partyMenu->args->itemId, 1, HEAP_ID_PARTY_MENU);
+        }
+        partyMenu->args->species = formSpecies;
         Heap_Free(itemData);
         PartyMenu_FormChangeScene_Begin(partyMenu);
         return PARTY_MENU_STATE_FORM_CHANGE_ANIM;
