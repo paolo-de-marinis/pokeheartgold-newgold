@@ -77,8 +77,8 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # seventeen Memories, the Roseli Berry and Heavy-Duty Boots.
 # The Blank Plate's power took one more.
 # The three origin items and Ogerpon's three masks took six.
-# The Gems took one, and the Binding Band one.
-IMPORTED_AND_UNREAD = 10
+# The Gems took one, the Binding Band one, the Adrenaline Orb one.
+IMPORTED_AND_UNREAD = 9
 
 
 def effects_defined():
@@ -450,6 +450,85 @@ class BindingTests(unittest.TestCase):
         self.run_divisor("sItem[1] = HOLD_EFFECT_TRAPPING_DAMAGE_UP; assert(BindDamageDivisor(&ctx, 0) == 6);"
                          "sItem[1] = HOLD_EFFECT_NONE; sItem[0] = HOLD_EFFECT_TRAPPING_DAMAGE_UP;"
                          "assert(BindDamageDivisor(&ctx, 0) == 8);")
+
+
+def subscript_named(define):
+    """The source of the subscript a BATTLE_SUBSCRIPT_ define numbers."""
+    number = int(re.search(rf"#define {define}\s+(\d+)",
+                           (ROOT / "include/constants/battle_subscript.h").read_text()).group(1))
+    matches = sorted(SUBSCRIPTS.glob(f"subscript_{number:04d}_*.s"))
+    assert len(matches) == 1, (define, matches)
+    return matches[0].read_text()
+
+
+def walk(script, answer):
+    """Follow a subscript's branches and return the subscripts it calls.
+
+    Only the commands that choose a path are understood: a CheckAbility or
+    CheckItemHoldEffect jumps when answer(...) says so, a CompareMonDataToValue
+    OPCODE_EQU jumps when answer(field) equals the value, GoTo jumps, Call is
+    recorded, End stops. Everything else is walked past."""
+    lines = [line.split("//")[0].strip() for line in script.splitlines()]
+    labels = {line[:-1]: i for i, line in enumerate(lines) if line.endswith(":")}
+    calls, i = [], 0
+    while i < len(lines):
+        words = lines[i].replace(",", " ").split()
+        i += 1
+        if not words:
+            continue
+        op, args = words[0], words[1:]
+        if op == "End":
+            break
+        if op == "GoTo":
+            i = labels[args[0]]
+        elif op == "Call":
+            calls.append(args[0])
+        elif op in ("CheckAbility", "CheckItemHoldEffect"):
+            if (args[0] == "CHECK_OPCODE_HAVE") == bool(answer(args[2])):
+                i = labels[args[3]]
+        elif op == "CompareMonDataToValue" and args[0] == "OPCODE_EQU":
+            if answer(args[2]) == int(args[3], 0):
+                i = labels[args[4]]
+    return calls
+
+
+class AdrenalineOrbTests(unittest.TestCase):
+    """No reference reader; Pokemon Central (Fifasfera): Intimidate on the
+    holder raises its Speed a stage and spends the orb, also when an ability
+    kept the Attack up, but not when the Attack was already at its limit or the
+    Speed has no room. The Attack drop itself is always tried."""
+
+    DROP = "BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE"
+    RAISE = "BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT"
+
+    def orb(self, contrary=False, atk=6, speed=6):
+        state = {"ABILITY_CONTRARY": contrary, "BMON_DATA_STAT_CHANGE_ATK": atk,
+                 "BMON_DATA_STAT_CHANGE_SPEED": speed}
+        return walk(subscript_named("BATTLE_SUBSCRIPT_ADRENALINE_ORB"), state.get)
+
+    def test_intimidate_sends_the_holder_through_the_orb(self):
+        script = subscript_named("BATTLE_SUBSCRIPT_INTIMIDATE")
+        self.assertEqual(walk(script, {}.get), [self.DROP])
+        self.assertEqual(walk(script, {"HOLD_EFFECT_INTIMIDATE_BOOST_SPEED": True}.get),
+                         ["BATTLE_SUBSCRIPT_ADRENALINE_ORB"])
+
+    def test_when_the_orb_raises_speed(self):
+        self.assertEqual(self.orb(), [self.DROP, self.RAISE])
+        self.assertEqual(self.orb(atk=0), [self.DROP])
+        self.assertEqual(self.orb(speed=12), [self.DROP])
+        self.assertEqual(self.orb(speed=11), [self.DROP, self.RAISE])
+        self.assertEqual(self.orb(contrary=True), [self.DROP, self.RAISE])
+        self.assertEqual(self.orb(contrary=True, atk=12), [self.DROP])
+        self.assertEqual(self.orb(contrary=True, speed=0), [self.DROP])
+        self.assertEqual(self.orb(contrary=True, speed=12), [self.DROP, self.RAISE])
+
+    def test_the_raise_is_the_holders_speed_and_credits_the_orb(self):
+        script = subscript_named("BATTLE_SUBSCRIPT_ADRENALINE_ORB")
+        raise_at = script.index("Call BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT")
+        setup = script[:raise_at]
+        self.assertIn("UpdateVar OPCODE_SET, BSCRIPT_VAR_MESSAGE, STAT_SPEED", setup)
+        self.assertIn("UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_STAT_CHANGE", setup)
+        self.assertIn("BMON_DATA_HELD_ITEM, BSCRIPT_VAR_MSG_ITEM_TEMP", setup)
 
 
 if __name__ == "__main__":
