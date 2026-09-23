@@ -31,9 +31,12 @@ TEXT_LINES, TEXT_CHARS = 16, 96
 
 
 def _names(header, prefix):
-    text = (ROOT / header).read_text()
-    return {int(m.group(2)): m.group(1)[len(prefix):].replace("_", " ").title()
-            for m in re.finditer(rf"#define ({prefix}[A-Z0-9_]+)\s+(\d+)\s*(?://.*)?$", text, re.M)}
+    # The first define of a number names it: moves.h goes on to number
+    # MOVE_ATTRIBUTE_* from 0, which would call Ice Punch "Attribute Priorty".
+    names = {}
+    for m in re.finditer(rf"#define ({prefix}[A-Z0-9_]+)\s+(\d+)\s*(?://.*)?$", (ROOT / header).read_text(), re.M):
+        names.setdefault(int(m.group(2)), m.group(1)[len(prefix):].replace("_", " ").title())
+    return names
 
 
 def _charmap():
