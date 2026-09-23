@@ -14,8 +14,10 @@
 #include "pm_string.h"
 #include "sprite_system.h"
 
-// HeartGold sizes the bag's list for its biggest pocket, 165 items.
-#define BAG_LIST_CAPACITY 165
+// The bag's list holds a whole pocket, and a pocket's count is a u8.
+// HeartGold's held 165, its biggest pocket; the save's pockets are wider now
+// (NUM_BAG_ITEMS and the rest), so the list is hg-engine's 255.
+#define BAG_LIST_CAPACITY 255
 
 // A list string holds an item's name, terminator included. HeartGold's 18 fit
 // its own names; hg-engine's run to 22 (Super Lumiose Galette), and a name that
@@ -23,7 +25,9 @@
 #define BAG_LIST_NAME_LENGTH 22
 
 // The bag's state, as Bag_Init allocates it. Only the fields the C reads are
-// named; the rest belong to the bag assembly.
+// named; the rest belong to the bag assembly, which addresses them by offset,
+// so the list's two arrays are past HeartGold's 0x94C bytes, where hg-engine
+// moved them too, and HeartGold's own are left unused.
 typedef struct BagAppState {
     BgConfig *bgConfig;
     Window descriptionWindow;
@@ -47,7 +51,7 @@ typedef struct BagAppState {
     MsgData *itemNamesMsgData;
     MsgData *moveNamesMsgData;
     u8 unk300[0x350 - 0x300];
-    String *listNames[BAG_LIST_CAPACITY]; // the name each row of the list shows
+    u8 unused350[0x5E4 - 0x350]; // HeartGold's 165 list strings
     u8 unk5E4[0x5EC - 0x5E4];
     String *unk5EC;
     u8 unk5F0[0x615 - 0x5F0];
@@ -59,9 +63,11 @@ typedef struct BagAppState {
     u8 unk673[0x68A - 0x673];
     u8 unk68A; // which of the two sets of list rows is on show
     u8 unk68B[0x6A4 - 0x68B];
-    u16 listItems[BAG_LIST_CAPACITY]; // the item each row of the list is
+    u8 unused6A4[0x7EE - 0x6A4]; // HeartGold's 165 list items
     u8 unk7EE[0x94C - 0x7EE];
-} BagAppState; // size: 0x94C
+    String *listNames[BAG_LIST_CAPACITY]; // the name each row of the list shows
+    u16 listItems[BAG_LIST_CAPACITY]; // the item each row of the list is
+} BagAppState;
 
 void ov15_021FE914(BagAppState *state, Window *window, ItemSlot *slot, u32 y);
 void ov15_021FF570(BagAppState *state, Window *window, String *name, BagViewPocket *list, u32 index);

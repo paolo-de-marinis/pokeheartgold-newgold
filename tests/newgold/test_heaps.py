@@ -99,6 +99,17 @@ class HeapTests(unittest.TestCase):
             "the items have outgrown the battle heap's share of heap 3")
         print(f"PASS: the item table is {size:#x} of the battle heap's {battle:#x}.")
 
+    def test_the_bag_fits_beside_the_pc(self):
+        """The PC opens the bag with its own heap still up. The bag's heap is
+        hg-engine's 0x65000 (retail 0x42000) since its list holds 255 names."""
+        general = self.heaps[3]
+        field = self.children["HEAP_ID_FIELD2"] + self.children["HEAP_ID_FIELD3"]
+        pc = child_size("HEAP_ID_10", ROOT / "src/overlay_14_021EAFAC.c")
+        bag = child_size("HEAP_ID_6", ROOT / "src/bag_init.c")
+        left = general - field - pc - bag
+        self.assertGreaterEqual(left, 0, f"heap 3 is {general:#x}; the field, the PC and the bag take {field + pc + bag:#x}")
+        print(f"PASS: heap 3 leaves {left:#x} with the PC and the bag open.")
+
     def test_the_save_still_fits_its_heap(self):
         """Heap 1 holds SaveData, whose region is SAVE_PAGE_MAX sectors."""
         import sys

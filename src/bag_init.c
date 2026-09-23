@@ -53,7 +53,9 @@ BOOL Bag_Init(OverlayManager *manager, int *state) {
     GXS_SetVisiblePlane(0);
     G2_BlendNone();
     G2S_BlendNone();
-    Heap_Create(HEAP_ID_3, HEAP_ID_6, 0x42000);
+    // hg-engine's heap for the bag, 0x65000 where HeartGold's was 0x42000: the
+    // list's strings are 255 of 22 halfwords now, not 165 of 18.
+    Heap_Create(HEAP_ID_3, HEAP_ID_6, 0x65000);
     bagApp = OverlayManager_CreateAndGetData(manager, sizeof(BagAppState), HEAP_ID_6);
     memset(bagApp, 0, sizeof(BagAppState));
     bagApp->bagView = OverlayManager_GetArgs(manager);

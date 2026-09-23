@@ -4,9 +4,15 @@
 #include "heap.h"
 
 typedef char BagAppStateViewCheck[offsetof(BagAppState, bagView) == 0x234 ? 1 : -1];
-typedef char BagAppStateNamesCheck[offsetof(BagAppState, listNames) == 0x350 ? 1 : -1];
-typedef char BagAppStateItemsCheck[offsetof(BagAppState, listItems) == 0x6A4 ? 1 : -1];
-typedef char BagAppStateSizeCheck[sizeof(BagAppState) == 0x94C ? 1 : -1];
+typedef char BagAppStateRetailCheck[offsetof(BagAppState, listNames) == 0x94C ? 1 : -1];
+// The list holds any pocket, and a pocket's count is a u8.
+typedef char BagListPocketCheck[BAG_LIST_CAPACITY >= NUM_BAG_ITEMS && BAG_LIST_CAPACITY >= NUM_BAG_MEDICINE
+                                && BAG_LIST_CAPACITY >= NUM_BAG_BALLS && BAG_LIST_CAPACITY >= NUM_BAG_TMS_HMS
+                                && BAG_LIST_CAPACITY >= NUM_BAG_BERRIES && BAG_LIST_CAPACITY >= NUM_BAG_MAIL
+                                && BAG_LIST_CAPACITY >= NUM_BAG_BATTLE_ITEMS && BAG_LIST_CAPACITY >= NUM_BAG_KEY_ITEMS
+                                && BAG_LIST_CAPACITY <= 255
+                                ? 1
+                                : -1];
 
 // How many of each pocket's slots the list reads, by pocket.
 extern const u8 ov15_022008B0[];
