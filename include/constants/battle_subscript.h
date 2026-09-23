@@ -691,6 +691,8 @@
 // Mimicry taking the terrain's type, which the reference gives Color
 // Change's subscript for.
 #define BATTLE_SUBSCRIPT_MIMICRY                            425
+// Symbiosis handing its item over, which the reference has no script for.
+#define BATTLE_SUBSCRIPT_SYMBIOSIS                          426
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

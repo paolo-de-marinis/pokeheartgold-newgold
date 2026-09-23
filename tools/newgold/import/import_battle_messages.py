@@ -119,6 +119,19 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0}’s stat\nchanges were removed!",
         r"The opposing {STRVAR_1 1, 0, 0}’s stat\nchanges were removed!",
     ]),
+    # Symbiosis handing its item to a partner that used its own up. The
+    # reference gives the ability no effect; the later games show its popup
+    # and this line. Two Pokemon, so the seven rows two-Pokemon lines have;
+    # only the three where both are on one side are ever printed.
+    ("symbiosis", [
+        r"{STRVAR_1 1, 0, 0} shared its\n{STRVAR_1 8, 1, 0} with {STRVAR_1 1, 2, 0}!",
+        r"{STRVAR_1 1, 0, 0} shared its\n{STRVAR_1 8, 1, 0} with the wild {STRVAR_1 1, 2, 0}!",
+        r"{STRVAR_1 1, 0, 0} shared its\n{STRVAR_1 8, 1, 0} with the opposing\f{STRVAR_1 1, 2, 0}!",
+        r"The wild {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with {STRVAR_1 1, 2, 0}!",
+        r"The wild {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with the\fwild {STRVAR_1 1, 2, 0}!",
+        r"The opposing {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with {STRVAR_1 1, 2, 0}!",
+        r"The opposing {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with the\fopposing {STRVAR_1 1, 2, 0}!",
+    ]),
 ]
 
 

@@ -7268,4 +7268,32 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s stat\nchanges were removed!</language>
 	</row>
+	<row id="msg_0197_01817" index="1817">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} shared its\n{STRVAR_1 8, 1, 0} with {STRVAR_1 1, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01818" index="1818">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} shared its\n{STRVAR_1 8, 1, 0} with the wild {STRVAR_1 1, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01819" index="1819">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} shared its\n{STRVAR_1 8, 1, 0} with the opposing\f{STRVAR_1 1, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01820" index="1820">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with {STRVAR_1 1, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01821" index="1821">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with the\fwild {STRVAR_1 1, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01822" index="1822">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with {STRVAR_1 1, 2, 0}!</language>
+	</row>
+	<row id="msg_0197_01823" index="1823">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with the\fopposing {STRVAR_1 1, 2, 0}!</language>
+	</row>
 </body>

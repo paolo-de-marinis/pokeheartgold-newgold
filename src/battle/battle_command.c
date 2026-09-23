@@ -6388,6 +6388,9 @@ BOOL BtlCmd_RemoveItem(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 
     ctx->battleMons[battlerId].item = 0;
+    // An item used up, which is what hands a partner's Symbiosis item over;
+    // the entry abilities' check does the handing.
+    ctx->symbiosisPending[battlerId] = TRUE;
 
     CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
 

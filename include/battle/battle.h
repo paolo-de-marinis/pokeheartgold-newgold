@@ -593,6 +593,10 @@ typedef struct BattleContext {
     // The stages an Opportunist has seen the other side gain and has yet to
     // copy, by stat. Cleared when the Pokemon is loaded into its slot.
     u8 opportunistStages[BATTLER_MAX][NUM_BATTLE_STATS];
+    // Whether a battler has used up its held item since the entry abilities
+    // were last looked at, for its partner's Symbiosis. Cleared when the
+    // Pokemon is loaded into its slot.
+    u8 symbiosisPending[BATTLER_MAX];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

@@ -183,6 +183,7 @@ IMPLEMENTED = {
     "SURGE_SURFER",
     "SWEET_VEIL",
     "SWORD_OF_RUIN",
+    "SYMBIOSIS",
     "TABLETS_OF_RUIN",
     "TANGLING_HAIR",
     "TELEPATHY",
@@ -238,7 +239,7 @@ IMPLEMENTED = {
 # ability does nothing looks right on the summary screen and loses battles
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
-    "BALL_FETCH", "SYMBIOSIS"
+    "BALL_FETCH"
 }
 
 # Numbers the engine keeps free rather than abilities. TEMP4 (317) sits
@@ -335,7 +336,7 @@ class AbilityEffectTests(unittest.TestCase):
     # Shields Down, Battle Bond and Mega Sol done.
     # Shields Down, Battle Bond and Mega Sol done. Desolate Land, Primordial
     # Sea and Delta Stream done.
-    STILL_TO_DO = 2
+    STILL_TO_DO = 1
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

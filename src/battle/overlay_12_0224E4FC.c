@@ -203,6 +203,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->supremeOverlordFallen[battlerId] = 0;
     ctx->mimicryTerrain[battlerId] = TERRAIN_NONE;
     MI_CpuClear8(ctx->opportunistStages[battlerId], NUM_BATTLE_STATS);
+    ctx->symbiosisPending[battlerId] = FALSE;
 
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
@@ -6177,7 +6178,40 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 34: // end
+        case 34: // Symbiosis
+            // A Pokemon that has used up its held item is handed its partner's
+            // by a partner with Symbiosis (Pokemon Central, Simbiosi), after
+            // the move or the entry in which it was used up. The reference
+            // declares the ability and nothing reads it. Used up is what
+            // BtlCmd_RemoveItem marks -- eaten, drunk, flung, popped, a Berry
+            // plucked off it included -- and not an item knocked off, stolen,
+            // swapped or burnt. The partner's item has to be one that can
+            // change hands.
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->symbiosisPending[battlerId]) {
+                    continue;
+                }
+                ctx->symbiosisPending[battlerId] = FALSE;
+                j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
+                if (j != battlerId && ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].item == ITEM_NONE
+                    && ctx->battleMons[j].hp && GetBattlerAbility(ctx, j) == ABILITY_SYMBIOSIS && CanStealHeldItem(battleSystem, ctx, j) == TRUE) {
+                    ctx->itemTemp = ctx->battleMons[j].item;
+                    ctx->battleMons[battlerId].item = ctx->battleMons[j].item;
+                    ctx->battleMons[j].item = ITEM_NONE;
+                    CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
+                    CopyBattleMonToPartyMon(battleSystem, ctx, j);
+                    ctx->battlerIdTemp = j;
+                    script = BATTLE_SUBSCRIPT_SYMBIOSIS;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 35: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;

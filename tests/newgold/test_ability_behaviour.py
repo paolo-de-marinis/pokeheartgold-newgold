@@ -639,5 +639,30 @@ int main(void) {
         self.assertIn("MI_CpuClear8(ctx->opportunistStages[battlerId], NUM_BATTLE_STATS);", function(OVERLAY, "BattleSystem_GetBattleMon"))
 
 
+class SymbiosisTests(unittest.TestCase):
+    def test_a_used_up_item_is_replaced_from_the_partner_s_hands(self):
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        remove = function(commands, "BtlCmd_RemoveItem")
+        self.assertIn("ctx->symbiosisPending[battlerId] = TRUE;", remove)
+        # Knocked off, stolen or burnt is not used up.
+        for other in ("BtlCmd_TryKnockOff", "BtlCmd_TryStealItem", "BtlCmd_TrySwapItems"):
+            if re.search(r"\nBOOL " + other + r"\(", commands):
+                self.assertNotIn("symbiosisPending", function(commands, other), other)
+        entry = function(OVERLAY, "TryAbilityOnEntry")
+        state = entry[entry.index("// Symbiosis"):]
+        state = state[:state.index("case ", 10)]
+        self.assertIn("ctx->symbiosisPending[battlerId] = FALSE;", state)
+        self.assertIn("j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);", state)
+        for condition in ("j != battlerId", "ctx->battleMons[battlerId].hp", "ctx->battleMons[battlerId].item == ITEM_NONE",
+                          "ctx->battleMons[j].hp", "GetBattlerAbility(ctx, j) == ABILITY_SYMBIOSIS",
+                          "CanStealHeldItem(battleSystem, ctx, j) == TRUE"):
+            self.assertIn(condition, state)
+        self.assertIn("ctx->battleMons[battlerId].item = ctx->battleMons[j].item;\n                    ctx->battleMons[j].item = ITEM_NONE;", state)
+        self.assertIn("script = BATTLE_SUBSCRIPT_SYMBIOSIS;", state)
+        self.assertIn("ctx->symbiosisPending[battlerId] = FALSE;", function(OVERLAY, "BattleSystem_GetBattleMon"))
+        self.assertIn("TAG_NICKNAME_ITEM_NICKNAME, BATTLER_CATEGORY_MSG_BATTLER_TEMP, BATTLER_CATEGORY_MSG_TEMP, BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_MSG_BATTLER_TEMP",
+                      subscript("Symbiosis"))
+
+
 if __name__ == "__main__":
     unittest.main()
