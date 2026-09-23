@@ -203,8 +203,9 @@ class QueueTests(unittest.TestCase):
 
     def test_what_clears_a_hazard_takes_it_off(self):
         defog = read("files/battledata/script/subscript/subscript_0171_Defog.s")
-        for hazard in ("SPIKES", "TOXIC_SPIKES", "STEALTH_ROCK"):
-            self.assertIn(f"RemoveEntryHazardFromQueue BATTLER_CATEGORY_DEFENDER, HAZARD_IDX_{hazard}", defog)
+        for side in ("DEFENDER", "ATTACKER"):
+            for hazard in ("SPIKES", "TOXIC_SPIKES", "STEALTH_ROCK", "STICKY_WEB"):
+                self.assertEqual(defog.count(f"RemoveEntryHazardFromQueue BATTLER_CATEGORY_{side}, HAZARD_IDX_{hazard}"), 1)
         spin = function(read("src/battle/battle_command.c"), "BtlCmd_RapidSpin")
         for hazard in ("SPIKES", "TOXIC_SPIKES", "STEALTH_ROCK", "STICKY_WEB"):
             self.assertIn(f"EntryHazardQueueRemove(ctx, side, HAZARD_IDX_{hazard});", spin)
@@ -212,6 +213,26 @@ class QueueTests(unittest.TestCase):
         for side in ("ENEMY", "PLAYER"):
             for hazard in ("SPIKES", "TOXIC_SPIKES", "STEALTH_ROCK", "STICKY_WEB"):
                 self.assertIn(f"RemoveEntryHazardFromQueue BATTLER_CATEGORY_{side}, HAZARD_IDX_{hazard}", tidy)
+
+    def test_defog_clears_the_hazards_from_both_sides(self):
+        # Pokemon Central (Scacciabruma), from the sixth generation: the
+        # target's screens, Aurora Veil among them, Mist and Safeguard, and the
+        # hazards of both sides, each named once. Generation IV's cleared the
+        # target's side and knew neither the veil nor the web.
+        defog = read("files/battledata/script/subscript/subscript_0171_Defog.s")
+        self.assertIn("ClearAuroraVeil", defog)
+        for side in ("TARGET", "ATTACKER"):
+            for flag in ("STEALTH_ROCKS", "STICKY_WEB"):
+                self.assertIn(f"UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_SIDE_CONDITION_{side}, SIDE_CONDITION_{flag}", defog)
+        for layers in ("SPIKES_LAYERS", "TOXIC_SPIKES_LAYERS"):
+            self.assertIn(f"CheckSideCondition BATTLER_CATEGORY_ATTACKER, CHECK_SIDE_COND_CLEAR, SIDE_COND_{layers},", defog)
+        # The user's side is named only when the target's was not, which asks
+        # for the name to start empty, not with whatever the last move left.
+        hazards = defog[defog.index("SIDE_COND_SAFEGUARD_TURNS, _113"):]
+        hazards = hazards[hazards.index("_113:"):]
+        self.assertTrue(hazards.startswith("_113:\n    UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_NONE\n"))
+        for move in ("SPIKES", "TOXIC_SPIKES", "STEALTH_ROCK", "STICKY_WEB"):
+            self.assertIn(f"CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_{move},", defog)
 
     def test_tidy_up_asks_each_side_for_the_stones_and_the_web(self):
         # Pokemon Central (Pulizie): Tidy Up clears the pointed stones and the
