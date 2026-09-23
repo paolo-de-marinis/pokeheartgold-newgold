@@ -99,7 +99,7 @@ typedef uint32_t u32;
 
 typedef struct { u16 id, quantity; } ItemSlot;
 typedef struct { int unused; } Window;
-typedef struct { int unused; } BagAppStatePrefix;
+typedef struct { int unused; } BagAppState;
 typedef enum { PRINTING_MODE_LEFT_ALIGN, PRINTING_MODE_RIGHT_ALIGN, PRINTING_MODE_LEADING_ZEROS } PrintingMode;
 
 #define BAG_HM_BADGE NARC_bag_gra_bag_gra_00000037_NCGR
@@ -121,14 +121,14 @@ static struct { u32 number, digits, mode, x, y, badge, badgeY; } drawn;
 static void PrintUIntOnWindow(int printer, u32 num, u32 digits, PrintingMode mode, Window *window, u32 x, u32 y) {
     drawn.number = num; drawn.digits = digits; drawn.mode = mode; drawn.x = x; drawn.y = y;
 }
-static void ov15_021FE9B0(BagAppStatePrefix *state, Window *window, u32 badge, u32 y) {
+static void ov15_021FE9B0(BagAppState *state, Window *window, u32 badge, u32 y) {
     drawn.badge = badge; drawn.badgeY = y;
 }
 
 @NATIVE@
 
 static void draw(u16 item) {
-    BagAppStatePrefix state = { 0 };
+    BagAppState state = { 0 };
     Window window;
     ItemSlot slot = { item, 1 };
     ov15_021FE914(&state, &window, &slot, 16);

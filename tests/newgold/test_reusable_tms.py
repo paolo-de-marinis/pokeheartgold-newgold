@@ -223,15 +223,15 @@ typedef int BOOL;
 #define MAKE_TEXT_COLOR(a, b, c) (((a) << 16) | ((b) << 8) | (c))
 typedef struct { u16 id, quantity; } ItemSlot;
 typedef struct { int unused; } Window, String, MessageFormat, MsgData, Bag;
-typedef struct { Bag *bag; MessageFormat *messageFormat; MsgData *msgData; } BagAppStatePrefix;
+typedef struct { Bag *bag; MessageFormat *messageFormat; MsgData *msgData; } BagAppState;
 typedef struct BagItemListPrefix { ItemSlot *slots; u32 unk04; u8 pocket; } BagItemListPrefix;
 BOOL ItemIsTM(u16 itemId);
 BOOL ItemIsHM(u16 itemId);
 BOOL ItemIsTR(u16 itemId);
 static int counted, labelled;
 static void AddTextPrinterParameterizedWithColor(Window *w, int f, String *s, int x, int y, int speed, u32 c, void *cb) {}
-static void ov15_021FE914(BagAppStatePrefix *state, Window *window, ItemSlot *slot, u32 y) { labelled++; }
-static void ov15_021FE9F0(BagAppStatePrefix *state, Window *window, u32 y, u32 which) {}
+static void ov15_021FE914(BagAppState *state, Window *window, ItemSlot *slot, u32 y) { labelled++; }
+static void ov15_021FE9F0(BagAppState *state, Window *window, u32 y, u32 which) {}
 static void ov15_021FF66C(MessageFormat *f, MsgData *m, Window *window, u32 quantity) { counted++; }
 static u16 Bag_GetRegisteredItem1(Bag *bag) { return ITEM_NONE; }
 static u16 Bag_GetRegisteredItem2(Bag *bag) { return ITEM_NONE; }
@@ -240,7 +240,7 @@ static u16 Bag_GetRegisteredItem2(Bag *bag) { return ITEM_NONE; }
 static int row(u8 pocket, u16 item) {
     ItemSlot slot = { item, 5 };
     BagItemListPrefix list = { &slot, 0, pocket };
-    BagAppStatePrefix state = { 0 };
+    BagAppState state = { 0 };
     Window window;
     counted = labelled = 0;
     ov15_021FF570(&state, &window, NULL, &list, 0);

@@ -11,12 +11,12 @@ typedef struct BagItemListPrefix {
     u8 pocket;
 } BagItemListPrefix;
 
-extern void ov15_021FE9F0(BagAppStatePrefix *state, Window *window, u32 y, u32 which);
+extern void ov15_021FE9F0(BagAppState *state, Window *window, u32 y, u32 which);
 extern void ov15_021FF66C(MessageFormat *messageFormat, MsgData *msgData, Window *window, u32 quantity);
 
 #define ROW_Y 0x10
 
-void ov15_021FF570(BagAppStatePrefix *state, Window *window, String *name, BagItemListPrefix *list, u32 index) {
+void ov15_021FF570(BagAppState *state, Window *window, String *name, BagItemListPrefix *list, u32 index) {
     switch (list->pocket) {
     case POCKET_TMHMS:
         AddTextPrinterParameterizedWithColor(window, 0, name, 0, 0, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);

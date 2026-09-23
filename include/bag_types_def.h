@@ -50,9 +50,11 @@ typedef struct Bag {
  */
 typedef struct BagViewPocket {
     ItemSlot *slots; // Points into Bag
-    u8 padding[4];
-    u8 pocketId; // POCKET_XXX constant
-    u8 padding2[3];
+    u16 position;    // The cursor's row on the page
+    s16 scroll;      // The list's first row on the page
+    u8 pocketId;     // POCKET_XXX constant
+    u8 count;        // The items the list shows
+    u8 padding2[2];
 } BagViewPocket;
 
 typedef struct ItemCheckUseData {
