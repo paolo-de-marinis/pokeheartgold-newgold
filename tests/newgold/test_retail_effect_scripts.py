@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+"""Compare retail's effect scripts, 0 to 276, with hg-engine's.
+
+import_moves.py matches an effect up to 276 by its number, on the premise
+that both trees hold the same script there. They do not quite: at d0380a487
+the engine rewrote about a hundred and twenty of them. Most of those
+rewrites say the same thing in other words -- flags or'ed in another order, a
+label renamed, a message given by number -- and assemble to the same bytes;
+they are not differences, and the comparison below reads through them. The
+rest are listed in STILL_DIFFERENT, each with what it waits on, and the list
+may only shrink: a script brought over leaves it, and one that drifts from
+the engine's without an entry fails.
+"""
+
+import re
+import subprocess
+import sys
+import unittest
+from pathlib import Path
+
+from test_level_cap import ROOT
+from test_repels import REFERENCE
+
+sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+import import_moves  # noqa: E402
+
+ENGINE = "d0380a487"
+LAST_RETAIL_EFFECT = 276
+EFFECT_SCRIPTS = ROOT / "files/battledata/script/effect_script"
+
+# What the engine does elsewhere, in C, and this game still does in the script.
+IN_C = "the engine moved it into C ({}); the script here still does it, to the same effect"
+PARENTAL_BOND = "Parental Bond, whose commands are stubs here (test_battle_commands.STUBS)"
+
+STILL_DIFFERENT = {
+    7: IN_C.format("Damp and the user's fainting, BattleController_BeforeMove.c"),
+    13: "Growth's two stages in sunshine: the engine's subscript HANDLE_GROWTH",
+    20: "retail's unused speed drop, the engine's a two-stage one; no move runs it",
+    21: "retail's damage stub, the engine's Sp. Atk drop; no move runs it",
+    22: "retail's damage stub, the engine's Sp. Def drop; no move runs it",
+    33: "Toxic from a Poison type: the engine's sure hit, in its accuracy check",
+    34: PARENTAL_BOND,
+    42: IN_C.format("the binding, ServerDoPostMoveEffects.c"),
+    48: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
+    61: "retail's damage stub, the engine's two-stage Sp. Atk drop (Eerie Impulse)",
+    63: "retail's damage stub, the engine's two-stage accuracy drop; no move runs it",
+    64: "retail's damage stub, the engine's two-stage evasion drop (Sweet Scent)",
+    83: PARENTAL_BOND,
+    97: PARENTAL_BOND,
+    104: IN_C.format("Triple Kick's rising power, CalcBaseDamage.c"),
+    105: IN_C.format("the theft, ServerDoPostMoveEffects.c"),
+    109: "Curse by a Ghost given as a third type",
+    112: "the entry-hazard queue, which nothing here reads yet",
+    115: "the primal weathers and the engine's weather subscripts",
+    121: IN_C.format("Return's power, CalcBaseDamage.c"),
+    122: PARENTAL_BOND,
+    123: IN_C.format("Frustration's power, CalcBaseDamage.c"),
+    129: "Rapid Spin's Speed raise: the engine sets it here and clears the field in "
+         "ServerDoPostMoveEffects.c",
+    132: "Mega Sol, which the recovery command here does not read",
+    136: "the primal weathers and the engine's weather subscripts",
+    137: "the primal weathers and the engine's weather subscripts",
+    147: IN_C.format("Earthquake against Dig, CalcBaseDamage.c"),
+    148: "the engine's Future Sight, worked out when it lands",
+    151: IN_C.format("the charge turn, BattleController_BeforeMove.c"),
+    153: "Teleport's switch in a trainer battle",
+    154: "the engine's Beat Up, one hit per member at 5 + base Attack / 10",
+    161: PARENTAL_BOND,
+    164: "the primal weathers and the engine's weather subscripts",
+    171: IN_C.format("Smelling Salts' doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
+    173: PARENTAL_BOND,
+    178: "Role Play refused to a Griseous Orb holder",
+    180: PARENTAL_BOND,
+    188: IN_C.format("the knocking off, ServerDoPostMoveEffects.c"),
+    197: PARENTAL_BOND,
+    198: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
+    217: IN_C.format("Wake-Up Slap's doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
+    222: IN_C.format("Natural Gift's type, power and berry, CalcBaseDamage.c"),
+    223: "Feint's hit on a target that is not protecting itself",
+    224: IN_C.format("the berry eaten, ServerDoPostMoveEffects.c"),
+    228: IN_C.format("the switch, ServerDoPostMoveEffects.c"),
+    230: IN_C.format("Payback's power, CalcBaseDamage.c"),
+    231: IN_C.format("Assurance's power, CalcBaseDamage.c"),
+    233: IN_C.format("the fling and the items that cannot be flung, BattleController_BeforeMove.c"),
+    241: PARENTAL_BOND,
+    242: PARENTAL_BOND,
+    249: "the entry-hazard queue, which nothing here reads yet",
+    252: "Magnet Rise refused to an Eelevate holder",
+    253: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
+    257: IN_C.format("Surf against Dive, CalcBaseDamage.c"),
+    259: "the engine's Room Service subscript and its message wait",
+    261: IN_C.format("Whirlpool against Dive and the binding, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
+    262: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
+    266: "the entry-hazard queue, which nothing here reads yet",
+    268: "Judgment with a Pixie Plate",
+    269: IN_C.format("the recoil and Reckless, ServerDoPostMoveEffects.c and CalcBaseDamage.c"),
+    272: IN_C.format("the charge turn and the Power Herb, BattleController_BeforeMove.c"),
+}
+
+
+def defines():
+    """Every constant the headers give a value, for reading a script's
+    arguments as numbers rather than as spellings."""
+    raw = {}
+    for path in list((ROOT / "include/constants").rglob("*.h")) + [ROOT / "include/battle/battle.h"]:
+        for name, value in re.findall(r"^\s*#define\s+([A-Z_][A-Z0-9_]*)\s+([^/\n]+)", path.read_text(errors="replace"), re.M):
+            raw.setdefault(name, value.strip())
+    values = {}
+
+    def value(name, depth=0):
+        if name in values:
+            return values[name]
+        text = raw.get(name)
+        if text is None or depth > 20:
+            return None
+        expression = re.sub(r"\b[A-Z_][A-Z0-9_]*\b",
+                            lambda m: str(value(m.group(0), depth + 1)), text)
+        if not re.fullmatch(r"[0-9xXa-fA-F()<>|&~+\-* ]+", expression) or "None" in expression:
+            return None
+        try:
+            values[name] = int(eval(expression))  # noqa: S307 -- digits and operators only
+        except Exception:
+            return None
+        return values[name]
+
+    return value
+
+
+def normalised(text, value):
+    """The script's commands, with labels numbered by where they appear,
+    messages given by number and every argument that is a constant or an or
+    of constants given as its value."""
+    lines = []
+    for line in text.splitlines():
+        line = line.split("//")[0].strip()
+        if line and not line.startswith("."):
+            lines.append(re.sub(r"\s+", " ", line))
+    labels = {m.group(1): f"L{i}" for i, m in
+              enumerate(re.match(r"^(\w+):$", l) for l in lines if re.match(r"^(\w+):$", l))}
+    out = []
+    for line in lines:
+        if line.endswith(":"):
+            out.append(labels[line[:-1]] + ":")
+            continue
+        command, _, rest = line.partition(" ")
+        arguments = []
+        for argument in (a.strip() for a in rest.split(",") if a.strip()):
+            argument = labels.get(argument, argument)
+            argument = re.sub(r"^msg_0197_0*(\d+)$", r"\1", argument)
+            parts = [p.strip() for p in argument.split("|")]
+            numbers = [int(p, 0) if re.fullmatch(r"-?(0x[0-9a-fA-F]+|\d+)", p) else value(p) for p in parts]
+            if all(n is not None for n in numbers):
+                total = 0
+                for n in numbers:
+                    total |= n
+                argument = str(total)
+            arguments.append(argument)
+        out.append(" ".join([command] + [", ".join(arguments)]).strip())
+    return out
+
+
+@unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
+class RetailEffectScriptTests(unittest.TestCase):
+    def test_retail_effect_scripts_are_the_engine_s_or_listed(self):
+        import_moves.read_macros(Path(REFERENCE))
+        value = defines()
+        listing = subprocess.run(["git", "-C", str(REFERENCE), "ls-tree", "--name-only", ENGINE,
+                                  "data/battle_scripts/effects/"], capture_output=True, text=True, check=True)
+        theirs = {int(re.search(r"effect_script_(\d+)_", path).group(1)): path
+                  for path in listing.stdout.split()}
+        differing = set()
+        for effect in range(LAST_RETAIL_EFFECT + 1):
+            ours = next(EFFECT_SCRIPTS.glob(f"effect_script_{effect:04d}*.s")).read_text()
+            reference = subprocess.run(["git", "-C", str(REFERENCE), "show", f"{ENGINE}:{theirs[effect]}"],
+                                       capture_output=True, text=True, errors="replace", check=True).stdout
+            if normalised(ours, value) != normalised(import_moves.native(reference), value):
+                differing.add(effect)
+        self.assertEqual(sorted(differing - set(STILL_DIFFERENT)), [],
+                         "effect scripts that differ from the engine's and are not listed")
+        self.assertEqual(sorted(set(STILL_DIFFERENT) - differing), [],
+                         "effect scripts that are the engine's now: take them off the list")
+
+
+if __name__ == "__main__":
+    unittest.main()

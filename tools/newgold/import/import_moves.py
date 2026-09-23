@@ -35,10 +35,13 @@ A move names its effect, and the two sides do not agree on the names: the
 reference calls effect 202 BADLY_POISON_HIT where this game calls it
 FLINCH_POISON_HIT, and worse, it calls 62 SP_DEF_DOWN_2 where this game calls
 62 ACC_DOWN_2 and puts SP_DEF_DOWN_2 at 64. Matching by name would quietly
-give a move the wrong effect. What both sides do share is the scripts: effect
-script 202 is the same file in both trees, because both were dumped from the
+give a move the wrong effect. What both sides do share is the numbering:
+effect 202 is the same effect in both trees, because both were dumped from the
 same ROM. So up to 276, the last effect retail had, an effect is matched by
-its NUMBER and the names are ignored.
+its NUMBER and the names are ignored. The scripts behind those numbers are not
+all the same file any more: the engine rewrote about sixty of them, some to
+move the work into its C, and tests/newgold/test_retail_effect_scripts.py
+lists each one still retail's here and what it waits on.
 
 Past 276 the two sides diverge for real -- this game numbered the ten effects
 it added from 277, the reference numbered its own hundred and thirty from the
@@ -92,7 +95,7 @@ HANDPICKED_ANIMATIONS = 28
 RECORD = "<HBBBBBBHbBBBH"
 RECORD_SIZE = 16
 
-# The last effect retail had. Up to here the two trees hold the same script at
+# The last effect retail had. Up to here the two trees mean the same effect by
 # the same index, whatever either calls it.
 LAST_VANILLA_EFFECT = 276
 # Effects the reference named the way pret names a different, retail effect.
@@ -669,7 +672,7 @@ def main():
     appeals = learn_appeal(blocks, plain, table, last_vanilla)
 
     # An effect keeps its number up to where retail stopped, because up to
-    # there both trees hold the same script at that index. Past it, a name the
+    # there both trees mean the same effect by that index. Past it, a name the
     # ten effects this game added answers to is that one, and the rest are new.
     first_effect = max(ours_effects.values()) + 1
     effect_id, new_effects, collisions = {}, [], []
