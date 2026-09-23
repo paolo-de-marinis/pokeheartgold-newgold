@@ -638,6 +638,18 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(dex["seen"], sorted([n["BULBASAUR"], n["PIDGEY"], n["UNOWN"]]))
         self.assertEqual(dex["caught"], sorted([n["BULBASAUR"], n["UNOWN"]]))
         self.assertEqual(save.block("SAVE_POKEDEX")[sv.UNOWN_SEEN], 0, "Unown A recorded")
+        # The genders the Dex draws: seen first, then the other one.
+        sv.set_dex(save, [n["NIDORAN_F"], n["NIDORAN_M"], n["STARYU"]], seen=True, caught=False)
+        block = save.block("SAVE_POKEDEX")
+        genders = lambda s: tuple((block[at + ((s - 1) >> 3)] >> ((s - 1) & 7)) & 1  # noqa: E731
+                                  for at in (sv.DEX_GENDERS, sv.DEX_GENDERS + sv.DEX_SEEN - sv.DEX_CAUGHT))
+        self.assertEqual(genders(n["NIDORAN_F"]), (1, 1), "only female: no male sprite to draw")
+        self.assertEqual((genders(n["NIDORAN_M"]), genders(n["STARYU"])), ((0, 0), (0, 0)))
+        self.assertEqual(genders(n["PIDGEY"]), (0, 1), "male first, female second")
+        at, mask = sv.DEX_FORM_ORDERS["SHAYMIN"]
+        block[at] = 0xFF   # Save_Pokedex_Init: no form seen yet
+        sv.set_dex(save, [n["SHAYMIN"]], seen=True, caught=False)
+        self.assertEqual(block[at] & mask, 0, "Land Forme first, not the empty order's Sky")
         self.assertTrue(sv.flag_is_set(save, 0x6B), "FLAG_GOT_POKEDEX: POKéDEX in the start menu")
         with self.assertRaises(ValueError):
             sv.set_dex(save, [n["EGG"]], True, True)

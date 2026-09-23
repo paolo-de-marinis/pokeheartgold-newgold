@@ -211,6 +211,16 @@ def set_bit(raw):
     return at, (raw[at] & -raw[at]).bit_length() - 1
 
 
+# The order the forms were seen in (Pokedex_TryAppendSeenForm), where the
+# first entry is the form the Dex shows: its field in struct Pokedex, and the
+# mask of that first entry, whose "none yet" is all ones. Rotom's is a u32 of
+# three-bit entries; Deoxys's, not a field of its own, _layout() adds.
+DEX_FORM_FIELDS = {"SHELLOS": ("shellosFormOrder", 0x03), "GASTRODON": ("gastrodonFormOrder", 0x03),
+                   "BURMY": ("burmyFormOrder", 0x03), "WORMADAM": ("wormadamFormOrder", 0x03),
+                   "ROTOM": ("rotomFormOrder", 0x07), "SHAYMIN": ("shayminFormOrder", 0x03),
+                   "GIRATINA": ("giratinaFormOrder", 0x03), "PICHU": ("pichuFormOrder", 0x03)}
+
+
 def _layout():
     """The save's layout, by the names this module uses for it."""
     offset = "__builtin_offsetof"
@@ -240,6 +250,8 @@ def _layout():
         "DEX_CAUGHT": f"{offset}(Pokedex, caughtSpecies)", "DEX_SEEN": f"{offset}(Pokedex, seenSpecies)",
         "DEX_ENABLED": f"{offset}(Pokedex, dexEnabled)", "DEX_NATIONAL": f"{offset}(Pokedex, nationalDex)",
         "UNOWN_SEEN": f"{offset}(Pokedex, unownSeenOrder)", "UNOWN_CAUGHT": f"{offset}(Pokedex, unownCaughtOrder)",
+        "DEX_GENDERS": f"{offset}(Pokedex, seenGenders)",
+        **{f"ORDER_{name}": f"{offset}(Pokedex, {field})" for name, (field, _) in DEX_FORM_FIELDS.items()},
         # SAVE_PCSTORAGE.
         "NUM_BOXES": "NUM_BOXES", "MONS_PER_BOX": "MONS_PER_BOX", "BOX_NAME_LENGTH": "BOX_NAME_LENGTH",
         "BOX": "sizeof(PC_BOX)", "CURRENT_BOX": f"{offset}(struct PokemonStorageSystem, curBox)",
@@ -271,6 +283,8 @@ def _layout():
                                                                      ("PokemonDataBlockB", ".hpIV = ~0u"),
                                                                      ("PokemonDataBlockB", ".form = ~0u")))
     out = dict(zip(names, values))
+    out["DEX_FORM_ORDERS"] = {name: (out.pop(f"ORDER_{name}"), mask) for name, (_, mask) in DEX_FORM_FIELDS.items()}
+    out["DEX_FORM_ORDERS"]["DEOXYS"] = (out["DEX_SEEN"] - 1, 0x0F)   # CheckDex4Flag: the last caught word's top byte
     at = out["PROFILE"]
     out.update(NAME=at + out["NAME_IN_PROFILE"], TRAINER_ID=at + out["ID_IN_PROFILE"], MONEY=at + out["MONEY_IN_PROFILE"],
                GENDER=at + out["GENDER_IN_PROFILE"], JOHTO_BADGES=at + out["JOHTO_IN_PROFILE"],
@@ -1056,6 +1070,9 @@ def mark_dex(save, names):
     for name in names:
         if name not in numbers:
             raise SystemExit(f"there is no SPECIES_{name}")
+        if not _dex_bit(block, DEX_SEEN, numbers[name]):
+            _set_seen_genders(block, numbers[name])
+            _set_seen_form(block, numbers[name])
         set_dex_flag(block, DEX_SEEN, numbers[name])
         set_dex_flag(block, DEX_CAUGHT, numbers[name])
     block[DEX_ENABLED] = 1
@@ -2291,20 +2308,51 @@ def dex(save):
             "national": bool(block[DEX_NATIONAL]), "seen": seen, "caught": caught}
 
 
+def _set_seen_genders(block, species):
+    """The genders Pokedex_SetMonSeenFlag records the first time a species is
+    seen -- seenGenders[0] the one seen first, seenGenders[1] the other --
+    here every gender the species can be. The Dex draws the gender recorded
+    first, and the male sprite of a species that is only ever female is an
+    empty member of the sprite archive: an assertion, and no picture."""
+    ratio = GENDER_RATIO(personal_records()[personal_row(species, 0)]["genderRatio"])
+    first, second = {MON_RATIO_FEMALE: (1, 1), MON_RATIO_MALE: (0, 0), MON_RATIO_UNKNOWN: (0, 0)}.get(ratio, (0, 1))
+    bit = 1 << ((species - 1) & 7)
+    # seenGenders[1] follows [0], each as long as the seen flags.
+    for at, female in ((DEX_GENDERS, first), (DEX_GENDERS + DEX_SEEN - DEX_CAUGHT, second)):
+        at += (species - 1) >> 3
+        block[at] = block[at] | bit if female else block[at] & ~bit
+
+
+def _set_seen_form(block, species):
+    """What Pokedex_TryAppendSeenForm records the first time a species with
+    Dex forms is seen, here its first form. With none recorded, the Dex
+    reads the empty order's all-ones as form 1: Sky Shaymin, Origin
+    Giratina, the East Sea's Shellos and Gastrodon."""
+    names = {v: k for k, v in species_numbers().items()}
+    at, mask = DEX_FORM_ORDERS.get(names.get(species), (None, 0))
+    if at is not None and block[at] & mask == mask:
+        block[at] &= ~mask
+
+
 def _got_pokedex():
     return constants("include/constants/flags.h", "FLAG_")["FLAG_GOT_POKEDEX"]
 
 
 def set_dex(save, species, seen, caught):
     """Seen and caught for these species; caught is only caught when seen, as
-    the game reads it. Unown seen with no letter recorded gets A, so the
-    Dex's form page has one to show."""
+    the game reads it. A species seen for the first time gets the genders
+    it can be (_set_seen_genders) and, with forms the Dex tells apart, its
+    first form (_set_seen_form). Unown seen with no letter recorded gets
+    A, so the Dex's form page has one to show."""
     block = save.block("SAVE_POKEDEX")
     valid = set(dex_species())
     seen = seen or caught
     for s in species:
         if s not in valid:
             raise ValueError(f"species {s} has no Dex page")
+        if seen and not _dex_bit(block, DEX_SEEN, s):
+            _set_seen_genders(block, s)
+            _set_seen_form(block, s)
         for at, on in ((DEX_SEEN, seen), (DEX_CAUGHT, caught)):
             bit = 1 << ((s - 1) & 7)
             block[at + ((s - 1) >> 3)] = block[at + ((s - 1) >> 3)] | bit if on else block[at + ((s - 1) >> 3)] & ~bit
