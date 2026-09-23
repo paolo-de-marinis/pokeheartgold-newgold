@@ -2527,6 +2527,11 @@
           "method": "EVO_OTHER_PARTY_MON",
           "param": "SPECIES_SHELMET",
           "target": "SPECIES_ESCAVALIER"
+        },
+        {
+          "method": "EVO_TRADE_SPECIFIC_MON",
+          "param": "SPECIES_SHELMET",
+          "target": "SPECIES_ESCAVALIER"
         }
       ]
     },
@@ -2615,6 +2620,11 @@
       "evos": [
         {
           "method": "EVO_OTHER_PARTY_MON",
+          "param": "SPECIES_KARRABLAST",
+          "target": "SPECIES_ACCELGOR"
+        },
+        {
+          "method": "EVO_TRADE_SPECIFIC_MON",
           "param": "SPECIES_KARRABLAST",
           "target": "SPECIES_ACCELGOR"
         }

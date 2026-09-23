@@ -635,6 +635,9 @@ typedef enum EvoMethod {
     EVO_HAS_MOVE_TYPE,
     // hg-engine: a level with a Dark-type Pokemon in the party.
     EVO_LEVEL_DARK_TYPE_MON_IN_PARTY,
+    // hg-engine names the method and leaves its check commented out: traded
+    // for the row's species, Karrablast for Shelmet and Shelmet for Karrablast.
+    EVO_TRADE_SPECIFIC_MON,
     // hg-engine: a level, Toxel's form by its nature.
     EVO_LEVEL_NATURE_AMPED,
     EVO_LEVEL_NATURE_LOW_KEY,

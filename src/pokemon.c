@@ -3339,6 +3339,14 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     *method_ret = EVO_TRADE_ITEM;
                 }
                 break;
+            case EVO_TRADE_SPECIFIC_MON:
+                // In a trade the party is the other side's: the Pokemon this
+                // one was traded for. A caller with none to give passes NULL.
+                if (party != NULL && Party_HasMon(party, evoTable[i].param) == 1) {
+                    target = evoTable[i].target;
+                    *method_ret = EVO_TRADE_SPECIFIC_MON;
+                }
+                break;
             }
             if (target != SPECIES_NONE) {
                 break;

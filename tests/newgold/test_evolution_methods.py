@@ -100,7 +100,14 @@ static void LoadMonEvolutionTable(u16 species, struct Evolution *dest) {
 }
 static inline BOOL MonHasMove(Pokemon *mon, u16 move) { (void)mon; (void)move; return FALSE; }
 static inline BOOL MonHasMoveOfType(Pokemon *mon, u8 type) { (void)mon; (void)type; return FALSE; }
-static inline BOOL Party_HasMon(Party *party, u16 species) { (void)party; (void)species; return FALSE; }
+static inline BOOL Party_HasMon(Party *party, u16 species) {
+    for (int i = 0; i < party->count; i++) {
+        if (party->mons[i].species == species) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
 static inline int Party_GetCount(Party *party) { return party->count; }
 static inline Pokemon *Party_GetMonByIndex(Party *party, int slot) { assert(slot < party->count); return &party->mons[slot]; }
 static inline SaveData *SaveData_Get(void) { return (SaveData *)&location; }
@@ -315,6 +322,25 @@ static void check_defeated_bisharp(void) {
     }
 }
 
+static void check_trade_specific_mon(void) {
+    // Traded for the row's species, which the trade passes as the party; with
+    // no party (the GTS's call), nothing. Not at a level-up or by an item.
+    Pokemon karrablast = { .species = SPECIES_KARRABLAST, .level = 1 };
+    Party partner = { .count = 1, .mons = { { .species = SPECIES_SHELMET } } };
+    Party other = { .count = 1, .mons = { { .species = SPECIES_KARRABLAST } } };
+    int method = -1;
+    one_row(EVO_TRADE_SPECIFIC_MON, SPECIES_SHELMET, SPECIES_ESCAVALIER);
+    assert(GetMonEvolution(&partner, &karrablast, EVOCTX_TRADE, ITEM_NONE, &method) == SPECIES_ESCAVALIER && method == EVO_TRADE_SPECIFIC_MON);
+    assert(GetMonEvolution(&other, &karrablast, EVOCTX_TRADE, ITEM_NONE, NULL) == SPECIES_NONE);
+    assert(GetMonEvolution(NULL, &karrablast, EVOCTX_TRADE, ITEM_NONE, NULL) == SPECIES_NONE);
+    assert(GetMonEvolution(&partner, &karrablast, EVOCTX_LEVELUP, ITEM_NONE, NULL) == SPECIES_NONE);
+    assert(GetMonEvolution(&partner, &karrablast, EVOCTX_ITEM_USE, ITEM_LINKING_CORD, NULL) == SPECIES_NONE);
+    // An Everstone holds it back, as for any trade.
+    karrablast.heldItem = ITEM_EVERSTONE;
+    assert(GetMonEvolution(&partner, &karrablast, EVOCTX_TRADE, ITEM_EVERSTONE, NULL) == SPECIES_NONE);
+    assert(allocations == 0);
+}
+
 static void check_counted_moves(void) {
     // Primeape counts Rage Fist and Stantler Psyshield Bash, nothing else and
     // no one else; the count stops at 255.
@@ -364,6 +390,7 @@ int main(void) {
     check_form_argument();
     check_gimmighoul_coins();
     check_defeated_bisharp();
+    check_trade_specific_mon();
     check_counted_moves();
     check_lets_go();
     return 0;
@@ -482,6 +509,18 @@ def run_program(test, text):
 class EvolutionMethods(unittest.TestCase):
     def test_the_evolution_spends_gimmighouls_coins(self):
         run_program(self, scene())
+
+    def test_the_wireless_trade_passes_what_it_was_traded_for(self):
+        """The Pokemon sent, as a party of one, is the party the trade's
+        evolution check is given, and is freed after it."""
+        body = function(read("src/launch_application.c"), "Task_WirelessTrade")
+        state = body[body.index("case WIRELESS_TRADE_STATE_5:"):body.index("case WIRELESS_TRADE_STATE_6:")]
+        self.assertRegex(state, r"Party \*partner = SaveArray_Party_Alloc\(HEAP_ID_FIELD3\);\s*"
+                                r"Party_AddMon\(partner, data->wirelessTradeSelectMon\.unk38\);\s*"
+                                r"int species = GetMonEvolution\(partner, data->wirelessTradeSelectMon\.unk3C, EVOCTX_TRADE, [^;]*;\s*"
+                                r"Heap_Free\(partner\);")
+        # unk38 is the Pokemon sent and unk3C the one received.
+        self.assertIn("data->tradeSequence.unk0 = Mon_GetBoxMon(data->wirelessTradeSelectMon.unk38);", body)
 
     def test_the_battle_counts_an_opponent_the_player_defeats(self):
         """Where a Pokemon faints, an opponent's faint counts for the

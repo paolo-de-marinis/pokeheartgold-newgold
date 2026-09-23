@@ -953,7 +953,12 @@ static BOOL Task_WirelessTrade(TaskManager *taskman) {
         break;
     case WIRELESS_TRADE_STATE_5:
         int heldItem = GetMonData(data->wirelessTradeSelectMon.unk3C, MON_DATA_HELD_ITEM, NULL);
-        int species = GetMonEvolution(NULL, data->wirelessTradeSelectMon.unk3C, EVOCTX_TRADE, heldItem, (int *)&evolutionCondition);
+        // The Pokemon it was traded for, as a party of one, for the evolutions
+        // that ask what the trade was for: Karrablast for Shelmet.
+        Party *partner = SaveArray_Party_Alloc(HEAP_ID_FIELD3);
+        Party_AddMon(partner, data->wirelessTradeSelectMon.unk38);
+        int species = GetMonEvolution(partner, data->wirelessTradeSelectMon.unk3C, EVOCTX_TRADE, heldItem, (int *)&evolutionCondition);
+        Heap_Free(partner);
         if (species != SPECIES_NONE) {
             Heap_Create(HEAP_ID_3, HEAP_ID_26, 0x30000);
             data->tradeSequence.evolutionTaskData = sub_02075A7C(NULL, data->wirelessTradeSelectMon.unk3C, species, Save_PlayerData_GetOptionsAddr(fieldSystem->saveData), sub_02088288(fieldSystem->saveData), Save_Pokedex_Get(fieldSystem->saveData), Save_Bag_Get(fieldSystem->saveData), Save_GameStats_Get(fieldSystem->saveData), evolutionCondition, 4, HEAP_ID_26);
