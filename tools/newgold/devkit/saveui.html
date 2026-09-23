@@ -569,7 +569,7 @@ function ask(title, body, buttons, setup) {
   return new Promise(resolve => {
     const d = $("#dlg");
     const left = buttons.filter(b => b[3] === "left"), right = buttons.filter(b => b[3] !== "left");
-    const btn = b => `<button value="${b[0]}" class="${b[2] || ""}" ${b[0] ? "" : "formnovalidate"}>${esc(b[1])}</button>`;
+    const btn = b => `<button value="${b[0]}" class="${b[2] || ""}" ${b[0] && b[3] !== "left" ? "" : "formnovalidate"}>${esc(b[1])}</button>`;
     d.innerHTML = `<form method="dialog"><h3>${esc(title)}</h3><div class="dbody">${body}</div>
       <div class="dfoot"><div class="left">${left.map(btn).join("")}</div>${right.map(btn).join("")}</div></form>`;
     d.returnValue = "";
@@ -626,13 +626,16 @@ function showSave(detail) {
 }
 // `version` is the file as the page showed it; the server refuses the edit
 // if the file has moved on since (melonDS, another tab), and the page reloads.
+let refusal = null;   // why the last edit() was turned down
 async function edit(op, args, ok = "Salvato (backup fatto)", version = S.save.version) {
   S.busy++;
+  refusal = null;
   try {
     const out = await api("/api/edit", {f: S.f, op, args, version});
     toast(ok); showSave(out); loadLibrary();
     return out;
   } catch (e) {
+    refusal = e;
     toast(e.message, true);
     if (e.code === "stale") await openSave(S.f);
     return null;
@@ -731,8 +734,10 @@ function renderParty() {
 }
 
 // ---- the Pokemon dialog -------------------------------------------------
-function monDialog(where, m) {
-  const isNew = !m, version = S.save.version;
+// `typed` is what the user had entered when the dialog was turned down:
+// it opens again with it, not with the Pokemon's values.
+function monDialog(where, m, typed = null, version = S.save.version) {
+  const isNew = !m;
   const v = m || {species: 0, level: 5, nature: 0, item: 0, moves: [], ivs: [31, 31, 31, 31, 31, 31], evs: [0, 0, 0, 0, 0, 0], friendship: 70};
   const title = isNew ? (where.kind === "party" ? "Nuovo Pokémon in squadra" : `Nuovo Pokémon · box ${where.box + 1}, posto ${where.slot + 1}`)
                       : (where.kind === "party" ? `Squadra, posto ${where.slot + 1}` : `Box ${where.box + 1}, posto ${where.slot + 1}`);
@@ -764,7 +769,12 @@ function monDialog(where, m) {
        [where.kind === "party" ? "deposit" : "withdraw", where.kind === "party" ? `Sposta nel box ${S.box + 1}` : "Sposta in squadra", "", "left"],
        ["remove", where.kind === "party" ? "Togli dalla squadra" : "Libera", "danger", "left"]];
   return ask(title, body, buttons, d => {
-    const form = $("form", d), evsum = () => { const t = [0, 1, 2, 3, 4, 5].reduce((a, i) => a + (+form.elements["ev" + i].value || 0), 0); $("#evsum", d).textContent = `totale ${t} / 510`; $("#evsum", d).style.color = t > 510 ? "var(--danger)" : ""; };
+    const form = $("form", d), evsum = () => {
+      const t = [0, 1, 2, 3, 4, 5].reduce((a, i) => a + (+form.elements["ev" + i].value || 0), 0);
+      $("#evsum", d).textContent = `totale ${t} / 510`; $("#evsum", d).style.color = t > 510 ? "var(--danger)" : "";
+      form.elements.ev0.setCustomValidity(t > 510 ? `Gli EV sono al massimo 510 in tutto (ora ${t})` : "");
+    };
+    if (typed) for (const [k, v] of Object.entries(typed)) if (form.elements[k]) form.elements[k].value = v;
     evsum();
     form.addEventListener("input", ev => { if (ev.target.name?.startsWith("ev")) evsum(); });
     $$("[data-iv]", d).forEach(b => b.onclick = () => [0, 1, 2, 3, 4, 5].forEach(i => form.elements["iv" + i].value = b.dataset.iv));
@@ -790,11 +800,12 @@ function monDialog(where, m) {
     if (!species) bad.push("specie");
     if (item === null) bad.push("strumento");
     mv.forEach((x, i) => x === null && bad.push(`mossa ${i + 1}`));
-    if (bad.length) { toast(`Non riconosco: ${bad.join(", ")}. Sceglili dall'elenco.`, true); return monDialog(where, m); }
+    if (bad.length) { toast(`Non riconosco: ${bad.join(", ")}. Sceglili dall'elenco.`, true); return monDialog(where, m, d, version); }
     const args = {...base, species, level: +d.level, nature: +d.nature, item, friendship: +d.friendship,
                   moves: mv.filter(Boolean), ivs: [0, 1, 2, 3, 4, 5].map(i => +d["iv" + i]), evs: [0, 1, 2, 3, 4, 5].map(i => +d["ev" + i])};
     const op = isNew ? (where.kind === "party" ? "party_add" : "box_add") : (where.kind === "party" ? "party_edit" : "box_edit");
-    edit(op, args, isNew ? "Pokémon aggiunto" : "Pokémon salvato", version);
+    if (!await edit(op, args, isNew ? "Pokémon aggiunto" : "Pokémon salvato", version) && refusal?.code !== "stale")
+      return monDialog(where, m, d, version);
   });
 }
 
