@@ -1576,6 +1576,17 @@ static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
     return ctx->unk_2174 != 0 && BattleMoveTbl(ctx, moveNo)->effectChance != 0 && !(ctx->unk_2174 & (MOVE_SIDE_EFFECT_ON_HIT | MOVE_SIDE_EFFECT_CHECK_SUBSTITUTE | MOVE_SIDE_EFFECT_CHECK_HP_AND_SUBSTITUTE | MOVE_SIDE_EFFECT_CHECK_HP));
 }
 
+// Whether Sheer Force traded the attacker's move effect for power, for what
+// answers the hit: Emergency Exit's arming, Berserk, Anger Shell, Pickpocket,
+// the Red Card and the Eject Button. From the effect roll on, the flags
+// IsSuppressibleSecondaryEffect reads are gone -- ov12_02250490 clears them
+// as it rolls or gives the effect up -- so what it found then is kept for the
+// rest of the action.
+static BOOL SheerForceTradedEffect(BattleContext *ctx) {
+    return GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE
+        && (ctx->selfTurnData[ctx->battlerIdAttacker].sheerForceTraded || IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE);
+}
+
 // Emergency Exit and Wimp Out (Activate_WimpOut_EmergencyExit,
 // ServerDoPostMoveEffects.c:2629 at d0380a487; Pokemon Central's Passoindietro
 // and Fuggifuggi): a Pokemon a move takes from above half its health to half
@@ -1596,7 +1607,7 @@ void Battler_ArmRetreat(BattleContext *ctx, int battlerId) {
 
     if ((ability == ABILITY_EMERGENCY_EXIT || ability == ABILITY_WIMP_OUT)
         && ctx->battleMons[battlerId].hp > (int)(ctx->battleMons[battlerId].maxHp / 2)
-        && !(GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE)) {
+        && !SheerForceTradedEffect(ctx)) {
         ctx->selfTurnData[battlerId].retreatArmed = TRUE;
     }
 }
@@ -1690,6 +1701,9 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     // The reference's list is Sheer Force's list, self-targeting effects
     // included, so a cloak also swallows the attacker's own Power-Up Punch
     // boost. That is its behaviour rather than an oversight here.
+    if (IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE && GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE) {
+        ctx->selfTurnData[ctx->battlerIdAttacker].sheerForceTraded = TRUE;
+    }
     if (IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE
         && (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE
             || (ctx->battlerIdTarget != BATTLER_NONE && GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) == HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS))) {
@@ -6713,7 +6727,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // only once. The bar has already been updated by the time this pass
         // runs, so the damage just dealt is added back to see where the
         // holder came from; the two figures are negative, as the bar wants.
-        if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] < 12 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE) && ctx->battleMons[ctx->battlerIdTarget].hp <= (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) && (ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) || ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].specialDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2))) {
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] < 12 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !SheerForceTradedEffect(ctx) && ctx->battleMons[ctx->battlerIdTarget].hp <= (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) && (ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) || ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].specialDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2))) {
             ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_1_STAGE;
             ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
             ctx->battlerIdStatChange = ctx->battlerIdTarget;
@@ -6726,7 +6740,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // The same crossing Berserk waits for, but the payout is five stat
         // changes, so the whole of it is a subscript. Any one of the five
         // having room is enough.
-        if (ctx->battleMons[ctx->battlerIdTarget].hp && (ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPEED] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_DEF] > 0 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPDEF] > 0) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE) && ctx->battleMons[ctx->battlerIdTarget].hp <= (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) && (ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) || ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].specialDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2))) {
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && (ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPEED] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_DEF] > 0 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPDEF] > 0) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !SheerForceTradedEffect(ctx) && ctx->battleMons[ctx->battlerIdTarget].hp <= (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) && (ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) || ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].specialDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2))) {
             ctx->battlerIdStatChange = ctx->battlerIdTarget;
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_ANGER_SHELL;
@@ -6797,7 +6811,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // Lifts whatever touched it, if its own hands are empty. The theft
         // is the Thief guard already in this tree, asked of the attacker
         // rather than of the target.
-        if (ctx->battleMons[ctx->battlerIdTarget].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur) && BattleMoveTbl(ctx, ctx->moveNoCur)->power && !(GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE) && CanAbilityTakeHeldItem(battleSystem, ctx, ctx->battlerIdTarget, ctx->battlerIdAttacker) == TRUE) {
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur) && BattleMoveTbl(ctx, ctx->moveNoCur)->power && !SheerForceTradedEffect(ctx) && CanAbilityTakeHeldItem(battleSystem, ctx, ctx->battlerIdTarget, ctx->battlerIdAttacker) == TRUE) {
             ctx->battlerIdStatChange = ctx->battlerIdTarget;
             ctx->battlerIdTemp = ctx->battlerIdAttacker;
             *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
@@ -8244,7 +8258,7 @@ static BOOL SwitchItemAnswersHit(BattleSystem *battleSystem, BattleContext *ctx,
         || ctx->battleMons[battlerId].hp == 0
         || (ctx->selfTurnData[battlerId].physicalDamage == 0 && ctx->selfTurnData[battlerId].specialDamage == 0)
         || Battler_CameInAfterTheHit(ctx, battlerId)
-        || (GetBattlerAbility(ctx, attacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE)) {
+        || SheerForceTradedEffect(ctx)) {
         return FALSE;
     }
     if (holdEffect == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {

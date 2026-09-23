@@ -108,5 +108,64 @@ class AnticipationTests(unittest.TestCase):
         self.assertGreater(case.index("ctx->fieldCondition = fieldCondition;"), ask)
 
 
+SHEER_FORCE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/move_effects.h"
+typedef struct { u16 effect; u16 effectChance; } MoveTbl;
+typedef struct { u32 sheerForceTraded : 1; } SelfTurnData;
+typedef struct { int ability; } Mon;
+typedef struct { Mon battleMons[4]; SelfTurnData selfTurnData[4]; int battlerIdAttacker; u32 moveNoCur, unk_2174; } BattleContext;
+static MoveTbl move = { 0, 30 };
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &move; }
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+@FUNCTIONS@
+int main(void) {
+    BattleContext ctx = { { { ABILITY_SHEER_FORCE } } };
+    // A 30% flinch, before the roll: Sheer Force has it.
+    ctx.unk_2174 = MOVE_SIDE_EFFECT_TO_DEFENDER;
+    assert(SheerForceTradedEffect(&ctx) == TRUE);
+    // After the roll the flags are gone; what the roll found is kept.
+    ctx.unk_2174 = 0;
+    assert(SheerForceTradedEffect(&ctx) == FALSE);
+    ctx.selfTurnData[0].sheerForceTraded = TRUE;
+    assert(SheerForceTradedEffect(&ctx) == TRUE);
+    // Only for Sheer Force.
+    ctx.battleMons[0].ability = ABILITY_NONE;
+    assert(SheerForceTradedEffect(&ctx) == FALSE);
+    return 0;
+}
+"""
+
+
+class SheerForceAftermathTests(unittest.TestCase):
+    """What answers a hit -- Berserk, Anger Shell, Pickpocket, the Red Card and
+    the Eject Button, Emergency Exit -- is asked after the effect roll, which
+    clears the flags Sheer Force is read from."""
+
+    def test_what_the_roll_found_is_kept(self):
+        source = OVERLAY.read_text()
+        functions = "\n".join(function(source, name) for name in ("IsSuppressibleSecondaryEffect", "SheerForceTradedEffect"))
+        run_c(SHEER_FORCE.replace("@FUNCTIONS@", functions))
+        roll = function(source, "ov12_02250490")
+        self.assertLess(roll.index("ctx->selfTurnData[ctx->battlerIdAttacker].sheerForceTraded = TRUE;"), roll.index("ctx->unk_2174 = 0;"))
+
+    def test_the_answers_to_the_hit_ask_what_was_kept(self):
+        source = OVERLAY.read_text()
+        hit = function(source, "CheckAbilityEffectOnHit")
+        for ability in ("BERSERK", "ANGER_SHELL", "PICKPOCKET"):
+            case = hit[hit.index(f"case ABILITY_{ability}:"):]
+            case = case[:case.index("break;")]
+            self.assertIn("!SheerForceTradedEffect(ctx)", case, ability)
+            self.assertNotIn("IsSuppressibleSecondaryEffect", case, ability)
+        self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "CheckSwitchItemOnHit"))
+
+
 if __name__ == "__main__":
     unittest.main()

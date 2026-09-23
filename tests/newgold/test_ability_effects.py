@@ -468,10 +468,13 @@ class SheerForceTests(unittest.TestCase):
         # The Red Card and the Eject Button do not answer a move Sheer Force
         # powered (CheckSwitchItemOnHit).
         source = self.SOURCE.read_text()
-        # The damage, the effect, Berserk, Anger Shell, Pickpocket,
-        # Emergency Exit's arming, and the Red Card and Eject Button.
-        self.assertEqual(source.count("IsSuppressibleSecondaryEffect(ctx,"), 7)
+        # The damage, the effect (twice: what it finds is remembered), and
+        # what answers the hit, through SheerForceTradedEffect.
+        self.assertEqual(source.count("IsSuppressibleSecondaryEffect(ctx,"), 4)
         self.assertEqual(source.count("static BOOL IsSuppressibleSecondaryEffect"), 1)
+        # Emergency Exit's arming, Berserk, Anger Shell, Pickpocket, and the
+        # Red Card and Eject Button.
+        self.assertEqual(source.count("SheerForceTradedEffect(ctx)"), 5)
 
     def test_the_guaranteed_effects_are_left_alone(self):
         body = re.search(r"static BOOL IsSuppressibleSecondaryEffect.*?\n\}", self.SOURCE.read_text(), re.S).group(0)

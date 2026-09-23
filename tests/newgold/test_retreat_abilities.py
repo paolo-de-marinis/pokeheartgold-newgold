@@ -30,7 +30,7 @@ enum { FALSE = 0, TRUE = 1 };
 #include "constants/battle_subscript.h"
 typedef struct { u32 battleType; BOOL canSwitch[4]; } BattleSystem;
 typedef struct { int hp; u32 maxHp; int ability; } Mon;
-typedef struct { u32 retreatArmed : 1; } SelfTurnData;
+typedef struct { u32 retreatArmed : 1; u32 sheerForceTraded : 1; } SelfTurnData;
 typedef struct {
     Mon battleMons[4];
     SelfTurnData selfTurnData[4];
@@ -148,7 +148,7 @@ class RetreatTests(unittest.TestCase):
     def test_the_pokemon_leaves_when_a_move_takes_it_to_half(self):
         source = OVERLAY.read_text()
         functions = "\n".join(function(source, name) for name in (
-            "Battler_ArmRetreat", "Battler_RetreatFlees", "Battler_Retreats", "TryRetreatAbility"))
+            "SheerForceTradedEffect", "Battler_ArmRetreat", "Battler_RetreatFlees", "Battler_Retreats", "TryRetreatAbility"))
         with tempfile.TemporaryDirectory(prefix="newgold-retreat-") as directory:
             path = Path(directory)
             (path / "test.c").write_text(FIXTURE.replace("@FUNCTIONS@", functions))

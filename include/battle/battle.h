@@ -112,7 +112,10 @@ typedef struct SelfTurnData {
     u32 retreatArmed : 1;
     // Parental Bond: this Pokemon's move is striking twice.
     u32 parentalBond : 1;
-    u32 unk0_11 : 21;
+    // Sheer Force: this Pokemon's move gave its effect up for power, as
+    // ov12_02250490 found before clearing the flags that say so.
+    u32 sheerForceTraded : 1;
+    u32 unk0_11 : 20;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;

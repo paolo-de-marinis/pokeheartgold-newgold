@@ -672,7 +672,7 @@ typedef int BOOL;
 #define FALSE 0
 typedef struct { int unused; } BattleSystem;
 typedef struct { int hp; u32 moveEffectFlags; u8 hitCount; } BattleMon;
-typedef struct { int physicalDamage, specialDamage; } SelfTurnData;
+typedef struct { int physicalDamage, specialDamage; u32 sheerForceTraded : 1; } SelfTurnData;
 typedef struct {
     int battlerIdAttacker, battlerIdTemp; u32 moveNoCur; u32 battleStatus2;
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
@@ -776,7 +776,7 @@ class SwitchItemTests(unittest.TestCase):
     def test_who_answers_a_hit(self):
         overlay = OVERLAY.read_text()
         body = "\n".join(function(overlay, name) for name in (
-            "Battler_CameInAfterTheHit", "SwitchItemAnswersHit", "BattlerIsAnchored", "CheckSwitchItemOnHit",
+            "SheerForceTradedEffect", "Battler_CameInAfterTheHit", "SwitchItemAnswersHit", "BattlerIsAnchored", "CheckSwitchItemOnHit",
             "SwitchItemWillAnswerPivot"))
         run_c(SWITCH_ITEM_FIXTURE.replace("@FUNCTION@", body))
 
