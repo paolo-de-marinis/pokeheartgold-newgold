@@ -2175,8 +2175,12 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                         flowerVeilHolder = ally;
                     }
                 }
-                // Mist
-                if (ctx->fieldSideConditionData[BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdStatChange)].mistTurns) {
+                // Mist. Infiltrator gets past it with its own moves, but not
+                // past an ability's drop such as Intimidate, where the
+                // attacker is not who is lowering the stat -- the reference
+                // asks it only for those.
+                if (ctx->fieldSideConditionData[BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdStatChange)].mistTurns
+                    && (ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY || GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_INFILTRATOR)) {
                     // "{0} is protected by Mist!"
                     ctx->buffMsg.id = msg_0197_00273;
                     ctx->buffMsg.tag = TAG_NICKNAME;

@@ -134,5 +134,30 @@ class PranksterTests(unittest.TestCase):
         self.assertIn("ctx->moveStatusFlag |= MOVE_STATUS_NO_EFFECT;", action)
 
 
+class InfiltratorTests(unittest.TestCase):
+    # Every status subscript whose Safeguard test a used move reaches. The
+    # reference gives each of them an _handleInfiltrator bypass.
+    SAFEGUARDED = ("FallAsleep", "Poison", "Burn", "Freeze", "Paralyze", "Confuse", "BadPoison", "Yawn")
+
+    def test_it_slips_past_safeguard_with_its_own_moves(self):
+        for name in self.SAFEGUARDED:
+            script = subscript(name)
+            # The move path's Safeguard test goes through the Infiltrator
+            # question and can come straight back past itself.
+            self.assertIn("SIDE_CONDITION_SAFEGUARD, _SAFEGUARD\n_BYPASS_SAFEGUARD:\n", script, name)
+            block = script[script.index("\n_SAFEGUARD:"):]
+            self.assertIn("BATTLER_CATEGORY_ATTACKER, BMON_DATA_ABILITY, ABILITY_INFILTRATOR, _BYPASS_SAFEGUARD", block, name)
+            if name != "Yawn":
+                # Not a secondary effect or a held item's: only a move used.
+                self.assertIn("SIDE_EFFECT_TYPE_DIRECT, _SAFEGUARD_INFILTRATOR", block, name)
+                self.assertIn("OPCODE_NEQ, BSCRIPT_VAR_SIDE_EFFECT_TYPE, SIDE_EFFECT_TYPE_MOVE_EFFECT", block, name)
+
+    def test_it_slips_past_mist_but_intimidate_does_not(self):
+        body = function(COMMANDS.read_text(), "BtlCmd_ChangeStatStage")
+        mist = re.search(r"if \((ctx->fieldSideConditionData\[[^\n]*\]\.mistTurns[^{]*)\) \{", body).group(1)
+        self.assertIn("GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_INFILTRATOR", mist)
+        self.assertIn("ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY", mist)
+
+
 if __name__ == "__main__":
     unittest.main()
