@@ -1455,7 +1455,16 @@ typedef enum UpdateMonConditionState {
 // What a binding move takes at the end of each turn it holds on: an eighth of
 // the bound Pokemon's maximum HP, as the reference has it
 // (ServerFieldConditionCheck.c:870 at d0380a487). HeartGold took a sixteenth.
+//
+// A sixth when the Pokemon that bound it holds a Binding Band. The reference
+// leaves the band unread, so this follows Pokemon Central (Legafascia): from
+// the sixth generation on, a sixth of the bound Pokemon's maximum HP instead
+// of an eighth. The band is asked of the binder as the damage is dealt; the
+// bind ends when the binder leaves, so the binder is still there to ask.
 static int BindDamageDivisor(BattleContext *ctx, int battlerId) {
+    if (GetBattlerHeldItemEffect(ctx, ctx->battleMons[battlerId].unk88.battlerIdBinding) == HOLD_EFFECT_TRAPPING_DAMAGE_UP) {
+        return 6;
+    }
     return 8;
 }
 

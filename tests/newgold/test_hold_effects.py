@@ -77,8 +77,8 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # seventeen Memories, the Roseli Berry and Heavy-Duty Boots.
 # The Blank Plate's power took one more.
 # The three origin items and Ogerpon's three masks took six.
-# The Gems took one.
-IMPORTED_AND_UNREAD = 11
+# The Gems took one, and the Binding Band one.
+IMPORTED_AND_UNREAD = 10
 
 
 def effects_defined():
@@ -442,6 +442,14 @@ class BindingTests(unittest.TestCase):
         self.run_divisor("assert(BindDamageDivisor(&ctx, 0) == 8);")
         self.assertIn("DamageDivide(ctx->battleMons[battlerId].maxHp * -1, BindDamageDivisor(ctx, battlerId))",
                       function(CONTROLLER.read_text(), "BattleControllerPlayer_UpdateMonCondition"))
+
+    def test_a_binding_band_on_the_binder_makes_it_a_sixth(self):
+        """The reference reads no Binding Band; Pokemon Central (Legafascia):
+        a sixth instead of an eighth from the sixth generation on.
+        The binder's band counts, not one on the bound Pokemon."""
+        self.run_divisor("sItem[1] = HOLD_EFFECT_TRAPPING_DAMAGE_UP; assert(BindDamageDivisor(&ctx, 0) == 6);"
+                         "sItem[1] = HOLD_EFFECT_NONE; sItem[0] = HOLD_EFFECT_TRAPPING_DAMAGE_UP;"
+                         "assert(BindDamageDivisor(&ctx, 0) == 8);")
 
 
 if __name__ == "__main__":
