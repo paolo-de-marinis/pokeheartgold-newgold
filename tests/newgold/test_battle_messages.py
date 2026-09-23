@@ -155,7 +155,7 @@ class BattleMessageTests(unittest.TestCase):
             "cud chew": (1802, "{STRVAR_1 1, 0, 0} ate its\\n{STRVAR_1 8, 1, 0} again!"),
             "tera shell": (1805, "{STRVAR_1 1, 0, 0} made its shell gleam!\\nIt’s distorting type matchups!"),
             "battle bond": (1808, "{STRVAR_1 1, 0, 0} became fully charged due\\nto its bond with its Trainer!"),
-            "mirror herb": (1805, "{STRVAR_1 1, 0, 0} used its\\n{STRVAR_1 8, 1, 0} to mirror its\\fopponent’s stat changes!"),
+            "mirror herb": (1824, "{STRVAR_1 1, 0, 0} used its\\n{STRVAR_1 8, 1, 0} to mirror its\\fopponent’s stat changes!"),
         }
         for name, (row, text) in expected.items():
             self.assertEqual(import_battle_messages.port_row(name), row, name)

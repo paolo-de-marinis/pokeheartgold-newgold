@@ -72,6 +72,7 @@ typedef struct {
     int unk_2158; u8 terrainOverlayType; int meFirstTotal; int totalTurns;
     u32 effectiveSpeed[4]; u8 paradoxBoostedStat[4]; u8 supremeOverlordFallen[4];
     int totalTimesFainted[4];
+    u8 gemBoostingMove; int battlerIdAttacker;
     BattleMon battleMons[4];
     struct { int helpingHandFlag; } turnData[4];
 } BattleContext;
@@ -105,11 +106,13 @@ static BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) { (void)ct
 static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return FALSE; }
 static BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return FALSE; }
 static BOOL BattleMoveIsSoundBased(u32 moveNo) { (void)moveNo; return FALSE; }
+static BOOL KnockOffCanRemoveItem(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
 static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, int battlerId, int ability) {
     (void)bs; (void)ctx; (void)flag; (void)battlerId; (void)ability; return 0;
 }
 static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int a, int t, int ability) { (void)ctx; (void)a; (void)t; (void)ability; return FALSE; }
 static int CheckMoveEffectOnField(BattleSystem *bs, BattleContext *ctx, u32 flag) { (void)bs; (void)ctx; (void)flag; return 0; }
+static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return 0; }
 static int ov12_022581D4(BattleSystem *bs, BattleContext *ctx, int var, int battlerId) { (void)bs; (void)ctx; (void)var; (void)battlerId; return 0; }
 @MOVE_IS_IN_LIST@
 @SLICING@
@@ -295,6 +298,7 @@ static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return S.ma
 static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
 static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; return S.random; }
 static u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) { (void)ctx; (void)battlerId; (void)moveNo; return TYPE_NORMAL; }
+static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)battlerId; return ctx->fieldCondition & FIELD_CONDITION_WEATHER; }
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &S.move; }
 static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, int battlerId, int ability) {
     (void)bs; (void)ctx; (void)flag; (void)battlerId; (void)ability; return 0;

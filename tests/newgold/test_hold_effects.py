@@ -214,6 +214,7 @@ static BOOL CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, i
     (void)bs; (void)ctx; (void)flag; (void)battlerId; (void)ability; return FALSE;
 }
 static BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return TRUE; }
+static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)battlerId; return ctx->fieldCondition; }
 @FUNCTION@
 int main(void) {
     static const int items[] = { @ITEMS@ };
@@ -909,7 +910,7 @@ class MirrorHerbTests(unittest.TestCase):
         change = function(COMMANDS.read_text(), "BtlCmd_ChangeStatStage")
         rise = change[:change.index("} else { // Stat Decrease")]
         self.assertIn("RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdStatChange, stat + 1, "
-                      "mon->statChanges[stat + 1] - before);", rise)
+                      "mon->statChanges[stat + 1] - stagesBefore);", rise)
         source = OVERLAY.read_text()
         use = function(source, "CheckUseHeldItem")
         case = use[use.index("case HOLD_EFFECT_COPY_STAT_INCREASE:"):]

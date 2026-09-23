@@ -239,9 +239,7 @@ IMPLEMENTED = {
 # they are unfinished, it is finishing without noticing: a Pokemon whose
 # ability does nothing looks right on the summary screen and loses battles
 # quietly. This test fails the moment one is added and not accounted for.
-PENDING = {
-   
-}
+PENDING = set()
 
 # Numbers the engine keeps free rather than abilities. TEMP4 (317) sits
 # between Fire Mane and Spicy Spray, where the engine reserved a slot for an
