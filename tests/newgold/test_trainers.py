@@ -323,7 +323,8 @@ class TrainerTests(unittest.TestCase):
         numbers = {int(v): n for n, v in re.findall(r"#define (MOVE_\w+)\s+(\d+)\b",
                                                     (ROOT / "include/constants/moves.h").read_text())}
         listed = [numbers[i] for i, (a, _) in enumerate(spans) if table[base + a + 11] & 0x20]
-        self.assertEqual(len(listed), 79)
+        # The engine's 79, less the ones given their effect here.
+        self.assertEqual(len(listed), 79 - len(import_moves.IMPLEMENTED_HERE))
         carried = {(index, member["species"], move) for index, trainer in enumerate(self.trainers)
                    for member in trainer["party"] for move in member.get("moves", []) if move in listed}
         self.assertEqual(carried, {(31, "SPECIES_ANNIHILAPE", "MOVE_RAGE_FIST"),
@@ -332,7 +333,8 @@ class TrainerTests(unittest.TestCase):
     @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
     def test_the_unimplemented_moves_are_the_engine_s(self):
         """The flag in the move table is the importer's reading of d0380a487's
-        data/Moves.c; konefr flags the same 79."""
+        data/Moves.c, bar the moves given their effect here; konefr flags the
+        same 79."""
         table = (ROOT / "files/poketool/waza/waza_tbl.narc").read_bytes()
         count = struct.unpack_from("<H", table, 0x18)[0]
         spans = [struct.unpack_from("<II", table, 0x1C + 8 * i) for i in range(count)]
@@ -343,7 +345,8 @@ class TrainerTests(unittest.TestCase):
         for revision in (gmm.ENGINE, gmm.NEWGOLD):
             blocks = import_moves.records_in(gmm.git_show(revision, "data/Moves.c"))
             flagged = {name for name, block in blocks.items()
-                       if "FLAG_UNUSABLE_UNIMPLEMENTED" in import_moves.named_flags(block)}
+                       if "FLAG_UNUSABLE_UNIMPLEMENTED" in import_moves.named_flags(block)
+                       and name not in import_moves.IMPLEMENTED_HERE}
             self.assertEqual(set(listed), flagged, revision)
 
     def test_the_override_byte_gives_the_slot_it_names(self):

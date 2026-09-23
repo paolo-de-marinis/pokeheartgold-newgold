@@ -318,6 +318,11 @@ RETAIL_EFFECTS = ("STRING_SHOT", "TAIL_GLOW", "CHATTER", "SWEET_SCENT", "HOWL")
 # Pokemon and reads the move that one last used, and neither half of that is
 # written yet.
 RETAIL_TARGETS_KEPT = ("CONVERSION_2",)
+# Added moves the engine leaves as a bare MOVE_EFFECT_HIT under
+# FLAG_UNUSABLE_UNIMPLEMENTED, and this game gives their canonical effect
+# (Pokemon Central), so without the flag. Floral Healing is Heal Pulse's heal;
+# subscript 320 gives it two thirds in Grassy Terrain.
+IMPLEMENTED_HERE = {"FLORAL_HEALING": "MOVE_EFFECT_HEAL_TARGET"}
 
 
 def retail_moves(reference, last_vanilla, types, effect_id, table):
@@ -804,11 +809,12 @@ def main():
         used += used_rows(blocks[by_number[identifier]])
     for offset, (_, name) in enumerate(order):
         block = blocks[name]
-        effect = field(block, "effect")
+        effect = IMPLEMENTED_HERE.get(name, field(block, "effect"))
         if effect not in effect_id:
             raise SystemExit(f"{name} has effect {effect}, which the reference does not define")
         split = SPLITS[field(block, "split")]
-        flags = sum(1 << bit for flag, bit in FLAG_BITS.items() if flag in named_flags(block))
+        flags = sum(1 << bit for flag, bit in FLAG_BITS.items() if flag in named_flags(block)
+                    and not (name in IMPLEMENTED_HERE and flag == "FLAG_UNUSABLE_UNIMPLEMENTED"))
         added.append((first_move + offset, name, struct.pack(
             RECORD,
             effect_id[effect],

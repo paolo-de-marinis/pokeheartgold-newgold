@@ -133,6 +133,18 @@ class MoveTests(unittest.TestCase):
         record = struct.unpack(import_moves.RECORD, self.table[self.moves["MOVE_HOWL"]])
         self.assertEqual((record[0], record[7]), (effects["MOVE_EFFECT_HOWL"], ranges["RANGE_USER_SIDE"]))
 
+    def test_floral_healing_is_heal_pulse_s_heal_with_more_on_grass(self):
+        # The engine leaves it a bare hit, flagged unimplemented; Pokemon
+        # Central gives half, and 2732/4096 in Grassy Terrain.
+        effects = constants("include/constants/move_effects.h", "MOVE_EFFECT_")
+        record = struct.unpack(import_moves.RECORD, self.table[self.moves["MOVE_FLORAL_HEALING"]])
+        self.assertEqual(record[0], effects["MOVE_EFFECT_HEAL_TARGET"])
+        self.assertFalse(record[9] & 1 << 5)
+        script = next((ROOT / "files/battledata/script/subscript").glob("subscript_0320_*.s")).read_text()
+        self.assertLess(script.index("MOVE_FLORAL_HEALING, _FloralHealing"), script.index("ABILITY_MEGA_LAUNCHER"))
+        self.assertRegex(script, r"_FloralHealing:\s*GotoIfTerrainOverlayIsType GRASSY_TERRAIN, (\w+)")
+        self.assertIn("OPCODE_MUL, BSCRIPT_VAR_HP_CALC, 2732\n    UpdateVar OPCODE_DIV, BSCRIPT_VAR_HP_CALC, 4096", script)
+
     def test_poison_gas_and_cotton_spore_hit_both_foes(self):
         ranges = import_moves.constants("include/constants/moves.h", "RANGE_")
         for name in ("POISON_GAS", "COTTON_SPORE"):
@@ -203,8 +215,9 @@ class MoveTests(unittest.TestCase):
     @unittest.skipUnless(REFERENCE.exists(), "the reference checkout is not here")
     def test_bit_5_is_the_engines_unimplemented_flag(self):
         """Every record, retail and added, carries bit 5 exactly when the
-        engine names FLAG_UNUSABLE_UNIMPLEMENTED for the move; konefr flag the
-        same seventy-nine. It used to be retail's King's Rock bit, which no
+        engine names FLAG_UNUSABLE_UNIMPLEMENTED for the move, bar the ones
+        given their effect here (import_moves.IMPLEMENTED_HERE); konefr flag
+        the same seventy-nine. It used to be retail's King's Rock bit, which no
         longer decides anything."""
         flagged = set()
         for revision in (import_moves.gmm.ENGINE, import_moves.gmm.NEWGOLD):
@@ -214,7 +227,8 @@ class MoveTests(unittest.TestCase):
             self.assertTrue(not flagged or names == flagged, revision)
             flagged = names
         self.assertEqual(len(flagged), 79)
-        numbers = {self.moves[name] for name in flagged}
+        numbers = {self.moves[name] for name in flagged
+                   if name[len("MOVE_"):] not in import_moves.IMPLEMENTED_HERE}
         carried = {move for move, record in enumerate(self.table)
                    if struct.unpack(import_moves.RECORD, record)[9] & 1 << 5}
         self.assertEqual(carried, numbers)

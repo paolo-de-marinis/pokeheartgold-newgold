@@ -13,8 +13,23 @@ _PAST_SUBSTITUTE:
     PrintAttackMessage 
     Wait 
     UpdateMonDataFromVar OPCODE_GET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_MAXHP, BSCRIPT_VAR_HP_CALC
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_FLORAL_HEALING, _FloralHealing
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_MEGA_LAUNCHER, _Heal75Percent
+
+_HealHalf:
     DivideVarByValueRoundUp BSCRIPT_VAR_HP_CALC, 2
+    GoTo _Heal50Percent
+
+// Floral Healing, which the engine leaves without an effect: Heal Pulse's
+// half, not boosted by Mega Launcher, and in Grassy Terrain 2732/4096 of the
+// maximum rounded down (Pokemon Central, Cura Floreale).
+_FloralHealing:
+    GotoIfTerrainOverlayIsType GRASSY_TERRAIN, _FloralHealingOnGrass
+    GoTo _HealHalf
+
+_FloralHealingOnGrass:
+    UpdateVar OPCODE_MUL, BSCRIPT_VAR_HP_CALC, 2732
+    UpdateVar OPCODE_DIV, BSCRIPT_VAR_HP_CALC, 4096
     GoTo _Heal50Percent
 
 _Heal75Percent:
