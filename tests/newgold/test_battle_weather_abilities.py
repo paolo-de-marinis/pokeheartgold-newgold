@@ -270,6 +270,14 @@ class WeatherAbilityTests(unittest.TestCase):
             case = entry[entry.index(f"case ABILITY_{ability}:"):]
             self.assertIn(f"(ctx->fieldCondition & FIELD_CONDITION_{bit}_ALL)", case[:case.index("break;")], name)
 
+    def test_sand_spit_reads_the_smooth_rock_of_the_pokemon_hit(self):
+        # Pokemon Central (Sputasabbia, Roccialiscia): five turns, eight with
+        # the rock the Pokemon with the ability holds -- the one that was hit.
+        script = subscript("SandSpit")
+        self.assertIn("UpdateVar OPCODE_SET, BSCRIPT_VAR_WEATHER_TURNS, 5", script)
+        self.assertIn("CheckItemHoldEffect CHECK_OPCODE_NOT_HAVE, BATTLER_CATEGORY_DEFENDER, HOLD_EFFECT_EXTEND_SANDSTORM", script)
+        self.assertIn("GetItemEffectParam BATTLER_CATEGORY_DEFENDER, BSCRIPT_VAR_CALC_TEMP", script)
+
     def test_snow_warning_and_orichalcum_pulse_leave_the_map_s_weather(self):
         # Pokemon Central (Scendineve, Ritmo d'Oricalco), and the reference's
         # subscripts 252 and 487. Orichalcum Pulse basks in the map's sun.
