@@ -315,10 +315,10 @@ async function loadLibrary() {
   renderLibrary();
 }
 function entryLine(e) {
-  if (e.exists === false) return `<div class="meta">Nessun salvataggio in questo slot.</div>`;
+  if (e.exists === false) return `${e.problem ? `<div class="meta invalid">Non usabile: ${esc(e.problem)}</div>` : ""}<div class="meta">Nessun salvataggio in questo slot.</div>`;
   if (!e.valid) return `<div class="meta"><span class="invalid">Non è un salvataggio valido</span> · ${esc(e.error)}</div>`;
   const party = (e.party || []).map(m => iconImg(m)).join("");
-  return `<div class="icons">${party || `<span class="meta">Squadra vuota</span>`}</div>
+  return `${e.problem ? `<div class="meta invalid">Non usabile: ${esc(e.problem)}</div>` : ""}<div class="icons">${party || `<span class="meta">Squadra vuota</span>`}</div>
     <div class="meta">${esc(e.name)} · ${e.badges} ${e.badges === 1 ? "medaglia" : "medaglie"} · ${esc(e.location)}</div>
     <div class="meta">Salvataggio n. ${e.counter} · tempo ${fmtTime(e.play_time)}</div>`;
 }
@@ -343,7 +343,7 @@ function renderLibrary() {
       <div class="acts">
         ${e.valid ? `<button class="small" data-act="open" data-f="${esc(e.f)}" type="button">Apri</button>` : ""}
         ${e.valid && lib.playable.length ? `<button class="small primary" data-act="play" data-f="${esc(e.f)}" type="button">Gioca</button>` : ""}
-        ${e.valid && lib.slots.length ? `<button class="small" data-act="load" data-f="${esc(e.f)}" type="button">Carica nell'emulatore</button>` : ""}
+        ${e.valid && usableSlots().length ? `<button class="small" data-act="load" data-f="${esc(e.f)}" type="button">Carica nell'emulatore</button>` : ""}
         <button class="small" data-act="more" data-f="${esc(e.f)}" type="button">Altro…</button>
       </div>
     </div>`;
@@ -365,6 +365,7 @@ $("#library").addEventListener("click", async ev => {
 $("#filter").addEventListener("input", renderLibrary);
 $("#refresh").addEventListener("click", loadLibrary);
 
+const usableSlots = () => S.lib.slots.filter(s => !s.problem).map(s => s.slot);
 function slotOptions(keys) {
   return keys.map(k => { const s = S.lib.slots.find(x => x.slot === k); return `<option value="${k}">${esc(s.label)}</option>`; }).join("");
 }
@@ -385,7 +386,7 @@ async function libraryAction(act, f, t) {
   }
   if (act === "load") {
     const r = await ask("Carica nell'emulatore", `<p>Copia <strong>${esc(f)}</strong> nello slot scelto. Quello che c'è ora nello slot viene salvato nei backup.</p>
-      <label class="f">Slot<select name="slot">${slotOptions(S.lib.slots.map(s => s.slot))}</select></label>`,
+      <label class="f">Slot<select name="slot">${slotOptions(usableSlots())}</select></label>`,
       [["go", "Carica", "primary"], ["", "Annulla"]]);
     if (r.value !== "go") return;
     await run(() => api("/api/load", {f, slot: r.data.slot}), "Caricato nello slot");

@@ -4,14 +4,17 @@
 Every endpoint the page uses, against a library in a temporary folder and a
 build folder whose emulator slots are temporary files too: the ROM's layout
 is read through links to the real main.sbin and main.elf, the .nds files are
-stand-ins, melonDS's presence is a switch and launching it is recorded
-rather than done. What is checked is what protects a real playthrough: a
+the real ROM's header alone (sealed again for their length), melonDS's
+presence is a switch, and launches are SAVEUI_DRY_RUN's -- recorded, never
+started. What is checked is what protects a real playthrough: a
 backup before every write, a written file that reopens, an undo that gives
 the old bytes back, nothing deleted, nothing reached outside the library and
 the slots, and no slot written while melonDS runs.
 """
 
 import json
+import os
+import struct
 import sys
 import tempfile
 import threading
@@ -26,6 +29,15 @@ from test_savedit import BUILD, game_like_save, party_save
 sys.path[:0] = [str(ROOT / "tools/newgold/devkit")]
 import savedit as sv  # noqa: E402
 import saveui  # noqa: E402
+
+
+def header_only():
+    """The built ROM's cartridge header, saying it is all there is."""
+    with open(BUILD / "pokeheartgold.us.nds", "rb") as f:
+        header = bytearray(f.read(0x200))
+    struct.pack_into("<I", header, 0x80, 0x200)
+    struct.pack_into("<H", header, 0x15E, saveui.nds_crc(header[:0x15E]))
+    return bytes(header)
 
 
 class SaveUiTests(unittest.TestCase):
@@ -44,16 +56,19 @@ class SaveUiTests(unittest.TestCase):
             folder.mkdir(parents=True)
             for name in ("main.sbin", "main.elf"):
                 (folder / name).symlink_to(BUILD / name)
-            (folder / "pokeheartgold.us.nds").write_bytes(b"not a ROM")
+            (folder / "pokeheartgold.us.nds").write_bytes(header_only())
         cls.running = False
-        cls.launched = []
-        cls.saved = saveui.melonds_running, saveui.launch
+        cls.saved = saveui.melonds_running, os.environ.get("SAVEUI_DRY_RUN")
         saveui.melonds_running = lambda: cls.running
-        saveui.launch = cls.launched.append
+        os.environ["SAVEUI_DRY_RUN"] = "1"
 
     @classmethod
     def tearDownClass(cls):
-        saveui.melonds_running, saveui.launch = cls.saved
+        saveui.melonds_running, dry = cls.saved
+        if dry is None:
+            os.environ.pop("SAVEUI_DRY_RUN")
+        else:
+            os.environ["SAVEUI_DRY_RUN"] = dry
         cls.tmp.cleanup()
 
     def setUp(self):
@@ -256,7 +271,7 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(slot.read_bytes(), self.save.read_bytes())
         self.assertEqual(self.backups("emulatore/hg-diag")[0].read_bytes(), old)
         self.ok("/api/play", {"f": "gyms/test.sav", "slot": "hg"})
-        self.assertEqual(self.launched[-1], (self.build / "heartgold.us/pokeheartgold.us.nds").resolve())
+        self.assertEqual(saveui.LAUNCHED[-1], (self.build / "heartgold.us/pokeheartgold.us.nds").resolve())
         self.assertIn("HeartGold", self.refused("/api/play", {"f": "gyms/test.sav", "slot": "ss"}))
         self.assertEqual(self.ok("/api/take", {"slot": "hg-diag", "name": "dal-gioco"})["f"], "dal-gioco.sav")
         self.assertEqual((self.library / "dal-gioco.sav").read_bytes(), slot.read_bytes())
@@ -265,6 +280,52 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(out["profile"]["money"], 7)
 
     # -- what it will not do ------------------------------------------------
+
+    def test_a_slot_needs_a_rom_melonds_can_play(self):
+        rom = self.build / "heartgold.us.diag/pokeheartgold.us.nds"
+        slot = rom.with_suffix(".sav")
+        good = rom.read_bytes()
+        launched = len(saveui.LAUNCHED)
+        try:
+            rom.write_bytes(b"fake\n")
+            error = self.refused("/api/play", {"f": "gyms/test.sav", "slot": "hg-diag"})
+            self.assertIn("non è una ROM del Nintendo DS (5 byte", error)
+            self.assertIn(str(rom), error)
+            self.assertIn("non è una ROM", self.refused("/api/load", {"f": "gyms/test.sav", "slot": "hg-diag"}))
+            self.assertEqual(slot.read_bytes(), self.template.read_bytes(), "nothing written")
+            self.assertEqual(len(saveui.LAUNCHED), launched, "nothing launched")
+            listed = {s["slot"]: s for s in self.ok("/api/library")["slots"]}
+            self.assertIn("non è una ROM", listed["hg-diag"]["problem"])
+            self.assertEqual(self.ok("/api/library")["playable"], ["hg"])
+            rom.write_bytes(good[:0x1FF])
+            self.assertIn("non è una ROM", saveui.rom_problem(rom, slot))
+            header = bytearray(good)
+            struct.pack_into("<I", header, 0x80, 0x10000)
+            struct.pack_into("<H", header, 0x15E, saveui.nds_crc(header[:0x15E]))
+            rom.write_bytes(header)
+            self.assertIn("troncata", saveui.rom_problem(rom, slot))
+        finally:
+            rom.write_bytes(good)
+        self.assertIsNone(saveui.rom_problem(rom, slot))
+        # Launched for real, melonDS's sandbox keeps /tmp to itself.
+        os.environ.pop("SAVEUI_DRY_RUN")
+        try:
+            problem = saveui.rom_problem(rom, slot)
+            self.assertIsNotNone(problem)
+            self.assertTrue("/tmp" in problem or "flatpak" in problem, problem)
+        finally:
+            os.environ["SAVEUI_DRY_RUN"] = "1"
+
+    def test_the_built_rom_passes(self):
+        """The real ROM and the real slot beside it, only read."""
+        real = BUILD / "pokeheartgold.us.nds"
+        if not real.exists() or saveui.flatpak_folders() is None:
+            self.skipTest("no built ROM or no melonDS flatpak here")
+        os.environ.pop("SAVEUI_DRY_RUN")
+        try:
+            self.assertIsNone(saveui.rom_problem(real, real.with_suffix(".sav")))
+        finally:
+            os.environ["SAVEUI_DRY_RUN"] = "1"
 
     def test_paths_that_leave_the_library(self):
         outside = Path(self.tmp.name) / "outside.sav"

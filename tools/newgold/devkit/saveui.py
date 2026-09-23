@@ -15,10 +15,17 @@ LIBRARY/.backups/<its path>/<timestamp>.sav (an emulator slot to
 savedit.Save must open, and only then does a rename replace the file. The
 bin is LIBRARY/.trash/. melonDS writes its .sav back when it closes, so no
 emulator slot is written while it runs.
+
+A slot is used only beside a real ROM (a Nintendo DS header whose checksums
+hold, and as long as the header says) in a folder the melonDS flatpak can
+see -- never /tmp, which its sandbox keeps private. --dry-run-launch, or
+SAVEUI_DRY_RUN=1 in the environment, makes "Gioca" say what it would run
+instead of running it; the tests use it.
 """
 
 import argparse
 import datetime
+import functools
 import http.server
 import json
 import os
@@ -51,6 +58,8 @@ SLOTS = {
 }
 PLAYABLE = ("hg-diag", "hg")
 NAME = re.compile(r"[\w\- .]+")
+APP = "net.kuribo64.melonDS"    # diag/play.py's
+LAUNCHED = []                   # what a dry run would have started
 
 
 class Refused(Exception):
@@ -61,10 +70,84 @@ def melonds_running():
     return subprocess.run(["pgrep", "-x", "melonDS"], capture_output=True).returncode == 0
 
 
+def dry_run():
+    return os.environ.get("SAVEUI_DRY_RUN") == "1"
+
+
 def launch(rom):
     """play.py's own launch: the flatpak on this ROM, detached."""
-    subprocess.Popen([sys.executable, str(PLAY), "launch", str(rom)],
-                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    command = [sys.executable, str(PLAY), "launch", str(rom)]
+    if dry_run():
+        LAUNCHED.append(rom)
+        print("avvio simulato:", " ".join(command))
+        return
+    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+
+def nds_crc(data):
+    """The cartridge header's CRC-16: polynomial 0xA001, reflected, from 0xFFFF."""
+    crc = 0xFFFF
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0xA001 if crc & 1 else crc >> 1
+    return crc
+
+
+@functools.cache
+def flatpak_folders():
+    """The folders the melonDS flatpak may write in, from its own
+    permissions (it writes the .sav beside the ROM); None without it."""
+    try:
+        run = subprocess.run(["flatpak", "info", "--show-permissions", APP], capture_output=True, text=True)
+    except OSError:
+        return None
+    if run.returncode:
+        return None
+    found = re.search(r"^filesystems=(.*)$", run.stdout, re.M)
+    folders = []
+    for entry in (found.group(1).split(";") if found else []):
+        where, _, mode = entry.partition(":")
+        if mode == "ro":
+            continue
+        if where in ("host", "host-os"):
+            folders.append(Path("/"))
+        elif where == "home":
+            folders.append(Path.home())
+        elif where.startswith("~/"):
+            folders.append(Path.home() / where[2:])
+        elif where.startswith("/"):
+            folders.append(Path(where))
+    return [f.resolve() for f in folders]
+
+
+def rom_problem(rom, save):
+    """Why melonDS could not play this ROM with this .sav, in Italian; None
+    when it can. The header is the cartridge's: the logo's CRC is 0xCF56,
+    the header's own CRC is at 0x15E, the used size at 0x80."""
+    try:
+        real = Path(rom).resolve(strict=True)
+    except OSError:
+        return f"la ROM {rom} non esiste"
+    size = real.stat().st_size
+    with open(real, "rb") as f:
+        header = f.read(0x200)
+    if (len(header) < 0x200 or struct.unpack_from("<H", header, 0x15C)[0] != 0xCF56
+            or nds_crc(header[0xC0:0x15C]) != 0xCF56 or nds_crc(header[:0x15E]) != struct.unpack_from("<H", header, 0x15E)[0]):
+        return f"{real} non è una ROM del Nintendo DS ({size} byte, senza un'intestazione di cartuccia valida)"
+    if size < struct.unpack_from("<I", header, 0x80)[0]:
+        return f"{real} è troncata: {size} byte, la sua intestazione ne dichiara {struct.unpack_from('<I', header, 0x80)[0]}"
+    if real.parent != Path(save).parent.resolve():
+        return f"{rom} porta a {real}: melonDS scriverebbe il salvataggio là, non in {Path(save).parent}"
+    if dry_run():
+        return None
+    folders = flatpak_folders()
+    if folders is None:
+        return f"non trovo melonDS installato come flatpak ({APP})"
+    if real.is_relative_to("/tmp") or real.is_relative_to("/var/tmp") or not any(real.is_relative_to(f) for f in folders):
+        return (f"melonDS gira come flatpak e può scrivere solo in {', '.join(map(str, folders))} (mai in /tmp): "
+                f"non vedrebbe {real}")
+    return None
 
 
 def stamp():
@@ -234,8 +317,9 @@ class Library:
                     files.append({"f": path.relative_to(self.root).as_posix(), **self.summary(path)})
         slots = []
         for key in self.slots():
-            path = self.slot_paths(key)[1]
+            rom, path = self.slot_paths(key)
             slots.append({"f": f"emu:{key}", "slot": key, "label": SLOTS[key][2], "path": str(path),
+                          "rom": str(rom), "problem": rom_problem(rom, path),
                           "exists": path.exists(), **(self.summary(path) if path.exists() else {})})
         trash = []
         if self.trash.is_dir():
@@ -243,7 +327,8 @@ class Library:
                 rel = path.relative_to(self.trash).as_posix()
                 trash.append({"t": rel, "f": rel.split("/", 1)[-1], "when": rel.split("/", 1)[0]})
         return {"library": str(self.root), "files": files, "slots": slots, "trash": trash,
-                "playable": [k for k in PLAYABLE if k in self.slots()], "melonds": melonds_running()}
+                "playable": [s["slot"] for s in slots if s["slot"] in PLAYABLE and not s["problem"]],
+                "melonds": melonds_running()}
 
     def detail(self, f):
         path, key, is_slot = self.locate(f)
@@ -366,9 +451,14 @@ class Library:
             return target.relative_to(self.root).as_posix()
 
     def load(self, f, slot):
-        """'Carica nell'emulatore': a valid save copied into a slot."""
+        """'Carica nell'emulatore': a valid save copied into a slot, beside
+        a ROM melonDS can play."""
         with self.lock:
             source, _, _ = self.locate(f)
+            target, _, _ = self.locate(f"emu:{slot}")
+            problem = rom_problem(self.slot_paths(slot)[0], target)
+            if problem:
+                raise Refused(f"{SLOTS[slot][2]}: {problem}")
             self.open(source)
             self.write(f"emu:{slot}", source.read_bytes())
 
@@ -386,7 +476,7 @@ class Library:
         if slot not in PLAYABLE:
             raise Refused("si gioca su HeartGold, normale o diagnostica")
         self.load(f, slot)
-        launch(self.slot_paths(slot)[0])
+        launch(self.slot_paths(slot)[0].resolve())
 
     # -- the edits the page sends -------------------------------------------
 
@@ -738,12 +828,17 @@ def main():
     parser.add_argument("--no-browser", action="store_true", help="print the address instead of opening it")
     parser.add_argument("--build", type=Path, default=ROOT / "build",
                         help="the folder holding heartgold.us, heartgold.us.diag and the rest")
+    parser.add_argument("--dry-run-launch", action="store_true",
+                        help="Gioca prints the melonDS command instead of running it (or SAVEUI_DRY_RUN=1)")
     args = parser.parse_args()
+    if args.dry_run_launch:
+        os.environ["SAVEUI_DRY_RUN"] = "1"
     if not args.library.is_dir():
         raise SystemExit(f"{args.library} is not a folder")
     server = serve(args.library, args.build, args.port)
     url = f"http://127.0.0.1:{Handler.port}/"
-    print(f"save editor on {url} -- library {Handler.library.root}; Ctrl+C to stop")
+    print(f"save editor on {url} -- library {Handler.library.root}, build {Handler.library.build}"
+          f"{' (launches simulated)' if dry_run() else ''}; Ctrl+C to stop")
     if not args.no_browser:
         webbrowser.open(url)
     try:
