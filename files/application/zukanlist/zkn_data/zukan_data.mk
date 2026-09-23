@@ -5,8 +5,11 @@ ZUKAN_DATA_JSON := $(ZUKAN_DATA_PREF).json
 ZUKAN_DATA_JSON_TXT := $(ZUKAN_DATA_PREF).json.txt
 
 $(ZUKAN_DATA_GIRA_NARC): %_gira.narc: %.narc ;
+# The headers the template includes: a change to one changes what it compiles to.
+$(ZUKAN_DATA_NARC): include/constants/species.h
+
 $(ZUKAN_DATA_NARC): %.narc: $(ZUKAN_DATA_JSON) $(ZUKAN_DATA_JSON_TXT)
-	$(JSONPROC) $^ $*.s
+	$(JSONPROC) $(filter-out %.h,$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -DPM_ASM -o $*.o $*.s
 	$(O2NARC) $*.o $@ -N -p 0xFF
 	$(WINE) $(MWAS) $(MWASFLAGS) -DGIRA -DPM_ASM -o $*_gira.o $*.s

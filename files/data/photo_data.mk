@@ -2,8 +2,11 @@ PHOTO_DATA_NARC := files/data/photo_data.narc
 PHOTO_DATA_JSON := files/data/photo_data.json
 PHOTO_DATA_TEMPLATE := files/data/photo_data.json.txt
 
+# The headers the template includes: a change to one changes what it compiles to.
+$(PHOTO_DATA_NARC): include/photo_album.h include/constants/maps.h include/constants/sprites.h
+
 $(PHOTO_DATA_NARC): %.narc: $(PHOTO_DATA_JSON) $(PHOTO_DATA_TEMPLATE)
-	$(JSONPROC) $^ $*.c
+	$(JSONPROC) $(filter-out %.h,$^) $*.c
 	$(WINE) $(MWCC) $(MWCFLAGS) -c -o $*.o $*.c
 	$(O2NARC) $*.o $@ -n -p 0x00
 	@$(RM) $*.o $*.c

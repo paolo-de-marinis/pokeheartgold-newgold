@@ -5,8 +5,11 @@ WAZA_OSHIE_TEMPLATE         := $(WAZA_OSHIE_DIR)/waza_oshie.json.txt
 WAZA_OSHIE_S                := $(WAZA_OSHIE_DIR)/waza_oshie.s
 WAZA_OSHIE_O                := $(WAZA_OSHIE_DIR)/waza_oshie.o
 
+# The headers the template includes: a change to one changes what it compiles to.
+$(WAZA_OSHIE_BIN): include/constants/moves.h
+
 $(WAZA_OSHIE_BIN): %.bin: %.json %.json.txt
-	$(JSONPROC) $^ $*.s
+	$(JSONPROC) $(filter-out %.h,$^) $*.s
 	$(WINE) $(MWAS) -DPM_ASM $(MWASFLAGS) -o $*.o $*.s
 	$(OBJCOPY) -O binary $*.o $@
 

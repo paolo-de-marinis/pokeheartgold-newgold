@@ -4,14 +4,18 @@ TRAINER_JSON := files/poketool/trainer/trainers.json
 TRDATA_TEMPLATE := files/poketool/trainer/trdata.json.txt
 TRPOKE_TEMPLATE := files/poketool/trainer/trpoke.json.txt
 
+# The headers the template includes: a change to one changes what it compiles to.
+$(TRDATA_NARC): include/trainer_data.h include/constants/items.h include/constants/trainer_class.h
+$(TRPOKE_NARC): include/trainer_data.h include/constants/species.h include/constants/moves.h include/constants/items.h
+
 $(TRDATA_NARC): %.narc: $(TRAINER_JSON) $(TRDATA_TEMPLATE)
-	$(JSONPROC) $^ $*.c
+	$(JSONPROC) $(filter-out %.h,$^) $*.c
 	$(WINE) $(MWCC) $(MWCFLAGS) -c -o $*.o $*.c
 	$(O2NARC) $*.o $@ -n
 	@$(RM) $*.o $*.c
 
 $(TRPOKE_NARC): %.narc: $(TRAINER_JSON) $(TRPOKE_TEMPLATE)
-	$(JSONPROC) $^ $*.s
+	$(JSONPROC) $(filter-out %.h,$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -DPM_ASM -o $*.o $*.s
 	$(O2NARC) $*.o $@ -n -p 0x00
 	@$(RM) $*.o $*.s
