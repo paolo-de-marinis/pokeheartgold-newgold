@@ -38,7 +38,7 @@ typedef struct FrontierMon {
             u32 spAtkIv : 5;
             u32 spDefIv : 5;
             u32 useSpeciesName : 1;
-            u32 dummy : 1;
+            u32 abilityMSB : 1; // New Gold: the ninth bit of ability; the IV readers mask it off
         };
         u32 ivsWord;
     };

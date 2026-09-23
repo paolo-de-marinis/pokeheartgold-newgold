@@ -72,15 +72,11 @@ u32 ov80_02229F6C(FrontierMon *frontierMon, u32 frontierMonIndex, u32 otId, u32 
     frontierMon->ppUp = 0;
     frontierMon->language = gGameLanguage;
     u32 ability = GetMonBaseStat(frontierMon->species, BASE_ABILITY_2);
-    if (ability != ABILITY_NONE) {
-        if (frontierMon->pid % 2) {
-            frontierMon->ability = ability;
-        } else {
-            frontierMon->ability = GetMonBaseStat(frontierMon->species, BASE_ABILITY_1);
-        }
-    } else {
-        frontierMon->ability = GetMonBaseStat(frontierMon->species, BASE_ABILITY_1);
+    if (ability == ABILITY_NONE || frontierMon->pid % 2 == 0) {
+        ability = GetMonBaseStat(frontierMon->species, BASE_ABILITY_1);
     }
+    frontierMon->ability = ability;
+    frontierMon->abilityMSB = ability >> 8;
     frontierMon->friendship = friendship;
     GetSpeciesNameIntoArray(frontierMon->species, heapID, frontierMon->nickname);
     return pidGen;
@@ -129,7 +125,7 @@ void ov80_0222A140(FrontierMon *frontierMon, Pokemon *mon, int level) {
     SetMonData(mon, MON_DATA_SPATK_EV, &value);
     value = frontierMon->evs[5];
     SetMonData(mon, MON_DATA_SPDEF_EV, &value);
-    u16 ability = frontierMon->ability;
+    u16 ability = frontierMon->ability | (frontierMon->abilityMSB << 8);
     SetMonData(mon, MON_DATA_ABILITY, &ability);
     SetMonData(mon, MON_DATA_FRIENDSHIP, &frontierMon->friendship);
     if (frontierMon->useSpeciesName) {

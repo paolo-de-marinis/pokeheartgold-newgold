@@ -706,7 +706,9 @@ static void SetFrontierMon(FrontierMon *frontierMon, Pokemon *mon) {
     for (s32 i = 0; i < NUM_STATS; i++) {
         frontierMon->evs[i] = GetMonData(mon, MON_DATA_HP_EV + i, NULL);
     }
-    frontierMon->ability = GetMonData(mon, MON_DATA_ABILITY, NULL);
+    u16 ability = GetMonData(mon, MON_DATA_ABILITY, NULL);
+    frontierMon->ability = ability;
+    frontierMon->abilityMSB = ability >> 8;
     frontierMon->friendship = GetMonData(mon, MON_DATA_FRIENDSHIP, NULL);
     GetMonData(mon, MON_DATA_NICKNAME, frontierMon->nickname);
 }

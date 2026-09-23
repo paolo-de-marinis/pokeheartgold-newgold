@@ -292,15 +292,11 @@ static u32 sub_0204B834(FrontierFieldSystem *frontierFsys, FrontierMon *frontier
     frontierMon->ppUp = 0;
     frontierMon->language = gGameLanguage;
     u32 ability = GetMonBaseStat(frontierMon->species, BASE_ABILITY_2);
-    if (ability != ABILITY_NONE) {
-        if (frontierMon->pid % 2) {
-            frontierMon->ability = ability;
-        } else {
-            frontierMon->ability = GetMonBaseStat(frontierMon->species, BASE_ABILITY_1);
-        }
-    } else {
-        frontierMon->ability = GetMonBaseStat(frontierMon->species, BASE_ABILITY_1);
+    if (ability == ABILITY_NONE || frontierMon->pid % 2 == 0) {
+        ability = GetMonBaseStat(frontierMon->species, BASE_ABILITY_1);
     }
+    frontierMon->ability = ability;
+    frontierMon->abilityMSB = ability >> 8;
     frontierMon->friendship = friendship;
     GetSpeciesNameIntoArray(frontierMon->species, heapID, frontierMon->nickname);
     return pidGen;
