@@ -89,6 +89,61 @@ int main(void) {
 """
 
 
+# CreateNPCTrainerParty's seed species, the real TrMon_SeedSpecies and its
+# generated table, run on the host: a species number in, the one the
+# personality is seeded with out.
+SEED_FIXTURE = r"""
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+typedef uint16_t u16;
+@TABLE@
+@FUNCTION@
+int main(void) {
+    unsigned species;
+    while (scanf("%u", &species) == 1) {
+        printf("%u\n", TrMon_SeedSpecies((u16)species));
+    }
+    return 0;
+}
+"""
+
+
+def seed_species(numbers):
+    source = (ROOT / "src/trainer_data.c").read_text()
+    program = (SEED_FIXTURE.replace("@TABLE@", (ROOT / "src/data/trainer_seed_species.h").read_text())
+               .replace("@FUNCTION@", function(source, "TrMon_SeedSpecies")))
+    with tempfile.TemporaryDirectory(prefix="newgold-trseed-") as directory:
+        path = Path(directory)
+        (path / "test.c").write_text(program)
+        subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+            "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+            str(path / "test.c"), "-o", str(path / "test")], check=True)
+        output = subprocess.run([str(path / "test")], input="\n".join(map(str, numbers)) + "\n",
+                                capture_output=True, text=True, check=True).stdout
+    return [int(line) for line in output.split()]
+
+
+def engine_species(names):
+    """hg-engine's number for each name, worked out from its header at the
+    engine's revision: a number, or a sum of numbers and names."""
+    text = gmm.git_show(gmm.ENGINE, "include/constants/species.h")
+    defs = dict(re.findall(r"^#define (\w+)\s+\(?([\w +]+?)\)?\s*(?://.*)?$", text, re.M))
+
+    def value(term):
+        return sum(int(t) if t.isdigit() else value(defs[t]) for t in term.replace(" ", "").split("+"))
+    return {name: value(defs[name]) for name in names}
+
+
+def lcrng(seed, rolls):
+    """LCRandom after SetLCRNGSeed(seed), rolled `rolls` times."""
+    value = seed
+    for _ in range(rolls):
+        seed = (seed * 1103515245 + 24691) & 0xFFFFFFFF
+        value = seed >> 16
+    return value
+
+
 def run_parties(lines):
     """[(modifier, ability)] for each `m` line, through the real functions."""
     source = (ROOT / "src/trainer_data.c").read_text()
@@ -325,6 +380,32 @@ class TrainerTests(unittest.TestCase):
             self.assertEqual((pid, ability), (reference_pid, wanted), place)
         compared = len(ours)
         self.assertEqual(compared, sum(len(t["party"]) for t in self.trainers))
+
+    @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
+    def test_the_personality_seed_is_the_engine_s_species_number(self):
+        """A trainer Pokemon's personality is seeded with its difficulty,
+        level, species and trainer (enemy_party.c:277), and past Arceus
+        hg-engine numbers species otherwise: Morty's Annihilape is 568 here and
+        1029 there. Seeded with 568 it was Jolly; konefr's is Bashful."""
+        party = function((ROOT / "src/trainer_data.c").read_text(), "CreateNPCTrainerParty")
+        self.assertEqual(party.count(".level + TrMon_SeedSpecies(species) + enemies->trainerId[partyIndex];"), 4)
+        ours = {name: int(number) for name, number in re.findall(
+            r"#define (SPECIES_\w+)\s+(\d+)\b", (ROOT / "include/constants/species.h").read_text())}
+        named = sorted({member["species"] for trainer in self.trainers for member in trainer["party"]})
+        engine = engine_species(named)
+        self.assertEqual(dict(zip(named, seed_species([ours[name] for name in named]))), engine)
+
+        c = override_constants()
+        morty = next(i for i, t in enumerate(self.trainers) if t["name"] == "{TRNAME}Morty")
+        members = self.trainers[morty]["party"]
+        modifiers = run_parties(party_lines(members, lambda member: c[member["genderOverride"]]
+                                            | c[member["abilityOverride"]] << 4))
+        (k, member), = [(k, m) for k, m in enumerate(members) if m["species"] == "SPECIES_ANNIHILAPE"]
+        rolls = int(re.search(r"#define TRAINERCLASS_LEADER_MORTY\s+(\d+)",
+                              (ROOT / "include/constants/trainer_class.h").read_text())[1])
+        seed = member["difficulty"] + member["level"] + seed_species([ours["SPECIES_ANNIHILAPE"]])[0] + morty
+        personality = (lcrng(seed, rolls) << 8) + modifiers[k][0]
+        self.assertEqual(personality % 25, 18)  # Bashful
 
     def test_added_species_reach_trainers(self):
         named = {member["species"] for trainer in self.trainers for member in trainer["party"]}

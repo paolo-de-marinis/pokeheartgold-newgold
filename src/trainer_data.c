@@ -16,6 +16,8 @@
 #include "pokemon.h"
 #include "save_misc_data.h"
 
+#include "data/trainer_seed_species.h"
+
 void CreateNPCTrainerParty(BattleSetup *battleSetup, int trainerIndex, enum HeapID heapID);
 
 void EnemyTrainerSet_Init(BattleSetup *battleSetup, SaveData *saveData, enum HeapID heapID) {
@@ -291,6 +293,16 @@ static u16 TrMon_UsableMove(u16 move) {
     return IsMoveUnimplemented(move) ? MOVE_NONE : move;
 }
 
+// The species a trainer Pokemon's personality is seeded with is hg-engine's
+// number for it, as in konefr's build: past Arceus the engine numbers
+// species otherwise, and the same entry got another nature here.
+static u16 TrMon_SeedSpecies(u16 species) {
+    if (species >= SPECIES_EGG && species <= NUM_SPECIES) {
+        return sTrainerSeedSpecies[species - SPECIES_EGG];
+    }
+    return species;
+}
+
 void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID heapID) {
     TRPOKE *data; // sp74
     int i;
@@ -344,7 +356,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             // This guarantees that NPC trainer' Pokemon are generated in a
             // consistent manner between attempts.
             // This procedure results in only a 24-bit peersonality value.
-            personality = monSpecies[i].difficulty + monSpecies[i].level + species + enemies->trainerId[partyIndex];
+            personality = monSpecies[i].difficulty + monSpecies[i].level + TrMon_SeedSpecies(species) + enemies->trainerId[partyIndex];
             SetLCRNGSeed(personality);
             for (j = 0; j < enemies->trainer[partyIndex].data.trainerClass; j++) {
                 personality = LCRandom();
@@ -381,7 +393,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             species = monSpeciesMoves[i].species & TRPOKE_SPECIES_MASK;
             form = (monSpeciesMoves[i].species & ~TRPOKE_SPECIES_MASK) >> TRPOKE_FORM_SHIFT;
             TrMon_OverridePidGender(species, form, monSpeciesMoves[i].genderAbilityOverride, &pidGender);
-            personality = monSpeciesMoves[i].difficulty + monSpeciesMoves[i].level + species + enemies->trainerId[partyIndex];
+            personality = monSpeciesMoves[i].difficulty + monSpeciesMoves[i].level + TrMon_SeedSpecies(species) + enemies->trainerId[partyIndex];
             SetLCRNGSeed(personality);
             for (j = 0; j < enemies->trainer[partyIndex].data.trainerClass; j++) {
                 personality = LCRandom();
@@ -409,7 +421,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             species = monSpeciesItem[i].species & TRPOKE_SPECIES_MASK;
             form = (monSpeciesItem[i].species & ~TRPOKE_SPECIES_MASK) >> TRPOKE_FORM_SHIFT;
             TrMon_OverridePidGender(species, form, monSpeciesItem[i].genderAbilityOverride, &pidGender);
-            personality = monSpeciesItem[i].difficulty + monSpeciesItem[i].level + species + enemies->trainerId[partyIndex];
+            personality = monSpeciesItem[i].difficulty + monSpeciesItem[i].level + TrMon_SeedSpecies(species) + enemies->trainerId[partyIndex];
             SetLCRNGSeed(personality);
             for (j = 0; j < enemies->trainer[partyIndex].data.trainerClass; j++) {
                 personality = LCRandom();
@@ -435,7 +447,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             species = monSpeciesItemMoves[i].species & TRPOKE_SPECIES_MASK;
             form = (monSpeciesItemMoves[i].species & ~TRPOKE_SPECIES_MASK) >> TRPOKE_FORM_SHIFT;
             TrMon_OverridePidGender(species, form, monSpeciesItemMoves[i].genderAbilityOverride, &pidGender);
-            personality = monSpeciesItemMoves[i].difficulty + monSpeciesItemMoves[i].level + species + enemies->trainerId[partyIndex];
+            personality = monSpeciesItemMoves[i].difficulty + monSpeciesItemMoves[i].level + TrMon_SeedSpecies(species) + enemies->trainerId[partyIndex];
             SetLCRNGSeed(personality);
             for (j = 0; j < enemies->trainer[partyIndex].data.trainerClass; j++) {
                 personality = LCRandom();
