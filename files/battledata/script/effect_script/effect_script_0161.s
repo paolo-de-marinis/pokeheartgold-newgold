@@ -2,15 +2,17 @@
 
     .data
 
-// Parental Bond's first strike leaves the stockpile to the second, as the
-// reference's script does, so both strike with its power and it wears off
-// once.
+// With Parental Bond both strikes have the stockpile's power, and it wears
+// off once. The reference's script leaves it to the second strike, so a first
+// strike that ended the move kept it; here the first strike spends it and the
+// second keeps the power the first worked out (ctx->movePower lasts the whole
+// move).
 _000:
+    GotoIfSecondHitOfParentalBond _STRIKE
     CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STOCKPILE_COUNT, 0, _064
     UpdateMonDataFromVar OPCODE_GET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STOCKPILE_COUNT, BSCRIPT_VAR_MOVE_POWER
     UpdateVar OPCODE_MUL, BSCRIPT_VAR_MOVE_POWER, 100
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_MISS_MESSAGE
-    GotoIfFirstHitOfParentalBond _STRIKE
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STOCKPILE_COUNT, 0
     UpdateMonDataFromVar OPCODE_GET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STOCKPILE_DEF_BOOSTS, BSCRIPT_VAR_CALC_TEMP
     UpdateMonDataFromVar OPCODE_SUB_TO_ZERO, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STAT_CHANGE_DEF, BSCRIPT_VAR_CALC_TEMP

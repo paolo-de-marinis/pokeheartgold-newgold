@@ -2,16 +2,21 @@
 
     .data
 
-// Natural Gift. With Parental Bond the Berry is spent on the second strike,
-// so both strike with its power and type (Pokemon Central, Amorefiliale).
+// Natural Gift. With Parental Bond both strikes have the Berry's power and
+// type (Pokemon Central, Amorefiliale), and the Berry is spent with the first,
+// which may be the last: the second keeps the power and type the first worked
+// out (ctx->movePower and ctx->moveType last the whole move).
 _000:
+    GotoIfSecondHitOfParentalBond _SECOND_STRIKE
     CalcNaturalGiftParams _006
     CalcCrit 
     CalcDamage 
-    GotoIfFirstHitOfParentalBond _KEEP_BERRY
     RemoveItem BATTLER_CATEGORY_ATTACKER
+    End 
 
-_KEEP_BERRY:
+_SECOND_STRIKE:
+    CalcCrit 
+    CalcDamage 
     End 
 
 _006:

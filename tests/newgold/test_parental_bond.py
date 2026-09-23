@@ -246,13 +246,18 @@ class ParentalBondTests(unittest.TestCase):
         present = (EFFECTS / "effect_script_0122.s").read_text()
         self.assertLess(present.index("GotoIfSecondHitOfParentalBond _SECOND_STRIKE"), present.index("Present _004"))
         self.assertIn("SetParentalBondFlag", present[present.index("Present _004"):present.index("_SECOND_STRIKE:")])
+        # The first strike spends the stockpile and the Berry, and may be the
+        # last; the second strikes with what the first worked out.
         spit_up = (EFFECTS / "effect_script_0161.s").read_text()
-        self.assertLess(spit_up.index("GotoIfFirstHitOfParentalBond _STRIKE"), spit_up.index("BMON_DATA_STOCKPILE_COUNT, 0\n"))
+        self.assertRegex(spit_up, r"_000:\s*GotoIfSecondHitOfParentalBond _STRIKE\s*CompareMonDataToValue")
+        self.assertNotIn("GotoIfFirstHitOfParentalBond", spit_up)
+        self.assertIn("BMON_DATA_STOCKPILE_COUNT, 0\n", spit_up[:spit_up.index("_STRIKE:")])
         secret_power = (EFFECTS / "effect_script_0197.s").read_text()
         self.assertNotIn("GetTerrainSecondaryEffect", secret_power[secret_power.index("_FIRST_STRIKE:"):])
         natural_gift = (EFFECTS / "effect_script_0222.s").read_text()
-        self.assertLess(natural_gift.index("GotoIfFirstHitOfParentalBond _KEEP_BERRY"),
-                        natural_gift.index("RemoveItem BATTLER_CATEGORY_ATTACKER"))
+        self.assertRegex(natural_gift, r"_000:\s*GotoIfSecondHitOfParentalBond _SECOND_STRIKE\s*CalcNaturalGiftParams _006"
+                                       r"\s*CalcCrit\s*CalcDamage\s*RemoveItem BATTLER_CATEGORY_ATTACKER")
+        self.assertNotIn("RemoveItem", natural_gift[natural_gift.index("_SECOND_STRIKE:"):])
 
 
 if __name__ == "__main__":
