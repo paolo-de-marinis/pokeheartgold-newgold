@@ -191,6 +191,44 @@ class ItemRangeTests(unittest.TestCase):
                 self.assertIn(names[item], value, f"msg_0223 row {item}")
 
 
+class ItemTextTests(unittest.TestCase):
+    """The four banks carry hg-engine's text, row = this game's item id.
+
+    hg-engine keeps descriptions, articles and plurals in banks 830..852 by
+    generation, and its 221/223/224 are one-row templates for custom items; the
+    port fills its flat banks from the engine's row for each item's reference
+    id (item_map.csv). Before this, 2045 descriptions read "Custom item
+    description" and the plurals were made up by a rule ("DNA Splicerses").
+    """
+
+    PINNED = {
+        221: {564: "Aromatic tea that has a slightly\\nbitter taste.\\nIt soothes a dry throat.",
+              # 850.txt stops five rows short; hg-engine shows nothing there.
+              2688: "", 2692: "", 1851: "N/A", 114: "- - -"},
+        222: {22: "Paralyze Heal", 328: "TM001", 469: "Unown Report", 564: "Tea",
+              113: "???", 1837: ""},
+        223: {657: "the {COLOR 255}DNA Splicers{COLOR 0}", 651: "???", 113: "???",
+              22: "a {COLOR 255}Paralyze Heal{COLOR 0}"},
+        224: {0: "None", 1: "{COLOR 255}Master Balls{COLOR 0}", 113: "???",
+              564: "{COLOR 255}cups of Tea{COLOR 0}", 657: "{COLOR 255}DNA Splicers{COLOR 0}"},
+    }
+
+    def test_pinned_rows_are_the_engines(self):
+        for bank, rows in self.PINNED.items():
+            text = message_text(ITEM_BANKS[bank - 221])
+            for index, want in rows.items():
+                self.assertEqual(text[index], want, f"msg_{bank:04d} row {index}")
+        self.assertNotIn("Custom item description", ITEM_BANKS[0].read_text(encoding="utf-8"))
+
+    def test_the_importer_reproduces_the_banks(self):
+        if REFERENCE is None:
+            self.skipTest("behaviour reference not present; the rows above are the pin")
+        import gmm
+        text = import_items.item_text(gmm.ENGINE, Path(REFERENCE))
+        self.assertEqual(import_items.write_text(text, items_count(), write=False), {},
+                         "run import_items.py REFERENCE --text-only --write")
+
+
 class ItemRangeAgainstTheReferenceTests(unittest.TestCase):
     """The whole of konefr's item range, under this tree's numbering.
 

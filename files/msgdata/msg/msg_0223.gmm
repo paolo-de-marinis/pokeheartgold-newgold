@@ -90,7 +90,7 @@
 	</row>
 	<row id="msg_0223_00022" index="22">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Parlyz Heal{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Paralyze Heal{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00023" index="23">
 		<attribute name="window_context_name">used</attribute>
@@ -138,7 +138,7 @@
 	</row>
 	<row id="msg_0223_00034" index="34">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}EnergyPowder{COLOR 0}</language>
+		<language name="English">an {COLOR 255}Energy Powder{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00035" index="35">
 		<attribute name="window_context_name">used</attribute>
@@ -234,7 +234,7 @@
 	</row>
 	<row id="msg_0223_00058" index="58">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}X Defend{COLOR 0}</language>
+		<language name="English">an {COLOR 255}X Defense{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00059" index="59">
 		<attribute name="window_context_name">used</attribute>
@@ -246,7 +246,7 @@
 	</row>
 	<row id="msg_0223_00061" index="61">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}X Special{COLOR 0}</language>
+		<language name="English">an {COLOR 255}X Sp. Atk{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00062" index="62">
 		<attribute name="window_context_name">used</attribute>
@@ -334,7 +334,7 @@
 	</row>
 	<row id="msg_0223_00083" index="83">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Thunderstone{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Thunder Stone{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00084" index="84">
 		<attribute name="window_context_name">used</attribute>
@@ -346,7 +346,7 @@
 	</row>
 	<row id="msg_0223_00086" index="86">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TinyMushroom{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Tiny Mushroom{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00087" index="87">
 		<attribute name="window_context_name">used</attribute>
@@ -490,31 +490,31 @@
 	</row>
 	<row id="msg_0223_00122" index="122">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English">a {COLOR 255}Medicine Pocket{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00123" index="123">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English">a {COLOR 255}TM Case{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00124" index="124">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English">a {COLOR 255}Candy Jar{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00125" index="125">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English">a {COLOR 255}Power-Up Pocket{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00126" index="126">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English">a {COLOR 255}Clothing Trunk{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00127" index="127">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English">a {COLOR 255}Catching Pocket{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00128" index="128">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English">a {COLOR 255}Battle Pocket{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00129" index="129">
 		<attribute name="window_context_name">used</attribute>
@@ -854,7 +854,7 @@
 	</row>
 	<row id="msg_0223_00213" index="213">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}BrightPowder{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Bright Powder{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00214" index="214">
 		<attribute name="window_context_name">used</attribute>
@@ -890,7 +890,7 @@
 	</row>
 	<row id="msg_0223_00222" index="222">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}SilverPowder{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Silver Powder{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00223" index="223">
 		<attribute name="window_context_name">used</attribute>
@@ -906,11 +906,11 @@
 	</row>
 	<row id="msg_0223_00226" index="226">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}DeepSeaTooth{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Deep Sea Tooth{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00227" index="227">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}DeepSeaScale{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Deep Sea Scale{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00228" index="228">
 		<attribute name="window_context_name">used</attribute>
@@ -962,7 +962,7 @@
 	</row>
 	<row id="msg_0223_00240" index="240">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">the {COLOR 255}BlackGlasses{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Black Glasses{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00241" index="241">
 		<attribute name="window_context_name">used</attribute>
@@ -986,7 +986,7 @@
 	</row>
 	<row id="msg_0223_00246" index="246">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}NeverMeltIce{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Never-Melt Ice{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00247" index="247">
 		<attribute name="window_context_name">used</attribute>
@@ -994,7 +994,7 @@
 	</row>
 	<row id="msg_0223_00248" index="248">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TwistedSpoon{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Twisted Spoon{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00249" index="249">
 		<attribute name="window_context_name">used</attribute>
@@ -1010,7 +1010,7 @@
 	</row>
 	<row id="msg_0223_00252" index="252">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Up-Grade{COLOR 0}</language>
+		<language name="English">an {COLOR 255}Upgrade{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00253" index="253">
 		<attribute name="window_context_name">used</attribute>
@@ -1038,7 +1038,7 @@
 	</row>
 	<row id="msg_0223_00259" index="259">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Stick{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Leek{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00260" index="260">
 		<attribute name="window_context_name">used</attribute>
@@ -1314,371 +1314,371 @@
 	</row>
 	<row id="msg_0223_00328" index="328">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM01{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM001{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00329" index="329">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM02{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM002{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00330" index="330">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM03{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM003{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00331" index="331">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM04{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM004{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00332" index="332">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM05{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM005{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00333" index="333">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM06{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM006{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00334" index="334">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM07{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM007{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00335" index="335">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM08{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM008{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00336" index="336">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM09{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM009{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00337" index="337">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM10{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM010{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00338" index="338">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM11{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM011{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00339" index="339">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM12{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM012{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00340" index="340">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM13{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM013{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00341" index="341">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM14{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM014{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00342" index="342">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM15{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM015{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00343" index="343">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM16{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM016{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00344" index="344">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM17{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM017{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00345" index="345">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM18{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM018{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00346" index="346">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM19{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM019{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00347" index="347">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM20{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM020{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00348" index="348">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM21{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM021{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00349" index="349">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM22{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM022{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00350" index="350">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM23{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM023{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00351" index="351">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM24{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM024{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00352" index="352">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM25{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM025{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00353" index="353">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM26{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM026{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00354" index="354">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM27{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM027{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00355" index="355">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM28{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM028{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00356" index="356">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM29{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM029{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00357" index="357">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM30{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM030{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00358" index="358">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM31{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM031{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00359" index="359">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM32{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM032{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00360" index="360">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM33{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM033{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00361" index="361">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM34{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM034{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00362" index="362">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM35{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM035{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00363" index="363">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM36{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM036{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00364" index="364">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM37{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM037{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00365" index="365">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM38{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM038{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00366" index="366">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM39{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM039{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00367" index="367">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM40{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM040{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00368" index="368">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM41{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM041{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00369" index="369">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM42{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM042{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00370" index="370">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM43{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM043{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00371" index="371">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM44{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM044{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00372" index="372">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM45{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM045{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00373" index="373">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM46{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM046{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00374" index="374">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM47{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM047{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00375" index="375">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM48{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM048{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00376" index="376">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM49{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM049{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00377" index="377">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM50{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM050{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00378" index="378">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM51{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM051{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00379" index="379">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM52{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM052{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00380" index="380">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM53{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM053{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00381" index="381">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM54{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM054{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00382" index="382">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM55{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM055{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00383" index="383">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM56{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM056{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00384" index="384">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM57{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM057{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00385" index="385">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM58{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM058{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00386" index="386">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM59{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM059{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00387" index="387">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM60{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM060{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00388" index="388">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM61{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM061{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00389" index="389">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM62{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM062{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00390" index="390">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM63{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM063{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00391" index="391">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM64{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM064{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00392" index="392">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM65{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM065{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00393" index="393">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM66{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM066{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00394" index="394">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM67{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM067{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00395" index="395">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM68{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM068{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00396" index="396">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM69{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM069{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00397" index="397">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM70{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM070{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00398" index="398">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM71{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM071{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00399" index="399">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM72{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM072{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00400" index="400">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM73{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM073{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00401" index="401">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM74{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM074{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00402" index="402">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM75{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM075{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00403" index="403">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM76{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM076{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00404" index="404">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM77{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM077{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00405" index="405">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM78{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM078{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00406" index="406">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM79{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM079{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00407" index="407">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM80{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM080{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00408" index="408">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM81{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM081{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00409" index="409">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM82{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM082{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00410" index="410">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM83{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM083{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00411" index="411">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM84{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM084{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00412" index="412">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM85{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM085{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00413" index="413">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM86{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM086{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00414" index="414">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM87{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM087{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00415" index="415">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM88{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM088{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00416" index="416">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM89{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM089{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00417" index="417">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM90{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM090{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00418" index="418">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM91{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM091{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00419" index="419">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}TM92{COLOR 0}</language>
+		<language name="English">a {COLOR 255}TM092{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00420" index="420">
 		<attribute name="window_context_name">used</attribute>
@@ -1714,7 +1714,7 @@
 	</row>
 	<row id="msg_0223_00428" index="428">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English">an {COLOR 255}Explorer Kit{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00429" index="429">
 		<attribute name="window_context_name">used</attribute>
@@ -1734,11 +1734,11 @@
 	</row>
 	<row id="msg_0223_00433" index="433">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Journal{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Guidebook{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00434" index="434">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Seal Case{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Sticker Case{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00435" index="435">
 		<attribute name="window_context_name">used</attribute>
@@ -1746,7 +1746,7 @@
 	</row>
 	<row id="msg_0223_00436" index="436">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Seal Bag{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Sticker Bag{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00437" index="437">
 		<attribute name="window_context_name">used</attribute>
@@ -1802,7 +1802,7 @@
 	</row>
 	<row id="msg_0223_00450" index="450">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Bicycle{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Bike{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00451" index="451">
 		<attribute name="window_context_name">used</attribute>
@@ -1814,7 +1814,7 @@
 	</row>
 	<row id="msg_0223_00453" index="453">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Lunar Wing{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Lunar Feather{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00454" index="454">
 		<attribute name="window_context_name">used</attribute>
@@ -1858,7 +1858,7 @@
 	</row>
 	<row id="msg_0223_00464" index="464">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}SecretPotion{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Secret Medicine{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00465" index="465">
 		<attribute name="window_context_name">used</attribute>
@@ -1878,7 +1878,7 @@
 	</row>
 	<row id="msg_0223_00469" index="469">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}UNOWN Report{COLOR 0}</language>
+		<language name="English">an {COLOR 255}Unown Report{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00470" index="470">
 		<attribute name="window_context_name">used</attribute>
@@ -1886,7 +1886,7 @@
 	</row>
 	<row id="msg_0223_00471" index="471">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Dowsing MCHN{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Dowsing Machine{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00472" index="472">
 		<attribute name="window_context_name">used</attribute>
@@ -1894,7 +1894,7 @@
 	</row>
 	<row id="msg_0223_00473" index="473">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}SlowpokeTail{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Slowpoke Tail{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00474" index="474">
 		<attribute name="window_context_name">used</attribute>
@@ -1910,7 +1910,7 @@
 	</row>
 	<row id="msg_0223_00477" index="477">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}SquirtBottle{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Squirt Bottle{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00478" index="478">
 		<attribute name="window_context_name">used</attribute>
@@ -1930,11 +1930,11 @@
 	</row>
 	<row id="msg_0223_00482" index="482">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Silver Wing{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Silver Feather{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00483" index="483">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Rainbow Wing{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Rainbow Feather{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00484" index="484">
 		<attribute name="window_context_name">used</attribute>
@@ -1946,27 +1946,27 @@
 	</row>
 	<row id="msg_0223_00486" index="486">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Ylw Apricorn{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Yellow Apricorn{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00487" index="487">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Blu Apricorn{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Blue Apricorn{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00488" index="488">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Grn Apricorn{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Green Apricorn{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00489" index="489">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Pnk Apricorn{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Pink Apricorn{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00490" index="490">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Wht Apricorn{COLOR 0}</language>
+		<language name="English">a {COLOR 255}White Apricorn{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00491" index="491">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Blk Apricorn{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Black Apricorn{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00492" index="492">
 		<attribute name="window_context_name">used</attribute>
@@ -2018,7 +2018,7 @@
 	</row>
 	<row id="msg_0223_00504" index="504">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}RageCandyBar{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Rage Candy Bar{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00505" index="505">
 		<attribute name="window_context_name">used</attribute>
@@ -2218,7 +2218,7 @@
 	</row>
 	<row id="msg_0223_00554" index="554">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Scroll of Waters{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Scroll of Waters{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00555" index="555">
 		<attribute name="window_context_name">used</attribute>
@@ -2606,7 +2606,7 @@
 	</row>
 	<row id="msg_0223_00651" index="651">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00652" index="652">
 		<attribute name="window_context_name">used</attribute>
@@ -2630,11 +2630,11 @@
 	</row>
 	<row id="msg_0223_00657" index="657">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}DNA Splicers{COLOR 0}</language>
+		<language name="English">the {COLOR 255}DNA Splicers{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00658" index="658">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}DNA Splicers{COLOR 0}</language>
+		<language name="English">the {COLOR 255}DNA Splicers{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00659" index="659">
 		<attribute name="window_context_name">used</attribute>
@@ -2690,7 +2690,7 @@
 	</row>
 	<row id="msg_0223_00672" index="672">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Roller Skates{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Roller Skates{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00673" index="673">
 		<attribute name="window_context_name">used</attribute>
@@ -2714,7 +2714,7 @@
 	</row>
 	<row id="msg_0223_00678" index="678">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Safety Goggles{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Safety Goggles{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00679" index="679">
 		<attribute name="window_context_name">used</attribute>
@@ -2922,7 +2922,7 @@
 	</row>
 	<row id="msg_0223_00730" index="730">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Honor of Kalos{COLOR 0}</language>
+		<language name="English">an {COLOR 255}Honor of Kalos{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00731" index="731">
 		<attribute name="window_context_name">used</attribute>
@@ -2998,7 +2998,7 @@
 	</row>
 	<row id="msg_0223_00749" index="749">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Devon Parts{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Devon Parts{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00750" index="750">
 		<attribute name="window_context_name">used</attribute>
@@ -3026,7 +3026,7 @@
 	</row>
 	<row id="msg_0223_00756" index="756">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Go-Goggles{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Go-Goggles{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00757" index="757">
 		<attribute name="window_context_name">used</attribute>
@@ -3058,7 +3058,7 @@
 	</row>
 	<row id="msg_0223_00764" index="764">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}S.S. Ticket{COLOR 0}</language>
+		<language name="English">an {COLOR 255}S.S. Ticket{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00765" index="765">
 		<attribute name="window_context_name">used</attribute>
@@ -3086,7 +3086,7 @@
 	</row>
 	<row id="msg_0223_00771" index="771">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Pair of Tickets{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Pair of Tickets{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00772" index="772">
 		<attribute name="window_context_name">used</attribute>
@@ -3098,7 +3098,7 @@
 	</row>
 	<row id="msg_0223_00774" index="774">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Mega Glasses{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Mega Glasses{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00775" index="775">
 		<attribute name="window_context_name">used</attribute>
@@ -3462,19 +3462,19 @@
 	</row>
 	<row id="msg_0223_00865" index="865">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00866" index="866">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00867" index="867">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00868" index="868">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00869" index="869">
 		<attribute name="window_context_name">used</attribute>
@@ -3506,7 +3506,7 @@
 	</row>
 	<row id="msg_0223_00876" index="876">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00877" index="877">
 		<attribute name="window_context_name">used</attribute>
@@ -3546,7 +3546,7 @@
 	</row>
 	<row id="msg_0223_00886" index="886">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00887" index="887">
 		<attribute name="window_context_name">used</attribute>
@@ -3578,23 +3578,23 @@
 	</row>
 	<row id="msg_0223_00894" index="894">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00895" index="895">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00896" index="896">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00897" index="897">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00898" index="898">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00899" index="899">
 		<attribute name="window_context_name">used</attribute>
@@ -3602,7 +3602,7 @@
 	</row>
 	<row id="msg_0223_00900" index="900">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}S.S. Ticket{COLOR 0}</language>
+		<language name="English">an {COLOR 255}S.S. Ticket{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00901" index="901">
 		<attribute name="window_context_name">used</attribute>
@@ -3630,7 +3630,7 @@
 	</row>
 	<row id="msg_0223_00907" index="907">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Protective Pads{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Protective Pads{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00908" index="908">
 		<attribute name="window_context_name">used</attribute>
@@ -3682,15 +3682,15 @@
 	</row>
 	<row id="msg_0223_00920" index="920">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00921" index="921">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00922" index="922">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_00923" index="923">
 		<attribute name="window_context_name">used</attribute>
@@ -3706,7 +3706,7 @@
 	</row>
 	<row id="msg_0223_00926" index="926">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Pewter Crunchies{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Pewter Crunchies{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00927" index="927">
 		<attribute name="window_context_name">used</attribute>
@@ -3866,19 +3866,19 @@
 	</row>
 	<row id="msg_0223_00966" index="966">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}N-Solarizer{COLOR 0}</language>
+		<language name="English">an {COLOR 255}N-Solarizer{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00967" index="967">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}N-Lunarizer{COLOR 0}</language>
+		<language name="English">an {COLOR 255}N-Lunarizer{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00968" index="968">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}N-Solarizer{COLOR 0}</language>
+		<language name="English">an {COLOR 255}N-Solarizer{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00969" index="969">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}N-Lunarizer{COLOR 0}</language>
+		<language name="English">an {COLOR 255}N-Lunarizer{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00970" index="970">
 		<attribute name="window_context_name">used</attribute>
@@ -3902,7 +3902,7 @@
 	</row>
 	<row id="msg_0223_00975" index="975">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Roto Exp. Points{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Roto Exp. Points{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_00976" index="976">
 		<attribute name="window_context_name">used</attribute>
@@ -4326,67 +4326,67 @@
 	</row>
 	<row id="msg_0223_01081" index="1081">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01082" index="1082">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01083" index="1083">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01084" index="1084">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01085" index="1085">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01086" index="1086">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01087" index="1087">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01088" index="1088">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01089" index="1089">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01090" index="1090">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01091" index="1091">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01092" index="1092">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01093" index="1093">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01094" index="1094">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01095" index="1095">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01096" index="1096">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01097" index="1097">
 		<attribute name="window_context_name">used</attribute>
@@ -4406,11 +4406,11 @@
 	</row>
 	<row id="msg_0223_01101" index="1101">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01102" index="1102">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01103" index="1103">
 		<attribute name="window_context_name">used</attribute>
@@ -4422,15 +4422,15 @@
 	</row>
 	<row id="msg_0223_01105" index="1105">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01106" index="1106">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01107" index="1107">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Sausages{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Sausages{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01108" index="1108">
 		<attribute name="window_context_name">used</attribute>
@@ -4442,7 +4442,7 @@
 	</row>
 	<row id="msg_0223_01110" index="1110">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Tin of Beans{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Tin of Beans{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01111" index="1111">
 		<attribute name="window_context_name">used</attribute>
@@ -4454,7 +4454,7 @@
 	</row>
 	<row id="msg_0223_01113" index="1113">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Mixed Mushrooms{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Mixed Mushrooms{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01114" index="1114">
 		<attribute name="window_context_name">used</attribute>
@@ -4470,11 +4470,11 @@
 	</row>
 	<row id="msg_0223_01117" index="1117">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Brittle Bones{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Brittle Bones{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01118" index="1118">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Pack of Potatoes{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Pack of Potatoes{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01119" index="1119">
 		<attribute name="window_context_name">used</attribute>
@@ -4498,11 +4498,11 @@
 	</row>
 	<row id="msg_0223_01124" index="1124">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01125" index="1125">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01126" index="1126">
 		<attribute name="window_context_name">used</attribute>
@@ -4566,7 +4566,7 @@
 	</row>
 	<row id="msg_0223_01141" index="1141">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Heavy-Duty Boots{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Heavy-Duty Boots{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01142" index="1142">
 		<attribute name="window_context_name">used</attribute>
@@ -4578,7 +4578,7 @@
 	</row>
 	<row id="msg_0223_01144" index="1144">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Utility Umbrella{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Utility Umbrella{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01145" index="1145">
 		<attribute name="window_context_name">used</attribute>
@@ -5098,7 +5098,7 @@
 	</row>
 	<row id="msg_0223_01274" index="1274">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Hi-tech Earbuds{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Hi-tech Earbuds{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01275" index="1275">
 		<attribute name="window_context_name">used</attribute>
@@ -5126,7 +5126,7 @@
 	</row>
 	<row id="msg_0223_01281" index="1281">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Instant Noodles{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Instant Noodles{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01282" index="1282">
 		<attribute name="window_context_name">used</attribute>
@@ -5150,7 +5150,7 @@
 	</row>
 	<row id="msg_0223_01287" index="1287">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01288" index="1288">
 		<attribute name="window_context_name">used</attribute>
@@ -5166,27 +5166,27 @@
 	</row>
 	<row id="msg_0223_01291" index="1291">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01292" index="1292">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01293" index="1293">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01294" index="1294">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01295" index="1295">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01296" index="1296">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01297" index="1297">
 		<attribute name="window_context_name">used</attribute>
@@ -5194,23 +5194,23 @@
 	</row>
 	<row id="msg_0223_01298" index="1298">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★And458{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★And458{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01299" index="1299">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★And15{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★And15{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01300" index="1300">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★And337{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★And337{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01301" index="1301">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★And603{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★And603{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01302" index="1302">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★And390{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★And390{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01303" index="1303">
 		<attribute name="window_context_name">used</attribute>
@@ -5354,51 +5354,51 @@
 	</row>
 	<row id="msg_0223_01338" index="1338">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri1084{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri1084{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01339" index="1339">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri472{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri472{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01340" index="1340">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri1666{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri1666{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01341" index="1341">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri897{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri897{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01342" index="1342">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri1231{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri1231{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01343" index="1343">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri874{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri874{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01344" index="1344">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri1298{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri1298{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01345" index="1345">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri1325{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri1325{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01346" index="1346">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri984{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri984{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01347" index="1347">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri1464{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri1464{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01348" index="1348">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri1393{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri1393{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01349" index="1349">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Eri850{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Eri850{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01350" index="1350">
 		<attribute name="window_context_name">used</attribute>
@@ -5466,63 +5466,63 @@
 	</row>
 	<row id="msg_0223_01366" index="1366">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa4905{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa4905{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01367" index="1367">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa4301{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa4301{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01368" index="1368">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa5191{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa5191{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01369" index="1369">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa5054{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa5054{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01370" index="1370">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa4295{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa4295{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01371" index="1371">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa4660{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa4660{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01372" index="1372">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa4554{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa4554{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01373" index="1373">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa4069{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa4069{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01374" index="1374">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa3569{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa3569{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01375" index="1375">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa3323{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa3323{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01376" index="1376">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa4033{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa4033{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01377" index="1377">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa4377{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa4377{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01378" index="1378">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa4375{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa4375{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01379" index="1379">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa4518{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa4518{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01380" index="1380">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMa3594{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMa3594{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01381" index="1381">
 		<attribute name="window_context_name">used</attribute>
@@ -5570,59 +5570,59 @@
 	</row>
 	<row id="msg_0223_01392" index="1392">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ari617{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ari617{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01393" index="1393">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ari553{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ari553{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01394" index="1394">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ari546{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ari546{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01395" index="1395">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ari951{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ari951{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01396" index="1396">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ori1713{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ori1713{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01397" index="1397">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ori2061{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ori2061{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01398" index="1398">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ori1790{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ori1790{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01399" index="1399">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ori1903{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ori1903{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01400" index="1400">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ori1948{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ori1948{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01401" index="1401">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ori2004{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ori2004{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01402" index="1402">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ori1852{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ori1852{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01403" index="1403">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ori1879{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ori1879{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01404" index="1404">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ori1899{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ori1899{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01405" index="1405">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ori1543{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ori1543{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01406" index="1406">
 		<attribute name="window_context_name">used</attribute>
@@ -5706,31 +5706,31 @@
 	</row>
 	<row id="msg_0223_01426" index="1426">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aur1708{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aur1708{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01427" index="1427">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aur2088{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aur2088{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01428" index="1428">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aur1605{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aur1605{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01429" index="1429">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aur2095{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aur2095{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01430" index="1430">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aur1577{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aur1577{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01431" index="1431">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aur1641{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aur1641{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01432" index="1432">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aur1612{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aur1612{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01433" index="1433">
 		<attribute name="window_context_name">used</attribute>
@@ -5802,7 +5802,7 @@
 	</row>
 	<row id="msg_0223_01450" index="1450">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Equ8131{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Equ8131{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01451" index="1451">
 		<attribute name="window_context_name">used</attribute>
@@ -5810,19 +5810,19 @@
 	</row>
 	<row id="msg_0223_01452" index="1452">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMi424{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMi424{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01453" index="1453">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMi5563{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMi5563{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01454" index="1454">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMi5735{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMi5735{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01455" index="1455">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★UMi6789{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★UMi6789{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01456" index="1456">
 		<attribute name="window_context_name">used</attribute>
@@ -5846,7 +5846,7 @@
 	</row>
 	<row id="msg_0223_01461" index="1461">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Ara6585{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Ara6585{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01462" index="1462">
 		<attribute name="window_context_name">used</attribute>
@@ -6014,7 +6014,7 @@
 	</row>
 	<row id="msg_0223_01503" index="1503">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Oct7228{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Oct7228{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01504" index="1504">
 		<attribute name="window_context_name">used</attribute>
@@ -6110,27 +6110,27 @@
 	</row>
 	<row id="msg_0223_01527" index="1527">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Oph6556{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Oph6556{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01528" index="1528">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Oph6378{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Oph6378{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01529" index="1529">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Oph6603{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Oph6603{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01530" index="1530">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Oph6149{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Oph6149{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01531" index="1531">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Oph6056{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Oph6056{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01532" index="1532">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Oph6075{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Oph6075{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01533" index="1533">
 		<attribute name="window_context_name">used</attribute>
@@ -6214,35 +6214,35 @@
 	</row>
 	<row id="msg_0223_01553" index="1553">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aqr8232{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aqr8232{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01554" index="1554">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aqr8414{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aqr8414{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01555" index="1555">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aqr8709{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aqr8709{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01556" index="1556">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aqr8518{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aqr8518{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01557" index="1557">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aqr7950{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aqr7950{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01558" index="1558">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aqr8499{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aqr8499{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01559" index="1559">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aqr8610{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aqr8610{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01560" index="1560">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aqr8264{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aqr8264{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01561" index="1561">
 		<attribute name="window_context_name">used</attribute>
@@ -6374,23 +6374,23 @@
 	</row>
 	<row id="msg_0223_01593" index="1593">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aql7595{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aql7595{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01594" index="1594">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aql7557{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aql7557{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01595" index="1595">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aql7525{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aql7525{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01596" index="1596">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aql7602{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aql7602{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01597" index="1597">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}★Aql7235{COLOR 0}</language>
+		<language name="English">an {COLOR 255}★Aql7235{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01598" index="1598">
 		<attribute name="window_context_name">used</attribute>
@@ -6398,7 +6398,7 @@
 	</row>
 	<row id="msg_0223_01599" index="1599">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Max Mushrooms{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Max Mushrooms{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01600" index="1600">
 		<attribute name="window_context_name">used</attribute>
@@ -6490,7 +6490,7 @@
 	</row>
 	<row id="msg_0223_01622" index="1622">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Carrot Seeds{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Carrot Seeds{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01623" index="1623">
 		<attribute name="window_context_name">used</attribute>
@@ -6558,7 +6558,7 @@
 	</row>
 	<row id="msg_0223_01639" index="1639">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01640" index="1640">
 		<attribute name="window_context_name">used</attribute>
@@ -6598,11 +6598,11 @@
 	</row>
 	<row id="msg_0223_01649" index="1649">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Hearty Grains{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Hearty Grains{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01650" index="1650">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Plump Beans{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Plump Beans{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01651" index="1651">
 		<attribute name="window_context_name">used</attribute>
@@ -6646,7 +6646,7 @@
 	</row>
 	<row id="msg_0223_01661" index="1661">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01662" index="1662">
 		<attribute name="window_context_name">used</attribute>
@@ -6754,7 +6754,7 @@
 	</row>
 	<row id="msg_0223_01688" index="1688">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01689" index="1689">
 		<attribute name="window_context_name">used</attribute>
@@ -6786,7 +6786,7 @@
 	</row>
 	<row id="msg_0223_01696" index="1696">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01697" index="1697">
 		<attribute name="window_context_name">used</attribute>
@@ -6798,7 +6798,7 @@
 	</row>
 	<row id="msg_0223_01699" index="1699">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01700" index="1700">
 		<attribute name="window_context_name">used</attribute>
@@ -6806,7 +6806,7 @@
 	</row>
 	<row id="msg_0223_01701" index="1701">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01702" index="1702">
 		<attribute name="window_context_name">used</attribute>
@@ -6846,11 +6846,11 @@
 	</row>
 	<row id="msg_0223_01711" index="1711">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01712" index="1712">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01713" index="1713">
 		<attribute name="window_context_name">used</attribute>
@@ -6870,7 +6870,7 @@
 	</row>
 	<row id="msg_0223_01717" index="1717">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Doppel Bonnets{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Doppel Bonnets{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01718" index="1718">
 		<attribute name="window_context_name">used</attribute>
@@ -6914,11 +6914,11 @@
 	</row>
 	<row id="msg_0223_01728" index="1728">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01729" index="1729">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01730" index="1730">
 		<attribute name="window_context_name">used</attribute>
@@ -6930,11 +6930,11 @@
 	</row>
 	<row id="msg_0223_01732" index="1732">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01733" index="1733">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01734" index="1734">
 		<attribute name="window_context_name">used</attribute>
@@ -7138,7 +7138,7 @@
 	</row>
 	<row id="msg_0223_01784" index="1784">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01785" index="1785">
 		<attribute name="window_context_name">used</attribute>
@@ -7146,19 +7146,19 @@
 	</row>
 	<row id="msg_0223_01786" index="1786">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01787" index="1787">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01788" index="1788">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01789" index="1789">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01790" index="1790">
 		<attribute name="window_context_name">used</attribute>
@@ -7182,7 +7182,7 @@
 	</row>
 	<row id="msg_0223_01795" index="1795">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01796" index="1796">
 		<attribute name="window_context_name">used</attribute>
@@ -7222,7 +7222,7 @@
 	</row>
 	<row id="msg_0223_01805" index="1805">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_01806" index="1806">
 		<attribute name="window_context_name">used</attribute>
@@ -7346,27 +7346,27 @@
 	</row>
 	<row id="msg_0223_01836" index="1836">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}DS Sounds{COLOR 0}</language>
+		<language name="English">the {COLOR 255}DS Sounds{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01837" index="1837">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01838" index="1838">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01839" index="1839">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01840" index="1840">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01841" index="1841">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01842" index="1842">
 		<attribute name="window_context_name">used</attribute>
@@ -7406,23 +7406,23 @@
 	</row>
 	<row id="msg_0223_01851" index="1851">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01852" index="1852">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01853" index="1853">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01854" index="1854">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01855" index="1855">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01856" index="1856">
 		<attribute name="window_context_name">used</attribute>
@@ -7434,63 +7434,63 @@
 	</row>
 	<row id="msg_0223_01858" index="1858">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01859" index="1859">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01860" index="1860">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01861" index="1861">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01862" index="1862">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01863" index="1863">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01864" index="1864">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01865" index="1865">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01866" index="1866">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01867" index="1867">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01868" index="1868">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01869" index="1869">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01870" index="1870">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01871" index="1871">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01872" index="1872">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01873" index="1873">
 		<attribute name="window_context_name">used</attribute>
@@ -7594,7 +7594,7 @@
 	</row>
 	<row id="msg_0223_01898" index="1898">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01899" index="1899">
 		<attribute name="window_context_name">used</attribute>
@@ -7690,7 +7690,7 @@
 	</row>
 	<row id="msg_0223_01922" index="1922">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Cherry Tomatoes{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Cherry Tomatoes{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01923" index="1923">
 		<attribute name="window_context_name">used</attribute>
@@ -7778,7 +7778,7 @@
 	</row>
 	<row id="msg_0223_01944" index="1944">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Noodles{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Noodles{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01945" index="1945">
 		<attribute name="window_context_name">used</attribute>
@@ -7834,39 +7834,39 @@
 	</row>
 	<row id="msg_0223_01958" index="1958">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01959" index="1959">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01960" index="1960">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01961" index="1961">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01962" index="1962">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01963" index="1963">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01964" index="1964">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01965" index="1965">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01966" index="1966">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_01967" index="1967">
 		<attribute name="window_context_name">used</attribute>
@@ -7910,7 +7910,7 @@
 	</row>
 	<row id="msg_0223_01977" index="1977">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Gastly Gas{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Gastly Gas{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01978" index="1978">
 		<attribute name="window_context_name">used</attribute>
@@ -7918,7 +7918,7 @@
 	</row>
 	<row id="msg_0223_01979" index="1979">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Voltorb Sparks{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Voltorb Sparks{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01980" index="1980">
 		<attribute name="window_context_name">used</attribute>
@@ -7930,7 +7930,7 @@
 	</row>
 	<row id="msg_0223_01982" index="1982">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Magikarp Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Magikarp Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01983" index="1983">
 		<attribute name="window_context_name">used</attribute>
@@ -7942,7 +7942,7 @@
 	</row>
 	<row id="msg_0223_01985" index="1985">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Dratini Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Dratini Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01986" index="1986">
 		<attribute name="window_context_name">used</attribute>
@@ -7970,7 +7970,7 @@
 	</row>
 	<row id="msg_0223_01992" index="1992">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Misdreavus Tears{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Misdreavus Tears{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01993" index="1993">
 		<attribute name="window_context_name">used</attribute>
@@ -7982,11 +7982,11 @@
 	</row>
 	<row id="msg_0223_01995" index="1995">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Dunsparce Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Dunsparce Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01996" index="1996">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Qwilfish Spines{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Qwilfish Spines{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_01997" index="1997">
 		<attribute name="window_context_name">used</attribute>
@@ -8034,7 +8034,7 @@
 	</row>
 	<row id="msg_0223_02008" index="2008">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Shroomish Spores{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Shroomish Spores{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02009" index="2009">
 		<attribute name="window_context_name">used</attribute>
@@ -8106,11 +8106,11 @@
 	</row>
 	<row id="msg_0223_02026" index="2026">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Luvdisc Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Luvdisc Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02027" index="2027">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Bagon Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Bagon Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02028" index="2028">
 		<attribute name="window_context_name">used</attribute>
@@ -8142,7 +8142,7 @@
 	</row>
 	<row id="msg_0223_02035" index="2035">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Drifloon Gas{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Drifloon Gas{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02036" index="2036">
 		<attribute name="window_context_name">used</attribute>
@@ -8154,7 +8154,7 @@
 	</row>
 	<row id="msg_0223_02038" index="2038">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Bonsly Tears{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Bonsly Tears{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02039" index="2039">
 		<attribute name="window_context_name">used</attribute>
@@ -8166,7 +8166,7 @@
 	</row>
 	<row id="msg_0223_02041" index="2041">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Gible Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Gible Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02042" index="2042">
 		<attribute name="window_context_name">used</attribute>
@@ -8182,15 +8182,15 @@
 	</row>
 	<row id="msg_0223_02045" index="2045">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Finneon Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Finneon Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02046" index="2046">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Snover Berries{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Snover Berries{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02047" index="2047">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Rotom Sparks{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Rotom Sparks{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02048" index="2048">
 		<attribute name="window_context_name">used</attribute>
@@ -8218,7 +8218,7 @@
 	</row>
 	<row id="msg_0223_02054" index="2054">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Foongus Spores{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Foongus Spores{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02055" index="2055">
 		<attribute name="window_context_name">used</attribute>
@@ -8230,7 +8230,7 @@
 	</row>
 	<row id="msg_0223_02057" index="2057">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Axew Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Axew Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02058" index="2058">
 		<attribute name="window_context_name">used</attribute>
@@ -8250,7 +8250,7 @@
 	</row>
 	<row id="msg_0223_02062" index="2062">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Deino Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Deino Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02063" index="2063">
 		<attribute name="window_context_name">used</attribute>
@@ -8338,7 +8338,7 @@
 	</row>
 	<row id="msg_0223_02084" index="2084">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Salandit Gas{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Salandit Gas{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02085" index="2085">
 		<attribute name="window_context_name">used</attribute>
@@ -8378,7 +8378,7 @@
 	</row>
 	<row id="msg_0223_02094" index="2094">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Arrokuda Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Arrokuda Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02095" index="2095">
 		<attribute name="window_context_name">used</attribute>
@@ -8386,7 +8386,7 @@
 	</row>
 	<row id="msg_0223_02096" index="2096">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Toxel Sparks{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Toxel Sparks{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02097" index="2097">
 		<attribute name="window_context_name">used</attribute>
@@ -8410,7 +8410,7 @@
 	</row>
 	<row id="msg_0223_02102" index="2102">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Pincurchin Spines{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Pincurchin Spines{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02103" index="2103">
 		<attribute name="window_context_name">used</attribute>
@@ -8446,15 +8446,15 @@
 	</row>
 	<row id="msg_0223_02111" index="2111">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02112" index="2112">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02113" index="2113">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02114" index="2114">
 		<attribute name="window_context_name">used</attribute>
@@ -8526,15 +8526,15 @@
 	</row>
 	<row id="msg_0223_02131" index="2131">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Frigibax Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Frigibax Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02132" index="2132">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Tatsugiri Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Tatsugiri Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02133" index="2133">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Cyclizar Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Cyclizar Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02134" index="2134">
 		<attribute name="window_context_name">used</attribute>
@@ -8542,11 +8542,11 @@
 	</row>
 	<row id="msg_0223_02135" index="2135">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02136" index="2136">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02137" index="2137">
 		<attribute name="window_context_name">used</attribute>
@@ -8598,75 +8598,75 @@
 	</row>
 	<row id="msg_0223_02149" index="2149">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02150" index="2150">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02151" index="2151">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02152" index="2152">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02153" index="2153">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02154" index="2154">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02155" index="2155">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02156" index="2156">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02157" index="2157">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02158" index="2158">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02159" index="2159">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02160" index="2160">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02161" index="2161">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02162" index="2162">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02163" index="2163">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02164" index="2164">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02165" index="2165">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02166" index="2166">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02167" index="2167">
 		<attribute name="window_context_name">used</attribute>
@@ -8678,7 +8678,7 @@
 	</row>
 	<row id="msg_0223_02169" index="2169">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Toedscool Flaps{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Toedscool Flaps{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02170" index="2170">
 		<attribute name="window_context_name">used</attribute>
@@ -9206,87 +9206,87 @@
 	</row>
 	<row id="msg_0223_02301" index="2301">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02302" index="2302">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02303" index="2303">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02304" index="2304">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02305" index="2305">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02306" index="2306">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02307" index="2307">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02308" index="2308">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02309" index="2309">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02310" index="2310">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02311" index="2311">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02312" index="2312">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02313" index="2313">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02314" index="2314">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02315" index="2315">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02316" index="2316">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02317" index="2317">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02318" index="2318">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02319" index="2319">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02320" index="2320">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02321" index="2321">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02322" index="2322">
 		<attribute name="window_context_name">used</attribute>
@@ -9294,7 +9294,7 @@
 	</row>
 	<row id="msg_0223_02323" index="2323">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02324" index="2324">
 		<attribute name="window_context_name">used</attribute>
@@ -9358,7 +9358,7 @@
 	</row>
 	<row id="msg_0223_02339" index="2339">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02340" index="2340">
 		<attribute name="window_context_name">used</attribute>
@@ -9418,7 +9418,7 @@
 	</row>
 	<row id="msg_0223_02354" index="2354">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02355" index="2355">
 		<attribute name="window_context_name">used</attribute>
@@ -9426,11 +9426,11 @@
 	</row>
 	<row id="msg_0223_02356" index="2356">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02357" index="2357">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">???</language>
+		<language name="English"></language>
 	</row>
 	<row id="msg_0223_02358" index="2358">
 		<attribute name="window_context_name">used</attribute>
@@ -9518,7 +9518,7 @@
 	</row>
 	<row id="msg_0223_02379" index="2379">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}B&W Grass Tablecloth{COLOR 0}</language>
+		<language name="English">a {COLOR 255}B&amp;W Grass Tablecloth{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02380" index="2380">
 		<attribute name="window_context_name">used</attribute>
@@ -9706,27 +9706,27 @@
 	</row>
 	<row id="msg_0223_02426" index="2426">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Simple Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Simple Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02427" index="2427">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Academy Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Academy Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02428" index="2428">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Academy Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Academy Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02429" index="2429">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Whimsical Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Whimsical Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02430" index="2430">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Leafy Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Leafy Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02431" index="2431">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Spooky Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Spooky Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02432" index="2432">
 		<attribute name="window_context_name">used</attribute>
@@ -9742,51 +9742,51 @@
 	</row>
 	<row id="msg_0223_02435" index="2435">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}B&W Grass Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}B&amp;W Grass Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02436" index="2436">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Battle Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Battle Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02437" index="2437">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Monstrous Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Monstrous Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02438" index="2438">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Striped Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Striped Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02439" index="2439">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Diamond Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Diamond Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02440" index="2440">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Polka-Dot Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Polka-Dot Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02441" index="2441">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Lilac Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Lilac Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02442" index="2442">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Mint Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Mint Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02443" index="2443">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Peach Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Peach Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02444" index="2444">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Yellow Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Yellow Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02445" index="2445">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Blue Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Blue Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02446" index="2446">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Pink Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Pink Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02447" index="2447">
 		<attribute name="window_context_name">used</attribute>
@@ -9818,7 +9818,7 @@
 	</row>
 	<row id="msg_0223_02454" index="2454">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Koffing Gas{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Koffing Gas{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02455" index="2455">
 		<attribute name="window_context_name">used</attribute>
@@ -9886,7 +9886,7 @@
 	</row>
 	<row id="msg_0223_02471" index="2471">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Feebas Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Feebas Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02472" index="2472">
 		<attribute name="window_context_name">used</attribute>
@@ -9938,7 +9938,7 @@
 	</row>
 	<row id="msg_0223_02484" index="2484">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Jangmo-o Scales{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Jangmo-o Scales{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02485" index="2485">
 		<attribute name="window_context_name">used</attribute>
@@ -10018,7 +10018,7 @@
 	</row>
 	<row id="msg_0223_02504" index="2504">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Chinchou Sparks{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Chinchou Sparks{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02505" index="2505">
 		<attribute name="window_context_name">used</attribute>
@@ -10242,7 +10242,7 @@
 	</row>
 	<row id="msg_0223_02560" index="2560">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}Blueberry Chairs{COLOR 0}</language>
+		<language name="English">the {COLOR 255}Blueberry Chairs{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02561" index="2561">
 		<attribute name="window_context_name">used</attribute>
@@ -10310,11 +10310,11 @@
 	</row>
 	<row id="msg_0223_02577" index="2577">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Emboarite{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Emboarite{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02578" index="2578">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Excadrite{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Excadrite{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02579" index="2579">
 		<attribute name="window_context_name">used</attribute>
@@ -10406,11 +10406,11 @@
 	</row>
 	<row id="msg_0223_02601" index="2601">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_02602" index="2602">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_02603" index="2603">
 		<attribute name="window_context_name">used</attribute>
@@ -10478,7 +10478,7 @@
 	</row>
 	<row id="msg_0223_02619" index="2619">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Important Letter{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Important Letter{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02620" index="2620">
 		<attribute name="window_context_name">used</attribute>
@@ -10490,19 +10490,19 @@
 	</row>
 	<row id="msg_0223_02622" index="2622">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_02623" index="2623">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_02624" index="2624">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_02625" index="2625">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">a {COLOR 255}???{COLOR 0}</language>
+		<language name="English">???</language>
 	</row>
 	<row id="msg_0223_02626" index="2626">
 		<attribute name="window_context_name">used</attribute>
@@ -10586,7 +10586,7 @@
 	</row>
 	<row id="msg_0223_02646" index="2646">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">an {COLOR 255}Absolite Z{COLOR 0}</language>
+		<language name="English">a {COLOR 255}Absolite Z{COLOR 0}</language>
 	</row>
 	<row id="msg_0223_02647" index="2647">
 		<attribute name="window_context_name">used</attribute>

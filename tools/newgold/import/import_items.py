@@ -39,7 +39,8 @@ WHAT COMES OUT OF WHERE
     files/itemtool/itemdata/item_data.csv  the record, from data/itemdata/itemdata.c
     files/itemtool/itemdata/item_data.mk   the icon build rule
     files/itemtool/itemdata/item_icon/     the PNG, from data/graphics/item
-    files/msgdata/msg/msg_0221..0224.gmm   description, name, with-article, plural
+    files/msgdata/msg/msg_0221..0224.gmm   description, name, with-article, plural,
+                                           from data/text at --revision
     src/item.c                             sItemNarcIds
     tools/newgold/import/item_map.csv             the mapping
 
@@ -52,16 +53,20 @@ rather than 1610 more copies of the same empty square.
 Every run rewrites its own generated blocks rather than appending to them, so
 running it twice is running it once.
 
-Usage: import_items.py REFERENCE_CHECKOUT [--write] [--limit N]
+Usage: import_items.py REFERENCE_CHECKOUT [--write] [--limit N] [--revision REV] [--text-only]
 Without --write it reports what it would change and touches nothing.
+--text-only rewrites the four item banks from item_map.csv and nothing else.
 """
 
 import argparse
+import bisect
 import csv
 import hashlib
 import re
 import shutil
 from pathlib import Path
+
+import gmm
 
 ROOT = Path(__file__).resolve().parents[3]
 ITEMS_H = ROOT / "include/constants/items.h"
@@ -69,7 +74,6 @@ ITEM_CSV = ROOT / "files/itemtool/itemdata/item_data.csv"
 ITEM_MK = ROOT / "files/itemtool/itemdata/item_data.mk"
 ICON_DIR = ROOT / "files/itemtool/itemdata/item_icon"
 ITEM_C = ROOT / "src/item.c"
-MSG = ROOT / "files/msgdata/msg"
 ITEM_MAP = ROOT / "tools/newgold/import/item_map.csv"
 
 # The last item HeartGold had. Up to here the two trees hold the same item at
@@ -120,11 +124,17 @@ HOLD_EFFECT_ALIASES = {
     "HOLD_EFFECT_EVIOLITE": "HOLD_EFFECT_BOOST_IF_NOT_EVOLVED",
 }
 
-# The reference's description bank, data/text/221.txt, is a single line for the
-# whole game -- there is no per-item description to carry. An imported item gets
-# that line, which is what konefr's own bag shows. Writing real descriptions is
-# prose, not an import.
-NO_DESCRIPTION = "Custom item description"
+# hg-engine keeps an item's text by generation, not in the retail banks: its
+# description, its name with an article and its plural are banks 830, 831 and
+# 832 plus four for each generation after the fourth (833 and every fourth
+# after it is a "give item" wording nothing reads), at the item's id less the
+# first id of its generation -- ITEM_GENERATION and ITEM_MSG_OFFSET in its
+# include/constants/item.h. Its 221, 223 and 224 are one row each, the text for
+# an item past the Canari Bread, which no item is. Its names stay flat in 222.
+# This game keeps one flat bank for each, indexed by its own id, so each row is
+# filled from the engine's bank for the item's reference id.
+GENERATION_ENDS = ("ITEM_ENIGMA_STONE", "ITEM_REVEAL_GLASS", "ITEM_EON_FLUTE",
+                   "ITEM_UNKNOWN_1073", "ITEM_LEGEND_PLATE", "ITEM_CANARI_BREAD")
 
 # What a previous run wrote, so a run reads what was here before it.
 GENERATED = {
@@ -443,61 +453,55 @@ def record(reference, name, fields, effects, report):
 
 # --- the text ------------------------------------------------------------
 
-# A letter that is read aloud starting with a vowel, for the items whose name
-# begins with an initialism: an HM01, an X Attack, a TM01.
-SPOKEN_VOWEL = set("AEFHILMNORSX")
 
+def item_text(revision, reference=gmm.REFERENCE):
+    """bank -> {item id here: text}, hg-engine's item text at a revision.
 
-def with_article(name):
-    first = name.split()[0]
-    if re.fullmatch(r"[A-Z]{1,3}\d*\.?", first):
-        article = "an" if first[0] in SPOKEN_VOWEL else "a"
-    else:
-        article = "an" if name[0].upper() in "AEIOU" else "a"
-    return f"{article} {{COLOR 255}}{name}{{COLOR 0}}"
-
-
-def plural(name):
-    """Cheri Berry pluralises to Cheri Berries, Scroll of Darkness to Scrolls.
-
-    ponytail: regular English only. The bank's own irregulars -- Mail and
-    Honey, which do not pluralise, Scarf to Scarves, Old Gateaux -- are left to
-    whoever cares; check() counts how many of the existing rows the rule would
-    not have produced so the ceiling is a number rather than a feeling.
+    Every item item_map.csv names gets its reference id's row. The eight slots
+    HeartGold left empty and konefr filled (113, 115-119, 121, 134) have no
+    reference id and are not here, so they keep what they have. The engine's
+    850 stops five rows short of its 856 items; hg-engine reads past the end
+    of the bank there and shows nothing, so those rows are empty.
     """
-    head, of, rest = name.partition(" of ")
-    if head.endswith(("f",)):
-        head = head[:-1] + "ves"
-    elif head.endswith("fe"):
-        head = head[:-2] + "ves"
-    elif head.endswith("y") and head[-2:-1].lower() not in "aeiou":
-        head = head[:-1] + "ies"
-    elif head.endswith(("s", "x", "z", "ch", "sh")):
-        head = head + "es"
-    else:
-        head = head + "s"
-    return head + of + rest
+    ids = defines(gmm.git_show(revision, "include/constants/item.h", reference), "ITEM_")
+    ends = [ids[name] for name in GENERATION_ENDS]
+    engine = {}
+    out = {221: {}, 222: {}, 223: {}, 224: {}}
+    names = gmm.reference_rows(revision, 222, reference)
+    for row in csv.DictReader(ITEM_MAP.read_text().splitlines()):
+        theirs, ours = int(row["reference_id"]), int(row["item_id"])
+        if ids.get(row["reference_name"]) != theirs:
+            raise SystemExit(f"{row['reference_name']} is not {theirs} at {revision}")
+        generation = bisect.bisect_left(ends, theirs)
+        offset = theirs - (ends[generation - 1] + 1 if generation else 0)
+        out[222][ours] = names[theirs]
+        for bank, kind in ((221, 0), (223, 1), (224, 2)):
+            number = 830 + 4 * generation + kind
+            if number not in engine:
+                engine[number] = gmm.reference_rows(revision, number, reference)
+            out[bank][ours] = engine[number][offset] if offset < len(engine[number]) else ""
+    return out
 
 
-def bank_rows(path):
-    return re.findall(r"\t<row id=\"[^\"]+\" index=\"\d+\">\n(.*?)\n\t</row>\n",
-                      path.read_text(encoding="utf-8"), re.S)
-
-
-def write_bank(path, bodies):
-    out = ['<?xml version="1.0"?>', '<body language="English">']
-    stem = path.stem
-    for index, body in enumerate(bodies):
-        out.append(f'\t<row id="{stem}_{index:05d}" index="{index}">')
-        out.append(body)
-        out.append("\t</row>")
-    out.append("</body>")
-    path.write_text("\n".join(out) + "\n", encoding="utf-8")
-
-
-def row_body(text):
-    return ('\t\t<attribute name="window_context_name">used</attribute>\n'
-            f'\t\t<language name="English">{text}</language>')
+def write_text(text, count, write):
+    """The four banks, rows 0..count-1, each mapped row set to its text; rows
+    the mapping does not name are kept as they are. Returns the rows changed."""
+    changed = {}
+    for bank, values in text.items():
+        rows = gmm.read(bank)[:count]
+        for index in range(count):
+            if index in values:
+                row = gmm.new_row(bank, index, values[index])
+                if index >= len(rows):
+                    rows.append(row)
+                elif rows[index] != row:
+                    changed.setdefault(bank, []).append((index, rows[index]["text"], values[index]))
+                    rows[index] = row
+            elif index >= len(rows):
+                raise SystemExit(f"bank {bank}: row {index} is no item's and was never written")
+        if write:
+            gmm.write(bank, rows)
+    return changed
 
 
 # --- the self-check ------------------------------------------------------
@@ -568,18 +572,6 @@ def check(reference, pairs, effects, fields, here_rows, report):
     report["fields that disagree on a shared item"] = {
         field: len(rows) for field, rows in sorted(disagree.items())}
 
-    names = bank_text(MSG / "msg_0222.gmm")
-    articles, plurals = bank_text(MSG / "msg_0223.gmm"), bank_text(MSG / "msg_0224.gmm")
-    report["rows the article rule would not reproduce"] = sum(
-        1 for name, value in zip(names, articles) if name != "???" and with_article(name) != value)
-    report["rows the plural rule would not reproduce"] = sum(
-        1 for name, value in zip(names, plurals) if name != "???" and plural(name) != value)
-
-
-def bank_text(path):
-    return re.findall(r'<language name="English">(.*?)</language>',
-                      path.read_text(encoding="utf-8"), re.S)
-
 
 # --- writing -------------------------------------------------------------
 
@@ -591,7 +583,22 @@ def main():
     parser.add_argument("--limit", type=int, help="import only the first N, for a look by eye")
     parser.add_argument("--sync", action="store_true",
                         help="also bring the shared items' records up to the reference's numbers")
+    parser.add_argument("--revision", default=gmm.ENGINE,
+                        help="the reference revision the item text is read at (hg-engine's by default)")
+    parser.add_argument("--text-only", action="store_true",
+                        help="only rewrite msg_0221..0224 from item_map.csv")
     args = parser.parse_args()
+
+    if args.text_only:
+        changed = write_text(item_text(args.revision, args.reference),
+                             len(item_block(ITEMS_H.read_text())), args.write)
+        for bank, rows in sorted(changed.items()):
+            print(f"msg_{bank:04d}: {len(rows)} rows change")
+            for index, old, new in rows:
+                print(f"  {index}: {old!r} -> {new!r}")
+        if not args.write:
+            print("\nnothing written; pass --write")
+        return
 
     reference = Reference(args.reference)
     header = original(ITEMS_H)
@@ -639,8 +646,6 @@ def main():
     next_icon = max(built + list(BLANK_ICON)) + 1
 
     constants, csv_rows, narc_rows, icon_rules, icons, mapping = [], [], [], [], [], []
-    banks = {bank: bank_rows(MSG / f"msg_{bank}.gmm")[:len(here)] for bank in
-             ("0221", "0222", "0223", "0224")}
     blank_art = unnamed = 0
     for name in missing:
         item_id, next_id = next_id, next_id + 1
@@ -661,20 +666,9 @@ def main():
         narc_rows.append((name, data_member, tiles, palette))
 
         # Eighty-four of konefr's constants are reserved gaps with no name in
-        # 222.txt. This game already writes such a slot the same way -- an empty
-        # description and ??? in the other three -- so they are written that way
-        # rather than given an invented name.
-        text = reference.names[reference.ids[name]].strip()
-        if text:
-            banks["0221"].append(row_body(NO_DESCRIPTION))
-            banks["0222"].append(row_body(text))
-            banks["0223"].append(row_body(with_article(text)))
-            banks["0224"].append(row_body(plural(text)))
-        else:
+        # 222.txt; they get the engine's own rows, like every other item.
+        if not reference.names[reference.ids[name]].strip():
             unnamed += 1
-            banks["0221"].append(row_body(""))
-            for bank in ("0222", "0223", "0224"):
-                banks[bank].append(row_body("???"))
         mapping.append((reference.ids[name], name, item_id, name))
 
     for theirs, ours in sorted(pairs.items(), key=lambda pair: reference.ids[pair[0]]):
@@ -769,13 +763,11 @@ def main():
     for source, destination in icons:
         shutil.copyfile(source, destination)
 
-    for bank, bodies in banks.items():
-        write_bank(MSG / f"msg_{bank}.gmm", bodies)
-
     with ITEM_MAP.open("w", newline="") as out:
         writer = csv.writer(out, lineterminator="\n")
         writer.writerow(["reference_id", "reference_name", "item_id", "item_name"])
         writer.writerows(mapping)
+    write_text(item_text(args.revision, args.reference), count, True)
     print(f"\nwritten; {ITEM_MAP.relative_to(ROOT)} holds {len(mapping)} names")
 
 
