@@ -122,6 +122,15 @@ class MultiHitScripts(unittest.TestCase):
         self.assertEqual(steps("TRIPLE_AXEL"), ["20"])
         self.assertEqual(set_multi_hit(script_for("TRIPLE_AXEL")), ("3", "MULTIHIT_TRIPLE_KICK"))
 
+    def test_surging_strikes_is_a_critical_hit_three_times(self):
+        """The reference's critical roll gives up for
+        MOVE_EFFECT_HIT_THREE_TIMES_ALWAYS_CRITICAL (other_battle_calculators.c:1769
+        at d0380a487). The script runs once a hit, so it asks each time."""
+        script = script_for("SURGING_STRIKES")
+        self.assertEqual(set_multi_hit(script), ("3", "MULTIHIT_MULTI_HIT_MOVE"))
+        self.assertIn("BSCRIPT_VAR_CRITICAL_BOOSTS, CRITICAL_STAGE_ALWAYS", script)
+        self.assertLess(script.index("BSCRIPT_VAR_CRITICAL_BOOSTS, CRITICAL_STAGE_ALWAYS"), script.index("\n    CalcCrit"))
+
 
 class RolledCount(unittest.TestCase):
     def test_the_odds_are_the_references(self):
