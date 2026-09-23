@@ -355,6 +355,12 @@ IMPLEMENTED_HERE = {
     # Fusion Flare thaws its user (Pokemon Central, Incrofiamma, Incrotuono).
     "FUSION_FLARE": "MOVE_EFFECT_HIT",
     "FUSION_BOLT": "MOVE_EFFECT_HIT",
+    # Wonder Room swaps every Pokemon's Defense and Sp. Def, and Magic Room
+    # takes every held item's effect away, for five turns; used again, each
+    # ends itself (Pokemon Central, Mirabilzona, Magicozona): effect scripts
+    # 411 and 412.
+    "WONDER_ROOM": "MOVE_EFFECT_WONDER_ROOM",
+    "MAGIC_ROOM": "MOVE_EFFECT_MAGIC_ROOM",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

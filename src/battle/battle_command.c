@@ -10240,6 +10240,17 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
             ctx->moveConditions[battlerId].throatChopTimer = 2;
         }
         break;
+    // The Rooms are the field's: five turns, or none if one was up already
+    // (Pokemon Central, Mirabilzona, Magicozona). What there is now goes in
+    // CALC_TEMP for the script to say.
+    case MOVE_WONDER_ROOM:
+        ctx->wonderRoomTurns = ctx->wonderRoomTurns ? 0 : 5;
+        ctx->calcTemp = ctx->wonderRoomTurns;
+        break;
+    case MOVE_MAGIC_ROOM:
+        ctx->magicRoomTurns = ctx->magicRoomTurns ? 0 : 5;
+        ctx->calcTemp = ctx->magicRoomTurns;
+        break;
     }
 
     return FALSE;

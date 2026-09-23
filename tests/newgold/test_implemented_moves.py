@@ -167,5 +167,27 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("effect != MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT && ctx->moveNoCur != MOVE_FUSION_FLARE", checks)
         self.assertIn("effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT || ctx->moveNoCur == MOVE_FUSION_FLARE", checks)
 
+    def test_the_rooms_go_up_and_come_down(self):
+        # Pokemon Central (Mirabilzona, Magicozona): five turns, ended early by
+        # the move again, each with its line; Wonder Room's swap is
+        # test_move_power's WonderRoomTests.
+        import import_battle_messages
+        self.assertImplemented("WONDER_ROOM", "MOVE_EFFECT_WONDER_ROOM")
+        self.assertImplemented("MAGIC_ROOM", "MOVE_EFFECT_MAGIC_ROOM")
+        flag = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SetMoveConditionFlag")
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        extra = function(controller, "BattleControllerPlayer_UpdateFieldConditionExtra")
+        for move, room in (("WONDER_ROOM", "wonderRoomTurns"), ("MAGIC_ROOM", "magicRoomTurns")):
+            name = move.lower().replace("_", " ")
+            up, down = import_battle_messages.port_row(name), import_battle_messages.port_row(name + " ends")
+            script = effect_script(f"MOVE_EFFECT_{move}")
+            self.assertIn(f"SetMoveConditionFlag MOVE_{move}, BATTLER_CATEGORY_ATTACKER", script)
+            self.assertIn(f"BufferMessage msg_0197_{up:05d}, TAG_NONE", script)
+            self.assertIn(f"BufferMessage msg_0197_{down:05d}, TAG_NONE", script)
+            self.assertIn(f"ctx->{room} = ctx->{room} ? 0 : 5;\n        ctx->calcTemp = ctx->{room};", flag)
+            self.assertIn(f"if (ctx->{room} && --ctx->{room} == 0) {{\n            ctx->buffMsg.id = msg_0197_{down:05d};", extra)
+        self.assertIn("if (ctx->magicRoomTurns) {\n        return ITEM_NONE;",
+                      function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "GetBattlerHeldItem"))
+
 if __name__ == "__main__":
     unittest.main()

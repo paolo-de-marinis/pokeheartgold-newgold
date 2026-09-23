@@ -141,6 +141,21 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} used its\n{STRVAR_1 8, 1, 0} to mirror its\fopponent’s stat changes!",
         r"The opposing {STRVAR_1 1, 0, 0} used\nits {STRVAR_1 8, 1, 0} to mirror its\fopponent’s stat changes!",
     ]),
+    # Wonder Room and Magic Room going up and coming down. The engine leaves
+    # both moves unimplemented and so has no line; these are the later
+    # games', about the field, so one row each.
+    ("wonder room", [
+        r"It created a bizarre area in which\nDefense and Sp. Def stats are swapped!",
+    ]),
+    ("wonder room ends", [
+        r"Wonder Room wore off, and Defense\nand Sp. Def stats returned to normal!",
+    ]),
+    ("magic room", [
+        r"It created a bizarre area in which\nPokémon’s held items lose their effects!",
+    ]),
+    ("magic room ends", [
+        r"Magic Room wore off, and held items’\neffects returned to normal!",
+    ]),
 ]
 
 

@@ -8455,6 +8455,10 @@ u16 GetBattlerHeldItem(BattleContext *ctx, int battlerId) {
     if (ctx->battleMons[battlerId].unk88.embargoFlag) {
         return ITEM_NONE;
     }
+    // Magic Room leaves every held item on the field without its effect.
+    if (ctx->magicRoomTurns) {
+        return ITEM_NONE;
+    }
     return ctx->battleMons[battlerId].item;
 }
 
@@ -10075,6 +10079,15 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     monDef = GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_DEF, NULL);
     monSpAtk = GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_SPATK, NULL);
     monSpDef = GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_SPDEF, NULL);
+    // Wonder Room swaps the two defences, the stats and not their stages:
+    // a physical hit meets the Sp. Def with the Defense's stage (Pokemon
+    // Central, Mirabilzona).
+    if (ctx->wonderRoomTurns) {
+        u16 swap = monDef;
+
+        monDef = monSpDef;
+        monSpDef = swap;
+    }
     statChangeAtk = GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_STAT_CHANGE_ATK, NULL) - 6;
     statChangeDef = GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_STAT_CHANGE_DEF, NULL) - 6;
     statChangeSpAtk = GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_STAT_CHANGE_SPATK, NULL) - 6;

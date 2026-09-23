@@ -182,9 +182,9 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // leaves to the second grew it by four. Echoed Voice's two bytes, after
 // Parental Bond's four, grew it by four. Round's byte went into the padding
 // after them. The two moves used last this turn, for Fusion Flare and Fusion
-// Bolt, grew it by four.
+// Bolt, grew it by four. The Rooms' two bytes grew it by four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x323C + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3240 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -1944,6 +1944,8 @@ typedef enum UpdateFieldConditionExtraState {
     UFCE_STATE_FUTURE_SIGHT,
     UFCE_STATE_PERISH_SONG,
     UFCE_STATE_TRICK_ROOM,
+    UFCE_STATE_WONDER_ROOM,
+    UFCE_STATE_MAGIC_ROOM,
     UFCE_STATE_HUNGER_SWITCH,
     UFCE_STATE_END
 } UpdateFieldConditionExtraState;
@@ -2045,6 +2047,31 @@ static void BattleControllerPlayer_UpdateFieldConditionExtra(BattleSystem *battl
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 return;
             }
+        }
+        ctx->stateUpdateFieldConditionExtra++;
+        ctx->updateFieldConditionExtraData = 0;
+        // fallthrough
+    case UFCE_STATE_WONDER_ROOM:
+        // Wonder Room and Magic Room come down after Trick Room, with the
+        // line the move says when it takes them down itself.
+        if (ctx->wonderRoomTurns && --ctx->wonderRoomTurns == 0) {
+            ctx->buffMsg.id = msg_0197_01828; // Wonder Room wore off...
+            ctx->buffMsg.tag = TAG_NONE;
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SHOW_PREPARED_MESSAGE);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        }
+        ctx->stateUpdateFieldConditionExtra++;
+        // fallthrough
+    case UFCE_STATE_MAGIC_ROOM:
+        if (ctx->magicRoomTurns && --ctx->magicRoomTurns == 0) {
+            ctx->buffMsg.id = msg_0197_01830; // Magic Room wore off...
+            ctx->buffMsg.tag = TAG_NONE;
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SHOW_PREPARED_MESSAGE);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
         }
         ctx->stateUpdateFieldConditionExtra++;
         ctx->updateFieldConditionExtraData = 0;

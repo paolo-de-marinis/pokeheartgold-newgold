@@ -418,5 +418,7 @@
 // reference's so that a run of the importer numbers those as it always has.
 #define MOVE_EFFECT_RAISE_ALLY_SP_DEF                            409
 #define MOVE_EFFECT_UPPER_HAND                                   410
+#define MOVE_EFFECT_WONDER_ROOM                                  411
+#define MOVE_EFFECT_MAGIC_ROOM                                   412
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

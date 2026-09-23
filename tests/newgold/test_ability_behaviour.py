@@ -72,19 +72,21 @@ typedef struct {
     int unk_2158; u8 terrainOverlayType; int meFirstTotal; int totalTurns;
     u32 effectiveSpeed[4]; u8 paradoxBoostedStat[4]; u8 supremeOverlordFallen[4];
     int totalTimesFainted[4];
-    u8 gemBoostingMove; int battlerIdAttacker; u8 multiHitCount; u8 echoedVoiceTurns; u8 roundUsers; u16 moveUsedBefore;
+    u8 gemBoostingMove; int battlerIdAttacker; u8 multiHitCount; u8 echoedVoiceTurns; u8 roundUsers; u16 moveUsedBefore; u8 wonderRoomTurns;
     BattleMon battleMons[4];
     struct { int helpingHandFlag; int unk3C; int switchedIn; } turnData[4];
     struct { u8 statLoweredThisTurn; } moveConditions[4];
 } BattleContext;
 typedef struct { int power, type, category, effect; } MoveTbl;
 
-static struct { int maxBattlers; int ability[4]; MoveTbl move; u32 weather; BOOL acted[4]; u32 status[4]; BOOL substitute[4]; } S;
+static struct { int maxBattlers; int ability[4]; MoveTbl move; u32 weather; BOOL acted[4]; u32 status[4]; BOOL substitute[4]; u16 def, spDef; } S;
 
 static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *data) {
     (void)data;
     switch (varId) {
-    case BMON_DATA_ATK: case BMON_DATA_DEF: case BMON_DATA_SPATK: case BMON_DATA_SPDEF: return 100;
+    case BMON_DATA_DEF: return S.def ? S.def : 100;
+    case BMON_DATA_SPDEF: return S.spDef ? S.spDef : 100;
+    case BMON_DATA_ATK: case BMON_DATA_SPATK: return 100;
     case BMON_DATA_STAT_CHANGE_ATK: case BMON_DATA_STAT_CHANGE_DEF:
     case BMON_DATA_STAT_CHANGE_SPATK: case BMON_DATA_STAT_CHANGE_SPDEF: return 6;
     case BMON_DATA_LEVEL: return 50;

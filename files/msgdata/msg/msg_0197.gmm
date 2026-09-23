@@ -7308,4 +7308,20 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} used\nits {STRVAR_1 8, 1, 0} to mirror its\fopponent’s stat changes!</language>
 	</row>
+	<row id="msg_0197_01827" index="1827">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It created a bizarre area in which\nDefense and Sp. Def stats are swapped!</language>
+	</row>
+	<row id="msg_0197_01828" index="1828">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wonder Room wore off, and Defense\nand Sp. Def stats returned to normal!</language>
+	</row>
+	<row id="msg_0197_01829" index="1829">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It created a bizarre area in which\nPokémon’s held items lose their effects!</language>
+	</row>
+	<row id="msg_0197_01830" index="1830">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Magic Room wore off, and held items’\neffects returned to normal!</language>
+	</row>
 </body>

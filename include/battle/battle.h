@@ -671,6 +671,9 @@ typedef struct BattleContext {
     // the turn has had none.
     u16 moveUsedLast;
     u16 moveUsedBefore;
+    // The turns Wonder Room and Magic Room have left, 0 when they are down.
+    u8 wonderRoomTurns;
+    u8 magicRoomTurns;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

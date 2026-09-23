@@ -116,6 +116,20 @@ class FusionTests(unittest.TestCase):
 """))
 
 
+class WonderRoomTests(unittest.TestCase):
+    def test_the_two_defences_swap_while_it_lasts(self):
+        """Defense 200 and Sp. Def 100: a physical 100 is 24, and 46 once
+        Wonder Room has swapped the stats; a special one the other way
+        round (Pokemon Central, Mirabilzona)."""
+        run_c(self, damage_program(r"""
+    reset(4); S.def = 200;
+    EXPECT(damage(0, 1), 24);
+    ctx.wonderRoomTurns = 5; EXPECT(damage(0, 1), 46);
+    S.move.category = CATEGORY_SPECIAL; EXPECT(damage(0, 1), 24);
+    ctx.wonderRoomTurns = 0; EXPECT(damage(0, 1), 46);
+"""))
+
+
 if __name__ == "__main__":
     unittest.main()
 
