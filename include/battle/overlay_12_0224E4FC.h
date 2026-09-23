@@ -92,6 +92,8 @@ BOOL ParentalBond_IsFirstStrike(BattleContext *ctx);
 BOOL ParentalBond_IsSecondStrike(BattleContext *ctx);
 BOOL ParentalBond_StrikeToCome(BattleContext *ctx);
 BOOL BattleMoveIsDance(u32 moveNo);
+Pokemon *Battler_IllusionMon(BattleSystem *battleSystem, int battlerId);
+BOOL TryDropLostIllusion(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 BOOL CheckStatusHealAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int flag);
 BOOL CheckStatusHealSwitch(BattleContext *ctx, int ability, int status);
 BOOL TrySyncronizeStatus(BattleSystem *battleSystem, BattleContext *ctx, ControllerCommand command);

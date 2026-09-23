@@ -273,7 +273,9 @@ typedef struct BattleMon {
     // in grounded never announces the balloon later. Another bit out of the
     // spare four, so the structure is the same size it was.
     u32 airBalloonFlag : 1;
-    u32 unk28_B : 3;
+    // Illusion: the party slot, plus one, of the Pokemon this one is made up
+    // as, or 0. The last three spare bits, so the structure keeps its size.
+    u32 illusionMon : 3;
     u8 movePPCur[MAX_MON_MOVES];
     u8 movePP[MAX_MON_MOVES];
     u8 level;

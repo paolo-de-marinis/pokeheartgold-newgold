@@ -656,6 +656,8 @@
 // Emergency Exit and Wimp Out taking a Pokemon out, or a wild one away. 498
 // there.
 #define BATTLE_SUBSCRIPT_EMERGENCY_EXIT                     411
+// An Illusion dropping. 330 there.
+#define BATTLE_SUBSCRIPT_ILLUSION_FADED                     412
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

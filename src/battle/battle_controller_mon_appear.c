@@ -50,8 +50,25 @@ typedef char MonShowCommandSizeCheck[sizeof(MonShowCommand) == 0x74 ? 1 : -1];
 typedef char MonShowCommandNicknameOffsetCheck[offsetof(MonShowCommand, nickname) == 0x30 ? 1 : -1];
 typedef char MonShowCommandPartnerOffsetCheck[offsetof(MonShowCommand, partnerSelectedMonIndex) == 0x48 ? 1 : -1];
 
+// Illusion: a battler made up as another Pokemon of its party is drawn as that
+// Pokemon -- species, form, colours, sex, personality and name, and the Poke
+// Ball it comes out of (ClientPokemonEncount, ClientPokemonEncountAppear and
+// ClientPokemonAppear, battle_pokemon.c:280-420 at d0380a487). The reference
+// changes the species, form and colours only; Pokemon Central (Illusione)
+// has the sex, the ball and the name copied too.
+#define ILLUSION_MAKE_UP(data, disguise)                                   \
+    do {                                                                  \
+        (data).species = GetMonData((disguise), MON_DATA_SPECIES, NULL);  \
+        (data).form = GetMonData((disguise), MON_DATA_FORM, NULL);        \
+        (data).shiny = MonIsShiny(disguise);                              \
+        (data).gender = GetMonGender(disguise);                           \
+        (data).personality = GetMonData((disguise), MON_DATA_PERSONALITY, NULL); \
+        GetMonData((disguise), MON_DATA_NICKNAME, (data).nickname);       \
+    } while (0)
+
 void BattleController_EmitPokemonEncounter(BattleSystem *battleSystem, int battlerId) {
     MonEncounterCommand data;
+    Pokemon *disguise;
     int i;
 
     data.command = 2;
@@ -69,11 +86,16 @@ void BattleController_EmitPokemonEncounter(BattleSystem *battleSystem, int battl
     }
 
     GetBattlerVar(battleSystem->ctx, battlerId, BMON_DATA_NICKNAME, &data.nickname);
+    disguise = Battler_IllusionMon(battleSystem, battlerId);
+    if (disguise != NULL) {
+        ILLUSION_MAKE_UP(data, disguise);
+    }
     ov12_02262240(battleSystem, 1, battlerId, &data, sizeof(MonEncounterCommand));
 }
 
 void BattleController_EmitPokemonSlideIn(BattleSystem *battleSystem, int battlerId) {
     MonShowCommand data;
+    Pokemon *disguise;
     int i;
 
     data.command = 3;
@@ -96,11 +118,17 @@ void BattleController_EmitPokemonSlideIn(BattleSystem *battleSystem, int battler
     }
 
     GetBattlerVar(battleSystem->ctx, battlerId, BMON_DATA_NICKNAME, &data.nickname);
+    disguise = Battler_IllusionMon(battleSystem, battlerId);
+    if (disguise != NULL) {
+        ILLUSION_MAKE_UP(data, disguise);
+        data.ball = BattleSystem_GetMonBall(battleSystem, disguise);
+    }
     ov12_02262240(battleSystem, 1, battlerId, &data, sizeof(MonShowCommand));
 }
 
 void BattleController_EmitPokemonSendOut(BattleSystem *battleSystem, int battlerId, int ball, int quickSendOut) {
     MonShowCommand data;
+    Pokemon *disguise;
     int i;
 
     data.command = 4;
@@ -150,7 +178,23 @@ void BattleController_EmitPokemonSendOut(BattleSystem *battleSystem, int battler
             data.battlerGender[i] = battleSystem->ctx->battleMons[i].gender;
             data.battlerPersonality[i] = battleSystem->ctx->battleMons[i].personality;
         }
+
+        disguise = Battler_IllusionMon(battleSystem, i);
+        if (disguise != NULL) {
+            data.battlerSpecies[i] = GetMonData(disguise, MON_DATA_SPECIES, NULL);
+            data.battlerShiny[i] = MonIsShiny(disguise);
+            data.battlerForm[i] = GetMonData(disguise, MON_DATA_FORM, NULL);
+            data.battlerGender[i] = GetMonGender(disguise);
+            data.battlerPersonality[i] = GetMonData(disguise, MON_DATA_PERSONALITY, NULL);
+        }
     }
 
+    disguise = Battler_IllusionMon(battleSystem, battlerId);
+    if (disguise != NULL) {
+        ILLUSION_MAKE_UP(data, disguise);
+        if (!ball) {
+            data.ball = BattleSystem_GetMonBall(battleSystem, disguise);
+        }
+    }
     ov12_02262240(battleSystem, 1, battlerId, &data, sizeof(MonShowCommand));
 }

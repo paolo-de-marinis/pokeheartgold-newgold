@@ -5,6 +5,10 @@
 _000:
     CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_SEMI_INVULNERABLE, _023
     CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_STATUS2, STATUS2_TRANSFORM, _023
+    // Nor onto or from a Pokemon made up by its Illusion (Pokemon Central,
+    // Illusione).
+    CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ILLUSION_MON, 0, _023
+    CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_ATTACKER, BMON_DATA_ILLUSION_MON, 0, _023
     // Good as Gold turns away nothing else in this game; refusing Transform
     // is the whole of it.
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_DEFENDER, ABILITY_GOOD_AS_GOLD, _023

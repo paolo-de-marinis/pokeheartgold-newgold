@@ -52,5 +52,23 @@ void BattleController_EmitHealthbarSlideIn(BattleSystem *battleSystem, BattleCon
     data.safariBalls = BattleSystem_GetSafariBallCount(battleSystem);
     data.delay = delay;
 
+    // Illusion: the box names the Pokemon the battler is made up as, with its
+    // sex and whether its species is caught; the level stays the battler's own
+    // (BattleSystem_GrabIllusionBoxMonNameForHpBar, battle_pokemon.c:519 at
+    // d0380a487, which changes the name only -- Pokemon Central, Illusione,
+    // has the sex copied).
+    if (ctx->battleMons[battlerId].illusionMon) {
+        Pokemon *disguise = Battler_IllusionMon(battleSystem, battlerId);
+        int disguiseSpecies = GetMonData(disguise, MON_DATA_SPECIES, NULL);
+
+        data.selectedMonIndex = ctx->battleMons[battlerId].illusionMon - 1;
+        if ((disguiseSpecies == SPECIES_NIDORAN_F || disguiseSpecies == SPECIES_NIDORAN_M) && !GetMonData(disguise, MON_DATA_HAS_NICKNAME, NULL)) {
+            data.gender = MON_GENDERLESS;
+        } else {
+            data.gender = GetMonGender(disguise);
+        }
+        data.caught = BattleSystem_CheckMonCaught(battleSystem, disguiseSpecies);
+    }
+
     ov12_02262240(battleSystem, 1, battlerId, &data, sizeof(HealthbarCommand));
 }

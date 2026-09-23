@@ -961,6 +961,19 @@ static void ov12_02249460(BattleSystem *battleSystem, BattleContext *ctx) {
         return;
     }
 
+    // Before any action, and before the end of the turn: an Illusion whose
+    // Pokemon no longer has the ability drops, whatever took it away.
+    {
+        int script;
+
+        if (TryDropLostIllusion(battleSystem, ctx, &script) == TRUE) {
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        }
+    }
+
     ctx->battlersOnField = 0;
     for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
         if (ctx->playerActions[battlerId].command != CONTROLLER_COMMAND_40) {

@@ -560,6 +560,9 @@ typedef enum Terrain {
 // sets it through a script.
 #define BMON_DATA_BERRY_EATEN             102
 #define BMON_DATA_QUICK_DRAW_FLAG         103
+// Whether a Pokemon is made up by its Illusion, and as which party slot plus
+// one. Read only.
+#define BMON_DATA_ILLUSION_MON            104
 
 // The order entry hazards are worked through when something switches in.
 #define HAZARD_IDX_NONE         0

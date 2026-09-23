@@ -82,6 +82,7 @@ IMPLEMENTED = {
     "HUNGER_SWITCH",
     "ICE_FACE",
     "ICE_SCALES",
+    "ILLUSION",
     "IMPOSTER",
     "INFILTRATOR",
     "INNARDS_OUT",
@@ -215,7 +216,7 @@ PENDING = {
     "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE",
     "DELTA_STREAM", "DESOLATE_LAND", "EMBODY_ASPECT",
     "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4",
-    "GUARD_DOG", "ILLUSION", "MEGA_SOL", "MIMICRY",
+    "GUARD_DOG", "MEGA_SOL", "MIMICRY",
     "OPPORTUNIST", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN",
     "STAKEOUT", "SUPREME_OVERLORD", "SYMBIOSIS", "TEMP4",
     "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR",
@@ -292,8 +293,9 @@ class AbilityEffectTests(unittest.TestCase):
     #
     # 39 -> 41: Schooling and Power Construct had been counted done on their
     # blocklist reads alone; see the note above PENDING. Cud Chew done.
-    # Emergency Exit and Wimp Out done, then Parental Bond, then Dancer.
-    STILL_TO_DO = 28
+    # Emergency Exit and Wimp Out done, then Parental Bond, Dancer and
+    # Illusion.
+    STILL_TO_DO = 27
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

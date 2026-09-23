@@ -49,6 +49,7 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count);
 static BOOL BattleMoveIsPunching(u32 moveNo);
 static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int moveNo);
 static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault);
+static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId);
 
 // Eviolite works for anything that has not finished growing up. The archive
 // lists a species' evolutions whether or not it can reach them, and an empty
@@ -59,6 +60,67 @@ static BOOL SpeciesHasEvolution(u16 species) {
     LoadMonEvolutionTable(species, table);
     for (int i = 0; i < MAX_EVOS_PER_POKE; i++) {
         if (table[i].method != EVO_NONE) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+// Illusion (Party_GetIllusionImitatedIndex and ClientPokemonAppear,
+// battle_pokemon.c:250-420 at d0380a487; Pokemon Central, Illusione): a
+// Pokemon with the ability comes out made up as the last Pokemon after it in
+// its party that can still fight and is not an Egg -- its species, form,
+// colours, sex, Poke Ball and name -- and not at all when there is none, or
+// when Neutralizing Gas is already out. A party that feeds both battlers of a
+// double battle needs a third Pokemon, as in the reference. The disguise is
+// kept as the party slot plus one, or 0.
+static int Battler_IllusionDisguise(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int selectedMon) {
+    int count = BattleSystem_GetPartySize(battleSystem, battlerId);
+    int disguise = 0;
+    int i;
+    Pokemon *mon;
+
+    if (ctx->battleMons[battlerId].ability != ABILITY_ILLUSION || AbilitiesAreNeutralized(ctx, battlerId)) {
+        return 0;
+    }
+    if ((BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_DOUBLES)
+        && BattleSystem_GetParty(battleSystem, battlerId) == BattleSystem_GetParty(battleSystem, BattleSystem_GetBattlerIdPartner(battleSystem, battlerId))
+        && count <= 2) {
+        return 0;
+    }
+    for (i = selectedMon + 1; i < count; i++) {
+        mon = BattleSystem_GetPartyMon(battleSystem, battlerId, i);
+        if (GetMonData(mon, MON_DATA_SPECIES, NULL) != SPECIES_NONE && GetMonData(mon, MON_DATA_HP, NULL) && !GetMonData(mon, MON_DATA_IS_EGG, NULL)) {
+            disguise = i + 1;
+        }
+    }
+    return disguise;
+}
+
+// The Pokemon a battler's Illusion shows, or NULL when it shows itself.
+Pokemon *Battler_IllusionMon(BattleSystem *battleSystem, int battlerId) {
+    int disguise = battleSystem->ctx->battleMons[battlerId].illusionMon;
+
+    return disguise ? BattleSystem_GetPartyMon(battleSystem, battlerId, disguise - 1) : NULL;
+}
+
+// The disguise drops when the Pokemon takes damage from a move -- not what a
+// substitute takes -- even the blow that faints it, before anything else the
+// hit sets off, and when it no longer has the ability, suppressed or
+// replaced: Gastro Acid, Worry Seed, Simple Beam, Neutralizing Gas coming
+// out. It does not come back.
+static void Battler_DropIllusion(BattleContext *ctx, int battlerId, int *script) {
+    ctx->battleMons[battlerId].illusionMon = 0;
+    ctx->battlerIdTemp = battlerId;
+    *script = BATTLE_SUBSCRIPT_ILLUSION_FADED;
+}
+
+BOOL TryDropLostIllusion(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+    for (int i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
+        int battlerId = ctx->turnOrder[i];
+
+        if (ctx->battleMons[battlerId].illusionMon && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) != ABILITY_ILLUSION) {
+            Battler_DropIllusion(ctx, battlerId, script);
             return TRUE;
         }
     }
@@ -199,6 +261,8 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     } else if (ctx->battleMons[battlerId].item) {
         ctx->battleMons[battlerId].unk88.knockOffFlag = TRUE;
     }
+
+    ctx->battleMons[battlerId].illusionMon = Battler_IllusionDisguise(battleSystem, ctx, battlerId, selectedMon);
 }
 
 void BattleSystem_ReloadMonData(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int monIndex) {
@@ -511,6 +575,8 @@ int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         return mon->unk88.quickClawFlag;
     case BMON_DATA_QUICK_DRAW_FLAG:
         return mon->unk88.quickDrawFlag;
+    case BMON_DATA_ILLUSION_MON:
+        return mon->illusionMon;
     case BMON_DATA_RECHARGE:
         return mon->unk88.rechargeCount;
     case BMON_DATA_FAKE_OUT:
@@ -5239,7 +5305,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 // A wild Pokemon only copies if it is a Ditto or a Mew; a
                 // trainer's may be anything. The reference also refuses a
                 // target hidden behind an Illusion, and this game has none.
-                if (!ctx->battleMons[battlerId].imposterFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_IMPOSTER && ctx->battleMons[battlerIdCopied].hp && ctx->battleMons[battlerIdCopied].ability != ABILITY_IMPOSTER && !(ctx->battleMons[battlerIdCopied].status2 & (STATUS2_SUBSTITUTE | STATUS2_TRANSFORM)) && ((BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) || ctx->battleMons[battlerId].species == SPECIES_DITTO || ctx->battleMons[battlerId].species == SPECIES_MEW)) {
+                if (!ctx->battleMons[battlerId].imposterFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_IMPOSTER && ctx->battleMons[battlerIdCopied].hp && ctx->battleMons[battlerIdCopied].ability != ABILITY_IMPOSTER && !ctx->battleMons[battlerIdCopied].illusionMon && !(ctx->battleMons[battlerIdCopied].status2 & (STATUS2_SUBSTITUTE | STATUS2_TRANSFORM)) && ((BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) || ctx->battleMons[battlerId].species == SPECIES_DITTO || ctx->battleMons[battlerId].species == SPECIES_MEW)) {
                     ctx->battleMons[battlerId].imposterFlag = TRUE;
                     // Transform copies from the attacker to the target, and
                     // this is not a move: what those two were is put aside
@@ -5596,6 +5662,14 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTarget, form, TRUE);
         ctx->battlerIdTemp = ctx->battlerIdTarget;
         *script = BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE;
+        return TRUE;
+    }
+
+    // An Illusion drops with the first damage a move deals it
+    // (MoveHitDefenderAbilityCheck.c:391 at d0380a487), before anything else
+    // the hit sets off -- the blow that faints it included.
+    if (ctx->battleMons[ctx->battlerIdTarget].illusionMon && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+        Battler_DropIllusion(ctx, ctx->battlerIdTarget, script);
         return TRUE;
     }
 

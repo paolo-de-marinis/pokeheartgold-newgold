@@ -1881,8 +1881,23 @@ static void BattleSystem_BufferMessage(BattleSystem *battleSystem, BattleMessage
     }
 }
 
+// A battler made up by its Illusion goes by the name of the Pokemon it is made
+// up as, and its species (BattleMessage_BufferNickname and
+// BattleMessage_BufferPokemon, battle_pokemon.c:463-512 at d0380a487): for
+// the party slot it stands in, not for the rest of its party.
+static Pokemon *BattleMessage_GetMon(BattleSystem *battleSystem, int param) {
+    int battlerId = param & 0xFF;
+    int index = (param & 0xFF00) >> 8;
+    Pokemon *disguise = Battler_IllusionMon(battleSystem, battlerId);
+
+    if (disguise != NULL && index == battleSystem->ctx->selectedMonIndex[battlerId]) {
+        return disguise;
+    }
+    return BattleSystem_GetPartyMon(battleSystem, battlerId, index);
+}
+
 static void BattleMessage_BufferNickname(BattleSystem *battleSystem, int bufferIndex, int param) {
-    Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, param & 0xFF, (param & 0xFF00) >> 8);
+    Pokemon *mon = BattleMessage_GetMon(battleSystem, param);
     BufferBoxMonNickname(battleSystem->msgFormat, bufferIndex, &mon->box);
 }
 
@@ -1923,7 +1938,7 @@ static void BattleMessage_BufferStatus(BattleSystem *battleSystem, int bufferInd
 }
 
 static void BattleMessage_BufferPokemon(BattleSystem *battleSystem, int bufferIndex, int param) {
-    Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, param & 0xFF, (param & 0xFF00) >> 8);
+    Pokemon *mon = BattleMessage_GetMon(battleSystem, param);
     BufferBoxMonSpeciesName(battleSystem->msgFormat, bufferIndex, &mon->box);
 }
 
