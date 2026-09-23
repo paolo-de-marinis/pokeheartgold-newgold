@@ -218,8 +218,10 @@ FLAG_NAMES = {"failsTrace": "ABILITY_FLAG_FAILS_TRACE", "failsSwap": "ABILITY_FL
               "failsSuppress": "ABILITY_FLAG_FAILS_SUPPRESS", "failsReceiver": "ABILITY_FLAG_FAILS_RECEIVER",
               "failsEntrainment": "ABILITY_FLAG_FAILS_ENTRAINMENT", "failsRolePlay": "ABILITY_FLAG_FAILS_ROLE_PLAY"}
 
-# What this port adds to the reference's flags, from Pokemon Central.
-ADDED_FLAGS = {}
+# What this port adds to the reference's flags, from Pokemon Central: the
+# three Saltamicizia names on the user's side.
+ADDED_FLAGS = {ability: {"ABILITY_FLAG_FAILS_ENTRAINMENT"}
+               for ability in ("ABILITY_GULP_MISSILE", "ABILITY_ORICHALCUM_PULSE", "ABILITY_HADRON_ENGINE")}
 
 
 def ability_flag_table():
