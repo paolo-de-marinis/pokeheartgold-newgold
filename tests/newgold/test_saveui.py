@@ -154,6 +154,18 @@ class SaveUiTests(unittest.TestCase):
         self.assertTrue(saveui.stop_outdated(self.port), "asked to stop, it stops")
         self.assertIsNone(saveui.already_serving(self.port))
 
+    def test_a_changed_tree_is_what_the_page_gets_next(self):
+        """A file of the tree saved since it was read: the next request reads
+        it again, and the state the page polls says the tree has moved on,
+        so the page asks for the names and the limits again."""
+        seen = self.ok("/api/data")["tree"]
+        self.assertEqual(self.ok("/api/state")["tree"], seen)
+        header = sv.ROOT / "include/constants/pokemon.h"
+        self.ok("/api/data")
+        sv._READ[header] -= 1   # as if saved since
+        self.assertEqual(self.ok("/api/state")["tree"], seen + 1)
+        self.assertEqual(self.ok("/api/data")["tree"], seen + 1)
+
     # -- the settings: the folder and the ROMs the page chooses -------------------
 
     def test_the_settings(self):

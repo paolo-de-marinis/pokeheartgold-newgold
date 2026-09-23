@@ -1339,6 +1339,18 @@ async function poll() {
   catch (e) { if (e.code === "down") setDown(true); return; }
   if (!$("#downbanner").hidden) { setDown(false); loadLibrary(); }
   if (s.melonds !== S.melon) { setMelon(s.melonds); loadLibrary(); }
+  // The tree changed under the server (a table, a header edited): the names,
+  // the lists and the limits are read again, and so is the open save.
+  if (s.tree !== undefined && s.tree !== S.data.tree && !S.busy) {
+    const data = await run(() => api("/api/data"));
+    if (data) {
+      S.data = data; buildLists();
+      toast("Il codice del gioco è cambiato: nomi, elenchi e limiti sono quelli nuovi");
+      if (S.save) await openSave(S.f);
+      loadLibrary();
+      return;
+    }
+  }
   if (S.save && !S.busy && s.version && s.version !== S.save.version) {
     toast("Il salvataggio aperto è cambiato su disco: l'ho ricaricato");
     await openSave(S.f);

@@ -57,6 +57,7 @@ MAX_PLAY_HOURS = 999            # where IGT_Add stops the clock, at 999:59:59
 # edited table is what the editor shows, offers and enforces next.
 _READ = {}
 _CACHES = []
+GENERATION = 0      # how many times fresh() has found the tree changed
 
 
 def source(path):
@@ -81,7 +82,9 @@ def fresh():
             return path.stat().st_mtime_ns != when
         except OSError:
             return True
+    global GENERATION
     if any(moved(path, when) for path, when in list(_READ.items())):
+        GENERATION += 1
         _READ.clear()
         for fn in _CACHES:
             fn.cache_clear()

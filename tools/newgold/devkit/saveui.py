@@ -1202,7 +1202,8 @@ def tables():
                        "name": sv.PLAYER_NAME_LENGTH, "money": sv.MAX_MONEY, "coins": sv.MAX_COINS,
                        "hours": sv.MAX_PLAY_HOURS, "level": sv.MAX_LEVEL, "moves": sv.MAX_MON_MOVES,
                        "iv": sv.MAX_IV, "ev": sv.MAX_EV_PER_STAT, "ev_sum": sv.MAX_EV_SUM,
-                       "hidden_slot": sv.HIDDEN_SLOT}}
+                       "hidden_slot": sv.HIDDEN_SLOT},
+            "tree": sv.GENERATION}
 
 
 # ---------------------------------------------------------------------------
@@ -1245,7 +1246,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if url.path in ("/", "/index.html"):
                 return self.reply(200, PAGE.read_bytes(), "text/html; charset=utf-8")
             if url.path == "/api/state":
-                return self.reply(200, {"melonds": melonds_running(), "code": CODE,
+                return self.reply(200, {"melonds": melonds_running(), "code": CODE, "tree": sv.GENERATION,
                                         "version": self.library.current(q["f"]) if q.get("f") else None})
             if url.path == "/api/settings":
                 return self.reply(200, self.library.settings())
