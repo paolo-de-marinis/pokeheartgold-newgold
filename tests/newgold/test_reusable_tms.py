@@ -214,7 +214,7 @@ ROW = r"""
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
-typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int16_t s16;
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
@@ -224,7 +224,7 @@ typedef int BOOL;
 typedef struct { u16 id, quantity; } ItemSlot;
 typedef struct { int unused; } Window, String, MessageFormat, MsgData, Bag;
 typedef struct { Bag *bag; MessageFormat *messageFormat; MsgData *msgData; } BagAppState;
-typedef struct BagItemListPrefix { ItemSlot *slots; u32 unk04; u8 pocket; } BagItemListPrefix;
+typedef struct { ItemSlot *slots; u16 position; s16 scroll; u8 pocketId; u8 count; } BagViewPocket;
 BOOL ItemIsTM(u16 itemId);
 BOOL ItemIsHM(u16 itemId);
 BOOL ItemIsTR(u16 itemId);
@@ -239,7 +239,7 @@ static u16 Bag_GetRegisteredItem2(Bag *bag) { return ITEM_NONE; }
 @NATIVE@
 static int row(u8 pocket, u16 item) {
     ItemSlot slot = { item, 5 };
-    BagItemListPrefix list = { &slot, 0, pocket };
+    BagViewPocket list = { &slot, 0, 0, pocket };
     BagAppState state = { 0 };
     Window window;
     counted = labelled = 0;

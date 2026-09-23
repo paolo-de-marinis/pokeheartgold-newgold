@@ -50,17 +50,27 @@ typedef struct BagAppState {
     String *listNames[BAG_LIST_CAPACITY]; // the name each row of the list shows
     u8 unk5E4[0x5EC - 0x5E4];
     String *unk5EC;
-    u8 unk5F0[0x6A4 - 0x5F0];
+    u8 unk5F0[0x615 - 0x5F0];
+    u8 trainerGender;
+    u8 unk616[0x644 - 0x616];
+    int unk644;
+    u8 unk648[0x672 - 0x648];
+    u8 unk672; // the row being moved; the redraw draws it in full and the others plain
+    u8 unk673[0x68A - 0x673];
+    u8 unk68A; // which of the two sets of list rows is on show
+    u8 unk68B[0x6A4 - 0x68B];
     u16 listItems[BAG_LIST_CAPACITY]; // the item each row of the list is
     u8 unk7EE[0x94C - 0x7EE];
 } BagAppState; // size: 0x94C
 
-struct BagItemListPrefix;
-
 void ov15_021FE914(BagAppState *state, Window *window, ItemSlot *slot, u32 y);
-void ov15_021FF570(BagAppState *state, Window *window, String *name, struct BagItemListPrefix *list, u32 index);
+void ov15_021FF570(BagAppState *state, Window *window, String *name, BagViewPocket *list, u32 index);
 void *ov15_021FE990(BagAppState *state, NNSG2dCharacterData **charData);
 void ov15_021FE9B0(BagAppState *state, Window *window, u32 badge, u32 y);
+void ov15_021FF364(BagAppState *bagApp, int scroll, int unused, BOOL movingOnly);
+void ov15_021FF4EC(BagAppState *bagApp, int scroll, int position);
+void ov15_021FF560(BagAppState *bagApp);
+void ov15_02200140(BagAppState *bagApp, BagViewPocket *pocket, int count, BOOL loadIcons);
 void ov15_021F9F08(BagAppState *bagApp);
 void ov15_021FA008(BagAppState *bagApp);
 void ov15_021FA028(BagAppState *bagApp);
