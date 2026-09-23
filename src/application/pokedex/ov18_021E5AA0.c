@@ -15,7 +15,12 @@ void ov18_021E5C3C(void);
 BOOL Pokedex_Init(OverlayManager *man, int *state) {
     PokedexAppData *appData;
 
-    Heap_Create(HEAP_ID_3, HEAP_ID_POKEDEX_APP, 0x61000);
+    // Retail's 0x61000 held lists sized for 493 species. The Dex's lists and
+    // the sort lists they are built from take every Dex species now, and the
+    // heap is the reference's (armips/asm/pokedex.s, "give about 12 more
+    // kb"): 24 KB more, which heap 3 has -- it gives the PC's storage system
+    // 512 KB from the same field and keeps 100 KB after it.
+    Heap_Create(HEAP_ID_3, HEAP_ID_POKEDEX_APP, 0x67000);
     appData = OverlayManager_CreateAndGetData(man, sizeof(PokedexAppData), HEAP_ID_POKEDEX_APP);
     MI_CpuClear8(appData, sizeof(PokedexAppData));
     appData->args = OverlayManager_GetArgs(man);

@@ -247,6 +247,18 @@ class DexRangeTests(unittest.TestCase):
         self.assertIn(f"=0x{end + 0x828:08X}", asm, "overlay_18.s no longer finds unk_1858 at retail's offset")
         run_native(self, LAYOUT.replace("@STRUCT@", struct_).replace("@SIZE@", str(end - start)), "newgold-dex-app-")
 
+    def test_the_dex_heap_has_room_for_every_dex_species(self):
+        """Retail's Dex heap, 0x61000, held its lists at 493 species: the Dex
+        list and the grid list (four bytes an entry) and ov18_021F7ED4's two
+        scratch lists (two). At every Dex species they need what is checked
+        here on top, and the sort list the Dex loads grows as much again."""
+        source = (ROOT / "src/application/pokedex/ov18_021E5AA0.c").read_text()
+        size = int(re.search(r"Heap_Create\(HEAP_ID_3, HEAP_ID_POKEDEX_APP, (0x[0-9A-Fa-f]+)\)", source).group(1), 16)
+        header = (ROOT / "include/constants/species.h").read_text()
+        dex = int(re.search(r"#define SPECIES_PECHARUNT\s+(\d+)", header).group(1))
+        grown = (dex + 50 - 518) * 4 + (dex - 493) * 4 + 2 * (dex - 493) * 2 + (dex - 493) * 2
+        self.assertGreaterEqual(size - 0x61000, grown)
+
     def test_the_deoxys_forms_are_not_dex_flags(self):
         """Retail kept Deoxys's form order in the top byte of flag word 15,
         free at 493. With the Dex wider that byte is the seen and caught flags
