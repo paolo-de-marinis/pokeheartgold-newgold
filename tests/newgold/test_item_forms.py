@@ -199,5 +199,69 @@ class GriseousCoreTests(unittest.TestCase):
         self.assertIn("if (partyMenu->args->itemId == ITEM_GRISEOUS_ORB) {", menu)
 
 
+PC_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/pokemon.h"
+#include "constants/species.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define NULL ((void *)0)
+typedef struct { u16 species, form, item; } BoxPokemon;
+typedef struct { BoxPokemon box; int recalculated; } Pokemon;
+typedef struct { Pokemon mons[6]; int count; } Party;
+typedef struct SaveData SaveData;
+static Party sParty;
+static SaveData *SaveData_Get(void) { return NULL; }
+static Party *SaveArray_Party_Get(SaveData *save) { (void)save; return &sParty; }
+static int Party_GetCount(Party *party) { return party->count; }
+static Pokemon *Party_GetMonByIndex(Party *party, int i) { return &party->mons[i]; }
+static BoxPokemon *Mon_GetBoxMon(Pokemon *mon) { return &mon->box; }
+static void CalcMonLevelAndStats(Pokemon *mon) { mon->recalculated++; }
+static u32 GetBoxMonData(BoxPokemon *boxMon, int attr, void *dest) {
+    (void)dest;
+    return attr == MON_DATA_SPECIES ? boxMon->species : attr == MON_DATA_FORM ? boxMon->form : boxMon->item;
+}
+// Stand-ins: a held item of 1 is a plate, a Memory or an Orb; 2 a Drive.
+static void BoxMon_UpdateArceusForm(BoxPokemon *boxMon) { boxMon->form = boxMon->item == 1 ? 10 : 0; }
+static void BoxMon_UpdateGiratinaForm(BoxPokemon *boxMon) { boxMon->form = boxMon->item == 1; }
+static BOOL BoxMon_UpdateHeldItemForm(BoxPokemon *boxMon) {
+    u16 form = boxMon->species == SPECIES_GENESECT && boxMon->item == 2 ? SPECIES_GENESECT_DOUSE_DRIVE : boxMon->species;
+    if (form == boxMon->species) return FALSE;
+    boxMon->species = form;
+    return TRUE;
+}
+@FUNCTION@
+int main(void) {
+    BoxPokemon inBox = { SPECIES_SILVALLY, 0, 1 };
+    assert(ov14_021E64D0(&inBox) && inBox.form == 10);
+    assert(!ov14_021E64D0(&inBox));
+    sParty.count = 2;
+    sParty.mons[1].box = (BoxPokemon){ SPECIES_GENESECT, 0, 2 };
+    assert(ov14_021E64D0(&sParty.mons[1].box) && sParty.mons[1].box.species == SPECIES_GENESECT_DOUSE_DRIVE);
+    assert(sParty.mons[1].recalculated == 1 && sParty.mons[0].recalculated == 0);
+    sParty.mons[0].box = (BoxPokemon){ SPECIES_GIRATINA, 0, 1 };
+    assert(ov14_021E64D0(&sParty.mons[0].box) && sParty.mons[0].box.form == 1 && sParty.mons[0].recalculated == 1);
+    assert(!ov14_021E64D0(&sParty.mons[0].box) && sParty.mons[0].recalculated == 1);
+    BoxPokemon arceus = { SPECIES_ARCEUS, 0, 0 };
+    assert(!ov14_021E64D0(&arceus));
+    return 0;
+}
+"""
+
+
+class PcFormTests(unittest.TestCase):
+    def test_the_pc_changes_the_form_and_the_party_s_stats(self):
+        run_c(PC_FIXTURE.replace("@FUNCTION@", function(read("src/overlay_14_021E64D0.c"), "ov14_021E64D0")))
+
+    def test_a_box_pokemon_changes_species_and_ability(self):
+        body = function(read("src/pokemon.c"), "BoxMon_UpdateHeldItemForm")
+        self.assertIn("Species_HeldItemForm(species, GetBoxMonData(boxMon, MON_DATA_HELD_ITEM, NULL))", body)
+        self.assertIn("SetBoxMonData(boxMon, MON_DATA_SPECIES, &form);", body)
+        self.assertIn("SetBoxMonData(boxMon, MON_DATA_ABILITY, &ability);", body)
+
+
 if __name__ == "__main__":
     unittest.main()

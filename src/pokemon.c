@@ -4368,6 +4368,22 @@ BOOL Mon_UpdateHeldItemForm(Pokemon *mon) {
     return TRUE;
 }
 
+// Mon_UpdateHeldItemForm for a Pokemon in a box, which has no stats: the
+// species and the ability in the same slot.
+BOOL BoxMon_UpdateHeldItemForm(BoxPokemon *boxMon) {
+    u16 species = GetBoxMonData(boxMon, MON_DATA_SPECIES, NULL);
+    u16 form = Species_HeldItemForm(species, GetBoxMonData(boxMon, MON_DATA_HELD_ITEM, NULL));
+    u16 ability;
+
+    if (form == species) {
+        return FALSE;
+    }
+    ability = Species_AbilityInSameSlot(species, form, GetBoxMonData(boxMon, MON_DATA_ABILITY, NULL));
+    SetBoxMonData(boxMon, MON_DATA_SPECIES, &form);
+    SetBoxMonData(boxMon, MON_DATA_ABILITY, &ability);
+    return TRUE;
+}
+
 // hg-engine's ChangeToBattleForm (src/pokemon.c:2233), for each Pokemon about to
 // battle: Xerneas is always in its Active Mode, and a Zacian or Zamazenta
 // holding its Rusted Sword or Shield is crowned. A trainer's or a wild

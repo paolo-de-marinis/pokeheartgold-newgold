@@ -157,6 +157,7 @@ u16 Species_GetBattleFormReversion(u16 species);
 BOOL Mon_RevertFormChange(Pokemon *mon);
 u16 Species_HeldItemForm(u16 species, u16 item);
 BOOL Mon_UpdateHeldItemForm(Pokemon *mon);
+BOOL BoxMon_UpdateHeldItemForm(BoxPokemon *boxMon);
 void Mon_ChangeToBattleForm(Pokemon *mon);
 int LowestFlagNo(u32 mask);
 BOOL IsPokemonBannedFromBattleFrontier(u16 species, u16 form);
