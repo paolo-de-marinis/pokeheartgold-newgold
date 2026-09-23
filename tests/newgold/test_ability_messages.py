@@ -38,7 +38,7 @@ class AbilityMessages(unittest.TestCase):
         konefr = {720: {314, 319}, 721: {314, 319}, 722: {313, 314, 319}}
         for bank in (720, 721, 722):
             engine = revision(REFERENCE, 'd0380a487', f'data/text/{bank}.txt').splitlines()
-            newgold = revision(REFERENCE, 'ccf2c9f5', f'data/text/{bank}.txt').splitlines()
+            newgold = revision(REFERENCE, '1fa3c9366', f'data/text/{bank}.txt').splitlines()
             rows = ET.parse(ROOT / f'files/msgdata/msg/msg_{bank:04}.gmm').getroot().findall('row')
             actual = [row.find("language[@name='English']").text for row in rows]
             self.assertEqual(actual, newgold)

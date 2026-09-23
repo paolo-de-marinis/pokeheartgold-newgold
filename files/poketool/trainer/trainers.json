@@ -1788,7 +1788,8 @@
       "name": "{TRNAME}Jasmine",
       "items": [
         "ITEM_HYPER_POTION",
-        "ITEM_HYPER_POTION"
+        "ITEM_HYPER_POTION",
+        "ITEM_FULL_RESTORE"
       ],
       "ai_flags": 7,
       "double": 0,
@@ -1797,14 +1798,14 @@
           "difficulty": 150,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 30,
-          "species": "SPECIES_MAGNEMITE",
-          "item": "ITEM_NONE",
+          "level": 43,
+          "species": "SPECIES_FORRETRESS",
+          "item": "ITEM_LEFTOVERS",
           "moves": [
-            "MOVE_THUNDERBOLT",
-            "MOVE_SUPERSONIC",
-            "MOVE_SONIC_BOOM",
-            "MOVE_THUNDER_WAVE"
+            "MOVE_SPIKES",
+            "MOVE_STEALTH_ROCK",
+            "MOVE_RAPID_SPIN",
+            "MOVE_GYRO_BALL"
           ],
           "capsule": 0
         },
@@ -1812,29 +1813,59 @@
           "difficulty": 150,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-          "level": 30,
-          "species": "SPECIES_MAGNEMITE",
-          "item": "ITEM_NONE",
-          "moves": [
-            "MOVE_THUNDERBOLT",
-            "MOVE_SUPERSONIC",
-            "MOVE_SONIC_BOOM",
-            "MOVE_THUNDER_WAVE"
-          ],
-          "capsule": 0
-        },
-        {
-          "difficulty": 150,
-          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-          "level": 35,
-          "species": "SPECIES_STEELIX",
+          "level": 44,
+          "species": "SPECIES_BRONZONG",
           "item": "ITEM_SITRUS_BERRY",
           "moves": [
-            "MOVE_SCREECH",
-            "MOVE_SANDSTORM",
-            "MOVE_ROCK_THROW",
-            "MOVE_IRON_TAIL"
+            "MOVE_REFLECT",
+            "MOVE_LIGHT_SCREEN",
+            "MOVE_HYPNOSIS",
+            "MOVE_GYRO_BALL"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 150,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
+          "level": 45,
+          "species": "SPECIES_MAGNEZONE",
+          "item": "ITEM_CHOICE_SPECS",
+          "moves": [
+            "MOVE_THUNDERBOLT",
+            "MOVE_FLASH_CANNON",
+            "MOVE_VOLT_SWITCH",
+            "MOVE_THUNDER_WAVE"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 150,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 47,
+          "species": "SPECIES_SKARMORY",
+          "item": "ITEM_SITRUS_BERRY",
+          "moves": [
+            "MOVE_DRILL_PECK",
+            "MOVE_ROOST",
+            "MOVE_SPIKES",
+            "MOVE_AERIAL_ACE"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 200,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
+          "level": 48,
+          "species": "SPECIES_STEELIX",
+          "item": "ITEM_LEFTOVERS",
+          "moves": [
+            "MOVE_EARTHQUAKE",
+            "MOVE_IRON_TAIL",
+            "MOVE_STEALTH_ROCK",
+            "MOVE_ROAR"
           ],
           "capsule": 0
         }
@@ -25974,6 +26005,20 @@
             "MOVE_WATERFALL"
           ],
           "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 40,
+          "species": "SPECIES_DUSCLOPS",
+          "moves": [
+            "MOVE_WILL_O_WISP",
+            "MOVE_SHADOW_SNEAK",
+            "MOVE_DISABLE",
+            "MOVE_NIGHT_SHADE"
+          ],
+          "capsule": 0
         }
       ],
       "messages": [
@@ -26010,6 +26055,20 @@
             "MOVE_WATER_GUN",
             "MOVE_GROWL",
             "MOVE_STRENGTH"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 20,
+          "species": "SPECIES_COFAGRIGUS",
+          "moves": [
+            "MOVE_WILL_O_WISP",
+            "MOVE_NIGHT_SHADE",
+            "MOVE_DISABLE",
+            "MOVE_ASTONISH"
           ],
           "capsule": 0
         }
