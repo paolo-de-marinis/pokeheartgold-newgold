@@ -270,6 +270,13 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} was freed\nfrom the telekinesis!",
         r"The opposing {STRVAR_1 1, 0, 0} was freed\nfrom the telekinesis!",
     ]),
+    # Beak Blast heating up as the turn begins. The engine leaves the move
+    # unimplemented; the later games' line.
+    ("beak blast", [
+        r"{STRVAR_1 1, 0, 0} started heating\nup its beak!",
+        r"The wild {STRVAR_1 1, 0, 0} started heating\nup its beak!",
+        r"The opposing {STRVAR_1 1, 0, 0} started\nheating up its beak!",
+    ]),
 ]
 
 

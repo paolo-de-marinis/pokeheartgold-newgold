@@ -815,5 +815,23 @@ int main(void) {
         step = umc[umc.index("case UMC_STATE_TELEKINESIS:"):umc.index("case UMC_STATE_HEALBLOCK:")]
         self.assertIn(f"ctx->buffMsg.id = msg_0197_{import_battle_messages.port_row('telekinesis ends'):05d};", step)
 
+    def test_beak_blast_burns_what_touches_its_heating_user(self):
+        # Pokemon Central (Cannonbecco): the beak heats as the turn begins,
+        # whatever the user's status, and a contact hit on it before it moves
+        # burns the attacker.
+        import import_battle_messages
+        self.assertImplemented("BEAK_BLAST", "MOVE_EFFECT_HIT")
+        before = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_BeforeTurn")
+        heating = before[before.index("MOVE_BEAK_BLAST"):]
+        self.assertIn("ctx->turnData[battlerId].beakBlastCharging = TRUE;", heating)
+        self.assertIn(f"ctx->buffMsg.id = msg_0197_{import_battle_messages.port_row('beak blast'):05d};", heating)
+        self.assertNotIn("STATUS_SLEEP", heating[:heating.index("{")])
+        hit = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CheckAbilityEffectOnHit")
+        burning = hit[hit.index("beakBlastCharging"):]
+        burning = burning[:burning.index("return TRUE;")]
+        self.assertIn("ov12_0225561C(ctx, ctx->battlerIdTarget) == FALSE", burning)
+        self.assertIn("BattleMoveMakesContact(ctx, ctx->moveNoCur)", burning)
+        self.assertIn("*script = BATTLE_SUBSCRIPT_BURN;", burning)
+
 if __name__ == "__main__":
     unittest.main()

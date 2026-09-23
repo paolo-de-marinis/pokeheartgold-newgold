@@ -478,6 +478,10 @@ IMPLEMENTED_HERE = {
     # Telekinesis lifts its target for three turns, out of the ground's reach
     # and into every move's (Pokemon Central, Telecinesi): effect script 439.
     "TELEKINESIS": "MOVE_EFFECT_TELEKINESIS",
+    # Beak Blast heats its user's beak as the turn begins and burns what
+    # touches it before it strikes (Pokemon Central, Cannonbecco): the
+    # controller's turn start and CheckAbilityEffectOnHit.
+    "BEAK_BLAST": "MOVE_EFFECT_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

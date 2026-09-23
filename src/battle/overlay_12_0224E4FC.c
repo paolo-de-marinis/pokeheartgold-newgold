@@ -6963,6 +6963,22 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         return TRUE;
     }
 
+    // A beak heating for Beak Blast burns what touches its Pokemon before that
+    // Pokemon has moved (Pokemon Central, Cannonbecco); the contact test is
+    // the one Long Reach, Protective Pads and a Punching Glove answer, and the
+    // burn subscript the one every burn takes, immunities and all.
+    if (ctx->turnData[ctx->battlerIdTarget].beakBlastCharging && ov12_0225561C(ctx, ctx->battlerIdTarget) == FALSE
+        && ctx->battleMons[ctx->battlerIdAttacker].hp && !ctx->battleMons[ctx->battlerIdAttacker].status && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)
+        && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
+        && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)
+        && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+        ctx->statChangeType = SIDE_EFFECT_TYPE_INDIRECT;
+        ctx->battlerIdStatChange = ctx->battlerIdAttacker;
+        ctx->battlerIdTemp = ctx->battlerIdTarget;
+        *script = BATTLE_SUBSCRIPT_BURN;
+        return TRUE;
+    }
+
     // Every ability below belongs to the Pokemon that was hit. Poison Touch is
     // the attacker's, so it is checked on its own and poisons the other way
     // round: the target takes the status, the attacker is named for it. A

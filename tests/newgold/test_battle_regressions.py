@@ -34,6 +34,7 @@ FIXTURE = r"""
 #include <stdint.h>
 #include "constants/battle.h"
 #include "constants/battle_subscript.h"
+#include "constants/message_tags.h"
 #include "constants/moves.h"
 
 enum { NARC_a_0_0_1 = 0, TRUE = 1 };
@@ -46,7 +47,8 @@ typedef struct {
     int stateBeforeTurn, beforeTurnData, executionOrder[BATTLER_MAX];
     u32 switchInFlag;
     struct { u32 status, status2; } battleMons[BATTLER_MAX];
-    struct { int struggleFlag; } turnData[BATTLER_MAX];
+    struct { int struggleFlag, beakBlastCharging; } turnData[BATTLER_MAX];
+    struct { int id, tag, param[6]; } buffMsg;
     int battlerIdTemp, commandNext, command;
     u32 unk_310C[BATTLER_MAX];
     int selectedMove[BATTLER_MAX];
@@ -57,6 +59,7 @@ static u32 MaskOfFlagNo(int battler) { return 1u << battler; }
 static int GetBattlerSelectedMove(BattleContext *ctx, int battler) { return ctx->selectedMove[battler]; }
 static int CheckTruant(BattleContext *ctx, int battler) { (void)ctx; (void)battler; return 0; }
 static void BattleController_EmitBlankMessage(BattleSystem *bs) { (void)bs; }
+static int CreateNicknameTag(BattleContext *ctx, int battler) { (void)ctx; return battler; }
 static void ReadBattleScriptFromNarc(BattleContext *ctx, int narc, int script) {
     (void)ctx; (void)narc; (void)script;
     assert(0 && "Unexpected script while processing Rage");
@@ -113,7 +116,10 @@ class BattleRegressions(unittest.TestCase):
         enum = re.search(r"typedef enum BeforeTurnState \{.*?\} BeforeTurnState;", source, re.S)
         self.assertIsNotNone(enum)
         program = FIXTURE.replace("@BEFORE_TURN_ENUM@", enum.group())
-        program = program.replace("@BEFORE_TURN_FUNCTION@", function(source, "BattleControllerPlayer_BeforeTurn"))
+        before = function(source, "BattleControllerPlayer_BeforeTurn")
+        program = program.replace("@BEFORE_TURN_FUNCTION@", before)
+        # The lines the turn start prints are named by their rows.
+        program = "".join(f"#define {row} {int(row[len('msg_0197_'):])}\n" for row in sorted(set(re.findall(r"msg_0197_\d+", before)))) + program
         with tempfile.TemporaryDirectory(prefix="newgold-battle-") as directory:
             path = Path(directory)
             (path / "test.c").write_text(program)

@@ -90,7 +90,8 @@ typedef struct TurnData {
     u32 switchedIn : 1;                // came into the battle during this turn, so has not acted in it: Payback does not double
     u32 statRaised : 1; // a stat of its rose this turn, or before the first: Burning Jealousy burns it
     u32 electrified : 1; // Electrify landed on it: its move this turn is Electric
-    u32 unk0_A : 16;
+    u32 beakBlastCharging : 1; // heating its beak for Beak Blast: what touches it before it moves is burned
+    u32 unk0_A : 15;
     int physicalDamage[4];
     int battlerIdPhysicalDamage;
     int battlerBitPhysicalDamage;

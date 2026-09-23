@@ -944,6 +944,21 @@ static void BattleControllerPlayer_BeforeTurn(BattleSystem *battleSystem, Battle
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                     return;
                 }
+                // Beak Blast heats its user's beak as the turn begins, asleep,
+                // frozen or confused as it may be, and until it moves what
+                // touches it is burned (Pokemon Central, Cannonbecco;
+                // CheckAbilityEffectOnHit).
+                if (GetBattlerSelectedMove(ctx, battlerId) == MOVE_BEAK_BLAST && !ctx->turnData[battlerId].struggleFlag) {
+                    BattleController_EmitBlankMessage(battleSystem);
+                    ctx->turnData[battlerId].beakBlastCharging = TRUE;
+                    ctx->buffMsg.id = msg_0197_01885; // {0} started heating up its beak!
+                    ctx->buffMsg.tag = TAG_NICKNAME;
+                    ctx->buffMsg.param[0] = CreateNicknameTag(ctx, battlerId);
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SHOW_PREPARED_MESSAGE);
+                    ctx->commandNext = ctx->command;
+                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                    return;
+                }
             }
             ctx->beforeTurnData = 0;
             ctx->stateBeforeTurn++;

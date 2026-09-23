@@ -7540,4 +7540,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} was freed\nfrom the telekinesis!</language>
 	</row>
+	<row id="msg_0197_01885" index="1885">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} started heating\nup its beak!</language>
+	</row>
+	<row id="msg_0197_01886" index="1886">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} started heating\nup its beak!</language>
+	</row>
+	<row id="msg_0197_01887" index="1887">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} started\nheating up its beak!</language>
+	</row>
 </body>
