@@ -3753,11 +3753,11 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count) {
 // moves, which this game never lets anyone use. Both lists are the
 // reference's, sorted, and Tachyon Cutter, which strikes twice of itself and
 // which the reference left off, so that the ability took its second strike's
-// power away. Present is on the second list because its own script strikes
-// twice when it wounds and once when it heals. Future Sight and Doom Desire
-// strike turns later and Misty Explosion faints its user as Explosion does;
-// the reference leaves all three off, and the second pass of the first two
-// failed.
+// power away, and New Gold's Solar Seeds, which strikes two to five times.
+// Present is on the second list because its own script strikes twice when it
+// wounds and once when it heals. Future Sight and Doom Desire strike turns
+// later and Misty Explosion faints its user as Explosion does; the reference
+// leaves all three off, and the second pass of the first two failed.
 static const u16 sMultiStrikeMoves[] = {
     MOVE_ARM_THRUST,
     MOVE_BARRAGE,
@@ -3781,6 +3781,7 @@ static const u16 sMultiStrikeMoves[] = {
     MOVE_POPULATION_BOMB,
     MOVE_ROCK_BLAST,
     MOVE_SCALE_SHOT,
+    MOVE_SOLAR_SEEDS,
     MOVE_SPIKE_CANNON,
     MOVE_SURGING_STRIKES,
     MOVE_TACHYON_CUTTER,

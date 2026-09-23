@@ -6,7 +6,9 @@ d0380a487; Pokemon Central, Amorefiliale)."""
 import os
 import re
 import shlex
+import struct
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -177,12 +179,33 @@ class ParentalBondTests(unittest.TestCase):
         if not REFERENCE.exists():
             self.skipTest("Pinned NewGold reference checkout not configured")
         # Tachyon Cutter strikes twice of itself; the reference left it off.
-        self.assertEqual(set(table("sMultiStrikeMoves")), reference_list("MultiHitMovesList") | {"MOVE_TACHYON_CUTTER"})
+        # Solar Seeds is New Gold's, and strikes two to five times.
+        self.assertEqual(set(table("sMultiStrikeMoves")),
+                         reference_list("MultiHitMovesList") | {"MOVE_TACHYON_CUTTER", "MOVE_SOLAR_SEEDS"})
         # Future Sight and Doom Desire strike later; Misty Explosion faints its
         # user. The reference leaves the three off.
         self.assertEqual(set(table("sParentalBondSingleStrikeMoves")),
                          reference_list("ParentalBondSingleStrikeMovesList")
                          | {"MOVE_FUTURE_SIGHT", "MOVE_DOOM_DESIRE", "MOVE_MISTY_EXPLOSION"})
+
+    def test_every_move_that_sets_its_own_strikes_is_on_the_list(self):
+        # A move whose script counts its own strikes would have the count
+        # taken from it, SetMultiHit giving way to one already set. Present's
+        # script strikes twice for the ability itself.
+        effects = {int(m.group(1)) for path in EFFECTS.glob("effect_script_*.s")
+                   for m in [re.match(r"effect_script_(\d+)\.s", path.name)]
+                   if re.search(r"^\s*(SetMultiHit|BeatUp)\b", path.read_text(), re.M)}
+        sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+        import import_moves
+        records = import_moves.read_table()
+        moves = {}
+        for name, n in re.findall(r"#define (MOVE_[A-Z0-9_]+)\s+(\d+)\s*$",
+                                  (ROOT / "include/constants/moves.h").read_text(), re.M):
+            moves.setdefault(int(n), name)
+        listed = set(table("sMultiStrikeMoves")) | set(table("sParentalBondSingleStrikeMoves"))
+        for number, record in enumerate(records):
+            if number in moves and struct.unpack("<H", record[:2])[0] in effects:
+                self.assertIn(moves[number], listed, f"{moves[number]} strikes more than once")
 
     def test_the_second_strike_is_a_quarter(self):
         body = function(COMMANDS.read_text(), "DamageCalcDefault")
