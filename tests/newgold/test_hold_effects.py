@@ -77,8 +77,9 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # seventeen Memories, the Roseli Berry and Heavy-Duty Boots.
 # The Blank Plate's power took one more.
 # The three origin items and Ogerpon's three masks took six.
-# The Gems took one, the Binding Band one, the Adrenaline Orb one.
-IMPORTED_AND_UNREAD = 9
+# The Gems took one, the Binding Band one, the Adrenaline Orb one, the
+# Blunder Policy one.
+IMPORTED_AND_UNREAD = 8
 
 
 def effects_defined():
@@ -529,6 +530,81 @@ class AdrenalineOrbTests(unittest.TestCase):
         self.assertIn("UpdateVar OPCODE_SET, BSCRIPT_VAR_MESSAGE, STAT_SPEED", setup)
         self.assertIn("UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_STAT_CHANGE", setup)
         self.assertIn("BMON_DATA_HELD_ITEM, BSCRIPT_VAR_MSG_ITEM_TEMP", setup)
+
+
+BLUNDER_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/items.h"
+#include "constants/move_effects.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8; typedef int8_t s8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { u16 effect; } MoveTbl;
+typedef struct { int hp; s8 statChanges[8]; } BattleMon;
+typedef struct { int battlerIdAttacker; u32 moveNoCur; u32 moveStatusFlag; BattleMon battleMons[4]; } BattleContext;
+static int sItem, sAbility;
+static MoveTbl sMove;
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return sItem; }
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return sAbility; }
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &sMove; }
+@FUNCTION@
+static int answers(int item, u32 flags, int effect, int hp, int speed, int ability) {
+    BattleContext ctx = { 0 };
+    sItem = item; sAbility = ability; sMove.effect = effect;
+    ctx.moveStatusFlag = flags;
+    ctx.battleMons[0].hp = hp;
+    ctx.battleMons[0].statChanges[STAT_SPEED] = speed;
+    return BlunderPolicyAnswersMiss(&ctx);
+}
+int main(void) {
+    int bp = HOLD_EFFECT_BOOST_SPEED_ON_MISS;
+    assert(answers(bp, MOVE_STATUS_MISSED, MOVE_EFFECT_HIT, 50, 6, ABILITY_NONE));
+    assert(answers(bp, MOVE_STATUS_MISSED, MOVE_EFFECT_HIT, 50, 11, ABILITY_NONE));
+    assert(!answers(bp, MOVE_STATUS_MISSED, MOVE_EFFECT_HIT, 50, 12, ABILITY_NONE));
+    assert(answers(bp, MOVE_STATUS_MISSED, MOVE_EFFECT_HIT, 50, 12, ABILITY_CONTRARY));
+    assert(!answers(bp, MOVE_STATUS_MISSED, MOVE_EFFECT_HIT, 50, 0, ABILITY_CONTRARY));
+    assert(!answers(bp, MOVE_STATUS_MISSED, MOVE_EFFECT_ONE_HIT_KO, 50, 6, ABILITY_NONE));
+    assert(!answers(bp, MOVE_STATUS_MISSED | MOVE_STATUS_SEMI_INVULNERABLE, MOVE_EFFECT_HIT, 50, 6, ABILITY_NONE));
+    assert(!answers(bp, MOVE_STATUS_MISSED | MOVE_STATUS_PROTECTED, MOVE_EFFECT_HIT, 50, 6, ABILITY_NONE));
+    assert(!answers(bp, MOVE_STATUS_NO_EFFECT, MOVE_EFFECT_HIT, 50, 6, ABILITY_NONE));
+    assert(!answers(bp, MOVE_STATUS_MISSED, MOVE_EFFECT_HIT, 0, 6, ABILITY_NONE));
+    assert(!answers(HOLD_EFFECT_NONE, MOVE_STATUS_MISSED, MOVE_EFFECT_HIT, 50, 6, ABILITY_NONE));
+    return 0;
+}
+"""
+
+
+class BlunderPolicyTests(unittest.TestCase):
+    """The reference has a TODO where the Blunder Policy goes; Pokemon Central
+    (Fiascopolizza): a miss on the accuracy roll alone raises the holder's
+    Speed two stages and spends the policy -- not for a one-hit KO, a target
+    out of reach, a guard or an immunity, and not at Speed +6 (-6 with
+    Contrary)."""
+
+    def test_which_misses_it_answers(self):
+        body = function(CONTROLLER.read_text(), "BlunderPolicyAnswersMiss")
+        run_c(BLUNDER_FIXTURE.replace("@FUNCTION@", body))
+
+    def test_the_missed_branch_hands_it_the_miss(self):
+        body = function(CONTROLLER.read_text(), "ov12_0224C5F8")
+        self.assertIn("BlunderPolicyAnswersMiss(ctx) == TRUE ? BATTLE_SUBSCRIPT_BLUNDER_POLICY : BATTLE_SUBSCRIPT_MISSED",
+                      body)
+
+    def test_the_miss_is_told_then_speed_rises_two_and_the_policy_goes(self):
+        script = subscript_named("BATTLE_SUBSCRIPT_BLUNDER_POLICY")
+        self.assertEqual(walk(script, {}.get), ["BATTLE_SUBSCRIPT_MISSED", "BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE"])
+        self.assertEqual(walk(script, {"BMON_DATA_HP": 0}.get), ["BATTLE_SUBSCRIPT_MISSED"])
+        raise_at = script.index("Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE")
+        for line in ("SIDE_EFFECT_TYPE_HELD_ITEM", "MOVE_SUBSCRIPT_PTR_SPEED_UP_2_STAGES",
+                     "BSCRIPT_VAR_BATTLER_STAT_CHANGE, BSCRIPT_VAR_BATTLER_ATTACKER",
+                     "BMON_DATA_HELD_ITEM, BSCRIPT_VAR_MSG_ITEM_TEMP"):
+            self.assertIn(line, script[:raise_at])
+        self.assertIn("RemoveItem BATTLER_CATEGORY_ATTACKER", script[raise_at:])
 
 
 if __name__ == "__main__":

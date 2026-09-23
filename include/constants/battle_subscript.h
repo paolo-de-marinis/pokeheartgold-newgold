@@ -699,6 +699,8 @@
 #define BATTLE_SUBSCRIPT_GEM                                428
 // Intimidate meeting an Adrenaline Orb, which the reference has no script for.
 #define BATTLE_SUBSCRIPT_ADRENALINE_ORB                     429
+// A miss spending a Blunder Policy, which the reference has no script for.
+#define BATTLE_SUBSCRIPT_BLUNDER_POLICY                     430
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

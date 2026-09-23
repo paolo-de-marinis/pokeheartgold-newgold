@@ -3413,6 +3413,32 @@ static void ov12_0224C5C8(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
+// A Blunder Policy answers a move of its holder's that missed on the accuracy
+// roll alone: the Speed rises two stages and the policy is spent. The
+// reference has the case and a TODO in its place
+// (ServerDoPostMoveEffects.c:1475 at d0380a487), so this follows Pokemon
+// Central (Fiascopolizza): not for a one-hit KO move, not for a target out of
+// reach underground or in the air, not for the later hits of Triple Kick and
+// its kind (those leave by the multi-hit branch before this is asked), and
+// not with the Speed already at +6 -- or at -6 with Contrary, which turns the
+// raise into a drop. A miss is only the roll's when nothing else stopped the
+// move: a guard, an immunity or a failure is not the policy's business.
+static BOOL BlunderPolicyAnswersMiss(BattleContext *ctx) {
+    int attacker = ctx->battlerIdAttacker;
+    int speed = ctx->battleMons[attacker].statChanges[STAT_SPEED];
+
+    if (GetBattlerHeldItemEffect(ctx, attacker) != HOLD_EFFECT_BOOST_SPEED_ON_MISS
+        || (ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT) != MOVE_STATUS_MISSED
+        || BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_ONE_HIT_KO
+        || ctx->battleMons[attacker].hp == 0) {
+        return FALSE;
+    }
+    if (GetBattlerAbility(ctx, attacker) == ABILITY_CONTRARY) {
+        return speed > 0;
+    }
+    return speed < 12;
+}
+
 static void ov12_0224C5F8(BattleSystem *battleSystem, BattleContext *ctx) {
     if (ctx->moveStatusFlag & MOVE_STATUS_NO_MORE_WORK) {
         ctx->command = CONTROLLER_COMMAND_35;
@@ -3425,7 +3451,7 @@ static void ov12_0224C5F8(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->moveStatusFlag |= MOVE_STATUS_MULTI_HIT_DISRUPTED;
         ctx->command = CONTROLLER_COMMAND_29;
     } else if (ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT) {
-        ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_MISSED);
+        ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BlunderPolicyAnswersMiss(ctx) == TRUE ? BATTLE_SUBSCRIPT_BLUNDER_POLICY : BATTLE_SUBSCRIPT_MISSED);
         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
         ctx->commandNext = CONTROLLER_COMMAND_34;
     } else {
