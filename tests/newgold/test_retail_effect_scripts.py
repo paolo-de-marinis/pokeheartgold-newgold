@@ -47,8 +47,8 @@ STILL_DIFFERENT = {
     121: IN_C.format("Return's power, CalcBaseDamage.c"),
     122: PARENTAL_BOND,
     123: IN_C.format("Frustration's power, CalcBaseDamage.c"),
-    129: "Rapid Spin's Speed raise: the engine sets it here and clears the field in "
-         "ServerDoPostMoveEffects.c",
+    129: "the engine raises Rapid Spin's Speed here and clears the field in "
+         "ServerDoPostMoveEffects.c; here both are the move's subscript, 115",
     132: "Mega Sol, which the recovery command here does not read",
     136: "the primal weathers and the engine's weather subscripts",
     137: "the primal weathers and the engine's weather subscripts",
@@ -168,6 +168,15 @@ class RetailEffectScriptTests(unittest.TestCase):
                          "effect scripts that are the engine's now: take them off the list")
 
 
+def constant(name):
+    return int(re.search(rf"#define {name}\s+(\d+)", (ROOT / "include/constants/battle_subscript.h").read_text()).group(1))
+
+
+def subscript(name):
+    number = constant(f"BATTLE_SUBSCRIPT_{name}")
+    return next((ROOT / "files/battledata/script/subscript").glob(f"subscript_{number:04d}*.s")).read_text()
+
+
 def script(effect):
     return next(EFFECT_SCRIPTS.glob(f"effect_script_{effect:04d}*.s")).read_text()
 
@@ -232,6 +241,13 @@ class BroughtOverTests(unittest.TestCase):
         self.assertRegex(body, r"move == MOVE_TOXIC\s*&& \(ctx->battleMons\[battlerIdAttacker\]\.type1 == TYPE_POISON"
                                r"[^{]*type3 == TYPE_POISON\)\) \{\s*ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;\s*return FALSE;")
         self.assertLess(body.index("MOVE_TOXIC"), body.index("ABILITY_NO_GUARD"))
+    def test_rapid_spin_raises_speed_before_it_clears(self):
+        # Generation VIII: the Speed rise, then the clearing, both only while
+        # the user stands; retail's subscript 115 was the clearing alone.
+        text = subscript("RAPID_SPIN")
+        self.assertRegex(text, r"BMON_DATA_HP, 0, (\w+)[^:]*MOVE_SUBSCRIPT_PTR_SPEED_UP_1_STAGE\s*"
+                               r"Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE\s*RapidSpin")
+
 
 if __name__ == "__main__":
     unittest.main()
