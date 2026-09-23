@@ -22538,68 +22538,6 @@ ov18_021F9648: ; 0x021F9648
 	pop {r3, r4, r5, r6, pc}
 	thumb_func_end ov18_021F9648
 
-	thumb_func_start ov18_021F967C
-ov18_021F967C: ; 0x021F967C
-	lsl r1, r0, #2
-	ldr r0, _021F9684 ; =ov18_021FBE10
-	ldr r0, [r0, r1]
-	bx lr
-	.balign 4, 0
-_021F9684: .word ov18_021FBE10
-	thumb_func_end ov18_021F967C
-
-	thumb_func_start ov18_021F9688
-ov18_021F9688: ; 0x021F9688
-	ldr r1, _021F9690 ; =ov18_021FBDFC
-	ldrb r0, [r1, r0]
-	bx lr
-	nop
-_021F9690: .word ov18_021FBDFC
-	thumb_func_end ov18_021F9688
-
-	thumb_func_start ov18_021F9694
-ov18_021F9694: ; 0x021F9694
-	push {r4, r5, r6, lr}
-	sub sp, #8
-	add r5, r0, #0
-	add r4, r1, #0
-	bl ov18_021E5900
-	add r6, r0, #0
-	add r0, r5, #0
-	bl ov18_021E5904
-	add r1, r0, #0
-	str r4, [sp]
-	add r0, r6, #0
-	mov r2, #1
-	add r3, sp, #4
-	bl GfGfxLoader_GetCharData
-	add r6, r0, #0
-	ldr r0, [sp, #4]
-	mov r1, #0x80
-	ldr r5, [r0, #0x14]
-	add r0, r4, #0
-	bl Heap_AllocAtEnd
-	mov r1, #0
-	mov r2, #0x80
-	add r4, r0, #0
-	bl memset
-	add r1, r5, #0
-	add r0, r4, #0
-	add r1, #0x80
-	mov r2, #0x40
-	bl memcpy
-	add r0, r4, #0
-	add r0, #0x40
-	add r1, r5, #0
-	mov r2, #0x40
-	bl memcpy
-	add r0, r6, #0
-	bl Heap_Free
-	add r0, r4, #0
-	add sp, #8
-	pop {r4, r5, r6, pc}
-	.balign 4, 0
-	thumb_func_end ov18_021F9694
 
 	.rodata
 	.balign 4, 0
@@ -23877,32 +23815,3 @@ ov18_021FBDB4:
 	.byte 0x01, 0x17, 0x0D, 0x08, 0x02, 0x01
 	.short 0x02AE
 	.size ov18_021FBDB4,.-ov18_021FBDB4
-
-	.global ov18_021FBDFC
-ov18_021FBDFC:
-	.byte 0x00, 0x02, 0x00, 0x03
-	.byte 0x01, 0x01, 0x03, 0x02, 0x00, 0x00, 0x02, 0x02, 0x01, 0x01, 0x01, 0x00, 0x02, 0x03, 0x00, 0x00
-	.size ov18_021FBDFC,.-ov18_021FBDFC
-
-	.global ov18_021FBE10
-	.balign 4, 0
-ov18_021FBE10:
-	.word 0x00000024
-	.word 0x0000002A
-	.word 0x00000032
-	.word 0x0000002E
-	.word 0x0000002C
-	.word 0x00000029
-	.word 0x0000002F
-	.word 0x0000002B
-	.word 0x0000002D
-	.word 0x00000024
-	.word 0x00000025
-	.word 0x00000027
-	.word 0x00000026
-	.word 0x00000028
-	.word 0x00000033
-	.word 0x00000031
-	.word 0x00000034
-	.word 0x00000030
-	.size ov18_021FBE10,.-ov18_021FBE10

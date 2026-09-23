@@ -295,3 +295,6 @@
 .public DSProt_DetectFlashcart
 .public DSProt_DetectEmulator
 .public DSProt_DetectNotDummy
+.public ov18_021F967C
+.public ov18_021F9688
+.public ov18_021F9694
