@@ -5,7 +5,9 @@
 _000:
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_MSG_TEMP, ABILITY_MAGIC_GUARD, _041
     UpdateMonDataFromVar OPCODE_GET, BATTLER_CATEGORY_MSG_TEMP, BMON_DATA_MAXHP, BSCRIPT_VAR_HP_CALC
-    DivideVarByValue BSCRIPT_VAR_HP_CALC, 8
+    // A sixteenth, and a thirty-second with Heatproof, as the reference has
+    // it. HeartGold took an eighth.
+    DivideVarByValue BSCRIPT_VAR_HP_CALC, 16
     CheckAbility CHECK_OPCODE_NOT_HAVE, BATTLER_CATEGORY_MSG_TEMP, ABILITY_HEATPROOF, _020
     DivideVarByValue BSCRIPT_VAR_HP_CALC, 2
 
