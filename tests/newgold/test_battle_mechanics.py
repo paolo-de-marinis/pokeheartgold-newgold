@@ -1140,8 +1140,10 @@ class DraggedInTests(unittest.TestCase):
         """In the games the Pokemon Dragon Tail or Circle Throw hits answers
         the hit -- Rough Skin, Justified, a Rocky Helmet -- and is dragged out
         at the end of the move. The hit's side effect marks it instead of
-        dragging it, and the move's end drags it before the switching items
-        (Pokemon Central, Cartelrosso: a holder dragged out uses no card)."""
+        dragging it, and the move's end drags it in the engine's step for the
+        move's additional effects, after the recoil and before Magician and
+        the switching items (Pokemon Central, Cartelrosso: a holder dragged
+        out uses no card)."""
         dispatch = function(OVERLAY.read_text(), "ov12_02250490")
         self.assertIn("if (ret == TRUE && *out == BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE\n"
                       "        && BattleMoveTbl(ctx, ctx->moveNoCur)->category != CATEGORY_STATUS) {\n"
@@ -1149,13 +1151,18 @@ class DraggedInTests(unittest.TestCase):
                       "        ret = FALSE;", dispatch)
         # After Parental Bond's hold-back, so only the last strike drags.
         self.assertLess(dispatch.index("ParentalBond_StrikeToCome(ctx)"), dispatch.index("dragPending = TRUE"))
-        end = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224E1BC")
-        drag = end.index("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE);")
-        self.assertLess(end.index("ctx->selfTurnData[ctx->battlerIdTarget].dragPending = FALSE;"), drag)
-        self.assertLess(drag, end.index("CheckSwitchItemOnHit("))
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        effects = function(controller, "TryAdditionalMoveEffect")
+        drag = effects.index("RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE);")
+        self.assertLess(effects.index("ctx->selfTurnData[target].dragPending = FALSE;"), drag)
         # Not once the user has fainted to what the hit set off (Codadrago).
-        self.assertIn("if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdAttacker].hp) {\n"
-                      "                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE);", end)
+        self.assertIn("if (!ctx->battleMons[target].hp || !ctx->battleMons[ctx->battlerIdAttacker].hp) {\n"
+                      "            return FALSE;", effects[:drag])
+        end = function(controller, "ov12_0224E1BC")
+        step = end.index("TryAdditionalMoveEffect(ctx)")
+        self.assertLess(end.index("TryRecoil(ctx)"), step)
+        self.assertLess(step, end.index("TryMagician("))
+        self.assertLess(step, end.index("CheckSwitchItemOnHit("))
 
     def test_a_pokemon_being_dragged_out_does_not_answer_with_three_abilities(self):
         """Pokemon Central (Codadrago): the target's Pickpocket, Color Change

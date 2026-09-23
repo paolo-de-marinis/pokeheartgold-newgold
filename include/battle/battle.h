@@ -653,10 +653,9 @@ typedef struct BattleContext {
     // (BtlCmd_SetBindingTurns), which is the only way into one.
     u8 bindingBandBinds;
     // What Parental Bond's first strike left to the second -- the side
-    // effect ov12_02250490 held back, or the recoil -- as the side-effect
-    // flags that ask for it, until the multi-strike loop knows whether the
-    // second strike comes; zero when nothing waits. Cleared as each action is
-    // dispatched.
+    // effect ov12_02250490 held back -- as the side-effect flags that ask for
+    // it, until the multi-strike loop knows whether the second strike comes;
+    // zero when nothing waits. Cleared as each action is dispatched.
     u32 parentalBondDeferred;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks

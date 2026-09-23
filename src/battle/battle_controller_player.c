@@ -4030,13 +4030,13 @@ static void ov12_0224CF10(BattleSystem *battleSystem, BattleContext *ctx) {
 }
 
 static void ov12_0224CF14(BattleSystem *battleSystem, BattleContext *ctx) {
-    // Parental Bond's first strike left its side effect or its recoil to the
-    // second (ov12_02250490), and Effect Spore has since put the user to
-    // sleep, which ends the move here. What was left is done now, as after
-    // the last strike: the move no longer strikes twice, so the recoil
-    // subscripts take this strike as the only one. When the second strike
-    // comes -- a Chesto or Lum Berry woke the user straight away -- it does
-    // them itself.
+    // Parental Bond's first strike left its side effect to the second
+    // (ov12_02250490), and Effect Spore has since put the user to sleep,
+    // which ends the move here. What was left is done now, as after the last
+    // strike: the move no longer strikes twice. When the second strike comes
+    // -- a Chesto or Lum Berry woke the user straight away -- it does it
+    // itself. The recoil is no side effect: it comes once the move is over
+    // (TryRecoil), from the one strike's damage.
     if (ctx->parentalBondDeferred != 0) {
         u32 deferred = ctx->parentalBondDeferred;
         int script;
@@ -4994,6 +4994,20 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
     int target = ctx->battlerIdTarget;
     int script;
 
+    // Dragon Tail and Circle Throw drag their target out now that it has
+    // answered the hit (ov12_02250490 marked it), the engine's
+    // MOVE_EFFECT_FORCE_SWITCH_HIT here (ServerDoPostMoveEffects.c:1213 at
+    // d0380a487): after the recoil, before Magician and the Red Cards and
+    // Eject Buttons; not if the user fainted to its Rough Skin, Iron Barbs,
+    // Rocky Helmet or Gulp Missile (Pokemon Central, Codadrago).
+    if (target != BATTLER_NONE && ctx->selfTurnData[target].dragPending) {
+        ctx->selfTurnData[target].dragPending = FALSE;
+        if (!ctx->battleMons[target].hp || !ctx->battleMons[ctx->battlerIdAttacker].hp) {
+            return FALSE;
+        }
+        RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE);
+        return TRUE;
+    }
     if (target == BATTLER_NONE || (ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
         return FALSE;
     }
@@ -5141,28 +5155,16 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             // first and both can act on one move -- the card's Pokemon comes
             // in before the button's -- but one of each at most, of several
             // buttons the fastest holder's (Pokemon Central, Pulsantefuga).
-            // Dragon Tail and Circle Throw drag their target out first, now
-            // that it has answered the hit (ov12_02250490 marked it), so a
-            // card or a button it held is not used (Pokemon Central,
-            // Cartelrosso: not by a holder the move drags out); not if the
-            // user fainted to its Rough Skin, Iron Barbs, Rocky Helmet or
-            // Gulp Missile (Codadrago).
+            // Dragon Tail and Circle Throw have dragged their target out by
+            // now (TryAdditionalMoveEffect), so a card or a button it held is
+            // not used (Pokemon Central, Cartelrosso: not by a holder the move
+            // drags out).
             //
             // unk_34 walks the battlers in the order they act, once for the
             // cards and once for the buttons; SWITCH_ITEM_USED remembers that
             // a button sent somebody away. A card does not keep an Eject
             // Pack from acting after it (Pokemon Central, Zainofuga: the
             // card first, then the Pack, a second switch).
-            if (ctx->battlerIdTarget != BATTLER_NONE && ctx->selfTurnData[ctx->battlerIdTarget].dragPending) {
-                ctx->selfTurnData[ctx->battlerIdTarget].dragPending = FALSE;
-                if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdAttacker].hp) {
-                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE);
-                    ctx->commandNext = ctx->command;
-                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                    flag = 1;
-                    break;
-                }
-            }
             while ((ctx->unk_34 & ~SWITCH_ITEM_USED) < 2 * maxBattlers) {
                 int walk = ctx->unk_34 & ~SWITCH_ITEM_USED;
                 int card = walk < maxBattlers;
