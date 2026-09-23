@@ -81,5 +81,18 @@ class FairyTypeTests(unittest.TestCase):
         self.assertEqual(self.rows[-1], ("TYPE_ENDTABLE", "TYPE_ENDTABLE", NO_EFFECT))
 
 
+
+class FightButtonTests(unittest.TestCase):
+    def test_a_fairy_move_has_a_fight_button_palette(self):
+        """ov06_0221BA00 indexes the FIGHT buttons' palettes by the move's type
+        with no bound. With eighteen entries, a Fairy move read the word after
+        the table -- 0 in the built overlay -- and loaded a palette from
+        address 0, a data abort on hardware the moment FIGHT opened."""
+        header = (ROOT / "include/overlay_06.h").read_text()
+        table = header[header.index("ov06_0221BDD0[NUMBER_OF_MON_TYPES] = {"):]
+        table = table[:table.index("};")]
+        self.assertIn("[TYPE_FAIRY] = sFightButtonPalette_Fairy", table)
+        self.assertEqual(len(re.findall(r"^\s+(?:\[\w+\] = )?\w+,$", table, re.M)), 19)
+
 if __name__ == "__main__":
     unittest.main()

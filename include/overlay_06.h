@@ -1,6 +1,8 @@
 #ifndef POKEHEARTGOLD_OVERLAY_06_H
 #define POKEHEARTGOLD_OVERLAY_06_H
 
+#include "constants/pokemon.h"
+
 #include "heap.h"
 #include "palette.h"
 #include "unk_02014DA0.h"
@@ -375,7 +377,32 @@ static const u16 ov06_0221BBAC[] = {
     0x0000,
 };
 
-static const u16 *const ov06_0221BDD0[] = {
+// The FIGHT button of a Fairy move. Retail has one palette per type through
+// Dark, and the lookup below takes a move's type unchecked, so a Fairy move read
+// the word after the table -- 0 -- and loaded 32 bytes from address 0. hg-engine
+// (d0380a487, fairy.s, overlay 6 offset 0x290) makes it by rewriting halfwords
+// 2 to 9 of the ??? palette, because its Fairy is type 9; here ??? keeps 9 for
+// Curse and Fairy is 18, so the same colours are a palette of their own.
+static const u16 sFightButtonPalette_Fairy[] = {
+    0x75CD,
+    0x7FFF,
+    0x7EDF,
+    0xF23F,
+    0x6A1E,
+    0x59DD,
+    0xCD5B,
+    0xC117,
+    0xB4D6,
+    0x7F37,
+    0x18C6,
+    0x0000,
+    0x318C,
+    0x52F9,
+    0x637C,
+    0x0000,
+};
+
+static const u16 *const ov06_0221BDD0[NUMBER_OF_MON_TYPES] = {
     ov06_0221BB4C,
     ov06_0221BD8C,
     ov06_0221BD6C,
@@ -394,6 +421,7 @@ static const u16 *const ov06_0221BDD0[] = {
     ov06_0221BBCC,
     ov06_0221BBAC,
     ov06_0221BB8C,
+    [TYPE_FAIRY] = sFightButtonPalette_Fairy,
 };
 
 #endif // POKEHEARTGOLD_OVERLAY_06_H
