@@ -13,6 +13,8 @@ English:
 
 - an added species takes the reference's entry and category (a form, which has
   none of its own there, takes its base's), and its name as msg_0237 has it;
+  an entry too wide for the Dex's window is broken again as msg_0803's is
+  (import_species_text.fit_entry);
 - the egg and the bad egg are blank, and the retail alternate forms 496..507
   take their base species' row from the same bank.
 
@@ -64,7 +66,10 @@ def text_data(revision):
 
 
 def wanted(kind, data, name):
-    return name if kind == "name" else gmm.escape(data[kind])
+    """A row's text; an entry broken for the Dex's window as msg_0803's is."""
+    if kind == "name":
+        return name
+    return gmm.escape(import_species_text.fit_entry(data[kind]) if kind == "entry" else data[kind])
 
 
 def main():

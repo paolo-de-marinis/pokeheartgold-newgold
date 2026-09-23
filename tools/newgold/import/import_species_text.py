@@ -10,8 +10,9 @@ weight to 812 and 813 -- and scripts/msg_cat.py finishes them: " becomes ”,
 otherwise, and a non-empty height is padded on the left with spaces to 7
 characters, a weight to 11. Bank 811 is a static data/text/811.txt.
 
-This does the same at a revision (the engine, d0380a487, by default), with two
-differences that come from this port's numbering, not from the text:
+This does the same at a revision (the engine, d0380a487, by default), with
+three differences: two that come from this port's numbering, not from the
+text, and the Dex entry's line breaks (fit_entry).
 
 - A row is a port species, found in the reference by its SPECIES_ name: the
   two number the same species alike only up to 495. The retail alternate-form
@@ -23,6 +24,10 @@ differences that come from this port's numbering, not from the text:
   through its base species, so its own rows for them are placeholders; where a
   form's field is one, the row takes the base species' field, which is what
   hg-engine shows. A form with a real value of its own keeps it.
+- hg-engine breaks its entries' lines for a box wider than HeartGold's Dex
+  window, and an entry wider than the window is not drawn but for a piece of
+  its first line (fit_entry says why). Such an entry is broken again for the
+  window, by the game's own glyph widths; its words stay the reference's.
 
 811 is copied row for row: nothing reads it, and a row of spaces is written as
 a garbage row, because msgenc encodes a used row of spaces as nothing.
@@ -36,7 +41,10 @@ Without --write it reports what it would change and touches nothing.
 
 import argparse
 import re
+import struct
 import sys
+from functools import cache
+from itertools import combinations
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -50,6 +58,7 @@ BANKS = sorted(FIELDS) + [BLANK]
 UPPER = {817}              # msg_cat caps_list
 ARTICLE = {238}            # msg_cat article_list
 PAD = {812: 11, 813: 11, 814: 7, 815: 7}    # msg_cat force_lengths
+ENTRY = 803                # broken into lines for the Dex's window (fit_entry)
 
 # What hg-engine writes for a form that has nothing of its own to say.
 PLACEHOLDERS = {"name": {"-----"}, "pokedexEntry": {"", "-----"},
@@ -137,9 +146,100 @@ def fields_by_port_row(revision):
     return rows
 
 
+def entry_window():
+    """The Dex entry's window, from the tree: its width in pixels, and how
+    many lines of font 0 it shows.
+
+    ov18_021EE8B8 has ov18_021EE984 print the entry in window 11 of
+    ov18_021F9F3C (the capture page's, window 4 of ov18_021FBDB4, is the same
+    size). A line starts maxLetterHeight + lineSpacing below the last one
+    (sFontInfos), and one that starts below the window draws nothing."""
+    source = (gmm.ROOT / "src/application/pokedex/ov18_021F9F3C.c").read_text()
+    table = source[re.search(r"ov18_021F9F3C\[\w*\] = \{", source).end():]
+    window = re.findall(r"\{([^{}]*)\}", table)[11].split(",")
+    font = re.search(r"sFontInfos\[\] = \{\s*\{([^}]*)\}", (gmm.ROOT / "src/font.c").read_text()).group(1).split(",")
+    return int(window[3]) * 8, int(window[4]) * 8 // (int(font[1], 0) + int(font[3], 0))
+
+
+@cache
+def glyph_widths():
+    """Font 0's width table: the member of graphic/font.narc sFontArcParam
+    gives it, whose header has the table's offset and length."""
+    member = re.search(r"sFontArcParam\[\]\[2\] = \{\s*\{\s*(\w+)", (gmm.ROOT / "src/font.c").read_text()).group(1)
+    data = (gmm.ROOT / f"files/graphic/font/font_{int(member, 0):08d}.bin").read_bytes()
+    start, count = struct.unpack_from("<II", data, 4)
+    return data[start:start + count]
+
+
+@cache
+def character_codes():
+    """charmap.txt as msgenc reads it: a character given twice is its last code."""
+    codes = {}
+    for line in re.split(r"[\r\n]", (gmm.ROOT / "charmap.txt").read_text(encoding="utf-8")):
+        code, equals, character = line.split("//")[0].lstrip(" \t").partition("=")
+        if equals and not character.startswith("{"):
+            codes[character] = int(code, 16)
+    return codes
+
+
+def line_widths(text):
+    """Each line's width in pixels, as the Dex measures it (FontID_String_
+    GetWidthMultiline, letter spacing 0): a character is its code's glyph's
+    width in font 0, and a code past the font's last glyph is glyph 428's."""
+    codes, widths = character_codes(), glyph_widths()
+
+    def glyph(character):
+        index = codes[character] - 1
+        return widths[index] if index < len(widths) else widths[427]
+    return [sum(map(glyph, line)) for line in text.split("\\n")]
+
+
+def fits(text):
+    """No line wider than the window, and nothing on a line below it (retail
+    Italian Mareep ends in an empty fourth line)."""
+    width, lines = entry_window()
+    sizes = line_widths(text)
+    return max(sizes) <= width and not any(sizes[lines:])
+
+
+def fit_entry(text):
+    """The entry with its lines broken where the Dex's window can show them.
+
+    ov18_021EE984 centres an entry as a block, at (window width - widest
+    line) / 2 in u32: past the window's width that wraps, the first line
+    starts left of the window and is cut on both sides, and the others start
+    past its right edge and are not drawn. hg-engine breaks its entries for a
+    wider box, so many of the reference's do not fit.
+
+    An entry that fits is left as it is. One that does not is broken again at
+    its spaces, into the lines the window shows, with its widest line as
+    narrow as it can be (retail balances its lines rather than filling them);
+    every character but the breaks stays. One that fits no way is left as it
+    is: only other words would make it fit."""
+    if fits(text):
+        return text
+    width, lines = entry_window()
+    words = re.split(r" |\\n", text)
+    sizes = [line_widths(word)[0] for word in words]
+    space = line_widths(" ")[0]
+
+    def spans(breaks):
+        return list(zip((0, *breaks), (*breaks, len(words))))
+
+    def widest(breaks):
+        return max(sum(sizes[a:b]) + space * (b - a - 1) for a, b in spans(breaks))
+    best, breaks = min((widest(b), b) for n in range(lines) for b in combinations(range(1, len(words)), n))
+    if best > width:
+        return text
+    return "\\n".join(" ".join(words[a:b]) for a, b in spans(breaks))
+
+
 def finish(bank, text):
-    """scripts/msg_cat.py, then escaped for a gmm."""
+    """scripts/msg_cat.py, the entry fitted to the Dex's window, then escaped
+    for a gmm."""
     text = text.replace('"', "”").replace("'", "’").replace("`", "’")
+    if bank == ENTRY:
+        text = fit_entry(text)
     if bank in UPPER:
         text = text.upper()
     if bank in ARTICLE:

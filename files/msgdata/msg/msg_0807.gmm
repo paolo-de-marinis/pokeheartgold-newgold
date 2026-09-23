@@ -2115,11 +2115,11 @@
 	</row>
 	<row id="msg_0807_joltik" index="528">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Since it can’t generate its own electricity,\nit sticks onto large-bodied Pokémon and\nabsorbs static electricity.</language>
+		<language name="English">Since it can’t generate its own\nelectricity, it sticks onto large-bodied\nPokémon and absorbs static electricity.</language>
 	</row>
 	<row id="msg_0807_galvantula" index="529">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It creates barriers from\nelectrified silk that stun foes.\nThis works as a weapon as well as a defense.</language>
+		<language name="English">It creates barriers from electrified\nsilk that stun foes. This works\nas a weapon as well as a defense.</language>
 	</row>
 	<row id="msg_0807_ferroseed" index="530">
 		<attribute name="window_context_name">used</attribute>
@@ -2139,7 +2139,7 @@
 	</row>
 	<row id="msg_0807_klinklang" index="534">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The minigear spins at high speed.\nThen the energy from the red core charges\nthe minigear to make it ready to fire.</language>
+		<language name="English">The minigear spins at high speed. Then\nthe energy from the red core charges\nthe minigear to make it ready to fire.</language>
 	</row>
 	<row id="msg_0807_elgyem" index="535">
 		<attribute name="window_context_name">used</attribute>
@@ -2155,7 +2155,7 @@
 	</row>
 	<row id="msg_0807_lampent" index="538">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The spirits it absorbs fuel its baleful fire.\nIt hangs around hospitals\nwaiting for people to pass on.</language>
+		<language name="English">The spirits it absorbs fuel its baleful\nfire. It hangs around hospitals\nwaiting for people to pass on.</language>
 	</row>
 	<row id="msg_0807_chandelure" index="539">
 		<attribute name="window_context_name">used</attribute>
@@ -2307,7 +2307,7 @@
 	</row>
 	<row id="msg_0807_snivy" index="576">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Being exposed to sunlight\nmakes its movements swifter.\nIt uses vines more adeptly than its hands.</language>
+		<language name="English">Being exposed to sunlight makes\nits movements swifter. It uses\nvines more adeptly than its hands.</language>
 	</row>
 	<row id="msg_0807_servine" index="577">
 		<attribute name="window_context_name">used</attribute>
@@ -2327,7 +2327,7 @@
 	</row>
 	<row id="msg_0807_emboar" index="581">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">A flaring beard of fire is\nproof that it is fired up.\nIt is adept at using many different moves.</language>
+		<language name="English">A flaring beard of fire is proof\nthat it is fired up. It is adept\nat using many different moves.</language>
 	</row>
 	<row id="msg_0807_oshawott" index="582">
 		<attribute name="window_context_name">used</attribute>
@@ -2351,7 +2351,7 @@
 	</row>
 	<row id="msg_0807_pansage" index="587">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It’s good at finding berries\nand gathers them from all over.\nIt’s kind enough to share them with friends.</language>
+		<language name="English">It’s good at finding berries and\ngathers them from all over. It’s kind\nenough to share them with friends.</language>
 	</row>
 	<row id="msg_0807_simisage" index="588">
 		<attribute name="window_context_name">used</attribute>
@@ -2467,11 +2467,11 @@
 	</row>
 	<row id="msg_0807_cottonee" index="616">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Perhaps because they feel more at ease\nin a group, they stick to others they find.\nThey end up looking like a cloud.</language>
+		<language name="English">Perhaps because they feel more at ease\nin a group, they stick to others they\nfind. They end up looking like a cloud.</language>
 	</row>
 	<row id="msg_0807_whimsicott" index="617">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">They appear along with whirlwinds.\nThey pull pranks, such as moving furniture\nand leaving balls of cotton in homes.</language>
+		<language name="English">They appear along with whirlwinds. They\npull pranks, such as moving furniture\nand leaving balls of cotton in homes.</language>
 	</row>
 	<row id="msg_0807_petilil" index="618">
 		<attribute name="window_context_name">used</attribute>
@@ -2635,11 +2635,11 @@
 	</row>
 	<row id="msg_0807_eelektross" index="658">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It latches on to prey with its sucker mouth,\nsinking in its fangs and shocking the prey\nwith powerful electricity.</language>
+		<language name="English">It latches on to prey with its sucker\nmouth, sinking in its fangs and shocking\nthe prey with powerful electricity.</language>
 	</row>
 	<row id="msg_0807_axew" index="659">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its large tusks have a tendency to break,\nbut each time they grow back, they grow\nin harder and sturdier.</language>
+		<language name="English">Its large tusks have a tendency to\nbreak, but each time they grow back,\nthey grow in harder and sturdier.</language>
 	</row>
 	<row id="msg_0807_fraxure" index="660">
 		<attribute name="window_context_name">used</attribute>
@@ -2655,11 +2655,11 @@
 	</row>
 	<row id="msg_0807_beartic" index="663">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">They love the cold seas of the north.\nThey create pathways across the\nocean waters by freezing their own breath.</language>
+		<language name="English">They love the cold seas of the north.\nThey create pathways across the ocean\nwaters by freezing their own breath.</language>
 	</row>
 	<row id="msg_0807_cryogonal" index="664">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">They are composed of ice crystals.\nThey capture prey with chains of ice,\nfreezing the prey at -148 degrees Fahrenheit.</language>
+		<language name="English">They are composed of ice crystals. They\ncapture prey with chains of ice, freezing\nthe prey at -148 degrees Fahrenheit.</language>
 	</row>
 	<row id="msg_0807_stunfisk" index="665">
 		<attribute name="window_context_name">used</attribute>
@@ -2703,7 +2703,7 @@
 	</row>
 	<row id="msg_0807_vullaby" index="675">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Their wings are too tiny to allow them to fly.\nThey guard their posteriors with bones that\nwere gathered by Mandibuzz.</language>
+		<language name="English">Their wings are too tiny to allow them\nto fly. They guard their posteriors with\nbones that were gathered by Mandibuzz.</language>
 	</row>
 	<row id="msg_0807_mandibuzz" index="676">
 		<attribute name="window_context_name">used</attribute>
@@ -2711,7 +2711,7 @@
 	</row>
 	<row id="msg_0807_heatmor" index="677">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It draws in air through its tail, transforms\nit into fire, and uses it like a tongue.\nIt melts Durant and eats them.</language>
+		<language name="English">It draws in air through its tail,\ntransforms it into fire, and uses it like\na tongue. It melts Durant and eats them.</language>
 	</row>
 	<row id="msg_0807_durant" index="678">
 		<attribute name="window_context_name">used</attribute>
@@ -2783,7 +2783,7 @@
 	</row>
 	<row id="msg_0807_genesect" index="695">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon existed 300 million years ago.\nTeam Plasma altered it and attached\na cannon to its back.</language>
+		<language name="English">This Pokémon existed 300 million\nyears ago. Team Plasma altered it\nand attached a cannon to its back.</language>
 	</row>
 	<row id="msg_0807_chespin" index="696">
 		<attribute name="window_context_name">used</attribute>
@@ -2947,7 +2947,7 @@
 	</row>
 	<row id="msg_0807_aurorus" index="736">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This usually quiet and kindly Pokémon\nhas a surface temperature of around -240\ndegrees Fahrenheit.</language>
+		<language name="English">This usually quiet and kindly\nPokémon has a surface temperature\nof around -240 degrees Fahrenheit.</language>
 	</row>
 	<row id="msg_0807_hawlucha" index="737">
 		<attribute name="window_context_name">used</attribute>
@@ -3363,7 +3363,7 @@
 	</row>
 	<row id="msg_0807_thwackey" index="840">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The faster a Thwackey can beat out a\nrhythm with its two sticks, the more respect\nit wins from its peers.</language>
+		<language name="English">The faster a Thwackey can beat out\na rhythm with its two sticks, the\nmore respect it wins from its peers.</language>
 	</row>
 	<row id="msg_0807_rillaboom" index="841">
 		<attribute name="window_context_name">used</attribute>
@@ -3603,7 +3603,7 @@
 	</row>
 	<row id="msg_0807_indeedee" index="900">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Through its horns, it can pick up on\nthe emotions of creatures around it. Males\nwill act as valets for those they serve.</language>
+		<language name="English">Through its horns, it can pick up on the\nemotions of creatures around it. Males\nwill act as valets for those they serve.</language>
 	</row>
 	<row id="msg_0807_morpeko" index="901">
 		<attribute name="window_context_name">used</attribute>
@@ -3667,11 +3667,11 @@
 	</row>
 	<row id="msg_0807_urshifu" index="916">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Inhabiting the mountains of a distant\nregion, it races across sheer cliffs, training\nits legs and refining its moves.</language>
+		<language name="English">Inhabiting the mountains of a distant\nregion, it races across sheer cliffs,\ntraining its legs and refining its moves.</language>
 	</row>
 	<row id="msg_0807_zarude" index="917">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Once the vines on its body tear off,\nthey become nutrients in the soil. This helps\nthe plants of the forest grow.</language>
+		<language name="English">Once the vines on its body tear off,\nthey become nutrients in the soil. This\nhelps the plants of the forest grow.</language>
 	</row>
 	<row id="msg_0807_regieleki" index="918">
 		<attribute name="window_context_name">used</attribute>
@@ -3687,11 +3687,11 @@
 	</row>
 	<row id="msg_0807_spectrier" index="921">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">As it dashes through the night, it\nabsorbs the life energy of sleeping Pokémon. It\ncraves silence and solitude.</language>
+		<language name="English">As it dashes through the night,\nit absorbs the life energy of sleeping\nPokémon. It craves silence and solitude.</language>
 	</row>
 	<row id="msg_0807_calyrex" index="922">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its every move is filled with grace\nand dignity. Extremely intelligent, it is said\nto see past, present, and future events.</language>
+		<language name="English">Its every move is filled with grace and\ndignity. Extremely intelligent, it is said\nto see past, present, and future events.</language>
 	</row>
 	<row id="msg_0807_basculegion" index="923">
 		<attribute name="window_context_name">used</attribute>
@@ -3959,7 +3959,7 @@
 	</row>
 	<row id="msg_0807_orthworm" index="989">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">When attacked, this Pokémon will wield\nthe tendrils on its body like fists and pelt\nthe opponent with a storm of punches.</language>
+		<language name="English">When attacked, this Pokémon will wield the\ntendrils on its body like fists and pelt\nthe opponent with a storm of punches.</language>
 	</row>
 	<row id="msg_0807_glimmet" index="990">
 		<attribute name="window_context_name">used</attribute>
@@ -3995,11 +3995,11 @@
 	</row>
 	<row id="msg_0807_dondozo" index="998">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon is a glutton,\nbut it’s bad at getting food.\nIt teams up with a Tatsugiri to catch prey.</language>
+		<language name="English">This Pokémon is a glutton, but\nit’s bad at getting food. It teams\nup with a Tatsugiri to catch prey.</language>
 	</row>
 	<row id="msg_0807_tatsugiri" index="999">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This is a small dragon Pokémon.\nIt lives inside the mouth of Dondozo to\nprotect itself from enemies on the outside.</language>
+		<language name="English">This is a small dragon Pokémon. It lives\ninside the mouth of Dondozo to protect\nitself from enemies on the outside.</language>
 	</row>
 	<row id="msg_0807_clodsire" index="1000">
 		<attribute name="window_context_name">used</attribute>
@@ -4031,7 +4031,7 @@
 	</row>
 	<row id="msg_0807_sandy_shocks" index="1007">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It slightly resembles a Magneton that\nlived for 10,000 years and was featured in\nan article in a paranormal magazine.</language>
+		<language name="English">It slightly resembles a Magneton that\nlived for 10,000 years and was featured\nin an article in a paranormal magazine.</language>
 	</row>
 	<row id="msg_0807_iron_treads" index="1008">
 		<attribute name="window_context_name">used</attribute>
@@ -4079,7 +4079,7 @@
 	</row>
 	<row id="msg_0807_wo_chien" index="1019">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It drains the life-force from vegetation,\ncausing nearby forests to instantly wither\nand fields to turn barren.</language>
+		<language name="English">It drains the life-force from vegetation,\ncausing nearby forests to instantly\nwither and fields to turn barren.</language>
 	</row>
 	<row id="msg_0807_chien_pao" index="1020">
 		<attribute name="window_context_name">used</attribute>
@@ -4715,19 +4715,19 @@
 	</row>
 	<row id="msg_0807_genesect_douse_drive" index="1178">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon existed 300 million years ago.\nTeam Plasma altered it and attached\na cannon to its back.</language>
+		<language name="English">This Pokémon existed 300 million\nyears ago. Team Plasma altered it\nand attached a cannon to its back.</language>
 	</row>
 	<row id="msg_0807_genesect_shock_drive" index="1179">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon existed 300 million years ago.\nTeam Plasma altered it and attached\na cannon to its back.</language>
+		<language name="English">This Pokémon existed 300 million\nyears ago. Team Plasma altered it\nand attached a cannon to its back.</language>
 	</row>
 	<row id="msg_0807_genesect_burn_drive" index="1180">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon existed 300 million years ago.\nTeam Plasma altered it and attached\na cannon to its back.</language>
+		<language name="English">This Pokémon existed 300 million\nyears ago. Team Plasma altered it\nand attached a cannon to its back.</language>
 	</row>
 	<row id="msg_0807_genesect_chill_drive" index="1181">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon existed 300 million years ago.\nTeam Plasma altered it and attached\na cannon to its back.</language>
+		<language name="English">This Pokémon existed 300 million\nyears ago. Team Plasma altered it\nand attached a cannon to its back.</language>
 	</row>
 	<row id="msg_0807_greninja_battle_bond" index="1182">
 		<attribute name="window_context_name">used</attribute>
@@ -5135,19 +5135,19 @@
 	</row>
 	<row id="msg_0807_urshifu_rapid_strike" index="1283">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Inhabiting the mountains of a distant\nregion, it races across sheer cliffs, training\nits legs and refining its moves.</language>
+		<language name="English">Inhabiting the mountains of a distant\nregion, it races across sheer cliffs,\ntraining its legs and refining its moves.</language>
 	</row>
 	<row id="msg_0807_zarude_dada" index="1284">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Once the vines on its body tear off,\nthey become nutrients in the soil. This helps\nthe plants of the forest grow.</language>
+		<language name="English">Once the vines on its body tear off,\nthey become nutrients in the soil. This\nhelps the plants of the forest grow.</language>
 	</row>
 	<row id="msg_0807_calyrex_ice_rider" index="1285">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its every move is filled with grace\nand dignity. Extremely intelligent, it is said\nto see past, present, and future events.</language>
+		<language name="English">Its every move is filled with grace and\ndignity. Extremely intelligent, it is said\nto see past, present, and future events.</language>
 	</row>
 	<row id="msg_0807_calyrex_shadow_rider" index="1286">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its every move is filled with grace\nand dignity. Extremely intelligent, it is said\nto see past, present, and future events.</language>
+		<language name="English">Its every move is filled with grace and\ndignity. Extremely intelligent, it is said\nto see past, present, and future events.</language>
 	</row>
 	<row id="msg_0807_enamorus_therian" index="1287">
 		<attribute name="window_context_name">used</attribute>
@@ -5259,7 +5259,7 @@
 	</row>
 	<row id="msg_0807_indeedee_female" index="1314">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Through its horns, it can pick up on\nthe emotions of creatures around it. Males\nwill act as valets for those they serve.</language>
+		<language name="English">Through its horns, it can pick up on the\nemotions of creatures around it. Males\nwill act as valets for those they serve.</language>
 	</row>
 	<row id="msg_0807_basculegion_female" index="1315">
 		<attribute name="window_context_name">used</attribute>
@@ -5287,11 +5287,11 @@
 	</row>
 	<row id="msg_0807_tatsugiri_droopy" index="1321">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This is a small dragon Pokémon.\nIt lives inside the mouth of Dondozo to\nprotect itself from enemies on the outside.</language>
+		<language name="English">This is a small dragon Pokémon. It lives\ninside the mouth of Dondozo to protect\nitself from enemies on the outside.</language>
 	</row>
 	<row id="msg_0807_tatsugiri_stretchy" index="1322">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This is a small dragon Pokémon.\nIt lives inside the mouth of Dondozo to\nprotect itself from enemies on the outside.</language>
+		<language name="English">This is a small dragon Pokémon. It lives\ninside the mouth of Dondozo to protect\nitself from enemies on the outside.</language>
 	</row>
 	<row id="msg_0807_dudunsparce_three_segment" index="1323">
 		<attribute name="window_context_name">used</attribute>
@@ -5551,11 +5551,11 @@
 	</row>
 	<row id="msg_0807_gigantamax_urshifu" index="1387">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Inhabiting the mountains of a distant\nregion, it races across sheer cliffs, training\nits legs and refining its moves.</language>
+		<language name="English">Inhabiting the mountains of a distant\nregion, it races across sheer cliffs,\ntraining its legs and refining its moves.</language>
 	</row>
 	<row id="msg_0807_gigantamax_urshifu_rapid_strike" index="1388">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Inhabiting the mountains of a distant\nregion, it races across sheer cliffs, training\nits legs and refining its moves.</language>
+		<language name="English">Inhabiting the mountains of a distant\nregion, it races across sheer cliffs,\ntraining its legs and refining its moves.</language>
 	</row>
 	<row id="msg_0807_mega_raichu_x" index="1389">
 		<attribute name="window_context_name">used</attribute>
@@ -5627,7 +5627,7 @@
 	</row>
 	<row id="msg_0807_mega_emboar" index="1406">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">A flaring beard of fire is\nproof that it is fired up.\nIt is adept at using many different moves.</language>
+		<language name="English">A flaring beard of fire is proof\nthat it is fired up. It is adept\nat using many different moves.</language>
 	</row>
 	<row id="msg_0807_mega_excadrill" index="1407">
 		<attribute name="window_context_name">used</attribute>
@@ -5643,7 +5643,7 @@
 	</row>
 	<row id="msg_0807_mega_eelektross" index="1410">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It latches on to prey with its sucker mouth,\nsinking in its fangs and shocking the prey\nwith powerful electricity.</language>
+		<language name="English">It latches on to prey with its sucker\nmouth, sinking in its fangs and shocking\nthe prey with powerful electricity.</language>
 	</row>
 	<row id="msg_0807_mega_chandelure" index="1411">
 		<attribute name="window_context_name">used</attribute>
@@ -5739,15 +5739,15 @@
 	</row>
 	<row id="msg_0807_mega_tatsugiri" index="1434">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This is a small dragon Pokémon.\nIt lives inside the mouth of Dondozo to\nprotect itself from enemies on the outside.</language>
+		<language name="English">This is a small dragon Pokémon. It lives\ninside the mouth of Dondozo to protect\nitself from enemies on the outside.</language>
 	</row>
 	<row id="msg_0807_mega_tatsugiri_droopy" index="1435">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This is a small dragon Pokémon.\nIt lives inside the mouth of Dondozo to\nprotect itself from enemies on the outside.</language>
+		<language name="English">This is a small dragon Pokémon. It lives\ninside the mouth of Dondozo to protect\nitself from enemies on the outside.</language>
 	</row>
 	<row id="msg_0807_mega_tatsugiri_stretchy" index="1436">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This is a small dragon Pokémon.\nIt lives inside the mouth of Dondozo to\nprotect itself from enemies on the outside.</language>
+		<language name="English">This is a small dragon Pokémon. It lives\ninside the mouth of Dondozo to protect\nitself from enemies on the outside.</language>
 	</row>
 	<row id="msg_0807_mega_baxcalibur" index="1437">
 		<attribute name="window_context_name">used</attribute>
