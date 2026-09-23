@@ -225,7 +225,7 @@ UNREAD_HERE = {
     "ADD_TYPE_GRASS": "script: subscript 325 fails behind a substitute, as the reference's substitute list does",
     "ADD_TYPE_GHOST": "script: subscript 324 fails behind a substitute, as the reference's substitute list does",
     "CHANGE_TO_PSYCHIC_TYPE": "script: subscript 323 fails behind a substitute, as the reference's substitute list does",
-    "COACHING": "not ported: the reference's failure with no partner to coach is not here",
+    "COACHING": "script: effect script 383 fails it in a single battle or with no partner standing",
     "DECORATE": "script: subscript 314 does not affect a target behind a substitute, the reference's stat-drop list",
     "PARTING_SHOT": "not ported: it lowers the two stats but the user never switches out",
     "FORCE_SWITCH_HIT": "script: a CHECK_HP_AND_SUBSTITUTE side effect runs Whirlwind's subscript after the damage",

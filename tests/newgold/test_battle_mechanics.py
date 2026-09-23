@@ -133,6 +133,19 @@ class StuffCheeksTests(unittest.TestCase):
         self.assertNotIn("RemoveItem", maxed)
 
 
+class CoachingTests(unittest.TestCase):
+    def test_it_needs_a_partner_to_coach(self):
+        # BattleController_BeforeMove.c:4618 at d0380a487: a single battle, or
+        # no ally standing, and the move fails before it runs.
+        script = (ROOT / "files/battledata/script/effect_script/effect_script_0383.s").read_text()
+        setting = script.index("MOVE_SUBSCRIPT_PTR_COACHING")
+        for test in ("OPCODE_FLAG_NOT, BSCRIPT_VAR_BATTLE_TYPE, BATTLE_TYPE_DOUBLES, _NO_PARTNER",
+                     "BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_ATTACKER, BMON_DATA_HP, 0, _NO_PARTNER"):
+            self.assertIn(test, script)
+            self.assertLess(script.index(test), setting)
+        self.assertIn("MOVE_STATUS_FAILED", script[script.index("\n_NO_PARTNER:"):])
+
+
 class CriticalHitTests(unittest.TestCase):
     def test_the_odds_at_each_stage_are_the_reference_s(self):
         # other_battle_calculators.c's CriticalRateTable. HeartGold's was
