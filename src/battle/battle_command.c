@@ -2459,6 +2459,17 @@ static BOOL SideEffectIsTheMoves(int statChangeType) {
     return FALSE;
 }
 
+// From the eighth generation Inner Focus, Oblivious, Own Tempo and Scrappy
+// keep Intimidate off, as Hyper Cutter always has (Pokemon Central,
+// Prepotenza); a Mold Breaker gets through. Intimidate is the one ability
+// that lowers another Pokemon's Attack. The reference asks none of them.
+static BOOL AbilityShrugsOffIntimidate(BattleContext *ctx) {
+    return CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_INNER_FOCUS) == TRUE
+        || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_OBLIVIOUS) == TRUE
+        || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_OWN_TEMPO) == TRUE
+        || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_SCRAPPY) == TRUE;
+}
+
 BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
     int change, stat;
     BattleMon *mon = &ctx->battleMons[ctx->battlerIdStatChange];
@@ -2631,7 +2642,7 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                     ctx->buffMsg.param[1] = GetBattlerHeldItem(ctx, ctx->battlerIdStatChange);
                     ctx->buffMsg.param[2] = stat + 1;
                     unkD = TRUE;
-                } else if ((CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_KEEN_EYE) == TRUE && (1 + stat) == 6) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_HYPER_CUTTER) == TRUE && (1 + stat) == 1) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_BIG_PECKS) == TRUE && (1 + stat) == 2) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_MINDS_EYE) == TRUE && (1 + stat) == 6)) {
+                } else if ((CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_KEEN_EYE) == TRUE && (1 + stat) == 6) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_HYPER_CUTTER) == TRUE && (1 + stat) == 1) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_BIG_PECKS) == TRUE && (1 + stat) == 2) || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_MINDS_EYE) == TRUE && (1 + stat) == 6) || (ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY && (1 + stat) == STAT_ATK && AbilityShrugsOffIntimidate(ctx) == TRUE)) {
                     if (ctx->statChangeType == 3) {
                         // "{0}'s {1} suppressed {2}'s {3}!"
                         ctx->buffMsg.id = msg_0197_00727;

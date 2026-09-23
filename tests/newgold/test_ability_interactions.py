@@ -187,5 +187,20 @@ class OrichalcumPulseTests(unittest.TestCase):
         self.assertIn("script = BATTLE_SUBSCRIPT_ORICHALCUM_PULSE;", case[:case.index("break;")])
 
 
+class IntimidateTests(unittest.TestCase):
+    """Pokemon Central, Prepotenza: from the eighth generation Inner Focus,
+    Oblivious, Own Tempo and Scrappy keep it off, and Rattled answers it."""
+
+    def test_the_four_abilities_keep_it_off(self):
+        source = COMMANDS.read_text()
+        helper = function(source, "AbilityShrugsOffIntimidate")
+        for ability in ("INNER_FOCUS", "OBLIVIOUS", "OWN_TEMPO", "SCRAPPY"):
+            self.assertIn(f"ABILITY_{ability}) == TRUE", helper)
+        change = function(source, "BtlCmd_ChangeStatStage")
+        branch = change[change.index("ABILITY_HYPER_CUTTER"):]
+        branch = branch[:branch.index("{")]
+        self.assertIn("(ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY && (1 + stat) == STAT_ATK && AbilityShrugsOffIntimidate(ctx) == TRUE)", branch)
+
+
 if __name__ == "__main__":
     unittest.main()
