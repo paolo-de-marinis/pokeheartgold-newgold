@@ -644,6 +644,8 @@ Overlay OVY_8
     Object asm/overlay_08.o
     Object src/overlay_08_02222B8C.o
     Object asm/overlay_08_02222D78.o
+    Object src/battle_bag_description.o
+    Object asm/overlay_08_02223AA0.o
 }
 Overlay OVY_9
 {
@@ -754,6 +756,8 @@ Overlay OVY_15
     Object asm/overlay_15_021F994C.o
     Object src/bag_pocket_list.o
     Object asm/overlay_15_021FA044.o
+    Object src/bag_item_description.o
+    Object asm/overlay_15_021FE620.o
     Object src/bag_machine_label.o
     Object asm/overlay_15_021FE9F0.o
     Object src/bag_item_row.o

@@ -26,7 +26,8 @@
 // named; the rest belong to the bag assembly.
 typedef struct BagAppState {
     BgConfig *bgConfig;
-    u8 unk004[0x64 - 0x4];
+    Window descriptionWindow;
+    u8 unk014[0x64 - 0x14];
     Window unk064;
     u8 unk074[0xB4 - 0x74];
     Window listWindows[12]; // two sets of six rows, drawn in turn
@@ -63,5 +64,6 @@ void ov15_021FE9B0(BagAppState *state, Window *window, u32 badge, u32 y);
 void ov15_021F9F08(BagAppState *bagApp);
 void ov15_021FA008(BagAppState *bagApp);
 void ov15_021FA028(BagAppState *bagApp);
+void ov15_021FE5C4(BagAppState *bagApp, u16 itemId);
 
 #endif // POKEHEARTGOLD_BAG_APP_STATE_H

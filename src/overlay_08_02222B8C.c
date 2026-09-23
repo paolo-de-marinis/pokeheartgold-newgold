@@ -16,35 +16,7 @@
 #include "pokemon.h"
 #include "pokemon_storage_system.h"
 
-// The parts of the battle bag's arguments and state that the decompiled
-// routine reads. The rest of overlay 8 addresses both by offset; nothing may
-// allocate or copy these by size.
-typedef struct BattleBagArgs {
-    BattleSystem *battleSystem;
-    PlayerProfile *playerProfile;
-    u8 unk8[4];
-    enum HeapID heapID; // 0x0C
-    int battlerId;      // 0x10
-    u8 unk14[4];
-    int embargoTurns; // 0x18
-    u16 itemId;       // 0x1C
-    u8 unk1E[4];
-    u8 twoTargets;    // 0x22
-    u8 targetHidden;  // 0x23
-    u8 targetHidden2; // 0x24
-} BattleBagArgs;
-
-typedef struct BattleBag {
-    BattleBagArgs *args;
-    u8 unk4[0xC];
-    MsgData *msgData;         // 0x10, bank 5
-    MessageFormat *msgFormat; // 0x14
-    String *msgBuffer;        // 0x18
-    u8 unk1C[0x112F];
-    u8 nextState; // 0x114B
-    u8 unk114C;
-    u8 pocket; // 0x114D
-} BattleBag;
+#include "battle_bag.h"
 
 int ov08_02223374(BattleBag *bag);
 void ov08_02223390(BattleSystem *battleSystem, int itemId, int pocket, enum HeapID heapID);
