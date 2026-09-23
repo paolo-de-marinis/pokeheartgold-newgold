@@ -126,7 +126,10 @@ typedef struct SelfTurnData {
     // The Berry BtlCmd_RemoveItem takes from this Pokemon next is not eaten
     // by it: it is plucked, flung or spent on Natural Gift.
     u32 berryNotEaten : 1;
-    u32 unk0_11 : 16;
+    // Dragon Tail or Circle Throw hit this Pokemon: it is dragged out once
+    // the hit has been answered (ov12_0224E1BC).
+    u32 dragPending : 1;
+    u32 unk0_11 : 15;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;

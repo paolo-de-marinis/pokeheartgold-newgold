@@ -1112,10 +1112,11 @@ int main(void) {
 
 
 class DraggedInTests(unittest.TestCase):
-    """A Pokemon that Dragon Tail, Circle Throw, Roar or a Red Card drags into
-    a slot in the middle of a move did not take the hit on record there, and
-    answers none of it: not with its abilities, its held item or a flinch,
-    as c172085f1 already had it for the Red Card and the Eject Button."""
+    """A Pokemon brought into a slot after the hit on record there -- by a Red
+    Card, an Eject Button, or Dragon Tail's and Circle Throw's drag -- did not
+    take that hit, and answers none of it: not with its abilities, its held
+    item or a flinch, as c172085f1 already had it for the Red Card and the
+    Eject Button. The Pokemon that was hit answers it before it is dragged."""
 
     def test_the_slot_s_hit_is_not_the_newcomer_s(self):
         overlay = OVERLAY.read_text()
@@ -1132,6 +1133,43 @@ class DraggedInTests(unittest.TestCase):
             self.assertLess(body.index(guard), body.index("switch ("), name)
         flinch = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "TryItemFlinch")
         self.assertLess(flinch.index("!Battler_CameInAfterTheHit(ctx, ctx->battlerIdTarget)"), flinch.index("BattleSystem_Random"))
+
+    def test_dragon_tail_drags_once_the_hit_is_answered(self):
+        """In the games the Pokemon Dragon Tail or Circle Throw hits answers
+        the hit -- Rough Skin, Justified, a Rocky Helmet -- and is dragged out
+        at the end of the move. The hit's side effect marks it instead of
+        dragging it, and the move's end drags it before the switching items
+        (Pokemon Central, Cartelrosso: a holder dragged out uses no card)."""
+        dispatch = function(OVERLAY.read_text(), "ov12_02250490")
+        self.assertIn("if (ret == TRUE && *out == BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE\n"
+                      "        && BattleMoveTbl(ctx, ctx->moveNoCur)->category != CATEGORY_STATUS) {\n"
+                      "        ctx->selfTurnData[ctx->battlerIdStatChange].dragPending = TRUE;\n"
+                      "        ret = FALSE;", dispatch)
+        # After Parental Bond's hold-back, so only the last strike drags.
+        self.assertLess(dispatch.index("ParentalBond_StrikeToCome(ctx)"), dispatch.index("dragPending = TRUE"))
+        end = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224E1BC")
+        drag = end.index("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE);")
+        self.assertLess(end.index("ctx->selfTurnData[ctx->battlerIdTarget].dragPending = FALSE;"), drag)
+        self.assertLess(drag, end.index("CheckSwitchItemOnHit("))
+        # Not once the user has fainted to what the hit set off (Codadrago).
+        self.assertIn("if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdAttacker].hp) {\n"
+                      "                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE);", end)
+
+    def test_a_pokemon_being_dragged_out_does_not_answer_with_three_abilities(self):
+        """Pokemon Central (Codadrago): the target's Pickpocket, Color Change
+        and Anger Shell do not act when the move drags it out -- Emergency
+        Exit and Wimp Out go with the slot's clearing. Kept in by Ingrain or
+        with nobody to come in, it answers as usual."""
+        overlay = OVERLAY.read_text()
+        will = function(overlay, "Battler_WillBeDraggedOut")
+        for part in ("!ctx->selfTurnData[battlerId].dragPending", "MOVE_EFFECT_FLAG_INGRAIN",
+                     "return CanSwitchMon(battleSystem, ctx, battlerId);", "return WhirlwindCheck(battleSystem, ctx);"):
+            self.assertIn(part, will)
+        hit = function(overlay, "CheckAbilityEffectOnHit")
+        for ability in ("ABILITY_COLOR_CHANGE", "ABILITY_ANGER_SHELL", "ABILITY_PICKPOCKET"):
+            case = hit[hit.index(f"case {ability}:"):]
+            case = case[:case.index("break;")]
+            self.assertIn("!Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget)", case, ability)
 
 class BattleBondTests(unittest.TestCase):
     def test_a_knockout_raises_three_stats_once_a_battle(self):

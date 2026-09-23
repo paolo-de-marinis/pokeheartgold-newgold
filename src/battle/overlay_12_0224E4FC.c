@@ -1987,6 +1987,19 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         }
     }
 
+    // Dragon Tail and Circle Throw drag their target out after it has
+    // answered the hit -- its Rough Skin, Justified, Rocky Helmet or Berry --
+    // as in the games, where the drag comes at the end of the move; here the
+    // hit's side effect would drag it before those steps, which would then
+    // find a Pokemon that took no hit. The target is marked instead, and
+    // ov12_0224E1BC drags it once the hit's steps are over. Roar and
+    // Whirlwind hit nothing and drag as they are used.
+    if (ret == TRUE && *out == BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE
+        && BattleMoveTbl(ctx, ctx->moveNoCur)->category != CATEGORY_STATUS) {
+        ctx->selfTurnData[ctx->battlerIdStatChange].dragPending = TRUE;
+        ret = FALSE;
+    }
+
     return ret;
 }
 
@@ -6823,12 +6836,33 @@ static BOOL ToxicChainTakesHold(BattleSystem *battleSystem, BattleContext *ctx) 
 
 // Whether the Pokemon in battlerId's slot came in after the hit on record
 // there: hitCount is zeroed when a Pokemon is loaded into a slot and counts
-// the hits it takes in it, so damage on record and no hit means Dragon Tail,
-// Circle Throw or Roar dragged it in, or a Red Card, in the middle of the
-// move. The hit was its predecessor's, and so is all it would set off.
+// the hits it takes in it, so damage on record and no hit means Dragon Tail
+// or Circle Throw dragged it in once the hit was answered, or a Red Card or
+// an Eject Button brought it. The hit was its predecessor's, and so is all
+// it would set off.
 BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) {
     return ctx->battleMons[battlerId].hitCount == 0
         && (ctx->selfTurnData[battlerId].physicalDamage || ctx->selfTurnData[battlerId].specialDamage);
+}
+
+// Whether the Pokemon Dragon Tail or Circle Throw hit is dragged out once the
+// move is over (ov12_02250490 marked it): not held by Ingrain -- Suction Cups
+// and Guard Dog are a Pokemon's only ability, and none of those asking has
+// them -- and with somewhere to go, a Pokemon to come in for it or, for a
+// wild one, a user of its level or above (subscript 91's TryWhirlwind). Its
+// Pickpocket, Color Change and Anger Shell do not answer the hit then
+// (Pokemon Central, Codadrago); Emergency Exit and Wimp Out go with it
+// (InitSwitchWork's clearing of the slot).
+// ponytail: asked before the user's Rocky Helmet, which can still faint it
+// and keep the target in; those three then stay silent all the same.
+static BOOL Battler_WillBeDraggedOut(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    if (!ctx->selfTurnData[battlerId].dragPending || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)) {
+        return FALSE;
+    }
+    if (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) {
+        return CanSwitchMon(battleSystem, ctx, battlerId);
+    }
+    return WhirlwindCheck(battleSystem, ctx);
 }
 
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
@@ -6919,7 +6953,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // Not for a move Sheer Force powered (Pokemon Central, Forzabruta;
         // the reference's ServerDoPostMoveEffects.c:1962 at d0380a487).
 
-        if (ctx->battleMons[ctx->battlerIdTarget].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && ctx->moveNoCur != MOVE_STRUGGLE && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && BattleMoveTbl(ctx, ctx->moveNoCur)->power && !SheerForceTradedEffect(ctx) && GetBattlerVar(ctx, ctx->battlerIdTarget, BMON_DATA_TYPE_1, NULL) != moveType && GetBattlerVar(ctx, ctx->battlerIdTarget, BMON_DATA_TYPE_2, NULL) != moveType) {
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && !Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && ctx->moveNoCur != MOVE_STRUGGLE && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && BattleMoveTbl(ctx, ctx->moveNoCur)->power && !SheerForceTradedEffect(ctx) && GetBattlerVar(ctx, ctx->battlerIdTarget, BMON_DATA_TYPE_1, NULL) != moveType && GetBattlerVar(ctx, ctx->battlerIdTarget, BMON_DATA_TYPE_2, NULL) != moveType) {
             *script = BATTLE_SUBSCRIPT_COLOR_CHANGE;
             ctx->msgTemp = moveType;
             ret = TRUE;
@@ -7040,7 +7074,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // The same crossing Berserk waits for, but the payout is five stat
         // changes, so the whole of it is a subscript. Any one of the five
         // having room is enough.
-        if (ctx->battleMons[ctx->battlerIdTarget].hp && (ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPEED] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_DEF] > 0 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPDEF] > 0) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !SheerForceTradedEffect(ctx) && ctx->battleMons[ctx->battlerIdTarget].hp <= (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) && (ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) || ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].specialDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2))) {
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && !Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget) && (ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPEED] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_DEF] > 0 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPDEF] > 0) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !SheerForceTradedEffect(ctx) && ctx->battleMons[ctx->battlerIdTarget].hp <= (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) && (ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) || ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].specialDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2))) {
             ctx->battlerIdStatChange = ctx->battlerIdTarget;
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_ANGER_SHELL;
@@ -7114,7 +7148,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // Lifts whatever touched it, if its own hands are empty. The theft
         // is the Thief guard already in this tree, asked of the attacker
         // rather than of the target.
-        if (ctx->battleMons[ctx->battlerIdTarget].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur) && BattleMoveTbl(ctx, ctx->moveNoCur)->power && !SheerForceTradedEffect(ctx) && CanAbilityTakeHeldItem(battleSystem, ctx, ctx->battlerIdTarget, ctx->battlerIdAttacker) == TRUE) {
+        if (ctx->battleMons[ctx->battlerIdTarget].hp && !Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur) && BattleMoveTbl(ctx, ctx->moveNoCur)->power && !SheerForceTradedEffect(ctx) && CanAbilityTakeHeldItem(battleSystem, ctx, ctx->battlerIdTarget, ctx->battlerIdAttacker) == TRUE) {
             ctx->battlerIdStatChange = ctx->battlerIdTarget;
             ctx->battlerIdTemp = ctx->battlerIdAttacker;
             *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;

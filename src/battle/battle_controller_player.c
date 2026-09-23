@@ -4964,11 +4964,28 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             // first and both can act on one move -- the card's Pokemon comes
             // in before the button's -- but one of each at most, of several
             // buttons the fastest holder's (Pokemon Central, Pulsantefuga).
+            // Dragon Tail and Circle Throw drag their target out first, now
+            // that it has answered the hit (ov12_02250490 marked it), so a
+            // card or a button it held is not used (Pokemon Central,
+            // Cartelrosso: not by a holder the move drags out); not if the
+            // user fainted to its Rough Skin, Iron Barbs, Rocky Helmet or
+            // Gulp Missile (Codadrago).
+            //
             // unk_34 walks the battlers in the order they act, once for the
             // cards and once for the buttons; SWITCH_ITEM_USED remembers that
             // a button sent somebody away. A card does not keep an Eject
             // Pack from acting after it (Pokemon Central, Zainofuga: the
             // card first, then the Pack, a second switch).
+            if (ctx->battlerIdTarget != BATTLER_NONE && ctx->selfTurnData[ctx->battlerIdTarget].dragPending) {
+                ctx->selfTurnData[ctx->battlerIdTarget].dragPending = FALSE;
+                if (ctx->battleMons[ctx->battlerIdTarget].hp && ctx->battleMons[ctx->battlerIdAttacker].hp) {
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE);
+                    ctx->commandNext = ctx->command;
+                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                    flag = 1;
+                    break;
+                }
+            }
             while ((ctx->unk_34 & ~SWITCH_ITEM_USED) < 2 * maxBattlers) {
                 int walk = ctx->unk_34 & ~SWITCH_ITEM_USED;
                 int card = walk < maxBattlers;
