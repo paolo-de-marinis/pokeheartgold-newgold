@@ -58,7 +58,6 @@ left to be discovered in play.
 
 Usage: import_moves.py REFERENCE_CHECKOUT [--write]
        import_moves.py --text [--revision REVISION] [--write]
-       import_moves.py --unimplemented [--revision REVISION] [--write]
 
 The second form writes every row of the move text banks and the type names at
 a revision of the reference, read with git: d0380a487 (the default) is hg-
@@ -482,26 +481,6 @@ def write_text(revision, write):
             gmm.write(bank, rows)
 
 
-def write_unimplemented(revision, write):
-    """The moves the engine flags FLAG_UNUSABLE_UNIMPLEMENTED, as the table
-    MoveIsUnimplemented in src/move.c reads. The flag's bit is King's Rock's in
-    this game's records, so the list is kept apart from them."""
-    blocks = records_in(gmm.git_show(revision, "data/Moves.c"))
-    numbers = {name: int(value) for name, value in
-               re.findall(r"^#define MOVE_([A-Z0-9_]+)\s+(\d+)\s*$", MOVES_H.read_text(), re.M)}
-    names = sorted((name for name, block in blocks.items()
-                    if "FLAG_UNUSABLE_UNIMPLEMENTED" in named_flags(block)), key=numbers.__getitem__)
-    path = ROOT / "src/move.c"
-    text = path.read_text()
-    start = text.index("static const u16 sUnimplementedMoves[] = {\n")
-    end = text.index("\n};", start)
-    text = (text[:start] + "static const u16 sUnimplementedMoves[] = {\n"
-            + "\n".join(f"    MOVE_{name}," for name in names) + text[end:])
-    print(f"{len(names)} moves the engine has no effect for")
-    if write:
-        path.write_text(text)
-
-
 def animation_for(block, moves, table, last_vanilla, types):
     """An existing move to borrow the animation from.
 
@@ -624,17 +603,12 @@ def main():
                         help="overwrite scripts and headers edited by hand since the import")
     parser.add_argument("--text", action="store_true",
                         help="write banks 749, 750, 751, 003 and 735 whole, at --revision")
-    parser.add_argument("--unimplemented", action="store_true",
-                        help="write the table of moves the engine has no effect for, at --revision")
     parser.add_argument("--retail", action="store_true",
                         help="rewrite the retail records (1..467) and nothing else")
     parser.add_argument("--revision", default=gmm.ENGINE)
     args = parser.parse_args()
     if args.text:
         write_text(args.revision, args.write)
-        return
-    if args.unimplemented:
-        write_unimplemented(args.revision, args.write)
         return
     if args.reference is None:
         parser.error("REFERENCE_CHECKOUT is needed unless --text")
