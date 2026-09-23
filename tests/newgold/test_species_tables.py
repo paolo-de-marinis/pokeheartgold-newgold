@@ -23,6 +23,7 @@ species -- are checked by insisting that their readers still bound the index.
 
 import re
 import struct
+import sys
 import unittest
 from pathlib import Path
 
@@ -90,6 +91,41 @@ class TableBoundTests(unittest.TestCase):
         self.assertLess(self.table_length("src/pokemon.c", "sPokeathlonPerformanceArcIdxs"),
                         num_species() + 1)
         self.assertIn("NELEMS(sPokeathlonPerformanceArcIdxs)", text)
+        # Past the table the form is not added either: member 0 plus a form
+        # would be another species' record.
+        self.assertIn("sPokeathlonPerformanceArcIdxs[species] + form : 0", text)
+
+    def test_the_course_bounds_its_own_copy_of_the_pokeathlon_table(self):
+        """The course reads performance.narc through ov96_0221AAE8, the same
+        494 entries as pokemon.c's. The lookup is compiled on the host with
+        the table as written and asked for retail and added species."""
+        sys.path.insert(0, str(Path(__file__).parent))
+        from test_dex_range import c_function, run_native
+        table = (ROOT / "src/pokeathlon/overlay_96_0221AAE8.c").read_text()
+        entries = re.search(r"ov96_0221AAE8\[MAX_SPECIES \+ 1\] = \{(.*?)\};", table, re.S).group(1)
+        lookup = c_function((ROOT / "src/pokeathlon/overlay_96_021E679C.c").read_text(), "ov96_021E679C")
+        run_native(self, COURSE.replace("@TABLE@", entries).replace("@LOOKUP@", lookup), "newgold-course-")
+
+
+COURSE = r"""
+#include <assert.h>
+#include <stdio.h>
+#define NELEMS(a) (sizeof(a) / sizeof((a)[0]))
+typedef unsigned short u16;
+static const u16 ov96_0221AAE8[493 + 1] = { @TABLE@ };
+@LOOKUP@
+int main(void) {
+    assert(ov96_021E679C(1, 0) == ov96_0221AAE8[1]);
+    assert(ov96_021E679C(386, 3) == ov96_0221AAE8[386] + 3); /* Deoxys Speed */
+    assert(ov96_021E679C(493, 0) == ov96_0221AAE8[493]);
+    for (int species = 494; species <= 1437; species++) {
+        assert(ov96_021E679C(species, 0) == 0);
+        assert(ov96_021E679C(species, 5) == 0);
+    }
+    printf("PASS: the course reads member 0 for every species past 493, form and all.\n");
+    return 0;
+}
+"""
 
 
 if __name__ == "__main__":
