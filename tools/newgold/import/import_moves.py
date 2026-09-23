@@ -157,7 +157,7 @@ def resolve(text):
 # What a previous run appended, so that a run reads what was here before it
 # and adding a move twice is the same as adding it once.
 GENERATED = (r"\n// The rest of the reference's moves.*?(?=\n// NUM_MOVES sizes)",
-             r"\n// The effects the reference brings with it.*?(?=\n#endif)",
+             r"\n// The effects the reference brings with it.*?(?=\n// Effects written here|\n#endif)",
              r"\n// The subscripts the reference brings with it.*?(?=\n#endif)")
 
 
@@ -318,9 +318,23 @@ RETAIL_EFFECTS = ("STRING_SHOT", "TAIL_GLOW", "CHATTER", "SWEET_SCENT", "HOWL")
 TARGETS_FIXED = {"CONVERSION_2": "RANGE_SINGLE_TARGET"}
 # Added moves the engine leaves as a bare MOVE_EFFECT_HIT under
 # FLAG_UNUSABLE_UNIMPLEMENTED, and this game gives their canonical effect
-# (Pokemon Central), so without the flag. Floral Healing is Heal Pulse's heal;
-# subscript 320 gives it two thirds in Grassy Terrain.
+# (Pokemon Central), so without the flag. An effect is named as this game's
+# move_effects.h names it, the ones written here for these moves included.
+# Floral Healing is Heal Pulse's heal; subscript 320 gives it two thirds in
+# Grassy Terrain.
 IMPLEMENTED_HERE = {"FLORAL_HEALING": "MOVE_EFFECT_HEAL_TARGET"}
+
+# The effects written here for those moves follow the reference's in
+# move_effects.h, under this line. A run keeps them where they are and numbers
+# the reference's before them, as it always has.
+WRITTEN_HERE = "\n// Effects written here"
+
+
+def effects_written_here():
+    text = MOVE_EFFECTS_H.read_text()
+    return {name: int(value) for name, value in re.findall(
+        r"#define (MOVE_EFFECT_[A-Z0-9_]+)\s+(\d+)\s*$", text[text.index(WRITTEN_HERE):], re.M)
+            } if WRITTEN_HERE in text else {}
 
 
 def retail_moves(reference, last_vanilla, types, effect_id, table):
@@ -620,7 +634,11 @@ def main():
     moves = constants("include/constants/moves.h", "MOVE_")
     rangesets = constants("include/constants/moves.h", "RANGE_")
     types = constants("include/constants/pokemon.h", "TYPE_")
-    ours_effects = constants("include/constants/move_effects.h", "MOVE_EFFECT_")
+    here = effects_written_here()
+    ours_effects = {name: value for name, value in
+                    constants("include/constants/move_effects.h", "MOVE_EFFECT_").items() if name not in here}
+    ours_now = {name: int(value) for name, value in re.findall(
+        r"#define (MOVE_EFFECT_[A-Z0-9_]+)\s+(\d+)\b", MOVE_EFFECTS_H.read_text())}
     their_defines = header_defines(reference)
     # move_effects.h is where they live, bar one the reference declares beside
     # the move table itself. MOVE_EFFECT_FLAG_ is a different family entirely.
@@ -781,15 +799,19 @@ def main():
         used += used_rows(blocks[by_number[identifier]])
     for offset, (_, name) in enumerate(order):
         block = blocks[name]
-        effect = IMPLEMENTED_HERE.get(name, field(block, "effect"))
-        if effect not in effect_id:
+        effect = field(block, "effect")
+        if name in IMPLEMENTED_HERE:
+            effect_number = ours_now[IMPLEMENTED_HERE[name]]
+        elif effect in effect_id:
+            effect_number = effect_id[effect]
+        else:
             raise SystemExit(f"{name} has effect {effect}, which the reference does not define")
         split = SPLITS[field(block, "split")]
         flags = sum(1 << bit for flag, bit in FLAG_BITS.items() if flag in named_flags(block)
                     and not (name in IMPLEMENTED_HERE and flag == "FLAG_UNUSABLE_UNIMPLEMENTED"))
         added.append((first_move + offset, name, struct.pack(
             RECORD,
-            effect_id[effect],
+            effect_number,
             split,
             number(block, "power"),
             types[field(block, "type")],
@@ -910,7 +932,7 @@ def main():
             "// what to call it, and past it this game had already spent ten of its own.\n"
             + "".join(f"#define MOVE_EFFECT_{name[len('MOVE_EFFECT_'):]:<44} {mine}\n"
                      for mine, _, name in new_effects))
-    at = effects_text.rindex(marker)
+    at = effects_text.index(WRITTEN_HERE) if WRITTEN_HERE in effects_text else effects_text.rindex(marker)
     MOVE_EFFECTS_H.write_text(effects_text[:at] + body + effects_text[at:])
 
     # The move numbers.
