@@ -423,6 +423,15 @@ void sub_0207EBE4(PartyMenu *partyMenu, u8 partySlot, u16 x, u16 y, NARC *narc) 
     partyMenu->monsDrawState[partySlot].mainScreenIconSprite = SpriteSystem_CreateSpriteFromResourceHeader(partyMenu->spriteRenderer, partyMenu->spriteGfxHandler, &sp1C);
 }
 
+// A Drive, a mask or an origin item turns the Pokemon it is given to or taken
+// from into its form (Mon_UpdateHeldItemForm); the icon follows it.
+void PartyMenu_UpdateHeldItemForm(PartyMenu *partyMenu, Pokemon *mon) {
+    if (Mon_UpdateHeldItemForm(mon) == TRUE) {
+        partyMenu->monsDrawState[partyMenu->partyMonIndex].species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+        sub_0207ECE0(partyMenu, partyMenu->partyMonIndex);
+    }
+}
+
 void sub_0207ECE0(PartyMenu *partyMenu, u8 partySlot) {
     Pokemon *mon;
     NARC *narc;

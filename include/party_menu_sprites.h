@@ -6,6 +6,7 @@
 void sub_0207EB24(PartyMenu *partyMenu);
 void sub_0207EBE4(PartyMenu *partyMenu, u8 partySlot, u16 x, u16 y, NARC *narc);
 void sub_0207ECE0(PartyMenu *partyMenu, u8 partySlot);
+void PartyMenu_UpdateHeldItemForm(PartyMenu *partyMenu, Pokemon *mon);
 void sub_0207EDD4(PartyMenu *partyMenu);
 void sub_0207EF5C(PartyMenu *partyMenu, u8 partySlot, u16 x, u16 y);
 void PartyMenu_RemoveSpriteRenderer(PartyMenu *partyMenu);

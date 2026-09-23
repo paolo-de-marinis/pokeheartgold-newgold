@@ -4300,11 +4300,73 @@ BOOL Mon_RevertFormChange(Pokemon *mon) {
     return TRUE;
 }
 
+// The forms a held item gives, each a species of its own here: Genesect's
+// Drives (the reference's GetGenesectForme, src/pokemon.c:684 at d0380a487),
+// and Ogerpon's masks and the origin items of Dialga and Palkia, which the
+// reference only reads for their power (Pokemon Central: each Pokemon's page).
+// The species the Pokemon is while holding item: the item's form, the base
+// form with any other item, and species itself for everyone else.
+u16 Species_HeldItemForm(u16 species, u16 item) {
+    switch (species) {
+    case SPECIES_GENESECT:
+    case SPECIES_GENESECT_DOUSE_DRIVE:
+    case SPECIES_GENESECT_SHOCK_DRIVE:
+    case SPECIES_GENESECT_BURN_DRIVE:
+    case SPECIES_GENESECT_CHILL_DRIVE:
+        switch (item) {
+        case ITEM_DOUSE_DRIVE:
+            return SPECIES_GENESECT_DOUSE_DRIVE;
+        case ITEM_SHOCK_DRIVE:
+            return SPECIES_GENESECT_SHOCK_DRIVE;
+        case ITEM_BURN_DRIVE:
+            return SPECIES_GENESECT_BURN_DRIVE;
+        case ITEM_CHILL_DRIVE:
+            return SPECIES_GENESECT_CHILL_DRIVE;
+        }
+        return SPECIES_GENESECT;
+    case SPECIES_OGERPON:
+    case SPECIES_OGERPON_WELLSPRING_MASK:
+    case SPECIES_OGERPON_HEARTHFLAME_MASK:
+    case SPECIES_OGERPON_CORNERSTONE_MASK:
+        switch (item) {
+        case ITEM_WELLSPRING_MASK:
+            return SPECIES_OGERPON_WELLSPRING_MASK;
+        case ITEM_HEARTHFLAME_MASK:
+            return SPECIES_OGERPON_HEARTHFLAME_MASK;
+        case ITEM_CORNERSTONE_MASK:
+            return SPECIES_OGERPON_CORNERSTONE_MASK;
+        }
+        return SPECIES_OGERPON;
+    case SPECIES_DIALGA:
+    case SPECIES_DIALGA_ORIGIN:
+        return item == ITEM_ADAMANT_CRYSTAL ? SPECIES_DIALGA_ORIGIN : SPECIES_DIALGA;
+    case SPECIES_PALKIA:
+    case SPECIES_PALKIA_ORIGIN:
+        return item == ITEM_LUSTROUS_GLOBE ? SPECIES_PALKIA_ORIGIN : SPECIES_PALKIA;
+    }
+    return species;
+}
+
+// Puts the Pokemon in the form its held item gives; TRUE when that changed
+// its species.
+BOOL Mon_UpdateHeldItemForm(Pokemon *mon) {
+    u16 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    u16 form = Species_HeldItemForm(species, GetMonData(mon, MON_DATA_HELD_ITEM, NULL));
+
+    if (form == species) {
+        return FALSE;
+    }
+    Mon_ChangeFormSpecies(mon, form);
+    return TRUE;
+}
+
 // hg-engine's ChangeToBattleForm (src/pokemon.c:2233), for each Pokemon about to
 // battle: Xerneas is always in its Active Mode, and a Zacian or Zamazenta
-// holding its Rusted Sword or Shield is crowned.
+// holding its Rusted Sword or Shield is crowned. A trainer's or a wild
+// Pokemon holding a Drive, a mask or an origin item comes in in its form.
 void Mon_ChangeToBattleForm(Pokemon *mon) {
     Mon_RevertFormChange(mon);
+    Mon_UpdateHeldItemForm(mon);
     switch (GetMonData(mon, MON_DATA_SPECIES, NULL)) {
     case SPECIES_XERNEAS:
         Mon_ChangeFormSpecies(mon, SPECIES_XERNEAS_ACTIVE);

@@ -2823,6 +2823,7 @@ static int PartyMenu_GiveItemToMon_HandleGriseousOrb(PartyMenu *partyMenu, Pokem
     SetMonData(mon, MON_DATA_HELD_ITEM, &itemToBeHeld);
     Pokemon_UpdateArceusForm(mon);
     *transformResult = Mon_UpdateGiratinaForm(mon);
+    PartyMenu_UpdateHeldItemForm(partyMenu, mon);
     partyMenu->monsDrawState[partyMenu->partyMonIndex].heldItem = partyMenu->args->itemId;
     PartyMenu_DrawMonHeldItemIcon(partyMenu, partyMenu->partyMonIndex, partyMenu->monsDrawState[partyMenu->partyMonIndex].heldItem);
     if (itemToBeHeld == ITEM_GRISEOUS_ORB && *transformResult != -1) {
@@ -2837,6 +2838,7 @@ static void PartyMenu_SwapMonHeldItem(PartyMenu *partyMenu, Pokemon *mon, u32 ol
     SetMonData(mon, MON_DATA_HELD_ITEM, &newItemId);
     Pokemon_UpdateArceusForm(mon);
     Mon_UpdateGiratinaForm(mon);
+    PartyMenu_UpdateHeldItemForm(partyMenu, mon);
     partyMenu->monsDrawState[partyMenu->partyMonIndex].heldItem = newItemId;
     PartyMenu_DrawMonHeldItemIcon(partyMenu, partyMenu->partyMonIndex, partyMenu->monsDrawState[partyMenu->partyMonIndex].heldItem);
 }

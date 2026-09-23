@@ -4,6 +4,10 @@
 RKS System makes Silvally the type of the Memory it holds (Pokemon Central,
 Sistema RKS), in battle and out of it, as Multitype does Arceus with a plate;
 the reference reads the plates for it, a defect its own comment admits.
+
+Genesect's Drives, Ogerpon's masks and Dialga's and Palkia's origin items
+give each its form, a species of its own here, when the item is given or
+taken in the party and when a Pokemon holding one comes into battle.
 """
 
 import os
@@ -110,6 +114,68 @@ class RksSystemTests(unittest.TestCase):
     def test_multi_attack_takes_the_same_type(self):
         body = function(read(OVERLAY), "GetDynamicMoveType")
         self.assertIn("type = GetSilvallyTypeByHeldItemEffect(GetBattlerHeldItemEffect(ctx, battlerId));", body)
+
+
+HELD_FORM_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/items.h"
+#include "constants/species.h"
+typedef uint16_t u16;
+@FUNCTION@
+int main(void) {
+    static const u16 cases[][3] = {
+        { SPECIES_GENESECT, ITEM_DOUSE_DRIVE, SPECIES_GENESECT_DOUSE_DRIVE },
+        { SPECIES_GENESECT, ITEM_SHOCK_DRIVE, SPECIES_GENESECT_SHOCK_DRIVE },
+        { SPECIES_GENESECT, ITEM_BURN_DRIVE, SPECIES_GENESECT_BURN_DRIVE },
+        { SPECIES_GENESECT, ITEM_CHILL_DRIVE, SPECIES_GENESECT_CHILL_DRIVE },
+        { SPECIES_GENESECT_BURN_DRIVE, ITEM_CHILL_DRIVE, SPECIES_GENESECT_CHILL_DRIVE },
+        { SPECIES_GENESECT_BURN_DRIVE, ITEM_NONE, SPECIES_GENESECT },
+        { SPECIES_GENESECT_DOUSE_DRIVE, ITEM_LEFTOVERS, SPECIES_GENESECT },
+        { SPECIES_OGERPON, ITEM_WELLSPRING_MASK, SPECIES_OGERPON_WELLSPRING_MASK },
+        { SPECIES_OGERPON, ITEM_HEARTHFLAME_MASK, SPECIES_OGERPON_HEARTHFLAME_MASK },
+        { SPECIES_OGERPON, ITEM_CORNERSTONE_MASK, SPECIES_OGERPON_CORNERSTONE_MASK },
+        { SPECIES_OGERPON_CORNERSTONE_MASK, ITEM_TEAL_MASK, SPECIES_OGERPON },
+        { SPECIES_OGERPON_WELLSPRING_MASK, ITEM_NONE, SPECIES_OGERPON },
+        { SPECIES_DIALGA, ITEM_ADAMANT_CRYSTAL, SPECIES_DIALGA_ORIGIN },
+        { SPECIES_DIALGA_ORIGIN, ITEM_NONE, SPECIES_DIALGA },
+        { SPECIES_DIALGA, ITEM_LUSTROUS_GLOBE, SPECIES_DIALGA },
+        { SPECIES_PALKIA, ITEM_LUSTROUS_GLOBE, SPECIES_PALKIA_ORIGIN },
+        { SPECIES_PALKIA_ORIGIN, ITEM_ADAMANT_CRYSTAL, SPECIES_PALKIA },
+        { SPECIES_SNORLAX, ITEM_DOUSE_DRIVE, SPECIES_SNORLAX },
+        { SPECIES_ZACIAN, ITEM_RUSTED_SWORD, SPECIES_ZACIAN },          // crowned in battle, not here
+        { SPECIES_OGERPON_TEAL_MASK_TERASTAL, ITEM_NONE, SPECIES_OGERPON_TEAL_MASK_TERASTAL },
+    };
+    for (unsigned i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        assert(Species_HeldItemForm(cases[i][0], cases[i][1]) == cases[i][2]);
+    }
+    return 0;
+}
+"""
+
+
+class HeldItemFormTests(unittest.TestCase):
+    def test_each_item_names_its_form(self):
+        run_c(HELD_FORM_FIXTURE.replace("@FUNCTION@", function(read("src/pokemon.c"), "Species_HeldItemForm")))
+
+    def test_the_form_is_put_on_as_a_species(self):
+        body = function(read("src/pokemon.c"), "Mon_UpdateHeldItemForm")
+        self.assertIn("Species_HeldItemForm(species, GetMonData(mon, MON_DATA_HELD_ITEM, NULL))", body)
+        self.assertIn("Mon_ChangeFormSpecies(mon, form);", body)
+
+    def test_a_pokemon_comes_into_battle_in_its_form(self):
+        body = function(read("src/pokemon.c"), "Mon_ChangeToBattleForm")
+        self.assertIn("Mon_UpdateHeldItemForm(mon);", body)
+
+    def test_the_party_menu_changes_it_when_an_item_is_given_or_taken(self):
+        helper = function(read("src/party_menu_sprites.c"), "PartyMenu_UpdateHeldItemForm")
+        self.assertIn("if (Mon_UpdateHeldItemForm(mon) == TRUE) {", helper)
+        self.assertIn("sub_0207ECE0(partyMenu, partyMenu->partyMonIndex);", helper)
+        menu = read("src/party_menu.c")
+        for name in ("PartyMenu_GiveItemToMon_HandleGriseousOrb", "PartyMenu_SwapMonHeldItem"):
+            self.assertIn("PartyMenu_UpdateHeldItemForm(partyMenu, mon);", function(menu, name), name)
+        take = function(read("src/party_menu_list_items.c"), "PartyMonContextMenuAction_Take")
+        self.assertIn("PartyMenu_UpdateHeldItemForm(partyMenu, mon);", take)
 
 
 if __name__ == "__main__":

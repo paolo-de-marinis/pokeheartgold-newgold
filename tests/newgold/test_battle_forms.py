@@ -141,6 +141,11 @@ int main(void) {
     Mon_ChangeToBattleForm(&zamazenta);
     assert(zamazenta.species == SPECIES_ZAMAZENTA_CROWNED && zamazenta.moves[0] == MOVE_BEHEMOTH_BASH);
 
+    // A trainer's Genesect holding a Drive comes in in the Drive's form.
+    Pokemon genesect = { SPECIES_GENESECT, ITEM_SHOCK_DRIVE };
+    Mon_ChangeToBattleForm(&genesect);
+    assert(genesect.species == SPECIES_GENESECT_SHOCK_DRIVE && genesect.recalculated == 1);
+
     // FormReversionMapping: a form number other than 0.
     Pokemon minior = { SPECIES_MINIOR_CORE_ORANGE };
     assert(Mon_RevertFormChange(&minior) && minior.species == SPECIES_MINIOR_METEOR_ORANGE);
@@ -169,7 +174,7 @@ class BattleFormTests(unittest.TestCase):
         source = (ROOT / "src/pokemon.c").read_text()
         functions = "\n".join(function(source, name) for name in (
             "Mon_SwapMove", "Species_AbilityInSameSlot", "Mon_ChangeFormSpecies", "Species_GetBattleFormReversion",
-            "Mon_RevertFormChange", "Mon_ChangeToBattleForm"))
+            "Mon_RevertFormChange", "Species_HeldItemForm", "Mon_UpdateHeldItemForm", "Mon_ChangeToBattleForm"))
         program = (FIXTURE.replace("@TABLE@", (ROOT / "src/data/form_reversion.h").read_text())
                    .replace("@FUNCTIONS@", functions))
         with tempfile.TemporaryDirectory(prefix="newgold-battle-forms-") as directory:
