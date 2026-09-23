@@ -2394,7 +2394,9 @@ static BOOL ov12_0224B398(BattleSystem *battleSystem, BattleContext *ctx) {
 
 static BOOL ov12_0224B498(BattleSystem *battleSystem, BattleContext *ctx) {
     if ((BattleMoveTbl(ctx, ctx->moveNoCur)->range != RANGE_USER && BattleMoveTbl(ctx, ctx->moveNoCur)->range != RANGE_USER_SIDE && BattleMoveTbl(ctx, ctx->moveNoCur)->power != 0 && !(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_IMMUNITY) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN)) || ctx->moveNoCur == MOVE_THUNDER_WAVE) {
-        ctx->damage = ov12_02251D28(battleSystem, ctx, ctx->moveNoCur, ctx->moveType, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->damage, &ctx->moveStatusFlag);
+        // The flags alone, as in the reference's BeforeMove: the damage is
+        // final already, CalcDamage having taken the type chart into it.
+        ov12_02251D28(battleSystem, ctx, ctx->moveNoCur, ctx->moveType, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->damage, &ctx->moveStatusFlag);
         // A Disguise or an Ice Face takes the whole hit, and nothing is said
         // about how well it landed (battle_calc_damage.c:254).
         if (Battler_BrokenFaceForm(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->moveNoCur) != SPECIES_NONE) {

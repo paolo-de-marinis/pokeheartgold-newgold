@@ -145,9 +145,10 @@ class UnseenFistTests(unittest.TestCase):
     def test_a_contact_move_goes_through_protect_for_a_quarter(self):
         """UNSEEN_FIST_GENERATION is GEN_CHAMPIONS, so the move lands weakened
         rather than ignoring the guard outright."""
-        overlay = source("src/battle/overlay_12_0224E4FC.c")
-        at = overlay.index("ABILITY_UNSEEN_FIST || calcAttacker.ability == ABILITY_PIERCING_DRILL")
-        self.assertIn("dmg /= 4;", overlay[at:at + 200])
+        # After the final modifier, the reference's step 10.1.
+        commands = source("src/battle/battle_command.c")
+        at = commands.index("ABILITY_UNSEEN_FIST || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_PIERCING_DRILL")
+        self.assertIn("damage = QMul_RoundDown(damage, UQ412__0_25);", commands[at:at + 200])
         self.assertIn("ABILITY_UNSEEN_FIST", source("src/battle/battle_controller_player.c"))
 
     def test_the_guard_that_did_not_hold_is_announced(self):

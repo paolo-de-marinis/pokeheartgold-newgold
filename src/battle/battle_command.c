@@ -751,7 +751,10 @@ BOOL BtlCmd_Wait(BattleSystem *battleSystem, BattleContext *ctx) {
 // the flag the scripts and the screen and stat-stage tests read, so those
 // values stay. What a critical hit does to the damage is the reference's
 // (battle_calc_damage.c, 6.4 and 6.9.3): x1.5, and x1.5 again for Sniper.
-// HeartGold doubled it, and tripled it for Sniper.
+// HeartGold doubled it, and tripled it for Sniper. This is Beat Up's, whose
+// damage is still HeartGold's own sum; an ordinary hit takes the first half in
+// DamageCalcDefault and Sniper's in the final modifier, where the reference
+// has them.
 static void ApplyCriticalHit(BattleContext *ctx) {
     if (ctx->criticalMultiplier > 1) {
         ctx->damage = ctx->damage * 15 / 10;
@@ -761,38 +764,216 @@ static void ApplyCriticalHit(BattleContext *ctx) {
     }
 }
 
-static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx) {
-    int type = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
+// Reflect, Light Screen and Aurora Veil (battle_calc_damage.c, 6.9.1). Future
+// Sight asks too, for the damage it works out on the turn it is used.
+static u32 ScreenModifier(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u32 sideCondition, int crit, int battlerIdAttacker, int battlerIdTarget) {
+    u32 screen = BattleMoveTbl(ctx, moveNo)->category == CATEGORY_PHYSICAL ? SIDE_CONDITION_REFLECT : SIDE_CONDITION_LIGHT_SCREEN;
 
-    ctx->damage = CalcMoveDamage(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget)], ctx->fieldCondition, ctx->movePower, type, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->criticalMultiplier);
+    if (!(sideCondition & (screen | SIDE_CONDITION_AURORA_VEIL)) || crit != 1 || BattleMoveTbl(ctx, moveNo)->effect == MOVE_EFFECT_REMOVE_SCREENS || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_INFILTRATOR) {
+        return UQ412__1_0;
+    }
+    if ((BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_DOUBLES) && GetMonsHitCount(battleSystem, ctx, 1, battlerIdTarget) == 2) {
+        return UQ412__0_6666;
+    }
+    return UQ412__0_5;
+}
 
-    ApplyCriticalHit(ctx);
+// The final modifier (6.9): every multiplier the reference chains into one
+// Q4.12 number with QMul_RoundUp before it touches the damage, once. The
+// reference visits the battlers by raw Speed; this takes the attacker's, then
+// the target's, then its ally's, which is the same chain whenever the attacker
+// is the faster, and all but always otherwise, these being halves and
+// quarters. effectiveness is the type chart's verdict in eighths, 8 neutral.
+static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, int moveType, int effectiveness) {
+    int battlerIdAttacker = ctx->battlerIdAttacker;
+    int battlerIdTarget = ctx->battlerIdTarget;
+    int ally = battlerIdTarget ^ 2;
+    u32 moveNo = ctx->moveNoCur;
+    int item = GetBattlerHeldItemEffect(ctx, battlerIdAttacker);
+    u32 modifier = ScreenModifier(battleSystem, ctx, moveNo, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerIdTarget)], ctx->criticalMultiplier, battlerIdAttacker, battlerIdTarget);
 
-    if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_HP_DRAIN_ON_ATK) {
-        ctx->damage = ctx->damage * (100 + GetHeldItemModifier(ctx, ctx->battlerIdAttacker, 0)) / 100;
+    if (effectiveness != 0 && effectiveness < 8 && GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_TINTED_LENS) {
+        modifier = QMul_RoundUp(modifier, UQ412__2_0);
+    }
+    if (effectiveness > 8 && GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_NEUROFORCE) {
+        modifier = QMul_RoundUp(modifier, UQ412__1_25);
+    }
+    // Sniper
+    if (ctx->criticalMultiplier == 3) {
+        modifier = QMul_RoundUp(modifier, UQ412__1_5);
     }
 
-    if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_BOOST_REPEATED) {
-        ctx->damage = ctx->damage * (10 + ctx->battleMons[ctx->battlerIdAttacker].unk88.metronomeTurns) / 10;
+    // Prism Armor is the same 0.75 as Filter and Solid Rock and shares their
+    // one if, so a mon reading as two of them still only takes it once. It is
+    // read raw: Mold Breaker does not turn it off.
+    if (effectiveness > 8 && (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FILTER) == TRUE || CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SOLID_ROCK) == TRUE || GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_PRISM_ARMOR)) {
+        modifier = QMul_RoundUp(modifier, UQ412__0_75);
     }
 
-    if (ctx->battleMons[ctx->battlerIdAttacker].unk88.meFirstFlag) {
-        if (ctx->meFirstTotal == ctx->battleMons[ctx->battlerIdAttacker].unk88.meFirstCount) {
-            ctx->battleMons[ctx->battlerIdAttacker].unk88.meFirstCount--;
+    // Fluffy's two halves are siblings and not a chain: a contact Fire move
+    // takes both and so comes out unchanged.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLUFFY) == TRUE) {
+        if (BattleMoveMakesContact(ctx, moveNo) == TRUE) {
+            modifier = QMul_RoundUp(modifier, UQ412__0_5);
         }
-        if ((ctx->meFirstTotal - ctx->battleMons[ctx->battlerIdAttacker].unk88.meFirstCount) < 2) {
-            ctx->damage = ctx->damage * 15 / 10;
-        } else {
-            ctx->battleMons[ctx->battlerIdAttacker].unk88.meFirstFlag = 0;
+        if (moveType == TYPE_FIRE) {
+            modifier = QMul_RoundUp(modifier, UQ412__2_0);
         }
     }
+
+    // Multiscale and Shadow Shield are one condition and one halving. Shadow
+    // Shield is read raw: Mold Breaker does not turn it off.
+    if ((CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_MULTISCALE) == TRUE || GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_SHADOW_SHIELD) && ctx->battleMons[battlerIdTarget].hp == (s32)ctx->battleMons[battlerIdTarget].maxHp) {
+        modifier = QMul_RoundUp(modifier, UQ412__0_5);
+    }
+
+    // Punk Rock's other half; the base power boost is in CalcMoveDamage.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_PUNK_ROCK) == TRUE && BattleMoveIsSoundBased(moveNo) == TRUE) {
+        modifier = QMul_RoundUp(modifier, UQ412__0_5);
+    }
+
+    // Ice Scales halves every special move, whether or not that move is the
+    // kind that reads Sp. Def -- Psyshock is halved too. The reference's loop
+    // applies it once for every battler on the field, a quarter in a single
+    // battle and a sixteenth in a double, because this one test lacks the
+    // "is this battler the target" the rest of the loop has. Once, as its own
+    // comment and the published ability say.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_SCALES) == TRUE && BattleMoveTbl(ctx, moveNo)->category == CATEGORY_SPECIAL) {
+        modifier = QMul_RoundUp(modifier, UQ412__0_5);
+    }
+
+    // Friend Guard belongs to the target's ALLY, so it exists only in a double
+    // battle -- the slot two over is stale rather than empty in a single one,
+    // which is what the maxBattlers guard is for.
+    if (ally < BattleSystem_GetMaxBattlers(battleSystem) && ctx->battleMons[ally].hp && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, ally, ABILITY_FRIEND_GUARD) == TRUE) {
+        modifier = QMul_RoundUp(modifier, UQ412__0_75);
+    }
+
+    // The Metronome item: HeartGold's tenth more for each use in a row.
+    if (item == HOLD_EFFECT_BOOST_REPEATED) {
+        modifier = QMul_RoundUp(modifier, UQ412__1_0 * (10 + ctx->battleMons[battlerIdAttacker].unk88.metronomeTurns) / 10);
+    }
+    if (effectiveness > 8 && item == HOLD_EFFECT_POWER_UP_SE) {
+        modifier = QMul_RoundUp(modifier, UQ412__1_2);
+    }
+    if (item == HOLD_EFFECT_HP_DRAIN_ON_ATK) {
+        modifier = QMul_RoundUp(modifier, UQ412__1_3_BUT_LOWER);
+    }
+
+    return modifier;
+}
+
+// An ordinary hit, in the order of the reference's CalcDamageOverall
+// (battle_calc_damage.c, steps 6 to 11): the base damage, the spread, the
+// weather, Glaive Rush, the critical hit, the roll, STAB and the type chart, a
+// burn, the final modifier, Unseen Fist, and at least 1. HeartGold folded the
+// burn, the screens, the spread and the weather into the base, and applied the
+// type chart and what hangs off it after the roll, from the controller. Spit
+// Up's CalcMaxDamage is the same without the roll.
+static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BOOL roll) {
+    int battlerIdAttacker = ctx->battlerIdAttacker;
+    int battlerIdTarget = ctx->battlerIdTarget;
+    u32 moveNo = ctx->moveNoCur;
+    int type = BattleMoveAdjustedType(ctx, battlerIdAttacker, moveNo);
+    int range = BattleMoveTbl(ctx, moveNo)->range;
+    u32 moveStatusFlag = 0;
+    int effectiveness;
+    u32 damage;
+
+    // Me First's copy is boosted only on the turn it was copied; the half
+    // again itself is on the power, in CalcMoveDamage.
+    if (ctx->battleMons[battlerIdAttacker].unk88.meFirstFlag) {
+        if (ctx->meFirstTotal == ctx->battleMons[battlerIdAttacker].unk88.meFirstCount) {
+            ctx->battleMons[battlerIdAttacker].unk88.meFirstCount--;
+        }
+        if ((ctx->meFirstTotal - ctx->battleMons[battlerIdAttacker].unk88.meFirstCount) >= 2) {
+            ctx->battleMons[battlerIdAttacker].unk88.meFirstFlag = 0;
+        }
+    }
+
+    damage = CalcMoveDamage(battleSystem, ctx, moveNo, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerIdTarget)], ctx->fieldCondition, ctx->movePower, type, battlerIdAttacker, battlerIdTarget, ctx->criticalMultiplier);
+
+    if ((BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_DOUBLES)
+        && ((range == RANGE_ADJACENT_OPPONENTS && GetMonsHitCount(battleSystem, ctx, 1, battlerIdTarget) == 2)
+            || (range == RANGE_ALL_ADJACENT && GetMonsHitCount(battleSystem, ctx, 0, battlerIdTarget) >= 2))) {
+        damage = QMul_RoundDown(damage, UQ412__0_75);
+    }
+
+    if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
+        if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
+            switch (type) {
+            case TYPE_FIRE:
+                damage = QMul_RoundDown(damage, UQ412__0_5);
+                break;
+            case TYPE_WATER:
+                damage = QMul_RoundDown(damage, UQ412__1_5);
+                break;
+            }
+        }
+        if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
+            switch (type) {
+            case TYPE_FIRE:
+                damage = QMul_RoundDown(damage, UQ412__1_5);
+                break;
+            case TYPE_WATER:
+                // Hydro Steam is the Water move the sun helps rather than
+                // hinders, and a Utility Umbrella on the one using it takes
+                // that away -- leaving the halving every other Water move
+                // gets, which is what the reference's else does. The item
+                // reaches no further than this in the reference: the rain and
+                // the sun are otherwise read with nobody's items in the
+                // question, and only Orichalcum Pulse excuses it too.
+                if (moveNo == MOVE_HYDRO_STEAM && GetBattlerHeldItemEffect(ctx, battlerIdAttacker) != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
+                    damage = QMul_RoundDown(damage, UQ412__1_5);
+                } else {
+                    damage = QMul_RoundDown(damage, UQ412__0_5);
+                }
+                break;
+            }
+        }
+    }
+
+    // Glaive Rush: whoever used it last takes double until it moves again.
+    if (ctx->moveConditions[battlerIdTarget].glaiveRush) {
+        damage = damage * 200 / 100;
+    }
+
+    if (ctx->criticalMultiplier > 1) {
+        damage = damage * 150 / 100;
+    }
+
+    if (roll) {
+        damage = damage * (100 - BattleSystem_Random(battleSystem) % 16) / 100;
+    }
+
+    damage = CalcTypeEffectiveness(battleSystem, ctx, moveNo, ctx->moveType, battlerIdAttacker, battlerIdTarget, damage, &moveStatusFlag, &effectiveness);
+
+    // A burn halves a physical move, unless Guts has made use of it.
+    if (BattleMoveTbl(ctx, moveNo)->category == CATEGORY_PHYSICAL && (ctx->battleMons[battlerIdAttacker].status & STATUS_BURN) && GetBattlerAbility(ctx, battlerIdAttacker) != ABILITY_GUTS) {
+        damage = QMul_RoundDown(damage, UQ412__0_5);
+    }
+
+    damage = QMul_RoundDown(damage, FinalDamageModifier(battleSystem, ctx, type, effectiveness));
+
+    // Whatever Unseen Fist or Piercing Drill got through a Protect with, it
+    // got through weakened. The reference asks only whether this target was
+    // protecting, not whether the move touched -- the contact test already
+    // happened where the move was let through, in BattleSystem_CheckMoveEffect.
+    if ((GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_UNSEEN_FIST || GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_PIERCING_DRILL) && ctx->turnData[battlerIdTarget].protectFlag) {
+        damage = QMul_RoundDown(damage, UQ412__0_25);
+    }
+
+    if (damage == 0) {
+        damage = 1;
+    }
+    // The reference's step 12: the damage is a 16-bit number.
+    ctx->damage = damage % 65536;
 }
 
 BOOL BtlCmd_CalcDamage(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
-    DamageCalcDefault(battleSystem, ctx);
-    ctx->damage = ApplyDamageRange(battleSystem, ctx, ctx->damage);
+    DamageCalcDefault(battleSystem, ctx, TRUE);
     ctx->damage *= -1;
 
     return FALSE;
@@ -801,7 +982,7 @@ BOOL BtlCmd_CalcDamage(BattleSystem *battleSystem, BattleContext *ctx) {
 BOOL BtlCmd_CalcDamageRaw(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
-    DamageCalcDefault(battleSystem, ctx);
+    DamageCalcDefault(battleSystem, ctx, FALSE);
     ctx->damage *= -1;
 
     return FALSE;
@@ -4354,8 +4535,11 @@ BOOL BtlCmd_TryFutureSight(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->fieldConditionData.futureSightTurns[ctx->battlerIdTarget] = 3;
         ctx->fieldConditionData.futureSightMoveNo[ctx->battlerIdTarget] = ctx->moveNoCur;
         ctx->fieldConditionData.battlerIdFutureSight[ctx->battlerIdTarget] = ctx->battlerIdAttacker;
-        int damage = CalcMoveDamage(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[side], ctx->fieldCondition, 0, 0, ctx->battlerIdAttacker, ctx->battlerIdTarget, 1) * -1;
-        ctx->fieldConditionData.futureSightDamage[ctx->battlerIdTarget] = ApplyDamageRange(battleSystem, ctx, damage);
+        // Worked out in full now, on the turn it is used, as HeartGold did:
+        // the base, the target's screens as they stand, and the roll.
+        int damage = CalcMoveDamage(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[side], ctx->fieldCondition, 0, 0, ctx->battlerIdAttacker, ctx->battlerIdTarget, 1);
+        damage = QMul_RoundDown(damage, ScreenModifier(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[side], 1, ctx->battlerIdAttacker, ctx->battlerIdTarget));
+        ctx->fieldConditionData.futureSightDamage[ctx->battlerIdTarget] = ApplyDamageRange(battleSystem, ctx, damage * -1);
         if (ctx->turnData[ctx->battlerIdAttacker].helpingHandFlag) {
             ctx->fieldConditionData.futureSightDamage[ctx->battlerIdTarget] = ctx->fieldConditionData.futureSightDamage[ctx->battlerIdTarget] * 15 / 10;
         }
@@ -4940,10 +5124,12 @@ BOOL BtlCmd_TryPursuit(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// The flags alone: CalcDamage has already taken the type chart into the
+// damage, as the reference's does, and Pursuit's is the only script that asks.
 BOOL BtlCmd_ApplyTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
-    ctx->damage = ov12_02251D28(battleSystem, ctx, ctx->moveNoCur, ctx->moveType, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->damage, &ctx->moveStatusFlag);
+    ov12_02251D28(battleSystem, ctx, ctx->moveNoCur, ctx->moveType, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->damage, &ctx->moveStatusFlag);
 
     return FALSE;
 }

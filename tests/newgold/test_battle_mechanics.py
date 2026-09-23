@@ -193,12 +193,17 @@ int main(void) {
             subprocess.run([str(path / "test")], check=True)
 
     def test_both_damage_paths_take_it(self):
-        # The ordinary calculation and Beat Up's own; neither multiplies by
-        # the stored number any more.
+        # Beat Up's own sum takes both halves at once; an ordinary hit takes
+        # the critical hit's before the roll and Sniper's in the final
+        # modifier, as the reference's chain does. Neither multiplies by the
+        # stored number any more.
         source = COMMANDS.read_text()
         self.assertNotIn("*= ctx->criticalMultiplier", source)
-        for name in ("DamageCalcDefault", "BtlCmd_BeatUp"):
-            self.assertIn("ApplyCriticalHit(ctx);", function(source, name), name)
+        self.assertIn("ApplyCriticalHit(ctx);", function(source, "BtlCmd_BeatUp"))
+        self.assertRegex(function(source, "DamageCalcDefault"),
+                         r"criticalMultiplier > 1\) \{\n\s*damage = damage \* 150 / 100;")
+        self.assertRegex(function(source, "FinalDamageModifier"),
+                         r"criticalMultiplier == 3\) \{\n\s*modifier = QMul_RoundUp\(modifier, UQ412__1_5\);")
 
 
 class ExplosionTests(unittest.TestCase):

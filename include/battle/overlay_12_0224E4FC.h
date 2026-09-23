@@ -120,6 +120,23 @@ void ov12_02256F28(BattleSystem *battleSystem, BattleContext *ctx);
 void ov12_02256F78(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u8 selectedMonIndex);
 int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u32 sideCondition, u32 fieldCondition, u16 power, u8 type, u8 battlerIdAttacker, u8 battlerIdTarget, u8 crit);
 int ApplyDamageRange(BattleSystem *battleSystem, BattleContext *ctx, int damage);
+int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, int moveTypeDefault, int battlerIdAttacker, int battlerIdTarget, int damage, u32 *moveStatusFlag, int *effectiveness);
+
+// Q4.12 fractions, the reference's include/q412.h: 4096 is 1.0. Only the
+// values the damage calculation uses are here.
+#define UQ412__1_0           4096
+#define UQ412__0_25          1024
+#define UQ412__0_5           2048
+#define UQ412__0_6666        2732
+#define UQ412__0_75          3072
+#define UQ412__1_2           4915
+#define UQ412__1_25          5120
+#define UQ412__1_3_BUT_LOWER 5324
+#define UQ412__1_5           6144
+#define UQ412__2_0           8192
+
+u32 QMul_RoundUp(u32 value, u32 q);
+u32 QMul_RoundDown(u32 value, u32 q);
 u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int critCnt, u32 sideCondition);
 BOOL CheckLegalMimicMove(u16 moveNo);
 BOOL CheckLegalMetronomeMove(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 moveNo);

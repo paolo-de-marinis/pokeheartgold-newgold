@@ -34,7 +34,7 @@ static const u8 sStatChangeTable[][2];
 static BOOL CheckFlyingImmunity(BattleContext *ctx, int item, int index);
 static void ApplyEffectivenessFlags(int effectiveness, u32 *moveStatusFlag);
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag);
-static int ov12_022583B4(BattleContext *ctx, int battlerId, int typeEffectiveness, int damage, int moveDamage, u32 *flag);
+static void ov12_022583B4(int typeEffectiveness, int moveDamage, u32 *flag);
 static int ov12_02258440(BattleContext *ctx, int moveNo);
 static u8 Battler_GetType(BattleContext *ctx, int battlerId, int var);
 static void ov12_02258584(BattleContext *ctx, u8 battlerId);
@@ -2564,26 +2564,30 @@ BOOL ov12_02251C74(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarge
     return ret;
 }
 
-int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, int moveTypeDefault, int battlerIdAttacker, int battlerIdTarget, int damage, u32 *moveStatusFlag) {
+// The one walk over the type chart. It sets the flags the scripts and the AI
+// read, as HeartGold's did, and scales the damage by STAB and then by the
+// chart -- the chart once, by what its rows multiply to, the way the
+// reference's GetTypeEffectiveness gives one verdict that CalcDamageOverall
+// applies as a shift (battle_calc_damage.c, 6.6 and 6.7). HeartGold scaled and
+// truncated row by row, so a Fire move into Water/Grass came out 44 from 45.
+//
+// *effectiveness is that verdict in eighths: 8 neutral, 16 super effective, 4
+// not very effective, 0 no effect. It stays 8 while the chart is not being
+// asked, which keeps the final modifier's Filter and Tinted Lens quiet then.
+int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, int moveTypeDefault, int battlerIdAttacker, int battlerIdTarget, int damage, u32 *moveStatusFlag, int *effectiveness) {
     int i;
-    int seffectMod; // this variable is not used but is required to match
+    int typeMul;
     u8 moveType;
     u32 movePower;
-    u8 itemAttacker;
     u8 itemTarget;
-    u8 extraAttacker;
-    u8 extraTarget;
 
-    seffectMod = 1;
+    *effectiveness = 8;
 
     if (moveNo == MOVE_STRUGGLE) {
         return damage;
     }
 
-    itemAttacker = GetBattlerHeldItemEffect(ctx, battlerIdAttacker);
-    extraAttacker = GetHeldItemModifier(ctx, battlerIdAttacker, 0);
     itemTarget = GetBattlerHeldItemEffect(ctx, battlerIdTarget);
-    extraTarget = GetHeldItemModifier(ctx, battlerIdTarget, 0);
 
     moveType = BattleMoveTypeForAbility(ctx, GetBattlerAbility(ctx, battlerIdAttacker), moveNo, moveTypeDefault);
 
@@ -2592,11 +2596,13 @@ int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, in
     // STAB
     if (!(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS) && (GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_TYPE_1, NULL) == moveType || GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_TYPE_2, NULL) == moveType)) {
         if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_ADAPTABILITY) {
-            damage *= 2;
+            damage = QMul_RoundDown(damage, UQ412__2_0);
         } else {
-            damage = damage * 15 / 10;
+            damage = QMul_RoundDown(damage, UQ412__1_5);
         }
     }
+
+    typeMul = 8;
 
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_LEVITATE) == TRUE && moveType == TYPE_GROUND && itemTarget != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
         *moveStatusFlag |= MOVE_STATUS_LEVITATE_IMMUNE;
@@ -2626,27 +2632,21 @@ int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, in
                 // sTypeEffectiveness[i][TYPETABLE_DEFENDER] -> sp10
                 if (sTypeEffectiveness[i][TYPETABLE_DEFENDER] == GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL)) {
                     if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE) {
-                        damage = ov12_022583B4(ctx, battlerIdAttacker, sTypeEffectiveness[i][TYPETABLE_EFFECT], damage, movePower, moveStatusFlag);
-                        if (sTypeEffectiveness[i][TYPETABLE_EFFECT] == TYPE_MUL_SUPER_EFFECTIVE) {
-                            seffectMod *= 2;
-                        }
+                        ov12_022583B4(sTypeEffectiveness[i][TYPETABLE_EFFECT], movePower, moveStatusFlag);
+                        typeMul = typeMul * sTypeEffectiveness[i][TYPETABLE_EFFECT] / TYPE_MUL_NORMAL;
                     }
                 }
                 if (sTypeEffectiveness[i][TYPETABLE_DEFENDER] == GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL) && GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL) != GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL)) {
                     if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE) {
-                        damage = ov12_022583B4(ctx, battlerIdAttacker, sTypeEffectiveness[i][TYPETABLE_EFFECT], damage, movePower, moveStatusFlag);
-                        if (sTypeEffectiveness[i][TYPETABLE_EFFECT] == TYPE_MUL_SUPER_EFFECTIVE) {
-                            seffectMod *= 2;
-                        }
+                        ov12_022583B4(sTypeEffectiveness[i][TYPETABLE_EFFECT], movePower, moveStatusFlag);
+                        typeMul = typeMul * sTypeEffectiveness[i][TYPETABLE_EFFECT] / TYPE_MUL_NORMAL;
                     }
                 }
                 // A third type, which only a battle script can have given.
                 if (sTypeEffectiveness[i][TYPETABLE_DEFENDER] == ctx->battleMons[battlerIdTarget].type3 && ctx->battleMons[battlerIdTarget].type3 != GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL) && ctx->battleMons[battlerIdTarget].type3 != GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL)) {
                     if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE) {
-                        damage = ov12_022583B4(ctx, battlerIdAttacker, sTypeEffectiveness[i][TYPETABLE_EFFECT], damage, movePower, moveStatusFlag);
-                        if (sTypeEffectiveness[i][TYPETABLE_EFFECT] == TYPE_MUL_SUPER_EFFECTIVE) {
-                            seffectMod *= 2;
-                        }
+                        ov12_022583B4(sTypeEffectiveness[i][TYPETABLE_EFFECT], movePower, moveStatusFlag);
+                        typeMul = typeMul * sTypeEffectiveness[i][TYPETABLE_EFFECT] / TYPE_MUL_NORMAL;
                     }
                 }
             }
@@ -2654,81 +2654,28 @@ int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, in
         } while (sTypeEffectiveness[i][TYPETABLE_ATTACKER] != TYPE_ENDTABLE);
     }
 
+    if (!(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS) && !(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_IMMUNITY)) {
+        *effectiveness = typeMul;
+        damage = damage * typeMul / 8;
+    }
+
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_WONDER_GUARD) == TRUE && ov12_02258440(ctx, moveNo) && (!(*moveStatusFlag & MOVE_STATUS_SUPER_EFFECTIVE) || ((*moveStatusFlag & MOVE_STATUS_ANY_EFFECTIVE) == MOVE_STATUS_ANY_EFFECTIVE)) && movePower) {
         *moveStatusFlag |= MOVE_STATUS_WONDER_GUARD_IMMUNE;
-    } else if (!(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS) && !(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_IMMUNITY)) {
-        if ((*moveStatusFlag & MOVE_STATUS_SUPER_EFFECTIVE) && movePower) {
-            // Prism Armor is the same 0.75 as Filter and Solid Rock and shares
-            // their one if, so a mon reading as two of them still only takes
-            // it once. It is read raw: Mold Breaker does not turn it off.
-            if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FILTER) == TRUE || CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SOLID_ROCK) == TRUE || GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_PRISM_ARMOR) {
-                damage = DamageDivide(damage * 3, 4);
-            }
-            if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_NEUROFORCE) {
-                damage = damage * 125 / 100;
-            }
-            if (itemAttacker == HOLD_EFFECT_POWER_UP_SE) {
-                damage = damage * (100 + extraAttacker) / 100;
-            }
-        }
-        // Tinted Lens doubles a resisted hit. The reference multiplies it by
-        // 1.25, Neuroforce's number, copied with Neuroforce's debug line from
-        // the case beside it; that is a slip, not a rule, and not copied.
-        if ((*moveStatusFlag & MOVE_STATUS_NOT_VERY_EFFECTIVE) && movePower) {
-            if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_TINTED_LENS) {
-                damage *= 2;
-            }
-        }
-    } else {
+    } else if ((ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS) || (ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_IMMUNITY)) {
         *moveStatusFlag &= ~MOVE_STATUS_SUPER_EFFECTIVE;
         *moveStatusFlag &= ~MOVE_STATUS_NOT_VERY_EFFECTIVE;
     }
 
-    // The abilities that cut a hit down on the way in, whatever its
-    // effectiveness. They stack with each other, as they do in the reference.
-
-    // Fluffy's two halves are siblings and not a chain: a contact Fire move
-    // takes both and so comes out unchanged.
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLUFFY) == TRUE) {
-        if (BattleMoveMakesContact(ctx, moveNo) == TRUE) {
-            damage = DamageDivide(damage, 2);
-        }
-        if (moveType == TYPE_FIRE) {
-            damage *= 2;
-        }
-    }
-
-    // Multiscale and Shadow Shield are one condition and one halving. Shadow
-    // Shield is read raw: Mold Breaker does not turn it off.
-    if ((CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_MULTISCALE) == TRUE || GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_SHADOW_SHIELD) && ctx->battleMons[battlerIdTarget].hp == (s32)ctx->battleMons[battlerIdTarget].maxHp) {
-        damage = DamageDivide(damage, 2);
-    }
-
-    // Friend Guard belongs to the target's ALLY, so it exists only in a double
-    // battle -- the slot two over is stale rather than empty in a single one,
-    // which is what the maxBattlers guard is for.
-    {
-        int ally = battlerIdTarget ^ 2;
-
-        if (ally < BattleSystem_GetMaxBattlers(battleSystem) && ctx->battleMons[ally].hp && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, ally, ABILITY_FRIEND_GUARD) == TRUE) {
-            damage = DamageDivide(damage * 3, 4);
-        }
-    }
-
-    // Punk Rock's other half; the base power boost is in CalcMoveDamage.
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_PUNK_ROCK) == TRUE && BattleMoveIsSoundBased(moveNo) == TRUE) {
-        damage = DamageDivide(damage, 2);
-    }
-
-    // Ice Scales halves every special move, whether or not that move is the
-    // kind that reads Sp. Def -- Psyshock is halved too. The reference applies
-    // this one once per battler rather than once; that is a bug in it, and the
-    // single halving its own comment describes is what is ported.
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_SCALES) == TRUE && BattleMoveTbl(ctx, moveNo)->category == CATEGORY_SPECIAL) {
-        damage = DamageDivide(damage, 2);
-    }
-
     return damage;
+}
+
+// What the AI and Anticipation ask, and what the controller asks for the
+// flags alone: the damage of a hit is final by the time the controller gets
+// here, CalcDamage having taken the chart into it already.
+int ov12_02251D28(BattleSystem *battleSystem, BattleContext *ctx, int moveNo, int moveTypeDefault, int battlerIdAttacker, int battlerIdTarget, int damage, u32 *moveStatusFlag) {
+    int effectiveness;
+
+    return CalcTypeEffectiveness(battleSystem, ctx, moveNo, moveTypeDefault, battlerIdAttacker, battlerIdTarget, damage, moveStatusFlag, &effectiveness);
 }
 
 void ov12_02252054(BattleContext *ctx, int moveNo, int moveTypeDefault, int abilityAttacker, int abilityTarget, int item, int type1, int type2, u32 *moveStatusFlag) {
@@ -4385,6 +4332,23 @@ int DamageDivide(int num, int denom) {
     }
 
     return num;
+}
+
+// The reference's asm/qmath.s. q is a fraction over 4096, and the two differ
+// only in which way an exact half goes. A q of exactly 1.0 hands the value
+// back untouched rather than multiplying, as there.
+u32 QMul_RoundUp(u32 value, u32 q) {
+    if (q == UQ412__1_0) {
+        return value;
+    }
+    return (value * q + 0x800) >> 12;
+}
+
+u32 QMul_RoundDown(u32 value, u32 q) {
+    if (q == UQ412__1_0) {
+        return value;
+    }
+    return (value * q + 0x7FF) >> 12;
 }
 
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
@@ -8089,7 +8053,6 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     u8 level;
     u16 movePower;
     u16 item;
-    u32 battleType;
     int maxBattlers;
     MoveDamageCalc calcAttacker;
     MoveDamageCalc calcTarget;
@@ -8130,7 +8093,6 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     calcTarget.item = GetItemVar(ctx, item, ITEM_VAR_HOLD_EFFECT);
     calcTarget.mod = GetItemVar(ctx, item, ITEM_VAR_MODIFIER);
 
-    battleType = BattleSystem_GetBattleType(battleSystem);
     maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
     // Hidden Power is the table's 60 whatever the IVs. The battle command and
@@ -8179,6 +8141,13 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 
     if ((ctx->battleMons[battlerIdAttacker].moveEffectFlags & MOVE_EFFECT_FLAG_CHARGE) && moveType == TYPE_ELECTRIC) {
         movePower *= 2;
+    }
+
+    // Me First's half again, on the power where the reference puts it. Whether
+    // the copied move is still this turn's is kept up to date by
+    // DamageCalcDefault; this only reads it, so the AI can ask too.
+    if (ctx->battleMons[battlerIdAttacker].unk88.meFirstFlag && (ctx->meFirstTotal - ctx->battleMons[battlerIdAttacker].unk88.meFirstCount) < 2) {
+        movePower = movePower * 15 / 10;
     }
 
     if (ctx->turnData[battlerIdAttacker].helpingHandFlag) {
@@ -8238,7 +8207,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 
     // Flare Boost pays for the burn in base power rather than in Attack, so
     // it helps a special move and does not excuse the holder from the burn's
-    // own halving further down.
+    // own halving, which DamageCalcDefault applies after the roll.
     if (calcAttacker.ability == ABILITY_FLARE_BOOST && (calcAttacker.status & STATUS_BURN)) {
         movePower = movePower * 15 / 10;
     }
@@ -8258,9 +8227,9 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower = movePower * 15 / 10;
     }
 
-    // Punk Rock's other half, the halving of an incoming sound move, is in
-    // ov12_02251D28. Both read the one sound move table Soundproof reads, so
-    // the three cannot disagree about what a sound move is.
+    // Punk Rock's other half, the halving of an incoming sound move, is in the
+    // final modifier in battle_command.c. Both read the one sound move table
+    // Soundproof reads, so the three cannot disagree about what a sound move is.
     if (calcAttacker.ability == ABILITY_PUNK_ROCK && BattleMoveIsSoundBased(moveNo) == TRUE) {
         movePower = movePower * 13 / 10;
     }
@@ -8542,6 +8511,13 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower = movePower * 150 / 100;
     }
 
+    // Flash Fire, once lit, is half again on the attacking stat, where the
+    // reference puts it; HeartGold multiplied the finished damage.
+    if (GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_FLASH_FIRE, NULL) && moveType == TYPE_FIRE) {
+        monAtk = monAtk * 150 / 100;
+        monSpAtk = monSpAtk * 150 / 100;
+    }
+
     // The type-keyed attack boosts: a same-type bonus for a Pokemon that is
     // not of the type. The reference scales the attack modifier, which the
     // move's split then picks one stat out of, so both stats are scaled here
@@ -8694,6 +8670,9 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     }
 
     if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
+        if ((fieldCondition & FIELD_CONDITION_WEATHER_NO_SUN) && moveNo == MOVE_SOLAR_BEAM) {
+            movePower /= 2;
+        }
         if ((fieldCondition & FIELD_CONDITION_SUN_ALL) && calcAttacker.ability == ABILITY_SOLAR_POWER) {
             monSpAtk = monSpAtk * 15 / 10;
         }
@@ -8752,18 +8731,6 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 
         dmg /= dmg2;
         dmg /= 50;
-
-        if ((calcAttacker.status & STATUS_BURN) && calcAttacker.ability != ABILITY_GUTS) {
-            dmg /= 2;
-        }
-
-        if ((sideCondition & (SIDE_CONDITION_REFLECT | SIDE_CONDITION_AURORA_VEIL)) && crit == 1 && BattleMoveTbl(ctx, moveNo)->effect != MOVE_EFFECT_REMOVE_SCREENS && calcAttacker.ability != ABILITY_INFILTRATOR) {
-            if ((battleType & BATTLE_TYPE_DOUBLES) && GetMonsHitCount(battleSystem, ctx, 1, battlerIdTarget) == 2) {
-                dmg = dmg * 2 / 3;
-            } else {
-                dmg /= 2;
-            }
-        }
     } else if (moveCategory == CATEGORY_SPECIAL) {
         if (crit > 1) {
             if (statChangeSpAtk > 6) {
@@ -8790,78 +8757,12 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 
         dmg /= dmg2;
         dmg /= 50;
-
-        if ((sideCondition & (SIDE_CONDITION_LIGHT_SCREEN | SIDE_CONDITION_AURORA_VEIL)) && crit == 1 && BattleMoveTbl(ctx, moveNo)->effect != MOVE_EFFECT_REMOVE_SCREENS && calcAttacker.ability != ABILITY_INFILTRATOR) {
-            if ((battleType & BATTLE_TYPE_DOUBLES) && GetMonsHitCount(battleSystem, ctx, 1, battlerIdTarget) == 2) {
-                dmg = dmg * 2 / 3;
-            } else {
-                dmg /= 2;
-            }
-        }
     }
 
-    if ((battleType & BATTLE_TYPE_DOUBLES) && BattleMoveTbl(ctx, moveNo)->range == RANGE_ADJACENT_OPPONENTS && GetMonsHitCount(battleSystem, ctx, 1, battlerIdTarget) == 2) {
-        dmg = dmg * 3 / 4;
-    }
-    if ((battleType & BATTLE_TYPE_DOUBLES) && BattleMoveTbl(ctx, moveNo)->range == RANGE_ALL_ADJACENT && GetMonsHitCount(battleSystem, ctx, 0, battlerIdTarget) >= 2) {
-        dmg = dmg * 3 / 4;
-    }
-
-    if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        if (fieldCondition & FIELD_CONDITION_RAIN_ALL) {
-            switch (moveType) {
-            case TYPE_FIRE:
-                dmg /= 2;
-                break;
-            case TYPE_WATER:
-                dmg = dmg * 15 / 10;
-                break;
-            }
-        }
-
-        if ((fieldCondition & FIELD_CONDITION_WEATHER_NO_SUN) && moveNo == MOVE_SOLAR_BEAM) {
-            dmg /= 2;
-        }
-        if (fieldCondition & FIELD_CONDITION_SUN_ALL) {
-            switch (moveType) {
-            case TYPE_FIRE:
-                dmg = dmg * 15 / 10;
-                break;
-            case TYPE_WATER:
-                // Hydro Steam is the Water move the sun helps rather than
-                // hinders, and a Utility Umbrella on the one using it takes
-                // that away -- leaving the halving every other Water move
-                // gets, which is what the reference's else does. The item
-                // reaches no further than this in the reference: the rain and
-                // the sun are otherwise read with nobody's items in the
-                // question, and only Orichalcum Pulse below excuses it too.
-                if (moveNo == MOVE_HYDRO_STEAM && calcAttacker.item != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
-                    dmg = dmg * 15 / 10;
-                } else {
-                    dmg /= 2;
-                }
-                break;
-            }
-        }
-    }
-
-    if (GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_FLASH_FIRE, NULL) && moveType == TYPE_FIRE) {
-        dmg = dmg * 15 / 10;
-    }
-
-    // Whatever Unseen Fist or Piercing Drill got through a Protect with, it
-    // got through weakened. The reference asks only whether this target was
-    // protecting, not whether the move touched -- the contact test already
-    // happened where the move was let through, in BattleSystem_CheckMoveEffect.
-    if ((calcAttacker.ability == ABILITY_UNSEEN_FIST || calcAttacker.ability == ABILITY_PIERCING_DRILL) && ctx->turnData[battlerIdTarget].protectFlag) {
-        dmg /= 4;
-    }
-
-    // Glaive Rush: whoever used it last takes double until it moves again.
-    if (ctx->moveConditions[battlerIdTarget].glaiveRush) {
-        dmg *= 2;
-    }
-
+    // The base damage, and nothing after it: the spread, the weather, Glaive
+    // Rush, the burn, the screens and the rest are DamageCalcDefault's, in
+    // the reference's order. The AI's two callers get the same base the
+    // reference's AI does from its CalcBaseDamage.
     return dmg + 2;
 }
 
@@ -9668,11 +9569,10 @@ static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32
     return sMoveStatusChangeScripts[flag & (0x7FFFFF)];
 }
 
-static int ov12_022583B4(BattleContext *ctx, int battlerId, int typeEffectiveness, int damage, int moveDamage, u32 *flag) {
-    if (!(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS) && !(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_IMMUNITY) && damage) {
-        damage = DamageDivide(damage * typeEffectiveness, 10);
-    }
-
+// One row of the chart that applies, for the flags alone: a super-effective
+// row and a not-very-effective one cancel, as in HeartGold. The damage is
+// scaled by CalcTypeEffectiveness, once, from all the rows together.
+static void ov12_022583B4(int typeEffectiveness, int moveDamage, u32 *flag) {
     switch (typeEffectiveness) {
     case TYPE_MUL_NO_EFFECT:
         *flag |= MOVE_STATUS_NO_EFFECT;
@@ -9698,8 +9598,6 @@ static int ov12_022583B4(BattleContext *ctx, int battlerId, int typeEffectivenes
         }
         break;
     }
-
-    return damage;
 }
 
 static int ov12_02258440(BattleContext *ctx, int moveNo) {
