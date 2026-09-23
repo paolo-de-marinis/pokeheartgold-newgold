@@ -4479,8 +4479,19 @@ void Mon_ChangeFormSpecies(Pokemon *mon, u16 species) {
 #include "data/form_reversion.h"
 
 // The species a form that lasts only as long as a battle -- Zen Mode, a
-// Minior's core, a crowned Zacian -- goes back to, or SPECIES_NONE.
+// Minior's meteor, a crowned Zacian -- goes back to, or SPECIES_NONE. A Minior
+// is in its Core Form whenever it is out of a battle (Pokemon Central,
+// Scudosoglia), so its Meteor Form goes back to the core of its colour; the
+// reference sends the core back to the meteor instead, and the importer
+// leaves those rows out. The red meteor is SPECIES_MINIOR itself, which the
+// table has no row for.
 u16 Species_GetBattleFormReversion(u16 species) {
+    if (species == SPECIES_MINIOR) {
+        return SPECIES_MINIOR_CORE_RED;
+    }
+    if (species >= SPECIES_MINIOR_METEOR_ORANGE && species <= SPECIES_MINIOR_METEOR_VIOLET) {
+        return SPECIES_MINIOR_CORE_ORANGE + species - SPECIES_MINIOR_METEOR_ORANGE;
+    }
     if (species <= NATIONAL_DEX_COUNT || species > NUM_SPECIES) {
         return SPECIES_NONE;
     }

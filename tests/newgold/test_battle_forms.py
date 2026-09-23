@@ -147,8 +147,6 @@ int main(void) {
     assert(genesect.species == SPECIES_GENESECT_SHOCK_DRIVE && genesect.recalculated == 1);
 
     // FormReversionMapping: a form number other than 0.
-    Pokemon minior = { SPECIES_MINIOR_CORE_ORANGE };
-    assert(Mon_RevertFormChange(&minior) && minior.species == SPECIES_MINIOR_METEOR_ORANGE);
     Pokemon zen = { SPECIES_DARMANITAN_ZEN_MODE_GALARIAN };
     assert(Mon_RevertFormChange(&zen) && zen.species == SPECIES_DARMANITAN_GALARIAN);
     Pokemon zygarde = { SPECIES_ZYGARDE_10_COMPLETE };
@@ -163,6 +161,17 @@ int main(void) {
     }
     Pokemon galarian = { SPECIES_DARMANITAN_GALARIAN };
     assert(!Mon_RevertFormChange(&galarian));
+
+    // A Minior leaves in its Core Form, of its colour, whatever the reference
+    // says: the red meteor is the base species, the others forms.
+    Pokemon minior = { SPECIES_MINIOR };
+    assert(Mon_RevertFormChange(&minior) && minior.species == SPECIES_MINIOR_CORE_RED);
+    assert(!Mon_RevertFormChange(&minior));
+    minior.species = SPECIES_MINIOR_METEOR_ORANGE;
+    assert(Mon_RevertFormChange(&minior) && minior.species == SPECIES_MINIOR_CORE_ORANGE);
+    minior.species = SPECIES_MINIOR_METEOR_VIOLET;
+    assert(Mon_RevertFormChange(&minior) && minior.species == SPECIES_MINIOR_CORE_VIOLET);
+    assert(!Mon_RevertFormChange(&minior));
     puts("PASS: battle forms are put on and taken off as hg-engine does.");
     return 0;
 }
@@ -195,7 +204,9 @@ class BattleFormTests(unittest.TestCase):
         written = dict(re.findall(r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_(\w+),",
                                   (ROOT / "src/data/form_reversion.h").read_text()))
         self.assertEqual(written, dict(import_form_reversion.table()))
-        self.assertEqual(written["MINIOR_CORE_VIOLET"], "MINIOR_METEOR_VIOLET")
+        # Less Minior's cores, which go back to nothing: the meteor goes
+        # back to the core, in Species_GetBattleFormReversion.
+        self.assertNotIn("MINIOR_CORE_VIOLET", written)
         self.assertEqual(written["GRENINJA_ASH"], "GRENINJA_BATTLE_BOND")
         self.assertNotIn("DARMANITAN_GALARIAN", written)
 

@@ -14,6 +14,11 @@ are settings the engine turns on (MEGA_EVOLUTIONS, PRIMAL_REVERSION and
 IMPLEMENT_DEXIT_FORMS_MECHANICS in include/config.h), so every entry counts. A
 form this game has not got is left out.
 
+Minior's cores are left out too: a Minior is in its Core Form whenever it is
+out of a battle (Pokemon Central, Scudosoglia), so it is the meteor that goes
+back, and to the core of its colour. Species_GetBattleFormReversion says so in
+C, because the red meteor is SPECIES_MINIOR itself and has no row here.
+
 Usage: import_form_reversion.py [--write]
 """
 
@@ -54,7 +59,7 @@ def table():
     rows = []
     for base, forms in form_table().items():
         for form, reverts in forms:
-            if not reverts or form not in ours:
+            if not reverts or form not in ours or form.startswith("MINIOR_CORE_"):
                 continue
             number = mapping.get(form, 0)
             target = base if number == 0 else forms[number - 1][0]
