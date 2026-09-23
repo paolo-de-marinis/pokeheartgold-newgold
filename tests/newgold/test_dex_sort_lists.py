@@ -16,9 +16,13 @@ Origin-forme copy.
 import json
 import re
 import struct
+import sys
 import unittest
 
 from test_level_cap import ROOT
+
+sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+import gmm  # noqa: E402
 
 DIR = ROOT / "files/application/zukanlist/zkn_data"
 SORT_LISTS_START = 11   # members 0..10 are the mon_stats tables
@@ -125,6 +129,26 @@ class DexSortListContentTests(unittest.TestCase):
             self.assertEqual(len(flags), self.ids["SPECIES_PECHARUNT"] + 1, path.name)
             # an added species has no area of its own: "unknown", and any
             self.assertEqual(flags[self.ids["SPECIES_LILLIPUP"]], 8 | 4, path.name)
+
+
+class GiratinaFormeTests(unittest.TestCase):
+    """The Dex shows each of Giratina's Formes its own height, weight and
+    body style: retail's pair, which the reference replaced with the Altered
+    Forme's figures alone (Origin: 6.9 m, 650 kg, serpentine)."""
+
+    def test_each_forme_reads_its_own_figures(self):
+        # SetDexBanksByGiratinaForm: the gira archive and banks 813/815 for
+        # the Altered Forme, the others for the Origin Forme.
+        source = (ROOT / "src/dex_mon_measures.c").read_text()
+        self.assertRegex(source, r"if \(form == GIRATINA_ALTERED\) \{\s*sDataNarcId = NARC_application_zukanlist_zkn_data_zukan_data_gira;"
+                                 r"\s*sWeightMsgBank = NARC_msg_msg_0813_bin;\s*sHeightMsgBank = NARC_msg_msg_0815_bin;")
+        # the template builds a pair's "altered" into zukan_data and its "origin" into zukan_data_gira
+        giratina = json.loads((DIR / "zukan_data.json").read_text())["mon_stats"][species_ids()["SPECIES_GIRATINA"]]
+        self.assertEqual({field: giratina[field] for field in ("height", "weight", "body_style")},
+                         {"height": {"altered": 69, "origin": 45}, "weight": {"altered": 6500, "origin": 7500},
+                          "body_style": {"altered": 3, "origin": 10}})
+        texts = {bank: gmm.read(bank)[species_ids()["SPECIES_GIRATINA"]]["text"] for bank in (812, 813, 814, 815)}
+        self.assertEqual(texts, {812: "1433.0 lbs.", 813: "1653.5 lbs.", 814: " 22’08”", 815: " 14’09”"})
 
 
 if __name__ == "__main__":

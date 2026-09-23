@@ -438,7 +438,12 @@ class SpeciesInPlayTests(unittest.TestCase):
             if name not in theirs:
                 continue
             for field, want in theirs[name].items():
-                self.assertEqual(row[field], want, f"{row['species']}.{field}")
+                have = row[field]
+                if isinstance(have, dict):
+                    # Giratina: the reference has the Altered Forme's figures,
+                    # which retail's pair keeps under "origin"
+                    have = have["origin"]
+                self.assertEqual(have, want, f"{row['species']}.{field}")
             checked += 1
         self.assertGreater(checked, 1000)
 

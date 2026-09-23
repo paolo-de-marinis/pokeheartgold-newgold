@@ -114,8 +114,13 @@ class SpeciesTextTests(unittest.TestCase):
             817: {1: "BULBASAUR", 494: "EGG", 508: "LILLIPUP", 1042: "VENUSAUR"},
             816: {1: "Seed Pokémon", 494: "????? Pokémon", 1042: "Seed Pokémon",
                   1123: "Unique Horn Pokémon"},
-            814: {1: "  2’04”", 487: " 14’09”", 494: "???’??”", 1238: " 21’04”"},
-            812: {1: "  15.2 lbs.", 122: " 120.2 lbs.", 487: "1653.5 lbs.", 1238: "1080.3 lbs."},
+            # 812 and 814 are read for Giratina's Origin Forme, 813 and 815
+            # for its Altered Forme: the engine's one figure, the Altered
+            # Forme's, is in both, and retail's Origin row in 812 and 814
+            814: {1: "  2’04”", 487: " 22’08”", 494: "???’??”", 1238: " 21’04”"},
+            815: {487: " 14’09”"},
+            812: {1: "  15.2 lbs.", 122: " 120.2 lbs.", 487: "1433.0 lbs.", 1238: "1080.3 lbs."},
+            813: {487: "1653.5 lbs."},
         }
         for bank, expected in pinned.items():
             have = rows(bank)

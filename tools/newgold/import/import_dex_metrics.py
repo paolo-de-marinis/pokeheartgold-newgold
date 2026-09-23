@@ -42,6 +42,16 @@ SPECIES_NAMES = 237
 AREA_UNKNOWN = 8 | 4
 RETAIL_LAST = 493  # Arceus
 
+# Giratina's Origin Forme, as retail's zukan_data has it: 6.9 m, 650 kg and
+# serpentine (Pokemon Central, Giratina). The reference gives SPECIES_GIRATINA
+# the Altered Forme's figures only and builds both archives from them, so its
+# Dex shows 4.5 m and 750 kg for the Origin Forme too. Retail keeps a pair:
+# SetDexBanksByGiratinaForm reads zukan_data_gira for the Altered Forme and
+# zukan_data for the Origin Forme, and the template puts a pair's "origin" in
+# zukan_data_gira and its "altered" in zukan_data -- pret's names are the
+# other way round from the formes whose figures they hold.
+GIRATINA_ORIGIN = {"height": 69, "weight": 6500, "body_style": 3}
+
 # entry field  <-  reference field
 FIELDS = {
     "height": "heightDecimetres",
@@ -236,6 +246,9 @@ def main():
         elif any(row.get(k) != v for k, v in want.items()):
             row.update(want)
             changed += 1
+    giratina = by_number[numbers["GIRATINA"]]
+    for field, origin in GIRATINA_ORIGIN.items():
+        giratina[field] = {"altered": origin, "origin": variants(giratina[field])[1]}
     # Anything still absent takes the row before it, so the table is dense.
     filled = []
     previous = None

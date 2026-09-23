@@ -62,6 +62,15 @@ PAD = {812: 11, 813: 11, 814: 7, 815: 7}    # msg_cat force_lengths
 ENTRY = 803                # broken into lines for the Dex's window (fit_entry)
 PAGES = 2                  # of an entry's lines, a window at a time (DexEntryPages)
 
+# The weight and height banks come in pairs because Giratina's differ by
+# Forme: the Dex reads 813 and 815 for the Altered Forme and 812 and 814 for
+# the Origin Forme (SetDexBanksByGiratinaForm). hg-engine writes one weight
+# and one height to both, the Altered Forme's, so its Origin Forme showed
+# 1653.5 lbs. and 14'09"; these are retail's rows, Pokemon Central's 650 kg
+# and 6.9 m.
+GIRATINA_ORIGIN = {812: "1433.0 lbs.", 814: "22’08”"}
+GIRATINA = 487
+
 # What hg-engine writes for a form that has nothing of its own to say.
 PLACEHOLDERS = {"name": {"-----"}, "pokedexEntry": {"", "-----"},
                 "classification": {"????? Pokémon"},
@@ -285,6 +294,8 @@ def wanted(revision):
     """Bank -> the English text of every row, in index order."""
     rows = fields_by_port_row(revision)
     out = {bank: [finish(bank, rows[row][field]) for row in sorted(rows)] for bank, field in FIELDS.items()}
+    for bank, text in GIRATINA_ORIGIN.items():
+        out[bank][GIRATINA] = finish(bank, text)
     out[BLANK] = gmm.reference_rows(revision, BLANK)
     return out
 
