@@ -251,7 +251,7 @@ def _layout():
         "PARTY_EXTRA": f"{offset}(Party, extra)", "PERFORMANCE_MAX": "sizeof(PartyExtraSub)",
         "MAIL_AT": f"{offset}(PartyPokemon, mail)",
         # Mail_Init's values, and the ball a Pokemon made here comes in.
-        "PLAYER_GENDER_MALE": "PLAYER_GENDER_MALE", "MAIL_NONE": "MAIL_NONE", "MAILMSG_BANK_NONE": "MAILMSG_BANK_NONE",
+        "PLAYER_GENDER_MALE": "PLAYER_GENDER_MALE", "PLAYER_GENDER_FEMALE": "PLAYER_GENDER_FEMALE", "MAIL_NONE": "MAIL_NONE", "MAILMSG_BANK_NONE": "MAILMSG_BANK_NONE",
         "MAILMSG_FIELDS_MAX": "MAILMSG_FIELDS_MAX", "EC_WORD_NULL": "EC_WORD_NULL", "ITEM_POKE_BALL": "ITEM_POKE_BALL",
         # The bits a Pokemon keeps its hidden ability and its Capsule in.
         "HIDDEN_ABILITY_BIT": "MON_HIDDEN_ABILITY_BIT", "SWAP_ABILITY_BIT": "MON_SWAP_ABILITY_SLOT_BIT",
@@ -1970,7 +1970,7 @@ def describe_mon(raw):
     given = next((entry["id"] for entry in species_abilities(species, b[0x18] >> 3) if entry["slot"] == slot), 0)
     out = {"ok": True, "personality": p, "species": species, "species_name": species_name(species),
            "form": b[0x18] >> 3, "egg": bool(ivword >> 30 & 1), "nicknamed": bool(ivword >> 31),
-           "nickname": decode_text(struct.unpack_from("<11H", c, 0)),
+           "nickname": decode_text(struct.unpack_from(f"<{POKEMON_NAME_LENGTH + 1}H", c, 0)),
            "exp": exp, "level": level_for(personal_records()[species]["growthRate"], exp),
            "nature": nature, "nature_name": natures[nature] if nature < len(natures) else str(nature),
            "nature_born": p % 25, "mint": mint - 1 if mint else None,
@@ -1981,7 +1981,7 @@ def describe_mon(raw):
            "types": mon_types(species, ability, item, b[0x18] >> 3),
            "friendship": a[0x0C], "moves": moves,
            "ivs": [(ivword >> (5 * i)) & MAX_IV for i in range(NUM_STATS)], "evs": list(a[0x10:0x10 + NUM_STATS]),
-           "ot_name": decode_text(struct.unpack_from("<8H", d, 0)), "ot_id": ot_id & 0xFFFF,
+           "ot_name": decode_text(struct.unpack_from(f"<{PLAYER_NAME_LENGTH + 1}H", d, 0)), "ot_id": ot_id & 0xFFFF,
            "ot_sid": ot_id >> 16, "ot_gender": d[0x1C] >> 7, "gender": (b[0x18] >> 1) & 3,
            "shiny": is_shiny(p, ot_id), "ball": d[0x1B], "met_level": d[0x1C] & 0x7F}
     if mon["party"] is not None:
@@ -2188,8 +2188,8 @@ def set_profile(save, money=None, gender=None, johto=None, kanto=None, coins=Non
             raise ValueError(f"money is 0 to {MAX_MONEY}")
         struct.pack_into("<I", block, MONEY, money)
     if gender is not None:
-        if gender not in (0, 1):
-            raise ValueError("the gender is 0 or 1")
+        if gender not in (PLAYER_GENDER_MALE, PLAYER_GENDER_FEMALE):
+            raise ValueError(f"the gender is {PLAYER_GENDER_MALE} or {PLAYER_GENDER_FEMALE}")
         block[GENDER] = gender
     for at, bits in ((JOHTO_BADGES, johto), (KANTO_BADGES, kanto)):
         if bits is not None:

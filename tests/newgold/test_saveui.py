@@ -456,7 +456,8 @@ class SaveUiTests(unittest.TestCase):
                              ("POCKET_NAMES", {p["const"] for p in data["pockets"]}),
                              ("STAT_NAMES", {s["const"] for s in data["stats"]}),
                              ("DIR_NAMES", {d["const"] for d in data["directions"]}),
-                             ("GENDER_MARKS", {g["const"] for g in data["genders"]}), ("TYPES", types)):
+                             ("GENDER_MARKS", {g["const"] for g in data["genders"]}), ("TYPES", types),
+                             ("PLAYER_GENDER_NAMES", {g["const"] for g in data["player_genders"]})):
             keys = set(re.findall(r"(\w+):", re.search(rf"const {table} = \{{(.*?)\}};", page, re.S).group(1)))
             self.assertLessEqual(keys, known, table)
 
@@ -709,7 +710,8 @@ class SaveUiTests(unittest.TestCase):
         for op, args, said in (("var", {"number": 1, "value": 2}, "variabile: da 16384"),
                                ("flag", {"number": 0xFFFF, "value": True}, "flag: da 1"),
                                ("dex", {"changes": [{"id": 494, "seen": True, "caught": False}]}, "pagina nel Pokédex"),
-                               ("trainer", {"play_time": [1, 2]}, "ore, minuti e secondi")):
+                               ("trainer", {"play_time": [1, 2]}, "ore, minuti e secondi"),
+                               ("trainer", {"gender": sv.PLAYER_GENDER_FEMALE + 1}, "genere")):
             self.assertIn(said, self.refused("/api/edit", {"f": "gyms/test.sav", "op": op, "args": args}))
         self.assertIn("non c'è più", self.refused("/api/rename", {"f": "gone.sav", "name": "altro"}))
         self.assertIn("non c'è più", self.refused("/api/trash", {"f": "gone.sav"}))

@@ -808,9 +808,13 @@ class Library:
         ident = number(a.get("id", now["id"]), 0, 0xFFFF, "ID"), number(a.get("sid", now["sid"]), 0, 0xFFFF, "ID segreto")
         if ident != (now["id"], now["sid"]):
             sv.set_trainer_id(save, ident[0] | ident[1] << 16)
-        limits = {"money": (sv.MAX_MONEY, "soldi"), "gender": (1, "genere"), "johto": (255, "medaglie di Johto"),
+        limits = {"money": (sv.MAX_MONEY, "soldi"), "johto": (255, "medaglie di Johto"),
                   "kanto": (255, "medaglie di Kanto"), "coins": (sv.MAX_COINS, "gettoni")}
         values = {k: number(a[k], 0, high, what) for k, (high, what) in limits.items() if k in a}
+        if "gender" in a:
+            values["gender"] = number(a["gender"], 0, 0xFF, "genere")
+            if values["gender"] not in (sv.PLAYER_GENDER_MALE, sv.PLAYER_GENDER_FEMALE):
+                raise Refused(f"genere: {sv.PLAYER_GENDER_MALE} o {sv.PLAYER_GENDER_FEMALE}")
         if "play_time" in a:
             if not isinstance(a["play_time"], list) or len(a["play_time"]) != 3:
                 raise Refused("il tempo di gioco: ore, minuti e secondi")
@@ -933,7 +937,8 @@ class Library:
         x, y = number(a["x"], 0, 0xFFFF, "x"), number(a["y"], 0, 0xFFFF, "y")
         if not sv.on_map(where, x, y):
             chunks = sv.map_chunks(where)
-            span = lambda i: f"{min(c[i] for c in chunks) * 32}–{max(c[i] for c in chunks) * 32 + 31}"
+            tiles = sv.CHUNK_TILES
+            span = lambda i: f"{min(c[i] for c in chunks) * tiles}–{(max(c[i] for c in chunks) + 1) * tiles - 1}"
             raise Refused(f"({x}, {y}) è fuori da {sv.map_table()[where]['name'] or where}: lì il gioco lascerebbe "
                           f"il giocatore nel nero. La mappa sta tra x {span(0)} e y {span(1)}.")
         sv.set_position(save, where, x, y, number(a.get("direction", 0), 0, sv.DIR_MAX - 1, "direzione"))
@@ -1059,7 +1064,7 @@ def created(save, a, party):
     fields = storable(checked_mon({k: v for k, v in a.items() if k != "moves" or v}))
     if "species" not in fields or "level" not in fields:
         raise Refused("servono specie e livello")
-    if 0xFFFF not in sv.owner(save)["codes"]:
+    if sv.EOS not in sv.owner(save)["codes"]:
         # A save sealed from RAM before the name was chosen: the Pokemon's
         # original trainer would be a name with no end, which the game
         # asserts on (CopyU16ArrayToString).
@@ -1081,13 +1086,13 @@ def retag(save, before, after):
         mon = sv.open_mon(raw)
         if mon is None or not mon["ok"]:
             return None
-        d = mon["blocks"][3]
-        codes = list(struct.unpack_from("<8H", d, 0))
-        codes = codes[:codes.index(0xFFFF) + 1] if 0xFFFF in codes else codes
+        d, width = mon["blocks"][3], sv.PLAYER_NAME_LENGTH + 1
+        codes = list(struct.unpack_from(f"<{width}H", d, 0))
+        codes = codes[:codes.index(sv.EOS) + 1] if sv.EOS in codes else codes
         a = mon["blocks"][0]
         if (codes, struct.unpack_from("<I", a, 4)[0], d[0x1C] >> 7) != (before["codes"], before["id"], before["gender"]):
             return None
-        d[0:16] = struct.pack("<8H", *(after["codes"] + [0] * (8 - len(after["codes"]))))
+        d[0:2 * width] = struct.pack(f"<{width}H", *(after["codes"] + [0] * (width - len(after["codes"]))))
         struct.pack_into("<I", a, 4, after["id"])
         d[0x1C] = (d[0x1C] & 0x7F) | (after["gender"] & 1) << 7
         return sv.seal_mon(mon)
@@ -1195,6 +1200,7 @@ def tables():
         {"const": const, "value": value} for const, value in sorted(sv.constants(header, prefix).items(),
                                                                     key=lambda kv: kv[1]) if 0 <= value < below]
     genders = {"MON_MALE": sv.MON_MALE, "MON_FEMALE": sv.MON_FEMALE, "MON_GENDERLESS": sv.MON_GENDERLESS}
+    players = {"PLAYER_GENDER_MALE": sv.PLAYER_GENDER_MALE, "PLAYER_GENDER_FEMALE": sv.PLAYER_GENDER_FEMALE}
     return {"species": sv.species_table(), "moves": sv.move_table(),
             "items": [{**row, "limit": sv.item_limit(row["id"])} if row["pocket"] else row
                       for row in sv.item_table().values()],
@@ -1204,6 +1210,7 @@ def tables():
             "stats": by_value("include/constants/pokemon.h", "STAT_", sv.NUM_STATS),
             "directions": by_value("include/constants/global_fieldmap.h", "DIR_", sv.DIR_MAX),
             "genders": [{"const": const, "value": value} for const, value in genders.items()],
+            "player_genders": [{"const": const, "value": value} for const, value in players.items()],
             "badges": sv.badges(),
             "limits": {"party": sv.PARTY_SIZE, "boxes": sv.NUM_BOXES, "box_slots": sv.MONS_PER_BOX,
                        "name": sv.PLAYER_NAME_LENGTH, "money": sv.MAX_MONEY, "coins": sv.MAX_COINS,

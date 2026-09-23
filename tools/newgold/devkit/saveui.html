@@ -276,6 +276,7 @@ const POCKET_NAMES = {POCKET_ITEMS: "Strumenti", POCKET_MEDICINE: "Rimedi", POCK
 const STAT_NAMES = {STAT_HP: "PS", STAT_ATK: "Att", STAT_DEF: "Dif", STAT_SPEED: "Vel", STAT_SPATK: "AttSp", STAT_SPDEF: "DifSp"};
 const DIR_NAMES = {DIR_NORTH: "su", DIR_SOUTH: "giù", DIR_WEST: "sinistra", DIR_EAST: "destra"};
 const GENDER_MARKS = {MON_MALE: "♂", MON_FEMALE: "♀", MON_GENDERLESS: ""};
+const PLAYER_GENDER_NAMES = {PLAYER_GENDER_MALE: "Ragazzo", PLAYER_GENDER_FEMALE: "Ragazza"};
 const named = (names, prefix) => c => names[c] ?? c.slice(prefix.length).replace(/_/g, " ").toLowerCase();
 const badgeName = named(BADGE_NAMES, "BADGE_"), pocketName = named(POCKET_NAMES, "POCKET_"), dirName = named(DIR_NAMES, "DIR_");
 const stats = () => S.data.stats.map(s => named(STAT_NAMES, "STAT_")(s.const));
@@ -762,7 +763,7 @@ function renderTrainer() {
   $("#tab").innerHTML = `<form id="trainer">
     <div class="form">
       <label class="f">Nome<input name="name" value="${esc(p.name)}" maxlength="${lim.name}"></label>
-      <label class="f">Genere<select name="gender"><option value="0" ${p.gender === 0 ? "selected" : ""}>Ragazzo</option><option value="1" ${p.gender === 1 ? "selected" : ""}>Ragazza</option></select></label>
+      <label class="f">Genere<select name="gender">${S.data.player_genders.map(g => `<option value="${g.value}" ${p.gender === g.value ? "selected" : ""}>${esc(named(PLAYER_GENDER_NAMES, "PLAYER_GENDER_")(g.const))}</option>`).join("")}</select></label>
       <label class="f">ID allenatore<input type="number" name="id" min="0" max="65535" value="${p.id}"></label>
       <label class="f">ID segreto<input type="number" name="sid" min="0" max="65535" value="${p.sid}"></label>
       <label class="f">Soldi<input type="number" name="money" min="0" max="${lim.money}" value="${p.money}"></label>
