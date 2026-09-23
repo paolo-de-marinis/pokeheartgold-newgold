@@ -2093,6 +2093,15 @@ void Mon_CountEvolutionMove(Pokemon *mon, u16 move) {
     }
 }
 
+// Bisharp counts the Bisharp holding a Leader's Crest it defeats: Pokemon
+// Central gives Kingambit's as "sconfiggendo tre Bisharp che tengono un
+// Simbolo del capo e successivamente salendo di livello".
+void Mon_CountDefeatedMon(Pokemon *mon, u16 species, u16 heldItem) {
+    if (GetMonData(mon, MON_DATA_SPECIES, NULL) == SPECIES_BISHARP && species == SPECIES_BISHARP && heldItem == ITEM_LEADERS_CREST) {
+        Mon_IncrementEvolutionCounter(mon);
+    }
+}
+
 // The games count the steps a Pokemon walks out of its ball with Let's Go;
 // this game's is the Pokemon that walks behind the player, and the field
 // counts one step in four for it. Pokemon Central gives Pawmot's as "per

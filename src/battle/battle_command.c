@@ -1799,6 +1799,12 @@ BOOL BtlCmd_TryFaintMon(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->battleStatus |= MaskOfFlagNo(battlerId) << BATTLE_STATUS_FAINTED_SHIFT;
         ctx->totalTimesFainted[battlerId]++;
         UpdateFriendshipFainted(battleSystem, ctx, battlerId);
+        // An opponent defeated by the player's own Pokemon, for the
+        // evolutions that count them: the one whose move it was.
+        if (BattleSystem_GetFieldSide(battleSystem, battlerId) != 0 && ctx->battlerIdAttacker < BattleSystem_GetMaxBattlers(battleSystem)
+            && BattleSystem_GetParty(battleSystem, ctx->battlerIdAttacker) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
+            Mon_CountDefeatedMon(BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdAttacker, ctx->selectedMonIndex[ctx->battlerIdAttacker]), ctx->battleMons[battlerId].species, ctx->battleMons[battlerId].item);
+        }
     }
 
     return FALSE;

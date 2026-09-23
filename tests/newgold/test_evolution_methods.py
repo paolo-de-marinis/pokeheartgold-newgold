@@ -293,6 +293,28 @@ static void check_gimmighoul_coins(void) {
     coins = 0;
 }
 
+static void check_defeated_bisharp(void) {
+    // A Bisharp counts the Bisharp holding a Leader's Crest it defeats; no
+    // other Pokemon, no other Bisharp and no other item.
+    static const u16 species[] = { SPECIES_BISHARP, SPECIES_PAWNIARD };
+    static const u16 items[] = { ITEM_LEADERS_CREST, ITEM_NONE, ITEM_EVERSTONE };
+    for (unsigned own = 0; own < 2; own++) {
+        for (unsigned foe = 0; foe < 2; foe++) {
+            for (unsigned it = 0; it < 3; it++) {
+                Pokemon mon = { .species = species[own] };
+                Mon_CountDefeatedMon(&mon, species[foe], items[it]);
+                assert(mon.evolutionCounter == (own == 0 && foe == 0 && it == 0));
+            }
+        }
+    }
+    Pokemon bisharp = { .species = SPECIES_BISHARP, .level = 1 };
+    one_row(EVO_FORM_ARGUMENT, 3, SPECIES_KINGAMBIT);
+    for (int defeated = 1; defeated <= 3; defeated++) {
+        Mon_CountDefeatedMon(&bisharp, SPECIES_BISHARP, ITEM_LEADERS_CREST);
+        assert(evolve(&bisharp, NULL, EVO_FORM_ARGUMENT) == (defeated == 3 ? SPECIES_KINGAMBIT : SPECIES_NONE));
+    }
+}
+
 static void check_counted_moves(void) {
     // Primeape counts Rage Fist and Stantler Psyshield Bash, nothing else and
     // no one else; the count stops at 255.
@@ -341,6 +363,7 @@ int main(void) {
     check_critical_hits();
     check_form_argument();
     check_gimmighoul_coins();
+    check_defeated_bisharp();
     check_counted_moves();
     check_lets_go();
     return 0;
@@ -435,7 +458,7 @@ def program():
         "@RTC_TYPE@": rtc.group(),
         "@HOUR_FUNCTION@": function(read("src/gf_rtc.c"), "GF_RTC_GetTimeOfDayByHour"),
         "@NIGHT_FUNCTION@": function(read("src/gf_rtc.c"), "IsNighttime"),
-        "@FUNCTIONS@": "\n".join(function(source, name) for name in ("GetNatureFromPersonality", "EvolvedPassiveForm", "GetMonEvolution", "Mon_IncrementEvolutionCounter", "Mon_CountEvolutionMove", "Mon_CountLetsGoStep")),
+        "@FUNCTIONS@": "\n".join(function(source, name) for name in ("GetNatureFromPersonality", "EvolvedPassiveForm", "GetMonEvolution", "Mon_IncrementEvolutionCounter", "Mon_CountEvolutionMove", "Mon_CountDefeatedMon", "Mon_CountLetsGoStep")),
     }
     text = FIXTURE
     for placeholder, replacement in replacements.items():
@@ -459,6 +482,15 @@ def run_program(test, text):
 class EvolutionMethods(unittest.TestCase):
     def test_the_evolution_spends_gimmighouls_coins(self):
         run_program(self, scene())
+
+    def test_the_battle_counts_an_opponent_the_player_defeats(self):
+        """Where a Pokemon faints, an opponent's faint counts for the
+        player's own Pokemon whose move it was."""
+        body = function(read("src/battle/battle_command.c"), "BtlCmd_TryFaintMon")
+        self.assertRegex(body, r"BattleSystem_GetFieldSide\(battleSystem, battlerId\) != 0 && ctx->battlerIdAttacker < BattleSystem_GetMaxBattlers\(battleSystem\)\s*"
+                               r"&& BattleSystem_GetParty\(battleSystem, ctx->battlerIdAttacker\) == BattleSystem_GetParty\(battleSystem, BATTLER_PLAYER\)\) \{\s*"
+                               r"Mon_CountDefeatedMon\(BattleSystem_GetPartyMon\(battleSystem, ctx->battlerIdAttacker, ctx->selectedMonIndex\[ctx->battlerIdAttacker\]\), "
+                               r"ctx->battleMons\[battlerId\]\.species, ctx->battleMons\[battlerId\]\.item\);")
 
     def test_the_field_counts_the_follower_one_step_in_four(self):
         """Each step with the Pokemon walking behind the player visible, one

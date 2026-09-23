@@ -5164,6 +5164,16 @@
           "target": "SPECIES_GHOLDENGO"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_BISHARP",
+      "evos": [
+        {
+          "method": "EVO_FORM_ARGUMENT",
+          "param": 3,
+          "target": "SPECIES_KINGAMBIT"
+        }
+      ]
     }
   ]
 }
