@@ -4,7 +4,8 @@
 boot_check.c runs a list of actions fixed before the run starts; this runs
 the same core in-process, so a script can look at memory after every frame
 and decide what to press next. That is what lets a battle be played through
-the game's own menus with nothing but memory to go on: no screen, no image.
+the game's own menus with nothing but memory to go on. The frame the core
+draws is only copied when asked for (shot); a battle draws black here.
 
     core = Core(rom, save=path)          # a save is put where the core reads it
     core.step(60)                        # run frames
@@ -12,6 +13,7 @@ the game's own menus with nothing but memory to go on: no screen, no image.
     core.touch(128, 83, 6)               # touch the bottom screen, in its own pixels
     core.ram()                           # main RAM, as bytes
     core.poke(address, value, width=4)   # write main RAM
+    core.shot()                          # the next frame, both screens, as a PIL image
 """
 import ctypes
 import os
@@ -52,8 +54,9 @@ class Core:
             shutil.copyfile(save, Path(self.dir) / (Path(rom).stem + ".sav"))
         self.buttons, self.touching, self.tx, self.ty = set(), False, 0, 0
         self.frames = 0
+        self._grab, self._frame = False, None
         self.lib = ctypes.CDLL(str(CORE))
-        self._callbacks = [ENV(self._env), VIDEO(lambda *a: None), AUDIO(lambda l, r: None),
+        self._callbacks = [ENV(self._env), VIDEO(self._video), AUDIO(lambda l, r: None),
                            AUDIO_BATCH(lambda d, n: n), POLL(lambda: None), STATE(self._input)]
         env, video, audio, batch, poll, state = self._callbacks
         self.lib.retro_set_environment(env)
@@ -95,6 +98,11 @@ class Core:
             return True
         return cmd in (6, 8, 11, 16, 18, 32, 34, 35, 36, 37, 53, 54, 55, 62, 63, 67, 68)
 
+    def _video(self, data, width, height, pitch):
+        # Copied only when asked for: a frame is 384 KB, every frame.
+        if self._grab and data:
+            self._frame = (ctypes.string_at(data, pitch * height), width, height, pitch)
+
     def _input(self, port, device, index, id_):
         if port:
             return 0
@@ -125,6 +133,15 @@ class Core:
         self.step(frames, hooks)
         self.touching = False
         self.step(4, hooks)
+
+    def shot(self, hooks=()):
+        """The next frame the core draws: the top screen over the bottom one."""
+        from PIL import Image
+        self._grab = True
+        self.step(1, hooks)
+        self._grab = False
+        data, width, height, pitch = self._frame
+        return Image.frombuffer("RGBX", (width, height), data, "raw", "BGRX", pitch, 1).convert("RGB")
 
     def ram(self):
         return ctypes.string_at(self.lib.retro_get_memory_data(2), self.lib.retro_get_memory_size(2))

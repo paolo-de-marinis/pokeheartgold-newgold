@@ -97,6 +97,16 @@ extern unsigned long gDiagBattlePrompt;
 extern unsigned long gDiagAiItemCount;
 extern unsigned long gDiagAiItemLast;
 
+// The cries the game asked for (PlayCry): how many so far, the last one's
+// species and form (species | form << 16), the bank it asked the sound
+// archive for, and whether the sound system started it. A species whose cry
+// does not play shows here as a bank of 1 or a start that failed.
+extern unsigned long gDiagCryCount;
+extern unsigned long gDiagCrySpecies;
+extern unsigned long gDiagCryBank;
+extern unsigned long gDiagCryStarted;
+void Diag_Cry(unsigned long speciesAndForm, unsigned long bank, unsigned long started);
+
 // Where the last wild encounter got to.
 extern unsigned long gDiagWildStage;
 extern unsigned long gDiagWildTicks;

@@ -14,6 +14,7 @@
 #define ARCHIVE_BANK_COUNT     1375
 
 #include "heap.h"
+#include "newgold/diag.h"
 #include "sound_radio.h"
 #include "sys_task.h"
 #include "sys_task_api.h"
@@ -1368,6 +1369,9 @@ BOOL PlayCry(int species, int form) {
     void **p24;
     u8 *p35;
     int result;
+#ifdef NEWGOLD_DIAG
+    u32 diagAsked = (u32)species | ((u32)form << 16);
+#endif
     p12 = GF_SdatGetAttrPtr(0x12);
     p24 = GF_SdatGetAttrPtr(0x24);
     p35 = GF_SdatGetAttrPtr(0x35);
@@ -1396,6 +1400,9 @@ BOOL PlayCry(int species, int form) {
         result = sub_02006C14(8, -1, species, -1, 2, 0);
         sub_02005464(species, 8);
     }
+#ifdef NEWGOLD_DIAG
+    Diag_Cry(diagAsked, species, result);
+#endif
     sub_02006E3C(0);
     return result;
 }

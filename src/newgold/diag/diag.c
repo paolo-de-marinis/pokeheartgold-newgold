@@ -45,6 +45,11 @@ u32 gDiagBattlePrompt;
 u32 gDiagAiItemCount;
 u32 gDiagAiItemLast;
 
+u32 gDiagCryCount;
+u32 gDiagCrySpecies;
+u32 gDiagCryBank;
+u32 gDiagCryStarted;
+
 u32 gDiagWildStage;
 u32 gDiagWildTicks;
 u32 gDiagLastWildSpecies;
@@ -77,6 +82,13 @@ void Diag_BattleText(const u16 *text) {
     }
     line[i] = 0xFFFF;
     gDiagBattleTextCount++;
+}
+
+void Diag_Cry(u32 speciesAndForm, u32 bank, u32 started) {
+    gDiagCryCount++;
+    gDiagCrySpecies = speciesAndForm;
+    gDiagCryBank = bank;
+    gDiagCryStarted = started;
 }
 
 void Diag_AllocFailed(u32 heapId, u32 size) {
