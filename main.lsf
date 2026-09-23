@@ -1250,6 +1250,8 @@ Overlay OVY_96
     Object asm/overlay_96_021E604C.o
     Object src/pokeathlon/overlay_96_021E679C.o
     Object asm/overlay_96_021E67AC.o
+    Object src/pokeathlon/overlay_96_021E786C.o
+    Object asm/overlay_96_021E7938.o
     Object src/pokeathlon/overlay_96_021E91B8.o
     Object asm/overlay_96.o
     Object src/pokeathlon/overlay_96_0221AAE8.o

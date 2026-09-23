@@ -26,6 +26,24 @@ typedef struct Pokeathlon_UnkSubStruct_B00 {
     u32 unk70;
 } Pokeathlon_UnkSubStruct_B00; // size: 0x74
 
+// A course's best result and the team that set it. The species is kept in
+// nine bits, which is retail's 493 and not the added species.
+typedef struct Pokeathlon_CourseRecordMon {
+    u32 species : 9;
+    u32 form : 5;
+    u32 unk_0_14 : 2;
+    u32 unk_0_16 : 1;
+    u32 unk_0_17 : 15;
+    u32 unk_04;
+    u32 unk_08;
+} Pokeathlon_CourseRecordMon; // size: 0xC
+
+typedef struct Pokeathlon_CourseRecord {
+    u16 scores[3];
+    u16 total;
+    Pokeathlon_CourseRecordMon mons[3];
+} Pokeathlon_CourseRecord; // size: 0x2C
+
 typedef struct Pokeathlon_CourseEntry {
     u16 unk_0;
     u8 unk_2[6];
@@ -42,7 +60,7 @@ typedef struct Pokeathlon_RecordsLink {
 } Pokeathlon_RecordsLink; // size: 0xA4
 
 typedef struct PokeathlonSave {
-    u8 unk_0[0xDC];
+    Pokeathlon_CourseRecord courseRecords[5]; // 0x0
     u8 unk_DC[0x1F0];                       // sub-struct pointed to by PokeathlonSave_GetUnkDC; byte[slot-1] holds per-pokemon course bits
     Pokeathlon_RecordsSolo recordsSolo[10]; // 0x2CC
     Pokeathlon_RecordsLink recordsLink[10]; // 0x484

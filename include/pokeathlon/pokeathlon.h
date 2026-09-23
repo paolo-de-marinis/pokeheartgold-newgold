@@ -46,7 +46,9 @@ typedef struct PokeathlonCourseArgs {
     };
     u8 field_8;        // 0x008
     u8 field_9;        // 0x009
-    u8 filler_A[4];    // 0x00A
+    u8 filler_A[2];    // 0x00A
+    u8 course;         // 0x00C
+    u8 filler_D;       // 0x00D
     u8 shouldFreeHeap; // 0x00E - Flag: if 0, free heap allocations in Exit
     // ... more fields to be discovered
 } PokeathlonCourseArgs;
@@ -197,6 +199,7 @@ u32 ov96_021E91B8(int species, int form, int gender);
 // One performance.narc member for each retail species, 0..493.
 extern const u16 ov96_0221AAE8[MAX_SPECIES + 1];
 int ov96_021E679C(int species, int form);
+void ov96_021E786C(PokeathlonCourseData *data, PokeathlonSave *save);
 
 void *ov96_021E92E0(enum HeapID heapId);
 void ov96_021E9320(void *ptr);
