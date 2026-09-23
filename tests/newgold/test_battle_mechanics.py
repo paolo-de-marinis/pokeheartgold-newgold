@@ -294,5 +294,14 @@ class StatusCureTests(unittest.TestCase):
             subprocess.run([str(path / "test")], check=True)
 
 
+class HexTests(unittest.TestCase):
+    def test_a_comatose_target_counts_as_suffering(self):
+        # effect_script_0287_DOUBLE_DAMAGE_ON_STATUS.s doubles Hex against a
+        # Comatose target, reading the ability raw.
+        script = (ROOT / "files/battledata/script/effect_script/effect_script_0279.s").read_text()
+        self.assertRegex(script, r"CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, "
+                                 r"ABILITY_COMATOSE, (_\w+)\n(?:.*\n)*?\1:\n    UpdateVar OPCODE_SET, BSCRIPT_VAR_POWER_MULTI, 20")
+
+
 if __name__ == "__main__":
     unittest.main()
