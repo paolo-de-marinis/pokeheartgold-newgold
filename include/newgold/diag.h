@@ -35,6 +35,15 @@ extern unsigned long gDiagAllocFailHeap;
 extern unsigned long gDiagAllocFailSize;
 void Diag_AllocFailed(unsigned long heapId, unsigned long size);
 
+// How close each heap came to full: after every allocation, the largest
+// block it could still hand out, kept when smaller than any before. All ones
+// until the heap's first allocation after it is created, so a battle's or an
+// application's heap is measured from its own start. Indexed by heap ID.
+#define DIAG_HEAPS 176
+extern unsigned long gDiagHeapLowWater[DIAG_HEAPS];
+void Diag_HeapCreated(unsigned long heapId);
+void Diag_HeapUsed(unsigned long heapId, void *heapHandle);
+
 // Switches. All zero unless something outside the game writes them.
 extern unsigned long gDiagIgnoreCommunicationError; // Continue works where nothing emulates wireless
 extern unsigned long gDiagForceEncounter;           // the encounter roll always succeeds

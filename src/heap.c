@@ -33,6 +33,12 @@ void Heap_InitSystem(const HeapParam *templates, u32 nTemplates, u32 totalNumHea
     u32 i;
     u32 usableHeaps = nTemplates + 24;
 
+#ifdef NEWGOLD_DIAG
+    for (i = 0; i < DIAG_HEAPS; i++) {
+        Diag_HeapCreated(i);
+    }
+#endif
+
     if (totalNumHeaps < usableHeaps) {
         totalNumHeaps = usableHeaps;
     }
@@ -133,6 +139,10 @@ static BOOL CreateHeapInternal(enum HeapID parent, enum HeapID child, u32 size, 
                         sHeapInfo.parentHeapHandles[i] = parentHeap;
                         sHeapInfo.subHeapRawPtrs[i] = newHeapAddr;
                         sHeapInfo.heapIdxs[child] = (u8)i;
+#ifdef NEWGOLD_DIAG
+                        Diag_HeapCreated(child);
+                        Diag_HeapUsed(parent, parentHeap);
+#endif
 
                         return TRUE;
                     } else {
@@ -207,6 +217,11 @@ void *Heap_Alloc(enum HeapID heapID, u32 size) {
     if ((u32)heapID < sHeapInfo.totalNumHeaps) {
         u8 index = sHeapInfo.heapIdxs[heapID];
         ptr = AllocFromHeapInternal(sHeapInfo.heapHandles[index], size, 4, heapID);
+#ifdef NEWGOLD_DIAG
+        if (ptr != NULL) {
+            Diag_HeapUsed(heapID, sHeapInfo.heapHandles[index]);
+        }
+#endif
     }
 
     if (ptr != NULL) {
@@ -227,6 +242,11 @@ void *Heap_AllocAtEnd(enum HeapID heapID, u32 size) {
     if ((u32)heapID < sHeapInfo.totalNumHeaps) {
         u8 index = sHeapInfo.heapIdxs[heapID];
         ptr = AllocFromHeapInternal(sHeapInfo.heapHandles[index], size, -4, heapID);
+#ifdef NEWGOLD_DIAG
+        if (ptr != NULL) {
+            Diag_HeapUsed(heapID, sHeapInfo.heapHandles[index]);
+        }
+#endif
     }
 
     if (ptr != NULL) {

@@ -37,6 +37,7 @@ there. `GAME_VERSION=SOULSILVER` works the same way.
 | `gDiagBattleStateSeen` | `Battle_Run` | One bit a state, cleared when a battle starts, so a finished battle reads as the list of states it passed through. |
 | `gDiagAssertCount`, `gDiagAssertReturn` | `GF_ASSERT` | How many assertions failed, and the address the last one returns to: the `bl` before it is the assertion, and `markers.py` names the function. |
 | `gDiagAllocFailCount`, `gDiagAllocFailHeap`, `gDiagAllocFailSize` | `Heap_Alloc`, `Heap_AllocAtEnd` | How many allocations failed, and the last one's heap and size. |
+| `gDiagHeapLowWater` | `Heap_Alloc`, `Heap_AllocAtEnd`, `Heap_Create` | For every heap, the largest block it could still hand out at its fullest: the free list walked after each allocation, the smallest answer kept, all ones again when the heap is created. The margin a heap really has, rather than a failure after it ran out. |
 | `gDiagWildStage`, `gDiagWildTicks` | `Task_WildEncounter` | How far the wild encounter task got and how often it ran. |
 | `gDiagLastWildSpecies`, `gDiagLastWildLevel` | the encounter generator | What the encounter actually made. |
 | `gDiagLastBattleMap`, `gDiagLastBattleBg`, `gDiagLastBattleTerrain` | the battle setup | Where the battle was started from and what it chose to draw. A battle whose screen stays black has usually failed to choose one of these. |
@@ -78,6 +79,10 @@ noise, not a wrong answer.
   and prints the battle as text; `tools/newgold/devkit/diag/watch.py` prints the
   same text from the melonDS that is running. Neither needs a screen, and
   neither costs an image to read -- this is how a gym is checked.
+- `tools/newgold/devkit/diag/pc.py SAVE` opens the PC's storage system from
+  a save standing in front of a PC (`savedit.py --where 158:11:13:0`, Violet
+  City's), pages through the boxes and prints every heap's margin; gym.py's
+  last line prints the same margins after a gym fight.
 - `tools/newgold/devkit/diag/dump.py OUTDIR` reads the `ram:` dumps of a harness run
   the same way, one line a dump, and pastes the run's shots into a sheet.
 - `tools/newgold/devkit/diag/battle.py OUTDIR encounter|battle:SPECIES` plays the

@@ -62,6 +62,55 @@ class DiagnosticsTests(unittest.TestCase):
             read |= set(re.findall(r"gDiag\w+", script.read_text()))
         self.assertEqual(names - read, set(), "in diag.h and read by nothing")
 
+    def test_a_heap_margin_is_its_largest_free_block_at_its_fullest(self):
+        """Diag_HeapUsed walks an expanded heap's free list as
+        NNS_FndGetTotalFreeSizeForExpHeap does -- the list at +0x24 of the
+        head, a block's size at +4 and the next at +0xC, 32-bit -- and keeps
+        the largest block when it is the smallest seen. Compiled on the host
+        with -m32, so the pointers are the game's four bytes."""
+        from test_dex_range import c_function, run_native
+        source = (ROOT / "src/newgold/diag/diag.c").read_text()
+        program = HEAP_MARGIN.replace("@CREATED@", c_function(source, "Diag_HeapCreated")) \
+                             .replace("@USED@", c_function(source, "Diag_HeapUsed"))
+        run_native(self, program, "newgold-heap-margin-", flags=("-m32",))
+
+
+HEAP_MARGIN = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+typedef unsigned char u8;
+typedef unsigned int u32;
+#define DIAG_HEAPS 176
+u32 gDiagHeapLowWater[DIAG_HEAPS];
+@CREATED@
+@USED@
+static u8 head[0x40], blocks[3][0x10];
+static void block(int i, u32 size, u8 *next) { memcpy(blocks[i] + 4, &size, 4); memcpy(blocks[i] + 0xC, &next, 4); }
+int main(void) {
+    u8 *first = blocks[0];
+    memcpy(head + 0x24, &first, 4);
+    block(0, 0x100, blocks[1]);
+    block(1, 0x5000, blocks[2]);
+    block(2, 0x40, NULL);
+    Diag_HeapCreated(5);
+    Diag_HeapUsed(5, head);
+    assert(gDiagHeapLowWater[5] == 0x5000);   /* the largest block, not the sum */
+    block(1, 0x6000, blocks[2]);
+    Diag_HeapUsed(5, head);
+    assert(gDiagHeapLowWater[5] == 0x5000);   /* a roomier moment does not raise it */
+    block(1, 0x80, blocks[2]);
+    Diag_HeapUsed(5, head);
+    assert(gDiagHeapLowWater[5] == 0x100);    /* a fuller one lowers it */
+    Diag_HeapCreated(5);
+    assert(gDiagHeapLowWater[5] == 0xFFFFFFFF);
+    Diag_HeapUsed(DIAG_HEAPS, head);          /* out of range: ignored */
+    printf("PASS: a heap's margin is its largest free block at its fullest.\n");
+    return 0;
+}
+"""
+
 
 if __name__ == "__main__":
     unittest.main()

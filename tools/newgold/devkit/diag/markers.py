@@ -161,6 +161,19 @@ class Markers:
         out.append("prompt: " + PROMPTS.get(prompt, f"none ({prompt})"))
         return out
 
+    def heaps(self, ram, base=None):
+        """{heap name: the largest block it had left at its fullest} for every
+        heap that allocated since it was created (gDiagHeapLowWater)."""
+        at = self.address("gDiagHeapLowWater")
+        if at is None:
+            return {}
+        if not hasattr(self, "_heaps"):
+            enum = re.search(r"enum HeapID \{(.*?)\}", (ROOT / "include/constants/heap.h").read_text(), re.S).group(1)
+            self._heaps = [n.strip().split("=")[0].strip() for n in enum.split(",") if n.strip() and not n.strip().startswith("//")]
+        count = self.table["gDiagHeapLowWater"][1] // 4
+        words = struct.unpack_from(f"<{count}I", ram, at - (base if base is not None else MAIN_RAM))
+        return {(self._heaps[i] if i < len(self._heaps) else i): v for i, v in enumerate(words) if v != 0xFFFFFFFF}
+
     def read_at(self, ram, name, base=None):
         address = self.address(name)
         if address is None:
@@ -190,6 +203,9 @@ class Markers:
                                    f" called from {self.callers(ram, loaded)}" if asserts else ""),
             f"alloc failures {allocs}" + (f" last {w('gDiagAllocFailSize')} bytes from heap {w('gDiagAllocFailHeap')}" if allocs else ""),
         ]
+        low = self.heaps(ram)
+        if low:
+            parts.append("least left " + " ".join(f"{name.replace('HEAP_ID_', '')}:{value:#x}" for name, value in low.items()))
         # A switch left on explains a run that behaves oddly.
         on = {name: self.read(ram, name, width) for name, width in SWITCHES.items()}
         on = {name: value for name, value in on.items() if value}

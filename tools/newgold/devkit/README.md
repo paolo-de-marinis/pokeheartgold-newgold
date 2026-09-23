@@ -62,6 +62,8 @@ Reading what the debug ROM records, and playing it without looking.
 - `frozen.py` -- the ARM9 out of a melonDS savestate once the game stopped.
 - `battle.py`, `dump.py` -- a wild battle forced on Route 29 in the
   harness, and its memory dumps read back.
+- `pc.py SAVE` -- the PC's storage system opened from a save standing in
+  front of a PC, and how full every heap got.
 - `markers.py` -- the decoding the others share.
 
 Every reader takes the ELF the ROM was linked from, the debug build's by

@@ -2,6 +2,8 @@
 
 #include "global.h"
 
+#include "constants/heap.h"
+
 // Built in with NEWGOLD_DIAG=1 and nothing without it. The hook sites are the
 // places in the game that write these, each under the same #ifdef; the readers
 // are in tools/newgold/devkit/diag. Everything lives in the static module so an
@@ -19,6 +21,9 @@ u32 gDiagAssertStack[DIAG_ASSERT_STACK_WORDS];
 u32 gDiagAllocFailCount;
 u32 gDiagAllocFailHeap;
 u32 gDiagAllocFailSize;
+
+u32 gDiagHeapLowWater[DIAG_HEAPS];
+typedef char DiagHeapsCoverEveryHeap[HEAP_ID_MAX <= DIAG_HEAPS ? 1 : -1];
 
 u32 gDiagIgnoreCommunicationError;
 u32 gDiagForceEncounter;
@@ -78,6 +83,32 @@ void Diag_AllocFailed(u32 heapId, u32 size) {
     gDiagAllocFailCount++;
     gDiagAllocFailHeap = heapId;
     gDiagAllocFailSize = size;
+}
+
+void Diag_HeapCreated(u32 heapId) {
+    if (heapId < DIAG_HEAPS) {
+        gDiagHeapLowWater[heapId] = 0xFFFFFFFF;
+    }
+}
+
+// The expanded heap's free list is at +0x24 of its head, each free block's
+// size at +4 and the next block at +0xC: what NNS_FndGetTotalFreeSizeForExpHeap
+// walks. The SDK's own largest-block query is not linked into this game.
+void Diag_HeapUsed(u32 heapId, void *heapHandle) {
+    u32 largest = 0;
+    u8 *block;
+
+    if (heapId >= DIAG_HEAPS) {
+        return;
+    }
+    for (block = *(u8 **)((u8 *)heapHandle + 0x24); block != NULL; block = *(u8 **)(block + 0xC)) {
+        if (*(u32 *)(block + 4) > largest) {
+            largest = *(u32 *)(block + 4);
+        }
+    }
+    if (largest < gDiagHeapLowWater[heapId]) {
+        gDiagHeapLowWater[heapId] = largest;
+    }
 }
 
 // Records where the assertion returns to and the top of the stack, then lets
