@@ -699,12 +699,40 @@ u8 ov12_0223B580(BattleSystem *battleSystem, int battlerId, u8 a2) {
     return 0;
 }
 
+// The mark three critical hits leave for Galarian Farfetch'd lasts the battle
+// it was earned in: Pokemon Central (Sirfetch'd) evolves it "dopo aver
+// inflitto tre brutti colpi nel corso di una lotta", with at least 1 HP when
+// the battle ends. hg-engine never clears it, so a Farfetch'd whose evolution
+// was cancelled, or refused because it had fainted, evolved at any later
+// level-up. Once the check after the battle is over, the mark goes.
+static void ClearCriticalHitsMarks(Party *party) {
+    int i;
+    u8 bits;
+    Pokemon *mon;
+
+    for (i = 0; i < Party_GetCount(party); i++) {
+        mon = Party_GetMonByIndex(party, i);
+        bits = GetMonData(mon, MON_DATA_UNUSED_113, NULL);
+        if (bits & MON_CRITICAL_HITS_EVOLUTION_BIT) {
+            bits &= ~MON_CRITICAL_HITS_EVOLUTION_BIT;
+            SetMonData(mon, MON_DATA_UNUSED_113, &bits);
+        }
+    }
+}
+
 u16 BattleSystem_CheckEvolution(BattleSetup *setup, int *selectedMonIndex, int *evolutionCondition) {
     Pokemon *mon;
     u16 species = 0;
 
     if (setup->winFlag != BATTLE_OUTCOME_WIN && setup->winFlag != BATTLE_OUTCOME_MON_CAUGHT && setup->winFlag != BATTLE_OUTCOME_PLAYER_FLED) {
+        ClearCriticalHitsMarks(setup->party[0]);
         return 0;
+    }
+    // A battle fled still lets a Pokemon that levelled up evolve, as in
+    // retail, but not by the critical hits it landed: running away is not
+    // seeing the battle to its end. A battle lost evolves nothing.
+    if (setup->winFlag == BATTLE_OUTCOME_PLAYER_FLED) {
+        ClearCriticalHitsMarks(setup->party[0]);
     }
 
     while (setup->levelUpFlag) {
@@ -722,6 +750,7 @@ u16 BattleSystem_CheckEvolution(BattleSetup *setup, int *selectedMonIndex, int *
             }
         }
     }
+    ClearCriticalHitsMarks(setup->party[0]);
     return species;
 }
 

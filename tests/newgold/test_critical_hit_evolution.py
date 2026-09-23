@@ -115,21 +115,117 @@ int main(void) {
 """
 
 
+AFTER_BATTLE = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include "constants/battle.h"
+#include "constants/pokemon.h"
+#include "constants/species.h"
+
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+#define PARTY_SIZE 6
+
+typedef struct { u16 species; u8 bits113, levelEvolves; } Pokemon;
+typedef struct { int count; Pokemon mons[6]; } Party;
+typedef struct { int winFlag; Party *party[1]; u32 evolutionLocation; int levelUpFlag; } BattleSetup;
+
+static u32 GetMonData(Pokemon *mon, int field, void *dest) {
+    assert(field == MON_DATA_UNUSED_113 && dest == NULL);
+    return mon->bits113;
+}
+static void SetMonData(Pokemon *mon, int field, void *value) {
+    assert(field == MON_DATA_UNUSED_113);
+    mon->bits113 = *(u8 *)value;
+}
+static int Party_GetCount(Party *party) { return party->count; }
+static Pokemon *Party_GetMonByIndex(Party *party, int i) { assert(i < party->count); return &party->mons[i]; }
+static inline u32 MaskOfFlagNo(int flag) { return 1u << flag; }
+// Galarian Farfetch'd evolves on the mark; any other on its level.
+static u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *method) {
+    (void)party; (void)usedItem;
+    assert(context == EVOCTX_LEVELUP);
+    if (mon->bits113 & MON_CRITICAL_HITS_EVOLUTION_BIT) {
+        *method = EVO_AMOUNT_OF_CRITICAL_HITS;
+        return SPECIES_SIRFETCHD;
+    }
+    *method = EVO_LEVEL;
+    return mon->levelEvolves ? SPECIES_IVYSAUR : SPECIES_NONE;
+}
+@FUNCTIONS@
+
+static Party party;
+
+// The battle's evolutions, one after another, as BSTATE_EVOLUTION_INIT asks
+// for them, none of them taken: the scene cancelled.
+static int evolutions(int winFlag, int levelUpFlag, u16 *first) {
+    BattleSetup setup = { winFlag, { &party }, 0, levelUpFlag };
+    int index, method, count = 0;
+    u16 species;
+    *first = SPECIES_NONE;
+    while ((species = BattleSystem_CheckEvolution(&setup, &index, &method)) != SPECIES_NONE) {
+        if (count++ == 0) {
+            *first = species;
+        }
+    }
+    return count;
+}
+
+int main(void) {
+    u16 first;
+    party.count = 3;
+    party.mons[0] = (Pokemon){ SPECIES_BULBASAUR, MON_HIDDEN_ABILITY_BIT, 1 };
+    party.mons[2] = (Pokemon){ SPECIES_FARFETCHD_GALARIAN, MON_HIDDEN_ABILITY_BIT | MON_CRITICAL_HITS_EVOLUTION_BIT, 0 };
+    // Won: the marked Pokemon is offered its evolution; cancelled, the mark
+    // goes with the battle, and the bit beside it stays.
+    assert(evolutions(BATTLE_OUTCOME_WIN, 1 << 2, &first) == 1 && first == SPECIES_SIRFETCHD);
+    assert(party.mons[2].bits113 == MON_HIDDEN_ABILITY_BIT);
+    assert(evolutions(BATTLE_OUTCOME_WIN, 1 << 2, &first) == 0);
+    // Fled: a level still evolves, the critical hits do not.
+    party.mons[2].bits113 |= MON_CRITICAL_HITS_EVOLUTION_BIT;
+    assert(evolutions(BATTLE_OUTCOME_PLAYER_FLED, (1 << 0) | (1 << 2), &first) == 1 && first == SPECIES_IVYSAUR);
+    assert(party.mons[2].bits113 == MON_HIDDEN_ABILITY_BIT);
+    // Lost: nothing evolves, and the mark goes.
+    party.mons[2].bits113 |= MON_CRITICAL_HITS_EVOLUTION_BIT;
+    assert(evolutions(BATTLE_OUTCOME_LOSE, 1 << 2, &first) == 0);
+    assert(party.mons[2].bits113 == MON_HIDDEN_ABILITY_BIT);
+    // Caught: as won.
+    party.mons[2].bits113 |= MON_CRITICAL_HITS_EVOLUTION_BIT;
+    assert(evolutions(BATTLE_OUTCOME_MON_CAUGHT, 1 << 2, &first) == 1 && first == SPECIES_SIRFETCHD);
+    assert(party.mons[2].bits113 == MON_HIDDEN_ABILITY_BIT);
+    return 0;
+}
+"""
+
+
+def run(test, program):
+    with tempfile.TemporaryDirectory(prefix="newgold-critical-hits-") as directory:
+        path = Path(directory)
+        (path / "test.c").write_text(program)
+        build = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+            "-std=c99", "-Wall", "-Wextra", "-Werror", "-Wno-unused-parameter", "-iquote", str(ROOT / "include"),
+            str(path / "test.c"), "-o", str(path / "test"),
+        ], capture_output=True, text=True)
+        test.assertEqual(build.returncode, 0, build.stderr)
+        result = subprocess.run([str(path / "test")], capture_output=True, text=True)
+        test.assertEqual(result.returncode, 0, result.stderr)
+
+
 class CriticalHitEvolution(unittest.TestCase):
     def test_the_third_critical_hit_marks_the_player_pokemon(self):
         source = read("src/battle/overlay_12_0224E4FC.c")
         table = re.search(r"static const u8 sCritChance\[\] = \{.*?\};", source, re.S).group()
-        program = FIXTURE.replace("@TABLE@", table).replace("@FUNCTION@", function(source, "TryCriticalHit"))
-        with tempfile.TemporaryDirectory(prefix="newgold-critical-hits-") as directory:
-            path = Path(directory)
-            (path / "test.c").write_text(program)
-            build = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
-                "-std=c99", "-Wall", "-Wextra", "-Werror", "-Wno-unused-parameter", "-iquote", str(ROOT / "include"),
-                str(path / "test.c"), "-o", str(path / "test"),
-            ], capture_output=True, text=True)
-            self.assertEqual(build.returncode, 0, build.stderr)
-            run = subprocess.run([str(path / "test")], capture_output=True, text=True)
-            self.assertEqual(run.returncode, 0, run.stderr)
+        run(self, FIXTURE.replace("@TABLE@", table).replace("@FUNCTION@", function(source, "TryCriticalHit")))
+
+    def test_the_mark_lasts_the_battle(self):
+        """BattleSystem_CheckEvolution, the real one: the mark evolves the
+        Pokemon after a battle won or a Pokemon caught, and is gone once the
+        check is over -- cancelled, fled or lost."""
+        source = read("src/battle/battle_system.c")
+        functions = "\n".join(function(source, name) for name in ("ClearCriticalHitsMarks", "BattleSystem_CheckEvolution"))
+        run(self, AFTER_BATTLE.replace("@FUNCTIONS@", functions))
 
     def test_the_count_starts_again_with_each_appearance(self):
         # The engine clears critical_hits in ClearBattleMonFlags; here that is
