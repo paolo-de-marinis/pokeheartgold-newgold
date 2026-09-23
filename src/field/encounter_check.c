@@ -56,7 +56,7 @@ typedef struct EncounterGenState {
     BOOL isSweetScent;
     u8 level;
     u8 isEgg;
-    u8 ability;
+    u16 ability;
     u8 unk_0F;
     u8 unk_10;
     u8 isSinjohMap;

@@ -648,7 +648,7 @@ static u8 GetEggCyclesToSubtract(Party *party) {
     int partySize = Party_GetCount(party);
     for (u8 i = 0; i < partySize; i++) {
         if (!GetMonData(Party_GetMonByIndex(party, i), MON_DATA_SANITY_IS_EGG, NULL)) {
-            u8 ability = GetMonData(Party_GetMonByIndex(party, i), MON_DATA_ABILITY, NULL);
+            u16 ability = GetMonData(Party_GetMonByIndex(party, i), MON_DATA_ABILITY, NULL);
             if (ability == ABILITY_MAGMA_ARMOR || ability == ABILITY_FLAME_BODY) {
                 return 2;
             }
