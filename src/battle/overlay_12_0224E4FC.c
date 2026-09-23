@@ -2452,6 +2452,11 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
         if (ctx->moveConditions[i].octolocked && ctx->battleMons[i].unk88.battlerIdMeanLook == battlerId) {
             ctx->moveConditions[i].octolocked = FALSE;
         }
+        // Syrup Bomb's syrup goes with the Pokemon that threw it (Pokemon
+        // Central, Bomba Sciroppata).
+        if (ctx->moveConditions[i].syrupBombTurns && ctx->moveConditions[i].syrupBombUser == battlerId) {
+            ctx->moveConditions[i].syrupBombTurns = 0;
+        }
     }
 
     if (!(ctx->battleStatus & BATTLE_STATUS_BATON_PASS)) {
@@ -2567,6 +2572,9 @@ void InitFaintedWork(BattleSystem *battleSystem, BattleContext *ctx, int battler
         if ((ctx->battleMons[i].status2 & STATUS2_MEAN_LOOK) && ctx->battleMons[i].unk88.battlerIdMeanLook == battlerId) {
             ctx->battleMons[i].status2 &= ~STATUS2_MEAN_LOOK;
             ctx->moveConditions[i].octolocked = FALSE;
+        }
+        if (ctx->moveConditions[i].syrupBombTurns && ctx->moveConditions[i].syrupBombUser == battlerId) {
+            ctx->moveConditions[i].syrupBombTurns = 0;
         }
         if (ctx->battleMons[i].status2 & (MaskOfFlagNo(battlerId) << STATUS2_ATTRACT_SHIFT)) {
             ctx->battleMons[i].status2 &= (MaskOfFlagNo(battlerId) << STATUS2_ATTRACT_SHIFT) ^ 0xFFFFFFFF;
@@ -11824,7 +11832,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_ELECTRIFY,
     BATTLE_SUBSCRIPT_NO_RETREAT,
     BATTLE_SUBSCRIPT_OCTOLOCK,
-    BATTLE_SUBSCRIPT_SALT_CURE
+    BATTLE_SUBSCRIPT_SALT_CURE,
+    BATTLE_SUBSCRIPT_SYRUP_BOMB
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

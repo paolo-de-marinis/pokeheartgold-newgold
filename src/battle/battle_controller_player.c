@@ -1488,6 +1488,7 @@ typedef enum UpdateMonConditionState {
     UMC_STATE_SALT_CURE,
     UMC_STATE_BINDING,
     UMC_STATE_OCTOLOCK,
+    UMC_STATE_SYRUP_BOMB,
     UMC_STATE_BAD_DREAMS,
     UMC_STATE_UPROAR,
     UMC_STATE_RAMPAGE,
@@ -1743,6 +1744,24 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
                 ctx->battlerIdAttacker = ctx->battleMons[battlerId].unk88.battlerIdMeanLook;
                 ctx->statChangeType = SIDE_EFFECT_TYPE_MOVE_EFFECT;
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_USER_DEF_AND_SPDEF_DOWN_1_STAGE);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            ctx->stateUpdateMonCondition++;
+            break;
+        case UMC_STATE_SYRUP_BOMB:
+            // Syrup Bomb takes a stage of Speed at each of the next three
+            // turns' ends, the thrower's drop as Clear Body and Mist see it,
+            // with nothing said once the Speed is at the bottom (Pokemon
+            // Central, Bomba Sciroppata).
+            if (ctx->moveConditions[battlerId].syrupBombTurns && ctx->battleMons[battlerId].hp != 0) {
+                ctx->moveConditions[battlerId].syrupBombTurns--;
+                ctx->battlerIdStatChange = battlerId;
+                ctx->battlerIdAttacker = ctx->moveConditions[battlerId].syrupBombUser;
+                ctx->statChangeType = SIDE_EFFECT_TYPE_INDIRECT;
+                ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 flag = 1;

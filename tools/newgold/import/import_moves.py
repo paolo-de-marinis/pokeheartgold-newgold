@@ -428,6 +428,10 @@ IMPLEMENTED_HERE = {
     # turn's end, a quarter for Water and Steel (Pokemon Central, Sotto Sale):
     # effect script 427.
     "SALT_CURE": "MOVE_EFFECT_SALT_CURE",
+    # Syrup Bomb covers its target, which loses a stage of Speed at each of
+    # the next three turns' ends while the thrower stays (Pokemon Central,
+    # Bomba Sciroppata): effect script 428.
+    "SYRUP_BOMB": "MOVE_EFFECT_SYRUP_BOMB",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

@@ -10265,6 +10265,15 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         ctx->calcTemp = !ctx->moveConditions[battlerId].saltCured;
         ctx->moveConditions[battlerId].saltCured = TRUE;
         break;
+    // Three turns' ends of lost Speed while the attacker stays in; a second
+    // bomb on a target still covered adds nothing (CALC_TEMP says which).
+    case MOVE_SYRUP_BOMB:
+        ctx->calcTemp = !ctx->moveConditions[battlerId].syrupBombTurns;
+        if (ctx->calcTemp) {
+            ctx->moveConditions[battlerId].syrupBombTurns = 3;
+            ctx->moveConditions[battlerId].syrupBombUser = ctx->battlerIdAttacker;
+        }
+        break;
     }
 
     return FALSE;

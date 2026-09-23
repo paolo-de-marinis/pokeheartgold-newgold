@@ -207,6 +207,13 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} is hurt by\nSalt Cure!",
         r"The opposing {STRVAR_1 1, 0, 0} is hurt by\nSalt Cure!",
     ]),
+    # Syrup Bomb landing. The engine leaves the move unimplemented; the later
+    # games' line.
+    ("syrup bomb", [
+        r"{STRVAR_1 1, 0, 0} got covered\nin sticky candy syrup!",
+        r"The wild {STRVAR_1 1, 0, 0} got covered\nin sticky candy syrup!",
+        r"The opposing {STRVAR_1 1, 0, 0} got covered\nin sticky candy syrup!",
+    ]),
 ]
 
 

@@ -347,6 +347,8 @@ typedef struct MoveConditions {
     u8 bindEighthTurn : 1;         // a Grip Claw's bind: the turn STATUS2_BIND's three bits cannot count
     u8 octolocked : 1;             // Octolock: held by Mean Look's flag, Defense and Sp. Def down at each turn's end
     u8 saltCured : 1;              // Salt Cure: an eighth of its HP at each turn's end, a quarter for Water and Steel
+    u8 syrupBombTurns : 2;         // Syrup Bomb: the turns' ends left to lose a stage of Speed at
+    u8 syrupBombUser : 2;          // Syrup Bomb: whose; it ends when that Pokemon leaves
 } MoveConditions;
 
 #define BATTLE_SCRIPT_BUFFER_WORDS 650

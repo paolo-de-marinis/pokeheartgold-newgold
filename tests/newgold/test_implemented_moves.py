@@ -491,5 +491,28 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertEqual(step.count("TYPE_STEEL"), 3)
         self.assertIn("ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, divisor);", step)
 
+    def test_syrup_bomb_takes_speed_for_three_turns(self):
+        # Pokemon Central (Bomba Sciroppata): an added effect; a stage of
+        # Speed at each of three turns' ends; over when the thrower leaves;
+        # not twice at once.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("SYRUP_BOMB", "MOVE_EFFECT_SYRUP_BOMB")
+        self.assertEqual(record("SYRUP_BOMB")[6], 100)
+        self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_SYRUP_BOMB", effect_script("MOVE_EFFECT_SYRUP_BOMB"))
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_SYRUP_BOMB"), "BATTLE_SUBSCRIPT_SYRUP_BOMB")
+        covering = subscript_named("BATTLE_SUBSCRIPT_SYRUP_BOMB")
+        self.assertIn("SetMoveConditionFlag MOVE_SYRUP_BOMB, BATTLER_CATEGORY_DEFENDER", covering)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('syrup bomb'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER", covering)
+        flag = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SetMoveConditionFlag")
+        self.assertIn("ctx->moveConditions[battlerId].syrupBombTurns = 3;", flag)
+        umc = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_UpdateMonCondition")
+        step = umc[umc.index("case UMC_STATE_SYRUP_BOMB:"):umc.index("case UMC_STATE_BAD_DREAMS:")]
+        self.assertIn("ctx->moveConditions[battlerId].syrupBombTurns--;", step)
+        self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE;", step)
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        for name in ("InitSwitchWork", "InitFaintedWork"):
+            self.assertIn("ctx->moveConditions[i].syrupBombUser == battlerId) {\n", function(overlay, name))
+
 if __name__ == "__main__":
     unittest.main()
