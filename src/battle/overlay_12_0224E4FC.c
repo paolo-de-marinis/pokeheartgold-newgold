@@ -126,6 +126,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->battleMons[battlerId].screenCleanerFlag = 0;
     ctx->battleMons[battlerId].imposterFlag = 0;
     ctx->battleMons[battlerId].hospitalityFlag = 0;
+    ctx->battleMons[battlerId].neutralizingGasFlag = 0;
     // Kept off the BattleMon because that structure's size is pinned; cleared
     // here, which is where the reference clears its copy.
     ctx->psychicTerrainMoveUsed[battlerId] = 0;
@@ -3112,6 +3113,13 @@ static BOOL AbilityIsUnsuppressable(u16 ability) {
     return FALSE;
 }
 
+// The gas acts only from a Pokemon that has it as its own, standing and not
+// suppressed itself; gas worn by a Pokemon that only has it by transforming
+// does not count.
+static BOOL BattlerGivesOffGas(BattleContext *ctx, int battlerId) {
+    return ctx->battleMons[battlerId].ability == ABILITY_NEUTRALIZING_GAS && ctx->battleMons[battlerId].hp && !(ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED) && !(ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM);
+}
+
 static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId) {
     int i;
 
@@ -3119,7 +3127,7 @@ static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId) {
         return FALSE;
     }
     for (i = 0; i < (int)NELEMS(ctx->battleMons); i++) {
-        if (ctx->battleMons[i].ability == ABILITY_NEUTRALIZING_GAS && ctx->battleMons[i].hp && !(ctx->battleMons[i].moveEffectFlags & MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED)) {
+        if (BattlerGivesOffGas(ctx, i) == TRUE) {
             return TRUE;
         }
     }
@@ -4372,7 +4380,39 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
 
     do {
         switch (ctx->sendOutState) {
-        case 0: // field weather
+        case 0: // Neutralizing Gas, and then the field weather
+            // The gas goes before every other entry ability, as it does in the
+            // later games, and says when it has gone as well as when it came:
+            // once it has, the abilities it held back find their flags unset
+            // and speak further down this list. The reference gives the
+            // ability no effect at all, so none of this is its.
+            if (ctx->neutralizingGasOut) {
+                for (i = 0; i < maxBattlers; i++) {
+                    if (BattlerGivesOffGas(ctx, i) == TRUE) {
+                        break;
+                    }
+                }
+                if (i == maxBattlers) {
+                    ctx->neutralizingGasOut = FALSE;
+                    script = BATTLE_SUBSCRIPT_NEUTRALIZING_GAS_END;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            for (i = 0; i < maxBattlers; i++) {
+                battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].neutralizingGasFlag && BattlerGivesOffGas(ctx, battlerId) == TRUE) {
+                    ctx->battleMons[battlerId].neutralizingGasFlag = TRUE;
+                    ctx->neutralizingGasOut = TRUE;
+                    ctx->battlerIdTemp = battlerId;
+                    script = BATTLE_SUBSCRIPT_NEUTRALIZING_GAS;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (flag == TRUE) {
+                break;
+            }
             if (!ctx->weatherCheckFlag) {
                 switch (BattleSystem_GetWeather(battleSystem)) {
                 case 1:

@@ -70,6 +70,15 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0}\ncan act faster than normal,\fthanks to its {STRVAR_1 5, 1, 0}!",
         r"The opposing {STRVAR_1 1, 0, 0}\ncan act faster than normal,\fthanks to its {STRVAR_1 5, 1, 0}!",
     ]),
+    # Neutralizing Gas coming and going. The reference gives the ability no
+    # effect and so no line; these are the later games' two, about the field
+    # rather than a Pokemon, so one row each.
+    ("neutralizing gas", [
+        r"Neutralizing gas filled the area!",
+    ]),
+    ("neutralizing gas ends", [
+        r"The effects of the neutralizing gas\nwore off!",
+    ]),
 ]
 
 

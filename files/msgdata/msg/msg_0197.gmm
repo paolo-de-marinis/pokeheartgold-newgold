@@ -7200,4 +7200,12 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0}\ncan act faster than normal,\fthanks to its {STRVAR_1 5, 1, 0}!</language>
 	</row>
+	<row id="msg_0197_01800" index="1800">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Neutralizing gas filled the area!</language>
+	</row>
+	<row id="msg_0197_01801" index="1801">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The effects of the neutralizing gas\nwore off!</language>
+	</row>
 </body>

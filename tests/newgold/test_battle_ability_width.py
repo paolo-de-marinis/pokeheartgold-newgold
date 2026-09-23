@@ -167,7 +167,20 @@ int main(void) {
         unsigned expected=ability==ABILITY_PICKUP?ITEM_POTION:ability==ABILITY_HONEY_GATHER?ITEM_HONEY:ITEM_NONE;
         assert(system.party[0].fields[MON_DATA_HELD_ITEM]==expected);
     }
-    puts("PASS: 2048 full-ID battle/cache/packet cases, suppression/guess/reset, absorbing aliases and 512 reward cases.");
+    // Neutralizing Gas turns off every ability but its own and the six that
+    // are a Pokemon's form or nature, and not when it was only transformed into.
+    memset(&ctx,0,sizeof(ctx));
+    ctx.battleMons[1].ability=ABILITY_NEUTRALIZING_GAS;ctx.battleMons[1].hp=1;
+    ctx.battleMons[0].ability=ABILITY_INTIMIDATE;
+    assert(GetBattlerAbility(&ctx,0)==ABILITY_NONE && GetBattlerAbility(&ctx,1)==ABILITY_NEUTRALIZING_GAS);
+    const u16 unsuppressible[]={ABILITY_MULTITYPE,ABILITY_COMATOSE,ABILITY_RKS_SYSTEM,ABILITY_GULP_MISSILE,
+                                ABILITY_AS_ONE_GLASTRIER,ABILITY_AS_ONE_SPECTRIER,ABILITY_COMMANDER};
+    for(unsigned i=0;i<sizeof(unsuppressible)/sizeof(*unsuppressible);i++) {
+        ctx.battleMons[0].ability=unsuppressible[i];assert(GetBattlerAbility(&ctx,0)==unsuppressible[i]);
+    }
+    ctx.battleMons[0].ability=ABILITY_INTIMIDATE;ctx.battleMons[1].status2=STATUS2_TRANSFORM;
+    assert(GetBattlerAbility(&ctx,0)==ABILITY_INTIMIDATE);
+    puts("PASS: 2048 full-ID battle/cache/packet cases, suppression/guess/reset, absorbing aliases, 512 reward cases and the gas.");
 }
 '''
 
@@ -186,7 +199,7 @@ class BattleAbilityWidthTests(unittest.TestCase):
         ai_header = (ROOT / "include/battle/trainer_ai.h").read_text()
         types += ai_header[ai_header.index("enum {"):ai_header.index("};")+2]
         native = [selected_cases(pokemon, name, {"BMON_DATA_ABILITY"}, "id") for name in ("GetBattlerVar", "SetBattlerVar")]
-        native += [function(pokemon, name) for name in ("AbilityIsUnsuppressable", "AbilitiesAreNeutralized", "BattleMoveTbl", "GetBattlerAbility", "ov12_0225859C")]
+        native += [function(pokemon, name) for name in ("AbilityIsUnsuppressable", "BattlerGivesOffGas", "AbilitiesAreNeutralized", "BattleMoveTbl", "GetBattlerAbility", "ov12_0225859C")]
         native += [function(command, name) for name in ("BattlerSetAbility", "ov12_0224819C", "BtlCmd_GenerateEndOfBattleItem")]
         native += [function(ai, name) for name in ("ov10_0221D0A8", "ov10_0221D188")]
         native += [function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224E384")]

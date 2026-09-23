@@ -616,5 +616,16 @@ class EntryAbilityFlagTests(unittest.TestCase):
             self.assertIn(f"ctx->battleMons[battlerId].{flag} = 0;", load, flag)
 
 
+class NeutralizingGasTests(unittest.TestCase):
+    def test_it_says_when_it_comes_and_when_it_goes_before_anything_else(self):
+        # The first thing the switch-in check asks, as the gas goes first in
+        # the later games; once it has gone, what it held back speaks below.
+        body = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        first = body[body.index("case 0:"):body.index("case 1:")]
+        self.assertIn("script = BATTLE_SUBSCRIPT_NEUTRALIZING_GAS_END;", first)
+        self.assertIn("script = BATTLE_SUBSCRIPT_NEUTRALIZING_GAS;", first)
+        self.assertLess(first.index("NEUTRALIZING_GAS"), first.index("weatherCheckFlag"))
+
+
 if __name__ == "__main__":
     unittest.main()

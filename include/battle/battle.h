@@ -253,6 +253,7 @@ typedef struct BattleMon {
     u32 screenCleanerFlag : 1;
     u32 imposterFlag : 1;
     u32 hospitalityFlag : 1;
+    u32 neutralizingGasFlag : 1;
     // A third type, TYPE_NONE unless a script has added one. It takes eight of
     // the spare bits rather than a byte of its own: the assembly that still
     // reads this structure does so by offset, and type1 and type2 have code
@@ -492,6 +493,10 @@ typedef struct BattleContext {
     u8 abilityLoopTracker;
     // Whether the ball now in the air was thrown critically.
     u8 criticalCapture;
+    // Whether Neutralizing Gas has said it filled the area and not yet that it
+    // wore off: the Pokemon giving it off can leave by fainting, by being
+    // switched or by losing the ability, and only the field can tell.
+    u8 neutralizingGasOut;
     // What the player's party was holding when the battle began. A single-use
     // item is given back at the end rather than being gone for good.
     u16 itemsToRestore[PARTY_SIZE];

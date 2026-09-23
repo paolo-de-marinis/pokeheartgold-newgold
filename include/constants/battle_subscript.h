@@ -648,6 +648,9 @@
 #define BATTLE_SUBSCRIPT_POWER_CONSTRUCT                    406
 // A confusion self-hit a Disguise or an Ice Face took. The end of 39 there.
 #define BATTLE_SUBSCRIPT_HURT_SELF_DISGUISED                407
+// Neutralizing Gas coming and going, which the reference has no script for.
+#define BATTLE_SUBSCRIPT_NEUTRALIZING_GAS                   408
+#define BATTLE_SUBSCRIPT_NEUTRALIZING_GAS_END               409
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
