@@ -501,6 +501,16 @@ class SaveditLibraryTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             sv.parse_party("CHIKORITA:5::TACKLE+TACKLE")
 
+    def test_the_cli_makes_only_species_a_pokemon_can_be(self):
+        """What the page refuses, the CLI does too: a battle's Mega, a
+        retail form row, the egg."""
+        for text in ("MEGA_CHARIZARD_X:50", "ROTOM_WASH:20", "EGG:5", "NOSUCHMON:5"):
+            with self.assertRaises(SystemExit, msg=text):
+                sv.parse_party(text)
+        with self.assertRaises(SystemExit):
+            sv.put_in_box(self.open(), 1, "mega_venusaur", 40)
+        self.assertEqual(sv.parse_party("chikorita:5")[0][0], "CHIKORITA")
+
     def test_the_cli_names_a_pokemon_as_the_game_prints_it(self):
         """build_mon writes the species bank's name, not its constant."""
         self.assertEqual(sv.describe_mon(sv.build_mon("MR_MIME", 5))["nickname"], "Mr. Mime")

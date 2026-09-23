@@ -981,6 +981,18 @@ def owner(save):
             "gender": profile[GENDER]}
 
 
+def pickable(name):
+    """A species constant (without SPECIES_) a Pokemon may be made as:
+    species_table's "pick", as the page holds it -- not the egg, a retail
+    form row, a battle's form."""
+    number = species_numbers().get(name)
+    if number is None:
+        raise SystemExit(f"there is no SPECIES_{name}")
+    if not next((row["pick"] for row in species_table() if row["id"] == number), False):
+        raise SystemExit(f"SPECIES_{name} is not a species a Pokemon can be made as (the egg, a form row, a battle's form)")
+    return name
+
+
 def parse_party(text):
     """SPECIES:LEVEL[:NATURE][:MOVE+MOVE+...],...; moves not given are the
     game's at that level (preset_moves), moves given must be ones it can
@@ -1003,7 +1015,7 @@ def parse_party(text):
                     check_moves(species_numbers()[parts[0].upper()], moves)
                 except Illegal as e:
                     raise SystemExit(str(e))
-        wanted.append((parts[0].upper(), int(parts[1]),
+        wanted.append((pickable(parts[0].upper()), int(parts[1]),
                        int(parts[2]) if len(parts) > 2 and parts[2] else None, moves))
     return wanted
 
@@ -1049,7 +1061,7 @@ def put_in_box(save, number, name, level):
         raise SystemExit(f"boxes are numbered 1 to {NUM_BOXES}")
     block = save.block("SAVE_PCSTORAGE")
     at = (number - 1) * BOX
-    block[at:at + BOX_MON] = build_mon(name.upper(), int(level))[:BOX_MON]
+    block[at:at + BOX_MON] = build_mon(pickable(name.upper()), int(level))[:BOX_MON]
 
 
 def set_trainer_id(save, value):
