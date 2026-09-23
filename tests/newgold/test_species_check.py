@@ -42,6 +42,12 @@ class SpeciesCheckTests(unittest.TestCase):
         self.assertTrue(any("drawn another way" in m for m in messages), messages)
         self.assertTrue(any("drawn exactly like" in m for m in messages), messages)
 
+    def test_the_texts_it_expects_are_read_from_their_banks(self):
+        text = species.expected_text(next(e for e in species.entries() if e["species"] == 1))
+        self.assertEqual((text["ability"], text["category"]), ("Overgrow", "Seed Pok\u00e9mon"))
+        self.assertTrue(text["ability description"].startswith("Powers up Grass-type"))
+        self.assertTrue(text["entry"].startswith("The seed on its back"))
+
 
 if __name__ == "__main__":
     unittest.main()

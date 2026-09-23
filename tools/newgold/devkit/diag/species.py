@@ -44,6 +44,7 @@ while a run goes on.
 """
 import argparse
 import hashlib
+import html
 import json
 import multiprocessing
 import os
@@ -691,17 +692,26 @@ def dex_number(species):
     return _dex_tables()[1].get(dex_species(species), dex_species(species))
 
 
+@cache
+def bank(number):
+    """A message bank's rows by its number: savedit.bank takes the function
+    of message_format.c that opens a bank, and these three have none."""
+    sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+    import gmm
+    return [html.unescape(row["text"]) for row in gmm.read(number)]
+
+
 def expected_text(e):
     """What each compared region should say, as a key: equal keys, equal pixels."""
     record = savedit.personal_records()[savedit.personal_row(e["species"], e["form"])]
     types = tuple(dict.fromkeys(record["types"]))
     name = savedit.species_name(e["species"])
     species = dex_species(e["species"])
-    ability, description = savedit.bank(savedit.ABILITY_NAMES)[e["ability"]], savedit.bank(ABILITY_TEXT)[e["ability"]]
+    ability, description = savedit.bank(savedit.ABILITY_NAMES)[e["ability"]], bank(ABILITY_TEXT)[e["ability"]]
     return {"dex number": dex_number(e["species"]), "name": name, "types": types,
             "ability": ability, "summary name": name, "summary ability": ability,
             "ability description": description, "dex name": name, "dex types": types,
-            "category": savedit.bank(DEX_CATEGORIES)[species], "entry": savedit.bank(DEX_ENTRIES)[species]}
+            "category": bank(DEX_CATEGORIES)[species], "entry": bank(DEX_ENTRIES)[species]}
 
 
 def text_failures(records, table):
