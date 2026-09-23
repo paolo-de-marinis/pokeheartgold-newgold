@@ -197,6 +197,12 @@ class KnockOffTests(unittest.TestCase):
     def test_fling_throws_nothing_its_species_keeps(self):
         body = function(read("src/battle/overlay_12_0224E4FC.c"), "TryFling")
         self.assertIn("SpeciesKeepsItem(ctx->battleMons[battlerId].species, ctx->battleMons[battlerId].item)", body)
+        # And only that: retail's script refused any Multitype holder and any
+        # Griseous Orb as well (Pokemon Central, Lancio: an Arceus with a
+        # Plate, a Giratina with the Griseous Orb).
+        script = read("files/battledata/script/effect_script/effect_script_0233.s")
+        self.assertNotIn("ABILITY_MULTITYPE", script)
+        self.assertNotIn("ITEM_GRISEOUS_ORB", script)
 
 
 if __name__ == "__main__":

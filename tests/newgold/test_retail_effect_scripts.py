@@ -71,7 +71,7 @@ STILL_DIFFERENT = {
     178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
     180: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     222: IN_C.format("Natural Gift's type, power and berry, CalcBaseDamage.c"),
-    233: IN_C.format("the fling and the items that cannot be flung, BattleController_BeforeMove.c"),
+    233: IN_C.format("what the flung item does, ServerDoPostMoveEffects.c's MovePerformance_Step_9"),
     241: CALLED_MOVE,
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     259: "the engine waits for a button after only buffering the line that restores the dimensions, "
