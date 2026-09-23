@@ -86,7 +86,8 @@ typedef struct TurnData {
     u32 runFlag : 2; // 1 - Fled using item, 2 - Fled using ability
     u32 endureFlag : 1;
     u32 forceExecutionOrder : 2; // EXECUTION_ORDER_*: After You brings this battler forward, Quash sends it last
-    u32 unk0_A : 20;
+    u32 gainedProtectFlagFromAlly : 1; // protectFlag came from the ally's Wide Guard, Quick Guard, Mat Block or Crafty Shield
+    u32 unk0_A : 19;
     int physicalDamage[4];
     int battlerIdPhysicalDamage;
     int battlerBitPhysicalDamage;

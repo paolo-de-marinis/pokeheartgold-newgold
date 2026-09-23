@@ -77,6 +77,7 @@ void BattleContext_UpdateTerrainOverlay(BattleContext *ctx, int battlerId, int t
 int BattleContext_ActivateParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL BattleMoveIsSoundBased(u32 moveNo);
 BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo);
+s8 BattlerMovePriority(BattleContext *ctx, int battlerId, u16 moveNo);
 u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo);
 BOOL ov12_02253068(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 int DamageDivide(int num, int denom);

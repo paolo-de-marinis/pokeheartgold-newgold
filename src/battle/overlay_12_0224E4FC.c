@@ -1047,7 +1047,7 @@ static const u16 sTriageMoves[] = {
 //
 // Gale Wings asks the move table's type, not the type the move will be thrown
 // with, so a Normalize or an -ate ability does not take it away or grant it.
-static s8 BattlerMovePriority(BattleContext *ctx, int battlerId, u16 moveNo) {
+s8 BattlerMovePriority(BattleContext *ctx, int battlerId, u16 moveNo) {
     s8 priority = BattleMoveTbl(ctx, moveNo)->priority;
 
     if (moveNo == MOVE_NONE) {

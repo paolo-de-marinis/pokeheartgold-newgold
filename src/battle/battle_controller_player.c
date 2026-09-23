@@ -2851,6 +2851,47 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
     return FALSE;
 }
 
+static BOOL IsTeamGuardMove(u16 guard) {
+    return guard == MOVE_QUICK_GUARD || guard == MOVE_WIDE_GUARD || guard == MOVE_MAT_BLOCK || guard == MOVE_CRAFTY_SHIELD;
+}
+
+// Whether a guard raised with the move `guard` stops `move`. ownGuard is the
+// target's own; otherwise it is its ally's, and only a team guard reaches
+// that far. As the reference (BattleController_BeforeMove.c): Protect,
+// Detect, Spiky Shield, Baneful Bunker and Max Guard stop everything; King's
+// Shield, Obstruct, Silk Trap, Burning Bulwark and Mat Block only a move that
+// does damage; Crafty Shield only a status move; Quick Guard only a move with
+// raised priority; Wide Guard only a move that hits every adjacent opponent
+// or every adjacent battler.
+static BOOL GuardStopsMove(BattleContext *ctx, int battlerIdAttacker, u32 move, u16 guard, BOOL ownGuard) {
+    BOOL status = BattleMoveTbl(ctx, move)->category == CATEGORY_STATUS;
+    u16 range = BattleMoveTbl(ctx, move)->range;
+
+    switch (guard) {
+    case MOVE_PROTECT:
+    case MOVE_DETECT:
+    case MOVE_SPIKY_SHIELD:
+    case MOVE_BANEFUL_BUNKER:
+    case MOVE_MAX_GUARD:
+        return ownGuard;
+    case MOVE_KINGS_SHIELD:
+    case MOVE_OBSTRUCT:
+    case MOVE_SILK_TRAP:
+    case MOVE_BURNING_BULWARK:
+        return ownGuard && !status;
+    case MOVE_MAT_BLOCK:
+        return !status;
+    case MOVE_CRAFTY_SHIELD:
+        return status;
+    case MOVE_QUICK_GUARD:
+        return BattlerMovePriority(ctx, battlerIdAttacker, move) > 0;
+    case MOVE_WIDE_GUARD:
+        return range == RANGE_ADJACENT_OPPONENTS || range == RANGE_ALL_ADJACENT;
+    default:
+        return FALSE;
+    }
+}
+
 static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int move) {
     if (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) {
         return FALSE;
@@ -2871,9 +2912,26 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         && punchesThroughProtect == FALSE
         && (move != MOVE_CURSE || CurseUserIsGhost(ctx, move, battlerIdAttacker) == TRUE)
         && (!BattleCtx_IsIdenticalToCurrentMove(ctx, move) || ctx->battleStatus & BATTLE_STATUS_CHARGE_MOVE_HIT)) {
-        UnlockBattlerOutOfCurrentMove(battleSystem, ctx, battlerIdAttacker);
-        ctx->moveStatusFlag |= MOVE_STATUS_PROTECTED;
-        return FALSE;
+        // What the guard stops depends on the move it was raised with, the
+        // target's own or its ally's, as the reference's CheckProtectedBySelf
+        // and CheckProtectedByAlly decide. A guard the ally lent does not
+        // make the target's last move count as one of its own.
+        BOOL byAlly = GuardStopsMove(ctx, battlerIdAttacker, move, ctx->moveNoProtect[battlerIdTarget ^ 2], FALSE);
+        BOOL bySelf = !ctx->turnData[battlerIdTarget].gainedProtectFlagFromAlly
+            && GuardStopsMove(ctx, battlerIdAttacker, move, ctx->moveNoProtect[battlerIdTarget], TRUE);
+
+        if (byAlly || bySelf) {
+            // The move named in the line subscript 7 prints: none for "{0}
+            // protected itself!", the team guard's for "{1} protected {0}!".
+            if (bySelf) {
+                ctx->moveTemp = IsTeamGuardMove(ctx->moveNoProtect[battlerIdTarget]) ? ctx->moveNoProtect[battlerIdTarget] : 0;
+            } else {
+                ctx->moveTemp = ctx->moveNoProtect[battlerIdTarget ^ 2];
+            }
+            UnlockBattlerOutOfCurrentMove(battleSystem, ctx, battlerIdAttacker);
+            ctx->moveStatusFlag |= MOVE_STATUS_PROTECTED;
+            return FALSE;
+        }
     }
 
     if (!(ctx->battleStatus & BATTLE_STATUS_FLAT_HIT_RATE) // TODO: Is this flag a debug flag to ignore hit rates..?

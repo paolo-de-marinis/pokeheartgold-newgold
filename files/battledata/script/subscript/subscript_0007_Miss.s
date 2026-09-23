@@ -28,6 +28,13 @@ _CHECK_FAILED:
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED, _CHECK_FAILED2
 
 _PROTECTED_MSG:
+    // The guard's move when a team guard stopped it, from the check that did.
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MSG_MOVE_TEMP, 0, _PROTECTED_ITSELF
+    // {1} protected {0}!
+    PrintMessage msg_0197_01567, TAG_NICKNAME_MOVE, BATTLER_CATEGORY_DEFENDER, BATTLER_CATEGORY_MSG_TEMP
+    GoTo _PRINT_MSG
+
+_PROTECTED_ITSELF:
     // {0} protected itself!
     PrintMessage msg_0197_00015, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
     GoTo _PRINT_MSG
