@@ -55,7 +55,8 @@ _045:
 
 _CORRODES_ITEM:
     CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_STATUS, STATUS_NONE, _248
-    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_SIDE_CONDITION_STAT_CHANGE, SIDE_CONDITION_SAFEGUARD, _248
+    // Since Generation V Safeguard does not stop a status the Pokemon's own
+    // held item gives it, so a Toxic Orb poisons behind it.
     GoTo _191
 
 _094:

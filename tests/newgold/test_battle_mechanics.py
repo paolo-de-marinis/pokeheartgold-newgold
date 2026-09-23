@@ -175,6 +175,25 @@ class InfiltratorTests(unittest.TestCase):
         self.assertIn("ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY", mist)
 
 
+class HeldItemSafeguardTests(unittest.TestCase):
+    @staticmethod
+    def held_item_path(script):
+        # From the question that sends every other source elsewhere to the
+        # label it sends them to.
+        match = re.search(r"OPCODE_NEQ, BSCRIPT_VAR_SIDE_EFFECT_TYPE, SIDE_EFFECT_TYPE_HELD_ITEM, (_\w+)", script)
+        return script[match.end():script.index(f"\n{match.group(1)}:")]
+
+    def test_the_orbs_work_behind_safeguard(self):
+        # The reference comments the test out in both, as Generation V's rule.
+        for name in ("Burn", "BadPoison"):
+            self.assertNotIn("SIDE_CONDITION_SAFEGUARD", self.held_item_path(subscript(name)), name)
+
+    def test_a_berry_s_confusion_keeps_the_reference_s_test(self):
+        # Its subscript_0037_CONFUSE.s keeps the line live, under a comment
+        # saying it should not be needed.
+        self.assertIn("SIDE_CONDITION_SAFEGUARD", self.held_item_path(subscript("Confuse")))
+
+
 class StatusImmunityTests(unittest.TestCase):
     # How many ways each status subscript can be entered -- a used move, a
     # move's own effect, Toxic Spikes, a held item -- and so how many times
