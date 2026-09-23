@@ -171,8 +171,8 @@ class RetreatTests(unittest.TestCase):
 
     def test_u_turn_leaves_its_user_in_when_the_target_retreats(self):
         body = function(OVERLAY.read_text(), "ov12_02250490")
-        self.assertIn("*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && ctx->battlerIdTarget != BATTLER_NONE"
-                      " && Battler_Retreats(battleSystem, ctx, ctx->battlerIdTarget)", body)
+        self.assertIn("*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && ctx->battlerIdTarget != BATTLER_NONE\n"
+                      "            && (Battler_Retreats(battleSystem, ctx, ctx->battlerIdTarget) || ", body)
 
     def test_the_script_switches_or_flees(self):
         header = (ROOT / "include/constants/battle_subscript.h").read_text()

@@ -685,6 +685,7 @@ static u32 BattleSystem_GetBattleType(BattleSystem *bs) { (void)bs; return S.bat
 static BOOL TryPickForcedSwitchIn(BattleSystem *bs, BattleContext *ctx, int battlerId) {
     (void)bs; (void)ctx; S.picked = battlerId + 1; return S.replacements;
 }
+static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return S.replacements; }
 @FUNCTION@
 static BattleContext ctx;
 static BattleSystem bs;
@@ -696,7 +697,7 @@ static void reset(void) {
     for (int i = 0; i < 4; i++) { ctx.battleMons[i].hp = 50; ctx.battleMons[i].hitCount = 1; }
     ctx.selfTurnData[1].physicalDamage = -20;
 }
-static int ask(int battlerId) { return CheckSwitchItemOnHit(&bs, &ctx, battlerId); }
+static int ask(int battlerId) { return CheckSwitchItemOnHit(&bs, &ctx, battlerId, S.item[battlerId]); }
 int main(void) {
     // Eject Button: a battler the move hurt, standing, goes back.
     reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT;
@@ -707,8 +708,32 @@ int main(void) {
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.battleMons[1].hp = 0;
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    // After a Red Card has dragged the user out (U-turn's flag) the button
+    // still answers; the card does not, the user being gone.
     reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.battleStatus2 = BATTLE_STATUS2_UTURN;
+    assert(ask(1) == BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; ctx.battleStatus2 = BATTLE_STATUS2_UTURN;
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    // Each walk asks only its own item.
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE;
+    assert(CheckSwitchItemOnHit(&bs, &ctx, 1, HOLD_EFFECT_SWITCH_OUT_WHEN_HIT) == BATTLE_SUBSCRIPT_NONE && S.picked == 0);
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT;
+    assert(CheckSwitchItemOnHit(&bs, &ctx, 1, HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) == BATTLE_SUBSCRIPT_NONE);
+    // A pivot move's user stays when the button or the card will act, and
+    // goes when nobody could come in, the card could not move it, or there is
+    // no such item.
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT;
+    assert(SwitchItemWillAnswerPivot(&bs, &ctx, 1));
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; S.replacements = 0;
+    assert(!SwitchItemWillAnswerPivot(&bs, &ctx, 1));
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE;
+    assert(SwitchItemWillAnswerPivot(&bs, &ctx, 1) && S.picked == 0);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.ability[0] = ABILITY_SUCTION_CUPS;
+    assert(!SwitchItemWillAnswerPivot(&bs, &ctx, 1));
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.battleType = 0;
+    assert(!SwitchItemWillAnswerPivot(&bs, &ctx, 1));
+    reset();
+    assert(!SwitchItemWillAnswerPivot(&bs, &ctx, 1));
     reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; S.ability[0] = ABILITY_SHEER_FORCE; S.suppressible = 1;
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; S.ability[0] = ABILITY_SHEER_FORCE;
@@ -749,15 +774,24 @@ class SwitchItemTests(unittest.TestCase):
     Pulsantefuga for the card spent on an anchored attacker)."""
 
     def test_who_answers_a_hit(self):
-        body = function(OVERLAY.read_text(), "CheckSwitchItemOnHit")
+        overlay = OVERLAY.read_text()
+        body = "\n".join(function(overlay, name) for name in (
+            "Battler_CameInAfterTheHit", "SwitchItemAnswersHit", "BattlerIsAnchored", "CheckSwitchItemOnHit",
+            "SwitchItemWillAnswerPivot"))
         run_c(SWITCH_ITEM_FIXTURE.replace("@FUNCTION@", body))
 
     def test_asked_after_the_move_before_the_users_own_items(self):
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
-        ask = body.index("CheckSwitchItemOnHit(battleSystem, ctx, ctx->turnOrder[ctx->unk_34++])")
+        ask = body.index("CheckSwitchItemOnHit(battleSystem, ctx, ctx->turnOrder[walk % maxBattlers],")
+        # The cards' walk, then the buttons', one of each.
+        self.assertIn("card ? HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE : HOLD_EFFECT_SWITCH_OUT_WHEN_HIT", body)
+        self.assertIn("ctx->unk_34 = (card ? maxBattlers : 2 * maxBattlers) | SWITCH_ITEM_USED;", body)
+        # And a pivot move asks ahead.
+        dispatch = function(OVERLAY.read_text(), "ov12_02250490")
+        self.assertIn("SwitchItemWillAnswerPivot(battleSystem, ctx, ctx->battlerIdTarget)", dispatch)
         self.assertLess(ask, body.index("HOLD_EFFECT_HP_RESTORE_ON_DMG"))
         self.assertLess(ask, body.index("HOLD_EFFECT_HP_DRAIN_ON_ATK"))
-        self.assertIn("ctx->unk_34 = SWITCH_ITEM_USED;", body)
+        self.assertIn("SWITCH_ITEM_USED", body)
         spray = body[body.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"):]
         self.assertIn("!(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)", spray[:spray.index("{")])
         self.assertIn("TryPickForcedSwitchIn(battleSystem, ctx, ctx->battlerIdTarget)",
@@ -909,7 +943,7 @@ class EjectPackTests(unittest.TestCase):
         ask = body.index("CheckEjectPack(ctx, ctx->turnOrder[ctx->unk_34++])")
         self.assertLess(body.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"), ask)
         self.assertLess(body.index("CheckSwitchItemOnHit"), ask)
-        self.assertIn("if (ctx->unk_34 != SWITCH_ITEM_USED) {\n                ctx->unk_34 = 0;", body)
+        self.assertIn("if (!(ctx->unk_34 & SWITCH_ITEM_USED)) {\n                ctx->unk_34 = 0;", body)
 
     def test_the_pack_has_its_own_line(self):
         script = subscript_named("BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM")

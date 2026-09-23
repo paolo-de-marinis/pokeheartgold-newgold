@@ -51,6 +51,7 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count);
 static BOOL BattleMoveIsPunching(u32 moveNo);
 static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int moveNo);
 static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item);
+static BOOL SwitchItemWillAnswerPivot(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault);
 static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId);
 
@@ -1702,11 +1703,13 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         }
         // U-turn, Volt Switch and Flip Turn do not take their user out when
         // the Pokemon they hit is leaving by Emergency Exit or Wimp Out
-        // (Pokemon Central, Passoindietro): the reference switches the user
-        // only if no switch is pending by then. Here the move's switch comes
-        // with the hit, so it asks ahead; the rest of the hit goes on as for
-        // any other attack.
-        if (*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && ctx->battlerIdTarget != BATTLER_NONE && Battler_Retreats(battleSystem, ctx, ctx->battlerIdTarget)) {
+        // (Pokemon Central, Passoindietro), or will send somebody away with
+        // its Eject Button or Red Card: the reference switches the user only
+        // if no switch is pending by then. Here the move's switch comes with
+        // the hit, so it asks ahead; the rest of the hit goes on as for any
+        // other attack.
+        if (*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && ctx->battlerIdTarget != BATTLER_NONE
+            && (Battler_Retreats(battleSystem, ctx, ctx->battlerIdTarget) || SwitchItemWillAnswerPivot(battleSystem, ctx, ctx->battlerIdTarget))) {
             ret = FALSE;
         }
     } else if (ctx->unk_2174 & (1 << 24)) {
@@ -8184,58 +8187,84 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
 // move is over rather than after each hit, so a multi-hit move lands every
 // hit first (the reference's Activate_KeeMarangaBerry_RedCard_EjectButton,
 // ServerDoPostMoveEffects.c:1799 at d0380a487, run from its post-move steps).
-// battlerId is any battler; it has to be one the move damaged -- not through
-// a substitute, which records no damage -- and still be standing. Nothing
-// answers a move Sheer Force powered, or one after which the user has
-// already gone (U-turn and its kind leave in the middle of the move here, so
-// the Eject Button they should have beaten is not asked; the reference's
-// order has the button win). Returns the subscript to run, with the holder in
-// battlerIdTemp, or BATTLE_SUBSCRIPT_NONE.
+// Whether battlerId's holdEffect -- one of the two -- answers the move: the
+// holder is any battler but the user that the move damaged -- not through a
+// substitute, which records no damage -- and that took the hit itself rather
+// than being dragged into its slot afterwards, and it still stands. Nothing
+// answers a move Sheer Force powered.
 //
 // Eject Button: the holder goes back and its trainer chooses who comes in;
-// subscript SWITCH_OUT_ITEM finds out whether there is anyone.
+// subscript SWITCH_OUT_ITEM finds out whether there is anyone. It answers
+// after a Red Card has dragged the user out as well (Pokemon Central,
+// Pulsantefuga: the card's Pokemon comes in first, then the button's).
 //
-// Red Card: the attacker is dragged out for a Pokemon at random. The
-// reference asks it only in a trainer battle, as Pokemon Central's
-// Cartelrosso does for a wild Pokemon, and uses Whirlwind's choice, which
-// asks no level there; with nobody to bring in the card is not used. Pokemon Central (the reference
-// keeps the card instead): Suction Cups, Guard Dog or Ingrain on the attacker
-// spend the card and keep the attacker where it is (Cartelrosso; Cane da
-// Guardia, which no item or move of another Pokemon makes leave the field).
-int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+// Red Card: the attacker is dragged out. The reference asks it only in a
+// trainer battle, as Pokemon Central's Cartelrosso does for a wild Pokemon,
+// and not once the user has gone of its own accord.
+static BOOL SwitchItemAnswersHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int holdEffect) {
     int attacker = ctx->battlerIdAttacker;
 
-    // hitCount is zeroed when a Pokemon is loaded into a slot and counts the
-    // hits it takes there, so a slot whose damage is on record but whose
-    // Pokemon has none came in after the hit: Dragon Tail, Circle Throw or
-    // Roar dragged it out in the middle of the move. It did not take the hit.
-    if (battlerId == attacker
+    if (GetBattlerHeldItemEffect(ctx, battlerId) != holdEffect
+        || battlerId == attacker
         || ctx->battleMons[battlerId].hp == 0
         || (ctx->selfTurnData[battlerId].physicalDamage == 0 && ctx->selfTurnData[battlerId].specialDamage == 0)
-        || ctx->battleMons[battlerId].hitCount == 0
-        || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
+        || Battler_CameInAfterTheHit(ctx, battlerId)
         || (GetBattlerAbility(ctx, attacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE)) {
+        return FALSE;
+    }
+    if (holdEffect == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {
+        return !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && ctx->battleMons[attacker].hp
+            && (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER);
+    }
+    return TRUE;
+}
+
+// Suction Cups, Guard Dog and Ingrain keep a Pokemon in against a Red Card:
+// the card is spent all the same (Pokemon Central, Cartelrosso; Cane da
+// Guardia, which no item or move of another Pokemon makes leave the field;
+// the reference keeps the card instead).
+static BOOL BattlerIsAnchored(BattleContext *ctx, int battlerId) {
+    return GetBattlerAbility(ctx, battlerId) == ABILITY_SUCTION_CUPS
+        || GetBattlerAbility(ctx, battlerId) == ABILITY_GUARD_DOG
+        || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN);
+}
+
+// Returns the subscript battlerId's holdEffect runs, with the holder in
+// battlerIdTemp, or BATTLE_SUBSCRIPT_NONE. The Red Card's Pokemon to drag in
+// is chosen here at random, as Whirlwind's is, and with nobody to bring in the
+// card is not used; against an anchored attacker it is played and nobody is
+// chosen.
+int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int holdEffect) {
+    if (!SwitchItemAnswersHit(battleSystem, ctx, battlerId, holdEffect)) {
         return BATTLE_SUBSCRIPT_NONE;
     }
-
-    switch (GetBattlerHeldItemEffect(ctx, battlerId)) {
-    case HOLD_EFFECT_SWITCH_OUT_WHEN_HIT:
-        ctx->battlerIdTemp = battlerId;
-        return BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM;
-    case HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE:
-        if (ctx->battleMons[attacker].hp == 0 || !(BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER)) {
-            return BATTLE_SUBSCRIPT_NONE;
-        }
-        if (GetBattlerAbility(ctx, attacker) != ABILITY_SUCTION_CUPS
-            && GetBattlerAbility(ctx, attacker) != ABILITY_GUARD_DOG
-            && !(ctx->battleMons[attacker].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
-            && TryPickForcedSwitchIn(battleSystem, ctx, attacker) == FALSE) {
+    if (holdEffect == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {
+        if (!BattlerIsAnchored(ctx, ctx->battlerIdAttacker) && TryPickForcedSwitchIn(battleSystem, ctx, ctx->battlerIdAttacker) == FALSE) {
             return BATTLE_SUBSCRIPT_NONE;
         }
         ctx->battlerIdTemp = battlerId;
         return BATTLE_SUBSCRIPT_RED_CARD;
     }
-    return BATTLE_SUBSCRIPT_NONE;
+    ctx->battlerIdTemp = battlerId;
+    return BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM;
+}
+
+// U-turn, Volt Switch and Flip Turn do not take their user out when the
+// Pokemon they hit will send somebody away with its Eject Button or its Red
+// Card once the move is over: the item wins (Pokemon Central, Pulsantefuga and
+// Cartelrosso; the reference switches the user only if no switch is pending).
+// Here the move's switch comes with the hit, so this asks ahead, with nothing
+// chosen and no random number drawn: whether the item answers, and whether
+// anyone is there to come in for the holder, or for an attacker a card can
+// move.
+static BOOL SwitchItemWillAnswerPivot(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    if (SwitchItemAnswersHit(battleSystem, ctx, battlerId, HOLD_EFFECT_SWITCH_OUT_WHEN_HIT)) {
+        return CanSwitchMon(battleSystem, ctx, battlerId);
+    }
+    if (SwitchItemAnswersHit(battleSystem, ctx, battlerId, HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE)) {
+        return !BattlerIsAnchored(ctx, ctx->battlerIdAttacker) && CanSwitchMon(battleSystem, ctx, ctx->battlerIdAttacker);
+    }
+    return FALSE;
 }
 
 // The Eject Pack, once the move is over: a holder that had a stat lowered

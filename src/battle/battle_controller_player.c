@@ -4767,9 +4767,9 @@ static BOOL ov12_0224E130(BattleSystem *battleSystem, BattleContext *ctx) {
     return ret;
 }
 
-// ov12_0224E1BC's battler walk once a held item has sent somebody away: one
-// such item a move, as the reference's "switch pending" status makes it.
-#define SWITCH_ITEM_USED 0xFF
+// Or'd into ov12_0224E1BC's battler walk once a held item has sent somebody
+// away, so that no Eject Pack answers the same move.
+#define SWITCH_ITEM_USED 0x100
 
 static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
     int flag = 0;
@@ -4791,20 +4791,27 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_30++;
             break;
         case 1:
-            // A Red Card or an Eject Button on anything the move hurt, once
-            // the move is over and before the user's own Shell Bell and Life
-            // Orb, which is where the reference asks them. unk_34 walks the
-            // battlers in the order they act; the first item that answers is
-            // the only one, and unk_34 then says so for the rest of the
-            // sequence.
-            while (ctx->unk_34 < maxBattlers) {
-                int script = CheckSwitchItemOnHit(battleSystem, ctx, ctx->turnOrder[ctx->unk_34++]);
+            // A Red Card, then an Eject Button, on anything the move hurt,
+            // once the move is over and before the user's own Shell Bell and
+            // Life Orb, which is where the reference asks them. The card goes
+            // first and both can act on one move -- the card's Pokemon comes
+            // in before the button's -- but one of each at most, of several
+            // buttons the fastest holder's (Pokemon Central, Pulsantefuga).
+            // unk_34 walks the battlers in the order they act, once for the
+            // cards and once for the buttons; SWITCH_ITEM_USED remembers that
+            // somebody was sent away.
+            while ((ctx->unk_34 & ~SWITCH_ITEM_USED) < 2 * maxBattlers) {
+                int walk = ctx->unk_34 & ~SWITCH_ITEM_USED;
+                int card = walk < maxBattlers;
+                int script = CheckSwitchItemOnHit(battleSystem, ctx, ctx->turnOrder[walk % maxBattlers],
+                    card ? HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE : HOLD_EFFECT_SWITCH_OUT_WHEN_HIT);
 
+                ctx->unk_34++;
                 if (script != BATTLE_SUBSCRIPT_NONE) {
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                    ctx->unk_34 = SWITCH_ITEM_USED;
+                    ctx->unk_34 = (card ? maxBattlers : 2 * maxBattlers) | SWITCH_ITEM_USED;
                     flag = 1;
                     break;
                 }
@@ -4874,7 +4881,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 flag = 1;
             }
             ctx->unk_30++;
-            if (ctx->unk_34 != SWITCH_ITEM_USED) {
+            if (!(ctx->unk_34 & SWITCH_ITEM_USED)) {
                 ctx->unk_34 = 0;
             }
             break;
