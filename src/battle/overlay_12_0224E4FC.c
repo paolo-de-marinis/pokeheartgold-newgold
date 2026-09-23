@@ -8791,6 +8791,15 @@ u8 BattleBuffer_GetNext(BattleContext *ctx, int battlerId) {
     return ctx->battleBuffer[battlerId][0];
 }
 
+// Infiltrator's moves go round another Pokemon's substitute, every one of them
+// but Transform and Sky Drop, from Generation VI (Pokemon Central, Intrapasso;
+// the reference's CheckSubstitute, battle_script_commands.c:3716). A
+// Pokemon's own substitute it still has to answer for.
+BOOL InfiltratorGoesRoundSubstitute(BattleContext *ctx, int battlerId) {
+    return battlerId != ctx->battlerIdAttacker && GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_INFILTRATOR
+        && ctx->moveNoCur != MOVE_TRANSFORM && ctx->moveNoCur != MOVE_SKY_DROP;
+}
+
 BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) {
     BOOL ret = FALSE;
 

@@ -2339,6 +2339,20 @@ BOOL BtlCmd_UpdateVar(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// Whether what a script is doing is the move's own doing -- the move's script,
+// its effect on a hit, its added effect -- rather than an ability's, a held
+// item's or Toxic Spikes', which Infiltrator does not carry past a substitute.
+static BOOL SideEffectIsTheMoves(int statChangeType) {
+    switch (statChangeType) {
+    case SIDE_EFFECT_TYPE_NONE:
+    case SIDE_EFFECT_TYPE_DIRECT:
+    case SIDE_EFFECT_TYPE_INDIRECT:
+    case SIDE_EFFECT_TYPE_MOVE_EFFECT:
+        return TRUE;
+    }
+    return FALSE;
+}
+
 BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
     int change, stat;
     BattleMon *mon = &ctx->battleMons[ctx->battlerIdStatChange];
@@ -2545,7 +2559,8 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                     }
                 } else if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_SHIELD_DUST) == TRUE && ctx->statChangeType == 2) {
                     unkD = 1;
-                } else if (ctx->battleMons[ctx->battlerIdStatChange].status2 & STATUS2_SUBSTITUTE) {
+                } else if ((ctx->battleMons[ctx->battlerIdStatChange].status2 & STATUS2_SUBSTITUTE)
+                    && !(SideEffectIsTheMoves(ctx->statChangeType) && InfiltratorGoesRoundSubstitute(ctx, ctx->battlerIdStatChange))) {
                     unkD = 2;
                 }
             } else if (mon->statChanges[1 + stat] == 0) {
@@ -6556,6 +6571,14 @@ BOOL BtlCmd_CheckSubstitute(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrs = BattleScriptReadWord(ctx);
 
     int battlerId = BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side);
+
+    // Leech Seed, Gastro Acid, Nightmare, the status subscripts and the rest
+    // reach past it for an Infiltrator. The reference lets through only its
+    // direct and move-effect types; its chance effects and the move's own
+    // script are the move's too, and the games let those past as well.
+    if (SideEffectIsTheMoves(ctx->statChangeType) && InfiltratorGoesRoundSubstitute(ctx, battlerId)) {
+        return FALSE;
+    }
 
     if (ctx->battleMons[battlerId].status2 & (1 << 24) || ctx->selfTurnData[battlerId].unk14 & 8) {
         BattleScriptIncrementPointer(ctx, adrs);

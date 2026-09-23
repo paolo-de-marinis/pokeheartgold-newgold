@@ -539,6 +539,80 @@ class SubstituteTests(unittest.TestCase):
             self.assertIn(f"BSCRIPT_VAR_MOVE_STATUS_FLAGS, {flag}\n    End", failure, name)
 
 
+INFILTRATOR_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint32_t u32; typedef uint16_t u16;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/moves.h"
+typedef struct { int dummy; } BattleSystem;
+typedef struct {
+    struct { u32 status2; int ability; } battleMons[4];
+    struct { u32 unk14; } selfTurnData[4];
+    int battlerIdAttacker, statChangeType; u32 moveNoCur;
+    int words[2], pc;
+} BattleContext;
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { ctx->pc += n; }
+static int BattleScriptReadWord(BattleContext *ctx) { return ctx->words[ctx->pc++ - 1]; }
+static int BattleSystem_GetBattlerIDBySide(BattleSystem *bs, BattleContext *ctx, int side) { (void)bs; (void)ctx; return side; }
+@FUNCTIONS@
+// Whether CheckSubstitute on battler 1 jumps to its "a substitute is there".
+static int stopped(int ability, u32 move, int type, int battler) {
+    BattleSystem bs;
+    BattleContext ctx = { 0 };
+    ctx.battleMons[0].ability = ability;
+    ctx.battleMons[battler].status2 = STATUS2_SUBSTITUTE;
+    ctx.moveNoCur = move;
+    ctx.statChangeType = type;
+    ctx.words[0] = battler;
+    ctx.words[1] = 100;
+    BtlCmd_CheckSubstitute(&bs, &ctx);
+    return ctx.pc > 3;
+}
+int main(void) {
+    // A plain user is stopped; an Infiltrator's move, its effect on a hit and
+    // its added effect are not.
+    assert(stopped(ABILITY_NONE, MOVE_LEECH_SEED, SIDE_EFFECT_TYPE_DIRECT, 1));
+    assert(!stopped(ABILITY_INFILTRATOR, MOVE_LEECH_SEED, SIDE_EFFECT_TYPE_DIRECT, 1));
+    assert(!stopped(ABILITY_INFILTRATOR, MOVE_GASTRO_ACID, SIDE_EFFECT_TYPE_NONE, 1));
+    assert(!stopped(ABILITY_INFILTRATOR, MOVE_THUNDERBOLT, SIDE_EFFECT_TYPE_INDIRECT, 1));
+    assert(!stopped(ABILITY_INFILTRATOR, MOVE_FLING, SIDE_EFFECT_TYPE_MOVE_EFFECT, 1));
+    // Not Transform, not Sky Drop, not an ability's or an item's doing, and
+    // not its own substitute.
+    assert(stopped(ABILITY_INFILTRATOR, MOVE_TRANSFORM, SIDE_EFFECT_TYPE_NONE, 1));
+    assert(stopped(ABILITY_INFILTRATOR, MOVE_SKY_DROP, SIDE_EFFECT_TYPE_NONE, 1));
+    assert(stopped(ABILITY_INFILTRATOR, MOVE_TACKLE, SIDE_EFFECT_TYPE_ABILITY, 1));
+    assert(stopped(ABILITY_INFILTRATOR, MOVE_TACKLE, SIDE_EFFECT_TYPE_HELD_ITEM, 1));
+    assert(stopped(ABILITY_INFILTRATOR, MOVE_SUBSTITUTE, SIDE_EFFECT_TYPE_NONE, 0));
+    return 0;
+}
+"""
+
+
+class InfiltratorSubstituteTests(unittest.TestCase):
+    def test_infiltrator_s_move_effects_go_round_a_substitute(self):
+        # battle_script_commands.c:3716 at d0380a487, and Pokemon Central's
+        # Intrapasso for which effects are the move's.
+        commands = COMMANDS.read_text()
+        functions = "\n".join([function(OVERLAY.read_text(), "InfiltratorGoesRoundSubstitute")]
+                              + [function(commands, name) for name in ("SideEffectIsTheMoves", "BtlCmd_CheckSubstitute")])
+        with tempfile.TemporaryDirectory(prefix="newgold-infiltrator-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(INFILTRATOR_FIXTURE.replace("@FUNCTIONS@", functions))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
+                str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+
+    def test_a_stat_drop_asks_the_same(self):
+        body = function(COMMANDS.read_text(), "BtlCmd_ChangeStatStage")
+        self.assertIn("!(SideEffectIsTheMoves(ctx->statChangeType) && InfiltratorGoesRoundSubstitute(ctx, ctx->battlerIdStatChange))", body)
+
+
 class HealBlockTests(unittest.TestCase):
     # Moves the reference's HealBlockUnusableMoveEffects reaches by effect,
     # retail's fourteen among them, and the two it names by move.
