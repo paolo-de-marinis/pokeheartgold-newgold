@@ -5091,6 +5091,9 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
 // has kept it in by then. A move that failed switches nothing. Nor does a
 // user holding a Red Card itself go (Pokemon Central, Cartelrosso;
 // Bulbapedia's U-turn, Volt Switch and Flip Turn); the reference switches it.
+// The card is the one it holds as it would go, not as the move hit: a card
+// the target's Pickpocket lifted off it keeps it in no longer, and one its
+// Magician took from the target does.
 static BOOL TryPivotSwitch(BattleContext *ctx) {
     int target = ctx->battlerIdTarget;
 
