@@ -299,6 +299,8 @@ struct PokedexAppData {
     u8 unk_185C;                                    // 0x185C
     u8 unk_185D;                                    // 0x185D
     u8 unk_185E;                                    // 0x185E
+    u8 unk_185F_0 : 4;                              // 0x185F
+    u8 unk_185F_4 : 4;                              // 0x185F
     int unk_1860;                                   // 0x1860
     GridInputHandler *unk_1864;                     // 0x1864
     u32 dexSearchCriteria[DEX_SEARCH_CRITERIA_NUM]; // 0x1868
@@ -482,7 +484,7 @@ void ov18_021F16C4(PokedexAppData *pokedexApp, int a1, int a2, u8 a3);
 void ov18_021F1760(PokedexAppData *pokedexApp, int a1, int a2, u8 a3);
 void ov18_021F1CAC(PokedexAppData *pokedexApp, int species, int a2, int a3);
 void ov18_021F1DE4(PokedexAppData *pokedexApp, u32 species, int a2, int a3);
-void ov18_021F209C(PokedexAppData *pokedexApp, u32 species, int a2, int a3);
+void ov18_021F209C(PokedexAppData *pokedexApp, u32 species, int idx, u32 spriteIdx);
 void ov18_021F24E0(PokedexAppData *pokedexApp, u32 species, int a2);
 void ov18_021F2530(PokedexAppData *pokedexApp, u32 species, int a2);
 void ov18_021F2880(PokedexAppData *pokedexApp);
