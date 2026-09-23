@@ -63,7 +63,7 @@ def our_species():
             re.finditer(r"#define (SPECIES_[A-Z0-9_]+)\s+(\d+)\s*$", header, re.M)}
 
 
-def samples(path):
+def samples(path, target=CRY_RATE):
     """Mono eight-bit samples at the rate this archive uses."""
     with wave.open(str(path)) as source:
         channels, width, rate, frames = (source.getnchannels(), source.getsampwidth(),
@@ -78,7 +78,7 @@ def samples(path):
 
     # Linear resampling. The source rates are close to the target and the
     # sounds are short, so nothing more elaborate earns its place here.
-    wanted = max(1, round(len(values) * CRY_RATE / rate))
+    wanted = max(1, round(len(values) * target / rate))
     out = bytearray()
     for i in range(wanted):
         position = i * (len(values) - 1) / max(1, wanted - 1)
@@ -91,9 +91,9 @@ def samples(path):
     return bytes(out)
 
 
-def wave_archive(pcm):
+def wave_archive(pcm, rate=CRY_RATE):
     """A SWAR holding one sample, which is all a cry ever is."""
-    swav = struct.pack("<BBHHHI", 0, 0, CRY_RATE, round(NDS_CLOCK / CRY_RATE),
+    swav = struct.pack("<BBHHHI", 0, 0, rate, round(NDS_CLOCK / rate),
                        0, len(pcm) // 4) + pcm
     size = 0x40 + len(swav)
     out = bytearray(b"SWAR" + struct.pack("<IIHH", 0x0100FEFF, size, 0x10, 1))
@@ -101,6 +101,33 @@ def wave_archive(pcm):
     out += struct.pack("<II", 1, 0x40)  # one sample, and where it starts
     out += swav
     return bytes(out)
+
+
+def cry_room(archive):
+    """The most a cry's bank and wave archive may weigh together: HeartGold's
+    largest, Jynx's. A cry plays from the heap of the player sequence 2 runs
+    on (PLAYER 0, 24,200 bytes), which the sequence, the bank and the wave
+    archive all load into; one that does not fit is never started, and the
+    species has no cry at all."""
+    room = 0
+    for bank in range(1, 0x1EF):
+        fileId, _, *waves = struct.unpack("<HH4H", archive.records["SBNK"][bank])
+        war = struct.unpack("<H", archive.records["SWAR"][waves[0]][:2])[0]
+        room = max(room, len(archive.files[fileId]) + len(archive.files[war]))
+    return room
+
+
+def fitted_cry(path, room, bankSize):
+    """The cry's wave archive, at the archive's rate when it fits the cry
+    player's heap and at the rate that makes it fit when it does not: a long
+    cry sampled a little lower still plays whole."""
+    rate = CRY_RATE
+    war = wave_archive(samples(path, rate), rate)
+    while len(war) + bankSize > room:
+        # The samples take all but the 0x4C bytes of the archive's headers.
+        rate = int(rate * (room - bankSize - 0x4C) / (len(war) - 0x4C))
+        war = wave_archive(samples(path, rate), rate)
+    return war
 
 
 def main():
@@ -130,6 +157,7 @@ def main():
     model = archive.records["SBNK"][1]
     modelFile = struct.unpack("<H", model[:2])[0]
     bankBytes = archive.files[modelFile]
+    room = cry_room(archive)
 
     mapping, bytesAdded = {}, 0
     for offset, name in enumerate(added):
@@ -137,7 +165,7 @@ def main():
         path = args.reference / "sound/cries" / f"{number:03d}.wav" if number else None
         if path is None or not path.exists():
             raise SystemExit(f"the reference has no cry for {name}")
-        war = wave_archive(samples(path))
+        war = fitted_cry(path, room, len(bankBytes))
         bytesAdded += len(war) + len(bankBytes)
 
         warFile = len(archive.files)

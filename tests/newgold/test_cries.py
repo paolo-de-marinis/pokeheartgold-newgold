@@ -53,10 +53,20 @@ class SoundArchiveTests(unittest.TestCase):
             self.assertEqual(count, 1, index)
             fmt, loop, rate, timer, loopStart, loopLen = struct.unpack("<BBHHHI", blob[offset:offset + 12])
             self.assertEqual(fmt, 0, "eight-bit samples")
-            self.assertEqual(rate, import_cries.CRY_RATE)
-            self.assertEqual(timer, round(import_cries.NDS_CLOCK / import_cries.CRY_RATE))
+            # A long cry is sampled lower so that it fits the cry player's heap.
+            self.assertLessEqual(rate, import_cries.CRY_RATE)
+            self.assertEqual(timer, round(import_cries.NDS_CLOCK / rate))
             self.assertGreater(loopLen, 0, index)
             self.assertEqual(len(blob), offset + 12 + loopLen * 4, index)
+
+    def test_every_added_cry_fits_the_cry_players_heap(self):
+        # A cry whose bank and wave archive outweigh HeartGold's largest is
+        # never started: 18 added species had no cry at all.
+        room = import_cries.cry_room(self.archive)
+        for index in range(RETAIL_BANKS, len(self.archive.records["SBNK"])):
+            bankFile, _, war = struct.unpack("<HHH", self.archive.records["SBNK"][index][:6])
+            warFile, = struct.unpack("<H", self.archive.records["SWAR"][war][:2])
+            self.assertLessEqual(len(self.archive.files[bankFile]) + len(self.archive.files[warFile]), room, index)
 
 
 class CryLookupTests(unittest.TestCase):
