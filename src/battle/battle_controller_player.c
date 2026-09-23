@@ -2723,7 +2723,10 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
     }
 
     if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        if ((ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) && BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_THUNDER) {
+        // Hurricane is as bad in the sun as Thunder.
+        if ((ctx->fieldCondition & FIELD_CONDITION_SUN_ALL)
+            && (BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_THUNDER
+                || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_HURRICANE)) {
             hitChance = 50;
         }
     }
@@ -2835,7 +2838,13 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
     }
 
     if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL && BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_THUNDER) {
+        // Hurricane and the three Storms never miss in the rain, as Thunder.
+        if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL
+            && (BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_THUNDER
+                || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_HURRICANE
+                || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_BLEAKWIND_STORM
+                || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_WILDBOLT_STORM
+                || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_SANDSEAR_STORM)) {
             ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;
         }
         if (ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL) && BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_BLIZZARD) {

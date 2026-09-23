@@ -244,6 +244,20 @@ class MoveTests(unittest.TestCase):
             result = subprocess.run([str(exe)], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_hurricane_and_the_storms_answer_to_the_weather(self):
+        """The reference (other_battle_calculators.c) drops Thunder and
+        Hurricane to 50 in the sun, and lets Thunder, Hurricane and the three
+        Storms through the rain without an accuracy roll."""
+        source = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        for weather, then, want in (
+                ("SUN_ALL", "hitChance = 50;", {"THUNDER", "HURRICANE"}),
+                ("RAIN_ALL", "ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;",
+                 {"THUNDER", "HURRICANE", "BLEAKWIND_STORM", "WILDBOLT_STORM", "SANDSEAR_STORM"})):
+            found = re.findall(r"if \(\(?ctx->fieldCondition & FIELD_CONDITION_" + weather
+                               + r"\)?\s*&&([^{]*)\{\s*" + re.escape(then), source)
+            self.assertEqual(len(found), 1, weather)
+            self.assertEqual(set(re.findall(r"MOVE_EFFECT_([A-Z_]+)", found[0])), want, weather)
+
     # Forty-one damaging moves carry no power, and the reference carries them
     # the same way, because the battle works the damage out instead: a Z-move
     # takes the power of the move it was made from, and five more take the
