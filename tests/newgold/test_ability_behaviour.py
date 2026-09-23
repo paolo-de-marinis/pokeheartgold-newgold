@@ -163,5 +163,22 @@ class PowerSpotTests(unittest.TestCase):
     reset(2); S.ability[2] = ABILITY_POWER_SPOT; EXPECT(damage(0, 1), 46);
 """))
 
+class StakeoutTests(unittest.TestCase):
+    def test_the_attacking_stat_doubles_against_a_pokemon_that_came_in_this_turn(self):
+        # Attack 200: (22 * 200 * 100 / 100) / 50 + 2 = 90.
+        run_c(self, damage_program(r"""
+    reset(4); S.ability[0] = ABILITY_STAKEOUT; ctx.totalTurns = 3;
+    ctx.battleMons[1].unk88.fakeOutCount = 4; EXPECT(damage(0, 1), 90);
+    // A special move, the same.
+    S.move.category = CATEGORY_SPECIAL; EXPECT(damage(0, 1), 90);
+    // One that came in at the end of last turn, and a lead on the first turn.
+    S.move.category = CATEGORY_PHYSICAL;
+    ctx.battleMons[1].unk88.fakeOutCount = 3; EXPECT(damage(0, 1), 46);
+    ctx.totalTurns = 0; ctx.battleMons[1].unk88.fakeOutCount = 0; EXPECT(damage(0, 1), 46);
+    // It is the attacker's ability.
+    reset(4); S.ability[1] = ABILITY_STAKEOUT; ctx.battleMons[1].unk88.fakeOutCount = 1; EXPECT(damage(0, 1), 46);
+"""))
+
+
 if __name__ == "__main__":
     unittest.main()

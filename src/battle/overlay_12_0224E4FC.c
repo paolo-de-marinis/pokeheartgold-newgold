@@ -9126,6 +9126,19 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monAtk *= 2;
     }
 
+    // Stakeout doubles the attacking stat against a target that came in this
+    // turn, whether by its own switch, a U-turn or a Roar, but not against one
+    // that has stood there since the battle began (Pokemon Central,
+    // Sorveglianza). Loading a Pokemon into its slot sets its Fake Out turn
+    // to the turn after the current one, so that is the test. The reference
+    // doubles the move's power instead, and asks whether the target's action
+    // this turn has been spent, which is also true after it used an item or
+    // failed to run, and not after it was dragged in.
+    if (calcAttacker.ability == ABILITY_STAKEOUT && ctx->battleMons[battlerIdTarget].unk88.fakeOutCount == ctx->totalTurns + 1) {
+        monAtk *= 2;
+        monSpAtk *= 2;
+    }
+
     // Tablets of Ruin weakens every Attack but its own bearer's. The
     // reference lowers the attacker's Attack while reading the DEFENDER's
     // ability for the exemption -- a copy of the Sword of Ruin block below,
