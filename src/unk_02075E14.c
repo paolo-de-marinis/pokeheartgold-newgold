@@ -301,7 +301,7 @@ void sub_02075E14(EvolutionTaskData *data) {
         }
         break;
     case 13:
-        switch (MonTryLearnMoveOnLevelUp(data->mon, &data->learnsetIndex, &move)) {
+        switch (MonTryLearnMoveOnEvolution(data->mon, &data->learnsetIndex, &move)) {
         case 0:
             data->state = 39;
             break;

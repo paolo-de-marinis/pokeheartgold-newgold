@@ -3370,6 +3370,46 @@ u32 MonTryLearnMoveOnLevelUp(Pokemon *mon, int *last_i, u16 *sp0) {
     return ret;
 }
 
+// What the evolution scene asks for, one move a call, until it returns 0: a
+// learnset's level-0 entries -- the moves learned on evolution, which lead
+// the list -- and then the entries of the Pokemon's level, as a level-up
+// would. An entry of its level that repeats a level-0 move is passed over,
+// that move having just been offered. The reference does this inside
+// MonTryLearnMoveOnLevelUp, when the return address says the caller is the
+// evolution scene (src/pokemon.c at d0380a487); its skip reads the entry
+// after the repeat without looking for the end, and it does not look at the
+// first entry it is handed, which the loop below does for every entry.
+u32 MonTryLearnMoveOnEvolution(Pokemon *mon, int *last_i, u16 *sp0) {
+    u32 ret = 0;
+    u32 *levelUpLearnset = Heap_Alloc(HEAP_ID_DEFAULT, LEVEL_UP_LEARNSET_SIZE * sizeof(u32));
+    u16 species = (u16)GetMonData(mon, MON_DATA_SPECIES, NULL);
+    u32 form = GetMonData(mon, MON_DATA_FORM, NULL);
+    u8 level = (u8)GetMonData(mon, MON_DATA_LEVEL, NULL);
+    int i;
+    LoadLevelUpLearnset_HandleAlternateForm(species, (int)form, levelUpLearnset);
+
+    for (; levelUpLearnset[*last_i] != LEVEL_UP_LEARNSET_END; (*last_i)++) {
+        u32 entryLevel = LEVEL_UP_LEARNSET_LVL(levelUpLearnset[*last_i]);
+        u16 move = LEVEL_UP_LEARNSET_MOVE(levelUpLearnset[*last_i]);
+        if (entryLevel != 0) {
+            if (entryLevel != level) {
+                continue;
+            }
+            // A level-0 entry for the same move is the move itself.
+            for (i = 0; i < *last_i && levelUpLearnset[i] != move; i++) { }
+            if (i < *last_i) {
+                continue;
+            }
+        }
+        *sp0 = move;
+        (*last_i)++;
+        ret = TryAppendMonMove(mon, move);
+        break;
+    }
+    Heap_Free(levelUpLearnset);
+    return ret;
+}
+
 void MonSwapMoves(Pokemon *mon, int a, int b) {
     BoxMonSwapMoves(&mon->box, a, b);
 }
