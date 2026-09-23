@@ -296,12 +296,17 @@ function buildLists() {
   S.maps = new Map(d.maps.map(r => [r.id, r]));
   S.speciesIndex = firstWins(d.species.filter(r => r.pick), r => r.label);
   S.moveIndex = new Map(d.moves.filter(r => r.id).map(r => [r.name.toLowerCase(), r.id]));
-  S.itemIndex = new Map(d.items.filter(usableItem).map(r => [r.name.toLowerCase(), r.id]));
+  const items = d.items.filter(usableItem), named = new Set();
+  for (const r of items) {   // a name printed twice gets its constant after the first
+    r.label = named.has(r.name.toLowerCase()) ? `${r.name} (${r.const.replace(/^ITEM_/, "")})` : r.name;
+    named.add(r.name.toLowerCase());
+  }
+  S.itemIndex = firstWins(items, r => r.label);
   S.mapIndex = new Map(d.maps.map(r => [mapLabel(r).toLowerCase(), r.id]));
   const opts = (rows, label) => rows.map(r => `<option value="${esc(ref(label(r), r.id))}">`).join("");
   $("#dl-species").innerHTML = opts(d.species.filter(r => r.pick), r => r.label);
   $("#dl-moves").innerHTML = opts(d.moves.filter(r => r.id), r => r.name);
-  $("#dl-items").innerHTML = opts(d.items.filter(usableItem), r => r.name);
+  $("#dl-items").innerHTML = opts(items, r => r.label);
   $("#dl-maps").innerHTML = opts(d.maps, mapLabel);
 }
 // A typed name to its id; where two rows print the same, the lower number.
@@ -310,11 +315,12 @@ function firstWins(rows, label) {
   for (const r of rows) if (!index.has(label(r).toLowerCase())) index.set(label(r).toLowerCase(), r.id);
   return index;
 }
-const usableItem = r => r.id && r.name && r.name !== "???" && !r.const.includes("UNUSED");
+// Not the recipes and the Legends: Arceus items, which only share a name with HeartGold's.
+const usableItem = r => r.id && r.name && r.name !== "???" && !/UNUSED|_RECIPE$|_PLA$/.test(r.const);
 const mapLabel = r => r.name ? `${r.name} · ${r.const.replace(/^MAP_/, "")}` : r.const.replace(/^MAP_/, "");
 const speciesRef = id => id ? ref(S.species.get(id)?.label ?? `#${id}`, id) : "";
 const moveRef = id => id ? ref(S.moves.get(id)?.name ?? `#${id}`, id) : "";
-const itemRef = id => id ? ref(S.items.get(id)?.name ?? `#${id}`, id) : "";
+const itemRef = id => id ? ref(S.items.get(id)?.label ?? S.items.get(id)?.name ?? `#${id}`, id) : "";
 
 // ---- library -----------------------------------------------------------
 async function loadLibrary() {
