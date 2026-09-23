@@ -191,6 +191,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->battleMons[battlerId].hospitalityFlag = 0;
     ctx->battleMons[battlerId].neutralizingGasFlag = 0;
     ctx->statLoweredBattlers &= ~MaskOfFlagNo(battlerId);
+    MI_CpuClear8(ctx->mirrorHerbStages[battlerId], sizeof(ctx->mirrorHerbStages[battlerId]));
     // Kept off the BattleMon because that structure's size is pinned; cleared
     // here, which is where the reference clears its copy.
     ctx->psychicTerrainMoveUsed[battlerId] = 0;
@@ -7459,6 +7460,48 @@ BOOL CheckItemGradualHPRestore(BattleSystem *battleSystem, BattleContext *ctx, i
     return ret;
 }
 
+// The Mirror Herb. The reference has the case in its post-move items with a
+// TODO and a break (ServerDoPostMoveEffects.c:1772 at d0380a487), so this is
+// Pokemon Central's (Foglia carbone): when a Pokemon on the other side gains
+// stat stages, the holder gains the same, all of them at once however many
+// stats and Pokemon went up, spends the herb, and does nothing if every stat
+// it would copy is already at +6. RecordMirrorHerbStages is told of every
+// stage BtlCmd_ChangeStatStage actually adds; the stages wait there until the
+// holder's items are next asked -- after the move that raised them, after the
+// entry abilities, at the end of the turn -- and MirrorHerbCopiesStages
+// applies them. The herb's own copy is written straight into the stages, so
+// it is not told to anybody's herb in turn. Costar and Opportunist are not
+// copied either; neither is written yet. A stage raised without
+// BtlCmd_ChangeStatStage -- Belly Drum, a Starf Berry, Stuff Cheeks -- is not
+// seen.
+void RecordMirrorHerbStages(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int stat, int stages) {
+    int i;
+
+    for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
+        if (BattleSystem_GetFieldSide(battleSystem, i) != BattleSystem_GetFieldSide(battleSystem, battlerId)
+            && ctx->battleMons[i].hp
+            && GetBattlerHeldItemEffect(ctx, i) == HOLD_EFFECT_COPY_STAT_INCREASE) {
+            ctx->mirrorHerbStages[i][stat] += stages;
+        }
+    }
+}
+
+static BOOL MirrorHerbCopiesStages(BattleContext *ctx, int battlerId) {
+    BOOL copied = FALSE;
+    int stat;
+
+    for (stat = STAT_ATK; stat < NUM_BATTLE_STATS; stat++) {
+        int stage = ctx->battleMons[battlerId].statChanges[stat] + ctx->mirrorHerbStages[battlerId][stat];
+
+        if (ctx->mirrorHerbStages[battlerId][stat] != 0 && ctx->battleMons[battlerId].statChanges[stat] < 12) {
+            ctx->battleMons[battlerId].statChanges[stat] = stage > 12 ? 12 : stage;
+            copied = TRUE;
+        }
+        ctx->mirrorHerbStages[battlerId][stat] = 0;
+    }
+    return copied;
+}
+
 BOOL CheckUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u32 *script) {
     BOOL ret = FALSE;
     int item;
@@ -7593,6 +7636,12 @@ BOOL CheckUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battle
             }
             break;
         }
+        case HOLD_EFFECT_COPY_STAT_INCREASE: // mirror herb
+            if (MirrorHerbCopiesStages(ctx, battlerId) == TRUE) {
+                *script = BATTLE_SUBSCRIPT_MIRROR_HERB;
+                ret = TRUE;
+            }
+            break;
         case HOLD_EFFECT_HEAL_INFATUATION: // mental herb
             if (ctx->battleMons[battlerId].status2 & STATUS2_ATTRACT) {
                 ctx->msgTemp = 6;

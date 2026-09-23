@@ -614,6 +614,11 @@ typedef struct BattleContext {
     // one battler when a Pokemon is loaded into its slot, so what comes in
     // does not answer for what left.
     u8 statLoweredBattlers;
+    // The stages each battler's Mirror Herb is to copy, by stat: what the
+    // other side has gained since the herb last looked. Written where a stage
+    // goes up, read and emptied the next time the holder's items are asked,
+    // and emptied when a Pokemon is loaded into the slot.
+    u8 mirrorHerbStages[BATTLER_MAX][NUM_BATTLE_STATS];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

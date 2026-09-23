@@ -705,6 +705,9 @@
 #define BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM                    431
 // A Red Card dragging the attacker out. 491 there.
 #define BATTLE_SUBSCRIPT_RED_CARD                           432
+// A Mirror Herb spent on the other side's stat stages, which the reference
+// has no script for.
+#define BATTLE_SUBSCRIPT_MIRROR_HERB                        433
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

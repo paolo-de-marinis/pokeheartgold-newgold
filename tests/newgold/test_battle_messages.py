@@ -143,7 +143,7 @@ class BattleMessageTests(unittest.TestCase):
         """Lines the port prints that the engine has no text for, and who
         prints them."""
         table = rows()
-        self.assertEqual(max(table) + 1, FIRST_PORT_ROW + 37)
+        self.assertEqual(max(table) + 1, FIRST_PORT_ROW + 40)
         expected = {
             "wandering spirit": (1787, "{STRVAR_1 1, 0, 0}’s Ability\\nbecame {STRVAR_1 5, 1, 0}!"),
             "belch": (1790, "{STRVAR_1 1, 0, 0} hasn’t eaten any held Berries,\\nso it can’t possibly belch!"),
@@ -155,6 +155,7 @@ class BattleMessageTests(unittest.TestCase):
             "cud chew": (1802, "{STRVAR_1 1, 0, 0} ate its\\n{STRVAR_1 8, 1, 0} again!"),
             "tera shell": (1805, "{STRVAR_1 1, 0, 0} made its shell gleam!\\nIt’s distorting type matchups!"),
             "battle bond": (1808, "{STRVAR_1 1, 0, 0} became fully charged due\\nto its bond with its Trainer!"),
+            "mirror herb": (1805, "{STRVAR_1 1, 0, 0} used its\\n{STRVAR_1 8, 1, 0} to mirror its\\fopponent’s stat changes!"),
         }
         for name, (row, text) in expected.items():
             self.assertEqual(import_battle_messages.port_row(name), row, name)
@@ -178,6 +179,7 @@ class BattleMessageTests(unittest.TestCase):
             row = import_battle_messages.port_row(name)
             self.assertEqual(table[row], text, name)
             self.assertIn(f"msg_0197_{row:05d}, {tag}", script(where), name)
+        self.assertIn("msg_0197_01824, TAG_NICKNAME_ITEM", script("subscript_*_MirrorHerb.s"))
         self.assertIn("msg_0197_01790, TAG_NICKNAME", script("effect_script_0397.s"))
         battle = ROOT / "src/battle"
         self.assertIn("msg->id = msg_0197_01790;", (battle / "overlay_12_0224E4FC.c").read_text())

@@ -132,6 +132,13 @@ PORT_ROWS = [
         r"The opposing {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with {STRVAR_1 1, 2, 0}!",
         r"The opposing {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with the\fopposing {STRVAR_1 1, 2, 0}!",
     ]),
+    # A Mirror Herb copying the other side's stat stages. The reference has a
+    # TODO where the herb goes and so no line; this is the later games' line.
+    ("mirror herb", [
+        r"{STRVAR_1 1, 0, 0} used its\n{STRVAR_1 8, 1, 0} to mirror its\fopponent’s stat changes!",
+        r"The wild {STRVAR_1 1, 0, 0} used its\n{STRVAR_1 8, 1, 0} to mirror its\fopponent’s stat changes!",
+        r"The opposing {STRVAR_1 1, 0, 0} used\nits {STRVAR_1 8, 1, 0} to mirror its\fopponent’s stat changes!",
+    ]),
 ]
 
 

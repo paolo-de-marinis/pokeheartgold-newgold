@@ -7296,4 +7296,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} shared\nits {STRVAR_1 8, 1, 0} with the\fopposing {STRVAR_1 1, 2, 0}!</language>
 	</row>
+	<row id="msg_0197_01824" index="1824">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} used its\n{STRVAR_1 8, 1, 0} to mirror its\fopponent’s stat changes!</language>
+	</row>
+	<row id="msg_0197_01825" index="1825">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} used its\n{STRVAR_1 8, 1, 0} to mirror its\fopponent’s stat changes!</language>
+	</row>
+	<row id="msg_0197_01826" index="1826">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} used\nits {STRVAR_1 8, 1, 0} to mirror its\fopponent’s stat changes!</language>
+	</row>
 </body>

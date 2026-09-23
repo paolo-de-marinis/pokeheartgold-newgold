@@ -79,8 +79,8 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # The three origin items and Ogerpon's three masks took six.
 # The Gems took one, the Binding Band one, the Adrenaline Orb one, the
 # Blunder Policy one, the Red Card and the Eject Button two, the Eject Pack
-# one.
-IMPORTED_AND_UNREAD = 5
+# one, the Mirror Herb one.
+IMPORTED_AND_UNREAD = 4
 
 
 def effects_defined():
@@ -807,6 +807,85 @@ class EjectPackTests(unittest.TestCase):
         pack = script[script.index("_EJECT_PACK:"):script.index("_SWITCHED:")]
         self.assertIn("PrintMessage msg_0197_01625, TAG_NICKNAME, BATTLER_CATEGORY_MSG_BATTLER_TEMP", pack)
         self.assertIn("BMON_DATA_HELD_ITEM, ITEM_EJECT_PACK, _EJECT_PACK", script)
+
+
+MIRROR_HERB_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/items.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8; typedef int8_t s8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { int unused; } BattleSystem;
+typedef struct { int hp; s8 statChanges[NUM_BATTLE_STATS]; } BattleMon;
+typedef struct { BattleMon battleMons[4]; u8 mirrorHerbStages[4][NUM_BATTLE_STATS]; } BattleContext;
+static int sItem[4];
+static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 4; }
+static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return sItem[battlerId]; }
+@FUNCTIONS@
+int main(void) {
+    BattleSystem bs;
+    BattleContext ctx = { 0 };
+    for (int i = 0; i < 4; i++) {
+        ctx.battleMons[i].hp = 30;
+        for (int s = 0; s < NUM_BATTLE_STATS; s++) ctx.battleMons[i].statChanges[s] = 6;
+    }
+    sItem[1] = HOLD_EFFECT_COPY_STAT_INCREASE;   // the herb, on the other side from 0 and 2
+    sItem[2] = HOLD_EFFECT_COPY_STAT_INCREASE;   // a herb beside the one who rose: not told
+    sItem[3] = HOLD_EFFECT_NONE;
+    RecordMirrorHerbStages(&bs, &ctx, 0, STAT_ATK, 2);
+    RecordMirrorHerbStages(&bs, &ctx, 2, STAT_SPEED, 1);
+    assert(ctx.mirrorHerbStages[1][STAT_ATK] == 2 && ctx.mirrorHerbStages[1][STAT_SPEED] == 1);
+    assert(ctx.mirrorHerbStages[2][STAT_ATK] == 0 && ctx.mirrorHerbStages[3][STAT_ATK] == 0);
+    // Every stage copied at once, and the record emptied.
+    assert(MirrorHerbCopiesStages(&ctx, 1) == TRUE);
+    assert(ctx.battleMons[1].statChanges[STAT_ATK] == 8 && ctx.battleMons[1].statChanges[STAT_SPEED] == 7);
+    assert(ctx.mirrorHerbStages[1][STAT_ATK] == 0 && ctx.mirrorHerbStages[1][STAT_SPEED] == 0);
+    assert(MirrorHerbCopiesStages(&ctx, 1) == FALSE);
+    // Up to +6 and no further; nothing when every stat to copy is there.
+    ctx.battleMons[1].statChanges[STAT_DEF] = 11;
+    ctx.mirrorHerbStages[1][STAT_DEF] = 3;
+    assert(MirrorHerbCopiesStages(&ctx, 1) == TRUE && ctx.battleMons[1].statChanges[STAT_DEF] == 12);
+    ctx.mirrorHerbStages[1][STAT_DEF] = 2;
+    assert(MirrorHerbCopiesStages(&ctx, 1) == FALSE && ctx.mirrorHerbStages[1][STAT_DEF] == 0);
+    // A fainted holder is not told.
+    ctx.battleMons[1].hp = 0;
+    RecordMirrorHerbStages(&bs, &ctx, 0, STAT_SPATK, 1);
+    assert(ctx.mirrorHerbStages[1][STAT_SPATK] == 0);
+    return 0;
+}
+"""
+
+
+class MirrorHerbTests(unittest.TestCase):
+    """The reference has a TODO where the Mirror Herb goes; Pokemon Central
+    (Foglia carbone): the other side's stat gains, all copied at once, the
+    herb spent, nothing if every stat to copy is at +6."""
+
+    def test_what_is_recorded_and_copied(self):
+        source = OVERLAY.read_text()
+        functions = "\n".join(function(source, name) for name in ("RecordMirrorHerbStages", "MirrorHerbCopiesStages"))
+        run_c(MIRROR_HERB_FIXTURE.replace("@FUNCTIONS@", functions))
+
+    def test_where_it_is_told_and_asked(self):
+        change = function(COMMANDS.read_text(), "BtlCmd_ChangeStatStage")
+        rise = change[:change.index("} else { // Stat Decrease")]
+        self.assertIn("RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdStatChange, stat + 1, "
+                      "mon->statChanges[stat + 1] - before);", rise)
+        source = OVERLAY.read_text()
+        use = function(source, "CheckUseHeldItem")
+        case = use[use.index("case HOLD_EFFECT_COPY_STAT_INCREASE:"):]
+        self.assertIn("MirrorHerbCopiesStages(ctx, battlerId) == TRUE", case[:case.index("break;")])
+        self.assertIn("*script = BATTLE_SUBSCRIPT_MIRROR_HERB;", case[:case.index("break;")])
+        self.assertIn("MI_CpuClear8(ctx->mirrorHerbStages[battlerId]", function(source, "BattleSystem_GetBattleMon"))
+
+    def test_the_herb_is_shown_and_spent(self):
+        script = subscript_named("BATTLE_SUBSCRIPT_MIRROR_HERB")
+        self.assertIn("PrintMessage msg_0197_01824, TAG_NICKNAME_ITEM, BATTLER_CATEGORY_MSG_TEMP, BATTLER_CATEGORY_MSG_TEMP", script)
+        self.assertIn("RemoveItem BATTLER_CATEGORY_MSG_TEMP", script)
 
 
 if __name__ == "__main__":
