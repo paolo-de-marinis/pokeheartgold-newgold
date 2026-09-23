@@ -1944,12 +1944,13 @@ BOOL BtlCmd_SetMultiHit(BattleSystem *battleSystem, BattleContext *ctx) {
 
     if (ctx->multiHitCountTemp == 0) {
         if (cnt == 0) {
+            // Two and three hits 35% each, four and five 15% each: the odds
+            // from Black and White on, rolled the way the reference rolls them.
             if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SKILL_LINK) {
                 cnt = 5;
-            } else if ((cnt = BattleSystem_Random(battleSystem) & 3) < 2) {
-                cnt += 2;
             } else {
-                cnt = (BattleSystem_Random(battleSystem) & 3) + 2;
+                cnt = BattleSystem_Random(battleSystem) % 100;
+                cnt = cnt < 35 ? 2 : cnt < 70 ? 3 : cnt < 85 ? 4 : 5;
             }
             // Loaded Dice rolls the two-to-five count again as four or five,
             // and leaves a roll that already came up four or five alone. That
