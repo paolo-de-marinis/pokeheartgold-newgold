@@ -4866,6 +4866,26 @@ void BattleContext_LandFutureSight(BattleSystem *battleSystem, BattleContext *ct
     ov12_02251D28(battleSystem, ctx, ctx->moveNoCur, ctx->moveType, ctx->battlerIdAttacker, battlerIdTarget, ctx->damage, &ctx->moveStatusFlag);
     BattleSystem_CheckMoveHitEffect(battleSystem, ctx, ctx->battlerIdAttacker, battlerIdTarget, ctx->moveNoCur);
     ctx->hpCalc = -ctx->damage;
+    // What the hit meets that answers it as it lands, as a move's hit does
+    // (ov12_0224B498, CheckAbilityEffectOnHit), asked while the user is still
+    // standing in for itself: a Disguise takes the whole hit and breaks
+    // (Pokemon Central, Fantasmanto: any damaging move, not through a
+    // substitute), and Tera Shell at full HP says so before it lands, the
+    // damage having been reduced already. Ice Face stops only physical moves,
+    // and these two are special. Subscript 121 runs the one in tempData.
+    ctx->tempData = 0;
+    if (!(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)) {
+        u16 form = Battler_BrokenFaceForm(ctx, ctx->battlerIdAttacker, battlerIdTarget, ctx->moveNoCur);
+
+        if (form != SPECIES_NONE && !(ctx->battleMons[battlerIdTarget].status2 & STATUS2_SUBSTITUTE)) {
+            ctx->hpCalc = 0;
+            ctx->moveStatusFlag &= ~MOVE_STATUS_ANY_EFFECTIVE;
+            BattleSystem_ChangeBattlerForm(battleSystem, ctx, battlerIdTarget, form, TRUE);
+            ctx->tempData = BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE;
+        } else if (TeraShellResists(ctx, ctx->battlerIdAttacker, battlerIdTarget, ctx->moveNoCur) == TRUE) {
+            ctx->tempData = BATTLE_SUBSCRIPT_TERA_SHELL;
+        }
+    }
     if (battlerIdAttacker == BATTLER_NONE) {
         ctx->battleMons[ctx->battlerIdAttacker] = onField;
     }

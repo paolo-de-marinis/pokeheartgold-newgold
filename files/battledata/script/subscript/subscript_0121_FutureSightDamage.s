@@ -6,7 +6,8 @@
 // MSG_ATTACKER one. BattleContext_LandFutureSight has just worked the hit out
 // with the two of them as attacker and defender: the damage in hpCalc, the
 // type chart's verdict and whether it hit in the move status flags, and the
-// critical hit.
+// critical hit; in TEMP_DATA, a Disguise that took the hit and has broken, or
+// Tera Shell's line to say before it lands, or 0.
 _000:
     PrintBufferedMessage
     Wait
@@ -18,6 +19,11 @@ _000:
     PlayMoveAnimationOnMons BATTLER_CATEGORY_MSG_TEMP, BATTLER_CATEGORY_MSG_ATTACKER, BATTLER_CATEGORY_MSG_TEMP
     Wait
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_MOVE_ANIMATIONS_OFF
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_TEMP_DATA, BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE, _Disguise
+    CompareVarToValue OPCODE_NEQ, BSCRIPT_VAR_TEMP_DATA, BATTLE_SUBSCRIPT_TERA_SHELL, _Strike
+    Call BATTLE_SUBSCRIPT_TERA_SHELL
+
+_Strike:
     CompareMonDataToValue OPCODE_FLAG_NOT, BATTLER_CATEGORY_MSG_TEMP, BMON_DATA_STATUS2, STATUS2_SUBSTITUTE, _058
     UpdateVar OPCODE_MUL, BSCRIPT_VAR_HP_CALC, -1
     CompareMonDataToVar OPCODE_LTE, BATTLER_CATEGORY_MSG_TEMP, BMON_DATA_SUBSTITUTE_HP, BSCRIPT_VAR_HP_CALC, _044
@@ -59,6 +65,10 @@ _117:
     PrintMessage msg_0197_00796, TAG_NONE
     Wait
     WaitButtonABTime 30
+    End
+
+_Disguise:
+    Call BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE
     End
 
 _NoEffect:

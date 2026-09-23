@@ -177,6 +177,24 @@ class FutureSightTests(unittest.TestCase):
         self.assertEqual(SUBSCRIPT.count("Call BATTLE_SUBSCRIPT_CRITICAL_HIT"), 2)
         self.assertEqual(SUBSCRIPT.count("Call BATTLE_SUBSCRIPT_MOVE_FOLLOWUP_MESSAGE"), 2)
 
+    def test_a_disguise_or_a_tera_shell_answers_the_landing(self):
+        """Pokemon Central (Fantasmanto): a Disguise takes any damaging move
+        but through a substitute, and breaks; (Teraguscio) the shell says so
+        before the hit. Asked while the user still stands in for itself."""
+        body = function(COMMANDS, "BattleContext_LandFutureSight")
+        answer = body[body.index("ctx->tempData = 0;"):]
+        self.assertLess(body.index("ctx->tempData = 0;"), body.index("ctx->battleMons[ctx->battlerIdAttacker] = onField;"))
+        self.assertIn("if (form != SPECIES_NONE && !(ctx->battleMons[battlerIdTarget].status2 & STATUS2_SUBSTITUTE)) {", answer)
+        self.assertIn("BattleSystem_ChangeBattlerForm(battleSystem, ctx, battlerIdTarget, form, TRUE);\n"
+                      "            ctx->tempData = BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE;", answer)
+        self.assertIn("} else if (TeraShellResists(ctx, ctx->battlerIdAttacker, battlerIdTarget, ctx->moveNoCur) == TRUE) {\n"
+                      "            ctx->tempData = BATTLE_SUBSCRIPT_TERA_SHELL;", answer)
+        # The script breaks the face instead of the damage, or says the
+        # shell's line before it.
+        self.assertLess(SUBSCRIPT.index("BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE, _Disguise"), SUBSCRIPT.index("_Strike:"))
+        self.assertLess(SUBSCRIPT.index("Call BATTLE_SUBSCRIPT_TERA_SHELL"), SUBSCRIPT.index("_Strike:"))
+        self.assertIn("_Disguise:\n    Call BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE\n    End", SUBSCRIPT)
+
 
 if __name__ == "__main__":
     unittest.main()
