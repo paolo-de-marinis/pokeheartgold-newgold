@@ -40,6 +40,7 @@ from test_repels import REFERENCE
 sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import import_cries  # noqa: E402
 import import_dex_text  # noqa: E402
+import gmm  # noqa: E402
 import import_footprints  # noqa: E402
 import import_species  # noqa: E402
 import sdat  # noqa: E402
@@ -308,22 +309,20 @@ class SpeciesInPlayTests(unittest.TestCase):
         and the answer compared, which is the only form of this check that
         would notice the whole range sliding by one.
         """
-        data = import_dex_text.text_data(Path(REFERENCE))
-        # A form takes its base's text, as the import gives it.
-        for form, base in import_species.base_species_of(Path(REFERENCE)).items():
-            if form in data and base in data and not data[form]["entry"]:
-                data[form] = dict(data[base])
-        names = import_dex_text.rows("0237")
+        # The English banks are hg-engine's, whole, and test_species_names.py
+        # holds them to import_species_text.py; these are the foreign-language
+        # ones, whose rows past 493 are this port's.
+        data = import_dex_text.text_data(gmm.ENGINE)
+        names = [row["text"] for row in gmm.read(237)]
         added = import_species.added_species()
         checked = 0
         for bank, kind in sorted(import_dex_text.BANKS.items()):
-            have = import_dex_text.rows(bank)
+            have = [row["text"] for row in gmm.read(bank)]
             for offset, name in enumerate(added):
                 index = self.firstAdded + offset
                 self.assertIn(name, data, f"the reference has no text for SPECIES_{name}")
-                wanted = import_dex_text.wanted(bank, kind, data[name],
-                                                names.get(index, data[name]["name"]))
-                self.assertEqual(have.get(index), wanted, f"msg_{bank} row {index} ({name})")
+                wanted = import_dex_text.wanted(kind, data[name], names[index])
+                self.assertEqual(have[index], wanted, f"msg_{bank:04d} row {index} ({name})")
                 checked += 1
         self.assertEqual(checked, len(added) * len(import_dex_text.BANKS))
 

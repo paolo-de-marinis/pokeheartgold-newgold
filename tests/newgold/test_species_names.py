@@ -1,38 +1,35 @@
 #!/usr/bin/env python3
-"""Check the species name bank reaches every species.
+"""Check the species' text banks: hg-engine's text, at every species.
 
 Names are read by species number, so a bank that stops short means an
-out-of-range read the moment one of the added species has to be named.
+out-of-range read the moment one of the added species has to be named. The
+text itself is hg-engine's: import_species_text.py writes 237, 238, 803,
+811..817 and 823 from Species.c at a revision, and the tree has to be what it
+writes at the engine (d0380a487) or at New Gold (ccf2c9f5).
 """
 
-import os
 import re
 import sys
 import unittest
-from pathlib import Path
 import xml.etree.ElementTree as ET
-from pathlib import Path
 
 from test_level_cap import ROOT
 
 sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
+import gmm  # noqa: E402
 import import_species  # noqa: E402
+import import_species_text  # noqa: E402
 
-REFERENCE = os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE")
-if REFERENCE is None:
-    sibling = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
-    REFERENCE = sibling if (sibling / ".git").exists() else None
-import import_species_names  # noqa: E402
-import import_species_names as names  # noqa: E402
-
+REFERENCE = gmm.REFERENCE if (gmm.REFERENCE / ".git").exists() else None
 BANK = ROOT / "files/msgdata/msg/msg_0237.gmm"
 NAME_LENGTH = int(re.search(r"#define POKEMON_NAME_LENGTH (\d+)",
                             (ROOT / "include/constants/global.h").read_text()).group(1))
+PLACEHOLDER = "-----"
 
 
-def rows():
-    parsed = ET.parse(BANK).getroot().findall("row")
-    return {int(row.get("index")): row.find("language[@name='English']").text for row in parsed}
+def rows(bank=237):
+    parsed = ET.parse(gmm.path_of(bank)).getroot().findall("row")
+    return {int(row.get("index")): row.find("language[@name='English']").text or "" for row in parsed}
 
 
 def last_species():
@@ -56,15 +53,19 @@ def fold(text):
 class SpeciesNameTests(unittest.TestCase):
     def setUp(self):
         self.rows = rows()
-        self.bases = import_species.base_species_of(Path(REFERENCE)) if REFERENCE else {}
+        self.bases = import_species_text.base_species(gmm.ENGINE) if REFERENCE else {}
 
     def test_the_bank_is_dense_and_reaches_the_last_species(self):
         self.assertEqual(sorted(self.rows), list(range(last_species() + 1)))
 
-    def test_pret_names_are_untouched(self):
+    def test_retail_names_are_the_engines(self):
+        """hg-engine writes the names in mixed case, retail's included."""
         self.assertEqual(self.rows[0], "-----")
-        self.assertEqual(self.rows[1], "BULBASAUR")
-        self.assertEqual(self.rows[493], "ARCEUS")
+        self.assertEqual(self.rows[1], "Bulbasaur")
+        self.assertEqual(self.rows[83], "Farfetch’d")
+        self.assertEqual(self.rows[122], "Mr. Mime")
+        self.assertEqual(self.rows[250], "Ho-oh")
+        self.assertEqual(self.rows[493], "Arceus")
         self.assertEqual(self.rows[494], "Egg")
         self.assertEqual(self.rows[495], "Bad Egg")
 
@@ -81,21 +82,16 @@ class SpeciesNameTests(unittest.TestCase):
         than the first letter would hold. Every constant that does fit in ten
         characters is still checked exactly, which is all but twenty-nine.
 
-        The two Galarian forms carry the Johto line's name, which is what the
-        reference does and what the Dex shows.
+        A form is named after its base, which is what hg-engine shows.
         """
         header = (ROOT / "include/constants/species.h").read_text()
         for name in import_species.added_species():
             index = int(re.search(rf"#define SPECIES_{name}\s+(\d+)", header).group(1))
             shown = self.rows[index]
-            self.assertTrue(shown, name)
+            self.assertTrue(shown and shown != PLACEHOLDER, name)
             self.assertLessEqual(len(shown), NAME_LENGTH, name)
-            expected = import_species_names.FORM_NAMES.get(name, name.replace("_", " "))
-            if name in self.bases:
-                expected = self.bases[name].replace("_", " ")  # a form is named after its base
-            if fold(expected) == fold(shown):
-                continue
-            if name in import_species_names.FORM_NAMES or name.endswith("_GALARIAN") or name in self.bases:
+            expected = self.bases.get(name, name).replace("_", " ")
+            if fold(expected) == fold(shown) or name in self.bases:
                 continue
             self.assertEqual(fold(shown)[0], fold(expected)[0], name)
 
@@ -105,7 +101,53 @@ class SpeciesNameTests(unittest.TestCase):
 
     def test_the_gap_holds_only_placeholders(self):
         for index in range(496, 508):
-            self.assertEqual(self.rows[index], names.PLACEHOLDER, index)
+            self.assertEqual(self.rows[index], PLACEHOLDER, index)
+
+
+class SpeciesTextTests(unittest.TestCase):
+    """The engine's text in the other banks, a few rows each, and every row
+    of every bank against the importer."""
+
+    def test_engine_rows(self):
+        pinned = {
+            238: {0: "a -----", 1: "a Bulbasaur", 2: "an Ivysaur", 1042: "a Venusaur"},
+            817: {1: "BULBASAUR", 494: "EGG", 508: "LILLIPUP", 1042: "VENUSAUR"},
+            816: {1: "Seed Pokémon", 494: "????? Pokémon", 1042: "Seed Pokémon",
+                  1123: "Unique Horn Pokémon"},
+            814: {1: "  2’04”", 487: " 14’09”", 494: "???’??”", 1238: " 21’04”"},
+            812: {1: "  15.2 lbs.", 122: " 120.2 lbs.", 487: "1653.5 lbs.", 1238: "1080.3 lbs."},
+        }
+        for bank, expected in pinned.items():
+            have = rows(bank)
+            for index, text in expected.items():
+                self.assertEqual(have[index], text, f"msg_{bank:04d} row {index}")
+        entries = rows(803)
+        self.assertEqual(entries[1043], entries[6])     # Mega Charizard X says Charizard's
+        self.assertTrue(entries[575].startswith("When it shares the infinite energy"))  # Victini
+        self.assertFalse(entries[200].endswith(" "))
+        self.assertEqual(entries[494], "-----")
+
+    def test_the_blank_bank_is_the_engines(self):
+        """811 is hg-engine's static 811.txt: 1096 rows, spaces as garbage rows."""
+        blank = gmm.read(811)
+        self.assertEqual(len(blank), 1096)
+        self.assertEqual(blank[494]["text"], "-----")
+        self.assertEqual(blank[544]["context"], "garbage")
+        self.assertEqual(import_species_text.encodes_as(blank[544]), " " * 53)
+
+    @unittest.skipIf(REFERENCE is None, "behaviour reference not present")
+    def test_every_bank_is_what_the_importer_writes(self):
+        """At the engine or at New Gold, every row: the two differ only in the
+        three Galarian names konefr gave (574, 1125, 1131)."""
+        engine = import_species_text.wanted(gmm.ENGINE)
+        newgold = import_species_text.wanted(gmm.NEWGOLD)
+        for bank in import_species_text.BANKS:
+            have = [import_species_text.encodes_as(row) for row in gmm.read(bank)]
+            self.assertIn(have, (engine[bank], newgold[bank]), f"msg_{bank:04d}")
+        differ = {bank: [i for i, (a, b) in enumerate(zip(engine[bank], newgold[bank])) if a != b]
+                  for bank in import_species_text.BANKS}
+        self.assertEqual({bank: rows_ for bank, rows_ in differ.items() if rows_},
+                         {237: [574, 1125, 1131], 238: [574, 1125, 1131], 817: [1125]})
 
 
 if __name__ == "__main__":

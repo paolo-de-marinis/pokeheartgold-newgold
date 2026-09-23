@@ -1978,59 +1978,59 @@
 	</row>
 	<row id="msg_0816_unused_494" index="494">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English"></language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_unused_495" index="495">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English"></language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_496" index="496">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">DNA Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_497" index="497">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">DNA Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_498" index="498">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">DNA Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_499" index="499">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Bagworm Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_500" index="500">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Bagworm Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_501" index="501">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Renegade Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_502" index="502">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Gratitude Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_503" index="503">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Plasma Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_504" index="504">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Plasma Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_505" index="505">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Plasma Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_506" index="506">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Plasma Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_form_507" index="507">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Plasma Pokémon</language>
+		<language name="English">????? Pokémon</language>
 	</row>
 	<row id="msg_0816_lillipup" index="508">
 		<attribute name="window_context_name">used</attribute>
@@ -4494,11 +4494,11 @@
 	</row>
 	<row id="msg_0816_ponyta_galarian" index="1123">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Fire Horse Pokémon</language>
+		<language name="English">Unique Horn Pokémon</language>
 	</row>
 	<row id="msg_0816_rapidash_galarian" index="1124">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Fire Horse Pokémon</language>
+		<language name="English">Unique Horn Pokémon</language>
 	</row>
 	<row id="msg_0816_farfetchd_galarian" index="1125">
 		<attribute name="window_context_name">used</attribute>
@@ -4510,23 +4510,23 @@
 	</row>
 	<row id="msg_0816_mr_mime_galarian" index="1127">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Barrier Pokémon</language>
+		<language name="English">Dancing Pokémon</language>
 	</row>
 	<row id="msg_0816_articuno_galarian" index="1128">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Freeze Pokémon</language>
+		<language name="English">Cruel Pokémon</language>
 	</row>
 	<row id="msg_0816_zapdos_galarian" index="1129">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Electric Pokémon</language>
+		<language name="English">Strong Legs Pokémon</language>
 	</row>
 	<row id="msg_0816_moltres_galarian" index="1130">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Flame Pokémon</language>
+		<language name="English">Malevolent Pokémon</language>
 	</row>
 	<row id="msg_0816_slowking_galarian" index="1131">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Royal Pokémon</language>
+		<language name="English">Hexpert Pokémon</language>
 	</row>
 	<row id="msg_0816_corsola_galarian" index="1132">
 		<attribute name="window_context_name">used</attribute>
@@ -4546,7 +4546,7 @@
 	</row>
 	<row id="msg_0816_darmanitan_galarian" index="1136">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Blazing Pokémon</language>
+		<language name="English">Zen Charm Pokémon</language>
 	</row>
 	<row id="msg_0816_yamask_galarian" index="1137">
 		<attribute name="window_context_name">used</attribute>
@@ -4650,7 +4650,7 @@
 	</row>
 	<row id="msg_0816_basculin_white_striped" index="1162">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Hostile Pokémon</language>
+		<language name="English">Mellow Pokémon</language>
 	</row>
 	<row id="msg_0816_darmanitan_zen_mode" index="1163">
 		<attribute name="window_context_name">used</attribute>
@@ -4658,7 +4658,7 @@
 	</row>
 	<row id="msg_0816_darmanitan_zen_mode_galarian" index="1164">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Blazing Pokémon</language>
+		<language name="English">Zen Charm Pokémon</language>
 	</row>
 	<row id="msg_0816_deerling_summer" index="1165">
 		<attribute name="window_context_name">used</attribute>
@@ -4954,7 +4954,7 @@
 	</row>
 	<row id="msg_0816_hoopa_unbound" index="1238">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Mischief Pokémon</language>
+		<language name="English">Djinn Pokémon</language>
 	</row>
 	<row id="msg_0816_oricorio_pom_pom" index="1239">
 		<attribute name="window_context_name">used</attribute>
@@ -5142,11 +5142,11 @@
 	</row>
 	<row id="msg_0816_calyrex_ice_rider" index="1285">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">King Pokémon</language>
+		<language name="English">High King Pokémon</language>
 	</row>
 	<row id="msg_0816_calyrex_shadow_rider" index="1286">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">King Pokémon</language>
+		<language name="English">High King Pokémon</language>
 	</row>
 	<row id="msg_0816_enamorus_therian" index="1287">
 		<attribute name="window_context_name">used</attribute>
@@ -5154,7 +5154,7 @@
 	</row>
 	<row id="msg_0816_growlithe_hisuian" index="1288">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Puppy Pokémon</language>
+		<language name="English">Scout Pokémon</language>
 	</row>
 	<row id="msg_0816_arcanine_hisuian" index="1289">
 		<attribute name="window_context_name">used</attribute>
@@ -5162,15 +5162,15 @@
 	</row>
 	<row id="msg_0816_voltorb_hisuian" index="1290">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Ball Pokémon</language>
+		<language name="English">Sphere Pokémon</language>
 	</row>
 	<row id="msg_0816_electrode_hisuian" index="1291">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Ball Pokémon</language>
+		<language name="English">Sphere Pokémon</language>
 	</row>
 	<row id="msg_0816_typhlosion_hisuian" index="1292">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Volcano Pokémon</language>
+		<language name="English">Ghost Flame Pokémon</language>
 	</row>
 	<row id="msg_0816_qwilfish_hisuian" index="1293">
 		<attribute name="window_context_name">used</attribute>
@@ -5186,27 +5186,27 @@
 	</row>
 	<row id="msg_0816_lilligant_hisuian" index="1296">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Flowering Pokémon</language>
+		<language name="English">Spinning Pokémon</language>
 	</row>
 	<row id="msg_0816_zorua_hisuian" index="1297">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Tricky Fox Pokémon</language>
+		<language name="English">Spiteful Fox Pokémon</language>
 	</row>
 	<row id="msg_0816_zoroark_hisuian" index="1298">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Illusion Fox Pokémon</language>
+		<language name="English">Baneful Fox Pokémon</language>
 	</row>
 	<row id="msg_0816_braviary_hisuian" index="1299">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Valiant Pokémon</language>
+		<language name="English">Battle Cry Pokémon</language>
 	</row>
 	<row id="msg_0816_sliggoo_hisuian" index="1300">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Soft Tissue Pokémon</language>
+		<language name="English">Snail Pokémon</language>
 	</row>
 	<row id="msg_0816_goodra_hisuian" index="1301">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Dragon Pokémon</language>
+		<language name="English">Shell Bunker Pokémon</language>
 	</row>
 	<row id="msg_0816_avalugg_hisuian" index="1302">
 		<attribute name="window_context_name">used</attribute>
@@ -5282,7 +5282,7 @@
 	</row>
 	<row id="msg_0816_palafin_hero" index="1320">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Dolphin Pokémon</language>
+		<language name="English">Hero Pokémon</language>
 	</row>
 	<row id="msg_0816_tatsugiri_droopy" index="1321">
 		<attribute name="window_context_name">used</attribute>
@@ -5298,11 +5298,11 @@
 	</row>
 	<row id="msg_0816_gimmighoul_roaming" index="1324">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Coin Chest Pokémon</language>
+		<language name="English">Coin Hunter Pokémon</language>
 	</row>
 	<row id="msg_0816_wooper_paldean" index="1325">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Water Fish Pokémon</language>
+		<language name="English">Poison Fish Pokémon</language>
 	</row>
 	<row id="msg_0816_tauros_combat" index="1326">
 		<attribute name="window_context_name">used</attribute>
@@ -5586,7 +5586,7 @@
 	</row>
 	<row id="msg_0816_mega_feraligatr" index="1396">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Big Jaw Pokémon</language>
+		<language name="English">Double Jaw Pokémon</language>
 	</row>
 	<row id="msg_0816_mega_skarmory" index="1397">
 		<attribute name="window_context_name">used</attribute>
@@ -5622,7 +5622,7 @@
 	</row>
 	<row id="msg_0816_mega_darkrai" index="1405">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Pitch-Black Pokémon</language>
+		<language name="English">Bad Dreams Pokémon</language>
 	</row>
 	<row id="msg_0816_mega_emboar" index="1406">
 		<attribute name="window_context_name">used</attribute>
@@ -5674,11 +5674,11 @@
 	</row>
 	<row id="msg_0816_mega_meowstic" index="1418">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Constraint Pokémon</language>
+		<language name="English">Second Sight Pokémon</language>
 	</row>
 	<row id="msg_0816_mega_meowstic_female" index="1419">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Constraint Pokémon</language>
+		<language name="English">Second Sight Pokémon</language>
 	</row>
 	<row id="msg_0816_mega_malamar" index="1420">
 		<attribute name="window_context_name">used</attribute>
@@ -5710,7 +5710,7 @@
 	</row>
 	<row id="msg_0816_mega_drampa" index="1427">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Placid Pokémon</language>
+		<language name="English">Imposing Pokémon</language>
 	</row>
 	<row id="msg_0816_mega_magearna" index="1428">
 		<attribute name="window_context_name">used</attribute>

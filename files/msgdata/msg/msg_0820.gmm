@@ -4502,7 +4502,7 @@
 	</row>
 	<row id="msg_0820_farfetchd_galarian" index="1125">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">FARFETCHD</language>
+		<language name="English">Farfetch’d</language>
 	</row>
 	<row id="msg_0820_weezing_galarian" index="1126">
 		<attribute name="window_context_name">used</attribute>
@@ -4526,7 +4526,7 @@
 	</row>
 	<row id="msg_0820_slowking_galarian" index="1131">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">SLOWKING</language>
+		<language name="English">Slowking</language>
 	</row>
 	<row id="msg_0820_corsola_galarian" index="1132">
 		<attribute name="window_context_name">used</attribute>
