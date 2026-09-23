@@ -5079,6 +5079,21 @@
           "target": "SPECIES_PANGORO"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_TOXEL",
+      "evos": [
+        {
+          "method": "EVO_LEVEL_NATURE_AMPED",
+          "param": 30,
+          "target": "SPECIES_TOXTRICITY"
+        },
+        {
+          "method": "EVO_LEVEL_NATURE_LOW_KEY",
+          "param": 30,
+          "target": "SPECIES_TOXTRICITY_LOW_KEY"
+        }
+      ]
     }
   ]
 }

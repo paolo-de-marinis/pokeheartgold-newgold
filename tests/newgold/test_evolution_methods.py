@@ -202,11 +202,32 @@ static void check_dark_type_in_party(void) {
     assert(evolve(pancham, &party, EVO_LEVEL_DARK_TYPE_MON_IN_PARTY) == SPECIES_NONE);
 }
 
+static void check_nature(void) {
+    // hg-engine and the games: thirteen natures make the Amped Form, the
+    // other twelve the Low Key Form. The nature is the personality's.
+    static const u8 amped[] = {
+        NATURE_HARDY, NATURE_BRAVE, NATURE_ADAMANT, NATURE_NAUGHTY, NATURE_DOCILE, NATURE_IMPISH, NATURE_LAX,
+        NATURE_HASTY, NATURE_JOLLY, NATURE_NAIVE, NATURE_RASH, NATURE_SASSY, NATURE_QUIRKY,
+    };
+    Pokemon mon = { .species = SPECIES_TOXEL };
+    one_row(EVO_LEVEL_NATURE_AMPED, 30, SPECIES_TOXTRICITY);
+    table[1] = (struct Evolution){ EVO_LEVEL_NATURE_LOW_KEY, 30, SPECIES_TOXTRICITY_LOW_KEY };
+    for (u32 nature = 0; nature < 25; nature++) {
+        int isAmped = memchr(amped, nature, sizeof(amped)) != NULL;
+        for (mon.level = 29; mon.level <= 31; mon.level++) {
+            mon.pid = 25 * 1000 + nature;
+            u16 expected = mon.level < 30 ? SPECIES_NONE : isAmped ? SPECIES_TOXTRICITY : SPECIES_TOXTRICITY_LOW_KEY;
+            assert(evolve(&mon, NULL, isAmped ? EVO_LEVEL_NATURE_AMPED : EVO_LEVEL_NATURE_LOW_KEY) == expected);
+        }
+    }
+}
+
 int main(void) {
     check_magnetic_field();
     check_time_of_day();
     check_rain();
     check_dark_type_in_party();
+    check_nature();
     return 0;
 }
 """
@@ -223,7 +244,7 @@ def program():
         "@RTC_TYPE@": rtc.group(),
         "@HOUR_FUNCTION@": function(read("src/gf_rtc.c"), "GF_RTC_GetTimeOfDayByHour"),
         "@NIGHT_FUNCTION@": function(read("src/gf_rtc.c"), "IsNighttime"),
-        "@FUNCTIONS@": "\n".join(function(source, name) for name in ("EvolvedPassiveForm", "GetMonEvolution")),
+        "@FUNCTIONS@": "\n".join(function(source, name) for name in ("GetNatureFromPersonality", "EvolvedPassiveForm", "GetMonEvolution")),
     }
     text = FIXTURE
     for placeholder, replacement in replacements.items():

@@ -95,6 +95,7 @@ static void LoadMonEvolutionTable(u16 species, struct Evolution *dest) {
 static BOOL MonHasMove(Pokemon *mon, u16 move) { return mon->move == move; }
 static inline BOOL MonHasMoveOfType(Pokemon *mon, u8 type) { return mon->moveType == type; }
 static BOOL Party_HasMon(Party *party, u16 species) { return party->species == species; }
+static inline u8 GetNatureFromPersonality(u32 pid) { return (u8)(pid % 25); }
 // No Dark type in this party: the one Pokemon it has is not asked its type.
 static inline int Party_GetCount(Party *party) { (void)party; return 0; }
 static inline Pokemon *Party_GetMonByIndex(Party *party, int slot) { (void)party; (void)slot; return NULL; }

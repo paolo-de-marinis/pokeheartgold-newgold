@@ -3121,6 +3121,39 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     }
                 }
                 break;
+            case EVO_LEVEL_NATURE_AMPED:
+            case EVO_LEVEL_NATURE_LOW_KEY:
+                // The nature the personality gives, not a Mint's: in the
+                // engine's words, Toxel's evolution disrespects nature mints,
+                // as the games' does.
+                if (evoTable[i].param <= level) {
+                    BOOL amped;
+                    switch (GetNatureFromPersonality(pid)) {
+                    case NATURE_HARDY:
+                    case NATURE_BRAVE:
+                    case NATURE_ADAMANT:
+                    case NATURE_NAUGHTY:
+                    case NATURE_DOCILE:
+                    case NATURE_IMPISH:
+                    case NATURE_LAX:
+                    case NATURE_HASTY:
+                    case NATURE_JOLLY:
+                    case NATURE_NAIVE:
+                    case NATURE_RASH:
+                    case NATURE_SASSY:
+                    case NATURE_QUIRKY:
+                        amped = TRUE;
+                        break;
+                    default:
+                        amped = FALSE;
+                        break;
+                    }
+                    if (amped == (evoTable[i].method == EVO_LEVEL_NATURE_AMPED)) {
+                        target = evoTable[i].target;
+                        *method_ret = evoTable[i].method;
+                    }
+                }
+                break;
             case EVO_OTHER_PARTY_MON:
                 if (party != NULL && Party_HasMon(party, evoTable[i].param) == 1) {
                     target = evoTable[i].target;
