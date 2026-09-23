@@ -333,6 +333,7 @@ struct PokedexAppData {
 typedef char PokedexAppData_MatchesOverlay18[sizeof(PokedexAppData) == 0x1910 ? 1 : -1];
 
 void ov18_021EE3AC(PokedexAppData *pokedexApp, MsgData *msgData, int windowId, int msgId, int x, int y, int fontId, u32 color, int alignment);
+void ov18_021EE520(PokedexAppData *pokedexApp, int windowId, u32 num);
 void ov18_021EE75C(PokedexAppData *pokedexApp, u32 species, int windowId);
 void ov18_021EE834(PokedexAppData *pokedexApp, u16 species, u32 idx, int windowId);
 void ov18_021EE984(PokedexAppData *pokedexApp, u16 species, u32 idx, int windowId);
