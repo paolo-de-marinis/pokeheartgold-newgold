@@ -93,6 +93,8 @@ BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId);
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 void Battler_ArmRetreat(BattleContext *ctx, int battlerId);
 BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *script);
+void Battler_ArmRetreatOutsideMove(BattleContext *ctx, int battlerId);
+BOOL TryRetreatAbilityOutsideMove(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 BOOL ParentalBond_MoveApplies(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo);
 void TryStartParentalBond(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL ParentalBond_IsFirstStrike(BattleContext *ctx);

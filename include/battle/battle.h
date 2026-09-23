@@ -115,7 +115,10 @@ typedef struct SelfTurnData {
     // Sheer Force: this Pokemon's move gave its effect up for power, as
     // ov12_02250490 found before clearing the flags that say so.
     u32 sheerForceTraded : 1;
-    u32 unk0_11 : 20;
+    // Emergency Exit and Wimp Out: this Pokemon, holding either, was above
+    // half its health when damage from outside a move came its way.
+    u32 retreatArmedOutsideMove : 1;
+    u32 unk0_11 : 19;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;

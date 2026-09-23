@@ -2041,6 +2041,20 @@ static void BattleControllerPlayer_TurnEnd(BattleSystem *battleSystem, BattleCon
         return;
     }
 
+    // What the turn's end did, and the entry hazards to what replaced the
+    // fallen, can send an Emergency Exit or Wimp Out Pokemon off, before the
+    // marks are cleared with the rest of the turn.
+    {
+        int script;
+
+        if (TryRetreatAbilityOutsideMove(battleSystem, ctx, &script) == TRUE) {
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        }
+    }
+
     ctx->totalTurns++;
     ctx->meFirstTotal++;
 
@@ -4232,6 +4246,14 @@ static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
 
         script = TryAbilityOnEntry(battleSystem, ctx);
         if (script) {
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        }
+        // A Pokemon that came in during the action and was brought to half by
+        // the entry hazards leaves again, once what it came in to is over.
+        if (TryRetreatAbilityOutsideMove(battleSystem, ctx, &script) == TRUE) {
             ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
             ctx->commandNext = ctx->command;
             ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;

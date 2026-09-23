@@ -4351,6 +4351,9 @@ BOOL BtlCmd_CheckSpikes(BattleSystem *battleSystem, BattleContext *ctx) {
     if (ctx->fieldSideConditionData[fieldSide].spikesLayers && ctx->battleMons[battlerId].hp) {
         ctx->hpCalc = (5 - ctx->fieldSideConditionData[fieldSide].spikesLayers) * 2;
         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, ctx->hpCalc);
+        // What the spikes take can send an Emergency Exit or Wimp Out
+        // Pokemon straight back (Pokemon Central, Passoindietro).
+        Battler_ArmRetreatOutsideMove(ctx, battlerId);
     } else {
         BattleScriptIncrementPointer(ctx, adrs);
     }
@@ -6163,6 +6166,8 @@ BOOL BtlCmd_CheckStealthRock(BattleSystem *battleSystem, BattleContext *ctx) {
             break;
         }
         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, ctx->hpCalc);
+        // As for the spikes.
+        Battler_ArmRetreatOutsideMove(ctx, battlerId);
     } else {
         BattleScriptIncrementPointer(ctx, adrs);
     }

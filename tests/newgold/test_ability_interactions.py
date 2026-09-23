@@ -330,5 +330,110 @@ class PivotRetreatTests(unittest.TestCase):
         self.assertIn("return TryUseHeldItem(battleSystem, ctx, ctx->battlerIdTarget);", pivot)
 
 
+RETREAT_OUTSIDE_MOVE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+typedef struct { u32 battleType; BOOL canSwitch[4]; } BattleSystem;
+typedef struct { int hp; u32 maxHp; int ability; } Mon;
+typedef struct { u32 retreatArmedOutsideMove : 1; } SelfTurnData;
+typedef struct { Mon battleMons[4]; SelfTurnData selfTurnData[4]; int battlerIdTemp, tempData; int turnOrder[4]; } BattleContext;
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static u32 BattleSystem_GetBattleType(BattleSystem *bs) { return bs->battleType; }
+static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
+static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 2; }
+static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)ctx; return bs->canSwitch[battlerId]; }
+@FUNCTIONS@
+static BattleSystem bs;
+static BattleContext ctx;
+static void setup(int ability, int hp) {
+    BattleContext blank = { 0 };
+    ctx = blank;
+    bs.battleType = BATTLE_TYPE_TRAINER;
+    bs.canSwitch[0] = bs.canSwitch[1] = TRUE;
+    ctx.turnOrder[0] = 0;
+    ctx.turnOrder[1] = 1;
+    ctx.battleMons[0].hp = ctx.battleMons[0].maxHp = 100;
+    ctx.battleMons[1].maxHp = 100;
+    ctx.battleMons[1].hp = hp;
+    ctx.battleMons[1].ability = ability;
+}
+static void hurt(int damage) {
+    Battler_ArmRetreatOutsideMove(&ctx, 1);
+    ctx.battleMons[1].hp -= damage;
+}
+static int leaves(void) {
+    int script = -1;
+    if (!TryRetreatAbilityOutsideMove(&bs, &ctx, &script)) {
+        return -1;
+    }
+    assert(script == BATTLE_SUBSCRIPT_EMERGENCY_EXIT && ctx.battlerIdTemp == 1);
+    return ctx.tempData;
+}
+int main(void) {
+    // Stealth Rock from above half to half: it leaves, once.
+    setup(ABILITY_EMERGENCY_EXIT, 60);
+    hurt(10);
+    assert(leaves() == 0);
+    assert(leaves() == -1);
+    setup(ABILITY_WIMP_OUT, 60);
+    hurt(12);
+    assert(leaves() == 0);
+    // Not past half; already at half; another ability; nobody to send.
+    setup(ABILITY_EMERGENCY_EXIT, 80);
+    hurt(12);
+    assert(leaves() == -1);
+    setup(ABILITY_EMERGENCY_EXIT, 50);
+    hurt(6);
+    assert(leaves() == -1);
+    setup(ABILITY_BERSERK, 60);
+    hurt(12);
+    assert(leaves() == -1);
+    setup(ABILITY_EMERGENCY_EXIT, 60);
+    bs.canSwitch[1] = FALSE;
+    hurt(12);
+    assert(leaves() == -1);
+    // A mark that does not send it off is kept for a later ask.
+    setup(ABILITY_EMERGENCY_EXIT, 80);
+    hurt(12);
+    assert(leaves() == -1);
+    ctx.battleMons[1].hp -= 20;
+    assert(leaves() == 0);
+    return 0;
+}
+"""
+
+
+class RetreatOutsideMoveTests(unittest.TestCase):
+    """Emergency Exit and Wimp Out answer damage from outside a move too
+    (Pokemon Central, Passoindietro)."""
+
+    def test_the_mark_and_the_ask(self):
+        source = OVERLAY.read_text()
+        functions = "\n".join(function(source, name) for name in (
+            "Battler_RetreatFlees", "Battler_ArmRetreatOutsideMove", "TryRetreatAbilityOutsideMove"))
+        run_c(RETREAT_OUTSIDE_MOVE.replace("@FUNCTIONS@", functions))
+
+    def test_the_entry_hazards_mark_it(self):
+        source = COMMANDS.read_text()
+        for name in ("BtlCmd_CheckSpikes", "BtlCmd_CheckStealthRock"):
+            body = function(source, name)
+            self.assertLess(body.index("DamageDivide(ctx->battleMons[battlerId].maxHp * -1"), body.index("Battler_ArmRetreatOutsideMove(ctx, battlerId);"), name)
+
+    def test_the_end_of_an_action_and_of_a_turn_ask(self):
+        controller = CONTROLLER.read_text()
+        action = function(controller, "ov12_0224D368")
+        self.assertLess(action.index("TryAbilityOnEntry(battleSystem, ctx)"), action.index("TryRetreatAbilityOutsideMove(battleSystem, ctx, &script)"))
+        self.assertLess(action.index("TryRetreatAbilityOutsideMove"), action.index("BattleContext_Init(ctx);"))
+        turn_end = function(controller, "BattleControllerPlayer_TurnEnd")
+        self.assertLess(turn_end.index("ov12_0224D540(battleSystem, ctx)"), turn_end.index("TryRetreatAbilityOutsideMove(battleSystem, ctx, &script)"))
+        self.assertLess(turn_end.index("TryRetreatAbilityOutsideMove"), turn_end.index("BattleContext_Init(ctx);"))
+
+
 if __name__ == "__main__":
     unittest.main()

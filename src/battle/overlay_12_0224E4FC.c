@@ -1656,8 +1656,8 @@ BOOL SheerForceTradedEffect(BattleContext *ctx) {
 // ask about the whole move. Only a move's hit arms it, so a confusion blow, a
 // Belly Drum or a Substitute does not, as in the games. A wild Pokemon flees,
 // as in the games; the reference keeps it in, having no Pokemon to send. Damage
-// from outside a move -- recoil, hazards, weather -- does not arm it here, as
-// it does not in the reference.
+// from outside a move arms it through Battler_ArmRetreatOutsideMove below; the
+// reference has none of that.
 void Battler_ArmRetreat(BattleContext *ctx, int battlerId) {
     int ability = GetBattlerAbility(ctx, battlerId);
 
@@ -1686,6 +1686,47 @@ static BOOL Battler_Retreats(BattleSystem *battleSystem, BattleContext *ctx, int
         return FALSE;
     }
     return Battler_RetreatFlees(battleSystem, battlerId) || CanSwitchMon(battleSystem, ctx, battlerId);
+}
+
+// Damage from outside a move sets the two off as well (Pokemon Central,
+// Passoindietro: any damage that takes the Pokemon to half or below, but for
+// a confusion blow and the HP a move of its own costs its user). The reference
+// asks only a move's damage. Such damage arms the holder here, and
+// TryRetreatAbilityOutsideMove asks once the action or the turn is over.
+void Battler_ArmRetreatOutsideMove(BattleContext *ctx, int battlerId) {
+    int ability = GetBattlerAbility(ctx, battlerId);
+
+    if ((ability == ABILITY_EMERGENCY_EXIT || ability == ABILITY_WIMP_OUT)
+        && ctx->battleMons[battlerId].hp > (int)(ctx->battleMons[battlerId].maxHp / 2)) {
+        ctx->selfTurnData[battlerId].retreatArmedOutsideMove = TRUE;
+    }
+}
+
+// Once an action is over (ov12_0224D368) and once the turn's end is (TurnEnd),
+// in speed order. No move is under way, so no attacker's Mold Breaker is asked.
+// A mark that does not send its Pokemon off is kept until the action ends, so
+// a later ask in the same action still sees it.
+BOOL TryRetreatAbilityOutsideMove(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+    for (int i = 0; i < maxBattlers; i++) {
+        int battlerId = ctx->turnOrder[i];
+        int ability = GetBattlerAbility(ctx, battlerId);
+
+        if (!ctx->selfTurnData[battlerId].retreatArmedOutsideMove
+            || ctx->battleMons[battlerId].hp == 0
+            || ctx->battleMons[battlerId].hp > (int)(ctx->battleMons[battlerId].maxHp / 2)
+            || (ability != ABILITY_EMERGENCY_EXIT && ability != ABILITY_WIMP_OUT)
+            || !(Battler_RetreatFlees(battleSystem, battlerId) || CanSwitchMon(battleSystem, ctx, battlerId))) {
+            continue;
+        }
+        ctx->selfTurnData[battlerId].retreatArmedOutsideMove = FALSE;
+        ctx->battlerIdTemp = battlerId;
+        ctx->tempData = Battler_RetreatFlees(battleSystem, battlerId);
+        *script = BATTLE_SUBSCRIPT_EMERGENCY_EXIT;
+        return TRUE;
+    }
+    return FALSE;
 }
 
 // Once the move is over, after the attacker's Shell Bell, Life Orb and Throat
