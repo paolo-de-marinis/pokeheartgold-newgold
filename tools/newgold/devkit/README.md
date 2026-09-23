@@ -29,6 +29,58 @@ position (`--where MAP:X:Y:DIR`, as a warp so the map builds itself), script
 flags (`--flag NAME`) and variables (`--var NAME=VALUE`). The gym saves in
 `~/hgss-saves/gyms` are made with it; their README says how.
 
+It is a library as well: every option is a function of a `Save`, and it
+reads everything else -- the party and all nine hundred box slots decoded,
+the bag, the Dex, the position, any flag or variable by name -- with the
+game's own names out of its message banks. `Save.image()` writes back only
+the newest half and only the blocks that changed, so a save opened and
+written back unchanged is the same bytes; `tests/newgold/test_savedit.py`
+holds it to that.
+
+## saveui.py
+
+    python3 tools/newgold/devkit/saveui.py
+
+opens the save editor in the browser, on http://127.0.0.1:8765 (this
+machine only; the next free port if that one is taken). `--library DIR`
+picks the folder of saves, `~/hgss-saves` by default; `--build DIR` the
+folder holding `heartgold.us`, `heartgold.us.diag` and the rest, this tree's
+`build/` by default, which is where the save layout is measured and where
+the emulator slots are; `--no-browser` only prints the address. Ctrl+C
+stops it. Standard library only; the page is `saveui.html` next to it.
+
+On the left, the library: every `.sav` under the folder and every emulator
+slot (the `.sav` melonDS reads beside each ROM), each with the player, the
+badges, the party's icons, where the player stands, the save counter and
+the date, and a red mark on a file that is not a valid save. From there a
+file is opened, duplicated, renamed, put in the bin or taken back out of it,
+its history of backups shown and any of them restored; "Carica
+nell'emulatore" copies it into a slot, "Prendi dall'emulatore" copies a slot
+into the library, and "Gioca" loads it into HeartGold's slot, normal or
+diagnostics, and starts melonDS the way `diag/play.py launch` does.
+
+On the right, the open save, in tabs: Allenatore (name, ids, money, gender,
+the sixteen badges, coins, play time), Squadra and Box (every Pokemon, a
+slot editor for species, level, nature, held item, moves -- with the
+learnset at that level a click away -- IVs, EVs and friendship; adding,
+removing, reordering, moving between box and party), Borsa, Pokedex (per
+species, all at once, and the two switches), Posizione (the `--where`
+write), Flag e variabili (by name) and Info (the two halves and the block
+table). The name can only be written in letters and digits: that is all
+`savedit.charcode` knows, although the game's character set has more.
+
+Nothing is deleted. Before every write the file is copied to
+`LIBRARY/.backups/<its path>/<timestamp>.sav` -- an emulator slot to
+`.backups/emulatore/<slot>/` -- the new bytes go to a temporary file that
+has to open with `savedit.Save`, and a rename puts it in place. "Annulla
+ultima modifica" restores the newest backup, keeping the state it replaces
+as a backup too. The bin is `LIBRARY/.trash/<timestamp>/<its path>`. melonDS
+writes its `.sav` back when it closes, so while it runs the page says so and
+refuses every write to a slot. Paths outside the library and the slots,
+symbolic links included, are refused, and the server answers only this page
+(its own Host and Origin, JSON bodies). `tests/newgold/test_saveui.py`
+drives every endpoint against a temporary library.
+
 ## harness/
 
 The emulator with no screen: the melonDS libretro core, driven from a list
