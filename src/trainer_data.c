@@ -10,6 +10,7 @@
 #include "msgdata/msg.naix"
 
 #include "math_util.h"
+#include "move.h"
 #include "msgdata.h"
 #include "party.h"
 #include "pokemon.h"
@@ -382,7 +383,9 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             iv = (u8)((monSpeciesMoves[i].difficulty * 31) / 255);
             CreateMon(mon, species, monSpeciesMoves[i].level, iv, TRUE, (s32)personality, OT_ID_RANDOM_NO_SHINY, 0);
             for (j = 0; j < MAX_MON_MOVES; j++) {
-                MonSetMoveInSlot(mon, monSpeciesMoves[i].moves[j], (u8)j);
+                // A move the engine has no effect for leaves its slot empty.
+                u16 move = monSpeciesMoves[i].moves[j];
+                MonSetMoveInSlot(mon, MoveIsUnimplemented(move) ? MOVE_NONE : move, (u8)j);
             }
             SetTrMonCapsule(monSpeciesMoves[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
@@ -437,7 +440,8 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             CreateMon(mon, species, monSpeciesItemMoves[i].level, iv, TRUE, (s32)personality, OT_ID_RANDOM_NO_SHINY, 0);
             SetMonData(mon, MON_DATA_HELD_ITEM, &monSpeciesItemMoves[i].item);
             for (j = 0; j < MAX_MON_MOVES; j++) {
-                MonSetMoveInSlot(mon, monSpeciesItemMoves[i].moves[j], (u8)j);
+                u16 move = monSpeciesItemMoves[i].moves[j];
+                MonSetMoveInSlot(mon, MoveIsUnimplemented(move) ? MOVE_NONE : move, (u8)j);
             }
             SetTrMonCapsule(monSpeciesItemMoves[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);

@@ -42,5 +42,6 @@ u8 GetMoveMaxPP(u16 moveId, u8 ppUps);
 void LoadMoveTbl(MoveTbl *dest);
 u32 GetMoveTblAttr(const MoveTbl *moveTbl, MoveAttr attr);
 void LoadMoveEntry(u16 moveId, MoveTbl *moveTbl);
+BOOL MoveIsUnimplemented(u16 moveId);
 
 #endif // POKEHEARTGOLD_MOVE_H

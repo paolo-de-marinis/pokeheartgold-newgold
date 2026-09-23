@@ -14,10 +14,11 @@ import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT
-from test_repels import REFERENCE
+from test_repels import REFERENCE, function
 
 sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import gmm  # noqa: E402
+import import_moves  # noqa: E402
 import import_species  # noqa: E402
 import import_trainer_text  # noqa: E402
 import wotbl  # noqa: E402
@@ -101,6 +102,35 @@ class TrainerTests(unittest.TestCase):
         for index, trainer in enumerate(self.trainers):
             for member in trainer["party"]:
                 self.assertLess(member.get("form", 0), 1 << (16 - shift), index)
+
+    def test_a_move_the_engine_has_no_effect_for_leaves_its_slot_empty(self):
+        """hg-engine's BLOCK_LEARNING_UNIMPLEMENTED_MOVES: a trainer's Pokemon
+        is not given a move flagged FLAG_UNUSABLE_UNIMPLEMENTED, and the slot
+        stays where it was. Two in konefr's table carry one: Morty's Annihilape
+        goes in with Bulk Up, nothing, Drain Punch and Taunt, and Issac's
+        Whismur without Echoed Voice."""
+        party = function((ROOT / "src/trainer_data.c").read_text(), "CreateNPCTrainerParty")
+        self.assertEqual(re.findall(r"MonSetMoveInSlot\(mon, ([^;]*)\);", party),
+                         ["MoveIsUnimplemented(move) ? MOVE_NONE : move, (u8)j"] * 2)
+        listed = re.findall(r"MOVE_\w+", re.search(r"sUnimplementedMoves\[\] = \{(.*?)\};",
+                                                   (ROOT / "src/move.c").read_text(), re.S)[1])
+        self.assertEqual(len(listed), 79)
+        carried = {(index, member["species"], move) for index, trainer in enumerate(self.trainers)
+                   for member in trainer["party"] for move in member.get("moves", []) if move in listed}
+        self.assertEqual(carried, {(31, "SPECIES_ANNIHILAPE", "MOVE_RAGE_FIST"),
+                                   (391, "SPECIES_WHISMUR", "MOVE_ECHOED_VOICE")})
+
+    @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
+    def test_the_unimplemented_moves_are_the_engine_s(self):
+        """The table is the importer's reading of d0380a487's data/Moves.c;
+        konefr flags the same 79."""
+        listed = re.findall(r"MOVE_(\w+)", re.search(r"sUnimplementedMoves\[\] = \{(.*?)\};",
+                                                   (ROOT / "src/move.c").read_text(), re.S)[1])
+        for revision in (gmm.ENGINE, gmm.NEWGOLD):
+            blocks = import_moves.records_in(gmm.git_show(revision, "data/Moves.c"))
+            flagged = {name for name, block in blocks.items()
+                       if "FLAG_UNUSABLE_UNIMPLEMENTED" in import_moves.named_flags(block)}
+            self.assertEqual(set(listed), flagged, revision)
 
     def test_added_species_reach_trainers(self):
         named = {member["species"] for trainer in self.trainers for member in trainer["party"]}
