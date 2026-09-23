@@ -5047,6 +5047,16 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         }
         script = BATTLE_SUBSCRIPT_STEAL_ITEM;
         break;
+    // Pluck and Bug Bite eat the target's Berry once the move is over, if the
+    // user still stands: Rough Skin and Aftermath answer the hit first, and a
+    // user they fell eats nothing (Pokemon Central, Coleomorso). Subscript 219
+    // asks the rest, the substitute among it.
+    case MOVE_EFFECT_EAT_BERRY:
+        if (!ctx->battleMons[ctx->battlerIdAttacker].hp) {
+            return FALSE;
+        }
+        script = BATTLE_SUBSCRIPT_PLUCK;
+        break;
     default:
         return FALSE;
     }

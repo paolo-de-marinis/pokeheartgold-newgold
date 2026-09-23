@@ -71,7 +71,6 @@ STILL_DIFFERENT = {
     178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
     180: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     222: IN_C.format("Natural Gift's type, power and berry, CalcBaseDamage.c"),
-    224: IN_C.format("the berry eaten, ServerDoPostMoveEffects.c"),
     228: IN_C.format("the switch, ServerDoPostMoveEffects.c"),
     233: IN_C.format("the fling and the items that cannot be flung, BattleController_BeforeMove.c"),
     241: CALLED_MOVE,
@@ -386,6 +385,17 @@ class BroughtOverTests(unittest.TestCase):
         self.assertNotIn("SIDE_EFFECT", script(105))
         body = function(controller, "ov12_0224E1BC")
         self.assertLess(body.index("TryAdditionalMoveEffect(ctx)"), body.index("TryMagician(battleSystem, ctx, &script)"))
+
+    def test_pluck_eats_once_the_move_is_over(self):
+        # The engine's post-move step; Pokemon Central, Coleomorso: Rough Skin
+        # and Aftermath come first, and a user they fell eats nothing.
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        step = function(controller, "TryAdditionalMoveEffect")
+        case = step[step.index("case MOVE_EFFECT_EAT_BERRY:"):]
+        case = case[:case.index("break;")]
+        self.assertIn("if (!ctx->battleMons[ctx->battlerIdAttacker].hp) {", case)
+        self.assertIn("script = BATTLE_SUBSCRIPT_PLUCK;", case)
+        self.assertNotIn("SIDE_EFFECT", script(224))
 
     def test_howl_raises_the_allies_too(self):
         # The reference raises Howl's user alone; from Generation VIII the

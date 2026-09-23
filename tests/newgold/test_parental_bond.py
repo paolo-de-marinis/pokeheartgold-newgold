@@ -240,7 +240,7 @@ class ParentalBondTests(unittest.TestCase):
     def test_what_waits_for_the_second_strike(self):
         body = function(OVERLAY.read_text(), "ov12_02250490")
         waiting = body[body.index("if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {"):]
-        for script in ("ATTACK_THEN_SWITCH_OUT", "FORCE_TARGET_TO_SWITCH_OR_FLEE", "PLUCK",
+        for script in ("ATTACK_THEN_SWITCH_OUT", "FORCE_TARGET_TO_SWITCH_OR_FLEE",
                        "FELL_STRAIGHT_DOWN", "MEAN_LOOK", "HANDLE_TERRAIN_END"):
             self.assertIn(f"case BATTLE_SUBSCRIPT_{script}:", waiting)
         self.assertIn("!ParentalBond_StrikeToCome(ctx)", function(CONTROLLER.read_text(), "ov12_0224CC88"))
