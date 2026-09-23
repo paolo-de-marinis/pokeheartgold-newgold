@@ -280,6 +280,7 @@ class RedirectTypeTests(unittest.TestCase):
         ai = (ROOT / "src/battle/trainer_ai_0221F084.c").read_text()
         functions = "\n".join([function((ROOT / "src/pokemon.c").read_text(), "GetSilvallyTypeByHeldItemEffect"),
                                function(OVERLAY.read_text(), "GetDriveOrMemoryType"),
+                               function(OVERLAY.read_text(), "WeatherBallWeather"), function(OVERLAY.read_text(), "WeatherBallType"),
                                function(ai, "ov10_0221F084"), function(ai, "ov10_0221F47C"),
                                function((ROOT / "src/battle/overlay_12_02258800.c").read_text(), "ov12_02258BB4")])
         program = AI[:AI.index("int main(void) {")].replace("@FUNCTIONS@", functions) + r"""

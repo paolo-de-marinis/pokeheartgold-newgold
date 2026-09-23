@@ -220,25 +220,11 @@ int ov12_02258BB4(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon, 
         }
         break;
     case MOVE_WEATHER_BALL:
-        // Normal unless a weather below makes it something else, as in
-        // GetDynamicMoveType.
-        type = TYPE_NORMAL;
-        if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-            if (ctx->fieldCondition & FIELD_CONDITION_WEATHER) {
-                if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
-                    type = TYPE_WATER;
-                }
-                if (ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) {
-                    type = TYPE_ROCK;
-                }
-                if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
-                    type = TYPE_FIRE;
-                }
-                if (ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {
-                    type = TYPE_ICE;
-                }
-            }
-        }
+        // As GetDynamicMoveType, for a Pokemon not yet out: under Mega Sol its
+        // own sunlight, otherwise the field's weather as a move sees it, less
+        // what its Utility Umbrella keeps off.
+        type = WeatherBallType(WeatherBallWeather(GetMonData(mon, MON_DATA_ABILITY, NULL) == ABILITY_MEGA_SOL ? FIELD_CONDITION_SUN : BattlerMoveWeather(battleSystem, ctx, BATTLER_NONE),
+            GetItemVar(ctx, GetMonData(mon, MON_DATA_HELD_ITEM, NULL), ITEMATTR_HOLD_EFFECT)));
         break;
     default:
         type = TYPE_NORMAL;

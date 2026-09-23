@@ -202,10 +202,22 @@ typedef struct BattleSystem BattleSystem;
 typedef struct Pokemon Pokemon;
 static const u16 ov10_0222B068[][2] = { { 0xFFFF, 0xFFFF } };
 static u16 sMonItem;
+static u16 sMonAbility;
+static int sMegaSol;
 static int sDamageType;
 // The item's hold effect stands for the item here.
 static int GetItemVar(BattleContext *ctx, u16 item, u16 var) { (void)ctx; return var == ITEMATTR_HOLD_EFFECT ? item : 0; }
-static u32 GetMonData(Pokemon *mon, int id, void *data) { (void)mon; (void)data; assert(id == MON_DATA_HELD_ITEM); return sMonItem; }
+static u32 GetMonData(Pokemon *mon, int id, void *data) {
+    (void)mon; (void)data;
+    assert(id == MON_DATA_HELD_ITEM || id == MON_DATA_ABILITY);
+    return id == MON_DATA_ABILITY ? sMonAbility : sMonItem;
+}
+// The weather battler 0's moves see: Mega Sol's sunlight when it has the
+// ability, otherwise the field's.
+static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) {
+    (void)bs;
+    return battlerId == 0 && sMegaSol ? FIELD_CONDITION_SUN : ctx->fieldCondition & FIELD_CONDITION_WEATHER;
+}
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].item; }
 static int GetNaturalGiftType(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return 0; }
 static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int a, int b, int c) { (void)bs; (void)ctx; (void)a; (void)b; (void)c; return 0; }
@@ -280,6 +292,8 @@ class ArceusFairyTests(unittest.TestCase):
         ai = (ROOT / "src/battle/trainer_ai_0221F084.c").read_text()
         functions = "\n".join([function((ROOT / "src/pokemon.c").read_text(), "GetSilvallyTypeByHeldItemEffect"),
                                function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "GetDriveOrMemoryType"),
+                               function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "WeatherBallWeather"),
+                               function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "WeatherBallType"),
                                function(ai, "ov10_0221F084"), function(ai, "ov10_0221F47C"),
                                function((ROOT / "src/battle/overlay_12_02258800.c").read_text(), "ov12_02258BB4")])
         with tempfile.TemporaryDirectory(prefix="newgold-arceus-ai-") as directory:

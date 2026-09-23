@@ -201,7 +201,7 @@ u32 ov10_0221F084(BattleSystem *battleSystem, BattleContext *ctx, u16 move, u16 
 }
 
 // The type of the battler's move, for the trainer AI: GetDynamicMoveType's
-// cases, with retail's weather.
+// cases.
 int ov10_0221F47C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int moveNo) {
     int type;
 
@@ -283,25 +283,9 @@ int ov10_0221F47C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId,
         }
         break;
     case MOVE_WEATHER_BALL:
-        // Normal unless a weather below makes it something else, as in
-        // GetDynamicMoveType.
-        type = TYPE_NORMAL;
-        if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-            if (ctx->fieldCondition & FIELD_CONDITION_WEATHER) {
-                if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
-                    type = TYPE_WATER;
-                }
-                if (ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) {
-                    type = TYPE_ROCK;
-                }
-                if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
-                    type = TYPE_FIRE;
-                }
-                if (ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {
-                    type = TYPE_ICE;
-                }
-            }
-        }
+        // As GetDynamicMoveType: the weather the battler's move sees, Mega
+        // Sol's sunlight included, less what its Utility Umbrella keeps off.
+        type = WeatherBallType(WeatherBallWeather(BattlerMoveWeather(battleSystem, ctx, battlerId), GetBattlerHeldItemEffect(ctx, battlerId)));
         break;
     default:
         type = TYPE_NORMAL;

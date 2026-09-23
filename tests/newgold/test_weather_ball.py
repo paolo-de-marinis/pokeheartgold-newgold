@@ -88,8 +88,8 @@ def helpers():
 
 SITES = (
     ("battle", ARCEUS, lambda: drive_or_memory() + helpers() + function(OVERLAY, "GetDynamicMoveType"), "GetDynamicMoveType(0, &ctx, 0, MOVE_WEATHER_BALL)"),
-    ("battler, for the AI", AI, lambda: drive_or_memory() + function(TRAINER_AI, "ov10_0221F47C"), "ov10_0221F47C(0, &ctx, 0, MOVE_WEATHER_BALL)"),
-    ("party, for the AI", AI, lambda: drive_or_memory() + function(OPPONENT, "ov12_02258BB4"), "ov12_02258BB4(0, &ctx, 0, MOVE_WEATHER_BALL)"),
+    ("battler, for the AI", AI, lambda: drive_or_memory() + helpers() + function(TRAINER_AI, "ov10_0221F47C"), "ov10_0221F47C(0, &ctx, 0, MOVE_WEATHER_BALL)"),
+    ("party, for the AI", AI, lambda: drive_or_memory() + helpers() + function(OPPONENT, "ov12_02258BB4"), "ov12_02258BB4(0, &ctx, 0, MOVE_WEATHER_BALL)"),
 )
 
 
@@ -117,6 +117,42 @@ class WeatherBallTypeTests(unittest.TestCase):
             (path / "test.c").write_text(program)
             result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
                 "-std=c99", "-O0", "-Wall", "-Werror", "-Wno-unused-function", "-Wno-unused-variable",
+                "-iquote", str(ROOT / "include"), str(path / "test.c"), "-o", str(path / "test")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(path / "test")], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_the_ai_sees_mega_sol_and_the_umbrella(self):
+        """The trainer AI's two copies ask the weather the Pokemon's move
+        sees, as GetDynamicMoveType does: Mega Sol's sunlight makes the ball
+        Fire in the rain, and an umbrella keeps the rain off it."""
+        checks = r"""
+int main(void) {
+    static BattleContext ctx;
+    ctx.fieldCondition = FIELD_CONDITION_RAIN;
+    sMegaSol = 1;
+    sMonAbility = ABILITY_MEGA_SOL;
+    assert(ov10_0221F47C(0, &ctx, 0, MOVE_WEATHER_BALL) == TYPE_FIRE);
+    assert(ov12_02258BB4(0, &ctx, 0, MOVE_WEATHER_BALL) == TYPE_FIRE);
+    sMegaSol = 0;
+    sMonAbility = 0;
+    ctx.battleMons[0].item = HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN;
+    sMonItem = HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN;
+    assert(ov10_0221F47C(0, &ctx, 0, MOVE_WEATHER_BALL) == TYPE_NORMAL);
+    assert(ov12_02258BB4(0, &ctx, 0, MOVE_WEATHER_BALL) == TYPE_NORMAL);
+    ctx.fieldCondition = FIELD_CONDITION_SANDSTORM;
+    assert(ov10_0221F47C(0, &ctx, 0, MOVE_WEATHER_BALL) == TYPE_ROCK);
+    assert(ov12_02258BB4(0, &ctx, 0, MOVE_WEATHER_BALL) == TYPE_ROCK);
+    return 0;
+}
+"""
+        functions = drive_or_memory() + helpers() + function(TRAINER_AI, "ov10_0221F47C") + "\n" + function(OPPONENT, "ov12_02258BB4")
+        program = AI[:AI.index("int main(void)")].replace("@FUNCTIONS@", functions) + checks
+        with tempfile.TemporaryDirectory(prefix="newgold-weather-ball-ai-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-Wno-unused-variable", "-Wno-maybe-uninitialized",
                 "-iquote", str(ROOT / "include"), str(path / "test.c"), "-o", str(path / "test")], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             result = subprocess.run([str(path / "test")], capture_output=True, text=True)
