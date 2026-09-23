@@ -172,6 +172,20 @@ class MoveTests(unittest.TestCase):
                 else:
                     self.assertEqual(got, want, f"{name} {key}")
 
+    def test_hidden_power_is_the_table_s_60(self):
+        """hg-engine fixes Hidden Power at 60 in its damage calculation,
+        whatever the IVs. Here the battle command and the AI still work out
+        retail's 30 to 70 and pass it in, so CalcMoveDamage has to take the
+        table's power for Hidden Power over the one it is given."""
+        record = struct.unpack(import_moves.RECORD, self.table[self.moves["MOVE_HIDDEN_POWER"]])
+        self.assertEqual(record[2], 60)
+        source = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        body = source[source.index("int CalcMoveDamage("):]
+        choice = re.search(r"if \(([^\n]*)\) \{\n\s*movePower = BattleMoveTbl\(ctx, moveNo\)->power;\n"
+                           r"\s*\} else \{\n\s*movePower = power;", body)
+        self.assertIsNotNone(choice, "CalcMoveDamage no longer chooses between the table and its argument")
+        self.assertIn("moveNo == MOVE_HIDDEN_POWER", choice.group(1))
+
     # Forty-one damaging moves carry no power, and the reference carries them
     # the same way, because the battle works the damage out instead: a Z-move
     # takes the power of the move it was made from, and five more take the

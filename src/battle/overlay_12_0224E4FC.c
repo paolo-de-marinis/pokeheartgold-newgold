@@ -7646,7 +7646,10 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     battleType = BattleSystem_GetBattleType(battleSystem);
     maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
-    if (power == 0) {
+    // Hidden Power is the table's 60 whatever the IVs. The battle command and
+    // the AI both still work a power out of them, 30 to 70, and pass it in;
+    // the reference overrules it in its damage calculation the same way.
+    if (power == 0 || moveNo == MOVE_HIDDEN_POWER) {
         movePower = BattleMoveTbl(ctx, moveNo)->power;
     } else {
         movePower = power;
