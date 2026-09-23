@@ -207,11 +207,11 @@ PARTY_MENU_FIELD_USE = 1
 # Ability Capsule and the twenty-one Mints need no form at all, and all their
 # routine ever did was open the party menu on the item -- so they get routine
 # 1, the same one konefr give the Ability Patch, and src/party_menu.c answers
-# them the way it answers the Gracidea. The others are not ported yet and stay
-# at routine 0.
+# them the way it answers the Gracidea. DNA Splicers keeps 31, with the fused
+# Reshiram or Zekrom kept in SAVE_MISC_DATA as the reference keeps it.
 FIELD_USE_ROUTINES = {
     30: 30,                    # Reveal Glass
-    31: GENERIC_FIELD_USE,     # DNA Splicers -- needs somewhere to keep the Reshiram or Zekrom
+    31: 31,                    # DNA Splicers
     32: PARTY_MENU_FIELD_USE,  # Ability Capsule
     33: PARTY_MENU_FIELD_USE,  # Mint
     34: 34,                    # Nectar

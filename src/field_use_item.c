@@ -96,6 +96,8 @@ static void ItemMenuUseFunc_VSRecorder(struct ItemMenuUseData *data, const struc
 static void ItemMenuUseFunc_FormChange(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2);
 static BOOL ItemFieldUseFunc_RevealGlass(struct ItemFieldUseData *data);
 static PartyMenuArgs *_CreateRevealGlassWork(FieldSystem *fieldSystem);
+static BOOL ItemFieldUseFunc_DNASplicers(struct ItemFieldUseData *data);
+static PartyMenuArgs *_CreateDNASplicersWork(FieldSystem *fieldSystem);
 static BOOL ItemFieldUseFunc_VSRecorder(struct ItemFieldUseData *data);
 static void *_VsRecorderInit(FieldSystem *fieldSystem);
 static BOOL KeyItemIdSpawnsSubprocess(FieldSystem *fieldSystem, u16 itemId);
@@ -137,7 +139,7 @@ static const struct ItemUseFuncDat sItemFieldUseFuncs[] = {
     // hg-engine's routines after HeartGold's thirty (sNewItemFieldUseFuncs in
     // its src/item.c), numbered as its item data numbers them.
     { ItemMenuUseFunc_FormChange,  ItemFieldUseFunc_RevealGlass, NULL                        }, // Reveal Glass
-    { NULL,                        NULL,                         ItemCheckUseFunc_Dummy      }, // DNA Splicers
+    { ItemMenuUseFunc_FormChange,  ItemFieldUseFunc_DNASplicers, NULL                        }, // DNA Splicers
     // The Ability Capsule and the Mints take routine 1 here, which opens the
     // party menu on the item just as these two would.
     { NULL,                        NULL,                         ItemCheckUseFunc_Dummy      },
@@ -740,6 +742,15 @@ static BOOL ItemFieldUseFunc_RevealGlass(struct ItemFieldUseData *data) {
 
 static PartyMenuArgs *_CreateRevealGlassWork(FieldSystem *fieldSystem) {
     return PartyMenu_LaunchApp_Gracidea(fieldSystem, HEAP_ID_FIELD2, ITEM_REVEAL_GLASS);
+}
+
+static BOOL ItemFieldUseFunc_DNASplicers(struct ItemFieldUseData *data) {
+    RegisteredItem_CreateGoToAppTask(data, (FieldApplicationWorkCtor)_CreateDNASplicersWork, FALSE);
+    return TRUE;
+}
+
+static PartyMenuArgs *_CreateDNASplicersWork(FieldSystem *fieldSystem) {
+    return PartyMenu_LaunchApp_Gracidea(fieldSystem, HEAP_ID_FIELD2, ITEM_DNA_SPLICERS_FUSE);
 }
 
 static void ItemMenuUseFunc_VSRecorder(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2) {

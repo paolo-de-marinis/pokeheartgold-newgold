@@ -4159,7 +4159,7 @@ void Mon_TakeHiddenAbilityFlag(Pokemon *mon, u16 flag) {
 
 // hg-engine's SwapPartyPokemonMove: the new move takes the old one's slot and
 // keeps its PP, down to what the new move holds.
-static void Mon_SwapMove(Pokemon *mon, u16 oldMove, u16 newMove) {
+void Mon_SwapMove(Pokemon *mon, u16 oldMove, u16 newMove) {
     for (int i = 0; i < MAX_MON_MOVES; i++) {
         if (GetMonData(mon, MON_DATA_MOVE1 + i, NULL) == oldMove) {
             u8 maxPP;

@@ -9,6 +9,7 @@
 
 #include "bag.h"
 #include "battle_regulation.h"
+#include "field_system.h"
 #include "font.h"
 #include "gf_gfx_loader.h"
 #include "menu_input_state.h"
@@ -20,6 +21,7 @@
 #include "poke_overlay.h"
 #include "render_text.h"
 #include "save_link_ruleset.h"
+#include "save_misc_data.h"
 #include "screen_fade.h"
 #include "sound_02004A44.h"
 #include "system.h"
@@ -56,6 +58,7 @@ static int PartyMenu_Subtask_AfterMessageBeginExit(PartyMenu *partyMenu);
 static int PartyMenu_Subtask_YesNoMenuInit(PartyMenu *partyMenu);
 static int PartyMenu_Subtask_YesNoMenuHandleInput(PartyMenu *partyMenu);
 static int PartyMenu_Subtask_UseTMHM(PartyMenu *partyMenu);
+static void PartyMenu_FinishDNASplicers(PartyMenu *partyMenu);
 static BOOL PartyMenuApp_Exit(OverlayManager *manager, int *pState);
 static void sub_020796B8(void *cbData);
 static void sub_02079700(void);
@@ -395,6 +398,9 @@ static BOOL PartyMenuApp_Main(OverlayManager *manager, int *pState) {
     case PARTY_MENU_STATE_FORM_CHANGE_ANIM:
         if (PartyMenu_AnimateIconFormChange(partyMenu) == TRUE) {
             PartyMenu_FormChangeScene_End(partyMenu);
+            if (partyMenu->args->itemId == ITEM_DNA_SPLICERS_FUSE) {
+                PartyMenu_FinishDNASplicers(partyMenu);
+            }
             *pState = PARTY_MENU_STATE_AFTER_MESSAGE_BEGIN_EXIT;
         } else {
             *pState = PARTY_MENU_STATE_FORM_CHANGE_ANIM;
@@ -2511,6 +2517,79 @@ static u16 ItemFormChangeSpecies(u16 itemId, u16 species) {
     return SPECIES_NONE;
 }
 
+// hg-engine's DNA Splicers (CanUseDNASplicersGrabSplicerPos and
+// UseItemMonAttrChangeCheck): on a Kyurem they fuse it with the first Reshiram
+// or Zekrom in the party, White Kyurem or Black, and the save keeps the other
+// Pokemon (SAVE_MISC_DATA's storedMons) until the DNA Splicers are used on
+// the fused Kyurem again, when it comes back to the party if there is room.
+// The species the Kyurem becomes, or SPECIES_NONE when they do nothing.
+// Where the reference differs it is its defect: it reads an egg's contents,
+// and on a fused Kyurem with nothing kept it stored an empty party slot and
+// fused the Kyurem again.
+static u16 DNASplicersSpecies(Party *party, int partySlot, const SAVE_MISC_DATA *misc) {
+    u16 partner;
+    int i;
+
+    switch (GetMonData(Party_GetMonByIndex(party, partySlot), MON_DATA_SPECIES_OR_EGG, NULL)) {
+    case SPECIES_KYUREM:
+        if (misc->isMonStored[STORED_MONS_DNA_SPLICERS]) {
+            break;
+        }
+        for (i = 0; i < Party_GetCount(party); i++) {
+            partner = GetMonData(Party_GetMonByIndex(party, i), MON_DATA_SPECIES_OR_EGG, NULL);
+            if (partner == SPECIES_RESHIRAM) {
+                return SPECIES_KYUREM_WHITE;
+            }
+            if (partner == SPECIES_ZEKROM) {
+                return SPECIES_KYUREM_BLACK;
+            }
+        }
+        break;
+    case SPECIES_KYUREM_WHITE:
+    case SPECIES_KYUREM_BLACK:
+        if (misc->isMonStored[STORED_MONS_DNA_SPLICERS] && Party_GetCount(party) < PARTY_SIZE) {
+            return SPECIES_KYUREM;
+        }
+        break;
+    }
+    return SPECIES_NONE;
+}
+
+// Once the form change scene has changed the Kyurem: fused, the partner goes
+// into the save and leaves the party, Glaciate becomes Ice Burn or Freeze
+// Shock and Scary Face Fusion Flare or Fusion Bolt; separated, the partner
+// comes back at the end of the party and the moves go back. The partner
+// leaves after the scene so that the scene draws the Kyurem where it is.
+static void PartyMenu_FinishDNASplicers(PartyMenu *partyMenu) {
+    Party *party = partyMenu->args->party;
+    SAVE_MISC_DATA *misc = Save_Misc_Get(FieldSystem_GetSaveData(partyMenu->args->fieldSystem));
+    Pokemon *kyurem = Party_GetMonByIndex(party, partyMenu->partyMonIndex);
+    u16 species = GetMonData(kyurem, MON_DATA_SPECIES, NULL);
+    BOOL white = species == SPECIES_KYUREM_WHITE;
+    int i;
+
+    if (species == SPECIES_KYUREM) {
+        Mon_SwapMove(kyurem, MOVE_ICE_BURN, MOVE_GLACIATE);
+        Mon_SwapMove(kyurem, MOVE_FREEZE_SHOCK, MOVE_GLACIATE);
+        Mon_SwapMove(kyurem, MOVE_FUSION_FLARE, MOVE_SCARY_FACE);
+        Mon_SwapMove(kyurem, MOVE_FUSION_BOLT, MOVE_SCARY_FACE);
+        Party_AddMon(party, &misc->storedMons[STORED_MONS_DNA_SPLICERS]);
+        MI_CpuClear8(&misc->storedMons[STORED_MONS_DNA_SPLICERS], sizeof(Pokemon));
+        misc->isMonStored[STORED_MONS_DNA_SPLICERS] = FALSE;
+        return;
+    }
+    Mon_SwapMove(kyurem, MOVE_GLACIATE, white ? MOVE_ICE_BURN : MOVE_FREEZE_SHOCK);
+    Mon_SwapMove(kyurem, MOVE_SCARY_FACE, white ? MOVE_FUSION_FLARE : MOVE_FUSION_BOLT);
+    for (i = 0; i < Party_GetCount(party); i++) {
+        if (GetMonData(Party_GetMonByIndex(party, i), MON_DATA_SPECIES_OR_EGG, NULL) == (white ? SPECIES_RESHIRAM : SPECIES_ZEKROM)) {
+            misc->storedMons[STORED_MONS_DNA_SPLICERS] = *Party_GetMonByIndex(party, i);
+            misc->isMonStored[STORED_MONS_DNA_SPLICERS] = TRUE;
+            Party_RemoveMon(party, i);
+            return;
+        }
+    }
+}
+
 // The Rotom Catalog's appliances in the order its list shows them, and the
 // form each gives (hg-engine's sPartyMenuRotomCatalogFormOrder). In a list of
 // seven the party menu's fourth button is the small one in the corner, where
@@ -2616,6 +2695,16 @@ static int PartyMenu_HandleUseItemOnMon(PartyMenu *partyMenu) {
         Heap_Free(itemData);
         PartyMenu_ShowRotomCatalog(partyMenu);
         return PARTY_MENU_STATE_HANDLE_CONTEXT_MENU_INPUT;
+    }
+
+    if (partyMenu->args->itemId == ITEM_DNA_SPLICERS_FUSE) {
+        formSpecies = DNASplicersSpecies(partyMenu->args->party, partyMenu->partyMonIndex, Save_Misc_Get(FieldSystem_GetSaveData(partyMenu->args->fieldSystem)));
+        if (formSpecies != SPECIES_NONE) {
+            partyMenu->args->species = formSpecies;
+            Heap_Free(itemData);
+            PartyMenu_FormChangeScene_Begin(partyMenu);
+            return PARTY_MENU_STATE_FORM_CHANGE_ANIM;
+        }
     }
 
     formSpecies = ItemFormChangeSpecies(partyMenu->args->itemId, GetMonData(Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex), MON_DATA_SPECIES_OR_EGG, NULL));

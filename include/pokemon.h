@@ -203,6 +203,7 @@ void Mon_ToggleHiddenAbility(Pokemon *mon);
 void Party_ResetAllShayminToLandForm(Party *party);
 BOOL Party_TryResetShaymin(Party *party, int min_max, const RTCTime *time);
 BOOL Mon_UpdateRotomForm(Pokemon *mon, int form, int defaultSlot);
+void Mon_SwapMove(Pokemon *mon, u16 oldMove, u16 newMove);
 u16 Rotom_GetFormMove(int form);
 int Rotom_GetFormOfMove(u16 move);
 BOOL Mon_RotomFormNeedsMoveSlot(Pokemon *mon, int form);
