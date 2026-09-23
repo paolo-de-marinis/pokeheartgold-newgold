@@ -143,7 +143,18 @@ endif
 # Make sure build directories exist before compiling anything
 DUMMY := $(shell mkdir -p $(ALL_BUILDDIRS))
 
+# Keep every generated file. GNU make 4.4 reads a bare .SECONDARY: as "every
+# target is secondary", and a secondary target is an intermediate one, whose
+# prerequisites are walked again for every target that names it instead of
+# once a pass: with -j and nothing built yet, every script walked the 829
+# message headers under headers.done on every pass, and a fresh tree's first
+# build sat in make itself for half an hour and more. .NOTINTERMEDIATE keeps
+# the files the same way and lets make prune the walk.
+ifneq ($(filter notintermediate,$(.FEATURES)),)
+.NOTINTERMEDIATE:
+else
 .SECONDARY:
+endif
 .SECONDEXPANSION:
 .DELETE_ON_ERROR:
 .PHONY: all tidy clean tools clean-tools patch_mwasmarm $(TOOLDIRS)
