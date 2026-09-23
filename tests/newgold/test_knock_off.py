@@ -80,6 +80,12 @@ class KnockOffTests(unittest.TestCase):
         self.assertRegex(body, r"moveNo == MOVE_KNOCK_OFF && KnockOffCanRemoveItem\(ctx, battlerIdTarget\)\)"
                                r"\s*\{\s*movePower = movePower \* 15 / 10;")
 
+    def test_knock_off_takes_what_it_boosts_for(self):
+        # A Paradox Pokemon's Booster Energy is welded to it, so the hit is not
+        # boosted and the item stays; retail's command took any item at all.
+        body = function(read("src/battle/battle_command.c"), "BtlCmd_TryKnockOff")
+        self.assertIn("} else if (KnockOffCanRemoveItem(ctx, ctx->battlerIdTarget)) {", body)
+
     def test_the_script_command_asks_the_same_question(self):
         body = function(read("src/battle/battle_command.c"), "BtlCmd_GotoIfCanApplyKnockOffBoost")
         self.assertIn("KnockOffCanRemoveItem(ctx, ctx->battlerIdTarget)", body)

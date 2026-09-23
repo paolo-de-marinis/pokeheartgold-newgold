@@ -5051,7 +5051,7 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdTarget);
         ctx->buffMsg.param[1] = ctx->battleMons[ctx->battlerIdTarget].ability;
         ctx->buffMsg.param[2] = ctx->moveNoCur;
-    } else if (ctx->battleMons[ctx->battlerIdTarget].item) {
+    } else if (KnockOffCanRemoveItem(ctx, ctx->battlerIdTarget)) {
         // "{0} knocked off {1}'s {2}!"
         ctx->buffMsg.id = msg_0197_00552;
         ctx->buffMsg.tag = TAG_NICKNAME_NICKNAME_ITEM;
