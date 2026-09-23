@@ -79,6 +79,9 @@ class FairySearchTests(unittest.TestCase):
         for name in ("SPECIES_CLEFAIRY", "SPECIES_TOGEPI", "SPECIES_SYLVEON", "SPECIES_ENAMORUS"):
             self.assertIn(ids[name], fairy, name)
         self.assertNotIn(ids["SPECIES_PIKACHU"], fairy)
+        # New Gold's: konefr makes Meganium Grass and Fairy, Mismagius Ghost and Fairy
+        self.assertIn(ids["SPECIES_MEGANIUM"], fairy)
+        self.assertIn(ids["SPECIES_MISMAGIUS"], fairy)
         # the lists the Dex's routines ask by number keep their members
         naix = (ROOT / "files/application/zukanlist/zkn_data/zukan_data.naix").read_text()
         self.assertIn("NARC_zukan_data_sort_order_types_normal = 62,", naix)
