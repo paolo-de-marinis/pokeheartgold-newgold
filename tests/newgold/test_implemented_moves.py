@@ -140,5 +140,17 @@ class ImplementedMoveTests(unittest.TestCase):
                       function(controller, "BattleControllerPlayer_TurnEnd"))
         # The power itself is test_move_power's EchoedVoiceTests.
 
+    def test_round_calls_the_others_that_chose_it(self):
+        # Pokemon Central (Coro): whoever else chose Round and has yet to move
+        # goes next; the power is test_move_power's RoundTests.
+        self.assertImplemented("ROUND", "MOVE_EFFECT_HIT")
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        noted = function(controller, "NoteMoveUsed")
+        self.assertIn("ctx->roundUsers |= MaskOfFlagNo(ctx->battlerIdAttacker);", noted)
+        self.assertIn("ctx->battleMons[battlerId].moves[ctx->movePos[battlerId]] == MOVE_ROUND) {\n"
+                      "                ctx->turnData[battlerId].forceExecutionOrder = EXECUTION_ORDER_AFTER_YOU;", noted)
+        self.assertIn("ov12_0225561C(ctx, battlerId) == FALSE", noted)
+        self.assertIn("ctx->roundUsers = 0;", function(controller, "BattleControllerPlayer_TurnEnd"))
+
 if __name__ == "__main__":
     unittest.main()

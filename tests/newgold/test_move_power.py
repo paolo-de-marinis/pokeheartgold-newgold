@@ -85,6 +85,20 @@ class EchoedVoiceTests(unittest.TestCase):
 """))
 
 
+class RoundTests(unittest.TestCase):
+    def test_every_round_in_a_turn_but_the_first_is_120(self):
+        """60 is 28 and 120 is 54 once another Pokemon, of either side, has
+        used Round this turn (Pokemon Central, Coro)."""
+        run_c(self, damage_program(r"""
+#define ROUND(attacker) CalcMoveDamage(&bs, &ctx, MOVE_ROUND, 0, 0, 0, TYPE_NORMAL, attacker, 1, 1)
+    reset(4); S.move.power = 60;
+    ctx.roundUsers = 1 << 0; EXPECT(ROUND(0), 28);
+    ctx.roundUsers = 1 << 0 | 1 << 2; EXPECT(ROUND(2), 54);
+    ctx.roundUsers = 1 << 1 | 1 << 3; EXPECT(ROUND(3), 54);
+    EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_HYPER_VOICE, 0, 0, 0, TYPE_NORMAL, 0, 1, 1), 28);
+"""))
+
+
 if __name__ == "__main__":
     unittest.main()
 

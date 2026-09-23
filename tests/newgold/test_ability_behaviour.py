@@ -72,7 +72,7 @@ typedef struct {
     int unk_2158; u8 terrainOverlayType; int meFirstTotal; int totalTurns;
     u32 effectiveSpeed[4]; u8 paradoxBoostedStat[4]; u8 supremeOverlordFallen[4];
     int totalTimesFainted[4];
-    u8 gemBoostingMove; int battlerIdAttacker; u8 multiHitCount; u8 echoedVoiceTurns;
+    u8 gemBoostingMove; int battlerIdAttacker; u8 multiHitCount; u8 echoedVoiceTurns; u8 roundUsers;
     BattleMon battleMons[4];
     struct { int helpingHandFlag; int unk3C; int switchedIn; } turnData[4];
     struct { u8 statLoweredThisTurn; } moveConditions[4];
@@ -119,6 +119,7 @@ static int CheckMoveEffectOnField(BattleSystem *bs, BattleContext *ctx, u32 flag
 static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return S.weather; }
 static int ov12_022581D4(BattleSystem *bs, BattleContext *ctx, int var, int battlerId) { (void)bs; (void)ctx; (void)var; (void)battlerId; return 0; }
 static BOOL ov12_0225561C(BattleContext *ctx, int battlerId) { (void)ctx; return S.acted[battlerId]; }
+static u32 MaskOfFlagNo(int flagno) { return 1u << flagno; }
 @MOVE_IS_IN_LIST@
 @SLICING@
 @CALC@

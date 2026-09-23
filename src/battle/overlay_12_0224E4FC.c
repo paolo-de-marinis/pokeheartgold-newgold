@@ -10161,6 +10161,11 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower = movePower * (1 + ctx->echoedVoiceTurns);
     }
 
+    // Every Round in a turn but the first is 120 (Pokemon Central, Coro).
+    if (moveNo == MOVE_ROUND && (ctx->roundUsers & ~MaskOfFlagNo(battlerIdAttacker))) {
+        movePower *= 2;
+    }
+
     moveType = BattleMoveTypeForAbility(ctx, calcAttacker.ability, moveNo, type & 0x3F);
 
     GF_ASSERT(ctx->unk_2158 >= 10);

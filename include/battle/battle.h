@@ -663,6 +663,9 @@ typedef struct BattleContext {
     // run when it ends, and a turn it was not ends the run.
     u8 echoedVoiceTurns;
     u8 echoedVoiceUsed;
+    // Round: the battlers that have used it this turn, a bit each. Every
+    // Round after the first in a turn has twice the power.
+    u8 roundUsers;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

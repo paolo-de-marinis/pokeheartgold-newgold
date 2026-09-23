@@ -347,6 +347,10 @@ IMPLEMENTED_HERE = {
     # Echoed Voice is 40 more for each turn in a row someone used it, to 200
     # (Pokemon Central, Echeggiavoce): CalcMoveDamage reads the run.
     "ECHOED_VOICE": "MOVE_EFFECT_HIT",
+    # Round is 120 after the turn's first and calls the other Pokemon that
+    # chose it to go next (Pokemon Central, Coro): NoteMoveUsed and
+    # CalcMoveDamage.
+    "ROUND": "MOVE_EFFECT_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

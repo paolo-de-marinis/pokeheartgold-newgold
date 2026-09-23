@@ -4,6 +4,7 @@
 
 #include "constants/abilities.h"
 #include "constants/battle_menu.h"
+#include "constants/battle_script_imports.h"
 #include "constants/battle_subscript.h"
 #include "constants/items.h"
 #include "constants/message_tags.h"
@@ -179,7 +180,8 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // raised, for Parting Shot, and the Binding Band's byte both went into the
 // padding after the Mirror Herb's stages. What Parental Bond's first strike
 // leaves to the second grew it by four. Echoed Voice's two bytes, after
-// Parental Bond's four, grew it by four.
+// Parental Bond's four, grew it by four. Round's byte went into the padding
+// after them.
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x3238 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
@@ -2122,6 +2124,7 @@ static void BattleControllerPlayer_TurnEnd(BattleSystem *battleSystem, BattleCon
         ctx->echoedVoiceTurns++;
     }
     ctx->echoedVoiceUsed = FALSE;
+    ctx->roundUsers = 0;
 
     ctx->totalTurns++;
     ctx->meFirstTotal++;
@@ -3395,12 +3398,28 @@ static BOOL PrimalWeatherStopsMove(u32 weather, int category, int type) {
 // now being used: it has come through everything that can stop a Pokemon
 // acting, and has spent its PP, whether or not it goes on to fail.
 static void NoteMoveUsed(BattleSystem *battleSystem, BattleContext *ctx) {
-#pragma unused(battleSystem)
     // Echoed Voice counts a turn a move of it was used in, failed or not;
     // one the user could not act in does not count (Pokemon Central,
     // Echeggiavoce).
     if (ctx->moveNoCur == MOVE_ECHOED_VOICE) {
         ctx->echoedVoiceUsed = TRUE;
+    }
+    // Round calls every other Pokemon that chose it and has yet to move to
+    // use it next, the fastest of them first (Pokemon Central, Coro): After
+    // You's mark, which the order of those still to move is sorted by after
+    // every action.
+    if (ctx->moveNoCur == MOVE_ROUND) {
+        int battlerId;
+        int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+        ctx->roundUsers |= MaskOfFlagNo(ctx->battlerIdAttacker);
+        for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
+            if (battlerId != ctx->battlerIdAttacker && ctx->battleMons[battlerId].hp && ov12_0225561C(ctx, battlerId) == FALSE
+                && ctx->playerActions[battlerId].inputSelection == BATTLE_INPUT_FIGHT && !ctx->turnData[battlerId].struggleFlag
+                && ctx->battleMons[battlerId].moves[ctx->movePos[battlerId]] == MOVE_ROUND) {
+                ctx->turnData[battlerId].forceExecutionOrder = EXECUTION_ORDER_AFTER_YOU;
+            }
+        }
     }
 }
 
