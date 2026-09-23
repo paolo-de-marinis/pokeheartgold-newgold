@@ -23,6 +23,13 @@ platform holds every item konefr could reach, and giving each of them its
 behaviour is a pass of its own. They are let past the check above and counted
 instead, so the block cannot quietly grow, an unread effect written by hand
 still fails, and implementing one shows up as the number going down.
+
+A battle script is as much a reader as a .c file. Techno Blast takes its type
+from the Drive in effect_script_0312, Multi-Attack from the Memory in 0313, the
+Roseli Berry is answered in the resist-berry subscript and Heavy-Duty Boots in
+the hazards check -- the reference answers all four in its scripts too -- so
+the scripts under files/battledata are read alongside src/, the way
+test_ability_effects.py reads them for abilities.
 """
 
 import re
@@ -33,6 +40,7 @@ from test_level_cap import ROOT
 HEADER = ROOT / "include/constants/items.h"
 ITEM_DATA = ROOT / "files/itemtool/itemdata/item_data.csv"
 SRC = ROOT / "src"
+SCRIPTS = ROOT / "files/battledata"
 
 # Eviolite's, the first effect this port added. Everything at or above it is
 # New Gold's.
@@ -42,16 +50,13 @@ FIRST_ADDED = "HOLD_EFFECT_BOOST_IF_NOT_EVOLVED"
 # hand, and those have to be read by name somewhere. At or above it are the
 # ones the range brought with it, which are counted instead.
 FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
-# How many of those an item carries and no line in src/ reads. It was every one
-# of them when the range came in; the nine held items that answer being hit or
-# hitting took nine off it, and the thirteen that change a number rather than
-# answer an event took thirteen more.
-#
-# Two of that second batch are still counted here and are not unread: the
-# Roseli Berry and Heavy-Duty Boots are battle scripts asking the hold effect
-# by name, and a script is not src/. Anything this test still lists is worth
-# checking against files/battledata before believing it does nothing.
-IMPORTED_AND_UNREAD = 42
+# How many of those an item carries and nothing reads. It was every one of them
+# when the range came in; the nine held items that answer being hit or hitting
+# took nine off it, and the thirteen that change a number rather than answer an
+# event took thirteen more. Counting the battle scripts as readers took the
+# twenty-three the scripts had been answering all along: the four Drives, the
+# seventeen Memories, the Roseli Berry and Heavy-Duty Boots.
+IMPORTED_AND_UNREAD = 19
 
 
 def effects_defined():
@@ -72,9 +77,9 @@ def effects_in_records():
 
 
 def effects_read():
-    """Every hold effect named anywhere under src/, by name."""
+    """Every hold effect named anywhere under src/ or in a battle script, by name."""
     read = set()
-    for path in SRC.rglob("*.c"):
+    for path in list(SRC.rglob("*.c")) + list(SCRIPTS.rglob("*.s")):
         read.update(re.findall(r"HOLD_EFFECT_[A-Z0-9_]+", path.read_text(errors="replace")))
     return read
 
@@ -92,7 +97,8 @@ class HoldEffectTests(unittest.TestCase):
             if defined[effect] >= defined[FIRST_IMPORTED]:
                 continue  # counted below instead
             self.assertIn(effect, read,
-                          f"an item carries {effect} and nothing in src/ reads it, "
+                          f"an item carries {effect} and nothing in src/ or the battle "
+                          f"scripts reads it, "
                           f"so the item does nothing when it is held")
 
     def test_the_effects_the_item_range_brought_with_it_are_the_only_unread_ones(self):
