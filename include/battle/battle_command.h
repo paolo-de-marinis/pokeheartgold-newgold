@@ -314,7 +314,7 @@ typedef struct TempStatsStruct {
 } TempStatsStruct;
 
 extern const u8 sTrumpCardPowerTable[5];
-extern const u16 sProtectSuccessChance[4];
+extern const u16 sProtectSuccessChance[7];
 extern const u8 sFlailDamageTable[6][2];
 extern const u16 sPickupTable2[11];
 extern const TempStatsStruct ov12_0226C33C;

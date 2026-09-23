@@ -33,6 +33,6 @@ void ov10_0221EBAC(BattleSystem *battleSystem, BattleContext *ctx) {
     if (ctx->moveNoProtect[battlerId] != MOVE_PROTECT && ctx->moveNoProtect[battlerId] != MOVE_DETECT && ctx->moveNoProtect[battlerId] != MOVE_ENDURE) {
         ctx->trainerAIData.unk8 = 0;
     } else {
-        ctx->trainerAIData.unk8 = ctx->battleMons[battlerId].unk88.protectSuccessTurns;
+        ctx->trainerAIData.unk8 = ctx->protectSuccessTurns[battlerId];
     }
 }

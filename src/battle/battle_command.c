@@ -3909,6 +3909,7 @@ static BOOL IsTeamGuard(u16 move) {
 }
 
 // As the reference (battle_script_commands.c and BattleController_BeforeMove.c):
+// one try in 3^n works after n in a row, and the count stops at six;
 // any move of Protect's family used before this one keeps the count going,
 // the four team guards never roll for it, and Mat Block and Crafty Shield do
 // not add to it. A team guard covers the user and, unless it has raised a
@@ -3924,7 +3925,7 @@ BOOL BtlCmd_TryProtection(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrs = BattleScriptReadWord(ctx);
 
     if (lastEffect != MOVE_EFFECT_PROTECT && lastEffect != MOVE_EFFECT_PROTECT_USER_SIDE && lastEffect != MOVE_EFFECT_SURVIVE_WITH_1_HP) {
-        ctx->battleMons[attacker].unk88.protectSuccessTurns = 0;
+        ctx->protectSuccessTurns[attacker] = 0;
     }
 
     if (ctx->battlersOnField == 1) {
@@ -3933,7 +3934,7 @@ BOOL BtlCmd_TryProtection(BattleSystem *battleSystem, BattleContext *ctx) {
         flag = TRUE;
     }
 
-    if ((IsTeamGuard(ctx->moveNoCur) || sProtectSuccessChance[ctx->battleMons[attacker].unk88.protectSuccessTurns] >= (u32)BattleSystem_Random(battleSystem)) && flag) {
+    if ((IsTeamGuard(ctx->moveNoCur) || BattleSystem_Random(battleSystem) % sProtectSuccessChance[ctx->protectSuccessTurns[attacker]] == 0) && flag) {
         ctx->buffMsg.tag = TAG_NICKNAME;
         ctx->buffMsg.param[0] = CreateNicknameTag(ctx, attacker);
         if (effect == MOVE_EFFECT_PROTECT) {
@@ -3960,13 +3961,13 @@ BOOL BtlCmd_TryProtection(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->buffMsg.id = msg_0197_00442;
         }
 
-        if (ctx->battleMons[attacker].unk88.protectSuccessTurns < NELEMS(sProtectSuccessChance) - 1
+        if (ctx->protectSuccessTurns[attacker] < NELEMS(sProtectSuccessChance) - 1
             && ctx->moveNoCur != MOVE_MAT_BLOCK && ctx->moveNoCur != MOVE_CRAFTY_SHIELD) {
-            ctx->battleMons[attacker].unk88.protectSuccessTurns++;
+            ctx->protectSuccessTurns[attacker]++;
         }
 
     } else {
-        ctx->battleMons[ctx->battlerIdAttacker].unk88.protectSuccessTurns = 0;
+        ctx->protectSuccessTurns[attacker] = 0;
         BattleScriptIncrementPointer(ctx, adrs);
     }
 

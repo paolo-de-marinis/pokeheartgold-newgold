@@ -168,7 +168,7 @@ typedef struct UnkBattlemonSub {
     u32 encoredTurns : 3;
     u32 isCharged : 2;
     u32 tauntTurns : 3;
-    u32 protectSuccessTurns : 2;
+    u32 unk0_B : 2; // retail's run of guards, now BattleContext.protectSuccessTurns
     u32 perishSongTurns : 2;
     u32 rolloutCount : 3;
     u32 furyCutterCount : 3;
@@ -553,6 +553,11 @@ typedef struct BattleContext {
     // does not follow it out and back in.
     u16 cudChewBerry[BATTLER_MAX];
     u16 cudChewTurn[BATTLER_MAX];
+    // How many times in a row the battler's Protect or one of its family has
+    // worked, up to six. hg-engine (d0380a487, include/battle.h) keeps it here
+    // rather than in the two bits the BattleMon had, which stop at three, for
+    // odds that go down to 1 in 729. Cleared when the battler is loaded.
+    u8 protectSuccessTurns[BATTLER_MAX];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

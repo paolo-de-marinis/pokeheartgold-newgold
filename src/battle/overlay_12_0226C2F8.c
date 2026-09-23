@@ -11,7 +11,11 @@
 // asm/overlay_12_battle_command.s before these, asm/overlay_12_0226C324.s
 // after them. The rest are overlay_12_0226C3E8.c and overlay_12_0226CA4C.c.
 
-const u16 sProtectSuccessChance[4] = { 0xFFFF, 0x7FFF, 0x3FFF, 0x1FFF };
+// One try in this many at Protect or one of its family works, by how many have
+// worked in a row before it: hg-engine's 1/3^n (d0380a487,
+// BattleController_BeforeMove.c), where Generation IV halved the odds against a
+// 16-bit roll and stopped at 1/8.
+const u16 sProtectSuccessChance[7] = { 1, 3, 9, 27, 81, 243, 729 };
 
 // HP threshold as 64ths of max, then the power.
 const u8 sFlailDamageTable[6][2] = {

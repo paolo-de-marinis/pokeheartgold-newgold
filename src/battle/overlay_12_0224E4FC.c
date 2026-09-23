@@ -130,6 +130,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     // Kept off the BattleMon because that structure's size is pinned; cleared
     // here, which is where the reference clears its copy.
     ctx->psychicTerrainMoveUsed[battlerId] = 0;
+    ctx->protectSuccessTurns[battlerId] = 0;
     // A Paradox ability picks its stat again from scratch when its Pokemon
     // comes back out, so what it had picked before does not travel with it --
     // nor does the record of a Booster Energy having been what raised it.
@@ -465,7 +466,7 @@ int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
     case BMON_DATA_TAUNTED_TURNS:
         return mon->unk88.tauntTurns;
     case BMON_DATA_PROTECT_SUCCESS_COUNT:
-        return mon->unk88.protectSuccessTurns;
+        return ctx->protectSuccessTurns[battlerId];
     case BMON_DATA_PERISH_SONG_TURNS:
         return mon->unk88.perishSongTurns;
     case BMON_DATA_ROLLOUT_TURNS:
@@ -721,7 +722,7 @@ void SetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         mon->unk88.tauntTurns = *data8;
         break;
     case BMON_DATA_PROTECT_SUCCESS_COUNT:
-        mon->unk88.protectSuccessTurns = *data8;
+        ctx->protectSuccessTurns[battlerId] = *data8;
         break;
     case BMON_DATA_PERISH_SONG_TURNS:
         mon->unk88.perishSongTurns = *data8;
@@ -834,6 +835,11 @@ void SetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
 }
 
 void AddBattlerVar(BattleContext *ctx, int battlerId, u32 varId, int data) {
+    // The one count kept off the BattleMon, which BattleMon_AddVar cannot reach.
+    if (varId == BMON_DATA_PROTECT_SUCCESS_COUNT) {
+        ctx->protectSuccessTurns[battlerId] += data;
+        return;
+    }
     BattleMon_AddVar(&ctx->battleMons[battlerId], varId, data);
 }
 
@@ -951,9 +957,6 @@ void BattleMon_AddVar(BattleMon *mon, u32 varId, int data) {
         break;
     case BMON_DATA_TAUNTED_TURNS:
         mon->unk88.tauntTurns += data;
-        break;
-    case BMON_DATA_PROTECT_SUCCESS_COUNT:
-        mon->unk88.protectSuccessTurns += data;
         break;
     case BMON_DATA_PERISH_SONG_TURNS:
         mon->unk88.perishSongTurns += data;

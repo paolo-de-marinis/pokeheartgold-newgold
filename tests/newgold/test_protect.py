@@ -38,7 +38,7 @@ typedef int BOOL;
 
 typedef struct { u16 effect; u8 category; u16 range; s8 priority; } MoveTbl;
 typedef struct { u32 protectFlag : 1; u32 endureFlag : 1; u32 gainedProtectFlagFromAlly : 1; } TurnData;
-typedef struct { struct { u32 protectSuccessTurns : 2; } unk88; } BattleMon;
+typedef struct { int hp; } BattleMon;
 typedef struct { u16 id; int tag; int param[4]; } BattleMessage;
 typedef struct {
     int battlerIdAttacker, battlerIdTarget, battlersOnField, moveTemp;
@@ -47,16 +47,18 @@ typedef struct {
     BattleMon battleMons[4];
     TurnData turnData[4];
     BattleMessage buffMsg;
+    u8 protectSuccessTurns[4];
 } BattleContext;
 typedef struct BattleSystem BattleSystem;
 
 static MoveTbl sMoves[MOVE_BURNING_BULWARK + 1];
 static int sRolls;
-static u16 sProtectSuccessChance[4] = { 0xFFFF, 0x7FFF, 0x3FFF, 0x1FFF };
+static u32 sRoll;
+@CHANCES@
 
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 move) { (void)ctx; return &sMoves[move]; }
 static s8 BattlerMovePriority(BattleContext *ctx, int battlerId, u16 move) { (void)ctx; (void)battlerId; return sMoves[move].priority; }
-static u32 BattleSystem_Random(BattleSystem *bs) { (void)bs; sRolls++; return 0; }
+static u32 BattleSystem_Random(BattleSystem *bs) { (void)bs; sRolls++; return sRoll; }
 static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
 static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return 0; }
 static int CreateNicknameTag(BattleContext *ctx, int battlerId) { (void)ctx; return battlerId; }
@@ -119,10 +121,10 @@ int main(void) {
     assert(ctx.turnData[3].protectFlag && ctx.turnData[3].gainedProtectFlagFromAlly);
     assert(ctx.buffMsg.id == msg_0197_01565 && ctx.buffMsg.tag == TAG_MOVE_SIDE);
     assert(ctx.buffMsg.param[0] == MOVE_WIDE_GUARD && ctx.buffMsg.param[1] == 1);
-    assert(ctx.battleMons[1].unk88.protectSuccessTurns == 1);
+    assert(ctx.protectSuccessTurns[1] == 1);
     // A Protect straight after counts as a second in a row and rolls for it.
     use(&ctx, 1, MOVE_PROTECT);
-    assert(sRolls == 1 && ctx.battleMons[1].unk88.protectSuccessTurns == 2);
+    assert(sRolls == 1 && ctx.protectSuccessTurns[1] == 2);
     // Its own Protect is its own guard, not the one it was lent.
     use(&ctx, 3, MOVE_PROTECT);
     assert(ctx.turnData[3].protectFlag && !ctx.turnData[3].gainedProtectFlagFromAlly);
@@ -139,13 +141,13 @@ int main(void) {
     ctx.battlersOnField = 2;
     use(&ctx, 0, MOVE_MAT_BLOCK);
     use(&ctx, 0, MOVE_CRAFTY_SHIELD);
-    assert(ctx.battleMons[0].unk88.protectSuccessTurns == 0);
+    assert(ctx.protectSuccessTurns[0] == 0);
     use(&ctx, 0, MOVE_QUICK_GUARD);
-    assert(ctx.battleMons[0].unk88.protectSuccessTurns == 1);
+    assert(ctx.protectSuccessTurns[0] == 1);
     // Any other move in between starts the count again.
     ctx.moveNoProtect[0] = MOVE_TACKLE;
     use(&ctx, 0, MOVE_KINGS_SHIELD);
-    assert(ctx.battleMons[0].unk88.protectSuccessTurns == 1);
+    assert(ctx.protectSuccessTurns[0] == 1);
 
     // Feint through a team guard lifts it from both battlers it covers,
     // whichever of the two it hits.
@@ -161,6 +163,31 @@ int main(void) {
     ctx.battlerIdTarget = 1;
     BtlCmd_TryFeint(0, &ctx);
     assert(!ctx.turnData[3].protectFlag);
+
+    // One try in 3^n works after n in a row, as the reference rolls it: a
+    // roll of 1 carries the first Protect and not the second, and a failure
+    // starts the count again.
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.battlersOnField = 2;
+    sRoll = 1;
+    use(&ctx, 0, MOVE_PROTECT);
+    assert(ctx.turnData[0].protectFlag && ctx.protectSuccessTurns[0] == 1);
+    ctx.turnData[0].protectFlag = FALSE;
+    use(&ctx, 0, MOVE_DETECT);
+    assert(!ctx.turnData[0].protectFlag && ctx.protectSuccessTurns[0] == 0);
+    // A roll of 729 divides by every step, so it carries eight in a row, and
+    // the count stops at six, where 243 is no longer enough.
+    sRoll = 729;
+    for (int i = 0; i < 8; i++) {
+        ctx.turnData[0].protectFlag = FALSE;
+        use(&ctx, 0, MOVE_PROTECT);
+        assert(ctx.turnData[0].protectFlag);
+    }
+    assert(ctx.protectSuccessTurns[0] == 6);
+    sRoll = 243;
+    ctx.turnData[0].protectFlag = FALSE;
+    use(&ctx, 0, MOVE_PROTECT);
+    assert(!ctx.turnData[0].protectFlag && ctx.protectSuccessTurns[0] == 0);
     return 0;
 }
 """
@@ -276,8 +303,11 @@ class ProtectTests(unittest.TestCase):
     def test_the_real_guard_check_and_protection_command(self):
         controller = read("src/battle/battle_controller_player.c")
         commands = read("src/battle/battle_command.c")
+        tables = read("src/battle/overlay_12_0226C2F8.c")
+        chances = tables[tables.index("const u16 sProtectSuccessChance["):]
         source = FIXTURE
         for token, replacement in {
+            "@CHANCES@": chances[:chances.index(";") + 1],
             "@TEAM_GUARD@": function(commands, "IsTeamGuard"),
             "@TEAM_GUARD_MOVE@": function(controller, "IsTeamGuardMove"),
             "@STOPS@": function(controller, "GuardStopsMove"),
