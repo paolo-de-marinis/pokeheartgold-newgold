@@ -730,16 +730,28 @@ class Library:
 
     def op_position(self, save, a):
         where = number(a["map"], 0, 0xFFFF, "mappa")
-        if where not in sv.map_table():
-            raise Refused(f"non c'è la mappa {where}")
-        sv.set_position(save, where, number(a["x"], 0, 0xFFFF, "x"), number(a["y"], 0, 0xFFFF, "y"),
-                        number(a.get("direction", 0), 0, 3, "direzione"))
+        if where not in sv.map_table() or not standable(where):
+            raise Refused(f"la mappa {where} non è un luogo dove stare")
+        x, y = number(a["x"], 0, 0xFFFF, "x"), number(a["y"], 0, 0xFFFF, "y")
+        if not sv.on_map(where, x, y):
+            chunks = sv.map_chunks(where)
+            span = lambda i: f"{min(c[i] for c in chunks) * 32}–{max(c[i] for c in chunks) * 32 + 31}"
+            raise Refused(f"({x}, {y}) è fuori da {sv.map_table()[where]['name'] or where}: lì il gioco lascerebbe "
+                          f"il giocatore nel nero. La mappa sta tra x {span(0)} e y {span(1)}.")
+        sv.set_position(save, where, x, y, number(a.get("direction", 0), 0, 3, "direzione"))
 
     def op_flag(self, save, a):
         sv.write_flag(save, number(a["number"], 1, 0xFFFF, "flag"), bool(a["value"]))
 
     def op_var(self, save, a):
         sv.write_var(save, number(a["number"], 0, 0xFFFF, "variabile"), number(a["value"], 0, 0xFFFF, "valore"))
+
+
+def standable(map_id):
+    """A map the player can be put on: not MAP_EVERYWHERE, which is the
+    header of no place, and one with chunks of its own (the unused ones
+    have none)."""
+    return map_id != 0 and bool(sv.map_chunks(map_id))
 
 
 def last_one(save):
@@ -934,7 +946,7 @@ def tables():
     """The names the page searches: species, moves, items, natures, maps."""
     return {"species": sv.species_table(), "moves": sv.move_table(),
             "items": list(sv.item_table().values()), "natures": sv.bank(sv.NATURE_NAMES),
-            "maps": list(sv.map_table().values()), "dex": sv.dex_species(),
+            "maps": [m for m in sv.map_table().values() if standable(m["id"])], "dex": sv.dex_species(),
             "pockets": [[name, count] for name, count in sv.POCKETS]}
 
 

@@ -344,6 +344,14 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(len(self.backups()), 8, "one backup a write")
         self.assertIn("mappa", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position",
                                                           "args": {"map": 60000, "x": 1, "y": 1}}))
+        # Off the map, or on no map: Continue would leave the player on black.
+        for where, x, y in ((0, 1, 1), (33, 5000, 5000), (80, 200, 200), (33, 5, 5)):
+            self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position", "args": {"map": where, "x": x, "y": y}})
+        self.assertIn("x 576–671 e y 384–415", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position",
+                                                               "args": {"map": 33, "x": 5, "y": 5}}))
+        out = self.edit("position", {"map": 33, "x": 655, "y": 400, "direction": 3})
+        self.assertEqual(out["position"]["current"], {"map": 33, "warp": -1, "x": 655, "y": 400, "direction": 3})
+        self.assertNotIn(0, [m["id"] for m in self.ok("/api/data")["maps"]])
 
     def test_files(self):
         self.edit("trainer", {"money": 1})

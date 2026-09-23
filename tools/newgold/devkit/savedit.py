@@ -937,6 +937,47 @@ def map_table():
     return dict(sorted(out.items()))
 
 
+MATRICES = ROOT / "files/fielddata/mapmatrix/map_matrix"
+CHUNK_TILES = 32                # a map chunk is 32 by 32 tiles
+
+
+@functools.cache
+def _matrix_of():
+    """Each map's matrix, as its header in src/data/map_headers.h names it."""
+    number = constants("include/constants/maps.h", "MAP_")
+    headers = (ROOT / "src/data/map_headers.h").read_text()
+    return {number[const]: int(m) for const, m in re.findall(
+        r"\[(MAP_\w+)\] = \{[^}]*?\.matrixId = NARC_map_matrix_map_matrix_(\d{4})", headers) if const in number}
+
+
+@functools.cache
+def map_chunks(map_id):
+    """The chunks of its matrix that are this map's, as (column, row).
+
+    MapMatrix_MapMatrixData_Load: width, height, whether there is a layer
+    naming each chunk's map (without one every chunk is the map's own), one
+    of altitudes, then each chunk's land data, 0xFFFF where there is none --
+    the black void. The matrix is the one the map's header names."""
+    matrix = _matrix_of().get(map_id)
+    if matrix is None:
+        return frozenset()
+    data = next(p for p in MATRICES.iterdir() if re.fullmatch(rf"map_matrix_{matrix:04d}(_\w+)?\.bin", p.name)).read_bytes()
+    width, height, has_maps, has_altitudes, name_length = data[:5]
+    at = 5 + name_length
+    cells = width * height
+    owners = struct.unpack_from(f"<{cells}H", data, at) if has_maps else [map_id] * cells
+    at += 2 * cells if has_maps else 0
+    at += cells if has_altitudes else 0
+    land = struct.unpack_from(f"<{cells}H", data, at)
+    return frozenset((i % width, i // width) for i in range(cells) if land[i] != 0xFFFF and owners[i] == map_id)
+
+
+def on_map(map_id, x, y):
+    """Whether the tile is on a chunk of this map, not off its matrix or in
+    the void between chunks, where Continue leaves the player on black."""
+    return (x // CHUNK_TILES, y // CHUNK_TILES) in map_chunks(map_id)
+
+
 # ---------------------------------------------------------------------------
 # One Pokemon, opened and closed the way AcquireBoxMonLock and
 # ReleaseBoxMonLock do it.
