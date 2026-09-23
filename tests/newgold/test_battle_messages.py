@@ -159,9 +159,9 @@ class BattleMessageTests(unittest.TestCase):
             self.assertEqual(table[row], text, name)
         self.assertIn("msg_0197_01787, TAG_NICKNAME_ABILITY", script("subscript_0366_WanderingSpirit.s"))
         self.assertIn("msg_0197_01797, TAG_NICKNAME_ABILITY", script("subscript_0278_CheckQuickClaw.s"))
-        self.assertIn("msg_0197_01800, TAG_NONE", script("subscript_0403_NeutralizingGas.s"))
-        self.assertIn("msg_0197_01801, TAG_NONE", script("subscript_0404_NeutralizingGasEnd.s"))
-        self.assertIn("msg_0197_01802, TAG_NICKNAME_ITEM", script("subscript_0405_CudChew.s"))
+        self.assertIn("msg_0197_01800, TAG_NONE", script("subscript_*_NeutralizingGas.s"))
+        self.assertIn("msg_0197_01801, TAG_NONE", script("subscript_*_NeutralizingGasEnd.s"))
+        self.assertIn("msg_0197_01802, TAG_NICKNAME_ITEM", script("subscript_*_CudChew.s"))
         self.assertIn("msg_0197_01790, TAG_NICKNAME", script("effect_script_0397.s"))
         battle = ROOT / "src/battle"
         self.assertIn("msg->id = msg_0197_01790;", (battle / "overlay_12_0224E4FC.c").read_text())

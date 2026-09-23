@@ -240,7 +240,7 @@ class FormChangeTests(unittest.TestCase):
         self.assertIn("ctx->iceFaceWeatherSeen &= ~MaskOfFlagNo(battlerId);", function(overlay, "BattleSystem_GetBattleMon"))
         damage = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224B498")
         self.assertRegex(damage, r"Battler_BrokenFaceForm\(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->moveNoCur\) != SPECIES_NONE\) \{\s*ctx->damage = 0;")
-        script = (ROOT / "files/battledata/script/subscript/subscript_0403_DisguiseIceFace.s").read_text()
+        script = next((ROOT / "files/battledata/script/subscript").glob("subscript_*_DisguiseIceFace.s")).read_text()
         for line in ("PrintMessage msg_0197_01131", "ChangeForm BATTLER_CATEGORY_MSG_TEMP", "PrintMessage msg_0197_01351",
                      "DivideVarByValue BSCRIPT_VAR_HP_CALC, 8", "PrintMessage msg_0197_00721"):
             self.assertIn(line, script)
@@ -270,7 +270,7 @@ class FormChangeTests(unittest.TestCase):
         entry = entry[entry.index("case 19: // Intrepid Sword"):entry.index("case 20: // Hospitality")]
         self.assertIn("script = BATTLE_SUBSCRIPT_ZERO_TO_HERO;", entry)
         self.assertIn("PrintMessage msg_0197_01780, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP",
-                      (ROOT / "files/battledata/script/subscript/subscript_0404_ZeroToHero.s").read_text())
+                      next((ROOT / "files/battledata/script/subscript").glob("subscript_*_ZeroToHero.s")).read_text())
 
     def test_relic_song(self):
         """A Meloetta whose Relic Song reached a target turns Pirouette, or
@@ -346,7 +346,7 @@ class FormChangeTests(unittest.TestCase):
     puts("PASS: Power Construct at half HP.");""", "newgold-construct-"))
         self.assertIn("form = Battler_PowerConstructForm(ctx, ctx->battlerIdTemp);", self.check)
         self.assertIn("ctx->hpCalc = ctx->battleMons[ctx->battlerIdTemp].maxHp - maxHp;", self.check)
-        script = (ROOT / "files/battledata/script/subscript/subscript_0405_PowerConstruct.s").read_text()
+        script = next((ROOT / "files/battledata/script/subscript").glob("subscript_*_PowerConstruct.s")).read_text()
         for line in ("PrintMessage msg_0197_01360", "Call BATTLE_SUBSCRIPT_UPDATE_HP", "PrintMessage msg_0197_01361"):
             self.assertIn(line, script)
 
@@ -367,9 +367,10 @@ typedef int BOOL;
 #define FALSE 0
 #define NELEMS(a) (sizeof(a) / sizeof(*(a)))
 #define MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED 1
-typedef struct { u16 ability; int hp; u32 moveEffectFlags; } BattleMon;
+#define STATUS2_TRANSFORM 2
+typedef struct { u16 ability; int hp; u32 moveEffectFlags; u32 status2; } BattleMon;
 typedef struct { BattleMon battleMons[4]; } BattleContext;
-""" + function(source, "AbilityIsUnsuppressable") + "\n" + function(source, "AbilitiesAreNeutralized") + r"""
+""" + function(source, "AbilityIsUnsuppressable") + "\n" + function(source, "BattlerGivesOffGas") + "\n" + function(source, "AbilitiesAreNeutralized") + r"""
 int main(void) {
     BattleContext ctx = { { { ABILITY_ZEN_MODE, 1, 0 }, { ABILITY_NEUTRALIZING_GAS, 1, 0 }, { ABILITY_INTIMIDATE, 1, 0 } } };
     static const u16 kept[] = { ABILITY_ZEN_MODE, ABILITY_STANCE_CHANGE, ABILITY_SCHOOLING, ABILITY_DISGUISE,
@@ -408,7 +409,7 @@ int main(void) {
         self.assertRegex(status, r"form = Battler_BrokenFaceForm\(ctx, ctx->battlerIdAttacker, ctx->battlerIdAttacker, MOVE_STRUGGLE\);\s*"
                                  r"if \(form != SPECIES_NONE\) \{\s*ctx->hpCalc = 0;")
         self.assertIn("BATTLE_SUBSCRIPT_HURT_SELF_DISGUISED", status)
-        script = (ROOT / "files/battledata/script/subscript/subscript_0406_HurtSelfDisguised.s").read_text()
+        script = next((ROOT / "files/battledata/script/subscript").glob("subscript_*_HurtSelfDisguised.s")).read_text()
         self.assertLess(script.index("PrintMessage msg_0197_00797"), script.index("Call BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE"))
 
 
