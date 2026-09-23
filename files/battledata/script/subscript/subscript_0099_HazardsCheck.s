@@ -58,6 +58,10 @@ _STICKY_WEB_GROUNDED:
     CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, HOLD_EFFECT_IGNORE_ENTRY_HAZARDS, _NEXT
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_STAT_CHANGE, BSCRIPT_VAR_BATTLER_SWITCH
     CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_SIDE_CONDITION_STAT_CHANGE, SIDE_CONDITION_STICKY_WEB, _NEXT
+    // {0} was caught in a sticky web!
+    PrintMessage msg_0197_01516, TAG_NICKNAME, BATTLER_CATEGORY_SWITCHED_MON
+    Wait
+    WaitButtonABTime 30
     // Mirror Armor sends a stat drop back where it came from, and a web has
     // nowhere to send it, so the mon simply keeps its Speed.
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SWITCHED_MON, ABILITY_MIRROR_ARMOR, _NEXT

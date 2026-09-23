@@ -181,6 +181,15 @@ class QueueTests(unittest.TestCase):
                    if "ABILITY_MAGIC_GUARD" in block(text, label)]
         self.assertEqual(guarded, ["_SPIKES_GROUNDED:", "_STEALTH_ROCK:"])
 
+    def test_the_web_says_it_caught_the_pokemon(self):
+        # "{0} was caught in a sticky web!", before the Speed drop and before
+        # Mirror Armor keeps it, as the reference's subscript 99 prints it.
+        web = block(read(HAZARDS), "_STICKY_WEB_GROUNDED:")
+        caught = web.index("PrintMessage msg_0197_01516, TAG_NICKNAME, BATTLER_CATEGORY_SWITCHED_MON")
+        self.assertLess(web.index("SIDE_CONDITION_STICKY_WEB, _NEXT"), caught)
+        self.assertLess(caught, web.index("ABILITY_MIRROR_ARMOR"))
+        self.assertLess(caught, web.index("Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE"))
+
     def test_what_clears_a_hazard_takes_it_off(self):
         defog = read("files/battledata/script/subscript/subscript_0171_Defog.s")
         for hazard in ("SPIKES", "TOXIC_SPIKES", "STEALTH_ROCK"):
