@@ -2043,6 +2043,32 @@ void Mon_SwapAbilitySlot(Pokemon *mon) {
     SetMonData(mon, MON_DATA_ABILITY, &swapped);
 }
 
+// The Ability Patch gives a Pokemon its species' hidden ability, or takes it
+// away again. konefr toggle a hidden-ability bit and let the slot bits choose
+// the ability; here the ability is written outright, so the toggle is the
+// ability itself: the hidden one if the Pokemon has not got it, and otherwise
+// the one its personality picks, as UpdateMonAbility writes it. Any species
+// with a hidden ability can take the Patch, as konefr's CanUseAbilityPatch has
+// it.
+BOOL Mon_CanUseAbilityPatch(Pokemon *mon) {
+    int species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    int form = GetMonData(mon, MON_DATA_FORM, NULL);
+
+    return GetMonBaseStat_HandleAlternateForm(species, form, BASE_HIDDEN_ABILITY) != ABILITY_NONE;
+}
+
+void Mon_ToggleHiddenAbility(Pokemon *mon) {
+    int species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    int form = GetMonData(mon, MON_DATA_FORM, NULL);
+    u16 hidden = (u16)GetMonBaseStat_HandleAlternateForm(species, form, BASE_HIDDEN_ABILITY);
+
+    if (GetMonData(mon, MON_DATA_ABILITY, NULL) == hidden) {
+        UpdateMonAbility(mon);
+    } else {
+        SetMonData(mon, MON_DATA_ABILITY, &hidden);
+    }
+}
+
 const s8 gNatureStatMods[NATURE_NUM][NUM_EV_STATS] = {
     { 0,  0,  0,  0,  0  },
     { 1,  -1, 0,  0,  0  },

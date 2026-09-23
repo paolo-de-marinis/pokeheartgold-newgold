@@ -2430,11 +2430,11 @@ static const u8 sMintNatures[ITEM_SERIOUS_MINT - ITEM_LONELY_MINT + 1] = {
     NATURE_SERIOUS,
 };
 
-// A Mint and the Ability Capsule change a Pokemon without changing its form, so
-// neither has a partyUseParam for CanUseItemOnMonInParty to say yes to: like the
-// Gracidea they are answered ahead of it. Neither gets the form-change scene --
-// there is no form to animate -- so the line is printed the way a healing item
-// prints its own and the menu then leaves.
+// A Mint, the Ability Capsule and the Ability Patch change a Pokemon without
+// changing its form, so none has a partyUseParam for CanUseItemOnMonInParty to
+// say yes to: like the Gracidea they are answered ahead of it. None gets the
+// form-change scene -- there is no form to animate -- so the line is printed
+// the way a healing item prints its own and the menu then leaves.
 static BOOL PartyMenu_TryUseMintOrAbilityCapsule(PartyMenu *partyMenu) {
     u16 itemId = partyMenu->args->itemId;
     Pokemon *mon = Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex);
@@ -2449,6 +2449,9 @@ static BOOL PartyMenu_TryUseMintOrAbilityCapsule(PartyMenu *partyMenu) {
         string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00194 + sMintNatures[itemId - ITEM_LONELY_MINT]);
     } else if (itemId == ITEM_ABILITY_CAPSULE && Mon_CanUseAbilityCapsule(mon) == TRUE) {
         Mon_SwapAbilitySlot(mon);
+        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00193);
+    } else if (itemId == ITEM_ABILITY_PATCH && Mon_CanUseAbilityPatch(mon) == TRUE) {
+        Mon_ToggleHiddenAbility(mon);
         string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00193);
     } else {
         return FALSE;

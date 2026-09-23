@@ -193,6 +193,8 @@ void Party_UpdateAllGiratina_DistortionWorld(Party *party, BOOL force_origin);
 BOOL Mon_CanUseGracidea(Pokemon *mon);
 BOOL Mon_CanUseAbilityCapsule(Pokemon *mon);
 void Mon_SwapAbilitySlot(Pokemon *mon);
+BOOL Mon_CanUseAbilityPatch(Pokemon *mon);
+void Mon_ToggleHiddenAbility(Pokemon *mon);
 void Party_ResetAllShayminToLandForm(Party *party);
 BOOL Party_TryResetShaymin(Party *party, int min_max, const RTCTime *time);
 BOOL Mon_UpdateRotomForm(Pokemon *mon, int form, int defaultSlot);
