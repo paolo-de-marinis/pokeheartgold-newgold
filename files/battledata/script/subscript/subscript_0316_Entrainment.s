@@ -3,6 +3,8 @@
     .data
 
 _000:
+    // An Ability Shield keeps the target's ability (Pokemon Central, Scudo abilita).
+    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_HELD_ITEM, ITEM_ABILITY_SHIELD, _FAILED
     UpdateMonDataFromVar OPCODE_GET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_ABILITY, BSCRIPT_VAR_CALC_TEMP
     UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, BSCRIPT_VAR_CALC_TEMP
     // {0} acquired {1}!
@@ -10,3 +12,7 @@ _000:
     Wait 
     WaitButtonABTime 30
     End 
+
+_FAILED:
+    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED
+    End

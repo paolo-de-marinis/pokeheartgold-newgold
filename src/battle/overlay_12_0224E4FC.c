@@ -3443,6 +3443,13 @@ static BOOL AbilitiesAreNeutralized(BattleContext *ctx, int battlerId) {
     return FALSE;
 }
 
+// An Ability Shield keeps its holder's ability from being changed, removed,
+// ignored or made to do nothing by any effect (Pokemon Central, Scudo
+// abilita), read from the item itself as the gas above reads it.
+static BOOL BattlerHasAbilityShield(BattleContext *ctx, int battlerId) {
+    return GetItemVar(ctx, ctx->battleMons[battlerId].item, ITEM_VAR_HOLD_EFFECT) == HOLD_EFFECT_PREVENT_ABILITY_CHANGES;
+}
+
 u16 GetBattlerAbility(BattleContext *ctx, int battlerId) {
     if (AbilitiesAreNeutralized(ctx, battlerId) == TRUE) {
         return ABILITY_NONE;
@@ -5415,7 +5422,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 battlerIdTargetR = ov12_0223ABB8(battleSystem, battlerId, 0);
                 battlerIdTargetL = ov12_0223ABB8(battleSystem, battlerId, 2);
                 ctx->battlerIdLeechSeeded = ov12_022585B8(battleSystem, ctx, battlerIdTargetR, battlerIdTargetL);
-                if (!ctx->battleMons[battlerId].traceFlag && ctx->battlerIdLeechSeeded != 0xFF && ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].item != ITEM_GRISEOUS_ORB && ctx->battleMons[ctx->battlerIdLeechSeeded].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_TRACE) {
+                if (!ctx->battleMons[battlerId].traceFlag && ctx->battlerIdLeechSeeded != 0xFF && ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].item != ITEM_GRISEOUS_ORB && !BattlerHasAbilityShield(ctx, battlerId) && ctx->battleMons[ctx->battlerIdLeechSeeded].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_TRACE) {
                     ctx->battleMons[battlerId].traceFlag = TRUE;
                     ctx->battlerIdTemp = battlerId;
                     script = BATTLE_SUBSCRIPT_TRACE;
@@ -6725,8 +6732,10 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // Multitype is what a Pokemon is rather than what it does, so it is
         // the one ability the wrapping does not take. The refusal is against
         // the holder's own ability rather than against Mummy by name, so
-        // Lingering Aroma shares the branch and neither re-wraps its own.
-        if (ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != GetBattlerAbility(ctx, ctx->battlerIdTarget) && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MULTITYPE && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+        // Lingering Aroma shares the branch and neither re-wraps its own. An
+        // Ability Shield on the attacker keeps its ability; the reference
+        // asks it only for Wandering Spirit below.
+        if (ctx->battleMons[ctx->battlerIdAttacker].hp && !BattlerHasAbilityShield(ctx, ctx->battlerIdAttacker) && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != GetBattlerAbility(ctx, ctx->battlerIdTarget) && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MULTITYPE && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
             ctx->abilityTemp = GetBattlerAbility(ctx, ctx->battlerIdTarget);
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_MUMMY;

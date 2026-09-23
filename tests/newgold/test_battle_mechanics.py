@@ -472,9 +472,11 @@ class AbilityBlockListTests(unittest.TestCase):
 
     # What the port refuses beyond the reference, and why: Gastro Acid also
     # turns away the two the games' unsuppressible list has and the
-    # reference's list lacks, since its mark would not hold on them.
+    # reference's list lacks, since its mark would not hold on them, and a
+    # target holding an Ability Shield (Pokemon Central, Scudo abilita).
     ADDED = {
-        "subscript/subscript_0163_GastroAcid.s": {("DEFENDER", "ABILITY_ZEN_MODE"), ("DEFENDER", "ABILITY_TERA_SHIFT")},
+        "subscript/subscript_0163_GastroAcid.s": {("DEFENDER", "ABILITY_ZEN_MODE"), ("DEFENDER", "ABILITY_TERA_SHIFT"),
+                                                  ("DEFENDER", "ITEM_ABILITY_SHIELD")},
     }
 
     def test_the_lists_are_the_reference_s(self):

@@ -693,5 +693,38 @@ class BallFetchTests(unittest.TestCase):
         self.assertIn("CallFromVar BSCRIPT_VAR_TEMP_DATA", after)
 
 
+class AbilityShieldTests(unittest.TestCase):
+    """An Ability Shield keeps its holder's ability from being changed,
+    removed or suppressed by any effect (Pokemon Central, Scudo abilita):
+    the moves that change or suppress the target's or the user's, and the
+    abilities that change their own or the attacker's."""
+
+    SHIELD = "BMON_DATA_HELD_ITEM, ITEM_ABILITY_SHIELD"
+
+    def test_every_ability_changing_move_asks_it(self):
+        for name, holders in (("CopyAbility", ["ATTACKER"]), ("SwapAbility", ["ATTACKER", "DEFENDER"]),
+                              ("GastroAcid", ["DEFENDER"]), ("WorrySeed", ["DEFENDER"]),
+                              ("GiveTargetSimple", ["DEFENDER"]), ("Entrainment", ["DEFENDER"])):
+            script = subscript(name)
+            for holder in holders:
+                line = f"CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_{holder}, {self.SHIELD}"
+                self.assertIn(line, script, (name, holder))
+                # Asked before the ability is written or suppressed.
+                change = re.search(r"UpdateMonData(FromVar)? OPCODE_(SET|FLAG_ON), BATTLER_CATEGORY_\w+, "
+                                   r"BMON_DATA_(ABILITY|MOVE_EFFECT, MOVE_EFFECT_FLAG_ABILITY_SUPPRESSED)", script)
+                self.assertLess(script.index(line), change.start(), (name, holder))
+        failed = label(subscript("Entrainment"), "_FAILED")
+        self.assertIn("UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED", failed)
+
+    def test_the_abilities_that_change_an_ability_ask_it(self):
+        mummy = OVERLAY[OVERLAY.index("    case ABILITY_MUMMY:\n    case ABILITY_LINGERING_AROMA:"):]
+        mummy = mummy[:mummy.index("break;")]
+        self.assertIn("!BattlerHasAbilityShield(ctx, ctx->battlerIdAttacker)", mummy)
+        entry = function(OVERLAY, "TryAbilityOnEntry")
+        trace = [line for line in entry.splitlines() if "== ABILITY_TRACE) {" in line]
+        self.assertEqual(len(trace), 1)
+        self.assertIn("!BattlerHasAbilityShield(ctx, battlerId)", trace[0])
+
+
 if __name__ == "__main__":
     unittest.main()
