@@ -3743,6 +3743,28 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count) {
     return FALSE;
 }
 
+// The dances Dancer copies: the reference's DanceMoveTable
+// (other_battle_calculators.c:506 at d0380a487), sorted, which is Pokemon
+// Central's list for Sincrodanza.
+static const u16 sDanceMoves[] = {
+    MOVE_AQUA_STEP,
+    MOVE_CLANGOROUS_SOUL,
+    MOVE_DRAGON_DANCE,
+    MOVE_FEATHER_DANCE,
+    MOVE_FIERY_DANCE,
+    MOVE_LUNAR_DANCE,
+    MOVE_PETAL_DANCE,
+    MOVE_QUIVER_DANCE,
+    MOVE_REVELATION_DANCE,
+    MOVE_SWORDS_DANCE,
+    MOVE_TEETER_DANCE,
+    MOVE_VICTORY_DANCE,
+};
+
+BOOL BattleMoveIsDance(u32 moveNo) {
+    return MoveIsInList(moveNo, sDanceMoves, NELEMS(sDanceMoves));
+}
+
 // Parental Bond (IsValidParentalBondMove, other_battle_calculators.c:2575 at
 // d0380a487; Pokemon Central, Amorefiliale): the holder's damaging moves
 // strike twice, the second strike a quarter of the first, and behave in all

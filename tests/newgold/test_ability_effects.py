@@ -42,6 +42,7 @@ IMPLEMENTED = {
     "COTTON_DOWN",
     "CUD_CHEW",
     "CURSED_BODY",
+    "DANCER",
     "DARK_AURA",
     "DAUNTLESS_SHIELD",
     "DAZZLING",
@@ -212,7 +213,7 @@ IMPLEMENTED = {
 # quietly. This test fails the moment one is added and not accounted for.
 PENDING = {
     "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE",
-    "DANCER", "DELTA_STREAM", "DESOLATE_LAND", "EMBODY_ASPECT",
+    "DELTA_STREAM", "DESOLATE_LAND", "EMBODY_ASPECT",
     "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4",
     "GUARD_DOG", "ILLUSION", "MEGA_SOL", "MIMICRY",
     "OPPORTUNIST", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN",
@@ -291,8 +292,8 @@ class AbilityEffectTests(unittest.TestCase):
     #
     # 39 -> 41: Schooling and Power Construct had been counted done on their
     # blocklist reads alone; see the note above PENDING. Cud Chew done.
-    # Emergency Exit and Wimp Out done, then Parental Bond.
-    STILL_TO_DO = 29
+    # Emergency Exit and Wimp Out done, then Parental Bond, then Dancer.
+    STILL_TO_DO = 28
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

@@ -1856,7 +1856,14 @@ BOOL BtlCmd_GoToSubscript(BattleSystem *battleSystem, BattleContext *ctx) {
 BOOL BtlCmd_GoToEffectScript(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
-    BattleScriptJump(ctx, NARC_a_0_3_0, BattleMoveTbl(ctx, ctx->moveNoCur)->effect);
+    int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
+
+    // A Petal Dance Dancer copies does not lock its dancer into a rampage
+    // (btl_scr_cmd_24_jumptocurmoveeffectscript at d0380a487).
+    if (ctx->dancing && effect == MOVE_EFFECT_CONTINUE_AND_CONFUSE_SELF) {
+        effect = MOVE_EFFECT_HIT;
+    }
+    BattleScriptJump(ctx, NARC_a_0_3_0, effect);
 
     return FALSE;
 }

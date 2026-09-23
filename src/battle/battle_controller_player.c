@@ -166,9 +166,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // for whose Paradox ability a Booster Energy switched on, grew it by four.
 // The byte for which battlers saw hail or snow, for Ice Face, and the one
 // for Relic Song, grew it by four; Cud Chew's Berry and turn by sixteen more,
-// and each battler's run of Protects by four.
+// each battler's run of Protects by four, and Dancer's six bytes by four,
+// two of them padding it carried already.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x31CC + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x31D0 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -3801,7 +3802,15 @@ static void ov12_0224D238(BattleSystem *battleSystem, BattleContext *ctx) {
 
 static void ov12_0224D23C(BattleSystem *battleSystem, BattleContext *ctx) {
     u8 item = GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker);
-    if (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN || ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {
+    // A dance Dancer copied locks a Choice item's holder only into a move it
+    // knows and only if nothing locked it yet, and it is not the move the
+    // dancer last used for Disable, Encore, Mimic, Spite or Sketch -- that
+    // stays the last one it spent PP on (Pokemon Central, Sincrodanza).
+    BOOL copied = ctx->dancing;
+    BOOL copyLocks = !copied || (ctx->battleMons[ctx->battlerIdAttacker].unk88.moveNoChoice == 0
+        && BattleMon_GetMoveIndex(&ctx->battleMons[ctx->battlerIdAttacker], ctx->moveNoTemp) < MAX_MON_MOVES);
+
+    if (copyLocks && (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN || ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE)) {
         if (item == HOLD_EFFECT_CHOICE_ATK || item == HOLD_EFFECT_CHOICE_SPEED || item == HOLD_EFFECT_CHOICE_SPATK) {
             if (!(ctx->moveNoTemp == MOVE_STRUGGLE || (ctx->moveNoTemp == MOVE_U_TURN && ctx->battleStatus2 & BATTLE_STATUS2_UTURN) || (ctx->moveNoTemp == MOVE_BATON_PASS && ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED))) {
                 ctx->battleMons[ctx->battlerIdAttacker].unk88.moveNoChoice = ctx->moveNoTemp;
@@ -3819,14 +3828,16 @@ static void ov12_0224D23C(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->moveNoProtect[ctx->battlerIdAttacker] = 0;
             ctx->moveNoPrev = 0;
         }
-        if (ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED) {
-            ctx->moveNoBattlerPrev[ctx->battlerIdAttacker] = ctx->moveNoTemp;
-        } else {
-            ctx->moveNoBattlerPrev[ctx->battlerIdAttacker] = 0;
+        if (!copied) {
+            if (ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED) {
+                ctx->moveNoBattlerPrev[ctx->battlerIdAttacker] = ctx->moveNoTemp;
+            } else {
+                ctx->moveNoBattlerPrev[ctx->battlerIdAttacker] = 0;
+            }
         }
     }
 
-    if (ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {
+    if (!copied && ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {
         ctx->moveNoSketch[ctx->battlerIdAttacker] = ctx->moveNoTemp;
     }
 
@@ -3838,6 +3849,96 @@ static void ov12_0224D23C(BattleSystem *battleSystem, BattleContext *ctx) {
     ov12_0224DD74(battleSystem, ctx);
     ov12_02256694(battleSystem, ctx);
     ctx->command = CONTROLLER_COMMAND_40;
+}
+
+// Dancer (the reference's step 30 of ServerDoPostMoveEffects.c, 653 to 741 at
+// d0380a487; Pokemon Central, Sincrodanza): when a Pokemon's dance move is
+// over, every other Pokemon with the ability dances it too, in speed order,
+// as a move of its own that takes no PP and does not count as the move it
+// last used. It does not when the dance missed or did nothing to its target,
+// or was snatched or reflected -- the reference copies whatever happened --
+// nor from a copy, nor while
+// the dancer is in the air or underground, fainted, or locked into another
+// move by a Choice item, an Encore or a rampage. What stops any move still
+// stops it: sleep, a freeze, paralysis, confusion, a flinch, a Taunt.
+static BOOL Battler_CanDance(BattleContext *ctx, int battlerId) {
+    BattleMon *mon = &ctx->battleMons[battlerId];
+
+    if (mon->hp == 0 || GetBattlerAbility(ctx, battlerId) != ABILITY_DANCER || (mon->moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE)) {
+        return FALSE;
+    }
+    if ((mon->unk88.moveNoChoice && mon->unk88.moveNoChoice != ctx->danceMove)
+        || (mon->unk88.encoredMove && mon->unk88.encoredMove != ctx->danceMove)
+        || ((mon->status2 & (STATUS2_LOCKED_INTO_MOVE | STATUS2_RAMPAGE)) && ctx->moveNoLockedInto[battlerId] != ctx->danceMove)) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+// A single-target dance goes back at the Pokemon that danced it, or, when
+// that was the dancer's ally, at the ally's own target -- at the ally, if the
+// dancer was that target. The rest aim as they would for anyone, a random
+// one anew.
+static int Dancer_Target(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int target = BATTLER_NONE;
+
+    if (BattleMoveTbl(ctx, ctx->danceMove)->range == RANGE_SINGLE_TARGET) {
+        if (BattleSystem_GetFieldSide(battleSystem, ctx->danceUser) != BattleSystem_GetFieldSide(battleSystem, battlerId)) {
+            target = ctx->danceUser;
+        } else {
+            target = ctx->danceTarget == battlerId ? ctx->danceUser : ctx->danceTarget;
+        }
+        if (target != BATTLER_NONE && target != battlerId && ctx->battleMons[target].hp) {
+            return target;
+        }
+    }
+    return ov12_022506D4(battleSystem, ctx, battlerId, ctx->danceMove, 1, 0);
+}
+
+static BOOL TryDancer(BattleSystem *battleSystem, BattleContext *ctx) {
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+    int i, battlerId;
+
+    if (ctx->dancing) {
+        ctx->dancing = FALSE;
+    } else if ((ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED)
+        && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)
+        && !(ctx->battleStatus & BATTLE_STATUS_NO_MOVE_SET)
+        && BattleMoveIsDance(ctx->moveNoCur)) {
+        ctx->danceMove = ctx->moveNoCur;
+        ctx->danceUser = ctx->battlerIdAttacker;
+        ctx->danceTarget = ctx->battlerIdTarget;
+        ctx->dancersPending = 0;
+        for (i = 0; i < maxBattlers; i++) {
+            if (i != ctx->battlerIdAttacker) {
+                ctx->dancersPending |= MaskOfFlagNo(i);
+            }
+        }
+    }
+
+    for (i = 0; i < maxBattlers; i++) {
+        battlerId = ctx->turnOrder[i];
+        if (!(ctx->dancersPending & MaskOfFlagNo(battlerId))) {
+            continue;
+        }
+        ctx->dancersPending &= ~MaskOfFlagNo(battlerId);
+        if (!Battler_CanDance(ctx, battlerId)) {
+            continue;
+        }
+        BattleContext_Init(ctx);
+        ctx->dancing = TRUE;
+        ctx->battlerIdAttacker = battlerId;
+        ctx->moveNoTemp = ctx->danceMove;
+        ctx->moveNoCur = ctx->danceMove;
+        ctx->battlerIdTarget = Dancer_Target(battleSystem, ctx, battlerId);
+        // Past the Quick Claw's line, the disobedience roll and the PP.
+        ctx->unk_48 = 1;
+        ctx->unk_2184 = MULTIHIT_SKIP_OBEDIENCE_CHECK | MULTIHIT_SKIP_PP_DECREMENT;
+        ctx->command = CONTROLLER_COMMAND_23;
+        BattleController_EmitBlankMessage(battleSystem);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
@@ -3869,6 +3970,9 @@ static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
             return;
         }
         ov12_0224DC0C(battleSystem, ctx);
+        if (TryDancer(battleSystem, ctx) == TRUE) {
+            return;
+        }
     }
 
     ctx->playerActions[ctx->executionOrder[ctx->executionIndex]].command = CONTROLLER_COMMAND_40;

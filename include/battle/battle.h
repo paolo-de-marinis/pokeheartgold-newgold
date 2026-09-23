@@ -563,6 +563,15 @@ typedef struct BattleContext {
     // rather than in the two bits the BattleMon had, which stop at three, for
     // odds that go down to 1 in 729. Cleared when the battler is loaded.
     u8 protectSuccessTurns[BATTLER_MAX];
+    // Dancer: the dance move another Pokemon has just used, the battlers
+    // still to copy it (a bit each), who used it and at whom, and whether the
+    // move running now is one of the copies. Each copy starts as a move of its
+    // own, so none of this is cleared between them.
+    u16 danceMove;
+    u8 dancersPending;
+    u8 danceUser;
+    u8 danceTarget;
+    u8 dancing;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.
