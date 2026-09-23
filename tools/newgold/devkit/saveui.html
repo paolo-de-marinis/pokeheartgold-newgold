@@ -1024,7 +1024,9 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       <p class="note" id="presetnote" hidden></p>
       <p class="note">Si sceglie solo tra le mosse che la specie può imparare, a qualsiasi livello, ognuna con tutte le sue fonti: livello (Evoluzione: quando si evolve),
         MT, MN e DT, insegnanti, mosse uovo, la mossa della forma (Rotom), e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
-        (una mossa evento, o una che i dati attuali non le danno più) resta finché non la cambi e non cambi specie. Una mossa che il Pokémon già conosce tiene i suoi PP; una nuova li ha pieni.
+        (una mossa evento, o una che i dati attuali non le danno più) resta finché non la cambi e non cambi specie. Il livello non si
+        controlla: una mossa imparata salendo di livello va bene a qualsiasi livello, perché un uovo la eredita a livello 1 se
+        entrambi i genitori la conoscono (per una specie che non nasce da un uovo, invece, sta a te). Una mossa che il Pokémon già conosce tiene i suoi PP; una nuova li ha pieni.
         "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie; finché
         non le tocchi, seguono il livello se lo cambi.</p></div>
     <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="${lim.iv}">Tutti ${lim.iv}</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${perStat("iv", v.ivs, lim.iv)}</div>

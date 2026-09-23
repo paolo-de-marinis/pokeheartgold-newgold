@@ -64,8 +64,11 @@ species: a form the game never evolves into has none). `species_abilities` is it
 hidden ability by the slot the game keeps each in: the personality's low
 bit (an Ability Capsule turns it over) or `MON_HIDDEN_ABILITY_BIT`, which
 `UpdateBoxMonAbility` reads again on evolving. `edit_mon` and `new_mon`
-refuse anything else (`Illegal`); a species change brings the new species'
-moves at that level (`preset_moves`) and the ability the game gives it,
+refuse anything else (`Illegal`). The level is not checked: a level-up
+move is allowed at any level, as an egg inherits one both its parents know
+whatever the level it is learnt at (`InheritMoves`); for a species no egg
+hatches as, a move above its level is for the user to avoid. A species
+change brings the new species' moves at that level (`preset_moves`) and the ability the game gives it,
 and only a Pokemon keeping its species keeps a move it already knew that
 no rule lists, an event's. The moves a script gives one Pokemon only --
 Brock's traded Rhyhorn's Thunder Fang (`SetMonMove`), the spiky-eared
