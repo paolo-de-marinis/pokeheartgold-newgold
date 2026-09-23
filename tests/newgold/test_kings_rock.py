@@ -42,7 +42,7 @@ typedef struct {
     u16 moveNoCur;
     int command, commandNext, script;
     struct { int physicalDamage, specialDamage; } selfTurnData[4];
-    struct { u16 hp; } battleMons[4];
+    struct { u16 hp; u8 hitCount; } battleMons[4];
 } BattleContext;
 
 enum { PLAIN_HIT = 1, BITE = 2, GROWL = 3 };
@@ -61,6 +61,7 @@ static int GetHeldItemModifier(BattleContext *ctx, int b, int flag) { (void)ctx;
 static u16 GetBattlerAbility(BattleContext *ctx, int b) { (void)ctx; return (u16)sAbility[b]; }
 static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; return sRoll; }
 static void ReadBattleScriptFromNarc(BattleContext *ctx, int narc, int file) { assert(narc == NARC_a_0_0_1); ctx->script = file; }
+static BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int b) { return ctx->battleMons[b].hitCount == 0; }
 @NATIVE@
 
 // Whether the attacker, with `item` (param `param`) and `ability`, makes the
@@ -74,6 +75,7 @@ static BOOL flinches(int item, int param, int ability, u16 move, u16 roll) {
     ctx.moveNoCur = move;
     ctx.selfTurnData[1].physicalDamage = 10;
     ctx.battleMons[1].hp = 10;
+    ctx.battleMons[1].hitCount = 1;
     sItem[0] = item;
     sItemParam[0] = param;
     sAbility[0] = ability;

@@ -1049,6 +1049,48 @@ class EndOfTurnAttackerTests(unittest.TestCase):
         self.assertLess(loop.index("ctx->battlerIdAttacker = battlerId;"), loop.index("switch (ctx->stateUpdateMonCondition) {"))
         self.assertGreater(loop.index("ctx->battlerIdAttacker = battlerId;"), loop.index("battlerId = ctx->turnOrder[ctx->updateMonConditionData];"))
 
+DRAGGED_IN_FIXTURE = r"""
+#include <assert.h>
+typedef int BOOL;
+typedef struct { struct { int hitCount; } battleMons[4]; struct { int physicalDamage, specialDamage; } selfTurnData[4]; } BattleContext;
+@FUNCTION@
+int main(void) {
+    BattleContext ctx = { 0 };
+    ctx.selfTurnData[1].physicalDamage = -30;
+    assert(Battler_CameInAfterTheHit(&ctx, 1));          // damage on record, no hit: dragged in
+    ctx.battleMons[1].hitCount = 1;
+    assert(!Battler_CameInAfterTheHit(&ctx, 1));         // it took the hit
+    ctx.battleMons[2].hitCount = 0;
+    assert(!Battler_CameInAfterTheHit(&ctx, 2));         // nothing on record: not hit at all
+    ctx.selfTurnData[3].specialDamage = -5;
+    assert(Battler_CameInAfterTheHit(&ctx, 3));
+    return 0;
+}
+"""
+
+
+class DraggedInTests(unittest.TestCase):
+    """A Pokemon that Dragon Tail, Circle Throw, Roar or a Red Card drags into
+    a slot in the middle of a move did not take the hit on record there, and
+    answers none of it: not with its abilities, its held item or a flinch,
+    as c172085f1 already had it for the Red Card and the Eject Button."""
+
+    def test_the_slot_s_hit_is_not_the_newcomer_s(self):
+        overlay = OVERLAY.read_text()
+        with tempfile.TemporaryDirectory(prefix="newgold-dragged-in-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(DRAGGED_IN_FIXTURE.replace("@FUNCTION@", function(overlay, "Battler_CameInAfterTheHit")))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+        guard = "if (Battler_CameInAfterTheHit(ctx, ctx->battlerIdTarget) == TRUE) {\n        return ret;\n    }"
+        for name in ("CheckAbilityEffectOnHit", "CheckItemEffectOnHit"):
+            body = function(overlay, name)
+            self.assertIn(guard, body, name)
+            self.assertLess(body.index(guard), body.index("switch ("), name)
+        flinch = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "TryItemFlinch")
+        self.assertLess(flinch.index("!Battler_CameInAfterTheHit(ctx, ctx->battlerIdTarget)"), flinch.index("BattleSystem_Random"))
+
 class BattleBondTests(unittest.TestCase):
     def test_a_knockout_raises_three_stats_once_a_battle(self):
         source = OVERLAY.read_text()

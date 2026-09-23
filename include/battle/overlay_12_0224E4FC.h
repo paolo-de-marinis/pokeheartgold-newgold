@@ -87,6 +87,7 @@ BOOL ov12_02253068(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
 int DamageDivide(int num, int denom);
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx);
 int Battler_GetRandomOpposingBattlerId(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId);
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 void Battler_ArmRetreat(BattleContext *ctx, int battlerId);
 BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *script);

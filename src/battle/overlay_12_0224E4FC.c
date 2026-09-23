@@ -6507,6 +6507,16 @@ static BOOL ToxicChainTakesHold(BattleSystem *battleSystem, BattleContext *ctx) 
         && BattleSystem_Random(battleSystem) % 10 < 3;
 }
 
+// Whether the Pokemon in battlerId's slot came in after the hit on record
+// there: hitCount is zeroed when a Pokemon is loaded into a slot and counts
+// the hits it takes in it, so damage on record and no hit means Dragon Tail,
+// Circle Throw or Roar dragged it in, or a Red Card, in the middle of the
+// move. The hit was its predecessor's, and so is all it would set off.
+BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) {
+    return ctx->battleMons[battlerId].hitCount == 0
+        && (ctx->selfTurnData[battlerId].physicalDamage || ctx->selfTurnData[battlerId].specialDamage);
+}
+
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     BOOL ret = FALSE;
     u16 form;
@@ -6516,6 +6526,12 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
     }
 
     if (BattlerCheckSubstitute(ctx, ctx->battlerIdTarget) == TRUE) {
+        return ret;
+    }
+
+    // Nothing on either side answers a hit on a Pokemon that was dragged in
+    // after it: not its abilities, not the attacker's Poison Touch on it.
+    if (Battler_CameInAfterTheHit(ctx, ctx->battlerIdTarget) == TRUE) {
         return ret;
     }
 
@@ -8045,6 +8061,11 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
     }
 
     if (BattlerCheckSubstitute(ctx, ctx->battlerIdTarget) == TRUE) {
+        return ret;
+    }
+
+    // Nor its held item: an Air Balloon, a Rocky Helmet, a Jaboca Berry.
+    if (Battler_CameInAfterTheHit(ctx, ctx->battlerIdTarget) == TRUE) {
         return ret;
     }
 

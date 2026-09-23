@@ -4722,6 +4722,7 @@ static BOOL TryItemFlinch(BattleSystem *battleSystem, BattleContext *ctx) {
         && chance != 0
         && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)
         && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage != 0 || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage != 0)
+        && !Battler_CameInAfterTheHit(ctx, ctx->battlerIdTarget)
         && (BattleSystem_Random(battleSystem) % 100) < chance
         && MoveIsAffectedByKingsRock(ctx, ctx->moveNoCur)
         && ctx->battleMons[ctx->battlerIdTarget].hp != 0) {
