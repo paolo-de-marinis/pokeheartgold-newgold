@@ -173,6 +173,25 @@ class MoveTests(unittest.TestCase):
                 else:
                     self.assertEqual(got, want, f"{name} {key}")
 
+    @unittest.skipUnless(REFERENCE.exists(), "the reference checkout is not here")
+    def test_bit_5_is_the_engines_unimplemented_flag(self):
+        """Every record, retail and added, carries bit 5 exactly when the
+        engine names FLAG_UNUSABLE_UNIMPLEMENTED for the move; konefr flag the
+        same seventy-nine. It used to be retail's King's Rock bit, which no
+        longer decides anything."""
+        flagged = set()
+        for revision in (import_moves.gmm.ENGINE, import_moves.gmm.NEWGOLD):
+            blocks = import_moves.records_in(import_moves.gmm.git_show(revision, "data/Moves.c", REFERENCE))
+            names = {f"MOVE_{name}" for name, block in blocks.items()
+                     if "FLAG_UNUSABLE_UNIMPLEMENTED" in import_moves.named_flags(block)}
+            self.assertTrue(not flagged or names == flagged, revision)
+            flagged = names
+        self.assertEqual(len(flagged), 79)
+        numbers = {self.moves[name] for name in flagged}
+        carried = {move for move, record in enumerate(self.table)
+                   if struct.unpack(import_moves.RECORD, record)[9] & 1 << 5}
+        self.assertEqual(carried, numbers)
+
     def test_hidden_power_is_the_table_s_60(self):
         """hg-engine fixes Hidden Power at 60 in its damage calculation,
         whatever the IVs. Here the battle command and the AI still work out

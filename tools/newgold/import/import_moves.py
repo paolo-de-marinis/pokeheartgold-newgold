@@ -12,16 +12,17 @@ which bit is which: a bit that is set exactly when the reference names a given
 flag is that flag. Seven of the eight pin down that way.
 
     bit 0  FLAG_CONTACT        bit 4  FLAG_MIRROR_MOVE
-    bit 1  FLAG_PROTECT        bit 5  (see below)
+    bit 1  FLAG_PROTECT        bit 5  FLAG_UNUSABLE_UNIMPLEMENTED
     bit 2  FLAG_MAGIC_COAT     bit 6  FLAG_KEEP_HP_BAR
     bit 3  FLAG_SNATCH         bit 7  FLAG_HIDE_SHADOW
 
-Bit 5 has no name in the reference. It is set on two hundred and eight moves,
-every one of them damaging, and on no status move at all -- it is the King's
-Rock flag, which the reference handles elsewhere. It is taken from the moves
-this game already has with the same effect, which agrees with the existing
-table on 93.7% of them, and left clear for a status move, which is right on
-all of them.
+Bit 5 was retail's King's Rock flag, and this used to guess it for the added
+moves from the retail moves with the same effect. The King's Rock now asks the
+move's power and effect instead, as the reference does, so the bit is free and
+means what the reference means by it: FLAG_UNUSABLE_UNIMPLEMENTED, which is
+0x20 while DISALLOW_DEXIT_GEN is undefined (test_toggled_mechanics checks it
+is). The Gen 8 and Gen 9 flags that share the bit are 0 under that setting and
+are not read.
 
 The contest pair is named on both sides. The type maps exactly --
 CONTEST_COOL is 0, BEAUTY 1, CUTE 2, SMART 3, TOUGH 4, right on all four
@@ -106,18 +107,18 @@ LAST_VANILLA_POINTER = 144
 
 SPLITS = {"SPLIT_PHYSICAL": 0, "SPLIT_SPECIAL": 1, "SPLIT_STATUS": 2}
 
-# The bits solved for against the moves both sides have. Bit 5 is not here:
-# the reference does not name it.
+# The bits solved for against the moves both sides have, and bit 5, which the
+# reference gives the moves it has not implemented.
 FLAG_BITS = {
     "FLAG_CONTACT": 0,
     "FLAG_PROTECT": 1,
     "FLAG_MAGIC_COAT": 2,
     "FLAG_SNATCH": 3,
     "FLAG_MIRROR_MOVE": 4,
+    "FLAG_UNUSABLE_UNIMPLEMENTED": 5,
     "FLAG_KEEP_HP_BAR": 6,
     "FLAG_HIDE_SHADOW": 7,
 }
-KINGS_ROCK_BIT = 5
 CONTEST_TYPES = {"CONTEST_COOL": 0, "CONTEST_BEAUTY": 1, "CONTEST_CUTE": 2,
                  "CONTEST_SMART": 3, "CONTEST_TOUGH": 4}
 
@@ -237,17 +238,6 @@ def learn_appeal(blocks, moves, table, last_vanilla):
     return {appeal: counts.most_common(1)[0][0] for appeal, counts in seen.items()}
 
 
-def learn_kings_rock(blocks, moves, table, last_vanilla):
-    """Whether a move with a given effect carries bit 5, from the moves here."""
-    seen = collections.defaultdict(collections.Counter)
-    for name, number in moves.items():
-        if not 0 < number <= last_vanilla:
-            continue
-        fields = struct.unpack(RECORD, table[number])
-        seen[fields[0]][fields[9] >> KINGS_ROCK_BIT & 1] += 1
-    return {effect: counts.most_common(1)[0][0] for effect, counts in seen.items()}
-
-
 def field(block, key):
     match = re.search(r"\." + key + r"\s*=\s*([^,\n]+)", block)
     return resolve(match.group(1).strip()) if match else None
@@ -315,7 +305,8 @@ RETAIL_POWER_KEPT = {
 # The effect and the flag byte are behaviour rather than numbers. The seven
 # flag bits solved for above mean the same thing to both games -- a set bit is
 # what each side's Protect, Magic Coat, Snatch and Mirror Move checks ask
-# about -- so they are the engine's; bit 5 is King's Rock here and stays. An
+# about -- so they are the engine's, and so is bit 5, the engine's flag for a
+# move it has not implemented. An
 # effect is the engine's only where this game's script for it is the engine's:
 # String Shot's two-stage speed drop (60), Tail Glow's three-stage Sp. Atk.
 # rise, Chatter's plain confusing hit (76), which with its chance of 100 always
@@ -344,8 +335,7 @@ def retail_moves(reference, last_vanilla, types, effect_id, table):
         fields[6] = number(block, "effectChance")
         if name in RETAIL_EFFECTS:
             fields[0] = effect_id[field(block, "effect")]
-        fields[9] = (fields[9] & 1 << KINGS_ROCK_BIT) | sum(
-            1 << bit for flag, bit in FLAG_BITS.items() if flag in named_flags(block))
+        fields[9] = sum(1 << bit for flag, bit in FLAG_BITS.items() if flag in named_flags(block))
         table[move] = struct.pack(RECORD, *fields)
 
 
@@ -662,7 +652,6 @@ def main():
                                              header).group(1)]
     plain = {name[len("MOVE_"):]: value for name, value in moves.items()}
     appeals = learn_appeal(blocks, plain, table, last_vanilla)
-    kings_rock = learn_kings_rock(blocks, plain, table, last_vanilla)
 
     # An effect keeps its number up to where retail stopped, because up to
     # there both trees hold the same script at that index. Past it, a name the
@@ -802,8 +791,6 @@ def main():
             raise SystemExit(f"{name} has effect {effect}, which the reference does not define")
         split = SPLITS[field(block, "split")]
         flags = sum(1 << bit for flag, bit in FLAG_BITS.items() if flag in named_flags(block))
-        if split != SPLITS["SPLIT_STATUS"] and kings_rock.get(effect_id[effect], 1):
-            flags |= 1 << KINGS_ROCK_BIT
         added.append((first_move + offset, name, struct.pack(
             RECORD,
             effect_id[effect],
