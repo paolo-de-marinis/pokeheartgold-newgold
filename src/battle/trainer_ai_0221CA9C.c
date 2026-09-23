@@ -20,7 +20,7 @@ void ov10_0221CA9C(BattleSystem *battleSystem, BattleContext *ctx) {
 
     for (i = 0; i < MAX_MON_MOVES; i++) {
         if (ctx->battleMons[ctx->trainerAIData.battlerIdAttacker].moves[i] != MOVE_NONE
-            && ctx->trainerAIData.moveData[ctx->battleMons[ctx->trainerAIData.battlerIdAttacker].moves[i]].power) {
+            && BattleMoveTbl(ctx, ctx->battleMons[ctx->trainerAIData.battlerIdAttacker].moves[i])->power) {
             break;
         }
     }
@@ -39,7 +39,7 @@ void ov10_0221CB00(BattleSystem *battleSystem, BattleContext *ctx) {
 
     for (i = 0; i < MAX_MON_MOVES; i++) {
         if (ctx->battleMons[ctx->trainerAIData.battlerIdAttacker].moves[i] != MOVE_NONE
-            && ctx->trainerAIData.moveData[ctx->battleMons[ctx->trainerAIData.battlerIdAttacker].moves[i]].power) {
+            && BattleMoveTbl(ctx, ctx->battleMons[ctx->trainerAIData.battlerIdAttacker].moves[i])->power) {
             break;
         }
     }
@@ -71,7 +71,7 @@ void ov10_0221CB80(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->trainerAIData.unk8 = GetBattlerVar(ctx, ctx->trainerAIData.battlerIdTarget, BMON_DATA_TYPE_2, NULL);
         break;
     case 4:
-        ctx->trainerAIData.unk8 = ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].type;
+        ctx->trainerAIData.unk8 = BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->type;
         break;
     case 6:
         ctx->trainerAIData.unk8 = GetBattlerVar(ctx, BattleSystem_GetBattlerIdPartner(battleSystem, ctx->trainerAIData.battlerIdAttacker), BMON_DATA_TYPE_1, NULL);
@@ -111,7 +111,7 @@ void ov10_0221CCB4(BattleSystem *battleSystem, BattleContext *ctx) {
 
 void ov10_0221CD10(BattleSystem *battleSystem, BattleContext *ctx) {
     ov10_0221EF24(ctx, 1);
-    ctx->trainerAIData.unk8 = ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].power;
+    ctx->trainerAIData.unk8 = BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->power;
 }
 
 void ov10_0221CD34(BattleSystem *battleSystem, BattleContext *ctx) {
@@ -127,7 +127,7 @@ void ov10_0221CD34(BattleSystem *battleSystem, BattleContext *ctx) {
 
     riskyIdx = 0;
     do {
-        if (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect == ov10_0222B098[riskyIdx]) {
+        if (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect == ov10_0222B098[riskyIdx]) {
             break;
         }
         riskyIdx++;
@@ -135,13 +135,13 @@ void ov10_0221CD34(BattleSystem *battleSystem, BattleContext *ctx) {
 
     altPowerIdx = 0;
     do {
-        if (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect == ov10_0222B080[altPowerIdx]) {
+        if (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect == ov10_0222B080[altPowerIdx]) {
             break;
         }
         altPowerIdx++;
     } while (ov10_0222B080[altPowerIdx] != 0xFFFF);
 
-    if (ov10_0222B080[altPowerIdx] != 0xFFFF || (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].power > 1 && ov10_0222B098[riskyIdx] == 0xFFFF)) {
+    if (ov10_0222B080[altPowerIdx] != 0xFFFF || (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->power > 1 && ov10_0222B098[riskyIdx] == 0xFFFF)) {
         for (i = 0; i < NUM_STATS; i++) {
             ivs[i] = GetBattlerVar(ctx, ctx->trainerAIData.battlerIdAttacker, BMON_DATA_HP_IV + i, NULL);
         }
@@ -273,5 +273,5 @@ void ov10_0221D068(BattleSystem *battleSystem, BattleContext *ctx) {
 
 void ov10_0221D084(BattleSystem *battleSystem, BattleContext *ctx) {
     ov10_0221EF24(ctx, 1);
-    ctx->trainerAIData.unk8 = ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect;
+    ctx->trainerAIData.unk8 = BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect;
 }

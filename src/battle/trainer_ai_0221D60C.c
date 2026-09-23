@@ -14,7 +14,7 @@ void ov10_0221D60C(BattleSystem *battleSystem, BattleContext *ctx) {
     effect = ov10_0221EEF0(ctx);
     adrs = ov10_0221EEF0(ctx);
 
-    if (effect == ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect) {
+    if (effect == BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect) {
         ov10_0221EF24(ctx, adrs);
     }
 }
@@ -27,7 +27,7 @@ void ov10_0221D644(BattleSystem *battleSystem, BattleContext *ctx) {
     effect = ov10_0221EEF0(ctx);
     adrs = ov10_0221EEF0(ctx);
 
-    if (effect != ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect) {
+    if (effect != BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect) {
         ov10_0221EF24(ctx, adrs);
     }
 }
@@ -122,7 +122,7 @@ void ov10_0221D7CC(BattleSystem *battleSystem, BattleContext *ctx) {
 
     riskyIdx = 0;
     do {
-        if (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect == ov10_0222B098[riskyIdx]) {
+        if (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect == ov10_0222B098[riskyIdx]) {
             break;
         }
         riskyIdx++;
@@ -130,13 +130,13 @@ void ov10_0221D7CC(BattleSystem *battleSystem, BattleContext *ctx) {
 
     altPowerIdx = 0;
     do {
-        if (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect == ov10_0222B080[altPowerIdx]) {
+        if (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect == ov10_0222B080[altPowerIdx]) {
             break;
         }
         altPowerIdx++;
     } while (ov10_0222B080[altPowerIdx] != 0xFFFF);
 
-    if (ov10_0222B080[altPowerIdx] != 0xFFFF || (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].power > 1 && ov10_0222B098[riskyIdx] == 0xFFFF)) {
+    if (ov10_0222B080[altPowerIdx] != 0xFFFF || (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->power > 1 && ov10_0222B098[riskyIdx] == 0xFFFF)) {
         for (i = 0; i < NUM_STATS; i++) {
             ivs[i] = GetBattlerVar(ctx, ctx->trainerAIData.battlerIdAttacker, BMON_DATA_HP_IV + i, NULL);
         }
@@ -179,7 +179,7 @@ void ov10_0221D8F8(BattleSystem *battleSystem, BattleContext *ctx) {
 
     riskyIdx = 0;
     do {
-        if (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect == ov10_0222B098[riskyIdx]) {
+        if (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect == ov10_0222B098[riskyIdx]) {
             break;
         }
         riskyIdx++;
@@ -187,13 +187,13 @@ void ov10_0221D8F8(BattleSystem *battleSystem, BattleContext *ctx) {
 
     altPowerIdx = 0;
     do {
-        if (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect == ov10_0222B080[altPowerIdx]) {
+        if (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect == ov10_0222B080[altPowerIdx]) {
             break;
         }
         altPowerIdx++;
     } while (ov10_0222B080[altPowerIdx] != 0xFFFF);
 
-    if (ov10_0222B080[altPowerIdx] != 0xFFFF || (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].power > 1 && ov10_0222B098[riskyIdx] == 0xFFFF)) {
+    if (ov10_0222B080[altPowerIdx] != 0xFFFF || (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->power > 1 && ov10_0222B098[riskyIdx] == 0xFFFF)) {
         for (i = 0; i < NUM_STATS; i++) {
             ivs[i] = GetBattlerVar(ctx, ctx->trainerAIData.battlerIdAttacker, BMON_DATA_HP_IV + i, NULL);
         }
@@ -330,7 +330,7 @@ void ov10_0221DBA4(BattleSystem *battleSystem, BattleContext *ctx) {
     switch (battler) {
     case AI_BATTLER_ATTACKER:
         for (i = 0; i < MAX_MON_MOVES; i++) {
-            if (ctx->battleMons[battlerId].moves[i] != MOVE_NONE && effect == ctx->trainerAIData.moveData[ctx->battleMons[battlerId].moves[i]].effect) {
+            if (ctx->battleMons[battlerId].moves[i] != MOVE_NONE && effect == BattleMoveTbl(ctx, ctx->battleMons[battlerId].moves[i])->effect) {
                 break;
             }
         }
@@ -340,7 +340,7 @@ void ov10_0221DBA4(BattleSystem *battleSystem, BattleContext *ctx) {
         break;
     case AI_BATTLER_TARGET:
         for (i = 0; i < MAX_MON_MOVES; i++) {
-            if (ctx->trainerAIData.moves[battlerId][i] != MOVE_NONE && effect == ctx->trainerAIData.moveData[ctx->trainerAIData.moves[battlerId][i]].effect) {
+            if (ctx->trainerAIData.moves[battlerId][i] != MOVE_NONE && effect == BattleMoveTbl(ctx, ctx->trainerAIData.moves[battlerId][i])->effect) {
                 break;
             }
         }
@@ -367,7 +367,7 @@ void ov10_0221DC48(BattleSystem *battleSystem, BattleContext *ctx) {
     switch (battler) {
     case AI_BATTLER_ATTACKER:
         for (i = 0; i < MAX_MON_MOVES; i++) {
-            if (ctx->battleMons[battlerId].moves[i] != MOVE_NONE && effect == ctx->trainerAIData.moveData[ctx->battleMons[battlerId].moves[i]].effect) {
+            if (ctx->battleMons[battlerId].moves[i] != MOVE_NONE && effect == BattleMoveTbl(ctx, ctx->battleMons[battlerId].moves[i])->effect) {
                 break;
             }
         }
@@ -377,7 +377,7 @@ void ov10_0221DC48(BattleSystem *battleSystem, BattleContext *ctx) {
         break;
     case AI_BATTLER_TARGET:
         for (i = 0; i < MAX_MON_MOVES; i++) {
-            if (ctx->trainerAIData.moves[battlerId][i] != MOVE_NONE && effect == ctx->trainerAIData.moveData[ctx->trainerAIData.moves[battlerId][i]].effect) {
+            if (ctx->trainerAIData.moves[battlerId][i] != MOVE_NONE && effect == BattleMoveTbl(ctx, ctx->trainerAIData.moves[battlerId][i])->effect) {
                 break;
             }
         }

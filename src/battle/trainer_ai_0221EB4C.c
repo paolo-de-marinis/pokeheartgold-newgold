@@ -6,15 +6,15 @@
 
 void ov10_0221EB4C(BattleSystem *battleSystem, BattleContext *ctx) {
     ov10_0221EF24(ctx, 1);
-    ctx->trainerAIData.unk8 = ctx->trainerAIData.moveData[ctx->trainerAIData.unk8].type;
+    ctx->trainerAIData.unk8 = BattleMoveTbl(ctx, ctx->trainerAIData.unk8)->type;
 }
 
 void ov10_0221EB6C(BattleSystem *battleSystem, BattleContext *ctx) {
     ov10_0221EF24(ctx, 1);
-    ctx->trainerAIData.unk8 = ctx->trainerAIData.moveData[ctx->trainerAIData.unk8].power;
+    ctx->trainerAIData.unk8 = BattleMoveTbl(ctx, ctx->trainerAIData.unk8)->power;
 }
 
 void ov10_0221EB8C(BattleSystem *battleSystem, BattleContext *ctx) {
     ov10_0221EF24(ctx, 1);
-    ctx->trainerAIData.unk8 = ctx->trainerAIData.moveData[ctx->trainerAIData.unk8].effect;
+    ctx->trainerAIData.unk8 = BattleMoveTbl(ctx, ctx->trainerAIData.unk8)->effect;
 }

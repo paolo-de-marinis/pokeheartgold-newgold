@@ -21,7 +21,7 @@ void ov10_0221E848(BattleSystem *battleSystem, BattleContext *ctx) {
 
     riskyIdx = 0;
     do {
-        if (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect == ov10_0222B098[riskyIdx]) {
+        if (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect == ov10_0222B098[riskyIdx]) {
             break;
         }
         riskyIdx++;
@@ -29,13 +29,13 @@ void ov10_0221E848(BattleSystem *battleSystem, BattleContext *ctx) {
 
     altPowerIdx = 0;
     do {
-        if (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].effect == ov10_0222B080[altPowerIdx]) {
+        if (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->effect == ov10_0222B080[altPowerIdx]) {
             break;
         }
         altPowerIdx++;
     } while (ov10_0222B080[altPowerIdx] != 0xFFFF);
 
-    if (ov10_0222B080[altPowerIdx] != 0xFFFF || (ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].power > 1 && ov10_0222B098[riskyIdx] == 0xFFFF)) {
+    if (ov10_0222B080[altPowerIdx] != 0xFFFF || (BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->power > 1 && ov10_0222B098[riskyIdx] == 0xFFFF)) {
         battlerId = ctx->trainerAIData.battlerIdAttacker;
 
         for (j = 0; j < 2; j++) {

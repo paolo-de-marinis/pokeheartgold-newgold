@@ -208,7 +208,7 @@ u8 ov10_0221C038(BattleSystem *battleSystem, BattleContext *ctx) {
     moveSlot = moveSlotByTarget[ctx->trainerAIData.unkA4[ctx->trainerAIData.battlerIdAttacker]];
     move = ctx->battleMons[ctx->trainerAIData.battlerIdAttacker].moves[moveSlot];
 
-    if (ctx->trainerAIData.moveData[move].range == RANGE_SINGLE_TARGET_USER_SIDE
+    if (BattleMoveTbl(ctx, move)->range == RANGE_SINGLE_TARGET_USER_SIDE
         && BattleSystem_GetFieldSide(battleSystem, ctx->trainerAIData.unkA4[ctx->trainerAIData.battlerIdAttacker]) == 0) {
         ctx->trainerAIData.unkA4[ctx->trainerAIData.battlerIdAttacker] = ctx->trainerAIData.battlerIdAttacker;
     }

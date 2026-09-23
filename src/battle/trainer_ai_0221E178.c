@@ -7,10 +7,10 @@
 
 void ov10_0221E178(BattleSystem *battleSystem, BattleContext *ctx) {
     ov10_0221EF24(ctx, 1);
-    ctx->trainerAIData.unk8 = ctx->trainerAIData.moveData[ctx->trainerAIData.unk2].category;
+    ctx->trainerAIData.unk8 = BattleMoveTbl(ctx, ctx->trainerAIData.unk2)->category;
 }
 
 void ov10_0221E19C(BattleSystem *battleSystem, BattleContext *ctx) {
     ov10_0221EF24(ctx, 1);
-    ctx->trainerAIData.unk8 = ctx->trainerAIData.moveData[ctx->moveNoBattlerPrev[ctx->trainerAIData.battlerIdTarget]].category;
+    ctx->trainerAIData.unk8 = BattleMoveTbl(ctx, ctx->moveNoBattlerPrev[ctx->trainerAIData.battlerIdTarget])->category;
 }

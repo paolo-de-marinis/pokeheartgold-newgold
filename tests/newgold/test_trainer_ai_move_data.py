@@ -15,6 +15,16 @@ from test_level_cap import ROOT
 # The routines that read a move's data, as they come out of the assembly.
 SOURCES = (
     "src/battle/overlay_12_02258800.c",
+    "src/battle/trainer_ai.c",
+    "src/battle/trainer_ai_0221CA9C.c",
+    "src/battle/trainer_ai_0221D60C.c",
+    "src/battle/trainer_ai_0221E178.c",
+    "src/battle/trainer_ai_0221E848.c",
+    "src/battle/trainer_ai_0221EB4C.c",
+    "src/battle/trainer_ai_0221EF7C.c",
+    "src/battle/trainer_ai_switch_absorb.c",
+    "src/battle/trainer_ai_switch_ineffective.c",
+    "src/battle/trainer_ai_switch_resist.c",
 )
 
 

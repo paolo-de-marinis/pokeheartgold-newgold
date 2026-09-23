@@ -17,7 +17,7 @@ s32 ov10_0221EF7C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId,
     for (i = 0; i < MAX_MON_MOVES; i++) {
         riskyIdx = 0;
         do {
-            if (ctx->trainerAIData.moveData[moves[i]].effect == ov10_0222B098[riskyIdx]) {
+            if (BattleMoveTbl(ctx, moves[i])->effect == ov10_0222B098[riskyIdx]) {
                 break;
             }
             riskyIdx++;
@@ -25,13 +25,13 @@ s32 ov10_0221EF7C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId,
 
         altPowerIdx = 0;
         do {
-            if (ctx->trainerAIData.moveData[moves[i]].effect == ov10_0222B080[altPowerIdx]) {
+            if (BattleMoveTbl(ctx, moves[i])->effect == ov10_0222B080[altPowerIdx]) {
                 break;
             }
             altPowerIdx++;
         } while (ov10_0222B080[altPowerIdx] != 0xFFFF);
 
-        if (ov10_0222B080[altPowerIdx] != 0xFFFF || (moves[i] != MOVE_NONE && ov10_0222B098[riskyIdx] == 0xFFFF && ctx->trainerAIData.moveData[moves[i]].power > 1)) {
+        if (ov10_0222B080[altPowerIdx] != 0xFFFF || (moves[i] != MOVE_NONE && ov10_0222B098[riskyIdx] == 0xFFFF && BattleMoveTbl(ctx, moves[i])->power > 1)) {
             if (varyDamage == 1) {
                 roll = ctx->trainerAIData.unk18[i];
             } else {

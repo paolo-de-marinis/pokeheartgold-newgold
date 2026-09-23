@@ -27,7 +27,7 @@ BOOL ov10_02220010(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     if (ctx->moveNoHit[battlerId] == MOVE_NONE || ctx->moveNoHitBattler[battlerId] == 0xFF) {
         return FALSE;
     }
-    if (ctx->trainerAIData.moveData[ctx->moveNoHit[battlerId]].power == 0) {
+    if (BattleMoveTbl(ctx, ctx->moveNoHit[battlerId])->power == 0) {
         return FALSE;
     }
 
@@ -102,7 +102,7 @@ BOOL ov10_02220270(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
         return TRUE;
     }
 
-    if (ctx->trainerAIData.moveData[ctx->moveNoHit[battlerId]].power == 0 && (BattleSystem_Random(battleSystem) & 1)) {
+    if (BattleMoveTbl(ctx, ctx->moveNoHit[battlerId])->power == 0 && (BattleSystem_Random(battleSystem) & 1)) {
         ctx->unk_21A4[battlerId] = 6;
         return TRUE;
     }

@@ -38,7 +38,7 @@ BOOL ov10_0221F7F0(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     for (i = 0; i < MAX_MON_MOVES; i++) {
         move = ctx->battleMons[battlerId].moves[i];
         moveType = ov10_0221F47C(battleSystem, ctx, battlerId, move);
-        if (move != MOVE_NONE && ctx->trainerAIData.moveData[move].power) {
+        if (move != MOVE_NONE && BattleMoveTbl(ctx, move)->power) {
             numDamagingMoves++;
 
             moveStatus = 0;
@@ -84,7 +84,7 @@ BOOL ov10_0221F7F0(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
             for (j = 0; j < MAX_MON_MOVES; j++) {
                 move = GetMonData(mon, MON_DATA_MOVE1 + j, NULL);
                 moveType = ov12_02258BB4(battleSystem, ctx, mon, move);
-                if (move != MOVE_NONE && ctx->trainerAIData.moveData[move].power) {
+                if (move != MOVE_NONE && BattleMoveTbl(ctx, move)->power) {
                     moveStatus = 0;
                     if (ctx->battleMons[defender1].hp) {
                         ov12_02252054(ctx, move, moveType, GetMonData(mon, MON_DATA_ABILITY, NULL), GetBattlerAbility(ctx, defender1), GetBattlerHeldItemEffect(ctx, defender1), GetBattlerVar(ctx, defender1, BMON_DATA_TYPE_1, NULL), GetBattlerVar(ctx, defender1, BMON_DATA_TYPE_2, NULL), &moveStatus);
@@ -119,7 +119,7 @@ BOOL ov10_0221F7F0(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
             for (j = 0; j < MAX_MON_MOVES; j++) {
                 move = GetMonData(mon, MON_DATA_MOVE1 + j, NULL);
                 moveType = ov12_02258BB4(battleSystem, ctx, mon, move);
-                if (move != MOVE_NONE && ctx->trainerAIData.moveData[move].power) {
+                if (move != MOVE_NONE && BattleMoveTbl(ctx, move)->power) {
                     moveStatus = 0;
                     if (ctx->battleMons[defender1].hp) {
                         ov12_02252054(ctx, move, moveType, GetMonData(mon, MON_DATA_ABILITY, NULL), GetBattlerAbility(ctx, defender1), GetBattlerHeldItemEffect(ctx, defender1), GetBattlerVar(ctx, defender1, BMON_DATA_TYPE_1, NULL), GetBattlerVar(ctx, defender1, BMON_DATA_TYPE_2, NULL), &moveStatus);
