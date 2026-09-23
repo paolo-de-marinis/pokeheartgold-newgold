@@ -851,12 +851,49 @@ static u32 ResistBerryModifier(BattleSystem *battleSystem, BattleContext *ctx, i
     return boost > 1 ? UQ412__0_25 : UQ412__0_5;
 }
 
+// The order the final modifier visits the battlers in (the reference's
+// SortRawSpeedNonRNGArray): by Speed as the summary shows it, with no stage,
+// Tailwind or paralysis in it. A tie goes to the side of the host, which in a
+// game against the machine is the player, and then to the left of the pair --
+// the rule the reference's own comments give; its code puts the far side
+// first and the player's right before its left. The reference would ask
+// first which of the two has had its ability longer, but its counter moves
+// for every battler at once and so never decides.
+static BOOL RawSpeedGoesFirst(BattleSystem *battleSystem, const u32 *speed, int battlerIdA, int battlerIdB) {
+    int sideA = BattleSystem_GetFieldSide(battleSystem, battlerIdA);
+    int sideB = BattleSystem_GetFieldSide(battleSystem, battlerIdB);
+
+    if (speed[battlerIdA] != speed[battlerIdB]) {
+        return speed[battlerIdA] > speed[battlerIdB];
+    }
+    if (sideA != sideB) {
+        return sideA == 0;
+    }
+    // The left one: 0 on the player's side, 3 facing it.
+    return sideA == 0 ? battlerIdA < battlerIdB : battlerIdA > battlerIdB;
+}
+
+static int RawSpeedOrder(BattleSystem *battleSystem, BattleContext *ctx, int *order) {
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+    u32 speed[BATTLER_MAX];
+    int i, j;
+
+    for (i = 0; i < maxBattlers; i++) {
+        speed[i] = GetMonData(BattleSystem_GetPartyMon(battleSystem, i, ctx->selectedMonIndex[i]), MON_DATA_SPEED, NULL);
+        for (j = i; j > 0 && RawSpeedGoesFirst(battleSystem, speed, i, order[j - 1]); j--) {
+            order[j] = order[j - 1];
+        }
+        order[j] = i;
+    }
+    return maxBattlers;
+}
+
 // The final modifier (6.9): every multiplier the reference chains into one
-// Q4.12 number with QMul_RoundUp before it touches the damage, once. The
-// reference visits the battlers by raw Speed; this takes the attacker's, then
-// the target's, then its ally's, which is the same chain whenever the attacker
-// is the faster, and all but always otherwise, these being halves and
-// quarters. effectiveness is the type chart's verdict in eighths, 8 neutral.
+// Q4.12 number with QMul_RoundUp before it touches the damage, once. Past the
+// moves' own doublings and the screens, the abilities and then the items are
+// taken battler by battler in RawSpeedOrder, each battler's in the
+// reference's order, since the rounding at each link makes the order show.
+// effectiveness is the type chart's verdict in eighths, 8 neutral.
 static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, int moveType, int effectiveness) {
     int battlerIdAttacker = ctx->battlerIdAttacker;
     int battlerIdTarget = ctx->battlerIdTarget;
@@ -864,6 +901,9 @@ static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, i
     u32 moveNo = ctx->moveNoCur;
     int item = GetBattlerHeldItemEffect(ctx, battlerIdAttacker);
     u32 modifier = UQ412__1_0;
+    int order[BATTLER_MAX];
+    int count = RawSpeedOrder(battleSystem, ctx, order);
+    int i;
 
     // Body Slam, Stomp and the other stamping moves do double against a
     // Pokemon that has used Minimize (6.9.14.1); HeartGold doubled Stomp's
@@ -878,77 +918,81 @@ static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, i
     }
     modifier = QMul_RoundUp(modifier, ScreenModifier(battleSystem, ctx, moveNo, ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerIdTarget)], ctx->criticalMultiplier, battlerIdAttacker));
 
-    if (effectiveness != 0 && effectiveness < 8 && GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_TINTED_LENS) {
-        modifier = QMul_RoundUp(modifier, UQ412__2_0);
-    }
-    if (effectiveness > 8 && GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_NEUROFORCE) {
-        modifier = QMul_RoundUp(modifier, UQ412__1_25);
-    }
-    // Sniper
-    if (ctx->criticalMultiplier == 3) {
-        modifier = QMul_RoundUp(modifier, UQ412__1_5);
-    }
+    for (i = 0; i < count; i++) {
+        int battlerId = order[i];
 
-    // Prism Armor is the same 0.75 as Filter and Solid Rock and shares their
-    // one if, so a mon reading as two of them still only takes it once. It is
-    // read raw: Mold Breaker does not turn it off.
-    if (effectiveness > 8 && (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FILTER) == TRUE || CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SOLID_ROCK) == TRUE || GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_PRISM_ARMOR)) {
-        modifier = QMul_RoundUp(modifier, UQ412__0_75);
-    }
-
-    // Fluffy's two halves are siblings and not a chain: a contact Fire move
-    // takes both and so comes out unchanged.
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLUFFY) == TRUE) {
-        if (BattleMoveMakesContact(ctx, moveNo) == TRUE) {
-            modifier = QMul_RoundUp(modifier, UQ412__0_5);
-        }
-        if (moveType == TYPE_FIRE) {
+        if (battlerId == battlerIdAttacker && effectiveness != 0 && effectiveness < 8 && GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_TINTED_LENS) {
             modifier = QMul_RoundUp(modifier, UQ412__2_0);
         }
+        if (battlerId == battlerIdAttacker && effectiveness > 8 && GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_NEUROFORCE) {
+            modifier = QMul_RoundUp(modifier, UQ412__1_25);
+        }
+        // Prism Armor is the same 0.75 as Filter and Solid Rock and shares
+        // their one if, so a mon reading as two of them still only takes it
+        // once. It is read raw: Mold Breaker does not turn it off.
+        if (battlerId == battlerIdTarget && effectiveness > 8 && (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FILTER) == TRUE || CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SOLID_ROCK) == TRUE || GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_PRISM_ARMOR)) {
+            modifier = QMul_RoundUp(modifier, UQ412__0_75);
+        }
+        // Sniper
+        if (battlerId == battlerIdAttacker && ctx->criticalMultiplier == 3) {
+            modifier = QMul_RoundUp(modifier, UQ412__1_5);
+        }
+        // Fluffy's two halves are siblings and not a chain: a contact Fire
+        // move takes both and so comes out unchanged.
+        if (battlerId == battlerIdTarget && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLUFFY) == TRUE) {
+            if (BattleMoveMakesContact(ctx, moveNo) == TRUE) {
+                modifier = QMul_RoundUp(modifier, UQ412__0_5);
+            }
+            if (moveType == TYPE_FIRE) {
+                modifier = QMul_RoundUp(modifier, UQ412__2_0);
+            }
+        }
+        // Multiscale and Shadow Shield are one condition and one halving.
+        // Shadow Shield is read raw: Mold Breaker does not turn it off.
+        if (battlerId == battlerIdTarget && (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_MULTISCALE) == TRUE || GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_SHADOW_SHIELD) && ctx->battleMons[battlerIdTarget].hp == (s32)ctx->battleMons[battlerIdTarget].maxHp) {
+            modifier = QMul_RoundUp(modifier, UQ412__0_5);
+        }
+        // Friend Guard belongs to the target's ALLY, so it exists only in a
+        // double battle; the order holds only the battlers the battle has.
+        if (battlerId == ally && ctx->battleMons[ally].hp && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, ally, ABILITY_FRIEND_GUARD) == TRUE) {
+            modifier = QMul_RoundUp(modifier, UQ412__0_75);
+        }
+        // Punk Rock's other half; the base power boost is in CalcMoveDamage.
+        if (battlerId == battlerIdTarget && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_PUNK_ROCK) == TRUE && BattleMoveIsSoundBased(moveNo) == TRUE) {
+            modifier = QMul_RoundUp(modifier, UQ412__0_5);
+        }
+        // Ice Scales halves every special move, whether or not that move is
+        // the kind that reads Sp. Def -- Psyshock is halved too. The
+        // reference's loop applies it once for every battler on the field, a
+        // quarter in a single battle and a sixteenth in a double, because
+        // this one test lacks the "is this battler the target" the rest of
+        // the loop has. Once, as its own comment and the published ability
+        // say.
+        if (battlerId == battlerIdTarget && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_SCALES) == TRUE && BattleMoveTbl(ctx, moveNo)->category == CATEGORY_SPECIAL) {
+            modifier = QMul_RoundUp(modifier, UQ412__0_5);
+        }
     }
 
-    // Multiscale and Shadow Shield are one condition and one halving. Shadow
-    // Shield is read raw: Mold Breaker does not turn it off.
-    if ((CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_MULTISCALE) == TRUE || GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_SHADOW_SHIELD) && ctx->battleMons[battlerIdTarget].hp == (s32)ctx->battleMons[battlerIdTarget].maxHp) {
-        modifier = QMul_RoundUp(modifier, UQ412__0_5);
-    }
+    for (i = 0; i < count; i++) {
+        int battlerId = order[i];
 
-    // Punk Rock's other half; the base power boost is in CalcMoveDamage.
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_PUNK_ROCK) == TRUE && BattleMoveIsSoundBased(moveNo) == TRUE) {
-        modifier = QMul_RoundUp(modifier, UQ412__0_5);
-    }
+        // The Metronome item: a fifth more for each use of the move in a
+        // row, up to double on the sixth, the reference's 1.2, 1.4, 1.6, 1.8
+        // and 2.0. HeartGold's was a tenth, and double only on the eleventh.
+        if (battlerId == battlerIdAttacker && item == HOLD_EFFECT_BOOST_REPEATED) {
+            int turns = ctx->battleMons[battlerIdAttacker].unk88.metronomeTurns;
 
-    // Ice Scales halves every special move, whether or not that move is the
-    // kind that reads Sp. Def -- Psyshock is halved too. The reference's loop
-    // applies it once for every battler on the field, a quarter in a single
-    // battle and a sixteenth in a double, because this one test lacks the
-    // "is this battler the target" the rest of the loop has. Once, as its own
-    // comment and the published ability say.
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_SCALES) == TRUE && BattleMoveTbl(ctx, moveNo)->category == CATEGORY_SPECIAL) {
-        modifier = QMul_RoundUp(modifier, UQ412__0_5);
-    }
-
-    // Friend Guard belongs to the target's ALLY, so it exists only in a double
-    // battle -- the slot two over is stale rather than empty in a single one,
-    // which is what the maxBattlers guard is for.
-    if (ally < BattleSystem_GetMaxBattlers(battleSystem) && ctx->battleMons[ally].hp && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, ally, ABILITY_FRIEND_GUARD) == TRUE) {
-        modifier = QMul_RoundUp(modifier, UQ412__0_75);
-    }
-
-    // The Metronome item: a fifth more for each use of the move in a row, up
-    // to double on the sixth, the reference's 1.2, 1.4, 1.6, 1.8 and 2.0.
-    // HeartGold's was a tenth, and double only on the eleventh.
-    if (item == HOLD_EFFECT_BOOST_REPEATED) {
-        int turns = ctx->battleMons[battlerIdAttacker].unk88.metronomeTurns;
-
-        modifier = QMul_RoundUp(modifier, UQ412__1_0 * (10 + 2 * (turns < 5 ? turns : 5)) / 10);
-    }
-    if (effectiveness > 8 && item == HOLD_EFFECT_POWER_UP_SE) {
-        modifier = QMul_RoundUp(modifier, UQ412__1_2);
-    }
-    modifier = QMul_RoundUp(modifier, ResistBerryModifier(battleSystem, ctx, moveType, effectiveness));
-    if (item == HOLD_EFFECT_HP_DRAIN_ON_ATK) {
-        modifier = QMul_RoundUp(modifier, UQ412__1_3_BUT_LOWER);
+            modifier = QMul_RoundUp(modifier, UQ412__1_0 * (10 + 2 * (turns < 5 ? turns : 5)) / 10);
+        }
+        if (battlerId == battlerIdAttacker && effectiveness > 8 && item == HOLD_EFFECT_POWER_UP_SE) {
+            modifier = QMul_RoundUp(modifier, UQ412__1_2);
+        }
+        if (battlerId == battlerIdTarget) {
+            modifier = QMul_RoundUp(modifier, ResistBerryModifier(battleSystem, ctx, moveType, effectiveness));
+        }
+        if (battlerId == battlerIdAttacker && item == HOLD_EFFECT_HP_DRAIN_ON_ATK) {
+            modifier = QMul_RoundUp(modifier, UQ412__1_3_BUT_LOWER);
+        }
     }
 
     return modifier;

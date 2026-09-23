@@ -43,6 +43,7 @@ typedef int BOOL;
 @UQ412@
 
 typedef struct { int unused; } BattleSystem;
+typedef struct { u32 speed; } Pokemon;
 typedef struct {
     int hp; u32 maxHp; u32 status; u32 status2; u32 moveEffectFlags; u8 type3;
     struct { int meFirstFlag, meFirstCount, metronomeTurns, magnetRiseTurns; } unk88;
@@ -57,6 +58,7 @@ typedef struct {
     struct { int protectFlag, roostFlag; } turnData[4];
     u8 teraShellResisting;
     struct { u32 unk14; } selfTurnData[4];
+    u8 selectedMonIndex[4];
 } BattleContext;
 typedef struct { int range, category, effect, power; } MoveTbl;
 
@@ -66,6 +68,7 @@ static struct {
     int ability[4]; int item[4]; int types[4][2];
     MoveTbl move; int contact, sound;
     int adjustedType, substitute, unnerve, ripen;
+    u32 speed[4];
 } S;
 
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &S.move; }
@@ -76,6 +79,10 @@ static int CalcMoveDamage(BattleSystem *bs, BattleContext *ctx, u32 moveNo, u32 
 // A type change such as Pixilate's, when the scenario asks for one.
 static u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) { (void)battlerId; (void)moveNo; return S.adjustedType ? S.adjustedType : ctx->moveType; }
 static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault) { (void)ctx; (void)ability; (void)moveNo; return S.adjustedType ? S.adjustedType : moveTypeDefault; }
+// Each battler's Speed as its summary shows it.
+static Pokemon mons[4];
+static Pokemon *BattleSystem_GetPartyMon(BattleSystem *bs, int battlerId, int slot) { (void)bs; (void)slot; mons[battlerId].speed = S.speed[battlerId]; return &mons[battlerId]; }
+static u32 GetMonData(Pokemon *mon, int attr, void *out) { (void)out; assert(attr == MON_DATA_SPEED); return mon->speed; }
 static BOOL SubstituteTakesHit(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return S.substitute; }
 static BOOL BerryCanBeEaten(BattleSystem *bs, BattleContext *ctx, int battlerId, int *boost) {
     (void)bs; (void)ctx; (void)battlerId;
@@ -330,6 +337,32 @@ int main(void) {
     reset(); ctx.fieldSideConditionFlags[1] = SIDE_CONDITION_REFLECT; S.item[0] = HOLD_EFFECT_HP_DRAIN_ON_ATK; S.base = 44;
     EXPECT(calc(), 29);
 
+    // The battlers are taken by raw Speed, and the rounding at each link
+    // shows the order. Sniper's 6144, then a Metronome item's first 4915 and
+    // a Chilan Berry's 2048: the attacker first, 6144 * 4915 rounds to 7373
+    // and * 2048 to 3687; the target first, 6144 * 2048 is 3072 and * 4915
+    // rounds to 3686.
+    reset(); ctx.criticalMultiplier = 3; S.item[0] = HOLD_EFFECT_BOOST_REPEATED; ctx.battleMons[0].unk88.metronomeTurns = 1;
+    S.item[1] = HOLD_EFFECT_WEAKEN_NORMAL;
+    S.speed[0] = 100; S.speed[1] = 50; EXPECT((int)FinalDamageModifier(&bs, &ctx, TYPE_NORMAL, 8), 3687);
+    S.speed[0] = 50; S.speed[1] = 100; EXPECT((int)FinalDamageModifier(&bs, &ctx, TYPE_NORMAL, 8), 3686);
+    // A tie goes to the player's side, whichever is attacking.
+    S.speed[0] = S.speed[1] = 80; EXPECT((int)FinalDamageModifier(&bs, &ctx, TYPE_NORMAL, 8), 3687);
+    ctx.battlerIdAttacker = 1; ctx.battlerIdTarget = 0; S.item[1] = HOLD_EFFECT_BOOST_REPEATED; S.item[0] = HOLD_EFFECT_WEAKEN_NORMAL;
+    ctx.battleMons[1].unk88.metronomeTurns = 1; EXPECT((int)FinalDamageModifier(&bs, &ctx, TYPE_NORMAL, 8), 3686);
+
+    // Four at one Speed: the player's left, its right, the far left, the far
+    // right -- 0, 2, 3, 1. Otherwise the fastest first.
+    {
+        int order[4];
+        reset(); S.maxBattlers = 4;
+        EXPECT(RawSpeedOrder(&bs, &ctx, order), 4);
+        EXPECT(order[0] * 1000 + order[1] * 100 + order[2] * 10 + order[3], 231);
+        S.speed[0] = 10; S.speed[1] = 40; S.speed[2] = 30; S.speed[3] = 20;
+        RawSpeedOrder(&bs, &ctx, order);
+        EXPECT(order[0] * 1000 + order[1] * 100 + order[2] * 10 + order[3], 1230);
+    }
+
     // Step 10.1 Unseen Fist into a Protect: a quarter, 45 * 1024 = 46080,
     // + 2047 >> 12 = 11.
     reset(); S.ability[0] = ABILITY_UNSEEN_FIST; ctx.turnData[1].protectFlag = TRUE; EXPECT(calc(), 11);
@@ -366,7 +399,8 @@ def program():
             "BattlerMoveWeather", "StrongWindsShelterRow", "StrongWindsFor", "StrongWindsWeakenMove",
             "CalcTypeEffectiveness", "MoveIsInList", "BattleMoveStampsOnMinimize")])
     commands = "\n".join(function(COMMANDS, name) for name in (
-        "ScreenModifier", "ResistBerryType", "ResistBerryModifier", "FinalDamageModifier", "DamageCalcDefault"))
+        "ScreenModifier", "ResistBerryType", "ResistBerryModifier", "RawSpeedGoesFirst", "RawSpeedOrder",
+        "FinalDamageModifier", "DamageCalcDefault"))
     return (FIXTURE.replace("@UQ412@", uq412)
             .replace("@OVERLAY@", overlay.replace("BOOL ov12_02251C74", "static BOOL ov12_02251C74")
                      .replace("int CalcTypeEffectiveness", "static int CalcTypeEffectiveness")

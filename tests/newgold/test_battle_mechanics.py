@@ -717,8 +717,9 @@ class IceScalesTests(unittest.TestCase):
         # sixteenth in a double; Paolo's rule (2026-09-23) keeps the one half.
         body = function(COMMANDS.read_text(), "FinalDamageModifier")
         self.assertEqual(body.count("ABILITY_ICE_SCALES"), 1)
-        self.assertRegex(body, r"\n    if \(CheckBattlerAbilityIfNotIgnored\(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_SCALES\)"
-                               r" == TRUE && [^\n]*CATEGORY_SPECIAL\) \{\n        modifier = QMul_RoundUp\(modifier, UQ412__0_5\);\n    \}")
+        # Taken at the target's turn in the battlers' order, and only there.
+        self.assertRegex(body, r"\n        if \(battlerId == battlerIdTarget && CheckBattlerAbilityIfNotIgnored\(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_SCALES\)"
+                               r" == TRUE && [^\n]*CATEGORY_SPECIAL\) \{\n            modifier = QMul_RoundUp\(modifier, UQ412__0_5\);\n        \}")
 
 
 class RuinTests(unittest.TestCase):
