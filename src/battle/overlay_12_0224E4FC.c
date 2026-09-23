@@ -5654,7 +5654,38 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 28: // end
+        case 28: // Teraform Zero
+            // Pokemon Central (Zeroformazione): the first time in a battle
+            // that Terapagos takes its Stellar Form, the weather and the
+            // ground are cleared. That form is Terastallizing, which this game
+            // has not got; the Stellar Form is a species here, so it is the
+            // first time the Pokemon comes in as one, remembered by party slot
+            // for the rest of the battle. The moment is spent even if the gas
+            // holds the ability back then, and not for a Pokemon Transformed
+            // into one. hg-engine (d0380a487) gives the ability nothing to do.
+            for (i = 0; i < maxBattlers; i++) {
+                u8 *done;
+
+                battlerId = ctx->turnOrder[i];
+                done = &ctx->onceOnlyEntryAbilityDone[BattleSystem_GetFieldSide(battleSystem, battlerId)][ctx->selectedMonIndex[battlerId]];
+                if (*done || !ctx->battleMons[battlerId].hp || ctx->battleMons[battlerId].ability != ABILITY_TERAFORM_ZERO
+                    || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+                    continue;
+                }
+                *done = TRUE;
+                if (GetBattlerAbility(ctx, battlerId) == ABILITY_TERAFORM_ZERO
+                    && ((ctx->fieldCondition & FIELD_CONDITION_WEATHER) || ctx->terrainOverlayType != TERRAIN_NONE)) {
+                    ctx->battlerIdTemp = battlerId;
+                    script = BATTLE_SUBSCRIPT_TERAFORM_ZERO;
+                    flag = TRUE;
+                    break;
+                }
+            }
+            if (i == maxBattlers) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 29: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;

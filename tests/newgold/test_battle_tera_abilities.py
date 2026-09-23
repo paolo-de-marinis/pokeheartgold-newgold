@@ -155,5 +155,27 @@ class TeraShellTests(unittest.TestCase):
         self.assertIn("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_TERA_SHELL);", flags)
 
 
+class TeraformZeroTests(unittest.TestCase):
+    def test_the_first_entry_as_the_stellar_form_clears_the_field(self):
+        state = entry_state("Teraform Zero")
+        self.assertIn("done = &ctx->onceOnlyEntryAbilityDone[", state)
+        self.assertIn("ctx->battleMons[battlerId].ability != ABILITY_TERAFORM_ZERO", state)
+        self.assertIn("(ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)", state)
+        # Spent whether or not the gas lets it act.
+        self.assertLess(state.index("*done = TRUE;"), state.index("GetBattlerAbility(ctx, battlerId) == ABILITY_TERAFORM_ZERO"))
+        self.assertIn("(ctx->fieldCondition & FIELD_CONDITION_WEATHER) || ctx->terrainOverlayType != TERRAIN_NONE", state)
+        self.assertIn("script = BATTLE_SUBSCRIPT_TERAFORM_ZERO;", state)
+
+    def test_the_script_ends_each_weather_and_the_ground(self):
+        script = (ROOT / "files/battledata/script/subscript/subscript_0415_TeraformZero.s").read_text()
+        for weather, line in (("RAIN_ALL", "00803"), ("SANDSTORM_ALL", "00806"), ("SUN_ALL", "00809"),
+                              ("HAIL_ALL", "00812"), ("SNOW_ALL", "01440"), ("FOG", "01470")):
+            self.assertIn(f"FIELD_CONDITION_{weather}, _", script)
+            self.assertIn(f"PrintMessage msg_0197_{line}, TAG_NONE", script)
+        self.assertIn("UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_WEATHER", script)
+        self.assertIn("ResetParadoxAbility ABILITY_PROTOSYNTHESIS", script)
+        self.assertIn("Call BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END", script)
+
+
 if __name__ == "__main__":
     unittest.main()

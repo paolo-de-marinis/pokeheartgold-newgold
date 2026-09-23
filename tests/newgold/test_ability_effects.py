@@ -171,6 +171,7 @@ IMPLEMENTED = {
     "TABLETS_OF_RUIN",
     "TANGLING_HAIR",
     "TELEPATHY",
+    "TERAFORM_ZERO",
     "TERA_SHELL",
     "TERA_SHIFT",
     "TERAVOLT",
@@ -223,8 +224,7 @@ PENDING = {
     "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE",
     "DELTA_STREAM", "DESOLATE_LAND", "GUARD_DOG", "MEGA_SOL", "MIMICRY",
     "OPPORTUNIST", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN", "STAKEOUT",
-    "SUPREME_OVERLORD", "SYMBIOSIS", "TERAFORM_ZERO", "TOXIC_CHAIN",
-    "VICTORY_STAR"
+    "SUPREME_OVERLORD", "SYMBIOSIS", "TOXIC_CHAIN", "VICTORY_STAR"
 }
 
 # Numbers the engine keeps free rather than abilities. TEMP4 (317) sits
@@ -318,7 +318,8 @@ class AbilityEffectTests(unittest.TestCase):
     # Embody Aspect's four done.
     # Embody Aspect's four done. Tera Shift done.
     # Embody Aspect's four done. Tera Shift and Tera Shell done.
-    STILL_TO_DO = 20
+    # Embody Aspect's four done. Tera Shift, Tera Shell and Teraform Zero done.
+    STILL_TO_DO = 19
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
