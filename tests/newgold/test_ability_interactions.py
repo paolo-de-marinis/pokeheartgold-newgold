@@ -53,5 +53,48 @@ class ObliviousTests(unittest.TestCase):
         self.assertRegex(body, r"moveEffect == MOVE_EFFECT_TAUNT && CheckBattlerAbilityIfNotIgnored\(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_OBLIVIOUS\) == TRUE\) \{\n\s+ctx->battlerIdTemp = battlerIdTarget;\n\s+script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;")
 
 
+AS_ONE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint16_t u16;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/items.h"
+typedef struct { int hp, ability, item; } Mon;
+typedef struct { Mon battleMons[4]; } BattleContext;
+typedef struct { int unused; } BattleSystem;
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 2; }
+static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
+@FUNCTIONS@
+int main(void) {
+    BattleSystem bs = { 0 };
+    BattleContext ctx = { { { 10, ABILITY_NONE, ITEM_SITRUS_BERRY }, { 10, ABILITY_NONE, ITEM_NONE } } };
+    int boost = 1;
+    assert(BerryCanBeEaten(&bs, &ctx, 0, &boost) == TRUE);
+    ctx.battleMons[1].ability = ABILITY_UNNERVE;
+    assert(BerryCanBeEaten(&bs, &ctx, 0, &boost) == FALSE);
+    ctx.battleMons[1].ability = ABILITY_AS_ONE_GLASTRIER;
+    assert(BerryCanBeEaten(&bs, &ctx, 0, &boost) == FALSE);
+    ctx.battleMons[1].ability = ABILITY_AS_ONE_SPECTRIER;
+    assert(BerryCanBeEaten(&bs, &ctx, 0, &boost) == FALSE);
+    // Not its own side's, and not once it has fainted.
+    assert(BerryCanBeEaten(&bs, &ctx, 1, &boost) == TRUE);
+    ctx.battleMons[1].hp = 0;
+    assert(BerryCanBeEaten(&bs, &ctx, 0, &boost) == TRUE);
+    return 0;
+}
+"""
+
+
+class AsOneTests(unittest.TestCase):
+    def test_as_one_puts_the_other_side_off_its_berries(self):
+        # Pokemon Central, Unisono: Unnerve and a Rider's ability in one.
+        source = OVERLAY.read_text()
+        functions = "\n".join(function(source, name) for name in ("BattlerHoldsBerry", "BerryCanBeEaten"))
+        run_c(AS_ONE.replace("@FUNCTIONS@", functions))
+
+
 if __name__ == "__main__":
     unittest.main()

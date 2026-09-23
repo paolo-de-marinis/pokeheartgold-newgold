@@ -7244,16 +7244,21 @@ static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item) {
     }
 }
 
-// Unnerve on the far side is enough to put a Pokemon off its food; Ripen on
-// this one makes what it does eat go twice as far.
+// Unnerve on the far side is enough to put a Pokemon off its food, and so is
+// As One, which is Unnerve and a Rider's ability in one (Pokemon Central,
+// Unisono); the reference asks only for Unnerve. Ripen on this side makes
+// what it does eat go twice as far.
 BOOL BerryCanBeEaten(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int *boost) {
     int i;
+    int ability;
 
     if (BattlerHoldsBerry(ctx, battlerId) == FALSE) {
         return TRUE;
     }
     for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
-        if (BattleSystem_GetFieldSide(battleSystem, battlerId) != BattleSystem_GetFieldSide(battleSystem, i) && ctx->battleMons[i].hp && GetBattlerAbility(ctx, i) == ABILITY_UNNERVE) {
+        ability = GetBattlerAbility(ctx, i);
+        if (BattleSystem_GetFieldSide(battleSystem, battlerId) != BattleSystem_GetFieldSide(battleSystem, i) && ctx->battleMons[i].hp
+            && (ability == ABILITY_UNNERVE || ability == ABILITY_AS_ONE_GLASTRIER || ability == ABILITY_AS_ONE_SPECTRIER)) {
             return FALSE;
         }
     }
