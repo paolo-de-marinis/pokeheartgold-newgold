@@ -1903,8 +1903,10 @@
 #define FLAG_UNK_A25                                      0xA25
 #define FLAG_UNK_A26                                      0xA26
 #define FLAG_UNK_A27                                      0xA27
-#define FLAG_UNK_A28                                      0xA28
-#define FLAG_UNK_A29                                      0xA29
+// hg-engine's HIDDEN_ABILITIES_FLAG and HIDDEN_ABILITIES_STARTERS_FLAG, 2600
+// and 2601: see Mon_TakeHiddenAbilityFlag.
+#define FLAG_HIDDEN_ABILITIES                             0xA28
+#define FLAG_HIDDEN_ABILITIES_STARTERS                    0xA29
 #define FLAG_UNK_A2A                                      0xA2A
 #define FLAG_UNK_A2B                                      0xA2B
 #define FLAG_UNK_A2C                                      0xA2C

@@ -149,6 +149,7 @@ void Mon_UpdateShayminForm(Pokemon *mon, int form);
 void BoxMon_UpdateShayminForm(BoxPokemon *boxMon, int form);
 void UpdateMonAbility(Pokemon *mon);
 void UpdateBoxMonAbility(BoxPokemon *boxMon);
+void Mon_TakeHiddenAbilityFlag(Pokemon *mon, u16 flag);
 int LowestFlagNo(u32 mask);
 BOOL IsPokemonBannedFromBattleFrontier(u16 species, u16 form);
 u16 GetBannedBattleFrontierPokemon(u32 idx);

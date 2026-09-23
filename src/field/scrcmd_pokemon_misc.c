@@ -1,5 +1,6 @@
 #include "global.h"
 
+#include "constants/flags.h"
 #include "constants/items.h"
 #include "constants/map_sections.h"
 #include "constants/moves.h"
@@ -1067,6 +1068,8 @@ BOOL ScrCmd_GiveTogepiEgg(ScriptContext *ctx) {
 
     pp = GetMonData(mon, MON_DATA_MOVE1_MAX_PP + i, 0);
     SetMonData(mon, MON_DATA_MOVE1_PP + i, &pp);
+
+    Mon_TakeHiddenAbilityFlag(mon, FLAG_HIDDEN_ABILITIES);
 
     Party_AddMon(party, mon);
 

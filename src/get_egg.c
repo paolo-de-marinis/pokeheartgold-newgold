@@ -974,7 +974,12 @@ void sub_0206D328(Pokemon *mon, enum HeapID heapID) {
     u8 hasNickname = FALSE;
     u8 pokeball = BALL_POKE;
     u8 metLevel = 0;
+    // The hatchling is made afresh from the egg's values; hg-engine carries
+    // this byte over too, so an egg given with its hidden ability keeps it.
+    u8 hiddenAbilityBits = GetMonData(mon, MON_DATA_UNUSED_113, NULL);
     sub_0206D038(mon, heapID);
+    SetMonData(mon, MON_DATA_UNUSED_113, &hiddenAbilityBits);
+    UpdateMonAbility(mon);
     SetMonData(mon, MON_DATA_IS_EGG, &isEgg);
     GetSpeciesNameIntoArray(GetMonData(mon, MON_DATA_SPECIES, NULL), HEAP_ID_DEFAULT, nickname);
     SetMonData(mon, MON_DATA_NICKNAME, nickname);

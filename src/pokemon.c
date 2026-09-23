@@ -3985,7 +3985,10 @@ void UpdateBoxMonAbility(BoxPokemon *boxMon) {
     int form = GetBoxMonData(boxMon, MON_DATA_FORM, NULL);
     int ability1 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_1);
     int ability2 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_2);
-    if (ability2 != ABILITY_NONE) {
+    int hiddenAbility = GetMonBaseStat_HandleAlternateForm(species, form, BASE_HIDDEN_ABILITY);
+    if ((GetBoxMonData(boxMon, MON_DATA_UNUSED_113, NULL) & MON_HIDDEN_ABILITY_BIT) && hiddenAbility != ABILITY_NONE) {
+        SetBoxMonData(boxMon, MON_DATA_ABILITY, &hiddenAbility);
+    } else if (ability2 != ABILITY_NONE) {
         if (pid & 1) {
             SetBoxMonData(boxMon, MON_DATA_ABILITY, &ability2);
         } else {
@@ -3995,6 +3998,24 @@ void UpdateBoxMonAbility(BoxPokemon *boxMon) {
         SetBoxMonData(boxMon, MON_DATA_ABILITY, &ability1);
     }
     ReleaseBoxMonLock(boxMon, decry);
+}
+
+// hg-engine's HIDDEN_ABILITIES_FLAG (d0380a487 config.h): a script sets the
+// flag, and the next Pokemon given, met in the wild or given as an egg has its
+// species' hidden ability; the bit keeps it through a form change and the
+// hatch. That flag is spent on the one Pokemon. The starters' flag is left
+// set, as the reference leaves it, so all three starters on offer take it.
+void Mon_TakeHiddenAbilityFlag(Pokemon *mon, u16 flag) {
+    SaveVarsFlags *varsFlags = Save_VarsFlags_Get(SaveData_Get());
+    if (!Save_VarsFlags_CheckFlagInArray(varsFlags, flag)) {
+        return;
+    }
+    u8 bits = GetMonData(mon, MON_DATA_UNUSED_113, NULL) | MON_HIDDEN_ABILITY_BIT;
+    SetMonData(mon, MON_DATA_UNUSED_113, &bits);
+    if (flag == FLAG_HIDDEN_ABILITIES) {
+        Save_VarsFlags_ClearFlagInArray(varsFlags, flag);
+    }
+    UpdateMonAbility(mon);
 }
 
 void SetMonPersonality(Pokemon *mon, u32 personality) {

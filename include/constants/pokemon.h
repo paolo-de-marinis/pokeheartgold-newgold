@@ -278,7 +278,7 @@
 #define MON_DATA_FATEFUL_ENCOUNTER          110
 #define MON_DATA_GENDER                     111
 #define MON_DATA_FORM                       112
-#define MON_DATA_UNUSED_113                 113
+#define MON_DATA_UNUSED_113                 113 // bit 0: MON_HIDDEN_ABILITY_BIT
 #define MON_DATA_UNUSED_114                 114
 #define MON_DATA_EGG_LOCATION_PTHGSS        115
 #define MON_DATA_MET_LOCATION_PTHGSS        116
@@ -353,6 +353,10 @@
 #define MON_DATA_SHINY_LEAF_E               185
 #define MON_DATA_SHINY_LEAF_CROWN           186
 #define MON_DATA_MOOD                       187
+
+// hg-engine's DUMMY_P2_1_HIDDEN_ABILITY_MASK, bit 0 of MON_DATA_UNUSED_113:
+// the Pokemon has its species' hidden ability.
+#define MON_HIDDEN_ABILITY_BIT 1
 
 #define OT_ID_PLAYER_ID       0
 #define OT_ID_PRESET          1

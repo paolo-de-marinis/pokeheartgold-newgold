@@ -4,6 +4,7 @@
 
 #include "constants/battle.h"
 #include "constants/field_poison.h"
+#include "constants/flags.h"
 #include "constants/items.h"
 
 #include "get_egg.h"
@@ -36,6 +37,7 @@ BOOL GiveMon(enum HeapID heapID, SaveData *saveData, int species, int level, int
         sp1C = heldItem;
         SetMonData(mon, MON_DATA_HELD_ITEM, &sp1C);
         SetMonData(mon, MON_DATA_FORM, &form);
+        Mon_TakeHiddenAbilityFlag(mon, FLAG_HIDDEN_ABILITIES);
         if (ability != 0) {
             SetMonData(mon, MON_DATA_ABILITY, &ability);
         }

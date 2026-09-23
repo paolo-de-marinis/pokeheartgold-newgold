@@ -3,6 +3,7 @@
 #include "global.h"
 
 #include "constants/abilities.h"
+#include "constants/flags.h"
 #include "constants/maps.h"
 #include "constants/weather.h"
 
@@ -1380,6 +1381,7 @@ static BOOL addGeneratedMonToBattleSetupParty(int battler, EncounterGenState *en
         u8 form = EncounterGen_ChooseUnownForm(encounterGen);
         SetMonData(pokemon, MON_DATA_FORM, &form);
     }
+    Mon_TakeHiddenAbilityFlag(pokemon, FLAG_HIDDEN_ABILITIES);
     return Party_AddMon(battleSetup->party[battler], pokemon);
 }
 

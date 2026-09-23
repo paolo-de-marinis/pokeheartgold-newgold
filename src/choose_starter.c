@@ -1,6 +1,7 @@
 #include "choose_starter.h"
 
 #include "constants/balls.h"
+#include "constants/flags.h"
 #include "constants/items.h"
 #include "constants/species.h"
 
@@ -62,6 +63,7 @@ static BOOL CreateStarter(TaskManager *taskManager) {
                     int item = ITEM_NONE;
                     SetMonData(mon, MON_DATA_HELD_ITEM, &item);
                 }
+                Mon_TakeHiddenAbilityFlag(mon, FLAG_HIDDEN_ABILITIES_STARTERS);
             }
         }
         ChooseStarter_LaunchApp(fieldSystem, env->args);

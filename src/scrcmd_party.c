@@ -1,4 +1,5 @@
 #include "constants/balls.h"
+#include "constants/flags.h"
 
 #include "field_system.h"
 #include "get_egg.h"
@@ -91,6 +92,7 @@ BOOL ScrCmd_GiveEgg(ScriptContext *ctx) {
         ZeroMonData(mon);
         int val = sub_02017FE4(MAPSECTYPE_GIFT, offset);
         SetEggStats(mon, species, 1, profile, 3, val);
+        Mon_TakeHiddenAbilityFlag(mon, FLAG_HIDDEN_ABILITIES);
         Party_AddMon(party, mon);
         Heap_Free(mon);
     }
