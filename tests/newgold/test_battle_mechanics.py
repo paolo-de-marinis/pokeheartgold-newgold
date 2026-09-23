@@ -570,6 +570,23 @@ class BelchMemoryTests(unittest.TestCase):
             subprocess.run([str(path / "test")], check=True)
         self.assertIn("RememberBerryEaten(battleSystem, ctx, battlerId);", function(commands, "BtlCmd_RemoveItem"))
 
+    def test_the_pokemon_that_eats_a_taken_berry_is_told(self):
+        """Pokemon Central (Rutto): a Berry plucked by Bug Bite or Pluck counts
+        for the plucker, a flung one for the Pokemon it lands on, and neither
+        for the Pokemon that held it; one spent on Natural Gift for nobody."""
+        commands, overlay = COMMANDS.read_text(), OVERLAY.read_text()
+        remove = function(commands, "BtlCmd_RemoveItem")
+        self.assertIn("&& !ctx->selfTurnData[battlerId].berryNotEaten) {\n"
+                      "        RememberBerryEaten(battleSystem, ctx, battlerId);", remove)
+        self.assertIn("ctx->selfTurnData[battlerId].berryNotEaten = FALSE;", remove)
+        pluck = function(overlay, "TryEatOpponentBerry")
+        self.assertIn("RememberBerryEaten(battleSystem, ctx, ctx->battlerIdAttacker);", pluck)
+        self.assertIn("ctx->selfTurnData[battlerId].berryNotEaten = TRUE;", pluck)
+        self.assertIn("ctx->selfTurnData[battlerId].berryNotEaten = TRUE;", function(overlay, "TryFling"))
+        self.assertIn("RememberBerryEaten(battleSystem, ctx, battlerId);", function(overlay, "FlungItemLands"))
+        self.assertIn("ctx->selfTurnData[ctx->battlerIdAttacker].berryNotEaten = TRUE;",
+                      function(commands, "BtlCmd_CalcNaturalGiftParams"))
+
 INFILTRATOR_FIXTURE = r"""
 #include <assert.h>
 #include <stdint.h>
@@ -927,7 +944,10 @@ typedef struct {
     u16 moveTemp;
     u16 recycleItem[4];
     int kept[4];
+    int ate[4];
 } BattleContext;
+static BOOL ItemIdIsBerry(u16 item) { return item == 149; }
+static void RememberBerryEaten(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; ctx->ate[battlerId] = 1; }
 static BOOL InfiltratorGoesRoundSubstitute(BattleContext *ctx, int battlerId) { (void)battlerId; return ctx->infiltrator; }
 static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item) { ctx->kept[eater] = item; }
 static int BattleMon_GetMoveIndex(BattleMon *mon, u16 move) { (void)mon; return move - 100; }
@@ -954,7 +974,10 @@ static int kept(int script, int flingScript, int hp, u32 status2, int infiltrato
 }
 int main(void) {
     assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, 0, 0) == 149);
+    // Belch counts the landed Berry for the Pokemon it landed on, not the thrower.
+    assert(ctx.ate[1] && !ctx.ate[0]);
     assert(kept(BATTLE_SUBSCRIPT_FLING, 0, 50, 0, 0) == 0);
+    assert(!ctx.ate[1]);
     assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 0, 0, 0) == 0);
     assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, STATUS2_SUBSTITUTE, 0) == 0);
     assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, STATUS2_SUBSTITUTE, 1) == 149);

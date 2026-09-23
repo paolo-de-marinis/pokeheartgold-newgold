@@ -123,7 +123,10 @@ typedef struct SelfTurnData {
     // form it shows once the action is over -- GULP_MISSILE_ARROKUDA or
     // GULP_MISSILE_PIKACHU, or 0.
     u32 gulpMissilePrey : 2;
-    u32 unk0_11 : 17;
+    // The Berry BtlCmd_RemoveItem takes from this Pokemon next is not eaten
+    // by it: it is plucked, flung or spent on Natural Gift.
+    u32 berryNotEaten : 1;
+    u32 unk0_11 : 16;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;

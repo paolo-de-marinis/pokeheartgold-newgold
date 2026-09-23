@@ -6112,6 +6112,8 @@ BOOL BtlCmd_CalcNaturalGiftParams(BattleSystem *battleSystem, BattleContext *ctx
     if (power) {
         ctx->movePower = power;
         ctx->moveType = GetNaturalGiftType(ctx, ctx->battlerIdAttacker);
+        // The Berry is spent, not eaten (BtlCmd_RemoveItem).
+        ctx->selfTurnData[ctx->battlerIdAttacker].berryNotEaten = TRUE;
     } else {
         BattleScriptIncrementPointer(ctx, adrs);
     }
@@ -6647,7 +6649,7 @@ BOOL BtlCmd_BoostRandomStatBy2(BattleSystem *battleSystem, BattleContext *ctx) {
 // once-per-battle entry abilities are remembered by (OnceOnlyEntryAbilityDone,
 // the reference's SanitizeClientForTeamAccess); a multi or tag partner has a
 // party of its own and is not.
-static void RememberBerryEaten(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+void RememberBerryEaten(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int partner = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
 
     ctx->berryEaten[battlerId][ctx->selectedMonIndex[battlerId]] = TRUE;
@@ -6664,17 +6666,21 @@ BOOL BtlCmd_RemoveItem(BattleSystem *battleSystem, BattleContext *ctx) {
 
     ctx->recycleItem[battlerId] = ctx->battleMons[battlerId].item;
 
-    // Every Berry eaten in a battle leaves through here -- the held-item
-    // scripts all end by calling BATTLE_SUBSCRIPT_PLUCK_CHECK, which is a
-    // RemoveItem and nothing else -- so this is the one place Belch has to be
-    // told. The reference has no such choke point and writes the same flag at
-    // each of the eight sites that eat one. Two of those sites name a battler
-    // this cannot: a Berry plucked off the target is eaten by the attacker,
-    // and a flung one by the target, so those two credit the wrong half of the
-    // pair.
-    if (ItemIdIsBerry(ctx->battleMons[battlerId].item) == TRUE) {
+    // Every Berry a Pokemon eats from its own hand leaves through here -- the
+    // held-item scripts all end by calling BATTLE_SUBSCRIPT_PLUCK_CHECK, which
+    // is a RemoveItem and nothing else -- so this is where Belch is told of it.
+    // The reference has no such choke point and writes the same flag at each
+    // of the eight sites that eat one. A Berry plucked off its holder, flung,
+    // or spent on Natural Gift leaves through here as well, uneaten by its
+    // holder, and does not count for it (Pokemon Central, Rutto): the routines
+    // that take it mark it so, and the Pokemon that does eat it -- the one that
+    // plucked it, the one it lands on -- is told there (TryEatOpponentBerry,
+    // FlungItemLands).
+    if (ItemIdIsBerry(ctx->battleMons[battlerId].item) == TRUE
+        && !ctx->selfTurnData[battlerId].berryNotEaten) {
         RememberBerryEaten(battleSystem, ctx, battlerId);
     }
+    ctx->selfTurnData[battlerId].berryNotEaten = FALSE;
 
     ctx->battleMons[battlerId].item = 0;
     // An item used up, which is what hands a partner's Symbiosis item over;

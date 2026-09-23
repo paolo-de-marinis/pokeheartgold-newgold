@@ -1806,6 +1806,11 @@ static void FlungItemLands(BattleSystem *battleSystem, BattleContext *ctx, int s
         break;
     }
     CudChewKeepsBerry(ctx, battlerId, ctx->recycleItem[ctx->battlerIdAttacker]);
+    // A Berry that lands is eaten by the Pokemon it lands on, which Belch
+    // counts (Pokemon Central, Rutto); not by the thrower (BtlCmd_RemoveItem).
+    if (ItemIdIsBerry(ctx->recycleItem[ctx->battlerIdAttacker]) == TRUE) {
+        RememberBerryEaten(battleSystem, ctx, battlerId);
+    }
 }
 
 // A pivot move -- U-turn, Volt Switch, Flip Turn -- takes its user out with
@@ -8964,6 +8969,12 @@ BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int bat
         ctx->itemTemp = ctx->battleMons[battlerId].item;
         ctx->selfTurnData[ctx->battlerIdAttacker].unk14 |= (1 << 1);
         CudChewKeepsBerry(ctx, ctx->battlerIdAttacker, ctx->battleMons[battlerId].item);
+        // The attacker eats it, and Belch counts it for the attacker, not for
+        // the Pokemon it was plucked from (BtlCmd_RemoveItem).
+        RememberBerryEaten(battleSystem, ctx, ctx->battlerIdAttacker);
+        if (battlerId != ctx->battlerIdAttacker) {
+            ctx->selfTurnData[battlerId].berryNotEaten = TRUE;
+        }
     }
 
     return ret;
@@ -9223,6 +9234,8 @@ BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
         }
         ctx->battlerIdTemp = ctx->battlerIdTarget;
     }
+    // Thrown, not eaten by the thrower (BtlCmd_RemoveItem).
+    ctx->selfTurnData[battlerId].berryNotEaten = TRUE;
 
     return TRUE;
 }
