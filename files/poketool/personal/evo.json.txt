@@ -8,7 +8,6 @@
 
 typedef struct EvolutionDataFile {
 	struct Evolution evos[MAX_EVOS_PER_POKE];
-	u16 pad0;
 } EVOLUTION_FILE;
 
 size_t __size = sizeof(struct EvolutionDataFile);

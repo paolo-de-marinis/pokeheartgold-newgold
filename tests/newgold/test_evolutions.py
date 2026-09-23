@@ -10,6 +10,7 @@ Eevee keeping every branch it had.
 import json
 import os
 import re
+import struct
 import sys
 import unittest
 from pathlib import Path
@@ -79,6 +80,21 @@ class EvolutionTests(unittest.TestCase):
         source = (ROOT / "src/pokemon.c").read_text()
         self.assertNotIn("for (i = 0; i < 7; i++)", source, "a loop still stops at seven")
         self.assertEqual(source.count("for (i = 0; i < MAX_EVOS_PER_POKE; i++)"), 3)
+
+    def test_a_member_is_as_long_as_the_readers_buffer(self):
+        """The whole member is read into MAX_EVOS_PER_POKE evolutions of six
+        bytes (a heap block in GetMonEvolution, a stack array in
+        SpeciesHasEvolution). A pad after them was written two bytes past
+        both."""
+        path = ROOT / "files/poketool/personal/evo.narc"
+        if not path.exists():
+            self.skipTest("evo.narc is build output")
+        data = path.read_bytes()
+        table = struct.unpack_from("<H", data, 12)[0]
+        count = struct.unpack_from("<H", data, table + 8)[0]
+        sizes = {end - start for start, end in
+                 (struct.unpack_from("<II", data, table + 12 + 8 * i) for i in range(count))}
+        self.assertEqual(sizes, {self.limit * 6})
 
     def test_a_linking_cord_stands_in_for_a_trade_with_an_item(self):
         """hg-engine at d0380a487: used on a Pokemon that evolves by trading
