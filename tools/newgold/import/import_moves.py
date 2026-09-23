@@ -446,6 +446,9 @@ IMPLEMENTED_HERE = {
     # contact, when that would hurt more (Pokemon Central, Armaguscio):
     # ShellSideArm_ChooseCategory and BattleMoveCategory.
     "SHELL_SIDE_ARM": "MOVE_EFFECT_POISON_HIT",
+    # Synchronoise hurts only the Pokemon that share a type with its user
+    # (Pokemon Central, Sincrumore): effect script 432.
+    "SYNCHRONOISE": "MOVE_EFFECT_HIT_SHARED_TYPE",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

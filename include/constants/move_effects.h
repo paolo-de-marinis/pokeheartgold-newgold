@@ -439,5 +439,6 @@
 #define MOVE_EFFECT_TAR_SHOT                                     429
 #define MOVE_EFFECT_TRIPLE_ARROWS                                430
 #define MOVE_EFFECT_EERIE_SPELL                                  431
+#define MOVE_EFFECT_HIT_SHARED_TYPE                              432
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

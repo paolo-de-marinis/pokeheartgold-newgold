@@ -615,5 +615,14 @@ int main(void) {
         self.assertIn("ShellSideArm_ChooseCategory(battleSystem, ctx);",
                       function((ROOT / "src/battle/battle_controller_player.c").read_text(), "NoteMoveUsed"))
 
+    def test_synchronoise_hurts_only_a_pokemon_that_shares_a_type(self):
+        # Pokemon Central (Sincrumore): any of the user's types against any of
+        # the target's; none shared, and it has no effect.
+        self.assertImplemented("SYNCHRONOISE", "MOVE_EFFECT_HIT_SHARED_TYPE")
+        script = effect_script("MOVE_EFFECT_HIT_SHARED_TYPE")
+        self.assertEqual(script.count("BSCRIPT_VAR_CALC_TEMP, _HIT"), 9)
+        self.assertIn("BSCRIPT_VAR_CALC_TEMP, TYPE_NONE, _NO_EFFECT", script)
+        self.assertLess(script.index("MOVE_STATUS_NO_EFFECT"), script.index("_HIT:"))
+
 if __name__ == "__main__":
     unittest.main()
