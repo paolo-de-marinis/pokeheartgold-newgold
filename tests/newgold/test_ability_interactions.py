@@ -201,6 +201,18 @@ class IntimidateTests(unittest.TestCase):
         branch = branch[:branch.index("{")]
         self.assertIn("(ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY && (1 + stat) == STAT_ATK && AbilityShrugsOffIntimidate(ctx) == TRUE)", branch)
 
+    def test_rattled_answers_a_drop_that_happened(self):
+        script = subscript("Intimidate")
+        change = label_body(script, "_CHANGE")
+        self.assertIn("BMON_DATA_STAT_CHANGE_ATK, BSCRIPT_VAR_CALC_TEMP", change)
+        self.assertIn("GoTo _RATTLED", change)
+        rattled = label_body(script, "_RATTLED")
+        self.assertIn("CheckAbility CHECK_OPCODE_NOT_HAVE, BATTLER_CATEGORY_SIDE_EFFECT_MON, ABILITY_RATTLED, _038", rattled)
+        self.assertIn("CompareMonDataToVar OPCODE_EQU, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_STAT_CHANGE_ATK, BSCRIPT_VAR_CALC_TEMP, _038", rattled)
+        self.assertIn("MOVE_SUBSCRIPT_PTR_SPEED_UP_1_STAGE", rattled)
+        # The Adrenaline Orb's path falls into it.
+        self.assertLess(script.index("Call BATTLE_SUBSCRIPT_ADRENALINE_ORB"), script.index("\n_RATTLED:"))
+
 
 if __name__ == "__main__":
     unittest.main()
