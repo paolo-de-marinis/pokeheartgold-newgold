@@ -18,48 +18,7 @@
 	.extern ov18_021E8B24
 	.extern ov18_021E8B5C
 
-.public ov18_021F8CCC
-.public ov18_021F8F10
-.public ov18_021F8FA0
-.public ov18_021F91F0
-.public ov18_021F95CC
-.public ov18_021FBD60
-.public ov18_021FBD7C
-.public ov18_021FBD98
-
 	.text
-
-	thumb_func_start ov18_021F8168
-ov18_021F8168: ; 0x021F8168
-	push {r4, r5, lr}
-	sub sp, #0xc
-	add r5, r0, #0
-	add r4, r1, #0
-	; u32 size;
-	; void * ret;
-	; GF_ASSERT(a < 82);
-	cmp r5, #0x52
-	blo _021F8178
-	bl GF_AssertFail
-_021F8178:
-	; ret = GfGfxLoader_LoadFromNarc_GetSizeOut(GetPokedexDataNarcID(), a0 + 11, FALSE, HEAP_ID_POKEDEX_APP, FALSE, &size);
-	bl GetPokedexDataNarcID
-	mov r2, #0
-	str r2, [sp]
-	add r1, sp, #8
-	add r5, #0xb
-	str r1, [sp, #4]
-	add r1, r5, #0
-	mov r3, #0x25
-	bl GfGfxLoader_LoadFromNarc_GetSizeOut
-	; *a1 = size / 2;
-	ldr r1, [sp, #8]
-	lsr r1, r1, #1
-	str r1, [r4]
-	; return ret;
-	add sp, #0xc
-	pop {r4, r5, pc}
-	thumb_func_end ov18_021F8168
 
 	thumb_func_start ov18_021F8198
 ov18_021F8198: ; 0x021F8198

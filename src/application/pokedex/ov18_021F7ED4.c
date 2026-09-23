@@ -8,7 +8,7 @@ u16 *ov18_021F8168(u32 member, u32 *count);
 void ov18_021F8198(u16 *dest, u32 *destCount, Pokedex *pokedex, u16 *src, u32 srcCount);
 void ov18_021F822C(u32 order, u16 *dest, u32 *destCount, u16 *src, u32 srcCount, Pokedex *pokedex);
 void ov18_021F82CC(u32 letter, u16 *dest, u32 *destCount, u16 *src, u32 srcCount, Pokedex *pokedex);
-void ov18_021F831C(u32 type, u16 *dest, u32 *destCount, u16 *src, u32 srcCount, Pokedex *pokedex);
+void ov18_021F831C(u32 type, u16 *dest, u32 *destCount, u16 *src, int srcCount, Pokedex *pokedex);
 void ov18_021F8468(u32 bodyType, u16 *dest, u32 *destCount, u16 *src, u32 srcCount, Pokedex *pokedex);
 void ov18_021F8584(PokedexAppData *pokedexApp, u32 area, u16 *dest, u32 *destCount, u16 *src, u32 srcCount, Pokedex *pokedex);
 void ov18_021F8640(PokedexAppData *pokedexApp, u16 min, u16 max, u16 *dest, u32 *destCount, u16 *src, u32 srcCount, Pokedex *pokedex);

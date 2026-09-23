@@ -821,6 +821,8 @@ Overlay OVY_18
     Object asm/overlay_18_021EECB0.o
     Object src/application/pokedex/ov18_021EED00.o
     Object asm/overlay_18_021EED70.o
+    Object src/application/pokedex/ov18_021EF848.o
+    Object asm/overlay_18_021EF91C.o
     Object src/application/pokedex/ov18_021F1598.o
     Object asm/overlay_18_021F1620.o
     Object src/application/pokedex/ov18_021F1DE4.o
@@ -830,9 +832,12 @@ Overlay OVY_18
     Object src/application/pokedex/ov18_021F2EC8.o
     Object asm/overlay_18_021F2F00.o
     Object src/application/pokedex/ov18_021F7ED4.o
-    Object asm/overlay_18_021F8168.o
+    Object src/application/pokedex/ov18_021F8168.o
+    Object asm/overlay_18_021F8198.o
     Object src/application/pokedex/ov18_021F81D8.o
     Object asm/overlay_18_021F822C.o
+    Object src/application/pokedex/ov18_021F831C.o
+    Object asm/overlay_18_021F8468.o
     Object src/application/pokedex/ov18_021F8838.o
     Object asm/overlay_18_021F8950.o
     Object src/application/pokedex/ov18_021F8974.o
