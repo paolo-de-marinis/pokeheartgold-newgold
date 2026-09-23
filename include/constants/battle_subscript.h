@@ -723,6 +723,9 @@
 // Poison Puppeteer confusing what its Pokemon's move poisoned, which the
 // reference has no script for.
 #define BATTLE_SUBSCRIPT_POISON_PUPPETEER                   439
+// Gulp Missile's Cramorant spitting its prey at what hit it, which the
+// reference has no script for.
+#define BATTLE_SUBSCRIPT_GULP_MISSILE                       440
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

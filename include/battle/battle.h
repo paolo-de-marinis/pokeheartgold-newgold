@@ -118,7 +118,11 @@ typedef struct SelfTurnData {
     // Emergency Exit and Wimp Out: this Pokemon, holding either, was above
     // half its health when damage from outside a move came its way.
     u32 retreatArmedOutsideMove : 1;
-    u32 unk0_11 : 19;
+    // Gulp Missile: the prey this Cramorant caught during the action, for the
+    // form it shows once the action is over -- GULP_MISSILE_ARROKUDA or
+    // GULP_MISSILE_PIKACHU, or 0.
+    u32 gulpMissilePrey : 2;
+    u32 unk0_11 : 17;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;

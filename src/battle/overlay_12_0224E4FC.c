@@ -6890,6 +6890,25 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         }
         break;
     }
+    case ABILITY_GULP_MISSILE:
+        // A Cramorant with its prey spits it at whatever hits it with a
+        // damaging move (Pokemon Central, Inghiottimissile): a quarter of the
+        // attacker's maximum HP, Magic Guard or not, then its Defense down a
+        // stage for an Arrokuda or paralysis for a Pikachu, and the Cramorant
+        // is itself again. Not at a substitute (the hit is the substitute's),
+        // nor from a transformed Cramorant; it need not survive the hit.
+        if ((ctx->battleMons[ctx->battlerIdTarget].species == SPECIES_CRAMORANT_GULPING || ctx->battleMons[ctx->battlerIdTarget].species == SPECIES_CRAMORANT_GORGING)
+            && !(ctx->battleMons[ctx->battlerIdTarget].status2 & STATUS2_TRANSFORM) && ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+            ctx->statChangeParam = ctx->battleMons[ctx->battlerIdTarget].species == SPECIES_CRAMORANT_GULPING ? MOVE_SUBSCRIPT_PTR_DEFENSE_DOWN_1_STAGE : 0;
+            ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+            ctx->battlerIdStatChange = ctx->battlerIdAttacker;
+            BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTarget, SPECIES_CRAMORANT, FALSE);
+            ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * -1, 4);
+            ctx->battlerIdTemp = ctx->battlerIdAttacker;
+            *script = BATTLE_SUBSCRIPT_GULP_MISSILE;
+            ret = TRUE;
+        }
+        break;
     case ABILITY_ROUGH_SKIN:
     case ABILITY_IRON_BARBS:
         if (ctx->battleMons[ctx->battlerIdAttacker].hp && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
@@ -9434,6 +9453,37 @@ static u16 Battler_RelicSongForm(BattleContext *ctx, int battlerId) {
     return SPECIES_NONE;
 }
 
+// Gulp Missile (Pokemon Central, Inghiottimissile): a Cramorant catches its
+// prey when its Surf reaches a target -- not one a Protect or an ability turned
+// the move away from -- or when it goes under with Dive, whether or not the
+// dive then lands: an Arrokuda above half its HP, a Pikachu at half or below.
+// The catch is noted as it happens and shown with the form changes once the
+// action is over (Battler_GulpMissileForm). Not a transformed Cramorant, whose
+// form is its copy's and which cannot spit the prey anyway. The reference
+// declares the ability and reads it only in its lists of what cannot be copied.
+void Battler_GulpMissileCatch(BattleContext *ctx, int battlerId) {
+    if (ctx->battleMons[battlerId].species != SPECIES_CRAMORANT || !ctx->battleMons[battlerId].hp || ctx->selfTurnData[battlerId].gulpMissilePrey
+        || GetBattlerAbility(ctx, battlerId) != ABILITY_GULP_MISSILE || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+        return;
+    }
+    ctx->selfTurnData[battlerId].gulpMissilePrey = ctx->battleMons[battlerId].hp > (s32)(ctx->battleMons[battlerId].maxHp / 2) ? GULP_MISSILE_ARROKUDA : GULP_MISSILE_PIKACHU;
+}
+
+// The form a Cramorant takes for the prey it caught during the action: the
+// Gulping Form with an Arrokuda, the Gorging Form with a Pikachu.
+static u16 Battler_GulpMissileForm(BattleContext *ctx, int battlerId) {
+    if (ctx->battleMons[battlerId].species != SPECIES_CRAMORANT || !ctx->battleMons[battlerId].hp) {
+        return SPECIES_NONE;
+    }
+    switch (ctx->selfTurnData[battlerId].gulpMissilePrey) {
+    case GULP_MISSILE_ARROKUDA:
+        return SPECIES_CRAMORANT_GULPING;
+    case GULP_MISSILE_PIKACHU:
+        return SPECIES_CRAMORANT_GORGING;
+    }
+    return SPECIES_NONE;
+}
+
 // Genesect (BattleFormChangeCheck.c:248): the Drive it holds decides its form.
 // hg-engine changes the battler's form alone, not the Pokemon's, and the
 // forms' stats are the same, so here it is the battler's species alone. Not a
@@ -9636,6 +9686,14 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
         if (form != SPECIES_NONE) {
             ctx->relicSongTracker &= ~MaskOfFlagNo(ctx->battlerIdTemp);
             BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, form, TRUE);
+            *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
+            ret = TRUE;
+            break;
+        }
+        form = Battler_GulpMissileForm(ctx, ctx->battlerIdTemp);
+        if (form != SPECIES_NONE) {
+            ctx->selfTurnData[ctx->battlerIdTemp].gulpMissilePrey = 0;
+            BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, form, FALSE);
             *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
             ret = TRUE;
             break;

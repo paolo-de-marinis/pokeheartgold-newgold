@@ -763,5 +763,9 @@ typedef enum ControllerCommand {
 #define BALL_SHAKE_MAX 4
 #define MOVES_MAX      4
 
+// The prey a Cramorant with Gulp Missile catches (SelfTurnData.gulpMissilePrey).
+#define GULP_MISSILE_ARROKUDA 1
+#define GULP_MISSILE_PIKACHU  2
+
 #endif // PM_ASM
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_H

@@ -2907,6 +2907,10 @@ static BOOL ov12_0224BC2C(BattleSystem *battleSystem, BattleContext *ctx) {
         switch (ctx->unk_54) {
         case 0:
             script = BattleContext_CheckMoveImmunityFromAbility(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
+            // A Surf that reaches this target lets a Cramorant catch its prey.
+            if (script == BATTLE_SUBSCRIPT_NONE && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT) && ctx->moveNoCur == MOVE_SURF) {
+                Battler_GulpMissileCatch(ctx, ctx->battlerIdAttacker);
+            }
             // A refusal is still worth saying even when the move was going to
             // miss or do nothing anyway, which is why the two scripts that
             // only name an ability are let past the DID_NOT_HIT test.
@@ -3490,6 +3494,11 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->command = CONTROLLER_COMMAND_26;
     } else {
         ctx->battleStatus2 |= BATTLE_STATUS2_MOVE_SUCCEEDED;
+        // A Cramorant going under with Dive catches its prey on the dive's
+        // first turn, whether or not the dive then lands.
+        if (ctx->moveNoCur == MOVE_DIVE && !(ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_LOCKED_INTO_MOVE)) {
+            Battler_GulpMissileCatch(ctx, ctx->battlerIdAttacker);
+        }
         TryStartParentalBond(battleSystem, ctx);
         ReadBattleScriptFromNarc(ctx, NARC_a_0_0_0, ctx->moveNoCur);
         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;

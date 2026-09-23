@@ -26,6 +26,7 @@ BOOL ov12_022503EC(BattleSystem *battleSystem, BattleContext *ctx, int *out);
 BOOL TryPivotTargetHeldItem(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out);
 BOOL SheerForceTradedEffect(BattleContext *ctx);
+void Battler_GulpMissileCatch(BattleContext *ctx, int battlerId);
 int ov12_022506D4(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 move, int a4, int a5);
 void ov12_02250A18(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 a3);
 BOOL ov12_02250BBC(BattleSystem *battleSystem, BattleContext *ctx);
