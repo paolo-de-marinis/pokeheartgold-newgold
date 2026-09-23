@@ -1001,6 +1001,8 @@ Overlay OVY_68
 {
     After main
     Object asm/overlay_68.o
+    Object src/overlay_68_021E7028.o
+    Object asm/overlay_68_021E70BC.o
 }
 Overlay OVY_69
 {

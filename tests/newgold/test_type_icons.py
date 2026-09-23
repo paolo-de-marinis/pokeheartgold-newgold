@@ -18,7 +18,7 @@ import unittest
 from test_level_cap import ROOT
 
 SOURCE = ROOT / "src/unk_02077678.c"
-RELEARNER = ROOT / "asm/overlay_68.s"
+RELEARNER = ROOT / "src/overlay_68_021E7028.c"
 TYPES = ROOT / "include/constants/pokemon.h"
 ARCHIVE = ROOT / "files/a/0/0/8"
 CONTEST_CONDITIONS = 5
@@ -48,8 +48,8 @@ class TypeIconTests(unittest.TestCase):
         self.assertEqual(len(table("sTypeIconPalettes")), want)
 
     def test_the_relearner_adds_the_same_boundary(self):
-        self.assertIn("add r6, #NUMBER_OF_MON_TYPES", RELEARNER.read_text(),
-                      "the move relearner still adds a literal to reach the contest icons")
+        self.assertIn("GetMoveAttr(move, MOVEATTR_CONTEST_TYPE) + NUMBER_OF_MON_TYPES", RELEARNER.read_text(),
+                      "the move relearner does not start the contest icons at NUMBER_OF_MON_TYPES")
 
     def test_the_fairy_icon_is_in_the_archive(self):
         fairy = table("sTypeIconFiles")[int(re.search(r"#define TYPE_FAIRY\s+(\d+)",

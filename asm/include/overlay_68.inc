@@ -166,3 +166,4 @@
 .public MoveRelearner_Init
 .public MoveRelearner_Main
 .public MoveRelearner_Exit
+.public ov68_021E7028

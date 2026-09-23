@@ -14,7 +14,8 @@ typedef struct MoveRelearnerArgs {
     Options *options;
     MenuInputStateMgr *menuInputStatePtr;
     u16 *eligibleMoves;
-    u8 filler_14[5];
+    u8 filler_14[4];
+    u8 unk_18;
     u8 type;
     u8 padding_1A[2];
 } MoveRelearnerArgs;
