@@ -298,6 +298,19 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("sei", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "party_add",
                                                         "args": {"species": 1, "level": 5}}))
 
+    def test_a_player_with_no_name_gives_none(self):
+        """A save sealed from RAM at the title screen has a name of zeroes,
+        no EOS: a Pokemon made then would carry it as its trainer's."""
+        save = sv.Save(self.save)
+        save.block("SAVE_PLAYERDATA")[sv.NAME:sv.NAME + 16] = bytes(16)
+        self.save.write_bytes(save.image())
+        n = sv.species_numbers()
+        self.assertIn("non ha ancora un nome", self.refused("/api/edit", {
+            "f": "gyms/test.sav", "op": "box_add", "args": {"box": 0, "slot": 0, "species": n["CHIKORITA"], "level": 5}}))
+        self.edit("trainer", {"name": "Paolo"})
+        out = self.edit("box_add", {"box": 0, "slot": 0, "species": n["CHIKORITA"], "level": 5})
+        self.assertEqual(out["boxes"]["mons"][0][0]["ot_name"], "Paolo")
+
     def test_the_boxes(self):
         n = sv.species_numbers()
         out = self.edit("box_add", {"box": 29, "slot": 29, "species": n["TOGEKISS"], "level": 40})

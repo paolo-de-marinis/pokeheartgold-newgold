@@ -903,6 +903,11 @@ def created(save, a, party):
     fields = storable(checked_mon({k: v for k, v in a.items() if k != "moves" or v}))
     if "species" not in fields or "level" not in fields:
         raise Refused("servono specie e livello")
+    if 0xFFFF not in sv.owner(save)["codes"]:
+        # A save sealed from RAM before the name was chosen: the Pokemon's
+        # original trainer would be a name with no end, which the game
+        # asserts on (CopyU16ArrayToString).
+        raise Refused("il giocatore non ha ancora un nome: daglielo nella scheda Allenatore, poi aggiungi il Pokémon")
     raw = sv.new_mon(fields["species"], fields["level"], sv.owner(save), nature=fields.get("nature"),
                      moves=fields.get("moves"), item=fields.get("item", 0),
                      ivs=fields.get("ivs", 31), evs=fields.get("evs", 0), party=party)
