@@ -3,6 +3,8 @@
 #include "pokeathlon/pokeathlon.h"
 #include "pokeathlon/pokeathlon_save.h"
 
+#include "pokedex.h"
+
 // A Pokemon on the course, as ov97 fills it from the party: three a
 // participant, after the participant's first four bytes.
 typedef struct PokeathlonCourseMon {
@@ -43,8 +45,24 @@ void ov96_021E786C(PokeathlonCourseData *data, PokeathlonSave *save) {
         }
         PokeathlonCourseMon *mons = (PokeathlonCourseMon *)PokeathlonCourse_GetParticipantUnk04(data, ov96_021E5F24(data));
         for (i = 0; i < 3; i++) {
-            record->mons[i].species = mons[i].species;
-            record->mons[i].form = mons[i].form;
+            // The record keeps a species in nine bits and the course-record
+            // screen (ov98_0221EE28) prints nothing past Arceus, so an added
+            // species is kept as its retail base, as a form is in the Dex
+            // (a Mega Venusaur as Venusaur), or as none when it has no retail
+            // base -- as added species earn no medals. Kept whole, 512 on
+            // were cut to another retail species and 494..511 failed the
+            // screen's assertion, a reset with a wireless link up.
+            u16 species = mons[i].species;
+            u16 form = mons[i].form;
+            if (species > MAX_SPECIES) {
+                species = SpeciesToDexSpecies(species);
+                form = 0;
+                if (species > MAX_SPECIES) {
+                    species = SPECIES_NONE;
+                }
+            }
+            record->mons[i].species = species;
+            record->mons[i].form = form;
             record->mons[i].unk_0_14 = mons[i].unk_11;
             record->mons[i].unk_0_16 = mons[i].unk_10;
             record->mons[i].unk_04 = mons[i].unk_04;
