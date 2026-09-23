@@ -3344,61 +3344,34 @@ BOOL BtlCmd_PrintBufferedTrainerMessage(BattleSystem *battleSystem, BattleContex
     return FALSE;
 }
 
+// Conversion from the sixth generation (Pokemon Central, Conversione): the
+// user takes the type of the move in its first slot, and the move fails when
+// the user has that type already, one of its own or an added one -- the
+// reference's before-move check (BattleController_BeforeMove.c at d0380a487,
+// with HasType), which then runs retail's command all the same. Retail's is
+// the fourth generation's: one of the user's other moves at random, of a type
+// it did not have.
 BOOL BtlCmd_TryConversion(BattleSystem *battleSystem, BattleContext *ctx) {
-    int i, cnt, moveType;
+#pragma unused(battleSystem)
+    BattleMon *mon = &ctx->battleMons[ctx->battlerIdAttacker];
+    int moveType;
 
     BattleScriptIncrementPointer(ctx, 1);
 
     int adrs = BattleScriptReadWord(ctx);
 
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MULTITYPE) {
+    moveType = BattleMoveTbl(ctx, mon->moves[0])->type;
+    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MULTITYPE
+        || GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) == moveType
+        || GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) == moveType
+        || mon->type3 == moveType) {
         BattleScriptIncrementPointer(ctx, adrs);
         return FALSE;
     }
-
-    for (cnt = 0; cnt < MAX_MON_MOVES; cnt++) {
-        if (ctx->battleMons[ctx->battlerIdAttacker].moves[cnt] == 0) {
-            break;
-        }
-    }
-
-    for (i = 0; i < cnt; i++) {
-        if (ctx->battleMons[ctx->battlerIdAttacker].moves[i] != MOVE_CONVERSION) {
-            moveType = BattleMoveTbl(ctx, ctx->battleMons[ctx->battlerIdAttacker].moves[i])->type;
-            if (moveType == TYPE_MYSTERY) {
-                if (GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) == TYPE_GHOST || GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) == TYPE_GHOST) {
-                    moveType = TYPE_GHOST;
-                } else {
-                    moveType = TYPE_NORMAL;
-                }
-            }
-            if (GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) != moveType && GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) != moveType) {
-                break;
-            }
-        }
-    }
-
-    if (i == cnt) {
-        BattleScriptIncrementPointer(ctx, adrs);
-    } else {
-        do {
-            do {
-                i = BattleSystem_Random(battleSystem) % cnt;
-            } while (ctx->battleMons[ctx->battlerIdAttacker].moves[i] == MOVE_CONVERSION);
-            moveType = BattleMoveTbl(ctx, ctx->battleMons[ctx->battlerIdAttacker].moves[i])->type;
-            if (moveType == TYPE_MYSTERY) {
-                if (GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) == TYPE_GHOST || GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) == TYPE_GHOST) {
-                    moveType = TYPE_GHOST;
-                } else {
-                    moveType = TYPE_NORMAL;
-                }
-            }
-        } while (GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) == moveType || GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) == moveType);
-        ctx->battleMons[ctx->battlerIdAttacker].type1 = moveType;
-        ctx->battleMons[ctx->battlerIdAttacker].type2 = moveType;
-        ctx->battleMons[ctx->battlerIdAttacker].type3 = TYPE_NONE;
-        ctx->msgTemp = moveType;
-    }
+    mon->type1 = moveType;
+    mon->type2 = moveType;
+    mon->type3 = TYPE_NONE;
+    ctx->msgTemp = moveType;
 
     return FALSE;
 }

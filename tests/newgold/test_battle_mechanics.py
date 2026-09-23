@@ -1162,8 +1162,17 @@ class TypeChangeTests(unittest.TestCase):
         commands = COMMANDS.read_text()
         self.assertIn("ctx->battleMons[battlerId].type3 = TYPE_NONE;", function(commands, "MakeBattlerPureType"))
         self.assertNotIn("type3", function(commands, "RemoveBattlerType"))
-        for command in ("BtlCmd_TryCamouflage", "BtlCmd_TryConversion"):
-            self.assertIn("ctx->battleMons[ctx->battlerIdAttacker].type3 = TYPE_NONE;", function(commands, command), command)
+        self.assertIn("ctx->battleMons[ctx->battlerIdAttacker].type3 = TYPE_NONE;", function(commands, "BtlCmd_TryCamouflage"))
+        self.assertIn("mon->type3 = TYPE_NONE;", function(commands, "BtlCmd_TryConversion"))
+
+    def test_conversion_takes_its_first_move_s_type(self):
+        # Pokemon Central, Conversione, from Generation VI: the type of the
+        # move in the first slot, failing when the user has it already, an
+        # added type included; no longer a random move's.
+        body = function(COMMANDS.read_text(), "BtlCmd_TryConversion")
+        self.assertIn("moveType = BattleMoveTbl(ctx, mon->moves[0])->type;", body)
+        self.assertIn("|| mon->type3 == moveType) {", body)
+        self.assertNotIn("BattleSystem_Random", body)
 
 
 class PaybackTests(unittest.TestCase):
