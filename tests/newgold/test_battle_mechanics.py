@@ -574,5 +574,25 @@ class AuraTests(unittest.TestCase):
         self.assertIn("moveType == TYPE_FAIRY && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_FAIRY_AURA)", body)
 
 
+class QuickDrawTests(unittest.TestCase):
+    def test_three_in_ten_and_only_for_an_attack(self):
+        # 100 / 30 is 3 in integer division, which made it one in three; and a
+        # status move never goes first by it.
+        body = function(OVERLAY.read_text(), "CheckSortSpeed")
+        for n in (1, 2):
+            self.assertIn(f"ability{n} == ABILITY_QUICK_DRAW && moveNo{n} && BattleMoveTbl(ctx, moveNo{n})->category != CATEGORY_STATUS"
+                          f" && (ctx->unk_310C[battlerId{n}] >> 8) % 10 < 3", body)
+        self.assertNotIn("100 / 30", body)
+
+    def test_it_raises_its_own_flag_and_says_so(self):
+        # Not the Quick Claw's: that one plays the held-item animation for a
+        # Pokemon holding nothing, and item thieves stand aside for it.
+        body = function(OVERLAY.read_text(), "CheckSortSpeed")
+        for n in (1, 2):
+            self.assertIn(f"ctx->battleMons[battlerId{n}].unk88.quickDrawFlag = TRUE;", body)
+        self.assertEqual(body.count("quickClawFlag = TRUE"), 2)
+        self.assertIn("BMON_DATA_QUICK_DRAW_FLAG, 0, _custap", subscript("CheckQuickClaw"))
+
+
 if __name__ == "__main__":
     unittest.main()

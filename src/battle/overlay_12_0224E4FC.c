@@ -497,6 +497,8 @@ int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         return mon->unk88.custapBerryFlag;
     case BMON_DATA_QUICK_CLAW_FLAG:
         return mon->unk88.quickClawFlag;
+    case BMON_DATA_QUICK_DRAW_FLAG:
+        return mon->unk88.quickDrawFlag;
     case BMON_DATA_RECHARGE:
         return mon->unk88.rechargeCount;
     case BMON_DATA_FAKE_OUT:
@@ -772,6 +774,9 @@ void SetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         break;
     case BMON_DATA_QUICK_CLAW_FLAG:
         mon->unk88.quickClawFlag = *data8;
+        break;
+    case BMON_DATA_QUICK_DRAW_FLAG:
+        mon->unk88.quickDrawFlag = *data8;
         break;
     case BMON_DATA_RECHARGE:
         mon->unk88.rechargeCount = *data32;
@@ -1242,16 +1247,6 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
         }
     }
 
-    // Quick Draw is a Quick Claw the Pokemon was born with: the same roll,
-    // the same flag, and the same three chances in ten.
-    if (ability1 == ABILITY_QUICK_DRAW && ctx->unk_310C[battlerId1] % (100 / 30) == 0) {
-        boostedPriority1 = 1;
-
-        if (!flag) {
-            ctx->battleMons[battlerId1].unk88.quickClawFlag = TRUE;
-        }
-    }
-
     if (heldItem1 == HOLD_EFFECT_PINCH_PRIORITY) {
         if (GetBattlerAbility(ctx, battlerId1) == ABILITY_GLUTTONY) {
             extra1 /= 2;
@@ -1311,16 +1306,6 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
         }
     }
 
-    // Quick Draw is a Quick Claw the Pokemon was born with: the same roll,
-    // the same flag, and the same three chances in ten.
-    if (ability2 == ABILITY_QUICK_DRAW && ctx->unk_310C[battlerId2] % (100 / 30) == 0) {
-        boostedPriority2 = 1;
-
-        if (!flag) {
-            ctx->battleMons[battlerId2].unk88.quickClawFlag = TRUE;
-        }
-    }
-
     if (heldItem2 == HOLD_EFFECT_PINCH_PRIORITY) {
         if (GetBattlerAbility(ctx, battlerId2) == ABILITY_GLUTTONY) {
             extra2 /= 2;
@@ -1361,6 +1346,20 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
         }
         movePriority1 = BattlerMovePriority(ctx, battlerId1, moveNo1);
         movePriority2 = BattlerMovePriority(ctx, battlerId2, moveNo2);
+
+        // Quick Draw is a Quick Claw the Pokemon was born with, three chances
+        // in ten and only for an attack, so it waits until the move is known.
+        // It reads the high byte of the turn's roll: Quick Claw reads it modulo
+        // five, which the high byte says nothing about, so a Pokemon with both
+        // gets two separate chances rather than one.
+        if (ability1 == ABILITY_QUICK_DRAW && moveNo1 && BattleMoveTbl(ctx, moveNo1)->category != CATEGORY_STATUS && (ctx->unk_310C[battlerId1] >> 8) % 10 < 3) {
+            boostedPriority1 = 1;
+            ctx->battleMons[battlerId1].unk88.quickDrawFlag = TRUE;
+        }
+        if (ability2 == ABILITY_QUICK_DRAW && moveNo2 && BattleMoveTbl(ctx, moveNo2)->category != CATEGORY_STATUS && (ctx->unk_310C[battlerId2] >> 8) % 10 < 3) {
+            boostedPriority2 = 1;
+            ctx->battleMons[battlerId2].unk88.quickDrawFlag = TRUE;
+        }
     }
 
     if (movePriority1 == movePriority2) {

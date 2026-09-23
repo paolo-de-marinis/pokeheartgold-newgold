@@ -192,7 +192,9 @@ typedef struct UnkBattlemonSub {
     u32 custapBerryFlag : 1;
     u32 quickClawFlag : 1;
     u32 meFirstFlag : 1;
-    u32 unk4_2F : 1; // unused
+    // Quick Draw's own Quick Claw flag, so that its line names the ability
+    // and an item thief does not take it for a Quick Claw at work.
+    u32 quickDrawFlag : 1;
     int rechargeCount;
     int fakeOutCount;
     int slowStartTurns;

@@ -143,17 +143,19 @@ class BattleMessageTests(unittest.TestCase):
         """Lines the port prints that the engine has no text for, and who
         prints them."""
         table = rows()
-        self.assertEqual(max(table) + 1, FIRST_PORT_ROW + 10)
+        self.assertEqual(max(table) + 1, FIRST_PORT_ROW + 13)
         expected = {
             "wandering spirit": (1787, "{STRVAR_1 1, 0, 0}’s Ability\\nbecame {STRVAR_1 5, 1, 0}!"),
             "belch": (1790, "{STRVAR_1 1, 0, 0} hasn’t eaten any held Berries,\\nso it can’t possibly belch!"),
             "snow continues": (1793, "The snow continues to fall."),
             "beat up": (1794, "{STRVAR_1 1, 0, 0}’s attack!"),
+            "quick draw": (1797, "{STRVAR_1 1, 0, 0}\\ncan act faster than normal,\\fthanks to its {STRVAR_1 5, 1, 0}!"),
         }
         for name, (row, text) in expected.items():
             self.assertEqual(import_battle_messages.port_row(name), row, name)
             self.assertEqual(table[row], text, name)
         self.assertIn("msg_0197_01787, TAG_NICKNAME_ABILITY", script("subscript_0366_WanderingSpirit.s"))
+        self.assertIn("msg_0197_01797, TAG_NICKNAME_ABILITY", script("subscript_0278_CheckQuickClaw.s"))
         self.assertIn("msg_0197_01790, TAG_NICKNAME", script("effect_script_0397.s"))
         battle = ROOT / "src/battle"
         self.assertIn("msg->id = msg_0197_01790;", (battle / "overlay_12_0224E4FC.c").read_text())

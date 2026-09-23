@@ -559,6 +559,7 @@ typedef enum Terrain {
 // switch -- so the getter reads it off the battle instead. Read only: nothing
 // sets it through a script.
 #define BMON_DATA_BERRY_EATEN             102
+#define BMON_DATA_QUICK_DRAW_FLAG         103
 
 // The order entry hazards are worked through when something switches in.
 #define HAZARD_IDX_NONE         0

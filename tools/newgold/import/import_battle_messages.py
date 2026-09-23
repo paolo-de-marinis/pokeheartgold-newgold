@@ -63,6 +63,13 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0}’s attack!",
         r"The foe’s {STRVAR_1 1, 0, 0}’s attack!",
     ]),
+    # Quick Draw. The reference gives the ability no effect and so no line;
+    # this is the Custap Berry's 1254 to 1256 naming the ability instead.
+    ("quick draw", [
+        r"{STRVAR_1 1, 0, 0}\ncan act faster than normal,\fthanks to its {STRVAR_1 5, 1, 0}!",
+        r"The wild {STRVAR_1 1, 0, 0}\ncan act faster than normal,\fthanks to its {STRVAR_1 5, 1, 0}!",
+        r"The opposing {STRVAR_1 1, 0, 0}\ncan act faster than normal,\fthanks to its {STRVAR_1 5, 1, 0}!",
+    ]),
 ]
 
 
