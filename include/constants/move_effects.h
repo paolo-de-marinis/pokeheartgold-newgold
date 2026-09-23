@@ -420,5 +420,7 @@
 #define MOVE_EFFECT_UPPER_HAND                                   410
 #define MOVE_EFFECT_WONDER_ROOM                                  411
 #define MOVE_EFFECT_MAGIC_ROOM                                   412
+#define MOVE_EFFECT_PLUS_MINUS_DEF_SP_DEF_UP                     413
+#define MOVE_EFFECT_PLUS_MINUS_ATK_SP_ATK_UP                     414
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

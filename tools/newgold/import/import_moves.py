@@ -361,6 +361,12 @@ IMPLEMENTED_HERE = {
     # 411 and 412.
     "WONDER_ROOM": "MOVE_EFFECT_WONDER_ROOM",
     "MAGIC_ROOM": "MOVE_EFFECT_MAGIC_ROOM",
+    # Magnetic Flux and Gear Up raise the Plus and Minus Pokemon on the user's
+    # side, Defense and Sp. Def or Attack and Sp. Atk, and fail with none
+    # (Pokemon Central, Controllo Polare, Marciainpiù): effect scripts 413
+    # and 414.
+    "MAGNETIC_FLUX": "MOVE_EFFECT_PLUS_MINUS_DEF_SP_DEF_UP",
+    "GEAR_UP": "MOVE_EFFECT_PLUS_MINUS_ATK_SP_ATK_UP",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

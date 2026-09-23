@@ -189,5 +189,22 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("if (ctx->magicRoomTurns) {\n        return ITEM_NONE;",
                       function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "GetBattlerHeldItem"))
 
+    def test_magnetic_flux_and_gear_up_raise_the_plus_and_minus_side(self):
+        # Pokemon Central (Controllo Polare, Marciainpiù): the user's side, the
+        # user included, only those with Plus or Minus, both stats a stage;
+        # with none it fails.
+        for move, effect, stats in (
+                ("MAGNETIC_FLUX", "MOVE_EFFECT_PLUS_MINUS_DEF_SP_DEF_UP", ("DEFENSE", "SP_DEFENSE")),
+                ("GEAR_UP", "MOVE_EFFECT_PLUS_MINUS_ATK_SP_ATK_UP", ("ATTACK", "SP_ATTACK"))):
+            self.assertImplemented(move, effect)
+            script = effect_script(effect)
+            found, raised = script.index("_FOUND:"), script.index("_RAISE:")
+            self.assertLess(script.index("MOVE_STATUS_FAILED"), found)
+            for ability in ("ABILITY_PLUS", "ABILITY_MINUS"):
+                self.assertEqual(script.count(f"BATTLER_CATEGORY_SIDE_EFFECT_MON, {ability},"), 2)
+            self.assertEqual(script.count("IfSameSide BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_SIDE_EFFECT_MON"), 2)
+            for stat in stats:
+                self.assertIn(f"MOVE_SUBSCRIPT_PTR_{stat}_UP_1_STAGE", script[raised:])
+
 if __name__ == "__main__":
     unittest.main()
