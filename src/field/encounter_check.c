@@ -1417,6 +1417,7 @@ static BOOL addGeneratedMonToBattleSetupParty(int battler, EncounterGenState *en
     // order (enemy_party.c: UpdatePassiveForms, then HIDDEN_ABILITIES_FLAG).
     WildMon_SetPassiveForm(pokemon);
     Mon_TakeHiddenAbilityFlag(pokemon, FLAG_HIDDEN_ABILITIES);
+    Mon_ChangeToBattleForm(pokemon);
     return Party_AddMon(battleSetup->party[battler], pokemon);
 }
 

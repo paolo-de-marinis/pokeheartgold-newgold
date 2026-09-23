@@ -260,6 +260,16 @@ static void EaseBadPoison(BattleSystem *battleSystem) {
     }
 }
 
+// The rest of hg-engine's end-of-battle RevertFormChange: a form that lasts
+// only as long as the battle goes back to the one it came from.
+static void RevertBattleForms(BattleSystem *battleSystem) {
+    int count = BattleSystem_GetPartySize(battleSystem, BATTLER_PLAYER);
+
+    for (int i = 0; i < count && i < PARTY_SIZE; i++) {
+        Mon_RevertFormChange(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i));
+    }
+}
+
 BattleContext *BattleContext_New(BattleSystem *battleSystem) {
     BattleContext *ctx = (BattleContext *)Heap_Alloc(HEAP_ID_BATTLE, sizeof(BattleContext));
     MI_CpuClearFast((u32 *)ctx, sizeof(BattleContext));
@@ -325,6 +335,7 @@ BOOL BattleContext_Main(BattleSystem *battleSystem, BattleContext *ctx) {
     if (ctx->command == CONTROLLER_COMMAND_45) {
         GiveBackHeldItems(battleSystem, ctx);
         EaseBadPoison(battleSystem);
+        RevertBattleForms(battleSystem);
         return TRUE;
     }
     return FALSE;

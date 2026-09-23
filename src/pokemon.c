@@ -4112,6 +4112,118 @@ void Mon_TakeHiddenAbilityFlag(Pokemon *mon, u16 flag) {
     UpdateMonAbility(mon);
 }
 
+// hg-engine's SwapPartyPokemonMove: the new move takes the old one's slot and
+// keeps its PP, down to what the new move holds.
+static void Mon_SwapMove(Pokemon *mon, u16 oldMove, u16 newMove) {
+    for (int i = 0; i < MAX_MON_MOVES; i++) {
+        if (GetMonData(mon, MON_DATA_MOVE1 + i, NULL) == oldMove) {
+            u8 maxPP;
+            SetMonData(mon, MON_DATA_MOVE1 + i, &newMove);
+            maxPP = GetMonData(mon, MON_DATA_MOVE1_MAX_PP + i, NULL);
+            if (GetMonData(mon, MON_DATA_MOVE1_PP + i, NULL) > maxPP) {
+                SetMonData(mon, MON_DATA_MOVE1_PP + i, &maxPP);
+            }
+            break;
+        }
+    }
+}
+
+// The ability a Pokemon has as another species of its line: the one in the
+// same slot, first, second or hidden, which is what hg-engine's
+// ResetPartyPokemonAbility picks from the personality and the hidden-ability
+// bit. Here the ability is written onto the Pokemon, and a trainer's is
+// written without the bit, so the slot is read off the species it was. An
+// ability in none of its slots, one a script gave it, stays.
+static u16 Species_AbilityInSameSlot(u16 oldSpecies, u16 species, u16 ability) {
+    int slot;
+    u16 ret;
+
+    if (ability == GetMonBaseStat(oldSpecies, BASE_ABILITY_1)) {
+        slot = BASE_ABILITY_1;
+    } else if (ability == GetMonBaseStat(oldSpecies, BASE_ABILITY_2)) {
+        slot = BASE_ABILITY_2;
+    } else if (ability == GetMonBaseStat(oldSpecies, BASE_HIDDEN_ABILITY)) {
+        slot = BASE_HIDDEN_ABILITY;
+    } else {
+        return ability;
+    }
+    ret = GetMonBaseStat(species, slot);
+    if (ret == ABILITY_NONE) {
+        ret = GetMonBaseStat(species, BASE_ABILITY_1);
+    }
+    return ret;
+}
+
+// A form here is a species of its own, so changing form is changing species,
+// with the stats and the ability to match, as hg-engine's ChangePartyPokemonToForm
+// changes them. A crowned Zacian or Zamazenta has Behemoth Blade or Bash where
+// Iron Head was (correct_zacian_zamazenta_kyurem_moves_for_form).
+void Mon_ChangeFormSpecies(Pokemon *mon, u16 species) {
+    u16 ability = Species_AbilityInSameSlot(GetMonData(mon, MON_DATA_SPECIES, NULL), species, GetMonData(mon, MON_DATA_ABILITY, NULL));
+
+    SetMonData(mon, MON_DATA_SPECIES, &species);
+    switch (species) {
+    case SPECIES_ZACIAN:
+        Mon_SwapMove(mon, MOVE_BEHEMOTH_BLADE, MOVE_IRON_HEAD);
+        break;
+    case SPECIES_ZACIAN_CROWNED:
+        Mon_SwapMove(mon, MOVE_IRON_HEAD, MOVE_BEHEMOTH_BLADE);
+        break;
+    case SPECIES_ZAMAZENTA:
+        Mon_SwapMove(mon, MOVE_BEHEMOTH_BASH, MOVE_IRON_HEAD);
+        break;
+    case SPECIES_ZAMAZENTA_CROWNED:
+        Mon_SwapMove(mon, MOVE_IRON_HEAD, MOVE_BEHEMOTH_BASH);
+        break;
+    }
+    CalcMonLevelAndStats(mon);
+    SetMonData(mon, MON_DATA_ABILITY, &ability);
+}
+
+#include "data/form_reversion.h"
+
+// The species a form that lasts only as long as a battle -- Zen Mode, a
+// Minior's core, a crowned Zacian -- goes back to, or SPECIES_NONE.
+u16 Species_GetBattleFormReversion(u16 species) {
+    if (species <= NATIONAL_DEX_COUNT || species > NUM_SPECIES) {
+        return SPECIES_NONE;
+    }
+    return sFormReversion[species - NATIONAL_DEX_COUNT - 1];
+}
+
+// hg-engine's RevertFormChange (src/pokemon.c:1455).
+BOOL Mon_RevertFormChange(Pokemon *mon) {
+    u16 species = Species_GetBattleFormReversion(GetMonData(mon, MON_DATA_SPECIES, NULL));
+
+    if (species == SPECIES_NONE) {
+        return FALSE;
+    }
+    Mon_ChangeFormSpecies(mon, species);
+    return TRUE;
+}
+
+// hg-engine's ChangeToBattleForm (src/pokemon.c:2233), for each Pokemon about to
+// battle: Xerneas is always in its Active Mode, and a Zacian or Zamazenta
+// holding its Rusted Sword or Shield is crowned.
+void Mon_ChangeToBattleForm(Pokemon *mon) {
+    Mon_RevertFormChange(mon);
+    switch (GetMonData(mon, MON_DATA_SPECIES, NULL)) {
+    case SPECIES_XERNEAS:
+        Mon_ChangeFormSpecies(mon, SPECIES_XERNEAS_ACTIVE);
+        break;
+    case SPECIES_ZACIAN:
+        if (GetMonData(mon, MON_DATA_HELD_ITEM, NULL) == ITEM_RUSTED_SWORD) {
+            Mon_ChangeFormSpecies(mon, SPECIES_ZACIAN_CROWNED);
+        }
+        break;
+    case SPECIES_ZAMAZENTA:
+        if (GetMonData(mon, MON_DATA_HELD_ITEM, NULL) == ITEM_RUSTED_SHIELD) {
+            Mon_ChangeFormSpecies(mon, SPECIES_ZAMAZENTA_CROWNED);
+        }
+        break;
+    }
+}
+
 void SetMonPersonality(Pokemon *mon, u32 personality) {
     PokemonDataBlockA *r4;
     PokemonDataBlockB *r6;

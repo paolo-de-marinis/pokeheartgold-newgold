@@ -1885,6 +1885,16 @@ BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSystem, BattleContext *ctx) {
         CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
     }
 
+    // hg-engine's TryRevertFormChange (battle_pokemon.c:1010): a battler in a
+    // form that lasts only for a battle leaves in the form it came from. Not a
+    // crowned Zacian or Zamazenta: hg-engine crowns them when the battle starts
+    // and nowhere else, so it took the crown for the rest of the battle.
+    if (Species_GetBattleFormReversion(ctx->battleMons[battlerId].species) != SPECIES_NONE
+        && ctx->battleMons[battlerId].species != SPECIES_ZACIAN_CROWNED
+        && ctx->battleMons[battlerId].species != SPECIES_ZAMAZENTA_CROWNED) {
+        Mon_RevertFormChange(BattleSystem_GetPartyMon(battleSystem, battlerId, ctx->selectedMonIndex[battlerId]));
+    }
+
     ctx->unk_13C[battlerId] &= ~1;
     ctx->switchInFlag &= (MaskOfFlagNo(battlerId) ^ ~0);
     ctx->selectedMonIndex[battlerId] = ctx->unk_21A0[battlerId];

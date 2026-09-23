@@ -7371,6 +7371,37 @@ BOOL ov12_022568B0(BattleSystem *battleSystem, Pokemon *mon) {
     return FALSE;
 }
 
+// hg-engine's BattleFormChange (battle_pokemon.c:968). A form is a species of
+// its own here, so the battler and the Pokemon behind it become that species;
+// the stats, the types and the weight follow, and the ability too when asked.
+// Not for a transformed battler, whose stats are the Pokemon it copied: the
+// callers leave one alone.
+void BattleSystem_ChangeBattlerForm(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 species, BOOL switchAbility) {
+    Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, battlerId, ctx->selectedMonIndex[battlerId]);
+    struct PokedexData *dexData;
+
+    Mon_ChangeFormSpecies(mon, species);
+    if (switchAbility) {
+        ctx->battleMons[battlerId].ability = GetMonData(mon, MON_DATA_ABILITY, NULL);
+    }
+    ctx->battleMons[battlerId].species = species;
+    ctx->battleMons[battlerId].atk = GetMonData(mon, MON_DATA_ATK, NULL);
+    ctx->battleMons[battlerId].def = GetMonData(mon, MON_DATA_DEF, NULL);
+    ctx->battleMons[battlerId].speed = GetMonData(mon, MON_DATA_SPEED, NULL);
+    ctx->battleMons[battlerId].spAtk = GetMonData(mon, MON_DATA_SP_ATK, NULL);
+    ctx->battleMons[battlerId].spDef = GetMonData(mon, MON_DATA_SP_DEF, NULL);
+    ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
+    ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
+    ctx->battleMons[battlerId].type3 = TYPE_NONE;
+    ctx->battleMons[battlerId].abilityActivatedFlag = FALSE;
+
+    dexData = PokedexData_Create(HEAP_ID_BATTLE);
+    PokedexData_LoadAll(dexData, 0, HEAP_ID_BATTLE);
+    ctx->battleMons[battlerId].weight = PokedexData_GetWeight(dexData, species);
+    PokedexData_UnloadAll(dexData);
+    PokedexData_Delete(dexData);
+}
+
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int form;
@@ -7508,6 +7539,16 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
                     break;
                 }
             }
+        }
+        // Xerneas is always in its Active Mode (BattleFormChangeCheck.c:258),
+        // whichever way it came in: a wild battle does not change the player's
+        // on the way in, and it leaves the field in its Neutral Mode.
+        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_XERNEAS && ctx->battleMons[ctx->battlerIdTemp].hp
+            && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {
+            BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, SPECIES_XERNEAS_ACTIVE, FALSE);
+            *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
+            ret = TRUE;
+            break;
         }
     }
 

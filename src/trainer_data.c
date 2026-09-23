@@ -49,6 +49,13 @@ void EnemyTrainerSet_Init(BattleSetup *battleSetup, SaveData *saveData, enum Hea
         battleSetup->battleType |= BATTLE_TYPE_DOUBLES;
     }
     DestroyMsgData(msgData);
+    // Once the trainers' parties are made, hg-engine puts every Pokemon of the
+    // battle in its battle form, the player's too (enemy_party.c:410).
+    for (i = 0; i < BATTLER_MAX; i++) {
+        for (int j = 0; j < Party_GetCount(battleSetup->party[i]); j++) {
+            Mon_ChangeToBattleForm(Party_GetMonByIndex(battleSetup->party[i], j));
+        }
+    }
 }
 
 int TrainerData_GetAttr(u32 trainerIndex, TrainerAttr attr) {
