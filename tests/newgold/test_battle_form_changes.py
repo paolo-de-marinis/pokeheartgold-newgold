@@ -47,6 +47,11 @@ typedef struct {
     BattleMon battleMons[4];
     u32 fieldCondition;
     u8 iceFaceWeatherSeen;
+    u8 relicSongTracker;
+    int battlerIdAttacker;
+    u32 moveNoCur;
+    u32 moveStatusFlag;
+    u8 multiHitCount;
     BOOL moldBreaker, cloudNine;
 } BattleContext;
 typedef struct BattleSystem BattleSystem;
@@ -263,6 +268,41 @@ class FormChangeTests(unittest.TestCase):
         self.assertIn("script = BATTLE_SUBSCRIPT_ZERO_TO_HERO;", entry)
         self.assertIn("PrintMessage msg_0197_01780, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP",
                       (ROOT / "files/battledata/script/subscript/subscript_0404_ZeroToHero.s").read_text())
+
+    def test_relic_song(self):
+        """A Meloetta whose Relic Song reached a target turns Pirouette, or
+        back to Aria; not for another move, another battler, a failed move,
+        before the last hit, or a transformed one."""
+        print(run(["Battler_RelicSongForm"], r"""
+    set(SPECIES_MELOETTA, ABILITY_SERENE_GRACE, 1, 1);
+    ctx.battlerIdAttacker = 0;
+    ctx.moveNoCur = MOVE_RELIC_SONG;
+    ctx.relicSongTracker = 1;
+    assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_MELOETTA_PIROUETTE);
+    ctx.battleMons[0].species = SPECIES_MELOETTA_PIROUETTE;
+    assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_MELOETTA);
+    ctx.relicSongTracker = 0;
+    assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_NONE);
+    ctx.relicSongTracker = 1;
+    ctx.moveNoCur = MOVE_TACKLE;
+    assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_NONE);
+    ctx.moveNoCur = MOVE_RELIC_SONG;
+    ctx.battlerIdAttacker = 1;
+    assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_NONE);
+    ctx.battlerIdAttacker = 0;
+    ctx.moveStatusFlag = MOVE_STATUS_FAILED;
+    assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_NONE);
+    ctx.moveStatusFlag = 0;
+    ctx.multiHitCount = 2;
+    assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_NONE);
+    ctx.multiHitCount = 0;
+    ctx.battleMons[0].status2 = STATUS2_TRANSFORM;
+    assert(Battler_RelicSongForm(&ctx, 0) == SPECIES_NONE);
+    puts("PASS: Relic Song turns Meloetta once it has reached a target.");""", "newgold-relic-"))
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        self.assertIn("ctx->relicSongTracker |= MaskOfFlagNo(battlerIdAttacker);",
+                      function(overlay, "BattleContext_CheckMoveImmunityFromAbility"))
+        self.assertIn("form = Battler_RelicSongForm(ctx, ctx->battlerIdTemp);", self.check)
 
 
 if __name__ == "__main__":

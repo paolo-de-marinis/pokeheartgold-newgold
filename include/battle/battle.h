@@ -538,6 +538,9 @@ typedef struct BattleContext {
     // way in while it lasts, not on every check it goes on. Cleared when the
     // battler is loaded, as the reference clears its log_hail_for_ice_face.
     u8 iceFaceWeatherSeen;
+    // Which battlers' Relic Song has reached a target this move, a bit each:
+    // Meloetta changes form only then (hg-engine's relic_song_tracker).
+    u8 relicSongTracker;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

@@ -3945,6 +3945,13 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
 
     script = BATTLE_SUBSCRIPT_NONE;
 
+    // A Meloetta's move has reached a target, which is what Relic Song needs
+    // before it changes the form (ability.c:47, relic_song_tracker).
+    if ((ctx->battleMons[battlerIdAttacker].species == SPECIES_MELOETTA || ctx->battleMons[battlerIdAttacker].species == SPECIES_MELOETTA_PIROUETTE)
+        && ctx->battleMons[battlerIdAttacker].hp && !(ctx->moveStatusFlag & MOVE_STATUS_FAILED)) {
+        ctx->relicSongTracker |= MaskOfFlagNo(battlerIdAttacker);
+    }
+
     moveType = BattleMoveAdjustedType(ctx, battlerIdAttacker, ctx->moveNoCur);
 
     // A Dark type on the other side is not fooled by a status move Prankster
@@ -7511,6 +7518,24 @@ static u16 Battler_RestoredFaceForm(BattleSystem *battleSystem, BattleContext *c
     return SPECIES_NONE;
 }
 
+// Relic Song (BattleFormChangeCheck.c:232): a Meloetta that has used it on a
+// target turns from its Aria Forme to its Pirouette Forme or back, once the
+// last hit is in. Not a transformed battler, which keeps the form it copied.
+static u16 Battler_RelicSongForm(BattleContext *ctx, int battlerId) {
+    if (battlerId != ctx->battlerIdAttacker || ctx->moveNoCur != MOVE_RELIC_SONG || !ctx->battleMons[battlerId].hp
+        || (ctx->moveStatusFlag & MOVE_STATUS_FAILED) || !(ctx->relicSongTracker & MaskOfFlagNo(battlerId)) || ctx->multiHitCount > 1
+        || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+        return SPECIES_NONE;
+    }
+    switch (ctx->battleMons[battlerId].species) {
+    case SPECIES_MELOETTA:
+        return SPECIES_MELOETTA_PIROUETTE;
+    case SPECIES_MELOETTA_PIROUETTE:
+        return SPECIES_MELOETTA;
+    }
+    return SPECIES_NONE;
+}
+
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int form;
@@ -7657,6 +7682,14 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
                 ret = TRUE;
                 break;
             }
+        }
+        form = Battler_RelicSongForm(ctx, ctx->battlerIdTemp);
+        if (form != SPECIES_NONE) {
+            ctx->relicSongTracker &= ~MaskOfFlagNo(ctx->battlerIdTemp);
+            BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, form, TRUE);
+            *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
+            ret = TRUE;
+            break;
         }
         // Xerneas is always in its Active Mode (BattleFormChangeCheck.c:258),
         // whichever way it came in: a wild battle does not change the player's
