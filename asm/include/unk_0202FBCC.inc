@@ -71,3 +71,4 @@
 .public MI_CpuFill8
 .public MI_CpuCopy8
 .public _021D2AF8
+.public sub_0203018C

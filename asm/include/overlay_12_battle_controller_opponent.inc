@@ -298,3 +298,4 @@
 .public PartyGauge_StartHideTask
 .public PartyGauge_IsHideTaskFinished
 .public PartyGauge_DeleteAndFreeResources
+.public ov12_0225E4EC

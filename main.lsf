@@ -139,6 +139,8 @@ Static main
     Object src/safari_zone.o
     Object src/photo_album.o
     Object asm/unk_0202FBCC.o
+    Object src/unk_0203018C.o
+    Object asm/unk_02030250.o
     Object asm/unk_02030A98.o
     Object src/unk_020312E0.o
     Object asm/unk_020313C4.o
@@ -666,6 +668,8 @@ Overlay OVY_12
     Object src/battle/battle_controller_player.o
     Object src/battle/overlay_12_0224E4FC.o
     Object asm/overlay_12_battle_controller_opponent.o
+    Object src/battle/overlay_12_0225E4EC.o
+    Object asm/overlay_12_battle_controller_opponent_0225E568.o
     Object src/battle/battle_02261FD4.o
     Object asm/overlay_12_battle_controller.o
     Object src/battle/battle_controller_mon_copy.o
