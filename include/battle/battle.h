@@ -331,6 +331,7 @@ typedef struct MoveConditions {
     u8 glaiveRush : 1;             // Glaive Rush: takes double, and cannot dodge, until it moves again
     u8 throatChopTimer : 2;        // Throat Chop: no sound moves while this runs
     u8 statLoweredThisTurn : 1;    // a stat of its was lowered this turn: Lash Out doubles
+    u8 bindEighthTurn : 1;         // a Grip Claw's bind: the turn STATUS2_BIND's three bits cannot count
 } MoveConditions;
 
 #define BATTLE_SCRIPT_BUFFER_WORDS 650

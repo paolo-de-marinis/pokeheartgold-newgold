@@ -9642,9 +9642,13 @@ BOOL BtlCmd_GotoIfGrounded(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-// Bind and the rest. The turns live in the target's status word, counted down
-// by the end-of-turn handler, so this only has to put them there; a target
-// already held takes the branch instead.
+// Bind and the rest hold for four or five turns, seven with a Grip Claw
+// (Pokemon Central, Legatutto; btl_scr_cmd_F7_setbindingcounter at d0380a487).
+// The count lives in the target's status word and is counted down by the
+// end-of-turn handler, which hurts the target while it has not reached 0 and
+// lets it go when it does, so it is one more than the turns of damage: 5 or 6,
+// or 8 -- one more than the word's three bits hold, which bindEighthTurn
+// keeps. A target already held takes the branch instead.
 BOOL BtlCmd_SetBindingTurns(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
@@ -9657,9 +9661,11 @@ BOOL BtlCmd_SetBindingTurns(BattleSystem *battleSystem, BattleContext *ctx) {
 
     int turns;
     if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_EXTEND_TRAPPING) {
-        turns = 6;
+        turns = 7;
+        ctx->moveConditions[ctx->battlerIdTarget].bindEighthTurn = TRUE;
     } else {
-        turns = 3 + (BattleSystem_Random(battleSystem) & 1);
+        turns = 5 + (BattleSystem_Random(battleSystem) & 1);
+        ctx->moveConditions[ctx->battlerIdTarget].bindEighthTurn = FALSE;
     }
 
     ctx->battleMons[ctx->battlerIdTarget].status2 |= turns << STATUS2_BINDING_SHIFT;

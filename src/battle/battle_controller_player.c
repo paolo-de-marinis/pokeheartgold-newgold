@@ -1484,6 +1484,18 @@ static int BindDamageDivisor(BattleContext *ctx, int battlerId) {
     return 8;
 }
 
+// A turn of a bind has gone by for the Pokemon held: TRUE while it is still
+// held. A Grip Claw's eighth turn goes first, then the count in the status
+// word (BtlCmd_SetBindingTurns).
+static BOOL BindTurnPasses(BattleContext *ctx, int battlerId) {
+    if (ctx->moveConditions[battlerId].bindEighthTurn) {
+        ctx->moveConditions[battlerId].bindEighthTurn = FALSE;
+    } else {
+        ctx->battleMons[battlerId].status2 -= 1 << STATUS2_BINDING_SHIFT;
+    }
+    return (ctx->battleMons[battlerId].status2 & STATUS2_BIND) != 0;
+}
+
 static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     u8 flag = 0;
@@ -1642,8 +1654,7 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
             break;
         case UMC_STATE_BINDING:
             if ((ctx->battleMons[battlerId].status2 & STATUS2_BIND) && ctx->battleMons[battlerId].hp != 0) {
-                ctx->battleMons[battlerId].status2 -= 1 << STATUS2_BINDING_SHIFT;
-                if (ctx->battleMons[battlerId].status2 & STATUS2_BIND) {
+                if (BindTurnPasses(ctx, battlerId)) {
                     ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, BindDamageDivisor(ctx, battlerId));
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_BIND_EFFECT);
                 } else {
