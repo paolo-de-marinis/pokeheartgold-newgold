@@ -896,11 +896,16 @@ static void PrintPlayerInfoField(Window *window, MsgData *msgData, MessageFormat
     String_Delete(string);
 }
 
+// The play time's hours and the Dex count. Retail's widest was three digits,
+// and a count past 999 printed as '?25'; a four-digit count prints four.
 static void ov74_02227E64(MessageFormat *messageFormat, int number) {
     u32 digits;
     PrintingMode printingMode;
 
-    if (number >= 100) {
+    if (number >= 1000) {
+        digits = 4;
+        printingMode = PRINTING_MODE_LEFT_ALIGN;
+    } else if (number >= 100) {
         digits = 3;
         printingMode = PRINTING_MODE_LEFT_ALIGN;
     } else if (number >= 10) {

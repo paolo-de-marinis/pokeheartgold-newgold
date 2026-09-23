@@ -226,6 +226,51 @@ class DexDigitTests(unittest.TestCase):
                 self.assertTrue(280 <= min(span) and max(span) < 0x3D0, f"{name}[{window}]: tiles")
                 used |= span
 
+    def test_a_dex_count_prints_four_digits(self):
+        """The continue screen, the save window, the trainer card and Oak's
+        call print the player's Dex count with retail's three digits at most,
+        so 1025 caught showed '?25'. The two that choose their digits by the
+        number (ov74_02227E64, ov01_021F3F9C) run here; the card and the call
+        take DEX_NUMBER_DIGITS."""
+        program = r"""
+#include <assert.h>
+#include <stdio.h>
+typedef unsigned int u32;
+typedef enum { PRINTING_MODE_LEFT_ALIGN, PRINTING_MODE_RIGHT_ALIGN, PRINTING_MODE_LEADING_ZEROS } PrintingMode;
+typedef struct { int unused; } MessageFormat, PlayerProfile, IGT;
+#define TRUE 1
+static u32 gDigits[8];
+static void BufferIntegerAsString(MessageFormat *f, int idx, int n, u32 digits, PrintingMode m, int x) { gDigits[idx] = digits; }
+static void BufferLandmarkName(MessageFormat *f, int idx, u32 mapsec) {}
+static void BufferPlayersName(MessageFormat *f, int idx, PlayerProfile *p) {}
+static int PlayerProfile_CountBadges(PlayerProfile *p) { return 16; }
+static int GetIGTHours(IGT *igt) { return 999; }
+static int GetIGTMinutes(IGT *igt) { return 59; }
+@STRUCT@
+@NATIVE@
+int main(void) {
+    MessageFormat f;
+    ov74_02227E64(&f, 1025);
+    assert(gDigits[0] == 4);
+    ov74_02227E64(&f, 999);
+    assert(gDigits[0] == 3);
+    SaveStats stats = { 1025 };
+    ov01_021F3F9C(&f, &stats);
+    assert(gDigits[3] == 4 && gDigits[4] == 3);
+    printf("PASS: the continue screen and the save window print 1025 in four digits.\n");
+    return 0;
+}
+"""
+        menu = (ROOT / "src/application/main_menu/main_menu.c").read_text()
+        save = (ROOT / "src/field/overlay_01_021F3F50.c").read_text()
+        struct_ = re.search(r"typedef struct SaveStats \{.*?\} SaveStats;", save, re.S).group(0)
+        native = c_function(menu, "ov74_02227E64") + "\n" + c_function(save, "ov01_021F3F9C")
+        run_native(self, program.replace("@STRUCT@", struct_).replace("@NATIVE@", native), "newgold-dex-count-")
+        card = c_function((ROOT / "src/ov51_021E6F18.c").read_text(), "ov51_021E6F18")
+        self.assertIn("card->dexCount, DEX_NUMBER_DIGITS,", card)
+        oak = (ROOT / "src/application/pokegear/phone/scripts/phone_scripts_prof_oak.c").read_text()
+        self.assertEqual(len(re.findall(r"BufferIntegerAsString\(ctx->msgFormat, [56], \w+, DEX_NUMBER_DIGITS,", oak)), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

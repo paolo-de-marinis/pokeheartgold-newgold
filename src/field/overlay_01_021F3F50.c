@@ -46,7 +46,11 @@ void ov01_021F3F9C(MessageFormat *msgFmt, SaveStats *stats) {
     BufferLandmarkName(msgFmt, 0, stats->mapsec);
     BufferPlayersName(msgFmt, 1, stats->profile);
     BufferIntegerAsString(msgFmt, 2, PlayerProfile_CountBadges(stats->profile), 2, PRINTING_MODE_LEFT_ALIGN, TRUE);
-    if (stats->dexCount >= 100) {
+    // Retail's widest was three digits, and a count past 999 printed as '?25'.
+    if (stats->dexCount >= 1000) {
+        digits = 4;
+        mode = PRINTING_MODE_LEFT_ALIGN;
+    } else if (stats->dexCount >= 100) {
         digits = 3;
         mode = PRINTING_MODE_LEFT_ALIGN;
     } else if (stats->dexCount >= 10) {

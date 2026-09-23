@@ -3,6 +3,7 @@
 #include "application/pokegear/phone/phone_internal.h"
 #include "msgdata/msg/msg_0666.h"
 
+#include "pokedex_util.h"
 #include "unk_02005D10.h"
 #include "unk_0205BB1C.h"
 
@@ -104,8 +105,9 @@ BOOL GearPhoneCall_ProfOak(PokegearPhoneCallContext *ctx) {
             r7 = Pokedex_CountNationalDexSeen(state->miscPtr.pokedex);
             r6_2 = Pokedex_CountNationalDexOwned(state->miscPtr.pokedex);
         }
-        BufferIntegerAsString(ctx->msgFormat, 5, r7, 3, PRINTING_MODE_LEFT_ALIGN, TRUE);
-        BufferIntegerAsString(ctx->msgFormat, 6, r6_2, 3, PRINTING_MODE_LEFT_ALIGN, TRUE);
+        // four digits, where retail's three printed 1025 as '?25'
+        BufferIntegerAsString(ctx->msgFormat, 5, r7, DEX_NUMBER_DIGITS, PRINTING_MODE_LEFT_ALIGN, TRUE);
+        BufferIntegerAsString(ctx->msgFormat, 6, r6_2, DEX_NUMBER_DIGITS, PRINTING_MODE_LEFT_ALIGN, TRUE);
         PhoneCallMessagePrint_Ungendered(ctx, ctx->msgData_PhoneContact, msg_0666_00020);
         break;
     case 4:

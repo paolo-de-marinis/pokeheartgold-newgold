@@ -6,6 +6,7 @@
 #include "message_format.h"
 #include "msgdata.h"
 #include "pm_string.h"
+#include "pokedex_util.h"
 #include "text.h"
 
 // The part of the trainer card's data (TrainerCardAppArgs) the front's
@@ -70,7 +71,8 @@ void ov51_021E6F18(u8 *app, Window *windows, TrainerCardFront *card) {
     AddTextPrinterParameterizedWithColor(&windows[2], 0, string, x, 0, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);
 
     if (card->hasPokedex) {
-        BufferIntegerAsString(msgFmt, 5, card->dexCount, 3, PRINTING_MODE_LEFT_ALIGN, TRUE);
+        // four digits, where retail's three printed 1025 as '?25'
+        BufferIntegerAsString(msgFmt, 5, card->dexCount, DEX_NUMBER_DIGITS, PRINTING_MODE_LEFT_ALIGN, TRUE);
         ReadMsgDataIntoString(msgData, 26, buf);
         StringExpandPlaceholders(msgFmt, string, buf);
         x = 136 - FontID_String_GetWidth(0, string, 0);
