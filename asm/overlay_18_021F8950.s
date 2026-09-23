@@ -18,6 +18,7 @@
 	.extern ov18_021E8B24
 	.extern ov18_021E8B5C
 
+.public ov18_021F891C
 .public ov18_021F8CCC
 .public ov18_021F8F10
 .public ov18_021F8FA0
@@ -28,33 +29,6 @@
 .public ov18_021FBD98
 
 	.text
-
-	thumb_func_start ov18_021F891C
-ov18_021F891C: ; 0x021F891C
-	push {r3, lr}
-	add r2, r0, #0
-	cmp r1, #0
-	bne _021F892A
-	ldr r0, _021F8944 ; =0x0000102C
-	ldrh r0, [r2, r0]
-	pop {r3, pc}
-_021F892A:
-	ldr r1, _021F8944 ; =0x0000102C
-	ldr r0, _021F8948 ; =0x00001858
-	ldrh r1, [r2, r1]
-	ldrb r0, [r2, r0]
-	sub r1, r1, #1
-	lsl r1, r1, #2
-	add r2, r2, r1
-	ldr r1, _021F894C ; =0x00000878
-	ldrh r1, [r2, r1]
-	bl Pokedex_ConvertToCurrentDexNo
-	pop {r3, pc}
-	nop
-_021F8944: .word 0x0000102C
-_021F8948: .word 0x00001858
-_021F894C: .word 0x00000878
-	thumb_func_end ov18_021F891C
 
 	thumb_func_start ov18_021F8950
 ov18_021F8950: ; 0x021F8950

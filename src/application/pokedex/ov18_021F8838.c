@@ -47,3 +47,12 @@ void ov18_021F8884(PokedexAppData *pokedexApp, int layout) {
         }
     }
 }
+
+// The length of the Dex list: its count, or laid out by number, the Dex
+// number of its last species.
+u32 ov18_021F891C(PokedexAppData *pokedexApp, BOOL byNumber) {
+    if (byNumber == FALSE) {
+        return pokedexApp->unk_0878.unk_7B4;
+    }
+    return Pokedex_ConvertToCurrentDexNo(pokedexApp->unk_1858, pokedexApp->unk_0878.unk_000[pokedexApp->unk_0878.unk_7B4 - 1][0]);
+}
