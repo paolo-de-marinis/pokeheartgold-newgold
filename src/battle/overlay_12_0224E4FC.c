@@ -9852,6 +9852,18 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower = (255 - ctx->battleMons[battlerIdAttacker].friendship) * 10 / 25;
     }
 
+    // Triple Kick and Triple Axel strike harder each time, ten and twenty
+    // times the strike it is, counted from the strikes left (the reference's
+    // CalcBaseDamage) rather than added up in their effect scripts. Outside
+    // the move the count is 0 and the table's first strike stands.
+    if (ctx->multiHitCount != 0) {
+        if (moveNo == MOVE_TRIPLE_KICK) {
+            movePower = 10 * (4 - ctx->multiHitCount);
+        } else if (moveNo == MOVE_TRIPLE_AXEL) {
+            movePower = 20 * (4 - ctx->multiHitCount);
+        }
+    }
+
     moveType = BattleMoveTypeForAbility(ctx, calcAttacker.ability, moveNo, type & 0x3F);
 
     GF_ASSERT(ctx->unk_2158 >= 10);

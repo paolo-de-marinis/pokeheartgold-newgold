@@ -72,7 +72,7 @@ typedef struct {
     int unk_2158; u8 terrainOverlayType; int meFirstTotal; int totalTurns;
     u32 effectiveSpeed[4]; u8 paradoxBoostedStat[4]; u8 supremeOverlordFallen[4];
     int totalTimesFainted[4];
-    u8 gemBoostingMove; int battlerIdAttacker;
+    u8 gemBoostingMove; int battlerIdAttacker; u8 multiHitCount;
     BattleMon battleMons[4];
     struct { int helpingHandFlag; } turnData[4];
     struct { u8 statLoweredThisTurn; } moveConditions[4];

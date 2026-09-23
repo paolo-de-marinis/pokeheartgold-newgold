@@ -98,5 +98,26 @@ class FriendshipTests(unittest.TestCase):
             self.assertNotIn("BSCRIPT_VAR_MOVE_POWER", read(f"files/battledata/script/effect_script/effect_script_{effect}.s"))
 
 
+class RisingPowerTests(unittest.TestCase):
+    def test_triple_kick_and_triple_axel_count_their_strikes(self):
+        # 10, 20, 30: 6, 10, 15; 20 and 60: 10 and 28.
+        run_c(self, damage_program(f"""
+    reset(4);
+    ctx.multiHitCount = 3; EXPECT({hit("MOVE_TRIPLE_KICK")}, 6);
+    ctx.multiHitCount = 2; EXPECT({hit("MOVE_TRIPLE_KICK")}, 10);
+    ctx.multiHitCount = 1; EXPECT({hit("MOVE_TRIPLE_KICK")}, 15);
+    ctx.multiHitCount = 3; EXPECT({hit("MOVE_TRIPLE_AXEL")}, 10);
+    ctx.multiHitCount = 1; EXPECT({hit("MOVE_TRIPLE_AXEL")}, 28);
+    // Outside the move, the table's power; and no other move counts.
+    ctx.multiHitCount = 0; EXPECT({hit("MOVE_TRIPLE_KICK")}, 46);
+    ctx.multiHitCount = 1; EXPECT({hit("MOVE_DOUBLE_KICK")}, 46);
+"""))
+
+    def test_the_effect_scripts_add_nothing(self):
+        from test_repels import read
+        for effect in ("0104", "0303"):
+            self.assertNotIn("BSCRIPT_VAR_MOVE_POWER", read(f"files/battledata/script/effect_script/effect_script_{effect}.s"))
+
+
 if __name__ == "__main__":
     unittest.main()

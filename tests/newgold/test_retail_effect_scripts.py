@@ -47,7 +47,6 @@ STILL_DIFFERENT = {
     83: CALLED_MOVE + BACK_TO_BEFORE_MOVE + ", and prints the move the finger picked (message 1483), "
          "which retail's Metronome does not",
     97: CALLED_MOVE,
-    104: IN_C.format("Triple Kick's rising power, CalcBaseDamage.c"),
     105: IN_C.format("the theft, ServerDoPostMoveEffects.c"),
     115: "the primal weathers and the engine's weather subscripts",
     122: "Present asks for Parental Bond with CheckAbility, which a suppressed ability fails, where the "

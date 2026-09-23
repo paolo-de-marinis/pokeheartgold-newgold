@@ -137,12 +137,12 @@ class MultiHitScripts(unittest.TestCase):
 
     def test_triple_axel_climbs_twenty_a_hit(self):
         """20, 40, 60, as the reference's CalcBaseDamage has it at d0380a487
-        (20 * (4 - multiHitCount)). The power a hit uses starts at 0 and the
-        script runs once a hit, which is how Triple Kick's own script makes its
-        10, 20, 30."""
+        (20 * (4 - multiHitCount)): CalcMoveDamage works it out from the
+        strikes left, for Triple Kick's 10, 20, 30 too (test_move_power), so
+        neither script adds to the power."""
         steps = lambda move: re.findall(r"UpdateVar OPCODE_ADD, BSCRIPT_VAR_MOVE_POWER, (\d+)", script_for(move))
-        self.assertEqual(steps("TRIPLE_KICK"), ["10"])
-        self.assertEqual(steps("TRIPLE_AXEL"), ["20"])
+        self.assertEqual(steps("TRIPLE_KICK"), [])
+        self.assertEqual(steps("TRIPLE_AXEL"), [])
         self.assertEqual(set_multi_hit(script_for("TRIPLE_AXEL")), ("3", "MULTIHIT_TRIPLE_KICK"))
 
     def test_surging_strikes_is_a_critical_hit_three_times(self):
