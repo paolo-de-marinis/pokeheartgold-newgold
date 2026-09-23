@@ -9141,6 +9141,11 @@ static const u8 sTypeEnhancingItems[][2] = {
     { HOLD_EFFECT_ARCEUS_DRAGON,       TYPE_DRAGON   },
     { HOLD_EFFECT_ARCEUS_DARK,         TYPE_DARK     },
     { HOLD_EFFECT_ARCEUS_STEEL,        TYPE_STEEL    },
+    // The Blank Plate is the Normal plate: a fifth more on Normal moves, the
+    // row the reference's HeldItemPowerUpTable ends its plates with
+    // (other_battle_calculators.c:81 at d0380a487). Arceus's type and
+    // Judgment's are Normal with it already, which is what no plate gives.
+    { HOLD_EFFECT_ARCEUS_NORMAL,       TYPE_NORMAL   },
     // The Fairy pair. The reference keeps them behind the switch that says
     // whether the Fairy type exists at all, which is why they are last rather
     // than beside their own kind; this game has the type, so they are simply

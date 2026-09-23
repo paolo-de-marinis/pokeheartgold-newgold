@@ -75,7 +75,8 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # event took thirteen more. Counting the battle scripts as readers took the
 # twenty-three the scripts had been answering all along: the four Drives, the
 # seventeen Memories, the Roseli Berry and Heavy-Duty Boots.
-IMPORTED_AND_UNREAD = 19
+# The Blank Plate's power took one more.
+IMPORTED_AND_UNREAD = 18
 
 
 def effects_defined():
@@ -227,6 +228,29 @@ class RedirectTypeTests(unittest.TestCase):
             self.assertEqual(got[moves["MOVE_TECHNO_BLAST"], effect[f"HOLD_EFFECT_{memory}_MEMORY"]], types["NORMAL"], memory)
         self.assertEqual(got[moves["MOVE_TECHNO_BLAST"], 0], types["NORMAL"])
         self.assertEqual(got[moves["MOVE_MULTI_ATTACK"], 0], types["NORMAL"])
+
+
+def item_records():
+    """item_data.csv by item name: the hold effect and its parameter."""
+    rows = {}
+    for line in ITEM_DATA.read_text().splitlines()[1:]:
+        fields = line.split(",")
+        if len(fields) > 3:
+            rows[fields[0]] = (fields[2], int(fields[3]))
+    return rows
+
+
+class BlankPlateTests(unittest.TestCase):
+    def test_the_blank_plate_powers_normal_moves(self):
+        """HeldItemPowerUpTable at d0380a487 (other_battle_calculators.c:81)
+        pairs the Blank Plate with Normal like every other plate with its
+        type, x1.2 in CalcBaseDamage; the table here multiplies by the
+        item's own parameter, 20."""
+        source = OVERLAY.read_text()
+        table = source[source.index("static const u8 sTypeEnhancingItems[][2] = {"):]
+        rows = re.findall(r"\{\s*(HOLD_EFFECT_\w+),\s*(TYPE_\w+)\s*\}", table[:table.index("};")])
+        self.assertIn(("HOLD_EFFECT_ARCEUS_NORMAL", "TYPE_NORMAL"), rows)
+        self.assertEqual(item_records()["ITEM_BLANK_PLATE"], ("HOLD_EFFECT_ARCEUS_NORMAL", 20))
 
 
 if __name__ == "__main__":
