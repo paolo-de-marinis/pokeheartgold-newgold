@@ -127,6 +127,32 @@ int main(void) {
 """
 
 
+GRID_END = r"""
+#include <assert.h>
+#include <stdio.h>
+typedef unsigned char u8;
+typedef unsigned int u32;
+typedef int BOOL;
+#define TRUE 1
+typedef struct { u8 unk_1859, unk_185A; } PokedexAppData;
+static u32 ov18_021F891C(PokedexAppData *app, BOOL byNumber) { return 1025; }
+@NATIVE@
+int main(void) {
+    PokedexAppData app = { 68, 12 };   /* the last page, a cell of its third row */
+    PokedexApp_KeepGridCursorOnList(&app);
+    assert(app.unk_1859 == 68 && app.unk_185A == 4);   /* No. 1025 */
+    app.unk_185A = 3;
+    PokedexApp_KeepGridCursorOnList(&app);
+    assert(app.unk_185A == 3);
+    app.unk_1859 = 67, app.unk_185A = 14;
+    PokedexApp_KeepGridCursorOnList(&app);
+    assert(app.unk_185A == 14);
+    printf("PASS: the grid's cursor stays on No. 1025 at the most.\n");
+    return 0;
+}
+"""
+
+
 class DexListTests(unittest.TestCase):
     def test_the_lists_hold_every_dex_species(self):
         header = (ROOT / "include/application/pokedex/pokedex_internal.h").read_text()
@@ -156,6 +182,18 @@ class DexListTests(unittest.TestCase):
         program = (PROGRAM.replace("@DEFINES@", defines).replace("@TYPES@", types)
                    .replace("@NATIVE@", native).replace("@ALLOCATE@", allocate))
         run_native(self, program, "newgold-dex-lists-")
+
+
+    def test_the_grid_cursor_stays_on_the_list(self):
+        """The grid by number pages three rows of five, so at 1025 its last
+        page has two rows past the end, and the cursor could rest on them.
+        Every move within a page and every page down keeps it on the list."""
+        source = (ROOT / "src/application/pokedex/ov18_021E8BF4.c").read_text()
+        run_native(self, GRID_END.replace("@NATIVE@", c_function(source, "PokedexApp_KeepGridCursorOnList")), "newgold-grid-end-")
+        moved = c_function(source, "PokedexApp_MainSeq_11")
+        self.assertRegex(moved, r"case 0:\s*PokedexApp_KeepGridCursorOnList\(pokedexApp\);")
+        paged = c_function(source, "PokedexApp_MainSeq_14")
+        self.assertRegex(paged, r"\+\+pokedexApp->unk_1859;\s*PokedexApp_KeepGridCursorOnList\(pokedexApp\);")
 
 
 if __name__ == "__main__":

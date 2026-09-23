@@ -127,6 +127,7 @@ static void ov18_021EDDB4(PokedexAppData *pokedexApp);
 static BOOL ov18_021EDE04(PokedexAppData *pokedexApp);
 static void ov18_021EDE4C(PokedexAppData *pokedexApp, int a1, int a2, int a3);
 static void ov18_021EDE64(PokedexAppData *pokedexApp);
+static void PokedexApp_KeepGridCursorOnList(PokedexAppData *pokedexApp);
 static void ov18_021EDEB0(PokedexAppData *pokedexApp);
 static BOOL ov18_021EDF14(PokedexAppData *pokedexApp, int a1, int a2);
 static void ov18_021EDF48(s8 *a0, s8 a1, int a2, u8 a3);
@@ -567,6 +568,7 @@ static int PokedexApp_MainSeq_10(PokedexAppData *pokedexApp) {
 static int PokedexApp_MainSeq_11(PokedexAppData *pokedexApp) {
     switch (ov18_021F6BBC(pokedexApp, 1)) {
     case 0:
+        PokedexApp_KeepGridCursorOnList(pokedexApp);
         ov18_021F2BB0(pokedexApp, 5);
         ov18_021E6E44(pokedexApp);
         ov18_021EDE64(pokedexApp);
@@ -769,6 +771,7 @@ static int PokedexApp_MainSeq_14(PokedexAppData *pokedexApp) {
             pokedexApp->unk_185A -= 10;
         }
         ++pokedexApp->unk_1859;
+        PokedexApp_KeepGridCursorOnList(pokedexApp);
         ov18_021F2BB0(pokedexApp, 5);
         ov18_021E6C90(r4->unk_0);
         ov18_021E6E44(pokedexApp);
@@ -3499,6 +3502,19 @@ static void ov18_021EDE4C(PokedexAppData *pokedexApp, int a1, int a2, int a3) {
     r4->unk_1 = a3;
     r4->unk_3 = a2;
     r4->unk_2 = 0;
+}
+
+// The grid by number shows three rows of five a page, and its last page
+// reaches past the last Dex number: at 1025 two of its three rows are past
+// the end (retail's 493 left two cells). The cursor could rest there on
+// nothing, with a blank top screen; moved or paged past the last number, it
+// stays on the last one instead.
+static void PokedexApp_KeepGridCursorOnList(PokedexAppData *pokedexApp) {
+    u32 last = ov18_021F891C(pokedexApp, TRUE) - 1;
+
+    if (15 * pokedexApp->unk_1859 + pokedexApp->unk_185A > last) {
+        pokedexApp->unk_185A = last - 15 * pokedexApp->unk_1859;
+    }
 }
 
 static void ov18_021EDE64(PokedexAppData *pokedexApp) {
