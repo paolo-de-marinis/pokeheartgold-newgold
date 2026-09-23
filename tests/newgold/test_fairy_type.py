@@ -258,7 +258,8 @@ class ArceusFairyTests(unittest.TestCase):
         battle and Judgment -- as in hg-engine (armips/asm/fairy.s and
         other_battle_calculators.c:3387); here all three stayed Normal."""
         battle = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
-        functions = "\n".join([function((ROOT / "src/pokemon.c").read_text(), "GetArceusTypeByHeldItemEffect"),
+        pokemon = (ROOT / "src/pokemon.c").read_text()
+        functions = "\n".join([function(pokemon, "GetArceusTypeByHeldItemEffect"), function(pokemon, "GetSilvallyTypeByHeldItemEffect"),
                                function(battle, "Battler_GetType"), function(battle, "GetDynamicMoveType")])
         with tempfile.TemporaryDirectory(prefix="newgold-arceus-") as directory:
             path = Path(directory)

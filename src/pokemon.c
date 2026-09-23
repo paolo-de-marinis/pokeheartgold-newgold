@@ -877,6 +877,8 @@ static u32 GetBoxMonDataInternal(BoxPokemon *boxMon, int attr, void *dest) {
     case MON_DATA_TYPE_2:
         if (blockA->species == SPECIES_ARCEUS && blockA->abilityMSB == 0 && blockA->ability == ABILITY_MULTITYPE) {
             ret = (u32)GetArceusTypeByHeldItemEffect((u16)GetItemAttr(blockA->heldItem, ITEMATTR_HOLD_EFFECT, HEAP_ID_DEFAULT));
+        } else if (blockA->species == SPECIES_SILVALLY && blockA->abilityMSB == 0 && blockA->ability == ABILITY_RKS_SYSTEM) {
+            ret = GetSilvallyTypeByHeldItemEffect((u16)GetItemAttr(blockA->heldItem, ITEMATTR_HOLD_EFFECT, HEAP_ID_DEFAULT));
         } else {
             ret = (u32)GetMonBaseStat_HandleAlternateForm(blockA->species, blockB->form, (int)(attr - MON_DATA_TYPE_1 + BASE_TYPE1));
         }
@@ -3713,6 +3715,12 @@ void BoxMon_UpdateArceusForm(BoxPokemon *boxMon) {
         form = GetArceusTypeByHeldItemEffect((u16)GetItemAttr((u16)heldItem, 1, HEAP_ID_DEFAULT));
         SetBoxMonData(boxMon, MON_DATA_FORM, &form);
     }
+    // RKS System does for Silvally with a Memory what Multitype does for
+    // Arceus with a plate, and the reference hooks the same place.
+    if (species == SPECIES_SILVALLY && ability == ABILITY_RKS_SYSTEM) {
+        form = GetSilvallyTypeByHeldItemEffect((u16)GetItemAttr((u16)heldItem, ITEMATTR_HOLD_EFFECT, HEAP_ID_DEFAULT));
+        SetBoxMonData(boxMon, MON_DATA_FORM, &form);
+    }
 }
 
 u32 GetArceusTypeByHeldItemEffect(u16 heldEffect) {
@@ -3753,6 +3761,51 @@ u32 GetArceusTypeByHeldItemEffect(u16 heldEffect) {
     // (armips/asm/fairy.s:45). Form 18 has no picture of its own in either
     // tree: the sprite code draws a form past ARCEUS_FORM_MAX as form 0.
     case HOLD_EFFECT_ARCEUS_FAIRY:
+        return TYPE_FAIRY;
+    default:
+        return TYPE_NORMAL;
+    }
+}
+
+// RKS System: Silvally is the type of the Memory it holds, Normal with none
+// (Pokemon Central, Sistema RKS). The reference reads the plates for it
+// instead, Arceus's items, with a comment of its own saying it means to read
+// the Memories; Multi-Attack takes the same type from the same Memory.
+u32 GetSilvallyTypeByHeldItemEffect(u16 heldEffect) {
+    switch (heldEffect) {
+    case HOLD_EFFECT_FIGHTING_MEMORY:
+        return TYPE_FIGHTING;
+    case HOLD_EFFECT_FLYING_MEMORY:
+        return TYPE_FLYING;
+    case HOLD_EFFECT_POISON_MEMORY:
+        return TYPE_POISON;
+    case HOLD_EFFECT_GROUND_MEMORY:
+        return TYPE_GROUND;
+    case HOLD_EFFECT_ROCK_MEMORY:
+        return TYPE_ROCK;
+    case HOLD_EFFECT_BUG_MEMORY:
+        return TYPE_BUG;
+    case HOLD_EFFECT_GHOST_MEMORY:
+        return TYPE_GHOST;
+    case HOLD_EFFECT_STEEL_MEMORY:
+        return TYPE_STEEL;
+    case HOLD_EFFECT_FIRE_MEMORY:
+        return TYPE_FIRE;
+    case HOLD_EFFECT_WATER_MEMORY:
+        return TYPE_WATER;
+    case HOLD_EFFECT_GRASS_MEMORY:
+        return TYPE_GRASS;
+    case HOLD_EFFECT_ELECTRIC_MEMORY:
+        return TYPE_ELECTRIC;
+    case HOLD_EFFECT_PSYCHIC_MEMORY:
+        return TYPE_PSYCHIC;
+    case HOLD_EFFECT_ICE_MEMORY:
+        return TYPE_ICE;
+    case HOLD_EFFECT_DRAGON_MEMORY:
+        return TYPE_DRAGON;
+    case HOLD_EFFECT_DARK_MEMORY:
+        return TYPE_DARK;
+    case HOLD_EFFECT_FAIRY_MEMORY:
         return TYPE_FAIRY;
     default:
         return TYPE_NORMAL;

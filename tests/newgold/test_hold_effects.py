@@ -245,7 +245,8 @@ class RedirectTypeTests(unittest.TestCase):
     def test_the_drives_and_the_memories_type_their_moves(self):
         items = ["HOLD_EFFECT_NONE"] + [f"HOLD_EFFECT_{d}_DRIVE" for d in DRIVES] + \
             [f"HOLD_EFFECT_{m}_MEMORY" for m in MEMORIES]
-        program = REDIRECT_TYPE_FIXTURE.replace("@FUNCTION@", function(OVERLAY.read_text(), "GetDynamicMoveType"))
+        memory = function((ROOT / "src/pokemon.c").read_text(), "GetSilvallyTypeByHeldItemEffect")
+        program = REDIRECT_TYPE_FIXTURE.replace("@FUNCTION@", memory + "\n" + function(OVERLAY.read_text(), "GetDynamicMoveType"))
         program = program.replace("@ITEMS@", ", ".join(items))
         out = [tuple(map(int, line.split())) for line in run_c(program).splitlines()]
         defined = effects_defined()

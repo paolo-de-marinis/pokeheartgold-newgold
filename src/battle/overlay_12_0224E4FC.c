@@ -9189,11 +9189,12 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
                 break;
             }
         }
-        // Silvally follows its plate the way Arceus follows its own. The
+        // Silvally follows its Memory the way Arceus follows its plate. The
         // reference copies the Arceus block for it verbatim, plates and all,
-        // and says in its own comment that it means to read memories instead.
+        // and says in its own comment that it means to read memories instead;
+        // RKS System reads the Memory (Pokemon Central, Sistema RKS).
         if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_SILVALLY && ctx->battleMons[ctx->battlerIdTemp].hp && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_RKS_SYSTEM) {
-            form = GetArceusTypeByHeldItemEffect(GetItemAttr(ctx->battleMons[ctx->battlerIdTemp].item, ITEMATTR_HOLD_EFFECT, HEAP_ID_BATTLE));
+            form = GetSilvallyTypeByHeldItemEffect(GetItemAttr(ctx->battleMons[ctx->battlerIdTemp].item, ITEMATTR_HOLD_EFFECT, HEAP_ID_BATTLE));
             if (ctx->battleMons[ctx->battlerIdTemp].form != form) {
                 ctx->battleMons[ctx->battlerIdTemp].form = form;
                 *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
@@ -11216,6 +11217,11 @@ static u8 Battler_GetType(BattleContext *ctx, int battlerId, int var) {
             break;
         }
     }
+    // RKS System types Silvally by its Memory as Multitype does Arceus by its
+    // plate, and the same way: the item as it is held.
+    if (ctx->battleMons[battlerId].species == SPECIES_SILVALLY && ctx->battleMons[battlerId].ability == ABILITY_RKS_SYSTEM) {
+        type = GetSilvallyTypeByHeldItemEffect(GetItemVar(ctx, ctx->battleMons[battlerId].item, ITEM_VAR_HOLD_EFFECT));
+    }
 
     return type;
 }
@@ -11416,62 +11422,7 @@ static int GetDynamicMoveType(BattleSystem *battleSystem, BattleContext *ctx, in
         }
         break;
     case MOVE_MULTI_ATTACK:
-        switch (GetBattlerHeldItemEffect(ctx, battlerId)) {
-        case HOLD_EFFECT_FIGHTING_MEMORY:
-            type = TYPE_FIGHTING;
-            break;
-        case HOLD_EFFECT_FLYING_MEMORY:
-            type = TYPE_FLYING;
-            break;
-        case HOLD_EFFECT_POISON_MEMORY:
-            type = TYPE_POISON;
-            break;
-        case HOLD_EFFECT_GROUND_MEMORY:
-            type = TYPE_GROUND;
-            break;
-        case HOLD_EFFECT_ROCK_MEMORY:
-            type = TYPE_ROCK;
-            break;
-        case HOLD_EFFECT_BUG_MEMORY:
-            type = TYPE_BUG;
-            break;
-        case HOLD_EFFECT_GHOST_MEMORY:
-            type = TYPE_GHOST;
-            break;
-        case HOLD_EFFECT_STEEL_MEMORY:
-            type = TYPE_STEEL;
-            break;
-        case HOLD_EFFECT_FIRE_MEMORY:
-            type = TYPE_FIRE;
-            break;
-        case HOLD_EFFECT_WATER_MEMORY:
-            type = TYPE_WATER;
-            break;
-        case HOLD_EFFECT_GRASS_MEMORY:
-            type = TYPE_GRASS;
-            break;
-        case HOLD_EFFECT_ELECTRIC_MEMORY:
-            type = TYPE_ELECTRIC;
-            break;
-        case HOLD_EFFECT_PSYCHIC_MEMORY:
-            type = TYPE_PSYCHIC;
-            break;
-        case HOLD_EFFECT_ICE_MEMORY:
-            type = TYPE_ICE;
-            break;
-        case HOLD_EFFECT_DRAGON_MEMORY:
-            type = TYPE_DRAGON;
-            break;
-        case HOLD_EFFECT_DARK_MEMORY:
-            type = TYPE_DARK;
-            break;
-        case HOLD_EFFECT_FAIRY_MEMORY:
-            type = TYPE_FAIRY;
-            break;
-        default:
-            type = TYPE_NORMAL;
-            break;
-        }
+        type = GetSilvallyTypeByHeldItemEffect(GetBattlerHeldItemEffect(ctx, battlerId));
         break;
     default:
         type = TYPE_NORMAL;

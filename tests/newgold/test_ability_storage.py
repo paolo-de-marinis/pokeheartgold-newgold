@@ -79,6 +79,7 @@ static u32 GetMonBaseStat_HandleAlternateForm(int species,int form,int field) {
 }
 static u32 GetItemAttr(u16 item,int attr,enum HeapID heap) { (void)item;(void)attr;(void)heap;return 17; }
 static u8 GetArceusTypeByHeldItemEffect(u16 effect) { assert(effect==17);return 10; }
+static u8 GetSilvallyTypeByHeldItemEffect(u16 effect) { assert(effect==17);return 10; }
 @MACROS@
 @PROTOTYPES@
 @NATIVE@

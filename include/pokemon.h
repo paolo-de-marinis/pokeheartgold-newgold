@@ -105,6 +105,7 @@ u8 BoxMonIsShiny(BoxPokemon *boxMon);
 u8 CalcShininessByOtIdAndPersonality(u32 otid, u32 pid);
 u32 GenerateShinyPersonality(u32 otid);
 u32 GetArceusTypeByHeldItemEffect(u16 plate);
+u32 GetSilvallyTypeByHeldItemEffect(u16 heldEffect);
 u8 GetBoxMonUnownLetter(BoxPokemon *boxMon);
 u8 GetMonUnownLetter(Pokemon *mon);
 u32 TryAppendMonMove(Pokemon *mon, u16 move);
