@@ -2156,6 +2156,7 @@ void BattleContext_Init(BattleContext *ctx) {
 
     ctx->magnitude = 0;
     ctx->teraShellResisting = 0;
+    ctx->strongWindsWeakened = 0;
 
     for (battlerId = 0; battlerId < 4; battlerId++) {
         MI_CpuClearFast((u32 *)&ctx->selfTurnData[battlerId], sizeof(SelfTurnData));
@@ -2773,6 +2774,45 @@ BOOL TeraShellResists(BattleContext *ctx, int battlerIdAttacker, int battlerIdTa
         || (ctx->teraShellResisting & MaskOfFlagNo(battlerIdTarget));
 }
 
+// Delta Stream's winds (Pokemon Central, Flusso Delta) take the Flying type's
+// weaknesses out of a damaging move: the rows of the chart that make a move
+// super effective on Flying are passed over for a Flying-type target, and the
+// move's other matchups with it stand. Cloud Nine and Air Lock leave the chart
+// alone (BattlerMoveWeather). hg-engine's StrongWindsShouldWeaken.
+static BOOL StrongWindsShelterRow(u32 winds, int index) {
+    return winds && sTypeEffectiveness[index][TYPETABLE_DEFENDER] == TYPE_FLYING
+        && sTypeEffectiveness[index][TYPETABLE_EFFECT] == TYPE_MUL_SUPER_EFFECTIVE;
+}
+
+static u32 StrongWindsFor(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, u32 moveNo) {
+    if (BattleMoveTbl(ctx, moveNo)->power == 0) {
+        return 0;
+    }
+    return BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker) & FIELD_CONDITION_STRONG_WINDS;
+}
+
+// Whether the winds take something off this move against this target, which
+// is when the later games say so: a Flying-type target, Roost not in the way,
+// and a move whose type is super effective on Flying.
+BOOL StrongWindsWeakenMove(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u32 moveNo, int moveTypeDefault) {
+    u32 winds = StrongWindsFor(battleSystem, ctx, battlerIdAttacker, moveNo);
+    u8 moveType;
+    int i;
+
+    if (!winds || ctx->turnData[battlerIdTarget].roostFlag
+        || (GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL) != TYPE_FLYING && GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL) != TYPE_FLYING
+            && ctx->battleMons[battlerIdTarget].type3 != TYPE_FLYING)) {
+        return FALSE;
+    }
+    moveType = BattleMoveTypeForAbility(ctx, GetBattlerAbility(ctx, battlerIdAttacker), moveNo, moveTypeDefault);
+    for (i = 0; sTypeEffectiveness[i][TYPETABLE_ATTACKER] != TYPE_ENDTABLE; i++) {
+        if (sTypeEffectiveness[i][TYPETABLE_ATTACKER] == moveType && StrongWindsShelterRow(winds, i) == TRUE) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 // The one walk over the type chart. It sets the flags the scripts and the AI
 // read, as HeartGold's did, and scales the damage by STAB and then by the
 // chart -- the chart once, by what its rows multiply to, the way the
@@ -2789,6 +2829,7 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
     u8 moveType;
     u32 movePower;
     u8 itemTarget;
+    u32 winds;
 
     *effectiveness = 8;
 
@@ -2801,6 +2842,9 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
     moveType = BattleMoveTypeForAbility(ctx, GetBattlerAbility(ctx, battlerIdAttacker), moveNo, moveTypeDefault);
 
     movePower = BattleMoveTbl(ctx, moveNo)->power;
+    // Anticipation asks this chart too, and so no longer shudders at such a
+    // move in the winds, where the later games still have it shudder.
+    winds = StrongWindsFor(battleSystem, ctx, battlerIdAttacker, moveNo);
 
     // STAB
     if (!(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS) && (GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_TYPE_1, NULL) == moveType || GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_TYPE_2, NULL) == moveType)) {
@@ -2840,20 +2884,20 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
             if (sTypeEffectiveness[i][TYPETABLE_ATTACKER] == moveType) {
                 // sTypeEffectiveness[i][TYPETABLE_DEFENDER] -> sp10
                 if (sTypeEffectiveness[i][TYPETABLE_DEFENDER] == GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL)) {
-                    if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE) {
+                    if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE && StrongWindsShelterRow(winds, i) == FALSE) {
                         ov12_022583B4(sTypeEffectiveness[i][TYPETABLE_EFFECT], movePower, moveStatusFlag);
                         typeMul = typeMul * sTypeEffectiveness[i][TYPETABLE_EFFECT] / TYPE_MUL_NORMAL;
                     }
                 }
                 if (sTypeEffectiveness[i][TYPETABLE_DEFENDER] == GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL) && GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL) != GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL)) {
-                    if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE) {
+                    if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE && StrongWindsShelterRow(winds, i) == FALSE) {
                         ov12_022583B4(sTypeEffectiveness[i][TYPETABLE_EFFECT], movePower, moveStatusFlag);
                         typeMul = typeMul * sTypeEffectiveness[i][TYPETABLE_EFFECT] / TYPE_MUL_NORMAL;
                     }
                 }
                 // A third type, which only a battle script can have given.
                 if (sTypeEffectiveness[i][TYPETABLE_DEFENDER] == ctx->battleMons[battlerIdTarget].type3 && ctx->battleMons[battlerIdTarget].type3 != GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL) && ctx->battleMons[battlerIdTarget].type3 != GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL)) {
-                    if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE) {
+                    if (ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE && StrongWindsShelterRow(winds, i) == FALSE) {
                         ov12_022583B4(sTypeEffectiveness[i][TYPETABLE_EFFECT], movePower, moveStatusFlag);
                         typeMul = typeMul * sTypeEffectiveness[i][TYPETABLE_EFFECT] / TYPE_MUL_NORMAL;
                     }

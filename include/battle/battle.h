@@ -579,6 +579,10 @@ typedef struct BattleContext {
     // a multi-hit move is not very effective on every hit if it was on the
     // first, at full HP. Cleared when the next action begins.
     u8 teraShellResisting;
+    // Which battlers Delta Stream's winds have said they shelter from the move
+    // now under way, a bit each, so a multi-hit move says it once. Cleared
+    // when the next action begins.
+    u8 strongWindsWeakened;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

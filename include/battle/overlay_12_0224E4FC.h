@@ -127,6 +127,7 @@ void BattleSystem_ChangeBattlerForm(BattleSystem *battleSystem, BattleContext *c
 u16 Battler_BrokenFaceForm(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u16 move);
 u32 BattlerMoveWeather(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL TeraShellResists(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u32 moveNo);
+BOOL StrongWindsWeakenMove(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u32 moveNo, int moveTypeDefault);
 u16 Battler_ShieldsDownForm(BattleContext *ctx, int battlerId);
 BOOL Battler_ShieldsUp(BattleContext *ctx, int battlerId);
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script);

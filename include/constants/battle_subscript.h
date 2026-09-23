@@ -678,6 +678,8 @@
 // A Water move evaporating in the harsh sunlight, or a Fire move in the heavy
 // rain. 370 and 371 there.
 #define BATTLE_SUBSCRIPT_PRIMAL_WEATHER_STOPS_MOVE          420
+// Delta Stream's winds sheltering a Flying type. 372 there.
+#define BATTLE_SUBSCRIPT_STRONG_WINDS_WEAKEN                421
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

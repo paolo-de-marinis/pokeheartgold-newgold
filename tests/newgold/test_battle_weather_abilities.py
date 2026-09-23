@@ -247,5 +247,22 @@ int main(void) {
         self.assertIn("PrintMessage msg_0197_01447, TAG_NONE", script)
 
 
+class StrongWindsTests(unittest.TestCase):
+    """The damage is test_damage_formula.py's worked example; this is where
+    the chart passes the rows over, and the line."""
+
+    def test_the_chart_passes_the_flying_weakness_over(self):
+        chart = function(OVERLAY.read_text(), "CalcTypeEffectiveness")
+        self.assertIn("winds = StrongWindsFor(battleSystem, ctx, battlerIdAttacker, moveNo);", chart)
+        self.assertEqual(chart.count("ov12_02251C74(ctx, battlerIdAttacker, battlerIdTarget, i) == TRUE && StrongWindsShelterRow(winds, i) == FALSE"), 3)
+
+    def test_they_say_so_once_a_move(self):
+        flags = function(CONTROLLER.read_text(), "ov12_0224B498")
+        self.assertIn("StrongWindsWeakenMove(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->moveNoCur, ctx->moveType) == TRUE", flags)
+        self.assertIn("ctx->strongWindsWeakened |= MaskOfFlagNo(ctx->battlerIdTarget);", flags)
+        self.assertIn("ctx->strongWindsWeakened = 0;", function(OVERLAY.read_text(), "BattleContext_Init"))
+        self.assertIn("PrintMessage msg_0197_01451, TAG_NONE", subscript("StrongWindsWeaken"))
+
+
 if __name__ == "__main__":
     unittest.main()

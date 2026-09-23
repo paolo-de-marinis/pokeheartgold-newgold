@@ -168,7 +168,8 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // for Relic Song, grew it by four; Cud Chew's Berry and turn by sixteen more,
 // each battler's run of Protects by four, and Dancer's six bytes by four,
 // two of them padding it carried already; Tera Shell's byte by four, since
-// Dancer's had taken the padding it would have used.
+// Dancer's had taken the padding it would have used, and the one for Delta
+// Stream's line went into what Tera Shell's left.
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x31D4 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
@@ -2438,6 +2439,17 @@ static BOOL ov12_0224B498(BattleSystem *battleSystem, BattleContext *ctx) {
         // The flags alone, as in the reference's BeforeMove: the damage is
         // final already, CalcDamage having taken the type chart into it.
         ov12_02251D28(battleSystem, ctx, ctx->moveNoCur, ctx->moveType, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->damage, &ctx->moveStatusFlag);
+        // Delta Stream's winds say so where they shelter the target, before
+        // the damage and once a move; the check comes round again and finds
+        // it said.
+        if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->strongWindsWeakened & MaskOfFlagNo(ctx->battlerIdTarget))
+            && StrongWindsWeakenMove(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->moveNoCur, ctx->moveType) == TRUE) {
+            ctx->strongWindsWeakened |= MaskOfFlagNo(ctx->battlerIdTarget);
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_STRONG_WINDS_WEAKEN);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return TRUE;
+        }
         // Tera Shell says so on the first hit it takes, before the damage; the
         // check comes round again once the line is out, and finds it said.
         if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->teraShellResisting & MaskOfFlagNo(ctx->battlerIdTarget))

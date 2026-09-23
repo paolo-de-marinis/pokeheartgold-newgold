@@ -176,6 +176,21 @@ int main(void) {
     reset(); S.types[1][0] = S.types[1][1] = TYPE_WATER; EXPECT(calc(), 22);
     reset(); S.types[1][0] = TYPE_WATER; S.types[1][1] = TYPE_ROCK; EXPECT(calc(), 11);
     reset(); S.types[1][0] = TYPE_GRASS; S.types[1][1] = TYPE_BUG; EXPECT(calc(), 180);
+    // Delta Stream's winds take the Flying weakness out: Rock into Flying 45
+    // rather than 90, into Fire/Flying 90 rather than 180; not under Cloud
+    // Nine, and they say so only where they did something.
+    reset(); ctx.moveType = TYPE_ROCK; S.types[1][0] = S.types[1][1] = TYPE_FLYING; EXPECT(calc(), 90);
+    ctx.fieldCondition = FIELD_CONDITION_STRONG_WINDS; EXPECT(calc(), 45);
+    EXPECT(StrongWindsWeakenMove(&bs, &ctx, 0, 1, 0, TYPE_ROCK), TRUE);
+    EXPECT(StrongWindsWeakenMove(&bs, &ctx, 0, 1, 0, TYPE_NORMAL), FALSE);
+    ctx.turnData[1].roostFlag = TRUE; EXPECT(StrongWindsWeakenMove(&bs, &ctx, 0, 1, 0, TYPE_ROCK), FALSE);
+    ctx.turnData[1].roostFlag = FALSE;
+    S.types[1][0] = TYPE_FIRE; EXPECT(calc(), 90);
+    S.cloudNine = TRUE; EXPECT(calc(), 180);
+    EXPECT(StrongWindsWeakenMove(&bs, &ctx, 0, 1, 0, TYPE_ROCK), FALSE);
+    reset(); ctx.moveType = TYPE_ROCK; ctx.fieldCondition = FIELD_CONDITION_STRONG_WINDS; S.types[1][0] = S.types[1][1] = TYPE_FIRE;
+    EXPECT(calc(), 90);
+    EXPECT(StrongWindsWeakenMove(&bs, &ctx, 0, 1, 0, TYPE_ROCK), FALSE);
     // Tera Shell at full HP makes it not very effective, whatever the chart
     // said, 22; not with a point of HP gone, 180, nor where the chart says no
     // effect.
@@ -306,7 +321,8 @@ def program():
     overlay = "\n".join([enum, table(OVERLAY, "sTypeEffectiveness")] + [
         function(OVERLAY, name) for name in (
             "QMul_RoundUp", "QMul_RoundDown", "ov12_02251C74", "ov12_022583B4", "TeraShellResists",
-            "CalcTypeEffectiveness", "BattlerMoveWeather")])
+            "BattlerMoveWeather", "StrongWindsShelterRow", "StrongWindsFor", "StrongWindsWeakenMove",
+            "CalcTypeEffectiveness")])
     commands = "\n".join(function(COMMANDS, name) for name in (
         "ScreenModifier", "FinalDamageModifier", "DamageCalcDefault"))
     return (FIXTURE.replace("@UQ412@", uq412)
@@ -314,6 +330,7 @@ def program():
                      .replace("int CalcTypeEffectiveness", "static int CalcTypeEffectiveness")
                      .replace("BOOL TeraShellResists", "static BOOL TeraShellResists")
                      .replace("u32 BattlerMoveWeather", "static u32 BattlerMoveWeather")
+                     .replace("BOOL StrongWindsWeakenMove", "static BOOL StrongWindsWeakenMove")
                      .replace("u32 QMul_", "static u32 QMul_"))
             .replace("@COMMANDS@", commands))
 
