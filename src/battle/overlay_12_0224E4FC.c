@@ -1490,6 +1490,72 @@ static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
     return ctx->unk_2174 != 0 && BattleMoveTbl(ctx, moveNo)->effectChance != 0 && !(ctx->unk_2174 & (MOVE_SIDE_EFFECT_ON_HIT | MOVE_SIDE_EFFECT_CHECK_SUBSTITUTE | MOVE_SIDE_EFFECT_CHECK_HP_AND_SUBSTITUTE | MOVE_SIDE_EFFECT_CHECK_HP));
 }
 
+// Emergency Exit and Wimp Out (Activate_WimpOut_EmergencyExit,
+// ServerDoPostMoveEffects.c:2629 at d0380a487; Pokemon Central's Passoindietro
+// and Fuggifuggi): a Pokemon a move takes from above half its health to half
+// or below leaves once the move is over -- switched out, or fled if it is a
+// wild Pokemon.
+//
+// Each hit about to land arms the Pokemon if it is above half, holds one of
+// the two, and the move is not one Sheer Force has boosted. The reference asks
+// instead whether the last hit alone crossed half, which misses a multi-strike
+// move whose earlier hit carried it past; the games wait for the last hit and
+// ask about the whole move. Only a move's hit arms it, so a confusion blow, a
+// Belly Drum or a Substitute does not, as in the games. A wild Pokemon flees,
+// as in the games; the reference keeps it in, having no Pokemon to send. Damage
+// from outside a move -- recoil, hazards, weather -- does not arm it here, as
+// it does not in the reference.
+void Battler_ArmRetreat(BattleContext *ctx, int battlerId) {
+    int ability = GetBattlerAbility(ctx, battlerId);
+
+    if ((ability == ABILITY_EMERGENCY_EXIT || ability == ABILITY_WIMP_OUT)
+        && ctx->battleMons[battlerId].hp > (int)(ctx->battleMons[battlerId].maxHp / 2)
+        && !(GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE)) {
+        ctx->selfTurnData[battlerId].retreatArmed = TRUE;
+    }
+}
+
+static BOOL Battler_RetreatFlees(BattleSystem *battleSystem, int battlerId) {
+    return !(BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) && BattleSystem_GetFieldSide(battleSystem, battlerId) != 0;
+}
+
+// Whether the Pokemon in this slot leaves now: still at half or below, still
+// holding the ability (Mummy or Wandering Spirit taking it on contact comes
+// first) as the attacker's Mold Breaker sees it, and with somewhere to go.
+static BOOL Battler_Retreats(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    if (!ctx->selfTurnData[battlerId].retreatArmed
+        || ctx->battleMons[battlerId].hp == 0
+        || ctx->battleMons[battlerId].hp > (int)(ctx->battleMons[battlerId].maxHp / 2)) {
+        return FALSE;
+    }
+    if (!CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, battlerId, ABILITY_EMERGENCY_EXIT)
+        && !CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, battlerId, ABILITY_WIMP_OUT)) {
+        return FALSE;
+    }
+    return Battler_RetreatFlees(battleSystem, battlerId) || CanSwitchMon(battleSystem, ctx, battlerId);
+}
+
+// Once the move is over, after the attacker's Shell Bell, Life Orb and Throat
+// Spray, in speed order: the reference's step 22, after the items and before
+// the switch U-turn asks for. TEMP_DATA tells the subscript to flee.
+BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+    for (int i = 0; i < maxBattlers; i++) {
+        int battlerId = ctx->turnOrder[i];
+        BOOL retreats = Battler_Retreats(battleSystem, ctx, battlerId);
+
+        ctx->selfTurnData[battlerId].retreatArmed = FALSE;
+        if (retreats) {
+            ctx->battlerIdTemp = battlerId;
+            ctx->tempData = Battler_RetreatFlees(battleSystem, battlerId);
+            *script = BATTLE_SUBSCRIPT_EMERGENCY_EXIT;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     BOOL ret = FALSE;
     u16 effectChance;
@@ -1515,6 +1581,15 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         ctx->unk_2174 = 0;
         if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
             ret = TRUE;
+        }
+        // U-turn, Volt Switch and Flip Turn do not take their user out when
+        // the Pokemon they hit is leaving by Emergency Exit or Wimp Out
+        // (Pokemon Central, Passoindietro): the reference switches the user
+        // only if no switch is pending by then. Here the move's switch comes
+        // with the hit, so it asks ahead; the rest of the hit goes on as for
+        // any other attack.
+        if (*out == BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT && ctx->battlerIdTarget != BATTLER_NONE && Battler_Retreats(battleSystem, ctx, ctx->battlerIdTarget)) {
+            ret = FALSE;
         }
     } else if (ctx->unk_2174 & (1 << 24)) {
         *out = GetMoveStatusChangeScript(ctx, 2, ctx->unk_2174);
@@ -2065,6 +2140,9 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
         data[i] = 0;
     }
     MI_CpuClear8(&ctx->moveConditions[battlerId], sizeof(MoveConditions));
+    // A Pokemon forced out by Dragon Tail before the move is over takes its
+    // Emergency Exit with it; what comes in was not hit.
+    ctx->selfTurnData[battlerId].retreatArmed = FALSE;
 
     if (ctx->battleStatus & BATTLE_STATUS_BATON_PASS) {
         ctx->battleMons[battlerId].unk88.substituteHp = unkStruct.substituteHp;

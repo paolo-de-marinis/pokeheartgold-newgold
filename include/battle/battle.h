@@ -107,7 +107,10 @@ typedef struct SelfTurnData {
     u32 trickRoomFlag : 1;
     u32 endureItemFlag : 1;
     u32 rolloutCount : 3;
-    u32 unk0_9 : 23;
+    // Emergency Exit and Wimp Out: this Pokemon, holding either, was above
+    // half its health when a hit of this action landed on it.
+    u32 retreatArmed : 1;
+    u32 unk0_10 : 22;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;

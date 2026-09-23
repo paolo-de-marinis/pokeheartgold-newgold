@@ -653,6 +653,9 @@
 #define BATTLE_SUBSCRIPT_NEUTRALIZING_GAS_END               409
 // Cud Chew eating a Berry again, which the reference has no script for.
 #define BATTLE_SUBSCRIPT_CUD_CHEW                           410
+// Emergency Exit and Wimp Out taking a Pokemon out, or a wild one away. 498
+// there.
+#define BATTLE_SUBSCRIPT_EMERGENCY_EXIT                     411
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

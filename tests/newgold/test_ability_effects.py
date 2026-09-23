@@ -54,6 +54,7 @@ IMPLEMENTED = {
     "EELEVATE",
     "ELECTRIC_SURGE",
     "ELECTROMORPHOSIS",
+    "EMERGENCY_EXIT",
     "EVAPORATE",
     "FAIRY_AURA",
     "FIRE_MANE",
@@ -178,6 +179,7 @@ IMPLEMENTED = {
     "WATER_COMPACTION",
     "WEAK_ARMOR",
     "WELL_BAKED_BODY",
+    "WIMP_OUT",
     "WIND_POWER",
     "WIND_RIDER",
     "WONDER_SKIN",
@@ -210,12 +212,11 @@ IMPLEMENTED = {
 PENDING = {
     "AROMA_VEIL", "BALL_FETCH", "BATTLE_BOND", "COSTAR", "CURIOUS_MEDICINE",
     "DANCER", "DELTA_STREAM", "DESOLATE_LAND", "EMBODY_ASPECT",
-    "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4", "EMERGENCY_EXIT",
+    "EMBODY_ASPECT_2", "EMBODY_ASPECT_3", "EMBODY_ASPECT_4",
     "GUARD_DOG", "ILLUSION", "MEGA_SOL", "MIMICRY",
     "OPPORTUNIST", "PARENTAL_BOND", "POWER_SPOT", "PRIMORDIAL_SEA", "SHIELDS_DOWN",
     "STAKEOUT", "SUPREME_OVERLORD", "SYMBIOSIS", "TEMP4",
     "TERAFORM_ZERO", "TERA_SHELL", "TERA_SHIFT", "TOXIC_CHAIN", "VICTORY_STAR",
-    "WIMP_OUT"
 }
 
 
@@ -289,7 +290,8 @@ class AbilityEffectTests(unittest.TestCase):
     #
     # 39 -> 41: Schooling and Power Construct had been counted done on their
     # blocklist reads alone; see the note above PENDING. Cud Chew done.
-    STILL_TO_DO = 32
+    # Emergency Exit and Wimp Out done.
+    STILL_TO_DO = 30
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(
@@ -420,7 +422,9 @@ class SheerForceTests(unittest.TestCase):
 
     def test_both_halves_ask_the_same_question(self):
         source = self.SOURCE.read_text()
-        self.assertEqual(source.count("IsSuppressibleSecondaryEffect(ctx,"), 5)
+        # The damage, the effect, Berserk, Anger Shell, Pickpocket, and
+        # Emergency Exit's arming.
+        self.assertEqual(source.count("IsSuppressibleSecondaryEffect(ctx,"), 6)
         self.assertEqual(source.count("static BOOL IsSuppressibleSecondaryEffect"), 1)
 
     def test_the_guaranteed_effects_are_left_alone(self):

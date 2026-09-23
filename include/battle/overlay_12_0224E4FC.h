@@ -84,6 +84,8 @@ int DamageDivide(int num, int denom);
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx);
 int Battler_GetRandomOpposingBattlerId(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script);
+void Battler_ArmRetreat(BattleContext *ctx, int battlerId);
+BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 BOOL CheckStatusHealAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int flag);
 BOOL CheckStatusHealSwitch(BattleContext *ctx, int ability, int status);
 BOOL TrySyncronizeStatus(BattleSystem *battleSystem, BattleContext *ctx, ControllerCommand command);

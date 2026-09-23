@@ -3410,6 +3410,7 @@ static void BattleControllerPlayer_HpCalc(BattleSystem *battleSystem, BattleCont
 
             ctx->turnData[ctx->battlerIdTarget].unk34 = ctx->damage;
             ctx->turnData[ctx->battlerIdTarget].unk38 = ctx->battlerIdAttacker;
+            Battler_ArmRetreat(ctx, ctx->battlerIdTarget);
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             ctx->hpCalc = ctx->damage;
             ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_HP);
@@ -4499,7 +4500,22 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 4:
+        case 4: {
+            // Emergency Exit and Wimp Out, one Pokemon at a time: this step
+            // comes round again after each, until none is left to go.
+            int script;
+
+            if (TryRetreatAbility(battleSystem, ctx, &script) == TRUE) {
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            } else {
+                ctx->unk_30++;
+            }
+            break;
+        }
+        case 5:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;
