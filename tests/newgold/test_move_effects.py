@@ -275,7 +275,7 @@ class WhatIsStillMissingTests(unittest.TestCase):
 class PartingShotTests(unittest.TestCase):
     """Parting Shot lowers its target's Attack and Sp. Atk and then its user
     goes back, as U-turn's does (Pokemon Central, Monito); since the seventh
-    generation only when a stat was lowered. The reference runs the switch
+    generation only when a stat was changed. The reference runs the switch
     from its post-move steps (Activate_Switch and subscript 469 at
     d0380a487); here the stats fell and the user stayed."""
 
@@ -284,7 +284,7 @@ class PartingShotTests(unittest.TestCase):
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
         step = body[body.index("MOVE_EFFECT_PARTING_SHOT"):]
         step = step[:step.index("break;")]
-        self.assertIn("(ctx->statLoweredBattlers & MaskOfFlagNo(ctx->battlerIdTarget))", step)
+        self.assertIn("((ctx->statLoweredBattlers | ctx->statRaisedBattlers) & MaskOfFlagNo(ctx->battlerIdTarget))", step)
         self.assertIn("!(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)", step)
         self.assertIn("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HANDLE_PARTING_SHOT);", step)
         # A user that left with its move does not spray its throat, and a
@@ -292,6 +292,19 @@ class PartingShotTests(unittest.TestCase):
         self.assertIn("ctx->unk_34 = SWITCH_ITEM_USED;", step)
         self.assertLess(body.index("MOVE_EFFECT_PARTING_SHOT"), body.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"))
         self.assertLess(body.index("MOVE_EFFECT_PARTING_SHOT"), body.index("CheckEjectPack"))
+
+    def test_a_contrary_target_s_rise_counts_as_a_change(self):
+        # Pokemon Central (Monito): the user stays only when the move changed
+        # neither stat -- a Contrary target at +6 in both among the cases -- so
+        # a rise the ability turned the drops into sends it out. The rises are
+        # written down as the drops are, for the action being taken.
+        from test_hold_effects import CONTROLLER, COMMANDS, OVERLAY
+        change = function(COMMANDS.read_text(), "BtlCmd_ChangeStatStage")
+        increase = change[change.index("if (change > 0) { // Stat Increase"):change.index("} else { // Stat Decrease")]
+        self.assertIn("ctx->statRaisedBattlers |= MaskOfFlagNo(ctx->battlerIdStatChange);", increase)
+        self.assertIn("ctx->statRaisedBattlers = 0;", function(CONTROLLER.read_text(), "ov12_02249460"))
+        self.assertIn("ctx->statRaisedBattlers &= ~MaskOfFlagNo(battlerId);",
+                      function(OVERLAY.read_text(), "BattleSystem_GetBattleMon"))
 
     def test_the_script_switches_the_user_out(self):
         from test_hold_effects import subscript_named, walk

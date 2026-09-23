@@ -976,6 +976,7 @@ static void ov12_02249460(BattleSystem *battleSystem, BattleContext *ctx) {
     // to be taken, not one lowered on the way in before it or at the end of
     // the last turn.
     ctx->statLoweredBattlers = 0;
+    ctx->statRaisedBattlers = 0;
     // Before any action, and before the end of the turn: an Illusion whose
     // Pokemon no longer has the ability drops, whatever took it away.
     {
@@ -4978,18 +4979,19 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             break;
         case 4:
             // Parting Shot's user goes back once the move is over, if the
-            // move lowered a stat of its target (Pokemon Central, Monito; the
+            // move changed a stat of its target (Pokemon Central, Monito; the
             // reference's Activate_Switch, ServerDoPostMoveEffects.c:2149 at
-            // d0380a487). Nothing lowered -- a miss, Protect, Soundproof,
-            // Clear Body, Mist, both stats at -6 -- and it stays, as it has
-            // since the seventh generation. It goes before the user's Throat
-            // Spray, which a user that left with its move does not use, and a
-            // target's Eject Pack does not answer a Parting Shot: unk_34 says
-            // so to the step that asks it.
+            // d0380a487). Nothing changed -- a miss, Protect, Soundproof,
+            // Clear Body, Mist, both stats at -6, or at +6 for a Contrary
+            // target whose stats the move raises instead -- and it stays, as
+            // it has since the seventh generation. It goes before the user's
+            // Throat Spray, which a user that left with its move does not use,
+            // and a target's Eject Pack does not answer a Parting Shot: unk_34
+            // says so to the step that asks it.
             if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_PARTING_SHOT
                 && ctx->battlerIdTarget != BATTLER_NONE
                 && ctx->battlerIdTarget != ctx->battlerIdAttacker
-                && (ctx->statLoweredBattlers & MaskOfFlagNo(ctx->battlerIdTarget))
+                && ((ctx->statLoweredBattlers | ctx->statRaisedBattlers) & MaskOfFlagNo(ctx->battlerIdTarget))
                 && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
                 && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HANDLE_PARTING_SHOT);

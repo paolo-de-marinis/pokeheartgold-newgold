@@ -2583,6 +2583,7 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                 mon->statChanges[stat + 1] = 12;
             }
             Battler_OpportunistNotesRaise(battleSystem, ctx, stat + 1, mon->statChanges[stat + 1] - stagesBefore);
+            ctx->statRaisedBattlers |= MaskOfFlagNo(ctx->battlerIdStatChange);
             // What a Mirror Herb on the other side is to copy.
             RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdStatChange, stat + 1, mon->statChanges[stat + 1] - stagesBefore);
         }

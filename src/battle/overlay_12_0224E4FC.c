@@ -197,6 +197,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->battleMons[battlerId].hospitalityFlag = 0;
     ctx->battleMons[battlerId].neutralizingGasFlag = 0;
     ctx->statLoweredBattlers &= ~MaskOfFlagNo(battlerId);
+    ctx->statRaisedBattlers &= ~MaskOfFlagNo(battlerId);
     MI_CpuClear8(ctx->mirrorHerbStages[battlerId], sizeof(ctx->mirrorHerbStages[battlerId]));
     // Kept off the BattleMon because that structure's size is pinned; cleared
     // here, which is where the reference clears its copy.
