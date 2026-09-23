@@ -1,7 +1,11 @@
 POKE_ICON_DIR := files/poketool/icongra/poke_icon
 POKE_ICON_NARC := $(POKE_ICON_DIR)/poke_icon.narc
 
-POKE_ICON_GFX_FLAGS_ICON := -clobbersize -version101
+# An icon is 4bpp whatever its PNG's depth: nitrogfx makes an 8-bit PNG an
+# 8bpp NCGR unless told, and the game reads every icon as 4bpp, so an 8-bit
+# one showed as stripes. Sixteen of the reference's icons are 8-bit PNGs; its
+# own icon rule passes -bitdepth 4 as well.
+POKE_ICON_GFX_FLAGS_ICON := -clobbersize -version101 -bitdepth 4
 POKE_ICON_GFX_FLAGS_PAL := -bitdepth 4
 
 POKE_ICON_PAL_FILES := $(wildcard $(POKE_ICON_DIR)/*.pal)
@@ -22,7 +26,9 @@ $(POKE_ICON_DIR)/%.NCER: $(POKE_ICON_DIR)/%.json
 $(POKE_ICON_DIR)/%.NANR: $(POKE_ICON_DIR)/%.json
 	$(GFX) $< $@
 
-$(POKE_ICON_DIR)/%.NCGR: $(POKE_ICON_DIR)/%.png
+# The flags are part of what an icon is built from: an icon built before
+# they changed is built again.
+$(POKE_ICON_DIR)/%.NCGR: $(POKE_ICON_DIR)/%.png $(POKE_ICON_DIR)/poke_icon.mk
 	$(GFX) $< $@ $(POKE_ICON_GFX_FLAGS_ICON)
 
 $(POKE_ICON_NARC): %.narc: $(POKE_ICON_PAL_OBJS) $(POKE_ICON_ANIM_OBJS) $(POKE_ICON_CELL_OBJS) $(POKE_ICON_ICON_OBJS)

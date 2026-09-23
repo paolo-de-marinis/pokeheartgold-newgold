@@ -69,6 +69,21 @@ class IconTests(unittest.TestCase):
         self.assertEqual(SOURCE.count("species >= SPECIES_LILLIPUP && species <= NUM_SPECIES"), 2)
         self.assertEqual(self.last - self.first + 1, len(import_species.added_species()))
 
+    def test_every_icon_is_built_4bpp(self):
+        # The game reads an icon as 4bpp. nitrogfx builds an 8-bit PNG (16 of
+        # the reference's, Walking Wake's among them) as 8bpp unless the rule
+        # says otherwise, and such an icon showed as stripes.
+        rule = (ICONS / "poke_icon.mk").read_text()
+        flags = re.search(r"^POKE_ICON_GFX_FLAGS_ICON := (.*)$", rule, re.M).group(1)
+        self.assertIn("-bitdepth 4", flags)
+        built = sorted(ICONS.glob("poke_icon_*.NCGR"))
+        if not built:
+            self.skipTest("the icons are not built")
+        for path in built:
+            data = path.read_bytes()
+            # the CHAR block's depth field: 3 is 4bpp; a 32x64 icon is 1024 bytes
+            self.assertEqual((data[0x1C], len(data) - 0x30), (3, 1024), path.name)
+
 
 if __name__ == "__main__":
     unittest.main()
