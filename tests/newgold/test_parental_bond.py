@@ -33,14 +33,15 @@ enum { FALSE = 0, TRUE = 1 };
 #include "constants/abilities.h"
 #include "constants/battle.h"
 #include "constants/moves.h"
+#include "constants/move_effects.h"
 typedef struct { int doubles; } BattleSystem;
-typedef struct { u8 category, range; } MoveTbl;
+typedef struct { u8 category, range; u16 effect; } MoveTbl;
 typedef struct { int hp, ability; u32 status; } Mon;
 typedef struct { u32 parentalBond : 1; } SelfTurnData;
 typedef struct {
     Mon battleMons[4];
     SelfTurnData selfTurnData[4];
-    int battlerIdAttacker, battlerIdFainted, moveNoCur;
+    int battlerIdAttacker, battlerIdFainted, moveNoCur, damage;
     u32 moveStatusFlag, unk_2184, checkMultiHit;
     int unk_38;
     u8 multiHitCount, multiHitCountTemp;
@@ -97,6 +98,19 @@ int main(void) {
                      MOVE_ROLLOUT, MOVE_UPROAR, MOVE_SOLAR_BEAM, MOVE_FLY, MOVE_ENDEAVOR, MOVE_PRESENT };
     for (unsigned i = 0; i < NELEMS(single); i++) {
         setup(0, single[i], CATEGORY_PHYSICAL, RANGE_SINGLE_TARGET);
+        assert(strikes() == 1);
+    }
+    // Bide only as it unleashes what it stored.
+    setup(0, MOVE_BIDE, CATEGORY_PHYSICAL, RANGE_SINGLE_TARGET);
+    ctx.move.effect = MOVE_EFFECT_BIDE;
+    assert(strikes() == 1);
+    setup(0, MOVE_BIDE, CATEGORY_PHYSICAL, RANGE_SINGLE_TARGET);
+    ctx.move.effect = MOVE_EFFECT_BIDE;
+    ctx.damage = 40;
+    assert(strikes() == 2);
+    int later[] = { MOVE_FUTURE_SIGHT, MOVE_DOOM_DESIRE, MOVE_MISTY_EXPLOSION };
+    for (unsigned i = 0; i < NELEMS(later); i++) {
+        setup(0, later[i], CATEGORY_SPECIAL, RANGE_SINGLE_TARGET);
         assert(strikes() == 1);
     }
     // Once per move: not again for a spread move's later target, nor over a
@@ -164,7 +178,11 @@ class ParentalBondTests(unittest.TestCase):
             self.skipTest("Pinned NewGold reference checkout not configured")
         # Tachyon Cutter strikes twice of itself; the reference left it off.
         self.assertEqual(set(table("sMultiStrikeMoves")), reference_list("MultiHitMovesList") | {"MOVE_TACHYON_CUTTER"})
-        self.assertEqual(set(table("sParentalBondSingleStrikeMoves")), reference_list("ParentalBondSingleStrikeMovesList"))
+        # Future Sight and Doom Desire strike later; Misty Explosion faints its
+        # user. The reference leaves the three off.
+        self.assertEqual(set(table("sParentalBondSingleStrikeMoves")),
+                         reference_list("ParentalBondSingleStrikeMovesList")
+                         | {"MOVE_FUTURE_SIGHT", "MOVE_DOOM_DESIRE", "MOVE_MISTY_EXPLOSION"})
 
     def test_the_second_strike_is_a_quarter(self):
         body = function(COMMANDS.read_text(), "DamageCalcDefault")
@@ -185,7 +203,8 @@ class ParentalBondTests(unittest.TestCase):
         body = function(OVERLAY.read_text(), "ov12_02250490")
         waiting = body[body.index("if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {"):]
         for script in ("ATTACK_THEN_SWITCH_OUT", "FORCE_TARGET_TO_SWITCH_OR_FLEE", "STEAL_ITEM", "PLUCK",
-                       "KNOCK_OFF", "HEAL_TARGET_PARALYSIS", "HEAL_TARGET_SLEEP", "FELL_STRAIGHT_DOWN", "MEAN_LOOK"):
+                       "KNOCK_OFF", "HEAL_TARGET_PARALYSIS", "HEAL_TARGET_SLEEP", "FELL_STRAIGHT_DOWN", "MEAN_LOOK",
+                       "HANDLE_TERRAIN_END"):
             self.assertIn(f"case BATTLE_SUBSCRIPT_{script}:", waiting)
         self.assertIn("!ParentalBond_StrikeToCome(ctx)", function(CONTROLLER.read_text(), "ov12_0224CC88"))
         self.assertIn("!ParentalBond_IsSecondStrike(ctx)", function(COMMANDS.read_text(), "BtlCmd_CalcFuryCutterPower"))
@@ -200,6 +219,9 @@ class ParentalBondTests(unittest.TestCase):
         self.assertLess(spit_up.index("GotoIfFirstHitOfParentalBond _STRIKE"), spit_up.index("BMON_DATA_STOCKPILE_COUNT, 0\n"))
         secret_power = (EFFECTS / "effect_script_0197.s").read_text()
         self.assertNotIn("GetTerrainSecondaryEffect", secret_power[secret_power.index("_FIRST_STRIKE:"):])
+        natural_gift = (EFFECTS / "effect_script_0222.s").read_text()
+        self.assertLess(natural_gift.index("GotoIfFirstHitOfParentalBond _KEEP_BERRY"),
+                        natural_gift.index("RemoveItem BATTLER_CATEGORY_ATTACKER"))
 
 
 if __name__ == "__main__":

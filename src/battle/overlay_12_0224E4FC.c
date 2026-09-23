@@ -1661,9 +1661,10 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     // Amorefiliale): U-turn's switch, Dragon Tail's, the item Thief takes,
     // Pluck eats or Knock Off knocks away, the cure Smelling Salts and Wake-Up
     // Slap give -- so both strikes are doubled -- Smack Down's fall and Anchor
-    // Shot's trap. The reference does these after the move; here they come
-    // with the hit, so the first strike leaves them to the second, unless the
-    // first was the last.
+    // Shot's trap, and the terrain Steel Roller and Ice Spinner tear up, which
+    // Steel Roller needs for its second strike. The reference does these after
+    // the move; here they come with the hit, so the first strike leaves them
+    // to the second, unless the first was the last.
     if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {
         switch (*out) {
         case BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT:
@@ -1675,6 +1676,7 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         case BATTLE_SUBSCRIPT_HEAL_TARGET_SLEEP:
         case BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN:
         case BATTLE_SUBSCRIPT_MEAN_LOOK:
+        case BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END:
             ret = FALSE;
             break;
         }
@@ -3752,7 +3754,10 @@ static BOOL MoveIsInList(u32 move, const u16 *list, int count) {
 // reference's, sorted, and Tachyon Cutter, which strikes twice of itself and
 // which the reference left off, so that the ability took its second strike's
 // power away. Present is on the second list because its own script strikes
-// twice when it wounds and once when it heals.
+// twice when it wounds and once when it heals. Future Sight and Doom Desire
+// strike turns later and Misty Explosion faints its user as Explosion does;
+// the reference leaves all three off, and the second pass of the first two
+// failed.
 static const u16 sMultiStrikeMoves[] = {
     MOVE_ARM_THRUST,
     MOVE_BARRAGE,
@@ -3810,6 +3815,7 @@ static const u16 sParentalBondSingleStrikeMoves[] = {
     MOVE_DEVASTATING_DRAKE_SPECIAL,
     MOVE_DIG,
     MOVE_DIVE,
+    MOVE_DOOM_DESIRE,
     MOVE_DYNAMAX_CANNON,
     MOVE_ELECTRO_SHOT,
     MOVE_ENDEAVOR,
@@ -3820,6 +3826,7 @@ static const u16 sParentalBondSingleStrikeMoves[] = {
     MOVE_FLING,
     MOVE_FLY,
     MOVE_FREEZE_SHOCK,
+    MOVE_FUTURE_SIGHT,
     MOVE_GENESIS_SUPERNOVA,
     MOVE_GEOMANCY,
     MOVE_GIGAVOLT_HAVOC_PHYSICAL,
@@ -3857,6 +3864,7 @@ static const u16 sParentalBondSingleStrikeMoves[] = {
     MOVE_MAX_WYRMWIND,
     MOVE_MENACING_MOONRAZE_MAELSTROM,
     MOVE_METEOR_BEAM,
+    MOVE_MISTY_EXPLOSION,
     MOVE_NEVER_ENDING_NIGHTMARE_PHYSICAL,
     MOVE_NEVER_ENDING_NIGHTMARE_SPECIAL,
     MOVE_OCEANIC_OPERETTA,
@@ -3920,9 +3928,13 @@ BOOL ParentalBond_MoveApplies(BattleSystem *battleSystem, BattleContext *ctx, u3
 // Once, as the move begins, where the reference's before-move sequence ends:
 // for the move chosen, and again for a move Metronome or its kind calls. Not
 // for a spread move's later targets, which come round with PP already taken.
+// Bide strikes twice only as it unleashes, both times for the energy it stored
+// (Pokemon Central); the damage is already worked out by then, and nothing on
+// its other turns.
 void TryStartParentalBond(BattleSystem *battleSystem, BattleContext *ctx) {
     if (ctx->multiHitCountTemp == 0
         && !(ctx->unk_2184 & MULTIHIT_SKIP_PP_DECREMENT)
+        && !(BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_BIDE && ctx->damage == 0)
         && ParentalBond_MoveApplies(battleSystem, ctx, ctx->moveNoCur)) {
         ctx->multiHitCount = 2;
         ctx->multiHitCountTemp = 2;
