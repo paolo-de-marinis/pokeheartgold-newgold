@@ -292,6 +292,9 @@ def write(models, lut, textures):
                     f"{'true' if value & 0x0F else 'false'},{'true' if value & 0xF0 else 'false'},0")
     TP_PARAM.write_text("\n".join(rows) + "\n")
 
+    replace_block(FOLLOW_MON_C, "    FOLLOWER_MON_ARCEUS_NORMAL,", "};",
+                  [f"    [SPECIES_{name}] = {lut[name]}," for _n, name in port_species()])
+
     replace_block(GRAPHICS_C, "{ SPRITE_FOLLOWER_MON_STATIC_FERALIGATR,", "{ 0xFFFF,",
                   [f"    {{ SPRITE_FOLLOWER_MON_{name}, MMODEL_FOLLOWER_MON_{name}, "
                    f"{sprite_parameter(name, texture_width(textures[name]), parameter)} }},"

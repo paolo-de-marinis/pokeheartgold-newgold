@@ -717,7 +717,7 @@ static void ov78_021E6664(Sprite *sprite, PlayerProfile *profile, enum HeapID he
 
 static u32 ov78_021E6688(int species, int form, int gender) {
     u32 ret;
-    if (species <= SPECIES_NONE || species > MAX_SPECIES) {
+    if (species <= SPECIES_NONE || species > NUM_SPECIES) {
         ret = 1;
     } else {
         ret = MMODEL_FOLLOWER_MON_BASE + SpeciesToOverworldModelIndexOffset(species);

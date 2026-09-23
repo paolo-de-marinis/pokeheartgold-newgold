@@ -7,11 +7,11 @@
 
 // The Pokeathlon's walking sprite for a Pokemon on the course: the
 // mmodel member of its follower model, its female one or its form's, and
-// member 1 for a species past retail's.
+// member 1 for a species past the last.
 u32 ov96_021E91B8(int species, int form, int gender) {
     u32 ret;
 
-    if (species <= SPECIES_NONE || species > MAX_SPECIES) {
+    if (species <= SPECIES_NONE || species > NUM_SPECIES) {
         ret = 1;
     } else {
         ret = MMODEL_FOLLOWER_MON_BASE + SpeciesToOverworldModelIndexOffset(species);

@@ -11,7 +11,8 @@ Sprite *sub_02064084(LocalMapObject *obj);
 // one of two places: a Pokemon walking behind the player keeps it first, and
 // everything else second, except the handful of sprites sub_02064084 draws.
 // Which is which is decided by the object's sprite ID, and a follower is any
-// ID from Bulbasaur's to the last Arceus.
+// ID from Bulbasaur's to the last Arceus, or one of the added species'
+// after the static Pokemon.
 Sprite *ov01_021F72DC(LocalMapObject *obj) {
     int spriteId = MapObject_GetSpriteID(obj);
 
@@ -42,7 +43,8 @@ Sprite *ov01_021F72DC(LocalMapObject *obj) {
     case 0x105:
         return ((Sprite **)sub_0205F40C(obj))[1];
     }
-    if (spriteId >= SPRITE_FOLLOWER_MON_BULBASAUR && spriteId <= SPRITE_FOLLOWER_MON_ARCEUS_DARK) {
+    if ((spriteId >= SPRITE_FOLLOWER_MON_BULBASAUR && spriteId <= SPRITE_FOLLOWER_MON_ARCEUS_DARK)
+        || (spriteId >= SPRITE_FOLLOWER_MON_ADDED_FIRST && spriteId <= SPRITE_FOLLOWER_MON_ADDED_LAST)) {
         return ((Sprite **)sub_0205F40C(obj))[0];
     }
     if (spriteId >= 0x106 && spriteId <= 0x10D) {
