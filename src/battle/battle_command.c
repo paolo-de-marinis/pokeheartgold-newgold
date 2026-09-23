@@ -1117,7 +1117,7 @@ static BOOL BattlerGemPowersMove(BattleContext *ctx, int battlerId, u32 moveNo, 
         && moveNo != MOVE_WATER_PLEDGE && moveNo != MOVE_FIRE_PLEDGE && moveNo != MOVE_GRASS_PLEDGE;
 }
 
-static void TrySetGemBoost(BattleContext *ctx) {
+void TrySetGemBoost(BattleContext *ctx) {
     if (BattlerGemPowersMove(ctx, ctx->battlerIdAttacker, ctx->moveNoCur, BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur))) {
         ctx->gemBoostingMove = TRUE;
     }

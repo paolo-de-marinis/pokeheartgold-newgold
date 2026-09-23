@@ -3535,6 +3535,14 @@ static void ov12_0224C678(BattleSystem *battleSystem, BattleContext *ctx) {
     // only when the move hits something). The command comes back here with
     // the Gem gone and goes on; a second target or hit finds no Gem to spend
     // and keeps the boost.
+    //
+    // A move whose damage CalcDamage does not work out -- a fixed amount,
+    // Seismic Toss, Super Fang, Endeavor, a one-hit KO -- has not been asked
+    // about the Gem yet, and is asked here: the reference decides the Gem
+    // before any move and spends it on these too, with nothing to power.
+    if (!ctx->gemBoostingMove) {
+        TrySetGemBoost(ctx);
+    }
     if (ctx->gemBoostingMove && GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_POWERING_UP_MOVE_ONCE) {
         ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_GEM);
         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;

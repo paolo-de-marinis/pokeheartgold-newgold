@@ -425,6 +425,9 @@ class GemTests(unittest.TestCase):
     def test_the_gem_is_spent_as_the_move_connects(self):
         body = function(CONTROLLER.read_text(), "ov12_0224C678")
         spend = body.index("BATTLE_SUBSCRIPT_GEM")
+        # A move CalcDamage never saw -- a fixed amount of damage -- is asked
+        # about the Gem here, before it is spent.
+        self.assertLess(body.index("if (!ctx->gemBoostingMove) {\n        TrySetGemBoost(ctx);\n    }"), spend)
         self.assertLess(body.index("ctx->gemBoostingMove && GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_POWERING_UP_MOVE_ONCE"), spend)
         self.assertLess(spend, body.index("BATTLE_SUBSCRIPT_USE_MOVE"))
         self.assertIn("ctx->commandNext = CONTROLLER_COMMAND_27;", body[spend:body.index("BATTLE_SUBSCRIPT_USE_MOVE")])
