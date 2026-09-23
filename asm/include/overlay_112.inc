@@ -867,3 +867,11 @@
 .public ov112_021FFB24
 .public ov112_021FFB64
 .public ov112_021FFBD8
+.public ov112_021EF1F0
+.public ov112_021EF31C
+.public ov112_021EF3F8
+.public ov112_021F039C
+.public ov112_021F03BC
+.public ov112_021F04DC
+.public ov112_021F050C
+.public ov112_021F051C

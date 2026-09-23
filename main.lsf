@@ -1373,6 +1373,8 @@ Overlay OVY_112
     Object asm/overlay_112.o
     Object src/pokewalker_receive.o
     Object asm/overlay_112_021EECF0.o
+    Object src/overlay_112_021EF31C.o
+    Object asm/overlay_112_021EF568.o
     Object src/pokewalker_trainer_house.o
     Object asm/overlay_112_021F35A4.o
 }

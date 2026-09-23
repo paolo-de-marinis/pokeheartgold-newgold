@@ -38,6 +38,22 @@ typedef struct PokewalkerGiftMon {
     u8 pokeball;
 } PokewalkerGiftMon;
 
+// The Pokemon the Pokewalker's own box selector (sub_02093440) has picked,
+// and what the walker is shown of it.
+typedef struct PokewalkerSelection {
+    int state;
+    void *unk4;
+    void *unk8;
+    int box; // 0x0C: a box, or the selector's party page
+    int slot;
+    int unk14;
+    u16 species;
+    u16 nickname[POKEMON_NAME_LENGTH + 1];
+    u8 form; // 0x30
+    u8 shiny;
+    u8 gender;
+} PokewalkerSelection;
+
 // Only the fields used by the receive path are identified here.
 typedef struct PokewalkerReceiveStatePrefix {
     u8 unk0000[0x20];
@@ -50,7 +66,10 @@ typedef struct PokewalkerReceiveStatePrefix {
     u8 unkAABC_6 : 2;
     u8 unkAABD[0xAD00 - 0xAABD];
     PokewalkerGiftMon giftMon;
-    u8 unkAD34[0x1E430 - 0xAD34];
+    u8 unkAD34[0x1D764 - 0xAD34];
+    PokewalkerSelection selection;
+    u8 unk1D798[0x1E42C - 0x1D798];
+    Pokemon *partyMon;
     BoxPokemon *receivedGiftMon;
     Bag *bag;
     PlayerProfile *profile;
@@ -62,6 +81,8 @@ typedef struct PokewalkerReceiveStatePrefix {
 void ov112_021EE9A4(Pokemon *mon, PlayerProfile *profile, PokewalkerCaughtMon *data, u32 nature, BOOL shiny);
 void ov112_021EE9E4(Pokemon *mon, u32 otId, PokewalkerCaughtMon *data, u32 nature, BOOL shiny);
 void ov112_021EEAF0(PokewalkerReceiveStatePrefix *state, BOOL usePreviousBox);
+void ov112_021EF31C(PokewalkerSelection *selection, PokewalkerReceiveStatePrefix *state);
+void ov112_021EF3F8(int box, int slot, PokewalkerReceiveStatePrefix *state);
 void ov112_021F33D8(TrainerHouseMon *dest, Party *party);
 
 #endif // POKEHEARTGOLD_OVERLAY_112_H
