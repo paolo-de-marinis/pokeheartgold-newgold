@@ -929,3 +929,13 @@
 .public ov14_021F70A4
 .public ov14_021F70F4
 .public ov14_021F7184
+.public ov14_021F7308
+.public ov14_021F73E4
+.public ov14_021F7444
+.public ov14_021F7528
+.public ov14_021F7594
+.public ov14_021F75AC
+.public ov14_021F7620
+.public ov14_021F7670
+.public ov14_021F7688
+.public ov14_021F7700

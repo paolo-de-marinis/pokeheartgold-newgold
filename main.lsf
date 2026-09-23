@@ -732,6 +732,8 @@ Overlay OVY_14
     Object asm/overlay_14_021F6E68.o
     Object src/overlay_14_021F7184.o
     Object asm/overlay_14_021F7308.o
+    Object src/overlay_14_021F7700.o
+    Object asm/overlay_14_021F7854.o
 }
 Overlay OVY_15
 {
