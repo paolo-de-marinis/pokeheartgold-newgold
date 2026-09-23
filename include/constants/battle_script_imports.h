@@ -23,6 +23,9 @@
 // Battery. Techno Blast was picking its type off those four. Anything
 // written here wants checking against items.h for the same reason.
 
+// Totem battles are Alola's; no battle here sets the bit, which is the
+// engine's own and free in this game's BATTLE_TYPE_ word.
+#define BATTLE_TYPE_TOTEM                              (1 << 14)
 #define EXECUTION_ORDER_AFTER_YOU                      1
 #define EXECUTION_ORDER_QUASH                          2
 #define BATTLE_ANIMATION_GRASSY_TERRAIN                50

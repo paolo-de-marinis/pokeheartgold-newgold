@@ -56,7 +56,6 @@ STILL_DIFFERENT = {
     147: IN_C.format("Earthquake against Dig, CalcBaseDamage.c"),
     148: "the engine's Future Sight, worked out when it lands",
     151: IN_C.format("the charge turn, BattleController_BeforeMove.c"),
-    153: "Teleport's switch in a trainer battle",
     154: "the engine's Beat Up, one hit per member at 5 + base Attack / 10",
     161: PARENTAL_BOND,
     164: "the primal weathers and the engine's weather subscripts",
@@ -214,6 +213,14 @@ class BroughtOverTests(unittest.TestCase):
         # Eelevate lifts a Pokemon the way Levitate does (BattlerIsGrounded),
         # and Magnet Rise fails for either.
         self.assertIn("CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_EELEVATE", script(252))
+    def test_teleport_switches_out_in_a_trainer_battle(self):
+        # From Generation VIII Teleport switches its user out when there is no
+        # running away; retail failed it in a trainer battle.
+        text = script(153)
+        trainer = re.search(r"BATTLE_TYPE_TRAINER, (\w+)", text).group(1)
+        branch = text[text.index(trainer + ":"):]
+        self.assertIn("TryReplaceFaintedMon BATTLER_CATEGORY_ATTACKER, TRUE", branch)
+        self.assertIn("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST", branch)
 
 
 if __name__ == "__main__":
