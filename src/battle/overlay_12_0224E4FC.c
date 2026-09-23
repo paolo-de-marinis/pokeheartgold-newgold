@@ -10368,7 +10368,9 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         }
     }
 
-    if (calcAttacker.ability == ABILITY_SHEER_FORCE && IsSuppressibleSecondaryEffect(ctx, moveNo) == TRUE) {
+    // Order Up is always worth Sheer Force's boost, and gives nothing up for
+    // it (Pokemon Central, Alta Cucina).
+    if (calcAttacker.ability == ABILITY_SHEER_FORCE && (IsSuppressibleSecondaryEffect(ctx, moveNo) == TRUE || moveNo == MOVE_ORDER_UP)) {
         movePower = movePower * 13 / 10;
     }
 

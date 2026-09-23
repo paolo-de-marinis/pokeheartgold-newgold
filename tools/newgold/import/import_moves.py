@@ -464,6 +464,10 @@ IMPLEMENTED_HERE = {
     # Doodle gives the user and its ally the target's ability (Pokemon
     # Central, Ricalco): effect script 437.
     "DOODLE": "MOVE_EFFECT_DOODLE",
+    # Order Up hurts, and raises a stat by the form of a Tatsugiri in the
+    # user's mouth, which only Commander puts there (Pokemon Central, Alta
+    # Cucina); Sheer Force always boosts it. CalcMoveDamage asks the latter.
+    "ORDER_UP": "MOVE_EFFECT_HIT",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

@@ -706,5 +706,10 @@ int main(void) {
                 self.assertIn(f"UpdateMonDataFromVar OPCODE_SET, {who}, BMON_DATA_ABILITY, BSCRIPT_VAR_TEMP_DATA", doodle)
         self.assertIn("BMON_DATA_ABILITY, ABILITY_RECEIVER, _FAILED", doodle)
 
+    def test_order_up_is_a_hit_sheer_force_always_boosts(self):
+        # Pokemon Central (Alta Cucina): the power is test_move_power's
+        # OrderUpTests; the boost to a stat waits on a Tatsugiri in the mouth.
+        self.assertImplemented("ORDER_UP", "MOVE_EFFECT_HIT")
+
 if __name__ == "__main__":
     unittest.main()

@@ -165,6 +165,20 @@ class RageFistTests(unittest.TestCase):
 """))
 
 
+class OrderUpTests(unittest.TestCase):
+    def test_sheer_force_always_boosts_it(self):
+        """80 is 37, and Sheer Force's 104 is 47, with no added effect to give
+        up (Pokemon Central, Alta Cucina); another plain hit gets nothing."""
+        run_c(self, damage_program(r"""
+#define ORDER(move) CalcMoveDamage(&bs, &ctx, move, 0, 0, 0, TYPE_DRAGON, 0, 1, 1)
+    reset(4); S.move.power = 80;
+    EXPECT(ORDER(MOVE_ORDER_UP), 37);
+    S.ability[0] = ABILITY_SHEER_FORCE;
+    EXPECT(ORDER(MOVE_ORDER_UP), 47);
+    EXPECT(ORDER(MOVE_DRAGON_CLAW), 37);
+"""))
+
+
 if __name__ == "__main__":
     unittest.main()
 
