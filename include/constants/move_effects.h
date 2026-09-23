@@ -434,5 +434,6 @@
 #define MOVE_EFFECT_ELECTRIFY                                    424
 #define MOVE_EFFECT_NO_RETREAT                                   425
 #define MOVE_EFFECT_OCTOLOCK                                     426
+#define MOVE_EFFECT_SALT_CURE                                    427
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

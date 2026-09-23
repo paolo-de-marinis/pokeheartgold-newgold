@@ -7400,4 +7400,28 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} can no longer\nescape because it used No Retreat!</language>
 	</row>
+	<row id="msg_0197_01850" index="1850">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} is being salt cured!</language>
+	</row>
+	<row id="msg_0197_01851" index="1851">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} is being\nsalt cured!</language>
+	</row>
+	<row id="msg_0197_01852" index="1852">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} is being\nsalt cured!</language>
+	</row>
+	<row id="msg_0197_01853" index="1853">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} is hurt by\nSalt Cure!</language>
+	</row>
+	<row id="msg_0197_01854" index="1854">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} is hurt by\nSalt Cure!</language>
+	</row>
+	<row id="msg_0197_01855" index="1855">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} is hurt by\nSalt Cure!</language>
+	</row>
 </body>

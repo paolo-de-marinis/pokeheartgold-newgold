@@ -748,6 +748,10 @@
 #define BATTLE_SUBSCRIPT_NO_RETREAT                         447
 // Octolock holding its target, which the reference has no script for.
 #define BATTLE_SUBSCRIPT_OCTOLOCK                           448
+// Salt Cure salting its target, and the salt at a turn's end, which the
+// reference has no scripts for.
+#define BATTLE_SUBSCRIPT_SALT_CURE                          449
+#define BATTLE_SUBSCRIPT_SALT_CURE_DAMAGE                   450
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -829,6 +833,7 @@
 #define MOVE_SUBSCRIPT_PTR_ELECTRIFY                        223
 #define MOVE_SUBSCRIPT_PTR_NO_RETREAT                       224
 #define MOVE_SUBSCRIPT_PTR_OCTOLOCK                         225
+#define MOVE_SUBSCRIPT_PTR_SALT_CURE                        226
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

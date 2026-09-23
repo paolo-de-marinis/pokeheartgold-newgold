@@ -468,5 +468,28 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertLess(switching.index("ctx->moveConditions[i].octolocked = FALSE;"), switching.index("BATTLE_STATUS_BATON_PASS"))
         self.assertIn("ctx->moveConditions[i].octolocked = FALSE;", function(overlay, "InitFaintedWork"))
 
+    def test_salt_cure_salts_its_target(self):
+        # Pokemon Central (Sotto Sale): an added effect -- Sheer Force and a
+        # substitute keep it off -- then an eighth of the HP at each turn's
+        # end, a quarter for Water and Steel; Magic Guard spares it.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("SALT_CURE", "MOVE_EFFECT_SALT_CURE")
+        self.assertEqual(record("SALT_CURE")[6], 100)
+        script = effect_script("MOVE_EFFECT_SALT_CURE")
+        self.assertIn("BSCRIPT_VAR_SIDE_EFFECT_FLAGS_INDIRECT, MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_SALT_CURE", script)
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_SALT_CURE"), "BATTLE_SUBSCRIPT_SALT_CURE")
+        salting = subscript_named("BATTLE_SUBSCRIPT_SALT_CURE")
+        self.assertIn("SetMoveConditionFlag MOVE_SALT_CURE, BATTLER_CATEGORY_DEFENDER", salting)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('salt cure'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER", salting)
+        hurting = subscript_named("BATTLE_SUBSCRIPT_SALT_CURE_DAMAGE")
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('salt cure damage'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP", hurting)
+        umc = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_UpdateMonCondition")
+        step = umc[umc.index("case UMC_STATE_SALT_CURE:"):umc.index("case UMC_STATE_BINDING:")]
+        self.assertIn("GetBattlerAbility(ctx, battlerId) != ABILITY_MAGIC_GUARD", step)
+        self.assertEqual(step.count("TYPE_WATER"), 3)
+        self.assertEqual(step.count("TYPE_STEEL"), 3)
+        self.assertIn("ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, divisor);", step)
+
 if __name__ == "__main__":
     unittest.main()

@@ -11823,7 +11823,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_CORE_ENFORCER,
     BATTLE_SUBSCRIPT_ELECTRIFY,
     BATTLE_SUBSCRIPT_NO_RETREAT,
-    BATTLE_SUBSCRIPT_OCTOLOCK
+    BATTLE_SUBSCRIPT_OCTOLOCK,
+    BATTLE_SUBSCRIPT_SALT_CURE
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

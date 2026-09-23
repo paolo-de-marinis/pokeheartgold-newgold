@@ -1485,6 +1485,7 @@ typedef enum UpdateMonConditionState {
     UMC_STATE_BURN,
     UMC_STATE_NIGHTMARE,
     UMC_STATE_CURSE,
+    UMC_STATE_SALT_CURE,
     UMC_STATE_BINDING,
     UMC_STATE_OCTOLOCK,
     UMC_STATE_BAD_DREAMS,
@@ -1687,6 +1688,28 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
             if ((ctx->battleMons[battlerId].status2 & STATUS2_CURSE) && ctx->battleMons[battlerId].hp != 0) {
                 ctx->battlerIdTemp = battlerId;
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_CURSE_DAMAGE);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            ctx->stateUpdateMonCondition++;
+            break;
+        case UMC_STATE_SALT_CURE:
+            // Salt Cure takes an eighth of its target's maximum HP at the end
+            // of every turn it stays in, a quarter from a Water- or Steel-type;
+            // Magic Guard spares it (Pokemon Central, Sotto Sale).
+            if (ctx->moveConditions[battlerId].saltCured && ctx->battleMons[battlerId].hp != 0 && GetBattlerAbility(ctx, battlerId) != ABILITY_MAGIC_GUARD) {
+                int divisor = 8;
+
+                if (GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) == TYPE_WATER || GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL) == TYPE_WATER
+                    || ctx->battleMons[battlerId].type3 == TYPE_WATER
+                    || GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) == TYPE_STEEL || GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL) == TYPE_STEEL
+                    || ctx->battleMons[battlerId].type3 == TYPE_STEEL) {
+                    divisor = 4;
+                }
+                ctx->battlerIdTemp = battlerId;
+                ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, divisor);
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SALT_CURE_DAMAGE);
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 flag = 1;

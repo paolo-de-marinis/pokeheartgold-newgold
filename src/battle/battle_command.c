@@ -10259,6 +10259,12 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
     case MOVE_OCTOLOCK:
         ctx->moveConditions[battlerId].octolocked = TRUE;
         break;
+    // Hurt at each turn's end while it stays in; a second cure adds nothing,
+    // and CALC_TEMP says whether this one took for the script to say so.
+    case MOVE_SALT_CURE:
+        ctx->calcTemp = !ctx->moveConditions[battlerId].saltCured;
+        ctx->moveConditions[battlerId].saltCured = TRUE;
+        break;
     }
 
     return FALSE;

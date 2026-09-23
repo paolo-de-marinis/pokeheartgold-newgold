@@ -424,6 +424,10 @@ IMPLEMENTED_HERE = {
     # turn's end while its user stays (Pokemon Central, Tentacolock): effect
     # script 426.
     "OCTOLOCK": "MOVE_EFFECT_OCTOLOCK",
+    # Salt Cure salts its target, which loses an eighth of its HP at each
+    # turn's end, a quarter for Water and Steel (Pokemon Central, Sotto Sale):
+    # effect script 427.
+    "SALT_CURE": "MOVE_EFFECT_SALT_CURE",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -459,6 +463,8 @@ FIELDS_HERE = {
     # Snatch takes it and Mirror Move cannot copy it (Pokemon Central, Spalle
     # al Muro).
     "NO_RETREAT": {"flagsOn": ("FLAG_SNATCH",), "flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT", "FLAG_MIRROR_MOVE")},
+    # An added effect that always comes, so one Sheer Force can trade.
+    "SALT_CURE": {"effectChance": 100},
 }
 
 # The effects written here for those moves follow the reference's in

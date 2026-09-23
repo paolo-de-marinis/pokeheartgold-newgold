@@ -195,6 +195,18 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} can no longer\nescape because it used No Retreat!",
         r"The opposing {STRVAR_1 1, 0, 0} can no longer\nescape because it used No Retreat!",
     ]),
+    # Salt Cure, landing and at each turn's end. The engine leaves the move
+    # unimplemented; the later games' lines.
+    ("salt cure", [
+        r"{STRVAR_1 1, 0, 0} is being salt cured!",
+        r"The wild {STRVAR_1 1, 0, 0} is being\nsalt cured!",
+        r"The opposing {STRVAR_1 1, 0, 0} is being\nsalt cured!",
+    ]),
+    ("salt cure damage", [
+        r"{STRVAR_1 1, 0, 0} is hurt by\nSalt Cure!",
+        r"The wild {STRVAR_1 1, 0, 0} is hurt by\nSalt Cure!",
+        r"The opposing {STRVAR_1 1, 0, 0} is hurt by\nSalt Cure!",
+    ]),
 ]
 
 
