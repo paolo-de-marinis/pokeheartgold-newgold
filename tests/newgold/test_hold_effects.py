@@ -1127,9 +1127,11 @@ class MirrorHerbTests(unittest.TestCase):
         Starf Berry raise theirs from a script, not the stat command."""
         update = function(COMMANDS.read_text(), "BtlCmd_UpdateMonData")
         self.assertIn("int stage = varId == BMON_DATA_TEMP ? ctx->tempData : varId;", update)
-        self.assertIn("if (stage >= BMON_DATA_STAT_CHANGE_ATK && stage <= BMON_DATA_STAT_CHANGE_EVASION && !(opcode == 7 && val == 6)\n"
-                      "        && (var > 12 ? 12 : var) > before) {\n"
-                      "        RecordMirrorHerbStages(battleSystem, ctx, battlerId, stage - BMON_DATA_STAT_CHANGE_HP, (var > 12 ? 12 : var) - before);", update)
+        self.assertIn("if (stage >= BMON_DATA_STAT_CHANGE_ATK && stage <= BMON_DATA_STAT_CHANGE_EVASION && !(opcode == 7 && val == 6) && var > before) {\n"
+                      "        RecordMirrorHerbStages(battleSystem, ctx, battlerId, stage - BMON_DATA_STAT_CHANGE_HP, var - before);", update)
+        # Written after the stage is kept within +6, so what is copied is
+        # what the stage really gained.
+        self.assertLess(update.index("var = var < 0 ? 0 : var > 12 ? 12 : var;"), update.index("RecordMirrorHerbStages("))
         rage = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "TryBuildRage")
         self.assertIn("RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdTarget, STAT_ATK, 1);", rage)
 

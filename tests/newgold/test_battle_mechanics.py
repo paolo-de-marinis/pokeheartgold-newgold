@@ -587,6 +587,18 @@ class BelchMemoryTests(unittest.TestCase):
         self.assertIn("ctx->selfTurnData[ctx->battlerIdAttacker].berryNotEaten = TRUE;",
                       function(commands, "BtlCmd_CalcNaturalGiftParams"))
 
+class ScriptStageTests(unittest.TestCase):
+    def test_a_script_keeps_a_stage_within_six(self):
+        """Steam Engine adds six Speed stages at once through UpdateMonData,
+        which wrote whatever the sum was: at +1 it made the stage +7 and
+        beyond, past the end of the stat ratio table. The stat-change
+        command clamps; the reference's Steam Engine goes through it."""
+        update = function(COMMANDS.read_text(), "BtlCmd_UpdateMonData")
+        self.assertIn("if (stage >= BMON_DATA_STAT_CHANGE_HP && stage <= BMON_DATA_STAT_CHANGE_EVASION) {\n"
+                      "        var = var < 0 ? 0 : var > 12 ? 12 : var;", update)
+        self.assertLess(update.index("var = var < 0 ? 0 : var > 12 ? 12 : var;"), update.index("SetBattlerVar(ctx, battlerId, varId, &var);"))
+
+
 INFILTRATOR_FIXTURE = r"""
 #include <assert.h>
 #include <stdint.h>

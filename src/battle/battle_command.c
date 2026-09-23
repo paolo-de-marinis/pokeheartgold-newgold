@@ -2815,6 +2815,12 @@ BOOL BtlCmd_UpdateMonData(BattleSystem *battleSystem, BattleContext *ctx) {
     if (varId == BMON_DATA_ABILITY) {
         BattlerSetAbility(ctx, battlerId, var);
     }
+    // A stat stage stays between -6 and +6 whatever a script adds to it:
+    // Steam Engine adds six at once, and the stage it writes indexes the
+    // stat ratio table.
+    if (stage >= BMON_DATA_STAT_CHANGE_HP && stage <= BMON_DATA_STAT_CHANGE_EVASION) {
+        var = var < 0 ? 0 : var > 12 ? 12 : var;
+    }
 
     SetBattlerVar(ctx, battlerId, varId, &var);
     CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
@@ -2826,9 +2832,8 @@ BOOL BtlCmd_UpdateMonData(BattleSystem *battleSystem, BattleContext *ctx) {
     // copy is the stages actually gained). A stage set back to neutral is
     // reset, not raised (Shed Tail), and the swaps write through another
     // command.
-    if (stage >= BMON_DATA_STAT_CHANGE_ATK && stage <= BMON_DATA_STAT_CHANGE_EVASION && !(opcode == 7 && val == 6)
-        && (var > 12 ? 12 : var) > before) {
-        RecordMirrorHerbStages(battleSystem, ctx, battlerId, stage - BMON_DATA_STAT_CHANGE_HP, (var > 12 ? 12 : var) - before);
+    if (stage >= BMON_DATA_STAT_CHANGE_ATK && stage <= BMON_DATA_STAT_CHANGE_EVASION && !(opcode == 7 && val == 6) && var > before) {
+        RecordMirrorHerbStages(battleSystem, ctx, battlerId, stage - BMON_DATA_STAT_CHANGE_HP, var - before);
     }
 
     return FALSE;

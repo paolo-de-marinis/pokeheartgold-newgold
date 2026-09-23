@@ -3,9 +3,9 @@
     .data
 
 // Six stages at once, which the stat-change command cannot express: it decodes
-// one and two only. Motor Drive raises its one stage the same way, and the add
-// clamps at the ceiling, so the C only has to refuse when there is no room at
-// all.
+// one and two only. Motor Drive raises its one stage the same way, and
+// UpdateMonData keeps a stage within +6, so the C only has to refuse when
+// there is no room at all.
 _000:
     WaitButtonABTime 15
     PlayBattleAnimation BATTLER_CATEGORY_DEFENDER, BATTLE_ANIMATION_STAT_BOOST
