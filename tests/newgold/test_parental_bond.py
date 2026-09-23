@@ -259,6 +259,20 @@ class ParentalBondTests(unittest.TestCase):
                                        r"\s*CalcCrit\s*CalcDamage\s*RemoveItem BATTLER_CATEGORY_ATTACKER")
         self.assertNotIn("RemoveItem", natural_gift[natural_gift.index("_SECOND_STRIKE:"):])
 
+    def test_recoil_comes_once_for_both_strikes(self):
+        # Pokemon Central, Amorefiliale: the recoil is worked out from both
+        # strikes' damage and taken after the second; a first strike that
+        # fells the target is the last, and takes it.
+        subscripts = ROOT / "files/battledata/script/subscript"
+        for number in (63, 147, 246, 389):
+            script = next(subscripts.glob(f"subscript_{number:04d}_*.s")).read_text()
+            self.assertIn("GotoIfFirstHitOfParentalBond _FIRST_STRIKE", script, number)
+            self.assertRegex(script, r"_FIRST_STRIKE:\s*CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_DEFENDER, "
+                                     r"BMON_DATA_HP, 0, (\w+)\s*GoTo _RECOIL", number)
+            if number != 389:
+                self.assertIn("BSCRIPT_VAR_HP_CALC, BSCRIPT_VAR_ATTACKER_SHELL_BELL_DAMAGE_DEALT", script, number)
+                self.assertNotIn("BSCRIPT_VAR_HIT_DAMAGE", script, number)
+
 
 if __name__ == "__main__":
     unittest.main()
