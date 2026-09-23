@@ -4096,7 +4096,9 @@ BOOL BtlCmd_TryStealItem(BattleSystem *battleSystem, BattleContext *ctx) {
     } else if (ctx->battleMons[ctx->battlerIdTarget].unk88.custapBerryFlag || ctx->battleMons[ctx->battlerIdTarget].unk88.quickClawFlag) {
         BattleScriptIncrementPointer(ctx, adrs1);
     } else {
-        if (ctx->battleMons[ctx->battlerIdTarget].item && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
+        // Sticky Hold keeps nothing for a holder the move has felled (Pokemon
+        // Central, Antifurto, from the fifth generation).
+        if (ctx->battleMons[ctx->battlerIdTarget].item && ctx->battleMons[ctx->battlerIdTarget].hp && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
             BattleScriptIncrementPointer(ctx, adrs2);
         } else if (ctx->battleMons[ctx->battlerIdAttacker].item || CanStealHeldItem(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget) == FALSE) {
             BattleScriptIncrementPointer(ctx, adrs1);
@@ -5206,7 +5208,9 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrs = BattleScriptReadWord(ctx);
     int side = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget);
 
-    if (ctx->battleMons[ctx->battlerIdTarget].item && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
+    // Sticky Hold keeps nothing for a holder the move has felled (Pokemon
+    // Central, Antifurto, from the fifth generation).
+    if (ctx->battleMons[ctx->battlerIdTarget].item && ctx->battleMons[ctx->battlerIdTarget].hp && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
         // "{0}'s {1} made {2} ineffective!"
         ctx->buffMsg.id = msg_0197_00714;
         ctx->buffMsg.tag = TAG_NICKNAME_ABILITY_MOVE;
@@ -6170,7 +6174,9 @@ BOOL BtlCmd_TryPluck(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrs1 = BattleScriptReadWord(ctx);
     int adrs2 = BattleScriptReadWord(ctx);
 
-    if (ctx->battleMons[ctx->battlerIdTarget].item && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
+    // Sticky Hold keeps nothing for a holder the move has felled (Pokemon
+    // Central, Antifurto, from the fifth generation).
+    if (ctx->battleMons[ctx->battlerIdTarget].item && ctx->battleMons[ctx->battlerIdTarget].hp && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
         BattleScriptIncrementPointer(ctx, adrs1);
     } else if ((ctx->battleMons[ctx->battlerIdTarget].item && ctx->battleMons[ctx->battlerIdTarget].unk88.custapBerryFlag) || BattlerCheckSubstitute(ctx, ctx->battlerIdTarget) == TRUE || TryEatOpponentBerry(battleSystem, ctx, ctx->battlerIdTarget) != TRUE) {
         BattleScriptIncrementPointer(ctx, adrs2);

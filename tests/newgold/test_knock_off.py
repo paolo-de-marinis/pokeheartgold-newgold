@@ -184,6 +184,16 @@ class KnockOffTests(unittest.TestCase):
         self.assertIn("ItemCanChangeHands(ctx, ctx->battleMons[battlerIdLoser].item, battlerIdTaker, battlerIdLoser)",
                       function(overlay, "CanStealHeldItem"))
 
+    def test_sticky_hold_keeps_nothing_for_a_fallen_holder(self):
+        # Pokemon Central, Antifurto: from the fifth generation a holder the
+        # move felled loses its item to Thief, Covet, Knock Off, Pluck and Bug
+        # Bite all the same.
+        commands = read("src/battle/battle_command.c")
+        for name in ("BtlCmd_TryStealItem", "BtlCmd_TryKnockOff", "BtlCmd_TryPluck"):
+            self.assertIn("ctx->battleMons[ctx->battlerIdTarget].item && ctx->battleMons[ctx->battlerIdTarget].hp && "
+                          "CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD)",
+                          function(commands, name), name)
+
     def test_fling_throws_nothing_its_species_keeps(self):
         body = function(read("src/battle/overlay_12_0224E4FC.c"), "TryFling")
         self.assertIn("SpeciesKeepsItem(ctx->battleMons[battlerId].species, ctx->battleMons[battlerId].item)", body)
