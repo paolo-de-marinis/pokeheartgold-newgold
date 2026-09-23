@@ -29,6 +29,7 @@ import binascii
 import csv
 import functools
 import html
+import itertools
 import json
 import random
 import re
@@ -273,17 +274,20 @@ def learnsets():
 
 def learnset(index, level):
     """The moves this species knows at this level: the last four it learns.
-    The CLI's --party default, kept as it was; moveset() is the game's."""
+    The CLI's --party default, kept as it was; preset_moves() is the game's."""
     known = [move for learned, move in learnsets()[index] if learned <= level]
     return known[-4:]
 
 
-def moveset(index, level):
-    """InitBoxMonMoveset: the learnset up to the level, each move appended
-    unless already known (MOVE_APPEND_KNOWN), the first dropped when four
-    are known -- so a move learned twice is known once."""
+def preset_moves(species, level, form=0):
+    """The moves the game gives a Pokemon of this species at this level, a
+    wild one or one made new (InitBoxMonMoveset): the learnset of its form's
+    row up to the level, each move appended unless already known
+    (MOVE_APPEND_KNOWN), the first dropped when four are known -- so a move
+    learned twice is known once. A species written over a Pokemon brings
+    these with it."""
     moves = []
-    for learned, move in learnsets()[index]:
+    for learned, move in learnsets()[personal_row(species, form)]:
         if learned > level:
             break
         if move not in moves:
@@ -744,7 +748,7 @@ def owner(save):
 
 def parse_party(text):
     """SPECIES:LEVEL[:NATURE][:MOVE+MOVE+...],...; moves not given come from
-    the learnset at that level."""
+    the learnset at that level, moves given must be ones it can learn."""
     numbers = move_numbers()
     wanted = []
     for entry in text.split(","):
@@ -758,6 +762,11 @@ def parse_party(text):
                 moves.append(numbers[move])
             if len(moves) > 4:
                 raise SystemExit("a Pokemon knows four moves")
+            if parts[0].upper() in species_numbers():
+                try:
+                    check_moves(species_numbers()[parts[0].upper()], moves)
+                except Illegal as e:
+                    raise SystemExit(str(e))
         wanted.append((parts[0].upper(), int(parts[1]),
                        int(parts[2]) if len(parts) > 2 and parts[2] else None, moves))
     return wanted
@@ -1111,15 +1120,17 @@ def is_shiny(personality, ot_id):
     return ((ot_id >> 16) ^ (ot_id & 0xFFFF) ^ (personality >> 16) ^ (personality & 0xFFFF)) < 8
 
 
-def personality_for_nature(personality, nature, ot_id):
+def personality_for_nature(personality, nature, ot_id, shiny=None):
     """A personality whose nature (the value modulo 25) is `nature`, keeping
     what else the old one decided: the low byte (the gender and the ability
-    slot) and whether the Pokemon is shiny. Unown's letter, which is spread
-    over the whole value, is not kept."""
-    if personality % 25 == nature:
+    slot) and whether the Pokemon is shiny (or becoming `shiny`, for a low
+    byte changed first). Unown's letter, which is spread over the whole
+    value, is not kept."""
+    shiny = is_shiny(personality, ot_id) if shiny is None else shiny
+    if personality % 25 == nature and is_shiny(personality, ot_id) == shiny:
         return personality
     low = personality & 0xFFFF
-    if not is_shiny(personality, ot_id):
+    if not shiny:
         # 0x10000 is 11 modulo 25, so every nature is within 25 steps.
         for step in range(1, 0x10000):
             candidate = ((((personality >> 16) + step) & 0xFFFF) << 16) | low
@@ -1138,25 +1149,16 @@ def personality_for_nature(personality, nature, ot_id):
     raise ValueError(f"no personality gives nature {nature}")
 
 
-def _set_ability(a, b, personality, species):
-    """UpdateBoxMonAbility: the hidden ability when its bit is set and the
-    species has one, otherwise the slot the personality picks, turned over
-    by an Ability Capsule."""
-    record = personal_records()[species]
-    numbers = ability_numbers()
-    first, second = (numbers[name[len("ABILITY_"):]] for name in record["abilities"])
-    hidden = numbers.get(record.get("hiddenAbility", "ABILITY_NONE")[len("ABILITY_"):], 0)
-    if struct.unpack_from("<H", b, 0x1A)[0] & SWAP_ABILITY_BIT:
-        personality ^= 1
-    if (b[0x19] >> 6) & HIDDEN_ABILITY_BIT and hidden:
-        ability = hidden
-    elif second:
-        ability = second if personality & 1 else first
-    else:
-        ability = first
-    a[0x0D] = ability & 0xFF
-    word = struct.unpack_from("<I", a, 8)[0]
-    struct.pack_into("<I", a, 8, (word & 0x7FFFFFFF) | ((ability >> 8) & 1) << 31)
+def personality_for_bit(personality, bit, ot_id, record):
+    """A personality whose low bit -- the ability slot -- is `bit`, keeping
+    the nature, the gender and whether it is shiny: the nearest low byte
+    that gives this record the same gender, then personality_for_nature's
+    high half."""
+    gender = gender_of(record, personality)
+    low = min((c for c in range(256) if c & 1 == bit and gender_of(record, c) == gender),
+              key=lambda c: abs(c - (personality & 0xFF)))
+    return personality_for_nature((personality & 0xFFFFFF00) | low, personality % 25, ot_id,
+                                  shiny=is_shiny(personality, ot_id))
 
 
 # ResolveMonForm: the five retail species whose forms have base stats of
@@ -1174,6 +1176,235 @@ def personal_row(species, form):
         if species == numbers[base] and 0 < form < count:
             return numbers[first] + form - 1
     return species
+
+
+# ---------------------------------------------------------------------------
+# What a species can know and be, read from what the build compiles: the
+# level-up learnsets, the machines, the tutors, the egg moves, the
+# evolutions and the abilities.
+
+@tree_cache
+def machines():
+    """Each machine by its place in hg-engine's numbering -- the bit a
+    species' record sets -- as (move, item): sTMHMMoves in src/item.c, and
+    the place ItemToTMHMId gives each machine item."""
+    text = source("src/item.c").read_text()
+    table = text[text.index("sTMHMMoves[] = {"):]
+    moves = move_numbers()
+    taught = [moves[name] for name in re.findall(r"\bMOVE_(\w+),", table[:table.index("};")])]
+    body = text[text.index("u16 ItemToTMHMId("):]
+    body = body[:body.index("\n}\n")]
+    items = constants("include/constants/items.h", "ITEM_")
+    item_at = {int(place): items[item] for item, place in
+               re.findall(r"itemId == (ITEM_\w+)\) \{\s*return (\d+);", body)}
+    for low, high, base, add in re.findall(r"itemId >= (ITEM_\w+) && itemId <= (ITEM_\w+)\) \{\s*"
+                                           r"return itemId - (ITEM_\w+)(?: \+ (\d+))?;", body):
+        for item in range(items[low], items[high] + 1):
+            item_at[item - items[base] + int(add or 0)] = item
+    return [(move, item_at.get(place)) for place, move in enumerate(taught)]
+
+
+def machine_places(record):
+    """The places GetTMHMCompatBySpeciesAndForm finds set in a record: the
+    template packs TM n at n - 1, HM n after the NUM_TMS TMs, and each of
+    "machines" at its own place."""
+    tms = constants("include/constants/items.h", "NUM_")["NUM_TMS"]
+    return [n - 1 for n in record["tms"]] + [tms + n - 1 for n in record["hms"]] + record.get("machines", [])
+
+
+@tree_cache
+def tutor_records():
+    """waza_oshie.json's records in the order the build writes them, each
+    the moves of sTutorMoves (src/field/scrcmd_move_tutor.c) its TUTOR_
+    bits name."""
+    text = source("src/field/scrcmd_move_tutor.c").read_text()
+    table = text[text.index("sTutorMoves[] = {"):]
+    moves = move_numbers()
+    taught = [moves[name] for name in re.findall(r"\{\s*MOVE_(\w+),", table[:table.index("};")])]
+    slots = constants("include/constants/moves.h", "TUTOR_")
+    return [[taught[slots[name]] for name in entry["moves"]]
+            for entry in json.loads(source("files/fielddata/wazaoshie/waza_oshie.json").read_text())["tutor"]]
+
+
+def tutor_moves(row):
+    """GetMoveTutorLearnsetIndex: a species' record (a retail form's row
+    for its form), counted without species 0 and, past Arceus, without the
+    egg and the bad egg."""
+    index = (row - 2 if row > species_numbers()["ARCEUS"] else row) - 1
+    records = tutor_records()
+    return records[index] if 0 <= index < len(records) else []
+
+
+@tree_cache
+def egg_moves():
+    """LoadEggMoves: kowaza_list.narc's one member, MAX_EGG_MOVES halfwords
+    a species, each list ended by 0xFFFF."""
+    sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+    import wotbl
+    width = constants("include/constants/daycare.h", "MAX_")["MAX_EGG_MOVES"]
+    member = wotbl.read_narc(source("files/fielddata/sodateya/kowaza_list.narc").read_bytes())[0][0]
+    records = struct.iter_unpack(f"<{width}H", member[:len(member) - len(member) % (2 * width)])
+    return [list(itertools.takewhile(lambda move: move != 0xFFFF, record)) for record in records]
+
+
+@tree_cache
+def pre_evolutions():
+    """evo.json, which the build packs into evo.narc for GetMonEvolution,
+    turned around: the species each one evolves from."""
+    numbers = species_numbers()
+    out = {}
+    for entry in json.loads(source("files/poketool/personal/evo.json").read_text())["evoTable"]:
+        for evo in entry["evos"]:
+            if evo["target"] != "SPECIES_NONE":
+                out.setdefault(numbers[evo["target"][len("SPECIES_"):]], set()).add(
+                    numbers[entry["baseSpecies"][len("SPECIES_"):]])
+    return out
+
+
+@tree_cache
+def form_bases():
+    """sFormBaseSpecies (src/pokedex.c): each form's base species."""
+    text = source("src/pokedex.c").read_text()
+    text = text[text.index("sFormBaseSpecies["):]
+    numbers = species_numbers()
+    return {numbers[form]: numbers[base] for form, base in
+            re.findall(r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_(\w+)", text[:text.index("};")])}
+
+
+@tree_cache
+def incense_parents():
+    """sIncenseMons (src/get_egg.c): the species an egg hatches as instead
+    of the baby when neither parent holds the incense."""
+    text = source("src/get_egg.c").read_text()
+    text = text[text.index("sIncenseMons[]"):]
+    numbers = species_numbers()
+    return {numbers[parent] for parent in
+            re.findall(r"\{\s*SPECIES_\w+,\s*ITEM_\w+,\s*SPECIES_(\w+)\s*\}", text[:text.index("};")])}
+
+
+def evolution_line(species):
+    """The species and every species it can have been before evolving,
+    nearest first, each with whether an egg can hatch as it (a first stage,
+    or the parent an incense baby hatches as without its incense). A form
+    with no pre-evolution of its own takes its base's."""
+    before = lambda s: pre_evolutions().get(s) or pre_evolutions().get(form_bases().get(s), set())
+    line, todo = [], [species]
+    while todo:
+        s = todo.pop(0)
+        if s not in [t for t, _ in line]:
+            line.append((s, not before(s) or s in incense_parents()))
+            todo += sorted(before(s))
+    return line
+
+
+def learnable_moves(species, form=0):
+    """Every move this species can know, whatever its level, with every way
+    it is learnt, never only the first: {move: [source, ...]}. A source is
+    {"how": "level", "level": n} (0: on evolving), {"how": "machine",
+    "item": the TM, HM or TR}, {"how": "tutor"} or {"how": "egg"}, with
+    "from": the species when it is a pre-evolution's -- a move learnt
+    before evolving is kept. Its own form's row (ResolveMonForm) for its
+    learnset, machines and tutors; egg moves are those of the species an
+    egg of its line hatches as. A pre-evolution's machine or tutor that the
+    species has itself is the same way, and is not repeated."""
+    out = {}
+    for s, hatches in evolution_line(species):
+        row = personal_row(s, form) if s == species else s
+        found = [(move, {"how": "level", "level": level}) for level, move in learnsets()[row]]
+        found += [(machines()[place][0], {"how": "machine", "item": machines()[place][1]})
+                  for place in machine_places(personal_records()[row]) if place < len(machines())]
+        found += [(move, {"how": "tutor"}) for move in tutor_moves(row)]
+        found += [(move, {"how": "egg"}) for move in (egg_moves()[s] if hatches and s < len(egg_moves()) else [])]
+        for move, how in found:
+            if s != species and how["how"] in ("machine", "tutor") and how in out.get(move, []):
+                continue
+            how = how if s == species else {**how, "from": s}
+            if move and how not in out.setdefault(move, []):
+                out[move].append(how)
+    return out
+
+
+class Illegal(ValueError):
+    """What a species cannot have: moves it never learns, or an ability
+    slot it has no ability in."""
+
+    def __init__(self, species, moves=(), ability=None):
+        self.species, self.moves, self.ability = species, list(moves), ability
+        what = [move_table()[m]["name"] for m in self.moves] or [f"an ability in slot {ability}"]
+        super().__init__(f"{species_name(species)} cannot have {', '.join(what)}")
+
+
+def check_moves(species, moves, form=0, kept=()):
+    """Illegal for a move the species cannot learn -- one of `kept`, an
+    event move the Pokemon already knows, excepted."""
+    legal = learnable_moves(species, form)
+    wrong = [move for move in moves if move and move not in legal and move not in kept]
+    if wrong:
+        raise Illegal(species, moves=wrong)
+
+
+HIDDEN_SLOT = 2     # the slot MON_HIDDEN_ABILITY_BIT picks; 0 and 1 the personality's
+
+
+def species_abilities(species, form=0):
+    """The abilities a Pokemon of this species can have, each with the slot
+    the game keeps it by: 0 and 1 the personality's low bit (turned over by
+    an Ability Capsule's bit), HIDDEN_SLOT the hidden-ability bit. A second
+    ability that is none, or the first again, is no slot of its own."""
+    record = personal_records()[personal_row(species, form)]
+    numbers, names = ability_numbers(), bank(ABILITY_NAMES)
+    first, second, hidden = (numbers.get(name[len("ABILITY_"):], 0) for name in
+                             (*record["abilities"], record.get("hiddenAbility", "ABILITY_NONE")))
+    slots = ((0, first), (1, second if second != first else 0), (HIDDEN_SLOT, hidden))
+    return [{"slot": slot, "id": ability, "name": names[ability] if ability < len(names) else str(ability)}
+            for slot, ability in slots if ability]
+
+
+def ability_slot(species, form, hidden_bit, low_bit):
+    """UpdateBoxMonAbility's choice: the hidden ability when its bit is set
+    and the species has one, else the second when the low bit (turned by a
+    Capsule) asks for it and there is one, else the first."""
+    have = {entry["slot"] for entry in species_abilities(species, form)}
+    if hidden_bit and HIDDEN_SLOT in have:
+        return HIDDEN_SLOT
+    return 1 if low_bit and 1 in have else 0
+
+
+def _ability_bits(mon):
+    """The hidden-ability bit and the low bit UpdateBoxMonAbility reads."""
+    b = mon["blocks"][1]
+    swap = struct.unpack_from("<H", b, 0x1A)[0] & SWAP_ABILITY_BIT
+    return bool((b[0x19] >> 6) & HIDDEN_ABILITY_BIT), (mon["personality"] ^ swap) & 1
+
+
+def _set_ability(mon):
+    """UpdateBoxMonAbility: the ability field from the bits the Pokemon
+    keeps, as the game writes it again on evolving or changing form."""
+    a, b = mon["blocks"][:2]
+    species, form = struct.unpack_from("<H", a, 0)[0], b[0x18] >> 3
+    slot = ability_slot(species, form, *_ability_bits(mon))
+    ability = next((entry["id"] for entry in species_abilities(species, form) if entry["slot"] == slot), 0)
+    a[0x0D] = ability & 0xFF
+    word = struct.unpack_from("<I", a, 8)[0]
+    struct.pack_into("<I", a, 8, (word & 0x7FFFFFFF) | ((ability >> 8) & 1) << 31)
+
+
+def _choose_ability(mon, slot):
+    """The bits that make UpdateBoxMonAbility give this slot, so the game
+    keeps it, through evolution too: the hidden-ability bit, or for the
+    first two a personality whose low bit (turned by a Capsule's) picks it
+    -- personality_for_bit, nature, gender and shininess kept."""
+    a, b = mon["blocks"][:2]
+    species, form = struct.unpack_from("<H", a, 0)[0], b[0x18] >> 3
+    have = {entry["slot"] for entry in species_abilities(species, form)}
+    if slot not in have:
+        raise Illegal(species, ability=slot)
+    b[0x19] = (b[0x19] & ~(HIDDEN_ABILITY_BIT << 6) & 0xFF) | (HIDDEN_ABILITY_BIT << 6 if slot == HIDDEN_SLOT else 0)
+    swap = struct.unpack_from("<H", b, 0x1A)[0] & SWAP_ABILITY_BIT
+    if slot != HIDDEN_SLOT and 1 in have and _ability_bits(mon)[1] != slot:
+        mon["personality"] = personality_for_bit(mon["personality"], slot ^ swap, struct.unpack_from("<I", a, 4)[0],
+                                                 personal_records()[personal_row(species, form)])
+    _set_ability(mon)
 
 
 def _set_party_stats(mon, level):
@@ -1205,15 +1436,23 @@ def _set_party_stats(mon, level):
 
 
 def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
-             ivs=None, evs=None, friendship=None):
+             ivs=None, evs=None, friendship=None, ability=None):
     """One stored Pokemon with these things changed as the game changes them,
     and everything else -- its trainer, its ribbons, its met data -- as it was.
 
-    A new species gets form 0, its gender and ability worked out again, and
-    the species' name unless it has a nickname; a level is the experience
-    that level costs; a nature is a new personality (personality_for_nature)
-    with any Mint taken away; a move it already knew keeps its PP and PP Ups,
-    a new one gets full PP. A party Pokemon's stats follow.
+    A new species gets form 0, its gender worked out again, the species'
+    name unless it has a nickname, and -- unless they are given -- its own
+    moves at that level (preset_moves) and the ability the game gives it
+    from the bits the Pokemon keeps (UpdateBoxMonAbility), never the old
+    species' left behind. Moves given must be ones the species can learn
+    (learnable_moves); only a Pokemon keeping its species keeps a move it
+    already knew that the rules do not list, an event's. An ability is its
+    slot (species_abilities), written the way the game keeps it
+    (_choose_ability). A level is the experience that level costs; a nature
+    is a new personality (personality_for_nature) with any Mint taken away;
+    a move it already knew keeps its PP and PP Ups, a new one gets full PP.
+    A party Pokemon's stats follow. Illegal, a ValueError, says what the
+    species cannot have.
     """
     mon = open_mon(raw)
     if mon is None or not mon["ok"]:
@@ -1225,6 +1464,9 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
     exp = struct.unpack_from("<I", a, 8)[0] & EXP_BITS
     current = mon["party"][4] if mon["party"] is not None else level_for(records[old_species]["growthRate"], exp)
     restat = any(v is not None for v in (level, nature, ivs, evs)) or (species not in (None, old_species))
+    knew = [struct.unpack_from("<H", b, 2 * i)[0] for i in range(4)]
+    if level is not None and not 1 <= level <= 100:
+        raise ValueError("a level is 1 to 100")
     if nature is not None:
         mon["personality"] = personality_for_nature(mon["personality"], nature, ot_id)
         struct.pack_into("<H", b, 0x1A, struct.unpack_from("<H", b, 0x1A)[0] & ~MINT_MASK)
@@ -1236,17 +1478,22 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
         if not struct.unpack_from("<I", b, 0x10)[0] >> 31:
             for i, code in enumerate(encode_text(species_name(species), POKEMON_NAME_LENGTH)):
                 struct.pack_into("<H", c, 2 * i, code)
-        _set_ability(a, b, mon["personality"], species)
         level = current if level is None else level
+        if moves is None:
+            moves = preset_moves(species, level)
+        knew = []
+        if ability is None:
+            _set_ability(mon)
+    if ability is not None:
+        _choose_ability(mon, ability)
     if level is not None:
-        if not 1 <= level <= 100:
-            raise ValueError("a level is 1 to 100")
         growth = records[struct.unpack_from("<H", a, 0)[0]]["growthRate"]
         word = struct.unpack_from("<I", a, 8)[0]
         struct.pack_into("<I", a, 8, (word & ~EXP_BITS & 0xFFFFFFFF) | experience_for(growth, level))
     if item is not None:
         struct.pack_into("<H", a, 2, item)
     if moves is not None:
+        check_moves(struct.unpack_from("<H", a, 0)[0], moves, b[0x18] >> 3, kept=knew)
         known = [(struct.unpack_from("<H", b, 2 * i)[0], b[8 + i], b[12 + i]) for i in range(4)]
         wanted = [move for move in moves if move][:4]
         table = move_table()
@@ -1268,10 +1515,12 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
     return seal_mon(mon)
 
 
-def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, party=True):
+def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, party=True, ability=None):
     """A Pokemon of the player's own, the way build_mon makes one, with a
     personality of its own (not shiny), full PP, the species' name as the
-    game prints it and the stats CalcMonStats gives."""
+    game prints it and the stats CalcMonStats gives. Moves given must be
+    ones it can learn, an ability one of its slots; without them, its
+    moves at that level and the ability its personality picks."""
     const = next((row["const"] for row in species_table() if row["id"] == species and row["pick"]), None)
     if const is None:
         raise ValueError(f"there is no species {species}")
@@ -1280,9 +1529,13 @@ def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, 
         personality = random.getrandbits(32)
     if nature is not None:
         personality = personality_for_nature(personality, nature, me["id"])
+    if moves:
+        check_moves(species, moves)
     mon = open_mon(build_mon(const, level, ivs=ivs, evs=evs, item=item, personality=personality,
-                             moves=moves or moveset(species, level), ot_codes=me["codes"], ot_id=me["id"],
+                             moves=moves or preset_moves(species, level), ot_codes=me["codes"], ot_id=me["id"],
                              ot_gender=me["gender"]))
+    if ability is not None:
+        _choose_ability(mon, ability)
     _, b, c, _ = mon["blocks"]
     table = move_table()
     for i in range(4):
@@ -1372,7 +1625,8 @@ def describe_mon(raw):
            "nature": nature, "nature_name": natures[nature] if nature < len(natures) else str(nature),
            "nature_born": p % 25, "mint": mint - 1 if mint else None,
            "ability": ability, "ability_name": abilities[ability] if ability < len(abilities) else str(ability),
-           "hidden_ability": bool((b[0x19] >> 6) & HIDDEN_ABILITY_BIT),
+           "hidden_ability": bool((b[0x19] >> 6) & HIDDEN_ABILITY_BIT), "ability_bit": _ability_bits(mon)[1],
+           "ability_slot": ability_slot(species, b[0x18] >> 3, *_ability_bits(mon)),
            "item": item, "item_name": "" if not item else items[item]["name"] if item in items else f"#{item}",
            "types": mon_types(species, ability, item),
            "friendship": a[0x0C], "moves": moves,

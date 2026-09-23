@@ -227,7 +227,7 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(len(data["natures"]), 25)
         self.assertIn(sv.species_numbers()["PIKACHU"], data["dex"])
         n = sv.species_numbers()["CHIKORITA"]
-        self.assertEqual(self.ok(f"/api/learnset?species={n}&level=20"), sv.moveset(n, 20))
+        self.assertEqual(self.ok(f"/api/learnset?species={n}&level=20"), sv.preset_moves(n, 20))
 
     def test_no_build_is_not_a_bad_save(self):
         """With no build to measure the layout from (a make clean, a wrong

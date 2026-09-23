@@ -1162,7 +1162,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.reply(200, {"rows": found[:FLAG_ROWS], "total": len(found)})
             if url.path == "/api/learnset":
                 species = number(q.get("species"), 1, len(sv.personal_records()) - 1, "specie")
-                return self.reply(200, sv.moveset(species, number(q.get("level"), 1, 100, "livello")))
+                return self.reply(200, sv.preset_moves(species, number(q.get("level"), 1, 100, "livello")))
             if url.path == "/api/icon":
                 png = icon(number(q.get("species"), 0, 0xFFFF, "specie"), number(q.get("form", 0), 0, 255, "forma"),
                            q.get("egg") in ("1", "true"))

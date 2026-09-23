@@ -233,7 +233,8 @@ class SaveditLibraryTests(unittest.TestCase):
         save = self.open()
         before = sv.party_raw(save)
         n, moves = sv.species_numbers(), sv.move_numbers()
-        known = sv.describe_mon(before[2])["moves"][0]
+        # Raichu's Double Team, which a Garchomp can learn too (a machine).
+        known = next(m for m in sv.describe_mon(before[2])["moves"] if m["id"] == moves["DOUBLE_TEAM"])
         raw = sv.edit_mon(before[2], species=n["GARCHOMP"], level=50, nature=sv.bank(sv.NATURE_NAMES).index("Jolly"),
                           item=234, moves=[known["id"], moves["DRAGON_CLAW"]], ivs=[31, 31, 31, 0, 0, 31],
                           evs=[0, 252, 4, 252, 0, 0])
@@ -287,11 +288,106 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(mail(raw), bytes(len(sv.MAIL_INIT)))
         self.assertEqual(mail(sv.edit_mon(raw, item=137)), sv.MAIL_INIT, "an all-zero one is mended on an edit")
 
+    def test_what_a_species_can_learn(self):
+        """Every way, at any level, checked against the data by hand:
+        Charizard's record in personal.json has TM35 (sTMHMMoves' 35th is
+        Flamethrower), its wotbl learnset has Flamethrower at 30 and Air
+        Slash at 0 (on evolving), waza_oshie.json gives it TUTOR_HEAT_WAVE,
+        Charmander's kowaza record has Metal Claw; Vulpix learns Incinerate
+        at 16, Ninetales never does; and Surf reaches none of them."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        items = {row["const"]: row["id"] for row in sv.item_table().values()}
+        charizard = sv.learnable_moves(n["CHARIZARD"])
+        flamethrower = charizard[moves["FLAMETHROWER"]]
+        self.assertIn({"how": "level", "level": 30}, flamethrower)
+        self.assertIn({"how": "machine", "item": items["ITEM_TM35"]}, flamethrower, "every source, not the first")
+        self.assertIn({"how": "level", "level": 24, "from": n["CHARMANDER"]}, flamethrower)
+        self.assertNotIn({"how": "machine", "item": items["ITEM_TM35"], "from": n["CHARMANDER"]}, flamethrower,
+                         "the same TM as its own is not another way")
+        self.assertIn({"how": "level", "level": 0}, charizard[moves["AIR_SLASH"]])
+        self.assertIn({"how": "tutor"}, charizard[moves["HEAT_WAVE"]])
+        self.assertEqual(charizard[moves["METAL_CLAW"]], [{"how": "egg", "from": n["CHARMANDER"]}])
+        self.assertNotIn(moves["SURF"], charizard)
+        self.assertEqual(sv.learnable_moves(n["NINETALES"])[moves["INCINERATE"]],
+                         [{"how": "level", "level": 16, "from": n["VULPIX"]}])
+        self.assertEqual(sv.tutor_moves(n["CHARIZARD"]), [moves[name] for name in (
+            "MUD_SLAP", "FURY_CUTTER", "THUNDER_PUNCH", "FIRE_PUNCH", "OMINOUS_WIND", "SNORE", "AIR_CUTTER",
+            "OUTRAGE", "TWISTER", "HEAT_WAVE", "SWIFT", "TAILWIND", "HEADBUTT")], "its own record, not the next")
+        self.assertEqual([s for s, _ in sv.evolution_line(n["NINETALES_ALOLAN"])],
+                         [n["NINETALES_ALOLAN"], n["VULPIX_ALOLAN"]], "a regional form's own line")
+        self.assertEqual(sv.evolution_line(n["MARILL"]), [(n["MARILL"], True), (n["AZURILL"], True)],
+                         "Marill hatches without the Sea Incense")
+
+        me = sv.owner(self.open())
+        young = sv.new_mon(n["CHARIZARD"], 5, me)
+        grown = sv.describe_mon(sv.edit_mon(young, moves=[moves["FLARE_BLITZ"], moves["METAL_CLAW"]]))
+        self.assertEqual([m["name"] for m in grown["moves"]], ["Flare Blitz", "Metal Claw"],
+                         "learnt at 62, known at 5")
+        with self.assertRaises(sv.Illegal) as refused:
+            sv.edit_mon(young, moves=[moves["SURF"], moves["EMBER"]])
+        self.assertEqual((refused.exception.species, refused.exception.moves), (n["CHARIZARD"], [moves["SURF"]]))
+        with self.assertRaises(sv.Illegal):
+            sv.new_mon(n["CHARIZARD"], 5, me, moves=[moves["SURF"]])
+
+    def test_an_event_move_stays_while_untouched(self):
+        """A Pokemon the game made may know a move no rule lists: it keeps it
+        while it keeps its species and the move, and loses nothing else."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        event = sv.build_mon("CHARIZARD", 50, moves=[moves["SURF"], moves["EMBER"]])
+        kept = sv.describe_mon(sv.edit_mon(event, moves=[moves["SURF"], moves["FLAMETHROWER"]], level=51))
+        self.assertEqual([m["name"] for m in kept["moves"]], ["Surf", "Flamethrower"])
+        with self.assertRaises(sv.Illegal):
+            sv.edit_mon(event, moves=[moves["SURF"], moves["WATERFALL"]])
+        with self.assertRaises(sv.Illegal, msg="a new species: the old moves sent back are refused too"):
+            sv.edit_mon(event, species=n["CHARMELEON"], moves=[moves["SURF"], moves["EMBER"]])
+        self.assertEqual(sv.describe_mon(sv.edit_mon(event, item=1))["moves"][0]["name"], "Surf")
+
+    def test_a_new_species_brings_its_own_moves_and_ability(self):
+        """preset_moves at its level, never the old moves, and the ability
+        UpdateBoxMonAbility gives the new species from the Pokemon's bits."""
+        n = sv.species_numbers()
+        raichu = sv.party_raw(self.open())[2]
+        was = sv.describe_mon(raichu)
+        mon = sv.describe_mon(sv.edit_mon(raichu, species=n["PONYTA"]))
+        self.assertEqual([m["id"] for m in mon["moves"]], sv.preset_moves(n["PONYTA"], 20))
+        self.assertEqual(mon["moves"][0]["pp"], mon["moves"][0]["pp_max"])
+        slot = sv.ability_slot(n["PONYTA"], 0, was["hidden_ability"], was["ability_bit"])
+        self.assertEqual(mon["ability"], {a["slot"]: a["id"] for a in sv.species_abilities(n["PONYTA"])}[slot])
+        self.assertEqual((mon["nature"], mon["ivs"], mon["evs"], mon["item"], mon["level"]),
+                         (was["nature"], was["ivs"], was["evs"], was["item"], was["level"]))
+        with self.assertRaises(sv.Illegal):
+            sv.edit_mon(raichu, species=n["CHARMANDER"], ability=1)   # Blaze and nothing else
+
+    def test_an_ability_is_kept_the_way_the_game_keeps_it(self):
+        """Ponyta: Run Away, Flash Fire, and Flame Body hidden. The second
+        is the personality's low bit -- here 0x7E, a female one step from
+        the male 0x7F, so the byte moves further to keep her female -- and
+        the hidden one is MON_HIDDEN_ABILITY_BIT, which the game reads again
+        on evolving: a Rapidash made of her has Flame Body too."""
+        n = sv.species_numbers()
+        self.assertEqual([(a["slot"], a["name"]) for a in sv.species_abilities(n["PONYTA"])],
+                         [(0, "Run Away"), (1, "Flash Fire"), (sv.HIDDEN_SLOT, "Flame Body")])
+        self.assertEqual([a["slot"] for a in sv.species_abilities(n["CHARMANDER"])], [0, sv.HIDDEN_SLOT])
+        she = sv.build_mon("PONYTA", 30, personality=0x5A5A007E, ot_id=0x00010002)
+        was = sv.describe_mon(she)
+        self.assertEqual((was["ability_slot"], was["gender"]), (0, 1))
+        second = sv.describe_mon(sv.edit_mon(she, ability=1))
+        self.assertEqual((second["ability_name"], second["ability_slot"], second["personality"] & 1), ("Flash Fire", 1, 1))
+        self.assertEqual((second["gender"], second["nature"], second["shiny"]), (was["gender"], was["nature"], was["shiny"]))
+        hidden = sv.edit_mon(she, ability=sv.HIDDEN_SLOT)
+        read = sv.describe_mon(hidden)
+        self.assertEqual((read["ability_name"], read["hidden_ability"], read["ability_slot"]), ("Flame Body", True, 2))
+        self.assertEqual(read["personality"], was["personality"], "the bit, not the personality")
+        evolved = sv.describe_mon(sv.edit_mon(hidden, species=n["RAPIDASH"]))
+        self.assertEqual((evolved["ability_name"], evolved["hidden_ability"]), ("Flame Body", True))
+        back = sv.describe_mon(sv.edit_mon(hidden, ability=0))
+        self.assertEqual((back["ability_name"], back["hidden_ability"]), ("Run Away", False))
+
     def test_a_new_pokemon_knows_each_move_once(self):
         """InitBoxMonMoveset skips a move already known: Metapod learns
         Harden twice and knows it once, Pidgeotto keeps Sand Attack once."""
         n, moves = sv.species_numbers(), sv.move_numbers()
-        self.assertEqual(sv.moveset(n["METAPOD"], 1), [moves["HARDEN"]])
+        self.assertEqual(sv.preset_moves(n["METAPOD"], 1), [moves["HARDEN"]])
         for species, level in (("METAPOD", 1), ("PIDGEOTTO", 5)):
             known = [m["id"] for m in sv.describe_mon(sv.new_mon(n[species], level, sv.owner(self.open())))["moves"]]
             self.assertEqual(len(known), len(set(known)), species)
