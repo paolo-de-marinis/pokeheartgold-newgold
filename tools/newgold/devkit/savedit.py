@@ -94,6 +94,20 @@ def constants(header, prefix):
     return {m.group(1): int(m.group(2), 0) for m in re.finditer(rf"#define ({prefix}\w+)\s+(0x[0-9A-Fa-f]+|\d+)", text)}
 
 
+def c_function(path, head):
+    """The body of the C function in `path` whose definition starts with `head`."""
+    text = source(path).read_text()
+    at = re.search(re.escape(head) + r"[^;{]*\{", text).start()     # not a prototype
+    return text[at:text.index("\n}\n", at)]
+
+
+def c_table(path, name):
+    """What a C array in `path` is initialized with, braces and all."""
+    text = source(path).read_text()
+    at = re.search(rf"\b{name}\[[^=;]*\]\s*=\s*\{{", text).end()
+    return text[at:text.index("};", at)]
+
+
 # ---------------------------------------------------------------------------
 # The save's layout, as this tree's headers give it: the host compiler reads
 # them the way config.mk has the game's read -- its defines, 32-bit pointers,
@@ -216,6 +230,11 @@ def _layout():
         # The bits a Pokemon keeps its hidden ability and its Capsule in.
         "HIDDEN_ABILITY_BIT": "MON_HIDDEN_ABILITY_BIT", "SWAP_ABILITY_BIT": "MON_SWAP_ABILITY_SLOT_BIT",
         "CHUNK_TILES": "MAP_TILES_COUNT_X",
+        # GetGenderBySpeciesAndPersonality's, and how many of an item a slot takes.
+        "MON_RATIO_MALE": "MON_RATIO_MALE", "MON_RATIO_FEMALE": "MON_RATIO_FEMALE",
+        "MON_RATIO_UNKNOWN": "MON_RATIO_UNKNOWN", "MON_MALE": "MON_MALE", "MON_FEMALE": "MON_FEMALE",
+        "MON_GENDERLESS": "MON_GENDERLESS",
+        "BAG_SLOT_QUANTITY_MAX": "BAG_SLOT_QUANTITY_MAX", "BAG_TMHM_QUANTITY_MAX": "BAG_TMHM_QUANTITY_MAX",
     }
     values, (natdex,) = compile_c(tuple(names.values()), (("PlayerProfile", ".natDex = 1"),))
     out = dict(zip(names, values))
@@ -319,31 +338,31 @@ def mon_checksum(data):
     return total & 0xFFFF
 
 
-# GetSubstruct's table: which of the four blocks sits at each of the four
-# offsets, chosen by bits 13 to 17 of the personality value.
-SHUFFLE = [
-    (0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3), (0, 3, 1, 2), (0, 2, 3, 1), (0, 3, 2, 1),
-    (1, 0, 2, 3), (1, 0, 3, 2), (2, 0, 1, 3), (3, 0, 1, 2), (2, 0, 3, 1), (3, 0, 2, 1),
-    (1, 2, 0, 3), (1, 3, 0, 2), (2, 1, 0, 3), (3, 1, 0, 2), (2, 3, 0, 1), (3, 2, 0, 1),
-    (1, 2, 3, 0), (1, 3, 2, 0), (2, 1, 3, 0), (3, 1, 2, 0), (2, 3, 1, 0), (3, 2, 1, 0),
-    (0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3), (0, 3, 1, 2), (0, 2, 3, 1), (0, 3, 2, 1),
-    (1, 0, 2, 3), (1, 0, 3, 2),
-]
+@tree_cache
+def block_order():
+    """GetSubstruct (src/pokemon.c): the bits of the personality it picks a
+    row by, as (mask, shift), and its rows -- where block A, B, C and D sit,
+    counted in blocks."""
+    body = c_function("src/pokemon.c", "PokemonDataBlock *GetSubstruct(")
+    rows = [tuple(int(v, 0) // BLOCK for v in re.findall(r"0x[0-9A-Fa-f]+|\d+", row))
+            for row in re.findall(r"\{([^{}]*)\}", body[body.index("= {"):body.index("};")])]
+    mask, shift = re.search(r"pid = \(\(pid & (0x[0-9A-Fa-f]+)\) >> (\d+)\);", body).groups()
+    return int(mask, 16), int(shift), rows
 
 
 def shuffle_order(personality):
     """Where block A, B, C and D go, for this personality."""
-    return SHUFFLE[(personality & 0x3E000) >> 13]
+    mask, shift, rows = block_order()
+    return rows[(personality & mask) >> shift]
 
 
-# ModifyStatByNature, over gNatureStatMods: +10% on one stat, -10% on another.
-NATURE_MODS = [
-    (0, 0, 0, 0, 0), (1, -1, 0, 0, 0), (1, 0, -1, 0, 0), (1, 0, 0, -1, 0), (1, 0, 0, 0, -1),
-    (-1, 1, 0, 0, 0), (0, 0, 0, 0, 0), (0, 1, -1, 0, 0), (0, 1, 0, -1, 0), (0, 1, 0, 0, -1),
-    (-1, 0, 1, 0, 0), (0, -1, 1, 0, 0), (0, 0, 0, 0, 0), (0, 0, 1, -1, 0), (0, 0, 1, 0, -1),
-    (-1, 0, 0, 1, 0), (0, -1, 0, 1, 0), (0, 0, -1, 1, 0), (0, 0, 0, 0, 0), (0, 0, 0, 1, -1),
-    (-1, 0, 0, 0, 1), (0, -1, 0, 0, 1), (0, 0, -1, 0, 1), (0, 0, 0, -1, 1), (0, 0, 0, 0, 0),
-]
+@tree_cache
+def nature_mods():
+    """gNatureStatMods (src/pokemon.c), a row a nature: 1 on the stat
+    ModifyStatByNature raises by a tenth, -1 on the one it lowers, over the
+    stats after HP."""
+    return [tuple(int(v) for v in row.split(",") if v.strip())
+            for row in re.findall(r"\{([^{}]*)\}", c_table("src/pokemon.c", "gNatureStatMods"))]
 
 
 @tree_cache
@@ -438,11 +457,12 @@ def ability_of(record, personality):
 
 
 def gender_of(record, personality):
-    """GetGenderBySpeciesAndPersonality: male, female or none (0, 1, 2)."""
+    """GetGenderBySpeciesAndPersonality: MON_MALE, MON_FEMALE or MON_GENDERLESS."""
     ratio = GENDER_RATIO(record["genderRatio"])
-    if ratio in (0, 254, 255):
-        return {0: 0, 254: 1, 255: 2}[ratio]
-    return 1 if ratio > (personality & 0xFF) else 0
+    fixed = {MON_RATIO_MALE: MON_MALE, MON_RATIO_FEMALE: MON_FEMALE, MON_RATIO_UNKNOWN: MON_GENDERLESS}
+    if ratio in fixed:
+        return fixed[ratio]
+    return MON_FEMALE if ratio > (personality & 0xFF) else MON_MALE
 
 
 @tree_cache
@@ -540,7 +560,7 @@ def stat_line(record, level, iv, evs, nature):
     out = [hp]
     for i in range(1, 6):
         value = (base[i] * 2 + iv[i] + ev[i] // 4) * level // 100 + 5
-        mod = NATURE_MODS[nature][i - 1]
+        mod = nature_mods()[nature][i - 1]
         if mod > 0:
             value = value * 110 // 100
         elif mod < 0:
@@ -551,21 +571,57 @@ def stat_line(record, level, iv, evs, nature):
     return out
 
 
-# struct Bag, in its declared order. Each slot is { u16 id; u16 quantity; }
-# and the whole thing is 2252 bytes, which is what the ROM reports for
-# Save_Bag_sizeof -- so the pockets below are counted, not guessed.
-POCKETS = [("items", 165 + 32), ("keyItems", 50 + 42), ("TMsHMs", 101),
-           ("mail", 12), ("medicine", 40), ("berries", 64),
-           ("balls", 24 + 2), ("battleItems", 30)]
+@tree_cache
+def pockets():
+    """The bag's pockets, in the order the game shows them (sPockets,
+    src/start_menu.c): each one's field in struct Bag, the POCKET_ constant
+    items are filed in it by (Bag_GetItemPocket's switch, src/bag.c), and
+    where its slots start in the block and how many there are."""
+    text = source("include/bag_types_def.h").read_text()
+    text = text[text.index("typedef struct Bag {"):]
+    fields = re.findall(r"ItemSlot (\w+)\[\w+\];", text[:text.index("} Bag;")])
+    switch = c_function("src/bag.c", "static u32 Bag_GetItemPocket(")
+    const_of = {field: const for const, field in re.findall(r"case (POCKET_\w+):\s*\*itemSlots = bag->(\w+);", switch)}
+    values, _ = compile_c(tuple(e for f in fields for e in (f"__builtin_offsetof(Bag, {f})",
+                                                             f"sizeof(((Bag *)0)->{f}) / sizeof(ItemSlot)")))
+    rows = {const_of[f]: {"name": f, "const": const_of[f], "at": values[2 * i], "slots": values[2 * i + 1]}
+            for i, f in enumerate(fields)}
+    order = [c for c in re.findall(r"POCKET_\w+", c_table("src/start_menu.c", "sPockets")) if c in rows]
+    return [rows[c] for c in order] + [row for c, row in rows.items() if c not in order]
 
 
 def pocket_at(name):
-    at = 0
-    for pocket, count in POCKETS:
-        if pocket == name:
-            return at, count
-        at += 4 * count
-    raise SystemExit(f"no pocket called {name}")
+    """Where a pocket's slots start in the bag, and how many there are."""
+    found = next((p for p in pockets() if p["name"] == name), None)
+    if found is None:
+        raise SystemExit(f"no pocket called {name}")
+    return found["at"], found["slots"]
+
+
+def pocket_const(name):
+    """The POCKET_ constant of a pocket, by its field in struct Bag."""
+    return next(p["const"] for p in pockets() if p["name"] == name)
+
+
+@tree_cache
+def item_kind(test):
+    """The items one of src/item.c's tests -- ItemIsTM, ItemIsHM, ItemIsTR --
+    says yes to: the ranges and the single items it names."""
+    body = c_function("src/item.c", f"BOOL {test}(")
+    items = constants("include/constants/items.h", "ITEM_")
+    out = {items[name] for name in re.findall(r"itemId == (ITEM_\w+)", body)}
+    for low, high in re.findall(r"itemId >= (ITEM_\w+) && itemId <= (ITEM_\w+)", body):
+        out.update(range(items[low], items[high] + 1))
+    return frozenset(out)
+
+
+def item_limit(item):
+    """How many of an item the bag takes (Bag_GetItemSlotForAdd): of a TM
+    one, as New Gold never uses one up; of another machine
+    BAG_TMHM_QUANTITY_MAX; of anything else BAG_SLOT_QUANTITY_MAX."""
+    if pocket_const(item_table()[item]["pocket"]) == "POCKET_TMHMS":
+        return 1 if item in item_kind("ItemIsTM") else BAG_TMHM_QUANTITY_MAX
+    return BAG_SLOT_QUANTITY_MAX
 
 
 def put_in_pocket(block, pocket, item, quantity):
@@ -759,7 +815,7 @@ def charcode(text):
     table = (ROOT / "include/constants/charcode.h").read_text()
     def value(name):
         return int(re.search(rf"#define {name}\s+(\d+)", table).group(1))
-    upper, digit, eos = value("CHAR_A"), value("CHAR_0"), 0xFFFF
+    upper, digit, eos = value("CHAR_A"), value("CHAR_0"), EOS
     out = []
     for character in text:
         if "A" <= character <= "Z":
@@ -841,9 +897,9 @@ def owner(save):
     the gender -- what the game compares to decide a Pokemon was traded."""
     profile = save.block("SAVE_PLAYERDATA")
     codes = list(struct.unpack_from(f"<{PLAYER_NAME_LENGTH + 1}H", profile, NAME))
-    codes = codes[:codes.index(0xFFFF) + 1] if 0xFFFF in codes else codes
+    codes = codes[:codes.index(EOS) + 1] if EOS in codes else codes
     return {"codes": codes, "id": struct.unpack_from("<I", profile, TRAINER_ID)[0],
-            "gender": profile[TRAINER_ID + 4 + 4]}
+            "gender": profile[GENDER]}
 
 
 def parse_party(text):
@@ -891,7 +947,7 @@ def add_machines(save, machines):
     first = int(re.search(r"#define ITEM_TM01\s+(\d+)",
                           (ROOT / "include/constants/items.h").read_text()).group(1))
     for n in machines:
-        put_in_pocket(block, "TMsHMs", first + n - 1, 1)
+        put_in_pocket(block, next(p["name"] for p in pockets() if p["const"] == "POCKET_TMHMS"), first + n - 1, 1)
 
 
 def mark_dex(save, names):
@@ -969,15 +1025,20 @@ def set_position(save, map_id, x, y, direction=0):
 # ---------------------------------------------------------------------------
 # The game's own names for things: its message banks and its character set.
 
-# BufferSpeciesName, BufferMoveName, BufferItemName, BufferAbilityName and
-# BufferNatureName in src/message_format.c, and the map sections
-# src/field/draw_map_name.c prints on entering one.
-SPECIES_NAMES, MOVE_NAMES, ITEM_NAMES, ABILITY_NAMES, NATURE_NAMES, MAPSEC_NAMES = 237, 750, 222, 720, 34, 279
+# The banks the game prints these names from: each the one a function of
+# src/message_format.c opens (the map sections' is the one the field's
+# map name reads too).
+SPECIES_NAMES, MOVE_NAMES, ITEM_NAMES, ABILITY_NAMES, NATURE_NAMES, MAPSEC_NAMES = (
+    "BufferSpeciesName", "BufferMoveName", "BufferItemName", "BufferAbilityName", "BufferNatureName",
+    "BufferLandmarkName")
 
 
 @tree_cache
-def bank(number):
-    """A message bank's rows, by index, as the game prints them."""
+def bank(which):
+    """A message bank's rows, by index, as the game prints them: the bank
+    `which`, a function of src/message_format.c, opens."""
+    body = c_function("src/message_format.c", f"void {which}(")
+    number = int(re.search(r"NARC_msg_msg_(\d+)_bin", body).group(1))
     sys.path.insert(0, str(ROOT / "tools/newgold/import"))
     import gmm
     source(gmm.path_of(number))
@@ -1006,7 +1067,7 @@ def decode_text(codes):
     decode, _ = charmap()
     out = []
     for code in codes:
-        if code == 0xFFFF:
+        if code == EOS:
             break
         out.append(decode.get(code, "?"))
     return "".join(out)
@@ -1020,7 +1081,7 @@ def encode_text(text, length):
         raise ValueError(f"{missing[0]!r} is not in the game's character set")
     if len(text) > length:
         raise ValueError(f"{text!r} is longer than {length}")
-    return [encode[c] for c in text] + [0xFFFF]
+    return [encode[c] for c in text] + [EOS]
 
 
 def species_name(species):
@@ -1065,24 +1126,19 @@ def species_table():
     return out
 
 
-# The pockets item_data.csv files items in, by the names struct Bag gives them.
-POCKET_OF = {"POCKET_ITEMS": "items", "POCKET_KEY_ITEMS": "keyItems", "POCKET_TMHMS": "TMsHMs",
-             "POCKET_MAIL": "mail", "POCKET_MEDICINE": "medicine", "POCKET_BERRIES": "berries",
-             "POCKET_BALLS": "balls", "POCKET_BATTLE_ITEMS": "battleItems"}
-
-
 @tree_cache
 def item_table():
     """Every item: its name, its constant, and the pocket it goes in
     (fieldPocket, which the csv gives by the item's name)."""
     names = bank(ITEM_NAMES)
     with source("files/itemtool/itemdata/item_data.csv").open() as f:
-        pockets = {row["item"]: POCKET_OF.get(row["fieldPocket"]) for row in csv.DictReader(f)}
+        pocket_of = {p["const"]: p["name"] for p in pockets()}
+        filed = {row["item"]: pocket_of.get(row["fieldPocket"]) for row in csv.DictReader(f)}
     by_id = {}
     for m in re.finditer(r"^#define (ITEM_\w+)\s+(\d+)\s*$",
                          source("include/constants/items.h").read_text(), re.M):
         by_id.setdefault(int(m.group(2)), m.group(1))
-    return {number: {"id": number, "const": const, "pocket": pockets.get(const),
+    return {number: {"id": number, "const": const, "pocket": filed.get(const),
                      "name": names[number] if number < len(names) else const}
             for number, const in sorted(by_id.items())}
 
@@ -1245,20 +1301,28 @@ def personality_for_bit(personality, bit, ot_id, record):
                                   shiny=is_shiny(personality, ot_id))
 
 
-# ResolveMonForm: the five retail species whose forms have base stats of
-# their own, the row of form 1 and the number of forms (the *_FORM_MAX of
-# include/constants/pokemon.h). Every other form is a species of its own.
-FORM_ROWS = {"DEOXYS": ("DEOXYS_ATK", 4), "WORMADAM": ("WORMADAM_SANDY", 3), "GIRATINA": ("GIRATINA_ORIGIN", 2),
-             "SHAYMIN": ("SHAYMIN_SKY", 2), "ROTOM": ("ROTOM_HEAT", 6)}
+@tree_cache
+def form_rows():
+    """ResolveMonForm's cases (src/pokemon.c): for each species whose forms
+    have base stats of their own, its base form, how many forms it has, and
+    the personal record of its first other form and which form that is."""
+    cases = re.findall(r"case SPECIES_(\w+):\s*if \(form != (\w+) && form <= (\w+) - 1\) \{\s*"
+                       r"return SPECIES_(\w+) \+ form - (\w+);", c_function("src/pokemon.c", "int ResolveMonForm("))
+    if not cases:
+        raise SystemExit("ResolveMonForm in src/pokemon.c no longer reads the way savedit expects")
+    values, _ = compile_c(tuple(name for case in cases for name in (case[1], case[2], case[4])))
+    numbers = species_numbers()
+    return {numbers[case[0]]: (values[3 * i], values[3 * i + 1], numbers[case[3]], values[3 * i + 2])
+            for i, case in enumerate(cases)}
 
 
 def personal_row(species, form):
     """ResolveMonForm: the personal record CalcMonStats reads for a species
     in this form."""
-    numbers = species_numbers()
-    for base, (first, count) in FORM_ROWS.items():
-        if species == numbers[base] and 0 < form < count:
-            return numbers[first] + form - 1
+    if species in form_rows():
+        base, count, row, first = form_rows()[species]
+        if form != base and form <= count - 1:
+            return row + form - first
     return species
 
 
@@ -1945,19 +2009,20 @@ def bag(save):
     block = save.block("SAVE_BAG")
     items = item_table()
     out = {}
-    for pocket, count in POCKETS:
-        at, _ = pocket_at(pocket)
+    for pocket in pockets():
+        at, count = pocket["at"], pocket["slots"]
         slots = [struct.unpack_from("<HH", block, at + 4 * s) for s in range(count)]
-        out[pocket] = [{"item": item, "quantity": quantity,
-                        "name": items[item]["name"] if item in items else f"#{item}"}
-                       for item, quantity in slots if item and quantity]
+        out[pocket["name"]] = [{"item": item, "quantity": quantity,
+                                "name": items[item]["name"] if item in items else f"#{item}"}
+                               for item, quantity in slots if item and quantity]
     return out
 
 
 def _machine_order(slot):
-    """SortTMHMPocket: the TMs, then the TRs, then the HMs, each by item id."""
-    const = item_table().get(slot[0], {}).get("const", "")
-    return (slot[1] == 0, 2 if const.startswith("ITEM_HM") else 1 if const.startswith("ITEM_TR") else 0, slot[0])
+    """SortTMHMPocket's MachineSortGroup: the TMs, then the TRs, then the
+    HMs, each by item id."""
+    group = 2 if slot[0] in item_kind("ItemIsHM") else 1 if slot[0] in item_kind("ItemIsTR") else 0
+    return (slot[1] == 0, group, slot[0])
 
 
 def set_item(save, item, quantity):
@@ -1969,8 +2034,7 @@ def set_item(save, item, quantity):
     entry = item_table().get(item)
     if not entry or not entry["pocket"]:
         raise ValueError(f"item {item} goes in no pocket")
-    pocket = entry["pocket"]
-    limit = 999 if pocket != "TMsHMs" else 1 if entry["const"].startswith("ITEM_TM") else 99
+    pocket, limit = entry["pocket"], item_limit(item)
     if not 0 <= quantity <= limit:
         raise ValueError(f"{entry['name']}: 0 to {limit}")
     block = save.block("SAVE_BAG")
@@ -1988,9 +2052,9 @@ def set_item(save, item, quantity):
         added = True
     if not quantity:
         slots = [s for s in slots if s[1]] + [s for s in slots if not s[1]]
-    if added and pocket == "berries":
+    if added and pocket_const(pocket) == "POCKET_BERRIES":
         slots.sort(key=lambda s: (s[1] == 0, s[0]))
-    if added and pocket == "TMsHMs":
+    if added and pocket_const(pocket) == "POCKET_TMHMS":
         slots.sort(key=_machine_order)
     for s, (got, many) in enumerate(slots):
         struct.pack_into("<HH", block, at + 4 * s, got, many)

@@ -847,14 +847,15 @@ class Library:
             raise Refused(str(e))
 
     def op_item(self, save, a):
-        item, quantity = number(a["item"], 1, 0xFFFF, "strumento"), number(a["quantity"], 0, 999, "quantità")
+        item = number(a["item"], 1, 0xFFFF, "strumento")
         entry = sv.item_table().get(item)
         if not entry or not entry["pocket"]:
             raise Refused("questo strumento non va in nessuna tasca")
-        if entry["pocket"] == "TMsHMs" and quantity > (1 if entry["const"].startswith("ITEM_TM") else 99):
-            raise Refused(f"{entry['name']}: una MT è una sola (New Gold non le consuma), una MN al massimo 99")
+        limit = sv.item_limit(item)
+        quantity = number(a["quantity"], 0, limit, f"{entry['name']}, quantità" +
+                          (" (una MT è una sola: New Gold non le consuma)" if limit == 1 else ""))
         held = sv.bag(save)[entry["pocket"]]
-        if quantity and item not in {i["item"] for i in held} and len(held) >= dict(sv.POCKETS)[entry["pocket"]]:
+        if quantity and item not in {i["item"] for i in held} and len(held) >= sv.pocket_at(entry["pocket"])[1]:
             raise Refused(f"la tasca è piena ({len(held)} posti)")
         sv.set_item(save, item, quantity)
 
@@ -1134,7 +1135,7 @@ def tables():
     return {"species": sv.species_table(), "moves": sv.move_table(),
             "items": list(sv.item_table().values()), "natures": sv.bank(sv.NATURE_NAMES),
             "maps": [m for m in sv.map_table().values() if standable(m["id"])], "dex": sv.dex_species(),
-            "pockets": [[name, count] for name, count in sv.POCKETS]}
+            "pockets": [[p["name"], p["slots"]] for p in sv.pockets()]}
 
 
 # ---------------------------------------------------------------------------
