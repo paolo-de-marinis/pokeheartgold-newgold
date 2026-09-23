@@ -75,6 +75,7 @@ typedef struct {
     u8 gemBoostingMove; int battlerIdAttacker;
     BattleMon battleMons[4];
     struct { int helpingHandFlag; } turnData[4];
+    struct { u8 statLoweredThisTurn; } moveConditions[4];
 } BattleContext;
 typedef struct { int power, type, category; } MoveTbl;
 

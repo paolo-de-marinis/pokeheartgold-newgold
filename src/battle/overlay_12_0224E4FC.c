@@ -9876,6 +9876,13 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower *= 2;
     }
 
+    // Lash Out doubles when a stat of the user's has been lowered this turn
+    // (Pokemon Central, Sfogarabbia; CalcBaseDamage.c:498 at d0380a487). What
+    // only swaps, copies or resets stages lowers nothing.
+    if (moveNo == MOVE_LASH_OUT && ctx->moveConditions[battlerIdAttacker].statLoweredThisTurn) {
+        movePower *= 2;
+    }
+
     if ((ctx->battleMons[battlerIdAttacker].moveEffectFlags & MOVE_EFFECT_FLAG_CHARGE) && moveType == TYPE_ELECTRIC) {
         movePower *= 2;
     }

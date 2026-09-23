@@ -9,6 +9,8 @@ into battler 1 does (22 * 100 * P / 100) / 50 + 2.
 import unittest
 
 from test_ability_behaviour import damage_program, run_c
+from test_level_cap import ROOT
+from test_repels import function
 
 
 class SolarBladeTests(unittest.TestCase):
@@ -29,6 +31,36 @@ class SolarBladeTests(unittest.TestCase):
     // Nothing else is halved.
     EXPECT(SOLAR(MOVE_LEAF_BLADE), 57);
 """))
+
+
+class LashOutTests(unittest.TestCase):
+    def test_it_doubles_after_a_drop_this_turn(self):
+        """75 is 35, and 150 is 68 once a stat of the user's has been lowered
+        this turn (Pokemon Central, Sfogarabbia; CalcBaseDamage.c:498 at
+        d0380a487); a drop on another battler, or on another move, does
+        nothing."""
+        run_c(self, damage_program(r"""
+#define HIT(move, attacker, target) CalcMoveDamage(&bs, &ctx, move, 0, 0, 0, TYPE_DARK, attacker, target, 1)
+    reset(4); S.move = (MoveTbl){ 75, TYPE_DARK, CATEGORY_PHYSICAL };
+    EXPECT(HIT(MOVE_LASH_OUT, 0, 1), 35);
+    ctx.moveConditions[0].statLoweredThisTurn = 1;
+    EXPECT(HIT(MOVE_LASH_OUT, 0, 1), 68);
+    EXPECT(HIT(MOVE_CRUNCH, 0, 1), 35);
+    EXPECT(HIT(MOVE_LASH_OUT, 2, 1), 35);
+    EXPECT(HIT(MOVE_LASH_OUT, 1, 0), 35);
+"""))
+
+    def test_a_drop_is_remembered_until_the_next_turn(self):
+        """Every drop the stat-change command makes marks its Pokemon, and the
+        marks go when a turn's choices begin -- after the entry abilities of
+        what was sent out for it. A Pokemon loaded into a slot starts with its
+        move conditions cleared."""
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        self.assertIn("ctx->moveConditions[ctx->battlerIdStatChange].statLoweredThisTurn = TRUE;",
+                      function(commands, "BtlCmd_ChangeStatStage"))
+        self.assertIn("ctx->moveConditions[battlerId].statLoweredThisTurn = FALSE;",
+                      function(controller, "BattleControllerPlayer_SelectionScreenInit"))
 
 
 if __name__ == "__main__":

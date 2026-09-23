@@ -2724,8 +2724,10 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
         if (mon->statChanges[stat + 1] < 0) {
             mon->statChanges[stat + 1] = 0;
         }
-        // For an Eject Pack, asked once the move is over.
+        // For an Eject Pack, asked once the move is over, and for Lash Out,
+        // for the rest of the turn.
         ctx->statLoweredBattlers |= MaskOfFlagNo(ctx->battlerIdStatChange);
+        ctx->moveConditions[ctx->battlerIdStatChange].statLoweredThisTurn = TRUE;
     }
 
     return FALSE;

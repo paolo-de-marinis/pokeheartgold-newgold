@@ -330,6 +330,7 @@ typedef struct MoveConditions {
     u8 laserFocusTimer : 2;        // Laser Focus: every hit is a critical hit while this runs
     u8 glaiveRush : 1;             // Glaive Rush: takes double, and cannot dodge, until it moves again
     u8 throatChopTimer : 2;        // Throat Chop: no sound moves while this runs
+    u8 statLoweredThisTurn : 1;    // a stat of its was lowered this turn: Lash Out doubles
 } MoveConditions;
 
 #define BATTLE_SCRIPT_BUFFER_WORDS 650

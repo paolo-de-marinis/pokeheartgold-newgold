@@ -416,6 +416,9 @@ static void BattleControllerPlayer_SelectionScreenInit(BattleSystem *battleSyste
         ctx->unk_0[battlerId] = 0;
         ctx->battleMons[battlerId].moveEffectFlagsTemp = ctx->battleMons[battlerId].moveEffectFlags;
         ctx->unk_314C[battlerId] = 0;
+        // A turn starts here, after the entry abilities of the Pokemon sent
+        // out for it: what they lowered was lowered before it.
+        ctx->moveConditions[battlerId].statLoweredThisTurn = FALSE;
     }
 
     ov12_0223BB64(battleSystem, 0);
