@@ -441,49 +441,57 @@ class HexTests(unittest.TestCase):
 
 
 class AbilityBlockListTests(unittest.TestCase):
-    # Gastro Acid and Worry Seed each refuse a list of abilities; the lists
-    # are the reference's, Comatose among them, with retail's Griseous Orb
-    # kept. Role Play and Skill Swap ask the ability table instead
-    # (test_ability_interactions).
+    # Gastro Acid, Worry Seed and Simple Beam refuse what the ability table
+    # says nothing suppresses or writes over -- the reference's
+    # AbilityCantSupress, which its move-failure check asks for all three --
+    # and each keeps only its own few beside it: what its reference script
+    # adds, and what is listed under ADDED. Role Play and Skill Swap ask the
+    # table too (test_ability_interactions).
     SCRIPTS = {
         "subscript/subscript_0163_GastroAcid.s": "subscripts/subscript_0163_SUPPRESS_TARGET_ABILITY.s",
         "subscript/subscript_0167_WorrySeed.s": "subscripts/subscript_0167_GIVE_TARGET_INSOMNIA.s",
+        "subscript/subscript_0338_GiveTargetSimple.s": "subscripts/subscript_0377_GIVE_TARGET_SIMPLE.s",
     }
+    TABLE = "CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY_FLAGS, ABILITY_FLAG_FAILS_SUPPRESS, _"
     ENTRY = re.compile(r"(?:CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_(\w+), BMON_DATA_(?:ABILITY|HELD_ITEM), (\w+)"
                        r"|CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_(\w+), (ABILITY_\w+)), _")
 
     def entries(self, text):
         return {(a or c, b or d) for a, b, c, d in self.ENTRY.findall(text)}
 
-    def test_comatose_is_refused(self):
-        expected = {
-            "subscript/subscript_0163_GastroAcid.s": {"DEFENDER"},
-            "subscript/subscript_0167_WorrySeed.s": {"DEFENDER"},
-        }
-        for name, battlers in expected.items():
-            found = {b for b, a in self.entries((ROOT / "files/battledata/script" / name).read_text())
-                     if a == "ABILITY_COMATOSE"}
-            self.assertEqual(found, battlers, name)
+    @staticmethod
+    def unsuppressable():
+        from test_ability_interactions import ability_flag_table
+        return {ability for ability, flags in ability_flag_table().items() if "ABILITY_FLAG_FAILS_SUPPRESS" in flags}
 
-    # What the port refuses beyond the reference, and why: Gastro Acid also
-    # turns away the two the games' unsuppressible list has and the
-    # reference's list lacks, since its mark would not hold on them, and a
-    # target holding an Ability Shield (Pokemon Central, Scudo abilita).
+    def test_they_ask_the_table(self):
+        # Comatose, and Gen 9's Zero to Hero and Tera Shift, which Worry Seed
+        # and Simple Beam missed (Pokemon Central, Supercambio, Teramorfosi).
+        self.assertLessEqual({"ABILITY_COMATOSE", "ABILITY_ZERO_TO_HERO", "ABILITY_TERA_SHIFT"}, self.unsuppressable())
+        for name in self.SCRIPTS:
+            text = (ROOT / "files/battledata/script" / name).read_text()
+            self.assertIn(self.TABLE, text, name)
+            self.assertLess(text.index(self.TABLE), text.index("Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION"), name)
+            self.assertEqual({a for _, a in self.entries(text)} & self.unsuppressable(), set(), name)
+
+    # What the port refuses beyond the reference's script, and why: a target
+    # holding an Ability Shield (Pokemon Central, Scudo abilita), and
+    # retail's Griseous Orb.
     ADDED = {
-        "subscript/subscript_0163_GastroAcid.s": {("DEFENDER", "ABILITY_ZEN_MODE"), ("DEFENDER", "ABILITY_TERA_SHIFT"),
-                                                  ("DEFENDER", "ITEM_ABILITY_SHIELD")},
+        "subscript/subscript_0163_GastroAcid.s": {("DEFENDER", "ITEM_ABILITY_SHIELD")},
+        "subscript/subscript_0167_WorrySeed.s": {("DEFENDER", "ITEM_GRISEOUS_ORB")},
     }
 
     def test_the_lists_are_the_reference_s(self):
         from test_repels import REFERENCE, revision
         if REFERENCE is None:
             self.skipTest("no reference checkout")
+        table = {("DEFENDER", ability) for ability in self.unsuppressable()}
         for name, theirs in self.SCRIPTS.items():
             ours = self.entries((ROOT / "files/battledata/script" / name).read_text())
             reference = self.entries(revision(REFERENCE, "d0380a487", "data/battle_scripts/" + theirs))
-            added = self.ADDED.get(name, set()) | {(b, "ITEM_GRISEOUS_ORB") for b in ("ATTACKER", "DEFENDER")}
-            self.assertEqual(ours - added, reference, name)
-            self.assertLessEqual(self.ADDED.get(name, set()), ours, name)
+            self.assertLessEqual(reference, ours | table, name)
+            self.assertEqual(ours - reference, self.ADDED.get(name, set()), name)
 
 
 class SubstituteTests(unittest.TestCase):

@@ -246,6 +246,10 @@ class BattleAbilityWidthTests(unittest.TestCase):
         spared = set(re.findall(r"case (ABILITY_\w+):", function(pokemon, "AbilityIsUnsuppressable"))) - {"ABILITY_NEUTRALIZING_GAS"}
         script = (ROOT / "files/battledata/script/subscript/subscript_0163_GastroAcid.s").read_text()
         refused = set(re.findall(r"BMON_DATA_ABILITY, (ABILITY_\w+), _034", script))
+        # And what the ability table says nothing suppresses, which it asks.
+        if "BMON_DATA_ABILITY_FLAGS, ABILITY_FLAG_FAILS_SUPPRESS, _034" in script:
+            from test_ability_interactions import ability_flag_table
+            refused |= {ability for ability, flags in ability_flag_table().items() if "ABILITY_FLAG_FAILS_SUPPRESS" in flags}
         self.assertTrue(spared)
         self.assertEqual(spared - refused, set())
 
