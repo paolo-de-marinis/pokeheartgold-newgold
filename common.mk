@@ -164,6 +164,11 @@ patch_mwasmarm:
 	$(ASPATCH) -q $(MWAS)
 
 ifeq ($(NODEP),)
+# fixdep also gives every file after the first line an empty rule of its own,
+# as gcc's -MP does: a header or an asm include deleted later is then a
+# prerequisite that is gone, and the object is rebuilt, rather than a target
+# with no rule, which stopped the next build until the .d was removed by hand
+# (overlay_12_battle_command.inc after 5d57ce707).
 ifneq ($(WINPATH),)
 PROJECT_ROOT_NT := $(shell $(WINPATH) -w $(PROJECT_ROOT) | $(SED) 's/\\/\//g')
 # The compiler names the tree's files by their absolute path; they are written
@@ -172,11 +177,13 @@ PROJECT_ROOT_NT := $(shell $(WINPATH) -w $(PROJECT_ROOT) | $(SED) 's/\\/\//g')
 # names (a .naix) matches the rule that makes it.
 define fixdep
 $(SED) -i 's/\r//g; s/\\/\//g; s/\/$$/\\/g; s#$(PROJECT_ROOT_NT)#$(WORK_DIR)/#g' $(1)
+$(SED) -n 's/^\t(.*[^ \\])[ \\]*$$/\1:/p' $(1) > $(1).tmp && cat $(1).tmp >> $(1) && $(RM) $(1).tmp
 touch -r $(1:%.d=%.o) $(1)
 endef
 else
 define fixdep
 $(SED) -i 's/\r//g; s/\\/\//g; s/\/$$/\\/g' $(1)
+$(SED) -n 's/^\t(.*[^ \\])[ \\]*$$/\1:/p' $(1) > $(1).tmp && cat $(1).tmp >> $(1) && $(RM) $(1).tmp
 touch -r $(1:%.d=%.o) $(1)
 endef
 endif

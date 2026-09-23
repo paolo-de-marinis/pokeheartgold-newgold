@@ -10,8 +10,10 @@ and a wine started outside the project's prefix makes one in ~/.wine.
 import os
 import re
 import subprocess
+import tempfile
 import unittest
 from functools import lru_cache
+from pathlib import Path
 
 from test_level_cap import ROOT
 
@@ -61,6 +63,35 @@ class BuildRuleTests(unittest.TestCase):
         self.assertEqual(fixed, "build/heartgold.us/src/foo.o: src/foo.c \\\n"
                                 "\t./include/global.h \\\n"
                                 "\t./files/data/resdat.naix\n")
+
+    def test_a_deleted_include_does_not_stop_the_next_build(self):
+        """A dependency file named its headers and includes with no rule for
+        any of them, so one deleted later -- overlay_12_battle_command.inc
+        after 5d57ce707 -- was a target make had no rule for, and the build
+        stopped until the .d was removed by hand. Runs each fixdep on a
+        dependency file as the tools write one, with sed -r as platform.mk
+        sets SED, deletes an include it names and builds again."""
+        env = {k: v for k, v in os.environ.items() if not k.startswith("MAKE")}
+        env["LC_ALL"] = "C"
+        bodies = re.findall(r"define fixdep\n(.*?)\nendef", (ROOT / "common.mk").read_text(), re.S)
+        self.assertEqual(len(bodies), 2)
+        for body in bodies:
+            with tempfile.TemporaryDirectory(prefix="newgold-fixdep-") as directory:
+                path = Path(directory)
+                (path / "Makefile").write_text(
+                    "SED := sed -r\nPROJECT_ROOT_NT := Z:/nowhere\nWORK_DIR := .\n"
+                    f"define fixdep\n{body}\nendef\n"
+                    "x.o: x.s\n\ttouch $@\n\tcp written.d x.d\n\t$(call fixdep,x.d)\n"
+                    "include $(wildcard x.d)\n")
+                (path / "written.d").write_text("x.o: x.s \\\r\n\tgone.inc \\\r\n\tkept.inc \r\n")
+                for name in ("x.s", "gone.inc", "kept.inc"):
+                    (path / name).touch()
+                first = subprocess.run(["make", "-C", directory], capture_output=True, text=True, env=env)
+                self.assertEqual(first.returncode, 0, first.stderr)
+                (path / "gone.inc").unlink()
+                second = subprocess.run(["make", "-C", directory], capture_output=True, text=True, env=env)
+                self.assertEqual(second.returncode, 0, second.stderr)
+                self.assertIn("touch x.o", second.stdout)
 
     def test_a_naix_is_made_by_making_its_archive(self):
         """nitroarc writes an archive's .naix beside it. A pattern rule with
