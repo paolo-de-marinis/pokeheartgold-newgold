@@ -1744,6 +1744,22 @@ static void FlungItemLands(BattleSystem *battleSystem, BattleContext *ctx, int s
     CudChewKeepsBerry(ctx, battlerId, ctx->recycleItem[ctx->battlerIdAttacker]);
 }
 
+// A pivot move -- U-turn, Volt Switch, Flip Turn -- takes its user out with
+// the hit (ov12_02250490), and does not when the Pokemon it hit is leaving by
+// Emergency Exit or Wimp Out. A Berry that heals that Pokemon back above half
+// keeps it in, and in the games the Berry is eaten as the damage lands, so it
+// is eaten here before the move decides, rather than with the other held
+// items once the move is over; otherwise the user stays for a retreat that
+// never comes. The reference decides the user's switch at the end of the
+// move, after the items.
+BOOL TryPivotTargetHeldItem(BattleSystem *battleSystem, BattleContext *ctx) {
+    if (ctx->battlerIdTarget == BATTLER_NONE || !(ctx->unk_2174 & MOVE_SIDE_EFFECT_ON_HIT)
+        || (ctx->unk_2174 & 0x7FFFFF) != MOVE_SUBSCRIPT_PTR_ATTACK_THEN_SWITCH_OUT) {
+        return FALSE;
+    }
+    return TryUseHeldItem(battleSystem, ctx, ctx->battlerIdTarget);
+}
+
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     BOOL ret = FALSE;
     u16 effectChance;

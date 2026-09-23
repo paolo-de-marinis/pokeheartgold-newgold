@@ -23,6 +23,7 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
 void BattleSystem_ClearExperienceEarnFlags(BattleContext *ctx, int battlerId);
 void BattleSystem_SetExperienceEarnFlags(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL ov12_022503EC(BattleSystem *battleSystem, BattleContext *ctx, int *out);
+BOOL TryPivotTargetHeldItem(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out);
 BOOL SheerForceTradedEffect(BattleContext *ctx);
 int ov12_022506D4(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 move, int a4, int a5);

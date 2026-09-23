@@ -3677,6 +3677,76 @@ static void ov12_0224CAA4(BattleSystem *battleSystem, BattleContext *ctx) {
                 return;
             }
             // fallthrough
+        case 2:
+            // A pivot move's target eats its Berry before the move decides
+            // whether its user goes (TryPivotTargetHeldItem).
+            ctx->unk_3C++;
+            if (TryPivotTargetHeldItem(battleSystem, ctx) == TRUE) {
+                return;
+            }
+            // fallthrough
+        case 3: {
+            int script;
+
+            ctx->unk_3C++;
+            if (ov12_02250490(battleSystem, ctx, &script) == TRUE && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)) {
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                return;
+            }
+        }
+            // fallthrough
+        case 4:
+            ctx->unk_3C++;
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_CHECK_SHAYMIN_FORM);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        case 5:
+            ctx->unk_3C++;
+            if (TryBuildRage(battleSystem, ctx) == TRUE) {
+                return;
+            }
+            // fallthrough
+        case 6: {
+            int script;
+
+            ctx->unk_3C++;
+            if (CheckAbilityEffectOnHit(battleSystem, ctx, &script) == TRUE) {
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                return;
+            }
+        }
+            // fallthrough
+        case 7:
+            ctx->unk_3C++;
+            if (TryItemFlinch(battleSystem, ctx) == TRUE) {
+                return;
+            }
+            // fallthrough
+        default:
+            break;
+        }
+        break;
+    case 1:
+        switch (ctx->unk_3C) {
+        case 0:
+            ctx->unk_3C++;
+            if (ov12_0224DF7C(battleSystem, ctx) == TRUE) {
+                return;
+            }
+            // fallthrough
+        case 1:
+            // A pivot move's target eats its Berry before the move decides
+            // whether its user goes (TryPivotTargetHeldItem).
+            ctx->unk_3C++;
+            if (TryPivotTargetHeldItem(battleSystem, ctx) == TRUE) {
+                return;
+            }
+            // fallthrough
         case 2: {
             int script;
 
@@ -3715,65 +3785,11 @@ static void ov12_0224CAA4(BattleSystem *battleSystem, BattleContext *ctx) {
             // fallthrough
         case 6:
             ctx->unk_3C++;
-            if (TryItemFlinch(battleSystem, ctx) == TRUE) {
-                return;
-            }
-            // fallthrough
-        default:
-            break;
-        }
-        break;
-    case 1:
-        switch (ctx->unk_3C) {
-        case 0:
-            ctx->unk_3C++;
-            if (ov12_0224DF7C(battleSystem, ctx) == TRUE) {
-                return;
-            }
-            // fallthrough
-        case 1: {
-            int script;
-
-            ctx->unk_3C++;
-            if (ov12_02250490(battleSystem, ctx, &script) == TRUE && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)) {
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
-                ctx->commandNext = ctx->command;
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                return;
-            }
-        }
-            // fallthrough
-        case 2:
-            ctx->unk_3C++;
-            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_CHECK_SHAYMIN_FORM);
-            ctx->commandNext = ctx->command;
-            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-            return;
-        case 3:
-            ctx->unk_3C++;
-            if (TryBuildRage(battleSystem, ctx) == TRUE) {
-                return;
-            }
-            // fallthrough
-        case 4: {
-            int script;
-
-            ctx->unk_3C++;
-            if (CheckAbilityEffectOnHit(battleSystem, ctx, &script) == TRUE) {
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
-                ctx->commandNext = ctx->command;
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                return;
-            }
-        }
-            // fallthrough
-        case 5:
-            ctx->unk_3C++;
             if (ov12_0224DF98(battleSystem, ctx) == TRUE) {
                 return;
             }
             // fallthrough
-        case 6:
+        case 7:
             ctx->unk_3C++;
             if (TryItemFlinch(battleSystem, ctx) == TRUE) {
                 return;
