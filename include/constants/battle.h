@@ -579,6 +579,10 @@ typedef enum Terrain {
 // Form, which takes no status (Battler_ShieldsUp). Read only.
 #define BMON_DATA_SHIELDS_UP              105
 
+// Whether Cheek Pouch has a Berry to answer for: set when the Pokemon eats
+// one, spent the next time its items are asked (TryUseHeldItem).
+#define BMON_DATA_CHEEK_POUCH_PENDING     106
+
 // The order entry hazards are worked through when something switches in.
 #define HAZARD_IDX_NONE         0
 #define HAZARD_IDX_SPIKES       1

@@ -469,6 +469,23 @@ class DamageFormulaTests(unittest.TestCase):
         update = (ROOT / "files/battledata/script/subscript/subscript_0002_UpdateHp.s").read_text()
         self.assertLess(update.index("Call BATTLE_SUBSCRIPT_TYPE_RESIST_BERRY"), update.index("UpdateHealthBar "))
 
+    def test_cheek_pouch_answers_the_berry(self):
+        # The reference's subscript 412 calls Cheek Pouch unless the hit
+        # fainted the holder; here the Berry leaves Cheek Pouch its pending
+        # mark, which TryUseHeldItem answers after the hit when the holder
+        # still stands.
+        script = (ROOT / "files/battledata/script/subscript/subscript_0264_SuperEffectiveBerries.s").read_text()
+        commands = [line.strip() for line in script.splitlines() if line.strip() and not line.strip().startswith("//")]
+        eaten = commands.index("RemoveItem BATTLER_CATEGORY_MSG_TEMP")
+        self.assertEqual(commands[eaten + 1:eaten + 3], [
+            "CheckAbility CHECK_OPCODE_NOT_HAVE, BATTLER_CATEGORY_MSG_TEMP, ABILITY_CHEEK_POUCH, _END",
+            "UpdateMonData OPCODE_SET, BATTLER_CATEGORY_MSG_TEMP, BMON_DATA_CHEEK_POUCH_PENDING, 1"])
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        self.assertIn("case BMON_DATA_CHEEK_POUCH_PENDING:\n        mon->cheekPouchPending = *data8;", function(overlay, "SetBattlerVar"))
+        self.assertIn("case BMON_DATA_CHEEK_POUCH_PENDING:\n        return mon->cheekPouchPending;", function(overlay, "GetBattlerVar"))
+        use = function(overlay, "TryUseHeldItem")
+        self.assertIn("if (ctx->battleMons[battlerId].cheekPouchPending) {", use)
+
     def test_future_sight_keeps_the_screens(self):
         # Its damage is still worked out whole on the turn it is used, as
         # HeartGold's was, and the screens left the base damage.

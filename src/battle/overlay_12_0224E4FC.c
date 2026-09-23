@@ -457,6 +457,8 @@ int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         return ctx->berryEaten[battlerId][ctx->selectedMonIndex[battlerId]];
     case BMON_DATA_SHIELDS_UP:
         return Battler_ShieldsUp(ctx, battlerId);
+    case BMON_DATA_CHEEK_POUCH_PENDING:
+        return mon->cheekPouchPending;
     case BMON_DATA_GENDER:
         return mon->gender;
     case BMON_DATA_IS_SHINY:
@@ -866,6 +868,9 @@ void SetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         break;
     case BMON_DATA_QUICK_DRAW_FLAG:
         mon->unk88.quickDrawFlag = *data8;
+        break;
+    case BMON_DATA_CHEEK_POUCH_PENDING:
+        mon->cheekPouchPending = *data8;
         break;
     case BMON_DATA_RECHARGE:
         mon->unk88.rechargeCount = *data32;
