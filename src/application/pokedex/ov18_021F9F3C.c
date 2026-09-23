@@ -1,6 +1,14 @@
 #include "global.h"
 
 #include "bg_window.h"
+#include "pokedex_util.h"
+
+// The counts of the species seen and caught are printed in windows a digit
+// a tile wide, four digits now that the Dex holds more than 999 species
+// (retail's three, at x 11 and 27): each window starts a tile further left,
+// where the front page's tilemap has its bracket one tile further left too,
+// and takes eight tiles, from 0x3B0.
+#define DEX_COUNT_DIGITS DEX_NUMBER_DIGITS
 
 // The windows of the Dex's front page (ov18_021EE3FC): its title, the Dex
 // counts in pairs used in turn (2 and 3 the species seen, 4 and 5 caught)
@@ -8,10 +16,10 @@
 const WindowTemplate ov18_021F9F3C[20] = {
     { 0, 2, 9, 12, 2, 9, 0x3E8 },
     { 0, 18, 9, 12, 2, 9, 0x3D0 },
-    { 0, 11, 11, 3, 2, 9, 0x3CA },
-    { 0, 11, 11, 3, 2, 9, 0x3C4 },
-    { 0, 27, 11, 3, 2, 9, 0x3BE },
-    { 0, 27, 11, 3, 2, 9, 0x3B8 },
+    { 0, 10, 11, DEX_COUNT_DIGITS, 2, 9, 0x3C8 },
+    { 0, 10, 11, DEX_COUNT_DIGITS, 2, 9, 0x3C0 },
+    { 0, 26, 11, DEX_COUNT_DIGITS, 2, 9, 0x3B8 },
+    { 0, 26, 11, DEX_COUNT_DIGITS, 2, 9, 0x3B0 },
     { 1, 10, 16, 11, 2, 0, 0x1EA },
     { 5, 2, 0, 8, 2, 2, 0x3F0 },
     { 5, 15, 3, 4, 2, 0, 0x3E8 },
@@ -28,7 +36,8 @@ const WindowTemplate ov18_021F9F3C[20] = {
     { 5, 15, 13, 16, 2, 1, 0x280 },
 };
 
-// Every window of the Dex's pages (ov18_021EEE58).
+// Every window of the Dex's pages (ov18_021EEE58); 95 to 100 are the front
+// page's again, the counts 97 to 100.
 const WindowTemplate ov18_021F9FDC[101] = {
     { 5, 2, 19, 28, 5, 2, 0x174 },
     { 5, 4, 1, 9, 2, 2, 0x162 },
@@ -127,8 +136,8 @@ const WindowTemplate ov18_021F9FDC[101] = {
     { 1, 10, 16, 11, 2, 0, 0x1BA },
     { 0, 2, 9, 12, 2, 9, 0x3E8 },
     { 0, 18, 9, 12, 2, 9, 0x3D0 },
-    { 0, 11, 11, 3, 2, 9, 0x3CA },
-    { 0, 11, 11, 3, 2, 9, 0x3C4 },
-    { 0, 27, 11, 3, 2, 9, 0x3BE },
-    { 0, 27, 11, 3, 2, 9, 0x3B8 },
+    { 0, 10, 11, DEX_COUNT_DIGITS, 2, 9, 0x3C8 },
+    { 0, 10, 11, DEX_COUNT_DIGITS, 2, 9, 0x3C0 },
+    { 0, 26, 11, DEX_COUNT_DIGITS, 2, 9, 0x3B8 },
+    { 0, 26, 11, DEX_COUNT_DIGITS, 2, 9, 0x3B0 },
 };

@@ -196,6 +196,36 @@ class DexDigitTests(unittest.TestCase):
             x, y = tile % (width // 8) * 8, tile // (width // 8) * 8
             self.assertTrue(any(pixels[y + dy][x + dx] != 15 for dy in range(8) for dx in range(8)), f"tile {tile:#x} is empty")
 
+    def test_the_front_page_counts_have_four_digits(self):
+        """The Dex's front page prints how many species are seen and caught;
+        retail's windows and digits were three wide, so 1025 showed '025'.
+        The windows (ov18_021F9F3C's 2 to 5, ov18_021F9FDC's 97 to 100) are
+        DEX_NUMBER_DIGITS tiles wide, the printer draws that many, and the
+        front page's tilemap puts its brackets round each window."""
+        header = (ROOT / "include/pokedex_util.h").read_text()
+        digits = int(re.search(r"#define DEX_NUMBER_DIGITS (\d+)", header).group(1))
+        printer = c_function((ROOT / "src/application/pokedex/ov18_021EE520.c").read_text(), "ov18_021EE520")
+        self.assertIn("i < DEX_NUMBER_DIGITS", printer)
+        self.assertIn("PrintUIntOnWindow(printer, num, DEX_NUMBER_DIGITS,", printer)
+        tables = (ROOT / "src/application/pokedex/ov18_021F9F3C.c").read_text()
+        count = {"DEX_COUNT_DIGITS": digits}
+        screen = (ROOT / "files/graphic/zukan_gra/zukan_gra_00000000.NSCR").read_bytes()
+        tile = lambda x, y: struct.unpack_from("<H", screen, 0x24 + 2 * (y * 32 + x))[0] & 0x3FF  # noqa: E731
+        for name, windows in (("ov18_021F9F3C", range(2, 6)), ("ov18_021F9FDC", range(97, 101))):
+            body = tables[tables.index(name + "["):]
+            rows = re.findall(r"\{ (\w+), (\w+), (\w+), (\w+), (\w+), (\w+), (0x\w+) \}", body[:body.index("};")])
+            used = set()
+            for window in windows:
+                bg, x, y, width, height, _, base = (count.get(v) or int(v, 0) for v in rows[window])
+                self.assertEqual(width, digits, f"{name}[{window}]")
+                self.assertEqual((tile(x - 1, y), tile(x + width, y)), (0x19, 0x15), f"{name}[{window}]: brackets")
+                # its tiles are its own: past the Dex's 280 tiles of graphics,
+                # before the title windows' (0x3D0), and no other count's
+                span = set(range(base, base + width * height))
+                self.assertFalse(span & used, f"{name}[{window}]: tiles")
+                self.assertTrue(280 <= min(span) and max(span) < 0x3D0, f"{name}[{window}]: tiles")
+                used |= span
+
 
 if __name__ == "__main__":
     unittest.main()
