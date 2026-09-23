@@ -8,6 +8,7 @@
 
 BOOL RunBattleScript(BattleSystem *battleSystem, BattleContext *ctx);
 int BeatUp_TotalPower(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+void BattleContext_LandFutureSight(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTarget);
 BOOL BtlCmd_PlayEncounterAnimation(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_SetPokemonEncounter(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL BtlCmd_PokemonSlideIn(BattleSystem *battleSystem, BattleContext *ctx);

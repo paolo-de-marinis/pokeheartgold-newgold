@@ -51,7 +51,7 @@ typedef struct FieldConditionData {
     u8 wishTurns[4];
     u16 futureSightMoveNo[4];
     int battlerIdFutureSight[4];
-    int futureSightDamage[4];
+    int futureSightMonIndex[4]; // the user's place in its party, for the landing
     u8 wishTarget[4];
 } FieldConditionData;
 

@@ -1956,10 +1956,10 @@ static void BattleControllerPlayer_UpdateFieldConditionExtra(BattleSystem *battl
                     ctx->buffMsg.param[0] = CreateNicknameTag(ctx, battlerId);
                     ctx->buffMsg.param[1] = ctx->fieldConditionData.futureSightMoveNo[battlerId];
                     ctx->battlerIdTemp = battlerId;
-                    ctx->battlerIdLeechSeedRecv = ctx->fieldConditionData.battlerIdFutureSight[battlerId];
                     ctx->moveTemp = ctx->fieldConditionData.futureSightMoveNo[battlerId];
-                    ctx->hpCalc = ctx->fieldConditionData.futureSightDamage[battlerId];
-                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, 121);
+                    BattleContext_LandFutureSight(battleSystem, ctx, battlerId);
+                    ctx->battlerIdLeechSeedRecv = ctx->battlerIdAttacker;
+                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FUTURE_SIGHT_DAMAGE);
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                     return;

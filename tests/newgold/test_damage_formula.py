@@ -487,10 +487,9 @@ class DamageFormulaTests(unittest.TestCase):
         self.assertIn("if (ctx->battleMons[battlerId].cheekPouchPending) {", use)
 
     def test_future_sight_keeps_the_screens(self):
-        # Its damage is still worked out whole on the turn it is used, as
-        # HeartGold's was, and the screens left the base damage.
-        body = function(COMMANDS, "BtlCmd_TryFutureSight")
-        self.assertIn("ScreenModifier(", body)
+        # Its damage is worked out when it lands, through the whole chain,
+        # the screens of the final modifier included (test_future_sight).
+        self.assertIn("DamageCalcDefault(battleSystem, ctx, TRUE);", function(COMMANDS, "BattleContext_LandFutureSight"))
 
 
 if __name__ == "__main__":

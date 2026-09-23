@@ -4768,19 +4768,94 @@ BOOL BtlCmd_TryFutureSight(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->fieldConditionData.futureSightTurns[ctx->battlerIdTarget] = 3;
         ctx->fieldConditionData.futureSightMoveNo[ctx->battlerIdTarget] = ctx->moveNoCur;
         ctx->fieldConditionData.battlerIdFutureSight[ctx->battlerIdTarget] = ctx->battlerIdAttacker;
-        // Worked out in full now, on the turn it is used, as HeartGold did:
-        // the base, the target's screens as they stand, and the roll.
-        int damage = CalcMoveDamage(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[side], ctx->fieldCondition, 0, 0, ctx->battlerIdAttacker, ctx->battlerIdTarget, 1);
-        damage = QMul_RoundDown(damage, ScreenModifier(battleSystem, ctx, ctx->moveNoCur, ctx->fieldSideConditionFlags[side], 1, ctx->battlerIdAttacker));
-        ctx->fieldConditionData.futureSightDamage[ctx->battlerIdTarget] = ApplyDamageRange(battleSystem, ctx, damage * -1);
-        if (ctx->turnData[ctx->battlerIdAttacker].helpingHandFlag) {
-            ctx->fieldConditionData.futureSightDamage[ctx->battlerIdTarget] = ctx->fieldConditionData.futureSightDamage[ctx->battlerIdTarget] * 15 / 10;
-        }
+        // Nothing is worked out now: the hit is, when it lands, and for that
+        // the user is remembered, by its place in its party
+        // (BattleContext_LandFutureSight).
+        ctx->fieldConditionData.futureSightMonIndex[ctx->battlerIdTarget] = ctx->selectedMonIndex[ctx->battlerIdAttacker];
     } else {
         BattleScriptIncrementPointer(ctx, adrs);
     }
 
     return FALSE;
+}
+
+// Where the Pokemon that used Future Sight or Doom Desire from slot is now:
+// on the field in its own place or, in a double battle, its partner's, or
+// BATTLER_NONE -- switched out, or fainted where it stood.
+static int FutureSightUser(BattleSystem *battleSystem, BattleContext *ctx, int slot, Pokemon *user) {
+    int battlerId = slot;
+    int i;
+
+    for (i = 0; i < 2; i++, battlerId ^= 2) {
+        if (battlerId < BattleSystem_GetMaxBattlers(battleSystem) && ctx->battleMons[battlerId].hp
+            && BattleSystem_GetPartyMon(battleSystem, battlerId, ctx->selectedMonIndex[battlerId]) == user) {
+            return battlerId;
+        }
+    }
+    return BATTLER_NONE;
+}
+
+// A Pokemon that is not on the field, as the damage calculation is to see it:
+// its party stats and its own types, no stat stages, no ability, no item and
+// no status (Pokemon Central, Divinazione; the reference's CalcBaseDamage,
+// battle_calc_damage.c:128 at d0380a487).
+static void BattleMon_LoadPartyStats(BattleMon *mon, Pokemon *pokemon) {
+    int i;
+
+    MI_CpuClear8(mon, sizeof(BattleMon));
+    mon->species = GetMonData(pokemon, MON_DATA_SPECIES, NULL);
+    mon->atk = GetMonData(pokemon, MON_DATA_ATK, NULL);
+    mon->def = GetMonData(pokemon, MON_DATA_DEF, NULL);
+    mon->speed = GetMonData(pokemon, MON_DATA_SPEED, NULL);
+    mon->spAtk = GetMonData(pokemon, MON_DATA_SP_ATK, NULL);
+    mon->spDef = GetMonData(pokemon, MON_DATA_SP_DEF, NULL);
+    for (i = 0; i < NUM_BATTLE_STATS; i++) {
+        mon->statChanges[i] = 6;
+    }
+    mon->type1 = GetMonData(pokemon, MON_DATA_TYPE_1, NULL);
+    mon->type2 = GetMonData(pokemon, MON_DATA_TYPE_2, NULL);
+    mon->type3 = TYPE_NONE;
+    mon->level = GetMonData(pokemon, MON_DATA_LEVEL, NULL);
+    mon->friendship = GetMonData(pokemon, MON_DATA_FRIENDSHIP, NULL);
+    mon->hp = GetMonData(pokemon, MON_DATA_HP, NULL);
+    mon->maxHp = GetMonData(pokemon, MON_DATA_MAX_HP, NULL);
+    mon->gender = GetMonData(pokemon, MON_DATA_GENDER, NULL);
+    mon->personality = GetMonData(pokemon, MON_DATA_PERSONALITY, NULL);
+}
+
+// Future Sight or Doom Desire lands on battlerIdTarget, and is worked out now,
+// as it is from the fifth generation (Pokemon Central, Divinazione; the
+// reference's CalcBaseDamage, battle_calc_damage.c:28 at d0380a487): a critical
+// hit, the weather, the screens, the type chart and everything else as they
+// stand. The user strikes as it is if it is on the field, in its own place or
+// its partner's; if it is not, it strikes from its own place with its party
+// stats (BattleMon_LoadPartyStats), which stand in for whoever is there for as
+// long as the sum takes -- the accuracy check too. The damage goes in hpCalc,
+// the chart's verdict and whether it hit in moveStatusFlag, for subscript 121;
+// attacker and target are left set for it.
+void BattleContext_LandFutureSight(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTarget) {
+    int slot = ctx->fieldConditionData.battlerIdFutureSight[battlerIdTarget];
+    Pokemon *user = BattleSystem_GetPartyMon(battleSystem, slot, ctx->fieldConditionData.futureSightMonIndex[battlerIdTarget]);
+    int battlerIdAttacker = FutureSightUser(battleSystem, ctx, slot, user);
+    BattleMon onField;
+
+    ctx->battlerIdAttacker = battlerIdAttacker == BATTLER_NONE ? slot : battlerIdAttacker;
+    ctx->battlerIdTarget = battlerIdTarget;
+    ctx->moveNoCur = ctx->fieldConditionData.futureSightMoveNo[battlerIdTarget];
+    ctx->moveStatusFlag = 0;
+    if (battlerIdAttacker == BATTLER_NONE) {
+        onField = ctx->battleMons[ctx->battlerIdAttacker];
+        BattleMon_LoadPartyStats(&ctx->battleMons[ctx->battlerIdAttacker], user);
+    }
+    ctx->moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
+    ctx->criticalMultiplier = TryCriticalHit(battleSystem, ctx, ctx->battlerIdAttacker, battlerIdTarget, ctx->criticalCnt, ov12_022581D4(battleSystem, ctx, 0, battlerIdTarget));
+    DamageCalcDefault(battleSystem, ctx, TRUE);
+    ov12_02251D28(battleSystem, ctx, ctx->moveNoCur, ctx->moveType, ctx->battlerIdAttacker, battlerIdTarget, ctx->damage, &ctx->moveStatusFlag);
+    BattleSystem_CheckMoveHitEffect(battleSystem, ctx, ctx->battlerIdAttacker, battlerIdTarget, ctx->moveNoCur);
+    ctx->hpCalc = -ctx->damage;
+    if (battlerIdAttacker == BATTLER_NONE) {
+        ctx->battleMons[ctx->battlerIdAttacker] = onField;
+    }
 }
 
 BOOL BtlCmd_CheckMoveHit(BattleSystem *battleSystem, BattleContext *ctx) {

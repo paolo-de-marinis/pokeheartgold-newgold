@@ -52,7 +52,8 @@ STILL_DIFFERENT = {
     136: "the primal weathers and the engine's weather subscripts",
     137: "the primal weathers and the engine's weather subscripts",
     147: IN_C.format("Earthquake against Dig, CalcBaseDamage.c"),
-    148: "the engine's Future Sight, worked out when it lands",
+    148: "the engine runs the landing back through its before-move sequence; here it is subscript 121's, "
+         "worked out by BattleContext_LandFutureSight, and the use keeps retail's flags",
     150: "the doubling against Minimize is the damage chain's here, for every stamping move (BattleMoveStampsOnMinimize), as battle_calc_damage.c 6.9.14.1 does it",
     151: IN_C.format("the charge turn, BattleController_BeforeMove.c"),
     161: PARENTAL_BOND,
