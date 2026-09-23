@@ -248,18 +248,15 @@ class ParentalBondTests(unittest.TestCase):
     def test_a_first_strike_that_proves_the_last_does_what_it_left(self):
         # Pokemon Central (Spargispora, Mossa multicolpo): Effect Spore's
         # sleep ends a multi-strike move at once. Parental Bond's first strike
-        # has left its switch, its theft or its recoil to the second by then;
-        # the loop does them when the second will not come.
+        # has left Dragon Tail's drag, Smack Down's fall or the like to the
+        # second by then; the loop does them when the second will not come.
+        # The recoil is a post-move step (TryRecoil) and waits for nothing.
         body = function(OVERLAY.read_text(), "ov12_02250490")
         self.assertIn("u32 sideEffect = ctx->unk_2174;", body)
         waiting = body[body.index("if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {"):]
         held = waiting[:waiting.index("ret = FALSE;")]
         self.assertIn("ctx->parentalBondDeferred = sideEffect;", held)
-        recoil = waiting[waiting.index("case BATTLE_SUBSCRIPT_RECOIL_1_4:"):]
-        for script in ("RECOIL_1_3", "RECOIL_1_2", "RECOIL_HALF_MAX_HP"):
-            self.assertIn(f"case BATTLE_SUBSCRIPT_{script}:", recoil[:recoil.index("break;")])
-        self.assertRegex(waiting, r"case BATTLE_SUBSCRIPT_RECOIL_1_3_CHANCE_TO_BURN:\s*case BATTLE_SUBSCRIPT_RECOIL_1_3_CHANCE_TO_PARALYZE:\s*"
-                                  r"ctx->parentalBondDeferred = MOVE_SIDE_EFFECT_ON_HIT \| MOVE_SUBSCRIPT_PTR_RECOIL_1_3;")
+        self.assertNotIn("RECOIL", waiting[:waiting.index("return ret;")])
         loop = function(CONTROLLER.read_text(), "ov12_0224CF14")
         deferred = loop[:loop.index("if (ctx->multiHitCountTemp != 0) {")]
         self.assertIn("if (ParentalBond_IsFirstStrike(ctx) && MultiHit_StoppedBySleep(ctx) && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {", deferred)

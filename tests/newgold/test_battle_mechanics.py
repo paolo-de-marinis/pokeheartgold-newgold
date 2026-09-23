@@ -1168,17 +1168,22 @@ class DraggedInTests(unittest.TestCase):
         """Pokemon Central (Codadrago): the target's Pickpocket, Color Change
         and Anger Shell do not act when the move drags it out -- Emergency
         Exit and Wimp Out go with the slot's clearing. Kept in by Ingrain or
-        with nobody to come in, it answers as usual."""
+        with nobody to come in, it answers as usual. Pickpocket is a
+        post-move step, after the drag, and passes over a Pokemon that came in
+        after the hit."""
         overlay = OVERLAY.read_text()
         will = function(overlay, "Battler_WillBeDraggedOut")
         for part in ("!ctx->selfTurnData[battlerId].dragPending", "MOVE_EFFECT_FLAG_INGRAIN",
                      "return CanSwitchMon(battleSystem, ctx, battlerId);", "return WhirlwindCheck(battleSystem, ctx);"):
             self.assertIn(part, will)
         hit = function(overlay, "CheckAbilityEffectOnHit")
-        for ability in ("ABILITY_COLOR_CHANGE", "ABILITY_ANGER_SHELL", "ABILITY_PICKPOCKET"):
+        for ability in ("ABILITY_COLOR_CHANGE", "ABILITY_ANGER_SHELL"):
             case = hit[hit.index(f"case {ability}:"):]
             case = case[:case.index("break;")]
             self.assertIn("!Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget)", case, ability)
+        self.assertIn("|| Battler_CameInAfterTheHit(ctx, battlerId)", function(overlay, "TryPickpocket"))
+        end = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224E1BC")
+        self.assertLess(end.index("TryAdditionalMoveEffect(ctx)"), end.index("TryPickpocket("))
 
 class BattleBondTests(unittest.TestCase):
     def test_a_knockout_raises_three_stats_once_a_battle(self):
