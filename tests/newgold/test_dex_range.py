@@ -177,6 +177,23 @@ int main(void) {
 }
 """
 
+LAYOUT = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+typedef uint16_t u16;
+@STRUCT@
+
+int main(void) {
+    assert(offsetof(PokedexAppData_UnkSub0878, unk_7B4) == 0x7B4);
+    assert(sizeof(PokedexAppData_UnkSub0878) == @SIZE@);
+    printf("PASS: the Dex list ends at 0x%X, where overlay_18.s expects unk_1030.\n", 0x878 + @SIZE@);
+    return 0;
+}
+"""
+
 def c_function(source, name):
     """Like test_level_cap.function, but for any storage class and return type."""
     match = re.search(r"^[\w \*]*\b" + name + r"\([^;]*?\) \{", source, re.M)
@@ -212,6 +229,20 @@ class DexRangeTests(unittest.TestCase):
         native = "\n".join(c_function(source, name) for name in (
             "Pokedex_CountJohtoDexOwned", "Pokedex_CountJohtoDexSeen", "Pokedex_CountJohtoOwned_ExcludeMythical"))
         run_native(self, JOHTO.replace("@LUT@", lut).replace("@NATIVE@", native), "newgold-johto-")
+
+    def test_the_dex_app_keeps_overlay_18s_layout(self):
+        """overlay_18.s, still assembly, addresses PokedexAppData at retail's
+        offsets. The list at 0x878 was sized with the Dex count, so from 0x1030
+        on the C and the assembly disagreed about every field: C wrote the Dex
+        mode at 0x20E8, the assembly read it at 0x1858."""
+        header = (ROOT / "include/application/pokedex/pokedex_internal.h").read_text()
+        struct_ = re.search(r"typedef struct PokedexAppData_UnkSub0878 \{.*?\} PokedexAppData_UnkSub0878;", header, re.S).group(0)
+        start = int(re.search(r"PokedexAppData_UnkSub0878 unk_0878;\s+// (0x[0-9A-F]+)", header).group(1), 16)
+        end = int(re.search(r"PokedexAppData_UnkSub1030 unk_1030\[\d+\];\s+// (0x[0-9A-F]+)", header).group(1), 16)
+        asm = (ROOT / "asm/overlay_18.s").read_text()
+        self.assertIn(f".word 0x{end:08X}", asm, "overlay_18.s no longer finds unk_1030 at retail's offset")
+        self.assertIn(f"=0x{start + 0x7B4:08X}", asm, "overlay_18.s no longer finds unk_7B4 at retail's offset")
+        run_native(self, LAYOUT.replace("@STRUCT@", struct_).replace("@SIZE@", str(end - start)), "newgold-dex-app-")
 
     def test_the_deoxys_forms_are_not_dex_flags(self):
         """Retail kept Deoxys's form order in the top byte of flag word 15,

@@ -206,7 +206,11 @@ typedef union PokedexAppData_UnkSub0868 {
 } PokedexAppData_UnkSub0868;
 
 typedef struct PokedexAppData_UnkSub0878 {
-    u16 unk_000[NATIONAL_DEX_COUNT][2];
+    // Retail's 493, not the Dex count: overlay_18.s, still assembly, fills
+    // this list for 493 species and addresses every field after it at
+    // retail's offsets. hg-engine lists the added species by moving this
+    // list and unk_1030 to the heap; that waits for the list code in C.
+    u16 unk_000[MAX_SPECIES][2];
     u16 unk_7B4;
     u16 unk_7B6;
 } PokedexAppData_UnkSub0878;
@@ -322,6 +326,9 @@ struct PokedexAppData {
     PokedexAppData_UnkSub1908 *unk_1908;            // 0x1908
     PokedexAppData_UnkSub190C *unk_190C;            // 0x190C
 }; // size: 0x1910
+
+// overlay_18.s reads and writes this struct at fixed offsets.
+typedef char PokedexAppData_MatchesOverlay18[sizeof(PokedexAppData) == 0x1910 ? 1 : -1];
 
 String *ov18_021E590C(u16 species, int language, enum HeapID heapId);
 String *ov18_021E595C(u16 species, int language, enum HeapID heapId);
