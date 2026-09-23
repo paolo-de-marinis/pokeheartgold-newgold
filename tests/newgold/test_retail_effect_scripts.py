@@ -62,7 +62,6 @@ STILL_DIFFERENT = {
     164: "the primal weathers and the engine's weather subscripts",
     171: IN_C.format("Smelling Salts' doubling and cure, CalcBaseDamage.c and ServerDoPostMoveEffects.c"),
     173: PARENTAL_BOND,
-    178: "Role Play refused to a Griseous Orb holder",
     180: PARENTAL_BOND,
     188: IN_C.format("the knocking off, ServerDoPostMoveEffects.c"),
     197: PARENTAL_BOND,
@@ -209,6 +208,9 @@ class BroughtOverTests(unittest.TestCase):
         text = script(223)
         failure = re.search(r"TryFeint (\w+)", text).group(1)
         self.assertRegex(text, failure + r":\s*CalcCrit\s*CalcDamage\s*End")
+    def test_role_play_is_not_refused_to_a_griseous_orb(self):
+        # Retail failed Role Play for any user holding a Griseous Orb.
+        self.assertNotIn("ITEM_GRISEOUS_ORB", script(178))
 
 
 if __name__ == "__main__":
