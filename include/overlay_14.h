@@ -52,7 +52,12 @@ void ov14_021E9370(PCBoxApp *app);
 void ov14_021F0234(PCBoxApp *app, void (*func)(PCBoxApp *app), int a2);
 void ov14_021F028C(PCBoxApp *app, int a1);
 void ov14_021F0314(PCBoxApp *app, int a1);
+void ov14_021F1004(PCBoxApp *app, int direction);
 void ov14_021F29E4(PCBoxAppGraphics *graphics, int a1, int a2);
 void ov14_021F2DE8(PCBoxApp *app, u8 box);
+void ov14_021F4848(PCBoxApp *app);
+void ov14_021F48B4(PCBoxApp *app);
+void ov14_021F49E0(PCBoxApp *app);
+void ov14_021F57B8(PCBoxApp *app);
 
 #endif // POKEHEARTGOLD_OVY_14_H

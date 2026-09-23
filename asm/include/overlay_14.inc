@@ -842,3 +842,15 @@
 .public ov14_021F4CA0
 .public ov14_021F4ED0
 .public ov14_021F4F00
+.public ov14_021F0910
+.public ov14_021F09BC
+.public ov14_021F0A80
+.public ov14_021F0AAC
+.public ov14_021F0AD8
+.public ov14_021F0B34
+.public ov14_021F0C0C
+.public ov14_021F0C88
+.public ov14_021F0F0C
+.public ov14_021F1100
+.public ov14_021F30B0
+.public ov14_021F311C
