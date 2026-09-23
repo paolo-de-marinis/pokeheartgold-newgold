@@ -22,6 +22,7 @@ from test_level_cap import ROOT, function
 
 sys.path.insert(0, str(ROOT / "tools/newgold/import"))
 from wotbl import read_narc  # noqa: E402
+import import_sprite_offsets  # noqa: E402
 
 ARCHIVES = {
     "NARC_pbr_pokegra": "files/pbr/pokegra.narc",
@@ -115,6 +116,19 @@ class PictureTableTests(unittest.TestCase):
         run_native(self, DRESS_UP.replace("@ENUM@", enum).replace("@COUNTS@", counts).replace("@NATIVE@", native),
                    "newgold-dress-up-")
 
+
+    def test_the_picture_records_reach_every_species(self):
+        """a/1/8/0 member 0 is an 89-byte record a species: cry delay,
+        animation, Y offset and shadow. Retail's stopped at Arceus, and six
+        readers index it by species, so every added species read its record
+        out of whatever followed the member. Each record is now the
+        reference's for that species."""
+        member = read_narc((ROOT / "files/a/1/8/0").read_bytes())[0][0]
+        species = import_sprite_offsets.port_species()
+        self.assertEqual(len(member), len(species) * import_sprite_offsets.RECORD)
+        if not import_sprite_offsets.REFERENCE.exists():
+            self.skipTest("no reference checkout")
+        self.assertEqual(member, b"".join(import_sprite_offsets.records(import_sprite_offsets.REFERENCE)))
 
 if __name__ == "__main__":
     unittest.main()
