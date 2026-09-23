@@ -240,7 +240,7 @@ BOOL RadioShow_PokemonTalk_AlreadySampledLandmark(PokemonTalkData *data, u16 lan
 
 void RadioShow_PokemonTalk_AddSpecies(PokemonTalkData *data, Pokedex *pokedex, u16 species) {
     int i;
-    if (species != SPECIES_NONE && species <= MAX_SPECIES) {
+    if (species != SPECIES_NONE && species <= NUM_SPECIES) {
         for (i = 0; i < data->numSpecies; ++i) {
             if (species == data->speciesBuffer[i]) {
                 return;
@@ -293,6 +293,9 @@ u16 RadioShow_PokemonTalk_SampleSpeciesFromMapEncounters(PokemonTalkData *data, 
     }
     if (encData.nightFish != SPECIES_NONE) {
         RadioShow_PokemonTalk_AddSpecies(data, pokedex, encData.nightFish);
+    }
+    if (data->numSpecies == 0) {
+        return SPECIES_NONE;
     }
     if (data->numPrioritySpecies == 0 || (data->numPrioritySpecies == 1 && (LCRandom() % 1000) < 500)) {
         return data->speciesBuffer[LCRandom() % data->numSpecies];
