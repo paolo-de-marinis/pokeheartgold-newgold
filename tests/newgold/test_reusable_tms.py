@@ -40,6 +40,11 @@ typedef struct Pokemon Pokemon;
 typedef struct { u16 moveId, itemId; Bag *bag; void *party; } PartyMenuArgs;
 typedef struct PartyMenu { PartyMenuArgs *args; } PartyMenu;
 
+BOOL ItemIsTM(u16 itemId);
+BOOL ItemIsHM(u16 itemId);
+BOOL ItemIsTR(u16 itemId);
+BOOL ItemIsMachine(u16 itemId);
+
 static u16 requestedMax;
 static ItemSlot slotStorage;
 static u16 takenItem;
@@ -51,7 +56,7 @@ static u32 Bag_GetItemPocket(Bag *bag, u16 itemId, ItemSlot **slots, u32 *count,
     (void)bag; (void)heapID;
     *slots = &slotStorage;
     *count = 1;
-    return (itemId >= ITEM_TM01 && itemId <= ITEM_HM08) ? POCKET_TMHMS : POCKET_ITEMS;
+    return ItemIsMachine(itemId) ? POCKET_TMHMS : POCKET_ITEMS;
 }
 static ItemSlot *Pocket_GetItemSlotForAdd(ItemSlot *slots, u32 count, u16 itemId, u16 quantity, u16 max) {
     (void)count; (void)itemId; (void)quantity;
@@ -108,8 +113,18 @@ int main(void) {
     assert(ITEM_TM92 - ITEM_TM01 + 1 == NUM_TMS);
     assert(ITEM_HM08 - ITEM_HM01 + 1 == NUM_HMS);
 
+    // The machines past HM08: the later TMs are TMs, the TRs are not.
+    assert(ItemIsTM(ITEM_TM00) && ItemIsTM(ITEM_TM093) && ItemIsTM(ITEM_TM100) && ItemIsTM(ITEM_TM229));
+    assert(ItemIsHM(ITEM_HM07_ORAS) && !ItemIsTM(ITEM_HM07_ORAS));
+    for (u16 item = ITEM_TR00; item <= ITEM_TR99; item++) assert(ItemIsMachine(item) && !ItemIsTM(item));
+
     // The bag takes exactly one of each TM, and HMs keep the pocket's limit.
     for (u16 item = ITEM_TM01; item <= ITEM_TM92; item++) {
+        requestedMax = 0;
+        assert(Bag_GetItemSlotForAdd(NULL, item, 1, HEAP_ID_DUMMY) != NULL);
+        assert(requestedMax == 1);
+    }
+    for (u16 item = ITEM_TM100_SV; item <= ITEM_TM229; item++) {
         requestedMax = 0;
         assert(Bag_GetItemSlotForAdd(NULL, item, 1, HEAP_ID_DUMMY) != NULL);
         assert(requestedMax == 1);
@@ -146,7 +161,7 @@ int main(void) {
 class ReusableTMTests(unittest.TestCase):
     def test_native_reusable_machines(self):
         native = [function((ROOT / "src/item.c").read_text(), name)
-                  for name in ("ItemIsTM", "ItemIsMachine", "MoveIsHM")] + [
+                  for name in ("ItemIsTM", "ItemIsHM", "ItemIsTR", "ItemIsMachine", "MoveIsHM")] + [
                   function((ROOT / "src/bag.c").read_text(), "Bag_GetItemSlotForAdd").replace("static ", "", 1),
                   function((ROOT / "src/party_menu_items.c").read_text(), "PartyMenu_LearnMoveToSlot")]
         program = PREFIX.replace("@NATIVE@", "\n".join(native)) + MAIN

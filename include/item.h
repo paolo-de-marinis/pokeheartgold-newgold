@@ -249,17 +249,24 @@ u16 TMHMGetMove(u16 itemId);
 BOOL MoveIsHM(u16 moveId);
 
 /*
- * u8 ItemToTMHMId
+ * u16 ItemToTMHMId
  *
- * Converts item to the number of the TM or HM. If it is an HM, the number will be between 92 and 99 inclusive.
+ * Converts a machine to its place in hg-engine's numbering of its 340
+ * machines, the place of its move in the machine table and of its bit in a
+ * species' record: TM01 to TM92 are 0 to 91 and HM01 to HM08 92 to 99, as
+ * HeartGold numbered them, then HM07 (Dive) 100, TM00 101, TM093 to TM100 102
+ * to 109, Scarlet and Violet's TM100 to TM229 110 to 239, TR00 to TR99 240 to
+ * 339.
  *
  * @param itemId:      ID of the item to convert
  *
- * @returns: Number of the TM or HM. If an HM, subtract 92 to get the true number.
+ * @returns: The machine's place; 0 for an item that is not a machine.
  */
 BOOL ItemIsTM(u16 itemId);
+BOOL ItemIsHM(u16 itemId);
+BOOL ItemIsTR(u16 itemId);
 BOOL ItemIsMachine(u16 itemId);
-u8 ItemToTMHMId(u16 itemId);
+u16 ItemToTMHMId(u16 itemId);
 
 /*
  * BOOL ItemIdIsMail(u16 itemId)

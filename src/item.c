@@ -129,6 +129,249 @@ static const u16 sTMHMMoves[] = {
     MOVE_ROCK_SMASH,   // HM06
     MOVE_WATERFALL,    // HM07
     MOVE_ROCK_CLIMB,   // HM08
+
+    // hg-engine's machines past HM08, in its order (sMachineMoves in its
+    // src/item.c): the place ItemToTMHMId gives and the species' bit.
+    MOVE_DIVE,             // HM07_ORAS
+    MOVE_MEGA_PUNCH,       // TM00
+    MOVE_FLASH_CANNON,     // TM093
+    MOVE_DARK_PULSE,       // TM094
+    MOVE_LEECH_LIFE,       // TM095
+    MOVE_EERIE_IMPULSE,    // TM096
+    MOVE_FLY,              // TM097
+    MOVE_SKILL_SWAP,       // TM098
+    MOVE_IRON_HEAD,        // TM099
+    MOVE_CONFIDE,          // TM100
+    MOVE_DRAGON_DANCE,     // TM100_SV
+    MOVE_POWER_GEM,        // TM101
+    MOVE_GUNK_SHOT,        // TM102
+    MOVE_SUBSTITUTE,       // TM103
+    MOVE_IRON_DEFENSE,     // TM104
+    MOVE_X_SCISSOR,        // TM105
+    MOVE_DRILL_RUN,        // TM106
+    MOVE_WILL_O_WISP,      // TM107
+    MOVE_CRUNCH,           // TM108
+    MOVE_TRICK,            // TM109
+    MOVE_LIQUIDATION,      // TM110
+    MOVE_GIGA_DRAIN,       // TM111
+    MOVE_AURA_SPHERE,      // TM112
+    MOVE_TAILWIND,         // TM113
+    MOVE_SHADOW_BALL,      // TM114
+    MOVE_DRAGON_PULSE,     // TM115
+    MOVE_STEALTH_ROCK,     // TM116
+    MOVE_HYPER_VOICE,      // TM117
+    MOVE_HEAT_WAVE,        // TM118
+    MOVE_ENERGY_BALL,      // TM119
+    MOVE_PSYCHIC,          // TM120
+    MOVE_HEAVY_SLAM,       // TM121
+    MOVE_ENCORE,           // TM122
+    MOVE_SURF,             // TM123
+    MOVE_ICE_SPINNER,      // TM124
+    MOVE_FLAMETHROWER,     // TM125
+    MOVE_THUNDERBOLT,      // TM126
+    MOVE_PLAY_ROUGH,       // TM127
+    MOVE_AMNESIA,          // TM128
+    MOVE_CALM_MIND,        // TM129
+    MOVE_HELPING_HAND,     // TM130
+    MOVE_POLLEN_PUFF,      // TM131
+    MOVE_BATON_PASS,       // TM132
+    MOVE_EARTH_POWER,      // TM133
+    MOVE_REVERSAL,         // TM134
+    MOVE_ICE_BEAM,         // TM135
+    MOVE_ELECTRIC_TERRAIN, // TM136
+    MOVE_GRASSY_TERRAIN,   // TM137
+    MOVE_PSYCHIC_TERRAIN,  // TM138
+    MOVE_MISTY_TERRAIN,    // TM139
+    MOVE_NASTY_PLOT,       // TM140
+    MOVE_FIRE_BLAST,       // TM141
+    MOVE_HYDRO_PUMP,       // TM142
+    MOVE_BLIZZARD,         // TM143
+    MOVE_FIRE_PLEDGE,      // TM144
+    MOVE_WATER_PLEDGE,     // TM145
+    MOVE_GRASS_PLEDGE,     // TM146
+    MOVE_WILD_CHARGE,      // TM147
+    MOVE_SLUDGE_BOMB,      // TM148
+    MOVE_EARTHQUAKE,       // TM149
+    MOVE_STONE_EDGE,       // TM150
+    MOVE_PHANTOM_FORCE,    // TM151
+    MOVE_GIGA_IMPACT,      // TM152
+    MOVE_BLAST_BURN,       // TM153
+    MOVE_HYDRO_CANNON,     // TM154
+    MOVE_FRENZY_PLANT,     // TM155
+    MOVE_OUTRAGE,          // TM156
+    MOVE_OVERHEAT,         // TM157
+    MOVE_FOCUS_BLAST,      // TM158
+    MOVE_LEAF_STORM,       // TM159
+    MOVE_HURRICANE,        // TM160
+    MOVE_TRICK_ROOM,       // TM161
+    MOVE_BUG_BUZZ,         // TM162
+    MOVE_HYPER_BEAM,       // TM163
+    MOVE_BRAVE_BIRD,       // TM164
+    MOVE_FLARE_BLITZ,      // TM165
+    MOVE_THUNDER,          // TM166
+    MOVE_CLOSE_COMBAT,     // TM167
+    MOVE_SOLAR_BEAM,       // TM168
+    MOVE_DRACO_METEOR,     // TM169
+    MOVE_STEEL_BEAM,       // TM170
+    MOVE_TERA_BLAST,       // TM171
+    MOVE_ROAR,             // TM172
+    MOVE_CHARGE,           // TM173
+    MOVE_HAZE,             // TM174
+    MOVE_TOXIC,            // TM175
+    MOVE_SAND_TOMB,        // TM176
+    MOVE_SPITE,            // TM177
+    MOVE_GRAVITY,          // TM178
+    MOVE_SMACK_DOWN,       // TM179
+    MOVE_GYRO_BALL,        // TM180
+    MOVE_KNOCK_OFF,        // TM181
+    MOVE_BUG_BITE,         // TM182
+    MOVE_SUPER_FANG,       // TM183
+    MOVE_VACUUM_WAVE,      // TM184
+    MOVE_LUNGE,            // TM185
+    MOVE_HIGH_HORSEPOWER,  // TM186
+    MOVE_ICICLE_SPEAR,     // TM187
+    MOVE_SCALD,            // TM188
+    MOVE_HEAT_CRASH,       // TM189
+    MOVE_SOLAR_BLADE,      // TM190
+    MOVE_UPROAR,           // TM191
+    MOVE_FOCUS_PUNCH,      // TM192
+    MOVE_WEATHER_BALL,     // TM193
+    MOVE_GRASSY_GLIDE,     // TM194
+    MOVE_BURNING_JEALOUSY, // TM195
+    MOVE_FLIP_TURN,        // TM196
+    MOVE_DUAL_WINGBEAT,    // TM197
+    MOVE_POLTERGEIST,      // TM198
+    MOVE_LASH_OUT,         // TM199
+    MOVE_SCALE_SHOT,       // TM200
+    MOVE_MISTY_EXPLOSION,  // TM201
+    MOVE_PAIN_SPLIT,       // TM202
+    MOVE_PSYCH_UP,         // TM203
+    MOVE_DOUBLE_EDGE,      // TM204
+    MOVE_ENDEAVOR,         // TM205
+    MOVE_PETAL_BLIZZARD,   // TM206
+    MOVE_TEMPER_FLARE,     // TM207
+    MOVE_WHIRLPOOL,        // TM208
+    MOVE_MUDDY_WATER,      // TM209
+    MOVE_SUPERCELL_SLAM,   // TM210
+    MOVE_ELECTROWEB,       // TM211
+    MOVE_TRIPLE_AXEL,      // TM212
+    MOVE_COACHING,         // TM213
+    MOVE_SLUDGE_WAVE,      // TM214
+    MOVE_SCORCHING_SANDS,  // TM215
+    MOVE_FEATHER_DANCE,    // TM216
+    MOVE_FUTURE_SIGHT,     // TM217
+    MOVE_EXPANDING_FORCE,  // TM218
+    MOVE_SKITTER_SMACK,    // TM219
+    MOVE_METEOR_BEAM,      // TM220
+    MOVE_THROAT_CHOP,      // TM221
+    MOVE_BREAKING_SWIPE,   // TM222
+    MOVE_METAL_SOUND,      // TM223
+    MOVE_CURSE,            // TM224
+    MOVE_HARD_PRESS,       // TM225
+    MOVE_DRAGON_CHEER,     // TM226
+    MOVE_ALLURING_VOICE,   // TM227
+    MOVE_PSYCHIC_NOISE,    // TM228
+    MOVE_UPPER_HAND,       // TM229
+    MOVE_SWORDS_DANCE,     // TR00
+    MOVE_BODY_SLAM,        // TR01
+    MOVE_FLAMETHROWER,     // TR02
+    MOVE_HYDRO_PUMP,       // TR03
+    MOVE_SURF,             // TR04
+    MOVE_ICE_BEAM,         // TR05
+    MOVE_BLIZZARD,         // TR06
+    MOVE_LOW_KICK,         // TR07
+    MOVE_THUNDERBOLT,      // TR08
+    MOVE_THUNDER,          // TR09
+    MOVE_EARTHQUAKE,       // TR10
+    MOVE_PSYCHIC,          // TR11
+    MOVE_AGILITY,          // TR12
+    MOVE_FOCUS_ENERGY,     // TR13
+    MOVE_METRONOME,        // TR14
+    MOVE_FIRE_BLAST,       // TR15
+    MOVE_WATERFALL,        // TR16
+    MOVE_AMNESIA,          // TR17
+    MOVE_LEECH_LIFE,       // TR18
+    MOVE_TRI_ATTACK,       // TR19
+    MOVE_SUBSTITUTE,       // TR20
+    MOVE_REVERSAL,         // TR21
+    MOVE_SLUDGE_BOMB,      // TR22
+    MOVE_SPIKES,           // TR23
+    MOVE_OUTRAGE,          // TR24
+    MOVE_PSYSHOCK,         // TR25
+    MOVE_ENDURE,           // TR26
+    MOVE_SLEEP_TALK,       // TR27
+    MOVE_MEGAHORN,         // TR28
+    MOVE_BATON_PASS,       // TR29
+    MOVE_ENCORE,           // TR30
+    MOVE_IRON_TAIL,        // TR31
+    MOVE_CRUNCH,           // TR32
+    MOVE_SHADOW_BALL,      // TR33
+    MOVE_FUTURE_SIGHT,     // TR34
+    MOVE_UPROAR,           // TR35
+    MOVE_HEAT_WAVE,        // TR36
+    MOVE_TAUNT,            // TR37
+    MOVE_TRICK,            // TR38
+    MOVE_SUPERPOWER,       // TR39
+    MOVE_SKILL_SWAP,       // TR40
+    MOVE_BLAZE_KICK,       // TR41
+    MOVE_HYPER_VOICE,      // TR42
+    MOVE_OVERHEAT,         // TR43
+    MOVE_COSMIC_POWER,     // TR44
+    MOVE_MUDDY_WATER,      // TR45
+    MOVE_IRON_DEFENSE,     // TR46
+    MOVE_DRAGON_CLAW,      // TR47
+    MOVE_BULK_UP,          // TR48
+    MOVE_CALM_MIND,        // TR49
+    MOVE_LEAF_BLADE,       // TR50
+    MOVE_DRAGON_DANCE,     // TR51
+    MOVE_GYRO_BALL,        // TR52
+    MOVE_CLOSE_COMBAT,     // TR53
+    MOVE_TOXIC_SPIKES,     // TR54
+    MOVE_FLARE_BLITZ,      // TR55
+    MOVE_AURA_SPHERE,      // TR56
+    MOVE_POISON_JAB,       // TR57
+    MOVE_DARK_PULSE,       // TR58
+    MOVE_SEED_BOMB,        // TR59
+    MOVE_X_SCISSOR,        // TR60
+    MOVE_BUG_BUZZ,         // TR61
+    MOVE_DRAGON_PULSE,     // TR62
+    MOVE_POWER_GEM,        // TR63
+    MOVE_FOCUS_BLAST,      // TR64
+    MOVE_ENERGY_BALL,      // TR65
+    MOVE_BRAVE_BIRD,       // TR66
+    MOVE_EARTH_POWER,      // TR67
+    MOVE_NASTY_PLOT,       // TR68
+    MOVE_ZEN_HEADBUTT,     // TR69
+    MOVE_FLASH_CANNON,     // TR70
+    MOVE_LEAF_STORM,       // TR71
+    MOVE_POWER_WHIP,       // TR72
+    MOVE_GUNK_SHOT,        // TR73
+    MOVE_IRON_HEAD,        // TR74
+    MOVE_STONE_EDGE,       // TR75
+    MOVE_STEALTH_ROCK,     // TR76
+    MOVE_GRASS_KNOT,       // TR77
+    MOVE_SLUDGE_WAVE,      // TR78
+    MOVE_HEAVY_SLAM,       // TR79
+    MOVE_ELECTRO_BALL,     // TR80
+    MOVE_FOUL_PLAY,        // TR81
+    MOVE_STORED_POWER,     // TR82
+    MOVE_ALLY_SWITCH,      // TR83
+    MOVE_SCALD,            // TR84
+    MOVE_WORK_UP,          // TR85
+    MOVE_WILD_CHARGE,      // TR86
+    MOVE_DRILL_RUN,        // TR87
+    MOVE_HEAT_CRASH,       // TR88
+    MOVE_HURRICANE,        // TR89
+    MOVE_PLAY_ROUGH,       // TR90
+    MOVE_VENOM_DRENCH,     // TR91
+    MOVE_DAZZLING_GLEAM,   // TR92
+    MOVE_DARKEST_LARIAT,   // TR93
+    MOVE_HIGH_HORSEPOWER,  // TR94
+    MOVE_THROAT_CHOP,      // TR95
+    MOVE_POLLEN_PUFF,      // TR96
+    MOVE_PSYCHIC_FANGS,    // TR97
+    MOVE_LIQUIDATION,      // TR98
+    MOVE_BODY_PRESS,       // TR99
 };
 
 static const u16 sItemNarcIds[FIRST_IMPORTED_ITEM][4] = {
@@ -1179,12 +1422,11 @@ static s32 GetItemAttrSub(ItemPartyParam *partyParam, u16 attr) {
 }
 
 u16 TMHMGetMove(u16 itemId) {
-    if (itemId < ITEM_TM01 || itemId > ITEM_HM08) {
+    if (!ItemIsMachine(itemId)) {
         return MOVE_NONE;
     }
 
-    itemId -= ITEM_TM01;
-    return sTMHMMoves[itemId];
+    return sTMHMMoves[ItemToTMHMId(itemId)];
 }
 
 // Everything that asks this asks it for one reason: to refuse to let the move
@@ -1200,19 +1442,49 @@ BOOL MoveIsHM(u16 moveId) {
 }
 
 BOOL ItemIsTM(u16 itemId) {
-    return itemId >= ITEM_TM01 && itemId <= ITEM_TM92;
+    return (itemId >= ITEM_TM01 && itemId <= ITEM_TM92) || itemId == ITEM_TM00
+        || (itemId >= ITEM_TM093 && itemId <= ITEM_TM095) || (itemId >= ITEM_TM096 && itemId <= ITEM_TM100)
+        || (itemId >= ITEM_TM100_SV && itemId <= ITEM_TM229);
+}
+
+BOOL ItemIsHM(u16 itemId) {
+    return (itemId >= ITEM_HM01 && itemId <= ITEM_HM08) || itemId == ITEM_HM07_ORAS;
+}
+
+BOOL ItemIsTR(u16 itemId) {
+    return itemId >= ITEM_TR00 && itemId <= ITEM_TR99;
 }
 
 BOOL ItemIsMachine(u16 itemId) {
-    return itemId >= ITEM_TM01 && itemId <= ITEM_HM08;
+    return ItemIsTM(itemId) || ItemIsHM(itemId) || ItemIsTR(itemId);
 }
 
-u8 ItemToTMHMId(u16 itemId) {
-    if (itemId < ITEM_TM01 || itemId > ITEM_HM08) {
-        return 0;
+// hg-engine's ItemToMachineMoveIndex: TM01 to HM08 keep HeartGold's places,
+// and the machines the later games added follow in hg-engine's order.
+u16 ItemToTMHMId(u16 itemId) {
+    if (itemId >= ITEM_TM01 && itemId <= ITEM_HM08) {
+        return itemId - ITEM_TM01;
+    }
+    if (itemId == ITEM_HM07_ORAS) {
+        return 100;
+    }
+    if (itemId == ITEM_TM00) {
+        return 101;
+    }
+    if (itemId >= ITEM_TM093 && itemId <= ITEM_TM095) {
+        return itemId - ITEM_TM093 + 102;
+    }
+    if (itemId >= ITEM_TM096 && itemId <= ITEM_TM100) {
+        return itemId - ITEM_TM096 + 105;
+    }
+    if (itemId >= ITEM_TM100_SV && itemId <= ITEM_TM229) {
+        return itemId - ITEM_TM100_SV + 110;
+    }
+    if (itemId >= ITEM_TR00 && itemId <= ITEM_TR99) {
+        return itemId - ITEM_TR00 + 240;
     }
 
-    return itemId - ITEM_TM01;
+    return 0;
 }
 
 BOOL ItemIdIsMail(u16 itemId) {
