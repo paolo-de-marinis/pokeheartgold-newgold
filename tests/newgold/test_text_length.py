@@ -8,11 +8,12 @@ which does nothing in this build, and the String keeps what it held before: a
 blank or somebody else's text, and nothing at build time says so. The lengths
 are read from the banks msgenc built, which store them.
 
-Item plurals and descriptions are checked only for the items a player can come
-by, read from the data that hands items out. Names are checked for every item:
-the bag's list strings (ov15_021FA008, BAG_LIST_NAME_LENGTH) are sized for the
-longest of hg-engine's, which run to 22 with the terminator where HeartGold's
-fitted 18.
+Item descriptions are checked only for the items a player can come by, read
+from the data that hands items out. Names and plurals are checked for every
+item; the plurals against MessageFormat_New, which the bag reads them into.
+The bag's list strings (ov15_021FA008, BAG_LIST_NAME_LENGTH) are sized for
+the longest name hg-engine has, which run to 22 with the terminator where
+HeartGold's fitted 18.
 
 Needs the build: run after make.
 """
@@ -114,9 +115,9 @@ class TextLengthTests(unittest.TestCase):
         source = (ROOT / "src/bag_pocket_list.c").read_text()
         self.assertIn("String_New(BAG_LIST_NAME_LENGTH, HEAP_ID_6)", source)
 
-    def test_obtainable_item_plurals_fit(self):
-        # hg-engine's Never-Melt Ice and Secret Medicine plurals are 33.
-        self.assertEqual(items_over(ITEM_PLURALS, item_plural_capacity()), {})
+    def test_every_item_plural_fits(self):
+        # hg-engine's plurals run to 40 (Twice-Spiced Radish, Bitter Herba Mystica).
+        self.assertEqual(over(ITEM_PLURALS, item_plural_capacity()), {})
 
     def test_obtainable_item_descriptions_fit(self):
         self.assertEqual(items_over(ITEM_DESCRIPTIONS, ITEM_DESCRIPTION_CAPACITY), {},

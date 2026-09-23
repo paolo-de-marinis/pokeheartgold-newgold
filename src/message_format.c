@@ -24,11 +24,11 @@
 #include "string_control_code.h"
 #include "trainer_data.h"
 
-// 33, not retail's 32: hg-engine's plurals "pieces of Never-Melt Ice" and
-// "doses of Secret Medicine" take 33 with their colour codes, and the bag
-// reads plurals through this buffer.
+// 40, not retail's 32: the bag reads item plurals through this buffer, and
+// hg-engine's run to 40 with their colour codes and terminator ("servings of
+// Twice-Spiced Radish", "shakers of Bitter Herba Mystica").
 MessageFormat *MessageFormat_New(enum HeapID heapID) {
-    return MessageFormat_New_Custom(8, 33, heapID);
+    return MessageFormat_New_Custom(8, 40, heapID);
 }
 
 MessageFormat *MessageFormat_New_Custom(u32 nstr, u32 len, enum HeapID heapID) {
