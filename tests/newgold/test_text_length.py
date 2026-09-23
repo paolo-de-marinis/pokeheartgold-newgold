@@ -29,7 +29,7 @@ MESSAGES = ROOT / "files/msgdata/msg"
 # Capacities in u16, terminator included, of the smallest String each bank is read into.
 MOVE_NAME_CAPACITY = 16         # GetMoveName's String_New(16) (src/msgdata.c), the move tutor's String_New(0x10)
 SPECIES_NAME_CAPACITY = 11      # POKEMON_NAME_LENGTH + 1: GetSpeciesNameIntoArray copies the row into a nickname array unbounded
-MESSAGE_FORMAT_CAPACITY = 32    # MessageFormat_New (src/message_format.c): ability names, items with article, plurals
+MESSAGE_FORMAT_CAPACITY = 32    # MessageFormat_New_Custom(_, 32) callers: ability names, items with article
 ITEM_NAME_CAPACITY = 18         # the bag's String_New(0x12) (ov15_021FA008)
 ITEM_DESCRIPTION_CAPACITY = 130  # bag, battle bag and shop String_New(130)
 
@@ -47,10 +47,13 @@ ITEM_SOURCES = [
     "src/scrcmd_dppl_prizes.c", "src/application/pokegear/phone/phone_script_defs.c", "files/tel/pmtel_book.json",
 ]
 
-# hg-engine's plural for these is 33 against the bag's 32 (30cec3bb9 brought the text): the toss
-# confirmation for more than one (msg_0010 row 55) shows whatever the bag buffered last. Secret Potion
-# is a key item and is never tossed. Open: when the text or the buffer changes, drop them from here.
-PLURALS_OVER = {"ITEM_NEVERMELTICE": 33, "ITEM_SECRETPOTION": 33}
+
+def item_plural_capacity():
+    """The bag reads plurals into the MessageFormat_New buffer (ov15, asm); the other plural
+    readers have 64 (scripts, overlay 31) or read Apricorns only (overlay 59's 32)."""
+    source = (ROOT / "src/message_format.c").read_text()
+    return int(re.search(r"MessageFormat_New\(enum HeapID heapID\) \{\s*return MessageFormat_New_Custom\(8, (\d+),",
+                         source).group(1))
 
 
 def row_lengths(bank):
@@ -108,7 +111,8 @@ class TextLengthTests(unittest.TestCase):
         self.assertEqual(items_over(ITEM_NAMES, ITEM_NAME_CAPACITY), {}, "obtainable items named longer than 18")
 
     def test_obtainable_item_plurals_fit(self):
-        self.assertEqual(items_over(ITEM_PLURALS, MESSAGE_FORMAT_CAPACITY), PLURALS_OVER)
+        # hg-engine's Never-Melt Ice and Secret Medicine plurals are 33.
+        self.assertEqual(items_over(ITEM_PLURALS, item_plural_capacity()), {})
 
     def test_obtainable_item_descriptions_fit(self):
         self.assertEqual(items_over(ITEM_DESCRIPTIONS, ITEM_DESCRIPTION_CAPACITY), {},
