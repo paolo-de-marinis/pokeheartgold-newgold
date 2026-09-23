@@ -3,6 +3,13 @@
     .data
 
 _000:
+    // A substitute turns this away unless the user has Infiltrator, which the
+    // reference checks in BattleController_CheckSubstituteBlockingOtherEffects
+    // before the move runs.
+    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_INFILTRATOR, _PAST_SUBSTITUTE
+    CheckSubstitute BATTLER_CATEGORY_DEFENDER, _SUBSTITUTE
+
+_PAST_SUBSTITUTE:
     CheckShouldNotTurnOffMultiStatAnim BATTLER_CATEGORY_DEFENDER, _skipShown
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_STAT_STAGE_CHANGE_SHOWN
 _skipShown:
@@ -13,4 +20,8 @@ _skipShown:
     Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_UPDATE_STAT_STAGES
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_STAT_STAGE_CHANGE_SHOWN
-    End 
+    End
+
+_SUBSTITUTE:
+    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_NO_EFFECT
+    End

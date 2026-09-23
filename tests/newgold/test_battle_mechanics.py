@@ -338,6 +338,34 @@ class HexTests(unittest.TestCase):
                                  r"ABILITY_COMATOSE, (_\w+)\n(?:.*\n)*?\1:\n    UpdateVar OPCODE_SET, BSCRIPT_VAR_POWER_MULTI, 20")
 
 
+class SubstituteTests(unittest.TestCase):
+    # BattleController_CheckSubstituteBlockingOtherEffects fails these before
+    # they run, unless the user has Infiltrator; Decorate is in the stat-drop
+    # list beside it, which says "It doesn't affect {0}..." instead.
+    SCRIPTS = {
+        "subscript/subscript_0351_ChangeTargetToWaterType.s": "MOVE_STATUS_FAILED",      # Soak
+        "subscript/subscript_0323_ChangeTargetToPsychicType.s": "MOVE_STATUS_FAILED",    # Magic Powder
+        "subscript/subscript_0325_AddTypeGrass.s": "MOVE_STATUS_FAILED",                 # Forest's Curse
+        "subscript/subscript_0324_AddTypeGhost.s": "MOVE_STATUS_FAILED",                 # Trick-or-Treat
+        "subscript/subscript_0341_HandleQuash.s": "MOVE_STATUS_FAILED",
+        "subscript/subscript_0320_HealPulse.s": "MOVE_STATUS_FAILED",
+        "subscript/subscript_0314_Decorate.s": "MOVE_STATUS_NO_EFFECT",
+        "effect_script/effect_script_0288.s": "MOVE_STATUS_FAILED",                      # Guard Split
+        "effect_script/effect_script_0289.s": "MOVE_STATUS_FAILED",                      # Power Split
+    }
+
+    def test_a_substitute_stops_the_imported_moves(self):
+        for name, flag in self.SCRIPTS.items():
+            script = (ROOT / "files/battledata/script" / name).read_text()
+            body = [line.strip() for line in script[script.index(":\n") + 2:].splitlines()
+                    if line.strip() and not line.strip().startswith("//")]
+            self.assertEqual(body[:2], [
+                "CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_INFILTRATOR, _PAST_SUBSTITUTE",
+                "CheckSubstitute BATTLER_CATEGORY_DEFENDER, _SUBSTITUTE"], name)
+            failure = script[script.index("\n_SUBSTITUTE:"):]
+            self.assertIn(f"BSCRIPT_VAR_MOVE_STATUS_FLAGS, {flag}\n    End", failure, name)
+
+
 class HealBlockTests(unittest.TestCase):
     # Moves the reference's HealBlockUnusableMoveEffects reaches by effect,
     # retail's fourteen among them, and the two it names by move.
