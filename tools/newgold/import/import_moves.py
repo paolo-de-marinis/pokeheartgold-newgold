@@ -33,9 +33,9 @@ WHAT A MOVE'S EFFECT IS
 
 A move names its effect, and the two sides do not agree on the names: the
 reference calls effect 202 BADLY_POISON_HIT where this game calls it
-FLINCH_POISON_HIT, and worse, it calls 62 SP_DEF_DOWN_2 where this game calls
-62 ACC_DOWN_2 and puts SP_DEF_DOWN_2 at 64. Matching by name would quietly
-give a move the wrong effect. What both sides do share is the numbering:
+FLINCH_POISON_HIT (and until the names were put right here, this game
+called 62 ACC_DOWN_2 and put SP_DEF_DOWN_2 at 64, the reverse of what their
+scripts do). Matching by name would quietly give a move the wrong effect. What both sides do share is the numbering:
 effect 202 is the same effect in both trees, because both were dumped from the
 same ROM. So up to 276, the last effect retail had, an effect is matched by
 its NUMBER and the names are ignored. The scripts behind those numbers are not

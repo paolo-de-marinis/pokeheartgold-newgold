@@ -63,9 +63,9 @@
 #define MOVE_EFFECT_DEF_DOWN_2                         59
 #define MOVE_EFFECT_SPEED_DOWN_2                       60
 #define MOVE_EFFECT_SP_ATK_DOWN_2                      61
-#define MOVE_EFFECT_ACC_DOWN_2                         62
-#define MOVE_EFFECT_EVA_DOWN_2                         63
-#define MOVE_EFFECT_SP_DEF_DOWN_2                      64
+#define MOVE_EFFECT_SP_DEF_DOWN_2                      62
+#define MOVE_EFFECT_ACC_DOWN_2                         63
+#define MOVE_EFFECT_EVA_DOWN_2                         64
 #define MOVE_EFFECT_SET_REFLECT                        65
 #define MOVE_EFFECT_STATUS_POISON                      66
 #define MOVE_EFFECT_STATUS_PARALYZE                    67

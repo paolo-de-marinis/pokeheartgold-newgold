@@ -194,6 +194,14 @@ class BroughtOverTests(unittest.TestCase):
             self.assertIn(f"MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_{pointer}", text, effect)
             self.assertNotIn("CalcDamage", text, effect)
 
+    def test_the_two_stage_drops_are_named_for_their_scripts(self):
+        # pret called 62 ACC_DOWN_2, 63 EVA_DOWN_2 and 64 SP_DEF_DOWN_2, each
+        # the name of another one's script.
+        header = (ROOT / "include/constants/move_effects.h").read_text()
+        for name, pointer in (("SP_DEF", "SP_DEFENSE"), ("ACC", "ACCURACY"), ("EVA", "EVASION")):
+            effect = int(re.search(rf"#define MOVE_EFFECT_{name}_DOWN_2\s+(\d+)", header).group(1))
+            self.assertIn(f"MOVE_SUBSCRIPT_PTR_{pointer}_DOWN_2_STAGES", script(effect), name)
+
     def test_judgment_reads_the_pixie_plate(self):
         # Retail's Judgment knew sixteen plates, so with a Pixie Plate it
         # stayed Normal.
