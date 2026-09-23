@@ -68,5 +68,64 @@ class DexSortListTests(unittest.TestCase):
         self.check("zukan_data_gira.narc", "origin")
 
 
+def national_numbers():
+    """species -> National Dex number, as Pokedex_ConvertToCurrentDexNo
+    answers: its own number up to Arceus, the table in src/pokedex.c after."""
+    source = (ROOT / "src/pokedex.c").read_text()
+    table = source[source.index("static const u16 sNationalDexNumbers["):]
+    table = table[:table.index("};")]
+    ids = species_ids()
+    out = {species: species for species in range(1, ids["SPECIES_ARCEUS"] + 1)}
+    for name, number in re.findall(r"\[(SPECIES_\w+) - LAST_DEX_GAP - 1\] = (\d+),", table):
+        out[ids[name]] = int(number)
+    return out
+
+
+class DexSortListContentTests(unittest.TestCase):
+    """The lists the Dex builds its list from hold every species it has an
+    entry for, as the Dex numbers and shows them; they stopped at Arceus."""
+
+    def setUp(self):
+        self.data = json.loads((DIR / "zukan_data.json").read_text())
+        self.ids = species_ids()
+        self.lists = {(g["type"], o["id"]): o["mons"] for g in self.data["sorting"] for o in g["options"]}
+        self.numbers = national_numbers()
+        # the two Galarian forms kept as species share Slowpoke's and Slowbro's numbers
+        self.dex = [s for s, n in self.numbers.items() if s <= self.ids["SPECIES_ARCEUS"] or n > self.ids["SPECIES_ARCEUS"]]
+
+    def flat(self, key):
+        value = self.lists[key]
+        return value if isinstance(value, list) else value["altered"]
+
+    def test_the_national_order_is_every_dex_species(self):
+        national = [self.ids[name] for name in self.flat(("dex_order", "national"))]
+        self.assertEqual(len(national), 1025)
+        self.assertEqual(sorted(national), sorted(self.dex))
+        self.assertEqual([self.numbers[s] for s in national], list(range(1, 1026)))
+        header = (ROOT / "include/application/pokedex/pokedex_internal.h").read_text()
+        self.assertIn("#define POKEDEX_LIST_LEN      NATIONAL_DEX_COUNT", header)
+        self.assertLessEqual(len(national), self.ids["SPECIES_PECHARUNT"])
+
+    def test_every_order_lists_the_same_species(self):
+        dex = sorted(self.dex)
+        for order in ("alphabetical", "heaviest", "lightest", "tallest", "shortest"):
+            self.assertEqual(sorted(self.ids[name] for name in self.flat(("dex_order", order))), dex, order)
+
+    def test_the_sizes_are_in_order(self):
+        stats = self.data["mon_stats"]
+        value = lambda name, field: (lambda v: v if isinstance(v, int) else v["altered"])(stats[self.ids[name]][field])  # noqa: E731
+        for order, field, sign in (("heaviest", "weight", -1), ("lightest", "weight", 1),
+                                   ("tallest", "height", -1), ("shortest", "height", 1)):
+            got = [sign * value(name, field) for name in self.flat(("dex_order", order))]
+            self.assertEqual(got, sorted(got), order)
+
+    def test_the_area_flags_reach_the_last_dex_species(self):
+        for path in sorted((DIR / "zukan_hw_data").glob("zukan_hw_data_1_*.bin")):
+            flags = path.read_bytes()
+            self.assertEqual(len(flags), self.ids["SPECIES_PECHARUNT"] + 1, path.name)
+            # an added species has no area of its own: "unknown", and any
+            self.assertEqual(flags[self.ids["SPECIES_LILLIPUP"]], 8 | 4, path.name)
+
+
 if __name__ == "__main__":
     unittest.main()
