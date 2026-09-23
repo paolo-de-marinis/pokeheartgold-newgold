@@ -967,7 +967,7 @@ static void BattleMon_AddVar(BattleMon *mon, u32 varId, int data) { mon->pp[varI
 static void CopyBattleMonToPartyMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; ctx->copied = battlerId + 1; }
 @FUNCTION@
 static BattleContext ctx;
-static int kept(int script, int flingScript, int hp, u32 status2, int infiltrator) {
+static int kept(int flingScript, int hp, u32 status2, int infiltrator) {
     BattleSystem bs;
     ctx = (BattleContext){ 0 };
     ctx.battlerIdAttacker = 0;
@@ -981,31 +981,26 @@ static int kept(int script, int flingScript, int hp, u32 status2, int infiltrato
     ctx.recycleItem[0] = 149;
     ctx.moveTemp = 102;
     ctx.flingData = 10;
-    FlungItemLands(&bs, &ctx, script);
+    FlungItemLands(&bs, &ctx);
     return ctx.kept[1];
 }
 int main(void) {
-    assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, 0, 0) == 149);
+    assert(kept(198, 50, 0, 0) == 149);
     // Belch counts the landed Berry for the Pokemon it landed on, not the thrower.
     assert(ctx.ate[1] && !ctx.ate[0]);
-    assert(kept(BATTLE_SUBSCRIPT_FLING, 0, 50, 0, 0) == 0);
+    assert(kept(0, 50, 0, 0) == 0);
     assert(!ctx.ate[1]);
-    assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 0, 0, 0) == 0);
-    assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, STATUS2_SUBSTITUTE, 0) == 0);
-    assert(kept(BATTLE_SUBSCRIPT_FLING, 198, 50, STATUS2_SUBSTITUTE, 1) == 149);
-    assert(kept(BATTLE_SUBSCRIPT_FLINCH_MON, 198, 50, 0, 0) == 0);
+    assert(kept(198, 0, 0, 0) == 0);
+    assert(kept(198, 50, STATUS2_SUBSTITUTE, 0) == 0);
+    assert(kept(198, 50, STATUS2_SUBSTITUTE, 1) == 149);
     // A Leppa Berry restores the chosen move's PP when it lands, not before.
-    kept(BATTLE_SUBSCRIPT_FLING, BATTLE_SUBSCRIPT_HELD_ITEM_PP_RESTORE, 50, 0, 0);
+    kept(BATTLE_SUBSCRIPT_HELD_ITEM_PP_RESTORE, 50, 0, 0);
     assert(ctx.battleMons[1].pp[2] == 10 && ctx.copied == 2);
-    kept(BATTLE_SUBSCRIPT_MISSED, BATTLE_SUBSCRIPT_HELD_ITEM_PP_RESTORE, 50, 0, 0);
-    assert(ctx.battleMons[1].pp[2] == 0 && ctx.copied == 0);
-    kept(BATTLE_SUBSCRIPT_FLING, BATTLE_SUBSCRIPT_HELD_ITEM_PP_RESTORE, 50, STATUS2_SUBSTITUTE, 0);
+    kept(BATTLE_SUBSCRIPT_HELD_ITEM_PP_RESTORE, 50, STATUS2_SUBSTITUTE, 0);
     assert(ctx.battleMons[1].pp[2] == 0);
     // A White Herb resets the lowered stats when it lands, and only those.
-    kept(BATTLE_SUBSCRIPT_FLING, BATTLE_SUBSCRIPT_HELD_ITEM_STATDOWN_RESTORE, 50, 0, 0);
+    kept(BATTLE_SUBSCRIPT_HELD_ITEM_STATDOWN_RESTORE, 50, 0, 0);
     assert(ctx.battleMons[1].statChanges[2] == 6 && ctx.battleMons[1].statChanges[5] == 9 && ctx.battleMons[1].statChanges[0] == 6);
-    kept(BATTLE_SUBSCRIPT_MISSED, BATTLE_SUBSCRIPT_HELD_ITEM_STATDOWN_RESTORE, 50, 0, 0);
-    assert(ctx.battleMons[1].statChanges[2] == 4);
     return 0;
 }
 """
@@ -1023,9 +1018,16 @@ int main(void) {
                 "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
                 str(path / "test.c"), "-o", str(path / "test")], check=True)
             subprocess.run([str(path / "test")], check=True)
-        dispatch = function(source, "ov12_02250490")
-        hit = dispatch[dispatch.index("if (ctx->unk_2174 & (1 << 29)) {"):dispatch.index("} else if (ctx->unk_2174 & (1 << 24)) {")]
-        self.assertIn("FlungItemLands(battleSystem, ctx, *out);", hit)
+        # Asked by the step that runs the flung item's script, for a move that
+        # hit, just before the move's other effects are rolled.
+        step = function(source, "TryFlungItemEffect")
+        self.assertIn("(ctx->moveStatusFlag & MOVE_STATUS_FAIL)", step)
+        self.assertLess(step.index("FlungItemLands(battleSystem, ctx);"), step.index("BATTLE_SUBSCRIPT_FLING"))
+        chains = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224CAA4")
+        flings = [i for i in range(len(chains)) if chains.startswith("TryFlungItemEffect(battleSystem, ctx)", i)]
+        rolls = [i for i in range(len(chains)) if chains.startswith("ov12_02250490(battleSystem, ctx, &script)", i)]
+        self.assertEqual(len(flings), 2)
+        self.assertTrue(all(fling < roll for fling, roll in zip(flings, rolls)))
         fling = function(source, "TryFling")
         self.assertNotIn("BattleMon_AddVar", fling)
         self.assertNotIn("statChanges[stat] = 6", fling)

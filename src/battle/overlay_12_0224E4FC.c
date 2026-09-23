@@ -1780,11 +1780,11 @@ BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *scri
 // a substitute. A Berry flung at a Cud Chew Pokemon is kept for the turn
 // after (Pokemon Central, Ruminante: Lancio); the Berry itself left the
 // thrower's hand through RemoveItem, which kept it in recycleItem.
-static void FlungItemLands(BattleSystem *battleSystem, BattleContext *ctx, int script) {
+static void FlungItemLands(BattleSystem *battleSystem, BattleContext *ctx) {
     int battlerId = ctx->battlerIdStatChange;
     int stat;
 
-    if (script != BATTLE_SUBSCRIPT_FLING || !ctx->flingScript || !ctx->battleMons[battlerId].hp) {
+    if (!ctx->flingScript || !ctx->battleMons[battlerId].hp) {
         return;
     }
     if (((ctx->battleMons[battlerId].status2 & STATUS2_SUBSTITUTE) || (ctx->selfTurnData[battlerId].unk14 & SELF_TURN_FLAG_SUBSTITUTE_HIT))
@@ -1810,6 +1810,26 @@ static void FlungItemLands(BattleSystem *battleSystem, BattleContext *ctx, int s
     if (ItemIdIsBerry(ctx->recycleItem[ctx->battlerIdAttacker]) == TRUE) {
         RememberBerryEaten(battleSystem, ctx, battlerId);
     }
+}
+
+// What the flung item does, as it lands: the engine's first step for each
+// Pokemon a move hits (MovePerformance_Step_9, ServerDoPostMoveEffects.c:2215
+// at d0380a487), before the flinch and the move's other effects, where
+// retail's effect script 233 set it as the move's side effect. Subscript 220
+// asks for a script to run, the target standing and no substitute in the
+// way; FlungItemLands does what the item's own script does not.
+BOOL TryFlungItemEffect(BattleSystem *battleSystem, BattleContext *ctx) {
+    if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect != MOVE_EFFECT_FLING || ctx->battlerIdTarget == BATTLER_NONE
+        || (ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
+        return FALSE;
+    }
+    ctx->statChangeType = SIDE_EFFECT_TYPE_INDIRECT;
+    ctx->battlerIdStatChange = ctx->battlerIdTarget;
+    FlungItemLands(battleSystem, ctx);
+    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FLING);
+    ctx->commandNext = ctx->command;
+    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+    return TRUE;
 }
 
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
@@ -1846,7 +1866,6 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         ctx->unk_2174 = 0;
         if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
             ret = TRUE;
-            FlungItemLands(battleSystem, ctx, *out);
         }
     } else if (ctx->unk_2174 & (1 << 24)) {
         *out = GetMoveStatusChangeScript(ctx, 2, ctx->unk_2174);
