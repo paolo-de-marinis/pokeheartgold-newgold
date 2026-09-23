@@ -36,12 +36,15 @@ static inline u32 dsprotMain(u32 *funcQueue, ExpectedResult expectedResult, void
     return (u32)ret;
 }
 
+// New Gold runs on flashcarts, as hg-engine's APPLY_ANTIPIRACY makes it:
+// the two ROM-read checks queue nothing, like the Dummy pair below, so a
+// flashcart is never detected and always passes as a genuine card. The
+// emulator checks are left as they are.
 u32 DSProtInternal_DetectFlashcart(void *callback) {
     u32 funcQueue[32];
 
-    funcQueue[2] = FUNC_QUEUE_END;
-    funcQueue[0] = ADDR_PLUS_ADDEND(RunEncrypted_ROMTest_IsBad, ENC_VAL_1) + DSP_OBFS_OFFSET;
-    funcQueue[1] = ADDR_PLUS_ADDEND(RunEncrypted_Integrity_ROMTest_IsBad, ENC_VAL_1) + DSP_OBFS_OFFSET;
+    // Prevent optimization of the function queue processing
+    *(u32 *)&funcQueue[0] = FUNC_QUEUE_END;
 
     return dsprotMain(&funcQueue[0], EXPECT_FALSE, callback);
 }
@@ -49,9 +52,8 @@ u32 DSProtInternal_DetectFlashcart(void *callback) {
 u32 DSProtInternal_DetectNotFlashcart(void *callback) {
     u32 funcQueue[32];
 
-    funcQueue[2] = FUNC_QUEUE_END;
-    funcQueue[0] = ADDR_PLUS_ADDEND(RunEncrypted_ROMTest_IsGood, ENC_VAL_1) + DSP_OBFS_OFFSET;
-    funcQueue[1] = ADDR_PLUS_ADDEND(RunEncrypted_Integrity_ROMTest_IsGood, ENC_VAL_1) + DSP_OBFS_OFFSET;
+    // Prevent optimization of the function queue processing
+    *(u32 *)&funcQueue[0] = FUNC_QUEUE_END;
 
     return dsprotMain(&funcQueue[0], EXPECT_TRUE, callback);
 }

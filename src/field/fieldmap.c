@@ -771,9 +771,12 @@ static void ov01_021E6580(FieldSystem *fieldSystem) {
     Main_SetVBlankIntrCB(FieldMap_VBlankCallback, fieldSystem);
 }
 
+// Retail asks the card's status register for a genuine cartridge and starts
+// two lag tasks when the answer is wrong, which it is on a flashcart. New
+// Gold runs on flashcarts, as hg-engine's APPLY_ANTIPIRACY makes it: the check
+// always passes.
 static BOOL ov01_021E662C(void) {
-    CARD_SpiWaitGetStatus();
-    return CARD_SpiWaitGetStatus() == 170;
+    return TRUE;
 }
 
 static MapObjectsToPreload *FetchMapObjectsToPreload(enum HeapID heapID, u16 modelBank) {
