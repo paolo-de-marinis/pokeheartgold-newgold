@@ -779,6 +779,78 @@ static u32 ScreenModifier(BattleSystem *battleSystem, BattleContext *ctx, u32 mo
     return UQ412__0_5;
 }
 
+// The type a type-resist Berry answers to, or -1 for any other item.
+static int ResistBerryType(int holdEffect) {
+    switch (holdEffect) {
+    case HOLD_EFFECT_WEAKEN_NORMAL:
+        return TYPE_NORMAL;
+    case HOLD_EFFECT_WEAKEN_SE_FIRE:
+        return TYPE_FIRE;
+    case HOLD_EFFECT_WEAKEN_SE_WATER:
+        return TYPE_WATER;
+    case HOLD_EFFECT_WEAKEN_SE_ELECTRIC:
+        return TYPE_ELECTRIC;
+    case HOLD_EFFECT_WEAKEN_SE_GRASS:
+        return TYPE_GRASS;
+    case HOLD_EFFECT_WEAKEN_SE_ICE:
+        return TYPE_ICE;
+    case HOLD_EFFECT_WEAKEN_SE_FIGHT:
+        return TYPE_FIGHTING;
+    case HOLD_EFFECT_WEAKEN_SE_POISON:
+        return TYPE_POISON;
+    case HOLD_EFFECT_WEAKEN_SE_GROUND:
+        return TYPE_GROUND;
+    case HOLD_EFFECT_WEAKEN_SE_FLYING:
+        return TYPE_FLYING;
+    case HOLD_EFFECT_WEAKEN_SE_PSYCHIC:
+        return TYPE_PSYCHIC;
+    case HOLD_EFFECT_WEAKEN_SE_BUG:
+        return TYPE_BUG;
+    case HOLD_EFFECT_WEAKEN_SE_ROCK:
+        return TYPE_ROCK;
+    case HOLD_EFFECT_WEAKEN_SE_GHOST:
+        return TYPE_GHOST;
+    case HOLD_EFFECT_WEAKEN_SE_DRAGON:
+        return TYPE_DRAGON;
+    case HOLD_EFFECT_WEAKEN_SE_DARK:
+        return TYPE_DARK;
+    case HOLD_EFFECT_WEAKEN_SE_STEEL:
+        return TYPE_STEEL;
+    case HOLD_EFFECT_WEAKEN_SE_FAIRY:
+        return TYPE_FAIRY;
+    }
+    return -1;
+}
+
+// The type-resist Berries (6.9.13, the reference's
+// CanActivateDamageReductionBerry): a super-effective hit of the Berry's type,
+// or any Normal hit for the Chilan Berry, is halved -- quartered with Ripen --
+// inside the chain, so what Counter, Mirror Coat, Metal Burst, Shell Bell and
+// the Endure and Focus Sash clamps see is the halved hit. The type is the
+// move's as it lands, after Pixilate and the others, Liquid Voice or Ion
+// Deluge. A substitute that takes the hit, a foe's Unnerve, Klutz and Embargo
+// leave the Berry alone, and Struggle and the typeless hits never wake it.
+// The mark left on the target has UpdateHp eat the Berry before the health
+// bar moves (subscript 264).
+static u32 ResistBerryModifier(BattleSystem *battleSystem, BattleContext *ctx, int moveType, int effectiveness) {
+    int battlerIdTarget = ctx->battlerIdTarget;
+    int berryType = ResistBerryType(GetBattlerHeldItemEffect(ctx, battlerIdTarget));
+    int boost = 1;
+
+    ctx->selfTurnData[battlerIdTarget].unk14 &= ~SELF_TURN_FLAG_RESIST_BERRY;
+    if (berryType != moveType || effectiveness == 0 || (berryType != TYPE_NORMAL && effectiveness <= 8)) {
+        return UQ412__1_0;
+    }
+    if (ctx->moveNoCur == MOVE_STRUGGLE || (ctx->battleStatus & (BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS | BATTLE_STATUS_IGNORE_TYPE_IMMUNITY))) {
+        return UQ412__1_0;
+    }
+    if (SubstituteTakesHit(ctx, battlerIdTarget) == TRUE || BerryCanBeEaten(battleSystem, ctx, battlerIdTarget, &boost) == FALSE) {
+        return UQ412__1_0;
+    }
+    ctx->selfTurnData[battlerIdTarget].unk14 |= SELF_TURN_FLAG_RESIST_BERRY;
+    return boost > 1 ? UQ412__0_25 : UQ412__0_5;
+}
+
 // The final modifier (6.9): every multiplier the reference chains into one
 // Q4.12 number with QMul_RoundUp before it touches the damage, once. The
 // reference visits the battlers by raw Speed; this takes the attacker's, then
@@ -874,6 +946,7 @@ static u32 FinalDamageModifier(BattleSystem *battleSystem, BattleContext *ctx, i
     if (effectiveness > 8 && item == HOLD_EFFECT_POWER_UP_SE) {
         modifier = QMul_RoundUp(modifier, UQ412__1_2);
     }
+    modifier = QMul_RoundUp(modifier, ResistBerryModifier(battleSystem, ctx, moveType, effectiveness));
     if (item == HOLD_EFFECT_HP_DRAIN_ON_ATK) {
         modifier = QMul_RoundUp(modifier, UQ412__1_3_BUT_LOWER);
     }

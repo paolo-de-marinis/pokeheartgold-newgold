@@ -56,6 +56,7 @@ typedef struct {
     struct { int glaiveRush; } moveConditions[4];
     struct { int protectFlag, roostFlag; } turnData[4];
     u8 teraShellResisting;
+    struct { u32 unk14; } selfTurnData[4];
 } BattleContext;
 typedef struct { int range, category, effect, power; } MoveTbl;
 
@@ -64,6 +65,7 @@ static struct {
     u32 base; u32 battleType; int maxBattlers; int hitCount; u16 random; int cloudNine; int secondStrike;
     int ability[4]; int item[4]; int types[4][2];
     MoveTbl move; int contact, sound;
+    int adjustedType, substitute, unnerve, ripen;
 } S;
 
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &S.move; }
@@ -71,8 +73,16 @@ static int CalcMoveDamage(BattleSystem *bs, BattleContext *ctx, u32 moveNo, u32 
     (void)bs; (void)ctx; (void)moveNo; (void)side; (void)field; (void)power; (void)type; (void)a; (void)t; (void)crit;
     return S.base;
 }
-static u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) { (void)battlerId; (void)moveNo; return ctx->moveType; }
-static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault) { (void)ctx; (void)ability; (void)moveNo; return moveTypeDefault; }
+// A type change such as Pixilate's, when the scenario asks for one.
+static u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) { (void)battlerId; (void)moveNo; return S.adjustedType ? S.adjustedType : ctx->moveType; }
+static u8 BattleMoveTypeForAbility(BattleContext *ctx, int ability, u32 moveNo, int moveTypeDefault) { (void)ctx; (void)ability; (void)moveNo; return S.adjustedType ? S.adjustedType : moveTypeDefault; }
+static BOOL SubstituteTakesHit(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return S.substitute; }
+static BOOL BerryCanBeEaten(BattleSystem *bs, BattleContext *ctx, int battlerId, int *boost) {
+    (void)bs; (void)ctx; (void)battlerId;
+    if (S.unnerve) return FALSE;
+    if (S.ripen) *boost *= 2;
+    return TRUE;
+}
 static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
 static u32 BattleSystem_GetBattleType(BattleSystem *bs) { (void)bs; return S.battleType; }
 static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return S.maxBattlers; }
@@ -287,6 +297,27 @@ int main(void) {
     // + 2047 >> 12 = 108. Nothing on a neutral one.
     reset(); S.types[1][0] = S.types[1][1] = TYPE_GRASS; S.item[0] = HOLD_EFFECT_POWER_UP_SE; EXPECT(calc(), 108);
     reset(); S.item[0] = HOLD_EFFECT_POWER_UP_SE; EXPECT(calc(), 45);
+    // 6.9.13 a type-resist Berry halves a super-effective hit of its type in
+    // the chain -- 90 to 45 -- and marks the target for UpdateHp to eat it.
+    // A neutral hit leaves it alone.
+    reset(); S.types[1][0] = S.types[1][1] = TYPE_GRASS; S.item[1] = HOLD_EFFECT_WEAKEN_SE_FIRE; EXPECT(calc(), 45);
+    EXPECT((ctx.selfTurnData[1].unk14 & SELF_TURN_FLAG_RESIST_BERRY) != 0, 1);
+    reset(); S.item[1] = HOLD_EFFECT_WEAKEN_SE_FIRE; EXPECT(calc(), 45);
+    EXPECT((int)(ctx.selfTurnData[1].unk14 & SELF_TURN_FLAG_RESIST_BERRY), 0);
+    // The Chilan Berry takes any Normal hit: a neutral one with STAB, 67,
+    // halved to 33.
+    reset(); ctx.moveType = TYPE_NORMAL; S.item[1] = HOLD_EFFECT_WEAKEN_NORMAL; EXPECT(calc(), 33);
+    // The type is the one the move lands with: a Normal move a Pixilate made
+    // Fairy wakes a Roseli Berry on a Dragon, 90 to 45.
+    reset(); ctx.moveType = TYPE_NORMAL; S.adjustedType = TYPE_FAIRY; S.types[1][0] = S.types[1][1] = TYPE_DRAGON;
+    S.item[1] = HOLD_EFFECT_WEAKEN_SE_FAIRY; EXPECT(calc(), 45);
+    // Not behind a substitute that takes the hit, not under Unnerve: 90.
+    // Ripen makes it a quarter: 90 * 1024, + 2047 >> 12 = 22.
+    reset(); S.types[1][0] = S.types[1][1] = TYPE_GRASS; S.item[1] = HOLD_EFFECT_WEAKEN_SE_FIRE; S.substitute = TRUE; EXPECT(calc(), 90);
+    EXPECT((int)(ctx.selfTurnData[1].unk14 & SELF_TURN_FLAG_RESIST_BERRY), 0);
+    S.substitute = FALSE; S.unnerve = TRUE; EXPECT(calc(), 90);
+    S.unnerve = FALSE; S.ripen = TRUE; EXPECT(calc(), 22);
+
     // 6.9.12 a Life Orb, 5324: 58.
     reset(); S.item[0] = HOLD_EFFECT_HP_DRAIN_ON_ATK; EXPECT(calc(), 58);
     // The final modifier is one number, rounded up at each link, and touches
@@ -335,7 +366,7 @@ def program():
             "BattlerMoveWeather", "StrongWindsShelterRow", "StrongWindsFor", "StrongWindsWeakenMove",
             "CalcTypeEffectiveness", "MoveIsInList", "BattleMoveStampsOnMinimize")])
     commands = "\n".join(function(COMMANDS, name) for name in (
-        "ScreenModifier", "FinalDamageModifier", "DamageCalcDefault"))
+        "ScreenModifier", "ResistBerryType", "ResistBerryModifier", "FinalDamageModifier", "DamageCalcDefault"))
     return (FIXTURE.replace("@UQ412@", uq412)
             .replace("@OVERLAY@", overlay.replace("BOOL ov12_02251C74", "static BOOL ov12_02251C74")
                      .replace("int CalcTypeEffectiveness", "static int CalcTypeEffectiveness")
@@ -392,6 +423,17 @@ class DamageFormulaTests(unittest.TestCase):
         self.assertRegex(body, r"MOVE_EFFECT_FLAG_MINIMIZE\) && BattleMoveStampsOnMinimize\(move\)\) \{\n\s*ctx->moveStatusFlag &= ~MOVE_STATUS_MISSED;")
         stomp = (ROOT / "files/battledata/script/effect_script/effect_script_0150.s").read_text()
         self.assertNotIn("BSCRIPT_VAR_POWER_MULTI, 20", stomp)
+
+    def test_the_berry_is_eaten_before_the_bar_moves_and_halves_nothing_more(self):
+        # The half is the chain's (6.9.13); subscript 264, called from UpdateHp
+        # before the health bar, only eats the Berry the chain marked.
+        script = (ROOT / "files/battledata/script/subscript/subscript_0264_SuperEffectiveBerries.s").read_text()
+        commands = [line.strip() for line in script.splitlines() if line.strip() and not line.strip().startswith("//")]
+        self.assertFalse([c for c in commands if c.startswith("DivideVar")])
+        self.assertIn("CompareVarToValue OPCODE_FLAG_NOT, BSCRIPT_VAR_DEFENDER_SELF_TURN_STATUS_FLAGS, SELF_TURN_FLAG_RESIST_BERRY, _END", commands)
+        self.assertIn("RemoveItem BATTLER_CATEGORY_MSG_TEMP", commands)
+        update = (ROOT / "files/battledata/script/subscript/subscript_0002_UpdateHp.s").read_text()
+        self.assertLess(update.index("Call BATTLE_SUBSCRIPT_TYPE_RESIST_BERRY"), update.index("UpdateHealthBar "))
 
     def test_future_sight_keeps_the_screens(self):
         # Its damage is still worked out whole on the turn it is used, as

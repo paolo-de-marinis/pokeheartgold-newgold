@@ -426,6 +426,7 @@ typedef enum Terrain {
 #define SELF_TURN_FLAG_PLUCK_BERRY    (1 << 1)
 #define SELF_TURN_FLAG_INFATUATED     (1 << 2)
 #define SELF_TURN_FLAG_SUBSTITUTE_HIT (1 << 3)
+#define SELF_TURN_FLAG_RESIST_BERRY   (1 << 4)
 
 // Struggle Checks
 #define STRUGGLE_CHECK_NO_MOVES   (1 << 0)

@@ -7106,7 +7106,7 @@ static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item) {
 
 // Unnerve on the far side is enough to put a Pokemon off its food; Ripen on
 // this one makes what it does eat go twice as far.
-static BOOL BerryCanBeEaten(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int *boost) {
+BOOL BerryCanBeEaten(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int *boost) {
     int i;
 
     if (BattlerHoldsBerry(ctx, battlerId) == FALSE) {

@@ -100,6 +100,7 @@ BOOL TryDropLostIllusion(BattleSystem *battleSystem, BattleContext *ctx, int *sc
 BOOL CheckStatusHealAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int flag);
 BOOL CheckStatusHealSwitch(BattleContext *ctx, int ability, int status);
 BOOL TrySyncronizeStatus(BattleSystem *battleSystem, BattleContext *ctx, ControllerCommand command);
+BOOL BerryCanBeEaten(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int *boost);
 BOOL TryUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL CheckItemGradualHPRestore(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL CheckUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u32 *scriptOut);
