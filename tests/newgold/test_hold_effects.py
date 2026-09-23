@@ -76,7 +76,8 @@ FIRST_IMPORTED = "HOLD_EFFECT_DOUSE_DRIVE"
 # twenty-three the scripts had been answering all along: the four Drives, the
 # seventeen Memories, the Roseli Berry and Heavy-Duty Boots.
 # The Blank Plate's power took one more.
-IMPORTED_AND_UNREAD = 18
+# The three origin items and Ogerpon's three masks took six.
+IMPORTED_AND_UNREAD = 12
 
 
 def effects_defined():
@@ -251,6 +252,56 @@ class BlankPlateTests(unittest.TestCase):
         rows = re.findall(r"\{\s*(HOLD_EFFECT_\w+),\s*(TYPE_\w+)\s*\}", table[:table.index("};")])
         self.assertIn(("HOLD_EFFECT_ARCEUS_NORMAL", "TYPE_NORMAL"), rows)
         self.assertEqual(item_records()["ITEM_BLANK_PLATE"], ("HOLD_EFFECT_ARCEUS_NORMAL", 20))
+
+
+def power_blocks(effect):
+    """The CalcMoveDamage if-blocks that name a hold effect: (condition, body)."""
+    from test_terrain import overlay_function
+    body = overlay_function("CalcMoveDamage")
+    return [(condition, action.strip()) for condition, action
+            in re.findall(r"\n    if \(((?:[^{]|\n)*?)\) \{\n(.*?)\n    \}", body, re.S)
+            if effect in condition]
+
+
+class OriginItemsAndMasksTests(unittest.TestCase):
+    """CalcBaseDamage.c:879-946 at d0380a487: x1.2 to Dialga's Dragon and
+    Steel moves with the Adamant Crystal, Palkia's Dragon and Water with the
+    Lustrous Globe, Giratina's Dragon and Ghost with the Griseous Core, and to
+    every move of an Ogerpon wearing its own mask."""
+
+    ITEMS = {
+        "HOLD_EFFECT_DIALGA_BOOST_AND_TRANSFORM": ("ITEM_ADAMANT_CRYSTAL", ["TYPE_DRAGON", "TYPE_STEEL"],
+                                                   ["SPECIES_DIALGA", "SPECIES_DIALGA_ORIGIN"]),
+        "HOLD_EFFECT_PALKIA_BOOST_AND_TRANSFORM": ("ITEM_LUSTROUS_GLOBE", ["TYPE_DRAGON", "TYPE_WATER"],
+                                                   ["SPECIES_PALKIA", "SPECIES_PALKIA_ORIGIN"]),
+        "HOLD_EFFECT_GIRATINA_BOOST_AND_TRANSFORM": ("ITEM_GRISEOUS_CORE", ["TYPE_DRAGON", "TYPE_GHOST"],
+                                                     ["SPECIES_GIRATINA"]),
+        "HOLD_EFFECT_WELLSPRING_MASK": ("ITEM_WELLSPRING_MASK", [],
+                                        ["SPECIES_OGERPON_WELLSPRING_MASK", "SPECIES_OGERPON_WELLSPRING_MASK_TERASTAL"]),
+        "HOLD_EFFECT_HEARTHFLAME_MASK": ("ITEM_HEARTHFLAME_MASK", [],
+                                         ["SPECIES_OGERPON_HEARTHFLAME_MASK", "SPECIES_OGERPON_HEARTHFLAME_MASK_TERASTAL"]),
+        "HOLD_EFFECT_CORNERSTONE_MASK": ("ITEM_CORNERSTONE_MASK", [],
+                                         ["SPECIES_OGERPON_CORNERSTONE_MASK", "SPECIES_OGERPON_CORNERSTONE_MASK_TERASTAL"]),
+    }
+
+    def test_each_item_gives_its_holder_a_fifth(self):
+        records = item_records()
+        for effect, (item, types, species) in self.ITEMS.items():
+            self.assertEqual(records[item], (effect, 20), item)
+            blocks = power_blocks(effect)
+            self.assertEqual(len(blocks), 1, effect)
+            condition, action = blocks[0]
+            self.assertEqual(action, "movePower = movePower * (100 + calcAttacker.mod) / 100;", effect)
+            clause = condition
+            if "||" in condition and not types:
+                # The three masks share one if; take this mask's clause.
+                clause = next(c for c in condition.split("\n") if effect in c)
+            self.assertIn(f"calcAttacker.item == {effect}", clause)
+            for kind in types:
+                self.assertIn(f"moveType == {kind}", clause, effect)
+            if not types:
+                self.assertNotIn("moveType", clause, effect)
+            self.assertEqual(sorted(re.findall(r"calcAttacker\.species == (SPECIES_\w+)", clause)), sorted(species), effect)
 
 
 if __name__ == "__main__":

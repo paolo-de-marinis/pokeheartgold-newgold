@@ -9626,6 +9626,35 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         movePower = movePower * (100 + calcAttacker.mod) / 100;
     }
 
+    // The Adamant Crystal, the Lustrous Globe and the Griseous Core are the
+    // three orbs again for the same types, and the reference writes them out
+    // beside the orbs (CalcBaseDamage.c:879-900 at d0380a487). It asks for the
+    // base species in any form; a form is a species here, so the Origin Forme
+    // is named beside it -- Giratina's forms are still a form number on
+    // SPECIES_GIRATINA, as in retail. Unlike the Griseous Orb above, the
+    // reference does not exclude a transformed holder. holdEffectParam is 20.
+    if (calcAttacker.item == HOLD_EFFECT_DIALGA_BOOST_AND_TRANSFORM && (moveType == TYPE_DRAGON || moveType == TYPE_STEEL) && (calcAttacker.species == SPECIES_DIALGA || calcAttacker.species == SPECIES_DIALGA_ORIGIN)) {
+        movePower = movePower * (100 + calcAttacker.mod) / 100;
+    }
+
+    if (calcAttacker.item == HOLD_EFFECT_PALKIA_BOOST_AND_TRANSFORM && (moveType == TYPE_DRAGON || moveType == TYPE_WATER) && (calcAttacker.species == SPECIES_PALKIA || calcAttacker.species == SPECIES_PALKIA_ORIGIN)) {
+        movePower = movePower * (100 + calcAttacker.mod) / 100;
+    }
+
+    if (calcAttacker.item == HOLD_EFFECT_GIRATINA_BOOST_AND_TRANSFORM && (moveType == TYPE_DRAGON || moveType == TYPE_GHOST) && calcAttacker.species == SPECIES_GIRATINA) {
+        movePower = movePower * (100 + calcAttacker.mod) / 100;
+    }
+
+    // Ogerpon's three masks give a fifth more to every move, worn by the form
+    // that goes with the mask (CalcBaseDamage.c:924-946: forms 1 and 5, 2 and
+    // 6, 3 and 7 -- the mask's form and its Terastal one, each a species of
+    // its own here). The Teal Mask has no hold effect, in either tree.
+    if ((calcAttacker.item == HOLD_EFFECT_WELLSPRING_MASK && (calcAttacker.species == SPECIES_OGERPON_WELLSPRING_MASK || calcAttacker.species == SPECIES_OGERPON_WELLSPRING_MASK_TERASTAL))
+        || (calcAttacker.item == HOLD_EFFECT_HEARTHFLAME_MASK && (calcAttacker.species == SPECIES_OGERPON_HEARTHFLAME_MASK || calcAttacker.species == SPECIES_OGERPON_HEARTHFLAME_MASK_TERASTAL))
+        || (calcAttacker.item == HOLD_EFFECT_CORNERSTONE_MASK && (calcAttacker.species == SPECIES_OGERPON_CORNERSTONE_MASK || calcAttacker.species == SPECIES_OGERPON_CORNERSTONE_MASK_TERASTAL))) {
+        movePower = movePower * (100 + calcAttacker.mod) / 100;
+    }
+
     if (calcAttacker.item == HOLD_EFFECT_POWER_UP_PHYS && moveCategory == CATEGORY_PHYSICAL) {
         movePower = movePower * (100 + calcAttacker.mod) / 100;
     }
