@@ -345,3 +345,4 @@
 .public TradeSequence_Init
 .public TradeSequence_Exit
 .public TradeSequence_Main
+.public ov70_02241648
