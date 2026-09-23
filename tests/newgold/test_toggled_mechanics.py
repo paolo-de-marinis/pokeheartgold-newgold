@@ -130,8 +130,13 @@ class SnowTests(unittest.TestCase):
 
     def test_snow_warning_lays_snow_rather_than_hail(self):
         text = subscript("SnowWarning")
-        self.assertIn("BATTLE_SUBSCRIPT_HANDLE_SNOW_TEMPORARY", text)
+        self.assertIn("UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SNOW_TEMP", text)
+        self.assertIn("UpdateVar OPCODE_SET, BSCRIPT_VAR_WEATHER_TURNS, 5", text)
         self.assertNotIn("FIELD_CONDITION_HAIL_PERMANENT", text)
+        # The Icy Rock is its own Pokemon's, not the last attacker's, which
+        # HANDLE_SNOW_TEMPORARY reads for Snowscape.
+        self.assertIn("CheckItemHoldEffect CHECK_OPCODE_NOT_HAVE, BATTLER_CATEGORY_MSG_BATTLER_TEMP, HOLD_EFFECT_EXTEND_HAIL", text)
+        self.assertNotIn("BATTLER_CATEGORY_ATTACKER", text)
         # And the send-out check asks about hail the way the reference does.
         overlay = source("src/battle/overlay_12_0224E4FC.c")
         at = overlay.index("case ABILITY_SNOW_WARNING:")
