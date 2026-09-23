@@ -370,5 +370,22 @@ class ImplementedMoveTests(unittest.TestCase):
         # against the variable numbered like BMON_DATA_MAXHP.
         self.assertNotIn("BMON_DATA_HP, BMON_DATA_MAXHP", script)
 
+    def test_purify_cures_the_target_and_heals_the_user(self):
+        # Pokemon Central (Purificazione): the target's status, then half the
+        # user's HP, rounded down; no status, a substitute or Heal Block on
+        # the user, and it fails.
+        from test_hold_effects import subscript_named
+        self.assertImplemented("PURIFY", "MOVE_EFFECT_PURIFY")
+        script = effect_script("MOVE_EFFECT_PURIFY")
+        for check in ("BATTLER_CATEGORY_ATTACKER, BMON_DATA_HEAL_BLOCK_TURNS, 0, _FAILED",
+                      "BATTLER_CATEGORY_DEFENDER, BMON_DATA_STATUS, STATUS_NONE, _FAILED",
+                      "CheckSubstitute BATTLER_CATEGORY_DEFENDER, _FAILED"):
+            self.assertIn(check, script)
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_PURIFY", script)
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_PURIFY"), "BATTLE_SUBSCRIPT_PURIFY")
+        purifying = subscript_named("BATTLE_SUBSCRIPT_PURIFY")
+        self.assertLess(purifying.index("BATTLER_CATEGORY_DEFENDER, BMON_DATA_STATUS, STATUS_NONE"),
+                        purifying.index("DivideVarByValue BSCRIPT_VAR_HP_CALC, 2\n    Call BATTLE_SUBSCRIPT_UPDATE_HP"))
+
 if __name__ == "__main__":
     unittest.main()

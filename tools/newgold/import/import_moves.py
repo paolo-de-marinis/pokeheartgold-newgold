@@ -408,6 +408,9 @@ IMPLEMENTED_HERE = {
     # Invocaluna): effect script 421.
     "JUNGLE_HEALING": "MOVE_EFFECT_HEAL_SIDE_QUARTER_CURE_STATUS",
     "LUNAR_BLESSING": "MOVE_EFFECT_HEAL_SIDE_QUARTER_CURE_STATUS",
+    # Purify cures the target's status and gives its user half its HP (Pokemon
+    # Central, Purificazione): effect script 422.
+    "PURIFY": "MOVE_EFFECT_PURIFY",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
