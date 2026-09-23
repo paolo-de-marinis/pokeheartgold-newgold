@@ -4,8 +4,15 @@
 #include "save.h"
 #include "save_frontier.h"
 
+// Retail's count of Battle Hall streak records in each mode, one for each
+// species id it shipped with.
+#define BATTLE_HALL_SPECIES_RECORDS 495
+
+// The Battle Hall's extra save chunk: for each of its three modes, the best
+// streak with each species.
 struct UnkStruct_02030A98 {
-    u8 filler_000[0xBA0];
+    u32 unk_0;
+    u16 streaks[3][BATTLE_HALL_SPECIES_RECORDS];
 }; // size = 0xBA0
 
 void sub_02030AA4(u32, u32, u8, u8 *);
@@ -30,6 +37,8 @@ u32 sub_02031108(FrontierSave *, int, int, u16);
 void sub_0203126C(FrontierSave *a0, u32 a1, u32 a2, u16 a3);
 u32 *sub_020312C4(SaveData *saveData, u32 a1, u32 *out);
 u32 sub_020312E0(SaveData *saveData, u32 *a1, u32 a2, u32 a3);
+u32 sub_0203132C(u32 *a0, u32 a1, u32 a2, u16 a3);
+u32 sub_02031378(SaveData *saveData, u32 *a1, u32 a2, u32 a3, u16 a4);
 u32 sub_02030E98(u32 a0);
 void sub_02031188(void);
 

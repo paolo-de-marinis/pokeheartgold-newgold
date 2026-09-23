@@ -100,3 +100,4 @@
 .public OS_GetOwnerInfo
 .public MI_CpuFill8
 .public MI_CpuCopy8
+.public sub_02031378
