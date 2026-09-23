@@ -284,10 +284,11 @@ def number(block, key):
 
 # THE RETAIL MOVES
 #
-# A retail move keeps its number, its split and its target, and takes
-# hg-engine's (d0380a487) type, power, accuracy, PP, effect chance and
-# priority -- Protect, Detect and Endure at +4, Fake Out at +3, Extreme Speed
-# and Follow Me at +2, Teleport at -6, as the later games have them --
+# A retail move keeps its number and its split, and takes hg-engine's
+# (d0380a487) type, power, accuracy, PP, effect chance, target and priority --
+# Protect, Detect and Endure at +4, Fake Out at +3, Extreme Speed and Follow
+# Me at +2, Teleport at -6, Poison Gas and Cotton Spore at both foes, as the
+# later games have them --
 # konefr changed no retail move. Where the engine writes a value as a choice,
 # its config.h settles it, as for every other move: Growth is Grass, Crabhammer
 # hits at 95, Bone Rush is 30 a blow, Iron Head flinches one time in five. A
@@ -317,6 +318,12 @@ RETAIL_POWER_KEPT = {
 # Not Howl's: its script raises the user alone, and the ally is the engine's
 # RANGE_USER_SIDE and the controller behind it, which this game has not got.
 RETAIL_EFFECTS = ("STRING_SHOT", "TAIL_GLOW", "CHATTER")
+# Two targets stay this game's. Howl's goes with its effect, above. Conversion
+# 2's is the engine's defect: it aims the move at every adjacent Pokemon and
+# keeps Generation IV's command, which reads the move that last hit the user;
+# from Generation V the move picks one Pokemon and reads the move that one
+# last used, and neither half of that is written yet.
+RETAIL_TARGETS_KEPT = ("HOWL", "CONVERSION_2")
 
 
 def retail_moves(reference, last_vanilla, types, effect_id, table):
@@ -325,10 +332,13 @@ def retail_moves(reference, last_vanilla, types, effect_id, table):
     by_number = {int(value): name for name, value in re.findall(
         r"^#define MOVE_([A-Z0-9_]+)\s+(\d+)\s*$",
         gmm.git_show(gmm.ENGINE, "include/constants/moves.h", reference), re.M) if name in blocks}
+    rangesets = constants("include/constants/moves.h", "RANGE_")
     for move in range(1, last_vanilla + 1):
         name = by_number[move]
         block = blocks[name]
         fields = list(struct.unpack(RECORD, table[move]))
+        if name not in RETAIL_TARGETS_KEPT:
+            fields[7] = ranges(block, rangesets)
         if name not in RETAIL_POWER_KEPT:
             fields[2] = number(block, "power")
         fields[3] = types[field(block, "type")]

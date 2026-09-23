@@ -121,6 +121,12 @@ class MoveTests(unittest.TestCase):
             record = struct.unpack(import_moves.RECORD, self.table[self.moves[f"MOVE_{name}"]])
             self.assertEqual(record[8], priority, name)
 
+    def test_poison_gas_and_cotton_spore_hit_both_foes(self):
+        ranges = import_moves.constants("include/constants/moves.h", "RANGE_")
+        for name in ("POISON_GAS", "COTTON_SPORE"):
+            record = struct.unpack(import_moves.RECORD, self.table[self.moves[f"MOVE_{name}"]])
+            self.assertEqual(record[7], ranges["RANGE_ADJACENT_OPPONENTS"], name)
+
     def test_the_four_retail_moves_the_settings_move(self):
         """CHAMPIONS_PP_CHANGES is off and the other four are on, so of the
         seven retail moves the reference writes as a choice, four take a value
@@ -141,6 +147,10 @@ class MoveTests(unittest.TestCase):
                                    "its EVA_DOWN_2 (63) are retail's unused damage stubs",
         ("HOWL", "effect"): "the engine's raises the ally through RANGE_USER_SIDE and its "
                             "controller; this game's script would raise the user alone",
+        ("HOWL", "target"): "RANGE_USER_SIDE goes with the effect",
+        ("CONVERSION_2", "target"): "the engine's aims at every adjacent Pokemon with Generation "
+                                    "IV's command; Generation V's single target and command are "
+                                    "not written",
     }
 
     @unittest.skipUnless(REFERENCE.exists(), "the reference checkout is not here")
@@ -160,6 +170,7 @@ class MoveTests(unittest.TestCase):
             import_moves.gmm.git_show(engine, "include/constants/move_effects.h", REFERENCE), re.M)}
         ours = constants("include/constants/move_effects.h", "MOVE_EFFECT_")
         types = constants("include/constants/pokemon.h", "TYPE_")
+        ranges = import_moves.constants("include/constants/moves.h", "RANGE_")
         named = sum(1 << bit for bit in import_moves.FLAG_BITS.values())
         for move in range(1, LAST_RETAIL + 1):
             name, block = numbers[move], blocks[numbers[move]]
@@ -174,6 +185,7 @@ class MoveTests(unittest.TestCase):
                 "pp": (record[5], import_moves.number(block, "pp")),
                 "effectChance": (record[6], import_moves.number(block, "effectChance")),
                 "priority": (record[8], import_moves.number(block, "priority")),
+                "target": (record[7], import_moves.ranges(block, ranges)),
                 "flags": (record[9] & named, sum(1 << import_moves.FLAG_BITS[flag]
                                                  for flag in import_moves.named_flags(block))),
             }
