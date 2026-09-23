@@ -12,7 +12,8 @@ into the record's machine words.
 
 HeartGold's own alternate forms (496 to 507) have their learnsets under their
 number in the reference. The reference has no learnset for 500, Trash Cloak
-Wormadam, so it can be taught no machine past HM08 there either.
+Wormadam, and teaches it no machine at all; its moves here are
+wotbl.REFERENCE_DEFECTS', by the same rule.
 
 Usage: import_machines.py REFERENCE_CHECKOUT [--write]
 """
@@ -22,6 +23,7 @@ import json
 from pathlib import Path
 
 import import_species
+import wotbl
 
 ROOT = Path(__file__).resolve().parents[3]
 PERSONAL = ROOT / "files/poketool/personal/personal.json"
@@ -35,7 +37,11 @@ def wanted(reference, records):
     result = []
     for index, record in enumerate(records):
         name = str(index) if index in NUMBERED_FORMS else record["species"]
-        result.append(import_species.machines_past_hm08(learnsets.get(name, set()), machine_list))
+        taught = learnsets.get(name, set())
+        if name not in learnsets and index in wotbl.REFERENCE_DEFECTS:
+            entry = wotbl.REFERENCE_DEFECTS[index]
+            taught = set(entry["MachineMoves"]) | {step["Move"] for step in entry["LevelMoves"]}
+        result.append(import_species.machines_past_hm08(taught, machine_list))
     return result
 
 

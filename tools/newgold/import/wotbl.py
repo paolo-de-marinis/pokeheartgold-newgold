@@ -51,6 +51,11 @@ NUMBERED_FORMS = range(496, 508)
 # games with Wormadam in them, the eighth generation's Brilliant Diamond and
 # Shining Pearl (Wormadam/Mosse apprese in ottava generazione, Manto Scarti),
 # in the reference's shape: level 0 is the move learnt on evolving.
+#
+# Its machine moves are gathered the way the reference's build gathers every
+# species' (build_learnsets.py, --inherit-machine): each game's TMs and HMs for
+# Trash Cloak from the fourth generation to the eighth, from Pokemon Central's
+# page for each.
 REFERENCE_DEFECTS = {
     500: {
         "LevelMoves": [{"Level": level, "Move": "MOVE_" + move} for level, move in (
@@ -60,6 +65,18 @@ REFERENCE_DEFECTS = {
             (10, "PROTECT"), (15, "BUG_BITE"), (20, "STRING_SHOT"), (23, "CONFUSION"),
             (26, "METAL_BURST"), (29, "METAL_SOUND"), (32, "PSYBEAM"), (35, "INFESTATION"),
             (38, "FLAIL"), (41, "ATTRACT"), (44, "PSYCHIC"), (47, "IRON_HEAD"), (50, "BUG_BUZZ"),
+        )],
+        "MachineMoves": ["MOVE_" + move for move in (
+            # Diamond, Pearl, Platinum, HeartGold and SoulSilver
+            "TOXIC", "HIDDEN_POWER", "SUNNY_DAY", "HYPER_BEAM", "PROTECT", "RAIN_DANCE", "SAFEGUARD",
+            "FRUSTRATION", "RETURN", "PSYCHIC", "SHADOW_BALL", "DOUBLE_TEAM", "FACADE", "SECRET_POWER",
+            "REST", "ATTRACT", "THIEF", "SKILL_SWAP", "ENDURE", "GIGA_IMPACT", "FLASH", "GYRO_BALL",
+            "STEALTH_ROCK", "PSYCH_UP", "CAPTIVATE", "SLEEP_TALK", "NATURAL_GIFT", "DREAM_EATER",
+            "SWAGGER", "SUBSTITUTE", "FLASH_CANNON",
+            # the fifth generation to the seventh
+            "VENOSHOCK", "ROUND", "STRUGGLE_BUG", "INFESTATION", "CONFIDE",
+            # Brilliant Diamond and Shining Pearl
+            "GIGA_DRAIN", "SOLAR_BEAM", "DIG", "BUG_BUZZ",
         )],
     },
 }

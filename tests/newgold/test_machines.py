@@ -69,6 +69,23 @@ class MachineDataTests(unittest.TestCase):
         self.assertIn(248, pikachu["machines"])
         self.assertNotIn(102, pikachu["machines"])
 
+    def test_trash_cloak_wormadam_has_machines(self):
+        """The reference gives Trash Cloak Wormadam none (wotbl.REFERENCE_DEFECTS
+        says why). Its own list, by the reference's rule, over the machine
+        list src/item.c keeps in the reference's order."""
+        import wotbl
+        source = (ROOT / "src/item.c").read_text()
+        table = source[source.index("static const u16 sTMHMMoves[]"):]
+        machine_list = re.findall(r"(MOVE_[A-Z0-9_]+),", table[:table.index("};")])
+        entry = wotbl.REFERENCE_DEFECTS[500]
+        taught = set(entry["MachineMoves"]) | {step["Move"] for step in entry["LevelMoves"]}
+        trash = next(row for row in self.rows if row["species"] == "WORMADAM_TRASH")
+        self.assertEqual(trash["machines"], import_species.machines_past_hm08(taught, machine_list))
+        # TM093 Flash Cannon, the Steel cloak's, and not the Sandy Cloak's.
+        self.assertIn(102, trash["machines"])
+        sandy = next(row for row in self.rows if row["species"] == "WORMADAM_SANDY")
+        self.assertNotIn(102, sandy["machines"])
+
 
 NATIVE = r"""
 #include <assert.h>
