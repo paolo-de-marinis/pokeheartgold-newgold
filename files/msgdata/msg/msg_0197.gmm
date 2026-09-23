@@ -7348,4 +7348,32 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s stat\nchanges were all reversed!</language>
 	</row>
+	<row id="msg_0197_01837" index="1837">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s type became the\nsame as {STRVAR_1 1, 1, 0}’s type!</language>
+	</row>
+	<row id="msg_0197_01838" index="1838">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s type became the same\nas the wild {STRVAR_1 1, 1, 0}’s type!</language>
+	</row>
+	<row id="msg_0197_01839" index="1839">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s type became the same\nas the opposing {STRVAR_1 1, 1, 0}’s type!</language>
+	</row>
+	<row id="msg_0197_01840" index="1840">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s type became\nthe same as {STRVAR_1 1, 1, 0}’s type!</language>
+	</row>
+	<row id="msg_0197_01841" index="1841">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}’s type became the\nsame as the wild {STRVAR_1 1, 1, 0}’s type!</language>
+	</row>
+	<row id="msg_0197_01842" index="1842">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s type became\nthe same as {STRVAR_1 1, 1, 0}’s type!</language>
+	</row>
+	<row id="msg_0197_01843" index="1843">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}’s type\nbecame the same as the\fopposing {STRVAR_1 1, 1, 0}’s type!</language>
+	</row>
 </body>

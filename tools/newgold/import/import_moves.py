@@ -379,6 +379,9 @@ IMPLEMENTED_HERE = {
     # Topsy-Turvy turns every stat stage of the target about, and fails with
     # none changed (Pokemon Central, Sottosopra): effect script 418.
     "TOPSY_TURVY": "MOVE_EFFECT_TOPSY_TURVY",
+    # Reflect Type makes the user the target's types (Pokemon Central,
+    # Riflettipo): effect script 419.
+    "REFLECT_TYPE": "MOVE_EFFECT_REFLECT_TYPE",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
@@ -398,6 +401,9 @@ FIELDS_HERE = {
     # Magic Coat and Magic Bounce do not send it back (Pokemon Central,
     # Velociscambio); the reference flags it as though they did.
     "SPEED_SWAP": {"flagsOff": ("FLAG_MAGIC_COAT",)},
+    # Protect stops it and Snatch cannot take it (Pokemon Central,
+    # Riflettipo); the reference flags it the other way about.
+    "REFLECT_TYPE": {"flagsOn": ("FLAG_PROTECT",), "flagsOff": ("FLAG_SNATCH",)},
 }
 
 # The effects written here for those moves follow the reference's in
@@ -883,7 +889,8 @@ def main():
         else:
             raise SystemExit(f"{name} has effect {effect}, which the reference does not define")
         split = SPLITS[field(block, "split")]
-        flags = sum(1 << bit for flag, bit in FLAG_BITS.items() if flag in named_flags(block)
+        flags = sum(1 << bit for flag, bit in FLAG_BITS.items()
+                    if (flag in named_flags(block) or flag in FIELDS_HERE.get(name, {}).get("flagsOn", ()))
                     and not (name in IMPLEMENTED_HERE and flag == "FLAG_UNUSABLE_UNIMPLEMENTED")
                     and flag not in FIELDS_HERE.get(name, {}).get("flagsOff", ()))
         added.append((first_move + offset, name, struct.pack(

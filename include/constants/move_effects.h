@@ -426,5 +426,6 @@
 #define MOVE_EFFECT_GROUNDED_GRASS_TYPES_ATK_SP_ATK_UP           416
 #define MOVE_EFFECT_SPEED_SWAP                                   417
 #define MOVE_EFFECT_TOPSY_TURVY                                  418
+#define MOVE_EFFECT_REFLECT_TYPE                                 419
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

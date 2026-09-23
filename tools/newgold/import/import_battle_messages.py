@@ -170,6 +170,17 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0}’s stat\nchanges were all reversed!",
         r"The opposing {STRVAR_1 1, 0, 0}’s stat\nchanges were all reversed!",
     ]),
+    # Reflect Type. The engine leaves the move unimplemented; the later
+    # games' line. Two Pokemon, so the seven rows of Psych Up's 452 to 458.
+    ("reflect type", [
+        r"{STRVAR_1 1, 0, 0}’s type became the\nsame as {STRVAR_1 1, 1, 0}’s type!",
+        r"{STRVAR_1 1, 0, 0}’s type became the same\nas the wild {STRVAR_1 1, 1, 0}’s type!",
+        r"{STRVAR_1 1, 0, 0}’s type became the same\nas the opposing {STRVAR_1 1, 1, 0}’s type!",
+        r"The wild {STRVAR_1 1, 0, 0}’s type became\nthe same as {STRVAR_1 1, 1, 0}’s type!",
+        r"The wild {STRVAR_1 1, 0, 0}’s type became the\nsame as the wild {STRVAR_1 1, 1, 0}’s type!",
+        r"The opposing {STRVAR_1 1, 0, 0}’s type became\nthe same as {STRVAR_1 1, 1, 0}’s type!",
+        r"The opposing {STRVAR_1 1, 0, 0}’s type\nbecame the same as the\fopposing {STRVAR_1 1, 1, 0}’s type!",
+    ]),
 ]
 
 

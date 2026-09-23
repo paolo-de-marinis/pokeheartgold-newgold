@@ -270,5 +270,26 @@ class ImplementedMoveTests(unittest.TestCase):
                           f"    UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_STAT_CHANGE_{stat}, BSCRIPT_VAR_CALC_TEMP", turning)
         self.assertIn(f"msg_0197_{import_battle_messages.port_row('topsy-turvy'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER", turning)
 
+    def test_reflect_type_copies_the_target_s_types(self):
+        # Pokemon Central (Riflettipo): all three types; Protect stops it and
+        # Snatch cannot take it; not for Multitype or RKS System, nor from a
+        # target with no type.
+        import import_battle_messages
+        from test_hold_effects import subscript_named
+        self.assertImplemented("REFLECT_TYPE", "MOVE_EFFECT_REFLECT_TYPE")
+        self.assertTrue(record("REFLECT_TYPE")[9] & 1 << 1, "FLAG_PROTECT")
+        self.assertFalse(record("REFLECT_TYPE")[9] & 1 << 3, "FLAG_SNATCH")
+        script = effect_script("MOVE_EFFECT_REFLECT_TYPE")
+        for ability in ("ABILITY_MULTITYPE", "ABILITY_RKS_SYSTEM"):
+            self.assertIn(f"BATTLER_CATEGORY_ATTACKER, {ability}, _FAILED", script)
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_REFLECT_TYPE", script)
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_REFLECT_TYPE"), "BATTLE_SUBSCRIPT_REFLECT_TYPE")
+        copying = subscript_named("BATTLE_SUBSCRIPT_REFLECT_TYPE")
+        for slot in ("1", "2", "3"):
+            self.assertIn(f"OPCODE_GET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_TYPE_{slot}, BSCRIPT_VAR_CALC_TEMP\n"
+                          f"    UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_TYPE_{slot}, BSCRIPT_VAR_CALC_TEMP", copying)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('reflect type'):05d}, TAG_NICKNAME_NICKNAME, "
+                      "BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_DEFENDER", copying)
+
 if __name__ == "__main__":
     unittest.main()
