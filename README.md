@@ -12,14 +12,14 @@ the unmodified upstream base, not the modified ROMs.
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    90%
+Overall                                                                    93%
   done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
-  done, never played   ██████████████████████████████░░░░░░░░░░░░░░░░░░░░  59%
+  done, never played   ██████████████████████████████░░░░░░░░░░░░░░░░░░░░  61%
   partial              ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
-  still to do          ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   3%
+  still to do          █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
   deferred / no scope  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  20%
 
-Implementation         ███████████████████████████████████████████████░░░  94%
+Implementation         ████████████████████████████████████████████████░░  96%
 Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  12%
 
 Overall and Implementation: done 1, partial a half, deferred rows

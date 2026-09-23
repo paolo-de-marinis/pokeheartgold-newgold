@@ -1926,7 +1926,7 @@
 	</row>
 	<row id="msg_0751_solar_seeds" index="481">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">-</language>
+		<language name="English">SOLAR SEEDS</language>
 	</row>
 	<row id="msg_0751_twin_beam" index="482">
 		<attribute name="window_context_name">used</attribute>

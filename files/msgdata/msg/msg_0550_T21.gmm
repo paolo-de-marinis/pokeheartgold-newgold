@@ -100,4 +100,168 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Guide Gent’s House\nFull-of-Energy, High-Speed Old Man</language>
 	</row>
+	<row id="msg_0550_T21_00025" index="25">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Password?</language>
+	</row>
+	<row id="msg_0550_T21_00026" index="26">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">0</language>
+	</row>
+	<row id="msg_0550_T21_00027" index="27">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">1</language>
+	</row>
+	<row id="msg_0550_T21_00028" index="28">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">2</language>
+	</row>
+	<row id="msg_0550_T21_00029" index="29">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">3</language>
+	</row>
+	<row id="msg_0550_T21_00030" index="30">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">4</language>
+	</row>
+	<row id="msg_0550_T21_00031" index="31">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">5</language>
+	</row>
+	<row id="msg_0550_T21_00032" index="32">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">6</language>
+	</row>
+	<row id="msg_0550_T21_00033" index="33">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">7</language>
+	</row>
+	<row id="msg_0550_T21_00034" index="34">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">8</language>
+	</row>
+	<row id="msg_0550_T21_00035" index="35">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">9</language>
+	</row>
+	<row id="msg_0550_T21_00036" index="36">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Access granted.</language>
+	</row>
+	<row id="msg_0550_T21_00037" index="37">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Wrong password.</language>
+	</row>
+	<row id="msg_0550_T21_00038" index="38">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rare Candy x1 - $1</language>
+	</row>
+	<row id="msg_0550_T21_00039" index="39">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rare Candy x10 - $10</language>
+	</row>
+	<row id="msg_0550_T21_00040" index="40">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rare Candy x50 - $50</language>
+	</row>
+	<row id="msg_0550_T21_00041" index="41">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rare Candy x99 - $99</language>
+	</row>
+	<row id="msg_0550_T21_00042" index="42">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Exit</language>
+	</row>
+	<row id="msg_0550_T21_00043" index="43">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Purchase complete.</language>
+	</row>
+	<row id="msg_0550_T21_00044" index="44">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">You don’t have enough money.</language>
+	</row>
+	<row id="msg_0550_T21_00045" index="45">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">You don’t have room in your Bag.</language>
+	</row>
+	<row id="msg_0550_T21_00046" index="46">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Developer Shop\nRare Candy: $1 each.</language>
+	</row>
+	<row id="msg_0550_T21_00047" index="47">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Developer Menu</language>
+	</row>
+	<row id="msg_0550_T21_00048" index="48">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Rare Candy</language>
+	</row>
+	<row id="msg_0550_T21_00049" index="49">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">EV Training</language>
+	</row>
+	<row id="msg_0550_T21_00050" index="50">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Exit</language>
+	</row>
+	<row id="msg_0550_T21_00051" index="51">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">EV Training\nThe first Pokémon in your party\nwill be modified.</language>
+	</row>
+	<row id="msg_0550_T21_00052" index="52">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Physical</language>
+	</row>
+	<row id="msg_0550_T21_00053" index="53">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Special</language>
+	</row>
+	<row id="msg_0550_T21_00054" index="54">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Physical Tank</language>
+	</row>
+	<row id="msg_0550_T21_00055" index="55">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Special Tank</language>
+	</row>
+	<row id="msg_0550_T21_00056" index="56">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Balanced</language>
+	</row>
+	<row id="msg_0550_T21_00057" index="57">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Reset EVs</language>
+	</row>
+	<row id="msg_0550_T21_00058" index="58">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Back</language>
+	</row>
+	<row id="msg_0550_T21_00059" index="59">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">EVs updated!</language>
+	</row>
+	<row id="msg_0550_T21_00060" index="60">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bulk Physical</language>
+	</row>
+	<row id="msg_0550_T21_00061" index="61">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bulk Special</language>
+	</row>
+	<row id="msg_0550_T21_00062" index="62">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Mixed Tank</language>
+	</row>
+	<row id="msg_0550_T21_00063" index="63">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fast Bulk Physical</language>
+	</row>
+	<row id="msg_0550_T21_00064" index="64">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fast Bulk Special</language>
+	</row>
+	<row id="msg_0550_T21_00065" index="65">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fast Bulk</language>
+	</row>
 </body>

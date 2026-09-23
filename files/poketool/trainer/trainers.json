@@ -2525,7 +2525,7 @@
     {
       "type": "TRTYPE_MON",
       "class": "TRAINERCLASS_YOUNGSTER",
-      "name": "{TRNAME}Mikey",
+      "name": "{TRNAME}Pippo Franco",
       "items": [
         "ITEM_SUPER_POTION"
       ],
@@ -2552,15 +2552,15 @@
       "messages": [
         {
           "type": "TRMSG_INTRO",
-          "message": "You\u2019re a Pok\u00e9mon Trainer, right?\\nThen you have to battle!\\r"
+          "message": "Mi scappa la pip\u00ec, pap\u00e0!\\r"
         },
         {
           "type": "TRMSG_LOSE",
-          "message": "That\u2019s strange.\\nI won before.\\n"
+          "message": "Non mi sono vaccinato.\\nSe vuoi conosco un medico.\\n"
         },
         {
           "type": "TRMSG_AFTER",
-          "message": "Becoming a good Trainer is really tough.\\nI\u2019m going to battle other people to\\fget better.\\n"
+          "message": "Non mi sono vaccinato.\\nSe hai problemi col green pass\\fti presento un medico amico mio.\\n"
         }
       ]
     },
@@ -18684,7 +18684,7 @@
     {
       "type": "TRTYPE_MON",
       "class": "TRAINERCLASS_BIRD_KEEPER_GS",
-      "name": "{TRNAME}Peter",
+      "name": "{TRNAME}Pietro Pacciani",
       "items": [
         "ITEM_SUPER_POTION"
       ],
@@ -18727,11 +18727,15 @@
       "messages": [
         {
           "type": "TRMSG_INTRO",
-          "message": "That Badge!\\rIt\u2019s from Violet City!\\nYou beat Falkner?\\r"
+          "message": "Se nel mondo ci fosse un po\u2019 di bene\\ne ognun si considerasse suo fratello,\\rci sarebbe meno pensieri e meno pene\\ne il mondo ne sarebbe assai piu\u2019 bello.\\r"
         },
         {
           "type": "TRMSG_LOSE",
-          "message": "I know what my weaknesses are.\\n"
+          "message": "Un\u2019ultima parola: viva il Duce,\\nil lavoro e la liberta\u2019!\\rRitorneremo!\\n"
+        },
+        {
+          "type": "TRMSG_WIN",
+          "message": "Possi parla da i\u2019banco?\\n"
         },
         {
           "type": "TRMSG_AFTER",
@@ -23320,16 +23324,16 @@
       ],
       "messages": [
         {
-          "type": "TRMSG_LAST_POKE",
-          "message": "It doesn\u2019t matter where we go, there\u2019s\\nalways someone who doesn\u2019t agree\\fwith us...\\n"
-        },
-        {
-          "type": "TRMSG_LAST_POKE_HALF",
-          "message": "Are you serious? Did you come here\\nthinking you could mess with our plans?\\n"
+          "type": "TRMSG_INTRO",
+          "message": "What? You want us to stop cutting off\\nSlowpokeTails?\\rHah! Don\u2019t make me laugh!\\r"
         },
         {
           "type": "TRMSG_LOSE",
-          "message": "Grr...\\nFor a kid to be this good...\\fI didn\u2019t see it coming.\\n"
+          "message": "For a kid, you\u2019re pretty tough...\\n"
+        },
+        {
+          "type": "TRMSG_AFTER",
+          "message": "Team Rocket won\u2019t fall apart because\\nof a brat like you!\\n"
         }
       ]
     },

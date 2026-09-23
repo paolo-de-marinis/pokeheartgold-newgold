@@ -4502,7 +4502,7 @@
 	</row>
 	<row id="msg_0817_farfetchd_galarian" index="1125">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">FARFETCH’D</language>
+		<language name="English">FARFETCHD</language>
 	</row>
 	<row id="msg_0817_weezing_galarian" index="1126">
 		<attribute name="window_context_name">used</attribute>

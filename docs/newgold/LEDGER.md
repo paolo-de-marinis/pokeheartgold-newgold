@@ -12,19 +12,19 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `ccf2c9f5` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 231 commits |
-| generated | 2026-09-23 02:55 |
+| port | 232 commits |
+| generated | 2026-09-23 03:03 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    90%
+Overall                                                                    93%
   done, seen running   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
-  done, never played   ██████████████████████████████░░░░░░░░░░░░░░░░░░░░  59%
+  done, never played   ██████████████████████████████░░░░░░░░░░░░░░░░░░░░  61%
   partial              ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
-  still to do          ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   3%
+  still to do          █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
   deferred / no scope  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  20%
 
-Implementation         ███████████████████████████████████████████████░░░  94%
+Implementation         ████████████████████████████████████████████████░░  96%
 Verified in play       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  12%
 
 Overall and Implementation: done 1, partial a half, deferred rows
@@ -115,7 +115,7 @@ konefr *could* reach, not only what the game reaches today.
 | Bug-Catching Contest | Butterfree through Escavalier, levels 20-30, evolution-item prizes | ✅ done |
 | Cherrygrove vendor and EV presets | his debug vendor, patched into a built script file — excluded in `SCOPE.md` | ⬜ out of scope |
 | Linking Cord for any trade | his `e26576dd1`: a Pokemon that evolves by trading alone evolves when a Linking Cord is used on it -- Phantump, Pumpkaboo and the rest. It sits ahead of the engine's own case, the trade with a held item, as in his code; the engine's stone rows for Kadabra and the other three are on the Evolutions row, not this one | ✅ done |
-| konefr's text | what `d0380a487..ccf2c9f5` changes in the text: Irrigation, Eelevate and Evaporate's names and descriptions, Solar Seeds' name, description and "used" lines, the three Galarian names, the lines and names of trainers 47, 383 and Proton, and bank 550's vendor lines | 🔴 to do |
+| konefr's text | what `d0380a487..ccf2c9f5` changes in the text: Irrigation, Eelevate and Evaporate's names and descriptions, Solar Seeds' name, description and "used" lines, the three Galarian names, the lines and names of trainers 47, 383 and Proton, and bank 550's vendor lines, which nothing here reads since the vendor itself is out of scope. Written by the same importers at `ccf2c9f5`, on top of the engine's text, so the engine layer is the commit before | ✅ done |
 | Water Absorb and Leaf Guard fixes | the row had it backwards. Leaf Guard's sunshine is HGSS's own and was never port work — but it left Rest out, and the Rest subscript now asks the same two questions the other six statuses ask. Water Absorb had the damaging-move guard and not the no-self-trigger one; it has both. Dry Skin keeps only the power check, in the reference as here | ✅ done |
 
 ---
@@ -153,7 +153,7 @@ This is the section that holds the overall number down.
 
 ---
 
-## Why 90% and not 94%
+## Why 93% and not 96%
 
 The points between the two numbers are the verification column, and the reason
 it is not a formality is that four silent bugs surfaced in one evening, on

@@ -29,21 +29,21 @@ class AbilityMessages(unittest.TestCase):
                     self.assertEqual(ET.tostring(row), ET.tostring(original))
 
     @unittest.skipIf(REFERENCE is None, 'Pinned NewGold checkout not configured')
-    def test_all_960_rows_are_the_engine_s(self):
-        """The engine layer: hg-engine's own text at d0380a487, row for row.
-        Evaporate (319) is past the engine's last row and reads as its unused
-        slot; Irrigation is the engine's slot 314, ABILITY_TEMP2. konefr's
-        names for both and the Eelevate description (313) are New Gold's."""
-        unused = {720: 'Placeholder', 721: 'PLACEHOLDER', 722: 'Placeholder'}
-        pinned = {720: ['Eelevate', 'Placeholder', 'Placeholder'],
-                  721: ['EELEVATE', 'PLACEHOLDER', 'PLACEHOLDER'], 722: ['Placeholder'] * 3}
+    def test_all_960_rows_are_new_gold_s_on_the_engine_s(self):
+        """New Gold's text at ccf2c9f5, row for row, and the engine layer under
+        it recoverable: hg-engine's own d0380a487 text differs from it only in
+        konefr's rows -- Eelevate's description (313), Irrigation in the
+        engine's ABILITY_TEMP2 slot (314) and Evaporate past its last row
+        (319)."""
+        konefr = {720: {314, 319}, 721: {314, 319}, 722: {313, 314, 319}}
         for bank in (720, 721, 722):
-            expected = revision(REFERENCE, 'd0380a487', f'data/text/{bank}.txt').splitlines()
+            engine = revision(REFERENCE, 'd0380a487', f'data/text/{bank}.txt').splitlines()
+            newgold = revision(REFERENCE, 'ccf2c9f5', f'data/text/{bank}.txt').splitlines()
             rows = ET.parse(ROOT / f'files/msgdata/msg/msg_{bank:04}.gmm').getroot().findall('row')
             actual = [row.find("language[@name='English']").text for row in rows]
-            self.assertEqual(actual, expected + [unused[bank]])
-            self.assertEqual([actual[i] for i in (313, 314, 319)], pinned[bank])
-
+            self.assertEqual(actual, newgold)
+            differ = {i for i, line in enumerate(newgold) if i >= len(engine) or engine[i] != line}
+            self.assertEqual(differ, konefr[bank])
 
 if __name__ == '__main__':
     unittest.main()
