@@ -553,5 +553,17 @@ class IceScalesTests(unittest.TestCase):
                                r" == TRUE && [^\n]*CATEGORY_SPECIAL\) \{\n        damage = DamageDivide\(damage, 2\);\n    \}")
 
 
+class RuinTests(unittest.TestCase):
+    def test_each_ruin_spares_its_own_bearer(self):
+        # Tablets and Vessel cut the attacker's stat and Sword and Beads the
+        # defender's, so each spares the side whose stat it cuts. The reference
+        # (CalcBaseDamage.c:1292 and :1304) exempts the defender for all four,
+        # a copy of the Sword block; that slip is not copied.
+        body = function(OVERLAY.read_text(), "CalcMoveDamage")
+        for ability, side in (("TABLETS_OF_RUIN", "calcAttacker"), ("VESSEL_OF_RUIN", "calcAttacker"),
+                              ("SWORD_OF_RUIN", "calcTarget"), ("BEADS_OF_RUIN", "calcTarget")):
+            self.assertIn(f"ABILITY_{ability}) && {side}.ability != ABILITY_{ability})", body)
+
+
 if __name__ == "__main__":
     unittest.main()

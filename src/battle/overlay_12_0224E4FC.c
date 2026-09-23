@@ -8255,13 +8255,13 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monAtk *= 2;
     }
 
-    // Tablets of Ruin, as New Gold has it. The reference lowers the ATTACKER's
-    // Attack while reading the DEFENDER's ability for the exemption, which is
-    // the wrong side -- a Wo-Chien weakens itself and is spared only by facing
-    // another one. It is a copy of the Sword of Ruin block below, where
-    // testing the defender is right. Ported as written, since this is a port
-    // of that game and not of the published ability.
-    if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_TABLETS_OF_RUIN) && calcTarget.ability != ABILITY_TABLETS_OF_RUIN) {
+    // Tablets of Ruin weakens every Attack but its own bearer's. The
+    // reference lowers the attacker's Attack while reading the DEFENDER's
+    // ability for the exemption -- a copy of the Sword of Ruin block below,
+    // where the defender is the right side -- so there a Wo-Chien weakens
+    // itself and is spared only by facing another one. That is a slip, not a
+    // rule, and the exemption here is the attacker's, as the ability says.
+    if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_TABLETS_OF_RUIN) && calcAttacker.ability != ABILITY_TABLETS_OF_RUIN) {
         monAtk = monAtk * 3 / 4;
     }
 
@@ -8424,11 +8424,10 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monSpAtk = monSpAtk * 150 / 100;
     }
 
-    // Vessel of Ruin, with the reference's exemption on the TARGET's ability
-    // rather than the holder's -- so a Chi-Yu's own special attacks are cut
-    // too, and only a target that also has it is spared. Same wrong-side
-    // reading as Tablets of Ruin above, kept for the same reason.
-    if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_VESSEL_OF_RUIN) && calcTarget.ability != ABILITY_VESSEL_OF_RUIN) {
+    // Vessel of Ruin is the Sp. Atk half, and spares its own bearer's special
+    // attacks. The reference exempts the TARGET's ability here too, the same
+    // slip as Tablets of Ruin above, and it is not copied for the same reason.
+    if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_VESSEL_OF_RUIN) && calcAttacker.ability != ABILITY_VESSEL_OF_RUIN) {
         monSpAtk = monSpAtk * 3 / 4;
     }
 
