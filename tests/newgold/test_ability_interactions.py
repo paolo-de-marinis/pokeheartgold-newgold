@@ -160,7 +160,7 @@ class SheerForceAftermathTests(unittest.TestCase):
     def test_the_answers_to_the_hit_ask_what_was_kept(self):
         source = OVERLAY.read_text()
         hit = function(source, "CheckAbilityEffectOnHit")
-        for ability in ("BERSERK", "ANGER_SHELL", "PICKPOCKET"):
+        for ability in ("BERSERK", "ANGER_SHELL", "PICKPOCKET", "COLOR_CHANGE"):
             case = hit[hit.index(f"case ABILITY_{ability}:"):]
             case = case[:case.index("break;")]
             self.assertIn("!SheerForceTradedEffect(ctx)", case, ability)
