@@ -86,6 +86,17 @@ class MachineDataTests(unittest.TestCase):
         sandy = next(row for row in self.rows if row["species"] == "WORMADAM_SANDY")
         self.assertNotIn(102, sandy["machines"])
 
+    def test_plant_cloak_wormadam_has_only_its_own_machines(self):
+        """The reference gives Plant Cloak Wormadam the other two cloaks'
+        machines (wotbl.REFERENCE_DEFECTS says why): no TM26 Earthquake, TM74
+        Gyro Ball, TM76 Stealth Rock or TM91 Flash Cannon, nor TM093 Flash
+        Cannon past HM08; its own TM53 Energy Ball stays."""
+        plant = next(row for row in self.rows if row["species"] == "WORMADAM")
+        for tm in (26, 37, 39, 74, 76, 91):
+            self.assertNotIn(tm, plant["tms"])
+        self.assertIn(53, plant["tms"])
+        self.assertNotIn(102, plant["machines"])
+
 
 NATIVE = r"""
 #include <assert.h>

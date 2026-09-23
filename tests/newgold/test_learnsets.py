@@ -48,14 +48,13 @@ class LearnsetTests(unittest.TestCase):
 
     @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
     def test_retail_species_learn_the_reference_s_moves(self):
-        reference = wotbl.reference_learnsets(REFERENCE, self.LEARNSETS_REVISION)
+        # Where the reference's list is wrong or missing -- Plant and Trash
+        # Cloak Wormadam -- wotbl.REFERENCE_DEFECTS' is read instead.
+        reference = wotbl.corrected(wotbl.reference_learnsets(REFERENCE, self.LEARNSETS_REVISION))
         moves = wotbl.move_names()
         for index in list(range(1, wotbl.LAST_RETAIL_SPECIES + 1)) + list(wotbl.NUMBERED_FORMS):
             name = self.names[index]
-            entry = reference.get(wotbl.reference_key(index, self.names))
-            if entry is None:
-                # Only where the reference has none: Trash Cloak Wormadam.
-                entry = wotbl.REFERENCE_DEFECTS[index]
+            entry = reference[wotbl.reference_key(index, self.names)]
             wanted = [{"level": step["Level"], "move": moves[step["Move"]]} for step in entry["LevelMoves"]]
             self.assertEqual(wotbl.decode(self.files[index]), wanted, name)
 
@@ -98,6 +97,17 @@ class LearnsetTests(unittest.TestCase):
         for level, move in ((0, "QUIVER_DANCE"), (26, "METAL_BURST"), (29, "METAL_SOUND"), (47, "IRON_HEAD")):
             self.assertIn({"level": level, "move": moves["MOVE_" + move]}, trash)
         self.assertNotIn(moves["MOVE_MIRROR_SHOT"], [step["move"] for step in trash])
+
+    def test_plant_cloak_wormadam_learns_none_of_the_trash_cloak_s_moves(self):
+        # The reference files the Trash Cloak's moves under SPECIES_WORMADAM;
+        # Pokemon Central gives the Plant Cloak Razor Leaf at 26 and Leaf
+        # Storm at 47 and none of Metal Burst, Metal Sound or Iron Head.
+        moves = wotbl.move_names()
+        plant = wotbl.decode(self.files[413])
+        for level, move in ((26, "RAZOR_LEAF"), (29, "GROWTH"), (47, "LEAF_STORM")):
+            self.assertIn({"level": level, "move": moves["MOVE_" + move]}, plant)
+        for move in ("METAL_BURST", "METAL_SOUND", "IRON_HEAD"):
+            self.assertNotIn(moves["MOVE_" + move], [step["move"] for step in plant])
 
     def test_new_species_can_fight(self):
         for name in import_species.added_species():

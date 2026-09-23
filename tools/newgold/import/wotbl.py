@@ -56,7 +56,40 @@ NUMBERED_FORMS = range(496, 508)
 # species' (build_learnsets.py, --inherit-machine): each game's TMs and HMs for
 # Trash Cloak from the fourth generation to the eighth, from Pokemon Central's
 # page for each.
+#
+# Plant Cloak Wormadam (413, SPECIES_WORMADAM) has the other side of the same
+# defect: the reference's list for it is the three cloaks' moves added
+# together -- Metal Burst, Metal Sound and Iron Head from the Trash Cloak's
+# level-up list, Flash Cannon and Gyro Ball from its machines, Earthquake,
+# Bulldoze, Rock Tomb, Sandstorm and Stealth Rock from the Sandy Cloak's
+# (the last the Trash Cloak's too).
+# Pokemon Central gives the Plant Cloak none of them. What is written is its
+# page's lists by the same rule: the eighth generation's level-up moves
+# (Brilliant Diamond and Shining Pearl, Manto Pianta), which are the
+# reference's without the Trash Cloak's four, and every game's machines for
+# the Plant Cloak from the fourth generation to the eighth.
 REFERENCE_DEFECTS = {
+    413: {
+        "LevelMoves": [{"Level": level, "Move": "MOVE_" + move} for level, move in (
+            (0, "QUIVER_DANCE"),
+            (1, "BUG_BITE"), (1, "PROTECT"), (1, "QUIVER_DANCE"), (1, "SUCKER_PUNCH"), (1, "TACKLE"),
+            (10, "PROTECT"), (15, "BUG_BITE"), (20, "STRING_SHOT"), (23, "CONFUSION"),
+            (26, "RAZOR_LEAF"), (29, "GROWTH"), (32, "PSYBEAM"), (35, "INFESTATION"),
+            (38, "FLAIL"), (41, "ATTRACT"), (44, "PSYCHIC"), (47, "LEAF_STORM"), (50, "BUG_BUZZ"),
+        )],
+        "MachineMoves": ["MOVE_" + move for move in (
+            # Diamond, Pearl, Platinum, HeartGold and SoulSilver
+            "TOXIC", "BULLET_SEED", "HIDDEN_POWER", "SUNNY_DAY", "HYPER_BEAM", "PROTECT", "RAIN_DANCE",
+            "GIGA_DRAIN", "SAFEGUARD", "FRUSTRATION", "SOLAR_BEAM", "RETURN", "PSYCHIC", "SHADOW_BALL",
+            "DOUBLE_TEAM", "FACADE", "SECRET_POWER", "REST", "ATTRACT", "THIEF", "SKILL_SWAP",
+            "ENERGY_BALL", "ENDURE", "GIGA_IMPACT", "FLASH", "PSYCH_UP", "CAPTIVATE", "SLEEP_TALK",
+            "NATURAL_GIFT", "DREAM_EATER", "GRASS_KNOT", "SWAGGER", "SUBSTITUTE",
+            # the fifth generation to the seventh
+            "VENOSHOCK", "ROUND", "STRUGGLE_BUG", "INFESTATION", "CONFIDE",
+            # Brilliant Diamond and Shining Pearl
+            "DIG", "BUG_BUZZ",
+        )],
+    },
     500: {
         "LevelMoves": [{"Level": level, "Move": "MOVE_" + move} for level, move in (
             (0, "QUIVER_DANCE"),
@@ -242,6 +275,15 @@ def reference_key(index, names):
     return f"SPECIES_{index}" if index in NUMBERED_FORMS else "SPECIES_" + names[index]
 
 
+def corrected(reference):
+    """The reference's learnsets.json with REFERENCE_DEFECTS put right."""
+    names = species_names()
+    fixed = dict(reference)
+    for index, entry in REFERENCE_DEFECTS.items():
+        fixed[reference_key(index, names)] = entry
+    return fixed
+
+
 def engine(args, files):
     """Rewrite HeartGold's own species with hg-engine's learnsets.
 
@@ -253,12 +295,12 @@ def engine(args, files):
     """
     names = species_names()
     moves = move_names()
-    reference = reference_learnsets(args.reference, ENGINE_BASE)
+    reference = corrected(reference_learnsets(args.reference, ENGINE_BASE))
 
     files = list(files)
     rewritten = 0
     for index in list(range(1, LAST_RETAIL_SPECIES + 1)) + list(NUMBERED_FORMS):
-        entry = reference.get(reference_key(index, names), REFERENCE_DEFECTS.get(index))
+        entry = reference.get(reference_key(index, names))
         if entry is None:
             raise SystemExit(f"the reference has no learnset for {names[index]}")
         learned = []

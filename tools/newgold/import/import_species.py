@@ -295,8 +295,12 @@ def machine_moves(reference):
     machine's move if its MachineMoves list names it or it learns it by
     level-up. A form with no list of its own takes its base species' -- the
     reference reads the base's for it -- so 324 forms do not come out unable
-    to learn any TM."""
-    learnsets = json.loads((reference / "data/learnsets/learnsets.json").read_text())
+    to learn any TM. Where the reference's learnset is wrong or missing,
+    wotbl.REFERENCE_DEFECTS' is read instead (Plant and Trash Cloak
+    Wormadam)."""
+    import wotbl
+
+    learnsets = wotbl.corrected(json.loads((reference / "data/learnsets/learnsets.json").read_text()))
     bases = base_species_of(reference)
 
     def listed(name, key):
