@@ -291,34 +291,64 @@ def number(block, key):
     return int(numbers[-1]) if numbers else 0
 
 
-# The four retail moves the reference's CHAMPIONS_ settings move off their
-# HeartGold values: Growth's type, Crabhammer's accuracy, Bone Rush's power,
-# Iron Head's effect chance. Three more moves are written as a choice as well
-# -- Protect, Sandstorm and Night Slash -- and for all three the setting picks
-# the value this game already has, so nothing here has to name them.
+# THE RETAIL MOVES
 #
-# Each of the four takes the whole of the reference's record for it, not only
-# the field the setting decides: half of konefr's Crabhammer is neither game's
-# move. The rest of the retail range keeps this game's own data, which is a
-# wider gap than this row and is counted in the ledger beside it.
-CHAMPIONS_RETAIL = ("GROWTH", "CRABHAMMER", "BONE_RUSH", "IRON_HEAD")
+# A retail move keeps its number, its split, its target and its priority, and
+# takes hg-engine's (d0380a487) type, power, accuracy, PP and effect chance --
+# konefr changed no retail move. Where the engine writes a value as a choice,
+# its config.h settles it, as for every other move: Growth is Grass, Crabhammer
+# hits at 95, Bone Rush is 30 a blow, Iron Head flinches one time in five. A
+# type is read by its name, because Fairy is 9 there and 18 here. An accuracy
+# of 0 means the same thing on both sides -- the hit check returns before it
+# rolls (BattleSystem_CheckMoveHit here, CalcAccuracy there) -- so Whirlwind
+# and Roar take it and stop missing, as they do in the engine.
+#
+# Two powers are the engine's number for something this game works out
+# differently, and stay this game's:
+RETAIL_POWER_KEPT = {
+    # The engine writes 1 and gives each hit 5 + the member's base Attack / 10
+    # in CalcBaseDamage; BtlCmd_BeatUp multiplies the base Attack by the
+    # table's power, so 1 would be a tenth of a Beat Up.
+    "BEAT_UP",
+    # The engine stops at three uses and 160; BtlCmd_CalcFuryCutterPower
+    # doubles the table's power up to four times, so 40 would reach 640.
+    "FURY_CUTTER",
+}
+# The effect and the flag byte are behaviour rather than numbers. The seven
+# flag bits solved for above mean the same thing to both games -- a set bit is
+# what each side's Protect, Magic Coat, Snatch and Mirror Move checks ask
+# about -- so they are the engine's; bit 5 is King's Rock here and stays. An
+# effect is the engine's only where this game's script for it is the engine's:
+# String Shot's two-stage speed drop (60), Tail Glow's three-stage Sp. Atk.
+# rise, Chatter's plain confusing hit (76), which with its chance of 100 always
+# confuses. Not Sweet Scent's: the engine's 64 lowers evasion by two, and this
+# game's 64 and its EVA_DOWN_2 (63) are still retail's unused damage stubs.
+# Not Howl's: its script raises the user alone, and the ally is the engine's
+# RANGE_USER_SIDE and the controller behind it, which this game has not got.
+RETAIL_EFFECTS = ("STRING_SHOT", "TAIL_GLOW", "CHATTER")
 
 
-def champions_retail(blocks, moves, types, table):
-    """Give those four the reference's power, type, accuracy, PP and chance.
-
-    Nothing else in their records differs -- not the effect, the target, the
-    priority or the flags -- so nothing else is written.
-    """
-    for name in CHAMPIONS_RETAIL:
+def retail_moves(reference, last_vanilla, types, effect_id, table):
+    """Write the retail records' numbers as the engine has them."""
+    blocks = records_in(gmm.git_show(gmm.ENGINE, "data/Moves.c", reference))
+    by_number = {int(value): name for name, value in re.findall(
+        r"^#define MOVE_([A-Z0-9_]+)\s+(\d+)\s*$",
+        gmm.git_show(gmm.ENGINE, "include/constants/moves.h", reference), re.M) if name in blocks}
+    for move in range(1, last_vanilla + 1):
+        name = by_number[move]
         block = blocks[name]
-        fields = list(struct.unpack(RECORD, table[moves[name]]))
-        fields[2] = number(block, "power")
+        fields = list(struct.unpack(RECORD, table[move]))
+        if name not in RETAIL_POWER_KEPT:
+            fields[2] = number(block, "power")
         fields[3] = types[field(block, "type")]
         fields[4] = number(block, "accuracy")
         fields[5] = number(block, "pp")
         fields[6] = number(block, "effectChance")
-        table[moves[name]] = struct.pack(RECORD, *fields)
+        if name in RETAIL_EFFECTS:
+            fields[0] = effect_id[field(block, "effect")]
+        fields[9] = (fields[9] & 1 << KINGS_ROCK_BIT) | sum(
+            1 << bit for flag, bit in FLAG_BITS.items() if flag in named_flags(block))
+        table[move] = struct.pack(RECORD, *fields)
 
 
 def read_table():
@@ -895,7 +925,7 @@ def main():
     MOVES_H.write_text(moves_text)
 
     # The table, which must stay dense, and the three banks beside it.
-    champions_retail(blocks, plain, types, table)
+    retail_moves(reference, last_vanilla, types, effect_id, table)
     while len(table) < first_move:
         table.append(bytes(RECORD_SIZE))
     for identifier, _, record in added:
@@ -909,16 +939,18 @@ def main():
     append_rows(DESCRIPTIONS, "msg_0749", descriptions, first_move, True)
     append_rows(USED, "msg_0003_EVERYWHERE", used, 3 * (last_vanilla + 1), True)
 
-    # The animations. The twenty-eight already there were chosen by hand and
-    # are left alone; the rest are the nearest move this game has.
+    # The animations. The first twenty-eight were chosen by hand, one at a
+    # time; each row after them is the retail move nearest to its move when
+    # the row was written. A row that is there stays: the nearest match moves
+    # with the retail records, which are hg-engine's now, and a move's
+    # animation is not something to change behind its back on a rerun. Only a
+    # move with no row yet is matched.
     text = COMMANDS.read_text()
     start = text.index("    static const u16 borrowed[NUM_ADDED_MOVES] = {")
     end = text.index("    };", start) + len("    };")
-    # The twenty-eight already there were chosen by hand, one at a time, and
-    # are better than anything this can work out; everything past them is.
-    kept = text[start:end].splitlines()[1:-1][:HANDPICKED_ANIMATIONS]
+    kept = text[start:end].splitlines()[1:-1]
     rows_ = kept + [f"        MOVE_{model + ',':<18} // {name.title().replace('_', ' ')}"
-                    for name, model in borrowed]
+                    for name, model in borrowed[len(kept) - HANDPICKED_ANIMATIONS:]]
     guarded(COMMANDS, text[:start]
             + "    static const u16 borrowed[NUM_ADDED_MOVES] = {\n"
             + "\n".join(rows_) + "\n    };" + text[end:], args.rewrite_scripts)

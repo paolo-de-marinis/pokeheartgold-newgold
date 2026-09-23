@@ -61,11 +61,12 @@ class MoveTests(unittest.TestCase):
         self.assertEqual(sorted(self.added.values()),
                          list(range(LAST_RETAIL + 1, LAST_RETAIL + 1 + len(self.added))))
 
-    def test_retail_moves_are_untouched(self):
+    def test_retail_moves_sit_at_their_numbers(self):
         # A few whose numbers anything shifted by one record would spoil.
+        # Thunderbolt is hg-engine's 90, not HeartGold's 95.
         types = constants("include/constants/pokemon.h", "TYPE_")
         for name, power, type_, pp in (("POUND", 40, "TYPE_NORMAL", 35),
-                                       ("THUNDERBOLT", 95, "TYPE_ELECTRIC", 15),
+                                       ("THUNDERBOLT", 90, "TYPE_ELECTRIC", 15),
                                        ("SHADOW_FORCE", 120, "TYPE_GHOST", 5)):
             _, _, gotPower, gotType, _, gotPP = struct.unpack(
                 import_moves.RECORD, self.table[self.moves[f"MOVE_{name}"]])[:6]
@@ -118,21 +119,58 @@ class MoveTests(unittest.TestCase):
             for key, value in wanted.items():
                 self.assertEqual(record[self.FIELD[key]], value, f"{name} {key}")
 
+    # Where a retail record is not hg-engine's, and why. Everything else in
+    # 1..467 -- type, power, accuracy, PP, effect chance, effect, and the
+    # seven flag bits both games name -- is the engine's (d0380a487).
+    RETAIL_EXCEPTIONS = {
+        ("BEAT_UP", "power"): "the engine's 1 is a placeholder for 5 + base Attack / 10; "
+                              "BtlCmd_BeatUp multiplies base Attack by the table's power",
+        ("FURY_CUTTER", "power"): "the engine's 40 stops at 160 after three uses; "
+                                  "BtlCmd_CalcFuryCutterPower doubles it four times, to 640",
+        ("SWEET_SCENT", "effect"): "the engine's 64 lowers evasion by two; this game's 64 and "
+                                   "its EVA_DOWN_2 (63) are retail's unused damage stubs",
+        ("HOWL", "effect"): "the engine's raises the ally through RANGE_USER_SIDE and its "
+                            "controller; this game's script would raise the user alone",
+    }
+
     @unittest.skipUnless(REFERENCE.exists(), "the reference checkout is not here")
-    def test_those_four_records_are_the_reference_s_own(self):
-        """Not only the field the setting decides: half of konefr's Crabhammer
-        would be neither game's move."""
+    def test_retail_records_are_hg_engine_s(self):
+        """Fairy is 9 there and 18 here, so a type is compared by name; an
+        effect up to 276 by number, where both trees keep retail's scripts,
+        and past it by name, where each numbered its own."""
+        engine = import_moves.gmm.ENGINE
         import_moves.read_conditions(REFERENCE)
-        blocks = import_moves.reference_records(REFERENCE)
+        blocks = import_moves.records_in(import_moves.gmm.git_show(engine, "data/Moves.c", REFERENCE))
+        numbers = {int(value): name for name, value in re.findall(
+            r"^#define MOVE_([A-Z0-9_]+)\s+(\d+)\s*$",
+            import_moves.gmm.git_show(engine, "include/constants/moves.h", REFERENCE), re.M)
+            if name in blocks}
+        theirs = {name: int(value) for name, value in re.findall(
+            r"^#define (MOVE_EFFECT_[A-Z0-9_]+)\s+(\d+)\s*$",
+            import_moves.gmm.git_show(engine, "include/constants/move_effects.h", REFERENCE), re.M)}
+        ours = constants("include/constants/move_effects.h", "MOVE_EFFECT_")
         types = constants("include/constants/pokemon.h", "TYPE_")
-        for name in import_moves.CHAMPIONS_RETAIL:
-            block = blocks[name]
-            record = struct.unpack(import_moves.RECORD, self.table[self.moves[f"MOVE_{name}"]])
-            self.assertEqual(record[2], import_moves.number(block, "power"), name)
-            self.assertEqual(record[3], types[import_moves.field(block, "type")], name)
-            self.assertEqual(record[4], import_moves.number(block, "accuracy"), name)
-            self.assertEqual(record[5], import_moves.number(block, "pp"), name)
-            self.assertEqual(record[6], import_moves.number(block, "effectChance"), name)
+        named = sum(1 << bit for bit in import_moves.FLAG_BITS.values())
+        for move in range(1, LAST_RETAIL + 1):
+            name, block = numbers[move], blocks[numbers[move]]
+            effect = import_moves.field(block, "effect")
+            record = struct.unpack(import_moves.RECORD, self.table[move])
+            wanted = {
+                "effect": (record[0], theirs[effect] if theirs[effect] <= import_moves.LAST_VANILLA_EFFECT
+                           else ours[effect]),
+                "power": (record[2], import_moves.number(block, "power")),
+                "type": (record[3], types[import_moves.field(block, "type")]),
+                "accuracy": (record[4], import_moves.number(block, "accuracy")),
+                "pp": (record[5], import_moves.number(block, "pp")),
+                "effectChance": (record[6], import_moves.number(block, "effectChance")),
+                "flags": (record[9] & named, sum(1 << import_moves.FLAG_BITS[flag]
+                                                 for flag in import_moves.named_flags(block))),
+            }
+            for key, (got, want) in wanted.items():
+                if (name, key) in self.RETAIL_EXCEPTIONS:
+                    self.assertNotEqual(got, want, f"{name} {key} is the engine's now: drop the exception")
+                else:
+                    self.assertEqual(got, want, f"{name} {key}")
 
     # Forty-one damaging moves carry no power, and the reference carries them
     # the same way, because the battle works the damage out instead: a Z-move
