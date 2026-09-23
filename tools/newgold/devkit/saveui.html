@@ -336,7 +336,8 @@ function natureLabel(n) {
 }
 function iconImg(m, size = 32) {
   if (!m || m.ok === false) return `<span class="badq" title="Checksum errato">?</span>`;
-  // The browser keeps an icon a day; the tree's count in the address makes a changed tree's icons new ones.
+  // The server has the browser ask again for every icon (its ETag), so an icon changed since -- a restart
+  // included -- is the new one; the tree's count in the address renews the ones this page already drew.
   return `<img class="ic" width="${size}" height="${size}" alt="" loading="lazy" src="/api/icon?species=${m.species}&form=${m.form || 0}&egg=${m.egg ? 1 : 0}&t=${S.data?.tree ?? 0}">`;
 }
 const fmtDate = t => new Date(t * 1000).toLocaleString("it-IT", {dateStyle: "short", timeStyle: "short"});

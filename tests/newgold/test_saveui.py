@@ -285,6 +285,17 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(self.call("/api/icon?species=1&egg=1")[0], 200)
         self.assertIn(saveui.ICONS / f"poke_icon_{sv.species_numbers()['PIKACHU'] + 7:08d}.png", sv._READ,
                       "an icon served is watched: a new one moves the tree on, and the page asks again")
+        # The browser keeps it but asks each time: a restarted server gives the same address.
+        url = f"http://127.0.0.1:{self.port}/api/icon?species={sv.species_numbers()['PIKACHU']}"
+        with urllib.request.urlopen(url) as response:
+            tag = response.headers["ETag"]
+            self.assertEqual((response.headers["Cache-Control"], tag.strip('"')), ("no-cache", saveui.digest(png)[:16]))
+        with self.assertRaises(urllib.error.HTTPError) as unchanged:
+            urllib.request.urlopen(urllib.request.Request(url, headers={"If-None-Match": tag}))
+        self.assertEqual(unchanged.exception.code, 304)
+        unchanged.exception.close()
+        with urllib.request.urlopen(urllib.request.Request(url, headers={"If-None-Match": '"0"'})) as response:
+            self.assertEqual(response.read(), png, "another icon than the browser's: this one")
 
     # -- writing ------------------------------------------------------------
 

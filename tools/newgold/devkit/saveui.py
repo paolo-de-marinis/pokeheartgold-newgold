@@ -1222,12 +1222,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
 
-    def reply(self, status, body, kind="application/json; charset=utf-8", cache=False):
+    def reply(self, status, body, kind="application/json; charset=utf-8", etag=None):
+        """`etag`: the browser may keep the body, but asks each time whether
+        it is still this one (an icon: its PNG changes with the tree, and a
+        restarted server would hand out the same address)."""
         data = json.dumps(body, ensure_ascii=False).encode() if kind.startswith("application/json") else body
         self.send_response(status)
         self.send_header("Content-Type", kind)
         self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "max-age=86400" if cache else "no-store")
+        self.send_header("Cache-Control", "no-cache" if etag else "no-store")
+        if etag:
+            self.send_header("ETag", etag)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         self.wfile.write(data)
@@ -1270,7 +1275,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if url.path == "/api/icon":
                 png = icon(number(q.get("species"), 0, 0xFFFF, "specie"), number(q.get("form", 0), 0, 255, "forma"),
                            q.get("egg") in ("1", "true"))
-                return self.reply(200, png, "image/png", cache=True)
+                tag = f'"{digest(png)[:16]}"'
+                if self.headers.get("If-None-Match") == tag:
+                    return self.reply(304, b"", "image/png", etag=tag)
+                return self.reply(200, png, "image/png", etag=tag)
             return self.reply(404, {"error": "non trovato"})
         except Refused as e:
             return self.reply(400, {"error": str(e), "code": e.code})
