@@ -358,6 +358,11 @@
 // the Pokemon has its species' hidden ability.
 #define MON_HIDDEN_ABILITY_BIT 1
 
+// hg-engine's DUMMY_P2_1_HAS_HIT_NECESSARY_CRITICAL_HITS, bit 1 of the same
+// field: the Pokemon has landed three critical hits in one appearance in
+// battle, which Galarian Farfetch'd evolves on.
+#define MON_CRITICAL_HITS_EVOLUTION_BIT 2
+
 // hg-engine's DUMMY_P2_2_CHANGE_ABILITY_SLOT, bit 0 of MON_DATA_UNUSED_114: an
 // Ability Capsule has swapped the slot the personality picks. The Mint's
 // nature takes bits 1 to 5 of the same field.
@@ -624,6 +629,8 @@ typedef enum EvoMethod {
     // hg-engine: a level, Toxel's form by its nature.
     EVO_LEVEL_NATURE_AMPED,
     EVO_LEVEL_NATURE_LOW_KEY,
+    // hg-engine: three critical hits landed in one appearance in battle.
+    EVO_AMOUNT_OF_CRITICAL_HITS,
     // hg-engine: a level with this much HP gone and some left, for the
     // Galarian Yamask's 49 -- the games' damage taken without fainting.
     EVO_HURT_IN_BATTLE_AMOUNT,

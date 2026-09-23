@@ -47,7 +47,7 @@ typedef struct { int hour, minute, second; } RTCTime;
 
 typedef struct {
     u16 species, heldItem, friendship;
-    u8 level, form, type1, type2;
+    u8 level, form, type1, type2, bits113;
     u32 pid, hp, maxHp;
 } Pokemon;
 typedef struct { int count; Pokemon mons[6]; } Party;
@@ -72,6 +72,7 @@ static u32 GetMonData(Pokemon *mon, int field, void *dest) {
     case MON_DATA_PERSONALITY: return mon->pid;
     case MON_DATA_TYPE_1: return mon->type1;
     case MON_DATA_TYPE_2: return mon->type2;
+    case MON_DATA_UNUSED_113: return mon->bits113;
     case MON_DATA_HP: return mon->hp;
     case MON_DATA_MAX_HP: return mon->maxHp;
     default: assert(0 && "Unexpected field"); return 0;
@@ -240,6 +241,20 @@ static void check_hurt(void) {
     }
 }
 
+static void check_critical_hits(void) {
+    // hg-engine: the mark the battle leaves at the third critical hit, at any
+    // level. The games also want it standing at the end of that battle.
+    Pokemon mon = { .species = SPECIES_FARFETCHD_GALARIAN, .level = 1, .maxHp = 50 };
+    one_row(EVO_AMOUNT_OF_CRITICAL_HITS, 3, SPECIES_SIRFETCHD);
+    for (int bits = 0; bits < 4; bits++) {
+        for (mon.hp = 0; mon.hp <= 1; mon.hp++) {
+            mon.bits113 = bits;
+            u16 expected = (bits & MON_CRITICAL_HITS_EVOLUTION_BIT) && mon.hp != 0 ? SPECIES_SIRFETCHD : SPECIES_NONE;
+            assert(evolve(&mon, NULL, EVO_AMOUNT_OF_CRITICAL_HITS) == expected);
+        }
+    }
+}
+
 int main(void) {
     check_magnetic_field();
     check_time_of_day();
@@ -247,6 +262,7 @@ int main(void) {
     check_dark_type_in_party();
     check_nature();
     check_hurt();
+    check_critical_hits();
     return 0;
 }
 """

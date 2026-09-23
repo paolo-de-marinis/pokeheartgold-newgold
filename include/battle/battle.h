@@ -238,7 +238,10 @@ typedef struct BattleMon {
     u8 type2;
     u8 form : 5;
     u8 shiny : 1;
-    u8 unk26_6 : 2;
+    // hg-engine's critical_hits: the critical hits landed since this
+    // Pokemon came out, for Galarian Farfetch'd. The two spare bits beside
+    // the form, so the structure keeps its size.
+    u8 criticalHits : 2;
     u8 unusedAbility;
     u32 sendOutFlag : 1;
     u32 intimidateFlag : 1;

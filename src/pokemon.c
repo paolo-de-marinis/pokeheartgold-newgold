@@ -3154,6 +3154,14 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     }
                 }
                 break;
+            case EVO_AMOUNT_OF_CRITICAL_HITS:
+                // Set by the battle at the third critical hit. The games also
+                // want the Pokemon standing when the battle ends.
+                if ((GetMonData(mon, MON_DATA_UNUSED_113, NULL) & MON_CRITICAL_HITS_EVOLUTION_BIT) && GetMonData(mon, MON_DATA_HP, NULL) != 0) {
+                    target = evoTable[i].target;
+                    *method_ret = EVO_AMOUNT_OF_CRITICAL_HITS;
+                }
+                break;
             case EVO_HURT_IN_BATTLE_AMOUNT: {
                 // The games count the damage Yamask takes without fainting and
                 // evolve it under Dusty Bowl's stone arch; the engine asks at

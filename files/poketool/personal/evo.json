@@ -5104,6 +5104,16 @@
           "target": "SPECIES_RUNERIGUS"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_FARFETCHD_GALARIAN",
+      "evos": [
+        {
+          "method": "EVO_AMOUNT_OF_CRITICAL_HITS",
+          "param": 3,
+          "target": "SPECIES_SIRFETCHD"
+        }
+      ]
     }
   ]
 }

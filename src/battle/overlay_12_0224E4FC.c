@@ -183,6 +183,9 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     // An Air Balloon announces itself once per appearance, so the same goes
     // for its flag. The reference clears it alongside these.
     ctx->battleMons[battlerId].airBalloonFlag = 0;
+    // And the critical hits: the engine counts them per appearance, and
+    // clears the count with these.
+    ctx->battleMons[battlerId].criticalHits = 0;
     // Unnerve, Screen Cleaner, Imposter and Hospitality act at every entry
     // too. The reference gates the first, second and fourth on the flag just
     // cleared above and Imposter on imposter_flag, and clears both in
@@ -10442,6 +10445,25 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
 
     if ((ret == 2) && GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_SNIPER) {
         ret = 3;
+    }
+
+    // hg-engine counts the critical hits a Pokemon lands while it is out and,
+    // at the third, marks it in its party record, which is what Galarian
+    // Farfetch'd evolves on. Only the player's own Pokemon: the engine marks
+    // any, and a wild one caught after landing three on the player's side
+    // would evolve for them. The games evolve it when that battle is over, not
+    // at its next level, so the Pokemon is also put with the ones that levelled
+    // up, which are the ones the check after the battle asks.
+    if (ret > 1 && BattleSystem_GetParty(battleSystem, battlerIdAttacker) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
+        ctx->battleMons[battlerIdAttacker].criticalHits++;
+        if (ctx->battleMons[battlerIdAttacker].criticalHits == 3) {
+            Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, battlerIdAttacker, ctx->selectedMonIndex[battlerIdAttacker]);
+            u8 bits = (u8)GetMonData(mon, MON_DATA_UNUSED_113, NULL);
+
+            bits |= MON_CRITICAL_HITS_EVOLUTION_BIT;
+            SetMonData(mon, MON_DATA_UNUSED_113, &bits);
+            ctx->levelUpMons |= MaskOfFlagNo(ctx->selectedMonIndex[battlerIdAttacker]);
+        }
     }
 
     return ret;
