@@ -4134,13 +4134,17 @@ static const u16 sParentalBondSingleStrikeMoves[] = {
 
 // A move that can hit more than one Pokemon strikes twice only when one is
 // there to hit (Pokemon Central). The reference refuses those moves in any
-// double battle, one target or two.
+// double battle, one target or two. Pollen Puff aimed at the user's ally heals
+// it and deals no damage, and the ability doubles the moves that deal damage
+// (Pokemon Central, Amorefiliale), so it heals once; the reference would run
+// it twice.
 BOOL ParentalBond_MoveApplies(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo) {
     int range = BattleMoveTbl(ctx, moveNo)->range;
     int targets = 0;
 
     if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_PARENTAL_BOND
         || BattleMoveTbl(ctx, moveNo)->category == CATEGORY_STATUS
+        || (moveNo == MOVE_POLLEN_PUFF && ctx->battlerIdTarget == (ctx->battlerIdAttacker ^ 2))
         || MoveIsInList(moveNo, sMultiStrikeMoves, NELEMS(sMultiStrikeMoves))
         || MoveIsInList(moveNo, sParentalBondSingleStrikeMoves, NELEMS(sParentalBondSingleStrikeMoves))) {
         return FALSE;

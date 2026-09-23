@@ -43,7 +43,7 @@ typedef struct { u32 parentalBond : 1; } SelfTurnData;
 typedef struct {
     Mon battleMons[4];
     SelfTurnData selfTurnData[4];
-    int battlerIdAttacker, battlerIdFainted, moveNoCur, moveNoTemp, damage;
+    int battlerIdAttacker, battlerIdTarget, battlerIdFainted, moveNoCur, moveNoTemp, damage;
     u32 moveStatusFlag, unk_2184, checkMultiHit;
     int unk_38;
     u8 multiHitCount, multiHitCountTemp;
@@ -65,6 +65,7 @@ static void setup(int doubles, int move, int category, int range) {
     }
     ctx.battleMons[0].ability = ABILITY_PARENTAL_BOND;
     ctx.battlerIdFainted = BATTLER_NONE;
+    ctx.battlerIdTarget = 1;
     ctx.moveNoCur = move;
     ctx.move.category = category;
     ctx.move.range = range;
@@ -110,6 +111,12 @@ int main(void) {
         setup(0, single[i], CATEGORY_PHYSICAL, RANGE_SINGLE_TARGET);
         assert(strikes() == 1);
     }
+    // Pollen Puff at a foe strikes twice; at the user's ally it heals, once.
+    setup(1, MOVE_POLLEN_PUFF, CATEGORY_SPECIAL, RANGE_SINGLE_TARGET);
+    assert(strikes() == 2);
+    setup(1, MOVE_POLLEN_PUFF, CATEGORY_SPECIAL, RANGE_SINGLE_TARGET);
+    ctx.battlerIdTarget = 2;
+    assert(strikes() == 1);
     // Bide only as it unleashes what it stored.
     setup(0, MOVE_BIDE, CATEGORY_PHYSICAL, RANGE_SINGLE_TARGET);
     ctx.move.effect = MOVE_EFFECT_BIDE;
