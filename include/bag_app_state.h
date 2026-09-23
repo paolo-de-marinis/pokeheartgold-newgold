@@ -17,6 +17,11 @@
 // HeartGold sizes the bag's list for its biggest pocket, 165 items.
 #define BAG_LIST_CAPACITY 165
 
+// A list string holds an item's name, terminator included. HeartGold's 18 fit
+// its own names; hg-engine's run to 22 (Super Lumiose Galette), and a name that
+// does not fit is not copied, so the row showed whatever the string held last.
+#define BAG_LIST_NAME_LENGTH 22
+
 // The bag's state, as Bag_Init allocates it. Only the fields the C reads are
 // named; the rest belong to the bag assembly.
 typedef struct BagAppState {

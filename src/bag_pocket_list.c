@@ -55,7 +55,7 @@ void ov15_021FA008(BagAppState *bagApp) {
     u32 i;
 
     for (i = 0; i < BAG_LIST_CAPACITY; i++) {
-        bagApp->listNames[i] = String_New(18, HEAP_ID_6);
+        bagApp->listNames[i] = String_New(BAG_LIST_NAME_LENGTH, HEAP_ID_6);
     }
 }
 

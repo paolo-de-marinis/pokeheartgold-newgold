@@ -8,12 +8,11 @@ which does nothing in this build, and the String keeps what it held before: a
 blank or somebody else's text, and nothing at build time says so. The lengths
 are read from the banks msgenc built, which store them.
 
-Item names, plurals and descriptions are checked only for the items a player
-can come by, read from the data that hands items out. hg-engine's banks carry
-every item up to Scarlet and Violet, and 74 of those names are longer than the
-bag's 18; none of the 74 can be obtained, and the bag's String_New(0x12) is
-assembly (ov15_021FA008), so the guard is that no such item enters the game
-until the bag's strings are sized for it.
+Item plurals and descriptions are checked only for the items a player can come
+by, read from the data that hands items out. Names are checked for every item:
+the bag's list strings (ov15_021FA008, BAG_LIST_NAME_LENGTH) are sized for the
+longest of hg-engine's, which run to 22 with the terminator where HeartGold's
+fitted 18.
 
 Needs the build: run after make.
 """
@@ -30,7 +29,8 @@ MESSAGES = ROOT / "files/msgdata/msg"
 MOVE_NAME_CAPACITY = 16         # GetMoveName's String_New(16) (src/msgdata.c), the move tutor's String_New(0x10)
 SPECIES_NAME_CAPACITY = 11      # POKEMON_NAME_LENGTH + 1: GetSpeciesNameIntoArray copies the row into a nickname array unbounded
 MESSAGE_FORMAT_CAPACITY = 32    # MessageFormat_New_Custom(_, 32) callers: ability names, items with article
-ITEM_NAME_CAPACITY = 18         # the bag's String_New(0x12) (ov15_021FA008)
+ITEM_NAME_CAPACITY = int(re.search(r"#define BAG_LIST_NAME_LENGTH (\d+)",
+                                    (ROOT / "include/bag_app_state.h").read_text()).group(1))  # ov15_021FA008
 ITEM_DESCRIPTION_CAPACITY = 130  # bag, battle bag and shop String_New(130)
 
 MOVE_NAMES, ITEM_DESCRIPTIONS, ITEM_NAMES, ITEM_ARTICLES, ITEM_PLURALS, SPECIES_NAMES, ABILITY_NAMES = (
@@ -107,8 +107,12 @@ class TextLengthTests(unittest.TestCase):
     def test_item_names_with_article_fit(self):
         self.assertEqual(over(ITEM_ARTICLES, MESSAGE_FORMAT_CAPACITY), {}, "article rows longer than 32")
 
-    def test_obtainable_item_names_fit(self):
-        self.assertEqual(items_over(ITEM_NAMES, ITEM_NAME_CAPACITY), {}, "obtainable items named longer than 18")
+    def test_every_item_name_fits_the_bags_list(self):
+        self.assertEqual(over(ITEM_NAMES, ITEM_NAME_CAPACITY), {}, "item names the bag's list cannot hold")
+
+    def test_the_bags_list_strings_are_that_long(self):
+        source = (ROOT / "src/bag_pocket_list.c").read_text()
+        self.assertIn("String_New(BAG_LIST_NAME_LENGTH, HEAP_ID_6)", source)
 
     def test_obtainable_item_plurals_fit(self):
         # hg-engine's Never-Melt Ice and Secret Medicine plurals are 33.
