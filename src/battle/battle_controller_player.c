@@ -2832,23 +2832,6 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_50++;
             break;
         case 17:
-            // Powder: a Fire move by a Pokemon covered in it goes off in its
-            // face instead, for a quarter of its HP unless it has Magic Guard,
-            // and the move is spent.
-            if (ctx->moveConditions[ctx->battlerIdAttacker].powderBlockingFireMove && BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur) == TYPE_FIRE) {
-                ctx->battlerIdTemp = ctx->battlerIdAttacker;
-                ctx->hpCalc = 0;
-                if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD) {
-                    ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * -1, 4);
-                }
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_TAKE_POWDER_DAMAGE);
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                ctx->commandNext = CONTROLLER_COMMAND_25;
-                ret = 1;
-            }
-            ctx->unk_50++;
-            break;
-        case 18:
             if (ctx->dancing && Battler_DanceLocked(ctx, ctx->battlerIdAttacker)) {
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_DANCE_FAILED);
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
@@ -2857,7 +2840,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_50++;
             break;
-        case 19:
+        case 18:
             ctx->unk_50 = 0;
             ret = 3;
             break;
@@ -3387,6 +3370,23 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
             ctx->commandNext = CONTROLLER_COMMAND_25;
             // As a move the before-move checks stop, Powder's among them.
+            ctx->battleStatus |= BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE;
+            ctx->moveStatusFlag |= MOVE_STATUS_NO_MORE_WORK;
+            return;
+        }
+        // Powder: a Fire move by a Pokemon covered in it goes off in its face
+        // instead, for a quarter of its HP unless it has Magic Guard. The move
+        // is spent first: the reference asks this among its move failures,
+        // after the PP and the primal weathers (BattleController_CheckMoveFailures1).
+        if (ctx->moveConditions[ctx->battlerIdAttacker].powderBlockingFireMove && BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur) == TYPE_FIRE) {
+            ctx->battlerIdTemp = ctx->battlerIdAttacker;
+            ctx->hpCalc = 0;
+            if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD) {
+                ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp * -1, 4);
+            }
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_TAKE_POWDER_DAMAGE);
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            ctx->commandNext = CONTROLLER_COMMAND_25;
             ctx->battleStatus |= BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE;
             ctx->moveStatusFlag |= MOVE_STATUS_NO_MORE_WORK;
             return;
