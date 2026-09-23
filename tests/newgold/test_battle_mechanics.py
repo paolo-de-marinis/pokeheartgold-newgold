@@ -10,7 +10,9 @@ import re
 import unittest
 
 from test_level_cap import ROOT
+from test_repels import function
 
+OVERLAY = ROOT / "src/battle/overlay_12_0224E4FC.c"
 SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
 
 
@@ -26,6 +28,15 @@ class BurnTests(unittest.TestCase):
         # again for Heatproof. HeartGold divided by 8.
         divisions = re.findall(r"DivideVarByValue BSCRIPT_VAR_HP_CALC, (\d+)", subscript("BurnDamage"))
         self.assertEqual(divisions, ["16", "2"])
+
+
+class ParalysisTests(unittest.TestCase):
+    def test_paralysis_halves_speed_on_both_sides_of_the_comparison(self):
+        # The reference's CalcSpeed takes QMul_RoundUp(speed, UQ412__0_5):
+        # half, a half rounded up. HeartGold divided by 4.
+        body = function(OVERLAY.read_text(), "CheckSortSpeed")
+        halvings = re.findall(r"STATUS_PARALYSIS\) \{\n(?:\s*//[^\n]*\n)*\s*(speed\d) = \(\1 \+ 1\) / 2;", body)
+        self.assertEqual(halvings, ["speed1", "speed2"])
 
 
 if __name__ == "__main__":

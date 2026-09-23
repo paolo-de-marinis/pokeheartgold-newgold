@@ -1214,7 +1214,9 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
     if (ability1 == ABILITY_QUICK_FEET && ctx->battleMons[battlerId1].status & 0xFF) {
         speed1 = speed1 * 15 / 10;
     } else if (ctx->battleMons[battlerId1].status & STATUS_PARALYSIS) {
-        speed1 /= 4;
+        // Paralysis halves Speed, rounding a half up, as the reference's
+        // QMul_RoundUp(speed, UQ412__0_5) does. HeartGold quartered it.
+        speed1 = (speed1 + 1) / 2;
     }
 
     if (ability1 == ABILITY_SLOW_START && ctx->totalTurns - ctx->battleMons[battlerId1].unk88.slowStartTurns < 5) {
@@ -1283,7 +1285,7 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
     if (ability2 == ABILITY_QUICK_FEET && ctx->battleMons[battlerId2].status & 0xFF) {
         speed2 = speed2 * 15 / 10;
     } else if (ctx->battleMons[battlerId2].status & STATUS_PARALYSIS) {
-        speed2 /= 4;
+        speed2 = (speed2 + 1) / 2;
     }
 
     if (ability2 == ABILITY_SLOW_START && ctx->totalTurns - ctx->battleMons[battlerId2].unk88.slowStartTurns < 5) {
