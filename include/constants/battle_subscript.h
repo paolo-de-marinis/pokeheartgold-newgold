@@ -640,7 +640,8 @@
 #define BATTLE_SUBSCRIPT_SPIKY_SHIELD                       402
 // Mortal Spin: its poison, then Rapid Spin's clearing. 444 there.
 #define BATTLE_SUBSCRIPT_MORTAL_SPIN                        403
-
+// A Disguise or an Ice Face giving way. 332 there.
+#define BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE                  404
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
 #define MOVE_SUBSCRIPT_PTR_POWDER                           152

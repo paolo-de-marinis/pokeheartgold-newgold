@@ -533,6 +533,11 @@ typedef struct BattleContext {
     // it has no battle system to ask which side a battler is on, and a party
     // slot only ever comes back to the position it left from.
     u8 berryEaten[BATTLER_MAX][PARTY_SIZE];
+    // Which battlers saw hail or snow the last time their forms were checked,
+    // a bit each: an Ice Face comes back when the weather begins, or on the
+    // way in while it lasts, not on every check it goes on. Cleared when the
+    // battler is loaded, as the reference clears its log_hail_for_ice_face.
+    u8 iceFaceWeatherSeen;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

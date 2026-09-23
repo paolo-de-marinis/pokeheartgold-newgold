@@ -125,6 +125,7 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     // nor does the record of a Booster Energy having been what raised it.
     ctx->paradoxBoostedStat[battlerId] = 0;
     ctx->boosterEnergyActivated[battlerId] = FALSE;
+    ctx->iceFaceWeatherSeen &= ~MaskOfFlagNo(battlerId);
 
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
@@ -5109,8 +5110,33 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
     return CanStealHeldItem(battleSystem, ctx, battlerIdLoser);
 }
 
+// Disguise and Ice Face (battle_calc_damage.c:254): a Mimikyu in its disguise
+// takes nothing from a move, and an Eiscue with its Ice Face nothing from a
+// physical one; Mold Breaker goes through. The form the face breaks into, or
+// SPECIES_NONE if it takes nothing. A Mimikyu of the Large form busts into
+// the Large busted form: hg-engine lets that one take the hit and never
+// busts it. A transformed battler has no face of its own.
+u16 Battler_BrokenFaceForm(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u16 move) {
+    if (ctx->battleMons[battlerIdTarget].status2 & STATUS2_TRANSFORM) {
+        return SPECIES_NONE;
+    }
+    switch (ctx->battleMons[battlerIdTarget].species) {
+    case SPECIES_MIMIKYU:
+        return CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_DISGUISE) == TRUE ? SPECIES_MIMIKYU_BUSTED : SPECIES_NONE;
+    case SPECIES_MIMIKYU_LARGE:
+        return CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_DISGUISE) == TRUE ? SPECIES_MIMIKYU_BUSTED_LARGE : SPECIES_NONE;
+    case SPECIES_EISCUE:
+        if (BattleMoveTbl(ctx, move)->category == CATEGORY_PHYSICAL && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_FACE) == TRUE) {
+            return SPECIES_EISCUE_NOICE_FACE;
+        }
+        break;
+    }
+    return SPECIES_NONE;
+}
+
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     BOOL ret = FALSE;
+    u16 form;
 
     if (ctx->battlerIdTarget == BATTLER_NONE) {
         return ret;
@@ -5118,6 +5144,17 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
 
     if (BattlerCheckSubstitute(ctx, ctx->battlerIdTarget) == TRUE) {
         return ret;
+    }
+
+    // The face that took the hit gives way (Activate_Disguise_IceFace,
+    // ServerDoPostMoveEffects.c:2030): for a move with power that did not
+    // miss, before anything else the hit sets off.
+    form = Battler_BrokenFaceForm(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->moveNoCur);
+    if (form != SPECIES_NONE && ctx->battleMons[ctx->battlerIdTarget].hp && !(ctx->moveStatusFlag & MOVE_STATUS_MISSED) && BattleMoveTbl(ctx, ctx->moveNoCur)->power) {
+        BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTarget, form, TRUE);
+        ctx->battlerIdTemp = ctx->battlerIdTarget;
+        *script = BATTLE_SUBSCRIPT_DISGUISE_ICE_FACE;
+        return TRUE;
     }
 
     // Every ability below belongs to the Pokemon that was hit. Poison Touch is
@@ -7442,6 +7479,28 @@ static u16 Battler_SchoolingForm(BattleContext *ctx, int battlerId) {
     return SPECIES_NONE;
 }
 
+// Ice Face comes back (SwitchInAbilityCheck.c:933) in hail or snow: when the
+// weather begins, or as the Eiscue comes in while it lasts, not on every check
+// it goes on. Each check writes down whether the battler saw it. The species
+// to become, or SPECIES_NONE; not for a transformed battler.
+static u16 Battler_RestoredFaceForm(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    BOOL snowing = (ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL))
+        && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE)
+        && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK);
+    BOOL seen = (ctx->iceFaceWeatherSeen & MaskOfFlagNo(battlerId)) != 0;
+
+    if (snowing) {
+        ctx->iceFaceWeatherSeen |= MaskOfFlagNo(battlerId);
+    } else {
+        ctx->iceFaceWeatherSeen &= ~MaskOfFlagNo(battlerId);
+    }
+    if (snowing && !seen && ctx->battleMons[battlerId].species == SPECIES_EISCUE_NOICE_FACE && ctx->battleMons[battlerId].hp
+        && GetBattlerAbility(ctx, battlerId) == ABILITY_ICE_FACE && !(ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
+        return SPECIES_EISCUE;
+    }
+    return SPECIES_NONE;
+}
+
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int form;
@@ -7595,6 +7654,13 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
         if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_XERNEAS && ctx->battleMons[ctx->battlerIdTemp].hp
             && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {
             BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, SPECIES_XERNEAS_ACTIVE, FALSE);
+            *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
+            ret = TRUE;
+            break;
+        }
+        form = Battler_RestoredFaceForm(battleSystem, ctx, ctx->battlerIdTemp);
+        if (form != SPECIES_NONE) {
+            BattleSystem_ChangeBattlerForm(battleSystem, ctx, ctx->battlerIdTemp, form, TRUE);
             *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
             ret = TRUE;
             break;

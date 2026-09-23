@@ -164,8 +164,9 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // those, for the Paradox abilities, grew it by four, and the twenty-four for
 // Belch's eaten-a-Berry flags grew it by twenty-four. The four after those,
 // for whose Paradox ability a Booster Energy switched on, grew it by four.
+// The byte for which battlers saw hail or snow, for Ice Face, grew it by four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x31B4 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x31B8 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -2393,6 +2394,12 @@ static BOOL ov12_0224B398(BattleSystem *battleSystem, BattleContext *ctx) {
 static BOOL ov12_0224B498(BattleSystem *battleSystem, BattleContext *ctx) {
     if ((BattleMoveTbl(ctx, ctx->moveNoCur)->range != RANGE_USER && BattleMoveTbl(ctx, ctx->moveNoCur)->range != RANGE_USER_SIDE && BattleMoveTbl(ctx, ctx->moveNoCur)->power != 0 && !(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_IMMUNITY) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN)) || ctx->moveNoCur == MOVE_THUNDER_WAVE) {
         ctx->damage = ov12_02251D28(battleSystem, ctx, ctx->moveNoCur, ctx->moveType, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->damage, &ctx->moveStatusFlag);
+        // A Disguise or an Ice Face takes the whole hit, and nothing is said
+        // about how well it landed (battle_calc_damage.c:254).
+        if (Battler_BrokenFaceForm(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->moveNoCur) != SPECIES_NONE) {
+            ctx->damage = 0;
+            ctx->moveStatusFlag &= ~MOVE_STATUS_ANY_EFFECTIVE;
+        }
         if (ctx->moveStatusFlag & MOVE_STATUS_NO_EFFECT) {
             ctx->moveFail[ctx->battlerIdAttacker].noEffect = TRUE;
         }

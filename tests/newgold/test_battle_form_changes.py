@@ -45,16 +45,32 @@ typedef struct {
 } BattleMon;
 typedef struct {
     BattleMon battleMons[4];
+    u32 fieldCondition;
+    u8 iceFaceWeatherSeen;
+    BOOL moldBreaker, cloudNine;
 } BattleContext;
-typedef struct { u16 power; } MoveTbl;
+typedef struct BattleSystem BattleSystem;
+typedef struct { u16 power; u8 category; } MoveTbl;
 
 static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
-static MoveTbl sMoves[] = { [MOVE_TACKLE] = { 40 }, [MOVE_SWORDS_DANCE] = { 0 }, [MOVE_KINGS_SHIELD] = { 0 } };
+static MoveTbl sMoves[] = {
+    [MOVE_TACKLE] = { 40, CATEGORY_PHYSICAL }, [MOVE_EMBER] = { 40, CATEGORY_SPECIAL },
+    [MOVE_SWORDS_DANCE] = { 0, CATEGORY_STATUS }, [MOVE_KINGS_SHIELD] = { 0, CATEGORY_STATUS } };
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u16 move) { (void)ctx; return &sMoves[move]; }
+static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int attacker, int target, int ability) {
+    (void)attacker;
+    return !ctx->moldBreaker && ctx->battleMons[target].ability == ability;
+}
+static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, int battlerId, int ability) {
+    (void)bs; (void)flag; (void)battlerId;
+    return ctx->cloudNine && (ability == ABILITY_CLOUD_NINE || ability == ABILITY_AIR_LOCK);
+}
+static u32 MaskOfFlagNo(int flagNo) { return 1u << flagNo; }
 
 static BattleContext ctx;
 static void set(u16 species, u16 ability, s32 hp, u32 maxHp) {
     ctx.battleMons[0] = (BattleMon){ species, ability, hp, maxHp, 0, 50 };
+    ctx.moldBreaker = ctx.cloudNine = FALSE;
 }
 """
 
@@ -166,6 +182,60 @@ class FormChangeTests(unittest.TestCase):
         extra = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_UpdateFieldConditionExtra")
         self.assertLess(extra.index("case UFCE_STATE_TRICK_ROOM:"), extra.index("case UFCE_STATE_HUNGER_SWITCH:"))
         self.assertIn("form = Battler_HungerSwitchForm(ctx, battlerId);", extra)
+
+    def test_disguise_and_ice_face(self):
+        """A disguised Mimikyu takes no move, an Eiscue with its face no
+        physical one, and each breaks into its other form; Mold Breaker goes
+        through. The Ice Face comes back once when hail or snow begins, or on
+        the way in while it lasts."""
+        print(run(["Battler_BrokenFaceForm", "Battler_RestoredFaceForm"], r"""
+    ctx.battleMons[1] = (BattleMon){ SPECIES_PIKACHU, ABILITY_STATIC, 1, 1, 0, 50 };
+    set(SPECIES_MIMIKYU, ABILITY_DISGUISE, 1, 1);
+    ctx.battleMons[1] = (BattleMon){ SPECIES_MIMIKYU, ABILITY_DISGUISE, 1, 1, 0, 50 };
+    assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_EMBER) == SPECIES_MIMIKYU_BUSTED);
+    ctx.battleMons[1].species = SPECIES_MIMIKYU_LARGE;
+    assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_TACKLE) == SPECIES_MIMIKYU_BUSTED_LARGE);
+    ctx.battleMons[1].species = SPECIES_MIMIKYU_BUSTED;
+    assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_TACKLE) == SPECIES_NONE);
+    ctx.battleMons[1].species = SPECIES_MIMIKYU;
+    ctx.moldBreaker = TRUE;
+    assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_TACKLE) == SPECIES_NONE);
+    ctx.moldBreaker = FALSE;
+    ctx.battleMons[1].status2 = STATUS2_TRANSFORM;
+    assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_TACKLE) == SPECIES_NONE);
+    ctx.battleMons[1] = (BattleMon){ SPECIES_EISCUE, ABILITY_ICE_FACE, 1, 1, 0, 50 };
+    assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_TACKLE) == SPECIES_EISCUE_NOICE_FACE);
+    assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_EMBER) == SPECIES_NONE);
+
+    set(SPECIES_EISCUE_NOICE_FACE, ABILITY_ICE_FACE, 1, 1);
+    ctx.iceFaceWeatherSeen = 0;
+    ctx.fieldCondition = 0;
+    assert(Battler_RestoredFaceForm(0, &ctx, 0) == SPECIES_NONE);
+    ctx.fieldCondition = FIELD_CONDITION_SNOW_TEMP;
+    assert(Battler_RestoredFaceForm(0, &ctx, 0) == SPECIES_EISCUE);
+    // Still snowing at the next check: the face came back once already.
+    assert(Battler_RestoredFaceForm(0, &ctx, 0) == SPECIES_NONE);
+    ctx.fieldCondition = 0;
+    assert(Battler_RestoredFaceForm(0, &ctx, 0) == SPECIES_NONE);
+    ctx.fieldCondition = FIELD_CONDITION_HAIL;
+    ctx.cloudNine = TRUE;
+    assert(Battler_RestoredFaceForm(0, &ctx, 0) == SPECIES_NONE);
+    ctx.cloudNine = FALSE;
+    ctx.iceFaceWeatherSeen = 0;
+    assert(Battler_RestoredFaceForm(0, &ctx, 0) == SPECIES_EISCUE);
+    puts("PASS: Disguise and Ice Face take a hit and break; the Ice Face comes back with the snow.");""",
+                  "newgold-face-"))
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        self.assertIn("form = Battler_BrokenFaceForm(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->moveNoCur);",
+                      function(overlay, "CheckAbilityEffectOnHit"))
+        self.assertIn("form = Battler_RestoredFaceForm(battleSystem, ctx, ctx->battlerIdTemp);", self.check)
+        self.assertIn("ctx->iceFaceWeatherSeen &= ~MaskOfFlagNo(battlerId);", function(overlay, "BattleSystem_GetBattleMon"))
+        damage = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224B498")
+        self.assertRegex(damage, r"Battler_BrokenFaceForm\(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ctx->moveNoCur\) != SPECIES_NONE\) \{\s*ctx->damage = 0;")
+        script = (ROOT / "files/battledata/script/subscript/subscript_0403_DisguiseIceFace.s").read_text()
+        for line in ("PrintMessage msg_0197_01131", "ChangeForm BATTLER_CATEGORY_MSG_TEMP", "PrintMessage msg_0197_01351",
+                     "DivideVarByValue BSCRIPT_VAR_HP_CALC, 8", "PrintMessage msg_0197_00721"):
+            self.assertIn(line, script)
 
 
 if __name__ == "__main__":
