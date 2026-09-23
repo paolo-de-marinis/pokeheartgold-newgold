@@ -183,7 +183,8 @@ class BattleAbilityWidthTests(unittest.TestCase):
         types += pokemon[pokemon.index("typedef struct MoveDamageCalc {"):pokemon.index("} MoveDamageCalc;")+len("} MoveDamageCalc;")]
         command = (ROOT / "src/battle/battle_command.c").read_text()
         ai = (ROOT / "src/battle/trainer_ai_ability.c").read_text()
-        types += ai[ai.index("enum {"):ai.index("};")+2]
+        ai_header = (ROOT / "include/battle/trainer_ai.h").read_text()
+        types += ai_header[ai_header.index("enum {"):ai_header.index("};")+2]
         native = [selected_cases(pokemon, name, {"BMON_DATA_ABILITY"}, "id") for name in ("GetBattlerVar", "SetBattlerVar")]
         native += [function(pokemon, name) for name in ("AbilitiesAreNeutralized", "BattleMoveTbl", "GetBattlerAbility", "ov12_0225859C")]
         native += [function(command, name) for name in ("BattlerSetAbility", "ov12_0224819C", "BtlCmd_GenerateEndOfBattleItem")]

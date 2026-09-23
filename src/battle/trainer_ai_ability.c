@@ -5,14 +5,6 @@
 
 #include "pokemon.h"
 
-// AI script battlers are relative to the attacker selecting a move.
-enum {
-    AI_BATTLER_TARGET,
-    AI_BATTLER_ATTACKER,
-    AI_BATTLER_TARGET_PARTNER,
-    AI_BATTLER_ATTACKER_PARTNER
-};
-
 void ov10_0221D0A8(BattleSystem *battleSystem, BattleContext *ctx) {
     int battler;
     int battlerId;

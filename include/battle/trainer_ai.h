@@ -3,6 +3,14 @@
 
 #include "battle.h"
 
+// AI script battlers are relative to the attacker selecting a move.
+enum {
+    AI_BATTLER_TARGET,
+    AI_BATTLER_ATTACKER,
+    AI_BATTLER_TARGET_PARTNER,
+    AI_BATTLER_ATTACKER_PARTNER
+};
+
 void ov10_0221BE20(BattleSystem *battleSystem, BattleContext *ctx, u8 battlerId, u8 a3);
 u8 ov10_0221BEF4(BattleSystem *battleSystem, u8 battlerId);
 
@@ -35,11 +43,30 @@ void ov10_0221D068(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221D084(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221D0A8(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221D188(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221D60C(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221D644(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221D67C(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221D6D0(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221D724(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221D778(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221D7CC(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221D8F8(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221DA24(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221DAE4(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221DBA4(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221DC48(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221E178(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221E19C(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221E848(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221EB4C(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221EB6C(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221EB8C(BattleSystem *battleSystem, BattleContext *ctx);
 u32 ov10_0221EEF0(BattleContext *ctx);
 void ov10_0221EF24(BattleContext *ctx, int offset);
 u8 ov10_0221EF34(BattleContext *ctx, u8 battler);
 
 s32 ov10_0221EF7C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 *moves, s32 *damages, u16 heldItem, u8 *ivs, int ability, int embargoTurns, int varyDamage);
+u32 ov10_0221F084(BattleSystem *battleSystem, BattleContext *ctx, u16 move, u16 heldItem, u8 *ivs, int battlerId, int ability, int embargoTurns, u8 roll);
 int ov10_0221F47C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int move);
 BOOL ov10_0221F62C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL ov10_0221FD34(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BOOL noRandom);

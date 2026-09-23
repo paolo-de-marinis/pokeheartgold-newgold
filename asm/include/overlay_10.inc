@@ -92,6 +92,7 @@
 .public ov10_0221EE88
 .public ov10_0221EF10
 .public ov10_0221EF7C
+.public ov10_0221F084
 .public ov10_0222B080
 .public ov10_0222B098
 .public ov10_0221D260
