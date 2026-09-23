@@ -12,7 +12,9 @@ import os
 from pathlib import Path
 import re
 import shlex
+import struct
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -137,6 +139,44 @@ int main(void) {
 """
 
 
+JOHTO = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "constants/johto_dex.h"
+#include "constants/species.h"
+typedef uint16_t u16;
+typedef int BOOL;
+#define TRUE 1
+#define ASSERT_POKEDEX(pokedex) ((void)(pokedex))
+typedef struct Pokedex Pokedex;
+
+// retail's poketool/johtozukan.narc member, as LoadSpeciesToJohtoDexNoLUT
+// allocates it: exactly this long, so reading past it is a heap overflow.
+static const u16 lut[] = { @LUT@ };
+static u16 *LoadSpeciesToJohtoDexNoLUT(void) {
+    u16 *copy = malloc(sizeof(lut));
+    memcpy(copy, lut, sizeof(lut));
+    return copy;
+}
+static void Heap_Free(void *p) { free(p); }
+// A save that has seen and caught every species, New Gold's included.
+static BOOL Pokedex_CheckMonCaughtFlag(const Pokedex *pokedex, u16 species) { (void)pokedex; (void)species; return TRUE; }
+static BOOL Pokedex_CheckMonSeenFlag(const Pokedex *pokedex, u16 species) { (void)pokedex; (void)species; return TRUE; }
+static BOOL SpeciesIsNotJohtoMythical(u16 species) { (void)species; return TRUE; }
+@NATIVE@
+
+int main(void) {
+    assert(Pokedex_CountJohtoDexOwned(0) == J_NUM_SPECIES);
+    assert(Pokedex_CountJohtoDexSeen(0) == J_NUM_SPECIES);
+    assert(Pokedex_CountJohtoOwned_ExcludeMythical(0) == J_NUM_SPECIES);
+    printf("PASS: a full Dex counts the %d Johto species inside the %d-entry table.\n", J_NUM_SPECIES, (int)(sizeof(lut) / sizeof(lut[0])));
+    return 0;
+}
+"""
+
 def c_function(source, name):
     """Like test_level_cap.function, but for any storage class and return type."""
     match = re.search(r"^[\w \*]*\b" + name + r"\([^;]*?\) \{", source, re.M)
@@ -161,6 +201,18 @@ def run_native(test, program, prefix, flags=()):
 
 
 class DexRangeTests(unittest.TestCase):
+    def test_the_johto_counts_stay_inside_the_johto_table(self):
+        """The Johto table is retail's, one entry a species up to Arceus.
+        The three Johto counts walked it to the last Dex species."""
+        sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+        from wotbl import read_narc
+        member = read_narc((ROOT / "files/poketool/johtozukan.narc").read_bytes())[0][0]
+        lut = ", ".join(str(v) for v in struct.unpack(f"<{len(member) // 2}H", member))
+        source = (ROOT / "src/pokedex.c").read_text()
+        native = "\n".join(c_function(source, name) for name in (
+            "Pokedex_CountJohtoDexOwned", "Pokedex_CountJohtoDexSeen", "Pokedex_CountJohtoOwned_ExcludeMythical"))
+        run_native(self, JOHTO.replace("@LUT@", lut).replace("@NATIVE@", native), "newgold-johto-")
+
     def test_the_deoxys_forms_are_not_dex_flags(self):
         """Retail kept Deoxys's form order in the top byte of flag word 15,
         free at 493. With the Dex wider that byte is the seen and caught flags

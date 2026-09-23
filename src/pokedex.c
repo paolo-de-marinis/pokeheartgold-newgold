@@ -984,13 +984,16 @@ u16 Pokedex_CountDexOwned(Pokedex *pokedex) {
     }
 }
 
+// The Johto table (LoadSpeciesToJohtoDexNoLUT) is retail's, one entry a
+// species up to Arceus, and the Johto Dex holds no species past it. The three
+// Johto counts walk that table, not the National Dex.
 u16 Pokedex_CountJohtoDexOwned(Pokedex *pokedex) {
     u16 *johto_species;
     u16 i, n;
     ASSERT_POKEDEX(pokedex);
     johto_species = LoadSpeciesToJohtoDexNoLUT();
     n = 0;
-    for (i = 1; i <= NATIONAL_DEX_COUNT; i++) {
+    for (i = 1; i <= MAX_SPECIES; i++) {
         if (Pokedex_CheckMonCaughtFlag(pokedex, i) == TRUE && johto_species[i] != J_SPECIES_NONE) {
             n++;
         }
@@ -1005,7 +1008,7 @@ u16 Pokedex_CountJohtoDexSeen(Pokedex *pokedex) {
     ASSERT_POKEDEX(pokedex);
     johto_species = LoadSpeciesToJohtoDexNoLUT();
     n = 0;
-    for (i = 1; i <= NATIONAL_DEX_COUNT; i++) {
+    for (i = 1; i <= MAX_SPECIES; i++) {
         if (Pokedex_CheckMonSeenFlag(pokedex, i) == TRUE && johto_species[i] != J_SPECIES_NONE) {
             n++;
         }
@@ -1044,7 +1047,7 @@ u16 Pokedex_CountJohtoOwned_ExcludeMythical(Pokedex *pokedex) {
 
     johto_dex = LoadSpeciesToJohtoDexNoLUT();
     n = 0;
-    for (i = 1; i <= NATIONAL_DEX_COUNT; i++) {
+    for (i = 1; i <= MAX_SPECIES; i++) {
         if (Pokedex_CheckMonCaughtFlag(pokedex, i) == TRUE && johto_dex[i] != J_SPECIES_NONE && SpeciesIsNotJohtoMythical(i) == TRUE) {
             n++;
         }
