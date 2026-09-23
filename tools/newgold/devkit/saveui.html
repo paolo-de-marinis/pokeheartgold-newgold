@@ -321,14 +321,20 @@ async function run(fn, ok) {
 
 // ---- names -----------------------------------------------------------
 const ref = (label, id) => `${label} #${id}`;
-function parseRef(value, index) {
+// A field's text to an id: "Name #N" when the name is that row's own (as ref() wrote it), else a name alone;
+// null for text that is neither -- a "#N" behind other text does not decide it.
+function parseRef(value, index, label) {
   value = (value || "").trim();
   if (!value) return 0;
-  const m = value.match(/#(\d+)\s*$/);
-  if (m) return +m[1];
+  const m = value.match(/^(.*?)\s*#(\d+)$/);
+  if (m && (label(+m[2]) ?? "").toLowerCase() === m[1].toLowerCase()) return +m[2];
   const hit = index.get(value.toLowerCase());
   return hit === undefined ? null : hit;
 }
+const speciesOf = v => parseRef(v, S.speciesIndex, id => S.species.get(id)?.label);
+const moveOf = v => parseRef(v, S.moveIndex, id => S.moves.get(id)?.name);
+const itemOf = v => parseRef(v, S.itemIndex, id => S.items.get(id)?.label ?? S.items.get(id)?.name);
+const mapOf = v => parseRef(v, S.mapIndex, id => S.maps.has(id) ? mapLabel(S.maps.get(id)) : undefined);
 // gNatureStatMods' row: 1 on the stat the nature raises, -1 on the one it lowers, over the stats after HP.
 function natureLabel(n) {
   const name = S.data.natures[n], mods = S.data.nature_mods[n] || [], after = stats().slice(1);
@@ -1041,7 +1047,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     $$("[data-iv]", d).forEach(b => b.onclick = () => six.forEach(i => form.elements["iv" + i].value = b.dataset.iv));
     const inputs = range(lim.moves).map(i => form.elements["move" + i]), sel = form.elements.ability;
     const tagLine = value => {
-      const id = parseRef(value, S.moveIndex);
+      const id = moveOf(value);
       if (!id || !st.species) return "";
       if (st.legal.has(id)) return sourceTags(st.legal.get(id));
       if (st.known.has(id)) return `<span class="tag warn">fuori elenco (mossa evento?): resta finché non la cambi</span>`;
@@ -1077,16 +1083,16 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       }
       showTags();
     }
-    const first = typed ? parseRef(typed.species, S.speciesIndex) : v.species;
+    const first = typed ? speciesOf(typed.species) : v.species;
     if (first) load(first, null, typed?.ability);
     form.elements.species.addEventListener("input", () => {
-      const sp = parseRef(form.elements.species.value, S.speciesIndex);
+      const sp = speciesOf(form.elements.species.value);
       if (sp && sp !== st.species) load(sp, "all");
     });
     // Moves the game gave for one level follow the level while they are left alone.
     form.elements.level.addEventListener("input", () => { if (st.preset && st.species) load(st.species, "moves"); });
     $("#learn", d).onclick = () => {
-      const sp = parseRef(form.elements.species.value, S.speciesIndex);
+      const sp = speciesOf(form.elements.species.value);
       if (!sp) return toast("Scegli prima la specie", true);
       load(sp, "moves");
     };
@@ -1144,8 +1150,8 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     if (r.value === "deposit") return edit("deposit", {slot: where.slot, box: S.box}, `Spostato nel box ${S.box + 1}`, version);
     if (r.value === "withdraw") return edit("withdraw", base, "Spostato in squadra", version);
     const d = r.data, bad = [];
-    const species = parseRef(d.species, S.speciesIndex), item = parseRef(d.held, S.itemIndex);
-    const mv = range(lim.moves).map(i => parseRef(d["move" + i], S.moveIndex));
+    const species = speciesOf(d.species), item = itemOf(d.held);
+    const mv = range(lim.moves).map(i => moveOf(d["move" + i]));
     if (!species) bad.push("specie");
     if (item === null) bad.push("strumento");
     mv.forEach((x, i) => x === null && bad.push(`mossa ${i + 1}`));
@@ -1193,7 +1199,7 @@ function renderBag() {
   $(".seg").onclick = ev => { const b = ev.target.closest("[data-pocket]"); if (b) { S.pocket = b.dataset.pocket; renderBag(); } };
   $("#additem").onsubmit = ev => {
     ev.preventDefault();
-    const id = parseRef(ev.target.elements.what.value, S.itemIndex);
+    const id = itemOf(ev.target.elements.what.value);
     if (!id) return toast("Scegli lo strumento dall'elenco", true);
     const pocket = S.items.get(id)?.pocket;
     if (!pocket) return toast("Questo strumento non va in nessuna tasca", true);
@@ -1288,7 +1294,7 @@ function renderPosition() {
     </form>`;
   $("#posform").onsubmit = ev => {
     ev.preventDefault();
-    const f = ev.target.elements, map = parseRef(f.map.value, S.mapIndex);
+    const f = ev.target.elements, map = mapOf(f.map.value);
     if (!map && map !== 0) return toast("Scegli la mappa dall'elenco", true);
     edit("position", {map, x: +f.x.value, y: +f.y.value, direction: +f.dir.value}, "Posizione scritta");
   };
