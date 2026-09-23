@@ -81,6 +81,14 @@ class TrainerTests(unittest.TestCase):
         added = {f"SPECIES_{name}" for name in import_species.added_species()}
         self.assertTrue(added & named, "the rebalance should hand added species to trainers")
 
+    def test_the_name_bank_is_remade_when_trainers_json_changes(self):
+        """Bank 729 is made from trainers.json by files/msgdata/msg.mk. Its rule
+        once had no prerequisites, so after the first build no edit to a name
+        ever reached the ROM."""
+        rule = re.search(r"^\$\(TRNAME_GMM\):(.*)$", (ROOT / "files/msgdata/msg.mk").read_text(), re.M)
+        self.assertIsNotNone(rule, "no rule makes $(TRNAME_GMM)")
+        self.assertLessEqual({"$(TRAINER_JSON)", "$(TRNAME_TEMPLATE)"}, set(rule.group(1).split()))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,7 +14,7 @@ TRNAME_TEMPLATE := files/poketool/trainer/trname.json.txt
 FIRST_MSG_H_GEN := $(MSGDATA_DIR)/headers.done
 TOUCH_ONCE      := $(MSGDATA_DIR)/touch_once.sh
 
-$(TRNAME_GMM):
+$(TRNAME_GMM): $(TRAINER_JSON) $(TRNAME_TEMPLATE)
 	$(JSONPROC) $(TRAINER_JSON) $(TRNAME_TEMPLATE) $(TRNAME_GMM)
 	$(SED) -i 's/&/&amp;/g' $(TRNAME_GMM)
 
