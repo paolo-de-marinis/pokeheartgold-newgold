@@ -792,6 +792,8 @@ function renderTrainer() {
 }
 
 // ---- Squadra -------------------------------------------------------------
+const STALE_ABILITY = "Non è l'abilità che il gioco darebbe a questa specie (la specie è stata cambiata senza l'abilità, "
+  + "o i dati della specie sono cambiati)";
 function monCard(m, i, count) {
   if (!m || !m.ok) return `<div class="mon" data-pos="party:${i}"><div class="head">${iconImg(m)}<span class="invalid">Checksum errato</span></div>
     <div class="sub">Questo Pokémon non si legge (nel gioco è un Uovo Difettoso).</div>
@@ -802,7 +804,7 @@ function monCard(m, i, count) {
       <div class="sub">${esc(m.species_name)} · Lv. ${m.level}${m.egg ? " · uovo" : ""}</div>
       ${m.egg ? "" : `<div>${typeBadges(m.types)}</div>`}</div></div>
     ${hp !== null ? `<div class="hp" title="PS ${m.hp}/${m.stats[0]}"><i style="width:${hp}%"></i></div><div class="sub">PS ${m.hp}/${m.stats[0]}</div>` : ""}
-    <div class="sub">${esc(m.nature_name)} · ${esc(m.ability_name)}${m.item ? ` · ${esc(m.item_name)}` : ""}</div>
+    <div class="sub">${esc(m.nature_name)} · ${esc(m.ability_name)}${m.ability_ok ? "" : ` <span class="tag warn" title="${esc(STALE_ABILITY)}: aprilo, scegli l'abilità e salva.">non sua</span>`}${m.item ? ` · ${esc(m.item_name)}` : ""}</div>
     <ul>${m.moves.map(mv => `<li>${esc(mv.name)} <span class="muted">${mv.pp}/${mv.pp_max}</span></li>`).join("")}</ul>
     <div class="acts">
       <button class="small" type="button" data-edit="${i}">Modifica</button>
@@ -990,7 +992,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       <dt>Soprannome</dt><dd>${esc(m.nickname)}${m.nicknamed ? "" : ` <span class="muted">(nome della specie)</span>`}</dd>
       ${m.egg ? "" : `<dt>Tipo</dt><dd>${typeBadges(m.types)}</dd>`}
       <dt>Allenatore</dt><dd>${esc(m.ot_name)} · ID ${String(m.ot_id).padStart(5, "0")}</dd>
-      <dt>Abilità</dt><dd>${esc(m.ability_name)}${m.hidden_ability ? " (nascosta)" : ""}</dd>
+      <dt>Abilità</dt><dd>${esc(m.ability_name)}${m.hidden_ability ? " (nascosta)" : ""}${m.ability_ok ? "" : ` <span class="tag warn">${esc(STALE_ABILITY)}: scegline una qui sotto e salva.</span>`}</dd>
       <dt>Personalità</dt><dd class="mono">${m.personality.toString(16).padStart(8, "0")}${m.shiny ? ` <span class="star">★ cromatico</span>` : ""}${m.mint !== null ? ` · menta: ${esc(S.data.natures[m.mint])}` : ""}</dd>
       <dt>Esperienza</dt><dd>${m.exp}${m.stats ? ` · PS ${m.hp}/${m.stats[0]} · ${m.stats.slice(1).map((x, i) => `${stats()[i + 1]} ${x}`).join(" · ")}` : ""}</dd>
     </dl></div>`;
@@ -1051,9 +1053,12 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       if (!r || st.species !== species) return;       // another species was picked meanwhile
       Object.assign(st, {moves: r.moves, legal: new Map(r.moves.map(x => [x.id, x.sources])), known: new Set(same ? m.moves.map(x => x.id) : [])});
       const was = sel.value;
-      sel.innerHTML = r.abilities.map(a => `<option value="${a.slot}">${esc(a.name)}${a.slot === lim.hidden_slot ? " (nascosta)" : ""}</option>`).join("");
-      sel.value = mode === "all" ? r.ability : mode === "moves" ? was : ability || (same ? m.ability_slot : r.ability);
-      if (!sel.value) sel.value = r.ability;
+      // An ability the species would not give (m.ability_ok false) is not silently replaced: one is chosen here.
+      const stale = same && !m.ability_ok && mode !== "all";
+      sel.innerHTML = (stale ? `<option value="">Scegli: ${esc(m.ability_name)} non è sua</option>` : "")
+        + r.abilities.map(a => `<option value="${a.slot}">${esc(a.name)}${a.slot === lim.hidden_slot ? " (nascosta)" : ""}</option>`).join("");
+      sel.value = mode === "all" ? r.ability : mode === "moves" ? was : ability ?? (same ? (m.ability_ok ? m.ability_slot : "") : r.ability);
+      if (!stale && !sel.value) sel.value = r.ability;
       const name = S.species.get(species)?.name ?? `#${species}`;
       if (isNew && (mode === "all" || form.elements.friendship.value === "")) form.elements.friendship.value = r.friendship;
       if (mode) {

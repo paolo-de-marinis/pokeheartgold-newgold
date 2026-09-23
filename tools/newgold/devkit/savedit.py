@@ -1918,7 +1918,10 @@ def mon_types(species, ability, item, form=0):
 
 def describe_mon(raw):
     """Everything the page shows about one Pokemon; None for an empty slot,
-    {"ok": False} for one whose checksum fails (the game's Bad Egg)."""
+    {"ok": False} for one whose checksum fails (the game's Bad Egg).
+    "ability_ok" is whether its ability is the one UpdateBoxMonAbility
+    would give it (in "ability_slot"): not, when its species was written
+    without it (an older editor) or the species' abilities changed since."""
     mon = open_mon(raw)
     if mon is None:
         return None
@@ -1940,6 +1943,8 @@ def describe_mon(raw):
             moves.append({"id": move, "name": row["name"], "pp": b[8 + i], "pp_ups": b[12 + i],
                           "pp_max": row["pp"] + row["pp"] * b[12 + i] // 5})
     items, abilities, natures = item_table(), bank(ABILITY_NAMES), bank(NATURE_NAMES)
+    slot = ability_slot(species, b[0x18] >> 3, *_ability_bits(mon))
+    given = next((entry["id"] for entry in species_abilities(species, b[0x18] >> 3) if entry["slot"] == slot), 0)
     out = {"ok": True, "personality": p, "species": species, "species_name": species_name(species),
            "form": b[0x18] >> 3, "egg": bool(ivword >> 30 & 1), "nicknamed": bool(ivword >> 31),
            "nickname": decode_text(struct.unpack_from("<11H", c, 0)),
@@ -1948,7 +1953,7 @@ def describe_mon(raw):
            "nature_born": p % 25, "mint": mint - 1 if mint else None,
            "ability": ability, "ability_name": abilities[ability] if ability < len(abilities) else str(ability),
            "hidden_ability": bool((b[0x19] >> 6) & HIDDEN_ABILITY_BIT), "ability_bit": _ability_bits(mon)[1],
-           "ability_slot": ability_slot(species, b[0x18] >> 3, *_ability_bits(mon)),
+           "ability_slot": slot, "ability_ok": ability == given,     # not: the species was changed alone
            "item": item, "item_name": "" if not item else items[item]["name"] if item in items else f"#{item}",
            "types": mon_types(species, ability, item, b[0x18] >> 3),
            "friendship": a[0x0C], "moves": moves,

@@ -489,6 +489,25 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual((out["boxes"]["mons"][0][0]["ability_name"], out["boxes"]["mons"][0][0]["hidden_ability"]),
                          ("Anticipation", True))
 
+    def test_an_ability_its_species_would_not_give_is_said_and_mended(self):
+        """A Pokemon whose species was written alone, as the old editor did:
+        it kept the old species' ability. It is said, and a slot sent for
+        it writes that slot's ability, even the one its bits already pick."""
+        n = sv.species_numbers()
+        save = sv.Save(self.save)
+        mon = sv.open_mon(sv.party_raw(save)[0])
+        struct.pack_into("<H", mon["blocks"][0], 0, n["PONYTA"])
+        sv.set_party_mon(save, 0, sv.seal_mon(mon))
+        self.save.write_bytes(save.image())
+        now = self.ok("/api/save?f=gyms/test.sav")["party"][0]
+        self.assertEqual((now["species_name"], now["ability_name"], now["ability_ok"]), ("Ponyta", "Overgrow", False))
+        out = self.edit("party_edit", {"slot": 0, "ability": now["ability_slot"]})
+        self.assertTrue(out["changed"])
+        mended = out["party"][0]
+        self.assertTrue(mended["ability_ok"])
+        self.assertIn(mended["ability_name"], [a["name"] for a in sv.species_abilities(n["PONYTA"])])
+        self.assertTrue(all(m["ability_ok"] for m in out["party"][1:]), "the ones the game made are right")
+
     def test_an_event_move_is_kept_until_it_is_changed(self):
         """A Pokemon the game made may know what no rule lists: editing it
         keeps that move while the move and the species stay."""

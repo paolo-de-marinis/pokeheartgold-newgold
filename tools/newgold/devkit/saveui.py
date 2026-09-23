@@ -1016,12 +1016,13 @@ def changed(fields, now):
     """Only what differs, so that a field left alone is not rewritten -- a
     level sent back unchanged would put the experience at the level's floor.
     With a new species the moves and the ability sent are the new species'
-    to check, even when they are the ones the Pokemon has."""
+    to check, even when they are the ones the Pokemon has; an ability slot
+    is new, whatever it is, to a Pokemon whose ability is not its slot's."""
     if now is None or not now["ok"]:
         raise Refused("qui non c'è un Pokémon leggibile")
     current = {"species": now["species"], "level": now["level"], "nature": now["nature"], "item": now["item"],
                "moves": [m["id"] for m in now["moves"]], "ivs": now["ivs"], "evs": now["evs"],
-               "friendship": now["friendship"], "ability": now["ability_slot"]}
+               "friendship": now["friendship"], "ability": now["ability_slot"] if now["ability_ok"] else None}
     out = {k: v for k, v in fields.items() if v != current[k]}
     if "species" in out:
         out.update({k: fields[k] for k in ("moves", "ability") if k in fields})
