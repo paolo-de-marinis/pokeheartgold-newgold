@@ -193,6 +193,21 @@ class SaveUiTests(unittest.TestCase):
         n = sv.species_numbers()["CHIKORITA"]
         self.assertEqual(self.ok(f"/api/learnset?species={n}&level=20"), sv.learnset(n, 20))
 
+    def test_no_build_is_not_a_bad_save(self):
+        """With no build to measure the layout from (a make clean, a wrong
+        --build) no file can be read: the library says so once, rather
+        than calling every save invalid."""
+        empty = Path(tempfile.mkdtemp(dir=self.tmp.name))
+        (empty / "heartgold.us").mkdir()
+        library = saveui.Library(self.library, empty, roms=[])
+        listing = library.listing()
+        self.assertIn("non trovo la build", listing["build"])
+        self.assertEqual({e["valid"] for e in listing["files"]}, {None})
+        with self.assertRaises(saveui.Refused) as refused:
+            library.detail("gyms/test.sav")
+        self.assertEqual(refused.exception.code, "build")
+        self.assertIsNone(self.ok("/api/library")["build"])
+
     def test_an_icon_has_the_games_palette(self):
         status, png = self.call(f"/api/icon?species={sv.species_numbers()['PIKACHU']}")
         self.assertEqual(status, 200)

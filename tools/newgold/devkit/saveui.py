@@ -389,7 +389,26 @@ class Library:
             (self.backups / to).parent.mkdir(parents=True, exist_ok=True)
             os.rename(self.backups / key, self.backups / to)
 
+    def layout_problem(self):
+        """Why the save's layout cannot be measured from the build, None when
+        it can: without it no file can be read, which is not the files'
+        fault (a make clean, a rebuild under way, a wrong --build)."""
+        missing = [name for name in ("main.sbin", "main.elf") if not (self.layout / name).is_file()]
+        if missing:
+            return (f"non trovo la build in {self.layout} (manca {' e '.join(missing)}): senza, i salvataggi non si "
+                    f"possono leggere. Se make la sta ricostruendo aspetta che finisca; altrimenti avvia l'editor "
+                    f"con --build sulla cartella build giusta.")
+        try:
+            sv.blocks(self.layout)
+        except (Exception, SystemExit) as e:
+            return (f"la build in {self.layout} non si legge ({type(e).__name__}: {e}): forse make la sta "
+                    f"ricostruendo. Riprova quando ha finito.")
+        return None
+
     def open(self, path):
+        problem = self.layout_problem()
+        if problem:
+            raise Refused(problem, "build")
         try:
             return sv.Save(path, self.layout)
         except SystemExit as e:
@@ -405,7 +424,7 @@ class Library:
         try:
             save = self.open(path)
         except Refused as e:
-            return {**entry, "valid": False, "error": str(e)}
+            return {**entry, "valid": None if e.code == "build" else False, "error": str(e)}
         profile = sv.profile(save)
         where = sv.position(save)["current"]
         place = sv.map_table().get(where["map"], {})
@@ -439,6 +458,7 @@ class Library:
                 rel = path.relative_to(self.trash).as_posix()
                 trash.append({"t": rel, "f": rel.split("/", 1)[-1], "when": rel.split("/", 1)[0]})
         return {"library": str(self.root), "files": files, "slots": slots, "trash": trash,
+                "build": self.layout_problem(),
                 "playable": [s["slot"] for s in slots if not s["problem"] and self.playable(s["slot"])],
                 "configured": CONFIG.exists(),
                 "melonds": melonds_running()}
@@ -1155,6 +1175,9 @@ def main():
         library = Path.home()   # the page opens on the settings to choose one
     roms = settings.get("roms") if isinstance(settings.get("roms"), list) else None
     server = serve(library, args.build, args.port, roms, persist=True)
+    problem = Handler.library.layout_problem()
+    if problem:
+        print("attenzione:", problem)
     url = f"http://127.0.0.1:{Handler.port}/"
     print(f"save editor on {url} -- library {Handler.library.root}, build {Handler.library.build}"
           f"{' (launches simulated)' if dry_run() else ''}; Ctrl+C to stop")

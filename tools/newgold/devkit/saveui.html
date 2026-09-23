@@ -177,6 +177,8 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
   possono scrivere finché non lo chiudi. I file della libreria si modificano normalmente.
 </div>
 
+<div class="banner" id="buildbanner" hidden></div>
+
 <main class="layout">
   <aside class="pane" id="library">
     <section>
@@ -328,11 +330,14 @@ async function loadLibrary() {
   if (!lib) return;
   S.lib = lib;
   $("#libpath").textContent = lib.library;
+  $("#buildbanner").hidden = !lib.build;
+  $("#buildbanner").textContent = lib.build ? `I salvataggi non si possono leggere: ${lib.build}` : "";
   setMelon(lib.melonds);
   renderLibrary();
 }
 function entryLine(e) {
   if (e.exists === false) return `${e.problem ? `<div class="meta invalid">Non usabile: ${esc(e.problem)}</div>` : ""}<div class="meta">Nessun salvataggio in questo slot.</div>`;
+  if (e.valid === null) return `<div class="meta">Non letto: manca la build (vedi sopra).</div>`;
   if (!e.valid) return `<div class="meta"><span class="invalid">Non è un salvataggio valido</span> · ${esc(e.error)}</div>`;
   const party = (e.party || []).map(m => iconImg(m)).join("");
   return `${e.problem ? `<div class="meta invalid">Non usabile: ${esc(e.problem)}</div>` : ""}<div class="icons">${party || `<span class="meta">Squadra vuota</span>`}</div>
