@@ -58,8 +58,33 @@ bit (an Ability Capsule turns it over) or `MON_HIDDEN_ABILITY_BIT`, which
 refuse anything else (`Illegal`); a species change brings the new species'
 moves at that level (`preset_moves`) and the ability the game gives it,
 and only a Pokemon keeping its species keeps a move it already knew that
-no rule lists, an event's. Every table is read from the tree as it is: a
-reading is kept only until its file changes (`fresh()`).
+no rule lists, an event's.
+
+Nothing the game has is typed into it: all of it is read from the tree as
+the build would compile it, and read again once a file it came from has
+changed (`fresh()`, which saveui calls before every request; a reading is
+kept only while its files are unchanged). The save's layout -- every size,
+offset and limit, from the Pokemon's size and the Dex's offsets to the
+party size, `MAX_EV_PER_STAT` and `Mail_Init`'s values -- is what the host
+compiler makes of the headers with `config.mk`'s defines, 32-bit pointers
+and signed char (`_layout`, `compile_c`: nothing is run, the numbers are
+read out of the assembly). The tables are read out of the C that has them:
+the block order (`GetSubstruct`), `gNatureStatMods`, `ResolveMonForm`'s
+forms, the pockets (`struct Bag`, `Bag_GetItemPocket`, `sPockets`), which
+items are TMs, HMs and TRs (`ItemIsTM` and the rest), the message banks
+(`message_format.c`'s Buffer functions), the icons' numbers
+(`GetMonIconNaixEx`). The blocks' sizes are the one thing measured from the
+build, since the game's `Save_*_sizeof` exist in no other form; the page
+says when a header the layout is read from is newer than that build.
+
+What the game has only as code -- a Pokemon's byte offsets and bits, the
+footers, the encryption's generator, `SHINY_CHECK`, the nature as
+`pid % 25`, `GENDER_RATIO`, the flash's halves, the clock's 999 hours, the
+tutor record's index, the badges' two bytes, a TM's one copy, the machines'
+sort, `UpdateBoxMonAbility`, `InitBoxMonMoveset`, `LoadEggMoves`,
+`DexSpeciesIsInvalid`, where the personal template packs the machines --
+stays code in savedit, and `TheCodeSaveditKeeps` in `test_savedit.py`
+reads each from the tree and fails the day they differ.
 
 ## saveui.py
 
@@ -126,7 +151,19 @@ this Pokemon as that species; "Mosse per livello" puts in the same moves.
 The server refuses in Italian a move or an ability the species cannot
 have, whatever sent it; a move the Pokemon already knew that the species
 does not learn (an event's) stays while it is left alone and the species
-is kept.
+is kept. A new Pokemon's friendship is its species' own.
+
+The page has no game data of its own. What exists and every limit -- the
+badges and the byte each is kept in, the pockets in the game's order, the
+stats, the natures' raised and lowered stat, the directions, the genders,
+each item's most, the party, box, level, IV and EV limits -- comes in
+`/api/data` from the tree; the page keeps only the Italian names, keyed by
+the tree's constants (`BADGE_ZEPHYR`, `POCKET_TMHMS`, `STAT_SPATK`,
+`TYPE_FAIRY`...), and shows a constant it has no name for as itself. When
+the tree changes under a running server, the page, which polls it, asks for
+the data again and reopens the save it shows, icons included; no reload.
+The emulator slots are the ROMs `config.mk` and the Makefile say make
+builds.
 
 Nothing is deleted. Before every write the file is copied to
 `LIBRARY/.backups/<its path>/<timestamp>.sav` -- an emulator slot to
