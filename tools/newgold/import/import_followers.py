@@ -24,6 +24,14 @@ Gigantamax and totem forms, the battle-only forms) is one hg-engine never
 draws: it walks as its base species, which is what get_mon_ow_tag falls back
 to. It takes its base's model here and adds none.
 
+Minior's seven Core Forms are among them, although a Minior is always in its
+Core outside battle here (3965cc5d4): it walks in its shell, the Meteor
+Form's sprite, which is one picture and palette for every colour. The
+reference ships a minior_core_*/overworld.png for each, but all seven are
+Bulbasaur's picture (blob 257f6588), a placeholder, in konefr's range too,
+and its table names none of them; a Core Form can have a follower of its own
+only once one is drawn for it.
+
     import_followers.py [--reference PATH] [--write]
 """
 
