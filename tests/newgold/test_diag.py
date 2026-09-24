@@ -9,6 +9,7 @@ came in, and this is what keeps the next hook honest.
 """
 
 import re
+import sys
 import unittest
 
 from test_level_cap import ROOT
@@ -61,6 +62,15 @@ class DiagnosticsTests(unittest.TestCase):
         for script in (ROOT / "tools/newgold/devkit/diag").glob("*.py"):
             read |= set(re.findall(r"gDiag\w+", script.read_text()))
         self.assertEqual(names - read, set(), "in diag.h and read by nothing")
+
+    def test_gym_reads_the_hp_past_a_two_word_species(self):
+        # markers.battle names a form in two words; gym.py once took the
+        # fourth word for the HP, read "L30" and died without a word.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from gym import battler_hp
+        self.assertEqual(battler_hp("you Raichu Alolan L30 0/80 | 1:Thunderbolt 15"), 0)
+        self.assertEqual(battler_hp("you Iron Crown L30 103/103 holding Leftovers | 1:Smart Strike 10"), 103)
+        self.assertEqual(battler_hp("you Porygon2 L30 57/90 PSN | 1:Tackle 35"), 57)
 
     def test_a_heap_margin_is_its_largest_free_block_at_its_fullest(self):
         """Diag_HeapUsed walks an expanded heap's free list as

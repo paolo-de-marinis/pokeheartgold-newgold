@@ -84,12 +84,20 @@ class Scorer:
         return value
 
 
+def battler_hp(line):
+    """The HP a battler line of markers.battle gives, "you Raichu Alolan L30
+    12/80 ...": found by its shape, since a species name can be two words."""
+    return int(re.search(r" (\d+)/\d+", line).group(1))
+
+
 def quiet():
-    """The core prints its own diagnostics to the process's stdout; keep ours."""
-    keep = os.dup(1)
+    """The core prints its own diagnostics to the process's stdout and stderr;
+    keep ours, and Python's own stderr so a crash still says why."""
+    keep, keep_err = os.dup(1), os.dup(2)
     null = os.open(os.devnull, os.O_WRONLY)
     os.dup2(null, 1)
     os.dup2(null, 2)
+    sys.stderr = os.fdopen(keep_err, "w", buffering=1)
     return os.fdopen(keep, "w", buffering=1)
 
 
@@ -161,7 +169,7 @@ def main():
             break
         view = markers.battle(ram)
         prompt = markers.read(ram, "gDiagBattlePrompt")
-        you_hp = int(view[0].split()[3].split("/")[0]) if view and view[0].startswith("you") else 1
+        you_hp = battler_hp(view[0]) if view and view[0].startswith("you") else 1
         if prompt in (1, 2):
             if view != last_view:
                 say(f"[{core.frames}]   " + "\n          ".join(view[:-1]))
