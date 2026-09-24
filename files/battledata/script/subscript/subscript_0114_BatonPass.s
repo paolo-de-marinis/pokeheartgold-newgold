@@ -3,6 +3,8 @@
     .data
 
 _000:
+    // Commander holds this Pokemon on the field (Pokemon Central, Torre di Comando).
+    CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_ATTACKER, BMON_DATA_COMMANDER, 0, _029
     TryReplaceFaintedMon BATTLER_CATEGORY_ATTACKER, TRUE, _029
     Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION
     TryRestoreStatusOnSwitch BATTLER_CATEGORY_ATTACKER, _013

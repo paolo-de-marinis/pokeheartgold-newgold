@@ -598,6 +598,9 @@ typedef enum Terrain {
 // Pokemon has (its own, not what Neutralizing Gas leaves of it): the flags of
 // the reference's data/AbilityFlags.c, which nothing there reads. Read only.
 #define BMON_DATA_ABILITY_FLAGS           107
+// Whether Commander holds this Pokemon on the field: a Tatsugiri in its
+// Dondozo's mouth, or that Dondozo (Battler_HeldByCommander). Read only.
+#define BMON_DATA_COMMANDER               108
 
 #define ABILITY_FLAG_FAILS_TRACE          (1 << 0) // Trace does not copy it
 #define ABILITY_FLAG_FAILS_SWAP           (1 << 1) // Skill Swap and Wandering Spirit do not swap it

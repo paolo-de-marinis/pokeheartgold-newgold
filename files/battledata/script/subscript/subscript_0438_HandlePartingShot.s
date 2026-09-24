@@ -14,6 +14,8 @@
 
 _000:
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_SWITCH, BSCRIPT_VAR_MSG_BATTLER_TEMP
+    // Commander holds this Pokemon on the field (Pokemon Central, Torre di Comando).
+    CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_SWITCHED_MON, BMON_DATA_COMMANDER, 0, _END
     TryReplaceFaintedMon BATTLER_CATEGORY_SWITCHED_MON, TRUE, _END
     // {0} went back to {1}!
     PrintMessage msg_0197_01067, TAG_NICKNAME_TRNAME, BATTLER_CATEGORY_SWITCHED_MON, BATTLER_CATEGORY_SWITCHED_MON

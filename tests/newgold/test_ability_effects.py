@@ -40,6 +40,7 @@ IMPLEMENTED = {
     "CHEEK_POUCH",
     "CHILLING_NEIGH",
     "COMATOSE",
+    "COMMANDER",
     "COMPETITIVE",
     "CONTRARY",
     "CORROSION",
@@ -238,17 +239,16 @@ IMPLEMENTED = {
 # Commander, Gulp Missile and Poison Puppeteer were counted done the same way:
 # every read of them was a block list -- the ability table, the gas's list of
 # what nothing suppresses, Mummy's refusals and the copy and suppress
-# scripts' lists. The check below no longer takes such a read for one. Gulp
-# Missile and Poison Puppeteer have their effects now; Commander is pending:
-# Tatsugiri going into its Dondozo's mouth wants a double battle's selection,
-# targeting, switching and forced-switch paths each to know of it (Pokemon
-# Central, Torre di Comando).
+# scripts' lists. The check below no longer takes such a read for one. All
+# three have their effects now: Commander last, its Tatsugiri going into its
+# Dondozo's mouth (TryCommander) and the selection, targeting, switching and
+# forced-switch paths each knowing of it (Pokemon Central, Torre di Comando).
 #
 # They are listed rather than waved through because the danger is not that
 # they are unfinished, it is finishing without noticing: a Pokemon whose
 # ability does nothing looks right on the summary screen and loses battles
 # quietly. This test fails the moment one is added and not accounted for.
-PENDING = {"COMMANDER"}
+PENDING = set()
 
 # Numbers the engine keeps free rather than abilities. TEMP4 (317) sits
 # between Fire Mane and Spicy Spray, where the engine reserved a slot for an
@@ -368,9 +368,8 @@ class AbilityEffectTests(unittest.TestCase):
             self.assertNotIn(name, stripped)
         # A list alone would not have been enough for these three.
         source = battle_source()
-        for name in ("GULP_MISSILE", "POISON_PUPPETEER"):
+        for name in ("GULP_MISSILE", "POISON_PUPPETEER", "COMMANDER"):
             self.assertIn(f"ABILITY_{name}", source)
-        self.assertNotIn("ABILITY_COMMANDER", source)
 
     def test_a_pending_ability_is_not_quietly_half_wired(self):
         source = written_in_c()
@@ -400,7 +399,8 @@ class AbilityEffectTests(unittest.TestCase):
     # Sea and Delta Stream done.
     # 0 -> 1: Commander had been counted done on its block-list reads alone;
     # see the note above PENDING.
-    STILL_TO_DO = 1
+    # 1 -> 0: Commander done.
+    STILL_TO_DO = 0
 
     def test_the_pending_list_only_ever_shrinks(self):
         self.assertLessEqual(

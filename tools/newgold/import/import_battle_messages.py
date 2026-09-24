@@ -294,6 +294,21 @@ PORT_ROWS = [
     ("teatime", [
         r"It’s teatime! Everyone dug in to\ntheir Berries!",
     ]),
+    # Commander taking a Tatsugiri into its Dondozo's mouth. The engine
+    # declares the ability and gives it nothing; the later games' line
+    # (Pokemon Showdown's transcription of it, the one text source found:
+    # neither Bulbapedia nor Pokemon Central quotes it). Seven rows, as for
+    # any line about two Pokemon; the pair is always on one side, so only the
+    # player's, the wild and the opposing pairs are ever shown.
+    ("commander", [
+        r"{STRVAR_1 1, 0, 0} was swallowed\nby {STRVAR_1 1, 1, 0} and became\f{STRVAR_1 1, 1, 0}’s commander!",
+        r"{STRVAR_1 1, 0, 0} was swallowed by\nthe wild {STRVAR_1 1, 1, 0} and\fbecame the wild\n{STRVAR_1 1, 1, 0}’s commander!",
+        r"{STRVAR_1 1, 0, 0} was swallowed by\nthe opposing {STRVAR_1 1, 1, 0} and\fbecame the opposing\n{STRVAR_1 1, 1, 0}’s commander!",
+        r"The wild {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!",
+        r"The wild {STRVAR_1 1, 0, 0}\nwas swallowed by the wild\f{STRVAR_1 1, 1, 0} and became the\nwild {STRVAR_1 1, 1, 0}’s commander!",
+        r"The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!",
+        r"The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by the opposing\f{STRVAR_1 1, 1, 0} and became the\nopposing {STRVAR_1 1, 1, 0}’s commander!",
+    ]),
 ]
 
 

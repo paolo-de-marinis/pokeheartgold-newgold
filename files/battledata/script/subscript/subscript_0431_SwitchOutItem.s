@@ -12,6 +12,8 @@
 // trainer chooses who comes in.
 
 _000:
+    // Commander holds this Pokemon on the field (Pokemon Central, Torre di Comando).
+    CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_MSG_BATTLER_TEMP, BMON_DATA_COMMANDER, 0, _end
     TryReplaceFaintedMon BATTLER_CATEGORY_MSG_BATTLER_TEMP, TRUE, _end
     PlayBattleAnimation BATTLER_CATEGORY_MSG_BATTLER_TEMP, BATTLE_ANIMATION_HELD_ITEM
     Wait 

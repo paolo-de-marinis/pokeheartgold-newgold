@@ -9,6 +9,8 @@
 // every move goes through, so none of it is asked here any more.
 _000:
     CheckBlackOut BATTLER_CATEGORY_DEFENDER, _END
+    // Commander holds this Pokemon on the field (Pokemon Central, Torre di Comando).
+    CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_ATTACKER, BMON_DATA_COMMANDER, 0, _END
     TryReplaceFaintedMon BATTLER_CATEGORY_ATTACKER, TRUE, _END
     CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HP, 0, _END
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_SWITCH, BSCRIPT_VAR_BATTLER_ATTACKER

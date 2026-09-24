@@ -359,6 +359,8 @@ typedef struct MoveConditions {
     u8 tarShot : 1;                // Tar Shot: Fire moves are twice as effective on it
     u8 dragonCheer : 2;            // Dragon Cheer: critical stages more, two for a Dragon-type when cheered
     u8 telekinesisTurns : 2;       // Telekinesis: the turns' ends left in the air, where every move but a one-hit KO hits it
+    u8 commanding : 1;             // Commander: a Tatsugiri in its Dondozo's mouth, which skips its turns and no move reaches
+    u8 commanderForm : 2;          // Commander: on the Dondozo, the form of the Tatsugiri it took in, 1 Curly to 3 Stretchy, fainted or not
 } MoveConditions;
 
 #define BATTLE_SCRIPT_BUFFER_WORDS 650

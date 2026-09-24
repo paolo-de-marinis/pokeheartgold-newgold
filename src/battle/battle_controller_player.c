@@ -477,7 +477,9 @@ static void BattleControllerPlayer_SelectionScreenInput(BattleSystem *battleSyst
             if ((battleType & BATTLE_TYPE_DOUBLES) && !(battleType & BATTLE_TYPE_MULTI) && ((battlerId == BATTLER_PLAYER2) && (ctx->unk_0[0] != SSI_STATE_14) || (battlerId == BATTLER_ENEMY2) && (ctx->unk_0[1] != SSI_STATE_14))) {
                 break;
             }
-            if (ctx->switchInFlag & MaskOfFlagNo(battlerId)) {
+            // A Tatsugiri in its Dondozo's mouth chooses nothing, as one
+            // switching in does not (Pokemon Central, Torre di Comando).
+            if ((ctx->switchInFlag & MaskOfFlagNo(battlerId)) || ctx->moveConditions[battlerId].commanding) {
                 ctx->unk_0[battlerId] = SSI_STATE_13;
                 ctx->playerActions[battlerId].command = CONTROLLER_COMMAND_40;
                 break;
@@ -3365,6 +3367,16 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
             ctx->moveStatusFlag |= MOVE_STATUS_PROTECTED;
             return FALSE;
         }
+    }
+
+    // A Tatsugiri in its Dondozo's mouth is out of every move's reach, No
+    // Guard, Lock-On and a Poison type's Toxic included (Pokemon Central,
+    // Torre di Comando); a move that aims at a side or the field, not at it,
+    // is not turned away.
+    if (ctx->moveConditions[battlerIdTarget].commanding && battlerIdTarget != battlerIdAttacker
+        && !(BattleMoveTbl(ctx, move)->range & (RANGE_USER | RANGE_USER_SIDE | RANGE_FIELD | RANGE_OPPONENT_SIDE))) {
+        ctx->moveStatusFlag |= MOVE_STATUS_SEMI_INVULNERABLE;
+        return FALSE;
     }
 
     // Toxic never misses when a Poison type uses it, from the sixth

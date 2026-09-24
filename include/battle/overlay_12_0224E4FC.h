@@ -134,6 +134,7 @@ int GetHeldItemStealBerryEffect(BattleContext *ctx, int battlerId);
 int GetHeldItemFlingEffect(BattleContext *ctx, int battlerId);
 int GetHeldItemFlingPower(BattleContext *ctx, int battlerId);
 BOOL BattlerCanSwitch(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId);
 BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 void ov12_022565E0(BattleSystem *battleSystem, BattleContext *ctx);

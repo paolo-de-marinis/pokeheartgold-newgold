@@ -66,6 +66,8 @@ STILL_DIFFERENT = {
          "worked out by BattleContext_LandFutureSight, and the use keeps retail's flags",
     150: "the doubling against Minimize is the damage chain's here, for every stamping move (BattleMoveStampsOnMinimize), as battle_calc_damage.c 6.9.14.1 does it",
     151: IN_C.format("the charge turn, BattleController_BeforeMove.c"),
+    153: "Teleport's switch asks whether Commander holds its user on the field (Pokemon Central, Torre "
+         "di Comando); the engine gives Commander no effect",
     161: "Spit Up's power from the stockpile: the engine reads it in CalcBaseDamage.c, and on Parental "
          "Bond's second strike, the stockpile spent, falls back on damage_power, which its script never "
          "sets; the script here sets the power before the stockpile goes, for both strikes",

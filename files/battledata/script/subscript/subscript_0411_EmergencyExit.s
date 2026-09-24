@@ -12,6 +12,8 @@
 
 _000:
     CompareVarToValue OPCODE_NEQ, BSCRIPT_VAR_TEMP_DATA, 0, _FLEE
+    // Commander holds this Pokemon on the field (Pokemon Central, Torre di Comando).
+    CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_MSG_BATTLER_TEMP, BMON_DATA_COMMANDER, 0, _END
     TryReplaceFaintedMon BATTLER_CATEGORY_MSG_BATTLER_TEMP, TRUE, _END
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_BATTLER_SWITCH, BSCRIPT_VAR_MSG_BATTLER_TEMP
     // {0} went back to {1}!

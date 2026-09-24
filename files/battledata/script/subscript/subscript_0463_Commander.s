@@ -1,0 +1,32 @@
+    .include "macros/btlcmd.inc"
+
+    .data
+
+// Commander: the Tatsugiri in MSG_BATTLER_TEMP goes into the mouth of its ally
+// the Dondozo, the SIDE_EFFECT_MON, whose Attack, Defense, Sp. Atk, Sp. Def
+// and Speed rise by two (Pokemon Central, Torre di Comando). TryCommander has
+// set both Pokemon's state and the indirect side effect, which says each rise
+// as "rose sharply" and passes over one already at +6. The reference has no
+// script; the line is the games'.
+_000:
+    WaitButtonABTime 15
+    // {0} was swallowed by {1} and became {1}’s commander!
+    PrintMessage msg_0197_01895, TAG_NICKNAME_NICKNAME, BATTLER_CATEGORY_MSG_BATTLER_TEMP, BATTLER_CATEGORY_SIDE_EFFECT_MON
+    Wait
+    WaitButtonABTime 30
+    ToggleVanish BATTLER_CATEGORY_MSG_BATTLER_TEMP, TRUE
+    Wait
+    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_STAT_STAGE_CHANGE_SHOWN
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_PARAM, MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES
+    Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_PARAM, MOVE_SUBSCRIPT_PTR_DEFENSE_UP_2_STAGES
+    Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_PARAM, MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_2_STAGES
+    Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_PARAM, MOVE_SUBSCRIPT_PTR_SP_DEFENSE_UP_2_STAGES
+    Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_PARAM, MOVE_SUBSCRIPT_PTR_SPEED_UP_2_STAGES
+    Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE
+    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_UPDATE_STAT_STAGES
+    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_STAT_STAGE_CHANGE_SHOWN
+    End

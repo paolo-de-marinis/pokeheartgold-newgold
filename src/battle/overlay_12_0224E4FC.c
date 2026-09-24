@@ -539,6 +539,8 @@ int GetBattlerVar(BattleContext *ctx, int battlerId, u32 id, void *data) {
         return mon->cheekPouchPending;
     case BMON_DATA_ABILITY_FLAGS:
         return AbilityFlags(mon->ability);
+    case BMON_DATA_COMMANDER:
+        return Battler_HeldByCommander(ctx, battlerId);
     case BMON_DATA_GENDER:
         return mon->gender;
     case BMON_DATA_IS_SHINY:
@@ -2608,6 +2610,15 @@ void InitFaintedWork(BattleSystem *battleSystem, BattleContext *ctx, int battler
     data = (u8 *)&ctx->battleMons[battlerId].unk88;
     for (i = 0; i < sizeof(UnkBattlemonSub); i++) {
         data[i] = 0;
+    }
+    // A Dondozo that faints lets the Tatsugiri out of its mouth, back into
+    // view and free to act again (Pokemon Central, Torre di Comando).
+    if (ctx->moveConditions[battlerId].commanderForm) {
+        i = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
+        if (ctx->moveConditions[i].commanding) {
+            ctx->moveConditions[i].commanding = FALSE;
+            BattleController_EmitToggleVanish(battleSystem, i, FALSE);
+        }
     }
     MI_CpuClear8(&ctx->moveConditions[battlerId], sizeof(MoveConditions));
 
@@ -5720,6 +5731,73 @@ u8 *Battler_RageFistHits(BattleSystem *battleSystem, BattleContext *ctx, int bat
     return &ctx->rageFistHits[party][ctx->selectedMonIndex[battlerId]];
 }
 
+// Commander holds its pair on the field (Pokemon Central, Torre di Comando):
+// a Tatsugiri in its Dondozo's mouth, and that Dondozo, which stays held once
+// the Tatsugiri has fainted. Neither switches nor is made to leave, by a
+// move, an ability or an item, for as long as it stands.
+BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId) {
+    return ctx->battleMons[battlerId].hp && (ctx->moveConditions[battlerId].commanding || ctx->moveConditions[battlerId].commanderForm);
+}
+
+// Commander (Pokemon Central, Torre di Comando): in a double battle that is
+// not a Multi Battle, a Tatsugiri with the ability -- any of its three forms,
+// its own and not a copy -- beside a Dondozo of the same trainer goes into
+// its mouth, a substitute on either no bar. From then on the Tatsugiri skips
+// its turns and no move aimed at it lands, neither can leave the field nor be
+// made to (Battler_HeldByCommander), and the Dondozo's Attack, Defense, Sp.
+// Atk, Sp. Def and Speed rise by two. A Tatsugiri that goes in during a turn
+// gives up what it had chosen for it. The Dondozo keeps it all while it stays
+// in, and the Tatsugiri's form for Order Up, the Tatsugiri fainted or not; it
+// takes in no other, and its own fainting lets the Tatsugiri out
+// (InitFaintedWork). Neutralizing Gas keeps the ability from acting, through
+// GetBattlerAbility; the step is asked at every entry, so it acts once the
+// gas is gone. The reference declares the ability and reads it only in its
+// lists of what cannot be copied.
+static BOOL TryCommander(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+    int tatsugiri;
+    int dondozo;
+    int form;
+    int i;
+
+    if (!(BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_DOUBLES) || (BattleSystem_GetBattleType(battleSystem) & (BATTLE_TYPE_MULTI | BATTLE_TYPE_TAG))) {
+        return FALSE;
+    }
+    for (i = 0; i < maxBattlers; i++) {
+        tatsugiri = ctx->turnOrder[i];
+        dondozo = BattleSystem_GetBattlerIdPartner(battleSystem, tatsugiri);
+        switch (ctx->battleMons[tatsugiri].species) {
+        case SPECIES_TATSUGIRI:
+            form = 1;
+            break;
+        case SPECIES_TATSUGIRI_DROOPY:
+            form = 2;
+            break;
+        case SPECIES_TATSUGIRI_STRETCHY:
+            form = 3;
+            break;
+        default:
+            continue;
+        }
+        if (!ctx->battleMons[tatsugiri].hp || ctx->moveConditions[tatsugiri].commanding || GetBattlerAbility(ctx, tatsugiri) != ABILITY_COMMANDER
+            || (ctx->battleMons[tatsugiri].status2 & STATUS2_TRANSFORM)
+            || !ctx->battleMons[dondozo].hp || ctx->battleMons[dondozo].species != SPECIES_DONDOZO || (ctx->battleMons[dondozo].status2 & STATUS2_TRANSFORM)
+            || ctx->moveConditions[dondozo].commanderForm
+            || BattleSystem_GetParty(battleSystem, tatsugiri) != BattleSystem_GetParty(battleSystem, dondozo)) {
+            continue;
+        }
+        ctx->moveConditions[tatsugiri].commanding = TRUE;
+        ctx->moveConditions[dondozo].commanderForm = form;
+        ctx->playerActions[tatsugiri].command = CONTROLLER_COMMAND_40;
+        ctx->battlerIdTemp = tatsugiri;
+        ctx->battlerIdStatChange = dondozo;
+        ctx->statChangeType = SIDE_EFFECT_TYPE_INDIRECT;
+        *script = BATTLE_SUBSCRIPT_COMMANDER;
+        return TRUE;
+    }
+    return FALSE;
+}
+
 int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;
     int j;
@@ -6793,7 +6871,13 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 36: // end
+        case 36: // Commander
+            flag = TryCommander(battleSystem, ctx, &script);
+            if (flag == FALSE) {
+                ctx->sendOutState++;
+            }
+            break;
+        case 37: // end
             ctx->sendOutState = 0;
             flag = 2;
             break;
@@ -6954,7 +7038,8 @@ static BOOL Battler_WillBeDraggedOut(BattleSystem *battleSystem, BattleContext *
     int attacker = ctx->battlerIdAttacker;
     int item = GetBattlerHeldItemEffect(ctx, battlerId);
 
-    if (!ctx->selfTurnData[battlerId].dragPending || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)) {
+    if (!ctx->selfTurnData[battlerId].dragPending || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
+        || Battler_HeldByCommander(ctx, battlerId)) {
         return FALSE;
     }
     if (((item == HOLD_EFFECT_DAMAGE_ON_CONTACT && BattleMoveMakesContact(ctx, ctx->moveNoCur))
@@ -8819,14 +8904,15 @@ static BOOL SwitchItemAnswersHit(BattleSystem *battleSystem, BattleContext *ctx,
     return TRUE;
 }
 
-// Suction Cups, Guard Dog and Ingrain keep a Pokemon in against a Red Card:
-// the card is spent all the same (Pokemon Central, Cartelrosso; Cane da
-// Guardia, which no item or move of another Pokemon makes leave the field;
-// the reference keeps the card instead).
+// Suction Cups, Guard Dog, Ingrain and Commander keep a Pokemon in against a
+// Red Card: the card is spent all the same (Pokemon Central, Cartelrosso;
+// Cane da Guardia, which no item or move of another Pokemon makes leave the
+// field; Torre di Comando; the reference keeps the card instead).
 static BOOL BattlerIsAnchored(BattleContext *ctx, int battlerId) {
     return GetBattlerAbility(ctx, battlerId) == ABILITY_SUCTION_CUPS
         || GetBattlerAbility(ctx, battlerId) == ABILITY_GUARD_DOG
-        || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN);
+        || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
+        || Battler_HeldByCommander(ctx, battlerId);
 }
 
 // Returns the subscript battlerId's holdEffect runs, with the holder in
@@ -8936,6 +9022,11 @@ int GetHeldItemFlingPower(BattleContext *ctx, int battlerId) {
 BOOL BattlerCanSwitch(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     BOOL ret = FALSE;
 
+    // Commander holds its pair in whatever they hold: a Shed Shell does not
+    // let them go (Pokemon Central, Torre di Comando).
+    if (Battler_HeldByCommander(ctx, battlerId)) {
+        return TRUE;
+    }
     if (GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_SWITCH) {
         return FALSE;
     }

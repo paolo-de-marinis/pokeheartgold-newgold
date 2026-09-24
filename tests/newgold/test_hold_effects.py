@@ -756,7 +756,7 @@ typedef struct {
     int battlerIdAttacker, battlerIdTemp; u32 moveNoCur; u32 battleStatus2; u32 tempData;
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
 } BattleContext;
-static struct { int item[4], ability[4]; u32 battleType; int suppressible, replacements, picked, pickpocket; } S;
+static struct { int item[4], ability[4], held[4]; u32 battleType; int suppressible, replacements, picked, pickpocket; } S;
 static BOOL PickpocketLifts(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; return S.pickpocket == battlerId + 1; }
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return S.item[battlerId]; }
 static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return S.ability[battlerId]; }
@@ -766,11 +766,12 @@ static BOOL TryPickForcedSwitchIn(BattleSystem *bs, BattleContext *ctx, int batt
     (void)bs; (void)ctx; S.picked = battlerId + 1; return S.replacements;
 }
 static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return S.replacements; }
+static BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId) { (void)ctx; return S.held[battlerId]; }
 @FUNCTION@
 static BattleContext ctx;
 static BattleSystem bs;
 static void reset(void) {
-    for (int i = 0; i < 4; i++) { S.item[i] = HOLD_EFFECT_NONE; S.ability[i] = ABILITY_NONE; }
+    for (int i = 0; i < 4; i++) { S.item[i] = HOLD_EFFECT_NONE; S.ability[i] = ABILITY_NONE; S.held[i] = 0; }
     S.battleType = BATTLE_TYPE_TRAINER; S.suppressible = 0; S.replacements = 1; S.picked = 0; S.pickpocket = 0;
     ctx = (BattleContext){ 0 };
     ctx.battlerIdAttacker = 0; ctx.battlerIdTemp = -1;
@@ -831,6 +832,10 @@ int main(void) {
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; ctx.battleMons[0].moveEffectFlags = MOVE_EFFECT_FLAG_INGRAIN; S.replacements = 0;
     assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && S.picked == 0);
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.ability[0] = ABILITY_GUARD_DOG; S.replacements = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && S.picked == 0);
+    // A Dondozo or Tatsugiri Commander holds: the card is spent to no effect
+    // (Pokemon Central, Torre di Comando).
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.held[0] = 1;
     assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && S.picked == 0);
     return 0;
 }

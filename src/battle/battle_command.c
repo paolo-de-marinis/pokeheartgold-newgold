@@ -4417,7 +4417,10 @@ BOOL BtlCmd_TryPerishSong(BattleSystem *battleSystem, BattleContext *ctx) {
     int cnt = 0;
 
     for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
-        if (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_PERISH_SONG || ctx->battleMons[battlerId].hp == 0 || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, battlerId, ABILITY_SOUNDPROOF) == TRUE) {
+        // A Tatsugiri in its Dondozo's mouth does not hear it; one that heard
+        // it first still counts down (Pokemon Central, Torre di Comando).
+        if (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_PERISH_SONG || ctx->battleMons[battlerId].hp == 0 || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, battlerId, ABILITY_SOUNDPROOF) == TRUE
+            || ctx->moveConditions[battlerId].commanding) {
             cnt++;
         } else {
             ctx->battleMons[battlerId].moveEffectFlags |= MOVE_EFFECT_FLAG_PERISH_SONG;

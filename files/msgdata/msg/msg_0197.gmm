@@ -7580,4 +7580,32 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">It’s teatime! Everyone dug in to\ntheir Berries!</language>
 	</row>
+	<row id="msg_0197_01895" index="1895">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} was swallowed\nby {STRVAR_1 1, 1, 0} and became\f{STRVAR_1 1, 1, 0}’s commander!</language>
+	</row>
+	<row id="msg_0197_01896" index="1896">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} was swallowed by\nthe wild {STRVAR_1 1, 1, 0} and\fbecame the wild\n{STRVAR_1 1, 1, 0}’s commander!</language>
+	</row>
+	<row id="msg_0197_01897" index="1897">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} was swallowed by\nthe opposing {STRVAR_1 1, 1, 0} and\fbecame the opposing\n{STRVAR_1 1, 1, 0}’s commander!</language>
+	</row>
+	<row id="msg_0197_01898" index="1898">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!</language>
+	</row>
+	<row id="msg_0197_01899" index="1899">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}\nwas swallowed by the wild\f{STRVAR_1 1, 1, 0} and became the\nwild {STRVAR_1 1, 1, 0}’s commander!</language>
+	</row>
+	<row id="msg_0197_01900" index="1900">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!</language>
+	</row>
+	<row id="msg_0197_01901" index="1901">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by the opposing\f{STRVAR_1 1, 1, 0} and became the\nopposing {STRVAR_1 1, 1, 0}’s commander!</language>
+	</row>
 </body>

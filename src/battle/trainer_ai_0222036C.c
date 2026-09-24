@@ -28,7 +28,8 @@ BOOL ov10_0222036C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
 }
 
 // Whether the trainer AI switches the battler out this turn: never when it is
-// trapped or has no one to send in; otherwise when Perish Song is about to
+// trapped -- Commander's pair included (Pokemon Central, Torre di Comando) --
+// or has no one to send in; otherwise when Perish Song is about to
 // take it, when it can do nothing to the foe, when an ability of the party's
 // would absorb the foe's move, and so on, unless it is doing well enough
 // where it is.
@@ -42,6 +43,7 @@ BOOL ov10_022203A4(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
 
     if ((ctx->battleMons[battlerId].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK))
         || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
+        || Battler_HeldByCommander(ctx, battlerId)
         || CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_OPPOSING_SIDE, battlerId, ABILITY_SHADOW_TAG)
         || CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_OPPOSING_SIDE, battlerId, ABILITY_ARENA_TRAP)
         || (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_NOT_USER, battlerId, ABILITY_MAGNET_PULL)
