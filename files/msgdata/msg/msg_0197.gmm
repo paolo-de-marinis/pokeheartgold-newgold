@@ -7598,7 +7598,7 @@
 	</row>
 	<row id="msg_0197_01899" index="1899">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The wild {STRVAR_1 1, 0, 0}\nwas swallowed by the wild\f{STRVAR_1 1, 1, 0} and became the\nwild {STRVAR_1 1, 1, 0}’s commander!</language>
+		<language name="English">The wild {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!</language>
 	</row>
 	<row id="msg_0197_01900" index="1900">
 		<attribute name="window_context_name">used</attribute>
@@ -7606,7 +7606,7 @@
 	</row>
 	<row id="msg_0197_01901" index="1901">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by the opposing\f{STRVAR_1 1, 1, 0} and became the\nopposing {STRVAR_1 1, 1, 0}’s commander!</language>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!</language>
 	</row>
 	<row id="msg_0197_01902" index="1902">
 		<attribute name="window_context_name">used</attribute>

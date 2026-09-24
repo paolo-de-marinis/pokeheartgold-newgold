@@ -295,19 +295,22 @@ PORT_ROWS = [
         r"It’s teatime! Everyone dug in to\ntheir Berries!",
     ]),
     # Commander taking a Tatsugiri into its Dondozo's mouth. The engine
-    # declares the ability and gives it nothing; the later games' line
-    # (Pokemon Showdown's transcription of it, the one text source found:
-    # neither Bulbapedia nor Pokemon Central quotes it). Seven rows, as for
-    # any line about two Pokemon; the pair is always on one side, so only the
-    # player's, the wild and the opposing pairs are ever shown.
+    # declares the ability and gives it nothing; the ninth generation's line,
+    # as Scarlet and Violet's own English text has it (common_eng.txt of the
+    # Pokemon-Project-com/sv-text dump, lines 8219-8221): the Tatsugiri is
+    # "The wild" or "The opposing" one and the Dondozo is named bare. Seven
+    # rows, as for any line about two Pokemon; the pair is always on one
+    # side, so only the player's, the wild and the opposing pairs are ever
+    # shown, and the rows for a pair split between the sides keep the
+    # Dondozo's side too.
     ("commander", [
         r"{STRVAR_1 1, 0, 0} was swallowed\nby {STRVAR_1 1, 1, 0} and became\f{STRVAR_1 1, 1, 0}’s commander!",
         r"{STRVAR_1 1, 0, 0} was swallowed by\nthe wild {STRVAR_1 1, 1, 0} and\fbecame the wild\n{STRVAR_1 1, 1, 0}’s commander!",
         r"{STRVAR_1 1, 0, 0} was swallowed by\nthe opposing {STRVAR_1 1, 1, 0} and\fbecame the opposing\n{STRVAR_1 1, 1, 0}’s commander!",
         r"The wild {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!",
-        r"The wild {STRVAR_1 1, 0, 0}\nwas swallowed by the wild\f{STRVAR_1 1, 1, 0} and became the\nwild {STRVAR_1 1, 1, 0}’s commander!",
+        r"The wild {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!",
         r"The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!",
-        r"The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by the opposing\f{STRVAR_1 1, 1, 0} and became the\nopposing {STRVAR_1 1, 1, 0}’s commander!",
+        r"The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!",
     ]),
     # Ally Switch. The engine leaves the move unimplemented; the later games'
     # line, about two Pokemon, so the seven rows TAG_NICKNAME_NICKNAME picks

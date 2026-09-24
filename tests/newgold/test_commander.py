@@ -193,9 +193,11 @@ class CommanderTests(unittest.TestCase):
         row = import_battle_messages.port_row("commander")
         self.assertEqual(table[row].replace("\\n", " ").replace("\\f", " "),
                          "{STRVAR_1 1, 0, 0} was swallowed by {STRVAR_1 1, 1, 0} and became {STRVAR_1 1, 1, 0}’s commander!")
-        self.assertIn("The opposing {STRVAR_1 1, 0, 0}", table[row + 6])
-        self.assertIn("opposing {STRVAR_1 1, 1, 0}’s commander!", table[row + 6])
-        self.assertIn("The wild {STRVAR_1 1, 0, 0}", table[row + 4])
+        # Scarlet and Violet's own text: the Tatsugiri is the wild or the
+        # opposing one, the Dondozo named bare (sv-text, common_eng.txt).
+        for offset, who in ((4, "The wild "), (6, "The opposing ")):
+            self.assertEqual(table[row + offset].replace("\\n", " ").replace("\\f", " "),
+                             who + "{STRVAR_1 1, 0, 0} was swallowed by {STRVAR_1 1, 1, 0} and became {STRVAR_1 1, 1, 0}’s commander!")
 
     def test_the_tatsugiri_neither_acts_nor_is_hit(self):
         select = function(CONTROLLER, "BattleControllerPlayer_SelectionScreenInput")
