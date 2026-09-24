@@ -165,6 +165,9 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .mvhead { padding: 6px 8px 2px; font-size: 12px; font-weight: 650; color: var(--muted); border-top: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); }
 .townbox canvas { display: block; width: 100%; max-width: 752px; height: auto; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; }
 .townbox { max-width: 752px; }
+.townscroll { overflow-x: auto; }
+/* A phone keeps the tiles big enough to tap: the map scrolls sideways in its box, not the page. */
+@media (max-width: 600px) { .townbox canvas { width: 752px; max-width: none; } }
 .tag.pre { border-style: dashed; }
 .tag.warn { background: var(--warn-soft); border-color: var(--warn-border); color: var(--text); }
 .tag.bad { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
@@ -1753,7 +1756,7 @@ function townLabel() {
   const name = sec => { const r = S.data.maps.find(m => m.section === sec); return `${r.name || sec} (${regionName(r.region)})`; };
   // What a click picks there, named: a square several places share gives one, the others are in the list.
   const picks = key && mapAtTile(key) !== undefined ? mapTitle(S.maps.get(mapAtTile(key))) : "";
-  $("#townlabel").innerHTML = key ? (sections.length ? `<strong>${esc(sections.map(name).join(" · "))}</strong> — clic: ${esc(picks)}${
+  $("#townlabel").innerHTML = key ? (sections.length ? `<strong>${esc(sections.map(name).join(" · "))}</strong> — ${S.pos.touch ? "tocca di nuovo" : "clic"}: ${esc(picks)}${
                                                          sections.length > 1 ? "; gli altri dall'elenco" : ""}`
                                                      : "Qui non c'è un luogo della mappa")
     : `<span style="color:#e11d48">●</span> dove sei ora · <span style="color:#a15c07">■</span> la sua zona · <span style="color:#1d4ed8">■</span> la mappa scelta`;
@@ -1792,7 +1795,7 @@ function renderPosition() {
     </dl>
     <form id="posform" class="box">
       <h3>Sposta il giocatore</h3>
-      <div class="townbox"><canvas id="town" width="${w.cols * 8 * TOWN_SCALE}" height="${w.rows * 8 * TOWN_SCALE}" aria-label="Mappa di Johto e Kanto: clic su un luogo per sceglierlo"></canvas>
+      <div class="townbox"><div class="townscroll"><canvas id="town" width="${w.cols * 8 * TOWN_SCALE}" height="${w.rows * 8 * TOWN_SCALE}" aria-label="Mappa di Johto e Kanto: clic su un luogo per sceglierlo"></canvas></div>
         <div class="note" id="townlabel"></div></div>
       <div class="form" style="margin-top:12px">
         <label class="f" style="grid-column:1/-1">Mappa<span class="mvin" style="display:block"><input name="map" id="mapin" value="${esc(mapTitle(here))}" placeholder="Cerca: città, percorso, grotta, interno, centro, palestra…"
@@ -1816,13 +1819,22 @@ function renderPosition() {
   }
   S.townImg.onload = drawTown;
   drawTown(); townLabel();
+  const scroller = $(".townscroll");      // on a phone, the player's square in view
+  scroller.scrollLeft = (pos.tile[0] + .5) * $("#town").clientWidth / w.cols - scroller.clientWidth / 2;
   const cv = $("#town"), tileAt = ev => {
     const r = cv.getBoundingClientRect();
     return `${Math.floor((ev.clientX - r.left) / r.width * w.cols)},${Math.floor((ev.clientY - r.top) / r.height * w.rows)}`;
   };
   cv.onmousemove = ev => { const k = tileAt(ev); if (k !== S.pos.hover) { S.pos.hover = k; drawTown(); townLabel(); } };
   cv.onmouseleave = () => { S.pos.hover = null; drawTown(); townLabel(); };
-  cv.onclick = ev => { const id = mapAtTile(tileAt(ev)); if (id !== undefined) pickMap(id); };
+  // A finger has no hover: its first tap on a square names it, a second one picks it.
+  cv.onpointerdown = ev => { S.pos.touch = ev.pointerType !== "mouse"; };
+  cv.onclick = ev => {
+    const k = tileAt(ev);
+    if (S.pos.touch && k !== S.pos.hover) { S.pos.hover = k; drawTown(); townLabel(); return; }
+    const id = mapAtTile(k);
+    if (id !== undefined) pickMap(id);
+  };
   mapCombo($("#mapin"));
   $("#posform").onsubmit = ev => {
     ev.preventDefault();
