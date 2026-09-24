@@ -114,6 +114,25 @@ REFERENCE_DEFECTS = {
     },
 }
 
+# Paolo's own designs (2026-09-23), beyond the reference and konefr's:
+# level-up moves a species is given that neither tree gives it.
+DESIGNED_MOVES = {
+    # Pay Day at 55, both forms: Gholdengo's evolution asks it be known.
+    "GIMMIGHOUL": [(55, "MOVE_PAY_DAY")],
+    "GIMMIGHOUL_ROAMING": [(55, "MOVE_PAY_DAY")],
+}
+
+
+def designed(name, learned, moves):
+    """A learnset with DESIGNED_MOVES put in, each after the moves of its
+    level and those below."""
+    for level, move in DESIGNED_MOVES.get(name, []):
+        step = {"level": level, "move": moves[move]}
+        if step not in learned:
+            learned.insert(sum(1 for known in learned if known["level"] <= level), step)
+    return learned
+
+
 ENTRY_SIZE = 4
 MOVE_BITS = 16
 MOVE_MASK = (1 << MOVE_BITS) - 1
@@ -309,7 +328,7 @@ def engine(args, files):
             if number is None:
                 raise SystemExit(f"{names[index]}: this game has no {step['Move']}")
             learned.append({"level": step["Level"], "move": number})
-        raw = encode(learned)
+        raw = encode(designed(names[index], learned, moves))
         if raw != files[index]:
             files[index] = raw
             rewritten += 1
@@ -353,7 +372,7 @@ def konefr(args, files):
                 missing.append(step["Move"])
                 continue
             learned.append({"level": step["Level"], "move": number})
-        raw = encode(learned)
+        raw = encode(designed(name, learned, moves))
         if raw != files[index]:
             files[index] = raw
             rewritten += 1
@@ -422,7 +441,7 @@ def extend(args, files, rebuild=False):
             earliest = min(learned, key=lambda step: step["level"])
             earliest["level"] = 1
             lowered[name] = earliest["move"]
-        added.append(encode(learned))
+        added.append(encode(designed(name, learned, moves)))
         if missing:
             dropped[name] = missing
 

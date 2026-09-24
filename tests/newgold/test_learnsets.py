@@ -65,6 +65,15 @@ class LearnsetTests(unittest.TestCase):
         self.assertIn({"level": 32, "move": moves["MOVE_HYPER_DRILL"]},
                       wotbl.decode(self.files[dunsparce]))
 
+    def test_gimmighoul_learns_pay_day(self):
+        # Paolo's design (2026-09-23), both forms: Pay Day at 55, which
+        # Gholdengo's evolution asks it to know. The importers keep it.
+        moves = wotbl.move_names()
+        for name in ("GIMMIGHOUL", "GIMMIGHOUL_ROAMING"):
+            index = next(i for i, n in self.names.items() if n == name)
+            self.assertIn({"level": 55, "move": moves["MOVE_PAY_DAY"]}, wotbl.decode(self.files[index]), name)
+            self.assertIn((55, "MOVE_PAY_DAY"), wotbl.DESIGNED_MOVES[name])
+
     def test_the_eggs_are_pret_s(self):
         original = upstream_archive()
         if original is None:
