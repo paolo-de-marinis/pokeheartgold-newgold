@@ -129,6 +129,33 @@ class PickOnTests(unittest.TestCase):
                              gmm([(0, "old"), (1, "old"), (2, "first"), (3, "mine")]))
 
 
+class AbilityTestResolverTests(unittest.TestCase):
+    """resolve_ability_test.py: PENDING and STILL_TO_DO after a pick."""
+
+    PATH = "tests/newgold/test_ability_effects.py"
+
+    def effects(self, pending):
+        listed = "PENDING = {\n" + "".join(f'    "{n}",\n' for n in pending) + "}\n" if pending else "PENDING = set()\n"
+        filler = "".join(f"# line {i}\n" for i in range(20))
+        return listed + filler + f"class T:\n    STILL_TO_DO = {len(pending)}\n"
+
+    def test_the_last_two_taken_on_two_branches_leave_an_empty_set(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Repo(Path(tmp))
+            repo.write({self.PATH: self.effects(["BATTLE_BOND", "COMMANDER"])})
+            base = repo.commit("base")
+            repo.write({self.PATH: self.effects(["COMMANDER"])})
+            repo.commit("ours: Battle Bond")
+            repo.git("checkout", "-q", "-b", "theirs", base)
+            repo.write({self.PATH: self.effects(["BATTLE_BOND"])})
+            theirs = repo.commit("theirs: Commander")
+            repo.git("checkout", "-q", "main")
+            self.assertNotEqual(subprocess.run(["git", "cherry-pick", theirs], cwd=tmp, capture_output=True).returncode, 0)
+            subprocess.run([sys.executable, str(ROUNDS / "resolve_ability_test.py")], cwd=tmp, check=True, capture_output=True)
+            text = (Path(tmp) / self.PATH).read_text()
+            self.assertEqual(text, self.effects([]), "set(), which Python reads as a set; {} would be a dict")
+
+
 class ResolverTests(unittest.TestCase):
     """The resolvers that keep both sides of a conflict."""
 
