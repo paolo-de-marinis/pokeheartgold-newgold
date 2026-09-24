@@ -1642,8 +1642,15 @@ BOOL ov12_022503EC(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
 // Heal Block and the trap of Thousand Waves, Anchor Shot and Spirit Shackle
 // land after the hit with no chance to roll, and Throat Chop's silence is set
 // by its effect script itself, which asks the ability and the cloak there.
+// The three Fangs come as a side effect on hit, and their subscript rolls the
+// status and the flinch against the chance itself, one after the other; both
+// are additional effects all the same (Pokemon Central, Forzabruta and
+// Anonimanto), and the reference lists the three by name.
 static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
     switch (BattleMoveTbl(ctx, moveNo)->effect) {
+    case MOVE_EFFECT_FLINCH_BURN_HIT:
+    case MOVE_EFFECT_FLINCH_FREEZE_HIT:
+    case MOVE_EFFECT_FLINCH_PARALYZE_HIT:
     case MOVE_EFFECT_PREVENT_HEALING_HIT:
     case MOVE_EFFECT_PREVENT_ESCAPE_HIT:
     case MOVE_EFFECT_THROAT_CHOP:

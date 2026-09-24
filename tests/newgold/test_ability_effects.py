@@ -552,6 +552,42 @@ class SheerForceTests(unittest.TestCase):
             self.assertIn(flag, body)
         self.assertIn("effectChance != 0", body)
 
+    def test_the_fangs_status_and_flinch_are_given_up(self):
+        # Fire, Ice and Thunder Fang leave a side effect on hit whose
+        # subscript rolls the status and the flinch itself; both are
+        # additional effects (Pokemon Central, Forzabruta and Anonimanto).
+        # A side effect on hit of no chance still comes what may.
+        from test_hold_effects import run_c
+        program = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+#include "constants/move_effects.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { u16 effect; u8 effectChance; } MoveTbl;
+typedef struct { u32 unk_2174; } BattleContext;
+static MoveTbl sMove;
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &sMove; }
+@FUNCTION@
+int main(void) {
+    BattleContext ctx = { MOVE_SIDE_EFFECT_ON_HIT | MOVE_SIDE_EFFECT_TO_DEFENDER | MOVE_SUBSCRIPT_PTR_BURN_OR_FLINCH };
+    sMove = (MoveTbl){ MOVE_EFFECT_FLINCH_BURN_HIT, 10 };
+    assert(IsSuppressibleSecondaryEffect(&ctx, 0) == TRUE);
+    sMove = (MoveTbl){ MOVE_EFFECT_FLINCH_FREEZE_HIT, 10 };
+    assert(IsSuppressibleSecondaryEffect(&ctx, 0) == TRUE);
+    sMove = (MoveTbl){ MOVE_EFFECT_FLINCH_PARALYZE_HIT, 10 };
+    assert(IsSuppressibleSecondaryEffect(&ctx, 0) == TRUE);
+    sMove = (MoveTbl){ MOVE_EFFECT_HIT, 0 };
+    assert(IsSuppressibleSecondaryEffect(&ctx, 0) == FALSE);
+    return 0;
+}
+"""
+        run_c(program.replace("@FUNCTION@", function(self.SOURCE.read_text(), "IsSuppressibleSecondaryEffect")))
+
     def test_the_reference_s_unrolled_effects_are_given_up_too(self):
         # btl_scr_cmd_24_jumptocurmoveeffectscript lists Psychic Noise's,
         # the three trapping moves' and Throat Chop's effects by name.
