@@ -4404,6 +4404,15 @@ static void ov12_0224CAA4(BattleSystem *battleSystem, BattleContext *ctx) {
 static void ov12_0224CC84(BattleSystem *battleSystem, BattleContext *ctx) {
 }
 
+// Besides a Fire move's, the hits that thaw a frozen target: Scald, Steam
+// Eruption, Scorching Sands (Pokemon Central, Congelamento) and Matcha Gotcha
+// (Spruzzate); and Hydro Steam, which Pokemon Central does not name and
+// Showdown's gen-9 data marks thawsTarget, as it does the other four.
+static BOOL MoveThawsTarget(u16 move) {
+    return move == MOVE_SCALD || move == MOVE_STEAM_ERUPTION || move == MOVE_SCORCHING_SANDS
+        || move == MOVE_MATCHA_GOTCHA || move == MOVE_HYDRO_STEAM;
+}
+
 // static
 void ov12_0224CC88(BattleSystem *battleSystem, BattleContext *ctx) {
     switch (ctx->unk_40) {
@@ -4486,7 +4495,7 @@ void ov12_0224CC88(BattleSystem *battleSystem, BattleContext *ctx) {
             && ctx->battlerIdTarget != ctx->battlerIdAttacker
             && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage != 0 || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage != 0)
             && ctx->battleMons[ctx->battlerIdTarget].hp != 0
-            && moveType == TYPE_FIRE) {
+            && (moveType == TYPE_FIRE || MoveThawsTarget(ctx->moveNoCur))) {
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_THAW_OUT);
             ctx->commandNext = ctx->command;
