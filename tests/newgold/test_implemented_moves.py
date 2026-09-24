@@ -1062,6 +1062,13 @@ int main(void) {
         flag = function(commands, "BtlCmd_SetMoveConditionFlag")
         self.assertIn("Battlers_SwapPlaces(ctx, battlerId, BattleSystem_GetBattlerIdPartner(battleSystem, battlerId));",
                       flag[flag.index("case MOVE_ALLY_SWITCH:"):])
+        # Scarlet and Violet's own line (sv-text, common_eng.txt 7591-7593):
+        # "The wild" or "The opposing" once, the ally named bare.
+        from test_battle_messages import rows
+        table, row = rows(), import_battle_messages.port_row("ally switch")
+        for offset, who in ((0, ""), (4, "The wild "), (6, "The opposing ")):
+            self.assertEqual(table[row + offset].replace("\\n", " "),
+                             who + "{STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0} switched places!")
         # A move the ally aimed at the user is now aimed at itself, and fails:
         # no target, before Follow Me or anything else is asked.
         target = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "ov12_022506D4")

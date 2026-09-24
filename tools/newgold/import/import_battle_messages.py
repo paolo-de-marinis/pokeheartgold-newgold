@@ -315,15 +315,19 @@ PORT_ROWS = [
     # Ally Switch. The engine leaves the move unimplemented; the later games'
     # line, about two Pokemon, so the seven rows TAG_NICKNAME_NICKNAME picks
     # from by the two sides (BattleSystem_AdjustMessageForSide), though the
-    # two are always on one.
+    # two are always on one. Scarlet and Violet's own text (sv-text,
+    # common_eng.txt, lines 7591 to 7593) says "The wild" or "The opposing"
+    # once and names the ally bare, as Commander's line does; the rows for a
+    # pair split between the sides, which Ally Switch never forms, keep
+    # naming the ally's side.
     ("ally switch", [
         r"{STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!",
         r"{STRVAR_1 1, 0, 0} and the wild {STRVAR_1 1, 1, 0}\nswitched places!",
         r"{STRVAR_1 1, 0, 0} and the opposing {STRVAR_1 1, 1, 0}\nswitched places!",
         r"The wild {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!",
-        r"The wild {STRVAR_1 1, 0, 0} and\nthe wild {STRVAR_1 1, 1, 0} switched places!",
+        r"The wild {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!",
         r"The opposing {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!",
-        r"The opposing {STRVAR_1 1, 0, 0} and\nthe opposing {STRVAR_1 1, 1, 0} switched places!",
+        r"The opposing {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!",
     ]),
     # The Pledges. The engine leaves the moves unimplemented; the later
     # games' lines. The one waiting names two Pokemon, so seven rows as Ally

@@ -7626,7 +7626,7 @@
 	</row>
 	<row id="msg_0197_01906" index="1906">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The wild {STRVAR_1 1, 0, 0} and\nthe wild {STRVAR_1 1, 1, 0} switched places!</language>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!</language>
 	</row>
 	<row id="msg_0197_01907" index="1907">
 		<attribute name="window_context_name">used</attribute>
@@ -7634,7 +7634,7 @@
 	</row>
 	<row id="msg_0197_01908" index="1908">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The opposing {STRVAR_1 1, 0, 0} and\nthe opposing {STRVAR_1 1, 1, 0} switched places!</language>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!</language>
 	</row>
 	<row id="msg_0197_01909" index="1909">
 		<attribute name="window_context_name">used</attribute>
