@@ -1268,11 +1268,22 @@ class TypeChangeTests(unittest.TestCase):
         for name in ("subscript_0351_ChangeTargetToWaterType.s", "subscript_0323_ChangeTargetToPsychicType.s"):
             script = (ROOT / "files/battledata/script/subscript" / name).read_text()
             refusal = script[script.index("_PAST_SUBSTITUTE:"):script.index("_CHANGE_TYPE:")]
-            self.assertIn("BATTLER_CATEGORY_DEFENDER, BMON_DATA_STATUS2, STATUS2_TRANSFORM, _CHANGE_TYPE", refusal, name)
+            self.assertIn("BATTLER_CATEGORY_DEFENDER, BMON_DATA_STATUS2, STATUS2_TRANSFORM, _PURE_TYPE", refusal, name)
             for ability in ("ABILITY_MULTITYPE", "ABILITY_RKS_SYSTEM"):
                 self.assertIn(f"BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, {ability}, _FAILED", refusal, name)
             self.assertLess(script.index("_CHANGE_TYPE:"), script.index("Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION"), name)
             self.assertIn("_FAILED:\n    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED\n    End", script, name)
+
+    def test_soak_and_magic_powder_fail_on_a_target_of_their_type(self):
+        # Pokemon Central (Inondazione, Magipolvere): a target purely Water,
+        # or Psychic, already is not changed; one with a type added is.
+        for name, type_ in (("subscript_0351_ChangeTargetToWaterType.s", "TYPE_WATER"),
+                            ("subscript_0323_ChangeTargetToPsychicType.s", "TYPE_PSYCHIC")):
+            script = (ROOT / "files/battledata/script/subscript" / name).read_text()
+            check = script[script.index("_PURE_TYPE:"):script.index("_CHANGE_TYPE:")]
+            self.assertIn(f"CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_DEFENDER, BMON_DATA_TYPE_1, {type_}, _CHANGE_TYPE\n"
+                          f"    CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_DEFENDER, BMON_DATA_TYPE_2, {type_}, _CHANGE_TYPE\n"
+                          "    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_TYPE_3, TYPE_NONE, _FAILED\n", check, name)
 
     def test_arceus_and_silvally_cannot_change_their_own_type(self):
         # Pokemon Central (Sistema Primevo): no move changes the type of a
