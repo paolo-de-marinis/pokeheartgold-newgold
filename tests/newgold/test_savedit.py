@@ -899,6 +899,25 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertFalse(sv.flag_is_set(save, flags["FLAG_ENGAGING_STATIC_POKEMON"]))
         self.assertFalse(sv.flag_is_set(save, flags["FLAG_HIDE_ROUTE_36_SUDOWOODO"]))
 
+    def test_a_step_taken_back_puts_back_what_it_found(self):
+        """Run with a record, a step taken back leaves the save as it was;
+        a record the save has moved on from is passed over, key by key."""
+        variables = sv.constants("include/constants/vars.h", "VAR_")
+        sudowoodo = next(s["id"] for s in sv.story() if s["kind"] == "flag" and s["key"] == "FLAG_UNK_0B4")
+        save, found = self.open(), {}
+        before = save.image()
+        sv.run_step(save, sudowoodo, found)
+        self.assertEqual(found["flag:FLAG_HIDE_ROUTE_36_SUDOWOODO"], 0)
+        sv.undo_step(save, sudowoodo, sv.record(save, found))
+        self.assertEqual(save.image(), before, "back byte for byte")
+        beaten = sv.badge_chains()["BADGE_PLAIN"][0]
+        save, found = self.open(), {}
+        sv.run_step(save, beaten, found)
+        done = sv.record(save, found)
+        sv.write_var(save, variables["VAR_UNK_410A"], 7)
+        self.assertEqual(sv.undo_step(save, beaten, done), [["VAR_UNK_410A", 1]], "left, not the record's")
+        self.assertEqual(sv.var_value(save, variables["VAR_UNK_40DA"]), 0, "the record's")
+
     def test_the_machines_as_the_bag_keeps_them(self):
         """Every machine, in SortTMHMPocket's order, with its move, the
         move's type and how many the bag takes."""

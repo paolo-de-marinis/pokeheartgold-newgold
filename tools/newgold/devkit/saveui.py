@@ -85,6 +85,9 @@ FLAG_ROWS = 300      # the flags and variables one search shows
 MELON_OPEN = "melonDS è aperto: riscriverebbe lo slot alla chiusura. Chiudilo prima."
 STALE = ("il file è cambiato su disco da quando la pagina l'ha letto (melonDS, un'altra scheda o "
          "savedit): l'ho ricaricato, rifai la modifica")
+# Beside a file's backups: for each story step run here, what it found
+# (savedit.record), so that taking it back puts that back.
+STORY_RECORDS = "storia.json"
 
 
 def digest(data):
@@ -559,6 +562,20 @@ class Library:
                 "position": position_of(save), "info": sv.info(save), "backups": self.history(key),
                 "given": given(save), "story": sv.story_state(save)}
 
+    def story_records(self, key):
+        try:
+            records = json.loads((self.backups / key / STORY_RECORDS).read_text())
+            return records if isinstance(records, dict) else {}
+        except (OSError, ValueError):
+            return {}
+
+    def keep_story_records(self, key, records):
+        folder = self.backups / key
+        folder.mkdir(parents=True, exist_ok=True)
+        partial = folder / f".{STORY_RECORDS}.tmp"
+        partial.write_text(json.dumps(records, indent=1, ensure_ascii=False))
+        os.replace(partial, folder / STORY_RECORDS)
+
     def history(self, key):
         folder = self.backups / key
         if not folder.is_dir():
@@ -621,10 +638,11 @@ class Library:
         if handler is None:
             raise Refused(f"operazione sconosciuta: {op}")
         with self.lock:
-            path, _, _ = self.locate(f)
+            path, key, _ = self.locate(f)
             if seen is not None and seen != self.current(f):
                 raise Refused(STALE, "stale")
             save = self.open(path)
+            self.editing = key
             try:
                 report = handler(save, args)
             except sv.Illegal as e:
@@ -950,18 +968,24 @@ class Library:
     def op_story(self, save, a):
         """Story steps run as the game runs them ("run", in order) or taken
         back ("undo", in order): what each wrote, and the variables an undo
-        left as they were."""
+        left as they were. What a run found is kept beside the backups, and
+        a step taken back puts it back (savedit.undo_step)."""
         steps = {s["id"]: s for s in sv.story()}
         for sid in list(a.get("run", [])) + list(a.get("undo", [])):
             if sid not in steps:
                 raise Refused(f"non c'è il passo della storia {sid}")
-        report = {"ran": {}, "left": {}}
+        report, records = {"ran": {}, "left": {}}, self.story_records(self.editing)
         for sid in a.get("undo", []):
-            left = sv.undo_step(save, sid)
+            left = sv.undo_step(save, sid, records.pop(sid, None))
             if left:
                 report["left"][sid] = left
         for sid in a.get("run", []):
-            report["ran"][sid] = sv.run_step(save, sid)
+            found = {}
+            report["ran"][sid] = sv.run_step(save, sid, found)
+            records[sid] = sv.record(save, found)
+        # Kept before the file is written: a record whose run never reached
+        # the file does not match it, and undo_step passes it over.
+        self.keep_story_records(self.editing, records)
         return report
 
     def op_menu(self, save, a):

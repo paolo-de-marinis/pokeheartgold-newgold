@@ -120,7 +120,7 @@ class SaveUiTests(unittest.TestCase):
 
     def backups(self, key="gyms/test.sav"):
         folder = self.library / ".backups" / key
-        return sorted(folder.iterdir()) if folder.is_dir() else []
+        return sorted(folder.glob("*.sav")) if folder.is_dir() else []
 
     def test_dragging_a_pokemon(self):
         """op "move": the page's drag. Onto another the two swap; onto an
@@ -690,6 +690,16 @@ class SaveUiTests(unittest.TestCase):
         out = self.edit("story", {"undo": [badge]})
         self.assertEqual(out["report"], {"ran": {}, "left": {}})
         self.assertEqual((out["profile"]["johto"], out["given"]["level_cap"]), (0, 10))
+        # What each run found is kept beside the backups: taken back, the
+        # steps put it back, the variables too.
+        records = self.library / ".backups/gyms/test.sav" / saveui.STORY_RECORDS
+        self.assertEqual(set(json.loads(records.read_text())), {beaten, lass})
+        out = self.edit("story", {"undo": [lass, beaten]})
+        self.assertEqual(out["report"]["left"], {})
+        now, then = sv.Save(self.save), sv.Save(self.template)
+        for block in ("SAVE_FLAGS", "SAVE_PLAYERDATA", "SAVE_BAG"):
+            self.assertEqual(bytes(now.block(block))[:-sv.save_budget.CRC], bytes(then.block(block))[:-sv.save_budget.CRC],
+                             f"{block} as it was")
         out = self.edit("menu", {"icon": "START_MENU_ICON_RUNNING_SHOES", "on": True})
         self.assertEqual((out["given"]["shoes"], out["given"]["menu"]["START_MENU_ICON_RUNNING_SHOES"]), (True, True))
         out = self.edit("pokegear", {"cards": 3, "map_level": 1})
@@ -700,7 +710,7 @@ class SaveUiTests(unittest.TestCase):
                                                                         "args": {"map_level": 3}}))
         self.assertIn("non è una voce del menu", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "menu",
                                                                             "args": {"icon": "START_MENU_ICON_EXIT", "on": 1}}))
-        self.assertEqual(len(self.backups()), 5, "one backup a write")
+        self.assertEqual(len(self.backups()), 6, "one backup a write")
 
     def test_the_machines(self):
         """op "machines": the checklist's changes written as the game keeps

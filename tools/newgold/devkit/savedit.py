@@ -3191,7 +3191,7 @@ def _reloads(stem):
     return list(dict.fromkeys(out))
 
 
-def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=False):
+def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=False, found=None):
     """A step's straight line from `start`: fall-through, GoTo and Call, to
     End, a Return with no Call to go back to, or a primary marker (but those
     in `through`); after a battle, the scripts the field runs when it is
@@ -3200,9 +3200,10 @@ def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=
     write it could skip is marked conditional. With a save, each jump is
     decided on it and each write made on it as the walk passes it, as the
     game runs the script. `outer`: the walk is inside a conditional stretch
-    of another; `reloaded`: it is a script the field runs when built again.
-    Returns the writes as (kind, name, value, conditional), the lines passed
-    and the marker line it stopped at."""
+    of another; `reloaded`: it is a script the field runs when built again;
+    `found`: filled, with a save, with what each thing written held before
+    the walk first wrote it (_value). Returns the writes as (kind, name,
+    value, conditional), the lines passed and the marker line it stopped at."""
     script = _script(stem)
     lines, labels = script["lines"], script["labels"]
     writes, passed, pending, stack, subjects, compared = [], set(), set(), [], {}, (None, None)
@@ -3244,6 +3245,8 @@ def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=
             skippable = bool(pending) or outer
             writes.append((*write, skippable))
             if save is not None:
+                if found is not None:
+                    found.setdefault(_key(write), _value(save, _key(write)))
                 _apply(save, write)
             elif write[0] in ("flag", "var", "trainer") and not skippable:
                 known[write[:2]] = write[2]
@@ -3253,7 +3256,7 @@ def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=
             for label in _reloads(stem):
                 if label in labels:
                     more, lines_passed, _ = _walk(stem, labels[label], save, known=known,
-                                                  outer=bool(pending) or outer, reloaded=True)
+                                                  outer=bool(pending) or outer, reloaded=True, found=found)
                     writes += more
                     also |= lines_passed
         i += 1
@@ -3292,6 +3295,47 @@ def _apply(save, write, undo=False):
         wanted = max(0, have - value) if undo else min(have + value, item_limit(names[name]))
         if wanted != have:
             set_item(save, names[name], wanted)
+
+
+def _key(write):
+    """What a write touches, as one string: an AddVar the variable's."""
+    kind, name = write[0], write[1]
+    return f"{'var' if kind == 'add' else kind}:{name}"
+
+
+def _value(save, key):
+    """What the save holds of a write's key (_key): a flag, badge, trainer,
+    the shoes, the Dex's switches as 0 or 1, a variable, the cards, the
+    map's level, how many of an item."""
+    kind, name = key.split(":", 1)
+    names = _script_names()[0]
+    if kind in ("flag", "trainer", "badge"):
+        return _state(save, (kind, name))
+    if kind == "var":
+        return var_value(save, names[name])
+    if kind == "item":
+        return _items(save)[names[name]]
+    return {"shoes": lambda: int(running_shoes(save)), "dex": lambda: save.block("SAVE_POKEDEX")[DEX_ENABLED],
+            "card": lambda: pokegear(save)["cards"], "map": lambda: pokegear(save)["map_level"],
+            "natdex": lambda: save.block("SAVE_POKEDEX")[DEX_NATIONAL]}[kind]()
+
+
+def _restore(save, key, value):
+    """A write's key (_key) put back to a value _value read."""
+    kind, name = key.split(":", 1)
+    if kind == "var":
+        write_var(save, _script_names()[0][name], value)
+    elif kind == "item":
+        if _items(save)[_script_names()[0][name]] != value:
+            set_item(save, _script_names()[0][name], value)
+    elif kind == "card":
+        set_pokegear(save, cards=value)
+    elif kind == "map":
+        set_pokegear(save, map_level=value)
+    elif kind == "dex":
+        save.block("SAVE_POKEDEX")[DEX_ENABLED] = value
+    else:
+        _apply(save, (kind, name, 1), undo=not value)
 
 
 def _holds(save, write, items=None):
@@ -3664,28 +3708,46 @@ def _step(step_id):
     return step
 
 
-def run_step(save, step_id):
+def run_step(save, step_id, found=None):
     """A step as the game runs it on this save: from its marker, each jump
-    decided on the save, each write made; the writes it made."""
+    decided on the save, each write made; the writes it made. `found`, a
+    dict, is filled with what each thing it wrote held before (by _key):
+    what undo_step puts back."""
     step = _step(step_id)
-    writes, _, _ = _walk(step["script"], step["start"], save=save, through=tuple(step["through"]))
+    writes, _, _ = _walk(step["script"], step["start"], save=save, through=tuple(step["through"]), found=found)
     return [list(w[:3]) for w in writes]
 
 
-def undo_step(save, step_id):
-    """A step taken back: each write it always makes undone -- a flag, a
-    trainer, a badge, the shoes, the Dex, a card, the map's level, the items
-    it gave, an AddVar -- and a SetVar put back to what the step before it
-    in its gym sets it to (Whitney's VAR_UNK_410A back to 1). Any other
-    SetVar is left, as the value the game had before is not known: they are
-    returned, [name, value]."""
+def record(save, found):
+    """What a step run left of each thing it found (run_step's `found`):
+    with it, undo_step knows the step's writes are still the save's."""
+    return {"found": dict(found), "after": {key: _value(save, key) for key in found}}
+
+
+def undo_step(save, step_id, done=None):
+    """A step taken back. With `done`, its record (record()), each thing
+    it wrote that still holds what the run left goes back to what the run
+    found. The rest by what the step always writes: undone -- a flag, a
+    trainer, a badge, the shoes, the Dex, a card, the map's level, the
+    items it gave, an AddVar -- and a SetVar put back to what the step
+    before it in its gym sets it to (Whitney's VAR_UNK_410A back to 1). Any
+    other SetVar is left, as the value the game had before is not known:
+    they are returned, [name, value]."""
     step = _step(step_id)
+    back = set()
+    if done:
+        for key, before in done["found"].items():
+            if _value(save, key) == done["after"].get(key):
+                _restore(save, key, before)
+                back.add(key)
     previous = {}
     for other in sorted((s for s in story() if step.get("badge") and s.get("badge") == step["badge"]
                          and s["order"] < step["order"]), key=lambda s: s["order"]):
         previous.update({w[1]: w[2] for w in other["gives"] if w[0] == "var"})
     left = []
     for kind, name, value in reversed(step["gives"]):
+        if _key((kind, name)) in back:
+            continue
         if kind == "var":
             if name in previous:
                 write_var(save, _script_names()[0][name], previous[name])

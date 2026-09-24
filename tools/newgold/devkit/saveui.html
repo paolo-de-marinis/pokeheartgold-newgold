@@ -1067,7 +1067,8 @@ function renderTrainer() {
         <select id="storyshow" aria-label="Mostra">${[["all", "Tutti"], ["done", "Fatti"], ["todo", "Da fare"]].map(([k, l]) => `<option value="${k}" ${show === k ? "selected" : ""}>${l}</option>`).join("")}</select>
       </div>
       <p class="note">Ogni passo è uno script del gioco, dal punto in cui scrive il salvataggio fino alla fine: spuntarlo lo esegue sul salvataggio come il gioco
-        (le scelte che dipendono dal salvataggio le decide il salvataggio), toglierlo lo riporta indietro. Le variabili che un passo imposta restano: il valore di prima non si sa.
+        (le scelte che dipendono dal salvataggio le decide il salvataggio), toglierlo lo riporta indietro: un passo spuntato qui rimette quello che aveva
+        trovato; uno fatto giocando rigira flag, medaglie e strumenti, e le variabili di cui non si sa il valore di prima restano.
         Per tutto il resto c'è la scheda Flag e variabili.</p>
       ${sections.map(([sec, ids]) => `<details data-sec="${esc(sec)}" ${q || S.storyopen.has(sec) ? "open" : ""}><summary><strong>${esc(sec || "Script comuni")}</strong> <span class="muted">${ids.filter(x => done.has(x)).length} di ${ids.length} fatti</span></summary>
         <div class="chain">${ids.map(x => stepRow(x)).join("")}</div></details>`).join("") || `<p class="muted">Nessun passo.</p>`}

@@ -102,9 +102,13 @@ ones), and the steps that give that. `badge_chains()` is each badge's gym in
 order -- Whitney beaten, the lass's trigger, the badge, TM45 -- from those
 links. `run_step` runs a step on a save as the game would, each jump decided
 on the save (Chuck's badge starts the Rocket takeover only as the third
-midgame badge), and `undo_step` takes one back: what it wrote undone, a
-`SetVar` put back to what the step before it in its gym sets, any other
-`SetVar` left and named, as its old value is not known.
+midgame badge), noting what each thing it writes held before
+(`record`), and `undo_step` takes one back: given that record, each thing
+the run left untouched since goes back to what it found; the rest -- a
+step done by playing -- by what the step writes: undone, a flag it only
+held for the scene (`FLAG_ENGAGING_STATIC_POKEMON` around a battle) left
+alone, a `SetVar` put back to what the step before it in its gym sets, any
+other `SetVar` left and named, as its old value is not known.
 
 Where the player can stand is read from the land data (the file
 `filesystem_files_def.h` gives `NARC_fielddata_landdata_land_data`): each
@@ -238,7 +242,9 @@ the game adds them in order), the level cap, the sixteen badges each with
 its gym's steps beside it, and every other step by place, with a search.
 Ticking a step runs it as the game does and offers the steps before it
 (in its gym, or the ones giving what it tests), unticking takes it back and
-offers the ones after it; nothing is forced, so a save can stand between
+offers the ones after it -- what a run here found is kept beside the file's
+backups (`storia.json`), so it goes back as it was; nothing is forced, so
+a save can stand between
 two steps -- Whitney beaten, the badge not given. A badge ticked on its own
 asks: as the game (its step, with what the script writes with it) or the
 bit alone. Each step shows what it writes and what the game tests before
