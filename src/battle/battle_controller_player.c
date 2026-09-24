@@ -3665,6 +3665,26 @@ static BOOL PrimalWeatherStopsMove(u32 weather, int category, int type) {
             || ((weather & FIELD_CONDITION_HEAVY_RAIN) && type == TYPE_FIRE));
 }
 
+// Natural Gift takes its power and type from the user's Berry, and fails
+// without one it can use -- none, or one Klutz, Embargo or Magic Room keeps
+// from it -- once its PP is spent, as the engine asks it
+// (BattleController_CheckMoveFailures1 at d0380a487; Pokemon Central,
+// Dononaturale). The primal weathers and Powder below see the Berry's type,
+// and stop the move with the Berry kept, and the damage has its power on
+// both of Parental Bond's strikes. The Berry goes once the move is over
+// (NaturalGiftSpendsBerry).
+static void TryNaturalGift(BattleContext *ctx) {
+    if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect != MOVE_EFFECT_NATURAL_GIFT) {
+        return;
+    }
+    ctx->movePower = GetNaturalGiftPower(ctx, ctx->battlerIdAttacker);
+    if (ctx->movePower == 0) {
+        ctx->moveStatusFlag |= MOVE_STATUS_FAILED;
+    } else {
+        ctx->moveType = GetNaturalGiftType(ctx, ctx->battlerIdAttacker);
+    }
+}
+
 // Damp keeps anyone from blowing up while its holder stands: Self-Destruct,
 // Explosion, Misty Explosion and Mind Blown fail with the holder's line once
 // their PP is spent, where the engine asks it (its
@@ -3792,6 +3812,7 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         if (!(ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) && ov12_0224B1FC(battleSystem, ctx) == TRUE) {
             return;
         }
+        TryNaturalGift(ctx);
         if (PrimalWeatherStopsMove(BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), BattleMoveTbl(ctx, ctx->moveNoCur)->category,
                 BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur))
             == TRUE) {

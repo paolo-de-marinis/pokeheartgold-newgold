@@ -292,7 +292,66 @@ int main(void) {
 """
 
 
+NATURAL_GIFT_BEFORE_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/move_effects.h"
+#include "constants/pokemon.h"
+typedef struct { u16 effect; } MoveTbl;
+typedef struct { int item; } Mon;
+typedef struct {
+    Mon battleMons[4];
+    int battlerIdAttacker, movePower;
+    u32 moveNoCur, moveStatusFlag;
+    u8 moveType;
+    MoveTbl move;
+} BattleContext;
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)moveNo; return &ctx->move; }
+// A Cheri Berry, 80 and Fire; nothing, or one it cannot use, 0.
+static int GetNaturalGiftPower(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].item ? 80 : 0; }
+static int GetNaturalGiftType(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return TYPE_FIRE; }
+@FUNCTIONS@
+int main(void) {
+    BattleContext ctx = { 0 };
+    ctx.move.effect = MOVE_EFFECT_NATURAL_GIFT;
+    ctx.battleMons[0].item = 1;
+    TryNaturalGift(&ctx);
+    assert(ctx.movePower == 80 && ctx.moveType == TYPE_FIRE && !ctx.moveStatusFlag);
+    ctx.battleMons[0].item = 0;
+    ctx.movePower = 0;
+    ctx.moveType = 0;
+    TryNaturalGift(&ctx);
+    assert(ctx.moveStatusFlag == MOVE_STATUS_FAILED && ctx.moveType == 0);
+    ctx.moveStatusFlag = 0;
+    ctx.move.effect = MOVE_EFFECT_HIT;
+    TryNaturalGift(&ctx);
+    assert(!ctx.moveStatusFlag && !ctx.movePower);
+    return 0;
+}
+"""
+
+
 class NaturalGiftTests(unittest.TestCase):
+    def test_the_berry_is_asked_before_the_move(self):
+        # The engine's before-move failures (BattleController_CheckMoveFailures1):
+        # once the PP is spent, and before the primal weathers and Powder,
+        # which see the Berry's type (Pokemon Central, Dononaturale: they keep
+        # the Berry).
+        from test_ability_interactions import run_c
+        controller = CONTROLLER.read_text()
+        run_c(NATURAL_GIFT_BEFORE_FIXTURE.replace("@FUNCTIONS@", function(controller, "TryNaturalGift")))
+        steps = function(controller, "ov12_0224C38C")
+        self.assertLess(steps.index("ov12_0224B1FC(battleSystem, ctx)"), steps.index("TryNaturalGift(ctx);"))
+        self.assertLess(steps.index("TryNaturalGift(ctx);"), steps.index("PrimalWeatherStopsMove("))
+        script = (ROOT / "files/battledata/script/effect_script/effect_script_0222.s").read_text()
+        self.assertNotIn("CalcNaturalGiftParams", script)
+
     def test_the_berry_goes_once_the_move_is_over(self):
         # Pokemon Central (Dononaturale): spent on a miss, Protect or an
         # immunity, kept when a Red Card sends the user back -- so spent at
