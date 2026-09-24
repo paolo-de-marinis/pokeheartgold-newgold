@@ -435,8 +435,10 @@ class IntimidateTests(unittest.TestCase):
     def test_the_four_abilities_keep_it_off(self):
         source = COMMANDS.read_text()
         helper = function(source, "AbilityShrugsOffIntimidate")
-        for ability in ("INNER_FOCUS", "OBLIVIOUS", "OWN_TEMPO", "SCRAPPY"):
+        for ability in ("INNER_FOCUS", "OBLIVIOUS", "OWN_TEMPO"):
             self.assertIn(f"ABILITY_{ability}) == TRUE", helper)
+        # Scrappy is one Mold Breaker does not pass (test_mold_breaker).
+        self.assertIn("GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_SCRAPPY", helper)
         change = function(source, "BtlCmd_ChangeStatStage")
         branch = change[change.index("ABILITY_HYPER_CUTTER"):]
         branch = branch[:branch.index("{")]

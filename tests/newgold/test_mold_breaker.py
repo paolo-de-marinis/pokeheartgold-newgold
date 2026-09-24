@@ -9,6 +9,7 @@ ask it, so that Teravolt and Turboblaze pass them by as Mold Breaker does
 """
 
 import os
+import re
 import shlex
 import subprocess
 import tempfile
@@ -19,6 +20,8 @@ from test_level_cap import ROOT
 from test_repels import function
 
 OVERLAY = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+REFERENCE = Path(os.environ.get(
+    "NEWGOLD_REFERENCE", "/home/paolo/Porting HGSS/hg-engine-newgold-reference"))
 
 PROGRAM = r"""
 #include <assert.h>
@@ -105,6 +108,13 @@ int main(void) {
         ctx.battleMons[3].hp = 0;
         assert(!SideAbilityNotIgnored(&bs, &ctx, 0, 1, ABILITY_FLOWER_GIFT));
     }
+    // A move never passes its own user's ability by: Sunsteel Strike's user
+    // keeps its Contrary for itself, while the target's is passed.
+    reset();
+    ctx.moveNoCur = ctx.moveNoTemp = MOVE_SUNSTEEL_STRIKE;
+    S.ability[0] = S.ability[1] = ABILITY_CONTRARY;
+    assert(CheckBattlerAbilityIfNotIgnored(&ctx, 0, 0, ABILITY_CONTRARY));
+    assert(!CheckBattlerAbilityIfNotIgnored(&ctx, 0, 1, ABILITY_CONTRARY));
     // Mycelium Might passes the rod by with a status move alone.
     reset();
     S.move.category = CATEGORY_STATUS;
@@ -172,6 +182,24 @@ def run(test):
 class MoldBreakerTests(unittest.TestCase):
     def test_they_pass_the_rod_and_the_flowers_by_unless_shielded(self):
         run(self)
+
+    @unittest.skipUnless(REFERENCE.exists(), "the reference is not here")
+    def test_only_an_ability_mold_breaker_can_pass_is_asked_so(self):
+        # The reference's second guard (MoldBreakerAbilityCheckInternal) is
+        # its AbilityFlags table; here the callers choose, and every ability
+        # they ask as one a move can pass by must be one the table marks.
+        flags = subprocess.run(["git", "-C", str(REFERENCE), "show", "1fa3c9366:data/AbilityFlags.c"],
+                               capture_output=True, text=True, check=True).stdout
+        breakable = {name.replace("LIGHTNING_ROD", "LIGHTNINGROD") for name in re.findall(
+            r"\[(ABILITY_\w+)\] = \{[^}]*ignoredByMoldBreaker = TRUE", flags)}
+        asked = set()
+        for path in (ROOT / "src/battle").glob("*.c"):
+            text = path.read_text()
+            asked |= set(re.findall(r"(?:CheckBattlerAbilityIfNotIgnored|SideAbilityNotIgnored)\([^;]*?, (ABILITY_\w+)\)", text))
+        for path in (ROOT / "files/battledata/script").glob("*/*.s"):
+            asked |= set(re.findall(r"CheckIgnorableAbility \w+, \w+, (ABILITY_\w+)", path.read_text()))
+        self.assertGreater(len(asked), 50)
+        self.assertEqual(asked - breakable, set())
 
     def test_the_ai_asks_it_of_levitate_and_wonder_guard(self):
         body = function(OVERLAY, "ov12_02252054")

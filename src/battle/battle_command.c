@@ -2488,12 +2488,13 @@ static BOOL SideEffectIsTheMoves(int statChangeType) {
 // From the eighth generation Inner Focus, Oblivious, Own Tempo and Scrappy
 // keep Intimidate off, as Hyper Cutter always has (Pokemon Central,
 // Prepotenza); a Mold Breaker gets through. Intimidate is the one ability
-// that lowers another Pokemon's Attack. The reference asks none of them.
+// that lowers another Pokemon's Attack. The reference asks none of them, and
+// its AbilityFlags leaves Scrappy one Mold Breaker does not pass.
 static BOOL AbilityShrugsOffIntimidate(BattleContext *ctx) {
     return CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_INNER_FOCUS) == TRUE
         || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_OBLIVIOUS) == TRUE
         || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_OWN_TEMPO) == TRUE
-        || CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_SCRAPPY) == TRUE;
+        || GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_SCRAPPY;
 }
 
 BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {

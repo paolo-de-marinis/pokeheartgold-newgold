@@ -1716,15 +1716,16 @@ static BOOL Battler_IsWild(BattleSystem *battleSystem, int battlerId) {
 
 // Whether the Pokemon in this slot leaves now: still at half or below, still
 // holding the ability (Mummy or Wandering Spirit taking it on contact comes
-// first) as the attacker's Mold Breaker sees it, and with somewhere to go.
+// first), which Mold Breaker does not pass (the reference's AbilityFlags
+// leaves both unignorable), and with somewhere to go.
 static BOOL Battler_Retreats(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     if (!ctx->selfTurnData[battlerId].retreatArmed
         || ctx->battleMons[battlerId].hp == 0
         || ctx->battleMons[battlerId].hp > (int)(ctx->battleMons[battlerId].maxHp / 2)) {
         return FALSE;
     }
-    if (!CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, battlerId, ABILITY_EMERGENCY_EXIT)
-        && !CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, battlerId, ABILITY_WIMP_OUT)) {
+    if (GetBattlerAbility(ctx, battlerId) != ABILITY_EMERGENCY_EXIT
+        && GetBattlerAbility(ctx, battlerId) != ABILITY_WIMP_OUT) {
         return FALSE;
     }
     return Battler_IsWild(battleSystem, battlerId) || CanSwitchMon(battleSystem, ctx, battlerId);
@@ -3795,11 +3796,16 @@ static BOOL BattlerIgnoresAbilities(BattleContext *ctx, int battlerId) {
 
 // An Ability Shield keeps its holder's ability from being ignored too (Pokemon
 // Central, Scudo abilita): against it the attacker's Mold Breaker and its kind
-// count for nothing. The reference does not ask the shield.
+// count for nothing. The reference does not ask the shield. Nor is the user's
+// own ability ever ignored by its move, the reference's first guard
+// (MoldBreakerAbilityCheckInternal, ability.c:518 at d0380a487); its second,
+// that only an ability Mold Breaker can pass is passed, is the callers':
+// those it cannot -- Comatose, Emergency Exit, Wimp Out, Scrappy -- are read
+// with GetBattlerAbility, as test_mold_breaker checks against its table.
 BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int ability) {
     BOOL ret = FALSE;
 
-    if (BattlerIgnoresAbilities(ctx, battlerIdAttacker) == FALSE || BattlerHasAbilityShield(ctx, battlerIdTarget)) {
+    if (battlerIdAttacker == battlerIdTarget || BattlerIgnoresAbilities(ctx, battlerIdAttacker) == FALSE || BattlerHasAbilityShield(ctx, battlerIdTarget)) {
         if (GetBattlerAbility(ctx, battlerIdTarget) == ability) {
             ret = TRUE;
         }
@@ -5110,8 +5116,9 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
     int moveEffect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
     BOOL givesStatus = moveEffect == MOVE_EFFECT_STATUS_SLEEP || moveEffect == MOVE_EFFECT_STATUS_SLEEP_NEXT_TURN || moveEffect == MOVE_EFFECT_STATUS_PARALYZE
         || moveEffect == MOVE_EFFECT_STATUS_POISON || moveEffect == MOVE_EFFECT_STATUS_BADLY_POISON || moveEffect == MOVE_EFFECT_STATUS_BURN;
-    // Comatose is already asleep, and so takes none of them.
-    if (givesStatus && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_COMATOSE) == TRUE) {
+    // Comatose is already asleep, and so takes none of them; Mold Breaker
+    // does not pass it (the reference's AbilityFlags).
+    if (givesStatus && GetBattlerAbility(ctx, battlerIdTarget) == ABILITY_COMATOSE) {
         ctx->battlerIdTemp = battlerIdTarget;
         script = BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY;
     }

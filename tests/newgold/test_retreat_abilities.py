@@ -105,7 +105,8 @@ int main(void) {
     hit(1, 20);
     ctx.battleMons[1].hp = 65;
     assert(leaves() == -1);
-    // Fainted, a move Sheer Force boosted, a Mold Breaker, nobody to send.
+    // Fainted, a move Sheer Force boosted, nobody to send; a Mold Breaker
+    // does not keep it in (the reference's AbilityFlags leaves it unignorable).
     setup(BATTLE_TYPE_TRAINER, ABILITY_EMERGENCY_EXIT, 60);
     hit(1, 60);
     assert(leaves() == -1);
@@ -121,7 +122,7 @@ int main(void) {
     setup(BATTLE_TYPE_TRAINER, ABILITY_EMERGENCY_EXIT, 60);
     moldBreaker = TRUE;
     hit(1, 20);
-    assert(leaves() == -1);
+    assert(leaves() == 0);
     setup(BATTLE_TYPE_TRAINER, ABILITY_EMERGENCY_EXIT, 60);
     bs.canSwitch[1] = FALSE;
     hit(1, 20);
