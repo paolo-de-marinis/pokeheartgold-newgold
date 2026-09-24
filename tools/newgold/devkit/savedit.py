@@ -296,7 +296,9 @@ def _layout():
         "MAILMSG_FIELDS_MAX": "MAILMSG_FIELDS_MAX", "EC_WORD_NULL": "EC_WORD_NULL", "ITEM_POKE_BALL": "ITEM_POKE_BALL",
         # The bits a Pokemon keeps its hidden ability and its Capsule in.
         "HIDDEN_ABILITY_BIT": "MON_HIDDEN_ABILITY_BIT", "SWAP_ABILITY_BIT": "MON_SWAP_ABILITY_SLOT_BIT",
-        "CHUNK_TILES": "MAP_TILES_COUNT_X",
+        # A map chunk's tiles, and where its land data member keeps their attributes.
+        "CHUNK_TILES": "MAP_TILES_COUNT_X", "CHUNK_ROWS": "MAP_TILES_COUNT_Z",
+        "TERRAIN_OFFSET": "TERRAIN_ATTRIBUTES_OFFSET",
         # GetGenderBySpeciesAndPersonality's, and how many of an item a slot takes.
         "MON_RATIO_MALE": "MON_RATIO_MALE", "MON_RATIO_FEMALE": "MON_RATIO_FEMALE",
         "MON_RATIO_UNKNOWN": "MON_RATIO_UNKNOWN", "MON_MALE": "MON_MALE", "MON_FEMALE": "MON_FEMALE",
@@ -1323,16 +1325,19 @@ def max_pp(move, pp_ups):
 
 @tree_cache
 def map_table():
-    """Every map by id, with the section name the game shows for it."""
+    """Every map by id: its constant, the section the game names it by (the
+    name it shows, and the MAPSEC_ constant), and its header's regionNo and
+    mapType, by their constants."""
     names = bank(MAPSEC_NAMES)
     sections = constants("include/constants/map_sections.h", "MAPSEC_")
-    headers = source("src/data/map_headers.h").read_text()
-    section_of = dict(re.findall(r"\[(MAP_\w+)\] = \{[^}]*?\.mapsec = (MAPSEC_\w+)", headers))
     out = {}
     for const, number in constants("include/constants/maps.h", "MAP_").items():
-        section = sections.get(section_of.get(const))
+        header = map_headers().get(const, {})
+        section = sections.get(header.get("mapsec"))
         out.setdefault(number, {"id": number, "const": const,
-                                "name": names[section] if section is not None and section < len(names) else ""})
+                                "name": names[section] if section is not None and section < len(names) else "",
+                                "section": header.get("mapsec", ""), "region": header.get("regionNo", ""),
+                                "type": header.get("mapType", "")})
     return dict(sorted(out.items()))
 
 
@@ -1352,38 +1357,213 @@ MATRICES = ROOT / "files/fielddata/mapmatrix/map_matrix"
 def _matrix_of():
     """Each map's matrix, as its header in src/data/map_headers.h names it."""
     number = constants("include/constants/maps.h", "MAP_")
-    headers = source("src/data/map_headers.h").read_text()
-    return {number[const]: int(m) for const, m in re.findall(
-        r"\[(MAP_\w+)\] = \{[^}]*?\.matrixId = NARC_map_matrix_map_matrix_(\d{4})", headers) if const in number}
+    return {number[const]: int(found.group(1)) for const, header in map_headers().items()
+            if const in number and (found := re.fullmatch(r"NARC_map_matrix_map_matrix_(\d{4})\w*", header.get("matrixId", "")))}
 
 
 @tree_cache
-def map_chunks(map_id):
-    """The chunks of its matrix that are this map's, as (column, row).
-
-    MapMatrix_MapMatrixData_Load: width, height, whether there is a layer
-    naming each chunk's map (without one every chunk is the map's own), one
-    of altitudes, then each chunk's land data, 0xFFFF where there is none --
-    the black void. The matrix is the one the map's header names."""
-    matrix = _matrix_of().get(map_id)
-    if matrix is None:
-        return frozenset()
+def _matrix(matrix):
+    """A matrix as MapMatrix_MapMatrixData_Load reads it: width, height,
+    whether there is a layer naming each chunk's map (without one every
+    chunk is the header's own map: None), one of altitudes, then each
+    chunk's land data, 0xFFFF where there is none -- the black void.
+    (width, height, owners, land)."""
     data = source(next(p for p in source(MATRICES).iterdir()
                        if re.fullmatch(rf"map_matrix_{matrix:04d}(_\w+)?\.bin", p.name))).read_bytes()
     width, height, has_maps, has_altitudes, name_length = data[:5]
     at = 5 + name_length
     cells = width * height
-    owners = struct.unpack_from(f"<{cells}H", data, at) if has_maps else [map_id] * cells
+    owners = struct.unpack_from(f"<{cells}H", data, at) if has_maps else None
     at += 2 * cells if has_maps else 0
     at += cells if has_altitudes else 0
-    land = struct.unpack_from(f"<{cells}H", data, at)
-    return frozenset((i % width, i // width) for i in range(cells) if land[i] != 0xFFFF and owners[i] == map_id)
+    return width, height, owners, struct.unpack_from(f"<{cells}H", data, at)
+
+
+@tree_cache
+def map_chunks(map_id):
+    """The chunks of its matrix -- the one its header names -- that are
+    this map's, as (column, row)."""
+    matrix = _matrix_of().get(map_id)
+    if matrix is None:
+        return frozenset()
+    width, height, owners, land = _matrix(matrix)
+    return frozenset((i % width, i // width) for i in range(width * height)
+                     if land[i] != 0xFFFF and (owners is None or owners[i] == map_id))
 
 
 def on_map(map_id, x, y):
     """Whether the tile is on a chunk of this map, not off its matrix or in
     the void between chunks, where Continue leaves the player on black."""
-    return (x // CHUNK_TILES, y // CHUNK_TILES) in map_chunks(map_id)
+    return x >= 0 and y >= 0 and (x // CHUNK_TILES, y // CHUNK_ROWS) in map_chunks(map_id)
+
+
+# ---------------------------------------------------------------------------
+# Where on a map the player can stand: its tiles as the land data gives
+# them, and the places the game itself puts the player -- which the editor
+# offers, and holds a position to.
+
+COLLISION = 0x8000      # sub_020548C0: a tile's attribute's top bit
+BEHAVIOR = 0xFF         # GetMetatileBehavior: its low byte
+STEPS = ((0, 1, "DIR_SOUTH"), (0, -1, "DIR_NORTH"), (-1, 0, "DIR_WEST"), (1, 0, "DIR_EAST"))
+
+
+def narc_file(name):
+    """The file a NarcId opens (include/filesystem_files_def.h): the entry
+    of sNarcFileList at the enum's value."""
+    text = source("include/filesystem_files_def.h").read_text()
+    number = int(re.search(rf"\b{name} = (\d+),", text).group(1))
+    return "files/" + re.findall(r'^\s*"([^"]+)",', text[text.index("sNarcFileList[]"):], re.M)[number]
+
+
+@tree_cache
+def _land():
+    """The land data's members (NARC_fielddata_landdata_land_data), one a chunk's worth of ground."""
+    sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+    import wotbl
+    return wotbl.read_narc(source(narc_file("NARC_fielddata_landdata_land_data")).read_bytes())[0]
+
+
+@tree_cache
+def _land_attributes(land_id):
+    """A land data member's tile attributes, a u16 a tile, row by row. The
+    field's loader reads the member's sound section first (ov01_021F4AAC:
+    its size is the u16 right before TERRAIN_ATTRIBUTES_OFFSET) and the
+    attributes after it; TerrainAttributes_Load's fixed offset holds only
+    where that section is empty."""
+    member = _land()[land_id]
+    at = TERRAIN_OFFSET + struct.unpack_from("<H", member, TERRAIN_OFFSET - 2)[0]
+    return struct.unpack_from(f"<{CHUNK_TILES * CHUNK_ROWS}H", member, at)
+
+
+def attribute(matrix, x, y):
+    """A tile's attribute in a matrix, whichever map owns its chunk; None
+    off the matrix or in its void."""
+    width, height, _, land = _matrix(matrix)
+    cx, cy = x // CHUNK_TILES, y // CHUNK_ROWS
+    if x < 0 or y < 0 or cx >= width or cy >= height or land[cy * width + cx] == 0xFFFF:
+        return None
+    return _land_attributes(land[cy * width + cx])[(y % CHUNK_ROWS) * CHUNK_TILES + x % CHUNK_TILES]
+
+
+@tree_cache
+def surfable():
+    """The behaviours MetatileBehavior_IsSurfableWater says yes to: the bit
+    it tests in sMetatileBehaviorFlags (src/metatile_behavior.c), the table
+    as the compiler lays it out, a byte a behaviour (a u8)."""
+    test = c_function("src/metatile_behavior.c", "BOOL MetatileBehavior_IsSurfableWater(")
+    (mask,), (flags,) = compile_c((re.search(r"sMetatileBehaviorFlags\[tile\] & (\w+)\)", test).group(1),),
+                                  (("BehaviorFlags", c_table("src/metatile_behavior.c", "sMetatileBehaviorFlags")),),
+                                  headers=LAYOUT_HEADERS + ("constants/metatile_behavior.h",),
+                                  decls=("typedef u8 BehaviorFlags[1 << 8];",))
+    return frozenset(b for b, f in enumerate(flags) if f & mask)
+
+
+@tree_cache
+def spawns():
+    """sSpawnMaps (asm/unk_0203BA5C.s) by its macro's own field names: each
+    fly point, as GetFlyWarpData gives it, and each heal spawn of a row that
+    is one (isBlackoutSpawn), as GetDeathWarpData does -- with the direction
+    each puts in the Location it fills. {"fly"|"heal": {map: (x, y, dir)}}."""
+    text = source("asm/unk_0203BA5C.s").read_text()
+    fields = [f.strip() for f in re.search(r"\.macro spawn (.*)", text).group(1).split(",")]
+    rows = [dict(zip(fields, (a.strip() for a in args.split(",")))) for args in re.findall(r"^\s*spawn (.*)$", text, re.M)]
+    maps = constants("include/constants/maps.h", "MAP_")
+
+    def facing(fn):     # what it stores at Location.direction, 16 bytes in
+        body = text[text.index(f"{fn}:"):text.index(f"thumb_func_end {fn}")]
+        return int(re.search(r"mov r0, #(\d+)\s+str r0, \[r4, #0x10\]", body).group(1))
+    fly, heal = facing("GetFlyWarpData"), facing("GetDeathWarpData")
+    return {"fly": {maps[r["flyPointMapNo"]]: (int(r["flyPointX"], 0), int(r["flyPointY"], 0), fly) for r in rows},
+            "heal": {maps[r["deathSpawnMapNo"]]: (int(r["deathSpawnX"], 0), int(r["deathSpawnY"], 0), heal)
+                     for r in rows if r["isBlackoutSpawn"] == "1"}}
+
+
+def map_events(map_id):
+    """The map's zone events (its header's eventsBank), {} for none."""
+    header = map_headers().get(map_table()[map_id]["const"], {})
+    path = _bank_file(header, "eventsBank", "zone_event_", "files/fielddata/eventdata/zone_event", ".json")
+    return json.loads(source(path).read_text()) if path and (ROOT / path).exists() else {}
+
+
+@tree_cache
+def _warp_facing():
+    """The direction FieldSystem_MapConnection puts the player in at the
+    warp it arrives by: SetLocation's last argument."""
+    body = c_function("src/field/field_control.c", "static BOOL FieldSystem_MapConnection(")
+    return int(re.search(r"SetLocation\(location, warpEvent->header, warpEvent->anchor, warpEvent->x, "
+                         r"warpEvent->z, (\d+)\);", body).group(1))
+
+
+@tree_cache
+def ground(map_id):
+    """Where on this map the game puts the player, and where it may stand.
+
+    The arrivals, in the order tried: its fly point, its heal spawn, then
+    each warp of its zone events -- the player comes out on the warp's own
+    tile, or, where that is in the wall (a door), on the first of its
+    neighbours south, north, west, east, facing the way stepped -- and, on a
+    matrix it shares, each tile a step from another map's ground, facing
+    in. A spot is a tile of its chunks with no collision, not surfable
+    water, holding no object of its zone events -- and, in a building
+    (MapHeader_IsInBuilding), joined by tiles with no collision to an
+    arrival or to one of those objects: the rooms a door opens on or
+    someone stands in (the gym rooms Bugsy's carts join), not the space
+    around them the collision leaves unmarked. Outside, ledges and
+    climbs, which have the collision bit, part ground the player reaches.
+    ([(how, x, y, direction)], {(x, y): why not}, the spots)."""
+    matrix, dirs = _matrix_of().get(map_id), constants("include/constants/global_fieldmap.h", "DIR_")
+    if matrix is None:
+        return [], {}, frozenset()
+    events, water, (width, _, owners, land) = map_events(map_id), surfable(), _matrix(matrix)
+    objects = {(o["x"], o["z"]) for o in events.get("objects", [])}
+    tiles = {(cx * CHUNK_TILES + i % CHUNK_TILES, cy * CHUNK_ROWS + i // CHUNK_TILES): attr
+             for cx, cy in map_chunks(map_id) for i, attr in enumerate(_land_attributes(land[cy * width + cx]))}
+    why = {p: "wall" if a & COLLISION else "water" if a & BEHAVIOR in water else "object" if p in objects else None
+           for p, a in tiles.items()}
+    free = lambda p: why.get(p, "off") is None
+    tried = [("fly", *spawns()["fly"][map_id]) if map_id in spawns()["fly"] else None,
+             ("heal", *spawns()["heal"][map_id]) if map_id in spawns()["heal"] else None]
+    for warp in events.get("warps", []):
+        x, y = warp["x"], warp["z"]
+        tried.append(("warp", x, y, _warp_facing()) if free((x, y)) else
+                     next((("door", x + dx, y + dy, dirs[d]) for dx, dy, d in STEPS if free((x + dx, y + dy))), None))
+    if owners is not None:
+        for x, y in sorted(tiles, key=lambda p: (p[1], p[0])):
+            for dx, dy, d in STEPS:     # stepping from the other map's tile onto this one
+                a = attribute(matrix, x - dx, y - dy)
+                if (x - dx, y - dy) not in tiles and a is not None and not a & COLLISION and a & BEHAVIOR not in water:
+                    tried.append(("edge", x, y, dirs[d]))
+    arrivals = list(dict.fromkeys(t for t in tried if t and free(t[1:3])))
+    joined, todo = set(), [a[1:3] for a in arrivals] + list(objects)
+    while todo:
+        p = todo.pop()
+        if p not in joined and p in tiles and why[p] != "wall":
+            joined.add(p)
+            todo += [(p[0] + dx, p[1] + dy) for dx, dy, _ in STEPS]
+    if arrivals and map_table()[map_id]["type"] in buildings():
+        why.update({p: "apart" for p, w in why.items() if w is None and p not in joined})
+    return arrivals, why, frozenset(p for p, w in why.items() if w is None)
+
+
+@tree_cache
+def buildings():
+    """The map types MapHeader_IsInBuilding says are a building's."""
+    return frozenset(re.findall(r"MapHeader_GetMapType\(mapId\) == (MAP_TYPE_\w+)",
+                                c_function("src/map_header.c", "BOOL MapHeader_IsInBuilding(")))
+
+
+def preset(map_id):
+    """The first place the game puts the player on this map, as
+    {"x", "y", "direction", "how"}; None when it has none."""
+    arrivals = ground(map_id)[0]
+    return dict(zip(("how", "x", "y", "direction"), arrivals[0])) if arrivals else None
+
+
+def tile_problem(map_id, x, y):
+    """Why the player cannot be put on this tile: "off" its chunks, a
+    "wall", "water", an "object" of the map, "apart" from where the game
+    puts the player; None when it can."""
+    return ground(map_id)[1].get((x, y), "off")
 
 
 # ---------------------------------------------------------------------------
@@ -2600,6 +2780,7 @@ def position(save):
     fields = ("map", "warp", "x", "y", "direction")
     return {"current": dict(zip(fields, struct.unpack_from("<5i", block, 0))),
             "warp": dict(zip(fields, struct.unpack_from("<5i", block, 3 * LOCATION))),
+            "special": dict(zip(fields, struct.unpack_from("<5i", block, 4 * LOCATION))),
             "by_warp": flag_is_set(save, FLAG_CONTINUE_BY_WARP)}
 
 

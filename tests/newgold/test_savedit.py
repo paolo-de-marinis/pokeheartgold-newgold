@@ -707,6 +707,7 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertFalse(sv.flag_is_set(again, 0x77))
         self.assertEqual(sv.var_value(again, 0x4079), 2)
         self.assertEqual(sv.position(again)["current"], {"map": 80, "warp": -1, "x": 10, "y": 9, "direction": 0})
+        self.assertEqual(set(sv.position(again)["special"]), {"map", "warp", "x", "y", "direction"})
         self.assertTrue(sv.position(again)["by_warp"])
         found = sv.find_flags(again, "UNK_076")
         self.assertIn({"kind": "flag", "name": "FLAG_UNK_076", "number": 0x76, "value": 1}, found)
@@ -733,6 +734,32 @@ class SaveditLibraryTests(unittest.TestCase):
                          ("medicine", "balls", "TMsHMs"))
         maps = sv.map_table()
         self.assertEqual(maps[sv.constants("include/constants/maps.h", "MAP_")["MAP_ROUTE_29"]]["name"], "Route 29")
+
+    def test_where_the_player_can_stand(self):
+        """A preset is where the game itself puts the player -- a town's fly
+        point, an interior's heal spawn, a warp's tile on a route and in a
+        cave -- facing as the game does, and each is a spot; a wall, water,
+        the void around a room and the black off the chunks are not."""
+        num, dirs = sv.constants("include/constants/maps.h", "MAP_"), sv.constants("include/constants/global_fieldmap.h", "DIR_")
+        for name, how, x, y, facing in (("MAP_NEW_BARK", "fly", 695, 397, "DIR_SOUTH"),
+                                        ("MAP_VIOLET_POKECENTER_1F", "heal", 8, 13, "DIR_NORTH"),
+                                        ("MAP_ROUTE_29", "warp", 626, 389, "DIR_SOUTH"),
+                                        ("MAP_UNION_CAVE_1F", "warp", 27, 43, "DIR_SOUTH")):
+            self.assertEqual(sv.preset(num[name]), {"how": how, "x": x, "y": y, "direction": dirs[facing]}, name)
+            self.assertIsNone(sv.tile_problem(num[name], x, y), name)
+        self.assertEqual(sv.preset(num["MAP_ROUTE_9"])["how"], "edge", "no warp: where it meets the next map")
+        self.assertIsNone(sv.tile_problem(80, 10, 9), "the tiles the other tests write")
+        self.assertIsNone(sv.tile_problem(33, 655, 400))
+        self.assertEqual(sv.tile_problem(num["MAP_ROUTE_32"], 468, 418), "wall")
+        self.assertEqual(sv.tile_problem(num["MAP_NEW_BARK"], *next(p for p, w in sorted(sv.ground(num["MAP_NEW_BARK"])[1].items())
+                                                                     if w == "water")), "water")
+        self.assertEqual(sv.tile_problem(num["MAP_VIOLET_POKECENTER_1F"], 20, 20), "apart", "the void around the room")
+        self.assertEqual(sv.tile_problem(33, 5, 5), "off")
+        self.assertIsNone(sv.preset(num["MAP_EVERYWHERE"]))
+        # Sprout Tower's land data has a sound section before its attributes:
+        # read at the fixed offset, its ladder and its monks stand in walls.
+        tower = num["MAP_SPROUT_TOWER_3F"]
+        self.assertTrue(all(sv.tile_problem(tower, o["x"], o["z"]) in (None, "object") for o in sv.map_events(tower)["objects"]))
 
     def test_a_bad_checksum_is_reported(self):
         raw = bytearray(sv.party_raw(self.open())[0])
@@ -904,9 +931,10 @@ class TheCodeSaveditKeeps(unittest.TestCase):
         self.assertEqual(self.fields("PartyCore", "maxCount", "curCount"), {"maxCount": 0, "curCount": 4})
         text = (ROOT / "src/save_local_field_data.c").read_text()
         members = re.findall(r"^\s*(\w+) (\w+);", text[text.index("struct LocalFieldData {"):], re.M)
-        self.assertEqual(members[:4], [("Location", "currentPosition"), ("Location", "entrancePosition"),
-                                       ("Location", "previousPosition"), ("Location", "dynamicWarp")],
-                         "the dynamic warp is 3 * LOCATION in")
+        self.assertEqual(members[:5], [("Location", "currentPosition"), ("Location", "entrancePosition"),
+                                       ("Location", "previousPosition"), ("Location", "dynamicWarp"),
+                                       ("Location", "specialSpawn")],
+                         "the dynamic warp is 3 * LOCATION in, the special spawn 4 *")
 
     def test_the_mail_is_mail_init_s(self):
         """MAIL_INIT is Mail_Init and MailMsg_Init over struct Mail: the same
@@ -1062,6 +1090,25 @@ class TheCodeSaveditKeeps(unittest.TestCase):
                                              decls=(sv.c_struct("src/save_local_field_data.c", "LocalFieldData"),))
         self.assertEqual(at, player, "hasRunningShoes is PlayerSaveData's first field")
         self.assertGreater(player, 4 * location, "after the five Locations")
+
+    def test_a_tile_is_read_as_the_field_reads_it(self):
+        """The collision bit and the behaviour byte of a tile's attribute
+        (sub_020548C0, GetMetatileBehavior), and the land data's sound
+        section, which the field's loader reads before the attributes
+        (ov01_021F4AAC: four bytes, then as many as their top half says);
+        every member keeps its size where _land_attributes reads it."""
+        asm = (ROOT / "asm/unk_02054648.s").read_text()
+        body = lambda text, fn: text[text.index(f"{fn}:"):text.index(f"thumb_func_end {fn}")]
+        self.assertRegex(body(asm, "sub_020548C0"), r"ldrh r0, \[r0\]\s+asr r0, r0, #0xf\s+lsl r0, r0, #0x18\s+"
+                                                  r"lsr r1, r0, #0x18\s+mov r0, #1\s+and r1, r0")
+        self.assertEqual(sv.COLLISION, 1 << 15)
+        self.assertRegex(body(asm, "GetMetatileBehavior"), r"ldrh r0, \[r0\]\s+add sp, #4\s+lsl r0, r0, #0x18\s+lsr r0, r0, #0x18")
+        self.assertEqual(sv.BEHAVIOR, 0xFF)
+        loader = body((ROOT / "asm/overlay_01_021F4704.s").read_text(), "ov01_021F4AAC")
+        self.assertRegex(loader, r"(?s)mov r1, #4\s+add r2, r4, r2\s+bl NARC_ReadFile\s+.*asr r0, r0, #0x10\s+lsl r0, r0, #0x10\s+"
+                                 r"lsr r1, r0, #0x10\s+beq \w+.*bl NARC_ReadFile")
+        self.assertEqual({struct.unpack_from("<H", member, sv.TERRAIN_OFFSET - 4)[0] for member in sv._land()}, {0x1234},
+                         "the sound section's header: its magic, then its size")
 
     def test_a_story_step_does_what_the_script_commands_do(self):
         """_walk and _apply are the commands they stand in for: a trainer
