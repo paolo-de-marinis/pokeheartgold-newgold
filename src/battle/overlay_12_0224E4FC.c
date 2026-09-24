@@ -10336,7 +10336,13 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 
     GF_ASSERT(crit == 1 || crit > 1);
 
-    monAtk = GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_ATK, NULL);
+    // Foul Play strikes with the target's Attack and its stages, Body Press
+    // with the user's Defense and its stages; everything else that works on
+    // an Attack -- the user's ability and item, a burn, the target's Unaware
+    // -- works on them as on the user's own (Pokemon Central, Ripicca,
+    // Schiacciacorpo). The reference's CalcBaseDamage swaps the stages in
+    // after its Unaware step, where the target's Unaware would ignore them.
+    monAtk = GetBattlerVar(ctx, moveNo == MOVE_FOUL_PLAY ? battlerIdTarget : battlerIdAttacker, moveNo == MOVE_BODY_PRESS ? BMON_DATA_DEF : BMON_DATA_ATK, NULL);
     monDef = GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_DEF, NULL);
     monSpAtk = GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_SPATK, NULL);
     monSpDef = GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_SPDEF, NULL);
@@ -10349,7 +10355,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monDef = monSpDef;
         monSpDef = swap;
     }
-    statChangeAtk = GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_STAT_CHANGE_ATK, NULL) - 6;
+    statChangeAtk = GetBattlerVar(ctx, moveNo == MOVE_FOUL_PLAY ? battlerIdTarget : battlerIdAttacker, moveNo == MOVE_BODY_PRESS ? BMON_DATA_STAT_CHANGE_DEF : BMON_DATA_STAT_CHANGE_ATK, NULL) - 6;
     statChangeDef = GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_STAT_CHANGE_DEF, NULL) - 6;
     statChangeSpAtk = GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_STAT_CHANGE_SPATK, NULL) - 6;
     statChangeSpDef = GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_STAT_CHANGE_SPDEF, NULL) - 6;
@@ -11210,6 +11216,14 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         dmg /= dmg2;
         dmg /= 50;
     } else if (moveCategory == CATEGORY_SPECIAL) {
+        // Psyshock, Psystrike and Secret Sword meet the target's Defense, its
+        // stages and whatever raised or lowered it, where every other special
+        // move meets its Sp. Def (Pokemon Central, Psicoshock). The reference
+        // swaps the stat and keeps the Sp. Def's stage.
+        if (moveNo == MOVE_PSYSHOCK || moveNo == MOVE_PSYSTRIKE || moveNo == MOVE_SECRET_SWORD) {
+            monSpDef = monDef;
+            statChangeSpDef = statChangeDef;
+        }
         if (crit > 1) {
             if (statChangeSpAtk > 6) {
                 dmg = monSpAtk * sStatChangeTable[statChangeSpAtk][0] / sStatChangeTable[statChangeSpAtk][1];

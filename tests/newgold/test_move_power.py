@@ -165,6 +165,33 @@ class RageFistTests(unittest.TestCase):
 """))
 
 
+class BorrowedStatTests(unittest.TestCase):
+    def test_foul_play_body_press_and_psyshock_read_other_stats(self):
+        """Stats 100 but for the one each move reads, 200: a physical 100 is
+        90 on it, 178 at +2; 46 on anything else. Foul Play strikes with the
+        target's Attack and stages (Pokemon Central, Ripicca), Body Press
+        with the user's Defense and stages (Schiacciacorpo); Psyshock,
+        Psystrike and Secret Sword meet the target's Defense and its stages,
+        200 making a special 100 24 (Psicoshock)."""
+        run_c(self, damage_program(r"""
+    reset(4); S.atkOf[1] = 200;
+    EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_FOUL_PLAY, 0, 0, 0, TYPE_DARK, 0, 1, 1), 90);
+    EXPECT(damage(0, 1), 46);
+    S.atkStage[1] = 8; EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_FOUL_PLAY, 0, 0, 0, TYPE_DARK, 0, 1, 1), 178);
+    S.atkStage[1] = 0; S.atkStage[0] = 8; EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_FOUL_PLAY, 0, 0, 0, TYPE_DARK, 0, 1, 1), 90);
+    reset(4); S.defOf[0] = 200;
+    EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_BODY_PRESS, 0, 0, 0, TYPE_FIGHTING, 0, 1, 1), 90);
+    S.defStage[0] = 8; EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_BODY_PRESS, 0, 0, 0, TYPE_FIGHTING, 0, 1, 1), 178);
+    S.defStage[0] = 0; S.atkStage[0] = 8; EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_BODY_PRESS, 0, 0, 0, TYPE_FIGHTING, 0, 1, 1), 90);
+    reset(4); S.move.category = CATEGORY_SPECIAL; S.defOf[1] = 200;
+    EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_PSYSHOCK, 0, 0, 0, TYPE_PSYCHIC, 0, 1, 1), 24);
+    EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_PSYSTRIKE, 0, 0, 0, TYPE_PSYCHIC, 0, 1, 1), 24);
+    EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_SECRET_SWORD, 0, 0, 0, TYPE_FIGHTING, 0, 1, 1), 24);
+    EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_PSYCHIC, 0, 0, 0, TYPE_PSYCHIC, 0, 1, 1), 46);
+    S.defStage[1] = 4; EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_PSYSHOCK, 0, 0, 0, TYPE_PSYCHIC, 0, 1, 1), 46);
+"""))
+
+
 class OrderUpTests(unittest.TestCase):
     def test_sheer_force_always_boosts_it(self):
         """80 is 37, and Sheer Force's 104 is 47, with no added effect to give
