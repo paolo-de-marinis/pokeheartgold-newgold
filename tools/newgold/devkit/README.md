@@ -407,6 +407,8 @@ Reading what the debug ROM records, and playing it without looking.
   quarters of an hour at twelve jobs (`--walk pc,details` two hours at two),
   and nothing may be built meanwhile: every job reads the ROM and the ELFs.
 - `markers.py` -- the decoding the others share.
+- `whitney.py SAVE` -- gym.py for Whitney, and the walk her badge waits
+  for: after the fight, south onto the Lass's trigger and back to her.
 
 Every reader takes the ELF the ROM was linked from, the debug build's by
 default, and refuses a game from another build: symbols move every time.
