@@ -27,7 +27,9 @@ extern void sub_02039528(SaveData *saveData);
 
 // Overlay 75's second application starts: its heap and state, the screens,
 // the text it prints -- its own lines, the species names and three more
-// banks -- and the step it starts at.
+// banks -- and the step it starts at. The species names are opened lazily:
+// whole, the bank is a line per species and form (36,302 bytes, retail's
+// 12,180), and nothing in the overlay reads it; it is only destroyed.
 BOOL ov75_02246F0C(OverlayManager *man, int *state) {
     Overlay75App *app;
 
@@ -55,7 +57,7 @@ BOOL ov75_02246F0C(OverlayManager *man, int *state) {
     app->msgData = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0775_bin, HEAP_ID_116);
     app->unk2C = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0778_bin, HEAP_ID_116);
     app->unk30 = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0800_bin, HEAP_ID_116);
-    app->speciesNames = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0237_bin, HEAP_ID_116);
+    app->speciesNames = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, NARC_msg_msg_0237_bin, HEAP_ID_116);
     app->unk34 = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0188_bin, HEAP_ID_116);
     app->unk38 = String_New(270, HEAP_ID_116);
     app->unk40 = String_New(256, HEAP_ID_116);

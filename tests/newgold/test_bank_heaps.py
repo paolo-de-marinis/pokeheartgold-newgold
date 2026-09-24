@@ -28,6 +28,7 @@ LAZY = [
     ("src/overlay_40_02235E34.c", 237, "HEAP_ID_109", "the Vs. Recorder's search by Pokemon, not measured: Wi-Fi"),
     ("src/overlay_40_0223EC40.c", 237, "HEAP_ID_109", "the Vs. Recorder's other search screen, as its first"),
     ("src/overlay_70_02238430.c", 237, "HEAP_ID_61", "the Global Trade Station, not measured: Wi-Fi"),
+    ("src/overlay_75_02246F0C.c", 237, "HEAP_ID_116", "Wii Message Settings' connection screen, not measured: Wi-Fi"),
 ]
 
 
