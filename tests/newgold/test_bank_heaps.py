@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""A bank with a line per item or move is not loaded whole where it
+"""A bank with a line per item, species or move is not loaded whole where it
 no longer fits.
 
 Each of these grew with the port -- the item names (msg_0222) from 14,866
-bytes to 80,202, the move names (msg_0750) from 13,154 to 28,214 -- and each
-row below is a heap that, measured with the bank loaded whole in the
-diagnostics build, had too little left for it. There the bank is opened
-lazily (MSGDATA_LOAD_LAZY): a header, the archive handle and the line read.
+bytes to 80,202, the species names (msg_0237) from 12,180 to 36,302, the
+move names (msg_0750) from 13,154 to 28,214 -- and each row below is a heap
+that, measured with the bank loaded whole in the diagnostics build, had too
+little left for it, or one that cannot be measured: the Wi-Fi applications
+start only with a Nintendo Wi-Fi Connection ID, which the emulated firmware
+has not. There the bank is opened lazily (MSGDATA_LOAD_LAZY): a header, the
+archive handle and the line read.
 """
 
 import re
@@ -22,6 +25,8 @@ LAZY = [
     ("src/overlay_68_021E6820.c", 750, "HEAP_ID_66", "the move relearner: 9,496 bytes, and the load failed"),
     ("src/overlay_68_021E6320.c", 750, "HEAP_ID_66", "the move relearner, as its list"),
     ("src/pokemon_summary_text.c", 750, "HEAP_ID_19", "the summary's moves page: 7,076 bytes of 0x45000"),
+    ("src/overlay_40_02235E34.c", 237, "HEAP_ID_109", "the Vs. Recorder's search by Pokemon, not measured: Wi-Fi"),
+    ("src/overlay_40_0223EC40.c", 237, "HEAP_ID_109", "the Vs. Recorder's other search screen, as its first"),
 ]
 
 

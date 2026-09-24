@@ -11,7 +11,9 @@ extern u16 *ov40_0222DD68(enum HeapID heapID, int unused, int *count);
 
 // A letter group's species for the search: the Dex's alphabetical order from
 // the group's first to its last, the ones the player has seen first, a row
-// for each of those, and the species names.
+// for each of those, and the species names. The names are opened lazily, a
+// line at a time: whole, the bank is a line per species and form (36,302
+// bytes, retail's 12,180), and only the rows shown are named.
 void ov40_02235E34(Overlay40App *app, int group) {
     u16 *all;
     Pokedex *pokedex;
@@ -49,6 +51,6 @@ void ov40_02235E34(Overlay40App *app, int group) {
         screen->list.rows[i].unk0 = screen->list.species[i];
         screen->list.rows[i].unk4 = screen->list.species[i];
     }
-    screen->list.speciesNames = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0237_bin, HEAP_ID_109);
+    screen->list.speciesNames = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, NARC_msg_msg_0237_bin, HEAP_ID_109);
     screen->list.speciesNamesOpen = TRUE;
 }
