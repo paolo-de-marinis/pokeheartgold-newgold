@@ -3263,6 +3263,50 @@ def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=
     return writes, {i for i, _ in passed} | also, stop
 
 
+@tree_cache
+def _before(stem):
+    """For each line of a script file an entry reaches, the lines writing
+    what the game writes on every way there: the scene before a step's
+    marker, the Burned Tower's beasts hidden before its SetVar opens
+    Morty's gym. A forward pass over the jumps -- GoTo, Call (and the line
+    after it), each conditional jump both ways -- keeping, where ways meet,
+    what they all wrote; False past a primary marker on any way there, as
+    that stretch is the marker's step's own. {line: frozenset(lines) or False}."""
+    script = _script(stem)
+    lines, labels = script["lines"], script["labels"]
+    writing = {i for i, (op, args) in enumerate(lines) if _write(op, args)}
+
+    def nexts(i):
+        op, args = lines[i]
+        if op in _ENDS or op == "Return":
+            return []
+        if op == "GoTo":
+            return [labels.get(args[0])]
+        if op == "Call" or op[:6] in ("GoToIf", "CallIf") or op == "Case":
+            return [labels.get(args[-1]), i + 1]
+        return [i + 1]
+    reached = {labels[e]: frozenset() for e in script["entries"] if e in labels}
+    todo = collections.deque(reached)
+    while todo:
+        i = todo.popleft()
+        out = False if _primary(*lines[i]) or reached[i] is False else reached[i] | ({i} & writing)
+        for j in nexts(i):
+            if j is None or j >= len(lines):
+                continue
+            meet = out if j not in reached else False if out is False or reached[j] is False else reached[j] & out
+            if meet != reached.get(j):
+                reached[j] = meet
+                todo.append(j)
+    return reached
+
+
+def _prefix(stem, start):
+    """What the game always writes in a step's scene before its marker
+    (_before): [(kind, name, value)], and those lines."""
+    lines = sorted(_before(stem).get(start) or ())
+    return [_write(*_script(stem)["lines"][i]) for i in lines], set(lines)
+
+
 def _apply(save, write, undo=False):
     """One write, as the script command does it -- or taken back."""
     kind, name, value = write
@@ -3536,15 +3580,18 @@ def story():
     steps, covered = [], set()
 
     def add(stem, line, kind, key, through=(), battle=None):
-        writes, passed, stop = _walk(stem, line, through=through)
-        writes = _net(writes)
+        before, lines = _prefix(stem, line)
+        walked, passed, stop = _walk(stem, line, through=through,
+                                     known={w[:2]: w[2] for w in before if w[0] in ("flag", "var", "trainer")})
+        writes = _net([(*w, False) for w in before] + walked)
         if kind == "flag" and ["flag", key, 1, False] not in writes:
             return stop     # its flag only held for the scene: the scene's next marker starts the step
-        covered.update((stem, j) for j in passed)
-        if not writes:
-            return stop
+        covered.update((stem, j) for j in passed | lines)
+        if not _net(walked):
+            return stop     # nothing from its marker on: the scene before it is no step of its own
         steps.append({"id": f"{stem[8:12]}:{line + 1}", "script": stem, "line": line + 1, "kind": kind, "key": key,
-                      "battle": battle, "writes": [list(w) for w in writes], "start": line, "through": list(through)})
+                      "battle": battle, "writes": [list(w) for w in writes], "start": line, "through": list(through),
+                      "prefix": [list(w) for w in before]})
         return stop
 
     for stem in _script_stems():
@@ -3714,8 +3761,12 @@ def run_step(save, step_id, found=None):
     dict, is filled with what each thing it wrote held before (by _key):
     what undo_step puts back."""
     step = _step(step_id)
+    for write in map(tuple, step["prefix"]):       # its scene before the marker, which it always makes
+        if found is not None:
+            found.setdefault(_key(write), _value(save, _key(write)))
+        _apply(save, write)
     writes, _, _ = _walk(step["script"], step["start"], save=save, through=tuple(step["through"]), found=found)
-    return [list(w[:3]) for w in writes]
+    return [list(w) for w in step["prefix"]] + [list(w[:3]) for w in writes]
 
 
 def record(save, found):

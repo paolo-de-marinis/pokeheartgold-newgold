@@ -899,6 +899,30 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertFalse(sv.flag_is_set(save, flags["FLAG_ENGAGING_STATIC_POKEMON"]))
         self.assertFalse(sv.flag_is_set(save, flags["FLAG_HIDE_ROUTE_36_SUDOWOODO"]))
 
+    def test_a_step_brings_its_scene_before_its_marker(self):
+        """What the game writes on every way to a step's marker, since no
+        other marker: the Burned Tower's beasts hidden before its SetVar
+        opens Morty's gym, the Mystery Egg given in the talk that ends with
+        the Pokédex, the Expansion Card's flag set with its card -- one
+        step, whose test is both."""
+        flags = sv.constants("include/constants/flags.h", "FLAG_")
+        steps = {s["id"]: s for s in sv.story()}
+        gate = steps[sv.badge_chains()["BADGE_FOG"][0]]
+        self.assertIn(["flag", "FLAG_HIDE_BURNED_TOWER_B1F_RAIKOU", 1, False], gate["writes"])
+        self.assertIn(["var", "VAR_UNK_4076", 1, False], gate["writes"])
+        dex = next(s for s in steps.values() if s["kind"] == "GivePokedex")
+        self.assertIn(["item", "ITEM_MYSTERY_EGG", 1, False], dex["writes"])
+        card = next(s for s in steps.values() if s["kind"] == "RegisterPokegearCard" and ("flag", "FLAG_GOT_EXPN_CARD", 1) in s["tests"])
+        self.assertIn(("card", "", 2), card["tests"])
+        self.assertEqual([s for s in steps.values() if s["key"] == "FLAG_GOT_EXPN_CARD"], [], "no step of its own")
+        pryce = [steps[i] for i in sv.badge_chains()["BADGE_GLACIER"]]
+        self.assertNotIn("VAR_MIDGAME_BADGES", [w[1] for s in pryce if s["kind"] == "item" for w in s["writes"]],
+                         "what follows a marker is its step's, not the next one's")
+        save = self.open()
+        sv.run_step(save, gate["id"])
+        self.assertTrue(sv.flag_is_set(save, flags["FLAG_HIDE_BURNED_TOWER_B1F_RAIKOU"]))
+        self.assertIn(gate["id"], sv.story_state(save)["done"])
+
     def test_a_step_taken_back_puts_back_what_it_found(self):
         """Run with a record, a step taken back leaves the save as it was;
         a record the save has moved on from is passed over, key by key."""

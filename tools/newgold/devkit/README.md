@@ -95,7 +95,11 @@ or the next marker, a jump decided on what it wrote itself before it, and a
 battle whose win runs into a marker opens that marker's step. After a
 battle the field is built again and runs its map's OnLoad and OnResume
 scripts (`fieldmap.c`), so the walk runs them too: Route 36's hides the
-Sudowoodo once it was fought. Each step has what it writes, what the game tests on the way
+Sudowoodo once it was fought. A step also brings its scene before the
+marker: what the game writes on every way there from the script's entry
+with no other marker on it (`_before`) -- the Burned Tower's beasts, hidden
+before the `SetVar` that opens Morty's gym; the Expansion Card's flag, set
+before its card, is one step with it. Each step has what it writes, what the game tests on the way
 to it from the script's entry (a trigger tile's variable, the map's frame
 table, `CheckBadge`, `HasItem`, `GoToIfSet` and the rest: the positive
 ones), and the steps that give that. `badge_chains()` is each badge's gym in
