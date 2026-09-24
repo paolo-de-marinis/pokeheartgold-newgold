@@ -3530,7 +3530,13 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
     // A Tatsugiri in its Dondozo's mouth is out of every move's reach, No
     // Guard, Lock-On and a Poison type's Toxic included (Pokemon Central,
     // Torre di Comando); a move that aims at a side or the field, not at it,
-    // is not turned away.
+    // is not turned away. The miss prints what any miss prints here,
+    // HeartGold's lines (subscript 7): "{0}'s attack missed!", "{0} avoided
+    // the attack!" for a move aimed at more than one. The latest games have
+    // only the second, for every miss, this one included -- Showdown's gen-9
+    // hitStepInvulnerabilityEvent sends a commanding target's miss as any
+    // other ('-miss' with the target), and Scarlet and Violet's English text
+    // (sv-text, common_eng.txt 6341 to 6344) has no other miss line.
     if (ctx->moveConditions[battlerIdTarget].commanding && battlerIdTarget != battlerIdAttacker
         && !(BattleMoveTbl(ctx, move)->range & (RANGE_USER | RANGE_USER_SIDE | RANGE_FIELD | RANGE_OPPONENT_SIDE))) {
         ctx->moveStatusFlag |= MOVE_STATUS_SEMI_INVULNERABLE;
