@@ -72,6 +72,7 @@ void BattleController_EmitLoadBallGfx(BattleSystem *battleSystem);
 void BattleController_EmitDeleteBallGfx(BattleSystem *battleSystem);
 void BattleController_EmitIncrementGameStat(BattleSystem *battleSystem, int battlerId, int flag, int id);
 void BattleController_EmitRestoreSprite(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+void BattleController_EmitBattlerSprites(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u8 command);
 void ov12_02264038(BattleSystem *battleSystem, int battlerId);
 void ov12_02264054(BattleSystem *battleSystem, int battlerId);
 void BattleController_EmitPrintResultMessage(BattleSystem *battleSystem);

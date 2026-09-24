@@ -132,7 +132,7 @@ class IllusionTests(unittest.TestCase):
         # health box after a level-up read the disguise too.
         battle = ROOT / "src/battle"
         for path, name in (("battle_controller_faint.c", "BattleController_EmitPlayFaintAnimation"),
-                           ("battle_controller_substitute.c", "BattleController_EmitSwapToSubstituteSprite")):
+                           ("battle_controller_substitute.c", "BattleController_EmitBattlerSprites")):
             body = function((battle / path).read_text(), name)
             self.assertIn("disguise = Battler_IllusionMon(battleSystem, i);", body, name)
             for field in ("Species", "Shiny", "Form", "Gender", "Personality"):
@@ -146,7 +146,16 @@ class IllusionTests(unittest.TestCase):
 
     def test_a_sprite_redrawn_in_place_shows_it(self):
         # ChangeForm, which Ally Switch redraws both places with, draws the
-        # disguise; the script that drops one forgets it first.
+        # disguise; the script that drops one forgets it first. RestoreSprite,
+        # which gives a sprite back from its substitute's -- when the doll
+        # goes, and in Ally Switch -- sends the swap's packet, disguise and all.
+        battle = ROOT / "src/battle"
+        substitute = (battle / "battle_controller_substitute.c").read_text()
+        self.assertIn("BattleController_EmitBattlerSprites(battleSystem, ctx, battlerId, 62);",
+                      function(substitute, "BattleController_EmitSwapToSubstituteSprite"))
+        self.assertIn("BattleController_EmitBattlerSprites(battleSystem, ctx, battlerId, 56);",
+                      function((battle / "battle_controller_restore_sprite.c").read_text(), "BattleController_EmitRestoreSprite"))
+        self.assertIn("data.command = command;", function(substitute, "BattleController_EmitBattlerSprites"))
         body = function((ROOT / "src/battle/battle_controller_change_form.c").read_text(), "BattleController_EmitChangeForm")
         tail = body[body.index("disguise = Battler_IllusionMon(battleSystem, battlerId);"):]
         for field in ("species", "shiny", "form", "gender", "personality"):

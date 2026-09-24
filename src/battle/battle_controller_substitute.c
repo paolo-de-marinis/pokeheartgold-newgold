@@ -4,16 +4,18 @@
 
 #include "pokemon.h"
 
-// Illusion: a battler made up as another Pokemon is drawn back as it when its
-// substitute goes (Pokemon Central, Illusione: the disguise stays until a
-// move's damage or the ability's loss drops it). The reference draws every
-// battler as itself.
-void BattleController_EmitSwapToSubstituteSprite(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+// How every battler looks, for the sprite a substitute takes the place of
+// and for the one it gives back (command 62, the swap; 56, RestoreSprite).
+// Illusion: a battler made up as another Pokemon is drawn as it, the doll
+// gone or not (Pokemon Central, Illusione: the disguise stays until a move's
+// damage or the ability's loss drops it). The reference draws every battler
+// as itself.
+void BattleController_EmitBattlerSprites(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u8 command) {
     BattlerSpritesCommand data;
     Pokemon *disguise;
     int i;
 
-    data.command = 62;
+    data.command = command;
 
     for (i = 0; i < BATTLER_MAX; i++) {
         data.battlerSpecies[i] = ctx->battleMons[i].species;
@@ -39,4 +41,8 @@ void BattleController_EmitSwapToSubstituteSprite(BattleSystem *battleSystem, Bat
     }
 
     ov12_02262240(battleSystem, 1, battlerId, &data, sizeof(BattlerSpritesCommand));
+}
+
+void BattleController_EmitSwapToSubstituteSprite(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    BattleController_EmitBattlerSprites(battleSystem, ctx, battlerId, 62);
 }
