@@ -1076,7 +1076,8 @@ typedef int BOOL;
 #define FALSE 0
 typedef struct { int unused; } BattleSystem;
 typedef struct { int hp; s8 statChanges[NUM_BATTLE_STATS]; } BattleMon;
-typedef struct { BattleMon battleMons[4]; u8 mirrorHerbStages[4][NUM_BATTLE_STATS]; int tempData; } BattleContext;
+typedef struct { u32 statRaised : 1; } TurnData;
+typedef struct { BattleMon battleMons[4]; u8 mirrorHerbStages[4][NUM_BATTLE_STATS]; int tempData; TurnData turnData[4]; } BattleContext;
 static int sItem[4], sAbility[4];
 static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 4; }
 static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
@@ -1101,6 +1102,8 @@ int main(void) {
     assert(MirrorHerbCopiesStages(&ctx, 1) == TRUE);
     assert(ctx.battleMons[1].statChanges[STAT_ATK] == 8 && ctx.battleMons[1].statChanges[STAT_SPEED] == 7);
     assert(ctx.mirrorHerbStages[1][STAT_ATK] == 0 && ctx.mirrorHerbStages[1][STAT_SPEED] == 0);
+    // A rise of the turn for Burning Jealousy (Pokemon Central, Fiamminvidia).
+    assert(ctx.turnData[1].statRaised && !ctx.turnData[3].statRaised);
     assert(MirrorHerbCopiesStages(&ctx, 1) == FALSE);
     // Up to +6 and no further; nothing when every stat to copy is there.
     ctx.battleMons[1].statChanges[STAT_DEF] = 11;
@@ -1111,9 +1114,11 @@ int main(void) {
     assert(ctx.tempData == BATTLE_ANIMATION_STAT_BOOST);
     // Contrary copies the gains as drops, down to -6, with a drop's animation.
     sAbility[1] = ABILITY_CONTRARY;
+    ctx.turnData[1].statRaised = FALSE;
     ctx.battleMons[1].statChanges[STAT_SPDEF] = 7;
     ctx.mirrorHerbStages[1][STAT_SPDEF] = 2;
     assert(MirrorHerbCopiesStages(&ctx, 1) == TRUE && ctx.battleMons[1].statChanges[STAT_SPDEF] == 5);
+    assert(!ctx.turnData[1].statRaised);
     assert(ctx.tempData == BATTLE_ANIMATION_STAT_DROP);
     ctx.battleMons[1].statChanges[STAT_SPDEF] = 1;
     ctx.mirrorHerbStages[1][STAT_SPDEF] = 3;

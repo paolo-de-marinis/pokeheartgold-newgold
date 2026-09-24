@@ -118,8 +118,21 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("return ctx->turnData[ctx->battlerIdTarget].statRaised;", meets)
         self.assertIn("} else if (ctx->unk_2174 && !SecondaryEffectMeetsItsTarget(ctx)) {\n        ctx->unk_2174 = 0;",
                       function(overlay, "ov12_02250490"))
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
         self.assertIn("ctx->turnData[ctx->battlerIdStatChange].statRaised = TRUE;",
-                      function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_ChangeStatStage"))
+                      function(commands, "BtlCmd_ChangeStatStage"))
+        # Every rise of the turn, not only the stat command's: a stage a
+        # script writes (Belly Drum, Anger Point, Steam Engine), Rage's, and
+        # Spectral Thief's, which the page names. The Mirror Herb's is
+        # test_hold_effects' MirrorHerbTests.
+        update = function(commands, "BtlCmd_UpdateMonData")
+        told = update[update.index("RecordMirrorHerbStages(battleSystem, ctx, battlerId, stage - BMON_DATA_STAT_CHANGE_HP, var - before);"):]
+        self.assertIn("ctx->turnData[battlerId].statRaised = TRUE;", told[:told.index("}")])
+        rage = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "TryBuildRage")
+        self.assertIn("ctx->turnData[ctx->battlerIdTarget].statRaised = TRUE;", rage)
+        flag = function(commands, "BtlCmd_SetMoveConditionFlag")
+        thief = flag[flag.index("case MOVE_SPECTRAL_THIEF:"):]
+        self.assertIn("ctx->turnData[ctx->battlerIdAttacker].statRaised = TRUE;", thief[:thief.index("break;")])
         # A rise before the first turn -- an entry ability as the battle
         # begins -- counts for the first, so the mark goes with TurnData at a
         # turn's end and not where the next is chosen.

@@ -5111,8 +5111,10 @@ static BOOL TryBuildRage(BattleSystem *battleSystem, BattleContext *ctx) {
         && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage != 0 || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage != 0)
         && ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12) {
         ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK]++;
-        // What a Mirror Herb on the other side is to copy (RecordMirrorHerbStages).
+        // What a Mirror Herb on the other side is to copy (RecordMirrorHerbStages),
+        // and a rise for a Burning Jealousy later in the turn (Fiamminvidia).
         RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdTarget, STAT_ATK, 1);
+        ctx->turnData[ctx->battlerIdTarget].statRaised = TRUE;
         ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_RAGE_IS_BUILDING);
         ctx->commandNext = ctx->command;
         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;

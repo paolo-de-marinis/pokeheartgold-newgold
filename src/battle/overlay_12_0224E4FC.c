@@ -8232,6 +8232,10 @@ static BOOL MirrorHerbCopiesStages(BattleContext *ctx, int battlerId) {
 
         if (stages > 0 && ctx->battleMons[battlerId].statChanges[stat] < 12) {
             ctx->battleMons[battlerId].statChanges[stat] = stage > 12 ? 12 : stage;
+            // Raised as Opportunist's copy is, through the stat command: a
+            // rise for Burning Jealousy (Fiamminvidia leaves out only the
+            // stages Psych Up, Transform and the swaps hand over whole).
+            ctx->turnData[battlerId].statRaised = TRUE;
             copied = TRUE;
         } else if (stages < 0 && ctx->battleMons[battlerId].statChanges[stat] > 0) {
             ctx->battleMons[battlerId].statChanges[stat] = stage < 0 ? 0 : stage;

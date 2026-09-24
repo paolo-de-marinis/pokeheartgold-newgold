@@ -2850,9 +2850,12 @@ BOOL BtlCmd_UpdateMonData(BattleSystem *battleSystem, BattleContext *ctx) {
     // as the stage really rose (Pokemon Central, Foglia carbone: Belly Drum's
     // copy is the stages actually gained). A stage set back to neutral is
     // reset, not raised (Shed Tail), and the swaps write through another
-    // command.
+    // command. It is a rise for Burning Jealousy and Alluring Voice as well,
+    // which count every rise of the turn but a copy or a swap (Pokemon
+    // Central, Fiamminvidia).
     if (stage >= BMON_DATA_STAT_CHANGE_ATK && stage <= BMON_DATA_STAT_CHANGE_EVASION && !(opcode == 7 && val == 6) && var > before) {
         RecordMirrorHerbStages(battleSystem, ctx, battlerId, stage - BMON_DATA_STAT_CHANGE_HP, var - before);
+        ctx->turnData[battlerId].statRaised = TRUE;
     }
 
     return FALSE;
@@ -10411,6 +10414,10 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
                 raised = -raised;
             }
             stage = ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat] + raised;
+            // A rise Burning Jealousy counts (Fiamminvidia names Spectral Thief).
+            if (raised > 0 && ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat] < 12) {
+                ctx->turnData[ctx->battlerIdAttacker].statRaised = TRUE;
+            }
             ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat] = stage > 12 ? 12 : (stage < 0 ? 0 : stage);
         }
         break;
