@@ -5754,10 +5754,24 @@ static u8 *OnceOnlyEntryAbilityDone(BattleSystem *battleSystem, BattleContext *c
     return &ctx->onceOnlyEntryAbilityDone[party][ctx->selectedMonIndex[battlerId]];
 }
 
+// A foe's Dragon Cheer copied, as Opportunist and the Mirror Herb do
+// (Pokemon Central, Scrocco and Foglia carbone; Grido del Drago): the same
+// critical stages, onto a Pokemon neither cheered nor pumped already, as the
+// move itself asks. RecordMirrorHerbStages keeps them in the HP slot of the
+// stages to copy, which no stage lives in. TRUE if it took.
+static BOOL CopyDragonCheer(BattleContext *ctx, int battlerId, int cheer) {
+    if (!cheer || ctx->moveConditions[battlerId].dragonCheer || (ctx->battleMons[battlerId].status2 & STATUS2_FOCUS_ENERGY)) {
+        return FALSE;
+    }
+    ctx->moveConditions[battlerId].dragonCheer = cheer > 2 ? 2 : cheer;
+    return TRUE;
+}
+
 // Opportunist copies what the other side raised (RecordMirrorHerbStages)
 // a stat at a time and at most two stages a step, each with the ability's
-// line. An Opportunist that has fainted or lost the ability since takes
-// nothing. TRUE with the script to run.
+// line, and a Dragon Cheer first, with the move's. An Opportunist that has
+// fainted or lost the ability since takes nothing. TRUE with the script to
+// run.
 static BOOL TryOpportunistCopy(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int j;
@@ -5766,7 +5780,7 @@ static BOOL TryOpportunistCopy(BattleSystem *battleSystem, BattleContext *ctx, i
 
     for (i = 0; i < maxBattlers; i++) {
         battlerId = ctx->turnOrder[i];
-        for (j = STAT_ATK; j < NUM_BATTLE_STATS; j++) {
+        for (j = STAT_HP; j < NUM_BATTLE_STATS; j++) {
             if (ctx->opportunistStages[battlerId][j]) {
                 break;
             }
@@ -5777,6 +5791,20 @@ static BOOL TryOpportunistCopy(BattleSystem *battleSystem, BattleContext *ctx, i
         if (!ctx->battleMons[battlerId].hp || GetBattlerAbility(ctx, battlerId) != ABILITY_OPPORTUNIST) {
             MI_CpuClear8(ctx->opportunistStages[battlerId], NUM_BATTLE_STATS);
             continue;
+        }
+        // A cheer it cannot take is let go, and its stats looked at again.
+        if (j == STAT_HP) {
+            int cheer = ctx->opportunistStages[battlerId][STAT_HP];
+            ctx->opportunistStages[battlerId][STAT_HP] = 0;
+            if (CopyDragonCheer(ctx, battlerId, cheer) == FALSE) {
+                return TryOpportunistCopy(battleSystem, ctx, script);
+            }
+            // "{0} is getting pumped!"
+            ctx->buffMsg.id = msg_0197_00276;
+            ctx->buffMsg.tag = TAG_NICKNAME;
+            ctx->buffMsg.param[0] = CreateNicknameTag(ctx, battlerId);
+            *script = BATTLE_SUBSCRIPT_SHOW_PREPARED_MESSAGE;
+            return TRUE;
         }
         if (ctx->opportunistStages[battlerId][j] >= 2) {
             ctx->opportunistStages[battlerId][j] -= 2;
@@ -8513,9 +8541,12 @@ void RecordMirrorHerbStages(BattleSystem *battleSystem, BattleContext *ctx, int 
 // doubles stages as they are read here, so its copy is doubled already).
 // tempData says which of the two animations subscript 433 plays.
 static BOOL MirrorHerbCopiesStages(BattleContext *ctx, int battlerId) {
-    BOOL copied = FALSE;
+    // A Dragon Cheer, which Contrary has nothing to turn over in.
+    BOOL copied = CopyDragonCheer(ctx, battlerId, ctx->mirrorHerbStages[battlerId][STAT_HP]);
     BOOL contrary = GetBattlerAbility(ctx, battlerId) == ABILITY_CONTRARY;
     int stat;
+
+    ctx->mirrorHerbStages[battlerId][STAT_HP] = 0;
 
     for (stat = STAT_ATK; stat < NUM_BATTLE_STATS; stat++) {
         int stages = contrary ? -ctx->mirrorHerbStages[battlerId][stat] : ctx->mirrorHerbStages[battlerId][stat];

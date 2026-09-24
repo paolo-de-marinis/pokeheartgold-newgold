@@ -10969,6 +10969,9 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
                                                              || ctx->battleMons[battlerId].type3 == TYPE_DRAGON)
                 ? 2
                 : 1;
+            // What a Mirror Herb or an Opportunist on the other side is to
+            // copy (Pokemon Central, Grido del Drago), in the HP slot.
+            RecordMirrorHerbStages(battleSystem, ctx, battlerId, STAT_HP, ctx->moveConditions[battlerId].dragonCheer);
         }
         break;
     }

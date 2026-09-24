@@ -1108,6 +1108,7 @@ MIRROR_HERB_FIXTURE = r"""
 #include <assert.h>
 #include <stdint.h>
 #include "constants/abilities.h"
+#include "constants/battle.h"
 #include "constants/battle_subscript.h"
 #include "constants/items.h"
 #include "constants/pokemon.h"
@@ -1116,9 +1117,9 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 typedef struct { int unused; } BattleSystem;
-typedef struct { int hp; s8 statChanges[NUM_BATTLE_STATS]; } BattleMon;
+typedef struct { int hp; s8 statChanges[NUM_BATTLE_STATS]; u32 status2; } BattleMon;
 typedef struct { u32 statRaised : 1; } TurnData;
-typedef struct { BattleMon battleMons[4]; u8 mirrorHerbStages[4][NUM_BATTLE_STATS]; u8 opportunistStages[4][NUM_BATTLE_STATS]; int tempData; TurnData turnData[4]; } BattleContext;
+typedef struct { BattleMon battleMons[4]; u8 mirrorHerbStages[4][NUM_BATTLE_STATS]; u8 opportunistStages[4][NUM_BATTLE_STATS]; int tempData; TurnData turnData[4]; struct { u8 dragonCheer : 2; } moveConditions[4]; } BattleContext;
 static int sItem[4], sAbility[4];
 static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 4; }
 static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
@@ -1167,6 +1168,16 @@ int main(void) {
     ctx.mirrorHerbStages[1][STAT_SPDEF] = 1;
     assert(MirrorHerbCopiesStages(&ctx, 1) == FALSE);
     sAbility[1] = ABILITY_NONE;
+    // A foe's Dragon Cheer, kept in the HP slot: the same critical stages
+    // (Pokemon Central, Foglia carbone and Grido del Drago), and nothing for
+    // a holder pumped already.
+    RecordMirrorHerbStages(&bs, &ctx, 0, STAT_HP, 2);
+    assert(MirrorHerbCopiesStages(&ctx, 1) == TRUE && ctx.moveConditions[1].dragonCheer == 2);
+    assert(ctx.mirrorHerbStages[1][STAT_HP] == 0);
+    ctx.moveConditions[1].dragonCheer = 0;
+    ctx.battleMons[1].status2 = STATUS2_FOCUS_ENERGY;
+    RecordMirrorHerbStages(&bs, &ctx, 0, STAT_HP, 1);
+    assert(MirrorHerbCopiesStages(&ctx, 1) == FALSE && ctx.moveConditions[1].dragonCheer == 0);
     // A fainted holder is not told.
     ctx.battleMons[1].hp = 0;
     RecordMirrorHerbStages(&bs, &ctx, 0, STAT_SPATK, 1);
@@ -1183,7 +1194,7 @@ class MirrorHerbTests(unittest.TestCase):
 
     def test_what_is_recorded_and_copied(self):
         source = OVERLAY.read_text()
-        functions = "\n".join(function(source, name) for name in ("RecordMirrorHerbStages", "MirrorHerbCopiesStages"))
+        functions = "\n".join(function(source, name) for name in ("CopyDragonCheer", "RecordMirrorHerbStages", "MirrorHerbCopiesStages"))
         run_c(MIRROR_HERB_FIXTURE.replace("@FUNCTIONS@", functions))
 
     def test_where_it_is_told_and_asked(self):
@@ -1212,6 +1223,9 @@ class MirrorHerbTests(unittest.TestCase):
         # Written after the stage is kept within +6, so what is copied is
         # what the stage really gained.
         self.assertLess(update.index("var = var < 0 ? 0 : var > 12 ? 12 : var;"), update.index("RecordMirrorHerbStages("))
+        # And Dragon Cheer's critical stages, in the HP slot.
+        condition = function(COMMANDS.read_text(), "BtlCmd_SetMoveConditionFlag")
+        self.assertIn("RecordMirrorHerbStages(battleSystem, ctx, battlerId, STAT_HP, ctx->moveConditions[battlerId].dragonCheer);", condition)
         rage = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "TryBuildRage")
         self.assertIn("RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdTarget, STAT_ATK, 1);", rage)
 

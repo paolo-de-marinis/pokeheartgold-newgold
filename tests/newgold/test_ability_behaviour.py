@@ -653,6 +653,12 @@ int main(void) {
         entry = function(OVERLAY, "TryAbilityOnEntry")
         self.assertIn("case 33: // Opportunist\n            flag = TryOpportunistCopy(battleSystem, ctx, &script);", entry)
         state = function(OVERLAY, "TryOpportunistCopy")
+        # A foe's Dragon Cheer first, from the HP slot, with the move's line
+        # (Pokemon Central, Scrocco and Grido del Drago).
+        self.assertIn("for (j = STAT_HP; j < NUM_BATTLE_STATS; j++) {", state)
+        self.assertIn("if (CopyDragonCheer(ctx, battlerId, cheer) == FALSE) {", state)
+        self.assertIn("ctx->buffMsg.id = msg_0197_00276;", state)
+        self.assertIn("*script = BATTLE_SUBSCRIPT_SHOW_PREPARED_MESSAGE;", state)
         self.assertIn("GetBattlerAbility(ctx, battlerId) != ABILITY_OPPORTUNIST", state)
         self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES + j - STAT_ATK;", state)
         self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;", state)
