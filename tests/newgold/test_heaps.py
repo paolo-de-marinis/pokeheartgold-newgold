@@ -65,6 +65,7 @@ BUILDS = {
     "heartgold": ROOT / "build/heartgold.us",
     "soulsilver": ROOT / "build/soulsilver.us",
     "heartgold.diag": ROOT / "build/heartgold.us.diag",
+    "soulsilver.diag": ROOT / "build/soulsilver.us.diag",
 }
 
 
@@ -179,13 +180,14 @@ class HeapTests(unittest.TestCase):
         print(f"PASS: the default heap is {self.heaps[0]:#x}, floor {DEFAULT_HEAP_FLOOR:#x}.")
 
     def test_the_boot_fits_the_main_arena(self):
-        """At the largest pre-size, for each ROM that is built."""
-        built = {name: build for name, build in BUILDS.items() if (build / "main.elf.xMAP").exists()}
-        if not built:
-            self.skipTest("no ROM is built")
+        """At the largest pre-size, for each of the four ROMs. One that is not
+        built is a skip of its own, named, so a run that checked nothing
+        says so."""
         fixed = heap_table_size(len(self.heaps)) + sum(map(round4, self.heaps)) + task_queues_size()
-        for name, build in built.items():
+        for name, build in BUILDS.items():
             with self.subTest(name):
+                if not (build / "main.elf.xMAP").exists():
+                    self.skipTest(f"{name} is not built: {build.relative_to(ROOT)} has no main.elf.xMAP")
                 need = MAX_PRESIZE + fixed + fs_table_size(next(build.glob("*.nds")))
                 left = ARENA_HI - arena_lo(build) - need
                 self.assertGreaterEqual(
