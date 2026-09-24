@@ -5647,11 +5647,11 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
     // (Pokemon Central, Acquapatto, Fiammapatto, Erbapatto). MSG_TEMP says
     // which for subscript 465.
     case MOVE_EFFECT_PLEDGE: {
-        int combination = ctx->turnData[ctx->battlerIdAttacker].pledgeCombination;
+        int combination = ctx->selfTurnData[ctx->battlerIdAttacker].combinedPledge;
         int shift = SIDE_CONDITION_RAINBOW_SHIFT + 3 * (combination - 1);
         int side;
 
-        if (!ctx->selfTurnData[ctx->battlerIdAttacker].combinedPledge) {
+        if (!combination) {
             return FALSE;
         }
         ctx->battlerIdTemp = combination == 1 ? ctx->battlerIdAttacker : target;

@@ -1072,7 +1072,7 @@ int main(void) {
 typedef struct { int unused; } BattleSystem;
 typedef struct { int hp; u16 ability; } BattleMon;
 typedef struct { u32 struggleFlag : 1, forceExecutionOrder : 2, pledgeCombination : 2; } TurnData;
-typedef struct { u32 combinedPledge : 1; } SelfTurnData;
+typedef struct { u32 combinedPledge : 2; } SelfTurnData;
 typedef struct { int effect, effectChance; } MoveTbl;
 typedef struct {
     int battlerIdAttacker; u32 moveNoCur; int movePower; int moveType; u32 fieldSideConditionFlags[2];
@@ -1101,7 +1101,12 @@ int main(void) {
     EXPECT(ctx.turnData[2].pledgeCombination, 2); EXPECT(ctx.turnData[2].forceExecutionOrder, EXECUTION_ORDER_AFTER_YOU);
     ctx.moveNoCur = MOVE_GRASS_PLEDGE;
     EXPECT(TryPledgeCombination(&bs, &ctx, 2), 2);
-    EXPECT(ctx.movePower, 150); EXPECT(ctx.moveType, TYPE_FIRE); EXPECT(ctx.selfTurnData[2].combinedPledge, 1);
+    EXPECT(ctx.movePower, 150); EXPECT(ctx.moveType, TYPE_FIRE); EXPECT(ctx.selfTurnData[2].combinedPledge, 2);
+    // The mark is spent, hit or miss: an Instructed Pledge later in the turn
+    // is a Pledge alone.
+    EXPECT(ctx.turnData[2].pledgeCombination, 0);
+    ctx.selfTurnData[2].combinedPledge = 0; ctx.movePower = 0; ctx.acted[0] = TRUE;
+    EXPECT(TryPledgeCombination(&bs, &ctx, 2), 0); EXPECT(ctx.movePower, 0);
     // Water with Fire is Water (the rainbow), Grass with Water is Grass (the
     // swamp), whichever comes first.
     reset(); ctx.moveNoCur = MOVE_WATER_PLEDGE; ctx.selected[2] = MOVE_FIRE_PLEDGE;

@@ -140,9 +140,10 @@ typedef struct SelfTurnData {
     // Shell Side Arm or Photon Geyser: the move being used is physical this
     // time, as ChooseMoveCategory decided when it was used.
     u32 physicalChosen : 1;
-    // Its Pledge is the combined one this action (the Pledges' effect script).
-    u32 combinedPledge : 1;
-    u32 unk0_11 : 13;
+    // Its Pledge is the combined one this action: which Pledge the two made
+    // (PledgeKind), 0 for none (the Pledges' effect script).
+    u32 combinedPledge : 2;
+    u32 unk0_11 : 12;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;

@@ -10600,10 +10600,14 @@ static int TryPledgeCombination(BattleSystem *battleSystem, BattleContext *ctx, 
     int kind = PledgeKind(ctx->moveNoCur);
     int allyKind = PledgeKind(GetBattlerSelectedMove(ctx, ally));
 
+    // The mark is spent on the one Pledge it waited for, whether that hits
+    // or not: a second Pledge in the same turn (Instruct) has no ally's
+    // waiting on it, and is a Pledge alone.
     if (ctx->turnData[battlerId].pledgeCombination) {
-        ctx->selfTurnData[battlerId].combinedPledge = TRUE;
+        ctx->selfTurnData[battlerId].combinedPledge = ctx->turnData[battlerId].pledgeCombination;
+        ctx->turnData[battlerId].pledgeCombination = 0;
         ctx->movePower = 150;
-        ctx->moveType = sPledgeTypes[ctx->turnData[battlerId].pledgeCombination];
+        ctx->moveType = sPledgeTypes[ctx->selfTurnData[battlerId].combinedPledge];
         return 2;
     }
     if (ally != battlerId && ctx->battleMons[ally].hp && ov12_0225561C(ctx, ally) == FALSE
