@@ -1697,7 +1697,10 @@ void Battler_ArmRetreat(BattleContext *ctx, int battlerId) {
     }
 }
 
-static BOOL Battler_RetreatFlees(BattleSystem *battleSystem, int battlerId) {
+// A wild Pokemon: one across the field outside a trainer battle. Its
+// Emergency Exit and Wimp Out make it flee; its Magician and Pickpocket take
+// nothing.
+static BOOL Battler_IsWild(BattleSystem *battleSystem, int battlerId) {
     return !(BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) && BattleSystem_GetFieldSide(battleSystem, battlerId) != 0;
 }
 
@@ -1714,7 +1717,7 @@ static BOOL Battler_Retreats(BattleSystem *battleSystem, BattleContext *ctx, int
         && !CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, battlerId, ABILITY_WIMP_OUT)) {
         return FALSE;
     }
-    return Battler_RetreatFlees(battleSystem, battlerId) || CanSwitchMon(battleSystem, ctx, battlerId);
+    return Battler_IsWild(battleSystem, battlerId) || CanSwitchMon(battleSystem, ctx, battlerId);
 }
 
 // Damage from outside a move sets the two off as well (Pokemon Central,
@@ -1746,12 +1749,12 @@ BOOL TryRetreatAbilityOutsideMove(BattleSystem *battleSystem, BattleContext *ctx
             || ctx->battleMons[battlerId].hp == 0
             || ctx->battleMons[battlerId].hp > (int)(ctx->battleMons[battlerId].maxHp / 2)
             || (ability != ABILITY_EMERGENCY_EXIT && ability != ABILITY_WIMP_OUT)
-            || !(Battler_RetreatFlees(battleSystem, battlerId) || CanSwitchMon(battleSystem, ctx, battlerId))) {
+            || !(Battler_IsWild(battleSystem, battlerId) || CanSwitchMon(battleSystem, ctx, battlerId))) {
             continue;
         }
         ctx->selfTurnData[battlerId].retreatArmedOutsideMove = FALSE;
         ctx->battlerIdTemp = battlerId;
-        ctx->tempData = Battler_RetreatFlees(battleSystem, battlerId);
+        ctx->tempData = Battler_IsWild(battleSystem, battlerId);
         *script = BATTLE_SUBSCRIPT_EMERGENCY_EXIT;
         return TRUE;
     }
@@ -1771,7 +1774,7 @@ BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *scri
         ctx->selfTurnData[battlerId].retreatArmed = FALSE;
         if (retreats) {
             ctx->battlerIdTemp = battlerId;
-            ctx->tempData = Battler_RetreatFlees(battleSystem, battlerId);
+            ctx->tempData = Battler_IsWild(battleSystem, battlerId);
             *script = BATTLE_SUBSCRIPT_EMERGENCY_EXIT;
             return TRUE;
         }
@@ -7445,7 +7448,8 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
 // at d0380a487, a step of its own after the move's additional effects;
 // Pokemon Central, Prestigiatore). Not from a Pokemon that a substitute kept
 // the hit off, holds on with Sticky Hold, or was dragged in after it; not if
-// the user has fainted or gone, nor with a move a Gem powered. Of several it
+// the user has fainted or gone, nor with a move a Gem powered, nor by a wild
+// Pokemon (Prestigiatore; the reference asks no such thing). Of several it
 // hit, the fastest foe first and the ally last (Prestigiatore); the reference
 // walks all of them in speed order. It asked once per hit before, where the
 // target's own answer to the hit came first and left it none.
@@ -7454,6 +7458,7 @@ BOOL TryMagician(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
     if (GetBattlerAbility(ctx, attacker) != ABILITY_MAGICIAN || ctx->gemBoostingMove || !ctx->battleMons[attacker].hp
+        || Battler_IsWild(battleSystem, attacker)
         || BattleMoveTbl(ctx, ctx->moveNoCur)->category == CATEGORY_STATUS
         || (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)) {
         return FALSE;
@@ -7488,10 +7493,11 @@ BOOL TryMagician(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
 // Magician, and after a Red Card (Pokemon Central, Arraffalesto) -- so a
 // Pokemon whose item a Knock Off has just taken lifts the attacker's. Not by
 // a holder the hit felled, one behind a substitute, or one sent away or
-// dragged in since; not from a user that has gone, nor from a move Sheer
-// Force boosted. The theft is the Thief guard already in this tree, asked of
-// the attacker rather than of the target. It was one of the answers to each
-// hit before.
+// dragged in since, nor by a wild one (Arraffalesto; the reference asks no
+// such thing); not from a user that has gone, nor from a move Sheer Force
+// boosted. The theft is the Thief guard already in this tree, asked of the
+// attacker rather than of the target. It was one of the answers to each hit
+// before.
 BOOL TryPickpocket(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int attacker = ctx->battlerIdAttacker;
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
@@ -7507,6 +7513,7 @@ BOOL TryPickpocket(BattleSystem *battleSystem, BattleContext *ctx, int *script) 
         if (battlerId == attacker
             || GetBattlerAbility(ctx, battlerId) != ABILITY_PICKPOCKET
             || !ctx->battleMons[battlerId].hp
+            || Battler_IsWild(battleSystem, battlerId)
             || !(ctx->selfTurnData[battlerId].physicalDamage || ctx->selfTurnData[battlerId].specialDamage)
             || BattlerCheckSubstitute(ctx, battlerId)
             || Battler_CameInAfterTheHit(ctx, battlerId)

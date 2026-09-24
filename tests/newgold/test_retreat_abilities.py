@@ -148,7 +148,7 @@ class RetreatTests(unittest.TestCase):
     def test_the_pokemon_leaves_when_a_move_takes_it_to_half(self):
         source = OVERLAY.read_text()
         functions = "\n".join(function(source, name) for name in (
-            "SheerForceTradedEffect", "Battler_ArmRetreat", "Battler_RetreatFlees", "Battler_Retreats", "TryRetreatAbility"))
+            "SheerForceTradedEffect", "Battler_ArmRetreat", "Battler_IsWild", "Battler_Retreats", "TryRetreatAbility"))
         with tempfile.TemporaryDirectory(prefix="newgold-retreat-") as directory:
             path = Path(directory)
             (path / "test.c").write_text(FIXTURE.replace("@FUNCTIONS@", functions))

@@ -210,6 +210,8 @@ static int BattleSystem_GetMaxBattlers(BattleSystem *battleSystem) { return batt
 static int BattleSystem_GetFieldSide(BattleSystem *battleSystem, int battlerId) { (void)battleSystem; return battlerId & 1; }
 static BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].substitute; }
 static BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].cameIn; }
+static BOOL wild[4];
+static BOOL Battler_IsWild(BattleSystem *battleSystem, int battlerId) { (void)battleSystem; return wild[battlerId]; }
 static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int taker, int loser) {
     (void)battleSystem;
     return !ctx->battleMons[taker].item && ctx->battleMons[loser].item;
@@ -228,6 +230,9 @@ static void reset(void) {
         ctx.turnOrder[i] = order[i];
     }
     ctx.battleMons[0] = (Mon){ ABILITY_MAGICIAN, 100, 0, FALSE, FALSE };
+    for (int i = 0; i < 4; i++) {
+        wild[i] = FALSE;
+    }
     ctx.selfTurnData[0] = (SelfTurnData){ 0, 0 };
     ctx.battlerIdAttacker = 0; ctx.battleStatus = 0; ctx.battleStatus2 = 0; ctx.gemBoostingMove = FALSE;
     ctx.battlerIdTemp = ctx.battlerIdStatChange = 0xFF;
@@ -259,6 +264,10 @@ int main(void) {
     reset(); ctx.battleStatus = BATTLE_STATUS_CHARGE_TURN; assert(takes() == -1);
     reset(); ctx.gemBoostingMove = TRUE; assert(takes() == -1);
     reset(); ctx.battleMons[0].ability = ABILITY_PICKPOCKET; assert(takes() == -1);
+    // A wild Pokemon's Magician takes nothing; the player's takes from a
+    // wild one (Pokemon Central, Prestigiatore).
+    reset(); wild[0] = TRUE; assert(takes() == -1);
+    reset(); wild[3] = TRUE; assert(takes() == 3);
     return 0;
 }
 """
@@ -310,6 +319,8 @@ static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->ba
 static int BattleSystem_GetMaxBattlers(BattleSystem *battleSystem) { return battleSystem->maxBattlers; }
 static BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].substitute; }
 static BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].cameIn; }
+static BOOL wild[4];
+static BOOL Battler_IsWild(BattleSystem *battleSystem, int battlerId) { (void)battleSystem; return wild[battlerId]; }
 static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int taker, int loser) {
     (void)battleSystem;
     return !ctx->battleMons[taker].item && ctx->battleMons[loser].item;
@@ -327,6 +338,9 @@ static void reset(void) {
         ctx.turnOrder[i] = order[i];
     }
     ctx.battleMons[0].item = 1;
+    for (int i = 0; i < 4; i++) {
+        wild[i] = FALSE;
+    }
     ctx.battlerIdAttacker = 0; ctx.battleStatus = 0; ctx.battleStatus2 = 0;
     ctx.battlerIdTemp = ctx.battlerIdStatChange = 0xFF;
     move.power = 80; contact = TRUE; sheerForce = FALSE;
@@ -356,6 +370,9 @@ int main(void) {
     // The user's own Pickpocket takes nothing from itself.
     reset(); ctx.battleMons[1].ability = ctx.battleMons[3].ability = ABILITY_NONE;
     ctx.battleMons[0].ability = ABILITY_PICKPOCKET; ctx.selfTurnData[0].physicalDamage = 10; assert(lifts() == -1);
+    // A wild Pokemon's Pickpocket takes nothing (Pokemon Central, Arraffalesto).
+    reset(); wild[3] = TRUE; assert(lifts() == 1);
+    reset(); wild[1] = wild[3] = TRUE; assert(lifts() == -1);
     return 0;
 }
 """
@@ -640,7 +657,7 @@ class RetreatOutsideMoveTests(unittest.TestCase):
     def test_the_mark_and_the_ask(self):
         source = OVERLAY.read_text()
         functions = "\n".join(function(source, name) for name in (
-            "Battler_RetreatFlees", "Battler_ArmRetreatOutsideMove", "TryRetreatAbilityOutsideMove"))
+            "Battler_IsWild", "Battler_ArmRetreatOutsideMove", "TryRetreatAbilityOutsideMove"))
         run_c(RETREAT_OUTSIDE_MOVE.replace("@FUNCTIONS@", functions))
 
     def test_the_entry_hazards_mark_it(self):
