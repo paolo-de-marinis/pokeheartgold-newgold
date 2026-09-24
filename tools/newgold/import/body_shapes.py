@@ -10,10 +10,15 @@ has used since Generation VI (Body01 a head only ... Body14 insectoid).
 The source is Bulbapedia's "List of Pokemon by shape", kept from the games'
 own Pokedex (Pokemon HOME for the newest species), at the revision named
 below; --fetch reads it again. It agrees with PokeAPI's pokemon_species.csv
-on 1024 of the 1025 (Sneasler: tailless here, tailed there). Pokemon
-Central's infoboxes were read first and disagree with both on 36, plainly
-wrong in most -- Nuzleaf a head only, Baxcalibur with two pairs of wings,
-Koraidon on four legs -- so they are not used.
+on 1024 of the 1025. The one is Sneasler: tailless here, tailed in PokeAPI
+and in Pokemon Central, though its feathers read as a tail. The list keeps
+Sneasler's as Pokemon HOME's body-shape search has it -- HOME is the only
+game with shapes that has Sneasler, and the list follows it even where
+HOME's two versions once differed (its "Changes" section) -- while neither
+PokeAPI nor Pokemon Central says its shape comes from a game; HOME's stands.
+Pokemon Central's infoboxes were read first and disagree with both on 36,
+plainly wrong in most -- Nuzleaf a head only, Baxcalibur with two pairs of
+wings, Koraidon on four legs -- so they are not used.
 
 HeartGold's Dex orders the shapes its own way; SHAPE_TO_STYLE maps one to
 the other. Retail's 493 keep retail's shapes: the later games moved nine
