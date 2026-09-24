@@ -452,12 +452,15 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual([b["const"] for b in data["badges"] if b["field"] == "kanto"][0], "BADGE_BOULDER")
         page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
         types = {name[len("TYPE_"):] for name in sv.constants("include/constants/pokemon.h", "TYPE_")}
+        header = (ROOT / "include/map_header.h").read_text()
         for table, known in (("BADGE_NAMES", {b["const"] for b in data["badges"]}),
                              ("POCKET_NAMES", {p["const"] for p in data["pockets"]}),
                              ("STAT_NAMES", {s["const"] for s in data["stats"]}),
                              ("DIR_NAMES", {d["const"] for d in data["directions"]}),
                              ("GENDER_MARKS", {g["const"] for g in data["genders"]}), ("TYPES", types),
-                             ("PLAYER_GENDER_NAMES", {g["const"] for g in data["player_genders"]})):
+                             ("PLAYER_GENDER_NAMES", {g["const"] for g in data["player_genders"]}),
+                             ("REGION_NAMES", set(re.findall(r"\b(MAP_REGION_\w+)", header))),
+                             ("MAP_TYPE_NAMES", set(re.findall(r"\b(MAP_TYPE_\w+)", header)))):
             keys = set(re.findall(r"(\w+):", re.search(rf"const {table} = \{{(.*?)\}};", page, re.S).group(1)))
             self.assertLessEqual(keys, known, table)
         # The story's words, whose values are sentences: a key starts the table or follows a comma.

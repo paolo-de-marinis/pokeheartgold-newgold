@@ -162,6 +162,9 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .mvopt:hover { background: var(--accent-soft); }
 .mvopt.on { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
 .mvopt .nm { font-weight: 600; margin-right: 4px; }
+.mvhead { padding: 6px 8px 2px; font-size: 12px; font-weight: 650; color: var(--muted); border-top: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); }
+.townbox canvas { display: block; width: 100%; max-width: 752px; height: auto; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; }
+.townbox { max-width: 752px; }
 .tag.pre { border-style: dashed; }
 .tag.warn { background: var(--warn-soft); border-color: var(--warn-border); color: var(--text); }
 .tag.bad { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
@@ -269,7 +272,6 @@ details summary { cursor: pointer; }
 <div id="toasts" aria-live="polite"></div>
 <datalist id="dl-species"></datalist>
 <datalist id="dl-items"></datalist>
-<datalist id="dl-maps"></datalist>
 
 <script>
 "use strict";
@@ -351,7 +353,6 @@ function parseRef(value, index, label) {
 const speciesOf = v => parseRef(v, S.speciesIndex, id => S.species.get(id)?.label);
 const moveOf = v => parseRef(v, S.moveIndex, id => S.moves.get(id)?.name);
 const itemOf = v => parseRef(v, S.itemIndex, id => S.items.get(id)?.label ?? S.items.get(id)?.name);
-const mapOf = v => parseRef(v, S.mapIndex, id => S.maps.has(id) ? mapLabel(S.maps.get(id)) : undefined);
 // gNatureStatMods' row: 1 on the stat the nature raises, -1 on the one it lowers, over the stats after HP.
 function natureLabel(n) {
   const name = S.data.natures[n], mods = S.data.nature_mods[n] || [], after = stats().slice(1);
@@ -385,11 +386,21 @@ function buildLists() {
     named.add(r.name.toLowerCase());
   }
   S.itemIndex = firstWins(items, r => r.label);
-  S.mapIndex = new Map(d.maps.map(r => [mapLabel(r).toLowerCase(), r.id]));
+  // The town map's tiles: the maps at each, and each section's.
+  S.townAt = new Map(); S.sectionTiles = new Map();
+  for (const r of d.maps) for (const [x, y] of d.world.tiles[r.id] || []) {
+    if (!S.townAt.has(`${x},${y}`)) S.townAt.set(`${x},${y}`, []);
+    S.townAt.get(`${x},${y}`).push(r.id);
+    if (!S.sectionTiles.has(r.section)) S.sectionTiles.set(r.section, new Set());
+    S.sectionTiles.get(r.section).add(`${x},${y}`);
+  }
+  S.mainMaps = new Set(d.world.main);
+  // The maps as the Posizione list shows them: by region, section, the section's own ground first.
+  S.mapOrder = d.maps.slice().sort((a, b) => a.region.localeCompare(b.region) || (a.name || "~").localeCompare(b.name || "~")
+    || S.mainMaps.has(b.id) - S.mainMaps.has(a.id) || a.const.localeCompare(b.const));
   const opts = (rows, label) => rows.map(r => `<option value="${esc(ref(label(r), r.id))}">`).join("");
   $("#dl-species").innerHTML = opts(d.species.filter(r => r.pick), r => r.label);
   $("#dl-items").innerHTML = opts(items, r => r.label);
-  $("#dl-maps").innerHTML = opts(d.maps, mapLabel);
 }
 // A typed name to its id; where two rows print the same, the lower number.
 function firstWins(rows, label) {
@@ -399,7 +410,9 @@ function firstWins(rows, label) {
 }
 // Not the recipes and the Legends: Arceus items, which only share a name with HeartGold's.
 const usableItem = r => r.id && r.name && r.name !== "???" && !/UNUSED|_RECIPE$|_PLA$/.test(r.const);
-const mapLabel = r => r.name ? `${r.name} · ${r.const.replace(/^MAP_/, "")}` : r.const.replace(/^MAP_/, "");
+// A map's own words, out of its constant: MAP_VIOLET_POKECENTER_1F is "Violet Pokecenter 1F".
+const mapWords = r => r.const.replace(/^MAP_/, "").split("_").map(w => /\d/.test(w) ? w : w[0] + w.slice(1).toLowerCase()).join(" ");
+const mapTitle = r => !r ? "" : !r.name || r.name.toLowerCase() === mapWords(r).toLowerCase() ? r.name || mapWords(r) : `${r.name} · ${mapWords(r)}`;
 const speciesRef = id => id ? ref(S.species.get(id)?.label ?? `#${id}`, id) : "";
 const moveRef = id => id ? ref(S.moves.get(id)?.name ?? `#${id}`, id) : "";
 const itemRef = id => id ? ref(S.items.get(id)?.label ?? S.items.get(id)?.name ?? `#${id}`, id) : "";
@@ -1628,33 +1641,165 @@ function renderDex() {
 }
 
 // ---- Posizione -------------------------------------------------------------
+// Every map with its section, region and kind, the town map's art and the tiles each map is at, and the place
+// the game itself puts the player on a map (/api/place) come from the server, read from the tree. These are
+// only the Italian words for them, by the tree's constants.
+const REGION_NAMES = {MAP_REGION_JOHTO: "Johto", MAP_REGION_KANTO: "Kanto"};
+const MAP_TYPE_NAMES = {MAP_TYPE_CITY_TOWN: "città", MAP_TYPE_ROUTE: "percorso", MAP_TYPE_CAVE: "grotta",
+  MAP_TYPE_INTERIOR: "interno", MAP_TYPE_POKEMON_CENTER: "Centro Pokémon", MAP_TYPE_UNDERGROUND: "sotterraneo"};
+const regionName = named(REGION_NAMES, "MAP_REGION_"), mapTypeName = named(MAP_TYPE_NAMES, "MAP_TYPE_");
+const TOWN_SCALE = 3;       // the canvas's pixels a pixel of the art, so the outlines are thin
+function townSections(key) {
+  return [...new Set((S.townAt.get(key) || []).map(id => S.maps.get(id).section))];
+}
+function drawTown() {
+  const cv = $("#town"), img = S.townImg;
+  if (!cv || !img?.complete || !img.naturalWidth) return;
+  const g = cv.getContext("2d"), t = 8 * TOWN_SCALE;
+  g.imageSmoothingEnabled = false;
+  g.drawImage(img, 0, 0, cv.width, cv.height);
+  const paint = (section, fill, stroke) => {
+    for (const key of S.sectionTiles.get(section) || []) {
+      const [x, y] = key.split(",").map(Number);
+      g.fillStyle = fill; g.fillRect(x * t, y * t, t, t);
+      g.strokeStyle = stroke; g.lineWidth = 2; g.strokeRect(x * t + 1, y * t + 1, t - 2, t - 2);
+    }
+  };
+  const now = S.maps.get(S.save.position.current.map), picked = S.maps.get(S.pos.map);
+  if (now) paint(now.section, "rgba(224,160,67,.35)", "#a15c07");
+  if (picked && picked.section !== now?.section) paint(picked.section, "rgba(59,130,246,.40)", "#1d4ed8");
+  for (const section of townSections(S.pos.hover)) paint(section, "rgba(255,255,255,.35)", "#1f1d1a");
+  const [mx, my] = S.save.position.tile;
+  g.beginPath(); g.arc((mx + .5) * t, (my + .5) * t, t * .32, 0, 2 * Math.PI);
+  g.fillStyle = "#e11d48"; g.fill(); g.lineWidth = 3; g.strokeStyle = "#fff"; g.stroke();
+}
+function townLabel() {
+  const key = S.pos.hover, sections = key ? townSections(key) : [];
+  const name = sec => { const r = S.data.maps.find(m => m.section === sec); return `${r.name || sec} (${regionName(r.region)})`; };
+  $("#townlabel").innerHTML = key ? (sections.length ? `<strong>${esc(sections.map(name).join(" · "))}</strong> — clic per sceglierla`
+                                                     : "Qui non c'è un luogo della mappa")
+    : `<span style="color:#e11d48">●</span> dove sei ora · <span style="color:#a15c07">■</span> la sua zona · <span style="color:#1d4ed8">■</span> la mappa scelta`;
+}
+// A tile of the town map to the map a click picks: the one whose ground it is (a town, a route), else one
+// placed there by its world coordinates, outdoors first.
+function mapAtTile(key) {
+  const rank = id => (S.mainMaps.has(id) ? 0 : 2) + (["MAP_TYPE_INTERIOR", "MAP_TYPE_POKEMON_CENTER"].includes(S.maps.get(id).type) ? 1 : 0);
+  return (S.townAt.get(key) || []).slice().sort((a, b) => rank(a) - rank(b) || a - b)[0];
+}
+// Picking a map -- in the list or on the town map -- puts in the place the game itself puts the player there.
+async function pickMap(id) {
+  S.pos.map = id;
+  const f = $("#posform").elements, note = $("#presetnote"), asked = ++S.pos.asked;
+  f.map.value = mapTitle(S.maps.get(id));
+  drawTown();
+  const r = await run(() => api(`/api/place?map=${id}`));
+  if (!r || asked !== S.pos.asked) return;      // another map was picked meanwhile
+  note.hidden = false;
+  if (r.preset) {
+    f.x.value = r.preset.x; f.y.value = r.preset.y; f.dir.value = r.preset.direction;
+    note.textContent = `Messa la posizione in cui il gioco porta il giocatore: (${r.preset.x}, ${r.preset.y}), ${r.preset.said}. Puoi cambiarla a mano.`;
+    for (const el of [f.x, f.y, f.dir]) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+  } else note.textContent = `Il gioco non ha un punto d'arrivo noto su questa mappa: scrivi x e y a mano (la mappa sta tra x ${r.x[0]}–${r.x[1]} e y ${r.y[0]}–${r.y[1]}).`;
+}
 function renderPosition() {
-  const pos = S.save.position, c = pos.current, place = S.maps.get(c.map);
+  const pos = S.save.position, c = pos.current, here = S.maps.get(c.map), w = S.data.world;
+  S.pos = {map: here ? c.map : null, hover: null, asked: 0};
   $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">
-      <dt>Mappa</dt><dd><strong>${esc(place?.name || "?")}</strong> <span class="muted">${esc(place?.const || "")} · id ${c.map}</span></dd>
+      <dt>Mappa</dt><dd><strong>${esc(here?.name || "?")}</strong> <span class="muted">${esc(here ? mapWords(here) : "")} · id ${c.map}</span></dd>
       <dt>Coordinate</dt><dd>x ${c.x}, y ${c.y}, rivolto ${esc(dirName(S.data.directions.find(x => x.value === c.direction)?.const ?? String(c.direction)))}</dd>
       <dt>Continua con warp</dt><dd>${pos.by_warp ? `sì, verso ${esc(S.maps.get(pos.warp.map)?.name || pos.warp.map)} (${pos.warp.x}, ${pos.warp.y})` : "no"}</dd>
     </dl>
     <form id="posform" class="box">
       <h3>Sposta il giocatore</h3>
-      <div class="form">
-        <label class="f" style="grid-column:1/-1">Mappa<input name="map" list="dl-maps" required value="${esc(place ? ref(mapLabel(place), c.map) : "")}" placeholder="Cerca per nome…"></label>
+      <div class="townbox"><canvas id="town" width="${w.cols * 8 * TOWN_SCALE}" height="${w.rows * 8 * TOWN_SCALE}" aria-label="Mappa di Johto e Kanto: clic su un luogo per sceglierlo"></canvas>
+        <div class="note" id="townlabel"></div></div>
+      <div class="form" style="margin-top:12px">
+        <label class="f" style="grid-column:1/-1">Mappa<span class="mvin" style="display:block"><input name="map" id="mapin" value="${esc(mapTitle(here))}" placeholder="Cerca: città, percorso, grotta, edificio…"
+          autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="maplist"></span></label>
         <label class="f">x<input type="number" name="x" min="0" max="65535" required value="${c.x}"></label>
         <label class="f">y<input type="number" name="y" min="0" max="65535" required value="${c.y}"></label>
         <label class="f">Rivolto verso<select name="dir">${S.data.directions.map(x => `<option value="${x.value}" ${x.value === c.direction ? "selected" : ""}>${esc(dirName(x.const))}</option>`).join("")}</select></label>
       </div>
-      <p class="note">Scrive la posizione come <span class="mono">savedit.py --where</span>: la posizione attuale e il warp dinamico, con FLAG_UNK_966,
-        così Continua entra con un warp e il gioco ricostruisce giocatore, follower e persone della mappa dai dati di zona.
-        Le coordinate sono in caselle, come il gioco le salva: contate dall'angolo della matrice della mappa, quindi all'aperto
-        sono numeri grandi (Route 29 è sui 600, 400) e al chiuso partono da 0. Nelle palestre dei salvataggi gyms/ il leader è una casella sopra.</p>
+      <p class="note" id="presetnote" hidden></p>
+      <p class="note">Scegliendo una mappa (dall'elenco o con un clic sulla minimappa) x, y e direzione diventano il punto in cui il gioco stesso porta il
+        giocatore: dove si atterra col Volo, davanti al bancone del Centro Pokémon, all'ingresso di una porta o di una scala. Si possono cambiare a mano:
+        una casella dove non si può stare (fuori dalla mappa, un muro, l'acqua, una persona, o, in un edificio, fuori dalle stanze) viene rifiutata.
+        Scrive la posizione come <span class="mono">savedit.py --where</span>: la posizione attuale e il warp dinamico, con FLAG_UNK_966, così Continua entra
+        con un warp e il gioco ricostruisce giocatore, follower e persone della mappa dai dati di zona. Le coordinate sono in caselle, contate dall'angolo
+        della matrice della mappa: all'aperto sono numeri grandi (Route 29 è sui 600, 400), al chiuso partono da 0.</p>
       <div class="bar"><button type="submit" class="primary">Sposta</button></div>
     </form>`;
+  if (!S.townImg || S.townImg.dataset.tree !== String(S.data.tree)) {
+    S.townImg = Object.assign(new Image(), {src: `/api/townmap.png?t=${S.data.tree}`});
+    S.townImg.dataset.tree = String(S.data.tree);
+  }
+  S.townImg.onload = drawTown;
+  drawTown(); townLabel();
+  const cv = $("#town"), tileAt = ev => {
+    const r = cv.getBoundingClientRect();
+    return `${Math.floor((ev.clientX - r.left) / r.width * w.cols)},${Math.floor((ev.clientY - r.top) / r.height * w.rows)}`;
+  };
+  cv.onmousemove = ev => { const k = tileAt(ev); if (k !== S.pos.hover) { S.pos.hover = k; drawTown(); townLabel(); } };
+  cv.onmouseleave = () => { S.pos.hover = null; drawTown(); townLabel(); };
+  cv.onclick = ev => { const id = mapAtTile(tileAt(ev)); if (id !== undefined) pickMap(id); };
+  mapCombo($("#mapin"));
   $("#posform").onsubmit = ev => {
     ev.preventDefault();
-    const f = ev.target.elements, map = mapOf(f.map.value);
-    if (!map && map !== 0) return toast("Scegli la mappa dall'elenco", true);
-    edit("position", {map, x: +f.x.value, y: +f.y.value, direction: +f.dir.value}, "Posizione scritta");
+    const f = ev.target.elements;
+    if (S.pos.map === null) return toast("Scegli la mappa dall'elenco o sulla minimappa", true);
+    edit("position", {map: S.pos.map, x: +f.x.value, y: +f.y.value, direction: +f.dir.value}, "Posizione scritta");
   };
+}
+// The map field: a search over every map, grouped by section, a row a map with its kind -- as a move field is.
+function mapCombo(el) {
+  const list = Object.assign(document.createElement("div"), {id: "maplist", className: "mvlist", hidden: true});
+  list.setAttribute("role", "listbox");
+  el.parentElement.append(list);
+  let shown = [], active = -1;
+  const close = () => { list.hidden = true; el.setAttribute("aria-expanded", "false"); el.removeAttribute("aria-activedescendant"); active = -1; };
+  const open = q => {
+    const words = (q || "").toLowerCase().split(/\s+/).filter(Boolean);
+    const has = text => words.every(x => text.toLowerCase().includes(x));
+    shown = S.mapOrder.filter(r => has(`${r.name} ${mapWords(r)} ${r.const} ${regionName(r.region)} ${mapTypeName(r.type)}`));
+    shown.sort((a, b) => has(b.name) - has(a.name));     // the places named so first: "violet" is Violet City before its gatehouses
+    let section = null;
+    list.innerHTML = shown.map((r, i) => {
+      const head = r.section !== section ? `<div class="mvhead">${esc(r.name || r.section)} <span class="muted">${esc(regionName(r.region))}</span></div>` : "";
+      section = r.section;
+      return `${head}<div class="mvopt" role="option" id="mapopt${i}" data-i="${i}"><span class="nm">${esc(mapWords(r))}</span><span class="tag">${esc(mapTypeName(r.type))}</span>${!(S.data.world.tiles[r.id] || []).length ? `<span class="tag" title="Non ha un posto sulla mappa della Pokégear">fuori mappa</span>` : ""}</div>`;
+    }).join("") || `<div class="mvopt muted">Nessuna mappa con questo nome</div>`;
+    active = -1;
+    list.hidden = false;
+    el.setAttribute("aria-expanded", "true");
+  };
+  const mark = i => {
+    $$(".mvopt.on", list).forEach(o => o.classList.remove("on"));
+    active = i;
+    const o = $(`#mapopt${i}`, list);
+    if (!o) return;
+    o.classList.add("on"); o.scrollIntoView({block: "nearest"});
+    el.setAttribute("aria-activedescendant", o.id);
+  };
+  const pick = i => { close(); pickMap(shown[i].id); };
+  list.addEventListener("mousedown", ev => { ev.preventDefault(); const o = ev.target.closest("[data-i]"); if (o) pick(+o.dataset.i); });
+  el.addEventListener("focus", () => { el.select(); open(""); });
+  el.addEventListener("input", () => open(el.value));
+  // Left without a pick, the field shows again the map that will be written.
+  el.addEventListener("blur", () => { close(); el.value = mapTitle(S.maps.get(S.pos.map)); });
+  el.addEventListener("keydown", ev => {
+    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+      ev.preventDefault();
+      if (list.hidden) open(el.value);
+      const step = ev.key === "ArrowDown" ? 1 : -1;
+      if (shown.length) mark(((active < 0 && step < 0 ? 0 : active) + step + shown.length) % shown.length);
+    } else if (ev.key === "Enter") {     // never the form's submit from here
+      ev.preventDefault();
+      if (!list.hidden && (active >= 0 || shown.length === 1)) pick(Math.max(active, 0));
+      else close();
+    } else if (ev.key === "Escape" && !list.hidden) {
+      ev.preventDefault(); close();
+    }
+  });
 }
 
 // ---- Flag e variabili ------------------------------------------------------
