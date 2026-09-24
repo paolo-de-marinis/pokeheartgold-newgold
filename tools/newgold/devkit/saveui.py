@@ -998,8 +998,8 @@ def checked_mon(a):
     if "moves" in a:
         moves = [number(m, 0, len(sv.move_table()) - 1, "mossa") for m in a["moves"]]
         moves = [m for m in moves if m]
-        if len(moves) > sv.MAX_MON_MOVES or len(set(moves)) != len(moves):
-            raise Refused(f"al massimo {sv.MAX_MON_MOVES} mosse, tutte diverse")
+        if len(moves) > sv.MAX_MON_MOVES:
+            raise Refused(f"al massimo {sv.MAX_MON_MOVES} mosse")
         if not moves:
             raise Refused("un Pokémon senza mosse non può lottare: serve almeno una mossa")
         out["moves"] = moves
@@ -1040,6 +1040,9 @@ def changed(fields, now):
 def illegal(e):
     """savedit's Illegal in Italian, naming what the species cannot have."""
     who = sv.species_name(e.species)
+    if e.twice:
+        return (f"{sv.move_table()[e.twice]['name']} è due volte: il gioco non insegna una mossa che il Pokémon "
+                f"conosce già, scegline un'altra")
     if e.moves:
         return (f"{who} non può imparare {', '.join(sv.move_table()[m]['name'] for m in e.moves)}: non è tra le "
                 f"mosse della specie (livello, MT/MN/DT, insegnanti, mosse uovo, forma, pre-evoluzioni). Una mossa "

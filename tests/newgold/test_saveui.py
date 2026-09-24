@@ -523,6 +523,24 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("Charizard non può imparare Waterfall", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "box_edit",
             "args": {"box": 0, "slot": 0, "moves": [moves["WATERFALL"], moves["FLAMETHROWER"]]}}))
 
+    def test_a_move_twice_is_refused_only_when_the_moves_change(self):
+        """The old CLI's Machamp knows Focus Energy twice: an edit that
+        leaves its moves keeps them; moves sent with one twice, to it, to a
+        boxed one or to a new one, are refused naming the move."""
+        moves = sv.move_numbers()
+        twice = [moves["FOCUS_ENERGY"], moves["FOCUS_ENERGY"], moves["KARATE_CHOP"], moves["FORESIGHT"]]
+        save = sv.Save(self.save)
+        sv.set_party_mon(save, 0, sv.build_mon("MACHAMP", 13, moves=twice))
+        sv.set_box_mon(save, 0, 0, sv.build_mon("MACHAMP", 13, moves=twice)[:sv.BOX_MON])
+        self.save.write_bytes(save.image())
+        out = self.edit("party_edit", {"slot": 0, "level": 14, "moves": twice})
+        self.assertEqual([m["id"] for m in out["party"][0]["moves"]], twice, "left alone, kept")
+        changed = twice[:3] + [moves["LOW_KICK"]]
+        for op, args in (("party_edit", {"slot": 0, "moves": changed}), ("box_edit", {"box": 0, "slot": 0, "moves": changed}),
+                         ("box_add", {"box": 0, "slot": 1, "species": sv.species_numbers()["MACHOP"], "level": 13,
+                                      "moves": twice[:2]})):
+            self.assertIn("Focus Energy è due volte", self.refused("/api/edit", {"f": "gyms/test.sav", "op": op, "args": args}))
+
     def test_only_species_a_pokemon_can_be(self):
         """504 is a row of the form table, not Rotom Wash; a Mega is a
         battle's. Neither is offered or made; one already there is kept."""

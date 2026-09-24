@@ -449,6 +449,22 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual([(m["pp"], m["pp_max"], m["repeat"]) for m in sv.describe_mon(sv.seal_mon(mon))["moves"]],
                          [(40, 30, False), (40, 30, True), (40, 25, False), (40, 64, False)])
 
+    def test_a_move_given_twice_is_refused(self):
+        """The game never teaches a move the Pokemon knows: new_mon, edit_mon
+        and the CLI refuse a move given twice; a Pokemon that knows one twice
+        keeps it through an edit that leaves its moves alone."""
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        twice = [moves["FOCUS_ENERGY"], moves["FOCUS_ENERGY"], moves["KARATE_CHOP"]]
+        with self.assertRaises(sv.Illegal) as refused:
+            sv.new_mon(n["MACHAMP"], 13, sv.owner(self.open()), moves=twice[:2])
+        self.assertEqual(refused.exception.twice, moves["FOCUS_ENERGY"])
+        old = sv.build_mon("MACHAMP", 13, moves=twice)
+        with self.assertRaises(sv.Illegal):
+            sv.edit_mon(old, moves=twice + [moves["LOW_KICK"]])
+        self.assertEqual([m["id"] for m in sv.describe_mon(sv.edit_mon(old, level=14))["moves"]], twice)
+        with self.assertRaises(SystemExit):
+            sv.parse_party("MACHAMP:13::FOCUS_ENERGY+FOCUS_ENERGY")
+
     def test_a_new_species_brings_its_own_moves_and_ability(self):
         """preset_moves at its level, never the old moves, and the ability
         UpdateBoxMonAbility gives the new species from the Pokemon's bits."""

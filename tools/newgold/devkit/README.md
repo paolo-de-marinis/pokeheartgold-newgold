@@ -64,7 +64,8 @@ has none). `species_abilities` is its first, second and hidden ability by
 the slot the game keeps each in: the personality's low bit (an Ability
 Capsule turns it over) or `MON_HIDDEN_ABILITY_BIT`, which
 `UpdateBoxMonAbility` reads again on evolving. `edit_mon` and `new_mon`
-refuse anything else (`Illegal`). The level is not checked: a level-up move
+refuse anything else (`Illegal`), and a move given twice, which the game
+never teaches (`TryAppendBoxMonMove`). The level is not checked: a level-up move
 is allowed at any level, as an egg inherits one both its parents know
 whatever the level it is learnt at (`InheritMoves`); for a species no egg
 hatches as, a move above its level is for the user to avoid. A species
@@ -170,7 +171,9 @@ the level while they are left alone. The server refuses in Italian a move or
 an ability the species cannot have, whatever sent it; a move the Pokemon
 already knew that the species does not learn (an event's, or one the data no
 longer gives it) stays while it is left alone and the species is kept, and
-the card marks it "non la impara". An ability that is not the one the game
+the card marks it "non la impara". A move known twice (an older editor's)
+stays while the moves are left alone; moves sent with one twice are
+refused, naming it. An ability that is not the one the game
 would give the Pokemon (its species written alone by an older editor) is
 marked "non sua", and the dialog has it chosen again. A new Pokemon's
 friendship is its species' own.

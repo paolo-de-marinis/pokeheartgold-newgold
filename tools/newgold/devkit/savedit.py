@@ -1695,18 +1695,24 @@ def learnable_moves(species, form=0):
 
 
 class Illegal(ValueError):
-    """What a species cannot have: moves it never learns, or an ability
-    slot it has no ability in."""
+    """What a species cannot have: moves it never learns, a move twice, or
+    an ability slot it has no ability in."""
 
-    def __init__(self, species, moves=(), ability=None):
-        self.species, self.moves, self.ability = species, list(moves), ability
-        what = [move_table()[m]["name"] for m in self.moves] or [f"an ability in slot {ability}"]
+    def __init__(self, species, moves=(), ability=None, twice=None):
+        self.species, self.moves, self.ability, self.twice = species, list(moves), ability, twice
+        what = ([f"{move_table()[twice]['name']} twice"] if twice else [move_table()[m]["name"] for m in self.moves]) \
+            or [f"an ability in slot {ability}"]
         super().__init__(f"{species_name(species)} cannot have {', '.join(what)}")
 
 
 def check_moves(species, moves, form=0, kept=()):
-    """Illegal for a move the species cannot learn -- one of `kept`, an
-    event move the Pokemon already knows, excepted."""
+    """Illegal for a move given twice -- the game never teaches a move the
+    Pokemon knows (TryAppendBoxMonMove) -- or one the species cannot learn,
+    one of `kept`, an event move the Pokemon already knows, excepted."""
+    given = [move for move in moves if move]
+    twice = next((move for i, move in enumerate(given) if move in given[:i]), None)
+    if twice:
+        raise Illegal(species, twice=twice)
     legal = learnable_moves(species, form)
     wrong = [move for move in moves if move and move not in legal and move not in kept]
     if wrong:
