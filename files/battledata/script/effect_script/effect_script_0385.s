@@ -5,8 +5,10 @@
 // Life Dew gives the user and each ally a quarter of its maximum HP, rounded
 // up (Pokemon Central, Goccia Vitale); subscript 317 does it once the move
 // is on. A Pokemon in the air or underground, or under Heal Block, is passed
-// over, and a substitute is no bar. With nobody standing to heal, the move
-// fails, as Jungle Healing does.
+// over, and a substitute is no bar. An ally with Water Absorb, Dry Skin or
+// Storm Drain takes the move with its ability instead, whatever its HP, and
+// counts as someone to reach. With nobody standing to heal, the move fails,
+// as Jungle Healing does.
 _000:
     UpdateVar OPCODE_SET, BSCRIPT_VAR_BATTLER_SPEED_TEMP, 0
 
@@ -18,6 +20,12 @@ _FIND:
 _FIND_CHECK:
     CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_HP, 0, _FIND_NEXT
     CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_SEMI_INVULNERABLE, _FIND_NEXT
+    CompareVarToVar OPCODE_EQU, BSCRIPT_VAR_BATTLER_STAT_CHANGE, BSCRIPT_VAR_BATTLER_ATTACKER, _FIND_HEAL
+    CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SIDE_EFFECT_MON, ABILITY_WATER_ABSORB, _FOUND
+    CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SIDE_EFFECT_MON, ABILITY_DRY_SKIN, _FOUND
+    CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SIDE_EFFECT_MON, ABILITY_STORM_DRAIN, _FOUND
+
+_FIND_HEAL:
     CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_HEAL_BLOCK_TURNS, 0, _FIND_NEXT
     UpdateMonDataFromVar OPCODE_GET, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_MAXHP, BSCRIPT_VAR_CALC_TEMP
     CompareMonDataToVar OPCODE_NEQ, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_HP, BSCRIPT_VAR_CALC_TEMP, _FOUND

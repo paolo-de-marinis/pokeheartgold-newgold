@@ -183,6 +183,26 @@ class LifeDewTests(unittest.TestCase):
         self.assertLess(effect.index("MOVE_STATUS_FAILED"), effect.index("\n_FOUND:"))
         self.assertIn("MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_LIFE_DEW", effect[effect.index("\n_FOUND:"):])
 
+    def test_an_ally_s_water_absorb_dry_skin_or_storm_drain_takes_it(self):
+        # Pokemon Central (Goccia Vitale): the ally's ability answers the move
+        # in place of the heal -- a quarter of its HP by Water Absorb or Dry
+        # Skin, a stage of Sp. Atk by Storm Drain; not the user's own.
+        heal = subscript("LifeDew")
+        check = heal[heal.index("\n_CHECK:"):heal.index("\n_HEAL:")]
+        self.assertLess(check.index("BSCRIPT_VAR_BATTLER_ATTACKER, _HEAL"), check.index("ABILITY_WATER_ABSORB"))
+        for ability, label in (("WATER_ABSORB", "_ABSORB"), ("DRY_SKIN", "_ABSORB"), ("STORM_DRAIN", "_STORM_DRAIN")):
+            self.assertIn(f"CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SIDE_EFFECT_MON, ABILITY_{ability}, {label}", check)
+        absorb = heal[heal.index("\n_ABSORB:"):heal.index("\n_STORM_DRAIN:")]
+        self.assertIn("msg_0197_00635, TAG_NICKNAME_ABILITY", absorb)
+        self.assertIn("DivideVarByValue BSCRIPT_VAR_HP_CALC, 4", absorb)
+        storm = heal[heal.index("\n_STORM_DRAIN:"):heal.index("\n_USELESS:")]
+        self.assertIn("MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_1_STAGE", storm)
+        self.assertIn("SIDE_EFFECT_TYPE_ABILITY", storm)
+        # Such an ally is someone the move reaches, whatever its HP.
+        effect = (ROOT / "files/battledata/script/effect_script/effect_script_0385.s").read_text()
+        self.assertIn("ABILITY_STORM_DRAIN, _FOUND", effect)
+        self.assertLess(effect.index("ABILITY_WATER_ABSORB, _FOUND"), effect.index("BMON_DATA_HEAL_BLOCK_TURNS"))
+
 
 class SpitUpTests(unittest.TestCase):
     def test_spit_up_rolls_its_damage(self):
