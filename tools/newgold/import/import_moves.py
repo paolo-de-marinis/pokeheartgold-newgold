@@ -466,7 +466,8 @@ IMPLEMENTED_HERE = {
     "DOODLE": "MOVE_EFFECT_DOODLE",
     # Order Up hurts, and raises a stat by the form of a Tatsugiri in the
     # user's mouth, which only Commander puts there (Pokemon Central, Alta
-    # Cucina); Sheer Force always boosts it. CalcMoveDamage asks the latter.
+    # Cucina): TryAdditionalMoveEffect. Sheer Force always boosts it, which
+    # CalcMoveDamage asks.
     "ORDER_UP": "MOVE_EFFECT_HIT",
     # Spectral Thief takes the target's raised stages and strikes with them,
     # round a substitute (Pokemon Central, Ombrafurto): the controller's

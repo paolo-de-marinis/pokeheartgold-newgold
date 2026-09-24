@@ -5304,6 +5304,18 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
     if (target == BATTLER_NONE || (ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
         return FALSE;
     }
+    // Order Up raises a stat of a user that holds a Tatsugiri in its mouth,
+    // by the Tatsugiri's form -- the Curly's Attack, the Droopy's Defense, the
+    // Stretchy's Speed -- the Tatsugiri fainted or not, once the move has hit
+    // (Pokemon Central, Alta Cucina: before Scarlet and Violet 1.2.0 it rose
+    // on a miss too). Sheer Force boosts the move and leaves the rise
+    // (CalcMoveDamage). The engine leaves it a plain hit.
+    if (ctx->moveNoCur == MOVE_ORDER_UP && ctx->moveConditions[ctx->battlerIdAttacker].commanderForm && ctx->battleMons[ctx->battlerIdAttacker].hp) {
+        ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + ctx->moveConditions[ctx->battlerIdAttacker].commanderForm - 1;
+        ctx->battlerIdStatChange = ctx->battlerIdAttacker;
+        RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
+        return TRUE;
+    }
     switch (effect) {
     // Smelling Salts and Wake-Up Slap cure what they doubled against, if the
     // hit reached the Pokemon (Pokemon Central, Maniereforti: even for no

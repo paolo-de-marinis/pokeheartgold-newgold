@@ -723,7 +723,8 @@ int main(void) {
 
     def test_order_up_is_a_hit_sheer_force_always_boosts(self):
         # Pokemon Central (Alta Cucina): the power is test_move_power's
-        # OrderUpTests; the boost to a stat waits on a Tatsugiri in the mouth.
+        # OrderUpTests; the rise of a stat by the Tatsugiri in the mouth is
+        # test_commander's.
         self.assertImplemented("ORDER_UP", "MOVE_EFFECT_HIT")
 
     def test_spectral_thief_takes_the_raised_stages_before_it_strikes(self):

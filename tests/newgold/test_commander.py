@@ -250,5 +250,32 @@ class CommanderTests(unittest.TestCase):
                       work[release:])
 
 
+class OrderUpTests(unittest.TestCase):
+    """Pokemon Central (Alta Cucina): a user holding a Tatsugiri in its mouth
+    raises its Attack, Defense or Speed by one, by the Curly, Droopy or
+    Stretchy form, the Tatsugiri fainted or not, once the move has hit (from
+    Scarlet and Violet 1.2.0); Sheer Force boosts it and takes nothing."""
+
+    def test_the_raise_follows_the_form(self):
+        step = function(CONTROLLER, "TryAdditionalMoveEffect")
+        order = step[step.index("if (ctx->moveNoCur == MOVE_ORDER_UP"):]
+        order = order[:order.index("return TRUE;")]
+        self.assertIn("ctx->moveConditions[ctx->battlerIdAttacker].commanderForm", order)
+        self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + ctx->moveConditions[ctx->battlerIdAttacker].commanderForm - 1;", order)
+        self.assertIn("RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);", order)
+        # Only once the move has hit.
+        self.assertLess(step.index("if (target == BATTLER_NONE || (ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {"),
+                        step.index("MOVE_ORDER_UP"))
+        # Curly, Droopy and Stretchy are TryCommander's 1, 2 and 3, and the
+        # three one-stage raises follow each other in that order.
+        header = (ROOT / "include/constants/battle_subscript.h").read_text()
+        ptr = {name: int(re.search(rf"#define MOVE_SUBSCRIPT_PTR_{name}_UP_1_STAGE\s+(\d+)", header).group(1))
+               for name in ("ATTACK", "DEFENSE", "SPEED")}
+        self.assertEqual((ptr["DEFENSE"], ptr["SPEED"]), (ptr["ATTACK"] + 1, ptr["ATTACK"] + 2))
+        commander = function(OVERLAY, "TryCommander")
+        for species, form in (("SPECIES_TATSUGIRI", 1), ("SPECIES_TATSUGIRI_DROOPY", 2), ("SPECIES_TATSUGIRI_STRETCHY", 3)):
+            self.assertIn(f"case {species}:\n            form = {form};", commander)
+
+
 if __name__ == "__main__":
     unittest.main()
