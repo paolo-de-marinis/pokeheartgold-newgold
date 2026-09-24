@@ -363,6 +363,7 @@ enum { FALSE = 0, TRUE = 1 };
 #include "constants/battle_subscript.h"
 #include "constants/items.h"
 #include "constants/move_effects.h"
+#include "constants/moves.h"
 typedef struct { u16 effect; } MoveTbl;
 typedef struct { int physicalDamage, specialDamage; } SelfTurnData;
 typedef struct { int hp; u32 status2; int holdEffect, cameIn; } Mon;
@@ -389,6 +390,7 @@ static void reset(void) {
     }
     ctx.battlerIdAttacker = 0; ctx.battlerIdStatChange = 0xFF;
     move.effect = MOVE_EFFECT_PREVENT_ESCAPE_HIT; sheerForce = FALSE; ran = 0;
+    ctx.moveNoCur = MOVE_ANCHOR_SHOT;
 }
 static BOOL holds(int battlerId) {
     ran = 0;
@@ -411,6 +413,10 @@ int main(void) {
     reset(); ctx.battleMons[0].hp = 0; assert(!holds(1) && !holds(3));
     reset(); sheerForce = TRUE; assert(!holds(1));
     reset(); ctx.battleMons[1].holdEffect = HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS; assert(!holds(1) && holds(3));
+    // Thousand Waves' hold is no additional effect: no cloak keeps it off
+    // (Pokemon Central, Mille Onde).
+    reset(); ctx.moveNoCur = MOVE_THOUSAND_WAVES; ctx.battleMons[1].holdEffect = HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS;
+    assert(holds(1));
     // Only the moves that hold.
     reset(); move.effect = MOVE_EFFECT_HIT; assert(!holds(1));
     return 0;

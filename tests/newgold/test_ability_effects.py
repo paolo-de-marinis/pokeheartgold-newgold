@@ -594,6 +594,9 @@ int main(void) {
         body = re.search(r"static BOOL IsSuppressibleSecondaryEffect.*?\n\}", self.SOURCE.read_text(), re.S).group(0)
         for effect in ("PREVENT_HEALING_HIT", "PREVENT_ESCAPE_HIT", "THROAT_CHOP"):
             self.assertIn(f"case MOVE_EFFECT_{effect}:", body)
+        # Thousand Waves shares the trap's effect, and its hold is no
+        # additional effect (Pokemon Central, Mille Onde).
+        self.assertIn("case MOVE_EFFECT_PREVENT_ESCAPE_HIT:\n        return moveNo != MOVE_THOUSAND_WAVES;", body)
         # Throat Chop sets its silence in its own script, before the damage.
         script = (ROOT / "files/battledata/script/effect_script/effect_script_0402.s").read_text()
         setting = script.index("SetMoveConditionFlag MOVE_THROAT_CHOP")

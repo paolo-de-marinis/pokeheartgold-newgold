@@ -119,6 +119,7 @@ enum { FALSE = 0, TRUE = 1 };
 #include "constants/abilities.h"
 #include "constants/battle.h"
 #include "constants/move_effects.h"
+#include "constants/moves.h"
 typedef struct { u16 effect; u16 effectChance; } MoveTbl;
 typedef struct { u32 sheerForceTraded : 1; } SelfTurnData;
 typedef struct { int ability; } Mon;
