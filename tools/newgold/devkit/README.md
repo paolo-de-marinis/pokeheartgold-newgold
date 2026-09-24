@@ -443,3 +443,24 @@ test suites run under it: `capped -m 8G make -j8 ...`.
   the ROM's file system, arm9, arm7 and the overlays.
 - `narccheck.py ARCHIVE FOLDER` -- a built NARC's members against the files
   its `.narcorder` lists: a stale archive in the source tree.
+
+## decomp/
+
+Assembly to matching C, after env.sh (the compiler through wine,
+arm-none-eabi's binutils).
+
+- `cc.sh SRC OUT.o [VARIABLE=VALUE...]` -- one `.c` compiled, or `.s`
+  assembled, with the command the Makefile itself uses
+  (`make print-MW_COMPILE`), so its flags are never copied; `INCLUDE=DIR`
+  is searched first, for a header changed only for the experiment.
+- `fncmp.py A.o B.o FUNC...` -- a function in two objects, instruction by
+  instruction: branches by their target in the function, calls and literals
+  by symbol. The C matches when every FUNC does.
+- `try.py SRC FUNC ORIG.o < VARIANTS` -- versions of one function, each
+  compiled in place and compared: which matches, or how far each is.
+- `relocmp.py OLD NEW SECTION...` -- two builds that differ only in where
+  things were placed.
+- `split.py ASM FUNC...` -- functions cut out of an assembly file, the rest
+  of its text into a file of its own, and `asm/include` given what the
+  parts now reach across; `datasplit.py` the same for a data label.
+- `offsets.py TYPE FIELD...` -- `offsetof`, as mwcc lays the struct out.
