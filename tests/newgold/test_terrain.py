@@ -198,6 +198,18 @@ class TerrainAbilityTests(unittest.TestCase):
         self.assertIn("case ABILITY_HADRON_ENGINE:", body)
         self.assertIn("BATTLE_SUBSCRIPT_HADRON_ENGINE_NO_TERRAIN_SETUP", body)
 
+    def test_a_surge_onto_its_own_terrain_says_nothing(self):
+        # Pokemon Central (Elettrogenesi and the other three): the terrain is
+        # laid "se non lo era in precedenza"; a second Surge of the same kind
+        # neither announces it again nor renews its turns. Hadron Engine keeps
+        # its own line for that case.
+        body = overlay_function("TryAbilityOnEntry")
+        step = body[body.index("case ABILITY_GRASSY_SURGE:"):body.index("BATTLE_SUBSCRIPT_CREATE_TERRAIN_OVERLAY")]
+        guard = "if (ctx->terrainOverlayType == terrainType && GetBattlerAbility(ctx, battlerId) != ABILITY_HADRON_ENGINE) {\n                    continue;"
+        self.assertIn(guard, step)
+        self.assertLess(step.index(guard), step.index("BattleContext_UpdateTerrainOverlay"))
+        self.assertLess(step.index(guard), step.index("ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;"))
+
     def test_a_surge_announces_itself_once(self):
         # The Surges' only guard against acting twice is abilityActivatedFlag,
         # and their subscript shows the ability popup. A popup that cleared

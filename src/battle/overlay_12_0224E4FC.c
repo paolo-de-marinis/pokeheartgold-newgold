@@ -6478,17 +6478,24 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                     continue;
                 }
                 ctx->battleMons[battlerId].abilityActivatedFlag = TRUE;
+                // A Surge lays its terrain only if it was not down already
+                // ("se non lo era in precedenza", Pokemon Central, Elettrogenesi,
+                // Erbogenesi, Nebbiogenesi, Psicogenesi): walking onto its own
+                // terrain, or coming in beside a Surge of the same kind, it
+                // says nothing and the turns are not renewed. Two different
+                // Surges both act, the slower last. The reference announces
+                // the terrain again, which is not copied. Hadron Engine has a
+                // line of its own for this case.
+                if (ctx->terrainOverlayType == terrainType && GetBattlerAbility(ctx, battlerId) != ABILITY_HADRON_ENGINE) {
+                    continue;
+                }
                 ctx->battlerIdTemp = battlerId;
                 // What tells the subscript to put an Ability popup up before
                 // it announces the ground.
                 ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
-                // Hadron Engine is the only one of the five that asks whether
-                // the ground it wants is already there: it has a second line
-                // for that case, because what it announces is its engine
-                // rather than the ground. A Surge walking onto its own terrain
-                // simply announces it again -- UpdateTerrainOverlay finds
-                // nothing to change and the script reads out what is down.
-                // That is the reference's behaviour, not an oversight here.
+                // Hadron Engine is the only one of the five that says so when
+                // the ground it wants is already there, because what it
+                // announces is its engine rather than the ground.
                 if (GetBattlerAbility(ctx, battlerId) == ABILITY_HADRON_ENGINE && ctx->terrainOverlayType == ELECTRIC_TERRAIN) {
                     script = BATTLE_SUBSCRIPT_HADRON_ENGINE_NO_TERRAIN_SETUP;
                 } else {
