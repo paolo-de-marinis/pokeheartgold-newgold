@@ -7,6 +7,17 @@
 // be passed on, the target's one nothing writes over or Truant, or the two
 // are the same (the table's, BMON_DATA_ABILITY_FLAGS). Like Role Play's
 // subscript, this one says what the move was once it has worked.
+//
+// Commander, Protosynthesis and Quark Drive are refused on the user's side
+// only. Pokemon Central's pages disagree: Saltamicizia lists the three among
+// the abilities the user cannot pass on and not among the target's, where
+// Torre di Comando and Paleoattivazione would have the move fail on a target
+// with one. None gives a version. Saltamicizia is followed, as the page that
+// agrees with the latest versions' rule for the moves that write a target's
+// ability over the same way: from Scarlet and Violet 2.0.1 Worry Seed, Gastro
+// Acid and Mummy work on Commander (Torre di Comando) and Worry Seed on the
+// paradox abilities (Paleoattivazione). Role Play is refused to a Commander
+// user (effect script 178) and cannot copy any of the three (the table).
 _000:
     // An Ability Shield keeps the target's ability (Pokemon Central, Scudo abilita).
     CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_HELD_ITEM, ITEM_ABILITY_SHIELD, _FAILED

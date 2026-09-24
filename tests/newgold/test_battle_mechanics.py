@@ -516,7 +516,10 @@ class AbilityBlockListTests(unittest.TestCase):
     }
 
     def test_commander_and_the_paradox_abilities_give_way(self):
-        for name in ("subscript_0163_GastroAcid.s", "subscript_0167_WorrySeed.s", "subscript_0445_CoreEnforcer.s"):
+        # Entrainment too, on the target's side, as Saltamicizia lists them
+        # (the decision is in subscript 316's note).
+        for name in ("subscript_0163_GastroAcid.s", "subscript_0167_WorrySeed.s", "subscript_0445_CoreEnforcer.s",
+                     "subscript_0316_Entrainment.s"):
             code = [line for line in (ROOT / "files/battledata/script/subscript" / name).read_text().splitlines()
                     if not line.strip().startswith("//")]
             for ability in ("ABILITY_COMMANDER", "ABILITY_QUARK_DRIVE", "ABILITY_PROTOSYNTHESIS"):
