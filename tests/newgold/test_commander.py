@@ -222,7 +222,7 @@ class CommanderTests(unittest.TestCase):
         self.assertIn("|| Battler_HeldByCommander(ctx, ctx->battlerIdAttacker)", function(CONTROLLER, "PivotSwitchPending"))
         self.assertIn("case BMON_DATA_COMMANDER:\n        return Battler_HeldByCommander(ctx, battlerId);", function(OVERLAY, "GetBattlerVar"))
         ai = (BATTLE / "trainer_ai_0222036C.c").read_text()
-        self.assertIn("|| Battler_HeldByCommander(ctx, battlerId)", function(ai, "ov10_022203A4"))
+        self.assertIn("if (Battler_HeldByCommander(ctx, battlerId)\n", function(ai, "ov10_022203A4"))
         # Every way out a script takes asks first: the user's own switch, the
         # items and Emergency Exit, and the moves and the card that drag.
         for name, battler, before in (

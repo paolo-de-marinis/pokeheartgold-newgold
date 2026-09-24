@@ -679,9 +679,10 @@ int main(void) {
         self.assertIn("case MOVE_FAIRY_LOCK:\n        ctx->calcTemp = !ctx->fairyLockTurns;",
                       function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SetMoveConditionFlag"))
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
-        self.assertEqual(function(overlay, "FairyLockHolds").count("TYPE_GHOST"), 3)
+        # A Ghost-type is held by nothing, this included (test_battle_mechanics' GhostTypeTests).
         for name in ("CantEscape", "BattlerCanSwitch"):
-            self.assertIn("|| FairyLockHolds(ctx, battlerId)) {", function(overlay, name))
+            self.assertIn("|| ctx->fairyLockTurns) {", function(overlay, name))
+            self.assertIn("Battler_HasGhostType(ctx, battlerId)", function(overlay, name))
         self.assertIn("if (ctx->fairyLockTurns) {\n        ctx->fairyLockTurns--;",
                       function((ROOT / "src/battle/battle_controller_player.c").read_text(), "BattleControllerPlayer_TurnEnd"))
 

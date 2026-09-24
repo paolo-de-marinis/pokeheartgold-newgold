@@ -3920,14 +3920,18 @@ BOOL CanSwitchMon(BattleSystem *battleSystem, BattleContext *ctx, int battlerId)
     return ret;
 }
 
-// Fairy Lock holds every Pokemon on the field but a Ghost-type until the end
-// of the turn after the one it was used in (Pokemon Central, Blocco Fatato);
-// Run Away, a Smoke Ball and a Shed Shell answer it as they answer any hold.
-static BOOL FairyLockHolds(BattleContext *ctx, int battlerId) {
-    return ctx->fairyLockTurns
-        && GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) != TYPE_GHOST
-        && GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL) != TYPE_GHOST
-        && ctx->battleMons[battlerId].type3 != TYPE_GHOST;
+// From the sixth generation nothing holds a Ghost-type on the field: "i
+// Pokemon di tipo Spettro sono immuni agli effetti di imprigionamento e
+// antifuga dovuto a mosse o abilita" (Pokemon Central, Spettro (tipo)) --
+// Mean Look, Block, Spider Web, the binding moves (whose damage still comes),
+// Jaw Lock, Anchor Shot, Spirit Shackle, Thousand Waves, Octolock, No
+// Retreat, Ingrain, Fairy Lock, Shadow Tag, Arena Trap and Magnet Pull -- and
+// it gets away from a wild battle whatever its Speed. HeartGold and the
+// reference hold it as any other; the reference spares it Fairy Lock alone.
+BOOL Battler_HasGhostType(BattleContext *ctx, int battlerId) {
+    return GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) == TYPE_GHOST
+        || GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL) == TYPE_GHOST
+        || ctx->battleMons[battlerId].type3 == TYPE_GHOST;
 }
 
 BOOL CantEscape(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BattleMessage *msg) {
@@ -3940,7 +3944,8 @@ BOOL CantEscape(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, B
     battleType = BattleSystem_GetBattleType(battleSystem);
     item = GetBattlerHeldItemEffect(ctx, battlerId);
 
-    if (item == HOLD_EFFECT_FLEE || (battleType & BATTLE_TYPE_NO_EXP) || GetBattlerAbility(ctx, battlerId) == ABILITY_RUN_AWAY) {
+    if (item == HOLD_EFFECT_FLEE || (battleType & BATTLE_TYPE_NO_EXP) || GetBattlerAbility(ctx, battlerId) == ABILITY_RUN_AWAY
+        || Battler_HasGhostType(ctx, battlerId)) {
         return FALSE;
     }
 
@@ -3996,8 +4001,10 @@ BOOL CantEscape(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, B
         return TRUE;
     }
 
+    // Fairy Lock holds every Pokemon on the field until the end of the turn
+    // after the one it was used in (Pokemon Central, Blocco Fatato).
     if ((ctx->battleMons[battlerId].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK)) || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
-        || FairyLockHolds(ctx, battlerId)) {
+        || ctx->fairyLockTurns) {
         if (msg == NULL) {
             return TRUE;
         }
@@ -4026,6 +4033,8 @@ BOOL BattleTryRun(BattleSystem *battleSystem, BattleContext *ctx, int battlerId)
         ret = TRUE;
     } else if (GetBattlerAbility(ctx, battlerId) == ABILITY_RUN_AWAY) {
         ctx->turnData[battlerId].runFlag = 2;
+        ret = TRUE;
+    } else if (Battler_HasGhostType(ctx, battlerId)) {
         ret = TRUE;
     } else {
         if (ctx->battleMons[battlerId].speed < ctx->battleMons[battlerId ^ 1].speed) {
@@ -9106,12 +9115,12 @@ BOOL BattlerCanSwitch(BattleSystem *battleSystem, BattleContext *ctx, int battle
     if (Battler_HeldByCommander(ctx, battlerId)) {
         return TRUE;
     }
-    if (GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_SWITCH) {
+    if (GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_SWITCH || Battler_HasGhostType(ctx, battlerId)) {
         return FALSE;
     }
 
     if ((ctx->battleMons[battlerId].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK)) || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
-        || FairyLockHolds(ctx, battlerId)) {
+        || ctx->fairyLockTurns) {
         ret = TRUE;
     }
 

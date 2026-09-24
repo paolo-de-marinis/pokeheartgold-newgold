@@ -1449,5 +1449,41 @@ class PaybackTests(unittest.TestCase):
         self.assertIn("MI_CpuClearFast((u32 *)&ctx->turnData[battlerId], sizeof(TurnData));", function(OVERLAY.read_text(), "ov12_02251710"))
 
 
+
+class GhostTypeTests(unittest.TestCase):
+    """From the sixth generation nothing holds a Ghost-type on the field, and
+    it gets away from a wild battle whatever its Speed (Pokemon Central,
+    Spettro (tipo); Malosguardo). HeartGold and the reference hold it."""
+
+    def test_no_hold_keeps_it_in(self):
+        overlay = OVERLAY.read_text()
+        ghost = function(overlay, "Battler_HasGhostType")
+        for part in ("BMON_DATA_TYPE_1", "BMON_DATA_TYPE_2", "type3"):
+            self.assertIn(part, ghost)
+        escape = function(overlay, "CantEscape")
+        self.assertLess(escape.index("|| Battler_HasGhostType(ctx, battlerId)) {\n        return FALSE;"),
+                        escape.index("ABILITY_SHADOW_TAG"))
+        switch = function(overlay, "BattlerCanSwitch")
+        self.assertLess(switch.index("Battler_HeldByCommander(ctx, battlerId)"), switch.index("Battler_HasGhostType"))
+        self.assertLess(switch.index("== HOLD_EFFECT_SWITCH || Battler_HasGhostType(ctx, battlerId)) {\n        return FALSE;"),
+                        switch.index("STATUS2_MEAN_LOOK"))
+        run = function(overlay, "BattleTryRun")
+        self.assertLess(run.index("} else if (Battler_HasGhostType(ctx, battlerId)) {\n        ret = TRUE;"),
+                        run.index("ctx->battleMons[battlerId].speed <"))
+
+    def test_a_wild_ghost_flees_and_the_ai_switches_it(self):
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        self.assertIn("(STATUS2_BIND | STATUS2_MEAN_LOOK)) && !Battler_HasGhostType(ctx, ctx->battlerIdAttacker)",
+                      function(controller, "BattleControllerPlayer_RunInput"))
+        ai = function((ROOT / "src/battle/trainer_ai_0222036C.c").read_text(), "ov10_022203A4")
+        self.assertIn("|| (!Battler_HasGhostType(ctx, battlerId)\n            && ((ctx->battleMons[battlerId].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK))", ai)
+
+    def test_mean_look_block_and_spider_web_fail_on_it(self):
+        script = subscript("MeanLook")
+        for part in ("BMON_DATA_TYPE_1", "BMON_DATA_TYPE_2", "BMON_DATA_TYPE_3"):
+            self.assertLess(script.index(f"CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, {part}, TYPE_GHOST, _048"),
+                            script.index("UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_DEFENDER, BMON_DATA_STATUS2, STATUS2_MEAN_LOOK"))
+
+
 if __name__ == "__main__":
     unittest.main()
