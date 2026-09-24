@@ -454,7 +454,11 @@ class PostMoveEffectsTests(unittest.TestCase):
     def test_stone_axe_and_ceaseless_edge_lay_them_if_the_user_stands(self):
         # Pokemon Central, Rocciascure and Lama Milleflutti.
         case = self.case("case MOVE_EFFECT_STEALTH_ROCK_HIT:\n    case MOVE_EFFECT_SET_SPIKES_HIT:")
-        self.assertIn("if (!ctx->battleMons[ctx->battlerIdAttacker].hp) {\n            return FALSE;", case)
+        self.assertIn("if (!ctx->battleMons[ctx->battlerIdAttacker].hp || SheerForceTradedEffect(ctx)) {\n            return FALSE;", case)
+        # Sheer Force powers Stone Axe and gives the stones up (Rocciascure).
+        body = re.search(r"static BOOL IsSuppressibleSecondaryEffect.*?\n\}", (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), re.S).group(0)
+        self.assertIn("case MOVE_EFFECT_STEALTH_ROCK_HIT:\n        return TRUE;", body)
+        self.assertNotIn("SET_SPIKES_HIT", body)
         self.assertIn("BATTLE_SUBSCRIPT_SET_STEALTH_ROCK : BATTLE_SUBSCRIPT_SET_SPIKES;", case)
         for name in ("STEALTH_ROCK_HIT", "SET_SPIKES_HIT"):
             self.assertNotIn("SIDE_EFFECT", self.effect_script(name), name)

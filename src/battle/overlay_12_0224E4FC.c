@@ -1646,7 +1646,10 @@ BOOL ov12_022503EC(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
 // and the cloak there. Thousand Waves shares the trap's effect, and the
 // reference lists it, but its hold is no additional effect: Sheer Force does
 // not power it and a Covert Cloak does not keep it off (Pokemon Central,
-// Mille Onde).
+// Mille Onde). Stone Axe's stones, laid once the move is over, are one more
+// that Sheer Force trades for power (Rocciascure: "Le rocce aguzze non
+// vengono piazzate quando Rocciascure e usata da un Pokemon con l'abilita
+// Forzabruta", and it is in Forzabruta's list of the moves it powers).
 // The three Fangs come as a side effect on hit, and their subscript rolls the
 // status and the flinch against the chance itself, one after the other; both
 // are additional effects all the same (Pokemon Central, Forzabruta and
@@ -1660,6 +1663,7 @@ static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
     case MOVE_EFFECT_FLINCH_PARALYZE_HIT:
     case MOVE_EFFECT_PREVENT_HEALING_HIT:
     case MOVE_EFFECT_THROAT_CHOP:
+    case MOVE_EFFECT_STEALTH_ROCK_HIT:
         return TRUE;
     }
     return ctx->unk_2174 != 0 && BattleMoveTbl(ctx, moveNo)->effectChance != 0 && !(ctx->unk_2174 & (MOVE_SIDE_EFFECT_ON_HIT | MOVE_SIDE_EFFECT_CHECK_SUBSTITUTE | MOVE_SIDE_EFFECT_CHECK_HP_AND_SUBSTITUTE | MOVE_SIDE_EFFECT_CHECK_HP));

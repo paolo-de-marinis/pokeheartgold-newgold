@@ -5370,11 +5370,13 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
     // the target's side once the move is over, if the user still stands
     // (Pokemon Central, Rocciascure and Lama Milleflutti: not once Iron
     // Barbs, Rough Skin or a Rocky Helmet has felled it); a substitute that
-    // took the hit stops neither. Subscripts 386 and 387 leave the stones
-    // that are there and a fourth layer unlaid.
+    // took the hit stops neither. Stone Axe lays nothing for power Sheer
+    // Force traded the stones for (Rocciascure; IsSuppressibleSecondaryEffect).
+    // Subscripts 386 and 387 leave the stones that are there and a fourth
+    // layer unlaid.
     case MOVE_EFFECT_STEALTH_ROCK_HIT:
     case MOVE_EFFECT_SET_SPIKES_HIT:
-        if (!ctx->battleMons[ctx->battlerIdAttacker].hp) {
+        if (!ctx->battleMons[ctx->battlerIdAttacker].hp || SheerForceTradedEffect(ctx)) {
             return FALSE;
         }
         script = effect == MOVE_EFFECT_STEALTH_ROCK_HIT ? BATTLE_SUBSCRIPT_SET_STEALTH_ROCK : BATTLE_SUBSCRIPT_SET_SPIKES;
