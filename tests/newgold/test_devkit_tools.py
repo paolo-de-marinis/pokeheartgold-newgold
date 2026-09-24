@@ -213,5 +213,32 @@ class CappedTests(unittest.TestCase):
         self.assertIn("capped [-m 4G] COMMAND...", run.stdout)
 
 
+class XmapTests(unittest.TestCase):
+    """xmap.py reads a module's entries out of mwld's map."""
+
+    MAP = ("# .OVY_12\r\n"
+           "#>0000000C          SDK_OVERLAY_OVY_12_ID (linker command file)\r\n"
+           "  0223D760 00000000 .text   $t\t(a.o)\r\n"
+           "  0223D760 00000100 .text   Battle_Run\t(a.o)\r\n"
+           "  0223D860 00000020 .text   Battle_Helper$123\t(a.o)\r\n"
+           "  0223D880 00000200 .text   Pledge_Go\t(b.o)\r\n"
+           "# .OVY_12.bss\r\n"
+           "  0223DA80 00000040 .bss    sState\t(b.o)\r\n"
+           "# .OVY_13\r\n"
+           "  0223DB00 00000400 .text   Other\t(c.o)\r\n")
+
+    def test_objects_and_symbols_of_a_module(self):
+        sys.path.insert(0, str(DEVKIT))
+        import xmap
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "main.elf.xMAP"
+            path.write_text(self.MAP, newline="")
+            entries = xmap.parse(path, "OVY_12")
+            self.assertEqual(len(entries), 5, "OVY_13 is another module")
+            self.assertEqual(xmap.byobj(entries), {"a.o": 0x120, "b.o": 0x240})
+            self.assertEqual(xmap.syms(entries), {("Battle_Run", "a.o"): 0x100, ("Battle_Helper$", "a.o"): 0x20,
+                                                  ("Pledge_Go", "b.o"): 0x200, ("sState", "b.o"): 0x40})
+
+
 if __name__ == "__main__":
     unittest.main()
