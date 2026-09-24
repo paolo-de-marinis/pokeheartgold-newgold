@@ -81,5 +81,6 @@
 .public ov03_022581BC
 .public ov31_0225D520
 .public ov31_0225D710
+.public ov31_0225D60C
 .public ov31_0225D758
 .public ov31_0225DE24
