@@ -33,7 +33,7 @@ class SpeciesCheckTests(unittest.TestCase):
                    {"n": 1, "text": {"summary ability": "b"}},
                    {"n": 2, "text": {"summary ability": "b"}}]
         original = species.expected_text
-        species.expected_text = lambda e: {"summary ability": e["ability"]}
+        species.expected_text = lambda e, r=None: {"summary ability": e["ability"]}
         try:
             found = species.text_failures(records, table)
         finally:
@@ -47,6 +47,35 @@ class SpeciesCheckTests(unittest.TestCase):
         self.assertEqual((text["ability"], text["category"]), ("Overgrow", "Seed Pok\u00e9mon"))
         self.assertTrue(text["ability description"].startswith("Powers up Grass-type"))
         self.assertTrue(text["entry"].startswith("The seed on its back"))
+
+
+    def test_forms_lists_what_the_dex_lists(self):
+        n = sv.species_numbers()
+        self.assertEqual(species.forms_entries(n["BULBASAUR"]), [("gender", 0), ("gender", 1)])
+        self.assertEqual(species.forms_entries(n["NIDORAN_F"]), [("gender", 1)])
+        self.assertEqual(species.forms_entries(n["MAGNEMITE"]), [("gender", 2)])
+        self.assertEqual(species.forms_entries(n["UNOWN"]), [("form", 0)])
+        self.assertEqual(species.forms_entries(n["CASTFORM"]), [("form", f) for f in range(4)])
+
+    def test_a_split_species_female_is_drawn_from_its_female_species(self):
+        n = sv.species_numbers()
+        front, back = species.forms_pictures(n["MEOWSTIC"], ("gender", 1))
+        self.assertEqual(front.parent.parent.name, f"{n['MEOWSTIC_FEMALE']:04d}")
+        front, back = species.forms_pictures(n["VENUSAUR"], ("gender", 1))
+        self.assertEqual((front.parent.name, back.name), ("female", "back.png"))
+        front, back = species.forms_pictures(n["NIDORAN_M"], ("gender", 1))
+        self.assertEqual(front.parent.name, "male")   # no female picture of its own
+
+    def test_the_area_page_is_read_from_the_records(self):
+        n = sv.species_numbers()
+        self.assertTrue(species.area_unknown(n["BULBASAUR"]))
+        self.assertFalse(species.area_unknown(n["PIDGEY"]))
+        self.assertFalse(species.area_unknown(n["APPLIN"]))   # Ilex Forest, New Gold's
+        table = {0: {"species": n["BULBASAUR"]}, 1: {"species": n["IVYSAUR"]}, 2: {"species": n["PIDGEY"]},
+                 3: {"species": n["VENUSAUR"]}}
+        records = [{"n": 0, "walk": "area", "banner": "unknown"}, {"n": 1, "walk": "area", "banner": "unknown"},
+                   {"n": 2, "walk": "area", "banner": "unknown"}, {"n": 3, "walk": "area", "banner": "a map"}]
+        self.assertEqual(sorted(n for n, _ in species.area_failures(records, table)), [2, 3])
 
 
 if __name__ == "__main__":

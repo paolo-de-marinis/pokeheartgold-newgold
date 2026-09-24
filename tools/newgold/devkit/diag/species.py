@@ -2,7 +2,7 @@
 """Every species and form through the screens that load its pictures, its cry,
 its name and its ability, in the headless harness, and a report of what failed.
 
-    species.py OUT [--walk pc,dex,battle] [--jobs N] [--only SPECIES,...]
+    species.py OUT [--walk pc,dex,details,battle] [--jobs N] [--only SPECIES,...]
 
 The ROM is the NEWGOLD_DIAG=1 HeartGold build. What each walk does:
 
@@ -13,13 +13,20 @@ The ROM is the NEWGOLD_DIAG=1 HeartGold build. What each walk does:
           icons are compared with the icon PNGs, every slot is hovered (the
           front sprite against its PNG; the Dex number, the name, the types
           and the ability as text) and every slot's summary is opened on its
-          Skills page (the sprite, the icon, the ability and its description
-          again, and the cry the game asked for).
+          Info page (the sprite, the icon, the Dex number, the name and the
+          types, and the cry the game asked for), then every slot's Skills
+          page (the sprite, the icon, the ability and its description).
   dex     The Pokedex's list, the cursor on every Dex species in national
           order: the page on the top screen (the sprite against its PNG; the
           name, category, types and entry as text) and the cry X plays,
           which also says which species the cursor is on. A form species
           is seen as the form the Dex shows first.
+  details The Dex's DETAILS on every Dex species: the AREA page it opens
+          on ("Area Unknown" exactly where zukan_enc has no Johto area in
+          the morning, which is what the page shows first), then FORMS,
+          every entry of its list -- each gender the species is recorded
+          as, or the forms the Dex lists for it -- with the front and back
+          pictures against their PNGs and the name and entry as text.
   battle  A wild battle for every species and form, and one more for every
           ability none of those has: the variant leads the party, the wild
           one is its species (form 0, as the switch makes it), until both
@@ -81,12 +88,34 @@ PC_TEXT = {"dex number": (8, 40, 56, 56), "name": (60, 40, 124, 56),
 SUMMARY_TEXT = {"summary name": (170, 30, 236, 46), "summary ability": (66, 136, 160, 152),
                 "ability description": (0, 152, 160, 186)}
 BOX_ICON = lambda slot: (8 + 24 * (slot % 6), 32 + 24 * (slot // 6))  # noqa: E731
+# The summary's first page: its INFO panel on the bottom screen, in the
+# pixels of both screens, measured on Bulbasaur.
+SUMMARY_INFO_TEXT = {"info dex number": (72, 200, 142, 214), "info name": (72, 216, 142, 230),
+                     "info types": (72, 232, 142, 247)}
 # The Dex's list, measured on Bulbasaur: the page of the species under the
 # cursor on the top screen.
 DEX_SPRITE = (8, 32)
 DEX_TEXT = {"dex name": (150, 24, 244, 40), "category": (106, 40, 246, 56),
             "dex types": (144, 64, 240, 80), "entry": (16, 134, 240, 186)}
 DEX_CHUNK = 128
+# DETAILS, measured on Bulbasaur: the AREA page's banner ("Area Unknown", or
+# the map under it), and FORMS' two pictures and its name and entry bar.
+AREA_BANNER = (88, 92, 232, 112)
+FORMS_FRONT, FORMS_BACK = (24, 80), (152, 98)
+# The back picture sits as high as the species' height says, and the
+# window's bottom cuts off what hangs below it.
+FORMS_BACK_ROWS, FORMS_BACK_WINDOW = range(-40, 21), (150, 78, 234, 161)
+FORMS_TEXT = {"forms name": (20, 40, 236, 56)}
+# ov18_021E8254: the species whose FORMS list is the Dex's seen forms, and
+# the two that list all of theirs; any other lists the genders it was seen as.
+DEX_FORM_LISTS = {"UNOWN", "PICHU", "DEOXYS", "BURMY", "WORMADAM", "SHELLOS", "GASTRODON", "ROTOM",
+                  "GIRATINA", "SHAYMIN"}
+DEX_ALL_FORMS = {"CASTFORM": 4, "CHERRIM": 2}
+# ov18_021E8528 on opening the page: the morning's overworld and special
+# overworld blocks, the morning's dungeon and special dungeon blocks, Johto
+# being the areas drawn left of x 22.
+AREA_BLOCKS = (("overworlds", 3), ("overworlds", 7), ("dungeons", 0), ("dungeons", 6))
+JOHTO_WIDTH = 22
 # sub_02006A0C: Sky Shaymin's cry is asked for under a number of its own.
 SKY_SHAYMIN_CRY = 0x1EE
 # ov18_021E595C and ov18_021E59A8: the category and the HeartGold entry,
@@ -300,23 +329,30 @@ def _close(a, b):
     return all(abs((p >> 3) - (q >> 3)) <= 1 for p, q in zip(a, b))
 
 
-def _score(px, size, pixels, ox, oy, step=1):
+def _score(px, size, pixels, ox, oy, step=1, clip=None):
+    """The share of the picture's pixels at (ox, oy) the screen shows; with
+    a clip box, of those that fall inside it (a window cuts the rest off)."""
     hit = n = 0
+    x0, y0, x1, y1 = clip or (0, 0, size[0], size[1])
     for x, y, c in pixels[::step]:
+        inside = x0 <= ox + x < x1 and y0 <= oy + y < y1
+        if clip and not inside:
+            continue
         n += 1
-        if 0 <= ox + x < size[0] and 0 <= oy + y < size[1] and _close(px[ox + x, oy + y], c):
+        if inside and _close(px[ox + x, oy + y], c):
             hit += 1
     return hit / n if n else 0.0
 
 
-def match(screen, frames, at, spread):
+def match(screen, frames, at, spread, clip=None, rows=None):
     """How much of the picture is on the screen near `at`: the best of both
-    frames over a small square of positions, a coarse pass and then a full one."""
+    frames over a small square of positions (or `rows` of heights), a coarse
+    pass and then a full one."""
     px, size = screen.load(), screen.size
-    places = [(at[0] + dx, at[1] + dy) for dx in range(-spread, spread + 1) for dy in range(-spread, spread + 1)]
-    coarse = sorted(((_score(px, size, f, x, y, 5), i, x, y) for i, f in enumerate(frames) for x, y in places),
+    places = [(at[0] + dx, at[1] + dy) for dx in range(-spread, spread + 1) for dy in rows or range(-spread, spread + 1)]
+    coarse = sorted(((_score(px, size, f, x, y, 5, clip), i, x, y) for i, f in enumerate(frames) for x, y in places),
                     reverse=True)[:3]
-    return max(_score(px, size, frames[i], x, y) for _, i, x, y in coarse)
+    return max(_score(px, size, frames[i], x, y, 1, clip) for _, i, x, y in coarse)
 
 
 def region(image, box, keep=None):
@@ -466,7 +502,8 @@ def pc_box(job):
             records.append(record)
             if problems(record, e):
                 shots[f"{e['n']:04d}_pc"] = screen
-        # Back to the first slot, and its summary on the Skills page.
+        # Back to the first slot, and its summary: the Info page it opens on,
+        # every slot going down, then the Skills page, every slot going up.
         # A press while the cursor still glides is lost: each one waits.
         for _ in range(position // 6):
             game.press("UP", 10)
@@ -477,31 +514,40 @@ def pc_box(job):
         game.press("A", 40)
         game.press("DOWN", 20)
         game.press("A", 250)
-        game.press("RIGHT", 80)
-        for i, n in enumerate(numbers):
-            if i:
-                game.press("DOWN")
-            # The sprite plays its animation first: Unown and Deoxys only
-            # hold still after about a hundred frames.
-            game.step(140)
-            e = table[n]
-            screen, score = game.still(lambda image: match(image.crop((0, 0, 256, 192)),
-                                                           _frames(sprite_png(e), 80), SUMMARY_SPRITE, 3))
-            top, bottom = screen.crop((0, 0, 256, 192)), screen.crop((0, 192, 256, 384))
-            now = game.counters()
-            icon, palette = icon_png(e)
-            record = {"n": n, "walk": "summary", "score": score,
-                      "icon": match(bottom, _frames(icon, 32, palette), SUMMARY_ICON, 3),
-                      "asserts": now["asserts"] - before["asserts"], "allocs": now["allocs"] - before["allocs"],
-                      "cry": {"asked": now["cries"] - before["cries"], "species": now["cry species"],
-                              "bank": now["cry bank"], "started": now["cry started"]},
-                      "text": regions(top, SUMMARY_TEXT, out)}
-            if record["asserts"] or record["allocs"]:
-                record["failure"] = game.failure()
-            before = now
-            records.append(record)
-            if problems(record, e):
-                shots[f"{n:04d}_summary"] = screen
+        passes = (("summary info", list(enumerate(numbers)), "DOWN"),
+                  ("summary", list(enumerate(numbers))[::-1], "UP"))
+        for walk, slots, button in passes:
+            if walk == "summary":
+                game.press("RIGHT", 80)
+            for i, n in slots:
+                if (i, n) != slots[0]:
+                    game.press(button)
+                # The sprite plays its animation first: Unown and Deoxys only
+                # hold still after about a hundred frames.
+                game.step(140)
+                e = table[n]
+                screen, score = game.still(lambda image: match(image.crop((0, 0, 256, 192)),
+                                                               _frames(sprite_png(e), 80), SUMMARY_SPRITE, 3))
+                top, bottom = screen.crop((0, 0, 256, 192)), screen.crop((0, 192, 256, 384))
+                now = game.counters()
+                icon, palette = icon_png(e)
+                record = {"n": n, "walk": walk, "score": score,
+                          "icon": match(bottom, _frames(icon, 32, palette), SUMMARY_ICON, 3),
+                          "asserts": now["asserts"] - before["asserts"], "allocs": now["allocs"] - before["allocs"]}
+                if walk == "summary info":
+                    # Opening a summary, or the next one, plays its cry; the
+                    # Skills page is reached by a page turn and plays none.
+                    record["cry"] = {"asked": now["cries"] - before["cries"], "species": now["cry species"],
+                                     "bank": now["cry bank"], "started": now["cry started"]}
+                    record["text"] = regions(screen, SUMMARY_INFO_TEXT, out)
+                else:
+                    record["text"] = regions(top, SUMMARY_TEXT, out)
+                if record["asserts"] or record["allocs"]:
+                    record["failure"] = game.failure()
+                before = now
+                records.append(record)
+                if problems(record, e):
+                    shots[f"{n:04d}_{walk.replace(' ', '_')}"] = screen
     except Exception as error:  # a box that stops is a result too
         records.append({"n": numbers[0], "walk": "pc box", "error": f"box {box + 1} of {save.name}: {error}"})
         shots[f"box{box + 1:02d}_{save.stem}_stopped"] = game.shot()
@@ -540,6 +586,10 @@ def dex_jobs(out, wanted):
     """A save with every Dex species seen and caught, standing in Violet's
     Pokemon Center, and the Dex's list cut into runs of DEX_CHUNK places."""
     save = savedit.Save(BASE_SAVE)
+    # Cleared first: the species the base save has seen (the starter, the
+    # Pokemon of the trainers on the way to Violet) keep only the gender
+    # they were seen as, and FORMS would list one entry for them.
+    savedit.set_dex(save, savedit.dex_species(), False, False)
     savedit.set_dex(save, savedit.dex_species(), True, True)
     savedit.set_dex_switches(save, True, True)
     savedit.set_position(save, PC_TILE[0], PC_TILE[1], PC_TILE[2], 1)
@@ -548,6 +598,29 @@ def dex_jobs(out, wanted):
     species = {e["species"] for e in wanted}
     places = [i for i, s in enumerate(national_order()) if s in species]
     return [(path, places[i:i + DEX_CHUNK], out) for i in range(0, len(places), DEX_CHUNK)]
+
+
+def dex_cursor(game, order, place, at):
+    """Put the Dex list's cursor on `place`, from `at`. The list swallows a
+    press now and then while it scrolls, one in fifteen however slowly they
+    come, so this goes by what the cry X plays says and closes the gap until
+    there is none. Returns where the cursor is and the counters after the cry."""
+    for _ in range(12):
+        while at != place:
+            game.press("RIGHT" if place > at else "LEFT", 6 if abs(place - at) > 1 else 10)
+            at += 1 if place > at else -1
+        game.step(30)
+        asked = game.counters()["cries"]
+        game.press("X", 4)
+        now = game.counters()
+        if now["cries"] == asked:
+            continue
+        shown = now["cry species"] & 0xFFFF
+        if shown in order and order.index(shown) != place:
+            at = order.index(shown)
+            continue
+        break
+    return at, now
 
 
 def dex_pages(job):
@@ -569,24 +642,7 @@ def dex_pages(job):
             game.press(button, wait)
         for place in places:
             before = game.counters()
-            # The list swallows a press now and then while it scrolls, one
-            # in fifteen however slowly they come, so the walk goes by what
-            # the cry says and closes the gap until there is none.
-            for _ in range(12):
-                while at != place:
-                    game.press("RIGHT" if place > at else "LEFT", 6 if abs(place - at) > 1 else 10)
-                    at += 1 if place > at else -1
-                game.step(30)
-                asked = game.counters()["cries"]
-                game.press("X", 4)
-                now = game.counters()
-                if now["cries"] == asked:
-                    continue
-                shown = now["cry species"] & 0xFFFF
-                if shown in order and order.index(shown) != place:
-                    at = order.index(shown)
-                    continue
-                break
+            at, now = dex_cursor(game, order, place, at)
             e = first[order[place]]
             # The Dex draws the form its cry names, and the gender seen first;
             # a species of one gender has an empty file for the other.
@@ -614,6 +670,133 @@ def dex_pages(job):
         records.append({"n": first[order[places[0]]]["n"], "walk": "dex",
                         "error": f"the Dex from place {places[0] + 1}: {error}"})
         shots[f"dex{places[0] + 1:04d}_stopped"] = game.shot()
+    finally:
+        for name, image in shots.items():
+            image.save(out / "fail" / f"{name}.png")
+        game.close()
+    return records
+
+
+@cache
+def _female_species():
+    """PicSpecies_FemaleForm: the species whose female is a species of its own."""
+    source = (ROOT / "src/pokemon.c").read_text()
+    body = source[source.index("static u16 PicSpecies_FemaleForm("):]
+    body = body[:body.index("\n}\n")]
+    numbers = savedit.species_numbers()
+    return {numbers[a]: numbers[b] for a, b in re.findall(r"case SPECIES_(\w+):\s*return SPECIES_(\w+);", body)}
+
+
+def forms_entries(species):
+    """What ov18_021E8254 lists on FORMS for a species seen the way the Dex
+    save has it (savedit.set_dex: every gender it can be, its first form):
+    ("form", n) or ("gender", MON_MALE / MON_FEMALE / MON_GENDERLESS)."""
+    const = next(k for k, v in savedit.species_numbers().items() if v == species)
+    if const in DEX_FORM_LISTS:
+        return [("form", 0)]
+    if const in DEX_ALL_FORMS:
+        return [("form", f) for f in range(DEX_ALL_FORMS[const])]
+    ratio = savedit.GENDER_RATIO(savedit.personal_records()[savedit.personal_row(species, 0)]["genderRatio"])
+    return [("gender", g) for g in {255: [2], 0: [0], 254: [1]}.get(ratio, [0, 1])]
+
+
+def forms_pictures(species, entry):
+    """The front and back PNGs FORMS should draw for an entry: the form's,
+    or the gender's -- a female's from the female species where it is one
+    (PicSpecies_FemaleForm), the male's where the female has no picture."""
+    kind, value = entry
+    if kind == "form":
+        front = sprite_png({"species": species, "form": value, "gender": 0})
+        return front, front.with_name("back.png")
+    if value == 1:
+        species = _female_species().get(species, species)
+    folder = POKEGRA / "pokegra" / f"{species:04d}"
+    gender = "female" if value == 1 and (folder / "female" / "front.png").stat().st_size else "male"
+    return folder / gender / "front.png", folder / gender / "back.png"
+
+
+@cache
+def area_unknown(species):
+    """Whether the AREA page opens on "Area Unknown" for a species, from
+    zukan_enc.json: no Johto area in its morning's records (HeartGold's)."""
+    data = json.loads((ROOT / "files/application/zukanlist/zkn_data/zukan_enc.json").read_text())
+    for table, block in AREA_BLOCKS:
+        record = list(data["encounters"][f"method_{block}"].values())[species]
+        record = record["GOLD"] if isinstance(record, dict) else record
+        if any(data[table][i]["unk_0"] < JOHTO_WIDTH for i in record[:-1]):
+            return False
+    return True
+
+
+def dex_details(job):
+    """DETAILS for every place of the run: the AREA page it opens on, then
+    FORMS and every entry of its list, and back to the list."""
+    save, places, out = job
+    quiet()
+    order = national_order()
+    first = {}
+    for e in entries():
+        first.setdefault(e["species"], e)
+    game = Game(save)
+    records, shots, at = [], {}, 0
+    try:
+        continue_game(game)
+        for button, wait in (("X", 30), ("A", 200), ("A", 200)):
+            game.press(button, wait)
+        for place in places:
+            at, _ = dex_cursor(game, order, place, at)
+            e = first[order[place]]
+            before = game.counters()
+            game.press("A", 200)
+            screen = game.shot()
+            now = game.counters()
+            record = {"n": e["n"], "walk": "area", "place": place + 1,
+                      "asserts": now["asserts"] - before["asserts"], "allocs": now["allocs"] - before["allocs"],
+                      "banner": region(screen, AREA_BANNER, out / "text" / "area_banner")}
+            if record["asserts"] or record["allocs"]:
+                record["failure"] = game.failure()
+            records.append(record)
+            if problems(record, e):
+                shots[f"{e['n']:04d}_area"] = screen
+            before = now
+            game.press("RIGHT", 120)
+            game.press("RIGHT", 120)
+            bar = None
+            for i, entry in enumerate(forms_entries(e["species"])):
+                # The list swallows a press now and then, as the Dex's list
+                # does: the bar names every entry its own way, so a bar that
+                # has not changed is pressed for again.
+                for _ in range(5 if i else 0):
+                    game.press("DOWN", 60)
+                    if region(game.shot(), FORMS_TEXT["forms name"]) != bar:
+                        break
+                front, back = forms_pictures(e["species"], entry)
+                # The back picture's PNG keeps another palette; the game draws
+                # both with the front's.
+                palette = tuple(_palette_of(front))
+                screen, score = game.still(lambda image: match(image.crop((0, 0, 256, 192)),
+                                                               _frames(front, 80), FORMS_FRONT, 3))
+                top = screen.crop((0, 0, 256, 192))
+                now = game.counters()
+                record = {"n": e["n"], "walk": "forms", "place": place + 1, "entry": list(entry), "score": score,
+                          "back": match(top, _frames(back, 80, palette), FORMS_BACK, 3,
+                                        FORMS_BACK_WINDOW, FORMS_BACK_ROWS),
+                          "asserts": now["asserts"] - before["asserts"], "allocs": now["allocs"] - before["allocs"],
+                          "text": regions(top, FORMS_TEXT, out)}
+                bar = record["text"]["forms name"]
+                if record["asserts"] or record["allocs"]:
+                    record["failure"] = game.failure()
+                before = now
+                records.append(record)
+                if problems(record, e):
+                    shots[f"{e['n']:04d}_forms_{entry[0]}{entry[1]}"] = screen
+            if any(r.get("asserts") for r in records if r.get("place") == place + 1):
+                break   # the game has gone to its error screen
+            game.press("B", 120)
+    except Exception as error:
+        records.append({"n": first[order[places[0]]]["n"], "walk": "details",
+                        "error": f"DETAILS from place {places[0] + 1}: {error}"})
+        shots[f"details{places[0] + 1:04d}_stopped"] = game.shot()
     finally:
         for name, image in shots.items():
             image.save(out / "fail" / f"{name}.png")
@@ -701,8 +884,9 @@ def bank(number):
     return [html.unescape(row["text"]) for row in gmm.read(number)]
 
 
-def expected_text(e):
-    """What each compared region should say, as a key: equal keys, equal pixels."""
+def expected_text(e, r=None):
+    """What each compared region should say, as a key: equal keys, equal
+    pixels. FORMS' bar also says which entry of the list it is on (r)."""
     record = savedit.personal_records()[savedit.personal_row(e["species"], e["form"])]
     types = tuple(dict.fromkeys(record["types"]))
     name = savedit.species_name(e["species"])
@@ -711,7 +895,9 @@ def expected_text(e):
     return {"dex number": dex_number(e["species"]), "name": name, "types": types,
             "ability": ability, "summary name": name, "summary ability": ability,
             "ability description": description, "dex name": name, "dex types": types,
-            "category": bank(DEX_CATEGORIES)[species], "entry": bank(DEX_ENTRIES)[species]}
+            "category": bank(DEX_CATEGORIES)[species], "entry": bank(DEX_ENTRIES)[species],
+            "info dex number": dex_number(e["species"]), "info name": name, "info types": types,
+            "forms name": (name, tuple(r["entry"]) if r and "entry" in r else None)}
 
 
 def text_failures(records, table):
@@ -722,7 +908,7 @@ def text_failures(records, table):
     who = defaultdict(list)                         # (region, key, pixels) -> entries
     for r in records:
         for region_name, pixels in r.get("text", {}).items():
-            key = expected_text(table[r["n"]])[region_name]
+            key = expected_text(table[r["n"]], r)[region_name]
             seen[region_name][key].add(pixels)
             drawn[region_name][pixels].add(key)
             who[region_name, key, pixels].append(r["n"])
@@ -757,7 +943,7 @@ def problems(record, e):
     # box's wide icons overlap: Ho-Oh's covers a tenth of a Lugia beside it.
     # The summary shows the icon alone, at the full PASS.
     floor = 0.8 if e["species"] == savedit.species_numbers()["SPINDA"] or record["walk"] == "pc icon" else PASS
-    for key, what in (("score", "picture"), ("icon", "icon")):
+    for key, what in (("score", "picture"), ("back", "back picture"), ("icon", "icon")):
         if key in record and record[key] < floor:
             out.append(f"{what} matches its PNG at {record[key]:.0%}")
     cry = record.get("cry")
@@ -781,12 +967,34 @@ def problems(record, e):
     return out
 
 
+def area_failures(records, table):
+    """AREA pages that say "Area Unknown" where zukan_enc has a Johto area
+    for the morning, or show a map where it has none. The banner's pixels
+    are the ones most of the species with no area show."""
+    walked = [r for r in records if r["walk"] == "area" and "banner" in r]
+    unknown = defaultdict(int)
+    for r in walked:
+        if area_unknown(dex_species(table[r["n"]]["species"])):
+            unknown[r["banner"]] += 1
+    banner = max(unknown, key=unknown.get, default=None)
+    out = []
+    for r in walked:
+        expected = area_unknown(dex_species(table[r["n"]]["species"]))
+        if expected and r["banner"] != banner:
+            out.append((r["n"], f"area: zukan_enc has no Johto area but the page shows a map (text/area_banner/{r['banner']}.png)"))
+        elif not expected and r["banner"] == banner:
+            out.append((r["n"], "area: the page says Area Unknown but zukan_enc has a Johto area"))
+    return out
+
+
 def report(out, records):
     table = {e["n"]: e for e in entries()}
     lines, failed = [], defaultdict(list)
     for r in records:
         for what in problems(r, table[r["n"]]):
             failed[r["n"]].append(f"{r['walk']}: {what}")
+    for n, what in area_failures(records, table):
+        failed[n].append(what)
     for region_name, numbers, what, pixels in text_failures(records, table):
         for n in numbers:
             failed[n].append(f"text: {what} (text/{region_name.replace(' ', '_')}/{pixels}.png)")
@@ -808,7 +1016,7 @@ def report(out, records):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("out", type=Path)
-    parser.add_argument("--walk", default="pc,dex,battle")
+    parser.add_argument("--walk", default="pc,dex,details,battle")
     parser.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 4))
     parser.add_argument("--only", help="species constants or numbers, comma separated")
     parser.add_argument("--report", action="store_true", help="only write the report from results.jsonl")
@@ -829,6 +1037,8 @@ def main():
                 jobs += [(pc_box, (save, box, numbers, out)) for box, numbers in enumerate(boxes)]
         if "dex" in walks:
             jobs += [(dex_pages, job) for job in dex_jobs(out, wanted)]
+        if "details" in walks:
+            jobs += [(dex_details, job) for job in dex_jobs(out, wanted)]
         if "battle" in walks:
             # Every species and form once, and every ability once more on a
             # variant that has it: an ability that acts on entry is what can
