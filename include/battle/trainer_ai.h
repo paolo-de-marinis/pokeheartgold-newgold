@@ -24,12 +24,43 @@ extern const u16 ov10_0222B068[][2];
 extern const u16 ov10_0222B080[];
 extern const u16 ov10_0222B098[];
 
+// The AI script commands, by opcode.
+typedef void (*AICommandFunc)(BattleSystem *battleSystem, BattleContext *ctx);
+extern const AICommandFunc ov10_0222B0B4[];
+
 // the following functions are in reality static but need to be decompiled still or are used by non-decompiled functions
 u8 ov10_0221BF44(BattleSystem *battleSystem, BattleContext *ctx);
 u8 ov10_0221C038(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221C278(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221EE88(BattleSystem *battleSystem, BattleContext *ctx);
 
+void ov10_0221C384(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C3C4(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C404(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C444(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C484(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C4B8(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C510(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C568(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C5C0(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C618(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C664(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C6B0(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C6FC(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C748(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C790(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C7D8(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C828(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C878(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C8A8(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C8D8(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C908(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C938(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C968(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C998(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C9C8(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221C9F8(BattleSystem *battleSystem, BattleContext *ctx);
+void ov10_0221CA4C(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221CA9C(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221CB00(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221CB64(BattleSystem *battleSystem, BattleContext *ctx);
@@ -67,6 +98,7 @@ void ov10_0221EB6C(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221EB8C(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221EBAC(BattleSystem *battleSystem, BattleContext *ctx);
 u32 ov10_0221EEF0(BattleContext *ctx);
+u32 ov10_0221EF10(BattleContext *ctx, int offset);
 void ov10_0221EF24(BattleContext *ctx, int offset);
 u8 ov10_0221EF34(BattleContext *ctx, u8 battler);
 
