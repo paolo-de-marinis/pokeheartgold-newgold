@@ -1001,9 +1001,42 @@ async function tickBadge(b, on) {
   if (!out) return renderTabs();
   storyToast(out);
 }
+// What was typed in a form and not saved yet: a story tick draws the tab again, and must not throw it away.
+function formDraft(form) {
+  return !form ? [] : [...form.elements].filter(el => el.name && (el.type === "checkbox" ? el.checked !== el.defaultChecked
+    : el.tagName === "SELECT" ? ![...el.options].some(o => o.selected && o.defaultSelected) : el.value !== el.defaultValue))
+    .map(el => [el.name, el.type === "checkbox" ? el.checked : el.value]);
+}
+function applyDraft(form, draft) {
+  for (const [name, v] of draft) if (form.elements[name]) form.elements[name][form.elements[name].type === "checkbox" ? "checked" : "value"] = v;
+}
+// The story's steps outside the gyms, by place, as the search and the filter leave them.
+function storyPlaces() {
+  const done = new Set(S.save.story.done), inChain = new Set(Object.values(S.data.chains).flat());
+  const q = (S.storyq || "").toLowerCase(), show = S.storyshow || "all";
+  const places = new Map();
+  for (const s of S.data.story) {
+    if (inChain.has(s.id)) continue;
+    // The constants it writes and tests too: "squirt" finds the Flower Shop's bottle and the Sudowoodo that wants it.
+    const text = `${stepLabel(s.id)} ${s.key} ${s.section} ${s.writes.map(w => w[1]).join(" ")} ${s.needs.map(([n]) => n[0][1]).join(" ")}`.toLowerCase();
+    if (q && !text.includes(q)) continue;
+    if (show !== "all" && done.has(s.id) !== (show === "done")) continue;
+    if (!places.has(s.section)) places.set(s.section, []);
+    places.get(s.section).push(s.id);
+  }
+  const sections = [...places].sort((a, b) => (a[0] || "~").localeCompare(b[0] || "~"));
+  return sections.map(([sec, ids]) => `<details data-sec="${esc(sec)}" ${q || S.storyopen.has(sec) ? "open" : ""}><summary><strong>${esc(sec || "Script comuni")}</strong> <span class="muted">${ids.filter(x => done.has(x)).length} di ${ids.length} fatti</span></summary>
+        <div class="chain">${ids.map(x => stepRow(x)).join("")}</div></details>`).join("") || `<p class="muted">Nessun passo.</p>`;
+}
+function drawPlaces() {
+  $("#storyplaces").innerHTML = storyPlaces();
+  // A place opened stays open when the tab is drawn again after a tick.
+  $$("details[data-sec]", $("#storyplaces")).forEach(d => d.ontoggle = () => { S.storyopen[d.open ? "add" : "delete"](d.dataset.sec); });
+}
 function renderTrainer() {
   const p = S.save.profile, lim = S.data.limits, given = S.save.given, done = new Set(S.save.story.done);
   const inChain = new Set(Object.values(S.data.chains).flat());
+  const draft = S.trainerFor === S.f ? formDraft($("#trainer")) : [];
   const menu = S.data.menu.map(e => {
     const [label, what, group] = MENU_NAMES[e.icon] ?? [e.icon, ""];
     return {e, group, html: `<label class="sw"><input type="checkbox" data-menu="${e.icon}" ${given.menu[e.icon] ? "checked" : ""}>
@@ -1026,18 +1059,7 @@ function renderTrainer() {
       ${uses.length ? `<p class="note">Il gioco la controlla anche per:</p><div class="chain">${uses.map(s => `<label class="plan"><input type="checkbox" data-step="${s.id}" ${done.has(s.id) ? "checked" : ""}>
         <span>${esc(stepLabel(s.id))} <span class="muted">(${esc(s.section)})</span></span></label>`).join("")}</div>` : ""}</div>`;
   };
-  const q = (S.storyq || "").toLowerCase(), show = S.storyshow || "all";
-  const places = new Map();
-  for (const s of S.data.story) {
-    if (inChain.has(s.id)) continue;
-    // The constants it writes and tests too: "squirt" finds the Flower Shop's bottle and the Sudowoodo that wants it.
-    const text = `${stepLabel(s.id)} ${s.key} ${s.section} ${s.writes.map(w => w[1]).join(" ")} ${s.needs.map(([n]) => n[0][1]).join(" ")}`.toLowerCase();
-    if (q && !text.includes(q)) continue;
-    if (show !== "all" && done.has(s.id) !== (show === "done")) continue;
-    if (!places.has(s.section)) places.set(s.section, []);
-    places.get(s.section).push(s.id);
-  }
-  const sections = [...places].sort((a, b) => (a[0] || "~").localeCompare(b[0] || "~"));
+  const show = S.storyshow || "all";
   $("#tab").innerHTML = `<form id="trainer">
     <div class="form">
       <label class="f">Nome<input name="name" value="${esc(p.name)}" maxlength="${lim.name}"></label>
@@ -1082,10 +1104,12 @@ function renderTrainer() {
         (le scelte che dipendono dal salvataggio le decide il salvataggio), toglierlo lo riporta indietro: un passo spuntato qui rimette quello che aveva
         trovato; uno fatto giocando rigira flag, medaglie e strumenti, e le variabili di cui non si sa il valore di prima restano, segnate sotto il passo.
         Per tutto il resto c'è la scheda Flag e variabili.</p>
-      ${sections.map(([sec, ids]) => `<details data-sec="${esc(sec)}" ${q || S.storyopen.has(sec) ? "open" : ""}><summary><strong>${esc(sec || "Script comuni")}</strong> <span class="muted">${ids.filter(x => done.has(x)).length} di ${ids.length} fatti</span></summary>
-        <div class="chain">${ids.map(x => stepRow(x)).join("")}</div></details>`).join("") || `<p class="muted">Nessun passo.</p>`}
+      <div id="storyplaces"></div>
     </div>
   </div>`;
+  applyDraft($("#trainer"), draft);
+  S.trainerFor = S.f;
+  drawPlaces();
   $("#trainer").addEventListener("submit", ev => {
     ev.preventDefault();
     const f = ev.target.elements;
@@ -1103,10 +1127,9 @@ function renderTrainer() {
     if (d.card)     // a bit each, as SavePokegear_RegisterCard ORs it in
       return edit("pokegear", {cards: el.checked ? given.pokegear.cards | +d.card : given.pokegear.cards & ~+d.card}, "Schede del Pokégear salvate");
   };
-  $("#storyq").oninput = ev => { S.storyq = ev.target.value; const pos = ev.target.selectionStart; renderTrainer(); const el = $("#storyq"); el.focus(); el.setSelectionRange(pos, pos); };
-  $("#storyshow").onchange = ev => { S.storyshow = ev.target.value; renderTrainer(); };
-  // A place opened stays open when the tab is drawn again after a tick.
-  $$("details[data-sec]", story).forEach(d => d.ontoggle = () => { S.storyopen[d.open ? "add" : "delete"](d.dataset.sec); });
+  // The search and the filter draw the places again, and nothing else: the form keeps what was typed in it.
+  $("#storyq").oninput = ev => { S.storyq = ev.target.value; drawPlaces(); };
+  $("#storyshow").onchange = ev => { S.storyshow = ev.target.value; drawPlaces(); };
 }
 
 // ---- Squadra -------------------------------------------------------------
