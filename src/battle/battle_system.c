@@ -729,8 +729,9 @@ u16 BattleSystem_CheckEvolution(BattleSetup *setup, int *selectedMonIndex, int *
         return 0;
     }
     // A battle fled still lets a Pokemon that levelled up evolve, as in
-    // retail, but not by the critical hits it landed: running away is not
-    // seeing the battle to its end. A battle lost evolves nothing.
+    // retail, but not by the critical hits it landed: Bulbapedia
+    // (Sirfetch'd) evolves it after three in one battle "without escaping
+    // or losing". A battle lost evolves nothing.
     if (setup->winFlag == BATTLE_OUTCOME_PLAYER_FLED) {
         ClearCriticalHitsMarks(setup->party[0]);
     }
