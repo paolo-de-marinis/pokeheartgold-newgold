@@ -9749,9 +9749,11 @@ static u16 Battler_RelicSongForm(BattleContext *ctx, int battlerId) {
 // the move away from -- or when it goes under with Dive, whether or not the
 // dive then lands: an Arrokuda above half its HP, a Pikachu at half or below.
 // The catch is noted as it happens and shown with the form changes once the
-// action is over (Battler_GulpMissileForm). Not a transformed Cramorant, whose
-// form is its copy's and which cannot spit the prey anyway. The reference
-// declares the ability and reads it only in its lists of what cannot be copied.
+// action is over (Battler_GulpMissileForm). Not a transformed Cramorant: the
+// ability does nothing for a Pokemon that took Cramorant's shape with
+// Transform or Imposter, and one that copied a Cramorant already holding its
+// prey cannot spit it (Inghiottimissile). The reference declares the ability
+// and reads it only in its lists of what cannot be copied.
 void Battler_GulpMissileCatch(BattleContext *ctx, int battlerId) {
     if (ctx->battleMons[battlerId].species != SPECIES_CRAMORANT || !ctx->battleMons[battlerId].hp || ctx->selfTurnData[battlerId].gulpMissilePrey
         || GetBattlerAbility(ctx, battlerId) != ABILITY_GULP_MISSILE || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
