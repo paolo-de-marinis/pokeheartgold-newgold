@@ -4242,6 +4242,8 @@ void SortMonsBySpeed(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
+// Pokemon Central (Gravita): Bounce, Fly, Sky Drop, Splash, Jump Kick, Flying
+// Press and High Jump Kick, and the two that lift, Magnet Rise and Telekinesis.
 static const u16 sGravityUnusableMoves[] = {
     MOVE_FLY,
     MOVE_BOUNCE,
@@ -4249,7 +4251,9 @@ static const u16 sGravityUnusableMoves[] = {
     MOVE_JUMP_KICK,
     MOVE_HI_JUMP_KICK,
     MOVE_SPLASH,
-    MOVE_MAGNET_RISE
+    MOVE_MAGNET_RISE,
+    MOVE_FLYING_PRESS,
+    MOVE_TELEKINESIS,
 };
 
 BOOL BattleContext_CheckMoveUnuseableInGravity(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int moveNo) {
