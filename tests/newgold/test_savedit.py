@@ -692,6 +692,20 @@ class SaveditLibraryTests(unittest.TestCase):
         block[at] = 0xFF   # Save_Pokedex_Init: no form seen yet
         sv.set_dex(save, [n["SHAYMIN"]], seen=True, caught=False)
         self.assertEqual(block[at] & mask, 0, "Land Forme first, not the empty order's Sky")
+        # Every Dex form in order, as Pokedex_TryAppendSeenForm appends them.
+        sv.set_dex_forms(save, n["SHAYMIN"], [1])
+        self.assertEqual(block[at] & mask, 0b11, "Sky alone: its only entry repeated")
+        sv.set_dex_forms(save, n["SHELLOS"], [0, 1])
+        self.assertEqual(block[sv.DEX_FORM_ORDERS["SHELLOS"][0]] & 0b11, 0b10)
+        sv.set_dex_forms(save, n["ROTOM"], [5, 0])
+        rotom = int.from_bytes(block[sv.DEX_FORM_ORDERS["ROTOM"][0]:][:4], "little")
+        self.assertEqual(rotom & 0x3FFFF, 5 | 0 << 3 | 0o7777 << 6, "then 7s: no more")
+        sv.set_dex_forms(save, n["UNOWN"], range(28))
+        self.assertEqual(bytes(block[sv.UNOWN_SEEN:sv.UNOWN_SEEN + 28]), bytes(range(28)))
+        sv.set_dex_forms(save, n["DEOXYS"], [3, 1])
+        self.assertEqual((block[sv.DEX_SEEN - 1], block[sv.DEX_GENDERS - 1]), (0x13, 0xFF))
+        with self.assertRaises(ValueError):
+            sv.set_dex_forms(save, n["BURMY"], [3])
         self.assertTrue(sv.flag_is_set(save, 0x6B), "FLAG_GOT_POKEDEX: POKéDEX in the start menu")
         with self.assertRaises(ValueError):
             sv.set_dex(save, [n["EGG"]], True, True)

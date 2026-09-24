@@ -249,6 +249,15 @@ DEX_FORM_FIELDS = {"SHELLOS": ("shellosFormOrder", 0x03), "GASTRODON": ("gastrod
                    "BURMY": ("burmyFormOrder", 0x03), "WORMADAM": ("wormadamFormOrder", 0x03),
                    "ROTOM": ("rotomFormOrder", 0x07), "SHAYMIN": ("shayminFormOrder", 0x03),
                    "GIRATINA": ("giratinaFormOrder", 0x03), "PICHU": ("pichuFormOrder", 0x03)}
+# The whole order, for the species whose FORMS page lists their seen forms:
+# the bits an entry takes, how many entries (the forms the Dex keeps, 0 up),
+# and the value that ends the list -- None where a list of two ends by
+# repeating its first entry (Pokedex_GetSeenFormNum_2max). Pichu's entries
+# are a male, a female and the Spiky-eared.
+DEX_FORM_LISTS = {"UNOWN": (8, 28, 0xFF), "DEOXYS": (4, 4, 0xF), "ROTOM": (3, 6, 7),
+                  "BURMY": (2, 3, 3), "WORMADAM": (2, 3, 3), "PICHU": (2, 3, 3),
+                  "SHELLOS": (1, 2, None), "GASTRODON": (1, 2, None),
+                  "SHAYMIN": (1, 2, None), "GIRATINA": (1, 2, None)}
 
 
 def _layout():
@@ -2737,6 +2746,25 @@ def _set_seen_form(block, species):
     at, mask = DEX_FORM_ORDERS.get(names.get(species), (None, 0))
     if at is not None and block[at] & mask == mask:
         block[at] &= ~mask
+
+
+def set_dex_forms(save, species, forms):
+    """The forms FORMS lists for a species of DEX_FORM_LISTS, in this order,
+    as Pokedex_TryAppendSeenForm records them seen one after the other; the
+    first is the one the Dex draws. The species' seen bit is set_dex's."""
+    name = {v: k for k, v in species_numbers().items()}[species]
+    bits, size, end = DEX_FORM_LISTS[name]
+    forms = list(dict.fromkeys(forms))
+    if not forms or not set(forms) <= set(range(size)):
+        raise ValueError(f"{name}'s Dex forms are 0 to {size - 1}, not {forms}")
+    entries = forms + [forms[0] if end is None else end] * (size - len(forms))
+    value = sum(f << bits * i for i, f in enumerate(entries))
+    block = save.block("SAVE_POKEDEX")
+    if name == "DEOXYS":   # CheckDex4Flag: the last caught word's top byte, then the last seen word's
+        block[DEX_SEEN - 1], block[DEX_GENDERS - 1] = value & 0xFF, value >> 8
+    else:
+        at = UNOWN_SEEN if name == "UNOWN" else DEX_FORM_ORDERS[name][0]
+        put_bits(block, (at, (bits * size + 7) // 8, (1 << bits * size) - 1), value)
 
 
 def _got_pokedex():
