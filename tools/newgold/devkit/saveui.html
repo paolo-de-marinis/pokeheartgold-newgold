@@ -802,7 +802,8 @@ function renderTrainer() {
 // A move the Pokemon knows that its species does not learn: an event's, or one the data (or an older editor) left.
 const NOT_LEARNT = "la specie non la impara (nei dati attuali): resta finché non la cambi o non cambi specie";
 // What an older editor wrote and the game never does: a move twice, PP above the maximum.
-const REPEAT = "doppia: il gioco non insegna una mossa che il Pokémon conosce già; resta finché non tocchi le mosse";
+const REPEAT = "doppia: il gioco non insegna una mossa che il Pokémon conosce già; resta finché non cambi le mosse, poi va sostituita";
+const REPEAT_NOW = "doppia: così non si salva, scegline un'altra";
 const PP_OVER = "i PP attuali superano il massimo: salvando questo Pokémon scendono al massimo";
 const moveMarks = mv => (mv.repeat ? ` <span class="tag warn" title="${esc(REPEAT)}">doppia</span>` : "")
   + (mv.pp > mv.pp_max ? ` <span class="tag warn" title="${esc(PP_OVER)}">PP oltre il massimo</span>` : "")
@@ -1036,7 +1037,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
         (una mossa evento, o una che i dati attuali non le danno più) resta finché non la cambi e non cambi specie. Il livello non si
         controlla: una mossa imparata salendo di livello va bene a qualsiasi livello, perché un uovo la eredita a livello 1 se
         entrambi i genitori la conoscono (per una specie che non nasce da un uovo, invece, sta a te). Una mossa che il Pokémon già conosce tiene i suoi PP (salvando, quelli oltre il massimo scendono al massimo: solo
-        per questo Pokémon); una nuova li ha pieni. Una mossa doppia resta finché non tocchi le mosse; mosse con una doppia non si salvano.
+        per questo Pokémon); una nuova li ha pieni. Una mossa doppia resta finché non tocchi le mosse; se le cambi, va sostituita.
         "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie; finché
         non le tocchi, seguono il livello se lo cambi.</p></div>
     <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="${lim.iv}">Tutti ${lim.iv}</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${perStat("iv", v.ivs, lim.iv)}</div>
@@ -1069,7 +1070,10 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       if (id === null) return `<span class="tag bad">nome sconosciuto: sceglila dall'elenco</span>`;
       if (!id || !st.species) return "";
       const over = m?.moves.find(x => x.id === id && x.pp > x.pp_max);
-      const odd = (inputs.slice(0, i).some(el => moveOf(el.value) === id) ? ` <span class="tag warn">${esc(REPEAT)}</span>` : "")
+      // Untouched, an older editor's repeat may stay; once the moves change it has to go.
+      const touched = inputs.some((el, j) => (moveOf(el.value) || 0) !== (m?.moves[j]?.id || 0));
+      const odd = (inputs.slice(0, i).some(el => moveOf(el.value) === id)
+          ? (touched ? ` <span class="tag bad">${esc(REPEAT_NOW)}</span>` : ` <span class="tag warn">${esc(REPEAT)}</span>`) : "")
         + (over ? ` <span class="tag warn">PP ${over.pp}/${over.pp_max}: ${esc(PP_OVER)}</span>` : "");
       if (st.legal.has(id)) return sourceTags(st.legal.get(id)) + odd;
       if (st.known.has(id)) return `<span class="tag warn">${esc(NOT_LEARNT)}</span>` + odd;

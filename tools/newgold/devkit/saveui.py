@@ -1039,7 +1039,7 @@ def illegal(e):
     """savedit's Illegal in Italian, naming what the species cannot have."""
     who = sv.species_name(e.species)
     if e.twice:
-        return (f"{sv.move_table()[e.twice]['name']} è due volte: il gioco non insegna una mossa che il Pokémon "
+        return (f"{sv.move_table()[e.twice]['name']} compare due volte: il gioco non insegna una mossa che il Pokémon "
                 f"conosce già, scegline un'altra")
     if e.moves:
         return (f"{who} non può imparare {', '.join(sv.move_table()[m]['name'] for m in e.moves)}: non è tra le "

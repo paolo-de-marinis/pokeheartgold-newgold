@@ -539,7 +539,7 @@ class SaveUiTests(unittest.TestCase):
         for op, args in (("party_edit", {"slot": 0, "moves": changed}), ("box_edit", {"box": 0, "slot": 0, "moves": changed}),
                          ("box_add", {"box": 0, "slot": 1, "species": sv.species_numbers()["MACHOP"], "level": 13,
                                       "moves": twice[:2]})):
-            self.assertIn("Focus Energy è due volte", self.refused("/api/edit", {"f": "gyms/test.sav", "op": op, "args": args}))
+            self.assertIn("Focus Energy compare due volte", self.refused("/api/edit", {"f": "gyms/test.sav", "op": op, "args": args}))
 
     def test_saving_a_pokemon_brings_its_pp_down(self):
         """The old CLI's Machamp has 40 PP on every move: saved from the
