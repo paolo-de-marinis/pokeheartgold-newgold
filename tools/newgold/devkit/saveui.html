@@ -1751,7 +1751,10 @@ function drawTown() {
 function townLabel() {
   const key = S.pos.hover, sections = key ? townSections(key) : [];
   const name = sec => { const r = S.data.maps.find(m => m.section === sec); return `${r.name || sec} (${regionName(r.region)})`; };
-  $("#townlabel").innerHTML = key ? (sections.length ? `<strong>${esc(sections.map(name).join(" · "))}</strong> — clic per sceglierla`
+  // What a click picks there, named: a square several places share gives one, the others are in the list.
+  const picks = key && mapAtTile(key) !== undefined ? mapTitle(S.maps.get(mapAtTile(key))) : "";
+  $("#townlabel").innerHTML = key ? (sections.length ? `<strong>${esc(sections.map(name).join(" · "))}</strong> — clic: ${esc(picks)}${
+                                                         sections.length > 1 ? "; gli altri dall'elenco" : ""}`
                                                      : "Qui non c'è un luogo della mappa")
     : `<span style="color:#e11d48">●</span> dove sei ora · <span style="color:#a15c07">■</span> la sua zona · <span style="color:#1d4ed8">■</span> la mappa scelta`;
 }
