@@ -2785,8 +2785,10 @@ static BOOL ov12_0224B398(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->commandNext = CONTROLLER_COMMAND_39;
         // An explosion with nothing left to hit still fells its user, from
         // the fifth generation (Pokemon Central, Esplosione): TrySelfDestruct
-        // has put it at 0 HP, and ov12_0224D1DC faints it.
-        if (ctx->battleStatus & BATTLE_STATUS_SELFDESTRUCTED) {
+        // has put it at 0 HP, and ov12_0224D1DC faints it. Natural Gift with
+        // nothing left to hit still spends its Berry (Pokemon Central,
+        // Dononaturale), once the move is over (NaturalGiftSpendsBerry).
+        if ((ctx->battleStatus & BATTLE_STATUS_SELFDESTRUCTED) || BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_NATURAL_GIFT) {
             ctx->commandNext = CONTROLLER_COMMAND_36;
         }
         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
@@ -5745,10 +5747,13 @@ static BOOL TryPivotSwitch(BattleContext *ctx) {
 // nor once it has fainted or a Pickpocket has taken the Berry (the engine's
 // Activate_SkillEffects, step 25.0 of ServerDoPostMoveEffects.c at
 // d0380a487, after Pickpocket). Not a Berry the move could not use, which
-// failed it.
+// failed it. With no target left, the move did not go off, but it was used
+// and the Berry goes (Dononaturale; ov12_0224B398 sends it here); stopped
+// by a primal weather or Powder, it keeps it.
 static BOOL NaturalGiftSpendsBerry(BattleContext *ctx) {
     return BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_NATURAL_GIFT
-        && (ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED)
+        && ((ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED)
+            || (ctx->battlerIdTarget == BATTLER_NONE && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)))
         && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
         && ctx->battleMons[ctx->battlerIdAttacker].hp != 0
         && GetNaturalGiftPower(ctx, ctx->battlerIdAttacker) != 0;

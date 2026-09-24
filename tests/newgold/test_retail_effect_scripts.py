@@ -589,6 +589,10 @@ int main(void) {
     ctx.move.effect = MOVE_EFFECT_HIT;
     ctx.battleStatus = 0;
     assert(ov12_0224B398(&bs, &ctx) == TRUE && ctx.commandNext == CONTROLLER_COMMAND_39);
+    // Natural Gift goes on to the post-move steps, which spend its Berry.
+    ctx.moveNoCur = MOVE_NATURAL_GIFT;
+    ctx.move.effect = MOVE_EFFECT_NATURAL_GIFT;
+    assert(ov12_0224B398(&bs, &ctx) == TRUE && ctx.commandNext == CONTROLLER_COMMAND_36);
     return 0;
 }
 """

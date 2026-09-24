@@ -248,8 +248,8 @@ typedef struct { u16 effect; } MoveTbl;
 typedef struct { int hp, item; } Mon;
 typedef struct {
     Mon battleMons[4];
-    int battlerIdAttacker;
-    u32 moveNoCur, battleStatus2;
+    int battlerIdAttacker, battlerIdTarget;
+    u32 moveNoCur, battleStatus2, moveStatusFlag;
     MoveTbl move;
 } BattleContext;
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)moveNo; return &ctx->move; }
@@ -286,6 +286,14 @@ int main(void) {
     assert(!NaturalGiftSpendsBerry(&ctx));
     setup();
     ctx.move.effect = MOVE_EFFECT_HIT;
+    assert(!NaturalGiftSpendsBerry(&ctx));
+    // At a target that fainted before the move, the Berry goes; stopped by a
+    // primal weather or Powder, it stays.
+    setup();
+    ctx.battleStatus2 = 0;
+    ctx.battlerIdTarget = BATTLER_NONE;
+    assert(NaturalGiftSpendsBerry(&ctx));
+    ctx.moveStatusFlag = MOVE_STATUS_NO_MORE_WORK;
     assert(!NaturalGiftSpendsBerry(&ctx));
     return 0;
 }
@@ -351,6 +359,13 @@ class NaturalGiftTests(unittest.TestCase):
         self.assertLess(steps.index("TryNaturalGift(ctx);"), steps.index("PrimalWeatherStopsMove("))
         script = (ROOT / "files/battledata/script/effect_script/effect_script_0222.s").read_text()
         self.assertNotIn("CalcNaturalGiftParams", script)
+
+    def test_at_a_fainted_target_the_berry_goes_too(self):
+        # Pokemon Central (Dononaturale): the Berry goes when the move fails
+        # because the target has already fainted.
+        body = function(CONTROLLER.read_text(), "ov12_0224B398")
+        self.assertIn("BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_NATURAL_GIFT) {\n"
+                      "            ctx->commandNext = CONTROLLER_COMMAND_36;", body)
 
     def test_the_berry_goes_once_the_move_is_over(self):
         # Pokemon Central (Dononaturale): spent on a miss, Protect or an
