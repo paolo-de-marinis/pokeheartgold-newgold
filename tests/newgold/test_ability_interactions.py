@@ -611,12 +611,15 @@ static u32 BattleSystem_GetBattleType(BattleSystem *bs) { return bs->battleType;
 static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
 static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 2; }
 static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)ctx; return bs->canSwitch[battlerId]; }
+static BOOL keptOnField;
+static BOOL Battler_KeptOnField(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return keptOnField; }
 @FUNCTIONS@
 static BattleSystem bs;
 static BattleContext ctx;
 static void setup(int ability, int hp) {
     BattleContext blank = { 0 };
     ctx = blank;
+    keptOnField = FALSE;
     bs.battleType = BATTLE_TYPE_TRAINER;
     bs.canSwitch[0] = bs.canSwitch[1] = TRUE;
     ctx.turnOrder[0] = 0;
@@ -667,6 +670,16 @@ int main(void) {
     assert(leaves() == -1);
     ctx.battleMons[1].hp -= 20;
     assert(leaves() == 0);
+    // Held by Sky Drop or Commander: neither switched out nor fled, wild or
+    // not, and the mark stays for once it is let go.
+    setup(ABILITY_WIMP_OUT, 60);
+    keptOnField = TRUE;
+    hurt(12);
+    assert(leaves() == -1);
+    bs.battleType = 0;
+    assert(leaves() == -1);
+    keptOnField = FALSE;
+    assert(leaves() == 1);
     return 0;
 }
 """

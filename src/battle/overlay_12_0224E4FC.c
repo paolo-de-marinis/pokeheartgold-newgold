@@ -1765,8 +1765,10 @@ void Battler_ArmRetreatOutsideMove(BattleContext *ctx, int battlerId) {
 
 // Once an action is over (ov12_0224D368) and once the turn's end is (TurnEnd),
 // in speed order. No move is under way, so no attacker's Mold Breaker is asked.
-// A mark that does not send its Pokemon off is kept until the action ends, so
-// a later ask in the same action still sees it.
+// A Pokemon kept on the field stays, as it does after a move (Battler_Retreats):
+// one Sky Drop holds in the air, which the turn's end can still hurt, and
+// Commander's pair. A mark that does not send its Pokemon off is kept until
+// the action ends, so a later ask in the same action still sees it.
 BOOL TryRetreatAbilityOutsideMove(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
@@ -1778,6 +1780,7 @@ BOOL TryRetreatAbilityOutsideMove(BattleSystem *battleSystem, BattleContext *ctx
             || ctx->battleMons[battlerId].hp == 0
             || ctx->battleMons[battlerId].hp > (int)(ctx->battleMons[battlerId].maxHp / 2)
             || (ability != ABILITY_EMERGENCY_EXIT && ability != ABILITY_WIMP_OUT)
+            || Battler_KeptOnField(ctx, battlerId)
             || !(Battler_IsWild(battleSystem, battlerId) || CanSwitchMon(battleSystem, ctx, battlerId))) {
             continue;
         }
