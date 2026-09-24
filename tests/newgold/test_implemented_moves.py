@@ -321,12 +321,12 @@ class ImplementedMoveTests(unittest.TestCase):
     def test_steel_beam_and_mind_blown_cost_half_the_user_s_hp(self):
         # Pokemon Central (Raggio d'Acciaio, Sbalorditesta): half the maximum
         # HP, rounded up, once the move is over, hit or miss; Magic Guard
-        # alone spares it; Damp stops Mind Blown.
+        # alone spares it; Damp stops Mind Blown (test_retail_effect_scripts'
+        # BeforeMoveTests).
         from test_hold_effects import CONTROLLER
         for move in ("STEEL_BEAM", "MIND_BLOWN"):
             self.assertImplemented(move, "MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP")
         script = effect_script("MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP")
-        self.assertIn("MOVE_MIND_BLOWN, _MARK\n    CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ALL, ABILITY_DAMP, _DAMP", script)
         self.assertIn("UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_ATTACKER_SELF_TURN_STATUS_FLAGS, SELF_TURN_FLAG_LOSE_HALF_MAX_HP", script)
         self.assertNotIn("ABILITY_ROCK_HEAD", script)
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")

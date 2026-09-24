@@ -3659,6 +3659,46 @@ static BOOL PrimalWeatherStopsMove(u32 weather, int category, int type) {
             || ((weather & FIELD_CONDITION_HEAVY_RAIN) && type == TYPE_FIRE));
 }
 
+// Damp keeps anyone from blowing up while its holder stands: Self-Destruct,
+// Explosion, Misty Explosion and Mind Blown fail with the holder's line once
+// their PP is spent, where the engine asks it (its
+// BattleController_CheckAbilityFailures1 at d0380a487: with a target to go
+// at, after the move failures and before Protean). Mold Breaker gets past it. The line names the first
+// holder in the order the battlers act, put in battlerIdAbility. A move with
+// no PP left has failed already, and says so (ov12_0224B1FC's
+// MOVE_STATUS_NO_PP, where the engine stops at its PP step).
+static BOOL DampStopsMove(BattleSystem *battleSystem, BattleContext *ctx) {
+    int i, battlerId;
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
+    if (ctx->battlerIdTarget == BATTLER_NONE
+        || (ctx->moveStatusFlag & MOVE_STATUS_FAIL)
+        || (BattleMoveTbl(ctx, ctx->moveNoCur)->effect != MOVE_EFFECT_HALVE_DEFENSE && ctx->moveNoCur != MOVE_MIND_BLOWN)) {
+        return FALSE;
+    }
+    for (i = 0; i < maxBattlers; i++) {
+        battlerId = ctx->turnOrder[i];
+        if (ctx->battleMons[battlerId].hp && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, battlerId, ABILITY_DAMP) == TRUE) {
+            ctx->battlerIdAbility = battlerId;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+// Self-Destruct, Explosion and Misty Explosion put their user at 0 HP as they
+// are used (the engine's BEFORE_MOVE_STATE_SET_EXPLOSION_SELF_DESTRUCT_FLAG,
+// BattleController_BeforeMove.c at d0380a487). Its bar stays full until the
+// move has done its damage, when ov12_0224D1DC faints it (subscript 277). Not
+// a move out of PP, which is not used at all (ov12_0224B1FC).
+static void TrySelfDestruct(BattleSystem *battleSystem, BattleContext *ctx) {
+    if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_HALVE_DEFENSE && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
+        ctx->battleStatus |= MaskOfFlagNo(ctx->battlerIdAttacker) << BATTLE_STATUS_SELFDESTRUCTED_SHIFT;
+        ctx->battleMons[ctx->battlerIdAttacker].hp = 0;
+        CopyBattleMonToPartyMon(battleSystem, ctx, ctx->battlerIdAttacker);
+    }
+}
+
 // What the moves that answer one another in a turn need to know of the move
 // now being used: it has come through everything that can stop a Pokemon
 // acting, and has spent its PP, whether or not it goes on to fail.
@@ -3773,6 +3813,14 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->moveStatusFlag |= MOVE_STATUS_NO_MORE_WORK;
             return;
         }
+        if (DampStopsMove(battleSystem, ctx) == TRUE) {
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_DAMP);
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            ctx->commandNext = CONTROLLER_COMMAND_25;
+            ctx->battleStatus |= BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE;
+            ctx->moveStatusFlag |= MOVE_STATUS_NO_MORE_WORK;
+            return;
+        }
         ctx->unk_48++;
         // fallthrough
     case 4: {
@@ -3806,6 +3854,7 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         if (ov12_0224B398(battleSystem, ctx) == TRUE) {
             return;
         }
+        TrySelfDestruct(battleSystem, ctx);
         ctx->unk_48++;
         // fallthrough
     case 6:

@@ -797,6 +797,9 @@
 #define BATTLE_SUBSCRIPT_PLEDGE_CONDITION_END               467
 // Grassy Terrain's heal at the end of a turn, the reference's subscript 346.
 #define BATTLE_SUBSCRIPT_GRASSY_TERRAIN_HEAL                468
+// Damp keeping a Pokemon from an explosion (DampStopsMove), where effect
+// scripts 7 and 420 printed it.
+#define BATTLE_SUBSCRIPT_DAMP                               469
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

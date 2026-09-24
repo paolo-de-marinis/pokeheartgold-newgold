@@ -49,9 +49,6 @@ WEATHER = ("the engine sets the weather through its HANDLE_*_TEMPORARY subscript
            "weather, as from the ninth generation (Terrempesta), which the engine writes over")
 
 STILL_DIFFERENT = {
-    7: "Damp and the user's HP going to 0 are the engine's before-move C (BattleController_BeforeMove.c); "
-       "the script here still does both, to the same effect. The bar and the faint come once the move is "
-       "over, subscript 277, as the engine's step 11.0 has them",
     34: "Pay Day scatters its coins on the first strike or the only one; the engine's branch scatters "
          "them only on a first strike of Parental Bond, never without the ability (a6ee2c81c)",
     83: CALLED_MOVE + BACK_TO_BEFORE_MOVE + ", and prints the move the finger picked (message 1483), "
@@ -356,10 +353,10 @@ class BroughtOverTests(unittest.TestCase):
 
     def test_explosion_s_user_faints_after_the_damage(self):
         # Pokemon Central (Esplosione): from the sixth generation the damage
-        # comes before the user faints. The HP goes as the move begins, the
-        # bar and the faint once it is over (the reference's step 11.0).
+        # comes before the user faints. The HP goes as the move begins
+        # (TrySelfDestruct, BeforeMoveTests), the bar and the faint once it is
+        # over (the reference's step 11.0).
         seven = script(7)
-        self.assertIn("UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HP, 0", seven)
         self.assertNotIn("UpdateHealthBar", seven)
         self.assertNotIn("ATTACK_MESSAGE_AND_ANIMATION", seven)
         after = subscript("AFTER_SELFDESTRUCT")
@@ -452,6 +449,122 @@ class BroughtOverTests(unittest.TestCase):
         self.assertIn("IfSameSide BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_SIDE_EFFECT_MON", text)
         self.assertIn("CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_SIDE_EFFECT_MON, ABILITY_SOUNDPROOF", text)
         self.assertEqual(text.count("Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE"), 2)
+
+
+BEFORE_MOVE_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/move_effects.h"
+#include "constants/moves.h"
+typedef struct { int doubles; } BattleSystem;
+typedef struct { u16 effect; } MoveTbl;
+typedef struct { int hp, ability; } Mon;
+typedef struct {
+    Mon battleMons[4];
+    u8 turnOrder[4];
+    int battlerIdAttacker, battlerIdTarget, battlerIdAbility;
+    u32 moveNoCur, battleStatus, moveStatusFlag;
+    MoveTbl move;
+    int copied;
+} BattleContext;
+static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { return bs->doubles ? 4 : 2; }
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)moveNo; return &ctx->move; }
+static u32 MaskOfFlagNo(int n) { return 1u << n; }
+static void CopyBattleMonToPartyMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; ctx->copied = battlerId + 1; }
+// Mold Breaker's question, as far as Damp needs it.
+static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int attacker, int battlerId, int ability) {
+    return ctx->battleMons[battlerId].ability == ability && ctx->battleMons[attacker].ability != ABILITY_MOLD_BREAKER;
+}
+@FUNCTIONS@
+static BattleSystem bs;
+static BattleContext ctx;
+static void setup(int move, int effect) {
+    BattleContext blank = { 0 };
+    ctx = blank;
+    bs.doubles = 1;
+    for (int i = 0; i < 4; i++) {
+        ctx.battleMons[i].hp = 100;
+        ctx.turnOrder[i] = 3 - i;
+    }
+    ctx.battlerIdAttacker = 0;
+    ctx.battlerIdTarget = 1;
+    ctx.battlerIdAbility = BATTLER_NONE;
+    ctx.moveNoCur = move;
+    ctx.move.effect = effect;
+}
+int main(void) {
+    // Damp anywhere stops the four explosions, and names the first holder in
+    // the order the battlers act.
+    setup(MOVE_EXPLOSION, MOVE_EFFECT_HALVE_DEFENSE);
+    ctx.battleMons[1].ability = ctx.battleMons[2].ability = ABILITY_DAMP;
+    assert(DampStopsMove(&bs, &ctx) && ctx.battlerIdAbility == 2);
+    setup(MOVE_MIND_BLOWN, MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP);
+    ctx.battleMons[0].ability = ABILITY_DAMP;
+    assert(DampStopsMove(&bs, &ctx) && ctx.battlerIdAbility == 0);
+    // Not a fainted holder, not Steel Beam, not past Mold Breaker, not with
+    // no target to go at.
+    setup(MOVE_SELF_DESTRUCT, MOVE_EFFECT_HALVE_DEFENSE);
+    ctx.battleMons[1].ability = ABILITY_DAMP;
+    ctx.battleMons[1].hp = 0;
+    assert(!DampStopsMove(&bs, &ctx) && ctx.battlerIdAbility == BATTLER_NONE);
+    setup(MOVE_STEEL_BEAM, MOVE_EFFECT_HIT_LOSE_HALF_MAX_HP);
+    ctx.battleMons[1].ability = ABILITY_DAMP;
+    assert(!DampStopsMove(&bs, &ctx));
+    setup(MOVE_EXPLOSION, MOVE_EFFECT_HALVE_DEFENSE);
+    ctx.battleMons[1].ability = ABILITY_DAMP;
+    ctx.battleMons[0].ability = ABILITY_MOLD_BREAKER;
+    assert(!DampStopsMove(&bs, &ctx));
+    setup(MOVE_EXPLOSION, MOVE_EFFECT_HALVE_DEFENSE);
+    ctx.battleMons[1].ability = ABILITY_DAMP;
+    ctx.battlerIdTarget = BATTLER_NONE;
+    assert(!DampStopsMove(&bs, &ctx));
+    // The user goes to 0 HP, marked for the faint once the move is over.
+    setup(MOVE_MISTY_EXPLOSION, MOVE_EFFECT_HALVE_DEFENSE);
+    ctx.battlerIdAttacker = 2;
+    TrySelfDestruct(&bs, &ctx);
+    assert(ctx.battleMons[2].hp == 0 && ctx.copied == 3);
+    assert((ctx.battleStatus & BATTLE_STATUS_SELFDESTRUCTED) == (4u << BATTLE_STATUS_SELFDESTRUCTED_SHIFT));
+    setup(MOVE_TACKLE, MOVE_EFFECT_HIT);
+    TrySelfDestruct(&bs, &ctx);
+    assert(ctx.battleMons[0].hp == 100 && !ctx.battleStatus);
+    // Out of PP, the move is not used: no Damp line, no faint.
+    setup(MOVE_EXPLOSION, MOVE_EFFECT_HALVE_DEFENSE);
+    ctx.battleMons[1].ability = ABILITY_DAMP;
+    ctx.moveStatusFlag = MOVE_STATUS_NO_PP;
+    assert(!DampStopsMove(&bs, &ctx));
+    TrySelfDestruct(&bs, &ctx);
+    assert(ctx.battleMons[0].hp == 100 && !ctx.battleStatus);
+    return 0;
+}
+"""
+
+
+class BeforeMoveTests(unittest.TestCase):
+    """What the engine's scripts left to its before-move steps, which a called
+    move goes through as well (test_called_moves)."""
+
+    def test_damp_and_the_explosion_s_faint(self):
+        from test_ability_interactions import run_c
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        functions = function(controller, "DampStopsMove") + function(controller, "TrySelfDestruct")
+        run_c(BEFORE_MOVE_FIXTURE.replace("@FUNCTIONS@", functions))
+        steps = function(controller, "ov12_0224C38C")
+        # Damp after the move failures -- Powder the last of them -- and
+        # before Protean; the user at 0 HP once a target is found.
+        self.assertLess(steps.index("powderBlockingFireMove"), steps.index("DampStopsMove(battleSystem, ctx) == TRUE"))
+        self.assertLess(steps.index("DampStopsMove(battleSystem, ctx) == TRUE"), steps.index("ABILITY_PROTEAN"))
+        self.assertLess(steps.index("ov12_0224B398(battleSystem, ctx) == TRUE"), steps.index("TrySelfDestruct(battleSystem, ctx);"))
+        damp = subscript("DAMP")
+        self.assertIn("PrintMessage msg_0197_00628, TAG_NICKNAME_ABILITY_NICKNAME_MOVE, BATTLER_CATEGORY_ABILITY_MON", damp)
+        for effect in (7, 420):
+            self.assertNotIn("ABILITY_DAMP", script(effect), effect)
 
 
 if __name__ == "__main__":
