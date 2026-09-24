@@ -209,24 +209,18 @@ def area_flags(numbers):
     return out
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("reference", type=Path)
-    parser.add_argument("--write", action="store_true")
-    args = parser.parse_args()
-
-    numbers = species_numbers(SPECIES_H)
-    styles = body_styles(args.reference)
-    theirs = metrics(args.reference, styles)
-    data = json.loads(DATA.read_text())
-    rows = data["mon_stats"]
-
+def merge(rows, theirs, numbers, national, shapes):
+    """The entries with the reference's metrics carried in, the games' body
+    styles past Arceus and Giratina's pair: (entries, added, changed,
+    missing). A row counts as changed when it ends up different from the
+    row it was, so a rerun over its own output counts none."""
+    before = {id(r): dict(r) for r in rows}
     # The entries are positional: row N is species N, and the file must stay
     # dense because the built tables are indexed by species.
     by_number = {numbers[r["species"][len("SPECIES_"):]]: r
                  for r in rows if r["species"][len("SPECIES_"):] in numbers}
     highest = max(numbers.values())
-    added = changed = missing = 0
+    added = missing = 0
     for number in range(highest + 1):
         name = next((n for n, v in numbers.items() if v == number), None)
         if name is None:
@@ -242,13 +236,10 @@ def main():
         if row is None:
             by_number[number] = {"species": f"SPECIES_{name}", **want}
             added += 1
-        elif any(row.get(k) != v for k, v in want.items()):
+        else:
             row.update(want)
-            changed += 1
     # The reference's bodyType past Arceus is a placeholder: the games' shape
     # instead, by National Dex number, so a form takes its base's.
-    national = national_numbers(args.reference)
-    shapes = shape_styles()
     for name, number in numbers.items():
         if number > RETAIL_LAST and number in by_number and name in national:
             by_number[number]["body_style"] = shapes[national[name]]
@@ -267,6 +258,23 @@ def main():
             added += 1
         filled.append(row)
         previous = row
+    changed = sum(1 for r in filled if id(r) in before and r != before[id(r)])
+    return filled, added, changed, missing
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("reference", type=Path)
+    parser.add_argument("--write", action="store_true")
+    args = parser.parse_args()
+
+    numbers = species_numbers(SPECIES_H)
+    styles = body_styles(args.reference)
+    theirs = metrics(args.reference, styles)
+    data = json.loads(DATA.read_text())
+    rows = data["mon_stats"]
+    national = national_numbers(args.reference)
+    filled, added, changed, missing = merge(rows, theirs, numbers, national, shape_styles())
     data["mon_stats"] = filled
 
     print(f"entries: {len(rows)} -> {len(filled)}")

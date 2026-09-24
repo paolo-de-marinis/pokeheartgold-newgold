@@ -449,6 +449,24 @@ class SpeciesInPlayTests(unittest.TestCase):
             checked += 1
         self.assertGreater(checked, 1000)
 
+    def test_the_dex_metrics_importer_counts_nothing_on_a_rerun(self):
+        """It counted a row as updated whenever the reference's figures
+        differed from it, before putting back what it writes over them --
+        the games' body style past Arceus and Giratina's pair -- so a rerun
+        that changed nothing said "updated 729". A table with one of each,
+        merged twice."""
+        import import_dex_metrics as importer
+        numbers = {f"MON{n}": n for n in range(495)}
+        numbers["GIRATINA"] = numbers.pop("MON487")
+        theirs = {name: {field: 1 for field in importer.FIELDS} for name in numbers}
+        national, shapes = {"MON494": 906}, {906: 7}
+        rows, added, _, _ = importer.merge([], theirs, numbers, national, shapes)
+        self.assertEqual(added, 495)
+        rows = json.loads(json.dumps(rows))
+        again, added, changed, _ = importer.merge(rows, theirs, numbers, national, shapes)
+        self.assertEqual((added, changed), (0, 0))
+        self.assertEqual(again, rows)
+
 
 if __name__ == "__main__":
     print(f"Pinned NewGold comparison: "
