@@ -127,7 +127,8 @@ typedef int BOOL;
 typedef struct { u16 item; } Pokemon;
 typedef struct { int unused; } Bag;
 typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; } BattleSystem;
-typedef struct { u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack; } BattleContext;
+typedef struct { u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken; } BattleContext;
+static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 
 static u16 sAdded[8][2];
 static int sAdds;
@@ -151,6 +152,7 @@ static BattleContext ctx;
 
 static void run(u32 type, const u16 *before, const u16 *after, BattleSystem *bs) {
     ctx.heldItemsGivenBack = 0;
+    ctx.heldItemsTaken = 0;
     bs->count = PARTY_SIZE;
     bs->type = type;
     for (int i = 0; i < PARTY_SIZE; i++) {
@@ -187,6 +189,25 @@ int main(void) {
     sAdds = 0;
     GiveBackHeldItems(&bs, &ctx);
     assert(sAdds == 0 && bs.party[1].item == ITEM_POTION && bs.party[0].item == ITEM_FOCUS_SASH);
+
+    // A Pokemon that ate its Berry and then took an item -- Magician, Thief --
+    // ends with nothing: what it took goes back to the trainer, or to the bag
+    // after a wild battle, not both.
+    const u16 tookOne[PARTY_SIZE] = { ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_LEFTOVERS, ITEM_NONE, ITEM_NONE };
+    run(BATTLE_TYPE_TRAINER, before, tookOne, &bs);
+    assert(sAdds == 0 && bs.party[3].item == ITEM_NONE);
+    run(BATTLE_TYPE_NONE, before, tookOne, &bs);
+    assert(sAdds == 1 && sAdded[0][0] == ITEM_LEFTOVERS && sAdded[0][1] == 1 && bs.party[3].item == ITEM_NONE);
+    // A Berry a foe's Magician or Pickpocket took comes back, eaten or not;
+    // an uneaten one stays.
+    const u16 kept[PARTY_SIZE] = { ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_ROSELI_BERRY, ITEM_NONE };
+    ctx.heldItemsGivenBack = 0;
+    for (int i = 0; i < PARTY_SIZE; i++) {
+        bs.party[i].item = kept[i];
+    }
+    ctx.heldItemsTaken = 1 << 5;
+    GiveBackHeldItems(&bs, &ctx);
+    assert(bs.party[5].item == ITEM_ORAN_BERRY && bs.party[4].item == ITEM_ROSELI_BERRY && bs.party[3].item == ITEM_NONE);
 
     // Swapped within the party is not gained.
     const u16 swapped[PARTY_SIZE] = { ITEM_NONE, ITEM_FOCUS_SASH, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };

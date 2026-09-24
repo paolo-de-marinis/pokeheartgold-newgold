@@ -706,6 +706,10 @@ typedef struct BattleContext {
     // won does it before Pickup and Honey Gather look, and the battle's end
     // then finds it done.
     u8 heldItemsGivenBack;
+    // The player's own Pokemon another has taken an item from -- Magician,
+    // Pickpocket -- a bit each by party slot (NoteHeldItemTaken), for
+    // GiveBackHeldItems: such an item comes back even if it was a Berry.
+    u8 heldItemsTaken;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

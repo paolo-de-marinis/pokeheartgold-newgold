@@ -6991,6 +6991,19 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
     return CanStealHeldItem(battleSystem, ctx, battlerIdTaker, battlerIdLoser);
 }
 
+// battlerIdLoser's item is being taken, by Magician or Pickpocket. Taken from
+// one of the player's own Pokemon, it is theirs again when the battle is over,
+// a Berry too, and even one the taker has used up (Pokemon Central: Furto,
+// items stolen from any trainer come back at the battle's end from the fifth
+// generation; Prestigiatore, even consumed from the eighth).
+// GiveBackHeldItems reads the mark; a Berry not marked that its holder no
+// longer has was eaten, and stays so.
+static void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdLoser) {
+    if (BattleSystem_GetParty(battleSystem, battlerIdLoser) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
+        ctx->heldItemsTaken |= MaskOfFlagNo(ctx->selectedMonIndex[battlerIdLoser]);
+    }
+}
+
 // Disguise and Ice Face (battle_calc_damage.c:254): a Mimikyu in its disguise
 // takes nothing from a move, and an Eiscue with its Ice Face nothing from a
 // physical one; Mold Breaker goes through. The form the face breaks into, or
@@ -7642,6 +7655,7 @@ BOOL TryMagician(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
             }
             ctx->battlerIdStatChange = attacker;
             ctx->battlerIdTemp = battlerId;
+            NoteHeldItemTaken(battleSystem, ctx, battlerId);
             *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
             return TRUE;
         }
@@ -7698,6 +7712,7 @@ BOOL TryPickpocket(BattleSystem *battleSystem, BattleContext *ctx, int *script) 
         }
         ctx->battlerIdStatChange = battlerId;
         ctx->battlerIdTemp = ctx->battlerIdAttacker;
+        NoteHeldItemTaken(battleSystem, ctx, ctx->battlerIdAttacker);
         *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
         return TRUE;
     }
@@ -8986,6 +9001,9 @@ int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int bat
         }
         ctx->battlerIdTemp = battlerId;
         ctx->tempData = PickpocketLifts(battleSystem, ctx, battlerId);
+        if (ctx->tempData) {
+            NoteHeldItemTaken(battleSystem, ctx, ctx->battlerIdAttacker);
+        }
         return BATTLE_SUBSCRIPT_RED_CARD;
     }
     ctx->battlerIdTemp = battlerId;

@@ -187,9 +187,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // twenty-four. Octolock's bit took each battler's move conditions to a second
 // byte, four in all. Dragon Cheer's two took them to a third, four more. Fairy
 // Lock's byte went into the padding after Rage Fist's count, and so did the
-// byte that says the held items are back.
+// byte that says the held items are back. The byte for the player's Pokemon
+// another has taken an item from grew it by four.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3260 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3264 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -219,7 +220,7 @@ static BOOL IsBerry(u16 item) {
 // As the reference's RESTORE_ITEMS_AT_BATTLE_END: outside a trainer battle,
 // any item the party holds more of than it started with was taken in battle
 // and goes to the bag; then every Pokemon gets back what it started with,
-// nothing included, unless that was a berry.
+// nothing included, unless that was a berry it ate.
 //
 // Once a battle: a battle won does it before Pickup and Honey Gather look for
 // empty hands (BtlCmd_GenerateEndOfBattleItem), so what they find is the
@@ -272,11 +273,19 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
         }
     }
 
+    // A Berry the Pokemon no longer holds was eaten, unless another took it
+    // (NoteHeldItemTaken): then it comes back as anything taken does. One that
+    // ate its Berry and took an item after ends with nothing, the item going
+    // back to the trainer it came from, or into the bag above. The reference
+    // leaves such a Pokemon holding whatever it has, so an item taken from a
+    // trainer stayed taken, one taken from a wild Pokemon went to the bag and
+    // stayed held too, and a Berry a foe's Magician took was lost.
     for (i = 0; i < count; i++) {
         u16 item = ctx->itemsToRestore[i];
-        if (!IsBerry(item)) {
-            SetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, &item);
+        if (IsBerry(item) && held[i] != item && !(ctx->heldItemsTaken & MaskOfFlagNo(i))) {
+            item = ITEM_NONE;
         }
+        SetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, &item);
     }
 }
 

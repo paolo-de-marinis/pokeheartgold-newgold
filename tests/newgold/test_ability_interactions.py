@@ -217,6 +217,9 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
     (void)battleSystem;
     return !ctx->battleMons[taker].item && ctx->battleMons[loser].item;
 }
+// Which battler's item was marked as taken, for the end of the battle.
+static int noted = -1;
+static void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdLoser) { (void)battleSystem; (void)ctx; noted = battlerIdLoser; }
 @FUNCTIONS@
 static BattleSystem bs = { 4 };
 static BattleContext ctx;
@@ -238,13 +241,15 @@ static void reset(void) {
     ctx.battlerIdAttacker = 0; ctx.battleStatus = 0; ctx.battleStatus2 = 0; ctx.gemBoostingMove = FALSE;
     ctx.battlerIdTemp = ctx.battlerIdStatChange = 0xFF;
     move.category = CATEGORY_PHYSICAL;
+    noted = -1;
 }
 static int takes(void) {
     int script = 0;
     if (TryMagician(&bs, &ctx, &script) == FALSE) {
+        assert(noted == -1);
         return -1;
     }
-    assert(script == BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM && ctx.battlerIdStatChange == 0);
+    assert(script == BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM && ctx.battlerIdStatChange == 0 && noted == ctx.battlerIdTemp);
     return ctx.battlerIdTemp;
 }
 int main(void) {
@@ -327,6 +332,9 @@ static BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int
     (void)battleSystem; (void)taker;
     return ctx->battleMons[loser].item != 0;
 }
+// Which battler's item was marked as taken, for the end of the battle.
+static int noted = -1;
+static void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdLoser) { (void)battleSystem; (void)ctx; noted = battlerIdLoser; }
 @FUNCTIONS@
 static BattleSystem bs = { 4 };
 static BattleContext ctx;
@@ -346,13 +354,15 @@ static void reset(void) {
     ctx.battlerIdAttacker = 0; ctx.battleStatus = 0; ctx.battleStatus2 = 0;
     ctx.battlerIdTemp = ctx.battlerIdStatChange = 0xFF;
     move.power = 80; contact = TRUE; sheerForce = FALSE;
+    noted = -1;
 }
 static int lifts(void) {
     int script = 0;
     if (TryPickpocket(&bs, &ctx, &script) == FALSE) {
+        assert(noted == -1);
         return -1;
     }
-    assert(script == BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM && ctx.battlerIdTemp == 0);
+    assert(script == BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM && ctx.battlerIdTemp == 0 && noted == 0);
     return ctx.battlerIdStatChange;
 }
 int main(void) {

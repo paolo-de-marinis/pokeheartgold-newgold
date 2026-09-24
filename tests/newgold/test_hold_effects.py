@@ -756,8 +756,9 @@ typedef struct {
     int battlerIdAttacker, battlerIdTemp; u32 moveNoCur; u32 battleStatus2; u32 tempData;
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
 } BattleContext;
-static struct { int item[4], ability[4], held[4]; u32 battleType; int suppressible, replacements, picked, pickpocket; } S;
+static struct { int item[4], ability[4], held[4]; u32 battleType; int suppressible, replacements, picked, pickpocket, noted; } S;
 static BOOL PickpocketLifts(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; return S.pickpocket == battlerId + 1; }
+static void NoteHeldItemTaken(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; S.noted = battlerId + 1; }
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return S.item[battlerId]; }
 static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return S.ability[battlerId]; }
 static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return S.suppressible; }
@@ -772,7 +773,7 @@ static BattleContext ctx;
 static BattleSystem bs;
 static void reset(void) {
     for (int i = 0; i < 4; i++) { S.item[i] = HOLD_EFFECT_NONE; S.ability[i] = ABILITY_NONE; S.held[i] = 0; }
-    S.battleType = BATTLE_TYPE_TRAINER; S.suppressible = 0; S.replacements = 1; S.picked = 0; S.pickpocket = 0;
+    S.battleType = BATTLE_TYPE_TRAINER; S.suppressible = 0; S.replacements = 1; S.picked = 0; S.pickpocket = 0; S.noted = 0;
     ctx = (BattleContext){ 0 };
     ctx.battlerIdAttacker = 0; ctx.battlerIdTemp = -1;
     for (int i = 0; i < 4; i++) { ctx.battleMons[i].hp = 50; ctx.battleMons[i].hitCount = 1; }
@@ -813,11 +814,12 @@ int main(void) {
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     // Red Card: the attacker is dragged out for someone chosen at random.
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE;
-    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.battlerIdTemp == 1 && S.picked == 1 && ctx.tempData == FALSE);
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.battlerIdTemp == 1 && S.picked == 1 && ctx.tempData == FALSE && S.noted == 0);
     // The holder's Pickpocket lifts the attacker's item as the card is spent
-    // (Pokemon Central, Arraffalesto); the subscript is told so.
+    // (Pokemon Central, Arraffalesto); the subscript is told so, and the
+    // attacker's item is marked as taken, for the end of the battle.
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.pickpocket = 2;
-    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.tempData == TRUE);
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.tempData == TRUE && S.noted == 1);
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.replacements = 0;
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.battleType = 0;
