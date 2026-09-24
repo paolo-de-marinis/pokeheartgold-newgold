@@ -181,21 +181,33 @@ class BuildRuleTests(unittest.TestCase):
         .d was Pascal source to it, and a way to remake the .d."""
         self.assertRegex(database(), r"(?m)^\.SUFFIXES:[ \t]*$")
 
-    def test_a_battle_script_archive_holds_script_n_at_member_n(self):
-        """The archive rule packed every .bin in the folder, so a script
-        renumbered or removed left its old .bin in the next build and every
-        script after it ran another's code. Reads the index the build wrote:
-        member N is the .bin of the .s numbered N, and there is no other."""
-        for name in ("subscript", "effect_script", "move_script"):
-            index = ROOT / f"files/battledata/script/{name}.naix"
-            if not index.exists():
-                self.skipTest(f"{index.name} is not built")
-            members = re.findall(rf"^#define NARC_{name}_(\w+)_bin (\d+)$", index.read_text(), re.M)
-            sources = sorted((s.stem for s in (ROOT / f"files/battledata/script/{name}").glob("*.s")),
-                             key=lambda stem: int(re.search(r"_(\d+)", stem).group(1)))
-            self.assertEqual([stem for stem, _ in members], sources, name)
-            for stem, member in members:
-                self.assertEqual(int(re.search(r"_(\d+)", stem).group(1)), int(member), stem)
+    # Each archive of numbered members: its index, the name the index gives
+    # a member, and the sources in the folder that make the members.
+    NUMBERED_ARCHIVES = [
+        *((f"files/battledata/script/{name}.naix", rf"NARC_{name}_(\w+)_bin", f"files/battledata/script/{name}", ("*.s",))
+          for name in ("subscript", "effect_script", "move_script")),
+        ("files/poketool/icongra/poke_icon/poke_icon.naix", r"NARC_poke_icon_(\w+)_(?:NCLR|NANR|NCER|NCGR)",
+         "files/poketool/icongra/poke_icon", ("*.pal", "*.json", "*.png")),
+    ]
+
+    def test_a_numbered_archive_holds_file_n_at_member_n(self):
+        """The archive rule packed every file of a kind in the folder, so a
+        script renumbered or removed left its old .bin in the next build and
+        every script after it ran another's code; the icon folder once held
+        733 icons of an older numbering, and the ROM showed them. Reads the
+        index the build wrote: member N is what the source numbered N makes,
+        and there is no other."""
+        def number(stem):
+            return int(re.search(r"_(\d+)", stem).group(1))
+        for index, member, folder, sources in self.NUMBERED_ARCHIVES:
+            with self.subTest(index):
+                if not (ROOT / index).exists():
+                    self.skipTest(f"{index} is not built")
+                members = re.findall(rf"^#define {member} (\d+)$", (ROOT / index).read_text(), re.M)
+                stems = sorted({s.stem for pattern in sources for s in (ROOT / folder).glob(pattern)}, key=number)
+                self.assertEqual([stem for stem, _ in members], stems)
+                for stem, n in members:
+                    self.assertEqual(number(stem), int(n), stem)
 
     def numbered_narc(self, directory, sources):
         """A folder of numbered sources, each copied to its .bin, packed by

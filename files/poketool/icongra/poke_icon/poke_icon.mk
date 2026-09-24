@@ -31,8 +31,9 @@ $(POKE_ICON_DIR)/%.NANR: $(POKE_ICON_DIR)/%.json
 $(POKE_ICON_DIR)/%.NCGR: $(POKE_ICON_DIR)/%.png $(POKE_ICON_DIR)/poke_icon.mk
 	$(GFX) $< $@ $(POKE_ICON_GFX_FLAGS_ICON)
 
-$(POKE_ICON_NARC): %.narc: $(POKE_ICON_PAL_OBJS) $(POKE_ICON_ANIM_OBJS) $(POKE_ICON_CELL_OBJS) $(POKE_ICON_ICON_OBJS)
-	$(NARC) -cf $@ --index-namespace $(POKE_ICON_DIR)
+# The archive holds what the palette, the animations, the cells and the icons
+# make, icon N at member N, and nothing else the folder holds (filesystem.mk).
+$(eval $(call numbered_narc,$(POKE_ICON_NARC),$(POKE_ICON_DIR),$(POKE_ICON_PAL_OBJS) $(POKE_ICON_ANIM_OBJS) $(POKE_ICON_CELL_OBJS) $(POKE_ICON_ICON_OBJS)))
 
 clean-poke-icon:
 	$(RM) $(POKE_ICON_NARC) $(POKE_ICON_PAL_OBJS) $(POKE_ICON_ANIM_OBJS) $(POKE_ICON_CELL_OBJS) $(POKE_ICON_ICON_OBJS)
