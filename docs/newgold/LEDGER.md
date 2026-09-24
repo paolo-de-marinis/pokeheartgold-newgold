@@ -12,8 +12,8 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `1fa3c9366` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 1108 commits |
-| generated | 2026-09-24 23:49 |
+| port | 1126 commits |
+| generated | 2026-09-25 00:56 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
@@ -43,7 +43,7 @@ Moves       ██████████████████████�
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████████████████████████████████████████████  2685 / 2685
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       152 files
+Tests       153 files
 ROM         165.8 MB of 268.4 MB   (2G card, 62% used)
 ```
 <!-- LEDGER:COUNTS:END -->
