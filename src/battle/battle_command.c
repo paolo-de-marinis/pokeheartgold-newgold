@@ -4139,7 +4139,12 @@ BOOL BtlCmd_TryStealItem(BattleSystem *battleSystem, BattleContext *ctx) {
     u32 battleType = BattleSystem_GetBattleType(battleSystem);
     int fieldSide = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker);
 
-    if (BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker) && !(battleType & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER))) {
+    // A wild Pokemon takes nothing from the player's (Pokemon Central, Furto,
+    // from the third generation). A trainer's does from the fifth, and the
+    // item is the player's again at the battle's end (NoteHeldItemTaken,
+    // GiveBackHeldItems): retail refused it, which kept the item from being
+    // lost for good.
+    if (BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker) && !(battleType & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER))) {
         BattleScriptIncrementPointer(ctx, adrs1);
     } else if (ctx->fieldSideConditionData[fieldSide].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdAttacker])) {
         BattleScriptIncrementPointer(ctx, adrs1);

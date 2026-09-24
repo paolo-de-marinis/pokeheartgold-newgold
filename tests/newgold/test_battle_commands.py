@@ -174,8 +174,12 @@ class ItemGrabTests(unittest.TestCase):
     def test_swapping_is_no_longer_refused_by_side(self):
         self.assertNotIn("BATTLE_TYPE_FRONTIER", self.swap)
 
-    def test_stealing_still_is(self):
-        self.assertIn("BATTLE_TYPE_FRONTIER", self.steal)
+    def test_only_a_wild_pokemon_steals_nothing(self):
+        # A trainer's Thief and Covet take the player's item from the fifth
+        # generation, given back at the end (Pokemon Central, Furto); a wild
+        # Pokemon's still take nothing.
+        self.assertIn("BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker) && "
+                      "!(battleType & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER))", self.steal)
 
     def test_the_items_come_back(self):
         """Without the restore there would be nothing to make this safe."""
