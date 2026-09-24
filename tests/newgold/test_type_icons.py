@@ -2,10 +2,10 @@
 """Check that every type has an icon, and that the contest block moved with it.
 
 sub_02077678 is asked for an icon by an index that is a type for every caller
-but one: the move relearner asks it for a contest condition, and does that by
-adding the number of types to the condition. So the table is types first and
-the five conditions after, and the two have to agree on where the boundary is
-or a Fairy move shows the word COOL.
+but two: the move relearner and the battle party menu ask it for a contest
+condition, and do that by adding the number of types to the condition. So the
+table is types first and the five conditions after, and they have to agree on
+where the boundary is or a Cool move shows the Fairy icon.
 
 The Fairy icon itself is a member added to the end of the battle graphics
 archive, which is why its file id is past every id the game shipped with.
@@ -20,6 +20,7 @@ from test_level_cap import ROOT
 
 SOURCE = ROOT / "src/unk_02077678.c"
 RELEARNER = ROOT / "src/overlay_68_021E7028.c"
+BATTLE_PARTY = ROOT / "src/overlay_08_02221328.c"
 TYPES = ROOT / "include/constants/pokemon.h"
 ARCHIVE = ROOT / "files/a/0/0/8"
 CONTEST_CONDITIONS = 5
@@ -159,6 +160,12 @@ class TypeIconTests(unittest.TestCase):
     def test_the_relearner_adds_the_same_boundary(self):
         self.assertIn("GetMoveAttr(move, MOVEATTR_CONTEST_TYPE) + NUMBER_OF_MON_TYPES", RELEARNER.read_text(),
                       "the move relearner does not start the contest icons at NUMBER_OF_MON_TYPES")
+
+    def test_the_battle_party_menu_adds_the_same_boundary(self):
+        body = BATTLE_PARTY.read_text()
+        self.assertEqual(body.count("MOVEATTR_CONTEST_TYPE) + NUMBER_OF_MON_TYPES"), 2,
+                         "the battle party menu does not start the contest icons at NUMBER_OF_MON_TYPES "
+                         "for the moves and the move to learn")
 
     def test_the_fairy_icon_is_in_the_archive(self):
         fairy = table("sTypeIconFiles")[int(re.search(r"#define TYPE_FAIRY\s+(\d+)",

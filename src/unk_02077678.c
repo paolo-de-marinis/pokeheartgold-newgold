@@ -13,8 +13,8 @@
 // five more the contests used: Cool, Beauty, Cute, Smart and Tough, in that
 // order, from a generation this game does not hold a contest in. The contest
 // block therefore begins at NUMBER_OF_MON_TYPES, which is what the move
-// relearner adds to a move's contest type -- the one caller that asks this
-// table for something that is not a type.
+// relearner and the battle party menu add to a move's contest type -- the two
+// callers that ask this table for something that is not a type.
 static const u8 sMoveSplitIconPalettes[] = { 0, 1, 0 };
 
 static const int sMoveSplitIconFiles[] = { 0xF4, 0xF6, 0xF5 };
