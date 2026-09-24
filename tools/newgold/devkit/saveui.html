@@ -806,7 +806,7 @@ $("#tabs").addEventListener("click", ev => {
 const MENU_NAMES = {
   START_MENU_ICON_POKEDEX: ["Pokédex", "la voce POKéDEX nel menu, e il Pokédex acceso", "dex"],
   START_MENU_ICON_POKEGEAR: ["Pokégear", "la voce POKéGEAR nel menu", "dex"],
-  START_MENU_ICON_POKEMON: ["Pokémon", "la voce POKéMON nel menu: arriva con il primo Pokémon"],
+  START_MENU_ICON_POKEMON: ["Pokémon", "la voce POKéMON nel menu"],
   START_MENU_ICON_BAG: ["Borsa", "la voce BORSA nel menu"],
   START_MENU_ICON_TRAINER_CARD: ["Scheda Allenatore", "la voce con il nome del giocatore nel menu"],
   START_MENU_ICON_SAVE: ["Salva", "la voce SALVA nel menu"],
@@ -814,11 +814,11 @@ const MENU_NAMES = {
   START_MENU_ICON_RUNNING_SHOES: ["Scarpe da corsa", "si corre tenendo premuto B"]};
 const CARD_NAMES = {GEARCARD_MAP: "Scheda Mappa", GEARCARD_RADIO: "Scheda Radio"};
 const STORY_NAMES = {
-  FLAG_GOT_STARTER: "Primo Pokémon ricevuto dal Prof. Elm",
-  FLAG_GOT_BAG: "Borsa, Scheda Allenatore, Salva e Opzioni (dalla mamma)",
-  FLAG_GOT_POKEGEAR: "Pokégear ricevuto dalla mamma",
-  FLAG_UNK_0B7: "Fermato dalla ragazza della palestra: ora Whitney consegna la medaglia",
-  FLAG_UNK_0B4: "Sudowoodo annaffiato con lo Spruzzino (e il resto della scena)",
+  FLAG_GOT_STARTER: "Primo Pokémon ricevuto",
+  FLAG_GOT_BAG: "Borsa ricevuta",
+  FLAG_GOT_POKEGEAR: "Pokégear ricevuto",
+  FLAG_UNK_0B7: "Fermato dalla ragazza della palestra",
+  FLAG_UNK_0B4: "Sudowoodo annaffiato con lo Spruzzino",
   FLAG_GOT_EXPN_CARD: "Scheda Espansione della radio",
   FLAG_RESTORED_POWER: "Corrente tornata (Centrale Elettrica)",
   FLAG_UNLOCKED_WEST_KANTO: "Kanto ovest aperta",
@@ -1082,7 +1082,7 @@ function renderTrainer() {
   const cards = S.data.pokegear.cards.map(c => `<label class="sw"><input type="checkbox" data-card="${c.value}" ${(given.pokegear.cards & c.value) === c.value ? "checked" : ""}>
       <span><strong>${esc(CARD_NAMES[c.const] ?? c.const)}</strong> <span class="muted">${esc(c.const)}</span></span></label>`).join("");
   const mapStep = n => S.data.story.find(s => s.kind === "ScrCmd_804" && +s.key === n);
-  const levels = range(S.data.pokegear.map_levels).map(n => `<option value="${n}" ${given.pokegear.map_level === n ? "selected" : ""}>${n}${mapStep(n) ? ` — come a ${esc(mapStep(n).section)}` : n ? "" : " — solo Johto"}</option>`).join("");
+  const levels = range(S.data.pokegear.map_levels).map(n => `<option value="${n}" ${given.pokegear.map_level === n ? "selected" : ""}>${n}${mapStep(n) ? ` — come a ${esc(mapStep(n).section)}` : ""}</option>`).join("");
   const capOf = c => S.data.level_cap.milestones.find(m => m.badge === c)?.cap;
   const reason = S.data.level_cap.milestones.find(m => m.cap === given.level_cap);
   const usedBy = c => S.data.story.filter(s => !inChain.has(s.id) && s.needs.some(([n]) => n[0][0] === "badge" && n[0][1] === c));
@@ -1125,7 +1125,7 @@ function renderTrainer() {
         <label class="sw"><input type="checkbox" id="natdex" ${S.save.dex.national ? "checked" : ""}><span><strong>Pokédex Nazionale</strong> <span class="muted">nel Pokédex e nel profilo, come NatDexFlagAction</span></span></label>
         ${cards}
         <label class="sw"><span><strong>Mappa del Pokégear</strong> <select id="maplevel" aria-label="Livello della mappa">${levels}</select>
-          <span class="muted">mapUnlockLevel: ogni livello aggiunge una parte di Kanto</span></span></label></div></div>
+          <span class="muted">mapUnlockLevel</span></span></label></div></div>
     <div class="box"><h3>Medaglie e capipalestra</h3>
       <p class="note">Accanto a ogni medaglia i passi della sua palestra, nell'ordine in cui li fa lo script: spuntane uno e lo fa come nel gioco (con le
         variabili e i flag che il gioco scrive con lui), offrendo quelli prima; toglierlo li riporta indietro, offrendo quelli dopo. Così un salvataggio
@@ -1618,6 +1618,9 @@ function renderMachines(pocket) {
     return S.tm.show === "all" || (S.tm.show === "have") === count(m.item) > 0;
   });
   const used = S.data.machines.filter(m => count(m.item) > 0).length;
+  // The kinds in the order the bag sorts them, and the ones a use spends, as the tree's table has them.
+  const kind = m => machineName(S.items.get(m.item)?.name ?? "").split(" ")[0];
+  const groups = [...new Set(S.data.machines.map(kind))], spent = [...new Set(S.data.machines.filter(m => m.spent).map(kind))];
   $("#machines").innerHTML = `<div class="bar" style="margin-top:0">
       <strong>${used} di ${pocket.slots} posti</strong> <span class="muted">${S.data.machines.length} macchine in tutto</span>
       <span style="flex:1"></span>
@@ -1629,8 +1632,8 @@ function renderMachines(pocket) {
       <select id="tmshow" aria-label="Mostra">${[["all", "Tutte"], ["have", "Ce l'ho"], ["missing", "Mancano"]].map(([k, l]) => `<option value="${k}" ${S.tm.show === k ? "selected" : ""}>${l}</option>`).join("")}</select>
     </div>
     <p class="note">Le caselle cambiano solo qui finché non premi "Salva modifiche"; il salvataggio tiene la tasca come il gioco: ogni macchina una volta, ordinate
-      MT, DT, MN. Le MT e le MN non si consumano; una DT si consuma a ogni uso, per questo ha la quantità. Una macchina che un personaggio regala, se ce l'hai già,
-      non te la dà: il gioco vede la tasca senza posto e il regalo non avviene.</p>
+      ${esc(groups.join(", "))}. ${esc(spent.join(", "))} si consuma a ogni uso, per questo ha la quantità; le altre no. Una macchina che un personaggio
+      regala, se ce l'hai già, non te la dà: il gioco vede la tasca senza posto e il regalo non avviene.</p>
     <div class="dexlist" style="margin-top:10px">${rows.map(m => {
       const n = count(m.item), name = machineName(S.items.get(m.item)?.name ?? `#${m.item}`);
       return `<div class="dexrow ${ch.has(m.item) ? "dirty" : ""}" data-item="${m.item}">
@@ -1751,7 +1754,7 @@ function townLabel() {
 // A tile of the town map to the map a click picks: the one whose ground it is (a town, a route), else one
 // placed there by its world coordinates, outdoors first.
 function mapAtTile(key) {
-  const rank = id => (S.mainMaps.has(id) ? 0 : 2) + (["MAP_TYPE_INTERIOR", "MAP_TYPE_POKEMON_CENTER"].includes(S.maps.get(id).type) ? 1 : 0);
+  const rank = id => (S.mainMaps.has(id) ? 0 : 2) + (S.data.world.buildings.includes(S.maps.get(id).type) ? 1 : 0);
   return (S.townAt.get(key) || []).slice().sort((a, b) => rank(a) - rank(b) || a - b)[0];
 }
 // Picking a map -- in the list or on the town map -- puts in the place the game itself puts the player there.
@@ -1790,11 +1793,11 @@ function renderPosition() {
       </div>
       <p class="note" id="presetnote" hidden></p>
       <p class="note">Scegliendo una mappa (dall'elenco o con un clic sulla minimappa) x, y e direzione diventano il punto in cui il gioco stesso porta il
-        giocatore: dove si atterra col Volo, davanti al bancone del Centro Pokémon, all'ingresso di una porta o di una scala. Si possono cambiare a mano:
+        giocatore: dove si atterra col Volo, dove si ricompare dopo una sconfitta, all'arrivo da una porta o da una scala. Si possono cambiare a mano:
         una casella dove non si può stare (fuori dalla mappa, un muro, l'acqua, una persona, o, in un edificio, fuori dalle stanze) viene rifiutata.
         Scrive la posizione come <span class="mono">savedit.py --where</span>: la posizione attuale e il warp dinamico, con FLAG_UNK_966, così Continua entra
         con un warp e il gioco ricostruisce giocatore, follower e persone della mappa dai dati di zona. Le coordinate sono in caselle, contate dall'angolo
-        della matrice della mappa: all'aperto sono numeri grandi (Route 29 è sui 600, 400), al chiuso partono da 0.</p>
+        della matrice della mappa.</p>
       <div class="bar"><button type="submit" class="primary">Sposta</button></div>
     </form>`;
   if (!S.townImg || S.townImg.dataset.tree !== String(S.data.tree)) {

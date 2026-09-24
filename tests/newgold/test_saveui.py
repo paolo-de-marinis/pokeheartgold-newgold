@@ -641,6 +641,8 @@ class SaveUiTests(unittest.TestCase):
         data = self.ok("/api/data")
         self.assertEqual((data["world"]["cols"], data["world"]["rows"]), (47, 20))
         self.assertIn(33, data["world"]["main"])
+        self.assertEqual(data["world"]["buildings"], sorted(sv.buildings()), "MapHeader_IsInBuilding's, not the page's")
+        self.assertEqual(re.findall(r'"MAP_TYPE_\w+"', (ROOT / "tools/newgold/devkit/saveui.html").read_text()), [])
         self.assertIn([655 // 32, 400 // 32 + 2], data["world"]["tiles"]["33"])
         self.assertEqual(self.ok("/api/place?map=33"), {"map": 33, "x": [576, 671], "y": [384, 415], "preset": {
             "how": "warp", "x": 626, "y": 389, "direction": 1, "said": saveui.ARRIVALS["warp"]}})

@@ -1086,9 +1086,11 @@ def map_place(q):
 
 def world():
     """The town map's size, and each map's tiles on it and whether the main
-    matrix is its own (a tile of it is then the chunk it owns)."""
+    matrix is its own (a tile of it is then the chunk it owns); and the map
+    types that are a building's (MapHeader_IsInBuilding), which a click
+    on a tile picks last."""
     town, tiles, main = sv.town_map(), sv.town_tiles(), sv.main_matrix()[1]
-    return {"cols": town["cols"], "rows": town["rows"],
+    return {"cols": town["cols"], "rows": town["rows"], "buildings": sorted(sv.buildings()),
             "tiles": {m: tiles.get(m, []) for m in sv.map_table() if standable(m)},
             "main": [m for m in sv.map_table() if standable(m) and sv._matrix_of().get(m) == main]}
 
