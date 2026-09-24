@@ -15,6 +15,10 @@
 _000:
     SetMoveConditionFlag MOVE_ALLY_SWITCH, BATTLER_CATEGORY_ATTACKER
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0, _FAILED
+    // The redraw below is the move's animation. The one it borrows
+    // (Hypnosis's, MoveAnimationFor) would otherwise play after "switched
+    // places!", from UseMove's subscript: rings and Zs on the user.
+    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_MOVE_ANIMATIONS_OFF
     PrintAttackMessage
     Wait
     WaitButtonABTime 15

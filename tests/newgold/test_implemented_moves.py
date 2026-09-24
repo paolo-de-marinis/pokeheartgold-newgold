@@ -1001,6 +1001,10 @@ int main(void) {
         script = effect_script("MOVE_EFFECT_ALLY_SWITCH")
         self.assertLess(script.index("SetMoveConditionFlag MOVE_ALLY_SWITCH, BATTLER_CATEGORY_ATTACKER"),
                         script.index("CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0, _FAILED"))
+        # The redraw is its animation: the borrowed one would play after the
+        # message, from UseMove's subscript (seen in melonDS, round 9).
+        self.assertLess(script.index("BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_MOVE_ANIMATIONS_OFF"),
+                        script.index("_FAILED:"))
         for part in ("ChangeForm BATTLER_CATEGORY_ATTACKER\n", "ChangeForm BATTLER_CATEGORY_ATTACKER_PARTNER",
                      "HealthbarSlideIn BATTLER_CATEGORY_ATTACKER\n", "HealthbarSlideIn BATTLER_CATEGORY_ATTACKER_PARTNER",
                      f"PrintMessage msg_0197_{import_battle_messages.port_row('ally switch'):05d}, TAG_NICKNAME_NICKNAME"):
