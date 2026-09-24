@@ -6,6 +6,8 @@
 
 #include "system.h"
 
+static BOOL AllySwitchHasNoAlly(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+
 void ov10_0221BE20(BattleSystem *battleSystem, BattleContext *ctx, u8 battlerId, u8 a3) {
     int i;
     u8 struggleFlags;
@@ -27,7 +29,8 @@ void ov10_0221BE20(BattleSystem *battleSystem, BattleContext *ctx, u8 battlerId,
     struggleFlags = StruggleCheck(battleSystem, ctx, battlerId, 0, -1);
 
     for (i = 0; i < MAX_MON_MOVES; i++) {
-        if (struggleFlags & MaskOfFlagNo(i)) {
+        if ((struggleFlags & MaskOfFlagNo(i))
+            || (ctx->battleMons[battlerId].moves[i] == MOVE_ALLY_SWITCH && AllySwitchHasNoAlly(battleSystem, ctx, battlerId))) {
             ctx->trainerAIData.movePoints[i] = 0;
         }
         ctx->trainerAIData.unk18[i] = 100 - (BattleSystem_Random(battleSystem) % 16);
@@ -44,6 +47,18 @@ void ov10_0221BE20(BattleSystem *battleSystem, BattleContext *ctx, u8 battlerId,
     if (battleSystem->battleType & BATTLE_TYPE_DOUBLES) {
         ctx->trainerAIData.aiFlags |= AI_DOUBLES;
     }
+}
+
+// Ally Switch fails with no ally standing beside its user, in a single or a
+// multi battle as beside a fainted ally (AllySwitchWorks), and the AI's
+// scripts know nothing of the move: it is scored as a move that cannot be
+// used is. The Pledges need no rule of their own, being damaging moves the
+// scripts' damage rules read like any other.
+static BOOL AllySwitchHasNoAlly(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int ally = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
+
+    return !(battleSystem->battleType & BATTLE_TYPE_DOUBLES) || (battleSystem->battleType & (BATTLE_TYPE_MULTI | BATTLE_TYPE_TAG))
+        || ally == battlerId || !ctx->battleMons[ally].hp;
 }
 
 u8 ov10_0221BEF4(BattleSystem *battleSystem, u8 battlerId) {

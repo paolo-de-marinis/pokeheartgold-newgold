@@ -992,6 +992,43 @@ int main(void) {
 }
 """
 
+    def test_the_trainer_ai_leaves_ally_switch_with_no_ally(self):
+        # The AI's scripts have no rule for the move, which fails with no
+        # ally standing (AllySwitchWorks): it is scored as a move that
+        # cannot be used is, as the Struggle check scores those.
+        from test_hold_effects import run_c
+        ai = (ROOT / "src/battle/trainer_ai.c").read_text()
+        program = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/battle.h"
+typedef int32_t s32; typedef uint32_t u32;
+typedef int BOOL;
+typedef struct { u32 battleType; } BattleSystem;
+typedef struct { s32 hp; } BattleMon;
+typedef struct { BattleMon battleMons[4]; } BattleContext;
+static int BattleSystem_GetBattlerIdPartner(BattleSystem *bs, int battlerId) {
+    return (bs->battleType & BATTLE_TYPE_DOUBLES) && !(bs->battleType & BATTLE_TYPE_MULTI) ? battlerId ^ 2 : battlerId;
+}
+""" + function(ai, "AllySwitchHasNoAlly") + r"""
+int main(void) {
+    BattleSystem bs = { 0 };
+    BattleContext ctx = { { { 10 }, { 10 }, { 10 }, { 10 } } };
+    assert(AllySwitchHasNoAlly(&bs, &ctx, 1));
+    bs.battleType = BATTLE_TYPE_DOUBLES | BATTLE_TYPE_TRAINER;
+    assert(!AllySwitchHasNoAlly(&bs, &ctx, 1));
+    ctx.battleMons[3].hp = 0;
+    assert(AllySwitchHasNoAlly(&bs, &ctx, 1));
+    ctx.battleMons[3].hp = 10;
+    bs.battleType |= BATTLE_TYPE_MULTI;
+    assert(AllySwitchHasNoAlly(&bs, &ctx, 1));
+    return 0;
+}
+"""
+        run_c(program)
+        self.assertIn("|| (ctx->battleMons[battlerId].moves[i] == MOVE_ALLY_SWITCH && AllySwitchHasNoAlly(battleSystem, ctx, battlerId))) {\n"
+                      "            ctx->trainerAIData.movePoints[i] = 0;", function(ai, "ov10_0221BE20"))
+
     def test_ally_switch_has_the_two_change_places(self):
         # Pokemon Central (Cambiaposto): in a double battle the user and its
         # ally change places, attacks aimed at a place hitting whoever stands
