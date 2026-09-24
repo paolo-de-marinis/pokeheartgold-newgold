@@ -183,7 +183,8 @@ class ImplementedMoveTests(unittest.TestCase):
         noted = function(controller, "NoteMoveUsed")
         self.assertIn("ctx->moveUsedBefore = ctx->moveUsedLast;\n    ctx->moveUsedLast = ctx->moveNoCur;", noted)
         # Once a move, not once a target: the spread loop comes back with 13.
-        self.assertLess(noted.index("if (ctx->unk_2184 == 13) {\n        return;"), noted.index("ctx->moveUsedBefore"))
+        self.assertLess(noted.index("if (ctx->unk_2184 == 13 || (ctx->unk_2184 & MULTIHIT_CALLED_MOVE)) {\n        return;"),
+                        noted.index("ctx->moveUsedBefore"))
         self.assertIn("ctx->unk_2184 = 13;", function(controller, "ov12_0224D03C"))
         self.assertIn("ctx->moveUsedLast = MOVE_NONE;\n    ctx->moveUsedBefore = MOVE_NONE;",
                       function(controller, "BattleControllerPlayer_TurnEnd"))

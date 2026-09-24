@@ -30,13 +30,17 @@ EFFECT_SCRIPTS = ROOT / "files/battledata/script/effect_script"
 
 # What the engine does elsewhere, in C, and this game still does in the script.
 IN_C = "the engine moved it into C ({}); the script here still does it, to the same effect"
-# A move another move calls starts its Parental Bond in C here (TryStartParentalBond,
-# from GoToMoveScript) where the engine's script calls a subscript for it; the
-# engine's script also sets a Psychic Terrain flag that nothing reads in either
-# tree (SetPsychicTerrainMoveUsedFlag).
-CALLED_MOVE = "the called move's Parental Bond, started in C here (TryStartParentalBond from GoToMoveScript)"
-BACK_TO_BEFORE_MOVE = ("; the engine also sends the called move back through the before-move checks "
-                       "(GoBackToBeforeMove), where here it starts at once, as in retail")
+# A move another move calls goes back through the before-move steps here, from
+# GoToMoveScript (CallMove), and starts its Parental Bond there
+# (TryStartParentalBond) where the engine's script calls a subscript for it;
+# the engine's script also sets a Psychic Terrain flag that nothing reads in
+# either tree (SetPsychicTerrainMoveUsedFlag).
+CALLED_MOVE = ("the called move's Parental Bond, started in C here (TryStartParentalBond, once GoToMoveScript "
+               "has sent the move back through the before-move steps)")
+BACK_TO_BEFORE_MOVE = ("; the engine's script sends the called move back through the before-move steps "
+                       "(GoBackToBeforeMove), which GoToMoveScript does here")
+NOT_BACK_TO_BEFORE_MOVE = ("; the engine's script does not send the called move back through the before-move "
+                           "steps, which GoToMoveScript does here for every calling move")
 
 WEATHER = ("the engine sets the weather through its HANDLE_*_TEMPORARY subscripts where this script and "
            "WEATHER_START do the same; under a strong weather its script adds \"But it failed!\" after the "
@@ -45,15 +49,14 @@ WEATHER = ("the engine sets the weather through its HANDLE_*_TEMPORARY subscript
            "weather, as from the ninth generation (Terrempesta), which the engine writes over")
 
 STILL_DIFFERENT = {
-    7: "Damp and the user's HP going to 0 are the engine's before-move C (BattleController_BeforeMove.c), "
-       "which a move another calls goes back through; here a called Self-Destruct starts at once from its "
-       "script, so the script keeps both, to the same effect. The bar and the faint come once the move is "
+    7: "Damp and the user's HP going to 0 are the engine's before-move C (BattleController_BeforeMove.c); "
+       "the script here still does both, to the same effect. The bar and the faint come once the move is "
        "over, subscript 277, as the engine's step 11.0 has them",
     34: "Pay Day scatters its coins on the first strike or the only one; the engine's branch scatters "
          "them only on a first strike of Parental Bond, never without the ability (a6ee2c81c)",
     83: CALLED_MOVE + BACK_TO_BEFORE_MOVE + ", and prints the move the finger picked (message 1483), "
          "which retail's Metronome does not",
-    97: CALLED_MOVE,
+    97: CALLED_MOVE + NOT_BACK_TO_BEFORE_MOVE,
     115: WEATHER,
     122: "Present asks for Parental Bond with CheckAbility, which a suppressed ability fails, where the "
           "engine reads the raw ability (BMON_DATA_ABILITY)",
@@ -74,11 +77,11 @@ STILL_DIFFERENT = {
          "Bond's second strike, the stockpile spent, falls back on damage_power, which its script never "
          "sets; the script here sets the power before the stockpile goes, for both strikes",
     164: WEATHER,
-    173: CALLED_MOVE,
+    173: CALLED_MOVE + NOT_BACK_TO_BEFORE_MOVE,
     178: "Role Play asks the ability table for the user, where the engine lists the abilities (test_ability_interactions)",
     180: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     222: IN_C.format("Natural Gift's type, power and berry, CalcBaseDamage.c"),
-    241: CALLED_MOVE,
+    241: CALLED_MOVE + NOT_BACK_TO_BEFORE_MOVE,
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     259: "the engine waits for a button after only buffering the line that restores the dimensions, "
          "which waits on nothing, and calls its Room Service subscript by another name (395 here)",

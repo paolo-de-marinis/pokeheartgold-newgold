@@ -230,12 +230,14 @@ class ParentalBondTests(unittest.TestCase):
         self.assertLess(quarter, body.index("BattlerMoveWeather("))
 
     def test_it_starts_with_the_move_and_with_a_called_one(self):
+        # A called move comes back through the before-move steps
+        # (test_called_moves), and starts there as a chosen one does.
         controller = function(CONTROLLER.read_text(), "ov12_0224C38C")
         self.assertLess(controller.index("TryStartParentalBond(battleSystem, ctx);"),
                         controller.index("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_0, ctx->moveNoCur);"))
         commands = COMMANDS.read_text()
         for name in ("BtlCmd_GoToMoveScript", "BtlCmd_SetMirrorMove"):
-            self.assertIn("TryStartParentalBond(battleSystem, ctx);", function(commands, name), name)
+            self.assertIn("return CallMove(ctx);", function(commands, name), name)
 
     def test_what_waits_for_the_second_strike(self):
         body = function(OVERLAY.read_text(), "ov12_02250490")

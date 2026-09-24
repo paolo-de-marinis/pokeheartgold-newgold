@@ -2019,6 +2019,26 @@ BOOL BtlCmd_GoToEffectScript(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// A move another move calls -- Metronome, Sleep Talk, Nature Power, Assist,
+// Me First and Copycat (GoToMoveScript), and Mirror Move -- is used from the
+// steps before a move (ov12_0224C38C) as a chosen one is, as the engine sends
+// it back to them (GoBackToBeforeMove, BattleController_BeforeMove.c at
+// d0380a487). Stance Change, the primal weathers, Powder, a target to go at,
+// Magic Coat, Magic Bounce and Snatch, Lightning Rod and Storm Drain, and
+// Parental Bond's second strike answer the move called, not the one calling
+// (Pokemon Central, Accendilotta: Sleep Talk's Aegislash takes the form of
+// the move it calls). The engine's Sleep Talk, Nature Power and Me First
+// scripts do not go back -- for Sleep Talk its steps would ask again whether
+// the sleeping user can move. Here what stops a Pokemon acting, the
+// disobedience roll and the PP were the caller's and are not asked again, so
+// every calling move goes back. The caller's script ends here.
+static BOOL CallMove(BattleContext *ctx) {
+    ctx->unk_2184 |= MULTIHIT_SKIP_OBEDIENCE_CHECK | MULTIHIT_SKIP_STATUS_CHECK | MULTIHIT_CALLED_MOVE;
+    ctx->commandNext = CONTROLLER_COMMAND_23;
+    ctx->battleContinueFlag = TRUE;
+    return TRUE;
+}
+
 BOOL BtlCmd_GoToMoveScript(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
@@ -2035,18 +2055,7 @@ BOOL BtlCmd_GoToMoveScript(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->playerActions[ctx->battlerIdAttacker].unk4 = ctx->battlerIdTarget;
     }
 
-    if (ctx->battlerIdTarget == BATTLER_NONE) {
-        ctx->commandNext = CONTROLLER_COMMAND_39;
-        BattleScriptJump(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_NO_TARGET);
-    } else {
-        // A move Metronome, Sleep Talk, Assist, Copycat, Me First or Nature
-        // Power calls strikes twice for Parental Bond as a chosen one does:
-        // the reference's subscript 353 from those effects' scripts.
-        TryStartParentalBond(battleSystem, ctx);
-        BattleScriptJump(ctx, NARC_a_0_0_0, ctx->moveNoCur);
-    }
-
-    return FALSE;
+    return CallMove(ctx);
 }
 
 BOOL BtlCmd_CalcCrit(BattleSystem *battleSystem, BattleContext *ctx) {
@@ -3126,15 +3135,12 @@ BOOL BtlCmd_SetMirrorMove(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->battleStatus &= ~BATTLE_STATUS_MOVE_ANIMATIONS_OFF;
         ctx->moveNoCur = move;
         ctx->battlerIdTarget = ov12_022506D4(battleSystem, ctx, ctx->battlerIdAttacker, move, 1, 0);
-        if (ctx->battlerIdTarget == BATTLER_NONE) {
-            ctx->commandNext = CONTROLLER_COMMAND_39;
-            BattleScriptJump(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_NO_TARGET);
-        } else {
+        if (ctx->battlerIdTarget != BATTLER_NONE) {
             ctx->playerActions[ctx->battlerIdAttacker].unk4 = ctx->battlerIdTarget;
-            // And one Mirror Move copies, which the reference leaves single.
-            TryStartParentalBond(battleSystem, ctx);
-            BattleScriptJump(ctx, NARC_a_0_0_0, move);
         }
+        // Parental Bond strikes twice with the copy too, which the reference
+        // leaves single.
+        return CallMove(ctx);
     } else {
         ctx->selfTurnData[ctx->battlerIdAttacker].ignorePressure = 1;
     }

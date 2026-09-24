@@ -3665,8 +3665,9 @@ static BOOL PrimalWeatherStopsMove(u32 weather, int category, int type) {
 static void NoteMoveUsed(BattleSystem *battleSystem, BattleContext *ctx) {
     // A move that hits several comes back through here for each target after
     // the first, with unk_2184 at 13 to pass the checks it has been through
-    // (ov12_0224D03C); it was used once, and noted with its first.
-    if (ctx->unk_2184 == 13) {
+    // (ov12_0224D03C); it was used once, and noted with its first. A move
+    // another move called was noted as the move that called it.
+    if (ctx->unk_2184 == 13 || (ctx->unk_2184 & MULTIHIT_CALLED_MOVE)) {
         return;
     }
     ctx->moveUsedBefore = ctx->moveUsedLast;
@@ -3740,7 +3741,8 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         if (TryStanceChange(battleSystem, ctx) == TRUE) {
             return;
         }
-        if (!(ctx->unk_2184 & (1 << 3)) && ov12_0224B1FC(battleSystem, ctx) == TRUE) {
+        // A called move's PP and Pressure were its caller's (CallMove).
+        if (!(ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) && ov12_0224B1FC(battleSystem, ctx) == TRUE) {
             return;
         }
         if (PrimalWeatherStopsMove(BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), BattleMoveTbl(ctx, ctx->moveNoCur)->category,
@@ -3833,7 +3835,10 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->commandNext = CONTROLLER_COMMAND_24;
         ov12_02252E30(battleSystem, ctx);
     }
-    ov12_022565E0(battleSystem, ctx);
+    // The Metronome item counted the move that called this one.
+    if (!(ctx->unk_2184 & MULTIHIT_CALLED_MOVE)) {
+        ov12_022565E0(battleSystem, ctx);
+    }
 }
 
 static void ov12_0224C4D8(BattleSystem *battleSystem, BattleContext *ctx) {
