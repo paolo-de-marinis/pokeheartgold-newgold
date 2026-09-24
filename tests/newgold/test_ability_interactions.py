@@ -172,7 +172,7 @@ class SheerForceAftermathTests(unittest.TestCase):
     def test_the_kee_and_maranga_berries_ask_it(self):
         # Pokemon Central, Forzabruta: Baccalighia and Baccapane.
         hit = function(OVERLAY.read_text(), "CheckItemEffectOnHit")
-        self.assertIn("ItemRaisesStatOnHit(ctx, physical && !SheerForceTradedEffect(ctx), STAT_DEF, script)", hit)
+        self.assertIn("ItemRaisesStatOnHit(ctx, physical && !SheerForceTradedEffect(ctx)\n", hit)
         self.assertIn("ItemRaisesStatOnHit(ctx, special && !SheerForceTradedEffect(ctx), STAT_SPDEF, script)", hit)
 
     def test_the_users_shell_bell_and_life_orb_ask_it_too(self):

@@ -8924,7 +8924,13 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
         // the move touched, so a physical hit from across the field still
         // feeds it. Not a move Sheer Force powered, for either Berry
         // (Pokemon Central, Forzabruta), which the reference does not ask.
-        ret = ItemRaisesStatOnHit(ctx, physical && !SheerForceTradedEffect(ctx), STAT_DEF, script);
+        // Nor a Bug Bite or Pluck, whose user eats the Berry first and has
+        // its Defense raised instead, unless Sticky Hold keeps it
+        // (Baccalighia; TryEatOpponentBerry, once the move is over).
+        ret = ItemRaisesStatOnHit(ctx, physical && !SheerForceTradedEffect(ctx)
+                && !(BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_EAT_BERRY
+                    && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) != TRUE),
+            STAT_DEF, script);
         break;
     case HOLD_EFFECT_BOOST_SPDEF_ON_SPECIAL_HIT: // maranga berry
         ret = ItemRaisesStatOnHit(ctx, special && !SheerForceTradedEffect(ctx), STAT_SPDEF, script);
@@ -9412,6 +9418,34 @@ BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int bat
         ret = TRUE;
         break;
     default:
+        // Berries whose record has no effect for another's route to them: what
+        // they do for their eater is read off the held effect. The Enigma
+        // Berry gives it a quarter of its maximum HP (Pokemon Central,
+        // Baccaenigma: from the eighth generation, Bug Bite and Pluck too),
+        // the Kee Berry a stage of Defense and the Maranga Berry one of Sp.
+        // Def (Baccalighia, Baccapane), whatever the Berry's own condition.
+        // The Jaboca, Rowap and Custap Berries and the ones that weaken a
+        // type's hit have nothing to give whoever eats them (Baccajaba).
+        switch (GetItemVar(ctx, ctx->battleMons[battlerId].item, ITEM_VAR_HOLD_EFFECT)) {
+        case HOLD_EFFECT_HP_RESTORE_SE: // enigma berry
+            if (ctx->battleMons[ctx->battlerIdAttacker].hp != ctx->battleMons[ctx->battlerIdAttacker].maxHp) {
+                ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp, mod);
+                script = BATTLE_SUBSCRIPT_HELD_ITEM_HP_RESTORE;
+            }
+            break;
+        case HOLD_EFFECT_BOOST_DEF_ON_PHYSICAL_HIT: // kee berry
+            if (ctx->battleMons[ctx->battlerIdAttacker].statChanges[STAT_DEF] < 12) {
+                ctx->msgTemp = STAT_DEF;
+                script = BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT;
+            }
+            break;
+        case HOLD_EFFECT_BOOST_SPDEF_ON_SPECIAL_HIT: // maranga berry
+            if (ctx->battleMons[ctx->battlerIdAttacker].statChanges[STAT_SPDEF] < 12) {
+                ctx->msgTemp = STAT_SPDEF;
+                script = BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT;
+            }
+            break;
+        }
         if (BattleItemIsBerry(ctx->battleMons[battlerId].item) == TRUE) {
             ret = TRUE;
         }

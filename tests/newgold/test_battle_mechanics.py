@@ -90,6 +90,29 @@ class BattleBerryTests(unittest.TestCase):
         self.assertEqual(OVERLAY.read_text().count("FIRST_BERRY_IDX"), 1)
 
 
+class EatenBerryTests(unittest.TestCase):
+    def test_the_enigma_kee_and_maranga_berries_feed_their_eater(self):
+        # Pokemon Central: eaten through Bug Bite, Pluck, Stuff Cheeks,
+        # Teatime or Cud Chew, the Enigma Berry gives a quarter of the HP
+        # (Baccaenigma, from the eighth generation), the Kee Berry a stage of
+        # Defense (Baccalighia), the Maranga one of Sp. Def (Baccapane). Their
+        # records have no pluck effect, and they were eaten for nothing.
+        eat = function(OVERLAY.read_text(), "TryEatOpponentBerry")
+        default = eat[eat.index("    default:"):]
+        for effect, line in (("HOLD_EFFECT_HP_RESTORE_SE", "script = BATTLE_SUBSCRIPT_HELD_ITEM_HP_RESTORE;"),
+                             ("HOLD_EFFECT_BOOST_DEF_ON_PHYSICAL_HIT", "ctx->msgTemp = STAT_DEF;"),
+                             ("HOLD_EFFECT_BOOST_SPDEF_ON_SPECIAL_HIT", "ctx->msgTemp = STAT_SPDEF;")):
+            case = default[default.index(f"case {effect}:"):]
+            self.assertIn(line, case[:case.index("break;")])
+        # Bug Bite and Pluck eat a Kee Berry before it raises its holder's
+        # Defense, Sticky Hold aside (Baccalighia).
+        hit = function(OVERLAY.read_text(), "CheckItemEffectOnHit")
+        kee = hit[hit.index("case HOLD_EFFECT_BOOST_DEF_ON_PHYSICAL_HIT:"):]
+        kee = kee[:kee.index("break;")]
+        self.assertIn("->effect == MOVE_EFFECT_EAT_BERRY", kee)
+        self.assertIn("ABILITY_STICKY_HOLD) != TRUE", kee)
+
+
 class MatchaGotchaTests(unittest.TestCase):
     def test_it_drains_on_every_hit_and_burns_one_time_in_five(self):
         # Pokemon Central (Spruzzate): half the damage back on every hit, a
