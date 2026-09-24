@@ -1655,8 +1655,8 @@ static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
 // Whether Sheer Force traded the attacker's move effect for power, for what
 // answers the hit: Emergency Exit's arming, Berserk, Anger Shell, Pickpocket,
 // the Red Card and the Eject Button, the user's Shell Bell and Life Orb, and
-// Relic Song's change of form (Pokemon Central, Forzabruta). Shell Trap, when
-// it is added, must ask it too: a boosted move does not set the trap off.
+// Relic Song's change of form (Pokemon Central, Forzabruta), and Shell Trap,
+// which a boosted move does not set off.
 // From the effect roll on, the flags IsSuppressibleSecondaryEffect reads are
 // gone -- ov12_02250490 clears them as it rolls or gives the effect up -- so
 // what it found then is kept for the rest of the action.
