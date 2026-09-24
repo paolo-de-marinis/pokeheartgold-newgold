@@ -768,8 +768,11 @@ class SaveditLibraryTests(unittest.TestCase):
         town, num = sv.town_map(), sv.constants("include/constants/maps.h", "MAP_")
         self.assertEqual((town["cols"], town["rows"], town["dx"], town["dy"]), (47, 20, 0, 2))
         self.assertEqual(struct.unpack(">II", town["png"][16:24]), (8 * town["cols"], 8 * town["rows"]))
-        rows, _ = sv._png_rows(town["png"])
+        rows, palette = sv._png_rows(town["png"])
         self.assertEqual((len(rows[0]), len(rows)), (8 * town["cols"], 8 * town["rows"]), "the PNG reads back")
+        self.assertEqual(palette, sv._nclr(f"{sv.TOWN_MAP}/pgmap_gra_00000020.NCLR"), "the NCLR the game loads, skin 0")
+        self.assertEqual(palette[3 * 2:3 * 3], bytes(sv._png_rows((sv.ROOT / sv.TOWN_MAP / "pgmap_gra_00000010.png").read_bytes())[1][3 * 2:3 * 3]),
+                         "today the art's PNG agrees with it")
         tiles = sv.town_tiles()
         violet = {(x, y + town["dy"]) for x, y in sv.map_chunks(num["MAP_VIOLET"])}
         self.assertEqual(set(tiles[num["MAP_VIOLET"]]), violet)

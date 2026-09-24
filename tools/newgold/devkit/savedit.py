@@ -1608,6 +1608,17 @@ def _png_rows(data):
     return rows, palette
 
 
+def _nclr(path):
+    """An NCLR's colours (its TTLP section's BGR555 halfwords) as a PNG's
+    PLTE, 256 entries."""
+    data = source(path).read_bytes()
+    at = data.index(b"TTLP")
+    size, offset = struct.unpack_from("<II", data, at + 16)
+    colours = struct.unpack_from(f"<{size // 2}H", data, at + 8 + offset)
+    rgb = b"".join(bytes((c >> shift & 31) * 255 // 31 for shift in (0, 5, 10)) for c in colours[:256])
+    return rgb + bytes(3 * 256 - len(rgb))
+
+
 def _png(rows, palette):
     """Indexed pixels as a PNG, in that palette."""
     chunk = lambda kind, body: struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
@@ -1624,7 +1635,8 @@ def town_map():
     GF_BG_LYR_MAIN_2 (its PNG, 8 bits a pixel), laid out by the screen it
     loads for BG_LYR_MAIN_3 over the window ov101_021EAF40 copies -- the
     whole map, both regions -- each entry a tile number and its flips; a
-    PNG in the tiles' own palette. A tile of it is a chunk of the main
+    PNG in the palette PokegearMap_LoadPalettes loads for that layer (the
+    NCLR of skin 0, a new game's). A tile of it is a chunk of the main
     matrix, the rows moved by what PokegearMap reads matrixXCoord and
     matrixYCoord with (FieldSystem_InitPokegearArgs gives it the chunk).
     {"png", "cols", "rows", "dx", "dy"}."""
@@ -1637,7 +1649,11 @@ def town_map():
     offset = {axis: int(n or 0) for axis, n in re.findall(
         r"mapApp->player([XY]) = mapApp->pokegear->args->matrix[XY]Coord(?: \+ (\d+))?;",
         c_function("src/application/pokegear/map/pokegear_map.c", "static void PokegearMap_InitInternal("))}
-    art, palette = _png_rows(source(f"{TOWN_MAP}/pgmap_gra_{int(tiles):08d}.png").read_bytes())
+    art, _ = _png_rows(source(f"{TOWN_MAP}/pgmap_gra_{int(tiles):08d}.png").read_bytes())
+    colours = re.search(r"NARC_pgmap_gra_pgmap_gra_(\d+)_NCLR \+ frame, mapApp->heapID, PLTTBUF_MAIN_BG,",
+                        c_function("src/application/pokegear/map/overlay_101_021E7FF4.c",
+                                   "static void PokegearMap_LoadPalettes(")).group(1)
+    palette = _nclr(f"{TOWN_MAP}/pgmap_gra_{int(colours):08d}.NCLR")
     data = source(f"{TOWN_MAP}/pgmap_gra_{int(screen):08d}.NSCR").read_bytes()
     at = data.index(b"NRCS")
     width = struct.unpack_from("<H", data, at + 8)[0] // 8

@@ -140,7 +140,8 @@ the map: the empty space around a room. Outside, ledges and climbs part
 ground the player reaches, so there it is not asked. `town_map()` is the
 Pokégear's town map, both regions, drawn as the game draws it: the tiles'
 PNG laid out by the screen `PokegearMap_LoadGraphics` loads, over the window
-`ov101_021EAF40` copies. `town_tiles()` is where each map is on it -- a map
+`ov101_021EAF40` copies, in the colours of the NCLR `PokegearMap_LoadPalettes`
+loads for it (a new game's skin). `town_tiles()` is where each map is on it -- a map
 of the main matrix at the chunks it owns, rows moved as
 `PokegearMap_InitInternal` moves them, any other at its header's world
 coordinates -- and `town_tile` where the Pokégear marks the player.
