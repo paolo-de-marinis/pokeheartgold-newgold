@@ -400,6 +400,9 @@ Reading what the debug ROM records, and playing it without looking.
 - `ingame_save.py SAVE OUT` -- the game continues a save and saves it
   through the start menu; OUT is what it wrote to flash. A save savedit
   wrote is proved on it.
+- `heapblocks.py DUMP [--heap N]` -- one heap's used and free blocks in a
+  memory dump, biggest first, with their first bytes: what fills a heap
+  when an allocation from it fails.
 - A game that stops in-process raises no data abort: the script writes
   `core.state()` to a file, and `frozen.py` reads it as it reads a melonDS
   savestate.
