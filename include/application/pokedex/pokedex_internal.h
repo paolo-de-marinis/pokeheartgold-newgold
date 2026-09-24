@@ -3,6 +3,7 @@
 
 #include "global.h"
 
+#include "application/pokedex/dex_entry_pages.h"
 #include "application/pokedex/pokedex_internal_constants.h"
 
 #include "bg_window.h"
@@ -335,10 +336,12 @@ struct PokedexAppData {
     PokedexAppData_UnkSub18DC unk_18DC;             // 0x18DC
     PokedexAppData_UnkSub1908 *unk_1908;            // 0x1908
     PokedexAppData_UnkSub190C *unk_190C;            // 0x190C
-}; // size: 0x1910
+    DexEntryPages entryPages;                       // 0x1910, the port's
+}; // size: 0x1920
 
-// overlay_18.s reads and writes this struct at fixed offsets.
-typedef char PokedexAppData_MatchesOverlay18[sizeof(PokedexAppData) == 0x1910 ? 1 : -1];
+// overlay_18.s reads and writes this struct at fixed offsets, retail's up to
+// 0x1910.
+typedef char PokedexAppData_MatchesOverlay18[offsetof(PokedexAppData, entryPages) == 0x1910 ? 1 : -1];
 
 void ov18_021EE3AC(PokedexAppData *pokedexApp, MsgData *msgData, int windowId, int msgId, int x, int y, int fontId, u32 color, int alignment);
 void ov18_021EE520(PokedexAppData *pokedexApp, int windowId, u32 num);

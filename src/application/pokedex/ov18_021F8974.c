@@ -30,6 +30,7 @@ BOOL ov18_021F89C8(PokedexCapturePage *page) {
 }
 
 void ov18_021F89D0(PokedexCapturePage *page) {
+    DexEntryPages_Stop(&page->entryPages);
     ov18_021F91F0(page);
     ov18_021F8F10(page);
     ov18_021F8BEC(page);
@@ -39,7 +40,8 @@ void ov18_021F89D0(PokedexCapturePage *page) {
 }
 
 // Draws the page and fades it in, then plays the species' cry; the battle
-// waits for the cry before it lets the player dismiss the page.
+// waits for the cry before it lets the player dismiss the page. The entry
+// turns its pages meanwhile, and until the battle ends the page.
 static void ov18_021F89F8(SysTask *task, void *data) {
     PokedexCapturePage *page = data;
 
@@ -72,6 +74,7 @@ static void ov18_021F89F8(SysTask *task, void *data) {
     case 4:
         break;
     }
+    DexEntryPages_Update(&page->entryPages);
     SpriteList_RenderAndAnimateSprites(page->spriteList);
     ov18_021F8C68(page);
 }

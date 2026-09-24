@@ -6,7 +6,8 @@
 
 // The Dex's windows are added from a table, from the first, and every window
 // it adds is removed here: the front page's twenty (ov18_021EE3FC), the
-// pages' hundred and one (ov18_021EEE58) and the other pages' sets.
+// pages' hundred and one (ov18_021EEE58) and the other pages' sets. An entry
+// turning its pages stops first, before its window goes.
 void ov18_021EE35C(PokedexAppData *pokedexApp, const WindowTemplate *templates, u32 count) {
     u32 i;
 
@@ -18,6 +19,7 @@ void ov18_021EE35C(PokedexAppData *pokedexApp, const WindowTemplate *templates, 
 void ov18_021EE388(PokedexAppData *pokedexApp) {
     u32 i;
 
+    DexEntryPages_Stop(&pokedexApp->entryPages);
     for (i = 0; i < NELEMS(pokedexApp->windows); i++) {
         if (pokedexApp->windows[i].pixelBuffer != NULL) {
             RemoveWindow(&pokedexApp->windows[i]);

@@ -248,6 +248,7 @@ BOOL PokedexApp_RunMainSeq(PokedexAppData *pokedexApp, int *pState) {
 
     sub_02019934(pokedexApp->unk_0008);
     ov18_021F1004(pokedexApp);
+    DexEntryPages_Update(&pokedexApp->entryPages);
     SpriteSystem_DrawSprites(pokedexApp->unk_066C);
     return TRUE;
 }

@@ -3,6 +3,8 @@
 
 #include "global.h"
 
+#include "application/pokedex/dex_entry_pages.h"
+
 #include "overlay_18.h"
 
 // The capture page's data. The first six fields are the UnkStruct_50C the
@@ -27,7 +29,8 @@ struct PokedexCapturePage {
     u32 unk24C;
     u32 unk250;
     BOOL done;                      // 0x254: the cry has played
-}; // size: 0x258
+    DexEntryPages entryPages;       // 0x258, the port's
+}; // size: 0x268
 
 void ov18_021F8AB8(PokedexCapturePage *page);
 void ov18_021F8B10(PokedexCapturePage *page);
