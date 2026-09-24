@@ -10038,6 +10038,12 @@ static void RemoveBattlerType(BattleContext *ctx, int battlerId, u8 type) {
     }
 }
 
+// The reference's two also set soakFlag and magicPowderFlag, which only its
+// end-of-turn Roost step reads (ENDTURN_ROOST_USERS_REGAINING_FLYING_TYPE):
+// its Roost takes the Flying type out of type1 and type2, and at the turn's
+// end writes the species' types back unless one of the two landed since. Here
+// Roost changes no type (BtlCmd_HandleRoost), so there is nothing to write
+// back and nothing for a flag to stop: the new type lasts as it is.
 BOOL BtlCmd_HandleSoak(BattleSystem *battleSystem, BattleContext *ctx) {
 #pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
