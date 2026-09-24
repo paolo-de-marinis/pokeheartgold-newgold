@@ -1,5 +1,6 @@
 #include "global.h"
 
+#include "application/pokedex/pokedex_capture_page.h"
 #include "msgdata/msg.naix"
 #include "msgdata/msg/msg_0802.h"
 
@@ -12,18 +13,6 @@
 #include "string_util.h"
 #include "text.h"
 
-// The capture page's own data: what ov18_021F8CCC reads of it.
-typedef struct PokedexCapturePage {
-    BgConfig *bgConfig;   // 0x000
-    u8 unk004[0xC];
-    BOOL natDexEnabled;   // 0x010
-    enum HeapID heapId;   // 0x014
-    u8 unk018[0xC];
-    Window windows[9];    // 0x024
-    u8 unk0B4[0x190];
-    u32 species;          // 0x244
-} PokedexCapturePage;
-
 extern const WindowTemplate ov18_021FBDB4[];
 
 // ov18_021E590C.c defines these with a u16 species; this page hands them its
@@ -34,7 +23,6 @@ String *ov18_021E59A8(u32 species, int language, int a2, enum HeapID heapId);
 
 void ov18_021F95FC(Window *window, String *string, int x, int y, FontID fontId, u32 color, int alignment);
 void ov18_021F9648(Window *window, MsgData *msgData, int msgId, int x, int y, FontID fontId, u32 color, int alignment);
-void ov18_021F8CCC(PokedexCapturePage *page);
 
 // The entry a newly caught species gets: its Dex number, name, category and
 // flavour text, height and weight.

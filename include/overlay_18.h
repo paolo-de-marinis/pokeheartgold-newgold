@@ -24,10 +24,15 @@ BOOL Pokedex_Init(OverlayManager *man, int *state);
 BOOL Pokedex_Main(OverlayManager *man, int *state);
 BOOL Pokedex_Exit(OverlayManager *man, int *state);
 
-OverlayManager *ov18_021F8974(UnkStruct_50C *unkStruct);
-s32 ov18_021F89C8(OverlayManager *man);
-void ov18_021F89D0(OverlayManager *man);
-Pokepic *ov18_021F95F8(OverlayManager *man);
-void ov18_021F95AC(OverlayManager *man);
+// The page a species the player catches gets over the battle (its Dex
+// number, name, category, entry, height and weight): battle_command.c's
+// "get Pokemon" states make it, wait on it and end it.
+typedef struct PokedexCapturePage PokedexCapturePage;
+
+PokedexCapturePage *ov18_021F8974(UnkStruct_50C *unkStruct);
+BOOL ov18_021F89C8(PokedexCapturePage *page);
+void ov18_021F89D0(PokedexCapturePage *page);
+Pokepic *ov18_021F95F8(PokedexCapturePage *page);
+void ov18_021F95AC(PokedexCapturePage *page);
 
 #endif // POKEHEARTGOLD_OVY_18_H
