@@ -183,7 +183,9 @@ On the right, the open save, in tabs: Allenatore (name, ids, money, gender,
 coins, play time, and the story), Squadra and Box (every Pokemon, a
 slot editor for species, level, nature, ability, held item, moves, IVs, EVs
 and friendship; adding, removing, reordering, moving between box and
-party), Borsa, Pokedex (per
+party), Borsa (the machines as a checklist, the Pokedex's way: every TM, TR
+and HM with its move and type, "ce l'ho", and a count for a TR, which a use
+spends; written as the game keeps the pocket, 101 slots at most), Pokedex (per
 species, all at once, and the two switches), Posizione (the `--where`
 write), Flag e variabili (by name) and Info (the two halves and the block
 table). The name can only be written in letters and digits: that is all

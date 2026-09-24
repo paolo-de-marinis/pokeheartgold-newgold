@@ -205,6 +205,7 @@ details .chain { margin-left: 8px; }
 .why .no { color: var(--danger); }
 details { border-top: 1px solid var(--border); padding: 6px 0; }
 details summary { cursor: pointer; }
+#machines .dexlist { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
 .browse { max-height: 50vh; }
 #libpath { cursor: pointer; }
 </style>
@@ -307,7 +308,7 @@ const typeBadges = types => (types || []).map(t => { const [name, colour] = TYPE
 const typeNames = types => (types || []).map(t => (TYPES[t] || [t])[0]).join("/");
 
 const S = {data: null, lib: null, f: null, save: null, tab: "trainer", box: 0, pocket: null,
-           dex: {changes: new Map(), q: "", show: "all"},
+           dex: {changes: new Map(), q: "", show: "all"}, tm: {changes: new Map(), q: "", show: "all"},
            storyq: "", storyshow: "all", storyopen: new Set(), melon: false, busy: 0};
 const store = {
   get(k) { try { return localStorage.getItem("saveui." + k); } catch { return null; } },
@@ -710,7 +711,7 @@ async function showHistory(f) {
 async function openSave(f) {
   const detail = await run(() => api(`/api/save?f=${encodeURIComponent(f)}`));
   if (!detail) return;
-  if (S.f !== f) S.dex.changes.clear();
+  if (S.f !== f) { S.dex.changes.clear(); S.tm.changes.clear(); }
   S.f = f;
   store.set("f", f);
   showSave(detail);
@@ -760,7 +761,7 @@ $("#undo").addEventListener("click", async () => {
   S.busy++;
   try {
     const out = await api("/api/undo", {f: S.f, version: S.save.version});
-    toast("Ultima modifica annullata"); S.dex.changes.clear(); showSave(out); loadLibrary();
+    toast("Ultima modifica annullata"); S.dex.changes.clear(); S.tm.changes.clear(); showSave(out); loadLibrary();
   } catch (e) {
     toast(e.message, true);
     if (e.code === "stale") await openSave(S.f);
@@ -1489,6 +1490,7 @@ function renderBag() {
   const here = pockets.find(p => p.name === S.pocket) || pockets[0];
   S.pocket = here.name;
   const rows = bag[S.pocket] || [], limit = id => S.items.get(id)?.limit ?? 0;
+  const machines = S.data.machines.length && S.items.get(S.data.machines[0].item)?.pocket === S.pocket;
   $("#tab").innerHTML = `<div class="seg">${pockets.map(p => `<button type="button" data-pocket="${p.name}" class="${p.name === S.pocket ? "on" : ""}">${esc(pocketName(p.const))} <span class="muted">${(bag[p.name] || []).length}</span></button>`).join("")}</div>
     <form id="additem" class="bar" style="margin:0 0 12px">
       <input name="what" list="dl-items" placeholder="Aggiungi uno strumento…" required style="flex:1;min-width:200px" aria-label="Strumento">
@@ -1496,13 +1498,13 @@ function renderBag() {
       <button class="primary" type="submit">Aggiungi</button>
     </form>
     <p class="note" style="margin-bottom:10px">Lo strumento va nella tasca che il gioco gli assegna, e al massimo quanti il gioco ne tiene: una MT è una sola (New Gold non le consuma).</p>
-    <div class="scroll"><table>
+    ${machines ? `<div id="machines"></div>` : `<div class="scroll"><table>
       <tr><th>${esc(pocketName(here.const))} <span class="muted">(${rows.length} di ${here.slots} posti)</span></th><th class="num">Quantità</th><th></th></tr>
       ${rows.map(r => `<tr><td>${esc(r.name)}</td>
         <td class="num"><input type="number" min="1" max="${limit(r.item)}" value="${r.quantity}" data-item="${r.item}" aria-label="Quantità di ${esc(r.name)}"></td>
         <td class="num"><button type="button" class="small" data-set="${r.item}">Imposta</button> <button type="button" class="small danger" data-del="${r.item}">Togli</button></td></tr>`).join("")
         || `<tr><td colspan="3" class="muted">Tasca vuota.</td></tr>`}
-    </table></div>`;
+    </table></div>`}`;
   $(".seg").onclick = ev => { const b = ev.target.closest("[data-pocket]"); if (b) { S.pocket = b.dataset.pocket; renderBag(); } };
   $("#additem").onsubmit = ev => {
     ev.preventDefault();
@@ -1514,12 +1516,60 @@ function renderBag() {
     S.pocket = pocket;
     edit("item", {item: id, quantity: have + +ev.target.elements.quantity.value}, "Strumento aggiunto");
   };
+  if (machines) return renderMachines(here);
   $("table", $("#tab")).onclick = ev => {
     const b = ev.target.closest("button");
     if (!b) return;
     if (b.dataset.del) return edit("item", {item: +b.dataset.del, quantity: 0}, "Strumento tolto");
     if (b.dataset.set) return edit("item", {item: +b.dataset.set, quantity: +$(`input[data-item="${b.dataset.set}"]`).value}, "Quantità cambiata");
   };
+}
+// The machines pocket as a checklist, the Pokédex's way: every TM, TR and HM
+// the tree has, in the order the bag sorts them; a count only where the game
+// keeps one (a TR is used up; the rest are one each, or up to the limit).
+function renderMachines(pocket) {
+  const held = new Map((S.save.bag[pocket.name] || []).map(r => [r.item, r.quantity])), ch = S.tm.changes;
+  const count = id => ch.has(id) ? ch.get(id) : held.get(id) || 0;
+  const q = S.tm.q.toLowerCase();
+  const rows = S.data.machines.filter(m => {
+    const label = `${machineName(S.items.get(m.item)?.name ?? "")} ${S.moves.get(m.move)?.name ?? ""} ${(TYPES[m.type] || [m.type])[0]}`.toLowerCase();
+    if (q && !label.includes(q)) return false;
+    return S.tm.show === "all" || (S.tm.show === "have") === count(m.item) > 0;
+  });
+  const used = S.data.machines.filter(m => count(m.item) > 0).length;
+  $("#machines").innerHTML = `<div class="bar" style="margin-top:0">
+      <strong>${used} di ${pocket.slots} posti</strong> <span class="muted">${S.data.machines.length} macchine in tutto</span>
+      <span style="flex:1"></span>
+      <button type="button" class="primary" id="tmsave" ${ch.size ? "" : "disabled"}>Salva modifiche (${ch.size})</button>
+      ${ch.size ? `<button type="button" id="tmdrop">Scarta</button>` : ""}
+    </div>
+    <div class="bar">
+      <input type="search" id="tmq" placeholder="Cerca: numero, mossa, tipo…" value="${esc(S.tm.q)}" style="flex:1;min-width:180px" aria-label="Cerca tra le macchine">
+      <select id="tmshow" aria-label="Mostra">${[["all", "Tutte"], ["have", "Ce l'ho"], ["missing", "Mancano"]].map(([k, l]) => `<option value="${k}" ${S.tm.show === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+    </div>
+    <p class="note">Le caselle cambiano solo qui finché non premi "Salva modifiche"; il salvataggio tiene la tasca come il gioco: ogni macchina una volta, ordinate
+      MT, DT, MN. Le MT e le MN non si consumano; una DT si consuma a ogni uso, per questo ha la quantità. Una macchina che un personaggio regala, se ce l'hai già,
+      non te la dà: il gioco vede la tasca senza posto e il regalo non avviene.</p>
+    <div class="dexlist" style="margin-top:10px">${rows.map(m => {
+      const n = count(m.item), name = machineName(S.items.get(m.item)?.name ?? `#${m.item}`);
+      return `<div class="dexrow ${ch.has(m.item) ? "dirty" : ""}" data-item="${m.item}">
+        <span class="n" style="width:4.6em">${esc(name)}</span><span class="nm">${esc(S.moves.get(m.move)?.name ?? m.move)} ${typeBadges([m.type])}</span>
+        <label><input type="checkbox" data-k="have" ${n ? "checked" : ""}> ce l'ho</label>
+        ${m.spent ? `<input type="number" data-k="n" min="1" max="${m.limit}" value="${n || 1}" style="width:4.5em" aria-label="Quantità di ${esc(name)}" ${n ? "" : "disabled"}>` : ""}</div>`;
+    }).join("") || `<span class="muted">Nessuna macchina.</span>`}</div>`;
+  const set = (id, n) => { if (n === (held.get(id) || 0)) ch.delete(id); else ch.set(id, n); renderMachines(pocket); };
+  $("#machines .dexlist").onchange = ev => {
+    const row = ev.target.closest(".dexrow"), id = +row.dataset.item, m = S.data.machines.find(x => x.item === id);
+    if (ev.target.dataset.k === "have") set(id, ev.target.checked ? Math.max(1, held.get(id) || 1) : 0);
+    else set(id, Math.min(m.limit, Math.max(1, +ev.target.value || 1)));
+  };
+  $("#tmq").oninput = ev => { S.tm.q = ev.target.value; const pos = ev.target.selectionStart; renderMachines(pocket); const el = $("#tmq"); el.focus(); el.setSelectionRange(pos, pos); };
+  $("#tmshow").onchange = ev => { S.tm.show = ev.target.value; renderMachines(pocket); };
+  $("#tmsave").onclick = async () => {
+    const changes = [...ch].map(([item, quantity]) => ({item, quantity}));
+    if (await edit("machines", {changes}, `Macchine salvate (${changes.length})`)) { ch.clear(); renderBag(); }
+  };
+  if ($("#tmdrop")) $("#tmdrop").onclick = () => { ch.clear(); renderMachines(pocket); };
 }
 
 // ---- Pokédex -------------------------------------------------------------
