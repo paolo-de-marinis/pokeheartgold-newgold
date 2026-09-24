@@ -568,7 +568,7 @@ class PivotRetreatTests(unittest.TestCase):
         # last, for a target still the one it hit.
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
         self.assertLess(body.index("TryRetreatAbility(battleSystem, ctx, &script)"), body.index("TryPivotSwitch(ctx)"))
-        self.assertIn("Battler_CameInAfterTheHit(ctx, target)", function(CONTROLLER.read_text(), "TryPivotSwitch"))
+        self.assertIn("Battler_CameInAfterTheHit(ctx, target)", function(CONTROLLER.read_text(), "PivotSwitchPending"))
         self.assertIn("TryUseHeldItem(battleSystem, ctx, ctx->battlerIdTarget)", function(CONTROLLER.read_text(), "ov12_0224CC88"))
 
 

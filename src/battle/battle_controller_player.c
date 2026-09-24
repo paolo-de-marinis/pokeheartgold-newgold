@@ -5453,19 +5453,24 @@ static BOOL TryHoldAfterHit(BattleContext *ctx, int battlerId) {
 // over: the engine's Activate_Switch (ServerDoPostMoveEffects.c:2120 at
 // d0380a487), the step after Emergency Exit and Wimp Out, for a user still
 // standing with no switch pending. So the user goes after the hit's Rough
-// Skin, Static or Rocky Helmet, its own Life Orb and Shell Bell, Magician and
-// Pickpocket, and a user those felled stays. Nor does it go once it has left
-// already -- dragged out by a Red Card, gone with its own Emergency Exit or
-// Eject Pack (U-turn's flag) -- or once the Pokemon it hit has left, by its
-// Eject Button, Emergency Exit or Wimp Out (Pokemon Central, Pulsantefuga,
-// Cartelrosso and Passoindietro); a Berry that healed that Pokemon above half
-// has kept it in by then. A move that failed switches nothing. Nor does a
-// user holding a Red Card itself go (Pokemon Central, Cartelrosso;
-// Bulbapedia's U-turn, Volt Switch and Flip Turn); the reference switches it.
-// The card is the one it holds as it would go, not as the move hit: a card
-// the target's Pickpocket lifted off it keeps it in no longer, and one its
-// Magician took from the target does.
-static BOOL TryPivotSwitch(BattleContext *ctx) {
+// Skin, Static or Rocky Helmet, its own Life Orb and Shell Bell, and Magician,
+// and a user those felled stays. Nor does it go once it has left already --
+// dragged out by a Red Card, gone with its own Emergency Exit (U-turn's flag)
+// -- or once the Pokemon it hit has left, by its Eject Button, Emergency Exit
+// or Wimp Out (Pokemon Central, Pulsantefuga, Cartelrosso and Passoindietro);
+// a Berry that healed that Pokemon above half has kept it in by then. A move
+// that failed switches nothing. Nor does a user holding a Red Card itself go
+// (Pokemon Central, Cartelrosso; Bulbapedia's U-turn, Volt Switch and Flip
+// Turn); the reference switches it. The card is the one it holds as it would
+// go, not as the move hit: a card the target's Pickpocket lifted off it keeps
+// it in no longer, and one its Magician took from the target does.
+//
+// The engine only marks the switch pending there and makes it at its step 29,
+// after Pickpocket, the Throat Spray and the Eject Pack; subscript 175 here
+// withdraws the user and sends the next one in at once, so it runs where the
+// engine makes the switch, and the Eject Pack step asks this to stay shut as
+// the engine's pending switch keeps it.
+static BOOL PivotSwitchPending(BattleContext *ctx) {
     int target = ctx->battlerIdTarget;
 
     if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect != MOVE_EFFECT_SWITCH_HIT
@@ -5473,6 +5478,13 @@ static BOOL TryPivotSwitch(BattleContext *ctx) {
         || !ctx->battleMons[ctx->battlerIdAttacker].hp || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
         || Battler_CameInAfterTheHit(ctx, target)
         || GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static BOOL TryPivotSwitch(BattleContext *ctx) {
+    if (!PivotSwitchPending(ctx)) {
         return FALSE;
     }
     RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_ATTACK_THEN_SWITCH_OUT);
@@ -5621,6 +5633,48 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_30++;
             break;
         case 8:
+            // Steel Beam and Mind Blown cost their user half its maximum HP,
+            // rounded up, once the move is over, whether it hit or not; only
+            // Magic Guard spares it (Pokemon Central, Raggio d'Acciaio,
+            // Sbalorditesta). Effect script 420 marks the user when the move
+            // goes off at a target, so one with none to go at costs nothing.
+            if ((ctx->selfTurnData[ctx->battlerIdAttacker].unk14 & SELF_TURN_FLAG_LOSE_HALF_MAX_HP)
+                && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD
+                && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {
+                ctx->selfTurnData[ctx->battlerIdAttacker].unk14 &= ~SELF_TURN_FLAG_LOSE_HALF_MAX_HP;
+                ctx->battlerIdTemp = ctx->battlerIdAttacker;
+                ctx->hpCalc = -(int)((ctx->battleMons[ctx->battlerIdAttacker].maxHp + 1) / 2);
+                ctx->battleStatus |= BATTLE_STATUS_NO_BLINK;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_HP);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            ctx->unk_30++;
+            break;
+        case 9: {
+            // Emergency Exit and Wimp Out, one Pokemon at a time: this step
+            // comes round again after each, until none is left to go. They
+            // come before Parting Shot, Pickpocket, the Throat Spray and the
+            // Eject Pack, the reference's step 22; once one has sent somebody
+            // away no Eject Pack answers the move (Pokemon Central, Zainofuga:
+            // the two abilities take precedence over it), which unk_34 says
+            // to the step that asks the Packs, as in the engine the pending
+            // switch does.
+            int script;
+
+            if (TryRetreatAbility(battleSystem, ctx, &script) == TRUE) {
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                ctx->unk_34 = SWITCH_ITEM_USED;
+                flag = 1;
+            } else {
+                ctx->unk_30++;
+            }
+            break;
+        }
+        case 10:
             // Parting Shot's user goes back once the move is over, if the
             // move changed a stat of its target (Pokemon Central, Monito; the
             // reference's Activate_Switch, ServerDoPostMoveEffects.c:2149 at
@@ -5662,7 +5716,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 9: {
+        case 11: {
             // Pickpocket, once the move is over and before U-turn's user
             // leaves; see TryPickpocket.
             int script;
@@ -5676,14 +5730,13 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 10:
+        case 12:
             // A Throat Spray answers the attacker using a sound move, and that
             // is the whole of the reference's condition: not that the move hit,
             // not that there was anything to hit, and not that Sp. Atk had room
             // left -- a spray at +6 prints "won't go any higher" and is spent
-            // all the same. It sits here because this is where the attacker's
-            // own items are read after its move, beside the Shell Bell and the
-            // Life Orb.
+            // all the same. It is asked after Pickpocket and before the Eject
+            // Pack, the reference's step 26.
             //
             // Not once the user has gone: what stands in its place now holds
             // its own items, and did not use the move.
@@ -5705,14 +5758,17 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_34 = 0;
             }
             break;
-        case 11:
+        case 13:
             // An Eject Pack on anyone who had a stat lowered during the move,
-            // after the user's own items, where the reference asks it; not
-            // once an Eject Button has sent somebody away, or after a
-            // Parting Shot. After a Red Card it is asked, and answers the
-            // drops of the move and of the entry of the Pokemon the card
-            // dragged in -- Sticky Web on its way in.
-            while (ctx->unk_34 < maxBattlers) {
+            // after the user's own items, where the reference asks it (step
+            // 28); not once an Eject Button, Emergency Exit or Wimp Out has
+            // sent somebody away, after a Parting Shot, or with U-turn's user
+            // about to go (PivotSwitchPending): in the engine each of those
+            // is a switch pending, which keeps the Packs shut. After a Red
+            // Card it is asked, and answers the drops of the move and of the
+            // entry of the Pokemon the card dragged in -- Sticky Web on its
+            // way in.
+            while (ctx->unk_34 < maxBattlers && !PivotSwitchPending(ctx)) {
                 int script = CheckEjectPack(ctx, ctx->turnOrder[ctx->unk_34++]);
 
                 if (script != BATTLE_SUBSCRIPT_NONE) {
@@ -5729,42 +5785,9 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 12:
-            // Steel Beam and Mind Blown cost their user half its maximum HP,
-            // rounded up, once the move is over, whether it hit or not; only
-            // Magic Guard spares it (Pokemon Central, Raggio d'Acciaio,
-            // Sbalorditesta). Effect script 420 marks the user when the move
-            // goes off at a target, so one with none to go at costs nothing.
-            if ((ctx->selfTurnData[ctx->battlerIdAttacker].unk14 & SELF_TURN_FLAG_LOSE_HALF_MAX_HP)
-                && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD
-                && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {
-                ctx->selfTurnData[ctx->battlerIdAttacker].unk14 &= ~SELF_TURN_FLAG_LOSE_HALF_MAX_HP;
-                ctx->battlerIdTemp = ctx->battlerIdAttacker;
-                ctx->hpCalc = -(int)((ctx->battleMons[ctx->battlerIdAttacker].maxHp + 1) / 2);
-                ctx->battleStatus |= BATTLE_STATUS_NO_BLINK;
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_UPDATE_HP);
-                ctx->commandNext = ctx->command;
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                flag = 1;
-            }
-            ctx->unk_30++;
-            break;
-        case 13: {
-            // Emergency Exit and Wimp Out, one Pokemon at a time: this step
-            // comes round again after each, until none is left to go.
-            int script;
-
-            if (TryRetreatAbility(battleSystem, ctx, &script) == TRUE) {
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
-                ctx->commandNext = ctx->command;
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                flag = 1;
-            } else {
-                ctx->unk_30++;
-            }
-            break;
-        }
         case 14:
+            // U-turn's user goes last, where the engine makes its pending
+            // switch; see PivotSwitchPending.
             ctx->unk_30++;
             if (TryPivotSwitch(ctx) == TRUE) {
                 flag = 1;

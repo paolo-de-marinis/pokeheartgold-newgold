@@ -842,7 +842,7 @@ class SwitchItemTests(unittest.TestCase):
     def test_a_red_card_holder_s_own_pivot_move_keeps_it_in(self):
         """Pokemon Central (Cartelrosso) and Bulbapedia's U-turn, Volt Switch
         and Flip Turn: the three do not switch a user holding a Red Card."""
-        pivot = function(CONTROLLER.read_text(), "TryPivotSwitch")
+        pivot = function(CONTROLLER.read_text(), "PivotSwitchPending")
         self.assertIn("|| GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {\n"
                       "        return FALSE;", pivot)
 
@@ -1013,6 +1013,14 @@ class EjectPackTests(unittest.TestCase):
         self.assertLess(body.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"), ask)
         self.assertLess(body.index("CheckSwitchItemOnHit"), ask)
         self.assertIn("if (!(ctx->unk_34 & SWITCH_ITEM_USED)) {\n                ctx->unk_34 = 0;", body)
+        # The reference's step 28, after Emergency Exit and Wimp Out (22),
+        # whose switch keeps it shut (Pokemon Central, Zainofuga), as the
+        # switch U-turn's user has pending does; that user goes after it.
+        retreat = body[body.index("TryRetreatAbility(battleSystem, ctx, &script)"):]
+        self.assertIn("ctx->unk_34 = SWITCH_ITEM_USED;", retreat[:retreat.index("break;")])
+        self.assertLess(body.index("TryRetreatAbility(battleSystem, ctx, &script)"), ask)
+        self.assertIn("while (ctx->unk_34 < maxBattlers && !PivotSwitchPending(ctx)) {", body)
+        self.assertLess(ask, body.index("TryPivotSwitch(ctx)"))
 
     def test_an_entry_s_drop_is_answered_once_the_action_is_over(self):
         """Pokemon Central (Zainofuga): Intimidate and Sticky Web on entry set

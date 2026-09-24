@@ -163,9 +163,13 @@ class RetreatTests(unittest.TestCase):
         # After the substitute's branch, before the bar moves.
         self.assertLess(hp_calc.index("BATTLE_SUBSCRIPT_HIT_SUBSTITUTE"), hp_calc.index("Battler_ArmRetreat(ctx, ctx->battlerIdTarget)"))
         self.assertLess(hp_calc.index("Battler_ArmRetreat"), hp_calc.index("BATTLE_SUBSCRIPT_UPDATE_HP"))
-        # After the attacker's Throat Spray, the last of its own items.
+        # After the attacker's Life Orb, before Parting Shot, Pickpocket, the
+        # Throat Spray and the Eject Pack: the engine's step 22.
         end = function(controller, "ov12_0224E1BC")
-        self.assertLess(end.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"), end.index("TryRetreatAbility(battleSystem, ctx, &script)"))
+        retreat = end.index("TryRetreatAbility(battleSystem, ctx, &script)")
+        self.assertLess(end.index("HOLD_EFFECT_HP_DRAIN_ON_ATK"), retreat)
+        for after in ("MOVE_EFFECT_PARTING_SHOT", "TryPickpocket(", "HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE", "CheckEjectPack("):
+            self.assertLess(retreat, end.index(after), after)
         # What comes in by a switch during the move was not hit.
         self.assertIn("ctx->selfTurnData[battlerId].retreatArmed = FALSE;", function(OVERLAY.read_text(), "InitSwitchWork"))
 
@@ -174,7 +178,7 @@ class RetreatTests(unittest.TestCase):
         # gone back is no longer the Pokemon that was hit.
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
         self.assertLess(body.index("TryRetreatAbility(battleSystem, ctx, &script)"), body.index("TryPivotSwitch(ctx)"))
-        self.assertIn("Battler_CameInAfterTheHit(ctx, target)", function(CONTROLLER.read_text(), "TryPivotSwitch"))
+        self.assertIn("Battler_CameInAfterTheHit(ctx, target)", function(CONTROLLER.read_text(), "PivotSwitchPending"))
 
     def test_the_script_switches_or_flees(self):
         header = (ROOT / "include/constants/battle_subscript.h").read_text()

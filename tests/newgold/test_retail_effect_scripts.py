@@ -400,7 +400,7 @@ class BroughtOverTests(unittest.TestCase):
         # Exit and Wimp Out, for a user still standing that has not left and
         # a target that has not left either.
         controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
-        step = function(controller, "TryPivotSwitch")
+        step = function(controller, "PivotSwitchPending") + function(controller, "TryPivotSwitch")
         for needed in ("!= MOVE_EFFECT_SWITCH_HIT", "(ctx->moveStatusFlag & MOVE_STATUS_FAIL)",
                        "!ctx->battleMons[ctx->battlerIdAttacker].hp || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)",
                        "Battler_CameInAfterTheHit(ctx, target)",

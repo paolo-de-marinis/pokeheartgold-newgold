@@ -1767,9 +1767,10 @@ BOOL TryRetreatAbilityOutsideMove(BattleSystem *battleSystem, BattleContext *ctx
     return FALSE;
 }
 
-// Once the move is over, after the attacker's Shell Bell, Life Orb and Throat
-// Spray, in speed order: the reference's step 22, after the items and before
-// the switch U-turn asks for. TEMP_DATA tells the subscript to flee.
+// Once the move is over, after the attacker's Shell Bell and Life Orb, in
+// speed order: the reference's step 22, after the items and before Parting
+// Shot, U-turn, Pickpocket, the Throat Spray and the Eject Pack. TEMP_DATA
+// tells the subscript to flee.
 BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
