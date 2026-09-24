@@ -403,6 +403,15 @@ Reading what the debug ROM records, and playing it without looking.
 - `heapblocks.py DUMP [--heap N]` -- one heap's used and free blocks in a
   memory dump, biggest first, with their first bytes: what fills a heap
   when an allocation from it fails.
+- `heaplens/` -- how full the four boot heaps and the arena get, scene by
+  scene (`lens.json`: each heap's least left, failed allocations,
+  asserts). `drive.py SAVE OUT STEP...` plays steps from a save -- the start
+  menu's applications, the PC, a catch, an evolution, a communication error;
+  `gymlens.py` a leader's fight; `opening.py` the opening. `saves.py`
+  makes the saves the scenes start from, `scenes.sh` is round 7's catalogue
+  of scenes, and `snap.sh TREE DEST` copies a tree's build and tools aside
+  (run with `SNAP=DEST`), so a long run reads one build while the tree is
+  rebuilt under it.
 - A game that stops in-process raises no data abort: the script writes
   `core.state()` to a file, and `frozen.py` reads it as it reads a melonDS
   savestate.
