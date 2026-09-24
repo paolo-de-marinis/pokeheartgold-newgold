@@ -648,6 +648,10 @@ Overlay OVY_8
 {
     After OVY_6
     Object asm/overlay_08.o
+    Object src/overlay_08_0221C14C.o
+    Object asm/overlay_08_0221C1C8.o
+    Object src/overlay_08_0221D91C.o
+    Object asm/overlay_08_0221DAC4.o
     Object src/overlay_08_02221328.o
     Object asm/overlay_08_022213C8.o
     Object src/overlay_08_02222B8C.o
@@ -710,6 +714,8 @@ Overlay OVY_12
     Object asm/overlay_12_battle_controller_opponent.o
     Object src/battle/overlay_12_0225E4EC.o
     Object asm/overlay_12_battle_controller_opponent_0225E568.o
+    Object src/battle/overlay_12_0225F8AC.o
+    Object asm/overlay_12_battle_controller_opponent_0225F960.o
     Object src/battle/battle_02261FD4.o
     Object asm/overlay_12_battle_controller.o
     Object src/battle/battle_controller_mon_appear.o
