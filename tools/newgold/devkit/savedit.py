@@ -1275,6 +1275,13 @@ def move_table():
     return [{"id": n, "name": name, "pp": pp[n] if n < len(pp) else 0} for n, name in enumerate(bank(MOVE_NAMES))]
 
 
+def max_pp(move, pp_ups):
+    """GetMoveMaxPP (src/move.c): the move's PP and a fifth of it more for
+    each PP Up, three at most."""
+    pp = move_table()[move]["pp"] if move < len(move_table()) else 0
+    return pp + pp * 20 * min(pp_ups, 3) // 100
+
+
 @tree_cache
 def map_table():
     """Every map by id, with the section name the game shows for it."""
@@ -1964,7 +1971,10 @@ def describe_mon(raw):
     would give it (in "ability_slot"): not, when its species was written
     without it (an older editor) or the species' abilities changed since.
     A move's "learnable" is whether the species learns it (learnable_moves):
-    not, for an event's, or one the data no longer gives it."""
+    not, for an event's, or one the data no longer gives it; "repeat",
+    whether an earlier slot holds it too (an older editor's: the game never
+    teaches a move the Pokemon knows, TryAppendBoxMonMove); "pp_max",
+    GetMoveMaxPP's, which an older editor's "pp" may be above."""
     mon = open_mon(raw)
     if mon is None:
         return None
@@ -1984,7 +1994,7 @@ def describe_mon(raw):
         if move:
             row = move_table()[move] if move < len(move_table()) else {"name": f"#{move}", "pp": 0}
             moves.append({"id": move, "name": row["name"], "pp": b[8 + i], "pp_ups": b[12 + i],
-                          "pp_max": row["pp"] + row["pp"] * b[12 + i] // 5,
+                          "pp_max": max_pp(move, b[12 + i]), "repeat": move in [m["id"] for m in moves],
                           "learnable": move in learnable_moves(species, b[0x18] >> 3)})
     items, abilities, natures = item_table(), bank(ABILITY_NAMES), bank(NATURE_NAMES)
     slot = ability_slot(species, b[0x18] >> 3, *_ability_bits(mon))

@@ -437,6 +437,18 @@ class SaveditLibraryTests(unittest.TestCase):
             sv.edit_mon(event, species=n["CHARMELEON"], moves=[moves["SURF"], moves["EMBER"]])
         self.assertEqual(sv.describe_mon(sv.edit_mon(event, item=1))["moves"][0]["name"], "Surf")
 
+    def test_an_older_editors_moves_are_marked(self):
+        """The old CLI's Machamp in falkner.sav: Focus Energy twice, every PP
+        40. The second Focus Energy is a repeat, and 40 is above Focus
+        Energy's 30 and Karate Chop's 25; GetMoveMaxPP counts three PP Ups
+        at most."""
+        moves = sv.move_numbers()
+        known = [moves["FOCUS_ENERGY"], moves["FOCUS_ENERGY"], moves["KARATE_CHOP"], moves["FORESIGHT"]]
+        mon = sv.open_mon(sv.build_mon("MACHAMP", 13, moves=known))
+        mon["blocks"][1][12 + 3] = 7
+        self.assertEqual([(m["pp"], m["pp_max"], m["repeat"]) for m in sv.describe_mon(sv.seal_mon(mon))["moves"]],
+                         [(40, 30, False), (40, 30, True), (40, 25, False), (40, 64, False)])
+
     def test_a_new_species_brings_its_own_moves_and_ability(self):
         """preset_moves at its level, never the old moves, and the ability
         UpdateBoxMonAbility gives the new species from the Pokemon's bits."""
