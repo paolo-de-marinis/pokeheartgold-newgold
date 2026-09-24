@@ -14,9 +14,14 @@ Nothing at build time knows how much of heap 3 the field has in use when a
 battle begins, so the check is against the margin retail shipped with: after
 the field's own heaps and the battle's, retail had 0x4D000 left, and the
 battle stopped rendering when that fell to 0x40000.
+
+The heaps themselves are carved from the main arena at boot, and that arena
+shrinks with every byte overlay 12 grows; each built ROM's map is checked
+against what the boot takes from it.
 """
 
 import re
+import struct
 import unittest
 
 from test_level_cap import ROOT
@@ -45,6 +50,55 @@ BATTLE_ITEM_TABLE_CEILING = 0x20000
 # screen, 0x5950 wherever it is raised; the Pokeathlon, not reached, is
 # estimated at 0x6000. The floor keeps 0x2000 over that estimate.
 DEFAULT_HEAP_FLOOR = 0x6000 + 0x2000
+
+# The main arena is what OS_InitArena leaves between the end of the highest
+# overlay (SDK_MAIN_ARENA_LO in the link map; overlay 12, the battle) and the
+# top of main memory. It is drawn on only at boot, by InitSystemForTheGame:
+# a random pre-size, the heap table, the four heaps above, the four task
+# queues, then the file system's table. If the table does not fit, its
+# allocation is NULL, GF_ASSERT is gated off, FS loads the FAT to address 0
+# and the screen stays white -- which the link does not notice, since the
+# heaps are data. So the margin is checked here, from each built ROM.
+ARENA_HI = 0x023E0000        # HW_MAIN_MEM_MAIN_END: OS_GetArenaHi(OS_ARENA_MAIN) at boot
+MAX_PRESIZE = 0x100          # sub_0201A1B4: a digest's byte sum & 0xFF, rounded up to 4
+BUILDS = {
+    "heartgold": ROOT / "build/heartgold.us",
+    "soulsilver": ROOT / "build/soulsilver.us",
+    "heartgold.diag": ROOT / "build/heartgold.us.diag",
+}
+
+
+def round4(size):
+    return (size + 3) & ~3
+
+
+def heap_table_size(templates):
+    """Heap_InitSystem's handle table, from src/heap.c."""
+    ids = re.search(r"enum HeapID \{(.*?)HEAP_ID_MAX", (ROOT / "include/constants/heap.h").read_text(), re.S)
+    usable = templates + 24
+    total = max(ids.group(1).count(","), usable)
+    return round4((usable + 1) * 4 + usable * 4 + usable * 4 + total * 2 + total)
+
+
+def task_queues_size():
+    """SysTaskQueue_GetArenaSize for each queue: a SysTask (0x1C) and a
+    pointer per task, and the queue itself (0x34)."""
+    counts = re.findall(r"SysTaskQueue_PlacementNew\((\d+),", SYSTEM.read_text())
+    return sum(round4(int(n) * (0x1C + 4) + 0x34) for n in counts)
+
+
+def fs_table_size(rom):
+    """FS_TryLoadTable(NULL, 0): the FAT and the FNT, room to align to 32."""
+    with rom.open("rb") as f:
+        fnt_size, fat_size = struct.unpack_from("<I4xI", f.read(0x50), 0x44)
+    return (fat_size + fnt_size + 0x3F) & ~0x1F
+
+
+def arena_lo(build):
+    for line in (build / "main.elf.xMAP").read_text().splitlines():
+        if "SDK_MAIN_ARENA_LO" in line:
+            return int(line.split()[0].lstrip("#>"), 16)
+    raise AssertionError(f"no SDK_MAIN_ARENA_LO in {build.name}'s map")
 
 # What is alive inside heap 3 while a wild battle runs.
 CHILDREN = {
@@ -123,6 +177,23 @@ class HeapTests(unittest.TestCase):
             f"the default heap is {self.heaps[0]:#x}; the communication-error screen "
             f"alone takes 0x5950 of it, and the floor is {DEFAULT_HEAP_FLOOR:#x}")
         print(f"PASS: the default heap is {self.heaps[0]:#x}, floor {DEFAULT_HEAP_FLOOR:#x}.")
+
+    def test_the_boot_fits_the_main_arena(self):
+        """At the largest pre-size, for each ROM that is built."""
+        built = {name: build for name, build in BUILDS.items() if (build / "main.elf.xMAP").exists()}
+        if not built:
+            self.skipTest("no ROM is built")
+        fixed = heap_table_size(len(self.heaps)) + sum(map(round4, self.heaps)) + task_queues_size()
+        for name, build in built.items():
+            with self.subTest(name):
+                need = MAX_PRESIZE + fixed + fs_table_size(next(build.glob("*.nds")))
+                left = ARENA_HI - arena_lo(build) - need
+                self.assertGreaterEqual(
+                    left, 0,
+                    f"{name}: the main arena starts at {arena_lo(build):#x} and the boot "
+                    f"takes {need:#x} of it, {-left:#x} more than there is; the game "
+                    "would stay on a white screen")
+                print(f"PASS: {name}'s boot leaves {left:#x} of the main arena at the largest pre-size.")
 
     def test_the_save_still_fits_its_heap(self):
         """Heap 1 holds SaveData, whose region is SAVE_PAGE_MAX sectors."""

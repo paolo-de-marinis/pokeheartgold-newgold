@@ -123,6 +123,8 @@ build short as well, the default heap (`sDefaultHeapSpec` in `src/system.c`)
 went from 0xD200 to 0x8000 in both builds, which the communication-error
 screen, the most it was ever seen to hold, fills to 0x5950. Both builds now
 have the same heaps, so the low-water marker reads the heap the game has.
+`tests/newgold/test_heaps.py` checks each built ROM's map against what the
+boot takes from the arena, so the next growth fails a test, not the screen.
 
 The return address costs the site nothing -- `bl Diag_AssertFail` is the
 size of `bl GF_AssertFail` -- so that is what is kept, and the ELF turns it

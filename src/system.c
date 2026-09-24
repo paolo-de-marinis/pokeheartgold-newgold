@@ -95,7 +95,7 @@ static const struct HeapParam sDefaultHeapSpec[] = {
     // 0x1504, and the Pokeathlon, never reached, is estimated at 0x6000. So
     // 0x8000 keeps 0x2000 over the estimate. The diagnostics build uses the
     // same size, so its markers measure the heap the game has.
-    // tests/newgold/test_heaps.py holds this floor.
+    // tests/newgold/test_heaps.py holds this floor and the arena's margin.
     { 0x8000,   OS_ARENA_MAIN },
     // Heap 1 holds SaveData, which holds the whole save region, and was sized
     // to it with a couple of hundred bytes to spare. Thirty boxes add thirteen
