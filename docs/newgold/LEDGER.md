@@ -12,8 +12,8 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `1fa3c9366` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 911 commits |
-| generated | 2026-09-24 11:52 |
+| port | 926 commits |
+| generated | 2026-09-24 13:43 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
@@ -26,9 +26,9 @@ Overall                                                                    95%
 
 Implementation         ████████████████████████████████████████████████░░  96%
 Verified in play       ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%
-Audit rows closed      ███████████████████████████████████████████░░░░░░░  86%
+Audit rows closed      ██████████████████████████████████████████░░░░░░░░  85%
 
-Audit: 48 of 344 rows in docs/newgold/AUDIT-*.md still open.
+Audit: 51 of 351 rows in docs/newgold/AUDIT-*.md still open.
 The port is finished when none is, or each is closed with a reason.
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
@@ -43,7 +43,7 @@ Moves       ██████████████████████�
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████████████████████████████████████████████  2685 / 2685
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       145 files
+Tests       148 files
 ROM         165.7 MB of 268.4 MB   (2G card, 62% used)
 ```
 <!-- LEDGER:COUNTS:END -->
