@@ -397,6 +397,9 @@ Reading what the debug ROM records, and playing it without looking.
 - `trace.py SAVE --touch X,Y,WAIT ...` -- the battle scripts and controller
   commands a turn runs through, frame by frame; Ally Switch's turn was
   followed with it.
+- `ingame_save.py SAVE OUT` -- the game continues a save and saves it
+  through the start menu; OUT is what it wrote to flash. A save savedit
+  wrote is proved on it.
 
 Every reader takes the ELF the ROM was linked from, the debug build's by
 default, and refuses a game from another build: symbols move every time.
