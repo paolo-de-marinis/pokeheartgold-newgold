@@ -1537,6 +1537,7 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
 
 typedef enum UpdateMonConditionState {
     UMC_STATE_SEA_OF_FIRE,
+    UMC_STATE_GRASSY_TERRAIN,
     UMC_STATE_INGRAIN,
     UMC_STATE_AQUA_RING,
     UMC_STATE_ABILITY,
@@ -1569,6 +1570,20 @@ typedef enum UpdateMonConditionState {
     UMC_STATE_HELD_ITEM_DAMAGE,
     UMC_STATE_END
 } UpdateMonConditionState;
+
+// Grassy Terrain gives a Pokemon standing on it a sixteenth of its maximum HP
+// back at every turn's end, after a side's damage, as the reference's
+// FIRST_EVENT_BLOCK_GRASSY_TERRAIN has it (ServerFieldConditionCheck.c at
+// d0380a487). Not one in the air or out of reach mid-move, nor one under
+// Heal Block (Pokemon Central, Campo Erboso), nor a Tatsugiri in its
+// Dondozo's mouth (Torre di Comando), none of which the reference asks.
+static BOOL GrassyTerrainHeals(BattleContext *ctx, int battlerId) {
+    BattleMon *mon = &ctx->battleMons[battlerId];
+
+    return ctx->terrainOverlayType == GRASSY_TERRAIN && mon->hp != 0 && mon->hp != mon->maxHp
+        && !(mon->moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE) && !mon->unk88.healBlockTurns
+        && !ctx->moveConditions[battlerId].commanding && BattlerIsGrounded(ctx, battlerId);
+}
 
 // What a binding move takes at the end of each turn it holds on: an eighth of
 // the bound Pokemon's maximum HP, as the reference has it
@@ -1648,6 +1663,17 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
                 ctx->battlerIdTemp = battlerId;
                 ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 8);
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SEA_OF_FIRE);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            ctx->stateUpdateMonCondition++;
+            break;
+        case UMC_STATE_GRASSY_TERRAIN:
+            if (GrassyTerrainHeals(ctx, battlerId)) {
+                ctx->battlerIdTemp = battlerId;
+                ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 16);
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_GRASSY_TERRAIN_HEAL);
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 flag = 1;

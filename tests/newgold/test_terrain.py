@@ -12,7 +12,9 @@ either never appears or never leaves, and neither is visible from the compiler.
 import re
 import unittest
 
+from test_hold_effects import run_c
 from test_level_cap import ROOT
+from test_repels import function
 from test_move_effects import moves, records, rows
 
 COMMANDS = ROOT / "src/battle/battle_command.c"
@@ -174,6 +176,64 @@ class TerrainRulesTests(unittest.TestCase):
         self.assertTrue(pointer, "MOVE_SUBSCRIPT_PTR_END_TERRAIN is not defined")
         self.assertEqual(entries[int(pointer.group(1))],
                          "BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END")
+
+    def test_grassy_terrain_heals_at_the_turns_end(self):
+        """A sixteenth back for every Pokemon standing on the grass, run
+        natively; not one in the air or out of reach, under Heal Block or in
+        a Dondozo's mouth (Pokemon Central, Campo Erboso, Torre di Comando)."""
+        program = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/battle.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef int32_t s32; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { u32 healBlockTurns : 3; } Unk88;
+typedef struct { s32 hp; u16 maxHp; u32 moveEffectFlags; Unk88 unk88; BOOL lifted; } BattleMon;
+typedef struct { u8 commanding : 1; } MoveConditions;
+typedef struct { u8 terrainOverlayType; BattleMon battleMons[4]; MoveConditions moveConditions[4]; } BattleContext;
+static BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) { return !ctx->battleMons[battlerId].lifted; }
+@FUNCTION@
+int main(void) {
+    static BattleContext ctx;
+    ctx.terrainOverlayType = GRASSY_TERRAIN;
+    ctx.battleMons[0].hp = 50;
+    ctx.battleMons[0].maxHp = 100;
+    assert(GrassyTerrainHeals(&ctx, 0));
+    ctx.terrainOverlayType = MISTY_TERRAIN;
+    assert(!GrassyTerrainHeals(&ctx, 0));
+    ctx.terrainOverlayType = GRASSY_TERRAIN;
+    ctx.battleMons[0].hp = 100;
+    assert(!GrassyTerrainHeals(&ctx, 0));
+    ctx.battleMons[0].hp = 0;
+    assert(!GrassyTerrainHeals(&ctx, 0));
+    ctx.battleMons[0].hp = 50;
+    ctx.battleMons[0].lifted = TRUE;
+    assert(!GrassyTerrainHeals(&ctx, 0));
+    ctx.battleMons[0].lifted = FALSE;
+    ctx.battleMons[0].moveEffectFlags = MOVE_EFFECT_FLAG_PHANTOM_FORCE;
+    assert(!GrassyTerrainHeals(&ctx, 0));
+    ctx.battleMons[0].moveEffectFlags = 0;
+    ctx.battleMons[0].unk88.healBlockTurns = 2;
+    assert(!GrassyTerrainHeals(&ctx, 0));
+    ctx.battleMons[0].unk88.healBlockTurns = 0;
+    ctx.moveConditions[0].commanding = TRUE;
+    assert(!GrassyTerrainHeals(&ctx, 0));
+    return 0;
+}
+"""
+        run_c(program.replace("@FUNCTION@", function(CONTROLLER.read_text(), "GrassyTerrainHeals")))
+        text = CONTROLLER.read_text()
+        states = re.search(r"typedef enum UpdateMonConditionState \{(.*?)\}", text, re.S).group(1).split()
+        self.assertEqual(states[:2], ["UMC_STATE_SEA_OF_FIRE,", "UMC_STATE_GRASSY_TERRAIN,"])
+        case = text[text.index("case UMC_STATE_GRASSY_TERRAIN:"):text.index("case UMC_STATE_INGRAIN:")]
+        self.assertIn("GrassyTerrainHeals(ctx, battlerId)", case)
+        self.assertIn("ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 16);", case)
+        self.assertIn("BATTLE_SUBSCRIPT_GRASSY_TERRAIN_HEAL", case)
+        script = subscript(subscript_number("GRASSY_TERRAIN_HEAL"))
+        self.assertIn("Call BATTLE_SUBSCRIPT_UPDATE_HP", script)
+        self.assertIn("PrintMessage msg_0197_01396, TAG_NICKNAME, BATTLER_CATEGORY_MSG_TEMP", script)
 
     def test_defog_blows_the_terrain_away_too(self):
         text = subscript(subscript_number("DEFOG"))

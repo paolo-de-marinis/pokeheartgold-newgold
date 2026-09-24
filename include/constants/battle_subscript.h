@@ -795,6 +795,8 @@
 #define BATTLE_SUBSCRIPT_PLEDGE_CONDITION                   465
 #define BATTLE_SUBSCRIPT_SEA_OF_FIRE                        466
 #define BATTLE_SUBSCRIPT_PLEDGE_CONDITION_END               467
+// Grassy Terrain's heal at the end of a turn, the reference's subscript 346.
+#define BATTLE_SUBSCRIPT_GRASSY_TERRAIN_HEAL                468
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
