@@ -8927,7 +8927,10 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
 // Eject Button: the holder goes back and its trainer chooses who comes in;
 // subscript SWITCH_OUT_ITEM finds out whether there is anyone. It answers
 // after a Red Card has dragged the user out as well (Pokemon Central,
-// Pulsantefuga: the card's Pokemon comes in first, then the button's).
+// Pulsantefuga: the card's Pokemon comes in first, then the button's). Not on
+// a Pokemon Commander holds on the field (Pokemon Central, Torre di Comando):
+// its button stays, and does not take another holder's turn or keep the
+// Eject Packs shut.
 //
 // Red Card: the attacker is dragged out. The reference asks it only in a
 // trainer battle, as Pokemon Central's Cartelrosso does for a wild Pokemon,
@@ -8947,7 +8950,7 @@ static BOOL SwitchItemAnswersHit(BattleSystem *battleSystem, BattleContext *ctx,
         return !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && ctx->battleMons[attacker].hp
             && (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER);
     }
-    return TRUE;
+    return !Battler_HeldByCommander(ctx, battlerId);
 }
 
 // Suction Cups, Guard Dog, Ingrain and Commander keep a Pokemon in against a
@@ -8997,13 +9000,16 @@ int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int bat
 // for what an entry lowered -- Intimidate, Sticky Web -- which the reference
 // has commented out and Pokemon Central (Zainofuga) answers (ov12_0224D368).
 // Its end-of-turn check is commented out there and is not here either. What
-// only swaps or resets stages lowers nothing and does not count. Subscript
-// SWITCH_OUT_ITEM finds out whether there is anyone to come in. Returns the
-// subscript, with the holder in battlerIdTemp, or BATTLE_SUBSCRIPT_NONE.
+// only swaps or resets stages lowers nothing and does not count, nor does a
+// holder Commander keeps on the field, whose Pack stays and lets the others
+// act (Pokemon Central, Torre di Comando). Subscript SWITCH_OUT_ITEM finds
+// out whether there is anyone to come in. Returns the subscript, with the
+// holder in battlerIdTemp, or BATTLE_SUBSCRIPT_NONE.
 int CheckEjectPack(BattleContext *ctx, int battlerId) {
     if (GetBattlerHeldItemEffect(ctx, battlerId) != HOLD_EFFECT_SWITCH_OUT_ON_STAT_DROP
         || ctx->battleMons[battlerId].hp == 0
-        || !(ctx->statLoweredBattlers & MaskOfFlagNo(battlerId))) {
+        || !(ctx->statLoweredBattlers & MaskOfFlagNo(battlerId))
+        || Battler_HeldByCommander(ctx, battlerId)) {
         return BATTLE_SUBSCRIPT_NONE;
     }
     ctx->battlerIdTemp = battlerId;

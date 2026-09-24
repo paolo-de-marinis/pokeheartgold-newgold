@@ -212,10 +212,11 @@ class CommanderTests(unittest.TestCase):
         self.assertIn("ctx->moveConditions[battlerId].commanding", perish)
 
     def test_neither_leaves_the_field(self):
-        for name in ("BattlerCanSwitch", "Battler_WillBeDraggedOut", "BattlerIsAnchored"):
+        for name in ("BattlerCanSwitch", "Battler_WillBeDraggedOut", "BattlerIsAnchored", "SwitchItemAnswersHit", "CheckEjectPack"):
             self.assertIn("Battler_HeldByCommander(ctx, battlerId)", function(OVERLAY, name), name)
         # Nor do the post-move questions count a switch the scripts refuse:
-        # Emergency Exit's and U-turn's would shut the Eject Packs.
+        # Emergency Exit's, U-turn's and the held Pokemon's own Eject Button
+        # or Pack would shut the Eject Packs.
         self.assertIn("(CanSwitchMon(battleSystem, ctx, battlerId) && !Battler_HeldByCommander(ctx, battlerId))",
                       function(OVERLAY, "Battler_Retreats"))
         self.assertIn("|| Battler_HeldByCommander(ctx, ctx->battlerIdAttacker)", function(CONTROLLER, "PivotSwitchPending"))

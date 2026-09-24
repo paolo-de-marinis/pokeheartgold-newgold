@@ -837,6 +837,12 @@ int main(void) {
     // (Pokemon Central, Torre di Comando).
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.held[0] = 1;
     assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && S.picked == 0);
+    // A button on a Pokemon Commander holds stays, to take nobody's turn; a
+    // card it holds drags the attacker out all the same.
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; S.held[1] = 1;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE && ctx.battlerIdTemp == -1);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.held[1] = 1;
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && S.picked == 1);
     return 0;
 }
 """
@@ -997,6 +1003,8 @@ typedef struct { int battlerIdTemp; u8 statLoweredBattlers; BattleMon battleMons
 static int sItem;
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return sItem; }
 static u32 MaskOfFlagNo(int flagNo) { return 1u << flagNo; }
+static int sHeld;
+static BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId) { (void)ctx; return sHeld == battlerId + 1; }
 @FUNCTION@
 int main(void) {
     BattleContext ctx = { -1, 1 << 2, { { 10 }, { 10 }, { 10 }, { 10 } } };
@@ -1006,6 +1014,10 @@ int main(void) {
     ctx.battleMons[2].hp = 0;
     assert(CheckEjectPack(&ctx, 2) == BATTLE_SUBSCRIPT_NONE);
     ctx.battleMons[2].hp = 10;
+    // Commander holds it on the field: the Pack stays.
+    sHeld = 3;
+    assert(CheckEjectPack(&ctx, 2) == BATTLE_SUBSCRIPT_NONE);
+    sHeld = 0;
     sItem = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT;
     assert(CheckEjectPack(&ctx, 2) == BATTLE_SUBSCRIPT_NONE);
     return 0;
