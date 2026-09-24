@@ -4482,6 +4482,14 @@ static void ov12_0224CF14(BattleSystem *battleSystem, BattleContext *ctx) {
     // -- a Chesto or Lum Berry woke the user straight away -- it does it
     // itself. The recoil is no side effect: it comes once the move is over
     // (TryRecoil), from the one strike's damage.
+    //
+    // A first strike after which the user fainted -- to Rough Skin, a Rocky
+    // Helmet, a Jaboca Berry -- gives nothing back: Smack Down does not bring
+    // the target down when its user faints (Pokemon Central, Abbattimento),
+    // nor Ice Spinner end the terrain (Vortighiaccio: not after a Rocky
+    // Helmet, Rough Skin or Iron Barbs), and Steel Roller's end asks for its
+    // user standing as Ice Spinner's does (effect script 389, the
+    // reference's guard; Ferrorullo leaves the case open).
     if (ctx->parentalBondDeferred != 0) {
         u32 deferred = ctx->parentalBondDeferred;
         int script;
