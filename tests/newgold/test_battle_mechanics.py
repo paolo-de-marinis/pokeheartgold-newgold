@@ -148,6 +148,22 @@ class StuffCheeksTests(unittest.TestCase):
         self.assertEqual(script.count("RemoveItem"), 1)
 
 
+class LifeDewTests(unittest.TestCase):
+    def test_it_heals_the_user_and_its_allies(self):
+        # Pokemon Central (Goccia Vitale): a quarter of each one's maximum HP,
+        # rounded up, the user and its allies. It healed the user alone, and
+        # its full-HP check compared against battle var BMON_DATA_MAXHP.
+        heal = subscript("LifeDew")
+        self.assertIn("IfSameSide BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_SIDE_EFFECT_MON, _CHECK", heal)
+        self.assertIn("GoToIfValidMon BSCRIPT_VAR_BATTLER_SPEED_TEMP, _LOOP", heal)
+        self.assertIn("DivideVarByValueRoundUp BSCRIPT_VAR_HP_CALC, 4", heal)
+        self.assertNotIn("BMON_DATA_HP, BMON_DATA_MAXHP", heal)
+        # With nobody to heal it fails before it runs.
+        effect = (ROOT / "files/battledata/script/effect_script/effect_script_0385.s").read_text()
+        self.assertLess(effect.index("MOVE_STATUS_FAILED"), effect.index("\n_FOUND:"))
+        self.assertIn("MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_LIFE_DEW", effect[effect.index("\n_FOUND:"):])
+
+
 class SpitUpTests(unittest.TestCase):
     def test_spit_up_rolls_its_damage(self):
         # effect_script_0161_SPIT_UP.s at d0380a487 calls CalcDamage, which
