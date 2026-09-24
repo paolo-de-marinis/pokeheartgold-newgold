@@ -5390,7 +5390,8 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
 // records no damage -- or one held already; not once the user has fainted,
 // as the hold lasts only while it stays in (Colpo d'Ancora); and, for Anchor
 // Shot and Spirit Shackle, not when Sheer Force traded the hold for power or
-// the Pokemon's Covert Cloak keeps it off (IsSuppressibleSecondaryEffect):
+// the Pokemon's Covert Cloak or Shield Dust keeps it off
+// (IsSuppressibleSecondaryEffect; Colpo d'Ancora and Cucitura d'Ombra):
 // Thousand Waves' hold is no additional effect (Mille Onde). The Pokemon is
 // the side-effect battler of subscript 461.
 static BOOL TryHoldAfterHit(BattleContext *ctx, int battlerId) {
@@ -5402,7 +5403,9 @@ static BOOL TryHoldAfterHit(BattleContext *ctx, int battlerId) {
         || Battler_CameInAfterTheHit(ctx, battlerId)
         || (ctx->battleMons[battlerId].status2 & STATUS2_MEAN_LOOK)
         || SheerForceTradedEffect(ctx)
-        || (ctx->moveNoCur != MOVE_THOUSAND_WAVES && GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS)) {
+        || (ctx->moveNoCur != MOVE_THOUSAND_WAVES
+            && (GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS
+                || CheckBattlerAbilityIfNotIgnored(ctx, attacker, battlerId, ABILITY_SHIELD_DUST) == TRUE))) {
         return FALSE;
     }
     ctx->battlerIdStatChange = battlerId;

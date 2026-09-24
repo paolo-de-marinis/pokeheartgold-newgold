@@ -359,6 +359,7 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef int BOOL;
 enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
 #include "constants/battle.h"
 #include "constants/battle_subscript.h"
 #include "constants/items.h"
@@ -366,7 +367,7 @@ enum { FALSE = 0, TRUE = 1 };
 #include "constants/moves.h"
 typedef struct { u16 effect; } MoveTbl;
 typedef struct { int physicalDamage, specialDamage; } SelfTurnData;
-typedef struct { int hp; u32 status2; int holdEffect, cameIn; } Mon;
+typedef struct { int hp; u32 status2; int holdEffect, cameIn, ability; } Mon;
 typedef struct {
     Mon battleMons[4]; SelfTurnData selfTurnData[4]; u8 turnOrder[4];
     int battlerIdAttacker, battlerIdStatChange;
@@ -379,17 +380,22 @@ static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx;
 static BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].cameIn; }
 static BOOL SheerForceTradedEffect(BattleContext *ctx) { (void)ctx; return sheerForce; }
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].holdEffect; }
+static BOOL moldBreaker;
+static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int attacker, int battlerId, int ability) {
+    (void)attacker;
+    return !moldBreaker && ctx->battleMons[battlerId].ability == ability;
+}
 static void RunPostMoveScript(BattleContext *ctx, int script) { (void)ctx; ran = script; }
 @FUNCTIONS@
 static BattleContext ctx;
 static void reset(void) {
     // A double battle: the user 0 hit both foes, 1 and 3.
     for (int i = 0; i < 4; i++) {
-        ctx.battleMons[i] = (Mon){ 100, 0, 0, FALSE };
+        ctx.battleMons[i] = (Mon){ 100, 0, 0, FALSE, 0 };
         ctx.selfTurnData[i] = (SelfTurnData){ i & 1 ? 10 : 0, 0 };
     }
     ctx.battlerIdAttacker = 0; ctx.battlerIdStatChange = 0xFF;
-    move.effect = MOVE_EFFECT_PREVENT_ESCAPE_HIT; sheerForce = FALSE; ran = 0;
+    move.effect = MOVE_EFFECT_PREVENT_ESCAPE_HIT; sheerForce = FALSE; moldBreaker = FALSE; ran = 0;
     ctx.moveNoCur = MOVE_ANCHOR_SHOT;
 }
 static BOOL holds(int battlerId) {
@@ -413,10 +419,14 @@ int main(void) {
     reset(); ctx.battleMons[0].hp = 0; assert(!holds(1) && !holds(3));
     reset(); sheerForce = TRUE; assert(!holds(1));
     reset(); ctx.battleMons[1].holdEffect = HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS; assert(!holds(1) && holds(3));
-    // Thousand Waves' hold is no additional effect: no cloak keeps it off
+    // Nor through Shield Dust, unless Mold Breaker ignores it (Pokemon
+    // Central, Colpo d'Ancora).
+    reset(); ctx.battleMons[1].ability = ABILITY_SHIELD_DUST; assert(!holds(1) && holds(3));
+    reset(); ctx.battleMons[1].ability = ABILITY_SHIELD_DUST; moldBreaker = TRUE; assert(holds(1));
+    // Thousand Waves' hold is no additional effect: neither keeps it off
     // (Pokemon Central, Mille Onde).
     reset(); ctx.moveNoCur = MOVE_THOUSAND_WAVES; ctx.battleMons[1].holdEffect = HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS;
-    assert(holds(1));
+    ctx.battleMons[3].ability = ABILITY_SHIELD_DUST; assert(holds(1) && holds(3));
     // Only the moves that hold.
     reset(); move.effect = MOVE_EFFECT_HIT; assert(!holds(1));
     return 0;
