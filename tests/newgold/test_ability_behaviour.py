@@ -600,18 +600,24 @@ int main(void) {
 
 class OpportunistTests(unittest.TestCase):
     def test_what_the_other_side_gains_is_kept_for_the_holder(self):
+        """Opportunist is told every rise a Mirror Herb is (RecordMirrorHerbStages):
+        the stat command's and those a script writes itself -- Belly Drum, a
+        Starf Berry, Anger Point, Spectral Thief, Rage (Pokemon Central,
+        Scrocco)."""
         program = HEADER + r"""
 typedef struct { int maxBattlers; } BattleSystem;
 typedef struct { int hp; } BattleMon;
 typedef struct {
-    int statChangeType, battlerIdStatChange; BattleMon battleMons[4];
+    BattleMon battleMons[4];
+    u8 mirrorHerbStages[4][NUM_BATTLE_STATS];
     u8 opportunistStages[4][NUM_BATTLE_STATS];
 } BattleContext;
 static int ability[4];
 static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { return bs->maxBattlers; }
 static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
 static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return ability[battlerId]; }
-""" + function(OVERLAY, "Battler_OpportunistNotesRaise") + r"""
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return 0; }
+""" + function(OVERLAY, "RecordMirrorHerbStages") + r"""
 int main(void) {
     BattleSystem bs = { 4 };
     BattleContext ctx;
@@ -619,28 +625,17 @@ int main(void) {
     for (int i = 0; i < 4; i++) ctx.battleMons[i].hp = 50;
     ability[1] = ABILITY_OPPORTUNIST;
     // A Swords Dance on the other side: two stages of Attack kept for it.
-    ctx.battlerIdStatChange = 0; ctx.statChangeType = SIDE_EFFECT_TYPE_DIRECT;
-    Battler_OpportunistNotesRaise(&bs, &ctx, STAT_ATK, 2);
+    RecordMirrorHerbStages(&bs, &ctx, 0, STAT_ATK, 2);
     EXPECT(ctx.opportunistStages[1][STAT_ATK], 2);
-    // Its own side's raises are not its to copy, nor a raise that did not
-    // happen, nor a fainted holder's.
-    ctx.battlerIdStatChange = 3;
-    Battler_OpportunistNotesRaise(&bs, &ctx, STAT_SPEED, 1);
-    ctx.battlerIdStatChange = 2;
-    Battler_OpportunistNotesRaise(&bs, &ctx, STAT_SPEED, 0);
+    // Its own side's raises are not its to copy, nor a fainted holder's.
+    RecordMirrorHerbStages(&bs, &ctx, 3, STAT_SPEED, 1);
     EXPECT(ctx.opportunistStages[1][STAT_SPEED], 0);
     ctx.battleMons[1].hp = 0;
-    Battler_OpportunistNotesRaise(&bs, &ctx, STAT_SPEED, 1);
+    RecordMirrorHerbStages(&bs, &ctx, 0, STAT_SPEED, 1);
     EXPECT(ctx.opportunistStages[1][STAT_SPEED], 0);
     ctx.battleMons[1].hp = 50;
-    // Two Opportunists do not copy each other's copying for ever.
-    ability[0] = ABILITY_OPPORTUNIST;
-    ctx.battlerIdStatChange = 0; ctx.statChangeType = SIDE_EFFECT_TYPE_ABILITY;
-    Battler_OpportunistNotesRaise(&bs, &ctx, STAT_DEF, 1);
-    EXPECT(ctx.opportunistStages[1][STAT_DEF], 0);
     // What is kept stops at six stages.
-    ctx.statChangeType = SIDE_EFFECT_TYPE_DIRECT;
-    for (int i = 0; i < 4; i++) Battler_OpportunistNotesRaise(&bs, &ctx, STAT_ATK, 6);
+    for (int i = 0; i < 4; i++) RecordMirrorHerbStages(&bs, &ctx, 2, STAT_ATK, 6);
     EXPECT(ctx.opportunistStages[1][STAT_ATK], 12);
     return 0;
 }
@@ -648,7 +643,12 @@ int main(void) {
         run_c(self, program)
         commands = (ROOT / "src/battle/battle_command.c").read_text()
         change = function(commands, "BtlCmd_ChangeStatStage")
-        self.assertIn("Battler_OpportunistNotesRaise(battleSystem, ctx, stat + 1, mon->statChanges[stat + 1] - stagesBefore);", change)
+        # Two Opportunists do not copy each other's copying for ever: the
+        # stat command tells nobody of an Opportunist's own copy.
+        self.assertIn("if (!(ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY && GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_OPPORTUNIST)) {\n"
+                      "                RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdStatChange, stat + 1, mon->statChanges[stat + 1] - stagesBefore);", change)
+        # And the rises a script writes itself are told too.
+        self.assertIn("RecordMirrorHerbStages(battleSystem, ctx, battlerId, stage - BMON_DATA_STAT_CHANGE_HP, var - before);", function(commands, "BtlCmd_UpdateMonData"))
         self.assertLess(change.index("int stagesBefore = mon->statChanges[stat + 1];"), change.index("mon->statChanges[stat + 1] += change;"))
         entry = function(OVERLAY, "TryAbilityOnEntry")
         self.assertIn("case 33: // Opportunist\n            flag = TryOpportunistCopy(battleSystem, ctx, &script);", entry)

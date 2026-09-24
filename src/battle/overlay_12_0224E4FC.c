@@ -5694,31 +5694,6 @@ BOOL Battler_ShieldsUp(BattleContext *ctx, int battlerId) {
         && (species == SPECIES_MINIOR || (species >= SPECIES_MINIOR_METEOR_ORANGE && species <= SPECIES_MINIOR_METEOR_VIOLET));
 }
 
-// Opportunist copies the stat raises of the other side (Pokemon Central,
-// Scrocco). The reference declares the ability and nothing reads it. Every
-// stage a foe of a standing holder actually gains -- what the cap let
-// through -- is kept for the holder here, and the holder takes them all after
-// the move or the entry that raised them, so a multi-stat or multi-hit raise
-// is copied whole. The holder's own copying is not copied back, which would
-// set two Opportunists copying each other for ever; Costar copies without
-// raising anything, so nothing comes of it either.
-void Battler_OpportunistNotesRaise(BattleSystem *battleSystem, BattleContext *ctx, int stat, int stages) {
-    int battlerId;
-
-    if (stages <= 0 || (ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY && GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_OPPORTUNIST)) {
-        return;
-    }
-    for (battlerId = 0; battlerId < BattleSystem_GetMaxBattlers(battleSystem); battlerId++) {
-        if (BattleSystem_GetFieldSide(battleSystem, battlerId) != BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdStatChange)
-            && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_OPPORTUNIST) {
-            ctx->opportunistStages[battlerId][stat] += stages;
-            if (ctx->opportunistStages[battlerId][stat] > 12) {
-                ctx->opportunistStages[battlerId][stat] = 12;
-            }
-        }
-    }
-}
-
 // How many times a Pokemon of battlerId's own party has fainted since the
 // battle began. The faints are kept per battler slot, and in a double battle
 // both slots on a side draw from the one party, where in a multi battle each
@@ -5779,7 +5754,7 @@ static u8 *OnceOnlyEntryAbilityDone(BattleSystem *battleSystem, BattleContext *c
     return &ctx->onceOnlyEntryAbilityDone[party][ctx->selectedMonIndex[battlerId]];
 }
 
-// Opportunist copies what the other side raised (Battler_OpportunistNotesRaise)
+// Opportunist copies what the other side raised (RecordMirrorHerbStages)
 // a stat at a time and at most two stages a step, each with the ability's
 // line. An Opportunist that has fainted or lost the ability since takes
 // nothing. TRUE with the script to run.
@@ -8506,14 +8481,28 @@ BOOL CheckItemGradualHPRestore(BattleSystem *battleSystem, BattleContext *ctx, i
 // own copy is written straight into the stages, so it is not told to
 // anybody's herb in turn, and neither are Costar's and Opportunist's, which
 // Pokemon Central leaves out as well.
+//
+// Opportunist (Pokemon Central, Scrocco; the reference declares the ability
+// and nothing reads it) copies the same rises: every stage a foe of a
+// standing holder gains, the script's own too, is kept for the holder here,
+// up to six, and TryOpportunistCopy has the holder take them all after the
+// move or the entry that raised them. Its own copying is not told back,
+// which would set two Opportunists copying each other for ever.
 void RecordMirrorHerbStages(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int stat, int stages) {
     int i;
 
     for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
         if (BattleSystem_GetFieldSide(battleSystem, i) != BattleSystem_GetFieldSide(battleSystem, battlerId)
-            && ctx->battleMons[i].hp
-            && GetBattlerHeldItemEffect(ctx, i) == HOLD_EFFECT_COPY_STAT_INCREASE) {
-            ctx->mirrorHerbStages[i][stat] += stages;
+            && ctx->battleMons[i].hp) {
+            if (GetBattlerHeldItemEffect(ctx, i) == HOLD_EFFECT_COPY_STAT_INCREASE) {
+                ctx->mirrorHerbStages[i][stat] += stages;
+            }
+            if (GetBattlerAbility(ctx, i) == ABILITY_OPPORTUNIST) {
+                ctx->opportunistStages[i][stat] += stages;
+                if (ctx->opportunistStages[i][stat] > 12) {
+                    ctx->opportunistStages[i][stat] = 12;
+                }
+            }
         }
     }
 }

@@ -1118,7 +1118,7 @@ typedef int BOOL;
 typedef struct { int unused; } BattleSystem;
 typedef struct { int hp; s8 statChanges[NUM_BATTLE_STATS]; } BattleMon;
 typedef struct { u32 statRaised : 1; } TurnData;
-typedef struct { BattleMon battleMons[4]; u8 mirrorHerbStages[4][NUM_BATTLE_STATS]; int tempData; TurnData turnData[4]; } BattleContext;
+typedef struct { BattleMon battleMons[4]; u8 mirrorHerbStages[4][NUM_BATTLE_STATS]; u8 opportunistStages[4][NUM_BATTLE_STATS]; int tempData; TurnData turnData[4]; } BattleContext;
 static int sItem[4], sAbility[4];
 static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 4; }
 static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }

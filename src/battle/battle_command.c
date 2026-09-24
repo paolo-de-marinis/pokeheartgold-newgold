@@ -2617,11 +2617,10 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
             if (mon->statChanges[stat + 1] > 12) {
                 mon->statChanges[stat + 1] = 12;
             }
-            Battler_OpportunistNotesRaise(battleSystem, ctx, stat + 1, mon->statChanges[stat + 1] - stagesBefore);
             ctx->statRaisedBattlers |= MaskOfFlagNo(ctx->battlerIdStatChange);
-            // What a Mirror Herb on the other side is to copy -- not an
-            // Opportunist's copy, which Pokemon Central (Foglia carbone)
-            // leaves to the herb uncopied, as Costar's.
+            // What a Mirror Herb or an Opportunist on the other side is to
+            // copy -- not an Opportunist's copy, which Pokemon Central
+            // (Foglia carbone, Scrocco) leaves to both uncopied, as Costar's.
             if (!(ctx->statChangeType == SIDE_EFFECT_TYPE_ABILITY && GetBattlerAbility(ctx, ctx->battlerIdStatChange) == ABILITY_OPPORTUNIST)) {
                 RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdStatChange, stat + 1, mon->statChanges[stat + 1] - stagesBefore);
             }
@@ -2864,9 +2863,10 @@ BOOL BtlCmd_UpdateMonData(BattleSystem *battleSystem, BattleContext *ctx) {
 
     // A stage a script raises itself rather than through the stat-change
     // command -- Belly Drum, Anger Point, Rage, Motor Drive, Steam Engine, a
-    // Starf Berry -- is copied by a Mirror Herb on the other side too, as far
-    // as the stage really rose (Pokemon Central, Foglia carbone: Belly Drum's
-    // copy is the stages actually gained). A stage set back to neutral is
+    // Starf Berry -- is copied by a Mirror Herb or an Opportunist on the other
+    // side too, as far as the stage really rose (Pokemon Central, Foglia
+    // carbone: Belly Drum's copy is the stages actually gained; Scrocco
+    // copies every rise of a foe's). A stage set back to neutral is
     // reset, not raised (Shed Tail), and the swaps write through another
     // command. It is a rise for Burning Jealousy and Alluring Voice as well,
     // which count every rise of the turn but a copy or a swap (Pokemon
