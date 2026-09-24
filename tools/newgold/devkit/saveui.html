@@ -959,11 +959,17 @@ async function tickStep(id, on) {
   let chosen = [];
   if (others.length) {
     const r = await ask(stepLabel(id), on
-      ? `<p>Nel gioco prima vengono questi passi, che il salvataggio non ha ancora. Li faccio anche io, nell'ordine? Togli la spunta a quelli che non vuoi.</p>${planList(others, "p")}`
+      ? `<p>Nel gioco prima vengono questi passi, che il salvataggio non ha ancora. Li faccio anche io, nell'ordine? Togli la spunta a quelli che non vuoi.</p>${planList(others, "p")}
+        <p class="note">"Solo i passi prima" fa quelli spuntati e non questo: il salvataggio resta subito prima di "${esc(stepLabel(id))}", da provare nel gioco.</p>`
       : `<p>Questi passi, già fatti, vengono dopo e dipendono da questo. Li tolgo anche? Togli la spunta a quelli da lasciare.</p>${planList(others, "p")}`,
-      [["go", on ? "Spunta" : "Togli", "primary"], ["", "Annulla"]]);
-    if (r.value !== "go") return renderTabs();
+      on ? [["go", "Spunta", "primary"], ["before", "Solo i passi prima"], ["", "Annulla"]] : [["go", "Togli", "primary"], ["", "Annulla"]]);
+    if (r.value !== "go" && r.value !== "before") return renderTabs();
     chosen = others.filter(x => r.data["p" + x]);
+    if (r.value === "before") {
+      if (!chosen.length) return renderTabs();
+      const out = await edit("story", {run: chosen}, "Fatti i passi prima (backup fatto)");
+      return out ? storyToast(out) : renderTabs();
+    }
   }
   const out = await edit("story", on ? {run: [...chosen, id]} : {undo: [...chosen.reverse(), id]},
                          on ? "Fatto come nel gioco (backup fatto)" : "Passo tolto (backup fatto)");
@@ -1015,13 +1021,15 @@ function renderTrainer() {
         <span><strong>Medaglia ${esc(badgeName(b.const))}</strong>
         <span class="muted">${moves.length ? `in campo: ${esc(moves.join(", "))}` : ""}${capOf(b.const) ? `${moves.length ? " · " : ""}livello massimo ${capOf(b.const)}` : ""}</span></span></label>
       ${chain.length ? `<div class="chain">${chain.map(x => stepRow(x)).join("")}</div>` : ""}
-      ${uses.length ? `<p class="note">Il gioco la controlla anche per: ${uses.map(s => `${esc(stepLabel(s.id))} <span class="muted">(${esc(s.section)})</span>`).join(" · ")}</p>` : ""}</div>`;
+      ${uses.length ? `<p class="note">Il gioco la controlla anche per:</p><div class="chain">${uses.map(s => `<label class="plan"><input type="checkbox" data-step="${s.id}" ${done.has(s.id) ? "checked" : ""}>
+        <span>${esc(stepLabel(s.id))} <span class="muted">(${esc(s.section)})</span></span></label>`).join("")}</div>` : ""}</div>`;
   };
   const q = (S.storyq || "").toLowerCase(), show = S.storyshow || "all";
   const places = new Map();
   for (const s of S.data.story) {
     if (inChain.has(s.id)) continue;
-    const text = `${stepLabel(s.id)} ${s.key} ${s.section}`.toLowerCase();
+    // The constants it writes and tests too: "squirt" finds the Flower Shop's bottle and the Sudowoodo that wants it.
+    const text = `${stepLabel(s.id)} ${s.key} ${s.section} ${s.writes.map(w => w[1]).join(" ")} ${s.needs.map(([n]) => n[0][1]).join(" ")}`.toLowerCase();
     if (q && !text.includes(q)) continue;
     if (show !== "all" && done.has(s.id) !== (show === "done")) continue;
     if (!places.has(s.section)) places.set(s.section, []);

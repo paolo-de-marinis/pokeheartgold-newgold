@@ -247,7 +247,8 @@ the Pokédex and the Pokégear (a card ticked brings the ones before it, as
 the game adds them in order), the level cap, the sixteen badges each with
 its gym's steps beside it, and every other step by place, with a search.
 Ticking a step runs it as the game does and offers the steps before it
-(in its gym, or the ones giving what it tests), unticking takes it back and
+(in its gym, or the ones giving what it tests) -- or only those, "Solo i
+passi prima", to leave the save just before it to play it --, unticking takes it back and
 offers the ones after it -- what a run here found is kept beside the file's
 backups (`storia.json`), so it goes back as it was, and a variable an undo
 could only leave is shown under its step while it holds that value; nothing
@@ -256,7 +257,9 @@ two steps -- Whitney beaten, the badge not given. A badge ticked on its own
 asks: as the game (its step, with what the script writes with it) or the
 bit alone. Each step shows what it writes and what the game tests before
 it, met or not, and the step giving it: the Sudowoodo wants the SquirtBottle,
-which the Flower Shop gives only with the Plain Badge.
+which the Flower Shop gives only with the Plain Badge. Under a badge, the
+steps outside its gym that test it can be ticked there too; the search
+also matches the constants a step writes and tests (`squirt` finds both).
 
 In the Pokemon dialog a move is picked only from the species'
 `learnable_moves`, each shown with all its sources as tags (Lv. 36, MT 035,
