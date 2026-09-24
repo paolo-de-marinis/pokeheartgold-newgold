@@ -10652,6 +10652,31 @@ static int TryPledgeCombination(BattleSystem *battleSystem, BattleContext *ctx, 
     return 0;
 }
 
+// A combined Pledge leaves its condition with the hit, for four turns' ends,
+// this one's counted: the rainbow over the user's side, the sea of fire or
+// the swamp around the target's; one already there stays as it is (Pokemon
+// Central, Acquapatto, Fiammapatto, Erbapatto). With the hit, not once the
+// move is over: the condition's line comes before a fainted target's, as
+// Showdown's gen-9 moveHit lays a side condition. MSG_TEMP says which for
+// subscript 465, and the return whether one was laid.
+static BOOL LeavePledgeCondition(BattleContext *ctx, int battlerId) {
+    int combination = ctx->selfTurnData[battlerId].combinedPledge;
+    int shift = SIDE_CONDITION_RAINBOW_SHIFT + 3 * (combination - 1);
+    int side;
+
+    if (!combination) {
+        return FALSE;
+    }
+    ctx->battlerIdTemp = combination == 1 ? battlerId : ctx->battlerIdTarget;
+    side = ctx->battlerIdTemp & 1;
+    if (ctx->fieldSideConditionFlags[side] & (7 << shift)) {
+        return FALSE;
+    }
+    ctx->fieldSideConditionFlags[side] |= 4 << shift;
+    ctx->msgTemp = combination - 1;
+    return TRUE;
+}
+
 // Ally Switch works in a double battle that is not a multi battle, beside an
 // ally that is standing, and not once that ally has switched places this
 // turn; used in a row it works one try in 3^n, as Protect does, the count
@@ -10953,6 +10978,11 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
     // The Pledges, whose script asks with Water Pledge's number for all three.
     case MOVE_WATER_PLEDGE:
         ctx->calcTemp = TryPledgeCombination(battleSystem, ctx, battlerId);
+        break;
+    // A combined Pledge's condition, asked with Fire Pledge's number by
+    // subscript 465 as the move hits (LeavePledgeCondition).
+    case MOVE_FIRE_PLEDGE:
+        ctx->calcTemp = LeavePledgeCondition(ctx, battlerId);
         break;
     // Sky Drop's three steps, on the battler it is aimed at (SkyDropStep).
     case MOVE_SKY_DROP:

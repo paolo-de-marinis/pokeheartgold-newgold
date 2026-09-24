@@ -12476,7 +12476,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_TELEKINESIS,
     BATTLE_SUBSCRIPT_INSTRUCT,
     BATTLE_SUBSCRIPT_THROAT_CHOP,
-    BATTLE_SUBSCRIPT_SKY_DROP_LIFT
+    BATTLE_SUBSCRIPT_SKY_DROP_LIFT,
+    BATTLE_SUBSCRIPT_PLEDGE_CONDITION
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

@@ -5793,29 +5793,6 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         }
         script = BATTLE_SUBSCRIPT_PLUCK;
         break;
-    // A combined Pledge that hit leaves its condition for four turns' ends,
-    // this one's counted: the rainbow over the user's side, the sea of fire
-    // or the swamp around the target's; one already there stays as it is
-    // (Pokemon Central, Acquapatto, Fiammapatto, Erbapatto). MSG_TEMP says
-    // which for subscript 465.
-    case MOVE_EFFECT_PLEDGE: {
-        int combination = ctx->selfTurnData[ctx->battlerIdAttacker].combinedPledge;
-        int shift = SIDE_CONDITION_RAINBOW_SHIFT + 3 * (combination - 1);
-        int side;
-
-        if (!combination) {
-            return FALSE;
-        }
-        ctx->battlerIdTemp = combination == 1 ? ctx->battlerIdAttacker : target;
-        side = ctx->battlerIdTemp & 1;
-        if (ctx->fieldSideConditionFlags[side] & (7 << shift)) {
-            return FALSE;
-        }
-        ctx->fieldSideConditionFlags[side] |= 4 << shift;
-        ctx->msgTemp = combination - 1;
-        script = BATTLE_SUBSCRIPT_PLEDGE_CONDITION;
-        break;
-    }
     default:
         return FALSE;
     }

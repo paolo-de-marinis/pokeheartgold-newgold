@@ -899,6 +899,7 @@
 #define MOVE_SUBSCRIPT_PTR_INSTRUCT                         235
 #define MOVE_SUBSCRIPT_PTR_THROAT_CHOP                      236
 #define MOVE_SUBSCRIPT_PTR_SKY_DROP_LIFT                    237
+#define MOVE_SUBSCRIPT_PTR_PLEDGE_CONDITION                 238
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

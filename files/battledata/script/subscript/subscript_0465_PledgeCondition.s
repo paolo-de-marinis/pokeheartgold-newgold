@@ -2,10 +2,13 @@
 
     .data
 
-// A combined Pledge's condition laid on the side of the Pokemon in MSG_TEMP:
-// MSG_TEMP 0 the rainbow, 1 the sea of fire, 2 the swamp (the post-move step,
-// TryAdditionalMoveEffect).
+// A combined Pledge's condition, laid as the move hits (the effect script's
+// side effect): LeavePledgeCondition, asked with Fire Pledge's number, lays
+// it on the side of the Pokemon in MSG_TEMP -- MSG_TEMP 0 the rainbow, 1 the
+// sea of fire, 2 the swamp -- or says there was one already.
 _000:
+    SetMoveConditionFlag MOVE_FIRE_PLEDGE, BATTLER_CATEGORY_ATTACKER
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0, _END
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MESSAGE, 1, _SEA_OF_FIRE
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MESSAGE, 2, _SWAMP
     // A rainbow appeared in the sky on your team's side!
@@ -24,4 +27,6 @@ _SWAMP:
 _SAID:
     Wait
     WaitButtonABTime 30
+
+_END:
     End

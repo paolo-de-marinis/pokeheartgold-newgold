@@ -1173,20 +1173,54 @@ int main(void) {
         speed = function(overlay, "CheckSortSpeed")
         for battler in ("1", "2"):
             self.assertIn(f"SIDE_CONDITION_SWAMP) {{\n        speed{battler} /= 4;", speed)
-        # The condition once the combined move has hit; the sea of fire at
-        # each turn's end; the three running out; Court Change taking them.
+        # The condition as the combined move hits, before a fainted target's
+        # line (Showdown's moveHit): the hit's side effect, subscript 465,
+        # which LeavePledgeCondition answers; the sea of fire at each turn's
+        # end; the three running out; Court Change taking them.
+        combined = script[script.index("TAG_NONE"):script.index("\n_HIT:")]
+        self.assertIn("SIDE_EFFECT_FLAGS_INDIRECT, MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_PLEDGE_CONDITION", combined)
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_PLEDGE_CONDITION"), "BATTLE_SUBSCRIPT_PLEDGE_CONDITION")
+        condition = next((SCRIPTS / "subscript").glob("subscript_*_PledgeCondition.s")).read_text()
+        self.assertIn("SetMoveConditionFlag MOVE_FIRE_PLEDGE, BATTLER_CATEGORY_ATTACKER\n"
+                      "    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0, _END", condition)
+        run_c(self, HEADER + self.PLEDGE_CONDITION_PROGRAM.replace("@FUNCTIONS@", function(commands, "LeavePledgeCondition")))
         controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
-        additional = function(controller, "TryAdditionalMoveEffect")
-        pledge = additional[additional.index("case MOVE_EFFECT_PLEDGE:"):]
-        for part in ("combinedPledge", "combination == 1 ? ctx->battlerIdAttacker : target", "|= 4 << shift",
-                     "BATTLE_SUBSCRIPT_PLEDGE_CONDITION"):
-            self.assertIn(part, pledge[:pledge.index("break;")])
+        self.assertNotIn("MOVE_EFFECT_PLEDGE", function(controller, "TryAdditionalMoveEffect"))
         self.assertIn("case UMC_STATE_SEA_OF_FIRE:", controller)
         self.assertIn("DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 8)", controller[controller.index("case UMC_STATE_SEA_OF_FIRE:"):controller.index("case UMC_STATE_INGRAIN:")])
         self.assertIn("BATTLE_SUBSCRIPT_PLEDGE_CONDITION_END", controller[controller.index("case UFC_STATE_PLEDGES:"):controller.index("case UFC_STATE_WISH:")])
         court = function(commands, "BtlCmd_SetMoveConditionFlag")
         court = court[court.index("case MOVE_COURT_CHANGE:"):]
         self.assertIn("SIDE_CONDITION_RAINBOW | SIDE_CONDITION_SEA_OF_FIRE | SIDE_CONDITION_SWAMP", court[:court.index("break;")])
+
+    PLEDGE_CONDITION_PROGRAM = r"""
+typedef struct { u8 combinedPledge; } SelfTurnData;
+typedef struct {
+    SelfTurnData selfTurnData[4];
+    u32 fieldSideConditionFlags[2];
+    int battlerIdTarget, battlerIdTemp, msgTemp;
+} BattleContext;
+@FUNCTIONS@
+int main(void) {
+    BattleContext ctx = { 0 };
+    ctx.battlerIdTarget = 1;
+    // A lone Pledge leaves nothing.
+    EXPECT(LeavePledgeCondition(&ctx, 0), FALSE);
+    // Fire and Grass: the sea of fire around the target's side.
+    ctx.selfTurnData[0].combinedPledge = 2;
+    EXPECT(LeavePledgeCondition(&ctx, 0), TRUE);
+    EXPECT(ctx.battlerIdTemp, 1); EXPECT(ctx.msgTemp, 1);
+    EXPECT((int)ctx.fieldSideConditionFlags[1], (int)(4u << SIDE_CONDITION_SEA_OF_FIRE_SHIFT));
+    // Not twice over.
+    EXPECT(LeavePledgeCondition(&ctx, 0), FALSE);
+    // Water and Fire: the rainbow over the user's own side.
+    ctx.selfTurnData[0].combinedPledge = 1;
+    EXPECT(LeavePledgeCondition(&ctx, 0), TRUE);
+    EXPECT(ctx.battlerIdTemp, 0);
+    EXPECT((int)ctx.fieldSideConditionFlags[0], (int)(4u << SIDE_CONDITION_RAINBOW_SHIFT));
+    return 0;
+}
+"""
 
     def test_instruct_has_its_target_use_its_last_move_again(self):
         # Pokemon Central (Imposizione): straight after, PP spent, not the

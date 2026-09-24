@@ -8,7 +8,7 @@
 // move: 150, of the type of the Pledge that beats the other -- Water over
 // Fire, Fire over Grass, Grass over Water -- with STAB whoever uses it, and
 // once it hits it leaves a rainbow, a sea of fire or a swamp for four turns
-// (the post-move step, TryAdditionalMoveEffect). Alone, a Pledge is a plain
+// (subscript 465, the hit's side effect). Alone, a Pledge is a plain
 // hit. SetMoveConditionFlag decides, asked with Water Pledge's number for all
 // three.
 _000:
@@ -22,6 +22,7 @@ _000:
     PrintMessage msg_0197_01916, TAG_NONE
     Wait
     WaitButtonABTime 30
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_FLAGS_INDIRECT, MOVE_SIDE_EFFECT_ON_HIT|MOVE_SUBSCRIPT_PTR_PLEDGE_CONDITION
 
 _HIT:
     CalcCrit
