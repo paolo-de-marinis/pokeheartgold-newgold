@@ -1,5 +1,7 @@
 #include "global.h"
 
+#include "constants/battle.h"
+
 #include "battle_party_menu.h"
 
 int ov08_0221D5DC(BattlePartyMenu *menu, int pos);
@@ -10,7 +12,8 @@ void ov08_022221CC(BattlePartyMenu *menu, u8 screen);
 // Draws the buttons of a battle party menu screen in the states they take
 // there (ov08_02221E6C; state 3 is greyed out). On the list (screen 0) each
 // Pokemon's button is drawn by what ov08_0221D5DC says of it, and Cancel is
-// greyed when a switch cannot be declined (mode 1); on the submenu of the
+// greyed when the pick cannot be declined (a forced switch, Revival
+// Blessing); on the submenu of the
 // Pokemon picked (1), SUMMARY and CHECK MOVES are greyed for an Egg; the
 // screens after those grey the buttons of empty move slots.
 void ov08_022221CC(BattlePartyMenu *menu, u8 screen) {
@@ -28,7 +31,8 @@ void ov08_022221CC(BattlePartyMenu *menu, u8 screen) {
                 ov08_02221E6C(menu, i, 0, 1);
             }
         }
-        if (menu->args->mode == 1) {
+        // Revival Blessing cannot be declined either (ov08_0221C14C).
+        if (menu->args->mode == BATTLE_PARTY_MODE_FORCED_SWITCH || menu->args->mode == BATTLE_PARTY_MODE_REVIVE) {
             ov08_02221E6C(menu, 6, 3, 0);
         } else {
             ov08_02221E6C(menu, 6, 0, 0);

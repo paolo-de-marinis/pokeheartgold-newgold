@@ -390,4 +390,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">{STRVAR_1 6, 1, 0}’s effect prevents\nthe item’s use on {STRVAR_1 1, 0, 0}!</language>
 	</row>
+	<row id="msg_0006_00096" index="96">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">REVIVE</language>
+	</row>
 </body>
