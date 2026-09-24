@@ -114,16 +114,19 @@ The first version of the assertion hook recorded `__FILE__` and
 17 KB across the static module, and the ROM stopped booting.
 
 By the seventh round overlay 12 had grown into nearly all of that room: the
-ordinary build has 0x72C bytes left once the file system's table is loaded,
+ordinary build had 0x72C bytes left once the file system's table was loaded,
 and the diagnostics, 0x1420 bytes across the static module and overlay 12,
 no longer fitted -- `FS_TryLoadTable`'s allocation failed at boot and the
-screen stayed blank. So a diagnostics build takes 0x2000 back from the
-default heap (`sDefaultHeapSpec` in `src/system.c`), which a cold boot, the
-opening and two wild battles never used more than 0x1504 of. The ordinary
-build is not changed; its own margin is the one to watch. The return
-address costs the site nothing -- `bl Diag_AssertFail` is the size of
-`bl GF_AssertFail` -- so that is what is kept, and the ELF turns it back
-into a function.
+screen stayed blank. For a while a diagnostics build took 0x2000 back from
+the default heap on its own; once the moves-types merge left the ordinary
+build short as well, the default heap (`sDefaultHeapSpec` in `src/system.c`)
+went from 0xD200 to 0x8000 in both builds, which the communication-error
+screen, the most it was ever seen to hold, fills to 0x5950. Both builds now
+have the same heaps, so the low-water marker reads the heap the game has.
+
+The return address costs the site nothing -- `bl Diag_AssertFail` is the
+size of `bl GF_AssertFail` -- so that is what is kept, and the ELF turns it
+back into a function.
 
 A trail (a ring of the last sixteen places reached, for a hang that says
 nothing) was used once and is not kept: it has no fixed sites, and one with

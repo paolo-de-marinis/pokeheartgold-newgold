@@ -39,6 +39,13 @@ ITEM_RECORD = 36
 # the number is checked rather than discovered.
 BATTLE_ITEM_TABLE_CEILING = 0x20000
 
+# The default heap went from retail's 0xD200 to 0x8000 to give the main
+# arena room. The most it was seen to hold (gDiagHeapLowWater, a diagnostics
+# build through every scene the harness reaches) is the communication-error
+# screen, 0x5950 wherever it is raised; the Pokeathlon, not reached, is
+# estimated at 0x6000. The floor keeps 0x2000 over that estimate.
+DEFAULT_HEAP_FLOOR = 0x6000 + 0x2000
+
 # What is alive inside heap 3 while a wild battle runs.
 CHILDREN = {
     "HEAP_ID_FIELD2": ROOT / "src/field_system.c",
@@ -109,6 +116,13 @@ class HeapTests(unittest.TestCase):
         left = general - field - pc - bag
         self.assertGreaterEqual(left, 0, f"heap 3 is {general:#x}; the field, the PC and the bag take {field + pc + bag:#x}")
         print(f"PASS: heap 3 leaves {left:#x} with the PC and the bag open.")
+
+    def test_the_default_heap_holds_the_communication_error_screen(self):
+        self.assertGreaterEqual(
+            self.heaps[0], DEFAULT_HEAP_FLOOR,
+            f"the default heap is {self.heaps[0]:#x}; the communication-error screen "
+            f"alone takes 0x5950 of it, and the floor is {DEFAULT_HEAP_FLOOR:#x}")
+        print(f"PASS: the default heap is {self.heaps[0]:#x}, floor {DEFAULT_HEAP_FLOOR:#x}.")
 
     def test_the_save_still_fits_its_heap(self):
         """Heap 1 holds SaveData, whose region is SAVE_PAGE_MAX sectors."""

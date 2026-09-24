@@ -84,18 +84,19 @@ void HBlankIntrRegsToggle(BOOL enable) {
 }
 
 static const struct HeapParam sDefaultHeapSpec[] = {
-#ifdef NEWGOLD_DIAG
-    // Overlay 12's end is where the main arena starts, and what these heaps
-    // leave of it at boot must still hold the file system's table
-    // (FS_TryLoadTable, 0x1B5E bytes): the ordinary build has 0x72C to spare
-    // after it. The diagnostics push the static module and overlay 12 up by
-    // 0x1420, so this build takes that and more back from the default heap,
-    // which a cold boot, the opening and two wild battles never used more
-    // than 0x1504 of (gDiagHeapLowWater). The ordinary build is untouched.
-    { 0xD200 - 0x2000, OS_ARENA_MAIN },
-#else
-    { 0xD200,   OS_ARENA_MAIN },
-#endif
+    // The default heap is retail's 0xD200 less 0x5200, given to the main
+    // arena. The arena starts where overlay 12, the battle, ends, and at boot
+    // it must hold these four heaps, the task queues and the file system's
+    // table above a random pre-size of up to 0x100; nothing takes from it
+    // after that. The battle's growth left it 0xDF8 short: FS_TryLoadTable got
+    // NULL and the screen stayed white. Read by the diagnostics build, the
+    // most this heap ever holds is the communication-error screen, 0x5950
+    // wherever it is raised (field, battle, Pokedex, PC); normal play peaks at
+    // 0x1504, and the Pokeathlon, never reached, is estimated at 0x6000. So
+    // 0x8000 keeps 0x2000 over the estimate. The diagnostics build uses the
+    // same size, so its markers measure the heap the game has.
+    // tests/newgold/test_heaps.py holds this floor.
+    { 0x8000,   OS_ARENA_MAIN },
     // Heap 1 holds SaveData, which holds the whole save region, and was sized
     // to it with a couple of hundred bytes to spare. Thirty boxes add thirteen
     // sectors to that region, so the heap takes the same 0xD000.
@@ -105,10 +106,8 @@ static const struct HeapParam sDefaultHeapSpec[] = {
     // field's own: when it gave up the 0xD000 for heap 1, Heap_Create could
     // no longer find that room, Battle_Run does not check, and GF_ASSERT is
     // gated off -- so every wild battle was a blank screen with the music
-    // playing until it unwound. The 0xD000 comes from the arena instead,
-    // which has 0x1D880 to spare with the game running (read from
-    // OS_GetArenaLo/Hi on a live dump), and tests/newgold/test_heaps.py holds
-    // the margin.
+    // playing until it unwound. The 0xD000 comes from the main arena
+    // instead, and tests/newgold/test_heaps.py holds heap 3's margin.
     { 0x30600,  OS_ARENA_MAIN },
     { 0x10,     OS_ARENA_MAIN },
     { 0x11D000, OS_ARENA_MAIN },
