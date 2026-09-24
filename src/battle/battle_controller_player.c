@@ -2914,6 +2914,26 @@ static BOOL Battler_DanceLocked(BattleContext *ctx, int battlerId) {
         || ((mon->status2 & (STATUS2_LOCKED_INTO_MOVE | STATUS2_RAMPAGE)) && ctx->moveNoLockedInto[battlerId] != ctx->danceMove);
 }
 
+
+// The moves that thaw their frozen user as it uses them (Pokemon Central,
+// Congelamento): Flame Wheel, Sacred Fire, Flare Blitz, Scald, Steam Eruption
+// and Matcha Gotcha by their side effect, as the reference's
+// BattleController_CheckThawOut asks; Fusion Flare (Incrofiamma), Pyro Ball
+// and Scorching Sands, which have no side effect of their own to ask by;
+// Burn Up for a user that is at least part Fire (Ultima Fiamma: an added
+// type is Grass or Ghost, never Fire); and Hydro
+// Steam, which Pokemon Central does not name and Showdown's gen-9 data gives
+// the same defrost flag.
+static BOOL MoveThawsUser(BattleContext *ctx, int effect) {
+    u16 move = ctx->moveNoCur;
+    int attacker = ctx->battlerIdAttacker;
+
+    if (move == MOVE_BURN_UP) {
+        return GetBattlerVar(ctx, attacker, BMON_DATA_TYPE_1, NULL) == TYPE_FIRE || GetBattlerVar(ctx, attacker, BMON_DATA_TYPE_2, NULL) == TYPE_FIRE;
+    }
+    return effect == MOVE_EFFECT_THAW_AND_BURN_HIT || effect == MOVE_EFFECT_RECOIL_BURN_HIT || effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT
+        || move == MOVE_FUSION_FLARE || move == MOVE_PYRO_BALL || move == MOVE_SCORCHING_SANDS || move == MOVE_HYDRO_STEAM;
+}
 static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
     int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
     int ret = 0;
@@ -2969,7 +2989,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
         case 2:
             if (ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_FREEZE) {
                 if (BattleSystem_Random(battleSystem) % 5 != 0) {
-                    if (effect != MOVE_EFFECT_THAW_AND_BURN_HIT && effect != MOVE_EFFECT_RECOIL_BURN_HIT && effect != MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT && ctx->moveNoCur != MOVE_FUSION_FLARE) {
+                    if (MoveThawsUser(ctx, effect) == FALSE) {
                         ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FROZEN);
                         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                         ctx->commandNext = CONTROLLER_COMMAND_39;
@@ -3161,11 +3181,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             break;
         case 15:
             if (ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_FREEZE) {
-                // Matcha Gotcha thaws its user as Flame Wheel does, as the
-                // reference's BattleController_CheckThawOut has it, and so
-                // does Fusion Flare, which has no side effect to ask by
-                // (Pokemon Central, Incrofiamma).
-                if (effect == MOVE_EFFECT_THAW_AND_BURN_HIT || effect == MOVE_EFFECT_RECOIL_BURN_HIT || effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT || ctx->moveNoCur == MOVE_FUSION_FLARE) {
+                if (MoveThawsUser(ctx, effect) == TRUE) {
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_DEFROSTED_BY_MOVE);
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;

@@ -187,9 +187,7 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("ctx->unk_2184 = 13;", function(controller, "ov12_0224D03C"))
         self.assertIn("ctx->moveUsedLast = MOVE_NONE;\n    ctx->moveUsedBefore = MOVE_NONE;",
                       function(controller, "BattleControllerPlayer_TurnEnd"))
-        checks = function(controller, "ov12_0224B528")
-        self.assertIn("effect != MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT && ctx->moveNoCur != MOVE_FUSION_FLARE", checks)
-        self.assertIn("effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT || ctx->moveNoCur == MOVE_FUSION_FLARE", checks)
+        self.assertIn("|| move == MOVE_FUSION_FLARE", function(controller, "MoveThawsUser"))
 
     def test_the_rooms_go_up_and_come_down(self):
         # Pokemon Central (Mirabilzona, Magicozona): five turns, ended early by

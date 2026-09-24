@@ -67,10 +67,11 @@ class ThawTests(unittest.TestCase):
         # BattleController_BeforeMove.c:1251 and 1785 at d0380a487: the frozen
         # roll lets the three thawing effects through, and the thaw names them.
         source = (ROOT / "src/battle/battle_controller_player.c").read_text()
-        self.assertIn("effect != MOVE_EFFECT_THAW_AND_BURN_HIT && effect != MOVE_EFFECT_RECOIL_BURN_HIT"
-                      " && effect != MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT", source)
         self.assertIn("effect == MOVE_EFFECT_THAW_AND_BURN_HIT || effect == MOVE_EFFECT_RECOIL_BURN_HIT"
-                      " || effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT", source)
+                      " || effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT", function(source, "MoveThawsUser"))
+        checks = function(source, "ov12_0224B528")
+        self.assertIn("if (MoveThawsUser(ctx, effect) == FALSE) {", checks)
+        self.assertIn("if (MoveThawsUser(ctx, effect) == TRUE) {", checks)
 
 
 class BattleBerryTests(unittest.TestCase):
