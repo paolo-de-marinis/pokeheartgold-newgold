@@ -11020,20 +11020,17 @@ BOOL BtlCmd_JumpToCurrentEntryHazard(BattleSystem *battleSystem, BattleContext *
     return FALSE;
 }
 
-// Stuff Cheeks eats the berry whether or not the moment called for it. The
-// held-item check knows what each berry does; what it declines to do, this
-// does anyway, because the move has already committed to eating it.
+// Stuff Cheeks eats the user's Berry whether or not the moment called for it
+// (Pokemon Central, Riempiguance), as Bug Bite eats a target's: the Berry's
+// script, if it has anything to do, is left in TEMP_DATA and the Berry in
+// itemTemp. CheckUseHeldItem, asked before, ate a pinch Berry only in a
+// pinch.
 BOOL BtlCmd_StuffCheeks(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
     int adrs = BattleScriptReadWord(ctx);
-    u32 script;
 
-    if (CheckUseHeldItem(battleSystem, ctx, ctx->battlerIdAttacker, &script) == TRUE) {
-        ctx->battlerIdTemp = ctx->battlerIdAttacker;
-        ctx->itemTemp = GetBattlerHeldItem(ctx, ctx->battlerIdAttacker);
-        ctx->tempData = script;
-    } else {
+    if (TryEatOpponentBerry(battleSystem, ctx, ctx->battlerIdAttacker) != TRUE) {
         BattleScriptIncrementPointer(ctx, adrs);
     }
 

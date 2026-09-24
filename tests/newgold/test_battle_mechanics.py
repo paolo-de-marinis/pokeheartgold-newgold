@@ -130,16 +130,22 @@ class StuffCheeksTests(unittest.TestCase):
         self.assertNotIn("StuffCheeks", maxed)
         self.assertNotIn("RemoveItem", maxed)
 
-    def test_a_berry_eaten_by_its_own_script_is_not_removed_again(self):
-        # RemoveItem keeps the item for Recycle and Harvest; a second one on
-        # an empty hand would keep nothing. The Berry's own script eats it, so
-        # the move's RemoveItem is only for a Berry that did nothing.
+    def test_it_eats_any_berry_and_then_raises_defense(self):
+        # Pokemon Central (Riempiguance): the Berry is eaten and has its
+        # effect whatever its own condition -- a Liechi Berry at full HP --
+        # as Bug Bite's does, then Defense rises by two. The held-item check
+        # asked before ate a pinch Berry only in a pinch, and came second.
+        body = function(COMMANDS.read_text(), "BtlCmd_StuffCheeks")
+        self.assertIn("TryEatOpponentBerry(battleSystem, ctx, ctx->battlerIdAttacker) != TRUE", body)
+        self.assertNotIn("CheckUseHeldItem", body)
         script = subscript("StuffCheeks")
-        tail = script[script.index("CallFromVar BSCRIPT_VAR_TEMP_DATA"):script.index("\n_DEFENSE_MAXED:")]
-        guard = "CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HELD_ITEM, ITEM_NONE, _end"
-        self.assertIn(guard, tail)
-        self.assertLess(tail.index(guard), tail.index("RemoveItem BATTLER_CATEGORY_ATTACKER"))
-        self.assertLess(tail.index("RemoveItem BATTLER_CATEGORY_ATTACKER"), tail.index("\n_end:"))
+        script = script[:script.index("\n_DEFENSE_MAXED:")]
+        steps = ["StuffCheeks _RAISE", "RemoveItem BATTLER_CATEGORY_ATTACKER", "CallFromVar BSCRIPT_VAR_TEMP_DATA",
+                 "\n_RAISE:", "SELF_TURN_FLAG_PLUCK_BERRY", "MOVE_SUBSCRIPT_PTR_DEFENSE_UP_2_STAGES"]
+        self.assertEqual([script.index(step) for step in steps], sorted(script.index(step) for step in steps))
+        # Removed once: the eating marks the Berry as Bug Bite's, which its
+        # own script's PLUCK_CHECK does not remove again.
+        self.assertEqual(script.count("RemoveItem"), 1)
 
 
 class SpitUpTests(unittest.TestCase):

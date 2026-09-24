@@ -2,7 +2,9 @@
 
     .data
 
-// Stuff Cheeks
+// Stuff Cheeks: the user eats its Berry, which has its effect whatever its
+// own condition, and then its Defense rises by two stages (Pokemon Central,
+// Riempiguance).
 
 _000:
     // At +6 Defense the reference refuses the move before it runs, with the
@@ -13,20 +15,20 @@ _000:
     PlayMoveAnimation BATTLER_CATEGORY_ATTACKER
     Wait
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_ATTACKER
+    // The Berry goes here, once; the eating marks it as Bug Bite's, so its
+    // own script, if it has one, does not remove it again.
+    StuffCheeks _RAISE
+    RemoveItem BATTLER_CATEGORY_ATTACKER
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_TEMP_DATA, 0, _RAISE
+    CallFromVar BSCRIPT_VAR_TEMP_DATA
+
+_RAISE:
+    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_ATTACKER_SELF_TURN_STATUS_FLAGS, SELF_TURN_FLAG_PLUCK_BERRY
+    UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_ATTACKER
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_STAT_STAGE_CHANGE_SHOWN
     UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_PARAM, MOVE_SUBSCRIPT_PTR_DEFENSE_UP_2_STAGES
     Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE
-    StuffCheeks _noBerryScript
-    CallFromVar BSCRIPT_VAR_TEMP_DATA
-
-_noBerryScript:
     UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS_2, BATTLE_STATUS2_STAT_STAGE_CHANGE_SHOWN
-    // A Berry whose script ran has been eaten there already, and RemoveItem
-    // on an empty hand would leave Recycle and Harvest nothing to bring back.
-    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HELD_ITEM, ITEM_NONE, _end
-    RemoveItem BATTLER_CATEGORY_ATTACKER
-
-_end:
     End
 
 _DEFENSE_MAXED:
