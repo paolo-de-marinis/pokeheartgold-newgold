@@ -445,6 +445,8 @@ class SaveditLibraryTests(unittest.TestCase):
         moves = sv.move_numbers()
         known = [moves["FOCUS_ENERGY"], moves["FOCUS_ENERGY"], moves["KARATE_CHOP"], moves["FORESIGHT"]]
         mon = sv.open_mon(sv.build_mon("MACHAMP", 13, moves=known))
+        for i in range(4):
+            mon["blocks"][1][8 + i], mon["blocks"][1][12 + i] = 40, 0   # what that CLI wrote
         mon["blocks"][1][12 + 3] = 7
         self.assertEqual([(m["pp"], m["pp_max"], m["repeat"]) for m in sv.describe_mon(sv.seal_mon(mon))["moves"]],
                          [(40, 30, False), (40, 30, True), (40, 25, False), (40, 64, False)])
@@ -469,7 +471,10 @@ class SaveditLibraryTests(unittest.TestCase):
         """An older savedit gave every move 40 PP: an edit brings each down
         to GetMoveMaxPP's, and leaves one at or below it."""
         moves = sv.move_numbers()
-        old = sv.build_mon("MACHAMP", 13, moves=[moves["FOCUS_ENERGY"], moves["FORESIGHT"]])
+        old = sv.open_mon(sv.build_mon("MACHAMP", 13, moves=[moves["FOCUS_ENERGY"], moves["FORESIGHT"]]))
+        for i in range(2):
+            old["blocks"][1][8 + i], old["blocks"][1][12 + i] = 40, 0   # what that CLI wrote
+        old = sv.seal_mon(old)
         self.assertEqual([m["pp"] for m in sv.describe_mon(sv.edit_mon(old, item=1))["moves"]], [30, 40])
 
     def test_a_new_species_brings_its_own_moves_and_ability(self):

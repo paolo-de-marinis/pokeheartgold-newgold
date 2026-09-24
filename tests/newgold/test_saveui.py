@@ -548,9 +548,15 @@ class SaveUiTests(unittest.TestCase):
         moves = sv.move_numbers()
         twice = [moves["FOCUS_ENERGY"], moves["FOCUS_ENERGY"], moves["KARATE_CHOP"], moves["FORESIGHT"]]
         save = sv.Save(self.save)
+
+        def old_cli(moves):   # what that CLI wrote: 40 PP, no PP Ups
+            mon = sv.open_mon(sv.build_mon("MACHAMP", 13, moves=moves))
+            for i in range(4):
+                mon["blocks"][1][8 + i], mon["blocks"][1][12 + i] = 40, 0
+            return sv.seal_mon(mon)
         for slot in (0, 1):
-            sv.set_party_mon(save, slot, sv.build_mon("MACHAMP", 13, moves=twice))
-        sv.set_box_mon(save, 0, 0, sv.build_mon("MACHAMP", 13, moves=twice)[:sv.BOX_MON])
+            sv.set_party_mon(save, slot, old_cli(twice))
+        sv.set_box_mon(save, 0, 0, old_cli(twice)[:sv.BOX_MON])
         self.save.write_bytes(save.image())
         out = self.edit("party_edit", {"slot": 0, "level": 13, "moves": twice})
         self.assertTrue(out["changed"])

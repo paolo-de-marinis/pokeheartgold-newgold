@@ -607,7 +607,8 @@ def build_mon(species_name, level, nature=None, ivs=31, evs=0, item=0,
     b = bytearray(BLOCK)
     for i, move in enumerate(moves):
         struct.pack_into("<H", b, 2 * i, move)
-        b[8 + i] = 40                       # plenty of PP for a test battle
+        b[12 + i] = 3                       # three PP Ups: plenty for a test battle, and PP the game can reach
+        b[8 + i] = max_pp(move, 3)
     iv = ivs if isinstance(ivs, (list, tuple)) else [ivs] * NUM_STATS
     packed = 0
     for i in range(NUM_STATS):
@@ -1920,7 +1921,7 @@ def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, 
     b = mon["blocks"][1]
     table = move_table()
     for i in range(MAX_MON_MOVES):
-        b[8 + i] = table[struct.unpack_from("<H", b, 2 * i)[0]]["pp"]
+        b[8 + i], b[12 + i] = table[struct.unpack_from("<H", b, 2 * i)[0]]["pp"], 0   # no PP Ups, as caught
     _set_party_stats(mon, level)    # build_mon's stats, but Shedinja's one HP
     raw = seal_mon(mon)
     return raw if party else raw[:BOX_MON]
