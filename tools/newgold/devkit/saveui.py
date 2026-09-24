@@ -86,7 +86,8 @@ MELON_OPEN = "melonDS è aperto: riscriverebbe lo slot alla chiusura. Chiudilo p
 STALE = ("il file è cambiato su disco da quando la pagina l'ha letto (melonDS, un'altra scheda o "
          "savedit): l'ho ricaricato, rifai la modifica")
 # Beside a file's backups: for each story step run here, what it found
-# (savedit.record), so that taking it back puts that back.
+# (savedit.record), so that taking it back puts that back; and for a step
+# taken back without one, the variables it left.
 STORY_RECORDS = "storia.json"
 
 
@@ -560,7 +561,7 @@ class Library:
                 "profile": sv.profile(save), "party": [sv.describe_mon(raw) for raw in sv.party_raw(save)],
                 "boxes": sv.boxes(save), "bag": sv.bag(save), "dex": sv.dex(save),
                 "position": position_of(save), "info": sv.info(save), "backups": self.history(key),
-                "given": given(save), "story": sv.story_state(save)}
+                "given": given(save), "story": {**sv.story_state(save), "left": self.story_left(key, save)}}
 
     def story_records(self, key):
         try:
@@ -575,6 +576,17 @@ class Library:
         partial = folder / f".{STORY_RECORDS}.tmp"
         partial.write_text(json.dumps(records, indent=1, ensure_ascii=False))
         os.replace(partial, folder / STORY_RECORDS)
+
+    def story_left(self, key, save):
+        """The variables steps taken back left, while they still hold it."""
+        names = sv.constants("include/constants/vars.h", "VAR_")
+        out = {}
+        for sid, record in self.story_records(key).items():
+            still = [[name, value] for name, value in record.get("left", [])
+                     if name in names and sv.var_value(save, names[name]) == value]
+            if still:
+                out[sid] = still
+        return out
 
     def history(self, key):
         folder = self.backups / key
@@ -976,9 +988,11 @@ class Library:
                 raise Refused(f"non c'è il passo della storia {sid}")
         report, records = {"ran": {}, "left": {}}, self.story_records(self.editing)
         for sid in a.get("undo", []):
-            left = sv.undo_step(save, sid, records.pop(sid, None))
+            done = records.pop(sid, {})
+            left = sv.undo_step(save, sid, done if "found" in done else None)
             if left:
                 report["left"][sid] = left
+                records[sid] = {"left": left}
         for sid in a.get("run", []):
             found = {}
             report["ran"][sid] = sv.run_step(save, sid, found)

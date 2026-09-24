@@ -910,10 +910,13 @@ function needsLine(s, done) {
 }
 function stepRow(id, extra = "") {
   const s = S.steps.get(id), done = S.save.story.done.includes(id), writes = writesLine(s), needs = needsLine(s, done);
+  const left = S.save.story.left?.[id];
   return `<div class="step ${done ? "done" : ""}"><label><input type="checkbox" data-step="${id}" ${done ? "checked" : ""}>
       <span><strong>${esc(stepLabel(id))}</strong>${extra}</span></label>
     <div class="why" title="${esc(`scr_seq_${s.script.slice(8)}.s, riga ${s.line}: ${writes.join(", ")}`)}">${esc(s.section || "script comuni")} · scrive: ${esc(writes.slice(0, 5).join(", "))}${writes.length > 5 ? ` e altre ${writes.length - 5}` : ""}</div>
-    ${needs.length ? `<div class="why">Il gioco controlla prima: ${needs.join(" · ")}</div>` : ""}</div>`;
+    ${needs.length ? `<div class="why">Il gioco controlla prima: ${needs.join(" · ")}</div>` : ""}
+    ${left ? `<div class="why"><span class="no">Rimaste da quando l'hai tolto: ${esc(left.map(([n, v]) => `${n} = ${v}`).join(", "))}</span>
+      <span class="muted">— il valore di prima non si sa: rimettilo in Flag e variabili, o usa Annulla ultima modifica</span></div>` : ""}</div>`;
 }
 // The steps to run before one, as the game would have: in a gym, those before
 // it in the gym's order; elsewhere, what gives what it tests, and so on back.
@@ -947,7 +950,7 @@ const planList = (ids, name) => ids.map(x => `<label class="plan"><input type="c
 function storyToast(out) {
   const left = Object.values(out?.report?.left || {}).flat();
   if (left.length) toast(`Variabili lasciate come sono (il valore di prima non si sa): ${left.map(([n, v]) => `${n} = ${v}`).join(", ")}. `
-    + `Rimettile a mano in Flag e variabili, o usa Annulla ultima modifica.`, true);
+    + `Restano segnate sotto il passo.`, true);
 }
 // Ticking a step runs it as the game does -- offering the ones before it --
 // and unticking takes it back, offering the ones after it; never forced.
@@ -1068,7 +1071,7 @@ function renderTrainer() {
       </div>
       <p class="note">Ogni passo è uno script del gioco, dal punto in cui scrive il salvataggio fino alla fine: spuntarlo lo esegue sul salvataggio come il gioco
         (le scelte che dipendono dal salvataggio le decide il salvataggio), toglierlo lo riporta indietro: un passo spuntato qui rimette quello che aveva
-        trovato; uno fatto giocando rigira flag, medaglie e strumenti, e le variabili di cui non si sa il valore di prima restano.
+        trovato; uno fatto giocando rigira flag, medaglie e strumenti, e le variabili di cui non si sa il valore di prima restano, segnate sotto il passo.
         Per tutto il resto c'è la scheda Flag e variabili.</p>
       ${sections.map(([sec, ids]) => `<details data-sec="${esc(sec)}" ${q || S.storyopen.has(sec) ? "open" : ""}><summary><strong>${esc(sec || "Script comuni")}</strong> <span class="muted">${ids.filter(x => done.has(x)).length} di ${ids.length} fatti</span></summary>
         <div class="chain">${ids.map(x => stepRow(x)).join("")}</div></details>`).join("") || `<p class="muted">Nessun passo.</p>`}

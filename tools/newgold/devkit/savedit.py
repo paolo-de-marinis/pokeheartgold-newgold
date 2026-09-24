@@ -3724,15 +3724,28 @@ def record(save, found):
     return {"found": dict(found), "after": {key: _value(save, key) for key in found}}
 
 
+@tree_cache
+def _values_set():
+    """Every value a script's SetVar gives each kept variable."""
+    out = {}
+    for stem in _script_stems():
+        for op, args in _script(stem)["lines"]:
+            if op == "SetVar" and _kept(args[0]) and _number(args[1]) is not None:
+                out.setdefault(args[0], set()).add(_number(args[1]))
+    return out
+
+
 def undo_step(save, step_id, done=None):
     """A step taken back. With `done`, its record (record()), each thing
     it wrote that still holds what the run left goes back to what the run
     found. The rest by what the step always writes: undone -- a flag, a
     trainer, a badge, the shoes, the Dex, a card, the map's level, the
-    items it gave, an AddVar -- and a SetVar put back to what the step
-    before it in its gym sets it to (Whitney's VAR_UNK_410A back to 1). Any
-    other SetVar is left, as the value the game had before is not known:
-    they are returned, [name, value]."""
+    items it gave, an AddVar -- and a SetVar, in a gym, put back to what
+    the step before it there sets it to (Whitney's VAR_UNK_410A back to 1),
+    or, set first by this step, to the value that keeps the gym shut (a
+    gate's) or else the highest lower value a script gives it, 0 (the new
+    game's) with none. Any other SetVar is left, as the value the game had
+    before is not known: they are returned, [name, value]."""
     step = _step(step_id)
     back = set()
     if done:
@@ -3744,13 +3757,15 @@ def undo_step(save, step_id, done=None):
     for other in sorted((s for s in story() if step.get("badge") and s.get("badge") == step["badge"]
                          and s["order"] < step["order"]), key=lambda s: s["order"]):
         previous.update({w[1]: w[2] for w in other["gives"] if w[0] == "var"})
-    left = []
+    gates, left = _gates()[0], []
     for kind, name, value in reversed(step["gives"]):
         if _key((kind, name)) in back:
             continue
         if kind == "var":
-            if name in previous:
-                write_var(save, _script_names()[0][name], previous[name])
+            if step.get("badge"):
+                lower = [v for v in _values_set().get(name, ()) if v < value]
+                before = previous.get(name, gates.get(name, max(lower, default=0)))
+                write_var(save, _script_names()[0][name], before)
             else:
                 left.append([name, value])
         else:

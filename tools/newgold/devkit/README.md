@@ -107,8 +107,10 @@ midgame badge), noting what each thing it writes held before
 the run left untouched since goes back to what it found; the rest -- a
 step done by playing -- by what the step writes: undone, a flag it only
 held for the scene (`FLAG_ENGAGING_STATIC_POKEMON` around a battle) left
-alone, a `SetVar` put back to what the step before it in its gym sets, any
-other `SetVar` left and named, as its old value is not known.
+alone, a `SetVar` in a gym put back to what the step before it there sets,
+or to the gate's value, or to the highest lower value a script gives it
+(0, the new game's, with none), any other `SetVar` left and named, as its
+old value is not known.
 
 Where the player can stand is read from the land data (the file
 `filesystem_files_def.h` gives `NARC_fielddata_landdata_land_data`): each
@@ -243,8 +245,9 @@ its gym's steps beside it, and every other step by place, with a search.
 Ticking a step runs it as the game does and offers the steps before it
 (in its gym, or the ones giving what it tests), unticking takes it back and
 offers the ones after it -- what a run here found is kept beside the file's
-backups (`storia.json`), so it goes back as it was; nothing is forced, so
-a save can stand between
+backups (`storia.json`), so it goes back as it was, and a variable an undo
+could only leave is shown under its step while it holds that value; nothing
+is forced, so a save can stand between
 two steps -- Whitney beaten, the badge not given. A badge ticked on its own
 asks: as the game (its step, with what the script writes with it) or the
 bit alone. Each step shows what it writes and what the game tests before

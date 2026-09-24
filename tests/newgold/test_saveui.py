@@ -700,6 +700,14 @@ class SaveUiTests(unittest.TestCase):
         for block in ("SAVE_FLAGS", "SAVE_PLAYERDATA", "SAVE_BAG"):
             self.assertEqual(bytes(now.block(block))[:-sv.save_budget.CRC], bytes(then.block(block))[:-sv.save_budget.CRC],
                              f"{block} as it was")
+        # A step outside a gym taken back with no record of its run leaves
+        # its variables, and says so while they hold what it left.
+        step = next(s for s in data["story"] if not s["badge"] and any(w[0] == "var" and not w[3] for w in s["writes"]))
+        self.edit("story", {"run": [step["id"]]})
+        records.unlink()
+        out = self.edit("story", {"undo": [step["id"]]})
+        self.assertTrue(out["report"]["left"][step["id"]])
+        self.assertEqual(out["story"]["left"], out["report"]["left"])
         out = self.edit("menu", {"icon": "START_MENU_ICON_RUNNING_SHOES", "on": True})
         self.assertEqual((out["given"]["shoes"], out["given"]["menu"]["START_MENU_ICON_RUNNING_SHOES"]), (True, True))
         out = self.edit("pokegear", {"cards": 3, "map_level": 1})
@@ -710,7 +718,7 @@ class SaveUiTests(unittest.TestCase):
                                                                         "args": {"map_level": 3}}))
         self.assertIn("non è una voce del menu", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "menu",
                                                                             "args": {"icon": "START_MENU_ICON_EXIT", "on": 1}}))
-        self.assertEqual(len(self.backups()), 6, "one backup a write")
+        self.assertEqual(len(self.backups()), 8, "one backup a write")
 
     def test_the_machines(self):
         """op "machines": the checklist's changes written as the game keeps

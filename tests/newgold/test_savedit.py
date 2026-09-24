@@ -915,8 +915,26 @@ class SaveditLibraryTests(unittest.TestCase):
         sv.run_step(save, beaten, found)
         done = sv.record(save, found)
         sv.write_var(save, variables["VAR_UNK_410A"], 7)
-        self.assertEqual(sv.undo_step(save, beaten, done), [["VAR_UNK_410A", 1]], "left, not the record's")
+        self.assertEqual(sv.undo_step(save, beaten, done), [])
         self.assertEqual(sv.var_value(save, variables["VAR_UNK_40DA"]), 0, "the record's")
+        self.assertEqual(sv.var_value(save, variables["VAR_UNK_410A"]), 0, "the gym's, not the record's")
+
+    def test_a_gym_step_taken_back_without_a_record(self):
+        """A step done by playing has no record: a gym's variable no earlier
+        step of it sets goes back to the value that keeps the gym as it was
+        -- Whitney's to 0, Morty's gate to the one that turns the player
+        away -- and the step no longer counts as done."""
+        variables = sv.constants("include/constants/vars.h", "VAR_")
+        save = self.open()
+        beaten = sv.badge_chains()["BADGE_PLAIN"][0]
+        sv.run_step(save, beaten)
+        self.assertEqual(sv.undo_step(save, beaten), [])
+        self.assertEqual([sv.var_value(save, variables[v]) for v in ("VAR_UNK_410A", "VAR_UNK_40DA")], [0, 0])
+        gate = sv.badge_chains()["BADGE_FOG"][0]
+        sv.run_step(save, gate)
+        self.assertEqual(sv.undo_step(save, gate), [])
+        self.assertEqual(sv.var_value(save, variables["VAR_UNK_4079"]), sv._gates()[0]["VAR_UNK_4079"])
+        self.assertNotIn(gate, sv.story_state(save)["done"])
 
     def test_the_machines_as_the_bag_keeps_them(self):
         """Every machine, in SortTMHMPocket's order, with its move, the
