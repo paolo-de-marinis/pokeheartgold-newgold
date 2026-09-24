@@ -211,13 +211,6 @@ static void RememberHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
-// The reference's IS_ITEM_BERRY: the berry range, and the three Gen 6+
-// berries imported after it.
-static BOOL IsBerry(u16 item) {
-    return (item >= FIRST_BERRY_IDX && item <= LAST_BERRY_IDX)
-        || (item >= ITEM_ROSELI_BERRY && item <= ITEM_MARANGA_BERRY);
-}
-
 // As the reference's RESTORE_ITEMS_AT_BATTLE_END: outside a trainer battle,
 // any item the party holds more of than it started with was taken in battle
 // and goes to the bag; then every Pokemon gets back what it started with,
@@ -289,7 +282,7 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     // stayed held too, and a Berry a foe's Magician took was lost.
     for (i = 0; i < count; i++) {
         u16 item = ctx->itemsToRestore[i];
-        if (IsBerry(item) && held[i] != item && !(ctx->heldItemsTaken & MaskOfFlagNo(i))) {
+        if (BattleItemIsBerry(item) && held[i] != item && !(ctx->heldItemsTaken & MaskOfFlagNo(i))) {
             item = ITEM_NONE;
         }
         SetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, &item);

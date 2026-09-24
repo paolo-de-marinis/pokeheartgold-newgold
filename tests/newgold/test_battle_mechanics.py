@@ -73,6 +73,23 @@ class ThawTests(unittest.TestCase):
                       " || effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT", source)
 
 
+class BattleBerryTests(unittest.TestCase):
+    def test_the_roseli_kee_and_maranga_berries_are_berries_in_battle(self):
+        # The reference's IS_ITEM_BERRY takes the three imported after the
+        # retail range; ItemIdIsBerry, the field's, does not. Every Berry
+        # question in battle -- Bug Bite, Teatime, Stuff Cheeks, Cud Chew,
+        # Harvest, Incinerate, Unnerve, Ripen, Cheek Pouch, Belch -- asks the
+        # battle's own.
+        body = function(OVERLAY.read_text(), "BattleItemIsBerry")
+        self.assertIn("item >= ITEM_ROSELI_BERRY && item <= ITEM_MARANGA_BERRY", body)
+        for path in sorted((ROOT / "src/battle").glob("*.c")):
+            source = re.sub(r"//[^\n]*", "", path.read_text())
+            self.assertNotIn("ItemIdIsBerry(", source, path.name)
+            if path != OVERLAY:
+                self.assertNotIn("FIRST_BERRY_IDX", source, path.name)
+        self.assertEqual(OVERLAY.read_text().count("FIRST_BERRY_IDX"), 1)
+
+
 class MatchaGotchaTests(unittest.TestCase):
     def test_it_drains_on_every_hit_and_burns_one_time_in_five(self):
         # Pokemon Central (Spruzzate): half the damage back on every hit, a
@@ -1192,7 +1209,7 @@ typedef struct {
     int kept[4];
     int ate[4];
 } BattleContext;
-static BOOL ItemIdIsBerry(u16 item) { return item == 149; }
+static BOOL BattleItemIsBerry(u16 item) { return item == 149; }
 static void RememberBerryEaten(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; ctx->ate[battlerId] = 1; }
 static BOOL InfiltratorGoesRoundSubstitute(BattleContext *ctx, int battlerId) { (void)battlerId; return ctx->infiltrator; }
 static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item) { ctx->kept[eater] = item; }

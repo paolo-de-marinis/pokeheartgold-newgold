@@ -6804,7 +6804,7 @@ BOOL BtlCmd_RemoveItem(BattleSystem *battleSystem, BattleContext *ctx) {
     // that take it mark it so, and the Pokemon that does eat it -- the one that
     // plucked it, the one it lands on -- is told there (TryEatOpponentBerry,
     // FlungItemLands).
-    if (ItemIdIsBerry(ctx->battleMons[battlerId].item) == TRUE
+    if (BattleItemIsBerry(ctx->battleMons[battlerId].item) == TRUE
         && !ctx->selfTurnData[battlerId].berryNotEaten) {
         RememberBerryEaten(battleSystem, ctx, battlerId);
     }
@@ -10104,7 +10104,7 @@ BOOL BtlCmd_TryIncinerate(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrs = BattleScriptReadWord(ctx);
     int item = ctx->battleMons[ctx->battlerIdTarget].item;
 
-    if (item < FIRST_BERRY_IDX || item > LAST_BERRY_IDX) {
+    if (!BattleItemIsBerry(item)) {
         BattleScriptIncrementPointer(ctx, adrs);
         return FALSE;
     }
@@ -10789,7 +10789,7 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
 
         ctx->calcTemp = FALSE;
         for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
-            if (ctx->battleMons[i].hp && !(ctx->battleMons[i].moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE) && ItemIdIsBerry(ctx->battleMons[i].item) == TRUE) {
+            if (ctx->battleMons[i].hp && !(ctx->battleMons[i].moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE) && BattleItemIsBerry(ctx->battleMons[i].item) == TRUE) {
                 ctx->calcTemp = TRUE;
             }
         }

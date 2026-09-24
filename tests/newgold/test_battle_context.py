@@ -319,7 +319,7 @@ class RestoreItemsTests(unittest.TestCase):
 
     def test_the_real_function_on_a_party(self):
         source = CONTROLLER.read_text()
-        program = (RESTORE_FIXTURE.replace("@IS_BERRY@", function(source, "IsBerry"))
+        program = (RESTORE_FIXTURE.replace("@IS_BERRY@", function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "BattleItemIsBerry"))
                    .replace("@GIVE_BACK@", function(source, "GiveBackHeldItems")))
         with tempfile.TemporaryDirectory(prefix="newgold-restore-") as directory:
             path = Path(directory)

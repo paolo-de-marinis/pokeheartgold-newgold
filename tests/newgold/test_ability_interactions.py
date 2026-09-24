@@ -93,7 +93,7 @@ class AsOneTests(unittest.TestCase):
     def test_as_one_puts_the_other_side_off_its_berries(self):
         # Pokemon Central, Unisono: Unnerve and a Rider's ability in one.
         source = OVERLAY.read_text()
-        functions = "\n".join(function(source, name) for name in ("BattlerHoldsBerry", "BerryCanBeEaten"))
+        functions = "\n".join(function(source, name) for name in ("BattleItemIsBerry", "BattlerHoldsBerry", "BerryCanBeEaten"))
         run_c(AS_ONE.replace("@FUNCTIONS@", functions))
 
 

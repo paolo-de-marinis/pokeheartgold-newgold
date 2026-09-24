@@ -1843,7 +1843,7 @@ static void FlungItemLands(BattleSystem *battleSystem, BattleContext *ctx) {
     CudChewKeepsBerry(ctx, battlerId, ctx->recycleItem[ctx->battlerIdAttacker]);
     // A Berry that lands is eaten by the Pokemon it lands on, which Belch
     // counts (Pokemon Central, Rutto); not by the thrower (BtlCmd_RemoveItem).
-    if (ItemIdIsBerry(ctx->recycleItem[ctx->battlerIdAttacker]) == TRUE) {
+    if (BattleItemIsBerry(ctx->recycleItem[ctx->battlerIdAttacker]) == TRUE) {
         RememberBerryEaten(battleSystem, ctx, battlerId);
     }
 }
@@ -5374,7 +5374,7 @@ BOOL ov12_02253068(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     // away again, the way they do at every other weather read here. The hand
     // is filled by the script, so the party copy is filled with it.
     case ABILITY_HARVEST:
-        if (ctx->battleMons[battlerId].hp && ItemIdIsBerry(ctx->recycleItem[battlerId]) == TRUE
+        if (ctx->battleMons[battlerId].hp && BattleItemIsBerry(ctx->recycleItem[battlerId]) == TRUE
             && (((WeatherUnderUmbrella(ctx, ctx->fieldCondition, battlerId) & FIELD_CONDITION_SUN_ALL) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK))
                 || (BattleSystem_Random(battleSystem) % 2) == 0)) {
             ctx->itemTemp = ctx->recycleItem[battlerId];
@@ -7972,18 +7972,27 @@ BOOL TrySyncronizeStatus(BattleSystem *battleSystem, BattleContext *ctx, Control
     return FALSE;
 }
 
+// Which items are Berries to the battle: the retail range, and the Roseli,
+// Kee and Maranga Berries imported after it -- the reference's IS_ITEM_BERRY.
+// ItemIdIsBerry is the field's, the Berries that grow in a pot, and has no
+// room for the three; everything in battle that eats, burns, recycles or
+// counts a Berry asks here.
+BOOL BattleItemIsBerry(u16 item) {
+    return (item >= FIRST_BERRY_IDX && item <= LAST_BERRY_IDX)
+        || (item >= ITEM_ROSELI_BERRY && item <= ITEM_MARANGA_BERRY);
+}
+
 // Three of the added abilities are about berries, and all three have to agree
 // on which items are berries, so they ask here rather than twice over in the
 // two held-item checks below.
 static BOOL BattlerHoldsBerry(BattleContext *ctx, int battlerId) {
-    int item = ctx->battleMons[battlerId].item;
-    return item >= FIRST_BERRY_IDX && item <= LAST_BERRY_IDX;
+    return BattleItemIsBerry(ctx->battleMons[battlerId].item);
 }
 
 // Cud Chew keeps a Berry it has eaten, its own or one plucked off a foe, to
 // eat again at the end of the next turn.
 static void CudChewKeepsBerry(BattleContext *ctx, int eater, u16 item) {
-    if (ItemIdIsBerry(item) == TRUE && GetBattlerAbility(ctx, eater) == ABILITY_CUD_CHEW) {
+    if (BattleItemIsBerry(item) == TRUE && GetBattlerAbility(ctx, eater) == ABILITY_CUD_CHEW) {
         ctx->cudChewBerry[eater] = item;
         ctx->cudChewTurn[eater] = ctx->totalTurns + 1;
     }
@@ -9403,7 +9412,7 @@ BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int bat
         ret = TRUE;
         break;
     default:
-        if (ItemIdIsBerry(ctx->battleMons[battlerId].item) == TRUE) {
+        if (BattleItemIsBerry(ctx->battleMons[battlerId].item) == TRUE) {
             ret = TRUE;
         }
         break;

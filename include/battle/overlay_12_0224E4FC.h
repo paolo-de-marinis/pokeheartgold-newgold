@@ -139,6 +139,7 @@ BOOL BattlerCanSwitch(BattleSystem *battleSystem, BattleContext *ctx, int battle
 BOOL Battler_HasGhostType(BattleContext *ctx, int battlerId);
 BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId);
 BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+BOOL BattleItemIsBerry(u16 item);
 BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 void ov12_022565E0(BattleSystem *battleSystem, BattleContext *ctx);
 void ov12_02256694(BattleSystem *battleSystem, BattleContext *ctx);

@@ -903,7 +903,7 @@ int main(void) {
         pluck = function(commands, "BtlCmd_TryPluck")
         self.assertLess(pluck.index("MOVE_TEATIME"), pluck.index("ABILITY_STICKY_HOLD"))
         flag = function(commands, "BtlCmd_SetMoveConditionFlag")
-        self.assertIn("ItemIdIsBerry(ctx->battleMons[i].item) == TRUE", flag[flag.index("case MOVE_TEATIME:"):])
+        self.assertIn("BattleItemIsBerry(ctx->battleMons[i].item) == TRUE", flag[flag.index("case MOVE_TEATIME:"):])
 
     ALLY_SWITCH_PROGRAM = r"""
 #include <stddef.h>
