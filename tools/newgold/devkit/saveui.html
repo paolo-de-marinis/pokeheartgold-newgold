@@ -190,11 +190,11 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
   .pc button { height: 52px; }
 }
 .wide { display: block; width: 100%; text-align: left; margin: 2px 0; }
-.sws { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px 16px; }
+.sws { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 6px 16px; }
 .sw, .plan { display: flex; gap: 8px; align-items: flex-start; }
 .sw input, .plan input, .step input { flex: none; margin-top: 3px; }
 .plan { margin: 4px 0; }
-.badgelist { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px 16px; }
+.badgelist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 10px 16px; }
 .badge { border-top: 1px solid var(--border); padding-top: 8px; min-width: 0; }
 .chain { margin: 4px 0 0 24px; display: flex; flex-direction: column; gap: 4px; }
 details .chain { margin-left: 8px; }
@@ -205,7 +205,7 @@ details .chain { margin-left: 8px; }
 .why .no { color: var(--danger); }
 details { border-top: 1px solid var(--border); padding: 6px 0; }
 details summary { cursor: pointer; }
-#machines .dexlist { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+#machines .dexlist { grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr)); }
 .browse { max-height: 50vh; }
 #libpath { cursor: pointer; }
 </style>
