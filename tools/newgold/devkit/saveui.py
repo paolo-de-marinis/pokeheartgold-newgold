@@ -556,12 +556,16 @@ class Library:
         path, key, is_slot = self.locate(f)
         if not path.exists():
             raise Refused("il file non c'è")
-        save = self.open(path)
+        save, errors = self.open(path), {}
         return {"f": f, "path": str(path), "slot": is_slot, "mtime": path.stat().st_mtime, "version": version(path),
                 "profile": sv.profile(save), "party": [sv.describe_mon(raw) for raw in sv.party_raw(save)],
                 "boxes": sv.boxes(save), "bag": sv.bag(save), "dex": sv.dex(save),
                 "position": position_of(save), "info": sv.info(save), "backups": self.history(key),
-                "given": given(save), "story": {**sv.story_state(save), "left": self.story_left(key, save)}}
+                "given": part(errors, "given", lambda: given(save), {"shoes": False, "pokegear": {"cards": 0, "map_level": 0},
+                                                                     "level_cap": 0, "menu": {}}),
+                "story": part(errors, "story", lambda: {**sv.story_state(save), "left": self.story_left(key, save)},
+                              {"done": [], "met": {}, "left": {}}),
+                "errors": errors}
 
     def story_records(self, key):
         try:
@@ -1065,11 +1069,12 @@ def span(map_id):
 
 
 def position_of(save):
-    """The save's position, and the town map's tile the Pokégear marks it at."""
+    """The save's position, and the town map's tile the Pokégear marks it at
+    (None when the town map does not read: /api/data says why)."""
     position = sv.position(save)
     now = position["current"]
-    return {**position, "tile": sv.town_tile(now["map"], now["x"], now["y"],
-                                              (position["special"]["x"], position["special"]["y"]))}
+    return {**position, "tile": part({}, "world", lambda: sv.town_tile(now["map"], now["x"], now["y"], (
+        position["special"]["x"], position["special"]["y"])), None)}
 
 
 def map_place(q):
@@ -1104,6 +1109,18 @@ def given(save):
     return {"shoes": sv.running_shoes(save), "pokegear": sv.pokegear(save), "level_cap": sv.level_cap(save),
             "menu": {e["icon"]: sv.running_shoes(save) if e.get("shoes") else sv.flag_is_set(save, e["flag"])
                      for e in sv.menu_unlocks()}}
+
+
+def part(errors, name, read, empty):
+    """One section of what the page gets, read on its own: a reader that
+    fails -- a file renamed upstream, the art exported another way, a
+    function renamed -- empties it and says why in `errors`, and the rest
+    of the editor still loads."""
+    try:
+        return read()
+    except Exception as e:
+        errors[name] = f"{type(e).__name__}: {e}"
+        return empty
 
 
 def story_table():
@@ -1365,12 +1382,17 @@ def tables():
         {"const": const, "value": value} for const, value in sorted(sv.constants(header, prefix).items(),
                                                                     key=lambda kv: kv[1]) if 0 <= value < below]
     genders = {"MON_MALE": sv.MON_MALE, "MON_FEMALE": sv.MON_FEMALE, "MON_GENDERLESS": sv.MON_GENDERLESS}
+    errors = {}
+    story, chains = part(errors, "story", lambda: (story_table(), sv.badge_chains()), ([], {}))
+    field_moves = lambda: {badge: [sv.move_numbers()[m[len("MOVE_"):]] for m in moves if m[len("MOVE_"):] in sv.move_numbers()]
+                           for badge, moves in sv.field_move_badges().items()}
     players = {"PLAYER_GENDER_MALE": sv.PLAYER_GENDER_MALE, "PLAYER_GENDER_FEMALE": sv.PLAYER_GENDER_FEMALE}
     return {"species": sv.species_table(), "moves": sv.move_table(),
             "items": [{**row, "limit": sv.item_limit(row["id"])} if row["pocket"] else row
                       for row in sv.item_table().values()],
             "natures": sv.bank(sv.NATURE_NAMES), "nature_mods": sv.nature_mods(),
-            "maps": [m for m in sv.map_table().values() if standable(m["id"])], "world": world(),
+            "maps": [m for m in sv.map_table().values() if standable(m["id"])],
+            "world": part(errors, "world", world, {"cols": 0, "rows": 0, "tiles": {}, "main": [], "buildings": [], "heals": []}),
             "dex": sv.dex_species(),
             "pockets": [{k: p[k] for k in ("name", "const", "slots")} for p in sv.pockets()],
             "stats": by_value("include/constants/pokemon.h", "STAT_", sv.NUM_STATS),
@@ -1378,17 +1400,17 @@ def tables():
             "genders": [{"const": const, "value": value} for const, value in genders.items()],
             "player_genders": [{"const": const, "value": value} for const, value in players.items()],
             "badges": sv.badges(),
-            "story": story_table(), "chains": sv.badge_chains(), "menu": sv.menu_unlocks(),
-            "pokegear": sv.pokegear_cards(), "level_cap": sv.level_cap_milestones(),
-            "field_moves": {badge: [sv.move_numbers()[m[len("MOVE_"):]] for m in moves]
-                            for badge, moves in sv.field_move_badges().items()},
-            "machines": sv.machine_table(),
+            "story": story, "chains": chains, "menu": part(errors, "menu", sv.menu_unlocks, []),
+            "pokegear": part(errors, "pokegear", sv.pokegear_cards, {"cards": [], "map_levels": 1}),
+            "level_cap": part(errors, "level_cap", sv.level_cap_milestones, {"milestones": [], "none": 0}),
+            "field_moves": part(errors, "field_moves", field_moves, {}),
+            "machines": part(errors, "machines", sv.machine_table, []),
             "limits": {"party": sv.PARTY_SIZE, "boxes": sv.NUM_BOXES, "box_slots": sv.MONS_PER_BOX,
                        "name": sv.PLAYER_NAME_LENGTH, "money": sv.MAX_MONEY, "coins": sv.MAX_COINS,
                        "hours": sv.MAX_PLAY_HOURS, "level": sv.MAX_LEVEL, "moves": sv.MAX_MON_MOVES,
                        "iv": sv.MAX_IV, "ev": sv.MAX_EV_PER_STAT, "ev_sum": sv.MAX_EV_SUM,
                        "hidden_slot": sv.HIDDEN_SLOT},
-            "tree": sv.GENERATION}
+            "tree": sv.GENERATION, "errors": errors}
 
 
 # ---------------------------------------------------------------------------

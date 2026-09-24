@@ -230,6 +230,7 @@ details summary { cursor: pointer; }
 </div>
 
 <div class="banner" id="buildbanner" hidden></div>
+<div class="banner" id="databanner" hidden></div>
 <div class="banner" id="downbanner" hidden><strong>L'editor non risponde.</strong> Il server si è fermato: riaprilo
   (doppio clic su Editor salvataggi), poi ricarica questa pagina. Finché è fermo non si legge né si salva niente.</div>
 
@@ -374,6 +375,7 @@ const bits = n => [...Array(8)].map((_, i) => (n >> i) & 1);
 
 function buildLists() {
   const d = S.data;
+  showErrors();
   S.species = new Map(d.species.map(r => [r.id, r]));
   S.moves = new Map(d.moves.map(r => [r.id, r]));
   S.items = new Map(d.items.map(r => [r.id, r]));
@@ -742,8 +744,16 @@ function closeSave() {
   S.f = null; S.save = null;
   $("#opened").hidden = true; $("#empty").hidden = false;
 }
+// A part of the game the server could not read from the tree: it is empty here, and the rest works.
+function showErrors() {
+  const all = {...S.data?.errors, ...S.save?.errors};
+  $("#databanner").hidden = !Object.keys(all).length;
+  $("#databanner").textContent = `Una parte del gioco non si legge dal codice, e qui resta vuota (il resto funziona): `
+    + Object.entries(all).map(([k, v]) => `${k} — ${v}`).join("; ");
+}
 function showSave(detail) {
   S.save = detail;
+  showErrors();
   $("#empty").hidden = true; $("#opened").hidden = false;
   const p = detail.profile, slot = S.lib?.slots.find(s => s.f === detail.f);
   $("#title").textContent = slot ? `${slot.label} (slot dell'emulatore)` : detail.f;
@@ -1827,6 +1837,17 @@ function renderPosition() {
         della matrice della mappa.</p>
       <div class="bar"><button type="submit" class="primary">Sposta</button></div>
     </form>`;
+  if (!w.cols) $(".townbox").hidden = true;      // the town map did not read: the list alone
+  else placeTown(pos, w);
+  mapCombo($("#mapin"));
+  $("#posform").onsubmit = ev => {
+    ev.preventDefault();
+    const f = ev.target.elements;
+    if (S.pos.map === null) return toast("Scegli la mappa dall'elenco o sulla minimappa", true);
+    edit("position", {map: S.pos.map, x: +f.x.value, y: +f.y.value, direction: +f.dir.value}, "Posizione scritta");
+  };
+}
+function placeTown(pos, w) {
   if (!S.townImg || S.townImg.dataset.tree !== String(S.data.tree)) {
     S.townImg = Object.assign(new Image(), {src: `/api/townmap.png?t=${S.data.tree}`});
     S.townImg.dataset.tree = String(S.data.tree);
@@ -1848,13 +1869,6 @@ function renderPosition() {
     if (S.pos.touch && k !== S.pos.hover) { S.pos.hover = k; drawTown(); townLabel(); return; }
     const id = mapAtTile(k);
     if (id !== undefined) pickMap(id);
-  };
-  mapCombo($("#mapin"));
-  $("#posform").onsubmit = ev => {
-    ev.preventDefault();
-    const f = ev.target.elements;
-    if (S.pos.map === null) return toast("Scegli la mappa dall'elenco o sulla minimappa", true);
-    edit("position", {map: S.pos.map, x: +f.x.value, y: +f.y.value, direction: +f.dir.value}, "Posizione scritta");
   };
 }
 // The map field: a search over every map, grouped by section, a row a map with its kind -- as a move field is.

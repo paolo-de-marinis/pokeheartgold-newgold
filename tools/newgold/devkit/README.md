@@ -297,7 +297,11 @@ each item's most, the party, box, level, IV and EV limits -- comes in
 the tree's constants (`BADGE_ZEPHYR`, `POCKET_TMHMS`, `STAT_SPATK`,
 `TYPE_FAIRY`, `START_MENU_ICON_BAG`, `GEARCARD_RADIO`, a story flag,
 `MAP_TYPE_CAVE`, `MAP_REGION_KANTO`...), and
-shows a constant it has no name for as itself. When the tree changes under a
+shows a constant it has no name for as itself. A part the server cannot
+read from the tree -- the town map, the story, the machines, the start
+menu's entries, the level cap, the field moves -- comes empty with the
+reason (`errors`), which the page shows in a banner, and the rest still
+loads. When the tree changes under a
 running server, the page, which polls it, asks for the data again and
 reopens the save it shows, icons included; no reload. The emulator slots are
 the ROMs `config.mk` and the Makefile say make builds.

@@ -823,6 +823,9 @@ class SaveditLibraryTests(unittest.TestCase):
         sv.write_flag(save, sv.constants("include/constants/flags.h", "FLAG_")["FLAG_HIDE_BURNED_TOWER_1F_RIVAL"], True)
         self.assertEqual(sv.level_cap(save), 36)
         self.assertEqual(sv.field_move_badges()["BADGE_PLAIN"], ["MOVE_STRENGTH"])
+        # The moves are named after FieldMove_Check* functions: each must be a field move the party menu offers.
+        self.assertLessEqual({m for ms in sv.field_move_badges().values() for m in ms},
+                             set(re.findall(r"MOVE_\w+", sv.c_table("src/party_menu.c", "sFieldMoves"))))
 
     def test_the_story_is_read_from_the_scripts(self):
         """Every badge's gym is a chain of steps with its GiveBadge in it;

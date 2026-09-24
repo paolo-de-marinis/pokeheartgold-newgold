@@ -674,6 +674,26 @@ class SaveUiTests(unittest.TestCase):
         out = self.edit("position", {"map": centre, "x": 8, "y": 13, "direction": 0})
         self.assertEqual(out["position"]["tile"], [15, 8 + 2], "the Pokégear's mark: Violet City's tile")
 
+    def test_a_part_that_does_not_read_leaves_the_rest(self):
+        """A reader of the tree that fails -- the town map's art exported
+        another way, a function renamed -- empties its part of /api/data
+        and says why; the page and a save still load."""
+        def broken():
+            raise ValueError("the town map's PNG is not 8-bit indexed, uninterlaced")
+        kept = sv.town_map, sv.level_cap
+        sv.town_map, sv.level_cap = broken, lambda save: broken()
+        try:
+            data = self.ok("/api/data")
+            self.assertEqual((data["world"]["cols"], data["world"]["tiles"]), (0, {}))
+            self.assertIn("8-bit indexed", data["errors"]["world"])
+            self.assertTrue(data["story"] and data["machines"], "the other parts are there")
+            out = self.ok("/api/save?f=gyms/test.sav")
+            self.assertIn("given", out["errors"])
+            self.assertEqual(out["party"][0]["species_name"], "Chikorita")
+        finally:
+            sv.town_map, sv.level_cap = kept
+        self.assertEqual(self.ok("/api/data")["errors"], {})
+
     def test_the_story_and_what_the_player_was_given(self):
         """The story's steps and the gyms come in /api/data, the save's
         state of them in /api/save; op "story" runs steps as the game does
