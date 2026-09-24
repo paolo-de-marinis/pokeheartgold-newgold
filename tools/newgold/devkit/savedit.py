@@ -3462,16 +3462,20 @@ def _gives(write, need):
 def _net(writes):
     """What a walk's writes leave, one each, in the order first written:
     a flag's or a variable's last value, the AddVars and the items added
-    up, the cards together; conditional as the last of them."""
-    out = {}
+    up, the cards together; conditional as the last of them. A flag the
+    walk sets and then clears held only for the scene -- as
+    FLAG_ENGAGING_STATIC_POKEMON does around a battle -- and leaves nothing:
+    taking the step back must not set it."""
+    out, first = {}, {}
     for kind, name, value, conditional in writes:
+        first.setdefault((kind, name), value)
         before = out.get((kind, name))
         if before and kind in ("add", "item"):
             value, conditional = value + before[2], conditional or before[3]
         elif before and kind == "card":
             value |= before[2]
         out[kind, name] = [kind, name, value, conditional]
-    return list(out.values())
+    return [w for key, w in out.items() if not (key[0] == "flag" and first[key] == 1 and w[2] == 0)]
 
 
 @tree_cache

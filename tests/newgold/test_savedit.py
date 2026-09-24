@@ -891,6 +891,13 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertTrue(sv.flag_is_set(save, flags["FLAG_HIDE_ROUTE_36_SUDOWOODO"]))
         self.assertFalse(sv.flag_is_set(save, flags["FLAG_ENGAGING_STATIC_POKEMON"]))
         self.assertIn(sudowoodo["id"], sv.story_state(save)["done"])
+        # FLAG_ENGAGING_STATIC_POKEMON is set and cleared around the battle:
+        # the step leaves it as it was, and taking it back does not set it --
+        # Route 36's OnLoad would hide the tree for good.
+        self.assertNotIn("FLAG_ENGAGING_STATIC_POKEMON", [w[1] for w in sudowoodo["writes"]])
+        sv.undo_step(save, sudowoodo["id"])
+        self.assertFalse(sv.flag_is_set(save, flags["FLAG_ENGAGING_STATIC_POKEMON"]))
+        self.assertFalse(sv.flag_is_set(save, flags["FLAG_HIDE_ROUTE_36_SUDOWOODO"]))
 
     def test_the_machines_as_the_bag_keeps_them(self):
         """Every machine, in SortTMHMPocket's order, with its move, the
