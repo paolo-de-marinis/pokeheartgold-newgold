@@ -9,7 +9,9 @@
 // and if it does moves the two Pokemon over, so from then on the user's
 // battler is its new place. Both places are drawn again: a substitute goes
 // first, the new Pokemon appears as a form change has it, then its own
-// substitute, and one in the air or underground keeps out of sight.
+// substitute, and one in the air or underground keeps out of sight, as does
+// a Tatsugiri in its Dondozo's mouth (Pokemon Showdown swaps the pair as it
+// swaps any other; Pokemon Central says nothing of it).
 _000:
     SetMoveConditionFlag MOVE_ALLY_SWITCH, BATTLER_CATEGORY_ATTACKER
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0, _FAILED
@@ -48,9 +50,14 @@ _REDRAW:
     HealthbarSlideIn BATTLER_CATEGORY_ATTACKER
     HealthbarSlideIn BATTLER_CATEGORY_ATTACKER_PARTNER
     Wait
-    // The user was not in the air; its ally may be, and is out of sight in
-    // its new place and no longer in its old one.
+    // The user was not in the air; its ally may be, or be the Tatsugiri in
+    // the user's mouth (Commander), and is out of sight in its new place and
+    // no longer in its old one. A place keeps its sprite, and so whether it
+    // is hidden, whoever is drawn on it.
+    CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_ATTACKER_PARTNER, BMON_DATA_COMMANDER, 0, _ALLY_OUT_OF_SIGHT
     CompareMonDataToValue OPCODE_FLAG_NOT, BATTLER_CATEGORY_ATTACKER_PARTNER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_SEMI_INVULNERABLE, _USER_DOLL
+
+_ALLY_OUT_OF_SIGHT:
     ToggleVanish BATTLER_CATEGORY_ATTACKER, FALSE
     ToggleVanish BATTLER_CATEGORY_ATTACKER_PARTNER, TRUE
     Wait

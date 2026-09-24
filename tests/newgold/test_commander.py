@@ -247,6 +247,19 @@ class CommanderTests(unittest.TestCase):
         for name in ("effect_script_0220.s", "effect_script_0270.s", "subscript_0159_HealingWish.s", "subscript_0261_LunarDance.s"):
             self.assertNotIn("BMON_DATA_COMMANDER", script(name), name)
 
+    def test_ally_switch_keeps_the_tatsugiri_out_of_sight(self):
+        # The pair's state goes with them (Battlers_SwapPlaces carries
+        # moveConditions), while a place keeps its sprite and whether it is
+        # hidden: the Dondozo is shown and the Tatsugiri hidden again, as for
+        # an ally in the air.
+        self.assertIn("PER_BATTLER(moveConditions),", COMMANDS)
+        text = code(script("effect_script_0443.s"))
+        ask = "CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_ATTACKER_PARTNER, BMON_DATA_COMMANDER, 0, _ALLY_OUT_OF_SIGHT"
+        self.assertLess(text.index("ChangeForm BATTLER_CATEGORY_ATTACKER_PARTNER"), text.index(ask))
+        hide = text[text.index("_ALLY_OUT_OF_SIGHT:"):text.index("_USER_DOLL:")]
+        self.assertIn("ToggleVanish BATTLER_CATEGORY_ATTACKER, FALSE", hide)
+        self.assertIn("ToggleVanish BATTLER_CATEGORY_ATTACKER_PARTNER, TRUE", hide)
+
     def test_the_dondozo_fainting_lets_the_tatsugiri_out(self):
         work = function(OVERLAY, "InitFaintedWork")
         release = work.index("if (ctx->moveConditions[battlerId].commanderForm) {")
