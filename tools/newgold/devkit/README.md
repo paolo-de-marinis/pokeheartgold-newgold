@@ -180,7 +180,7 @@ to take it into the library first. A slot's own "Gioca" starts melonDS on
 it as it is.
 
 On the right, the open save, in tabs: Allenatore (name, ids, money, gender,
-the sixteen badges, coins, play time), Squadra and Box (every Pokemon, a
+coins, play time, and the story), Squadra and Box (every Pokemon, a
 slot editor for species, level, nature, ability, held item, moves, IVs, EVs
 and friendship; adding, removing, reordering, moving between box and
 party), Borsa, Pokedex (per
@@ -191,6 +191,19 @@ table). The name can only be written in letters and digits: that is all
 species list leaves out what a Pokemon cannot be (the egg, the retail form
 rows 496-507, the forms only a battle has); a position must be a tile of
 the map, not the black around it.
+
+The story in Allenatore: the start menu's entries and the running shoes,
+the Pokédex and the Pokégear (a card ticked brings the ones before it, as
+the game adds them in order), the level cap, the sixteen badges each with
+its gym's steps beside it, and every other step by place, with a search.
+Ticking a step runs it as the game does and offers the steps before it
+(in its gym, or the ones giving what it tests), unticking takes it back and
+offers the ones after it; nothing is forced, so a save can stand between
+two steps -- Whitney beaten, the badge not given. A badge ticked on its own
+asks: as the game (its step, with what the script writes with it) or the
+bit alone. Each step shows what it writes and what the game tests before
+it, met or not, and the step giving it: the Sudowoodo wants the SquirtBottle,
+which the Flower Shop gives only with the Plain Badge.
 
 In the Pokemon dialog a move is picked only from the species'
 `learnable_moves`, each shown with all its sources as tags (Lv. 36, MT 035,
@@ -220,11 +233,11 @@ stats, the natures' raised and lowered stat, the directions, the genders,
 each item's most, the party, box, level, IV and EV limits -- comes in
 `/api/data` from the tree; the page keeps only the Italian names, keyed by
 the tree's constants (`BADGE_ZEPHYR`, `POCKET_TMHMS`, `STAT_SPATK`,
-`TYPE_FAIRY`...), and shows a constant it has no name for as itself. When
-the tree changes under a running server, the page, which polls it, asks for
-the data again and reopens the save it shows, icons included; no reload.
-The emulator slots are the ROMs `config.mk` and the Makefile say make
-builds.
+`TYPE_FAIRY`, `START_MENU_ICON_BAG`, `GEARCARD_RADIO`, a story flag...), and
+shows a constant it has no name for as itself. When the tree changes under a
+running server, the page, which polls it, asks for the data again and
+reopens the save it shows, icons included; no reload. The emulator slots are
+the ROMs `config.mk` and the Makefile say make builds.
 
 Nothing is deleted. Before every write the file is copied to
 `LIBRARY/.backups/<its path>/<timestamp>.sav` -- an emulator slot to

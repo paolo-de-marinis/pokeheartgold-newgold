@@ -190,6 +190,21 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
   .pc button { height: 52px; }
 }
 .wide { display: block; width: 100%; text-align: left; margin: 2px 0; }
+.sws { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px 16px; }
+.sw, .plan { display: flex; gap: 8px; align-items: flex-start; }
+.sw input, .plan input, .step input { flex: none; margin-top: 3px; }
+.plan { margin: 4px 0; }
+.badgelist { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px 16px; }
+.badge { border-top: 1px solid var(--border); padding-top: 8px; min-width: 0; }
+.chain { margin: 4px 0 0 24px; display: flex; flex-direction: column; gap: 4px; }
+details .chain { margin-left: 8px; }
+.step label { display: flex; gap: 8px; align-items: flex-start; }
+.step.done strong { color: var(--ok); }
+.why { font-size: 12px; color: var(--muted); margin-left: 24px; overflow-wrap: anywhere; }
+.why .ok { color: var(--ok); }
+.why .no { color: var(--danger); }
+details { border-top: 1px solid var(--border); padding: 6px 0; }
+details summary { cursor: pointer; }
 .browse { max-height: 50vh; }
 #libpath { cursor: pointer; }
 </style>
@@ -292,7 +307,8 @@ const typeBadges = types => (types || []).map(t => { const [name, colour] = TYPE
 const typeNames = types => (types || []).map(t => (TYPES[t] || [t])[0]).join("/");
 
 const S = {data: null, lib: null, f: null, save: null, tab: "trainer", box: 0, pocket: null,
-           dex: {changes: new Map(), q: "", show: "all"}, melon: false, busy: 0};
+           dex: {changes: new Map(), q: "", show: "all"},
+           storyq: "", storyshow: "all", storyopen: new Set(), melon: false, busy: 0};
 const store = {
   get(k) { try { return localStorage.getItem("saveui." + k); } catch { return null; } },
   set(k, v) { try { localStorage.setItem("saveui." + k, v); } catch {} },
@@ -357,6 +373,9 @@ function buildLists() {
   S.moves = new Map(d.moves.map(r => [r.id, r]));
   S.items = new Map(d.items.map(r => [r.id, r]));
   S.maps = new Map(d.maps.map(r => [r.id, r]));
+  S.steps = new Map(d.story.map(s => [s.id, s]));
+  S.itemByConst = new Map(d.items.map(r => [r.const, r]));
+  S.speciesByConst = new Map(d.species.map(r => [r.const, r]));
   S.speciesIndex = firstWins(d.species.filter(r => r.pick), r => r.label);
   S.moveIndex = new Map(d.moves.filter(r => r.id).map(r => [r.name.toLowerCase(), r.id]));
   const items = d.items.filter(usableItem), named = new Set();
@@ -762,10 +781,236 @@ $("#tabs").addEventListener("click", ev => {
 });
 
 // ---- Allenatore ----------------------------------------------------------
+// What exists -- the start menu's entries, the Pokégear's cards, the story's
+// steps, what each writes and what the game tests before it, the gyms --
+// comes from the server, read from the scripts and the C. These are only
+// the Italian words for it, by the tree's constants; a step with none is
+// named by a rule over its constant (flagLabel), or shown as the constant.
+const MENU_NAMES = {
+  START_MENU_ICON_POKEDEX: ["Pokédex", "la voce POKéDEX nel menu, e il Pokédex acceso", "dex"],
+  START_MENU_ICON_POKEGEAR: ["Pokégear", "la voce POKéGEAR nel menu", "dex"],
+  START_MENU_ICON_POKEMON: ["Pokémon", "la voce POKéMON nel menu: arriva con il primo Pokémon"],
+  START_MENU_ICON_BAG: ["Borsa", "la voce BORSA nel menu"],
+  START_MENU_ICON_TRAINER_CARD: ["Scheda Allenatore", "la voce con il nome del giocatore nel menu"],
+  START_MENU_ICON_SAVE: ["Salva", "la voce SALVA nel menu"],
+  START_MENU_ICON_OPTIONS: ["Opzioni", "la voce OPZIONI nel menu"],
+  START_MENU_ICON_RUNNING_SHOES: ["Scarpe da corsa", "si corre tenendo premuto B"]};
+const CARD_NAMES = {GEARCARD_MAP: "Scheda Mappa", GEARCARD_RADIO: "Scheda Radio"};
+const STORY_NAMES = {
+  FLAG_GOT_STARTER: "Primo Pokémon ricevuto dal Prof. Elm",
+  FLAG_GOT_BAG: "Borsa, Scheda Allenatore, Salva e Opzioni (dalla mamma)",
+  FLAG_GOT_POKEGEAR: "Pokégear ricevuto dalla mamma",
+  FLAG_UNK_0B7: "Fermato dalla ragazza della palestra: ora Whitney consegna la medaglia",
+  FLAG_UNK_0B4: "Sudowoodo annaffiato con lo Spruzzino (e il resto della scena)",
+  FLAG_GOT_EXPN_CARD: "Scheda Espansione della radio",
+  FLAG_RESTORED_POWER: "Corrente tornata (Centrale Elettrica)",
+  FLAG_UNLOCKED_WEST_KANTO: "Kanto ovest aperta",
+  FLAG_BOAT_ARRIVED: "M/N Acqua arrivata",
+  FLAG_HIDE_BURNED_TOWER_1F_RIVAL: "Torre Bruciata: il rivale se ne va",
+  FLAG_UNK_076: "Torre Sprout completata",
+  FLAG_BEAT_AZALEA_ROCKETS: "Team Rocket cacciato dal Pozzo Slowpoke"};
+// The first word of a flag's name, in Italian; the rest is the game's name
+// when it names an item or a species, otherwise the words themselves.
+const FLAG_WORDS = {GOT: "Ricevuto", BEAT: "Sconfitti", DEFEATED: "Battuto", CAUGHT: "Catturato", TRADE: "Scambio",
+  UNLOCKED: "Sbloccato", MET: "Incontrato", FOUND: "Trovato", SAW: "Visto", SHOWED: "Mostrato", TALKED: "Parlato",
+  OPENED: "Aperto", EXCHANGED: "Scambiato", RETURNED: "Restituito", WON: "Vinto", GAVE: "Dato", FAILED: "Fallito",
+  RESTORED: "Riattivato", HIDE: "Nascosto"};
+const WORDS_IT = {FROM: "da", TO: "a", AND: "e", THE: "", IN: "in"};
+function flagLabel(name) {
+  if (STORY_NAMES[name]) return STORY_NAMES[name];
+  const words = name.replace(/^(FLAG|VAR)_/, "").split("_");
+  if (words[0] === "UNK" || words[0] === "SCENE") return name;
+  const lead = FLAG_WORDS[words[0]] ? [FLAG_WORDS[words.shift()]] : [];
+  for (let n = words.length; n > 0; n--) {
+    const item = S.itemByConst.get("ITEM_" + words.slice(0, n).join("_")), mon = S.speciesByConst.get(words.slice(0, n).join("_"));
+    if (item || mon) {
+      const rest = words.slice(n).map(w => WORDS_IT[w] ?? w[0] + w.slice(1).toLowerCase()).filter(Boolean).join(" ");
+      return [...lead, machineName(item ? item.name : mon.name) + (rest ? ` (${rest})` : "")].join(": ");
+    }
+  }
+  return [...lead, words.map(w => WORDS_IT[w] ?? w[0] + w.slice(1).toLowerCase()).filter(Boolean).join(" ")].join(": ");
+}
+const machineName = name => name.replace(/^(TM|HM|TR)(?=\d)/, p => MACHINE_PREFIX[p] + " ");
+const itemNameOf = c => machineName(S.itemByConst.get(c)?.name ?? c);
+function stepLabel(id) {
+  const s = S.steps.get(id);
+  if (!s) return id;
+  if (STORY_NAMES[s.key]) return STORY_NAMES[s.key];
+  switch (s.kind) {
+    case "badge": return s.battle ? `Vittoria su ${s.trainer} e Medaglia ${badgeName(s.key)}` : `Medaglia ${badgeName(s.key)} consegnata`;
+    case "battle": return `Vittoria su ${s.trainer || s.key}`;
+    case "item": return `Ricevuto: ${itemNameOf(s.key)}`;
+    case "gate": return `Apre la palestra di ${s.opens || "?"}`;
+    case "GiveRunningShoes": return "Scarpe da corsa ricevute";
+    case "GivePokedex": return "Pokédex ricevuto";
+    case "RegisterPokegearCard": {
+      const card = S.data.pokegear.cards.find(c => String(c.value) === s.key);
+      return `${card ? CARD_NAMES[card.const] ?? card.const : "Scheda " + s.key} del Pokégear`;
+    }
+    case "ScrCmd_804": return `Mappa del Pokégear: livello ${s.key}`;
+    case "NatDexFlagAction": return "Pokédex Nazionale";
+    default: return flagLabel(s.key);
+  }
+}
+// What a step writes, short; every write in its title.
+function writeText(w) {
+  const [kind, name, value] = w;
+  switch (kind) {
+    case "flag": return value ? name : `${name} spento`;
+    case "var": return `${name} = ${value}`;
+    case "add": return `${name} ${value < 0 ? "−" : "+"} ${Math.abs(value)}`;
+    case "trainer": return `${name} battuto`;
+    case "badge": return `Medaglia ${badgeName(name)}`;
+    case "item": return `${itemNameOf(name)}${value > 1 ? ` ×${value}` : ""}`;
+    case "shoes": return "scarpe da corsa";
+    case "dex": return "Pokédex acceso";
+    case "card": return `scheda ${value} del Pokégear`;
+    case "map": return `mappa del Pokégear al livello ${value}`;
+    case "natdex": return "Pokédex Nazionale";
+  }
+  return `${kind} ${name} ${value}`;
+}
+function writesLine(s) {
+  const trainers = s.writes.filter(w => w[0] === "trainer" && w[2]).length;
+  const shown = s.writes.filter(w => !(w[0] === "trainer" && w[2])).map(w => (w[3] ? "se il gioco ci arriva: " : "") + writeText(w));
+  if (trainers) shown.unshift(`${trainers} ${trainers === 1 ? "allenatore" : "allenatori"} dati per battuti`);
+  return shown;
+}
+function needText(need) {
+  const [subject, test, value] = need, [kind, name] = subject;
+  if (kind === "badge") return `Medaglia ${badgeName(name)}`;
+  if (kind === "item") return `${itemNameOf(name)} nella Borsa`;
+  if (kind === "trainer") return `${name} battuto`;
+  if (kind === "flag") return STORY_NAMES[name] ? `${STORY_NAMES[name]} (${name})` : name;
+  return `${name} ${{eq: "=", ge: "≥", gt: ">"}[test] ?? test} ${value}`;
+}
+// What the game tests before a step, each with whether the save has it -- for
+// a step not done yet: once done, what it tested may have moved on since.
+function needsLine(s, done) {
+  return s.needs.map(([need, by]) => {
+    const met = S.save.story.met[JSON.stringify(need)];
+    const from = by.length ? ` — lo dà: ${stepLabel(by[0])}${S.steps.get(by[0])?.section ? ` (${S.steps.get(by[0]).section})` : ""}` : "";
+    return done ? `<span>${esc(needText(need))}</span><span class="muted">${esc(from)}</span>`
+      : `<span class="${met ? "ok" : "no"}">${met ? "✓" : "✗"} ${esc(needText(need))}</span><span class="muted">${esc(from)}</span>`;
+  });
+}
+function stepRow(id, extra = "") {
+  const s = S.steps.get(id), done = S.save.story.done.includes(id), writes = writesLine(s), needs = needsLine(s, done);
+  return `<div class="step ${done ? "done" : ""}"><label><input type="checkbox" data-step="${id}" ${done ? "checked" : ""}>
+      <span><strong>${esc(stepLabel(id))}</strong>${extra}</span></label>
+    <div class="why" title="${esc(`scr_seq_${s.script.slice(8)}.s, riga ${s.line}: ${writes.join(", ")}`)}">${esc(s.section || "script comuni")} · scrive: ${esc(writes.slice(0, 5).join(", "))}${writes.length > 5 ? ` e altre ${writes.length - 5}` : ""}</div>
+    ${needs.length ? `<div class="why">Il gioco controlla prima: ${needs.join(" · ")}</div>` : ""}</div>`;
+}
+// The steps to run before one, as the game would have: in a gym, those before
+// it in the gym's order; elsewhere, what gives what it tests, and so on back.
+function earlierSteps(id) {
+  const s = S.steps.get(id), done = new Set(S.save.story.done);
+  if (s.badge) { const chain = S.data.chains[s.badge]; return chain.slice(0, chain.indexOf(id)).filter(x => !done.has(x)); }
+  const out = [], seen = new Set([id]);
+  const visit = sid => {
+    for (const [need, by] of S.steps.get(sid).needs) {
+      const p = by[0];
+      if (S.save.story.met[JSON.stringify(need)] || !p || seen.has(p) || done.has(p)) continue;
+      seen.add(p); visit(p); out.push(p);
+    }
+  };
+  visit(id);
+  return out;
+}
+// The steps done after one that it made possible: in a gym, the ones after it.
+function laterSteps(id) {
+  const s = S.steps.get(id), done = new Set(S.save.story.done);
+  if (s.badge) { const chain = S.data.chains[s.badge]; return chain.slice(chain.indexOf(id) + 1).filter(x => done.has(x)); }
+  const out = [], seen = new Set([id]);
+  const visit = sid => {
+    for (const t of S.data.story) if (!seen.has(t.id) && done.has(t.id) && t.needs.some(([, by]) => by[0] === sid)) { seen.add(t.id); out.push(t.id); visit(t.id); }
+  };
+  visit(id);
+  return out;
+}
+const planList = (ids, name) => ids.map(x => `<label class="plan"><input type="checkbox" name="${name}${x}" checked>
+  <span>${esc(stepLabel(x))} <span class="muted">${esc(S.steps.get(x).section)}</span></span></label>`).join("");
+function storyToast(out) {
+  const left = Object.values(out?.report?.left || {}).flat();
+  if (left.length) toast(`Variabili lasciate come sono (il valore di prima non si sa): ${left.map(([n, v]) => `${n} = ${v}`).join(", ")}. `
+    + `Rimettile a mano in Flag e variabili, o usa Annulla ultima modifica.`, true);
+}
+// Ticking a step runs it as the game does -- offering the ones before it --
+// and unticking takes it back, offering the ones after it; never forced.
+async function tickStep(id, on) {
+  const others = on ? earlierSteps(id) : laterSteps(id);
+  let chosen = [];
+  if (others.length) {
+    const r = await ask(stepLabel(id), on
+      ? `<p>Nel gioco prima vengono questi passi, che il salvataggio non ha ancora. Li faccio anche io, nell'ordine? Togli la spunta a quelli che non vuoi.</p>${planList(others, "p")}`
+      : `<p>Questi passi, già fatti, vengono dopo e dipendono da questo. Li tolgo anche? Togli la spunta a quelli da lasciare.</p>${planList(others, "p")}`,
+      [["go", on ? "Spunta" : "Togli", "primary"], ["", "Annulla"]]);
+    if (r.value !== "go") return renderTabs();
+    chosen = others.filter(x => r.data["p" + x]);
+  }
+  const out = await edit("story", on ? {run: [...chosen, id]} : {undo: [...chosen.reverse(), id]},
+                         on ? "Fatto come nel gioco (backup fatto)" : "Passo tolto (backup fatto)");
+  if (!out) return renderTabs();
+  storyToast(out);
+}
+async function tickBadge(b, on) {
+  const p = S.save.profile, chain = S.data.chains[b.const] || [], done = new Set(S.save.story.done);
+  const step = chain.map(x => S.steps.get(x)).find(s => s.kind === "badge" && s.key === b.const);
+  const bits = on ? p[b.field] | 1 << b.bit : p[b.field] & ~(1 << b.bit);
+  const others = !step ? [] : on ? chain.slice(0, chain.indexOf(step.id)).filter(x => !done.has(x))
+                                : chain.slice(chain.indexOf(step.id) + 1).filter(x => done.has(x));
+  const game = step && (on || done.has(step.id));
+  const r = await ask(`Medaglia ${badgeName(b.const)}`, `
+    ${game ? `<label class="plan"><input type="radio" name="how" value="game" checked><span><strong>${on ? "Come nel gioco" : "Come se non l'avessi mai presa"}</strong>:
+      ${on ? "fa" : "annulla"} il passo "${esc(stepLabel(step.id))}" (scrive: ${esc(writesLine(step).join(", "))})</span></label>
+      ${others.length ? `<div style="margin-left:26px"><p class="note">${on ? "E prima, come nel gioco:" : "E i passi dopo, già fatti:"}</p>${planList(others, "p")}</div>` : ""}` : ""}
+    <label class="plan"><input type="radio" name="how" value="bit" ${game ? "" : "checked"}><span><strong>Solo la medaglia</strong>: il bit nel profilo e basta;
+      allenatori, variabili e il resto della storia restano come sono.</span></label>`,
+    [["go", on ? "Dai la medaglia" : "Togli la medaglia", "primary"], ["", "Annulla"]]);
+  if (r.value !== "go") return renderTabs();
+  if (r.form.elements.how.value !== "game")
+    return (await edit("trainer", {[b.field]: bits, retag: false}, on ? "Medaglia data" : "Medaglia tolta")) || renderTabs();
+  const chosen = others.filter(x => r.data["p" + x]);
+  const out = await edit("story", on ? {run: [...chosen, step.id]} : {undo: [...chosen.reverse(), step.id]},
+                         on ? "Medaglia data come nel gioco" : "Medaglia tolta come nel gioco");
+  if (!out) return renderTabs();
+  storyToast(out);
+}
 function renderTrainer() {
-  const p = S.save.profile;
-  const lim = S.data.limits;
-  const badge = field => S.data.badges.filter(b => b.field === field).map(b => `<label><input type="checkbox" name="${field}${b.bit}" ${(p[field] >> b.bit) & 1 ? "checked" : ""}> ${esc(badgeName(b.const))}</label>`).join("");
+  const p = S.save.profile, lim = S.data.limits, given = S.save.given, done = new Set(S.save.story.done);
+  const inChain = new Set(Object.values(S.data.chains).flat());
+  const menu = S.data.menu.map(e => {
+    const [label, what, group] = MENU_NAMES[e.icon] ?? [e.icon, ""];
+    return {e, group, html: `<label class="sw"><input type="checkbox" data-menu="${e.icon}" ${given.menu[e.icon] ? "checked" : ""}>
+      <span><strong>${esc(label)}</strong> <span class="muted">${esc(what)}${e.name ? ` (${esc(e.name)})` : " (hasRunningShoes)"}</span></span></label>`};
+  });
+  const cards = S.data.pokegear.cards.map(c => `<label class="sw"><input type="checkbox" data-card="${c.value}" ${(given.pokegear.cards & c.value) === c.value ? "checked" : ""}>
+      <span><strong>${esc(CARD_NAMES[c.const] ?? c.const)}</strong> <span class="muted">${esc(c.const)}</span></span></label>`).join("");
+  const mapStep = n => S.data.story.find(s => s.kind === "ScrCmd_804" && +s.key === n);
+  const levels = range(S.data.pokegear.map_levels).map(n => `<option value="${n}" ${given.pokegear.map_level === n ? "selected" : ""}>${n}${mapStep(n) ? ` — come a ${esc(mapStep(n).section)}` : n ? "" : " — solo Johto"}</option>`).join("");
+  const capOf = c => S.data.level_cap.milestones.find(m => m.badge === c)?.cap;
+  const reason = S.data.level_cap.milestones.find(m => m.cap === given.level_cap);
+  const usedBy = c => S.data.story.filter(s => !inChain.has(s.id) && s.needs.some(([n]) => n[0][0] === "badge" && n[0][1] === c));
+  const badge = b => {
+    const chain = S.data.chains[b.const] || [], moves = (S.data.field_moves[b.const] || []).map(m => S.moves.get(m)?.name ?? m);
+    const has = (p[b.field] >> b.bit) & 1, uses = usedBy(b.const);
+    return `<div class="badge"><label class="sw"><input type="checkbox" data-badge="${b.const}" ${has ? "checked" : ""}>
+        <span><strong>Medaglia ${esc(badgeName(b.const))}</strong>
+        <span class="muted">${moves.length ? `in campo: ${esc(moves.join(", "))}` : ""}${capOf(b.const) ? `${moves.length ? " · " : ""}livello massimo ${capOf(b.const)}` : ""}</span></span></label>
+      ${chain.length ? `<div class="chain">${chain.map(x => stepRow(x)).join("")}</div>` : ""}
+      ${uses.length ? `<p class="note">Il gioco la controlla anche per: ${uses.map(s => `${esc(stepLabel(s.id))} <span class="muted">(${esc(s.section)})</span>`).join(" · ")}</p>` : ""}</div>`;
+  };
+  const q = (S.storyq || "").toLowerCase(), show = S.storyshow || "all";
+  const places = new Map();
+  for (const s of S.data.story) {
+    if (inChain.has(s.id)) continue;
+    const text = `${stepLabel(s.id)} ${s.key} ${s.section}`.toLowerCase();
+    if (q && !text.includes(q)) continue;
+    if (show !== "all" && done.has(s.id) !== (show === "done")) continue;
+    if (!places.has(s.section)) places.set(s.section, []);
+    places.get(s.section).push(s.id);
+  }
+  const sections = [...places].sort((a, b) => (a[0] || "~").localeCompare(b[0] || "~"));
   $("#tab").innerHTML = `<form id="trainer">
     <div class="form">
       <label class="f">Nome<input name="name" value="${esc(p.name)}" maxlength="${lim.name}"></label>
@@ -781,21 +1026,65 @@ function renderTrainer() {
     </div>
     <p class="note">Il nome si scrive con i caratteri del gioco, ma savedit sa scrivere solo lettere (A–Z, a–z) e cifre, al massimo ${lim.name}.
       Un nome letto con altri caratteri si vede qui com'è, ma per cambiarlo servono solo lettere e cifre.</p>
-    <div class="box"><h3>Medaglie di Johto</h3><div class="badges">${badge("johto")}</div></div>
-    <div class="box"><h3>Medaglie di Kanto</h3><div class="badges">${badge("kanto")}</div></div>
     <label style="display:flex;gap:8px;align-items:flex-start;margin-top:14px"><input type="checkbox" name="retag" checked>
       <span>Se cambiano nome, ID o genere, aggiorna anche l'allenatore originale dei Pokémon che erano del giocatore.
       <span class="muted">Altrimenti il gioco li considera scambiati, e oltre il livello concesso dalle medaglie non obbediscono. Un Pokémon cromatico può smettere di esserlo se cambia l'ID.</span></span></label>
     <div class="bar"><button class="primary" type="submit">Salva allenatore</button></div>
-  </form>`;
+  </form>
+  <div id="story">
+    <div class="zonehead"><h3>Storia</h3><span class="muted">Ogni spunta si salva subito, con backup. Livello massimo dei Pokémon ora: <strong>${given.level_cap}</strong>${reason ? ` (${esc(reason.badge ? "Medaglia " + badgeName(reason.badge) : needText([["flag", reason.flag], "eq", 1]))})` : ""}</span></div>
+    <div class="box"><h3>Oggetti e strumenti di gioco</h3><div class="sws">${menu.filter(m => m.group !== "dex").map(m => m.html).join("")}</div>
+      <p class="note">Solo l'interruttore che il gioco legge (il flag della voce del menu, o hasRunningShoes): per farlo come nel gioco, con chi te lo dà, spunta il suo passo in Momenti della storia.</p></div>
+    <div class="box"><h3>Pokédex e Pokégear</h3><div class="sws">${menu.filter(m => m.group === "dex").map(m => m.html).join("")}
+        <label class="sw"><input type="checkbox" id="natdex" ${S.save.dex.national ? "checked" : ""}><span><strong>Pokédex Nazionale</strong> <span class="muted">nel Pokédex e nel profilo, come NatDexFlagAction</span></span></label>
+        ${cards}
+        <label class="sw"><span><strong>Mappa del Pokégear</strong> <select id="maplevel" aria-label="Livello della mappa">${levels}</select>
+          <span class="muted">mapUnlockLevel: ogni livello aggiunge una parte di Kanto</span></span></label></div>
+      <p class="note">Le schede il gioco le aggiunge in ordine (prima la Mappa, poi la Radio) e il Pokégear conta su questo: spuntarne una spunta anche quelle prima, toglierla toglie quelle dopo.</p></div>
+    <div class="box"><h3>Medaglie e capipalestra</h3>
+      <p class="note">Accanto a ogni medaglia i passi della sua palestra, nell'ordine in cui li fa lo script: spuntane uno e lo fa come nel gioco (con le
+        variabili e i flag che il gioco scrive con lui), offrendo quelli prima; toglierlo li riporta indietro, offrendo quelli dopo. Così un salvataggio
+        può stare tra un passo e l'altro, per esempio Whitney battuta ma senza medaglia. "Il gioco controlla prima" è letto dallo script: ✓ se il salvataggio c'è già.</p>
+      <h3 style="margin-top:12px">Johto</h3><div class="badgelist">${S.data.badges.filter(b => b.field === "johto").map(badge).join("")}</div>
+      <h3 style="margin-top:12px">Kanto</h3><div class="badgelist">${S.data.badges.filter(b => b.field === "kanto").map(badge).join("")}</div></div>
+    <div class="box"><h3>Momenti della storia</h3>
+      <div class="bar" style="margin-top:0">
+        <input type="search" id="storyq" placeholder="Cerca: luogo, Sudowoodo, FLAG_UNK_0B7…" value="${esc(S.storyq || "")}" style="flex:1;min-width:200px" aria-label="Cerca nella storia">
+        <select id="storyshow" aria-label="Mostra">${[["all", "Tutti"], ["done", "Fatti"], ["todo", "Da fare"]].map(([k, l]) => `<option value="${k}" ${show === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+      </div>
+      <p class="note">Ogni passo è uno script del gioco, dal punto in cui scrive il salvataggio fino alla fine: spuntarlo lo esegue sul salvataggio come il gioco
+        (le scelte che dipendono dal salvataggio le decide il salvataggio), toglierlo lo riporta indietro. Le variabili che un passo imposta restano: il valore di prima non si sa.
+        Per tutto il resto c'è la scheda Flag e variabili.</p>
+      ${sections.map(([sec, ids]) => `<details data-sec="${esc(sec)}" ${q || S.storyopen.has(sec) ? "open" : ""}><summary><strong>${esc(sec || "Script comuni")}</strong> <span class="muted">${ids.filter(x => done.has(x)).length} di ${ids.length} fatti</span></summary>
+        <div class="chain">${ids.map(x => stepRow(x)).join("")}</div></details>`).join("") || `<p class="muted">Nessun passo.</p>`}
+    </div>
+  </div>`;
   $("#trainer").addEventListener("submit", ev => {
     ev.preventDefault();
-    // A bit the page shows no badge for is kept as it was.
-    const f = ev.target.elements, sum = g => range(8).reduce((a, i) => f[g + i] ? (f[g + i].checked ? a | 1 << i : a) : a | (p[g] & 1 << i), 0);
+    const f = ev.target.elements;
     edit("trainer", {name: f.name.value, gender: +f.gender.value, id: +f.id.value, sid: +f.sid.value, money: +f.money.value,
-                     coins: +f.coins.value, play_time: [+f.h.value, +f.m.value, +f.s.value], johto: sum("johto"), kanto: sum("kanto"),
-                     retag: f.retag.checked});
+                     coins: +f.coins.value, play_time: [+f.h.value, +f.m.value, +f.s.value], retag: f.retag.checked});
   });
+  const story = $("#story");
+  story.onchange = ev => {
+    const el = ev.target, d = el.dataset;
+    if (d.step) return tickStep(d.step, el.checked);
+    if (d.badge) return tickBadge(S.data.badges.find(b => b.const === d.badge), el.checked);
+    if (d.menu) return edit("menu", {icon: d.menu, on: el.checked}, "Salvato (backup fatto)");
+    if (el.id === "natdex") return edit("dex_switches", {national: el.checked});
+    if (el.id === "maplevel") return edit("pokegear", {map_level: +el.value}, "Mappa del Pokégear salvata");
+    if (d.card) {
+      // The cards come in order: one ticked brings those before it, one taken away those after it.
+      const all = S.data.pokegear.cards.map(c => c.value), v = +d.card, i = all.indexOf(v);
+      const cards = el.checked ? all.slice(0, i + 1).reduce((a, c) => a | c, given.pokegear.cards)
+                               : all.slice(i).reduce((a, c) => a & ~c, given.pokegear.cards);
+      return edit("pokegear", {cards}, "Schede del Pokégear salvate");
+    }
+  };
+  $("#storyq").oninput = ev => { S.storyq = ev.target.value; const pos = ev.target.selectionStart; renderTrainer(); const el = $("#storyq"); el.focus(); el.setSelectionRange(pos, pos); };
+  $("#storyshow").onchange = ev => { S.storyshow = ev.target.value; renderTrainer(); };
+  // A place opened stays open when the tab is drawn again after a tick.
+  $$("details[data-sec]", story).forEach(d => d.ontoggle = () => { S.storyopen[d.open ? "add" : "delete"](d.dataset.sec); });
 }
 
 // ---- Squadra -------------------------------------------------------------

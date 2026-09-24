@@ -460,6 +460,15 @@ class SaveUiTests(unittest.TestCase):
                              ("PLAYER_GENDER_NAMES", {g["const"] for g in data["player_genders"]})):
             keys = set(re.findall(r"(\w+):", re.search(rf"const {table} = \{{(.*?)\}};", page, re.S).group(1)))
             self.assertLessEqual(keys, known, table)
+        # The story's words, whose values are sentences: a key starts the table or follows a comma.
+        flags = set(sv.constants("include/constants/flags.h", "FLAG_"))
+        for table, known in (("MENU_NAMES", {m["icon"] for m in data["menu"]}),
+                             ("CARD_NAMES", {c["const"] for c in data["pokegear"]["cards"]}),
+                             ("STORY_NAMES", flags | {s["key"] for s in data["story"]})):
+            text = re.search(rf"const {table} = \{{(.*?)\}};", page, re.S).group(1)
+            keys = set(re.findall(r"(?:^|[{,]\s*)(\w+):", text))
+            self.assertTrue(keys, table)
+            self.assertLessEqual(keys, known, table)
 
     def test_only_what_the_species_can_have(self):
         """A move the species never learns, or an ability slot it lacks, is
