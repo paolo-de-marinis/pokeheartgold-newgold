@@ -5971,7 +5971,12 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                     ctx->unk_34 = card ? maxBattlers : (2 * maxBattlers | SWITCH_ITEM_USED);
                     // With the button, the Eject Packs give up what the move
-                    // lowered; what an entry lowers from here on is theirs.
+                    // lowered: of the two only the button acts, whichever
+                    // holder is faster (Pokemon Central, Pulsantefuga, where
+                    // Zainofuga has the faster holder's act; Showdown's gen-9
+                    // Eject Pack refuses while the button's switch is
+                    // pending and forgets the drop). What an entry lowers
+                    // from here on is theirs.
                     if (!card) {
                         ctx->statLoweredBattlers = 0;
                     }

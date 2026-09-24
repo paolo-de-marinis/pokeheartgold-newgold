@@ -1093,6 +1093,11 @@ class EjectPackTests(unittest.TestCase):
         self.assertIn("ctx->statLoweredBattlers = 0;", end[ask:end.index("ov12_0224E130(battleSystem, ctx)")])
         move = function(CONTROLLER.read_text(), "ov12_0224E1BC")
         # The button, the Parting Shot and the Pack each spend the move's drops.
+        # Of a button and a Pack on one move only the button acts, whichever
+        # holder is faster (Pokemon Central, Pulsantefuga; Showdown's gen-9
+        # Eject Pack refuses while a switch is pending).
+        button = move[move.index("case 5:"):move.index("case 6:")]
+        self.assertIn("if (!card) {\n                        ctx->statLoweredBattlers = 0;", button)
         self.assertEqual(move.count("ctx->statLoweredBattlers = 0;"), 3)
 
     def test_the_pack_has_its_own_line(self):
