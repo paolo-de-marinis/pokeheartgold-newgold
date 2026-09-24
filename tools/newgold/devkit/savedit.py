@@ -26,11 +26,13 @@ or variable -- for saveui.py, which puts a page in front of all of it.
 
 import argparse
 import binascii
+import collections
 import csv
 import functools
 import html
 import itertools
 import json
+import operator
 import random
 import re
 import struct
@@ -1199,6 +1201,15 @@ def bank(which):
 
 
 @tree_cache
+def trainer_names():
+    """Each trainer's name by its number, as BufferTrainerName prints it:
+    the bank the build makes from trainers.json's "name" (trname.json.txt),
+    its {...} control codes left out."""
+    return [re.sub(r"\{[^}]*\}", "", t["name"])
+            for t in json.loads(source("files/poketool/trainer/trainers.json").read_text())["trainers"]]
+
+
+@tree_cache
 def charmap():
     """charmap.txt both ways. A character the table gives twice is written
     with its Western code, the one the English game's own text uses."""
@@ -1323,6 +1334,15 @@ def map_table():
         out.setdefault(number, {"id": number, "const": const,
                                 "name": names[section] if section is not None and section < len(names) else ""})
     return dict(sorted(out.items()))
+
+
+@tree_cache
+def map_headers():
+    """src/data/map_headers.h: each map's header by its MAP_ constant, as
+    {field: the value's text}."""
+    text = source("src/data/map_headers.h").read_text()
+    return {const: dict(re.findall(r"\.(\w+) = ([^,\n]+),", body))
+            for const, body in re.findall(r"\[(MAP_\w+)\] = \{(.*?)\}", text, re.S)}
 
 
 MATRICES = ROOT / "files/fielddata/mapmatrix/map_matrix"
@@ -2603,6 +2623,711 @@ def find_flags(save, query):
         if query in name and 0 < number < num_flags() and not name.startswith("FLAG_ACTION_"):
             out.append({"kind": "flag", "name": name, "number": number, "value": int(flag_is_set(save, number))})
     return out
+
+
+# ---------------------------------------------------------------------------
+# The story, as the event scripts (files/fielddata/script/scr_seq) write it
+# into the save. A step is a stretch of a script that starts at a marker --
+# a badge given, a scripted battle, the running shoes, the Pokédex, a
+# Pokégear card or map, the National Dex, an item given after the bag is
+# checked for room -- and runs straight on, through GoTo and Call, to End or
+# the next marker; a SetFlag of a flags.h "Story flags" flag, an item given
+# unchecked and a variable a gate tests start one only where no other step
+# runs. What it writes, what the game tests on the way to it, and which
+# steps write what those tests want, are all read out of the scripts.
+
+SCRIPTS = "files/fielddata/script/scr_seq"
+_TESTS = {"eq": operator.eq, "ne": operator.ne, "lt": operator.lt, "gt": operator.gt, "le": operator.le,
+          "ge": operator.ge}
+_NOT = {"eq": "ne", "ne": "eq", "lt": "ge", "ge": "lt", "gt": "le", "le": "gt"}
+_ENDS = ("End", "ScrDefEnd", "WhiteOut")
+
+
+@tree_cache
+def flag_sections():
+    """The section of flags.h each flag is defined in: its own headings, a
+    '// ...' line with a blank line after it."""
+    lines, out, heading = source("include/constants/flags.h").read_text().splitlines(), {}, None
+    for i, line in enumerate(lines):
+        if re.fullmatch(r"// .+", line) and i + 1 < len(lines) and not lines[i + 1].strip():
+            heading = line[3:]
+        m = re.match(r"#define (FLAG_\w+)\s+(?:0x[0-9A-Fa-f]+|\d+)\b", line)
+        if m:
+            out[m.group(1)] = heading
+    return out
+
+
+@tree_cache
+def _script_names():
+    """The names the scripts use for numbers, and which of those the save
+    keeps: the variables past the temporary ones, the flags past the map's."""
+    out = {}
+    for header, prefix in (("flags.h", "FLAG_"), ("vars.h", "VAR_"), ("badge.h", "BADGE_"), ("items.h", "ITEM_"),
+                           ("trainers.h", "TRAINER_"), ("species.h", "SPECIES_"), ("battle.h", "BATTLE_OUTCOME_"),
+                           ("global_fieldmap.h", "DIR_"), ("pokegear_card.h", "GEARCARD_")):
+        out.update(constants(f"include/constants/{header}", prefix))
+    temp = constants("include/constants/vars.h", "NUM_")["NUM_TEMP_VARS"]
+    maptemp = constants("include/constants/flags.h", "")
+    return out, (VAR_BASE + temp, VAR_BASE + NUM_VARS), \
+        (maptemp["MAPTEMP_FLAG_BASE"] + maptemp["NUM_MAPTEMP_FLAGS"], num_flags()), maptemp["TRAINER_FLAG_BASE"]
+
+
+def _number(token):
+    """A number a script writes: a literal or a constant's name -- not a
+    variable, whose value is the save's."""
+    try:
+        return int(token, 0)
+    except ValueError:
+        return None if token.startswith("VAR_") else _script_names()[0].get(token)
+
+
+def _kept(name):
+    """A variable or flag the save keeps across maps, by its name."""
+    names, variables, flags, _ = _script_names()
+    number = names.get(name)
+    if number is None:
+        return False
+    low, high = variables if name.startswith("VAR_") else flags
+    return low <= number < high
+
+
+@tree_cache
+def _script(stem):
+    """A script file as (command, arguments) a line (a label is an empty
+    line of its own), its labels' lines and its entries (ScrDef)."""
+    lines, labels, entries = [], {}, []
+    for raw in source(f"{SCRIPTS}/{stem}.s").read_text(errors="replace").splitlines():
+        line = raw.split(";")[0].strip()
+        if re.fullmatch(r"\w+:", line):
+            labels[line[:-1]] = len(lines)
+            lines.append(("", ()))
+            continue
+        op, _, rest = line.partition(" ")
+        lines.append((op, tuple(a.strip() for a in rest.split(",")) if rest.strip() else ()))
+        if op == "ScrDef":
+            entries.append(lines[-1][1][0])
+    return {"lines": lines, "labels": labels, "entries": entries}
+
+
+@tree_cache
+def _script_stems():
+    return sorted(p.stem for p in source(SCRIPTS).iterdir() if p.suffix == ".s" and not p.stem.endswith("_hdr"))
+
+
+def _primary(op, args):
+    """The marker a line is, as (kind, key), when it starts a step wherever it is."""
+    if op == "GiveBadge":
+        return "badge", args[0]
+    if op == "TrainerBattle" and args[0].startswith("TRAINER_"):
+        return "battle", args[0]
+    if op in ("GiveRunningShoes", "GivePokedex"):
+        return op, ""
+    if op in ("RegisterPokegearCard", "ScrCmd_804"):
+        return op, args[0]
+    if op == "NatDexFlagAction" and args[:1] == ("1",):
+        return op, ""
+    if op == "GoToIfNoItemSpace" and args[0].startswith("ITEM_"):
+        return "item", args[0]
+    return None
+
+
+def _secondary(op, args, gates):
+    """The marker a line is when no other step's walk passes it."""
+    if op == "SetFlag" and flag_sections().get(args[0]) == "Story flags":
+        return "flag", args[0]
+    if op == "GiveItemNoCheck" and args[0].startswith("ITEM_"):
+        return "item", args[0]
+    if op == "SetVar" and args[0] in gates and _number(args[1]) != gates[args[0]]:
+        return "gate", args[0]
+    return None
+
+
+def _write(op, args):
+    """What a line writes into the save, as (kind, name, value)."""
+    if op in ("SetFlag", "ClearFlag") and _kept(args[0]):
+        return "flag", args[0], int(op == "SetFlag")
+    if op in ("SetVar", "AddVar", "SubVar") and _kept(args[0]) and _number(args[1]) is not None:
+        value = _number(args[1])
+        return ("var", args[0], value) if op == "SetVar" else ("add", args[0], value if op == "AddVar" else -value)
+    if op in ("SetTrainerFlag", "ClearTrainerFlag") and args[0].startswith("TRAINER_") and args[0] in _script_names()[0]:
+        return "trainer", args[0], int(op == "SetTrainerFlag")
+    if op == "GiveBadge":
+        return "badge", args[0], 1
+    if op == "GiveRunningShoes":
+        return "shoes", "", 1
+    if op == "GivePokedex":
+        return "dex", "", 1
+    if op == "RegisterPokegearCard" and _number(args[0]):
+        return "card", "", _number(args[0])
+    if op == "ScrCmd_804":
+        return "map", "", _number(args[0])
+    if op == "NatDexFlagAction" and args[:1] == ("1",):
+        return "natdex", "", 1
+    if op in ("GoToIfNoItemSpace", "GiveItemNoCheck") and args[0].startswith("ITEM_"):
+        return "item", args[0], _number(args[1]) or 1     # a count in a variable: one, at least
+    return None
+
+
+def _subject(name, subjects):
+    """What a variable a Compare reads stands for: what the script put in a
+    temporary one (a badge, an item, a battle won), or a kept variable."""
+    if name in subjects:
+        return subjects[name]
+    return ("var", name) if _kept(name) else None
+
+
+def _track(op, args, subjects):
+    """What a line puts in a temporary variable a later Compare reads."""
+    if op == "CheckBadge" and args[0].startswith("BADGE_"):
+        subjects[args[1]] = ("badge", args[0])
+    elif op == "HasItem" and args[0].startswith("ITEM_"):
+        subjects[args[2]] = ("item", args[0], _number(args[1]) or 1)
+    elif op == "CheckBattleWon":
+        subjects[args[0]] = ("won",)
+    elif op == "Switch":
+        subjects["VAR_SPECIAL_x8008"] = _subject(args[0], subjects)
+    elif op == "CopyVar":
+        subjects[args[0]] = _subject(args[1], subjects)
+    elif args and args[-1].startswith("VAR_") and not _kept(args[-1]):
+        subjects[args[-1]] = None
+
+
+def _branch(op, args, subjects, compared):
+    """A conditional jump or call: (its label, (subject, test, value), is a
+    call). The condition is None when it does not depend on the save -- the
+    player's facing, a menu choice, a battle lost, the bag full -- and the
+    walk goes on as if not taken."""
+    kind = op[6:] if op[:6] in ("GoToIf", "CallIf") else "Case" if op == "Case" else None
+    if kind is None or kind in ("", "NoItemSpace", "NoItemSpace2"):
+        return None
+    if kind == "Case":
+        condition = (_subject("VAR_SPECIAL_x8008", subjects), "eq", _number(args[0]))
+    elif kind in ("Set", "Unset"):
+        condition = (("flag", args[0]) if _kept(args[0]) else None, "eq", int(kind == "Set"))
+    elif kind in ("Defeated", "NotDefeated"):
+        condition = (("trainer", args[0]), "eq", int(kind == "Defeated"))
+    elif kind.lower() in _TESTS:
+        condition = (compared[0], kind.lower(), compared[1])
+    else:
+        return None
+    if condition[0] is None or condition[0] == ("won",) or condition[2] is None:
+        condition = None
+    return args[-1], condition, op.startswith("CallIf")
+
+
+def _items(save):
+    """How many of each item the bag holds, by item number."""
+    have = collections.Counter()
+    for pocket in bag(save).values():
+        for slot in pocket:
+            have[slot["item"]] += slot["quantity"]
+    return have
+
+
+def _state(save, subject, items=None):
+    """A subject's value in the save, as the game's check returns it
+    (`items`: _items(save), when it is asked many times)."""
+    kind, name = subject[0], subject[1]
+    names = _script_names()[0]
+    if kind == "flag":
+        return int(flag_is_set(save, names[name]))
+    if kind == "var":
+        return var_value(save, names[name])
+    if kind == "badge":
+        return int(_has_badge(save, name))
+    if kind == "item":
+        return int((items if items is not None else _items(save))[names[name]] >= subject[2])
+    if kind == "trainer":
+        return int(flag_is_set(save, _script_names()[3] + names[name]))
+    return 0
+
+
+def _has_badge(save, const):
+    b = next(b for b in badges() if b["const"] == const)
+    return bool(save.block("SAVE_PLAYERDATA")[JOHTO_BADGES if b["field"] == "johto" else KANTO_BADGES] >> b["bit"] & 1)
+
+
+def _walk(stem, start, save=None, through=()):
+    """A step's straight line from `start`: fall-through, GoTo and Call, to
+    End, a Return with no Call to go back to, or a primary marker (but those
+    in `through`). Without a save, a jump that depends on it is not taken
+    and each write it could skip is marked conditional. With a save, each
+    jump is decided on it and each write made on it as the walk passes it,
+    as the game runs the script. Returns the writes as (kind, name, value,
+    conditional), the lines passed and the marker line it stopped at."""
+    script = _script(stem)
+    lines, labels = script["lines"], script["labels"]
+    writes, passed, pending, stack, subjects, compared = [], set(), set(), [], {}, (None, None)
+    i, stop = start, None
+    while 0 <= i < len(lines) and (i, tuple(stack)) not in passed and len(passed) < 4000:
+        passed.add((i, tuple(stack)))
+        pending.discard(i)
+        op, args = lines[i]
+        if i != start and i not in through and _primary(op, args):
+            stop = i
+            break
+        if op in _ENDS or (op == "Return" and not stack):
+            break
+        if op == "Return":
+            i = stack.pop()
+            continue
+        if op in ("GoTo", "Call"):
+            if op == "Call":
+                stack.append(i + 1)
+            i = labels[args[0]]
+            continue
+        if op == "Compare":
+            compared = (_subject(args[0], subjects), _number(args[1]))
+        branch = _branch(op, args, subjects, compared)
+        if branch and branch[1] and branch[0] in labels:
+            label, (subject, test, value), call = branch
+            if save is None:
+                pending.add(labels[label])
+            elif _TESTS[test](_state(save, subject), value):
+                if call:
+                    stack.append(i + 1)
+                i = labels[label]
+                continue
+        _track(op, args, subjects)
+        write = _write(op, args)
+        if write:
+            writes.append((*write, bool(pending)))
+            if save is not None:
+                _apply(save, write)
+        i += 1
+    return writes, {i for i, _ in passed}, stop
+
+
+def _apply(save, write, undo=False):
+    """One write, as the script command does it -- or taken back."""
+    kind, name, value = write
+    names = _script_names()[0]
+    if kind == "flag":
+        write_flag(save, names[name], bool(value) != undo)
+    elif kind == "var":
+        write_var(save, names[name], value)
+    elif kind == "add":
+        write_var(save, names[name], (var_value(save, names[name]) + (-value if undo else value)) & 0xFFFF)
+    elif kind == "trainer":
+        write_flag(save, _script_names()[3] + names[name], bool(value) != undo)
+    elif kind == "badge":
+        b = next(b for b in badges() if b["const"] == name)
+        block, at = save.block("SAVE_PLAYERDATA"), JOHTO_BADGES if b["field"] == "johto" else KANTO_BADGES
+        block[at] = block[at] & ~(1 << b["bit"]) if undo else block[at] | 1 << b["bit"]
+    elif kind == "shoes":
+        set_running_shoes(save, not undo)
+    elif kind == "dex":
+        save.block("SAVE_POKEDEX")[DEX_ENABLED] = int(not undo)
+    elif kind == "card":
+        cards = pokegear(save)["cards"]
+        set_pokegear(save, cards=cards & ~value if undo else cards | value)
+    elif kind == "map":
+        set_pokegear(save, map_level=max(0, value - 1) if undo else value)
+    elif kind == "natdex":
+        set_dex_switches(save, national=not undo)
+    elif kind == "item":
+        have = sum(i["quantity"] for p in bag(save).values() for i in p if i["item"] == names[name])
+        wanted = max(0, have - value) if undo else min(have + value, item_limit(names[name]))
+        if wanted != have:
+            set_item(save, names[name], wanted)
+
+
+def _holds(save, write, items=None):
+    """Whether the save has what a write left."""
+    kind, name, value = write
+    names = _script_names()[0]
+    if kind in ("flag", "trainer", "badge"):
+        return _state(save, (kind, name)) == value
+    if kind == "item":
+        return (items if items is not None else _items(save))[names[name]] > 0
+    if kind == "var":
+        return var_value(save, names[name]) >= value
+    if kind == "shoes":
+        return running_shoes(save)
+    if kind == "dex":
+        return bool(save.block("SAVE_POKEDEX")[DEX_ENABLED])
+    if kind == "card":
+        return pokegear(save)["cards"] & value == value
+    if kind == "map":
+        return pokegear(save)["map_level"] >= value
+    if kind == "natdex":
+        return bool(save.block("SAVE_POKEDEX")[DEX_NATIONAL])
+    return False
+
+
+@tree_cache
+def _map_of_scripts():
+    """The maps each script file is the scripts of (their headers'
+    scriptsBank), by the file's name."""
+    out = {}
+    for const, header in map_headers().items():
+        bank = re.fullmatch(r"NARC_scr_seq_(scr_seq_\w+)_bin", header.get("scriptsBank", ""))
+        if bank:
+            out.setdefault(bank.group(1), []).append(const)
+    return out
+
+
+def _bank_file(header, field, prefix, folder, suffix):
+    found = re.fullmatch(rf"NARC_{prefix}(\w+)_bin", header.get(field, ""))
+    return f"{folder}/{found.group(1)}{suffix}" if found else None
+
+
+@tree_cache
+def _entry_conditions(stem):
+    """The conditions under which the game runs an entry of a script file
+    by itself: a trigger tile of the zone's events (while its variable holds
+    its value), or the map's frame table (InitScriptGoToIfEqual in its _hdr
+    script). {entry label: [(subject, "eq", value)]}."""
+    out = {}
+    for const in _map_of_scripts().get(stem, []):
+        header = map_headers()[const]
+        events = _bank_file(header, "eventsBank", "zone_event_", "files/fielddata/eventdata/zone_event", ".json")
+        if events and (ROOT / events).exists():
+            for coord in json.loads(source(events).read_text()).get("coords", []):
+                label = re.fullmatch(r"_EV_(\w+) \+ 1", str(coord.get("scriptId", "")))
+                value = _number(str(coord.get("val")))
+                if label and _kept(str(coord.get("var", ""))) and value is not None:
+                    out.setdefault(label.group(1), []).append((("var", coord["var"]), "eq", value))
+        hdr = _bank_file(header, "scriptHeaderBank", "scr_seq_", SCRIPTS, ".s")
+        if hdr and (ROOT / hdr).exists():
+            for var, value, label in re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), _EV_(\w+) \+ 1",
+                                                source(hdr).read_text()):
+                if _kept(var) and _number(value) is not None:
+                    out.setdefault(label, []).append((("var", var), "eq", _number(value)))
+    return out
+
+
+@tree_cache
+def _gates():
+    """The variables that keep the player out of a gym (a map whose scripts
+    give a badge): its frame table runs a script that warps away while the
+    variable holds a value -- Morty's, until the Burned Tower. {variable:
+    that value}, and the lines of those scripts."""
+    gates, lines = {}, set()
+    for stem in _script_stems():
+        script = _script(stem)
+        for label, conditions in _entry_conditions(stem).items():
+            at = script["labels"].get(label)
+            if at is None:
+                continue
+            passed, i = set(), at
+            while 0 <= i < len(script["lines"]) and i not in passed and script["lines"][i][0] not in _ENDS:
+                passed.add(i)
+                op, args = script["lines"][i]
+                i = script["labels"][args[0]] if op == "GoTo" else i + 1
+            gym = any(op == "GiveBadge" for op, _ in script["lines"])
+            if gym and any(script["lines"][j][0] == "Warp" for j in passed):
+                for (subject, _, value) in conditions:
+                    gates[subject[1]] = value
+                lines |= {(stem, j) for j in passed}
+    return gates, frozenset(lines)
+
+
+def _negate(condition):
+    """A condition not met: a flag, badge, item or trainer the other way
+    round, a variable's test turned over."""
+    subject, test, value = condition
+    if subject[0] != "var" and test == "eq":
+        return subject, "eq", int(not value)
+    return subject, _NOT[test], value
+
+
+def _requirements(stem):
+    """For each line of a script file the game can reach, what it tested on
+    the way from an entry (the first way found, the shortest): positive
+    conditions only -- a flag set, a badge or an item had, a trainer beaten,
+    a variable at or past a value -- as the negative ones say only that the
+    step is not done yet."""
+    script = _script(stem)
+    lines, labels = script["lines"], script["labels"]
+    entry = _entry_conditions(stem)
+    found, queue = {}, []
+    for label in script["entries"]:
+        if label in labels and labels[label] not in found:
+            conditions = tuple(entry.get(label, ()))
+            found[labels[label]] = conditions
+            queue.append((labels[label], conditions, {}, (None, None)))
+    queue = collections.deque(queue)
+    while queue:
+        i, conditions, subjects, compared = queue.popleft()
+        op, args = lines[i]
+        nexts = []
+        if op in _ENDS or op == "Return":
+            pass
+        elif op == "GoTo":
+            nexts.append((labels.get(args[0]), conditions))
+        elif op == "Call":
+            nexts += [(labels.get(args[0]), conditions), (i + 1, conditions)]
+        else:
+            subjects = dict(subjects)
+            if op == "Compare":
+                compared = (_subject(args[0], subjects), _number(args[1]))
+            branch = _branch(op, args, subjects, compared)
+            after = conditions
+            if branch and branch[0] in labels:
+                label, condition, call = branch
+                nexts.append((labels[label], conditions + ((condition,) if condition else ())))
+                if condition and not call:      # a call comes back: the line after it is reached either way
+                    after = conditions + (_negate(condition),)
+            _track(op, args, subjects)
+            nexts.append((i + 1, after))
+        for j, c in nexts:
+            if j is not None and j < len(lines) and j not in found:
+                found[j] = c
+                queue.append((j, c, subjects, compared))
+    keep = lambda s, test, value: (s[0] == "var" and test in ("eq", "ge", "gt") and value > 0) or \
+        (s[0] != "var" and test == "eq" and value)
+    return {i: [c for c in dict.fromkeys(conditions) if keep(*c)] for i, conditions in found.items()}
+
+
+def _need_met(save, need, items=None):
+    subject, test, value = need
+    return _TESTS[test](_state(save, subject, items), value)
+
+
+def _gives(write, need):
+    """Whether a step's write leaves what a test wants."""
+    (subject, test, value), (kind, name, written) = need, write
+    if subject[0] == "item":
+        return kind == "item" and name == subject[1]
+    if subject[0] == "badge":
+        return kind == "badge" and name == subject[1]
+    if subject[0] in ("flag", "trainer"):
+        return kind == subject[0] and name == subject[1] and written == value
+    return kind == "var" and name == subject[1] and _TESTS[test](written, value)
+
+
+def _net(writes):
+    """What a walk's writes leave, one each, in the order first written:
+    a flag's or a variable's last value, the AddVars and the items added
+    up, the cards together; conditional as the last of them."""
+    out = {}
+    for kind, name, value, conditional in writes:
+        before = out.get((kind, name))
+        if before and kind in ("add", "item"):
+            value, conditional = value + before[2], conditional or before[3]
+        elif before and kind == "card":
+            value |= before[2]
+        out[kind, name] = [kind, name, value, conditional]
+    return list(out.values())
+
+
+@tree_cache
+def story():
+    """Every step of the story. A step: "id" (the script's number and the
+    line), "script", "line", "kind" and "key" (its marker), "battle" and
+    "trainer" (the scripted battle whose win runs into it, and the name
+    BufferTrainerName prints for it), "maps" and "section" (where), "opens"
+    (a gate's gym), "writes" [kind, name, value, conditional] as its straight
+    line makes them, "gives" those it always makes, "tests" those that say
+    it is done, "needs" [[subject, test, value], [ids of the steps that give
+    it]], and "badge" and "order" when it is part of a gym (badge_chains)."""
+    gates, gate_lines = _gates()
+    steps, covered = [], set()
+
+    def add(stem, line, kind, key, through=(), battle=None):
+        writes, passed, stop = _walk(stem, line, through=through)
+        writes = _net(writes)
+        if kind == "flag" and ["flag", key, 1, False] not in writes:
+            return stop     # its flag only held for the scene: the scene's next marker starts the step
+        covered.update((stem, j) for j in passed)
+        if not writes:
+            return stop
+        steps.append({"id": f"{stem[8:12]}:{line + 1}", "script": stem, "line": line + 1, "kind": kind, "key": key,
+                      "battle": battle, "writes": [list(w) for w in writes], "start": line, "through": list(through)})
+        return stop
+
+    for stem in _script_stems():
+        lines = _script(stem)["lines"]
+        merged = {}
+        for i, (op, args) in enumerate(lines):
+            marker = _primary(op, args)
+            if not marker or i in merged:
+                continue
+            if marker[0] == "battle":
+                _, passed, stop = _walk(stem, i)
+                if stop is not None and _primary(*lines[stop])[0] != "battle":
+                    merged[stop] = i     # the battle opens the step its win runs into
+                    continue
+            add(stem, i, *marker)
+        for stop, battle in merged.items():
+            add(stem, battle, *_primary(*lines[stop]), through=(stop,), battle=lines[battle][1][0])
+    for stem in _script_stems():
+        for i, (op, args) in enumerate(_script(stem)["lines"]):
+            marker = _secondary(op, args, gates)
+            if marker and (stem, i) not in covered and (stem, i) not in gate_lines:
+                add(stem, i, *marker)
+    # One step a set of writes in a script: the same scene written twice is one.
+    seen, unique = set(), []
+    for step in sorted(steps, key=lambda s: (s["script"], s["line"])):
+        net = (step["script"], tuple(sorted({(w[0], w[1]): tuple(w[:3]) for w in step["writes"]}.values())))
+        if net not in seen:
+            seen.add(net)
+            unique.append(step)
+    steps = unique
+    names_sec = bank(MAPSEC_NAMES)
+    sections = constants("include/constants/map_sections.h", "MAPSEC_")
+    requirements = {}
+    for step in steps:
+        if step["script"] not in requirements:
+            requirements[step["script"]] = _requirements(step["script"])
+        step["maps"] = _map_of_scripts().get(step["script"], [])
+        sec = map_headers()[step["maps"][0]].get("mapsec") if step["maps"] else None
+        step["section"] = names_sec[sections[sec]] if sec in sections and sections[sec] < len(names_sec) else ""
+        step["needs"] = [list(need) for need in requirements[step["script"]].get(step["start"], [])]
+    cleared = {args[0] for stem in _script_stems() for op, args in _script(stem)["lines"] if op == "ClearFlag" and args}
+    for step in steps:
+        step["gives"] = [tuple(w[:3]) for w in step["writes"] if not w[3]]
+        # Done: every write it leaves for good holds -- its own flag, and
+        # any badge, trainer, shoes, Dex, card, map or flag no script
+        # clears; else its flags; else its variables, at or past the value.
+        own = [w for w in step["gives"] if step["kind"] == "flag" and w[:2] == ("flag", step["key"])]
+        lasting = [w for w in step["gives"] if w[0] in ("badge", "trainer", "shoes", "dex", "card", "map", "natdex")
+                   or (w[0] == "flag" and w[2] and w[1] not in cleared)]
+        step["tests"] = list(dict.fromkeys(own + lasting)) or [w for w in step["gives"] if w[0] == "flag"] or \
+            [w for w in step["gives"] if w[0] == "var"] or [w for w in step["gives"] if w[0] == "item"]
+        # A need its own writes meet is the step already under way.
+        step["needs"] = [need for need in step["needs"] if not any(_gives(w, need) for w in step["gives"])]
+    tested = {need[0][1] for step in steps for need in step["needs"] if need[0][0] == "item"}
+    # An item given with nothing else to show for it is the bag's, unless
+    # a script tests for it (the SquirtBottle): prizes and berries are not.
+    steps = [s for s in steps if s["tests"] and (s["tests"][0][0] != "item" or s["tests"][0][1] in tested)]
+    trainers, names = constants("include/constants/trainers.h", "TRAINER_"), trainer_names()
+    for step in steps:
+        step["needs"] = [[need, [other["id"] for other in steps if other is not step
+                                 and any(_gives(w, need) for w in other["gives"])]] for need in step["needs"]]
+        trainer = step["battle"] or (step["key"] if step["kind"] == "battle" else None)
+        step["trainer"] = names[trainers[trainer]] if trainer in trainers and trainers[trainer] < len(names) else ""
+        if step["kind"] == "gate":
+            gated = [m for stem in _script_stems() for m in _map_of_scripts().get(stem, [])
+                     if any(c[0] == ("var", step["key"]) for cs in _entry_conditions(stem).values() for c in cs)]
+            sec = map_headers()[gated[0]].get("mapsec") if gated else None
+            step["opens"] = names_sec[sections[sec]] if sec in sections and sections[sec] < len(names_sec) else ""
+    by_id = {s["id"]: s for s in steps}
+    for badge, chain in _badge_chains(steps, by_id, gates).items():
+        for order, sid in enumerate(chain):
+            if not by_id[sid].get("badge"):
+                by_id[sid].update(badge=badge, order=order)
+    return steps
+
+
+def _badge_chains(steps, by_id, gates):
+    """The gym of each badge, as the steps of its GiveBadge step's chain:
+    the steps giving what it tests, and theirs, the first of each; the step
+    that opens a gate of those maps (the lowest value its variable is set to
+    past the one that keeps the player out); the scripted battles of those
+    scripts, and their steps that test what the chain gives (the machine
+    after the badge); and any step testing a story flag the chain leaves
+    for good (Clair's machine, once the Dragon's Den gave the badge). In
+    order: a step after the ones it needs, then gate, battle, the rest, the
+    badge."""
+    out = {}
+    for badge_step in (s for s in steps if s["kind"] == "badge"):
+        if badge_step["key"] in out:
+            continue
+        chain, todo = [badge_step["id"]], [badge_step]
+        while todo:
+            for need, by in todo.pop()["needs"]:
+                if by and by[0] not in chain:
+                    chain.append(by[0])
+                    todo.append(by_id[by[0]])
+        files = {by_id[sid]["script"] for sid in chain}
+        for var, blocked in gates.items():
+            gated = [m for stem in files for m in _map_of_scripts().get(stem, [])
+                     if any(c[0] == ("var", var) for cs in _entry_conditions(stem).values() for c in cs)]
+            openers = [s for s in steps if any(w[:2] == ("var", var) and w[2] != blocked for w in s["gives"])]
+            if gated and openers:
+                first = min(openers, key=lambda s: min(w[2] for w in s["gives"] if w[:2] == ("var", var)))
+                if first["id"] not in chain:
+                    chain.append(first["id"])
+        grew = True
+        while grew:
+            grew = False
+            lasting = {w for sid in chain for w in by_id[sid]["tests"] if w[0] == "flag" and w[2]
+                       and flag_sections().get(w[1]) == "Story flags"}
+            for s in steps:
+                near = s["script"] in files
+                if s["id"] not in chain and ((near and s["kind"] == "battle")
+                                             or (near and any(set(by) & set(chain) for _, by in s["needs"]))
+                                             or any(_gives(w, need) for need, _ in s["needs"] for w in lasting)):
+                    chain.append(s["id"])
+                    files.add(s["script"])
+                    grew = True
+        depth = {}
+
+        def deep(sid, seen=()):
+            if sid not in depth:
+                below = [deep(p, seen + (sid,)) for _, by in by_id[sid]["needs"] for p in by[:1]
+                         if p in chain and p not in seen]
+                depth[sid] = 1 + max(below, default=-1)
+            return depth[sid]
+        rank = {"gate": 0, "battle": 1, "badge": 3}
+        out[badge_step["key"]] = sorted(chain, key=lambda sid: (deep(sid), rank.get(by_id[sid]["kind"], 2),
+                                                                 by_id[sid]["script"], by_id[sid]["line"]))
+    return out
+
+
+def badge_chains():
+    """{badge: the ids of its gym's steps, in order} (story's "badge")."""
+    out = {}
+    for step in story():
+        if step.get("badge"):
+            out.setdefault(step["badge"], []).append(step)
+    return {badge: [s["id"] for s in sorted(chain, key=lambda s: s["order"])] for badge, chain in out.items()}
+
+
+def story_state(save):
+    """Which steps the save has done -- every write a step leaves for good
+    holds (its "tests") -- and, by the need as compact JSON, which of the
+    conditions the steps test it meets."""
+    done, met, items = [], {}, _items(save)
+    for step in story():
+        if all(_holds(save, tuple(t), items) for t in step["tests"]):
+            done.append(step["id"])
+        for need, _ in step["needs"]:
+            key = json.dumps(need, separators=(",", ":"))     # as the page's JSON.stringify writes it
+            if key not in met:
+                met[key] = _need_met(save, need, items)
+    return {"done": done, "met": met}
+
+
+def _step(step_id):
+    step = next((s for s in story() if s["id"] == step_id), None)
+    if step is None:
+        raise ValueError(f"there is no story step {step_id}")
+    return step
+
+
+def run_step(save, step_id):
+    """A step as the game runs it on this save: from its marker, each jump
+    decided on the save, each write made; the writes it made."""
+    step = _step(step_id)
+    writes, _, _ = _walk(step["script"], step["start"], save=save, through=tuple(step["through"]))
+    return [list(w[:3]) for w in writes]
+
+
+def undo_step(save, step_id):
+    """A step taken back: each write it always makes undone -- a flag, a
+    trainer, a badge, the shoes, the Dex, a card, the map's level, the items
+    it gave, an AddVar -- and a SetVar put back to what the step before it
+    in its gym sets it to (Whitney's VAR_UNK_410A back to 1). Any other
+    SetVar is left, as the value the game had before is not known: they are
+    returned, [name, value]."""
+    step = _step(step_id)
+    previous = {}
+    for other in sorted((s for s in story() if step.get("badge") and s.get("badge") == step["badge"]
+                         and s["order"] < step["order"]), key=lambda s: s["order"]):
+        previous.update({w[1]: w[2] for w in other["gives"] if w[0] == "var"})
+    left = []
+    for kind, name, value in reversed(step["gives"]):
+        if kind == "var":
+            if name in previous:
+                write_var(save, _script_names()[0][name], previous[name])
+            else:
+                left.append([name, value])
+        else:
+            _apply(save, (kind, name, value), undo=True)
+    return left
 
 
 def info(save):

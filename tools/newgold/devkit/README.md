@@ -84,6 +84,25 @@ as a declaration), the start menu's entries by the flag each case of
 (`SavePokegear`'s bitfields), and the level cap `GetLevelCap` makes of the
 badges and its milestones.
 
+The story is read out of the event scripts (`story()`). A step starts at a
+marker -- a `GiveBadge`, a scripted `TrainerBattle`, `GiveRunningShoes`,
+`GivePokedex`, `RegisterPokegearCard`, `ScrCmd_804`, `NatDexFlagAction 1`,
+an item given after `GoToIfNoItemSpace` -- or, where no other step passes, a
+`SetFlag` of one of flags.h's "Story flags", a `GiveItemNoCheck`, or a
+`SetVar` of a variable that keeps the player out of a gym (Morty's, until
+the Burned Tower); it runs straight on, through `GoTo` and `Call`, to `End`
+or the next marker, and a battle whose win runs into a marker opens that
+marker's step. Each step has what it writes, what the game tests on the way
+to it from the script's entry (a trigger tile's variable, the map's frame
+table, `CheckBadge`, `HasItem`, `GoToIfSet` and the rest: the positive
+ones), and the steps that give that. `badge_chains()` is each badge's gym in
+order -- Whitney beaten, the lass's trigger, the badge, TM45 -- from those
+links. `run_step` runs a step on a save as the game would, each jump decided
+on the save (Chuck's badge starts the Rocket takeover only as the third
+midgame badge), and `undo_step` takes one back: what it wrote undone, a
+`SetVar` put back to what the step before it in its gym sets, any other
+`SetVar` left and named, as its old value is not known.
+
 Nothing the game has is typed into it: all of it is read from the tree as
 the build would compile it, and read again once a file it came from has
 changed (`fresh()`, which saveui calls before every request; a reading is

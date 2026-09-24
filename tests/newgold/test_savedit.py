@@ -775,6 +775,64 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(sv.level_cap(save), 36)
         self.assertEqual(sv.field_move_badges()["BADGE_PLAIN"], ["MOVE_STRENGTH"])
 
+    def test_the_story_is_read_from_the_scripts(self):
+        """Every badge's gym is a chain of steps with its GiveBadge in it;
+        Whitney's is beaten, stopped by the lass, the badge, the TM, each
+        needing the one before; Morty's opens with the Burned Tower; the
+        Sudowoodo wants the SquirtBottle, which the Flower Shop gives only
+        with the Plain Badge."""
+        steps, chains = {s["id"]: s for s in sv.story()}, sv.badge_chains()
+        self.assertEqual(set(chains), {b["const"] for b in sv.badges()})
+        for badge, chain in chains.items():
+            self.assertIn(("badge", badge), {(steps[i]["kind"], steps[i]["key"]) for i in chain})
+        whitney = [steps[i] for i in chains["BADGE_PLAIN"]]
+        self.assertEqual([(s["kind"], s["key"]) for s in whitney],
+                         [("battle", "TRAINER_LEADER_WHITNEY"), ("flag", "FLAG_UNK_0B7"), ("badge", "BADGE_PLAIN"),
+                          ("item", "ITEM_TM45")])
+        self.assertEqual(whitney[1]["needs"], [[[("var", "VAR_UNK_410A"), "eq", 1], [whitney[0]["id"]]]],
+                         "the lass's trigger tile")
+        self.assertEqual(whitney[2]["needs"], [[[("flag", "FLAG_UNK_0B7"), "eq", 1], [whitney[1]["id"]]]])
+        morty = steps[chains["BADGE_FOG"][0]]
+        self.assertEqual((morty["kind"], morty["key"], morty["section"]), ("gate", "VAR_UNK_4079", "Burned Tower"))
+        bottle = [("item", "ITEM_SQUIRTBOTTLE", 1), "eq", 1]
+        sudowoodo = next(s for s in steps.values() if bottle in [need for need, _ in s["needs"]])
+        shop = steps[next(by for need, by in sudowoodo["needs"] if need == bottle)[0]]
+        self.assertEqual((shop["kind"], shop["key"]), ("item", "ITEM_SQUIRTBOTTLE"))
+        self.assertEqual(shop["needs"], [[[("badge", "BADGE_PLAIN"), "eq", 1], [whitney[2]["id"]]]])
+
+    def test_a_story_step_runs_as_the_game_runs_it(self):
+        """Whitney beaten with the badge not given yet; the badge, whose
+        undo puts her back to crying; the TM; Chuck's badge starting the
+        Rocket takeover only as the third midgame badge."""
+        save = self.open()
+        variables = sv.constants("include/constants/vars.h", "VAR_")
+        flags = sv.constants("include/constants/flags.h", "FLAG_")
+        beaten, lass, badge, tm = sv.badge_chains()["BADGE_PLAIN"]
+        sv.run_step(save, beaten)
+        self.assertEqual(sv.var_value(save, variables["VAR_UNK_410A"]), 1)
+        self.assertTrue(sv.flag_is_set(save, flags["FLAG_UNK_084"]))
+        self.assertEqual([s in sv.story_state(save)["done"] for s in (beaten, lass, badge, tm)], [True, False, False, False])
+        sv.run_step(save, lass)
+        self.assertIn(["badge", "BADGE_PLAIN", 1], sv.run_step(save, badge))
+        self.assertEqual((sv.var_value(save, variables["VAR_UNK_410A"]), sv.level_cap(save)), (2, 34))
+        self.assertFalse(sv.flag_is_set(save, flags["FLAG_UNK_084"]))
+        self.assertEqual(sv.undo_step(save, badge), [])
+        self.assertEqual(sv.var_value(save, variables["VAR_UNK_410A"]), 1, "back to what the step before set")
+        self.assertTrue(sv.flag_is_set(save, flags["FLAG_UNK_084"]))
+        self.assertEqual(sv.profile(save)["johto"], 0)
+        sv.run_step(save, tm)
+        tm45 = sv.constants("include/constants/items.h", "ITEM_")["ITEM_TM45"]
+        self.assertEqual([i["item"] for i in sv.bag(save)["TMsHMs"]], [tm45])
+        chuck = next(s for s in sv.badge_chains()["BADGE_STORM"] if sv._step(s)["kind"] == "badge")
+        takeover = variables["VAR_SCENE_ROCKET_TAKEOVER"]
+        sv.run_step(save, chuck)
+        self.assertEqual(sv.var_value(save, takeover), 0, "the first midgame badge")
+        sv.undo_step(save, chuck)
+        sv.write_var(save, variables["VAR_MIDGAME_BADGES"], 2)
+        sv.run_step(save, chuck)
+        self.assertEqual((sv.var_value(save, takeover), sv.var_value(save, variables["VAR_MIDGAME_BADGES"])), (1, 3))
+        self.assert_only(save, ["SAVE_FLAGS", "SAVE_PLAYERDATA", "SAVE_BAG"])
+
 
 class TheCodeSaveditKeeps(unittest.TestCase):
     """What savedit keeps as code rather than reads: the game has it only as
@@ -987,6 +1045,30 @@ class TheCodeSaveditKeeps(unittest.TestCase):
                                              decls=(sv.c_struct("src/save_local_field_data.c", "LocalFieldData"),))
         self.assertEqual(at, player, "hasRunningShoes is PlayerSaveData's first field")
         self.assertGreater(player, 4 * location, "after the five Locations")
+
+    def test_a_story_step_does_what_the_script_commands_do(self):
+        """_walk and _apply are the commands they stand in for: a trainer
+        flag at TRAINER_FLAG_BASE, a battle taken as won, the bag's room
+        checked before an item is given, Switch and Case a Compare, the
+        Dex's switch, the National Dex in both places, the badge's bit."""
+        self.assertIn("Save_VarsFlags_SetFlagInArray(varsFlags, trainer + TRAINER_FLAG_BASE);",
+                      sv.c_function("src/script_manager.c", "void TrainerFlagSet("))
+        self.assertIn("*retBattleWon = IsBattleResultWin(*winFlag);",
+                      sv.c_function("src/scrcmd_battle.c", "BOOL ScrCmd_CheckBattleWon("))
+        self.assertIn("Pokedex_Enable(pokedex);", sv.c_function("src/scrcmd_17.c", "BOOL ScrCmd_GivePokedex("))
+        self.assertIn("PlayerProfile_SetBadgeFlag(Save_PlayerData_GetProfile(ctx->fieldSystem->saveData), badgeIdx);",
+                      sv.c_function("src/scrcmd_17.c", "BOOL ScrCmd_GiveBadge("))
+        self.assertIn("Pokegear_SetMapUnlockLevel(SaveData_Pokegear_Get(ctx->fieldSystem->saveData), ScriptReadByte(ctx));",
+                      sv.c_function("src/scrcmd_c.c", "BOOL ScrCmd_804("))
+        self.assertRegex(sv.c_function("src/scrcmd_c.c", "BOOL ScrCmd_NatDexFlagAction("),
+                         r"if \(action == 1\) \{\s*Pokedex_SetNatDexFlag\([^;]*\);\s*PlayerProfile_SetNatDexFlag\(")
+        macros = (ROOT / "asm/macros/script.inc").read_text()
+        self.assertRegex(macros, r"\.macro GoToIfNoItemSpace item, quantity, target\s*ItemVars \\item, \\quantity\s*"
+                                 r"HasSpaceForItem VAR_SPECIAL_x8004, VAR_SPECIAL_x8005, VAR_SPECIAL_RESULT")
+        self.assertRegex(macros, r"\.macro GiveItemNoCheck item, quantity\s*ItemVars \\item, \\quantity\s*"
+                                 r"CallStd std_give_item_verbose")
+        self.assertRegex(macros, r"\.macro Switch var\s*CopyVar VAR_SPECIAL_x8008, \\var")
+        self.assertRegex(macros, r"\.macro Case value, target\s*Compare VAR_SPECIAL_x8008, \\value\s*GoToIf eq, \\target")
 
 
 if __name__ == "__main__":
