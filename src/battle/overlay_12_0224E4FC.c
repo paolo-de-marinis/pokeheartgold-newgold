@@ -2169,6 +2169,11 @@ int ov12_022506D4(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdA
             // Aimed at the place its ally stood, which Ally Switch has made
             // its own: the move fails (Pokemon Central, Cambiaposto).
         } else if (!BattlerIgnoresRedirection(ctx, battlerIdAttacker) && ctx->fieldSideConditionData[side].followMeFlag && ctx->battleMons[ctx->fieldSideConditionData[side].battlerIdFollowMe].hp) {
+            // Follow Me and Rage Powder draw a move aimed at the user's own
+            // ally too: "even if it was a friendly target, unless it is a
+            // move that cannot target an opponent such as Acupressure or
+            // Helping Hand" (Bulbapedia, Follow Me), which take the two
+            // branches for the user's side above. As retail does.
             battlerIdTarget = ctx->fieldSideConditionData[side].battlerIdFollowMe;
         } else if (ctx->battleMons[battlerIdTargetTemp].hp) {
             battlerIdTarget = battlerIdTargetTemp;

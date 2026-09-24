@@ -1060,6 +1060,9 @@ int main(void) {
         target = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "ov12_022506D4")
         target = target[target.index("int battlerIdTargetTemp = ctx->playerActions[battlerIdAttacker].unk4;"):]
         self.assertLess(target.index("if (battlerIdTargetTemp == battlerIdAttacker) {"), target.index("followMeFlag"))
+        # Follow Me draws a move aimed at the user's own ally as well
+        # (Bulbapedia, Follow Me): the redirection asks no side of the target.
+        self.assertNotIn("BattleSystem_GetFieldSide(battleSystem, battlerIdTargetTemp)", target)
 
     PLEDGE_PROGRAM = r"""
 typedef struct { int unused; } BattleSystem;
