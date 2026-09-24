@@ -1195,6 +1195,8 @@ Overlay OVY_75
 {
     After OVY_70
     Object asm/overlay_75.o
+    Object src/overlay_75_02246F0C.o
+    Object asm/overlay_75_02247118.o
 }
 Overlay credits
 {
