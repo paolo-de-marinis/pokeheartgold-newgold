@@ -4,7 +4,7 @@
 
 // Jaw Lock holds both Pokemon where Mean Look holds one, and it holds them
 // with the same flag, so either side already trapped is simply left alone and
-// the other one is caught. Reached after the damage, from effect script 356.
+// the other one is caught. Run once the move is over, TryAdditionalMoveEffect.
 _000:
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_PROTECTED, _PROTECTED
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_DID_NOT_HIT, _MISSED

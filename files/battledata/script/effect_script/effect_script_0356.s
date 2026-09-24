@@ -2,9 +2,10 @@
 
     .data
 
-// Jaw Lock. As above, but the subscript traps both sides rather than one.
+// Jaw Lock. Both Pokemon are held once the move is over
+// (TryAdditionalMoveEffect), as the engine holds them; the script is its
+// bare hit.
 _000:
-    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_FLAGS_INDIRECT, MOVE_SIDE_EFFECT_CHECK_HP|MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_JAW_LOCK
     CalcCrit 
     CalcDamage 
     End 

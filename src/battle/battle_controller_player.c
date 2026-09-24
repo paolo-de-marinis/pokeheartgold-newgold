@@ -5320,6 +5320,16 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         ctx->battlerIdStatChange = target;
         script = BATTLE_SUBSCRIPT_BIND_START;
         break;
+    // Jaw Lock holds its user and its target where Mean Look holds one, once
+    // the move is over, if both still stand: a hold would end the moment
+    // either left. Subscript 385 turns a substitute away and leaves one held
+    // already as it is.
+    case MOVE_EFFECT_PREVENT_ESCAPE_BOTH_HIT:
+        if (!ctx->battleMons[ctx->battlerIdAttacker].hp || !ctx->battleMons[target].hp) {
+            return FALSE;
+        }
+        script = BATTLE_SUBSCRIPT_JAW_LOCK;
+        break;
     // Stone Axe and Ceaseless Edge lay pointed stones or a layer of Spikes on
     // the target's side once the move is over, if the user still stands
     // (Pokemon Central, Rocciascure and Lama Milleflutti: not once Iron

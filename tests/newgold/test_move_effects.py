@@ -212,7 +212,6 @@ UNREAD_HERE = {
     "SPEED_DOWN_3": "unused",
     "SP_ATK_DOWN_3": "unused",
     "SP_DEF_DOWN_3": "unused",
-    "PREVENT_ESCAPE_BOTH_HIT": "script: the side effect runs Jaw Lock's subscript after the damage",
     "HIT_THREE_TIMES_ALWAYS_CRITICAL": "script: it asks for CRITICAL_STAGE_ALWAYS on every hit, which CalcCrit reads as a sure critical",
     "MORTAL_SPIN": "script: an ON_HIT side effect runs subscript 403, the poison and then Rapid Spin's clearing",
     "ADD_TYPE_GRASS": "script: subscript 325 fails behind a substitute, as the reference's substitute list does",
@@ -228,7 +227,7 @@ UNREAD_HERE = {
 
 class WhatIsStillMissingTests(unittest.TestCase):
     # A ratchet, not a target: the table above may only shrink.
-    STILL_UNREAD = 39
+    STILL_UNREAD = 38
 
     def test_the_table_only_ever_shrinks(self):
         self.assertLessEqual(
@@ -377,6 +376,12 @@ class PostMoveEffectsTests(unittest.TestCase):
         self.assertIn("BATTLE_SUBSCRIPT_SET_STEALTH_ROCK : BATTLE_SUBSCRIPT_SET_SPIKES;", case)
         for name in ("STEALTH_ROCK_HIT", "SET_SPIKES_HIT"):
             self.assertNotIn("SIDE_EFFECT", self.effect_script(name), name)
+
+    def test_jaw_lock_holds_both_if_both_stand(self):
+        case = self.case("case MOVE_EFFECT_PREVENT_ESCAPE_BOTH_HIT:")
+        self.assertIn("if (!ctx->battleMons[ctx->battlerIdAttacker].hp || !ctx->battleMons[target].hp) {", case)
+        self.assertIn("script = BATTLE_SUBSCRIPT_JAW_LOCK;", case)
+        self.assertNotIn("SIDE_EFFECT", self.effect_script("PREVENT_ESCAPE_BOTH_HIT"))
 
 
 if __name__ == "__main__":
