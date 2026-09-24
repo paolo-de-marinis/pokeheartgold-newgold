@@ -3,6 +3,7 @@
 
 #include "bg_window.h"
 #include "message_format.h"
+#include "message_printer.h"
 #include "msgdata.h"
 #include "unk_02088288.h"
 
@@ -72,12 +73,15 @@ typedef struct PokemonSummaryAppPrefix {
     PokemonSummaryArgs *args;
     PokemonSummaryMon mon;
     u8 shinyLeaves[MON_DATA_SHINY_LEAF_CROWN - MON_DATA_SHINY_LEAF_A + 1];
-    u8 unk29A[0x7A0 - 0x29A];
+    u8 unk29A[0x79C - 0x29A];
+    MessagePrinter *messagePrinter;
     MsgData *msgData;
     MsgData *ribbonMsgData;
     MessageFormat *messageFormat;
     String *stringBuffer;
-    u8 unk7B0[0x7B8 - 0x7B0];
+    // The player's name, when the caller gave one (PokemonSummaryArgs).
+    String *playerName;
+    MsgData *moveNames;
     // The archive sub_020729A4 reads a species' cry delay from.
     NARC *unk7B8;
     // Which of the summary's pages is showing: 1 is the stats page, 2 the
@@ -99,6 +103,7 @@ typedef struct PokemonSummaryAppPrefix {
 #define SUMMARY_STATS_IVS 2
 #define SUMMARY_STATS_NONE 3
 
+void sub_02088894(PokemonSummaryAppPrefix *summary);
 u32 sub_02088B40(PokemonSummaryAppPrefix *summary);
 void sub_02089C50(PokemonSummaryAppPrefix *summary);
 void PokemonSummary_ShowStatValues(PokemonSummaryAppPrefix *summary, u32 mode);

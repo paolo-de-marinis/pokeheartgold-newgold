@@ -12,7 +12,9 @@ extern struct OverlayManagerTemplate gOverlayTemplate_PokemonSummary;
 typedef struct PokemonSummaryArgs {
     Party *party;
     Options *options;
-    u8 unk8[0x8];
+    // sub_0208AD34: the player's name and ID.
+    const u16 *playerName;
+    u32 playerId;
     u8 unk10;
     u8 unk11;
     u8 unk12;

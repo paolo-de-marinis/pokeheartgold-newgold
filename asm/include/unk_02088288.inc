@@ -264,3 +264,8 @@
 .public sub_02089680
 .public sub_02089698
 .public sub_02089794
+.public sub_02088894
+.public sub_0208895C
+.public sub_020889D0
+.public sub_02088AF8
+.public sub_02088B08
