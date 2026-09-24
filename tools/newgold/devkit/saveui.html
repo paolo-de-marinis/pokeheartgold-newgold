@@ -386,6 +386,9 @@ function buildLists() {
     named.add(r.name.toLowerCase());
   }
   S.itemIndex = firstWins(items, r => r.label);
+  // The words of a trainer's or a place's name, which a flag's name may hold as they are.
+  S.properWords = new Set([...d.story.map(s => s.trainer), ...d.maps.map(r => r.name)].flatMap(n => (n || "").toUpperCase().split(/[^A-Z0-9]+/)).filter(Boolean));
+  buildStepNames();
   // The town map's tiles: the maps at each, and each section's.
   S.townAt = new Map(); S.sectionTiles = new Map();
   for (const r of d.maps) for (const [x, y] of d.world.tiles[r.id] || []) {
@@ -824,7 +827,9 @@ const STORY_NAMES = {
   FLAG_UNK_076: "Torre Sprout completata",
   FLAG_BEAT_AZALEA_ROCKETS: "Team Rocket cacciato dal Pozzo Slowpoke"};
 // The first word of a flag's name, in Italian; the rest is the game's name
-// when it names an item or a species, otherwise the words themselves.
+// where words name an item or a species, a word below in Italian, or a word
+// of a trainer's or a place's name as it is. A flag with any other word is
+// shown as its constant: half translated, it would say neither.
 const FLAG_WORDS = {GOT: "Ricevuto", BEAT: "Sconfitti", DEFEATED: "Battuto", CAUGHT: "Catturato", TRADE: "Scambio",
   UNLOCKED: "Sbloccato", MET: "Incontrato", FOUND: "Trovato", SAW: "Visto", SHOWED: "Mostrato", TALKED: "Parlato",
   OPENED: "Aperto", EXCHANGED: "Scambiato", RETURNED: "Restituito", WON: "Vinto", GAVE: "Dato", FAILED: "Fallito",
@@ -834,19 +839,47 @@ function flagLabel(name) {
   if (STORY_NAMES[name]) return STORY_NAMES[name];
   const words = name.replace(/^(FLAG|VAR)_/, "").split("_");
   if (words[0] === "UNK" || words[0] === "SCENE") return name;
-  const lead = FLAG_WORDS[words[0]] ? [FLAG_WORDS[words.shift()]] : [];
-  for (let n = words.length; n > 0; n--) {
-    const item = S.itemByConst.get("ITEM_" + words.slice(0, n).join("_")), mon = S.speciesByConst.get(words.slice(0, n).join("_"));
-    if (item || mon) {
-      const rest = words.slice(n).map(w => WORDS_IT[w] ?? w[0] + w.slice(1).toLowerCase()).filter(Boolean).join(" ");
-      return [...lead, machineName(item ? item.name : mon.name) + (rest ? ` (${rest})` : "")].join(": ");
-    }
+  const lead = FLAG_WORDS[words[0]] ? [FLAG_WORDS[words.shift()]] : [], out = [];
+  for (let i = 0; i < words.length;) {
+    const n = range(words.length - i).map(k => words.length - i - k).find(n => S.itemByConst.has("ITEM_" + words.slice(i, i + n).join("_"))
+                                                                          || S.speciesByConst.has(words.slice(i, i + n).join("_")));
+    if (n) {
+      const key = words.slice(i, i + n).join("_");
+      out.push(machineName(S.itemByConst.get("ITEM_" + key)?.name ?? S.speciesByConst.get(key).name));
+      i += n;
+    } else if (words[i] in WORDS_IT || S.properWords.has(words[i])) {
+      out.push(WORDS_IT[words[i]] ?? words[i][0] + words[i].slice(1).toLowerCase());
+      i++;
+    } else return name;
   }
-  return [...lead, words.map(w => WORDS_IT[w] ?? w[0] + w.slice(1).toLowerCase()).filter(Boolean).join(" ")].join(": ");
+  return [...lead, out.filter(Boolean).join(" ")].join(": ");
 }
 const machineName = name => name.replace(/^(TM|HM|TR)(?=\d)/, p => MACHINE_PREFIX[p] + " ");
 const itemNameOf = c => machineName(S.itemByConst.get(c)?.name ?? c);
-function stepLabel(id) {
+// A step's name: its marker's, and -- where that is a bare constant, or another step of its place has it too -- what
+// tells it apart: the first thing it gives that the others of that name do not (for a bare constant, the first that is
+// no flag or variable), its trainer, else the script's line.
+const stepLabel = id => S.stepNames?.get(id) ?? stepBase(id);
+function buildStepNames() {
+  const groups = new Map();
+  for (const s of S.data.story) {
+    const key = `${s.section}|${stepBase(s.id)}`;
+    groups.set(key, [...groups.get(key) || [], s]);
+  }
+  const text = w => JSON.stringify(w.slice(0, 3));
+  const named = S.data.story.map(s => {
+    const name = stepBase(s.id), others = groups.get(`${s.section}|${name}`).filter(o => o !== s);
+    if (!/^(FLAG|VAR)_/.test(name) && !others.length) return [s, name];
+    const theirs = new Set(others.flatMap(o => o.writes.map(text))), said = name + (s.trainer || "");
+    const own = s.writes.find(w => !w[3] && !theirs.has(text(w)) && !said.includes(w[0] === "item" ? itemNameOf(w[1]) : w[1] || writeText(w))
+                                   && (others.length || !["flag", "var", "add", "trainer"].includes(w[0])));
+    return [s, own ? `${name} — ${writeText(own)}` : s.trainer && !name.includes(s.trainer) ? `${name} — dopo la lotta con ${s.trainer}` : name];
+  });
+  const count = new Map();
+  for (const [s, name] of named) count.set(`${s.section}|${name}`, (count.get(`${s.section}|${name}`) || 0) + 1);
+  S.stepNames = new Map(named.map(([s, name]) => [s.id, count.get(`${s.section}|${name}`) > 1 ? `${name} (script ${s.script.slice(8)}, riga ${s.line})` : name]));
+}
+function stepBase(id) {
   const s = S.steps.get(id);
   if (!s) return id;
   if (STORY_NAMES[s.key]) return STORY_NAMES[s.key];
