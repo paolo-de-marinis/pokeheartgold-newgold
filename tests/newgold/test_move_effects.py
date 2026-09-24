@@ -435,6 +435,64 @@ int main(void) {
 """
 
 
+FALL_AND_TERRAIN = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+typedef struct { u32 fallPending : 1; u32 terrainEndPending : 1; } SelfTurnData;
+typedef struct { int hp; } Mon;
+typedef struct {
+    Mon battleMons[4]; SelfTurnData selfTurnData[4];
+    int battlerIdAttacker, battlerIdStatChange;
+    u32 battleStatus2;
+} BattleContext;
+static int ran;
+static void RunPostMoveScript(BattleContext *ctx, int script) { (void)ctx; ran = script; }
+@FUNCTIONS@
+static BattleContext ctx;
+static void reset(void) {
+    // A double battle: the user 0 hit both foes, 1 and 3, with Thousand
+    // Arrows, or tore the terrain up with Ice Spinner.
+    for (int i = 0; i < 4; i++) {
+        ctx.battleMons[i].hp = 100;
+        ctx.selfTurnData[i] = (SelfTurnData){ i & 1, i == 0 };
+    }
+    ctx.battlerIdAttacker = 0; ctx.battlerIdStatChange = 0xFF; ctx.battleStatus2 = 0; ran = 0;
+}
+static BOOL falls(int battlerId) {
+    ran = 0;
+    if (TryFallAfterHit(&ctx, battlerId) == FALSE) {
+        assert(ran == 0 && !ctx.selfTurnData[battlerId].fallPending);
+        return FALSE;
+    }
+    assert(ran == BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN && ctx.battlerIdStatChange == battlerId);
+    assert(!ctx.selfTurnData[battlerId].fallPending);
+    return TRUE;
+}
+int main(void) {
+    // Each Pokemon the hit marked comes down, once.
+    reset(); assert(falls(1) && falls(3) && !falls(0) && !falls(2) && !falls(1));
+    // Not one the hit felled; nothing once the user has fainted to what
+    // answered the hit (Pokemon Central, Abbattimento).
+    reset(); ctx.battleMons[1].hp = 0; assert(!falls(1) && falls(3));
+    reset(); ctx.battleMons[0].hp = 0; assert(!falls(1) && !falls(3));
+    // The terrain goes for a user still standing and still there, once.
+    reset(); assert(TerrainEnds(&ctx) && !TerrainEnds(&ctx));
+    // Not after its Life Orb, a Rocky Helmet or Destiny Bond felled it, nor
+    // once a Red Card sent it back (Pokemon Central, Vortighiaccio).
+    reset(); ctx.battleMons[0].hp = 0; assert(!TerrainEnds(&ctx) && !ctx.selfTurnData[0].terrainEndPending);
+    reset(); ctx.battleStatus2 = BATTLE_STATUS2_UTURN; assert(!TerrainEnds(&ctx));
+    reset(); ctx.selfTurnData[0].terrainEndPending = FALSE; assert(!TerrainEnds(&ctx));
+    return 0;
+}
+"""
+
 class PostMoveEffectsTests(unittest.TestCase):
     """What the moves past retail's effects do once the move is over, as the
     engine's Activate_AdditionalMoveEffects does it
@@ -478,9 +536,37 @@ class PostMoveEffectsTests(unittest.TestCase):
         from test_hold_effects import CONTROLLER
         run_c(HOLD_AFTER_HIT.replace("@FUNCTIONS@", function(CONTROLLER.read_text(), "TryHoldAfterHit")))
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
-        self.assertLess(body.index("TryAdditionalMoveEffect(ctx)"), body.index("TryHoldAfterHit(ctx, ctx->turnOrder[ctx->unk_34++])"))
+        self.assertLess(body.index("TryAdditionalMoveEffect(ctx)"), body.index("TryHoldAfterHit(ctx, battlerId)"))
         self.assertLess(body.index("TryHoldAfterHit("), body.index("TryMagician("))
         self.assertNotIn("SIDE_EFFECT", self.effect_script("PREVENT_ESCAPE_HIT"))
+
+    def test_smack_down_and_the_terrain_s_end_wait_for_the_hit_s_answer(self):
+        # Pokemon Central (Abbattimento, Vortighiaccio): a user the hit's
+        # answer fells brings nothing down and ends no terrain. The hit marks
+        # them; the post-move steps do them, where the engine does (15.4 and
+        # 25.0): the fall before Magician, the terrain with Natural Gift's
+        # Berry, after the Life Orb and the Red Card.
+        from test_ability_interactions import run_c
+        from test_hold_effects import CONTROLLER
+        controller = CONTROLLER.read_text()
+        run_c(FALL_AND_TERRAIN.replace("@FUNCTIONS@", function(controller, "TryFallAfterHit") + function(controller, "TerrainEnds")))
+        hit = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "ov12_02250490")
+        marks = hit[hit.index("if (ret == TRUE && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)) {"):]
+        self.assertIn("if (*out == BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN) {\n"
+                      "            ctx->selfTurnData[ctx->battlerIdStatChange].fallPending = TRUE;\n"
+                      "            ret = FALSE;", marks)
+        self.assertIn("} else if (*out == BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END) {\n"
+                      "            ctx->selfTurnData[ctx->battlerIdAttacker].terrainEndPending = TRUE;\n"
+                      "            ret = FALSE;", marks)
+        self.assertLess(marks.index("fallPending"), marks.index("ParentalBond_StrikeToCome(ctx)"))
+        body = function(controller, "ov12_0224E1BC")
+        self.assertIn("TryHoldAfterHit(ctx, battlerId) == TRUE || TryFallAfterHit(ctx, battlerId) == TRUE", body)
+        self.assertLess(body.index("TryFallAfterHit("), body.index("TryMagician("))
+        self.assertLess(body.index("item == HOLD_EFFECT_HP_DRAIN_ON_ATK"), body.index("TerrainEnds(ctx)"))
+        self.assertLess(body.index("HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE"), body.index("TerrainEnds(ctx)"))
+        self.assertLess(body.index("NaturalGiftSpendsBerry(ctx)"), body.index("TerrainEnds(ctx)"))
+        from test_retail_effect_scripts import subscript
+        self.assertNotIn("BATTLER_CATEGORY_DEFENDER", subscript("FELL_STRAIGHT_DOWN"))
 
     def test_fell_stinger_raises_attack_three_for_a_felled_target(self):
         # Pokemon Central, Pungiglione: three stages from the seventh generation.

@@ -242,8 +242,11 @@ class ParentalBondTests(unittest.TestCase):
     def test_what_waits_for_the_second_strike(self):
         body = function(OVERLAY.read_text(), "ov12_02250490")
         waiting = body[body.index("if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {"):]
-        for script in ("FORCE_TARGET_TO_SWITCH_OR_FLEE", "FELL_STRAIGHT_DOWN", "HANDLE_TERRAIN_END"):
-            self.assertIn(f"case BATTLE_SUBSCRIPT_{script}:", waiting)
+        self.assertIn("case BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE:", waiting)
+        # Smack Down's fall and the terrain's end wait for the move's end,
+        # both strikes over (test_move_effects).
+        for script in ("FELL_STRAIGHT_DOWN", "HANDLE_TERRAIN_END"):
+            self.assertLess(body.index(f"*out == BATTLE_SUBSCRIPT_{script}"), body.index("ParentalBond_StrikeToCome(ctx)"))
         # Anchor Shot's hold is no side effect: it comes once the move is over.
         self.assertNotIn("MEAN_LOOK", waiting[:waiting.index("return ret;")])
         self.assertIn("!ParentalBond_StrikeToCome(ctx)", function(CONTROLLER.read_text(), "ov12_0224CC88"))
@@ -279,8 +282,8 @@ class ParentalBondTests(unittest.TestCase):
     def test_a_first_strike_that_proves_the_last_does_what_it_left(self):
         # Pokemon Central (Spargispora, Mossa multicolpo): Effect Spore's
         # sleep ends a multi-strike move at once. Parental Bond's first strike
-        # has left Dragon Tail's drag, Smack Down's fall or the like to the
-        # second by then; the loop does them when the second will not come.
+        # has left Dragon Tail's drag to the second by then; the loop does it
+        # when the second will not come.
         # The recoil is a post-move step (TryRecoil) and waits for nothing.
         body = function(OVERLAY.read_text(), "ov12_02250490")
         self.assertIn("u32 sideEffect = ctx->unk_2174;", body)

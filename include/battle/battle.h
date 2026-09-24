@@ -146,7 +146,13 @@ typedef struct SelfTurnData {
     // Revival Blessing: its user is picking the fainted Pokemon to revive,
     // for BtlCmd_ShowParty to open the menu to.
     u32 revivalBlessing : 1;
-    u32 unk0_11 : 11;
+    // Smack Down or Thousand Arrows hit this Pokemon: it is brought down once
+    // the hit has been answered, its user still standing (TryFallAfterHit).
+    u32 fallPending : 1;
+    // Steel Roller or Ice Spinner: this Pokemon's move tears the terrain up
+    // once the move is over, if it still stands (TerrainEnds).
+    u32 terrainEndPending : 1;
+    u32 unk0_11 : 9;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;

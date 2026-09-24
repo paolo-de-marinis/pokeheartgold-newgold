@@ -2022,12 +2022,29 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         }
     }
 
-    // What these do waits for Parental Bond's second strike (Pokemon Central,
-    // Amorefiliale): Dragon Tail's switch and Smack Down's fall, and the
-    // terrain Steel Roller and Ice Spinner tear up, which Steel Roller needs
-    // for its second strike. The reference does these after the move; here
-    // they come with the hit, so the first strike leaves them to the second,
-    // unless the first was the last. (The cure Smelling Salts and Wake-Up Slap
+    // Smack Down's fall and the terrain Steel Roller and Ice Spinner tear up
+    // wait until the hit has been answered: a user that a Jaboca Berry, Rough
+    // Skin, Iron Barbs or a Rocky Helmet fells brings nothing down and ends
+    // no terrain (Pokemon Central, Abbattimento, Vortighiaccio), as in the
+    // engine, which does them after the move (steps 15.4 and 25.0 of
+    // ServerDoPostMoveEffects.c at d0380a487). The Pokemon to bring down and
+    // the user are marked here, as the hit lands, and the post-move steps do
+    // the rest (TryFallAfterHit, TerrainEnds), after Parental Bond's second
+    // strike too, which Steel Roller needs the terrain for.
+    if (ret == TRUE && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)) {
+        if (*out == BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN) {
+            ctx->selfTurnData[ctx->battlerIdStatChange].fallPending = TRUE;
+            ret = FALSE;
+        } else if (*out == BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END) {
+            ctx->selfTurnData[ctx->battlerIdAttacker].terrainEndPending = TRUE;
+            ret = FALSE;
+        }
+    }
+
+    // What this does waits for Parental Bond's second strike (Pokemon Central,
+    // Amorefiliale): Dragon Tail's switch. The reference does it after the
+    // move; here it comes with the hit, so the first strike leaves it to the
+    // second, unless the first was the last. (The cure Smelling Salts and Wake-Up Slap
     // give, Knock Off's knocking, Thief's taking, Pluck's eating, and the
     // holds and hazards of the moves past retail's are post-move steps here
     // too, TryAdditionalMoveEffect and TryHoldAfterHit, and U-turn's switch is
@@ -2043,8 +2060,6 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {
         switch (*out) {
         case BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE:
-        case BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN:
-        case BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END:
             ctx->parentalBondDeferred = sideEffect;
             ret = FALSE;
             break;

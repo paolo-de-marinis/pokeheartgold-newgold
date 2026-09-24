@@ -4532,12 +4532,10 @@ static void ov12_0224CF14(BattleSystem *battleSystem, BattleContext *ctx) {
     // (TryRecoil), from the one strike's damage.
     //
     // A first strike after which the user fainted -- to Rough Skin, a Rocky
-    // Helmet, a Jaboca Berry -- gives nothing back: Smack Down does not bring
-    // the target down when its user faints (Pokemon Central, Abbattimento),
-    // nor Ice Spinner end the terrain (Vortighiaccio: not after a Rocky
-    // Helmet, Rough Skin or Iron Barbs), and Steel Roller's end asks for its
-    // user standing as Ice Spinner's does (effect script 389, the
-    // reference's guard; Ferrorullo leaves the case open).
+    // Helmet, a Jaboca Berry -- gives nothing back: Dragon Tail drags nothing
+    // once its user has fainted (Pokemon Central, Codadrago). Smack Down's
+    // fall and the terrain's end wait for no strike: they are post-move
+    // steps (TryFallAfterHit, TerrainEnds).
     if (ctx->parentalBondDeferred != 0) {
         u32 deferred = ctx->parentalBondDeferred;
         int script;
@@ -5781,6 +5779,26 @@ static BOOL TryHoldAfterHit(BattleContext *ctx, int battlerId) {
     return TRUE;
 }
 
+// Smack Down and Thousand Arrows bring down each Pokemon they hit once the
+// hit has been answered: the engine's step 15.4 (Activate_SmackDown,
+// ServerDoPostMoveEffects.c:451 at d0380a487), after the move's additional
+// effects and before Magician. ov12_02250490 marked the Pokemon as the hit
+// landed, past a substitute. Not once the user has fainted -- to a Jaboca
+// Berry, Rough Skin, Iron Barbs, a Rocky Helmet or Gulp Missile (Pokemon
+// Central, Abbattimento) -- nor a Pokemon the hit felled.
+static BOOL TryFallAfterHit(BattleContext *ctx, int battlerId) {
+    if (!ctx->selfTurnData[battlerId].fallPending) {
+        return FALSE;
+    }
+    ctx->selfTurnData[battlerId].fallPending = FALSE;
+    if (!ctx->battleMons[ctx->battlerIdAttacker].hp || !ctx->battleMons[battlerId].hp) {
+        return FALSE;
+    }
+    ctx->battlerIdStatChange = battlerId;
+    RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN);
+    return TRUE;
+}
+
 // U-turn, Volt Switch and Flip Turn take their user out once the move is
 // over: the engine's Activate_Switch (ServerDoPostMoveEffects.c:2120 at
 // d0380a487), the step after Emergency Exit and Wimp Out, for a user still
@@ -5844,6 +5862,23 @@ static BOOL NaturalGiftSpendsBerry(BattleContext *ctx) {
         && GetNaturalGiftPower(ctx, ctx->battlerIdAttacker) != 0;
 }
 
+// Steel Roller and Ice Spinner tear the terrain up once the move is over,
+// with Natural Gift's Berry: the engine's Activate_SkillEffects, step 25.0
+// of ServerDoPostMoveEffects.c at d0380a487. ov12_02250490 marked the user
+// as the hit landed. Not once the user has fainted -- to its Life Orb, a
+// Rocky Helmet, Rough Skin, Iron Barbs or Destiny Bond -- nor once a Red
+// Card has sent it back (Pokemon Central, Vortighiaccio); Steel Roller asks
+// the same, as the reference's effect script 389 does for both (Ferrorullo
+// leaves the case open). A Static or a Flame Body the hit woke has acted by
+// then, under the terrain still up (Vortighiaccio).
+static BOOL TerrainEnds(BattleContext *ctx) {
+    int attacker = ctx->battlerIdAttacker;
+    BOOL pending = ctx->selfTurnData[attacker].terrainEndPending;
+
+    ctx->selfTurnData[attacker].terrainEndPending = FALSE;
+    return pending && ctx->battleMons[attacker].hp != 0 && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN);
+}
+
 static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
     int flag = 0;
 
@@ -5879,8 +5914,12 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             // The hold Thousand Waves, Anchor Shot and Spirit Shackle put on
             // each Pokemon they hit, one at a time in the order the battlers
             // act; see TryHoldAfterHit.
+            // Smack Down's and Thousand Arrows' fall come in the same walk; see
+            // TryFallAfterHit.
             while (ctx->unk_34 < maxBattlers) {
-                if (TryHoldAfterHit(ctx, ctx->turnOrder[ctx->unk_34++]) == TRUE) {
+                int battlerId = ctx->turnOrder[ctx->unk_34++];
+
+                if (TryHoldAfterHit(ctx, battlerId) == TRUE || TryFallAfterHit(ctx, battlerId) == TRUE) {
                     flag = 1;
                     break;
                 }
@@ -6094,6 +6133,10 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_PLUCK_CHECK);
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            } else if (TerrainEnds(ctx) == TRUE) {
+                // Steel Roller and Ice Spinner, in the same step.
+                RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END);
                 flag = 1;
             }
             break;
