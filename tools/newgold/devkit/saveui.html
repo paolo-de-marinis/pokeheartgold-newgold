@@ -985,12 +985,16 @@ async function tickBadge(b, on) {
   const others = !step ? [] : on ? chain.slice(0, chain.indexOf(step.id)).filter(x => !done.has(x))
                                 : chain.slice(chain.indexOf(step.id) + 1).filter(x => done.has(x));
   const game = step && (on || done.has(step.id));
+  // What the badge's step adds up (VAR_MIDGAME_BADGES): the bit alone leaves it, so the two ways must not be mixed.
+  const counters = step ? step.writes.filter(w => w[0] === "add" && !w[3]).map(w => w[1]) : [];
   const r = await ask(`Medaglia ${badgeName(b.const)}`, `
     ${game ? `<label class="plan"><input type="radio" name="how" value="game" checked><span><strong>${on ? "Come nel gioco" : "Come se non l'avessi mai presa"}</strong>:
       ${on ? "fa" : "annulla"} il passo "${esc(stepLabel(step.id))}" (scrive: ${esc(writesLine(step).join(", "))})</span></label>
       ${others.length ? `<div style="margin-left:26px"><p class="note">${on ? "E prima, come nel gioco:" : "E i passi dopo, già fatti:"}</p>${planList(others, "p")}</div>` : ""}` : ""}
     <label class="plan"><input type="radio" name="how" value="bit" ${game ? "" : "checked"}><span><strong>Solo la medaglia</strong>: il bit nel profilo e basta;
-      allenatori, variabili e il resto della storia restano come sono.</span></label>`,
+      allenatori, variabili e il resto della storia restano come sono.${!counters.length ? "" : on
+        ? ` ${esc(counters.join(", "))} non conta questa medaglia.`
+        : ` ${esc(counters.join(", "))} resta com'è e la conta ancora: rifacendo poi la medaglia "come nel gioco" la conterebbe due volte.`}</span></label>`,
     [["go", on ? "Dai la medaglia" : "Togli la medaglia", "primary"], ["", "Annulla"]]);
   if (r.value !== "go") return renderTabs();
   if (r.form.elements.how.value !== "game")
