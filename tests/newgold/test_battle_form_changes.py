@@ -54,7 +54,7 @@ typedef struct {
     u32 moveNoCur;
     u32 moveStatusFlag;
     u8 multiHitCount;
-    BOOL moldBreaker, cloudNine, sheerForce;
+    BOOL moldBreaker, cloudNine, sheerForce, physicalChosen;
 } BattleContext;
 typedef struct BattleSystem BattleSystem;
 typedef struct { u16 power; u8 category; } MoveTbl;
@@ -63,8 +63,14 @@ static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->ba
 static MoveTbl sMoves[] = {
     [MOVE_TACKLE] = { 40, CATEGORY_PHYSICAL }, [MOVE_EMBER] = { 40, CATEGORY_SPECIAL },
     [MOVE_STRUGGLE] = { 50, CATEGORY_PHYSICAL },
-    [MOVE_SWORDS_DANCE] = { 0, CATEGORY_STATUS }, [MOVE_KINGS_SHIELD] = { 0, CATEGORY_STATUS } };
+    [MOVE_SWORDS_DANCE] = { 0, CATEGORY_STATUS }, [MOVE_KINGS_SHIELD] = { 0, CATEGORY_STATUS },
+    [MOVE_SHELL_SIDE_ARM] = { 90, CATEGORY_SPECIAL } };
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u16 move) { (void)ctx; return &sMoves[move]; }
+// Shell Side Arm as ChooseMoveCategory left it for this attacker.
+static int BattleMoveCategory(BattleContext *ctx, u32 move, int attacker) {
+    (void)attacker;
+    return move == MOVE_SHELL_SIDE_ARM && ctx->physicalChosen ? CATEGORY_PHYSICAL : sMoves[move].category;
+}
 static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int attacker, int target, int ability) {
     (void)attacker;
     return !ctx->moldBreaker && ctx->battleMons[target].ability == ability;
@@ -215,6 +221,11 @@ class FormChangeTests(unittest.TestCase):
     ctx.battleMons[1] = (BattleMon){ SPECIES_EISCUE, ABILITY_ICE_FACE, 1, 1, 0, 50 };
     assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_TACKLE) == SPECIES_EISCUE_NOICE_FACE);
     assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_EMBER) == SPECIES_NONE);
+    // A Shell Side Arm is physical to it when it goes physical.
+    assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_SHELL_SIDE_ARM) == SPECIES_NONE);
+    ctx.physicalChosen = TRUE;
+    assert(Battler_BrokenFaceForm(&ctx, 0, 1, MOVE_SHELL_SIDE_ARM) == SPECIES_EISCUE_NOICE_FACE);
+    ctx.physicalChosen = FALSE;
 
     set(SPECIES_EISCUE_NOICE_FACE, ABILITY_ICE_FACE, 1, 1);
     ctx.iceFaceWeatherSeen = 0;

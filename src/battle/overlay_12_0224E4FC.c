@@ -7021,7 +7021,9 @@ void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battl
 
 // Disguise and Ice Face (battle_calc_damage.c:254): a Mimikyu in its disguise
 // takes nothing from a move, and an Eiscue with its Ice Face nothing from a
-// physical one; Mold Breaker goes through. The form the face breaks into, or
+// physical one -- physical as this attacker uses it, so a Photon Geyser or a
+// Shell Side Arm gone physical too (BattleMoveCategory), where the reference
+// reads the move table; Mold Breaker goes through. The form the face breaks into, or
 // SPECIES_NONE if it takes nothing. A Mimikyu of the Large form busts into
 // the Large busted form: hg-engine lets that one take the hit and never
 // busts it. A transformed battler has no face of its own.
@@ -7035,7 +7037,7 @@ u16 Battler_BrokenFaceForm(BattleContext *ctx, int battlerIdAttacker, int battle
     case SPECIES_MIMIKYU_LARGE:
         return CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_DISGUISE) == TRUE ? SPECIES_MIMIKYU_BUSTED_LARGE : SPECIES_NONE;
     case SPECIES_EISCUE:
-        if (BattleMoveTbl(ctx, move)->category == CATEGORY_PHYSICAL && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_FACE) == TRUE) {
+        if (BattleMoveCategory(ctx, move, battlerIdAttacker) == CATEGORY_PHYSICAL && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_ICE_FACE) == TRUE) {
             return SPECIES_EISCUE_NOICE_FACE;
         }
         break;
