@@ -125,7 +125,7 @@ BOOL ov12_0225561C(BattleContext *ctx, int battlerId);
 u16 MoveEffectChance(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int holdEffect);
-int CheckEjectPack(BattleContext *ctx, int battlerId);
+int CheckEjectPack(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 void RecordMirrorHerbStages(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int stat, int stages);
 int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId);
 int GetHeldItemModifier(BattleContext *ctx, int battlerId, int flag);

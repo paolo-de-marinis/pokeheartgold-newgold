@@ -4854,7 +4854,7 @@ static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
         // answered once it was over or given up to the switch that came
         // first (ov12_0224E1BC), so the marks go with it.
         for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
-            script = CheckEjectPack(ctx, ctx->turnOrder[i]);
+            script = CheckEjectPack(battleSystem, ctx, ctx->turnOrder[i]);
             if (script != BATTLE_SUBSCRIPT_NONE) {
                 ctx->statLoweredBattlers = 0;
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
@@ -6051,7 +6051,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             // entry of the Pokemon the card dragged in -- Sticky Web on its
             // way in.
             while (ctx->unk_34 < maxBattlers && !PivotSwitchPending(ctx)) {
-                int script = CheckEjectPack(ctx, ctx->turnOrder[ctx->unk_34++]);
+                int script = CheckEjectPack(battleSystem, ctx, ctx->turnOrder[ctx->unk_34++]);
 
                 if (script != BATTLE_SUBSCRIPT_NONE) {
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);

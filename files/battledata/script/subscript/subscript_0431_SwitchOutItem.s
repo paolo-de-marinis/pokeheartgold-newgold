@@ -5,8 +5,8 @@
 // An Eject Button or an Eject Pack sending its holder back once the move is
 // over (the reference's subscript_0340_HANDLE_SWITCHING_ITEMS at d0380a487,
 // which is both). The holder is in MSG_BATTLER_TEMP; CheckSwitchItemOnHit or
-// CheckEjectPack has asked everything else. With nobody to come in nothing
-// happens and the item stays. The rest
+// CheckEjectPack has asked everything else, whether anyone can come in too;
+// TryReplaceFaintedMon below picks who. The rest
 // is the tail of the pivot moves' subscript, 175, for a Pokemon that is not
 // the attacker: Pursuit has its chance, Natural Cure its say, and the holder's
 // trainer chooses who comes in.

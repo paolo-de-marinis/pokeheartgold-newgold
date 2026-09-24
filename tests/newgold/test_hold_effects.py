@@ -790,6 +790,10 @@ int main(void) {
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.battleMons[1].hp = 0;
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    // Not with nobody to come in (Pokemon Central, Pulsantefuga): not played,
+    // so the next holder's button may answer.
+    reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; S.replacements = 0;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE && ctx.battlerIdTemp == -1);
     // After a Red Card has dragged the user out (U-turn's flag) the button
     // still answers; the card does not, the user being gone.
     reset(); S.item[1] = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT; ctx.battleStatus2 = BATTLE_STATUS2_UTURN;
@@ -1015,21 +1019,29 @@ static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)c
 static u32 MaskOfFlagNo(int flagNo) { return 1u << flagNo; }
 static int sHeld;
 static BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId) { (void)ctx; return sHeld == battlerId + 1; }
+typedef struct { int replacements; } BattleSystem;
+static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return bs->replacements; }
 @FUNCTION@
 int main(void) {
+    BattleSystem bs = { 1 };
     BattleContext ctx = { -1, 1 << 2, { { 10 }, { 10 }, { 10 }, { 10 } } };
     sItem = HOLD_EFFECT_SWITCH_OUT_ON_STAT_DROP;
-    assert(CheckEjectPack(&ctx, 2) == BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM && ctx.battlerIdTemp == 2);
-    assert(CheckEjectPack(&ctx, 1) == BATTLE_SUBSCRIPT_NONE);
+    assert(CheckEjectPack(&bs, &ctx, 2) == BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM && ctx.battlerIdTemp == 2);
+    assert(CheckEjectPack(&bs, &ctx, 1) == BATTLE_SUBSCRIPT_NONE);
     ctx.battleMons[2].hp = 0;
-    assert(CheckEjectPack(&ctx, 2) == BATTLE_SUBSCRIPT_NONE);
+    assert(CheckEjectPack(&bs, &ctx, 2) == BATTLE_SUBSCRIPT_NONE);
     ctx.battleMons[2].hp = 10;
     // Commander holds it on the field: the Pack stays.
     sHeld = 3;
-    assert(CheckEjectPack(&ctx, 2) == BATTLE_SUBSCRIPT_NONE);
+    assert(CheckEjectPack(&bs, &ctx, 2) == BATTLE_SUBSCRIPT_NONE);
     sHeld = 0;
+    // Nobody to come in: the Pack stays, and the next holder may act.
+    bs.replacements = 0;
+    ctx.battlerIdTemp = -1;
+    assert(CheckEjectPack(&bs, &ctx, 2) == BATTLE_SUBSCRIPT_NONE && ctx.battlerIdTemp == -1);
+    bs.replacements = 1;
     sItem = HOLD_EFFECT_SWITCH_OUT_WHEN_HIT;
-    assert(CheckEjectPack(&ctx, 2) == BATTLE_SUBSCRIPT_NONE);
+    assert(CheckEjectPack(&bs, &ctx, 2) == BATTLE_SUBSCRIPT_NONE);
     return 0;
 }
 """
@@ -1054,7 +1066,7 @@ class EjectPackTests(unittest.TestCase):
 
     def test_asked_after_the_users_items_and_not_after_another_switch(self):
         body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
-        ask = body.index("CheckEjectPack(ctx, ctx->turnOrder[ctx->unk_34++])")
+        ask = body.index("CheckEjectPack(battleSystem, ctx, ctx->turnOrder[ctx->unk_34++])")
         self.assertLess(body.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"), ask)
         self.assertLess(body.index("CheckSwitchItemOnHit"), ask)
         self.assertIn("if (!(ctx->unk_34 & SWITCH_ITEM_USED)) {\n                ctx->unk_34 = 0;", body)
@@ -1073,7 +1085,7 @@ class EjectPackTests(unittest.TestCase):
         the entry abilities and Emergency Exit, once an action is over; the
         move's own drops are spent by then, answered or given up."""
         end = function(CONTROLLER.read_text(), "ov12_0224D368")
-        ask = end.index("script = CheckEjectPack(ctx, ctx->turnOrder[i]);")
+        ask = end.index("script = CheckEjectPack(battleSystem, ctx, ctx->turnOrder[i]);")
         self.assertLess(end.index("script = TryAbilityOnEntry(battleSystem, ctx);"), ask)
         self.assertLess(end.index("TryRetreatAbilityOutsideMove(battleSystem, ctx, &script)"), ask)
         self.assertIn("ctx->statLoweredBattlers = 0;", end[ask:end.index("ov12_0224E130(battleSystem, ctx)")])
