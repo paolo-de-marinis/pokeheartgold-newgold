@@ -1261,6 +1261,19 @@ class TypeChangeTests(unittest.TestCase):
         self.assertIn("|| mon->type3 == moveType) {", body)
         self.assertNotIn("BattleSystem_Random", body)
 
+    def test_soak_and_magic_powder_leave_arceus_and_silvally_alone(self):
+        # Pokemon Central (Inondazione): they fail against Arceus and
+        # Silvally, not against a Pokemon wearing their looks by Transform or
+        # Imposter; past the substitute, before the move is shown.
+        for name in ("subscript_0351_ChangeTargetToWaterType.s", "subscript_0323_ChangeTargetToPsychicType.s"):
+            script = (ROOT / "files/battledata/script/subscript" / name).read_text()
+            refusal = script[script.index("_PAST_SUBSTITUTE:"):script.index("_CHANGE_TYPE:")]
+            self.assertIn("BATTLER_CATEGORY_DEFENDER, BMON_DATA_STATUS2, STATUS2_TRANSFORM, _CHANGE_TYPE", refusal, name)
+            for ability in ("ABILITY_MULTITYPE", "ABILITY_RKS_SYSTEM"):
+                self.assertIn(f"BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, {ability}, _FAILED", refusal, name)
+            self.assertLess(script.index("_CHANGE_TYPE:"), script.index("Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION"), name)
+            self.assertIn("_FAILED:\n    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED\n    End", script, name)
+
 
 class PaybackTests(unittest.TestCase):
     def test_it_does_not_double_against_what_came_in_this_turn(self):
