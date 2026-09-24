@@ -41,7 +41,9 @@ typedef struct Overlay40SearchScreen2 {
     Overlay40SpeciesList list;
 } Overlay40SearchScreen2;
 
+BOOL ov40_02235DAC(Overlay40App *app, int group);
 void ov40_02235E34(Overlay40App *app, int group);
+BOOL ov40_0223EBB8(Overlay40App *app, int group);
 void ov40_0223EC40(Overlay40App *app, int group);
 
 #endif // POKEHEARTGOLD_OVERLAY_40_H

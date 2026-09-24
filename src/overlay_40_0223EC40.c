@@ -9,6 +9,37 @@
 extern u16 ov40_02245E44[];
 extern u16 *ov40_0222DD68(enum HeapID heapID, int unused, int *count);
 
+// Whether the player has seen any species of a letter group, which the
+// search screen asks of each group before it offers it: the group's stretch
+// of the Dex's alphabetical order with the unseen struck out, and whether
+// any is left.
+BOOL ov40_0223EBB8(Overlay40App *app, int group) {
+    int count;
+    BOOL found = FALSE;
+    u16 *all;
+    Pokedex *pokedex;
+    int start;
+    int end = ov40_02245E44[group + 1];
+    int i;
+
+    start = ov40_02245E44[group];
+    all = ov40_0222DD68(HEAP_ID_109, found, &count);
+    pokedex = Save_Pokedex_Get(app->saveData);
+    for (i = start; i < end; i++) {
+        if (!Pokedex_CheckMonSeenFlag(pokedex, all[i])) {
+            all[i] = 0xFFFF;
+        }
+    }
+    for (; start < end; start++) {
+        if (all[start] != 0xFFFF) {
+            found = TRUE;
+            break;
+        }
+    }
+    Heap_Free(all);
+    return found;
+}
+
 // ov40_02235E34 for the other search screen: a letter group's species in
 // the Dex's alphabetical order, the ones the player has seen first, a row for
 // each of those, and the species names, opened lazily as there.
