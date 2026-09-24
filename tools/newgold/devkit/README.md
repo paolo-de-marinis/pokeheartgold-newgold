@@ -100,8 +100,8 @@ Sudowoodo once it was fought. A step also brings its scene before the
 marker: what the game writes on every way there from the script's entry
 with no other marker on it (`_before`) -- the Burned Tower's beasts, hidden
 before the `SetVar` that opens Morty's gym; the Expansion Card's flag, set
-before its card, is one step with it. Each step has what it writes, what the game tests on the way
-to it from the script's entry (a trigger tile's variable, the map's frame
+before its card, is one step with it. Each step has what it writes, what
+the game tests on the way to it from the script's entry (a trigger tile's variable, the map's frame
 table, `CheckBadge`, `HasItem`, `GoToIfSet` and the rest: the positive
 ones), and the steps that give that. `badge_chains()` is each badge's gym in
 order -- Whitney beaten, the lass's trigger, the badge, TM45 -- from those
@@ -111,8 +111,8 @@ on the save (Chuck's badge starts the Rocket takeover only as the third
 midgame badge; a gift the bag has no room for, `GoToIfNoItemSpace`, is not
 given), taking what `TakeItem` takes and the money `SubMoneyImmediate` does,
 and naming what it does not do itself (a Pokemon or an egg given, a roamer
-let loose); noting what each thing it writes held before
-(`record`), and `undo_step` takes one back: given that record, each thing
+let loose); noting what each thing it writes held before (`record`), and
+`undo_step` takes one back: given that record, each thing
 the run left untouched since goes back to what it found; the rest -- a
 step done by playing -- by what the step writes: undone, a flag it only
 held for the scene (`FLAG_ENGAGING_STATIC_POKEMON` around a battle) left
@@ -140,9 +140,10 @@ the map: the empty space around a room. Outside, ledges and climbs part
 ground the player reaches, so there it is not asked. `town_map()` is the
 Pokégear's town map, both regions, drawn as the game draws it: the tiles'
 PNG laid out by the screen `PokegearMap_LoadGraphics` loads, over the window
-`ov101_021EAF40` copies, in the colours of the NCLR `PokegearMap_LoadPalettes`
-loads for it (a new game's skin). `town_tiles()` is where each map is on it -- a map
-of the main matrix at the chunks it owns, rows moved as
+`ov101_021EAF40` copies, in the colours of the NCLR
+`PokegearMap_LoadPalettes` loads for it (a new game's skin). `town_tiles()`
+is where each map is on it -- a map of the main matrix at the chunks it
+owns, rows moved as
 `PokegearMap_InitInternal` moves them, any other at its header's world
 coordinates -- and `town_tile` where the Pokégear marks the player.
 
@@ -229,7 +230,8 @@ slot editor for species, level, nature, ability, held item, moves, IVs, EVs
 and friendship; adding, removing, reordering, moving between box and
 party), Borsa (the machines as a checklist, the Pokedex's way: every TM, TR
 and HM with its move and type, "ce l'ho", and a count for a TR, which a use
-spends; written as the game keeps the pocket, 101 slots at most), Pokedex (per
+spends; searched by "MT 45" as by "TM045"; written as the game keeps the
+pocket, 101 slots at most), Pokedex (per
 species, all at once, and the two switches), Posizione (the `--where`
 write, the map picked from a list or on the town map), Flag e variabili (by
 name) and Info (the two halves and the block table). The name can only be written in letters and digits: that is all
@@ -238,34 +240,43 @@ species list leaves out what a Pokemon cannot be (the egg, the retail form
 rows 496-507, the forms only a battle has).
 
 Posizione: the map field is a search over every map, grouped by its section
-(the name the game shows) with its region and kind, as a move field is; above
-it the Pokégear's town map, both regions, with the player marked and the
-player's section lit. Hovering names the place under the pointer, a click
-picks its own map (the town, the route) and fills the field, and a map picked
-in the field lights its section on the town map. Picking a map puts in x, y
-and the direction the game itself would give -- the fly point, the heal
-spawn, a door's arrival (`savedit.preset`); they stay editable, and the
-server refuses in Italian a tile off the map or where the player could not
-stand, naming the place that is safe (`savedit.tile_problem`).
+(the name the game shows) with its region and kind, as a move field is --
+Italian words for its constant's words match too ("centro", "palestra"),
+and a map a blackout sends the player to is tagged; above it the
+Pokégear's town map, both regions, with the player marked and the player's
+section lit. Hovering names the places under the pointer and the one a
+click picks (the town, the route), which fills the field; on a phone the
+map keeps its size and scrolls in its box, and a first tap names, a second
+picks. A map picked in the field lights its section on the town map.
+Picking a map puts in x, y and the direction the game itself would give --
+the fly point, the heal spawn, a door's arrival (`savedit.preset`), or
+empties them where there is none; they stay editable, and the server
+refuses in Italian a tile off the map or where the player could not stand,
+naming the place that is safe (`savedit.tile_problem`).
 
 The story in Allenatore: the start menu's entries and the running shoes,
 the Pokédex and the Pokégear (each card on its own, as
-`SavePokegear_RegisterCard` ORs it in), the level cap, the sixteen badges each with
-its gym's steps beside it, and every other step by place, with a search.
-Ticking a step runs it as the game does and offers the steps before it
-(in its gym, or the ones giving what it tests) -- or only those, "Solo i
-passi prima", to leave the save just before it to play it --, unticking takes it back and
-offers the ones after it -- what a run here found is kept beside the file's
-backups (`storia.json`), so it goes back as it was, and a variable an undo
-could only leave is shown under its step while it holds that value; nothing
-is forced, so a save can stand between
-two steps -- Whitney beaten, the badge not given. A badge ticked on its own
-asks: as the game (its step, with what the script writes with it) or the
-bit alone. Each step shows what it writes and what the game tests before
-it, met or not, and the step giving it: the Sudowoodo wants the SquirtBottle,
-which the Flower Shop gives only with the Plain Badge. Under a badge, the
-steps outside its gym that test it can be ticked there too; the search
-also matches the constants a step writes and tests (`squirt` finds both).
+`SavePokegear_RegisterCard` ORs it in), the level cap, the sixteen badges
+each with its gym's steps beside it, and every other step by place, with a
+search that also matches the constants a step writes and tests (`squirt`
+finds the Flower Shop's bottle and the Sudowoodo that wants it). A step
+another of its place shares a name with, or named only by a constant, says
+what tells it apart. Ticking a step runs it as the game does and offers the
+steps before it (in its gym, or the ones giving what it tests), or those
+alone ("Solo i passi prima"), which leaves the save just before it, to play
+it; unticking takes it back and offers the ones after it. What a run here
+found is kept beside the file's backups (`storia.json`), so a step ticked
+and unticked leaves the file as it was, and a variable an undo could only
+leave is shown under its step while it holds that value. Nothing is forced,
+so a save can stand between two steps -- Whitney beaten, the badge not
+given. A badge ticked on its own asks: as the game (its step, with what the
+script writes with it) or the bit alone, which says the counters it leaves.
+Each step shows what it writes -- and what the editor does not do, an egg
+given, a roamer -- and what the game tests before it, met or not, and the
+step giving it: the Sudowoodo wants the SquirtBottle, which the Flower Shop
+gives only with the Plain Badge; under a badge, the steps outside its gym
+that test it can be ticked there too. A tick keeps what was typed in the
+form above it and not saved yet.
 
 In the Pokemon dialog a move is picked only from the species'
 `learnable_moves`, each shown with all its sources as tags (Lv. 36, MT 035,
@@ -301,8 +312,7 @@ shows a constant it has no name for as itself. A part the server cannot
 read from the tree -- the town map, the story, the machines, the start
 menu's entries, the level cap, the field moves -- comes empty with the
 reason (`errors`), which the page shows in a banner, and the rest still
-loads. When the tree changes under a
-running server, the page, which polls it, asks for the data again and
+loads. When the tree changes under a running server, the page, which polls it, asks for the data again and
 reopens the save it shows, icons included; no reload. The emulator slots are
 the ROMs `config.mk` and the Makefile say make builds.
 
