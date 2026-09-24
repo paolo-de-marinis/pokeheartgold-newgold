@@ -187,7 +187,8 @@ def read_in_the_reference():
 #   data        the move record answers it in this engine
 #   unused      no move here has the effect
 #   not ported  it is not here; what the game does instead is said
-# An effect whose C gets written here leaves the table; nothing may join it.
+# An effect whose C gets written here leaves the table; nothing may join it
+# but an effect whose C a script replaces, as THROAT_CHOP's did.
 UNREAD_HERE = {
     "ATK_ACC_UP": "script: subscript 355 refuses when both stats are at +6, the reference's up-front check",
     "GUARD_SPLIT": "script: effect script 288 fails behind a substitute, as the reference's substitute list does",
@@ -227,7 +228,7 @@ UNREAD_HERE = {
 
 class WhatIsStillMissingTests(unittest.TestCase):
     # A ratchet, not a target: the table above may only shrink.
-    STILL_UNREAD = 37
+    STILL_UNREAD = 33
 
     def test_the_table_only_ever_shrinks(self):
         self.assertLessEqual(
