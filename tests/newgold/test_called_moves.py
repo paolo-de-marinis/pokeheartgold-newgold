@@ -8,7 +8,6 @@ GoBackToBeforeMove sends it (BattleController_BeforeMove.c at d0380a487),
 past what stops a Pokemon acting and the PP, which were the caller's.
 """
 
-import re
 import unittest
 
 from test_ability_interactions import run_c
@@ -91,7 +90,12 @@ class CalledMoveTests(unittest.TestCase):
         steps = function(controller, "ov12_0224C38C")
         self.assertIn("!(ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) && ov12_0224B1FC(", steps)
         self.assertRegex(steps, r"if \(!\(ctx->unk_2184 & MULTIHIT_CALLED_MOVE\)\) \{\n\s+ov12_022565E0\(battleSystem, ctx\);")
-        self.assertIn("(ctx->unk_2184 & MULTIHIT_CALLED_MOVE)", function(controller, "NoteMoveUsed"))
+        noted = function(controller, "NoteMoveUsed")
+        called = noted.index("if (ctx->unk_2184 & MULTIHIT_CALLED_MOVE) {")
+        self.assertLess(called, noted.index("ctx->moveUsedBefore"))
+        # But a called Photon Geyser or Shell Side Arm chooses its category
+        # (Pokemon Central, Geyser Fotonico, Armaguscio).
+        self.assertIn("ChooseMoveCategory(battleSystem, ctx);\n        return;", noted[called:])
         # Parental Bond starts for the called move where it does for a
         # chosen one, once the steps are through: CallMove leaves the PP flag
         # TryStartParentalBond asks off.

@@ -3735,8 +3735,15 @@ static void NoteMoveUsed(BattleSystem *battleSystem, BattleContext *ctx) {
     // A move that hits several comes back through here for each target after
     // the first, with unk_2184 at 13 to pass the checks it has been through
     // (ov12_0224D03C); it was used once, and noted with its first. A move
-    // another move called was noted as the move that called it.
-    if (ctx->unk_2184 == 13 || (ctx->unk_2184 & MULTIHIT_CALLED_MOVE)) {
+    // another move called was noted as the move that called it, but chooses
+    // its own category: a called Photon Geyser or Shell Side Arm goes
+    // physical as a chosen one does (Pokemon Central, Geyser Fotonico,
+    // Armaguscio).
+    if (ctx->unk_2184 & MULTIHIT_CALLED_MOVE) {
+        ChooseMoveCategory(battleSystem, ctx);
+        return;
+    }
+    if (ctx->unk_2184 == 13) {
         return;
     }
     ctx->moveUsedBefore = ctx->moveUsedLast;
