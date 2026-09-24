@@ -104,7 +104,8 @@ to it from the script's entry (a trigger tile's variable, the map's frame
 table, `CheckBadge`, `HasItem`, `GoToIfSet` and the rest: the positive
 ones), and the steps that give that. `badge_chains()` is each badge's gym in
 order -- Whitney beaten, the lass's trigger, the badge, TM45 -- from those
-links. `run_step` runs a step on a save as the game would, each jump decided
+links and the step a walk stops at (Pryce's TM07, given in the badge's
+scene). `run_step` runs a step on a save as the game would, each jump decided
 on the save (Chuck's badge starts the Rocket takeover only as the third
 midgame badge), noting what each thing it writes held before
 (`record`), and `undo_step` takes one back: given that record, each thing

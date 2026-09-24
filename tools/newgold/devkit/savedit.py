@@ -3591,7 +3591,7 @@ def story():
             return stop     # nothing from its marker on: the scene before it is no step of its own
         steps.append({"id": f"{stem[8:12]}:{line + 1}", "script": stem, "line": line + 1, "kind": kind, "key": key,
                       "battle": battle, "writes": [list(w) for w in writes], "start": line, "through": list(through),
-                      "prefix": [list(w) for w in before]})
+                      "prefix": [list(w) for w in before], "stop": stop})
         return stop
 
     for stem in _script_stems():
@@ -3673,9 +3673,11 @@ def _badge_chains(steps, by_id, gates):
     the steps giving what it tests, and theirs, the first of each; the step
     that opens a gate of those maps (the lowest value its variable is set to
     past the one that keeps the player out); the scripted battles of those
-    scripts, and their steps that test what the chain gives (the machine
-    after the badge); and any step testing a story flag the chain leaves
-    for good (Clair's machine, once the Dragon's Den gave the badge). In
+    scripts, their steps that test what the chain gives (the machine
+    after the badge) and the step a chain step's walk stops at, the same
+    scene going on (Pryce's machine, given right after his badge); and any
+    step testing a story flag the chain leaves for good (Clair's machine,
+    once the Dragon's Den gave the badge). In
     order: a step after the ones it needs, then gate, battle, the rest, the
     badge."""
     out = {}
@@ -3702,20 +3704,24 @@ def _badge_chains(steps, by_id, gates):
             grew = False
             lasting = {w for sid in chain for w in by_id[sid]["tests"] if w[0] == "flag" and w[2]
                        and flag_sections().get(w[1]) == "Story flags"}
+            stops = {(by_id[sid]["script"], by_id[sid]["stop"]) for sid in chain}
             for s in steps:
                 near = s["script"] in files
                 if s["id"] not in chain and ((near and s["kind"] == "battle")
                                              or (near and any(set(by) & set(chain) for _, by in s["needs"]))
+                                             or (s["script"], s["start"]) in stops
                                              or any(_gives(w, need) for need, _ in s["needs"] for w in lasting)):
                     chain.append(s["id"])
                     files.add(s["script"])
                     grew = True
         depth = {}
 
-        def deep(sid, seen=()):
+        def deep(sid, seen=()):     # after the steps it needs, and the one whose walk stops at it
             if sid not in depth:
-                below = [deep(p, seen + (sid,)) for _, by in by_id[sid]["needs"] for p in by[:1]
-                         if p in chain and p not in seen]
+                s = by_id[sid]
+                before = [by[0] for _, by in s["needs"] if by] + [c for c in chain if (by_id[c]["script"], by_id[c]["stop"])
+                                                                  == (s["script"], s["start"])]
+                below = [deep(p, seen + (sid,)) for p in before if p in chain and p not in seen]
                 depth[sid] = 1 + max(below, default=-1)
             return depth[sid]
         rank = {"gate": 0, "battle": 1, "badge": 3}
