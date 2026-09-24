@@ -9,20 +9,44 @@ at boot rather than as a build error, which is to say silently.
 The run is short on purpose: far enough to know the ROM is executing and
 drawing, not far enough to be a play session. tools/newgold/devkit/harness/smoke.py takes it
 further when a change deserves it.
+
+The boot draws a random pre-size of up to 0x100 bytes from the main arena,
+seeded by the console's clock, which the emulator takes from the host's. So
+the same ROM booted white in some runs and not in others while the arena was
+short: the test boots at a fixed clock, which gives the same screen every
+run, and measures the arena the boot left against the largest pre-size.
 """
 
-import subprocess
+import re
+import struct
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
+from test_heaps import MAX_PRESIZE, arena_lo
 from test_level_cap import ROOT
 
 sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import smoke  # noqa: E402
 
 FRAMES = 900
+CLOCK = 1700000000           # any fixed second: 2023-11-14 22:13:20 UTC
+MAIN_MEMORY = 0x02000000     # the ram: dump starts here, 4 MB, mirrored above
+ARENA_INFO = 0x027FFDA0      # HW_ARENA_INFO_BUF: OSArenaInfo, lo[9] then hi[9]
+RTC = 0x027FFDE8             # OSSystemWork.real_time_clock: the date in BCD first
+
+
+def arena(build, ram):
+    """The pre-size the boot drew and the main arena it left, from a dump of
+    main memory: Heap_InitSystem puts the heap table right after the
+    pre-size, and nothing takes from the arena after the boot."""
+    heap_info = re.search(r"^\s+([0-9A-F]{8}) [0-9A-F]{8} \.bss\s+sHeapInfo\s", (build / "main.elf.xMAP").read_text(), re.M)
+    table = struct.unpack_from("<I", ram, int(heap_info.group(1), 16) - MAIN_MEMORY)[0]
+    info = (ARENA_INFO - MAIN_MEMORY) % len(ram)
+    lo, hi = struct.unpack_from("<I", ram, info)[0], struct.unpack_from("<I", ram, info + 36)[0]
+    return table - arena_lo(build), hi - lo
 
 
 class BootTests(unittest.TestCase):
@@ -44,15 +68,29 @@ class BootTests(unittest.TestCase):
     def boot(self, name, rom=None):
         rom = rom or smoke.ROMS[name]
         shot = Path(self.temp.name) / f"{name}.ppm"
-        line = smoke.run(self.host, rom, FRAMES, [f"shot:{FRAMES - 1}:{shot}"], self.temp.name)
+        ram = Path(self.temp.name) / f"{name}.ram"
+        line = smoke.run(self.host, rom, FRAMES,
+                         [f"clock:{CLOCK}", f"shot:{FRAMES - 1}:{shot}", f"ram:{FRAMES - 1}:{ram}"], self.temp.name)
         self.assertIn(f"ran {FRAMES} frames", line)
         self.assertTrue(shot.exists(), f"{name} drew nothing")
+        dump = ram.read_bytes()
+        at = (RTC - MAIN_MEMORY) % len(dump)
+        self.assertEqual(dump[at:at + 3].hex(), time.strftime("%y%m%d", time.gmtime(CLOCK)),
+                         f"{name}'s console date is not the pinned clock's")
+        presize, left = arena(rom.parent, dump)
         pixels = shot.read_bytes()
         # A ROM that stopped early leaves the screen one flat colour.
         body = pixels[pixels.index(b"255\n") + 4:]
         self.assertGreater(len(set(body[i:i + 3] for i in range(0, len(body), 3))), 8,
-                           f"{name} is showing a blank screen")
-        print(f"PASS: {name} {line}, screen has content.")
+                           f"{name} is showing a blank screen (pre-size {presize:#x}, "
+                           f"{left:#x} of the main arena left)")
+        self.assertGreaterEqual(
+            left - (MAX_PRESIZE - presize), 0,
+            f"{name} booted at a pre-size of {presize:#x} with {left:#x} of the main arena "
+            f"left; at the largest, {MAX_PRESIZE:#x}, the file system's table would not fit "
+            "and the screen would stay white")
+        print(f"PASS: {name} {line}, screen has content; {left - (MAX_PRESIZE - presize):#x} "
+              f"of the main arena left at the largest pre-size.")
 
     def test_heartgold_boots(self):
         self.boot("heartgold")

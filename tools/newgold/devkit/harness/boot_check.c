@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 enum {
     ENV_GET_OVERSCAN = 2, ENV_GET_CAN_DUPE = 3, ENV_SET_MESSAGE = 6,
@@ -38,6 +39,28 @@ static unsigned long frames_run;
 static int pressed[16];
 static int touching, touch_x, touch_y;
 static int quiet = 1;
+
+// The core has no clock of its own: melonDS sets the console's RTC from the
+// host's time(), and the game draws its random pre-size at boot from the RTC
+// among other things (sub_0201A1B4), so the same input booted differently
+// from one second to the next -- and white whenever the pre-size was more
+// than the main arena had room for. clock:SECONDS pins what time() answers,
+// in UTC, for the whole run. The host is linked -rdynamic, so the core,
+// loaded after it, calls this time() and not the C library's.
+static long long pinned_clock = -1;
+
+time_t time(time_t *out) {
+    struct timespec now;
+    time_t t;
+    if (pinned_clock >= 0) {
+        t = (time_t)pinned_clock;
+    } else {
+        clock_gettime(CLOCK_REALTIME, &now);
+        t = now.tv_sec;
+    }
+    if (out) *out = t;
+    return t;
+}
 
 static void logger(int level, const char *fmt, ...) {
     if (quiet && level < 2) return;
@@ -132,6 +155,12 @@ int main(int argc, char **argv) {
     snprintf(system_dir, sizeof system_dir, "%s", argv[3]);
     snprintf(save_dir, sizeof save_dir, "%s", argv[3]);
     unsigned long frames = strtoul(argv[4], NULL, 10);
+    for (int i = 5; i < argc; i++) {
+        if (sscanf(argv[i], "clock:%lld", &pinned_clock) == 1) {
+            setenv("TZ", "UTC0", 1);
+            tzset();
+        }
+    }
 
     void *core = dlopen(core_path, RTLD_NOW);
     if (!core) { fprintf(stderr, "dlopen: %s\n", dlerror()); return 1; }

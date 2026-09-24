@@ -227,7 +227,9 @@ of actions fixed before the run.
 
 - `boot_check.c` -- the host: presses, touches, holds and pokes at given
   frames, memory dumps, a small window of memory sampled every so many
-  frames, screenshots, a save put where the core reads it.
+  frames, screenshots, a save put where the core reads it, and the clock
+  pinned (`clock:SECONDS`): the core takes the console's from the host's, and
+  the boot's random pre-size follows it.
 - `smoke.py` -- builds the host, runs the ROMs, and the scripted route
   through the opening.
 - `where.py` -- symbols out of `main.elf`, and the player's position and

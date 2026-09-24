@@ -24,6 +24,7 @@ boot_check.c takes its actions on the command line, one per argument:
     shot:FRAME:PATH                 write the framebuffer out
     save:FRAME:PATH                 write the emulator's state out
     load:PATH                       start from a state instead of a boot
+    clock:SECONDS                   the host clock the core reads, pinned
     ram:FRAME:PATH                  write the console's own memory out
 
 save and load are what make anything past the opening practical: reaching the
@@ -205,7 +206,8 @@ WALKS = {
 
 def build(into):
     host = Path(into) / "boot_check"
-    result = subprocess.run(["cc", "-O2", "-o", str(host), str(HOST), "-ldl"],
+    # -rdynamic: the core binds to the host's time(), which clock: pins.
+    result = subprocess.run(["cc", "-O2", "-rdynamic", "-o", str(host), str(HOST), "-ldl"],
                             capture_output=True, text=True)
     if result.returncode != 0:
         raise SystemExit(result.stderr.strip())
