@@ -32,7 +32,7 @@ _CHANGE_TYPE:
     Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION
     HandleMagicPowder 0
     // {0} transformed into the Psychic type!
-    PrintMessage msg_0197_01585, TAG_NICKNAME_ABILITY, BATTLER_CATEGORY_MSG_TEMP, BATTLER_CATEGORY_MSG_TEMP
+    PrintMessage msg_0197_01585, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
     Wait
     WaitButtonABTime 30
     End

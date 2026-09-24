@@ -1285,6 +1285,15 @@ class TypeChangeTests(unittest.TestCase):
                           f"    CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_DEFENDER, BMON_DATA_TYPE_2, {type_}, _CHANGE_TYPE\n"
                           "    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_TYPE_3, TYPE_NONE, _FAILED\n", check, name)
 
+    def test_the_target_is_the_one_named(self):
+        # "{0} transformed into the Psychic type!" names the target, as
+        # Soak's line does; the reference's names the message battler, left
+        # over from whatever set it last.
+        for name, row in (("subscript_0351_ChangeTargetToWaterType.s", "01330"),
+                          ("subscript_0323_ChangeTargetToPsychicType.s", "01585")):
+            script = (ROOT / "files/battledata/script/subscript" / name).read_text()
+            self.assertIn(f"PrintMessage msg_0197_{row}, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER\n", script, name)
+
     def test_arceus_and_silvally_cannot_change_their_own_type(self):
         # Pokemon Central (Sistema Primevo): no move changes the type of a
         # Pokemon with RKS System, as none does one with Multitype.
