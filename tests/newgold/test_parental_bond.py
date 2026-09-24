@@ -247,6 +247,33 @@ class ParentalBondTests(unittest.TestCase):
         self.assertIn("!ParentalBond_StrikeToCome(ctx)", function(CONTROLLER.read_text(), "ov12_0224CC88"))
         self.assertIn("!ParentalBond_IsSecondStrike(ctx)", function(COMMANDS.read_text(), "BtlCmd_CalcFuryCutterPower"))
 
+    def test_the_second_strike_rolls_no_accuracy_and_so_never_misses(self):
+        # Pokemon Central (Amorefiliale): one accuracy check for the two
+        # strikes. The second comes back through the before-move checks with
+        # the multi-strike flags, which skip the roll and what overrides it,
+        # and a miss is only ever the roll's: MOVE_STATUS_MULTI_HIT_DISRUPTED
+        # is set only for a later strike that missed, so it never cuts off
+        # what the first strike held back for the second (ov12_02250490).
+        self.assertIn("ctx->checkMultiHit = MULTIHIT_MULTI_HIT_MOVE;", function(OVERLAY.read_text(), "TryStartParentalBond"))
+        flags = (ROOT / "include/constants/battle.h").read_text()
+        multi = re.search(r"#define MULTIHIT_MULTI_HIT_MOVE\s+\((.*)\)", flags).group(1)
+        triple = re.search(r"#define MULTIHIT_TRIPLE_KICK\s+\((.*)\)", flags).group(1)
+        self.assertIn("MULTIHIT_SKIP_ACCURACY_CHECK", multi)
+        self.assertIn("MULTIHIT_SKIP_ACCURACY_OVERRIDES", triple)
+        controller = CONTROLLER.read_text()
+        self.assertIn("ctx->unk_2184 = ctx->checkMultiHit;", function(controller, "ov12_0224CF14"))
+        checks = function(controller, "ov12_0224C4D8")
+        self.assertIn("if (!(ctx->unk_2184 & 0x20) && ctx->battlerIdTarget != BATTLER_NONE && BattleSystem_CheckMoveHit(", checks)
+        self.assertIn("if (!(ctx->unk_2184 & 0x40) && ctx->battlerIdTarget != BATTLER_NONE && BattleSystem_CheckMoveEffect(", checks)
+        sources = "".join(path.read_text() for path in sorted((ROOT / "src/battle").glob("*.c")))
+        self.assertEqual(sources.count("|= MOVE_STATUS_MISSED"), 1)
+        self.assertIn("ctx->moveStatusFlag |= MOVE_STATUS_MISSED;", function(controller, "BattleSystem_CheckMoveHit"))
+        self.assertEqual(sources.count("|= MOVE_STATUS_MULTI_HIT_DISRUPTED"), 1)
+        self.assertIn("} else if (ctx->unk_2180 && (ctx->moveStatusFlag & MOVE_STATUS_MISSED)) {", function(controller, "ov12_0224C5F8"))
+        scripts = "".join(path.read_text() for path in (ROOT / "files/battledata/script").rglob("*.s"))
+        self.assertIsNone(re.search(r"UpdateVar +OPCODE_(FLAG_ON|SET|ADD), *BSCRIPT_VAR_MOVE_STATUS_FLAGS, *[^/\n]*"
+                                    r"MOVE_STATUS_(MISSED|MULTI_HIT_DISRUPTED)", scripts))
+
     def test_a_first_strike_that_proves_the_last_does_what_it_left(self):
         # Pokemon Central (Spargispora, Mossa multicolpo): Effect Spore's
         # sleep ends a multi-strike move at once. Parental Bond's first strike
