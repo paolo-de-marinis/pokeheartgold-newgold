@@ -7636,4 +7636,96 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} and\nthe opposing {STRVAR_1 1, 1, 0} switched places!</language>
 	</row>
+	<row id="msg_0197_01909" index="1909">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} is waiting\nfor {STRVAR_1 1, 1, 0}’s move...</language>
+	</row>
+	<row id="msg_0197_01910" index="1910">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} is waiting\nfor the wild {STRVAR_1 1, 1, 0}’s move...</language>
+	</row>
+	<row id="msg_0197_01911" index="1911">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} is waiting\nfor the opposing {STRVAR_1 1, 1, 0}’s move...</language>
+	</row>
+	<row id="msg_0197_01912" index="1912">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} is waiting\nfor {STRVAR_1 1, 1, 0}’s move...</language>
+	</row>
+	<row id="msg_0197_01913" index="1913">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} is waiting\nfor the wild {STRVAR_1 1, 1, 0}’s move...</language>
+	</row>
+	<row id="msg_0197_01914" index="1914">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} is waiting\nfor {STRVAR_1 1, 1, 0}’s move...</language>
+	</row>
+	<row id="msg_0197_01915" index="1915">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} is waiting\nfor the opposing {STRVAR_1 1, 1, 0}’s move...</language>
+	</row>
+	<row id="msg_0197_01916" index="1916">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The two moves have become one!\nIt’s a combined move!</language>
+	</row>
+	<row id="msg_0197_01917" index="1917">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A rainbow appeared in the sky\non your team’s side!</language>
+	</row>
+	<row id="msg_0197_01918" index="1918">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A rainbow appeared in the sky\non the opposing team’s side!</language>
+	</row>
+	<row id="msg_0197_01919" index="1919">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A sea of fire enveloped\nyour team!</language>
+	</row>
+	<row id="msg_0197_01920" index="1920">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A sea of fire enveloped\nthe opposing team!</language>
+	</row>
+	<row id="msg_0197_01921" index="1921">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A swamp enveloped\nyour team!</language>
+	</row>
+	<row id="msg_0197_01922" index="1922">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A swamp enveloped\nthe opposing team!</language>
+	</row>
+	<row id="msg_0197_01923" index="1923">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The rainbow on your team’s\nside disappeared!</language>
+	</row>
+	<row id="msg_0197_01924" index="1924">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The rainbow on the opposing\nteam’s side disappeared!</language>
+	</row>
+	<row id="msg_0197_01925" index="1925">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The sea of fire around your\nteam disappeared!</language>
+	</row>
+	<row id="msg_0197_01926" index="1926">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The sea of fire around the\nopposing team disappeared!</language>
+	</row>
+	<row id="msg_0197_01927" index="1927">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The swamp around your team\ndisappeared!</language>
+	</row>
+	<row id="msg_0197_01928" index="1928">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The swamp around the opposing\nteam disappeared!</language>
+	</row>
+	<row id="msg_0197_01929" index="1929">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} is hurt by the sea of fire!</language>
+	</row>
+	<row id="msg_0197_01930" index="1930">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} is hurt\nby the sea of fire!</language>
+	</row>
+	<row id="msg_0197_01931" index="1931">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} is hurt\nby the sea of fire!</language>
+	</row>
 </body>

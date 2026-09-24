@@ -1415,6 +1415,11 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
         speed1 *= 2;
     }
 
+    // A swamp around the side quarters it (Pokemon Central, Erbapatto).
+    if (ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerId1)] & SIDE_CONDITION_SWAMP) {
+        speed1 /= 4;
+    }
+
     if (heldItem1 == HOLD_EFFECT_SOMETIMES_PRIORITY) {
         if (ctx->unk_310C[battlerId1] % (100 / extra1) == 0) {
             boostedPriority1 = 1;
@@ -1472,6 +1477,10 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
 
     if (ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerId2)] & SIDE_CONDITION_TAILWIND) {
         speed2 *= 2;
+    }
+
+    if (ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerId2)] & SIDE_CONDITION_SWAMP) {
+        speed2 /= 4;
     }
 
     if (heldItem2 == HOLD_EFFECT_SOMETIMES_PRIORITY) {
@@ -1866,6 +1875,38 @@ static BOOL SecondaryEffectMeetsItsTarget(BattleContext *ctx) {
     return TRUE;
 }
 
+// The flinches among the added effects.
+static const u16 sFlinchEffects[] = {
+    MOVE_EFFECT_FLINCH_HIT,
+    MOVE_EFFECT_CHARGE_TURN_HIGH_CRIT_FLINCH,
+    MOVE_EFFECT_FLINCH_DOUBLE_DAMAGE_FLY_OR_BOUNCE,
+    MOVE_EFFECT_FLINCH_MINIMIZE_DOUBLE_HIT,
+    MOVE_EFFECT_FLINCH_POISON_HIT,
+    MOVE_EFFECT_FLINCH_BURN_HIT,
+    MOVE_EFFECT_FLINCH_FREEZE_HIT,
+    MOVE_EFFECT_FLINCH_PARALYZE_HIT,
+    MOVE_EFFECT_HIT_TWICE_AND_FLINCH,
+};
+
+// The chance of the move's added effect: twice over with Serene Grace, and
+// twice over again under a rainbow on the user's side -- not for Secret
+// Power, and not on top of Serene Grace for a flinch (Pokemon Central,
+// Acquapatto, Fiammapatto).
+u16 MoveEffectChance(BattleSystem *battleSystem, BattleContext *ctx) {
+    u16 chance = BattleMoveTbl(ctx, ctx->moveNoCur)->effectChance;
+    BOOL sereneGrace = GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SERENE_GRACE;
+
+    if (sereneGrace) {
+        chance *= 2;
+    }
+    if ((ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker)] & SIDE_CONDITION_RAINBOW)
+        && ctx->moveNoCur != MOVE_SECRET_POWER
+        && !(sereneGrace && MoveIsInList(BattleMoveTbl(ctx, ctx->moveNoCur)->effect, sFlinchEffects, NELEMS(sFlinchEffects)))) {
+        chance *= 2;
+    }
+    return chance;
+}
+
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     BOOL ret = FALSE;
     u16 effectChance;
@@ -1920,12 +1961,7 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
             ret = TRUE;
         }
     } else if (ctx->unk_2174 & (1 << 26)) {
-        // the inclusion of serene grace here makes me think this function has to do with secondary move effects
-        if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SERENE_GRACE) {
-            effectChance = BattleMoveTbl(ctx, ctx->moveNoCur)->effectChance * 2;
-        } else {
-            effectChance = BattleMoveTbl(ctx, ctx->moveNoCur)->effectChance;
-        }
+        effectChance = MoveEffectChance(battleSystem, ctx);
 
         GF_ASSERT(effectChance);
 
@@ -1943,12 +1979,7 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     } else if (ctx->unk_2174 && !SecondaryEffectMeetsItsTarget(ctx)) {
         ctx->unk_2174 = 0;
     } else if (ctx->unk_2174) {
-        // the inclusion of serene grace here makes me think this function has to do with secondary move effects
-        if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SERENE_GRACE) {
-            effectChance = BattleMoveTbl(ctx, ctx->moveNoCur)->effectChance * 2;
-        } else {
-            effectChance = BattleMoveTbl(ctx, ctx->moveNoCur)->effectChance;
-        }
+        effectChance = MoveEffectChance(battleSystem, ctx);
 
         GF_ASSERT(effectChance);
 
@@ -3180,8 +3211,10 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
     // for the question: they weaken the hit, not the danger it shudders at.
     winds = StrongWindsFor(battleSystem, ctx, battlerIdAttacker, moveNo);
 
-    // STAB
-    if (!(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS) && (GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_TYPE_1, NULL) == moveType || GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_TYPE_2, NULL) == moveType)) {
+    // STAB, which a combined Pledge always has (Pokemon Central, Acquapatto).
+    if (!(ctx->battleStatus & BATTLE_STATUS_IGNORE_TYPE_EFFECTIVENESS)
+        && (GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_TYPE_1, NULL) == moveType || GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_TYPE_2, NULL) == moveType
+            || (ctx->selfTurnData[battlerIdAttacker].combinedPledge && BattleMoveTbl(ctx, moveNo)->effect == MOVE_EFFECT_PLEDGE))) {
         if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_ADAPTABILITY) {
             damage = QMul_RoundDown(damage, UQ412__2_0);
         } else {

@@ -345,9 +345,18 @@ typedef enum Terrain {
 // Spikes and Lucky Chant; Aurora Veil goes above them all.
 #define SIDE_CONDITION_STICKY_WEB    (1 << 11)
 #define SIDE_CONDITION_AURORA_VEIL   (1 << 15)
+// The Pledges' three conditions, each a count of the turns' ends left as
+// Tailwind's is: a rainbow over the side of the Pokemon that made it, a sea
+// of fire or a swamp around the other.
+#define SIDE_CONDITION_RAINBOW       (7 << 16)
+#define SIDE_CONDITION_SEA_OF_FIRE   (7 << 19)
+#define SIDE_CONDITION_SWAMP         (7 << 22)
 
 #define SIDE_CONDITION_TAILWIND_SHIFT    8
 #define SIDE_CONDITION_LUCKY_CHANT_SHIFT 12
+#define SIDE_CONDITION_RAINBOW_SHIFT     16
+#define SIDE_CONDITION_SEA_OF_FIRE_SHIFT 19
+#define SIDE_CONDITION_SWAMP_SHIFT       22
 
 // Side Condition Enums
 #define SIDE_COND_REFLECT_TURNS       0

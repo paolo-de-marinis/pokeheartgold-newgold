@@ -451,5 +451,6 @@
 #define MOVE_EFFECT_TEATIME                                      441
 #define MOVE_EFFECT_INSTRUCT                                     442
 #define MOVE_EFFECT_ALLY_SWITCH                                  443
+#define MOVE_EFFECT_PLEDGE                                       444
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

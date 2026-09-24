@@ -121,6 +121,7 @@ u8 *Battler_RageFistHits(BattleSystem *battleSystem, BattleContext *ctx, int bat
 int BattleMoveCategory(BattleContext *ctx, u32 moveNo, int battlerIdAttacker);
 void ChooseMoveCategory(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL ov12_0225561C(BattleContext *ctx, int battlerId);
+u16 MoveEffectChance(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int holdEffect);
 int CheckEjectPack(BattleContext *ctx, int battlerId);

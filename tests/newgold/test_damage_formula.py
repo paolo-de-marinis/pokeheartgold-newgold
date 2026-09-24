@@ -61,7 +61,7 @@ typedef struct {
     struct { int glaiveRush; int tarShot; int telekinesisTurns; } moveConditions[4];
     struct { int protectFlag, roostFlag; } turnData[4];
     u8 teraShellResisting;
-    struct { u32 unk14; } selfTurnData[4];
+    struct { u32 unk14; u32 combinedPledge; } selfTurnData[4];
     u8 selectedMonIndex[4];
 } BattleContext;
 typedef struct { int range, category, effect, power; } MoveTbl;
@@ -192,6 +192,10 @@ int main(void) {
     // 6.6 STAB, 1.5 rounded down: 67; Adaptability 2.0: 90.
     reset(); S.types[0][0] = TYPE_FIRE; EXPECT(calc(), 67);
     S.ability[0] = ABILITY_ADAPTABILITY; EXPECT(calc(), 90);
+    // A combined Pledge has it whoever uses it (Pokemon Central, Acquapatto):
+    // a Normal user's Water one, 67; the bit alone on another move, 45.
+    reset(); ctx.moveType = TYPE_WATER; ctx.selfTurnData[0].combinedPledge = 1; S.move.effect = MOVE_EFFECT_PLEDGE; EXPECT(calc(), 67);
+    S.move.effect = MOVE_EFFECT_HIT; EXPECT(calc(), 45);
 
     // 6.7 one verdict from the whole chart. Fire into Water/Grass is neutral
     // and stays 45; HeartGold went row by row, 45 -> 22 -> 44.

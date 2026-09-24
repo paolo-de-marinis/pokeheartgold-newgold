@@ -790,6 +790,11 @@
 // Throat Chop's silence as an added effect of the hit, where the reference
 // sets it in the effect script before the accuracy check.
 #define BATTLE_SUBSCRIPT_THROAT_CHOP                        464
+// The Pledges' three conditions: one laid, a sea of fire burning a Pokemon,
+// one gone. The reference leaves the moves unimplemented.
+#define BATTLE_SUBSCRIPT_PLEDGE_CONDITION                   465
+#define BATTLE_SUBSCRIPT_SEA_OF_FIRE                        466
+#define BATTLE_SUBSCRIPT_PLEDGE_CONDITION_END               467
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

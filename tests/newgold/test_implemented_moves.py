@@ -1019,6 +1019,113 @@ int main(void) {
         target = target[target.index("int battlerIdTargetTemp = ctx->playerActions[battlerIdAttacker].unk4;"):]
         self.assertLess(target.index("if (battlerIdTargetTemp == battlerIdAttacker) {"), target.index("followMeFlag"))
 
+    PLEDGE_PROGRAM = r"""
+typedef struct { int unused; } BattleSystem;
+typedef struct { int hp; u16 ability; } BattleMon;
+typedef struct { u32 struggleFlag : 1, forceExecutionOrder : 2, pledgeCombination : 2; } TurnData;
+typedef struct { u32 combinedPledge : 1; } SelfTurnData;
+typedef struct { int effect, effectChance; } MoveTbl;
+typedef struct {
+    int battlerIdAttacker; u32 moveNoCur; int movePower; int moveType; u32 fieldSideConditionFlags[2];
+    BattleMon battleMons[4]; TurnData turnData[4]; SelfTurnData selfTurnData[4]; u16 selected[4]; int acted[4];
+} BattleContext;
+static u32 sBattleType; static MoveTbl sMove;
+static int BattleSystem_GetBattlerIdPartner(BattleSystem *bs, int battlerId) { (void)bs; return sBattleType ? battlerId ^ 2 : battlerId; }
+static u8 BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
+static u16 GetBattlerSelectedMove(BattleContext *ctx, int battlerId) { return ctx->selected[battlerId]; }
+static BOOL ov12_0225561C(BattleContext *ctx, int battlerId) { return ctx->acted[battlerId]; }
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &sMove; }
+static BOOL MoveIsInList(u32 move, const u16 *list, int count) { for (int i = 0; i < count; i++) if (list[i] == move) return TRUE; return FALSE; }
+@FUNCTIONS@
+static BattleContext ctx;
+static BattleSystem bs;
+static void reset(void) {
+    memset(&ctx, 0, sizeof(ctx)); sBattleType = 1;
+    for (int i = 0; i < 4; i++) ctx.battleMons[i].hp = 10;
+}
+int main(void) {
+    // Fire Pledge first, the ally's Grass Pledge still to come: the Fire one
+    // waits and the Grass one goes next, as a Fire move that burns.
+    reset(); ctx.moveNoCur = MOVE_FIRE_PLEDGE; ctx.selected[2] = MOVE_GRASS_PLEDGE;
+    EXPECT(TryPledgeCombination(&bs, &ctx, 0), 1);
+    EXPECT(ctx.turnData[2].pledgeCombination, 2); EXPECT(ctx.turnData[2].forceExecutionOrder, EXECUTION_ORDER_AFTER_YOU);
+    ctx.moveNoCur = MOVE_GRASS_PLEDGE;
+    EXPECT(TryPledgeCombination(&bs, &ctx, 2), 2);
+    EXPECT(ctx.movePower, 150); EXPECT(ctx.moveType, TYPE_FIRE); EXPECT(ctx.selfTurnData[2].combinedPledge, 1);
+    // Water with Fire is Water (the rainbow), Grass with Water is Grass (the
+    // swamp), whichever comes first.
+    reset(); ctx.moveNoCur = MOVE_WATER_PLEDGE; ctx.selected[2] = MOVE_FIRE_PLEDGE;
+    EXPECT(TryPledgeCombination(&bs, &ctx, 0), 1); EXPECT(ctx.turnData[2].pledgeCombination, 1);
+    reset(); ctx.moveNoCur = MOVE_FIRE_PLEDGE; ctx.selected[2] = MOVE_WATER_PLEDGE;
+    EXPECT(TryPledgeCombination(&bs, &ctx, 0), 1); EXPECT(ctx.turnData[2].pledgeCombination, 1);
+    reset(); ctx.moveNoCur = MOVE_GRASS_PLEDGE; ctx.selected[2] = MOVE_WATER_PLEDGE;
+    EXPECT(TryPledgeCombination(&bs, &ctx, 0), 1); EXPECT(ctx.turnData[2].pledgeCombination, 3);
+    // Alone: the same Pledge, no Pledge, an ally that has moved or fainted,
+    // a single battle.
+    reset(); ctx.moveNoCur = MOVE_FIRE_PLEDGE; ctx.selected[2] = MOVE_FIRE_PLEDGE; EXPECT(TryPledgeCombination(&bs, &ctx, 0), 0);
+    ctx.selected[2] = MOVE_EMBER; EXPECT(TryPledgeCombination(&bs, &ctx, 0), 0);
+    ctx.selected[2] = MOVE_GRASS_PLEDGE; ctx.acted[2] = TRUE; EXPECT(TryPledgeCombination(&bs, &ctx, 0), 0);
+    ctx.acted[2] = FALSE; ctx.battleMons[2].hp = 0; EXPECT(TryPledgeCombination(&bs, &ctx, 0), 0);
+    reset(); sBattleType = 0; ctx.moveNoCur = MOVE_FIRE_PLEDGE; ctx.selected[2] = MOVE_GRASS_PLEDGE; EXPECT(TryPledgeCombination(&bs, &ctx, 0), 0);
+    EXPECT(ctx.movePower, 0);
+    // The rainbow doubles an added effect's chance; not Secret Power's, and
+    // with Serene Grace not a flinch's again.
+    reset(); sMove = (MoveTbl){ MOVE_EFFECT_BURN_HIT, 10 }; ctx.moveNoCur = MOVE_EMBER;
+    EXPECT(MoveEffectChance(&bs, &ctx), 10);
+    ctx.fieldSideConditionFlags[0] = 4 << SIDE_CONDITION_RAINBOW_SHIFT; EXPECT(MoveEffectChance(&bs, &ctx), 20);
+    ctx.battleMons[0].ability = ABILITY_SERENE_GRACE; EXPECT(MoveEffectChance(&bs, &ctx), 40);
+    sMove.effect = MOVE_EFFECT_FLINCH_HIT; EXPECT(MoveEffectChance(&bs, &ctx), 20);
+    ctx.battleMons[0].ability = 0; EXPECT(MoveEffectChance(&bs, &ctx), 20);
+    ctx.moveNoCur = MOVE_SECRET_POWER; EXPECT(MoveEffectChance(&bs, &ctx), 10);
+    ctx.moveNoCur = MOVE_BITE; ctx.fieldSideConditionFlags[0] = 0; ctx.fieldSideConditionFlags[1] = 4 << SIDE_CONDITION_RAINBOW_SHIFT;
+    EXPECT(MoveEffectChance(&bs, &ctx), 10);
+    return 0;
+}
+"""
+
+    def test_the_pledges_combine_into_one_move(self):
+        # Pokemon Central (Acquapatto, Fiammapatto, Erbapatto): with an ally's
+        # other Pledge, one waits and the other goes next as a move of 150 of
+        # the winning type, with STAB, leaving a rainbow over the user's side
+        # or a sea of fire or a swamp around the target's for four turns.
+        from test_ability_behaviour import HEADER, run_c
+        import import_battle_messages
+        for move in ("WATER_PLEDGE", "FIRE_PLEDGE", "GRASS_PLEDGE"):
+            self.assertImplemented(move, "MOVE_EFFECT_PLEDGE")
+        script = effect_script("MOVE_EFFECT_PLEDGE")
+        self.assertIn("SetMoveConditionFlag MOVE_WATER_PLEDGE, BATTLER_CATEGORY_ATTACKER", script)
+        self.assertIn(f"PrintMessage msg_0197_{import_battle_messages.port_row('pledge waiting'):05d}, TAG_NICKNAME_NICKNAME", script)
+        self.assertIn(f"PrintMessage msg_0197_{import_battle_messages.port_row('pledge combined'):05d}, TAG_NONE", script)
+        waiting = script[script.index("\n_WAIT:"):]
+        self.assertIn("MOVE_STATUS_NO_MORE_WORK", waiting)
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        kinds = re.search(r"static int PledgeKind\(u16 move\) \{.*?\n\}\n\nstatic const u8 sPledgeTypes\[\] = [^;]*;", commands, re.S).group(0)
+        flinches = re.search(r"static const u16 sFlinchEffects\[\] = \{.*?\};", overlay, re.S).group(0)
+        functions = "\n".join([kinds, function(commands, "TryPledgeCombination"), flinches, function(overlay, "MoveEffectChance")])
+        run_c(self, HEADER + '#include "constants/battle_script_imports.h"\n' + self.PLEDGE_PROGRAM.replace("@FUNCTIONS@", functions))
+        # The combined move's STAB and the swamp's quartered Speed.
+        self.assertIn("ctx->selfTurnData[battlerIdAttacker].combinedPledge && BattleMoveTbl(ctx, moveNo)->effect == MOVE_EFFECT_PLEDGE",
+                      function(overlay, "CalcTypeEffectiveness"))
+        speed = function(overlay, "CheckSortSpeed")
+        for battler in ("1", "2"):
+            self.assertIn(f"SIDE_CONDITION_SWAMP) {{\n        speed{battler} /= 4;", speed)
+        # The condition once the combined move has hit; the sea of fire at
+        # each turn's end; the three running out; Court Change taking them.
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        additional = function(controller, "TryAdditionalMoveEffect")
+        pledge = additional[additional.index("case MOVE_EFFECT_PLEDGE:"):]
+        for part in ("combinedPledge", "combination == 1 ? ctx->battlerIdAttacker : target", "|= 4 << shift",
+                     "BATTLE_SUBSCRIPT_PLEDGE_CONDITION"):
+            self.assertIn(part, pledge[:pledge.index("break;")])
+        self.assertIn("case UMC_STATE_SEA_OF_FIRE:", controller)
+        self.assertIn("DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 8)", controller[controller.index("case UMC_STATE_SEA_OF_FIRE:"):controller.index("case UMC_STATE_INGRAIN:")])
+        self.assertIn("BATTLE_SUBSCRIPT_PLEDGE_CONDITION_END", controller[controller.index("case UFC_STATE_PLEDGES:"):controller.index("case UFC_STATE_WISH:")])
+        court = function(commands, "BtlCmd_SetMoveConditionFlag")
+        court = court[court.index("case MOVE_COURT_CHANGE:"):]
+        self.assertIn("SIDE_CONDITION_RAINBOW | SIDE_CONDITION_SEA_OF_FIRE | SIDE_CONDITION_SWAMP", court[:court.index("break;")])
+
     def test_instruct_has_its_target_use_its_last_move_again(self):
         # Pokemon Central (Imposizione): straight after, PP spent, not the
         # moves that wait, charge, recharge, copy or call another.

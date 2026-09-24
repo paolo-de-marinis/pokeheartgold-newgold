@@ -95,7 +95,8 @@ typedef struct TurnData {
     u32 shellTrapSprung : 1; // and sprung by a foe's physical hit: it goes next
     u32 instructed : 1; // Instruct landed on it: it uses its last move again once the action is over
     u32 allySwitched : 1; // it switched places with its ally this turn: the ally's Ally Switch fails
-    u32 unk0_A : 11;
+    u32 pledgeCombination : 2; // its ally's Pledge waits on it: which Pledge the two make (PledgeKind), 0 for none
+    u32 unk0_A : 9;
     int physicalDamage[4];
     int battlerIdPhysicalDamage;
     int battlerBitPhysicalDamage;
@@ -139,7 +140,9 @@ typedef struct SelfTurnData {
     // Shell Side Arm or Photon Geyser: the move being used is physical this
     // time, as ChooseMoveCategory decided when it was used.
     u32 physicalChosen : 1;
-    u32 unk0_11 : 14;
+    // Its Pledge is the combined one this action (the Pledges' effect script).
+    u32 combinedPledge : 1;
+    u32 unk0_11 : 13;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;

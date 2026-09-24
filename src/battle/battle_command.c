@@ -5,6 +5,7 @@
 #include "constants/abilities.h"
 #include "constants/battle.h"
 #include "constants/battle_script.h"
+#include "constants/battle_script_imports.h"
 #include "constants/battle_subscript.h"
 #include "constants/items.h"
 #include "constants/message_tags.h"
@@ -6385,11 +6386,7 @@ BOOL BtlCmd_CheckEffectActivation(BattleSystem *battleSystem, BattleContext *ctx
 
     int adrs = BattleScriptReadWord(ctx);
 
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SERENE_GRACE) {
-        effectChance = BattleMoveTbl(ctx, ctx->moveNoCur)->effectChance * 2;
-    } else {
-        effectChance = BattleMoveTbl(ctx, ctx->moveNoCur)->effectChance;
-    }
+    effectChance = MoveEffectChance(battleSystem, ctx);
 
     GF_ASSERT(effectChance != 0);
 
@@ -10540,6 +10537,48 @@ static void Battlers_SwapPlaces(BattleContext *ctx, int a, int b) {
     SwapBytes(&ctx->unk_312C[a & 1][0], &ctx->unk_312C[a & 1][1], 1);
 }
 
+// The Pledges' kinds, each beaten by the one before it on the type chart's
+// round -- Water puts out Fire, Fire burns Grass, Grass drinks Water -- and
+// the type of the move two of them make, the one that wins; 0 is no Pledge.
+static int PledgeKind(u16 move) {
+    switch (move) {
+    case MOVE_WATER_PLEDGE:
+        return 1;
+    case MOVE_FIRE_PLEDGE:
+        return 2;
+    case MOVE_GRASS_PLEDGE:
+        return 3;
+    }
+    return 0;
+}
+
+static const u8 sPledgeTypes[] = { TYPE_NORMAL, TYPE_WATER, TYPE_FIRE, TYPE_GRASS };
+
+// What a Pledge does as it is used (Pokemon Central, Acquapatto, Fiammapatto,
+// Erbapatto). 2: an ally's Pledge waited on this one, and this is the
+// combined move, of 150 and the type of the Pledge that wins. 1: an ally
+// still to move this turn has chosen another Pledge; it goes next, whatever
+// its speed or item, and this one waits. 0: a Pledge alone.
+static int TryPledgeCombination(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int ally = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
+    int kind = PledgeKind(ctx->moveNoCur);
+    int allyKind = PledgeKind(GetBattlerSelectedMove(ctx, ally));
+
+    if (ctx->turnData[battlerId].pledgeCombination) {
+        ctx->selfTurnData[battlerId].combinedPledge = TRUE;
+        ctx->movePower = 150;
+        ctx->moveType = sPledgeTypes[ctx->turnData[battlerId].pledgeCombination];
+        return 2;
+    }
+    if (ally != battlerId && ctx->battleMons[ally].hp && ov12_0225561C(ctx, ally) == FALSE
+        && !ctx->turnData[ally].struggleFlag && allyKind && allyKind != kind) {
+        ctx->turnData[ally].pledgeCombination = allyKind == kind % 3 + 1 ? kind : allyKind;
+        ctx->turnData[ally].forceExecutionOrder = EXECUTION_ORDER_AFTER_YOU;
+        return 1;
+    }
+    return 0;
+}
+
 // Ally Switch works in a double battle that is not a multi battle, beside an
 // ally that is standing, and not once that ally has switched places this
 // turn; used in a row it works one try in 3^n, as Protect does, the count
@@ -10661,14 +10700,15 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         break;
     }
     // Court Change swaps what lies on each side of the field: the screens,
-    // Mist, Safeguard, Tailwind and the entry hazards, with their turns, their
-    // layers and the order a Pokemon meets them in (Pokemon Central,
-    // Cambiocampo). What belongs to a Pokemon rather than to the ground -- a
-    // Future Sight on its way, a Wish, Lucky Chant, the items knocked off --
-    // stays where it is.
+    // Mist, Safeguard, Tailwind, the entry hazards and the Pledges' rainbow,
+    // sea of fire and swamp, with their turns, their layers and the order a
+    // Pokemon meets them in (Pokemon Central, Cambiocampo). What belongs to a
+    // Pokemon rather than to the ground -- a Future Sight on its way, a Wish,
+    // Lucky Chant, the items knocked off -- stays where it is.
     case MOVE_COURT_CHANGE: {
         u32 courtFlags = SIDE_CONDITION_REFLECT | SIDE_CONDITION_LIGHT_SCREEN | SIDE_CONDITION_AURORA_VEIL | SIDE_CONDITION_MIST | SIDE_CONDITION_SAFEGUARD
-            | SIDE_CONDITION_TAILWIND | SIDE_CONDITION_SPIKES | SIDE_CONDITION_TOXIC_SPIKES | SIDE_CONDITION_STEALTH_ROCKS | SIDE_CONDITION_STICKY_WEB;
+            | SIDE_CONDITION_TAILWIND | SIDE_CONDITION_SPIKES | SIDE_CONDITION_TOXIC_SPIKES | SIDE_CONDITION_STEALTH_ROCKS | SIDE_CONDITION_STICKY_WEB
+            | SIDE_CONDITION_RAINBOW | SIDE_CONDITION_SEA_OF_FIRE | SIDE_CONDITION_SWAMP;
         u32 swapped = (ctx->fieldSideConditionFlags[0] ^ ctx->fieldSideConditionFlags[1]) & courtFlags;
         SideConditionData data0 = ctx->fieldSideConditionData[0];
         SideConditionData *data = ctx->fieldSideConditionData;
@@ -10735,6 +10775,10 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         if (ctx->calcTemp) {
             Battlers_SwapPlaces(ctx, battlerId, BattleSystem_GetBattlerIdPartner(battleSystem, battlerId));
         }
+        break;
+    // The Pledges, whose script asks with Water Pledge's number for all three.
+    case MOVE_WATER_PLEDGE:
+        ctx->calcTemp = TryPledgeCombination(battleSystem, ctx, battlerId);
         break;
     // Whether the battler's Shell Trap was sprung, for its script to ask.
     case MOVE_SHELL_TRAP:

@@ -496,6 +496,12 @@ IMPLEMENTED_HERE = {
     # Ally Switch has the user and its ally change places in a double battle
     # (Pokemon Central, Cambiaposto): effect script 443.
     "ALLY_SWITCH": "MOVE_EFFECT_ALLY_SWITCH",
+    # The Pledges: a combined move of 150 when an ally uses another Pledge the
+    # same turn, and the sea of fire, the swamp or the rainbow it leaves
+    # (Pokemon Central, Acquapatto, Fiammapatto, Erbapatto): effect script 444.
+    "WATER_PLEDGE": "MOVE_EFFECT_PLEDGE",
+    "FIRE_PLEDGE": "MOVE_EFFECT_PLEDGE",
+    "GRASS_PLEDGE": "MOVE_EFFECT_PLEDGE",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

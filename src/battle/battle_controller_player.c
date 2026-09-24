@@ -1059,6 +1059,7 @@ typedef enum UpdateFieldConditionState {
     UFC_STATE_SAFEGUARD,
     UFC_STATE_TAILWIND,
     UFC_STATE_LUCKY_CHANT,
+    UFC_STATE_PLEDGES,
     UFC_STATE_WISH,
     UFC_STATE_RAIN,
     UFC_STATE_SANDSTORM,
@@ -1257,6 +1258,34 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
                 ctx->fieldConditionUpdateData++;
                 if (flag) {
                     break;
+                }
+            }
+            if (!flag) {
+                ctx->stateFieldConditionUpdate++;
+                ctx->fieldConditionUpdateData = 0;
+            }
+            break;
+        case UFC_STATE_PLEDGES:
+            // The Pledges' rainbow, sea of fire and swamp run out, each side's
+            // in turn, after the fourth turn's end counting the one they came
+            // in (Pokemon Central, Acquapatto, Fiammapatto, Erbapatto). MSG_TEMP
+            // says which for subscript 467.
+            while (ctx->fieldConditionUpdateData < 6) {
+                int shift = SIDE_CONDITION_RAINBOW_SHIFT + 3 * (ctx->fieldConditionUpdateData >> 1);
+
+                side = ctx->fieldConditionUpdateData & 1;
+                ctx->fieldConditionUpdateData++;
+                if (ctx->fieldSideConditionFlags[side] & (7 << shift)) {
+                    ctx->fieldSideConditionFlags[side] -= 1 << shift;
+                    if ((ctx->fieldSideConditionFlags[side] & (7 << shift)) == 0) {
+                        ctx->msgTemp = (shift - SIDE_CONDITION_RAINBOW_SHIFT) / 3;
+                        ctx->battlerIdTemp = ov12_02257E98(battleSystem, ctx, side);
+                        ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_PLEDGE_CONDITION_END);
+                        ctx->commandNext = ctx->command;
+                        ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                        flag = 1;
+                        break;
+                    }
                 }
             }
             if (!flag) {
@@ -1498,6 +1527,7 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
 }
 
 typedef enum UpdateMonConditionState {
+    UMC_STATE_SEA_OF_FIRE,
     UMC_STATE_INGRAIN,
     UMC_STATE_AQUA_RING,
     UMC_STATE_ABILITY,
@@ -1598,6 +1628,23 @@ static void BattleControllerPlayer_UpdateMonCondition(BattleSystem *battleSystem
         // those questions with no: none of them asks about a Pokemon's own.
         ctx->battlerIdAttacker = battlerId;
         switch (ctx->stateUpdateMonCondition) {
+        case UMC_STATE_SEA_OF_FIRE:
+            // A sea of fire around the Pokemon's side burns an eighth of its
+            // maximum HP at every turn's end, but not a Fire type's, and Magic
+            // Guard spares it (Pokemon Central, Fiammapatto, Erbapatto).
+            if ((ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerId)] & SIDE_CONDITION_SEA_OF_FIRE)
+                && ctx->battleMons[battlerId].hp != 0 && GetBattlerAbility(ctx, battlerId) != ABILITY_MAGIC_GUARD
+                && GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) != TYPE_FIRE && GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL) != TYPE_FIRE
+                && ctx->battleMons[battlerId].type3 != TYPE_FIRE) {
+                ctx->battlerIdTemp = battlerId;
+                ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 8);
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SEA_OF_FIRE);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            ctx->stateUpdateMonCondition++;
+            break;
         case UMC_STATE_INGRAIN:
             if ((ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN) && ctx->battleMons[battlerId].hp != ctx->battleMons[battlerId].maxHp && ctx->battleMons[battlerId].hp != 0) {
                 if (ctx->battleMons[battlerId].unk88.healBlockTurns) {
@@ -5437,6 +5484,29 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         }
         script = BATTLE_SUBSCRIPT_PLUCK;
         break;
+    // A combined Pledge that hit leaves its condition for four turns' ends,
+    // this one's counted: the rainbow over the user's side, the sea of fire
+    // or the swamp around the target's; one already there stays as it is
+    // (Pokemon Central, Acquapatto, Fiammapatto, Erbapatto). MSG_TEMP says
+    // which for subscript 465.
+    case MOVE_EFFECT_PLEDGE: {
+        int combination = ctx->turnData[ctx->battlerIdAttacker].pledgeCombination;
+        int shift = SIDE_CONDITION_RAINBOW_SHIFT + 3 * (combination - 1);
+        int side;
+
+        if (!ctx->selfTurnData[ctx->battlerIdAttacker].combinedPledge) {
+            return FALSE;
+        }
+        ctx->battlerIdTemp = combination == 1 ? ctx->battlerIdAttacker : target;
+        side = ctx->battlerIdTemp & 1;
+        if (ctx->fieldSideConditionFlags[side] & (7 << shift)) {
+            return FALSE;
+        }
+        ctx->fieldSideConditionFlags[side] |= 4 << shift;
+        ctx->msgTemp = combination - 1;
+        script = BATTLE_SUBSCRIPT_PLEDGE_CONDITION;
+        break;
+    }
     default:
         return FALSE;
     }

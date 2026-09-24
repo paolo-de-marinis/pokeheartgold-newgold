@@ -322,6 +322,52 @@ PORT_ROWS = [
         r"The opposing {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!",
         r"The opposing {STRVAR_1 1, 0, 0} and\nthe opposing {STRVAR_1 1, 1, 0} switched places!",
     ]),
+    # The Pledges. The engine leaves the moves unimplemented; the later
+    # games' lines. The one waiting names two Pokemon, so seven rows as Ally
+    # Switch's; the combination is about the field, one row; a condition laid
+    # or gone is about a side, two rows, TAG_NONE_SIDE's; the sea of fire's
+    # burn is about one Pokemon, three.
+    ("pledge waiting", [
+        r"{STRVAR_1 1, 0, 0} is waiting\nfor {STRVAR_1 1, 1, 0}’s move...",
+        r"{STRVAR_1 1, 0, 0} is waiting\nfor the wild {STRVAR_1 1, 1, 0}’s move...",
+        r"{STRVAR_1 1, 0, 0} is waiting\nfor the opposing {STRVAR_1 1, 1, 0}’s move...",
+        r"The wild {STRVAR_1 1, 0, 0} is waiting\nfor {STRVAR_1 1, 1, 0}’s move...",
+        r"The wild {STRVAR_1 1, 0, 0} is waiting\nfor the wild {STRVAR_1 1, 1, 0}’s move...",
+        r"The opposing {STRVAR_1 1, 0, 0} is waiting\nfor {STRVAR_1 1, 1, 0}’s move...",
+        r"The opposing {STRVAR_1 1, 0, 0} is waiting\nfor the opposing {STRVAR_1 1, 1, 0}’s move...",
+    ]),
+    ("pledge combined", [
+        r"The two moves have become one!\nIt’s a combined move!",
+    ]),
+    ("rainbow", [
+        r"A rainbow appeared in the sky\non your team’s side!",
+        r"A rainbow appeared in the sky\non the opposing team’s side!",
+    ]),
+    ("sea of fire", [
+        r"A sea of fire enveloped\nyour team!",
+        r"A sea of fire enveloped\nthe opposing team!",
+    ]),
+    ("swamp", [
+        r"A swamp enveloped\nyour team!",
+        r"A swamp enveloped\nthe opposing team!",
+    ]),
+    ("rainbow ends", [
+        r"The rainbow on your team’s\nside disappeared!",
+        r"The rainbow on the opposing\nteam’s side disappeared!",
+    ]),
+    ("sea of fire ends", [
+        r"The sea of fire around your\nteam disappeared!",
+        r"The sea of fire around the\nopposing team disappeared!",
+    ]),
+    ("swamp ends", [
+        r"The swamp around your team\ndisappeared!",
+        r"The swamp around the opposing\nteam disappeared!",
+    ]),
+    ("sea of fire burns", [
+        r"{STRVAR_1 1, 0, 0} is hurt by the sea of fire!",
+        r"The wild {STRVAR_1 1, 0, 0} is hurt\nby the sea of fire!",
+        r"The opposing {STRVAR_1 1, 0, 0} is hurt\nby the sea of fire!",
+    ]),
 ]
 
 
