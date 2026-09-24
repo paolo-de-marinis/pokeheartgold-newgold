@@ -1664,11 +1664,13 @@ BOOL ov12_022503EC(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
 // The three Fangs come as a side effect on hit, and their subscript rolls the
 // status and the flinch against the chance itself, one after the other; both
 // are additional effects all the same (Pokemon Central, Forzabruta and
-// Anonimanto), and the reference lists the three by name.
+// Anonimanto), and the reference lists the three by name. Matcha Gotcha's
+// subscript comes on hit as well, for its drain, and rolls its burn itself.
 static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
     switch (BattleMoveTbl(ctx, moveNo)->effect) {
     case MOVE_EFFECT_PREVENT_ESCAPE_HIT:
         return moveNo != MOVE_THOUSAND_WAVES;
+    case MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT:
     case MOVE_EFFECT_FLINCH_BURN_HIT:
     case MOVE_EFFECT_FLINCH_FREEZE_HIT:
     case MOVE_EFFECT_FLINCH_PARALYZE_HIT:
@@ -1930,7 +1932,11 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     if (IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE && GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE) {
         ctx->selfTurnData[ctx->battlerIdAttacker].sheerForceTraded = TRUE;
     }
+    // Matcha Gotcha's drain is no additional effect and comes whatever
+    // happens to its burn: its subscript asks Sheer Force and the cloak for
+    // the burn alone.
     if (IsSuppressibleSecondaryEffect(ctx, ctx->moveNoCur) == TRUE
+        && BattleMoveTbl(ctx, ctx->moveNoCur)->effect != MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT
         && (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_SHEER_FORCE
             || (ctx->battlerIdTarget != BATTLER_NONE
                 && !(ctx->unk_2174 & MOVE_SIDE_EFFECT_TO_ATTACKER)

@@ -73,6 +73,25 @@ class ThawTests(unittest.TestCase):
                       " || effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT", source)
 
 
+class MatchaGotchaTests(unittest.TestCase):
+    def test_it_drains_on_every_hit_and_burns_one_time_in_five(self):
+        # Pokemon Central (Spruzzate): half the damage back on every hit, a
+        # burn at 20%. Without ON_HIT ov12_02250490 rolled the 20% first and
+        # the subscript rolled the burn again: a drain on 20% of hits, a burn
+        # on 4%, and Sheer Force and a Covert Cloak dropped the drain too.
+        effect = (ROOT / "files/battledata/script/effect_script/effect_script_0352.s").read_text()
+        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_BURN_AND_DRAIN_HEALTH", effect)
+        script = subscript("BurnAndDrainHealth")
+        drain = script.index("Call BATTLE_SUBSCRIPT_DRAIN_HALF_DAMAGE_DEALT")
+        for check in ("ABILITY_SHEER_FORCE, NoBurn", "HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS, NoBurn", "CheckEffectActivation NoBurn"):
+            self.assertLess(drain, script.index(check))
+            self.assertLess(script.index(check), script.index("Call BATTLE_SUBSCRIPT_BURN"))
+        # Sheer Force still powers it, and leaves it the drain.
+        overlay = OVERLAY.read_text()
+        self.assertIn("case MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT:", function(overlay, "IsSuppressibleSecondaryEffect"))
+        self.assertIn("->effect != MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT", function(overlay, "ov12_02250490"))
+
+
 class MortalSpinTests(unittest.TestCase):
     def test_it_poisons_and_clears_once_the_move_is_over(self):
         # The reference poisons through the side effect and runs Rapid Spin's
