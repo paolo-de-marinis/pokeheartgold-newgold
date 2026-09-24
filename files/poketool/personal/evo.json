@@ -5172,6 +5172,11 @@
           "method": "EVO_FORM_ARGUMENT",
           "param": 999,
           "target": "SPECIES_GHOLDENGO"
+        },
+        {
+          "method": "EVO_HAS_MOVE",
+          "param": "MOVE_PAY_DAY",
+          "target": "SPECIES_GHOLDENGO"
         }
       ]
     },
@@ -5187,6 +5192,16 @@
           "method": "EVO_HAS_MOVE",
           "param": "MOVE_SWORDS_DANCE",
           "target": "SPECIES_KINGAMBIT"
+        }
+      ]
+    },
+    {
+      "baseSpecies": "SPECIES_GIMMIGHOUL_ROAMING",
+      "evos": [
+        {
+          "method": "EVO_HAS_MOVE",
+          "param": "MOVE_PAY_DAY",
+          "target": "SPECIES_GHOLDENGO"
         }
       ]
     }

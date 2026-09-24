@@ -386,6 +386,28 @@ static void check_swords_dance(void) {
     }
 }
 
+static void check_pay_day(void) {
+    // Paolo's design (2026-09-23), both forms' rows as evo.json has them: a
+    // level-up knowing Pay Day, with no coin in the Bag; the Chest Form's
+    // 999 coins are still its other way, and are the method when both hold.
+    static const u16 moves[] = { MOVE_NONE, MOVE_ASTONISH, MOVE_PAY_DAY };
+    const struct Evolution *rows[] = { rows_SPECIES_GIMMIGHOUL, rows_SPECIES_GIMMIGHOUL_ROAMING };
+    const u16 species[] = { SPECIES_GIMMIGHOUL, SPECIES_GIMMIGHOUL_ROAMING };
+    for (unsigned f = 0; f < 2; f++) {
+        Pokemon mon = { .species = species[f], .level = 55 };
+        memcpy(table, rows[f], sizeof(table));
+        for (unsigned m = 0; m < 3; m++) {
+            mon.move = moves[m];
+            assert(evolve(&mon, NULL, EVO_HAS_MOVE) == (mon.move == MOVE_PAY_DAY ? SPECIES_GHOLDENGO : SPECIES_NONE));
+        }
+    }
+    Pokemon chest = { .species = SPECIES_GIMMIGHOUL, .level = 55, .move = MOVE_PAY_DAY };
+    memcpy(table, rows_SPECIES_GIMMIGHOUL, sizeof(table));
+    coins = GIMMIGHOUL_EVOLUTION_COINS;
+    assert(evolve(&chest, NULL, EVO_FORM_ARGUMENT) == SPECIES_GHOLDENGO);
+    coins = 0;
+}
+
 static void check_counted_moves(void) {
     // Primeape counts Rage Fist and Stantler Psyshield Bash, nothing else and
     // no one else; the count stops at 255.
@@ -438,6 +460,7 @@ int main(void) {
     check_defeated_bisharp();
     check_trade_specific_mon();
     check_swords_dance();
+    check_pay_day();
     check_counted_moves();
     check_lets_go();
     return 0;
@@ -522,14 +545,15 @@ def scene():
 
 
 # The species whose rows, as the table has them, the program runs.
-DESIGNED_SPECIES = ("SPECIES_BISHARP",)
+DESIGNED_SPECIES = ("SPECIES_BISHARP", "SPECIES_GIMMIGHOUL", "SPECIES_GIMMIGHOUL_ROAMING")
 
 
 def designed_rows():
     """Each of DESIGNED_SPECIES' rows in evo.json, as rows_<species>."""
     table = {entry["baseSpecies"]: entry["evos"] for entry in json.loads(read("files/poketool/personal/evo.json"))["evoTable"]}
     return "\n".join(f"static const struct Evolution rows_{base}[MAX_EVOS_PER_POKE] = {{ "
-                     + ", ".join(f"{{ {e['method']}, {e['param']}, {e['target']} }}" for e in table[base]) + " };"
+                     + (", ".join(f"{{ {e['method']}, {e['param']}, {e['target']} }}" for e in table.get(base, []))
+                        or "{ EVO_NONE, 0, SPECIES_NONE }") + " };"
                      for base in DESIGNED_SPECIES)
 
 

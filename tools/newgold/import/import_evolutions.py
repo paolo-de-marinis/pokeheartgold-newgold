@@ -83,6 +83,11 @@ DESIGNED_ROWS = {
     # it, three Bisharp holding a Leader's Crest defeated, stays; no Bisharp
     # in the game holds one.
     "SPECIES_BISHARP": [("EVO_HAS_MOVE", "MOVE_SWORDS_DANCE", "SPECIES_KINGAMBIT")],
+    # Gholdengo, levelling up knowing Pay Day, which both forms learn at 55
+    # (wotbl.py's DESIGNED_MOVES). The engine's 999 Gimmighoul Coins stay
+    # the Chest Form's other way; no coin is placed anywhere.
+    "SPECIES_GIMMIGHOUL": [("EVO_HAS_MOVE", "MOVE_PAY_DAY", "SPECIES_GHOLDENGO")],
+    "SPECIES_GIMMIGHOUL_ROAMING": [("EVO_HAS_MOVE", "MOVE_PAY_DAY", "SPECIES_GHOLDENGO")],
 }
 
 
