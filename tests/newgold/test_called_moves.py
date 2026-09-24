@@ -131,8 +131,8 @@ int main(void) {
         self.assertNotIn("NARC_a_0_0_0", body)
 
     def test_the_steps_skip_the_caller_s_pp_and_metronome_count(self):
-        # The PP and Pressure were the calling move's; the Metronome item
-        # counted the calling move once; the calling move was the one noted.
+        # The PP was the calling move's; the Metronome item counted the
+        # calling move once.
         controller = CONTROLLER.read_text()
         steps = function(controller, "ov12_0224C38C")
         self.assertIn("!(ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) && ov12_0224B1FC(", steps)
@@ -140,17 +140,73 @@ int main(void) {
         # 13: one use, one count (Pokemon Central, Plessimetro).
         self.assertRegex(steps, r"if \(!\(ctx->unk_2184 & MULTIHIT_CALLED_MOVE\) && ctx->unk_2184 != MULTIHIT_HIT_MULTIPLE_TARGETS\) \{\n\s+ov12_022565E0\(battleSystem, ctx\);")
         self.assertIn("ctx->unk_2184 = 13;", function(controller, "ov12_0224D03C"))
-        noted = function(controller, "NoteMoveUsed")
-        called = noted.index("if (ctx->unk_2184 & MULTIHIT_CALLED_MOVE) {")
-        self.assertLess(called, noted.index("ctx->moveUsedBefore"))
-        # But a called Photon Geyser or Shell Side Arm chooses its category
-        # (Pokemon Central, Geyser Fotonico, Armaguscio).
-        self.assertIn("ChooseMoveCategory(battleSystem, ctx);\n        return;", noted[called:])
         # Parental Bond starts for the called move where it does for a
         # chosen one, once the steps are through: CallMove leaves the PP flag
         # TryStartParentalBond asks off.
         self.assertLess(steps.index("TryStartParentalBond(battleSystem, ctx);"),
                         steps.index("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_0, ctx->moveNoCur);"))
+
+    def test_the_called_move_is_noted_as_the_move_used(self):
+        run_c(NOTED.replace("@FUNCTIONS@", function(CONTROLLER.read_text(), "NoteMoveUsed")))
+
+
+NOTED = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/battle_menu.h"
+#include "constants/battle_script_imports.h"
+#include "constants/moves.h"
+typedef struct { int unused; } BattleSystem;
+typedef struct { u16 hp; u16 moves[4]; } BattleMon;
+typedef struct { int inputSelection; } PlayerAction;
+typedef struct { u8 struggleFlag, forceExecutionOrder; } TurnData;
+typedef struct {
+    BattleMon battleMons[4];
+    PlayerAction playerActions[4];
+    TurnData turnData[4];
+    u8 movePos[4];
+    int battlerIdAttacker, categories, echoedVoiceUsed;
+    u32 unk_2184, roundUsers;
+    u16 moveNoCur, moveUsedLast, moveUsedBefore;
+} BattleContext;
+static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 4; }
+static u32 MaskOfFlagNo(int n) { return 1u << n; }
+static BOOL ov12_0225561C(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
+static void ChooseMoveCategory(BattleSystem *bs, BattleContext *ctx) { (void)bs; ctx->categories++; }
+@FUNCTIONS@
+int main(void) {
+    BattleSystem bs = { 0 };
+    BattleContext ctx = { 0 };
+    // Thunderbolt, then a Metronome that calls Fusion Bolt: Metronome is
+    // noted as it is used, and the move it calls in its place.
+    ctx.moveNoCur = MOVE_THUNDERBOLT; NoteMoveUsed(&bs, &ctx);
+    ctx.moveNoCur = MOVE_METRONOME; NoteMoveUsed(&bs, &ctx);
+    assert(ctx.moveUsedLast == MOVE_METRONOME && ctx.moveUsedBefore == MOVE_THUNDERBOLT);
+    ctx.unk_2184 = MULTIHIT_SKIP_OBEDIENCE_CHECK | MULTIHIT_SKIP_STATUS_CHECK | MULTIHIT_CALLED_MOVE;
+    ctx.moveNoCur = MOVE_FUSION_BOLT; NoteMoveUsed(&bs, &ctx);
+    assert(ctx.moveUsedLast == MOVE_FUSION_BOLT && ctx.moveUsedBefore == MOVE_THUNDERBOLT);
+    assert(ctx.categories == 3);
+    // The next move sees Fusion Bolt as the move before it.
+    ctx.unk_2184 = 0;
+    ctx.moveNoCur = MOVE_FUSION_FLARE; NoteMoveUsed(&bs, &ctx);
+    assert(ctx.moveUsedBefore == MOVE_FUSION_BOLT);
+    // A called Echoed Voice counts.
+    ctx.unk_2184 = MULTIHIT_CALLED_MOVE;
+    ctx.moveNoCur = MOVE_ECHOED_VOICE; NoteMoveUsed(&bs, &ctx);
+    assert(ctx.echoedVoiceUsed);
+    // A spread move's later targets note nothing.
+    ctx.unk_2184 = 13;
+    ctx.moveNoCur = MOVE_SURF; NoteMoveUsed(&bs, &ctx);
+    assert(ctx.moveUsedLast == MOVE_ECHOED_VOICE);
+    return 0;
+}
+"""
 
 
 if __name__ == "__main__":

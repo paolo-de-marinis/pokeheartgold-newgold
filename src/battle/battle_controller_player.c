@@ -3801,19 +3801,21 @@ static void TrySelfDestruct(BattleSystem *battleSystem, BattleContext *ctx) {
 static void NoteMoveUsed(BattleSystem *battleSystem, BattleContext *ctx) {
     // A move that hits several comes back through here for each target after
     // the first, with unk_2184 at 13 to pass the checks it has been through
-    // (ov12_0224D03C); it was used once, and noted with its first. A move
-    // another move called was noted as the move that called it, but chooses
-    // its own category: a called Photon Geyser or Shell Side Arm goes
-    // physical as a chosen one does (Pokemon Central, Geyser Fotonico,
-    // Armaguscio).
-    if (ctx->unk_2184 & MULTIHIT_CALLED_MOVE) {
-        ChooseMoveCategory(battleSystem, ctx);
-        return;
-    }
+    // (ov12_0224D03C); it was used once, and noted with its first.
     if (ctx->unk_2184 == 13) {
         return;
     }
-    ctx->moveUsedBefore = ctx->moveUsedLast;
+    // A move another move called is noted as the move used, in the place of
+    // the one that called it, which was noted as it was used: a Fusion Flare
+    // after a Metronome's Fusion Bolt is boosted, a called Echoed Voice
+    // counts and a called Round calls the others (Showdown's gen-9 runMove
+    // notes the move the caller ended as, lastSuccessfulMoveThisTurn; Pokemon
+    // Central, Incrofiamma, has the last move used in the turn). It chooses
+    // its own category: a called Photon Geyser or Shell Side Arm goes
+    // physical as a chosen one does (Geyser Fotonico, Armaguscio).
+    if (!(ctx->unk_2184 & MULTIHIT_CALLED_MOVE)) {
+        ctx->moveUsedBefore = ctx->moveUsedLast;
+    }
     ctx->moveUsedLast = ctx->moveNoCur;
     ChooseMoveCategory(battleSystem, ctx);
     // Echoed Voice counts a turn a move of it was used in, failed or not;
