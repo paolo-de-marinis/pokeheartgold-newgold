@@ -5,8 +5,6 @@
 #include "bg_window.h"
 #include "text.h"
 
-void ov18_021EEA84(PokedexAppData *pokedexApp, u32 species, u32 state, int windowId, int x, int y, u32 color, int alignment);
-
 // An entry's height: its real one once the grid list at 0x1030 has the
 // species caught, "???" before.
 void ov18_021EEAE4(PokedexAppData *pokedexApp, u32 species, u32 idx, int windowId) {

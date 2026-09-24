@@ -814,8 +814,9 @@ Overlay OVY_18
     Object asm/overlay_18_021EE8B8.o
     Object src/application/pokedex/ov18_021EE984.o
     Object asm/overlay_18_021EE9FC.o
+    Object src/application/pokedex/ov18_021EEA84.o
     Object src/application/pokedex/ov18_021EEAE4.o
-    Object asm/overlay_18_021EEB34.o
+    Object src/application/pokedex/ov18_021EEB34.o
     Object src/application/pokedex/ov18_021EEB94.o
     Object asm/overlay_18_021EEBE4.o
     Object src/application/pokedex/ov18_021EEC34.o
