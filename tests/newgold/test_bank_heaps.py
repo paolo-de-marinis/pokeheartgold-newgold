@@ -27,6 +27,7 @@ LAZY = [
     ("src/pokemon_summary_text.c", 750, "HEAP_ID_19", "the summary's moves page: 7,076 bytes of 0x45000"),
     ("src/overlay_40_02235E34.c", 237, "HEAP_ID_109", "the Vs. Recorder's search by Pokemon, not measured: Wi-Fi"),
     ("src/overlay_40_0223EC40.c", 237, "HEAP_ID_109", "the Vs. Recorder's other search screen, as its first"),
+    ("src/overlay_70_02238430.c", 237, "HEAP_ID_61", "the Global Trade Station, not measured: Wi-Fi"),
 ]
 
 

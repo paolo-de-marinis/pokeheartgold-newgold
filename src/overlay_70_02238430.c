@@ -33,7 +33,9 @@ extern void LoadOVY38(void);
 
 // The Global Trade Station starts: its heap, the DWC library and its heap,
 // the state, the screens and the text it prints -- its own lines, the
-// species names and three more banks.
+// species names and three more banks. The species names are opened lazily,
+// a line at a time: whole, the bank is a line per species and form (36,302
+// bytes, retail's 12,180), and the station prints one name at a time.
 BOOL ov70_02238430(OverlayManager *man, int *state) {
     GtsWork *work;
 
@@ -61,7 +63,7 @@ BOOL ov70_02238430(OverlayManager *man, int *state) {
         work->msgData = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0775_bin, HEAP_ID_61);
         work->unkBA8 = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0778_bin, HEAP_ID_61);
         work->unkBAC = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0800_bin, HEAP_ID_61);
-        work->speciesNames = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0237_bin, HEAP_ID_61);
+        work->speciesNames = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, NARC_msg_msg_0237_bin, HEAP_ID_61);
         work->unkBB0 = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0798_bin, HEAP_ID_61);
         SetKeyRepeatTimers(4, 8);
         ov70_02238818(work, man);
