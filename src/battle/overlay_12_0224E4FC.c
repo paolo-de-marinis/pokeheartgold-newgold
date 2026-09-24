@@ -2084,10 +2084,12 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
 
 // Propeller Tail and Stalwart both aim where they were told. The reference
 // never tells the two apart -- every read of one is the same condition as the
-// read of the other -- so they are one question here.
-static BOOL BattlerIgnoresRedirection(BattleContext *ctx, int battlerId) {
+// read of the other -- so they are one question here. Snipe Shot aims where
+// it was told too, past Follow Me, Rage Powder, Lightning Rod and Storm Drain
+// (Pokemon Central, Sonoqui), which the reference's target branch leaves out.
+static BOOL BattlerIgnoresRedirection(BattleContext *ctx, int battlerId, u16 moveNo) {
     int ability = GetBattlerAbility(ctx, battlerId);
-    return ability == ABILITY_PROPELLER_TAIL || ability == ABILITY_STALWART;
+    return ability == ABILITY_PROPELLER_TAIL || ability == ABILITY_STALWART || moveNo == MOVE_SNIPE_SHOT;
 }
 
 int ov12_022506D4(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, u16 moveNo, int a4, int range) {
@@ -2181,7 +2183,7 @@ int ov12_022506D4(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdA
         battlerIdOpponents[1] = ov12_0223ABB8(battleSystem, battlerIdAttacker, 2);
 
         if (battleType & BATTLE_TYPE_DOUBLES) {
-            if (!BattlerIgnoresRedirection(ctx, battlerIdAttacker) && ctx->fieldSideConditionData[side].followMeFlag && ctx->battleMons[ctx->fieldSideConditionData[side].battlerIdFollowMe].hp) {
+            if (!BattlerIgnoresRedirection(ctx, battlerIdAttacker, moveNo) && ctx->fieldSideConditionData[side].followMeFlag && ctx->battleMons[ctx->fieldSideConditionData[side].battlerIdFollowMe].hp) {
                 battlerIdTarget = ctx->fieldSideConditionData[side].battlerIdFollowMe;
             } else if (ctx->battleMons[battlerIdOpponents[0]].hp && ctx->battleMons[battlerIdOpponents[1]].hp) {
                 // This looks like targeting for Outrage in double battles
@@ -2203,7 +2205,7 @@ int ov12_022506D4(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdA
         if (battlerIdTargetTemp == battlerIdAttacker) {
             // Aimed at the place its ally stood, which Ally Switch has made
             // its own: the move fails (Pokemon Central, Cambiaposto).
-        } else if (!BattlerIgnoresRedirection(ctx, battlerIdAttacker) && ctx->fieldSideConditionData[side].followMeFlag && ctx->battleMons[ctx->fieldSideConditionData[side].battlerIdFollowMe].hp) {
+        } else if (!BattlerIgnoresRedirection(ctx, battlerIdAttacker, moveNo) && ctx->fieldSideConditionData[side].followMeFlag && ctx->battleMons[ctx->fieldSideConditionData[side].battlerIdFollowMe].hp) {
             // Follow Me and Rage Powder draw a move aimed at the user's own
             // ally too: "even if it was a friendly target, unless it is a
             // move that cannot target an opponent such as Acupressure or
@@ -2242,11 +2244,11 @@ void ov12_02250A18(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
         return;
     }
 
-    // Redirection is the whole of what this function does, so Propeller Tail
-    // and Stalwart leave by the same door Mold Breaker does. The reference
+    // Redirection is the whole of what this function does, so Propeller Tail,
+    // Stalwart and Snipe Shot leave by the same door Mold Breaker does. The reference
     // writes the pair out again at each of the two re-targets below; with
     // nothing else here to reach, one return says the same thing.
-    if (BattlerIgnoresRedirection(ctx, battlerIdAttacker)) {
+    if (BattlerIgnoresRedirection(ctx, battlerIdAttacker, moveNo)) {
         return;
     }
 
