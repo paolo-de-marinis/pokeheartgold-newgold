@@ -1097,7 +1097,6 @@ typedef enum UpdateFieldConditionState {
     UFC_STATE_FOG,
     UFC_STATE_STRONG_WINDS,
     UFC_STATE_GRAVITY,
-    UFC_STATE_TERRAIN,
     UFC_STATE_END
 } UpdateFieldConditionState;
 
@@ -1513,24 +1512,6 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
                 ctx->fieldCondition -= (1 << FIELD_CONDITION_GRAVITY_SHIFT);
                 if ((ctx->fieldCondition & FIELD_CONDITION_GRAVITY) == 0) {
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_GRAVITY_END);
-                    ctx->commandNext = ctx->command;
-                    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                    flag = 1;
-                }
-            }
-            ctx->stateFieldConditionUpdate++;
-            break;
-        case UFC_STATE_TERRAIN:
-            // A terrain runs out the way a weather above does, one turn at a
-            // time in the same loop, and the script it runs is what says which
-            // terrain ended and clears it. The count stops at the floor rather
-            // than wrapping, which is what the reference's own guard is for.
-            if (ctx->terrainOverlayType != TERRAIN_NONE) {
-                if (ctx->terrainOverlayTurns > 0) {
-                    ctx->terrainOverlayTurns--;
-                }
-                if (ctx->terrainOverlayTurns == 0) {
-                    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END);
                     ctx->commandNext = ctx->command;
                     ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                     flag = 1;
@@ -2123,6 +2104,7 @@ typedef enum UpdateFieldConditionExtraState {
     UFCE_STATE_TRICK_ROOM,
     UFCE_STATE_WONDER_ROOM,
     UFCE_STATE_MAGIC_ROOM,
+    UFCE_STATE_TERRAIN,
     UFCE_STATE_HUNGER_SWITCH,
     UFCE_STATE_END
 } UpdateFieldConditionExtraState;
@@ -2249,6 +2231,29 @@ static void BattleControllerPlayer_UpdateFieldConditionExtra(BattleSystem *battl
             ctx->commandNext = ctx->command;
             ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
             return;
+        }
+        ctx->stateUpdateFieldConditionExtra++;
+        // fallthrough
+    case UFCE_STATE_TERRAIN:
+        // A terrain runs out after the rooms, past every Pokemon's own
+        // conditions, as the reference's ENDTURN_TERRAIN_DISSIPATING has it
+        // (ServerFieldConditionCheck.c at d0380a487): so Grassy Terrain still
+        // heals on its last turn (Pokemon Central, Campo Erboso). The script
+        // says which terrain ended and clears it. The count stops at the
+        // floor rather than wrapping, which is what the reference's own guard
+        // is for.
+        if (ctx->terrainOverlayType != TERRAIN_NONE) {
+            if (ctx->terrainOverlayTurns > 0) {
+                ctx->terrainOverlayTurns--;
+            }
+            if (ctx->terrainOverlayTurns == 0) {
+                ctx->stateUpdateFieldConditionExtra++;
+                ctx->updateFieldConditionExtraData = 0;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                return;
+            }
         }
         ctx->stateUpdateFieldConditionExtra++;
         ctx->updateFieldConditionExtraData = 0;

@@ -79,9 +79,15 @@ class TerrainTests(unittest.TestCase):
 
     def test_the_turn_loop_counts_the_terrain_down_and_ends_it(self):
         text = CONTROLLER.read_text()
-        self.assertIn("UFC_STATE_TERRAIN", text, "terrain is not in the field-condition loop")
-        self.assertIn("ctx->terrainOverlayTurns--", text, "nothing counts the terrain down")
-        self.assertIn("BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END", text,
+        # After the Pokemon's own conditions, past the rooms, as the reference
+        # ends it (ENDTURN_TERRAIN_DISSIPATING): Grassy Terrain heals on its
+        # last turn too (Pokemon Central, Campo Erboso).
+        self.assertNotIn("UFC_STATE_TERRAIN", text, "the terrain ends before the Pokemon's own conditions")
+        states = re.search(r"typedef enum UpdateFieldConditionExtraState \{(.*?)\}", text, re.S).group(1)
+        self.assertLess(states.index("UFCE_STATE_MAGIC_ROOM"), states.index("UFCE_STATE_TERRAIN"))
+        case = text[text.index("    case UFCE_STATE_TERRAIN:"):text.index("    case UFCE_STATE_HUNGER_SWITCH:")]
+        self.assertIn("ctx->terrainOverlayTurns--", case, "nothing counts the terrain down")
+        self.assertIn("BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END", case,
                       "nothing runs the script that ends a terrain")
 
     def test_the_end_subscript_clears_every_terrain_it_names(self):
