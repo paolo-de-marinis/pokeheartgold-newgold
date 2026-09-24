@@ -1617,6 +1617,28 @@ def incense_parents():
             re.findall(r"\{\s*SPECIES_\w+,\s*ITEM_\w+,\s*SPECIES_(\w+)\s*\}", text[:text.index("};")])}
 
 
+@tree_cache
+def type_names():
+    """include/constants/pokemon.h's TYPE_ names by number, without TYPE_:
+    the types come first, TYPE_MUL_ after."""
+    names = {}
+    for name, number in constants("include/constants/pokemon.h", "TYPE_").items():
+        names.setdefault(number, name[len("TYPE_"):])
+    return names
+
+
+@tree_cache
+def machine_table():
+    """Every machine as the bag keeps it: the item, the move it teaches and
+    that move's type (MOVEATTR_TYPE), how many the bag takes (item_limit),
+    and whether teaching uses one up -- a TR, as PartyMenu_LearnMoveToSlot
+    takes one only when ItemIsTR -- in the order SortTMHMPocket puts them."""
+    types, kind, spent = type_names(), move_attr("MOVEATTR_TYPE"), item_kind("ItemIsTR")
+    rows = [{"item": item, "move": move, "type": types.get(kind[move], str(kind[move])), "limit": item_limit(item),
+             "spent": item in spent} for move, item in machines() if item is not None]
+    return sorted(rows, key=lambda row: _machine_order((row["item"], 1)))
+
+
 # The Blackthorn move tutor's script: Draco Meteor, for a Pokemon of a type.
 TYPE_TUTOR = "files/fielddata/script/scr_seq/scr_seq_0948_T30R0601.s"
 
@@ -1628,9 +1650,7 @@ def type_tutors():
     tests compare with (include/constants/pokemon.h's TYPE_ by number).
     [(move, type name without TYPE_)]."""
     text = source(TYPE_TUTOR).read_text()
-    names = {}
-    for name, number in constants("include/constants/pokemon.h", "TYPE_").items():
-        names.setdefault(number, name[len("TYPE_"):])      # the types come first, TYPE_MUL_ after
+    names = type_names()
     types = {names[int(n)] for _, n in re.findall(r"GetMonTypes (VAR_\w+), (?:VAR_\w+), \w+\s+Compare \1, (\d+)", text)}
     moves = [move_numbers()[name] for name in re.findall(r"MoveTutorInit VAR_\w+, MOVE_(\w+)", text)]
     return [(move, kind) for move in moves for kind in sorted(types)]

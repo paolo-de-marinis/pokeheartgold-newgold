@@ -103,6 +103,11 @@ midgame badge), and `undo_step` takes one back: what it wrote undone, a
 `SetVar` put back to what the step before it in its gym sets, any other
 `SetVar` left and named, as its old value is not known.
 
+`machine_table()` is every TM, TR and HM as the bag keeps them: in
+`SortTMHMPocket`'s order, each with its move, the move's type, how many the
+bag takes, and whether a use spends it (a TR, as `PartyMenu_LearnMoveToSlot`
+takes one only then).
+
 Nothing the game has is typed into it: all of it is read from the tree as
 the build would compile it, and read again once a file it came from has
 changed (`fresh()`, which saveui calls before every request; a reading is

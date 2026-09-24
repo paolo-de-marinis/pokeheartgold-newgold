@@ -833,6 +833,20 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual((sv.var_value(save, takeover), sv.var_value(save, variables["VAR_MIDGAME_BADGES"])), (1, 3))
         self.assert_only(save, ["SAVE_FLAGS", "SAVE_PLAYERDATA", "SAVE_BAG"])
 
+    def test_the_machines_as_the_bag_keeps_them(self):
+        """Every machine, in SortTMHMPocket's order, with its move, the
+        move's type and how many the bag takes."""
+        table, items = sv.machine_table(), sv.constants("include/constants/items.h", "ITEM_")
+        self.assertEqual(len(table), len([m for m in sv.machines() if m[1] is not None]))
+        first = table[0]
+        self.assertEqual((first["item"], sv.move_table()[first["move"]]["name"], first["type"], first["limit"]),
+                         (items["ITEM_TM01"], "Focus Punch", "FIGHTING", 1))
+        groups = [sv._machine_order((row["item"], 1))[1] for row in table]
+        self.assertEqual(groups, sorted(groups), "the TMs, then the TRs, then the HMs")
+        hm01, tr00 = (next(r for r in table if r["item"] == items[name]) for name in ("ITEM_HM01", "ITEM_TR00"))
+        self.assertEqual((hm01["limit"], hm01["spent"], tr00["spent"], first["spent"]),
+                         (sv.BAG_TMHM_QUANTITY_MAX, False, True, False))
+
 
 class TheCodeSaveditKeeps(unittest.TestCase):
     """What savedit keeps as code rather than reads: the game has it only as
@@ -948,6 +962,9 @@ class TheCodeSaveditKeeps(unittest.TestCase):
         badge = sv.c_function("src/player_data.c", "void PlayerProfile_SetBadgeFlag(")
         self.assertRegex(badge, r"if \(badge_no < 8\) \{\s*profile->johtoBadges \|= \(1 << badge_no\);\s*\} else \{\s*"
                                 r"profile->kantoBadges \|= \(1 << badge_no - 8\);", "badges()")
+        self.assertIn("if (!ItemIsMachine(partyMenu->args->itemId) || ItemIsTR(partyMenu->args->itemId)) {",
+                      sv.c_function("src/party_menu_items.c", "void PartyMenu_LearnMoveToSlot("),
+                      "machine_table: only a TR is used up")
         self.assertIn("u16 max = ItemIsTM(itemId) ? 1 : BAG_TMHM_QUANTITY_MAX;",
                       sv.c_function("src/bag.c", "static ItemSlot *Bag_GetItemSlotForAdd("), "item_limit")
         self.assertRegex(sv.c_function("src/bag.c", "static int MachineSortGroup("),
