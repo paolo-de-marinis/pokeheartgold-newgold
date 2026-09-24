@@ -2059,14 +2059,11 @@ BOOL BtlCmd_CalcCrit(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-BOOL BtlCmd_CalcExpGain(BattleSystem *battleSystem, BattleContext *ctx) {
-    int adrs;
+// Whether the fainted battler -- or the caught one -- gives experience, and
+// to how many.
+static BOOL CountExpGainers(BattleSystem *battleSystem, BattleContext *ctx) {
     u32 battleType = BattleSystem_GetBattleType(battleSystem);
     OpponentData *opponentData = BattleSystem_GetOpponentData(battleSystem, ctx->battlerIdFainted);
-
-    BattleScriptIncrementPointer(ctx, 1);
-
-    adrs = BattleScriptReadWord(ctx);
 
     if ((opponentData->battlerType & BATTLER_TYPE_IS_ENEMY) && !(battleType & (BATTLE_TYPE_LINK | BATTLE_TYPE_SAFARI | BATTLE_TYPE_FRONTIER | BATTLE_TYPE_PAL_PARK))) {
         u16 itemNo;
@@ -2088,7 +2085,17 @@ BOOL BtlCmd_CalcExpGain(BattleSystem *battleSystem, BattleContext *ctx) {
                 }
             }
         }
-    } else {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+BOOL BtlCmd_CalcExpGain(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    int adrs = BattleScriptReadWord(ctx);
+
+    if (!CountExpGainers(battleSystem, ctx)) {
         BattleScriptIncrementPointer(ctx, adrs);
     }
 
@@ -2107,8 +2114,11 @@ enum {
     DATA_GET_EXP_PARTY_SLOT,
 };
 
-BOOL BtlCmd_StartGetExpTask(BattleSystem *battleSystem, BattleContext *ctx) {
-    BattleScriptIncrementPointer(ctx, 1);
+// Task_GetExp holds ctx->getterWork while it runs, and at its end hands it
+// back to what held it before: nothing, for a script's WaitGetExpTask, or the
+// catch, which pays a capture's experience from inside (Task_GetPokemon).
+static void StartGetExpTask(BattleSystem *battleSystem, BattleContext *ctx) {
+    GetterWork *caller = ctx->getterWork;
 
     ctx->getterWork = Heap_Alloc(HEAP_ID_BATTLE, sizeof(GetterWork));
 
@@ -2116,8 +2126,15 @@ BOOL BtlCmd_StartGetExpTask(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->getterWork->ctx = ctx;
     ctx->getterWork->state = 0;
     ctx->getterWork->tempData[DATA_GET_EXP_PARTY_SLOT] = 0;
+    ctx->getterWork->caller = caller;
 
     SysTask_CreateOnMainQueue(Task_GetExp, ctx->getterWork, 0);
+}
+
+BOOL BtlCmd_StartGetExpTask(BattleSystem *battleSystem, BattleContext *ctx) {
+    BattleScriptIncrementPointer(ctx, 1);
+
+    StartGetExpTask(battleSystem, ctx);
 
     return FALSE;
 }
@@ -7788,7 +7805,7 @@ static void Task_GetExp(SysTask *task, void *inData) {
         break;
 
     case STATE_GET_EXP_DONE:
-        data->ctx->getterWork = NULL;
+        data->ctx->getterWork = data->caller;
         Heap_Free(inData);
         SysTask_Destroy(task);
         break;
@@ -7923,6 +7940,7 @@ enum {
     STATE_GET_POKEMON_BREAK_OUT_MESSAGE,
     STATE_GET_POKEMON_DONE_BREAK_OUT,
     STATE_GET_POKEMON_DONE_CAUGHT,
+    STATE_GET_POKEMON_WAIT_FOR_EXP,
 };
 
 enum {
@@ -8099,8 +8117,22 @@ static void Task_GetPokemon(SysTask *task, void *inData) {
         break;
     case STATE_GET_POKEMON_BALL_FADE:
         if (!TextPrinterCheckActive(data->tempData[DATA_GET_POKEMON_PRINTER_ID])) { // Wait for the text box to finish printing.
-            data->state = STATE_GET_POKEMON_CHECK_MON_DATA;
+            data->state = STATE_GET_POKEMON_WAIT_FOR_EXP;
             UnkBallData_SetBallAnimation(data->ballData, BALL_ANIM_FADE);
+            // A capture pays experience as a knockout does, and, as in the
+            // games since the sixth generation, straight after "Gotcha!",
+            // before the Dex and the nickname: after them the naming screen
+            // has taken the battle's windows down, and the messages went to
+            // a window that was no more.
+            data->ctx->battlerIdFainted = battlerId;
+            if (CountExpGainers(data->battleSystem, data->ctx)) {
+                StartGetExpTask(data->battleSystem, data->ctx);
+            }
+        }
+        break;
+    case STATE_GET_POKEMON_WAIT_FOR_EXP:
+        if (data->ctx->getterWork == data) { // Task_GetExp has handed it back, or never ran.
+            data->state = STATE_GET_POKEMON_CHECK_MON_DATA;
         }
         break;
     case STATE_GET_POKEMON_CHECK_MON_DATA:

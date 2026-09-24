@@ -918,7 +918,8 @@ struct GetterWork {
     int ballID;
     int tempData[8];
     void *tempPointers[2];
-}; // size: 0x58
+    GetterWork *caller; // Task_GetExp's: who gets ctx->getterWork back at its end
+}; // size: 0x5C
 
 typedef BOOL (*BtlCmdFunc)(BattleSystem *, BattleContext *);
 
