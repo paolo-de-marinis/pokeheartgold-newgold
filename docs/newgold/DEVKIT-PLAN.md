@@ -191,6 +191,46 @@ harness's markers), or opened in melonDS with one click to watch it. A
 reproduced bug becomes a test. It grows out of `battle.py`, `gym.py` and the gym
 saves.
 
+### Which parties to test a fight with
+
+Agreed with Paolo on 2026-09-24. Every combination is neither possible nor
+useful; three steps instead:
+
+1. **What a player can have at that point, computed from the tree:** the maps
+   reachable before the fight (from the story graph: the flags and badges that
+   open each road), what can be caught there (grass, water, Rock Smash,
+   Headbutt, the contest, gifts, in-game trades), what evolves within the
+   level cap and with the stones already findable, and the moves -- level-up
+   to the cap, the TMs already collectable, the reachable tutors, egg moves
+   once the Day-Care is open. Nothing typed in: it follows konefr's data.
+2. **A few representative parties, for each of the three starters:** a
+   *prepared* player (the best types against that leader, at the cap), a
+   *typical* one (the starter and the commonest Pokemon on the way, weighted
+   by how often they are met, with the moves the game gives at that level),
+   an *unprepared* one (poor types or under the cap) -- nine fixed parties per
+   fight, comparable over time.
+3. **A random sample on top:** a few dozen parties drawn from the pool, each
+   Pokemon weighted by how easy it is to get -- the number of fights stays the
+   same however big the pool grows, and it shows a common party that makes a
+   fight unfair.
+
+Each party fights with many seeds; the measures are the win rate, the turns
+and the items the opponent used, against targets set per profile (e.g.
+prepared over 90%, typical 70-80%, unprepared 30-50%), and the curve along
+the game shows a leader out of scale.
+
+**The simulated player has to get better too** (Paolo, 2026-09-24). Today
+`gym.py` only picks the hardest-hitting move, never switches and never heals,
+so it underrates what a real player wins. The lab needs a player bot that
+plays like a person: it switches out of a losing match-up, heals and revives
+with the bag's items, uses status and set-up moves when they pay, and
+predicts the obvious. It comes in levels that match the profiles -- a
+*casual* style for the typical and unprepared parties (sensible, not
+perfect: it misses some switches, heals late), a *good* style for the
+prepared one -- so a profile measures a kind of player as well as a kind of
+party. It is built and checked before any balance number is trusted: the
+same bot, the same seeds, results compared over time.
+
 ## 6. Diagnostics and scenarios
 
 The diagnostics build stays a compile-time switch (`NEWGOLD_DIAG=1`). What it
@@ -233,6 +273,70 @@ English row queuing its Italian draft, and a build with the Italian bank.
   beside it and opens melonDS.
 - **Patches:** a ROM cannot be shared; a patch against the original can. The
   devkit makes one for each release, so others can play New Gold.
+
+## After the port: game features to build
+
+Not devkit tools but changes to the game itself, noted with Paolo on 2026-09-24 so they
+are not forgotten. Like the devkit, they wait until the port is finished; they are new
+game behaviour (Paolo's own or New Gold's, to agree with konefr), so each commit says so.
+
+### A smarter trainer AI and scripted battle events, designed together
+
+Both act at the same point: the moment each turn when the opponent decides what to do.
+The AI gives the normal behaviour; a scripted event is a moment the game's author
+writes, which overrides or steers that decision. They share one set of actions -- say a
+line, use an item, switch, raise a stat, change the weather or terrain, change the
+music -- so there is one system to build and to test.
+
+- **Today** (retail, kept by hg-engine and in this port): per trainer, AI flags that
+  choose how it reasons (super-effective first, evaluate attacks, expert, status moves,
+  risky, damage, healing, weather, harassment, doubles), up to four items it uses by
+  retail's rules (HP thresholds and chance), and lines at fixed moments (intro, first
+  hit, current Pokemon at half HP, last Pokemon, last at half HP, win, lose, after, the
+  doubles and phone-rematch variants). All of it is in `trainers.json` and works; the
+  AI's code (overlay 10) is about half decompiled.
+- **A smarter AI:** a real damage calculation with everything the game now has
+  (abilities, held items, weather, terrains), knowing whether it KOs or is KO'd first
+  (speed included); smart switching out of a losing match-up into a resist; items used
+  when they matter, not by chance; awareness of abilities and items (no Ground move into
+  Levitate, a Focus Sash counted); doubles coordination (targets, Protect, spread
+  moves); and difficulty levels (normal / expert, possibly a game option).
+- **Scripted battle events:** per trainer, a list of rules in the trainer data --
+  *when* (battle start, turn N, an HP threshold, a given Pokemon comes in, a faint),
+  a *condition*, and an *action* (a line, an item, a switch, weather or terrain, a
+  "totem" stat boost, the music) -- edited from the devkit's trainer screen. Neither
+  retail nor hg-engine has this; in a decompilation it can be added.
+- **Order:** (1) decompile the rest of the trainer AI to matching C (the port's rule,
+  and useful anyway); (2) the battle lab (section 5), to *measure* the AI -- what it
+  chooses, how often it wins against test parties -- with the simulated
+  player improved first (casual and good styles, see "Which parties to test
+  a fight with"); (3) the event system, small and
+  data-driven; (4) the smarter AI one module at a time, each measured in the lab.
+- **The hard part is not making it too strong** (Paolo). A perfect AI is easy; a fun one
+  is the work. The rules: it does not cheat (it learns the player's moves, item and
+  ability only when it sees them, and never reads the player's choice for the same
+  turn); a skill level per trainer that rises through the game with konefr's level cap
+  (a Youngster, a leader, the Elite Four); dosed mistakes -- it picks among its best
+  choices with some chance, more for ordinary trainers, little for the League, and does
+  not always switch when it should; tuned by measurement in the battle lab (a party a
+  player would have at that point, at the cap, a hundred fights against each leader,
+  aiming at e.g. 70-80% first-try wins against leaders and fewer against the League);
+  a difficulty the player chooses (normal / expert); scripted events for drama rather
+  than difficulty; and the last word to people playing it -- Paolo, and konefr.
+- **Mind:** the AI lives in overlay 10, off the boot chain, so it can grow freely; the
+  events' hooks touch overlay 12, whose boot margin is limited (test_heaps). konefr
+  balanced his trainers for today's AI: a stronger one makes the game harder -- to agree
+  with him (in `KONEFR-NOTES.md`), perhaps with a difficulty choice.
+
+### Reference for the devkit's screens
+
+DSPRE (DS Pokemon Rom Editor, "DSPRE Reloaded"), the tool the hg-engine community uses
+next to hg-engine, has the editors this plan needs -- zone headers, the map matrix, maps
+(importing Pokemon DS Map Studio models), events, scripts, encounters (grass by morning,
+day and night, the radio's Hoenn/Sinnoh slots, Rock Smash, water), trainers, text. It
+edits a built ROM, so it cannot be used on this project's output (the next build would
+overwrite it); its screens are the model to follow, working on the decompilation's
+sources instead.
 
 ## Order
 
