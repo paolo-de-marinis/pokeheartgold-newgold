@@ -85,7 +85,7 @@ def new_message(text):
     text = shift_prose(text)
     text = re.sub(r"(pointer )(\d{3})", lambda m: m.group(1) + shift(m.group(2), b_ptr, l_ptr, d_ptr), text)
     text = re.sub(r"(BMON_DATA_\w+ (?:= |is |at )?)(\d{3})\b", lambda m: m.group(1) + shift(m.group(2), b_bmon, l_bmon, d_bmon), text)
-    text = re.sub(r"\b0(1[89]\d\d)\b", lambda m: f"{int(m.group(1)) + d_msg:05d}" if b_msg < int(m.group(1)) <= l_msg else m.group(0), text)
+    text = re.sub(r"\b0([1-9]\d{3})\b", lambda m: f"{int(m.group(1)) + d_msg:05d}" if b_msg < int(m.group(1)) <= l_msg else m.group(0), text)
     return new_text("", text)
 
 

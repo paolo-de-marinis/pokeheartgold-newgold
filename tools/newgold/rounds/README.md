@@ -18,11 +18,16 @@ one that takes arguments prints its usage without them.
     for f in ARM9-TS.lcf.template mwldarm.response.template sub/ARM7-TS.lcf.template; do
         cp ~/hgss-newgold/$f $f; done
 
-The compiler, the prebuilt tools and the linker templates are ignored
-files, so a worktree needs them from the main tree. `build_at.sh` builds a
+The compiler and the prebuilt tools (`tools/mwccarm`, `tools/bin`) are
+untracked in the main tree -- not ignored: the links show as `??`, so never
+`git add -A` in a worktree, stage files by name -- and the linker templates
+are copies, so a worktree needs them from the main tree. `build_at.sh` builds a
 fresh worktree, host tools first.
 
-**The rows.** The open rows go to a rows file (`.rounds/roundN/open_rows_rN.txt`)
+**BASE** below is the newgold commit the round's branches started from.
+
+**The rows.** The open rows come from `docs/newgold/AUDIT-*.md` (the rows
+not closed) and go to a rows file (`.rounds/roundN/open_rows_rN.txt`)
 and each agent gets its share in the workflow's `args` -- the rows, and its
 share of the overlay-12 budget (the battle overlay's end is where the main
 arena starts; `tests/newgold/test_heaps.py` fails a build that would boot
@@ -57,9 +62,9 @@ The prompt names the next free number of each list; the landing moves them.
 (`~/hgss-worktrees/integrate`, branch `rN-integrate` from newgold's tip).
 For each branch, in an order that keeps conflicts small:
 
-    shift_branch.py BASE rN-battle rN-integrate rN-battle-shifted
+    python3 tools/newgold/rounds/shift_branch.py BASE rN-battle rN-integrate rN-battle-shifted
     git cherry-pick BASE..rN-battle-shifted
-    pick_on.sh                      # at every stop
+    bash tools/newgold/rounds/pick_on.sh    # at every stop; an empty pick is skipped
 
 `shift_branch.py` rewrites the branch (a temporary index and commit-tree:
 same messages, authors and dates) so the subscripts, pointers, message rows
@@ -142,7 +147,9 @@ removed `.inc`, and on archives built before a fix: delete them.
 `/tmp` is a RAM disk, and the PC ran out of memory twice with three
 workflows at once. Every build, emulator, harness walk, gym replay and test
 suite runs under `tools/newgold/devkit/capped` (`capped -m 8G make -j8 ...`;
-a command past its cap is killed alone); scratch, logs, dumps and ROM copies
+a command past its cap is killed alone -- and never test capped by
+provoking that kill: KDE then shows Paolo "Carenza di memoria evitata" on
+his desktop; check its arguments only, as test_devkit_tools does); scratch, logs, dumps and ROM copies
 go under `~/hgss-worktrees/.rounds/<task>/`, with `TMPDIR` there for tests
 (test_saveui's fake-ROM test needs the real /tmp: that one failure is
 expected). Nine agents at once: make -j6 each, at most two or three
@@ -156,7 +163,9 @@ starts a second copy in the same worktree.
 ## workflows/
 
 The Workflow tool's scripts, kept as templates: the prompts are the part
-worth keeping. The paths they ran with are constants at the top of each.
+worth keeping. They are the round-9 versions and name round 9 throughout,
+not only in the constants at the top: its base and tip commits, `r9-*`,
+`round9/...`, "nine" -- replace each for a new round (grep them).
 
 - `audit-round.js` -- a round: nine agents, one worktree each (round 9).
 - `land-round.js` -- its landing: integrate, review lenses, fix, docs, check.
@@ -199,6 +208,12 @@ folder; RND is that folder.
   `devkit/diag/nested.py`; `burst.py`'s contact sheets of it.
 - RND/round8/tmp/ui/scene.py -- `devkit/diag/scene.py`.
 - RND/dex-bugs/B/where_stuck.py -- `core.state()` and `frozen.py`.
+- RND/round8/tmp/battle/tools/stage_hunks.py -- stages hunks by their
+  number; the kept `stage_hunks.py` picks them by a pattern.
+- RND/round8/tmp/items/heaplens/{run_catch2.sh, run_naming.sh},
+  round9/tmp/items/lens/run_box.sh -- heap-lens runs close to
+  `devkit/diag/heaplens/scenes.sh`'s catch and naming scenes, plus the naming
+  screen's variant and a 40-shot box sequence; kept there as examples.
 - RND/round7/tmp/{xref.py, ovl_ends.py, walk_arena.py, walk_heaps.py,
   arena_dump.py, boot_itcmfs.py}, budget/*, heaplens/scripts/asm_*.py,
   verify/{asm_heap0.py, savepeek.py, battle/*}, lens_hgengine/* -- the

@@ -16,4 +16,6 @@ else
     git checkout-index -a --prefix="$T/"
 fi
 cd "$T/tests/newgold"
-python3 -m unittest "$@" 2>&1 | tail -3
+python3 -m unittest "$@" > "$T/out" 2>&1 && ok=0 || ok=$?
+tail -3 "$T/out"
+exit $ok
