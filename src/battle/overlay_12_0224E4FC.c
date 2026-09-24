@@ -10551,6 +10551,9 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     // also names the moves that crash on a miss; their scripts still ask for
     // the fifth through POWER_MULTI, here as in the engine (whose
     // CalcBaseDamage no longer reads it), so they are left to the scripts.
+    // The engine's list names Chloroblast's effect too; its recoil is Rock
+    // Head's to stop but not Reckless's to pay for (Pokemon Central,
+    // Clorofillaser: the ninth generation's move is not boosted by it).
     if (calcAttacker.ability == ABILITY_RECKLESS) {
         switch (BattleMoveTbl(ctx, moveNo)->effect) {
         case MOVE_EFFECT_RECOIL_QUARTER_DAMAGE_DELT:
@@ -10558,7 +10561,6 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         case MOVE_EFFECT_RECOIL_BURN_HIT:
         case MOVE_EFFECT_RECOIL_PARALYZE_HIT:
         case MOVE_EFFECT_RECOIL_HALF:
-        case MOVE_EFFECT_RECOIL_HALF_MAX_HP:
             movePower = movePower * 12 / 10;
             break;
         }

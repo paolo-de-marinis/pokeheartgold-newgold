@@ -299,8 +299,10 @@ class BroughtOverTests(unittest.TestCase):
         reckless = body[body.index("if (calcAttacker.ability == ABILITY_RECKLESS)"):]
         reckless = reckless[:reckless.index("break;")]
         for effect in ("RECOIL_QUARTER_DAMAGE_DELT", "RECOIL_THIRD", "RECOIL_BURN_HIT", "RECOIL_PARALYZE_HIT",
-                       "RECOIL_HALF", "RECOIL_HALF_MAX_HP"):
+                       "RECOIL_HALF"):
             self.assertIn(f"case MOVE_EFFECT_{effect}:", reckless)
+        # Chloroblast's recoil is not Reckless's (Pokemon Central, Clorofillaser).
+        self.assertNotIn("RECOIL_HALF_MAX_HP", reckless)
         self.assertIn("movePower = movePower * 12 / 10;", reckless)
         for effect in (48, 198, 253, 262, 269, 404):
             self.assertNotIn("ABILITY_RECKLESS", script(effect), effect)
