@@ -33,6 +33,13 @@ class CaptureExperienceTests(unittest.TestCase):
         self.assertLess(pays, body.index("NamingScreen_CreateArgs("), "before the naming screen")
         self.assertIn("CountExpGainers(", body[gotcha:pays], "only when there is experience to give")
 
+    def test_the_catching_demonstration_pays_none(self):
+        body = function(self.source, "Task_GetPokemon")
+        pays = body.index("StartGetExpTask(")
+        condition = body[body.rindex("if (", 0, pays):pays]
+        self.assertIn("!(BattleSystem_GetBattleType(data->battleSystem) & BATTLE_TYPE_TUTORIAL)", condition,
+                      "Lyra's Marill gains experience from the demonstration's catch")
+
     def test_the_catch_waits_for_its_getter_back(self):
         self.assertIn("data->ctx->getterWork = data->caller;", function(self.source, "Task_GetExp"))
         self.assertIn("->caller = caller;", function(self.source, "StartGetExpTask"))

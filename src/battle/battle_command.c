@@ -8136,9 +8136,11 @@ static void Task_GetPokemon(SysTask *task, void *inData) {
             // games since the sixth generation, straight after "Gotcha!",
             // before the Dex and the nickname: after them the naming screen
             // has taken the battle's windows down, and the messages went to
-            // a window that was no more.
+            // a window that was no more. Lyra's catching demonstration pays
+            // none: her Marill is made for the scene and goes with it, and
+            // the demonstration never showed experience.
             data->ctx->battlerIdFainted = battlerId;
-            if (CountExpGainers(data->battleSystem, data->ctx)) {
+            if (!(BattleSystem_GetBattleType(data->battleSystem) & BATTLE_TYPE_TUTORIAL) && CountExpGainers(data->battleSystem, data->ctx)) {
                 StartGetExpTask(data->battleSystem, data->ctx);
             }
         }
