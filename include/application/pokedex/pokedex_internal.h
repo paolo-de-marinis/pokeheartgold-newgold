@@ -431,6 +431,7 @@ void ov18_021E8BD4(PokedexAppData *pokedexApp);
 
 BOOL PokedexApp_RunMainSeq(PokedexAppData *pokedexApp, int *pState);
 
+void ov18_021EE35C(PokedexAppData *pokedexApp, const WindowTemplate *templates, u32 count);
 void ov18_021EE388(PokedexAppData *pokedexApp);
 void ov18_021EE3FC(PokedexAppData *pokedexApp);
 void ov18_021EE5FC(PokedexAppData *pokedexApp);

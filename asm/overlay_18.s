@@ -36,60 +36,9 @@
 .public ov18_021F9648
 .public ov18_021F9F3C
 .public ov18_021EE35C
-.public ov18_021EE388
 .public ov18_021EE3AC
 .public ov18_021EE44C
 .public ov18_021EE520
-
-	thumb_func_start ov18_021EE35C
-ov18_021EE35C: ; 0x021EE35C
-	push {r3, r4, r5, r6, r7, lr}
-	add r7, r0, #0
-	add r5, r1, #0
-	mov r6, #0
-	str r2, [sp]
-	add r0, r2, #0
-	beq _021EE384
-	add r4, r7, #0
-	add r4, #0xc
-_021EE36E:
-	ldr r0, [r7, #4]
-	add r1, r4, #0
-	add r2, r5, #0
-	bl AddWindow
-	ldr r0, [sp]
-	add r6, r6, #1
-	add r5, #8
-	add r4, #0x10
-	cmp r6, r0
-	blo _021EE36E
-_021EE384:
-	pop {r3, r4, r5, r6, r7, pc}
-	.balign 4, 0
-	thumb_func_end ov18_021EE35C
-
-	thumb_func_start ov18_021EE388
-ov18_021EE388: ; 0x021EE388
-	push {r4, r5, r6, lr}
-	add r5, r0, #0
-	add r4, r5, #0
-	mov r6, #0
-	add r4, #0xc
-_021EE392:
-	ldr r0, [r5, #0x18]
-	cmp r0, #0
-	beq _021EE39E
-	add r0, r4, #0
-	bl RemoveWindow
-_021EE39E:
-	add r6, r6, #1
-	add r5, #0x10
-	add r4, #0x10
-	cmp r6, #0x65
-	blo _021EE392
-	pop {r4, r5, r6, pc}
-	.balign 4, 0
-	thumb_func_end ov18_021EE388
 
 	thumb_func_start ov18_021EE3AC
 ov18_021EE3AC: ; 0x021EE3AC
