@@ -3,6 +3,7 @@
 
     battle.py OUTDIR encounter            the roll is forced: the first step in grass
     battle.py OUTDIR battle:SPECIES       a battle against that species, from anywhere
+    battle.py OUTDIR tutorial             the catching demonstration, from anywhere
 
 No savestate: this machine writes them unreliably, and a run from a cold boot
 cannot be wrong about what it is looking at. About ten minutes. The dumps and
@@ -44,6 +45,8 @@ def main():
     begin = outside + IDLE
     if what == "encounter":
         actions.append(f"hold:{begin}:20000:{at('gDiagForceEncounter')}:4:1")
+    elif what == "tutorial":
+        actions.append(f"hold:{begin}:200:{at('gDiagForceTutorial')}:2:1")
     else:
         actions.append(f"hold:{begin}:200:{at('gDiagForceBattleSpecies')}:2:{what.split(':')[1]}")
     roam, done = smoke.legs(["d:60", "u:60", "l:60", "r:60"] * 8, begin + 30)

@@ -28,6 +28,7 @@ typedef char DiagHeapsCoverEveryHeap[HEAP_ID_MAX <= DIAG_HEAPS ? 1 : -1];
 u32 gDiagIgnoreCommunicationError;
 u32 gDiagForceEncounter;
 u16 gDiagForceBattleSpecies;
+u16 gDiagForceTutorial;
 u16 gDiagWarpX;
 u16 gDiagWarpZ;
 

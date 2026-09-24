@@ -499,6 +499,11 @@ static BOOL FieldSystem_CheckWildEncounter(FieldSystem *fieldSystem) {
     if (gDiagForceBattleSpecies != 0) {
         return Diag_ForceBattle(fieldSystem);
     }
+    if (gDiagForceTutorial != 0) {
+        gDiagForceTutorial = 0;
+        Diag_StartTutorialBattle(fieldSystem);
+        return TRUE;
+    }
 #endif
 
     return MapHeader_HasWildEncounters(fieldSystem->location->mapId) && FieldSystem_PerformLandOrSurfEncounterCheck(fieldSystem) == TRUE;

@@ -48,6 +48,7 @@ void Diag_HeapUsed(unsigned long heapId, void *heapHandle);
 extern unsigned long gDiagIgnoreCommunicationError; // Continue works where nothing emulates wireless
 extern unsigned long gDiagForceEncounter;           // the encounter roll always succeeds
 extern unsigned short gDiagForceBattleSpecies;      // the next step is a wild battle against it
+extern unsigned short gDiagForceTutorial;           // the next step starts the catching demonstration
 extern unsigned short gDiagWarpX;                   // the next step check puts the player on this tile
 extern unsigned short gDiagWarpZ;
 

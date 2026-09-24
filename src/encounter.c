@@ -698,6 +698,15 @@ void SetupAndStartTutorialBattle(TaskManager *taskManager) {
     TaskManager_Call(taskManager, Task_TutorialBattle, encounter);
 }
 
+#ifdef NEWGOLD_DIAG
+// The catching demonstration from wherever the player stands, as a field task
+// where ScrCmd_CatchingTutorial calls it from a script's: gDiagForceTutorial.
+void Diag_StartTutorialBattle(FieldSystem *fieldSystem) {
+    BattleSetup *setup = BattleSetup_New_Tutorial(HEAP_ID_FIELD2, fieldSystem);
+    FieldSystem_CreateTask(fieldSystem, Task_TutorialBattle, Encounter_New(setup, BattleSetup_GetWildTransitionEffect(setup), BattleSetup_GetWildBattleMusic(setup), NULL));
+}
+#endif
+
 void SetupAndStartTrainerBattle(TaskManager *taskManager, u32 opponentTrainer1, u32 opponentTrainer2, u32 followerTrainerNum, u32 a4, u32 a5, enum HeapID heapID, u32 *winFlag) {
     u32 battleType;
     BattleSetup *setup;
