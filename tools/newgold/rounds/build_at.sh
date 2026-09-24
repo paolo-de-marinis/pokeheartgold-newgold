@@ -7,7 +7,12 @@
 # Targets: hg, ss (HeartGold, SoulSilver), dhg, dss (their NEWGOLD_DIAG=1
 # builds); default hg,ss. One line per commit: COMMIT subject hg MD5 ss MD5.
 HERE=$(dirname "$(readlink -f "$0")")
-CAPPED=$HERE/../devkit/capped
+# Copies of the helpers: an older commit checked out may not have them.
+TOOLS=$(mktemp -d "${TMPDIR:-/tmp}/build_at.XXXXXX")
+cp "$HERE/../devkit/capped" "$HERE/clean_stale_scripts.py" "$TOOLS/"
+CAPPED=$TOOLS/capped
+CLEAN=$TOOLS/clean_stale_scripts.py
+trap 'rm -rf "$TOOLS"' EXIT
 OUT=build/at
 TARGETS=hg,ss
 while getopts o:t:h opt; do
@@ -43,7 +48,7 @@ build() {  # build TAG: every target at what is checked out now
     fi
     for t in ${TARGETS//,/ }; do
         args=$(rom "$t") || return 1
-        python3 "$HERE/clean_stale_scripts.py" > /dev/null
+        python3 "$CLEAN" > /dev/null
         # shellcheck disable=SC2086
         if ! "$CAPPED" -m "${CAP:-8G}" make -j"${JOBS:-8}" COMPARE=0 $args > "$OUT/$1.$t.log" 2>&1; then
             echo "$1 $t FAILED (log $OUT/$1.$t.log)" | tee -a "$OUT/md5.txt"
@@ -63,7 +68,7 @@ git diff --quiet HEAD && git diff --cached --quiet || { echo "the working tree h
 commits=""   # resolved before HEAD moves: HEAD~1 means the same commit throughout
 for c in "$@"; do commits="$commits $(git rev-parse --verify -q "$c^{commit}")" || { echo "no commit $c"; exit 1; }; done
 back=$(git symbolic-ref -q --short HEAD || git rev-parse HEAD)
-trap 'git checkout -q "$back"; python3 "$HERE/clean_stale_scripts.py" > /dev/null' EXIT
+trap 'git checkout -q "$back"; python3 "$CLEAN" > /dev/null; rm -rf "$TOOLS"' EXIT
 rc=0
 for c in $commits; do
     git checkout -q --detach "$c" || exit 1

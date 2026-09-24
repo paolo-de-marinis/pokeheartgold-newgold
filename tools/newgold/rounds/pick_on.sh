@@ -42,6 +42,12 @@ while true; do
     if [ -n "$left" ]; then
         echo "CONFLICT in: $left"; exit 1
     fi
+    if [ -z "$(git diff --name-only --diff-filter=U)" ] && git diff --cached --quiet && git rev-parse -q --verify CHERRY_PICK_HEAD >/dev/null; then
+        # The pick is empty: its change is already here (two branches made the same edit).
+        echo "empty: $(git log -1 --format='%h %s' CHERRY_PICK_HEAD) -- skipped"
+        git cherry-pick --skip 2>&1 | grep -E 'error' | head -3
+        continue
+    fi
     GIT_EDITOR=true git cherry-pick --continue 2>&1 | grep -E '^\[|error' | head -3
     git rev-parse -q --verify CHERRY_PICK_HEAD >/dev/null || { [ -z "$(git diff --name-only --diff-filter=U)" ] && { echo "done"; exit 0; }; }
 done
