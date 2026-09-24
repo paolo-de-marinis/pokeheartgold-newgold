@@ -144,6 +144,15 @@ class IllusionTests(unittest.TestCase):
         self.assertIn("data.selectedMonIndex = ctx->battleMons[battlerId].illusionMon - 1;", box)
         self.assertLess(box.index("illusionMon)"), box.index("ov12_02262240("))
 
+    def test_a_sprite_redrawn_in_place_shows_it(self):
+        # ChangeForm, which Ally Switch redraws both places with, draws the
+        # disguise; the script that drops one forgets it first.
+        body = function((ROOT / "src/battle/battle_controller_change_form.c").read_text(), "BattleController_EmitChangeForm")
+        tail = body[body.index("disguise = Battler_IllusionMon(battleSystem, battlerId);"):]
+        for field in ("species", "shiny", "form", "gender", "personality"):
+            self.assertIn(f"data.{field} = ", tail, field)
+        self.assertLess(body.index("Battler_IllusionMon"), body.index("ov12_02262240("))
+
     def test_it_drops_on_damage_and_when_the_ability_goes(self):
         overlay = OVERLAY.read_text()
         hit = function(overlay, "CheckAbilityEffectOnHit")
