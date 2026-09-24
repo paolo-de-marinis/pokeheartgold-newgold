@@ -5,7 +5,8 @@ boot_check.c runs a list of actions fixed before the run starts; this runs
 the same core in-process, so a script can look at memory after every frame
 and decide what to press next. That is what lets a battle be played through
 the game's own menus with nothing but memory to go on. The frame the core
-draws is only copied when asked for (shot); a battle draws black here.
+draws is only copied when asked for (shot), and a battle is drawn in it
+like anything else.
 
     core = Core(rom, save=path)          # a save is put where the core reads it
     core.step(60)                        # run frames

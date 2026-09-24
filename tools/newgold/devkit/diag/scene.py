@@ -23,7 +23,9 @@ The ROM is the NEWGOLD_DIAG=1 HeartGold build, run by core.py at the pinned
 clock; the heaps are its gDiagHeapLowWater, read by markers.py. The harness
 has no wireless, so the communication error the game raises for it is held
 off (gDiagIgnoreCommunicationError) every frame, and the Union Room, trades
-and the GTS's first screens can be reached. A battle draws black here.
+and the GTS's first screens can be reached. A shot draws a battle as the
+game does -- both sprites, the HP boxes, the message box -- since the frame
+comes from the core's own video callback (core.shot).
 """
 import argparse
 import sys
