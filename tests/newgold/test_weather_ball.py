@@ -158,6 +158,50 @@ int main(void) {
             result = subprocess.run([str(path / "test")], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_the_ai_s_damage_estimate_types_and_doubles_it(self):
+        """ov10_0221F084 works Weather Ball out as BtlCmd_CalcWeatherBallParams
+        does: double power and the weather's type in a weather its user's
+        move sees, the move's own in none. A power of 0 is the table's."""
+        checks = r"""
+int main(void) {
+    static BattleContext ctx;
+    u8 ivs[6] = { 0 };
+    ctx.fieldCondition = FIELD_CONDITION_RAIN;
+    ov10_0221F084(0, &ctx, MOVE_WEATHER_BALL, 0, ivs, 0, 0, 0, 100);
+    assert(sDamageType == TYPE_WATER && sDamagePower == 100);
+    ctx.fieldCondition = FIELD_CONDITION_SANDSTORM;
+    ov10_0221F084(0, &ctx, MOVE_WEATHER_BALL, 0, ivs, 0, 0, 0, 100);
+    assert(sDamageType == TYPE_ROCK && sDamagePower == 100);
+    ctx.fieldCondition = 0;
+    ov10_0221F084(0, &ctx, MOVE_WEATHER_BALL, 0, ivs, 0, 0, 0, 100);
+    assert(sDamageType == TYPE_NORMAL && sDamagePower == 0);
+    ctx.fieldCondition = FIELD_CONDITION_STRONG_WINDS;
+    ov10_0221F084(0, &ctx, MOVE_WEATHER_BALL, 0, ivs, 0, 0, 0, 100);
+    assert(sDamageType == TYPE_NORMAL && sDamagePower == 0);
+    // Mega Sol's sunlight, and an umbrella keeping the rain off.
+    ctx.fieldCondition = FIELD_CONDITION_RAIN;
+    sMegaSol = 1;
+    ov10_0221F084(0, &ctx, MOVE_WEATHER_BALL, 0, ivs, 0, 0, 0, 100);
+    assert(sDamageType == TYPE_FIRE && sDamagePower == 100);
+    sMegaSol = 0;
+    ctx.battleMons[0].item = HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN;
+    ov10_0221F084(0, &ctx, MOVE_WEATHER_BALL, HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN, ivs, 0, 0, 0, 100);
+    assert(sDamageType == TYPE_NORMAL && sDamagePower == 0);
+    return 0;
+}
+"""
+        functions = drive_or_memory() + helpers() + function(TRAINER_AI, "ov10_0221F084")
+        program = AI[:AI.index("int main(void)")].replace("@FUNCTIONS@", functions) + checks
+        with tempfile.TemporaryDirectory(prefix="newgold-weather-ball-estimate-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-Wno-unused-variable", "-Wno-maybe-uninitialized",
+                "-iquote", str(ROOT / "include"), str(path / "test.c"), "-o", str(path / "test")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(path / "test")], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_snow_makes_it_ice(self):
         """The ninth generation's snow makes Weather Ball an Ice move, as
         hail did (Pokemon Central, Palla Clima)."""

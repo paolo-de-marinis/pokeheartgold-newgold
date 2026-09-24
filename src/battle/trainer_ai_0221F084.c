@@ -20,6 +20,7 @@ u32 ov10_0221F084(BattleSystem *battleSystem, BattleContext *ctx, u16 move, u16 
     u32 moveStatusFlag;
     int rnd;
     int damage;
+    u32 weather;
 
     side = BattleSystem_GetFieldSide(battleSystem, ctx->trainerAIData.battlerIdTarget);
     damage = 0;
@@ -104,6 +105,18 @@ u32 ov10_0221F084(BattleSystem *battleSystem, BattleContext *ctx, u16 move, u16 
     case MOVE_MULTI_ATTACK:
         if (ability != ABILITY_KLUTZ && embargoTurns == 0) {
             type = GetDriveOrMemoryType(move, GetItemVar(ctx, heldItem, ITEMATTR_HOLD_EFFECT));
+        }
+        break;
+    // Weather Ball as BtlCmd_CalcWeatherBallParams works it out when used:
+    // the weather its user's moves see doubles its power and gives it that
+    // weather's type. Retail estimated it Normal at its table power in any
+    // weather; the reference's CalcBaseDamage, which the estimate goes
+    // through there, types and doubles it.
+    case MOVE_WEATHER_BALL:
+        weather = WeatherBallWeather(BattlerMoveWeather(battleSystem, ctx, battlerId), GetBattlerHeldItemEffect(ctx, battlerId));
+        if (weather) {
+            power = BattleMoveTbl(ctx, move)->power * 2;
+            type = WeatherBallType(weather);
         }
         break;
     case MOVE_HIDDEN_POWER:

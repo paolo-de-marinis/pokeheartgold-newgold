@@ -205,6 +205,11 @@ static u16 sMonItem;
 static u16 sMonAbility;
 static int sMegaSol;
 static int sDamageType;
+static int sDamagePower;
+// Every move is a 50-power one here, Weather Ball's table power.
+typedef struct { u16 power; } MoveTbl;
+static const MoveTbl sMoveTbl = { 50 };
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &sMoveTbl; }
 // The item's hold effect stands for the item here.
 static int GetItemVar(BattleContext *ctx, u16 item, u16 var) { (void)ctx; return var == ITEMATTR_HOLD_EFFECT ? item : 0; }
 static u32 GetMonData(Pokemon *mon, int id, void *data) {
@@ -225,8 +230,9 @@ static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs
 static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; return 0; }
 static int BeatUp_TotalPower(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return 0; }
 static int CalcMoveDamage(BattleSystem *bs, BattleContext *ctx, u32 move, u32 side, u32 field, u16 power, u8 type, u8 attacker, u8 target, u8 crit) {
-    (void)bs; (void)ctx; (void)move; (void)side; (void)field; (void)power; (void)attacker; (void)target; (void)crit;
+    (void)bs; (void)ctx; (void)move; (void)side; (void)field; (void)attacker; (void)target; (void)crit;
     sDamageType = type;
+    sDamagePower = power;
     return 100;
 }
 static int ov12_02251D28(BattleSystem *bs, BattleContext *ctx, int move, int type, int attacker, int target, int damage, u32 *flags) {
