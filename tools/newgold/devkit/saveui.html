@@ -801,13 +801,6 @@ function renderTrainer() {
 // ---- Squadra -------------------------------------------------------------
 // A move the Pokemon knows that its species does not learn: an event's, or one the data (or an older editor) left.
 const NOT_LEARNT = "la specie non la impara (nei dati attuali): resta finché non la cambi o non cambi specie";
-// What an older editor wrote and the game never does: a move twice, PP above the maximum.
-const REPEAT = "doppia: il gioco non insegna una mossa che il Pokémon conosce già; resta finché non cambi le mosse, poi va sostituita";
-const REPEAT_NOW = "doppia: così non si salva, scegline un'altra";
-const PP_OVER = "i PP attuali superano il massimo: salvando questo Pokémon scendono al massimo";
-const moveMarks = mv => (mv.repeat ? ` <span class="tag warn" title="${esc(REPEAT)}">doppia</span>` : "")
-  + (mv.pp > mv.pp_max ? ` <span class="tag warn" title="${esc(PP_OVER)}">PP oltre il massimo</span>` : "")
-  + (mv.learnable ? "" : ` <span class="tag warn" title="${esc(NOT_LEARNT)}">non la impara</span>`);
 const STALE_ABILITY = "Non è l'abilità che il gioco darebbe a questa specie (la specie è stata cambiata senza l'abilità, "
   + "o i dati della specie sono cambiati)";
 function monCard(m, i, count) {
@@ -821,7 +814,7 @@ function monCard(m, i, count) {
       ${m.egg ? "" : `<div>${typeBadges(m.types)}</div>`}</div></div>
     ${hp !== null ? `<div class="hp" title="PS ${m.hp}/${m.stats[0]}"><i style="width:${hp}%"></i></div><div class="sub">PS ${m.hp}/${m.stats[0]}</div>` : ""}
     <div class="sub">${esc(m.nature_name)} · ${esc(m.ability_name)}${m.ability_ok ? "" : ` <span class="tag warn" title="${esc(STALE_ABILITY)}: aprilo, scegli l'abilità e salva.">non sua</span>`}${m.item ? ` · ${esc(m.item_name)}` : ""}</div>
-    <ul>${m.moves.map(mv => `<li>${esc(mv.name)} <span class="muted">${mv.pp}/${mv.pp_max}</span>${moveMarks(mv)}</li>`).join("")}</ul>
+    <ul>${m.moves.map(mv => `<li>${esc(mv.name)} <span class="muted">${mv.pp}/${mv.pp_max}</span>${mv.learnable ? "" : ` <span class="tag warn" title="${esc(NOT_LEARNT)}">non la impara</span>`}</li>`).join("")}</ul>
     <div class="acts">
       <button class="small" type="button" data-edit="${i}">Modifica</button>
       <button class="small" type="button" data-up="${i}" ${i === 0 ? "disabled" : ""} aria-label="Sposta su">↑</button>
@@ -853,12 +846,9 @@ function renderParty() {
   $("#tab").ondragstart = ev => ev.preventDefault();
 }
 
-const oddities = m => {
+const unlearnt = m => {
   const odd = m.moves.filter(mv => !mv.learnable).map(mv => mv.name);
-  const twice = m.moves.filter(mv => mv.repeat).map(mv => mv.name);
-  const over = m.moves.filter(mv => mv.pp > mv.pp_max).map(mv => `${mv.name} ${mv.pp}/${mv.pp_max}`);
-  return (odd.length ? ` · ${m.species_name} non impara ${odd.join(", ")}` : "") + (twice.length ? ` · doppia: ${twice.join(", ")}` : "")
-    + (over.length ? ` · PP oltre il massimo: ${over.join(", ")}` : "") + (m.ability_ok ? "" : ` · abilità non sua`);
+  return (odd.length ? ` · ${m.species_name} non impara ${odd.join(", ")}` : "") + (m.ability_ok ? "" : ` · abilità non sua`);
 };
 function renderBoxArea() {
   const boxes = S.save.boxes, mons = boxes.mons[S.box];
@@ -870,7 +860,7 @@ function renderBoxArea() {
       <button type="button" class="small" data-boxnav="1" aria-label="Box successivo">▶</button>
     </div>
     <div class="pc">${mons.map((m, s) => `<button type="button" class="${m ? "full" : ""}" data-slot="${s}" data-pos="box:${S.box}:${s}" ${m ? "data-mon" : ""}
-      title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}${m.egg ? "" : " · " + typeNames(m.types)}${oddities(m)}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere, o trascina qui un Pokémon`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
+      title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}${m.egg ? "" : " · " + typeNames(m.types)}${unlearnt(m)}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere, o trascina qui un Pokémon`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
     <p class="note">Clic su un posto occupato per modificarlo; su uno vuoto per aggiungere un Pokémon.</p>`;
   $("#boxsel").onchange = ev => goBox(+ev.target.value);
   $("#boxarea").onclick = ev => {
@@ -1036,8 +1026,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
         MT, MN e DT, insegnanti, mosse uovo, la mossa della forma (Rotom), e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
         (una mossa evento, o una che i dati attuali non le danno più) resta finché non la cambi e non cambi specie. Il livello non si
         controlla: una mossa imparata salendo di livello va bene a qualsiasi livello, perché un uovo la eredita a livello 1 se
-        entrambi i genitori la conoscono (per una specie che non nasce da un uovo, invece, sta a te). Una mossa che il Pokémon già conosce tiene i suoi PP (salvando, quelli oltre il massimo scendono al massimo: solo
-        per questo Pokémon); una nuova li ha pieni. Una mossa doppia resta finché non tocchi le mosse; se le cambi, va sostituita.
+        entrambi i genitori la conoscono (per una specie che non nasce da un uovo, invece, sta a te). Una mossa che il Pokémon già conosce tiene i suoi PP (salvando, quelli oltre il massimo scendono al massimo); una nuova li ha pieni.
         "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie; finché
         non le tocchi, seguono il livello se lo cambi.</p></div>
     <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="${lim.iv}">Tutti ${lim.iv}</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${perStat("iv", v.ivs, lim.iv)}</div>
@@ -1065,21 +1054,15 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     form.addEventListener("input", ev => { if (ev.target.name?.startsWith("ev")) evsum(); });
     $$("[data-iv]", d).forEach(b => b.onclick = () => six.forEach(i => form.elements["iv" + i].value = b.dataset.iv));
     const inputs = range(lim.moves).map(i => form.elements["move" + i]), sel = form.elements.ability;
-    const tagLine = (value, i) => {
+    const tagLine = value => {
       const id = moveOf(value);
       if (id === null) return `<span class="tag bad">nome sconosciuto: sceglila dall'elenco</span>`;
       if (!id || !st.species) return "";
-      const over = m?.moves.find(x => x.id === id && x.pp > x.pp_max);
-      // Untouched, an older editor's repeat may stay; once the moves change it has to go.
-      const touched = inputs.some((el, j) => (moveOf(el.value) || 0) !== (m?.moves[j]?.id || 0));
-      const odd = (inputs.slice(0, i).some(el => moveOf(el.value) === id)
-          ? (touched ? ` <span class="tag bad">${esc(REPEAT_NOW)}</span>` : ` <span class="tag warn">${esc(REPEAT)}</span>`) : "")
-        + (over ? ` <span class="tag warn">PP ${over.pp}/${over.pp_max}: ${esc(PP_OVER)}</span>` : "");
-      if (st.legal.has(id)) return sourceTags(st.legal.get(id)) + odd;
-      if (st.known.has(id)) return `<span class="tag warn">${esc(NOT_LEARNT)}</span>` + odd;
-      return `<span class="tag bad">${esc(S.species.get(st.species)?.name ?? "")} non la impara</span>` + odd;
+      if (st.legal.has(id)) return sourceTags(st.legal.get(id));
+      if (st.known.has(id)) return `<span class="tag warn">${esc(NOT_LEARNT)}</span>`;
+      return `<span class="tag bad">${esc(S.species.get(st.species)?.name ?? "")} non la impara</span>`;
     };
-    const showTags = () => inputs.forEach((el, i) => { $(`#mvtags${i}`, d).innerHTML = tagLine(el.value, i); });
+    const showTags = () => inputs.forEach((el, i) => { $(`#mvtags${i}`, d).innerHTML = tagLine(el.value); });
     const flash = el => { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); };
     // mode: null keeps what the fields hold, "moves" puts the preset in, "all" the preset and the ability.
     async function load(species, mode, ability) {
@@ -1136,7 +1119,9 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     const close = () => { list.hidden = true; cur?.setAttribute("aria-expanded", "false"); cur?.removeAttribute("aria-activedescendant"); active = -1; };
     const open = (el, q) => {
       cur = el; el.parentElement.append(list);
-      shown = st.moves.filter(x => !q || (S.moves.get(x.id)?.name ?? "").toLowerCase().includes(q.toLowerCase()));
+      // A move another field already holds is not offered: the game never teaches a move twice.
+      const taken = new Set(inputs.filter(x => x !== el).map(x => moveOf(x.value)).filter(Boolean));
+      shown = st.moves.filter(x => !taken.has(x.id) && (!q || (S.moves.get(x.id)?.name ?? "").toLowerCase().includes(q.toLowerCase())));
       active = -1;
       list.innerHTML = shown.map((x, i) => `<div class="mvopt" role="option" id="mvopt${i}" data-i="${i}"><span class="nm">${esc(S.moves.get(x.id)?.name ?? `#${x.id}`)}</span>${sourceTags(x.sources)}</div>`).join("")
         || `<div class="mvopt muted">${st.species ? "Nessuna mossa della specie ha questo nome" : "Scegli prima la specie"}</div>`;
