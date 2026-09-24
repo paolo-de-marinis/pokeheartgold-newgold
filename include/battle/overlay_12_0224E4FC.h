@@ -138,6 +138,8 @@ int GetHeldItemFlingPower(BattleContext *ctx, int battlerId);
 BOOL BattlerCanSwitch(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL Battler_HasGhostType(BattleContext *ctx, int battlerId);
 BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId);
+BOOL Battler_HeldBySkyDrop(BattleContext *ctx, int battlerId);
+BOOL Battler_KeptOnField(BattleContext *ctx, int battlerId);
 BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL BattleItemIsBerry(u16 item);
 BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);

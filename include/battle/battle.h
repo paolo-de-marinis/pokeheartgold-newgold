@@ -366,6 +366,7 @@ typedef struct MoveConditions {
     u8 telekinesisTurns : 2;       // Telekinesis: the turns' ends left in the air, where every move but a one-hit KO hits it
     u8 commanding : 1;             // Commander: a Tatsugiri in its Dondozo's mouth, which skips its turns and no move reaches
     u8 commanderForm : 2;          // Commander: on the Dondozo, the form of the Tatsugiri it took in, 1 Curly to 3 Stretchy, fainted or not
+    u8 skyDropHolder : 3;          // Sky Drop: the battler holding it in the air, plus one; 0 when nothing does (Battler_HeldBySkyDrop)
 } MoveConditions;
 
 #define BATTLE_SCRIPT_BUFFER_WORDS 650

@@ -188,10 +188,11 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // byte, four in all. Dragon Cheer's two took them to a third, four more. Fairy
 // Lock's byte went into the padding after Rage Fist's count, and so did the
 // byte that says the held items are back. The byte for the player's Pokemon
-// another has taken an item from grew it by four, and the items taken from
-// the wild ones by four more.
+// another has taken an item from grew it by four, and the items taken from the
+// wild ones by four more. Sky Drop's holder took the move conditions to a
+// fourth byte, four more.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3268 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x326C + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -2373,6 +2374,13 @@ static void BattleControllerPlayer_FightInput(BattleSystem *battleSystem, Battle
 
     ctx->battlerIdAttacker = ctx->executionOrder[ctx->executionIndex];
 
+    // A Pokemon Sky Drop holds in the air does nothing while it is held --
+    // its sleep, its confusion and Truant waiting as it does -- and acts, if
+    // it has not, once it has been let down (Pokemon Central, Cadutalibera).
+    if (Battler_HeldBySkyDrop(ctx, ctx->battlerIdAttacker)) {
+        ctx->command = CONTROLLER_COMMAND_40;
+        return;
+    }
     if (ctx->turnData[ctx->battlerIdAttacker].struggleFlag) {
         ctx->moveNoTemp = MOVE_STRUGGLE;
         flag = 1;
@@ -2396,6 +2404,18 @@ static void BattleControllerPlayer_FightInput(BattleSystem *battleSystem, Battle
     ctx->moveNoCur = ctx->moveNoTemp;
     ctx->command = CONTROLLER_COMMAND_23;
     ctx->battlerIdTarget = ov12_022506D4(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoTemp, flag, 0);
+    // Sky Drop's second turn comes down on the Pokemon it lifted, whatever
+    // else would draw the move, or on nobody once that one is gone.
+    if ((ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_LOCKED_INTO_MOVE) && ctx->moveNoTemp == MOVE_SKY_DROP) {
+        int battlerId;
+
+        ctx->battlerIdTarget = BATTLER_NONE;
+        for (battlerId = 0; battlerId < BattleSystem_GetMaxBattlers(battleSystem); battlerId++) {
+            if (ctx->moveConditions[battlerId].skyDropHolder == ctx->battlerIdAttacker + 1 && ctx->battleMons[battlerId].hp) {
+                ctx->battlerIdTarget = battlerId;
+            }
+        }
+    }
     BattleController_EmitBlankMessage(battleSystem);
 }
 
@@ -3440,7 +3460,11 @@ static BOOL GuardStopsMove(BattleContext *ctx, int battlerIdAttacker, u32 move, 
 }
 
 static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int move) {
-    if (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) {
+    // Sky Drop's lift is the one charge turn that touches its target, and a
+    // guard stops it as it would the hit (Pokemon Showdown's Sky Drop, with
+    // Pokemon Central silent on it): the lift itself waits for the move to
+    // get through (subscript 470).
+    if ((ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && move != MOVE_SKY_DROP) {
         return FALSE;
     }
 
@@ -4820,6 +4844,32 @@ static BOOL TryInstruct(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// A Pokemon Sky Drop held is let go as soon as its user stops holding it
+// (Pokemon Central, Cadutalibera). A user that faints or leaves lets go on
+// the spot (ReleaseSkyDropTargetsOf); one brought down by Gravity or Smack
+// Down, or stopped before the drop, does here, at the end of the action. The
+// Pokemon comes down -- its sprite with it, ov12_0224E130 showing it once it
+// is no longer in the air -- and acts, if it has not yet, when its turn
+// comes. One Gravity has already brought down says nothing more.
+static BOOL TrySkyDropRelease(BattleSystem *battleSystem, BattleContext *ctx) {
+    int battlerId;
+
+    for (battlerId = 0; battlerId < BattleSystem_GetMaxBattlers(battleSystem); battlerId++) {
+        if (ctx->moveConditions[battlerId].skyDropHolder && !Battler_HeldBySkyDrop(ctx, battlerId)) {
+            ctx->moveConditions[battlerId].skyDropHolder = 0;
+            if (ctx->battleMons[battlerId].hp && (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_FLY)) {
+                ctx->battleMons[battlerId].moveEffectFlags &= ~MOVE_EFFECT_FLAG_FLY;
+                ctx->battlerIdTemp = battlerId;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_SKY_DROP_FREED);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
 static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
     int script;
     int i;
@@ -4870,6 +4920,9 @@ static void ov12_0224D368(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 return;
             }
+        }
+        if (TrySkyDropRelease(battleSystem, ctx) == TRUE) {
+            return;
         }
         if (ov12_0224E130(battleSystem, ctx) == TRUE) {
             return;

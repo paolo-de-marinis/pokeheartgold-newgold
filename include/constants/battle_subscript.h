@@ -800,6 +800,10 @@
 // Damp keeping a Pokemon from an explosion (DampStopsMove), where effect
 // scripts 7 and 420 printed it.
 #define BATTLE_SUBSCRIPT_DAMP                               469
+// Sky Drop lifting its target and a Pokemon it held let go. The reference
+// leaves the move unimplemented.
+#define BATTLE_SUBSCRIPT_SKY_DROP_LIFT                      470
+#define BATTLE_SUBSCRIPT_SKY_DROP_FREED                     471
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -892,6 +896,7 @@
 #define MOVE_SUBSCRIPT_PTR_TELEKINESIS                      234
 #define MOVE_SUBSCRIPT_PTR_INSTRUCT                         235
 #define MOVE_SUBSCRIPT_PTR_THROAT_CHOP                      236
+#define MOVE_SUBSCRIPT_PTR_SKY_DROP_LIFT                    237
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

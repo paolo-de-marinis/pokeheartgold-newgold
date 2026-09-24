@@ -1731,7 +1731,8 @@ static BOOL Battler_IsWild(BattleSystem *battleSystem, int battlerId) {
 // first), which Mold Breaker does not pass (the reference's AbilityFlags
 // leaves both unignorable), and with somewhere to go: not a Pokemon Commander
 // holds on the field (Pokemon Central, Torre di Comando), which would only
-// shut the Eject Packs of the move for a switch its script refuses.
+// shut the Eject Packs of the move for a switch its script refuses, and not
+// one Sky Drop holds in the air, which does not flee either (Cadutalibera).
 static BOOL Battler_Retreats(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     if (!ctx->selfTurnData[battlerId].retreatArmed
         || ctx->battleMons[battlerId].hp == 0
@@ -1740,6 +1741,9 @@ static BOOL Battler_Retreats(BattleSystem *battleSystem, BattleContext *ctx, int
     }
     if (GetBattlerAbility(ctx, battlerId) != ABILITY_EMERGENCY_EXIT
         && GetBattlerAbility(ctx, battlerId) != ABILITY_WIMP_OUT) {
+        return FALSE;
+    }
+    if (Battler_HeldBySkyDrop(ctx, battlerId)) {
         return FALSE;
     }
     return Battler_IsWild(battleSystem, battlerId) || (CanSwitchMon(battleSystem, ctx, battlerId) && !Battler_HeldByCommander(ctx, battlerId));
@@ -2502,6 +2506,25 @@ void ov12_02251038(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->safariRunAttempts = 6;
 }
 
+// A Pokemon that leaves the field or faints lets go at once of what it held
+// with Sky Drop, which comes back down into view (Pokemon Central,
+// Cadutalibera: released immediately). TrySkyDropRelease lets go, with a
+// line, of one whose holder stays on the field but no longer holds it.
+static void ReleaseSkyDropTargetsOf(BattleSystem *battleSystem, BattleContext *ctx, int holder) {
+    int i;
+
+    for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
+        if (ctx->moveConditions[i].skyDropHolder == holder + 1) {
+            ctx->moveConditions[i].skyDropHolder = 0;
+            if (ctx->battleMons[i].moveEffectFlags & MOVE_EFFECT_FLAG_FLY) {
+                ctx->battleMons[i].moveEffectFlags &= ~MOVE_EFFECT_FLAG_FLY;
+                ctx->battleMons[i].moveEffectFlagsTemp &= ~MOVE_EFFECT_FLAG_FLY;
+                BattleController_EmitToggleVanish(battleSystem, i, FALSE);
+            }
+        }
+    }
+}
+
 void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int i;
     int maxBattlers;
@@ -2511,6 +2534,7 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
     maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
     BattleSystem_GetBattleType(battleSystem);
     ctx->playerActions[battlerId].command = CONTROLLER_COMMAND_40;
+    ReleaseSkyDropTargetsOf(battleSystem, ctx, battlerId);
     // What comes in during a turn has no action left in it, and has not
     // acted either. The mark goes with the rest of the turn's data as the
     // next turn begins, so a Pokemon sent out between turns does not keep it.
@@ -2634,6 +2658,7 @@ void InitFaintedWork(BattleSystem *battleSystem, BattleContext *ctx, int battler
     for (int stat = 0; stat < 8; stat++) {
         ctx->battleMons[battlerId].statChanges[stat] = 6;
     }
+    ReleaseSkyDropTargetsOf(battleSystem, ctx, battlerId);
 
     ctx->battleMons[battlerId].status2 = 0;
     ctx->battleMons[battlerId].moveEffectFlags = 0;
@@ -3258,6 +3283,12 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
         // A Pokemon Telekinesis has lifted is out of the ground's reach, as
         // long as nothing has brought it down -- Gravity, an Iron Ball --
         // and Thousand Arrows aside (Pokemon Central, Telecinesi).
+        *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
+    } else if (moveNo == MOVE_SKY_DROP
+        && (GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_1, NULL) == TYPE_FLYING || GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_TYPE_2, NULL) == TYPE_FLYING
+            || ctx->battleMons[battlerIdTarget].type3 == TYPE_FLYING)) {
+        // Sky Drop lets a Flying type down unhurt (Pokemon Central,
+        // Cadutalibera), lifted and held all the same.
         *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
     } else if ((ctx->battleMons[battlerIdTarget].unk88.magnetRiseTurns || itemTarget == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT) && moveType == TYPE_GROUND && BattlerIsGrounded(ctx, battlerIdTarget) == FALSE) {
         // An Air Balloon rides out a Ground move the same way Magnet Rise
@@ -3970,6 +4001,15 @@ BOOL CantEscape(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, B
     battleType = BattleSystem_GetBattleType(battleSystem);
     item = GetBattlerHeldItemEffect(ctx, battlerId);
 
+    // Held in the air by Sky Drop, it flees in no way at all, a Smoke Ball and
+    // Run Away included (Pokemon Central, Cadutalibera).
+    if (Battler_HeldBySkyDrop(ctx, battlerId)) {
+        if (msg != NULL) {
+            msg->tag = TAG_NONE;
+            msg->id = msg_0197_00794;
+        }
+        return TRUE;
+    }
     if (item == HOLD_EFFECT_FLEE || (battleType & BATTLE_TYPE_NO_EXP) || GetBattlerAbility(ctx, battlerId) == ABILITY_RUN_AWAY
         || Battler_HasGhostType(ctx, battlerId)) {
         return FALSE;
@@ -4167,6 +4207,7 @@ void SortMonsBySpeed(BattleSystem *battleSystem, BattleContext *ctx) {
 static const u16 sGravityUnusableMoves[] = {
     MOVE_FLY,
     MOVE_BOUNCE,
+    MOVE_SKY_DROP,
     MOVE_JUMP_KICK,
     MOVE_HI_JUMP_KICK,
     MOVE_SPLASH,
@@ -5818,6 +5859,27 @@ u8 *Battler_RageFistHits(BattleSystem *battleSystem, BattleContext *ctx, int bat
 // move, an ability or an item, for as long as it stands.
 BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId) {
     return ctx->battleMons[battlerId].hp && (ctx->moveConditions[battlerId].commanding || ctx->moveConditions[battlerId].commanderForm);
+}
+
+// Sky Drop holds its target in the air from the turn it lifts it to the turn
+// it drops it, for as long as its user is still up there holding it: not once
+// the user has fainted, left, been brought down by Gravity or Smack Down or
+// stopped before the drop (Pokemon Central, Cadutalibera). skyDropHolder says
+// who lifted it; TrySkyDropRelease lets go of one whose holder no longer holds
+// it, at the end of the action.
+BOOL Battler_HeldBySkyDrop(BattleContext *ctx, int battlerId) {
+    int holder = ctx->moveConditions[battlerId].skyDropHolder - 1;
+
+    return holder >= 0 && ctx->battleMons[battlerId].hp && ctx->battleMons[holder].hp
+        && (ctx->battleMons[holder].status2 & STATUS2_LOCKED_INTO_MOVE) && ctx->moveNoLockedInto[holder] == MOVE_SKY_DROP
+        && (ctx->battleMons[holder].moveEffectFlags & MOVE_EFFECT_FLAG_FLY);
+}
+
+// What neither switches out nor is made to leave the field by a move, an
+// ability or an item: Commander's pair, and a Pokemon Sky Drop holds in the
+// air, which "cannot be recalled or flee in any way" (Cadutalibera).
+BOOL Battler_KeptOnField(BattleContext *ctx, int battlerId) {
+    return Battler_HeldByCommander(ctx, battlerId) || Battler_HeldBySkyDrop(ctx, battlerId);
 }
 
 // Commander (Pokemon Central, Torre di Comando): in a double battle that is
@@ -9023,7 +9085,7 @@ static BOOL SwitchItemAnswersHit(BattleSystem *battleSystem, BattleContext *ctx,
         return !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && ctx->battleMons[attacker].hp
             && (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER);
     }
-    return !Battler_HeldByCommander(ctx, battlerId) && CanSwitchMon(battleSystem, ctx, battlerId);
+    return !Battler_KeptOnField(ctx, battlerId) && CanSwitchMon(battleSystem, ctx, battlerId);
 }
 
 // Suction Cups, Guard Dog, Ingrain and Commander keep a Pokemon in against a
@@ -9094,7 +9156,7 @@ int CheckEjectPack(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     if (GetBattlerHeldItemEffect(ctx, battlerId) != HOLD_EFFECT_SWITCH_OUT_ON_STAT_DROP
         || ctx->battleMons[battlerId].hp == 0
         || !(ctx->statLoweredBattlers & MaskOfFlagNo(battlerId))
-        || Battler_HeldByCommander(ctx, battlerId)
+        || Battler_KeptOnField(ctx, battlerId)
         || !CanSwitchMon(battleSystem, ctx, battlerId)) {
         return BATTLE_SUBSCRIPT_NONE;
     }
@@ -9164,8 +9226,9 @@ BOOL BattlerCanSwitch(BattleSystem *battleSystem, BattleContext *ctx, int battle
     BOOL ret = FALSE;
 
     // Commander holds its pair in whatever they hold: a Shed Shell does not
-    // let them go (Pokemon Central, Torre di Comando).
-    if (Battler_HeldByCommander(ctx, battlerId)) {
+    // let them go (Pokemon Central, Torre di Comando). Nor is a Pokemon Sky
+    // Drop holds in the air let go (Cadutalibera).
+    if (Battler_KeptOnField(ctx, battlerId)) {
         return TRUE;
     }
     if (GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_SWITCH || Battler_HasGhostType(ctx, battlerId)) {
@@ -12313,7 +12376,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_DOODLE,
     BATTLE_SUBSCRIPT_TELEKINESIS,
     BATTLE_SUBSCRIPT_INSTRUCT,
-    BATTLE_SUBSCRIPT_THROAT_CHOP
+    BATTLE_SUBSCRIPT_THROAT_CHOP,
+    BATTLE_SUBSCRIPT_SKY_DROP_LIFT
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

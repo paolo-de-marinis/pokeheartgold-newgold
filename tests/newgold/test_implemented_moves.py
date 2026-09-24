@@ -919,7 +919,7 @@ typedef struct {
 } TurnData;
 typedef struct { u32 moldBreakerFlag : 1; int battlerIdPhysicalAttacker; int battlerIdSpecialAttacker; } SelfTurnData;
 typedef struct { u32 paralysis : 1; } MoveFailFlags;
-typedef struct { u8 syrupBombTurns : 2; u8 syrupBombUser : 2; } MoveConditions;
+typedef struct { u8 syrupBombTurns : 2; u8 syrupBombUser : 2; u8 skyDropHolder : 3; } MoveConditions;
 typedef struct { int command; u32 unk4; u32 unk8; u32 inputSelection; } PlayerActions;
 typedef struct { u16 moves[4][4]; u16 heldItems[4]; } TrainerAIData;
 typedef struct { int battlerIdFutureSight[4]; } FieldConditionData;
@@ -965,12 +965,15 @@ int main(void) {
     reset(); ctx.battleMons[1].unk88.battlerIdMeanLook = 0; ctx.battleMons[1].status2 = 1u << (STATUS2_ATTRACT_SHIFT + 0);
     ctx.rageFistHits[0][0] = 3; ctx.roundUsers = 1; ctx.fieldCondition = 1u << FIELD_CONDITION_UPROAR_SHIFT;
     ctx.battleMons[3].ability = ABILITY_STALWART; ctx.playerActions[3].unk4 = 0; ctx.playerActions[0].unk8 = 7;
+    ctx.moveConditions[1].skyDropHolder = 0 + 1;
     EXPECT(AllySwitchWorks(&bs, &ctx), TRUE);
     Battlers_SwapPlaces(&ctx, 0, 2);
     EXPECT(ctx.battleMons[0].species, 102); EXPECT(ctx.battleMons[2].species, 100);
     EXPECT(ctx.selectedMonIndex[0], 1); EXPECT(ctx.selectedMonIndex[2], 0);
     EXPECT(ctx.playerActions[2].unk8, 7); EXPECT(ctx.turnData[2].allySwitched, 1);
     EXPECT(ctx.battlerIdAttacker, 2); EXPECT(ctx.battleMons[1].unk88.battlerIdMeanLook, 2);
+    // A Pokemon Sky Drop holds is held by its holder in the holder's new place.
+    EXPECT(ctx.moveConditions[1].skyDropHolder, 2 + 1);
     EXPECT((int)ctx.battleMons[1].status2, (int)(1u << (STATUS2_ATTRACT_SHIFT + 2)));
     EXPECT(ctx.rageFistHits[2][0], 3); EXPECT(ctx.rageFistHits[0][0], 0); EXPECT(ctx.roundUsers, 4);
     EXPECT((int)ctx.fieldCondition, (int)(4u << FIELD_CONDITION_UPROAR_SHIFT));
@@ -1202,6 +1205,118 @@ int main(void) {
         self.assertIn("ctx->unk_2184 = MULTIHIT_SKIP_OBEDIENCE_CHECK | MULTIHIT_SKIP_PP_DECREMENT;", instructing)
         end = function(controller, "ov12_0224D368")
         self.assertLess(end.index("TryInstruct(battleSystem, ctx)"), end.index("TryDancer(battleSystem, ctx)"))
+
+    SKY_DROP_PROGRAM = r"""
+typedef struct { int unused; } BattleSystem;
+typedef struct { int hp; u16 ability; u32 status2; u32 moveEffectFlags; u32 moveEffectFlagsTemp; int weight; } BattleMon;
+typedef struct { u8 skyDropHolder : 3; } MoveConditions;
+typedef struct {
+    int battlerIdAttacker; BattleMon battleMons[4]; MoveConditions moveConditions[4]; u16 moveNoLockedInto[4];
+    int item[4]; int substitute[4];
+} BattleContext;
+static u8 BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
+static BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) { return ctx->substitute[battlerId]; }
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int attacker, int battlerId, int ability) { (void)attacker; return ctx->battleMons[battlerId].ability == ability; }
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return ctx->item[battlerId]; }
+@FUNCTIONS@
+static BattleContext ctx;
+static BattleSystem bs;
+static void reset(void) {
+    memset(&ctx, 0, sizeof(ctx));
+    for (int i = 0; i < 4; i++) { ctx.battleMons[i].hp = 10; ctx.battleMons[i].weight = 500; }
+}
+static void lock(int battlerId) { ctx.battleMons[battlerId].status2 |= STATUS2_LOCKED_INTO_MOVE; ctx.moveNoLockedInto[battlerId] = MOVE_SKY_DROP; }
+int main(void) {
+    // The lift: not an ally, a substitute, one in the air or underground.
+    reset(); EXPECT(SkyDropStep(&bs, &ctx, 1), 1);
+    EXPECT(SkyDropStep(&bs, &ctx, 2), 0);
+    ctx.substitute[1] = TRUE; EXPECT(SkyDropStep(&bs, &ctx, 1), 0);
+    reset(); ctx.battleMons[1].moveEffectFlags = MOVE_EFFECT_FLAG_DIG; EXPECT(SkyDropStep(&bs, &ctx, 1), 0);
+    // 200 kg is too heavy, as Heavy Metal makes 100 kg; a Float Stone halves 300.
+    reset(); ctx.battleMons[1].weight = 2000; EXPECT(SkyDropStep(&bs, &ctx, 1), 2);
+    ctx.battleMons[1].weight = 1999; EXPECT(SkyDropStep(&bs, &ctx, 1), 1);
+    ctx.battleMons[1].weight = 1000; ctx.battleMons[1].ability = ABILITY_HEAVY_METAL; EXPECT(SkyDropStep(&bs, &ctx, 1), 2);
+    ctx.battleMons[1].ability = 0; ctx.battleMons[1].weight = 3000; ctx.item[1] = HOLD_EFFECT_HALVE_WEIGHT; EXPECT(SkyDropStep(&bs, &ctx, 1), 1);
+    // Up: both out of reach, the target held as long as the user holds it.
+    reset(); EXPECT(Battler_HeldBySkyDrop(&ctx, 1), FALSE);
+    lock(0); SkyDropStep(&bs, &ctx, 1);
+    EXPECT(ctx.moveConditions[1].skyDropHolder, 1);
+    EXPECT(!!(ctx.battleMons[0].moveEffectFlags & MOVE_EFFECT_FLAG_FLY), 1);
+    EXPECT(!!(ctx.battleMons[1].moveEffectFlags & MOVE_EFFECT_FLAG_FLY), 1);
+    EXPECT(!!(ctx.battleMons[1].moveEffectFlagsTemp & MOVE_EFFECT_FLAG_FLY), 1);
+    EXPECT(Battler_HeldBySkyDrop(&ctx, 1), TRUE); EXPECT(Battler_HeldBySkyDrop(&ctx, 0), FALSE);
+    // Let go once the user faints, comes down (Gravity) or is locked no more.
+    ctx.battleMons[0].hp = 0; EXPECT(Battler_HeldBySkyDrop(&ctx, 1), FALSE); ctx.battleMons[0].hp = 10;
+    ctx.battleMons[0].moveEffectFlags = 0; EXPECT(Battler_HeldBySkyDrop(&ctx, 1), FALSE); ctx.battleMons[0].moveEffectFlags = MOVE_EFFECT_FLAG_FLY;
+    ctx.battleMons[0].status2 = 0; EXPECT(Battler_HeldBySkyDrop(&ctx, 1), FALSE); lock(0);
+    ctx.moveNoLockedInto[0] = MOVE_FLY; EXPECT(Battler_HeldBySkyDrop(&ctx, 1), FALSE); lock(0);
+    EXPECT(Battler_HeldBySkyDrop(&ctx, 1), TRUE);
+    // Down: the target comes down before the hit.
+    EXPECT(SkyDropStep(&bs, &ctx, 1), 1);
+    EXPECT(ctx.moveConditions[1].skyDropHolder, 0);
+    EXPECT(!!(ctx.battleMons[1].moveEffectFlags & MOVE_EFFECT_FLAG_FLY), 0);
+    EXPECT(Battler_HeldBySkyDrop(&ctx, 1), FALSE);
+    return 0;
+}
+"""
+
+    def test_sky_drop_lifts_its_target_and_drops_it(self):
+        # Pokemon Central (Cadutalibera), the seventh generation's rules, the
+        # last with the move: a turn in the air for both, the target held --
+        # it does not act, switch or flee -- and let go the moment its user
+        # stops holding it; dropped the next turn, when the accuracy is
+        # asked; a Flying type takes nothing; not an ally, a substitute, one
+        # already out of reach or one of 200 kg or more; not under Gravity.
+        from test_ability_behaviour import HEADER, run_c
+        from test_hold_effects import subscript_named
+        import import_battle_messages
+        self.assertImplemented("SKY_DROP", "MOVE_EFFECT_SKY_DROP")
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        functions = "\n".join([function(commands, "BattlerWeight"), function(commands, "SkyDropStep"),
+                               function(overlay, "Battler_HeldBySkyDrop")])
+        run_c(self, HEADER + self.SKY_DROP_PROGRAM.replace("@FUNCTIONS@", functions))
+        script = effect_script("MOVE_EFFECT_SKY_DROP")
+        self.assertLess(script.index("STATUS2_LOCKED_INTO_MOVE, _DROP"), script.index("SetMoveConditionFlag MOVE_SKY_DROP"))
+        self.assertIn("MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_SKY_DROP_LIFT", script)
+        self.assertIn("BATTLE_STATUS_CHARGE_TURN", script)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('sky drop too heavy'):05d}, TAG_NICKNAME", script)
+        drop = script[script.index("\n_DROP:"):]
+        self.assertLess(drop.index("SetMoveConditionFlag MOVE_SKY_DROP"), drop.index("CalcDamage"))
+        self.assertEqual(side_effect_subscript("MOVE_SUBSCRIPT_PTR_SKY_DROP_LIFT"), "BATTLE_SUBSCRIPT_SKY_DROP_LIFT")
+        lift = subscript_named("BATTLE_SUBSCRIPT_SKY_DROP_LIFT")
+        self.assertLess(lift.index("LockMoveChoice BATTLER_CATEGORY_ATTACKER"), lift.index("SetMoveConditionFlag MOVE_SKY_DROP"))
+        self.assertIn("ToggleVanish BATTLER_CATEGORY_DEFENDER, TRUE", lift)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('sky drop lift'):05d}, TAG_NICKNAME_NICKNAME", lift)
+        self.assertIn(f"msg_0197_{import_battle_messages.port_row('sky drop freed'):05d}, TAG_NICKNAME",
+                      subscript_named("BATTLE_SUBSCRIPT_SKY_DROP_FREED"))
+        # A guard stops the lift, which is a charge turn.
+        self.assertIn("(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && move != MOVE_SKY_DROP",
+                      function(controller, "BattleSystem_CheckMoveEffect"))
+        # The held Pokemon does nothing; the drop comes down on it alone.
+        fight = function(controller, "BattleControllerPlayer_FightInput")
+        self.assertLess(fight.index("Battler_HeldBySkyDrop(ctx, ctx->battlerIdAttacker)"), fight.index("struggleFlag"))
+        self.assertIn("ctx->moveConditions[battlerId].skyDropHolder == ctx->battlerIdAttacker + 1", fight)
+        # Let go at the end of the action, before the sprites come back.
+        end = function(controller, "ov12_0224D368")
+        self.assertLess(end.index("TrySkyDropRelease(battleSystem, ctx)"), end.index("ov12_0224E130(battleSystem, ctx)"))
+        self.assertIn("BATTLE_SUBSCRIPT_SKY_DROP_FREED", function(controller, "TrySkyDropRelease"))
+        # And on the spot when its user faints or leaves.
+        for name in ("InitFaintedWork", "InitSwitchWork"):
+            self.assertIn("ReleaseSkyDropTargetsOf(battleSystem, ctx, battlerId);", function(overlay, name), name)
+        # Held: no switch, no flight, no switch item or Emergency Exit, no AI switch.
+        for name in ("BattlerCanSwitch", "SwitchItemAnswersHit", "CheckEjectPack"):
+            self.assertIn("Battler_KeptOnField(ctx, battlerId)", function(overlay, name), name)
+        self.assertIn("Battler_HeldBySkyDrop(ctx, battlerId)", function(overlay, "CantEscape"))
+        self.assertIn("Battler_HeldBySkyDrop(ctx, battlerId)", function(overlay, "Battler_Retreats"))
+        self.assertIn("Battler_KeptOnField(ctx, battlerId)", (ROOT / "src/battle/trainer_ai_0222036C.c").read_text())
+        # A Flying type drops unhurt; Gravity keeps the move from use.
+        self.assertIn("moveNo == MOVE_SKY_DROP", function(overlay, "CalcTypeEffectiveness"))
+        gravity = re.search(r"sGravityUnusableMoves\[\] = \{(.*?)\};", overlay, re.S).group(1)
+        self.assertIn("MOVE_SKY_DROP,", gravity)
+        self.assertIn("MOVE_EFFECT_SKY_DROP,", re.search(r"sEffectsInstructCannotRepeat\[\] = \{(.*?)\};", commands, re.S).group(1))
 
 if __name__ == "__main__":
     unittest.main()

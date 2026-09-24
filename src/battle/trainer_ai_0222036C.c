@@ -28,8 +28,9 @@ BOOL ov10_0222036C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
 }
 
 // Whether the trainer AI switches the battler out this turn: never when it is
-// trapped -- Commander's pair included (Pokemon Central, Torre di Comando),
-// a Ghost-type never (Battler_HasGhostType) -- or has no one to send in; otherwise when Perish Song is about to
+// trapped -- Commander's pair and a Pokemon Sky Drop holds included (Pokemon
+// Central, Torre di Comando, Cadutalibera), a Ghost-type otherwise never
+// (Battler_HasGhostType) -- or has no one to send in; otherwise when Perish Song is about to
 // take it, when it can do nothing to the foe, when an ability of the party's
 // would absorb the foe's move, and so on, unless it is doing well enough
 // where it is.
@@ -41,7 +42,7 @@ BOOL ov10_022203A4(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     int partySize;
     Pokemon *mon;
 
-    if (Battler_HeldByCommander(ctx, battlerId)
+    if (Battler_KeptOnField(ctx, battlerId)
         || (!Battler_HasGhostType(ctx, battlerId)
             && ((ctx->battleMons[battlerId].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK))
                 || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)

@@ -10345,6 +10345,7 @@ static const u16 sEffectsInstructCannotRepeat[] = {
     MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP_RAIN_SKIPS,
     MOVE_EFFECT_CHARGE_TURN_PARALYZE_HIT,
     MOVE_EFFECT_CHARGE_TURN_BURN_HIT,
+    MOVE_EFFECT_SKY_DROP,
 };
 
 static BOOL MoveCanBeInstructed(BattleContext *ctx, u16 move) {
@@ -10560,6 +10561,9 @@ static void Battlers_SwapPlaces(BattleContext *ctx, int a, int b) {
         mon->status2 = (mon->status2 & ~STATUS2_ATTRACT)
             | (SwapMaskBits((mon->status2 & STATUS2_ATTRACT) >> STATUS2_ATTRACT_SHIFT, a, b) << STATUS2_ATTRACT_SHIFT);
         ctx->moveConditions[i].syrupBombUser = OtherOfPair(ctx->moveConditions[i].syrupBombUser, a, b);
+        if (ctx->moveConditions[i].skyDropHolder) {
+            ctx->moveConditions[i].skyDropHolder = OtherOfPair(ctx->moveConditions[i].skyDropHolder - 1, a, b) + 1;
+        }
         SwapBytes(&ctx->moveNoCopiedHit[i][a], &ctx->moveNoCopiedHit[i][b], sizeof(u16));
         SwapBytes(&ctx->turnData[i].physicalDamage[a], &ctx->turnData[i].physicalDamage[b], sizeof(int));
         SwapBytes(&ctx->turnData[i].specialDamage[a], &ctx->turnData[i].specialDamage[b], sizeof(int));
@@ -10642,6 +10646,42 @@ static BOOL AllySwitchWorks(BattleSystem *battleSystem, BattleContext *ctx) {
     }
     ctx->turnData[user].allySwitched = TRUE;
     return TRUE;
+}
+
+// Sky Drop, on the battler it is aimed at, in the three steps of its two
+// turns (Pokemon Central, Cadutalibera), told apart by where its user is:
+//  - before the lift, from effect script 445, whether the target can be
+//    lifted: 0 not an ally, not one behind a substitute or already in the
+//    air or underground; 2 not one of 200 kg or more, Heavy Metal, Light
+//    Metal and a Float Stone counted; 1 it can;
+//  - the lift, from subscript 470 once the move has got through and the user
+//    is locked into it: both go up out of reach, the target held
+//    (Battler_HeldBySkyDrop) and marked as up there, so that its sprite comes
+//    back when it is let go;
+//  - the drop, from effect script 445 on the second turn: the target comes
+//    down before the hit, so the accuracy of that turn is the only one the
+//    move has.
+static int SkyDropStep(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int attacker = ctx->battlerIdAttacker;
+
+    if (!(ctx->battleMons[attacker].status2 & STATUS2_LOCKED_INTO_MOVE)) {
+        if (BattleSystem_GetFieldSide(battleSystem, attacker) == BattleSystem_GetFieldSide(battleSystem, battlerId)
+            || BattlerCheckSubstitute(ctx, battlerId)
+            || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE)) {
+            return 0;
+        }
+        return BattlerWeight(ctx, attacker, battlerId) >= 2000 ? 2 : 1;
+    }
+    if (ctx->moveConditions[battlerId].skyDropHolder != attacker + 1) {
+        ctx->battleMons[attacker].moveEffectFlags |= MOVE_EFFECT_FLAG_FLY;
+        ctx->battleMons[battlerId].moveEffectFlags |= MOVE_EFFECT_FLAG_FLY;
+        ctx->battleMons[battlerId].moveEffectFlagsTemp |= MOVE_EFFECT_FLAG_FLY;
+        ctx->moveConditions[battlerId].skyDropHolder = attacker + 1;
+    } else {
+        ctx->battleMons[battlerId].moveEffectFlags &= ~MOVE_EFFECT_FLAG_FLY;
+        ctx->moveConditions[battlerId].skyDropHolder = 0;
+    }
+    return 1;
 }
 
 BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx) {
@@ -10823,6 +10863,10 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
     // The Pledges, whose script asks with Water Pledge's number for all three.
     case MOVE_WATER_PLEDGE:
         ctx->calcTemp = TryPledgeCombination(battleSystem, ctx, battlerId);
+        break;
+    // Sky Drop's three steps, on the battler it is aimed at (SkyDropStep).
+    case MOVE_SKY_DROP:
+        ctx->calcTemp = SkyDropStep(battleSystem, ctx, battlerId);
         break;
     // Whether the battler's Shell Trap was sprung, for its script to ask.
     case MOVE_SHELL_TRAP:

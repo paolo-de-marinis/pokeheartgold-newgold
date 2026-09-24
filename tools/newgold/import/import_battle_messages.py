@@ -371,6 +371,29 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} is hurt\nby the sea of fire!",
         r"The opposing {STRVAR_1 1, 0, 0} is hurt\nby the sea of fire!",
     ]),
+    # Sky Drop. The engine leaves the move unimplemented; the later games'
+    # lines. The lift names the user and its target, seven rows as Ally
+    # Switch's though the two are always on opposite sides; the Pokemon too
+    # heavy to lift and the one let go are one Pokemon each, three rows.
+    ("sky drop lift", [
+        r"{STRVAR_1 1, 0, 0} took\n{STRVAR_1 1, 1, 0} into the sky!",
+        r"{STRVAR_1 1, 0, 0} took the wild\n{STRVAR_1 1, 1, 0} into the sky!",
+        r"{STRVAR_1 1, 0, 0} took the opposing\n{STRVAR_1 1, 1, 0} into the sky!",
+        r"The wild {STRVAR_1 1, 0, 0} took\n{STRVAR_1 1, 1, 0} into the sky!",
+        r"The wild {STRVAR_1 1, 0, 0} took the wild\n{STRVAR_1 1, 1, 0} into the sky!",
+        r"The opposing {STRVAR_1 1, 0, 0} took\n{STRVAR_1 1, 1, 0} into the sky!",
+        r"The opposing {STRVAR_1 1, 0, 0} took the\nopposing {STRVAR_1 1, 1, 0} into the sky!",
+    ]),
+    ("sky drop too heavy", [
+        r"{STRVAR_1 1, 0, 0} is too heavy\nto be lifted!",
+        r"The wild {STRVAR_1 1, 0, 0} is too heavy\nto be lifted!",
+        r"The opposing {STRVAR_1 1, 0, 0} is too heavy\nto be lifted!",
+    ]),
+    ("sky drop freed", [
+        r"{STRVAR_1 1, 0, 0} was freed\nfrom the Sky Drop!",
+        r"The wild {STRVAR_1 1, 0, 0} was freed\nfrom the Sky Drop!",
+        r"The opposing {STRVAR_1 1, 0, 0} was freed\nfrom the Sky Drop!",
+    ]),
 ]
 
 

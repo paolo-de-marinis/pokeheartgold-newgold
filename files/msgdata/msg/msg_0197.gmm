@@ -7728,4 +7728,56 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} is hurt\nby the sea of fire!</language>
 	</row>
+	<row id="msg_0197_01932" index="1932">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} took\n{STRVAR_1 1, 1, 0} into the sky!</language>
+	</row>
+	<row id="msg_0197_01933" index="1933">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} took the wild\n{STRVAR_1 1, 1, 0} into the sky!</language>
+	</row>
+	<row id="msg_0197_01934" index="1934">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} took the opposing\n{STRVAR_1 1, 1, 0} into the sky!</language>
+	</row>
+	<row id="msg_0197_01935" index="1935">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} took\n{STRVAR_1 1, 1, 0} into the sky!</language>
+	</row>
+	<row id="msg_0197_01936" index="1936">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} took the wild\n{STRVAR_1 1, 1, 0} into the sky!</language>
+	</row>
+	<row id="msg_0197_01937" index="1937">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} took\n{STRVAR_1 1, 1, 0} into the sky!</language>
+	</row>
+	<row id="msg_0197_01938" index="1938">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} took the\nopposing {STRVAR_1 1, 1, 0} into the sky!</language>
+	</row>
+	<row id="msg_0197_01939" index="1939">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} is too heavy\nto be lifted!</language>
+	</row>
+	<row id="msg_0197_01940" index="1940">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} is too heavy\nto be lifted!</language>
+	</row>
+	<row id="msg_0197_01941" index="1941">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} is too heavy\nto be lifted!</language>
+	</row>
+	<row id="msg_0197_01942" index="1942">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} was freed\nfrom the Sky Drop!</language>
+	</row>
+	<row id="msg_0197_01943" index="1943">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} was freed\nfrom the Sky Drop!</language>
+	</row>
+	<row id="msg_0197_01944" index="1944">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} was freed\nfrom the Sky Drop!</language>
+	</row>
 </body>

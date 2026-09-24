@@ -49,6 +49,7 @@ static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs
 static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return 2; }
 static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)ctx; return bs->canSwitch[battlerId]; }
 static BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
+static BOOL Battler_HeldBySkyDrop(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
 @FUNCTIONS@
 static BattleSystem bs;
 static BattleContext ctx;

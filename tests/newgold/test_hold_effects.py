@@ -768,6 +768,7 @@ static BOOL TryPickForcedSwitchIn(BattleSystem *bs, BattleContext *ctx, int batt
 }
 static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return S.replacements; }
 static BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId) { (void)ctx; return S.held[battlerId]; }
+static BOOL Battler_KeptOnField(BattleContext *ctx, int battlerId) { return Battler_HeldByCommander(ctx, battlerId); }
 @FUNCTION@
 static BattleContext ctx;
 static BattleSystem bs;
@@ -1019,6 +1020,7 @@ static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)c
 static u32 MaskOfFlagNo(int flagNo) { return 1u << flagNo; }
 static int sHeld;
 static BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId) { (void)ctx; return sHeld == battlerId + 1; }
+static BOOL Battler_KeptOnField(BattleContext *ctx, int battlerId) { return Battler_HeldByCommander(ctx, battlerId); }
 typedef struct { int replacements; } BattleSystem;
 static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return bs->replacements; }
 @FUNCTION@

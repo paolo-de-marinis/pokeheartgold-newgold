@@ -502,6 +502,10 @@ IMPLEMENTED_HERE = {
     "WATER_PLEDGE": "MOVE_EFFECT_PLEDGE",
     "FIRE_PLEDGE": "MOVE_EFFECT_PLEDGE",
     "GRASS_PLEDGE": "MOVE_EFFECT_PLEDGE",
+    # Sky Drop lifts its target for a turn, both out of reach and the target
+    # held, and drops it the next; not on a Pokemon of 200 kg or more
+    # (Pokemon Central, Cadutalibera): effect script 445.
+    "SKY_DROP": "MOVE_EFFECT_SKY_DROP",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
