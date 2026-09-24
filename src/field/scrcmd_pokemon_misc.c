@@ -137,7 +137,7 @@ BOOL ScrCmd_648(ScriptContext *ctx) {
 
     ctx->data[0] = unkC;
 
-    msgdata = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, 237, HEAP_ID_FIELD3);
+    msgdata = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, 237, HEAP_ID_FIELD3);
 
     input = GetVarPointer(fieldSystem, unkC);
 
