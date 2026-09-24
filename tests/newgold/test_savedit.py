@@ -879,6 +879,19 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual((sv.var_value(save, takeover), sv.var_value(save, variables["VAR_MIDGAME_BADGES"])), (1, 3))
         self.assert_only(save, ["SAVE_FLAGS", "SAVE_PLAYERDATA", "SAVE_BAG"])
 
+    def test_a_battle_runs_the_scripts_the_field_runs_after_it(self):
+        """The Sudowoodo's battle rebuilds Route 36, whose OnLoad script
+        hides the tree while FLAG_ENGAGING_STATIC_POKEMON is set: the step
+        writes that, and running it leaves the tree gone."""
+        flags = sv.constants("include/constants/flags.h", "FLAG_")
+        sudowoodo = next(s for s in sv.story() if s["kind"] == "flag" and s["key"] == "FLAG_UNK_0B4")
+        self.assertIn(["flag", "FLAG_HIDE_ROUTE_36_SUDOWOODO", 1, False], sudowoodo["writes"])
+        save = self.open()
+        sv.run_step(save, sudowoodo["id"])
+        self.assertTrue(sv.flag_is_set(save, flags["FLAG_HIDE_ROUTE_36_SUDOWOODO"]))
+        self.assertFalse(sv.flag_is_set(save, flags["FLAG_ENGAGING_STATIC_POKEMON"]))
+        self.assertIn(sudowoodo["id"], sv.story_state(save)["done"])
+
     def test_the_machines_as_the_bag_keeps_them(self):
         """Every machine, in SortTMHMPocket's order, with its move, the
         move's type and how many the bag takes."""
@@ -1145,7 +1158,13 @@ class TheCodeSaveditKeeps(unittest.TestCase):
                       sv.c_function("src/scrcmd_c.c", "BOOL ScrCmd_804("))
         self.assertRegex(sv.c_function("src/scrcmd_c.c", "BOOL ScrCmd_NatDexFlagAction("),
                          r"if \(action == 1\) \{\s*Pokedex_SetNatDexFlag\([^;]*\);\s*PlayerProfile_SetNatDexFlag\(")
+        fieldmap = (ROOT / "src/field/fieldmap.c").read_text()
+        self.assertLess(fieldmap.index("TryStartMapScriptByType(fieldSystem, INIT_SCRIPT_ON_LOAD);"),
+                        fieldmap.index("TryStartMapScriptByType(fieldSystem, INIT_SCRIPT_ON_RESUME);"),
+                        "a field built again runs its OnLoad script, then its OnResume one")
         macros = (ROOT / "asm/macros/script.inc").read_text()
+        for battle in sv._BATTLES:
+            self.assertRegex(macros, rf"\.macro {battle}\b")
         self.assertRegex(macros, r"\.macro GoToIfNoItemSpace item, quantity, target\s*ItemVars \\item, \\quantity\s*"
                                  r"HasSpaceForItem VAR_SPECIAL_x8004, VAR_SPECIAL_x8005, VAR_SPECIAL_RESULT")
         self.assertRegex(macros, r"\.macro GiveItemNoCheck item, quantity\s*ItemVars \\item, \\quantity\s*"

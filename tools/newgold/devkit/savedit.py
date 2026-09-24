@@ -3170,17 +3170,43 @@ def _has_badge(save, const):
     return bool(save.block("SAVE_PLAYERDATA")[JOHTO_BADGES if b["field"] == "johto" else KANTO_BADGES] >> b["bit"] & 1)
 
 
-def _walk(stem, start, save=None, through=()):
+# The commands that start a battle: the field is built again when it ends,
+# and runs its map's OnLoad and OnResume scripts (_reloads).
+_BATTLES = ("TrainerBattle", "WildBattle", "RocketTrapBattle", "MultiBattle")
+
+
+@tree_cache
+def _reloads(stem):
+    """The labels of the scripts the game runs when the field of this
+    script file's maps is built again -- after a battle: each map header's
+    OnLoad, then OnResume entry (FieldMap's init states run
+    INIT_SCRIPT_ON_LOAD, then INIT_SCRIPT_ON_RESUME)."""
+    out = []
+    for const in _map_of_scripts().get(stem, []):
+        hdr = _bank_file(map_headers()[const], "scriptHeaderBank", "scr_seq_", SCRIPTS, ".s")
+        if hdr and (ROOT / hdr).exists():
+            text = source(hdr).read_text()
+            for kind in ("OnLoad", "OnResume"):
+                out += re.findall(rf"InitScriptEntry_{kind} _EV_(\w+) \+ 1", text)
+    return list(dict.fromkeys(out))
+
+
+def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=False):
     """A step's straight line from `start`: fall-through, GoTo and Call, to
     End, a Return with no Call to go back to, or a primary marker (but those
-    in `through`). Without a save, a jump that depends on it is not taken
-    and each write it could skip is marked conditional. With a save, each
-    jump is decided on it and each write made on it as the walk passes it,
-    as the game runs the script. Returns the writes as (kind, name, value,
-    conditional), the lines passed and the marker line it stopped at."""
+    in `through`); after a battle, the scripts the field runs when it is
+    built again (_reloads). Without a save, a jump is decided on what the
+    walk itself wrote before it (`known`), else it is not taken and each
+    write it could skip is marked conditional. With a save, each jump is
+    decided on it and each write made on it as the walk passes it, as the
+    game runs the script. `outer`: the walk is inside a conditional stretch
+    of another; `reloaded`: it is a script the field runs when built again.
+    Returns the writes as (kind, name, value, conditional), the lines passed
+    and the marker line it stopped at."""
     script = _script(stem)
     lines, labels = script["lines"], script["labels"]
     writes, passed, pending, stack, subjects, compared = [], set(), set(), [], {}, (None, None)
+    known, also = {} if known is None else known, set()
     i, stop = start, None
     while 0 <= i < len(lines) and (i, tuple(stack)) not in passed and len(passed) < 4000:
         passed.add((i, tuple(stack)))
@@ -3204,9 +3230,10 @@ def _walk(stem, start, save=None, through=()):
         branch = _branch(op, args, subjects, compared)
         if branch and branch[1] and branch[0] in labels:
             label, (subject, test, value), call = branch
-            if save is None:
+            have = _state(save, subject) if save is not None else known.get(subject[:2])
+            if have is None:
                 pending.add(labels[label])
-            elif _TESTS[test](_state(save, subject), value):
+            elif _TESTS[test](have, value):
                 if call:
                     stack.append(i + 1)
                 i = labels[label]
@@ -3214,11 +3241,23 @@ def _walk(stem, start, save=None, through=()):
         _track(op, args, subjects)
         write = _write(op, args)
         if write:
-            writes.append((*write, bool(pending)))
+            skippable = bool(pending) or outer
+            writes.append((*write, skippable))
             if save is not None:
                 _apply(save, write)
+            elif write[0] in ("flag", "var", "trainer") and not skippable:
+                known[write[:2]] = write[2]
+            else:
+                known.pop(write[:2] if write[0] != "add" else ("var", write[1]), None)
+        if op in _BATTLES and not reloaded:
+            for label in _reloads(stem):
+                if label in labels:
+                    more, lines_passed, _ = _walk(stem, labels[label], save, known=known,
+                                                  outer=bool(pending) or outer, reloaded=True)
+                    writes += more
+                    also |= lines_passed
         i += 1
-    return writes, {i for i, _ in passed}, stop
+    return writes, {i for i, _ in passed} | also, stop
 
 
 def _apply(save, write, undo=False):

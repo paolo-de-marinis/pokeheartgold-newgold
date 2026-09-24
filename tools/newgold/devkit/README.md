@@ -91,8 +91,11 @@ an item given after `GoToIfNoItemSpace` -- or, where no other step passes, a
 `SetFlag` of one of flags.h's "Story flags", a `GiveItemNoCheck`, or a
 `SetVar` of a variable that keeps the player out of a gym (Morty's, until
 the Burned Tower); it runs straight on, through `GoTo` and `Call`, to `End`
-or the next marker, and a battle whose win runs into a marker opens that
-marker's step. Each step has what it writes, what the game tests on the way
+or the next marker, a jump decided on what it wrote itself before it, and a
+battle whose win runs into a marker opens that marker's step. After a
+battle the field is built again and runs its map's OnLoad and OnResume
+scripts (`fieldmap.c`), so the walk runs them too: Route 36's hides the
+Sudowoodo once it was fought. Each step has what it writes, what the game tests on the way
 to it from the script's entry (a trigger tile's variable, the map's frame
 table, `CheckBadge`, `HasItem`, `GoToIfSet` and the rest: the positive
 ones), and the steps that give that. `badge_chains()` is each badge's gym in
