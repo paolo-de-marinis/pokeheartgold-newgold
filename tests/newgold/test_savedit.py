@@ -465,6 +465,13 @@ class SaveditLibraryTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             sv.parse_party("MACHAMP:13::FOCUS_ENERGY+FOCUS_ENERGY")
 
+    def test_an_edit_brings_pp_down_to_the_maximum(self):
+        """An older savedit gave every move 40 PP: an edit brings each down
+        to GetMoveMaxPP's, and leaves one at or below it."""
+        moves = sv.move_numbers()
+        old = sv.build_mon("MACHAMP", 13, moves=[moves["FOCUS_ENERGY"], moves["FORESIGHT"]])
+        self.assertEqual([m["pp"] for m in sv.describe_mon(sv.edit_mon(old, item=1))["moves"]], [30, 40])
+
     def test_a_new_species_brings_its_own_moves_and_ability(self):
         """preset_moves at its level, never the old moves, and the ability
         UpdateBoxMonAbility gives the new species from the Pokemon's bits."""

@@ -173,7 +173,9 @@ already knew that the species does not learn (an event's, or one the data no
 longer gives it) stays while it is left alone and the species is kept, and
 the card marks it "non la impara". A move known twice (an older editor's)
 stays while the moves are left alone; moves sent with one twice are
-refused, naming it. An ability that is not the one the game
+refused, naming it. Saving a Pokemon from its dialog, even with nothing
+changed, brings any PP above the move's maximum (`GetMoveMaxPP`; an older
+savedit wrote 40) down to it; a Pokemon not saved keeps what it has. An ability that is not the one the game
 would give the Pokemon (its species written alone by an older editor) is
 marked "non sua", and the dialog has it chosen again. A new Pokemon's
 friendship is its species' own.

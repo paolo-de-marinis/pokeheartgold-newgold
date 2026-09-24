@@ -829,8 +829,7 @@ class Library:
         slot = number(a["slot"], 0, sv.PARTY_SIZE - 1, "posto")
         raw = sv.party_raw(save)[slot]
         changes = storable(changed(checked_mon(a), sv.describe_mon(raw)))
-        if changes:
-            sv.set_party_mon(save, slot, sv.edit_mon(raw, **changes))
+        sv.set_party_mon(save, slot, sv.edit_mon(raw, **changes))     # with none, PP down to the maximum
 
     def op_party_add(self, save, a):
         if len(sv.party_raw(save)) >= sv.PARTY_SIZE:
@@ -849,8 +848,7 @@ class Library:
         box, slot = number(a["box"], 0, sv.NUM_BOXES - 1, "box"), number(a["slot"], 0, sv.MONS_PER_BOX - 1, "posto")
         raw = sv.box_raw(save, box, slot)
         changes = storable(changed(checked_mon(a), sv.describe_mon(raw)))
-        if changes:
-            sv.set_box_mon(save, box, slot, sv.edit_mon(raw, **changes))
+        sv.set_box_mon(save, box, slot, sv.edit_mon(raw, **changes))     # with none, PP down to the maximum
 
     def op_box_add(self, save, a):
         box, slot = number(a["box"], 0, sv.NUM_BOXES - 1, "box"), number(a["slot"], 0, sv.MONS_PER_BOX - 1, "posto")

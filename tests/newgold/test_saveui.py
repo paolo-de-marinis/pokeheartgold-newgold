@@ -541,6 +541,25 @@ class SaveUiTests(unittest.TestCase):
                                       "moves": twice[:2]})):
             self.assertIn("Focus Energy è due volte", self.refused("/api/edit", {"f": "gyms/test.sav", "op": op, "args": args}))
 
+    def test_saving_a_pokemon_brings_its_pp_down(self):
+        """The old CLI's Machamp has 40 PP on every move: saved from the
+        dialog, even with nothing changed, each comes down to its maximum;
+        the one next to it, not saved, keeps its 40s and its move twice."""
+        moves = sv.move_numbers()
+        twice = [moves["FOCUS_ENERGY"], moves["FOCUS_ENERGY"], moves["KARATE_CHOP"], moves["FORESIGHT"]]
+        save = sv.Save(self.save)
+        for slot in (0, 1):
+            sv.set_party_mon(save, slot, sv.build_mon("MACHAMP", 13, moves=twice))
+        sv.set_box_mon(save, 0, 0, sv.build_mon("MACHAMP", 13, moves=twice)[:sv.BOX_MON])
+        self.save.write_bytes(save.image())
+        out = self.edit("party_edit", {"slot": 0, "level": 13, "moves": twice})
+        self.assertTrue(out["changed"])
+        self.assertEqual([(m["pp"], m["pp_max"]) for m in out["party"][0]["moves"]], [(30, 30), (30, 30), (25, 25), (40, 40)])
+        self.assertEqual([(m["pp"], m["repeat"]) for m in out["party"][1]["moves"]],
+                         [(40, False), (40, True), (40, False), (40, False)], "untouched")
+        out = self.edit("box_edit", {"box": 0, "slot": 0})
+        self.assertEqual([m["pp"] for m in out["boxes"]["mons"][0][0]["moves"]], [30, 30, 25, 40])
+
     def test_only_species_a_pokemon_can_be(self):
         """504 is a row of the form table, not Rotom Wash; a Mega is a
         battle's. Neither is offered or made; one already there is kept."""

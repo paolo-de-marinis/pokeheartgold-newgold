@@ -1828,7 +1828,8 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
     slot (species_abilities), written the way the game keeps it
     (_choose_ability). A level is the experience that level costs; a nature
     is a new personality (personality_for_nature) with any Mint taken away;
-    a move it already knew keeps its PP and PP Ups, a new one gets full PP.
+    a move it already knew keeps its PP and PP Ups, a new one gets full PP,
+    and PP above GetMoveMaxPP's (an older editor wrote 40) come down to it.
     A party Pokemon's stats follow. Illegal, a ValueError, says what the
     species cannot have.
     """
@@ -1881,6 +1882,8 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
             pp, ups = (kept[1], kept[2]) if kept else ((table[move]["pp"], 0) if move else (0, 0))
             struct.pack_into("<H", b, 2 * i, move)
             b[8 + i], b[12 + i] = pp, ups
+    for i in range(MAX_MON_MOVES):
+        b[8 + i] = min(b[8 + i], max_pp(struct.unpack_from("<H", b, 2 * i)[0], b[12 + i]))
     if ivs is not None:
         word = struct.unpack_from("<I", b, 0x10)[0] & 0xC0000000
         struct.pack_into("<I", b, 0x10, word | sum((iv & MAX_IV) << (5 * i) for i, iv in enumerate(ivs)))
