@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A bank with a line per item, species or move is not loaded whole where it
+"""A bank with a line per item or move is not loaded whole where it
 no longer fits.
 
 Each of these grew with the port -- the item names (msg_0222) from 14,866
@@ -21,6 +21,7 @@ LAZY = [
     ("src/overlay_31_0225D60C.c", 222, "HEAP_ID_8", "every mart's list: 10,572 bytes of 0x18000"),
     ("src/overlay_68_021E6820.c", 750, "HEAP_ID_66", "the move relearner: 9,496 bytes, and the load failed"),
     ("src/overlay_68_021E6320.c", 750, "HEAP_ID_66", "the move relearner, as its list"),
+    ("src/pokemon_summary_text.c", 750, "HEAP_ID_19", "the summary's moves page: 7,076 bytes of 0x45000"),
 ]
 
 

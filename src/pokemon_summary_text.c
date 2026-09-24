@@ -10,7 +10,10 @@
 
 // The summary opens its text: its own lines, the ribbons' (read a line at a
 // time), the digits it prints, the placeholders, the Pokemon's three names,
-// a line buffer, the move names and the player's name.
+// a line buffer, the move names and the player's name. The move names are
+// read a line at a time as well: whole, the bank is a line per move (28,214
+// bytes, retail's 13,154), and on the moves page, a move's details open, the
+// summary's heap had 7,076 bytes left in one piece.
 void sub_02088894(PokemonSummaryAppPrefix *summary) {
     summary->msgData = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0302_bin, HEAP_ID_19);
     summary->ribbonMsgData = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, NARC_msg_msg_0424_bin, HEAP_ID_19);
@@ -20,7 +23,7 @@ void sub_02088894(PokemonSummaryAppPrefix *summary) {
     summary->mon.nickname = String_New(12, HEAP_ID_19);
     summary->mon.otName = String_New(8, HEAP_ID_19);
     summary->stringBuffer = String_New(128, HEAP_ID_19);
-    summary->moveNames = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0750_bin, HEAP_ID_19);
+    summary->moveNames = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, NARC_msg_msg_0750_bin, HEAP_ID_19);
     summary->playerName = String_New(8, HEAP_ID_19);
     if (summary->args->playerName != NULL) {
         CopyU16ArrayToString(summary->playerName, summary->args->playerName);
