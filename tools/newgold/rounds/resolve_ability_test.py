@@ -17,7 +17,7 @@ def show(rev):
 
 
 def pending(text):
-    body = re.search(r"^PENDING = \{(.*?)^\}", text, re.S | re.M).group(1)
+    body = re.search(r"^PENDING = (?:set\(\)|\{(.*?)^\})", text, re.S | re.M).group(1) or ""
     return set(re.findall(r'"([A-Z0-9_]+)"', body))
 
 
@@ -49,7 +49,9 @@ for name in names:
         row = "   "
     row += piece
 rows.append(row.rstrip(","))
-text = re.sub(r"^PENDING = \{.*?^\}", "PENDING = {\n" + "\n".join(rows) + "\n}", text, count=1, flags=re.S | re.M)
+# an empty one is set(): {} is a dict
+written = "PENDING = {\n" + "\n".join(rows) + "\n}" if names else "PENDING = set()"
+text = re.sub(r"^PENDING = (?:set\(\)|\{.*?^\})", lambda m: written, text, count=1, flags=re.S | re.M)
 text = re.sub(r"^(    STILL_TO_DO = )\d+", lambda m: f"{m.group(1)}{len(left)}", text, count=1, flags=re.M)
 Path(PATH).write_text(text)
 print(f"took {sorted(taken)}; {len(left)} pending")
