@@ -4141,6 +4141,8 @@ BOOL BtlCmd_TryStealItem(BattleSystem *battleSystem, BattleContext *ctx) {
             // A Thief or a Covet a Gem powered takes nothing, though the Gem
             // has left the hand empty (ServerDoPostMoveEffects.c:1242).
             BattleScriptIncrementPointer(ctx, adrs1);
+        } else {
+            NoteHeldItemTaken(battleSystem, ctx, ctx->battlerIdTarget);
         }
     }
 
@@ -8162,6 +8164,14 @@ static void Task_GetPokemon(SysTask *task, void *inData) {
         if (!ov07_02232F60(data->ballData, BALL_ANIM_FADE) && !(data->tempData[DATA_GET_POKEMON_FRAME_COUNTER]--, data->tempData[DATA_GET_POKEMON_FRAME_COUNTER])) {
             ov12_0223BD8C(data->battleSystem, battlerId);
             Pokemon *mon = BattleSystem_GetPartyMon(data->battleSystem, battlerId, data->ctx->selectedMonIndex[battlerId]); // Get the data of the caught Pokemon.
+            // The item the player's side took from it is its own again, and
+            // the other wild Pokemon's, if any, still goes to the bag
+            // (NoteHeldItemTaken, GiveBackHeldItems).
+            u16 *taken = data->ctx->itemsTakenFromWild;
+            if (taken[battlerId >> 1] != ITEM_NONE) {
+                SetMonData(mon, MON_DATA_HELD_ITEM, &taken[battlerId >> 1]);
+            }
+            taken[(battlerId >> 1) ^ 1] = ITEM_NONE;
             if (BattleSystem_GetBattleType(data->battleSystem) & (BATTLE_TYPE_PAL_PARK | BATTLE_TYPE_TUTORIAL)) {           // If this was the Catching Demo or a Pal Park encounter...
                 ov12_022567D4(data->battleSystem, data->ctx, BattleSystem_GetPartyMon(data->battleSystem, battlerId, data->ctx->selectedMonIndex[battlerId]));
                 sub_0201649C(BattleSystem_GetMessageIcon(data->battleSystem), 1);

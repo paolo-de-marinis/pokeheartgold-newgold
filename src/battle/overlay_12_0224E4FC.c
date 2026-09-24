@@ -6991,16 +6991,22 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
     return CanStealHeldItem(battleSystem, ctx, battlerIdTaker, battlerIdLoser);
 }
 
-// battlerIdLoser's item is being taken, by Magician or Pickpocket. Taken from
-// one of the player's own Pokemon, it is theirs again when the battle is over,
-// a Berry too, and even one the taker has used up (Pokemon Central: Furto,
-// items stolen from any trainer come back at the battle's end from the fifth
-// generation; Prestigiatore, even consumed from the eighth).
+// battlerIdLoser's item is being taken, by Magician, Pickpocket, Thief or
+// Covet. Taken from one of the player's own Pokemon, it is theirs again when
+// the battle is over, a Berry too, and even one the taker has used up (Pokemon
+// Central: Furto, items stolen from any trainer come back at the battle's end
+// from the fifth generation; Prestigiatore, even consumed from the eighth).
 // GiveBackHeldItems reads the mark; a Berry not marked that its holder no
 // longer has was eaten, and stays so.
-static void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdLoser) {
+//
+// Taken from a wild Pokemon, it goes to the bag when the battle is over,
+// unless that Pokemon is caught: then it keeps its item and the bag gets no
+// copy (Pokemon Central, Arraffalesto and Furto, from the ninth generation).
+void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdLoser) {
     if (BattleSystem_GetParty(battleSystem, battlerIdLoser) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
         ctx->heldItemsTaken |= MaskOfFlagNo(ctx->selectedMonIndex[battlerIdLoser]);
+    } else if (Battler_IsWild(battleSystem, battlerIdLoser)) {
+        ctx->itemsTakenFromWild[battlerIdLoser >> 1] = ctx->battleMons[battlerIdLoser].item;
     }
 }
 

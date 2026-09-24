@@ -126,8 +126,8 @@ typedef int BOOL;
 #define TRUE 1
 typedef struct { u16 item; } Pokemon;
 typedef struct { int unused; } Bag;
-typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; } BattleSystem;
-typedef struct { u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken; } BattleContext;
+typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; u8 outcome; } BattleSystem;
+typedef struct { u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken; u16 itemsTakenFromWild[2]; } BattleContext;
 static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 
 static u16 sAdded[8][2];
@@ -136,6 +136,7 @@ static int sAdds;
 static int BattleSystem_GetPartySize(BattleSystem *bs, int side) { assert(side == BATTLER_PLAYER); return bs->count; }
 static Pokemon *BattleSystem_GetPartyMon(BattleSystem *bs, int side, int i) { assert(side == BATTLER_PLAYER); return &bs->party[i]; }
 static u32 BattleSystem_GetBattleType(BattleSystem *bs) { return bs->type; }
+static u8 BattleSystem_GetBattleOutcomeFlags(BattleSystem *bs) { return bs->outcome; }
 static Bag *BattleSystem_GetBag(BattleSystem *bs) { return &bs->bag; }
 static u32 GetMonData(Pokemon *mon, int attr, void *ptr) { assert(attr == MON_DATA_HELD_ITEM && ptr == 0); return mon->item; }
 static void SetMonData(Pokemon *mon, int attr, const void *value) { assert(attr == MON_DATA_HELD_ITEM); mon->item = *(const u16 *)value; }
@@ -154,6 +155,7 @@ static void run(u32 type, const u16 *before, const u16 *after, BattleSystem *bs)
     ctx.heldItemsGivenBack = 0;
     ctx.heldItemsTaken = 0;
     bs->count = PARTY_SIZE;
+    bs->outcome = BATTLE_OUTCOME_WIN;
     bs->type = type;
     for (int i = 0; i < PARTY_SIZE; i++) {
         ctx.itemsToRestore[i] = before[i];
@@ -209,6 +211,24 @@ int main(void) {
     GiveBackHeldItems(&bs, &ctx);
     assert(bs.party[5].item == ITEM_ORAN_BERRY && bs.party[4].item == ITEM_ROSELI_BERRY && bs.party[3].item == ITEM_NONE);
 
+    // What was taken from a wild Pokemon that was then caught went back with
+    // it: no copy for the bag. One that fainted or fled leaves it to the bag.
+    const u16 tookWild[PARTY_SIZE] = { ITEM_FOCUS_SASH, ITEM_LEFTOVERS, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
+    run(BATTLE_TYPE_NONE, before, tookWild, &bs);
+    assert(sAdds == 1 && sAdded[0][0] == ITEM_LEFTOVERS);
+    ctx.itemsTakenFromWild[1] = ITEM_LEFTOVERS;
+    run(BATTLE_TYPE_NONE, before, tookWild, &bs);
+    assert(sAdds == 1 && sAdded[0][0] == ITEM_LEFTOVERS);
+    ctx.heldItemsGivenBack = 0;
+    bs.outcome = BATTLE_OUTCOME_MON_CAUGHT;
+    for (int i = 0; i < PARTY_SIZE; i++) {
+        bs.party[i].item = tookWild[i];
+    }
+    sAdds = 0;
+    GiveBackHeldItems(&bs, &ctx);
+    assert(sAdds == 0 && bs.party[1].item == ITEM_NONE);
+    ctx.itemsTakenFromWild[1] = ITEM_NONE;
+
     // Swapped within the party is not gained.
     const u16 swapped[PARTY_SIZE] = { ITEM_NONE, ITEM_FOCUS_SASH, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
     run(BATTLE_TYPE_NONE, before, swapped, &bs);
@@ -216,6 +236,79 @@ int main(void) {
     return 0;
 }
 """
+
+
+# The real NoteHeldItemTaken and Battler_IsWild: who is marked for what.
+NOTE_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/battle.h"
+#include "constants/items.h"
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+typedef struct { int unused; } Party;
+typedef struct { u32 type; Party parties[4]; } BattleSystem;
+typedef struct { u16 item; } BattleMon;
+typedef struct { BattleMon battleMons[4]; u8 selectedMonIndex[4], heldItemsTaken; u16 itemsTakenFromWild[2]; } BattleContext;
+static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
+static u32 BattleSystem_GetBattleType(BattleSystem *bs) { return bs->type; }
+static u8 BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
+// A double battle's two player battlers share the player's party.
+static Party *BattleSystem_GetParty(BattleSystem *bs, int battlerId) { return &bs->parties[battlerId == 2 ? 0 : battlerId]; }
+@FUNCTIONS@
+int main(void) {
+    BattleSystem bs = { BATTLE_TYPE_TRAINER | BATTLE_TYPE_DOUBLES };
+    BattleContext ctx = { .battleMons = { { ITEM_ORAN_BERRY }, { ITEM_LEFTOVERS }, { ITEM_POTION }, { ITEM_ESCAPE_ROPE } },
+                          .selectedMonIndex = { 1, 0, 4, 2 } };
+    // The player's Pokemon, by party slot; a trainer's, not at all.
+    NoteHeldItemTaken(&bs, &ctx, 0);
+    NoteHeldItemTaken(&bs, &ctx, 2);
+    NoteHeldItemTaken(&bs, &ctx, 1);
+    assert(ctx.heldItemsTaken == ((1 << 1) | (1 << 4)));
+    assert(ctx.itemsTakenFromWild[0] == ITEM_NONE && ctx.itemsTakenFromWild[1] == ITEM_NONE);
+    // A wild one's item, by battler.
+    bs.type = BATTLE_TYPE_DOUBLES;
+    NoteHeldItemTaken(&bs, &ctx, 3);
+    NoteHeldItemTaken(&bs, &ctx, 1);
+    assert(ctx.itemsTakenFromWild[0] == ITEM_LEFTOVERS && ctx.itemsTakenFromWild[1] == ITEM_ESCAPE_ROPE);
+    return 0;
+}
+"""
+
+
+class TakenItemTests(unittest.TestCase):
+    """Pokemon Central: Furto and Arraffalesto. An item taken from the
+    player's Pokemon comes back after the battle; one taken from a wild
+    Pokemon goes to the bag, unless the Pokemon is caught, when it keeps it."""
+
+    def test_who_is_marked(self):
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        program = NOTE_FIXTURE.replace("@FUNCTIONS@", function(overlay, "Battler_IsWild") + function(overlay, "NoteHeldItemTaken"))
+        with tempfile.TemporaryDirectory(prefix="newgold-taken-") as directory:
+            path = Path(directory)
+            (path / "check.c").write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+                str(path / "check.c"), "-o", str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_thief_and_covet_mark_what_they_take(self):
+        thief = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TryStealItem")
+        self.assertRegex(thief, r"\} else \{\n\s*NoteHeldItemTaken\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\}\n\s*\}\n\n\s*return FALSE;")
+
+    def test_a_caught_pokemon_gets_its_item_back(self):
+        # Before the Pokemon is stored, whichever way it is stored; the other
+        # wild Pokemon's item is left to the bag.
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        state = commands[commands.index("case STATE_GET_POKEMON_CHECK_MON_DATA:"):commands.index("case STATE_GET_POKEMON_FADE_TO_POKEDEX:")]
+        give = state.index("SetMonData(mon, MON_DATA_HELD_ITEM, &taken[battlerId >> 1]);")
+        self.assertLess(state.index("Pokemon *mon = BattleSystem_GetPartyMon("), give)
+        self.assertLess(give, state.index("BATTLE_TYPE_PAL_PARK | BATTLE_TYPE_TUTORIAL"))
+        self.assertIn("taken[(battlerId >> 1) ^ 1] = ITEM_NONE;", state)
 
 
 class RestoreItemsTests(unittest.TestCase):

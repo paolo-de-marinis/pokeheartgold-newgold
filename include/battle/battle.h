@@ -707,9 +707,15 @@ typedef struct BattleContext {
     // then finds it done.
     u8 heldItemsGivenBack;
     // The player's own Pokemon another has taken an item from -- Magician,
-    // Pickpocket -- a bit each by party slot (NoteHeldItemTaken), for
-    // GiveBackHeldItems: such an item comes back even if it was a Berry.
+    // Pickpocket, Thief, Covet -- a bit each by party slot (NoteHeldItemTaken),
+    // for GiveBackHeldItems: such an item comes back even if it was a Berry.
     u8 heldItemsTaken;
+    // The item the player's side took from each wild Pokemon -- Thief,
+    // Covet, Magician, Pickpocket -- by battlerId >> 1, the wild ones being 1
+    // and 3 (NoteHeldItemTaken). A wild Pokemon caught gets it back; the
+    // catch clears the other's, and GiveBackHeldItems bags no copy of what is
+    // left.
+    u16 itemsTakenFromWild[2];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

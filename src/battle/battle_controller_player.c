@@ -188,9 +188,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // byte, four in all. Dragon Cheer's two took them to a third, four more. Fairy
 // Lock's byte went into the padding after Rage Fist's count, and so did the
 // byte that says the held items are back. The byte for the player's Pokemon
-// another has taken an item from grew it by four.
+// another has taken an item from grew it by four, and the items taken from
+// the wild ones by four more.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3264 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3268 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -266,6 +267,12 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
             for (j = 0; j < count; j++) {
                 now += held[j] == held[i];
                 before += ctx->itemsToRestore[j] == held[i];
+            }
+            // What was taken from a wild Pokemon that was then caught is back
+            // with it, and not the bag's (Pokemon Central, Arraffalesto; the
+            // catch has left only its entry).
+            if (BattleSystem_GetBattleOutcomeFlags(battleSystem) == BATTLE_OUTCOME_MON_CAUGHT) {
+                before += (ctx->itemsTakenFromWild[0] == held[i]) + (ctx->itemsTakenFromWild[1] == held[i]);
             }
             if (now > before) {
                 Bag_AddItem(BattleSystem_GetBag(battleSystem), held[i], now - before, HEAP_ID_BATTLE);

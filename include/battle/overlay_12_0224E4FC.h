@@ -56,6 +56,7 @@ int CalculateTypeEffectiveness(u8 typeMove, u8 typeMon1, u8 typeMon2);
 BOOL CheckMoveCallsOtherMove(u16 moveNo);
 BOOL CurseUserIsGhost(BattleContext *ctx, u16 moveNo, int battlerId);
 BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTaker, int battlerIdLoser);
+void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdLoser);
 BOOL KnockOffCanRemoveItem(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget);
 BOOL CanTrickHeldItem(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget);
 BOOL WhirlwindCheck(BattleSystem *battleSystem, BattleContext *ctx);
