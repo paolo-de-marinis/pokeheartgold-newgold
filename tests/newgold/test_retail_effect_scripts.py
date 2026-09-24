@@ -431,6 +431,10 @@ class BroughtOverTests(unittest.TestCase):
         for gone in ("TriggerAbilityOnHit", "TriggerHeldItemOnPivotMove", "STATUS2_DESTINY_BOND", "TryGrudge"):
             self.assertNotIn(gone, text)
         self.assertIn("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST", text)
+        # The command itself stays: Pursuit's hit on a Pokemon switching out
+        # runs in its own subscript, outside the post-move pass, and it is
+        # what lets Rough Skin, Static and the rest answer that hit.
+        self.assertEqual(subscript("PURSUIT").count("TriggerAbilityOnHit"), 2)
 
     def test_howl_raises_the_allies_too(self):
         # The reference raises Howl's user alone; from Generation VIII the
