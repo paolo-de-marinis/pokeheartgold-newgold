@@ -648,6 +648,8 @@ Overlay OVY_8
 {
     After OVY_6
     Object asm/overlay_08.o
+    Object src/overlay_08_02221328.o
+    Object asm/overlay_08_022213C8.o
     Object src/overlay_08_02222B8C.o
     Object asm/overlay_08_02222D78.o
     Object src/battle_bag_description.o
