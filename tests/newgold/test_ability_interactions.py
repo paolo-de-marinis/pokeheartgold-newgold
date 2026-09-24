@@ -372,6 +372,10 @@ int main(void) {
     // The user's own Pickpocket takes nothing from itself.
     reset(); ctx.battleMons[1].ability = ctx.battleMons[3].ability = ABILITY_NONE;
     ctx.battleMons[0].ability = ABILITY_PICKPOCKET; ctx.selfTurnData[0].physicalDamage = 10; assert(lifts() == -1);
+    // Nothing from a user that holds on with Sticky Hold, unless it has
+    // fainted (Pokemon Central, Arraffalesto).
+    reset(); ctx.battleMons[0].ability = ABILITY_STICKY_HOLD; assert(lifts() == -1);
+    reset(); ctx.battleMons[0].ability = ABILITY_STICKY_HOLD; ctx.battleMons[0].hp = 0; assert(lifts() == 3);
     // A wild Pokemon's Pickpocket takes nothing (Pokemon Central, Arraffalesto).
     reset(); wild[3] = TRUE; assert(lifts() == 1);
     reset(); wild[1] = wild[3] = TRUE; assert(lifts() == -1);

@@ -7502,7 +7502,9 @@ BOOL TryMagician(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
 // a holder the hit felled, one behind a substitute, or one sent away or
 // dragged in since, nor by a wild one (Arraffalesto; the reference asks no
 // such thing); not from a user that has gone, nor from a move Sheer Force
-// boosted. The theft is the Thief guard already in this tree, asked of the
+// boosted, nor from a user that holds on with Sticky Hold and still stands
+// (Arraffalesto, as Magician's Prestigiatore; the reference asks nothing of
+// it). The theft is the Thief guard already in this tree, asked of the
 // attacker rather than of the target. It was one of the answers to each hit
 // before.
 //
@@ -7521,7 +7523,8 @@ static BOOL PickpocketLifts(BattleSystem *battleSystem, BattleContext *ctx, int 
         || Battler_IsWild(battleSystem, battlerId)
         || !(ctx->selfTurnData[battlerId].physicalDamage || ctx->selfTurnData[battlerId].specialDamage)
         || BattlerCheckSubstitute(ctx, battlerId)
-        || Battler_CameInAfterTheHit(ctx, battlerId)) {
+        || Battler_CameInAfterTheHit(ctx, battlerId)
+        || (GetBattlerAbility(ctx, attacker) == ABILITY_STICKY_HOLD && ctx->battleMons[attacker].hp)) {
         return FALSE;
     }
     return CanStealHeldItem(battleSystem, ctx, battlerId, attacker);
