@@ -2351,6 +2351,38 @@ void GetBoxmonSpriteCharAndPlttNarcIds(PokepicTemplate *pokepicTemplate, BoxPoke
     ReleaseBoxMonLock(boxMon, decry);
 }
 
+// New Gold keeps the female of these eight as a species of its own and makes
+// their base species male-only, so the base has no female picture: its slot
+// is empty (hg-engine's too, for Meowstic and Basculegion). What knows only
+// the national species and a gender -- the Dex, drawing the gender it saw a
+// female Meowstic as -- gets the female species' picture, palette and height.
+// A Pokemon is its female species already.
+static u16 PicSpecies_FemaleForm(u16 species, u8 gender) {
+    if (gender != MON_FEMALE) {
+        return species;
+    }
+    switch (species) {
+    case SPECIES_UNFEZANT:
+        return SPECIES_UNFEZANT_FEMALE;
+    case SPECIES_FRILLISH:
+        return SPECIES_FRILLISH_FEMALE;
+    case SPECIES_JELLICENT:
+        return SPECIES_JELLICENT_FEMALE;
+    case SPECIES_PYROAR:
+        return SPECIES_PYROAR_FEMALE;
+    case SPECIES_MEOWSTIC:
+        return SPECIES_MEOWSTIC_FEMALE;
+    case SPECIES_INDEEDEE:
+        return SPECIES_INDEEDEE_FEMALE;
+    case SPECIES_BASCULEGION:
+        return SPECIES_BASCULEGION_FEMALE;
+    case SPECIES_OINKOLOGNE:
+        return SPECIES_OINKOLOGNE_FEMALE;
+    default:
+        return species;
+    }
+}
+
 void GetMonSpriteCharAndPlttNarcIdsEx(PokepicTemplate *pokepicTemplate, u16 species, u8 gender, u8 whichFacing, u8 shiny, u8 form, u32 personality) {
     pokepicTemplate->species = SPECIES_NONE;
     pokepicTemplate->isAnimated = FALSE;
@@ -2433,6 +2465,7 @@ void GetMonSpriteCharAndPlttNarcIdsEx(PokepicTemplate *pokepicTemplate, u16 spec
         pokepicTemplate->palDataID = (u16)(shiny + 0xFC + form * 2);
         break;
     default:
+        species = PicSpecies_FemaleForm(species, gender);
         pokepicTemplate->narcID = NARC_poketool_pokegra_pokegra;
         pokepicTemplate->charDataID = (u16)(species * 6 + whichFacing + (gender == MON_FEMALE ? 0 : 1));
         pokepicTemplate->palDataID = (u16)(shiny + (species * 6 + 4));
@@ -2736,6 +2769,7 @@ u8 GetMonPicHeightBySpeciesGenderForm(u16 species, u8 gender, u8 whichFacing, u8
         fileId = 0x9C + whichFacing / 2 + form * 2;
         break;
     default:
+        species = PicSpecies_FemaleForm(species, gender);
         narcId = NARC_poketool_pokegra_height;
         fileId = species * 4 + whichFacing + (gender != MON_FEMALE ? 1 : 0);
         break;

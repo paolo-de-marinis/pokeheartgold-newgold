@@ -11,11 +11,17 @@ against Falkner).
 """
 
 import json
+import re
 import unittest
 
-from test_level_cap import ROOT
+from test_level_cap import ROOT, function
 
 SPRITES = ROOT / "files/poketool/pokegra/pokegra"
+
+
+def species_numbers():
+    text = (ROOT / "include/constants/species.h").read_text()
+    return {m.group(1): int(m.group(2)) for m in re.finditer(r"#define SPECIES_(\w+)\s+(\d+)\b", text)}
 
 
 class SpriteTests(unittest.TestCase):
@@ -32,6 +38,39 @@ class SpriteTests(unittest.TestCase):
                     if (SPRITES / f"{species:04d}" / gender / name).stat().st_size == 0:
                         missing.append(f"{species:04d}/{gender}/{name}")
         self.assertEqual(missing, [], "a picture the game will ask for is empty:\n" + "\n".join(missing[:20]))
+
+    def test_every_gender_the_dex_records_draws_a_picture(self):
+        """The Dex draws a species' picture in the gender it saw: its own
+        genders and those of its forms, which count for it
+        (SpeciesToDexSpecies). A female Meowstic is MEOWSTIC_FEMALE and the
+        base is male-only, so the Dex asks for Meowstic, female: the picture
+        code has to send that to the female species."""
+        personal = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
+        numbers = species_numbers()
+        pokemon = (ROOT / "src/pokemon.c").read_text()
+        sprite = function(pokemon, "GetMonSpriteCharAndPlttNarcIdsEx")
+        own_case = {numbers.get(name) for name in re.findall(r"case SPECIES_(\w+):", sprite[:sprite.index("default:")])}
+        mapping = re.search(r"^static u16 PicSpecies_FemaleForm\(.*?^\}", pokemon, re.M | re.S)
+        female_form = {numbers[a]: numbers[b] for a, b in re.findall(
+            r"case SPECIES_(\w+):\s*return SPECIES_(\w+);", mapping.group(0) if mapping else "")}
+        bases = {numbers[form]: numbers[base] for form, base in re.findall(
+            r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_(\w+),", (ROOT / "src/pokedex.c").read_text())}
+        recorded = {}
+        for species in range(1, len(personal)):
+            if 494 <= species <= 507:
+                continue
+            ratio = personal[species]["genderRatio"]
+            genders = (["male"] if ratio != 1 else []) + (["female"] if 0 < ratio <= 1 else [])
+            recorded.setdefault(bases.get(species, species), set()).update(genders)
+        missing = []
+        for species, genders in sorted(recorded.items()):
+            if species in own_case:
+                continue  # otherpoke.narc, by form
+            for gender in sorted(genders):
+                drawn = female_form.get(species, species) if gender == "female" else species
+                if (SPRITES / f"{drawn:04d}" / gender / "front.png").stat().st_size == 0:
+                    missing.append(f"{species:04d} {gender} -> {drawn:04d}/{gender}/front.png")
+        self.assertEqual(missing, [], "the Dex draws an empty picture:\n" + "\n".join(missing))
 
 
 if __name__ == "__main__":

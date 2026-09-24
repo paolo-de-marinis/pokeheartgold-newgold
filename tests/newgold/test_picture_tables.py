@@ -163,7 +163,7 @@ class PictureTableTests(unittest.TestCase):
                            for name, path in ARCHIVES.items())
         source = (ROOT / "src/pokemon.c").read_text()
         native = "\n".join(function(source, name) for name in (
-            "sub_02070438", "sub_02070560", "DP_GetMonSpriteCharAndPlttNarcIdsEx",
+            "sub_02070438", "sub_02070560", "DP_GetMonSpriteCharAndPlttNarcIdsEx", "PicSpecies_FemaleForm",
             "GetMonPicHeightBySpeciesGenderForm", "GetMonPicHeightBySpeciesGenderForm_PBR"))
         run_native(self, DRESS_UP.replace("@ENUM@", enum).replace("@COUNTS@", counts).replace("@NATIVE@", native),
                    "newgold-dress-up-")
