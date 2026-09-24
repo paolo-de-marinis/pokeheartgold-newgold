@@ -9014,8 +9014,11 @@ int GetHeldItemFlingEffect(BattleContext *ctx, int battlerId) {
     return GetItemVar(ctx, ctx->battleMons[battlerId].item, ITEM_VAR_9);
 }
 
+// A Gem cannot be flung, though its record gives it 30 (Pokemon Central,
+// Lancio; the reference refuses it before the move, IS_ITEM_GEM).
 int GetHeldItemFlingPower(BattleContext *ctx, int battlerId) {
-    if (ctx->battleMons[battlerId].unk88.embargoFlag) {
+    if (ctx->battleMons[battlerId].unk88.embargoFlag
+        || GetItemVar(ctx, ctx->battleMons[battlerId].item, ITEM_VAR_HOLD_EFFECT) == HOLD_EFFECT_POWERING_UP_MOVE_ONCE) {
         return 0;
     }
 

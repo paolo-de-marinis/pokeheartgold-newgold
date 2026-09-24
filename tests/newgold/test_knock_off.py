@@ -16,6 +16,7 @@ any Griseous Orb. The helpers are compiled here with the context they read.
 import os
 import shlex
 import subprocess
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -205,6 +206,17 @@ class KnockOffTests(unittest.TestCase):
         script = read("files/battledata/script/effect_script/effect_script_0233.s")
         self.assertNotIn("ABILITY_MULTITYPE", script)
         self.assertNotIn("ITEM_GRISEOUS_ORB", script)
+
+    def test_a_gem_cannot_be_flung(self):
+        # Pokemon Central (Lancio): no bijou of any kind. Their records give
+        # them a fling power of 30, so the power asked answers 0 for their
+        # hold effect, which the eighteen Gems and nothing else have.
+        body = function(read("src/battle/overlay_12_0224E4FC.c"), "GetHeldItemFlingPower")
+        self.assertRegex(body, r"== HOLD_EFFECT_POWERING_UP_MOVE_ONCE\) \{\n\s*return 0;")
+        rows = [line.split(",") for line in read("files/itemtool/itemdata/item_data.csv").splitlines()]
+        gems = {row[0] for row in rows if row[2] == "HOLD_EFFECT_POWERING_UP_MOVE_ONCE"}
+        types = re.findall(r"#define TYPE_([A-Z]+)\s+(\w+)", read("include/constants/pokemon.h"))
+        self.assertEqual(gems, {f"ITEM_{name}_GEM" for name, value in types if int(value, 0) <= 18 and name != "MYSTERY"})
 
 
 if __name__ == "__main__":
