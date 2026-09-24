@@ -88,7 +88,8 @@ The story is read out of the event scripts (`story()`). A step starts at a
 marker -- a `GiveBadge`, a scripted `TrainerBattle`, `GiveRunningShoes`,
 `GivePokedex`, `RegisterPokegearCard`, `ScrCmd_804`, `NatDexFlagAction 1`,
 an item given after `GoToIfNoItemSpace` -- or, where no other step passes, a
-`SetFlag` of one of flags.h's "Story flags", a `GiveItemNoCheck`, or a
+`SetFlag` of a story flag (one of any section of flags.h but those that are
+no story: hide/show, items, trainers, system), a `GiveItemNoCheck`, or a
 `SetVar` of a variable that keeps the player out of a gym (Morty's, until
 the Burned Tower); it runs straight on, through `GoTo` and `Call`, to `End`
 or the next marker, a jump decided on what it wrote itself before it, and a

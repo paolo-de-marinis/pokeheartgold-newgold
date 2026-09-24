@@ -2954,7 +2954,7 @@ def find_flags(save, query):
 # a badge given, a scripted battle, the running shoes, the Pokédex, a
 # Pokégear card or map, the National Dex, an item given after the bag is
 # checked for room -- and runs straight on, through GoTo and Call, to End or
-# the next marker; a SetFlag of a flags.h "Story flags" flag, an item given
+# the next marker; a SetFlag of a story flag (_story_flag), an item given
 # unchecked and a variable a gate tests start one only where no other step
 # runs. What it writes, what the game tests on the way to it, and which
 # steps write what those tests want, are all read out of the scripts.
@@ -3054,9 +3054,20 @@ def _primary(op, args):
     return None
 
 
+# The sections of flags.h that are no story: an object shown or hidden, an
+# item picked up, a trainer beaten, the system's, a map's own. A flag in any
+# other -- "Story flags", or one a hack adds -- is the story's.
+_NOT_STORY = ("Hide/show flags", "Item ball collection flags", "Hidden items", "Trainer flags", "System flags",
+              "Flags reset on map transition")
+
+
+def _story_flag(name):
+    return flag_sections().get(name) not in _NOT_STORY
+
+
 def _secondary(op, args, gates):
     """The marker a line is when no other step's walk passes it."""
-    if op == "SetFlag" and flag_sections().get(args[0]) == "Story flags":
+    if op == "SetFlag" and _story_flag(args[0]):
         return "flag", args[0]
     if op == "GiveItemNoCheck" and args[0].startswith("ITEM_"):
         return "item", args[0]
@@ -3753,7 +3764,7 @@ def _badge_chains(steps, by_id, gates):
         while grew:
             grew = False
             lasting = {w for sid in chain for w in by_id[sid]["tests"] if w[0] == "flag" and w[2]
-                       and flag_sections().get(w[1]) == "Story flags"}
+                       and _story_flag(w[1])}
             stops = {(by_id[sid]["script"], by_id[sid]["stop"]) for sid in chain}
             for s in steps:
                 near = s["script"] in files

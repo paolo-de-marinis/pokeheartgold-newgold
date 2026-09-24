@@ -883,6 +883,17 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual((sv.var_value(save, takeover), sv.var_value(save, variables["VAR_MIDGAME_BADGES"])), (1, 3))
         self.assert_only(save, ["SAVE_FLAGS", "SAVE_PLAYERDATA", "SAVE_BAG"])
 
+    def test_a_story_flag_is_one_of_no_other_kind(self):
+        """A SetFlag starts a step for a flag of any section of flags.h but
+        those that are no story -- each of them a heading flags.h has, or a
+        hide flag would start steps the day one is renamed -- so a flag a
+        hack adds under a heading of its own is the story's too."""
+        self.assertLessEqual(set(sv._NOT_STORY), set(sv.flag_sections().values()))
+        self.assertEqual(sv._secondary("SetFlag", ("FLAG_UNK_0B7",), {}), ("flag", "FLAG_UNK_0B7"))
+        self.assertEqual(sv._secondary("SetFlag", ("FLAG_A_NEW_GOLD_SCENE",), {}), ("flag", "FLAG_A_NEW_GOLD_SCENE"))
+        for kept in ("FLAG_HIDE_ROUTE_36_SUDOWOODO", "FLAG_DAILY_GOT_HAIRCUT"):
+            self.assertIsNone(sv._secondary("SetFlag", (kept,), {}), kept)
+
     def test_a_battle_runs_the_scripts_the_field_runs_after_it(self):
         """The Sudowoodo's battle rebuilds Route 36, whose OnLoad script
         hides the tree while FLAG_ENGAGING_STATIC_POKEMON is set: the step
