@@ -359,6 +359,10 @@ of actions fixed before the run.
 - `where.py` -- symbols out of `main.elf`, and the player's position and
   party out of a memory dump.
 - `save_budget.py` -- how the save's blocks fit their sectors.
+- `boots.py BUILD OUT OFFSET...` -- one ROM booted at many console clocks
+  (`clock:`, a second each), each boot's pre-size, the arena it left and
+  what would be left at the largest pre-size, and a screen that stayed
+  blank: the sweep behind test_boot's one pinned boot.
 
 ## diag/
 
