@@ -40,6 +40,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -1564,6 +1565,127 @@ def tile_problem(map_id, x, y):
     "wall", "water", an "object" of the map, "apart" from where the game
     puts the player; None when it can."""
     return ground(map_id)[1].get((x, y), "off")
+
+
+# The Pokégear's town map: the art PokegearMap_LoadGraphics loads (the
+# character data's source is a PNG, the screen a committed NSCR), and the
+# code that says how its tiles are the world's.
+TOWN_MAP = "files/application/pokegear/map/pgmap_gra"
+
+
+@tree_cache
+def main_matrix():
+    """The matrix MapHeader_MapIsOnMainMatrix calls the main one: its name
+    in the headers, and its number."""
+    name = re.search(r"== (NARC_map_matrix_\w+);", c_function("src/map_header.c", "BOOL MapHeader_MapIsOnMainMatrix(")).group(1)
+    return name, int(re.search(r"map_matrix_(\d{4})", name).group(1))
+
+
+def _png_rows(data):
+    """An 8-bit indexed PNG's pixels, a row of indices a line, and its PLTE."""
+    at, idat, head, palette = 8, b"", None, b""
+    while at < len(data):
+        size, kind = struct.unpack_from(">I4s", data, at)
+        body = data[at + 8:at + 8 + size]
+        at += 12 + size
+        head = body if kind == b"IHDR" else head
+        palette = body if kind == b"PLTE" else palette
+        idat += body if kind == b"IDAT" else b""
+    width, height, depth, colour, _, _, interlace = struct.unpack(">IIBBBBB", head)
+    if (depth, colour, interlace) != (8, 3, 0):
+        raise ValueError("the town map's PNG is not 8-bit indexed, uninterlaced")
+    raw, rows, prev = zlib.decompress(idat), [], bytearray(width)
+    for y in range(height):
+        kind, line = raw[y * (width + 1)], bytearray(raw[y * (width + 1) + 1:(y + 1) * (width + 1)])
+        for i in range(width):
+            a, b, c = line[i - 1] if i else 0, prev[i], prev[i - 1] if i else 0
+            p = a + b - c
+            line[i] = (line[i] + (0, a, b, (a + b) // 2,
+                                  a if abs(p - a) <= abs(p - b) and abs(p - a) <= abs(p - c) else
+                                  b if abs(p - b) <= abs(p - c) else c)[kind]) & 0xFF
+        rows.append(line)
+        prev = line
+    return rows, palette
+
+
+def _png(rows, palette):
+    """Indexed pixels as a PNG, in that palette."""
+    chunk = lambda kind, body: struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", len(rows[0]), len(rows), 8, 3, 0, 0, 0))
+            + chunk(b"PLTE", palette) + chunk(b"IDAT", zlib.compress(b"".join(b"\0" + bytes(r) for r in rows)))
+            + chunk(b"IEND", b""))
+
+
+@tree_cache
+def town_map():
+    """The town map as the Pokégear draws it, and where the world is on it.
+
+    The tiles are the character data PokegearMap_LoadGraphics puts on
+    GF_BG_LYR_MAIN_2 (its PNG, 8 bits a pixel), laid out by the screen it
+    loads for BG_LYR_MAIN_3 over the window ov101_021EAF40 copies -- the
+    whole map, both regions -- each entry a tile number and its flips; a
+    PNG in the tiles' own palette. A tile of it is a chunk of the main
+    matrix, the rows moved by what PokegearMap reads matrixXCoord and
+    matrixYCoord with (FieldSystem_InitPokegearArgs gives it the chunk).
+    {"png", "cols", "rows", "dx", "dy"}."""
+    loader = c_function("src/application/pokegear/map/overlay_101_021E7FF4.c", "static void PokegearMap_LoadGraphics(")
+    draw = c_function("src/application/pokegear/map/overlay_101_021E9270.c", "void ov101_021EAF40(")
+    cols, rows, field = re.search(r"GF_BG_LYR_MAIN_3, 0, 0, (\d+), (\d+), mapApp->(\w+)->rawData", draw).groups()
+    cols, rows = int(cols), int(rows)
+    tiles = re.search(r", NARC_pgmap_gra_pgmap_gra_(\d+)_NCGR, GF_BG_LYR_MAIN_2,", loader).group(1)
+    screen = re.search(rf"\(narc, NARC_pgmap_gra_pgmap_gra_(\d+)_NSCR, FALSE, &mapApp->{field},", loader).group(1)
+    offset = {axis: int(n or 0) for axis, n in re.findall(
+        r"mapApp->player([XY]) = mapApp->pokegear->args->matrix[XY]Coord(?: \+ (\d+))?;",
+        c_function("src/application/pokegear/map/pokegear_map.c", "static void PokegearMap_InitInternal("))}
+    art, palette = _png_rows(source(f"{TOWN_MAP}/pgmap_gra_{int(tiles):08d}.png").read_bytes())
+    data = source(f"{TOWN_MAP}/pgmap_gra_{int(screen):08d}.NSCR").read_bytes()
+    at = data.index(b"NRCS")
+    width = struct.unpack_from("<H", data, at + 8)[0] // 8
+    entries = struct.unpack_from(f"<{struct.unpack_from('<I', data, at + 16)[0] // 2}H", data, at + 20)
+    per_row = len(art[0]) // 8
+    out = [bytearray(8 * cols) for _ in range(8 * rows)]
+    for ty in range(rows):
+        for tx in range(cols):
+            entry = entries[ty * width + tx]
+            tile, hflip, vflip = entry & 0x3FF, entry >> 10 & 1, entry >> 11 & 1
+            for y in range(8):
+                line = art[(tile // per_row) * 8 + (7 - y if vflip else y)][(tile % per_row) * 8:(tile % per_row) * 8 + 8]
+                out[ty * 8 + y][tx * 8:tx * 8 + 8] = line[::-1] if hflip else line
+    return {"png": _png(out, palette), "cols": cols, "rows": rows, "dx": offset["X"], "dy": offset["Y"]}
+
+
+@tree_cache
+def town_tiles():
+    """The town map's tiles each map is at, as FieldSystem_InitPokegearArgs
+    puts the player there: a map of the main matrix at each chunk it owns
+    (the player's own chunk, when in it), another at its header's
+    worldMapX and worldMapY -- none when those are 0, where the game uses
+    the special spawn's chunk (town_tile). {map: [(x, y)]}."""
+    place, (width, height, owners, land) = town_map(), _matrix(main_matrix()[1])
+    number = constants("include/constants/maps.h", "MAP_")
+    out = {}
+    for i, owner in enumerate(owners):
+        if land[i] != 0xFFFF:
+            out.setdefault(owner, []).append((i % width + place["dx"], i // width + place["dy"]))
+    for const, header in map_headers().items():
+        at = (int(header.get("worldMapX", 0)), int(header.get("worldMapY", 0)))
+        if const in number and header.get("matrixId") != main_matrix()[0] and at != (0, 0):
+            out.setdefault(number[const], []).append((at[0] + place["dx"], at[1] + place["dy"]))
+    return out
+
+
+def town_tile(map_id, x, y, special):
+    """The tile the Pokégear marks the player at (FieldSystem_InitPokegearArgs):
+    the chunk the player stands in on the main matrix, else the map's world
+    coordinates, else the chunk of `special`, the special spawn's (x, y)."""
+    place, header = town_map(), map_headers().get(map_table().get(map_id, {}).get("const"), {})
+    if header.get("matrixId") == main_matrix()[0]:
+        at = (x // CHUNK_TILES, y // CHUNK_ROWS)
+    else:
+        at = (int(header.get("worldMapX", 0)), int(header.get("worldMapY", 0)))
+        if at == (0, 0):
+            at = (special[0] // CHUNK_TILES, special[1] // CHUNK_ROWS)
+    return at[0] + place["dx"], at[1] + place["dy"]
 
 
 # ---------------------------------------------------------------------------

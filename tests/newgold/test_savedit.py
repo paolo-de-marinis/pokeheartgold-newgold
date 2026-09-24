@@ -761,6 +761,25 @@ class SaveditLibraryTests(unittest.TestCase):
         tower = num["MAP_SPROUT_TOWER_3F"]
         self.assertTrue(all(sv.tile_problem(tower, o["x"], o["z"]) in (None, "object") for o in sv.map_events(tower)["objects"]))
 
+    def test_the_town_map(self):
+        """The Pokégear's town map as a PNG of its window, and each map's
+        tiles on it: a map of the main matrix at its chunks, rows moved as
+        the Pokégear moves them; an interior at its world coordinates."""
+        town, num = sv.town_map(), sv.constants("include/constants/maps.h", "MAP_")
+        self.assertEqual((town["cols"], town["rows"], town["dx"], town["dy"]), (47, 20, 0, 2))
+        self.assertEqual(struct.unpack(">II", town["png"][16:24]), (8 * town["cols"], 8 * town["rows"]))
+        rows, _ = sv._png_rows(town["png"])
+        self.assertEqual((len(rows[0]), len(rows)), (8 * town["cols"], 8 * town["rows"]), "the PNG reads back")
+        tiles = sv.town_tiles()
+        violet = {(x, y + town["dy"]) for x, y in sv.map_chunks(num["MAP_VIOLET"])}
+        self.assertEqual(set(tiles[num["MAP_VIOLET"]]), violet)
+        header = sv.map_headers()["MAP_VIOLET_POKECENTER_1F"]
+        self.assertEqual(tiles[num["MAP_VIOLET_POKECENTER_1F"]], [(int(header["worldMapX"]), int(header["worldMapY"]) + town["dy"])])
+        self.assertIn(sv.town_tile(num["MAP_VIOLET_POKECENTER_1F"], 8, 13, (0, 0)), violet)
+        self.assertEqual(sv.town_tile(33, 655, 400, (0, 0)), (655 // 32, 400 // 32 + town["dy"]))
+        row = sv.map_table()[num["MAP_VIOLET_POKECENTER_1F"]]
+        self.assertEqual((row["section"], row["region"], row["type"]), ("MAPSEC_VIOLET_CITY", "MAP_REGION_JOHTO", "MAP_TYPE_INTERIOR"))
+
     def test_a_bad_checksum_is_reported(self):
         raw = bytearray(sv.party_raw(self.open())[0])
         raw[20] ^= 0xFF
