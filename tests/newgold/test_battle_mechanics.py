@@ -1257,6 +1257,7 @@ static BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo) { (void)ctx; 
 static u32 BattleSystem_GetBattleType(BattleSystem *bs) { (void)bs; return BATTLE_TYPE_TRAINER; }
 static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return TRUE; }
 static BOOL WhirlwindCheck(BattleSystem *bs, BattleContext *ctx) { (void)bs; (void)ctx; return TRUE; }
+static BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
 @FUNCTIONS@
 static BattleSystem bs;
 static BattleContext ctx;

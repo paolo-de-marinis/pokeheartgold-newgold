@@ -564,6 +564,7 @@ class SheerForceTests(unittest.TestCase):
 #include "constants/battle.h"
 #include "constants/battle_subscript.h"
 #include "constants/move_effects.h"
+#include "constants/moves.h"
 typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
 typedef int BOOL;
 #define TRUE 1
