@@ -1066,8 +1066,7 @@ function renderTrainer() {
         <label class="sw"><input type="checkbox" id="natdex" ${S.save.dex.national ? "checked" : ""}><span><strong>Pokédex Nazionale</strong> <span class="muted">nel Pokédex e nel profilo, come NatDexFlagAction</span></span></label>
         ${cards}
         <label class="sw"><span><strong>Mappa del Pokégear</strong> <select id="maplevel" aria-label="Livello della mappa">${levels}</select>
-          <span class="muted">mapUnlockLevel: ogni livello aggiunge una parte di Kanto</span></span></label></div>
-      <p class="note">Le schede il gioco le aggiunge in ordine (prima la Mappa, poi la Radio) e il Pokégear conta su questo: spuntarne una spunta anche quelle prima, toglierla toglie quelle dopo.</p></div>
+          <span class="muted">mapUnlockLevel: ogni livello aggiunge una parte di Kanto</span></span></label></div></div>
     <div class="box"><h3>Medaglie e capipalestra</h3>
       <p class="note">Accanto a ogni medaglia i passi della sua palestra, nell'ordine in cui li fa lo script: spuntane uno e lo fa come nel gioco (con le
         variabili e i flag che il gioco scrive con lui), offrendo quelli prima; toglierlo li riporta indietro, offrendo quelli dopo. Così un salvataggio
@@ -1101,13 +1100,8 @@ function renderTrainer() {
     if (d.menu) return edit("menu", {icon: d.menu, on: el.checked}, "Salvato (backup fatto)");
     if (el.id === "natdex") return edit("dex_switches", {national: el.checked});
     if (el.id === "maplevel") return edit("pokegear", {map_level: +el.value}, "Mappa del Pokégear salvata");
-    if (d.card) {
-      // The cards come in order: one ticked brings those before it, one taken away those after it.
-      const all = S.data.pokegear.cards.map(c => c.value), v = +d.card, i = all.indexOf(v);
-      const cards = el.checked ? all.slice(0, i + 1).reduce((a, c) => a | c, given.pokegear.cards)
-                               : all.slice(i).reduce((a, c) => a & ~c, given.pokegear.cards);
-      return edit("pokegear", {cards}, "Schede del Pokégear salvate");
-    }
+    if (d.card)     // a bit each, as SavePokegear_RegisterCard ORs it in
+      return edit("pokegear", {cards: el.checked ? given.pokegear.cards | +d.card : given.pokegear.cards & ~+d.card}, "Schede del Pokégear salvate");
   };
   $("#storyq").oninput = ev => { S.storyq = ev.target.value; const pos = ev.target.selectionStart; renderTrainer(); const el = $("#storyq"); el.focus(); el.setSelectionRange(pos, pos); };
   $("#storyshow").onchange = ev => { S.storyshow = ev.target.value; renderTrainer(); };

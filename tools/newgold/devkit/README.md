@@ -247,8 +247,8 @@ server refuses in Italian a tile off the map or where the player could not
 stand, naming the place that is safe (`savedit.tile_problem`).
 
 The story in Allenatore: the start menu's entries and the running shoes,
-the Pokédex and the Pokégear (a card ticked brings the ones before it, as
-the game adds them in order), the level cap, the sixteen badges each with
+the Pokédex and the Pokégear (each card on its own, as
+`SavePokegear_RegisterCard` ORs it in), the level cap, the sixteen badges each with
 its gym's steps beside it, and every other step by place, with a search.
 Ticking a step runs it as the game does and offers the steps before it
 (in its gym, or the ones giving what it tests) -- or only those, "Solo i
