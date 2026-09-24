@@ -28,6 +28,9 @@ $(SCRIPT_BINS): %.bin: %.s
 endif
 
 $(SCRIPT_NARC): $(SCRIPT_BINS) | check_scripts
+# Event N at member N, and no .bin a removed or renumbered script left
+# behind (filesystem.mk).
+$(eval $(call numbered_narc,$(SCRIPT_NARC),$(SCRIPT_DIR),$(SCRIPT_BINS)))
 
 check_scripts: $(SCRIPT_BINS)
 ifeq ($(COMPARE),1)

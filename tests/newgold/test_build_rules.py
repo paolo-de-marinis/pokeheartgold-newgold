@@ -188,15 +188,16 @@ class BuildRuleTests(unittest.TestCase):
           for name in ("subscript", "effect_script", "move_script")),
         ("files/poketool/icongra/poke_icon/poke_icon.naix", r"NARC_poke_icon_(\w+)_(?:NCLR|NANR|NCER|NCGR)",
          "files/poketool/icongra/poke_icon", ("*.pal", "*.json", "*.png")),
+        ("files/fielddata/script/scr_seq.naix", r"NARC_scr_seq_(\w+)_bin", "files/fielddata/script/scr_seq", ("*.s",)),
     ]
 
     def test_a_numbered_archive_holds_file_n_at_member_n(self):
         """The archive rule packed every file of a kind in the folder, so a
         script renumbered or removed left its old .bin in the next build and
-        every script after it ran another's code; the icon folder once held
-        733 icons of an older numbering, and the ROM showed them. Reads the
-        index the build wrote: member N is what the source numbered N makes,
-        and there is no other."""
+        every script after it ran another's code (a field script: every event
+        after it); the icon folder once held 733 icons of an older numbering,
+        and the ROM showed them. Reads the index the build wrote: member N is
+        what the source numbered N makes, and there is no other."""
         def number(stem):
             return int(re.search(r"_(\d+)", stem).group(1))
         for index, member, folder, sources in self.NUMBERED_ARCHIVES:
