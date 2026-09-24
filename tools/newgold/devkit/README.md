@@ -76,6 +76,14 @@ gives one Pokemon only -- Brock's traded Rhyhorn's Thunder Fang
 (`SetMonMove`), the spiky-eared Pichu's Volt Tackle and Pain Split -- are
 such moves: kept on the Pokemon that has them, never added to another.
 
+What the player was given outside the bag is read where the game keeps it:
+the running shoes (`LocalFieldData.player`, in a struct
+`src/save_local_field_data.c` declares for itself, which `compile_c` takes
+as a declaration), the start menu's entries by the flag each case of
+`FieldSystem_ShouldDrawStartMenuIcon` checks, the Pokégear's cards and map
+(`SavePokegear`'s bitfields), and the level cap `GetLevelCap` makes of the
+badges and its milestones.
+
 Nothing the game has is typed into it: all of it is read from the tree as
 the build would compile it, and read again once a file it came from has
 changed (`fresh()`, which saveui calls before every request; a reading is

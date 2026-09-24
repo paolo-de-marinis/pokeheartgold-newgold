@@ -162,13 +162,15 @@ def build_defines():
 
 
 @tree_cache
-def compile_c(exprs=(), inits=(), headers=LAYOUT_HEADERS):
+def compile_c(exprs=(), inits=(), headers=LAYOUT_HEADERS, decls=()):
     """What the host compiler makes of the headers: each of `exprs`, a C
     constant expression, as a number, and each of `inits`, a (type,
     designated initializer) pair, as the bytes of that value -- which is
-    where a bitfield sits. Nothing is run: the values are read out of the
-    assembly the compiler writes. Every header it read is noted for fresh()."""
-    lines = [f'#include "{h}"' for h in headers]
+    where a bitfield sits. `decls` are declarations put after the headers:
+    a struct a .c file keeps to itself (c_struct). Nothing is run: the
+    values are read out of the assembly the compiler writes. Every header
+    it read is noted for fresh()."""
+    lines = [f'#include "{h}"' for h in headers] + list(decls)
     lines.append(f"const unsigned int probe_values[] = {{ {', '.join(f'(unsigned int)({e})' for e in exprs) or 0} }};")
     for i, (kind, init) in enumerate(inits):
         lines.append(f"const union {{ {kind} v; unsigned char raw[sizeof({kind})]; }} probe_init_{i} = "
@@ -205,10 +207,35 @@ def compile_c(exprs=(), inits=(), headers=LAYOUT_HEADERS):
     return values, [bytes(data[f"probe_init_{i}"]) for i in range(len(inits))]
 
 
+def c_struct(path, name):
+    """The declaration of a struct a .c file keeps to itself, for compile_c."""
+    return re.search(rf"^struct {name} \{{.*?^\}};", source(path).read_text(), re.S | re.M).group(0)
+
+
 def set_bit(raw):
     """(byte, bit) of the first bit set in an initialized value's bytes."""
     at = next(i for i, b in enumerate(raw) if b)
     return at, (raw[at] & -raw[at]).bit_length() - 1
+
+
+def bitfield(raw):
+    """Where a bitfield is, out of its value initialized to all ones: the
+    first byte it touches, how many bytes, and its mask over them."""
+    used = [i for i, b in enumerate(raw) if b]
+    return used[0], used[-1] + 1 - used[0], int.from_bytes(raw[used[0]:used[-1] + 1], "little")
+
+
+def get_bits(block, field):
+    at, width, mask = field
+    return (int.from_bytes(block[at:at + width], "little") & mask) // (mask & -mask)
+
+
+def put_bits(block, field, value):
+    at, width, mask = field
+    if not 0 <= value <= mask // (mask & -mask):
+        raise ValueError(f"{value} does not fit in {bin(mask).count('1')} bits")
+    word = int.from_bytes(block[at:at + width], "little") & ~mask | value * (mask & -mask)
+    block[at:at + width] = word.to_bytes(width, "little")
 
 
 # The order the forms were seen in (Pokedex_TryAppendSeenForm), where the
@@ -2395,6 +2422,137 @@ def set_dex_switches(save, enabled=None, national=None):
         block[DEX_NATIONAL] = int(bool(national))
         player = save.block("SAVE_PLAYERDATA")
         player[PROFILE_FLAGS] = (player[PROFILE_FLAGS] & ~NATDEX_MASK) | (NATDEX_MASK if national else 0)
+
+
+# ---------------------------------------------------------------------------
+# What the player was given that the bag does not hold: the running shoes,
+# the start menu's entries, the Pokégear's cards and its map.
+
+@tree_cache
+def _given_layout():
+    """PlayerSaveData.hasRunningShoes inside struct LocalFieldData (which
+    src/save_local_field_data.c declares for itself), and SavePokegear's
+    registeredCards and mapUnlockLevel bitfields, as bitfield() gives them."""
+    (shoes, width), (cards, level) = compile_c(
+        ("__builtin_offsetof(struct LocalFieldData, player) + __builtin_offsetof(PlayerSaveData, hasRunningShoes)",
+         "sizeof(((PlayerSaveData *)0)->hasRunningShoes)"),
+        (("SavePokegear", ".registeredCards = ~0u"), ("SavePokegear", ".mapUnlockLevel = ~0u")),
+        headers=LAYOUT_HEADERS + ("player_avatar.h", "save_pokegear.h"),
+        decls=(c_struct("src/save_local_field_data.c", "LocalFieldData"),))
+    return {"shoes": (shoes, width, (1 << 8 * width) - 1), "cards": bitfield(cards), "map_level": bitfield(level)}
+
+
+def running_shoes(save):
+    return bool(get_bits(save.block("SAVE_LOCAL_FIELD_DATA"), _given_layout()["shoes"]))
+
+
+def set_running_shoes(save, on):
+    """PlayerSaveData_SetRunningShoesFlag: TRUE or FALSE."""
+    put_bits(save.block("SAVE_LOCAL_FIELD_DATA"), _given_layout()["shoes"], int(bool(on)))
+
+
+@tree_cache
+def menu_unlocks():
+    """The start menu's entries that are earned (FieldSystem_ShouldDrawStartMenuIcon,
+    src/start_menu.c), each with what its case reads: the flag of the
+    src/sys_flags.c check it calls (CheckGotMenuIconI adds its
+    START_MENU_ICON_UNLOCK_ to FLAG_GOT_BAG), or the running shoes. The
+    icons it draws always are left out."""
+    body = c_function("src/start_menu.c", "BOOL FieldSystem_ShouldDrawStartMenuIcon(")
+    flags = constants("include/constants/flags.h", "FLAG_")
+    unlocks = constants("include/constants/start_menu_icons.h", "START_MENU_ICON_UNLOCK_")
+    out = []
+    for icon, check, args in re.findall(r"case (START_MENU_ICON_\w+):\s*return (\w+)\((.*?)\);\n", body):
+        if check.endswith("RunningShoes"):
+            out.append({"icon": icon, "shoes": True})
+            continue
+        flag, offset = re.search(r"CheckScriptFlag\(state, (FLAG_\w+)( \+ \w+)?\)",
+                                 c_function("src/sys_flags.c", f"BOOL {check}(")).groups()
+        number = flags[flag] + (unlocks[re.search(r"START_MENU_ICON_UNLOCK_\w+", args).group()] if offset else 0)
+        out.append({"icon": icon, "flag": number,
+                    "name": next(name for name, n in flags.items() if n == number)})
+    return out
+
+
+def set_menu_unlock(save, icon, on):
+    """One start menu entry, by its icon: the running shoes, or its flag --
+    the Pokédex's with Pokedex.dexEnabled too (set_dex_switches)."""
+    entry = next((e for e in menu_unlocks() if e["icon"] == icon), None)
+    if entry is None:
+        raise ValueError(f"{icon} is not an entry the start menu earns")
+    if entry.get("shoes"):
+        set_running_shoes(save, on)
+    elif entry["flag"] == _got_pokedex():
+        set_dex_switches(save, enabled=on)
+    else:
+        write_flag(save, entry["flag"], on)
+
+
+@tree_cache
+def pokegear_cards():
+    """The Pokégear's cards (constants/pokegear_card.h) SavePokegear_RegisterCard
+    ORs into registeredCards; the phone's 0 is no card. And the map's
+    levels, 0 up to the bound Pokegear_SetMapUnlockLevel keeps it under."""
+    cards = sorted(constants("include/constants/pokegear_card.h", "GEARCARD_").items(), key=lambda kv: kv[1])
+    bound = re.search(r"if \(mapUnlockLevel < (\d+)\)",
+                      c_function("src/save_pokegear.c", "void Pokegear_SetMapUnlockLevel(")).group(1)
+    return {"cards": [{"const": const, "value": value} for const, value in cards if value], "map_levels": int(bound)}
+
+
+def pokegear(save):
+    block, layout = save.block("SAVE_POKEGEAR"), _given_layout()
+    return {"cards": get_bits(block, layout["cards"]), "map_level": get_bits(block, layout["map_level"])}
+
+
+def set_pokegear(save, cards=None, map_level=None):
+    block, layout = save.block("SAVE_POKEGEAR"), _given_layout()
+    if cards is not None:
+        put_bits(block, layout["cards"], cards)
+    if map_level is not None:
+        if not 0 <= map_level < pokegear_cards()["map_levels"]:
+            raise ValueError(f"the map's level is 0 to {pokegear_cards()['map_levels'] - 1}")
+        put_bits(block, layout["map_level"], map_level)
+
+
+@tree_cache
+def level_cap_milestones():
+    """GetLevelCap (src/pokemon.c), latest milestone first: each test -- a
+    badge, or a flag -- with the cap it gives, and the cap with none."""
+    body = c_function("src/pokemon.c", "u8 GetLevelCap(")
+    tests = re.findall(r"if \((?:PlayerProfile_TestBadgeFlag\(profile, (BADGE_\w+)\)|"
+                       r"Save_VarsFlags_CheckFlagInArray\(varsFlags, (FLAG_\w+)\))\) \{\s*return (\w+);", body)
+    last = re.findall(r"return (\w+);\s*$", body.rstrip())[-1]
+    values, _ = compile_c(tuple(cap for _, _, cap in tests) + (last,))
+    return {"milestones": [{"badge": badge or None, "flag": flag or None, "cap": value}
+                           for (badge, flag, _), value in zip(tests, values)], "none": values[-1]}
+
+
+def level_cap(save):
+    """What GetLevelCap returns for this save."""
+    player, flags, badge_of = save.block("SAVE_PLAYERDATA"), constants("include/constants/flags.h", "FLAG_"), \
+        {b["const"]: b for b in badges()}
+    for m in level_cap_milestones()["milestones"]:
+        if m["badge"]:
+            b = badge_of[m["badge"]]
+            if player[JOHTO_BADGES if b["field"] == "johto" else KANTO_BADGES] >> b["bit"] & 1:
+                return m["cap"]
+        elif flag_is_set(save, flags[m["flag"]]):
+            return m["cap"]
+    return level_cap_milestones()["none"]
+
+
+@tree_cache
+def field_move_badges():
+    """The badge each field move wants (src/field_move.c's FieldMove_Check
+    functions that test one), by the move's constant: FieldMove_CheckRockSmash
+    is MOVE_ROCK_SMASH."""
+    text = source("src/field_move.c").read_text()
+    out = {}
+    for name, body in re.findall(r"static u32 FieldMove_Check(\w+)\(const FieldMoveCheckData \*checkData\) \{(.*?)\n\}", text, re.S):
+        badge = re.search(r"PlayerProfile_TestBadgeFlag\([^;]*?(BADGE_\w+)\)", body)
+        if badge:
+            out.setdefault(badge.group(1), []).append("MOVE_" + re.sub(r"(?<!^)(?=[A-Z])", "_", name).upper())
+    return out
 
 
 def position(save):

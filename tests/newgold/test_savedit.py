@@ -741,6 +741,40 @@ class SaveditLibraryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             sv.edit_mon(bytes(raw), level=5)
 
+    def test_what_the_player_was_given(self):
+        """The running shoes, the start menu's entries by the flag each
+        checks, the Pokégear's cards and map; nothing else is touched."""
+        save = self.open()
+        flags = sv.constants("include/constants/flags.h", "FLAG_")
+        icons = {entry["icon"]: entry for entry in sv.menu_unlocks()}
+        self.assertEqual(icons["START_MENU_ICON_TRAINER_CARD"]["flag"], flags["FLAG_GOT_BAG"] + 1, "CheckGotMenuIconI")
+        self.assertEqual(icons["START_MENU_ICON_POKEGEAR"]["flag"], flags["FLAG_GOT_POKEGEAR"])
+        self.assertTrue(icons["START_MENU_ICON_RUNNING_SHOES"]["shoes"])
+        self.assertFalse(sv.running_shoes(save))
+        sv.set_menu_unlock(save, "START_MENU_ICON_RUNNING_SHOES", True)
+        sv.set_menu_unlock(save, "START_MENU_ICON_BAG", True)
+        sv.set_pokegear(save, cards=3, map_level=2)
+        with self.assertRaises(ValueError):
+            sv.set_pokegear(save, map_level=sv.pokegear_cards()["map_levels"])
+        again = self.written(save)
+        self.assertTrue(sv.running_shoes(again))
+        self.assertTrue(sv.flag_is_set(again, flags["FLAG_GOT_BAG"]))
+        self.assertEqual(sv.pokegear(again), {"cards": 3, "map_level": 2})
+        self.assertEqual([c["const"] for c in sv.pokegear_cards()["cards"]], ["GEARCARD_MAP", "GEARCARD_RADIO"])
+        self.assert_only(save, ["SAVE_LOCAL_FIELD_DATA", "SAVE_FLAGS", "SAVE_POKEGEAR"])
+
+    def test_the_level_cap(self):
+        """GetLevelCap's milestones, latest first: whitney.sav's Zephyr and
+        Hive make 30, the Burned Tower 36."""
+        save = self.open()
+        self.assertEqual(sv.level_cap(save), 10)
+        bits = {b["const"]: b["bit"] for b in sv.badges()}
+        sv.set_profile(save, johto=1 << bits["BADGE_ZEPHYR"] | 1 << bits["BADGE_HIVE"])
+        self.assertEqual(sv.level_cap(save), 30)
+        sv.write_flag(save, sv.constants("include/constants/flags.h", "FLAG_")["FLAG_HIDE_BURNED_TOWER_1F_RIVAL"], True)
+        self.assertEqual(sv.level_cap(save), 36)
+        self.assertEqual(sv.field_move_badges()["BADGE_PLAIN"], ["MOVE_STRENGTH"])
+
 
 class TheCodeSaveditKeeps(unittest.TestCase):
     """What savedit keeps as code rather than reads: the game has it only as
@@ -930,6 +964,29 @@ class TheCodeSaveditKeeps(unittest.TestCase):
         self.assertEqual(sv.machines()[layout["tms", 1]][1], items["ITEM_TM01"])
         self.assertEqual(sv.machines()[layout["hms", 1]][1], items["ITEM_HM01"])
         self.assertEqual(sv.machine_places({"tms": [2, 1], "hms": [1]}), [layout["tms", 2], layout["tms", 1], layout["hms", 1]])
+
+    def test_what_was_given_is_kept_where_savedit_reads_it(self):
+        """The running shoes are LocalFieldData.player's hasRunningShoes, a
+        bool16 the start menu and GiveRunningShoes read and write; a card is
+        OR'd into registeredCards; the map's level is set as given."""
+        self.assertIn("return &localFieldData->player;",
+                      sv.c_function("src/save_local_field_data.c", "PlayerSaveData *LocalFieldData_GetPlayer("))
+        self.assertIn("playerSaveData->hasRunningShoes == TRUE",
+                      sv.c_function("src/player_avatar.c", "BOOL PlayerSaveData_CheckRunningShoes("))
+        self.assertIn("PlayerSaveData_SetRunningShoesFlag(sub, TRUE);",
+                      sv.c_function("src/scrcmd_17.c", "BOOL ScrCmd_GiveRunningShoes("))
+        self.assertRegex(sv.c_function("src/save_pokegear.c", "void SavePokegear_RegisterCard("),
+                         r"case GEARCARD_MAP:\s*pokegear->registeredCards \|= GEARCARD_MAP;\s*break;\s*"
+                         r"case GEARCARD_RADIO:\s*pokegear->registeredCards \|= GEARCARD_RADIO;")
+        self.assertIn("pokegear->mapUnlockLevel = mapUnlockLevel;",
+                      sv.c_function("src/save_pokegear.c", "void Pokegear_SetMapUnlockLevel("))
+        at, width, _ = sv._given_layout()["shoes"]
+        self.assertEqual(width, 2, "bool16")
+        (player, location), _ = sv.compile_c(("__builtin_offsetof(struct LocalFieldData, player)", "sizeof(Location)"),
+                                             headers=sv.LAYOUT_HEADERS + ("player_avatar.h",),
+                                             decls=(sv.c_struct("src/save_local_field_data.c", "LocalFieldData"),))
+        self.assertEqual(at, player, "hasRunningShoes is PlayerSaveData's first field")
+        self.assertGreater(player, 4 * location, "after the five Locations")
 
 
 if __name__ == "__main__":
