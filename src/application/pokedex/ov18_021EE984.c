@@ -35,13 +35,15 @@ static int DexEntryPages_CountLines(String *entry) {
 }
 
 // Centred as a block by its widest line, as the Dex has always centred an
-// entry.
+// entry. A line wider than the window starts at its left edge, cut on the
+// right: retail's (width - widest) / 2 in u32 wrapped past the window, and
+// showed a piece of the first line and nothing else.
 static void DexEntryPages_Draw(Window *window, String *text) {
-    u32 x = GetWindowWidth(window);
+    u32 width = GetWindowWidth(window) * 8;
+    u32 widest = FontID_String_GetWidthMultiline(0, text, 0);
 
-    x = (x * 8 - FontID_String_GetWidthMultiline(0, text, 0)) / 2;
     FillWindowPixelBuffer(window, 0);
-    ov18_021F95FC(window, text, x, 0, 0, MAKE_TEXT_COLOR(2, 1, 0), 0);
+    ov18_021F95FC(window, text, widest < width ? (width - widest) / 2 : 0, 0, 0, MAKE_TEXT_COLOR(2, 1, 0), 0);
 }
 
 // The page's lines, as the entry breaks them.
