@@ -432,3 +432,14 @@ and no more than 1G of swap): past it the kernel kills that command alone,
 not the machine. A harness walk once grew to 12 GB a copy and took the
 session down with it. Builds, emulators, harness walks, gym replays and
 test suites run under it: `capped -m 8G make -j8 ...`.
+
+## Builds and ROMs
+
+- `xmap.py objects|diff|growth` -- a module's bytes by object file and by
+  symbol, from a build's `main.elf.xMAP`, and how it grew between two
+  builds: overlay 12's end is where the main arena starts, and its budget
+  is read with this.
+- `ndsfiles.py A B` -- which files of two ROMs differ, by their paths in
+  the ROM's file system, arm9, arm7 and the overlays.
+- `narccheck.py ARCHIVE FOLDER` -- a built NARC's members against the files
+  its `.narcorder` lists: a stale archive in the source tree.
