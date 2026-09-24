@@ -167,3 +167,12 @@
 .public MoveRelearner_Main
 .public MoveRelearner_Exit
 .public ov68_021E7028
+.public ov68_021E6234
+.public ov68_021E62D4
+.public ov68_021E6320
+.public ov68_021E6820
+.public ov68_021E68C4
+.public ov68_021E68D4
+.public ov68_021E6BEC
+.public ov68_021E6C14
+.public ov68_021E6E84
