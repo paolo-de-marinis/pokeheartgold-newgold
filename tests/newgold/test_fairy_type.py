@@ -140,7 +140,7 @@ typedef struct {
     u8 type1, type2, type3;
     u32 hpIV : 5, atkIV : 5, defIV : 5, speedIV : 5, spAtkIV : 5, spDefIV : 5;
 } BattleMon;
-typedef struct { BattleMon battleMons[4]; u32 fieldCondition; u8 terrainOverlayType; } BattleContext;
+typedef struct { BattleMon battleMons[4]; struct { unsigned roostFlag : 1; } turnData[4]; u32 fieldCondition; u8 terrainOverlayType; } BattleContext;
 typedef struct BattleSystem BattleSystem;
 static int GetItemVar(BattleContext *ctx, u16 item, u16 var) { (void)ctx; assert(var == ITEM_VAR_HOLD_EFFECT); return item; }
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].item; }

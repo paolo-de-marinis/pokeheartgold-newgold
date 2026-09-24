@@ -12622,6 +12622,17 @@ static u8 Battler_GetType(BattleContext *ctx, int battlerId, int var) {
     if (ctx->battleMons[battlerId].species == SPECIES_SILVALLY && ctx->battleMons[battlerId].ability == ABILITY_RKS_SYSTEM) {
         type = GetSilvallyTypeByHeldItemEffect(GetItemVar(ctx, ctx->battleMons[battlerId].item, ITEM_VAR_HOLD_EFFECT));
     }
+    // Roost grounds a bird for the turn by the type chart's roostFlag, which
+    // drops its Flying type there. A pure Flying type is left with none, and
+    // from the fifth generation that is the Normal type for the turn (Pokemon
+    // Central, Trespolo; the reference's HandleRoost writes TYPE_NORMAL): Ghost
+    // moves miss it and Fighting moves hit it hard. Its two types are the same
+    // one, so an Arceus the Sky Plate makes Flying is one too; a type Forest's
+    // Curse or Trick-or-Treat added is still a type.
+    if (type == TYPE_FLYING && ctx->turnData[battlerId].roostFlag
+        && ctx->battleMons[battlerId].type1 == ctx->battleMons[battlerId].type2 && ctx->battleMons[battlerId].type3 == TYPE_NONE) {
+        type = TYPE_NORMAL;
+    }
 
     return type;
 }

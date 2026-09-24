@@ -35,7 +35,7 @@ typedef int BOOL;
 #define FALSE 0
 #define GF_ASSERT(x) assert(x)
 typedef struct { u16 species, ability, item; u8 type1, type2, type3; } BattleMon;
-typedef struct { BattleMon battleMons[4]; } BattleContext;
+typedef struct { BattleMon battleMons[4]; struct { unsigned roostFlag : 1; } turnData[4]; } BattleContext;
 static int GetItemVar(BattleContext *ctx, u16 item, int var) {
     (void)ctx; assert(var == ITEM_VAR_HOLD_EFFECT);
     switch (item) {
