@@ -690,7 +690,7 @@ Overlay OVY_10
     Object src/battle/trainer_ai_0222036C.o
     Object asm/overlay_10_trainer_ai_022205BC.o
     Object src/battle/trainer_ai_0222B080.o
-    Object asm/overlay_10_trainer_ai_0222B0B4.o
+    Object src/battle/trainer_ai_0222B0B4.o
 }
 Overlay OVY_11
 {
