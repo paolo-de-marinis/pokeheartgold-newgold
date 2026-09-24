@@ -2271,19 +2271,19 @@
 	</row>
 	<row id="msg_0805_ursaluna" index="567">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">I believe it was Hisui’s swampy terrain that gave Ursaluna its\nburly physique and newfound capacity to manipulate peat\nat will.</language>
+		<language name="English">I believe it was Hisui’s swampy terrain\nthat gave Ursaluna its burly physique\nand newfound capacity to manipulate peat\nat will.</language>
 	</row>
 	<row id="msg_0805_annihilape" index="568">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">When its anger rose beyond a critical\npoint, this Pokémon gained power that is\nunfettered by the limits of its physical body.</language>
+		<language name="English">When its anger rose beyond a critical\npoint, this Pokémon gained power that is\nunfettered by the limits\nof its physical body.</language>
 	</row>
 	<row id="msg_0805_farigiraf" index="569">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The hardened head from the tail protects\nthe head of the main body as Farigiraf whips\nits long neck around to headbutt enemies.</language>
+		<language name="English">The hardened head from the tail protects\nthe head of the main body as\nFarigiraf whips its long neck\naround to headbutt enemies.</language>
 	</row>
 	<row id="msg_0805_dudunsparce" index="570">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It drives enemies out of its nest by sucking\nin enough air to fill its long, narrow lungs,\nthen releasing the air in an intense blast.</language>
+		<language name="English">It drives enemies out of its nest\nby sucking in enough air to fill its\nlong, narrow lungs, then releasing\nthe air in an intense blast.</language>
 	</row>
 	<row id="msg_0805_dipplin" index="571">
 		<attribute name="window_context_name">used</attribute>
@@ -2291,7 +2291,7 @@
 	</row>
 	<row id="msg_0805_hydrapple" index="572">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">These capricious syrpents have banded\ntogether. On the rare occasion that their\nmoods align, their true power is unleashed.</language>
+		<language name="English">These capricious syrpents have banded\ntogether. On the rare occasion\nthat their moods align,\ntheir true power is unleashed.</language>
 	</row>
 	<row id="msg_0805_slowpoke_galarian" index="573">
 		<attribute name="window_context_name">used</attribute>
@@ -2595,7 +2595,7 @@
 	</row>
 	<row id="msg_0805_vanillite" index="648">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Theoretically, this Pokémon formed from\nicicles bathed in energy from the morning\nsun. Their breath is -58 degrees Farenheit.</language>
+		<language name="English">Theoretically, this Pokémon formed from\nicicles bathed in energy from the morning\nsun. Their breath is\n-58 degrees Farenheit.</language>
 	</row>
 	<row id="msg_0805_vanillish" index="649">
 		<attribute name="window_context_name">used</attribute>
@@ -3355,7 +3355,7 @@
 	</row>
 	<row id="msg_0805_melmetal" index="838">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Revered long ago for its capacity to\ncreate iron from nothing, for some reason\nit has come back to life after 3,000 years.</language>
+		<language name="English">Revered long ago for its capacity to\ncreate iron from nothing, for\nsome reason it has come back\nto life after 3,000 years.</language>
 	</row>
 	<row id="msg_0805_grookey" index="839">
 		<attribute name="window_context_name">used</attribute>
@@ -3511,7 +3511,7 @@
 	</row>
 	<row id="msg_0805_grapploct" index="877">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Searching for an opponent to test its\nskills against, it emerges onto land. Once\nthe battle is over, it returns to the sea.</language>
+		<language name="English">Searching for an opponent to test its\nskills against, it emerges onto land. Once\nthe battle is over, it\nreturns to the sea.</language>
 	</row>
 	<row id="msg_0805_sinistea" index="878">
 		<attribute name="window_context_name">used</attribute>
@@ -3547,7 +3547,7 @@
 	</row>
 	<row id="msg_0805_obstagoon" index="886">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It evolved after experiencing numerous\nfights. While crossing its arms, it lets out a\nshout that would make anyone flinch.</language>
+		<language name="English">It evolved after experiencing numerous\nfights. While crossing\nits arms, it lets out a\nshout that would make anyone flinch.</language>
 	</row>
 	<row id="msg_0805_perrserker" index="887">
 		<attribute name="window_context_name">used</attribute>
@@ -3579,7 +3579,7 @@
 	</row>
 	<row id="msg_0805_falinks" index="894">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The six of them work together as one.\nTeamwork is also their battle strategy, and\nthey constantly change their formation.</language>
+		<language name="English">The six of them work together as one.\nTeamwork is also their\nbattle strategy, and\nthey constantly change their formation.</language>
 	</row>
 	<row id="msg_0805_pincurchin" index="895">
 		<attribute name="window_context_name">used</attribute>
@@ -3675,7 +3675,7 @@
 	</row>
 	<row id="msg_0805_regieleki" index="918">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its entire body is made of an organ\nthat generates electricity. It is capable of\ngenerating a region’s worth of electricity.</language>
+		<language name="English">Its entire body is made of an organ\nthat generates electricity.\nIt is capable of generating a\nregion’s worth of electricity.</language>
 	</row>
 	<row id="msg_0805_regidrago" index="919">
 		<attribute name="window_context_name">used</attribute>
@@ -3695,23 +3695,23 @@
 	</row>
 	<row id="msg_0805_basculegion" index="923">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon is cloaked in the souls of its\ncomrades who perished during a punishing\njourney to the river of their birth.</language>
+		<language name="English">This Pokémon is cloaked\nin the souls of its\ncomrades who perished during a punishing\njourney to the river of their birth.</language>
 	</row>
 	<row id="msg_0805_sneasler" index="924">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Because of Sneasler’s virulent poison and\ndaunting physical prowess, no other species\ncould hope to best it on the frozen highlands.</language>
+		<language name="English">Because of Sneasler’s virulent poison and\ndaunting physical prowess,\nno other species could hope to\nbest it on the frozen highlands.</language>
 	</row>
 	<row id="msg_0805_overqwil" index="925">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Overqwil’s poisonous spikes will reflexively\nreact even while Overqwil sleeps, stabbing\nany moving thing that approaches.</language>
+		<language name="English">Overqwil’s poisonous spikes\nwill reflexively react even\nwhile Overqwil sleeps, stabbing\nany moving thing that approaches.</language>
 	</row>
 	<row id="msg_0805_enamorus" index="926">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">When it flies to this land from across the sea, the bitter winter\ncomes to an end. According to legend, this Pokémon’s love\ngives rise to the budding of fresh life across Hisui.</language>
+		<language name="English">When it flies to this land from across\nthe sea, the bitter winter comes\nto an end. According to legend,\nthis Pokémon’s love gives rise to the\nbudding of fresh life across Hisui.</language>
 	</row>
 	<row id="msg_0805_sprigatito" index="927">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The sweet scent its body gives off\nmesmerizes those around it. The scent grows\nstronger when this Pokémon is in the sun.</language>
+		<language name="English">The sweet scent its body gives off\nmesmerizes those around\nit. The scent grows\nstronger when this Pokémon is in the sun.</language>
 	</row>
 	<row id="msg_0805_floragato" index="928">
 		<attribute name="window_context_name">used</attribute>
@@ -3719,7 +3719,7 @@
 	</row>
 	<row id="msg_0805_meowscarada" index="929">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">With skillful misdirection, it rigs foes with\npollen-packed flower bombs, and sets them\noff before its foes realize what’s going on.</language>
+		<language name="English">With skillful misdirection, it rigs\nfoes with pollen-packed flower\nbombs, and sets them off before\nits foes realize what’s going on.</language>
 	</row>
 	<row id="msg_0805_fuecoco" index="930">
 		<attribute name="window_context_name">used</attribute>
@@ -3727,23 +3727,23 @@
 	</row>
 	<row id="msg_0805_crocalor" index="931">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The combination of Crocalor’s fire energy\nand overflowing vitality has caused an\negg-shaped fireball to appear on its head.</language>
+		<language name="English">The combination of Crocalor’s fire energy\nand overflowing vitality has caused an\negg-shaped fireball\nto appear on its head.</language>
 	</row>
 	<row id="msg_0805_skeledirge" index="932">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Skeledirge’s gentle singing soothes the souls of all that hear it. It burns its enemies to a crisp with flames of over 5,400 degrees Fahrenheit.</language>
+		<language name="English">Skeledirge’s gentle singing soothes\nthe souls of all that hear it. It burns\nits enemies to a crisp with flames\nof over 5,400 degrees Fahrenheit.</language>
 	</row>
 	<row id="msg_0805_quaxly" index="933">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its strong legs let it easily swim around in\neven fast-flowing rivers. It likes to keep\nthings tidy and is prone to overthinking.</language>
+		<language name="English">Its strong legs let it\neasily swim around in\neven fast-flowing rivers. It likes to keep\nthings tidy and is prone to overthinking.</language>
 	</row>
 	<row id="msg_0805_quaxwell" index="934">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The hardworking Quaxwell observes people and Pokémon from various regions and incorporates their movements into its own dance routines.</language>
+		<language name="English">The hardworking Quaxwell\nobserves people and Pokémon from\nvarious regions and incorporates their\nmovements into its own dance routines.</language>
 	</row>
 	<row id="msg_0805_quaquaval" index="935">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Dancing in ways that evoke far-away places, this Pokémon mesmerizes all that see it. Flourishes of its decorative water feathers slice into its foes.</language>
+		<language name="English">Dancing in ways that evoke far-away\nplaces, this Pokémon mesmerizes all that\nsee it. Flourishes of its decorative\nwater feathers slice into its foes.</language>
 	</row>
 	<row id="msg_0805_lechonk" index="936">
 		<attribute name="window_context_name">used</attribute>
@@ -3755,27 +3755,27 @@
 	</row>
 	<row id="msg_0805_tarountula" index="938">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The ball of threads wrapped around its body\nis elastic enough to deflect the scythes of\nScyther, this Pokémon’s natural enemy.</language>
+		<language name="English">The ball of threads wrapped\naround its body is elastic enough\nto deflect the scythes of\nScyther, this Pokémon’s natural enemy.</language>
 	</row>
 	<row id="msg_0805_spidops" index="939">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It clings to branches and ceilings using its\nthreads and moves without a sound. It takes\nout its prey before the prey even notices it.</language>
+		<language name="English">It clings to branches and ceilings\nusing its threads and moves without\na sound. It takes out its prey\nbefore the prey even notices it.</language>
 	</row>
 	<row id="msg_0805_nymble" index="940">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It has its third set of legs folded up. When\nit’s in a tough spot, this Pokémon jumps\nover 30 feet using the strength of its legs.</language>
+		<language name="English">It has its third set of\nlegs folded up. When\nit’s in a tough spot, this Pokémon jumps\nover 30 feet using the\nstrength of its legs.</language>
 	</row>
 	<row id="msg_0805_lokix" index="941">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It uses its normally folded third set of legs when in Showdown Mode. This places a huge burden on its body, so it can’t stay in this mode for long.</language>
+		<language name="English">It uses its normally folded third set\nof legs when in Showdown Mode. This\nplaces a huge burden on its body, so\nit can’t stay in this mode for long.</language>
 	</row>
 	<row id="msg_0805_pawmi" index="942">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The pads of its paws are electricity-discharging organs. Pawmi fires electricity from its forepaws while standing unsteadily on its hind legs.</language>
+		<language name="English">The pads of its paws are\nelectricity-discharging organs. Pawmi\nfires electricity from its forepaws while\nstanding unsteadily on its hind legs.</language>
 	</row>
 	<row id="msg_0805_pawmo" index="943">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Pawmo uses a unique fighting technique in which it uses its forepaws to strike foes and zap them with electricity from its paw pads simultaneously.</language>
+		<language name="English">Pawmo uses a unique fighting technique\nin which it uses its forepaws to strike\nfoes and zap them with electricity\nfrom its paw pads simultaneously.</language>
 	</row>
 	<row id="msg_0805_pawmot" index="944">
 		<attribute name="window_context_name">used</attribute>
@@ -3787,7 +3787,7 @@
 	</row>
 	<row id="msg_0805_maushold" index="946">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The two little ones just appeared one day.\nThe group might be a family of related\nPokémon, but nobody knows for sure.</language>
+		<language name="English">The two little ones\njust appeared one day.\nThe group might be a family of related\nPokémon, but nobody knows for sure.</language>
 	</row>
 	<row id="msg_0805_fidough" index="947">
 		<attribute name="window_context_name">used</attribute>
@@ -3799,11 +3799,11 @@
 	</row>
 	<row id="msg_0805_smoliv" index="949">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon converts nutrients into oil, which it stores in the fruit on its head. It can easily go a whole week without eating or drinking.</language>
+		<language name="English">This Pokémon converts nutrients\ninto oil, which it stores in the fruit\non its head. It can easily go a whole\nweek without eating or drinking.</language>
 	</row>
 	<row id="msg_0805_dolliv" index="950">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Dolliv shares its tasty, fresh-scented oil\nwith others. This species has coexisted\nwith humans since times long gone.</language>
+		<language name="English">Dolliv shares its tasty,\nfresh-scented oil\nwith others. This species has coexisted\nwith humans since times long gone.</language>
 	</row>
 	<row id="msg_0805_arboliva" index="951">
 		<attribute name="window_context_name">used</attribute>
@@ -3811,19 +3811,19 @@
 	</row>
 	<row id="msg_0805_squawkabilly" index="952">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">These Pokémon prefer to live in cities.\nThey form flocks based on the color of\ntheir feathers, and they fight over territory.</language>
+		<language name="English">These Pokémon prefer to live in cities.\nThey form flocks based on the color of\ntheir feathers, and they\nfight over territory.</language>
 	</row>
 	<row id="msg_0805_nacli" index="953">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The ground scrapes its body as it travels, causing it to leave salt behind. Salt is constantly being created and replenished inside Nacli’s body.</language>
+		<language name="English">The ground scrapes its body\nas it travels, causing it to leave salt\nbehind. Salt is constantly being created\nand replenished inside Nacli’s body.</language>
 	</row>
 	<row id="msg_0805_naclstack" index="954">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It compresses rock salt inside its body and shoots out hardened salt pellets with enough force to perforate an iron sheet.</language>
+		<language name="English">It compresses rock salt inside\nits body and shoots out hardened\nsalt pellets with enough force\nto perforate an iron sheet.</language>
 	</row>
 	<row id="msg_0805_garganacl" index="955">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Garganacl will rub its fingertips together\nand sprinkle injured Pokémon with salt. Even\nsevere wounds will promptly heal afterward.</language>
+		<language name="English">Garganacl will rub its fingertips together\nand sprinkle injured Pokémon\nwith salt. Even severe wounds\nwill promptly heal afterward.</language>
 	</row>
 	<row id="msg_0805_charcadet" index="956">
 		<attribute name="window_context_name">used</attribute>
@@ -3831,31 +3831,31 @@
 	</row>
 	<row id="msg_0805_armarouge" index="957">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Armarouge evolved through the use of a set\nof armor that belonged to a distinguished\nwarrior. This Pokémon is incredibly loyal.</language>
+		<language name="English">Armarouge evolved\nthrough the use of a set\nof armor that belonged to a distinguished\nwarrior. This Pokémon is incredibly loyal.</language>
 	</row>
 	<row id="msg_0805_ceruledge" index="958">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">An old set of armor steeped in grudges\ncaused this Pokémon’s evolution. Ceruledge\ncuts its enemies to pieces without mercy.</language>
+		<language name="English">An old set of armor steeped in grudges\ncaused this Pokémon’s\nevolution. Ceruledge\ncuts its enemies to pieces without mercy.</language>
 	</row>
 	<row id="msg_0805_tadbulb" index="959">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Tadbulb shakes its tail to generate\nelectricity. If it senses danger, it will make\nits head blink on and off to alert its allies.</language>
+		<language name="English">Tadbulb shakes its tail to generate\nelectricity. If it senses danger,\nit will make its head blink\non and off to alert its allies.</language>
 	</row>
 	<row id="msg_0805_bellibolt" index="960">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">What appear to be eyeballs are actually\norgans for discharging the electricity\ngenerated by Bellibolt’s belly-button dynamo.</language>
+		<language name="English">What appear to be eyeballs are actually\norgans for discharging the electricity\ngenerated by Bellibolt’s\nbelly-button dynamo.</language>
 	</row>
 	<row id="msg_0805_wattrel" index="961">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">These Pokémon make their nests on coastal\ncliffs. The nests have a strange, crackling\ntexture, and they’re a popular delicacy.</language>
+		<language name="English">These Pokémon make their nests\non coastal cliffs. The nests\nhave a strange, crackling\ntexture, and they’re a popular delicacy.</language>
 	</row>
 	<row id="msg_0805_kilowattrel" index="962">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Kilowattrel inflates its throat sac to\namplify its electricity. By riding the wind,\nthis Pokémon can fly over 430 miles in a day.</language>
+		<language name="English">Kilowattrel inflates its throat sac to\namplify its electricity. By riding the wind,\nthis Pokémon can fly\nover 430 miles in a day.</language>
 	</row>
 	<row id="msg_0805_maschiff" index="963">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its well-developed jaw and fangs are strong\nenough to crunch through boulders, and its\nthick fat makes for an excellent defense.</language>
+		<language name="English">Its well-developed jaw and fangs\nare strong enough to crunch\nthrough boulders, and its\nthick fat makes for an excellent defense.</language>
 	</row>
 	<row id="msg_0805_mabosstiff" index="964">
 		<attribute name="window_context_name">used</attribute>
@@ -3867,47 +3867,47 @@
 	</row>
 	<row id="msg_0805_grafaiai" index="966">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Each Grafaiai paints its own individual\npattern, and it will paint that same pattern\nover and over again throughout its life.</language>
+		<language name="English">Each Grafaiai paints its own individual\npattern, and it will\npaint that same pattern\nover and over again throughout its life.</language>
 	</row>
 	<row id="msg_0805_bramblin" index="967">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Not even Bramblin knows where it is headed\nas it tumbles across the wilderness, blown\nby the wind. It loathes getting wet.</language>
+		<language name="English">Not even Bramblin knows where\nit is headed as it tumbles\nacross the wilderness, blown\nby the wind. It loathes getting wet.</language>
 	</row>
 	<row id="msg_0805_brambleghast" index="968">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Brambleghast wanders around arid regions.\nOn rare occasions, mass outbreaks of\nthese Pokémon will bury an entire town.</language>
+		<language name="English">Brambleghast wanders\naround arid regions.\nOn rare occasions, mass outbreaks of\nthese Pokémon will bury an entire town.</language>
 	</row>
 	<row id="msg_0805_toedscool" index="969">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Though it looks like Tentacool, Toedscool is\na completely different species. Its legs may\nbe thin, but it can run at a speed of 30 mph.</language>
+		<language name="English">Though it looks like Tentacool,\nToedscool is a completely different\nspecies. Its legs may be thin, but\nit can run at a speed of 30 mph.</language>
 	</row>
 	<row id="msg_0805_toedscruel" index="970">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">These Pokémon gather into groups and\nform colonies deep within forests. They\nabsolutely hate it when strangers approach.</language>
+		<language name="English">These Pokémon gather into groups and\nform colonies deep within forests. They\nabsolutely hate it when\nstrangers approach.</language>
 	</row>
 	<row id="msg_0805_klawf" index="971">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon lives on sheer cliffs.\nIt sidesteps opponents’ attacks, then\nlunges for their weak spots with its claws.</language>
+		<language name="English">This Pokémon lives on sheer cliffs.\nIt sidesteps opponents’ attacks, then\nlunges for their weak\nspots with its claws.</language>
 	</row>
 	<row id="msg_0805_capsakid" index="972">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The more sunlight this Pokémon bathes in,\nthe more spicy chemicals are produced by its\nbody, and thus the spicier its moves become.</language>
+		<language name="English">The more sunlight this Pokémon bathes in,\nthe more spicy chemicals are\nproduced by its body, and thus\nthe spicier its moves become.</language>
 	</row>
 	<row id="msg_0805_scovillain" index="973">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The red head converts spicy chemicals into\nfire energy and blasts the surrounding area\nwith a super spicy stream of flame.</language>
+		<language name="English">The red head converts spicy\nchemicals into fire energy and\nblasts the surrounding area\nwith a super spicy stream of flame.</language>
 	</row>
 	<row id="msg_0805_rellor" index="974">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It rolls its mud ball around while the energy\nit needs for evolution matures.\nEventually the time comes for it to evolve.</language>
+		<language name="English">It rolls its mud ball\naround while the energy\nit needs for evolution matures.\nEventually the time\ncomes for it to evolve.</language>
 	</row>
 	<row id="msg_0805_rabsca" index="975">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The body that supports the ball barely moves.\nTherefore, it is thought that the true body\nof this Pokémon is actually inside the ball.</language>
+		<language name="English">The body that supports the\nball barely moves. Therefore, it is\nthought that the true body of this\nPokémon is actually inside the ball.</language>
 	</row>
 	<row id="msg_0805_flittle" index="976">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It spends its time running around wastelands.\nIf anyone steals its beloved berries, it will\nchase them down and exact its revenge.</language>
+		<language name="English">It spends its time running\naround wastelands. If anyone\nsteals its beloved berries, it will\nchase them down and exact its revenge.</language>
 	</row>
 	<row id="msg_0805_espathra" index="977">
 		<attribute name="window_context_name">used</attribute>
@@ -3919,11 +3919,11 @@
 	</row>
 	<row id="msg_0805_tinkatuff" index="979">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">These Pokémon make their homes in piles of\nscrap metal. They test the strength of each\nother’s hammers by smashing them together.</language>
+		<language name="English">These Pokémon make their homes in\npiles of scrap metal. They test the\nstrength of each other’s hammers\nby smashing them together.</language>
 	</row>
 	<row id="msg_0805_tinkaton" index="980">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This intelligent Pokémon has a very daring\ndisposition. It knocks rocks into the sky with\nits hammer, aiming for flying Corviknight.</language>
+		<language name="English">This intelligent Pokémon has a very daring\ndisposition. It knocks\nrocks into the sky with\nits hammer, aiming for flying Corviknight.</language>
 	</row>
 	<row id="msg_0805_wiglett" index="981">
 		<attribute name="window_context_name">used</attribute>
@@ -3935,7 +3935,7 @@
 	</row>
 	<row id="msg_0805_bombirdier" index="983">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Bombirdier uses the apron on its chest to bundle up food, which it carries back to its nest. It enjoys dropping things that make loud noises.</language>
+		<language name="English">Bombirdier uses the apron\non its chest to bundle up food, which\nit carries back to its nest. It enjoys\ndropping things that make loud noises.</language>
 	</row>
 	<row id="msg_0805_finizen" index="984">
 		<attribute name="window_context_name">used</attribute>
@@ -3943,19 +3943,19 @@
 	</row>
 	<row id="msg_0805_palafin" index="985">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its physical capabilities are no different\nthan a Finizen’s, but when its allies are in\ndanger, it transforms and powers itself up.</language>
+		<language name="English">Its physical capabilities are no different\nthan a Finizen’s, but\nwhen its allies are in danger, it\ntransforms and powers itself up.</language>
 	</row>
 	<row id="msg_0805_varoom" index="986">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The steel section is Varoom’s actual body. This Pokémon clings to rocks and converts the minerals within into energy to fuel its activities.</language>
+		<language name="English">The steel section is Varoom’s actual\nbody. This Pokémon clings to rocks\nand converts the minerals within\ninto energy to fuel its activities.</language>
 	</row>
 	<row id="msg_0805_revavroom" index="987">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It creates a gas out of poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders to generate energy.</language>
+		<language name="English">It creates a gas out\nof poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders\nto generate energy.</language>
 	</row>
 	<row id="msg_0805_cyclizar" index="988">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It can sprint at over 70 mph while carrying a\nhuman. The rider’s body heat warms Cyclizar’s\nback and lifts the Pokémon’s spirit.</language>
+		<language name="English">It can sprint at over 70 mph while\ncarrying a human. The rider’s\nbody heat warms Cyclizar’s\nback and lifts the Pokémon’s spirit.</language>
 	</row>
 	<row id="msg_0805_orthworm" index="989">
 		<attribute name="window_context_name">used</attribute>
@@ -3975,11 +3975,11 @@
 	</row>
 	<row id="msg_0805_houndstone" index="993">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Houndstone spends most of its time sleeping\nin graveyards. Among all the dog Pokémon,\nthis one is most loyal to its master.</language>
+		<language name="English">Houndstone spends most of its\ntime sleeping in graveyards.\nAmong all the dog Pokémon,\nthis one is most loyal to its master.</language>
 	</row>
 	<row id="msg_0805_flamigo" index="994">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon apparently ties the base of its\nneck into a knot so that the energy stored\nin its belly does not escape from its beak.</language>
+		<language name="English">This Pokémon apparently ties\nthe base of its neck into a knot so\nthat the energy stored in its belly\ndoes not escape from its beak.</language>
 	</row>
 	<row id="msg_0805_cetoddle" index="995">
 		<attribute name="window_context_name">used</attribute>
@@ -3987,11 +3987,11 @@
 	</row>
 	<row id="msg_0805_cetitan" index="996">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Ice energy builds up in the horn on its upper\njaw, causing the horn to reach cryogenic\ntemperatures that freeze its surroundings.</language>
+		<language name="English">Ice energy builds up in\nthe horn on its upper\njaw, causing the horn to reach cryogenic\ntemperatures that\nfreeze its surroundings.</language>
 	</row>
 	<row id="msg_0805_veluza" index="997">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Veluza has excellent regenerative capabilities. It sheds spare flesh from its body to boost its agility, then charges at its prey.</language>
+		<language name="English">Veluza has excellent regenerative\ncapabilities. It sheds spare\nflesh from its body to boost its\nagility, then charges at its prey.</language>
 	</row>
 	<row id="msg_0805_dondozo" index="998">
 		<attribute name="window_context_name">used</attribute>
@@ -4003,7 +4003,7 @@
 	</row>
 	<row id="msg_0805_clodsire" index="1000">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It lives at the bottom of ponds and swamps.\nIt will carry Wooper on its back and ferry\nthem across water from shore to shore.</language>
+		<language name="English">It lives at the bottom of\nponds and swamps. It will carry\nWooper on its back and ferry\nthem across water from shore to shore.</language>
 	</row>
 	<row id="msg_0805_kingambit" index="1001">
 		<attribute name="window_context_name">used</attribute>
@@ -4019,11 +4019,11 @@
 	</row>
 	<row id="msg_0805_brute_bonnet" index="1004">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It bears a slight resemblance to a Pokémon\ndescribed in a dubious magazine as a cross\nbetween a dinosaur and a mushroom.</language>
+		<language name="English">It bears a slight resemblance\nto a Pokémon described in\na dubious magazine as a cross\nbetween a dinosaur and a mushroom.</language>
 	</row>
 	<row id="msg_0805_flutter_mane" index="1005">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It has similar features to a ghostly pterosaur\nthat was covered in a paranormal magazine,\nbut the two have little else in common.</language>
+		<language name="English">It has similar features\nto a ghostly pterosaur that was\ncovered in a paranormal magazine,\nbut the two have little else in common.</language>
 	</row>
 	<row id="msg_0805_slither_wing" index="1006">
 		<attribute name="window_context_name">used</attribute>
@@ -4035,15 +4035,15 @@
 	</row>
 	<row id="msg_0805_iron_treads" index="1008">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon closely resembles a scientific\nweapon that a paranormal magazine claimed\nwas sent to this planet by aliens.</language>
+		<language name="English">This Pokémon closely resembles\na scientific weapon that\na paranormal magazine claimed\nwas sent to this planet by aliens.</language>
 	</row>
 	<row id="msg_0805_iron_bundle" index="1009">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its shape is similar to a robot featured in a\nparanormal magazine. The robot was said to\nhave been created by an ancient civilization.</language>
+		<language name="English">Its shape is similar to a robot\nfeatured in a paranormal magazine.\nThe robot was said to have been\ncreated by an ancient civilization.</language>
 	</row>
 	<row id="msg_0805_iron_hands" index="1010">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It is very similar to a cyborg covered by a\nparanormal magazine. The cyborg was said to\nbe the modified form of a certain athlete.</language>
+		<language name="English">It is very similar to a\ncyborg covered by a paranormal\nmagazine. The cyborg was said to\nbe the modified form of a certain athlete.</language>
 	</row>
 	<row id="msg_0805_iron_jugulis" index="1011">
 		<attribute name="window_context_name">used</attribute>
@@ -4055,7 +4055,7 @@
 	</row>
 	<row id="msg_0805_iron_thorns" index="1013">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It has some similarities to a Pokémon\nintroduced in a dubious magazine as a\nTyranitar from 1 billion years in the future.</language>
+		<language name="English">It has some similarities to a Pokémon\nintroduced in a dubious magazine as a\nTyranitar from 1 billion\nyears in the future.</language>
 	</row>
 	<row id="msg_0805_frigibax" index="1014">
 		<attribute name="window_context_name">used</attribute>
@@ -4071,11 +4071,11 @@
 	</row>
 	<row id="msg_0805_gimmighoul" index="1017">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It lives inside an old treasure chest.\nSometimes it gets left in shop corners since\nno one realizes it’s actually a Pokémon.</language>
+		<language name="English">It lives inside an old treasure chest.\nSometimes it gets left\nin shop corners since\nno one realizes it’s actually a Pokémon.</language>
 	</row>
 	<row id="msg_0805_gholdengo" index="1018">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its body seems to be made up of 1,000 coins.\nThis Pokémon gets along well with others\nand is quick to make friends with anybody.</language>
+		<language name="English">Its body seems to be\nmade up of 1,000 coins.\nThis Pokémon gets along well with others\nand is quick to make friends with anybody.</language>
 	</row>
 	<row id="msg_0805_wo_chien" index="1019">
 		<attribute name="window_context_name">used</attribute>
@@ -4083,7 +4083,7 @@
 	</row>
 	<row id="msg_0805_chien_pao" index="1020">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon can control 100 tons of fallen\nsnow. It plays around innocently by leaping\nin and out of avalanches it has caused.</language>
+		<language name="English">This Pokémon can control 100\ntons of fallen snow. It plays\naround innocently by leaping\nin and out of avalanches it has caused.</language>
 	</row>
 	<row id="msg_0805_ting_lu" index="1021">
 		<attribute name="window_context_name">used</attribute>
@@ -4095,7 +4095,7 @@
 	</row>
 	<row id="msg_0805_roaring_moon" index="1023">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">According to a dubious magazine,\nthis Pokémon has some connection to a\nphenomenon that occurs in a certain region.</language>
+		<language name="English">According to a dubious magazine,\nthis Pokémon has some connection to a\nphenomenon that occurs\nin a certain region.</language>
 	</row>
 	<row id="msg_0805_iron_valiant" index="1024">
 		<attribute name="window_context_name">used</attribute>
@@ -4103,7 +4103,7 @@
 	</row>
 	<row id="msg_0805_koraidon" index="1025">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon resembles Cyclizar, but it is\nfar burlier and more ferocious. Nothing is\nknown about its ecology or other features.</language>
+		<language name="English">This Pokémon resembles Cyclizar, but it is\nfar burlier and more ferocious. Nothing is\nknown about its ecology\nor other features.</language>
 	</row>
 	<row id="msg_0805_miraidon" index="1026">
 		<attribute name="window_context_name">used</attribute>
@@ -4115,15 +4115,15 @@
 	</row>
 	<row id="msg_0805_iron_leaves" index="1028">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Many of its physical characteristics match\nthose of a Virizion from the future that\nwas covered in a paranormal magazine.</language>
+		<language name="English">Many of its physical\ncharacteristics match\nthose of a Virizion from the future that\nwas covered in a paranormal magazine.</language>
 	</row>
 	<row id="msg_0805_poltchageist" index="1029">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Poltchageist looks like a regional form of\nSinistea, but it was recently discovered\nthat the two Pokémon are entirely unrelated.</language>
+		<language name="English">Poltchageist looks like a regional form of\nSinistea, but it was recently discovered\nthat the two Pokémon\nare entirely unrelated.</language>
 	</row>
 	<row id="msg_0805_sinistcha" index="1030">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It pretends to be tea, trying to fool people\ninto drinking it so it can drain their life-\nforce. Its ruse is generally unsuccessful.</language>
+		<language name="English">It pretends to be tea,\ntrying to fool people\ninto drinking it so it can drain their life-\nforce. Its ruse is\ngenerally unsuccessful.</language>
 	</row>
 	<row id="msg_0805_okidogi" index="1031">
 		<attribute name="window_context_name">used</attribute>
@@ -4131,7 +4131,7 @@
 	</row>
 	<row id="msg_0805_munkidori" index="1032">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Munkidori keeps itself somewhere safe\nwhile it toys with its foes, using\npsychokinesis to induce intense dizziness.</language>
+		<language name="English">Munkidori keeps itself somewhere safe\nwhile it toys with its foes, using\npsychokinesis to induce\nintense dizziness.</language>
 	</row>
 	<row id="msg_0805_fezandipiti" index="1033">
 		<attribute name="window_context_name">used</attribute>
@@ -4139,7 +4139,7 @@
 	</row>
 	<row id="msg_0805_ogerpon" index="1034">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by drawing out the type-\nbased energy contained within its masks.</language>
+		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by\ndrawing out the type-\nbased energy contained within its masks.</language>
 	</row>
 	<row id="msg_0805_archaludon" index="1035">
 		<attribute name="window_context_name">used</attribute>
@@ -4147,11 +4147,11 @@
 	</row>
 	<row id="msg_0805_gouging_fire" index="1036">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It resembles a Pokémon once shown in a\nparanormal magazine. That Pokémon was said\nto be an Entei regenerated from a fossil.</language>
+		<language name="English">It resembles a Pokémon once shown in a\nparanormal magazine.\nThat Pokémon was said\nto be an Entei regenerated from a fossil.</language>
 	</row>
 	<row id="msg_0805_raging_bolt" index="1037">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It bears resemblance to a Pokémon that\nbecame a hot topic for a short while after\nbeing touted it as Raikou’s ancestor.</language>
+		<language name="English">It bears resemblance to a Pokémon that\nbecame a hot topic for\na short while after\nbeing touted it as Raikou’s ancestor.</language>
 	</row>
 	<row id="msg_0805_iron_boulder" index="1038">
 		<attribute name="window_context_name">used</attribute>
@@ -4159,7 +4159,7 @@
 	</row>
 	<row id="msg_0805_iron_crown" index="1039">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It resembles a mysterious object introduced\nin a paranormal magazine as a cutting-edge\nweapon shaped like a Cobalion.</language>
+		<language name="English">It resembles a mysterious object\nintroduced in a paranormal\nmagazine as a cutting-edge\nweapon shaped like a Cobalion.</language>
 	</row>
 	<row id="msg_0805_terapagos" index="1040">
 		<attribute name="window_context_name">used</attribute>
@@ -4167,7 +4167,7 @@
 	</row>
 	<row id="msg_0805_pecharunt" index="1041">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its peach-shaped shell serves as storage\nfor a potent poison. It makes poisonous\nmochi and serves it to people and Pokémon.</language>
+		<language name="English">Its peach-shaped shell\nserves as storage\nfor a potent poison. It makes poisonous\nmochi and serves it to\npeople and Pokémon.</language>
 	</row>
 	<row id="msg_0805_mega_venusaur" index="1042">
 		<attribute name="window_context_name">used</attribute>
@@ -5151,7 +5151,7 @@
 	</row>
 	<row id="msg_0805_enamorus_therian" index="1287">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">When it flies to this land from across the sea, the bitter winter\ncomes to an end. According to legend, this Pokémon’s love\ngives rise to the budding of fresh life across Hisui.</language>
+		<language name="English">When it flies to this land from across\nthe sea, the bitter winter comes\nto an end. According to legend,\nthis Pokémon’s love gives rise to the\nbudding of fresh life across Hisui.</language>
 	</row>
 	<row id="msg_0805_growlithe_hisuian" index="1288">
 		<attribute name="window_context_name">used</attribute>
@@ -5263,27 +5263,27 @@
 	</row>
 	<row id="msg_0805_basculegion_female" index="1315">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon is cloaked in the souls of its\ncomrades who perished during a punishing\njourney to the river of their birth.</language>
+		<language name="English">This Pokémon is cloaked\nin the souls of its\ncomrades who perished during a punishing\njourney to the river of their birth.</language>
 	</row>
 	<row id="msg_0805_maushold_family_of_three" index="1316">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The two little ones just appeared one day.\nThe group might be a family of related\nPokémon, but nobody knows for sure.</language>
+		<language name="English">The two little ones\njust appeared one day.\nThe group might be a family of related\nPokémon, but nobody knows for sure.</language>
 	</row>
 	<row id="msg_0805_squawkabilly_blue_plumage" index="1317">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">These Pokémon prefer to live in cities.\nThey form flocks based on the color of\ntheir feathers, and they fight over territory.</language>
+		<language name="English">These Pokémon prefer to live in cities.\nThey form flocks based on the color of\ntheir feathers, and they\nfight over territory.</language>
 	</row>
 	<row id="msg_0805_squawkabilly_yellow_plumage" index="1318">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">These Pokémon prefer to live in cities.\nThey form flocks based on the color of\ntheir feathers, and they fight over territory.</language>
+		<language name="English">These Pokémon prefer to live in cities.\nThey form flocks based on the color of\ntheir feathers, and they\nfight over territory.</language>
 	</row>
 	<row id="msg_0805_squawkabilly_white_plumage" index="1319">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">These Pokémon prefer to live in cities.\nThey form flocks based on the color of\ntheir feathers, and they fight over territory.</language>
+		<language name="English">These Pokémon prefer to live in cities.\nThey form flocks based on the color of\ntheir feathers, and they\nfight over territory.</language>
 	</row>
 	<row id="msg_0805_palafin_hero" index="1320">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Its physical capabilities are no different\nthan a Finizen’s, but when its allies are in\ndanger, it transforms and powers itself up.</language>
+		<language name="English">Its physical capabilities are no different\nthan a Finizen’s, but\nwhen its allies are in danger, it\ntransforms and powers itself up.</language>
 	</row>
 	<row id="msg_0805_tatsugiri_droopy" index="1321">
 		<attribute name="window_context_name">used</attribute>
@@ -5295,11 +5295,11 @@
 	</row>
 	<row id="msg_0805_dudunsparce_three_segment" index="1323">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It drives enemies out of its nest by sucking\nin enough air to fill its long, narrow lungs,\nthen releasing the air in an intense blast.</language>
+		<language name="English">It drives enemies out of its nest\nby sucking in enough air to fill its\nlong, narrow lungs, then releasing\nthe air in an intense blast.</language>
 	</row>
 	<row id="msg_0805_gimmighoul_roaming" index="1324">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It lives inside an old treasure chest.\nSometimes it gets left in shop corners since\nno one realizes it’s actually a Pokémon.</language>
+		<language name="English">It lives inside an old treasure chest.\nSometimes it gets left\nin shop corners since\nno one realizes it’s actually a Pokémon.</language>
 	</row>
 	<row id="msg_0805_wooper_paldean" index="1325">
 		<attribute name="window_context_name">used</attribute>
@@ -5323,39 +5323,39 @@
 	</row>
 	<row id="msg_0805_revavroom_segin" index="1330">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It creates a gas out of poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders to generate energy.</language>
+		<language name="English">It creates a gas out\nof poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders\nto generate energy.</language>
 	</row>
 	<row id="msg_0805_revavroom_schedar" index="1331">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It creates a gas out of poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders to generate energy.</language>
+		<language name="English">It creates a gas out\nof poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders\nto generate energy.</language>
 	</row>
 	<row id="msg_0805_revavroom_navi" index="1332">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It creates a gas out of poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders to generate energy.</language>
+		<language name="English">It creates a gas out\nof poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders\nto generate energy.</language>
 	</row>
 	<row id="msg_0805_revavroom_ruchbah" index="1333">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It creates a gas out of poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders to generate energy.</language>
+		<language name="English">It creates a gas out\nof poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders\nto generate energy.</language>
 	</row>
 	<row id="msg_0805_revavroom_caph" index="1334">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It creates a gas out of poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders to generate energy.</language>
+		<language name="English">It creates a gas out\nof poison and minerals\nfrom rocks. It then detonates the gas\nin its eight cylinders\nto generate energy.</language>
 	</row>
 	<row id="msg_0805_koraidon_limited_build" index="1335">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon resembles Cyclizar, but it is\nfar burlier and more ferocious. Nothing is\nknown about its ecology or other features.</language>
+		<language name="English">This Pokémon resembles Cyclizar, but it is\nfar burlier and more ferocious. Nothing is\nknown about its ecology\nor other features.</language>
 	</row>
 	<row id="msg_0805_koraidon_sprinting_build" index="1336">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon resembles Cyclizar, but it is\nfar burlier and more ferocious. Nothing is\nknown about its ecology or other features.</language>
+		<language name="English">This Pokémon resembles Cyclizar, but it is\nfar burlier and more ferocious. Nothing is\nknown about its ecology\nor other features.</language>
 	</row>
 	<row id="msg_0805_koraidon_swimming_build" index="1337">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon resembles Cyclizar, but it is\nfar burlier and more ferocious. Nothing is\nknown about its ecology or other features.</language>
+		<language name="English">This Pokémon resembles Cyclizar, but it is\nfar burlier and more ferocious. Nothing is\nknown about its ecology\nor other features.</language>
 	</row>
 	<row id="msg_0805_koraidon_gliding_build" index="1338">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This Pokémon resembles Cyclizar, but it is\nfar burlier and more ferocious. Nothing is\nknown about its ecology or other features.</language>
+		<language name="English">This Pokémon resembles Cyclizar, but it is\nfar burlier and more ferocious. Nothing is\nknown about its ecology\nor other features.</language>
 	</row>
 	<row id="msg_0805_miraidon_low_power_mode" index="1339">
 		<attribute name="window_context_name">used</attribute>
@@ -5375,43 +5375,43 @@
 	</row>
 	<row id="msg_0805_poltchageist_masterpiece" index="1343">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Poltchageist looks like a regional form of\nSinistea, but it was recently discovered\nthat the two Pokémon are entirely unrelated.</language>
+		<language name="English">Poltchageist looks like a regional form of\nSinistea, but it was recently discovered\nthat the two Pokémon\nare entirely unrelated.</language>
 	</row>
 	<row id="msg_0805_sinistcha_masterpiece" index="1344">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">It pretends to be tea, trying to fool people\ninto drinking it so it can drain their life-\nforce. Its ruse is generally unsuccessful.</language>
+		<language name="English">It pretends to be tea,\ntrying to fool people\ninto drinking it so it can drain their life-\nforce. Its ruse is\ngenerally unsuccessful.</language>
 	</row>
 	<row id="msg_0805_ogerpon_wellspring_mask" index="1345">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by drawing out the type-\nbased energy contained within its masks.</language>
+		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by\ndrawing out the type-\nbased energy contained within its masks.</language>
 	</row>
 	<row id="msg_0805_ogerpon_hearthflame_mask" index="1346">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by drawing out the type-\nbased energy contained within its masks.</language>
+		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by\ndrawing out the type-\nbased energy contained within its masks.</language>
 	</row>
 	<row id="msg_0805_ogerpon_cornerstone_mask" index="1347">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by drawing out the type-\nbased energy contained within its masks.</language>
+		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by\ndrawing out the type-\nbased energy contained within its masks.</language>
 	</row>
 	<row id="msg_0805_ogerpon_teal_mask_terastal" index="1348">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by drawing out the type-\nbased energy contained within its masks.</language>
+		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by\ndrawing out the type-\nbased energy contained within its masks.</language>
 	</row>
 	<row id="msg_0805_ogerpon_wellspring_mask_terastal" index="1349">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by drawing out the type-\nbased energy contained within its masks.</language>
+		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by\ndrawing out the type-\nbased energy contained within its masks.</language>
 	</row>
 	<row id="msg_0805_ogerpon_hearthflame_mask_terastal" index="1350">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by drawing out the type-\nbased energy contained within its masks.</language>
+		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by\ndrawing out the type-\nbased energy contained within its masks.</language>
 	</row>
 	<row id="msg_0805_ogerpon_cornerstone_mask_terastal" index="1351">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by drawing out the type-\nbased energy contained within its masks.</language>
+		<language name="English">This mischief-loving Pokémon is full of\ncuriosity. It battles by\ndrawing out the type-\nbased energy contained within its masks.</language>
 	</row>
 	<row id="msg_0805_ursaluna_bloodmoon" index="1352">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">I believe it was Hisui’s swampy terrain that gave Ursaluna its\nburly physique and newfound capacity to manipulate peat\nat will.</language>
+		<language name="English">I believe it was Hisui’s swampy terrain\nthat gave Ursaluna its burly physique\nand newfound capacity to manipulate peat\nat will.</language>
 	</row>
 	<row id="msg_0805_terapagos_terastal" index="1353">
 		<attribute name="window_context_name">used</attribute>
@@ -5475,7 +5475,7 @@
 	</row>
 	<row id="msg_0805_gigantamax_melmetal" index="1368">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">Revered long ago for its capacity to\ncreate iron from nothing, for some reason\nit has come back to life after 3,000 years.</language>
+		<language name="English">Revered long ago for its capacity to\ncreate iron from nothing, for\nsome reason it has come back\nto life after 3,000 years.</language>
 	</row>
 	<row id="msg_0805_gigantamax_rillaboom" index="1369">
 		<attribute name="window_context_name">used</attribute>
@@ -5727,11 +5727,11 @@
 	</row>
 	<row id="msg_0805_mega_falinks" index="1431">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The six of them work together as one.\nTeamwork is also their battle strategy, and\nthey constantly change their formation.</language>
+		<language name="English">The six of them work together as one.\nTeamwork is also their\nbattle strategy, and\nthey constantly change their formation.</language>
 	</row>
 	<row id="msg_0805_mega_scovillain" index="1432">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The red head converts spicy chemicals into\nfire energy and blasts the surrounding area\nwith a super spicy stream of flame.</language>
+		<language name="English">The red head converts spicy\nchemicals into fire energy and\nblasts the surrounding area\nwith a super spicy stream of flame.</language>
 	</row>
 	<row id="msg_0805_mega_glimmora" index="1433">
 		<attribute name="window_context_name">used</attribute>

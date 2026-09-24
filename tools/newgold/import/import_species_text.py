@@ -27,7 +27,8 @@ text, and the Dex entry's line breaks (fit_entry).
 - hg-engine breaks its entries' lines for a box wider than HeartGold's Dex
   window, and an entry wider than the window is not drawn but for a piece of
   its first line (fit_entry says why). Such an entry is broken again for the
-  window, by the game's own glyph widths; its words stay the reference's.
+  window, by the game's own glyph widths, into three lines, or into two pages
+  of three where three lines cannot hold it; its words stay the reference's.
 
 811 is copied row for row: nothing reads it, and a row of spaces is written as
 a garbage row, because msgenc encodes a used row of spaces as nothing.
@@ -44,7 +45,7 @@ import re
 import struct
 import sys
 from functools import cache
-from itertools import combinations
+from itertools import accumulate, combinations, groupby
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -59,6 +60,7 @@ UPPER = {817}              # msg_cat caps_list
 ARTICLE = {238}            # msg_cat article_list
 PAD = {812: 11, 813: 11, 814: 7, 815: 7}    # msg_cat force_lengths
 ENTRY = 803                # broken into lines for the Dex's window (fit_entry)
+PAGES = 2                  # of an entry's lines, a window at a time (DexEntryPages)
 
 # What hg-engine writes for a form that has nothing of its own to say.
 PLACEHOLDERS = {"name": {"-----"}, "pokedexEntry": {"", "-----"},
@@ -194,14 +196,32 @@ def line_widths(text):
     return [sum(map(glyph, line)) for line in text.split("\\n")]
 
 
-def fits(text):
-    """No line wider than the window, and nothing on a line below it (retail
-    Italian Mareep ends in an empty fourth line)."""
+def fits(text, pages=1):
+    """No line wider than the window, and nothing on a line below this many
+    windows of lines (retail Italian Mareep ends in an empty fourth line)."""
     width, lines = entry_window()
     sizes = line_widths(text)
-    return max(sizes) <= width and not any(sizes[lines:])
+    return max(sizes) <= width and not any(sizes[lines * pages:])
 
 
+def balance(words, counts):
+    """Of the ways to break these words into a number of lines in counts, the
+    one whose widest line is narrowest: (that width, the breaks)."""
+    ends = list(accumulate((line_widths(word)[0] for word in words), initial=0))
+    space = line_widths(" ")[0]
+
+    def widest(breaks):
+        edges = (0, *breaks, len(words))
+        return max(ends[b] - ends[a] + space * (b - a - 1) for a, b in zip(edges, edges[1:]))
+    return min((widest(b), b) for n in counts for b in combinations(range(1, len(words)), n - 1))
+
+
+def joined(words, breaks):
+    edges = (0, *breaks, len(words))
+    return "\\n".join(" ".join(words[a:b]) for a, b in zip(edges, edges[1:]))
+
+
+@cache
 def fit_entry(text):
     """The entry with its lines broken where the Dex's window can show them.
 
@@ -214,24 +234,36 @@ def fit_entry(text):
     An entry that fits is left as it is. One that does not is broken again at
     its spaces, into the lines the window shows, with its widest line as
     narrow as it can be (retail balances its lines rather than filling them);
-    every character but the breaks stays. One that fits no way is left as it
-    is: only other words would make it fit."""
+    every character but the breaks stays.
+
+    One that three lines cannot hold is shown three lines at a time, and the
+    pages turn by themselves (DexEntryPages). Its lines that fit the window
+    stay as they are, and each run of its lines that do not is broken again as
+    one, at its spaces, into the fewest lines that fit, balanced the same way.
+    One that needs more than PAGES windows of lines even so is reported and
+    left as it is: only other words would make it fit."""
     if fits(text):
         return text
     width, lines = entry_window()
     words = re.split(r" |\\n", text)
-    sizes = [line_widths(word)[0] for word in words]
-    space = line_widths(" ")[0]
-
-    def spans(breaks):
-        return list(zip((0, *breaks), (*breaks, len(words))))
-
-    def widest(breaks):
-        return max(sum(sizes[a:b]) + space * (b - a - 1) for a, b in spans(breaks))
-    best, breaks = min((widest(b), b) for n in range(lines) for b in combinations(range(1, len(words)), n))
-    if best > width:
+    best, breaks = balance(words, range(1, lines + 1))
+    if best <= width:
+        return joined(words, breaks)
+    broken = []
+    for wide, run in groupby(text.split("\\n"), key=lambda line: line_widths(line)[0] > width):
+        if not wide:
+            broken.extend(run)
+            continue
+        words = " ".join(run).split(" ")
+        for n in range(1, len(words) + 1):
+            best, breaks = balance(words, [n])
+            if best <= width:
+                break
+        broken.append(joined(words, breaks))
+    if not fits("\\n".join(broken), PAGES):
+        print(f"an entry needs more than {PAGES * lines} lines of the Dex's window: {text}", file=sys.stderr)
         return text
-    return "\\n".join(" ".join(words[a:b]) for a, b in spans(breaks))
+    return "\\n".join(broken)
 
 
 def finish(bank, text):
