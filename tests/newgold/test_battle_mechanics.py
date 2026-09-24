@@ -1183,6 +1183,70 @@ class DraggedInTests(unittest.TestCase):
         end = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224E1BC")
         self.assertLess(end.index("TryAdditionalMoveEffect(ctx)"), end.index("TryPickpocket("))
 
+    def test_a_user_its_item_will_fell_drags_nothing(self):
+        # Pokemon Central (Codadrago): a user a Rocky Helmet fells drags
+        # nothing, so the target's Color Change and Anger Shell answer the hit.
+        from test_ability_interactions import run_c
+        overlay = OVERLAY.read_text()
+        functions = function(overlay, "DamageDivide") + function(overlay, "Battler_WillBeDraggedOut")
+        run_c(DRAG_FIXTURE.replace("@FUNCTIONS@", functions))
+
+DRAG_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/items.h"
+typedef struct { int unused; } BattleSystem;
+typedef struct { int hp, maxHp; u32 moveEffectFlags; int ability, holdEffect, modifier; } Mon;
+typedef struct { u32 dragPending : 1; int physicalDamage; } SelfTurnData;
+typedef struct { Mon battleMons[4]; SelfTurnData selfTurnData[4]; int battlerIdAttacker; u32 moveNoCur; } BattleContext;
+static BOOL contact;
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].holdEffect; }
+static int GetHeldItemModifier(BattleContext *ctx, int battlerId, int flag) { (void)flag; return ctx->battleMons[battlerId].modifier; }
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static BOOL BattleMoveMakesContact(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return contact; }
+static u32 BattleSystem_GetBattleType(BattleSystem *bs) { (void)bs; return BATTLE_TYPE_TRAINER; }
+static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return TRUE; }
+static BOOL WhirlwindCheck(BattleSystem *bs, BattleContext *ctx) { (void)bs; (void)ctx; return TRUE; }
+@FUNCTIONS@
+static BattleSystem bs;
+static BattleContext ctx;
+static void reset(void) {
+    // The user 0, at 60 of 120 HP, Dragon Tails 1, which holds a Rocky Helmet.
+    ctx = (BattleContext){ 0 };
+    ctx.battleMons[0] = (Mon){ 60, 120, 0, ABILITY_NONE, HOLD_EFFECT_NONE, 0 };
+    ctx.battleMons[1] = (Mon){ 50, 100, 0, ABILITY_COLOR_CHANGE, HOLD_EFFECT_DAMAGE_ON_CONTACT, 6 };
+    ctx.selfTurnData[1].dragPending = TRUE; ctx.selfTurnData[1].physicalDamage = 30;
+    contact = TRUE;
+}
+int main(void) {
+    reset(); assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    // The helmet takes 20: at 20 HP the user faints and the target stays.
+    reset(); ctx.battleMons[0].hp = 20; assert(!Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    reset(); ctx.battleMons[0].hp = 21; assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    reset(); ctx.battleMons[0].hp = 20; ctx.battleMons[0].ability = ABILITY_MAGIC_GUARD; assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    reset(); ctx.battleMons[0].hp = 20; contact = FALSE; assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    // A Jaboca Berry on a physical hit, likewise: an eighth, 15.
+    reset(); ctx.battleMons[0].hp = 15; ctx.battleMons[1].holdEffect = HOLD_EFFECT_RECOIL_PHYSICAL; ctx.battleMons[1].modifier = 8;
+    assert(!Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    reset(); ctx.battleMons[0].hp = 16; ctx.battleMons[1].holdEffect = HOLD_EFFECT_RECOIL_PHYSICAL; ctx.battleMons[1].modifier = 8;
+    assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    reset(); ctx.battleMons[0].hp = 15; ctx.battleMons[1].holdEffect = HOLD_EFFECT_RECOIL_PHYSICAL; ctx.battleMons[1].modifier = 8;
+    ctx.selfTurnData[1].physicalDamage = 0; assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    // Ingrain, or no drag pending.
+    reset(); ctx.battleMons[1].moveEffectFlags = MOVE_EFFECT_FLAG_INGRAIN; assert(!Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    reset(); ctx.selfTurnData[1].dragPending = FALSE; assert(!Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    return 0;
+}
+"""
+
+
 class BattleBondTests(unittest.TestCase):
     def test_a_knockout_raises_three_stats_once_a_battle(self):
         source = OVERLAY.read_text()

@@ -6931,10 +6931,25 @@ BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) {
 // Pickpocket, Color Change and Anger Shell do not answer the hit then
 // (Pokemon Central, Codadrago); Emergency Exit and Wimp Out go with it
 // (InitSwitchWork's clearing of the slot).
-// ponytail: asked before the user's Rocky Helmet, which can still faint it
-// and keep the target in; those three then stay silent all the same.
+//
+// Nor if the user will not stand to drag it (Codadrago: not when the user
+// faints to a Rocky Helmet, Rough Skin, Iron Barbs or Gulp Missile). The
+// three abilities asking this are the Pokemon's own, so the only thing left
+// to fell the user is its held item, which answers the hit after them
+// (CheckItemEffectOnHit): a Rocky Helmet on a contact move or a Jaboca Berry
+// on a physical one, a share of the user's maximum HP that Magic Guard
+// spares. What they would take is what they take there.
 static BOOL Battler_WillBeDraggedOut(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int attacker = ctx->battlerIdAttacker;
+    int item = GetBattlerHeldItemEffect(ctx, battlerId);
+
     if (!ctx->selfTurnData[battlerId].dragPending || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)) {
+        return FALSE;
+    }
+    if (((item == HOLD_EFFECT_DAMAGE_ON_CONTACT && BattleMoveMakesContact(ctx, ctx->moveNoCur))
+            || (item == HOLD_EFFECT_RECOIL_PHYSICAL && ctx->selfTurnData[battlerId].physicalDamage))
+        && GetBattlerAbility(ctx, attacker) != ABILITY_MAGIC_GUARD
+        && ctx->battleMons[attacker].hp <= DamageDivide(ctx->battleMons[attacker].maxHp, GetHeldItemModifier(ctx, battlerId, 0))) {
         return FALSE;
     }
     if (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) {
