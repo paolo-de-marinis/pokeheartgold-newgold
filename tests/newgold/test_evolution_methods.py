@@ -408,6 +408,39 @@ static void check_pay_day(void) {
     coins = 0;
 }
 
+static void check_ice_path(void) {
+    // Paolo's design (2026-09-23), Milcery's rows as evo.json has them: a
+    // level-up on any of the Ice Path's four floors, at any level, holding
+    // one of seven Berries, which picks the Sweet. Anywhere else, holding
+    // another Berry or nothing, or by trade or item, nothing.
+    static const struct { u16 berry, sweet; } berries[] = {
+        { ITEM_CHERI_BERRY, SPECIES_ALCREMIE },
+        { ITEM_ORAN_BERRY, SPECIES_ALCREMIE_BERRY_SWEET },
+        { ITEM_PECHA_BERRY, SPECIES_ALCREMIE_LOVE_SWEET },
+        { ITEM_SITRUS_BERRY, SPECIES_ALCREMIE_STAR_SWEET },
+        { ITEM_LUM_BERRY, SPECIES_ALCREMIE_CLOVER_SWEET },
+        { ITEM_ASPEAR_BERRY, SPECIES_ALCREMIE_FLOWER_SWEET },
+        { ITEM_NANAB_BERRY, SPECIES_ALCREMIE_RIBBON_SWEET },
+        { ITEM_RAWST_BERRY, SPECIES_NONE },
+        { ITEM_NONE, SPECIES_NONE },
+    };
+    Pokemon mon = { .species = SPECIES_MILCERY, .level = 1 };
+    memcpy(table, rows_SPECIES_MILCERY, sizeof(table));
+    for (unsigned b = 0; b < sizeof(berries) / sizeof(berries[0]); b++) {
+        mon.heldItem = berries[b].berry;
+        for (int map = 0; map < MAP_ID_MAX; map++) {
+            location.mapId = map;
+            int icePath = map == MAP_ICE_PATH_1F || map == MAP_ICE_PATH_B1F || map == MAP_ICE_PATH_B2F || map == MAP_ICE_PATH_B3F;
+            assert(evolve(&mon, NULL, EVO_ITEM_ICE_PATH) == (icePath ? berries[b].sweet : SPECIES_NONE));
+        }
+        location.mapId = MAP_ICE_PATH_B1F;
+        for (int context = EVOCTX_TRADE; context <= EVOCTX_ITEM_USE; context++) {
+            assert(GetMonEvolution(NULL, &mon, context, berries[b].berry, NULL) == SPECIES_NONE);
+        }
+    }
+    location.mapId = MAP_NEW_BARK;
+}
+
 static void check_counted_moves(void) {
     // Primeape counts Rage Fist and Stantler Psyshield Bash, nothing else and
     // no one else; the count stops at 255.
@@ -461,6 +494,7 @@ int main(void) {
     check_trade_specific_mon();
     check_swords_dance();
     check_pay_day();
+    check_ice_path();
     check_counted_moves();
     check_lets_go();
     return 0;
@@ -533,6 +567,11 @@ int main(void) {
     data.evolutionCondition = EVO_ITEM_DAY;
     sub_02076C90(&data);
     assert(mon.heldItem == ITEM_NONE && taken == 999);
+    // And Milcery's Berry in the Ice Path.
+    mon.heldItem = ITEM_CHERI_BERRY;
+    data.evolutionCondition = EVO_ITEM_ICE_PATH;
+    sub_02076C90(&data);
+    assert(mon.heldItem == ITEM_NONE && taken == 999);
     return 0;
 }
 """
@@ -545,7 +584,7 @@ def scene():
 
 
 # The species whose rows, as the table has them, the program runs.
-DESIGNED_SPECIES = ("SPECIES_BISHARP", "SPECIES_GIMMIGHOUL", "SPECIES_GIMMIGHOUL_ROAMING")
+DESIGNED_SPECIES = ("SPECIES_BISHARP", "SPECIES_GIMMIGHOUL", "SPECIES_GIMMIGHOUL_ROAMING", "SPECIES_MILCERY")
 
 
 def designed_rows():

@@ -370,7 +370,8 @@ class SaveditLibraryTests(unittest.TestCase):
                          [n["NINETALES_ALOLAN"], n["VULPIX_ALOLAN"]], "a regional form's own line")
         self.assertEqual(sv.evolution_line(n["MARILL"]), [(n["MARILL"], True), (n["AZURILL"], True)],
                          "Marill hatches without the Sea Incense")
-        self.assertEqual(sv.evolution_line(n["ALCREMIE"]), [(n["ALCREMIE"], False)], "pms.narc: an egg is a Milcery")
+        self.assertEqual(sv.evolution_line(n["ALCREMIE"]), [(n["ALCREMIE"], False), (n["MILCERY"], True)],
+                         "a Milcery evolves into it (evo.json); pms.narc: an egg is a Milcery")
         self.assertEqual(sv.evolution_line(n["VOLBEAT"]), [(n["VOLBEAT"], True)], "Daycare_GetEggSpecies' Illumise egg")
         self.assertEqual([s for s, _ in sv.evolution_line(n["RAICHU_ALOLAN"])], [n["RAICHU_ALOLAN"]],
                          "no evolution in evo.json makes one: not its base's Pikachu")

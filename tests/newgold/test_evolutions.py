@@ -87,7 +87,12 @@ DESIGNED_ROWS = [
     ("SPECIES_BISHARP", ("EVO_HAS_MOVE", "MOVE_SWORDS_DANCE", "SPECIES_KINGAMBIT")),
     ("SPECIES_GIMMIGHOUL", ("EVO_HAS_MOVE", "MOVE_PAY_DAY", "SPECIES_GHOLDENGO")),
     ("SPECIES_GIMMIGHOUL_ROAMING", ("EVO_HAS_MOVE", "MOVE_PAY_DAY", "SPECIES_GHOLDENGO")),
-]
+] + [("SPECIES_MILCERY", ("EVO_ITEM_ICE_PATH", f"ITEM_{berry}_BERRY", target)) for berry, target in (
+    ("CHERI", "SPECIES_ALCREMIE"), ("ORAN", "SPECIES_ALCREMIE_BERRY_SWEET"),
+    ("PECHA", "SPECIES_ALCREMIE_LOVE_SWEET"), ("SITRUS", "SPECIES_ALCREMIE_STAR_SWEET"),
+    ("LUM", "SPECIES_ALCREMIE_CLOVER_SWEET"), ("ASPEAR", "SPECIES_ALCREMIE_FLOWER_SWEET"),
+    ("NANAB", "SPECIES_ALCREMIE_RIBBON_SWEET"),
+)]
 
 VANILLA_EEVEE = {
     "SPECIES_VAPOREON", "SPECIES_JOLTEON", "SPECIES_FLAREON",
@@ -207,6 +212,8 @@ class EvolutionTests(unittest.TestCase):
         for base, row in DESIGNED_ROWS:
             self.assertIn(dict(zip(("method", "param", "target"), row)), self.byBase.get(base, []), base)
             self.assertIn(row, import_evolutions.DESIGNED_ROWS[base], base)
+        # Milcery has those seven and no other: the reference's spins stay out.
+        self.assertEqual(len(self.byBase["SPECIES_MILCERY"]), 7)
 
     def test_every_name_is_defined(self):
         known = (constants("include/constants/pokemon.h", "EVO_")

@@ -88,6 +88,20 @@ DESIGNED_ROWS = {
     # the Chest Form's other way; no coin is placed anywhere.
     "SPECIES_GIMMIGHOUL": [("EVO_HAS_MOVE", "MOVE_PAY_DAY", "SPECIES_GHOLDENGO")],
     "SPECIES_GIMMIGHOUL_ROAMING": [("EVO_HAS_MOVE", "MOVE_PAY_DAY", "SPECIES_GHOLDENGO")],
+    # Alcremie, levelling up anywhere in the Ice Path holding a Berry, which
+    # picks the Sweet and is used up; no other way. They take the place of
+    # the reference's nine EVO_SPIN_* rows, a method its engine never checks,
+    # aimed at forms 1..8 of Alcremie, of which 7 is Gigantamax and 8 is not
+    # there.
+    "SPECIES_MILCERY": [
+        ("EVO_ITEM_ICE_PATH", "ITEM_CHERI_BERRY", "SPECIES_ALCREMIE"),  # the Strawberry Sweet
+        ("EVO_ITEM_ICE_PATH", "ITEM_ORAN_BERRY", "SPECIES_ALCREMIE_BERRY_SWEET"),
+        ("EVO_ITEM_ICE_PATH", "ITEM_PECHA_BERRY", "SPECIES_ALCREMIE_LOVE_SWEET"),
+        ("EVO_ITEM_ICE_PATH", "ITEM_SITRUS_BERRY", "SPECIES_ALCREMIE_STAR_SWEET"),
+        ("EVO_ITEM_ICE_PATH", "ITEM_LUM_BERRY", "SPECIES_ALCREMIE_CLOVER_SWEET"),
+        ("EVO_ITEM_ICE_PATH", "ITEM_ASPEAR_BERRY", "SPECIES_ALCREMIE_FLOWER_SWEET"),
+        ("EVO_ITEM_ICE_PATH", "ITEM_NANAB_BERRY", "SPECIES_ALCREMIE_RIBBON_SWEET"),
+    ],
 }
 
 
@@ -250,7 +264,10 @@ def main():
     for base, body in table.items():
         rows = [(method, param, carried_form(base, native_target(target))) for method, param, target in ROW.findall(body)]
         rows = [(method, param, target) for method, param, target in rows if target != "SPECIES_NONE"]
-        rows = [CANONICAL_ROWS.get((base, *row), row) for row in rows] + DESIGNED_ROWS.get(base, [])
+        rows = [CANONICAL_ROWS.get((base, *row), row) for row in rows]
+        # A design stands in for the reference's rows by a method this game
+        # has not got -- Milcery's spins -- so those are dropped, not reported.
+        rows = [row for row in rows if base not in DESIGNED_ROWS or row[0] in methods] + DESIGNED_ROWS.get(base, [])
         # Only lines that touch a new species: either it evolves, or something
         # already here gains a way to become one.
         rows = [row for row in rows if base in wanted or row[2] in wanted]

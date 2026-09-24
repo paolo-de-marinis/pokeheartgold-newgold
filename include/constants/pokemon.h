@@ -656,6 +656,9 @@ typedef enum EvoMethod {
     // hg-engine names the method and checks nothing: the games' Let's Go, a
     // thousand steps out of the ball; here, walking behind the player.
     EVO_LETS_GO,
+    // Paolo's design (2026-09-23) for Milcery, in neither tree: a level
+    // anywhere in the Ice Path holding the row's item, which is used up.
+    EVO_ITEM_ICE_PATH,
 } EvoMethod;
 
 typedef enum {

@@ -3326,6 +3326,16 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
                     *method_ret = EVO_ICY_ROCK;
                 }
             } break;
+            case EVO_ITEM_ICE_PATH: {
+                // Paolo's design (2026-09-23): Milcery evolves at a level-up
+                // on any of the Ice Path's four floors holding a Berry, which
+                // picks the Sweet. The map is read as the rocks' is.
+                int mapId = LocalFieldData_GetCurrentPosition(Save_LocalFieldData_Get(SaveData_Get()))->mapId;
+                if ((mapId == MAP_ICE_PATH_1F || mapId == MAP_ICE_PATH_B1F || mapId == MAP_ICE_PATH_B2F || mapId == MAP_ICE_PATH_B3F) && evoTable[i].param == heldItem) {
+                    target = evoTable[i].target;
+                    *method_ret = EVO_ITEM_ICE_PATH;
+                }
+            } break;
             case EVO_LEVEL_DAY:
                 if (IsNighttime() == 0 && evoTable[i].param <= level) {
                     target = evoTable[i].target;

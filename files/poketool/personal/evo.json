@@ -5204,6 +5204,46 @@
           "target": "SPECIES_GHOLDENGO"
         }
       ]
+    },
+    {
+      "baseSpecies": "SPECIES_MILCERY",
+      "evos": [
+        {
+          "method": "EVO_ITEM_ICE_PATH",
+          "param": "ITEM_CHERI_BERRY",
+          "target": "SPECIES_ALCREMIE"
+        },
+        {
+          "method": "EVO_ITEM_ICE_PATH",
+          "param": "ITEM_ORAN_BERRY",
+          "target": "SPECIES_ALCREMIE_BERRY_SWEET"
+        },
+        {
+          "method": "EVO_ITEM_ICE_PATH",
+          "param": "ITEM_PECHA_BERRY",
+          "target": "SPECIES_ALCREMIE_LOVE_SWEET"
+        },
+        {
+          "method": "EVO_ITEM_ICE_PATH",
+          "param": "ITEM_SITRUS_BERRY",
+          "target": "SPECIES_ALCREMIE_STAR_SWEET"
+        },
+        {
+          "method": "EVO_ITEM_ICE_PATH",
+          "param": "ITEM_LUM_BERRY",
+          "target": "SPECIES_ALCREMIE_CLOVER_SWEET"
+        },
+        {
+          "method": "EVO_ITEM_ICE_PATH",
+          "param": "ITEM_ASPEAR_BERRY",
+          "target": "SPECIES_ALCREMIE_FLOWER_SWEET"
+        },
+        {
+          "method": "EVO_ITEM_ICE_PATH",
+          "param": "ITEM_NANAB_BERRY",
+          "target": "SPECIES_ALCREMIE_RIBBON_SWEET"
+        }
+      ]
     }
   ]
 }

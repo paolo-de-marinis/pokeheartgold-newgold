@@ -625,6 +625,7 @@ void sub_02076C90(EvolutionTaskData *data) {
     case EVO_TRADE_ITEM:
     case EVO_ITEM_DAY:
     case EVO_ITEM_NIGHT:
+    case EVO_ITEM_ICE_PATH: // Milcery's Berry is used up, as a held item is here
         i = ITEM_NONE;
         SetMonData(data->mon, MON_DATA_HELD_ITEM, &i);
         break;
