@@ -7608,4 +7608,32 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by the opposing\f{STRVAR_1 1, 1, 0} and became the\nopposing {STRVAR_1 1, 1, 0}’s commander!</language>
 	</row>
+	<row id="msg_0197_01902" index="1902">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!</language>
+	</row>
+	<row id="msg_0197_01903" index="1903">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} and the wild {STRVAR_1 1, 1, 0}\nswitched places!</language>
+	</row>
+	<row id="msg_0197_01904" index="1904">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} and the opposing {STRVAR_1 1, 1, 0}\nswitched places!</language>
+	</row>
+	<row id="msg_0197_01905" index="1905">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!</language>
+	</row>
+	<row id="msg_0197_01906" index="1906">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} and\nthe wild {STRVAR_1 1, 1, 0} switched places!</language>
+	</row>
+	<row id="msg_0197_01907" index="1907">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!</language>
+	</row>
+	<row id="msg_0197_01908" index="1908">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} and\nthe opposing {STRVAR_1 1, 1, 0} switched places!</language>
+	</row>
 </body>

@@ -2132,7 +2132,10 @@ int ov12_022506D4(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdA
         int battlerIdTargetTemp = ctx->playerActions[battlerIdAttacker].unk4;
         BattleSystem_GetMaxBattlers(battleSystem);
 
-        if (!BattlerIgnoresRedirection(ctx, battlerIdAttacker) && ctx->fieldSideConditionData[side].followMeFlag && ctx->battleMons[ctx->fieldSideConditionData[side].battlerIdFollowMe].hp) {
+        if (battlerIdTargetTemp == battlerIdAttacker) {
+            // Aimed at the place its ally stood, which Ally Switch has made
+            // its own: the move fails (Pokemon Central, Cambiaposto).
+        } else if (!BattlerIgnoresRedirection(ctx, battlerIdAttacker) && ctx->fieldSideConditionData[side].followMeFlag && ctx->battleMons[ctx->fieldSideConditionData[side].battlerIdFollowMe].hp) {
             battlerIdTarget = ctx->fieldSideConditionData[side].battlerIdFollowMe;
         } else if (ctx->battleMons[battlerIdTargetTemp].hp) {
             battlerIdTarget = battlerIdTargetTemp;

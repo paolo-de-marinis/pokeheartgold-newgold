@@ -900,6 +900,125 @@ int main(void) {
         flag = function(commands, "BtlCmd_SetMoveConditionFlag")
         self.assertIn("ItemIdIsBerry(ctx->battleMons[i].item) == TRUE", flag[flag.index("case MOVE_TEATIME:"):])
 
+    ALLY_SWITCH_PROGRAM = r"""
+#include <stddef.h>
+typedef struct { int unused; } BattleSystem;
+typedef struct {
+    u32 disabledTurns : 3, battlerIdLockOn : 2, battlerIdBinding : 2, battlerIdMeanLook : 2;
+} UnkBattlemonSub;
+typedef struct { u16 species; int hp; u16 ability; u32 status2; UnkBattlemonSub unk88; } BattleMon;
+typedef struct {
+    u32 protectFlag : 1, allySwitched : 1;
+    int physicalDamage[4]; int battlerIdPhysicalDamage; int battlerBitPhysicalDamage;
+    int specialDamage[4]; int battlerIdSpecialDamage; int battlerBitSpecialDamage;
+} TurnData;
+typedef struct { u32 moldBreakerFlag : 1; int battlerIdPhysicalAttacker; int battlerIdSpecialAttacker; } SelfTurnData;
+typedef struct { u32 paralysis : 1; } MoveFailFlags;
+typedef struct { u8 syrupBombTurns : 2; u8 syrupBombUser : 2; } MoveConditions;
+typedef struct { int command; u32 unk4; u32 unk8; u32 inputSelection; } PlayerActions;
+typedef struct { u16 moves[4][4]; u16 heldItems[4]; } TrainerAIData;
+typedef struct { int battlerIdFutureSight[4]; } FieldConditionData;
+typedef struct { u32 followMeFlag : 1; u32 battlerIdFollowMe : 2; } SideConditionData;
+typedef struct {
+    int battlerIdAttacker, battlerIdAttackerTemp, battlerIdTarget, battlerIdTargetTemp, battlerIdStatChange, battlerIdTemp, battlerIdMagicCoat;
+    u32 fieldCondition; FieldConditionData fieldConditionData; SideConditionData fieldSideConditionData[2];
+    BattleMon battleMons[4]; TurnData turnData[4]; SelfTurnData selfTurnData[4]; MoveFailFlags moveFail[4];
+    MoveConditions moveConditions[4]; PlayerActions playerActions[4]; TrainerAIData trainerAIData;
+    u8 selectedMonIndex[4]; u8 unk_21A0[4]; u32 unk_13C[4]; u32 unk_218C[4]; u16 movePos[4]; u16 unk_30B4[4];
+    u32 moveNoLockedInto[4]; u16 moveNoProtect[4]; u16 moveNoHit[4]; u16 moveNoHitBattler[4]; u16 moveNoHitType[4];
+    u16 moveNoBattlerPrev[4]; u16 moveNoCopied[4]; u16 moveNoCopiedHit[4][4]; u16 moveNoSketch[4]; u16 conversion2Move[4];
+    u16 conversion2BattlerId[4]; u16 conversion2Type[4]; u16 moveNoMetronome[4]; int unk_30E4[4]; int unk_30F4[4];
+    u32 effectiveSpeed[4]; u16 trainerAIAbilities[4]; u8 protectSuccessTurns[4]; u8 psychicTerrainMoveUsed[4];
+    u8 paradoxBoostedStat[4]; u8 boosterEnergyActivated[4]; u16 cudChewBerry[4]; u16 cudChewTurn[4];
+    u8 supremeOverlordFallen[4]; u8 mimicryTerrain[4]; u8 opportunistStages[4][8]; u8 symbiosisPending[4];
+    u8 mirrorHerbStages[4][8]; u8 onceOnlyEntryAbilityDone[4][6]; u8 berryEaten[4][6]; u8 rageFistHits[4][6];
+    u8 turnOrder[4]; u8 executionOrder[4]; u8 danceUser, danceTarget; u8 switchInFlag, roundUsers, statLoweredBattlers,
+    statRaisedBattlers, teraShellResisting, dancersPending, bindingBandBinds, strongWindsWeakened; u8 unk_312C[2][6];
+} BattleContext;
+static u32 sBattleType; static u16 sRandom;
+static const u16 sProtectSuccessChance[7] = { 1, 3, 9, 27, 81, 243, 729 };
+static u32 MaskOfFlagNo(int flagNo) { return 1u << flagNo; }
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static u32 BattleSystem_GetBattleType(BattleSystem *bs) { (void)bs; return sBattleType; }
+static int BattleSystem_GetBattlerIdPartner(BattleSystem *bs, int battlerId) { (void)bs; return sBattleType & BATTLE_TYPE_DOUBLES ? battlerId ^ 2 : battlerId; }
+static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; return sRandom; }
+@FUNCTIONS@
+static BattleContext ctx;
+static BattleSystem bs;
+static void reset(void) {
+    memset(&ctx, 0, sizeof(ctx));
+    sBattleType = BATTLE_TYPE_DOUBLES | BATTLE_TYPE_TRAINER; sRandom = 1;
+    for (int i = 0; i < 4; i++) {
+        ctx.battleMons[i].species = 100 + i; ctx.battleMons[i].hp = 10; ctx.selectedMonIndex[i] = i >> 1;
+        ctx.turnOrder[i] = i; ctx.playerActions[i].unk4 = 1;
+    }
+    ctx.battlerIdAttacker = 0; ctx.unk_312C[0][0] = 0; ctx.unk_312C[0][1] = 1;
+}
+int main(void) {
+    // Works beside a standing ally in a double battle; the user's battler is
+    // its new place's, the Pokemon change battlers with what is theirs.
+    reset(); ctx.battleMons[1].unk88.battlerIdMeanLook = 0; ctx.battleMons[1].status2 = 1u << (STATUS2_ATTRACT_SHIFT + 0);
+    ctx.rageFistHits[0][0] = 3; ctx.roundUsers = 1; ctx.fieldCondition = 1u << FIELD_CONDITION_UPROAR_SHIFT;
+    ctx.battleMons[3].ability = ABILITY_STALWART; ctx.playerActions[3].unk4 = 0; ctx.playerActions[0].unk8 = 7;
+    EXPECT(AllySwitchWorks(&bs, &ctx), TRUE);
+    Battlers_SwapPlaces(&ctx, 0, 2);
+    EXPECT(ctx.battleMons[0].species, 102); EXPECT(ctx.battleMons[2].species, 100);
+    EXPECT(ctx.selectedMonIndex[0], 1); EXPECT(ctx.selectedMonIndex[2], 0);
+    EXPECT(ctx.playerActions[2].unk8, 7); EXPECT(ctx.turnData[2].allySwitched, 1);
+    EXPECT(ctx.battlerIdAttacker, 2); EXPECT(ctx.battleMons[1].unk88.battlerIdMeanLook, 2);
+    EXPECT((int)ctx.battleMons[1].status2, (int)(1u << (STATUS2_ATTRACT_SHIFT + 2)));
+    EXPECT(ctx.rageFistHits[2][0], 3); EXPECT(ctx.rageFistHits[0][0], 0); EXPECT(ctx.roundUsers, 4);
+    EXPECT((int)ctx.fieldCondition, (int)(4u << FIELD_CONDITION_UPROAR_SHIFT));
+    EXPECT(ctx.turnOrder[0] * 1000 + ctx.turnOrder[1] * 100 + ctx.turnOrder[2] * 10 + ctx.turnOrder[3], 2103);
+    EXPECT(ctx.unk_312C[0][0], 1); EXPECT(ctx.unk_312C[0][1], 0);
+    // A foe's move stays aimed at the place, Stalwart's at the Pokemon.
+    EXPECT(ctx.playerActions[1].unk4, 1); EXPECT(ctx.playerActions[3].unk4, 2);
+    // The ally, having moved, cannot move them back this turn.
+    ctx.battlerIdAttacker = 0; ctx.moveNoProtect[0] = 0;
+    EXPECT(AllySwitchWorks(&bs, &ctx), FALSE);
+    // Not in a single or a multi battle, nor beside a fainted ally.
+    reset(); sBattleType = BATTLE_TYPE_TRAINER; EXPECT(AllySwitchWorks(&bs, &ctx), FALSE);
+    reset(); sBattleType |= BATTLE_TYPE_MULTI; EXPECT(AllySwitchWorks(&bs, &ctx), FALSE);
+    reset(); ctx.battleMons[2].hp = 0; EXPECT(AllySwitchWorks(&bs, &ctx), FALSE);
+    // In a row, one try in three, then nine; another move in between, sure.
+    reset(); ctx.moveNoProtect[0] = MOVE_ALLY_SWITCH; ctx.protectSuccessTurns[0] = 1;
+    sRandom = 1; EXPECT(AllySwitchWorks(&bs, &ctx), FALSE); EXPECT(ctx.protectSuccessTurns[0], 0);
+    reset(); ctx.moveNoProtect[0] = MOVE_ALLY_SWITCH; ctx.protectSuccessTurns[0] = 1;
+    sRandom = 3; EXPECT(AllySwitchWorks(&bs, &ctx), TRUE); EXPECT(ctx.protectSuccessTurns[0], 2);
+    reset(); ctx.moveNoProtect[0] = MOVE_PROTECT; ctx.protectSuccessTurns[0] = 3;
+    sRandom = 1; EXPECT(AllySwitchWorks(&bs, &ctx), TRUE);
+    return 0;
+}
+"""
+
+    def test_ally_switch_has_the_two_change_places(self):
+        # Pokemon Central (Cambiaposto): in a double battle the user and its
+        # ally change places, attacks aimed at a place hitting whoever stands
+        # there; fails otherwise, and in a row as Protect does.
+        from test_ability_behaviour import HEADER, run_c
+        import import_battle_messages
+        self.assertImplemented("ALLY_SWITCH", "MOVE_EFFECT_ALLY_SWITCH")
+        script = effect_script("MOVE_EFFECT_ALLY_SWITCH")
+        self.assertLess(script.index("SetMoveConditionFlag MOVE_ALLY_SWITCH, BATTLER_CATEGORY_ATTACKER"),
+                        script.index("CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0, _FAILED"))
+        for part in ("ChangeForm BATTLER_CATEGORY_ATTACKER\n", "ChangeForm BATTLER_CATEGORY_ATTACKER_PARTNER",
+                     "HealthbarSlideIn BATTLER_CATEGORY_ATTACKER\n", "HealthbarSlideIn BATTLER_CATEGORY_ATTACKER_PARTNER",
+                     f"PrintMessage msg_0197_{import_battle_messages.port_row('ally switch'):05d}, TAG_NICKNAME_NICKNAME"):
+            self.assertIn(part, script)
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        tables = "\n".join(re.search(r"typedef struct BattlerField \{.*?#undef ONCE\n", commands, re.S).group(0).splitlines())
+        functions = "\n".join(function(commands, name) for name in (
+            "SwapBytes", "OtherOfPair", "SwapMaskBits", "ReadBattlerField", "WriteBattlerField", "Battlers_SwapPlaces", "AllySwitchWorks"))
+        run_c(self, HEADER + self.ALLY_SWITCH_PROGRAM.replace("@FUNCTIONS@", tables + "\n" + functions))
+        flag = function(commands, "BtlCmd_SetMoveConditionFlag")
+        self.assertIn("Battlers_SwapPlaces(ctx, battlerId, BattleSystem_GetBattlerIdPartner(battleSystem, battlerId));",
+                      flag[flag.index("case MOVE_ALLY_SWITCH:"):])
+        # A move the ally aimed at the user is now aimed at itself, and fails:
+        # no target, before Follow Me or anything else is asked.
+        target = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "ov12_022506D4")
+        target = target[target.index("int battlerIdTargetTemp = ctx->playerActions[battlerIdAttacker].unk4;"):]
+        self.assertLess(target.index("if (battlerIdTargetTemp == battlerIdAttacker) {"), target.index("followMeFlag"))
+
     def test_instruct_has_its_target_use_its_last_move_again(self):
         # Pokemon Central (Imposizione): straight after, PP spent, not the
         # moves that wait, charge, recharge, copy or call another.

@@ -94,7 +94,8 @@ typedef struct TurnData {
     u32 shellTrapSet : 1; // Shell Trap set as the turn began
     u32 shellTrapSprung : 1; // and sprung by a foe's physical hit: it goes next
     u32 instructed : 1; // Instruct landed on it: it uses its last move again once the action is over
-    u32 unk0_A : 12;
+    u32 allySwitched : 1; // it switched places with its ally this turn: the ally's Ally Switch fails
+    u32 unk0_A : 11;
     int physicalDamage[4];
     int battlerIdPhysicalDamage;
     int battlerBitPhysicalDamage;

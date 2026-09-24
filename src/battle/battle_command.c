@@ -10333,6 +10333,238 @@ static BOOL MoveCanBeInstructed(BattleContext *ctx, u16 move) {
     return TRUE;
 }
 
+static void SwapBytes(void *x, void *y, u32 size) {
+    u8 *p = x;
+    u8 *q = y;
+    u8 byte;
+
+    while (size--) {
+        byte = *p;
+        *p++ = *q;
+        *q++ = byte;
+    }
+}
+
+// The one of a and b that battlerId is not, or battlerId if it is neither.
+static int OtherOfPair(int battlerId, int a, int b) {
+    return battlerId == a ? b : (battlerId == b ? a : battlerId);
+}
+
+// A battler mask with the bits of a and b exchanged.
+static u32 SwapMaskBits(u32 mask, int a, int b) {
+    u32 bits = mask & (MaskOfFlagNo(a) | MaskOfFlagNo(b));
+
+    if (bits != 0 && bits != (MaskOfFlagNo(a) | MaskOfFlagNo(b))) {
+        mask ^= MaskOfFlagNo(a) | MaskOfFlagNo(b);
+    }
+    return mask;
+}
+
+// A field of the context that Ally Switch has to see to: where it is, how
+// wide one is (1, 2 or 4 bytes; for an array a Pokemon owns, one entry), and
+// how far apart its four battlers' are (0 for one field about the battle).
+typedef struct BattlerField {
+    u16 offset;
+    u8 width;
+    u8 stride;
+} BattlerField;
+
+#define PER_BATTLER(field) { offsetof(BattleContext, field), sizeof(((BattleContext *)0)->field[0]), 0 }
+#define IN_EACH(array, type, field) { offsetof(BattleContext, array) + offsetof(type, field), sizeof(((type *)0)->field), sizeof(type) }
+#define IN_ARRAY(field) { offsetof(BattleContext, field), sizeof(((BattleContext *)0)->field[0]), sizeof(((BattleContext *)0)->field[0]) }
+#define ONCE(field) { offsetof(BattleContext, field), sizeof(((BattleContext *)0)->field), 0 }
+
+// The arrays kept by battler whose entries belong to the Pokemon.
+static const BattlerField sPokemonArrays[] = {
+    PER_BATTLER(battleMons),
+    PER_BATTLER(turnData),
+    PER_BATTLER(selfTurnData),
+    PER_BATTLER(moveFail),
+    PER_BATTLER(moveConditions),
+    PER_BATTLER(playerActions),
+    PER_BATTLER(selectedMonIndex),
+    PER_BATTLER(unk_21A0),
+    PER_BATTLER(unk_13C),
+    PER_BATTLER(unk_218C),
+    PER_BATTLER(movePos),
+    PER_BATTLER(unk_30B4),
+    PER_BATTLER(moveNoLockedInto),
+    PER_BATTLER(moveNoProtect),
+    PER_BATTLER(moveNoHit),
+    PER_BATTLER(moveNoHitBattler),
+    PER_BATTLER(moveNoHitType),
+    PER_BATTLER(moveNoBattlerPrev),
+    PER_BATTLER(moveNoCopied),
+    PER_BATTLER(moveNoCopiedHit),
+    PER_BATTLER(moveNoSketch),
+    PER_BATTLER(conversion2Move),
+    PER_BATTLER(conversion2BattlerId),
+    PER_BATTLER(conversion2Type),
+    PER_BATTLER(moveNoMetronome),
+    PER_BATTLER(unk_30E4),
+    PER_BATTLER(unk_30F4),
+    PER_BATTLER(effectiveSpeed),
+    PER_BATTLER(trainerAIAbilities),
+    PER_BATTLER(trainerAIData.moves),
+    PER_BATTLER(trainerAIData.heldItems),
+    PER_BATTLER(protectSuccessTurns),
+    PER_BATTLER(psychicTerrainMoveUsed),
+    PER_BATTLER(paradoxBoostedStat),
+    PER_BATTLER(boosterEnergyActivated),
+    PER_BATTLER(cudChewBerry),
+    PER_BATTLER(cudChewTurn),
+    PER_BATTLER(supremeOverlordFallen),
+    PER_BATTLER(mimicryTerrain),
+    PER_BATTLER(opportunistStages),
+    PER_BATTLER(symbiosisPending),
+    PER_BATTLER(mirrorHerbStages),
+};
+
+// The fields that name a Pokemon by its battler.
+static const BattlerField sBattlerIds[] = {
+    IN_ARRAY(moveNoHitBattler),
+    IN_ARRAY(conversion2BattlerId),
+    IN_ARRAY(unk_30F4),
+    IN_ARRAY(turnOrder),
+    IN_ARRAY(executionOrder),
+    IN_ARRAY(fieldConditionData.battlerIdFutureSight),
+    IN_EACH(turnData, TurnData, battlerIdPhysicalDamage),
+    IN_EACH(turnData, TurnData, battlerIdSpecialDamage),
+    IN_EACH(selfTurnData, SelfTurnData, battlerIdPhysicalAttacker),
+    IN_EACH(selfTurnData, SelfTurnData, battlerIdSpecialAttacker),
+    ONCE(battlerIdAttacker),
+    ONCE(battlerIdAttackerTemp),
+    ONCE(battlerIdTarget),
+    ONCE(battlerIdTargetTemp),
+    ONCE(battlerIdStatChange),
+    ONCE(battlerIdTemp),
+    ONCE(battlerIdMagicCoat),
+    ONCE(danceUser),
+    ONCE(danceTarget),
+};
+
+// The masks with a bit for each battler's Pokemon.
+static const BattlerField sBattlerMasks[] = {
+    IN_EACH(turnData, TurnData, battlerBitPhysicalDamage),
+    IN_EACH(turnData, TurnData, battlerBitSpecialDamage),
+    ONCE(switchInFlag),
+    ONCE(roundUsers),
+    ONCE(statLoweredBattlers),
+    ONCE(statRaisedBattlers),
+    ONCE(teraShellResisting),
+    ONCE(dancersPending),
+    ONCE(bindingBandBinds),
+    ONCE(strongWindsWeakened),
+};
+
+#undef PER_BATTLER
+#undef IN_EACH
+#undef IN_ARRAY
+#undef ONCE
+
+static u32 ReadBattlerField(const u8 *p, int width) {
+    return width == 1 ? *p : (width == 2 ? *(const u16 *)p : *(const u32 *)p);
+}
+
+static void WriteBattlerField(u8 *p, int width, u32 value) {
+    if (width == 1) {
+        *p = value;
+    } else if (width == 2) {
+        *(u16 *)p = value;
+    } else {
+        *(u32 *)p = value;
+    }
+}
+
+// The Pokemon of a and b change places (Ally Switch). What belongs to a
+// Pokemon goes with it: its battle data and party slot, its stages and
+// conditions, what it chose and did this turn, its place in the turn's
+// order, what the AI has seen of it; and whatever names it by its battler --
+// a bind, a Mean Look or an Octolock, a Lock-On, an infatuation, a Syrup
+// Bomb, an Uproar, the last Pokemon to hit something, Follow Me -- is told
+// its new one. What belongs to a place stays there: the target another
+// Pokemon chose, a Wish, a Future Sight on its way, the Leech Seed that feeds
+// the place's Pokemon (Pokemon Central, Cambiaposto). Stalwart, Propeller
+// Tail and Snipe Shot aim at the Pokemon, not the place, and follow it.
+static void Battlers_SwapPlaces(BattleContext *ctx, int a, int b) {
+    u8 *base = (u8 *)ctx;
+    const BattlerField *field;
+    u8 slots[2];
+    int i, j, count;
+
+    slots[0] = ctx->selectedMonIndex[a];
+    slots[1] = ctx->selectedMonIndex[b];
+    for (field = sPokemonArrays; field < sPokemonArrays + NELEMS(sPokemonArrays); field++) {
+        SwapBytes(base + field->offset + a * field->width, base + field->offset + b * field->width, field->width);
+    }
+    for (field = sBattlerIds; field < sBattlerIds + NELEMS(sBattlerIds); field++) {
+        count = field->stride ? BATTLER_MAX : 1;
+        for (i = 0; i < count; i++) {
+            u8 *p = base + field->offset + i * field->stride;
+            WriteBattlerField(p, field->width, OtherOfPair(ReadBattlerField(p, field->width), a, b));
+        }
+    }
+    for (field = sBattlerMasks; field < sBattlerMasks + NELEMS(sBattlerMasks); field++) {
+        count = field->stride ? BATTLER_MAX : 1;
+        for (i = 0; i < count; i++) {
+            u8 *p = base + field->offset + i * field->stride;
+            WriteBattlerField(p, field->width, SwapMaskBits(ReadBattlerField(p, field->width), a, b));
+        }
+    }
+    // Kept by battler and party slot: the two Pokemon's own entries move.
+    for (j = 0; j < 2; j++) {
+        SwapBytes(&ctx->onceOnlyEntryAbilityDone[a][slots[j]], &ctx->onceOnlyEntryAbilityDone[b][slots[j]], 1);
+        SwapBytes(&ctx->berryEaten[a][slots[j]], &ctx->berryEaten[b][slots[j]], 1);
+        SwapBytes(&ctx->rageFistHits[a][slots[j]], &ctx->rageFistHits[b][slots[j]], 1);
+        ctx->fieldSideConditionData[j].battlerIdFollowMe = OtherOfPair(ctx->fieldSideConditionData[j].battlerIdFollowMe, a, b);
+    }
+    for (i = 0; i < BATTLER_MAX; i++) {
+        BattleMon *mon = &ctx->battleMons[i];
+
+        mon->unk88.battlerIdLockOn = OtherOfPair(mon->unk88.battlerIdLockOn, a, b);
+        mon->unk88.battlerIdBinding = OtherOfPair(mon->unk88.battlerIdBinding, a, b);
+        mon->unk88.battlerIdMeanLook = OtherOfPair(mon->unk88.battlerIdMeanLook, a, b);
+        mon->status2 = (mon->status2 & ~STATUS2_ATTRACT)
+            | (SwapMaskBits((mon->status2 & STATUS2_ATTRACT) >> STATUS2_ATTRACT_SHIFT, a, b) << STATUS2_ATTRACT_SHIFT);
+        ctx->moveConditions[i].syrupBombUser = OtherOfPair(ctx->moveConditions[i].syrupBombUser, a, b);
+        SwapBytes(&ctx->moveNoCopiedHit[i][a], &ctx->moveNoCopiedHit[i][b], sizeof(u16));
+        SwapBytes(&ctx->turnData[i].physicalDamage[a], &ctx->turnData[i].physicalDamage[b], sizeof(int));
+        SwapBytes(&ctx->turnData[i].specialDamage[a], &ctx->turnData[i].specialDamage[b], sizeof(int));
+        if (GetBattlerAbility(ctx, i) == ABILITY_STALWART || GetBattlerAbility(ctx, i) == ABILITY_PROPELLER_TAIL || ctx->unk_30B4[i] == MOVE_SNIPE_SHOT) {
+            ctx->playerActions[i].unk4 = OtherOfPair(ctx->playerActions[i].unk4, a, b);
+        }
+    }
+    ctx->fieldCondition = (ctx->fieldCondition & ~FIELD_CONDITION_UPROAR)
+        | (SwapMaskBits((ctx->fieldCondition & FIELD_CONDITION_UPROAR) >> FIELD_CONDITION_UPROAR_SHIFT, a, b) << FIELD_CONDITION_UPROAR_SHIFT);
+    // The party list shows the Pokemon in the order of their places.
+    SwapBytes(&ctx->unk_312C[a & 1][0], &ctx->unk_312C[a & 1][1], 1);
+}
+
+// Ally Switch works in a double battle that is not a multi battle, beside an
+// ally that is standing, and not once that ally has switched places this
+// turn; used in a row it works one try in 3^n, as Protect does, the count
+// kept apart from Protect's (Pokemon Central, Cambiaposto).
+static BOOL AllySwitchWorks(BattleSystem *battleSystem, BattleContext *ctx) {
+    int user = ctx->battlerIdAttacker;
+    int ally = BattleSystem_GetBattlerIdPartner(battleSystem, user);
+    u32 battleType = BattleSystem_GetBattleType(battleSystem);
+
+    if (ctx->moveNoProtect[user] != MOVE_ALLY_SWITCH) {
+        ctx->protectSuccessTurns[user] = 0;
+    }
+    if (!(battleType & BATTLE_TYPE_DOUBLES) || (battleType & (BATTLE_TYPE_MULTI | BATTLE_TYPE_TAG)) || ally == user
+        || !ctx->battleMons[ally].hp || ctx->turnData[ally].allySwitched
+        || BattleSystem_Random(battleSystem) % sProtectSuccessChance[ctx->protectSuccessTurns[user]] != 0) {
+        ctx->protectSuccessTurns[user] = 0;
+        return FALSE;
+    }
+    if (ctx->protectSuccessTurns[user] < NELEMS(sProtectSuccessChance) - 1) {
+        ctx->protectSuccessTurns[user]++;
+    }
+    ctx->turnData[user].allySwitched = TRUE;
+    return TRUE;
+}
+
 BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx) {
     int move;
     int battlerId;
@@ -10496,6 +10728,14 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         }
         break;
     }
+    // Ally Switch: the user and its ally change places, if it works
+    // (CALC_TEMP says whether); the user's battler is its new place's.
+    case MOVE_ALLY_SWITCH:
+        ctx->calcTemp = AllySwitchWorks(battleSystem, ctx);
+        if (ctx->calcTemp) {
+            Battlers_SwapPlaces(ctx, battlerId, BattleSystem_GetBattlerIdPartner(battleSystem, battlerId));
+        }
+        break;
     // Whether the battler's Shell Trap was sprung, for its script to ask.
     case MOVE_SHELL_TRAP:
         ctx->calcTemp = ctx->turnData[battlerId].shellTrapSprung;

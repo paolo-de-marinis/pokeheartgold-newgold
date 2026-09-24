@@ -309,6 +309,19 @@ PORT_ROWS = [
         r"The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by {STRVAR_1 1, 1, 0} and\fbecame {STRVAR_1 1, 1, 0}’s commander!",
         r"The opposing {STRVAR_1 1, 0, 0}\nwas swallowed by the opposing\f{STRVAR_1 1, 1, 0} and became the\nopposing {STRVAR_1 1, 1, 0}’s commander!",
     ]),
+    # Ally Switch. The engine leaves the move unimplemented; the later games'
+    # line, about two Pokemon, so the seven rows TAG_NICKNAME_NICKNAME picks
+    # from by the two sides (BattleSystem_AdjustMessageForSide), though the
+    # two are always on one.
+    ("ally switch", [
+        r"{STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!",
+        r"{STRVAR_1 1, 0, 0} and the wild {STRVAR_1 1, 1, 0}\nswitched places!",
+        r"{STRVAR_1 1, 0, 0} and the opposing {STRVAR_1 1, 1, 0}\nswitched places!",
+        r"The wild {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!",
+        r"The wild {STRVAR_1 1, 0, 0} and\nthe wild {STRVAR_1 1, 1, 0} switched places!",
+        r"The opposing {STRVAR_1 1, 0, 0} and {STRVAR_1 1, 1, 0}\nswitched places!",
+        r"The opposing {STRVAR_1 1, 0, 0} and\nthe opposing {STRVAR_1 1, 1, 0} switched places!",
+    ]),
 ]
 
 

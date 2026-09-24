@@ -493,6 +493,9 @@ IMPLEMENTED_HERE = {
     # Instruct has its target use its last move again straight away (Pokemon
     # Central, Imposizione): effect script 442.
     "INSTRUCT": "MOVE_EFFECT_INSTRUCT",
+    # Ally Switch has the user and its ally change places in a double battle
+    # (Pokemon Central, Cambiaposto): effect script 443.
+    "ALLY_SWITCH": "MOVE_EFFECT_ALLY_SWITCH",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A
