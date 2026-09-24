@@ -705,6 +705,10 @@ u8 ov12_0223B580(BattleSystem *battleSystem, int battlerId, u8 a2) {
 // the battle ends. hg-engine never clears it, so a Farfetch'd whose evolution
 // was cancelled, or refused because it had fainted, evolved at any later
 // level-up. Once the check after the battle is over, the mark goes.
+//
+// A link battle outside the Frontier ends without this check (Battle_Run's
+// BSTATE_END_MAIN) and needs none: the party it marks is the setup's copy,
+// which the link tasks drop, copying only the Pokedex back (sub_02052444).
 static void ClearCriticalHitsMarks(Party *party) {
     int i;
     u8 bits;

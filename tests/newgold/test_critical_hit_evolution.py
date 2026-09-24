@@ -227,6 +227,20 @@ class CriticalHitEvolution(unittest.TestCase):
         functions = "\n".join(function(source, name) for name in ("ClearCriticalHitsMarks", "BattleSystem_CheckEvolution"))
         run(self, AFTER_BATTLE.replace("@FUNCTIONS@", functions))
 
+    def test_a_link_battle_s_mark_goes_with_its_copy_of_the_party(self):
+        # A link battle outside the Frontier never reaches
+        # BattleSystem_CheckEvolution, which clears the mark. The party it
+        # marks is the setup's copy of the player's, and the link tasks
+        # copy only the Pokedex back to the save, never the party.
+        setup = read("src/battle/battle_setup.c")
+        self.assertIn("Party_Copy(party, setup->party[battlerId]);", function(setup, "BattleSetup_SetParty"))
+        self.assertNotIn("Party_Copy", function(setup, "sub_02052444"))
+        encounter = read("src/encounter.c")
+        for task in ("Task_020508B8", "Task_02050960"):
+            body = function(encounter, task)
+            self.assertIn("sub_02052444(encounter->setup, fieldSystem);", body, task)
+            self.assertNotIn("sub_0205239C", body, task)
+
     def test_the_count_starts_again_with_each_appearance(self):
         # The engine clears critical_hits in ClearBattleMonFlags; here that is
         # where a Pokemon is loaded into its battler.
