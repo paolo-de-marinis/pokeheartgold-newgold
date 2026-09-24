@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Boot both ROMs in an emulator.
+"""Boot both ROMs, and both diagnostics builds, in an emulator.
 
 Every other test here reads source or data, and none of them can tell whether
 the ROM starts. The changes most likely to stop it starting are the ones this
@@ -105,6 +105,12 @@ class BootTests(unittest.TestCase):
         if not smoke.DIAG_ROM.exists():
             self.skipTest("not built: make NEWGOLD_DIAG=1 COMPARE=0")
         self.boot("heartgold.diag", smoke.DIAG_ROM)
+
+    def test_soulsilver_with_diagnostics_boots(self):
+        rom = ROOT / "build/soulsilver.us.diag/pokesoulsilver.us.nds"
+        if not rom.exists():
+            self.skipTest("not built: make NEWGOLD_DIAG=1 GAME_VERSION=SOULSILVER COMPARE=0")
+        self.boot("soulsilver.diag", rom)
 
 
 class ClockTests(unittest.TestCase):
