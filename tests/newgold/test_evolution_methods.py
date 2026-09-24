@@ -662,7 +662,7 @@ class EvolutionMethods(unittest.TestCase):
         self.assertIn("GetTradeEvolution(mon, deposit, &depositCondition)", body)
         # The animation sends the station's copy of the save's deposit, at
         # 0x11F0 of its work, which the next step frees.
-        self.assertIn("u8 unk114[0x10DC];\n    Pokemon *given;", source)
+        self.assertIn("u8 unkBB4[0x11F0 - 0xBB4];\n    Pokemon *given;", read("include/overlay_70.h"))
 
     def test_the_battle_counts_an_opponent_the_player_defeats(self):
         """Where a Pokemon faints, an opponent's faint counts for the

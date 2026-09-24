@@ -3,37 +3,11 @@
 #include "constants/pokemon.h"
 
 #include "heap.h"
+#include "overlay_70.h"
 #include "overlay_manager.h"
 #include "party.h"
 #include "pokemon.h"
 #include "unk_020755E8.h"
-
-// The Global Trade Station's shared data, as far as this reads it.
-typedef struct GtsArgs {
-    void *gtsSave; // the save's GTS block: the Pokemon on deposit
-    u8 unk04[0xC];
-    Pokedex *pokedex;
-    u8 unk14[0x10];
-    Options *options;
-    GameStats *gameStats;
-    Bag *bag;
-    u8 unk30[0x8];
-    u32 unk38;
-} GtsArgs;
-
-typedef struct GtsWork {
-    GtsArgs *args;
-    u8 unk004[0x20];
-    int tradeType; // 9 trades for an offer found; 8 and 10 collect the deposit, or what it was traded for
-    u8 unk028[0x4];
-    int subState;
-    u8 unk030[0x88];
-    OverlayManager *tradeSequence;
-    u8 unk0BC[0x54];
-    EvolutionTaskData *evolutionTask;
-    u8 unk114[0x10DC];
-    Pokemon *given; // what the trade animation sends: the Pokemon given
-} GtsWork;
 
 Pokemon *ov70_02241868(GtsWork *work, int tradeType);
 void ov70_022418A4(GtsWork *work);
