@@ -6584,7 +6584,7 @@ BOOL BtlCmd_RestoreSprite(BattleSystem *battleSystem, BattleContext *ctx) {
 
     int side = BattleScriptReadWord(ctx);
     int battlerId = BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side);
-    ov12_02263F8C(battleSystem, ctx, battlerId);
+    BattleController_EmitRestoreSprite(battleSystem, ctx, battlerId);
 
     return FALSE;
 }

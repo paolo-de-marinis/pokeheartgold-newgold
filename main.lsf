@@ -725,6 +725,8 @@ Overlay OVY_12
     Object asm/overlay_12_battle_controller_02263D14.o
     Object src/battle/battle_controller_change_form.o
     Object asm/overlay_12_battle_controller_02263DFC.o
+    Object src/battle/battle_controller_restore_sprite.o
+    Object asm/overlay_12_battle_controller_02264038.o
     Object src/battle/battle_controller_substitute.o
     Object asm/overlay_12_battle_controller_02264228.o
     Object src/battle/battle_hp_bar.o

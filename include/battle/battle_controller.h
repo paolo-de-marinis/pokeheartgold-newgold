@@ -5,6 +5,24 @@
 
 typedef void (*ControllerFunction)(BattleSystem *, BattleContext *ctx);
 
+// How every battler on the field looks, for the opponent controller to draw
+// a battler's sprite from: its substitute's (BattleController_EmitSwapToSubstituteSprite)
+// or its own again (BattleController_EmitRestoreSprite). The packet is the
+// move animation's, whose other fields these leave unset.
+typedef struct BattlerSpritesCommand {
+    u8 command;
+    u8 unused1[0x17];
+    u16 battlerSpecies[BATTLER_MAX];
+    u8 battlerGender[BATTLER_MAX];
+    u8 battlerShiny[BATTLER_MAX];
+    u8 battlerForm[BATTLER_MAX];
+    u32 battlerPersonality[BATTLER_MAX];
+    u8 unused2[0x1C];
+} BattlerSpritesCommand;
+
+// The opponent controller reads this packet by offset.
+typedef char BattlerSpritesCommandSizeCheck[sizeof(BattlerSpritesCommand) == 0x58 ? 1 : -1];
+
 void ov12_02262240(BattleSystem *battleSystem, int bufferId, int battlerId, void *data, u8 size);
 void BattleController_EmitPlayEncounterAnimation(BattleSystem *battleSystem, BOOL a1);
 void BattleController_EmitPokemonEncounter(BattleSystem *battleSystem, int battlerId);
@@ -53,7 +71,7 @@ void BattleController_EmitDeleteBallGauge(BattleSystem *battleSystem, int battle
 void BattleController_EmitLoadBallGfx(BattleSystem *battleSystem);
 void BattleController_EmitDeleteBallGfx(BattleSystem *battleSystem);
 void BattleController_EmitIncrementGameStat(BattleSystem *battleSystem, int battlerId, int flag, int id);
-void ov12_02263F8C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+void BattleController_EmitRestoreSprite(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 void ov12_02264038(BattleSystem *battleSystem, int battlerId);
 void ov12_02264054(BattleSystem *battleSystem, int battlerId);
 void BattleController_EmitPrintResultMessage(BattleSystem *battleSystem);

@@ -118,7 +118,7 @@
 .public BattleController_EmitDeleteBallGfx
 .public BattleController_EmitIncrementGameStat
 .public BattleController_EmitShowWaitMessage
-.public ov12_02263F8C
+.public BattleController_EmitRestoreSprite
 .public ov12_02264038
 .public ov12_02264054
 .public BattleController_EmitPrintResultMessage
