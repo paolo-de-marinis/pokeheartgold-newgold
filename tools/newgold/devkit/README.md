@@ -384,6 +384,12 @@ Reading what the debug ROM records, and playing it without looking.
   harness, and its memory dumps read back.
 - `pc.py SAVE` -- the PC's storage system opened from a save standing in
   front of a PC, and how full every heap got.
+- `scene.py SAVE OUT STEP...` -- any scene played from a save by steps
+  given on the command line (presses, taps, drags, waits, pokes by symbol),
+  with screenshots and every heap's low water where asked, the communication
+  error held off. The marts, the Move Relearner, the summary, the bag, the
+  PC, trades, the Union Room, the GTS's first screens and the Pokeathlon's
+  team choice were measured with it.
 - `species.py OUT` -- every species and form through the screens that load
   its resources: in the PC, in boxes savedit fills (its icon, its sprite,
   its name, Dex number, types and ability on the hover, and its summary's
