@@ -210,6 +210,9 @@ class CommanderTests(unittest.TestCase):
         self.assertIn("MOVE_STATUS_SEMI_INVULNERABLE", effect[guard:guard + 400])
         perish = function(COMMANDS, "BtlCmd_TryPerishSong")
         self.assertIn("ctx->moveConditions[battlerId].commanding", perish)
+        # The trainer AI aims nothing at it.
+        ai = function((BATTLE / "trainer_ai.c").read_text(), "ov10_0221C038")
+        self.assertIn("ctx->battleMons[i].hp == 0 || ctx->moveConditions[i].commanding) {\n            moveSlotByTarget[i] = -1;", ai)
 
     def test_neither_leaves_the_field(self):
         for name in ("BattlerCanSwitch", "Battler_WillBeDraggedOut", "BattlerIsAnchored", "SwitchItemAnswersHit", "CheckEjectPack"):

@@ -131,7 +131,9 @@ u8 ov10_0221C038(BattleSystem *battleSystem, BattleContext *ctx) {
     u16 move;
 
     for (i = 0; i < BATTLER_MAX; i++) {
-        if (i == ctx->trainerAIData.battlerIdAttacker || ctx->battleMons[i].hp == 0) {
+        // Not a Tatsugiri in its Dondozo's mouth, which every move aimed at
+        // fails (Pokemon Central, Torre di Comando).
+        if (i == ctx->trainerAIData.battlerIdAttacker || ctx->battleMons[i].hp == 0 || ctx->moveConditions[i].commanding) {
             moveSlotByTarget[i] = -1;
             maxScoreByTarget[i] = -1;
             continue;
