@@ -840,6 +840,8 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(whitney[2]["needs"], [[[("flag", "FLAG_UNK_0B7"), "eq", 1], [whitney[1]["id"]]]])
         morty = steps[chains["BADGE_FOG"][0]]
         self.assertEqual((morty["kind"], morty["key"], morty["section"]), ("gate", "VAR_UNK_4079", "Burned Tower"))
+        self.assertEqual([s["id"] for s in steps.values() if s["kind"] == "gate"], [morty["id"]],
+                         "Elm's lab and the Kimono Girls set VAR_UNK_4079 again, after the gym opened")
         self.assertEqual([(steps[i]["kind"], steps[i]["key"]) for i in chains["BADGE_GLACIER"]],
                          [("badge", "BADGE_GLACIER"), ("item", "ITEM_TM07")], "TM07 follows the badge in one scene")
         bottle = [("item", "ITEM_SQUIRTBOTTLE", 1), "eq", 1]

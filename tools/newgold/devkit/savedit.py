@@ -3689,6 +3689,16 @@ def story():
     # An item given with nothing else to show for it is the bag's, unless
     # a script tests for it (the SquirtBottle): prizes and berries are not.
     steps = [s for s in steps if s["tests"] and (s["tests"][0][0] != "item" or s["tests"][0][1] in tested)]
+    # A gate's variable set again later (Elm's lab, the Kimono Girls) is a
+    # scene after the gym opened: the gate is the step that first sets it
+    # past the value keeping the player out, the lowest.
+    opener = lambda s: min(w[2] for w in s["gives"] if w[:2] == ("var", s["key"]))
+    first = {}
+    for step in (s for s in steps if s["kind"] == "gate"):
+        first[step["key"]] = min(first.get(step["key"], opener(step)), opener(step))
+    for step in steps:
+        if step["kind"] == "gate" and opener(step) != first[step["key"]]:
+            step["kind"] = "var"
     trainers, names = constants("include/constants/trainers.h", "TRAINER_"), trainer_names()
     for step in steps:
         step["needs"] = [[need, [other["id"] for other in steps if other is not step
