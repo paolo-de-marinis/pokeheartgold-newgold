@@ -5330,6 +5330,21 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         }
         script = BATTLE_SUBSCRIPT_JAW_LOCK;
         break;
+    // Scale Shot lowers its user's Defense a stage and raises its Speed a
+    // stage once its strikes are over, however many landed, if the user
+    // still stands: each stat changes whatever the other's stage (Pokemon
+    // Central, Squamacolpo), where the engine asks both to have room
+    // (ServerDoPostMoveEffects.c:1270 at d0380a487). It is no additional
+    // effect: neither Sheer Force nor a Covert Cloak has a say. A stage at its
+    // limit stays as it is, unsaid.
+    case MOVE_EFFECT_MULTI_HIT:
+        if (ctx->moveNoCur != MOVE_SCALE_SHOT || !ctx->battleMons[ctx->battlerIdAttacker].hp) {
+            return FALSE;
+        }
+        ctx->battlerIdStatChange = ctx->battlerIdAttacker;
+        RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_SCALE_SHOT);
+        ctx->statChangeType = SIDE_EFFECT_TYPE_INDIRECT;
+        return TRUE;
     // Fell Stinger raises its user's Attack three stages once the move is
     // over, if it felled the target and the user still stands (Pokemon
     // Central, Pungiglione; the engine asks nothing of the user). At +6 the

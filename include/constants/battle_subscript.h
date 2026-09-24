@@ -781,6 +781,9 @@
 // The hold Thousand Waves, Anchor Shot and Spirit Shackle put on a Pokemon
 // they hit, once the move is over (TryHoldAfterHit).
 #define BATTLE_SUBSCRIPT_HOLD_AFTER_HIT                     461
+// Scale Shot lowering its user's Defense and raising its Speed once its
+// strikes are over (the reference's subscript 483, DEF_DOWN_1_SPEED_UP_1).
+#define BATTLE_SUBSCRIPT_SCALE_SHOT                         462
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

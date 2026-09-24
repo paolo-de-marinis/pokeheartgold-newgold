@@ -485,6 +485,17 @@ class PostMoveEffectsTests(unittest.TestCase):
         self.assertIn("MOVE_SUBSCRIPT_PTR_ATTACK_UP_3_STAGES\n", subscript("ATTACK_UP_3_ON_FAINT"))
         self.assertNotIn("SIDE_EFFECT", self.effect_script("FELL_STINGER"))
 
+    def test_scale_shot_lowers_defense_and_raises_speed_after_its_strikes(self):
+        # Pokemon Central, Squamacolpo: each whatever the other's stage.
+        case = self.case("case MOVE_EFFECT_MULTI_HIT:")
+        self.assertIn("if (ctx->moveNoCur != MOVE_SCALE_SHOT || !ctx->battleMons[ctx->battlerIdAttacker].hp) {", case)
+        self.assertIn("ctx->battlerIdStatChange = ctx->battlerIdAttacker;\n        RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_SCALE_SHOT);", case)
+        self.assertNotIn("statChanges", case)
+        from test_retail_effect_scripts import subscript
+        script = subscript("SCALE_SHOT")
+        self.assertLess(script.index("MOVE_SUBSCRIPT_PTR_DEFENSE_DOWN_1_STAGE"), script.index("MOVE_SUBSCRIPT_PTR_SPEED_UP_1_STAGE"))
+        self.assertEqual(script.count("Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE"), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
