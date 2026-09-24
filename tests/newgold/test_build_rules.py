@@ -191,7 +191,8 @@ class BuildRuleTests(unittest.TestCase):
             if not index.exists():
                 self.skipTest(f"{index.name} is not built")
             members = re.findall(rf"^#define NARC_{name}_(\w+)_bin (\d+)$", index.read_text(), re.M)
-            sources = sorted(s.stem for s in (ROOT / f"files/battledata/script/{name}").glob("*.s"))
+            sources = sorted((s.stem for s in (ROOT / f"files/battledata/script/{name}").glob("*.s")),
+                             key=lambda stem: int(re.search(r"_(\d+)", stem).group(1)))
             self.assertEqual([stem for stem, _ in members], sources, name)
             for stem, member in members:
                 self.assertEqual(int(re.search(r"_(\d+)", stem).group(1)), int(member), stem)
@@ -237,6 +238,14 @@ class BuildRuleTests(unittest.TestCase):
             self.assertNotIn("nitroarc", printed, "a run with nothing changed rebuilt the archive")
             (Path(directory) / "a/d/x_0002.s").unlink()
             self.assertEqual(make()[1], ["x_0000", "x_0001"])
+
+    def test_an_archive_packs_its_members_in_number_order(self):
+        """The list was sorted by name, which is number order only while
+        every number has four digits: a script past 9999, or one written
+        without the zeros, went where its name sorts."""
+        with tempfile.TemporaryDirectory(prefix="newgold-narcorder-") as directory:
+            make = self.numbered_narc(directory, ["x_10000.s", "x_0200.s", "x_10.s", "x_9.s"])
+            self.assertEqual(make()[1], ["x_9", "x_10", "x_0200", "x_10000"])
 
 
 if __name__ == "__main__":

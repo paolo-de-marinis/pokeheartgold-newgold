@@ -482,8 +482,9 @@ else
 %.narc: csvdep :=
 endif
 
-# An archive of numbered members holds the ones the build makes, in name
-# order, which is number order, and nothing else. nitroarc on its own packs
+# An archive of numbered members holds the ones the build makes, in number
+# order, and nothing else. sort -V orders the names by the number in them,
+# with or without zero padding and past four digits. nitroarc on its own packs
 # the whole folder, so a member renumbered or removed left its old file
 # behind, it was packed too, and every member after it moved. .narcorder is
 # the list nitroarc reads; -E '*' keeps it from adding the folder's other
@@ -494,7 +495,7 @@ endif
 #     $(call numbered_narc,ARCHIVE,FOLDER,MEMBERS)
 define numbered_narc
 $(2)/.narcorder: FORCE
-	@printf '%s\n' $(notdir $(sort $(3))) >$$@.new
+	@printf '%s\n' $(notdir $(3)) | LC_ALL=C sort -V >$$@.new
 	@if cmp -s $$@.new $$@; then rm $$@.new; else mv $$@.new $$@; fi
 $(1): $(2)/.narcorder $(3)
 	$$(NARC) -cf $$@ --index-namespace -E '*' $(2)
