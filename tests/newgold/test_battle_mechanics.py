@@ -1697,7 +1697,8 @@ class GhostTypeTests(unittest.TestCase):
         self.assertLess(escape.index("|| Battler_HasGhostType(ctx, battlerId)) {\n        return FALSE;"),
                         escape.index("ABILITY_SHADOW_TAG"))
         switch = function(overlay, "BattlerCanSwitch")
-        self.assertLess(switch.index("Battler_HeldByCommander(ctx, battlerId)"), switch.index("Battler_HasGhostType"))
+        # Commander's hold, and Sky Drop's beside it, still come first.
+        self.assertLess(switch.index("Battler_KeptOnField(ctx, battlerId)"), switch.index("Battler_HasGhostType"))
         self.assertLess(switch.index("== HOLD_EFFECT_SWITCH || Battler_HasGhostType(ctx, battlerId)) {\n        return FALSE;"),
                         switch.index("STATUS2_MEAN_LOOK"))
         run = function(overlay, "BattleTryRun")

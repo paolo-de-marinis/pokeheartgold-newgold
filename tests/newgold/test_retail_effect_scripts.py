@@ -586,6 +586,7 @@ enum { NARC_a_0_0_1 = 1 };
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)moveNo; return &ctx->move; }
 static BOOL BattleCtx_IsIdenticalToCurrentMove(BattleContext *ctx, int moveNo) { (void)ctx; (void)moveNo; return FALSE; }
 static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return 0; }
+static u32 WeatherUnderUmbrella(BattleContext *ctx, u32 weather, int battlerId) { (void)ctx; (void)battlerId; return weather; }
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return 0; }
 static void ReadBattleScriptFromNarc(BattleContext *ctx, int narc, int script) { (void)narc; ctx->script = script; }
 @FUNCTIONS@
