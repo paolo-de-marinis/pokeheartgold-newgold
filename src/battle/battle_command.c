@@ -6036,6 +6036,9 @@ BOOL BtlCmd_GenerateEndOfBattleItem(BattleSystem *battleSystem, BattleContext *c
 
     BattleScriptIncrementPointer(ctx, 1);
 
+    // The party has its items back first: Pickup and Honey Gather look for
+    // hands empty after the battle, and what they find stays held.
+    GiveBackHeldItems(battleSystem, ctx);
     for (i = 0; i < BattleSystem_GetPartySize(battleSystem, 0); i++) {
         mon = BattleSystem_GetPartyMon(battleSystem, 0, i);
         species = GetMonData(mon, MON_DATA_SPECIES_OR_EGG, 0);

@@ -73,6 +73,9 @@ static const u16 sPickupTable1[18]={ITEM_POTION};
 static const u16 sPickupTable2[11]={ITEM_POTION};
 static const u8 sPickupWeightTable[9]={100};
 static const u8 sHoneyGatherChanceTable[10]={100};
+// The party's items are given back before Pickup looks; that is
+// test_battle_context's to check.
+static void GiveBackHeldItems(BattleSystem *s,BattleContext *c) { (void)s;(void)c; }
 @PROTOTYPES@
 @NATIVE@
 '''

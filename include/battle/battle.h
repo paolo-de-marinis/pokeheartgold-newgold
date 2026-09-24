@@ -702,6 +702,10 @@ typedef struct BattleContext {
     // by the party slot it was sent out from (Battler_RageFistHits); switching
     // out and fainting keep the count.
     u8 rageFistHits[BATTLER_MAX][PARTY_SIZE];
+    // Whether GiveBackHeldItems has given the party its items back: a battle
+    // won does it before Pickup and Honey Gather look, and the battle's end
+    // then finds it done.
+    u8 heldItemsGivenBack;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

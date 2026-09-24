@@ -186,7 +186,8 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // count by party, two of its bytes in the padding the Rooms' left, grew it by
 // twenty-four. Octolock's bit took each battler's move conditions to a second
 // byte, four in all. Dragon Cheer's two took them to a third, four more. Fairy
-// Lock's byte went into the padding after Rage Fist's count.
+// Lock's byte went into the padding after Rage Fist's count, and so did the
+// byte that says the held items are back.
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x3260 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
@@ -219,11 +220,22 @@ static BOOL IsBerry(u16 item) {
 // any item the party holds more of than it started with was taken in battle
 // and goes to the bag; then every Pokemon gets back what it started with,
 // nothing included, unless that was a berry.
-static void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
+//
+// Once a battle: a battle won does it before Pickup and Honey Gather look for
+// empty hands (BtlCmd_GenerateEndOfBattleItem), so what they find is the
+// Pokemon's to hold (Pokemon Central, Raccolta), and every battle's end asks
+// again. The reference does it at the end only, after them, and so writes
+// over what they found: nothing after a trainer battle, the bag after a wild
+// one.
+void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     int count = BattleSystem_GetPartySize(battleSystem, BATTLER_PLAYER);
     u16 held[PARTY_SIZE];
     int i, j;
 
+    if (ctx->heldItemsGivenBack) {
+        return;
+    }
+    ctx->heldItemsGivenBack = TRUE;
     if (count > PARTY_SIZE) {
         count = PARTY_SIZE;
     }

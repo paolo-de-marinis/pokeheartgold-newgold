@@ -51,6 +51,12 @@ class BattleContextTests(unittest.TestCase):
     def test_held_items_are_given_back(self):
         self.assertIn("GiveBackHeldItems(battleSystem, ctx);", body("BattleContext_Main"))
 
+    def test_pickup_looks_once_the_items_are_back(self):
+        # Pokemon Central (Raccolta): what Pickup and Honey Gather find is the
+        # Pokemon's to hold, so the party has its items back before they look.
+        pickup = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_GenerateEndOfBattleItem")
+        self.assertLess(pickup.index("GiveBackHeldItems(battleSystem, ctx);"), pickup.index("ABILITY_PICKUP"))
+
     def test_a_bad_poisoning_ends_with_the_battle(self):
         """hg-engine's RevertFormChange turns each of the player's badly
         poisoned Pokemon ordinarily poisoned as the battle ends; the real
@@ -113,13 +119,15 @@ RESTORE_FIXTURE = r"""
 #include "constants/heap.h"
 #include "constants/items.h"
 #include "constants/pokemon.h"
+typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef int BOOL;
+#define TRUE 1
 typedef struct { u16 item; } Pokemon;
 typedef struct { int unused; } Bag;
 typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; } BattleSystem;
-typedef struct { u16 itemsToRestore[PARTY_SIZE]; } BattleContext;
+typedef struct { u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack; } BattleContext;
 
 static u16 sAdded[8][2];
 static int sAdds;
@@ -139,8 +147,10 @@ static BOOL Bag_AddItem(Bag *bag, u16 item, u16 quantity, enum HeapID heapID) {
 @IS_BERRY@
 @GIVE_BACK@
 
+static BattleContext ctx;
+
 static void run(u32 type, const u16 *before, const u16 *after, BattleSystem *bs) {
-    BattleContext ctx;
+    ctx.heldItemsGivenBack = 0;
     bs->count = PARTY_SIZE;
     bs->type = type;
     for (int i = 0; i < PARTY_SIZE; i++) {
@@ -169,6 +179,14 @@ int main(void) {
     run(BATTLE_TYPE_TRAINER, before, after, &bs);
     assert(sAdds == 0);
     assert(bs.party[0].item == ITEM_FOCUS_SASH && bs.party[1].item == ITEM_NONE);
+
+    // Once a battle: what Pickup finds after a battle won, with the items
+    // already back, is not taken back at the battle's end.
+    run(BATTLE_TYPE_NONE, before, after, &bs);
+    bs.party[1].item = ITEM_POTION;
+    sAdds = 0;
+    GiveBackHeldItems(&bs, &ctx);
+    assert(sAdds == 0 && bs.party[1].item == ITEM_POTION && bs.party[0].item == ITEM_FOCUS_SASH);
 
     // Swapped within the party is not gained.
     const u16 swapped[PARTY_SIZE] = { ITEM_NONE, ITEM_FOCUS_SASH, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
