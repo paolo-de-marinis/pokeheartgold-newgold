@@ -7,7 +7,8 @@ presets) are part of his game and live in its data, not here.
 
 The port's own machinery -- the importers that read konefr's tree and write
 this one's data -- is next door in `tools/newgold/import/`, and the ledger
-in `tools/newgold/ledger.py`.
+in `tools/newgold/ledger.py`. The tools the rounds of parallel agents are
+run and merged with, and how a round goes, are in `tools/newgold/rounds/`.
 
 ## The debug ROM
 
