@@ -5186,6 +5186,19 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_MOTOR_DRIVE) == TRUE && moveType == TYPE_ELECTRIC && battlerIdAttacker != battlerIdTarget) {
         script = BATTLE_SUBSCRIPT_ABSORB_AND_SPEED_UP_1_STAGE;
     }
+    // From the fifth generation Lightning Rod and Storm Drain do more than
+    // draw the move: the holder swallows every Electric or Water move aimed at
+    // it, a status move too, and gains a stage of Sp. Atk for it (Pokemon
+    // Central, Parafulmine and Acquascolo; the reference's
+    // BATTLE_SUBSCRIPT_HANDLE_LIGHTNING_ROD_RAISE_SPATK).
+    if (((CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_LIGHTNINGROD) == TRUE && moveType == TYPE_ELECTRIC)
+            || (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_STORM_DRAIN) == TRUE && moveType == TYPE_WATER))
+        && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && battlerIdAttacker != battlerIdTarget) {
+        ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_1_STAGE;
+        ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
+        ctx->battlerIdStatChange = battlerIdTarget;
+        script = BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_SP_ATTACK;
+    }
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_DRY_SKIN) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && BattleMoveTbl(ctx, ctx->moveNoCur)->power) {
         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerIdTarget].maxHp, 4);
         script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;

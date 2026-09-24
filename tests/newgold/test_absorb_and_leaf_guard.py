@@ -75,6 +75,35 @@ class WaterAbsorbTests(unittest.TestCase):
         self.assertNotIn("attacker != defender", dry)
 
 
+
+class LightningRodTests(unittest.TestCase):
+    """From the fifth generation Lightning Rod and Storm Drain swallow an
+    Electric or Water move aimed at the holder, status moves too, for a stage
+    of Sp. Atk (Pokemon Central, Parafulmine and Acquascolo); Gen IV's only
+    drew it and let it hit."""
+
+    def test_the_holder_swallows_the_move(self):
+        body = function(OVERLAY.read_text(), "BattleContext_CheckMoveImmunityFromAbility")
+        start = body.index("ABILITY_LIGHTNINGROD")
+        block = body[start:body.index("}", start)]
+        self.assertIn("ABILITY_LIGHTNINGROD) == TRUE && moveType == TYPE_ELECTRIC", block)
+        self.assertIn("ABILITY_STORM_DRAIN) == TRUE && moveType == TYPE_WATER", block)
+        self.assertIn("battlerIdAttacker != battlerIdTarget", block)
+        self.assertNotIn("power", block)
+        self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_1_STAGE;", block)
+        self.assertIn("ctx->battlerIdStatChange = battlerIdTarget;", block)
+        self.assertIn("script = BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_SP_ATTACK;", block)
+
+    def test_the_script_raises_sp_atk_or_says_the_move_was_useless(self):
+        header = (ROOT / "include/constants/battle_subscript.h").read_text()
+        number = int(re.search(r"#define BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_SP_ATTACK\s+(\d+)", header).group(1))
+        (path,) = SUBSCRIPTS.glob(f"subscript_{number:04d}_*.s")
+        script = path.read_text()
+        self.assertIn("BMON_DATA_STAT_CHANGE_SPATK, 12, _MAXED", script)
+        self.assertIn("Call BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE", script)
+        self.assertIn("msg_0197_00638", script)
+
+
 class LeafGuardTests(unittest.TestCase):
     def test_every_status_asks_for_sunshine_first(self):
         for name in LEAF_GUARD_SUBSCRIPTS:
