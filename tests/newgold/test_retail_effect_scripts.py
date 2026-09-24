@@ -66,7 +66,8 @@ STILL_DIFFERENT = {
     148: "the engine runs the landing back through its before-move sequence; here it is subscript 121's, "
          "worked out by BattleContext_LandFutureSight, and the use keeps retail's flags",
     150: "the doubling against Minimize is the damage chain's here, for every stamping move (BattleMoveStampsOnMinimize), as battle_calc_damage.c 6.9.14.1 does it",
-    151: IN_C.format("the charge turn, BattleController_BeforeMove.c"),
+    151: IN_C.format("the charge turn, BattleController_BeforeMove.c") + "; and a Utility Umbrella holder "
+         "charges in the sun here (Pokemon Central, Superombrello), which the engine does not ask",
     153: "Teleport's switch asks whether Commander holds its user on the field (Pokemon Central, Torre "
          "di Comando); the engine gives Commander no effect",
     161: "Spit Up's power from the stockpile: the engine reads it in CalcBaseDamage.c, and on Parental "

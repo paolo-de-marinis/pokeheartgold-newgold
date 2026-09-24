@@ -84,9 +84,12 @@ class LeafGuardTests(unittest.TestCase):
             self.assertTrue(checks, f"{name} never asks about Leaf Guard")
             lines = text.splitlines()
             for i in checks:
-                window = "\n".join(lines[max(0, i - 2):i])
+                # The sun, unless Cloud Nine or a Utility Umbrella keeps it
+                # off (Pokemon Central, Superombrello).
+                window = "\n".join(lines[max(0, i - 3):i])
                 self.assertIn("FIELD_CONDITION_SUN_ALL", window, name)
                 self.assertIn("CheckIgnoreWeather", window, name)
+                self.assertIn("HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN", lines[i - 1], name)
 
     def test_rest_is_refused_in_the_sun(self):
         text = (SUBSCRIPTS / "subscript_0055_Rest.s").read_text()

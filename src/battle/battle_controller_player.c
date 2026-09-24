@@ -2787,8 +2787,10 @@ static BOOL ov12_0224B398(BattleSystem *battleSystem, BattleContext *ctx) {
         ret = TRUE;
     }
 
-    // Under Mega Sol the user's Solar Beam needs no charge, whatever the field.
-    if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_151 && (BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker) & FIELD_CONDITION_SUN_ALL)) {
+    // Under Mega Sol the user's Solar Beam needs no charge, whatever the
+    // field; a Utility Umbrella holder charges it in the sun (Superombrello).
+    if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_151
+        && (WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), ctx->battlerIdAttacker) & FIELD_CONDITION_SUN_ALL)) {
         quickChargeFlag = TRUE;
     }
 
@@ -3303,8 +3305,10 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
     }
 
     // The weather as the attacker's move sees it: under Mega Sol, the sun's,
-    // whatever the field has, as hg-engine's CalcAccuracy reads it.
-    weather = BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker);
+    // whatever the field has, as hg-engine's CalcAccuracy reads it; the rain
+    // and the sun leave Thunder's and Hurricane's accuracy against a Utility
+    // Umbrella holder as it is (Superombrello).
+    weather = WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker), battlerIdTarget);
 
     // Hurricane is as bad in the sun as Thunder.
     if ((weather & FIELD_CONDITION_SUN_ALL)
@@ -3510,8 +3514,9 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
     }
 
     // Hurricane and the three Storms never miss in the rain, as Thunder. The
-    // weather is the one the attacker's move sees: a Mega Sol user's is sun.
-    if (BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker) & FIELD_CONDITION_RAIN_ALL
+    // weather is the one the attacker's move sees: a Mega Sol user's is sun;
+    // not against a Utility Umbrella holder (Superombrello).
+    if (WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker), battlerIdTarget) & FIELD_CONDITION_RAIN_ALL
         && (BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_THUNDER
             || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_HURRICANE
             || BattleMoveTbl(ctx, move)->effect == MOVE_EFFECT_BLEAKWIND_STORM

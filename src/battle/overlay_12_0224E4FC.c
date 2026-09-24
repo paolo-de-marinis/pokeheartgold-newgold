@@ -1349,10 +1349,11 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
     speed2 = ctx->battleMons[battlerId2].speed * sStatChangeTable[speedStatChange2][0] / sStatChangeTable[speedStatChange2][1];
 
     if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-        if ((ability1 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability1 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) || (ability1 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) || (ability1 == ABILITY_SLUSH_RUSH && ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL))) {
+        // Not under a Utility Umbrella (Superombrello).
+        if ((ability1 == ABILITY_SWIFT_SWIM && WeatherUnderUmbrella(ctx, ctx->fieldCondition, battlerId1) & FIELD_CONDITION_RAIN_ALL) || (ability1 == ABILITY_CHLOROPHYLL && WeatherUnderUmbrella(ctx, ctx->fieldCondition, battlerId1) & FIELD_CONDITION_SUN_ALL) || (ability1 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) || (ability1 == ABILITY_SLUSH_RUSH && ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL))) {
             speed1 *= 2;
         }
-        if ((ability2 == ABILITY_SWIFT_SWIM && ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) || (ability2 == ABILITY_CHLOROPHYLL && ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) || (ability2 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) || (ability2 == ABILITY_SLUSH_RUSH && ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL))) {
+        if ((ability2 == ABILITY_SWIFT_SWIM && WeatherUnderUmbrella(ctx, ctx->fieldCondition, battlerId2) & FIELD_CONDITION_RAIN_ALL) || (ability2 == ABILITY_CHLOROPHYLL && WeatherUnderUmbrella(ctx, ctx->fieldCondition, battlerId2) & FIELD_CONDITION_SUN_ALL) || (ability2 == ABILITY_SAND_RUSH && ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) || (ability2 == ABILITY_SLUSH_RUSH && ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL))) {
             speed2 *= 2;
         }
     }
@@ -3095,6 +3096,20 @@ u32 BattlerMoveWeather(BattleSystem *battleSystem, BattleContext *ctx, int battl
         return 0;
     }
     return ctx->fieldCondition & FIELD_CONDITION_WEATHER;
+}
+
+// A Utility Umbrella keeps the rain and the sun off its holder (Pokemon
+// Central, Superombrello): the holder's own moves and abilities act as if
+// neither were up, and so does a Fire or Water move, or Thunder's accuracy,
+// against it. The weather as it reaches the battler: the one given, less the
+// rain and the sun for a holder. Protosynthesis is not held off
+// (Paleoattivazione); Mega Sol's own sunlight, which no Pokemon in New Gold
+// has, is not told apart.
+u32 WeatherUnderUmbrella(BattleContext *ctx, u32 weather, int battlerId) {
+    if (GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
+        weather &= ~(FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SUN_ALL);
+    }
+    return weather;
 }
 
 // Weather Ball (Pokemon Central, Palla Clima): the weather that counts for it,
@@ -5354,7 +5369,7 @@ BOOL ov12_02253068(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     // is filled by the script, so the party copy is filled with it.
     case ABILITY_HARVEST:
         if (ctx->battleMons[battlerId].hp && ItemIdIsBerry(ctx->recycleItem[battlerId]) == TRUE
-            && (((ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK))
+            && (((WeatherUnderUmbrella(ctx, ctx->fieldCondition, battlerId) & FIELD_CONDITION_SUN_ALL) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK))
                 || (BattleSystem_Random(battleSystem) % 2) == 0)) {
             ctx->itemTemp = ctx->recycleItem[battlerId];
             ctx->recycleItem[battlerId] = 0;
@@ -10016,34 +10031,38 @@ static u16 Battler_PowerConstructForm(BattleContext *ctx, int battlerId) {
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int form;
+    u32 weather;
     BOOL ret = FALSE;
 
     for (i = 0; i < BattleSystem_GetMaxBattlers(battleSystem); i++) {
         ctx->battlerIdTemp = ctx->turnOrder[i];
+        // A Utility Umbrella keeps Castform and Cherrim in the form they take
+        // with no weather, in the rain or the sun (Superombrello).
+        weather = WeatherUnderUmbrella(ctx, ctx->fieldCondition, ctx->battlerIdTemp);
         if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_CASTFORM && ctx->battleMons[ctx->battlerIdTemp].hp && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_FORECAST) {
             if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-                if (!(ctx->fieldCondition & FIELD_CONDITION_WEATHER_CASTFORM) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_NORMAL && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_NORMAL) {
+                if (!(weather & FIELD_CONDITION_WEATHER_CASTFORM) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_NORMAL && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_NORMAL) {
                     ctx->battleMons[ctx->battlerIdTemp].type1 = TYPE_NORMAL;
                     ctx->battleMons[ctx->battlerIdTemp].type2 = TYPE_NORMAL;
                     ctx->battleMons[ctx->battlerIdTemp].form = (u8)CASTFORM_NORMAL;
                     *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
                     ret = TRUE;
                     break;
-                } else if ((ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_FIRE && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_FIRE) {
+                } else if ((weather & FIELD_CONDITION_SUN_ALL) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_FIRE && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_FIRE) {
                     ctx->battleMons[ctx->battlerIdTemp].type1 = TYPE_FIRE;
                     ctx->battleMons[ctx->battlerIdTemp].type2 = TYPE_FIRE;
                     ctx->battleMons[ctx->battlerIdTemp].form = (u8)CASTFORM_SUNNY;
                     *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
                     ret = TRUE;
                     break;
-                } else if ((ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_WATER && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_WATER) {
+                } else if ((weather & FIELD_CONDITION_RAIN_ALL) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_WATER && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_WATER) {
                     ctx->battleMons[ctx->battlerIdTemp].type1 = TYPE_WATER;
                     ctx->battleMons[ctx->battlerIdTemp].type2 = TYPE_WATER;
                     ctx->battleMons[ctx->battlerIdTemp].form = (u8)CASTFORM_RAINY;
                     *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
                     ret = TRUE;
                     break;
-                } else if ((ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_ICE && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_ICE) {
+                } else if ((weather & FIELD_CONDITION_HAIL_ALL) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_ICE && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_ICE) {
                     ctx->battleMons[ctx->battlerIdTemp].type1 = TYPE_ICE;
                     ctx->battleMons[ctx->battlerIdTemp].type2 = TYPE_ICE;
                     ctx->battleMons[ctx->battlerIdTemp].form = (u8)CASTFORM_SNOWY;
@@ -10062,22 +10081,22 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
         }
         if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_CHERRIM && ctx->battleMons[ctx->battlerIdTemp].hp) {
             if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-                if (!(ctx->fieldCondition & FIELD_CONDITION_WEATHER_CASTFORM) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_SUNNY) {
+                if (!(weather & FIELD_CONDITION_WEATHER_CASTFORM) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_SUNNY) {
                     ctx->battleMons[ctx->battlerIdTemp].form = (u8)CHERRIM_CLOUDY;
                     *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
                     ret = TRUE;
                     break;
-                } else if ((ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_CLOUDY) {
+                } else if ((weather & FIELD_CONDITION_SUN_ALL) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_CLOUDY) {
                     ctx->battleMons[ctx->battlerIdTemp].form = (u8)CHERRIM_SUNNY;
                     *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
                     ret = TRUE;
                     break;
-                } else if ((ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_SUNNY) {
+                } else if ((weather & FIELD_CONDITION_RAIN_ALL) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_SUNNY) {
                     ctx->battleMons[ctx->battlerIdTemp].form = (u8)CHERRIM_CLOUDY;
                     *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
                     ret = TRUE;
                     break;
-                } else if ((ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_SUNNY) {
+                } else if ((weather & FIELD_CONDITION_HAIL_ALL) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_SUNNY) {
                     ctx->battleMons[ctx->battlerIdTemp].form = (u8)CHERRIM_CLOUDY;
                     *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
                     ret = TRUE;
@@ -10405,6 +10424,7 @@ static const u16 sPulseMoves[] = {
 
 int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u32 sideCondition, u32 fieldCondition, u16 power, u8 type, u8 battlerIdAttacker, u8 battlerIdTarget, u8 crit) {
     u32 weather;
+    u32 weatherOnTarget;
     int i;
     s32 dmg = 0;
     s32 dmg2 = 0;
@@ -11243,6 +11263,14 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     // for no weather. Solar Blade gathers its light as Solar Beam does and is
     // halved in the same weathers (CalcBaseDamage.c:535 at d0380a487).
     weather = fieldCondition ? BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker) : 0;
+    // A Utility Umbrella keeps the rain and the sun off what its holder's
+    // side of the sum reads (Superombrello): Solar Beam's halving in the rain,
+    // Solar Power, Orichalcum Pulse and Flower Gift's Attack on the
+    // attacker's; Flower Gift's Sp. Def on the target's.
+    weatherOnTarget = calcTarget.item == HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN ? weather & ~(FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SUN_ALL) : weather;
+    if (calcAttacker.item == HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
+        weather &= ~(FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SUN_ALL);
+    }
     if ((weather & FIELD_CONDITION_WEATHER_NO_SUN) && (moveNo == MOVE_SOLAR_BEAM || moveNo == MOVE_SOLAR_BLADE)) {
         movePower /= 2;
     }
@@ -11251,10 +11279,10 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     }
     // Orichalcum Pulse works the sun harder than Solar Power does, and on
     // the physical side. A Utility Umbrella on the one with the ability
-    // takes the Attack away -- but not the sentence the ability prints on
-    // its way in, which the reference has a note of its own about: the
-    // pulse still announces itself from under the umbrella.
-    if ((weather & FIELD_CONDITION_SUN_ALL) && calcAttacker.ability == ABILITY_ORICHALCUM_PULSE && calcAttacker.item != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
+    // takes the Attack away (above) -- but not the sentence the ability
+    // prints on its way in, which the reference has a note of its own about:
+    // the pulse still announces itself from under the umbrella.
+    if ((weather & FIELD_CONDITION_SUN_ALL) && calcAttacker.ability == ABILITY_ORICHALCUM_PULSE) {
         monAtk = monAtk * 4 / 3;
     }
     // Sand Force reads the same weather as everything here, so Cloud Nine
@@ -11276,7 +11304,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     // The target's side's Flower Gift is lost on Mold Breaker, Teravolt and
     // Turboblaze alike, as the reference asks it (MoldBreakerAbilityCheck,
     // CalcBaseDamage.c:1435 at d0380a487).
-    if ((weather & FIELD_CONDITION_SUN_ALL) && SideAbilityNotIgnored(battleSystem, ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLOWER_GIFT)) {
+    if ((weatherOnTarget & FIELD_CONDITION_SUN_ALL) && SideAbilityNotIgnored(battleSystem, ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLOWER_GIFT)) {
         monSpDef = monSpDef * 15 / 10;
     }
 

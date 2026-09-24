@@ -91,16 +91,16 @@ class MegaSolTests(unittest.TestCase):
         self.assertIn("weather = BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker);", function(commands, "DamageCalcDefault"))
         self.assertIn("WeatherBallWeather(BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker),",
                       function(commands, "BtlCmd_CalcWeatherBallParams"))
-        self.assertIn("u32 weather = BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker);",
+        self.assertIn("u32 weather = WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), ctx->battlerIdAttacker);",
                       function(commands, "BtlCmd_WeatherHPRecovery"))
         overlay = OVERLAY.read_text()
         self.assertIn("weather = fieldCondition ? BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker) : 0;",
                       function(overlay, "CalcMoveDamage"))
         self.assertIn("WeatherBallWeather(BattlerMoveWeather(battleSystem, ctx, battlerId),", function(overlay, "GetDynamicMoveType"))
         controller = CONTROLLER.read_text()
-        self.assertIn("weather = BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker);", function(controller, "BattleSystem_CheckMoveHit"))
+        self.assertIn("weather = WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker), battlerIdTarget);", function(controller, "BattleSystem_CheckMoveHit"))
         self.assertEqual(function(controller, "BattleSystem_CheckMoveEffect").count("BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker)"), 2)
-        self.assertIn("(BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker) & FIELD_CONDITION_SUN_ALL)",
+        self.assertIn("(WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), ctx->battlerIdAttacker) & FIELD_CONDITION_SUN_ALL)",
                       function(controller, "ov12_0224B398"))
         # Solar Beam and Solar Blade fire at once; Electro Shot's rain is the
         # field's, as in hg-engine, and Growth is not asked.
@@ -323,6 +323,81 @@ class WeatherAbilityTests(unittest.TestCase):
                          if re.search(r"FLAG_ON, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_\w+_PERMANENT", path.read_text()))
         self.assertEqual(setters, ["subscript_0271_OverworldRain.s", "subscript_0272_OverworldHail.s",
                                    "subscript_0273_OverworldSand.s", "subscript_0294_OverworldSun.s"])
+
+
+class UtilityUmbrellaTests(unittest.TestCase):
+    """A Utility Umbrella keeps the rain and the sun off its holder (Pokemon
+    Central, Superombrello): its own moves and abilities, and what a Fire or
+    Water move and Thunder's accuracy do to it. The reference reaches only
+    Weather Ball, Hydro Steam and Orichalcum Pulse. The damage's worked
+    examples are test_damage_formula's."""
+
+    UMBRELLA = "HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN"
+
+    def test_the_rain_and_the_sun_go_and_nothing_else(self):
+        from test_hold_effects import run_c
+        run_c(r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/battle.h"
+#include "constants/items.h"
+typedef uint32_t u32;
+typedef struct { int item[4]; } BattleContext;
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return ctx->item[battlerId]; }
+""" + function(OVERLAY.read_text(), "WeatherUnderUmbrella") + r"""
+int main(void) {
+    BattleContext ctx = { { 0, HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN, 0, 0 } };
+    assert(WeatherUnderUmbrella(&ctx, FIELD_CONDITION_RAIN, 0) == FIELD_CONDITION_RAIN);
+    assert(WeatherUnderUmbrella(&ctx, FIELD_CONDITION_RAIN, 1) == 0);
+    assert(WeatherUnderUmbrella(&ctx, FIELD_CONDITION_HEAVY_RAIN, 1) == 0);
+    assert(WeatherUnderUmbrella(&ctx, FIELD_CONDITION_SUN_PERMANENT, 1) == 0);
+    assert(WeatherUnderUmbrella(&ctx, FIELD_CONDITION_SANDSTORM, 1) == FIELD_CONDITION_SANDSTORM);
+    assert(WeatherUnderUmbrella(&ctx, FIELD_CONDITION_SNOW_TEMP | FIELD_CONDITION_GRAVITY, 1) == (FIELD_CONDITION_SNOW_TEMP | FIELD_CONDITION_GRAVITY));
+    return 0;
+}
+""")
+
+    def test_every_place_asks_it(self):
+        commands = COMMANDS.read_text()
+        self.assertIn("weather = WeatherUnderUmbrella(ctx, weather, battlerIdTarget);", function(commands, "DamageCalcDefault"))
+        self.assertIn("WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), ctx->battlerIdAttacker)",
+                      function(commands, "BtlCmd_WeatherHPRecovery"))
+        turn = function(commands, "BtlCmd_EndOfTurnWeatherEffect")
+        self.assertIn("u32 weather = WeatherUnderUmbrella(ctx, ctx->fieldCondition, battlerId);", turn)
+        self.assertNotIn("ctx->fieldCondition & FIELD_CONDITION_SUN_ALL", turn)
+        self.assertNotIn("ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL", turn)
+        controller = CONTROLLER.read_text()
+        hit = function(controller, "BattleSystem_CheckMoveEffect")
+        self.assertIn("WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker), battlerIdTarget) & FIELD_CONDITION_RAIN_ALL", hit)
+        overlay = OVERLAY.read_text()
+        calc = function(overlay, "CalcMoveDamage")
+        self.assertLess(calc.index(f"if (calcAttacker.item == {self.UMBRELLA})"), calc.index("MOVE_SOLAR_BEAM || moveNo == MOVE_SOLAR_BLADE"))
+        self.assertIn(f"weatherOnTarget = calcTarget.item == {self.UMBRELLA}", calc)
+        speed = function(overlay, "CheckSortSpeed")
+        for battler in ("battlerId1", "battlerId2"):
+            self.assertEqual(speed.count(f"WeatherUnderUmbrella(ctx, ctx->fieldCondition, {battler})"), 2, battler)
+        self.assertIn("(WeatherUnderUmbrella(ctx, ctx->fieldCondition, battlerId) & FIELD_CONDITION_SUN_ALL)", function(overlay, "ov12_02253068"))
+        forms = function(overlay, "Battler_CheckWeatherFormChange")
+        self.assertIn("weather = WeatherUnderUmbrella(ctx, ctx->fieldCondition, ctx->battlerIdTemp);", forms)
+        self.assertNotIn("ctx->fieldCondition & FIELD_CONDITION_", forms)
+
+    def test_the_scripts_ask_it(self):
+        leaf = 0
+        for name in ("FallAsleep", "Poison", "Burn", "Paralyze", "BadPoison", "Rest", "Yawn"):
+            lines = subscript(name).splitlines()
+            for i, line in enumerate(lines):
+                if "FIELD_CONDITION_SUN_ALL" in line and "OPCODE_FLAG_NOT" in line:
+                    label = line.rsplit(", ", 1)[1]
+                    self.assertRegex(lines[i + 1], rf"CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_\w+, {self.UMBRELLA}, {label}$", name)
+                    self.assertIn("ABILITY_LEAF_GUARD", lines[i + 2], name)
+                    leaf += 1
+        self.assertEqual(leaf, 12)
+        freeze = subscript("Freeze")
+        self.assertLess(freeze.index(f"{self.UMBRELLA}, _011"), freeze.index("FIELD_CONDITION_SUN_ALL, _095"))
+        for effect, weather in ((151, "SUN_ALL"), (330, "RAIN_ALL")):
+            script = (EFFECTS / f"effect_script_{effect:04d}.s").read_text()
+            self.assertLess(script.index(f"BATTLER_CATEGORY_ATTACKER, {self.UMBRELLA}, _006"),
+                            script.index(f"FIELD_CONDITION_{weather}, _028"), effect)
 
 
 class StrongWindsTests(unittest.TestCase):

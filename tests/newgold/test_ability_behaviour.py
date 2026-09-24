@@ -314,6 +314,7 @@ static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs
 static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; return S.random; }
 static u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) { (void)ctx; (void)battlerId; (void)moveNo; return TYPE_NORMAL; }
 static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)battlerId; return ctx->fieldCondition & FIELD_CONDITION_WEATHER; }
+static u32 WeatherUnderUmbrella(BattleContext *ctx, u32 weather, int battlerId) { (void)ctx; (void)battlerId; return weather; }
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &S.move; }
 static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int flag, int battlerId, int ability) {
     (void)bs; (void)ctx; (void)flag; (void)battlerId; (void)ability; return 0;

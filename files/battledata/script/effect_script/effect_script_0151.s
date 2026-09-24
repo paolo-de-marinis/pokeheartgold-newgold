@@ -7,6 +7,8 @@ _000:
     // too (hg-engine's CheckChargeMoves reads the weather its move sees).
     CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_MEGA_SOL, _028
     CheckIgnoreWeather _006
+    // A Utility Umbrella holder charges it in the sun too (Superombrello).
+    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN, _006
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SUN_ALL, _028
 
 _006:

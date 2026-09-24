@@ -1037,7 +1037,19 @@ static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BO
     }
 
     // The weather as the attacker's move sees it: under Mega Sol, the sun's.
+    // Hydro Steam is the Water move the sun helps rather than hinders, and
+    // a Utility Umbrella on the one using it takes that away, leaving the
+    // halving every other Water move gets. Then a Utility Umbrella on the
+    // target keeps the rain and the sun from changing a Fire or Water move
+    // aimed at it (Pokemon Central, Superombrello, Idrovapore), which the
+    // reference does not ask; Hydro Steam's help is its user's alone.
     weather = BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker);
+    if ((weather & FIELD_CONDITION_SUN_ALL) && type == TYPE_WATER && moveNo == MOVE_HYDRO_STEAM
+        && GetBattlerHeldItemEffect(ctx, battlerIdAttacker) != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
+        damage = QMul_RoundDown(damage, UQ412__1_5);
+        weather = 0;
+    }
+    weather = WeatherUnderUmbrella(ctx, weather, battlerIdTarget);
     if (weather & FIELD_CONDITION_RAIN_ALL) {
         switch (type) {
         case TYPE_FIRE:
@@ -1054,18 +1066,7 @@ static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BO
             damage = QMul_RoundDown(damage, UQ412__1_5);
             break;
         case TYPE_WATER:
-            // Hydro Steam is the Water move the sun helps rather than
-            // hinders, and a Utility Umbrella on the one using it takes
-            // that away -- leaving the halving every other Water move
-            // gets, which is what the reference's else does. The item
-            // reaches no further than this in the reference: the rain and
-            // the sun are otherwise read with nobody's items in the
-            // question, and only Orichalcum Pulse excuses it too.
-            if (moveNo == MOVE_HYDRO_STEAM && GetBattlerHeldItemEffect(ctx, battlerIdAttacker) != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
-                damage = QMul_RoundDown(damage, UQ412__1_5);
-            } else {
-                damage = QMul_RoundDown(damage, UQ412__0_5);
-            }
+            damage = QMul_RoundDown(damage, UQ412__0_5);
             break;
         }
     }
@@ -4472,6 +4473,9 @@ BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSystem, BattleContext *ct
 
     u32 type1 = GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL);
     u32 type2 = GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL);
+    // A Utility Umbrella keeps the rain and the sun off its holder's Dry
+    // Skin, Solar Power, Rain Dish and Hydration (Superombrello).
+    u32 weather = WeatherUnderUmbrella(ctx, ctx->fieldCondition, battlerId);
 
     if (CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) == 0 && CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK) == 0) {
         // Safety Goggles keep the sand and the hail off the same way Overcoat
@@ -4485,7 +4489,7 @@ BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSystem, BattleContext *ct
                 ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 16);
             }
         }
-        if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
+        if (weather & FIELD_CONDITION_SUN_ALL) {
             if (ctx->battleMons[battlerId].hp && !(ctx->battleMons[battlerId].moveEffectFlags & 0x40080)) {
                 if (GetBattlerAbility(ctx, battlerId) == ABILITY_DRY_SKIN || GetBattlerAbility(ctx, battlerId) == ABILITY_SOLAR_POWER) {
                     ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp * -1, 8);
@@ -4515,7 +4519,7 @@ BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSystem, BattleContext *ct
                 ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 16);
             }
         }
-        if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
+        if (weather & FIELD_CONDITION_RAIN_ALL) {
             if (ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].hp < ctx->battleMons[battlerId].maxHp && GetBattlerAbility(ctx, battlerId) == ABILITY_RAIN_DISH) {
                 ctx->hpCalc = DamageDivide(ctx->battleMons[battlerId].maxHp, 16);
             }
@@ -4773,7 +4777,9 @@ BOOL BtlCmd_WeatherHPRecovery(BattleSystem *battleSystem, BattleContext *ctx) {
     // Under Mega Sol the user's always heals two thirds, as in the sun. Delta
     // Stream's winds leave it the half it heals in clear weather (hg-engine's
     // BtlCmd_WeatherHPRecovery).
-    u32 weather = BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker);
+    // A Utility Umbrella holder heals the half it heals in clear weather in
+    // the rain or the sun too (Superombrello).
+    u32 weather = WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), ctx->battlerIdAttacker);
 
     if (!weather || (weather & FIELD_CONDITION_STRONG_WINDS)) {
         ctx->hpCalc = ctx->battleMons[ctx->battlerIdAttacker].maxHp / 2;

@@ -4,6 +4,8 @@
 
 _000:
     CheckIgnoreWeather _006
+    // A Utility Umbrella holder charges it in the rain too (Superombrello).
+    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN, _006
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_RAIN_ALL, _028
 
 _006:

@@ -178,6 +178,16 @@ int main(void) {
     reset(); S.ability[0] = ABILITY_MEGA_SOL; EXPECT(calc(), 67);
     ctx.moveType = TYPE_WATER; ctx.fieldCondition = FIELD_CONDITION_RAIN_ALL; EXPECT(calc(), 22);
     S.cloudNine = TRUE; EXPECT(calc(), 22);
+    // A Utility Umbrella on the target keeps the rain off a Water move aimed
+    // at it (Pokemon Central, Superombrello): 45; on the user it does not, 67.
+    reset(); ctx.moveType = TYPE_WATER; ctx.fieldCondition = FIELD_CONDITION_RAIN; S.item[1] = HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN; EXPECT(calc(), 45);
+    S.item[1] = 0; S.item[0] = HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN; EXPECT(calc(), 67);
+    // Hydro Steam in the sun: 67; its user's umbrella leaves it halved, 22;
+    // the target's leaves the user's help, 67, and keeps the halving off, 45.
+    reset(); ctx.moveType = TYPE_WATER; ctx.moveNoCur = MOVE_HYDRO_STEAM; ctx.fieldCondition = FIELD_CONDITION_SUN; EXPECT(calc(), 67);
+    S.item[0] = HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN; EXPECT(calc(), 22);
+    S.item[0] = 0; S.item[1] = HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN; EXPECT(calc(), 67);
+    S.item[0] = HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN; EXPECT(calc(), 45);
 
     // 6.3.5 Glaive Rush on the target: 90.
     reset(); ctx.moveConditions[1].glaiveRush = TRUE; EXPECT(calc(), 90);
@@ -438,7 +448,7 @@ def program():
     overlay = "\n".join([enum, table(OVERLAY, "sTypeEffectiveness"), move_list(OVERLAY, "sMinimizeVulnerableMoves")] + [
         function(OVERLAY, name) for name in (
             "QMul_RoundUp", "QMul_RoundDown", "ov12_02251C74", "ov12_022583B4", "TeraShellResists",
-            "BattlerMoveWeather", "StrongWindsShelterRow", "StrongWindsFor", "StrongWindsWeakenMove",
+            "BattlerMoveWeather", "WeatherUnderUmbrella", "StrongWindsShelterRow", "StrongWindsFor", "StrongWindsWeakenMove",
             "BattlerIsGrounded", "CalcTypeEffectiveness", "MoveIsInList", "BattleMoveStampsOnMinimize")])
     commands = "\n".join(function(COMMANDS, name) for name in (
         "ScreenModifier", "ResistBerryType", "ResistBerryModifier", "RawSpeedGoesFirst", "RawSpeedOrder",
@@ -449,6 +459,7 @@ def program():
                      .replace("BOOL BattlerIsGrounded", "static BOOL BattlerIsGrounded")
                      .replace("BOOL TeraShellResists", "static BOOL TeraShellResists")
                      .replace("u32 BattlerMoveWeather", "static u32 BattlerMoveWeather")
+                     .replace("u32 WeatherUnderUmbrella", "static u32 WeatherUnderUmbrella")
                      .replace("BOOL StrongWindsWeakenMove", "static BOOL StrongWindsWeakenMove")
                      .replace("u32 QMul_", "static u32 QMul_")
                      .replace("BOOL BattleMoveStampsOnMinimize", "static BOOL BattleMoveStampsOnMinimize"))

@@ -213,7 +213,7 @@ class MoldBreakerTests(unittest.TestCase):
             self.assertIn("if ((!AbilityBreaksMolds(abilityAttacker) || item == HOLD_EFFECT_PREVENT_ABILITY_CHANGES) && abilityTarget == ABILITY_" + ability, body)
 
     def test_the_damage_asks_the_side_s_flower_gift_so(self):
-        self.assertIn("(weather & FIELD_CONDITION_SUN_ALL) && SideAbilityNotIgnored(battleSystem, ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLOWER_GIFT)",
+        self.assertIn("(weatherOnTarget & FIELD_CONDITION_SUN_ALL) && SideAbilityNotIgnored(battleSystem, ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLOWER_GIFT)",
                       function(OVERLAY, "CalcMoveDamage"))
 
 
