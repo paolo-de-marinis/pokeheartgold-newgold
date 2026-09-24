@@ -6,6 +6,10 @@ _000:
     CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HEAL_BLOCK_TURNS, 0, _059
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_HP_CALC, BSCRIPT_VAR_HIT_DAMAGE
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_HP_CALC, 0, _037
+    // Half the damage, an odd half rounded up (Pokemon Central, Spruzzate;
+    // Showdown's gen-9 drain rounds): the damage is negative here, and the
+    // division rounds towards zero.
+    UpdateVar OPCODE_ADD, BSCRIPT_VAR_HP_CALC, -1
     DivideVarByValue BSCRIPT_VAR_HP_CALC, 2
     CheckItemHoldEffect CHECK_OPCODE_NOT_HAVE, BATTLER_CATEGORY_ATTACKER, HOLD_EFFECT_LEECH_BOOST, _037
     GetItemEffectParam BATTLER_CATEGORY_ATTACKER, BSCRIPT_VAR_CALC_TEMP

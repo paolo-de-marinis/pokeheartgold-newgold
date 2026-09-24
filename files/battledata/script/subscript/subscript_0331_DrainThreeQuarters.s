@@ -6,7 +6,11 @@ Start:
     UpdateVarFromVar OPCODE_SET, BSCRIPT_VAR_HP_CALC, BSCRIPT_VAR_HIT_DAMAGE
     CompareVarToValue OPCODE_GT, BSCRIPT_VAR_HP_CALC, -1, EndScript
     UpdateVar OPCODE_MUL, BSCRIPT_VAR_HP_CALC, 3
-    DivideVarByValue BSCRIPT_VAR_HP_CALC, 4// Floors var to 1.
+    // Three quarters of the damage, rounded to the nearest and a half up
+    // (Showdown's gen-9 drain rounds): the damage is negative here, and the
+    // division rounds towards zero, and at least 1.
+    UpdateVar OPCODE_ADD, BSCRIPT_VAR_HP_CALC, -2
+    DivideVarByValue BSCRIPT_VAR_HP_CALC, 4
 
 CheckLeechBoost:
     CheckItemHoldEffect CHECK_OPCODE_NOT_HAVE, BATTLER_CATEGORY_ATTACKER, HOLD_EFFECT_LEECH_BOOST, DrainHealth
