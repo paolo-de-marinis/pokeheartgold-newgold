@@ -3,13 +3,12 @@
 #include "application/pokedex/ov18_021F967C.h"
 #include "application/pokedex/pokedex_capture_page.h"
 
-#include "constants/pokemon.h"
-
 typedef char PokedexCapturePageTypeIconsCheck[offsetof(PokedexCapturePage, type2Icon) == 0x218 && offsetof(PokedexCapturePage, type2) == 0x250 ? 1 : -1];
 
 // The capture page's type icons, the first beside the second, which shares the
-// first's palette: none for a second type that is the first, nor for a Normal
-// one.
+// first's palette: none for a second type that is the first. HeartGold also
+// left out a Normal one, which none of its species had second; Litleo,
+// Helioptile, Cyclizar and the others that have it showed a single type.
 void ov18_021F9370(PokedexCapturePage *page) {
     SimpleSpriteTemplate template;
     SpriteResourcesHeader header;
@@ -34,7 +33,7 @@ void ov18_021F9370(PokedexCapturePage *page) {
     template.position.x = FX32_CONST(217);
     template.position.y = FX32_CONST(72);
     page->type2Icon = Sprite_Create(&template);
-    if (page->type2 == TYPE_NORMAL || page->type1 == page->type2) {
+    if (page->type1 == page->type2) {
         Sprite_SetDrawFlag(page->type2Icon, FALSE);
     } else {
         Sprite_SetPalIndexRespectVramOffset(page->type2Icon, ov18_021F9688(page->type2));

@@ -105,6 +105,51 @@ int main(void) {
 """
 
 
+CAPTURE_PAGE = r"""
+#include <assert.h>
+#include <stdio.h>
+#include "constants/pokemon.h"
+typedef unsigned char u8; typedef unsigned int u32;
+#define FALSE 0
+#define FX32_CONST(x) ((x) << 12)
+#define NNS_G2D_VRAM_TYPE_2DMAIN 1
+typedef struct { int unused; } Sprite, SpriteList, SpriteResource, GF_2DGfxResMan, SpriteResourcesHeader;
+typedef struct { int x, y, z; } VecFx32;
+typedef struct {
+    SpriteList *spriteList; const SpriteResourcesHeader *header; VecFx32 position;
+    u32 priority; int whichScreen; int heapID;
+} SimpleSpriteTemplate;
+typedef struct {
+    int heapId; SpriteList *spriteList; GF_2DGfxResMan *resourceManagers[4];
+    Sprite *type1Icon; SpriteResource *type1IconResources[4];
+    Sprite *type2Icon; SpriteResource *type2IconResources[4];
+    u32 type1, type2;
+} PokedexCapturePage;
+static Sprite icons[2];
+static int created, secondDrawn;
+static void ov18_021F9310(SpriteResource **resources, GF_2DGfxResMan **managers, SpriteResourcesHeader *header, int priority) { }
+static int GF2DGfxResObj_GetResID(SpriteResource *resource) { return 0; }
+static void CreateSpriteResourcesHeader(SpriteResourcesHeader *header, ...) { }
+static Sprite *Sprite_Create(const SimpleSpriteTemplate *template) { return &icons[created++ % 2]; }
+static void Sprite_SetPalIndexRespectVramOffset(Sprite *sprite, int index) { }
+static void Sprite_SetDrawFlag(Sprite *sprite, int flag) { if (sprite == &icons[1]) secondDrawn = flag; }
+static u8 ov18_021F9688(int type) { return 0; }
+@NATIVE@
+int main(void) {
+    /* Litleo, Fire and Normal: the second icon stays; Charmander's is hidden */
+    PokedexCapturePage page = { .type1 = TYPE_FIRE, .type2 = TYPE_NORMAL };
+    secondDrawn = 1;
+    ov18_021F9370(&page);
+    assert(secondDrawn);
+    page.type2 = TYPE_FIRE;
+    ov18_021F9370(&page);
+    assert(!secondDrawn);
+    printf("PASS: the capture page shows Litleo's Normal second type, and one icon for a single type.\n");
+    return 0;
+}
+"""
+
+
 class TypeIconTests(unittest.TestCase):
     def test_the_table_holds_every_type_and_the_five_conditions(self):
         want = number_of_types() + CONTEST_CONDITIONS
@@ -135,6 +180,12 @@ class TypeIconTests(unittest.TestCase):
         pc = c_function((ROOT / "src/overlay_14_021F3D70.c").read_text(), "ov14_021F3D70")
         dex = c_function((ROOT / "src/application/pokedex/ov18_021F209C.c").read_text(), "ov18_021F209C")
         run_native(self, SECOND_TYPE.replace("@NATIVE@", pc + "\n" + dex), "newgold-second-type-")
+
+    def test_the_capture_page_draws_a_normal_second_type(self):
+        """The Dex page a new catch opens had the same test (ov18_021F9370);
+        the reference leaves it as it is."""
+        page = c_function((ROOT / "src/application/pokedex/ov18_021F9370.c").read_text(), "ov18_021F9370")
+        run_native(self, CAPTURE_PAGE.replace("@NATIVE@", page), "newgold-capture-types-")
 
 
 if __name__ == "__main__":
