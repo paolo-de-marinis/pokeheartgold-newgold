@@ -1615,10 +1615,14 @@ function renderBag() {
 function renderMachines(pocket) {
   const held = new Map((S.save.bag[pocket.name] || []).map(r => [r.item, r.quantity])), ch = S.tm.changes;
   const count = id => ch.has(id) ? ch.get(id) : held.get(id) || 0;
-  const q = S.tm.q.toLowerCase();
+  // "MT 45", "mt45", "TM045" are one machine: spaces and a number's leading zeros do not count; a machine's code
+  // alone ("MN", "DT 1") is looked for in the codes only, not in the moves' names.
+  const norm = s => s.toLowerCase().replace(/\s+/g, "").replace(/(^|\D)0+(?=\d)/g, "$1");
+  const q = norm(S.tm.q), codeOnly = /^(mt|mn|dt|tm|hm|tr)\d*$/.test(q);
   const rows = S.data.machines.filter(m => {
-    const label = `${machineName(S.items.get(m.item)?.name ?? "")} ${S.moves.get(m.move)?.name ?? ""} ${(TYPES[m.type] || [m.type])[0]}`.toLowerCase();
-    if (q && !label.includes(q)) return false;
+    const item = S.items.get(m.item), codes = [machineName(item?.name ?? ""), item?.name ?? "", item?.const.replace(/^ITEM_/, "") ?? ""].map(norm);
+    const label = norm(`${codes.join(" ")} ${S.moves.get(m.move)?.name ?? ""} ${(TYPES[m.type] || [m.type])[0]}`);
+    if (q && !(codeOnly ? codes.some(c => c.startsWith(q)) : label.includes(q))) return false;
     return S.tm.show === "all" || (S.tm.show === "have") === count(m.item) > 0;
   });
   const used = S.data.machines.filter(m => count(m.item) > 0).length;
@@ -1639,7 +1643,7 @@ function renderMachines(pocket) {
       ${esc(groups.join(", "))}. ${esc(spent.join(", "))} si consuma a ogni uso, per questo ha la quantità; le altre no. Una macchina che un personaggio
       regala, se ce l'hai già, non te la dà: il gioco vede la tasca senza posto e il regalo non avviene.</p>
     <div class="dexlist" style="margin-top:10px">${rows.map(m => {
-      const n = count(m.item), name = machineName(S.items.get(m.item)?.name ?? `#${m.item}`);
+      const n = count(m.item), name = machineName(S.items.get(m.item)?.label ?? S.items.get(m.item)?.name ?? `#${m.item}`);   // two named alike: the constant too
       return `<div class="dexrow ${ch.has(m.item) ? "dirty" : ""}" data-item="${m.item}">
         <span class="n" style="width:4.6em">${esc(name)}</span><span class="nm">${esc(S.moves.get(m.move)?.name ?? m.move)} ${typeBadges([m.type])}</span>
         <label><input type="checkbox" data-k="have" ${n ? "checked" : ""}> ce l'ho</label>
