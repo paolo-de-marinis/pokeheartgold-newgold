@@ -240,8 +240,10 @@ class ParentalBondTests(unittest.TestCase):
     def test_what_waits_for_the_second_strike(self):
         body = function(OVERLAY.read_text(), "ov12_02250490")
         waiting = body[body.index("if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {"):]
-        for script in ("FORCE_TARGET_TO_SWITCH_OR_FLEE", "FELL_STRAIGHT_DOWN", "MEAN_LOOK", "HANDLE_TERRAIN_END"):
+        for script in ("FORCE_TARGET_TO_SWITCH_OR_FLEE", "FELL_STRAIGHT_DOWN", "HANDLE_TERRAIN_END"):
             self.assertIn(f"case BATTLE_SUBSCRIPT_{script}:", waiting)
+        # Anchor Shot's hold is no side effect: it comes once the move is over.
+        self.assertNotIn("MEAN_LOOK", waiting[:waiting.index("return ret;")])
         self.assertIn("!ParentalBond_StrikeToCome(ctx)", function(CONTROLLER.read_text(), "ov12_0224CC88"))
         self.assertIn("!ParentalBond_IsSecondStrike(ctx)", function(COMMANDS.read_text(), "BtlCmd_CalcFuryCutterPower"))
 

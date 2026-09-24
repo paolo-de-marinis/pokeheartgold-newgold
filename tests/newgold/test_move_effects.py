@@ -351,6 +351,73 @@ class PriorityTests(unittest.TestCase):
             self.assertEqual(priority, want, name)
 
 
+HOLD_AFTER_HIT = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+#include "constants/items.h"
+#include "constants/move_effects.h"
+typedef struct { u16 effect; } MoveTbl;
+typedef struct { int physicalDamage, specialDamage; } SelfTurnData;
+typedef struct { int hp; u32 status2; int holdEffect, cameIn; } Mon;
+typedef struct {
+    Mon battleMons[4]; SelfTurnData selfTurnData[4]; u8 turnOrder[4];
+    int battlerIdAttacker, battlerIdStatChange;
+    u32 moveNoCur;
+} BattleContext;
+static MoveTbl move;
+static BOOL sheerForce;
+static int ran;
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &move; }
+static BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].cameIn; }
+static BOOL SheerForceTradedEffect(BattleContext *ctx) { (void)ctx; return sheerForce; }
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].holdEffect; }
+static void RunPostMoveScript(BattleContext *ctx, int script) { (void)ctx; ran = script; }
+@FUNCTIONS@
+static BattleContext ctx;
+static void reset(void) {
+    // A double battle: the user 0 hit both foes, 1 and 3.
+    for (int i = 0; i < 4; i++) {
+        ctx.battleMons[i] = (Mon){ 100, 0, 0, FALSE };
+        ctx.selfTurnData[i] = (SelfTurnData){ i & 1 ? 10 : 0, 0 };
+    }
+    ctx.battlerIdAttacker = 0; ctx.battlerIdStatChange = 0xFF;
+    move.effect = MOVE_EFFECT_PREVENT_ESCAPE_HIT; sheerForce = FALSE; ran = 0;
+}
+static BOOL holds(int battlerId) {
+    ran = 0;
+    if (TryHoldAfterHit(&ctx, battlerId) == FALSE) {
+        assert(ran == 0);
+        return FALSE;
+    }
+    assert(ran == BATTLE_SUBSCRIPT_HOLD_AFTER_HIT && ctx.battlerIdStatChange == battlerId);
+    return TRUE;
+}
+int main(void) {
+    // Both foes it hit, not the user nor the ally it did not hit.
+    reset(); assert(holds(1) && holds(3) && !holds(0) && !holds(2));
+    reset(); ctx.selfTurnData[3].physicalDamage = 0; ctx.selfTurnData[3].specialDamage = 10; assert(holds(3));
+    // Not a Pokemon fainted, come in after the hit, or held already; not once
+    // the user has fainted; not with Sheer Force or through a Covert Cloak.
+    reset(); ctx.battleMons[1].hp = 0; assert(!holds(1) && holds(3));
+    reset(); ctx.battleMons[1].cameIn = TRUE; assert(!holds(1));
+    reset(); ctx.battleMons[1].status2 = STATUS2_MEAN_LOOK; assert(!holds(1));
+    reset(); ctx.battleMons[0].hp = 0; assert(!holds(1) && !holds(3));
+    reset(); sheerForce = TRUE; assert(!holds(1));
+    reset(); ctx.battleMons[1].holdEffect = HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS; assert(!holds(1) && holds(3));
+    // Only the moves that hold.
+    reset(); move.effect = MOVE_EFFECT_HIT; assert(!holds(1));
+    return 0;
+}
+"""
+
+
 class PostMoveEffectsTests(unittest.TestCase):
     """What the moves past retail's effects do once the move is over, as the
     engine's Activate_AdditionalMoveEffects does it
@@ -382,6 +449,17 @@ class PostMoveEffectsTests(unittest.TestCase):
         self.assertIn("if (!ctx->battleMons[ctx->battlerIdAttacker].hp || !ctx->battleMons[target].hp) {", case)
         self.assertIn("script = BATTLE_SUBSCRIPT_JAW_LOCK;", case)
         self.assertNotIn("SIDE_EFFECT", self.effect_script("PREVENT_ESCAPE_BOTH_HIT"))
+
+    def test_the_hold_of_every_pokemon_thousand_waves_or_anchor_shot_hit(self):
+        # Pokemon Central, Colpo d'Ancora and Mille Onde; asked once the move
+        # is over, for each battler in turn.
+        from test_ability_interactions import run_c
+        from test_hold_effects import CONTROLLER
+        run_c(HOLD_AFTER_HIT.replace("@FUNCTIONS@", function(CONTROLLER.read_text(), "TryHoldAfterHit")))
+        body = function(CONTROLLER.read_text(), "ov12_0224E1BC")
+        self.assertLess(body.index("TryAdditionalMoveEffect(ctx)"), body.index("TryHoldAfterHit(ctx, ctx->turnOrder[ctx->unk_34++])"))
+        self.assertLess(body.index("TryHoldAfterHit("), body.index("TryMagician("))
+        self.assertNotIn("SIDE_EFFECT", self.effect_script("PREVENT_ESCAPE_HIT"))
 
 
 if __name__ == "__main__":

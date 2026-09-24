@@ -1639,9 +1639,11 @@ BOOL ov12_022503EC(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
 // ability can ask the same question.
 //
 // Three effects the reference lists by name are not rolled: Psychic Noise's
-// Heal Block and the trap of Thousand Waves, Anchor Shot and Spirit Shackle
-// land after the hit with no chance to roll, and Throat Chop's silence is set
-// by its effect script itself, which asks the ability and the cloak there.
+// Heal Block lands after the hit with no chance to roll, the trap of Thousand
+// Waves, Anchor Shot and Spirit Shackle once the move is over
+// (TryHoldAfterHit, which asks this through SheerForceTradedEffect and the
+// cloak itself), and Throat Chop's silence is set by its effect script
+// itself, which asks the ability and the cloak there.
 // The three Fangs come as a side effect on hit, and their subscript rolls the
 // status and the flinch against the chance itself, one after the other; both
 // are additional effects all the same (Pokemon Central, Forzabruta and
@@ -1958,14 +1960,15 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     }
 
     // What these do waits for Parental Bond's second strike (Pokemon Central,
-    // Amorefiliale): Dragon Tail's switch, Smack Down's fall and Anchor Shot's
-    // trap, and the terrain Steel Roller and Ice Spinner tear up, which Steel
-    // Roller needs for its second strike. The reference does these after the
-    // move; here they come with the hit, so the first strike leaves them to
-    // the second, unless the first was the last. (The cure Smelling Salts and
-    // Wake-Up Slap give, Knock Off's knocking, Thief's taking and Pluck's
-    // eating are post-move steps here too, TryAdditionalMoveEffect, and
-    // U-turn's switch is TryPivotSwitch.)
+    // Amorefiliale): Dragon Tail's switch and Smack Down's fall, and the
+    // terrain Steel Roller and Ice Spinner tear up, which Steel Roller needs
+    // for its second strike. The reference does these after the move; here
+    // they come with the hit, so the first strike leaves them to the second,
+    // unless the first was the last. (The cure Smelling Salts and Wake-Up Slap
+    // give, Knock Off's knocking, Thief's taking, Pluck's eating, and the
+    // holds and hazards of the moves past retail's are post-move steps here
+    // too, TryAdditionalMoveEffect and TryHoldAfterHit, and U-turn's switch is
+    // TryPivotSwitch.)
     //
     // The first strike can still prove the last once these have been asked:
     // Effect Spore puts the user to sleep, and the move ends there (Pokemon
@@ -1978,7 +1981,6 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         switch (*out) {
         case BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE:
         case BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN:
-        case BATTLE_SUBSCRIPT_MEAN_LOOK:
         case BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END:
             ctx->parentalBondDeferred = sideEffect;
             ret = FALSE;

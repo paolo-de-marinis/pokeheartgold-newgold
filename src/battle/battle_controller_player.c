@@ -5380,6 +5380,35 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
     return TRUE;
 }
 
+// Thousand Waves, Anchor Shot and Spirit Shackle hold each Pokemon they hit
+// where Mean Look holds one, once the move is over: the engine's
+// Activate_AdditionalMoveEffects (ServerDoPostMoveEffects.c:1189 at
+// d0380a487, the PREVENT_ESCAPE_HIT case), which holds its one target. Here
+// every Pokemon the move hit is asked, so Thousand Waves holds both foes of a
+// double battle (Pokemon Central, Mille Onde: those it hits). Not one that
+// has fainted or came in after the hit, one behind a substitute -- which
+// records no damage -- or one held already; not once the user has fainted,
+// as the hold lasts only while it stays in (Colpo d'Ancora); and not when
+// Sheer Force traded the hold for power or the Pokemon's Covert Cloak keeps
+// it off (IsSuppressibleSecondaryEffect). The Pokemon is the side-effect
+// battler of subscript 461.
+static BOOL TryHoldAfterHit(BattleContext *ctx, int battlerId) {
+    int attacker = ctx->battlerIdAttacker;
+
+    if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect != MOVE_EFFECT_PREVENT_ESCAPE_HIT
+        || battlerId == attacker || !ctx->battleMons[attacker].hp || !ctx->battleMons[battlerId].hp
+        || !(ctx->selfTurnData[battlerId].physicalDamage || ctx->selfTurnData[battlerId].specialDamage)
+        || Battler_CameInAfterTheHit(ctx, battlerId)
+        || (ctx->battleMons[battlerId].status2 & STATUS2_MEAN_LOOK)
+        || SheerForceTradedEffect(ctx)
+        || GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS) {
+        return FALSE;
+    }
+    ctx->battlerIdStatChange = battlerId;
+    RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_HOLD_AFTER_HIT);
+    return TRUE;
+}
+
 // U-turn, Volt Switch and Flip Turn take their user out once the move is
 // over: the engine's Activate_Switch (ServerDoPostMoveEffects.c:2120 at
 // d0380a487), the step after Emergency Exit and Wimp Out, for a user still
@@ -5441,7 +5470,22 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 flag = 1;
             }
             break;
-        case 3: {
+        case 3:
+            // The hold Thousand Waves, Anchor Shot and Spirit Shackle put on
+            // each Pokemon they hit, one at a time in the order the battlers
+            // act; see TryHoldAfterHit.
+            while (ctx->unk_34 < maxBattlers) {
+                if (TryHoldAfterHit(ctx, ctx->turnOrder[ctx->unk_34++]) == TRUE) {
+                    flag = 1;
+                    break;
+                }
+            }
+            if (flag == 0) {
+                ctx->unk_30++;
+                ctx->unk_34 = 0;
+            }
+            break;
+        case 4: {
             int script;
 
             ctx->unk_30++;
@@ -5453,7 +5497,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 4:
+        case 5:
             // A Red Card, then an Eject Button, on anything the move hurt,
             // once the move is over and before the user's own Shell Bell and
             // Life Orb, which is where the reference asks them. The card goes
@@ -5495,7 +5539,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 5:
+        case 6:
             // Neither the Shell Bell nor the Life Orb below answers a move
             // Sheer Force powered (Pokemon Central, Forzabruta; the
             // reference's ServerDoPostMoveEffects.c:1508 at d0380a487).
@@ -5518,7 +5562,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 6:
+        case 7:
             if (item == HOLD_EFFECT_HP_DRAIN_ON_ATK
                 && !SheerForceTradedEffect(ctx)
                 && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD
@@ -5536,7 +5580,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 7:
+        case 8:
             // Parting Shot's user goes back once the move is over, if the
             // move changed a stat of its target (Pokemon Central, Monito; the
             // reference's Activate_Switch, ServerDoPostMoveEffects.c:2149 at
@@ -5578,7 +5622,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 8: {
+        case 9: {
             // Pickpocket, once the move is over and before U-turn's user
             // leaves; see TryPickpocket.
             int script;
@@ -5592,7 +5636,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 9:
+        case 10:
             // A Throat Spray answers the attacker using a sound move, and that
             // is the whole of the reference's condition: not that the move hit,
             // not that there was anything to hit, and not that Sp. Atk had room
@@ -5621,7 +5665,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_34 = 0;
             }
             break;
-        case 10:
+        case 11:
             // An Eject Pack on anyone who had a stat lowered during the move,
             // after the user's own items, where the reference asks it; not
             // once an Eject Button has sent somebody away, or after a
@@ -5645,7 +5689,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 11:
+        case 12:
             // Steel Beam and Mind Blown cost their user half its maximum HP,
             // rounded up, once the move is over, whether it hit or not; only
             // Magic Guard spares it (Pokemon Central, Raggio d'Acciaio,
@@ -5665,7 +5709,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_30++;
             break;
-        case 12: {
+        case 13: {
             // Emergency Exit and Wimp Out, one Pokemon at a time: this step
             // comes round again after each, until none is left to go.
             int script;
@@ -5680,13 +5724,13 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         }
-        case 13:
+        case 14:
             ctx->unk_30++;
             if (TryPivotSwitch(ctx) == TRUE) {
                 flag = 1;
             }
             break;
-        case 14:
+        case 15:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;

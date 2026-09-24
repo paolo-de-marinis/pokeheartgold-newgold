@@ -778,6 +778,9 @@
 // Instruct telling its target to move again, which the reference has no
 // script for.
 #define BATTLE_SUBSCRIPT_INSTRUCT                           460
+// The hold Thousand Waves, Anchor Shot and Spirit Shackle put on a Pokemon
+// they hit, once the move is over (TryHoldAfterHit).
+#define BATTLE_SUBSCRIPT_HOLD_AFTER_HIT                     461
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
