@@ -115,6 +115,12 @@ int main(void) {
     S.ability[0] = S.ability[1] = ABILITY_CONTRARY;
     assert(CheckBattlerAbilityIfNotIgnored(&ctx, 0, 0, ABILITY_CONTRARY));
     assert(!CheckBattlerAbilityIfNotIgnored(&ctx, 0, 1, ABILITY_CONTRARY));
+    // Photon Geyser passes the target's ability by as the two do, used
+    // directly (Pokemon Central, Geyser Fotonico).
+    ctx.moveNoCur = ctx.moveNoTemp = MOVE_PHOTON_GEYSER;
+    assert(!CheckBattlerAbilityIfNotIgnored(&ctx, 0, 1, ABILITY_CONTRARY));
+    ctx.moveNoTemp = MOVE_METRONOME;
+    assert(CheckBattlerAbilityIfNotIgnored(&ctx, 0, 1, ABILITY_CONTRARY));
     // Mycelium Might passes the rod by with a status move alone.
     reset();
     S.move.category = CATEGORY_STATUS;

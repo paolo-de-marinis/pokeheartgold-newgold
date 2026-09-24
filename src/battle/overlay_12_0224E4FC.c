@@ -3773,13 +3773,13 @@ u16 GetBattlerAbility(BattleContext *ctx, int battlerId) {
 
 // Teravolt and Turboblaze ignore the target's ability exactly as Mold Breaker
 // does; Mycelium Might does so only while what it is using is a status move.
-// Sunsteel Strike and Moongeist Beam ignore it too, whoever uses them, but
-// only used directly and not called by another move such as Metronome
-// (Pokemon Central, Astrocarica, Raggio d'Ombra; the reference's
-// MoldBreakerAbilityCheckInternal asks the two by number).
+// Sunsteel Strike, Moongeist Beam and Photon Geyser ignore it too, whoever
+// uses them, but only used directly and not called by another move such as
+// Metronome (Pokemon Central, Astrocarica, Raggio d'Ombra, Geyser Fotonico;
+// the reference's MoldBreakerAbilityCheckInternal asks the three by number).
 static BOOL BattlerIgnoresAbilities(BattleContext *ctx, int battlerId) {
     if (battlerId == ctx->battlerIdAttacker && ctx->moveNoCur == ctx->moveNoTemp
-        && (ctx->moveNoCur == MOVE_SUNSTEEL_STRIKE || ctx->moveNoCur == MOVE_MOONGEIST_BEAM)) {
+        && (ctx->moveNoCur == MOVE_SUNSTEEL_STRIKE || ctx->moveNoCur == MOVE_MOONGEIST_BEAM || ctx->moveNoCur == MOVE_PHOTON_GEYSER)) {
         return TRUE;
     }
     switch (GetBattlerAbility(ctx, battlerId)) {
@@ -11269,9 +11269,11 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
 // special otherwise, a tie going either way at random (Pokemon Central,
 // Armaguscio). The forecast is made once, as the move is used, from the stats
 // and their stages alone -- no item or ability -- with Wonder Room swapping
-// the target's two stages but not its two stats, as the page has it; what it
-// decides is kept for the rest of the action.
-void ShellSideArm_ChooseCategory(BattleSystem *battleSystem, BattleContext *ctx) {
+// the target's two stages but not its two stats, as the page has it. Photon
+// Geyser is physical when its user's Attack is higher than its Sp. Atk, their
+// stages counted and nothing else (Pokemon Central, Geyser Fotonico). What
+// either decides is kept for the rest of the action.
+void ChooseMoveCategory(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleMon *attacker = &ctx->battleMons[ctx->battlerIdAttacker];
     BattleMon *target;
     int defStage;
@@ -11280,7 +11282,12 @@ void ShellSideArm_ChooseCategory(BattleSystem *battleSystem, BattleContext *ctx)
     s32 physical;
     s32 special;
 
-    ctx->selfTurnData[ctx->battlerIdAttacker].shellSideArmPhysical = FALSE;
+    ctx->selfTurnData[ctx->battlerIdAttacker].physicalChosen = FALSE;
+    if (ctx->moveNoCur == MOVE_PHOTON_GEYSER) {
+        ctx->selfTurnData[ctx->battlerIdAttacker].physicalChosen = BattleStatWithStage(attacker->atk, attacker->statChanges[STAT_ATK])
+            > BattleStatWithStage(attacker->spAtk, attacker->statChanges[STAT_SPATK]);
+        return;
+    }
     if (ctx->moveNoCur != MOVE_SHELL_SIDE_ARM || ctx->battlerIdTarget == BATTLER_NONE) {
         return;
     }
@@ -11290,13 +11297,13 @@ void ShellSideArm_ChooseCategory(BattleSystem *battleSystem, BattleContext *ctx)
     base = (attacker->level * 2 / 5 + 2) * BattleMoveTbl(ctx, MOVE_SHELL_SIDE_ARM)->power;
     physical = base * (s32)BattleStatWithStage(attacker->atk, attacker->statChanges[STAT_ATK]) / (s32)BattleStatWithStage(target->def, defStage) / 50;
     special = base * (s32)BattleStatWithStage(attacker->spAtk, attacker->statChanges[STAT_SPATK]) / (s32)BattleStatWithStage(target->spDef, spDefStage) / 50;
-    ctx->selfTurnData[ctx->battlerIdAttacker].shellSideArmPhysical = physical > special || (physical == special && (BattleSystem_Random(battleSystem) & 1));
+    ctx->selfTurnData[ctx->battlerIdAttacker].physicalChosen = physical > special || (physical == special && (BattleSystem_Random(battleSystem) & 1));
 }
 
 // The category a move has as this attacker uses it: the table's, but for a
-// Shell Side Arm forecast to be physical.
+// Shell Side Arm or a Photon Geyser ChooseMoveCategory made physical.
 int BattleMoveCategory(BattleContext *ctx, u32 moveNo, int battlerIdAttacker) {
-    if (moveNo == MOVE_SHELL_SIDE_ARM && battlerIdAttacker < BATTLER_MAX && ctx->selfTurnData[battlerIdAttacker].shellSideArmPhysical) {
+    if ((moveNo == MOVE_SHELL_SIDE_ARM || moveNo == MOVE_PHOTON_GEYSER) && battlerIdAttacker < BATTLER_MAX && ctx->selfTurnData[battlerIdAttacker].physicalChosen) {
         return CATEGORY_PHYSICAL;
     }
     return BattleMoveTbl(ctx, moveNo)->category;

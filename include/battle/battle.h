@@ -135,9 +135,9 @@ typedef struct SelfTurnData {
     // Dragon Tail or Circle Throw hit this Pokemon: it is dragged out once
     // the hit has been answered (ov12_0224E1BC).
     u32 dragPending : 1;
-    // Shell Side Arm: the move being used is physical this time, as
-    // ShellSideArm_ChooseCategory forecast when it was used.
-    u32 shellSideArmPhysical : 1;
+    // Shell Side Arm or Photon Geyser: the move being used is physical this
+    // time, as ChooseMoveCategory decided when it was used.
+    u32 physicalChosen : 1;
     u32 unk0_11 : 14;
     int physicalDamage;
     int battlerIdPhysicalAttacker;

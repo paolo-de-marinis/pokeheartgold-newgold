@@ -314,7 +314,7 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertImplemented("MOONGEIST_BEAM", "MOVE_EFFECT_HIT")
         ignores = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "BattlerIgnoresAbilities")
         self.assertIn("if (battlerId == ctx->battlerIdAttacker && ctx->moveNoCur == ctx->moveNoTemp\n"
-                      "        && (ctx->moveNoCur == MOVE_SUNSTEEL_STRIKE || ctx->moveNoCur == MOVE_MOONGEIST_BEAM)) {\n"
+                      "        && (ctx->moveNoCur == MOVE_SUNSTEEL_STRIKE || ctx->moveNoCur == MOVE_MOONGEIST_BEAM || ctx->moveNoCur == MOVE_PHOTON_GEYSER)) {\n"
                       "        return TRUE;", ignores)
 
     def test_steel_beam_and_mind_blown_cost_half_the_user_s_hp(self):
@@ -585,7 +585,7 @@ class ImplementedMoveTests(unittest.TestCase):
         program = HEADER + r"""
 typedef struct { int unused; } BattleSystem;
 typedef struct { u16 atk, def, spAtk, spDef; u8 level; s8 statChanges[8]; } BattleMon;
-typedef struct { int shellSideArmPhysical; } SelfTurnData;
+typedef struct { int physicalChosen; } SelfTurnData;
 typedef struct {
     int battlerIdAttacker, battlerIdTarget; u32 moveNoCur; u8 wonderRoomTurns;
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
@@ -595,7 +595,7 @@ static MoveTbl sMove = { 90, CATEGORY_SPECIAL };
 static int sRandom;
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &sMove; }
 static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; return sRandom; }
-""" + table + "\n" + function(overlay, "BattleStatWithStage") + "\n" + function(overlay, "ShellSideArm_ChooseCategory") + "\n" + function(overlay, "BattleMoveCategory") + r"""
+""" + table + "\n" + function(overlay, "BattleStatWithStage") + "\n" + function(overlay, "ChooseMoveCategory") + "\n" + function(overlay, "BattleMoveCategory") + r"""
 static BattleContext ctx;
 static BattleSystem bs;
 static void reset(void) {
@@ -608,26 +608,35 @@ static void reset(void) {
 #define CATEGORY() BattleMoveCategory(&ctx, MOVE_SHELL_SIDE_ARM, 0)
 int main(void) {
     // A tie: at random.
-    reset(); sRandom = 0; ShellSideArm_ChooseCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_SPECIAL);
-    reset(); sRandom = 1; ShellSideArm_ChooseCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_PHYSICAL);
+    reset(); sRandom = 0; ChooseMoveCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_SPECIAL);
+    reset(); sRandom = 1; ChooseMoveCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_PHYSICAL);
     // The higher Attack, or the softer Defense, makes it physical.
-    reset(); ctx.battleMons[0].atk = 120; ShellSideArm_ChooseCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_PHYSICAL);
-    reset(); ctx.battleMons[1].spDef = 60; ShellSideArm_ChooseCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_SPECIAL);
+    reset(); ctx.battleMons[0].atk = 120; ChooseMoveCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_PHYSICAL);
+    reset(); ctx.battleMons[1].spDef = 60; ChooseMoveCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_SPECIAL);
     // Stages count: +2 Sp. Atk against a Defense 50 higher.
-    reset(); ctx.battleMons[0].atk = 150; ctx.battleMons[0].statChanges[STAT_SPATK] = 8; ShellSideArm_ChooseCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_SPECIAL);
+    reset(); ctx.battleMons[0].atk = 150; ctx.battleMons[0].statChanges[STAT_SPATK] = 8; ChooseMoveCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_SPECIAL);
     // Wonder Room swaps the stages it reads, not the stats: the target's -2
     // Defense stage counts against the Sp. Def.
-    reset(); ctx.battleMons[1].statChanges[STAT_DEF] = 4; ShellSideArm_ChooseCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_PHYSICAL);
-    ctx.wonderRoomTurns = 3; ShellSideArm_ChooseCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_SPECIAL);
+    reset(); ctx.battleMons[1].statChanges[STAT_DEF] = 4; ChooseMoveCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_PHYSICAL);
+    ctx.wonderRoomTurns = 3; ChooseMoveCategory(&bs, &ctx); EXPECT(CATEGORY(), CATEGORY_SPECIAL);
     // Another move keeps its table's category.
     EXPECT(BattleMoveCategory(&ctx, MOVE_SLUDGE_BOMB, 0), CATEGORY_SPECIAL);
+    // Photon Geyser is physical on the higher Attack, stages counted and the
+    // target not asked; a tie stays special (Pokemon Central, Geyser
+    // Fotonico).
+#define GEYSER() BattleMoveCategory(&ctx, MOVE_PHOTON_GEYSER, 0)
+    reset(); ctx.moveNoCur = MOVE_PHOTON_GEYSER; sRandom = 1; ChooseMoveCategory(&bs, &ctx); EXPECT(GEYSER(), CATEGORY_SPECIAL);
+    ctx.battleMons[0].atk = 101; ChooseMoveCategory(&bs, &ctx); EXPECT(GEYSER(), CATEGORY_PHYSICAL);
+    ctx.battleMons[1].def = 1000; ChooseMoveCategory(&bs, &ctx); EXPECT(GEYSER(), CATEGORY_PHYSICAL);
+    ctx.battleMons[0].statChanges[STAT_SPATK] = 7; ChooseMoveCategory(&bs, &ctx); EXPECT(GEYSER(), CATEGORY_SPECIAL);
+    ctx.battlerIdTarget = BATTLER_NONE; ctx.battleMons[0].statChanges[STAT_ATK] = 8; ChooseMoveCategory(&bs, &ctx); EXPECT(GEYSER(), CATEGORY_PHYSICAL);
     return 0;
 }
 """
         run_c(self, program)
         self.assertIn("if (moveNo == MOVE_SHELL_SIDE_ARM) {\n        return BattleMoveCategory(ctx, moveNo, ctx->battlerIdAttacker) == CATEGORY_PHYSICAL;",
                       function(overlay, "BattleMoveMakesContact"))
-        self.assertIn("ShellSideArm_ChooseCategory(battleSystem, ctx);",
+        self.assertIn("ChooseMoveCategory(battleSystem, ctx);",
                       function((ROOT / "src/battle/battle_controller_player.c").read_text(), "NoteMoveUsed"))
 
     def test_synchronoise_hurts_only_a_pokemon_that_shares_a_type(self):

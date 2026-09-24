@@ -119,7 +119,7 @@ BOOL TryHeldItemNegativeEffect(BattleSystem *battleSystem, BattleContext *ctx, i
 u16 GetBattlerHeldItem(BattleContext *ctx, int battlerId);
 u8 *Battler_RageFistHits(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 int BattleMoveCategory(BattleContext *ctx, u32 moveNo, int battlerIdAttacker);
-void ShellSideArm_ChooseCategory(BattleSystem *battleSystem, BattleContext *ctx);
+void ChooseMoveCategory(BattleSystem *battleSystem, BattleContext *ctx);
 BOOL ov12_0225561C(BattleContext *ctx, int battlerId);
 BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script);
 int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int holdEffect);

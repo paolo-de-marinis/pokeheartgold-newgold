@@ -3559,7 +3559,7 @@ static void NoteMoveUsed(BattleSystem *battleSystem, BattleContext *ctx) {
     }
     ctx->moveUsedBefore = ctx->moveUsedLast;
     ctx->moveUsedLast = ctx->moveNoCur;
-    ShellSideArm_ChooseCategory(battleSystem, ctx);
+    ChooseMoveCategory(battleSystem, ctx);
     // Echoed Voice counts a turn a move of it was used in, failed or not;
     // one the user could not act in does not count (Pokemon Central,
     // Echeggiavoce).
