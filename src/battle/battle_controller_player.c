@@ -5270,6 +5270,7 @@ static BOOL TryRecoil(BattleContext *ctx) {
 // Amorefiliale, for what waits for the second).
 static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
     int target = ctx->battlerIdTarget;
+    int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
     int script;
 
     // Dragon Tail and Circle Throw drag their target out now that it has
@@ -5289,7 +5290,7 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
     if (target == BATTLER_NONE || (ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
         return FALSE;
     }
-    switch (BattleMoveTbl(ctx, ctx->moveNoCur)->effect) {
+    switch (effect) {
     // Smelling Salts and Wake-Up Slap cure what they doubled against, if the
     // hit reached the Pokemon (Pokemon Central, Maniereforti: even for no
     // damage). A substitute that took it keeps the Pokemon behind it as it
@@ -5318,6 +5319,19 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         }
         ctx->battlerIdStatChange = target;
         script = BATTLE_SUBSCRIPT_BIND_START;
+        break;
+    // Stone Axe and Ceaseless Edge lay pointed stones or a layer of Spikes on
+    // the target's side once the move is over, if the user still stands
+    // (Pokemon Central, Rocciascure and Lama Milleflutti: not once Iron
+    // Barbs, Rough Skin or a Rocky Helmet has felled it); a substitute that
+    // took the hit stops neither. Subscripts 386 and 387 leave the stones
+    // that are there and a fourth layer unlaid.
+    case MOVE_EFFECT_STEALTH_ROCK_HIT:
+    case MOVE_EFFECT_SET_SPIKES_HIT:
+        if (!ctx->battleMons[ctx->battlerIdAttacker].hp) {
+            return FALSE;
+        }
+        script = effect == MOVE_EFFECT_STEALTH_ROCK_HIT ? BATTLE_SUBSCRIPT_SET_STEALTH_ROCK : BATTLE_SUBSCRIPT_SET_SPIKES;
         break;
     // Knock Off takes the target's item once the move is over: not if the
     // user has fainted to Rough Skin, Aftermath or the like, and from a target

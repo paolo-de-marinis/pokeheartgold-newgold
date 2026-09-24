@@ -2,10 +2,11 @@
 
     .data
 
-// The Spikes half of Ceaseless Edge. TrySpikes is the same command effect
-// script 112 uses, so the third layer refuses here too; it just refuses
-// quietly, because the move has already done its damage and has nothing left
-// to fail at.
+// The Spikes half of Ceaseless Edge, run once the move is over
+// (TryAdditionalMoveEffect). TrySpikes is the same command effect script 112
+// uses, so the fourth layer refuses here too; it just refuses quietly,
+// because the move has already done its damage and has nothing left to fail
+// at.
 _000:
     TrySpikes _END
     AddEntryHazardToQueue BATTLER_CATEGORY_DEFENDER, HAZARD_IDX_SPIKES

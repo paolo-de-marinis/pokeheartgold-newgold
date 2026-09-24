@@ -213,8 +213,6 @@ UNREAD_HERE = {
     "SP_ATK_DOWN_3": "unused",
     "SP_DEF_DOWN_3": "unused",
     "PREVENT_ESCAPE_BOTH_HIT": "script: the side effect runs Jaw Lock's subscript after the damage",
-    "STEALTH_ROCK_HIT": "script: an ON_HIT side effect lays the stones after the damage",
-    "SET_SPIKES_HIT": "script: an ON_HIT side effect lays the spikes after the damage",
     "HIT_THREE_TIMES_ALWAYS_CRITICAL": "script: it asks for CRITICAL_STAGE_ALWAYS on every hit, which CalcCrit reads as a sure critical",
     "MORTAL_SPIN": "script: an ON_HIT side effect runs subscript 403, the poison and then Rapid Spin's clearing",
     "ADD_TYPE_GRASS": "script: subscript 325 fails behind a substitute, as the reference's substitute list does",
@@ -230,7 +228,7 @@ UNREAD_HERE = {
 
 class WhatIsStillMissingTests(unittest.TestCase):
     # A ratchet, not a target: the table above may only shrink.
-    STILL_UNREAD = 41
+    STILL_UNREAD = 39
 
     def test_the_table_only_ever_shrinks(self):
         self.assertLessEqual(
@@ -352,6 +350,33 @@ class PriorityTests(unittest.TestCase):
             start, _ = spans[moves[name]]
             priority = struct.unpack_from("<b", data, body + start + 10)[0]
             self.assertEqual(priority, want, name)
+
+
+class PostMoveEffectsTests(unittest.TestCase):
+    """What the moves past retail's effects do once the move is over, as the
+    engine's Activate_AdditionalMoveEffects does it
+    (ServerDoPostMoveEffects.c:1095 at d0380a487), where the scripts here
+    did it with the hit."""
+
+    @staticmethod
+    def case(label):
+        from test_hold_effects import CONTROLLER
+        step = function(CONTROLLER.read_text(), "TryAdditionalMoveEffect")
+        case = step[step.index(label):]
+        return case[:case.index("break;")]
+
+    @staticmethod
+    def effect_script(name):
+        number = int(re.search(rf"#define MOVE_EFFECT_{name}\s+(\d+)", EFFECTS_H.read_text()).group(1))
+        return next((ROOT / "files/battledata/script/effect_script").glob(f"effect_script_{number:04d}*.s")).read_text()
+
+    def test_stone_axe_and_ceaseless_edge_lay_them_if_the_user_stands(self):
+        # Pokemon Central, Rocciascure and Lama Milleflutti.
+        case = self.case("case MOVE_EFFECT_STEALTH_ROCK_HIT:\n    case MOVE_EFFECT_SET_SPIKES_HIT:")
+        self.assertIn("if (!ctx->battleMons[ctx->battlerIdAttacker].hp) {\n            return FALSE;", case)
+        self.assertIn("BATTLE_SUBSCRIPT_SET_STEALTH_ROCK : BATTLE_SUBSCRIPT_SET_SPIKES;", case)
+        for name in ("STEALTH_ROCK_HIT", "SET_SPIKES_HIT"):
+            self.assertNotIn("SIDE_EFFECT", self.effect_script(name), name)
 
 
 if __name__ == "__main__":
