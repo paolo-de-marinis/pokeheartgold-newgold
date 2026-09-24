@@ -1885,44 +1885,48 @@ void ov18_021E8648(PokedexAppData *pokedexApp) {
     Heap_Free(pokedexApp->unk_18DC.unk_28);
 }
 
+// The archive is the two drawing tables, then eight blocks, one a method,
+// of one record a Dex species from species 0 to the last
+// (tools/newgold/devkit/dex_areas.py writes them from the wild data).
+#define ZUKAN_ENC_BLOCK(method) (NARC_zukan_enc_zukan_enc_00000002 + (method) * (NATIONAL_DEX_COUNT + 1))
+
 static void ov18_021E8698(PokedexAppData_UnkSub18DC_0 *a0, u16 species, int a2) {
     int base;
     u32 size;
 
     switch (a2) {
     case 0:
-        base = NARC_zukan_enc_zukan_enc_00000002; // 0 * 495 + 2
+        base = ZUKAN_ENC_BLOCK(0);
         break;
     case 1:
-        base = NARC_zukan_enc_zukan_enc_00000497; // 1 * 495 + 2
+        base = ZUKAN_ENC_BLOCK(1);
         break;
     case 2:
-        base = NARC_zukan_enc_zukan_enc_00000992; // 2 * 495 + 2
+        base = ZUKAN_ENC_BLOCK(2);
         break;
     case 3:
-        base = NARC_zukan_enc_zukan_enc_00002972; // 6 * 495 + 2
+        base = ZUKAN_ENC_BLOCK(6);
         break;
     case 4:
-        base = NARC_zukan_enc_zukan_enc_00001487; // 3 * 495 + 2
+        base = ZUKAN_ENC_BLOCK(3);
         break;
     case 5:
-        base = NARC_zukan_enc_zukan_enc_00001982; // 4 * 495 + 2
+        base = ZUKAN_ENC_BLOCK(4);
         break;
     case 6:
-        base = NARC_zukan_enc_zukan_enc_00002477; // 5 * 495 + 2
+        base = ZUKAN_ENC_BLOCK(5);
         break;
     case 7:
-        base = NARC_zukan_enc_zukan_enc_00003467; // 7 * 495 + 2
+        base = ZUKAN_ENC_BLOCK(7);
         break;
     }
-    // Each method's block is 495 records long, one a species up to the egg,
-    // and the archive is retail's. A species past that has no map of its own,
-    // and reading on would hand it the next method's records: it reads the
-    // egg's, which holds only the terminator, and the page says "Area
-    // Unknown". Every record has its terminator, and ov18_021E8528 sizes the
-    // merged list as one plus each record's count less one: four empty
-    // records made that -3, a 4-byte block written past its end.
-    if (species > SPECIES_EGG) {
+    // Every Dex species has its record. A species past the last one has
+    // none, and reading on would hand it the next method's records: it
+    // reads the egg's, which holds only the terminator, and the page says
+    // "Area Unknown". Every record has its terminator, and ov18_021E8528
+    // sizes the merged list as one plus each record's count less one: four
+    // empty records made that -3, a 4-byte block written past its end.
+    if (species > NATIONAL_DEX_COUNT) {
         species = SPECIES_EGG;
     }
 
