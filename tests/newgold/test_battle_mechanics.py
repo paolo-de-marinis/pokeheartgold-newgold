@@ -1274,6 +1274,32 @@ class TypeChangeTests(unittest.TestCase):
             self.assertLess(script.index("_CHANGE_TYPE:"), script.index("Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION"), name)
             self.assertIn("_FAILED:\n    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED\n    End", script, name)
 
+    def test_arceus_and_silvally_cannot_change_their_own_type(self):
+        # Pokemon Central (Sistema Primevo): no move changes the type of a
+        # Pokemon with RKS System, as none does one with Multitype.
+        from test_hold_effects import run_c
+        commands = COMMANDS.read_text()
+        for name in ("BtlCmd_TryConversion", "BtlCmd_TryConversion2", "BtlCmd_TryCamouflage"):
+            self.assertIn("BattlerTypeIsItsAbilitys(ctx, ctx->battlerIdAttacker)", function(commands, name), name)
+            self.assertNotIn("ABILITY_MULTITYPE", function(commands, name), name)
+        run_c(r"""
+#include <assert.h>
+#include "constants/abilities.h"
+typedef int BOOL;
+typedef struct { int ability; } BattleContext;
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)battlerId; return ctx->ability; }
+""" + function(commands, "BattlerTypeIsItsAbilitys") + r"""
+int main(void) {
+    BattleContext ctx = { ABILITY_MULTITYPE };
+    assert(BattlerTypeIsItsAbilitys(&ctx, 0));
+    ctx.ability = ABILITY_RKS_SYSTEM;
+    assert(BattlerTypeIsItsAbilitys(&ctx, 0));
+    ctx.ability = ABILITY_PROTEAN;
+    assert(!BattlerTypeIsItsAbilitys(&ctx, 0));
+    return 0;
+}
+""")
+
 
 class PaybackTests(unittest.TestCase):
     def test_it_does_not_double_against_what_came_in_this_turn(self):

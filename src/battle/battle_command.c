@@ -3386,6 +3386,15 @@ BOOL BtlCmd_PrintBufferedTrainerMessage(BattleSystem *battleSystem, BattleContex
     return FALSE;
 }
 
+// Arceus and Silvally are the type their Multitype and RKS System make them,
+// and no move changes it (Pokemon Central, Sistema Primevo): Conversion,
+// Conversion 2 and Camouflage fail for them. Retail knew only Multitype.
+static BOOL BattlerTypeIsItsAbilitys(BattleContext *ctx, int battlerId) {
+    int ability = GetBattlerAbility(ctx, battlerId);
+
+    return ability == ABILITY_MULTITYPE || ability == ABILITY_RKS_SYSTEM;
+}
+
 // Conversion from the sixth generation (Pokemon Central, Conversione): the
 // user takes the type of the move in its first slot, and the move fails when
 // the user has that type already, one of its own or an added one -- the
@@ -3403,7 +3412,7 @@ BOOL BtlCmd_TryConversion(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrs = BattleScriptReadWord(ctx);
 
     moveType = BattleMoveTbl(ctx, mon->moves[0])->type;
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MULTITYPE
+    if (BattlerTypeIsItsAbilitys(ctx, ctx->battlerIdAttacker)
         || GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) == moveType
         || GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) == moveType
         || mon->type3 == moveType) {
@@ -3925,7 +3934,7 @@ BOOL BtlCmd_TryConversion2(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrs = BattleScriptReadWord(ctx);
     int target = ctx->battlerIdTarget;
 
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MULTITYPE || target == BATTLER_NONE
+    if (BattlerTypeIsItsAbilitys(ctx, ctx->battlerIdAttacker) || target == BATTLER_NONE
         || ctx->conversion2Move[target] == MOVE_NONE || ctx->conversion2Move[target] == MOVE_STRUGGLE
         || !Conversion2PickType(battleSystem, ctx, ctx->conversion2Type[target], &type)) {
         BattleScriptIncrementPointer(ctx, adrs);
@@ -6142,7 +6151,7 @@ BOOL BtlCmd_TryCamouflage(BattleSystem *battleSystem, BattleContext *ctx) {
 
     int adrs = BattleScriptReadWord(ctx);
 
-    if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_MULTITYPE) {
+    if (BattlerTypeIsItsAbilitys(ctx, ctx->battlerIdAttacker)) {
         BattleScriptIncrementPointer(ctx, adrs);
         return FALSE;
     }
