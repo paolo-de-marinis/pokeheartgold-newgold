@@ -379,6 +379,10 @@ Reading what the debug ROM records, and playing it without looking.
 - `party.py` -- the party of the running game, decrypted as the game does.
 - `play.py` -- drives the melonDS on this desktop: launch, focus, keys,
   a screenshot when one is really needed.
+- `nested.py` -- the same melonDS on a display of its own (a headless
+  KWin, a rootful Xwayland in it, a HOME and runtime directory of its own
+  under `build/nested/`), so nothing opens, sounds or types on the desktop:
+  start from a ROM and a save, keys and taps, a screenshot, stop.
 - `frozen.py` -- the ARM9 out of a melonDS savestate once the game stopped.
 - `battle.py`, `dump.py` -- a wild battle forced on Route 29 in the
   harness, and its memory dumps read back.

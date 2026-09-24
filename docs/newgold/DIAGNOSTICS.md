@@ -75,6 +75,12 @@ noise, not a wrong answer.
   through a virtual keyboard in whatever mapping the player set, its window
   through Spectacle -- so a gym is played from a shell, one screenshot a
   turn, with the readers above watching the same game.
+- `tools/newgold/devkit/diag/nested.py start|press|shot|stop` does the same on a
+  display nothing else sees: a headless KWin with its own D-Bus, a rootful
+  Xwayland inside it whose XTEST keeps keys and taps to itself, and melonDS
+  with a HOME of its own and no sound -- for an agent that must not open a
+  window on the desktop. A battle is seen this way, which the harness cannot
+  draw.
 - `tools/newgold/devkit/diag/gym.py SAVE` fights, in the headless harness, whatever
   the save stands the player in front of, with the auto-battle switch on,
   and prints the battle as text; `tools/newgold/devkit/diag/watch.py` prints the

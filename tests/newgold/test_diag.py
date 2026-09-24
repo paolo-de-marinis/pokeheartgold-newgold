@@ -72,6 +72,18 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(battler_hp("you Iron Crown L30 103/103 holding Leftovers | 1:Smart Strike 10"), 103)
         self.assertEqual(battler_hp("you Porygon2 L30 57/90 PSN | 1:Tackle 35"), 57)
 
+    def test_nested_melonds_binds_every_button(self):
+        # nested.py writes melonDS's key table before melonDS starts; a table
+        # whose parent was implicit made melonDS's toml writer abort.
+        import tomllib
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from nested import KEYS, bind
+        for text in ("", "[Instance0]\n\n[Instance0.Keyboard]\nA = -1\nHK_Lid = -1\n"):
+            config = bind(text)
+            self.assertIn("[Instance0]\n", config)
+            keyboard = tomllib.loads(config)["Instance0"]["Keyboard"]
+            self.assertEqual({k: keyboard[k] for k in KEYS}, {k: code for k, (code, _) in KEYS.items()})
+
     def test_a_heap_margin_is_its_largest_free_block_at_its_fullest(self):
         """Diag_HeapUsed walks an expanded heap's free list as
         NNS_FndGetTotalFreeSizeForExpHeap does -- the list at +0x24 of the
