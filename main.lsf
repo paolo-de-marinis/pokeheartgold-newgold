@@ -984,6 +984,10 @@ Overlay OVY_40
 {
     After OVY_39
     Object asm/overlay_40.o
+    Object src/overlay_40_02235E34.o
+    Object asm/overlay_40_02235FA0.o
+    Object src/overlay_40_0223EC40.o
+    Object asm/overlay_40_0223EDA8.o
 }
 Overlay OVY_41
 {
