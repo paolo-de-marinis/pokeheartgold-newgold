@@ -656,6 +656,31 @@ class SaveUiTests(unittest.TestCase):
                                                                             "args": {"icon": "START_MENU_ICON_EXIT", "on": 1}}))
         self.assertEqual(len(self.backups()), 5, "one backup a write")
 
+    def test_the_machines(self):
+        """op "machines": the checklist's changes written as the game keeps
+        the pocket -- sorted TMs, TRs, HMs, a removal closing the gap -- and
+        refused in Italian past a machine's limit, past the pocket's slots,
+        or for an item that is no machine."""
+        items = {row["const"]: row["id"] for row in sv.item_table().values()}
+        table = self.ok("/api/data")["machines"]
+        self.assertEqual(table[0]["item"], items["ITEM_TM01"])
+        out = self.edit("machines", {"changes": [{"item": items["ITEM_HM01"], "quantity": 1},
+                                                 {"item": items["ITEM_TR00"], "quantity": 5},
+                                                 {"item": items["ITEM_TM01"], "quantity": 1}]})
+        self.assertEqual([(s["item"], s["quantity"]) for s in out["bag"]["TMsHMs"]],
+                         [(items["ITEM_TM01"], 1), (items["ITEM_TR00"], 5), (items["ITEM_HM01"], 1)])
+        out = self.edit("machines", {"changes": [{"item": items["ITEM_TM01"], "quantity": 0},
+                                                 {"item": items["ITEM_TM02"], "quantity": 1}]})
+        self.assertEqual([s["item"] for s in out["bag"]["TMsHMs"]], [items["ITEM_TM02"], items["ITEM_TR00"], items["ITEM_HM01"]])
+        refused = lambda changes: self.refused("/api/edit", {"f": "gyms/test.sav", "op": "machines",
+                                                             "args": {"changes": changes}})
+        self.assertIn("una MT è una sola", refused([{"item": items["ITEM_TM03"], "quantity": 2}]))
+        self.assertIn("non è una MT", refused([{"item": items["ITEM_POTION"], "quantity": 1}]))
+        slots = next(p["slots"] for p in self.ok("/api/data")["pockets"] if p["name"] == "TMsHMs")
+        many = [{"item": row["item"], "quantity": 1} for row in table[:slots + 1]]
+        self.assertIn(f"ha {slots} posti: ne servirebbero", refused(many))
+        self.assertEqual(len(self.backups()), 2, "a refused change writes nothing")
+
     def test_files(self):
         self.edit("trainer", {"money": 1})
         self.assertEqual(self.ok("/api/duplicate", {"f": "gyms/test.sav", "name": "copia"})["f"], "copia.sav")

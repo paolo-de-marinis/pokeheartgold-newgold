@@ -971,6 +971,30 @@ class Library:
                         map_level=number(a["map_level"], 0, sv.pokegear_cards()["map_levels"] - 1, "livello della mappa")
                         if "map_level" in a else None)
 
+    def op_machines(self, save, a):
+        """The machines ticked and their counts, written as the game keeps
+        the pocket: each at most once, from 1 to its limit, filled slots
+        first and sorted as SortTMHMPocket sorts them (set_item). Removals
+        first, so that a swap never finds the pocket full."""
+        table = {row["item"]: row for row in sv.machine_table()}
+        wanted = {}
+        for change in a["changes"]:
+            item = number(change["item"], 1, 0xFFFF, "macchina")
+            if item not in table:
+                raise Refused(f"lo strumento {item} non è una MT, una MN o una DT")
+            name = sv.item_table()[item]["name"]
+            wanted[item] = number(change["quantity"], 0, table[item]["limit"], f"{name}, quantità" +
+                                  (" (una MT è una sola: New Gold non le consuma)" if table[item]["limit"] == 1 else ""))
+        pocket = sv.item_table()[next(iter(table))]["pocket"]      # the machines' own
+        held = {slot["item"]: slot["quantity"] for slot in sv.bag(save)[pocket]}
+        after = {**held, **wanted}
+        slots = sv.pocket_at(pocket)[1]
+        if sum(1 for q in after.values() if q) > slots:
+            raise Refused(f"la tasca MT e MN ha {slots} posti: ne servirebbero {sum(1 for q in after.values() if q)}")
+        for item, quantity in sorted(wanted.items(), key=lambda kv: kv[1] != 0):
+            if held.get(item, 0) != quantity:
+                sv.set_item(save, item, quantity)
+
     def op_flag(self, save, a):
         sv.write_flag(save, number(a["number"], 1, sv.num_flags() - 1, "flag"), bool(a["value"]))
 
@@ -1262,6 +1286,7 @@ def tables():
             "pokegear": sv.pokegear_cards(), "level_cap": sv.level_cap_milestones(),
             "field_moves": {badge: [sv.move_numbers()[m[len("MOVE_"):]] for m in moves]
                             for badge, moves in sv.field_move_badges().items()},
+            "machines": sv.machine_table(),
             "limits": {"party": sv.PARTY_SIZE, "boxes": sv.NUM_BOXES, "box_slots": sv.MONS_PER_BOX,
                        "name": sv.PLAYER_NAME_LENGTH, "money": sv.MAX_MONEY, "coins": sv.MAX_COINS,
                        "hours": sv.MAX_PLAY_HOURS, "level": sv.MAX_LEVEL, "moves": sv.MAX_MON_MOVES,
