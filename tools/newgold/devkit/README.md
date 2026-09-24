@@ -103,6 +103,30 @@ midgame badge), and `undo_step` takes one back: what it wrote undone, a
 `SetVar` put back to what the step before it in its gym sets, any other
 `SetVar` left and named, as its old value is not known.
 
+Where the player can stand is read from the land data (the file
+`filesystem_files_def.h` gives `NARC_fielddata_landdata_land_data`): each
+tile's attribute, its collision bit and its behaviour byte, which the field's
+loader reads after a member's sound section (`ov01_021F4AAC`;
+`TerrainAttributes_Load`'s fixed offset is right only where that section is
+empty, and Sprout Tower's is not). `ground(map)` is where the game puts the
+player on a map, in the order tried: the fly point (`GetFlyWarpData` over
+`sSpawnMaps`), the heal spawn (`GetDeathWarpData`, a row that is one), each
+warp of its zone events -- its own tile, or the first free neighbour of a
+door set in a wall -- and, on a matrix shared with other maps, a step in
+from another map's ground; `preset(map)` is the first of them, with the
+direction the game faces the player in. `tile_problem` says why a tile is
+no place to stand: off the map's chunks, a wall, surfable water
+(`MetatileBehavior_IsSurfableWater`), an object of the map, or -- in a
+building (`MapHeader_IsInBuilding`) -- joined to no arrival and no person of
+the map: the empty space around a room. Outside, ledges and climbs part
+ground the player reaches, so there it is not asked. `town_map()` is the
+Pokégear's town map, both regions, drawn as the game draws it: the tiles'
+PNG laid out by the screen `PokegearMap_LoadGraphics` loads, over the window
+`ov101_021EAF40` copies. `town_tiles()` is where each map is on it -- a map
+of the main matrix at the chunks it owns, rows moved as
+`PokegearMap_InitInternal` moves them, any other at its header's world
+coordinates -- and `town_tile` where the Pokégear marks the player.
+
 `machine_table()` is every TM, TR and HM as the bag keeps them: in
 `SortTMHMPocket`'s order, each with its move, the move's type, how many the
 bag takes, and whether a use spends it (a TR, as `PartyMenu_LearnMoveToSlot`
@@ -132,7 +156,8 @@ footers, the encryption's generator, `SHINY_CHECK`, the nature as
 `pid % 25`, `GENDER_RATIO`, the flash's halves, the clock's 999 hours, the tutor
 record's index, the badges' two bytes, a TM's one copy, the machines' sort,
 `CalcMonStats`, `UpdateBoxMonAbility`, `InitBoxMonMoveset`, `LoadEggMoves`,
-the learnsets' filter, the Day-Care's egg moves, `DexSpeciesIsInvalid` --
+the learnsets' filter, the Day-Care's egg moves, `DexSpeciesIsInvalid`, a
+tile's collision bit and behaviour byte, the land data's sound section --
 stays code in savedit, and `TheCodeSaveditKeeps` in `test_savedit.py` reads
 each from the tree and fails the day they differ.
 
@@ -187,12 +212,22 @@ party), Borsa (the machines as a checklist, the Pokedex's way: every TM, TR
 and HM with its move and type, "ce l'ho", and a count for a TR, which a use
 spends; written as the game keeps the pocket, 101 slots at most), Pokedex (per
 species, all at once, and the two switches), Posizione (the `--where`
-write), Flag e variabili (by name) and Info (the two halves and the block
-table). The name can only be written in letters and digits: that is all
+write, the map picked from a list or on the town map), Flag e variabili (by
+name) and Info (the two halves and the block table). The name can only be written in letters and digits: that is all
 `savedit.charcode` knows, although the game's character set has more. The
 species list leaves out what a Pokemon cannot be (the egg, the retail form
-rows 496-507, the forms only a battle has); a position must be a tile of
-the map, not the black around it.
+rows 496-507, the forms only a battle has).
+
+Posizione: the map field is a search over every map, grouped by its section
+(the name the game shows) with its region and kind, as a move field is; above
+it the Pokégear's town map, both regions, with the player marked and the
+player's section lit. Hovering names the place under the pointer, a click
+picks its own map (the town, the route) and fills the field, and a map picked
+in the field lights its section on the town map. Picking a map puts in x, y
+and the direction the game itself would give -- the fly point, the heal
+spawn, a door's arrival (`savedit.preset`); they stay editable, and the
+server refuses in Italian a tile off the map or where the player could not
+stand, naming the place that is safe (`savedit.tile_problem`).
 
 The story in Allenatore: the start menu's entries and the running shoes,
 the Pokédex and the Pokégear (a card ticked brings the ones before it, as
@@ -235,7 +270,8 @@ stats, the natures' raised and lowered stat, the directions, the genders,
 each item's most, the party, box, level, IV and EV limits -- comes in
 `/api/data` from the tree; the page keeps only the Italian names, keyed by
 the tree's constants (`BADGE_ZEPHYR`, `POCKET_TMHMS`, `STAT_SPATK`,
-`TYPE_FAIRY`, `START_MENU_ICON_BAG`, `GEARCARD_RADIO`, a story flag...), and
+`TYPE_FAIRY`, `START_MENU_ICON_BAG`, `GEARCARD_RADIO`, a story flag,
+`MAP_TYPE_CAVE`, `MAP_REGION_KANTO`...), and
 shows a constant it has no name for as itself. When the tree changes under a
 running server, the page, which polls it, asks for the data again and
 reopens the save it shows, icons included; no reload. The emulator slots are
