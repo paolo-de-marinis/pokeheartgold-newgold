@@ -67,11 +67,17 @@ int main(void) {
     int reached = 0;
     for (u32 roll = 0; roll < NUM_MOVES_TOTAL; roll++) {
         u16 move = roll + 1;
-        if (CheckLegalMetronomeMove(&bs, &ctx, 0, move)) {
+        if (CheckLegalMetronomeMove(&bs, &ctx, 0, move) && move != MOVE_REVIVAL_BLESSING) {
             assert(metronome(roll) == move);
             reached++;
         }
     }
+    // Revival Blessing is Metronome's own refusal, not the shared list's:
+    // Showdown's gen-9 data gives it no metronome flag, and Copycat copies it.
+    assert(CheckLegalMetronomeMove(&bs, &ctx, 0, MOVE_REVIVAL_BLESSING));
+    assert(metronome(MOVE_REVIVAL_BLESSING - 1) == MOVE_POUND);
+    // Sky Drop comes out, as it did in the games that had it.
+    assert(metronome(MOVE_SKY_DROP - 1) == MOVE_SKY_DROP);
     assert(metronome(NUM_MOVES_TOTAL) == MOVE_POUND);
     assert(metronome(NUM_MOVES_TOTAL - 1) == MOVE_MALIGNANT_CHAIN);
     assert(metronome(MOVE_SOLAR_SEEDS - 1) == MOVE_SOLAR_SEEDS);
