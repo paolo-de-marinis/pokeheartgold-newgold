@@ -80,7 +80,7 @@ typedef struct {
 typedef struct { int power, type, category, effect; } MoveTbl;
 
 static struct { int maxBattlers; int ability[4]; MoveTbl move; u32 weather; BOOL acted[4]; u32 status[4]; BOOL substitute[4]; u16 def, spDef; u8 rageFist[4];
-    u16 atkOf[4], defOf[4]; u8 atkStage[4], defStage[4]; } S;
+    u16 atkOf[4], defOf[4]; u8 atkStage[4], defStage[4], spDefStage[4]; } S;
 
 static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *data) {
     (void)data;
@@ -91,7 +91,8 @@ static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *dat
     case BMON_DATA_SPATK: return 100;
     case BMON_DATA_STAT_CHANGE_ATK: return S.atkStage[battlerId] ? S.atkStage[battlerId] : 6;
     case BMON_DATA_STAT_CHANGE_DEF: return S.defStage[battlerId] ? S.defStage[battlerId] : 6;
-    case BMON_DATA_STAT_CHANGE_SPATK: case BMON_DATA_STAT_CHANGE_SPDEF: return 6;
+    case BMON_DATA_STAT_CHANGE_SPDEF: return S.spDefStage[battlerId] ? S.spDefStage[battlerId] : 6;
+    case BMON_DATA_STAT_CHANGE_SPATK: return 6;
     case BMON_DATA_LEVEL: return 50;
     case BMON_DATA_SPECIES: return ctx->battleMons[battlerId].species;
     case BMON_DATA_HP: return ctx->battleMons[battlerId].hp;

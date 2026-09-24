@@ -10482,7 +10482,11 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monDef = monSpDef;
         monSpDef = swap;
     }
-    statChangeAtk = GetBattlerVar(ctx, moveNo == MOVE_FOUL_PLAY ? battlerIdTarget : battlerIdAttacker, moveNo == MOVE_BODY_PRESS ? BMON_DATA_STAT_CHANGE_DEF : BMON_DATA_STAT_CHANGE_ATK, NULL) - 6;
+    // Under Wonder Room Body Press keeps the user's Defense but takes the
+    // Sp. Def's stage (Pokemon Central, Schiacciacorpo).
+    statChangeAtk = GetBattlerVar(ctx, moveNo == MOVE_FOUL_PLAY ? battlerIdTarget : battlerIdAttacker,
+                        moveNo == MOVE_BODY_PRESS ? (ctx->wonderRoomTurns ? BMON_DATA_STAT_CHANGE_SPDEF : BMON_DATA_STAT_CHANGE_DEF) : BMON_DATA_STAT_CHANGE_ATK, NULL)
+        - 6;
     statChangeDef = GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_STAT_CHANGE_DEF, NULL) - 6;
     statChangeSpAtk = GetBattlerVar(ctx, battlerIdAttacker, BMON_DATA_STAT_CHANGE_SPATK, NULL) - 6;
     statChangeSpDef = GetBattlerVar(ctx, battlerIdTarget, BMON_DATA_STAT_CHANGE_SPDEF, NULL) - 6;

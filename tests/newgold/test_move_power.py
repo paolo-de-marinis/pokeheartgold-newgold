@@ -170,7 +170,8 @@ class BorrowedStatTests(unittest.TestCase):
         """Stats 100 but for the one each move reads, 200: a physical 100 is
         90 on it, 178 at +2; 46 on anything else. Foul Play strikes with the
         target's Attack and stages (Pokemon Central, Ripicca), Body Press
-        with the user's Defense and stages (Schiacciacorpo); Psyshock,
+        with the user's Defense and stages, the Sp. Def's stage under Wonder
+        Room (Schiacciacorpo); Psyshock,
         Psystrike and Secret Sword meet the target's Defense and its stages,
         200 making a special 100 24 (Psicoshock)."""
         run_c(self, damage_program(r"""
@@ -183,6 +184,11 @@ class BorrowedStatTests(unittest.TestCase):
     EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_BODY_PRESS, 0, 0, 0, TYPE_FIGHTING, 0, 1, 1), 90);
     S.defStage[0] = 8; EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_BODY_PRESS, 0, 0, 0, TYPE_FIGHTING, 0, 1, 1), 178);
     S.defStage[0] = 0; S.atkStage[0] = 8; EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_BODY_PRESS, 0, 0, 0, TYPE_FIGHTING, 0, 1, 1), 90);
+    // Under Wonder Room, the Defense with the Sp. Def's stage (Schiacciacorpo).
+    reset(4); S.defOf[0] = 200; ctx.wonderRoomTurns = 5;
+    S.defStage[0] = 8; EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_BODY_PRESS, 0, 0, 0, TYPE_FIGHTING, 0, 1, 1), 90);
+    S.defStage[0] = 0; S.spDefStage[0] = 8; EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_BODY_PRESS, 0, 0, 0, TYPE_FIGHTING, 0, 1, 1), 178);
+    ctx.wonderRoomTurns = 0;
     reset(4); S.move.category = CATEGORY_SPECIAL; S.defOf[1] = 200;
     EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_PSYSHOCK, 0, 0, 0, TYPE_PSYCHIC, 0, 1, 1), 24);
     EXPECT(CalcMoveDamage(&bs, &ctx, MOVE_PSYSTRIKE, 0, 0, 0, TYPE_PSYCHIC, 0, 1, 1), 24);
