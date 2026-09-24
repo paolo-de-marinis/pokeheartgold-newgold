@@ -466,10 +466,13 @@ $(eval $(call arc_strip_name,files/data/photo_data.narc,files/a/2/5/4))
 $(eval $(call arc_strip_name,files/application/guinness.narc,files/a/2/6/0))
 $(eval $(call arc_strip_name,files/graphic/camera_viewfinder.narc,files/a/2/6/1))
 
+# Three are copied from the version's own archive, and a switch of version
+# makes no file newer: they are remade on every run, and like the others
+# written only when they differ, so a run with nothing changed packs nothing.
 $(DIFF_ARCS):
-	cp $< $@
+	@cmp -s $< $@ || { echo cp $< $@; cp $< $@; }
 
-.PHONY: files/a/0/7/5 files/a/2/5/2 files/a/1/3/3
+files/a/0/7/5 files/a/2/5/2 files/a/1/3/3: FORCE
 
 NARCS := $(filter %.narc,$(NITROFS_FILES) $(SRC_ARCS))
 NAIXS := $(NARCS:%.narc=%.naix)

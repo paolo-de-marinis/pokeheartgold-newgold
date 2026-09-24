@@ -267,9 +267,7 @@ ifeq ($(COMPARE),1)
 	$(SHA1SUM) --quiet -c $*.sha1
 endif
 
-$(ELF): $(ALL_OBJS)
-	$(MAKE) $(LCF)
-	$(MAKE) $(RESPONSE)
+$(ELF): $(ALL_OBJS) $(LCF) $(RESPONSE)
 	cd $(BUILD_DIR) && LM_LICENSE_FILE=$(BACK_REL)/$(LM_LICENSE_FILE) $(WINE) $(MWLD) $(MWLDFLAGS) $(LIBS) -o $(BACK_REL)/$(ELF) $(LCF:$(BUILD_DIR)/%=%) @$(RESPONSE:$(BUILD_DIR)/%=%) $(CRT0_OBJ)
 #	$(NTRMERGE) $*
 

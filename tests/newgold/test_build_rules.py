@@ -138,6 +138,24 @@ class BuildRuleTests(unittest.TestCase):
             normal, _, order_only = rules[0].partition("|")
             self.assertTrue(name not in normal.split() and name in order_only.split(), f"{target}: {name}")
 
+    def test_a_build_with_nothing_changed_links_and_packs_nothing(self):
+        """The link waited on dsprot, libsyscall and files_for_compile, the
+        ROM on filesystem, main_lz and sub -- names, remade on every run --
+        and three of the archives copied from the version's own were phony:
+        every make linked, compressed and packed the ROM again with nothing
+        changed. Those only order now; what counts is files, and the
+        libraries are installed with their times kept."""
+        db = database()
+        phony = set(re.search(r"^\.PHONY:(.*)$", db, re.M).group(1).split())
+        for target in ("build/heartgold.us/main.elf", "build/heartgold.us/pokeheartgold.us.nds"):
+            rules = [m.group(1) for m in re.finditer(rf"^{re.escape(target)}:(.*)$", db, re.M) if "=" not in m.group(1)]
+            self.assertEqual(len(rules), 1, target)
+            normal = set(rules[0].partition("|")[0].split())
+            self.assertEqual(normal & (phony | {"files_for_compile"}), set(), target)
+        self.assertEqual(phony & {"files/a/0/7/5", "files/a/1/3/3", "files/a/2/5/2"}, set())
+        for makefile in ("lib/dsprot/Makefile", "lib/syscall/Makefile"):
+            self.assertRegex((ROOT / makefile).read_text(), r"(?m)^\tcp -p ", makefile)
+
     def test_a_zone_event_is_rebuilt_for_the_header_its_json_names(self):
         """A zone's events name their scripts by the ids of the header the
         json gives ({{ header }}); only the assembler knew which, and the

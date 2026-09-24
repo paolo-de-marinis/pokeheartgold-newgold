@@ -75,7 +75,7 @@ dsprot: $(LIBRARY_FILES)
 
 install: all
 	$(shell mkdir -p $(INSTALL_LIBDIR))
-	cp $(LIBRARY_FILES) $(INSTALL_LIBDIR)
+	cp -p $(LIBRARY_FILES) $(INSTALL_LIBDIR)
 
 
 # Assembly assembling

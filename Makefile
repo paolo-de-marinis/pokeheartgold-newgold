@@ -65,7 +65,13 @@ ROMSPEC        := rom.rsf
 MAKEROM_FLAGS  := $(DEFINES)
 
 $(ALL_GAME_OBJS): | files_for_compile
-$(ELF): files_for_compile dsprot libsyscall
+# dsprot and libsyscall are made by their own makefiles, which install them
+# on every run and keep their times (cp -p): the link waits for them and is
+# done again only when an object, the LCF, the response file or one of what
+# they installed is newer than the ELF, not on every run.
+INSTALLED_LIBS := $(BUILD_DIR)/lib/libsyscall.a $(wildcard $(BUILD_DIR)/lib/dsprot/*.o)
+$(ELF): $(INSTALLED_LIBS) | files_for_compile dsprot libsyscall
+$(INSTALLED_LIBS): dsprot libsyscall ;
 
 dsprot:
 	$(MAKE) -C lib/dsprot all install INSTALL_PREFIX=$(abspath $(WORK_DIR)/$(BUILD_DIR))
@@ -80,7 +86,16 @@ $(BUILD_DIR)/component.files: main ;
 
 $(HEADER_TEMPLATE): ;
 
-$(ROM): $(ROMSPEC) filesystem main_lz sub $(BANNER)
+# The same for the ROM: packed again only when something it holds is newer.
+# The ARM7 is made by sub's makefile and the file system's check is a step of
+# its own; they are waited for, not counted. With COMPARE=1 every run links
+# and packs, as before, so the hashes are checked each time.
+SUB_FILES := $(addprefix sub/build/ichneumon_sub,.sbin _defs.sbin .elf)
+$(SUB_FILES): sub ;
+ifeq ($(COMPARE),1)
+$(ELF) $(ROM): FORCE
+endif
+$(ROM): $(ROMSPEC) $(HEADER_TEMPLATE) $(BANNER) $(SBIN_LZ) $(SUB_FILES) $(NITROFS_FILES) | filesystem
 	$(WINE) $(MAKEROM) $(MAKEROM_FLAGS) -DBUILD_DIR=$(BUILD_DIR) -DNITROFS_FILES="$(NITROFS_FILES:files/%=%)" -DTITLE_NAME="$(TITLE_NAME)" -DBNR="$(BANNER)" -DHEADER_TEMPLATE="$(HEADER_TEMPLATE)" $< $@
 	$(FIXROM) $@ --secure-crc $(SECURE_CRC) --game-code $(GAME_CODE)
 ifeq ($(COMPARE),1)
