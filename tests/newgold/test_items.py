@@ -337,6 +337,23 @@ class ItemRangeAgainstTheReferenceTests(unittest.TestCase):
 
 
 
+class ItemTableStrideTests(unittest.TestCase):
+    def test_the_battle_steps_through_the_item_table_by_the_archive_s_stride(self):
+        """LoadAllItemData reads item_data.narc's records as one array, and
+        GetItemDataPtrFromArray indexes it by sizeof(ItemData). The archive
+        starts each 34-byte record on a word, so that size has to be 36
+        (test_heaps' ITEM_RECORD). It was 34 from 2026-09-22: in battle a
+        Focus Sash read the Toxic Orb's hold effect and poisoned its holder.
+        """
+        from test_ability_behaviour import run_c
+        header = (ROOT / "include/item.h").read_text()
+        structs = "\n".join(header[header.index(f"typedef struct {name} {{"):header.index(f"}} {name};") + len(name) + 3]
+                            for name in ("ItemPartyParam", "ItemData"))
+        run_c(self, "#include <stdint.h>\ntypedef uint8_t u8; typedef int8_t s8; typedef uint16_t u16;\n" + structs +
+              "\n_Static_assert(sizeof(ItemData) == 36, \"ItemData steps by the archive's stride\");\n"
+              "int main(void) { return 0; }\n")
+
+
 class SharedRecordTests(unittest.TestCase):
     """An item both trees have should carry konefr's numbers, not Game Freak's.
 

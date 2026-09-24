@@ -98,6 +98,12 @@ typedef struct ItemData {
         u8 dummy;
         ItemPartyParam partyUseParam;
     };
+    // The archive keeps each 34-byte record on a word boundary, so records are
+    // 36 bytes apart. LoadAllItemData reads the whole run as one array and
+    // GetItemDataPtrFromArray steps through it by this structure's size, which
+    // these two bytes make 36, as retail had it. Without them every record
+    // past the first was read from the wrong place in battle.
+    u8 padding_22[2];
 } ItemData;
 
 /*
