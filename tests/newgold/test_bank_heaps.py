@@ -19,6 +19,8 @@ LOAD = re.compile(r"NewMsgDataFromNarc\(MSGDATA_LOAD_(DIRECT|LAZY),\s*NARC_msgda
 # (source, bank, heap, what the heap had left in one piece with the bank whole)
 LAZY = [
     ("src/overlay_31_0225D60C.c", 222, "HEAP_ID_8", "every mart's list: 10,572 bytes of 0x18000"),
+    ("src/overlay_68_021E6820.c", 750, "HEAP_ID_66", "the move relearner: 9,496 bytes, and the load failed"),
+    ("src/overlay_68_021E6320.c", 750, "HEAP_ID_66", "the move relearner, as its list"),
 ]
 
 

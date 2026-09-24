@@ -15,7 +15,8 @@
 extern void ov68_021E6234(MoveRelearnerApp *app, u32 windowId, u32 fontId, u32 color, u32 alignment, u8 y);
 
 // The relearner's fixed text: its headings, the Pokemon's name, its four
-// moves with their PP, and its species and level.
+// moves with their PP, and its species and level. The move names are opened
+// lazily, for the four lines, as ov68_021E6820 opens them for its list.
 void ov68_021E6320(MoveRelearnerApp *app) {
     String *template;
     MsgData *moveNames;
@@ -48,7 +49,7 @@ void ov68_021E6320(MoveRelearnerApp *app) {
     ov68_021E6234(app, 12, 0, MAKE_TEXT_COLOR(1, 2, 0), 0, 4);
     ScheduleWindowCopyToVram(&app->windows[12]);
 
-    moveNames = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0750_bin, HEAP_ID_66);
+    moveNames = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, NARC_msg_msg_0750_bin, HEAP_ID_66);
     boxMon = Mon_GetBoxMon(app->args->mon);
     for (i = 0; i < MAX_MON_MOVES; i++) {
         move = GetBoxMonData(boxMon, MON_DATA_MOVE1 + i, NULL);
