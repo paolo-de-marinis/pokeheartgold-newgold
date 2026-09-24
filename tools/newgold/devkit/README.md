@@ -410,3 +410,13 @@ Reading what the debug ROM records, and playing it without looking.
 
 Every reader takes the ELF the ROM was linked from, the debug build's by
 default, and refuses a game from another build: symbols move every time.
+
+## capped
+
+    capped [-m 4G] COMMAND...
+
+The command in its own systemd scope with a memory cap (4G unless told,
+and no more than 1G of swap): past it the kernel kills that command alone,
+not the machine. A harness walk once grew to 12 GB a copy and took the
+session down with it. Builds, emulators, harness walks, gym replays and
+test suites run under it: `capped -m 8G make -j8 ...`.
