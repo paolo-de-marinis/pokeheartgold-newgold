@@ -1310,6 +1310,10 @@ int main(void) {
         for name in ("BattlerCanSwitch", "SwitchItemAnswersHit", "CheckEjectPack"):
             self.assertIn("Battler_KeptOnField(ctx, battlerId)", function(overlay, name), name)
         self.assertIn("Battler_HeldBySkyDrop(ctx, battlerId)", function(overlay, "CantEscape"))
+        # A wild Pokemon's own Run (a roamer's) is refused while it is held, Ghost-type or not.
+        run = function(controller, "BattleControllerPlayer_RunInput")
+        self.assertLess(run.index("if (Battler_HeldBySkyDrop(ctx, ctx->battlerIdAttacker)\n            || "), run.index("!Battler_HasGhostType(ctx"))
+        self.assertLess(run.index("Battler_HeldBySkyDrop"), run.index("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, 286);"))
         self.assertIn("Battler_HeldBySkyDrop(ctx, battlerId)", function(overlay, "Battler_Retreats"))
         self.assertIn("Battler_KeptOnField(ctx, battlerId)", (ROOT / "src/battle/trainer_ai_0222036C.c").read_text())
         # A Flying type drops unhurt; Gravity keeps the move from use.

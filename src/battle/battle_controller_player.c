@@ -2497,8 +2497,10 @@ static void BattleControllerPlayer_RunInput(BattleSystem *battleSystem, BattleCo
     ctx->battlerIdAttacker = ctx->executionOrder[ctx->executionIndex];
 
     if (BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker) && !(BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_LINK)) {
-        // A wild Ghost-type flees whatever holds it (Battler_HasGhostType).
-        if ((ctx->battleMons[ctx->battlerIdAttacker].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK)) && !Battler_HasGhostType(ctx, ctx->battlerIdAttacker)) {
+        // A wild Ghost-type flees whatever holds it (Battler_HasGhostType),
+        // but for Sky Drop, whose hold nothing flees (CantEscape).
+        if (Battler_HeldBySkyDrop(ctx, ctx->battlerIdAttacker)
+            || ((ctx->battleMons[ctx->battlerIdAttacker].status2 & (STATUS2_BIND | STATUS2_MEAN_LOOK)) && !Battler_HasGhostType(ctx, ctx->battlerIdAttacker))) {
             ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, 286);
             ctx->scriptSeqNo = 0;
             ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
