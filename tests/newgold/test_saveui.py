@@ -630,6 +630,40 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(out["position"]["current"], {"map": 33, "warp": -1, "x": 655, "y": 400, "direction": 3})
         self.assertNotIn(0, [m["id"] for m in self.ok("/api/data")["maps"]])
 
+    def test_the_position_tab(self):
+        """What the Posizione tab offers: every map's tiles on the town map
+        (/api/data's "world"), the town map itself, the place the game puts
+        the player on a map (/api/place), and a tile refused in Italian when
+        the player could not stand there, naming the place that is safe."""
+        data = self.ok("/api/data")
+        self.assertEqual((data["world"]["cols"], data["world"]["rows"]), (47, 20))
+        self.assertIn(33, data["world"]["main"])
+        self.assertIn([655 // 32, 400 // 32 + 2], data["world"]["tiles"]["33"])
+        self.assertEqual(self.ok("/api/place?map=33"), {"map": 33, "x": [576, 671], "y": [384, 415], "preset": {
+            "how": "warp", "x": 626, "y": 389, "direction": 1, "said": saveui.ARRIVALS["warp"]}})
+        self.assertIn("non è un luogo", self.refused("/api/place?map=0"))
+        status, png = self.call("/api/townmap.png")
+        self.assertEqual((status, struct.unpack(">II", png[16:24])), (200, (8 * 47, 8 * 20)))
+        url = f"http://127.0.0.1:{self.port}/api/townmap.png"
+        with urllib.request.urlopen(url) as response:
+            tag = response.headers["ETag"]
+        with self.assertRaises(urllib.error.HTTPError) as unchanged:
+            urllib.request.urlopen(urllib.request.Request(url, headers={"If-None-Match": tag}))
+        self.assertEqual(unchanged.exception.code, 304)
+        unchanged.exception.close()
+        position = lambda where, x, y: {"f": "gyms/test.sav", "op": "position", "args": {"map": where, "x": x, "y": y}}
+        wall = self.refused("/api/edit", position(33, 576, 384))
+        self.assertIn("casella bloccata", wall)
+        self.assertIn("(626, 389)", wall, "the safe place named")
+        new_bark = sv.constants("include/constants/maps.h", "MAP_")["MAP_NEW_BARK"]
+        water = next(p for p, w in sorted(sv.ground(new_bark)[1].items()) if w == "water")
+        self.assertIn("è acqua", self.refused("/api/edit", position(new_bark, *water)))
+        centre = sv.constants("include/constants/maps.h", "MAP_")["MAP_VIOLET_POKECENTER_1F"]
+        self.assertIn("fuori dalle stanze", self.refused("/api/edit", position(centre, 20, 20)))
+        self.assertEqual(self.backups(), [], "a refused position writes nothing")
+        out = self.edit("position", {"map": centre, "x": 8, "y": 13, "direction": 0})
+        self.assertEqual(out["position"]["tile"], [15, 8 + 2], "the Pokégear's mark: Violet City's tile")
+
     def test_the_story_and_what_the_player_was_given(self):
         """The story's steps and the gyms come in /api/data, the save's
         state of them in /api/save; op "story" runs steps as the game does

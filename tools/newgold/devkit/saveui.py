@@ -556,7 +556,7 @@ class Library:
         return {"f": f, "path": str(path), "slot": is_slot, "mtime": path.stat().st_mtime, "version": version(path),
                 "profile": sv.profile(save), "party": [sv.describe_mon(raw) for raw in sv.party_raw(save)],
                 "boxes": sv.boxes(save), "bag": sv.bag(save), "dex": sv.dex(save),
-                "position": sv.position(save), "info": sv.info(save), "backups": self.history(key),
+                "position": position_of(save), "info": sv.info(save), "backups": self.history(key),
                 "given": given(save), "story": sv.story_state(save)}
 
     def history(self, key):
@@ -934,12 +934,17 @@ class Library:
         if where not in sv.map_table() or not standable(where):
             raise Refused(f"la mappa {where} non è un luogo dove stare")
         x, y = number(a["x"], 0, 0xFFFF, "x"), number(a["y"], 0, 0xFFFF, "y")
+        name = sv.map_table()[where]["name"] or sv.map_table()[where]["const"]
         if not sv.on_map(where, x, y):
-            chunks = sv.map_chunks(where)
-            tiles = sv.CHUNK_TILES
-            span = lambda i: f"{min(c[i] for c in chunks) * tiles}–{(max(c[i] for c in chunks) + 1) * tiles - 1}"
-            raise Refused(f"({x}, {y}) è fuori da {sv.map_table()[where]['name'] or where}: lì il gioco lascerebbe "
-                          f"il giocatore nel nero. La mappa sta tra x {span(0)} e y {span(1)}.")
+            (x0, x1), (y0, y1) = span(where)
+            raise Refused(f"({x}, {y}) è fuori da {name}: lì il gioco lascerebbe "
+                          f"il giocatore nel nero. La mappa sta tra x {x0}–{x1} e y {y0}–{y1}.")
+        problem = sv.tile_problem(where, x, y)
+        if problem:
+            safe = sv.preset(where)
+            raise Refused(f"({x}, {y}) in {name} ({sv.map_table()[where]['const']}) {TILE_PROBLEMS[problem]}. " + (
+                f"Il gioco mette il giocatore in ({safe['x']}, {safe['y']}), {ARRIVALS[safe['how']]}: scegli di nuovo la "
+                f"mappa (elenco o minimappa) e la trovi già scritta." if safe else "Scegli un'altra casella."))
         sv.set_position(save, where, x, y, number(a.get("direction", 0), 0, sv.DIR_MAX - 1, "direzione"))
 
     def op_story(self, save, a):
@@ -1001,6 +1006,53 @@ class Library:
     def op_var(self, save, a):
         sv.write_var(save, number(a["number"], sv.VAR_BASE, sv.VAR_BASE + sv.NUM_VARS - 1, "variabile"),
                      number(a["value"], 0, 0xFFFF, "valore"))
+
+
+# Why a tile is refused (savedit.tile_problem), and where a preset is from (savedit.ground's arrivals).
+TILE_PROBLEMS = {"wall": "è una casella bloccata (un muro, un albero, un mobile, una sporgenza)",
+                 "water": "è acqua: il giocatore ci starebbe in piedi",
+                 "object": "è occupata da una persona o da un oggetto della mappa",
+                 "apart": "è fuori dalle stanze in cui il gioco porta il giocatore (lo spazio vuoto attorno, o una "
+                          "parte chiusa)"}
+ARRIVALS = {"fly": "dove si arriva col Volo o con Teleport", "heal": "dove si ricompare dopo una sconfitta",
+            "warp": "dove si arriva da una porta o da una scala", "door": "appena fuori da una porta",
+            "edge": "dove si entra da una mappa vicina"}
+
+
+def span(map_id):
+    """The tiles a map's chunks cover, ((x from, to), (y from, to))."""
+    chunks = sv.map_chunks(map_id)
+    return tuple((min(c[i] for c in chunks) * size, (max(c[i] for c in chunks) + 1) * size - 1)
+                 for i, size in ((0, sv.CHUNK_TILES), (1, sv.CHUNK_ROWS)))
+
+
+def position_of(save):
+    """The save's position, and the town map's tile the Pokégear marks it at."""
+    position = sv.position(save)
+    now = position["current"]
+    return {**position, "tile": sv.town_tile(now["map"], now["x"], now["y"],
+                                              (position["special"]["x"], position["special"]["y"]))}
+
+
+def map_place(q):
+    """What the page puts in for a map picked: where the game itself puts
+    the player there (None when it puts the player nowhere the editor knows
+    of), and the tiles the map covers."""
+    map_id = number(q.get("map"), 0, 0xFFFF, "mappa")
+    if map_id not in sv.map_table() or not standable(map_id):
+        raise Refused(f"la mappa {map_id} non è un luogo dove stare")
+    (x0, x1), (y0, y1) = span(map_id)
+    preset = sv.preset(map_id)
+    return {"map": map_id, "preset": preset and {**preset, "said": ARRIVALS[preset["how"]]}, "x": [x0, x1], "y": [y0, y1]}
+
+
+def world():
+    """The town map's size, and each map's tiles on it and whether the main
+    matrix is its own (a tile of it is then the chunk it owns)."""
+    town, tiles, main = sv.town_map(), sv.town_tiles(), sv.main_matrix()[1]
+    return {"cols": town["cols"], "rows": town["rows"],
+            "tiles": {m: tiles.get(m, []) for m in sv.map_table() if standable(m)},
+            "main": [m for m in sv.map_table() if standable(m) and sv._matrix_of().get(m) == main]}
 
 
 def given(save):
@@ -1275,7 +1327,8 @@ def tables():
             "items": [{**row, "limit": sv.item_limit(row["id"])} if row["pocket"] else row
                       for row in sv.item_table().values()],
             "natures": sv.bank(sv.NATURE_NAMES), "nature_mods": sv.nature_mods(),
-            "maps": [m for m in sv.map_table().values() if standable(m["id"])], "dex": sv.dex_species(),
+            "maps": [m for m in sv.map_table().values() if standable(m["id"])], "world": world(),
+            "dex": sv.dex_species(),
             "pockets": [{k: p[k] for k in ("name", "const", "slots")} for p in sv.pockets()],
             "stats": by_value("include/constants/pokemon.h", "STAT_", sv.NUM_STATS),
             "directions": by_value("include/constants/global_fieldmap.h", "DIR_", sv.DIR_MAX),
@@ -1323,6 +1376,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def image(self, png):
+        """A PNG the browser keeps and asks again for each time (its ETag)."""
+        tag = f'"{digest(png)[:16]}"'
+        if self.headers.get("If-None-Match") == tag:
+            return self.reply(304, b"", "image/png", etag=tag)
+        return self.reply(200, png, "image/png", etag=tag)
+
     def trusted(self):
         """Only this page: the Host is ours (no DNS rebinding) and an Origin,
         when there is one, is ours too (no other site posting here)."""
@@ -1358,13 +1418,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.reply(200, {"rows": found[:FLAG_ROWS], "total": len(found)})
             if url.path == "/api/species":
                 return self.reply(200, species_rules(q))
+            if url.path == "/api/place":
+                return self.reply(200, map_place(q))
+            if url.path == "/api/townmap.png":
+                return self.image(sv.town_map()["png"])
             if url.path == "/api/icon":
-                png = icon(number(q.get("species"), 0, 0xFFFF, "specie"), number(q.get("form", 0), 0, 255, "forma"),
-                           q.get("egg") in ("1", "true"))
-                tag = f'"{digest(png)[:16]}"'
-                if self.headers.get("If-None-Match") == tag:
-                    return self.reply(304, b"", "image/png", etag=tag)
-                return self.reply(200, png, "image/png", etag=tag)
+                return self.image(icon(number(q.get("species"), 0, 0xFFFF, "specie"), number(q.get("form", 0), 0, 255, "forma"),
+                                       q.get("egg") in ("1", "true")))
             return self.reply(404, {"error": "non trovato"})
         except Refused as e:
             return self.reply(400, {"error": str(e), "code": e.code})
