@@ -10,7 +10,9 @@ _000:
     // What nothing writes over, the ability table's, as the reference's
     // move-failure check asks it (AbilityCantSupress).
     CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY_FLAGS, ABILITY_FLAG_FAILS_SUPPRESS, _041
-    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, ABILITY_COMMANDER, _041
+    // Not Commander, which the reference's list adds and Pokemon Central's
+    // Affannoseme still lists: from Scarlet and Violet 2.0.1 it is written
+    // over (Torre di Comando).
     CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_HELD_ITEM, ITEM_ABILITY_SHIELD, _041
     Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, ABILITY_INSOMNIA

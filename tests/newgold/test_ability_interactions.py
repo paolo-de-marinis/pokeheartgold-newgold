@@ -732,8 +732,9 @@ enum { FALSE = 0, TRUE = 1 };
 #include "constants/abilities.h"
 @FUNCTION@
 int main(void) {
-    // Pokemon Central's Mummia and Odore Tenace.
-    assert(WrappingRefuses(ABILITY_MUMMY, ABILITY_COMMANDER) && WrappingRefuses(ABILITY_LINGERING_AROMA, ABILITY_COMMANDER));
+    // Pokemon Central's Mummia and Odore Tenace; Commander is wrapped from
+    // Scarlet and Violet 2.0.1 (Torre di Comando).
+    assert(!WrappingRefuses(ABILITY_MUMMY, ABILITY_COMMANDER) && !WrappingRefuses(ABILITY_LINGERING_AROMA, ABILITY_COMMANDER));
     assert(WrappingRefuses(ABILITY_MUMMY, ABILITY_LINGERING_AROMA) && WrappingRefuses(ABILITY_LINGERING_AROMA, ABILITY_MUMMY));
     assert(WrappingRefuses(ABILITY_LINGERING_AROMA, ABILITY_PROTOSYNTHESIS) && !WrappingRefuses(ABILITY_MUMMY, ABILITY_PROTOSYNTHESIS));
     assert(WrappingRefuses(ABILITY_LINGERING_AROMA, ABILITY_HADRON_ENGINE) && !WrappingRefuses(ABILITY_MUMMY, ABILITY_ORICHALCUM_PULSE));

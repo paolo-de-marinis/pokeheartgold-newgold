@@ -456,12 +456,12 @@ static u8 AbilityFlags(u16 ability) {
 
 // What Pokemon Central's pages add for Mummy and Lingering Aroma (Mummia,
 // Odore Tenace) to what the table keeps from being written over: neither
-// wraps Commander, nor the other of the two, and Lingering Aroma leaves the
-// four Paradox and legend abilities its page names. The reference asks the
-// table alone.
+// wraps the other of the two, and Lingering Aroma leaves the four Paradox and
+// legend abilities its page names. The reference asks the table alone.
+// Mummia still lists Commander, which the two wrap from Scarlet and Violet
+// 2.0.1 on (Torre di Comando), the latest version followed here.
 static BOOL WrappingRefuses(u16 wrapper, u16 ability) {
     switch (ability) {
-    case ABILITY_COMMANDER:
     case ABILITY_MUMMY:
     case ABILITY_LINGERING_AROMA:
         return TRUE;

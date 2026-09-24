@@ -9,10 +9,10 @@ _000:
     // What nothing suppresses, the ability table's (the reference's
     // AbilityCantSupress): the mark would not hold on it.
     CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY_FLAGS, ABILITY_FLAG_FAILS_SUPPRESS, _034
-    // And three the reference's list adds, as Pokemon Central's Gastroacido has them.
-    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, ABILITY_COMMANDER, _034
-    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, ABILITY_QUARK_DRIVE, _034
-    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_ABILITY, ABILITY_PROTOSYNTHESIS, _034
+    // Not the three the reference's list adds, which Pokemon Central's
+    // Gastroacido still lists: Commander is suppressed from Scarlet and
+    // Violet 2.0.1 (Torre di Comando), Protosynthesis and Quark Drive from
+    // 3.0.0 (Paleoattivazione, Carica Quark).
     // An Ability Shield keeps the ability working (Pokemon Central, Scudo abilita).
     CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_HELD_ITEM, ITEM_ABILITY_SHIELD, _034
     Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION

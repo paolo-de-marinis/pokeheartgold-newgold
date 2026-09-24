@@ -480,6 +480,27 @@ class AbilityBlockListTests(unittest.TestCase):
         "subscript/subscript_0163_GastroAcid.s": {("DEFENDER", "ITEM_ABILITY_SHIELD")},
     }
 
+    # What the reference refuses and the port does not, and why: the latest
+    # game version's rule where Pokemon Central's pages disagree. Commander is
+    # suppressed and written over from Scarlet and Violet 2.0.1 (Torre di
+    # Comando, over the older lists of Gastroacido and Affannoseme);
+    # Protosynthesis and Quark Drive are suppressed from 3.0.0
+    # (Paleoattivazione, Carica Quark). Zen Mode stays refused, as Stato Zen
+    # has it from the seventh generation.
+    REMOVED = {
+        "subscript/subscript_0163_GastroAcid.s": {("DEFENDER", "ABILITY_COMMANDER"), ("DEFENDER", "ABILITY_QUARK_DRIVE"),
+                                                  ("DEFENDER", "ABILITY_PROTOSYNTHESIS")},
+        "subscript/subscript_0167_WorrySeed.s": {("DEFENDER", "ABILITY_COMMANDER")},
+    }
+
+    def test_commander_and_the_paradox_abilities_give_way(self):
+        for name in ("subscript_0163_GastroAcid.s", "subscript_0167_WorrySeed.s", "subscript_0445_CoreEnforcer.s"):
+            code = [line for line in (ROOT / "files/battledata/script/subscript" / name).read_text().splitlines()
+                    if not line.strip().startswith("//")]
+            for ability in ("ABILITY_COMMANDER", "ABILITY_QUARK_DRIVE", "ABILITY_PROTOSYNTHESIS"):
+                self.assertFalse([line for line in code if ability in line], (name, ability))
+        self.assertIn("ABILITY_ZEN_MODE", self.unsuppressable())
+
     def test_worry_seed_ignores_the_griseous_orb(self):
         text = (ROOT / "files/battledata/script/subscript/subscript_0167_WorrySeed.s").read_text()
         self.assertNotIn("ITEM_GRISEOUS_ORB", text)
@@ -492,7 +513,7 @@ class AbilityBlockListTests(unittest.TestCase):
         for name, theirs in self.SCRIPTS.items():
             ours = self.entries((ROOT / "files/battledata/script" / name).read_text())
             reference = self.entries(revision(REFERENCE, "d0380a487", "data/battle_scripts/" + theirs))
-            self.assertLessEqual(reference, ours | table, name)
+            self.assertEqual(reference - ours - table, self.REMOVED.get(name, set()), name)
             self.assertEqual(ours - reference, self.ADDED.get(name, set()), name)
 
 
