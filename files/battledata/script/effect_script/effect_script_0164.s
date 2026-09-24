@@ -6,6 +6,9 @@ _000:
     // Nothing but another strong weather replaces one: under Desolate Land,
     // Primordial Sea or Delta Stream the move is spent saying so.
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_PRIMAL_WEATHER, _PrimalWeather
+    // Nor is the weather the map brought written over: the move fails, as
+    // from the ninth generation (Pokemon Central, Terrempesta, Pioggiadanza).
+    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_OVERWORLD_WEATHER_ANY, _036
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_HAIL, _036
     // It started to hail!
     BufferMessage msg_0197_00701, TAG_NONE

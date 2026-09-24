@@ -2,8 +2,11 @@
 
     .data
 
+// Snowscape's snow. The weather the map brought is not written over: the
+// move fails, as from the ninth generation (Pokemon Central, Terrempesta).
 _000:
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SNOW_TEMP, _035
+    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_OVERWORLD_WEATHER_ANY, _035
     // It started to snow!
     PrintMessage msg_0197_01439, TAG_NONE
     Wait

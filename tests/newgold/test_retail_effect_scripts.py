@@ -41,7 +41,8 @@ BACK_TO_BEFORE_MOVE = ("; the engine also sends the called move back through the
 WEATHER = ("the engine sets the weather through its HANDLE_*_TEMPORARY subscripts where this script and "
            "WEATHER_START do the same; under a strong weather its script adds \"But it failed!\" after the "
            "strong weather's own line (MOVE_STATUS_FAILED), where this ends the move on the line "
-           "(NO_MORE_WORK), as Snowscape (effect 324) does here")
+           "(NO_MORE_WORK), as Snowscape (effect 324) does here; and here the move fails against the map's "
+           "weather, as from the ninth generation (Terrempesta), which the engine writes over")
 
 STILL_DIFFERENT = {
     7: "Damp and the user's HP going to 0 are the engine's before-move C (BattleController_BeforeMove.c), "

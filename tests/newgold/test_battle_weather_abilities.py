@@ -300,6 +300,24 @@ class WeatherAbilityTests(unittest.TestCase):
         spit = subscript("SandSpit")
         self.assertLess(spit.index("_MapWeather"), spit.index("FIELD_CONDITION_SANDSTORM\n"))
 
+    def test_the_weather_moves_leave_the_map_s_weather(self):
+        # Pokemon Central (Terrempesta, Pioggiadanza): from the ninth
+        # generation a move no longer writes over the weather the map brought;
+        # the move fails. Chilly Reception leaves it as it leaves a snow
+        # already falling, and its user still goes back. The reference refuses
+        # neither.
+        for effect in (115, 136, 137, 164):
+            script = (EFFECTS / f"effect_script_{effect:04d}.s").read_text()
+            self.assertLess(script.index("FIELD_CONDITION_OVERWORLD_WEATHER_ANY, _036"),
+                            script.index("UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_WEATHER"), effect)
+            self.assertIn("UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED",
+                          script[script.index("\n_036:"):], effect)
+        snow = subscript("HandleSnowTemporary")
+        self.assertLess(snow.index("FIELD_CONDITION_OVERWORLD_WEATHER_ANY, _035"), snow.index("PrintMessage"))
+        chilly = (EFFECTS / "effect_script_0436.s").read_text()
+        self.assertLess(chilly.index("FIELD_CONDITION_OVERWORLD_WEATHER_ANY, _SWITCH"),
+                        chilly.index("Call BATTLE_SUBSCRIPT_HANDLE_SNOW_TEMPORARY"))
+
     def test_only_the_map_lays_a_weather_for_good(self):
         setters = sorted(path.name for path in (ROOT / "files/battledata/script").rglob("*.s")
                          if re.search(r"FLAG_ON, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_\w+_PERMANENT", path.read_text()))
