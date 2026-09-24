@@ -16,8 +16,8 @@ filling of the list (ov18_021E8714 and on) is left out, it reads the records'
 counts.
 
 The records themselves: dex_areas.py gives back retail's archive byte for byte
-from retail's wild data (pret's), and every block has a record for each Dex
-species.
+from retail's wild data (pret's), the json is what it gives from the tree's,
+and every block has a record for each Dex species.
 """
 
 import json
@@ -130,6 +130,12 @@ class DexAreaTests(unittest.TestCase):
             # jsonproc sorts the keys: that has to be the species' order
             numbers = [int(key.split("_")[1]) for key in sorted(records)]
             self.assertEqual(numbers, list(range(count + 1)), method)
+
+    def test_the_records_are_the_trees_wild_data(self):
+        # New Gold's tables: Applin in Ilex Forest's grass, Klink and the
+        # other added species where konefr put them.
+        self.assertEqual(dex_areas.from_tree(), (ROOT / dex_areas.OUT).read_text(),
+                         "zukan_enc.json is not what the wild data gives: run tools/newgold/devkit/dex_areas.py")
 
     def test_retails_records_come_from_retails_tables(self):
         def upstream(path):
