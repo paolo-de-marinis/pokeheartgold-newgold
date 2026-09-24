@@ -556,7 +556,8 @@ class Library:
         return {"f": f, "path": str(path), "slot": is_slot, "mtime": path.stat().st_mtime, "version": version(path),
                 "profile": sv.profile(save), "party": [sv.describe_mon(raw) for raw in sv.party_raw(save)],
                 "boxes": sv.boxes(save), "bag": sv.bag(save), "dex": sv.dex(save),
-                "position": sv.position(save), "info": sv.info(save), "backups": self.history(key)}
+                "position": sv.position(save), "info": sv.info(save), "backups": self.history(key),
+                "given": given(save), "story": sv.story_state(save)}
 
     def history(self, key):
         folder = self.backups / key
@@ -625,7 +626,7 @@ class Library:
                 raise Refused(STALE, "stale")
             save = self.open(path)
             try:
-                handler(save, args)
+                report = handler(save, args)
             except sv.Illegal as e:
                 raise Refused(illegal(e))
             except (KeyError, TypeError) as e:
@@ -636,7 +637,7 @@ class Library:
             changed = data != path.read_bytes()
             if changed:
                 self.write(f, data)
-            return {**self.detail(f), "changed": changed}
+            return {**self.detail(f), "changed": changed, **({"report": report} if report is not None else {})}
 
     def readable(self, path):
         try:
@@ -941,12 +942,56 @@ class Library:
                           f"il giocatore nel nero. La mappa sta tra x {span(0)} e y {span(1)}.")
         sv.set_position(save, where, x, y, number(a.get("direction", 0), 0, sv.DIR_MAX - 1, "direzione"))
 
+    def op_story(self, save, a):
+        """Story steps run as the game runs them ("run", in order) or taken
+        back ("undo", in order): what each wrote, and the variables an undo
+        left as they were."""
+        steps = {s["id"]: s for s in sv.story()}
+        for sid in list(a.get("run", [])) + list(a.get("undo", [])):
+            if sid not in steps:
+                raise Refused(f"non c'è il passo della storia {sid}")
+        report = {"ran": {}, "left": {}}
+        for sid in a.get("undo", []):
+            left = sv.undo_step(save, sid)
+            if left:
+                report["left"][sid] = left
+        for sid in a.get("run", []):
+            report["ran"][sid] = sv.run_step(save, sid)
+        return report
+
+    def op_menu(self, save, a):
+        icon = a.get("icon")
+        if icon not in {e["icon"] for e in sv.menu_unlocks()}:
+            raise Refused(f"{icon} non è una voce del menu che si ottiene")
+        sv.set_menu_unlock(save, icon, bool(a["on"]))
+
+    def op_pokegear(self, save, a):
+        cards = sum(c["value"] for c in sv.pokegear_cards()["cards"])
+        sv.set_pokegear(save, cards=number(a["cards"], 0, cards, "schede") & cards if "cards" in a else None,
+                        map_level=number(a["map_level"], 0, sv.pokegear_cards()["map_levels"] - 1, "livello della mappa")
+                        if "map_level" in a else None)
+
     def op_flag(self, save, a):
         sv.write_flag(save, number(a["number"], 1, sv.num_flags() - 1, "flag"), bool(a["value"]))
 
     def op_var(self, save, a):
         sv.write_var(save, number(a["number"], sv.VAR_BASE, sv.VAR_BASE + sv.NUM_VARS - 1, "variabile"),
                      number(a["value"], 0, 0xFFFF, "valore"))
+
+
+def given(save):
+    """What the player was given that the bag does not hold, and the level
+    cap it all makes."""
+    return {"shoes": sv.running_shoes(save), "pokegear": sv.pokegear(save), "level_cap": sv.level_cap(save),
+            "menu": {e["icon"]: sv.running_shoes(save) if e.get("shoes") else sv.flag_is_set(save, e["flag"])
+                     for e in sv.menu_unlocks()}}
+
+
+def story_table():
+    """The story's steps as the page shows them."""
+    keep = ("id", "script", "line", "kind", "key", "battle", "trainer", "section", "writes", "needs", "badge", "order",
+            "opens")
+    return [{k: step.get(k) for k in keep} for step in sv.story()]
 
 
 def standable(map_id):
@@ -1213,6 +1258,10 @@ def tables():
             "genders": [{"const": const, "value": value} for const, value in genders.items()],
             "player_genders": [{"const": const, "value": value} for const, value in players.items()],
             "badges": sv.badges(),
+            "story": story_table(), "chains": sv.badge_chains(), "menu": sv.menu_unlocks(),
+            "pokegear": sv.pokegear_cards(), "level_cap": sv.level_cap_milestones(),
+            "field_moves": {badge: [sv.move_numbers()[m[len("MOVE_"):]] for m in moves]
+                            for badge, moves in sv.field_move_badges().items()},
             "limits": {"party": sv.PARTY_SIZE, "boxes": sv.NUM_BOXES, "box_slots": sv.MONS_PER_BOX,
                        "name": sv.PLAYER_NAME_LENGTH, "money": sv.MAX_MONEY, "coins": sv.MAX_COINS,
                        "hours": sv.MAX_PLAY_HOURS, "level": sv.MAX_LEVEL, "moves": sv.MAX_MON_MOVES,

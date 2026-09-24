@@ -621,6 +621,41 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(out["position"]["current"], {"map": 33, "warp": -1, "x": 655, "y": 400, "direction": 3})
         self.assertNotIn(0, [m["id"] for m in self.ok("/api/data")["maps"]])
 
+    def test_the_story_and_what_the_player_was_given(self):
+        """The story's steps and the gyms come in /api/data, the save's
+        state of them in /api/save; op "story" runs steps as the game does
+        and takes them back, saying which variables it left; "menu" and
+        "pokegear" are the switches the start menu and the Pokégear read."""
+        data = self.ok("/api/data")
+        beaten, lass, badge, tm = data["chains"]["BADGE_PLAIN"]
+        steps = {s["id"]: s for s in data["story"]}
+        self.assertEqual(steps[beaten]["trainer"], "Whitney")
+        self.assertEqual([m["icon"] for m in data["menu"]][-1], "START_MENU_ICON_RUNNING_SHOES")
+        self.assertEqual(data["level_cap"]["none"], 10)
+        out = self.ok("/api/save?f=gyms/test.sav")
+        self.assertEqual((out["given"]["shoes"], out["given"]["level_cap"]), (False, 10))
+        self.assertNotIn(beaten, out["story"]["done"])
+        out = self.edit("story", {"run": [beaten]})
+        self.assertIn(["var", "VAR_UNK_410A", 1], out["report"]["ran"][beaten])
+        self.assertIn(beaten, out["story"]["done"])
+        self.assertNotIn(badge, out["story"]["done"], "Whitney beaten, the badge not given yet")
+        out = self.edit("story", {"run": [lass, badge]})
+        self.assertEqual((out["profile"]["johto"] != 0, out["given"]["level_cap"]), (True, 34))
+        out = self.edit("story", {"undo": [badge]})
+        self.assertEqual(out["report"], {"ran": {}, "left": {}})
+        self.assertEqual((out["profile"]["johto"], out["given"]["level_cap"]), (0, 10))
+        out = self.edit("menu", {"icon": "START_MENU_ICON_RUNNING_SHOES", "on": True})
+        self.assertEqual((out["given"]["shoes"], out["given"]["menu"]["START_MENU_ICON_RUNNING_SHOES"]), (True, True))
+        out = self.edit("pokegear", {"cards": 3, "map_level": 1})
+        self.assertEqual(out["given"]["pokegear"], {"cards": 3, "map_level": 1})
+        self.assertIn("passo della storia", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "story",
+                                                                       "args": {"run": ["0000:1"]}}))
+        self.assertIn("livello della mappa", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "pokegear",
+                                                                        "args": {"map_level": 3}}))
+        self.assertIn("non è una voce del menu", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "menu",
+                                                                            "args": {"icon": "START_MENU_ICON_EXIT", "on": 1}}))
+        self.assertEqual(len(self.backups()), 5, "one backup a write")
+
     def test_files(self):
         self.edit("trainer", {"money": 1})
         self.assertEqual(self.ok("/api/duplicate", {"f": "gyms/test.sav", "name": "copia"})["f"], "copia.sav")
