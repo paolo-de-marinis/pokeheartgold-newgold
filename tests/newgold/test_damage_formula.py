@@ -448,7 +448,7 @@ def program():
     overlay = "\n".join([enum, table(OVERLAY, "sTypeEffectiveness"), move_list(OVERLAY, "sMinimizeVulnerableMoves")] + [
         function(OVERLAY, name) for name in (
             "QMul_RoundUp", "QMul_RoundDown", "ov12_02251C74", "ov12_022583B4", "TeraShellResists",
-            "BattlerMoveWeather", "WeatherUnderUmbrella", "StrongWindsShelterRow", "StrongWindsFor", "StrongWindsWeakenMove",
+            "BattlerMoveWeather", "WeatherUnderUmbrella", "BattlerMoveWeatherAt", "StrongWindsShelterRow", "StrongWindsFor", "StrongWindsWeakenMove",
             "BattlerIsGrounded", "CalcTypeEffectiveness", "MoveIsInList", "BattleMoveStampsOnMinimize")])
     commands = "\n".join(function(COMMANDS, name) for name in (
         "ScreenModifier", "ResistBerryType", "ResistBerryModifier", "RawSpeedGoesFirst", "RawSpeedOrder",

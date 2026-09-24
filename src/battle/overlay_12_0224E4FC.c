@@ -3143,13 +3143,25 @@ u32 BattlerMoveWeather(BattleSystem *battleSystem, BattleContext *ctx, int battl
 // neither were up, and so does a Fire or Water move, or Thunder's accuracy,
 // against it. The weather as it reaches the battler: the one given, less the
 // rain and the sun for a holder. Protosynthesis is not held off
-// (Paleoattivazione); Mega Sol's own sunlight, which no Pokemon in New Gold
-// has, is not told apart.
+// (Paleoattivazione).
 u32 WeatherUnderUmbrella(BattleContext *ctx, u32 weather, int battlerId) {
     if (GetBattlerHeldItemEffect(ctx, battlerId) == HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
         weather &= ~(FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SUN_ALL);
     }
     return weather;
+}
+
+// The weather battlerIdAttacker's move meets at battlerId, its user or its
+// target: the one its moves see, under the umbrella as it reaches battlerId.
+// Mega Sol's sunlight is the move's own, and no umbrella keeps it off, the
+// user's or the target's: Pokemon Showdown's Pokemon.effectiveWeather gives a
+// Mega Sol user's move the sun before it asks for the umbrella (Pokemon
+// Central, Megasolar and Superombrello, says nothing of the two together).
+u32 BattlerMoveWeatherAt(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerId) {
+    if (GetBattlerAbility(ctx, battlerIdAttacker) == ABILITY_MEGA_SOL) {
+        return FIELD_CONDITION_SUN;
+    }
+    return WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker), battlerId);
 }
 
 // Weather Ball (Pokemon Central, Palla Clima): the weather that counts for it,

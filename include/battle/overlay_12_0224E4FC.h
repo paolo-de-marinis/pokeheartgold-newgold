@@ -160,6 +160,7 @@ u16 Battler_BrokenFaceForm(BattleContext *ctx, int battlerIdAttacker, int battle
 u32 BattlerMoveWeather(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 u32 WeatherBallWeather(u32 weather, int holdEffect);
 u32 WeatherUnderUmbrella(BattleContext *ctx, u32 weather, int battlerId);
+u32 BattlerMoveWeatherAt(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerId);
 u8 WeatherBallType(u32 weather);
 BOOL TeraShellResists(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u32 moveNo);
 BOOL StrongWindsWeakenMove(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u32 moveNo, int moveTypeDefault);

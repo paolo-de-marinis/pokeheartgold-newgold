@@ -227,7 +227,7 @@ class ParentalBondTests(unittest.TestCase):
         quarter = body.index("if (ParentalBond_IsSecondStrike(ctx)) {\n        damage = QMul_RoundDown(damage, UQ412__0_25);")
         # 6.2, after the spread's three quarters and before the weather.
         self.assertLess(body.index("UQ412__0_75"), quarter)
-        self.assertLess(quarter, body.index("BattlerMoveWeather("))
+        self.assertLess(quarter, body.index("BattlerMoveWeatherAt("))
 
     def test_it_starts_with_the_move_and_with_a_called_one(self):
         # A called move comes back through the before-move steps

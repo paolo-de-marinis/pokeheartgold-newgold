@@ -308,7 +308,7 @@ class MoveTests(unittest.TestCase):
                  {"THUNDER", "HURRICANE", "BLEAKWIND_STORM", "WILDBOLT_STORM", "SANDSEAR_STORM"})):
             # The weather is the one the attacker's move sees (BattlerMoveWeather),
             # less what a Utility Umbrella keeps off the target.
-            found = re.findall(r"if \(\(?(?:weather|WeatherUnderUmbrella\(ctx, BattlerMoveWeather\(battleSystem, ctx, battlerIdAttacker\), battlerIdTarget\)) & FIELD_CONDITION_" + weather
+            found = re.findall(r"if \(\(?(?:weather|BattlerMoveWeatherAt\(battleSystem, ctx, battlerIdAttacker, battlerIdTarget\)) & FIELD_CONDITION_" + weather
                                + r"\)?\s*&&([^{]*)\{\s*" + re.escape(then), source)
             self.assertEqual(len(found), 1, weather)
             self.assertEqual(set(re.findall(r"MOVE_EFFECT_([A-Z_]+)", found[0])), want, weather)

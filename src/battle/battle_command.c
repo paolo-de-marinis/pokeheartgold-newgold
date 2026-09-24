@@ -1043,13 +1043,11 @@ static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BO
     // target keeps the rain and the sun from changing a Fire or Water move
     // aimed at it (Pokemon Central, Superombrello, Idrovapore), which the
     // reference does not ask; Hydro Steam's help is its user's alone.
-    weather = BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker);
-    if ((weather & FIELD_CONDITION_SUN_ALL) && type == TYPE_WATER && moveNo == MOVE_HYDRO_STEAM
-        && GetBattlerHeldItemEffect(ctx, battlerIdAttacker) != HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN) {
+    weather = BattlerMoveWeatherAt(battleSystem, ctx, battlerIdAttacker, battlerIdTarget);
+    if ((BattlerMoveWeatherAt(battleSystem, ctx, battlerIdAttacker, battlerIdAttacker) & FIELD_CONDITION_SUN_ALL) && type == TYPE_WATER && moveNo == MOVE_HYDRO_STEAM) {
         damage = QMul_RoundDown(damage, UQ412__1_5);
         weather = 0;
     }
-    weather = WeatherUnderUmbrella(ctx, weather, battlerIdTarget);
     if (weather & FIELD_CONDITION_RAIN_ALL) {
         switch (type) {
         case TYPE_FIRE:
@@ -4798,7 +4796,7 @@ BOOL BtlCmd_WeatherHPRecovery(BattleSystem *battleSystem, BattleContext *ctx) {
     // BtlCmd_WeatherHPRecovery).
     // A Utility Umbrella holder heals the half it heals in clear weather in
     // the rain or the sun too (Superombrello).
-    u32 weather = WeatherUnderUmbrella(ctx, BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), ctx->battlerIdAttacker);
+    u32 weather = BattlerMoveWeatherAt(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdAttacker);
 
     if (!weather || (weather & FIELD_CONDITION_STRONG_WINDS)) {
         ctx->hpCalc = ctx->battleMons[ctx->battlerIdAttacker].maxHp / 2;
