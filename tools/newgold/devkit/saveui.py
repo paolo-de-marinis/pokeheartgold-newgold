@@ -1088,9 +1088,12 @@ def world():
     """The town map's size, and each map's tiles on it and whether the main
     matrix is its own (a tile of it is then the chunk it owns); and the map
     types that are a building's (MapHeader_IsInBuilding), which a click
-    on a tile picks last."""
+    on a tile picks last; and the maps a blackout sends the player to (the
+    heal spawns: the Pokémon Centers, and the few other places that are
+    one)."""
     town, tiles, main = sv.town_map(), sv.town_tiles(), sv.main_matrix()[1]
     return {"cols": town["cols"], "rows": town["rows"], "buildings": sorted(sv.buildings()),
+            "heals": sorted(m for m in sv.spawns()["heal"] if standable(m)),
             "tiles": {m: tiles.get(m, []) for m in sv.map_table() if standable(m)},
             "main": [m for m in sv.map_table() if standable(m) and sv._matrix_of().get(m) == main]}
 

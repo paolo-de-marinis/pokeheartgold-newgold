@@ -463,6 +463,9 @@ class SaveUiTests(unittest.TestCase):
                              ("MAP_TYPE_NAMES", set(re.findall(r"\b(MAP_TYPE_\w+)", header)))):
             keys = set(re.findall(r"(\w+):", re.search(rf"const {table} = \{{(.*?)\}};", page, re.S).group(1)))
             self.assertLessEqual(keys, known, table)
+        words = {w for m in data["maps"] for w in m["const"].split("_")}
+        self.assertLessEqual(set(re.findall(r"(\w+):", re.search(r"const MAP_WORDS_IT = \{(.*?)\};", page, re.S).group(1))), words,
+                             "MAP_WORDS_IT: words of the maps' constants")
         # The story's words, whose values are sentences: a key starts the table or follows a comma.
         flags = set(sv.constants("include/constants/flags.h", "FLAG_"))
         for table, known in (("MENU_NAMES", {m["icon"] for m in data["menu"]}),
@@ -642,6 +645,8 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual((data["world"]["cols"], data["world"]["rows"]), (47, 20))
         self.assertIn(33, data["world"]["main"])
         self.assertEqual(data["world"]["buildings"], sorted(sv.buildings()), "MapHeader_IsInBuilding's, not the page's")
+        centre = sv.constants("include/constants/maps.h", "MAP_")["MAP_VIOLET_POKECENTER_1F"]
+        self.assertIn(centre, data["world"]["heals"], "a heal spawn: tagged in the list")
         self.assertEqual(re.findall(r'"MAP_TYPE_\w+"', (ROOT / "tools/newgold/devkit/saveui.html").read_text()), [])
         self.assertIn([655 // 32, 400 // 32 + 2], data["world"]["tiles"]["33"])
         self.assertEqual(self.ok("/api/place?map=33"), {"map": 33, "x": [576, 671], "y": [384, 415], "preset": {

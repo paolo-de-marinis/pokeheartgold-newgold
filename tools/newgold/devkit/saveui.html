@@ -398,6 +398,7 @@ function buildLists() {
     S.sectionTiles.get(r.section).add(`${x},${y}`);
   }
   S.mainMaps = new Set(d.world.main);
+  S.heals = new Set(d.world.heals);
   // The maps as the Posizione list shows them: by region, section, the section's own ground first.
   S.mapOrder = d.maps.slice().sort((a, b) => a.region.localeCompare(b.region) || (a.name || "~").localeCompare(b.name || "~")
     || S.mainMaps.has(b.id) - S.mainMaps.has(a.id) || a.const.localeCompare(b.const));
@@ -1716,6 +1717,9 @@ function renderDex() {
 // the game itself puts the player on a map (/api/place) come from the server, read from the tree. These are
 // only the Italian words for them, by the tree's constants.
 const REGION_NAMES = {MAP_REGION_JOHTO: "Johto", MAP_REGION_KANTO: "Kanto"};
+// Italian for words of the maps' constants, so the search finds "centro" in MAP_VIOLET_POKECENTER_1F.
+const MAP_WORDS_IT = {POKECENTER: "centro pokémon", GYM: "palestra", POKEMART: "market negozio", HOUSE: "casa",
+  TOWER: "torre", GATEHOUSE: "casello", CAVE: "grotta", ROOM: "stanza"};
 const MAP_TYPE_NAMES = {MAP_TYPE_CITY_TOWN: "città", MAP_TYPE_ROUTE: "percorso", MAP_TYPE_CAVE: "grotta",
   MAP_TYPE_INTERIOR: "interno", MAP_TYPE_POKEMON_CENTER: "Centro Pokémon", MAP_TYPE_UNDERGROUND: "sotterraneo"};
 const regionName = named(REGION_NAMES, "MAP_REGION_"), mapTypeName = named(MAP_TYPE_NAMES, "MAP_TYPE_");
@@ -1785,7 +1789,7 @@ function renderPosition() {
       <div class="townbox"><canvas id="town" width="${w.cols * 8 * TOWN_SCALE}" height="${w.rows * 8 * TOWN_SCALE}" aria-label="Mappa di Johto e Kanto: clic su un luogo per sceglierlo"></canvas>
         <div class="note" id="townlabel"></div></div>
       <div class="form" style="margin-top:12px">
-        <label class="f" style="grid-column:1/-1">Mappa<span class="mvin" style="display:block"><input name="map" id="mapin" value="${esc(mapTitle(here))}" placeholder="Cerca: città, percorso, grotta, edificio…"
+        <label class="f" style="grid-column:1/-1">Mappa<span class="mvin" style="display:block"><input name="map" id="mapin" value="${esc(mapTitle(here))}" placeholder="Cerca: città, percorso, grotta, interno, centro, palestra…"
           autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="maplist"></span></label>
         <label class="f">x<input type="number" name="x" min="0" max="65535" required value="${c.x}"></label>
         <label class="f">y<input type="number" name="y" min="0" max="65535" required value="${c.y}"></label>
@@ -1831,13 +1835,14 @@ function mapCombo(el) {
   const open = q => {
     const words = (q || "").toLowerCase().split(/\s+/).filter(Boolean);
     const has = text => words.every(x => text.toLowerCase().includes(x));
-    shown = S.mapOrder.filter(r => has(`${r.name} ${mapWords(r)} ${r.const} ${regionName(r.region)} ${mapTypeName(r.type)}`));
+    const italian = r => r.const.split("_").map(w => MAP_WORDS_IT[w] ?? "").join(" ");
+    shown = S.mapOrder.filter(r => has(`${r.name} ${mapWords(r)} ${r.const} ${regionName(r.region)} ${mapTypeName(r.type)} ${italian(r)}`));
     shown.sort((a, b) => has(b.name) - has(a.name));     // the places named so first: "violet" is Violet City before its gatehouses
     let section = null;
     list.innerHTML = shown.map((r, i) => {
       const head = r.section !== section ? `<div class="mvhead">${esc(r.name || r.section)} <span class="muted">${esc(regionName(r.region))}</span></div>` : "";
       section = r.section;
-      return `${head}<div class="mvopt" role="option" id="mapopt${i}" data-i="${i}"><span class="nm">${esc(mapWords(r))}</span><span class="tag">${esc(mapTypeName(r.type))}</span>${!(S.data.world.tiles[r.id] || []).length ? `<span class="tag" title="Non ha un posto sulla mappa della Pokégear">fuori mappa</span>` : ""}</div>`;
+      return `${head}<div class="mvopt" role="option" id="mapopt${i}" data-i="${i}"><span class="nm">${esc(mapWords(r))}</span><span class="tag">${esc(mapTypeName(r.type))}</span>${S.heals.has(r.id) ? `<span class="tag" title="Il gioco ti rimanda qui dopo una sconfitta">si ricompare qui</span>` : ""}${!(S.data.world.tiles[r.id] || []).length ? `<span class="tag" title="Non ha un posto sulla mappa della Pokégear">fuori mappa</span>` : ""}</div>`;
     }).join("") || `<div class="mvopt muted">Nessuna mappa con questo nome</div>`;
     active = -1;
     list.hidden = false;
