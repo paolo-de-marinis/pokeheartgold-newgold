@@ -128,10 +128,13 @@ BOOL FrtCmd_103(FrontierScriptContext *ctx) {
         break;
     case 18: {
         // The type most of the next trainer's Pokemon share, if two share one.
-        int typeCounts[18];
+        // Retail counted in eighteen slots, which end at Dark: a Fairy type
+        // wrote one past them, into the saved registers, and was never the
+        // answer.
+        int typeCounts[NUMBER_OF_MON_TYPES];
         int numMons = ov80_02236DF8(data->type, 1);
 
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < NUMBER_OF_MON_TYPES; i++) {
             typeCounts[i] = 0;
         }
         mon = AllocMonZeroed(HEAP_ID_FIELD2);
@@ -149,7 +152,7 @@ BOOL FrtCmd_103(FrontierScriptContext *ctx) {
         }
         Heap_Free(mon);
         type1 = 0;
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < NUMBER_OF_MON_TYPES; i++) {
             if (typeCounts[type1] < typeCounts[i]) {
                 type1 = i;
             }
