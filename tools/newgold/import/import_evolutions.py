@@ -76,6 +76,16 @@ CANONICAL_ROWS = {
 }
 
 
+# Paolo's own designs (2026-09-23), beyond the reference and konefr's: rows a
+# species is given that neither tree gives it, after the reference's own.
+DESIGNED_ROWS = {
+    # Kingambit, levelling up knowing Swords Dance. The engine's row beside
+    # it, three Bisharp holding a Leader's Crest defeated, stays; no Bisharp
+    # in the game holds one.
+    "SPECIES_BISHARP": [("EVO_HAS_MOVE", "MOVE_SWORDS_DANCE", "SPECIES_KINGAMBIT")],
+}
+
+
 FORMS_OF = {}
 
 
@@ -235,7 +245,7 @@ def main():
     for base, body in table.items():
         rows = [(method, param, carried_form(base, native_target(target))) for method, param, target in ROW.findall(body)]
         rows = [(method, param, target) for method, param, target in rows if target != "SPECIES_NONE"]
-        rows = [CANONICAL_ROWS.get((base, *row), row) for row in rows]
+        rows = [CANONICAL_ROWS.get((base, *row), row) for row in rows] + DESIGNED_ROWS.get(base, [])
         # Only lines that touch a new species: either it evolves, or something
         # already here gains a way to become one.
         rows = [row for row in rows if base in wanted or row[2] in wanted]

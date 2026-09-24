@@ -5182,6 +5182,11 @@
           "method": "EVO_FORM_ARGUMENT",
           "param": 3,
           "target": "SPECIES_KINGAMBIT"
+        },
+        {
+          "method": "EVO_HAS_MOVE",
+          "param": "MOVE_SWORDS_DANCE",
+          "target": "SPECIES_KINGAMBIT"
         }
       ]
     }

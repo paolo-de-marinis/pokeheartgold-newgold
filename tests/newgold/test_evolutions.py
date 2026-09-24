@@ -81,6 +81,12 @@ ENGINE_METHOD_ROWS = [
     ("SPECIES_SHELMET", ("EVO_TRADE_SPECIFIC_MON", "SPECIES_KARRABLAST", "SPECIES_ACCELGOR")),
 ]
 
+# Paolo's own designs (2026-09-23), beyond the reference and konefr's, which
+# the importer writes from its DESIGNED_ROWS.
+DESIGNED_ROWS = [
+    ("SPECIES_BISHARP", ("EVO_HAS_MOVE", "MOVE_SWORDS_DANCE", "SPECIES_KINGAMBIT")),
+]
+
 VANILLA_EEVEE = {
     "SPECIES_VAPOREON", "SPECIES_JOLTEON", "SPECIES_FLAREON",
     "SPECIES_ESPEON", "SPECIES_UMBREON", "SPECIES_LEAFEON", "SPECIES_GLACEON",
@@ -192,6 +198,13 @@ class EvolutionTests(unittest.TestCase):
         method on the host."""
         for base, row in ENGINE_METHOD_ROWS:
             self.assertIn(dict(zip(("method", "param", "target"), row)), self.byBase.get(base, []), base)
+
+    def test_paolos_designs(self):
+        """test_evolution_methods.py runs these rows, read from the table, on
+        the host."""
+        for base, row in DESIGNED_ROWS:
+            self.assertIn(dict(zip(("method", "param", "target"), row)), self.byBase.get(base, []), base)
+            self.assertIn(row, import_evolutions.DESIGNED_ROWS[base], base)
 
     def test_every_name_is_defined(self):
         known = (constants("include/constants/pokemon.h", "EVO_")

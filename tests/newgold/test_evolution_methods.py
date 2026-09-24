@@ -8,6 +8,7 @@ hg-engine's GetMonEvolutionInternal does at d0380a487, and where the port
 departs from it to the games' behaviour the check says so.
 """
 
+import json
 import os
 import re
 import shlex
@@ -46,7 +47,7 @@ typedef int BOOL;
 typedef struct { int hour, minute, second; } RTCTime;
 
 typedef struct {
-    u16 species, heldItem, friendship;
+    u16 species, heldItem, friendship, move;
     u8 level, form, type1, type2, bits113, evolutionCounter;
     u32 pid, hp, maxHp;
 } Pokemon;
@@ -98,7 +99,7 @@ static void LoadMonEvolutionTable(u16 species, struct Evolution *dest) {
     assert(species != SPECIES_NONE);
     memcpy(dest, table, sizeof(table));
 }
-static inline BOOL MonHasMove(Pokemon *mon, u16 move) { (void)mon; (void)move; return FALSE; }
+static inline BOOL MonHasMove(Pokemon *mon, u16 move) { return mon->move == move; }
 static inline BOOL MonHasMoveOfType(Pokemon *mon, u8 type) { (void)mon; (void)type; return FALSE; }
 static inline BOOL Party_HasMon(Party *party, u16 species) {
     for (int i = 0; i < party->count; i++) {
@@ -125,6 +126,7 @@ static inline void GF_RTC_CopyTime(RTCTime *time) { time->hour = hour; time->min
 static TIMEOFDAY GF_RTC_GetTimeOfDay(void) { return GF_RTC_GetTimeOfDayByHour(hour); }
 @NIGHT_FUNCTION@
 @FUNCTIONS@
+@DESIGNED_ROWS@
 
 static void one_row(int method, u16 parameter, u16 target) {
     memset(table, 0, sizeof(table));
@@ -368,6 +370,22 @@ static void check_trade_specific_mon(void) {
     assert(allocations == 0);
 }
 
+static void check_swords_dance(void) {
+    // Paolo's design (2026-09-23), Bisharp's rows as evo.json has them: a
+    // level-up knowing Swords Dance, at any level; knowing another move, or
+    // by trade or item, nothing.
+    static const u16 moves[] = { MOVE_NONE, MOVE_SLASH, MOVE_SWORDS_DANCE };
+    Pokemon mon = { .species = SPECIES_BISHARP, .level = 1 };
+    memcpy(table, rows_SPECIES_BISHARP, sizeof(table));
+    for (unsigned m = 0; m < 3; m++) {
+        mon.move = moves[m];
+        assert(evolve(&mon, NULL, EVO_HAS_MOVE) == (mon.move == MOVE_SWORDS_DANCE ? SPECIES_KINGAMBIT : SPECIES_NONE));
+    }
+    for (int context = EVOCTX_TRADE; context <= EVOCTX_ITEM_USE; context++) {
+        assert(GetMonEvolution(NULL, &mon, context, ITEM_LINKING_CORD, NULL) == SPECIES_NONE);
+    }
+}
+
 static void check_counted_moves(void) {
     // Primeape counts Rage Fist and Stantler Psyshield Bash, nothing else and
     // no one else; the count stops at 255.
@@ -419,6 +437,7 @@ int main(void) {
     check_gimmighoul_coins();
     check_defeated_bisharp();
     check_trade_specific_mon();
+    check_swords_dance();
     check_counted_moves();
     check_lets_go();
     return 0;
@@ -502,6 +521,18 @@ def scene():
     return SCENE.replace("@STRUCT@", struct).replace("@FUNCTION@", function(source, "sub_02076C90"))
 
 
+# The species whose rows, as the table has them, the program runs.
+DESIGNED_SPECIES = ("SPECIES_BISHARP",)
+
+
+def designed_rows():
+    """Each of DESIGNED_SPECIES' rows in evo.json, as rows_<species>."""
+    table = {entry["baseSpecies"]: entry["evos"] for entry in json.loads(read("files/poketool/personal/evo.json"))["evoTable"]}
+    return "\n".join(f"static const struct Evolution rows_{base}[MAX_EVOS_PER_POKE] = {{ "
+                     + ", ".join(f"{{ {e['method']}, {e['param']}, {e['target']} }}" for e in table[base]) + " };"
+                     for base in DESIGNED_SPECIES)
+
+
 def program():
     evolution = re.search(r"struct Evolution \{.*?\};\n#define MAX_EVOS_PER_POKE \d+", read("include/pokemon_types_def.h"), re.S)
     rtc = re.search(r"typedef enum RTC_TimeOfDay \{.*?\} TIMEOFDAY;", read("include/gf_rtc.h"), re.S)
@@ -513,6 +544,7 @@ def program():
         "@RTC_TYPE@": rtc.group(),
         "@HOUR_FUNCTION@": function(read("src/gf_rtc.c"), "GF_RTC_GetTimeOfDayByHour"),
         "@NIGHT_FUNCTION@": function(read("src/gf_rtc.c"), "IsNighttime"),
+        "@DESIGNED_ROWS@": designed_rows(),
         "@FUNCTIONS@": "\n".join(function(source, name) for name in ("GetNatureFromPersonality", "EvolvedPassiveForm", "GetMonEvolution", "Mon_IncrementEvolutionCounter", "Mon_CountEvolutionMove", "Mon_CountDefeatedMon", "Mon_CountLetsGoStep")),
     }
     text = FIXTURE
