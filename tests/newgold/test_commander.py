@@ -277,6 +277,124 @@ class CommanderTests(unittest.TestCase):
                       work[release:])
 
 
+    COUNTERS = r"""
+int main(void) {
+    sMoves[MOVE_PROTECT].effect = MOVE_EFFECT_PROTECT;
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.battlersOnField = 2;
+    // The Tatsugiri (2) protects, then goes into the Dondozo's (0) mouth.
+    sRoll = 0;
+    use(&ctx, 2, MOVE_PROTECT);
+    assert(ctx.protectSuccessTurns[2] == 1);
+    // Its turns there pass with no move of its own; the Dondozo and a foe
+    // protect meanwhile.
+    use(&ctx, 0, MOVE_PROTECT);
+    use(&ctx, 1, MOVE_PROTECT);
+    use(&ctx, 0, MOVE_PROTECT);
+    // Out again, its next Protect is the second in a row: one try in three.
+    memset(ctx.turnData, 0, sizeof(ctx.turnData));
+    sRoll = 1;
+    use(&ctx, 2, MOVE_PROTECT);
+    assert(!ctx.turnData[2].protectFlag && ctx.protectSuccessTurns[2] == 0);
+    return 0;
+}
+"""
+
+    METRONOME = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
+#include "constants/battle.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+typedef uint16_t u16; typedef uint32_t u32;
+typedef struct BattleSystem BattleSystem;
+typedef struct { u32 status2; struct { int metronomeTurns; } unk88; } BattleMon;
+typedef struct {
+    int battlerIdAttacker; u32 battleStatus; u16 moveNoTemp; u16 moveNoMetronome[4]; BattleMon battleMons[4];
+} BattleContext;
+static int sItem[4];
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return sItem[battlerId]; }
+@COUNT@
+static void use(BattleContext *ctx, int battlerId, u16 move) {
+    ctx->battlerIdAttacker = battlerId;
+    ctx->moveNoTemp = move;
+    ov12_022565E0(0, ctx);
+}
+int main(void) {
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    sItem[0] = sItem[2] = HOLD_EFFECT_BOOST_REPEATED;
+    // The Tatsugiri (2) attacks twice, then goes into the Dondozo's (0) mouth.
+    use(&ctx, 2, MOVE_TACKLE);
+    use(&ctx, 2, MOVE_TACKLE);
+    assert(ctx.battleMons[2].unk88.metronomeTurns == 1);
+    // The Dondozo and a foe use their own moves meanwhile.
+    use(&ctx, 0, MOVE_WATERFALL);
+    use(&ctx, 0, MOVE_EARTHQUAKE);
+    use(&ctx, 1, MOVE_TACKLE);
+    // Out again, the same attack is the third in a row.
+    use(&ctx, 2, MOVE_TACKLE);
+    assert(ctx.battleMons[2].unk88.metronomeTurns == 2);
+    return 0;
+}
+"""
+
+    def test_its_counters_wait_in_the_mouth(self):
+        # Pokemon Central (Torre di Comando): the Tatsugiri's turn counters
+        # pause while it is in the mouth -- a Protect before it and one
+        # straight after it are two in a row, and the Metronome item boosts
+        # an attack repeated across it. It chooses nothing there
+        # (test_the_tatsugiri_neither_acts_nor_is_hit), and the counts move
+        # only as their Pokemon uses a move, comes in or faints: the real
+        # Protect and Metronome counters, run for its turns around the
+        # mouth and the Dondozo's and a foe's in it, and every writer of the
+        # four fields.
+        from test_protect import FIXTURE
+        tables = (BATTLE / "overlay_12_0226C2F8.c").read_text()
+        chances = tables[tables.index("const u16 sProtectSuccessChance["):]
+        source = FIXTURE[:FIXTURE.index("int main(void) {")] + self.COUNTERS
+        for token, replacement in {
+            "@CHANCES@": chances[:chances.index(";") + 1],
+            "@TEAM_GUARD@": function(COMMANDS, "IsTeamGuard"),
+            "@TEAM_GUARD_MOVE@": function(CONTROLLER, "IsTeamGuardMove"),
+            "@STOPS@": function(CONTROLLER, "GuardStopsMove"),
+            "@TRY@": function(COMMANDS, "BtlCmd_TryProtection"),
+            "@FEINT@": "",
+        }.items():
+            source = source.replace(token, replacement)
+        run_c(source)
+        run_c(self.METRONOME.replace("@COUNT@", function(OVERLAY, "ov12_022565E0")))
+        write = re.compile(r"\b(protectSuccessTurns|moveNoProtect|metronomeTurns|moveNoMetronome)\b[^;]*?(?:[-+]=|(?<![!<>=])=(?!=)|\+\+|--)")
+        writers = set()
+        for path in sorted(BATTLE.glob("*.c")):
+            name = None
+            for line in path.read_text().splitlines():
+                head = re.match(r"(?:static )?[A-Za-z_][\w *]*?\b(\w+)\(.*\) \{$", line)
+                if head:
+                    name = head.group(1)
+                elif write.search(line) and not line.lstrip().startswith("//"):
+                    writers.add(name)
+        self.assertEqual(writers, {
+            # Its own moves: Protect's family, Ally Switch, the Metronome
+            # item's count and a failed move's, the move noted (or not).
+            "BtlCmd_TryProtection", "AllySwitchWorks", "ov12_022565E0", "ov12_02256694",
+            "ov12_0224C204", "ov12_0224D23C",
+            # Its coming in and its fainting.
+            "BattleSystem_GetBattleMon", "InitSwitchWork", "InitFaintedWork",
+            # The script commands, which no script uses on these.
+            "SetBattlerVar", "AddBattlerVar",
+        })
+        scripts = "".join(path.read_text() for path in SCRIPTS.rglob("*.s"))
+        for data in ("BMON_DATA_PROTECT_SUCCESS_COUNT", "BMON_DATA_METRONOME_TURNS"):
+            self.assertNotIn(data, scripts)
+        # The Dondozo fainting lets it out, its counts as they were.
+        work = function(OVERLAY, "InitFaintedWork")
+        release = work[work.index("if (ctx->moveConditions[battlerId].commanderForm) {"):]
+        release = release[:release.index("MI_CpuClear8")]
+        self.assertNotRegex(release, r"protectSuccessTurns|moveNoProtect|metronomeTurns|moveNoMetronome")
+
 class OrderUpTests(unittest.TestCase):
     """Pokemon Central (Alta Cucina): a user holding a Tatsugiri in its mouth
     raises its Attack, Defense or Speed by one, by the Curly, Droopy or
