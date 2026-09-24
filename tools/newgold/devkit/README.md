@@ -107,7 +107,10 @@ order -- Whitney beaten, the lass's trigger, the badge, TM45 -- from those
 links and the step a walk stops at (Pryce's TM07, given in the badge's
 scene). `run_step` runs a step on a save as the game would, each jump decided
 on the save (Chuck's badge starts the Rocket takeover only as the third
-midgame badge), noting what each thing it writes held before
+midgame badge; a gift the bag has no room for, `GoToIfNoItemSpace`, is not
+given), taking what `TakeItem` takes and the money `SubMoneyImmediate` does,
+and naming what it does not do itself (a Pokemon or an egg given, a roamer
+let loose); noting what each thing it writes held before
 (`record`), and `undo_step` takes one back: given that record, each thing
 the run left untouched since goes back to what it found; the rest -- a
 step done by playing -- by what the step writes: undone, a flag it only

@@ -875,7 +875,9 @@ function writeText(w) {
     case "add": return `${name} ${value < 0 ? "−" : "+"} ${Math.abs(value)}`;
     case "trainer": return `${name} battuto`;
     case "badge": return `Medaglia ${badgeName(name)}`;
-    case "item": return `${itemNameOf(name)}${value > 1 ? ` ×${value}` : ""}`;
+    case "item": return value < 0 ? `${itemNameOf(name)} tolto dalla Borsa${value < -1 ? ` ×${-value}` : ""}` : `${itemNameOf(name)}${value > 1 ? ` ×${value}` : ""}`;
+    case "money": return `${value < 0 ? "−" : "+"}${Math.abs(value)} soldi`;
+    case "other": return `non lo fa l'editor: ${name}`;
     case "shoes": return "scarpe da corsa";
     case "dex": return "Pokédex acceso";
     case "card": return `scheda ${value} del Pokégear`;

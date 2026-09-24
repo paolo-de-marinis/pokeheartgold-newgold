@@ -3088,7 +3088,20 @@ def _write(op, args):
         return "natdex", "", 1
     if op in ("GoToIfNoItemSpace", "GiveItemNoCheck") and args[0].startswith("ITEM_"):
         return "item", args[0], _number(args[1]) or 1     # a count in a variable: one, at least
+    if op in ("TakeItem", "TakeItemNoCheck") and args[0].startswith("ITEM_"):
+        return "item", args[0], -(_number(args[1]) or 1)
+    if op in ("SubMoneyImmediate", "AddMoney") and _number(args[0]) is not None:
+        return "money", "", _number(args[0]) * (-1 if op == "SubMoneyImmediate" else 1)
+    if op in _NOT_DONE or op in ("GiveItem", "TakeItem"):
+        return "other", f"{op} {', '.join(args)}".strip(), 0
     return None
+
+
+# What a script does to the save that the editor does not do -- a Pokemon or
+# an egg given, a roamer let loose, coins or points moved, money by a
+# variable -- named among a step's writes so the page can say so.
+_NOT_DONE = ("GiveMon", "GiveEgg", "GiveTogepiEgg", "GiveSpikyEarPichu", "GiveLoanMon", "GiveDaycareEgg", "CreateRoamer",
+             "GiveCoins", "TakeCoins", "SubMoneyVar", "GiveAthletePoints", "TakeAthletePoints", "GiveRibbon", "SetMonMove")
 
 
 def _subject(name, subjects):
@@ -3136,6 +3149,18 @@ def _branch(op, args, subjects, compared):
     if condition[0] is None or condition[0] == ("won",) or condition[2] is None:
         condition = None
     return args[-1], condition, op.startswith("CallIf")
+
+
+def _room(save, name, count):
+    """Bag_HasSpaceForItem: the item's own slot with room for `count` more
+    (item_limit), or else a free slot in its pocket."""
+    item = _script_names()[0][name]
+    pocket = item_table().get(item, {}).get("pocket")
+    if not pocket:
+        return False
+    held = bag(save)[pocket]
+    have = next((slot["quantity"] for slot in held if slot["item"] == item), None)
+    return have + count <= item_limit(item) if have is not None else len(held) < pocket_at(pocket)[1]
 
 
 def _items(save):
@@ -3228,6 +3253,10 @@ def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=
             continue
         if op == "Compare":
             compared = (_subject(args[0], subjects), _number(args[1]))
+        if (save is not None and op in ("GoToIfNoItemSpace", "GoToIfNoItemSpace2") and args[0].startswith("ITEM_")
+                and args[-1] in labels and not _room(save, args[0], _number(args[1]) or 1)):
+            i = labels[args[-1]]        # the bag is full, or already holds the one a TM can be
+            continue
         branch = _branch(op, args, subjects, compared)
         if branch and branch[1] and branch[0] in labels:
             label, (subject, test, value), call = branch
@@ -3335,10 +3364,12 @@ def _apply(save, write, undo=False):
     elif kind == "natdex":
         set_dex_switches(save, national=not undo)
     elif kind == "item":
-        have = sum(i["quantity"] for p in bag(save).values() for i in p if i["item"] == names[name])
-        wanted = max(0, have - value) if undo else min(have + value, item_limit(names[name]))
+        have = _items(save)[names[name]]
+        wanted = max(0, min(have + (-value if undo else value), item_limit(names[name])))
         if wanted != have:
             set_item(save, names[name], wanted)
+    elif kind == "money":
+        set_profile(save, money=max(0, min(profile(save)["money"] + (-value if undo else value), MAX_MONEY)))
 
 
 def _key(write):
@@ -3359,6 +3390,10 @@ def _value(save, key):
         return var_value(save, names[name])
     if kind == "item":
         return _items(save)[names[name]]
+    if kind == "money":
+        return profile(save)["money"]
+    if kind == "other":
+        return None         # what the editor does not do, it does not take back
     return {"shoes": lambda: int(running_shoes(save)), "dex": lambda: save.block("SAVE_POKEDEX")[DEX_ENABLED],
             "card": lambda: pokegear(save)["cards"], "map": lambda: pokegear(save)["map_level"],
             "natdex": lambda: save.block("SAVE_POKEDEX")[DEX_NATIONAL]}[kind]()
@@ -3367,6 +3402,8 @@ def _value(save, key):
 def _restore(save, key, value):
     """A write's key (_key) put back to a value _value read."""
     kind, name = key.split(":", 1)
+    if kind == "other":
+        return
     if kind == "var":
         write_var(save, _script_names()[0][name], value)
     elif kind == "item":
@@ -3378,6 +3415,8 @@ def _restore(save, key, value):
         set_pokegear(save, map_level=value)
     elif kind == "dex":
         save.block("SAVE_POKEDEX")[DEX_ENABLED] = value
+    elif kind == "money":
+        set_profile(save, money=value)
     else:
         _apply(save, (kind, name, 1), undo=not value)
 
@@ -3389,7 +3428,8 @@ def _holds(save, write, items=None):
     if kind in ("flag", "trainer", "badge"):
         return _state(save, (kind, name)) == value
     if kind == "item":
-        return (items if items is not None else _items(save))[names[name]] > 0
+        have = (items if items is not None else _items(save))[names[name]]
+        return have > 0 if value > 0 else have == 0
     if kind == "var":
         return var_value(save, names[name]) >= value
     if kind == "shoes":
@@ -3539,7 +3579,7 @@ def _gives(write, need):
     """Whether a step's write leaves what a test wants."""
     (subject, test, value), (kind, name, written) = need, write
     if subject[0] == "item":
-        return kind == "item" and name == subject[1]
+        return kind == "item" and name == subject[1] and written > 0
     if subject[0] == "badge":
         return kind == "badge" and name == subject[1]
     if subject[0] in ("flag", "trainer"):
@@ -3558,7 +3598,7 @@ def _net(writes):
     for kind, name, value, conditional in writes:
         first.setdefault((kind, name), value)
         before = out.get((kind, name))
-        if before and kind in ("add", "item"):
+        if before and kind in ("add", "item", "money"):
             value, conditional = value + before[2], conditional or before[3]
         elif before and kind == "card":
             value |= before[2]

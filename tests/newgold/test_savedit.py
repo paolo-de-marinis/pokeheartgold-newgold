@@ -925,6 +925,38 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertTrue(sv.flag_is_set(save, flags["FLAG_HIDE_BURNED_TOWER_B1F_RAIKOU"]))
         self.assertIn(gate["id"], sv.story_state(save)["done"])
 
+    def test_a_step_takes_and_pays_as_the_script_does(self):
+        """TakeItem and TakeItemNoCheck take the item (the Exp. Share for
+        the Red Scale), SubMoneyImmediate takes the money, a gift the bag
+        has no room for is not given (Whitney's TM45, already held: neither
+        the TM nor its flag), and what the editor does not do -- an egg
+        given -- is named among the writes."""
+        items, flags = sv.constants("include/constants/items.h", "ITEM_"), sv.constants("include/constants/flags.h", "FLAG_")
+        steps = {s["id"]: s for s in sv.story()}
+        share = next(s for s in steps.values() if s["kind"] == "item" and s["key"] == "ITEM_EXP__SHARE")
+        self.assertIn(["item", "ITEM_RED_SCALE", -1, False], share["writes"])
+        save = self.open()
+        sv.set_item(save, items["ITEM_RED_SCALE"], 1)
+        sv.run_step(save, share["id"])
+        self.assertEqual((sv._items(save)[items["ITEM_RED_SCALE"]], sv._items(save)[items["ITEM_EXP__SHARE"]]), (0, 1))
+        self.assertIn(share["id"], sv.story_state(save)["done"])
+        candy = next(s for s in steps.values() if s["key"] == "ITEM_RAGECANDYBAR" and ["money", "", -300, False] in s["writes"])
+        sv.set_profile(save, money=1000)
+        sv.run_step(save, candy["id"])
+        self.assertEqual(sv.profile(save)["money"], 700)
+        tm = sv.badge_chains()["BADGE_PLAIN"][3]
+        save = self.open()
+        sv.set_item(save, items["ITEM_TM45"], 1)
+        self.assertEqual(sv.run_step(save, tm), [], "no room: std_bag_is_full, and nothing else")
+        self.assertFalse(sv.flag_is_set(save, flags["FLAG_GOT_TM45_FROM_WHITNEY"]))
+        primo = next(s for s in steps.values() if s["key"] == "FLAG_GOT_MAREEP_EGG_FROM_PRIMO")
+        self.assertTrue(any(w[0] == "other" and w[1].startswith("GiveEgg SPECIES_MAREEP") for w in primo["writes"]))
+        save, found = self.open(), {}
+        before = save.image()
+        sv.run_step(save, primo["id"], found)
+        sv.undo_step(save, primo["id"], sv.record(save, found))
+        self.assertEqual(save.image(), before)
+
     def test_a_step_taken_back_puts_back_what_it_found(self):
         """Run with a record, a step taken back leaves the save as it was;
         a record the save has moved on from is passed over, key by key."""
