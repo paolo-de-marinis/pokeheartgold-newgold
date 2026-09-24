@@ -72,6 +72,15 @@ class SpriteTests(unittest.TestCase):
                     missing.append(f"{species:04d} {gender} -> {drawn:04d}/{gender}/front.png")
         self.assertEqual(missing, [], "the Dex draws an empty picture:\n" + "\n".join(missing))
 
+    def test_the_picture_and_its_height_ask_the_female_form(self):
+        """The mapping above only counts if the two functions that draw a
+        picture from a species and a gender -- the picture and palette, and
+        the picture's height -- send the base's female to it."""
+        pokemon = (ROOT / "src/pokemon.c").read_text()
+        for name in ("GetMonSpriteCharAndPlttNarcIdsEx", "GetMonPicHeightBySpeciesGenderForm"):
+            with self.subTest(function=name):
+                self.assertIn("PicSpecies_FemaleForm(species, gender)", function(pokemon, name))
+
 
 if __name__ == "__main__":
     unittest.main()
