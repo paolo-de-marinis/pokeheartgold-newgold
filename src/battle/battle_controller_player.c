@@ -5330,6 +5330,16 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         }
         script = BATTLE_SUBSCRIPT_JAW_LOCK;
         break;
+    // Mortal Spin clears its user's side once the move is over, if the user
+    // still stands (Pokemon Central, Glitturbine: not once Rough Skin, Iron
+    // Barbs, a Rocky Helmet or Aftermath has felled it). The poison is each
+    // target's additional effect.
+    case MOVE_EFFECT_MORTAL_SPIN:
+        if (!ctx->battleMons[ctx->battlerIdAttacker].hp) {
+            return FALSE;
+        }
+        script = BATTLE_SUBSCRIPT_MORTAL_SPIN;
+        break;
     // Stone Axe and Ceaseless Edge lay pointed stones or a layer of Spikes on
     // the target's side once the move is over, if the user still stands
     // (Pokemon Central, Rocciascure and Lama Milleflutti: not once Iron

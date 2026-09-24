@@ -73,23 +73,21 @@ class ThawTests(unittest.TestCase):
 
 
 class MortalSpinTests(unittest.TestCase):
-    def test_it_poisons_and_then_clears_as_rapid_spin_does(self):
+    def test_it_poisons_and_clears_once_the_move_is_over(self):
         # The reference poisons through the side effect and runs Rapid Spin's
-        # subscript after the move (ServerDoPostMoveEffects.c:1166-1175).
+        # subscript after the move (ServerDoPostMoveEffects.c:1166-1175), if
+        # the user stands (Pokemon Central, Glitturbine).
         effect = (ROOT / "files/battledata/script/effect_script/effect_script_0371.s").read_text()
-        self.assertIn("MOVE_SIDE_EFFECT_ON_HIT|MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_MORTAL_SPIN", effect)
+        self.assertIn("MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_POISON\n", effect)
+        self.assertNotIn("MORTAL_SPIN", effect)
         script = subscript("MortalSpin")
-        self.assertLess(script.index("BMON_DATA_HP, 0, _SPIN"), script.index("Call BATTLE_SUBSCRIPT_POISON"))
-        self.assertLess(script.index("Call BATTLE_SUBSCRIPT_POISON"), script.index("\n    RapidSpin"))
-        # The pointer names the new subscript through the table's last entry.
-        header = (ROOT / "include/constants/battle_subscript.h").read_text()
-        pointer = int(re.search(r"#define MOVE_SUBSCRIPT_PTR_MORTAL_SPIN\s+(\d+)", header).group(1))
-        table = OVERLAY.read_text()
-        table = table[table.index("sMoveStatusChangeScripts[] = {"):]
-        entries = re.findall(r"BATTLE_SUBSCRIPT_\w+", table[:table.index("};")])
-        self.assertEqual(entries[pointer], "BATTLE_SUBSCRIPT_MORTAL_SPIN")
-        number = int(re.search(r"#define BATTLE_SUBSCRIPT_MORTAL_SPIN\s+(\d+)", header).group(1))
-        self.assertTrue((SUBSCRIPTS / f"subscript_{number:04d}_MortalSpin.s").exists())
+        self.assertIn("\n    RapidSpin\n", script)
+        self.assertNotIn("POISON", script.split("_000:")[1])
+        step = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "TryAdditionalMoveEffect")
+        case = step[step.index("case MOVE_EFFECT_MORTAL_SPIN:"):]
+        case = case[:case.index("break;")]
+        self.assertIn("if (!ctx->battleMons[ctx->battlerIdAttacker].hp) {", case)
+        self.assertIn("script = BATTLE_SUBSCRIPT_MORTAL_SPIN;", case)
 
 
 class StuffCheeksTests(unittest.TestCase):
