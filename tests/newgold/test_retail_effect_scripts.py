@@ -44,7 +44,10 @@ WEATHER = ("the engine sets the weather through its HANDLE_*_TEMPORARY subscript
            "(NO_MORE_WORK), as Snowscape (effect 324) does here")
 
 STILL_DIFFERENT = {
-    7: IN_C.format("Damp and the user's fainting, BattleController_BeforeMove.c"),
+    7: "Damp and the user's HP going to 0 are the engine's before-move C (BattleController_BeforeMove.c), "
+       "which a move another calls goes back through; here a called Self-Destruct starts at once from its "
+       "script, so the script keeps both, to the same effect. The bar and the faint come once the move is "
+       "over, subscript 277, as the engine's step 11.0 has them",
     34: "Pay Day scatters its coins on the first strike or the only one; the engine's branch scatters "
          "them only on a first strike of Parental Bond, never without the ability (a6ee2c81c)",
     83: CALLED_MOVE + BACK_TO_BEFORE_MOVE + ", and prints the move the finger picked (message 1483), "
@@ -341,6 +344,17 @@ class BroughtOverTests(unittest.TestCase):
         for effect in (171, 217):
             self.assertNotIn("POWER_MULTI", script(effect), effect)
             self.assertNotIn("SIDE_EFFECT", script(effect), effect)
+
+    def test_explosion_s_user_faints_after_the_damage(self):
+        # Pokemon Central (Esplosione): from the sixth generation the damage
+        # comes before the user faints. The HP goes as the move begins, the
+        # bar and the faint once it is over (the reference's step 11.0).
+        seven = script(7)
+        self.assertIn("UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HP, 0", seven)
+        self.assertNotIn("UpdateHealthBar", seven)
+        self.assertNotIn("ATTACK_MESSAGE_AND_ANIMATION", seven)
+        after = subscript("AFTER_SELFDESTRUCT")
+        self.assertLess(after.index("UpdateHealthBar BATTLER_CATEGORY_FAINTED_MON"), after.index("Call BATTLE_SUBSCRIPT_FAINT_MON"))
 
     def test_the_binding_comes_once_the_move_is_over(self):
         # The engine's post-move step binds the target, both still standing;

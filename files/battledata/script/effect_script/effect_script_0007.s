@@ -2,6 +2,12 @@
 
     .data
 
+// Self-Destruct, Explosion and Misty Explosion. The user is at 0 HP from
+// here on, as the reference's before-move step puts it, but its bar stays
+// full until the move has done its damage: subscript 277 empties it and
+// faints the user once the move is over, as the reference's post-move step
+// 11.0 does. From the sixth generation the damage comes before the user
+// faints (Pokemon Central, Esplosione); retail emptied the bar first.
 _000:
     CheckIgnorableAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ALL, ABILITY_DAMP, _038
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_SELFDESTRUCTED, _035
@@ -9,10 +15,6 @@ _000:
     UpdateVarFromVar OPCODE_LEFT_SHIFT, BSCRIPT_VAR_CALC_TEMP, BSCRIPT_VAR_BATTLER_ATTACKER
     UpdateVarFromVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, BSCRIPT_VAR_CALC_TEMP
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HP, 0
-    UpdateVar OPCODE_SET, BSCRIPT_VAR_HP_CALC, S16_MAX
-    UpdateHealthBar BATTLER_CATEGORY_ATTACKER
-    Wait 
-    Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION
 
 _035:
     CalcCrit 
