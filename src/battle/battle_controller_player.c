@@ -2783,6 +2783,12 @@ static BOOL ov12_0224B398(BattleSystem *battleSystem, BattleContext *ctx) {
         || (ctx->battlerIdTarget == BATTLER_NONE && BattleCtx_IsIdenticalToCurrentMove(ctx, ctx->moveNoCur) == TRUE && (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_LOCKED_INTO_MOVE || ctx->battleStatus & BATTLE_STATUS_CHARGE_MOVE_HIT))) {
         ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_NO_TARGET);
         ctx->commandNext = CONTROLLER_COMMAND_39;
+        // An explosion with nothing left to hit still fells its user, from
+        // the fifth generation (Pokemon Central, Esplosione): TrySelfDestruct
+        // has put it at 0 HP, and ov12_0224D1DC faints it.
+        if (ctx->battleStatus & BATTLE_STATUS_SELFDESTRUCTED) {
+            ctx->commandNext = CONTROLLER_COMMAND_36;
+        }
         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
         ret = TRUE;
     }
@@ -3687,7 +3693,8 @@ static BOOL DampStopsMove(BattleSystem *battleSystem, BattleContext *ctx) {
 }
 
 // Self-Destruct, Explosion and Misty Explosion put their user at 0 HP as they
-// are used (the engine's BEFORE_MOVE_STATE_SET_EXPLOSION_SELF_DESTRUCT_FLAG,
+// are used, before a target is looked for (the engine's
+// BEFORE_MOVE_STATE_SET_EXPLOSION_SELF_DESTRUCT_FLAG,
 // BattleController_BeforeMove.c at d0380a487). Its bar stays full until the
 // move has done its damage, when ov12_0224D1DC faints it (subscript 277). Not
 // a move out of PP, which is not used at all (ov12_0224B1FC).
@@ -3851,10 +3858,10 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->unk_48++;
         // fallthrough
     case 5:
+        TrySelfDestruct(battleSystem, ctx);
         if (ov12_0224B398(battleSystem, ctx) == TRUE) {
             return;
         }
-        TrySelfDestruct(battleSystem, ctx);
         ctx->unk_48++;
         // fallthrough
     case 6:

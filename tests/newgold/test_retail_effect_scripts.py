@@ -546,6 +546,55 @@ int main(void) {
 """
 
 
+NO_TARGET_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+#include "constants/move_effects.h"
+#include "constants/moves.h"
+#include "constants/items.h"
+typedef struct { int unused; } BattleSystem;
+typedef struct { u16 effect; } MoveTbl;
+typedef struct { u32 status2; } Mon;
+typedef struct {
+    Mon battleMons[4];
+    int battlerIdAttacker, battlerIdTarget, script;
+    u32 moveNoCur, battleStatus;
+    ControllerCommand command, commandNext;
+    MoveTbl move;
+} BattleContext;
+enum { NARC_a_0_0_1 = 1 };
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)moveNo; return &ctx->move; }
+static BOOL BattleCtx_IsIdenticalToCurrentMove(BattleContext *ctx, int moveNo) { (void)ctx; (void)moveNo; return FALSE; }
+static u32 BattlerMoveWeather(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return 0; }
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return 0; }
+static void ReadBattleScriptFromNarc(BattleContext *ctx, int narc, int script) { (void)narc; ctx->script = script; }
+@FUNCTIONS@
+int main(void) {
+    BattleSystem bs = { 0 };
+    BattleContext ctx = { 0 };
+    ctx.battlerIdTarget = BATTLER_NONE;
+    ctx.moveNoCur = MOVE_EXPLOSION;
+    ctx.move.effect = MOVE_EFFECT_HALVE_DEFENSE;
+    ctx.battleStatus = 1u << BATTLE_STATUS_SELFDESTRUCTED_SHIFT;
+    assert(ov12_0224B398(&bs, &ctx) == TRUE);
+    assert(ctx.script == BATTLE_SUBSCRIPT_NO_TARGET && ctx.command == CONTROLLER_COMMAND_RUN_SCRIPT);
+    assert(ctx.commandNext == CONTROLLER_COMMAND_36);
+    ctx.moveNoCur = MOVE_TACKLE;
+    ctx.move.effect = MOVE_EFFECT_HIT;
+    ctx.battleStatus = 0;
+    assert(ov12_0224B398(&bs, &ctx) == TRUE && ctx.commandNext == CONTROLLER_COMMAND_39);
+    return 0;
+}
+"""
+
+
 class BeforeMoveTests(unittest.TestCase):
     """What the engine's scripts left to its before-move steps, which a called
     move goes through as well (test_called_moves)."""
@@ -557,14 +606,24 @@ class BeforeMoveTests(unittest.TestCase):
         run_c(BEFORE_MOVE_FIXTURE.replace("@FUNCTIONS@", functions))
         steps = function(controller, "ov12_0224C38C")
         # Damp after the move failures -- Powder the last of them -- and
-        # before Protean; the user at 0 HP once a target is found.
+        # before Protean; the user at 0 HP before a target is looked for.
         self.assertLess(steps.index("powderBlockingFireMove"), steps.index("DampStopsMove(battleSystem, ctx) == TRUE"))
         self.assertLess(steps.index("DampStopsMove(battleSystem, ctx) == TRUE"), steps.index("ABILITY_PROTEAN"))
-        self.assertLess(steps.index("ov12_0224B398(battleSystem, ctx) == TRUE"), steps.index("TrySelfDestruct(battleSystem, ctx);"))
+        self.assertLess(steps.index("TrySelfDestruct(battleSystem, ctx);"), steps.index("ov12_0224B398(battleSystem, ctx) == TRUE"))
         damp = subscript("DAMP")
         self.assertIn("PrintMessage msg_0197_00628, TAG_NICKNAME_ABILITY_NICKNAME_MOVE, BATTLER_CATEGORY_ABILITY_MON", damp)
         for effect in (7, 420):
             self.assertNotIn("ABILITY_DAMP", script(effect), effect)
+
+    def test_an_explosion_with_nothing_to_hit_fells_its_user(self):
+        # Pokemon Central (Esplosione): from the fifth generation the user
+        # faints even when every target fainted before it moved. The no-target
+        # line goes on to ov12_0224D1DC, which faints it, rather than past it.
+        from test_ability_interactions import run_c
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        run_c(NO_TARGET_FIXTURE.replace("@FUNCTIONS@", function(controller, "ov12_0224B398")))
+        self.assertIn("ctx->command = CONTROLLER_COMMAND_36;", function(controller, "ov12_0224D03C"))
+        self.assertIn("BATTLE_SUBSCRIPT_AFTER_SELFDESTRUCT", function(controller, "ov12_0224D1DC"))
 
 
 if __name__ == "__main__":
