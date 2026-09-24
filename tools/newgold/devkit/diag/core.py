@@ -14,10 +14,15 @@ draws is only copied when asked for (shot); a battle draws black here.
     core.ram()                           # main RAM, as bytes
     core.poke(address, value, width=4)   # write main RAM
     core.shot()                          # the next frame, both screens, as a PIL image
+
+A script calls pin_clock() first, before it does anything else.
 """
 import ctypes
+import hashlib
 import os
 import shutil
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -36,6 +41,46 @@ AUDIO = ctypes.CFUNCTYPE(None, ctypes.c_int16, ctypes.c_int16)
 AUDIO_BATCH = ctypes.CFUNCTYPE(ctypes.c_size_t, ctypes.c_void_p, ctypes.c_size_t)
 POLL = ctypes.CFUNCTYPE(None)
 STATE = ctypes.CFUNCTYPE(ctypes.c_int16, ctypes.c_uint, ctypes.c_uint, ctypes.c_uint, ctypes.c_uint)
+
+# The core sets the console's clock from the host's time(), so the RNG's seed
+# and the time of day followed the second a run started in, and one replay
+# could differ from the next. boot_check.c answers time() itself; in-process
+# the core binds the C library's, and only a library preloaded comes before
+# it. pin_clock() runs the script again, once, with one that answers CLOCK
+# (smoke.CLOCK, test_boot's), in UTC as boot_check's clock: does.
+CLOCK = 1700000000
+SHIM = r"""
+#include <stdlib.h>
+#include <time.h>
+time_t time(time_t *out) {
+    const char *pinned = getenv("NEWGOLD_CLOCK");
+    struct timespec now;
+    time_t t;
+    if (pinned) {
+        t = (time_t)strtoll(pinned, NULL, 10);
+    } else {
+        clock_gettime(CLOCK_REALTIME, &now);
+        t = now.tv_sec;
+    }
+    if (out) *out = t;
+    return t;
+}
+"""
+
+
+def pin_clock(seconds=CLOCK):
+    shim = Path(tempfile.gettempdir()) / f"newgold-clock-{hashlib.sha1(SHIM.encode()).hexdigest()[:8]}.so"
+    preload = os.environ.get("LD_PRELOAD", "")
+    if os.environ.get("NEWGOLD_CLOCK") == str(seconds) and str(shim) in preload.split():
+        return
+    if not shim.exists():
+        source, built = shim.with_suffix(f".{os.getpid()}.c"), shim.with_suffix(f".{os.getpid()}.tmp")
+        source.write_text(SHIM)
+        subprocess.run(["cc", "-O2", "-shared", "-fPIC", "-o", str(built), str(source)], check=True)
+        source.unlink()
+        os.replace(built, shim)
+    os.execve(sys.executable, sys.orig_argv, {**os.environ, "NEWGOLD_CLOCK": str(seconds), "TZ": "UTC0",
+                                              "LD_PRELOAD": f"{shim} {preload}".strip()})
 
 
 class GameInfo(ctypes.Structure):

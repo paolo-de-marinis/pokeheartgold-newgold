@@ -19,6 +19,7 @@ run, and measures the arena the boot left against the largest pre-size.
 
 import re
 import struct
+import subprocess
 import sys
 import tempfile
 import time
@@ -32,7 +33,7 @@ sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit"
 import smoke  # noqa: E402
 
 FRAMES = 900
-CLOCK = 1700000000           # any fixed second: 2023-11-14 22:13:20 UTC
+CLOCK = smoke.CLOCK          # any fixed second: 2023-11-14 22:13:20 UTC
 MAIN_MEMORY = 0x02000000     # the ram: dump starts here, 4 MB, mirrored above
 ARENA_INFO = 0x027FFDA0      # HW_ARENA_INFO_BUF: OSArenaInfo, lo[9] then hi[9]
 RTC = 0x027FFDE8             # OSSystemWork.real_time_clock: the date in BCD first
@@ -104,6 +105,28 @@ class BootTests(unittest.TestCase):
         if not smoke.DIAG_ROM.exists():
             self.skipTest("not built: make NEWGOLD_DIAG=1 COMPARE=0")
         self.boot("heartgold.diag", smoke.DIAG_ROM)
+
+
+class ClockTests(unittest.TestCase):
+    def test_a_run_is_at_the_pinned_clock_unless_told(self):
+        # The other harness tools (diag/battle.py, smoke.py's routes) name no
+        # clock; at the host's, the RNG and the time of day followed the
+        # second the run started in. A stand-in host says what it was given.
+        with tempfile.TemporaryDirectory(prefix="newgold-clock-") as temp:
+            host = Path(temp) / "host"
+            host.write_text('#!/bin/sh\necho "ran $*"\n')
+            host.chmod(0o755)
+            self.assertIn(f" clock:{CLOCK} ", smoke.run(host, "rom", 1, ["shot:0:x"], temp) + " ")
+            self.assertNotIn(f"clock:{CLOCK}", smoke.run(host, "rom", 1, ["clock:-1"], temp))
+
+    def test_the_in_process_core_is_at_the_pinned_clock(self):
+        # diag/core.py's scripts (gym.py, pc.py, species.py) load the core
+        # into Python, where it binds the C library's time(): pin_clock()
+        # runs the script again with one that answers the pinned second.
+        script = "import core, ctypes; core.pin_clock(); print(ctypes.CDLL(None).time(None))"
+        result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True,
+                                cwd=ROOT / "tools/newgold/devkit/diag")
+        self.assertEqual(result.stdout.strip(), str(CLOCK), result.stderr)
 
 
 if __name__ == "__main__":

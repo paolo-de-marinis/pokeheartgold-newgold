@@ -25,6 +25,7 @@ boot_check.c takes its actions on the command line, one per argument:
     save:FRAME:PATH                 write the emulator's state out
     load:PATH                       start from a state instead of a boot
     clock:SECONDS                   the host clock the core reads, pinned
+                                    (run() pins CLOCK unless told; -1 is the real one)
     ram:FRAME:PATH                  write the console's own memory out
 
 save and load are what make anything past the opening practical: reaching the
@@ -57,6 +58,12 @@ ROMS = {
 # The build with the diagnostics in (make NEWGOLD_DIAG=1 COMPARE=0); the
 # readers in tools/newgold/devkit/diag want this one.
 DIAG_ROM = ROOT / "build/heartgold.us.diag/pokeheartgold.us.nds"
+
+# The second the core's clock reads unless an action says otherwise: the
+# console's date and time, and through them the RNG's seed and the time of
+# day, are then the same every run, so a replay does what the last one did.
+# Any fixed second would do: 2023-11-14 22:13:20 UTC. clock:-1 is the host's.
+CLOCK = 1700000000
 
 # Enough to get past the publisher screens, the intro and the title, which is
 # where a save or heap that does not fit would have stopped it.
@@ -215,6 +222,8 @@ def build(into):
 
 
 def run(host, rom, frames, actions, workdir):
+    if not any(action.startswith("clock:") for action in actions):
+        actions = [f"clock:{CLOCK}"] + actions
     system = Path(workdir) / "system"
     system.mkdir(exist_ok=True)
     result = subprocess.run([str(host), str(CORE), str(rom), str(system), str(frames)] + actions,

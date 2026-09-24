@@ -353,7 +353,9 @@ of actions fixed before the run.
   pinned (`clock:SECONDS`): the core takes the console's from the host's, and
   the boot's random pre-size follows it.
 - `smoke.py` -- builds the host, runs the ROMs, and the scripted route
-  through the opening.
+  through the opening. A run is at `smoke.CLOCK` unless its actions name a
+  clock (`clock:-1` is the host's), so the RNG's seed and the time of day are
+  the same every run and a replay does what the last one did.
 - `where.py` -- symbols out of `main.elf`, and the player's position and
   party out of a memory dump.
 - `save_budget.py` -- how the save's blocks fit their sectors.
@@ -363,7 +365,10 @@ of actions fixed before the run.
 Reading what the debug ROM records, and playing it without looking.
 
 - `core.py` -- the same core run in-process, one frame at a time, so a
-  script can read memory after every frame and decide what to press.
+  script can read memory after every frame and decide what to press. In
+  Python the core reads the C library's clock: `pin_clock()`, first thing in
+  a script, runs it again with a `time()` preloaded that answers the same
+  second as the harness's.
 - `gym.py SAVE` -- fights what the save stands the player in front of,
   through the game's own menus, and reports the battle as text: every line
   it printed, the battlers each turn, what the trainer's AI spent, what

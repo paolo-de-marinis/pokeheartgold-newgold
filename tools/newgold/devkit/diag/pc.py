@@ -19,13 +19,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from core import Core  # noqa: E402
+from core import Core, pin_clock  # noqa: E402
 from markers import DIAG_ELF, Markers  # noqa: E402
 
 ROM = Path(__file__).resolve().parents[4] / "build/heartgold.us.diag/pokeheartgold.us.nds"
 
 
 def main():
+    pin_clock()
     markers = Markers(DIAG_ELF)
     core = Core(ROM, save=sys.argv[1])
     ignore = markers.address("gDiagIgnoreCommunicationError")

@@ -69,7 +69,7 @@ ROOT = HERE.parents[3]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 import savedit  # noqa: E402
-from core import Core  # noqa: E402
+from core import Core, pin_clock  # noqa: E402
 from markers import STATES, Markers  # noqa: E402
 
 BUILD = ROOT / "build/heartgold.us.diag"
@@ -1014,6 +1014,7 @@ def report(out, records):
 
 
 def main():
+    pin_clock()
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("out", type=Path)
     parser.add_argument("--walk", default="pc,dex,details,battle")

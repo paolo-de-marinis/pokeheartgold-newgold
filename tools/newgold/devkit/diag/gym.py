@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from core import Core  # noqa: E402
+from core import Core, pin_clock  # noqa: E402
 from markers import BATTLER, DIAG_ELF, STATES, Markers  # noqa: E402
 from party import badges, party  # noqa: E402
 
@@ -102,6 +102,7 @@ def quiet():
 
 
 def main():
+    pin_clock()
     parser = argparse.ArgumentParser()
     parser.add_argument("save", type=Path)
     parser.add_argument("--move", type=int, default=-1,
