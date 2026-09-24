@@ -11423,7 +11423,15 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     // would evolve for them. The games evolve it when that battle is over, not
     // at its next level, so the Pokemon is also put with the ones that levelled
     // up, which are the ones the check after the battle asks.
-    if (ret > 1 && BattleSystem_GetParty(battleSystem, battlerIdAttacker) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
+    //
+    // Nor in a link or a Frontier battle (BATTLE_TYPE_NO_EXP; Safari and Pal
+    // Park, its other two, see no move of the player's): the games evolve
+    // nothing after either. A link battle ends without the check; a Frontier
+    // one reaches it having levelled nobody up, and the mark alone would play
+    // the scene on the Frontier's copy of the party and register Sirfetch'd
+    // in the Pokedex copied back after it.
+    if (ret > 1 && !(BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_NO_EXP)
+        && BattleSystem_GetParty(battleSystem, battlerIdAttacker) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
         ctx->battleMons[battlerIdAttacker].criticalHits++;
         if (ctx->battleMons[battlerIdAttacker].criticalHits == 3) {
             Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, battlerIdAttacker, ctx->selectedMonIndex[battlerIdAttacker]);

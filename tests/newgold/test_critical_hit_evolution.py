@@ -67,6 +67,8 @@ static inline u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 static Party *BattleSystem_GetParty(BattleSystem *battleSystem, int battlerId) { (void)battleSystem; return &parties[battlerId & 1]; }
 static Pokemon *BattleSystem_GetPartyMon(BattleSystem *battleSystem, int battlerId, int index) { return &BattleSystem_GetParty(battleSystem, battlerId)->mons[index]; }
 static u16 BattleSystem_Random(BattleSystem *battleSystem) { (void)battleSystem; return critical ? 0 : 1; }
+static u32 battleType;
+static u32 BattleSystem_GetBattleType(BattleSystem *battleSystem) { (void)battleSystem; return battleType; }
 static u16 GetBattlerHeldItem(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return ITEM_NONE; }
 static int GetItemVar(BattleContext *ctx, u16 item, int var) { (void)ctx; (void)item; assert(var == ITEM_VAR_HOLD_EFFECT); return 0; }
 static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int attacker, int target, int ability) { (void)attacker; return ctx->battleMons[target].ability == ability; }
@@ -110,6 +112,19 @@ int main(void) {
         hit(&ctx, 1, 0, 1);
     }
     assert(parties[1].mons[0].writes == 0 && ctx.battleMons[1].criticalHits == 0);
+    // Nor do a link or a Frontier battle's: nothing evolves after either.
+    ctx.battleMons[1].ability = ABILITY_NONE;
+    const u32 noEvolution[] = { BATTLE_TYPE_LINK, BATTLE_TYPE_FRONTIER, BATTLE_TYPE_TRAINER | BATTLE_TYPE_FRONTIER };
+    for (int t = 0; t < 3; t++) {
+        battleType = noEvolution[t];
+        ctx.battleMons[0].criticalHits = 0;
+        ctx.levelUpMons = 0;
+        parties[0].mons[2] = (Pokemon){ 0 };
+        for (int i = 0; i < 3; i++) {
+            hit(&ctx, 0, 1, 1);
+        }
+        assert(parties[0].mons[2].writes == 0 && ctx.levelUpMons == 0);
+    }
     return 0;
 }
 """
