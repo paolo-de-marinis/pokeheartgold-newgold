@@ -10896,6 +10896,13 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
         }
         break;
     }
+    // Gravity brings down what Telekinesis holds up, and it ends (Pokemon
+    // Central, Gravita), as subscript 156 ends Magnet Rise; CALC_TEMP says
+    // whether it was running.
+    case MOVE_GRAVITY:
+        ctx->calcTemp = ctx->moveConditions[battlerId].telekinesisTurns;
+        ctx->moveConditions[battlerId].telekinesisTurns = 0;
+        break;
     // Three turns in the air; not twice over (CALC_TEMP says whether it
     // took).
     case MOVE_TELEKINESIS:
