@@ -1179,7 +1179,7 @@ class DraggedInTests(unittest.TestCase):
             case = hit[hit.index(f"case {ability}:"):]
             case = case[:case.index("break;")]
             self.assertIn("!Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget)", case, ability)
-        self.assertIn("|| Battler_CameInAfterTheHit(ctx, battlerId)", function(overlay, "TryPickpocket"))
+        self.assertIn("|| Battler_CameInAfterTheHit(ctx, battlerId)", function(overlay, "PickpocketLifts"))
         end = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224E1BC")
         self.assertLess(end.index("TryAdditionalMoveEffect(ctx)"), end.index("TryPickpocket("))
 

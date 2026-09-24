@@ -7505,30 +7505,39 @@ BOOL TryMagician(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
 // boosted. The theft is the Thief guard already in this tree, asked of the
 // attacker rather than of the target. It was one of the answers to each hit
 // before.
-BOOL TryPickpocket(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+//
+// Whether battlerId's Pickpocket lifts the attacker's item, its own hands
+// aside: TryPickpocket asks them to be empty, and a Red Card's holder is
+// asked as the card empties them (CheckSwitchItemOnHit).
+static BOOL PickpocketLifts(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int attacker = ctx->battlerIdAttacker;
-    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
     if (!BattleMoveMakesContact(ctx, ctx->moveNoCur) || !BattleMoveTbl(ctx, ctx->moveNoCur)->power
         || (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
-        || SheerForceTradedEffect(ctx)) {
+        || SheerForceTradedEffect(ctx)
+        || battlerId == attacker
+        || GetBattlerAbility(ctx, battlerId) != ABILITY_PICKPOCKET
+        || !ctx->battleMons[battlerId].hp
+        || Battler_IsWild(battleSystem, battlerId)
+        || !(ctx->selfTurnData[battlerId].physicalDamage || ctx->selfTurnData[battlerId].specialDamage)
+        || BattlerCheckSubstitute(ctx, battlerId)
+        || Battler_CameInAfterTheHit(ctx, battlerId)) {
         return FALSE;
     }
+    return CanStealHeldItem(battleSystem, ctx, battlerId, attacker);
+}
+
+BOOL TryPickpocket(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
+
     for (int i = 0; i < maxBattlers; i++) {
         int battlerId = ctx->turnOrder[i];
 
-        if (battlerId == attacker
-            || GetBattlerAbility(ctx, battlerId) != ABILITY_PICKPOCKET
-            || !ctx->battleMons[battlerId].hp
-            || Battler_IsWild(battleSystem, battlerId)
-            || !(ctx->selfTurnData[battlerId].physicalDamage || ctx->selfTurnData[battlerId].specialDamage)
-            || BattlerCheckSubstitute(ctx, battlerId)
-            || Battler_CameInAfterTheHit(ctx, battlerId)
-            || !CanAbilityTakeHeldItem(battleSystem, ctx, battlerId, attacker)) {
+        if (ctx->battleMons[battlerId].item != ITEM_NONE || !PickpocketLifts(battleSystem, ctx, battlerId)) {
             continue;
         }
         ctx->battlerIdStatChange = battlerId;
-        ctx->battlerIdTemp = attacker;
+        ctx->battlerIdTemp = ctx->battlerIdAttacker;
         *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
         return TRUE;
     }
@@ -8792,6 +8801,13 @@ static BOOL BattlerIsAnchored(BattleContext *ctx, int battlerId) {
 // is chosen here at random, as Whirlwind's is, and with nobody to bring in the
 // card is not used; against an anchored attacker it is played and nobody is
 // chosen.
+//
+// A card holder with Pickpocket lifts the attacker's item all the same, its
+// hands emptied by the card, though the attacker is dragged out (Pokemon
+// Central, Arraffalesto; Bulbapedia's Red Card: "even after that attacker is
+// switched out"). Pickpocket's own step comes after the card, once the
+// attacker has gone, so the card's subscript lifts the item as the card is
+// spent, told by TEMP_DATA.
 int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int holdEffect) {
     if (!SwitchItemAnswersHit(battleSystem, ctx, battlerId, holdEffect)) {
         return BATTLE_SUBSCRIPT_NONE;
@@ -8801,6 +8817,7 @@ int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int bat
             return BATTLE_SUBSCRIPT_NONE;
         }
         ctx->battlerIdTemp = battlerId;
+        ctx->tempData = PickpocketLifts(battleSystem, ctx, battlerId);
         return BATTLE_SUBSCRIPT_RED_CARD;
     }
     ctx->battlerIdTemp = battlerId;

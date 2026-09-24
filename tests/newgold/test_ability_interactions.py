@@ -166,7 +166,7 @@ class SheerForceAftermathTests(unittest.TestCase):
             case = case[:case.index("break;")]
             self.assertIn("!SheerForceTradedEffect(ctx)", case, ability)
             self.assertNotIn("IsSuppressibleSecondaryEffect", case, ability)
-        self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "TryPickpocket"))
+        self.assertIn("|| SheerForceTradedEffect(ctx)\n", function(source, "PickpocketLifts"))
         self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "SwitchItemAnswersHit"))
 
     def test_the_kee_and_maranga_berries_ask_it(self):
@@ -302,6 +302,7 @@ enum { FALSE = 0, TRUE = 1 };
 #include "constants/abilities.h"
 #include "constants/battle.h"
 #include "constants/battle_subscript.h"
+#include "constants/items.h"
 typedef struct { int maxBattlers; } BattleSystem;
 typedef struct { u16 power; } MoveTbl;
 typedef struct { int physicalDamage, specialDamage; } SelfTurnData;
@@ -322,9 +323,9 @@ static BOOL BattlerCheckSubstitute(BattleContext *ctx, int battlerId) { return c
 static BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].cameIn; }
 static BOOL wild[4];
 static BOOL Battler_IsWild(BattleSystem *battleSystem, int battlerId) { (void)battleSystem; return wild[battlerId]; }
-static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int taker, int loser) {
-    (void)battleSystem;
-    return !ctx->battleMons[taker].item && ctx->battleMons[loser].item;
+static BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int taker, int loser) {
+    (void)battleSystem; (void)taker;
+    return ctx->battleMons[loser].item != 0;
 }
 @FUNCTIONS@
 static BattleSystem bs = { 4 };
@@ -374,6 +375,9 @@ int main(void) {
     // A wild Pokemon's Pickpocket takes nothing (Pokemon Central, Arraffalesto).
     reset(); wild[3] = TRUE; assert(lifts() == 1);
     reset(); wild[1] = wild[3] = TRUE; assert(lifts() == -1);
+    // A Red Card's holder is asked whatever it holds: the card is spent as
+    // it lifts (CheckSwitchItemOnHit).
+    reset(); ctx.battleMons[3].item = 1; assert(PickpocketLifts(&bs, &ctx, 3) && !PickpocketLifts(&bs, &ctx, 2));
     return 0;
 }
 """
@@ -384,7 +388,8 @@ class PickpocketTests(unittest.TestCase):
     ServerDoPostMoveEffects.c:1993 at d0380a487."""
 
     def test_who_lifts_what(self):
-        run_c(PICKPOCKET.replace("@FUNCTIONS@", function(OVERLAY.read_text(), "TryPickpocket")))
+        source = OVERLAY.read_text()
+        run_c(PICKPOCKET.replace("@FUNCTIONS@", function(source, "PickpocketLifts") + function(source, "TryPickpocket")))
 
     def test_it_lifts_once_the_move_is_over(self):
         # After Magician, the Red Card and the Eject Button and the user's

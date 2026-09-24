@@ -579,7 +579,8 @@ def walk(script, answer):
     Only the commands that choose a path are understood: a CheckAbility or
     CheckItemHoldEffect jumps when answer(...) says so, a CompareMonDataToValue
     jumps when answer(field) equals the value (OPCODE_EQU) or answer(flag) is
-    true (OPCODE_FLAG_SET), TryReplaceFaintedMon jumps unless
+    true (OPCODE_FLAG_SET), a CompareVarToValue OPCODE_EQU when answer(var),
+    or 0, equals its number, TryReplaceFaintedMon jumps unless
     answer("REPLACEMENT"), GoTo jumps, End stops. Call, GoToSubscript (which
     also stops) and SwitchAndUpdateMon are recorded. Everything else is walked
     past."""
@@ -608,6 +609,9 @@ def walk(script, answer):
         elif op == "CompareMonDataToValue" and args[0] == "OPCODE_FLAG_SET":
             if answer(args[3]):
                 i = labels[args[4]]
+        elif op == "CompareVarToValue" and args[0] == "OPCODE_EQU":
+            if (answer(args[1]) or 0) == int(args[2], 0):
+                i = labels[args[3]]
         elif op == "TryReplaceFaintedMon":
             if not answer("REPLACEMENT"):
                 i = labels[args[2]]
@@ -749,10 +753,11 @@ typedef struct { int unused; } BattleSystem;
 typedef struct { int hp; u32 moveEffectFlags; u8 hitCount; } BattleMon;
 typedef struct { int physicalDamage, specialDamage; u32 sheerForceTraded : 1; } SelfTurnData;
 typedef struct {
-    int battlerIdAttacker, battlerIdTemp; u32 moveNoCur; u32 battleStatus2;
+    int battlerIdAttacker, battlerIdTemp; u32 moveNoCur; u32 battleStatus2; u32 tempData;
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
 } BattleContext;
-static struct { int item[4], ability[4]; u32 battleType; int suppressible, replacements, picked; } S;
+static struct { int item[4], ability[4]; u32 battleType; int suppressible, replacements, picked, pickpocket; } S;
+static BOOL PickpocketLifts(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; return S.pickpocket == battlerId + 1; }
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return S.item[battlerId]; }
 static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return S.ability[battlerId]; }
 static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return S.suppressible; }
@@ -766,7 +771,7 @@ static BattleContext ctx;
 static BattleSystem bs;
 static void reset(void) {
     for (int i = 0; i < 4; i++) { S.item[i] = HOLD_EFFECT_NONE; S.ability[i] = ABILITY_NONE; }
-    S.battleType = BATTLE_TYPE_TRAINER; S.suppressible = 0; S.replacements = 1; S.picked = 0;
+    S.battleType = BATTLE_TYPE_TRAINER; S.suppressible = 0; S.replacements = 1; S.picked = 0; S.pickpocket = 0;
     ctx = (BattleContext){ 0 };
     ctx.battlerIdAttacker = 0; ctx.battlerIdTemp = -1;
     for (int i = 0; i < 4; i++) { ctx.battleMons[i].hp = 50; ctx.battleMons[i].hitCount = 1; }
@@ -807,7 +812,11 @@ int main(void) {
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     // Red Card: the attacker is dragged out for someone chosen at random.
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE;
-    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.battlerIdTemp == 1 && S.picked == 1);
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.battlerIdTemp == 1 && S.picked == 1 && ctx.tempData == FALSE);
+    // The holder's Pickpocket lifts the attacker's item as the card is spent
+    // (Pokemon Central, Arraffalesto); the subscript is told so.
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.pickpocket = 2;
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && ctx.tempData == TRUE);
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.replacements = 0;
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.battleType = 0;
@@ -885,6 +894,15 @@ class SwitchItemTests(unittest.TestCase):
         self.assertEqual(walk(script, {"ABILITY_SUCTION_CUPS": True}.get), [push, pop])
         self.assertEqual(walk(script, {"ABILITY_GUARD_DOG": True}.get), [push, pop])
         self.assertEqual(walk(script, {"MOVE_EFFECT_FLAG_INGRAIN": True}.get), [push, pop])
+        # A Pickpocket holder lifts the attacker's item as the card is spent,
+        # before the attacker goes (Pokemon Central, Arraffalesto).
+        self.assertEqual(walk(script, {"BSCRIPT_VAR_TEMP_DATA": 1}.get),
+                         [push, "BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM", "SwitchAndUpdateMon BATTLER_CATEGORY_FORCED_OUT",
+                          "BATTLE_SUBSCRIPT_HAZARDS_CHECK", pop])
+        lift = script[script.index("BSCRIPT_VAR_TEMP_DATA"):script.index("_NO_PICKPOCKET:")]
+        self.assertIn("BSCRIPT_VAR_BATTLER_STAT_CHANGE, BSCRIPT_VAR_BATTLER_ATTACKER", lift)
+        self.assertIn("BSCRIPT_VAR_MSG_BATTLER_TEMP, BSCRIPT_VAR_BATTLER_TARGET", lift)
+        self.assertLess(script.index("RemoveItem BATTLER_CATEGORY_ATTACKER"), script.index("BSCRIPT_VAR_TEMP_DATA"))
         card = script[:script.index("CheckAbility")]
         self.assertIn("BSCRIPT_VAR_BATTLER_TARGET, BSCRIPT_VAR_BATTLER_ATTACKER", card)
         self.assertIn("BSCRIPT_VAR_BATTLER_ATTACKER, BSCRIPT_VAR_MSG_BATTLER_TEMP", card)
