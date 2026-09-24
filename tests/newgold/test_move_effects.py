@@ -476,6 +476,15 @@ class PostMoveEffectsTests(unittest.TestCase):
         self.assertLess(body.index("TryHoldAfterHit("), body.index("TryMagician("))
         self.assertNotIn("SIDE_EFFECT", self.effect_script("PREVENT_ESCAPE_HIT"))
 
+    def test_fell_stinger_raises_attack_three_for_a_felled_target(self):
+        # Pokemon Central, Pungiglione: three stages from the seventh generation.
+        case = self.case("case MOVE_EFFECT_FELL_STINGER:")
+        self.assertIn("if (ctx->battleMons[target].hp || !ctx->battleMons[ctx->battlerIdAttacker].hp) {", case)
+        self.assertIn("RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_ATTACK_UP_3_ON_FAINT);\n        ctx->statChangeType = SIDE_EFFECT_TYPE_INDIRECT;", case)
+        from test_retail_effect_scripts import subscript
+        self.assertIn("MOVE_SUBSCRIPT_PTR_ATTACK_UP_3_STAGES\n", subscript("ATTACK_UP_3_ON_FAINT"))
+        self.assertNotIn("SIDE_EFFECT", self.effect_script("FELL_STINGER"))
+
 
 if __name__ == "__main__":
     unittest.main()

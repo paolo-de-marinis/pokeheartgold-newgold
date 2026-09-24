@@ -5330,6 +5330,17 @@ static BOOL TryAdditionalMoveEffect(BattleContext *ctx) {
         }
         script = BATTLE_SUBSCRIPT_JAW_LOCK;
         break;
+    // Fell Stinger raises its user's Attack three stages once the move is
+    // over, if it felled the target and the user still stands (Pokemon
+    // Central, Pungiglione; the engine asks nothing of the user). At +6 the
+    // rise is left unsaid, as the engine does not ask for it.
+    case MOVE_EFFECT_FELL_STINGER:
+        if (ctx->battleMons[target].hp || !ctx->battleMons[ctx->battlerIdAttacker].hp) {
+            return FALSE;
+        }
+        RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_ATTACK_UP_3_ON_FAINT);
+        ctx->statChangeType = SIDE_EFFECT_TYPE_INDIRECT;
+        return TRUE;
     // Mortal Spin clears its user's side once the move is over, if the user
     // still stands (Pokemon Central, Glitturbine: not once Rough Skin, Iron
     // Barbs, a Rocky Helmet or Aftermath has felled it). The poison is each
