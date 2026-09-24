@@ -69,8 +69,11 @@ static void DexEntryPages_DrawPage(DexEntryPages *pages) {
 // in the window's first cell. A page that takes the entry away clears that
 // cell -- ov18_021F014C clears the Info windows for an empty search result --
 // or puts its own tiles there; the Dex stops the pages before it removes the
-// window (ov18_021EE388). ponytail: both entry windows are on text
-// backgrounds 32 tiles wide; a wider one needs GetTileMapIndexFromCoords.
+// window (ov18_021EE388). The Dex's cover hides the Info page without
+// clearing it: the pages turn under the cover, and start again from the
+// first as it opens (DexEntryPages_Restart). ponytail: both entry windows are
+// on text backgrounds 32 tiles wide; a wider one needs
+// GetTileMapIndexFromCoords.
 static BOOL DexEntryPages_IsShown(Window *window) {
     u16 *tilemap = GetBgTilemapBuffer(window->bgConfig, window->bgId);
 
@@ -119,6 +122,17 @@ void DexEntryPages_Stop(DexEntryPages *pages) {
     if (pages->window != NULL) {
         String_Delete(pages->entry);
         pages->window = NULL;
+    }
+}
+
+// The first page again, for all its time, when the entry comes into view
+// without being printed again.
+void DexEntryPages_Restart(DexEntryPages *pages) {
+    if (pages->window != NULL) {
+        pages->timer = DEX_ENTRY_PAGE_FRAMES;
+        pages->page = 0;
+        DexEntryPages_DrawPage(pages);
+        ScheduleWindowCopyToVram(pages->window);
     }
 }
 

@@ -483,6 +483,9 @@ static int PokedexApp_MainSeq_09(PokedexAppData *pokedexApp) {
     switch (r4->unk_0) {
     case 0:
         ov18_021E6574(pokedexApp);
+        // The cover opens on the Info page, whose entry has been turning its
+        // pages under it: it starts from the first.
+        DexEntryPages_Restart(&pokedexApp->entryPages);
         ++r4->unk_0;
         // fallthrough
     case 1: {

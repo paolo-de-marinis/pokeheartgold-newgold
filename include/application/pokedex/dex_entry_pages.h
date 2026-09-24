@@ -11,7 +11,8 @@
 // lines at a time, a page, and the pages turn by themselves while the entry
 // is on screen: its owner prints it with DexEntryPages_Print, calls
 // DexEntryPages_Update once a frame and DexEntryPages_Stop before it removes
-// the window.
+// the window, and DexEntryPages_Restart when it brings the window back into
+// view from under something that hid it (the Dex's cover).
 typedef struct DexEntryPages {
     Window *window; // NULL while no entry is turning pages
     String *entry;
@@ -24,5 +25,6 @@ typedef struct DexEntryPages {
 void DexEntryPages_Print(DexEntryPages *pages, Window *window, String *entry, enum HeapID heapId);
 void DexEntryPages_Update(DexEntryPages *pages);
 void DexEntryPages_Stop(DexEntryPages *pages);
+void DexEntryPages_Restart(DexEntryPages *pages);
 
 #endif // POKEHEARTGOLD_APPLICATION_POKEDEX_DEX_ENTRY_PAGES_H

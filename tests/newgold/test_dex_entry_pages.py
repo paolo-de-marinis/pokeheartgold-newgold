@@ -136,7 +136,7 @@ int main(void) {
 
     // One command a line: "print TEXT" (as ov18_021EE984 prints), "frames N"
     // (the Dex's frames), "clear" (the page clears the window's tilemap),
-    // "stop"; after each, the Strings alive.
+    // "stop", "restart" (the Dex's cover opens); after each, the Strings alive.
     while (fgets(line, sizeof(line), stdin)) {
         line[strcspn(line, "\n")] = 0;
         if (strncmp(line, "print ", 6) == 0) {
@@ -151,6 +151,8 @@ int main(void) {
             bg.tilemap[window.tilemapTop * 32 + window.tilemapLeft] = 0;
         } else if (strcmp(line, "stop") == 0) {
             DexEntryPages_Stop(&pages);
+        } else if (strcmp(line, "restart") == 0) {
+            DexEntryPages_Restart(&pages);
         }
         printf("live %d\n", live);
     }
@@ -257,6 +259,15 @@ class DexEntryPagesTests(unittest.TestCase):
         drawn, live = self.run_pages("print a|b|c|d", "frames 10", "stop", f"frames {FRAMES * 2}", "stop")
         self.assertEqual([t for _, _, t in drawn], ["a|b|c"])
         self.assertEqual(live, [1, 1, 0, 0, 0])
+
+    def test_the_cover_opens_on_the_first_page(self):
+        """The Dex's cover hides the entry without clearing it, and the pages
+        turn under it: as it opens they start again from the first, for all
+        its time. With no entry turning, nothing is drawn."""
+        drawn, live = self.run_pages("print a|b|c|d", f"frames {FRAMES + 10}", "restart", f"frames {FRAMES}",
+                                     "print e|f", "restart", f"frames {FRAMES}")
+        self.assertEqual([(f, t) for f, _, t in drawn], [(0, "a|b|c"), (FRAMES, "d"), (0, "a|b|c"), (FRAMES, "d"), (0, "e|f")])
+        self.assertEqual(live, [1, 1, 1, 1, 0, 0, 0])
 
 
 if __name__ == "__main__":
