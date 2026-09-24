@@ -36,6 +36,14 @@ RULES = {
     "files/tel/pmtel_book.json.txt": "files/tel/pmtel_book.mk",
 }
 
+# Each template that loops over a json object (for key, value in object), and
+# what keeps the order of that object's keys the order the loop needs.
+OBJECT_LOOPS = {
+    # the archive's members, one per method and species: dex_areas.py pads
+    # the species' numbers to one width, test_dex_area checks the order
+    "files/application/zukanlist/zkn_data/zukan_enc.json.txt": "tools/newgold/devkit/dex_areas.py",
+}
+
 
 class ArchiveRuleTests(unittest.TestCase):
     def test_every_included_header_is_a_prerequisite(self):
@@ -51,6 +59,18 @@ class ArchiveRuleTests(unittest.TestCase):
         header as well it prints its usage line and writes nothing."""
         for makefile in sorted(ROOT.glob("files/**/*.mk")):
             self.assertFalse("$(JSONPROC) $^" in makefile.read_text(), makefile.relative_to(ROOT))
+
+    def test_a_template_that_loops_over_an_object_is_known(self):
+        """jsonproc reads a json object into a sorted map, so a loop over one
+        takes the members in their keys' order, not the file's: mon_1000
+        before mon_100, and an archive's members out of place with no error.
+        A template that does must be listed above with what holds its keys'
+        order."""
+        loop = re.compile(r"(?:^[ \t]*##|\{%-?)\s*for\s+\w+\s*,\s*\w+\s+in\b", re.M)
+        found = {str(t.relative_to(ROOT)) for t in ROOT.glob("files/**/*.json.txt") if loop.search(t.read_text())}
+        self.assertEqual(found, set(OBJECT_LOOPS))
+        for keeper in OBJECT_LOOPS.values():
+            self.assertTrue((ROOT / keeper).exists(), keeper)
 
 
 if __name__ == "__main__":

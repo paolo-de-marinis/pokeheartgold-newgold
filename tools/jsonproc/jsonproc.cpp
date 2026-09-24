@@ -12,6 +12,12 @@ using std::to_string;
 
 #include "inja.hpp"
 using namespace inja;
+// An object is a sorted map: a template's `for key, value in object` takes the
+// members in their keys' order, not the file's -- mon_1000 before mon_100.
+// nlohmann::ordered_json would keep the file's, but inja holds pointers into
+// its loop data while it adds members, which a vector-backed object moves (it
+// crashed on the first template). Keys a loop walks are padded to one width;
+// tests/newgold/test_archive_rules.py lists the templates that loop so.
 using json = nlohmann::json;
 
 std::map<string, string> customVars;
