@@ -5567,7 +5567,9 @@ static BOOL TryHoldAfterHit(BattleContext *ctx, int battlerId) {
 // after Pickpocket, the Throat Spray and the Eject Pack; subscript 175 here
 // withdraws the user and sends the next one in at once, so it runs where the
 // engine makes the switch, and the Eject Pack step asks this to stay shut as
-// the engine's pending switch keeps it.
+// the engine's pending switch keeps it. A user Commander holds on the field
+// has no switch pending: its script would refuse it (Pokemon Central, Torre
+// di Comando), and the Packs are not to stay shut for it.
 static BOOL PivotSwitchPending(BattleContext *ctx) {
     int target = ctx->battlerIdTarget;
 
@@ -5575,6 +5577,7 @@ static BOOL PivotSwitchPending(BattleContext *ctx) {
         || target == BATTLER_NONE || (ctx->moveStatusFlag & MOVE_STATUS_FAIL)
         || !ctx->battleMons[ctx->battlerIdAttacker].hp || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
         || Battler_CameInAfterTheHit(ctx, target)
+        || Battler_HeldByCommander(ctx, ctx->battlerIdAttacker)
         || GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {
         return FALSE;
     }

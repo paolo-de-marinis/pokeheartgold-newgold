@@ -1726,7 +1726,9 @@ static BOOL Battler_IsWild(BattleSystem *battleSystem, int battlerId) {
 // Whether the Pokemon in this slot leaves now: still at half or below, still
 // holding the ability (Mummy or Wandering Spirit taking it on contact comes
 // first), which Mold Breaker does not pass (the reference's AbilityFlags
-// leaves both unignorable), and with somewhere to go.
+// leaves both unignorable), and with somewhere to go: not a Pokemon Commander
+// holds on the field (Pokemon Central, Torre di Comando), which would only
+// shut the Eject Packs of the move for a switch its script refuses.
 static BOOL Battler_Retreats(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     if (!ctx->selfTurnData[battlerId].retreatArmed
         || ctx->battleMons[battlerId].hp == 0
@@ -1737,7 +1739,7 @@ static BOOL Battler_Retreats(BattleSystem *battleSystem, BattleContext *ctx, int
         && GetBattlerAbility(ctx, battlerId) != ABILITY_WIMP_OUT) {
         return FALSE;
     }
-    return Battler_IsWild(battleSystem, battlerId) || CanSwitchMon(battleSystem, ctx, battlerId);
+    return Battler_IsWild(battleSystem, battlerId) || (CanSwitchMon(battleSystem, ctx, battlerId) && !Battler_HeldByCommander(ctx, battlerId));
 }
 
 // Damage from outside a move sets the two off as well (Pokemon Central,

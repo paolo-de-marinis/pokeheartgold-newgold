@@ -214,6 +214,11 @@ class CommanderTests(unittest.TestCase):
     def test_neither_leaves_the_field(self):
         for name in ("BattlerCanSwitch", "Battler_WillBeDraggedOut", "BattlerIsAnchored"):
             self.assertIn("Battler_HeldByCommander(ctx, battlerId)", function(OVERLAY, name), name)
+        # Nor do the post-move questions count a switch the scripts refuse:
+        # Emergency Exit's and U-turn's would shut the Eject Packs.
+        self.assertIn("(CanSwitchMon(battleSystem, ctx, battlerId) && !Battler_HeldByCommander(ctx, battlerId))",
+                      function(OVERLAY, "Battler_Retreats"))
+        self.assertIn("|| Battler_HeldByCommander(ctx, ctx->battlerIdAttacker)", function(CONTROLLER, "PivotSwitchPending"))
         self.assertIn("case BMON_DATA_COMMANDER:\n        return Battler_HeldByCommander(ctx, battlerId);", function(OVERLAY, "GetBattlerVar"))
         ai = (BATTLE / "trainer_ai_0222036C.c").read_text()
         self.assertIn("|| Battler_HeldByCommander(ctx, battlerId)", function(ai, "ov10_022203A4"))
