@@ -2745,22 +2745,23 @@ static u32 TryDisobedience(BattleSystem *battleSystem, BattleContext *ctx, int *
     return 1;
 }
 
-BOOL ov12_0224B1FC(BattleSystem *battleSystem, BattleContext *ctx) {
-    int decreasePP = 1;
-    int index;
+// The PP Pressure takes from a move on top of its own: one for each Pokemon
+// with it the move is aimed at, by the move's range.
+static int PressurePP(BattleSystem *battleSystem, BattleContext *ctx, u16 move) {
+    int pp = 0;
 
     if (!ctx->selfTurnData[ctx->battlerIdAttacker].ignorePressure && ctx->battlerIdTarget != BATTLER_NONE) {
-        if (ctx->moveNoTemp == MOVE_IMPRISON) {
-            decreasePP += CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_OPPOSING_SIDE_HP, ctx->battlerIdAttacker, ABILITY_PRESSURE);
+        if (move == MOVE_IMPRISON) {
+            pp = CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_OPPOSING_SIDE_HP, ctx->battlerIdAttacker, ABILITY_PRESSURE);
         } else {
-            switch (BattleMoveTbl(ctx, ctx->moveNoTemp)->range) {
+            switch (BattleMoveTbl(ctx, move)->range) {
             case RANGE_ALL_ADJACENT:
             case RANGE_FIELD:
-                decreasePP += CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP_NOT_USER, ctx->battlerIdAttacker, ABILITY_PRESSURE);
+                pp = CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP_NOT_USER, ctx->battlerIdAttacker, ABILITY_PRESSURE);
                 break;
             case RANGE_ADJACENT_OPPONENTS:
             case RANGE_OPPONENT_SIDE:
-                decreasePP += CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_OPPOSING_SIDE_HP, ctx->battlerIdAttacker, ABILITY_PRESSURE);
+                pp = CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_OPPOSING_SIDE_HP, ctx->battlerIdAttacker, ABILITY_PRESSURE);
                 break;
             case RANGE_USER_SIDE:
             case RANGE_USER:
@@ -2769,12 +2770,39 @@ BOOL ov12_0224B1FC(BattleSystem *battleSystem, BattleContext *ctx) {
                 break;
             default:
                 if (ctx->battlerIdAttacker != ctx->battlerIdTarget && GetBattlerAbility(ctx, ctx->battlerIdTarget) == ABILITY_PRESSURE) {
-                    decreasePP++;
+                    pp = 1;
                 }
                 break;
             }
         }
     }
+    return pp;
+}
+
+// A called move's PP was its caller's (CallMove), and so is what Pressure
+// takes for it: reckoned on the move called and where it is aimed, and
+// taken from the calling move (Showdown's gen-9 useMoveInner, its
+// callerMoveForPressure; Pokemon Central, Pressione, says nothing of called
+// moves). Metronome is aimed at its user, which Pressure never counted; Me
+// First is aimed at a foe, and pays for it too, as in Showdown.
+static void ChargeCallerPressure(BattleSystem *battleSystem, BattleContext *ctx) {
+    int attacker = ctx->battlerIdAttacker;
+    int index = BattleMon_GetMoveIndex(&ctx->battleMons[attacker], ctx->moveNoTemp);
+    int pp = PressurePP(battleSystem, ctx, ctx->moveNoCur);
+
+    if (pp && index < 4) {
+        if (ctx->battleMons[attacker].movePPCur[index] > pp) {
+            ctx->battleMons[attacker].movePPCur[index] -= pp;
+        } else {
+            ctx->battleMons[attacker].movePPCur[index] = 0;
+        }
+        CopyBattleMonToPartyMon(battleSystem, ctx, attacker);
+    }
+}
+
+BOOL ov12_0224B1FC(BattleSystem *battleSystem, BattleContext *ctx) {
+    int decreasePP = 1 + PressurePP(battleSystem, ctx, ctx->moveNoTemp);
+    int index;
 
     index = BattleMon_GetMoveIndex(&ctx->battleMons[ctx->battlerIdAttacker], ctx->moveNoTemp);
 
@@ -3886,9 +3914,13 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         if (TryStanceChange(battleSystem, ctx) == TRUE) {
             return;
         }
-        // A called move's PP and Pressure were its caller's (CallMove).
+        // A called move's PP was its caller's (CallMove); Pressure takes its
+        // due from the caller for it (ChargeCallerPressure).
         if (!(ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) && ov12_0224B1FC(battleSystem, ctx) == TRUE) {
             return;
+        }
+        if ((ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) == MULTIHIT_CALLED_MOVE) {
+            ChargeCallerPressure(battleSystem, ctx);
         }
         TryNaturalGift(ctx);
         if (PrimalWeatherStopsMove(BattlerMoveWeather(battleSystem, ctx, ctx->battlerIdAttacker), BattleMoveTbl(ctx, ctx->moveNoCur)->category,

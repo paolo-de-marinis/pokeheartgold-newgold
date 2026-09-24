@@ -149,6 +149,86 @@ int main(void) {
     def test_the_called_move_is_noted_as_the_move_used(self):
         run_c(NOTED.replace("@FUNCTIONS@", function(CONTROLLER.read_text(), "NoteMoveUsed")))
 
+    def test_pressure_charges_the_caller_for_the_move_called(self):
+        controller = CONTROLLER.read_text()
+        run_c(PRESSURE.replace("@FUNCTIONS@", function(controller, "PressurePP") + function(controller, "ChargeCallerPressure")))
+        steps = function(controller, "ov12_0224C38C")
+        self.assertIn("if ((ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) == MULTIHIT_CALLED_MOVE) {\n"
+                      "            ChargeCallerPressure(battleSystem, ctx);", steps)
+
+
+PRESSURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/moves.h"
+typedef struct { int unused; } BattleSystem;
+typedef struct { u16 moves[4]; u8 movePPCur[4]; int ability; } BattleMon;
+typedef struct { u8 ignorePressure; } SelfTurnData;
+typedef struct { u16 range; } MoveTbl;
+typedef struct {
+    BattleMon battleMons[4];
+    SelfTurnData selfTurnData[4];
+    int battlerIdAttacker, battlerIdTarget, copies;
+    u16 moveNoCur, moveNoTemp;
+} BattleContext;
+static MoveTbl sMove;
+static MoveTbl *BattleMoveTbl(BattleContext *ctx, u16 move) {
+    (void)ctx;
+    sMove.range = move == MOVE_METRONOME ? RANGE_SINGLE_TARGET_SPECIAL : move == MOVE_SURF ? RANGE_ALL_ADJACENT : RANGE_SINGLE_TARGET;
+    return &sMove;
+}
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static int CheckAbilityActive(BattleSystem *bs, BattleContext *ctx, int mode, int battlerId, int ability) {
+    int count = 0;
+    (void)bs;
+    for (int i = 0; i < 4; i++) {
+        if (i != battlerId && ctx->battleMons[i].ability == ability && (mode != CHECK_ABILITY_OPPOSING_SIDE_HP || (i & 1) != (battlerId & 1))) {
+            count++;
+        }
+    }
+    return count;
+}
+static int BattleMon_GetMoveIndex(BattleMon *mon, u16 move) {
+    int i;
+    for (i = 0; i < 4 && mon->moves[i] != move; i++) { }
+    return i;
+}
+static void CopyBattleMonToPartyMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)battlerId; ctx->copies++; }
+@FUNCTIONS@
+int main(void) {
+    BattleSystem bs = { 0 };
+    BattleContext ctx = { 0 };
+    ctx.battleMons[0].moves[1] = MOVE_METRONOME;
+    ctx.battleMons[0].movePPCur[1] = 9;
+    ctx.battleMons[1].ability = ABILITY_PRESSURE;
+    ctx.battleMons[3].ability = ABILITY_PRESSURE;
+    ctx.moveNoTemp = MOVE_METRONOME;
+    // Metronome is aimed at its user: nothing for Pressure.
+    ctx.battlerIdTarget = 0;
+    assert(PressurePP(&bs, &ctx, MOVE_METRONOME) == 0);
+    // Its Tackle, aimed at a Pressure holder, costs Metronome a PP more.
+    ctx.moveNoCur = MOVE_TACKLE; ctx.battlerIdTarget = 1;
+    ChargeCallerPressure(&bs, &ctx);
+    assert(ctx.battleMons[0].movePPCur[1] == 8 && ctx.copies == 1);
+    // Its Surf, one for each of the two holders around it.
+    ctx.moveNoCur = MOVE_SURF;
+    ChargeCallerPressure(&bs, &ctx);
+    assert(ctx.battleMons[0].movePPCur[1] == 6);
+    // A Tackle at a Pokemon without it, nothing.
+    ctx.moveNoCur = MOVE_TACKLE; ctx.battlerIdTarget = 2;
+    ChargeCallerPressure(&bs, &ctx);
+    assert(ctx.battleMons[0].movePPCur[1] == 6 && ctx.copies == 2);
+    return 0;
+}
+"""
+
 
 NOTED = r"""
 #include <assert.h>
