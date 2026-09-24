@@ -9029,12 +9029,20 @@ static BOOL BattlerIsAnchored(BattleContext *ctx, int battlerId) {
 // attacker has gone, so the card's subscript lifts the item as the card is
 // spent, told by TEMP_DATA.
 int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int holdEffect) {
+    int i;
+
     if (!SwitchItemAnswersHit(battleSystem, ctx, battlerId, holdEffect)) {
         return BATTLE_SUBSCRIPT_NONE;
     }
     if (holdEffect == HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE) {
         if (!BattlerIsAnchored(ctx, ctx->battlerIdAttacker) && TryPickForcedSwitchIn(battleSystem, ctx, ctx->battlerIdAttacker) == FALSE) {
             return BATTLE_SUBSCRIPT_NONE;
+        }
+        // A card played, whatever it drags, keeps Emergency Exit and Wimp
+        // Out from answering the move, whoever holds them (Pokemon Central,
+        // Cartelrosso); the move's end asks them after it (TryRetreatAbility).
+        for (i = 0; i < BATTLER_MAX; i++) {
+            ctx->selfTurnData[i].retreatArmed = FALSE;
         }
         ctx->battlerIdTemp = battlerId;
         ctx->tempData = PickpocketLifts(battleSystem, ctx, battlerId);

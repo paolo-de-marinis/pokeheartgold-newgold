@@ -751,7 +751,7 @@ typedef int BOOL;
 #define FALSE 0
 typedef struct { int unused; } BattleSystem;
 typedef struct { int hp; u32 moveEffectFlags; u8 hitCount; } BattleMon;
-typedef struct { int physicalDamage, specialDamage; u32 sheerForceTraded : 1; } SelfTurnData;
+typedef struct { int physicalDamage, specialDamage; u32 sheerForceTraded : 1; u32 retreatArmed : 1; } SelfTurnData;
 typedef struct {
     int battlerIdAttacker, battlerIdTemp; u32 moveNoCur; u32 battleStatus2; u32 tempData;
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
@@ -796,6 +796,14 @@ int main(void) {
     assert(ask(1) == BATTLE_SUBSCRIPT_SWITCH_OUT_ITEM);
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; ctx.battleStatus2 = BATTLE_STATUS2_UTURN;
     assert(ask(1) == BATTLE_SUBSCRIPT_NONE);
+    // A card played keeps Emergency Exit and Wimp Out from answering the move
+    // (Pokemon Central, Cartelrosso); one with nobody to drag in is not.
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE;
+    ctx.selfTurnData[1].retreatArmed = ctx.selfTurnData[2].retreatArmed = 1;
+    assert(ask(1) == BATTLE_SUBSCRIPT_RED_CARD && !ctx.selfTurnData[1].retreatArmed && !ctx.selfTurnData[2].retreatArmed);
+    reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE; S.replacements = 0;
+    ctx.selfTurnData[2].retreatArmed = 1;
+    assert(ask(1) == BATTLE_SUBSCRIPT_NONE && ctx.selfTurnData[2].retreatArmed);
     // Each walk asks only its own item.
     reset(); S.item[1] = HOLD_EFFECT_FORCE_SWITCH_ON_DAMAGE;
     assert(CheckSwitchItemOnHit(&bs, &ctx, 1, HOLD_EFFECT_SWITCH_OUT_WHEN_HIT) == BATTLE_SUBSCRIPT_NONE && S.picked == 0);
