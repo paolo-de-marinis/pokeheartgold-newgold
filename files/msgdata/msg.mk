@@ -12,7 +12,6 @@ TRAINER_JSON := files/poketool/trainer/trainers.json
 TRNAME_TEMPLATE := files/poketool/trainer/trname.json.txt
 
 FIRST_MSG_H_GEN := $(MSGDATA_DIR)/headers.done
-TOUCH_ONCE      := $(MSGDATA_DIR)/touch_once.sh
 
 $(TRNAME_GMM): $(TRAINER_JSON) $(TRNAME_TEMPLATE)
 	$(JSONPROC) $(TRAINER_JSON) $(TRNAME_TEMPLATE) $(TRNAME_GMM)
@@ -34,9 +33,12 @@ $(MSGFILE_H): %.h: %.bin
 # don't want to re-build all the scripts whenever a header changes later.
 #
 # Any scripts affected by a header change will be re-built outside this rule
-# (since the scripts are assembled with DEPFLAGS).
-$(FIRST_MSG_H_GEN): $(MSGFILE_H)
-	$(TOUCH_ONCE) $(FIRST_MSG_H_GEN)
+# (since the scripts are assembled with DEPFLAGS). The headers only order it:
+# as prerequisites, a header newer than it ran the recipe again on every make
+# (touch_once.sh, which touched nothing once the file was there) and had
+# make -n take it for remade and print every script.
+$(FIRST_MSG_H_GEN): | $(MSGFILE_H)
+	touch $@
 
 clean-msg:
 	$(RM) $(MSGDATA_MSG_DIR).narc $(MSGFILE_BIN) $(MSGFILE_H) $(FIRST_MSG_H_GEN) $(TRNAME_GMM)

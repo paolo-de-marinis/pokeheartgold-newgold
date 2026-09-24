@@ -161,6 +161,18 @@ class BuildRuleTests(unittest.TestCase):
         for makefile in ("lib/dsprot/Makefile", "lib/syscall/Makefile"):
             self.assertRegex((ROOT / makefile).read_text(), r"(?m)^\tcp -p ", makefile)
 
+    def test_the_message_headers_only_order_headers_done(self):
+        """headers.done is made once, when it is missing, so that the scripts
+        wait for every message header. With the headers as prerequisites, one
+        newer than it ran its recipe on every make, which touched nothing,
+        and make -n took it for remade and printed every script."""
+        db = database()
+        rules = [m.group(1) for m in re.finditer(r"^files/msgdata/headers\.done:(.*)$", db, re.M) if "=" not in m.group(1)]
+        self.assertEqual(len(rules), 1)
+        normal, _, order_only = rules[0].partition("|")
+        self.assertEqual(normal.split(), [])
+        self.assertIn("files/msgdata/msg/msg_0000.h", order_only.split())
+
     def test_a_zone_event_is_rebuilt_for_the_header_its_json_names(self):
         """A zone's events name their scripts by the ids of the header the
         json gives ({{ header }}); only the assembler knew which, and the
