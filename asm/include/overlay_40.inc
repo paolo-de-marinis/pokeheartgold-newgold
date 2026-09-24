@@ -646,7 +646,5 @@
 .public ov40_02245CA0
 .public ov40_02245CA4
 .public ov40_02245CE8
-.public ov40_02245E44
 .public ov40_02245E58
 .public ov40_02245E74
-.public ov40_02245CD4

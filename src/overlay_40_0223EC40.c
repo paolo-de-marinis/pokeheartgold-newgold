@@ -6,7 +6,6 @@
 #include "overlay_40.h"
 #include "pokedex.h"
 
-extern u16 ov40_02245E44[];
 extern u16 *ov40_0222DD68(enum HeapID heapID, int unused, int *count);
 
 // Whether the player has seen any species of a letter group, which the
@@ -19,10 +18,10 @@ BOOL ov40_0223EBB8(Overlay40App *app, int group) {
     u16 *all;
     Pokedex *pokedex;
     int start;
-    int end = ov40_02245E44[group + 1];
+    int end;
     int i;
 
-    start = ov40_02245E44[group];
+    VsRecorder_GetLetterGroupBounds(group, &start, &end);
     all = ov40_0222DD68(HEAP_ID_109, found, &count);
     pokedex = Save_Pokedex_Get(app->saveData);
     for (i = start; i < end; i++) {
@@ -48,10 +47,10 @@ void ov40_0223EC40(Overlay40App *app, int group) {
     Pokedex *pokedex;
     int start;
     Overlay40SearchScreen2 *screen = app->screen;
-    int end = ov40_02245E44[group + 1];
+    int end;
     int i;
 
-    start = ov40_02245E44[group];
+    VsRecorder_GetLetterGroupBounds(group, &start, &end);
     screen->list.species = ov40_0222DD68(HEAP_ID_109, 0, &screen->list.numSpecies);
     all = ov40_0222DD68(HEAP_ID_109, 0, &screen->list.numSpecies);
     pokedex = Save_Pokedex_Get(app->saveData);

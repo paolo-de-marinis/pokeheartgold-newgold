@@ -1,13 +1,30 @@
 #include "global.h"
 
+#include "application/zukanlist/zkn_data/zukan_data.naix"
 #include "msgdata/msg.naix"
 
+#include "filesystem.h"
 #include "heap.h"
 #include "overlay_40.h"
 #include "pokedex.h"
 
-extern u16 ov40_02245CD4[];
 extern u16 *ov40_0222DD68(enum HeapID heapID, int unused, int *count);
+
+// The stretch of the Dex's alphabetical order (zukan data 13) that a letter
+// group, ABC to YZ, takes. The zukan data keeps each group's own list too,
+// in the same order, and the groups follow one another in the whole: a
+// group starts where the ones before it end. Retail wrote the bounds in, a
+// table for each search screen, for its 493 species: read against this
+// Dex's 1025 they cut YZ at Linoone and left everything after it out.
+void VsRecorder_GetLetterGroupBounds(int group, int *start, int *end) {
+    int i;
+
+    *start = 0;
+    for (i = 0; i < group; i++) {
+        *start += GetNarcMemberSizeByIdPair(NARC_application_zukanlist_zkn_data_zukan_data, NARC_zukan_data_sort_order_letter_groups_abc + i) / sizeof(u16);
+    }
+    *end = *start + GetNarcMemberSizeByIdPair(NARC_application_zukanlist_zkn_data_zukan_data, NARC_zukan_data_sort_order_letter_groups_abc + group) / sizeof(u16);
+}
 
 // Whether the player has seen any species of a letter group, which the
 // search screen asks of each group before it offers it: the group's stretch
@@ -19,10 +36,10 @@ BOOL ov40_02235DAC(Overlay40App *app, int group) {
     u16 *all;
     Pokedex *pokedex;
     int start;
-    int end = ov40_02245CD4[group + 1];
+    int end;
     int i;
 
-    start = ov40_02245CD4[group];
+    VsRecorder_GetLetterGroupBounds(group, &start, &end);
     all = ov40_0222DD68(HEAP_ID_109, found, &count);
     pokedex = Save_Pokedex_Get(app->saveData);
     for (i = start; i < end; i++) {
@@ -50,10 +67,10 @@ void ov40_02235E34(Overlay40App *app, int group) {
     Pokedex *pokedex;
     int start;
     Overlay40SearchScreen *screen = app->screen;
-    int end = ov40_02245CD4[group + 1];
+    int end;
     int i;
 
-    start = ov40_02245CD4[group];
+    VsRecorder_GetLetterGroupBounds(group, &start, &end);
     screen->list.species = ov40_0222DD68(HEAP_ID_109, 0, &screen->list.numSpecies);
     all = ov40_0222DD68(HEAP_ID_109, 0, &screen->list.numSpecies);
     pokedex = Save_Pokedex_Get(app->saveData);
