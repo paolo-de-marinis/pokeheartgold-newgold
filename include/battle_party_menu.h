@@ -3,6 +3,8 @@
 
 #include "battle/battle_system.h"
 
+#include "bg_window.h"
+
 #include "message_format.h"
 #include "msgdata.h"
 #include "palette.h"
@@ -29,7 +31,8 @@ typedef struct BattlePartyMenuArgs {
     u8 unk26[2];
     int battlerId;   // 0x28
     u8 partySlots[6]; // 0x2C: the party slot each list position shows
-    u8 unk32[3];
+    u8 unk32[2];
+    u8 unk34;        // 0x34: which of screen 4's four buttons is drawn selected
     u8 mode;         // 0x35: 1 a switch that cannot be declined, 2 an item to use on the Pokemon picked
     u8 done;         // 0x36
 } BattlePartyMenuArgs;
@@ -41,7 +44,11 @@ typedef struct BattlePartyMenuMon {
     u8 unk12[5];
     u8 unk17_0 : 7;
     u8 isEgg : 1; // 0x17
-    u8 unk18[0x50 - 0x18];
+    u8 unk18[0x30 - 0x18];
+    struct {
+        u16 move;
+        u8 unk2[6];
+    } moves[4]; // 0x30
 } BattlePartyMenuMon;
 
 typedef struct BattlePartyMenu {
@@ -53,9 +60,12 @@ typedef struct BattlePartyMenu {
     MsgData *msgData;         // 0x1FA8, bank 6
     MessageFormat *msgFormat; // 0x1FAC
     String *msgBuffer;        // 0x1FB0
-    u8 unk1FB4[0x2076 - 0x1FB4];
+    u8 unk1FB4[0x2070 - 0x1FB4];
+    Window *windows; // 0x2070: the text windows of the screen shown
+    u8 unk2074[2];
     u8 unk2076;   // 0x2076: the list position of the battler's own Pokemon
-    u8 unk2077;
+    u8 unk2077_0 : 4;
+    u8 unk2077_4 : 4;
     u8 unk2078;
     u8 nextState; // 0x2079
 } BattlePartyMenu;
