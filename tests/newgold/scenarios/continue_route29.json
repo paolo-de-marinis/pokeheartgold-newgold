@@ -1,0 +1,6 @@
+{
+  "about": "Continue from Paolo's Route 29 save: the field comes up on Route 29 with the starter, and nothing asserted or failed to allocate on the way.",
+  "save": "route29-official.sav",
+  "steps": ["field"],
+  "expect": {"map": "MAP_ROUTE_29", "x": 663, "y": 398, "party": 1, "heaps": {"HEAP_ID_FIELD1": "0x1000"}}
+}

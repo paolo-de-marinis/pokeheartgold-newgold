@@ -398,7 +398,14 @@ Reading what the debug ROM records, and playing it without looking.
   with screenshots and every heap's low water where asked, the communication
   error held off. The marts, the Move Relearner, the summary, the bag, the
   PC, trades, the Union Room, the GTS's first screens and the Pokeathlon's
-  team choice were measured with it.
+  team choice were measured with it. `field` presses through Continue until
+  the player can move, `fight` has gym.py's player fight the battle that
+  comes up, `hold:` keeps a switch poked every frame. `--scenario FILE`
+  plays a scenario -- a save, savedit edits to a copy, the steps, and what
+  the battle's lines and memory (location, badges, flags, variables, the
+  battlers, the heaps, asserts, failed allocations) have to show -- to PASS
+  or FAIL; `tests/newgold/scenarios/` holds them and `test_scenarios.py`
+  runs each on the diagnostics ROM.
 - `species.py OUT` -- every species and form through the screens that load
   its resources: in the PC, in boxes savedit fills (its icon, its sprite,
   its name, Dex number, types and ability on the hover, and its summary's

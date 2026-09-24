@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Play a scene from a save with steps given on the command line, and read
-how full every heap got on the way.
+"""Play a scene from a save, step by step, and check what it shows.
 
     scene.py SAVE OUT STEP... [--rom ROM] [--elf ELF]
+    scene.py --scenario FILE [--out DIR] [--rom ROM] [--elf ELF]
 
 A step is one of
     A, B, X, Y, START, SELECT, UP, DOWN, LEFT, RIGHT, L, R   a press, then 20 frames
@@ -16,8 +16,39 @@ A step is one of
     untilheap:HEAP_ID_N[:MAX]   A, every 40 frames, until that heap is made
                                 (400 presses at most by default)
     poke:SYMBOL=VALUE           a word of the ROM's memory, by name
+    hold:SYMBOL=VALUE           the same before every frame from now on; 0 lets go
+    field[:N]                   A until the field is up and the player can move,
+                                and through any text box on the way (N frames at most)
+    fight[:N]                   A until a battle is up, then gym.py's player plays
+                                it to the end (N: always move slot N)
 
     scene.py mart.sav out wait:300 A*3 untilheap:HEAP_ID_FIELD2 heaps:mart shot:mart
+
+A scenario is the same run kept as a test: a JSON file (tests/newgold/
+scenarios/) naming a save, the savedit.py options applied to a scratch copy
+of it, the switches held from the first frame, the steps, and what has to be
+true at the end. It ends in PASS or FAIL and why; a failure keeps a shot of
+both screens and the last battle lines.
+
+    {"about": "Falkner, beaten with the six at the cap",
+     "save": "gyms/falkner.sav", "edit": ["--badges", "0"],
+     "hold": {"gDiagBattleSeed": 7},
+     "steps": ["field", "A", "fight", "field"],
+     "expect": {"lines": ["Falkner sent out Pidgey!"], "badges": 1}}
+
+A save's path is taken in ~/hgss-saves unless it is absolute; the saves there
+are Paolo's and only a copy is ever edited. In "expect", "lines" have to be
+printed by the battle, in that order (a part of the line is enough), and
+"no_lines" never; "heaps" is the least a heap may have had left at its
+fullest (gDiagHeapLowWater); every other key is a value read out of main RAM
+by name, through the ELF's symbols and the offsets the tree's own headers
+give: map, x, y, party (the count), badges, flag:FLAG_..., var:VAR_...,
+battlerN.species|hp|maxHp|level|partySlot|status|item (gDiagBattlers; N
+counts the player's side even), or any gDiag* global. A value is a number,
+a constant's name (MAP_..., SPECIES_..., ITEM_..., MOVE_...), [low, high],
+or for a status the flags as markers.py names them ("BRN", "" for none).
+"asserts" and "alloc_failures" are 0 unless the file says otherwise. A step
+may also be {"expect": {...}}, checked when the run gets there.
 
 The ROM is the NEWGOLD_DIAG=1 HeartGold build, run by core.py at the pinned
 clock; the heaps are its gDiagHeapLowWater, read by markers.py. The harness
@@ -28,44 +59,153 @@ game does -- both sprites, the HP boxes, the message box -- since the frame
 comes from the core's own video callback (core.shot).
 """
 import argparse
+import json
+import shutil
+import struct
+import subprocess
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from core import Core, pin_clock  # noqa: E402
-from markers import DIAG_ELF, Markers  # noqa: E402
+from markers import BATTLER, DIAG_ELF, STATES, STATUS, Markers  # noqa: E402
+import savedit  # noqa: E402
 
-ROM = Path(__file__).resolve().parents[4] / "build/heartgold.us.diag/pokeheartgold.us.nds"
+ROOT = Path(__file__).resolve().parents[4]
+ROM = ROOT / "build/heartgold.us.diag/pokeheartgold.us.nds"
+SAVES = Path.home() / "hgss-saves"
+BATTLE_MAIN = STATES.index("BATTLE_MAIN")
+# DiagBattler's fields in BATTLER's order, the arrays left out.
+BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item")
+CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/species.h",
+             "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h"}
+STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight")
 
 
-def main():
-    pin_clock()
-    parser = argparse.ArgumentParser()
-    parser.add_argument("save")
-    parser.add_argument("out", type=Path)
-    parser.add_argument("steps", nargs="+")
-    parser.add_argument("--rom", default=ROM)
-    parser.add_argument("--elf", type=Path, default=DIAG_ELF)
-    args = parser.parse_args()
-    args.out.mkdir(parents=True, exist_ok=True)
-    markers = Markers(args.elf)
-    core = Core(args.rom, save=args.save)
-    ignore = markers.address("gDiagIgnoreCommunicationError")
-    hold = [lambda c: c.poke(ignore, 1)]
+def readable(step_or_key, key=False):
+    """Whether scene.py knows a step (or, with key, an expectation's key)
+    without running anything: a scenario's typo is found by the fast test."""
+    import re
+    from core import BUTTONS
+    if key:
+        return (step_or_key in ("lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
+                                "party", "badges")
+                or step_or_key.startswith(("flag:", "var:", "gDiag"))
+                or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)})", step_or_key) is not None)
+    if isinstance(step_or_key, dict):
+        return list(step_or_key) == ["expect"] and all(readable(k, True) for k in step_or_key["expect"])
+    kind = step_or_key.partition(":")[0]
+    return kind in STEPS or step_or_key.partition("*")[0] in BUTTONS
 
-    def failures(ram):
-        return " ".join(f"{label}={markers.read(ram, name)}" for label, name in (
-            ("allocfail", "gDiagAllocFailCount"), ("heap", "gDiagAllocFailHeap"),
-            ("size", "gDiagAllocFailSize"), ("asserts", "gDiagAssertCount")))
 
-    for step in args.steps:
+@savedit.tree_cache
+def field_layout():
+    """Where the field keeps what a walk reads, from the tree's headers: the
+    offsets of the fields followed from sFieldSysPtr, and textbox_open's bit."""
+    names = ("FieldSystem, location", "FieldSystem, taskman", "FieldSystem, playerAvatar",
+             "FieldSystem, processManager", "FieldSystem, runningFieldMap", "FieldSystem, mapObjectManager",
+             "FieldProcessManager, isPaused", "PlayerAvatar, mapObject", "LocalMapObject, currentX",
+             "LocalMapObject, currentZ", "MapObjectManager, objectCount", "MapObjectManager, objects")
+    values, (textbox,) = savedit.compile_c(
+        exprs=tuple(f"__builtin_offsetof({n})" for n in names) + ("sizeof(LocalMapObject)",),
+        inits=(("FieldSystem", ".textbox_open = 1"),),
+        headers=savedit.LAYOUT_HEADERS + ("field_system.h", "player_avatar.h", "map_object.h"))
+    out = {n.replace(", ", "."): v for n, v in zip(names, values)}
+    out["LocalMapObject.size"] = values[-1]
+    out["FieldSystem.textbox_open"] = savedit.set_bit(textbox)
+    return out
+
+
+class Scene:
+    """A core running a save, with the switches it holds and every line the
+    battle has printed since it started."""
+
+    def __init__(self, save, rom=ROM, elf=DIAG_ELF, out=None, say=None):
+        self.markers = Markers(elf)
+        self.elf = Path(elf)
+        self.out = Path(out) if out else None
+        self.say = say or (lambda line: None)
+        self.core = Core(rom, save=save)
+        self.holds = {}
+        self.hold("gDiagIgnoreCommunicationError", 1)
+        self.lines, self._count = [], 0
+        self._text_count = self.markers.address("gDiagBattleTextCount")
+        self._field = self.markers.address("sFieldSysPtr")
+        self.hooks = [self._poke, self._collect]
+
+    def hold(self, name, value):
+        address = self.markers.address(name)
+        if address is None:
+            raise SystemExit(f"{name} is not in this build")
+        if value:
+            self.holds[address] = (value, self.markers.table[name][1] or 4)
+        else:
+            self.holds.pop(address, None)
+
+    def _poke(self, core):
+        for address, (value, width) in self.holds.items():
+            core.poke(address, value, width)
+
+    def _collect(self, core):
+        count = core.word(self._text_count)
+        if count == self._count:
+            return
+        if count < self._count:     # a console reset clears the ring with the rest of memory
+            self._count = 0
+        self.lines += [line for index, line in self.markers.text(core.ram()) if index >= self._count and line]
+        self._count = count
+
+    # -- the field ---------------------------------------------------------
+
+    def _chain(self, *fields):
+        """The word at the end of a chain of fields from sFieldSysPtr; 0 when a
+        pointer on the way is not set."""
+        layout, address = field_layout(), self.core.word(self._field)
+        for field in fields:
+            if not address:
+                return 0
+            address = self.core.word(address + layout[field])
+        return address
+
+    def movable(self):
+        """FieldSystem_IsPlayerMovementAllowed, read out of memory."""
+        return bool(self.core.word(self._field) and not self._chain("FieldSystem.processManager", "FieldProcessManager.isPaused")
+                    and self._chain("FieldSystem.runningFieldMap") and not self._chain("FieldSystem.taskman"))
+
+    def textbox(self):
+        """FieldSystem.textbox_open: a script's message box is on screen."""
+        byte, bit = field_layout()["FieldSystem.textbox_open"]
+        field = self.core.word(self._field)
+        return bool(field and self.core.word(field + byte, 1) >> bit & 1)
+
+    def location(self):
+        """(map, x, y): the map from FieldSystem.location, the tile from the
+        player's map object."""
+        layout = field_layout()
+        location = self._chain("FieldSystem.location")
+        obj = self._chain("FieldSystem.playerAvatar", "PlayerAvatar.mapObject")
+        if not location or not obj:
+            return None
+        return (self.core.word(location), self.core.word(obj + layout["LocalMapObject.currentX"]),
+                self.core.word(obj + layout["LocalMapObject.currentZ"]))
+
+    # -- steps -------------------------------------------------------------
+
+    def run(self, step):
+        """Play one step; a {"expect": ...} step returns what did not hold."""
+        core, hooks = self.core, self.hooks
+        if isinstance(step, dict):
+            return self.check(step["expect"])
         kind, _, rest = step.partition(":")
         if kind == "wait":
-            core.step(int(rest), hold)
+            core.step(int(rest), hooks)
         elif kind == "touch":
             x, y = map(int, rest.split(","))
-            core.touch(x, y, 6, hold)
-            core.step(20, hold)
+            core.touch(x, y, 6, hooks)
+            core.step(20, hooks)
         elif kind == "drag":
             x1, y1, x2, y2 = map(int, rest.split(","))
             core.touching = True
@@ -74,37 +214,219 @@ def main():
                 x, y = x1 + (x2 - x1) * k / 20, y1 + (y2 - y1) * k / 20
                 core.tx = int(((x / 256.0) * 2 - 1) * 0x7FFF)
                 core.ty = int((((y + 192) / 384.0) * 2 - 1) * 0x7FFF)
-                core.step(3 if 0 < k < 20 else 10, hold)
+                core.step(3 if 0 < k < 20 else 10, hooks)
             core.touching = False
-            core.step(20, hold)
+            core.step(20, hooks)
         elif kind == "shot":
-            core.shot(hold).save(args.out / f"{rest}.png")
+            core.shot(hooks).save(self.out / f"{rest}.png")
         elif kind == "poke":
             name, value = rest.split("=")
-            core.poke(markers.address(name), int(value, 0))
+            core.poke(self.markers.address(name), int(value, 0))
+        elif kind == "hold":
+            name, value = rest.split("=")
+            self.hold(name, int(value, 0))
         elif kind == "heaps":
             ram = core.ram()
-            print(f"== {rest} [frame {core.frames}] {failures(ram)}")
-            for name, value in markers.heaps(ram).items():
+            print(f"== {rest} [frame {core.frames}] {self.failures(ram)}")
+            for name, value in self.markers.heaps(ram).items():
                 print(f"   {name:<24} {value:#8x} ({value})")
             sys.stdout.flush()
         elif kind == "untilheap":
             heap, _, most = rest.partition(":")
             for press in range(int(most or 400)):
-                core.press("A", 6, hold)
-                core.step(40, hold)
-                if heap in markers.heaps(core.ram()):
+                core.press("A", 6, hooks)
+                core.step(40, hooks)
+                if heap in self.markers.heaps(core.ram()):
                     print(f"[{core.frames}] {heap} made after {press + 1} presses")
                     break
             else:
-                print(f"{heap} was never made: {markers.describe(core.ram())}")
+                print(f"{heap} was never made: {self.markers.describe(core.ram())}")
+        elif kind == "field":
+            # A through the title and Continue until the field map runs; after
+            # that A only for a text box, or the press that lands as the
+            # player gets control talks to whoever the player faces.
+            end = core.frames + int(rest or 12000)
+            while core.frames < end and not self.movable():
+                if not self._chain("FieldSystem.runningFieldMap") or self.textbox():
+                    core.press("A", 6, hooks)
+                    core.step(20, hooks)
+                else:
+                    core.step(1, hooks)
+            if not self.movable():
+                self.say(f"[{core.frames}] the field never let the player move")
+        elif kind == "fight":
+            import gym
+            for _ in range(300):
+                if self.markers.read(core.ram(), "gDiagBattleState") == BATTLE_MAIN:
+                    break
+                core.press("A", 6, hooks)
+                core.step(30, hooks)
+            else:
+                self.say(f"[{core.frames}] no battle came up")
+                return None
+            gym.fight(core, self.markers, hooks, self.say, int(rest) if rest else -1, core.frames + 60000)
+            self._collect(core)
         else:
             button, _, times = step.partition("*")
             for _ in range(int(times or 1)):
-                core.press(button, 6, hold)
-                core.step(20, hold)
-    print(markers.describe(core.ram()))
-    core.close()
+                core.press(button, 6, hooks)
+                core.step(20, hooks)
+        return None
+
+    def failures(self, ram):
+        return " ".join(f"{label}={self.markers.read(ram, name)}" for label, name in (
+            ("allocfail", "gDiagAllocFailCount"), ("heap", "gDiagAllocFailHeap"),
+            ("size", "gDiagAllocFailSize"), ("asserts", "gDiagAssertCount")))
+
+    # -- expectations ------------------------------------------------------
+
+    def value(self, ram, name):
+        """A value of the game's memory by the name a scenario gives it."""
+        import party
+        import where
+        markers = self.markers
+        if name == "asserts":
+            return markers.read(ram, "gDiagAssertCount")
+        if name == "alloc_failures":
+            return markers.read(ram, "gDiagAllocFailCount")
+        if name.startswith("gDiag"):
+            return markers.read(ram, name, markers.table[name][1] if name in markers.table else 4)
+        if name in ("map", "x", "y"):
+            here = self.location()
+            return here and here[("map", "x", "y").index(name)]
+        memory = where.Memory(ram)
+        if name == "party":
+            return memory.word(party.block(memory, self.elf, where.SAVE_PARTY) + where.PARTY_COUNT)
+        if name == "badges":
+            return party.badges(ram, self.elf)
+        if name.startswith(("flag:", "var:")):
+            kind, _, constant = name.partition(":")
+            flags = party.block(memory, self.elf, savedit.block_ids().index("SAVE_FLAGS")) - 0x02000000
+            if kind == "var":
+                number = savedit.constants("include/constants/vars.h", "VAR_")[constant]
+                return struct.unpack_from("<H", ram, flags + 2 * (number - savedit.VAR_BASE))[0]
+            number = savedit.constants("include/constants/flags.h", "FLAG_")[constant]
+            return ram[flags + savedit.FLAGS_AT + number // 8] >> (number % 8) & 1
+        if name.startswith("battler") and "." in name:
+            battler, field = name[len("battler"):].split(".")
+            at = markers.address("gDiagBattlers") - 0x02000000 + int(battler) * struct.calcsize(BATTLER)
+            return struct.unpack_from(BATTLER, ram, at)[BATTLER_FIELDS.index(field)]
+        raise SystemExit(f"a scenario asks for {name!r}, which scene.py cannot read")
+
+    @staticmethod
+    def wanted(name, expected):
+        """The expectation as a test on the value read: (test, how it is said)."""
+        if isinstance(expected, list):
+            low, high = (Scene.number(e) for e in expected)
+            return (lambda v: v is not None and low <= v <= high), f"within [{low}, {high}]"
+        if isinstance(expected, str) and name.endswith(".status"):
+            names = sorted(expected.split())
+            return (lambda v: sorted(n for mask, n in STATUS if v & mask) == names), f"status {expected or 'none'}"
+        number = Scene.number(expected)
+        return (lambda v: v == number), f"{number}"
+
+    @staticmethod
+    def number(value):
+        if isinstance(value, int):
+            return value
+        for prefix, header in CONSTANTS.items():
+            if value.startswith(prefix):
+                return savedit.constants(header, prefix)[value]
+        return int(value, 0)
+
+    def check(self, expect, final=False):
+        """What in `expect` does not hold, as sentences; [] when it all does."""
+        self._collect(self.core)
+        ram, wrong = self.core.ram(), []
+        if final:
+            expect = {"asserts": 0, "alloc_failures": 0, **expect}
+        at = 0
+        for line in expect.get("lines", []):
+            found = next((i for i in range(at, len(self.lines)) if line in self.lines[i]), None)
+            if found is None:
+                earlier = any(line in printed for printed in self.lines[:at])
+                wrong.append(f"the line {line!r} was not printed" + (" in that order" if earlier else ""))
+            else:
+                at = found + 1
+        wrong += [f"the line {line!r} was printed" for line in expect.get("no_lines", [])
+                  if any(line in printed for printed in self.lines)]
+        low = self.markers.heaps(ram)
+        for heap, least in expect.get("heaps", {}).items():
+            if heap not in low:
+                wrong.append(f"{heap} never allocated")
+            elif low[heap] < self.number(least):
+                wrong.append(f"{heap} had {low[heap]:#x} left at its fullest, under {self.number(least):#x}")
+        for name, expected in expect.items():
+            if name in ("lines", "no_lines", "heaps"):
+                continue
+            test, said = self.wanted(name, expected)
+            value = self.value(ram, name)
+            if not test(value):
+                wrong.append(f"{name} is {value}, not {said}")
+        return wrong
+
+
+def scenario(path, rom=ROM, elf=DIAG_ELF, out=None):
+    """Run one scenario file: (True, False, or None when it cannot run here;
+    the report's lines)."""
+    spec = json.loads(Path(path).read_text())
+    save = Path(spec["save"]) if Path(spec["save"]).is_absolute() else SAVES / spec["save"]
+    if not save.exists():
+        return None, [f"SKIP {Path(path).name}: {save} is not on this machine"]
+    out = Path(out or tempfile.mkdtemp(prefix=f"newgold-scene-{Path(path).stem}-"))
+    out.mkdir(parents=True, exist_ok=True)
+    copy = out / "save.sav"
+    shutil.copyfile(save, copy)
+    if spec.get("edit"):
+        subprocess.run([sys.executable, str(ROOT / "tools/newgold/devkit/savedit.py"), *spec["edit"], str(copy)],
+                       check=True, capture_output=True)
+    log, wrong, started = [], [], time.time()
+    scene = Scene(copy, rom, elf, out, say=log.append)
+    for name, value in spec.get("hold", {}).items():
+        scene.hold(name, Scene.number(value))
+    for step in spec["steps"]:
+        wrong += [f"at {json.dumps(step['expect'])}: {w}" for w in scene.run(step) or []]
+    wrong += scene.check(spec.get("expect", {}), final=True)
+    report = [f"{'FAIL' if wrong else 'PASS'} {Path(path).name}: {scene.core.frames} frames in {time.time() - started:.0f} s"]
+    if wrong:
+        scene.core.shot(scene.hooks).save(out / "fail.png")
+        report += [f"  {w}" for w in wrong]
+        report += ["  the battle's last lines:"] + [f"    {line}" for line in scene.lines[-12:]]
+        report += [f"  at the end: {scene.markers.describe(scene.core.ram())}", f"  kept in {out}"]
+        (out / "log.txt").write_text("\n".join(log) + "\n")
+    scene.core.close()
+    if not wrong:
+        shutil.rmtree(out, ignore_errors=True)
+    return not wrong, report
+
+
+def main():
+    pin_clock()
+    if "--scenario" in sys.argv:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--scenario", type=Path, required=True)
+        parser.add_argument("--out", type=Path)
+        parser.add_argument("--rom", default=ROM)
+        parser.add_argument("--elf", type=Path, default=DIAG_ELF)
+        args = parser.parse_args()
+        from gym import quiet
+        out = quiet()
+        passed, report = scenario(args.scenario, args.rom, args.elf, args.out)
+        print("\n".join(report), file=out)
+        sys.exit(1 if passed is False else 0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("save")
+    parser.add_argument("out", type=Path)
+    parser.add_argument("steps", nargs="+")
+    parser.add_argument("--rom", default=ROM)
+    parser.add_argument("--elf", type=Path, default=DIAG_ELF)
+    args = parser.parse_args()
+    args.out.mkdir(parents=True, exist_ok=True)
+    scene = Scene(args.save, args.rom, args.elf, args.out, say=print)
+    for step in args.steps:
+        scene.run(step)
+    print(scene.markers.describe(scene.core.ram()))
+    scene.core.close()
 
 
 if __name__ == "__main__":

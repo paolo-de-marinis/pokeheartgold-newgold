@@ -101,35 +101,20 @@ def quiet():
     return os.fdopen(keep, "w", buffering=1)
 
 
-def main():
-    pin_clock()
-    parser = argparse.ArgumentParser()
-    parser.add_argument("save", type=Path)
-    parser.add_argument("--move", type=int, default=-1,
-                        help="the move slot to use, 1 to 4; 0 for the first with PP; left out, the hardest-hitting")
-    parser.add_argument("--frames", type=int, default=40000)
-    args = parser.parse_args()
+def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None):
+    """Play the battle that is up until it is over or the core reaches
+    `frames`, and return the last line it printed. `move` is a move slot,
+    1 to 4, to use every turn; 0 the first with PP; -1 the hardest-hitting
+    by the Scorer. `hold` runs before every frame, `say` gets the report.
 
-    out = quiet()
-    say = lambda line: print(line, file=out)  # noqa: E731
-    markers = Markers(DIAG_ELF)
-    scorer = Scorer()
-    core = Core(ROM, save=args.save)
-    ignore = markers.address("gDiagIgnoreCommunicationError")
-    hold = [lambda c: c.poke(ignore, 1)]
-    read = lambda name: markers.read(core.ram(), name)  # noqa: E731
-
-    # Title, Continue, and the leader's lines: A until the battle is up.
-    while core.frames < 6000 and read("gDiagBattleState") != BATTLE_MAIN:
-        core.press("A", 6, hold)
-        core.step(30, hold)
-    say(f"[{core.frames}] the battle is up")
-    before = None
-
+    Memory is read every four frames, but the text ring is decoded only when
+    its counter has moved: decoding it every time halved the frame rate.
+    """
+    scorer = scorer or Scorer()
     seen, last_view, stuck, idle, last_line = set(), None, 0, 0, ""
     refused, last_slot = set(), None   # moves the game turned down this turn: Taunt, Disable, no PP
-    last_count, last_asserts, restarts = 0, 0, 0
-    while core.frames < args.frames:
+    last_count, last_asserts, restarts, decoded = 0, 0, 0, None
+    while core.frames < frames:
         core.step(4, hold)
         ram = core.ram()
         # A console reset clears the diagnostics with the rest of memory: the
@@ -154,7 +139,7 @@ def main():
                 say(f"[{core.frames}]   the script running: archive, member, position = "
                     f"{struct.unpack_from('<3I', ram, markers.address('gDiagBattleScript') - 0x02000000)}")
             last_asserts = asserts
-        for index, line in markers.text(ram):
+        for index, line in markers.text(ram) if count != decoded else ():
             if index not in seen and line:
                 seen.add(index)
                 last_line = line
@@ -164,6 +149,7 @@ def main():
                     refused.clear()
                 if not line.startswith("What will"):
                     say(f"[{core.frames}] {line.split('?{')[0]}")
+        decoded = count
         state = markers.read(ram, "gDiagBattleState")
         if state == EXIT:
             say(f"[{core.frames}] the battle is over")
@@ -180,8 +166,8 @@ def main():
         elif prompt in (3, 4):
             moves = view[0].split("|")[1].split(",")
             usable = [i for i, part in enumerate(moves) if not part.strip().endswith(" 0") and i not in refused]
-            slot = args.move - 1 if 1 <= args.move <= 4 and args.move - 1 not in refused else (usable or [0])[0]
-            if args.move < 0 and usable:
+            slot = move - 1 if 1 <= move <= 4 and move - 1 not in refused else (usable or [0])[0]
+            if move < 0 and usable:
                 at = markers.address("gDiagBattlers") - 0x02000000
                 you = struct.unpack_from(BATTLER, ram, at)
                 foe = struct.unpack_from(BATTLER, ram, at + struct.calcsize(BATTLER))
@@ -212,6 +198,36 @@ def main():
             idle += 1
             if idle % 8 == 0:
                 core.press("B", 4, hold)
+
+    return last_line
+
+
+def main():
+    pin_clock()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("save", type=Path)
+    parser.add_argument("--move", type=int, default=-1,
+                        help="the move slot to use, 1 to 4; 0 for the first with PP; left out, the hardest-hitting")
+    parser.add_argument("--frames", type=int, default=40000)
+    args = parser.parse_args()
+
+    out = quiet()
+    say = lambda line: print(line, file=out)  # noqa: E731
+    markers = Markers(DIAG_ELF)
+    scorer = Scorer()
+    core = Core(ROM, save=args.save)
+    ignore = markers.address("gDiagIgnoreCommunicationError")
+    hold = [lambda c: c.poke(ignore, 1)]
+    read = lambda name: markers.read(core.ram(), name)  # noqa: E731
+
+    # Title, Continue, and the leader's lines: A until the battle is up.
+    while core.frames < 6000 and read("gDiagBattleState") != BATTLE_MAIN:
+        core.press("A", 6, hold)
+        core.step(30, hold)
+    say(f"[{core.frames}] the battle is up")
+    before = None
+
+    last_line = fight(core, markers, hold, say, args.move, args.frames, scorer)
 
     ram = core.ram()
     say(f"[{core.frames}] trainer items {markers.read(ram, 'gDiagAiItemCount')}")

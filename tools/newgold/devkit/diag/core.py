@@ -13,6 +13,7 @@ like anything else.
     core.press("A", 6)                   # hold a button for some frames
     core.touch(128, 83, 6)               # touch the bottom screen, in its own pixels
     core.ram()                           # main RAM, as bytes
+    core.word(address)                   # one word of it, without copying the rest
     core.poke(address, value, width=4)   # write main RAM
     core.shot()                          # the next frame, both screens, as a PIL image
 
@@ -191,6 +192,10 @@ class Core:
 
     def ram(self):
         return ctypes.string_at(self.lib.retro_get_memory_data(2), self.lib.retro_get_memory_size(2))
+
+    def word(self, address, width=4):
+        base = self.lib.retro_get_memory_data(2)
+        return int.from_bytes(ctypes.string_at(base + address - MAIN_RAM, width), "little")
 
     def poke(self, address, value, width=4):
         base = self.lib.retro_get_memory_data(2)
