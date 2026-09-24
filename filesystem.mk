@@ -482,6 +482,26 @@ else
 %.narc: csvdep :=
 endif
 
+# An archive of numbered members holds the ones the build makes, in name
+# order, which is number order, and nothing else. nitroarc on its own packs
+# the whole folder, so a member renumbered or removed left its old file
+# behind, it was packed too, and every member after it moved. .narcorder is
+# the list nitroarc reads; -E '*' keeps it from adding the folder's other
+# files after it. The list is its own target, remade on every run and
+# rewritten only when it changes: the archive depends on it, so a member
+# removed, which makes no other file newer, rebuilds the archive, and a run
+# with nothing changed rebuilds nothing.
+#     $(call numbered_narc,ARCHIVE,FOLDER,MEMBERS)
+define numbered_narc
+$(2)/.narcorder: FORCE
+	@printf '%s\n' $(notdir $(sort $(3))) >$$@.new
+	@if cmp -s $$@.new $$@; then rm $$@.new; else mv $$@.new $$@; fi
+$(1): $(2)/.narcorder $(3)
+	$$(NARC) -cf $$@ --index-namespace -E '*' $(2)
+endef
+FORCE:
+.PHONY: FORCE
+
 include files/msgdata/msg.mk
 include files/fielddata/script/scr_seq.mk
 $(SCRIPT_BINS): $(FIRST_MSG_H_GEN)
@@ -496,14 +516,10 @@ $(MOVE_SCRIPT_BINS): $(FIRST_MSG_H_GEN)
 include files/battledata/script/subscript.mk
 $(BTL_SUBSCRIPT_SCRIPT_BINS): $(FIRST_MSG_H_GEN)
 
-# A battle script archive holds the .bin each .s makes, in name order, which
-# is number order, and nothing else. nitroarc on its own packs the whole
-# directory, so the .bin of a script renumbered or removed was packed too and
-# every member after it moved. .narcorder is the list nitroarc reads; -E '*'
-# keeps it from adding the directory's other files after it.
-$(EFFECT_SCRIPT_NARC) $(MOVE_SCRIPT_NARC) $(BTL_SUBSCRIPT_SCRIPT_NARC): %.narc:
-	printf '%s\n' $(notdir $(sort $(filter %.bin,$^))) >$*/.narcorder
-	$(NARC) -cf $@ --index-namespace -E '*' $*
+# A battle script archive holds the .bin each .s makes.
+$(eval $(call numbered_narc,$(EFFECT_SCRIPT_NARC),$(EFFECT_SCRIPT_DIR),$(EFFECT_SCRIPT_BINS)))
+$(eval $(call numbered_narc,$(MOVE_SCRIPT_NARC),$(MOVE_SCRIPT_DIR),$(MOVE_SCRIPT_BINS)))
+$(eval $(call numbered_narc,$(BTL_SUBSCRIPT_SCRIPT_NARC),$(BTL_SUBSCRIPT_SCRIPT_DIR),$(BTL_SUBSCRIPT_SCRIPT_BINS)))
 
 include files/fielddata/eventdata/zone_event.mk
 include files/data/sound/sound_data.mk

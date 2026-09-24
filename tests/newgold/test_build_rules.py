@@ -196,6 +196,48 @@ class BuildRuleTests(unittest.TestCase):
             for stem, member in members:
                 self.assertEqual(int(re.search(r"_(\d+)", stem).group(1)), int(member), stem)
 
+    def numbered_narc(self, directory, sources):
+        """A folder of numbered sources, each copied to its .bin, packed by
+        filesystem.mk's numbered_narc with the tree's nitroarc: returns a
+        function that runs make and gives what it printed and the members
+        the index names, in order."""
+        nitroarc = ROOT / "tools/nitroarc/nitroarc"
+        if not nitroarc.exists():
+            self.skipTest("nitroarc is not built")
+        body = re.search(r"^define numbered_narc\n(.*?)\nendef$", (ROOT / "filesystem.mk").read_text(), re.S | re.M).group(1)
+        path = Path(directory)
+        (path / "a/d").mkdir(parents=True)
+        (path / "Makefile").write_text(
+            f"NARC := {nitroarc}\nFORCE:\n.PHONY: FORCE\n"
+            f"define numbered_narc\n{body}\nendef\n"
+            "a/d/%.bin: a/d/%.s\n\tcp $< $@\n"
+            "$(eval $(call numbered_narc,a/d.narc,a/d,$(patsubst %.s,%.bin,$(wildcard a/d/*.s))))\n")
+        for name in sources:
+            (path / "a/d" / name).write_text(name)
+        env = {k: v for k, v in os.environ.items() if not k.startswith("MAKE")}
+        env["LC_ALL"] = "C"
+
+        def make():
+            result = subprocess.run(["make", "-C", directory, "a/d.narc"], capture_output=True, text=True, env=env)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            index = (path / "a/d.naix").read_text()
+            return result.stdout, re.findall(r"^#define NARC_d_(\w+)_bin \d+$", index, re.M)
+        return make
+
+    def test_an_archive_is_rebuilt_when_only_a_member_is_removed(self):
+        """The archive depended on its members' files alone, so deleting the
+        last script made nothing newer: the archive kept the old member until
+        something else rebuilt it. The list of members is a prerequisite now,
+        rewritten only when it changes, so a run with nothing changed still
+        rebuilds nothing."""
+        with tempfile.TemporaryDirectory(prefix="newgold-narcorder-") as directory:
+            make = self.numbered_narc(directory, ["x_0000.s", "x_0001.s", "x_0002.s"])
+            self.assertEqual(make()[1], ["x_0000", "x_0001", "x_0002"])
+            printed, _ = make()
+            self.assertNotIn("nitroarc", printed, "a run with nothing changed rebuilt the archive")
+            (Path(directory) / "a/d/x_0002.s").unlink()
+            self.assertEqual(make()[1], ["x_0000", "x_0001"])
+
 
 if __name__ == "__main__":
     unittest.main()
