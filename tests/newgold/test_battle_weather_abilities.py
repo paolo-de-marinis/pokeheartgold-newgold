@@ -288,12 +288,17 @@ class WeatherAbilityTests(unittest.TestCase):
     def test_snow_warning_and_orichalcum_pulse_leave_the_map_s_weather(self):
         # Pokemon Central (Scendineve, Ritmo d'Oricalco), and the reference's
         # subscripts 252 and 487. Orichalcum Pulse basks in the map's sun.
-        for name in ("SnowWarning", "OrichalcumPulse"):
+        # Sand Spit too: from the ninth generation nothing overwrites the
+        # map's weather (Terrempesta, Sabbiafiume), and the reference sends it
+        # through Sand Stream's refusal.
+        for name in ("SnowWarning", "OrichalcumPulse", "SandSpit"):
             script = subscript(name)
             self.assertLess(script.index("FIELD_CONDITION_OVERWORLD_WEATHER_ANY, _MapWeather"), script.index("PrintMessage"), name)
             self.assertIn("PrintMessage msg_0197_00796, TAG_NONE", script[script.index("\n_MapWeather:"):], name)
         pulse = subscript("OrichalcumPulse")
         self.assertLess(pulse.index("FIELD_CONDITION_SUN_ALL, _AlreadySunny"), pulse.index("_MapWeather"))
+        spit = subscript("SandSpit")
+        self.assertLess(spit.index("_MapWeather"), spit.index("FIELD_CONDITION_SANDSTORM\n"))
 
     def test_only_the_map_lays_a_weather_for_good(self):
         setters = sorted(path.name for path in (ROOT / "files/battledata/script").rglob("*.s")
