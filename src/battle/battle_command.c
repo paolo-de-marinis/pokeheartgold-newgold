@@ -8141,12 +8141,17 @@ static void Task_GetPokemon(SysTask *task, void *inData) {
             // the demonstration never showed experience.
             data->ctx->battlerIdFainted = battlerId;
             if (!(BattleSystem_GetBattleType(data->battleSystem) & BATTLE_TYPE_TUTORIAL) && CountExpGainers(data->battleSystem, data->ctx)) {
+                // The caught Pokemon is in the ball: its box leaves before
+                // the others gain from it, as a fainted one's does.
+                BattleController_EmitHealthbarSlideOut(data->battleSystem, battlerId);
                 StartGetExpTask(data->battleSystem, data->ctx);
             }
         }
         break;
     case STATE_GET_POKEMON_WAIT_FOR_EXP:
-        if (data->ctx->getterWork == data) { // Task_GetExp has handed it back, or never ran.
+        // Task_GetExp has handed the getter back, or never ran, and the box
+        // is out.
+        if (data->ctx->getterWork == data && Link_QueueNotEmpty(data->ctx)) {
             data->state = STATE_GET_POKEMON_CHECK_MON_DATA;
         }
         break;

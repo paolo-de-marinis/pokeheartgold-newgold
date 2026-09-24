@@ -33,6 +33,16 @@ class CaptureExperienceTests(unittest.TestCase):
         self.assertLess(pays, body.index("NamingScreen_CreateArgs("), "before the naming screen")
         self.assertIn("CountExpGainers(", body[gotcha:pays], "only when there is experience to give")
 
+    def test_the_caught_pokemons_box_leaves_before_the_experience(self):
+        body = function(self.source, "Task_GetPokemon")
+        pays = body.index("StartGetExpTask(")
+        condition = body.rindex("if (", 0, pays)
+        self.assertIn("BattleController_EmitHealthbarSlideOut(data->battleSystem, battlerId);", body[condition:pays],
+                      "the caught Pokemon's HP box stays up through its capture experience")
+        wait = body[body.index("case STATE_GET_POKEMON_WAIT_FOR_EXP:"):]
+        wait = wait[:wait.index("break;")]
+        self.assertIn("Link_QueueNotEmpty(data->ctx)", wait, "the catch goes on before the box is out")
+
     def test_the_catching_demonstration_pays_none(self):
         body = function(self.source, "Task_GetPokemon")
         pays = body.index("StartGetExpTask(")
