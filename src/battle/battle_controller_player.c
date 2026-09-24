@@ -5718,6 +5718,21 @@ static BOOL TryPivotSwitch(BattleContext *ctx) {
     return TRUE;
 }
 
+// Natural Gift's Berry goes once the move is over, whether the move hit or
+// not -- a miss, Protect, an immunity -- if its user is still there to spend
+// it: not once a Red Card has sent it back (Pokemon Central, Dononaturale),
+// nor once it has fainted or a Pickpocket has taken the Berry (the engine's
+// Activate_SkillEffects, step 25.0 of ServerDoPostMoveEffects.c at
+// d0380a487, after Pickpocket). Not a Berry the move could not use, which
+// failed it.
+static BOOL NaturalGiftSpendsBerry(BattleContext *ctx) {
+    return BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_NATURAL_GIFT
+        && (ctx->battleStatus2 & BATTLE_STATUS2_MOVE_SUCCEEDED)
+        && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN)
+        && ctx->battleMons[ctx->battlerIdAttacker].hp != 0
+        && GetNaturalGiftPower(ctx, ctx->battlerIdAttacker) != 0;
+}
+
 static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
     int flag = 0;
 
@@ -5958,6 +5973,20 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
             break;
         }
         case 12:
+            // Natural Gift's Berry, after Pickpocket; see NaturalGiftSpendsBerry.
+            // It is not eaten (BtlCmd_RemoveItem): subscript PLUCK_CHECK is a
+            // RemoveItem of battlerIdTemp's.
+            ctx->unk_30++;
+            if (NaturalGiftSpendsBerry(ctx) == TRUE) {
+                ctx->battlerIdTemp = ctx->battlerIdAttacker;
+                ctx->selfTurnData[ctx->battlerIdAttacker].berryNotEaten = TRUE;
+                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_PLUCK_CHECK);
+                ctx->commandNext = ctx->command;
+                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+                flag = 1;
+            }
+            break;
+        case 13:
             // A Throat Spray answers the attacker using a sound move, and that
             // is the whole of the reference's condition: not that the move hit,
             // not that there was anything to hit, and not that Sp. Atk had room
@@ -5985,7 +6014,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_34 = 0;
             }
             break;
-        case 13:
+        case 14:
             // An Eject Pack on anyone who had a stat lowered during the move,
             // after the user's own items, where the reference asks it (step
             // 28); not once an Eject Button, Emergency Exit or Wimp Out has
@@ -6012,7 +6041,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->unk_30++;
             }
             break;
-        case 14:
+        case 15:
             // U-turn's user goes last, where the engine makes its pending
             // switch; see PivotSwitchPending.
             ctx->unk_30++;
@@ -6020,7 +6049,7 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 flag = 1;
             }
             break;
-        case 15:
+        case 16:
             ctx->unk_30 = 0;
             ctx->unk_34 = 0;
             flag = 2;

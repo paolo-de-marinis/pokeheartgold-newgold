@@ -309,10 +309,11 @@ class ParentalBondTests(unittest.TestCase):
         self.assertIn("BMON_DATA_STOCKPILE_COUNT, 0\n", spit_up[:spit_up.index("_STRIKE:")])
         secret_power = (EFFECTS / "effect_script_0197.s").read_text()
         self.assertNotIn("GetTerrainSecondaryEffect", secret_power[secret_power.index("_FIRST_STRIKE:"):])
+        # Natural Gift's Berry is spent once the move is over, so both strikes
+        # have it (test_battle_mechanics' NaturalGiftTests).
         natural_gift = (EFFECTS / "effect_script_0222.s").read_text()
-        self.assertRegex(natural_gift, r"_000:\s*GotoIfSecondHitOfParentalBond _SECOND_STRIKE\s*CalcNaturalGiftParams _006"
-                                       r"\s*CalcCrit\s*CalcDamage\s*RemoveItem BATTLER_CATEGORY_ATTACKER")
-        self.assertNotIn("RemoveItem", natural_gift[natural_gift.index("_SECOND_STRIKE:"):])
+        self.assertNotIn("RemoveItem", natural_gift)
+        self.assertNotIn("ParentalBond", natural_gift)
 
     def test_recoil_comes_once_for_both_strikes(self):
         # Pokemon Central, Amorefiliale: the recoil is worked out from both

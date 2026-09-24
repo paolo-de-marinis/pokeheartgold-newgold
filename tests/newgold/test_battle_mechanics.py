@@ -19,6 +19,7 @@ from test_repels import function
 
 OVERLAY = ROOT / "src/battle/overlay_12_0224E4FC.c"
 COMMANDS = ROOT / "src/battle/battle_command.c"
+CONTROLLER = ROOT / "src/battle/battle_controller_player.c"
 SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
 
 
@@ -231,6 +232,82 @@ class ExplosionTests(unittest.TestCase):
         # user; its move records carry the later powers instead, and so do
         # this game's.
         self.assertNotIn("MOVE_EFFECT_HALVE_DEFENSE", function(OVERLAY.read_text(), "CalcMoveDamage"))
+
+
+NATURAL_GIFT_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/move_effects.h"
+typedef struct { u16 effect; } MoveTbl;
+typedef struct { int hp, item; } Mon;
+typedef struct {
+    Mon battleMons[4];
+    int battlerIdAttacker;
+    u32 moveNoCur, battleStatus2;
+    MoveTbl move;
+} BattleContext;
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)moveNo; return &ctx->move; }
+// 80 for the one Berry of the test, as a Berry Klutz, Embargo or Magic Room
+// leave unusable reads 0.
+static int GetNaturalGiftPower(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].item ? 80 : 0; }
+@FUNCTIONS@
+static BattleContext ctx;
+static void setup(void) {
+    BattleContext blank = { 0 };
+    ctx = blank;
+    ctx.move.effect = MOVE_EFFECT_NATURAL_GIFT;
+    ctx.battleMons[0].hp = 100;
+    ctx.battleMons[0].item = 1;
+    ctx.battleStatus2 = BATTLE_STATUS2_MOVE_SUCCEEDED;
+}
+int main(void) {
+    setup();
+    assert(NaturalGiftSpendsBerry(&ctx));
+    // Not when a Red Card or the user's own switch has sent it back, nor when
+    // it has fainted, nor for a Berry it could not use, nor for a move
+    // stopped before it went off.
+    setup();
+    ctx.battleStatus2 |= BATTLE_STATUS2_UTURN;
+    assert(!NaturalGiftSpendsBerry(&ctx));
+    setup();
+    ctx.battleMons[0].hp = 0;
+    assert(!NaturalGiftSpendsBerry(&ctx));
+    setup();
+    ctx.battleMons[0].item = 0;
+    assert(!NaturalGiftSpendsBerry(&ctx));
+    setup();
+    ctx.battleStatus2 = 0;
+    assert(!NaturalGiftSpendsBerry(&ctx));
+    setup();
+    ctx.move.effect = MOVE_EFFECT_HIT;
+    assert(!NaturalGiftSpendsBerry(&ctx));
+    return 0;
+}
+"""
+
+
+class NaturalGiftTests(unittest.TestCase):
+    def test_the_berry_goes_once_the_move_is_over(self):
+        # Pokemon Central (Dononaturale): spent on a miss, Protect or an
+        # immunity, kept when a Red Card sends the user back -- so spent at
+        # the end of the move, where the engine spends it (step 25.0, after
+        # Pickpocket).
+        from test_ability_interactions import run_c
+        controller = CONTROLLER.read_text()
+        run_c(NATURAL_GIFT_FIXTURE.replace("@FUNCTIONS@", function(controller, "NaturalGiftSpendsBerry")))
+        steps = function(controller, "ov12_0224E1BC")
+        self.assertLess(steps.index("TryPickpocket("), steps.index("NaturalGiftSpendsBerry(ctx) == TRUE"))
+        self.assertLess(steps.index("NaturalGiftSpendsBerry(ctx) == TRUE"), steps.index("HOLD_EFFECT_BOOST_SPATK_ON_SOUND_MOVE"))
+        pluck_check = (SUBSCRIPTS / "subscript_0290_Pluck.s").read_text()
+        self.assertIn("#define BATTLE_SUBSCRIPT_PLUCK_CHECK                      290",
+                      (ROOT / "include/constants/battle_subscript.h").read_text())
+        self.assertIn("RemoveItem BATTLER_CATEGORY_MSG_TEMP", pluck_check)
 
 
 class SandstormTests(unittest.TestCase):
@@ -629,7 +706,7 @@ class BelchMemoryTests(unittest.TestCase):
         self.assertIn("ctx->selfTurnData[battlerId].berryNotEaten = TRUE;", function(overlay, "TryFling"))
         self.assertIn("RememberBerryEaten(battleSystem, ctx, battlerId);", function(overlay, "FlungItemLands"))
         self.assertIn("ctx->selfTurnData[ctx->battlerIdAttacker].berryNotEaten = TRUE;",
-                      function(commands, "BtlCmd_CalcNaturalGiftParams"))
+                      function(CONTROLLER.read_text(), "ov12_0224E1BC"))
 
 class ScriptStageTests(unittest.TestCase):
     def test_a_script_keeps_a_stage_within_six(self):

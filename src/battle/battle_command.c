@@ -6234,8 +6234,6 @@ BOOL BtlCmd_CalcNaturalGiftParams(BattleSystem *battleSystem, BattleContext *ctx
     if (power) {
         ctx->movePower = power;
         ctx->moveType = GetNaturalGiftType(ctx, ctx->battlerIdAttacker);
-        // The Berry is spent, not eaten (BtlCmd_RemoveItem).
-        ctx->selfTurnData[ctx->battlerIdAttacker].berryNotEaten = TRUE;
     } else {
         BattleScriptIncrementPointer(ctx, adrs);
     }
