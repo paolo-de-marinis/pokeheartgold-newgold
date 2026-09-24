@@ -3196,13 +3196,16 @@ int CalcTypeEffectiveness(BattleSystem *battleSystem, BattleContext *ctx, int mo
         // long as nothing has brought it down -- Gravity, an Iron Ball --
         // and Thousand Arrows aside (Pokemon Central, Telecinesi).
         *moveStatusFlag |= MOVE_STATUS_NO_EFFECT;
-    } else if ((ctx->battleMons[battlerIdTarget].unk88.magnetRiseTurns || itemTarget == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT) && !(ctx->battleMons[battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN) && moveType == TYPE_GROUND && itemTarget != HOLD_EFFECT_SPEED_DOWN_GROUNDED) {
+    } else if ((ctx->battleMons[battlerIdTarget].unk88.magnetRiseTurns || itemTarget == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT) && moveType == TYPE_GROUND && BattlerIsGrounded(ctx, battlerIdTarget) == FALSE) {
         // An Air Balloon rides out a Ground move the same way Magnet Rise
-        // does, and the reference answers both from one place too. It leaves
-        // the same flag behind, so what gets printed is the Magnet Rise line
-        // rather than one naming the balloon -- which is the reference's own
-        // behaviour, with the reference's own note saying the AI would need a
-        // second flag before it could tell them apart.
+        // does, and the reference answers both from one place too -- unless
+        // something has brought the Pokemon down: Gravity, Ingrain, an Iron
+        // Ball, a Smack Down (BattlerIsGrounded; Pokemon Central,
+        // Magnetascesa, Gravita). It leaves the same flag behind, so what
+        // gets printed is the Magnet Rise line rather than one naming the
+        // balloon -- which is the reference's own behaviour, with the
+        // reference's own note saying the AI would need a second flag before
+        // it could tell them apart.
         *moveStatusFlag |= MOVE_STATUS_MAGNET_RISE_IMMUNE;
     } else {
         i = 0;

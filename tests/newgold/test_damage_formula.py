@@ -35,6 +35,10 @@ FIXTURE = r"""
 #include "constants/move_effects.h"
 #include "constants/moves.h"
 #include "constants/pokemon.h"
+// The header's 1 << 31 overflows a host int; the game's compiler takes it as
+// the top bit, which is what this is.
+#undef MOVE_EFFECT_FLAG_SMACK_DOWN
+#define MOVE_EFFECT_FLAG_SMACK_DOWN (1u << 31)
 typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int32_t s32;
 typedef int BOOL;
 #define TRUE 1
@@ -45,7 +49,7 @@ typedef int BOOL;
 typedef struct { int unused; } BattleSystem;
 typedef struct { u32 speed; } Pokemon;
 typedef struct {
-    int hp; u32 maxHp; u32 status; u32 status2; u32 moveEffectFlags; u8 type3;
+    int hp; u32 maxHp; u32 status; u32 status2; u32 moveEffectFlags; u8 type1, type2, type3;
     struct { int meFirstFlag, meFirstCount, metronomeTurns, magnetRiseTurns; } unk88;
 } BattleMon;
 typedef struct {
@@ -73,7 +77,6 @@ static struct {
 
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &S.move; }
 static int BattleMoveCategory(BattleContext *ctx, u32 moveNo, int battlerIdAttacker) { (void)ctx; (void)moveNo; (void)battlerIdAttacker; return S.move.category; }
-static BOOL BattlerIsGrounded(BattleContext *ctx, int battlerId) { return !ctx->moveConditions[battlerId].telekinesisTurns; }
 static int CalcMoveDamage(BattleSystem *bs, BattleContext *ctx, u32 moveNo, u32 side, u32 field, u16 power, u8 type, u8 a, u8 t, u8 crit) {
     (void)bs; (void)ctx; (void)moveNo; (void)side; (void)field; (void)power; (void)type; (void)a; (void)t; (void)crit;
     return S.base;
@@ -130,6 +133,7 @@ static void reset(void) {
         S.types[i][0] = S.types[i][1] = TYPE_NORMAL;
         ctx.battleMons[i].hp = 100;
         ctx.battleMons[i].maxHp = 100;
+        ctx.battleMons[i].type1 = ctx.battleMons[i].type2 = TYPE_NORMAL;
         ctx.battleMons[i].type3 = TYPE_NONE;
     }
     ctx.battlerIdAttacker = 0;
@@ -238,6 +242,23 @@ int main(void) {
         EXPECT(CalcTypeEffectiveness(&bs, &ctx, 0, TYPE_FIRE, 0, 1, 45, &flags, &effectiveness), 22);
         EXPECT(effectiveness, 4);
         EXPECT((int)(flags & MOVE_STATUS_NOT_VERY_EFFECTIVE) != 0, 1);
+        // Magnet Rise and an Air Balloon keep a Ground move off, but not
+        // under Gravity or with an Iron Ball (Pokemon Central, Magnetascesa).
+        reset(); ctx.battleMons[1].unk88.magnetRiseTurns = 3; flags = 0;
+        CalcTypeEffectiveness(&bs, &ctx, 0, TYPE_GROUND, 0, 1, 45, &flags, &effectiveness);
+        EXPECT((int)(flags & MOVE_STATUS_MAGNET_RISE_IMMUNE) != 0, 1);
+        ctx.fieldCondition = FIELD_CONDITION_GRAVITY; flags = 0;
+        CalcTypeEffectiveness(&bs, &ctx, 0, TYPE_GROUND, 0, 1, 45, &flags, &effectiveness);
+        EXPECT((int)(flags & MOVE_STATUS_MAGNET_RISE_IMMUNE), 0);
+        reset(); S.item[1] = HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT; flags = 0;
+        CalcTypeEffectiveness(&bs, &ctx, 0, TYPE_GROUND, 0, 1, 45, &flags, &effectiveness);
+        EXPECT((int)(flags & MOVE_STATUS_MAGNET_RISE_IMMUNE) != 0, 1);
+        ctx.fieldCondition = FIELD_CONDITION_GRAVITY; flags = 0;
+        CalcTypeEffectiveness(&bs, &ctx, 0, TYPE_GROUND, 0, 1, 45, &flags, &effectiveness);
+        EXPECT((int)(flags & MOVE_STATUS_MAGNET_RISE_IMMUNE), 0);
+        reset(); ctx.battleMons[1].unk88.magnetRiseTurns = 3; S.item[1] = HOLD_EFFECT_SPEED_DOWN_GROUNDED; flags = 0;
+        CalcTypeEffectiveness(&bs, &ctx, 0, TYPE_GROUND, 0, 1, 45, &flags, &effectiveness);
+        EXPECT((int)(flags & MOVE_STATUS_MAGNET_RISE_IMMUNE), 0);
     }
 
     // 6.8 a burn halves a physical move: 22. Guts is spared; a special move is
@@ -414,13 +435,14 @@ def program():
         function(OVERLAY, name) for name in (
             "QMul_RoundUp", "QMul_RoundDown", "ov12_02251C74", "ov12_022583B4", "TeraShellResists",
             "BattlerMoveWeather", "StrongWindsShelterRow", "StrongWindsFor", "StrongWindsWeakenMove",
-            "CalcTypeEffectiveness", "MoveIsInList", "BattleMoveStampsOnMinimize")])
+            "BattlerIsGrounded", "CalcTypeEffectiveness", "MoveIsInList", "BattleMoveStampsOnMinimize")])
     commands = "\n".join(function(COMMANDS, name) for name in (
         "ScreenModifier", "ResistBerryType", "ResistBerryModifier", "RawSpeedGoesFirst", "RawSpeedOrder",
         "FinalDamageModifier", "DamageCalcDefault"))
     return (FIXTURE.replace("@UQ412@", uq412)
             .replace("@OVERLAY@", overlay.replace("BOOL ov12_02251C74", "static BOOL ov12_02251C74")
                      .replace("int CalcTypeEffectiveness", "static int CalcTypeEffectiveness")
+                     .replace("BOOL BattlerIsGrounded", "static BOOL BattlerIsGrounded")
                      .replace("BOOL TeraShellResists", "static BOOL TeraShellResists")
                      .replace("u32 BattlerMoveWeather", "static u32 BattlerMoveWeather")
                      .replace("BOOL StrongWindsWeakenMove", "static BOOL StrongWindsWeakenMove")
