@@ -106,10 +106,10 @@ FORMS_FRONT, FORMS_BACK = (24, 80), (152, 98)
 # window's bottom cuts off what hangs below it.
 FORMS_BACK_ROWS, FORMS_BACK_WINDOW = range(-40, 21), (150, 78, 234, 161)
 FORMS_TEXT = {"forms name": (20, 40, 236, 56)}
-# ov18_021E8254: the species whose FORMS list is the Dex's seen forms, and
-# the two that list all of theirs; any other lists the genders it was seen as.
-DEX_FORM_LISTS = {"UNOWN", "PICHU", "DEOXYS", "BURMY", "WORMADAM", "SHELLOS", "GASTRODON", "ROTOM",
-                  "GIRATINA", "SHAYMIN"}
+FORMS_LIST = (32, 198, 216, 314)   # the list on the bottom screen, its rows and cursor
+# ov18_021E8254: the species whose FORMS list is the Dex's seen forms
+# (savedit.DEX_FORM_LISTS), and the two that list all of theirs; any other
+# lists the genders it was seen as.
 DEX_ALL_FORMS = {"CASTFORM": 4, "CHERRIM": 2}
 # ov18_021E8528 on opening the page: the morning's overworld and special
 # overworld blocks, the morning's dungeon and special dungeon blocks, Johto
@@ -591,6 +591,9 @@ def dex_jobs(out, wanted):
     # they were seen as, and FORMS would list one entry for them.
     savedit.set_dex(save, savedit.dex_species(), False, False)
     savedit.set_dex(save, savedit.dex_species(), True, True)
+    # Every form of the species whose FORMS lists the forms seen, first form first.
+    for name, (_, count, _) in savedit.DEX_FORM_LISTS.items():
+        savedit.set_dex_forms(save, savedit.species_numbers()[name], range(count))
     savedit.set_dex_switches(save, True, True)
     savedit.set_position(save, PC_TILE[0], PC_TILE[1], PC_TILE[2], 1)
     path = out / "dex.sav"
@@ -689,11 +692,11 @@ def _female_species():
 
 def forms_entries(species):
     """What ov18_021E8254 lists on FORMS for a species seen the way the Dex
-    save has it (savedit.set_dex: every gender it can be, its first form):
+    save has it (dex_jobs: every gender it can be, every Dex form in order):
     ("form", n) or ("gender", MON_MALE / MON_FEMALE / MON_GENDERLESS)."""
     const = next(k for k, v in savedit.species_numbers().items() if v == species)
-    if const in DEX_FORM_LISTS:
-        return [("form", 0)]
+    if const in savedit.DEX_FORM_LISTS:
+        return [("form", f) for f in range(savedit.DEX_FORM_LISTS[const][1])]
     if const in DEX_ALL_FORMS:
         return [("form", f) for f in range(DEX_ALL_FORMS[const])]
     ratio = savedit.GENDER_RATIO(savedit.personal_records()[savedit.personal_row(species, 0)]["genderRatio"])
@@ -706,6 +709,8 @@ def forms_pictures(species, entry):
     (PicSpecies_FemaleForm), the male's where the female has no picture."""
     kind, value = entry
     if kind == "form":
+        if species == savedit.species_numbers()["PICHU"]:
+            value = int(value == 2)   # ov18_021F3CA8: a male, a female, the Spiky-eared
         front = sprite_png({"species": species, "form": value, "gender": 0})
         return front, front.with_name("back.png")
     if value == 1:
@@ -761,14 +766,16 @@ def dex_details(job):
             before = now
             game.press("RIGHT", 120)
             game.press("RIGHT", 120)
-            bar = None
+            bar = rows = None
             for i, entry in enumerate(forms_entries(e["species"])):
                 # The list swallows a press now and then, as the Dex's list
-                # does: the bar names every entry its own way, so a bar that
-                # has not changed is pressed for again.
+                # does: a press after which neither the bar nor the list has
+                # moved is pressed for again. The bar alone does not do: it
+                # says "One form" for every Unown letter.
                 for _ in range(5 if i else 0):
                     game.press("DOWN", 60)
-                    if region(game.shot(), FORMS_TEXT["forms name"]) != bar:
+                    shot = game.shot()
+                    if region(shot, FORMS_TEXT["forms name"]) != bar or region(shot, FORMS_LIST) != rows:
                         break
                 front, back = forms_pictures(e["species"], entry)
                 # The back picture's PNG keeps another palette; the game draws
@@ -783,7 +790,7 @@ def dex_details(job):
                                         FORMS_BACK_WINDOW, FORMS_BACK_ROWS),
                           "asserts": now["asserts"] - before["asserts"], "allocs": now["allocs"] - before["allocs"],
                           "text": regions(top, FORMS_TEXT, out)}
-                bar = record["text"]["forms name"]
+                bar, rows = record["text"]["forms name"], region(screen, FORMS_LIST)
                 if record["asserts"] or record["allocs"]:
                     record["failure"] = game.failure()
                 before = now
@@ -892,12 +899,14 @@ def expected_text(e, r=None):
     name = savedit.species_name(e["species"])
     species = dex_species(e["species"])
     ability, description = savedit.bank(savedit.ABILITY_NAMES)[e["ability"]], bank(ABILITY_TEXT)[e["ability"]]
+    # ov18's bar says "One form" for every Unown letter (bank 802, row 0x79)
+    entry = tuple(r["entry"]) if r and "entry" in r and species != savedit.species_numbers()["UNOWN"] else None
     return {"dex number": dex_number(e["species"]), "name": name, "types": types,
             "ability": ability, "summary name": name, "summary ability": ability,
             "ability description": description, "dex name": name, "dex types": types,
             "category": bank(DEX_CATEGORIES)[species], "entry": bank(DEX_ENTRIES)[species],
             "info dex number": dex_number(e["species"]), "info name": name, "info types": types,
-            "forms name": (name, tuple(r["entry"]) if r and "entry" in r else None)}
+            "forms name": (name, entry)}
 
 
 def text_failures(records, table):

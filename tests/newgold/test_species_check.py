@@ -54,8 +54,18 @@ class SpeciesCheckTests(unittest.TestCase):
         self.assertEqual(species.forms_entries(n["BULBASAUR"]), [("gender", 0), ("gender", 1)])
         self.assertEqual(species.forms_entries(n["NIDORAN_F"]), [("gender", 1)])
         self.assertEqual(species.forms_entries(n["MAGNEMITE"]), [("gender", 2)])
-        self.assertEqual(species.forms_entries(n["UNOWN"]), [("form", 0)])
+        # the Dex save has every form of these seen (dex_jobs)
+        self.assertEqual(species.forms_entries(n["UNOWN"]), [("form", f) for f in range(28)])
+        self.assertEqual(species.forms_entries(n["ROTOM"]), [("form", f) for f in range(6)])
         self.assertEqual(species.forms_entries(n["CASTFORM"]), [("form", f) for f in range(4)])
+        # the bar says "One form" for every Unown letter, not for Shellos's two
+        unown, shellos = (next(e for e in species.entries() if e["species"] == n[s]) for s in ("UNOWN", "SHELLOS"))
+        bar = lambda e, f: species.expected_text(e, {"entry": ["form", f]})["forms name"]  # noqa: E731
+        self.assertEqual(bar(unown, 0), bar(unown, 3))
+        self.assertNotEqual(bar(shellos, 0), bar(shellos, 1))
+        # Pichu's entries are a male, a female and the Spiky-eared
+        self.assertEqual([species.forms_pictures(n["PICHU"], ("form", f))[0].parent.name for f in range(3)],
+                         [species.form_species()["PICHU"][1][f] for f in (0, 0, 1)])
 
     def test_a_split_species_female_is_drawn_from_its_female_species(self):
         n = sv.species_numbers()
