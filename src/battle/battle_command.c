@@ -10004,13 +10004,15 @@ static void MakeBattlerPureType(BattleContext *ctx, int battlerId, u8 type) {
 }
 
 // Burn Up and Double Shock spend a type to use the move. What is left of a
-// Pokemon that was only that type is nothing, which the chart reads as a
-// typeless Pokemon rather than as an error. An added type is not theirs to
-// take.
+// Pokemon that was only that type is nothing: TYPE_MYSTERY, which the chart
+// has no row for, so every move is neutral on it and none gets its STAB (the
+// reference's RemoveType writes its TYPE_TYPELESS, the same type under its
+// number; Pokemon Central, Ultima Fiamma, Doppiolampo). An added type is not
+// theirs to take.
 static void RemoveBattlerType(BattleContext *ctx, int battlerId, u8 type) {
     if (ctx->battleMons[battlerId].type1 == type && ctx->battleMons[battlerId].type2 == type) {
-        ctx->battleMons[battlerId].type1 = TYPE_NORMAL;
-        ctx->battleMons[battlerId].type2 = TYPE_NORMAL;
+        ctx->battleMons[battlerId].type1 = TYPE_MYSTERY;
+        ctx->battleMons[battlerId].type2 = TYPE_MYSTERY;
     } else if (ctx->battleMons[battlerId].type1 == type) {
         ctx->battleMons[battlerId].type1 = ctx->battleMons[battlerId].type2;
     } else if (ctx->battleMons[battlerId].type2 == type) {

@@ -1335,6 +1335,17 @@ class TypeChangeTests(unittest.TestCase):
         self.assertIn("ctx->battleMons[ctx->battlerIdAttacker].type3 = TYPE_NONE;", function(commands, "BtlCmd_TryCamouflage"))
         self.assertIn("mon->type3 = TYPE_NONE;", function(commands, "BtlCmd_TryConversion"))
 
+    def test_burn_up_leaves_a_pure_fire_type_typeless(self):
+        # Pokemon Central (Ultima Fiamma, Doppiolampo): typeless, which is
+        # TYPE_MYSTERY here, the one type the chart has no row for; Normal
+        # would be immune to Ghost and weak to Fighting.
+        body = function(COMMANDS.read_text(), "RemoveBattlerType")
+        self.assertEqual(body.count("= TYPE_MYSTERY;"), 2)
+        self.assertNotIn("TYPE_NORMAL", body)
+        chart = OVERLAY.read_text()
+        chart = chart[chart.index("sTypeEffectiveness[][3] = {"):]
+        self.assertNotIn("TYPE_MYSTERY", chart[:chart.index("};")])
+
     def test_conversion_takes_its_first_move_s_type(self):
         # Pokemon Central, Conversione, from Generation VI: the type of the
         # move in the first slot, failing when the user has it already, an
