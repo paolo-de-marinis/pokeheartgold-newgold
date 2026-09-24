@@ -154,6 +154,13 @@ typedef enum Terrain {
 
 #define BATTLE_TYPE_NO_EXP (BATTLE_TYPE_LINK | BATTLE_TYPE_SAFARI | BATTLE_TYPE_FRONTIER | BATTLE_TYPE_PAL_PARK)
 
+// What the battle party menu (overlay 8) is opened to pick. 1 is a switch that
+// cannot be declined and 2 a Pokemon to use an item on; Revival Blessing asks
+// for a fainted Pokemon of the user's own, and the menu cannot be closed
+// without one.
+#define BATTLE_PARTY_MODE_FORCED_SWITCH 1
+#define BATTLE_PARTY_MODE_REVIVE        5
+
 // Battle Special Flags
 #define BATTLE_SPECIAL_FIRST_RIVAL      (1 << 0)
 #define BATTLE_SPECIAL_HONEY_TREE       (1 << 1)

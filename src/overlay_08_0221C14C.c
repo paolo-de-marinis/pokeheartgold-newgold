@@ -1,5 +1,7 @@
 #include "global.h"
 
+#include "constants/battle.h"
+
 #include "constants/sndseq.h"
 
 #include "palette.h"
@@ -15,14 +17,16 @@ int ov08_0221C14C(BattlePartyMenu *menu);
 // The battle party menu's list, once the palette has faded in: a Pokemon
 // picked opens its submenu (state 22), or, with an item to use (mode 2), has
 // the item used on it; Cancel closes the menu (state 25), except when a
-// switch cannot be declined (mode 1). 1 is to keep waiting.
+// switch cannot be declined (mode 1) and when Revival Blessing is waiting for
+// a fainted Pokemon to revive (BATTLE_PARTY_MODE_REVIVE). 1 is to keep
+// waiting.
 int ov08_0221C14C(BattlePartyMenu *menu) {
     if (PaletteData_GetSelectedBuffersBitmask(menu->paletteData) != 0) {
         return 1;
     }
     if (ov08_0221D438(menu) == TRUE) {
         if (menu->args->selectedPos == 6) {
-            if (menu->args->mode != 1) {
+            if (menu->args->mode != BATTLE_PARTY_MODE_FORCED_SWITCH && menu->args->mode != BATTLE_PARTY_MODE_REVIVE) {
                 PlaySE(SEQ_SE_DP_DECIDE);
                 ov08_022220AC(menu, 6);
                 return 25;

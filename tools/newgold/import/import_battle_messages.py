@@ -394,6 +394,13 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} was freed\nfrom the Sky Drop!",
         r"The opposing {STRVAR_1 1, 0, 0} was freed\nfrom the Sky Drop!",
     ]),
+    # Revival Blessing. The engine leaves the move unimplemented; the later
+    # games' line, about the Pokemon revived, three rows.
+    ("revival blessing", [
+        r"{STRVAR_1 1, 0, 0} was revived and\nis ready to fight again!",
+        r"The wild {STRVAR_1 1, 0, 0} was revived\nand is ready to fight again!",
+        r"The opposing {STRVAR_1 1, 0, 0} was revived\nand is ready to fight again!",
+    ]),
 ]
 
 

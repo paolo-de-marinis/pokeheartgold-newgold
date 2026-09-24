@@ -4238,6 +4238,7 @@ BOOL BattleContext_CheckMoveUnuseableInGravity(BattleSystem *battleSystem, Battl
 static const u16 sHealBlockUnusableMoves[] = {
     MOVE_FLORAL_HEALING,
     MOVE_LUNAR_BLESSING,
+    MOVE_REVIVAL_BLESSING,
 };
 
 static const u16 sHealBlockUnusableMoveEffects[] = {

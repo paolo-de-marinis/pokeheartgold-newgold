@@ -1,5 +1,7 @@
 #include "global.h"
 
+#include "constants/battle.h"
+
 #include "battle/battle_system.h"
 #include "msgdata/msg/msg_0006.h"
 
@@ -17,7 +19,8 @@ BOOL ov08_0221D91C(BattlePartyMenu *menu);
 // Whether the Pokemon picked in the battle party menu can be sent in, with
 // the reason in the message buffer when it cannot: one of the multi-battle
 // partner's, one with no HP left, one already on the field, an Egg, one the
-// ally has already chosen, or none at all while the battler is trapped.
+// ally has already chosen, or none at all while the battler is trapped. For
+// Revival Blessing, whether it can be revived.
 BOOL ov08_0221D91C(BattlePartyMenu *menu) {
     BattlePartyMenuMon *entry = &menu->mons[menu->args->selectedPos];
     String *str;
@@ -29,6 +32,15 @@ BOOL ov08_0221D91C(BattlePartyMenu *menu) {
         StringExpandPlaceholders(menu->msgFormat, menu->msgBuffer, str);
         String_Delete(str);
         return FALSE;
+    }
+    // Revival Blessing takes a fainted Pokemon of the user's own, and nothing
+    // else would have any effect (Pokemon Central, Preghiera Vitale).
+    if (menu->args->mode == BATTLE_PARTY_MODE_REVIVE) {
+        if (entry->hp != 0 || ov08_0221DAC4(menu) == TRUE) {
+            ReadMsgDataIntoString(menu->msgData, msg_0006_00081, menu->msgBuffer);
+            return FALSE;
+        }
+        return TRUE;
     }
     if (entry->hp == 0) {
         str = NewString_ReadMsgData(menu->msgData, msg_0006_00077);

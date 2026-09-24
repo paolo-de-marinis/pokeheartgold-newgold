@@ -506,6 +506,10 @@ IMPLEMENTED_HERE = {
     # held, and drops it the next; not on a Pokemon of 200 kg or more
     # (Pokemon Central, Cadutalibera): effect script 445.
     "SKY_DROP": "MOVE_EFFECT_SKY_DROP",
+    # Revival Blessing revives a fainted Pokemon of the user's party, picked
+    # from the party menu, with half its HP (Pokemon Central, Preghiera
+    # Vitale): effect script 446.
+    "REVIVAL_BLESSING": "MOVE_EFFECT_REVIVAL_BLESSING",
 }
 
 # What else those moves' records need and the engine's leave out, by field. A

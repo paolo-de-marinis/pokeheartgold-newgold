@@ -453,5 +453,6 @@
 #define MOVE_EFFECT_ALLY_SWITCH                                  443
 #define MOVE_EFFECT_PLEDGE                                       444
 #define MOVE_EFFECT_SKY_DROP                                     445
+#define MOVE_EFFECT_REVIVAL_BLESSING                             446
 
 #endif // POKEHEARTGOLD_CONSTANTS_MOVE_EFFECTS_H

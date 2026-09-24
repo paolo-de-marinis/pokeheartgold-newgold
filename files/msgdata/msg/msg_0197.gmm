@@ -7780,4 +7780,16 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} was freed\nfrom the Sky Drop!</language>
 	</row>
+	<row id="msg_0197_01945" index="1945">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0} was revived and\nis ready to fight again!</language>
+	</row>
+	<row id="msg_0197_01946" index="1946">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The wild {STRVAR_1 1, 0, 0} was revived\nand is ready to fight again!</language>
+	</row>
+	<row id="msg_0197_01947" index="1947">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">The opposing {STRVAR_1 1, 0, 0} was revived\nand is ready to fight again!</language>
+	</row>
 </body>

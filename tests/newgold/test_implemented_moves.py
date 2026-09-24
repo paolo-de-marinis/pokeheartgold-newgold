@@ -1318,5 +1318,98 @@ int main(void) {
         self.assertIn("MOVE_SKY_DROP,", gravity)
         self.assertIn("MOVE_EFFECT_SKY_DROP,", re.search(r"sEffectsInstructCannotRepeat\[\] = \{(.*?)\};", commands, re.S).group(1))
 
+    REVIVAL_BLESSING_PROGRAM = r"""
+typedef struct { int unused; } BattleSystem;
+typedef struct { int species, hp, maxHp, status; } Pokemon;
+typedef struct { int hp; } BattleMon;
+typedef struct { u32 revivalBlessing : 1; } SelfTurnData;
+typedef struct {
+    BattleMon battleMons[4]; SelfTurnData selfTurnData[4]; u8 unk_13C[4]; u8 unk_21A0[4]; u8 selectedMonIndex[4];
+    int battlerIdSwitch;
+} BattleContext;
+static Pokemon sParty[6]; static int sPartySize; static int sDoubles;
+static int BattleSystem_GetPartySize(BattleSystem *bs, int battlerId) { (void)bs; (void)battlerId; return sPartySize; }
+static Pokemon *BattleSystem_GetPartyMon(BattleSystem *bs, int battlerId, int slot) { (void)bs; (void)battlerId; return &sParty[slot]; }
+static void *BattleSystem_GetParty(BattleSystem *bs, int battlerId) { (void)bs; (void)battlerId; return sParty; }
+static int BattleSystem_GetBattlerIdPartner(BattleSystem *bs, int battlerId) { (void)bs; return sDoubles ? battlerId ^ 2 : battlerId; }
+static u32 GetMonData(Pokemon *mon, int field, void *data) {
+    (void)data;
+    switch (field) {
+    case MON_DATA_SPECIES_OR_EGG: return mon->species;
+    case MON_DATA_HP: return mon->hp;
+    case MON_DATA_MAX_HP: return mon->maxHp;
+    }
+    return 0;
+}
+static void SetMonData(Pokemon *mon, int field, void *data) {
+    if (field == MON_DATA_HP) mon->hp = *(u32 *)data;
+    if (field == MON_DATA_STATUS) mon->status = *(u32 *)data;
+}
+@FUNCTIONS@
+static BattleContext ctx;
+static BattleSystem bs;
+static void reset(void) {
+    memset(&ctx, 0, sizeof(ctx)); memset(sParty, 0, sizeof(sParty)); sPartySize = 3; sDoubles = 0;
+    for (int i = 0; i < 3; i++) { sParty[i].species = SPECIES_PIKACHU; sParty[i].hp = 20; sParty[i].maxHp = 41; }
+    for (int i = 0; i < 4; i++) { ctx.battleMons[i].hp = 10; ctx.unk_21A0[i] = 6; ctx.selectedMonIndex[i] = i >> 1; }
+}
+int main(void) {
+    // Nobody fainted, or only an Egg: the move fails.
+    reset(); EXPECT(RevivalBlessingStep(&bs, &ctx, 0), 0); EXPECT(ctx.selfTurnData[0].revivalBlessing, 0);
+    sParty[2].species = SPECIES_EGG; sParty[2].hp = 0; EXPECT(RevivalBlessingStep(&bs, &ctx, 0), 0);
+    // A fainted one: the user picks, then it comes back with half its HP,
+    // rounded down, and no status.
+    sParty[1].hp = 0; sParty[1].status = 7; EXPECT(RevivalBlessingStep(&bs, &ctx, 0), 1);
+    EXPECT(ctx.selfTurnData[0].revivalBlessing, 1); EXPECT(ctx.unk_13C[0] & 1, 1);
+    ctx.unk_21A0[0] = 1; EXPECT(RevivalBlessingStep(&bs, &ctx, 0), 0);
+    EXPECT(sParty[1].hp, 20); EXPECT(sParty[1].status, 0);
+    EXPECT(ctx.selfTurnData[0].revivalBlessing, 0); EXPECT(ctx.unk_13C[0] & 1, 0); EXPECT(ctx.unk_21A0[0], 6);
+    // At least one HP (Shedinja).
+    reset(); sParty[2].hp = 0; sParty[2].maxHp = 1; RevivalBlessingStep(&bs, &ctx, 0);
+    ctx.unk_21A0[0] = 2; RevivalBlessingStep(&bs, &ctx, 0); EXPECT(sParty[2].hp, 1);
+    // In a double battle, the ally's own Pokemon, its place empty, goes back
+    // into it at once; one from the bench does not.
+    reset(); sDoubles = 1; sParty[1].hp = 0; ctx.battleMons[2].hp = 0;
+    RevivalBlessingStep(&bs, &ctx, 0); ctx.unk_21A0[0] = 1;
+    EXPECT(RevivalBlessingStep(&bs, &ctx, 0), 1); EXPECT(ctx.battlerIdSwitch, 2); EXPECT(ctx.unk_21A0[2], 1);
+    reset(); sDoubles = 1; sParty[2].hp = 0; ctx.battleMons[2].hp = 0;
+    RevivalBlessingStep(&bs, &ctx, 0); ctx.unk_21A0[0] = 2;
+    EXPECT(RevivalBlessingStep(&bs, &ctx, 0), 0);
+    return 0;
+}
+"""
+
+    def test_revival_blessing_revives_a_fainted_party_member(self):
+        # Pokemon Central (Preghiera Vitale): a fainted Pokemon of the user's
+        # party, picked by its trainer, back with half its maximum HP rounded
+        # down; it fails with none, and under Heal Block. In a double battle
+        # one whose place stands empty goes back into it at once.
+        from test_ability_behaviour import HEADER, run_c
+        import import_battle_messages
+        self.assertImplemented("REVIVAL_BLESSING", "MOVE_EFFECT_REVIVAL_BLESSING")
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        run_c(self, HEADER + self.REVIVAL_BLESSING_PROGRAM.replace("@FUNCTIONS@", function(commands, "RevivalBlessingStep")))
+        script = effect_script("MOVE_EFFECT_REVIVAL_BLESSING")
+        order = [script.index(line) for line in ("SetMoveConditionFlag MOVE_REVIVAL_BLESSING", "ShowParty", "WaitMonSelection",
+                 f"msg_0197_{import_battle_messages.port_row('revival blessing'):05d}, TAG_NICKNAME, BATTLER_CATEGORY_SWITCHED_MON_AFTER",
+                 "SwitchAndUpdateMon BATTLER_CATEGORY_SWITCHED_MON")]
+        self.assertEqual(order, sorted(order))
+        self.assertEqual(script.count("SetMoveConditionFlag MOVE_REVIVAL_BLESSING"), 2)
+        # The party menu opened to the fainted: nothing else is taken ("It
+        # won't have any effect."), and it cannot be closed without one; the
+        # trainer AI takes the first fainted.
+        self.assertIn("ctx->selfTurnData[battlerId].revivalBlessing ? BATTLE_PARTY_MODE_REVIVE : BATTLE_PARTY_MODE_FORCED_SWITCH",
+                      function(commands, "BtlCmd_ShowParty"))
+        check = function((ROOT / "src/overlay_08_0221D91C.c").read_text(), "ov08_0221D91C")
+        revive = check[check.index("BATTLE_PARTY_MODE_REVIVE"):]
+        self.assertLess(check.index("BATTLE_PARTY_MODE_REVIVE"), check.index("if (entry->hp == 0)"))
+        self.assertIn("msg_0006_00081", revive[:revive.index("return TRUE;")])
+        self.assertIn("menu->args->mode != BATTLE_PARTY_MODE_REVIVE", function((ROOT / "src/overlay_08_0221C14C.c").read_text(), "ov08_0221C14C"))
+        ai = (ROOT / "src/battle/overlay_12_0225F8AC.c").read_text()
+        self.assertIn("slot = PartyFaintedMonSlot(data->battleSystem, battlerId);", function(ai, "ov12_0225F8AC"))
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        self.assertIn("MOVE_REVIVAL_BLESSING,", re.search(r"sHealBlockUnusableMoves\[\] = \{(.*?)\};", overlay, re.S).group(1))
+        self.assertIn("ctx->moveNoSketch[ctx->battlerIdTarget] == MOVE_REVIVAL_BLESSING", function(commands, "BtlCmd_TrySketch"))
+
 if __name__ == "__main__":
     unittest.main()

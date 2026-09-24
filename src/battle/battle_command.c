@@ -2179,7 +2179,10 @@ BOOL BtlCmd_ShowParty(BattleSystem *battleSystem, BattleContext *ctx) {
     for (battlerId = 0; battlerId < maxBattlers; battlerId++) {
         if (ctx->unk_13C[battlerId] & 1) {
             unkB |= MaskOfFlagNo(battlerId);
-            BattleController_EmitShowMonList(battleSystem, ctx, battlerId, 1, 0, 6);
+            // Revival Blessing opens the menu to a fainted Pokemon of the
+            // user's own (RevivalBlessingStep); a switch is not declined.
+            BattleController_EmitShowMonList(battleSystem, ctx, battlerId,
+                ctx->selfTurnData[battlerId].revivalBlessing ? BATTLE_PARTY_MODE_REVIVE : BATTLE_PARTY_MODE_FORCED_SWITCH, 0, 6);
         }
     }
 
@@ -3968,7 +3971,9 @@ BOOL BtlCmd_TrySketch(BattleSystem *battleSystem, BattleContext *ctx) {
 
     int adrs = BattleScriptReadWord(ctx);
 
-    if (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_TRANSFORM || ctx->moveNoSketch[ctx->battlerIdTarget] == MOVE_STRUGGLE || ctx->moveNoSketch[ctx->battlerIdTarget] == MOVE_SKETCH || ctx->moveNoSketch[ctx->battlerIdTarget] == MOVE_CHATTER || ctx->moveNoSketch[ctx->battlerIdTarget] == 0) {
+    // Nor Revival Blessing (Pokemon Central, Preghiera Vitale).
+    if (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_TRANSFORM || ctx->moveNoSketch[ctx->battlerIdTarget] == MOVE_STRUGGLE || ctx->moveNoSketch[ctx->battlerIdTarget] == MOVE_SKETCH || ctx->moveNoSketch[ctx->battlerIdTarget] == MOVE_CHATTER || ctx->moveNoSketch[ctx->battlerIdTarget] == 0
+        || ctx->moveNoSketch[ctx->battlerIdTarget] == MOVE_REVIVAL_BLESSING) {
         BattleScriptIncrementPointer(ctx, adrs);
     } else {
         for (moveIndex = 0; moveIndex < MAX_MON_MOVES; moveIndex++) {
@@ -10648,6 +10653,60 @@ static BOOL AllySwitchWorks(BattleSystem *battleSystem, BattleContext *ctx) {
     return TRUE;
 }
 
+// Revival Blessing (Pokemon Central, Preghiera Vitale), in two steps on its
+// user. First, whether the user's party has a fainted Pokemon to revive, an
+// Egg aside: if so the user is marked as picking one, for BtlCmd_ShowParty to
+// open the party menu to and the AI's pick (ov12_0225F8AC) to take the first,
+// and 1; the move fails without one. Then, the one picked (WaitMonSelection
+// left it in unk_21A0) is revived with half its maximum HP, rounded down, and
+// no status. In a double battle, a Pokemon whose own place stands empty goes
+// back into it at once: 1, with the place in battlerIdSwitch for the script
+// to send it out; 0 otherwise.
+static int RevivalBlessingStep(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int slot;
+    int partner;
+    u32 value;
+    Pokemon *mon;
+
+    if (!ctx->selfTurnData[battlerId].revivalBlessing) {
+        for (slot = 0; slot < BattleSystem_GetPartySize(battleSystem, battlerId); slot++) {
+            mon = BattleSystem_GetPartyMon(battleSystem, battlerId, slot);
+            value = GetMonData(mon, MON_DATA_SPECIES_OR_EGG, NULL);
+            if (value != SPECIES_NONE && value != SPECIES_EGG && GetMonData(mon, MON_DATA_HP, NULL) == 0) {
+                ctx->selfTurnData[battlerId].revivalBlessing = TRUE;
+                ctx->unk_13C[battlerId] |= 1;
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    slot = ctx->unk_21A0[battlerId];
+    ctx->selfTurnData[battlerId].revivalBlessing = FALSE;
+    ctx->unk_13C[battlerId] &= ~1;
+    ctx->unk_21A0[battlerId] = 6;
+    if (slot >= BattleSystem_GetPartySize(battleSystem, battlerId)) {
+        return 0;
+    }
+    mon = BattleSystem_GetPartyMon(battleSystem, battlerId, slot);
+    value = GetMonData(mon, MON_DATA_MAX_HP, NULL) / 2;
+    if (value == 0) {
+        value = 1;
+    }
+    SetMonData(mon, MON_DATA_HP, &value);
+    value = 0;
+    SetMonData(mon, MON_DATA_STATUS, &value);
+
+    partner = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
+    if (partner != battlerId && BattleSystem_GetParty(battleSystem, partner) == BattleSystem_GetParty(battleSystem, battlerId)
+        && ctx->selectedMonIndex[partner] == slot && ctx->battleMons[partner].hp == 0) {
+        ctx->battlerIdSwitch = partner;
+        ctx->unk_21A0[partner] = slot;
+        return 1;
+    }
+    return 0;
+}
+
 // Sky Drop, on the battler it is aimed at, in the three steps of its two
 // turns (Pokemon Central, Cadutalibera), told apart by where its user is:
 //  - before the lift, from effect script 445, whether the target can be
@@ -10867,6 +10926,10 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
     // Sky Drop's three steps, on the battler it is aimed at (SkyDropStep).
     case MOVE_SKY_DROP:
         ctx->calcTemp = SkyDropStep(battleSystem, ctx, battlerId);
+        break;
+    // Revival Blessing's two steps, on its user (RevivalBlessingStep).
+    case MOVE_REVIVAL_BLESSING:
+        ctx->calcTemp = RevivalBlessingStep(battleSystem, ctx, battlerId);
         break;
     // Whether the battler's Shell Trap was sprung, for its script to ask.
     case MOVE_SHELL_TRAP:

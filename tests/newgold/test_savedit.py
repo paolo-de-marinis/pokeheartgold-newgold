@@ -527,17 +527,18 @@ class SaveditLibraryTests(unittest.TestCase):
 
     def test_no_level_up_move_the_engine_never_implemented(self):
         """LoadLevelUpLearnset_HandleAlternateForm drops the moves whose
-        waza_tbl flag says unimplemented: Pawmot learns Revival Blessing as it
-        evolves and is never given it. (Kadabra's Ally Switch at 15 was the
-        example until it was implemented; a new one at 15 knows it now.)"""
+        waza_tbl flag says unimplemented; what is left of them is Dynamax's
+        eighteen Max moves, which nothing learns. (Kadabra's Ally Switch at 15
+        was the example until it was implemented, and Pawmot's Revival
+        Blessing after it; both are learnt now.)"""
         n, moves = sv.species_numbers(), sv.move_numbers()
         unimplemented = sv.unimplemented_moves()
-        self.assertIn(moves["REVIVAL_BLESSING"], unimplemented)
+        self.assertIn(moves["MAX_FLARE"], unimplemented)
         self.assertNotIn(moves["ALLY_SWITCH"], unimplemented)
+        self.assertNotIn(moves["REVIVAL_BLESSING"], unimplemented)
         self.assertEqual([m for row in sv.learnsets() for _, m in row if m in unimplemented], [])
         self.assertEqual(sv.preset_moves(n["KADABRA"], 15), [moves[m] for m in ("TELEPORT", "PSYBEAM", "REFLECT", "ALLY_SWITCH")])
-        levels = [s for s in sv.learnable_moves(n["PAWMOT"]).get(moves["REVIVAL_BLESSING"], []) if s["how"] == "level"]
-        self.assertEqual(levels, [], "not offered as a level-up move either")
+        self.assertTrue(sv.learnable_moves(n["PAWMOT"]).get(moves["REVIVAL_BLESSING"]), "Pawmot learns it now")
 
     def test_a_new_pokemon_knows_each_move_once(self):
         """InitBoxMonMoveset skips a move already known: Metapod learns

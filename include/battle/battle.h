@@ -143,7 +143,10 @@ typedef struct SelfTurnData {
     // Its Pledge is the combined one this action: which Pledge the two made
     // (PledgeKind), 0 for none (the Pledges' effect script).
     u32 combinedPledge : 2;
-    u32 unk0_11 : 12;
+    // Revival Blessing: its user is picking the fainted Pokemon to revive,
+    // for BtlCmd_ShowParty to open the menu to.
+    u32 revivalBlessing : 1;
+    u32 unk0_11 : 11;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;
