@@ -787,6 +787,9 @@
 // Commander taking a Tatsugiri into its Dondozo's mouth, which the reference
 // has no script for.
 #define BATTLE_SUBSCRIPT_COMMANDER                          463
+// Throat Chop's silence as an added effect of the hit, where the reference
+// sets it in the effect script before the accuracy check.
+#define BATTLE_SUBSCRIPT_THROAT_CHOP                        464
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151
@@ -878,6 +881,7 @@
 #define MOVE_SUBSCRIPT_PTR_DOODLE                           233
 #define MOVE_SUBSCRIPT_PTR_TELEKINESIS                      234
 #define MOVE_SUBSCRIPT_PTR_INSTRUCT                         235
+#define MOVE_SUBSCRIPT_PTR_THROAT_CHOP                      236
 
 
 #endif // POKEHEARTGOLD_CONSTANTS_BATTLE_SUBSCRIPT_H

@@ -1640,18 +1640,17 @@ BOOL ov12_022503EC(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
 // script sets this before it asks for the damage, so both halves of the
 // ability can ask the same question.
 //
-// Three effects the reference lists by name are not rolled: Psychic Noise's
-// Heal Block lands after the hit with no chance to roll, the trap of Anchor
-// Shot and Spirit Shackle once the move is over (TryHoldAfterHit, which asks
-// this through SheerForceTradedEffect and the cloak itself), and Throat
-// Chop's silence is set by its effect script itself, which asks the ability
-// and the cloak there. Thousand Waves shares the trap's effect, and the
-// reference lists it, but its hold is no additional effect: Sheer Force does
-// not power it and a Covert Cloak does not keep it off (Pokemon Central,
-// Mille Onde). Stone Axe's stones, laid once the move is over, are one more
-// that Sheer Force trades for power (Rocciascure: "Le rocce aguzze non
-// vengono piazzate quando Rocciascure e usata da un Pokemon con l'abilita
-// Forzabruta", and it is in Forzabruta's list of the moves it powers).
+// Two effects the reference lists by name are not rolled: Psychic Noise's
+// Heal Block lands after the hit with no chance to roll, and the trap of
+// Anchor Shot and Spirit Shackle once the move is over (TryHoldAfterHit,
+// which asks this through SheerForceTradedEffect and the cloak itself).
+// Thousand Waves shares the trap's effect, and the reference lists it, but
+// its hold is no additional effect: Sheer Force does not power it and a
+// Covert Cloak does not keep it off (Pokemon Central, Mille Onde). Stone
+// Axe's stones, laid once the move is over, are one more that Sheer Force
+// trades for power (Rocciascure: "Le rocce aguzze non vengono piazzate
+// quando Rocciascure e usata da un Pokemon con l'abilita Forzabruta", and it
+// is in Forzabruta's list of the moves it powers).
 // The three Fangs come as a side effect on hit, and their subscript rolls the
 // status and the flinch against the chance itself, one after the other; both
 // are additional effects all the same (Pokemon Central, Forzabruta and
@@ -1664,7 +1663,6 @@ static BOOL IsSuppressibleSecondaryEffect(BattleContext *ctx, u32 moveNo) {
     case MOVE_EFFECT_FLINCH_FREEZE_HIT:
     case MOVE_EFFECT_FLINCH_PARALYZE_HIT:
     case MOVE_EFFECT_PREVENT_HEALING_HIT:
-    case MOVE_EFFECT_THROAT_CHOP:
     case MOVE_EFFECT_STEALTH_ROCK_HIT:
         return TRUE;
     }
@@ -12103,7 +12101,8 @@ static const int sMoveStatusChangeScripts[] = {
     BATTLE_SUBSCRIPT_CORROSIVE_GAS,
     BATTLE_SUBSCRIPT_DOODLE,
     BATTLE_SUBSCRIPT_TELEKINESIS,
-    BATTLE_SUBSCRIPT_INSTRUCT
+    BATTLE_SUBSCRIPT_INSTRUCT,
+    BATTLE_SUBSCRIPT_THROAT_CHOP
 };
 
 static int GetMoveStatusChangeScript(BattleContext *ctx, int statChangeType, u32 flag) {

@@ -589,17 +589,27 @@ int main(void) {
         run_c(program.replace("@FUNCTION@", function(self.SOURCE.read_text(), "IsSuppressibleSecondaryEffect")))
 
     def test_the_reference_s_unrolled_effects_are_given_up_too(self):
-        # btl_scr_cmd_24_jumptocurmoveeffectscript lists Psychic Noise's,
-        # the three trapping moves' and Throat Chop's effects by name.
+        # btl_scr_cmd_24_jumptocurmoveeffectscript lists Psychic Noise's and
+        # the three trapping moves' effects by name.
         body = re.search(r"static BOOL IsSuppressibleSecondaryEffect.*?\n\}", self.SOURCE.read_text(), re.S).group(0)
-        for effect in ("PREVENT_HEALING_HIT", "PREVENT_ESCAPE_HIT", "THROAT_CHOP"):
+        for effect in ("PREVENT_HEALING_HIT", "PREVENT_ESCAPE_HIT"):
             self.assertIn(f"case MOVE_EFFECT_{effect}:", body)
         # Thousand Waves shares the trap's effect, and its hold is no
         # additional effect (Pokemon Central, Mille Onde).
         self.assertIn("case MOVE_EFFECT_PREVENT_ESCAPE_HIT:\n        return moveNo != MOVE_THOUSAND_WAVES;", body)
-        # Throat Chop sets its silence in its own script, before the damage.
+
+    def test_throat_chop_silences_as_an_added_effect_of_its_hit(self):
+        # Pokemon Central (Colpo Infernale): only a hit silences, and Sheer
+        # Force, Shield Dust and the Covert Cloak stop it. The reference sets
+        # it in the effect script, before the accuracy check, so a miss did.
         script = (ROOT / "files/battledata/script/effect_script/effect_script_0402.s").read_text()
-        setting = script.index("SetMoveConditionFlag MOVE_THROAT_CHOP")
-        for guard in ("ABILITY_SHEER_FORCE, _DAMAGE", "HOLD_EFFECT_PREVENT_SECONDARY_EFFECTS, _DAMAGE"):
-            self.assertLess(script.index(guard), setting)
-        self.assertLess(setting, script.index("_DAMAGE:"))
+        self.assertNotIn("SetMoveConditionFlag", script)
+        self.assertIn("BSCRIPT_VAR_SIDE_EFFECT_FLAGS_INDIRECT, MOVE_SIDE_EFFECT_TO_DEFENDER|MOVE_SUBSCRIPT_PTR_THROAT_CHOP", script)
+        header = (ROOT / "include/constants/battle_subscript.h").read_text()
+        pointer = int(re.search(r"#define MOVE_SUBSCRIPT_PTR_THROAT_CHOP\s+(\d+)", header).group(1))
+        table = self.SOURCE.read_text()
+        table = table[table.index("sMoveStatusChangeScripts[] = {"):]
+        self.assertEqual(re.findall(r"BATTLE_SUBSCRIPT_\w+", table[:table.index("};")])[pointer], "BATTLE_SUBSCRIPT_THROAT_CHOP")
+        number = int(re.search(r"#define BATTLE_SUBSCRIPT_THROAT_CHOP\s+(\d+)", header).group(1))
+        silence = (ROOT / f"files/battledata/script/subscript/subscript_{number:04d}_ThroatChop.s").read_text()
+        self.assertLess(silence.index("ABILITY_SHIELD_DUST, _END"), silence.index("SetMoveConditionFlag MOVE_THROAT_CHOP"))

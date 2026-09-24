@@ -213,6 +213,7 @@ UNREAD_HERE = {
     "SP_ATK_DOWN_3": "unused",
     "SP_DEF_DOWN_3": "unused",
     "HIT_THREE_TIMES_ALWAYS_CRITICAL": "script: it asks for CRITICAL_STAGE_ALWAYS on every hit, which CalcCrit reads as a sure critical",
+    "THROAT_CHOP": "script: an indirect side effect runs subscript 464, the silence, rolled with the hit",
     "ADD_TYPE_GRASS": "script: subscript 325 fails behind a substitute, as the reference's substitute list does",
     "ADD_TYPE_GHOST": "script: subscript 324 fails behind a substitute, as the reference's substitute list does",
     "CHANGE_TO_PSYCHIC_TYPE": "script: subscript 323 fails behind a substitute, as the reference's substitute list does",
