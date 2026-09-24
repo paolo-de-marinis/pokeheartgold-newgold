@@ -1774,7 +1774,10 @@ async function pickMap(id) {
     f.x.value = r.preset.x; f.y.value = r.preset.y; f.dir.value = r.preset.direction;
     note.textContent = `Messa la posizione in cui il gioco porta il giocatore: (${r.preset.x}, ${r.preset.y}), ${r.preset.said}. Puoi cambiarla a mano.`;
     for (const el of [f.x, f.y, f.dir]) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
-  } else note.textContent = `Il gioco non ha un punto d'arrivo noto su questa mappa: scrivi x e y a mano (la mappa sta tra x ${r.x[0]}–${r.x[1]} e y ${r.y[0]}–${r.y[1]}).`;
+  } else {      // no stale numbers from the map picked before: the fields are required, so Sposta waits for them
+    f.x.value = f.y.value = "";
+    note.textContent = `Il gioco non ha un punto d'arrivo noto su questa mappa: scrivi x e y a mano (la mappa sta tra x ${r.x[0]}–${r.x[1]} e y ${r.y[0]}–${r.y[1]}).`;
+  }
 }
 function renderPosition() {
   const pos = S.save.position, c = pos.current, here = S.maps.get(c.map), w = S.data.world;
