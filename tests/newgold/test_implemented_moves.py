@@ -754,6 +754,10 @@ int main(void) {
         stealing = flag[flag.index("case MOVE_SPECTRAL_THIEF:"):]
         for line in ("ctx->battleMons[battlerId].statChanges[stat] = 6;", "raised *= 2;", "raised = -raised;"):
             self.assertIn(line, stealing)
+        # A Mirror Herb on the other side copies the stolen rise, as far as
+        # the stage really rose (Pokemon Central, Foglia carbone).
+        self.assertIn("RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdAttacker, stat, stage - ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat]);",
+                      stealing[:stealing.index("break;")])
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
         self.assertIn("ctx->moveNoCur == MOVE_SPECTRAL_THIEF", function(overlay, "MoveGoesRoundSubstitute"))
         self.assertIn("ctx->moveNoCur != MOVE_SPECTRAL_THIEF", function(overlay, "SubstituteTakesHit"))

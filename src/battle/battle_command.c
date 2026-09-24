@@ -10727,11 +10727,15 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
                 raised = -raised;
             }
             stage = ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat] + raised;
-            // A rise Burning Jealousy counts (Fiamminvidia names Spectral Thief).
-            if (raised > 0 && ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat] < 12) {
+            stage = stage > 12 ? 12 : (stage < 0 ? 0 : stage);
+            // A rise Burning Jealousy counts (Fiamminvidia names Spectral
+            // Thief), and a Mirror Herb on the other side copies as far as
+            // the stage really rose (Foglia carbone: any rise of a foe's).
+            if (stage > ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat]) {
                 ctx->turnData[ctx->battlerIdAttacker].statRaised = TRUE;
+                RecordMirrorHerbStages(battleSystem, ctx, ctx->battlerIdAttacker, stat, stage - ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat]);
             }
-            ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat] = stage > 12 ? 12 : (stage < 0 ? 0 : stage);
+            ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat] = stage;
         }
         break;
     }
