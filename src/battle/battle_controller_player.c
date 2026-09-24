@@ -3960,8 +3960,10 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->commandNext = CONTROLLER_COMMAND_24;
         ov12_02252E30(battleSystem, ctx);
     }
-    // The Metronome item counted the move that called this one.
-    if (!(ctx->unk_2184 & MULTIHIT_CALLED_MOVE)) {
+    // The Metronome item counted the move that called this one, and counts a
+    // move that hits several Pokemon once (Pokemon Central, Plessimetro): the
+    // later targets come back here with unk_2184 at 13 (ov12_0224D03C).
+    if (!(ctx->unk_2184 & MULTIHIT_CALLED_MOVE) && ctx->unk_2184 != MULTIHIT_HIT_MULTIPLE_TARGETS) {
         ov12_022565E0(battleSystem, ctx);
     }
 }

@@ -89,7 +89,10 @@ class CalledMoveTests(unittest.TestCase):
         controller = CONTROLLER.read_text()
         steps = function(controller, "ov12_0224C38C")
         self.assertIn("!(ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) && ov12_0224B1FC(", steps)
-        self.assertRegex(steps, r"if \(!\(ctx->unk_2184 & MULTIHIT_CALLED_MOVE\)\) \{\n\s+ov12_022565E0\(battleSystem, ctx\);")
+        # Nor a spread move's later targets, which come back with unk_2184 at
+        # 13: one use, one count (Pokemon Central, Plessimetro).
+        self.assertRegex(steps, r"if \(!\(ctx->unk_2184 & MULTIHIT_CALLED_MOVE\) && ctx->unk_2184 != MULTIHIT_HIT_MULTIPLE_TARGETS\) \{\n\s+ov12_022565E0\(battleSystem, ctx\);")
+        self.assertIn("ctx->unk_2184 = 13;", function(controller, "ov12_0224D03C"))
         noted = function(controller, "NoteMoveUsed")
         called = noted.index("if (ctx->unk_2184 & MULTIHIT_CALLED_MOVE) {")
         self.assertLess(called, noted.index("ctx->moveUsedBefore"))
