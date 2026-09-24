@@ -3,7 +3,13 @@
 
     frozen.py STATE.ml1 [ELF]
 
-Shift+F1 in melonDS writes the state beside the ROM. Its ARM9 section is the
+Shift+F1 in melonDS writes the state beside the ROM. A harness script whose
+game stopped writes one from the in-process core, which raises no data
+abort, so a hang there is read the same way:
+
+    Path("stuck.ml1").write_bytes(core.state())
+
+Its ARM9 section is the
 registers; CPSR 0x97 is abort mode, where the BIOS parks a data abort with
 the faulting instruction eight bytes before the link register. The last
 0x4000 bytes of the CP15 section are the DTCM, which holds the stack, and

@@ -415,6 +415,9 @@ Reading what the debug ROM records, and playing it without looking.
 - `ingame_save.py SAVE OUT` -- the game continues a save and saves it
   through the start menu; OUT is what it wrote to flash. A save savedit
   wrote is proved on it.
+- A game that stops in-process raises no data abort: the script writes
+  `core.state()` to a file, and `frozen.py` reads it as it reads a melonDS
+  savestate.
 
 Every reader takes the ELF the ROM was linked from, the debug build's by
 default, and refuses a game from another build: symbols move every time.

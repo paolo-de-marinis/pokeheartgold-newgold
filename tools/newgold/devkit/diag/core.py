@@ -195,6 +195,16 @@ class Core:
         base = self.lib.retro_get_memory_data(2)
         ctypes.memmove(base + address - MAIN_RAM, int(value).to_bytes(width, "little"), width)
 
+    def state(self):
+        """The core's savestate, in melonDS's own format: a run that finds
+        the game stuck writes it to a file, and frozen.py reads the ARM9."""
+        self.lib.retro_serialize_size.restype = ctypes.c_size_t
+        size = self.lib.retro_serialize_size()
+        buffer = ctypes.create_string_buffer(size)
+        if not self.lib.retro_serialize(buffer, ctypes.c_size_t(size)):
+            raise RuntimeError("the core would not write its state")
+        return buffer.raw
+
     def close(self):
         self.lib.retro_unload_game()
         self.lib.retro_deinit()
