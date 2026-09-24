@@ -9,7 +9,7 @@ WAZA_OSHIE_O                := $(WAZA_OSHIE_DIR)/waza_oshie.o
 $(WAZA_OSHIE_BIN): include/constants/moves.h
 
 $(WAZA_OSHIE_BIN): %.bin: %.json %.json.txt
-	$(JSONPROC) $(filter-out %.h,$^) $*.s
+	$(JSONPROC) $(filter-out %.h $(JSONPROC),$^) $*.s
 	$(WINE) $(MWAS) -DPM_ASM $(MWASFLAGS) -o $*.o $*.s
 	$(OBJCOPY) -O binary $*.o $@
 

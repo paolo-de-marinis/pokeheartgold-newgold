@@ -9,7 +9,7 @@ $(ZUKAN_DATA_GIRA_NARC): %_gira.narc: %.narc ;
 $(ZUKAN_DATA_NARC): include/constants/species.h
 
 $(ZUKAN_DATA_NARC): %.narc: $(ZUKAN_DATA_JSON) $(ZUKAN_DATA_JSON_TXT)
-	$(JSONPROC) $(filter-out %.h $(O2NARC),$^) $*.s
+	$(JSONPROC) $(filter-out %.h $(O2NARC) $(JSONPROC),$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -DPM_ASM -o $*.o $*.s
 	$(O2NARC) $*.o $@ -N -p 0xFF
 	$(WINE) $(MWAS) $(MWASFLAGS) -DGIRA -DPM_ASM -o $*_gira.o $*.s

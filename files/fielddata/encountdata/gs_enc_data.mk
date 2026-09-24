@@ -13,7 +13,7 @@ $(ENCDATA_DIR)/s_enc_data.narc: GAME_VERSION_S = ENC_SOULSILVER
 $(ENCDATA_NARCS): include/constants/species.h include/constants/maps.h include/wild_encounter.h
 
 $(ENCDATA_NARCS): %.narc: $(ENCDATA_JSON) $(ENCDATA_JSON).txt | $(WORK_DIR)/include/global.h
-	$(JSONPROC) $(filter-out %.h $(O2NARC),$^) $*.c
+	$(JSONPROC) $(filter-out %.h $(O2NARC) $(JSONPROC),$^) $*.c
 	$(WINE) $(MWCC) $(MWCFLAGS) -D$(GAME_VERSION_S) -c -o $*.o $*.c
 	$(O2NARC) $*.o $@ -n
 #	@$(RM) $*.o $*.c

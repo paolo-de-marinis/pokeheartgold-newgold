@@ -6,7 +6,7 @@ PHOTO_DATA_TEMPLATE := files/data/photo_data.json.txt
 $(PHOTO_DATA_NARC): include/photo_album.h include/constants/maps.h include/constants/sprites.h
 
 $(PHOTO_DATA_NARC): %.narc: $(PHOTO_DATA_JSON) $(PHOTO_DATA_TEMPLATE)
-	$(JSONPROC) $(filter-out %.h $(O2NARC),$^) $*.c
+	$(JSONPROC) $(filter-out %.h $(O2NARC) $(JSONPROC),$^) $*.c
 	$(WINE) $(MWCC) $(MWCFLAGS) -c -o $*.o $*.c
 	$(O2NARC) $*.o $@ -n -p 0x00
 	@$(RM) $*.o $*.c
