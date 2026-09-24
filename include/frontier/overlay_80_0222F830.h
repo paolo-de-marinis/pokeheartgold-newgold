@@ -1,0 +1,8 @@
+#ifndef POKEHEARTGOLD_FRONTIER_OVERLAY_80_0222F830_H
+#define POKEHEARTGOLD_FRONTIER_OVERLAY_80_0222F830_H
+
+#include "frontier/frontier_script_context.h"
+
+BOOL FrtCmd_103(FrontierScriptContext *ctx);
+
+#endif // POKEHEARTGOLD_FRONTIER_OVERLAY_80_0222F830_H
