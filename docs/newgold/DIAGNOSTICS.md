@@ -160,19 +160,36 @@ Both play every scenario to the same battle lines, and each repeats itself:
 three Falkner runs on melonDS DS gave the same frames, lines and RAM, with
 the JIT off and again with it on. Where they differ is emulation:
 
-- Loading takes melonDS DS a VBlank or two more here and there, and the
-  Continue seeds the RNG with the VBlank count (`RngSeedFromRTC`):
-  0xbb160215 on 0.9.3, 0xbb160217 on melonDS DS. Every wild Pokemon after
-  it is another one -- the walk to Cherrygrove meets two on 0.9.3 (a
-  Spinarak first) and one Rattata on melonDS DS -- and a forced Geodude has
-  other stats. `rolls_forced_high.json` and `rolls_forced_low.json`, which
-  expect its HP to the point, set `sLCRNG_State` to 0.9.3's value after
-  Continue, and pass on both.
+- melonDS DS starts the game a frame sooner (the main loop's
+  `gSystem.frameCounter` first moves at frame 23, at 24 on 0.9.3), so its
+  VBlank count runs one ahead at any frame; and it hands the game a button
+  a frame later (A held from frame 700 is in `gSystem.heldKeysRaw` at the
+  end of frame 701, of 700 on 0.9.3, and let go a frame later too). A
+  script that times a press by frame count, or compares frame counts
+  across the cores, has to allow for both.
+- So Continue comes a frame later there, and seeds the field's RNG
+  (`RngSeedFromRTC`: 0xbb160017 plus the VBlank count, at the pinned
+  second) two counts higher: 0xbb160215 on 0.9.3 at frame 861, 0xbb160217
+  on melonDS DS at 862. Which wild Pokemon a walk meets follows from that
+  seed alone: the walk to Cherrygrove meets two on 0.9.3 (a Spinarak first)
+  and one Rattata on melonDS DS, and each core given the other's RNG state
+  after Continue meets the other's. A walk's wild battles hold no
+  `gDiagBattleSeed`, so their turns are seeded by the clock and the VBlank
+  count as well: a walk with wild battles plays out per core. A forced
+  Geodude has other stats too. The four scenarios that force one and expect its HP to the
+  point (`battle_seed`, `accuracy_forced`, `rolls_forced_high`,
+  `rolls_forced_low`) set `sLCRNG_State` to 0.9.3's value after Continue,
+  and pass on both; `test_scenarios` holds every scenario that forces a
+  wild Pokemon to it.
 - The boot's random pre-size is 0xa8 on melonDS DS, 0xe8 on 0.9.3: the
   heaps start 0x40 bytes apart.
 - Frame counts differ by a few in battles (Falkner 16556 against 16555,
-  the double battle from `gyms/bugsy.sav` 45 more); the JIT changes them
-  again (Falkner 16551 on melonDS DS, 16605 on 0.9.3).
+  the double battle from `gyms/bugsy.sav` 45 more). That is not slower
+  loading -- at the end of each run the frames less the VBlank count agree
+  within one on both cores -- but more frames played: the double battle's
+  extra 44 after its start all fall inside BATTLE_MAIN, most likely the
+  game waiting on presses that reach it a frame later. The JIT changes the
+  counts again (Falkner 16551 on melonDS DS, 16605 on 0.9.3).
 - Speed, frames a second over a whole scenario: Falkner 143 on melonDS DS
   and 178 on 0.9.3 with the JIT off, 235 and 266 with it on; the walk from
   New Bark to Route 29 107 and 132 with the JIT off, 196 on 0.9.3 with it on.
