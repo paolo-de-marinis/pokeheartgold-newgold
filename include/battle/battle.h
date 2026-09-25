@@ -725,6 +725,11 @@ typedef struct BattleContext {
     // (NoteHeldItemTaken, BtlCmd_TryKnockOff), for GiveBackHeldItems: such an
     // item comes back even if it was a Berry.
     u8 heldItemsTaken;
+    // How many Pokemon the party had when RememberHeldItems wrote their items
+    // down: GiveBackHeldItems gives back to those, and a Pokemon caught into
+    // the party after them keeps what it holds. In the padding before the
+    // items taken from the wild ones.
+    u8 heldItemsCount;
     // The item the player's side took from each wild Pokemon -- Thief,
     // Covet, Magician, Pickpocket -- by battlerId >> 1, the wild ones being 1
     // and 3 (NoteHeldItemTaken). A wild Pokemon caught gets it back; the

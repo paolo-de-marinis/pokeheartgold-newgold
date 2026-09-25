@@ -128,13 +128,14 @@ typedef struct { u16 item; } Pokemon;
 typedef struct { int unused; } Bag;
 typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; u8 outcome; } BattleSystem;
 typedef struct { u16 item; } BattleMon;
-typedef struct { BattleMon battleMons[BATTLER_MAX]; u16 recycleItem[BATTLER_MAX]; u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken; u16 itemsTakenFromWild[2]; u8 heldItemsGiven; } BattleContext;
+typedef struct { BattleMon battleMons[BATTLER_MAX]; u16 recycleItem[BATTLER_MAX]; u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken, heldItemsCount; u16 itemsTakenFromWild[2]; u8 heldItemsGiven; } BattleContext;
 static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 
 static u16 sAdded[8][2];
 static int sAdds;
 
-static int BattleSystem_GetPartySize(BattleSystem *bs, int side) { assert(side == BATTLER_PLAYER); return bs->count; }
+// The party as it is now, which GiveBackHeldItems no longer counts by.
+__attribute__((unused)) static int BattleSystem_GetPartySize(BattleSystem *bs, int side) { assert(side == BATTLER_PLAYER); return bs->count; }
 static Pokemon *BattleSystem_GetPartyMon(BattleSystem *bs, int side, int i) { assert(side == BATTLER_PLAYER); return &bs->party[i]; }
 static u32 BattleSystem_GetBattleType(BattleSystem *bs) { return bs->type; }
 static u8 BattleSystem_GetBattleOutcomeFlags(BattleSystem *bs) { return bs->outcome; }
@@ -156,6 +157,7 @@ static void run(u32 type, const u16 *before, const u16 *after, BattleSystem *bs)
     ctx.heldItemsGivenBack = 0;
     ctx.heldItemsTaken = 0;
     ctx.heldItemsGiven = 0;
+    ctx.heldItemsCount = PARTY_SIZE;
     bs->count = PARTY_SIZE;
     bs->outcome = BATTLE_OUTCOME_WIN;
     bs->type = type;
@@ -315,6 +317,24 @@ int main(void) {
     const u16 swapped[PARTY_SIZE] = { ITEM_NONE, ITEM_FOCUS_SASH, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
     run(BATTLE_TYPE_NONE, before, swapped, &bs);
     assert(sAdds == 0 && bs.party[0].item == ITEM_FOCUS_SASH && bs.party[1].item == ITEM_NONE);
+
+    // A wild Pokemon caught into the party, which the catch has grown from
+    // five to six before the battle's end, keeps the item it holds: it is
+    // not one of the five whose items were written down. Before, its Oval
+    // Stone went to the bag and it was left holding nothing.
+    const u16 grown[PARTY_SIZE] = { ITEM_FOCUS_SASH, ITEM_NONE, ITEM_NONE, ITEM_KEE_BERRY, ITEM_ROSELI_BERRY, ITEM_OVAL_STONE };
+    for (int i = 0; i < PARTY_SIZE; i++) {
+        ctx.itemsToRestore[i] = i < 5 ? before[i] : ITEM_NONE;
+        bs.party[i].item = grown[i];
+    }
+    ctx.heldItemsGivenBack = 0;
+    ctx.heldItemsTaken = 0;
+    ctx.heldItemsCount = 5;
+    bs.type = BATTLE_TYPE_NONE;
+    bs.outcome = BATTLE_OUTCOME_MON_CAUGHT;
+    sAdds = 0;
+    GiveBackHeldItems(&bs, &ctx);
+    assert(sAdds == 0 && bs.party[5].item == ITEM_OVAL_STONE && bs.party[0].item == ITEM_FOCUS_SASH);
     return 0;
 }
 """
@@ -432,6 +452,12 @@ class TakenItemTests(unittest.TestCase):
         burn = function(commands, "BtlCmd_TryIncinerate")
         self.assertLess(burn.index("NoteHeldItemUsedUp(battleSystem, ctx, ctx->battlerIdTarget);"),
                         burn.index("ctx->battleMons[ctx->battlerIdTarget].item = ITEM_NONE;"))
+
+    def test_the_items_are_written_down_with_the_party_count(self):
+        # GiveBackHeldItems gives back to the Pokemon the battle started with,
+        # not to one caught into the party since.
+        self.assertIn("ctx->heldItemsCount = count;", function(CONTROLLER.read_text(), "RememberHeldItems"))
+        self.assertIn("int count = ctx->heldItemsCount;", function(CONTROLLER.read_text(), "GiveBackHeldItems"))
 
     def test_a_caught_pokemon_gets_its_item_back(self):
         # Before the Pokemon is stored, whichever way it is stored; the other

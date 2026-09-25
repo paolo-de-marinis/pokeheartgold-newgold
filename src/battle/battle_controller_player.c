@@ -209,6 +209,7 @@ typedef char BattleContextSizeCheck[
 static void RememberHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     int count = BattleSystem_GetPartySize(battleSystem, BATTLER_PLAYER);
 
+    ctx->heldItemsCount = count;
     for (int i = 0; i < count && i < PARTY_SIZE; i++) {
         ctx->itemsToRestore[i] = GetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, NULL);
     }
@@ -225,8 +226,14 @@ static void RememberHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
 // again. The reference does it at the end only, after them, and so writes
 // over what they found: nothing after a trainer battle, the bag after a wild
 // one.
+//
+// Only the Pokemon the battle started with: a wild Pokemon caught into the
+// party (Task_GetPokemon, before the battle's end) keeps the item it holds,
+// as in every game. The reference counts the party as it is at the end, so
+// the caught one's item went to the bag as taken and it was left holding
+// nothing.
 void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
-    int count = BattleSystem_GetPartySize(battleSystem, BATTLER_PLAYER);
+    int count = ctx->heldItemsCount;
     u16 held[PARTY_SIZE];
     int i, j;
 
