@@ -78,6 +78,53 @@ class CalledMoveTests(unittest.TestCase):
         run_c(FIXTURE.replace("@FUNCTIONS@", functions).replace(
             '#include "constants/battle.h"', '#include "constants/battle.h"\n#include "constants/moves.h"'))
 
+    METRONOME_ITEM = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
+#include "constants/battle.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+typedef uint16_t u16; typedef uint32_t u32;
+typedef struct BattleSystem BattleSystem;
+typedef struct { u32 status2; struct { int metronomeTurns; } unk88; } BattleMon;
+typedef struct { u32 metronomeLanded : 1; int rolloutCount; } SelfTurnData;
+typedef struct {
+    int battlerIdAttacker; u32 battleStatus, moveStatusFlag; u16 moveNoTemp; u16 moveNoMetronome[4];
+    BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
+} BattleContext;
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return HOLD_EFFECT_BOOST_REPEATED; }
+@FUNCTIONS@
+int main(void) {
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.moveNoTemp = ctx.moveNoMetronome[0] = MOVE_EARTHQUAKE;
+    // A third Earthquake in a row that hit one foe and not the Flying-type
+    // after it keeps its count; one that hit nothing gives it back.
+    ctx.battleMons[0].unk88.metronomeTurns = 2;
+    ctx.moveStatusFlag = MOVE_STATUS_NO_EFFECT;
+    ctx.selfTurnData[0].metronomeLanded = 1;
+    ov12_02256694(0, &ctx);
+    assert(ctx.battleMons[0].unk88.metronomeTurns == 2);
+    ctx.selfTurnData[0].metronomeLanded = 0;
+    ov12_02256694(0, &ctx);
+    assert(ctx.battleMons[0].unk88.metronomeTurns == 1);
+    return 0;
+}
+"""
+
+    def test_the_metronome_item_counts_a_spread_move_once(self):
+        # Pokemon Central (Plessimetro): a move that hits several Pokemon is
+        # one use, if it hits one. Its later targets are no use of their
+        # own, and a last target that avoided it takes nothing back once an
+        # earlier one was hit.
+        controller = CONTROLLER.read_text()
+        overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        run_c(self.METRONOME_ITEM.replace("@FUNCTIONS@", function(overlay, "ov12_02256694")))
+        loop = function(controller, "ov12_0224D03C")
+        self.assertLess(loop.index("ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded = TRUE;"), loop.index("BATTLE_STATUS2_MAGIC_COAT"))
+        self.assertIn("if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {\n        ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded = TRUE;", loop)
+
     def test_mirror_move_s_copy_does_too(self):
         body = function(COMMANDS.read_text(), "BtlCmd_SetMirrorMove")
         self.assertIn("return CallMove(ctx);", body)

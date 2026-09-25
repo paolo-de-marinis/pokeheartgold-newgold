@@ -4606,6 +4606,12 @@ static void ov12_0224D014(BattleSystem *battleSystem, BattleContext *ctx) {
 }
 
 static void ov12_0224D03C(BattleSystem *battleSystem, BattleContext *ctx) {
+    // The Metronome item counts a move that hits several Pokemon if it hit
+    // one (Pokemon Central, Plessimetro), where ov12_02256694 sees only how
+    // it did against the last.
+    if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
+        ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded = TRUE;
+    }
     if (ctx->battleStatus2 & BATTLE_STATUS2_MAGIC_COAT) {
         ctx->battleStatus2 &= ~BATTLE_STATUS2_MAGIC_COAT;
         ctx->battlerIdTarget = ctx->battlerIdAttacker;

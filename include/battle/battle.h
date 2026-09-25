@@ -152,7 +152,10 @@ typedef struct SelfTurnData {
     // Steel Roller or Ice Spinner: this Pokemon's move tears the terrain up
     // once the move is over, if it still stands (TerrainEnds).
     u32 terrainEndPending : 1;
-    u32 unk0_11 : 9;
+    // The Metronome item: this Pokemon's move has not failed on every
+    // Pokemon it was aimed at (ov12_0224D03C), so it counts as a use.
+    u32 metronomeLanded : 1;
+    u32 unk0_11 : 8;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;
