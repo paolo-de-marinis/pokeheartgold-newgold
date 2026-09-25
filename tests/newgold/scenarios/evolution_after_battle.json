@@ -1,0 +1,9 @@
+{
+  "about": "A Pokemon that levels up in a wild battle evolves after it, and gym.py's player lets it: a level-6 Caterpie, taught Guillotine in the running battle (teach:) and its accuracy roll forced (gDiagForceHit), knocks out a forced wild level-5 Chansey in one hit, gains enough to reach level 7, and evolves into Metapod once the battle is over -- gym.py presses A through the evolution, where the B it presses through other text would stop it. The next battle sends out Metapod. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CATERPIE:6"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_GUILLOTINE", "fight:1", "field", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0"],
+  "expect": {"lines": ["The wild Chansey fainted!", "Go! Metapod!"], "battler0.species": "SPECIES_METAPOD"}
+}

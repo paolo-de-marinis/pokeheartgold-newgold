@@ -14,7 +14,8 @@ drawn and nothing is looked at: after every few frames the diagnostics'
 memory says what the battle printed, who is fighting, and whether the game
 is waiting for the player, and the player answers through the game's own
 menus -- a touch on FIGHT, on a move, on a Pokemon -- exactly where a thumb
-would go. B moves text on and declines "will you switch?".
+would go. B moves text on and declines "will you switch?"; A moves it on
+through an evolution, which B would stop.
 
 The report is the battle's own lines, the battlers each turn, what the
 trainer's AI spent, anything that asserted, and the party before and after.
@@ -45,6 +46,7 @@ FOE_PANELS = [(64, 43), (192, 43)]
 OWN_PANELS = {0: (64, 115), 2: (192, 115)}
 RANGE_USER, RANGE_USER_SIDE, RANGE_ALLY = 1 << 4, 1 << 5, 1 << 8   # include/constants/moves.h
 BATTLE_MAIN, EXIT = STATES.index("BATTLE_MAIN"), STATES.index("EXIT")
+EVOLVING = (STATES.index("EVOLUTION_INIT"), STATES.index("EVOLUTION_MAIN"))
 
 
 def narc(path):
@@ -263,7 +265,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             stuck = 0
             idle += 1
             if idle % 8 == 0:
-                core.press("B", 4, hold)
+                core.press("A" if state in EVOLVING else "B", 4, hold)
 
     return last_line
 
