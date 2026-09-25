@@ -158,6 +158,74 @@ int main(void) {
     return 0;
 }
 """
+SWITCH = r"""
+#include "constants/abilities.h"
+typedef struct { s32 hp; u32 maxHp, status2; u16 species, ability; } BattleMon;
+typedef struct {
+    BattleMon battleMons[4];
+    int battlerIdAttacker, battlerIdSwitch, battlerIdTarget, script, hpTemp;
+    u8 unk_13C[4];
+    u8 selectedMonIndex[4];
+    u8 unk_21A0[4];
+    u8 switchInFlag;
+} BattleContext;
+static Pokemon *sReverted;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static int BattleScriptReadWord(BattleContext *ctx) { return ctx->script; }
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static void CopyBattleMonToPartyMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; }
+static u16 Species_GetBattleFormReversion(u16 species) { return species == SPECIES_AEGISLASH_BLADE ? SPECIES_AEGISLASH : SPECIES_NONE; }
+static BOOL Mon_RevertFormChange(Pokemon *mon) { sReverted = mon; return TRUE; }
+static void Mon_ChangeFormSpecies(Pokemon *mon, int species) { (void)mon; (void)species; assert(0); }
+static void BattleSystem_GetBattleMon(BattleSystem *bs, BattleContext *ctx, int battlerId, int index) {
+    ctx->battleMons[battlerId].species = BattleSystem_GetPartyMon(bs, battlerId, index)->species;
+    ctx->battleMons[battlerId].hp = 50;
+}
+static void ov12_02256F78(BattleSystem *bs, BattleContext *ctx, int battlerId, int index) { (void)bs; (void)ctx; (void)battlerId; (void)index; }
+static void InitSwitchWork(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; }
+@FUNCTIONS@
+
+int main(void) {
+    static BattleContext ctx;
+
+    // The player's Aegislash in 0, in its Blade Forme, and a Pikachu in 2;
+    // the party's third, a Snorlax, fainted earlier.
+    sCount[0] = 3;
+    sParties[0][0].species = SPECIES_AEGISLASH_BLADE;
+    sParties[0][1].species = SPECIES_PIKACHU;
+    sParties[0][2].species = SPECIES_SNORLAX;
+    ctx.selectedMonIndex[0] = 0;
+    ctx.selectedMonIndex[2] = 1;
+    ctx.battleMons[0].species = SPECIES_AEGISLASH_BLADE;
+    ctx.battleMons[2].species = SPECIES_PIKACHU;
+    ctx.battleMons[2].hp = 40;
+    ctx.unk_21A0[0] = ctx.unk_21A0[2] = 6;
+
+    // The Aegislash faints with nothing to follow it: its place is empty.
+    ctx.battleMons[0].hp = 0;
+    ctx.switchInFlag |= MaskOfFlagNo(0);
+    ctx.selectedMonIndex[0] = 6;
+
+    // A Revive from the bag brings the Snorlax back, and the end of the
+    // turn sends it into the empty place.
+    ctx.battlerIdSwitch = 0;
+    ctx.unk_21A0[0] = 2;
+    ctx.script = BATTLER_CATEGORY_SWITCHED_MON;
+    BtlCmd_SwitchAndUpdateMon(0, &ctx);
+    assert(sReverted == NULL);
+    assert(!(ctx.switchInFlag & MaskOfFlagNo(0)) && ctx.selectedMonIndex[0] == 2 && ctx.unk_21A0[0] == 6);
+    assert(ctx.battleMons[0].species == SPECIES_SNORLAX);
+
+    // A Blade Forme leaving a place that is not empty still goes back.
+    ctx.battleMons[2].species = SPECIES_AEGISLASH_BLADE;
+    ctx.battlerIdAttacker = 2;
+    ctx.unk_21A0[2] = 0;
+    ctx.script = BATTLER_CATEGORY_ATTACKER;
+    BtlCmd_SwitchAndUpdateMon(0, &ctx);
+    assert(sReverted == &sParties[0][1]);
+    return 0;
+}
+"""
 
 
 class EmptyPlaceTests(unittest.TestCase):
@@ -166,6 +234,9 @@ class EmptyPlaceTests(unittest.TestCase):
 
     def test_a_defeat_from_an_empty_place_counts_for_nobody(self):
         run(self, FAINT, ("BtlCmd_TryFaintMon",))
+
+    def test_a_pokemon_sent_into_an_empty_place_reverts_nothing(self):
+        run(self, SWITCH, ("Battler_TurnsHero", "BtlCmd_SwitchAndUpdateMon"))
 
 
 if __name__ == "__main__":

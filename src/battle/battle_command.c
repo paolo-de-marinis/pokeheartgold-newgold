@@ -2308,8 +2308,13 @@ BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSystem, BattleContext *ctx) {
     // crowned Zacian or Zamazenta: hg-engine crowns them when the battle starts
     // and nowhere else, so it took the crown for the rest of the battle. Nor a
     // Palafin in its Hero Form, which it took by leaving: hg-engine sent it
-    // back to its Zero Form the second time it left.
-    if (Species_GetBattleFormReversion(ctx->battleMons[battlerId].species) != SPECIES_NONE
+    // back to its Zero Form the second time it left. Nor a place left empty,
+    // where what fainted last has no party slot to be found at any more: a
+    // Revive from the bag, or a Revival Blessing, fills it at the end of the
+    // turn, and the one that fainted there goes back with the rest of the
+    // party when the battle ends (RevertBattleForms).
+    if (!(ctx->switchInFlag & MaskOfFlagNo(battlerId))
+        && Species_GetBattleFormReversion(ctx->battleMons[battlerId].species) != SPECIES_NONE
         && ctx->battleMons[battlerId].species != SPECIES_ZACIAN_CROWNED
         && ctx->battleMons[battlerId].species != SPECIES_ZAMAZENTA_CROWNED
         && ctx->battleMons[battlerId].species != SPECIES_PALAFIN_HERO) {
