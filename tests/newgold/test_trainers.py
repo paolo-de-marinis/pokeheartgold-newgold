@@ -334,32 +334,60 @@ class TrainerTests(unittest.TestCase):
         self.assertEqual([member["item"] for member in self.trainers[251]["party"]],
                          ["ITEM_SITRUS_BERRY", "ITEM_BLACK_BELT"])
 
-    def test_a_double_battle_without_a_partner_is_engaged_alone(self):
-        """When a trainer sees the player, TryGetSeenByNpcTrainers sends a
-        partner walking up with him if the sight record says so, and looks
-        for one on the map; finding none it asserts and goes on with a null
-        object. The real GetEngagingTrainerParams and battle-type checks, run
-        on the host for each battle type: only a double with a partner
-        (TRAINER_BATTLE_DOUBLE) has one; Mark's and Nelson's
-        (TRAINER_BATTLE_DOUBLE_NO_PARTNER) are engaged alone."""
+    def test_a_double_battle_engages_by_sight_only_a_player_who_can_fight_it(self):
+        """TryGetSeenByNpcTrainers, GetEngagingTrainerParams and the
+        battle-type checks, run on the host for each battle type with a player
+        who can fight a double (two usable Pokemon) and one who cannot. A
+        double with a partner (TRAINER_BATTLE_DOUBLE) walks up with him; one
+        without (Mark's and Nelson's, TRAINER_BATTLE_DOUBLE_NO_PARTNER) walks up
+        alone, as a single trainer does -- looking for a partner who is not on
+        the map asserted and read a null object. Neither sees a player with one
+        usable Pokemon: this port's battle cannot run a double with one, it
+        asserts in Party_GetMonByIndex, and talking to them gives only the
+        intro (scr_seq_0953: TrainerIsDoubleBattle, PartyCheckForDouble)."""
         header = (ROOT / "include/unk_020632B0.h").read_text()
         record = re.search(r"typedef struct EngagingTrainer \{.*?\} EngagingTrainer;", header, re.S)[0]
         manager = (ROOT / "src/script_manager.c").read_text()
+        sight = (ROOT / "src/trainer_sight.c").read_text()
         program = "\n".join([
-            "#include <stdint.h>", "#include <stdio.h>", '#include "constants/trainers.h"',
-            "typedef uint16_t u16; typedef uint32_t u32; typedef int BOOL;",
-            "typedef struct LocalMapObject LocalMapObject;", "enum { TRATTR_DOUBLEBTL = 1 };",
-            record, "static int battleType;",
-            "static u32 MapObject_GetScriptID(LocalMapObject *object) { return 3000; }",
+            "#include <stdint.h>", "#include <stdio.h>", '#include "constants/std_script.h"',
+            "typedef uint16_t u16; typedef uint32_t u32; typedef int BOOL; enum { FALSE, TRUE };",
+            "typedef struct LocalMapObject { int partner; } LocalMapObject;",
+            "typedef struct MapObjectManager MapObjectManager; typedef struct PlayerAvatar PlayerAvatar;",
+            "typedef struct FieldSystem { MapObjectManager *mapObjectManager; PlayerAvatar *playerAvatar; } FieldSystem;",
+            "enum { TRATTR_DOUBLEBTL = 1 };",
+            record, re.search(r"^enum \{\n    ENGAGED_.*?^\};", sight, re.S | re.M)[0],
+            "static int battleType, asserts, walks, engaged[2] = {-1, -1};",
+            "static LocalMapObject trainer = {0}, partner = {1};",
+            "static u32 MapObject_GetScriptID(LocalMapObject *object) { return 3000 + object->partner; }",
             "static u16 ScriptNumToTrainerNum(u16 script) { return script - 2999; }",
             "static int TrainerData_GetAttr(u32 trainer, int attr) { return attr == TRATTR_DOUBLEBTL ? battleType : -1; }",
+            "static void GF_AssertFail(void) { asserts++; }",
+            "static void StartMapSceneScript(FieldSystem *f, u16 script, LocalMapObject *o) { walks++; }",
+            "static void FieldSystem_SetEngagedTrainer(FieldSystem *f, LocalMapObject *o, int a2, int a3, int a4, int trainerId, int type, int idx) { engaged[idx] = type; }",
+            # The partner of a TRAINER_BATTLE_DOUBLE trainer is on the map; nobody else is.
+            "static LocalMapObject *sub_02064520(FieldSystem *f, MapObjectManager *m, LocalMapObject *o, u32 trainerNum) {",
+            "    if (battleType != TRAINER_BATTLE_DOUBLE) { GF_AssertFail(); return 0; }",
+            "    return &partner;",
+            "}",
+            "void GetEngagingTrainerParams(EngagingTrainer *trainer, LocalMapObject *object, int unk0, int unk4);",
+            # One trainer sees the player: the second look finds nobody.
+            "static BOOL CheckSeenByNpcTrainers(FieldSystem *f, MapObjectManager *m, PlayerAvatar *p, LocalMapObject *excluded, EngagingTrainer *record) {",
+            "    if (excluded) return FALSE;",
+            "    GetEngagingTrainerParams(record, &trainer, 0, 0);",
+            "    return TRUE;",
+            "}",
             function(manager, "TrainerNumIsDouble"), function(manager, "TrainerNumHasDoublePartner"),
-            function((ROOT / "src/trainer_sight.c").read_text(), "GetEngagingTrainerParams"),
+            function(sight, "GetEngagingTrainerParams"), function(sight, "TryGetSeenByNpcTrainers"),
             "int main(void) {",
-            "    for (battleType = 0; battleType < 4; battleType++) {",
-            "        EngagingTrainer trainer;",
-            "        GetEngagingTrainerParams(&trainer, 0, 0, 0);",
-            "        printf(\"%d\\n\", *(int *)((char *)&trainer + 0x10));",
+            "    static const int types[] = {TRAINER_BATTLE_SINGLE, TRAINER_BATTLE_DOUBLE, TRAINER_BATTLE_DOUBLE_NO_PARTNER};",
+            "    FieldSystem fieldSystem = {0, 0};",
+            "    for (int i = 0; i < 3; i++) {",
+            "        for (int eligible = 0; eligible < 2; eligible++) {",
+            "            battleType = types[i]; asserts = walks = 0; engaged[0] = engaged[1] = -1;",
+            "            BOOL seen = TryGetSeenByNpcTrainers(&fieldSystem, eligible);",
+            "            printf(\"%d:%d %d %d %d %d %d\\n\", battleType, eligible, seen, walks, engaged[0], engaged[1], asserts);",
+            "        }",
             "    }",
             "    return 0;",
             "}"])
@@ -370,11 +398,13 @@ class TrainerTests(unittest.TestCase):
                 "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-Wno-unused-parameter",
                 "-iquote", str(ROOT / "include"), str(path / "test.c"), "-o", str(path / "test")], check=True)
             output = subprocess.run([str(path / "test")], capture_output=True, text=True, check=True).stdout
-        # Single, (unused), double with a partner, double without one.
-        self.assertEqual(output.split(), ["0", "0", "1", "0"])
-        # The record's flag is the one TryGetSeenByNpcTrainers tests.
-        self.assertIn("first.hasPartner == FALSE",
-                      function((ROOT / "src/trainer_sight.c").read_text(), "TryGetSeenByNpcTrainers"))
+        # battle type:can fight a double -> seen, walks up, the two engaged
+        # records' types (0 alone, 1 with a partner, -1 none), asserts.
+        self.assertEqual(output.splitlines(), [
+            "0:0 1 1 0 -1 0", "0:1 1 1 0 -1 0",  # single
+            "2:0 0 0 -1 -1 0", "2:1 1 1 1 1 0",  # double with a partner
+            "3:0 0 0 -1 -1 0", "3:1 1 1 0 -1 0",  # double without one
+        ])
 
     def test_nelson_and_mark_are_doubles_without_a_partner(self):
         """konefr made Nelson #389 DOUBLE_BATTLE, the two-trainer kind, but he

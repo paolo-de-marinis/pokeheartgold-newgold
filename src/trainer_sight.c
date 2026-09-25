@@ -15,10 +15,10 @@ enum {
 };
 
 // Each step: if a trainer on the map sees the player, he walks up and his
-// battle is recorded. A trainer whose partner walks up with him engages only
-// a player who can fight a double battle (doublesEligible); any other trainer
-// engages alone, or with a second trainer who sees the player too if the
-// player can fight both at once.
+// battle is recorded. A trainer who fights a double battle, with a partner
+// walking up with him or without, engages only a player who can fight one
+// (doublesEligible); any other trainer engages alone, or with a second
+// trainer who sees the player too if the player can fight both at once.
 BOOL TryGetSeenByNpcTrainers(FieldSystem *fieldSystem, BOOL doublesEligible) {
     EngagingTrainer first;
     EngagingTrainer second;
@@ -30,6 +30,13 @@ BOOL TryGetSeenByNpcTrainers(FieldSystem *fieldSystem, BOOL doublesEligible) {
         return FALSE;
     }
     if (first.hasPartner == FALSE) {
+        // A double battle without a partner (TRAINER_BATTLE_DOUBLE_NO_PARTNER)
+        // cannot run with one usable Pokemon: he does not see such a player,
+        // as the partner kind does not and as talking to him gives only his
+        // intro (TrainerIsDoubleBattle, PartyCheckForDouble).
+        if (doublesEligible == FALSE && TrainerNumIsDouble(first.trainerNum)) {
+            return FALSE;
+        }
         StartMapSceneScript(fieldSystem, std_trainer_approach, first.object);
         if (doublesEligible == FALSE || CheckSeenByNpcTrainers(fieldSystem, mapObjectManager, playerAvatar, first.object, &second) == FALSE) {
             FieldSystem_SetEngagedTrainer(fieldSystem, first.object, first.unk0, first.unk4, first.scriptId, first.trainerNum, ENGAGED_SINGLE, 0);
