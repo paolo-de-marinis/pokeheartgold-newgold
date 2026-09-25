@@ -1,0 +1,15 @@
+{
+  "about": "A move another move called is noted as the move used (96cc0771d), and Pressure charges the calling move for the move it calls (230ff4fb2). A level-10 Pikachu, put to sleep, knows only Sleep Talk (5 PP) and Echoed Voice, given in the running battle (teach:), against a forced wild level-5 Chansey that knows only Splash and is given Pressure (set:). Each turn Sleep Talk calls Echoed Voice: the first does 7 damage, the second, counting the first, twice the power and 12; and each Sleep Talk loses two PP, one for itself and one for Pressure on the Echoed Voice it called at the Chansey. Before, the called Echoed Voice did not count and Sleep Talk, aimed at its user, paid no Pressure. The damage roll is forced to the top of the range. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SLEEP_TALK", "teach:0,1,MOVE_ECHOED_VOICE", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:1,ability,ABILITY_PRESSURE", "set:0,status,SLP", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Sleep Talk!", "Pikachu used Echoed Voice!"],
+                        "battler1.hp": 33, "battler0.pp0": 3, "battler0.pp1": 5}},
+            "fight:1:1"],
+  "expect": {"lines": ["Pikachu used Sleep Talk!", "Pikachu used Echoed Voice!", "Pikachu used Sleep Talk!", "Pikachu used Echoed Voice!"],
+             "battler1.hp": 21, "battler0.pp0": 1, "battler0.pp1": 5, "battler0.status": "SLP"}
+}
