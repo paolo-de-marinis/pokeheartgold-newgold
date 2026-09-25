@@ -21,6 +21,9 @@ import struct
 from pathlib import Path
 
 KINDS = ["SSEQ", "SSAR", "SBNK", "SWAR", "PLAYER", "GROUP", "PLAYER2", "STRM"]
+# The records that name a file: the first word's low 24 bits are its number
+# (a wave archive keeps flags in the top byte).
+FILE_KINDS = ["SSEQ", "SSAR", "SBNK", "SWAR", "STRM"]
 HEADER_SIZE = 0x40
 
 
@@ -96,6 +99,24 @@ class Sdat:
             start, size, a, b = struct.unpack("<IIII", self.data[here:here + 16])
             self.files.append(self.data[start:start + size])
             self.fatExtra.append((a, b))
+
+    # --- editing ---
+
+    def drop_unused_files(self):
+        """Drop every file no record names, keeping the rest in order and
+        renumbering the records that name them. The game loads the file table
+        into its sound heap whole, so a file nothing plays still costs it."""
+        def fileId(record):
+            return struct.unpack("<I", record[:4])[0] & 0xFFFFFF
+        used = {fileId(r) for kind in FILE_KINDS for r in self.records[kind] if r is not None}
+        keep = [i for i in range(len(self.files)) if i in used]
+        new = {old: i for i, old in enumerate(keep)}
+        self.files = [self.files[i] for i in keep]
+        self.fatExtra = [self.fatExtra[i] for i in keep]
+        for kind in FILE_KINDS:
+            self.records[kind] = [None if r is None else struct.pack(
+                "<I", struct.unpack("<I", r[:4])[0] & 0xFF000000 | new[fileId(r)]) + r[4:]
+                for r in self.records[kind]]
 
     # --- writing ---
 

@@ -12,6 +12,7 @@ import re
 import struct
 import sys
 import unittest
+from collections import Counter
 from pathlib import Path
 
 from test_level_cap import ROOT
@@ -31,6 +32,29 @@ class SoundArchiveTests(unittest.TestCase):
 
     def test_the_archive_rebuilds_byte_for_byte(self):
         self.assertEqual(self.archive.build(), self.archive.data)
+
+    def test_dropping_unused_files_keeps_every_record_on_its_bytes(self):
+        """sdat.drop_unused_files finds nothing to drop in the committed
+        archive; and a record nulled takes its file with it, the files after
+        it move down one, and every other record still names the same bytes."""
+        def fileId(record):
+            return struct.unpack("<I", record[:4])[0] & 0xFFFFFF
+
+        def contents():
+            return {(kind, i): self.archive.files[fileId(r)] for kind in sdat.FILE_KINDS
+                    for i, r in enumerate(self.archive.records[kind]) if r is not None}
+        self.archive.drop_unused_files()
+        self.assertEqual(self.archive.build(), self.archive.data)
+        before, count = contents(), len(self.archive.files)
+        names = [(fileId(r), kind, i) for kind in sdat.FILE_KINDS
+                 for i, r in enumerate(self.archive.records[kind]) if r is not None]
+        users = Counter(f for f, _, _ in names)
+        _, kind, index = min(n for n in names if users[n[0]] == 1)
+        self.archive.records[kind][index] = None
+        self.archive.drop_unused_files()
+        del before[kind, index]
+        self.assertEqual(len(self.archive.files), count - 1)
+        self.assertEqual(contents(), before)
 
     def test_an_added_cry_is_a_wave_archive_alone(self):
         """No bank past HeartGold's own: each costs the sound heap sixteen
