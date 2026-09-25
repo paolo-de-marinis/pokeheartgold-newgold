@@ -553,8 +553,10 @@ class MimicryTests(unittest.TestCase):
 typedef struct { int types[2]; } Pokemon;
 typedef struct { Pokemon party[4]; } BattleSystem;
 typedef struct { u8 type1, type2, type3; } BattleMon;
-typedef struct { BattleMon battleMons[4]; u8 mimicryTerrain[4]; u8 selectedMonIndex[4]; } BattleContext;
-static Pokemon *BattleSystem_GetPartyMon(BattleSystem *bs, int battlerId, int index) { (void)index; return &bs->party[battlerId]; }
+typedef struct { BattleMon battleMons[4]; u8 mimicryTerrain[4]; u8 selectedMonIndex[4]; u8 switchInFlag; } BattleContext;
+static u32 MaskOfFlagNo(int flagno) { return 1u << flagno; }
+// Slot 6 is past any party: Party_GetMonByIndex asserts it.
+static Pokemon *BattleSystem_GetPartyMon(BattleSystem *bs, int battlerId, int index) { assert(index < 6); return &bs->party[battlerId]; }
 static int GetMonData(Pokemon *mon, int attr, void *out) { (void)out; return mon->types[attr == MON_DATA_TYPE_2]; }
 """ + function(OVERLAY, "TerrainMimicryType") + function(OVERLAY, "Battler_MimicryRestoreTypes") + r"""
 int main(void) {
@@ -578,6 +580,15 @@ int main(void) {
     ctx.battleMons[0].type1 = ctx.battleMons[0].type2 = TYPE_WATER;
     Battler_MimicryRestoreTypes(&bs, &ctx, 0);
     EXPECT(ctx.battleMons[0].type1, TYPE_WATER);
+    // One that fainted Electric in a double battle with nothing to follow it
+    // leaves its place empty, and the terrain ending there reads nothing.
+    ctx.battleMons[1] = (BattleMon){ TYPE_ELECTRIC, TYPE_ELECTRIC, TYPE_NONE };
+    ctx.mimicryTerrain[1] = ELECTRIC_TERRAIN;
+    ctx.switchInFlag |= MaskOfFlagNo(1);
+    ctx.selectedMonIndex[1] = 6;
+    Battler_MimicryRestoreTypes(&bs, &ctx, 1);
+    EXPECT(ctx.mimicryTerrain[1], TERRAIN_NONE);
+    EXPECT(ctx.battleMons[1].type1, TYPE_ELECTRIC);
     return 0;
 }
 """

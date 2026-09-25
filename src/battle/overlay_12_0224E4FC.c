@@ -4824,7 +4824,9 @@ static u8 TerrainMimicryType(int terrainType) {
 
 // A Mimicry holder going back to its own two types, which the reference
 // reads from the Pokemon as it does here, without a word; the third type
-// stays. Does nothing for a battler that has not taken a terrain's type.
+// stays. Does nothing for a battler that has not taken a terrain's type, nor
+// for a place left empty, whose holder fainted with nothing to follow it and
+// has no party slot to be read at any more.
 void Battler_MimicryRestoreTypes(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     Pokemon *mon;
 
@@ -4832,6 +4834,9 @@ void Battler_MimicryRestoreTypes(BattleSystem *battleSystem, BattleContext *ctx,
         return;
     }
     ctx->mimicryTerrain[battlerId] = TERRAIN_NONE;
+    if (ctx->switchInFlag & MaskOfFlagNo(battlerId)) {
+        return;
+    }
     mon = BattleSystem_GetPartyMon(battleSystem, battlerId, ctx->selectedMonIndex[battlerId]);
     ctx->battleMons[battlerId].type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     ctx->battleMons[battlerId].type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
