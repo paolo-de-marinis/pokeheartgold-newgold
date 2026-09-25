@@ -43,6 +43,21 @@ class ScenarioFileTests(unittest.TestCase):
                 self.assertEqual([k for k in spec.get("expect", {}) if not scene.readable(k, key=True)], [])
                 self.assertTrue(all(name.startswith("gDiag") for name in spec.get("hold", {})))
 
+    def test_a_forced_wild_pokemon_is_rolled_from_a_pinned_rng(self):
+        # A forced wild Pokemon's stats come from the field's RNG, which
+        # Continue seeds with the VBlank count, and that count moves with the
+        # core, its JIT and the loading before Continue (rolls_forced_high.json's
+        # about): a scenario that forces one sets sLCRNG_State after the field
+        # comes up, or the HP it expects is luck.
+        for path in sorted(SCENARIOS.glob("*.json")):
+            spec = json.loads(path.read_text())
+            steps = [s for s in spec["steps"] if isinstance(s, str)]
+            if any("gDiagForceBattleSpecies" in s for s in steps) or "gDiagForceBattleSpecies" in spec.get("hold", {}):
+                with self.subTest(path.name):
+                    pin = "poke:sLCRNG_State=0xbb160215"
+                    self.assertIn(pin, steps)
+                    self.assertLess(steps.index("field"), steps.index(pin))
+
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.
         self.assertTrue(scene.Scene.wanted("x", 663)[0](663))
