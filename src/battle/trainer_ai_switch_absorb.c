@@ -7,8 +7,34 @@
 
 #include "pokemon.h"
 
+// Whether the ability swallows a damaging move of the type: retail's Flash
+// Fire, Water Absorb and Volt Absorb, and those the port makes absorbing --
+// Lightning Rod and Storm Drain from the fifth generation, Well-Baked Body,
+// Sap Sipper and Earth Eater (BattleContext_CheckMoveImmunityFromAbility).
+static BOOL AbilityAbsorbsMoveType(int ability, int type) {
+    switch (ability) {
+    case ABILITY_FLASH_FIRE:
+    case ABILITY_WELL_BAKED_BODY:
+        return type == TYPE_FIRE;
+    case ABILITY_WATER_ABSORB:
+    case ABILITY_STORM_DRAIN:
+        return type == TYPE_WATER;
+    case ABILITY_VOLT_ABSORB:
+    case ABILITY_LIGHTNINGROD:
+        return type == TYPE_ELECTRIC;
+    case ABILITY_SAP_SIPPER:
+        return type == TYPE_GRASS;
+    case ABILITY_EARTH_EATER:
+        return type == TYPE_GROUND;
+    }
+    return FALSE;
+}
+
+// Whether the battler, hit by a damaging move, is switched for a party member
+// whose ability swallows the move's type (one in two of those found), unless
+// it has such an ability itself.
 BOOL ov10_0221FE8C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
-    int ability;
+    int type;
     u8 battlerIdSelf;
     u8 battlerIdPartner;
     int partyCount;
@@ -25,17 +51,8 @@ BOOL ov10_0221FE8C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
         return FALSE;
     }
 
-    if (BattleMoveTbl(ctx, ctx->moveNoHit[battlerId])->type == TYPE_FIRE) {
-        ability = ABILITY_FLASH_FIRE;
-    } else if (BattleMoveTbl(ctx, ctx->moveNoHit[battlerId])->type == TYPE_WATER) {
-        ability = ABILITY_WATER_ABSORB;
-    } else if (BattleMoveTbl(ctx, ctx->moveNoHit[battlerId])->type == TYPE_ELECTRIC) {
-        ability = ABILITY_VOLT_ABSORB;
-    } else {
-        return FALSE;
-    }
-
-    if (ability == GetBattlerAbility(ctx, battlerId)) {
+    type = BattleMoveTbl(ctx, ctx->moveNoHit[battlerId])->type;
+    if (AbilityAbsorbsMoveType(GetBattlerAbility(ctx, battlerId), type)) {
         return FALSE;
     }
 
@@ -60,7 +77,7 @@ BOOL ov10_0221FE8C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
             continue;
         }
 
-        if (ability == GetMonData(mon, MON_DATA_ABILITY, NULL) && (BattleSystem_Random(battleSystem) & 1)) {
+        if (AbilityAbsorbsMoveType(GetMonData(mon, MON_DATA_ABILITY, NULL), type) && (BattleSystem_Random(battleSystem) & 1)) {
             ctx->unk_21A4[battlerId] = i;
             return TRUE;
         }

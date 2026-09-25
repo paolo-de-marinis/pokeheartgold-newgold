@@ -226,7 +226,8 @@ class BattleAbilityWidthTests(unittest.TestCase):
         native += [function(command, name) for name in ("BattlerSetAbility", "ov12_0224819C", "BtlCmd_GenerateEndOfBattleItem")]
         native += [function(ai, name) for name in ("ov10_0221D0A8", "ov10_0221D188")]
         native += [function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224E384")]
-        native += [function((ROOT / "src/battle/trainer_ai_switch_absorb.c").read_text(), "ov10_0221FE8C")]
+        absorb = (ROOT / "src/battle/trainer_ai_switch_absorb.c").read_text()
+        native += [function(absorb, name) for name in ("AbilityAbsorbsMoveType", "ov10_0221FE8C")]
         for file, name in (("battle_controller_mon_copy.c", "BattleController_EmitBattleMonToPartyMonCopy"), ("battle_controller_party_heal.c", "BattleControl_EmitPartyStatusHeal")):
             content = (ROOT / "src/battle" / file).read_text()
             types += content[content.index("typedef struct "):content.index("void " + name)]

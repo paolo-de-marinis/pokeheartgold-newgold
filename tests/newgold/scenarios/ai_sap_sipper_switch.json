@@ -1,0 +1,10 @@
+{
+  "about": "The trainer AI sends in a Pokemon whose ability swallows the move that hit it (ov10_0221FE8C): Whitney's Furret, hit by a Breloom's Absorb, is switched for her Farigiraf, whose Sap Sipper eats Grass moves. Retail's check knew only Flash Fire, Water Absorb and Volt Absorb; Lightning Rod, Storm Drain, Sap Sipper, Earth Eater and Well-Baked Body go the same way. Furret is left only Body Slam (teach:), so no super-effective move keeps it in and no U-turn sends in another.",
+  "save": "gyms/whitney.sav",
+  "edit": ["--party", "BRELOOM:30::ABSORB"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:1,0,MOVE_BODY_SLAM", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0", "fight:1:4"],
+  "expect": {"lines": ["Leader Whitney sent out Furret!", "withdrew", "Leader Whitney sent out Farigiraf!"],
+             "no_lines": ["The opposing Furret fainted!"]}
+}
