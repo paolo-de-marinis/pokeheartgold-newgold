@@ -3,7 +3,21 @@
 
 #include "script.h"
 
+// A trainer that sees the player, as CheckSeenByNpcTrainers records it: the
+// two values the sight check gave (EngagedTrainer's unk0 and unk4), the
+// object's script and trainer, whether the trainer fights a double battle,
+// and the object.
+typedef struct EngagingTrainer {
+    int unk0;
+    int unk4;
+    u32 scriptId;
+    u32 trainerNum;
+    BOOL isDouble;
+    LocalMapObject *object;
+} EngagingTrainer;
+
 BOOL TryGetSeenByNpcTrainers(FieldSystem *fieldSystem, BOOL doublesEligible);
+void GetEngagingTrainerParams(EngagingTrainer *trainer, LocalMapObject *object, int unk0, int unk4);
 int sub_0206457C(FieldSystem *fieldSystem, LocalMapObject *localMapObject, PlayerAvatar *playerAvatar, int a3, int a4, int a5, int a6, u16 trainerNum);
 BOOL sub_02064598(void);
 void sub_020645AC(int a0);

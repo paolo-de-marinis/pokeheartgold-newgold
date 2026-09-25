@@ -144,3 +144,7 @@
 .public ov01_022003F4
 .public ov01_02200540
 .public ov01_02207274
+.public sub_020642C4
+.public MapObject_GetTrainerNum
+.public sub_02064520
+.public GetEngagingTrainerParams
