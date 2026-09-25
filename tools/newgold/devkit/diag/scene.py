@@ -23,6 +23,9 @@ A step is one of
     fight[:N[:T]]               A until a battle is up, then gym.py's player plays
                                 it to the end (N: always move slot N; T: stop at the
                                 command prompt after T turns, to expect what they did)
+    teach:B,SLOT,MOVE[,PP]      battler B's move in that slot (0-3), and its PP (5 by
+                                default), written into the running battle: a move
+                                no trainer's data gives, for the AI to use
     goto:MAP,X,Y                walk there: the path planned from the tree's map data
                                 (tile attributes, ledges, warps) and the objects in
                                 RAM, planned again when left or blocked; A through
@@ -91,7 +94,7 @@ BATTLE_MAIN = STATES.index("BATTLE_MAIN")
 BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item")
 CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/species.h",
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h"}
-STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto")
+STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach")
 
 
 def readable(step_or_key, key=False):
@@ -108,6 +111,16 @@ def readable(step_or_key, key=False):
         return list(step_or_key) == ["expect"] and all(readable(k, True) for k in step_or_key["expect"])
     kind = step_or_key.partition(":")[0]
     return kind in STEPS or step_or_key.partition("*")[0] in BUTTONS
+
+
+@savedit.tree_cache
+def battle_layout():
+    """BattleMon's size and the offsets teach: writes, from the tree's headers."""
+    names = ("sizeof(BattleMon)", "__builtin_offsetof(BattleMon, moves)", "__builtin_offsetof(BattleMon, movePPCur)",
+             "__builtin_offsetof(BattleMon, hp)", "__builtin_offsetof(BattleContext, battleMons)",
+             "__builtin_offsetof(BattleContext, unk_0)")
+    return dict(zip(("size", "moves", "pp", "hp", "mons", "select"), savedit.compile_c(
+        exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h",))[0]))
 
 
 @savedit.tree_cache
@@ -392,7 +405,7 @@ class Scene:
             # that A only for a text box, or the press that lands as the
             # player gets control talks to whoever the player faces.
             end = core.frames + int(rest or 12000)
-            while core.frames < end and not self.movable():
+            while core.frames < end and not self.movable() and not self.in_battle():
                 if not self._chain("FieldSystem.runningFieldMap") or self.textbox():
                     core.press("A", 6, hooks)
                     core.step(20, hooks)
@@ -405,6 +418,16 @@ class Scene:
             done, said = self.goto((self.number(name) if not name.isdigit() else int(name), int(x), int(y)))
             self.say(f"[{core.frames}] {said}")
             return None if done else [said]
+        elif kind == "teach":
+            # teach:BATTLER,SLOT,MOVE[,PP] -- what a battler knows, written into
+            # the battle as it runs (the trainer's data cannot say it): with the
+            # others' PP at 0, the AI has that move to use and no other.
+            battler, slot, move, *pp = rest.split(",")
+            at, layout = self.battle_mon(int(battler)), battle_layout()
+            if at is None:
+                return [f"battler {battler} is not in the battle: {self.markers.battle(core.ram())}"]
+            core.poke(at + layout["moves"] + 2 * int(slot), self.number(move), 2)
+            core.poke(at + layout["pp"] + int(slot), int(pp[0]) if pp else 5, 1)
         elif kind == "fight":
             import gym
             for _ in range(300):
@@ -417,7 +440,8 @@ class Scene:
                 return None
             slot, _, turns = rest.partition(":")
             gym.fight(core, self.markers, hooks, self.say, int(slot) if slot else -1, core.frames + 60000,
-                      turns=int(turns) if turns else None)
+                      turns=int(turns) if turns else None, since=core.word(self._text_count),
+                      partner=self.partner_prompt())
             self._collect(core)
         else:
             button, _, times = step.partition("*")
@@ -473,7 +497,8 @@ class Scene:
             core.buttons = set()
             if self.in_battle():
                 battles += 1
-                gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000)
+                gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
+                          since=core.word(self._text_count), partner=self.partner_prompt())
                 self._collect(core)
                 continue
             if not self.movable():
@@ -524,6 +549,35 @@ class Scene:
             core.step(1, hooks)
         core.buttons = set()
         return False, f"goto {goal}: stopped at {self.location()} after {frames} frames, {replans} plans"
+
+    def battle_mon(self, battler):
+        """Where the battle keeps a battler's BattleMon: found in main RAM by
+        the species, HP and maximum HP gDiagBattlers shows for it, since the
+        battle's context lives on its heap and no symbol points at it."""
+        import re
+        ram, layout = self.core.ram(), battle_layout()
+        shown = struct.unpack_from(BATTLER, ram, self.markers.address("gDiagBattlers") - 0x02000000
+                                   + battler * struct.calcsize(BATTLER))
+        species, hp, max_hp = shown[:3]
+        pattern = re.escape(struct.pack("<H", species)) + b".{%d}" % (layout["hp"] - 2) + re.escape(struct.pack("<iI", hp, max_hp))
+        found = [m.start() for m in re.finditer(pattern, ram, re.S) if m.start() % 4 == 0]
+        return 0x02000000 + found[0] if len(found) == 1 else None
+
+    def partner_prompt(self):
+        """For gym.fight: where the player's second Pokemon is in choosing, in
+        a double battle -- BattleContext.unk_0[2], the context found once
+        through battle_mon -- or None."""
+        context = {}
+
+        def read():
+            second = self.markers.address("gDiagBattlers") + 2 * struct.calcsize(BATTLER)
+            if not self.core.word(second, 2) or not self.core.word(second + 2, 2):    # none, or fainted
+                return None
+            if "at" not in context:
+                mon = self.battle_mon(0)
+                context["at"] = mon and mon - battle_layout()["mons"]
+            return self.core.word(context["at"] + battle_layout()["select"] + 2, 1) if context["at"] else None
+        return read
 
     def failures(self, ram):
         return " ".join(f"{label}={self.markers.read(ram, name)}" for label, name in (

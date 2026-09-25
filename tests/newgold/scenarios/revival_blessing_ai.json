@@ -1,0 +1,14 @@
+{
+  "about": "Revival Blessing picked by the trainer AI (ov12_0225F8AC, the first fainted in its party). No trainer's data gives the move, so the scenario writes it into the running battle: Falkner's second Pokemon, once out, knows Revival Blessing and nothing else (teach:). Raichu faints the Hoothoot with Thunderbolt, then only lowers the Farfetch'd's Defense so it can move, and the AI revives the Hoothoot with it -- in a single battle, where the revived Pokemon waits in the party. falkner.json plays the fight to the badge.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13,UMBREON:13",
+           "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:4:1",
+            "teach:1,0,MOVE_REVIVAL_BLESSING", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["The opposing Hoothoot fainted!", "Leader Falkner sent out Farfetch’d!",
+                       "The opposing Farfetch’d used Revival Blessing!",
+                       "The opposing Hoothoot was revived and is ready to fight again!"],
+             "battler1.species": "SPECIES_FARFETCHD"}
+}

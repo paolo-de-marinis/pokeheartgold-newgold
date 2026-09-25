@@ -382,7 +382,10 @@ Reading what the debug ROM records, and playing it without looking.
 - `gym.py SAVE` -- fights what the save stands the player in front of,
   through the game's own menus, and reports the battle as text: every line
   it printed, the battlers each turn, what the trainer's AI spent, what
-  asserted and where, the party before and after. No image.
+  asserted and where, the party before and after. No image. In a double
+  battle it chooses for the second Pokemon too (read from the battle's own
+  selection state) and touches the target screen by the move's range; the
+  player's own Revival Blessing gets the first fainted Pokemon.
 - `watch.py` -- the same text for the melonDS that is running.
 - `live.py` -- one line about the running melonDS: field, encounter,
   battle, failures.
@@ -411,7 +414,11 @@ Reading what the debug ROM records, and playing it without looking.
   events' warps, and the map objects standing in RAM), planned again when
   the player leaves it or is blocked, A through text boxes (read from
   FieldSystem.textbox_open) and gym.py's player through any battle on the
-  way; one line says how it went. `--scenario FILE`
+  way; one line says how it went. `fight:N:T` stops after T turns at the
+  prompt, so a scenario can expect what they did, and `teach:B,SLOT,MOVE`
+  writes a move into battler B's BattleMon in the running battle (found in
+  RAM by what gDiagBattlers shows), for an AI to use a move no trainer's
+  data gives. `--scenario FILE`
   plays a scenario -- a save, savedit edits to a copy, the steps, and what
   the battle's lines and memory (location, badges, flags, variables, the
   battlers, the heaps, asserts, failed allocations) have to show -- to PASS

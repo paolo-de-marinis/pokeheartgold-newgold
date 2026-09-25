@@ -72,6 +72,20 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(battler_hp("you Iron Crown L30 103/103 holding Leftovers | 1:Smart Strike 10"), 103)
         self.assertEqual(battler_hp("you Porygon2 L30 57/90 PSN | 1:Tackle 35"), 57)
 
+    def test_gym_touches_the_target_panel_a_move_asks_for(self):
+        # A double battle's target screen: a move on the user (Revival
+        # Blessing) is confirmed on the user's own panel, an attack goes to a
+        # foe's, the other foe's when the first is gone. Read from the moves'
+        # range in waza_tbl.
+        sys.path[:0] = [str(ROOT / "tools/newgold/devkit/diag"), str(ROOT / "tools/newgold/devkit")]
+        from gym import FOE_PANELS, OWN_PANELS, Scorer
+        from savedit import move_numbers
+        moves, scorer = move_numbers(), Scorer()
+        self.assertEqual(scorer.panel(moves["REVIVAL_BLESSING"], 0, 0), OWN_PANELS[0])
+        self.assertEqual(scorer.panel(moves["REVIVAL_BLESSING"], 2, 0), OWN_PANELS[2])
+        self.assertEqual(scorer.panel(moves["THUNDERBOLT"], 2, 0), FOE_PANELS[0])
+        self.assertEqual(scorer.panel(moves["THUNDERBOLT"], 0, 1), FOE_PANELS[1])
+
     def test_nested_melonds_binds_every_button(self):
         # nested.py writes melonDS's key table before melonDS starts; a table
         # whose parent was implicit made melonDS's toml writer abort.

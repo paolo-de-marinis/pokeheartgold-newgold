@@ -39,6 +39,11 @@ MOVES = [(64, 51), (192, 51), (64, 116), (192, 116)]
 PARTY = [(64, 35), (192, 38), (64, 78), (192, 81), (64, 123), (192, 126)]
 SHIFT = (127, 113)
 KEEP_BATTLING = (128, 139)   # "will you switch?" -- the lower of the two
+# A double battle's target screen: the foes above, the player's two below,
+# the first on the left. A move on the user's side is confirmed on its own panel.
+FOE_PANELS = [(64, 43), (192, 43)]
+OWN_PANELS = {0: (64, 115), 2: (192, 115)}
+RANGE_USER, RANGE_USER_SIDE, RANGE_ALLY = 1 << 4, 1 << 5, 1 << 8   # include/constants/moves.h
 BATTLE_MAIN, EXIT = STATES.index("BATTLE_MAIN"), STATES.index("EXIT")
 
 
@@ -72,6 +77,16 @@ class Scorer:
         record = self.personal[species] if species < len(self.personal) else b""
         return set(record[6:8]) if len(record) >= 8 else set()
 
+    def panel(self, move, battler, tries):
+        """Where to touch on the target screen for this move of this battler."""
+        record = self.moves[move] if move < len(self.moves) else b""
+        reach = struct.unpack_from("<H", record, 8)[0] if len(record) >= 10 else 0
+        if reach & (RANGE_USER | RANGE_USER_SIDE):
+            return OWN_PANELS[battler]
+        if reach & RANGE_ALLY:
+            return OWN_PANELS[2 - battler]
+        return FOE_PANELS[tries % 2]     # the other foe when the first is gone
+
     def score(self, move, user, target):
         record = self.moves[move] if move < len(self.moves) else b""
         # effect (2 bytes), split, power, type: import_moves.py's RECORD.
@@ -101,22 +116,30 @@ def quiet():
     return os.fdopen(keep, "w", buffering=1)
 
 
-def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=None):
+def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=None, since=0, partner=None):
     """Play the battle that is up until it is over or the core reaches
     `frames`, and return the last line it printed. `move` is a move slot,
     1 to 4, to use every turn; 0 the first with PP; -1 the hardest-hitting
     by the Scorer. `hold` runs before every frame, `say` gets the report.
     With `turns`, it stops at the command prompt after that many turns, the
-    battle waiting, so what a turn did can be read; called again, it goes on.
+    battle waiting, so what a turn did can be read; called again, it goes on,
+    and `since` (the text counter then) keeps it from saying old lines again.
+    The player's own Revival Blessing opens the party menu in its revive
+    mode, which takes only a fainted Pokemon: the first fainted is chosen.
+    `partner`, in a double battle, says where the player's second Pokemon is
+    in choosing (its BattleContext.unk_0, as gDiagBattlePrompt is the
+    first's); it chooses as the first does, from its own moves. A move that
+    asks for a target is not handled.
 
     Memory is read every four frames, but the text ring is decoded only when
     its counter has moved: decoding it every time halved the frame rate.
     """
     scorer = scorer or Scorer()
-    seen, last_view, stuck, idle, last_line = set(), None, 0, 0, ""
+    seen, last_view, stuck, idle, last_line = set(range(since)), None, 0, 0, ""
     refused, last_slot = set(), None   # moves the game turned down this turn: Taunt, Disable, no PP
     last_count, last_asserts, restarts, decoded = 0, 0, 0, None
-    last_prompt, commands = None, 0
+    last_prompt, commands, revive = None, 0, None
+    moves_chosen, tries = {}, 0        # the move each of the player's two took, for its target screen
     while core.frames < frames:
         core.step(4, hold)
         ram = core.ram()
@@ -150,6 +173,10 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                     refused.add(last_slot)
                 if " used " in line and not line.startswith("The foe") and "Leader" not in line:
                     refused.clear()
+                if " used Revival Blessing!" in line and not line.startswith(("The opposing", "The wild")):
+                    revive = core.frames
+                if "But it failed" in line or "was revived" in line:
+                    revive = None
                 if not line.startswith("What will"):
                     say(f"[{core.frames}] {line.split('?{')[0]}")
         decoded = count
@@ -181,6 +208,37 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 foe = struct.unpack_from(BATTLER, ram, at + struct.calcsize(BATTLER))
                 slot = max(usable, key=lambda i: scorer.score(you[7 + i], you[0], foe[0]))
             last_slot = slot
+            moves_chosen[0] = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000)[7 + slot]
+            core.touch(*MOVES[slot], 6, hold)
+            core.step(20, hold)
+        elif revive is not None and core.frames - revive > 90:
+            species = struct.unpack_from("<6H", ram, markers.address("gDiagPartySpecies") - 0x02000000)
+            hp = struct.unpack_from("<6H", ram, markers.address("gDiagPartyHp") - 0x02000000)
+            fainted = [i for i in range(6) if species[i] and not hp[i]]
+            if fainted:
+                core.touch(*PARTY[fainted[0]], 6, hold)
+                core.step(30, hold)
+                core.touch(*SHIFT, 6, hold)
+                core.step(60, hold)
+            revive = core.frames    # again later if the menu was not up yet
+        elif prompt in (5, 6) or (partner and prompt not in (1, 2, 3, 4) and partner() in (5, 6)):
+            battler = 0 if prompt in (5, 6) else 2
+            core.touch(*scorer.panel(moves_chosen.get(battler, 0), battler, tries), 6, hold)
+            core.step(20, hold)
+            tries += 1
+        elif partner and prompt not in (1, 2, 3, 4) and partner() in (1, 2):
+            core.touch(*FIGHT, 6, hold)
+            core.step(20, hold)
+        elif partner and prompt not in (1, 2, 3, 4) and partner() in (3, 4):
+            second = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000
+                                        + 2 * struct.calcsize(BATTLER))
+            usable = [i for i in range(4) if second[7 + i] and second[11 + i]]
+            slot = move - 1 if 1 <= move <= 4 else (usable or [0])[0]
+            if move < 0 and usable:
+                foe = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000
+                                         + struct.calcsize(BATTLER))
+                slot = max(usable, key=lambda i: scorer.score(second[7 + i], second[0], foe[0]))
+            moves_chosen[2] = second[7 + slot]
             core.touch(*MOVES[slot], 6, hold)
             core.step(20, hold)
         elif you_hp == 0 and state == BATTLE_MAIN:

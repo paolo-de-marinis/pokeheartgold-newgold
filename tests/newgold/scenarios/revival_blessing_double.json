@@ -1,0 +1,11 @@
+{
+  "about": "Revival Blessing's send-out in a double battle: Twins Amy & Mimi in the Azalea Gym (konefr's level-20 bugs) against a scratch copy of Paolo's Bugsy save with two Pokemon, a level-30 Pawmot and a level-5 Magikarp, put on the twins' platform facing them. The Pawmot is given Revival Blessing in the running battle (teach:) and uses it; the Spinarak's Shadow Sneak faints the Magikarp first, with no one left to take its place, and the Revival Blessing, the Magikarp chosen in the party menu's revive mode, brings it back at half its HP, rounded down (9 of 18), and sends it out into its own empty place (Showdown's rule, which the move follows).",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:30,MAGIKARP:5", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0", "teach:0,0,MOVE_REVIVAL_BLESSING", "fight:1:1"],
+  "expect": {"lines": ["You are challenged by Twins Amy & Mimi!", "Go! Pawmot and Magikarp!", "Magikarp fainted!",
+                       "Pawmot used Revival Blessing!", "Magikarp was revived and is ready to fight again!",
+                       "Go! Magikarp!"],
+             "battler2.species": "SPECIES_MAGIKARP", "battler2.hp": 9, "battler2.maxHp": 18}
+}
