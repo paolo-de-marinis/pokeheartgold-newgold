@@ -6237,6 +6237,11 @@ BOOL BtlCmd_GetTerrainSecondaryEffect(BattleSystem *battleSystem, BattleContext 
     return FALSE;
 }
 
+// Retail's command 172, which no script calls since Natural Gift's power
+// and type are worked out before the move (TryNaturalGift, 04caf40ee), as
+// hg-engine's effect script 222 at d0380a487 has its CalcNaturalGiftParams
+// commented out. Kept, as the engine keeps it: the command table goes by
+// position, and dropping it would only trade it for a placeholder.
 BOOL BtlCmd_CalcNaturalGiftParams(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
