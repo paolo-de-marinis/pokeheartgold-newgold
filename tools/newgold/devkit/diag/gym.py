@@ -107,6 +107,23 @@ def battler_hp(line):
     return int(re.search(r" (\d+)/\d+", line).group(1))
 
 
+def second_down(ram, markers):
+    """Whether the player's second Pokemon in a double battle has fainted."""
+    second = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000 + 2 * struct.calcsize(BATTLER))
+    return second[0] != 0 and second[1] == 0
+
+
+def reserve(ram, markers):
+    """The party slot the party screen after a faint sends, in the battle's
+    own order: the first Pokemon with HP left that is not already out --
+    in a double battle, not the partner still standing."""
+    at, size = markers.address("gDiagBattlers") - 0x02000000, struct.calcsize(BATTLER)
+    out = {mon[4] for mon in (struct.unpack_from(BATTLER, ram, at + b * size) for b in (0, 2)) if mon[0] and mon[1]}
+    species = struct.unpack_from("<6H", ram, markers.address("gDiagPartySpecies") - 0x02000000)
+    hp = struct.unpack_from("<6H", ram, markers.address("gDiagPartyHp") - 0x02000000)
+    return next((i for i in range(6) if species[i] and hp[i] and i not in out), None)
+
+
 def quiet():
     """The core prints its own diagnostics to the process's stdout and stderr;
     keep ours, and Python's own stderr so a crash still says why."""
@@ -243,16 +260,14 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             moves_chosen[2] = second[7 + slot]
             core.touch(*MOVES[slot], 6, hold)
             core.step(20, hold)
-        elif you_hp == 0 and state == BATTLE_MAIN:
+        elif state == BATTLE_MAIN and (you_hp == 0 or (second_down(ram, markers) and reserve(ram, markers) is not None)):
             stuck += 1
             if stuck > 60:
-                # The party screen after a faint, in the battle's own order:
-                # the first Pokemon with HP left is the one to send.
-                species = struct.unpack_from("<6H", ram, markers.address("gDiagPartySpecies") - 0x02000000)
-                hp = struct.unpack_from("<6H", ram, markers.address("gDiagPartyHp") - 0x02000000)
-                alive = [i for i in range(6) if species[i] and hp[i]]
-                if alive:
-                    core.touch(*PARTY[alive[0]], 6, hold)
+                # The party screen after a faint, for the first of the
+                # player's two or, in a double battle, the second.
+                slot = reserve(ram, markers)
+                if slot is not None:
+                    core.touch(*PARTY[slot], 6, hold)
                     core.step(30, hold)
                     core.touch(*SHIFT, 6, hold)
                     core.step(60, hold)
