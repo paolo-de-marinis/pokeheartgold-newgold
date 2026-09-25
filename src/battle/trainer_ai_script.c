@@ -108,7 +108,7 @@ enum AIScriptCommand {
     AI_IF_HELD_ITEM_EQUAL_TO, // 55: jumps when the battler holds the item, as far as the AI knows
     AI_IF_FIELD_CONDITIONS_MASK, // 56: jumps when the field has any of the conditions (FIELD_CONDITION_*)
     AI_LOAD_SPIKES_LAYERS, // 57: loads how many layers of the hazard the battler's side has
-    AI_IF_ANY_PARTY_MEMBER_IS_WOUNDED, // 58: jumps when any of the battler's party not on the field has lost HP
+    AI_IF_ANY_PARTY_MEMBER_IS_WOUNDED, // 58: jumps when any of the battler's party but the battler itself has lost HP (its partner on the field included, fainted ones too)
     AI_IF_ANY_PARTY_MEMBER_USED_PP, // 59: ... has used PP
     AI_LOAD_FLING_POWER, // 5A: loads the power Fling would have with the battler's item
     AI_LOAD_CURRENT_MOVE_PP, // 5B: loads the PP left of the move being rated

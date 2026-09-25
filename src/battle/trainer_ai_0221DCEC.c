@@ -154,8 +154,9 @@ void ov10_0221DF20(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
-// Jumps if a party member of the battler's that is not in battle is missing
-// some of its HP.
+// Jumps if a party member of the battler's other than the battler itself is
+// missing some of its HP: in a double battle its partner on the field counts,
+// as does a fainted member, unlike ov10_0221D3AC's benched ones.
 void ov10_0221DF88(BattleSystem *battleSystem, BattleContext *ctx) {
     Pokemon *mon;
     int i;
