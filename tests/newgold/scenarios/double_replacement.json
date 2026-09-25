@@ -1,8 +1,8 @@
 {
-  "about": "A double battle where the player's second Pokemon faints with a third to take its place: Twins Amy & Mimi in the Azalea Gym (konefr's level-20 bugs) against a scratch copy of Paolo's Bugsy save with a level-30 Pawmot, a level-5 Magikarp and a level-30 Baxcalibur, put on the twins' platform facing them. The Spinarak's Shadow Sneak faints the Magikarp, the party screen asks who goes in its place, gym.py's player sends the Baxcalibur -- the first with HP that is not already out -- and the second turn's command is asked of it. (The battle stops there: a turn after the twins have one Pokemon left asserts, RawSpeedOrder reading the empty slot's party index 6, which is the audit's.)",
+  "about": "A double battle where the player's second Pokemon faints with a third to take its place: Twins Amy & Mimi in the Azalea Gym (konefr's level-20 bugs) against a scratch copy of Paolo's Bugsy save with a level-30 Pawmot, a level-5 Magikarp and a level-30 Baxcalibur, put on the twins' platform facing them. The Spinarak's Shadow Sneak faints the Magikarp, the party screen asks who goes in its place, gym.py's player sends the Baxcalibur -- the first with HP that is not already out -- and the battle is played to its end: the twins send Karrablast and Shelmet, and the turns after one of their places is left empty play on to 'You defeated Twins Amy & Mimi!' with no assert (before 757cb7ff3 the damage of the first move after it asserted, RawSpeedOrder reading the empty place's party index 6).",
   "save": "gyms/bugsy.sav",
   "edit": ["--party", "PAWMOT:30,MAGIKARP:5,BAXCALIBUR:30", "--where", "180:3:8:0"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight::1"],
-  "expect": {"lines": ["Go! Pawmot and Magikarp!", "Magikarp fainted!", "Go! Baxcalibur!"], "battler2.species": "SPECIES_BAXCALIBUR"}
+  "steps": ["field", "A", "fight"],
+  "expect": {"lines": ["Go! Pawmot and Magikarp!", "Magikarp fainted!", "Go! Baxcalibur!", "Twins Amy & Mimi sent out Shelmet!", "You defeated Twins Amy & Mimi!"], "asserts": 0}
 }
