@@ -44,7 +44,7 @@ STRING = r'((?:"(?:[^"\\]|\\.)*"\s*)+)'
 # fixed and stays in KONEFR-NOTES.md). eb4e20f17 made Beauty Samantha #70's
 # Meowth a Persian with the same slot and moves (and her other Meowth a
 # Wigglytuff); her retail lines, which he did not touch, still mourn and
-# praise MEOWTH. KONEFR-NOTES.md, Allenatori.
+# praise MEOWTH. KONEFR-NOTES.md, Allenatori 13.
 STALE_NAMES = {70: ("MEOWTH", "PERSIAN")}
 
 
