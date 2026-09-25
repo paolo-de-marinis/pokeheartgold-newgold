@@ -39,7 +39,8 @@ A step is one of
                                 text boxes, gym.py's player through battles. MAP is
                                 MAP_... or a number; X, Y as the game counts them
                                 (the matrix's tiles outdoors). A tile someone stands
-                                on is reached beside them, facing them.
+                                on -- or started on, wherever they have wandered
+                                since -- is reached beside them, facing them.
 
     scene.py mart.sav out wait:300 A*3 untilheap:HEAP_ID_FIELD2 heaps:mart shot:mart
 
@@ -147,7 +148,8 @@ def field_layout():
     names = ("FieldSystem, location", "FieldSystem, taskman", "FieldSystem, playerAvatar",
              "FieldSystem, processManager", "FieldSystem, runningFieldMap", "FieldSystem, mapObjectManager",
              "FieldProcessManager, isPaused", "PlayerAvatar, mapObject", "LocalMapObject, currentX",
-             "LocalMapObject, currentZ", "MapObjectManager, objectCount", "MapObjectManager, objects")
+             "LocalMapObject, currentZ", "MapObjectManager, objectCount", "MapObjectManager, objects",
+             "LocalMapObject, initialX", "LocalMapObject, initialZ", "LocalMapObject, currentFacing")
     values, (textbox,) = savedit.compile_c(
         exprs=tuple(f"__builtin_offsetof({n})" for n in names) + ("sizeof(LocalMapObject)",),
         inits=(("FieldSystem", ".textbox_open = 1"),),
@@ -483,24 +485,32 @@ class Scene:
 
     def objects(self):
         """The tiles the map's live objects stand on -- the player and the
-        Pokemon following them apart -- read from MapObjectManager."""
+        Pokemon following them apart -- read from MapObjectManager, each
+        mapped to the tile it started on."""
         layout, core = field_layout(), self.core
         manager = self._chain("FieldSystem.mapObjectManager")
         player = self._chain("FieldSystem.playerAvatar", "PlayerAvatar.mapObject")
         here = self.location()
         if not manager or not here:
-            return set()
+            return {}
         count = core.word(manager + layout["MapObjectManager.objectCount"])
         first = core.word(manager + layout["MapObjectManager.objects"])
-        out = set()
+        out = {}
         for i in range(min(count, 64)):
             obj = first + i * layout["LocalMapObject.size"]
             # flags bit 0 is MAPOBJECTFLAG_ACTIVE; id 253 is obj_partner_poke, which steps aside
             if obj == player or not core.word(obj) & 1 or core.word(obj + 8) == 253:
                 continue
             x, z = core.word(obj + layout["LocalMapObject.currentX"]), core.word(obj + layout["LocalMapObject.currentZ"])
-            out.add((tile(here[0], x, z) or (here[0],))[0:1] + (x, z))
+            x0, z0 = core.word(obj + layout["LocalMapObject.initialX"]), core.word(obj + layout["LocalMapObject.initialZ"])
+            out[(tile(here[0], x, z) or (here[0],))[0:1] + (x, z)] = (tile(here[0], x0, z0) or (here[0],))[0:1] + (x0, z0)
         return out
+
+    def facing(self):
+        """The direction the player faces, as STEP names it (DIR_NORTH 0,
+        SOUTH 1, WEST 2, EAST 3)."""
+        obj = self._chain("FieldSystem.playerAvatar", "PlayerAvatar.mapObject")
+        return obj and ("UP", "DOWN", "LEFT", "RIGHT")[self.core.word(obj + field_layout()["LocalMapObject.currentFacing"]) & 3]
 
     def in_battle(self):
         """A battle is running: Battle_Run has been through a state since the
@@ -513,7 +523,8 @@ class Scene:
         """Walk to goal (map, x, z) by the plan the tree's data gives, again
         from wherever the player is whenever the plan is left or blocked;
         A through text boxes, gym.py's player through battles. A goal
-        something stands on is reached beside it, facing it. Returns
+        something stands on, or started on, is reached beside it where it
+        stands now, facing it. Returns
         (True or False, one line saying how it went)."""
         import gym
         from core import BUTTONS
@@ -544,17 +555,31 @@ class Scene:
                 # The objects are read when planning, not every frame: a
                 # walk read at every frame ran at half the core's speed.
                 objects = self.objects()
-                goals = [goal]
-                if goal in objects or not (tile(*goal) and not tile(*goal)[1] & savedit.COLLISION):
-                    goals = [(goal[0], goal[1] + dx, goal[2] + dz) for dx, dz in STEP.values()]
+                # Whoever started on the goal is sought where they stand now:
+                # Black Belt Lung wanders along Cianwood Gym's row 3, and
+                # from (17, 3) he blocks the only way to his own (15, 3).
+                target = next((now for now, start in objects.items() if start == goal), goal)
+                goals = [target]
+                if target in objects or not (tile(*target) and not tile(*target)[1] & savedit.COLLISION):
+                    goals = [(target[0], target[1] + dx, target[2] + dz) for dx, dz in STEP.values()]
                 path = None
             if here in goals:
-                if goals != [goal]:     # face whoever stands on the goal
-                    core.press(next(d for d, (dx, dz) in STEP.items()
-                                    if (here[1] + dx, here[2] + dz) == goal[1:]), 4, hooks)
-                # A pressed while the turn still plays is not read: the mother
-                # once never gave the Pokegear for an A one frame too early.
-                core.step(16, hooks)
+                if target in objects and target not in self.objects():
+                    path = None     # they walked on while the player came
+                    continue
+                if goals != [target]:   # face whoever stands on the goal
+                    want = next(d for d, (dx, dz) in STEP.items() if (here[1] + dx, here[2] + dz) == target[1:])
+                    # A pressed while the turn still plays is not read: the
+                    # mother once never gave the Pokegear for an A one frame
+                    # too early. And a 4-frame turn right after a step is
+                    # not always taken (Cianwood Gym): press until it is.
+                    for _ in range(4):
+                        core.press(want, 4, hooks)
+                        core.step(16, hooks)
+                        if self.facing() == want:
+                            break
+                else:
+                    core.step(16, hooks)
                 return True, (f"goto {goal}: there in {core.frames - started} frames, {replans} plans, "
                               f"{battles} battles, {texts} text boxes")
             if path is None:

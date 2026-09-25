@@ -1,0 +1,19 @@
+{
+  "about": "Cianwood Gym walked and played from a scratch copy of Paolo's chuck.sav (inside the door, four badges, six at level 48), the battle's seed fixed. goto: finds Black Belt Lung where he has wandered to -- (17, 3) in the one-tile corridor of row 3, blocking the way to his own (15, 3) -- and Lao, then Lung, spot the player on the way and are fought there. Nob is talked to: konefr's new team from 8cbe6ab86, Hariyama at 43 and Machoke at 45 (his old one was a Machop and a Machoke at 25). Yoshi spots the player on the way to him. Then the winch at the top left, turned with A and a Yes, which stops the waterfall Chuck trains under (FLAG_SYS_CIANWOOD_WATERFALL_DISABLE; until then he only talks), and Chuck himself: his six beaten, the Storm Badge and TM01.",
+  "save": "gyms/chuck.sav",
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field",
+            "goto:139,15,3",
+            "goto:139,7,5", "fight::0",
+            {"expect": {"battler1.species": "SPECIES_HARIYAMA", "battler1.level": 43}},
+            "fight", "field",
+            "goto:139,6,9",
+            "goto:139,10,2", "A", "field",
+            {"expect": {"flag:FLAG_SYS_CIANWOOD_WATERFALL_DISABLE": 1, "badges": 4}},
+            "goto:139,13,10", "fight", "field"],
+  "expect": {"lines": ["You defeated Black Belt Lao!", "You defeated Black Belt Lung!",
+                       "Black Belt Nob sent out Hariyama!", "Black Belt Nob sent out Machoke!", "You defeated Black Belt Nob!",
+                       "You defeated Black Belt Yoshi!",
+                       "You are challenged by Leader Chuck!", "You defeated Leader Chuck!"],
+             "badges": 5, "flag:FLAG_GOT_TM01_FROM_CHUCK": 1, "map": "MAP_CIANWOOD_GYM"}
+}

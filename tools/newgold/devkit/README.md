@@ -419,7 +419,8 @@ Reading what the debug ROM records, and playing it without looking.
   comes up, `hold:` keeps a switch poked every frame, and `goto:MAP,X,Y`
   walks there: the path planned from the tree's map data (each matrix's
   tile attributes -- collision, ledges, doors, warp mats -- the zone
-  events' warps, and the map objects standing in RAM), planned again when
+  events' warps, and the map objects standing in RAM; a goal someone
+  started on is sought where they have wandered to), planned again when
   the player leaves it or is blocked, A through text boxes (read from
   FieldSystem.textbox_open) and gym.py's player through any battle on the
   way; one line says how it went. `fight:N:T` stops after T turns at the
