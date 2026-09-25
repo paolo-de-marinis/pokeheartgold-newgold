@@ -1,0 +1,15 @@
+{
+  "about": "Gravity ends Telekinesis (653137d8f) and forbids Telekinesis and Flying Press (e2c494b55). A level-10 Pikachu is given Growl, Telekinesis, Gravity and Flying Press in the running battle (teach:) against a forced wild level-5 Chansey that knows only Growl. Telekinesis lifts the Chansey; Gravity, the next turn, brings it down at once, and the three turns Telekinesis gave it end with no line; then the selection screen turns down Flying Press and Telekinesis because of gravity, and gym.py's player takes Growl instead. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_GROWL", "teach:0,1,MOVE_TELEKINESIS", "teach:0,2,MOVE_GRAVITY", "teach:0,3,MOVE_FLYING_PRESS",
+            "teach:1,0,MOVE_GROWL", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:2:1", "fight:3:1", "fight:4:1", "fight:2:1"],
+  "expect": {"lines": ["Pikachu used Telekinesis!", "The wild Chansey was hurled into the air!",
+                       "Pikachu used Gravity!", "Gravity intensified!", "The wild Chansey fell from the sky due to the gravity!",
+                       "Pikachu can’t use Flying Press because of gravity!", "Pikachu used Growl!",
+                       "Pikachu can’t use Telekinesis because of gravity!", "Pikachu used Growl!"],
+             "no_lines": ["freed from the telekinesis", "Pikachu used Flying Press!"]}
+}
