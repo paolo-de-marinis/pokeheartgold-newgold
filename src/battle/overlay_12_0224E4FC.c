@@ -6552,13 +6552,17 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
             break;
         case 15: // Supersweet Syrup
             // Once per Pokemon per battle, not once per send-out, so it is the
-            // party slot that remembers, as for Intrepid Sword below.
+            // party slot that remembers, as for Intrepid Sword below. HP is
+            // asked first: a place left empty has no party slot.
             for (i = 0; i < maxBattlers; i++) {
                 u8 *syrupDone;
 
                 battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].hp) {
+                    continue;
+                }
                 syrupDone = OnceOnlyEntryAbilityDone(battleSystem, ctx, battlerId);
-                if (!*syrupDone && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_SUPERSWEET_SYRUP) {
+                if (!*syrupDone && GetBattlerAbility(ctx, battlerId) == ABILITY_SUPERSWEET_SYRUP) {
                     *syrupDone = TRUE;
                     ctx->battlerIdTemp = battlerId;
                     script = BATTLE_SUBSCRIPT_SUPERSWEET_SYRUP;
@@ -6919,8 +6923,11 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 u8 *done;
 
                 battlerId = ctx->turnOrder[i];
+                if (!ctx->battleMons[battlerId].hp) {
+                    continue;
+                }
                 done = OnceOnlyEntryAbilityDone(battleSystem, ctx, battlerId);
-                if (*done || !ctx->battleMons[battlerId].hp || ctx->battleMons[battlerId].ability != ABILITY_TERAFORM_ZERO
+                if (*done || ctx->battleMons[battlerId].ability != ABILITY_TERAFORM_ZERO
                     || (ctx->battleMons[battlerId].status2 & STATUS2_TRANSFORM)) {
                     continue;
                 }

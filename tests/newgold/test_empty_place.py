@@ -21,6 +21,7 @@ from pathlib import Path
 from test_repels import ROOT, function
 
 COMMANDS = (ROOT / "src/battle/battle_command.c").read_text()
+OVERLAY = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
 
 HEADER = r"""
 #include <assert.h>
@@ -328,6 +329,71 @@ int main(void) {
     return 0;
 }
 """
+ENTRY = r"""
+#include "constants/abilities.h"
+#include "constants/battle_subscript.h"
+typedef struct { s32 hp; u32 status2; u16 ability; } BattleMon;
+typedef struct {
+    BattleMon battleMons[4];
+    int battlerIdTemp, sendOutState;
+    u32 fieldCondition;
+    u8 terrainOverlayType;
+    u8 turnOrder[4];
+    u8 selectedMonIndex[4];
+    u8 switchInFlag;
+    u8 done[2][6];
+} BattleContext;
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+// The record of a Pokemon's party slot, which slot 6 is past.
+static u8 *OnceOnlyEntryAbilityDone(BattleSystem *bs, BattleContext *ctx, int battlerId) {
+    (void)bs;
+    assert(ctx->selectedMonIndex[battlerId] < 6 && "a place left empty has no party slot");
+    return &ctx->done[battlerId & 1][ctx->selectedMonIndex[battlerId]];
+}
+// Supersweet Syrup's and Teraform Zero's states of TryAbilityOnEntry.
+static int Entry(BattleSystem *battleSystem, BattleContext *ctx, int state) {
+    int i, battlerId, maxBattlers = sMaxBattlers, script = 0, flag = FALSE;
+
+    switch (state) {
+@CASES@
+    }
+    return flag ? script : 0;
+}
+
+int main(void) {
+    static BattleContext ctx;
+
+    // The opposing Pokemon in 1 has fainted with nothing to follow it, and
+    // comes first in the order; the player's in 0 has the ability.
+    ctx.turnOrder[0] = 1;
+    ctx.turnOrder[1] = 0;
+    ctx.turnOrder[2] = 2;
+    ctx.turnOrder[3] = 3;
+    ctx.switchInFlag |= MaskOfFlagNo(1);
+    ctx.selectedMonIndex[1] = 6;
+    ctx.battleMons[0].hp = ctx.battleMons[2].hp = ctx.battleMons[3].hp = 30;
+    ctx.selectedMonIndex[2] = 1;
+    ctx.selectedMonIndex[3] = 1;
+
+    ctx.battleMons[0].ability = ABILITY_SUPERSWEET_SYRUP;
+    assert(Entry(0, &ctx, 15) == BATTLE_SUBSCRIPT_SUPERSWEET_SYRUP && ctx.battlerIdTemp == 0 && ctx.done[0][0]);
+    assert(Entry(0, &ctx, 15) == 0 && ctx.sendOutState == 1);
+
+    ctx.battleMons[0].ability = ABILITY_TERAFORM_ZERO;
+    ctx.done[0][0] = FALSE;
+    ctx.terrainOverlayType = ELECTRIC_TERRAIN;
+    assert(Entry(0, &ctx, 28) == BATTLE_SUBSCRIPT_TERAFORM_ZERO && ctx.battlerIdTemp == 0 && ctx.done[0][0]);
+    assert(Entry(0, &ctx, 28) == 0 && ctx.sendOutState == 2);
+    return 0;
+}
+"""
+
+
+def entry_case(title):
+    """One state of TryAbilityOnEntry, from its case label to the next."""
+    body = function(OVERLAY, "TryAbilityOnEntry")
+    start = body.rindex("\n", 0, body.index(f": // {title}\n")) + 1
+    return body[start:body.index("\n        case ", start) + 1]
 
 
 class EmptyPlaceTests(unittest.TestCase):
@@ -348,6 +414,10 @@ class EmptyPlaceTests(unittest.TestCase):
         start = body.index("                int flowerVeilHolder = -1;")
         lines = body[start:body.index("                // Mist.", start)]
         run(self, FLOWER_VEIL.replace("@FLOWER_VEIL@", lines), ())
+
+    def test_the_once_only_entry_abilities_ask_for_hp_first(self):
+        cases = entry_case("Supersweet Syrup") + entry_case("Teraform Zero")
+        run(self, ENTRY.replace("@CASES@", cases), ())
 
 
 if __name__ == "__main__":
