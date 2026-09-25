@@ -5350,7 +5350,13 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdTarget);
         ctx->buffMsg.param[1] = ctx->battleMons[ctx->battlerIdTarget].ability;
         ctx->buffMsg.param[2] = ctx->moveNoCur;
-    } else if (KnockOffCanRemoveItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)) {
+    } else if (KnockOffCanRemoveItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)
+               // A wild Pokemon's Knock Off takes nothing from the player's
+               // (Pokemon Central, Privazione: from the fifth generation),
+               // the power aside. The page says nothing of Corrosive Gas.
+               && !(ctx->moveNoCur == MOVE_KNOCK_OFF && BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker)
+                    && !BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget)
+                    && !(BattleSystem_GetBattleType(battleSystem) & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER)))) {
         // "{0} knocked off {1}'s {2}!", or Corrosive Gas's "{0} corroded
         // {1}'s {2}!": the item is gone for the rest of the battle either way,
         // out of Recycle's and Harvest's reach (Pokemon Central, Gas

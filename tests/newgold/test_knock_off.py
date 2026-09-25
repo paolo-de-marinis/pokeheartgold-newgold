@@ -160,7 +160,7 @@ class KnockOffTests(unittest.TestCase):
 
     def test_knock_off_takes_what_it_boosts_for(self):
         body = function(read("src/battle/battle_command.c"), "BtlCmd_TryKnockOff")
-        self.assertIn("} else if (KnockOffCanRemoveItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)) {", body)
+        self.assertIn("} else if (KnockOffCanRemoveItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)\n", body)
 
     def test_the_script_command_asks_the_same_question(self):
         body = function(read("src/battle/battle_command.c"), "BtlCmd_GotoIfCanApplyKnockOffBoost")
@@ -212,6 +212,16 @@ class KnockOffTests(unittest.TestCase):
         # The party copy writes the empty hand, so a Pokemon sent back in has
         # nothing, and a wild one caught nothing either.
         self.assertIn("data.knockedOffItems = 0;", read("src/battle/battle_controller_mon_copy.c"))
+
+    def test_a_wild_pokemon_knocks_off_nothing_of_the_players(self):
+        # Pokemon Central (Privazione): from the fifth generation a wild
+        # Pokemon's Knock Off does not take the player's Pokemon's item. The
+        # power is left as it is; Corrosive Gas's page says nothing.
+        knock = function(read("src/battle/battle_command.c"), "BtlCmd_TryKnockOff")
+        self.assertRegex(knock, r"\} else if \(KnockOffCanRemoveItem\(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget\)\n(\s*//.*\n)*"
+                                r"\s*&& !\(ctx->moveNoCur == MOVE_KNOCK_OFF && BattleSystem_GetFieldSide\(battleSystem, ctx->battlerIdAttacker\)\n"
+                                r"\s*&& !BattleSystem_GetFieldSide\(battleSystem, ctx->battlerIdTarget\)\n"
+                                r"\s*&& !\(BattleSystem_GetBattleType\(battleSystem\) & \(BATTLE_TYPE_TRAINER \| BATTLE_TYPE_LINK \| BATTLE_TYPE_FRONTIER\)\)\)\) \{")
 
     def test_fling_throws_nothing_its_species_keeps(self):
         body = function(read("src/battle/overlay_12_0224E4FC.c"), "TryFling")

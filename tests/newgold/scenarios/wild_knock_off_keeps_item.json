@@ -1,0 +1,12 @@
+{
+  "about": "A wild Pokemon's Knock Off takes nothing from the player's Pokemon (Pokemon Central, Privazione: from the fifth generation). A forced wild Geodude on Route 29 is taught Knock Off alone, the player's Cyndaquil holds Leftovers and uses Splash (set:, teach:); the Geodude's Knock Off hits and the Leftovers stay. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CYNDAQUIL:12"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0",
+            "set:0,item,ITEM_LEFTOVERS", "teach:0,0,MOVE_SPLASH",
+            "teach:1,0,MOVE_KNOCK_OFF", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["Cyndaquil used Splash!", "The wild Geodude used Knock Off!"], "no_lines": ["knocked off"],
+             "battler1.species": "SPECIES_GEODUDE", "battler0.item": "ITEM_LEFTOVERS"}
+}
