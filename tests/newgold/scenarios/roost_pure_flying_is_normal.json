@@ -1,0 +1,15 @@
+{
+  "about": "A pure Flying-type that used Roost is Normal for the rest of the turn (fd22433d9: before, it was left with no type, and a Ghost move hit it). A level-10 Rookidee, its HP set to 10, is given Roost in the running battle (teach:) against a forced wild level-5 Chansey that knows only Lick: Roost restores 15 HP and the Lick after it does not affect the Rookidee. The next turn the Rookidee pecks instead, and the same Lick hits it. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "ROOKIDEE:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_ROOST", "teach:1,0,MOVE_LICK", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:0,hp,10", "fight:1:1",
+            {"expect": {"lines": ["Rookidee used Roost!", "Rookidee’s HP was restored!", "The wild Chansey used Lick!",
+                                  "It doesn’t affect Rookidee..."],
+                        "battler0.species": "SPECIES_ROOKIDEE", "battler0.hp": 25}},
+            "fight:2:1"],
+  "expect": {"lines": ["It doesn’t affect Rookidee...", "Rookidee used Peck!", "The wild Chansey used Lick!"],
+             "battler0.hp": [1, 24]}
+}
