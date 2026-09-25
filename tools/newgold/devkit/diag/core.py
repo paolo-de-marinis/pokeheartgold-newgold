@@ -26,9 +26,9 @@ it go down two pipes to ffmpeg, which writes H.264 at the DS's own frame rate
 the file. A run records at roughly the speed it plays without recording.
 
 Two cores can drive it, picked by NEWGOLD_CORE (a path; Core(core=...) for
-one instance): melonDS 0.9.3 (MELONDS, Arch's libretro-melonds, the
-default) and melonDS DS 1.3.1 (MELONDSDS, melonDS 1.x as Paolo's melonDS
-is, unpacked under ~/hgss-build/deps/melondsds). Each boots the ROM directly on
+one instance): melonDS DS 1.3.1 (MELONDSDS, melonDS 1.x as Paolo's melonDS
+is, unpacked under ~/hgss-build/deps/melondsds; the default) and melonDS
+0.9.3 (MELONDS, Arch's libretro-melonds, the harness's first). Each boots the ROM directly on
 its built-in BIOS and firmware, draws in software, runs without its JIT
 (NEWGOLD_JIT=1 turns it on) and keeps the console's clock at CLOCK; main RAM
 is the core's memory 2 on both, from 0x02000000. melonDS 0.9.3 reads and
@@ -59,7 +59,7 @@ from pathlib import Path
 # either core's JIT recompiler on, off by default.
 MELONDS = Path("/usr/lib/libretro/melonds_libretro.so")      # melonDS 0.9.3, Arch's libretro-melonds
 MELONDSDS = Path.home() / "hgss-build/deps/melondsds/melondsds_libretro.so"   # melonDS DS 1.3.1
-CORE = Path(os.environ.get("NEWGOLD_CORE") or MELONDS)
+CORE = Path(os.environ.get("NEWGOLD_CORE") or MELONDSDS)
 JIT = os.environ.get("NEWGOLD_JIT") == "1"
 MAIN_RAM = 0x02000000
 BUTTONS = {"B": 0, "Y": 1, "SELECT": 2, "START": 3, "UP": 4, "DOWN": 5, "LEFT": 6, "RIGHT": 7,

@@ -130,6 +130,77 @@ player object stood at Route 29's coordinates inside a one-chunk gym, which
 `GetLocalSoundplateID` read through a null pointer. The harness had passed
 it, because its core reads a null as zero.
 
+## The harness's emulator
+
+`tools/newgold/devkit/diag/core.py` runs a libretro melonDS in-process, and
+`NEWGOLD_CORE` (a path) says which; `NEWGOLD_JIT=1` turns its JIT on.
+
+- melonDS DS 1.3.1, `~/hgss-build/deps/melondsds/melondsds_libretro.so`
+  (the melonds-ds release, melonDS commit 7117178, newer than the melonDS
+  1.1 Paolo plays on): the default. core.py sets
+  `melonds_render_mode=software` (it then asks for no OpenGL context),
+  `melonds_threaded_renderer=disabled`, `melonds_console_mode=ds`,
+  `melonds_boot_mode=direct`, `melonds_sysfile_mode=builtin`,
+  `melonds_network_mode=disabled`, `melonds_mic_input=silence`,
+  `melonds_show_cursor=disabled`, one `top-bottom` layout with no gap,
+  `melonds_touch_mode=touch`, `melonds_dsi_sdcard=disabled`, English
+  firmware, and `melonds_start_time_mode=sync`: the core reads the host's
+  clock at every frame, which `pin_clock()`'s shim answers with the pinned
+  second while a frame runs, so the console says 2023-11-14 22:13:20
+  throughout, as on 0.9.3. (`real` sets the clock once and lets it run; the
+  `absolute` options take their seconds from the host.) The save goes in
+  and out as the core's memory 0, kept in the same `.sav` file 0.9.3
+  writes.
+- melonDS 0.9.3, `/usr/lib/libretro/melonds_libretro.so` (Arch's
+  libretro-melonds), the harness's first core:
+  `NEWGOLD_CORE=/usr/lib/libretro/melonds_libretro.so`. `boot_check.c`,
+  `smoke.py` and `test_boot.py` still run it.
+
+Both play every scenario to the same battle lines, and each repeats itself:
+three Falkner runs on melonDS DS gave the same frames, lines and RAM, with
+the JIT off and again with it on. Where they differ is emulation:
+
+- Loading takes melonDS DS a VBlank or two more here and there, and the
+  Continue seeds the RNG with the VBlank count (`RngSeedFromRTC`):
+  0xbb160215 on 0.9.3, 0xbb160217 on melonDS DS. Every wild Pokemon after
+  it is another one -- the walk to Cherrygrove meets two on 0.9.3 (a
+  Spinarak first) and one Rattata on melonDS DS -- and a forced Geodude has
+  other stats. `rolls_forced_high.json` and `rolls_forced_low.json`, which
+  expect its HP to the point, set `sLCRNG_State` to 0.9.3's value after
+  Continue, and pass on both.
+- The boot's random pre-size is 0xa8 on melonDS DS, 0xe8 on 0.9.3: the
+  heaps start 0x40 bytes apart.
+- Frame counts differ by a few in battles (Falkner 16556 against 16555,
+  the double battle from `gyms/bugsy.sav` 45 more); the JIT changes them
+  again (Falkner 16551 on melonDS DS, 16605 on 0.9.3).
+- Speed, frames a second over a whole scenario: Falkner 143 on melonDS DS
+  and 178 on 0.9.3 with the JIT off, 235 and 266 with it on; the walk from
+  New Bark to Route 29 107 and 132 with the JIT off, 196 on 0.9.3 with it on.
+- With the JIT on, melonDS DS stops that walk at a wild Sentret on Route 29,
+  the same way both times it was run: the encounter's screen effect
+  (`sub_020551B8`, called from `Task_WildEncounter`'s first state) never
+  says it is done, `gDiagWildStage` stays at 1, no battle starts. Scenarios
+  run with the JIT off.
+
+## Missing music
+
+The towns', the routes', the title's and the intro's music never plays, on
+either core, and the title's not on melonDS 1.1 either (read there through
+`nested.py` and `live.py`): `SND_WORK.currentSeqNo` names the sequence and
+the BGM handle's player stays empty. The gym's music, the battle's, an
+event's, the menus' clicks and the cries do play. `InitSoundData` loads the
+sound archive's INFO and FAT tables into `SND_WORK.heap_buf`, which is
+`SND_HEAP_SIZE` bytes whatever the archive holds; with the added species'
+banks and wave archives (4c8176ea1) those tables are 0x1bbec bytes against
+0x14b9c in an archive of retail size, and that much less is left for a
+sequence, its bank and its wave archive. `sSndHeapFreeSize` reads 0x3520
+after the setup, 0x62e0 at the title and 0x61c0 on Route 29 and in Elm's lab
+with nothing playing. The Violet Gym's sequence (1065) takes 0x727c and
+leaves 0x1e40, and Falkner's battle (1118, 0x7238) fits as well; Route 29's
+(1028) wants 0xa95c, Elm's lab's (1066) 0xa0c4, the title's (1008) 0xb5a0
+and the intro's (1004) 0xc328. A copy of the ROM with two of the archive's
+player heaps set to 0 (0x9b14 bytes back) plays the intro's music at once.
+
 ## Why it is shaped this way
 
 The main arena is what is left after the static module and the largest

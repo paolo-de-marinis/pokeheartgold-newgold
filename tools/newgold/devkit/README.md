@@ -345,8 +345,9 @@ drives every endpoint against a temporary library.
 
 ## harness/
 
-The emulator with no screen: the melonDS libretro core, driven from a list
-of actions fixed before the run.
+The emulator with no screen: the melonDS libretro core (0.9.3, Arch's;
+diag/core.py runs melonDS DS as well), driven from a list of actions fixed
+before the run.
 
 - `boot_check.c` -- the host: presses, touches, holds and pokes at given
   frames, memory dumps, a small window of memory sampled every so many
@@ -373,12 +374,20 @@ Reading what the debug ROM records, and playing it without looking.
   script can read memory after every frame and decide what to press. In
   Python the core reads the C library's clock: `pin_clock()`, first thing in
   a script, runs it again with a `time()` preloaded that answers the same
-  second as the harness's.
+  second as the harness's (and a `clock_gettime()` that does too, while the
+  core runs a frame).
+  `NEWGOLD_CORE` picks the core: melonDS DS 1.3.1 (melonDS 1.x,
+  `~/hgss-build/deps/melondsds/melondsds_libretro.so`) by default, or
+  melonDS 0.9.3 with `NEWGOLD_CORE=/usr/lib/libretro/melonds_libretro.so`;
+  both play every scenario to the same battle lines, and `NEWGOLD_JIT=1`
+  turns either one's JIT on (faster, other frame counts, and on melonDS DS
+  one wild encounter that never starts). DIAGNOSTICS.md says what else
+  differs between the two.
   `Core(rom, record="run.mp4")` (scene.py's `--record`) films the run:
   every frame, both screens, and the sound the core mixed, piped to ffmpeg
-  at the core's frame rate. Off by default; it is silence unless the core
-  gets the DS BIOS (`NEWGOLD_BIOS`, a directory with bios7.bin, bios9.bin
-  and firmware.bin), since this core's FreeBIOS mixes nothing.
+  at the core's frame rate. Off by default. Clicks, cries, the gym's and the
+  battle's music are there on either core; a town's or a route's music is
+  not, on any emulator: the game's sound heap has no room for it.
 - `gym.py SAVE` -- fights what the save stands the player in front of,
   through the game's own menus, and reports the battle as text: every line
   it printed, the battlers each turn, what the trainer's AI spent, what
