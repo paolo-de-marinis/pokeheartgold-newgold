@@ -194,7 +194,7 @@ class MoldBreakerTests(unittest.TestCase):
         # The reference's second guard (MoldBreakerAbilityCheckInternal) is
         # its AbilityFlags table; here the callers choose, and every ability
         # they ask as one a move can pass by must be one the table marks.
-        flags = subprocess.run(["git", "-C", str(REFERENCE), "show", "1fa3c9366:data/AbilityFlags.c"],
+        flags = subprocess.run(["git", "-C", str(REFERENCE), "show", "8cbe6ab86:data/AbilityFlags.c"],
                                capture_output=True, text=True, check=True).stdout
         breakable = {name.replace("LIGHTNING_ROD", "LIGHTNINGROD") for name in re.findall(
             r"\[(ABILITY_\w+)\] = \{[^}]*ignoredByMoldBreaker = TRUE", flags)}

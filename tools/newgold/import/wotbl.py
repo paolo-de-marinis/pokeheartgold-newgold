@@ -34,7 +34,7 @@ ARCHIVE = ROOT / "files/poketool/personal/wotbl.narc"
 # learnsets say that this does not is konefr's own work.
 ENGINE_BASE = "d0380a487"
 # konefr's tip: what New Gold's learnsets are.
-KONEFR_TIP = "1fa3c9366"
+KONEFR_TIP = "8cbe6ab86"
 # HeartGold's own species. The egg and the bad egg follow them, and have no
 # learnset anywhere.
 LAST_RETAIL_SPECIES = 493

@@ -26,7 +26,7 @@ from pathlib import Path
 from test_level_cap import ROOT
 from test_repels import REFERENCE, function
 
-NEWGOLD = "1fa3c9366"  # konefr's tip, the engine under it included
+NEWGOLD = "8cbe6ab86"  # konefr's tip, the engine under it included
 
 MOVES_H = ROOT / "include/constants/moves.h"
 EFFECTS_H = ROOT / "include/constants/move_effects.h"
