@@ -30,9 +30,10 @@ The ROM is the NEWGOLD_DIAG=1 HeartGold build. What each walk does:
   battle  A wild battle for every species and form, and one more for every
           ability none of those has: the variant leads the party, the wild
           one is its species (form 0, as the switch makes it), until both
-          are out and the game asks for a command. The
-          harness draws no battle, so a battle is its markers: the state,
-          the battlers, the cries, asserts and failed allocations.
+          are out and the game asks for a command. A
+          battle is judged by its markers, written when the harness drew
+          none: the state, the battlers, the cries, asserts and failed
+          allocations.
 
 A picture passes when at least 90% of the PNG's opaque pixels are on the
 screen in the PNG's colours, at the best of a few positions and both frames.

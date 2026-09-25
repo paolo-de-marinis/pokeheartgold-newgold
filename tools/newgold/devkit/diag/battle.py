@@ -10,9 +10,10 @@ cannot be wrong about what it is looking at. About ten minutes. The dumps and
 shots land in OUTDIR and are read back with dump.py at the end.
 
 The ROM is the NEWGOLD_DIAG=1 HeartGold build, which is the only one with the
-switches this writes. The harness does not draw a battle (its shots go black
-the moment overlay 12 loads), so what a run proves is that the encounter rolls,
-which species it made, and how far Battle_Run got.
+switches this writes. Its shots come through boot_check's framebuffer, which
+goes black the moment overlay 12 loads (core.py's shot draws a battle), so what
+a run proves is that the encounter rolls, which species it made, and how far
+Battle_Run got.
 """
 import sys
 import tempfile

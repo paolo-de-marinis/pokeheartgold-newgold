@@ -96,8 +96,8 @@ noise, not a wrong answer.
   display nothing else sees: a headless KWin with its own D-Bus, a rootful
   Xwayland inside it whose XTEST keeps keys and taps to itself, and melonDS
   with a HOME of its own and no sound -- for an agent that must not open a
-  window on the desktop. A battle is seen this way, which the harness cannot
-  draw.
+  window on the desktop. A battle is seen this way on melonDS itself; the
+  headless harness draws one too (`core.py`'s shot, below).
 - `tools/newgold/devkit/diag/gym.py SAVE` fights, in the headless harness, whatever
   the save stands the player in front of, with the auto-battle switch on,
   and prints the battle as text; `tools/newgold/devkit/diag/watch.py` prints the
@@ -111,11 +111,13 @@ noise, not a wrong answer.
   the same way, one line a dump, and pastes the run's shots into a sheet.
 - `tools/newgold/devkit/diag/battle.py OUTDIR encounter|battle:SPECIES` plays the
   opening in the harness, warps to Route 29, throws a switch, and reads the
-  dumps back. About ten minutes from a cold boot. The harness does not draw
-  a battle -- its screen goes black the moment overlay 12 loads, on every
-  build -- so what it proves is that the encounter rolled, what it made, and
-  how far `Battle_Run` got. Whether it draws is a question only melonDS
-  answers.
+  dumps back. About ten minutes from a cold boot. Its shots come through
+  `boot_check`'s framebuffer, which went black the moment overlay 12 loaded,
+  so what it proves is that the encounter rolled, what it made, and how far
+  `Battle_Run` got. `core.py`'s shot takes the frame from the core's own
+  video callback (3f37ceeac) and draws a battle whole -- the background,
+  both sprites, the HP boxes and the message box -- and `scene.py`'s
+  `shot:` step, the scenarios' too, is that shot.
 
 A frozen melonDS answers too. `Shift+F1` writes a savestate beside the ROM,
 and `tools/newgold/devkit/diag/frozen.py STATE.ml1` reads its `ARM9` section as the
