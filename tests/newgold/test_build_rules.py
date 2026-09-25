@@ -314,6 +314,50 @@ class BuildRuleTests(unittest.TestCase):
         self.assertIn("filesystem", order_only.split())
         self.assertIn("files/a/0/0/6", normal.split())
 
+    def test_the_pokedex_indexes_are_written_only_when_they_change(self):
+        """zukan_enc.naix and zukan_hw_data.naix are the version's index with
+        the version's name taken out, and both versions write them: the other
+        version's archive built again rewrote one, and the next make of this
+        version recompiled the Pokedex for nothing. The name is taken out of
+        the guard's capitals too, so both versions write the same, and it is
+        replaced only when that changes. Runs each recipe as the .mk has it."""
+        folder = ROOT / "files/application/zukanlist/zkn_data"
+        recipes = {"zukan_enc": re.search(r"^\$\(ZUKAN_ENC_NAIX\): %\.naix: %_\$\(shortname\)\.naix\n(\t[^\n]*)",
+                                          (folder / "zukan_enc.mk").read_text(), re.M).group(1),
+                   "zukan_hw_data": re.search(r"^\$\(ZUKAN_HW_DATA_NAIX\): \$\(ZUKAN_HW_DATA_NARC\)\n(\t[^\n]*)",
+                                              (folder / "zukan_hw_data.mk").read_text(), re.M).group(1)}
+        env = {k: v for k, v in os.environ.items() if not k.startswith("MAKE")}
+        for name, recipe in recipes.items():
+            with self.subTest(name), tempfile.TemporaryDirectory(prefix="newgold-naix-") as directory:
+                path = Path(directory)
+                (path / "Makefile").write_text(
+                    f"SED := sed -r\nZUKAN_HW_DATA_VER_NAIX = {name}_$(shortname).naix\n"
+                    f"{name}.naix: {name}_$(shortname).naix\n{recipe}\n")
+
+                def index(version):
+                    upper = version.upper()
+                    (path / f"{name}_{version}.naix").write_text(
+                        f"#ifndef NARC_{name.upper()}_{upper}_NAIX_\n#define NARC_{name.upper()}_{upper}_NAIX_\n"
+                        f"enum {{\n    NARC_{name}_{version}_{name}_{version}_00000000 = 0,\n}};\n#endif\n")
+
+                def make(version):
+                    result = subprocess.run(["make", "-C", directory, f"shortname={version}", f"{name}.naix"],
+                                            capture_output=True, text=True, env=env)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+
+                index("gold")
+                make("gold")
+                written = (path / f"{name}.naix").read_text()
+                self.assertNotIn("GOLD", written.upper())
+                os.utime(path / f"{name}.naix", (1000000000, 1000000000))
+                index("silver")
+                make("silver")
+                self.assertEqual((path / f"{name}.naix").read_text(), written)
+                self.assertEqual((path / f"{name}.naix").stat().st_mtime, 1000000000)
+                (path / f"{name}_silver.naix").write_text((path / f"{name}_silver.naix").read_text().replace("= 0", "= 1"))
+                make("silver")
+                self.assertNotEqual((path / f"{name}.naix").read_text(), written)
+
     # Each archive of numbered members: its index, the name the index gives
     # a member, and the sources in the folder that make the members.
     NUMBERED_ARCHIVES = [

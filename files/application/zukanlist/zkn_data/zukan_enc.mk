@@ -4,9 +4,13 @@ ZUKAN_ENC_NAIX := $(ZUKAN_ENC_PREF).naix
 ZUKAN_ENC_JSON := $(ZUKAN_ENC_PREF).json
 ZUKAN_ENC_JSON_TXT := $(ZUKAN_ENC_PREF).json.txt
 
-# Normalize the NAIX to version-agnostic enums
+# Normalize the NAIX to version-agnostic enums. Both versions write it, and
+# with the version's name out of it, its guard's capitals too, both write the
+# same: it is replaced only when that changes, so the other version's archive
+# built again recompiles no Pokedex. The check runs in a dry run too (+),
+# which then reads the index's time again and prints nothing behind it.
 $(ZUKAN_ENC_NAIX): %.naix: %_$(shortname).naix
-	$(SED) 's/_$(shortname)//g' $< > $@
+	+@$(SED) 's/_$(shortname)//gI' $< >$@.new; if cmp -s $@.new $@; then rm $@.new; else mv $@.new $@; fi
 filesystem: $(ZUKAN_ENC_NAIX)
 # The Pokedex includes it, so it is made before anything is compiled, as the
 # archives' own indexes are: `filesystem` alone does not order it before the

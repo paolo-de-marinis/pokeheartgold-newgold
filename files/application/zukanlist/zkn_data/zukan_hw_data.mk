@@ -9,8 +9,9 @@ $(ZUKAN_HW_DATA_NARC): $(ZUKAN_HW_DATA_DIR)/zukan_hw_data_0.bin $(ZUKAN_HW_DATA_
 
 # Normalize the NAIX to version-agnostic enums
 # naix file is built when narc is built. narc needs to be prerequisite and naix file needs to be specified in the command so that there is no error.
+# Written only when it changes, as zukan_enc.naix is.
 $(ZUKAN_HW_DATA_NAIX): $(ZUKAN_HW_DATA_NARC)
-	$(SED) 's/_$(shortname)//g' $(ZUKAN_HW_DATA_VER_NAIX) > $@
+	+@$(SED) 's/_$(shortname)//gI' $(ZUKAN_HW_DATA_VER_NAIX) >$@.new; if cmp -s $@.new $@; then rm $@.new; else mv $@.new $@; fi
 filesystem: $(ZUKAN_HW_DATA_NAIX)
 
 clean-zukan-hw-data:
