@@ -107,12 +107,16 @@ class BattleCommandTests(unittest.TestCase):
         "GoToIfTerastallized": "no script in the reference runs it either",
         "MakeTotem": "totems",
         # The reference's pending-switch ordering (subscripts 0009, 0091,
-        # 0114, 0175, 0340, 0469, 0498, read in ServerDoPostMoveEffects.c):
-        # nothing here switches a Pokemon out after a move that way yet;
-        # Wimp Out and Emergency Exit ask ahead of U-turn's switch instead.
-        "SetCurrentMoveSwitchingStatus": "Parting Shot's switch, Eject Button and Eject Pack, "
-                                         "none of them written",
-        "TryActivateZeroToHero": "Zero to Hero, Palafin's form change",
+        # 0114, 0175, 0340, 0469, 0498, read in ServerDoPostMoveEffects.c).
+        # Here the switches after a move are asked in C once the move is
+        # over: Parting Shot's (HANDLE_PARTING_SHOT, battle_controller_player.c),
+        # the Eject Button's and the Eject Pack's (CheckSwitchItemOnHit and
+        # CheckEjectPack, SWITCH_OUT_ITEM); Wimp Out and Emergency Exit ask
+        # ahead of U-turn's switch.
+        "SetCurrentMoveSwitchingStatus": "nothing: the switches after a move are asked in C",
+        # Battler_TurnsHero in BtlCmd_SwitchAndUpdateMon, and the entry
+        # abilities' step that runs subscript ZERO_TO_HERO.
+        "TryActivateZeroToHero": "nothing: Palafin's form change is in C",
         "TryMegaOrUltraBurstDuringPursuit": "mega and ultra burst",
         "AbilityPopup": "the banner the later games put up naming the ability",
     }
