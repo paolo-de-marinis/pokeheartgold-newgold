@@ -102,7 +102,7 @@ enum AIScriptCommand {
     AI_IF_TARGET_IS_TAUNTED, // 4F: jumps when the target is taunted
     AI_IF_TARGET_IS_NOT_TAUNTED, // 50: ... is not
     AI_IF_TARGET_IS_PARTNER, // 51: jumps when the target is the attacker's partner
-    AI_FLAG_BATTLER_IS_TYPE, // 52: loads whether the battler has the type
+    AI_FLAG_BATTLER_IS_TYPE, // 52: loads whether the battler has the type, a third one included
     AI_CHECK_BATTLER_ABILITY, // 53: loads whether the battler has the ability: 1 yes, 0 no, 2 not known
     AI_IF_ACTIVATED_FLASH_FIRE, // 54: jumps when the battler's Flash Fire has been set off
     AI_IF_HELD_ITEM_EQUAL_TO, // 55: jumps when the battler holds the item, as far as the AI knows

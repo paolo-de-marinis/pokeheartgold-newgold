@@ -92,6 +92,8 @@ void ov10_0221CB80(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
+// Loads whether the battler has the type, the third one Trick-or-Treat or
+// Forest's Curse gives included (retail read only the first two).
 void ov10_0221CCB4(BattleSystem *battleSystem, BattleContext *ctx) {
     int battler;
     int type;
@@ -102,7 +104,8 @@ void ov10_0221CCB4(BattleSystem *battleSystem, BattleContext *ctx) {
     type = ov10_0221EEF0(ctx);
     battlerId = ov10_0221EF34(ctx, battler);
 
-    if (type == GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) || type == GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL)) {
+    if (type == GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) || type == GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL)
+        || type == GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_3, NULL)) {
         ctx->trainerAIData.unk8 = 1;
     } else {
         ctx->trainerAIData.unk8 = 0;
