@@ -15,8 +15,10 @@ import struct
 import subprocess
 import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from test_level_cap import ROOT
 from test_repels import REFERENCE, function
@@ -332,6 +334,20 @@ class TrainerTests(unittest.TestCase):
         for member in filled:
             self.assertEqual(member["moves"], import_trainers.default_moves(member["species"], member["level"]),
                              f"{member['species']} L{member['level']}")
+
+    def test_filling_moves_in_an_unbuilt_tree_says_to_build_it(self):
+        """savedit reads the learnsets through the host compiler, whose
+        headers include ones the build generates; in an unbuilt tree it stops
+        on "could not read the headers", and the import says which entry it
+        was filling and to run make first. Here savedit is one that stops so."""
+        def unbuilt():
+            raise SystemExit("the host compiler could not read the headers:\nfx_const.h: No such file")
+        with mock.patch.dict(sys.modules, {"savedit": types.SimpleNamespace(move_numbers=unbuilt)}):
+            with self.assertRaises(SystemExit) as raised:
+                import_trainers.default_moves("SPECIES_SKITTY", 20)
+        self.assertIn("SPECIES_SKITTY L20", str(raised.exception))
+        self.assertIn("run make first", str(raised.exception))
+        self.assertIn("could not read the headers", str(raised.exception))
 
     @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
     def test_every_held_item_konefr_names_is_held(self):
