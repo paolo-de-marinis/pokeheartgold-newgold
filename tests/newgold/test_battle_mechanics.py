@@ -1577,9 +1577,11 @@ class BattleBondTests(unittest.TestCase):
 class PsychUpTests(unittest.TestCase):
     def test_focus_energy_is_copied_not_added(self):
         # Pokemon Central, Psicamisu: from Generation VI the user takes the
-        # target's critical-hit rise, and loses its own if the target has none.
+        # target's critical-hit rises, and loses its own if the target has
+        # none -- Costar's copy (test_ability_behaviour's CostarTests), which
+        # takes Dragon Cheer too (Grido del Drago).
         body = function(COMMANDS.read_text(), "BtlCmd_CopyStatStages")
-        self.assertIn("status2 & ~STATUS2_FOCUS_ENERGY)", body)
+        self.assertIn("CopyStatStagesAndCriticalRises(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);", body)
         self.assertNotIn("status2 |=", body)
 
 

@@ -128,6 +128,7 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
 int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int holdEffect);
 int CheckEjectPack(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 void RecordMirrorHerbStages(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int stat, int stages);
+void CopyStatStagesAndCriticalRises(BattleContext *ctx, int battlerId, int from);
 int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId);
 int GetHeldItemModifier(BattleContext *ctx, int battlerId, int flag);
 int GetNaturalGiftPower(BattleContext *ctx, int battlerId);

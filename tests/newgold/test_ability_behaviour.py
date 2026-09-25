@@ -506,9 +506,9 @@ class CostarTests(unittest.TestCase):
     def test_the_ally_s_stages_and_critical_odds_become_its_own(self):
         program = HEADER + r"""
 typedef struct { s8 statChanges[NUM_BATTLE_STATS]; u32 status2; } BattleMon;
-typedef struct { u8 laserFocusTimer; } MoveConditions;
+typedef struct { u8 laserFocusTimer, dragonCheer; } MoveConditions;
 typedef struct { BattleMon battleMons[4]; MoveConditions moveConditions[4]; } BattleContext;
-""" + function(OVERLAY, "CostarCopiesAlly") + r"""
+""" + function(OVERLAY, "CopyStatStagesAndCriticalRises") + r"""
 int main(void) {
     BattleContext ctx;
     memset(&ctx, 0, sizeof(ctx));
@@ -520,7 +520,8 @@ int main(void) {
     ctx.battleMons[2].statChanges[STAT_ATK] = 8;
     ctx.battleMons[2].statChanges[STAT_DEF] = 5;
     ctx.moveConditions[2].laserFocusTimer = 2;
-    CostarCopiesAlly(&ctx, 0, 2);
+    ctx.moveConditions[0].dragonCheer = 1;
+    CopyStatStagesAndCriticalRises(&ctx, 0, 2);
     EXPECT(ctx.battleMons[0].statChanges[STAT_ATK], 8);
     EXPECT(ctx.battleMons[0].statChanges[STAT_DEF], 5);
     EXPECT(ctx.battleMons[0].statChanges[STAT_SPEED], 6);
@@ -528,9 +529,14 @@ int main(void) {
     // holder's conditions stay.
     EXPECT(ctx.battleMons[0].status2, STATUS2_CONFUSION);
     EXPECT(ctx.moveConditions[0].laserFocusTimer, 2);
+    // And its Dragon Cheer, a Dragon-type ally's two stages as they were
+    // cheered (Grido del Drago), or none, the holder's own going.
+    EXPECT(ctx.moveConditions[0].dragonCheer, 0);
     ctx.battleMons[2].status2 = STATUS2_FOCUS_ENERGY;
-    CostarCopiesAlly(&ctx, 0, 2);
+    ctx.moveConditions[2].dragonCheer = 2;
+    CopyStatStagesAndCriticalRises(&ctx, 0, 2);
     EXPECT(ctx.battleMons[0].status2, STATUS2_CONFUSION | STATUS2_FOCUS_ENERGY);
+    EXPECT(ctx.moveConditions[0].dragonCheer, 2);
     // The ally is not touched.
     EXPECT(ctx.battleMons[2].statChanges[STAT_ATK], 8);
     return 0;
@@ -541,7 +547,7 @@ int main(void) {
         state = entry[entry.index("// Costar"):]
         state = state[:state.index("case ", 10)]
         self.assertIn("!ctx->battleMons[battlerId].sendOutFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_COSTAR", state)
-        self.assertIn("if (j != battlerId && ctx->battleMons[j].hp) {\n                        CostarCopiesAlly(ctx, battlerId, j);", state)
+        self.assertIn("if (j != battlerId && ctx->battleMons[j].hp) {\n                        CopyStatStagesAndCriticalRises(ctx, battlerId, j);", state)
         self.assertIn("script = BATTLE_SUBSCRIPT_COSTAR;", state)
         self.assertIn("msg_0197_00452, TAG_NICKNAME_NICKNAME, BATTLER_CATEGORY_MSG_BATTLER_TEMP, BATTLER_RELATIVE_ALLY|BATTLER_CATEGORY_MSG_BATTLER_TEMP",
                       subscript("Costar"))

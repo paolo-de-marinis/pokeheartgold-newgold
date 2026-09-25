@@ -4897,20 +4897,12 @@ BOOL BtlCmd_CalcHiddenPowerParams(BattleSystem *battleSystem, BattleContext *ctx
 }
 
 BOOL BtlCmd_CopyStatStages(BattleSystem *battleSystem, BattleContext *ctx) {
-    int stat;
-
     BattleScriptIncrementPointer(ctx, 1);
 
-    for (stat = 0; stat < 8; stat++) {
-        ctx->battleMons[ctx->battlerIdAttacker].statChanges[stat] = ctx->battleMons[ctx->battlerIdTarget].statChanges[stat];
-    }
-
-    // From Generation VI Psych Up copies the target's critical-hit rise as it
+    // From Generation VI Psych Up copies the target's critical-hit rises as it
     // copies its stages, so the user loses its own Focus Energy when the target
     // has none (Pokemon Central, Psicamisu). Retail and the reference OR it in.
-    ctx->battleMons[ctx->battlerIdAttacker].status2 = (ctx->battleMons[ctx->battlerIdAttacker].status2 & ~STATUS2_FOCUS_ENERGY)
-        | (ctx->battleMons[ctx->battlerIdTarget].status2 & STATUS2_FOCUS_ENERGY);
-    ctx->moveConditions[ctx->battlerIdAttacker].laserFocusTimer = ctx->moveConditions[ctx->battlerIdTarget].laserFocusTimer;
+    CopyStatStagesAndCriticalRises(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
 
     return FALSE;
 }
