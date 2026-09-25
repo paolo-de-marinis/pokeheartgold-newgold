@@ -9,6 +9,12 @@ species, held items and moves.
 A trainer naming something this repository does not define is reported and left
 as it was rather than half-written.
 
+It runs in a built tree, after `wotbl.py konefr`: a party Pokemon konefr left
+without moves under the moves flag gets the ones the game makes it with
+(default_moves), which savedit reads out of this tree's learnsets through the
+host compiler, and the headers it compiles include ones the build generates
+(lib/include/nitro/fx/fx_const.h). Without them the run stops and says so.
+
 Usage: import_trainers.py REFERENCE_CHECKOUT [--write] [--index N]
 """
 
@@ -129,12 +135,16 @@ def default_moves(species, level):
     dropped once four are. savedit.preset_moves is that function on this
     tree's learnsets, so the trainers are imported after `wotbl.py konefr`."""
     sys.path.insert(0, str(ROOT / "tools/newgold/devkit"))
-    import savedit
-    names = {}
-    for name, number in savedit.move_numbers().items():
-        names.setdefault(number, "MOVE_" + name)    # the first spelling, not an alias
-    _, number = savedit.personal(species[len("SPECIES_"):])
-    return [names[move] for move in savedit.preset_moves(number, level)]
+    try:
+        import savedit      # it reads the tree's layout through the host compiler as it loads
+        names = {}
+        for name, number in savedit.move_numbers().items():
+            names.setdefault(number, "MOVE_" + name)    # the first spelling, not an alias
+        _, number = savedit.personal(species[len("SPECIES_"):])
+        return [names[move] for move in savedit.preset_moves(number, level)]
+    except SystemExit as error:
+        raise SystemExit(f"{species} L{level} is left without moves and filling them needs a built tree "
+                         f"(run make first; see the docstring):\n{error}") from None
 
 
 @functools.lru_cache(maxsize=1)
