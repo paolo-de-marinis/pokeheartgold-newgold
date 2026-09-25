@@ -499,3 +499,23 @@ class PriceTests(unittest.TestCase):
         self.assertEqual(data_offset, 0x20)
         self.assertEqual(offset(c_layout, "price_high"), data_offset,
                          "the struct reads the price's top bits somewhere the data does not put them")
+
+
+class KeeAndMarangaBerryTests(unittest.TestCase):
+    """Pokemon Central, Baccalighia and Baccapane: Natural Gift makes them a
+    Fairy-type and a Dark-type move of 100 power, Fling throws them at 10 and
+    raises the target's Defense or Sp. Def, and they are Berries in the bag.
+    The reference's records (d0380a487 and konefr's tip alike) put them in the
+    Items pocket with type 31 -- no type -- and a Fling of 30 that does
+    nothing; its Roseli Berry, of the same generation, is written right."""
+
+    def test_their_records(self):
+        rows = {row["item"]: row for row in item_records()}
+        steal = {name: value for name, value in re.findall(r"#define (STEAL_EFFECT_\w+)\s+(\d+)", HEADER.read_text())}
+        roseli = rows["ITEM_ROSELI_BERRY"]
+        for item, kind, stat in (("ITEM_KEE_BERRY", "TYPE_FAIRY", "DEF"), ("ITEM_MARANGA_BERRY", "TYPE_DARK", "SPDEF")):
+            row = rows[item]
+            self.assertEqual((row["naturalGiftPower"], row["naturalGiftType"]), ("100", kind), item)
+            self.assertEqual((row["flingPower"], row["flingEffect"]), ("10", steal[f"STEAL_EFFECT_{stat}_UP"]), item)
+            for field in ("fieldPocket", "battlePocket", "fieldUseFunc", "battleUseFunc", "partyUse"):
+                self.assertEqual(row[field], roseli[field], f"{item}.{field}")
