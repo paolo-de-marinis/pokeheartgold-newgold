@@ -1127,7 +1127,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 20,
           "species": "SPECIES_SKITTY",
-          "moves": [],
+          "moves": [
+            "MOVE_ATTRACT",
+            "MOVE_DISARMING_VOICE",
+            "MOVE_FURY_SWIPES",
+            "MOVE_COPYCAT"
+          ],
           "capsule": 0
         },
         {
@@ -1136,7 +1141,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 30,
           "species": "SPECIES_HERDIER",
-          "moves": [],
+          "moves": [
+            "MOVE_RETALIATE",
+            "MOVE_BABY_DOLL_EYES",
+            "MOVE_PLAY_ROUGH",
+            "MOVE_CRUNCH"
+          ],
           "capsule": 0
         }
       ],
@@ -1462,7 +1472,12 @@
           "level": 13,
           "species": "SPECIES_NOIBAT",
           "item": "ITEM_NONE",
-          "moves": [],
+          "moves": [
+            "MOVE_ABSORB",
+            "MOVE_GUST",
+            "MOVE_SUPERSONIC",
+            "MOVE_DOUBLE_TEAM"
+          ],
           "capsule": 0
         },
         {
@@ -1487,7 +1502,12 @@
           "level": 12,
           "species": "SPECIES_DELIBIRD",
           "item": "ITEM_NONE",
-          "moves": [],
+          "moves": [
+            "MOVE_PRESENT",
+            "MOVE_POWDER_SNOW",
+            "MOVE_QUICK_ATTACK",
+            "MOVE_ICY_WIND"
+          ],
           "capsule": 0
         }
       ],
@@ -2418,7 +2438,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 38,
           "species": "SPECIES_ILLUMISE",
-          "moves": [],
+          "moves": [
+            "MOVE_ENCORE",
+            "MOVE_FLATTER",
+            "MOVE_ZEN_HEADBUTT",
+            "MOVE_HELPING_HAND"
+          ],
           "capsule": 0
         },
         {
@@ -2427,7 +2452,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 38,
           "species": "SPECIES_VOLBEAT",
-          "moves": [],
+          "moves": [
+            "MOVE_PROTECT",
+            "MOVE_ZEN_HEADBUTT",
+            "MOVE_HELPING_HAND",
+            "MOVE_BUG_BUZZ"
+          ],
           "capsule": 0
         }
       ],
@@ -2478,7 +2508,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 37,
           "species": "SPECIES_BOUFFALANT",
-          "moves": [],
+          "moves": [
+            "MOVE_SCARY_FACE",
+            "MOVE_HORN_ATTACK",
+            "MOVE_REVERSAL",
+            "MOVE_THROAT_CHOP"
+          ],
           "capsule": 0
         }
       ],
@@ -3335,7 +3370,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 19,
           "species": "SPECIES_MANKEY",
-          "moves": [],
+          "moves": [
+            "MOVE_FURY_SWIPES",
+            "MOVE_LOW_KICK",
+            "MOVE_SEISMIC_TOSS",
+            "MOVE_SWAGGER"
+          ],
           "capsule": 0
         },
         {
@@ -3344,7 +3384,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 19,
           "species": "SPECIES_SANDSHREW",
-          "moves": [],
+          "moves": [
+            "MOVE_ROLLOUT",
+            "MOVE_FURY_CUTTER",
+            "MOVE_RAPID_SPIN",
+            "MOVE_BULLDOZE"
+          ],
           "capsule": 0
         },
         {
@@ -3353,7 +3398,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 21,
           "species": "SPECIES_DIGLETT",
-          "moves": [],
+          "moves": [
+            "MOVE_ASTONISH",
+            "MOVE_MUD_SLAP",
+            "MOVE_BULLDOZE",
+            "MOVE_SUCKER_PUNCH"
+          ],
           "capsule": 0
         },
         {
@@ -3362,7 +3412,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 22,
           "species": "SPECIES_ARBOK",
-          "moves": [],
+          "moves": [
+            "MOVE_THUNDER_FANG",
+            "MOVE_GLARE",
+            "MOVE_SCREECH",
+            "MOVE_ACID"
+          ],
           "capsule": 0
         }
       ],
@@ -3979,7 +4034,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 24,
           "species": "SPECIES_PIKACHU",
-          "moves": [],
+          "moves": [
+            "MOVE_ELECTRO_BALL",
+            "MOVE_FEINT",
+            "MOVE_SPARK",
+            "MOVE_AGILITY"
+          ],
           "capsule": 0
         },
         {
@@ -3988,7 +4048,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 24,
           "species": "SPECIES_DEDENNE",
-          "moves": [],
+          "moves": [
+            "MOVE_TACKLE",
+            "MOVE_CHARGE",
+            "MOVE_THUNDER_SHOCK",
+            "MOVE_CHARM"
+          ],
           "capsule": 0
         },
         {
@@ -3997,7 +4062,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 26,
           "species": "SPECIES_FLAAFFY",
-          "moves": [],
+          "moves": [
+            "MOVE_COTTON_SPORE",
+            "MOVE_CHARGE",
+            "MOVE_TAKE_DOWN",
+            "MOVE_ELECTRO_BALL"
+          ],
           "capsule": 0
         }
       ],
@@ -10050,7 +10120,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 38,
           "species": "SPECIES_KRABBY",
-          "moves": [],
+          "moves": [
+            "MOVE_STOMP",
+            "MOVE_FLAIL",
+            "MOVE_RAZOR_SHELL",
+            "MOVE_SLAM"
+          ],
           "capsule": 0
         },
         {
@@ -10059,7 +10134,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 38,
           "species": "SPECIES_HUNTAIL",
-          "moves": [],
+          "moves": [
+            "MOVE_SUCKER_PUNCH",
+            "MOVE_DIVE",
+            "MOVE_BATON_PASS",
+            "MOVE_CRUNCH"
+          ],
           "capsule": 0
         },
         {
@@ -10068,7 +10148,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 40,
           "species": "SPECIES_KINGLER",
-          "moves": [],
+          "moves": [
+            "MOVE_BUBBLE_BEAM",
+            "MOVE_STOMP",
+            "MOVE_FLAIL",
+            "MOVE_RAZOR_SHELL"
+          ],
           "capsule": 0
         }
       ],
@@ -19163,7 +19248,12 @@
           "level": 24,
           "species": "SPECIES_LICKITUNG",
           "item": "ITEM_NONE",
-          "moves": [],
+          "moves": [
+            "MOVE_ROLLOUT",
+            "MOVE_SUPERSONIC",
+            "MOVE_WRAP",
+            "MOVE_DISABLE"
+          ],
           "capsule": 0
         }
       ],
@@ -20141,7 +20231,11 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
           "level": 34,
           "species": "SPECIES_CLAMPERL",
-          "moves": [],
+          "moves": [
+            "MOVE_IRON_DEFENSE",
+            "MOVE_WATER_GUN",
+            "MOVE_WHIRLPOOL"
+          ],
           "capsule": 0
         },
         {
@@ -20150,7 +20244,12 @@
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
           "level": 34,
           "species": "SPECIES_TENTACOOL",
-          "moves": [],
+          "moves": [
+            "MOVE_SCREECH",
+            "MOVE_BUBBLE_BEAM",
+            "MOVE_HEX",
+            "MOVE_ACID_ARMOR"
+          ],
           "capsule": 0
         }
       ],

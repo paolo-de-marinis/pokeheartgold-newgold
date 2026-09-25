@@ -37,6 +37,8 @@ from test_level_cap import ROOT
 from test_repels import REFERENCE as REFERENCE_PATH
 
 sys.path.insert(0, str(ROOT / "tests/newgold"))
+sys.path.insert(0, str(ROOT / "tools/newgold/devkit"))
+import savedit  # noqa: E402
 import test_hold_effects  # noqa: E402
 
 REFERENCE = Path(REFERENCE_PATH) if REFERENCE_PATH is not None else None
@@ -141,13 +143,24 @@ NAMED_ABILITIES = {
 }
 
 # Four Pokemon in these gyms are declared by a trainer that carries movesets
-# and are then given no moveset. Both engines write all four slots whatever is
-# there, so each of these walks into battle with MOVE_NONE four times and
-# Struggles. It is konefr's data, faithfully carried, and the pin is here so
-# that stays a known fact rather than a surprise -- and so that a fifth one
-# arriving fails.
+# and konefr gives them no moveset. Both engines write all four slots whatever
+# is there, so in his game each walks into battle with MOVE_NONE four times
+# and Struggles. It is his slip, and the importer gives each the moves the
+# game made it with (KONEFR-NOTES.md, Allenatori 5); the pin keeps which four
+# they are, so that a fifth one arriving fails.
 MOVELESS = {(29, "SPECIES_NOIBAT"), (29, "SPECIES_DELIBIRD"),
             (22, "SPECIES_SKITTY"), (22, "SPECIES_HERDIER")}
+
+
+def made_with(species, level):
+    """The moves CreateMon gives a Pokemon it makes, InitBoxMonMoveset
+    (src/pokemon.c) as savedit.preset_moves runs it on this tree's
+    learnsets: what a party entry that names no moves is left with."""
+    names = {}
+    for name, number in savedit.move_numbers().items():
+        names.setdefault(number, "MOVE_" + name)
+    _, number = savedit.personal(species[len("SPECIES_"):])
+    return [names[move] for move in savedit.preset_moves(number, level)]
 
 
 def trainers():
@@ -263,7 +276,9 @@ def reference_record(body, slots):
         if kinds & HAS_MOVES:
             moves = re.findall(r"\bMOVE_[A-Z0-9_]+", group(member, "moves")) \
                 if ".moves = {" in member else []
-            entry["moves"] = [native(move) for move in moves if move != "MOVE_NONE"]
+            # An entry he left without moves has the ones it was made with.
+            entry["moves"] = [native(move) for move in moves if move != "MOVE_NONE"] \
+                or made_with(species, entry["level"])
         if kinds & HAS_ABILITY:
             named = re.search(r"\.ability\s*=\s*(ABILITY_[A-Z0-9_]+)", member)
             if named:
@@ -372,13 +387,12 @@ class GymParties(unittest.TestCase):
         self.assertEqual(table[10]["double"], BATTLE_TYPES["DOUBLE_BATTLE"])
 
     def test_a_declared_moveset_is_a_moveset(self):
-        """The four that are not, and no fifth.
+        """No gym Pokemon is left without moves.
 
         A party entry under a moveset-carrying trainer that gives no moves is
         written as MOVE_NONE four times, and both engines set all four slots
-        unconditionally -- so the Pokemon has nothing to use. These four are
-        konefr's own and are carried faithfully; anything else here would be
-        this port losing a moveset in translation.
+        unconditionally -- so the Pokemon has nothing to use. konefr left four
+        like that; each has the moves the game made it with.
         """
         empty = set()
         for gym, index, trainer, member in gym_members():
@@ -388,7 +402,11 @@ class GymParties(unittest.TestCase):
                 empty.add((index, member["species"]))
             else:
                 self.assertLessEqual(len(member["moves"]), 4, index)
-        self.assertEqual(empty, MOVELESS)
+        self.assertEqual(empty, set())
+        table = trainers()
+        for index, species in MOVELESS:
+            member = next(entry for entry in table[index]["party"] if entry["species"] == species)
+            self.assertEqual(member["moves"], made_with(species, member["level"]), f"[{index}] {species}")
 
     @needs_reference
     def test_the_moveless_four_are_moveless_in_the_reference_too(self):

@@ -17,6 +17,7 @@ import collections
 import functools
 import json
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -100,6 +101,21 @@ ALIASES = {
 
 def native(name):
     return ALIASES.get(name, name)
+
+
+def default_moves(species, level):
+    """The moves the game gives a Pokemon that is made without any named:
+    CreateMon's InitBoxMonMoveset (src/pokemon.c), the level-up learnset
+    up to its level, each move appended unless already known and the first
+    dropped once four are. savedit.preset_moves is that function on this
+    tree's learnsets, so the trainers are imported after `wotbl.py konefr`."""
+    sys.path.insert(0, str(ROOT / "tools/newgold/devkit"))
+    import savedit
+    names = {}
+    for name, number in savedit.move_numbers().items():
+        names.setdefault(number, "MOVE_" + name)    # the first spelling, not an alias
+    _, number = savedit.personal(species[len("SPECIES_"):])
+    return [names[move] for move in savedit.preset_moves(number, level)]
 
 
 @functools.lru_cache(maxsize=1)
@@ -218,6 +234,17 @@ def translate(block, flags, types):
         if trainerType & HAS_MOVES:
             moves = re.findall(r"\bMOVE_[A-Z0-9_]+", section(member, "moves")) if ".moves = {" in member else []
             entry["moves"] = [native(move) for move in moves if move != "MOVE_NONE"]
+            if not entry["moves"]:
+                # konefr's slip: no .moves under a trainer with the moves
+                # flag (20 entries at 8cbe6ab86, none at d0380a487). His
+                # trainerdatagen writes four MOVE_NONE over the moves the
+                # Pokemon was made with, and it can only Struggle. Where he
+                # wrote a whole party without moves he dropped the flag
+                # himself (Mark #395, a6bf7e9d3), and he filled Issac's other
+                # three in eb4e20f17; so the entry gets the moves it was made
+                # with, the ones a trainer without the flag gives it.
+                # KONEFR-NOTES.md, Allenatori 5.
+                entry["moves"] = default_moves(entry["species"], entry["level"])
         if trainerType & HAS_ABILITY:
             # The ability named outright wins over the slot the entry also
             # gives: the reference writes both and reads the name.

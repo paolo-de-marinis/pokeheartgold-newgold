@@ -299,6 +299,18 @@ class TrainerTests(unittest.TestCase):
             self.assertEqual((self.trainers[boy]["class"], self.trainers[boy]["name"]),
                              ("TRAINERCLASS_PASSERBY", "{TRNAME}Boy"), boy)
 
+    def test_no_pokemon_under_the_moves_flag_is_left_without_moves(self):
+        """konefr left 20 party entries without .moves under the moves flag;
+        his build writes MOVE_NONE over all four slots and they can only
+        Struggle. Each has the moves CreateMon made it with (InitBoxMonMoveset,
+        which savedit.preset_moves runs on this tree's learnsets)."""
+        empty = [(index, member["species"]) for index, trainer in enumerate(self.trainers)
+                 if "MOVES" in trainer["type"] for member in trainer["party"] if not member["moves"]]
+        self.assertEqual(empty, [])
+        lickitung = next(member for member in self.trainers[391]["party"] if member["species"] == "SPECIES_LICKITUNG")
+        self.assertEqual((lickitung["level"], lickitung["moves"]),
+                         (24, ["MOVE_ROLLOUT", "MOVE_SUPERSONIC", "MOVE_WRAP", "MOVE_DISABLE"]))
+
     def test_a_party_entry_can_name_every_species(self):
         """The species field is 11 bits of species and 5 of form, hg-engine's
         split. Platinum's was 10 and 6, which wrapped every species from 1024
