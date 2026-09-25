@@ -63,6 +63,7 @@ typedef struct {
     u8 teraShellResisting;
     struct { u32 unk14; u32 combinedPledge; } selfTurnData[4];
     u8 selectedMonIndex[4];
+    u8 switchInFlag;
 } BattleContext;
 typedef struct { int range, category, effect, power; } MoveTbl;
 

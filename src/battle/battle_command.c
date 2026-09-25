@@ -863,7 +863,18 @@ static int RawSpeedOrder(BattleSystem *battleSystem, BattleContext *ctx, int *or
     int i, j;
 
     for (i = 0; i < maxBattlers; i++) {
-        speed[i] = GetMonData(BattleSystem_GetPartyMon(battleSystem, i, ctx->selectedMonIndex[i]), MON_DATA_SPEED, NULL);
+        // A place left empty -- its Pokemon fainted and the party had none to
+        // send in, so selectedMonIndex is 6 and the switch-in flag stays up --
+        // has no Pokemon to read a Speed from, and comes last. It is kept in
+        // the order for a Future Sight whose user stands in there with its
+        // party stats (BattleContext_LandFutureSight), which bring no ability
+        // and no item; the target is never an empty place, and its ally
+        // counts only with HP.
+        if (ctx->switchInFlag & MaskOfFlagNo(i)) {
+            speed[i] = 0;
+        } else {
+            speed[i] = GetMonData(BattleSystem_GetPartyMon(battleSystem, i, ctx->selectedMonIndex[i]), MON_DATA_SPEED, NULL);
+        }
         for (j = i; j > 0 && RawSpeedGoesFirst(battleSystem, speed, i, order[j - 1]); j--) {
             order[j] = order[j - 1];
         }
