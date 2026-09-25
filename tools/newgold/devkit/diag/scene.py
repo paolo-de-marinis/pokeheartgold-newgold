@@ -26,6 +26,11 @@ A step is one of
     teach:B,SLOT,MOVE[,PP]      battler B's move in that slot (0-3), and its PP (5 by
                                 default), written into the running battle: a move
                                 no trainer's data gives, for the AI to use
+    set:B,FIELD,VALUE           battler B's hp, status (its flags as markers.py names
+                                them: "BRN", "PSN"), ability (ABILITY_...) or item
+                                (ITEM_...), written into the running battle: a state
+                                no battle starts in (hp last: the battler is found by
+                                the HP gDiagBattlers shows, a frame behind)
     goto:MAP,X,Y                walk there: the path planned from the tree's map data
                                 (tile attributes, ledges, warps) and the objects in
                                 RAM, planned again when left or blocked; A through
@@ -97,8 +102,9 @@ BATTLE_MAIN = STATES.index("BATTLE_MAIN")
 BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item")
 CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/species.h",
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
-             "SEQ_": "include/constants/sndseq.h"}
-STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach")
+             "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
+STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
+         "set")
 
 
 def readable(step_or_key, key=False):
@@ -119,11 +125,12 @@ def readable(step_or_key, key=False):
 
 @savedit.tree_cache
 def battle_layout():
-    """BattleMon's size and the offsets teach: writes, from the tree's headers."""
+    """BattleMon's size and the offsets teach: and set: write, from the tree's headers."""
     names = ("sizeof(BattleMon)", "__builtin_offsetof(BattleMon, moves)", "__builtin_offsetof(BattleMon, movePPCur)",
              "__builtin_offsetof(BattleMon, hp)", "__builtin_offsetof(BattleContext, battleMons)",
-             "__builtin_offsetof(BattleContext, unk_0)")
-    return dict(zip(("size", "moves", "pp", "hp", "mons", "select"), savedit.compile_c(
+             "__builtin_offsetof(BattleContext, unk_0)", "__builtin_offsetof(BattleMon, status)",
+             "__builtin_offsetof(BattleMon, ability)", "__builtin_offsetof(BattleMon, item)")
+    return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item"), savedit.compile_c(
         exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h",))[0]))
 
 
@@ -432,6 +439,18 @@ class Scene:
                 return [f"battler {battler} is not in the battle: {self.markers.battle(core.ram())}"]
             core.poke(at + layout["moves"] + 2 * int(slot), self.number(move), 2)
             core.poke(at + layout["pp"] + int(slot), int(pp[0]) if pp else 5, 1)
+        elif kind == "set":
+            # set:BATTLER,FIELD,VALUE -- a battler's hp, status, ability or item,
+            # written into the battle as it runs, as teach: writes its moves.
+            battler, field, value = rest.split(",")
+            at, layout = self.battle_mon(int(battler)), battle_layout()
+            if at is None:
+                return [f"battler {battler} is not in the battle: {self.markers.battle(core.ram())}"]
+            if field == "status":
+                number = sum(mask for mask, name in STATUS if name in value.split())
+            else:
+                number = self.number(value)
+            core.poke(at + layout[field], number, 2 if field in ("ability", "item") else 4)
         elif kind == "fight":
             import gym
             for _ in range(300):

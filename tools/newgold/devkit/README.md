@@ -418,7 +418,8 @@ Reading what the debug ROM records, and playing it without looking.
   prompt, so a scenario can expect what they did, and `teach:B,SLOT,MOVE`
   writes a move into battler B's BattleMon in the running battle (found in
   RAM by what gDiagBattlers shows), for an AI to use a move no trainer's
-  data gives. `--scenario FILE`
+  data gives; `set:B,FIELD,VALUE` writes its HP, status, ability or held
+  item the same way, for a state no battle starts in. `--scenario FILE`
   plays a scenario -- a save, savedit edits to a copy, the steps, and what
   the battle's lines and memory (location, badges, flags, variables, the
   battlers, the heaps, asserts, failed allocations) have to show -- to PASS
