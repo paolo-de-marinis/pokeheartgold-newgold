@@ -56,8 +56,13 @@ class DiagnosticsTests(unittest.TestCase):
 
     def test_the_readers_know_every_marker(self):
         # A global the readers never print is one nobody will notice going wrong.
+        # Every extern diag.h declares, whatever its type and however many
+        # elements: the check once read 'unsigned int' and 'short' only, three
+        # of the header's 45, and diag.h declares nearly all 'unsigned long'.
         header = (ROOT / "include/newgold/diag.h").read_text()
-        names = set(re.findall(r"extern unsigned (?:int|short) (gDiag\w+);", header))
+        names = set(re.findall(r"^extern\b[^;()]*?\b(gDiag\w+)\s*(?:\[[^\]]*\]\s*)*;", header, re.M))
+        self.assertEqual(len(names), len(re.findall(r"^extern\b[^;()]*;", header, re.M)))
+        self.assertIn("gDiagBattlers", names)
         read = set()
         for script in (ROOT / "tools/newgold/devkit/diag").glob("*.py"):
             read |= set(re.findall(r"gDiag\w+", script.read_text()))

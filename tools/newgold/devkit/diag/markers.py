@@ -204,6 +204,17 @@ class Markers:
                                    f" called from {self.callers(ram, loaded)}" if asserts else ""),
             f"alloc failures {allocs}" + (f" last {w('gDiagAllocFailSize')} bytes from heap {w('gDiagAllocFailHeap')}" if allocs else ""),
         ]
+        items = w("gDiagAiItemCount")
+        if items:
+            last = w("gDiagAiItemLast")
+            parts.append(f"trainer items {items}, the last {_names('include/constants/items.h', 'ITEM_').get(last, last)}")
+        # Each check names its roll just before it takes it, so between frames
+        # none is waiting: one that is was named by a check that took no roll,
+        # and a forced switch would answer the battle's next roll in its place.
+        pending = w("gDiagRollNext")
+        if pending:
+            kind = _names("include/newgold/diag.h", "DIAG_ROLL_").get(pending, pending)
+            parts.append(f"{str(kind).lower()} roll named and not taken")
         low = self.heaps(ram)
         if low:
             parts.append("least left " + " ".join(f"{name.replace('HEAP_ID_', '')}:{value:#x}" for name, value in low.items()))

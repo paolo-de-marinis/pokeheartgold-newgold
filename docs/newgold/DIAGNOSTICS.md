@@ -44,7 +44,7 @@ there. `GAME_VERSION=SOULSILVER` works the same way.
 
 | `gDiagBattleText`, `gDiagBattleTextCount` | `BattleSystem_PrintBattleMessage` | The last sixteen lines the battle printed, in the game's own character codes (`charmap.txt` decodes them). The battle as text: "Falkner used a Potion!", "It's super effective!". |
 | `gDiagBattlers`, `gDiagBattlePrompt`, `gDiagBattleCommand` | `BattleContext_Main`, every frame | The four battlers -- species, level, HP, status, held item, moves and PP -- and where the player is in choosing (a command, a move, a target, a Pokemon). |
-| `gDiagAiItemCount`, `gDiagAiItemLast` | the trainer AI's item use | What the trainer spent in battle. |
+| `gDiagAiItemCount`, `gDiagAiItemLast` | the trainer AI's item use | What the trainer spent in battle; the readers' summary names the last item. |
 | `gDiagCryCount`, `gDiagCrySpecies`, `gDiagCryBank`, `gDiagCryStarted` | `PlayCry` | How many cries were asked for; the last one's species and form as the caller gave them (`species + (form << 16)`), the sound archive bank it became, and whether the sound system started it. A cry that falls back to bank 1 or does not start is a species whose cry does not play. |
 
 And the switches, zero unless something outside the game writes them:
@@ -65,7 +65,9 @@ And the switches, zero unless something outside the game writes them:
 The four forced rolls work the same way: the check says which roll it is about to
 ask for (`Diag_RollNext`), and `BattleSystem_Random` hands its value to `Diag_Roll`,
 which answers the forced one when that switch is on. The RNG advances as it always
-does, so forcing one roll moves no other. A scenario holds them (`"hold"`, or a
+does, so forcing one roll moves no other. Between frames no roll is waiting
+(`gDiagRollNext` is zero): the readers' one-line summary names one that is, a
+check that named a roll and took none. A scenario holds them (`"hold"`, or a
 `hold:` step to change one mid-battle); `tests/newgold/scenarios/rolls_forced_*.json`,
 `accuracy_forced.json` and `battle_seed.json` show each at work.
 
