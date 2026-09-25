@@ -242,6 +242,27 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 
     if (!(BattleSystem_GetBattleType(battleSystem) & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_NO_EXP))) {
+        // A swap with a wild Pokemon lasts (Pokemon Central, Rapidscambio):
+        // the player's Pokemon keeps what it got, and what it handed over
+        // goes to the bag if a wild Pokemon still has it, held or used up
+        // (Raggiro, from the ninth generation; a Berry eaten is gone,
+        // NoteHeldItemUsedUp, and one caught keeps it, CaughtMonKeepsItem).
+        // Before, the Pokemon had its own item back and the one it got went
+        // to the bag: the same two items, in each other's place.
+        for (i = 0; i < count; i++) {
+            u16 given = ctx->itemsToRestore[i];
+
+            if (!(ctx->heldItemsGiven >> i & 1)) {
+                continue;
+            }
+            for (j = 1; given != ITEM_NONE && j < BATTLER_MAX; j += 2) {
+                if (ctx->battleMons[j].item == given || ctx->recycleItem[j] == given) {
+                    Bag_AddItem(BattleSystem_GetBag(battleSystem), given, 1, HEAP_ID_BATTLE);
+                    break;
+                }
+            }
+            ctx->itemsToRestore[i] = held[i];
+        }
         for (i = 0; i < count; i++) {
             int now = 0;
             int before = 0;
@@ -279,8 +300,8 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     // A Berry the Pokemon no longer holds was eaten, unless another took it
     // (NoteHeldItemTaken) or it handed it over (NoteHeldItemGiven, which
     // NoteHeldItemUsedUp undoes for one the other used up): then it comes
-    // back as anything taken does. One that
-    // ate its Berry and took an item after ends with nothing, the item going
+    // back as anything taken does. One that ate its Berry and took an item
+    // after ends with nothing, the item going
     // back to the trainer it came from, or into the bag above. The reference
     // leaves such a Pokemon holding whatever it has, so an item taken from a
     // trainer stayed taken, one taken from a wild Pokemon went to the bag and

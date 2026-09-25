@@ -127,7 +127,8 @@ typedef int BOOL;
 typedef struct { u16 item; } Pokemon;
 typedef struct { int unused; } Bag;
 typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; u8 outcome; } BattleSystem;
-typedef struct { u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken; u16 itemsTakenFromWild[2]; u8 heldItemsGiven; } BattleContext;
+typedef struct { u16 item; } BattleMon;
+typedef struct { BattleMon battleMons[BATTLER_MAX]; u16 recycleItem[BATTLER_MAX]; u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken; u16 itemsTakenFromWild[2]; u8 heldItemsGiven; } BattleContext;
 static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 
 static u16 sAdded[8][2];
@@ -269,17 +270,46 @@ int main(void) {
     CaughtMonKeepsItem(&bs, &ctx, &caught);
     GiveBackHeldItems(&bs, &ctx);
     assert(sAdds == 0 && bs.party[0].item == ITEM_LEFTOVERS && caught.item == ITEM_FOCUS_SASH);
-    // One caught with an item of its own leaves the swap to the bag.
+    // One caught with an item of its own, the Sash with the other wild
+    // Pokemon of a double battle: the swap lasts all the same, and the Sash
+    // goes to the bag.
     caught.item = ITEM_POTION;
     for (int i = 0; i < PARTY_SIZE; i++) {
         ctx.itemsToRestore[i] = before[i];
         bs.party[i].item = swappedWild[i];
     }
+    ctx.battleMons[3].item = ITEM_FOCUS_SASH;
     ctx.heldItemsGivenBack = 0;
     sAdds = 0;
     CaughtMonKeepsItem(&bs, &ctx, &caught);
     GiveBackHeldItems(&bs, &ctx);
-    assert(sAdds == 1 && sAdded[0][0] == ITEM_LEFTOVERS && bs.party[0].item == ITEM_FOCUS_SASH);
+    assert(sAdds == 1 && sAdded[0][0] == ITEM_FOCUS_SASH && bs.party[0].item == ITEM_LEFTOVERS);
+    ctx.battleMons[3].item = ITEM_NONE;
+
+    // Tricked with a wild Pokemon that then fainted or fled: the swap lasts
+    // (Rapidscambio) -- the player's Pokemon keeps the Leftovers it got, and
+    // the Focus Sash it handed over, which the wild one still holds or has
+    // used up, goes to the bag (Raggiro, from the ninth generation). Before,
+    // the Sash came back to the Pokemon and the Leftovers went to the bag.
+    for (int used = 0; used < 3; used++) {
+        for (int i = 0; i < PARTY_SIZE; i++) {
+            ctx.itemsToRestore[i] = before[i];
+            bs.party[i].item = swappedWild[i];
+        }
+        ctx.battleMons[1].item = used == 0 ? ITEM_FOCUS_SASH : ITEM_NONE;
+        ctx.recycleItem[1] = used == 1 ? ITEM_FOCUS_SASH : ITEM_NONE;
+        ctx.heldItemsGivenBack = 0;
+        ctx.heldItemsTaken = 0;
+        ctx.heldItemsGiven = 1 << 0;
+        bs.outcome = BATTLE_OUTCOME_WIN;
+        sAdds = 0;
+        GiveBackHeldItems(&bs, &ctx);
+        assert(bs.party[0].item == ITEM_LEFTOVERS);
+        // Knocked off, it is gone (the third pass).
+        assert(used == 2 ? sAdds == 0 : sAdds == 1 && sAdded[0][0] == ITEM_FOCUS_SASH && sAdded[0][1] == 1);
+    }
+    ctx.battleMons[1].item = ctx.recycleItem[1] = ITEM_NONE;
+    ctx.heldItemsGiven = 0;
 
     // Swapped within the party is not gained.
     const u16 swapped[PARTY_SIZE] = { ITEM_NONE, ITEM_FOCUS_SASH, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
