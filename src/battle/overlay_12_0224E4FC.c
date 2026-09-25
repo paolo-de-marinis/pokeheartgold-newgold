@@ -7178,22 +7178,46 @@ void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battl
     }
 }
 
-// Trick and Switcheroo: battlerId hands its item to the other. One of the
-// player's own Pokemon handing over what it started the battle with has it
-// back when the battle is over, a Berry too, as if it had been taken (Pokemon
-// Central, Raggiro and Rapidscambio: from the fifth generation a swap does
-// not outlast a battle against a trainer; GiveBackHeldItems). A wild Pokemon
-// caught with it keeps it (CaughtMonKeepsItem).
-//
-// ponytail: a Berry the one it went to then eats comes back too; Raggiro has
-// a wild Pokemon's eaten Berry stay eaten. Telling them apart needs the
-// receiver to remember whose Berry it holds.
+// Trick, Switcheroo and Bestow: battlerId hands its item to the other. One
+// of the player's own Pokemon handing over what it started the battle with
+// has it back when the battle is over, a Berry too (Pokemon Central, Raggiro
+// and Rapidscambio: from the fifth generation a swap does not outlast a
+// battle against a trainer; GiveBackHeldItems), unless the one it went to
+// uses it up (NoteHeldItemUsedUp). A wild Pokemon caught with it keeps it
+// (CaughtMonKeepsItem).
 void NoteHeldItemGiven(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int slot = ctx->selectedMonIndex[battlerId];
 
     if (BattleSystem_GetParty(battleSystem, battlerId) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)
         && ctx->battleMons[battlerId].item != ITEM_NONE && ctx->battleMons[battlerId].item == ctx->itemsToRestore[slot]) {
-        ctx->heldItemsTaken |= MaskOfFlagNo(slot);
+        ctx->heldItemsGiven |= MaskOfFlagNo(slot);
+    }
+}
+
+// battlerId is using up the Berry it holds: eating it, or losing it to Pluck,
+// Bug Bite, Fling, Natural Gift or Incinerate. One of the player's own
+// Pokemon handed it that Berry (NoteHeldItemGiven): it is gone for good, not
+// the player's again when the battle is over (Pokemon Central, Raggiro: the
+// swapped item comes back unless it was consumed; from the ninth generation
+// a wild Pokemon's gives back what it used of the player's, Berries
+// excepted). A Berry taken from the player's Pokemon comes back even eaten
+// (NoteHeldItemTaken), and one a Pokemon has back and eats itself is its own
+// Berry eaten, as ever.
+//
+// ponytail: matched by kind, so another Pokemon's own Berry of the same kind,
+// eaten while the handed one is still held, counts as the handed one.
+void NoteHeldItemUsedUp(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    u16 item = ctx->battleMons[battlerId].item;
+    int own = BattleSystem_GetParty(battleSystem, battlerId) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER) ? ctx->selectedMonIndex[battlerId] : PARTY_SIZE;
+
+    if (!BattleItemIsBerry(item)) {
+        return;
+    }
+    for (int i = 0; i < PARTY_SIZE; i++) {
+        if (i != own && (ctx->heldItemsGiven >> i & 1) && ctx->itemsToRestore[i] == item) {
+            ctx->itemsToRestore[i] = ITEM_NONE;
+            return;
+        }
     }
 }
 

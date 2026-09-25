@@ -731,6 +731,12 @@ typedef struct BattleContext {
     // catch clears the other's, and GiveBackHeldItems bags no copy of what is
     // left.
     u16 itemsTakenFromWild[2];
+    // The player's own Pokemon that handed the item they started with to
+    // another by Trick, Switcheroo or Bestow, a bit each by party slot
+    // (NoteHeldItemGiven), for GiveBackHeldItems: such an item comes back
+    // even if it was a Berry, unless the one it went to used it up
+    // (BtlCmd_RemoveItem), where a taken one comes back all the same.
+    u8 heldItemsGiven;
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.

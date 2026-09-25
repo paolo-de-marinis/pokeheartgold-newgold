@@ -191,7 +191,8 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // byte that says the held items are back. The byte for the player's Pokemon
 // another has taken an item from grew it by four, and the items taken from the
 // wild ones by four more. Sky Drop's holder took the move conditions to a
-// fourth byte, four more.
+// fourth byte, four more. The byte for the player's Pokemon that handed an
+// item over went into padding and grew it by nothing.
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x326C + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
@@ -276,7 +277,9 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 
     // A Berry the Pokemon no longer holds was eaten, unless another took it
-    // (NoteHeldItemTaken): then it comes back as anything taken does. One that
+    // (NoteHeldItemTaken) or it handed it over (NoteHeldItemGiven, which
+    // NoteHeldItemUsedUp undoes for one the other used up): then it comes
+    // back as anything taken does. One that
     // ate its Berry and took an item after ends with nothing, the item going
     // back to the trainer it came from, or into the bag above. The reference
     // leaves such a Pokemon holding whatever it has, so an item taken from a
@@ -284,7 +287,7 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     // stayed held too, and a Berry a foe's Magician took was lost.
     for (i = 0; i < count; i++) {
         u16 item = ctx->itemsToRestore[i];
-        if (BattleItemIsBerry(item) && held[i] != item && !(ctx->heldItemsTaken & MaskOfFlagNo(i))) {
+        if (BattleItemIsBerry(item) && held[i] != item && !((ctx->heldItemsTaken | ctx->heldItemsGiven) & MaskOfFlagNo(i))) {
             item = ITEM_NONE;
         }
         SetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, &item);
@@ -301,7 +304,7 @@ void CaughtMonKeepsItem(BattleSystem *battleSystem, BattleContext *ctx, Pokemon 
     u16 item = GetMonData(mon, MON_DATA_HELD_ITEM, NULL);
 
     for (int i = 0; item != ITEM_NONE && i < PARTY_SIZE; i++) {
-        if ((ctx->heldItemsTaken & MaskOfFlagNo(i)) && ctx->itemsToRestore[i] == item) {
+        if (((ctx->heldItemsTaken | ctx->heldItemsGiven) & MaskOfFlagNo(i)) && ctx->itemsToRestore[i] == item) {
             ctx->itemsToRestore[i] = GetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, NULL);
             return;
         }

@@ -1,0 +1,12 @@
+{
+  "about": "A Berry the player's Pokemon hands over by Trick, eaten by the Pokemon it went to, stays eaten: the swapped item comes back at the battle's end unless it was consumed (Pokemon Central, Raggiro). In the Violet Gym the Snorlax starts the battle holding an Oran Berry and is taught Trick; Falkner's Hoothoot is left at 5 HP holding a Silk Scarf (set:, teach:). The Trick hands the Hoothoot the Oran Berry, which it eats; the six then beat Falkner, and back on the field the Snorlax holds nothing -- the Silk Scarf went back to Falkner, and the Oran Berry, before, came back uneaten.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:13:::ORAN_BERRY,RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13",
+           "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceDamageRoll": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_TRICK", "set:1,item,ITEM_SILK_SCARF", "set:1,hp,5",
+            "fight:1:1", "fight", "field"],
+  "expect": {"lines": ["Snorlax used Trick!", "Oran Berry", "You defeated Leader Falkner!"],
+             "party0.species": "SPECIES_SNORLAX", "party0.item": "ITEM_NONE"}
+}

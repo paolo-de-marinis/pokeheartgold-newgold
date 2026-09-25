@@ -127,7 +127,7 @@ typedef int BOOL;
 typedef struct { u16 item; } Pokemon;
 typedef struct { int unused; } Bag;
 typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; u8 outcome; } BattleSystem;
-typedef struct { u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken; u16 itemsTakenFromWild[2]; } BattleContext;
+typedef struct { u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken; u16 itemsTakenFromWild[2]; u8 heldItemsGiven; } BattleContext;
 static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 
 static u16 sAdded[8][2];
@@ -154,6 +154,7 @@ static BattleContext ctx;
 static void run(u32 type, const u16 *before, const u16 *after, BattleSystem *bs) {
     ctx.heldItemsGivenBack = 0;
     ctx.heldItemsTaken = 0;
+    ctx.heldItemsGiven = 0;
     bs->count = PARTY_SIZE;
     bs->outcome = BATTLE_OUTCOME_WIN;
     bs->type = type;
@@ -210,6 +211,27 @@ int main(void) {
     ctx.heldItemsTaken = 1 << 5;
     GiveBackHeldItems(&bs, &ctx);
     assert(bs.party[5].item == ITEM_ORAN_BERRY && bs.party[4].item == ITEM_ROSELI_BERRY && bs.party[3].item == ITEM_NONE);
+    // A Berry handed over by Trick comes back after a trainer battle, the
+    // Leftovers got for it going back to the trainer; one the trainer's
+    // Pokemon then ate does not (NoteHeldItemUsedUp emptied its entry).
+    const u16 tricked[PARTY_SIZE] = { ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_LEFTOVERS };
+    for (int eaten = 0; eaten < 2; eaten++) {
+        for (int i = 0; i < PARTY_SIZE; i++) {
+            ctx.itemsToRestore[i] = before[i];
+            bs.party[i].item = tricked[i];
+        }
+        if (eaten) {
+            ctx.itemsToRestore[5] = ITEM_NONE;
+        }
+        ctx.heldItemsGivenBack = 0;
+        ctx.heldItemsTaken = 0;
+        ctx.heldItemsGiven = 1 << 5;
+        bs.type = BATTLE_TYPE_TRAINER;
+        sAdds = 0;
+        GiveBackHeldItems(&bs, &ctx);
+        assert(sAdds == 0 && bs.party[5].item == (eaten ? ITEM_NONE : ITEM_ORAN_BERRY));
+    }
+    ctx.heldItemsGiven = 0;
 
     // What was taken from a wild Pokemon that was then caught went back with
     // it: no copy for the bag. One that fainted or fled leaves it to the bag.
@@ -240,7 +262,7 @@ int main(void) {
         bs.party[i].item = swappedWild[i];
     }
     ctx.heldItemsGivenBack = 0;
-    ctx.heldItemsTaken = 1 << 0;
+    ctx.heldItemsGiven = 1 << 0;
     bs.type = BATTLE_TYPE_NONE;
     bs.outcome = BATTLE_OUTCOME_MON_CAUGHT;
     sAdds = 0;
@@ -281,7 +303,9 @@ typedef int BOOL;
 typedef struct { int unused; } Party;
 typedef struct { u32 type; Party parties[4]; } BattleSystem;
 typedef struct { u16 item; } BattleMon;
-typedef struct { BattleMon battleMons[4]; u8 selectedMonIndex[4], heldItemsTaken; u16 itemsTakenFromWild[2], itemsToRestore[6]; } BattleContext;
+typedef struct { BattleMon battleMons[4]; u8 selectedMonIndex[4], heldItemsTaken, heldItemsGiven; u16 itemsTakenFromWild[2], itemsToRestore[6]; } BattleContext;
+#define PARTY_SIZE 6
+static BOOL BattleItemIsBerry(u16 item) { return item == ITEM_ORAN_BERRY || item == ITEM_SITRUS_BERRY; }
 static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 static u32 BattleSystem_GetBattleType(BattleSystem *bs) { return bs->type; }
 static u8 BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
@@ -312,7 +336,26 @@ int main(void) {
     NoteHeldItemGiven(&bs, &ctx, 0);
     NoteHeldItemGiven(&bs, &ctx, 2);
     NoteHeldItemGiven(&bs, &ctx, 1);
-    assert(ctx.heldItemsTaken == (1 << 1));
+    assert(ctx.heldItemsGiven == (1 << 1) && ctx.heldItemsTaken == 0);
+    // The Oran Berry went to the trainer's Pokemon (battler 1), which eats
+    // it: gone for good (Raggiro). Not before: a Potion, and the player's own
+    // Pokemon eating an Oran Berry of its own.
+    ctx.battleMons[1].item = ITEM_POTION;
+    NoteHeldItemUsedUp(&bs, &ctx, 1);
+    ctx.battleMons[0].item = ITEM_ORAN_BERRY;
+    ctx.selectedMonIndex[0] = 1;
+    NoteHeldItemUsedUp(&bs, &ctx, 0);
+    assert(ctx.itemsToRestore[1] == ITEM_ORAN_BERRY);
+    ctx.battleMons[1].item = ITEM_ORAN_BERRY;
+    NoteHeldItemUsedUp(&bs, &ctx, 1);
+    assert(ctx.itemsToRestore[1] == ITEM_NONE && ctx.itemsToRestore[4] == ITEM_LEFTOVERS);
+    // A Berry taken, not handed over, stays the player's even eaten.
+    ctx.itemsToRestore[1] = ITEM_SITRUS_BERRY;
+    ctx.heldItemsGiven = 0;
+    ctx.heldItemsTaken = 1 << 1;
+    ctx.battleMons[1].item = ITEM_SITRUS_BERRY;
+    NoteHeldItemUsedUp(&bs, &ctx, 1);
+    assert(ctx.itemsToRestore[1] == ITEM_SITRUS_BERRY);
     return 0;
 }
 """
@@ -326,7 +369,7 @@ class TakenItemTests(unittest.TestCase):
     def test_who_is_marked(self):
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
         program = NOTE_FIXTURE.replace("@FUNCTIONS@", function(overlay, "Battler_IsWild") + function(overlay, "NoteHeldItemTaken")
-                                                + function(overlay, "NoteHeldItemGiven"))
+                                                + function(overlay, "NoteHeldItemGiven") + function(overlay, "NoteHeldItemUsedUp"))
         with tempfile.TemporaryDirectory(prefix="newgold-taken-") as directory:
             path = Path(directory)
             (path / "check.c").write_text(program)
@@ -349,6 +392,16 @@ class TakenItemTests(unittest.TestCase):
         self.assertRegex(swap, r"ABILITY_STICKY_HOLD\) == TRUE\) \{\n\s*BattleScriptIncrementPointer\(ctx, adrsB\);\n\s*\} else \{\n"
                                r"\s*NoteHeldItemGiven\(battleSystem, ctx, ctx->battlerIdAttacker\);\n"
                                r"\s*NoteHeldItemGiven\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\}")
+
+    def test_a_berry_handed_over_and_used_up_is_gone(self):
+        # Pokemon Central (Raggiro): the swapped item comes back unless it
+        # was consumed. Every held item used up leaves through RemoveItem,
+        # a burnt Berry through Incinerate's command.
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        self.assertIn("NoteHeldItemUsedUp(battleSystem, ctx, battlerId);", function(commands, "BtlCmd_RemoveItem"))
+        burn = function(commands, "BtlCmd_TryIncinerate")
+        self.assertLess(burn.index("NoteHeldItemUsedUp(battleSystem, ctx, ctx->battlerIdTarget);"),
+                        burn.index("ctx->battleMons[ctx->battlerIdTarget].item = ITEM_NONE;"))
 
     def test_a_caught_pokemon_gets_its_item_back(self):
         # Before the Pokemon is stored, whichever way it is stored; the other

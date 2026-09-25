@@ -6913,6 +6913,7 @@ BOOL BtlCmd_RemoveItem(BattleSystem *battleSystem, BattleContext *ctx) {
         RememberBerryEaten(battleSystem, ctx, battlerId);
     }
     ctx->selfTurnData[battlerId].berryNotEaten = FALSE;
+    NoteHeldItemUsedUp(battleSystem, ctx, battlerId);
 
     ctx->battleMons[battlerId].item = 0;
     // An item used up, which is what hands a partner's Symbiosis item over;
@@ -10203,7 +10204,6 @@ BOOL BtlCmd_HandleDoubleShock(BattleSystem *battleSystem, BattleContext *ctx) {
 // it, and there is nothing to burn if the target was not holding one; either
 // way the move has nothing to say and takes the branch.
 BOOL BtlCmd_TryIncinerate(BattleSystem *battleSystem, BattleContext *ctx) {
-#pragma unused(battleSystem)
     BattleScriptIncrementPointer(ctx, 1);
 
     int adrs = BattleScriptReadWord(ctx);
@@ -10220,6 +10220,7 @@ BOOL BtlCmd_TryIncinerate(BattleSystem *battleSystem, BattleContext *ctx) {
 
     ctx->itemTemp = item;
     ctx->battlerIdTemp = ctx->battlerIdTarget;
+    NoteHeldItemUsedUp(battleSystem, ctx, ctx->battlerIdTarget);
     // Burnt, not knocked off: there is nothing left for Recycle to find.
     ctx->battleMons[ctx->battlerIdTarget].item = ITEM_NONE;
 
