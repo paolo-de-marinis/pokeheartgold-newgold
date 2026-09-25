@@ -429,7 +429,8 @@ int main(void) {
         self.assertEqual(leaf, 12)
         freeze = subscript("Freeze")
         self.assertLess(freeze.index(f"{self.UMBRELLA}, _011"), freeze.index("FIELD_CONDITION_SUN_ALL, _095"))
-        # Solar Beam's is SolarBeamFiresAtOnce's WeatherUnderUmbrella.
+        # Solar Beam's is SolarBeamFiresAtOnce's, through BattlerMoveWeatherAt at
+        # its user (MegaSolTests above).
         script = (EFFECTS / "effect_script_0330.s").read_text()
         self.assertLess(script.index(f"BATTLER_CATEGORY_ATTACKER, {self.UMBRELLA}, _006"),
                         script.index("FIELD_CONDITION_RAIN_ALL, _028"))
