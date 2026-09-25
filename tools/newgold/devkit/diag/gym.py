@@ -206,10 +206,13 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
         view = markers.battle(ram)
         prompt = markers.read(ram, "gDiagBattlePrompt")
         you_hp = battler_hp(view[0]) if view and view[0].startswith("you") else 1
-        if prompt in (1, 2) and last_prompt not in (1, 2):
+        # A turn's command is the first place's to give, or, with the first
+        # place empty in a double battle, the second's.
+        asked = partner() if you_hp == 0 and partner else prompt
+        if asked in (1, 2) and last_prompt not in (1, 2):
             commands += 1
-        last_prompt = prompt
-        if prompt in (1, 2) and turns is not None and commands > turns:
+        last_prompt = asked
+        if asked in (1, 2) and turns is not None and commands > turns:
             return last_line
         if prompt in (1, 2):
             if view != last_view:
@@ -260,17 +263,18 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             moves_chosen[2] = second[7 + slot]
             core.touch(*MOVES[slot], 6, hold)
             core.step(20, hold)
-        elif state == BATTLE_MAIN and (you_hp == 0 or (second_down(ram, markers) and reserve(ram, markers) is not None)):
+        elif state == BATTLE_MAIN and (you_hp == 0 or second_down(ram, markers)) and reserve(ram, markers) is not None:
             stuck += 1
             if stuck > 60:
                 # The party screen after a faint, for the first of the
-                # player's two or, in a double battle, the second.
-                slot = reserve(ram, markers)
-                if slot is not None:
-                    core.touch(*PARTY[slot], 6, hold)
-                    core.step(30, hold)
-                    core.touch(*SHIFT, 6, hold)
-                    core.step(60, hold)
+                # player's two or, in a double battle, the second -- also
+                # at the end of a turn where a Revive or a Revival Blessing
+                # gave an empty place someone to send. With no one to send
+                # the place stays empty, and B below moves the text on.
+                core.touch(*PARTY[reserve(ram, markers)], 6, hold)
+                core.step(30, hold)
+                core.touch(*SHIFT, 6, hold)
+                core.step(60, hold)
                 stuck = 0
         elif "Will you switch" in last_line:
             core.touch(*KEEP_BATTLING, 6, hold)
