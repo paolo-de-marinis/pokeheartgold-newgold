@@ -1,0 +1,14 @@
+{
+  "about": "A Pokemon whose item Knock Off took comes back into the battle without it: the item leaves the party at once, not at the Pokemon's next move or hit. In the Violet Gym the Raichu holds Leftovers and knows Splash alone, Falkner's Hoothoot Knock Off alone (teach:); the Raichu, the faster, splashes and has its Leftovers knocked off, is switched out for the Snorlax straight away, and switched back in a turn later -- empty-handed. Before, it had the Leftovers again.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "RAICHU:13:::LEFTOVERS,SNORLAX:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:1,0,MOVE_KNOCK_OFF", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:0,0,MOVE_SPLASH", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "fight:1:1",
+            "wait:60", "touch:216,172", "wait:60", "touch:192,38", "wait:40", "touch:127,113", "wait:120", "fight:1:0",
+            "wait:60", "touch:216,172", "wait:60", "touch:192,38", "wait:40", "touch:127,113", "wait:120", "fight:1:0"],
+  "expect": {"lines": ["knocked off Raichu", "Go! Snorlax!", "Go! Raichu!"],
+             "battler0.species": "SPECIES_RAICHU", "battler0.item": "ITEM_NONE"}
+}

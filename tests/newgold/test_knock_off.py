@@ -209,9 +209,11 @@ class KnockOffTests(unittest.TestCase):
         self.assertRegex(knock, r"ctx->battleMons\[ctx->battlerIdTarget\]\.item = 0;\n(\s*//.*\n)*"
                                 r"\s*if \(BattleSystem_GetParty\(battleSystem, ctx->battlerIdTarget\) == BattleSystem_GetParty\(battleSystem, BATTLER_PLAYER\)\) \{\n"
                                 r"\s*ctx->heldItemsTaken \|= MaskOfFlagNo\(ctx->selectedMonIndex\[ctx->battlerIdTarget\]\);")
-        # The party copy writes the empty hand, so a Pokemon sent back in has
-        # nothing, and a wild one caught nothing either.
+        # The party copy writes the empty hand, at once, so a Pokemon sent
+        # back in has nothing, and a wild one caught nothing either.
         self.assertIn("data.knockedOffItems = 0;", read("src/battle/battle_controller_mon_copy.c"))
+        self.assertRegex(knock, r"ctx->heldItemsTaken \|= MaskOfFlagNo\(ctx->selectedMonIndex\[ctx->battlerIdTarget\]\);\n\s*\}\n(\s*//.*\n)*"
+                                r"\s*CopyBattleMonToPartyMon\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\} else \{")
 
     def test_a_wild_pokemon_knocks_off_nothing_of_the_players(self):
         # Pokemon Central (Privazione): from the fifth generation a wild

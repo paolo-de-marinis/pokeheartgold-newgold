@@ -5377,6 +5377,11 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
         if (BattleSystem_GetParty(battleSystem, ctx->battlerIdTarget) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
             ctx->heldItemsTaken |= MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]);
         }
+        // The party holds what the battler holds at once, as an item used up
+        // does (BtlCmd_RemoveItem): the hit's own copy came before, and a
+        // Pokemon switched out, or caught, before the next would have its
+        // item back.
+        CopyBattleMonToPartyMon(battleSystem, ctx, ctx->battlerIdTarget);
     } else {
         BattleScriptIncrementPointer(ctx, adrs);
     }
