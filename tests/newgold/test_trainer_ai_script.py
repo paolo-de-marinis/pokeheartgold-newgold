@@ -45,11 +45,14 @@ class TrainerAIScriptTests(unittest.TestCase):
             offsets = [int(w) for w in script[1:] if re.fullmatch(r"-?\d+", w)][-len(reaches):] if reaches else []
             self.assertEqual([at + o for o in offsets], reaches, f"line {index:04X}: {script} // {comment}")
 
-    def test_lightning_rod_and_storm_drain_are_absorbing_abilities(self):
-        # Flag 0 marks down a move the target's ability swallows. From the
-        # fifth generation Lightning Rod and Storm Drain swallow their type as
-        # Volt Absorb and Water Absorb do (BattleContext_CheckMoveImmunityFromAbility):
-        # they go to the same type checks.
+    def test_every_absorbing_ability_reaches_its_type_check(self):
+        # Flag 0 marks down a move the target's ability swallows
+        # (BattleContext_CheckMoveImmunityFromAbility). From the fifth
+        # generation Lightning Rod and Storm Drain swallow their type as Volt
+        # Absorb and Water Absorb do; Dry Skin, which retail's word 0049 meant
+        # and asked as Levitate, takes Water, Earth Eater Ground, Well-Baked
+        # Body Fire and Sap Sipper Grass. Each goes to a check of the move's
+        # type that takes 12 off its score.
         lines = words()
 
         def reach(index):
@@ -58,6 +61,7 @@ class TrainerAIScriptTests(unittest.TestCase):
 
         def type_check(index):
             self.assertEqual(lines[index][0], ["AI_LOAD_TYPE_FROM", "4"])
+            self.assertEqual(reach(index + 2), 0x09DD)
             return lines[index + 2][0][1]
 
         self.assertEqual(lines[0x0035][0], ["AI_LOAD_BATTLER_ABILITY", "AI_BATTLER_TARGET"])
@@ -75,7 +79,10 @@ class TrainerAIScriptTests(unittest.TestCase):
         self.assertEqual(reach(index), 0x0079)
         for ability, kind in (("ABILITY_VOLT_ABSORB", "TYPE_ELECTRIC"), ("ABILITY_MOTOR_DRIVE", "TYPE_ELECTRIC"),
                               ("ABILITY_LIGHTNINGROD", "TYPE_ELECTRIC"), ("ABILITY_WATER_ABSORB", "TYPE_WATER"),
-                              ("ABILITY_STORM_DRAIN", "TYPE_WATER"), ("ABILITY_FLASH_FIRE", "TYPE_FIRE")):
+                              ("ABILITY_STORM_DRAIN", "TYPE_WATER"), ("ABILITY_DRY_SKIN", "TYPE_WATER"),
+                              ("ABILITY_FLASH_FIRE", "TYPE_FIRE"), ("ABILITY_WELL_BAKED_BODY", "TYPE_FIRE"),
+                              ("ABILITY_LEVITATE", "TYPE_GROUND"), ("ABILITY_EARTH_EATER", "TYPE_GROUND"),
+                              ("ABILITY_SAP_SIPPER", "TYPE_GRASS")):
             self.assertEqual(type_check(absorbers[ability]), kind, ability)
 
 

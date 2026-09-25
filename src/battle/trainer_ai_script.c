@@ -187,9 +187,9 @@ const u32 ov10_02220AAC[] = {
     /* 0040 */ AI_IF_LOADED_EQUAL_TO, ABILITY_FLASH_FIRE, 25, // -> 005C
     /* 0043 */ AI_IF_LOADED_EQUAL_TO, ABILITY_WONDER_GUARD, 29, // -> 0063
     /* 0046 */ AI_IF_LOADED_EQUAL_TO, ABILITY_LEVITATE, 34, // -> 006B
-    // retail asks for Levitate a second time here, so the Water check at 0072 (meant for Dry Skin) is never reached
-    /* 0049 */ AI_IF_LOADED_EQUAL_TO, ABILITY_LEVITATE, 38, // -> 0072
-    // retail went on to 0079 here; Lightning Rod and Storm Drain are asked at 296F
+    // retail asked for Levitate a second time here, so the Water check at 0072, meant for Dry Skin, was never reached
+    /* 0049 */ AI_IF_LOADED_EQUAL_TO, ABILITY_DRY_SKIN, 38, // -> 0072
+    // retail went on to 0079 here; the absorbing abilities it did not know are asked at 296F
     /* 004C */ AI_GOTO, 10529, // -> 296F
 
     // 004E
@@ -6041,9 +6041,19 @@ const u32 ov10_02220AAC[] = {
     // and Storm Drain swallow every Electric or Water move aimed at their
     // holder from the fifth generation, as Volt Absorb and Water Absorb do
     // (BattleContext_CheckMoveImmunityFromAbility), so the move is worth as
-    // little; retail's script knew them as redirecting only. Appended, so no
-    // word index above moves.
+    // little; retail's script knew them as redirecting only. Earth Eater
+    // swallows a Ground move as Levitate dodges one, Well-Baked Body a Fire move
+    // as Flash Fire does, and Sap Sipper a Grass move, which retail had no
+    // check for. Appended, so no word index above moves.
     /* 296F */ AI_IF_LOADED_EQUAL_TO, ABILITY_LIGHTNINGROD, -10532, // -> 004E
     /* 2972 */ AI_IF_LOADED_EQUAL_TO, ABILITY_STORM_DRAIN, -10528, // -> 0055
-    /* 2975 */ AI_GOTO, -10494, // -> 0079
+    /* 2975 */ AI_IF_LOADED_EQUAL_TO, ABILITY_EARTH_EATER, -10509, // -> 006B
+    /* 2978 */ AI_IF_LOADED_EQUAL_TO, ABILITY_WELL_BAKED_BODY, -10527, // -> 005C
+    /* 297B */ AI_IF_LOADED_EQUAL_TO, ABILITY_SAP_SIPPER, 2, // -> 2980
+    /* 297E */ AI_GOTO, -10503, // -> 0079
+
+    // 2980
+    /* 2980 */ AI_LOAD_TYPE_FROM, 4,
+    /* 2982 */ AI_IF_TEMP_EQUAL_TO, TYPE_GRASS, -8104, // -> 09DD
+    /* 2985 */ AI_GOTO, -10510, // -> 0079
 };
