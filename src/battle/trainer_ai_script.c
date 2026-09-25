@@ -189,7 +189,8 @@ const u32 ov10_02220AAC[] = {
     /* 0046 */ AI_IF_LOADED_EQUAL_TO, ABILITY_LEVITATE, 34, // -> 006B
     // retail asks for Levitate a second time here, so the Water check at 0072 (meant for Dry Skin) is never reached
     /* 0049 */ AI_IF_LOADED_EQUAL_TO, ABILITY_LEVITATE, 38, // -> 0072
-    /* 004C */ AI_GOTO, 43, // -> 0079
+    // retail went on to 0079 here; Lightning Rod and Storm Drain are asked at 296F
+    /* 004C */ AI_GOTO, 10529, // -> 296F
 
     // 004E
     /* 004E */ AI_LOAD_TYPE_FROM, 4,
@@ -6035,4 +6036,14 @@ const u32 ov10_02220AAC[] = {
 
     // 296E: flag 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28
     /* 296E */ AI_POP_OR_END,
+
+    // 296F: flag 0, from 004C, the target's ability still loaded. Lightning Rod
+    // and Storm Drain swallow every Electric or Water move aimed at their
+    // holder from the fifth generation, as Volt Absorb and Water Absorb do
+    // (BattleContext_CheckMoveImmunityFromAbility), so the move is worth as
+    // little; retail's script knew them as redirecting only. Appended, so no
+    // word index above moves.
+    /* 296F */ AI_IF_LOADED_EQUAL_TO, ABILITY_LIGHTNINGROD, -10532, // -> 004E
+    /* 2972 */ AI_IF_LOADED_EQUAL_TO, ABILITY_STORM_DRAIN, -10528, // -> 0055
+    /* 2975 */ AI_GOTO, -10494, // -> 0079
 };
