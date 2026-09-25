@@ -231,8 +231,9 @@ endif
 # Each tool is made by its own directory's makefile, so what depends on one
 # tool waits for that one alone, and a build never remakes a tool while
 # another rule is running it. The empty recipe keeps make's built-in rules
-# away: without one they compiled and linked the tool here themselves.
-$(foreach tool,$(NATIVE_TOOLS),$(eval $(tool): $(dir $(tool)) ;))
+# away: without one they compiled and linked the tool here themselves. It is
+# a bare +, which has make -n read the tool's time again (see Makefile).
+$(foreach tool,$(NATIVE_TOOLS),$(eval $(tool): $(dir $(tool)) ; +))
 
 tools: $(TOOLDIRS) $(MWAS)
 

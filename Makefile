@@ -69,9 +69,15 @@ $(ALL_GAME_OBJS): | files_for_compile
 # on every run and keep their times (cp -p): the link waits for them and is
 # done again only when an object, the LCF, the response file or one of what
 # they installed is newer than the ELF, not on every run.
+# A file another makefile writes has a recipe of one bare +, here and for the
+# ARM7 and the tools: a line marked + runs in a dry run too, so make -n reads
+# the file's time again after the step that writes it, as a real run does. An
+# empty recipe (;) is taken for remade by make -n, which then printed the
+# link, the pack and everything behind a tool. What that makefile would
+# rebuild, make -n shows; what follows from it, not.
 INSTALLED_LIBS := $(BUILD_DIR)/lib/libsyscall.a $(wildcard $(BUILD_DIR)/lib/dsprot/*.o)
 $(ELF): $(INSTALLED_LIBS) | files_for_compile dsprot libsyscall
-$(INSTALLED_LIBS): dsprot libsyscall ;
+$(INSTALLED_LIBS): dsprot libsyscall ; +
 
 dsprot:
 	$(MAKE) -C lib/dsprot all install INSTALL_PREFIX=$(abspath $(WORK_DIR)/$(BUILD_DIR))
@@ -79,10 +85,13 @@ dsprot:
 libsyscall: files_for_compile
 	$(MAKE) -C lib/syscall all install INSTALL_PREFIX=$(abspath $(WORK_DIR)/$(BUILD_DIR)) GAME_CODE=$(GAME_CODE)
 
-$(SBIN_LZ): $(BUILD_DIR)/component.files
+# The link writes component.files before it has written the ELF, so the
+# compressed module follows the ELF: as older than it, component.files was
+# taken for remade by make -n every time.
+$(SBIN_LZ): $(BUILD_DIR)/component.files $(ELF)
 	$(COMPSTATIC) -9 -c -f $<
 
-$(BUILD_DIR)/component.files: main ;
+$(BUILD_DIR)/component.files: | main ;
 
 $(HEADER_TEMPLATE): ;
 
@@ -91,7 +100,7 @@ $(HEADER_TEMPLATE): ;
 # its own; they are waited for, not counted. With COMPARE=1 every run links
 # and packs, as before, so the hashes are checked each time.
 SUB_FILES := $(addprefix sub/build/ichneumon_sub,.sbin _defs.sbin .elf)
-$(SUB_FILES): sub ;
+$(SUB_FILES): sub ; +
 ifeq ($(COMPARE),1)
 $(ELF) $(ROM): FORCE
 endif
@@ -113,7 +122,10 @@ $(FX_CONST_H): $(MKFXCONST) $(TOOLSDIR)/gen_fx_consts/fx_const.csv
 
 $(ALL_LIB_OBJS): $(FX_CONST_H)
 sdk9: $(ALL_LIB_OBJS)
-$(WORK_DIR)/include/global.h: $(FX_CONST_H) ;
+# fx_const.h is made before anything includes global.h. It only orders it: as
+# a prerequisite, newer than global.h as it always is, it had make -n take
+# global.h for remade and print every C object.
+$(WORK_DIR)/include/global.h: | $(FX_CONST_H) ;
 
 # Convenience targets
 heartgold:          ; @$(MAKE) GAME_VERSION=HEARTGOLD

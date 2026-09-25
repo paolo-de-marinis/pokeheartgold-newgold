@@ -467,12 +467,18 @@ $(eval $(call arc_strip_name,files/application/guinness.narc,files/a/2/6/0))
 $(eval $(call arc_strip_name,files/graphic/camera_viewfinder.narc,files/a/2/6/1))
 
 # Three are copied from the version's own archive, and a switch of version
-# makes no file newer: they are remade on every run, and like the others
-# written only when they differ, so a run with nothing changed packs nothing.
+# makes no file newer: they depend as well on a note of the version files/a
+# holds, rewritten only when the version changes and written in a dry run
+# too (+), so make -n prints the copies and the pack only when a make would
+# do them. A copy is a plain cp: compared instead, one left older than its
+# archive was compared again on every run, and make -n printed the pack.
 $(DIFF_ARCS):
-	@cmp -s $< $@ || { echo cp $< $@; cp $< $@; }
+	cp $< $@
 
-files/a/0/7/5 files/a/2/5/2 files/a/1/3/3: FORCE
+VERSION_NOTE := files/a/.version
+$(VERSION_NOTE): FORCE
+	+@echo $(buildname) | cmp -s - $@ || echo $(buildname) >$@
+files/a/0/7/5 files/a/2/5/2 files/a/1/3/3: $(VERSION_NOTE)
 
 NARCS := $(filter %.narc,$(NITROFS_FILES) $(SRC_ARCS))
 NAIXS := $(NARCS:%.narc=%.naix)
@@ -494,12 +500,13 @@ endif
 # files after it. The list is its own target, remade on every run and
 # rewritten only when it changes: the archive depends on it, so a member
 # removed, which makes no other file newer, rebuilds the archive, and a run
-# with nothing changed rebuilds nothing.
+# with nothing changed rebuilds nothing. The list is written in a dry run too
+# (+), so make -n prints the archive only when a make would pack it.
 #     $(call numbered_narc,ARCHIVE,FOLDER,MEMBERS)
 define numbered_narc
 $(2)/.narcorder: FORCE
-	@printf '%s\n' $(notdir $(3)) | LC_ALL=C sort -V >$$@.new
-	@if cmp -s $$@.new $$@; then rm $$@.new; else mv $$@.new $$@; fi
+	+@printf '%s\n' $(notdir $(3)) | LC_ALL=C sort -V >$$@.new
+	+@if cmp -s $$@.new $$@; then rm $$@.new; else mv $$@.new $$@; fi
 $(1): $(2)/.narcorder $(3)
 	$$(NARC) -cf $$@ --index-namespace -E '*' $(2)
 endef

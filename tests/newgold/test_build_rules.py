@@ -99,7 +99,8 @@ class BuildRuleTests(unittest.TestCase):
         were deleted by hand: nothing o2narc builds depended on it, and
         nothing jsonproc builds depended on jsonproc. Every target whose
         recipe runs either now depends on it, and jsonproc, handed the rest
-        of $^, still gets only the json and the template."""
+        of $^, still gets only the json and the template. The tool is taken
+        as newer (-W) and not remade (-o): remade, it is read again."""
         rules = re.findall(r"^([^#\s%][^:\n]*):(?!=)([^\n]*)\n(?:#[^\n]*\n)*((?:\t[^\n]*\n)+)", database(), re.M)
         for name, example in (("o2narc", "files/application/zukanlist/zkn_data/zukan_data.narc"),
                               ("jsonproc", "files/tel/pmtel_book.dat")):
@@ -112,7 +113,7 @@ class BuildRuleTests(unittest.TestCase):
                     found = [p for p in prerequisites if p.endswith(f"/tools/{name}/{name}")]
                     self.assertTrue(found, f"{target} does not depend on {name}")
                     tool = found[0]
-                result = run_make("-n", "-W", tool, *sorted(users))
+                result = run_make("-n", "-W", tool, "-o", tool, *sorted(users))
                 self.assertEqual(result.returncode, 0, result.stderr)
                 jsonproc = [line for line in result.stdout.splitlines() if "/jsonproc " in line]
                 self.assertEqual(len(jsonproc), len(users), result.stdout)
@@ -160,6 +161,43 @@ class BuildRuleTests(unittest.TestCase):
         self.assertEqual(phony & {"files/a/0/7/5", "files/a/1/3/3", "files/a/2/5/2"}, set())
         for makefile in ("lib/dsprot/Makefile", "lib/syscall/Makefile"):
             self.assertRegex((ROOT / makefile).read_text(), r"(?m)^\tcp -p ", makefile)
+
+    def test_a_dry_run_reads_again_what_a_step_behind_it_writes(self):
+        """make -n takes a target whose recipe it did not run for remade,
+        unless every line of the recipe is marked + (run in a dry run too),
+        and then reads the file's time again. The tools, the installed
+        libraries and the ARM7 had empty recipes behind a phony step, and the
+        archive lists and the three version archives were remade on every
+        run: with nothing changed, make -n printed the whole build, the link
+        and the pack. Each file with a phony prerequisite and a recipe has a
+        recipe marked + now. Three files were older than what they follow,
+        and so remade on every run, which only make -n showed: global.h
+        than fx_const.h, the link's component.files than the ELF, and the
+        indexes csv2bin writes than their archives."""
+        db = database()
+        phony = set(re.search(r"^\.PHONY:(.*)$", db, re.M).group(1).split())
+        rules = re.findall(r"^([^#\s%][^:\n]*):(?!=)([^\n]*)\n(?:#[^\n]*\n)*((?:\t[^\n]*\n)*)", db, re.M)
+        checked = set()
+        for target, prerequisites, recipe in rules:
+            behind = set(prerequisites.partition("|")[0].split()) & phony
+            if "=" in prerequisites or "$(" in target or target in phony or not behind or not recipe:
+                continue
+            for line in recipe.splitlines():
+                self.assertIn("+", re.match(r"\s*([@+-]*)", line).group(1), f"{target}: {line}")
+            checked.add(target)
+        for target in ("build/heartgold.us/lib/libsyscall.a", "sub/build/ichneumon_sub.sbin", "files/a/.version",
+                       "files/fielddata/script/scr_seq/.narcorder"):
+            self.assertIn(target, checked)
+        self.assertTrue(any(target.endswith("/tools/o2narc/o2narc") for target in checked))
+        for archive in ("files/a/0/7/5", "files/a/1/3/3", "files/a/2/5/2"):
+            self.assertNotIn(archive, phony)
+        prerequisites = {target: rest.partition("|")[0].split() for target, rest, _ in rules if "=" not in rest}
+        self.assertEqual(prerequisites["include/global.h"], [])
+        self.assertEqual(prerequisites["build/heartgold.us/component.files"], [])
+        self.assertIn("build/heartgold.us/main.elf", prerequisites["build/heartgold.us/main.sbin_LZ"])
+        recipes = {target: recipe for target, _, recipe in rules}
+        for archive in ("files/itemtool/itemdata/item_data.narc", "files/poketool/personal/growtbl.narc"):
+            self.assertIn("touch $*.naix", recipes[archive], archive)
 
     def test_the_message_headers_only_order_headers_done(self):
         """headers.done is made once, when it is missing, so that the scripts

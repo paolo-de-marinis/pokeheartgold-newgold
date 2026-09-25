@@ -4,8 +4,12 @@ ITEMICON_NARC  := files/itemtool/itemdata/item_icon.narc
 $(ITEMDATA_NARC): MANIFEST = $(patsubst %.narc,%.txt,$@)
 $(ITEMDATA_NARC): CSV2BINFLAGS += --pad 0xFF
 
+# csv2bin writes the index before the archive. Touched after it, the index
+# is not older than its archive, which remade it on every run (make -n
+# printed every object that includes it).
 $(ITEMDATA_NARC): %.narc: %.csv $(MANIFEST) $$(csvdep)
 	$(CSV2BIN) compile $< $@ $(MANIFEST) $(CSV2BINFLAGS)
+	@touch $*.naix
 
 ITEMICON_DIR := files/itemtool/itemdata/item_icon
 
