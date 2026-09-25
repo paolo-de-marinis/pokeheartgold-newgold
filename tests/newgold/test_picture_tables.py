@@ -17,6 +17,7 @@ reference, and its six readers share one bound.
 import os
 from pathlib import Path
 import re
+import struct
 import subprocess
 import sys
 import tempfile
@@ -181,6 +182,34 @@ class PictureTableTests(unittest.TestCase):
         if not import_sprite_offsets.REFERENCE.exists():
             self.skipTest("no reference checkout")
         self.assertEqual(member, b"".join(import_sprite_offsets.records(import_sprite_offsets.REFERENCE)))
+
+    def test_no_front_picture_sinks_deeper_than_retail_lets_one(self):
+        """ov12 draws a front picture at its height (height.narc) less the Y
+        offset of its record here, so its lowest row sits height - offset -
+        clearance under the ground line. Retail's deepest is Metagross's, 12.
+        The reference's offsets for the added species count the whole
+        distance, from heights of 0; on this game's heights, the clearance
+        under each picture, they counted it twice, and a Joltik sank 23 rows,
+        behind the player's HP box."""
+        import heights
+        member = read_narc((ROOT / "files/a/1/8/0").read_bytes())[0][0]
+        table = read_narc(heights.ARCHIVE.read_bytes())[0]
+        offset = lambda species: struct.unpack_from("<b", member, species * import_sprite_offsets.RECORD
+                                                    + import_sprite_offsets.Y_OFFSET)[0]  # noqa: E731
+        # 494..507, the eggs and retail's form rows, are drawn from otherpoke.
+        others = range(import_sprite_offsets.RETAIL, heights.PRET_SPECIES)
+        retail = max(-offset(species) for species in range(1, others.start))
+        sunk = {}
+        for index, entry in enumerate(table):
+            species, slot = divmod(index, len(heights.SLOTS))
+            gender, picture = heights.SLOTS[slot]
+            if picture != "front.png" or not entry or species in others:
+                continue
+            depth = entry[0] - offset(species) - heights.height_of(heights.SPRITES / f"{species:04d}" / gender / picture)[0]
+            if depth > retail:
+                sunk[f"{species} {gender}"] = depth
+        self.assertEqual(retail, 12)
+        self.assertEqual(sunk, {})
 
     def test_every_picture_record_reader_reads_its_species(self):
         """a/1/8/0 member 0 now has a record for every species; the six
