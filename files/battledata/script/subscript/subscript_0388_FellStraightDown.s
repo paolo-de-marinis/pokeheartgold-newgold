@@ -25,6 +25,9 @@ _CANCEL_FLY:
 _GROUND:
     UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_SMACK_DOWN
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_MAGNET_RISE_TURNS, 0
+    // Telekinesis ends too (Pokemon Central, Abbattimento), by Gravity's case
+    // of SetMoveConditionFlag, which zeroes its turns.
+    SetMoveConditionFlag MOVE_GRAVITY, BATTLER_CATEGORY_SIDE_EFFECT_MON
     // {0} fell straight down!
     PrintMessage msg_0197_01784, TAG_NICKNAME, BATTLER_CATEGORY_SIDE_EFFECT_MON
     Wait

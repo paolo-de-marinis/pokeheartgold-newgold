@@ -581,6 +581,16 @@ class PostMoveEffectsTests(unittest.TestCase):
         from test_retail_effect_scripts import subscript
         self.assertNotIn("BATTLER_CATEGORY_DEFENDER", subscript("FELL_STRAIGHT_DOWN"))
 
+    def test_smack_down_ends_magnet_rise_and_telekinesis(self):
+        # Pokemon Central, Abbattimento: what either holds up comes down, and
+        # the effect is over -- no sure hits after, no "freed" line later.
+        from test_retail_effect_scripts import subscript
+        ground = subscript("FELL_STRAIGHT_DOWN").split("_GROUND:\n", 1)[1].split("PrintMessage", 1)[0]
+        self.assertIn("UpdateMonData OPCODE_SET, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_MAGNET_RISE_TURNS, 0\n", ground)
+        self.assertIn("SetMoveConditionFlag MOVE_GRAVITY, BATTLER_CATEGORY_SIDE_EFFECT_MON\n", ground)
+        case = re.search(r"case MOVE_GRAVITY:\n(.*?)break;", (ROOT / "src/battle/battle_command.c").read_text(), re.S).group(1)
+        self.assertIn("ctx->moveConditions[battlerId].telekinesisTurns = 0;", case)
+
     def test_fell_stinger_raises_attack_three_for_a_felled_target(self):
         # Pokemon Central, Pungiglione: three stages from the seventh generation.
         case = self.case("case MOVE_EFFECT_FELL_STINGER:")
