@@ -174,7 +174,8 @@ const u32 ov10_02220AAC[] = {
     /* 0022 */ AI_IF_MOVE_EQUAL_TO, MOVE_FISSURE, 8, // -> 002D
     /* 0025 */ AI_IF_MOVE_EQUAL_TO, MOVE_HORN_DRILL, 5, // -> 002D
     /* 0028 */ AI_FLAG_MOVE_DAMAGE_SCORE, 0,
-    /* 002A */ AI_IF_LOADED_EQUAL_TO, 0, 81, // -> 007E
+    // retail went on to 007E here; the moves that fail on a Ghost-type are asked at 2987
+    /* 002A */ AI_IF_LOADED_EQUAL_TO, 0, 10586, // -> 2987
 
     // 002D
     /* 002D */ AI_IF_MOVE_EFFECTIVENESS_EQUALS, 0, 2474, // -> 09DA
@@ -6056,4 +6057,19 @@ const u32 ov10_02220AAC[] = {
     /* 2980 */ AI_LOAD_TYPE_FROM, 4,
     /* 2982 */ AI_IF_TEMP_EQUAL_TO, TYPE_GRASS, -8104, // -> 09DD
     /* 2985 */ AI_GOTO, -10510, // -> 0079
+
+    // 2987: flag 0, from 002A: a move whose damage is not weighed, every status
+    // move among them. From the sixth generation nothing holds a Ghost-type
+    // (Battler_HasGhostType): Mean Look, Block and Spider Web fail on one, and
+    // so does Octolock, which retail's script has no line for and which also
+    // fails on a target already held (effect script 426); Mean Look's own
+    // check of that is at 04E4. Appended, so no word index above moves.
+    /* 2987 */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_PREVENT_ESCAPE, 3, // -> 298D
+    /* 298A */ AI_IF_CURRENT_MOVE_EFFECT_NOT_EQUAL_TO, MOVE_EFFECT_OCTOLOCK, -10511, // -> 007E
+
+    // 298D
+    /* 298D */ AI_IF_VOLATILE_STATUS, AI_BATTLER_TARGET, 0x4000000, -8119, // -> 09DA
+    /* 2991 */ AI_FLAG_BATTLER_IS_TYPE, AI_BATTLER_TARGET, TYPE_GHOST,
+    /* 2994 */ AI_IF_LOADED_EQUAL_TO, 1, -8125, // -> 09DA
+    /* 2997 */ AI_GOTO, -10523, // -> 007E
 };

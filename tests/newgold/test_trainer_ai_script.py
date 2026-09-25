@@ -85,6 +85,42 @@ class TrainerAIScriptTests(unittest.TestCase):
                               ("ABILITY_SAP_SIPPER", "TYPE_GRASS")):
             self.assertEqual(type_check(absorbers[ability]), kind, ability)
 
+    def test_a_ghost_type_is_not_held(self):
+        # From the sixth generation nothing holds a Ghost-type
+        # (Battler_HasGhostType): flag 0 marks Mean Look, Block, Spider Web
+        # (PREVENT_ESCAPE) and Octolock down against one, a third type
+        # included (command 52), and Octolock against a target already held.
+        lines = words()
+
+        def reach(index):
+            script, _ = lines[index]
+            return index + len(script) + int(script[-1])
+
+        def ran(effect):
+            """The lines flag 0 runs for a status move with the effect, from
+            the jump that takes such a move on (002A) to the one that goes on
+            to the sound checks (007E)."""
+            index, out = reach(0x002A), []
+            while index != 0x007E:
+                script = lines[index][0]
+                if script[0].startswith("AI_IF_CURRENT_MOVE_EFFECT_"):
+                    taken = (script[1] == effect) != ("NOT" in script[0])
+                    index = reach(index) if taken else index + len(script)
+                elif script[0] == "AI_GOTO":
+                    index = reach(index)
+                else:
+                    out.append(index)
+                    index += len(script)
+            return out
+
+        self.assertEqual(ran("MOVE_EFFECT_DEF_DOWN"), [])
+        for effect in ("MOVE_EFFECT_PREVENT_ESCAPE", "MOVE_EFFECT_OCTOLOCK"):
+            held = next(i for i in ran(effect) if lines[i][0][:3] == ["AI_IF_VOLATILE_STATUS", "AI_BATTLER_TARGET", "0x4000000"])
+            self.assertEqual(reach(held), 0x09DA, effect)
+            at = next(i for i in ran(effect) if lines[i][0] == ["AI_FLAG_BATTLER_IS_TYPE", "AI_BATTLER_TARGET", "TYPE_GHOST"])
+            self.assertEqual(lines[at + 3][0][:2], ["AI_IF_LOADED_EQUAL_TO", "1"])
+            self.assertEqual(reach(at + 3), 0x09DA, effect)
+
 
 if __name__ == "__main__":
     unittest.main()
