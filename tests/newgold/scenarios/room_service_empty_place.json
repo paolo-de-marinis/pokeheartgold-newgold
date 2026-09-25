@@ -1,0 +1,12 @@
+{
+  "about": "Room Service passes over a fallen holder: Twins Amy & Mimi in the Azalea Gym against a scratch copy of Paolo's Bugsy save with two Pokemon, a level-40 Slowbro and a level-5 Rattata given a Room Service, poison and 1 HP in the running battle (set:). Both Protect; the poison faints the Rattata at the turn's end, with no one left to take its place. The next turn the Slowbro's Trick Room wakes every Room Service on the field, and the fallen Rattata's does nothing (before the subscript asked for HP, 'Bad Egg's Speed fell!' named party slot 6 and RemoveItem wrote it over the opposing party).",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "SLOWBRO:40::PROTECT+TRICK_ROOM,RATTATA:5::PROTECT", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "set:2,item,ITEM_ROOM_SERVICE", "set:2,status,PSN", "set:2,hp,1",
+            "fight:1:1", "fight:2:1"],
+  "expect": {"lines": ["Rattata was hurt by its poisoning!", "Rattata fainted!", "Slowbro used Trick Room!",
+                       "Slowbro twisted the dimensions!"],
+             "no_lines": ["Room Service", "Bad Egg"]}
+}

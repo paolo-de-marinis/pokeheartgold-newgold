@@ -518,6 +518,15 @@ class EmptyPlaceTests(unittest.TestCase):
     def test_a_pokemon_that_faints_leaves_its_battle_form(self):
         run(self, FAINT_FORM, ("BtlCmd_PlayFaintAnimation",))
 
+    def test_room_service_passes_over_a_fallen_holder(self):
+        # Trick Room's walk over the field asks each battler's HP before its
+        # item, as Teatime's does: a holder that fell with nothing to follow
+        # it has no party slot for RemoveItem to write.
+        script = (ROOT / "files/battledata/script/subscript/subscript_0395_RoomService.s").read_text()
+        steps = [line.strip() for line in script[script.index("_loop:"):].splitlines()[1:4]]
+        self.assertEqual(steps[0], "GetMonBySpeedOrder BSCRIPT_VAR_BATTLER_STAT_CHANGE")
+        self.assertEqual(steps[1], "CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_SIDE_EFFECT_MON, BMON_DATA_HP, 0, _continue")
+
 
 if __name__ == "__main__":
     unittest.main()
