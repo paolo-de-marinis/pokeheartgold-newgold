@@ -132,6 +132,10 @@ sdk9: $(ALL_LIB_OBJS)
 # a prerequisite, newer than global.h as it always is, it had make -n take
 # global.h for remade and print every C object.
 $(WORK_DIR)/include/global.h: | $(FX_CONST_H) ;
+# dsprot's makefile and the ARM7's compile the SDK's headers too, which
+# include it: in a fresh tree their first compiles ran before it was made and
+# stopped on "the file 'nitro/fx/fx_const.h' cannot be opened".
+dsprot sub: | $(FX_CONST_H)
 
 # Convenience targets
 heartgold:          ; @$(MAKE) GAME_VERSION=HEARTGOLD

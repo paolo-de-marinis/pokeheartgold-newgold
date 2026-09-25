@@ -265,6 +265,18 @@ class BuildRuleTests(unittest.TestCase):
         self.assertIn("files/arc/safari_enc.json files/arc/safari_enc.json.txt files/arc/safari_enc.s", result.stdout,
                       result.stdout + result.stderr)
 
+    def test_the_libraries_made_elsewhere_wait_for_fx_const_h(self):
+        """fx_const.h is generated, and the SDK's headers include it. dsprot's
+        makefile and the ARM7's compile them too, and in a fresh tree, where
+        gen_fx_consts had to be built first, their first compiles ran before
+        the header was there: "the file 'nitro/fx/fx_const.h' cannot be
+        opened", on a clean build of a git archive."""
+        db = database()
+        for target in ("dsprot", "sub"):
+            with self.subTest(target):
+                prerequisites = " ".join(m.group(1) for m in re.finditer(rf"^{target}:(.*)$", db, re.M) if "=" not in m.group(1))
+                self.assertIn("lib/include/nitro/fx/fx_const.h", prerequisites)
+
     def test_zukan_enc_naix_is_made_before_anything_is_compiled(self):
         """The Pokedex includes zukan_enc.naix, which is sed's copy of the
         version's own index, not an archive's. Only `filesystem` asked for
