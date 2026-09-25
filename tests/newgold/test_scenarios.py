@@ -99,6 +99,45 @@ class RecordingTests(unittest.TestCase):
             self.assertAlmostEqual(float(audio["duration"]), float(video["duration"]), delta=0.1)
             self.assertEqual(audio["channels"], 2)
 
+    def test_each_core_is_the_one_named_and_its_sound_gets_through(self):
+        # NEWGOLD_CORE picks the core, and what it mixes reaches the mp4: a
+        # save continued, A pressed at the title and its menu, recorded. The
+        # title's music never plays on this ROM (the sound heap has no room
+        # for it; DIAGNOSTICS.md), so the sound is the menu's: its first
+        # clicks come about eleven seconds in. The same stretch before the
+        # presses is silence -- it would not be, were the samples noise.
+        import re
+        import shutil
+        import tempfile
+        save = scene.SAVES / "route29-official.sav"
+        for needed in (ROM, save):
+            if not os.path.exists(needed):
+                self.skipTest(f"{needed} is not there")
+        if not shutil.which("ffmpeg"):
+            self.skipTest("ffmpeg is not installed")
+
+        def loudest(clip, start, length):
+            run = subprocess.run(["ffmpeg", "-hide_banner", "-ss", str(start), "-t", str(length), "-i", clip,
+                                  "-af", "volumedetect", "-f", "null", "-"], capture_output=True, text=True)
+            return float(re.search(r"max_volume: (-?[\d.]+|-inf) dB", run.stderr).group(1))
+
+        for path, name in ((core.MELONDS, "melonDS 0.9.3"), (core.MELONDSDS, "melonDS DS 1.3.1")):
+            with self.subTest(name):
+                if not path.exists():
+                    self.skipTest(f"{path} is not there")
+                with tempfile.TemporaryDirectory(prefix="newgold-sound-") as temp:
+                    clip = os.path.join(temp, "clip.mp4")
+                    script = (f"import sys; sys.path.insert(0, {str(DIAG)!r}); import core; core.pin_clock(); "
+                              f"c = core.Core({str(ROM)!r}, save={str(save)!r}, record={clip!r}); "
+                              "c.step(300)\nfor _ in range(20): c.press('A', 6); c.step(50)\n"
+                              "print('core:', c.name, file=sys.stderr); c.close()")
+                    run = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True,
+                                         timeout=600, env={**os.environ, "NEWGOLD_CORE": str(path)})
+                    self.assertEqual(run.returncode, 0, run.stderr[-2000:])
+                    self.assertTrue(re.search(r"core: (.*)", run.stderr).group(1).startswith(name))
+                    self.assertLess(loudest(clip, 0, 5), -80)
+                    self.assertGreater(loudest(clip, 5, 20), -40)
+
 
 class NavigatorTests(unittest.TestCase):
     """scene.py's goto plans from the tree's own map data; these read the plan
