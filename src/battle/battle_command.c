@@ -3662,6 +3662,9 @@ BOOL BtlCmd_TryOHKOMove(BattleSystem *battleSystem, BattleContext *ctx) {
     } else {
         if (!(ctx->battleMons[ctx->battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_LOCK_ON) && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_NO_GUARD && GetBattlerAbility(ctx, ctx->battlerIdTarget) != ABILITY_NO_GUARD) {
             hitChance = ctx->battleMons[ctx->battlerIdAttacker].level - ctx->battleMons[ctx->battlerIdTarget].level + BattleMoveTbl(ctx, ctx->moveNoCur)->accuracy;
+#ifdef NEWGOLD_DIAG
+            Diag_RollNext(DIAG_ROLL_HIT);
+#endif
             if ((BattleSystem_Random(battleSystem) % 100) < hitChance && (ctx->battleMons[ctx->battlerIdAttacker].level >= ctx->battleMons[ctx->battlerIdTarget].level)) {
                 hitChance = 1;
             } else {
@@ -3672,6 +3675,9 @@ BOOL BtlCmd_TryOHKOMove(BattleSystem *battleSystem, BattleContext *ctx) {
                 hitChance = 1;
             } else {
                 hitChance = ctx->battleMons[ctx->battlerIdAttacker].level - ctx->battleMons[ctx->battlerIdTarget].level + BattleMoveTbl(ctx, ctx->moveNoCur)->accuracy;
+#ifdef NEWGOLD_DIAG
+                Diag_RollNext(DIAG_ROLL_HIT);
+#endif
                 if ((BattleSystem_Random(battleSystem) % 100) < hitChance && ctx->battleMons[ctx->battlerIdAttacker].level >= ctx->battleMons[ctx->battlerIdTarget].level) {
                     hitChance = 1;
                 } else {

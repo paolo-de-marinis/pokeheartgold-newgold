@@ -58,7 +58,7 @@ And the switches, zero unless something outside the game writes them:
 | `gDiagWarpX`, `gDiagWarpZ` | the step check | The next step check puts the player on that tile. The overworld is one coordinate space, so a Route 29 tile written from New Bark Town is Route 29 with its grass and its table. |
 | `gDiagBattleSeed` | `BattleSetup_New` | Nonzero: the battle's RNG is seeded with it instead of the clock's seed, so a battle goes the same way however many frames came before it -- the AI's choices, every roll left to the RNG. |
 | `gDiagForceCritical` | `TryCriticalHit` | 1: the critical-hit roll lands; 2: it fails. The roll only: Battle Armor, Shell Armor and Lucky Chant still refuse a critical hit, and an always-critical move or stage still gets one. Both sides. |
-| `gDiagForceHit` | `BattleSystem_CheckMoveHit` | 1: the accuracy roll hits; 2: it misses. A move accurate to 100 or more still hits. |
+| `gDiagForceHit` | `BattleSystem_CheckMoveHit`, `BtlCmd_TryOHKOMove` | 1: the accuracy roll hits; 2: it misses. A move accurate to 100 or more still hits; a one-hit KO move still fails on a higher-level target or on Sturdy. |
 | `gDiagForceDamageRoll` | `DamageCalcDefault`, `ApplyDamageRange` | 1: the top of the damage range (100%); 2: the bottom (85%). |
 | `gDiagForceEffect` | `ov12_02250490`, `BtlCmd_CheckEffectActivation` | 1: an additional effect's roll succeeds (a burn, a flinch, a stat drop); 2: it fails. A certain effect still happens. |
 
@@ -68,6 +68,10 @@ which answers the forced one when that switch is on. The RNG advances as it alwa
 does, so forcing one roll moves no other. A scenario holds them (`"hold"`, or a
 `hold:` step to change one mid-battle); `tests/newgold/scenarios/rolls_forced_*.json`,
 `accuracy_forced.json` and `battle_seed.json` show each at work.
+
+The other chance rolls are not forced, only fixed by the seed: the flinch of a King's
+Rock, a Razor Fang or Stench, the contact abilities' three in ten (Static, Flame Body,
+Poison Point, Effect Spore, Cute Charm and the like) and Toxic Chain among them.
 
 ## Reading it
 

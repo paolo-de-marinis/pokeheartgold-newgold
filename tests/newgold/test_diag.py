@@ -63,6 +63,16 @@ class DiagnosticsTests(unittest.TestCase):
             read |= set(re.findall(r"gDiag\w+", script.read_text()))
         self.assertEqual(names - read, set(), "in diag.h and read by nothing")
 
+    def test_a_one_hit_ko_move_s_accuracy_is_forced_too(self):
+        # BattleSystem_CheckMoveHit returns on the flat hit rate before its
+        # roll; Fissure, Horn Drill, Guillotine and Sheer Cold roll in
+        # BtlCmd_TryOHKOMove, each of its two rolls named just before it.
+        from test_dex_range import c_function
+        body = c_function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TryOHKOMove")
+        rolls = re.findall(r"#ifdef NEWGOLD_DIAG\n\s*Diag_RollNext\(DIAG_ROLL_HIT\);\n#endif\n\s*if \(\(BattleSystem_Random\(battleSystem\) % 100\) < hitChance", body)
+        self.assertEqual(len(rolls), 2)
+        self.assertEqual(body.count("BattleSystem_Random("), 2)
+
     def test_gym_reads_the_hp_past_a_two_word_species(self):
         # markers.battle names a form in two words; gym.py once took the
         # fourth word for the HP, read "L30" and died without a word.

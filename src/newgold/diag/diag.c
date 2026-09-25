@@ -105,9 +105,10 @@ void Diag_RollNext(u32 kind) {
 
 // A forced roll, as the check that asks for it reads the value: [kind][switch - 1].
 // TryCriticalHit lands on a remainder of 0; BattleSystem_CheckMoveHit misses
-// when the roll modulo 100, plus one, is over the accuracy; the damage is
-// (100 - roll % 16)%; an additional effect happens when the roll modulo 100
-// is under its chance.
+// when the roll modulo 100, plus one, is over the accuracy, and
+// BtlCmd_TryOHKOMove hits when the roll modulo 100 is under its chance; the
+// damage is (100 - roll % 16)%; an additional effect happens when the roll
+// modulo 100 is under its chance.
 static const u8 sDiagForcedRolls[][2] = {
     { 0, 0 },
     { 0, 1 },
