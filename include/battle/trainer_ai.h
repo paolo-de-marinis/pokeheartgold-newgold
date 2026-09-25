@@ -34,8 +34,8 @@ extern const AICommandFunc ov10_0222B0B4[];
 // The AI's routines, extern because the AI is split over several files: the
 // script commands the command table calls, the script machine's helpers
 // (ov10_0221EEF0 .. ov10_0221EF34), and what the turn choice and the switch
-// checks share. Two script commands are still assembly (ov10_0221E018,
-// ov10_0221E2CC; asm/include/overlay_10.inc names what they call).
+// checks share. One script command is still assembly (ov10_0221E2CC;
+// asm/include/overlay_10.inc names what it calls).
 u8 ov10_0221BF44(BattleSystem *battleSystem, BattleContext *ctx);
 u8 ov10_0221C038(BattleSystem *battleSystem, BattleContext *ctx);
 void ov10_0221C278(BattleSystem *battleSystem, BattleContext *ctx);
