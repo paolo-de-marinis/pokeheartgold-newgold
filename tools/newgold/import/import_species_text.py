@@ -149,20 +149,21 @@ def fields_by_port_row(revision):
             fields = dict(by_number[row])
         else:
             raise SystemExit(f"SPECIES_{name} ({row}) has no text at {revision}")
+        # konefr's 77469fbd4 replaced three Galarian forms' "-----" with their
+        # base's SPECIES_ identifier -- "SLOWBRO", "FARFETCHD" (no
+        # apostrophe), "SLOWKING" -- the only capitals among his mixed-case
+        # names; a trainer's Galarian Slowbro showed "SLOWBRO". He meant the
+        # species' name: a form named so is read as one left "-----", which
+        # the loop below names after its base, through a base that is itself
+        # a form. KONEFR-NOTES.md, Testi 1.
+        if name in bases and fields["name"] == bases[name]:
+            fields["name"] = "-----"
         for field, blank in PLACEHOLDERS.items():
             # A Gigantamax Toxtricity Low Key's base is Low Key, itself a form.
             base = name
             while fields[field] in blank and base in bases:
                 base = bases[base]
                 fields[field] = data[base][field]
-        # konefr's 77469fbd4 replaced three Galarian forms' "-----" with their
-        # base's SPECIES_ identifier -- "SLOWBRO", "FARFETCHD" (no
-        # apostrophe), "SLOWKING" -- the only capitals among his mixed-case
-        # names; a trainer's Galarian Slowbro showed "SLOWBRO". He meant the
-        # species' name, and a form named so takes its base's, as a form
-        # left "-----" does. KONEFR-NOTES.md, Testi 1.
-        if name in bases and fields["name"] == bases[name]:
-            fields["name"] = data[bases[name]]["name"]
         rows[row] = fields
     return rows
 

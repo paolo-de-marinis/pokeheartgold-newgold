@@ -12,6 +12,7 @@ import re
 import sys
 import unittest
 import xml.etree.ElementTree as ET
+from unittest import mock
 
 from test_level_cap import ROOT
 
@@ -157,6 +158,22 @@ class SpeciesTextTests(unittest.TestCase):
         self.assertEqual([rows(237)[i] for i in (573, 574, 1125, 1131)],
                          ["Slowpoke", "Slowbro", "Farfetch’d", "Slowking"])
         self.assertEqual(rows(817)[1125], "FARFETCH’D")
+
+    def test_a_form_named_by_its_base_s_identifier_is_named_up_the_chain(self):
+        """konefr's slip (a form named by its base's SPECIES_ identifier)
+        takes its name as a form left "-----" does, through a base that is
+        itself a form: a form of a form so named gets the first real name up
+        the chain, not its base's "-----". No species is shaped so today."""
+        fields = {"pokedexEntry": "x", "classification": "x", "height": "x", "weight": "x"}
+        data = {"BASE": dict(fields, name="Base"), "FORM": dict(fields, name=PLACEHOLDER),
+                "FORM_OF_FORM": dict(fields, name="FORM")}
+        with mock.patch.multiple(import_species_text, text_data=lambda revision: data,
+                                 numbers=lambda header, names: {},
+                                 base_species=lambda revision: {"FORM": "BASE", "FORM_OF_FORM": "FORM"},
+                                 port_species=lambda: {1: "BASE", 2: "FORM", 3: "FORM_OF_FORM"}), \
+                mock.patch.object(gmm, "git_show", return_value=""):
+            named = {row: row_fields["name"] for row, row_fields in import_species_text.fields_by_port_row("x").items()}
+        self.assertEqual(named, {1: "Base", 2: "Base", 3: "Base"})
 
 
 if __name__ == "__main__":
