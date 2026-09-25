@@ -251,7 +251,7 @@ typedef int BOOL;
 typedef struct { int unused; } Party;
 typedef struct { u32 type; Party parties[4]; } BattleSystem;
 typedef struct { u16 item; } BattleMon;
-typedef struct { BattleMon battleMons[4]; u8 selectedMonIndex[4], heldItemsTaken; u16 itemsTakenFromWild[2]; } BattleContext;
+typedef struct { BattleMon battleMons[4]; u8 selectedMonIndex[4], heldItemsTaken; u16 itemsTakenFromWild[2], itemsToRestore[6]; } BattleContext;
 static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 static u32 BattleSystem_GetBattleType(BattleSystem *bs) { return bs->type; }
 static u8 BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
@@ -273,6 +273,16 @@ int main(void) {
     NoteHeldItemTaken(&bs, &ctx, 3);
     NoteHeldItemTaken(&bs, &ctx, 1);
     assert(ctx.itemsTakenFromWild[0] == ITEM_LEFTOVERS && ctx.itemsTakenFromWild[1] == ITEM_ESCAPE_ROPE);
+    // Trick and Switcheroo: the player's Pokemon handing over the item it
+    // started with (slot 1's Oran Berry), not one it got in the battle (slot
+    // 4 started with Leftovers and holds a Potion), nor a wild one.
+    ctx.heldItemsTaken = 0;
+    ctx.itemsToRestore[1] = ITEM_ORAN_BERRY;
+    ctx.itemsToRestore[4] = ITEM_LEFTOVERS;
+    NoteHeldItemGiven(&bs, &ctx, 0);
+    NoteHeldItemGiven(&bs, &ctx, 2);
+    NoteHeldItemGiven(&bs, &ctx, 1);
+    assert(ctx.heldItemsTaken == (1 << 1));
     return 0;
 }
 """
@@ -285,7 +295,8 @@ class TakenItemTests(unittest.TestCase):
 
     def test_who_is_marked(self):
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
-        program = NOTE_FIXTURE.replace("@FUNCTIONS@", function(overlay, "Battler_IsWild") + function(overlay, "NoteHeldItemTaken"))
+        program = NOTE_FIXTURE.replace("@FUNCTIONS@", function(overlay, "Battler_IsWild") + function(overlay, "NoteHeldItemTaken")
+                                                + function(overlay, "NoteHeldItemGiven"))
         with tempfile.TemporaryDirectory(prefix="newgold-taken-") as directory:
             path = Path(directory)
             (path / "check.c").write_text(program)
@@ -299,6 +310,15 @@ class TakenItemTests(unittest.TestCase):
     def test_thief_and_covet_mark_what_they_take(self):
         thief = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TryStealItem")
         self.assertRegex(thief, r"\} else \{\n\s*NoteHeldItemTaken\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\}\n\s*\}\n\n\s*return FALSE;")
+
+    def test_trick_and_switcheroo_mark_what_the_player_hands_over(self):
+        # Pokemon Central (Raggiro, Rapidscambio): from the fifth generation
+        # a swap does not outlast a battle against a trainer, a Berry
+        # included.
+        swap = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TrySwapItems")
+        self.assertRegex(swap, r"ABILITY_STICKY_HOLD\) == TRUE\) \{\n\s*BattleScriptIncrementPointer\(ctx, adrsB\);\n\s*\} else \{\n"
+                               r"\s*NoteHeldItemGiven\(battleSystem, ctx, ctx->battlerIdAttacker\);\n"
+                               r"\s*NoteHeldItemGiven\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\}")
 
     def test_a_caught_pokemon_gets_its_item_back(self):
         # Before the Pokemon is stored, whichever way it is stored; the other

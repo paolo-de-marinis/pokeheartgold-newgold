@@ -5111,13 +5111,17 @@ BOOL BtlCmd_TrySwapItems(BattleSystem *battleSystem, BattleContext *ctx) {
     // HeartGold refuses the swap when the other side starts it outside a link
     // or Frontier battle, so the player can never lose a held item to the AI.
     // New Gold drops that refusal: whatever the player was holding is handed
-    // back when the battle ends, so the item is not gone for good.
+    // back when the battle ends, a Berry too (NoteHeldItemGiven), so the item
+    // is not gone for good.
     if ((ctx->fieldSideConditionData[sideAttacker].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdAttacker])) || (ctx->fieldSideConditionData[sideTarget].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]))) {
         BattleScriptIncrementPointer(ctx, adrsA);
     } else if ((ctx->battleMons[ctx->battlerIdAttacker].item == 0 && ctx->battleMons[ctx->battlerIdTarget].item == 0) || !CanTrickHeldItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)) {
         BattleScriptIncrementPointer(ctx, adrsA);
     } else if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
         BattleScriptIncrementPointer(ctx, adrsB);
+    } else {
+        NoteHeldItemGiven(battleSystem, ctx, ctx->battlerIdAttacker);
+        NoteHeldItemGiven(battleSystem, ctx, ctx->battlerIdTarget);
     }
 
     return FALSE;

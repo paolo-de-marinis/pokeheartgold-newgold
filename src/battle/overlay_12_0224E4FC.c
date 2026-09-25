@@ -7117,6 +7117,25 @@ void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battl
     }
 }
 
+// Trick and Switcheroo: battlerId hands its item to the other. One of the
+// player's own Pokemon handing over what it started the battle with has it
+// back when the battle is over, a Berry too, as if it had been taken (Pokemon
+// Central, Raggiro and Rapidscambio: from the fifth generation a swap does
+// not outlast a battle against a trainer; GiveBackHeldItems). A wild Pokemon
+// caught with it keeps it (CaughtMonKeepsItem).
+//
+// ponytail: a Berry the one it went to then eats comes back too; Raggiro has
+// a wild Pokemon's eaten Berry stay eaten. Telling them apart needs the
+// receiver to remember whose Berry it holds.
+void NoteHeldItemGiven(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    int slot = ctx->selectedMonIndex[battlerId];
+
+    if (BattleSystem_GetParty(battleSystem, battlerId) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)
+        && ctx->battleMons[battlerId].item != ITEM_NONE && ctx->battleMons[battlerId].item == ctx->itemsToRestore[slot]) {
+        ctx->heldItemsTaken |= MaskOfFlagNo(slot);
+    }
+}
+
 // Disguise and Ice Face (battle_calc_damage.c:254): a Mimikyu in its disguise
 // takes nothing from a move, and an Eiscue with its Ice Face nothing from a
 // physical one -- physical as this attacker uses it, so a Photon Geyser or a
