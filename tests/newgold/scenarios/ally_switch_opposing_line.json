@@ -1,0 +1,15 @@
+{
+  "about": "Ally Switch's line for the opposing pair names their side once, as Scarlet and Violet's text does (a187e9fff: before, 'The opposing Spinarak and the opposing Ledyba switched places!'). The Twins' double battle in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-30 Pawmot and a level-30 Baxcalibur on the twins' platform; the twins' Spinarak is given only Ally Switch in the running battle (teach:), everyone else only Splash, and the two change places. The wild pair's line needs a wild double battle, which the harness cannot start.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:30,BAXCALIBUR:30", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_SPLASH", "teach:2,0,MOVE_SPLASH",
+            "teach:1,0,MOVE_ALLY_SWITCH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:3,0,MOVE_SPLASH", "teach:3,1,0,0", "teach:3,2,0,0", "teach:3,3,0,0",
+            {"expect": {"battler1.species": "SPECIES_SPINARAK", "battler3.species": "SPECIES_LEDYBA"}},
+            "fight:1:1"],
+  "expect": {"lines": ["The opposing Spinarak used Ally Switch!", "The opposing Spinarak and Ledyba switched places!"],
+             "no_lines": ["and the opposing"],
+             "battler1.species": "SPECIES_LEDYBA", "battler3.species": "SPECIES_SPINARAK"}
+}
