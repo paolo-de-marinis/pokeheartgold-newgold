@@ -1,6 +1,18 @@
 #ifndef NNSYS_SND_SNDARC_H_
 #define NNSYS_SND_SNDARC_H_
 
+typedef struct NNSSndArcBankInfo
+{
+    u32 fileId;
+    u16 waveArcNo[4];
+} NNSSndArcBankInfo;
+
+typedef struct NNSSndArcWaveArcInfo
+{
+    u32 fileId : 24;
+    u32 flags : 8;
+} NNSSndArcWaveArcInfo;
+
 typedef struct NNSSndArcFileInfo
 {
     u32 offset;
@@ -75,5 +87,8 @@ typedef struct NNSSndArc
 void NNS_SndArcInit(NNSSndArc *arc, const char *filePath, NNSSndHeapHandle heap, BOOL symbolLoadFlag);
 
 const NNSSndSeqParam* NNS_SndArcGetSeqParam(int seqNo);
+const NNSSndArcBankInfo *NNS_SndArcGetBankInfo(int bankNo);
+const NNSSndArcWaveArcInfo *NNS_SndArcGetWaveArcInfo(int waveArcNo);
+void *NNS_SndArcGetFileAddress(u32 fileId);
 
 #endif //NNSYS_SND_SNDARC_H_

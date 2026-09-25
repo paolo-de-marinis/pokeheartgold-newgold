@@ -373,6 +373,8 @@ Static main
     Object lib/asm/wifi.o
     Object lib/asm/libVCT.o
     Object lib/asm/nnsys.o
+    Object lib/NitroSystem/src/sndarc_loader.o
+    Object lib/asm/nnsys_2.o
 
     ### NitroSDK ###
     Object lib/NitroSDK/asm/fx_sincos.o
