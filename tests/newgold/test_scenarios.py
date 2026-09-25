@@ -24,10 +24,12 @@ DIAG = ROOT / "tools/newgold/devkit/diag"
 SCENARIOS = ROOT / "tests/newgold/scenarios"
 ROM = ROOT / "build/heartgold.us.diag/pokeheartgold.us.nds"
 ELF = ROOT / "build/heartgold.us.diag/main.elf"
-CORE = "/usr/lib/libretro/melonds_libretro.so"
 
 sys.path.insert(0, str(DIAG))
+import core  # noqa: E402
 import scene  # noqa: E402
+
+CORE = str(core.CORE)       # the one NEWGOLD_CORE names, or core.py's default
 
 
 class ScenarioFileTests(unittest.TestCase):
@@ -127,7 +129,7 @@ class NavigatorTests(unittest.TestCase):
 def play(path):
     def test(self):
         for needed, how in ((ROM, "make NEWGOLD_DIAG=1 COMPARE=0 build/heartgold.us.diag/pokeheartgold.us.nds"),
-                            (ELF, "the same build"), (CORE, "the melonDS libretro core")):
+                            (ELF, "the same build"), (CORE, "the libretro core (NEWGOLD_CORE)")):
             if not os.path.exists(needed):
                 self.skipTest(f"{needed} is not there: {how}")
         run = subprocess.run([sys.executable, str(DIAG / "scene.py"), "--scenario", str(path)],

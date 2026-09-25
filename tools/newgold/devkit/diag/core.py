@@ -25,13 +25,20 @@ it go down two pipes to ffmpeg, which writes H.264 at the DS's own frame rate
 (the core's, 59.83 per second) with the game's sound in AAC; close() finishes
 the file. A run records at roughly the speed it plays without recording.
 
-The sound is silence unless the core has the DS's own BIOS: without it this
-core (melonDS 0.9.3) runs its FreeBIOS, and the game's sound driver, set up
-and playing, mixes nothing -- measured, every sample zero through the intro
-and the title. A directory named by NEWGOLD_BIOS holding bios7.bin,
-bios9.bin and firmware.bin (dumps of one's own console; none is on this
-machine) is copied into the core's system directory for a recorded run only,
-so every other run keeps the FreeBIOS the harness has always had.
+Two cores can drive it, picked by NEWGOLD_CORE (a path; Core(core=...) for
+one instance): melonDS 0.9.3 (MELONDS, Arch's libretro-melonds, the
+default) and melonDS DS 1.3.1 (MELONDSDS, melonDS 1.x as Paolo's melonDS
+is, unpacked under ~/hgss-build/deps/melondsds). Each boots the ROM directly on
+its built-in BIOS and firmware, draws in software, runs without its JIT
+(NEWGOLD_JIT=1 turns it on) and keeps the console's clock at CLOCK; main RAM
+is the core's memory 2 on both, from 0x02000000. melonDS 0.9.3 reads and
+writes the save file itself; melonDS DS is handed it and gives it back as
+memory, and core.py keeps the same file for it (save_file).
+
+Both mix the game's sound alike: the clicks, the cries, the gym's and the
+battle's music. A town's, a route's, the title's and the intro's music never
+plays, on either core or on melonDS itself: the game's sound heap has no
+room left for them (DIAGNOSTICS.md, "Missing music").
 
 A script calls pin_clock() first, before it does anything else.
 """
@@ -47,7 +54,13 @@ import tempfile
 import threading
 from pathlib import Path
 
-CORE = Path("/usr/lib/libretro/melonds_libretro.so")
+# The two cores the harness knows. NEWGOLD_CORE names the one a run uses (a
+# path; Core(core=...) overrides it for one instance); NEWGOLD_JIT=1 turns
+# either core's JIT recompiler on, off by default.
+MELONDS = Path("/usr/lib/libretro/melonds_libretro.so")      # melonDS 0.9.3, Arch's libretro-melonds
+MELONDSDS = Path.home() / "hgss-build/deps/melondsds/melondsds_libretro.so"   # melonDS DS 1.3.1
+CORE = Path(os.environ.get("NEWGOLD_CORE") or MELONDS)
+JIT = os.environ.get("NEWGOLD_JIT") == "1"
 MAIN_RAM = 0x02000000
 BUTTONS = {"B": 0, "Y": 1, "SELECT": 2, "START": 3, "UP": 4, "DOWN": 5, "LEFT": 6, "RIGHT": 7,
            "A": 8, "X": 9, "L": 10, "R": 11}
@@ -63,16 +76,29 @@ AUDIO_BATCH = ctypes.CFUNCTYPE(ctypes.c_size_t, ctypes.c_void_p, ctypes.c_size_t
 POLL = ctypes.CFUNCTYPE(None)
 STATE = ctypes.CFUNCTYPE(ctypes.c_int16, ctypes.c_uint, ctypes.c_uint, ctypes.c_uint, ctypes.c_uint)
 
-# The core sets the console's clock from the host's time(), so the RNG's seed
+# The core sets the console's clock from the host's time, so the RNG's seed
 # and the time of day followed the second a run started in, and one replay
 # could differ from the next. boot_check.c answers time() itself; in-process
 # the core binds the C library's, and only a library preloaded comes before
 # it. pin_clock() runs the script again, once, with one that answers CLOCK
 # (smoke.CLOCK, test_boot's), in UTC as boot_check's clock: does.
+#
+# melonDS 0.9.3 asks time() at every read of the console's clock, which then
+# stands still at CLOCK. melonDS DS asks clock_gettime(): in its "sync" time
+# mode at every frame, so its clock stands still at CLOCK the same way (its
+# "real" mode sets the clock once and lets it run, and a wild Pokemon rolled
+# after a few seconds of play is then another one). The shim answers that
+# call with CLOCK too, but only while Core sets newgold_pin_realtime -- in
+# retro_load_game and retro_run -- so the rest of the process keeps the real
+# time. (Its "absolute" start-time options would give no seconds: those it
+# takes from the host.)
 CLOCK = 1700000000
 SHIM = r"""
+#define _GNU_SOURCE
+#include <dlfcn.h>
 #include <stdlib.h>
 #include <time.h>
+int newgold_pin_realtime;
 time_t time(time_t *out) {
     const char *pinned = getenv("NEWGOLD_CLOCK");
     struct timespec now;
@@ -86,6 +112,17 @@ time_t time(time_t *out) {
     if (out) *out = t;
     return t;
 }
+int clock_gettime(clockid_t id, struct timespec *out) {
+    static int (*real)(clockid_t, struct timespec *);
+    const char *pinned = newgold_pin_realtime && id == CLOCK_REALTIME ? getenv("NEWGOLD_CLOCK") : NULL;
+    if (pinned) {
+        out->tv_sec = (time_t)strtoll(pinned, NULL, 10);
+        out->tv_nsec = 0;
+        return 0;
+    }
+    if (!real) real = (int (*)(clockid_t, struct timespec *))dlsym(RTLD_NEXT, "clock_gettime");
+    return real(id, out);
+}
 """
 
 
@@ -97,11 +134,33 @@ def pin_clock(seconds=CLOCK):
     if not shim.exists():
         source, built = shim.with_suffix(f".{os.getpid()}.c"), shim.with_suffix(f".{os.getpid()}.tmp")
         source.write_text(SHIM)
-        subprocess.run(["cc", "-O2", "-shared", "-fPIC", "-o", str(built), str(source)], check=True)
+        subprocess.run(["cc", "-O2", "-shared", "-fPIC", "-o", str(built), str(source), "-ldl"], check=True)
         source.unlink()
         os.replace(built, shim)
     os.execve(sys.executable, sys.orig_argv, {**os.environ, "NEWGOLD_CLOCK": str(seconds), "TZ": "UTC0",
                                               "LD_PRELOAD": f"{shim} {preload}".strip()})
+
+
+def ds_options():
+    """melonDS DS's options: the software renderer (it asks for no OpenGL
+    context then), a DS booted directly on its built-in BIOS and firmware, no
+    network, no microphone, no cursor drawn over the touch screen, the two
+    screens top over bottom with no gap, and the clock kept at the host's
+    time -- CLOCK, under pin_clock()."""
+    return {b"melonds_render_mode": b"software", b"melonds_threaded_renderer": b"disabled",
+            b"melonds_console_mode": b"ds", b"melonds_boot_mode": b"direct",
+            b"melonds_sysfile_mode": b"builtin", b"melonds_network_mode": b"disabled",
+            b"melonds_mic_input": b"silence", b"melonds_show_cursor": b"disabled",
+            b"melonds_number_of_screen_layouts": b"1", b"melonds_screen_layout1": b"top-bottom",
+            b"melonds_screen_gap": b"0", b"melonds_touch_mode": b"touch", b"melonds_dsi_sdcard": b"disabled",
+            b"melonds_firmware_language": b"en", b"melonds_firmware_username": b"melonDS DS",
+            b"melonds_start_time_mode": b"sync"}
+
+
+class SystemInfo(ctypes.Structure):
+    _fields_ = [("library_name", ctypes.c_char_p), ("library_version", ctypes.c_char_p),
+                ("valid_extensions", ctypes.c_char_p), ("need_fullpath", ctypes.c_bool),
+                ("block_extract", ctypes.c_bool)]
 
 
 class AvInfo(ctypes.Structure):
@@ -120,20 +179,24 @@ class Variable(ctypes.Structure):
 
 
 class Core:
-    def __init__(self, rom, save=None, record=None):
+    def __init__(self, rom, save=None, record=None, core=None):
         self.dir = tempfile.mkdtemp(prefix="newgold-core-")
         self._dir = ctypes.c_char_p(self.dir.encode())
+        self.save_file = Path(self.dir) / (Path(rom).stem + ".sav")
         if save:
-            shutil.copyfile(save, Path(self.dir) / (Path(rom).stem + ".sav"))
-        if record and os.environ.get("NEWGOLD_BIOS"):
-            for name in ("bios7.bin", "bios9.bin", "firmware.bin"):
-                if (Path(os.environ["NEWGOLD_BIOS"]) / name).exists():
-                    shutil.copyfile(Path(os.environ["NEWGOLD_BIOS"]) / name, Path(self.dir) / name)
+            shutil.copyfile(save, self.save_file)
         self.buttons, self.touching, self.tx, self.ty = set(), False, 0, 0
         self.frames = 0
         self._grab, self._frame = False, None
         self._ffmpeg, self._sound = None, None
-        self.lib = ctypes.CDLL(str(CORE))
+        self.core = Path(core or CORE)
+        self.lib = ctypes.CDLL(str(self.core))
+        info = SystemInfo()
+        self.lib.retro_get_system_info(ctypes.byref(info))
+        self.name = f"{info.library_name.decode()} {info.library_version.decode()}"
+        self.ds = info.library_name == b"melonDS DS"
+        self.options = ds_options() if self.ds else dict(OPTIONS)
+        self.options[b"melonds_jit_enable"] = b"enabled" if JIT else b"disabled"
         self._callbacks = [ENV(self._env), VIDEO(self._video), AUDIO(self._sample),
                            AUDIO_BATCH(self._samples), POLL(lambda: None), STATE(self._input)]
         env, video, audio, batch, poll, state = self._callbacks
@@ -147,10 +210,28 @@ class Core:
         self._rom = Path(rom).read_bytes()
         self._rombuf = ctypes.create_string_buffer(self._rom, len(self._rom))
         info = GameInfo(str(rom).encode(), ctypes.cast(self._rombuf, ctypes.c_void_p), len(self._rom), None)
-        if not self.lib.retro_load_game(ctypes.byref(info)):
+        try:
+            self._pin = ctypes.c_int.in_dll(ctypes.CDLL(None), "newgold_pin_realtime")
+        except ValueError:      # no pin_clock(): the host's time, as it always was
+            self._pin = ctypes.c_int()
+        self._pin.value = 1
+        loaded = self.lib.retro_load_game(ctypes.byref(info))
+        self._pin.value = 0
+        if not loaded:
             raise SystemExit("the core would not load the ROM")
         self.lib.retro_get_memory_data.restype = ctypes.c_void_p
         self.lib.retro_get_memory_size.restype = ctypes.c_size_t
+        # melonDS 0.9.3 reads and writes <save directory>/<rom>.sav itself;
+        # melonDS DS hands the save to the frontend as memory, which is filled
+        # from that file here, before the first frame, and written back to it
+        # when it changes (every second of the game's time, and at close()).
+        self._sram = None
+        if self.ds:
+            self._sram = (self.lib.retro_get_memory_data(0), self.lib.retro_get_memory_size(0))
+            if save:
+                data = Path(save).read_bytes()[:self._sram[1]]
+                ctypes.memmove(self._sram[0], data, len(data))
+            self._saved = ctypes.string_at(*self._sram)
         if record:
             self.record(record)
 
@@ -218,7 +299,7 @@ class Core:
             return True
         if cmd == 15:  # a core option
             var = ctypes.cast(data, ctypes.POINTER(Variable))[0]
-            value = OPTIONS.get(var.key)
+            value = self.options.get(var.key)
             if value is None:
                 return False
             ctypes.cast(data, ctypes.POINTER(Variable))[0].value = value
@@ -254,10 +335,20 @@ class Core:
         for _ in range(frames):
             for hook in hooks:
                 hook(self)
+            self._pin.value = 1
             self.lib.retro_run()
+            self._pin.value = 0
             self.frames += 1
             if self._ffmpeg:
                 self._record()
+            if self._sram and self.frames % 60 == 0:
+                self._write_save()
+
+    def _write_save(self):
+        now = ctypes.string_at(*self._sram)
+        if now != self._saved:
+            self.save_file.write_bytes(now)
+            self._saved = now
 
     def press(self, button, frames=6, hooks=()):
         self.buttons = {BUTTONS[button]}
@@ -307,6 +398,8 @@ class Core:
     def close(self):
         if self._ffmpeg:
             self._stop_recording()
+        if self._sram:
+            self._write_save()
         self.lib.retro_unload_game()
         self.lib.retro_deinit()
         shutil.rmtree(self.dir, ignore_errors=True)

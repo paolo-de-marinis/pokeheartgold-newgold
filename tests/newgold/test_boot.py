@@ -174,6 +174,19 @@ class ClockTests(unittest.TestCase):
                                 cwd=ROOT / "tools/newgold/devkit/diag")
         self.assertEqual(result.stdout.strip(), str(CLOCK), result.stderr)
 
+    def test_the_real_time_is_pinned_only_while_the_core_runs(self):
+        # melonDS DS reads clock_gettime() instead: the same shim answers the
+        # pinned second there while core.py holds newgold_pin_realtime (in
+        # retro_load_game and retro_run), and the real time otherwise.
+        script = ("import core, ctypes, time; core.pin_clock(); "
+                  "pin = ctypes.c_int.in_dll(ctypes.CDLL(None), 'newgold_pin_realtime'); "
+                  "pin.value = 1; held = int(time.time()); pin.value = 0; print(held, int(time.time()))")
+        result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True,
+                                cwd=ROOT / "tools/newgold/devkit/diag")
+        held, free = map(int, result.stdout.split())
+        self.assertEqual(held, CLOCK, result.stderr)
+        self.assertGreater(free, CLOCK + 3600 * 24 * 365)
+
 
 if __name__ == "__main__":
     unittest.main()
