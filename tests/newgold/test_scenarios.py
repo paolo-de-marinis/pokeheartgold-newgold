@@ -122,10 +122,9 @@ class RecordingTests(unittest.TestCase):
     def test_each_core_is_the_one_named_and_its_sound_gets_through(self):
         # NEWGOLD_CORE picks the core, and what it mixes reaches the mp4: a
         # save continued, A pressed at the title and its menu, recorded. The
-        # title's music never plays on this ROM (the sound heap has no room
-        # for it; DIAGNOSTICS.md), so the sound is the menu's: its first
-        # clicks come about eleven seconds in. The same stretch before the
-        # presses is silence -- it would not be, were the samples noise. And
+        # boot's white screen and first notices are silence -- they would not
+        # be, were the samples noise -- and its sound starts 5.2 seconds in
+        # on either core, the title's and the menu's after it. And
         # ffmpeg is given as much sound as picture from the first frame on:
         # about 547 samples a frame on either core (melonDS 0.9.3 gives none
         # with its first, and core.py fills that frame with silence).
@@ -163,7 +162,7 @@ class RecordingTests(unittest.TestCase):
                     self.assertTrue(re.search(r"core: (.*)", run.stderr).group(1).startswith(name))
                     samples, frames = map(int, re.search(r"sound: (\d+) (\d+)", run.stderr).groups())
                     self.assertLess(abs(samples - frames * 32728.498 / 59.826098), 100)
-                    self.assertLess(loudest(clip, 0, 5), -80)
+                    self.assertLess(loudest(clip, 0, 4), -80)
                     self.assertGreater(loudest(clip, 5, 20), -40)
 
 
