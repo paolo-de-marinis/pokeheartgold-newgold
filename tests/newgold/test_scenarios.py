@@ -125,7 +125,10 @@ class RecordingTests(unittest.TestCase):
         # title's music never plays on this ROM (the sound heap has no room
         # for it; DIAGNOSTICS.md), so the sound is the menu's: its first
         # clicks come about eleven seconds in. The same stretch before the
-        # presses is silence -- it would not be, were the samples noise.
+        # presses is silence -- it would not be, were the samples noise. And
+        # ffmpeg is given as much sound as picture from the first frame on:
+        # about 547 samples a frame on either core (melonDS 0.9.3 gives none
+        # with its first, and core.py fills that frame with silence).
         import re
         import shutil
         import tempfile
@@ -149,12 +152,17 @@ class RecordingTests(unittest.TestCase):
                     clip = os.path.join(temp, "clip.mp4")
                     script = (f"import sys; sys.path.insert(0, {str(DIAG)!r}); import core; core.pin_clock(); "
                               f"c = core.Core({str(ROM)!r}, save={str(save)!r}, record={clip!r}); "
+                              "fed, put = [], c._sounds.put\n"
+                              "c._sounds.put = lambda chunk: (fed.append(len(chunk or b'')), put(chunk))\n"
                               "c.step(300)\nfor _ in range(20): c.press('A', 6); c.step(50)\n"
-                              "print('core:', c.name, file=sys.stderr); c.close()")
+                              "print('core:', c.name, file=sys.stderr)\n"
+                              "print('sound:', sum(fed) // 4, c.frames, file=sys.stderr); c.close()")
                     run = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True,
                                          timeout=600, env={**os.environ, "NEWGOLD_CORE": str(path)})
                     self.assertEqual(run.returncode, 0, run.stderr[-2000:])
                     self.assertTrue(re.search(r"core: (.*)", run.stderr).group(1).startswith(name))
+                    samples, frames = map(int, re.search(r"sound: (\d+) (\d+)", run.stderr).groups())
+                    self.assertLess(abs(samples - frames * 32728.498 / 59.826098), 100)
                     self.assertLess(loudest(clip, 0, 5), -80)
                     self.assertGreater(loudest(clip, 5, 20), -40)
 

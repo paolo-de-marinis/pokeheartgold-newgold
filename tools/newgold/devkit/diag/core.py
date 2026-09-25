@@ -269,6 +269,7 @@ class Core:
         # other waits -- and one thread writing both blocked on the one
         # ffmpeg was not reading, forever.
         self._sound, self._sounds = bytearray(), queue.Queue()
+        self._silence, self._heard = bytes(4 * round(av.sample_rate / av.fps)), False
         sound_pipe = os.fdopen(into, "wb")
 
         def pour():
@@ -295,6 +296,12 @@ class Core:
             if pitch != width * 4:
                 data = b"".join(data[row * pitch:row * pitch + width * 4] for row in range(height))
             self._ffmpeg.stdin.write(data)      # a frame the core did not draw repeats the last
+        if not self._heard and not self._sound:
+            # melonDS 0.9.3 hands over no sound with its first frame, and
+            # every sound after it came a frame early: a frame's silence there
+            self._sound += self._silence
+        else:
+            self._heard = True
         self._sounds.put(bytes(self._sound))
         self._sound.clear()
 
