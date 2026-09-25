@@ -1,0 +1,16 @@
+{
+  "about": "Scald thaws the frozen Pokemon it hits (cb929abbe: before, only a Fire move did), and Scorching Sands thaws its frozen user as it is chosen (b822ac077: before, a frozen user of it stayed frozen). A level-10 Pikachu is given the two moves in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash; the Chansey is frozen (set:) and hit by Scald, then the Pikachu is frozen and uses Scorching Sands. The effect rolls are forced to fail, so neither move burns. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SCALD", "teach:0,1,MOVE_SCORCHING_SANDS",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:1,status,FRZ", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Scald!", "The wild Chansey thawed out!", "The wild Chansey used Splash!"],
+                        "battler1.status": ""}},
+            "set:0,status,FRZ", "fight:2:1"],
+  "expect": {"lines": ["Pikachu’s Scorching Sands melted the ice!", "Pikachu used Scorching Sands!"],
+             "no_lines": ["is frozen solid"],
+             "battler0.status": "", "battler1.status": ""}
+}
