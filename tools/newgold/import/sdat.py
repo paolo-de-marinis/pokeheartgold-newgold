@@ -11,9 +11,10 @@ original byte for byte.
     FAT   where each file is and how long
     FILE  the files themselves
 
-A Pokemon's cry is bank N and wave archive N, where N is its number, played as
-sequence 2. That is the whole of it: the bank is seventy-six bytes naming one
-instrument, and the archive holds the one sample.
+A Pokemon's cry is wave archive N, where N is its number, played as sequence 2
+on bank N -- or, where N has no bank of its own (every added cry), on bank 1:
+all of HeartGold's cry banks are the same seventy-six bytes naming one
+instrument, and the wave archive holds the one sample.
 """
 
 import struct

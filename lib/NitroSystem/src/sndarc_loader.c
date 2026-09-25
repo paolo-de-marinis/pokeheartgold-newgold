@@ -17,10 +17,25 @@ int NNSi_SndArcLoadBank(int bankNo, u32 loadFlag, NNSSndHeapHandle heap, BOOL bS
     struct SNDWaveArc *waveArc;
     int result;
     int i;
+    NNSSndArcBankInfo cry;
 
     bankInfo = NNS_SndArcGetBankInfo(bankNo);
     if (bankInfo == NULL) {
-        return 4;
+        // A cry is a wave archive with no bank of its own, as hg-engine has
+        // them: every cry bank was the same 76-byte instrument, and a bank's
+        // record and file table entries are sound heap the music needs. So a
+        // number with a wave archive and no bank plays that wave archive on
+        // bank 1's instrument. Each cry player heap loads a copy of its own:
+        // StartSeq passes bSetAddr FALSE, and LoadBank reuses only a copy
+        // the file table knows, which nothing makes of bank 1 (no group or
+        // scene loads a cry's bank or sequence; test_cries checks the
+        // groups). So two cries at once do not relink one bank.
+        if (NNS_SndArcGetWaveArcInfo(bankNo) == NULL) {
+            return 4;
+        }
+        cry = *NNS_SndArcGetBankInfo(1);
+        cry.waveArcNo[0] = bankNo;
+        bankInfo = &cry;
     }
     if (loadFlag & 2) {
         bank = LoadBank(bankInfo->fileId, heap, bSetAddr);

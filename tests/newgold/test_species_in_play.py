@@ -229,26 +229,26 @@ class SpeciesInPlayTests(unittest.TestCase):
                          "species it is indexed by is not the species it answers for")
         return ({number: table[number - first] if number >= first else number
                  for number, _ in self.species},
-                constant(source, "ARCHIVE_BANK_COUNT"))
+                constant(source, "ARCHIVE_WAVE_ARC_COUNT"))
 
     def test_every_species_maps_to_a_cry_the_archive_holds(self):
-        """The bank a species lands on has to be a bank.
+        """The number a species lands on has to be a cry: a wave archive.
 
-        PlayCry clamps an out-of-range bank to 1, so a species past the end of
-        the table does not crash -- it cries as Bulbasaur, or as whatever the
-        read off the end happened to be. Nothing in a build says so.
+        PlayCry clamps an out-of-range number to 1, so a species past the end
+        of the table does not crash -- it cries as Bulbasaur, or as whatever
+        the read off the end happened to be. Nothing in a build says so. The
+        bank is the wave archive's own where it has one and bank 1's
+        instrument where it does not (NNSi_SndArcLoadBank).
         """
         banks, limit = self.cry_banks()
         archive = sdat.load(import_cries.ARCHIVE)
-        self.assertEqual(limit, len(archive.records["SBNK"]))
+        self.assertEqual(limit, len(archive.records["SWAR"]))
         for number, name in self.species:
             bank = banks[number]
             self.assertTrue(0 < bank < limit,
-                            f"{name} ({number}) asks for bank {bank} of {limit}")
-            self.assertIsNotNone(archive.records["SBNK"][bank],
-                                 f"{name} ({number}) asks for empty bank {bank}")
+                            f"{name} ({number}) asks for cry {bank} of {limit}")
             self.assertIsNotNone(archive.records["SWAR"][bank],
-                                 f"{name} ({number}) asks for bank {bank}, which has no wave archive")
+                                 f"{name} ({number}) asks for cry {bank}, which has no wave archive")
 
     def test_no_two_species_share_a_cry_but_the_two_that_should(self):
         """The test the off-by-one would have failed.

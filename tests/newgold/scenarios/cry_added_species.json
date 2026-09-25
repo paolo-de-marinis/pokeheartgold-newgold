@@ -1,0 +1,8 @@
+{
+  "about": "An added species' cry, a wave archive with no bank of its own, which NNSi_SndArcLoadBank plays on bank 1's instrument: a level-12 Baxcalibur leads against a forced wild Geodude, and its cry, the last before the first command, starts (PlayCry's result, gDiagCryStarted). Without the loader's rule the bank load fails with 4 and the added species are silent. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "BAXCALIBUR:12"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0"],
+  "expect": {"lines": ["Go! Baxcalibur!"], "gDiagCrySpecies": "SPECIES_BAXCALIBUR", "gDiagCryStarted": 1}
+}

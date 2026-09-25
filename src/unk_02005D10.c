@@ -2,8 +2,10 @@
 
 #include "constants/species.h"
 
-// The last species HeartGold records a cry for, and how many banks the sound
-// archive holds once the added ones are in it.
+// The last species HeartGold records a cry for, and how many wave archives
+// the sound archive holds once the added cries are in it. An added cry is a
+// wave archive alone, played on bank 1's instrument (NNSi_SndArcLoadBank), so
+// the number PlayCry asks for is bounded by the wave archives, not the banks.
 // The last identifier the base archive has a cry for. The egg, the bad egg
 // and the twelve alternate forms sit at 494 to 507 and have none, so the
 // added species -- and sAddedCryBanks -- start at 508. This said 494, which
@@ -11,7 +13,7 @@
 // played Karrablast's cry, and the last thirteen read past the end of the
 // table entirely for whatever halfword followed it.
 #define NUM_SPECIES_WITH_CRIES 507
-#define ARCHIVE_BANK_COUNT     1310
+#define ARCHIVE_WAVE_ARC_COUNT 1310
 
 #include "heap.h"
 #include "newgold/diag.h"
@@ -1380,7 +1382,7 @@ BOOL PlayCry(int species, int form) {
     }
     if (species != 0x1EE) {
         species = CryBankForSpecies(species);
-        if ((u32)species >= ARCHIVE_BANK_COUNT || species == 0) {
+        if ((u32)species >= ARCHIVE_WAVE_ARC_COUNT || species == 0) {
             species = 1;
         }
     }
@@ -1478,7 +1480,7 @@ BOOL PlayCryEx(int mode, int species, int pan, int volume, int heapId, int form)
     bank = species;
     if (bank != 0x1EE) {
         bank = CryBankForSpecies(bank);
-        if ((u32)bank >= ARCHIVE_BANK_COUNT || bank == 0) {
+        if ((u32)bank >= ARCHIVE_WAVE_ARC_COUNT || bank == 0) {
             bank = 1;
         }
     }

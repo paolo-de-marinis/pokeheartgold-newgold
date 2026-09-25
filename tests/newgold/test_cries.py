@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Check the sound archive and the cries added to it.
 
-A cry is bank N played as sequence 2, and nothing bounds N but the code that
-picks it: a species past the end of the bank list would read whatever follows
-it. The archive is also a binary with no text source, so the tool that writes
-it has to reproduce what it did not touch exactly.
+A cry is wave archive N played as sequence 2 -- on bank N where N has one,
+on bank 1's instrument where it does not (every added cry) -- and nothing
+bounds N but the code that picks it: a species past the end of the list would
+read whatever follows it. The archive is also a binary with no text source, so
+the tool that writes it has to reproduce what it did not touch exactly.
 """
 
 import re
@@ -31,17 +32,48 @@ class SoundArchiveTests(unittest.TestCase):
     def test_the_archive_rebuilds_byte_for_byte(self):
         self.assertEqual(self.archive.build(), self.archive.data)
 
-    def test_every_added_species_has_a_bank(self):
-        banks = self.archive.records["SBNK"]
+    def test_an_added_cry_is_a_wave_archive_alone(self):
+        """No bank past HeartGold's own: each costs the sound heap sixteen
+        bytes of records and file table, and the music loads into what is left
+        (NNSi_SndArcLoadBank plays the wave archive on bank 1's instrument)."""
         wars = self.archive.records["SWAR"]
-        self.assertEqual(len(banks), len(wars))
-        self.assertGreater(len(banks), RETAIL_BANKS)
-        for index in range(RETAIL_BANKS, len(banks)):
-            self.assertIsNotNone(banks[index], index)
+        self.assertEqual(len(self.archive.records["SBNK"]), RETAIL_BANKS)
+        self.assertGreater(len(wars), RETAIL_BANKS)
+        for index in range(RETAIL_BANKS, len(wars)):
             self.assertIsNotNone(wars[index], index)
-            fileId, _, first = struct.unpack("<HH4H", banks[index])[:3]
-            self.assertEqual(first, index, "a bank must name its own wave archive")
-            self.assertEqual(len(self.archive.files[fileId]), 76)
+
+    def test_bank_1_is_every_cry_bank(self):
+        """What a cry with no bank plays on. HeartGold's cry banks all hold the
+        same seventy-six bytes, one instrument playing slot 0's wave archive,
+        so bank 1's record with the cry's number in slot 0 is the cry's bank."""
+        fileId, _, *waves = struct.unpack("<HH4H", self.archive.records["SBNK"][1])
+        model = self.archive.files[fileId]
+        self.assertEqual(len(model), 76)
+        self.assertEqual(waves, [1, 0xFFFF, 0xFFFF, 0xFFFF])
+        for bank in range(2, 495):
+            record = self.archive.records["SBNK"][bank]
+            if record is not None:
+                self.assertEqual(self.archive.files[struct.unpack("<H", record[:2])[0]], model, bank)
+
+    def test_nothing_loads_a_cry_outside_the_cry_players(self):
+        """A cry's bank is a copy in the cry player's own heap, one per cry.
+
+        StartSeq loads it there without registering it (bSetAddr FALSE), and
+        LoadBank reuses only a registered copy. Were bank 1 loaded into the
+        sound heap and registered -- by a group, or by a scene loading a
+        sequence that names it -- every bankless cry would relink that one
+        copy, and two cries started together would play the second. Only the
+        cry sequences name a cry bank, and no group names either.
+        """
+        cries = set(range(1, 495)) | set(range(RETAIL_BANKS, len(self.archive.records["SWAR"])))
+        naming = {seq for seq, record in enumerate(self.archive.records["SSEQ"])
+                  if record is not None and struct.unpack("<HHH", record[:6])[2] in cries}
+        self.assertEqual(naming, {1, 2, 3})  # SEQ_PV001, SEQ_PV, SEQ_PV_END
+        for group in self.archive.records["GROUP"]:
+            count, = struct.unpack("<I", group[:4])
+            for kind, _, number in (struct.unpack("<BBxxI", group[4 + 8 * i:12 + 8 * i]) for i in range(count)):
+                self.assertFalse(kind == 0 and number in naming, f"a group loads sequence {number}")
+                self.assertFalse(kind == 1 and number in cries, f"a group loads bank {number}")
 
     def test_every_added_wave_archive_holds_one_playable_sample(self):
         for index in range(RETAIL_BANKS, len(self.archive.records["SWAR"])):
@@ -63,9 +95,9 @@ class SoundArchiveTests(unittest.TestCase):
         # A cry whose bank and wave archive outweigh HeartGold's largest is
         # never started: 18 added species had no cry at all.
         room = import_cries.cry_room(self.archive)
-        for index in range(RETAIL_BANKS, len(self.archive.records["SBNK"])):
-            bankFile, _, war = struct.unpack("<HHH", self.archive.records["SBNK"][index][:6])
-            warFile, = struct.unpack("<H", self.archive.records["SWAR"][war][:2])
+        bankFile, = struct.unpack("<H", self.archive.records["SBNK"][1][:2])
+        for index in range(RETAIL_BANKS, len(self.archive.records["SWAR"])):
+            warFile, = struct.unpack("<H", self.archive.records["SWAR"][index][:2])
             self.assertLessEqual(len(self.archive.files[bankFile]) + len(self.archive.files[warFile]), room, index)
 
 
@@ -112,12 +144,28 @@ class CryLookupTests(unittest.TestCase):
         self.assertEqual(set(range(RETAIL_BANKS, len(archive.records["SWAR"]))),
                          {bank for bank in self.banks if bank >= RETAIL_BANKS})
 
-    def test_no_bank_is_past_the_end_of_the_archive(self):
-        limit = int(re.search(r"#define ARCHIVE_BANK_COUNT\s+(\d+)", self.source).group(1))
+    def test_no_cry_is_past_the_end_of_the_archive(self):
+        limit = int(re.search(r"#define ARCHIVE_WAVE_ARC_COUNT\s+(\d+)", self.source).group(1))
         archive = sdat.load(import_cries.ARCHIVE)
-        self.assertEqual(limit, len(archive.records["SBNK"]))
+        self.assertEqual(limit, len(archive.records["SWAR"]))
         for bank in self.banks:
             self.assertLess(bank, limit)
+
+    def test_the_numbers_with_no_bank_are_cries(self):
+        """The loader plays any number with a wave archive and no bank as a
+        cry, so those numbers have to be the cries and nothing else; and the
+        egg, the bad egg and the alternate forms (495 to 507), silent in
+        HeartGold, have neither."""
+        archive = sdat.load(import_cries.ARCHIVE)
+        banks, wars = archive.records["SBNK"], archive.records["SWAR"]
+        bankless = {n for n in range(len(wars)) if wars[n] is not None and (n >= len(banks) or banks[n] is None)}
+        cries = set(range(1, 495)) | set(self.banks)
+        self.assertLessEqual(bankless, cries)
+        for number in cries:
+            self.assertIsNotNone(wars[number], number)
+        for number in [0] + list(range(495, 508)):
+            self.assertIsNone(banks[number], number)
+            self.assertIsNone(wars[number], number)
 
     def test_both_ways_into_a_cry_go_through_the_lookup(self):
         """PlayCry and PlayCryEx both clamp, and both have to ask."""

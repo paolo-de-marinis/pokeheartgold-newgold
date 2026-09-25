@@ -112,6 +112,46 @@ class BootTests(unittest.TestCase):
             self.skipTest("not built: make NEWGOLD_DIAG=1 GAME_VERSION=SOULSILVER COMPARE=0")
         self.boot("soulsilver.diag", rom)
 
+    def music(self, name):
+        """The intro's music, the title's, and the cry Start plays there.
+
+        All three load into the sound heap, which the sound archive's INFO and
+        FAT blocks take their share of for good (InitSoundData). When the added
+        cries' records outgrew it, the intro and the title asked for their
+        music and were left with an empty handle: silence on every emulator.
+        A handle is read from sSoundWork's, one per player: the sequence player
+        it plays on, where 0x34 holds 1 for a sequence and 0x38 its number
+        (NNS_SndPlayerGetSeqNo).
+        """
+        rom = smoke.ROMS[name]
+        seq = dict((n, int(v)) for n, v in re.findall(r"#define (SEQ_\w+)\s+(\d+)",
+                                                      (ROOT / "include/constants/sndseq.h").read_text()))
+        handles = int(re.search(r"/\* (0x[0-9A-F]+) \*/ NNSSndHandle \w+\[SND_HANDLE_MAX\];",
+                                (ROOT / "src/sound.c").read_text()).group(1), 16)
+        work = int(re.search(r"^\s+([0-9A-F]{8}) [0-9A-F]{8} \.bss\s+sSoundWork\s",
+                             (rom.parent / "main.elf.xMAP").read_text(), re.M).group(1), 16)
+        bgm, pv = 7, 1  # SND_HANDLE_BGM, SND_HANDLE_PV
+        points = {900: ("the intro", bgm, "SEQ_GS_TITLE"), 1190: ("the title", bgm, "SEQ_GS_POKEMON_THEME"),
+                  1230: ("the title's cry", pv, "SEQ_PV")}
+        dumps = {frame: Path(self.temp.name) / f"{name}.{frame}.ram" for frame in points}
+        # A past the intro at 1000, Start at the title at 1200.
+        smoke.run(self.host, rom, max(points) + 1,
+                  ["press:1000:10:8", "press:1200:10:3"] + [f"ram:{f}:{p}" for f, p in dumps.items()], self.temp.name)
+        for frame, (what, handle, expected) in points.items():
+            ram = dumps[frame].read_bytes()
+
+            def word(address, size=4):
+                return int.from_bytes(ram[(address - MAIN_MEMORY) % len(ram):][:size], "little")
+            player = word(work + handles + 4 * handle)
+            playing = word(player + 0x38, 2) if player and word(player + 0x34, 2) == 1 else None
+            self.assertEqual(playing, seq[expected], f"{name}: {what} (frame {frame}) is not playing {expected}")
+
+    def test_heartgold_plays_its_music(self):
+        self.music("heartgold")
+
+    def test_soulsilver_plays_its_music(self):
+        self.music("soulsilver")
+
 
 class ClockTests(unittest.TestCase):
     def test_a_run_is_at_the_pinned_clock_unless_told(self):

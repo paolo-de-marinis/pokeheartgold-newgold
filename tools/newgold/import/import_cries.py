@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Give the added species their cries.
 
-A cry is bank N and wave archive N played as sequence 2, where N is the
-species number, so the cries stop where HeartGold's species do. The added ones
-get banks of their own past the end of the archive, and PlayCry is told where
-to find them.
+A cry is wave archive N played as sequence 2, where N is the species number,
+so the cries stop where HeartGold's species do. HeartGold gives each one a
+bank N too, but every cry bank is the same seventy-six bytes naming one
+instrument, and each bank costs the sound heap its records; so an added cry is
+a wave archive past the end of the archive and nothing else, and the loader
+(lib/NitroSystem/src/sndarc_loader.c) plays a number with a wave archive and
+no bank on bank 1's instrument, as hg-engine does. PlayCry is told where to
+find each one.
 
 The sound itself comes from the reference, which ships a cry for every species
 the engine knows as a mono WAV. It is resampled and reduced to the eight-bit
@@ -151,9 +155,9 @@ def main():
             sharing.setdefault(form, base)
     added = [name for name in import_species.added_species() if name not in sharing]
 
-    firstBank = len(archive.records["SBNK"])
-    if firstBank != BASE_BANKS:
-        raise SystemExit(f"the archive holds {firstBank} banks and this import appends to the one with "
+    first = len(archive.records["SWAR"])
+    if first != BASE_BANKS or len(archive.records["SBNK"]) != BASE_BANKS:
+        raise SystemExit(f"the archive holds {first} wave archives and this import appends to the one with "
                          f"{BASE_BANKS}: git show 4c8176ea1^:files/data/sound/gs_sound_data.sdat > "
                          "files/data/sound/gs_sound_data.sdat first")
     model = archive.records["SBNK"][1]
@@ -168,27 +172,22 @@ def main():
         if path is None or not path.exists():
             raise SystemExit(f"the reference has no cry for {name}")
         war = fitted_cry(path, room, len(bankBytes))
-        bytesAdded += len(war) + len(bankBytes)
+        bytesAdded += len(war)
 
         warFile = len(archive.files)
         archive.files.append(war)
         archive.fatExtra.append((0, 0))
-        bankFile = len(archive.files)
-        archive.files.append(bankBytes)
-        archive.fatExtra.append((0, 0))
 
-        index = firstBank + offset
+        index = first + offset
         archive.records["SWAR"].append(struct.pack("<HH", warFile, 0))
-        archive.records["SBNK"].append(struct.pack("<HH4H", bankFile, 0, index, 0xFFFF, 0xFFFF, 0xFFFF))
         archive.names["SWAR"].append(None)
-        archive.names["SBNK"].append(None)
         mapping[name] = index
 
     for name, base in sharing.items():
-        # An added base has a bank of its own; a retail one's bank is its number.
+        # An added base has a wave archive of its own; a retail one's is its number.
         mapping[name] = mapping[base] if base in mapping else ours[base]
 
-    print(f"{len(added)} cries added as banks {firstBank} to {firstBank + len(added) - 1}, "
+    print(f"{len(added)} cries added as wave archives {first} to {first + len(added) - 1}, "
           f"{bytesAdded // 1024} KiB")
     print(f"  {len(sharing)} share their base species' cry")
 
@@ -212,11 +211,11 @@ def main():
     start = text.index("static const u16 sAddedCryBanks[] = {")
     end = text.index("};", start) + len("};")
     text = text[:start] + "static const u16 sAddedCryBanks[] = {\n" + table + "\n};" + text[end:]
-    text = re.sub(r"#define ARCHIVE_BANK_COUNT\s+\d+",
-                  f"#define ARCHIVE_BANK_COUNT     {len(archive.records['SBNK'])}", text)
+    text = re.sub(r"#define ARCHIVE_WAVE_ARC_COUNT\s+\d+",
+                  f"#define ARCHIVE_WAVE_ARC_COUNT {len(archive.records['SWAR'])}", text)
     source.write_text(text)
-    print(f"wrote {source.relative_to(ROOT)}: {len(mapping)} banks, "
-          f"ARCHIVE_BANK_COUNT {len(archive.records['SBNK'])}")
+    print(f"wrote {source.relative_to(ROOT)}: {len(mapping)} cries, "
+          f"ARCHIVE_WAVE_ARC_COUNT {len(archive.records['SWAR'])}")
 
 
 if __name__ == "__main__":
