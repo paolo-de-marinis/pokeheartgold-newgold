@@ -144,6 +144,18 @@ class IllusionTests(unittest.TestCase):
         self.assertIn("data.selectedMonIndex = ctx->battleMons[battlerId].illusionMon - 1;", box)
         self.assertLess(box.index("illusionMon)"), box.index("ov12_02262240("))
 
+    def test_the_move_animation_draws_and_cries_it(self):
+        # The move animation's packet gives every battler's looks to the
+        # animations, which redraw a picture and play the user's cry from
+        # them (Pokemon Central, Illusione: the cry is copied too): the
+        # disguise's, after a transformation's would have been taken.
+        body = function((ROOT / "src/battle/battle_controller_move_animation.c").read_text(), "ov12_022643C8")
+        tail = body[body.index("disguise = Battler_IllusionMon(battleSystem, i);"):]
+        for field in ("Species", "Shiny", "Form", "Gender", "Personality"):
+            self.assertIn(f"data->battler{field}[i] = ", tail, field)
+        self.assertLess(body.index("unk88.transformPersonality"), body.index("Battler_IllusionMon"))
+        self.assertLess(body.index("Battler_IllusionMon"), body.index("ov12_0223C140("))
+
     def test_a_sprite_redrawn_in_place_shows_it(self):
         # ChangeForm, which Ally Switch redraws both places with, draws the
         # disguise; the script that drops one forgets it first. RestoreSprite,
