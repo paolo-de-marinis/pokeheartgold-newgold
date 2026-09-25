@@ -1,0 +1,13 @@
+{
+  "about": "A disguised Pokemon's move animation cries as its disguise (7299b20ae: the animation packet gives the Illusion's looks; before, Growl's, Roar's and Hyper Voice's animations cried as the Pokemon itself). A level-20 Zoroark leads a party of two whose last is a Pikachu, so it goes in as 'Pikachu', and is given Growl in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash: the one cry Growl's animation plays is Pikachu's (gDiagCrySpecies), not Zoroark's. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "ZOROARK:20,PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_GROWL",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            {"expect": {"lines": ["Go! Pikachu!"], "battler0.species": "SPECIES_ZOROARK", "gDiagCryCount": 3}},
+            "fight:1:1"],
+  "expect": {"lines": ["Pikachu used Growl!", "The wild Chansey’s Attack fell!"],
+             "gDiagCryCount": 4, "gDiagCrySpecies": "SPECIES_PIKACHU"}
+}
