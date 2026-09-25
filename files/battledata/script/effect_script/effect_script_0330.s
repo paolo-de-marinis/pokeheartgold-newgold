@@ -10,6 +10,14 @@ _000:
 
 _006:
     CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS2, STATUS2_LOCKED_INTO_MOVE, _033
+    // Its charge turn is its own, the rain being its script's to ask; like
+    // the other charge moves' (TryChargeTurn, subscript 473) it says the
+    // attack message first, then the line its move script does not buffer.
+    PrintAttackMessage
+    Wait
+    WaitButtonABTime 30
+    // {0} absorbed electricity!
+    BufferMessage msg_0197_01480, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
     CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, HOLD_EFFECT_CHARGE_SKIP, _026
     UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_FLAGS_DIRECT, MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_VANISH_CHARGE_TURN
     UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_FLAGS_INDIRECT, MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_1_STAGE

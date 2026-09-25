@@ -2,24 +2,135 @@
 
     .data
 
-// Solar Beam's and Shadow Force's first turn (TryChargeTurn, which buffers the
-// charge line and marks Shadow Force's user). The attack message first, as
-// the engine's subscripts 422 and 426 say it; then the charge as retail's
-// scripts had it -- subscript 13 as the side effect, which plays the charge,
-// says the line and locks the user in -- or, with a Power Herb, the charge
-// and the herb spent at once (subscript 217) and the effect script's hit,
+// A charge move's first turn (TryChargeTurn). The move's charge line -- the
+// one retail's move scripts buffered, and for the moves after retail's the
+// engine's charge subscripts' -- and a mark on a user that vanishes. Then the
+// attack message, as Showdown's gen-9 move line and the engine's charge
+// subscripts say it first; then the charge as retail's scripts had it --
+// subscript 13 as the side effect, which plays the charge, says the line and
+// locks the user in, Skull Bash's Defense and Meteor Beam's Sp. Atk. rising
+// with it -- or, with a Power Herb, the charge (and the rise) and the herb
+// spent at once (subscripts 217, 292 and 336) and the effect script's hit,
 // which a locked user goes to.
 _000:
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_RAZOR_WIND, _RAZOR_WIND
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_SKY_ATTACK, _SKY_ATTACK
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_SKULL_BASH, _SKULL_BASH
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_SOLAR_BEAM, _SOLAR_BEAM
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_SOLAR_BLADE, _SOLAR_BEAM
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_FLY, _FLY
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_BOUNCE, _BOUNCE
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_DIG, _DIG
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_DIVE, _DIVE
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_SHADOW_FORCE, _SHADOW_FORCE
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_PHANTOM_FORCE, _SHADOW_FORCE
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_GEOMANCY, _GEOMANCY
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_METEOR_BEAM, _METEOR_BEAM
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_FREEZE_SHOCK, _FREEZE_SHOCK
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_ICE_BURN, _ICE_BURN
+
+_RAZOR_WIND:
+    // {0} whipped up a whirlwind!
+    BufferMessage msg_0197_00211, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_SKY_ATTACK:
+    // {0} became cloaked in a harsh light!
+    BufferMessage msg_0197_00220, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_SKULL_BASH:
+    // {0} tucked in its head!
+    BufferMessage msg_0197_00217, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_SOLAR_BEAM:
+    // {0} absorbed light!
+    BufferMessage msg_0197_00214, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_FLY:
+    UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_ATTACKER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_FLY
+    // {0} flew up high!
+    BufferMessage msg_0197_00223, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_BOUNCE:
+    UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_ATTACKER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_FLY
+    // {0} sprang up!
+    BufferMessage msg_0197_00232, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_DIG:
+    UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_ATTACKER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_DIG
+    // {0} burrowed its way under the ground!
+    BufferMessage msg_0197_00226, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_DIVE:
+    UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_ATTACKER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_DIVE
+    // {0} hid underwater!
+    BufferMessage msg_0197_00229, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_SHADOW_FORCE:
+    UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_ATTACKER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_PHANTOM_FORCE
+    // {0} vanished instantly!
+    BufferMessage msg_0197_01082, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_GEOMANCY:
+    // {0} is absorbing power!
+    BufferMessage msg_0197_01436, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_METEOR_BEAM:
+    // {0} is overflowing with space power!
+    BufferMessage msg_0197_01477, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_FREEZE_SHOCK:
+    // {0} became cloaked in a freezing light!
+    BufferMessage msg_0197_01533, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    GoTo _CHARGE
+
+_ICE_BURN:
+    // {0} became cloaked in freezing air!
+    BufferMessage msg_0197_01536, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+
+_CHARGE:
     PrintAttackMessage
     Wait
     WaitButtonABTime 30
     CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, HOLD_EFFECT_CHARGE_SKIP, _POWER_HERB
     UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_FLAGS_DIRECT, MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_VANISH_CHARGE_TURN
     UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE|BATTLE_STATUS_CHARGE_TURN
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_SKULL_BASH, _DEFENSE_UP
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_METEOR_BEAM, _SP_ATTACK_UP
+    End
+
+_DEFENSE_UP:
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_FLAGS_INDIRECT, MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_DEFENSE_UP_1_STAGE
+    End
+
+_SP_ATTACK_UP:
+    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_FLAGS_INDIRECT, MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_1_STAGE
     End
 
 _POWER_HERB:
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_SKULL_BASH, _POWER_HERB_DEFENSE_UP
+    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_MOVE_NO_CUR, MOVE_METEOR_BEAM, _POWER_HERB_SP_ATTACK_UP
     Call BATTLE_SUBSCRIPT_ITEM_SKIP_CHARGE_TURN
+    GoTo _HIT
+
+_POWER_HERB_DEFENSE_UP:
+    Call BATTLE_SUBSCRIPT_POWER_HERB_SKULL_BASH
+    GoTo _HIT
+
+_POWER_HERB_SP_ATTACK_UP:
+    Call BATTLE_SUBSCRIPT_POWER_HERB_METEOR_BEAM
+
+_HIT:
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_BATTLER_TARGET, BATTLER_NONE, _NO_TARGET
     LockMoveChoice BATTLER_CATEGORY_ATTACKER
     GoToEffectScript

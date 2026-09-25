@@ -3849,33 +3849,50 @@ static void TrySelfDestruct(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
-// Solar Beam's, Solar Blade's, Shadow Force's and Phantom Force's first turn,
-// asked of the controller before the move script as the engine's
-// BattleController_CheckChargeMoves and CheckPowerHerb ask it
-// (BattleController_BeforeMove.c:2253 and 2354 at d0380a487), so the two
-// effect scripts are the engine's and keep only the hit. Not on the second
-// turn, nor for a Solar Beam the sun fires at once, which its script says.
-// The charge line goes to the buffer the move script would have filled, and
-// subscript 473 says the attack message first -- "X used Solar Beam!" on the
-// charge turn, as the latest games show it (the engine's subscripts 422 and
-// 426, Showdown's gen-9 move line before its -prepare; Pokemon Central does
-// not say) -- then charges as retail's scripts did, or spends a Power Herb and
-// goes on to the hit.
+// The moves whose first turn is a charge, by effect: all but Sky Drop, which
+// lifts its target in its own script, and Electro Shot, whose script asks
+// the rain (effect script 330).
+static const u16 sChargeTurnEffects[] = {
+    MOVE_EFFECT_CHARGE_TURN_HIGH_CRIT,
+    MOVE_EFFECT_CHARGE_TURN_HIGH_CRIT_FLINCH,
+    MOVE_EFFECT_CHARGE_TURN_DEF_UP,
+    MOVE_EFFECT_151,
+    MOVE_EFFECT_FLY,
+    MOVE_EFFECT_DIVE,
+    MOVE_EFFECT_DIG,
+    MOVE_EFFECT_BOUNCE,
+    MOVE_EFFECT_SHADOW_FORCE,
+    MOVE_EFFECT_CHARGE_TURN_ATK_SP_ATK_SPEED_UP_2,
+    MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP,
+    MOVE_EFFECT_CHARGE_TURN_PARALYZE_HIT,
+    MOVE_EFFECT_CHARGE_TURN_BURN_HIT,
+};
+
+// A charge move's first turn, asked of the controller before the move script
+// as the engine's BattleController_CheckChargeMoves and CheckPowerHerb ask it
+// (BattleController_BeforeMove.c:2253 and 2354 at d0380a487): the effect
+// scripts are the engine's, and what they still say of the charge only a
+// locked user reaches. Not on the second turn, nor for a Solar Beam the sun
+// fires at once, which its script says. Subscript 473 buffers the charge
+// line, marks a user that vanishes and says the attack message first -- "X
+// used Fly!" on the charge turn, as the latest games show it (Showdown's
+// gen-9 move line before its -prepare, the engine's subscripts 418 to 429;
+// Pokemon Central does not say) -- then charges as retail's scripts did, or
+// spends a Power Herb and goes on to the hit.
 static BOOL TryChargeTurn(BattleSystem *battleSystem, BattleContext *ctx) {
     int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
-    int attacker = ctx->battlerIdAttacker;
+    int i;
 
-    if ((effect != MOVE_EFFECT_151 && effect != MOVE_EFFECT_SHADOW_FORCE)
-        || (ctx->battleMons[attacker].status2 & STATUS2_LOCKED_INTO_MOVE)
+    for (i = 0; i < NELEMS(sChargeTurnEffects); i++) {
+        if (sChargeTurnEffects[i] == effect) {
+            break;
+        }
+    }
+    if (i == NELEMS(sChargeTurnEffects)
+        || (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_LOCKED_INTO_MOVE)
         || (ctx->battleStatus & BATTLE_STATUS_CHARGE_MOVE_HIT)
         || SolarBeamFiresAtOnce(battleSystem, ctx) == TRUE) {
         return FALSE;
-    }
-    ctx->buffMsg.id = effect == MOVE_EFFECT_151 ? msg_0197_00214 : msg_0197_01082; // absorbed light! / vanished instantly!
-    ctx->buffMsg.tag = TAG_NICKNAME;
-    ctx->buffMsg.param[0] = CreateNicknameTag(ctx, attacker);
-    if (effect == MOVE_EFFECT_SHADOW_FORCE) {
-        ctx->battleMons[attacker].moveEffectFlags |= MOVE_EFFECT_FLAG_PHANTOM_FORCE;
     }
     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_CHARGE_TURN);
     return TRUE;

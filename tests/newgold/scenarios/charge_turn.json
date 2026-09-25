@@ -1,0 +1,16 @@
+{
+  "about": "A charge move says its attack message on the charge turn, then its line, as the latest games do (TryChargeTurn, subscript 473). Falkner's scenario, the Raichu given Insomnia, so that the Hoothoot's Hypnosis ends no charge, and taught each move in the running battle: Fly flies up and hits the next turn; Freeze Shock says the line its move script never buffered; Skull Bash with a Power Herb tucks in its head, raises its Defense and spends the herb before the hit, all in one turn.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13,UMBREON:13",
+           "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0", "set:0,ability,ABILITY_INSOMNIA",
+            "teach:0,0,MOVE_FLY,15", "fight:1:1",
+            {"expect": {"lines": ["Raichu used Fly!", "Raichu flew up high!", "Raichu used Fly!"]}},
+            "teach:0,0,MOVE_FREEZE_SHOCK,5", "fight:1:1",
+            {"expect": {"lines": ["Raichu used Freeze Shock!", "Raichu became cloaked in a freezing light!", "Raichu used Freeze Shock!"]}},
+            "set:0,item,ITEM_POWER_HERB", "teach:0,0,MOVE_SKULL_BASH,5", "fight:1:1"],
+  "expect": {"lines": ["Raichu used Skull Bash!", "Raichu tucked in its head!", "Defense rose",
+                       "Raichu became fully charged due to its Power Herb!"],
+             "battler0.item": "ITEM_NONE"}
+}
