@@ -16,6 +16,7 @@
 #include "battle/battle_controller_opponent.h"
 #include "battle/battle_system.h"
 #include "battle/overlay_12_0224E4FC.h"
+#include "battle/trainer_ai.h"
 #include "msgdata/msg/msg_0197.h"
 
 #include "heap.h"
@@ -6307,8 +6308,6 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
 
     return flag == 1;
 }
-
-extern u32 ov10_02220AAC[];
 
 static void ov12_0224E384(BattleSystem *battleSystem, BattleContext *ctx) {
     int i;

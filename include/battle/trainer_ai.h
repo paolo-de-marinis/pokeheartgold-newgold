@@ -24,6 +24,9 @@ extern const u16 ov10_0222B068[][2];
 extern const u16 ov10_0222B080[];
 extern const u16 ov10_0222B098[];
 
+// The AI script (trainer_ai_script.c): each AI flag's routine, in words.
+extern const u32 ov10_02220AAC[];
+
 // The AI script commands, by opcode.
 typedef void (*AICommandFunc)(BattleSystem *battleSystem, BattleContext *ctx);
 extern const AICommandFunc ov10_0222B0B4[];

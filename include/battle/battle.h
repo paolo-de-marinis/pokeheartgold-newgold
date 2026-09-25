@@ -461,7 +461,7 @@ typedef struct BattleContext {
     SelfTurnData selfTurnData[4];
     MoveFailFlags moveFail[4];
     TrainerAIData trainerAIData;
-    u32 *unk_2134;
+    const u32 *unk_2134;
     u32 unk_2138;
     u32 battleStatus;
     u32 battleStatus2;
