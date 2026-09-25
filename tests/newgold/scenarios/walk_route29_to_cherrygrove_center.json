@@ -1,0 +1,6 @@
+{
+  "about": "A walk across Route 29 and in through a door: from the east end of Route 29 (Paolo's save) to the Pokemon Center counter in Cherrygrove City, the path planned from the map data, through the grass -- the navigator fights what comes out of it -- and whatever Cherrygrove's scripts say on the way; then the nurse heals the party.",
+  "save": "route29-official.sav",
+  "steps": ["field", "goto:MAP_CHERRYGROVE_POKECENTER_1F,8,13", "UP", "A", "field"],
+  "expect": {"map": "MAP_CHERRYGROVE_POKECENTER_1F", "x": 8, "y": 13, "party": 1}
+}

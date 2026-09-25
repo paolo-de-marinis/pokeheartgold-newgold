@@ -55,6 +55,32 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertTrue(scene.Scene.wanted("map", "MAP_ROUTE_29")[0](33))
 
 
+class NavigatorTests(unittest.TestCase):
+    """scene.py's goto plans from the tree's own map data; these read the plan
+    without the emulator."""
+
+    def test_a_walk_leaves_a_building_by_its_mat_and_crosses_maps(self):
+        # Elm's lab to where the old scripted walk ended on Route 29: out
+        # through the mat at (4, 14), pressed down into the wall below it,
+        # onto New Bark Town's lab door, and west across the town into the
+        # route's own chunks, without a tile a wall or water stands on.
+        path = scene.plan((61, 1, 11), [(33, 606, 410)])
+        nodes = [node for node, _ in path]
+        self.assertEqual(nodes[-1], (33, 606, 410))
+        mat = nodes.index((61, 4, 14))
+        self.assertEqual((path[mat][1], nodes[mat + 1]), ("DOWN", (60, 684, 393)))
+        self.assertIn(60, {m for m, _, _ in nodes})
+        for node in nodes[mat + 2:]:
+            self.assertFalse(scene.tile(*node)[1] & scene.savedit.COLLISION, node)
+
+    def test_a_ledge_is_jumped_one_way_only(self):
+        # Route 29's ledges at x = 651 face east: over one in two tiles going
+        # east, round by the shore coming back.
+        self.assertEqual(scene.plan((33, 650, 400), [(33, 653, 400)]),
+                         [((33, 650, 400), "RIGHT"), ((33, 652, 400), "RIGHT"), ((33, 653, 400), None)])
+        self.assertGreater(len(scene.plan((33, 653, 400), [(33, 650, 400)])), 20)
+
+
 def play(path):
     def test(self):
         for needed, how in ((ROM, "make NEWGOLD_DIAG=1 COMPARE=0 build/heartgold.us.diag/pokeheartgold.us.nds"),

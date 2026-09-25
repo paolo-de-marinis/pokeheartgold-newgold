@@ -400,7 +400,13 @@ Reading what the debug ROM records, and playing it without looking.
   PC, trades, the Union Room, the GTS's first screens and the Pokeathlon's
   team choice were measured with it. `field` presses through Continue until
   the player can move, `fight` has gym.py's player fight the battle that
-  comes up, `hold:` keeps a switch poked every frame. `--scenario FILE`
+  comes up, `hold:` keeps a switch poked every frame, and `goto:MAP,X,Y`
+  walks there: the path planned from the tree's map data (each matrix's
+  tile attributes -- collision, ledges, doors, warp mats -- the zone
+  events' warps, and the map objects standing in RAM), planned again when
+  the player leaves it or is blocked, A through text boxes (read from
+  FieldSystem.textbox_open) and gym.py's player through any battle on the
+  way; one line says how it went. `--scenario FILE`
   plays a scenario -- a save, savedit edits to a copy, the steps, and what
   the battle's lines and memory (location, badges, flags, variables, the
   battlers, the heaps, asserts, failed allocations) have to show -- to PASS

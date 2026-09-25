@@ -1,0 +1,6 @@
+{
+  "about": "The old scripted walk to Route 29 (smoke.py's WALKS, which stopped arriving), done by the navigator from the data at the pinned clock: from Elm's lab with the starter, home to the mother for the Pokegear -- the woman at the western edge sends the player back without it -- and west to the shore on Route 29 where the old walk ended, through the lab's and the house's doors.",
+  "save": "fresh-newbark.sav",
+  "steps": ["field", "goto:MAP_NEW_BARK_PLAYER_HOUSE_1F,6,7", "A", "field", "goto:MAP_ROUTE_29,606,410"],
+  "expect": {"map": "MAP_ROUTE_29", "x": 606, "y": 410, "flag:FLAG_GOT_POKEGEAR": 1, "party": 1}
+}

@@ -22,6 +22,13 @@ A step is one of
     fight[:N[:T]]               A until a battle is up, then gym.py's player plays
                                 it to the end (N: always move slot N; T: stop at the
                                 command prompt after T turns, to expect what they did)
+    goto:MAP,X,Y                walk there: the path planned from the tree's map data
+                                (tile attributes, ledges, warps) and the objects in
+                                RAM, planned again when left or blocked; A through
+                                text boxes, gym.py's player through battles. MAP is
+                                MAP_... or a number; X, Y as the game counts them
+                                (the matrix's tiles outdoors). A tile someone stands
+                                on is reached beside them, facing them.
 
     scene.py mart.sav out wait:300 A*3 untilheap:HEAP_ID_FIELD2 heaps:mart shot:mart
 
@@ -83,7 +90,7 @@ BATTLE_MAIN = STATES.index("BATTLE_MAIN")
 BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item")
 CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/species.h",
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h"}
-STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight")
+STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto")
 
 
 def readable(step_or_key, key=False):
@@ -118,6 +125,143 @@ def field_layout():
     out["LocalMapObject.size"] = values[-1]
     out["FieldSystem.textbox_open"] = savedit.set_bit(textbox)
     return out
+
+
+# -- the navigator's map, from the tree -------------------------------------
+#
+# goto: plans a walk from the data the game itself reads: each map's matrix
+# and the land data's tile attributes (the collision bit, the behaviour byte:
+# ledges, doors, the warp mats), the zone events' warps, and the map objects
+# standing in main RAM right now. Nothing is aimed by eye.
+
+STEP = {"UP": (0, -1), "DOWN": (0, 1), "LEFT": (-1, 0), "RIGHT": (1, 0)}
+
+
+@savedit.tree_cache
+def behaviours():
+    """The behaviours a walk treats apart, by name without TILE_BEHAVIOR_,
+    as the tree's enum numbers them."""
+    names = ("JUMP_NORTH", "JUMP_SOUTH", "JUMP_WEST", "JUMP_EAST", "DOOR", "WARP_ENTRANCE_NORTH", "WARP_NORTH",
+             "WARP_PANEL", "LADDER_DOWN", "ESCALATOR", "ESCALATOR_FLIP_FACE", "WARP_ENTRANCE_SOUTH", "WARP_SOUTH",
+             "WARP_ENTRANCE_EAST", "WARP_EAST", "WARP_STAIRS_EAST", "WARP_ENTRANCE_WEST", "WARP_WEST",
+             "WARP_STAIRS_WEST", "LADDER_NORTH", "LADDER_SOUTH")
+    values = savedit.compile_c(exprs=tuple(f"TILE_BEHAVIOR_{n}" for n in names),
+                               headers=savedit.LAYOUT_HEADERS + ("constants/metatile_behavior.h",))[0]
+    b = dict(zip(names, values))
+    return {
+        # a ledge is jumped over in its own direction and nowhere else
+        "jump": {b["JUMP_NORTH"]: "UP", b["JUMP_SOUTH"]: "DOWN", b["JUMP_WEST"]: "LEFT", b["JUMP_EAST"]: "RIGHT"},
+        # FieldSystem_CheckTransition: these warp the moment they are stepped on
+        "on_step": {b[n] for n in ("WARP_ENTRANCE_NORTH", "WARP_NORTH", "WARP_PANEL", "LADDER_DOWN", "ESCALATOR",
+                                   "ESCALATOR_FLIP_FACE")},
+        # FieldSystem_CheckMapTransition: these warp when the player stands on
+        # them and presses this way, into the wall; a door, from the tile before it
+        "press": {b["WARP_ENTRANCE_SOUTH"]: "DOWN", b["WARP_SOUTH"]: "DOWN", b["WARP_ENTRANCE_EAST"]: "RIGHT",
+                  b["WARP_EAST"]: "RIGHT", b["WARP_STAIRS_EAST"]: "RIGHT", b["WARP_ENTRANCE_WEST"]: "LEFT",
+                  b["WARP_WEST"]: "LEFT", b["WARP_STAIRS_WEST"]: "LEFT", b["LADDER_NORTH"]: "UP",
+                  b["LADDER_SOUTH"]: "DOWN"},
+        "door": b["DOOR"],
+    }
+
+
+def tile(map_id, x, z):
+    """(the map that owns the tile, its attribute), or None off the map. On
+    a matrix several maps share, the tile is the owner's."""
+    matrix = savedit._matrix_of().get(map_id)
+    if matrix is None:
+        return None
+    attr = savedit.attribute(matrix, x, z)
+    if attr is None:
+        return None
+    width, _, owners, _ = savedit._matrix(matrix)
+    return (owners[z // savedit.CHUNK_ROWS * width + x // savedit.CHUNK_TILES] if owners else map_id), attr
+
+
+@savedit.tree_cache
+def warps(map_id):
+    """{(x, z): (map, x, z)}: where each of the map's warps puts the player,
+    the target map's warp of that anchor. A warp to a map the tree has no
+    events for (the dynamic ones) is left out."""
+    maps = savedit.constants("include/constants/maps.h", "MAP_")
+    out = {}
+    for warp in savedit.map_events(map_id).get("warps", []):
+        target = maps.get(warp["header"])
+        arrivals = savedit.map_events(target).get("warps", []) if target is not None else []
+        if warp["anchor"] < len(arrivals):
+            out[(warp["x"], warp["z"])] = (target, arrivals[warp["anchor"]]["x"], arrivals[warp["anchor"]]["z"])
+    return out
+
+
+def plan(start, goals, blocked=frozenset(), most=300000):
+    """The cheapest walk from `start` (map, x, z) to any of `goals`, as
+    [(node, the direction held from it)], the last node a goal; None when
+    there is none. A step costs 1, a ledge 2, a warp 4. `blocked` are tiles
+    (map, x, z) something stands on."""
+    import heapq
+    kinds, water = behaviours(), savedit.surfable()
+    goal_set = set(goals)
+
+    def free(node):
+        found = tile(*node)
+        return found is not None and not found[1] & savedit.COLLISION and found[1] & 0xFF not in water \
+            and found[1] & 0xFF not in kinds["on_step"] and (found[0], *node[1:]) not in blocked
+
+    def edges(node):
+        m, x, z = node
+        here = tile(m, x, z)
+        for direction, (dx, dz) in STEP.items():
+            nx, nz = x + dx, z + dz
+            there = tile(m, nx, nz)
+            if there is None:
+                continue
+            owner, attr = there
+            behaviour = attr & 0xFF
+            warp = warps(owner).get((nx, nz))
+            if warp and (behaviour == kinds["door"] or behaviour in kinds["on_step"]):
+                yield warp, direction, 4
+            elif kinds["jump"].get(behaviour) == direction:
+                landing = (owner, nx + dx, nz + dz)
+                if free(landing):
+                    yield (tile(*landing)[0], nx + dx, nz + dz), direction, 2
+            elif free((owner, nx, nz)):
+                yield (owner, nx, nz), direction, 1
+        warp = warps(m).get((x, z)) if here else None
+        if warp:
+            # A mat or a stair: pressed into the wall its behaviour names; any
+            # other warp tile answers a press into whichever wall is beside it.
+            direction = kinds["press"].get(here[1] & 0xFF) or next(
+                (d for d, (dx, dz) in STEP.items() if (tile(m, x + dx, z + dz) or (0, savedit.COLLISION))[1]
+                 & savedit.COLLISION), None)
+            if direction:
+                yield warp, direction, 4
+
+    def matrix(m):
+        return savedit._matrix_of().get(m), savedit._matrix(savedit._matrix_of()[m])[2] is not None or m
+
+    goal_matrix = {matrix(g[0]) for g in goals if g[0] in savedit._matrix_of()}
+
+    def guess(node):
+        if matrix(node[0]) not in goal_matrix:
+            return 0
+        return min(abs(node[1] - g[1]) + abs(node[2] - g[2]) for g in goals)
+
+    came, cost, queue, seen = {start: None}, {start: 0}, [(guess(start), 0, start)], 0
+    while queue and seen < most:
+        _, spent, node = heapq.heappop(queue)
+        if node in goal_set:
+            path = [(node, None)]
+            while came[node]:
+                node, direction = came[node]
+                path.append((node, direction))
+            return path[::-1]
+        if spent > cost[node]:
+            continue
+        seen += 1
+        for nxt, direction, step in edges(node):
+            if spent + step < cost.get(nxt, 1 << 30):
+                cost[nxt], came[nxt] = spent + step, (node, direction)
+                heapq.heappush(queue, (spent + step + guess(nxt), spent + step, nxt))
+    return None
 
 
 class Scene:
@@ -255,6 +399,11 @@ class Scene:
                     core.step(1, hooks)
             if not self.movable():
                 self.say(f"[{core.frames}] the field never let the player move")
+        elif kind == "goto":
+            name, x, y = rest.split(",")
+            done, said = self.goto((self.number(name) if not name.isdigit() else int(name), int(x), int(y)))
+            self.say(f"[{core.frames}] {said}")
+            return None if done else [said]
         elif kind == "fight":
             import gym
             for _ in range(300):
@@ -275,6 +424,105 @@ class Scene:
                 core.press(button, 6, hooks)
                 core.step(20, hooks)
         return None
+
+    # -- the navigator -----------------------------------------------------
+
+    def objects(self):
+        """The tiles the map's live objects stand on -- the player and the
+        Pokemon following them apart -- read from MapObjectManager."""
+        layout, core = field_layout(), self.core
+        manager = self._chain("FieldSystem.mapObjectManager")
+        player = self._chain("FieldSystem.playerAvatar", "PlayerAvatar.mapObject")
+        here = self.location()
+        if not manager or not here:
+            return set()
+        count = core.word(manager + layout["MapObjectManager.objectCount"])
+        first = core.word(manager + layout["MapObjectManager.objects"])
+        out = set()
+        for i in range(min(count, 64)):
+            obj = first + i * layout["LocalMapObject.size"]
+            # flags bit 0 is MAPOBJECTFLAG_ACTIVE; id 253 is obj_partner_poke, which steps aside
+            if obj == player or not core.word(obj) & 1 or core.word(obj + 8) == 253:
+                continue
+            x, z = core.word(obj + layout["LocalMapObject.currentX"]), core.word(obj + layout["LocalMapObject.currentZ"])
+            out.add((tile(here[0], x, z) or (here[0],))[0:1] + (x, z))
+        return out
+
+    def in_battle(self):
+        """A battle is running: Battle_Run has been through a state since the
+        last one ended (gDiagBattleStateSeen), and is not at EXIT."""
+        markers = self.markers
+        return self.core.word(markers.address("gDiagBattleStateSeen")) != 0 and \
+            self.core.word(markers.address("gDiagBattleState")) != STATES.index("EXIT")
+
+    def goto(self, goal, frames=30000):
+        """Walk to goal (map, x, z) by the plan the tree's data gives, again
+        from wherever the player is whenever the plan is left or blocked;
+        A through text boxes, gym.py's player through battles. A goal
+        something stands on is reached beside it, facing it. Returns
+        (True or False, one line saying how it went)."""
+        import gym
+        from core import BUTTONS
+        core, hooks = self.core, self.hooks
+        end, started = core.frames + frames, core.frames
+        blocked, path, index, goals = {}, None, {}, [goal]
+        replans = battles = texts = 0
+        last, still = None, 0
+        while core.frames < end:
+            core.buttons = set()
+            if self.in_battle():
+                battles += 1
+                gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000)
+                self._collect(core)
+                continue
+            if not self.movable():
+                if self.textbox():
+                    texts += 1
+                    core.press("A", 6, hooks)
+                    core.step(10, hooks)
+                else:
+                    core.step(1, hooks)
+                path = None if path and self.location() not in index else path
+                continue
+            here = self.location()
+            if path is None or here not in index:
+                # The objects are read when planning, not every frame: a
+                # walk read at every frame ran at half the core's speed.
+                objects = self.objects()
+                goals = [goal]
+                if goal in objects or not (tile(*goal) and not tile(*goal)[1] & savedit.COLLISION):
+                    goals = [(goal[0], goal[1] + dx, goal[2] + dz) for dx, dz in STEP.values()]
+                path = None
+            if here in goals:
+                if goals != [goal]:     # face whoever stands on the goal
+                    core.press(next(d for d, (dx, dz) in STEP.items()
+                                    if (here[1] + dx, here[2] + dz) == goal[1:]), 4, hooks)
+                # A pressed while the turn still plays is not read: the mother
+                # once never gave the Pokegear for an A one frame too early.
+                core.step(16, hooks)
+                return True, (f"goto {goal}: there in {core.frames - started} frames, {replans} plans, "
+                              f"{battles} battles, {texts} text boxes")
+            if path is None:
+                blocked = {tile_: until for tile_, until in blocked.items() if until > core.frames}
+                path = plan(here, goals, frozenset(objects) | frozenset(blocked))
+                replans += 1
+                if path is None:
+                    return False, f"goto {goal}: no way from {here} (blocked {sorted(blocked)})"
+                index = {node: i for i, (node, _) in enumerate(path)}
+            direction = path[index[here]][1]
+            if here == last:
+                still += 1
+                if still > 48:      # something the plan did not know stands in the way
+                    nxt = path[index[here] + 1][0]
+                    blocked[nxt] = core.frames + 600
+                    path, still = None, 0
+                    continue
+            else:
+                last, still = here, 0
+            core.buttons = {BUTTONS[direction], BUTTONS["B"]}   # B runs, once the save has the shoes
+            core.step(1, hooks)
+        core.buttons = set()
+        return False, f"goto {goal}: stopped at {self.location()} after {frames} frames, {replans} plans"
 
     def failures(self, ram):
         return " ".join(f"{label}={self.markers.read(ram, name)}" for label, name in (
@@ -391,9 +639,11 @@ def scenario(path, rom=ROM, elf=DIAG_ELF, out=None):
     for name, value in spec.get("hold", {}).items():
         scene.hold(name, Scene.number(value))
     for step in spec["steps"]:
-        wrong += [f"at {json.dumps(step['expect'])}: {w}" for w in scene.run(step) or []]
+        where_ = json.dumps(step["expect"]) if isinstance(step, dict) else step
+        wrong += [f"at {where_}: {w}" for w in scene.run(step) or []]
     wrong += scene.check(spec.get("expect", {}), final=True)
     report = [f"{'FAIL' if wrong else 'PASS'} {Path(path).name}: {scene.core.frames} frames in {time.time() - started:.0f} s"]
+    report += [f"  {line.split('] ', 1)[-1]}" for line in log if "] goto " in line and not wrong]
     if wrong:
         scene.core.shot(scene.hooks).save(out / "fail.png")
         report += [f"  {w}" for w in wrong]
