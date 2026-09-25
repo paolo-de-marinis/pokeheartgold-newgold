@@ -23,7 +23,7 @@ Implementation         ███████████████████
 Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  15%
 Audit rows closed      ██████████████████████████████████████████████░░░░  91%
 
-Audit: 42 of 486 rows in docs/newgold/AUDIT-*.md still open.
+Audit: 42 of 492 rows in docs/newgold/AUDIT-*.md still open.
 The port is finished when none is, or each is closed with a reason.
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
@@ -39,7 +39,7 @@ Abilities   ██████████████████████�
 Items       ██████████████████████████████████████████████████  2685 / 2685
 Trainers    ██████████████████████████████████████████████████   738 /  738
 Tests       164 files
-ROM         165.8 MB of 268.4 MB   (2G card, 62% used)
+ROM         164.9 MB of 268.4 MB   (2G card, 61% used)
 ```
 <!-- LEDGER:COUNTS:END -->
 
