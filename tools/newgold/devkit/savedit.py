@@ -1130,6 +1130,19 @@ def parse_party(text):
     return wanted
 
 
+def short_of_next_level(raw, points):
+    """A party Pokemon left `points` experience short of its next level, its
+    level and stats as they were: the smallest gain a battle gives then
+    levels it, whatever the level (the level cap's scenarios)."""
+    mon = open_mon(raw)
+    a = mon["blocks"][0]
+    growth = personal_records()[struct.unpack_from("<H", a, 0)[0]]["growthRate"]
+    word = struct.unpack_from("<I", a, 8)[0]
+    exp = experience_for(growth, mon["party"][4] + 1) - points
+    struct.pack_into("<I", a, 8, (word & ~EXP_BITS & 0xFFFFFFFF) | exp)
+    return seal_mon(mon)
+
+
 def set_party(save, wanted):
     """The whole party, always the player's own so that it obeys."""
     if len(wanted) > PARTY_SIZE:
@@ -4005,6 +4018,9 @@ def main():
                         help="fill the party, e.g. CHIKORITA:5,PIDGEY:3:::ORAN_BERRY")
     parser.add_argument("--bag", metavar="ITEM:COUNT[,...]",
                         help="the same as --item, a count left out being 1, e.g. MASTER_BALL:1")
+    parser.add_argument("--exp-short", action="append", default=[], metavar="SLOT:POINTS",
+                        help="leave party Pokemon SLOT (counted from one) POINTS experience "
+                             "short of its next level; repeatable")
     parser.add_argument("--name", help="the player's name, which the save must carry "
                                        "terminated: the main menu copies it into a String "
                                        "and asserts on one that never ends")
@@ -4056,6 +4072,12 @@ def main():
                 raise SystemExit(str(e))
         save.write()
         print(f"bag: {','.join(filter(None, (args.item, args.bag)))}")
+
+    for entry in args.exp_short:
+        slot, points = (int(v) for v in entry.split(":"))
+        set_party_mon(save, slot - 1, short_of_next_level(party_raw(save)[slot - 1], points))
+        save.write()
+        print(f"party slot {slot}: {points} experience short of its next level")
 
     if args.tm:
         machines = [int(n) for n in args.tm.split(",")]

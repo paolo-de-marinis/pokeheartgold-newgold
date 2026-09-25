@@ -310,6 +310,16 @@ class SaveditLibraryTests(unittest.TestCase):
             self.assertTrue(all(m["pp"] == m["pp_max"] for m in mon["moves"]))
         self.assertEqual(party[5]["stats"][0], 1, "Shedinja has one HP")
 
+    def test_a_party_pokemon_left_short_of_its_next_level(self):
+        # The level cap's scenarios: a point or three short, the smallest gain
+        # a battle gives levels it, and its level stays what it was.
+        raw = sv.party_raw(self.open())[1]
+        mon = sv.describe_mon(sv.short_of_next_level(raw, 3))
+        rate = sv.personal_records()[mon["species"]]["growthRate"]
+        self.assertTrue(mon["ok"])
+        self.assertEqual(mon["exp"], sv.experience_for(rate, 21) - 3)
+        self.assertEqual((mon["level"], sv.open_mon(sv.short_of_next_level(raw, 3))["party"][4]), (20, 20))
+
     def test_editing_the_third_leaves_the_other_five(self):
         save = self.open()
         before = sv.party_raw(save)
