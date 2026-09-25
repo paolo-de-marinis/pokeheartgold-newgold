@@ -40,20 +40,6 @@ BACK_TO_BEFORE_MOVE = ("; the engine's script sends the called move back through
 NOT_BACK_TO_BEFORE_MOVE = ("; the engine's script does not send the called move back through the before-move "
                            "steps, which GoToMoveScript does here for every calling move")
 
-# Solar Beam's and Shadow Force's first turn. The engine asks it before the move
-# (BattleController_CheckChargeMoves and CheckPowerHerb at d0380a487) and runs
-# subscripts of its own (422, 426, 416) that print the attack message and the
-# charge line themselves and end the turn with NO_MORE_WORK; its scripts keep
-# only the hit. Here the scripts still charge as retail's do, a called move
-# included since it goes back through the before-move steps: the charge line
-# the move script buffers, printed by subscript 13, the side effect the script
-# sets, and no attack message on the charge turn. Bringing the scripts over is those subscripts and
-# a C step that buffers the line, and whether the charge turn shows the attack
-# message wants a rendered battle to settle.
-CHARGE_TURN = ("the charge turn and the Power Herb are the engine's before-move C "
-               "(CheckChargeMoves, CheckPowerHerb) with subscripts 422, 426 and 416 of its own, which print "
-               "the attack message on the charge turn; the script here keeps retail's charge turn")
-
 WEATHER = ("the engine sets the weather through its HANDLE_*_TEMPORARY subscripts where this script and "
            "WEATHER_START do the same; under a strong weather its script adds \"But it failed!\" after the "
            "strong weather's own line (MOVE_STATUS_FAILED), where this ends the move on the line "
@@ -78,10 +64,10 @@ STILL_DIFFERENT = {
     148: "the engine runs the landing back through its before-move sequence; here it is subscript 121's, "
          "worked out by BattleContext_LandFutureSight, and the use keeps retail's flags",
     150: "the doubling against Minimize is the damage chain's here, for every stamping move (BattleMoveStampsOnMinimize), as battle_calc_damage.c 6.9.14.1 does it",
-    151: CHARGE_TURN + "; its sun path, which is all its script keeps of the charge, prints \"absorbed light!\" "
-         "and plays the animation, then clears MOVE_ANIMATIONS_OFF, which here would play it a second time "
-         "with the damage, and shows Mega Sol's popup off the raw ability, as 132 does; and a Utility Umbrella "
-         "holder charges in the sun here (Pokemon Central, Superombrello), which the engine does not ask",
+    151: "the first turn is the controller's here as in the engine (TryChargeTurn), but the engine's sun path "
+         "plays the move's animation and clears MOVE_ANIMATIONS_OFF, which here would play it a second time "
+         "with the damage, and shows Mega Sol's popup off the raw ability, as 132 does: the script here says "
+         "the attack message and \"absorbed light!\" and leaves the animation to the hit",
     153: "Teleport's switch asks whether Commander holds its user on the field (Pokemon Central, Torre "
          "di Comando); the engine gives Commander no effect",
     161: "Spit Up's power from the stockpile: the engine reads it in CalcBaseDamage.c, and on Parental "
@@ -95,7 +81,6 @@ STILL_DIFFERENT = {
     242: CALLED_MOVE + BACK_TO_BEFORE_MOVE,
     259: "the engine waits for a button after only buffering the line that restores the dimensions, "
          "which waits on nothing, and calls its Room Service subscript by another name (395 here)",
-    272: CHARGE_TURN,
 }
 
 
@@ -639,7 +624,7 @@ class BeforeMoveTests(unittest.TestCase):
         # line goes on to ov12_0224D1DC, which faints it, rather than past it.
         from test_ability_interactions import run_c
         controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
-        run_c(NO_TARGET_FIXTURE.replace("@FUNCTIONS@", function(controller, "ov12_0224B398")))
+        run_c(NO_TARGET_FIXTURE.replace("@FUNCTIONS@", function(controller, "SolarBeamFiresAtOnce") + function(controller, "ov12_0224B398")))
         self.assertIn("ctx->command = CONTROLLER_COMMAND_36;", function(controller, "ov12_0224D03C"))
         self.assertIn("BATTLE_SUBSCRIPT_AFTER_SELFDESTRUCT", function(controller, "ov12_0224D1DC"))
 

@@ -2,32 +2,29 @@
 
     .data
 
+// Solar Beam and Solar Blade: the engine's script (d0380a487), its first turn
+// the controller's (TryChargeTurn). What reaches it unlocked is a move the
+// sun fires at once (SolarBeamFiresAtOnce): the attack message and "absorbed
+// light!" before the hit, as the engine and Showdown's gen-9 -prepare say it
+// in harsh sunlight too. Not the engine's PlayMoveAnimation there, which
+// would play the move a second time with the hit here, nor its Mega Sol
+// popup, which it shows off the raw ability.
 _000:
-    // Mega Sol's user fires at once whatever the weather, under Cloud Nine
-    // too (hg-engine's CheckChargeMoves reads the weather its move sees).
-    CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_MEGA_SOL, _028
-    CheckIgnoreWeather _006
-    // A Utility Umbrella holder charges it in the sun too (Superombrello).
-    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN, _006
-    CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_SUN_ALL, _028
-
-_006:
     CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS2, STATUS2_LOCKED_INTO_MOVE, _033
-    CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, HOLD_EFFECT_CHARGE_SKIP, _026
-    UpdateVar OPCODE_SET, BSCRIPT_VAR_SIDE_EFFECT_FLAGS_DIRECT, MOVE_SIDE_EFFECT_TO_ATTACKER|MOVE_SUBSCRIPT_PTR_VANISH_CHARGE_TURN
-    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_NO_ATTACK_MESSAGE|BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE|BATTLE_STATUS_CHARGE_TURN
-    End 
-
-_026:
-    Call BATTLE_SUBSCRIPT_ITEM_SKIP_CHARGE_TURN
-
-_028:
+    PrintAttackMessage
+    Wait
+    WaitButtonABTime 30
+    // {0} absorbed light!
+    PrintMessage msg_0197_00214, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
+    Wait
+    WaitButtonABTime 30
     CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_BATTLER_TARGET, BATTLER_NONE, _035
 
 _033:
-    CalcCrit 
-    CalcDamage 
+    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_MOVE_ANIMATIONS_OFF
+    CalcCrit
+    CalcDamage
 
 _035:
     Call BATTLE_SUBSCRIPT_CHARGE_MOVE_CLEANUP
-    End 
+    End

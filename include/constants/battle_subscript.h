@@ -806,6 +806,9 @@
 #define BATTLE_SUBSCRIPT_SKY_DROP_FREED                     471
 // Lightning Rod and Storm Drain swallowing the move for a stage of Sp. Atk.
 #define BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_SP_ATTACK         472
+// Solar Beam's and Shadow Force's first turn (TryChargeTurn), where effect
+// scripts 151 and 272 charged.
+#define BATTLE_SUBSCRIPT_CHARGE_TURN                        473
 
 #define MOVE_SUBSCRIPT_PTR_GIVE_HELD_ITEM                   150
 #define MOVE_SUBSCRIPT_PTR_LASER_FOCUS                      151

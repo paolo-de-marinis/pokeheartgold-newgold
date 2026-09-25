@@ -2835,9 +2835,17 @@ BOOL ov12_0224B1FC(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// Solar Beam and Solar Blade need no charge in harsh sunlight, and under
+// Mega Sol its user's need none whatever the field, umbrella or not
+// (BattlerMoveWeatherAt); a Utility Umbrella holder charges them in the sun
+// (Superombrello).
+static BOOL SolarBeamFiresAtOnce(BattleSystem *battleSystem, BattleContext *ctx) {
+    return BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_151
+        && (BattlerMoveWeatherAt(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdAttacker) & FIELD_CONDITION_SUN_ALL);
+}
+
 static BOOL ov12_0224B398(BattleSystem *battleSystem, BattleContext *ctx) {
     BOOL ret = FALSE;
-    BOOL quickChargeFlag = FALSE; // only for solar beam this gen
 
     if ((ctx->battlerIdTarget == BATTLER_NONE && !BattleCtx_IsIdenticalToCurrentMove(ctx, ctx->moveNoCur))
         || (ctx->battlerIdTarget == BATTLER_NONE && BattleCtx_IsIdenticalToCurrentMove(ctx, ctx->moveNoCur) == TRUE && (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_LOCKED_INTO_MOVE || ctx->battleStatus & BATTLE_STATUS_CHARGE_MOVE_HIT))) {
@@ -2861,14 +2869,7 @@ static BOOL ov12_0224B398(BattleSystem *battleSystem, BattleContext *ctx) {
         ret = TRUE;
     }
 
-    // Under Mega Sol the user's Solar Beam needs no charge, whatever the
-    // field; a Utility Umbrella holder charges it in the sun (Superombrello).
-    if (BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_151
-        && (BattlerMoveWeatherAt(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdAttacker) & FIELD_CONDITION_SUN_ALL)) {
-        quickChargeFlag = TRUE;
-    }
-
-    if (ctx->battlerIdTarget == BATTLER_NONE && BattleCtx_IsIdenticalToCurrentMove(ctx, ctx->moveNoCur) == TRUE && ret == FALSE && quickChargeFlag == FALSE && GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) != HOLD_EFFECT_CHARGE_SKIP && !(ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_LOCKED_INTO_MOVE)) {
+    if (ctx->battlerIdTarget == BATTLER_NONE && BattleCtx_IsIdenticalToCurrentMove(ctx, ctx->moveNoCur) == TRUE && ret == FALSE && SolarBeamFiresAtOnce(battleSystem, ctx) == FALSE && GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) != HOLD_EFFECT_CHARGE_SKIP && !(ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_LOCKED_INTO_MOVE)) {
         ctx->battlerIdTarget = ctx->battlerIdAttacker;
     }
 
@@ -3823,6 +3824,38 @@ static void TrySelfDestruct(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
+// Solar Beam's, Solar Blade's, Shadow Force's and Phantom Force's first turn,
+// asked of the controller before the move script as the engine's
+// BattleController_CheckChargeMoves and CheckPowerHerb ask it
+// (BattleController_BeforeMove.c:2253 and 2354 at d0380a487), so the two
+// effect scripts are the engine's and keep only the hit. Not on the second
+// turn, nor for a Solar Beam the sun fires at once, which its script says.
+// The charge line goes to the buffer the move script would have filled, and
+// subscript 473 says the attack message first -- "X used Solar Beam!" on the
+// charge turn, as the latest games show it (the engine's subscripts 422 and
+// 426, Showdown's gen-9 move line before its -prepare; Pokemon Central does
+// not say) -- then charges as retail's scripts did, or spends a Power Herb and
+// goes on to the hit.
+static BOOL TryChargeTurn(BattleSystem *battleSystem, BattleContext *ctx) {
+    int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
+    int attacker = ctx->battlerIdAttacker;
+
+    if ((effect != MOVE_EFFECT_151 && effect != MOVE_EFFECT_SHADOW_FORCE)
+        || (ctx->battleMons[attacker].status2 & STATUS2_LOCKED_INTO_MOVE)
+        || (ctx->battleStatus & BATTLE_STATUS_CHARGE_MOVE_HIT)
+        || SolarBeamFiresAtOnce(battleSystem, ctx) == TRUE) {
+        return FALSE;
+    }
+    ctx->buffMsg.id = effect == MOVE_EFFECT_151 ? msg_0197_00214 : msg_0197_01082; // absorbed light! / vanished instantly!
+    ctx->buffMsg.tag = TAG_NICKNAME;
+    ctx->buffMsg.param[0] = CreateNicknameTag(ctx, attacker);
+    if (effect == MOVE_EFFECT_SHADOW_FORCE) {
+        ctx->battleMons[attacker].moveEffectFlags |= MOVE_EFFECT_FLAG_PHANTOM_FORCE;
+    }
+    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_CHARGE_TURN);
+    return TRUE;
+}
+
 // What the moves that answer one another in a turn need to know of the move
 // now being used: it has come through everything that can stop a Pokemon
 // acting, and has spent its PP, whether or not it goes on to fail.
@@ -4017,7 +4050,9 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
             Battler_GulpMissileCatch(ctx, ctx->battlerIdAttacker);
         }
         TryStartParentalBond(battleSystem, ctx);
-        ReadBattleScriptFromNarc(ctx, NARC_a_0_0_0, ctx->moveNoCur);
+        if (TryChargeTurn(battleSystem, ctx) == FALSE) {
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_0, ctx->moveNoCur);
+        }
         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
         ctx->commandNext = CONTROLLER_COMMAND_24;
         ov12_02252E30(battleSystem, ctx);

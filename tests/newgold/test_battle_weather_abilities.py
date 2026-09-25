@@ -102,13 +102,14 @@ class MegaSolTests(unittest.TestCase):
         effect = function(controller, "BattleSystem_CheckMoveEffect")
         self.assertEqual(effect.count("BattlerMoveWeather(battleSystem, ctx, battlerIdAttacker)"), 1)
         self.assertEqual(effect.count("BattlerMoveWeatherAt(battleSystem, ctx, battlerIdAttacker, battlerIdTarget)"), 1)
+        # Solar Beam and Solar Blade fire at once, Mega Sol's sun being the
+        # user's move's weather, which no umbrella keeps off
+        # (BattlerMoveWeatherAt); Electro Shot's rain is the field's, as in
+        # hg-engine, and Growth is not asked.
         self.assertIn("(BattlerMoveWeatherAt(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdAttacker) & FIELD_CONDITION_SUN_ALL)",
-                      function(controller, "ov12_0224B398"))
-        # Solar Beam and Solar Blade fire at once; Electro Shot's rain is the
-        # field's, as in hg-engine, and Growth is not asked.
-        solar = (EFFECTS / "effect_script_0151.s").read_text()
-        self.assertLess(solar.index("CheckAbility CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, ABILITY_MEGA_SOL, _028"),
-                        solar.index("CheckIgnoreWeather"))
+                      function(controller, "SolarBeamFiresAtOnce"))
+        for asker in ("ov12_0224B398", "TryChargeTurn"):
+            self.assertIn("SolarBeamFiresAtOnce(battleSystem, ctx)", function(controller, asker))
         self.assertNotIn("MEGA_SOL", (EFFECTS / "effect_script_0330.s").read_text())
 
 
@@ -428,10 +429,10 @@ int main(void) {
         self.assertEqual(leaf, 12)
         freeze = subscript("Freeze")
         self.assertLess(freeze.index(f"{self.UMBRELLA}, _011"), freeze.index("FIELD_CONDITION_SUN_ALL, _095"))
-        for effect, weather in ((151, "SUN_ALL"), (330, "RAIN_ALL")):
-            script = (EFFECTS / f"effect_script_{effect:04d}.s").read_text()
-            self.assertLess(script.index(f"BATTLER_CATEGORY_ATTACKER, {self.UMBRELLA}, _006"),
-                            script.index(f"FIELD_CONDITION_{weather}, _028"), effect)
+        # Solar Beam's is SolarBeamFiresAtOnce's WeatherUnderUmbrella.
+        script = (EFFECTS / "effect_script_0330.s").read_text()
+        self.assertLess(script.index(f"BATTLER_CATEGORY_ATTACKER, {self.UMBRELLA}, _006"),
+                        script.index("FIELD_CONDITION_RAIN_ALL, _028"))
 
 
 class StrongWindsTests(unittest.TestCase):
