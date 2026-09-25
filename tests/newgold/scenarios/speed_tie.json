@@ -1,0 +1,12 @@
+{
+  "about": "A speed tie forced both ways (NEWGOLD_DIAG's gDiagForceSpeedTie): a level-12 Cyndaquil against a forced wild level-5 Geodude, both given Speed 40 in the running battle (set:), so CheckSortSpeed rolls for who goes first. With the switch at 1 the roll says the second battler asked -- the Geodude -- moves first; at 2, the Cyndaquil. Cyndaquil uses Leer, so no stat stage moves either Speed. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CYNDAQUIL:12"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceSpeedTie": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:2:0",
+            "set:0,speed,40", "set:1,speed,40", "fight:2:1",
+            {"expect": {"lines": ["The wild Geodude used", "Cyndaquil used Leer!"]}},
+            "hold:gDiagForceSpeedTie=2", "fight:2:1"],
+  "expect": {"lines": ["The wild Geodude used", "Cyndaquil used Leer!", "Cyndaquil used Leer!", "The wild Geodude used"],
+             "battler1.species": "SPECIES_GEODUDE"}
+}

@@ -27,10 +27,12 @@ A step is one of
                                 default), written into the running battle: a move
                                 no trainer's data gives, for the AI to use
     set:B,FIELD,VALUE           battler B's hp, status (its flags as markers.py names
-                                them: "BRN", "PSN"), ability (ABILITY_...) or item
-                                (ITEM_...), written into the running battle: a state
-                                no battle starts in (hp last: the battler is found by
-                                the HP gDiagBattlers shows, a frame behind)
+                                them: "BRN", "PSN"), ability (ABILITY_...), item
+                                (ITEM_...) or speed (the stat before its stages),
+                                written into the running battle: a state no battle
+                                starts in, two speeds alike for a tie (hp last: the
+                                battler is found by the HP gDiagBattlers shows, a
+                                frame behind)
     goto:MAP,X,Y                walk there: the path planned from the tree's map data
                                 (tile attributes, ledges, warps) and the objects in
                                 RAM, planned again when left or blocked; A through
@@ -132,8 +134,9 @@ def battle_layout():
     names = ("sizeof(BattleMon)", "__builtin_offsetof(BattleMon, moves)", "__builtin_offsetof(BattleMon, movePPCur)",
              "__builtin_offsetof(BattleMon, hp)", "__builtin_offsetof(BattleContext, battleMons)",
              "__builtin_offsetof(BattleContext, unk_0)", "__builtin_offsetof(BattleMon, status)",
-             "__builtin_offsetof(BattleMon, ability)", "__builtin_offsetof(BattleMon, item)")
-    return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item"), savedit.compile_c(
+             "__builtin_offsetof(BattleMon, ability)", "__builtin_offsetof(BattleMon, item)",
+             "__builtin_offsetof(BattleMon, speed)")
+    return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item", "speed"), savedit.compile_c(
         exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h",))[0]))
 
 
@@ -443,7 +446,7 @@ class Scene:
             core.poke(at + layout["moves"] + 2 * int(slot), self.number(move), 2)
             core.poke(at + layout["pp"] + int(slot), int(pp[0]) if pp else 5, 1)
         elif kind == "set":
-            # set:BATTLER,FIELD,VALUE -- a battler's hp, status, ability or item,
+            # set:BATTLER,FIELD,VALUE -- a battler's hp, status, ability, item or speed,
             # written into the battle as it runs, as teach: writes its moves.
             battler, field, value = rest.split(",")
             at, layout = self.battle_mon(int(battler)), battle_layout()
@@ -453,7 +456,7 @@ class Scene:
                 number = sum(mask for mask, name in STATUS if name in value.split())
             else:
                 number = self.number(value)
-            core.poke(at + layout[field], number, 2 if field in ("ability", "item") else 4)
+            core.poke(at + layout[field], number, 2 if field in ("ability", "item", "speed") else 4)
         elif kind == "fight":
             import gym
             for _ in range(300):

@@ -70,7 +70,8 @@ does, so forcing one roll moves no other. Between frames no roll is waiting
 (`gDiagRollNext` is zero): the readers' one-line summary names one that is, a
 check that named a roll and took none. A scenario holds them (`"hold"`, or a
 `hold:` step to change one mid-battle); `tests/newgold/scenarios/rolls_forced_*.json`,
-`accuracy_forced.json` and `battle_seed.json` show each at work.
+`accuracy_forced.json`, `speed_tie.json` and `battle_seed.json` show each at work;
+`scene.py`'s `set:B,speed,N` gives two battlers the same Speed for a tie.
 
 The other chance rolls are not forced, only fixed by the seed: the flinch of a King's
 Rock, a Razor Fang or Stench, the contact abilities' three in ten (Static, Flame Body,
