@@ -284,6 +284,21 @@ class TrainerTests(unittest.TestCase):
         self.assertIn("ITEM_STICK", held)
         self.assertIn("ITEM_EVIOLITE", held)
 
+    def test_the_first_silver_is_konefr_s(self):
+        """Cherrygrove fights the Passerby Boy 495-497 (scr_seq_0850_T21.s);
+        konefr's L7, difficulty 40 and Potion were written on 2, 3 and 265,
+        which no script fights, and are carried to the Boy one species for
+        one. The Boy keeps his class, name and lines."""
+        script = (ROOT / "files/fielddata/script/scr_seq/scr_seq_0850_T21.s").read_text()
+        self.assertEqual(re.findall(r"TrainerBattle (TRAINER_\w+)", script),
+                         ["TRAINER_PASSERBY_BOY_2", "TRAINER_PASSERBY_BOY_3", "TRAINER_PASSERBY_BOY"])
+        for boy, silver in ((495, 265), (496, 2), (497, 3)):
+            self.assertEqual(self.trainers[boy]["party"], self.trainers[silver]["party"], boy)
+            self.assertEqual(self.trainers[boy]["party"][0]["level"], 7, boy)
+            self.assertEqual(self.trainers[boy]["items"], ["ITEM_POTION"], boy)
+            self.assertEqual((self.trainers[boy]["class"], self.trainers[boy]["name"]),
+                             ("TRAINERCLASS_PASSERBY", "{TRNAME}Boy"), boy)
+
     def test_a_party_entry_can_name_every_species(self):
         """The species field is 11 bits of species and 5 of form, hg-engine's
         split. Platinum's was 10 and 6, which wrapped every species from 1024

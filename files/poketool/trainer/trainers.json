@@ -24055,15 +24055,17 @@
       "type": "TRTYPE_MON",
       "class": "TRAINERCLASS_PASSERBY",
       "name": "{TRNAME}Boy",
-      "items": [],
+      "items": [
+        "ITEM_POTION"
+      ],
       "ai_flags": 1,
       "double": 0,
       "party": [
         {
-          "difficulty": 0,
+          "difficulty": 40,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 5,
+          "level": 7,
           "species": "SPECIES_CHIKORITA",
           "capsule": 0
         }
@@ -24087,15 +24089,17 @@
       "type": "TRTYPE_MON",
       "class": "TRAINERCLASS_PASSERBY",
       "name": "{TRNAME}Boy",
-      "items": [],
+      "items": [
+        "ITEM_POTION"
+      ],
       "ai_flags": 1,
       "double": 0,
       "party": [
         {
-          "difficulty": 0,
+          "difficulty": 40,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 5,
+          "level": 7,
           "species": "SPECIES_CYNDAQUIL",
           "capsule": 0
         }
@@ -24119,15 +24123,17 @@
       "type": "TRTYPE_MON",
       "class": "TRAINERCLASS_PASSERBY",
       "name": "{TRNAME}Boy",
-      "items": [],
+      "items": [
+        "ITEM_POTION"
+      ],
       "ai_flags": 1,
       "double": 0,
       "party": [
         {
-          "difficulty": 0,
+          "difficulty": 40,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 5,
+          "level": 7,
           "species": "SPECIES_TOTODILE",
           "capsule": 0
         }

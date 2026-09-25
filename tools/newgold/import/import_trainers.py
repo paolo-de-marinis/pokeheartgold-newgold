@@ -70,6 +70,21 @@ def named_override(slot, named):
 
 DOUBLE = {"SINGLE_BATTLE": 0, "DOUBLE_BATTLE": 2, "NO_PARTNER_DOUBLE_BATTLE": 3}
 
+# konefr's plain errors, corrected on the way in (Paolo, 2026-09-25: a plain
+# konefr error is fixed and stays in docs/newgold/KONEFR-NOTES.md). Each one
+# holds only while his data still has the slip: once he changes it, his data
+# is taken as it is and the run says the correction is stale.
+
+# konefr's first Silver: 5cfd84cc7 gives trainers 2, 3 and 265 (Silver with
+# Cyndaquil, Totodile, Chikorita) L7, difficulty 40 and a Potion, and his
+# worklog says the same for each variant ("Target level / ace: 7", "Potion
+# IVs 40", "increased difficulty"). Cherrygrove's script (scr_seq_0850_T21.s)
+# fights the Passerby Boy 495-497 instead, which he never touched, and no
+# script fights 2, 3 or 265. His party and items go to the trainer the script
+# uses, one species for one; the Boy's class, name and lines stay, since the
+# rival has no name yet there. KONEFR-NOTES.md, Allenatori 1.
+FIRST_SILVER = {495: 265, 496: 2, 497: 3}
+
 # Names this repository spells differently from the reference.
 ALIASES = {
     "MOVE_FEINT_ATTACK": "MOVE_FAINT_ATTACK",
@@ -249,7 +264,7 @@ def main():
 
     counts = collections.Counter()
     changed, problems = 0, collections.Counter()
-    hidden = 0
+    hidden, stale = 0, []
     for index, trainer in enumerate(trainers):
         if index not in table:
             problems["no reference entry"] += 1
@@ -257,6 +272,14 @@ def main():
         block = table[index]
         try:
             wanted = translate(block, flags, types)
+            if index in FIRST_SILVER:
+                his = translate(table[FIRST_SILVER[index]], flags, types)
+                if (not wanted["items"] and his["type"] == wanted["type"]
+                        and all(m["level"] == 5 and m["difficulty"] == 0 for m in wanted["party"])
+                        and [m["species"] for m in his["party"]] == [m["species"] for m in wanted["party"]]):
+                    wanted.update(items=his["items"], party=his["party"])
+                else:
+                    stale.append(f"{index}: not the retail first Silver any more (FIRST_SILVER)")
         except (AttributeError, KeyError, ValueError) as error:
             problems[f"unreadable: {error}"] += 1
             continue
@@ -284,6 +307,8 @@ def main():
         print(f"  {hidden} Pokemon ask for a hidden ability")
     for problem, count in problems.most_common():
         print(f"  left alone, {count}: {problem}")
+    for line in stale:
+        print(f"  correction stale, his data taken: {line}")
 
     if not args.write:
         print("nothing written; pass --write")
