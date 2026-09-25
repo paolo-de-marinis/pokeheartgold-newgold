@@ -665,6 +665,14 @@ int main(void) {
         self.assertIn("TYPE_DRAGON)\n                ? 2\n                : 1;", cheer)
         self.assertIn("+ ctx->moveConditions[battlerIdAttacker].dragonCheer +",
                       function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "TryCriticalHit"))
+        # Baton Pass passes it, from Scarlet and Violet 3.0.0; a switch clears
+        # it with the rest of the slot's conditions.
+        switching = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "InitSwitchWork")
+        passing = switching[switching.index("MI_CpuClear8(&ctx->moveConditions[battlerId], sizeof(MoveConditions));"):]
+        passing = passing[passing.index("if (ctx->battleStatus & BATTLE_STATUS_BATON_PASS) {"):]
+        passing = passing[:passing.index("\n    }\n")]
+        self.assertIn("u8 dragonCheer = ctx->moveConditions[battlerId].dragonCheer;", switching)
+        self.assertIn("ctx->moveConditions[battlerId].dragonCheer = dragonCheer;", passing)
 
     def test_fairy_lock_holds_the_field_till_the_next_turn_s_end(self):
         # Pokemon Central (Blocco Fatato): all but Ghost-types, this turn and

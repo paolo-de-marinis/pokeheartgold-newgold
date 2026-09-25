@@ -2560,6 +2560,7 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
     int maxBattlers;
     u8 *data;
     UnkBattlemonSub unkStruct = ctx->battleMons[battlerId].unk88;
+    u8 dragonCheer = ctx->moveConditions[battlerId].dragonCheer;
 
     maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
     BattleSystem_GetBattleType(battleSystem);
@@ -2636,6 +2637,10 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
         ctx->battleMons[battlerId].unk88.magnetRiseTurns = unkStruct.magnetRiseTurns;
         ctx->battleMons[battlerId].unk88.embargoFlag = unkStruct.embargoFlag;
         ctx->battleMons[battlerId].unk88.healBlockTurns = unkStruct.healBlockTurns;
+        // Dragon Cheer goes with the rest, a Dragon-type's two stages as
+        // they were cheered, from Scarlet and Violet 3.0.0 (Pokemon Central,
+        // Grido del Drago; Showdown's gen-9 Baton Pass copies the volatile).
+        ctx->moveConditions[battlerId].dragonCheer = dragonCheer;
     }
 
     ctx->battleMons[battlerId].unk88.fakeOutCount = ctx->totalTurns + 1;
