@@ -96,6 +96,59 @@ class DiagnosticsTests(unittest.TestCase):
                              .replace("@USED@", c_function(source, "Diag_HeapUsed"))
         run_native(self, program, "newgold-heap-margin-", flags=("-m32",))
 
+    def test_a_forced_roll_is_the_one_its_check_reads_that_way(self):
+        """Diag_Roll answers, for the check Diag_RollNext named, the value that
+        check reads as the forced outcome -- a critical hit's remainder of 0
+        or 1, the accuracy's 0 or 99, the damage's 0 (100%) or 15 (85%), an
+        effect's 0 or 99 -- the RNG's own value with the switch off, and
+        forgets the check either way, so the next roll is the RNG's."""
+        from test_dex_range import c_function, run_native
+        source = (ROOT / "src/newgold/diag/diag.c").read_text()
+        table = re.search(r"static const u8 sDiagForcedRolls\[\]\[2\] = \{.*?\};", source, re.S).group(0)
+        program = FORCED_ROLL.replace("@TABLE@", table).replace("@NEXT@", c_function(source, "Diag_RollNext")) \
+                             .replace("@ROLL@", c_function(source, "Diag_Roll"))
+        header = (ROOT / "include/newgold/diag.h").read_text()
+        program = program.replace("@DEFINES@", "\n".join(re.findall(r"^#define DIAG_ROLL_\w+ \d+$", header, re.M)))
+        run_native(self, program, "newgold-forced-roll-")
+
+
+FORCED_ROLL = r"""
+#include <assert.h>
+#include <stdio.h>
+typedef unsigned char u8;
+typedef unsigned short u16;
+typedef unsigned int u32;
+@DEFINES@
+u32 gDiagForceCritical, gDiagForceHit, gDiagForceDamageRoll, gDiagForceEffect, gDiagRollNext;
+@TABLE@
+@NEXT@
+@ROLL@
+static u16 roll(u32 kind, u32 *sw, u32 value, u16 natural) {
+    *sw = value;
+    Diag_RollNext(kind);
+    return Diag_Roll(natural);
+}
+int main(void) {
+    assert(roll(DIAG_ROLL_CRITICAL, &gDiagForceCritical, 1, 777) % 24 == 0);   /* lands at any stage */
+    assert(roll(DIAG_ROLL_CRITICAL, &gDiagForceCritical, 2, 777) % 2 != 0);    /* fails at stage 2, 1 in 2 */
+    assert(roll(DIAG_ROLL_HIT, &gDiagForceHit, 1, 777) % 100 + 1 <= 1);        /* hits anything accurate at all */
+    assert(roll(DIAG_ROLL_HIT, &gDiagForceHit, 2, 777) % 100 + 1 > 99);        /* misses all under 100 */
+    assert(100 - roll(DIAG_ROLL_DAMAGE, &gDiagForceDamageRoll, 1, 777) % 16 == 100);
+    assert(100 - roll(DIAG_ROLL_DAMAGE, &gDiagForceDamageRoll, 2, 777) % 16 == 85);
+    assert(roll(DIAG_ROLL_EFFECT, &gDiagForceEffect, 1, 777) % 100 < 1);
+    assert(roll(DIAG_ROLL_EFFECT, &gDiagForceEffect, 2, 777) % 100 >= 99);
+    assert(roll(DIAG_ROLL_EFFECT, &gDiagForceEffect, 0, 777) == 777);        /* off: the RNG's */
+    assert(gDiagRollNext == DIAG_ROLL_NONE);                                   /* forgotten */
+    gDiagForceCritical = 1;
+    assert(Diag_Roll(777) == 777);                                             /* no check named: the RNG's */
+    Diag_RollNext(DIAG_ROLL_CRITICAL);
+    Diag_Roll(777);
+    assert(Diag_Roll(778) == 778);                                             /* one roll a check */
+    printf("PASS: a forced roll is the one its check reads as that outcome, once.\n");
+    return 0;
+}
+"""
+
 
 HEAP_MARGIN = r"""
 #include <assert.h>

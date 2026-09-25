@@ -72,6 +72,11 @@ BattleSetup *BattleSetup_New(enum HeapID heapID, u32 battleTypeFlags) {
     setup->bugContestMon = AllocMonZeroed(heapID);
 
     setup->unk_19C = RngSeedFromRTC();
+#ifdef NEWGOLD_DIAG
+    if (gDiagBattleSeed) {
+        setup->unk_19C = gDiagBattleSeed;
+    }
+#endif
 
     if (sub_02037474() == TRUE) {
         for (i = 0; i < sub_02037454(); ++i) {

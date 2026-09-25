@@ -19,8 +19,9 @@ A step is one of
     hold:SYMBOL=VALUE           the same before every frame from now on; 0 lets go
     field[:N]                   A until the field is up and the player can move,
                                 and through any text box on the way (N frames at most)
-    fight[:N]                   A until a battle is up, then gym.py's player plays
-                                it to the end (N: always move slot N)
+    fight[:N[:T]]               A until a battle is up, then gym.py's player plays
+                                it to the end (N: always move slot N; T: stop at the
+                                command prompt after T turns, to expect what they did)
 
     scene.py mart.sav out wait:300 A*3 untilheap:HEAP_ID_FIELD2 heaps:mart shot:mart
 
@@ -264,7 +265,9 @@ class Scene:
             else:
                 self.say(f"[{core.frames}] no battle came up")
                 return None
-            gym.fight(core, self.markers, hooks, self.say, int(rest) if rest else -1, core.frames + 60000)
+            slot, _, turns = rest.partition(":")
+            gym.fight(core, self.markers, hooks, self.say, int(slot) if slot else -1, core.frames + 60000,
+                      turns=int(turns) if turns else None)
             self._collect(core)
         else:
             button, _, times = step.partition("*")
@@ -378,8 +381,11 @@ def scenario(path, rom=ROM, elf=DIAG_ELF, out=None):
     copy = out / "save.sav"
     shutil.copyfile(save, copy)
     if spec.get("edit"):
-        subprocess.run([sys.executable, str(ROOT / "tools/newgold/devkit/savedit.py"), *spec["edit"], str(copy)],
-                       check=True, capture_output=True)
+        edit = subprocess.run([sys.executable, str(ROOT / "tools/newgold/devkit/savedit.py"), *spec["edit"], str(copy)],
+                              capture_output=True, text=True)
+        if edit.returncode:
+            return False, [f"FAIL {Path(path).name}: savedit.py {' '.join(spec['edit'])}: "
+                           + (edit.stderr.strip().splitlines() or ["failed"])[-1]]
     log, wrong, started = [], [], time.time()
     scene = Scene(copy, rom, elf, out, say=log.append)
     for name, value in spec.get("hold", {}).items():

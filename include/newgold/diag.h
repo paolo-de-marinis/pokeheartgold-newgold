@@ -51,6 +51,29 @@ extern unsigned short gDiagForceBattleSpecies;      // the next step is a wild b
 extern unsigned short gDiagWarpX;                   // the next step check puts the player on this tile
 extern unsigned short gDiagWarpZ;
 
+// The battle's randomness, under the harness's control (agreed with Paolo,
+// 2026-09-25): a seed, and four rolls forced one way or the other. Like
+// gDiagForceEncounter, each forces the roll and nothing else: what the game
+// decides from the roll it still decides -- Battle Armor still refuses a
+// critical hit, a move that cannot miss still hits, a certain effect still
+// happens -- and the RNG still advances, so forcing one roll moves no other.
+extern unsigned long gDiagBattleSeed;      // nonzero: BattleSetup_New seeds the battle's RNG with it
+extern unsigned long gDiagForceCritical;   // 1: the critical-hit roll lands; 2: it fails
+extern unsigned long gDiagForceHit;        // 1: the accuracy roll hits; 2: it misses
+extern unsigned long gDiagForceDamageRoll; // 1: the top of the damage range (100%); 2: the bottom (85%)
+extern unsigned long gDiagForceEffect;     // 1: an additional effect's roll succeeds; 2: it fails
+// Each check says which roll it is about to ask BattleSystem_Random for, and
+// BattleSystem_Random hands its value to Diag_Roll, which answers the forced
+// one when that switch is on and forgets the kind either way.
+#define DIAG_ROLL_NONE 0
+#define DIAG_ROLL_CRITICAL 1
+#define DIAG_ROLL_HIT 2
+#define DIAG_ROLL_DAMAGE 3
+#define DIAG_ROLL_EFFECT 4
+extern unsigned long gDiagRollNext;
+void Diag_RollNext(unsigned long kind);
+unsigned short Diag_Roll(unsigned short roll);
+
 // The battle as text, so it can be followed without a screen. The last lines
 // the battle printed, in the game's own character codes (charmap.txt decodes
 // them), newest at gDiagBattleTextCount - 1 modulo the ring.

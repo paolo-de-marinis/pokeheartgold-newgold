@@ -1150,7 +1150,11 @@ void ov12_0223BD8C(BattleSystem *battleSystem, int a1) {
 
 u16 BattleSystem_Random(BattleSystem *battleSystem) {
     battleSystem->rand = battleSystem->rand * 1103515245L + 24691;
+#ifdef NEWGOLD_DIAG
+    return Diag_Roll(battleSystem->rand / 65536L);
+#else
     return battleSystem->rand / 65536L;
+#endif
 }
 
 u32 BattleSystem_GetRandTemp(BattleSystem *battleSystem) {

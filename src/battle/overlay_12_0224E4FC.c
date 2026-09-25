@@ -1981,6 +1981,9 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
 
         GF_ASSERT(effectChance);
 
+#ifdef NEWGOLD_DIAG
+        Diag_RollNext(DIAG_ROLL_EFFECT);
+#endif
         if ((BattleSystem_Random(battleSystem) % 100) < effectChance) {
             ctx->battleStatus |= BATTLE_STATUS_SECONDARY_EFFECT;
         }
@@ -1999,6 +2002,9 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
 
         GF_ASSERT(effectChance);
 
+#ifdef NEWGOLD_DIAG
+        Diag_RollNext(DIAG_ROLL_EFFECT);
+#endif
         if ((BattleSystem_Random(battleSystem) % 100) < effectChance) {
             *out = GetMoveStatusChangeScript(ctx, 2, ctx->unk_2174);
             ctx->unk_2174 = 0;
@@ -11553,6 +11559,9 @@ int BattleMoveCategory(BattleContext *ctx, u32 moveNo, int battlerIdAttacker) {
 
 int ApplyDamageRange(BattleSystem *battleSystem, BattleContext *ctx, int damage) {
     if (damage) {
+#ifdef NEWGOLD_DIAG
+        Diag_RollNext(DIAG_ROLL_DAMAGE);
+#endif
         damage *= (100 - (BattleSystem_Random(battleSystem) % 16));
         damage /= 100;
         if (!damage) {
@@ -11604,6 +11613,9 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     // effect scripts carry more, so the script says so by asking for a
     // critical stage the ladder above has no rung for. The stage is capped
     // before the roll, so the sentinel cannot walk off the table either.
+#ifdef NEWGOLD_DIAG
+    Diag_RollNext(DIAG_ROLL_CRITICAL);
+#endif
     if ((BattleSystem_Random(battleSystem) % sCritChance[critUp]) == 0 || critCnt >= CRITICAL_STAGE_ALWAYS || (ability == ABILITY_MERCILESS && (ctx->battleMons[battlerIdTarget].status & STATUS_POISON_ALL))) {
         if (!CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_BATTLE_ARMOR) && !CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_SHELL_ARMOR) && !(sideCondition & SIDE_CONDITION_LUCKY_CHANT) && !(moveEffect & MOVE_EFFECT_FLAG_LUCKY_CHANT)) {
             ret = 2;

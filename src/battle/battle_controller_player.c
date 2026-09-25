@@ -3413,6 +3413,9 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
         hitChance = hitChance < 10 ? 0 : hitChance - 10;
     }
 
+#ifdef NEWGOLD_DIAG
+    Diag_RollNext(DIAG_ROLL_HIT);
+#endif
     if ((BattleSystem_Random(battleSystem) % 100) + 1 > hitChance) {
         ctx->moveStatusFlag |= MOVE_STATUS_MISSED;
     }

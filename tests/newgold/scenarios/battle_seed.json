@@ -1,0 +1,9 @@
+{
+  "about": "gDiagBattleSeed seeds the battle's RNG, whatever the console's clock says when the battle starts: with the rolls left to it, seed 3 has the forced wild Geodude answer a level-12 Cyndaquil's Ember with Defense Curl, where the clock's own seed (and seeds 2, 5 and 7) has it use Tackle. The Ember's damage is 9 at almost any roll.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CYNDAQUIL:12"],
+  "hold": {"gDiagBattleSeed": 3},
+  "steps": ["field", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:4:1"],
+  "expect": {"lines": ["Cyndaquil used Ember!", "The wild Geodude used Defense Curl!"], "no_lines": ["used Tackle"],
+             "battler1.species": "SPECIES_GEODUDE", "battler1.hp": 10}
+}

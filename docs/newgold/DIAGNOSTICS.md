@@ -55,6 +55,18 @@ And the switches, zero unless something outside the game writes them:
 | `gDiagForceEncounter` | the encounter roll | The roll always succeeds, so the first step on a tile that has encounters starts one. It forces the roll and nothing else: an earlier version also answered "this tile has encounters" and produced a battle in New Bark Town, whose table is surf-only, against species zero. |
 | `gDiagForceBattleSpecies` | the step check | The next step starts a wild battle against that species wherever the player stands, indoors included. |
 | `gDiagWarpX`, `gDiagWarpZ` | the step check | The next step check puts the player on that tile. The overworld is one coordinate space, so a Route 29 tile written from New Bark Town is Route 29 with its grass and its table. |
+| `gDiagBattleSeed` | `BattleSetup_New` | Nonzero: the battle's RNG is seeded with it instead of the clock's seed, so a battle goes the same way however many frames came before it -- the AI's choices, every roll left to the RNG. |
+| `gDiagForceCritical` | `TryCriticalHit` | 1: the critical-hit roll lands; 2: it fails. The roll only: Battle Armor, Shell Armor and Lucky Chant still refuse a critical hit, and an always-critical move or stage still gets one. Both sides. |
+| `gDiagForceHit` | `BattleSystem_CheckMoveHit` | 1: the accuracy roll hits; 2: it misses. A move accurate to 100 or more still hits. |
+| `gDiagForceDamageRoll` | `DamageCalcDefault`, `ApplyDamageRange` | 1: the top of the damage range (100%); 2: the bottom (85%). |
+| `gDiagForceEffect` | `ov12_02250490`, `BtlCmd_CheckEffectActivation` | 1: an additional effect's roll succeeds (a burn, a flinch, a stat drop); 2: it fails. A certain effect still happens. |
+
+The four forced rolls work the same way: the check says which roll it is about to
+ask for (`Diag_RollNext`), and `BattleSystem_Random` hands its value to `Diag_Roll`,
+which answers the forced one when that switch is on. The RNG advances as it always
+does, so forcing one roll moves no other. A scenario holds them (`"hold"`, or a
+`hold:` step to change one mid-battle); `tests/newgold/scenarios/rolls_forced_*.json`,
+`accuracy_forced.json` and `battle_seed.json` show each at work.
 
 ## Reading it
 

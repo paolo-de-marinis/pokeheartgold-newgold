@@ -101,11 +101,13 @@ def quiet():
     return os.fdopen(keep, "w", buffering=1)
 
 
-def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None):
+def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=None):
     """Play the battle that is up until it is over or the core reaches
     `frames`, and return the last line it printed. `move` is a move slot,
     1 to 4, to use every turn; 0 the first with PP; -1 the hardest-hitting
     by the Scorer. `hold` runs before every frame, `say` gets the report.
+    With `turns`, it stops at the command prompt after that many turns, the
+    battle waiting, so what a turn did can be read; called again, it goes on.
 
     Memory is read every four frames, but the text ring is decoded only when
     its counter has moved: decoding it every time halved the frame rate.
@@ -114,6 +116,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None):
     seen, last_view, stuck, idle, last_line = set(), None, 0, 0, ""
     refused, last_slot = set(), None   # moves the game turned down this turn: Taunt, Disable, no PP
     last_count, last_asserts, restarts, decoded = 0, 0, 0, None
+    last_prompt, commands = None, 0
     while core.frames < frames:
         core.step(4, hold)
         ram = core.ram()
@@ -157,6 +160,11 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None):
         view = markers.battle(ram)
         prompt = markers.read(ram, "gDiagBattlePrompt")
         you_hp = battler_hp(view[0]) if view and view[0].startswith("you") else 1
+        if prompt in (1, 2) and last_prompt not in (1, 2):
+            commands += 1
+        last_prompt = prompt
+        if prompt in (1, 2) and turns is not None and commands > turns:
+            return last_line
         if prompt in (1, 2):
             if view != last_view:
                 say(f"[{core.frames}]   " + "\n          ".join(view[:-1]))

@@ -1,0 +1,11 @@
+{
+  "about": "The accuracy roll forced (gDiagForceHit): a level-46 Cyndaquil's Inferno, 50% accurate, misses a forced wild level-5 Geodude while the switch says miss, and hits it the next turn when the switch says hit. The Geodude's Tackle, 100% accurate, hits all the same: the switch forces the roll, and a move that cannot miss does not.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CYNDAQUIL:46"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 2, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:4:1",
+            {"expect": {"lines": ["Cyndaquil used Inferno!", "missed", "The wild Geodude used Tackle!"], "battler1.hp": 19}},
+            "hold:gDiagForceHit=1", "fight:4"],
+  "expect": {"lines": ["Cyndaquil used Inferno!", "missed", "Cyndaquil used Inferno!", "The wild Geodude fainted!"],
+             "gDiagBattleState": 15}
+}

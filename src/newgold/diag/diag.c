@@ -31,6 +31,13 @@ u16 gDiagForceBattleSpecies;
 u16 gDiagWarpX;
 u16 gDiagWarpZ;
 
+u32 gDiagBattleSeed;
+u32 gDiagForceCritical;
+u32 gDiagForceHit;
+u32 gDiagForceDamageRoll;
+u32 gDiagForceEffect;
+u32 gDiagRollNext;
+
 u16 gDiagBattleText[DIAG_BATTLE_TEXT_LINES][DIAG_BATTLE_TEXT_CHARS];
 u32 gDiagBattleTextCount;
 u32 gDiagLastMessage[5];
@@ -89,6 +96,50 @@ void Diag_Cry(u32 speciesAndForm, u32 bank, u32 started) {
     gDiagCrySpecies = speciesAndForm;
     gDiagCryBank = bank;
     gDiagCryStarted = started;
+}
+
+void Diag_RollNext(u32 kind) {
+    gDiagRollNext = kind;
+}
+
+// A forced roll, as the check that asks for it reads the value: [kind][switch - 1].
+// TryCriticalHit lands on a remainder of 0; BattleSystem_CheckMoveHit misses
+// when the roll modulo 100, plus one, is over the accuracy; the damage is
+// (100 - roll % 16)%; an additional effect happens when the roll modulo 100
+// is under its chance.
+static const u8 sDiagForcedRolls[][2] = {
+    { 0, 0 },
+    { 0, 1 },
+    { 0, 99 },
+    { 0, 15 },
+    { 0, 99 },
+};
+
+u16 Diag_Roll(u16 roll) {
+    u32 kind = gDiagRollNext;
+    u32 force;
+
+    gDiagRollNext = DIAG_ROLL_NONE;
+    switch (kind) {
+    case DIAG_ROLL_CRITICAL:
+        force = gDiagForceCritical;
+        break;
+    case DIAG_ROLL_HIT:
+        force = gDiagForceHit;
+        break;
+    case DIAG_ROLL_DAMAGE:
+        force = gDiagForceDamageRoll;
+        break;
+    case DIAG_ROLL_EFFECT:
+        force = gDiagForceEffect;
+        break;
+    default:
+        return roll;
+    }
+    if (force == 1 || force == 2) {
+        return sDiagForcedRolls[kind][force - 1];
+    }
+    return roll;
 }
 
 void Diag_AllocFailed(u32 heapId, u32 size) {

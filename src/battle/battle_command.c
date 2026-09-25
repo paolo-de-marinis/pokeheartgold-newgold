@@ -1081,6 +1081,9 @@ static void DamageCalcDefault(BattleSystem *battleSystem, BattleContext *ctx, BO
     }
 
     if (roll) {
+#ifdef NEWGOLD_DIAG
+        Diag_RollNext(DIAG_ROLL_DAMAGE);
+#endif
         damage = damage * (100 - BattleSystem_Random(battleSystem) % 16) / 100;
     }
 
@@ -6410,6 +6413,9 @@ BOOL BtlCmd_CheckEffectActivation(BattleSystem *battleSystem, BattleContext *ctx
 
     GF_ASSERT(effectChance != 0);
 
+#ifdef NEWGOLD_DIAG
+    Diag_RollNext(DIAG_ROLL_EFFECT);
+#endif
     if ((BattleSystem_Random(battleSystem) % 100) < effectChance && ctx->battleMons[ctx->battlerIdStatChange].hp) {
         return FALSE;
     }
