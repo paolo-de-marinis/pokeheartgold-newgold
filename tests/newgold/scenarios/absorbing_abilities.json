@@ -1,0 +1,16 @@
+{
+  "about": "Storm Drain and Lightning Rod swallow a move of their type aimed at their holder, status moves included, and raise its Sp. Atk (08c24a1ce; before, they only drew the move, which hit). A level-10 Pikachu is given Water Gun, Soak and Thunder Wave in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash and is given Storm Drain, then Lightning Rod (set:): each of the three raises its Sp. Atk, and the Chansey keeps its 40 HP, its type and no paralysis. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_WATER_GUN", "teach:0,1,MOVE_SOAK", "teach:0,2,MOVE_THUNDER_WAVE",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:1,ability,ABILITY_STORM_DRAIN", "fight:1:1", "fight:2:1",
+            "set:1,ability,ABILITY_LIGHTNINGROD", "fight:3:1"],
+  "expect": {"lines": ["Pikachu used Water Gun!", "The wild Chansey’s Storm Drain raised its Sp. Atk!",
+                       "Pikachu used Soak!", "The wild Chansey’s Storm Drain raised its Sp. Atk!",
+                       "Pikachu used Thunder Wave!", "The wild Chansey’s Lightning Rod raised its Sp. Atk!"],
+             "no_lines": ["transformed into the Water type", "is paralyzed"],
+             "battler1.hp": 40, "battler1.status": ""}
+}
