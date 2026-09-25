@@ -9510,7 +9510,10 @@ BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int bat
         break;
     }
     if (ret == TRUE) {
-        if (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_KLUTZ || (ctx->battleMons[ctx->battlerIdAttacker].moveEffectFlags & MOVE_EFFECT_FLAG_EMBARGO)) {
+        // Klutz and Embargo keep a Pokemon from what its own Berry does, but
+        // not from one it eats off another with Bug Bite or Pluck (Pokemon
+        // Central, Coleomorso and Spennata: from the fifth generation).
+        if (battlerId == ctx->battlerIdAttacker && (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_KLUTZ || (ctx->battleMons[ctx->battlerIdAttacker].moveEffectFlags & MOVE_EFFECT_FLAG_EMBARGO))) {
             ctx->tempData = 0;
         } else {
             ctx->tempData = script;

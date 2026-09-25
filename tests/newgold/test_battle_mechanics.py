@@ -121,6 +121,17 @@ class EatenBerryTests(unittest.TestCase):
         self.assertIn("ABILITY_STICKY_HOLD) != TRUE", kee)
 
 
+class PluckKlutzTests(unittest.TestCase):
+    def test_bug_bite_and_pluck_feed_a_klutz_or_embargo_eater(self):
+        # Pokemon Central (Coleomorso, Spennata): from the fifth generation
+        # the user has the Berry's effect under Klutz or Embargo. Its own
+        # Berry -- Teatime, Stuff Cheeks, Cud Chew -- is still withheld.
+        eat = function(OVERLAY.read_text(), "TryEatOpponentBerry")
+        self.assertIn("if (battlerId == ctx->battlerIdAttacker && (GetBattlerAbility(ctx, ctx->battlerIdAttacker) == ABILITY_KLUTZ"
+                      " || (ctx->battleMons[ctx->battlerIdAttacker].moveEffectFlags & MOVE_EFFECT_FLAG_EMBARGO))) {\n"
+                      "            ctx->tempData = 0;", eat)
+
+
 class MatchaGotchaTests(unittest.TestCase):
     def test_it_drains_on_every_hit_and_burns_one_time_in_five(self):
         # Pokemon Central (Spruzzate): half the damage back on every hit, a
