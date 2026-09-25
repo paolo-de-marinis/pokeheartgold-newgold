@@ -100,14 +100,29 @@ int main(void) {
     memset(&ctx, 0, sizeof(ctx));
     ctx.moveNoTemp = ctx.moveNoMetronome[0] = MOVE_EARTHQUAKE;
     // A third Earthquake in a row that hit one foe and not the Flying-type
-    // after it keeps its count; one that hit nothing gives it back.
+    // after it keeps its count; one that hit nothing starts it over, the
+    // next Earthquake being a first (Plessimetro, from the fifth generation).
     ctx.battleMons[0].unk88.metronomeTurns = 2;
     ctx.moveStatusFlag = MOVE_STATUS_NO_EFFECT;
     ctx.selfTurnData[0].metronomeLanded = 1;
     ov12_02256694(0, &ctx);
-    assert(ctx.battleMons[0].unk88.metronomeTurns == 2);
+    ctx.moveStatusFlag = 0;
+    ov12_022565E0(0, &ctx);
+    assert(ctx.battleMons[0].unk88.metronomeTurns == 3);
+    ctx.moveStatusFlag = MOVE_STATUS_NO_EFFECT;
     ctx.selfTurnData[0].metronomeLanded = 0;
     ov12_02256694(0, &ctx);
+    ctx.moveStatusFlag = 0;
+    ov12_022565E0(0, &ctx);
+    assert(ctx.battleMons[0].unk88.metronomeTurns == 0 && ctx.moveNoMetronome[0] == MOVE_EARTHQUAKE);
+    // A first use that missed is no first of a run either; one that hit is.
+    ctx.moveStatusFlag = MOVE_STATUS_MISSED;
+    ov12_02256694(0, &ctx);
+    ctx.moveStatusFlag = 0;
+    ov12_022565E0(0, &ctx);
+    assert(ctx.battleMons[0].unk88.metronomeTurns == 0);
+    ov12_02256694(0, &ctx);
+    ov12_022565E0(0, &ctx);
     assert(ctx.battleMons[0].unk88.metronomeTurns == 1);
     return 0;
 }
@@ -120,7 +135,7 @@ int main(void) {
         # earlier one was hit.
         controller = CONTROLLER.read_text()
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
-        run_c(self.METRONOME_ITEM.replace("@FUNCTIONS@", function(overlay, "ov12_02256694")))
+        run_c(self.METRONOME_ITEM.replace("@FUNCTIONS@", function(overlay, "ov12_022565E0") + function(overlay, "ov12_02256694")))
         loop = function(controller, "ov12_0224D03C")
         self.assertLess(loop.index("ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded = TRUE;"), loop.index("BATTLE_STATUS2_MAGIC_COAT"))
         self.assertIn("if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {\n        ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded = TRUE;", loop)
