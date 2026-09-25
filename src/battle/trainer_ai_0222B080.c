@@ -6,7 +6,7 @@
 
 // The AI's read-only tables beside its script (trainer_ai_script.c): Low
 // Kick's weight table and the two effect lists, each ended by 0xFFFF
-// (trainer_ai.h). The AI command table follows them, in the assembly.
+// (trainer_ai.h). The AI command table (trainer_ai_0222B0B4.c) follows them.
 
 // Low Kick's and Grass Knot's power by the target's weight in tenths of a
 // kilogram: the first row whose weight is at least the target's.
