@@ -7917,6 +7917,14 @@ BOOL TryPickpocket(BattleSystem *battleSystem, BattleContext *ctx, int *script) 
 BOOL CheckStatusHealAbility(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, int flag) {
     BOOL ret = FALSE;
 
+    // A fainted Pokemon has no ability. Retail never needed to ask: a Water
+    // Veil or an Immunity never kept the status it cures. Under the port's
+    // Neutralizing Gas it can, and faint with it; when the gas ends, the
+    // entry abilities run again and would cure the fallen -- from a place
+    // left empty, a party slot past the party.
+    if (ctx->battleMons[battlerId].hp == 0) {
+        return FALSE;
+    }
     switch (GetBattlerAbility(ctx, battlerId)) {
     case ABILITY_IMMUNITY:
         if (ctx->battleMons[battlerId].status & STATUS_POISON_ALL) {

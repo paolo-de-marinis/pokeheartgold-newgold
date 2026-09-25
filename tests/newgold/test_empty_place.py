@@ -389,6 +389,40 @@ int main(void) {
 """
 
 
+HEAL = r"""
+#include "constants/abilities.h"
+#define NARC_a_0_0_1 1
+typedef struct { u32 knockOffFlag : 1; } UnkBattlemonSub;
+typedef struct { s32 hp; u32 status, status2; u16 ability, item; UnkBattlemonSub unk88; } BattleMon;
+typedef struct {
+    BattleMon battleMons[4];
+    int battlerIdTemp, abilityTemp, msgTemp, command, commandNext, script;
+} BattleContext;
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static void ReadBattleScriptFromNarc(BattleContext *ctx, int narc, int script) { (void)narc; ctx->script = script; }
+@HEAL@
+
+int main(void) {
+    static BattleContext ctx;
+
+    // A Goldeen with Water Veil in 2 was burned under Neutralizing Gas and
+    // fainted with nothing to follow it. The gas has ended, and the entry
+    // abilities run again: its place is empty, and nothing is cured.
+    ctx.battleMons[2] = (BattleMon){ 0, STATUS_BURN, 0, ABILITY_WATER_VEIL, 0, { 0 } };
+    ctx.battlerIdTemp = BATTLER_NONE;
+    assert(CheckStatusHealAbility(0, &ctx, 2, 1) == FALSE && ctx.battlerIdTemp == BATTLER_NONE);
+    assert(CheckStatusHealAbility(0, &ctx, 2, 0) == FALSE && ctx.script == 0);
+
+    // One standing cures itself, at entry and after a move, as ever.
+    ctx.battleMons[3] = (BattleMon){ 40, STATUS_BURN, 0, ABILITY_WATER_VEIL, 0, { 0 } };
+    assert(CheckStatusHealAbility(0, &ctx, 3, 1) == TRUE && ctx.battlerIdTemp == 3 && ctx.msgTemp == 2);
+    assert(ctx.abilityTemp == ABILITY_WATER_VEIL && ctx.script == 0);
+    assert(CheckStatusHealAbility(0, &ctx, 3, 0) == TRUE && ctx.script == 221 && ctx.command == CONTROLLER_COMMAND_RUN_SCRIPT);
+    return 0;
+}
+"""
+
+
 def entry_case(title):
     """One state of TryAbilityOnEntry, from its case label to the next."""
     body = function(OVERLAY, "TryAbilityOnEntry")
@@ -418,6 +452,9 @@ class EmptyPlaceTests(unittest.TestCase):
     def test_the_once_only_entry_abilities_ask_for_hp_first(self):
         cases = entry_case("Supersweet Syrup") + entry_case("Teraform Zero")
         run(self, ENTRY.replace("@CASES@", cases), ())
+
+    def test_a_fallen_pokemon_s_ability_cures_nothing(self):
+        run(self, HEAL.replace("@HEAL@", function(OVERLAY, "CheckStatusHealAbility")), ())
 
 
 if __name__ == "__main__":

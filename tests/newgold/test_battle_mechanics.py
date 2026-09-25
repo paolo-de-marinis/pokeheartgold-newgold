@@ -664,7 +664,7 @@ enum { FALSE = 0, TRUE = 1, NARC_a_0_0_1 = 0 };
 #include "constants/battle.h"
 typedef struct { int dummy; } BattleSystem;
 typedef struct {
-    struct { u32 status, status2; int item, ability; struct { int knockOffFlag; } unk88; } battleMons[4];
+    struct { u32 status, status2; int hp, item, ability; struct { int knockOffFlag; } unk88; } battleMons[4];
     int msgTemp, battlerIdTemp, abilityTemp, commandNext, command;
 } BattleContext;
 static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
@@ -673,6 +673,7 @@ static void ReadBattleScriptFromNarc(BattleContext *ctx, int narc, int script) {
 static int cure(int ability, u32 status) {
     BattleSystem bs;
     BattleContext ctx = { 0 };
+    ctx.battleMons[0].hp = 1;       // standing: a fainted Pokemon has no ability
     ctx.battleMons[0].ability = ability;
     ctx.battleMons[0].status = status;
     ctx.msgTemp = -1;
