@@ -1,0 +1,14 @@
+{
+  "about": "A trainer's Thief takes the player's item, and the item is the player's again when the battle is over (81dfc806e: before, a trainer's Pokemon took nothing, retail's guard). A scratch copy of Paolo's Route 29 save with a level-60 Raichu holding Leftovers, put in front of Bird Keeper Abe in the Violet Gym (savedit --party's item, --where); Abe's Spearow is given only Thief in the running battle (teach:) and the Raichu only Growl for the first turn. The Spearow steals the Leftovers; gym.py's player then wins the battle, and the Raichu holds its Leftovers again in the party.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "RAICHU:60:::LEFTOVERS", "--where", "135:13:15:2"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_GROWL", "teach:1,0,MOVE_THIEF", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            {"expect": {"battler0.item": "ITEM_LEFTOVERS", "battler1.species": "SPECIES_SPEAROW", "battler1.item": 0}},
+            "fight:1:1",
+            {"expect": {"lines": ["The opposing Spearow used Thief!", "The opposing Spearow stole Raichu’s Leftovers!"],
+                        "battler0.item": 0, "battler1.item": "ITEM_LEFTOVERS"}},
+            "fight", "field"],
+  "expect": {"lines": ["You defeated Bird Keeper Abe!"], "party0.species": "SPECIES_RAICHU", "party0.item": "ITEM_LEFTOVERS"}
+}
