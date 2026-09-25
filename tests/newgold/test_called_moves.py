@@ -156,6 +156,19 @@ int main(void) {
         self.assertIn("if ((ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) == MULTIHIT_CALLED_MOVE) {\n"
                       "            ChargeCallerPressure(battleSystem, ctx);", steps)
 
+    def test_pressure_counts_where_lightning_rod_draws_a_chosen_move(self):
+        # The engine redirects, then spends the PP (BEFORE_MOVE_STATE_REDIRECT_TARGET
+        # before BEFORE_MOVE_STATE_DECREMENT_PP at d0380a487), as a called
+        # move's BtlCmd_GoToMoveScript does: Pressure is counted at the
+        # Pokemon Lightning Rod or Storm Drain has drawn the move to.
+        steps = function(CONTROLLER.read_text(), "ov12_0224C38C")
+        redirect = "ov12_02250A18(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoCur);"
+        self.assertEqual(steps.count(redirect), 1)
+        self.assertLess(steps.index("TryStanceChange(battleSystem, ctx)"), steps.index(redirect))
+        self.assertLess(steps.index(redirect), steps.index("ov12_0224B1FC(battleSystem, ctx)"))
+        self.assertLess(steps.index(redirect), steps.index("ChargeCallerPressure(battleSystem, ctx);"))
+        self.assertLess(steps.index(redirect), steps.index("ov12_0224C204(battleSystem, ctx)"))
+
 
 PRESSURE = r"""
 #include <assert.h>

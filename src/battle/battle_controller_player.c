@@ -3948,6 +3948,13 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         if (TryStanceChange(battleSystem, ctx) == TRUE) {
             return;
         }
+        // Lightning Rod and Storm Drain draw the move before its PP goes, as
+        // the engine's before-move steps redirect before they spend it
+        // (BEFORE_MOVE_STATE_REDIRECT_TARGET at d0380a487): Pressure counts at
+        // the Pokemon the move goes to, for a chosen move as for a called one,
+        // whose BtlCmd_GoToMoveScript has drawn it already; and Magic Coat
+        // (ov12_0224C204) is asked of that Pokemon.
+        ov12_02250A18(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
         // A called move's PP was its caller's (CallMove); Pressure takes its
         // due from the caller for it (ChargeCallerPressure).
         if (!(ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) && ov12_0224B1FC(battleSystem, ctx) == TRUE) {
@@ -4036,7 +4043,6 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->unk_48++;
         // fallthrough
     case 7:
-        ov12_02250A18(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
         ctx->unk_48 = 0;
     }
 
