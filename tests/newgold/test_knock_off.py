@@ -223,6 +223,22 @@ class KnockOffTests(unittest.TestCase):
                                 r"\s*&& !BattleSystem_GetFieldSide\(battleSystem, ctx->battlerIdTarget\)\n"
                                 r"\s*&& !\(BattleSystem_GetBattleType\(battleSystem\) & \(BATTLE_TYPE_TRAINER \| BATTLE_TYPE_LINK \| BATTLE_TYPE_FRONTIER\)\)\)\) \{")
 
+    def test_bestow_fails_as_the_games_do(self):
+        # Pokemon Central (Cediregalo), and the engine's before-move checks:
+        # it fails with nothing to give, onto a target that holds an item,
+        # and with Mail or an item either species keeps -- which Trick's
+        # command asks. Sticky Hold does not stop it. All before the item
+        # moves, so a target's own is never written over.
+        from test_hold_effects import subscript_named
+        script = subscript_named("BATTLE_SUBSCRIPT_GIVE_HELD_ITEM")
+        checks = ["CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HELD_ITEM, ITEM_NONE, _MoveFailed",
+                  "CompareMonDataToValue OPCODE_NEQ, BATTLER_CATEGORY_DEFENDER, BMON_DATA_HELD_ITEM, ITEM_NONE, _MoveFailed",
+                  "TrySwapItems _MoveFailed, _Give\n\n_Give:"]
+        at = [script.index(check) for check in checks]
+        self.assertEqual(at, sorted(at))
+        self.assertLess(at[-1], script.index("UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HELD_ITEM, ITEM_NONE"))
+        self.assertIn("_MoveFailed:\n    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED", script)
+
     def test_fling_throws_nothing_its_species_keeps(self):
         body = function(read("src/battle/overlay_12_0224E4FC.c"), "TryFling")
         self.assertIn("SpeciesKeepsItem(ctx->battleMons[battlerId].species, ctx->battleMons[battlerId].item)", body)

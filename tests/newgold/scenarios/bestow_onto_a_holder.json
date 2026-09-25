@@ -1,0 +1,12 @@
+{
+  "about": "Bestow fails onto a target that holds an item (Pokemon Central, Cediregalo), where it wrote the user's item over the target's. Nothing in New Gold learns the move, so the scenario teaches it: in the Violet Gym the player's Snorlax holds Leftovers and knows Bestow alone, Falkner's Hoothoot holds a Silk Scarf (set:, teach:). The move fails, and each keeps its own.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "set:0,item,ITEM_LEFTOVERS", "set:1,item,ITEM_SILK_SCARF",
+            "teach:0,0,MOVE_BESTOW", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["Snorlax used Bestow!", "But it failed!"], "no_lines": ["received"],
+             "battler0.item": "ITEM_LEFTOVERS", "battler1.item": "ITEM_SILK_SCARF"}
+}
