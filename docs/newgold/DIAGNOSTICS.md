@@ -176,11 +176,19 @@ the JIT off and again with it on. Where they differ is emulation:
 - Speed, frames a second over a whole scenario: Falkner 143 on melonDS DS
   and 178 on 0.9.3 with the JIT off, 235 and 266 with it on; the walk from
   New Bark to Route 29 107 and 132 with the JIT off, 196 on 0.9.3 with it on.
-- With the JIT on, melonDS DS stops that walk at a wild Sentret on Route 29,
-  the same way both times it was run: the encounter's screen effect
+- With the JIT on, melonDS DS starts no wild battle at all: in every
+  scenario with one (the forced Geodudes, the Sentret on the walk to Route
+  29, the Rattata on the walk to Cherrygrove) the encounter's screen effect
   (`sub_020551B8`, called from `Task_WildEncounter`'s first state) never
-  says it is done, `gDiagWildStage` stays at 1, no battle starts. Scenarios
-  run with the JIT off.
+  says it is done, `gDiagWildStage` stays at 1 and the run waits until its
+  frames are spent. The trainer battles play (Falkner, the double from
+  `gyms/bugsy.sav`). It is the JIT's doing, not the encounter's: the same
+  Sentret, rolled from the same RNG state with the JIT off, is met and
+  beaten. melonDS 0.9.3's JIT plays wild battles. core.py says so on stderr
+  when `NEWGOLD_JIT=1` meets melonDS DS.
+- Either core's JIT also boots faster, and so moves the Continue's seed
+  (0xbb160225 on melonDS DS, 0xbb160232 on 0.9.3) and every wild Pokemon
+  after it. Scenarios run with the JIT off.
 
 ## Missing music
 

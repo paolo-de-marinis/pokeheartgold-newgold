@@ -380,9 +380,9 @@ Reading what the debug ROM records, and playing it without looking.
   `~/hgss-build/deps/melondsds/melondsds_libretro.so`) by default, or
   melonDS 0.9.3 with `NEWGOLD_CORE=/usr/lib/libretro/melonds_libretro.so`;
   both play every scenario to the same battle lines, and `NEWGOLD_JIT=1`
-  turns either one's JIT on (faster, other frame counts, and on melonDS DS
-  one wild encounter that never starts). DIAGNOSTICS.md says what else
-  differs between the two.
+  turns either one's JIT on (faster, another Continue seed and other frame
+  counts; on melonDS DS no wild battle ever starts, so scenarios run
+  without it). DIAGNOSTICS.md says what else differs between the two.
   `Core(rom, record="run.mp4")` (scene.py's `--record`) films the run:
   every frame, both screens, and the sound the core mixed, piped to ffmpeg
   at the core's frame rate. Off by default. Clicks, cries, the gym's and the

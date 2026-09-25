@@ -30,7 +30,8 @@ one instance): melonDS DS 1.3.1 (MELONDSDS, melonDS 1.x as Paolo's melonDS
 is, unpacked under ~/hgss-build/deps/melondsds; the default) and melonDS
 0.9.3 (MELONDS, Arch's libretro-melonds, the harness's first). Each boots the ROM directly on
 its built-in BIOS and firmware, draws in software, runs without its JIT
-(NEWGOLD_JIT=1 turns it on) and keeps the console's clock at CLOCK; main RAM
+(NEWGOLD_JIT=1 turns it on: faster, but on melonDS DS no wild battle ever
+starts) and keeps the console's clock at CLOCK; main RAM
 is the core's memory 2 on both, from 0x02000000. melonDS 0.9.3 reads and
 writes the save file itself; melonDS DS is handed it and gives it back as
 memory, and core.py keeps the same file for it (save_file).
@@ -197,6 +198,9 @@ class Core:
         self.ds = info.library_name == b"melonDS DS"
         self.options = ds_options() if self.ds else dict(OPTIONS)
         self.options[b"melonds_jit_enable"] = b"enabled" if JIT else b"disabled"
+        if JIT and self.ds:
+            print("core.py: with melonDS DS's JIT no wild battle starts (the encounter's screen effect "
+                  "never ends); scenarios run with NEWGOLD_JIT off", file=sys.stderr)
         self._callbacks = [ENV(self._env), VIDEO(self._video), AUDIO(self._sample),
                            AUDIO_BATCH(self._samples), POLL(lambda: None), STATE(self._input)]
         env, video, audio, batch, poll, state = self._callbacks
