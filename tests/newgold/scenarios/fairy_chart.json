@@ -1,0 +1,8 @@
+{
+  "about": "The Fairy type's chart, in play: a level-40 Clefairy, Fairy since the engine, uses Splash while a forced wild Dratini, left only Dragon Breath, hits it for nothing, then knocks the Dratini out with Moonblast, super effective against a Dragon. Both moves taught in the battle. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CLEFAIRY:40"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=147", "LEFT", "fight:1:0", "teach:0,0,MOVE_SPLASH", "teach:0,1,MOVE_MOONBLAST", "teach:1,0,MOVE_DRAGON_BREATH", "teach:1,1,MOVE_DRAGON_BREATH,0", "teach:1,2,MOVE_DRAGON_BREATH,0", "teach:1,3,MOVE_DRAGON_BREATH,0", "fight:1:1", "fight:2", "field"],
+  "expect": {"lines": ["The wild Dratini used Dragon Breath!", "It doesn’t affect Clefairy", "Clefairy used Moonblast!", "It’s super effective!", "The wild Dratini fainted!"], "gDiagBattleState": 15}
+}

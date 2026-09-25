@@ -1,0 +1,8 @@
+{
+  "about": "Zero to Hero, in play: a level-40 Palafin leads against a forced wild Geodude, switches out for a Tauros and back in, and comes back in its Hero Form, saying so once -- Battler_TurnsHero in BtlCmd_SwitchAndUpdateMon and the entry step that runs subscript ZERO_TO_HERO, the C that does the work the reference's TryActivateZeroToHero command does (a stub here, test_battle_commands). The switches are the player's own, touched on the command screen. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PALAFIN:40,TAUROS:40"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0", "wait:90", "touch:216,166", "wait:60", "touch:192,38", "wait:40", "touch:127,113", "wait:40", "fight:1:0", "wait:90", "touch:216,166", "wait:60", "touch:192,38", "wait:40", "touch:127,113", "wait:40", "fight:1:0", {"expect": {"battler0.species": "SPECIES_PALAFIN_HERO"}}, "fight", "field"],
+  "expect": {"lines": ["Go! Tauros!", "Go! Palafin!", "Palafin underwent a heroic transformation!"], "gDiagBattleState": 15}
+}

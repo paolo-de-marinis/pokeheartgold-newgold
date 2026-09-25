@@ -1,0 +1,8 @@
+{
+  "about": "The Eject Pack, in play: a level-40 Snorlax given one in the battle (set:) uses Splash, the forced wild Geodude, left only Growl, lowers its Attack, and the pack sends it back for the Tauros -- CheckEjectPack and subscript SWITCH_OUT_ITEM, the C that does the work of the reference's SetCurrentMoveSwitchingStatus (a stub here). gym.py answers the party screen. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:40,TAUROS:40"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0", "set:0,item,ITEM_EJECT_PACK", "teach:0,0,MOVE_SPLASH", "teach:1,0,MOVE_GROWL", "teach:1,1,MOVE_GROWL,0", "teach:1,2,MOVE_GROWL,0", "teach:1,3,MOVE_GROWL,0", "fight:1:1", {"expect": {"battler0.species": "SPECIES_TAUROS"}}, "fight", "field"],
+  "expect": {"lines": ["Snorlax used Splash!", "The wild Geodude used Growl!", "Snorlax’s Attack fell!", "Snorlax is switched out by the Eject Pack!", "Go! Tauros!"], "gDiagBattleState": 15}
+}

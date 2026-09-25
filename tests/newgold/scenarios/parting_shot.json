@@ -1,0 +1,8 @@
+{
+  "about": "Parting Shot's switch, in play: a level-40 Snorlax, taught Parting Shot in the battle, lowers a forced wild Geodude's Attack and Sp. Atk and goes back, and the party screen sends in the Tauros -- battle_controller_player.c's post-move step and subscript HANDLE_PARTING_SHOT, the C that does the work of the reference's SetCurrentMoveSwitchingStatus (a stub here, test_battle_commands). gym.py answers the party screen. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:40,TAUROS:40"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0", "teach:0,0,MOVE_PARTING_SHOT", "fight:1:1", {"expect": {"battler0.species": "SPECIES_TAUROS"}}, "fight", "field"],
+  "expect": {"lines": ["Snorlax used Parting Shot!", "The wild Geodude’s Attack fell!", "The wild Geodude’s Sp. Atk fell!", "Snorlax went back to", "Go! Tauros!"], "gDiagBattleState": 15}
+}
