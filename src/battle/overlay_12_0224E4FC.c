@@ -133,7 +133,6 @@ BOOL TryDropLostIllusion(BattleSystem *battleSystem, BattleContext *ctx, int *sc
 void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u8 selectedMon) {
     Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, battlerId, selectedMon);
     int i;
-    int side;
     struct PokedexData *dexData;
 
     ctx->battleMons[battlerId].species = GetMonData(mon, MON_DATA_SPECIES, NULL);
@@ -266,12 +265,10 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
     ctx->battleMons[battlerId].hitCount = 0;
     ctx->battleMons[battlerId].msgFlag = 0;
 
-    side = BattleSystem_GetFieldSide(battleSystem, battlerId);
-
-    if (ctx->fieldSideConditionData[side].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[battlerId])) {
-        ctx->battleMons[battlerId].item = 0;
-        ctx->battleMons[battlerId].unk88.knockOffFlag = FALSE;
-    } else if (ctx->battleMons[battlerId].item) {
+    // A Pokemon whose item was knocked off comes back without it: the party
+    // copy has it holding nothing since (BtlCmd_TryKnockOff), where retail
+    // kept the item there and emptied the hand here.
+    if (ctx->battleMons[battlerId].item) {
         ctx->battleMons[battlerId].unk88.knockOffFlag = TRUE;
     }
 
@@ -3789,17 +3786,11 @@ static BOOL ItemCanChangeHands(BattleContext *ctx, u16 item, int battlerIdA, int
     return !SpeciesKeepsItem(ctx->battleMons[battlerIdA].species, item) && !SpeciesKeepsItem(ctx->battleMons[battlerIdB].species, item);
 }
 
-// Whether battlerIdTaker can take battlerIdLoser's item: there is one, it was
-// not knocked off, and it can change hands between the two.
+// Whether battlerIdTaker can take battlerIdLoser's item: there is one, and it
+// can change hands between the two.
 BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTaker, int battlerIdLoser) {
-    BOOL ret = FALSE;
-    int side = BattleSystem_GetFieldSide(battleSystem, battlerIdLoser);
-
-    if (ctx->battleMons[battlerIdLoser].item && !(ctx->fieldSideConditionData[side].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[battlerIdLoser])) && ItemCanChangeHands(ctx, ctx->battleMons[battlerIdLoser].item, battlerIdTaker, battlerIdLoser)) {
-        ret = TRUE;
-    }
-
-    return ret;
+#pragma unused(battleSystem)
+    return ctx->battleMons[battlerIdLoser].item && ItemCanChangeHands(ctx, ctx->battleMons[battlerIdLoser].item, battlerIdTaker, battlerIdLoser);
 }
 
 // Whether Knock Off would take the target's item: it holds one, and neither
@@ -9034,10 +9025,10 @@ static BOOL ItemRaisesStatOnHit(BattleContext *ctx, BOOL triggered, int stat, in
 }
 
 BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+#pragma unused(battleSystem)
     BOOL ret = FALSE;
     int item;
     int boost;
-    int side;
     BOOL physical;
     BOOL special;
     int moveType;
@@ -9057,14 +9048,13 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
 
     item = GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget);
     boost = GetHeldItemModifier(ctx, ctx->battlerIdTarget, 0);
-    side = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker);
     physical = ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage != 0;
     special = ctx->selfTurnData[ctx->battlerIdTarget].specialDamage != 0;
     moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
 
     switch (item) {
     case HOLD_EFFECT_DMG_USER_CONTACT_XFR: // sticky barb
-        if (ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->battleMons[ctx->battlerIdAttacker].item) && !(ctx->fieldSideConditionData[side].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdAttacker])) && ctx->moveNoCur != MOVE_KNOCK_OFF && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+        if (ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->battleMons[ctx->battlerIdAttacker].item) && ctx->moveNoCur != MOVE_KNOCK_OFF && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
             *script = BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB;
             ret = TRUE;
         }
@@ -12146,12 +12136,12 @@ BOOL CheckStatusEffectsSubstitute(BattleContext *ctx, int battlerId, int status)
 }
 
 BOOL CheckItemEffectOnUTurn(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+#pragma unused(battleSystem)
     BOOL ret = FALSE;
     int itemAttacker = GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker);
     int modAttacker = GetHeldItemModifier(ctx, ctx->battlerIdAttacker, 0);
     int itemTarget = GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget);
     int modTarget = GetHeldItemModifier(ctx, ctx->battlerIdTarget, 0);
-    int side = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker);
 
     if (itemAttacker == HOLD_EFFECT_HP_RESTORE_ON_DMG && (ctx->battleStatus & BATTLE_STATUS_MOVE_SUCCESSFUL) && (ctx->selfTurnData[ctx->battlerIdAttacker].shellBellDamage) && (ctx->battlerIdAttacker != ctx->battlerIdTarget) && (ctx->battleMons[ctx->battlerIdAttacker].hp < ctx->battleMons[ctx->battlerIdAttacker].maxHp) && ctx->battleMons[ctx->battlerIdAttacker].hp) {
         ctx->hpCalc = DamageDivide(ctx->selfTurnData[ctx->battlerIdAttacker].shellBellDamage * -1, modAttacker);
@@ -12182,7 +12172,7 @@ BOOL CheckItemEffectOnUTurn(BattleSystem *battleSystem, BattleContext *ctx, int 
         ret = TRUE;
     }
 
-    if (itemTarget == HOLD_EFFECT_DMG_USER_CONTACT_XFR && ctx->battleMons[ctx->battlerIdAttacker].hp && !ctx->battleMons[ctx->battlerIdAttacker].item && !(ctx->fieldSideConditionData[side].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdAttacker])) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+    if (itemTarget == HOLD_EFFECT_DMG_USER_CONTACT_XFR && ctx->battleMons[ctx->battlerIdAttacker].hp && !ctx->battleMons[ctx->battlerIdAttacker].item && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
         *script = BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB;
         ret = TRUE;
     }

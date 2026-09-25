@@ -1,0 +1,13 @@
+{
+  "about": "Knock Off takes the item off, and the Pokemon can then take another (Pokemon Central, Privazione: from the fifth generation). In the Violet Gym, Falkner's Hoothoot is made to know Knock Off alone and to hold a Silk Scarf, the player's Snorlax to hold Leftovers and know Thief (set:, teach:). Hoothoot, the faster, knocks off the Leftovers; the Snorlax's Thief then takes the Silk Scarf in the same turn. Retail's mark, kept until this change, refused the Thief of a Pokemon whose own item was knocked off.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "set:0,item,ITEM_LEFTOVERS", "set:1,item,ITEM_SILK_SCARF",
+            "teach:0,0,MOVE_THIEF",
+            "teach:1,0,MOVE_KNOCK_OFF", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["The opposing Hoothoot used Knock Off!", "Leftovers!", "Snorlax used Thief!", "Silk Scarf!"],
+             "battler0.item": "ITEM_SILK_SCARF", "battler1.item": "ITEM_NONE"}
+}

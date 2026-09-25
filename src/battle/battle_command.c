@@ -4208,16 +4208,14 @@ BOOL BtlCmd_TryStealItem(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrs2 = BattleScriptReadWord(ctx);
 
     u32 battleType = BattleSystem_GetBattleType(battleSystem);
-    int fieldSide = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker);
 
     // A wild Pokemon takes nothing from the player's (Pokemon Central, Furto,
     // from the third generation). A trainer's does from the fifth, and the
     // item is the player's again at the battle's end (NoteHeldItemTaken,
     // GiveBackHeldItems): retail refused it, which kept the item from being
-    // lost for good.
+    // lost for good. A user whose own item was knocked off takes one all the
+    // same (BtlCmd_TryKnockOff).
     if (BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker) && !(battleType & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER))) {
-        BattleScriptIncrementPointer(ctx, adrs1);
-    } else if (ctx->fieldSideConditionData[fieldSide].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdAttacker])) {
         BattleScriptIncrementPointer(ctx, adrs1);
     } else if (ctx->battleMons[ctx->battlerIdTarget].unk88.custapBerryFlag || ctx->battleMons[ctx->battlerIdTarget].unk88.quickClawFlag) {
         BattleScriptIncrementPointer(ctx, adrs1);
@@ -5181,17 +5179,13 @@ BOOL BtlCmd_TrySwapItems(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrsA = BattleScriptReadWord(ctx);
     int adrsB = BattleScriptReadWord(ctx);
 
-    int sideAttacker = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker);
-    int sideTarget = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget);
-
     // HeartGold refuses the swap when the other side starts it outside a link
     // or Frontier battle, so the player can never lose a held item to the AI.
     // New Gold drops that refusal: whatever the player was holding is handed
     // back when the battle ends, a Berry too (NoteHeldItemGiven), so the item
-    // is not gone for good.
-    if ((ctx->fieldSideConditionData[sideAttacker].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdAttacker])) || (ctx->fieldSideConditionData[sideTarget].battlerBitKnockedOffItem & MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]))) {
-        BattleScriptIncrementPointer(ctx, adrsA);
-    } else if ((ctx->battleMons[ctx->battlerIdAttacker].item == 0 && ctx->battleMons[ctx->battlerIdTarget].item == 0) || !CanTrickHeldItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)) {
+    // is not gone for good. Nor does a knocked-off item stop it any more
+    // (BtlCmd_TryKnockOff).
+    if ((ctx->battleMons[ctx->battlerIdAttacker].item == 0 && ctx->battleMons[ctx->battlerIdTarget].item == 0) || !CanTrickHeldItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)) {
         BattleScriptIncrementPointer(ctx, adrsA);
     } else if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
         BattleScriptIncrementPointer(ctx, adrsB);
@@ -5346,7 +5340,6 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
     int adrs = BattleScriptReadWord(ctx);
-    int side = BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget);
 
     // Sticky Hold keeps nothing for a holder the move has felled (Pokemon
     // Central, Antifurto, from the fifth generation).
@@ -5368,7 +5361,16 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->buffMsg.param[1] = CreateNicknameTag(ctx, ctx->battlerIdTarget);
         ctx->buffMsg.param[2] = ctx->battleMons[ctx->battlerIdTarget].item;
         ctx->battleMons[ctx->battlerIdTarget].item = 0;
-        ctx->fieldSideConditionData[side].battlerBitKnockedOffItem |= MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]);
+        // Taken off, not made useless as retail's fourth generation did: the
+        // Pokemon can be given another, or take one with Thief, Covet, Trick
+        // or a Sticky Barb (Pokemon Central, Privazione: from the fifth
+        // generation), and a wild one caught has none. The engine no longer
+        // marks it either (btl_scr_cmd_87_tryknockoff at d0380a487). One of
+        // the player's own has its item back when the battle is over, a Berry
+        // too, as a taken one does (GiveBackHeldItems).
+        if (BattleSystem_GetParty(battleSystem, ctx->battlerIdTarget) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
+            ctx->heldItemsTaken |= MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]);
+        }
     } else {
         BattleScriptIncrementPointer(ctx, adrs);
     }
@@ -10964,7 +10966,7 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
     // sea of fire and swamp, with their turns, their layers and the order a
     // Pokemon meets them in (Pokemon Central, Cambiocampo). What belongs to a
     // Pokemon rather than to the ground -- a Future Sight on its way, a Wish,
-    // Lucky Chant, the items knocked off -- stays where it is.
+    // Lucky Chant -- stays where it is.
     case MOVE_COURT_CHANGE: {
         u32 courtFlags = SIDE_CONDITION_REFLECT | SIDE_CONDITION_LIGHT_SCREEN | SIDE_CONDITION_AURORA_VEIL | SIDE_CONDITION_MIST | SIDE_CONDITION_SAFEGUARD
             | SIDE_CONDITION_TAILWIND | SIDE_CONDITION_SPIKES | SIDE_CONDITION_TOXIC_SPIKES | SIDE_CONDITION_STEALTH_ROCKS | SIDE_CONDITION_STICKY_WEB
@@ -10977,16 +10979,14 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
 
         ctx->fieldSideConditionFlags[0] ^= swapped;
         ctx->fieldSideConditionFlags[1] ^= swapped;
-        // The sides' data change places whole, and then Follow Me and the
-        // items knocked off go back to the side they belong to.
+        // The sides' data change places whole, and then Follow Me goes back
+        // to the side it belongs to.
         data[0] = data[1];
         data[1] = data0;
         data[1].followMeFlag = data[0].followMeFlag;
         data[1].battlerIdFollowMe = data[0].battlerIdFollowMe;
-        data[1].battlerBitKnockedOffItem = data[0].battlerBitKnockedOffItem;
         data[0].followMeFlag = data0.followMeFlag;
         data[0].battlerIdFollowMe = data0.battlerIdFollowMe;
-        data[0].battlerBitKnockedOffItem = data0.battlerBitKnockedOffItem;
         for (i = 0; i < NUM_HAZARD_IDX; i++) {
             hazard = ctx->entryHazardQueue[0][i];
             ctx->entryHazardQueue[0][i] = ctx->entryHazardQueue[1][i];

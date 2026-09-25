@@ -66,7 +66,7 @@ typedef struct SideConditionData {
     u32 safeguardTurns : 3;
     u32 followMeFlag : 1;
     u32 battlerIdFollowMe : 2;
-    u32 battlerBitKnockedOffItem : 6;
+    u32 unk0_17 : 6; // retail's items knocked off, a bit by party slot: free since Knock Off takes the item for good
     u32 unk0_1D : 3;
     u32 spikesLayers : 2;
     u32 toxicSpikesLayers : 2;
@@ -721,8 +721,9 @@ typedef struct BattleContext {
     // then finds it done.
     u8 heldItemsGivenBack;
     // The player's own Pokemon another has taken an item from -- Magician,
-    // Pickpocket, Thief, Covet -- a bit each by party slot (NoteHeldItemTaken),
-    // for GiveBackHeldItems: such an item comes back even if it was a Berry.
+    // Pickpocket, Thief, Covet -- or knocked it off, a bit each by party slot
+    // (NoteHeldItemTaken, BtlCmd_TryKnockOff), for GiveBackHeldItems: such an
+    // item comes back even if it was a Berry.
     u8 heldItemsTaken;
     // The item the player's side took from each wild Pokemon -- Thief,
     // Covet, Magician, Pickpocket -- by battlerId >> 1, the wild ones being 1

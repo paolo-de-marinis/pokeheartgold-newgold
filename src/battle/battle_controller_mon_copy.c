@@ -32,7 +32,10 @@ void BattleController_EmitBattleMonToPartyMonCopy(BattleSystem *battleSystem, Ba
     data.mimicedMoveIndex = ctx->battleMons[battlerId].unk88.mimicedMoveIndex;
     data.hp = ctx->battleMons[battlerId].hp;
     data.item = ctx->battleMons[battlerId].item;
-    data.knockedOffItems = ctx->fieldSideConditionData[BattleSystem_GetFieldSide(battleSystem, battlerId)].battlerBitKnockedOffItem;
+    // The controller leaves the party's item alone for these slots, retail's
+    // knocked-off items; Knock Off takes the item for good now, and the party
+    // holds what the battler holds.
+    data.knockedOffItems = 0;
     data.form = ctx->battleMons[battlerId].form;
     data.ability = ctx->battleMons[battlerId].ability;
     for (i = 0; i < MAX_MON_MOVES; i++) {

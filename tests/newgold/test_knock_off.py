@@ -195,6 +195,24 @@ class KnockOffTests(unittest.TestCase):
                           "CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD)",
                           function(commands, name), name)
 
+    def test_a_knocked_off_item_is_taken_off(self):
+        # Pokemon Central (Privazione): from the fifth generation Knock Off
+        # takes the item off, and the Pokemon can be given or take another --
+        # Thief, Covet, Trick, a Sticky Barb -- where retail's fourth
+        # generation only made it useless, kept it in the party and refused
+        # every one of them. The engine no longer marks it either. One of the
+        # player's own has its item back after the battle, a Berry too.
+        for path in ("include/battle/battle.h", "src/battle/battle_command.c", "src/battle/overlay_12_0224E4FC.c",
+                     "src/battle/battle_controller_mon_copy.c"):
+            self.assertNotIn("battlerBitKnockedOffItem", read(path), path)
+        knock = function(read("src/battle/battle_command.c"), "BtlCmd_TryKnockOff")
+        self.assertRegex(knock, r"ctx->battleMons\[ctx->battlerIdTarget\]\.item = 0;\n(\s*//.*\n)*"
+                                r"\s*if \(BattleSystem_GetParty\(battleSystem, ctx->battlerIdTarget\) == BattleSystem_GetParty\(battleSystem, BATTLER_PLAYER\)\) \{\n"
+                                r"\s*ctx->heldItemsTaken \|= MaskOfFlagNo\(ctx->selectedMonIndex\[ctx->battlerIdTarget\]\);")
+        # The party copy writes the empty hand, so a Pokemon sent back in has
+        # nothing, and a wild one caught nothing either.
+        self.assertIn("data.knockedOffItems = 0;", read("src/battle/battle_controller_mon_copy.c"))
+
     def test_fling_throws_nothing_its_species_keeps(self):
         body = function(read("src/battle/overlay_12_0224E4FC.c"), "TryFling")
         self.assertIn("SpeciesKeepsItem(ctx->battleMons[battlerId].species, ctx->battleMons[battlerId].item)", body)

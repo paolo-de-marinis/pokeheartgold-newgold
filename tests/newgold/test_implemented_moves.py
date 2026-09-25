@@ -776,8 +776,8 @@ int main(void) {
             self.assertIn(f"SIDE_CONDITION_{condition}", court)
         for condition in ("LUCKY_CHANT", "WISH", "FUTURE_SIGHT"):
             self.assertNotIn(f"SIDE_CONDITION_{condition}", court)
-        # Run the case: the ground's conditions change sides, Follow Me and the
-        # items knocked off stay where they were.
+        # Run the case: the ground's conditions change sides, Follow Me stays
+        # where it was.
         from test_ability_behaviour import HEADER, run_c
         battle = (ROOT / "include/battle/battle.h").read_text()
         data = re.search(r"typedef struct SideConditionData \{.*?\} SideConditionData;", battle, re.S).group(0)
@@ -794,7 +794,6 @@ int main(void) {
     ctx->fieldSideConditionData[0].followMeFlag = 1;
     ctx->fieldSideConditionData[0].battlerIdFollowMe = 2;
     ctx->fieldSideConditionData[1].spikesLayers = 3;
-    ctx->fieldSideConditionData[1].battlerBitKnockedOffItem = 5;
     ctx->entryHazardQueue[1][0] = 7;
     """ + body + r"""
     assert(ctx->fieldSideConditionFlags[0] == (SIDE_CONDITION_SPIKES | SIDE_CONDITION_LUCKY_CHANT));
@@ -803,8 +802,7 @@ int main(void) {
     assert(ctx->fieldSideConditionData[0].reflectTurns == 0 && ctx->fieldSideConditionData[0].spikesLayers == 3);
     assert(ctx->fieldSideConditionData[1].spikesLayers == 0);
     assert(ctx->fieldSideConditionData[0].followMeFlag == 1 && ctx->fieldSideConditionData[0].battlerIdFollowMe == 2);
-    assert(ctx->fieldSideConditionData[1].followMeFlag == 0 && ctx->fieldSideConditionData[1].battlerBitKnockedOffItem == 5);
-    assert(ctx->fieldSideConditionData[0].battlerBitKnockedOffItem == 0);
+    assert(ctx->fieldSideConditionData[1].followMeFlag == 0);
     assert(ctx->entryHazardQueue[0][0] == 7 && ctx->entryHazardQueue[1][0] == 0);
     return 0;
 }
