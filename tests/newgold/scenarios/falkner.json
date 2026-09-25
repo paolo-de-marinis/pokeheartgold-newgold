@@ -1,0 +1,12 @@
+{
+  "about": "Falkner, played as a scenario: a scratch copy of Paolo's Route 29 save put in front of him in the Violet Gym (savedit --where, the tile below his, facing up) with Sprout Tower done (FLAG_UNK_076: the level cap is 13) and six at the cap, gym.py's player choosing the moves, the battle's seed fixed and every damage roll at the top of its range. His party is konefr's; his Delibird's Focus Sash has to hold at full HP against the hit that would faint it -- the item-record fix, fd3162ac5, after which the Sash had read as a Toxic Orb -- and the Zephyr Badge has to be the player's at the end.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13,UMBREON:13",
+           "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceDamageRoll": 1},
+  "steps": ["field", "A", "fight", "field"],
+  "expect": {"lines": ["You are challenged by Leader Falkner!", "Leader Falkner sent out Hoothoot!",
+                       "Leader Falkner sent out Delibird!", "The opposing Delibird hung on using its Focus Sash!",
+                       "The opposing Delibird fainted!", "Leader Falkner sent out Murkrow!", "You defeated Leader Falkner!"],
+             "no_lines": ["poisoned"], "badges": 1, "heaps": {"HEAP_ID_BATTLE": "0x10000"}}
+}
