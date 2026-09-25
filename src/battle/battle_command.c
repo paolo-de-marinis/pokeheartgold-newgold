@@ -1847,6 +1847,37 @@ BOOL BtlCmd_PlayFaintAnimation(BattleSystem *battleSystem, BattleContext *ctx) {
 
     InitFaintedWork(battleSystem, ctx, ctx->battlerIdFainted);
 
+    // A Pokemon that faints in a form that lasts only for a battle goes back
+    // to its own form, so a Revive or a Revival Blessing brings it back in
+    // that form. Pokemon Central says so for Mimikyu, Zygarde and Ash-Greninja
+    // (Fantasmanto, Sciamefusione, Morfosintonia), and says Aegislash, Zen
+    // Mode Darmanitan and Minior are never in the battle form outside a fight
+    // (Accendilotta, Stato Zen, Scudosoglia). It says nothing of Wishiwashi,
+    // Morpeko, Meloetta, Cramorant, Castform, Cherrim or the Terastal forms,
+    // and Showdown puts all of them back on a faint. The party slot is read
+    // now, while the place still has it; at the end of the turn a place with
+    // nothing to send in is left empty (ov12_0224D540), and SwitchAndUpdateMon
+    // cannot find this Pokemon any more. Not an Eiscue's Noice Face, which
+    // lasts until the battle ends, through a switch (Bulbapedia, Ice Face) and
+    // through a faint (Showdown). Nor the forms a Pokemon keeps from the start
+    // of a battle to its end: a crowned Zacian or Zamazenta, an Active
+    // Xerneas, a Hero Palafin.
+    {
+        Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdFainted, ctx->selectedMonIndex[ctx->battlerIdFainted]);
+
+        switch (GetMonData(mon, MON_DATA_SPECIES, NULL)) {
+        case SPECIES_EISCUE_NOICE_FACE:
+        case SPECIES_ZACIAN_CROWNED:
+        case SPECIES_ZAMAZENTA_CROWNED:
+        case SPECIES_XERNEAS_ACTIVE:
+        case SPECIES_PALAFIN_HERO:
+            break;
+        default:
+            Mon_RevertFormChange(mon);
+            break;
+        }
+    }
+
     return FALSE;
 }
 
@@ -2311,8 +2342,8 @@ BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSystem, BattleContext *ctx) {
     // back to its Zero Form the second time it left. Nor a place left empty,
     // where what fainted last has no party slot to be found at any more: a
     // Revive from the bag, or a Revival Blessing, fills it at the end of the
-    // turn, and the one that fainted there goes back with the rest of the
-    // party when the battle ends (RevertBattleForms).
+    // turn, and battleMons still holds the fallen one's form, which went back
+    // in the party when it fainted (BtlCmd_PlayFaintAnimation).
     if (!(ctx->switchInFlag & MaskOfFlagNo(battlerId))
         && Species_GetBattleFormReversion(ctx->battleMons[battlerId].species) != SPECIES_NONE
         && ctx->battleMons[battlerId].species != SPECIES_ZACIAN_CROWNED

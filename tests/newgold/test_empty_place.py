@@ -422,6 +422,65 @@ int main(void) {
 }
 """
 
+FAINT_FORM = r"""
+typedef struct { int command; } PlayerActions;
+typedef struct {
+    int battlerIdFainted;
+    u32 battleStatus, battleStatus2;
+    PlayerActions playerActions[4];
+    u8 selectedMonIndex[4];
+} BattleContext;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static void BattleController_EmitPlayFaintAnimation(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; }
+static void InitFaintedWork(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; }
+static u32 GetMonData(Pokemon *mon, int id, void *data) {
+    (void)data;
+    assert(id == MON_DATA_SPECIES);
+    return mon->species;
+}
+// A few rows of the form reversion table (form_reversion.h).
+static BOOL Mon_RevertFormChange(Pokemon *mon) {
+    static const u16 rows[][2] = {
+        { SPECIES_AEGISLASH_BLADE, SPECIES_AEGISLASH }, { SPECIES_MIMIKYU_BUSTED, SPECIES_MIMIKYU },
+        { SPECIES_EISCUE_NOICE_FACE, SPECIES_EISCUE }, { SPECIES_ZACIAN_CROWNED, SPECIES_ZACIAN },
+    };
+    for (unsigned i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
+        if (mon->species == rows[i][0]) {
+            mon->species = rows[i][1];
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+@FUNCTIONS@
+
+static u16 Faint(int battlerId, int slot, u16 species) {
+    static BattleContext ctx;
+
+    sParties[battlerId & 1][slot].species = species;
+    ctx.selectedMonIndex[battlerId] = slot;
+    ctx.battlerIdFainted = battlerId;
+    BtlCmd_PlayFaintAnimation(0, &ctx);
+    return sParties[battlerId & 1][slot].species;
+}
+
+int main(void) {
+    sCount[0] = sCount[1] = 2;
+
+    // An Aegislash that faints in its Blade Forme is in its Shield Forme in
+    // the party, which is what a Revive or a Revival Blessing brings back
+    // once its place is left empty. A Busted Mimikyu likewise, on either side.
+    assert(Faint(2, 1, SPECIES_AEGISLASH_BLADE) == SPECIES_AEGISLASH);
+    assert(Faint(1, 0, SPECIES_MIMIKYU_BUSTED) == SPECIES_MIMIKYU);
+    assert(Faint(0, 0, SPECIES_PIKACHU) == SPECIES_PIKACHU);
+
+    // An Eiscue's Noice Face lasts the battle, and a crowned Zacian keeps
+    // its crown.
+    assert(Faint(3, 1, SPECIES_EISCUE_NOICE_FACE) == SPECIES_EISCUE_NOICE_FACE);
+    assert(Faint(0, 1, SPECIES_ZACIAN_CROWNED) == SPECIES_ZACIAN_CROWNED);
+    return 0;
+}
+"""
 
 def entry_case(title):
     """One state of TryAbilityOnEntry, from its case label to the next."""
@@ -455,6 +514,9 @@ class EmptyPlaceTests(unittest.TestCase):
 
     def test_a_fallen_pokemon_s_ability_cures_nothing(self):
         run(self, HEAL.replace("@HEAL@", function(OVERLAY, "CheckStatusHealAbility")), ())
+
+    def test_a_pokemon_that_faints_leaves_its_battle_form(self):
+        run(self, FAINT_FORM, ("BtlCmd_PlayFaintAnimation",))
 
 
 if __name__ == "__main__":

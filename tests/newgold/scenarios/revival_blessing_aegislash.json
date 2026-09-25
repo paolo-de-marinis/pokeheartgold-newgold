@@ -1,0 +1,13 @@
+{
+  "about": "A Pokemon that faints in its battle form comes back in its own: Twins Amy & Mimi in the Azalea Gym against a scratch copy of Paolo's Bugsy save with two Pokemon, a level-20 Pawmot and a level-10 Aegislash. The Aegislash turns to its Blade Forme for its Shadow Sneak and the Spinarak's faints it, with no one left to take its place; the next turn the Pawmot's Revival Blessing (teach:) revives it and the turn's end sends it into its empty place in its Shield Forme, so its next Shadow Sneak turns it to the Blade Forme again (before BtlCmd_PlayFaintAnimation put the form back, it came back as SPECIES_AEGISLASH_BLADE, with the Blade Forme's stats and no line).",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:20::THUNDER_SHOCK,AEGISLASH:10::SHADOW_SNEAK", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0", "fight:1:1",
+            "teach:0,0,MOVE_REVIVAL_BLESSING", "fight:1:1",
+            {"expect": {"battler2.species": "SPECIES_AEGISLASH"}},
+            "fight:1:1"],
+  "expect": {"lines": ["Aegislash transformed!", "Aegislash used Shadow Sneak!", "Aegislash fainted!",
+                       "Pawmot used Revival Blessing!", "Aegislash was revived and is ready to fight again!",
+                       "Go! Aegislash!", "Aegislash transformed!", "Aegislash used Shadow Sneak!"]}
+}
