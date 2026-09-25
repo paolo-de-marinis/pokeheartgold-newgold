@@ -1,0 +1,15 @@
+{
+  "about": "A combined Pledge lays its condition with the hit, before the target it fells faints (0b389990a: before, 'fainted!' came first, as seen in round 9). The Twins' double battle in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-30 Pawmot and a level-30 Baxcalibur on the twins' platform, given Fire Pledge and Grass Pledge in the running battle (teach:), the foes only Splash. The Pawmot waits for the Baxcalibur's Pledge, which becomes the combined move, fells the Spinarak and lays the sea of fire first; the Ledyba, set to 1 HP, is burnt down by the sea of fire at the turn's end.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:30,BAXCALIBUR:30", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_FIRE_PLEDGE", "teach:2,0,MOVE_GRASS_PLEDGE",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:3,0,MOVE_SPLASH", "teach:3,1,0,0", "teach:3,2,0,0", "teach:3,3,0,0",
+            "set:3,hp,1", "fight:1:1"],
+  "expect": {"lines": ["Pawmot is waiting for Baxcalibur’s move...", "Baxcalibur used Grass Pledge!",
+                       "The two moves have become one! It’s a combined move!",
+                       "A sea of fire enveloped the opposing team!", "The opposing Spinarak fainted!",
+                       "The opposing Ledyba is hurt by the sea of fire!", "The opposing Ledyba fainted!"]}
+}
