@@ -183,6 +183,16 @@ the JIT off and again with it on. Where they differ is emulation:
   wild Pokemon to it.
 - The boot's random pre-size is 0xa8 on melonDS DS, 0xe8 on 0.9.3: the
   heaps start 0x40 bytes apart.
+- melonDS 0.9.3 emulates no wireless. Both cores make the comm system's
+  heap at the main menu (heap 15, 0x7080 bytes taken from the end of heap
+  3 by `Heap_CreateAtEnd` in `unk_02037C94.s`); melonDS DS destroys it
+  before Continue, 0.9.3 never does -- and without
+  `gDiagIgnoreCommunicationError` it resets at the main menu and never
+  reaches the field, where melonDS DS reaches Route 29 in the same 1050
+  frames. So on 0.9.3 that block stays at the top of heap 3 in the field:
+  heap 3's low water on Route 29 is 0x188d8 there and 0x1f8e8 on melonDS
+  DS. A heap-3 margin measured on 0.9.3 is 0x7010 short of melonDS DS's,
+  which is the one to trust.
 - Frame counts differ by a few in battles (Falkner 16556 against 16555,
   the double battle from `gyms/bugsy.sav` 45 more). That is not slower
   loading -- at the end of each run the frames less the VBlank count agree

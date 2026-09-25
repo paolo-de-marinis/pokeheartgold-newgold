@@ -71,12 +71,15 @@ or for a status the flags as markers.py names them ("BRN", "" for none).
 may also be {"expect": {...}}, checked when the run gets there.
 
 The ROM is the NEWGOLD_DIAG=1 HeartGold build, run by core.py at the pinned
-clock; the heaps are its gDiagHeapLowWater, read by markers.py. The harness
-has no wireless, so the communication error the game raises for it is held
-off (gDiagIgnoreCommunicationError) every frame, and the Union Room, trades
-and the GTS's first screens can be reached. A shot draws a battle as the
-game does -- both sprites, the HP boxes, the message box -- since the frame
-comes from the core's own video callback (core.shot).
+clock; the heaps are its gDiagHeapLowWater, read by markers.py. melonDS
+0.9.3 has no wireless: the communication error the game raises for it at
+the main menu is held off (gDiagIgnoreCommunicationError, held every frame
+on either core), so Continue works, and the Union Room, trades and the
+GTS's first screens can be reached. melonDS DS reaches the field without
+it. On 0.9.3 the comm heap then stays in heap 3 all the same (0x7080
+bytes; DIAGNOSTICS.md): its heap-3 figures are that much short. A shot
+draws a battle as the game does -- both sprites, the HP boxes, the message
+box -- since the frame comes from the core's own video callback (core.shot).
 """
 import argparse
 import json
