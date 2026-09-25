@@ -1,0 +1,8 @@
+{
+  "about": "A save in an older layout keeps its bag when the game converts it (docs/newgold/SAVE-LAYOUT.md): route29-official.sav, written before the DNA Splicers and before the Berries pocket held every Berry, is given Ultra Balls, X Attacks, Oran and Hyper Oran Berries by savedit in its own layout; continued, the game has moved the balls and the battle items past the Berries pocket's new slots, and every one of them is in the bag with the Potions.",
+  "save": "route29-official.sav",
+  "edit": ["--item", "ULTRA_BALL:7,X_ATTACK:2,ORAN_BERRY:3,HYPER_ORAN_BERRY:4"],
+  "steps": ["field"],
+  "expect": {"bag:ITEM_ULTRA_BALL": 7, "bag:ITEM_X_ATTACK": 2, "bag:ITEM_ORAN_BERRY": 3,
+             "bag:ITEM_HYPER_ORAN_BERRY": 4, "bag:ITEM_POTION": 5}
+}

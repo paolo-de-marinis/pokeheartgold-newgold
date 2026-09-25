@@ -596,6 +596,18 @@ class SaveditLibraryTests(unittest.TestCase):
         held = [sv.describe_mon(raw)["item"] for raw in sv.party_raw(save)]
         self.assertEqual(held[:2], [items["ITEM_LEFTOVERS"], 0])
 
+    def test_the_cli_fills_the_bag(self):
+        """--item: how many of each item, in its own pocket, as set_item
+        writes it; an item there is none of is refused."""
+        path = Path(self.tmp.name) / "cli-bag.sav"
+        path.write_bytes(self.path.read_bytes())
+        tool = [sys.executable, str(ROOT / "tools/newgold/devkit/savedit.py"), str(path)]
+        subprocess.run(tool + ["--item", "ORAN_BERRY:3,ITEM_ULTRA_BALL:7"], check=True, capture_output=True, text=True)
+        items = sv.constants("include/constants/items.h", "ITEM_")
+        held = {slot["item"]: slot["quantity"] for pocket in sv.bag(sv.Save(path)).values() for slot in pocket}
+        self.assertEqual((held.get(items["ITEM_ORAN_BERRY"]), held.get(items["ITEM_ULTRA_BALL"])), (3, 7))
+        self.assertNotEqual(subprocess.run(tool + ["--item", "NO_SUCH_THING:1"], capture_output=True).returncode, 0)
+
     def test_the_cli_makes_only_species_a_pokemon_can_be(self):
         """What the page refuses, the CLI does too: a battle's Mega, a
         retail form row, the egg."""

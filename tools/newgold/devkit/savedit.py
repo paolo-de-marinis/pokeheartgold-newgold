@@ -3993,6 +3993,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("save", type=Path)
     parser.add_argument("--show", action="store_true")
+    parser.add_argument("--item", metavar="ITEM:COUNT[,...]",
+                        help="how many of each item the bag holds, in its own pocket (ITEM_ optional)")
     parser.add_argument("--tm", metavar="N[,N...]",
                         help="put these machines in the bag, e.g. 1,2,26")
     parser.add_argument("--dex", metavar="SPECIES[,...]",
@@ -4036,6 +4038,20 @@ def main():
         set_party(save, wanted)
         save.write()
         print("party: " + ", ".join(f"{n} at level {l}" for n, l, *_ in wanted))
+
+    if args.item:
+        items = constants("include/constants/items.h", "ITEM_")
+        for entry in args.item.split(","):
+            name, _, count = entry.upper().partition(":")
+            name = name if name.startswith("ITEM_") else "ITEM_" + name
+            if name not in items:
+                raise SystemExit(f"there is no {name}")
+            try:
+                set_item(save, items[name], int(count))
+            except ValueError as e:
+                raise SystemExit(str(e))
+        save.write()
+        print(f"bag: {args.item}")
 
     if args.tm:
         machines = [int(n) for n in args.tm.split(",")]
