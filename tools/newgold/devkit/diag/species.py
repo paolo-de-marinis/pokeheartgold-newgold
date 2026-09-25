@@ -70,6 +70,7 @@ import multiprocessing
 import os
 import random
 import re
+import shutil
 import struct
 import sys
 import tempfile
@@ -940,6 +941,7 @@ def battle(job):
         record["error"] = str(error)
     finally:
         game.close()
+        shutil.rmtree(temp, ignore_errors=True)
     return [record]
 
 
