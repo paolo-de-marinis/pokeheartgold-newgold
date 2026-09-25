@@ -156,9 +156,11 @@ it, because its core reads a null as zero.
   `NEWGOLD_CORE=/usr/lib/libretro/melonds_libretro.so`. `boot_check.c`,
   `smoke.py` and `test_boot.py` still run it.
 
-Both play every scenario to the same battle lines, and each repeats itself:
-three Falkner runs on melonDS DS gave the same frames, lines and RAM, with
-the JIT off and again with it on. Where they differ is emulation:
+Both play every scenario to the same battle lines (on the landed tree, all
+eighteen, but for the command prompt's line printed once more on 0.9.3
+where `revival_blessing_aegislash` stops at it), and each repeats itself:
+Falkner on melonDS DS gave the same frames, lines and RAM run after run,
+with the JIT off and again with it on. Where they differ is emulation:
 
 - melonDS DS starts the game a frame sooner (the main loop's
   `gSystem.frameCounter` first moves at frame 23, at 24 on 0.9.3), so its
@@ -167,20 +169,23 @@ the JIT off and again with it on. Where they differ is emulation:
   end of frame 701, of 700 on 0.9.3, and let go a frame later too). A
   script that times a press by frame count, or compares frame counts
   across the cores, has to allow for both.
-- So Continue comes a frame later there, and seeds the field's RNG
-  (`RngSeedFromRTC`: 0xbb160017 plus the VBlank count, at the pinned
-  second) two counts higher: 0xbb160215 on 0.9.3 at frame 861, 0xbb160217
-  on melonDS DS at 862. Which wild Pokemon a walk meets follows from that
-  seed alone: the walk to Cherrygrove meets two on 0.9.3 (a Spinarak first)
-  and one Rattata on melonDS DS, and each core given the other's RNG state
-  after Continue meets the other's. A walk's wild battles hold no
-  `gDiagBattleSeed`, so their turns are seeded by the clock and the VBlank
-  count as well: a walk with wild battles plays out per core. A forced
-  Geodude has other stats too. The four scenarios that force one and expect its HP to the
-  point (`battle_seed`, `accuracy_forced`, `rolls_forced_high`,
-  `rolls_forced_low`) set `sLCRNG_State` to 0.9.3's value after Continue,
-  and pass on both; `test_scenarios` holds every scenario that forces a
-  wild Pokemon to it.
+- Continue seeds the field's RNG (`RngSeedFromRTC`: 0xbb160017 plus the
+  VBlank count, at the pinned second). Measured on the tenth round's lab
+  branch, melonDS DS came to it a frame later and two counts higher:
+  0xbb160215 on 0.9.3 at frame 861, 0xbb160217 on melonDS DS at 862. The
+  loading before it has grown since, the title's and the menu's music with
+  it (the pseudobanks, 51f7a1ca3 .. 904c0baa3), and on the landed tree both
+  cores leave 0xbb160231, 538 VBlanks: at frame 892 on 0.9.3 and 891 on
+  melonDS DS, whose frame of head start is all that shows there. Which wild
+  Pokemon a walk meets follows from that seed alone: each core given the
+  other's RNG state after Continue met the other's. A walk's wild battles
+  hold no `gDiagBattleSeed`, so their turns are seeded by the clock and the
+  VBlank count as well: a walk with wild battles plays out per core. The
+  scenarios that force a wild Pokemon and expect its HP to the point, and
+  the walk to Cherrygrove, set `sLCRNG_State` to 0xbb160215 after Continue
+  (67a15906a, a0effe0ab, 77a7080e6) -- the seed their expectations were
+  written against, no longer either core's own -- and `test_scenarios`
+  holds every scenario that forces a wild Pokemon to it.
 - The boot's random pre-size is 0xa8 on melonDS DS, 0xe8 on 0.9.3: the
   heaps start 0x40 bytes apart.
 - melonDS 0.9.3 emulates no wireless. Both cores make the comm system's
@@ -188,53 +193,66 @@ the JIT off and again with it on. Where they differ is emulation:
   3 by `Heap_CreateAtEnd` in `unk_02037C94.s`); melonDS DS destroys it
   before Continue, 0.9.3 never does -- and without
   `gDiagIgnoreCommunicationError` it resets at the main menu and never
-  reaches the field, where melonDS DS reaches Route 29 in the same 1050
-  frames. So on 0.9.3 that block stays at the top of heap 3 in the field:
-  heap 3's low water on Route 29 is 0x188d8 there and 0x1f8e8 on melonDS
-  DS. A heap-3 margin measured on 0.9.3 is 0x7010 short of melonDS DS's,
+  reaches the field, where melonDS DS reaches Route 29 in the same frames
+  as with it held. So on 0.9.3 that block stays at the top of heap 3 in
+  the field: heap 3's low water on Route 29 is 0x188d8 there and 0x1f8e8
+  on melonDS DS. A heap-3 margin measured on 0.9.3 is 0x7010 short of melonDS DS's,
   which is the one to trust.
-- Frame counts differ by a few in battles (Falkner 16556 against 16555,
-  the double battle from `gyms/bugsy.sav` 45 more). That is not slower
-  loading -- at the end of each run the frames less the VBlank count agree
-  within one on both cores -- but more frames played: the double battle's
-  extra 44 after its start all fall inside BATTLE_MAIN, most likely the
-  game waiting on presses that reach it a frame later. The JIT changes the
-  counts again (Falkner 16551 on melonDS DS, 16605 on 0.9.3).
-- Speed, frames a second over a whole scenario: Falkner 143 on melonDS DS
-  and 178 on 0.9.3 with the JIT off, 235 and 266 with it on; the walk from
-  New Bark to Route 29 107 and 132 with the JIT off, 196 on 0.9.3 with it on.
-- With the JIT on, melonDS DS starts no wild battle at all: in every
-  scenario with one (the forced Geodudes, the Sentret on the walk to Route
-  29, the Rattata on the walk to Cherrygrove) the encounter's screen effect
+- Frame counts differ in battles, the lines the same. On the landed tree
+  Falkner takes 16586 frames on melonDS DS and 16484 on 0.9.3: its battle
+  102 more on melonDS DS, all of them at the command prompts (between the
+  prompt showing and the move) and around the faints, where gym.py waits
+  on the game; `double_replacement`, the double from `gyms/bugsy.sav`, 41
+  fewer. (On the lab branch Falkner took 16556 against 16555, and that
+  double 45 more.) It is not slower loading: there the frames less the
+  VBlank count agreed within one at every run's end. The JIT changes the
+  counts again.
+- Speed, frames a second over a whole scenario, on the lab branch: Falkner
+  143 on melonDS DS
+  and 178 on 0.9.3 with the JIT off, 235 and 266 with it on; the walk
+  from New Bark to Route 29 107 and 132 with the JIT off, 196 on 0.9.3
+  with it on. The landed tree, three runs at a time, came within 7% of them.
+- With the JIT on, melonDS DS starts no wild battle at all: on the lab
+  branch, in every scenario with one (the forced Geodudes, the Sentret on
+  the walk to Route 29, the Rattata on the walk to Cherrygrove), the
+  encounter's screen effect
   (`sub_020551B8`, called from `Task_WildEncounter`'s first state) never
   says it is done, `gDiagWildStage` stays at 1 and the run waits until its
   frames are spent. The trainer battles play (Falkner, the double from
   `gyms/bugsy.sav`). It is the JIT's doing, not the encounter's: the same
   Sentret, rolled from the same RNG state with the JIT off, is met and
-  beaten. melonDS 0.9.3's JIT plays wild battles. core.py says so on stderr
-  when `NEWGOLD_JIT=1` meets melonDS DS.
+  beaten. On the landed tree `rolls_forced_high` still stops at wild stage
+  1. melonDS 0.9.3's JIT plays wild battles. core.py says so on stderr when
+  `NEWGOLD_JIT=1` meets melonDS DS.
 - Either core's JIT also boots faster, and so moves the Continue's seed
-  (0xbb160225 on melonDS DS, 0xbb160232 on 0.9.3) and every wild Pokemon
-  after it. Scenarios run with the JIT off.
+  (on the landed tree 0xbb160241 on melonDS DS, 0xbb160230 on 0.9.3) and
+  every wild Pokemon after it. Scenarios run with the JIT off.
+- The threaded renderer, off on both (core.py's options), changes nothing a
+  run shows: Falkner's frames, lines and RAM on either core, the walk to
+  Cherrygrove's on melonDS DS, and four shots from the field into a wild
+  battle's start, each the same byte for byte; it plays 12 to 18% faster.
+- Two runs in one Python process replay the same on melonDS DS -- the walk
+  from New Bark twice, 8927 frames and the same RAM each time, as in a
+  process of its own -- and not on 0.9.3, which keeps state across
+  `retro_deinit` and `retro_init` (8940 frames, then 8927 and other RAM).
+  scene.py and `test_scenarios` still play a scenario in a process of its
+  own.
 
-## Missing music
+## The music that did not play
 
-The towns', the routes', the title's and the intro's music never plays, on
-either core, and the title's not on melonDS 1.1 either (read there through
-`nested.py` and `live.py`): `SND_WORK.currentSeqNo` names the sequence and
-the BGM handle's player stays empty. The gym's music, the battle's, an
-event's, the menus' clicks and the cries do play. `InitSoundData` loads the
-sound archive's INFO and FAT tables into `SND_WORK.heap_buf`, which is
-`SND_HEAP_SIZE` bytes whatever the archive holds; with the added species'
-banks and wave archives (4c8176ea1) those tables are 0x1bbec bytes against
-0x14b9c in an archive of retail size, and that much less is left for a
-sequence, its bank and its wave archive. `sSndHeapFreeSize` reads 0x3520
-after the setup, 0x62e0 at the title and 0x61c0 on Route 29 and in Elm's lab
-with nothing playing. The Violet Gym's sequence (1065) takes 0x727c and
-leaves 0x1e40, and Falkner's battle (1118, 0x7238) fits as well; Route 29's
-(1028) wants 0xa95c, Elm's lab's (1066) 0xa0c4, the title's (1008) 0xb5a0
-and the intro's (1004) 0xc328. A copy of the ROM with two of the archive's
-player heaps set to 0 (0x9b14 bytes back) plays the intro's music at once.
+From 4c8176ea1 to the pseudobanks, the intro's, the title's, the towns', the
+routes' and ordinary trainer battles' music never played, on either core
+and on melonDS 1.1 alike, while the gyms' and the other battles' music, the
+clicks and the cries did: the harness's recordings found it.
+`InitSoundData` loads the sound archive's INFO and FAT blocks for good into
+the sound heap, `SND_HEAP_SIZE` bytes whatever the archive holds, and the
+added species' cry banks, wave archives and file entries had grown them
+from HeartGold's 0x13954 bytes to 0x1bbec: 0x61c0 was left on Route 29,
+whose music wants 0xa95c, and `SND_WORK.currentSeqNo` named a sequence the
+BGM handle never loaded. A cry is now a wave archive alone, hg-engine's
+pseudobank (51f7a1ca3, 86a7ace16, ae812433b, c0b0909bb, 904c0baa3): the
+blocks cost 0x135a0, every scene's music plays, and `continue_route29.json`
+expects Route 29's (the audit's "Found by the harness's core work").
 
 ## Why it is shaped this way
 

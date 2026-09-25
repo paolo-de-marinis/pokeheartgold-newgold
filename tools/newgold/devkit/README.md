@@ -385,9 +385,8 @@ Reading what the debug ROM records, and playing it without looking.
   without it). DIAGNOSTICS.md says what else differs between the two.
   `Core(rom, record="run.mp4")` (scene.py's `--record`) films the run:
   every frame, both screens, and the sound the core mixed, piped to ffmpeg
-  at the core's frame rate. Off by default. Clicks, cries, the gym's and the
-  battle's music are there on either core; a town's or a route's music is
-  not, on any emulator: the game's sound heap has no room for it.
+  at the core's frame rate. Off by default. The music, the clicks and the
+  cries are there on either core.
 - `gym.py SAVE` -- fights what the save stands the player in front of,
   through the game's own menus, and reports the battle as text: every line
   it printed, the battlers each turn, what the trainer's AI spent, what

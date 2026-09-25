@@ -36,10 +36,7 @@ is the core's memory 2 on both, from 0x02000000. melonDS 0.9.3 reads and
 writes the save file itself; melonDS DS is handed it and gives it back as
 memory, and core.py keeps the same file for it (save_file).
 
-Both mix the game's sound alike: the clicks, the cries, the gym's and the
-battle's music. A town's, a route's, the title's and the intro's music never
-plays, on either core or on melonDS itself: the game's sound heap has no
-room left for them (DIAGNOSTICS.md, "Missing music").
+Both mix the game's sound alike: the music, the clicks and the cries.
 
 A script calls pin_clock() first, before it does anything else.
 """
