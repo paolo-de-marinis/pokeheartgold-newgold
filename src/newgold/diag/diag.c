@@ -37,6 +37,7 @@ u32 gDiagForceCritical;
 u32 gDiagForceHit;
 u32 gDiagForceDamageRoll;
 u32 gDiagForceEffect;
+u32 gDiagForceSpeedTie;
 u32 gDiagRollNext;
 
 u16 gDiagBattleText[DIAG_BATTLE_TEXT_LINES][DIAG_BATTLE_TEXT_CHARS];
@@ -108,13 +109,15 @@ void Diag_RollNext(u32 kind) {
 // when the roll modulo 100, plus one, is over the accuracy, and
 // BtlCmd_TryOHKOMove hits when the roll modulo 100 is under its chance; the
 // damage is (100 - roll % 16)%; an additional effect happens when the roll
-// modulo 100 is under its chance.
+// modulo 100 is under its chance; and CheckSortSpeed puts the second of two
+// tied battlers first when the roll is odd.
 static const u8 sDiagForcedRolls[][2] = {
     { 0, 0 },
     { 0, 1 },
     { 0, 99 },
     { 0, 15 },
     { 0, 99 },
+    { 1, 0 },
 };
 
 u16 Diag_Roll(u16 roll) {
@@ -134,6 +137,9 @@ u16 Diag_Roll(u16 roll) {
         break;
     case DIAG_ROLL_EFFECT:
         force = gDiagForceEffect;
+        break;
+    case DIAG_ROLL_SPEED_TIE:
+        force = gDiagForceSpeedTie;
         break;
     default:
         return roll;

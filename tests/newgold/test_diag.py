@@ -78,6 +78,18 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(len(rolls), 2)
         self.assertEqual(body.count("BattleSystem_Random("), 2)
 
+    def test_every_speed_tie_roll_is_forced(self):
+        # CheckSortSpeed rolls a tie in five places, one per ordering rule
+        # (the Quick Claw's, the Lagging Tail's, Stall's, Trick Room's and
+        # plain Speed); the chain between the two marks makes no other roll,
+        # and the second mark forgets the first when no tie came.
+        from test_dex_range import c_function
+        body = c_function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CheckSortSpeed")
+        start = body.index("Diag_RollNext(DIAG_ROLL_SPEED_TIE);")
+        end = body.index("Diag_RollNext(DIAG_ROLL_NONE);")
+        self.assertEqual(body[start:end].count("BattleSystem_Random(battleSystem) & 1"), 5)
+        self.assertEqual(body.count("BattleSystem_Random("), 5)
+
     def test_gym_reads_the_hp_past_a_two_word_species(self):
         # markers.battle names a form in two words; gym.py once took the
         # fourth word for the HP, read "L30" and died without a word.
@@ -130,7 +142,9 @@ class DiagnosticsTests(unittest.TestCase):
         check reads as the forced outcome -- a critical hit's remainder of 0
         or 1, the accuracy's 0 or 99, the damage's 0 (100%) or 15 (85%), an
         effect's 0 or 99 -- the RNG's own value with the switch off, and
-        forgets the check either way, so the next roll is the RNG's."""
+        forgets the check either way, so the next roll is the RNG's. A
+        speed tie's is odd (the pair swaps: the second asked goes first) or
+        even."""
         from test_dex_range import c_function, run_native
         source = (ROOT / "src/newgold/diag/diag.c").read_text()
         table = re.search(r"static const u8 sDiagForcedRolls\[\]\[2\] = \{.*?\};", source, re.S).group(0)
@@ -148,7 +162,7 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 @DEFINES@
-u32 gDiagForceCritical, gDiagForceHit, gDiagForceDamageRoll, gDiagForceEffect, gDiagRollNext;
+u32 gDiagForceCritical, gDiagForceHit, gDiagForceDamageRoll, gDiagForceEffect, gDiagForceSpeedTie, gDiagRollNext;
 @TABLE@
 @NEXT@
 @ROLL@
@@ -166,6 +180,8 @@ int main(void) {
     assert(100 - roll(DIAG_ROLL_DAMAGE, &gDiagForceDamageRoll, 2, 777) % 16 == 85);
     assert(roll(DIAG_ROLL_EFFECT, &gDiagForceEffect, 1, 777) % 100 < 1);
     assert(roll(DIAG_ROLL_EFFECT, &gDiagForceEffect, 2, 777) % 100 >= 99);
+    assert(roll(DIAG_ROLL_SPEED_TIE, &gDiagForceSpeedTie, 1, 776) & 1);      /* the pair swaps */
+    assert(!(roll(DIAG_ROLL_SPEED_TIE, &gDiagForceSpeedTie, 2, 777) & 1));   /* it stays */
     assert(roll(DIAG_ROLL_EFFECT, &gDiagForceEffect, 0, 777) == 777);        /* off: the RNG's */
     assert(gDiagRollNext == DIAG_ROLL_NONE);                                   /* forgotten */
     gDiagForceCritical = 1;

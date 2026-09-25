@@ -1550,6 +1550,10 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
         }
     }
 
+#ifdef NEWGOLD_DIAG
+    // A tie below is rolled once at most, and nothing else here rolls.
+    Diag_RollNext(DIAG_ROLL_SPEED_TIE);
+#endif
     if (movePriority1 == movePriority2) {
         if (boostedPriority1 && boostedPriority2) {
             if (speed1 < speed2) {
@@ -1599,6 +1603,9 @@ u8 CheckSortSpeed(BattleSystem *battleSystem, BattleContext *ctx, int battlerId1
     } else if (movePriority1 < movePriority2) {
         ret = 1;
     }
+#ifdef NEWGOLD_DIAG
+    Diag_RollNext(DIAG_ROLL_NONE); // no tie came: the next roll is not one
+#endif
 
     return ret;
 }

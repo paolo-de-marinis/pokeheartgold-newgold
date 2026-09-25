@@ -61,8 +61,9 @@ And the switches, zero unless something outside the game writes them:
 | `gDiagForceHit` | `BattleSystem_CheckMoveHit`, `BtlCmd_TryOHKOMove` | 1: the accuracy roll hits; 2: it misses. A move accurate to 100 or more still hits; a one-hit KO move still fails on a higher-level target or on Sturdy. |
 | `gDiagForceDamageRoll` | `DamageCalcDefault`, `ApplyDamageRange` | 1: the top of the damage range (100%); 2: the bottom (85%). |
 | `gDiagForceEffect` | `ov12_02250490`, `BtlCmd_CheckEffectActivation` | 1: an additional effect's roll succeeds (a burn, a flinch, a stat drop); 2: it fails. A certain effect still happens. |
+| `gDiagForceSpeedTie` | `CheckSortSpeed` | 1: a speed tie goes to the second of the two battlers compared -- the pair swaps, so in a single battle the foe moves first; 2: to the first, the player. The roll only: priority, the Quick Claw, the Lagging Tail, Stall and Trick Room still order the pair first, and only a tie is rolled. Every ordering the game sorts by Speed, the AI's own guess included. |
 
-The four forced rolls work the same way: the check says which roll it is about to
+The five forced rolls work the same way: the check says which roll it is about to
 ask for (`Diag_RollNext`), and `BattleSystem_Random` hands its value to `Diag_Roll`,
 which answers the forced one when that switch is on. The RNG advances as it always
 does, so forcing one roll moves no other. Between frames no roll is waiting
