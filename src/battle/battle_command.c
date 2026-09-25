@@ -11381,8 +11381,11 @@ BOOL BtlCmd_ResetParadoxAbility(BattleSystem *battleSystem, BattleContext *ctx) 
 
         // A boost a Booster Energy bought is not the weather's to take back:
         // it lasts as long as the Pokemon stays out, so the battler holding
-        // that record is passed over here.
-        if (GetBattlerAbility(ctx, battlerId) == ability && ctx->paradoxBoostedStat[battlerId] != 0 && !ctx->boosterEnergyActivated[battlerId]) {
+        // that record is passed over here. So is one that has fainted, whose
+        // boost went with it: the record stays until the next Pokemon comes
+        // in, and the line would name a Pokemon that is not there -- in a
+        // place left empty, party slot 6.
+        if (ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ability && ctx->paradoxBoostedStat[battlerId] != 0 && !ctx->boosterEnergyActivated[battlerId]) {
             ctx->paradoxBoostedStat[battlerId] = 0;
             ctx->battlerIdTemp = battlerId;
             BattleScriptIncrementPointer(ctx, -2);

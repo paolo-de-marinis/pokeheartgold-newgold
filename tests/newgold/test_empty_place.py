@@ -226,6 +226,52 @@ int main(void) {
     return 0;
 }
 """
+PARADOX = r"""
+#include "constants/abilities.h"
+#include "constants/battle_subscript.h"
+#define NARC_a_0_0_1 1
+typedef struct { s32 hp; u16 ability; } BattleMon;
+typedef struct {
+    BattleMon battleMons[4];
+    int battlerIdTemp, subscript;
+    u8 turnOrder[4];
+    u8 paradoxBoostedStat[4];
+    u8 boosterEnergyActivated[4];
+    u8 selectedMonIndex[4];
+    u8 switchInFlag;
+} BattleContext;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return ABILITY_PROTOSYNTHESIS; }
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static void BattleScriptGotoSubscript(BattleContext *ctx, int narc, int subscript) { (void)narc; ctx->subscript = subscript; }
+@FUNCTIONS@
+
+int main(void) {
+    static BattleContext ctx;
+    int i;
+
+    for (i = 0; i < 4; i++) {
+        ctx.turnOrder[i] = i;
+        ctx.battleMons[i].hp = 30;
+    }
+    // Two Protosynthesis holders boosted by the sun, in 1 and 3. The one in
+    // 1 has fainted and its place is empty.
+    ctx.battleMons[1].ability = ctx.battleMons[3].ability = ABILITY_PROTOSYNTHESIS;
+    ctx.paradoxBoostedStat[1] = ctx.paradoxBoostedStat[3] = STAT_ATK;
+    ctx.battleMons[1].hp = 0;
+    ctx.switchInFlag |= MaskOfFlagNo(1);
+    ctx.selectedMonIndex[1] = 6;
+
+    // The sun ends: the line is for the one in 3 alone.
+    BtlCmd_ResetParadoxAbility(0, &ctx);
+    assert(ctx.subscript == BATTLE_SUBSCRIPT_PARADOX_ABILITY_END && ctx.battlerIdTemp == 3);
+    assert(ctx.paradoxBoostedStat[3] == 0);
+    ctx.subscript = 0;
+    BtlCmd_ResetParadoxAbility(0, &ctx);
+    assert(ctx.subscript == 0);
+    return 0;
+}
+"""
 
 
 class EmptyPlaceTests(unittest.TestCase):
@@ -237,6 +283,9 @@ class EmptyPlaceTests(unittest.TestCase):
 
     def test_a_pokemon_sent_into_an_empty_place_reverts_nothing(self):
         run(self, SWITCH, ("Battler_TurnsHero", "BtlCmd_SwitchAndUpdateMon"))
+
+    def test_a_paradox_boost_ends_without_a_word_for_the_fallen(self):
+        run(self, PARADOX, ("BtlCmd_ResetParadoxAbility",))
 
 
 if __name__ == "__main__":
