@@ -245,13 +245,20 @@ class Core:
         av = AvInfo()
         self.lib.retro_get_system_av_info(ctypes.byref(av))
         self._size = (av.base_width, av.base_height)
+        # ffmpeg takes raw sound at a whole number of samples a second, and
+        # melonDS DS mixes 32728.498 (33513982/1024): labelled 32728, the
+        # sound would run 15 ppm slow and end 55 ms after the picture an hour
+        # in. The picture is labelled slow by the same factor, and the two
+        # stay together.
+        rate = int(av.sample_rate)
         audio, into = os.pipe()
         self._ffmpeg = subprocess.Popen(
             ["ffmpeg", "-loglevel", "error", "-y",
              "-probesize", "32", "-f", "rawvideo", "-pix_fmt", "bgr0", "-s", f"{av.base_width}x{av.base_height}",
-             "-framerate", f"{av.fps:.4f}", "-i", "pipe:0",
-             "-probesize", "32", "-f", "s16le", "-ar", str(int(av.sample_rate)), "-ac", "2", "-i", f"pipe:{audio}",
-             # twice the size, pixels kept square and sharp; the sound as it was made
+             "-framerate", f"{av.fps * rate / av.sample_rate:.6f}", "-i", "pipe:0",
+             "-probesize", "32", "-f", "s16le", "-ar", str(rate), "-ac", "2", "-i", f"pipe:{audio}",
+             # twice the size, pixels kept square and sharp; the sound as it
+             # was mixed, which the AAC encoder resamples to 32 kHz
              "-vf", "scale=iw*2:ih*2:flags=neighbor", "-c:v", "libx264", "-preset", "veryfast",
              "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", str(path)],
             stdin=subprocess.PIPE, pass_fds=(audio,))
