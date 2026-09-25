@@ -372,8 +372,9 @@ class TrainerTests(unittest.TestCase):
             output = subprocess.run([str(path / "test")], capture_output=True, text=True, check=True).stdout
         # Single, (unused), double with a partner, double without one.
         self.assertEqual(output.split(), ["0", "0", "1", "0"])
-        # The record's flag is the word TryGetSeenByNpcTrainers tests, 0x10 in.
-        self.assertIn("ldr r0, [sp, #0x50]\n\tcmp r0, #0", (ROOT / "asm/unk_020632B0.s").read_text())
+        # The record's flag is the one TryGetSeenByNpcTrainers tests.
+        self.assertIn("first.hasPartner == FALSE",
+                      function((ROOT / "src/trainer_sight.c").read_text(), "TryGetSeenByNpcTrainers"))
 
     def test_nelson_and_mark_are_doubles_without_a_partner(self):
         """konefr made Nelson #389 DOUBLE_BATTLE, the two-trainer kind, but he
