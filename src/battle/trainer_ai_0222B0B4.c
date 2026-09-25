@@ -1,54 +1,5 @@
 #include "battle/trainer_ai.h"
 
-// The commands still in the assembly (asm/overlay_10_trainer_ai_*.s), until
-// their files come to C and declare them in trainer_ai.h.
-void ov10_0221D260(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221D314(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221D3AC(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221D4A0(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221D594(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DCEC(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DD5C(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DDCC(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DDE8(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DDEC(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DDF0(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DE24(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EA44(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EA7C(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EAC8(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EB00(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EB18(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EC08(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EC28(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EC44(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EC6C(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221ED10(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221ED48(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221ED80(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EDB4(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DE88(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DEF0(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DF20(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221DF88(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E018(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E0BC(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E0EC(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E11C(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E1CC(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E290(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E2CC(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E460(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E498(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E5B0(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E600(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E650(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E6A4(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E6F8(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E9A4(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221E9F4(BattleSystem *battleSystem, BattleContext *ctx);
-void ov10_0221EDF8(BattleSystem *battleSystem, BattleContext *ctx);
-
 // The AI script commands by opcode, the number each command's first word
 // holds: ov10_0221C278 calls the one under the script's cursor.
 const AICommandFunc ov10_0222B0B4[] = {
