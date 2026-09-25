@@ -1,0 +1,12 @@
+{
+  "about": "The trainer AI's weather command reads heavy rain as rain (ov10_0221D594), so flag 0 marks down a Rain Dance under it, which fails there. The player's Marill is given Primordial Sea once the battle is up (set:), which raises the heavy rain during the first turn; Falkner's Hoothoot, taught Leer, then also Rain Dance once the rain is up, Leers every turn. Before the fix heavy rain read as no weather and Rain Dance was used about every other turn, to 'There is no relief from this heavy rain!'.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "MARILL:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0", "set:0,ability,ABILITY_PRIMORDIAL_SEA",
+            "teach:1,0,MOVE_LEER", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:0,0,MOVE_SPLASH", "fight:1:1", "teach:1,1,MOVE_RAIN_DANCE", "fight:1:4"],
+  "expect": {"lines": ["A heavy rain began to fall!", "The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!",
+                       "The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!"],
+             "no_lines": ["used Rain Dance"], "battler1.species": "SPECIES_HOOTHOOT"}
+}

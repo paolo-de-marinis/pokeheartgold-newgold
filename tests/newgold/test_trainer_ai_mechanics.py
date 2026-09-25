@@ -35,6 +35,7 @@ typedef struct { int unused; } Pokemon;
 typedef struct { u16 power; u8 type; } MoveTbl;
 typedef struct { int unk8; } TrainerAIData;
 typedef struct {
+    u32 fieldCondition;
     TrainerAIData trainerAIData;
     u8 types[4][3];
     u8 selectedMonIndex[4];
@@ -145,6 +146,27 @@ class AbsorbSwitchTests(unittest.TestCase):
         assert(ov10_0221FE8C(&bs, &ctx, 1) == FALSE);
     }
     puts("PASS: the switch knows every ability that swallows a move's type.");"""))
+
+
+class WeatherCommandTests(unittest.TestCase):
+    def test_the_new_weathers_read_as_their_kin(self):
+        # Command 2E: 0 none, 1 sun, 2 rain, 3 sandstorm, 4 hail, 5 fog. Heavy
+        # rain is rain and extremely harsh sunlight sun; snow reads as hail;
+        # strong winds are none of the five.
+        print(run("src/battle/trainer_ai_0221D260.c", ["ov10_0221D594"], r"""
+    static const u32 cases[][2] = {
+        { 0, 0 }, { FIELD_CONDITION_SUN, 1 }, { FIELD_CONDITION_EXTREMELY_HARSH_SUNLIGHT, 1 },
+        { FIELD_CONDITION_RAIN, 2 }, { FIELD_CONDITION_HEAVY_RAIN, 2 }, { FIELD_CONDITION_SANDSTORM, 3 },
+        { FIELD_CONDITION_HAIL, 4 }, { FIELD_CONDITION_SNOW_TEMP, 4 }, { FIELD_CONDITION_SNOW_PERMANENT, 4 },
+        { FIELD_CONDITION_FOG, 5 }, { FIELD_CONDITION_STRONG_WINDS, 0 },
+    };
+    unsigned i;
+    for (i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        ctx.fieldCondition = cases[i][0];
+        ov10_0221D594(&bs, &ctx);
+        assert(ctx.trainerAIData.unk8 == (int)cases[i][1]);
+    }
+    puts("PASS: the weather command reads the port's weathers.");"""))
 
 
 if __name__ == "__main__":

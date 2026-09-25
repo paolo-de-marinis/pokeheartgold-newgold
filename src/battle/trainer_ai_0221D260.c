@@ -175,21 +175,24 @@ void ov10_0221D4A0(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
-// Loads the weather: 0 none, 1 sun, 2 rain, 3 sandstorm, 4 hail, 5 fog.
+// Loads the weather: 0 none, 1 sun, 2 rain, 3 sandstorm, 4 hail, 5 fog. Heavy
+// rain is rain to the scripts and extremely harsh sunlight sun; snow, hail
+// with nothing falling out of it, is hail, which the scripts ask for Blizzard,
+// Morning Sun and Solar Beam alike; strong winds are none of the five.
 void ov10_0221D594(BattleSystem *battleSystem, BattleContext *ctx) {
     ov10_0221EF24(ctx, 1);
     ctx->trainerAIData.unk8 = 0;
 
-    if (ctx->fieldCondition & (FIELD_CONDITION_RAIN | FIELD_CONDITION_RAIN_PERMANENT)) {
+    if (ctx->fieldCondition & FIELD_CONDITION_RAIN_ALL) {
         ctx->trainerAIData.unk8 = 2;
     }
     if (ctx->fieldCondition & FIELD_CONDITION_SANDSTORM_ALL) {
         ctx->trainerAIData.unk8 = 3;
     }
-    if (ctx->fieldCondition & (FIELD_CONDITION_SUN | FIELD_CONDITION_SUN_PERMANENT)) {
+    if (ctx->fieldCondition & FIELD_CONDITION_SUN_ALL) {
         ctx->trainerAIData.unk8 = 1;
     }
-    if (ctx->fieldCondition & FIELD_CONDITION_HAIL_ALL) {
+    if (ctx->fieldCondition & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {
         ctx->trainerAIData.unk8 = 4;
     }
     if (ctx->fieldCondition & FIELD_CONDITION_FOG) {
