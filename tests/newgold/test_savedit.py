@@ -618,6 +618,19 @@ class SaveditLibraryTests(unittest.TestCase):
             sv.put_in_box(self.open(), 1, "mega_venusaur", 40)
         self.assertEqual(sv.parse_party("chikorita:5")[0][0], "CHIKORITA")
 
+    def test_the_cli_gives_a_party_pokemon_its_item(self):
+        """--party's fifth field is the held item: a scenario's Thief or
+        Trick wants one held from the battle's start."""
+        items = sv.constants("include/constants/items.h", "ITEM_")
+        out = Path(self.tmp.name) / "cli.sav"
+        out.write_bytes(self.path.read_bytes())
+        subprocess.run([sys.executable, str(ROOT / "tools/newgold/devkit/savedit.py"), str(out),
+                        "--party", "PIKACHU:10:::oran_berry,CHIKORITA:5"], check=True, capture_output=True)
+        party = [sv.describe_mon(raw) for raw in sv.party_raw(sv.Save(out))]
+        self.assertEqual([m["item"] for m in party], [items["ITEM_ORAN_BERRY"], 0])
+        with self.assertRaises(SystemExit):
+            sv.parse_party("PIKACHU:10:::NO_SUCH_ITEM")
+
     def test_the_cli_names_a_pokemon_as_the_game_prints_it(self):
         """build_mon writes the species bank's name, not its constant."""
         self.assertEqual(sv.describe_mon(sv.build_mon("MR_MIME", 5))["nickname"], "Mr. Mime")

@@ -4002,7 +4002,7 @@ def main():
     parser.add_argument("--box", metavar="N:SPECIES:LEVEL",
                         help="put one Pokemon in box N, counted from one")
     parser.add_argument("--party", metavar="SPECIES:LEVEL[:NATURE][:MOVE+...][:ITEM][,...]",
-                        help="fill the party, e.g. CHIKORITA:5,PIDGEY:3")
+                        help="fill the party, e.g. CHIKORITA:5,PIDGEY:3:::ORAN_BERRY")
     parser.add_argument("--name", help="the player's name, which the save must carry "
                                        "terminated: the main menu copies it into a String "
                                        "and asserts on one that never ends")
