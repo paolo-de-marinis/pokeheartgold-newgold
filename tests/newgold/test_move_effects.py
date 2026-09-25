@@ -111,6 +111,19 @@ class MoveTableTests(unittest.TestCase):
         self.assertEqual(len(re.findall(r"MOVE_[A-Z0-9_]+", borrowed)),
                          self.last - self.last_vanilla)
 
+    def test_every_record_is_read_through_battlemovetbl(self):
+        # The battle's retail table ends at NUM_MOVES; an added move's record
+        # is in addedMoveData, and only BattleMoveTbl knows which is which.
+        # The move animation's packet read the power straight from the
+        # retail table, past its end for an added move.
+        for path in sorted((ROOT / "src/battle").glob("*.c")):
+            text = path.read_text()
+            for match in re.finditer(r"trainerAIData\.moveData\[", text):
+                owner = re.findall(r"\n(?:static )?[\w *]+?\b(\w+)\([^;{]*\) \{\n", text[:match.start()])[-1]
+                self.assertEqual(owner, "BattleMoveTbl", f"{path.name}: {owner}")
+        body = function((ROOT / "src/battle/battle_controller_move_animation.c").read_text(), "ov12_022643C8")
+        self.assertIn("data->power = BattleMoveTbl(ctx, move)->power;", body)
+
 
 class EffectScriptTests(unittest.TestCase):
     """The battle jumps into the archive by the effect's number, so the files

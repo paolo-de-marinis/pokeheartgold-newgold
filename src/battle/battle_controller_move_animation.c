@@ -39,10 +39,13 @@ void ov12_022643C8(BattleSystem *battleSystem, BattleContext *ctx, MoveAnimation
     }
 
     data->damage = ctx->damage;
+    // The power worked out for the move, or its table's: BattleMoveTbl's,
+    // which holds the moves past retail's too; the retail table ends at
+    // NUM_MOVES, and one past it read what follows it.
     if (ctx->movePower != 0) {
         data->power = ctx->movePower;
     } else {
-        data->power = ctx->trainerAIData.moveData[move].power;
+        data->power = BattleMoveTbl(ctx, move)->power;
     }
     data->friendship = ctx->battleMons[attacker].friendship;
     if (!CheckAbilityActive(battleSystem, ctx, 8, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, 8, 0, ABILITY_AIR_LOCK)) {
