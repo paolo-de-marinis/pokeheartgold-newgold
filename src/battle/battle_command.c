@@ -4433,6 +4433,12 @@ BOOL BtlCmd_Transform(BattleSystem *battleSystem, BattleContext *ctx) {
     for (i = 0; i < 40; i++) {
         src[i] = dest[i];
     }
+    // From the sixth generation the user takes the target's critical-hit
+    // rises too, those moves gave it -- Focus Energy, Laser Focus, Dragon
+    // Cheer -- in place of its own (Pokemon Central, Trasformazione (stato)
+    // and Grido del Drago; Showdown's Pokemon.transformInto from gen 6). The
+    // stages came with the copy above.
+    CopyStatStagesAndCriticalRises(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
 
     ctx->battleMons[ctx->battlerIdAttacker].sendOutFlag = 0;
     ctx->battleMons[ctx->battlerIdAttacker].intimidateFlag = 0;

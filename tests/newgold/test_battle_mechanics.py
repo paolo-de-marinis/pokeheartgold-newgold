@@ -1585,6 +1585,17 @@ class PsychUpTests(unittest.TestCase):
         self.assertNotIn("status2 |=", body)
 
 
+class TransformTests(unittest.TestCase):
+    def test_the_critical_hit_rises_come_with_the_copy(self):
+        # Pokemon Central, Trasformazione (stato): from Generation VI the user
+        # takes the target's critical-hit rises that moves gave it, Focus
+        # Energy and Laser Focus among them, and Dragon Cheer (Grido del
+        # Drago) -- Psych Up's copy, in place of its own.
+        body = function(COMMANDS.read_text(), "BtlCmd_Transform")
+        self.assertLess(body.index("src[i] = dest[i];"),
+                        body.index("CopyStatStagesAndCriticalRises(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);"))
+
+
 class Conversion2Tests(unittest.TestCase):
     def test_it_reads_the_move_its_target_last_used(self):
         # Pokemon Central, Conversione2, from Generation V: the target's last
