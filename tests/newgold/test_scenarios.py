@@ -55,6 +55,33 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertTrue(scene.Scene.wanted("map", "MAP_ROUTE_29")[0](33))
 
 
+class RecordingTests(unittest.TestCase):
+    def test_a_run_records_its_frames_and_sound_to_an_mp4(self):
+        # Three seconds from the boot, recorded by core.py through ffmpeg:
+        # every frame there, both screens at twice their size, and a sound
+        # track as long as the picture. The clip goes with the directory.
+        import shutil
+        import tempfile
+        for needed in (ROM, CORE):
+            if not os.path.exists(needed):
+                self.skipTest(f"{needed} is not there")
+        if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
+            self.skipTest("ffmpeg is not installed")
+        with tempfile.TemporaryDirectory(prefix="newgold-record-") as temp:
+            clip = os.path.join(temp, "clip.mp4")
+            script = (f"import sys; sys.path.insert(0, {str(DIAG)!r}); import core; "
+                      f"c = core.Core({str(ROM)!r}, record={clip!r}); c.step(180); c.close()")
+            subprocess.run([sys.executable, "-c", script], check=True, capture_output=True, timeout=600)
+            probe = json.loads(subprocess.run(["ffprobe", "-v", "error", "-show_streams", "-of", "json", clip],
+                                              capture_output=True, text=True, check=True).stdout)
+            streams = {s["codec_type"]: s for s in probe["streams"]}
+            video, audio = streams["video"], streams["audio"]
+            self.assertEqual((video["codec_name"], video["width"], video["height"]), ("h264", 512, 768))
+            self.assertEqual(int(video["nb_frames"]), 180)
+            self.assertAlmostEqual(float(audio["duration"]), float(video["duration"]), delta=0.1)
+            self.assertEqual(audio["channels"], 2)
+
+
 class NavigatorTests(unittest.TestCase):
     """scene.py's goto plans from the tree's own map data; these read the plan
     without the emulator."""

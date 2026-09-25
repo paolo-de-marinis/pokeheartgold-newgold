@@ -16,16 +16,35 @@ like anything else.
     core.word(address)                   # one word of it, without copying the rest
     core.poke(address, value, width=4)   # write main RAM
     core.shot()                          # the next frame, both screens, as a PIL image
+    Core(rom, save=path, record="run.mp4")   # every frame and its sound, to an mp4
+
+Recording is off unless asked for, and costs nothing then: the audio the
+core hands over is dropped and no frame is copied. On, every frame the core
+draws (both screens, the top over the bottom) and the samples that came with
+it go down two pipes to ffmpeg, which writes H.264 at the DS's own frame rate
+(the core's, 59.83 per second) with the game's sound in AAC; close() finishes
+the file. A run records at roughly the speed it plays without recording.
+
+The sound is silence unless the core has the DS's own BIOS: without it this
+core (melonDS 0.9.3) runs its FreeBIOS, and the game's sound driver, set up
+and playing, mixes nothing -- measured, every sample zero through the intro
+and the title. A directory named by NEWGOLD_BIOS holding bios7.bin,
+bios9.bin and firmware.bin (dumps of one's own console; none is on this
+machine) is copied into the core's system directory for a recorded run only,
+so every other run keeps the FreeBIOS the harness has always had.
 
 A script calls pin_clock() first, before it does anything else.
 """
 import ctypes
 import hashlib
 import os
+import queue
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
 
 CORE = Path("/usr/lib/libretro/melonds_libretro.so")
@@ -85,6 +104,13 @@ def pin_clock(seconds=CLOCK):
                                               "LD_PRELOAD": f"{shim} {preload}".strip()})
 
 
+class AvInfo(ctypes.Structure):
+    # struct retro_system_av_info: its geometry, then its timing
+    _fields_ = [("base_width", ctypes.c_uint), ("base_height", ctypes.c_uint), ("max_width", ctypes.c_uint),
+                ("max_height", ctypes.c_uint), ("aspect", ctypes.c_float), ("fps", ctypes.c_double),
+                ("sample_rate", ctypes.c_double)]
+
+
 class GameInfo(ctypes.Structure):
     _fields_ = [("path", ctypes.c_char_p), ("data", ctypes.c_void_p), ("size", ctypes.c_size_t), ("meta", ctypes.c_char_p)]
 
@@ -94,17 +120,22 @@ class Variable(ctypes.Structure):
 
 
 class Core:
-    def __init__(self, rom, save=None):
+    def __init__(self, rom, save=None, record=None):
         self.dir = tempfile.mkdtemp(prefix="newgold-core-")
         self._dir = ctypes.c_char_p(self.dir.encode())
         if save:
             shutil.copyfile(save, Path(self.dir) / (Path(rom).stem + ".sav"))
+        if record and os.environ.get("NEWGOLD_BIOS"):
+            for name in ("bios7.bin", "bios9.bin", "firmware.bin"):
+                if (Path(os.environ["NEWGOLD_BIOS"]) / name).exists():
+                    shutil.copyfile(Path(os.environ["NEWGOLD_BIOS"]) / name, Path(self.dir) / name)
         self.buttons, self.touching, self.tx, self.ty = set(), False, 0, 0
         self.frames = 0
         self._grab, self._frame = False, None
+        self._ffmpeg, self._sound = None, None
         self.lib = ctypes.CDLL(str(CORE))
-        self._callbacks = [ENV(self._env), VIDEO(self._video), AUDIO(lambda l, r: None),
-                           AUDIO_BATCH(lambda d, n: n), POLL(lambda: None), STATE(self._input)]
+        self._callbacks = [ENV(self._env), VIDEO(self._video), AUDIO(self._sample),
+                           AUDIO_BATCH(self._samples), POLL(lambda: None), STATE(self._input)]
         env, video, audio, batch, poll, state = self._callbacks
         self.lib.retro_set_environment(env)
         self.lib.retro_set_video_refresh(video)
@@ -120,6 +151,66 @@ class Core:
             raise SystemExit("the core would not load the ROM")
         self.lib.retro_get_memory_data.restype = ctypes.c_void_p
         self.lib.retro_get_memory_size.restype = ctypes.c_size_t
+        if record:
+            self.record(record)
+
+    def record(self, path):
+        """From the next frame on, the picture and the sound to an mp4 at
+        `path`, through ffmpeg; close() finishes it."""
+        av = AvInfo()
+        self.lib.retro_get_system_av_info(ctypes.byref(av))
+        self._size = (av.base_width, av.base_height)
+        audio, into = os.pipe()
+        self._ffmpeg = subprocess.Popen(
+            ["ffmpeg", "-loglevel", "error", "-y",
+             "-probesize", "32", "-f", "rawvideo", "-pix_fmt", "bgr0", "-s", f"{av.base_width}x{av.base_height}",
+             "-framerate", f"{av.fps:.4f}", "-i", "pipe:0",
+             "-probesize", "32", "-f", "s16le", "-ar", str(int(av.sample_rate)), "-ac", "2", "-i", f"pipe:{audio}",
+             # twice the size, pixels kept square and sharp; the sound as it was made
+             "-vf", "scale=iw*2:ih*2:flags=neighbor", "-c:v", "libx264", "-preset", "veryfast",
+             "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", str(path)],
+            stdin=subprocess.PIPE, pass_fds=(audio,))
+        os.close(audio)
+        # The sound goes down its pipe from a thread of its own: ffmpeg reads
+        # its two inputs as it pleases -- the first frames of one while the
+        # other waits -- and one thread writing both blocked on the one
+        # ffmpeg was not reading, forever.
+        self._sound, self._sounds = bytearray(), queue.Queue()
+        sound_pipe = os.fdopen(into, "wb")
+
+        def pour():
+            for chunk in iter(self._sounds.get, None):
+                sound_pipe.write(chunk)
+                sound_pipe.flush()
+            sound_pipe.close()
+        self._pourer = threading.Thread(target=pour, daemon=True)
+        self._pourer.start()
+        self._grab = True
+
+    def _sample(self, left, right):
+        if self._sound is not None:
+            self._sound += struct.pack("<hh", left, right)
+
+    def _samples(self, data, frames):
+        if self._sound is not None:
+            self._sound += ctypes.string_at(data, frames * 4)
+        return frames
+
+    def _record(self):
+        if self._frame is not None:
+            data, width, height, pitch = self._frame
+            if pitch != width * 4:
+                data = b"".join(data[row * pitch:row * pitch + width * 4] for row in range(height))
+            self._ffmpeg.stdin.write(data)      # a frame the core did not draw repeats the last
+        self._sounds.put(bytes(self._sound))
+        self._sound.clear()
+
+    def _stop_recording(self):
+        self._ffmpeg.stdin.close()
+        self._sounds.put(None)
+        self._pourer.join()
+        self._ffmpeg.wait()
+        self._ffmpeg, self._sound, self._grab = None, None, False
 
     def _env(self, cmd, data):
         if cmd in (9, 31):  # system and save directory
@@ -165,6 +256,8 @@ class Core:
                 hook(self)
             self.lib.retro_run()
             self.frames += 1
+            if self._ffmpeg:
+                self._record()
 
     def press(self, button, frames=6, hooks=()):
         self.buttons = {BUTTONS[button]}
@@ -184,9 +277,9 @@ class Core:
     def shot(self, hooks=()):
         """The next frame the core draws: the top screen over the bottom one."""
         from PIL import Image
-        self._grab = True
+        recording, self._grab = self._grab, True
         self.step(1, hooks)
-        self._grab = False
+        self._grab = recording
         data, width, height, pitch = self._frame
         return Image.frombuffer("RGBX", (width, height), data, "raw", "BGRX", pitch, 1).convert("RGB")
 
@@ -212,6 +305,8 @@ class Core:
         return buffer.raw
 
     def close(self):
+        if self._ffmpeg:
+            self._stop_recording()
         self.lib.retro_unload_game()
         self.lib.retro_deinit()
         shutil.rmtree(self.dir, ignore_errors=True)

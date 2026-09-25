@@ -3,6 +3,7 @@
 
     scene.py SAVE OUT STEP... [--rom ROM] [--elf ELF]
     scene.py --scenario FILE [--out DIR] [--rom ROM] [--elf ELF]
+    ... --record RUN.mp4        either, filmed: every frame and its sound (core.py)
 
 A step is one of
     A, B, X, Y, START, SELECT, UP, DOWN, LEFT, RIGHT, L, R   a press, then 20 frames
@@ -268,12 +269,12 @@ class Scene:
     """A core running a save, with the switches it holds and every line the
     battle has printed since it started."""
 
-    def __init__(self, save, rom=ROM, elf=DIAG_ELF, out=None, say=None):
+    def __init__(self, save, rom=ROM, elf=DIAG_ELF, out=None, say=None, record=None):
         self.markers = Markers(elf)
         self.elf = Path(elf)
         self.out = Path(out) if out else None
         self.say = say or (lambda line: None)
-        self.core = Core(rom, save=save)
+        self.core = Core(rom, save=save, record=record)
         self.holds = {}
         self.hold("gDiagIgnoreCommunicationError", 1)
         self.lines, self._count = [], 0
@@ -617,7 +618,7 @@ class Scene:
         return wrong
 
 
-def scenario(path, rom=ROM, elf=DIAG_ELF, out=None):
+def scenario(path, rom=ROM, elf=DIAG_ELF, out=None, record=None):
     """Run one scenario file: (True, False, or None when it cannot run here;
     the report's lines)."""
     spec = json.loads(Path(path).read_text())
@@ -635,7 +636,7 @@ def scenario(path, rom=ROM, elf=DIAG_ELF, out=None):
             return False, [f"FAIL {Path(path).name}: savedit.py {' '.join(spec['edit'])}: "
                            + (edit.stderr.strip().splitlines() or ["failed"])[-1]]
     log, wrong, started = [], [], time.time()
-    scene = Scene(copy, rom, elf, out, say=log.append)
+    scene = Scene(copy, rom, elf, out, say=log.append, record=record)
     for name, value in spec.get("hold", {}).items():
         scene.hold(name, Scene.number(value))
     for step in spec["steps"]:
@@ -662,12 +663,13 @@ def main():
         parser = argparse.ArgumentParser()
         parser.add_argument("--scenario", type=Path, required=True)
         parser.add_argument("--out", type=Path)
+        parser.add_argument("--record", type=Path, help="the run, picture and sound, to this mp4 (core.py)")
         parser.add_argument("--rom", default=ROM)
         parser.add_argument("--elf", type=Path, default=DIAG_ELF)
         args = parser.parse_args()
         from gym import quiet
         out = quiet()
-        passed, report = scenario(args.scenario, args.rom, args.elf, args.out)
+        passed, report = scenario(args.scenario, args.rom, args.elf, args.out, args.record)
         print("\n".join(report), file=out)
         sys.exit(1 if passed is False else 0)
     parser = argparse.ArgumentParser()
@@ -676,9 +678,10 @@ def main():
     parser.add_argument("steps", nargs="+")
     parser.add_argument("--rom", default=ROM)
     parser.add_argument("--elf", type=Path, default=DIAG_ELF)
+    parser.add_argument("--record", type=Path, help="the run, picture and sound, to this mp4 (core.py)")
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
-    scene = Scene(args.save, args.rom, args.elf, args.out, say=print)
+    scene = Scene(args.save, args.rom, args.elf, args.out, say=print, record=args.record)
     for step in args.steps:
         scene.run(step)
     print(scene.markers.describe(scene.core.ram()))

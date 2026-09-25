@@ -374,6 +374,11 @@ Reading what the debug ROM records, and playing it without looking.
   Python the core reads the C library's clock: `pin_clock()`, first thing in
   a script, runs it again with a `time()` preloaded that answers the same
   second as the harness's.
+  `Core(rom, record="run.mp4")` (scene.py's `--record`) films the run:
+  every frame, both screens, and the sound the core mixed, piped to ffmpeg
+  at the core's frame rate. Off by default; it is silence unless the core
+  gets the DS BIOS (`NEWGOLD_BIOS`, a directory with bios7.bin, bios9.bin
+  and firmware.bin), since this core's FreeBIOS mixes nothing.
 - `gym.py SAVE` -- fights what the save stands the player in front of,
   through the game's own menus, and reports the battle as text: every line
   it printed, the battlers each turn, what the trainer's AI spent, what
