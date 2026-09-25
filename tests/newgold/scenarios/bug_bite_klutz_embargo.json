@@ -1,0 +1,19 @@
+{
+  "about": "Bug Bite and Pluck feed their user the Berry they steal under Klutz and under Embargo (6ecec8f6d: before, the Berry was eaten for nothing). A level-10 Chansey at 5 HP, whose low Attack leaves the target above the half where it would eat its own Berry, is given Bug Bite and Pluck in the running battle (teach:) against a forced wild level-5 Chansey that knows only Embargo and holds an Oran Berry (set:). With Klutz, Bug Bite eats the Berry and heals 10; then, its own ability back, under the Embargo the wild Chansey laid, Pluck eats another and heals 10 again. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CHANSEY:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_BUG_BITE", "teach:0,1,MOVE_PLUCK",
+            "teach:1,0,MOVE_EMBARGO", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:0,ability,ABILITY_KLUTZ", "set:1,item,ITEM_ORAN_BERRY", "set:0,hp,5", "fight:1:1",
+            {"expect": {"lines": ["Chansey used Bug Bite!", "Chansey stole and ate its target’s Oran Berry!",
+                                  "Chansey restored its health using its Oran Berry!",
+                                  "The wild Chansey used Embargo!", "Chansey can’t use items anymore!"],
+                        "battler0.hp": 15, "battler1.item": 0}},
+            "set:0,ability,ABILITY_NATURAL_CURE", "set:1,item,ITEM_ORAN_BERRY", "set:1,hp,40", "set:0,hp,5", "fight:2:1"],
+  "expect": {"lines": ["Chansey used Pluck!", "Chansey stole and ate its target’s Oran Berry!",
+                       "Chansey restored its health using its Oran Berry!"],
+             "no_lines": ["The wild Chansey restored its health"],
+             "battler0.hp": 15, "battler1.item": 0}
+}
