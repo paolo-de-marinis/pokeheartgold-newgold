@@ -8998,9 +8998,12 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
         // (Pokemon Central, Forzabruta), which the reference does not ask.
         // Nor a Bug Bite or Pluck, whose user eats the Berry first and has
         // its Defense raised instead, unless Sticky Hold keeps it
-        // (Baccalighia; TryEatOpponentBerry, once the move is over).
+        // (Baccalighia; TryEatOpponentBerry, once the move is over), or
+        // Rough Skin, Iron Barbs or the like has felled the user already, the
+        // Berry left uneaten (Coleomorso).
         ret = ItemRaisesStatOnHit(ctx, physical && !SheerForceTradedEffect(ctx)
                 && !(BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_EAT_BERRY
+                    && ctx->battleMons[ctx->battlerIdAttacker].hp
                     && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) != TRUE),
             STAT_DEF, script);
         break;

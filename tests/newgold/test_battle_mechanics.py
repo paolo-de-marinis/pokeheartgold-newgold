@@ -119,6 +119,15 @@ class EatenBerryTests(unittest.TestCase):
         kee = kee[:kee.index("break;")]
         self.assertIn("->effect == MOVE_EFFECT_EAT_BERRY", kee)
         self.assertIn("ABILITY_STICKY_HOLD) != TRUE", kee)
+        # A user Rough Skin or Iron Barbs has felled, asked before this
+        # (ov12_0224CAA4, controller command 29), eats nothing: the Berry
+        # answers the hit (Coleomorso).
+        self.assertIn("MOVE_EFFECT_EAT_BERRY\n                    && ctx->battleMons[ctx->battlerIdAttacker].hp\n", kee)
+        controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
+        abilities = function(controller, "ov12_0224CAA4")
+        self.assertIn("CheckAbilityEffectOnHit(battleSystem, ctx, &script)", abilities)
+        self.assertTrue(abilities.rstrip().endswith("ctx->command = CONTROLLER_COMMAND_31;\n}"))
+        self.assertIn("CheckItemEffectOnHit(battleSystem, ctx, &script)", function(controller, "ov12_0224CC88"))
 
 
 class PluckKlutzTests(unittest.TestCase):
