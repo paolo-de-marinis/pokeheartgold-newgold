@@ -278,6 +278,19 @@ class BuildRuleTests(unittest.TestCase):
         .d was Pascal source to it, and a way to remake the .d."""
         self.assertRegex(database(), r"(?m)^\.SUFFIXES:[ \t]*$")
 
+    def test_a_missing_linker_template_is_copied_from_the_sdk(self):
+        """The three linker templates are the NitroSDK's own, git-ignored, and
+        no rule made them: a fresh checkout or a git archive of a commit
+        stopped on "No rule to make target ARM9-TS.lcf.template". Each is
+        copied from the SDK NITROSDK names when it is missing; sub's makefile
+        has the ARM7's."""
+        response = re.search(r"^RESPONSE_TEMPLATE := (.*)$", database(), re.M).group(1)
+        for directory, target in (((), "ARM9-TS.lcf.template"), ((), response), (("-C", "sub"), "ARM7-TS.lcf.template")):
+            with self.subTest(target):
+                result = run_make(*directory, "-n", "-B", "NITROSDK=/the/sdk", target)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn(f'cp "/the/sdk/include/nitro/specfiles/{Path(target).name}" {target}.', result.stdout)
+
     # Each archive of numbered members: its index, the name the index gives
     # a member, and the sources in the folder that make the members.
     NUMBERED_ARCHIVES = [

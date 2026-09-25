@@ -15,14 +15,18 @@ one that takes arguments prints its usage without them.
     git worktree add ~/hgss-worktrees/battle -b r9-battle newgold
     cd ~/hgss-worktrees/battle
     ln -s ~/hgss-newgold/tools/mwccarm ~/hgss-newgold/tools/bin tools/
-    for f in ARM9-TS.lcf.template mwldarm.response.template sub/ARM7-TS.lcf.template; do
-        cp ~/hgss-newgold/$f $f; done
 
 The compiler and the prebuilt tools (`tools/mwccarm`, `tools/bin`) are
 untracked in the main tree -- not ignored: the links show as `??`, so never
-`git add -A` in a worktree, stage files by name -- and the linker templates
-are copies, so a worktree needs them from the main tree. `build_at.sh` builds a
-fresh worktree, host tools first.
+`git add -A` in a worktree, stage files by name. The linker templates
+(`ARM9-TS.lcf.template`, `mwldarm.response.template`,
+`sub/ARM7-TS.lcf.template`) are the NitroSDK's and not tracked either: the
+build copies each from `$NITROSDK/include/nitro/specfiles` the first time it
+wants it, so NITROSDK has to name the SDK
+(`~/hgss-build/deps/extract/NitroSDK-3_2-060901` here; env.sh is the place
+to export it) -- or copy the three from the main tree as before. A git
+archive of a commit builds the same way. `build_at.sh` builds a fresh
+worktree, host tools first.
 
 **BASE** below is the newgold commit the round's branches started from.
 

@@ -255,6 +255,15 @@ endif
 RESPONSE_TEMPLATE    := $(PROJECT_ROOT)/mwldarm.response.template
 RESPONSE_TEMPLATE_NT := $(PROJECT_ROOT_NT)/mwldarm.response.template
 
+# The linker's templates are the NitroSDK's own, as tools/bin is, and not the
+# tree's to publish: one that is missing is copied from the SDK's
+# include/nitro/specfiles, NITROSDK naming the SDK's folder. Without the rule
+# a fresh checkout stopped on "No rule to make target". This makefile and
+# sub's can both want the response template at once: a copy lands whole.
+$(LCF_TEMPLATE) $(RESPONSE_TEMPLATE):
+	@test -f "$(NITROSDK)/include/nitro/specfiles/$(@F)" || { echo "$@ is missing: it is the NitroSDK's include/nitro/specfiles/$(@F); copy it here, or set NITROSDK to the SDK's folder" >&2; exit 1; }
+	cp "$(NITROSDK)/include/nitro/specfiles/$(@F)" $@.$$$$ && mv $@.$$$$ $@
+
 $(RESPONSE): $(LSF) $(RESPONSE_TEMPLATE)
 	$(WINE) $(MAKELCF) $(MAKELCF_FLAGS) $< $(RESPONSE_TEMPLATE_NT) $@
 
