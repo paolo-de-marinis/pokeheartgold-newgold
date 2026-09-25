@@ -3763,11 +3763,11 @@
         },
         {
           "type": "TRMSG_LOSE",
-          "message": "No!\\nOh, MEOWTH, I\u2019m so sorry!\\n"
+          "message": "No!\\nOh, PERSIAN, I\u2019m so sorry!\\n"
         },
         {
           "type": "TRMSG_AFTER",
-          "message": "I taught MEOWTH moves for taking\\non any type...\\n"
+          "message": "I taught PERSIAN moves for taking\\non any type...\\n"
         }
       ]
     },

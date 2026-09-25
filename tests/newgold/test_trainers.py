@@ -397,6 +397,21 @@ class TrainerTests(unittest.TestCase):
             self.assertIn((index, 4), rows)       # TRMSG_DBL_LOSE_1
             self.assertNotIn((index, 1), rows)    # TRMSG_LOSE
 
+    def test_samantha_s_lines_name_her_persian(self):
+        """konefr's eb4e20f17 made Beauty Samantha #70's Meowth a Persian with
+        the same moves and her other Meowth a Wigglytuff; her retail lines,
+        which he left alone, still said MEOWTH. Here they name the Persian;
+        the engine layer's, whose party is two Meowth, keep MEOWTH."""
+        samantha = self.trainers[70]
+        self.assertEqual([m["species"] for m in samantha["party"]], ["SPECIES_PERSIAN", "SPECIES_WIGGLYTUFF"])
+        lines = [m["message"] for m in samantha["messages"]]
+        self.assertEqual(lines[1:], ["No!\\nOh, PERSIAN, I’m so sorry!\\n",
+                                     "I taught PERSIAN moves for taking\\non any type...\\n"])
+        self.assertIn("No!\\nOh, PERSIAN, I’m so sorry!\\n", [row["text"] for row in gmm.read(728)])
+        if REFERENCE is not None:
+            engine = [text for trainer, _, text in import_trainer_text.generate(gmm.ENGINE)[1] if trainer == 70]
+            self.assertIn("I taught MEOWTH moves for taking\\non any type...\\n", engine)
+
     def test_a_party_entry_can_name_every_species(self):
         """The species field is 11 bits of species and 5 of form, hg-engine's
         split. Platinum's was 10 and 6, which wrapped every species from 1024

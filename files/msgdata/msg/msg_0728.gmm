@@ -658,11 +658,11 @@
 	</row>
 	<row id="msg_0728_00164" index="164">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">No!\nOh, MEOWTH, I’m so sorry!\n</language>
+		<language name="English">No!\nOh, PERSIAN, I’m so sorry!\n</language>
 	</row>
 	<row id="msg_0728_00165" index="165">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">I taught MEOWTH moves for taking\non any type...\n</language>
+		<language name="English">I taught PERSIAN moves for taking\non any type...\n</language>
 	</row>
 	<row id="msg_0728_00166" index="166">
 		<attribute name="window_context_name">used</attribute>

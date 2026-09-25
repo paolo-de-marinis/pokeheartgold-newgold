@@ -39,6 +39,14 @@ TRTBLOFS = gmm.ROOT / "files/poketool/trmsg/trtblofs.narc"
 LITERAL = r'"((?:[^"\\]|\\.)*)"'
 STRING = r'((?:"(?:[^"\\]|\\.)*"\s*)+)'
 
+# konefr's lines that name a Pokemon he took out of the party, corrected
+# while the party still says so (Paolo, 2026-09-25: a plain konefr error is
+# fixed and stays in KONEFR-NOTES.md). eb4e20f17 made Beauty Samantha #70's
+# Meowth a Persian with the same slot and moves (and her other Meowth a
+# Wigglytuff); her retail lines, which he did not touch, still mourn and
+# praise MEOWTH. KONEFR-NOTES.md, Allenatori.
+STALE_NAMES = {70: ("MEOWTH", "PERSIAN")}
+
 
 def c_string(literals):
     """The value of adjacent C literals ("a\\n" "b" is one string). Trainers.c
@@ -85,6 +93,10 @@ def generate(revision):
                 and "TRMSG_LOSE" in kinds and "TRMSG_DBL_LOSE_1" not in kinds):
             texts[index] = [("TRMSG_DBL_LOSE_1" if kind == "TRMSG_LOSE" else kind, text)
                             for kind, text in texts[index]]
+    for index, (old, new) in STALE_NAMES.items():
+        party = set(re.findall(r"\bSPECIES_\w+", trainers[index]))
+        if f"SPECIES_{new}" in party and f"SPECIES_{old}" not in party:
+            texts[index] = [(kind, text.replace(old, new)) for kind, text in texts[index]]
 
     rows, trtbl, offsets = [], b"", [0] * len(trainers)
     for trainer in order:
