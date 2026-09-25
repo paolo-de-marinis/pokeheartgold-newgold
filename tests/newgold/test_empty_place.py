@@ -272,6 +272,62 @@ int main(void) {
     return 0;
 }
 """
+FLOWER_VEIL = r"""
+#include "constants/abilities.h"
+typedef struct { s32 hp; u16 ability; u8 type1, type2, type3; } BattleMon;
+typedef struct {
+    BattleMon battleMons[4];
+    int battlerIdAttacker, battlerIdStatChange;
+    u8 selectedMonIndex[4];
+    u8 switchInFlag;
+} BattleContext;
+static int GetBattlerVar(BattleContext *ctx, int battlerId, int id, void *data) {
+    (void)data;
+    switch (id) {
+    case BMON_DATA_TYPE_1: return ctx->battleMons[battlerId].type1;
+    case BMON_DATA_TYPE_2: return ctx->battleMons[battlerId].type2;
+    case BMON_DATA_TYPE_3: return ctx->battleMons[battlerId].type3;
+    }
+    assert(0);
+    return 0;
+}
+static int BattleSystem_GetBattlerIdPartner(BattleSystem *bs, int battlerId) { (void)bs; return sMaxBattlers == 4 ? battlerId ^ 2 : battlerId; }
+static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int ability) {
+    (void)battlerIdAttacker;
+    return ctx->battleMons[battlerIdTarget].ability == ability;
+}
+// The lines of BtlCmd_ChangeStatStage that find who, if anyone, holds a
+// Flower Veil over the Pokemon whose stat is to fall; the message that
+// follows names that holder.
+static int FlowerVeilHolder(BattleSystem *battleSystem, BattleContext *ctx) {
+@FLOWER_VEIL@
+    return flowerVeilHolder;
+}
+
+int main(void) {
+    static BattleContext ctx;
+
+    // Intimidate from the other side at a Grass type in 1, a Comfey with
+    // Flower Veil beside it in 3.
+    ctx.battlerIdAttacker = 0;
+    ctx.battlerIdStatChange = 1;
+    ctx.battleMons[1] = (BattleMon){ 40, ABILITY_OVERGROW, TYPE_GRASS, TYPE_GRASS, TYPE_NONE };
+    ctx.battleMons[3] = (BattleMon){ 40, ABILITY_FLOWER_VEIL, TYPE_FAIRY, TYPE_FAIRY, TYPE_NONE };
+    assert(FlowerVeilHolder(0, &ctx) == 3);
+
+    // The Comfey has fainted with nothing to follow it: its place is empty,
+    // and its ability, still in battleMons, shelters nobody.
+    ctx.battleMons[3].hp = 0;
+    ctx.switchInFlag |= MaskOfFlagNo(3);
+    ctx.selectedMonIndex[3] = 6;
+    assert(FlowerVeilHolder(0, &ctx) == -1);
+
+    // Its own Flower Veil still counts.
+    ctx.battleMons[1].ability = ABILITY_FLOWER_VEIL;
+    assert(FlowerVeilHolder(0, &ctx) == 1);
+    return 0;
+}
+"""
 
 
 class EmptyPlaceTests(unittest.TestCase):
@@ -286,6 +342,12 @@ class EmptyPlaceTests(unittest.TestCase):
 
     def test_a_paradox_boost_ends_without_a_word_for_the_fallen(self):
         run(self, PARADOX, ("BtlCmd_ResetParadoxAbility",))
+
+    def test_a_fallen_ally_s_flower_veil_shelters_nobody(self):
+        body = function(COMMANDS, "BtlCmd_ChangeStatStage")
+        start = body.index("                int flowerVeilHolder = -1;")
+        lines = body[start:body.index("                // Mist.", start)]
+        run(self, FLOWER_VEIL.replace("@FLOWER_VEIL@", lines), ())
 
 
 if __name__ == "__main__":

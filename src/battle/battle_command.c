@@ -2650,12 +2650,15 @@ BOOL BtlCmd_ChangeStatStage(BattleSystem *battleSystem, BattleContext *ctx) {
                 // Flower Veil shelters the Grass types on its own side. Each
                 // slot is asked separately rather than through CheckAbilityActive
                 // so that Mold Breaker can put out one flower and not the other.
+                // An ally shelters only while it stands: a fainted one keeps
+                // its ability in battleMons, and in a place left empty the
+                // line naming it would read party slot 6.
                 int flowerVeilHolder = -1;
                 if (GetBattlerVar(ctx, ctx->battlerIdStatChange, BMON_DATA_TYPE_1, NULL) == TYPE_GRASS || GetBattlerVar(ctx, ctx->battlerIdStatChange, BMON_DATA_TYPE_2, NULL) == TYPE_GRASS || GetBattlerVar(ctx, ctx->battlerIdStatChange, BMON_DATA_TYPE_3, NULL) == TYPE_GRASS) {
                     int ally = BattleSystem_GetBattlerIdPartner(battleSystem, ctx->battlerIdStatChange);
                     if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdStatChange, ABILITY_FLOWER_VEIL) == TRUE) {
                         flowerVeilHolder = ctx->battlerIdStatChange;
-                    } else if (ally != ctx->battlerIdStatChange && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ally, ABILITY_FLOWER_VEIL) == TRUE) {
+                    } else if (ally != ctx->battlerIdStatChange && ctx->battleMons[ally].hp && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ally, ABILITY_FLOWER_VEIL) == TRUE) {
                         flowerVeilHolder = ally;
                     }
                 }
