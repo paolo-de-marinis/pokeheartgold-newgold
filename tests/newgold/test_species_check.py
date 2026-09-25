@@ -49,6 +49,40 @@ class SpeciesCheckTests(unittest.TestCase):
         self.assertTrue(text["entry"].startswith("The seed on its back"))
 
 
+    def test_a_battle_is_judged_by_both_its_pictures(self):
+        # The foe's front and the leader's back, drawn where a battle draws
+        # them -- the back in the front's palette, as the game loads it --
+        # score full; a black frame scores next to nothing (the outlines),
+        # and the back in the PNG's own palette does not pass.
+        from PIL import Image
+        e = next(x for x in species.entries() if x["species"] == sv.species_numbers()["LILLIPUP"])
+        fronts, front, back = species.battle_pictures(e)
+        palette = Image.open(front).getpalette()
+
+        def frame(back_palette):
+            screen = Image.new("RGB", (256, 384), (90, 90, 120))
+            for png, at, pal in ((fronts[0], (species.BATTLE_FRONT[0], species.BATTLE_FRONT[1] + 6), palette),
+                                 (back, (species.BATTLE_BACK[0], species.BATTLE_BACK[1] - 10), back_palette)):
+                picture = Image.open(png)
+                picture.putpalette(pal)
+                cell = picture.crop((0, 0, 80, 80))
+                opaque = Image.frombytes("L", cell.size, bytes(255 if i else 0 for i in cell.tobytes()))
+                screen.paste(cell.convert("RGB"), at, opaque)
+            return screen
+
+        self.assertEqual(species.battle_scores(frame(palette), e), (1.0, 1.0))
+        self.assertLess(max(species.battle_scores(Image.new("RGB", (256, 384)), e)), 0.1)
+        self.assertLess(species.battle_scores(frame(Image.open(back).getpalette()), e)[1], species.PASS)
+
+    def test_the_added_sample_is_every_species_past_arceus_and_every_form_group(self):
+        n = sv.species_numbers()
+        picked = {(e["species"], e["form"]) for e in species.added(species.entries())}
+        self.assertEqual({s for s, _ in picked if s > n["ARCEUS"]}, set(range(n["ARCEUS"] + 1, max(n.values()) + 1))
+                         - set(range(n["EGG"], n["ROTOM_MOW"] + 1)))
+        for name, (count, _) in species.form_species().items():
+            self.assertEqual({f for s, f in picked if s == n[name]}, set(range(count)), name)
+        self.assertNotIn(n["BULBASAUR"], {s for s, _ in picked})
+
     def test_forms_lists_what_the_dex_lists(self):
         n = sv.species_numbers()
         self.assertEqual(species.forms_entries(n["BULBASAUR"]), [("gender", 0), ("gender", 1)])

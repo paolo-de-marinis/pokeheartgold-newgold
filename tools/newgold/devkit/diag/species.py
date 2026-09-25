@@ -2,7 +2,7 @@
 """Every species and form through the screens that load its pictures, its cry,
 its name and its ability, in the headless harness, and a report of what failed.
 
-    species.py OUT [--walk pc,dex,details,battle] [--jobs N] [--only SPECIES,...]
+    species.py OUT [--walk pc,dex,details,battle] [--jobs N] [--only SPECIES,...|added]
 
 The ROM is the NEWGOLD_DIAG=1 HeartGold build. What each walk does:
 
@@ -30,10 +30,21 @@ The ROM is the NEWGOLD_DIAG=1 HeartGold build. What each walk does:
   battle  A wild battle for every species and form, and one more for every
           ability none of those has: the variant leads the party, the wild
           one is its species (form 0, as the switch makes it), until both
-          are out and the game asks for a command. A
-          battle is judged by its markers, written when the harness drew
-          none: the state, the battlers, the cries, asserts and failed
-          allocations.
+          are out and the game asks for a command. A battle is judged by
+          its markers -- the state, the battlers, the cries, asserts and
+          failed allocations -- and by the frame core.shot() draws there:
+          the wild one's front picture (form 0, either gender's PNG) and
+          the leader's back picture, drawn with the front's palette as the
+          game draws it, each against its PNG -- in form 0 for the form
+          groups the battle puts back in it (BATTLE_FORM_ZERO). The frame is
+          kept in OUT/battle/.
+
+--only added is the sample the round-11 rerun of the battle walk used:
+every species and form past Arceus -- each added species and each form
+kept as a species of its own -- and every form of the retail species whose
+forms are drawn from otherpoke.narc (form_species), one battle each, so
+every added species' front and back pictures and every form group's are
+drawn in a battle.
 
 A picture passes when at least 90% of the PNG's opaque pixels are on the
 screen in the PNG's colours, at the best of a few positions and both frames.
@@ -123,6 +134,19 @@ SKY_SHAYMIN_CRY = 0x1EE
 # one row per species.
 DEX_CATEGORIES, DEX_ENTRIES = 816, 803
 ABILITY_TEXT = 722   # the descriptions sub_0208D178 prints
+# A wild battle at the command prompt, measured on Bulbasaur: the foe's front
+# picture and the leader's back one, each as high as the species' height says
+# (the leader's bobs a pixel either way). The player's HP box covers the foe
+# below row 95, the message box the leader below row 144.
+BATTLE_FRONT, BATTLE_BACK = (152, 33), (23, 90)
+BATTLE_ROWS = range(-45, 46)
+BATTLE_LEAST = 0.4   # of a picture's pixels, in the box at the place it is scored
+# The form groups a battle puts back in form 0 with nothing to hold them in
+# another: Arceus with no Plate, Giratina with no Griseous Orb ("Giratina
+# transformed!"), Cherrim out of the sun, Shaymin's Sky Forme at night, which
+# the harness's pinned clock (core.CLOCK, 22:13) is.
+BATTLE_FORM_ZERO = {"ARCEUS", "GIRATINA", "CHERRIM", "SHAYMIN"}
+BATTLE_FRONT_CLIP, BATTLE_BACK_CLIP = (0, 0, 256, 95), (0, 0, 256, 144)
 BATTLE_MAIN, EXIT = STATES.index("BATTLE_MAIN"), STATES.index("EXIT")
 RUN = (128, 170)   # the bottom screen's RUN, under FIGHT (gym.py)
 
@@ -330,9 +354,11 @@ def _close(a, b):
     return all(abs((p >> 3) - (q >> 3)) <= 1 for p, q in zip(a, b))
 
 
-def _score(px, size, pixels, ox, oy, step=1, clip=None):
+def _score(px, size, pixels, ox, oy, step=1, clip=None, least=0):
     """The share of the picture's pixels at (ox, oy) the screen shows; with
-    a clip box, of those that fall inside it (a window cuts the rest off)."""
+    a clip box, of those that fall inside it (a window cuts the rest off),
+    and nothing where less than `least` of them does -- a place that leaves
+    a few pixels in the box would match on the background by chance."""
     hit = n = 0
     x0, y0, x1, y1 = clip or (0, 0, size[0], size[1])
     for x, y, c in pixels[::step]:
@@ -342,18 +368,18 @@ def _score(px, size, pixels, ox, oy, step=1, clip=None):
         n += 1
         if inside and _close(px[ox + x, oy + y], c):
             hit += 1
-    return hit / n if n else 0.0
+    return hit / n if n and n >= least * len(pixels[::step]) else 0.0
 
 
-def match(screen, frames, at, spread, clip=None, rows=None):
+def match(screen, frames, at, spread, clip=None, rows=None, least=0):
     """How much of the picture is on the screen near `at`: the best of both
     frames over a small square of positions (or `rows` of heights), a coarse
     pass and then a full one."""
     px, size = screen.load(), screen.size
     places = [(at[0] + dx, at[1] + dy) for dx in range(-spread, spread + 1) for dy in rows or range(-spread, spread + 1)]
-    coarse = sorted(((_score(px, size, f, x, y, 5, clip), i, x, y) for i, f in enumerate(frames) for x, y in places),
-                    reverse=True)[:3]
-    return max(_score(px, size, frames[i], x, y, 1, clip) for _, i, x, y in coarse)
+    coarse = sorted(((_score(px, size, f, x, y, 5, clip, least), i, x, y) for i, f in enumerate(frames)
+                     for x, y in places), reverse=True)[:3]
+    return max(_score(px, size, frames[i], x, y, 1, clip, least) for _, i, x, y in coarse)
 
 
 def region(image, box, keep=None):
@@ -812,9 +838,45 @@ def dex_details(job):
     return records
 
 
+def added(wanted):
+    """--only added: every entry past Arceus, and every form of a retail
+    species whose forms are drawn from otherpoke.narc."""
+    numbers = savedit.species_numbers()
+    groups = {numbers[name] for name in form_species()}
+    return [e for e in wanted if e["species"] > numbers["ARCEUS"] or e["species"] in groups]
+
+
+def battle_pictures(e):
+    """The PNGs a battle should draw for an entry: the wild one's fronts --
+    form 0, and its gender is the game's to pick, so each gender's picture
+    the species has (a female species' own, PicSpecies_FemaleForm) -- and
+    the leader's back, with the palette of its front, the one the game loads."""
+    form0 = dict(e, form=0)
+    const = next(k for k, v in savedit.species_numbers().items() if v == e["species"])
+    if const in form_species():
+        fronts = [sprite_png(form0)]
+        front = sprite_png(form0 if const in BATTLE_FORM_ZERO else e)
+        back = front.with_name("back.png")
+    else:
+        fronts = [forms_pictures(e["species"], ("gender", g))[0] for g in (0, 1)]
+        front, back = forms_pictures(e["species"], ("gender", e["gender"]))
+    return list(dict.fromkeys(fronts)), front, back
+
+
+def battle_scores(screen, e):
+    """How well the foe's front and the leader's back match their PNGs."""
+    fronts, front, back = battle_pictures(e)
+    top = screen.crop((0, 0, 256, 192))
+    foe = max(match(top, _frames(png, 80), BATTLE_FRONT, 2, BATTLE_FRONT_CLIP, BATTLE_ROWS, BATTLE_LEAST)
+              for png in fronts)
+    lead = match(top, _frames(back, 80, tuple(_palette_of(front))), BATTLE_BACK, 2, BATTLE_BACK_CLIP, BATTLE_ROWS,
+                 BATTLE_LEAST)
+    return foe, lead
+
+
 def battle(job):
     """One species against itself: it leads the party and the wild battle
-    is against it, until the game asks for a command."""
+    is against it, until the game asks for a command; then the pictures."""
     n, out = job
     quiet()
     e = {x["n"]: x for x in entries()}[n]
@@ -843,6 +905,11 @@ def battle(job):
             state, prompt = game.read("gDiagBattleState"), game.read("gDiagBattlePrompt")
             if state == BATTLE_MAIN and prompt in (1, 2) or state == EXIT:
                 break
+        if state == BATTLE_MAIN:
+            screen, _ = game.still(lambda image: min(battle_scores(image, e)))
+            record["score"], record["back"] = battle_scores(screen, e)
+            (out / "battle").mkdir(exist_ok=True)
+            screen.save(out / "battle" / f"{n}.png")
         now = game.counters()
         view = game.markers.battle(game.core.ram())
         record.update(state=STATES[state] if state < len(STATES) else state, prompt=prompt, battlers=view,
@@ -1037,7 +1104,9 @@ def main():
     results = out / "results.jsonl"
     if not args.report:
         wanted = entries()
-        if args.only:
+        if args.only == "added":
+            wanted = added(wanted)
+        elif args.only:
             numbers = savedit.species_numbers()
             pick = {int(s) if s.isdigit() else numbers[s.upper()] for s in args.only.split(",")}
             wanted = [e for e in wanted if e["species"] in pick]
