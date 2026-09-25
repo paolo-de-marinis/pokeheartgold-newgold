@@ -23,7 +23,7 @@ $(MSGDATA_MSG_DIR).narc: %.narc: $(MSGFILE_BIN)
 #$(MSGDATA_MSG_DIR)/msg_0729.bin: $(TRNAME_GMM)
 
 $(MSGFILE_BIN): MSGENCFLAGS = -e -c charmap.txt --gmm -H $*.h
-$(MSGFILE_BIN): %.bin: %.gmm charmap.txt | $(BUILT_GMMS)
+$(MSGFILE_BIN): %.bin: %.gmm charmap.txt $(MSGENC) | $(BUILT_GMMS)
 	$(MSGENC) $(MSGENCFLAGS) $< $@
 
 $(MSGFILE_H): %.h: %.bin

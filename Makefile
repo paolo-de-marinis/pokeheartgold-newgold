@@ -88,7 +88,7 @@ libsyscall: files_for_compile
 # The link writes component.files before it has written the ELF, so the
 # compressed module follows the ELF: as older than it, component.files was
 # taken for remade by make -n every time.
-$(SBIN_LZ): $(BUILD_DIR)/component.files $(ELF)
+$(SBIN_LZ): $(BUILD_DIR)/component.files $(ELF) $(COMPSTATIC)
 	$(COMPSTATIC) -9 -c -f $<
 
 $(BUILD_DIR)/component.files: | main ;
@@ -104,7 +104,7 @@ $(SUB_FILES): sub ; +
 ifeq ($(COMPARE),1)
 $(ELF) $(ROM): FORCE
 endif
-$(ROM): $(ROMSPEC) $(HEADER_TEMPLATE) $(BANNER) $(SBIN_LZ) $(SUB_FILES) $(NITROFS_FILES) | filesystem
+$(ROM): $(ROMSPEC) $(HEADER_TEMPLATE) $(BANNER) $(SBIN_LZ) $(SUB_FILES) $(NITROFS_FILES) $(FIXROM) | filesystem
 	$(WINE) $(MAKEROM) $(MAKEROM_FLAGS) -DBUILD_DIR=$(BUILD_DIR) -DNITROFS_FILES="$(NITROFS_FILES:files/%=%)" -DTITLE_NAME="$(TITLE_NAME)" -DBNR="$(BANNER)" -DHEADER_TEMPLATE="$(HEADER_TEMPLATE)" $< $@
 	$(FIXROM) $@ --secure-crc $(SECURE_CRC) --game-code $(GAME_CODE)
 ifeq ($(COMPARE),1)

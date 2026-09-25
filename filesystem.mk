@@ -507,7 +507,7 @@ define numbered_narc
 $(2)/.narcorder: FORCE
 	+@printf '%s\n' $(notdir $(3)) | LC_ALL=C sort -V >$$@.new
 	+@if cmp -s $$@.new $$@; then rm $$@.new; else mv $$@.new $$@; fi
-$(1): $(2)/.narcorder $(3)
+$(1): $(2)/.narcorder $(3) $(NARC)
 	$$(NARC) -cf $$@ --index-namespace -E '*' $(2)
 endef
 FORCE:
@@ -586,7 +586,9 @@ include files/arc/safari_enc.mk
 # changed where o2narc puts each member, and the Dex archives it had already
 # built kept the old layout until they were deleted by hand. The same for
 # jsonproc, which writes the source each of them, and each of the second
-# list, is assembled or compiled from.
+# list, is assembled or compiled from. And for every other tool the tree
+# builds: each rule that runs msgenc, nitrogfx, nitroarc or csv2bin lists it
+# beside its sources, as the module lists compstatic and the ROM fixrom.
 $(ZUKAN_DATA_NARC) $(ZUKAN_ENC_NARC) $(PPARK_NARC) $(SAFARI_ENC_NARC) $(HEADBUTT_NARC) \
 	$(PHOTO_DATA_NARC) $(DATA_RESDAT_BIN) $(ENCDATA_NARCS) $(EVO_NARC) $(PERSONAL_NARC) \
 	$(TRDATA_NARC) $(TRPOKE_NARC): $(O2NARC) $(JSONPROC)
@@ -600,7 +602,10 @@ include graphics_files_rules.mk
 NTR_FILE_EXT := bin NCGR NCLR NCER NSCR NSBMD NSBCA NSBTA
 
 %.narc: NARC_DEPS = $(foreach ext,$(NTR_FILE_EXT),$(wildcard $*/*.$ext))
-%.narc: $(NARC_DEPS)
+# nitroarc packs the folder beside the archive. An archive with no folder
+# (height.narc, waza_tbl.narc) is a source the tree holds, and a newer
+# nitroarc has nothing to pack it from.
+%.narc: $(NARC_DEPS) $$(if $$(wildcard $$*/),$$(NARC))
 	$(NARC) -cf $@ --index-namespace $*
 %.naix: %.narc
 # nitroarc writes an archive's index beside it, so a .naix a dependency file

@@ -17,18 +17,18 @@ POKE_ICON_CELL_OBJS := $(patsubst $(POKE_ICON_DIR)/%.json,$(POKE_ICON_DIR)/%.NCE
 POKE_ICON_ICON_FILES := $(wildcard $(POKE_ICON_DIR)/*.png)
 POKE_ICON_ICON_OBJS := $(patsubst $(POKE_ICON_DIR)/%.png,$(POKE_ICON_DIR)/%.NCGR,$(POKE_ICON_ICON_FILES))
 
-$(POKE_ICON_DIR)/%.NCLR: $(POKE_ICON_DIR)/%.pal
+$(POKE_ICON_DIR)/%.NCLR: $(POKE_ICON_DIR)/%.pal $(GFX)
 	$(GFX) $< $@ $(POKE_ICON_GFX_FLAGS_PAL)
 
-$(POKE_ICON_DIR)/%.NCER: $(POKE_ICON_DIR)/%.json
+$(POKE_ICON_DIR)/%.NCER: $(POKE_ICON_DIR)/%.json $(GFX)
 	$(GFX) $< $@
 
-$(POKE_ICON_DIR)/%.NANR: $(POKE_ICON_DIR)/%.json
+$(POKE_ICON_DIR)/%.NANR: $(POKE_ICON_DIR)/%.json $(GFX)
 	$(GFX) $< $@
 
 # The flags are part of what an icon is built from: an icon built before
 # they changed is built again.
-$(POKE_ICON_DIR)/%.NCGR: $(POKE_ICON_DIR)/%.png $(POKE_ICON_DIR)/poke_icon.mk
+$(POKE_ICON_DIR)/%.NCGR: $(POKE_ICON_DIR)/%.png $(POKE_ICON_DIR)/poke_icon.mk $(GFX)
 	$(GFX) $< $@ $(POKE_ICON_GFX_FLAGS_ICON)
 
 # The archive holds what the palette, the animations, the cells and the icons

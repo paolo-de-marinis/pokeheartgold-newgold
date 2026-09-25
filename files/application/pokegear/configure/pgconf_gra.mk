@@ -31,7 +31,7 @@ PGCONF_GRA_FILES := \
 	pgconf_gra_00000026.NSCR \
 	pgconf_gra_00000027.NSCR
 
-$(PGCONF_GRA_NARC): $(addprefix $(PGCONF_GRA_DIR)/,$(PGCONF_GRA_FILES))
+$(PGCONF_GRA_NARC): $(addprefix $(PGCONF_GRA_DIR)/,$(PGCONF_GRA_FILES)) $(NARC)
 	$(NARC) -cf $@ --index-namespace $(PGCONF_GRA_DIR)
 
 CLOBBER_SIZE_VERSION101_NCGR_FILES += \

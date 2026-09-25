@@ -7,7 +7,7 @@ OTHERPOKE_MAP_TXT := $(POKEGRA_DIR)/otherpoke.txt
 
 OTHERPOKE_PIC_FILES := $(find $(OTHERPOKE_SPRITES_DIR) -name '*.png')
 
-$(OTHERPOKE_NARC): %.narc: $(OTHERPOKE_PIC_FILES)
+$(OTHERPOKE_NARC): %.narc: $(OTHERPOKE_PIC_FILES) $(GFX) $(NARC)
 	mkdir -p $(OTHERPOKE_BUILD_DIR)
 	while read -r line; do $(GFX) $$line; done < $(OTHERPOKE_MAP_TXT)
 	$(NARC) -cf $@ --index-namespace $(OTHERPOKE_BUILD_DIR)

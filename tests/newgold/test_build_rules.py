@@ -96,24 +96,48 @@ class BuildRuleTests(unittest.TestCase):
     def test_what_a_tool_builds_depends_on_the_tool(self):
         """f9de102b7 changed where o2narc puts an archive's members, and the
         Dex archives it had already built kept the old layout until they
-        were deleted by hand: nothing o2narc builds depended on it, and
-        nothing jsonproc builds depended on jsonproc. Every target whose
-        recipe runs either now depends on it, and jsonproc, handed the rest
-        of $^, still gets only the json and the template. The tool is taken
-        as newer (-W) and not remade (-o): remade, it is read again."""
-        rules = re.findall(r"^([^#\s%][^:\n]*):(?!=)([^\n]*)\n(?:#[^\n]*\n)*((?:\t[^\n]*\n)+)", database(), re.M)
-        for name, example in (("o2narc", "files/application/zukanlist/zkn_data/zukan_data.narc"),
-                              ("jsonproc", "files/tel/pmtel_book.dat")):
-            with self.subTest(name):
+        were deleted by hand: nothing a tool of the tree's own builds
+        depended on it. Every rule whose recipe runs one of NATIVE_TOOLS --
+        pattern rules too, which make the graphics -- now lists it: msgenc's
+        829 message bins, nitrogfx's graphics, nitroarc's archives,
+        csv2bin's tables, compstatic's module and fixrom's ROM as o2narc's
+        and jsonproc's outputs. A phony step (patch_mwasmarm) runs anyway.
+        The archive rule of last resort, %.narc, depends on nitroarc only
+        for an archive with a folder beside it: without one (height.narc,
+        waza_tbl.narc) the archive is a source the tree holds."""
+        db = database()
+        tools = re.search(r"^NATIVE_TOOLS := (.*)$", db, re.M).group(1).split()
+        names = {m.group(1): m.group(2) for m in re.finditer(r"^(\w+) :?= (\S+)$", db, re.M) if m.group(2) in tools}
+        phony = set(re.search(r"^\.PHONY:(.*)$", db, re.M).group(1).split())
+        rules = re.findall(r"^([^#\s][^:\n]*):(?!=)([^\n]*)\n(?:#[^\n]*\n)*((?:\t[^\n]*\n)+)", db, re.M)
+        examples = {"o2narc": "files/application/zukanlist/zkn_data/zukan_data.narc",
+                    "jsonproc": "files/tel/pmtel_book.dat", "msgenc": "files/msgdata/msg/msg_0000.bin",
+                    "nitrogfx": "%.NCGR", "nitroarc": "files/data/resdat.narc",
+                    "csv2bin": "files/itemtool/itemdata/item_data.narc",
+                    "compstatic": "build/heartgold.us/main.sbin_LZ", "fixrom": "build/heartgold.us/pokeheartgold.us.nds"}
+        self.assertEqual(set(examples) - {Path(tool).name for tool in names.values()}, set())
+        for variable, tool in names.items():
+            with self.subTest(Path(tool).name):
                 users = {target: prerequisites.split() for target, prerequisites, recipe in rules
-                         if f"$({name.upper()})" in recipe}
-                self.assertIn(example, users)
-                tool = None
+                         if re.search(rf"\$[({{]{variable}[)}}]", recipe) and "$(" not in target and target not in phony}
+                if Path(tool).name in examples:
+                    self.assertIn(examples[Path(tool).name], users)
                 for target, prerequisites in users.items():
-                    found = [p for p in prerequisites if p.endswith(f"/tools/{name}/{name}")]
-                    self.assertTrue(found, f"{target} does not depend on {name}")
-                    tool = found[0]
-                result = run_make("-n", "-W", tool, "-o", tool, *sorted(users))
+                    # or by its name, in a second expansion (%.narc: only where there is a folder to pack)
+                    named = tool in prerequisites or f"$({variable}))" in " ".join(prerequisites)
+                    self.assertTrue(named, f"{target} does not depend on {Path(tool).name}")
+
+    def test_jsonproc_gets_only_the_json_and_the_template(self):
+        """The recipes that hand jsonproc the rest of $^ filter the tools out
+        of it. The tool is taken as newer (-W) and not remade (-o): remade,
+        it is read again."""
+        rules = re.findall(r"^([^#\s%][^:\n]*):(?!=)([^\n]*)\n(?:#[^\n]*\n)*((?:\t[^\n]*\n)+)", database(), re.M)
+        for name in ("o2narc", "jsonproc"):
+            with self.subTest(name):
+                users = sorted(target for target, _, recipe in rules if f"$({name.upper()})" in recipe)
+                tool = next(p for p in re.search(r"^NATIVE_TOOLS := (.*)$", database(), re.M).group(1).split()
+                            if p.endswith(f"/tools/{name}/{name}"))
+                result = run_make("-n", "-W", tool, "-o", tool, *users)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 jsonproc = [line for line in result.stdout.splitlines() if "/jsonproc " in line]
                 self.assertEqual(len(jsonproc), len(users), result.stdout)

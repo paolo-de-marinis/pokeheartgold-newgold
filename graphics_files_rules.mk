@@ -20,20 +20,20 @@ $(EXTFMT_LZ_FILES): LZ_FLAGS = -nopad -extfmt
 # note: this is as of yet unused
 $(PADDED_LZ_FILES): LZ_FLAGS =
 
-%.NCGR: %.png
+%.NCGR: %.png $(GFX)
 	$(GFX) $< $@ $(GFX_FLAGS)
 
-%.NCLR: %.png
+%.NCLR: %.png $(GFX)
 	$(GFX) $< $@ $(GFX_FLAGS)
 
-%.NCLR: %.pal
+%.NCLR: %.pal $(GFX)
 	$(GFX) $< $@ $(GFX_FLAGS)
 
-%.nbfc: %.png
+%.nbfc: %.png $(GFX)
 	$(GFX) $< $@ $(GFX_FLAGS)
 
-%.nbfp: %.png
+%.nbfp: %.png $(GFX)
 	$(GFX) $< $@ $(GFX_FLAGS)
 
-%.lz: %
+%.lz: % $(GFX)
 	$(GFX) $< $@ $(LZ_FLAGS)

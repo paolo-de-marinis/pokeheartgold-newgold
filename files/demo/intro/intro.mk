@@ -69,7 +69,7 @@ INTRO_DEMO_FILES := \
 	intro_00000065.NCER \
 	intro_00000066.NANR
 
-$(INTRO_DEMO_NARC): $(addprefix $(INTRO_DEMO_DIR)/,$(INTRO_DEMO_FILES))
+$(INTRO_DEMO_NARC): $(addprefix $(INTRO_DEMO_DIR)/,$(INTRO_DEMO_FILES)) $(NARC)
 	$(NARC) -cf $@ --index-namespace $(INTRO_DEMO_DIR)
 
 clean-intro:

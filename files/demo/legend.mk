@@ -113,7 +113,7 @@ LEGEND_DEMO_FILES := \
 	legend_00000108.NSBCA \
 	legend_00000109.NSBTA
 
-$(LEGEND_DEMO_NARC): $(addprefix $(LEGEND_DEMO_DIR)/,$(LEGEND_DEMO_FILES))
+$(LEGEND_DEMO_NARC): $(addprefix $(LEGEND_DEMO_DIR)/,$(LEGEND_DEMO_FILES)) $(NARC)
 	$(NARC) -cf $@ --index-namespace $(LEGEND_DEMO_DIR)
 
 clean-legend-demo:

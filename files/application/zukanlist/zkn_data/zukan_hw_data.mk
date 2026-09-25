@@ -3,7 +3,7 @@ ZUKAN_HW_DATA_NARC := $(ZUKAN_HW_DATA_DIR)_$(shortname).narc
 ZUKAN_HW_DATA_VER_NAIX := $(ZUKAN_HW_DATA_DIR)_$(shortname).naix
 ZUKAN_HW_DATA_NAIX := $(ZUKAN_HW_DATA_DIR).naix
 
-$(ZUKAN_HW_DATA_NARC): $(ZUKAN_HW_DATA_DIR)/zukan_hw_data_0.bin $(ZUKAN_HW_DATA_DIR)/zukan_hw_data_1_$(shortname).bin
+$(ZUKAN_HW_DATA_NARC): $(ZUKAN_HW_DATA_DIR)/zukan_hw_data_0.bin $(ZUKAN_HW_DATA_DIR)/zukan_hw_data_1_$(shortname).bin $(NARC)
 	ln -sf zukan_hw_data_1_$(shortname).bin $(ZUKAN_HW_DATA_DIR)/zukan_hw_data_1.bin
 	$(NARC) -cf $@ --index-namespace --exclude="zukan_hw_data_1_*.bin" $(ZUKAN_HW_DATA_DIR)
 

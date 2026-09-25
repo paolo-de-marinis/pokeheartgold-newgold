@@ -7,7 +7,7 @@ $(ITEMDATA_NARC): CSV2BINFLAGS += --pad 0xFF
 # csv2bin writes the index before the archive. Touched after it, the index
 # is not older than its archive, which remade it on every run (make -n
 # printed every object that includes it).
-$(ITEMDATA_NARC): %.narc: %.csv $(MANIFEST) $$(csvdep)
+$(ITEMDATA_NARC): %.narc: %.csv $(MANIFEST) $$(csvdep) $(CSV2BIN)
 	$(CSV2BIN) compile $< $@ $(MANIFEST) $(CSV2BINFLAGS)
 	@touch $*.naix
 
@@ -22,9 +22,9 @@ ITEMICON_DIR := files/itemtool/itemdata/item_icon
 # makes two members, the tiles and the palette, with the flags the reference
 # builds item icons with.
 define ITEMICON_FROM_PNG
-$(ITEMICON_DIR)/item_icon_$(1).NCGR: $(ITEMICON_DIR)/$(3).png
+$(ITEMICON_DIR)/item_icon_$(1).NCGR: $(ITEMICON_DIR)/$(3).png $(GFX)
 	$$(GFX) $$< $$@ -clobbersize -version101 -bitdepth 4
-$(ITEMICON_DIR)/item_icon_$(2).NCLR: $(ITEMICON_DIR)/$(3).png
+$(ITEMICON_DIR)/item_icon_$(2).NCLR: $(ITEMICON_DIR)/$(3).png $(GFX)
 	$$(GFX) $$< $$@ -ir -bitdepth 4
 ITEMICON_OBJS += $(ITEMICON_DIR)/item_icon_$(1).NCGR $(ITEMICON_DIR)/item_icon_$(2).NCLR
 endef
