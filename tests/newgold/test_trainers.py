@@ -312,6 +312,28 @@ class TrainerTests(unittest.TestCase):
                          (24, ["MOVE_ROLLOUT", "MOVE_SUPERSONIC", "MOVE_WRAP", "MOVE_DISABLE"]))
 
     @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
+    def test_the_moves_filled_in_are_the_learnsets_as_they_are_now(self):
+        """The import writes the moves of the 20 entries konefr left without
+        any into trainers.json; this is each one against the default-moveset
+        rule (import_trainers.default_moves) on the tree's learnsets now, so
+        a learnset changed after the import fails here until the trainers are
+        imported again."""
+        source = gmm.git_show(gmm.NEWGOLD, "data/Trainers.c")
+        blocks = re.split(r"\n\s*\[(\d+)\] = \{", source)
+        filled = []
+        for index, block in ((int(blocks[i]), blocks[i + 1]) for i in range(1, len(blocks), 2)):
+            if "TRAINER_DATA_TYPE_MOVES" not in re.search(r"\.trainerType\s*=\s*([^,]+),", block)[1]:
+                continue
+            for slot, member in enumerate(import_trainers.party_members(block)):
+                named = re.findall(r"\bMOVE_\w+", import_trainers.section(member, "moves")) if ".moves = {" in member else []
+                if set(named) <= {"MOVE_NONE"}:
+                    filled.append(self.trainers[index]["party"][slot])
+        self.assertEqual(len(filled), 20)
+        for member in filled:
+            self.assertEqual(member["moves"], import_trainers.default_moves(member["species"], member["level"]),
+                             f"{member['species']} L{member['level']}")
+
+    @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
     def test_every_held_item_konefr_names_is_held(self):
         """His trainerdatagen writes a party Pokemon's .item only under
         TRAINER_DATA_TYPE_ITEMS, and three trainers name items without it:
