@@ -50,7 +50,7 @@ enum AIScriptCommand {
     AI_IF_ATTACKER_HAS_DAMAGING_MOVES, // 1B: jumps when the attacker has a move with power
     AI_IF_ATTACKER_HAS_NO_DAMAGING_MOVES, // 1C: ... has none
     AI_LOAD_TURN_COUNT, // 1D: loads the number of turns the battle has run
-    AI_LOAD_TYPE_FROM, // 1E: loads a type: 0/2 the target's first/second, 1/3 the attacker's, 4 the move being rated's, 5..8 as 0..3 for the partners
+    AI_LOAD_TYPE_FROM, // 1E: loads a type: 0/2 the target's first/second, 1/3 the attacker's, 4 the move being rated's, 5..8 as 0..3 for the partners (7 reads the first type, as retail does)
     AI_LOAD_MOVE_POWER, // 1F: loads the power of the move being rated
     AI_FLAG_MOVE_DAMAGE_SCORE, // 20: loads 2 when the move being rated does the most damage of the attacker's, 1 when another does more, 0 when it is not compared (argument: whether damage rolls vary)
     AI_LOAD_BATTLER_PREVIOUS_MOVE, // 21: loads the battler's last move
@@ -62,10 +62,10 @@ enum AIScriptCommand {
     AI_LOAD_CURRENT_MOVE, // 27: loads the move being rated
     AI_LOAD_CURRENT_MOVE_EFFECT, // 28: loads its effect
     AI_LOAD_BATTLER_ABILITY, // 29: loads the battler's ability, as far as the AI knows it
-    AI_CALC_MAX_EFFECTIVENESS, // 2A: loads whether the move being rated is the most effective the attacker has
-    AI_IF_MOVE_EFFECTIVENESS_EQUALS, // 2B: jumps when the move being rated has the effectiveness (0 immune .. 10 neutral .. 160)
-    AI_IF_PARTY_MEMBER_STATUS, // 2C: jumps when any of the battler's party has the status conditions
-    AI_IF_PARTY_MEMBER_NOT_STATUS, // 2D: ... when none has
+    AI_CALC_MAX_EFFECTIVENESS, // 2A: loads the best effectiveness of the attacker's four moves on the target, on 2B's scale
+    AI_IF_MOVE_EFFECTIVENESS_EQUALS, // 2B: jumps when the move being rated has the effectiveness (0 immune, 10 x1/4, 20 x1/2, 40 neutral, 80 x2, 160 x4; a neutral STAB move reads 60)
+    AI_IF_PARTY_MEMBER_STATUS, // 2C: jumps when any of the battler's benched party, standing and not an Egg, has any of the status conditions
+    AI_IF_PARTY_MEMBER_NOT_STATUS, // 2D: ... when any of them has none of the status conditions
     AI_LOAD_CURRENT_WEATHER, // 2E: loads the weather
     AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, // 2F: jumps when the move being rated has the effect
     AI_IF_CURRENT_MOVE_EFFECT_NOT_EQUAL_TO, // 30: ... does not
@@ -84,7 +84,7 @@ enum AIScriptCommand {
     AI_ESCAPE, // 3D: ends the script: the AI runs from the battle
     AI_IF_RANDOM_SAFARI_FLEE, // 3E: a Safari Zone command left over: this game does nothing, not even step past it
     AI_WATCH, // 3F: a Safari Zone command left over: this game does nothing, not even step past it
-    AI_LOAD_HELD_ITEM, // 40: loads the battler's held item, as far as the AI knows it
+    AI_LOAD_HELD_ITEM, // 40: loads the battler's held item: the real one, for any battler
     AI_LOAD_HELD_ITEM_EFFECT, // 41: loads the hold effect of the battler's item, as far as the AI knows it
     AI_LOAD_GENDER, // 42: loads the battler's gender
     AI_LOAD_IS_FIRST_TURN_IN_BATTLE, // 43: loads whether it is the battler's first turn out
