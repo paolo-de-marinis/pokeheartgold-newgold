@@ -79,6 +79,12 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertTrue(scene.Scene.wanted("battler1.status", "")[0](0))
         self.assertTrue(scene.Scene.wanted("map", "MAP_ROUTE_29")[0](33))
         self.assertTrue(scene.Scene.wanted("music", "SEQ_GS_R_1_29")[0](1028))
+        # The keys a battle scenario reads beyond the battlers' HP: a move's
+        # PP, and the party's items once the battle has given them back.
+        for key in ("battler0.pp0", "battler3.move3", "party0.item", "party5.species"):
+            self.assertTrue(scene.readable(key, key=True), key)
+        for key in ("battler0.pp4", "party6.item", "party0.ability"):
+            self.assertFalse(scene.readable(key, key=True), key)
 
 
 class RecordingTests(unittest.TestCase):

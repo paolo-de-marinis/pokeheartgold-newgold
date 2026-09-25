@@ -48,7 +48,8 @@ def badges(ram, elf):
 
 
 def mons(ram, elf):
-    """Each Pokemon of the party: species, item, exp, level, hp, maxHp."""
+    """The party as the game holds it, each Pokemon in its order: species,
+    item, exp, level, hp, maxHp."""
     memory = where.Memory(ram)
     base = block(memory, elf, where.SAVE_PARTY)
     out = []

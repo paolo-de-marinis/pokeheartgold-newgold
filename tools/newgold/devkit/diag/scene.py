@@ -62,16 +62,16 @@ printed by the battle, in that order (a part of the line is enough), and
 "no_lines" never; "heaps" is the least a heap may have had left at its
 fullest (gDiagHeapLowWater); every other key is a value read out of main RAM
 by name, through the ELF's symbols and the offsets the tree's own headers
-give: map, x, y, party (the count), badges, flag:FLAG_..., var:VAR_...,
-battlerN.species|hp|maxHp|level|partySlot|status|item (gDiagBattlers; N
-counts the player's side even), partyN.species|item|level|hp (the save's
-party, slot N from 0, once the field is up: what a battle gave back), bag:ITEM_...
-(how many the bag holds), music (the sequence the field's sound
-handle plays, -1 for none: a load the sound heap cannot hold leaves it
-empty and counts as no failed allocation), or any gDiag* global. A value
-is a number, a constant's name (MAP_..., SPECIES_..., ITEM_..., MOVE_...,
-SEQ_...), [low, high],
-or for a status the flags as markers.py names them ("BRN", "" for none).
+give: map, x, y, party (the count), partyN.species|item|level|exp|hp|maxHp
+(the party as its save block holds it, slot N from 0, once the field is up:
+what a battle gave back), bag:ITEM_... (how many the bag holds), badges,
+flag:FLAG_..., var:VAR_..., battlerN.species|hp|maxHp|level|partySlot|
+status|item|moveK|ppK (gDiagBattlers; N counts the player's side even, K is
+a move slot, 0 to 3), music (the sequence the field's sound handle plays, -1
+for none: a load the sound heap cannot hold leaves it empty and counts as no
+failed allocation), or any gDiag* global. A value is a number, a constant's
+name (MAP_..., SPECIES_..., ITEM_..., MOVE_..., SEQ_...), [low, high], or for
+a status the flags as markers.py names them ("BRN", "" for none).
 "asserts" and "alloc_failures" are 0 unless the file says otherwise. A step
 may also be {"expect": {...}}, checked when the run gets there.
 
@@ -106,8 +106,11 @@ ROOT = Path(__file__).resolve().parents[4]
 ROM = ROOT / "build/heartgold.us.diag/pokeheartgold.us.nds"
 SAVES = Path.home() / "hgss-saves"
 BATTLE_MAIN = STATES.index("BATTLE_MAIN")
-# DiagBattler's fields in BATTLER's order, the arrays left out.
-BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item")
+# DiagBattler's fields in BATTLER's order, then its two arrays, a name a slot.
+BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item",
+                  *(f"move{k}" for k in range(4)), *(f"pp{k}" for k in range(4)))
+# party.mons' keys, the fields a scenario may name.
+PARTY_FIELDS = ("species", "item", "level", "exp", "hp", "maxHp")
 CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/species.h",
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
@@ -125,8 +128,8 @@ def readable(step_or_key, key=False):
                                 "party", "badges", "music")
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
-                or re.fullmatch(r"party[0-5]\.(species|item|level|hp)", step_or_key) is not None
-                or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)})", step_or_key) is not None)
+                or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)})", step_or_key) is not None
+                or re.fullmatch(rf"party[0-5]\.({'|'.join(PARTY_FIELDS)})", step_or_key) is not None)
     if isinstance(step_or_key, dict):
         return list(step_or_key) == ["expect"] and all(readable(k, True) for k in step_or_key["expect"])
     kind = step_or_key.partition(":")[0]
