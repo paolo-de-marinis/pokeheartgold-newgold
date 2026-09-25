@@ -47,15 +47,12 @@ def badges(ram, elf):
     return bin(ram[at]).count("1")
 
 
-def party(ram, elf):
+def mons(ram, elf):
+    """Each Pokemon of the party: species, item, exp, level, hp, maxHp."""
     memory = where.Memory(ram)
     base = block(memory, elf, where.SAVE_PARTY)
-    count = memory.word(base + where.PARTY_COUNT)
-    names = {v: k for k, v in savedit.species_numbers().items()}
-    items = {int(m.group(2)): m.group(1)[len("ITEM_"):] for m in
-             re.finditer(r"^#define (ITEM_[A-Z0-9_]+)\s+(\d+)\s*$", (ROOT / "include/constants/items.h").read_text(), re.M)}
     out = []
-    for slot in range(count):
+    for slot in range(memory.word(base + where.PARTY_COUNT)):
         mon = base + 8 + slot * savedit.PARTY_MON - MAIN_RAM
         raw = ram[mon:mon + savedit.PARTY_MON]
         personality, checksum = struct.unpack_from("<IxxH", raw, 0)
@@ -64,9 +61,29 @@ def party(ram, elf):
         species, item, _, exp = struct.unpack_from("<HHII", blocks, first)
         stats = savedit.mon_crypt(bytes(raw[savedit.BOX_MON:]), personality)
         level, _, hp, max_hp = struct.unpack_from("<BBHH", stats, 4)
-        out.append(f"{slot + 1}. {names.get(species, species)} L{level} exp {exp} HP {hp}/{max_hp}"
-                   + (f" holding {items.get(item, item)}" if item else ""))
+        out.append({"species": species, "item": item, "exp": exp, "level": level, "hp": hp, "maxHp": max_hp})
     return out
+
+
+def bag(ram, elf, item):
+    """How many of `item` the bag holds, in whichever pocket."""
+    memory = where.Memory(ram)
+    at = block(memory, elf, savedit.block_ids().index("SAVE_BAG")) - MAIN_RAM
+    for pocket in savedit.pockets():
+        for slot in range(pocket["slots"]):
+            got, quantity = struct.unpack_from("<HH", ram, at + pocket["at"] + 4 * slot)
+            if got == item:
+                return quantity
+    return 0
+
+
+def party(ram, elf):
+    names = {v: k for k, v in savedit.species_numbers().items()}
+    items = {int(m.group(2)): m.group(1)[len("ITEM_"):] for m in
+             re.finditer(r"^#define (ITEM_[A-Z0-9_]+)\s+(\d+)\s*$", (ROOT / "include/constants/items.h").read_text(), re.M)}
+    return [f"{slot + 1}. {names.get(m['species'], m['species'])} L{m['level']} exp {m['exp']} HP {m['hp']}/{m['maxHp']}"
+            + (f" holding {items.get(m['item'], m['item'])}" if m["item"] else "")
+            for slot, m in enumerate(mons(ram, elf))]
 
 
 def main():

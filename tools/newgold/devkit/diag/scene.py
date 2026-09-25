@@ -64,7 +64,9 @@ fullest (gDiagHeapLowWater); every other key is a value read out of main RAM
 by name, through the ELF's symbols and the offsets the tree's own headers
 give: map, x, y, party (the count), badges, flag:FLAG_..., var:VAR_...,
 battlerN.species|hp|maxHp|level|partySlot|status|item (gDiagBattlers; N
-counts the player's side even), music (the sequence the field's sound
+counts the player's side even), partyN.species|item|level|hp (the save's
+party, slot N from 0, once the field is up: what a battle gave back), bag:ITEM_...
+(how many the bag holds), music (the sequence the field's sound
 handle plays, -1 for none: a load the sound heap cannot hold leaves it
 empty and counts as no failed allocation), or any gDiag* global. A value
 is a number, a constant's name (MAP_..., SPECIES_..., ITEM_..., MOVE_...,
@@ -122,6 +124,8 @@ def readable(step_or_key, key=False):
         return (step_or_key in ("lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
                                 "party", "badges", "music")
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
+                or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
+                or re.fullmatch(r"party[0-5]\.(species|item|level|hp)", step_or_key) is not None
                 or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)})", step_or_key) is not None)
     if isinstance(step_or_key, dict):
         return list(step_or_key) == ["expect"] and all(readable(k, True) for k in step_or_key["expect"])
@@ -670,6 +674,12 @@ class Scene:
             return memory.word(party.block(memory, self.elf, where.SAVE_PARTY) + where.PARTY_COUNT)
         if name == "badges":
             return party.badges(ram, self.elf)
+        if name.startswith("bag:"):
+            return party.bag(ram, self.elf, self.number(name[len("bag:"):]))
+        if name.startswith("party") and "." in name:
+            slot, field = name[len("party"):].split(".")
+            mons = party.mons(ram, self.elf)
+            return mons[int(slot)][field] if int(slot) < len(mons) else None
         if name.startswith(("flag:", "var:")):
             kind, _, constant = name.partition(":")
             flags = party.block(memory, self.elf, savedit.block_ids().index("SAVE_FLAGS")) - 0x02000000

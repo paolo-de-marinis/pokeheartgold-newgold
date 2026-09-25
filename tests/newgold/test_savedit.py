@@ -553,6 +553,19 @@ class SaveditLibraryTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             sv.parse_party("CHIKORITA:5::TACKLE+TACKLE")
 
+    def test_the_cli_gives_a_pokemon_its_item(self):
+        """--party's fifth field is the item held: a scenario's battle can
+        start with the item the party remembers and gives back."""
+        items = sv.constants("include/constants/items.h", "ITEM_")
+        self.assertEqual(sv.parse_party("SNORLAX:13:::ORAN_BERRY")[0][4], items["ITEM_ORAN_BERRY"])
+        self.assertEqual(sv.parse_party("SNORLAX:13")[0][4], 0)
+        with self.assertRaises(SystemExit):
+            sv.parse_party("SNORLAX:13:::NO_SUCH_ITEM")
+        save = self.open()
+        sv.set_party(save, sv.parse_party("SNORLAX:13:::ITEM_LEFTOVERS,PIDGEY:3"))
+        held = [sv.describe_mon(raw)["item"] for raw in sv.party_raw(save)]
+        self.assertEqual(held[:2], [items["ITEM_LEFTOVERS"], 0])
+
     def test_the_cli_makes_only_species_a_pokemon_can_be(self):
         """What the page refuses, the CLI does too: a battle's Mega, a
         retail form row, the egg."""

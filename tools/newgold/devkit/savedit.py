@@ -1057,13 +1057,20 @@ def pickable(name):
 
 
 def parse_party(text):
-    """SPECIES:LEVEL[:NATURE][:MOVE+MOVE+...],...; moves not given are the
-    game's at that level (preset_moves), moves given must be ones it can
-    learn, each once."""
+    """SPECIES:LEVEL[:NATURE][:MOVE+MOVE+...][:ITEM],...; moves not given are
+    the game's at that level (preset_moves), moves given must be ones it can
+    learn, each once; ITEM (ITEM_ optional) is the item it holds."""
     numbers = move_numbers()
     wanted = []
     for entry in text.split(","):
         parts = entry.split(":")
+        item = 0
+        if len(parts) > 4 and parts[4]:
+            name = parts[4].upper()
+            items = constants("include/constants/items.h", "ITEM_")
+            item = items.get(name if name.startswith("ITEM_") else "ITEM_" + name)
+            if not item:
+                raise SystemExit(f"there is no item {parts[4]}")
         moves = None
         if len(parts) > 3 and parts[3]:
             moves = []
@@ -1079,7 +1086,7 @@ def parse_party(text):
                 except Illegal as e:
                     raise SystemExit(str(e))
         wanted.append((pickable(parts[0].upper()), int(parts[1]),
-                       int(parts[2]) if len(parts) > 2 and parts[2] else None, moves))
+                       int(parts[2]) if len(parts) > 2 and parts[2] else None, moves, item))
     return wanted
 
 
@@ -1091,8 +1098,8 @@ def set_party(save, wanted):
     # PartyCore is { int maxCount; int curCount; Pokemon mons[PARTY_SIZE]; }
     struct.pack_into("<ii", block, 0, PARTY_SIZE, len(wanted))
     me = owner(save)
-    for slot, (name, level, nature, moves) in enumerate(wanted):
-        mon = build_mon(name, level, nature=nature, moves=moves,
+    for slot, (name, level, nature, moves, *item) in enumerate(wanted):
+        mon = build_mon(name, level, nature=nature, moves=moves, item=item[0] if item else 0,
                         ot_codes=me["codes"], ot_id=me["id"], ot_gender=me["gender"])
         block[PARTY_AT + slot * PARTY_MON:PARTY_AT + (slot + 1) * PARTY_MON] = mon
 
@@ -3952,7 +3959,7 @@ def main():
                         help="mark these seen and caught, and switch the Dex on")
     parser.add_argument("--box", metavar="N:SPECIES:LEVEL",
                         help="put one Pokemon in box N, counted from one")
-    parser.add_argument("--party", metavar="SPECIES:LEVEL[:NATURE][,...]",
+    parser.add_argument("--party", metavar="SPECIES:LEVEL[:NATURE][:MOVE+...][:ITEM][,...]",
                         help="fill the party, e.g. CHIKORITA:5,PIDGEY:3")
     parser.add_argument("--name", help="the player's name, which the save must carry "
                                        "terminated: the main menu copies it into a String "
@@ -3988,7 +3995,7 @@ def main():
         wanted = parse_party(args.party)
         set_party(save, wanted)
         save.write()
-        print("party: " + ", ".join(f"{n} at level {l}" for n, l, _, _ in wanted))
+        print("party: " + ", ".join(f"{n} at level {l}" for n, l, *_ in wanted))
 
     if args.tm:
         machines = [int(n) for n in args.tm.split(",")]

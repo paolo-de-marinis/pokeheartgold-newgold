@@ -33,6 +33,14 @@ CORE = str(core.CORE)       # the one NEWGOLD_CORE names, or core.py's default
 
 
 class ScenarioFileTests(unittest.TestCase):
+    def test_a_scenario_can_read_the_party_and_the_bag(self):
+        # After the battle, on the field: what the party holds and what the
+        # bag has, as the battle's end left them.
+        for key in ("party0.item", "party5.species", "bag:ITEM_ORAN_BERRY"):
+            self.assertTrue(scene.readable(key, key=True), key)
+        for key in ("party6.item", "party0.moves", "bag:ORAN_BERRY"):
+            self.assertFalse(scene.readable(key, key=True), key)
+
     def test_every_scenario_is_one_scene_py_can_play(self):
         # A typo in a step or an expectation is found here, without the
         # emulator, rather than twenty seconds into a run.
