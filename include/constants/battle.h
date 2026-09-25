@@ -794,6 +794,15 @@ typedef enum ControllerCommand {
 #define BALL_SHAKE_MAX 4
 #define MOVES_MAX      4
 
+// Where the blocks of the list of moves the calling moves may not call begin
+// (sMetronomeUnuseableMoves): Mimic's own, the one Metronome, Copycat and
+// Assist share, Copycat's and Assist's, Assist's alone, and the end.
+#define CALLED_MOVE_BANS_MIMIC   0xFFF0
+#define CALLED_MOVE_BANS_SHARED  0xFFF1
+#define CALLED_MOVE_BANS_COPYCAT 0xFFF2
+#define CALLED_MOVE_BANS_ASSIST  0xFFF3
+#define CALLED_MOVE_BANS_END     0xFFFF
+
 // The prey a Cramorant with Gulp Missile catches (SelfTurnData.gulpMissilePrey).
 #define GULP_MISSILE_ARROKUDA 1
 #define GULP_MISSILE_PIKACHU  2

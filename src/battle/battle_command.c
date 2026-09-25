@@ -3866,7 +3866,7 @@ BOOL BtlCmd_Metronome(BattleSystem *battleSystem, BattleContext *ctx) {
         // (Metronomo) marks it; Copycat copies it (no failcopycat), so the
         // shared list below does not name it. Sky Drop stays callable, as
         // in the fifth to seventh generations, the last it was in.
-        if (moveNo == MOVE_REVIVAL_BLESSING || CheckLegalMetronomeMove(battleSystem, ctx, ctx->battlerIdAttacker, moveNo) == FALSE) {
+        if (moveNo == MOVE_REVIVAL_BLESSING || CheckLegalCalledMove(battleSystem, ctx, ctx->battlerIdAttacker, moveNo, 0, CALLED_MOVE_BANS_COPYCAT) == FALSE) {
             continue;
         }
 
@@ -5231,7 +5231,7 @@ BOOL BtlCmd_TryAssist(BattleSystem *battleSystem, BattleContext *ctx) {
                 && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, 0) != SPECIES_EGG) {
                 for (j = 0; j < MAX_MON_MOVES; j++) {
                     move = GetMonData(mon, MON_DATA_MOVE1 + j, 0);
-                    if (CheckMoveCallsOtherMove(move) == FALSE && CheckLegalMetronomeMove(battleSystem, ctx, ctx->battlerIdAttacker, move) == TRUE) {
+                    if (CheckMoveCallsOtherMove(move) == FALSE && CheckLegalCalledMove(battleSystem, ctx, ctx->battlerIdAttacker, move, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_END) == TRUE) {
                         avaliableMoves[moveCnt] = move;
                         moveCnt++;
                     }
@@ -5838,7 +5838,7 @@ BOOL BtlCmd_TryCopycat(BattleSystem *battleSystem, BattleContext *ctx) {
 
     int adrs = BattleScriptReadWord(ctx);
 
-    if (CheckMoveCallsOtherMove(ctx->moveNoPrev) == FALSE && ctx->moveNoPrev && CheckLegalMetronomeMove(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoPrev) == TRUE) {
+    if (CheckMoveCallsOtherMove(ctx->moveNoPrev) == FALSE && ctx->moveNoPrev && CheckLegalCalledMove(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoPrev, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_ASSIST) == TRUE) {
         ctx->moveTemp = ctx->moveNoPrev;
     } else {
         BattleScriptIncrementPointer(ctx, adrs);

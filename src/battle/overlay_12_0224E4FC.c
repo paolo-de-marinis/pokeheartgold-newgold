@@ -11794,15 +11794,92 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     return ret;
 }
 
+// What the moves that call another may not call: one list in blocks, each
+// caller refusing a run of them from the block it starts at to the one it
+// stops at (CalledMoveBanned). Metronome refuses from the list's start to
+// Copycat's block, Mimic its own block alone, Copycat from Mimic's block to
+// Assist's, Assist from Mimic's block to the end. Retail shared one list,
+// Metronome's, among Metronome, Copycat and Assist, and the engine kept that;
+// Copycat's rules are Scarlet and Violet's and Assist's Ultra Sun and Ultra
+// Moon's, the last it was in.
 static const u16 sMetronomeUnuseableMoves[] = {
+    // The engine's further bans for Metronome alone, and Mirror Coat, which
+    // Copycat copies (Showdown's gen-9 data; Pokemon Central, Copione, does
+    // not know) and Assist does not call (Assistente).
+    MOVE_AFTER_YOU,
+    MOVE_APPLE_ACID,
+    MOVE_ASTRAL_BARRAGE,
+    MOVE_AURA_WHEEL,
+    MOVE_BODY_PRESS,
+    MOVE_BRANCH_POKE,
+    MOVE_BREAKING_SWIPE,
+    MOVE_CLANGOROUS_SOUL,
+    MOVE_CRAFTY_SHIELD,
+    MOVE_DECORATE,
+    MOVE_DIAMOND_STORM,
+    MOVE_DRAGON_ASCENT,
+    MOVE_DRAGON_ENERGY,
+    MOVE_DRAGON_HAMMER,
+    MOVE_DRUM_BEATING,
+    MOVE_ETERNABEAM,
+    MOVE_FALSE_SURRENDER,
+    MOVE_FIERY_WRATH,
+    MOVE_FLEUR_CANNON,
+    MOVE_FREEZE_SHOCK,
+    MOVE_FREEZING_GLARE,
+    MOVE_GLACIAL_LANCE,
+    MOVE_GRAV_APPLE,
+    MOVE_HYPERSPACE_FURY,
+    MOVE_HYPERSPACE_HOLE,
+    MOVE_ICE_BURN,
+    MOVE_INSTRUCT,
+    MOVE_JUNGLE_HEALING,
+    MOVE_LIFE_DEW,
+    MOVE_LIGHT_OF_RUIN,
+    MOVE_METEOR_ASSAULT,
+    MOVE_MIND_BLOWN,
+    MOVE_MOONGEIST_BEAM,
+    MOVE_NATURES_MADNESS,
+    MOVE_OBSTRUCT,
+    MOVE_ORIGIN_PULSE,
+    MOVE_OVERDRIVE,
+    MOVE_PHOTON_GEYSER,
+    MOVE_PLASMA_FISTS,
+    MOVE_PRECIPICE_BLADES,
+    MOVE_PYRO_BALL,
+    MOVE_QUASH,
+    MOVE_QUICK_GUARD,
+    MOVE_RELIC_SONG,
+    MOVE_SECRET_SWORD,
+    MOVE_SNAP_TRAP,
+    MOVE_SNARL,
+    MOVE_SNORE,
+    MOVE_SPECTRAL_THIEF,
+    MOVE_SPIRIT_BREAK,
+    MOVE_STEAM_ERUPTION,
+    MOVE_STEEL_BEAM,
+    MOVE_STRANGE_STEAM,
+    MOVE_SUNSTEEL_STRIKE,
+    MOVE_SURGING_STRIKES,
+    MOVE_TECHNO_BLAST,
+    MOVE_THOUSAND_ARROWS,
+    MOVE_THOUSAND_WAVES,
+    MOVE_THUNDER_CAGE,
+    MOVE_THUNDEROUS_KICK,
+    MOVE_V_CREATE,
+    MOVE_WICKED_BLOW,
+    MOVE_WIDE_GUARD,
+    MOVE_MIRROR_COAT,
+
+    CALLED_MOVE_BANS_MIMIC,
+    // Metronome, Mimic, Copycat and Assist: retail's own, and the engine's Z-,
+    // Let's Go and Max moves and placeholders, which Copycat does not copy
+    // (Copione) and no party Pokemon knows for Assist.
     MOVE_METRONOME,
     MOVE_STRUGGLE,
     MOVE_SKETCH,
     MOVE_MIMIC,
     MOVE_CHATTER,
-
-    // Moves the engine added that neither Metronome nor Mimic may call: the
-    // Z-moves, the Let's Go and Max moves, and the three placeholders.
     MOVE_BEHEMOTH_BLADE,
     MOVE_BEHEMOTH_BASH,
     MOVE_BREAKNECK_BLITZ_PHYSICAL,
@@ -11896,12 +11973,14 @@ static const u16 sMetronomeUnuseableMoves[] = {
     MOVE_469,
     MOVE_470,
 
-    0xFFFE,
+    CALLED_MOVE_BANS_SHARED,
+    // Metronome, Copycat and Assist: retail's, and the engine's (Copione's and
+    // Assistente's tables; King's Shield, missing from Assistente's among the
+    // other guards, is Showdown's gen-9 noassist).
     MOVE_SLEEP_TALK,
     MOVE_ASSIST,
     MOVE_MIRROR_MOVE,
     MOVE_COUNTER,
-    MOVE_MIRROR_COAT,
     MOVE_PROTECT,
     MOVE_DETECT,
     MOVE_ENDURE,
@@ -11917,116 +11996,86 @@ static const u16 sMetronomeUnuseableMoves[] = {
     MOVE_COPYCAT,
     MOVE_ME_FIRST,
     MOVE_SWITCHEROO,
-
-    // The engine's further bans for Metronome alone.
-    MOVE_AFTER_YOU,
-    MOVE_APPLE_ACID,
-    MOVE_ASTRAL_BARRAGE,
-    MOVE_AURA_WHEEL,
     MOVE_BANEFUL_BUNKER,
     MOVE_BEAK_BLAST,
     MOVE_BELCH,
     MOVE_BESTOW,
-    MOVE_BODY_PRESS,
-    MOVE_BRANCH_POKE,
-    MOVE_BREAKING_SWIPE,
     MOVE_CELEBRATE,
-    MOVE_CLANGOROUS_SOUL,
-    MOVE_CRAFTY_SHIELD,
-    MOVE_DECORATE,
-    MOVE_DIAMOND_STORM,
-    MOVE_DRAGON_ASCENT,
-    MOVE_DRAGON_ENERGY,
-    MOVE_DRAGON_HAMMER,
-    MOVE_DRUM_BEATING,
-    MOVE_ETERNABEAM,
-    MOVE_FALSE_SURRENDER,
-    MOVE_FIERY_WRATH,
-    MOVE_FLEUR_CANNON,
-    MOVE_FREEZE_SHOCK,
-    MOVE_FREEZING_GLARE,
-    MOVE_GLACIAL_LANCE,
-    MOVE_GRAV_APPLE,
     MOVE_HOLD_HANDS,
-    MOVE_HYPERSPACE_FURY,
-    MOVE_HYPERSPACE_HOLE,
-    MOVE_ICE_BURN,
-    MOVE_INSTRUCT,
-    MOVE_JUNGLE_HEALING,
     MOVE_KINGS_SHIELD,
-    MOVE_LIFE_DEW,
-    MOVE_LIGHT_OF_RUIN,
     MOVE_MAT_BLOCK,
-    MOVE_METEOR_ASSAULT,
-    MOVE_MIND_BLOWN,
-    MOVE_MOONGEIST_BEAM,
     MOVE_NATURE_POWER,
-    MOVE_NATURES_MADNESS,
-    MOVE_OBSTRUCT,
-    MOVE_ORIGIN_PULSE,
-    MOVE_OVERDRIVE,
-    MOVE_PHOTON_GEYSER,
-    MOVE_PLASMA_FISTS,
-    MOVE_PRECIPICE_BLADES,
-    MOVE_PYRO_BALL,
-    MOVE_QUASH,
-    MOVE_QUICK_GUARD,
     MOVE_RAGE_POWDER,
-    MOVE_RELIC_SONG,
-    MOVE_SECRET_SWORD,
     MOVE_SHELL_TRAP,
-    MOVE_SNAP_TRAP,
-    MOVE_SNARL,
-    MOVE_SNORE,
-    MOVE_SPECTRAL_THIEF,
     MOVE_SPIKY_SHIELD,
-    MOVE_SPIRIT_BREAK,
     MOVE_SPOTLIGHT,
-    MOVE_STEAM_ERUPTION,
-    MOVE_STEEL_BEAM,
-    MOVE_STRANGE_STEAM,
-    MOVE_SUNSTEEL_STRIKE,
-    MOVE_SURGING_STRIKES,
-    MOVE_TECHNO_BLAST,
-    MOVE_THOUSAND_ARROWS,
-    MOVE_THOUSAND_WAVES,
-    MOVE_THUNDER_CAGE,
-    MOVE_THUNDEROUS_KICK,
     MOVE_TRANSFORM,
-    MOVE_V_CREATE,
-    MOVE_WICKED_BLOW,
-    MOVE_WIDE_GUARD,
-    0xFFFF
+
+    CALLED_MOVE_BANS_COPYCAT,
+    // Copycat and Assist, not Metronome: the moves that force a switch, which
+    // neither calls, Roar and Whirlwind from the sixth generation (Copione,
+    // Assistente); Burning Bulwark, Tera Starstorm and the torques (Copione;
+    // Showdown's gen-9 data has Assist refuse them too); and Collision
+    // Course, which Copione's table lists with the torques, where Showdown's
+    // gen-9 data lets Copycat copy it.
+    MOVE_ROAR,
+    MOVE_WHIRLWIND,
+    MOVE_DRAGON_TAIL,
+    MOVE_CIRCLE_THROW,
+    MOVE_BURNING_BULWARK,
+    MOVE_TERA_STARSTORM,
+    MOVE_BLAZING_TORQUE,
+    MOVE_COMBAT_TORQUE,
+    MOVE_MAGICAL_TORQUE,
+    MOVE_NOXIOUS_TORQUE,
+    MOVE_WICKED_TORQUE,
+    MOVE_COLLISION_COURSE,
+
+    CALLED_MOVE_BANS_ASSIST,
+    // Assist alone: from the sixth generation it calls no move that takes the
+    // user out of sight, and never Mirror Coat (Assistente).
+    MOVE_FLY,
+    MOVE_DIG,
+    MOVE_DIVE,
+    MOVE_BOUNCE,
+    MOVE_SHADOW_FORCE,
+    MOVE_PHANTOM_FORCE,
+    MOVE_SKY_DROP,
+    MOVE_MIRROR_COAT,
+    CALLED_MOVE_BANS_END
 };
 
-BOOL CheckLegalMimicMove(u16 moveNo) {
-    int i = 0;
+// Whether moveNo is in the run of the list from the block `first` begins (0,
+// the list's start) to the block `last` begins.
+static BOOL CalledMoveBanned(u16 moveNo, u16 first, u16 last) {
+    const u16 *ban = sMetronomeUnuseableMoves;
 
-    do {
-        if (sMetronomeUnuseableMoves[i] == moveNo) {
-            break;
+    if (first != 0) {
+        while (*ban++ != first) {
         }
-        i++;
-    } while (sMetronomeUnuseableMoves[i] != 0xFFFE);
-
-    return sMetronomeUnuseableMoves[i] == 0xFFFE;
+    }
+    for (; *ban != last; ban++) {
+        if (*ban == moveNo) {
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
-BOOL CheckLegalMetronomeMove(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 moveNo) {
-    int i = 0;
+BOOL CheckLegalMimicMove(u16 moveNo) {
+    return !CalledMoveBanned(moveNo, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_SHARED);
+}
 
+// Whether Metronome (0 to CALLED_MOVE_BANS_COPYCAT), Copycat
+// (CALLED_MOVE_BANS_MIMIC to CALLED_MOVE_BANS_ASSIST) or Assist
+// (CALLED_MOVE_BANS_MIMIC to CALLED_MOVE_BANS_END) may call moveNo: nothing
+// Gravity or Heal Block stops, as retail had it for all three, nor its run of
+// the list.
+BOOL CheckLegalCalledMove(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 moveNo, u16 first, u16 last) {
     if (BattleContext_CheckMoveUnuseableInGravity(battleSystem, ctx, battlerId, moveNo) == TRUE || BattleContext_CheckMoveHealBlocked(battleSystem, ctx, battlerId, moveNo) == TRUE) {
         return FALSE;
     }
-
-    do {
-        if (moveNo == sMetronomeUnuseableMoves[i]) {
-            break;
-        }
-        i++;
-    } while (sMetronomeUnuseableMoves[i] != 0xFFFF);
-
-    return sMetronomeUnuseableMoves[i] == 0xFFFF;
+    return !CalledMoveBanned(moveNo, first, last);
 }
 
 static const u16 sEncoreFailMoves[] = {

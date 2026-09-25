@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Run Metronome's roll and the Metronome/Mimic ban list with host sanitizers.
+"""Run Metronome's roll and the calling moves' ban list with host sanitizers.
 
-BtlCmd_Metronome, CheckLegalMetronomeMove, CheckLegalMimicMove and the list
+BtlCmd_Metronome, CheckLegalCalledMove, CheckLegalMimicMove and the list
 they share are extracted from the port's C and driven with a scripted random
-number. Where the reference checkout is present, the list is also compared by
-move name with the engine's at d0380a487.
+number: Metronome, Mimic, Copycat and Assist each refuse their run of it.
+Where the reference checkout is present, Metronome's and Mimic's runs are
+also compared by move name with the engine's list at d0380a487.
 """
 
 import os
@@ -25,6 +26,7 @@ OVERLAY = ROOT / "src/battle/overlay_12_0224E4FC.c"
 PREFIX = r'''
 #include <assert.h>
 #include <stdint.h>
+#include "constants/battle.h"
 #include "constants/moves.h"
 #include "constants/pokemon.h"
 typedef uint16_t u16; typedef uint32_t u32;
@@ -47,6 +49,16 @@ static BOOL BattleContext_CheckMoveUnuseableInGravity(BattleSystem *bs, BattleCo
 static BOOL BattleContext_CheckMoveHealBlocked(BattleSystem *bs, BattleContext *ctx, int b, u16 m) { (void)bs; (void)ctx; (void)b; (void)m; return FALSE; }
 @NATIVE@
 
+static BOOL metronomeCalls(u16 move) {
+    return CheckLegalCalledMove(0, 0, 0, move, 0, CALLED_MOVE_BANS_COPYCAT);
+}
+static BOOL copycatCopies(u16 move) {
+    return CheckLegalCalledMove(0, 0, 0, move, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_ASSIST);
+}
+static BOOL assistCalls(u16 move) {
+    return CheckLegalCalledMove(0, 0, 0, move, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_END);
+}
+
 // The move Metronome calls when the first roll is `roll` and every later one
 // lands on Pound.
 static u16 metronome(u16 roll) {
@@ -67,14 +79,14 @@ int main(void) {
     int reached = 0;
     for (u32 roll = 0; roll < NUM_MOVES_TOTAL; roll++) {
         u16 move = roll + 1;
-        if (CheckLegalMetronomeMove(&bs, &ctx, 0, move) && move != MOVE_REVIVAL_BLESSING) {
+        if (metronomeCalls(move) && move != MOVE_REVIVAL_BLESSING) {
             assert(metronome(roll) == move);
             reached++;
         }
     }
     // Revival Blessing is Metronome's own refusal, not the shared list's:
     // Showdown's gen-9 data gives it no metronome flag, and Copycat copies it.
-    assert(CheckLegalMetronomeMove(&bs, &ctx, 0, MOVE_REVIVAL_BLESSING));
+    assert(metronomeCalls(MOVE_REVIVAL_BLESSING));
     assert(metronome(MOVE_REVIVAL_BLESSING - 1) == MOVE_POUND);
     // Sky Drop comes out, as it did in the games that had it.
     assert(metronome(MOVE_SKY_DROP - 1) == MOVE_SKY_DROP);
@@ -91,7 +103,7 @@ int main(void) {
         MOVE_ZIPPY_ZAP, MOVE_MAX_GUARD, MOVE_MAX_STEELSPIKE, MOVE_468, MOVE_470,
     };
     for (unsigned i = 0; i < sizeof(both) / sizeof(both[0]); i++) {
-        assert(!CheckLegalMetronomeMove(&bs, &ctx, 0, both[i]));
+        assert(!metronomeCalls(both[i]) && !copycatCopies(both[i]) && !assistCalls(both[i]));
         assert(!CheckLegalMimicMove(both[i]));
     }
 
@@ -101,14 +113,39 @@ int main(void) {
         MOVE_AFTER_YOU, MOVE_BELCH, MOVE_WIDE_GUARD, MOVE_ASTRAL_BARRAGE,
     };
     for (unsigned i = 0; i < sizeof(metronomeOnly) / sizeof(metronomeOnly[0]); i++) {
-        assert(!CheckLegalMetronomeMove(&bs, &ctx, 0, metronomeOnly[i]));
+        assert(!metronomeCalls(metronomeOnly[i]));
         assert(CheckLegalMimicMove(metronomeOnly[i]));
     }
 
-    // And the ordinary moves stay open to both.
-    static const u16 open[] = { MOVE_POUND, MOVE_SHADOW_FORCE, MOVE_ACROBATICS, MOVE_MOONBLAST, MOVE_MALIGNANT_CHAIN };
+    // Copycat's and Assist's own: not Metronome's further bans, which both
+    // call; the switching moves, which neither does; and the moves that take
+    // their user out of sight, which Assist alone does not call, as Mirror
+    // Coat (Copione, Assistente; Showdown's gen-9 failcopycat and noassist).
+    static const u16 bothCall[] = { MOVE_AFTER_YOU, MOVE_V_CREATE, MOVE_SNARL, MOVE_FREEZE_SHOCK, MOVE_ASTRAL_BARRAGE };
+    for (unsigned i = 0; i < sizeof(bothCall) / sizeof(bothCall[0]); i++) {
+        assert(!metronomeCalls(bothCall[i]) && copycatCopies(bothCall[i]) && assistCalls(bothCall[i]));
+    }
+    static const u16 neitherCalls[] = {
+        MOVE_ROAR, MOVE_WHIRLWIND, MOVE_DRAGON_TAIL, MOVE_CIRCLE_THROW, MOVE_BURNING_BULWARK, MOVE_TERA_STARSTORM,
+        MOVE_BLAZING_TORQUE, MOVE_WICKED_TORQUE, MOVE_PROTECT, MOVE_KINGS_SHIELD, MOVE_TRANSFORM, MOVE_METRONOME,
+        MOVE_CATASTROPIKA,
+    };
+    for (unsigned i = 0; i < sizeof(neitherCalls) / sizeof(neitherCalls[0]); i++) {
+        assert(!copycatCopies(neitherCalls[i]) && !assistCalls(neitherCalls[i]));
+    }
+    static const u16 assistRefuses[] = {
+        MOVE_FLY, MOVE_DIG, MOVE_DIVE, MOVE_BOUNCE, MOVE_SHADOW_FORCE, MOVE_PHANTOM_FORCE, MOVE_SKY_DROP, MOVE_MIRROR_COAT,
+    };
+    for (unsigned i = 0; i < sizeof(assistRefuses) / sizeof(assistRefuses[0]); i++) {
+        assert(copycatCopies(assistRefuses[i]) && !assistCalls(assistRefuses[i]));
+    }
+    assert(metronomeCalls(MOVE_ROAR) && metronomeCalls(MOVE_FLY) && !metronomeCalls(MOVE_MIRROR_COAT));
+    assert(copycatCopies(MOVE_REVIVAL_BLESSING) && !copycatCopies(MOVE_COLLISION_COURSE));
+
+    // And the ordinary moves stay open to all.
+    static const u16 open[] = { MOVE_POUND, MOVE_SURF, MOVE_ACROBATICS, MOVE_MOONBLAST, MOVE_MALIGNANT_CHAIN };
     for (unsigned i = 0; i < sizeof(open) / sizeof(open[0]); i++) {
-        assert(CheckLegalMetronomeMove(&bs, &ctx, 0, open[i]));
+        assert(metronomeCalls(open[i]) && copycatCopies(open[i]) && assistCalls(open[i]));
         assert(CheckLegalMimicMove(open[i]));
     }
     return 0;
@@ -124,6 +161,16 @@ def ban_list(text, start):
     return set(names[:split]), set(names[split + 1:]) - {"0xFFFF"}
 
 
+def port_ban_runs(text):
+    """Mimic's block, and the rest of Metronome's run, of the port's list."""
+    body = text[text.index("sMetronomeUnuseableMoves[]"):]
+    body = body[:body.index("};")]
+    names = re.findall(r"\bMOVE_\w+|CALLED_MOVE_BANS_\w+", body)
+    mimic = names[names.index("CALLED_MOVE_BANS_MIMIC") + 1:names.index("CALLED_MOVE_BANS_SHARED")]
+    metronome = [name for name in names[:names.index("CALLED_MOVE_BANS_COPYCAT")] if not name.startswith("CALLED_")]
+    return set(mimic), set(metronome) - set(mimic)
+
+
 class MetronomeTests(unittest.TestCase):
     def test_metronome_reaches_every_move_but_the_banned(self):
         overlay = OVERLAY.read_text()
@@ -131,8 +178,9 @@ class MetronomeTests(unittest.TestCase):
         table = table[:table.index("};") + 2]
         native = "\n".join([
             table,
+            function(overlay, "CalledMoveBanned"),
             function(overlay, "CheckLegalMimicMove"),
-            function(overlay, "CheckLegalMetronomeMove"),
+            function(overlay, "CheckLegalCalledMove"),
             function(COMMAND.read_text(), "BtlCmd_Metronome"),
         ])
         with tempfile.TemporaryDirectory(prefix="newgold-metronome-") as temp:
@@ -148,7 +196,7 @@ class MetronomeTests(unittest.TestCase):
             self.skipTest("no reference checkout")
         engine = revision(REFERENCE, ENGINE_COMMIT, "src/battle/other_battle_calculators.c")
         both, metronome = ban_list(engine, "u16 sMetronomeMimicMoveBanList[]")
-        port_both, port_metronome = ban_list(OVERLAY.read_text(), "sMetronomeUnuseableMoves[]")
+        port_both, port_metronome = port_ban_runs(OVERLAY.read_text())
         self.assertEqual(port_both, both)
         # Double Iron Bash and Dynamax Cannon sit on both sides of the engine's
         # marker; the Mimic half already covers them here.
