@@ -13,8 +13,8 @@ moves under the moves flag have the moves the game made them with
 The fourth is not a question about data and is not answered here. Whether the
 AI reaches for the potions in a leader's bag, and whether it plays around the
 Sitrus Berry or the Focus Sash the Pokemon in front of it is holding, is
-decided in `asm/overlay_10_trainer_ai*.s` -- vanilla assembly this port has
-never decompiled and does not touch. Nothing in this file runs a turn of
+decided in `src/battle/trainer_ai*.c` -- overlay 10, retail's AI in C with
+the few additions the audit lists. Nothing in this file runs a turn of
 battle. What it can say is that the ingredients are there: the flags are the
 numbers konefr wrote, the potions are in the bag, and every held item names a
 hold effect that some line of this tree actually reads. Somebody still has to
