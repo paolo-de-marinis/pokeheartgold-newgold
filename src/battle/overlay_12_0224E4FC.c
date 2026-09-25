@@ -11803,9 +11803,11 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
 // Copycat's rules are Scarlet and Violet's and Assist's Ultra Sun and Ultra
 // Moon's, the last it was in.
 static const u16 sMetronomeUnuseableMoves[] = {
-    // The engine's further bans for Metronome alone, and Mirror Coat, which
-    // Copycat copies (Showdown's gen-9 data; Pokemon Central, Copione, does
-    // not know) and Assist does not call (Assistente).
+    // Metronome alone: the engine's further bans, Dragon Hammer apart, which
+    // Metronome calls in every game that has it (Pokemon Central, Metronomo;
+    // Showdown's gen-9 data); and Mirror Coat, which Copycat copies
+    // (Showdown's gen-9 data; Pokemon Central, Copione, does not know) and
+    // Assist does not call (Assistente).
     MOVE_AFTER_YOU,
     MOVE_APPLE_ACID,
     MOVE_ASTRAL_BARRAGE,
@@ -11819,7 +11821,6 @@ static const u16 sMetronomeUnuseableMoves[] = {
     MOVE_DIAMOND_STORM,
     MOVE_DRAGON_ASCENT,
     MOVE_DRAGON_ENERGY,
-    MOVE_DRAGON_HAMMER,
     MOVE_DRUM_BEATING,
     MOVE_ETERNABEAM,
     MOVE_FALSE_SURRENDER,
@@ -11870,6 +11871,40 @@ static const u16 sMetronomeUnuseableMoves[] = {
     MOVE_WICKED_BLOW,
     MOVE_WIDE_GUARD,
     MOVE_MIRROR_COAT,
+
+    // Scarlet and Violet's own: the moves of theirs Metronome does not call
+    // (Metronomo's table, column SV, read row by row), Revival Blessing among
+    // them; and Springtide Storm, which the table leaves out and Showdown's
+    // gen-9 data gives no metronome flag.
+    MOVE_ARMOR_CANNON,
+    MOVE_CHILLING_WATER,
+    MOVE_CHILLY_RECEPTION,
+    MOVE_COMEUPPANCE,
+    MOVE_DOODLE,
+    MOVE_DOUBLE_SHOCK,
+    MOVE_ELECTRO_DRIFT,
+    MOVE_FILLET_AWAY,
+    MOVE_HYPER_DRILL,
+    MOVE_JET_PUNCH,
+    MOVE_MAKE_IT_RAIN,
+    MOVE_ORDER_UP,
+    MOVE_POPULATION_BOMB,
+    MOVE_POUNCE,
+    MOVE_POWER_SHIFT,
+    MOVE_RAGE_FIST,
+    MOVE_RAGING_BULL,
+    MOVE_RAGING_FURY,
+    MOVE_REVIVAL_BLESSING,
+    MOVE_RUINATION,
+    MOVE_SALT_CURE,
+    MOVE_SHED_TAIL,
+    MOVE_SILK_TRAP,
+    MOVE_SNOWSCAPE,
+    MOVE_SPICY_EXTRACT,
+    MOVE_TIDY_UP,
+    MOVE_TRAILBLAZE,
+    MOVE_TWIN_BEAM,
+    MOVE_SPRINGTIDE_STORM,
 
     CALLED_MOVE_BANS_MIMIC,
     // Metronome, Mimic, Copycat and Assist: retail's own, and the engine's Z-,
@@ -12010,19 +12045,11 @@ static const u16 sMetronomeUnuseableMoves[] = {
     MOVE_SPIKY_SHIELD,
     MOVE_SPOTLIGHT,
     MOVE_TRANSFORM,
-
-    CALLED_MOVE_BANS_COPYCAT,
-    // Copycat and Assist, not Metronome: the moves that force a switch, which
-    // neither calls, Roar and Whirlwind from the sixth generation (Copione,
-    // Assistente); Burning Bulwark, Tera Starstorm and the torques (Copione;
-    // Showdown's gen-9 data has Assist refuse them too); and Collision
-    // Course, which Copione's table lists with the torques, where Showdown's
-    // gen-9 data lets Copycat copy it.
-    MOVE_ROAR,
-    MOVE_WHIRLWIND,
-    MOVE_DRAGON_TAIL,
-    MOVE_CIRCLE_THROW,
-    MOVE_BURNING_BULWARK,
+    // Scarlet and Violet's, which none of the three calls: Tera Starstorm
+    // (Metronomo, Copione); the torques, which Pokemon Central does not
+    // name, by Showdown's gen-9 data; and Collision Course, which Metronomo's
+    // and Copione's tables list, the second with the torques, where
+    // Showdown's gen-9 data lets Copycat copy it.
     MOVE_TERA_STARSTORM,
     MOVE_BLAZING_TORQUE,
     MOVE_COMBAT_TORQUE,
@@ -12030,6 +12057,17 @@ static const u16 sMetronomeUnuseableMoves[] = {
     MOVE_NOXIOUS_TORQUE,
     MOVE_WICKED_TORQUE,
     MOVE_COLLISION_COURSE,
+
+    CALLED_MOVE_BANS_COPYCAT,
+    // Copycat and Assist, not Metronome: the moves that force a switch, which
+    // neither calls, Roar and Whirlwind from the sixth generation (Copione,
+    // Assistente); and Burning Bulwark (Copione; Showdown's gen-9 data has
+    // Assist refuse it too).
+    MOVE_ROAR,
+    MOVE_WHIRLWIND,
+    MOVE_DRAGON_TAIL,
+    MOVE_CIRCLE_THROW,
+    MOVE_BURNING_BULWARK,
 
     CALLED_MOVE_BANS_ASSIST,
     // Assist alone: from the sixth generation it calls no move that takes the

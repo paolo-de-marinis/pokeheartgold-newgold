@@ -79,15 +79,25 @@ int main(void) {
     int reached = 0;
     for (u32 roll = 0; roll < NUM_MOVES_TOTAL; roll++) {
         u16 move = roll + 1;
-        if (metronomeCalls(move) && move != MOVE_REVIVAL_BLESSING) {
+        if (metronomeCalls(move)) {
             assert(metronome(roll) == move);
             reached++;
         }
     }
-    // Revival Blessing is Metronome's own refusal, not the shared list's:
-    // Showdown's gen-9 data gives it no metronome flag, and Copycat copies it.
-    assert(metronomeCalls(MOVE_REVIVAL_BLESSING));
+    // Scarlet and Violet's refusals: Revival Blessing, Population Bomb, Shed
+    // Tail and the rest of Metronomo's column SV, Springtide Storm and the
+    // torques by Showdown's gen-9 data; Dragon Hammer comes out.
+    static const u16 scarletViolet[] = {
+        MOVE_REVIVAL_BLESSING, MOVE_POPULATION_BOMB, MOVE_SHED_TAIL, MOVE_SALT_CURE, MOVE_DOODLE, MOVE_TWIN_BEAM,
+        MOVE_SPRINGTIDE_STORM, MOVE_BLAZING_TORQUE, MOVE_TERA_STARSTORM, MOVE_COLLISION_COURSE,
+    };
+    for (unsigned i = 0; i < sizeof(scarletViolet) / sizeof(scarletViolet[0]); i++) {
+        assert(!metronomeCalls(scarletViolet[i]));
+    }
     assert(metronome(MOVE_REVIVAL_BLESSING - 1) == MOVE_POUND);
+    assert(metronome(MOVE_DRAGON_HAMMER - 1) == MOVE_DRAGON_HAMMER);
+    // Copycat copies Revival Blessing and Population Bomb all the same.
+    assert(copycatCopies(MOVE_REVIVAL_BLESSING) && copycatCopies(MOVE_POPULATION_BOMB));
     // Sky Drop comes out, as it did in the games that had it.
     assert(metronome(MOVE_SKY_DROP - 1) == MOVE_SKY_DROP);
     assert(metronome(NUM_MOVES_TOTAL) == MOVE_POUND);
@@ -140,7 +150,7 @@ int main(void) {
         assert(copycatCopies(assistRefuses[i]) && !assistCalls(assistRefuses[i]));
     }
     assert(metronomeCalls(MOVE_ROAR) && metronomeCalls(MOVE_FLY) && !metronomeCalls(MOVE_MIRROR_COAT));
-    assert(copycatCopies(MOVE_REVIVAL_BLESSING) && !copycatCopies(MOVE_COLLISION_COURSE));
+    assert(!copycatCopies(MOVE_COLLISION_COURSE));
 
     // And the ordinary moves stay open to all.
     static const u16 open[] = { MOVE_POUND, MOVE_SURF, MOVE_ACROBATICS, MOVE_MOONBLAST, MOVE_MALIGNANT_CHAIN };
@@ -171,6 +181,17 @@ def port_ban_runs(text):
     return set(mimic), set(metronome) - set(mimic)
 
 
+# The moves Scarlet and Violet's Metronome does not call and the engine's list
+# does not name: Metronomo's table, column SV, row by row, and Springtide
+# Storm and the torques by Showdown's gen-9 data.
+SCARLET_VIOLET = {"MOVE_" + name for name in (
+    "ARMOR_CANNON CHILLING_WATER CHILLY_RECEPTION COLLISION_COURSE COMEUPPANCE DOODLE DOUBLE_SHOCK ELECTRO_DRIFT "
+    "FILLET_AWAY HYPER_DRILL JET_PUNCH MAKE_IT_RAIN ORDER_UP POPULATION_BOMB POUNCE POWER_SHIFT RAGE_FIST RAGING_BULL "
+    "RAGING_FURY REVIVAL_BLESSING RUINATION SALT_CURE SHED_TAIL SILK_TRAP SNOWSCAPE SPICY_EXTRACT TERA_STARSTORM "
+    "TIDY_UP TRAILBLAZE TWIN_BEAM SPRINGTIDE_STORM BLAZING_TORQUE COMBAT_TORQUE MAGICAL_TORQUE NOXIOUS_TORQUE "
+    "WICKED_TORQUE").split()}
+
+
 class MetronomeTests(unittest.TestCase):
     def test_metronome_reaches_every_move_but_the_banned(self):
         overlay = OVERLAY.read_text()
@@ -199,8 +220,11 @@ class MetronomeTests(unittest.TestCase):
         port_both, port_metronome = port_ban_runs(OVERLAY.read_text())
         self.assertEqual(port_both, both)
         # Double Iron Bash and Dynamax Cannon sit on both sides of the engine's
-        # marker; the Mimic half already covers them here.
-        self.assertEqual(port_metronome, metronome - both)
+        # marker; the Mimic half already covers them here. Scarlet and
+        # Violet's refusals are the port's (Metronomo's table, Showdown's gen-9
+        # data), and Dragon Hammer, which the engine refuses, is called.
+        self.assertLessEqual(SCARLET_VIOLET, port_metronome)
+        self.assertEqual(port_metronome - SCARLET_VIOLET, metronome - both - {"MOVE_DRAGON_HAMMER"})
 
 
 if __name__ == "__main__":

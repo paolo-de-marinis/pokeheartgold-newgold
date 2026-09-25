@@ -3861,12 +3861,10 @@ BOOL BtlCmd_Metronome(BattleSystem *battleSystem, BattleContext *ctx) {
             continue;
         }
 
-        // Revival Blessing is Metronome's alone to refuse: Showdown's gen-9
-        // data gives it no metronome flag, and Pokemon Central's table
-        // (Metronomo) marks it; Copycat copies it (no failcopycat), so the
-        // shared list below does not name it. Sky Drop stays callable, as
-        // in the fifth to seventh generations, the last it was in.
-        if (moveNo == MOVE_REVIVAL_BLESSING || CheckLegalCalledMove(battleSystem, ctx, ctx->battlerIdAttacker, moveNo, 0, CALLED_MOVE_BANS_COPYCAT) == FALSE) {
+        // Sky Drop stays callable: Pokemon Central's table (Metronomo) does
+        // not list it, so Metronome calls it in every game that has it, as
+        // Showdown's data for those generations does.
+        if (CheckLegalCalledMove(battleSystem, ctx, ctx->battlerIdAttacker, moveNo, 0, CALLED_MOVE_BANS_COPYCAT) == FALSE) {
             continue;
         }
 
