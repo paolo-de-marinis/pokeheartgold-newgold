@@ -291,6 +291,29 @@ class BuildRuleTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn(f'cp "/the/sdk/include/nitro/specfiles/{Path(target).name}" {target}.', result.stdout)
 
+    def test_a_switch_of_version_packs_nothing(self):
+        """Three archives differ by version -- the Pokedex's two and the
+        headbutt trees -- and are copied into files/a, which both versions
+        share, so a switch of version copies them again. The ROM counted the
+        copies and was packed again, with the same md5, by the first make
+        after the other version's. It counts what each copy in files/a is
+        copied from now, the version's own archive for those three; the
+        copies are still made before the pack (filesystem)."""
+        db = database()
+        rules = [m.group(1) for m in re.finditer(r"^build/heartgold\.us/pokeheartgold\.us\.nds:(.*)$", db, re.M)
+                 if "=" not in m.group(1)]
+        self.assertEqual(len(rules), 1)
+        normal, _, order_only = rules[0].partition("|")
+        filesystem = re.search(r"^filesystem:(.*)$", db, re.M).group(1).split()
+        for copy, source in (("files/a/0/7/5", "files/application/zukanlist/zkn_data/zukan_hw_data_gold.narc"),
+                             ("files/a/1/3/3", "files/application/zukanlist/zkn_data/zukan_enc_gold.narc"),
+                             ("files/a/2/5/2", "files/arc/headbutt.heartgold.us.narc")):
+            self.assertNotIn(copy, normal.split())
+            self.assertIn(source, normal.split())
+            self.assertIn(copy, filesystem)
+        self.assertIn("filesystem", order_only.split())
+        self.assertIn("files/a/0/0/6", normal.split())
+
     # Each archive of numbered members: its index, the name the index gives
     # a member, and the sources in the folder that make the members.
     NUMBERED_ARCHIVES = [

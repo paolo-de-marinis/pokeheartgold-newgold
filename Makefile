@@ -104,7 +104,13 @@ $(SUB_FILES): sub ; +
 ifeq ($(COMPARE),1)
 $(ELF) $(ROM): FORCE
 endif
-$(ROM): $(ROMSPEC) $(HEADER_TEMPLATE) $(BANNER) $(SBIN_LZ) $(SUB_FILES) $(NITROFS_FILES) $(FIXROM) | filesystem
+# What files/a holds as copies counts by the archive each is copied from: the
+# Pokedex's and the headbutt archives are the version's own, both versions
+# copy theirs to the same place, and counted by the copies a switch of
+# version packed the ROM again with the same bytes. The copies are made
+# before the pack all the same (filesystem).
+ROM_FILES := $(filter-out $(DIFF_ARCS),$(NITROFS_FILES)) $(SRC_ARCS)
+$(ROM): $(ROMSPEC) $(HEADER_TEMPLATE) $(BANNER) $(SBIN_LZ) $(SUB_FILES) $(ROM_FILES) $(FIXROM) | filesystem
 	$(WINE) $(MAKEROM) $(MAKEROM_FLAGS) -DBUILD_DIR=$(BUILD_DIR) -DNITROFS_FILES="$(NITROFS_FILES:files/%=%)" -DTITLE_NAME="$(TITLE_NAME)" -DBNR="$(BANNER)" -DHEADER_TEMPLATE="$(HEADER_TEMPLATE)" $< $@
 	$(FIXROM) $@ --secure-crc $(SECURE_CRC) --game-code $(GAME_CODE)
 ifeq ($(COMPARE),1)
