@@ -239,6 +239,12 @@ class KnockOffTests(unittest.TestCase):
         self.assertLess(at[-1], script.index("UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HELD_ITEM, ITEM_NONE"))
         self.assertIn("_MoveFailed:\n    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED", script)
 
+    def test_klutz_does_not_stop_bestow(self):
+        # Klutz keeps an item from working, not from changing hands
+        # (Bulbapedia's Klutz; Showdown's bestow asks nothing of it).
+        from test_hold_effects import subscript_named
+        self.assertNotIn("ABILITY_KLUTZ", subscript_named("BATTLE_SUBSCRIPT_GIVE_HELD_ITEM"))
+
     def test_fling_throws_nothing_its_species_keeps(self):
         body = function(read("src/battle/overlay_12_0224E4FC.c"), "TryFling")
         self.assertIn("SpeciesKeepsItem(ctx->battleMons[battlerId].species, ctx->battleMons[battlerId].item)", body)

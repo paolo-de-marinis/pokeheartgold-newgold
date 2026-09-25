@@ -24,7 +24,10 @@ _Start:
     TrySwapItems _MoveFailed, _Give
 
 _Give:
-    CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_ATTACKER, BMON_DATA_ABILITY, ABILITY_KLUTZ, _KlutzMessage
+    // Klutz does not stop it: the ability keeps an item from working, not
+    // from changing hands (Bulbapedia's Klutz: Switcheroo works as usual;
+    // Showdown's bestow asks nothing of it). The engine's subscript printed
+    // "{0}'s Klutz made Bestow ineffective!" and gave nothing.
     Call BATTLE_SUBSCRIPT_ATTACK_MESSAGE_AND_ANIMATION
     // {0} received {2} from {1}!
     PrintMessage msg_0197_01740, TAG_NICKNAME_NICKNAME_ITEM, BATTLER_CATEGORY_DEFENDER, BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_ATTACKER
@@ -36,16 +39,6 @@ _Give:
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_HELD_ITEM, ITEM_NONE
     // Set the defender's held item to the cached value.
     UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_DEFENDER, BMON_DATA_HELD_ITEM, BSCRIPT_VAR_TEMP_DATA
-    Wait 
-    WaitButtonABTime 30
-    End 
-
-_KlutzMessage:
-    PrintAttackMessage 
-    Wait 
-    WaitButtonABTime 30
-    // {0}’s {1} made {2} ineffective!
-    PrintMessage msg_0197_00714, TAG_NICKNAME_ABILITY_MOVE, BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_ATTACKER, BATTLER_CATEGORY_ATTACKER
     Wait 
     WaitButtonABTime 30
     End 
