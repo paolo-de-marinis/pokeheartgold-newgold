@@ -1,0 +1,8 @@
+{
+  "about": "A level-cap step, in a wild battle: Proton and the Slowpoke Well's Rockets beaten (FLAG_BEAT_AZALEA_ROCKETS): the cap is 22 (GetLevelCap). A level-19 Snorlax, one point short of its next level, leads against a forced wild Geodude and switches out for a level-22 Tauros at the cap, also one point short, which knocks the Geodude out with Guillotine (taught in the battle, its accuracy roll forced). Both took part: Snorlax, under the cap, gains and grows to 20 -- past the old cap; Tauros, at the cap, gains nothing and no line says it did. The battle has to end (gDiagBattleState 15, EXIT). The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:19,TAUROS:22", "--exp-short", "1:1", "--exp-short", "2:1", "--flag", "FLAG_UNK_076", "--badges", "1", "--flag", "FLAG_BEAT_AZALEA_ROCKETS"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0", "wait:90", "touch:216,166", "wait:60", "touch:192,38", "wait:40", "touch:127,113", "wait:40", "fight:1:0", "teach:0,0,MOVE_GUILLOTINE", "fight:1", "field"],
+  "expect": {"lines": ["Snorlax, switch out! Come back!", "Go! Tauros!", "Tauros used Guillotine!", "The wild Geodude fainted!", "Snorlax grew to Lv. 20!"], "no_lines": ["Tauros gained", "Tauros grew"], "gDiagBattleState": 15}
+}

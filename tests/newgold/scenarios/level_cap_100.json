@@ -1,0 +1,8 @@
+{
+  "about": "The level cap's last step, in a wild battle: the Fog Badge: the cap is lifted, 100. A level-36 Snorlax, one point short of its next level, leads against a forced wild Geodude and switches out for a level-50 Tauros, also one point short, which knocks the Geodude out with Guillotine (taught in the battle, its accuracy roll forced). Both took part, so both share the experience: Snorlax grows past the old cap of 36 and Tauros to 51, nothing holding either. The battle has to end (gDiagBattleState 15, EXIT). The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:36,TAUROS:50", "--exp-short", "1:1", "--exp-short", "2:1", "--flag", "FLAG_UNK_076", "--badges", "4", "--flag", "FLAG_BEAT_AZALEA_ROCKETS", "--flag", "FLAG_HIDE_BURNED_TOWER_1F_RIVAL"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0", "wait:90", "touch:216,166", "wait:60", "touch:192,38", "wait:40", "touch:127,113", "wait:40", "fight:1:0", "teach:0,0,MOVE_GUILLOTINE", "fight:1", "field"],
+  "expect": {"lines": ["Snorlax, switch out! Come back!", "Go! Tauros!", "Tauros used Guillotine!", "The wild Geodude fainted!", "Snorlax grew to Lv. 37!", "Tauros grew to Lv. 51!"], "gDiagBattleState": 15}
+}
