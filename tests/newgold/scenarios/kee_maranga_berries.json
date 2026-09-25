@@ -1,0 +1,16 @@
+{
+  "about": "The Kee and Maranga Berries (abc86d0da, b0f34eacf), and a Kee Berry answering the hit of a Bug Bite user its holder's Rough Skin fells (002364226: before, it stood aside for the Bug Bite user, who, fallen, ate nothing). A level-50 Pikachu that only splashes holds a Maranga Berry (set:) against a forced wild level-5 Chansey that knows only Water Gun: the special hit raises its Sp. Def. Then it holds a Kee Berry and has Rough Skin, the Chansey knows only Bug Bite and has 1 HP: Rough Skin fells it and the Kee Berry raises the Pikachu's Defense. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:50"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SPLASH",
+            "teach:1,0,MOVE_WATER_GUN", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:0,item,ITEM_MARANGA_BERRY", "fight:1:1",
+            {"expect": {"lines": ["The wild Chansey used Water Gun!", "The Maranga Berry boosted Pikachu’s Sp. Def!"],
+                        "battler0.item": 0}},
+            "teach:1,0,MOVE_BUG_BITE", "set:0,item,ITEM_KEE_BERRY", "set:0,ability,ABILITY_ROUGH_SKIN", "set:1,hp,1", "fight:1"],
+  "expect": {"lines": ["The wild Chansey used Bug Bite!", "Pikachu’s Rough Skin hurt the wild Chansey!",
+                       "The Kee Berry boosted Pikachu’s Defense!", "The wild Chansey fainted!"],
+             "no_lines": ["stole and ate"]}
+}
