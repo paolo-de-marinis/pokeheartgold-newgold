@@ -1,9 +1,9 @@
 {
-  "about": "rolls_forced_high.json's turn with the rolls forced the other way (gDiagForceCritical, gDiagForceEffect, gDiagForceDamageRoll at 2): the same Ember is no critical hit, burns nothing, and does the bottom of the damage range, so the Geodude keeps more HP than at the top.",
+  "about": "rolls_forced_high.json's turn with the rolls forced the other way (gDiagForceCritical, gDiagForceEffect, gDiagForceDamageRoll at 2): the same Ember is no critical hit, burns nothing, and does the bottom of the damage range, so the Geodude keeps more HP than at the top. The field's RNG is pinned as in rolls_forced_high.json.",
   "save": "route29-official.sav",
   "edit": ["--party", "CYNDAQUIL:12"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceCritical": 2, "gDiagForceEffect": 2, "gDiagForceDamageRoll": 2},
-  "steps": ["field", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:4:1"],
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:4:1"],
   "expect": {"lines": ["Cyndaquil used Ember!", "The wild Geodude used Tackle!"], "no_lines": ["critical hit", "burned"],
              "battler1.species": "SPECIES_GEODUDE", "battler1.status": "", "battler1.hp": 10}
 }

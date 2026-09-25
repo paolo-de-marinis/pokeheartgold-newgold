@@ -1,9 +1,9 @@
 {
-  "about": "The battle's rolls forced the likely-to-show way (NEWGOLD_DIAG's gDiagForceCritical, gDiagForceEffect, gDiagForceDamageRoll at 1, and gDiagBattleSeed): a level-12 Cyndaquil's Ember against a forced wild level-5 Geodude lands a critical hit (1 in 24 by the roll) and burns (1 in 10), at the top of the damage range. The switches force the roll for both sides, so the Geodude's Tackle is a critical hit too. rolls_forced_low.json is the same turn the other way.",
+  "about": "The battle's rolls forced the likely-to-show way (NEWGOLD_DIAG's gDiagForceCritical, gDiagForceEffect, gDiagForceDamageRoll at 1, and gDiagBattleSeed): a level-12 Cyndaquil's Ember against a forced wild level-5 Geodude lands a critical hit (1 in 24 by the roll) and burns (1 in 10), at the top of the damage range. The switches force the roll for both sides, so the Geodude's Tackle is a critical hit too. rolls_forced_low.json is the same turn the other way. The field's RNG is set as Continue left it on melonDS 0.9.3 when these expectations were written (sLCRNG_State 0xbb160215), since the Geodude's own stats come from it and Continue seeds it with the VBlank count, which another emulator's loading, or the game's own, moves.",
   "save": "route29-official.sav",
   "edit": ["--party", "CYNDAQUIL:12"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceCritical": 1, "gDiagForceEffect": 1, "gDiagForceDamageRoll": 1},
-  "steps": ["field", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:4:1"],
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:4:1"],
   "expect": {"lines": ["Cyndaquil used Ember!", "A critical hit!", "The wild Geodude was burned!", "The wild Geodude used Tackle!", "A critical hit!"],
              "battler1.species": "SPECIES_GEODUDE", "battler1.status": "BRN", "battler1.hp": 2}
 }
