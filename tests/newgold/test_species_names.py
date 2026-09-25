@@ -142,8 +142,10 @@ class SpeciesTextTests(unittest.TestCase):
 
     @unittest.skipIf(REFERENCE is None, "behaviour reference not present")
     def test_every_bank_is_what_the_importer_writes(self):
-        """At the engine or at New Gold, every row: the two differ only in the
-        three Galarian names konefr gave (574, 1125, 1131)."""
+        """At the engine or at New Gold, every row, and the two are the same.
+        konefr named three Galarian forms by their base's SPECIES_ identifier
+        ("SLOWBRO", "FARFETCHD", "SLOWKING"); they take the base's name, as
+        the form he left "-----", Galarian Slowpoke, does."""
         engine = import_species_text.wanted(gmm.ENGINE)
         newgold = import_species_text.wanted(gmm.NEWGOLD)
         for bank in import_species_text.BANKS:
@@ -151,8 +153,10 @@ class SpeciesTextTests(unittest.TestCase):
             self.assertIn(have, (engine[bank], newgold[bank]), f"msg_{bank:04d}")
         differ = {bank: [i for i, (a, b) in enumerate(zip(engine[bank], newgold[bank])) if a != b]
                   for bank in import_species_text.BANKS}
-        self.assertEqual({bank: rows_ for bank, rows_ in differ.items() if rows_},
-                         {237: [574, 1125, 1131], 238: [574, 1125, 1131], 817: [1125]})
+        self.assertEqual({bank: rows_ for bank, rows_ in differ.items() if rows_}, {})
+        self.assertEqual([rows(237)[i] for i in (573, 574, 1125, 1131)],
+                         ["Slowpoke", "Slowbro", "Farfetch’d", "Slowking"])
+        self.assertEqual(rows(817)[1125], "FARFETCH’D")
 
 
 if __name__ == "__main__":

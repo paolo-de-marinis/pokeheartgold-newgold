@@ -23,7 +23,9 @@ text, and the Dex entry's line breaks (fit_entry).
   573/574), read by their own number. hg-engine names and describes a form
   through its base species, so its own rows for them are placeholders; where a
   form's field is one, the row takes the base species' field, which is what
-  hg-engine shows. A form with a real value of its own keeps it.
+  hg-engine shows. A form with a real value of its own keeps it, except a
+  name that is its base's SPECIES_ identifier, konefr's slip, which takes the
+  base's name too.
 - hg-engine breaks its entries' lines for a box wider than HeartGold's Dex
   window, and an entry wider than the window is not drawn but for a piece of
   its first line (fit_entry says why). Such an entry is broken again for the
@@ -153,6 +155,14 @@ def fields_by_port_row(revision):
             while fields[field] in blank and base in bases:
                 base = bases[base]
                 fields[field] = data[base][field]
+        # konefr's 77469fbd4 replaced three Galarian forms' "-----" with their
+        # base's SPECIES_ identifier -- "SLOWBRO", "FARFETCHD" (no
+        # apostrophe), "SLOWKING" -- the only capitals among his mixed-case
+        # names; a trainer's Galarian Slowbro showed "SLOWBRO". He meant the
+        # species' name, and a form named so takes its base's, as a form
+        # left "-----" does. KONEFR-NOTES.md, Testi 1.
+        if name in bases and fields["name"] == bases[name]:
+            fields["name"] = data[bases[name]]["name"]
         rows[row] = fields
     return rows
 
