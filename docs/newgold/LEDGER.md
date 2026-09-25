@@ -11,7 +11,7 @@ argument.
 | | |
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
-| reference | `1fa3c9366` — konefr/hg-engine-newgold, `heartgold-modern` |
+| reference | `8cbe6ab86` — konefr/hg-engine-newgold, `heartgold-modern` |
 | port | 1233 commits |
 | generated | 2026-09-25 13:11 |
 
@@ -120,7 +120,7 @@ konefr *could* reach, not only what the game reaches today.
 | Bug-Catching Contest | Butterfree through Escavalier, levels 20-30, evolution-item prizes | ✅ done |
 | Cherrygrove vendor and EV presets | his debug vendor, patched into a built script file — excluded in `SCOPE.md` | ⬜ out of scope |
 | Linking Cord for any trade | his `e26576dd1`: a Pokemon that evolves by trading alone evolves when a Linking Cord is used on it -- Phantump, Pumpkaboo and the rest. It sits ahead of the engine's own case, the trade with a held item, as in his code; the engine's stone rows for Kadabra and the other three are on the Evolutions row, not this one | ✅ done |
-| konefr's text | what `d0380a487..1fa3c9366` changes in the text: Irrigation, Eelevate and Evaporate's names and descriptions, Solar Seeds' name, description and "used" lines, the three Galarian names, the lines and names of trainers 47, 383 and Proton, and bank 550's vendor lines, which nothing here reads since the vendor itself is out of scope. Written by the same importers at `1fa3c9366`, on top of the engine's text, so the engine layer is the commit before | ✅ done |
+| konefr's text | what `d0380a487..8cbe6ab86` changes in the text: Irrigation, Eelevate and Evaporate's names and descriptions, Solar Seeds' name, description and "used" lines, the three Galarian names (his capitals, now their bases' names: 147c9e1b8), the lines and names of trainers 47, 383 and Proton, and bank 550's vendor lines, which nothing here reads since the vendor itself is out of scope. Three plain errors of his are corrected, by Paolo's rule in `KONEFR-NOTES.md`: those names, Samantha's two lines saying PERSIAN (5a6655bbc), and Mark's and Nelson's defeat lines where a double battle reads them (247823e32). Written by the same importers at `8cbe6ab86`, on top of the engine's text, so the engine layer is the commit before | ✅ done |
 | Water Absorb and Leaf Guard fixes | the row had it backwards. Leaf Guard's sunshine is HGSS's own and was never port work — but it left Rest out, and the Rest subscript now asks the same two questions the other six statuses ask. Water Absorb had the damaging-move guard and not the no-self-trigger one; it has both. Dry Skin keeps only the power check, in the reference as here | ✅ done |
 
 ---
@@ -134,9 +134,9 @@ The split into an engine and New Gold, deferred until further notice: `SCOPE.md`
 | konefr's five switches configurable | `IMPLEMENT_LEVEL_CAP`, `LEVEL_CAP_VARIABLE`, `UNCAP_CANDIES_FROM_LEVEL_CAP`, `ALLOW_LEVEL_CAP_EVOLVE`, `DELETABLE_HMS`: off in the engine, on in New Gold. Today they are wired always on | ⬜ deferred |
 | `GetLevelCap` reads the variable | as hg-engine does, `LEVEL_CAP_VARIABLE`, with konefr's ladder 10→13→19→22→30→34→36 as data rather than code | ⬜ deferred |
 | konefr's abilities and move behind the extension points | Irrigation, Evaporate, Solar Seeds; `ABILITY_TEMP2` and `NUM_OF_CUSTOM_MOVES` at 0 in the engine | ⬜ deferred |
-| Importers that take a revision | `d0380a487` gives the engine's data, `1fa3c9366` New Gold's | ⬜ deferred |
-| The separation recounted by provenance | the old count, 8 mixed commits of 175, looked only at file paths; the rule is what `d0380a487..1fa3c9366` introduces or modifies | ⬜ deferred |
-| The split | `git tag port-history`; `engine` from pret `e97c7fc9` with the matching decompilations cherry-picked and the rest regenerated at `d0380a487`; `newgold` rebuilt on it at `1fa3c9366`; `git merge -s ours` of the published branch, so the push is a fast-forward | ⬜ deferred |
+| Importers that take a revision | `d0380a487` gives the engine's data, `8cbe6ab86` New Gold's | ⬜ deferred |
+| The separation recounted by provenance | the old count, 8 mixed commits of 175, looked only at file paths; the rule is what `d0380a487..8cbe6ab86` introduces or modifies | ⬜ deferred |
+| The split | `git tag port-history`; `engine` from pret `e97c7fc9` with the matching decompilations cherry-picked and the rest regenerated at `d0380a487`; `newgold` rebuilt on it at `8cbe6ab86`; `git merge -s ours` of the published branch, so the push is a fast-forward | ⬜ deferred |
 | The engine-only configuration played | never built yet | ⬜ deferred |
 
 ---

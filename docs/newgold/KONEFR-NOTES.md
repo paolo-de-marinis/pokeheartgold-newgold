@@ -5,12 +5,21 @@ e ogni tanto abbiamo trovato cose che sembrano sviste, pezzi lasciati a metà, a
 scelte che non abbiamo capito. Le raccogliamo qui per chiederle a lui. Non è un bug report e non
 è un giudizio: molte potrebbero essere volute, e in quel caso basta saperlo.
 
+Dal 25 settembre vale la regola di Paolo: «se una cosa di konefr è palesemente errata correggila e
+comunque mettila nella nota». Palesemente errata vuol dire che nel suo gioco non fa quello che lui
+voleva, e che c'è una sola correzione, presa dai suoi dati o da una regola del gioco. Quelle le
+correggiamo nel port, e la voce resta qui con la sua domanda, perché lui lo sappia. Il resto resta
+com'è. Ogni voce l'hanno giudicata tre giudici, ognuno per conto suo. Quando il loro motivo aiuta a
+fare la domanda, lo riportiamo in una riga.
+
 Come leggere le voci:
 
 - **Domanda** è quella da fargli.
 - **Cosa** dice che cosa abbiamo trovato.
-- **Dove** dà i commit del suo range (`d0380a487..1fa3c9366`, sopra hg-engine) e i file. Le righe
-  si riferiscono alla sua punta, `1fa3c9366`.
+- **Dove** dà i commit del suo range (`d0380a487..8cbe6ab86`, sopra hg-engine) e i file. Le righe
+  sono ancora quelle di `1fa3c9366`. La sua punta, `8cbe6ab86`, cambia solo la squadra di Nob
+  (Allenatori 4), e le righe di Nob sono date alla punta. Dopo Nob, alla punta le righe di
+  `data/Trainers.c` sono due più avanti.
 - **Nel port** dice che cosa abbiamo fatto nel frattempo: tenuto com'è (è suo), corretto (e perché)
   o deciso da Paolo.
 
@@ -31,7 +40,11 @@ Anche il tuo `hg_trainer_log_generator.py` (sezione 1) indica 2/3/265 come primo
 **Dove:** `data/Trainers.c:75`, `:95`, `:11970` (modificati) e `:21864`, `:21898`, `:21932`
 (quelli usati). Lo script di Cherrygrove è `scr_seq_0850_T21.s:551-561` nella decomp.
 
-**Nel port:** tenuto com'è. Lo scontro resta L5.
+**Nel port:** corretto (7359221d1). I tuoi L7, IV 40 e Pozione sono passati sui 495-497, specie per
+specie: 265 → 495 Chikorita, 2 → 496 Cyndaquil, 3 → 497 Totodile. Il ragazzo tiene classe, nome e
+frasi, e 2, 3 e 265 restano come li hai lasciati. Far combattere allo script i 2/3/265 avrebbe
+mostrato il nome del rivale troppo presto e tolto le frasi. In gioco non l'abbiamo ancora visto:
+serve un salvataggio a Cherrygrove prima dello scontro.
 
 ### 2. Il grunt del Teatro di Danza di Ecruteak
 **Domanda:** il Mickey #63 era pensato per il Teatro?
@@ -54,20 +67,28 @@ Sullo stesso piano c'è Alfred a L36, e tutti gli altri allenatori del Faro sono
 
 **Dove:** `data/Trainers.c:9306` (#211) e `:19563` (#440).
 
-**Nel port:** tenuto com'è.
+**Nel port:** tenuto com'è. I giudici: correggerlo vuol dire scegliere per te, fra spostare la
+squadra del #440 sul #211 e dare al #211 una squadra nuova.
 
 ### 4. Nob della palestra di Cianwood e Kiyo
-**Domanda:** in "Rebalance Chuck gym trainers" volevi toccare Nob invece di Kiyo?
+**Domanda:** in "Rebalance Chuck gym trainers" volevi toccare Nob invece di Kiyo? E ora che Nob ha
+la sua squadra, Kiyo a L40-43 lo vuoi così?
 
 **Cosa:** ccf2c9f5e ribilancia i Black Belt 156-159 (Yoshi, Lao, Kiyo, Lung). Kiyo (158) però è il
-Karate King di Mt. Mortar B1F, non uno della palestra. Il quarto della palestra è Nob (251), che ha
-ancora il Machop e il Machoke retail a L25, contro gli altri a L40-45. Sembra che la palestra sia
-stata presa come 156-159.
+Karate King di Mt. Mortar B1F, non uno della palestra. Il quarto della palestra è Nob (251), che a
+`1fa3c9366` aveva ancora il Machop e il Machoke retail a L25, contro gli altri a L40-45. Sembra che
+la palestra sia stata presa come 156-159.
 
-**Dove:** ccf2c9f5e, `data/Trainers.c:7311` (Kiyo) e `:11102` (Nob). Quel commit tocca solo i
-trainer 34, 90-99 e 156-159.
+Il 24 settembre hai risposto per Nob con 8924ebe2d ("Nob chuck gym") e 8cbe6ab86 ("Update Nob Chuck
+Gym"): Hariyama L43 con la Sitrus Berry e Machoke L45 con la Black Belt. Kiyo non l'hai toccato.
 
-**Nel port:** decisione di Paolo (23 settembre): resta come l'ha lasciato konefr.
+**Dove:** ccf2c9f5e, `data/Trainers.c:7311` (Kiyo) e `:11102` (Nob, uguale alla punta). Quel commit
+tocca solo i trainer 34, 90-99 e 156-159.
+
+**Nel port:** decisione di Paolo (23 settembre): resta come l'ha lasciato konefr. La nuova squadra
+di Nob è portata in 5858ab446, e i suoi strumenti in ba314aa29 (voce 6). Kiyo resta una domanda.
+I giudici: quando sei tornato alla palestra non l'hai toccato, né per rimetterlo retail né per
+cambiarlo, quindi non si sa se l'hai dimenticato o se lo vuoi così.
 
 ### 5. Pokémon senza mosse, che usano solo Scontro
 **Domanda:** a questi Pokémon mancano le mosse per svista?
@@ -88,32 +109,66 @@ solo Scontro (Struggle). In certi casi il Pokémon retail al loro posto le mosse
 
 **Dove:** `data/Trainers.c` a quei numeri.
 
-**Nel port:** tenuto com'è. Per le palestre c'è anche un test che lo fissa (`tests/newgold/test_gyms.py`,
-`MOVELESS`).
+**Nel port:** corretto (16a3cf45b). Ognuno dei 20 Pokémon ha le mosse con cui il gioco crea un
+Pokémon a quel livello (`InitBoxMonMoveset`): le ultime quattro che impara salendo di livello, come
+per un allenatore senza il flag. Clamperl ne ha tre, perché il suo learnset arriva a tre. I giudici:
+dove volevi un Pokémon senza mosse hai tolto tu il flag (Mark #395 in a6bf7e9d3), e agli altri tre
+di Issac le mosse le hai date. I test: `tests/newgold/test_gyms.py` (`MOVELESS`) ora chiede che
+nessun Pokémon delle palestre sia senza mosse, e 0aba1ddfe confronta tutti e 20 con i learnset.
+L'importer ora va lanciato in un albero già compilato, e se non lo è lo dice (89e4ce2f1, test in
+dd62c2dff). Visto in gioco: lo Skitty e l'Herdier di Carrie usano le loro mosse.
 
-### 6. Bacche che nessuno tiene
-**Domanda:** i Saggi della Sprout Tower dovevano avere la Bacca Oran?
+### 6. Strumenti che nessuno tiene
+**Domanda:** i Saggi della Sprout Tower dovevano avere la Bacca Oran? E Nob doveva tenere i suoi
+due strumenti?
 
 **Cosa:** 5cfd84cc7 dà la Bacca Oran ai Bellsprout di Chow #43 ed Edmond #52. I due però sono
-`TRAINER_DATA_TYPE_NOTHING`, senza il flag ITEMS, quindi le bacche non vengono lette.
+`TRAINER_DATA_TYPE_NOTHING`, senza il flag ITEMS, quindi le bacche non vengono lette. Lo stesso in
+8cbe6ab86, il tuo ultimo commit: Nob #251 dà la Sitrus Berry all'Hariyama (quello con Belly Drum) e
+la Black Belt al Machoke, ma resta `TRAINER_DATA_TYPE_MOVES`. Archer #485 invece non c'entra: i
+cinque strumenti che una ricerca gli aveva dato sono di Proton #486, che il flag ce l'ha.
 
-**Dove:** `data/Trainers.c:2152` e `:2561`.
+**Dove:** `data/Trainers.c:2152` e `:2561`. Nob a `:11102`, gli strumenti a `:11116` e `:11125`
+(righe della punta).
 
-**Nel port:** tenuto com'è. L'importer segue il flag come il suo gioco.
+**Nel port:** corretto (ba314aa29). Se un Pokémon della squadra ha uno strumento, l'allenatore prende
+il flag ITEMS, e ognuno tiene quello che hai scritto: Chow Oran, niente, Oran; Edmond una Oran su
+tutti e quattro; Nob la Sitrus Berry all'Hariyama e la Black Belt al Machoke. Mosse e livelli non
+cambiano. I giudici: ogni altra volta che dai strumenti metti il flag nello stesso commit (Jin #53,
+Neal #55 e Li #290 in 5cfd84cc7, Albert in 02c811f26). Visto in gioco: i due Pokémon di Nob tengono
+i loro strumenti.
 
-### 7. Nelson, Route 39, lotta in doppio
+### 7. Nelson (Route 39) e Mark (Route 36), lotte in doppio
 **Domanda:** Nelson doveva essere `NO_PARTNER_DOUBLE_BATTLE` come Mark?
 
-**Cosa:** Nelson #389 è `DOUBLE_BATTLE`, ma è da solo e ha solo i testi da lotta singola. Mark #395
-era nato `DOUBLE_BATTLE` (a6bf7e9d3) ed è passato a `NO_PARTNER_DOUBLE_BATTLE` in 62e0c76de. Lo stesso
-commit ha toccato anche Nelson (livelli degli Slowbro) e lo ha lasciato `DOUBLE_BATTLE`. Poi, secondo
-la documentazione di hg-engine, un doppio senza partner vuole il testo di sconfitta in lotta come
-`TEXT_DOUBLE_DEFEATED_IN_BATTLE_1`, e Mark ha solo `TRMSG_LOSE`.
+**Cosa:** Nelson #389 è `DOUBLE_BATTLE`, ma è da solo e ha solo i testi da lotta singola. Mark #395,
+sulla Route 36, era nato `DOUBLE_BATTLE` (a6bf7e9d3) ed è passato a `NO_PARTNER_DOUBLE_BATTLE` in
+62e0c76de. Lo stesso commit ha toccato anche Nelson (livelli degli Slowbro) e lo ha lasciato
+`DOUBLE_BATTLE`. Poi, secondo la documentazione di hg-engine, un doppio senza partner vuole il testo
+di sconfitta in lotta come `TEXT_DOUBLE_DEFEATED_IN_BATTLE_1`, e Mark ha solo `TRMSG_LOSE`.
+
+Nel tuo gioco, quando Nelson vede un giocatore con due Pokémon, il gioco cerca un compagno che sulla
+mappa non c'è: un assert, poi un oggetto nullo letto. Se gli parli, i box vengono vuoti. Mark e
+Nelson in lotta non dicono mai la loro frase di sconfitta ("I was wrong.", "Ooh, your Pokémon have
+potential."): al loro posto escono box vuoti.
 
 **Dove:** `data/Trainers.c:17341` (Nelson) e `:17653` (Mark). La nota è in
 `documentation/wiki/Trainer-Pokémon-Structure-Documentation.md:44`.
 
-**Nel port:** tenuti tutti e due come sono. Non l'abbiamo ancora visto in gioco.
+**Nel port:** corretto.
+- Nelson è `NO_PARTNER_DOUBLE_BATTLE` come Mark, e la frase di sconfitta di tutti e due passa nel
+  posto che un doppio legge, `TRMSG_DBL_LOSE_1` (247823e32). Tutte e due le frasi ora si vedono.
+- Il motore del port chiedeva "è un doppio?" invece di "arriva un compagno?", quindi anche Mark
+  cercava un compagno. Ora chiede la seconda: 18dab19df decompila la routine, 0b3eaef4c la cambia.
+- Un giocatore con un solo Pokémon in grado di lottare: Mark e Nelson non lo vedono, e se gli parli
+  dicono solo la frase d'apertura (8d0f059b4 decompila la routine, 16430cd42 aggiunge il controllo).
+  Qui il port si allontana da hg-engine: nel tuo gioco quel giocatore viene sfidato sia a vista sia
+  parlandogli, e il doppio parte con un Pokémon solo. Nel port quel doppio non può partire (la build
+  diagnostica si resetta, le altre leggono oltre la squadra), quindi vale la regola retail di ogni
+  doppio.
+- Visti in gioco sulla build diagnostica: Mark e Nelson fino alla fine, in tutti e due gli ordini di
+  KO, senza assert. Serviva anche 757cb7ff3, sul posto vuoto di un doppio. Lo scenario
+  `tests/newgold/scenarios/mark_double_to_the_end.json` (2a4adf251) rigioca quello di Mark.
 
 ### 8. Silver alla Torre Bruciata
 **Domanda:** il Silver della Torre Bruciata è rimasto indietro?
@@ -124,7 +179,8 @@ L23-31.
 
 **Dove:** `data/Trainers.c:11828`, `:12058` e `:12268`. Il cap è in `src/pokemon.c`, flag 454.
 
-**Nel port:** tenuto com'è.
+**Nel port:** tenuto com'è. I giudici: l'unica correzione è una squadra nuova, e i tuoi dati non la
+danno.
 
 ### 9. Le tre versioni del Silver di Azalea
 **Domanda:** le differenze fra le tre squadre sono volute?
@@ -151,7 +207,8 @@ della Route 41 invece sono stati portati a L27-40, dentro ccf2c9f5e ("Rebalance 
 **Domanda:** il Jigglypuff di Cathy e lo Skitty di Carrie sono rimasti per sbaglio?
 
 **Cosa:** in eb4e20f17 Cathy #71 ha Delcatty e Miltank a L27, più un Jigglypuff L15 con IV 10 rimasto
-dalla squadra retail. Carrie #22 ha uno Skitty L20 accanto a due L30, ed è anche senza mosse (voce 5).
+dalla squadra retail. Carrie #22 ha uno Skitty L20 accanto a due L30, ed era anche senza mosse (voce
+5, corretta nel port).
 
 **Dove:** `data/Trainers.c:3461` e `:1072`.
 
@@ -165,13 +222,63 @@ dalla squadra retail. Carrie #22 ha uno Skitty L20 accanto a due L30, ed è anch
 - l'Ampharos di Dana #400 è L34, e tu hai spostato Flaaffy → Ampharos a 35;
 - il Magcargo di Ned #282 è L31 (Slugma evolve al 38);
 - il Cofagrigus di Markus #539 è L20 (34);
-- il Persian di Samantha #70 è L25 (28).
+- il Persian di Samantha #70 è L25 (28), e le sue frasi sono nella voce 13;
+- il Palpitoad di Henry #60 è L14 (Tympole evolve al 25), accanto a un Poliwag L14 (78e568051);
+- lo Slowbro di Nelson #389 è L36 (37). Questo sembra voluto: in 77469fbd4 era L37, e in 62e0c76de
+  l'hai abbassato a 36 con tutta la squadra.
 
 Poi Irwin: la sua rivincita #454 apre con un Voltorb L22, più basso del primo scontro (#7, L23-26).
 Le specie sono cambiate ma i livelli sono rimasti retail. Wade #4 ha un Wurmple L2 con IV 0 in una
 squadra L6-7.
 
-**Dove:** `data/Trainers.c` a quei numeri. Flaaffy è in `data/Evolutions.c`.
+**Dove:** `data/Trainers.c` a quei numeri (Henry `:2907`, lo Slowbro di Nelson `:17363`). Flaaffy è in
+`data/Evolutions.c`.
+
+**Nel port:** tenuto com'è.
+
+### 13. Le frasi di Samantha
+**Domanda:** le frasi di Samantha dovevano dire PERSIAN?
+
+**Cosa:** in eb4e20f17 il primo Meowth di Beauty Samantha #70 (palestra di Goldenrod) diventa un
+Persian L25, nello stesso slot e con le stesse mosse retail (Scratch, Growl, Bite, Pay Day). Il
+secondo diventa un Wigglytuff. Le sue frasi retail però dicono ancora "No! Oh, MEOWTH, I’m so
+sorry!" e "I taught MEOWTH moves for taking on any type...". Quindi si scusa con un Pokémon che non
+ha più. In tutto il tuo range è l'unica le cui frasi nominano una specie che hai tolto dalla squadra.
+
+**Dove:** `data/Trainers.c:3418` (il Persian a `:3432`).
+
+**Nel port:** corretto (5a6655bbc): MEOWTH → PERSIAN nelle due frasi, nient'altro. Le righe stanno
+ancora nel box. Visto in gioco: "No! Oh, PERSIAN, I'm so sorry!".
+
+### 14. Il Gorebyss di George
+**Domanda:** il Gorebyss di George doveva avere mosse sue?
+
+**Cosa:** in ccf2c9f5e (i nuotatori della Route 41) lo Swimmer George #96 ha un Gorebyss L33 con le
+stesse mosse dei suoi Tentacool e del Tentacruel: Supersonic, Bubble Beam, Wrap e Toxic. Nel retail
+quello slot era un terzo Tentacool. Nel tuo `learnsets.json` Gorebyss non impara né Wrap né Bubble
+Beam, in nessun modo. Sembra un cambio di specie con le mosse vecchie rimaste.
+
+**Dove:** `data/Trainers.c:4653` (il Gorebyss a `:4685`, le mosse a `:4687`).
+
+**Nel port:** tenuto com'è. I giudici: in lotta funziona, con quattro mosse vere, e nessuno controlla
+che siano legali. Correggerlo vuol dire scegliere due mosse al posto tuo.
+
+### 15. Rivincite al telefono più deboli del primo scontro
+**Domanda:** le rivincite di Derek, Chad e Dana sono ancora da fare?
+
+**Cosa:** in 77469fbd4 e 84efd24c6 hai alzato tre primi scontri delle Route 38 e 39, ma le loro
+rivincite sono ancora retail:
+- il Pokéfan Derek #44 è L38 (Pikachu, Illumise, Volbeat); DEREK_2 #438 è L24/30 e DEREK_3 #439
+  L13-37;
+- lo School Kid Chad #397 è L37; CHAD_2 #434 è L29/30;
+- la Lass Dana #400 è L33-34; DANA_2 #464 è L31/32.
+
+Quindi la prima rivincita è più debole del primo scontro, come per Irwin (voce 12). Per Huey (voce 3)
+è il contrario. I giudici: la rivincita _2 si sblocca solo dopo la Torre Radio, e prima il telefono
+ripete il primo scontro. Il calo si vede solo oltre il punto dove sei arrivato.
+
+**Dove:** `data/Trainers.c:2202` (#44), `:19483` (#438), `:19516` (#439), `:17759` (#397), `:19365`
+(#434), `:17912` (#400) e `:20446` (#464).
 
 **Nel port:** tenuto com'è.
 
@@ -307,7 +414,8 @@ cambiato: va bene così?
 
 **Dove:** 05a81a4d4 e `src/battle/other_battle_calculators.c:185`.
 
-**Nel port:** aggiunta nel layer New Gold (b7c31a7d7). L'animazione è tenuta com'è (c7f39fca8).
+**Nel port:** corretto già prima della regola: aggiunta nel layer New Gold (b7c31a7d7). L'animazione
+è tenuta com'è (c7f39fca8).
 
 ---
 
@@ -334,6 +442,20 @@ Silver nasconde la MT46, e raccogliere la MT46 segna quel Silver come battuto.
 **Dove:** `armips/include/flags.s:1207` (e `:1397` per la base).
 
 **Nel port:** non c'è niente da portare, quindi il flag non è stato portato.
+
+### 3. Le 33 Bacche Hyper
+**Domanda:** le Bacche Hyper devono potersi trovare nel tuo gioco?
+
+**Cosa:** le 33 Bacche Hyper, da `ITEM_HYPER_CHERI_BERRY` a `ITEM_HYPER_ROSELI_BERRY` (2651-2683),
+hanno il loro record nella tasca delle Bacche, ma niente le dà: né allenatori, né market, né
+strumenti a terra, né regali. Non le hai aggiunte tu: vengono da hg-engine (3aa4f8563, "plza
+items"), prima di `d0380a487`, e il tuo range non le tocca. La domanda è tua perché è il tuo gioco a
+decidere se usarle.
+
+**Dove:** `include/constants/item.h:2657-2689` e `data/itemdata/itemdata.c:172329` (la prima).
+
+**Nel port:** tenuto com'è: ci sono i record e niente le dà. La tasca delle Bacche ha 64 posti, e oggi
+si possono avere solo le 64 retail (AUDIT, riga aperta).
 
 ---
 
@@ -395,8 +517,11 @@ mentre il resto dei nomi è in maiuscolo e minuscolo ("Farfetch’d"). Slowpoke 
 
 **Dove:** `data/Species.c:66067`, `:66124`, `:66181` e `:66523`.
 
-**Nel port:** i suoi tre nomi sono tenuti. Lo Slowpoke di Galar mostra "Slowpoke", perché nel port
-una forma prende il testo della sua base.
+**Nel port:** corretto (147c9e1b8). "SLOWBRO", "FARFETCHD" e "SLOWKING" sono gli identificatori
+`SPECIES_` delle basi, non nomi. Una forma che hai chiamato così prende il nome della sua base:
+Slowbro, Farfetch’d e Slowking. Nelson ora manda in campo "Slowbro" e non "SLOWBRO". La regola vale
+anche per la forma di una forma (590be859f). Lo Slowpoke di Galar mostra "Slowpoke", perché nel port
+una forma col nome segnaposto prende il testo della sua base.
 
 ### 2. Le battute nuove di Proton non si vedono
 **Domanda:** sapevi che le battute nuove di Proton non compaiono?
@@ -554,5 +679,5 @@ L'elenco completo è in AUDIT-2026-09-23.md ("Differences from konefr's referenc
   di Bulbasaur (tenute).
 - Refuso "ELECRIC" nel nome di un effetto degli strumenti (`hold_item_effects.h`).
 - Queste cose sono di hg-engine e non sue, anche se i nostri record a volte gliele attribuiscono: i
-  prezzi degli strumenti e le potenze di Natural Gift, `ALLOW_SAVE_CHANGES`, gli sprite segnaposto e
-  le voci del Pokédex.
+  prezzi degli strumenti e le potenze di Natural Gift, `ALLOW_SAVE_CHANGES`, gli sprite segnaposto,
+  le voci del Pokédex e le 33 Bacche Hyper (Strumenti 3).

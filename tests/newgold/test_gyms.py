@@ -5,7 +5,10 @@ The ledger's verification row for these four gyms asks four things: parties,
 levels, held items, and the AI using what it carries. Three of those are a
 question about data and are answered here, for every trainer standing in
 Violet, Azalea, Goldenrod and Ecruteak: 18 trainers and 72 Pokemon, each one
-compared field for field against konefr's `data/Trainers.c`.
+compared field for field against konefr's `data/Trainers.c`, read with the
+importer's corrections of his plain slips: the four Pokemon he left without
+moves under the moves flag have the moves the game made them with
+(KONEFR-NOTES.md, Allenatori 5).
 
 The fourth is not a question about data and is not answered here. Whether the
 AI reaches for the potions in a leader's bag, and whether it plays around the
