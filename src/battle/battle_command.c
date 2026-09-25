@@ -8197,6 +8197,7 @@ static void Task_GetPokemon(SysTask *task, void *inData) {
                 SetMonData(mon, MON_DATA_HELD_ITEM, &taken[battlerId >> 1]);
             }
             taken[(battlerId >> 1) ^ 1] = ITEM_NONE;
+            CaughtMonKeepsItem(data->battleSystem, data->ctx, mon);
             if (BattleSystem_GetBattleType(data->battleSystem) & (BATTLE_TYPE_PAL_PARK | BATTLE_TYPE_TUTORIAL)) {           // If this was the Catching Demo or a Pal Park encounter...
                 ov12_022567D4(data->battleSystem, data->ctx, BattleSystem_GetPartyMon(data->battleSystem, battlerId, data->ctx->selectedMonIndex[battlerId]));
                 sub_0201649C(BattleSystem_GetMessageIcon(data->battleSystem), 1);

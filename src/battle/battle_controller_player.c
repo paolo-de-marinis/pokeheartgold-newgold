@@ -290,6 +290,23 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
+// A wild Pokemon caught with an item one of the player's handed it (Trick,
+// Switcheroo) or lost to it (Magician, Pickpocket) keeps it, and nobody gets a
+// copy (Pokemon Central, Raggiro: from the ninth generation). The player's
+// Pokemon keeps what it holds now, what the swap gave it: a swap with a wild
+// Pokemon lasts (Rapidscambio). Asked at the catch, once the caught Pokemon
+// has had back what was taken from it (Task_GetPokemon).
+void CaughtMonKeepsItem(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon) {
+    u16 item = GetMonData(mon, MON_DATA_HELD_ITEM, NULL);
+
+    for (int i = 0; item != ITEM_NONE && i < PARTY_SIZE; i++) {
+        if ((ctx->heldItemsTaken & MaskOfFlagNo(i)) && ctx->itemsToRestore[i] == item) {
+            ctx->itemsToRestore[i] = GetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, NULL);
+            return;
+        }
+    }
+}
+
 // A bad poisoning does not outlast the battle: the player's Pokemon leave it
 // ordinarily poisoned, as hg-engine's RevertFormChange leaves them.
 static void EaseBadPoison(BattleSystem *battleSystem) {

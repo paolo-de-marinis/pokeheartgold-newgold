@@ -229,6 +229,36 @@ int main(void) {
     assert(sAdds == 0 && bs.party[1].item == ITEM_NONE);
     ctx.itemsTakenFromWild[1] = ITEM_NONE;
 
+    // Tricked with a wild Pokemon that was then caught: it keeps the Focus
+    // Sash it was handed, the player's Pokemon the Leftovers it got, and the
+    // bag gets neither (Raggiro, Rapidscambio). Before, the Sash came back
+    // too and the Leftovers went to the bag.
+    const u16 swappedWild[PARTY_SIZE] = { ITEM_LEFTOVERS, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
+    Pokemon caught = { ITEM_FOCUS_SASH };
+    for (int i = 0; i < PARTY_SIZE; i++) {
+        ctx.itemsToRestore[i] = before[i];
+        bs.party[i].item = swappedWild[i];
+    }
+    ctx.heldItemsGivenBack = 0;
+    ctx.heldItemsTaken = 1 << 0;
+    bs.type = BATTLE_TYPE_NONE;
+    bs.outcome = BATTLE_OUTCOME_MON_CAUGHT;
+    sAdds = 0;
+    CaughtMonKeepsItem(&bs, &ctx, &caught);
+    GiveBackHeldItems(&bs, &ctx);
+    assert(sAdds == 0 && bs.party[0].item == ITEM_LEFTOVERS && caught.item == ITEM_FOCUS_SASH);
+    // One caught with an item of its own leaves the swap to the bag.
+    caught.item = ITEM_POTION;
+    for (int i = 0; i < PARTY_SIZE; i++) {
+        ctx.itemsToRestore[i] = before[i];
+        bs.party[i].item = swappedWild[i];
+    }
+    ctx.heldItemsGivenBack = 0;
+    sAdds = 0;
+    CaughtMonKeepsItem(&bs, &ctx, &caught);
+    GiveBackHeldItems(&bs, &ctx);
+    assert(sAdds == 1 && sAdded[0][0] == ITEM_LEFTOVERS && bs.party[0].item == ITEM_FOCUS_SASH);
+
     // Swapped within the party is not gained.
     const u16 swapped[PARTY_SIZE] = { ITEM_NONE, ITEM_FOCUS_SASH, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
     run(BATTLE_TYPE_NONE, before, swapped, &bs);
@@ -328,7 +358,7 @@ class TakenItemTests(unittest.TestCase):
         give = state.index("SetMonData(mon, MON_DATA_HELD_ITEM, &taken[battlerId >> 1]);")
         self.assertLess(state.index("Pokemon *mon = BattleSystem_GetPartyMon("), give)
         self.assertLess(give, state.index("BATTLE_TYPE_PAL_PARK | BATTLE_TYPE_TUTORIAL"))
-        self.assertIn("taken[(battlerId >> 1) ^ 1] = ITEM_NONE;", state)
+        self.assertIn("taken[(battlerId >> 1) ^ 1] = ITEM_NONE;\n            CaughtMonKeepsItem(data->battleSystem, data->ctx, mon);", state)
 
 
 class RestoreItemsTests(unittest.TestCase):
@@ -340,7 +370,7 @@ class RestoreItemsTests(unittest.TestCase):
     def test_the_real_function_on_a_party(self):
         source = CONTROLLER.read_text()
         program = (RESTORE_FIXTURE.replace("@IS_BERRY@", function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "BattleItemIsBerry"))
-                   .replace("@GIVE_BACK@", function(source, "GiveBackHeldItems")))
+                   .replace("@GIVE_BACK@", function(source, "GiveBackHeldItems") + function(source, "CaughtMonKeepsItem")))
         with tempfile.TemporaryDirectory(prefix="newgold-restore-") as directory:
             path = Path(directory)
             (path / "check.c").write_text(program)
