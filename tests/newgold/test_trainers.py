@@ -311,6 +311,29 @@ class TrainerTests(unittest.TestCase):
         self.assertEqual((lickitung["level"], lickitung["moves"]),
                          (24, ["MOVE_ROLLOUT", "MOVE_SUPERSONIC", "MOVE_WRAP", "MOVE_DISABLE"]))
 
+    @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
+    def test_every_held_item_konefr_names_is_held(self):
+        """His trainerdatagen writes a party Pokemon's .item only under
+        TRAINER_DATA_TYPE_ITEMS, and three trainers name items without it:
+        Chow's and Edmond's Oran Berries, Nob's Sitrus Berry and Black Belt.
+        Here every item he names is held; a fourth trainer without the flag
+        fails, to be looked at and noted."""
+        source = gmm.git_show(gmm.NEWGOLD, "data/Trainers.c")
+        blocks = re.split(r"\n\s*\[(\d+)\] = \{", source)
+        unflagged = set()
+        for index, block in ((int(blocks[i]), blocks[i + 1]) for i in range(1, len(blocks), 2)):
+            named = [re.search(r"\.item\s*=\s*(ITEM_\w+)", member) for member in import_trainers.party_members(block)]
+            named = [import_trainers.native(item[1]) if item else "ITEM_NONE" for item in named]
+            if set(named) <= {"ITEM_NONE"}:
+                continue
+            if "TRAINER_DATA_TYPE_ITEMS" not in re.search(r"\.trainerType\s*=\s*([^,]+),", block)[1]:
+                unflagged.add(index)
+            self.assertIn("ITEM", self.trainers[index]["type"], index)
+            self.assertEqual([member["item"] for member in self.trainers[index]["party"]], named, index)
+        self.assertEqual(unflagged, {43, 52, 251})
+        self.assertEqual([member["item"] for member in self.trainers[251]["party"]],
+                         ["ITEM_SITRUS_BERRY", "ITEM_BLACK_BELT"])
+
     def test_a_party_entry_can_name_every_species(self):
         """The species field is 11 bits of species and 5 of form, hg-engine's
         split. Platinum's was 10 and 6, which wrapped every species from 1024

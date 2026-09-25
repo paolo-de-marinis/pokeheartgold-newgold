@@ -206,8 +206,17 @@ def translate(block, flags, types):
     trainerType = 0
     for name in re.findall(r"TRAINER_DATA_TYPE_[A-Z_]+", re.search(r"\.trainerType\s*=\s*([^,]+),", block).group(1)):
         trainerType |= types[name]
+    # konefr's slip: a party Pokemon given a held item under a trainer without
+    # TRAINER_DATA_TYPE_ITEMS (Chow #43, Edmond #52, Nob #251 at 8cbe6ab86;
+    # none at d0380a487). His trainerdatagen writes a held item only under
+    # that flag, so his game drops them; every other time he gives items he
+    # sets it in the same edit (Jin #53, Neal #55, Li #290 in 5cfd84cc7,
+    # Albert in 02c811f26). The flag is added and they hold what he wrote.
+    # KONEFR-NOTES.md, Allenatori 6.
+    if any(re.search(r"\.item\s*=\s*ITEM_(?!NONE\b)", member) for member in party_members(block)):
+        trainerType |= types["TRAINER_DATA_TYPE_ITEMS"]
 
-    aiText = re.search(r"\.aiFlags\s*=\s*([^,]+),", block).group(1)
+    aiText =re.search(r"\.aiFlags\s*=\s*([^,]+),", block).group(1)
     ai = 0
     for name in re.findall(r"F_[A-Z0-9_]+", aiText):
         ai |= flags[name]

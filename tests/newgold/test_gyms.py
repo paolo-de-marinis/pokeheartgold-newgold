@@ -258,6 +258,9 @@ def reference_record(body, slots):
     for name in re.findall(r"TRAINER_DATA_TYPE_[A-Z_]+",
                            re.search(r"\.trainerType\s*=\s*([^,]+),", body).group(1)):
         kinds |= types[name]
+    # A held item he names under a trainer without the items flag is held.
+    if re.search(r"\.item\s*=\s*ITEM_(?!NONE\b)", group(body, "party")):
+        kinds |= HAS_ITEM
 
     party = []
     for member in braced(group(body, "party")):
