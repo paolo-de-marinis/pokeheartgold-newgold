@@ -110,9 +110,62 @@ int main(void) {
 """
 
 
+FAINT = r"""
+typedef struct { s32 hp; u16 species, item; } BattleMon;
+typedef struct {
+    BattleMon battleMons[4];
+    int battlerIdAttacker, battlerIdFainted, script;
+    u32 battleStatus;
+    u8 totalTimesFainted[4];
+    u8 selectedMonIndex[4];
+    u8 switchInFlag;
+} BattleContext;
+typedef struct Party Party;
+static Pokemon *sCounted;
+static int sCounts;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static int BattleScriptReadWord(BattleContext *ctx) { return ctx->script; }
+static int BattleSystem_GetBattlerIDBySide(BattleSystem *bs, BattleContext *ctx, int side) { (void)bs; (void)ctx; return side; }
+static void UpdateFriendshipFainted(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; }
+static Party *BattleSystem_GetParty(BattleSystem *bs, int battlerId) { (void)bs; return (Party *)&sParties[battlerId & 1]; }
+static void Mon_CountDefeatedMon(Pokemon *mon, u16 species, u16 heldItem) { (void)species; (void)heldItem; sCounted = mon; sCounts++; }
+@FUNCTIONS@
+
+int main(void) {
+    static BattleContext ctx;
+
+    // The player's two Pokemon in 0 and 2, the opponent's in 1 and 3.
+    sCount[0] = 2;
+    ctx.selectedMonIndex[0] = 0;
+    ctx.selectedMonIndex[2] = 1;
+
+    // The Pokemon in 2 knocks out the one in 3: its own count goes up.
+    ctx.battlerIdAttacker = 2;
+    ctx.script = 3;
+    BtlCmd_TryFaintMon(0, &ctx);
+    assert(sCounts == 1 && sCounted == &sParties[0][1]);
+
+    // The one in 0 used Future Sight and fell, and the party had nothing to
+    // send in: its place is empty when the move lands two turns on and
+    // knocks out the one in 1, from that place. Nobody's count goes up.
+    ctx.switchInFlag |= MaskOfFlagNo(0);
+    ctx.selectedMonIndex[0] = 6;
+    ctx.battlerIdAttacker = 0;
+    ctx.script = 1;
+    BtlCmd_TryFaintMon(0, &ctx);
+    assert(ctx.battlerIdFainted == 1 && ctx.totalTimesFainted[1] == 1);
+    assert(sCounts == 1);
+    return 0;
+}
+"""
+
+
 class EmptyPlaceTests(unittest.TestCase):
     def test_the_final_modifier_orders_an_empty_place_without_reading_it(self):
         run(self, RAW_SPEED, ("RawSpeedGoesFirst", "RawSpeedOrder"))
+
+    def test_a_defeat_from_an_empty_place_counts_for_nobody(self):
+        run(self, FAINT, ("BtlCmd_TryFaintMon",))
 
 
 if __name__ == "__main__":

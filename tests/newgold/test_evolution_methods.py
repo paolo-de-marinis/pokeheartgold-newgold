@@ -669,6 +669,7 @@ class EvolutionMethods(unittest.TestCase):
         player's own Pokemon whose move it was."""
         body = function(read("src/battle/battle_command.c"), "BtlCmd_TryFaintMon")
         self.assertRegex(body, r"BattleSystem_GetFieldSide\(battleSystem, battlerId\) != 0 && ctx->battlerIdAttacker < BattleSystem_GetMaxBattlers\(battleSystem\)\s*"
+                               r"&& !\(ctx->switchInFlag & MaskOfFlagNo\(ctx->battlerIdAttacker\)\)\s*"
                                r"&& BattleSystem_GetParty\(battleSystem, ctx->battlerIdAttacker\) == BattleSystem_GetParty\(battleSystem, BATTLER_PLAYER\)\) \{\s*"
                                r"Mon_CountDefeatedMon\(BattleSystem_GetPartyMon\(battleSystem, ctx->battlerIdAttacker, ctx->selectedMonIndex\[ctx->battlerIdAttacker\]\), "
                                r"ctx->battleMons\[battlerId\]\.species, ctx->battleMons\[battlerId\]\.item\);")
