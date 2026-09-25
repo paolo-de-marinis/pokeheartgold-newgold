@@ -1,0 +1,15 @@
+{
+  "about": "A drain move heals its share of the damage rounded to the nearest, a half up (5aa29ea74: before, rounded down). A level-10 Pikachu at 5 HP is given Absorb and Draining Kiss in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash, with the damage roll forced to the bottom of the range: Absorb does 3 and heals 2, half of 3 rounded up, where it healed 1; Draining Kiss does 6 and heals 5, three quarters of 6 rounded up, where it healed 4. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_ABSORB", "teach:0,1,MOVE_DRAINING_KISS",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:0,hp,5", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Absorb!", "The wild Chansey had its energy drained!"],
+                        "battler1.hp": 37, "battler0.hp": 7}},
+            "fight:2:1"],
+  "expect": {"lines": ["Pikachu used Draining Kiss!", "The wild Chansey had its energy drained!"],
+             "battler1.hp": 31, "battler0.hp": 12}
+}
