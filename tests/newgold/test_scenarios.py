@@ -68,6 +68,7 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertFalse(scene.Scene.wanted("battler1.status", "BRN")[0](0))
         self.assertTrue(scene.Scene.wanted("battler1.status", "")[0](0))
         self.assertTrue(scene.Scene.wanted("map", "MAP_ROUTE_29")[0](33))
+        self.assertTrue(scene.Scene.wanted("music", "SEQ_GS_R_1_29")[0](1028))
 
 
 class RecordingTests(unittest.TestCase):

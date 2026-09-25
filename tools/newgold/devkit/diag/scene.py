@@ -56,8 +56,11 @@ fullest (gDiagHeapLowWater); every other key is a value read out of main RAM
 by name, through the ELF's symbols and the offsets the tree's own headers
 give: map, x, y, party (the count), badges, flag:FLAG_..., var:VAR_...,
 battlerN.species|hp|maxHp|level|partySlot|status|item (gDiagBattlers; N
-counts the player's side even), or any gDiag* global. A value is a number,
-a constant's name (MAP_..., SPECIES_..., ITEM_..., MOVE_...), [low, high],
+counts the player's side even), music (the sequence the field's sound
+handle plays, -1 for none: a load the sound heap cannot hold leaves it
+empty and counts as no failed allocation), or any gDiag* global. A value
+is a number, a constant's name (MAP_..., SPECIES_..., ITEM_..., MOVE_...,
+SEQ_...), [low, high],
 or for a status the flags as markers.py names them ("BRN", "" for none).
 "asserts" and "alloc_failures" are 0 unless the file says otherwise. A step
 may also be {"expect": {...}}, checked when the run gets there.
@@ -93,7 +96,8 @@ BATTLE_MAIN = STATES.index("BATTLE_MAIN")
 # DiagBattler's fields in BATTLER's order, the arrays left out.
 BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item")
 CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/species.h",
-             "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h"}
+             "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
+             "SEQ_": "include/constants/sndseq.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach")
 
 
@@ -104,7 +108,7 @@ def readable(step_or_key, key=False):
     from core import BUTTONS
     if key:
         return (step_or_key in ("lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
-                                "party", "badges")
+                                "party", "badges", "music")
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
                 or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)})", step_or_key) is not None)
     if isinstance(step_or_key, dict):
@@ -597,6 +601,17 @@ class Scene:
             return markers.read(ram, "gDiagAllocFailCount")
         if name.startswith("gDiag"):
             return markers.read(ram, name, markers.table[name][1] if name in markers.table else 4)
+        if name == "music":
+            # SND_HANDLE_FIELD's player, the first of sSoundWork's handles
+            # (src/sound.c): 1 at 0x34 for a sequence, its number at 0x38
+            # (NNS_SndPlayerGetSeqNo).
+            import re
+            handles = int(re.search(r"/\* (0x[0-9A-F]+) \*/ NNSSndHandle \w+\[SND_HANDLE_MAX\];",
+                                    (ROOT / "src/sound.c").read_text()).group(1), 16)
+            player = struct.unpack_from("<I", ram, markers.address("sSoundWork") + handles - 0x02000000)[0]
+            if not player or struct.unpack_from("<H", ram, player + 0x34 - 0x02000000)[0] != 1:
+                return -1
+            return struct.unpack_from("<H", ram, player + 0x38 - 0x02000000)[0]
         if name in ("map", "x", "y"):
             here = self.location()
             return here and here[("map", "x", "y").index(name)]

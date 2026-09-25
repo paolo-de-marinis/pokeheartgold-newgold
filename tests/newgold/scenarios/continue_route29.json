@@ -1,6 +1,6 @@
 {
-  "about": "Continue from Paolo's Route 29 save: the field comes up on Route 29 with the starter, and nothing asserted or failed to allocate on the way.",
+  "about": "Continue from Paolo's Route 29 save: the field comes up on Route 29 with the starter, and nothing asserted or failed to allocate on the way; Route 29's music plays, on the field's handle (from 4c8176ea1 until the sound archive lost its added banks it did not: the sound heap could not hold it beside the added cries' tables, which InitSoundData loads into it for good, and nothing counted that as a failed allocation).",
   "save": "route29-official.sav",
   "steps": ["field"],
-  "expect": {"map": "MAP_ROUTE_29", "x": 663, "y": 398, "party": 1, "heaps": {"HEAP_ID_FIELD1": "0x1000"}}
+  "expect": {"map": "MAP_ROUTE_29", "x": 663, "y": 398, "party": 1, "music": "SEQ_GS_R_1_29", "heaps": {"HEAP_ID_FIELD1": "0x1000"}}
 }
