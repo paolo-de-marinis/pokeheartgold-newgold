@@ -943,7 +943,7 @@ class Library:
         quantity = number(a["quantity"], 0, limit, f"{entry['name']}, quantità" +
                           (" (una MT è una sola: New Gold non le consuma)" if limit == 1 else ""))
         held = sv.bag(save)[entry["pocket"]]
-        if quantity and item not in {i["item"] for i in held} and len(held) >= sv.pocket_at(entry["pocket"])[1]:
+        if quantity and item not in {i["item"] for i in held} and len(held) >= sv.pocket_at(entry["pocket"], save.layout)[1]:
             raise Refused(f"la tasca è piena ({len(held)} posti)")
         sv.set_item(save, item, quantity)
 
@@ -1035,7 +1035,7 @@ class Library:
         pocket = sv.item_table()[next(iter(table))]["pocket"]      # the machines' own
         held = {slot["item"]: slot["quantity"] for slot in sv.bag(save)[pocket]}
         after = {**held, **wanted}
-        slots = sv.pocket_at(pocket)[1]
+        slots = sv.pocket_at(pocket, save.layout)[1]
         if sum(1 for q in after.values() if q) > slots:
             raise Refused(f"la tasca MT e MN ha {slots} posti: ne servirebbero {sum(1 for q in after.values() if q)}")
         for item, quantity in sorted(wanted.items(), key=lambda kv: kv[1] != 0):

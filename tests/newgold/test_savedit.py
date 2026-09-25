@@ -36,11 +36,12 @@ def reference_crc16(data, crc=0xFFFF):
     return crc
 
 
-def seal_footers(region, table, count):
-    """SaveSlot_BuildFooter for both slots, the blocks' fields left alone."""
+def seal_footers(region, table, count, magic=None):
+    """SaveSlot_BuildFooter for both slots, the blocks' fields left alone:
+    the layout of now's magic, or an older layout's."""
     for spec in sv.slot_specs(table):
         at = spec["offset"] + spec["size"] - sv.CHUNK_FOOTER
-        struct.pack_into("<IIIHH", region, at, count, spec["size"], sv.CHUNK_MAGIC, spec["slot"],
+        struct.pack_into("<IIIHH", region, at, count, spec["size"], magic or sv.CHUNK_MAGIC_NOW, spec["slot"],
                          sv.crc16(region[spec["offset"]:at]))
 
 
@@ -72,7 +73,7 @@ def the_game_saves(path):
     other = sv.HALF - save.half
     for spec in save.specs:
         start, end = spec["offset"], spec["offset"] + spec["size"]
-        struct.pack_into("<IIIHH", ram, end - sv.CHUNK_FOOTER, save.counter() + 1, spec["size"], sv.CHUNK_MAGIC,
+        struct.pack_into("<IIIHH", ram, end - sv.CHUNK_FOOTER, save.counter() + 1, spec["size"], sv.CHUNK_MAGIC_NOW,
                          spec["slot"], sv.crc16(ram[start:end - sv.CHUNK_FOOTER]))
         if start == pc:
             written = [(pc + n * sv.BOX, pc + (n + 1) * sv.BOX) for n in range(sv.NUM_BOXES) if kept >> n & 1]
@@ -141,21 +142,21 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(stray[:8], [], f"bytes changed outside {names}")
 
     def test_a_save_from_before_the_misc_block_grew(self):
-        """Save_GetLegacySlotSpecs' layout: the misc block at
-        SAVE_MISC_LEGACY_SIZE, every block after it and the PC's slot where
-        they were. It is read in that layout, and written back in it, for
-        the game to convert when it loads it."""
-        legacy = sv.blocks(legacy=True)
-        if legacy == sv.blocks():
-            self.skipTest("the ROM built here has the misc block at its old size")
+        """Save_GetLayoutSlotSpecs' oldest layout: the misc block at
+        SAVE_MISC_LEGACY_SIZE and the Berries pocket at 64 slots, every
+        block after them and the PC's slot where they were. It is read in
+        that layout, and written back in it, for the game to convert when it
+        loads it."""
+        legacy = sv.blocks(layout=sv.LAYOUT_BEFORE_DNA_SPLICERS)
         region = bytearray(save_budget.REGION)
         player = next(b for b in legacy if b["id"] == "SAVE_PLAYERDATA")
         region[player["offset"] + sv.NAME:player["offset"] + sv.NAME + 4] = struct.pack("<HH", sv.charcode("A")[0], 0xFFFF)
-        seal_footers(region, legacy, 1)
+        seal_footers(region, legacy, 1, sv.CHUNK_MAGIC)
         path = Path(self.tmp.name) / "legacy.sav"
         path.write_bytes(bytes(sv.build_save(region)))
         save = sv.Save(path)
         self.assertTrue(save.legacy)
+        self.assertEqual(save.layout, sv.LAYOUT_BEFORE_DNA_SPLICERS)
         self.assertEqual(save.table, legacy)
         self.assertEqual(save.image(), path.read_bytes(), "unchanged, it stays byte for byte")
         sv.set_profile(save, money=4242)
@@ -163,6 +164,35 @@ class SaveditLibraryTests(unittest.TestCase):
         again = sv.Save(path)
         self.assertTrue(again.legacy, "an edit keeps the layout the game will convert")
         self.assertEqual(sv.profile(again)["money"], 4242)
+
+    def test_a_save_from_before_the_berries_pocket_grew(self):
+        """The layout before the Berries pocket held every Berry: 64 slots,
+        the balls and the battle items that much earlier in the bag, and the
+        footers with HeartGold's magic. The bag is read and written where
+        that layout has it; the page and the options see the same pockets."""
+        older = sv.blocks(layout=sv.LAYOUT_BEFORE_BERRY_POCKET)
+        region = bytearray(save_budget.REGION)
+        player = next(b for b in older if b["id"] == "SAVE_PLAYERDATA")
+        region[player["offset"] + sv.NAME:player["offset"] + sv.NAME + 4] = struct.pack("<HH", sv.charcode("A")[0], 0xFFFF)
+        items = sv.constants("include/constants/items.h", "ITEM_")
+        bag = next(b for b in older if b["id"] == "SAVE_BAG")
+        balls = sv.BERRIES_AT + sv.BAG_BERRIES_LEGACY * sv.ITEM_SLOT       # where that layout's balls start
+        struct.pack_into("<HH", region, bag["offset"] + balls, items["ITEM_ULTRA_BALL"], 7)
+        seal_footers(region, older, 1, sv.CHUNK_MAGIC)
+        path = Path(self.tmp.name) / "berries.sav"
+        path.write_bytes(bytes(sv.build_save(region)))
+        save = sv.Save(path)
+        self.assertEqual(save.layout, sv.LAYOUT_BEFORE_BERRY_POCKET)
+        self.assertEqual(save.table, older)
+        pocket = {p["const"]: p["name"] for p in sv.pockets()}
+        self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(save)[pocket["POCKET_BALLS"]]], [(items["ITEM_ULTRA_BALL"], 7)])
+        self.assertEqual(sv.pocket_at(pocket["POCKET_BERRIES"], save.layout)[1], sv.BAG_BERRIES_LEGACY)
+        sv.set_item(save, items["ITEM_ORAN_BERRY"], 3)
+        path.write_bytes(save.image())
+        again = sv.Save(path)
+        self.assertEqual(again.layout, sv.LAYOUT_BEFORE_BERRY_POCKET, "an edit keeps the layout the game will convert")
+        self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(again)[pocket["POCKET_BERRIES"]]], [(items["ITEM_ORAN_BERRY"], 3)])
+        self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(again)[pocket["POCKET_BALLS"]]], [(items["ITEM_ULTRA_BALL"], 7)])
 
     def test_a_pokemon_s_types_are_the_game_s(self):
         """GetMonData's MON_DATA_TYPE_1/_2: the species' two, one when they

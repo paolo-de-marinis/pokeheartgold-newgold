@@ -8,6 +8,7 @@ checks which item is consumed and how many copies the bag accepts, not the
 bag interface or its rendering.
 """
 
+import csv
 import os
 from pathlib import Path
 import re
@@ -187,11 +188,14 @@ class PocketSizeTests(unittest.TestCase):
 
     HeartGold sized its pockets for its own item list. New Gold widens three of
     them, and the counts are the engine's: thirty-two more general items, two
-    more balls, forty-two more key items.
+    more balls, forty-two more key items. The Berries pocket holds every Berry,
+    as the latest games' does: thirty-six more, for the Roseli, Kee and
+    Maranga Berries and the thirty-three Hyper Berries hg-engine defines.
     """
 
-    WIDENED = {"NUM_BAG_ITEMS": (165, 32), "NUM_BAG_BALLS": (24, 2), "NUM_BAG_KEY_ITEMS": (50, 42)}
-    UNCHANGED = {"NUM_BAG_MEDICINE": 40, "NUM_BAG_TMS_HMS": 101, "NUM_BAG_BERRIES": 64,
+    WIDENED = {"NUM_BAG_ITEMS": (165, 32), "NUM_BAG_BALLS": (24, 2), "NUM_BAG_KEY_ITEMS": (50, 42),
+               "NUM_BAG_BERRIES": (64, 36)}
+    UNCHANGED = {"NUM_BAG_MEDICINE": 40, "NUM_BAG_TMS_HMS": 101,
                  "NUM_BAG_MAIL": 12, "NUM_BAG_BATTLE_ITEMS": 30}
 
     def setUp(self):
@@ -202,6 +206,15 @@ class PocketSizeTests(unittest.TestCase):
             match = re.search(rf"#define {name}\s+\((\d+) \+ (\d+)\)", self.header)
             self.assertIsNotNone(match, f"{name} is no longer widened")
             self.assertEqual((int(match.group(1)), int(match.group(2))), (base, added), name)
+
+    def test_every_berry_has_a_slot(self):
+        # A Berries pocket holding every kind of Berry has a slot for each:
+        # none is refused for want of room (Bag_GetItemSlotForAdd), whichever
+        # the player comes by.
+        with (ROOT / "files/itemtool/itemdata/item_data.csv").open() as stream:
+            berries = sum(row["fieldPocket"] == "POCKET_BERRIES" for row in csv.DictReader(stream))
+        base, added = re.search(r"#define NUM_BAG_BERRIES\s+\((\d+) \+ (\d+)\)", self.header).groups()
+        self.assertLessEqual(berries, int(base) + int(added))
 
     def test_the_rest_keep_their_size(self):
         for name, value in self.UNCHANGED.items():

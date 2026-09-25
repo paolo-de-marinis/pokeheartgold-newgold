@@ -2,6 +2,7 @@
 
 #include "global.h"
 
+#include "bag_types_def.h"
 #include "heap.h"
 #include "math_util.h"
 #include "save_arrays.h"
@@ -42,8 +43,9 @@ static void CancelAsyncSave(SaveData *saveData, struct AsyncWriteManager *writeM
 static int _NowWriteFlash(SaveData *saveData);
 static int FlashClobberChunkFooter(SaveData *saveData, int spec, int sector);
 static u32 GetSaveChunkSizePlusCRC(int idx);
-static void Save_GetLegacySlotSpecs(SaveData *saveData, struct SaveSlotSpec *specs);
-static void Save_ConvertLegacyFirstSlot(u8 *region, const struct SaveArrayHeader *misc, u32 legacySize);
+static u32 Save_LayoutGrowth(const SaveData *saveData, u32 layout, int *block, u32 *at);
+static void Save_GetLayoutSlotSpecs(const SaveData *saveData, u32 layout, struct SaveSlotSpec *specs);
+static void Save_ConvertFirstSlot(const SaveData *saveData, u8 *region, u32 layout, u32 size);
 static BOOL Save_LoadLegacySlots(SaveData *saveData);
 static void Save_CheckSlotFooters(SaveData *saveData, u8 *data1, u8 *data2, struct SaveSlotCheck *checks_main, struct SaveSlotCheck *checks_sub);
 static void SaveData_InitSubstructs(struct SaveArrayHeader *arr_hdr);
@@ -342,7 +344,7 @@ static BOOL ValidateSaveSectorFooter(SaveData *saveData, void *data, int idx) {
     if (footer->size != spec->size) {
         return FALSE;
     }
-    if (footer->magic != SAVE_CHUNK_MAGIC) {
+    if (footer->magic != (saveData->saveLayout == SAVE_LAYOUT_NOW ? SAVE_CHUNK_MAGIC_BERRY_POCKET : SAVE_CHUNK_MAGIC)) {
         return FALSE;
     }
     if (footer->slot != idx) {
@@ -373,7 +375,7 @@ static void SaveSlot_BuildFooter(SaveData *saveData, void *data, int idx) {
     offset = spec->offset;
     footer->count = saveData->saveCounter;
     footer->size = spec->size;
-    footer->magic = SAVE_CHUNK_MAGIC;
+    footer->magic = SAVE_CHUNK_MAGIC_BERRY_POCKET;
     footer->slot = idx;
     footer->crc = SaveArray_CalcCRC16MinusFooter(saveData, (u8 *)data + offset, spec->size);
     SaveFooterDebugPrn(footer);
@@ -471,18 +473,22 @@ static int Save_GetSaveFilesStatus(SaveData *saveData) {
     data2 = Heap_AllocAtEnd(HEAP_ID_3, SAVE_PAGE_MAX * SAVE_SECTOR_SIZE);
     read1 = FlashLoadChunk(0 * 0x40000, data1, SAVE_PAGE_MAX * SAVE_SECTOR_SIZE);
     read2 = FlashLoadChunk(1 * 0x40000, data2, SAVE_PAGE_MAX * SAVE_SECTOR_SIZE);
+    saveData->saveLayout = SAVE_LAYOUT_NOW;
     Save_CheckSlotFooters(saveData, read1 ? data1 : NULL, read2 ? data2 : NULL, checks_main, checks_sub);
-    saveData->legacyMiscLayout = FALSE;
-    if (!checks_main[0].valid && !checks_main[1].valid && !checks_sub[0].valid && !checks_sub[1].valid) {
-        // Nothing reads as this layout: perhaps a save from before the misc
-        // block kept Pokemon, whose footers are where that layout put them.
-        specs[0] = saveData->saveSlotSpecs[0];
-        specs[1] = saveData->saveSlotSpecs[1];
-        Save_GetLegacySlotSpecs(saveData, saveData->saveSlotSpecs);
+    // Nothing reads as this layout: perhaps a save in an older one, whose
+    // footers are where that layout put them, with its magic. The newest
+    // first, so a flash with a half of each loads its newer half.
+    specs[0] = saveData->saveSlotSpecs[0];
+    specs[1] = saveData->saveSlotSpecs[1];
+    while (!checks_main[0].valid && !checks_main[1].valid && !checks_sub[0].valid && !checks_sub[1].valid
+           && ++saveData->saveLayout < SAVE_LAYOUT_COUNT) {
+        Save_GetLayoutSlotSpecs(saveData, saveData->saveLayout, saveData->saveSlotSpecs);
         Save_CheckSlotFooters(saveData, read1 ? data1 : NULL, read2 ? data2 : NULL, checks_main, checks_sub);
         saveData->saveSlotSpecs[0] = specs[0];
         saveData->saveSlotSpecs[1] = specs[1];
-        saveData->legacyMiscLayout = checks_main[0].valid || checks_main[1].valid || checks_sub[0].valid || checks_sub[1].valid;
+    }
+    if (saveData->saveLayout == SAVE_LAYOUT_COUNT) {
+        saveData->saveLayout = SAVE_LAYOUT_NOW;
     }
     Heap_Free(data1);
     Heap_Free(data2);
@@ -601,7 +607,7 @@ static BOOL Save_LoadDynamicRegion(SaveData *saveData) {
     struct SaveSlotSpec *specs = saveData->saveSlotSpecs;
 
     data = saveData->dynamic_region;
-    if (saveData->legacyMiscLayout) {
+    if (saveData->saveLayout != SAVE_LAYOUT_NOW) {
         if (!Save_LoadLegacySlots(saveData)) {
             return FALSE;
         }
@@ -719,7 +725,7 @@ static void Save_WriteManFinish(SaveData *saveData, struct AsyncWriteManager *wr
         saveData->lastGoodSector = saveData->lastGoodSector == 0;
         saveData->saveFileExists = TRUE;
         saveData->isNewGame = FALSE;
-        saveData->legacyMiscLayout = FALSE;
+        saveData->saveLayout = SAVE_LAYOUT_NOW;
     }
     Sys_ClearSleepDisableFlag(1);
 }
@@ -775,43 +781,74 @@ static u32 GetSaveChunkSizePlusCRC(int idx) {
     return size;
 }
 
-// A save made before SAVE_MISC_DATA kept Pokemon (hg-engine's expansion) has
-// the misc block SAVE_MISC_LEGACY_SIZE long: every block after it sits that
-// much earlier, and so does the PC's slot, which starts on the next 0x100
-// after the first slot's footer. Nothing else changed.
-static void Save_GetLegacySlotSpecs(SaveData *saveData, struct SaveSlotSpec *specs) {
-    u32 shrink = saveData->arrayHeaders[SAVE_MISC].size - (((SAVE_MISC_LEGACY_SIZE + 3) & ~3) + 4);
+// What the change from an older layout (enum SaveLayout) to the next newer
+// one added: its bytes, in `block` from `at` on. Nothing else changed.
+static u32 Save_LayoutGrowth(const SaveData *saveData, u32 layout, int *block, u32 *at) {
+    if (layout == SAVE_LAYOUT_BEFORE_BERRY_POCKET) {
+        // The Berries pocket's slots past HeartGold's 64, before the balls.
+        *block = SAVE_BAG;
+        *at = offsetof(Bag, berries) + NUM_BAG_BERRIES_LEGACY * sizeof(ItemSlot);
+        return (NUM_BAG_BERRIES - NUM_BAG_BERRIES_LEGACY) * sizeof(ItemSlot);
+    }
+    // SAVE_LAYOUT_BEFORE_DNA_SPLICERS: SAVE_MISC_DATA's Pokemon kept aside
+    // (hg-engine's expansion) after HeartGold's block.
+    *block = SAVE_MISC;
+    *at = SAVE_MISC_LEGACY_SIZE;
+    return saveData->arrayHeaders[SAVE_MISC].size - (((SAVE_MISC_LEGACY_SIZE + 3) & ~3) + 4);
+}
+
+// Where an older layout had the region's two slots: the first smaller by
+// what every change since added, and the PC's on the next 0x100 after its
+// footer.
+static void Save_GetLayoutSlotSpecs(const SaveData *saveData, u32 layout, struct SaveSlotSpec *specs) {
+    int block;
+    u32 at;
 
     specs[0] = saveData->saveSlotSpecs[0];
     specs[1] = saveData->saveSlotSpecs[1];
-    specs[0].size -= shrink;
+    for (; layout != SAVE_LAYOUT_NOW; layout--) {
+        specs[0].size -= Save_LayoutGrowth(saveData, layout, &block, &at);
+    }
     specs[1].offset = (specs[0].size + 0xFF) & ~0xFF;
 }
 
-// The first slot, read as a save in that layout wrote it, made this layout's:
-// the blocks after the misc block move up by what it grew, and its new fields
-// and its check word start clear, as a new game's do.
-static void Save_ConvertLegacyFirstSlot(u8 *region, const struct SaveArrayHeader *misc, u32 legacySize) {
-    u32 legacyMiscSize = ((SAVE_MISC_LEGACY_SIZE + 3) & ~3) + 4;
+// The first slot, `size` bytes as a save in an older layout wrote it, made
+// this layout's one change at a time, the oldest first: each opens its bytes
+// where they go, clear as a new game's, and moves everything after them up.
+// A block is where it is now, less what the changes still to come add before
+// it.
+static void Save_ConvertFirstSlot(const SaveData *saveData, u8 *region, u32 layout, u32 size) {
+    int block, other;
+    u32 at, offset, grow, later, unused;
 
-    memmove(region + misc->offset + misc->size, region + misc->offset + legacyMiscSize, legacySize - (misc->offset + legacyMiscSize));
-    MI_CpuClear8(region + misc->offset + SAVE_MISC_LEGACY_SIZE, misc->size - SAVE_MISC_LEGACY_SIZE);
+    for (; layout != SAVE_LAYOUT_NOW; layout--) {
+        grow = Save_LayoutGrowth(saveData, layout, &block, &at);
+        offset = saveData->arrayHeaders[block].offset + at;
+        for (later = layout - 1; later != SAVE_LAYOUT_NOW; later--) {
+            u32 more = Save_LayoutGrowth(saveData, later, &other, &unused);
+            if (other < block) {
+                offset -= more;
+            }
+        }
+        memmove(region + offset + grow, region + offset, size - offset);
+        MI_CpuClear8(region + offset, grow);
+        size += grow;
+    }
 }
 
-// Read a save in that layout into this one: the PC's slot from where it was
-// in the flash to where it is now, the first slot as it was, then the blocks
-// after the misc block moved up to make room for its new fields, which start
-// empty. Each slot is checked against the footer it was written with. The
-// next two saves write every box, to both halves of the flash, in this layout.
+// Read a save in an older layout into this one: the PC's slot from where it
+// was in the flash to where it is now, the first slot as it was, then made
+// this layout's (Save_ConvertFirstSlot). Each slot is checked against the
+// footer it was written with. The next two saves write every box, to both
+// halves of the flash, in this layout.
 static BOOL Save_LoadLegacySlots(SaveData *saveData) {
     struct SaveSlotSpec legacy[2];
     struct SaveSlotSpec current;
-    struct SaveArrayHeader *misc = &saveData->arrayHeaders[SAVE_MISC];
     u8 *region = saveData->dynamic_region;
     u32 flash = saveData->lastGoodSector == 0 ? 0 : 0x40000;
     BOOL valid;
 
-    Save_GetLegacySlotSpecs(saveData, legacy);
+    Save_GetLayoutSlotSpecs(saveData, saveData->saveLayout, legacy);
     if (!FlashLoadChunk(flash + legacy[1].offset, region + saveData->saveSlotSpecs[1].offset, legacy[1].size)) {
         return FALSE;
     }
@@ -828,7 +865,7 @@ static BOOL Save_LoadLegacySlots(SaveData *saveData) {
     if (!valid) {
         return FALSE;
     }
-    Save_ConvertLegacyFirstSlot(region, misc, legacy[0].size);
+    Save_ConvertFirstSlot(saveData, region, saveData->saveLayout, legacy[0].size);
     saveData->sectorCleanFlag[0] = 1;
     saveData->sectorCleanFlag[1] = 1;
     return TRUE;

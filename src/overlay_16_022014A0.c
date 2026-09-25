@@ -361,10 +361,12 @@ u32 ItemIdToMulchId(u16 itemId) {
     return itemId - ITEM_GROWTH_MULCH + 1;
 }
 
+// The Berries a pot takes, HeartGold's: by their own count, not the pocket's,
+// which holds every Berry since and would run past Rowap into other items.
 u16 GetTotalBerryQuantity(Bag *bag, enum HeapID heapID) {
     s32 i;
     u16 total;
-    for (total = 0, i = 0; i < NUM_BAG_BERRIES; i++) {
+    for (total = 0, i = 0; i < NUM_BERRIES; i++) {
         total += Bag_GetQuantity(bag, FIRST_BERRY_IDX + i, heapID);
     }
     return total;

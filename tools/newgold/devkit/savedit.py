@@ -270,6 +270,14 @@ def _layout():
         "BOX_MON": "sizeof(BoxPokemon)", "PARTY_MON": "sizeof(Pokemon)", "BLOCK": "sizeof(PokemonDataBlock)",
         "LOCATION": "sizeof(Location)",
         "CHUNK_MAGIC": "SAVE_CHUNK_MAGIC", "CHUNK_FOOTER": "sizeof(struct SaveChunkFooter)",
+        # The region's magic in the layout of now; SAVE_CHUNK_MAGIC is the
+        # older layouts' (docs/newgold/SAVE-LAYOUT.md), and the layouts.
+        "CHUNK_MAGIC_NOW": "SAVE_CHUNK_MAGIC_BERRY_POCKET", "LAYOUT_NOW": "SAVE_LAYOUT_NOW",
+        "LAYOUT_BEFORE_BERRY_POCKET": "SAVE_LAYOUT_BEFORE_BERRY_POCKET",
+        "LAYOUT_BEFORE_DNA_SPLICERS": "SAVE_LAYOUT_BEFORE_DNA_SPLICERS", "LAYOUT_COUNT": "SAVE_LAYOUT_COUNT",
+        # SAVE_BAG's Berries pocket, which grew from HeartGold's 64 slots.
+        "BERRIES_AT": f"{offset}(Bag, berries)", "ITEM_SLOT": "sizeof(ItemSlot)",
+        "BAG_BERRIES": "NUM_BAG_BERRIES", "BAG_BERRIES_LEGACY": "NUM_BAG_BERRIES_LEGACY",
         "CHUNK_CRC_AT": f"{offset}(struct SaveChunkFooter, crc)",
         "ARRAY_FOOTER": "sizeof(struct SaveArrayFooter)", "FOOTER_CRC_AT": f"{offset}(struct SaveArrayFooter, crc)",
         # SAVE_PLAYERDATA: the options, the profile, the coins, the play time.
@@ -714,7 +722,7 @@ def stat_line(record, level, iv, evs, nature):
 
 
 @tree_cache
-def pockets():
+def _pockets():
     """The bag's pockets, in the order the game shows them (sPockets,
     src/start_menu.c): each one's field in struct Bag, the POCKET_ constant
     items are filed in it by (Bag_GetItemPocket's switch, src/bag.c), and
@@ -732,9 +740,22 @@ def pockets():
     return [rows[c] for c in order] + [row for c, row in rows.items() if c not in order]
 
 
-def pocket_at(name):
+def pockets(layout=0):
+    """_pockets as a save in `layout` has them: before the Berries pocket
+    held every Berry (LAYOUT_BEFORE_BERRY_POCKET and older) it had
+    BAG_BERRIES_LEGACY slots, and every pocket after it started that much
+    earlier (Save_LayoutGrowth)."""
+    rows = _pockets()
+    if layout < LAYOUT_BEFORE_BERRY_POCKET:
+        return rows
+    fewer = (BAG_BERRIES - BAG_BERRIES_LEGACY) * ITEM_SLOT
+    return [{**p, "slots": BAG_BERRIES_LEGACY} if p["at"] == BERRIES_AT else
+            {**p, "at": p["at"] - fewer} if p["at"] > BERRIES_AT else p for p in rows]
+
+
+def pocket_at(name, layout=0):
     """Where a pocket's slots start in the bag, and how many there are."""
-    found = next((p for p in pockets() if p["name"] == name), None)
+    found = next((p for p in pockets(layout) if p["name"] == name), None)
     if found is None:
         raise SystemExit(f"no pocket called {name}")
     return found["at"], found["slots"]
@@ -766,9 +787,9 @@ def item_limit(item):
     return BAG_SLOT_QUANTITY_MAX
 
 
-def put_in_pocket(block, pocket, item, quantity):
+def put_in_pocket(block, pocket, item, quantity, layout=0):
     """The first free slot, or the one already holding it."""
-    at, count = pocket_at(pocket)
+    at, count = pocket_at(pocket, layout)
     for slot in range(count):
         here = at + 4 * slot
         got, _ = struct.unpack_from("<HH", block, here)
@@ -784,22 +805,35 @@ def set_dex_flag(block, at, species):
     block[at + (flag >> 3)] |= 1 << (flag & 7)
 
 
-def blocks(build=None, legacy=False):
+def layout_growth(layout, build=None):
+    """Save_LayoutGrowth: what the change from `layout` to the next newer
+    one added -- the block, where in it its bytes start, and how many."""
+    if layout == LAYOUT_BEFORE_BERRY_POCKET:
+        return "SAVE_BAG", BERRIES_AT + BAG_BERRIES_LEGACY * ITEM_SLOT, (BAG_BERRIES - BAG_BERRIES_LEGACY) * ITEM_SLOT
+    legacy = constants("include/save_misc_data.h", "SAVE_MISC_LEGACY_")["SAVE_MISC_LEGACY_SIZE"]
+    misc = next(size for (fn, size, slot), name in zip(measure(build)[0], block_ids()) if name == "SAVE_MISC")
+    return "SAVE_MISC", legacy, ((misc + 3) & ~3) - ((legacy + 3) & ~3)
+
+
+def blocks(build=None, layout=0):
     """Every block's id, size and slot, then where each one starts.
 
     This is SaveData_InitSubstructs: sizes come rounded up to a word with four
     bytes of checksum added, a slot's last block is followed by the chunk
-    footer, and the next slot starts on a 0x100 boundary. With `legacy`, the
-    layout of a save made before the misc block grew for the DNA Splicers
-    (Save_GetLegacySlotSpecs): the same blocks with SAVE_MISC at
-    SAVE_MISC_LEGACY_SIZE, laid out the same way.
+    footer, and the next slot starts on a 0x100 boundary. With an older
+    `layout` (LAYOUT_BEFORE_BERRY_POCKET, LAYOUT_BEFORE_DNA_SPLICERS), that
+    layout's (Save_GetLayoutSlotSpecs): the same blocks, less what every
+    change since added to them, laid out the same way.
     """
     inside, _ = measure(build)
     names = block_ids()
+    fewer = {}
+    for older in range(1, layout + 1):
+        block, _, grow = layout_growth(older, build)
+        fewer[block] = fewer.get(block, 0) + grow
     out, offset = [], 0
     for index, (fn, size, slot) in enumerate(inside):
-        if legacy and names[index] == "SAVE_MISC":
-            size = constants("include/save_misc_data.h", "SAVE_MISC_LEGACY_")["SAVE_MISC_LEGACY_SIZE"]
+        size -= fewer.get(names[index], 0)
         chunk = ((size + 3) & ~3) + save_budget.CRC
         out.append({"index": index, "id": names[index], "sizefn": fn,
                     "offset": offset, "size": chunk, "slot": slot})
@@ -836,18 +870,20 @@ class Save:
     def __init__(self, path, build=None):
         self.path = Path(path)
         self.raw = bytearray(self.path.read_bytes())
-        self.table = blocks(build)
-        self.specs = slot_specs(self.table)
-        # A save made before the misc block grew is read, and written, in its
-        # own layout: the game converts it when it loads it
-        # (Save_LoadLegacySlots), so it is left for the game to do.
-        self.legacy = False
-        if not any(self.valid(h) for h in (0, HALF)):
-            table = blocks(build, legacy=True)
-            if table != self.table:
-                self.table, self.specs, self.legacy = table, slot_specs(table), True
-                if not any(self.valid(h) for h in (0, HALF)):
-                    self.table, self.specs, self.legacy = blocks(build), slot_specs(blocks(build)), False
+        # A save in an older layout is read, and written, in its own: the game
+        # converts it when it loads it (Save_LoadLegacySlots), so it is left
+        # for the game to do. The layouts are tried newest first, as the game
+        # does (Save_GetSaveFilesStatus); `layout` says which one read, and
+        # `legacy` whether it is an older one.
+        for self.layout in range(LAYOUT_COUNT):
+            self.table = blocks(build, self.layout)
+            self.specs = slot_specs(self.table)
+            if any(self.valid(h) for h in (0, HALF)):
+                break
+        else:
+            self.layout = LAYOUT_NOW
+            self.table, self.specs = blocks(build), slot_specs(blocks(build))
+        self.legacy = self.layout != LAYOUT_NOW
         self.half = self._newest_half()
         self.region = bytearray(self.raw[self.half:self.half + HALF])
         self.opened = bytes(self.region)
@@ -861,11 +897,15 @@ class Save:
         count, size, magic, slot, crc = struct.unpack("<IIIHH", self.raw[at:at + CHUNK_FOOTER])
         return {"count": count, "size": size, "magic": magic, "slot": slot, "crc": crc}
 
+    def magic(self):
+        """The footer magic of this save's layout."""
+        return CHUNK_MAGIC_NOW if self.layout == LAYOUT_NOW else CHUNK_MAGIC
+
     def valid(self, half):
         """A half is good when every slot's footer says what it should."""
         for spec in self.specs:
             f = self._footer(half, spec)
-            if f["magic"] != CHUNK_MAGIC or f["size"] != spec["size"] or f["slot"] != spec["slot"]:
+            if f["magic"] != self.magic() or f["size"] != spec["size"] or f["slot"] != spec["slot"]:
                 return False
             body = self.raw[half + spec["offset"]:half + spec["offset"] + spec["size"] - CHUNK_FOOTER]
             if crc16(body) != f["crc"]:
@@ -896,7 +936,7 @@ class Save:
             count = struct.unpack_from("<I", self.region, at)[0]
             body = bytes(self.region[spec["offset"]:at])
             struct.pack_into("<IIIHH", self.region, at,
-                             count, spec["size"], CHUNK_MAGIC, spec["slot"], crc16(body))
+                             count, spec["size"], self.magic(), spec["slot"], crc16(body))
 
     def write(self, path=None):
         """Both halves get the same sealed region, so either one loads."""
@@ -1019,8 +1059,8 @@ def seal_from_ram(dump_path, save_path):
     at = pointer - where.MAIN_RAM + DYNAMIC_REGION
     region = bytearray(dump[at:at + save_budget.REGION])
     table = blocks()
-    holder = type("_", (), {"region": region, "table": table,
-                            "specs": slot_specs(table)})()
+    holder = type("_", (), {"region": region, "table": table, "specs": slot_specs(table),
+                            "magic": lambda self: CHUNK_MAGIC_NOW})()
     Save.reseal(holder)
     Path(save_path).write_bytes(bytes(build_save(region)))
 
@@ -1109,7 +1149,7 @@ def add_machines(save, machines):
     first = int(re.search(r"#define ITEM_TM01\s+(\d+)",
                           (ROOT / "include/constants/items.h").read_text()).group(1))
     for n in machines:
-        put_in_pocket(block, next(p["name"] for p in pockets() if p["const"] == "POCKET_TMHMS"), first + n - 1, 1)
+        put_in_pocket(block, next(p["name"] for p in pockets() if p["const"] == "POCKET_TMHMS"), first + n - 1, 1, save.layout)
 
 
 def mark_dex(save, names):
@@ -2653,7 +2693,7 @@ def bag(save):
     block = save.block("SAVE_BAG")
     items = item_table()
     out = {}
-    for pocket in pockets():
+    for pocket in pockets(save.layout):
         at, count = pocket["at"], pocket["slots"]
         slots = [struct.unpack_from("<HH", block, at + 4 * s) for s in range(count)]
         out[pocket["name"]] = [{"item": item, "quantity": quantity,
@@ -2682,7 +2722,7 @@ def set_item(save, item, quantity):
     if not 0 <= quantity <= limit:
         raise ValueError(f"{entry['name']}: 0 to {limit}")
     block = save.block("SAVE_BAG")
-    at, count = pocket_at(pocket)
+    at, count = pocket_at(pocket, save.layout)
     slots = [list(struct.unpack_from("<HH", block, at + 4 * s)) for s in range(count)]
     held = next((s for s in slots if s[0] == item), None)
     added = False
@@ -3222,7 +3262,7 @@ def _room(save, name, count):
         return False
     held = bag(save)[pocket]
     have = next((slot["quantity"] for slot in held if slot["item"] == item), None)
-    return have + count <= item_limit(item) if have is not None else len(held) < pocket_at(pocket)[1]
+    return have + count <= item_limit(item) if have is not None else len(held) < pocket_at(pocket, save.layout)[1]
 
 
 def _items(save):
@@ -3943,7 +3983,7 @@ def undo_step(save, step_id, done=None):
 
 
 def info(save):
-    return {"half": save.half, "counter": save.counter(), "legacy": save.legacy,
+    return {"half": save.half, "counter": save.counter(), "legacy": save.legacy, "layout": save.layout,
             "halves": [{"at": h, "valid": save.valid(h), "counter": save.counter(h)} for h in (0, HALF)],
             "blocks": [{k: b[k] for k in ("index", "id", "offset", "size", "slot")} for b in save.table],
             "slots": save.specs}
