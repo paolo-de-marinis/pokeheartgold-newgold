@@ -35,9 +35,10 @@ The ROM is the NEWGOLD_DIAG=1 HeartGold build. What each walk does:
           failed allocations -- and by the frame core.shot() draws there:
           the wild one's front picture (form 0, either gender's PNG) and
           the leader's back picture, drawn with the front's palette as the
-          game draws it, each against its PNG -- in form 0 for the form
-          groups the battle puts back in it (BATTLE_FORM_ZERO). The frame is
-          kept in OUT/battle/.
+          game draws it, each against its PNG: of the species the battle
+          says each is (gDiagBattlers), a Xerneas coming in Active, and in
+          form 0 for the form groups the battle puts back in it
+          (BATTLE_FORM_ZERO). The frame is kept in OUT/battle/.
 
 --only added is the sample the round-11 rerun of the battle walk used:
 every species and form past Arceus -- each added species and each form
@@ -82,7 +83,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 import savedit  # noqa: E402
 from core import Core, pin_clock  # noqa: E402
-from markers import STATES, Markers  # noqa: E402
+from markers import BATTLER, STATES, Markers  # noqa: E402
 
 BUILD = ROOT / "build/heartgold.us.diag"
 BASE_SAVE = Path.home() / "hgss-saves/route29-official.sav"
@@ -846,26 +847,37 @@ def added(wanted):
     return [e for e in wanted if e["species"] > numbers["ARCEUS"] or e["species"] in groups]
 
 
-def battle_pictures(e):
+def battle_pictures(e, lead=None, foe=None):
     """The PNGs a battle should draw for an entry: the wild one's fronts --
     form 0, and its gender is the game's to pick, so each gender's picture
     the species has (a female species' own, PicSpecies_FemaleForm) -- and
-    the leader's back, with the palette of its front, the one the game loads."""
-    form0 = dict(e, form=0)
+    the leader's back, with the palette of its front, the one the game loads.
+    `lead` and `foe` are the species the battle says they are (gDiagBattlers)
+    when that is another: a Xerneas comes in Active."""
     const = next(k for k, v in savedit.species_numbers().items() if v == e["species"])
     if const in form_species():
+        form0 = dict(e, form=0)
         fronts = [sprite_png(form0)]
         front = sprite_png(form0 if const in BATTLE_FORM_ZERO else e)
         back = front.with_name("back.png")
     else:
-        fronts = [forms_pictures(e["species"], ("gender", g))[0] for g in (0, 1)]
-        front, back = forms_pictures(e["species"], ("gender", e["gender"]))
-    return list(dict.fromkeys(fronts)), front, back
+        # A battle-only form met wild comes in as its base, a Cherrim
+        # Sunshine as a Cherrim, whose pictures are otherpoke's.
+        groups = {savedit.species_numbers()[name] for name in form_species()}
+        foe, lead = foe or e["species"], lead or e["species"]
+        fronts = ([sprite_png({"species": foe, "form": 0, "gender": 0})] if foe in groups
+                  else [forms_pictures(foe, ("gender", g))[0] for g in (0, 1)])
+        if lead in groups:
+            front = sprite_png({"species": lead, "form": 0, "gender": 0})
+            back = front.with_name("back.png")
+        else:
+            front, back = forms_pictures(lead, ("gender", e["gender"]))
+    return [png for png in dict.fromkeys(fronts) if png.stat().st_size], front, back
 
 
-def battle_scores(screen, e):
+def battle_scores(screen, e, lead=None, foe=None):
     """How well the foe's front and the leader's back match their PNGs."""
-    fronts, front, back = battle_pictures(e)
+    fronts, front, back = battle_pictures(e, lead, foe)
     top = screen.crop((0, 0, 256, 192))
     foe = max(match(top, _frames(png, 80), BATTLE_FRONT, 2, BATTLE_FRONT_CLIP, BATTLE_ROWS, BATTLE_LEAST)
               for png in fronts)
@@ -906,8 +918,14 @@ def battle(job):
             if state == BATTLE_MAIN and prompt in (1, 2) or state == EXIT:
                 break
         if state == BATTLE_MAIN:
-            screen, _ = game.still(lambda image: min(battle_scores(image, e)))
-            record["score"], record["back"] = battle_scores(screen, e)
+            ram, size = game.core.ram(), struct.calcsize(BATTLER)
+            lead, foe = (struct.unpack_from(BATTLER, ram, game.markers.address("gDiagBattlers") - 0x02000000
+                                            + battler * size)[0] for battler in (0, 1))
+            lead, foe = (None if s in (0, e["species"]) else s for s in (lead, foe))
+            screen, _ = game.still(lambda image: min(battle_scores(image, e, lead, foe)))
+            record["score"], record["back"] = battle_scores(screen, e, lead, foe)
+            if lead or foe:
+                record["became"] = [lead, foe]
             (out / "battle").mkdir(exist_ok=True)
             screen.save(out / "battle" / f"{n}.png")
         now = game.counters()
