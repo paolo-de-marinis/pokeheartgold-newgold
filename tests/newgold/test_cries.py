@@ -56,6 +56,27 @@ class SoundArchiveTests(unittest.TestCase):
         self.assertEqual(len(self.archive.files), count - 1)
         self.assertEqual(contents(), before)
 
+    def test_the_tables_leave_the_sound_heap_what_heartgold_left_it(self):
+        """The regression guard for the music that did not play.
+
+        InitSoundData loads the archive's INFO and FAT blocks into the sound
+        heap (SND_HEAP_SIZE, static, in the main arena) and never frees them;
+        every scene's music, groups and fanfares are loaded into what is
+        left, and HeartGold left some of them very little: the Trainer Card
+        over Ecruteak's music had 0x60 spare. So the two blocks may cost the
+        heap no more than HeartGold's own did. They cost 0x1bc40 when the
+        added cries each had a bank, and the intro, the title, the towns, the
+        routes and trainer battles were silent; 0x16b80 with only the added
+        cries bankless, where a replay of every load HeartGold makes still
+        failed 408 of them. Each allocation is rounded up to 32 bytes and has
+        a 32-byte header (NNS_SndHeapAlloc).
+        """
+        def cost(size):
+            return ((size + 31) & ~31) + 0x20
+        tables = cost(self.archive.blocks["INFO"][1]) + cost(self.archive.blocks["FAT"][1])
+        self.assertLessEqual(tables, cost(0xA638) + cost(0x931C),  # HeartGold's INFO and FAT
+                             f"the archive's tables take {tables:#x} of the sound heap")
+
     def test_an_added_cry_is_a_wave_archive_alone(self):
         """No bank past HeartGold's own: each costs the sound heap sixteen
         bytes of records and file table, and the music loads into what is left

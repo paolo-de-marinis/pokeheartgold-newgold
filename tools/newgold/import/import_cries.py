@@ -4,11 +4,11 @@
 A cry is wave archive N played as sequence 2, where N is the species number,
 so the cries stop where HeartGold's species do. HeartGold gives each one a
 bank N too, but every cry bank is the same seventy-six bytes naming one
-instrument, and each bank costs the sound heap its records; so an added cry is
-a wave archive past the end of the archive and nothing else, and the loader
-(lib/NitroSystem/src/sndarc_loader.c) plays a number with a wave archive and
-no bank on bank 1's instrument, as hg-engine does. PlayCry is told where to
-find each one.
+instrument, and each bank costs the sound heap its records; so bank 1 is kept
+and the others go, an added cry is a wave archive past the end of the archive
+and nothing else, and the loader (lib/NitroSystem/src/sndarc_loader.c) plays a
+number with a wave archive and no bank on bank 1's instrument, as hg-engine
+does. PlayCry is told where to find each added one.
 
 The sound itself comes from the reference, which ships a cry for every species
 the engine knows as a mono WAV. It is resampled and reduced to the eight-bit
@@ -114,13 +114,10 @@ def cry_room(archive):
     largest, Jynx's. A cry plays from the heap of the player sequence 2 runs
     on (PLAYER 0, 24,200 bytes), which the sequence, the bank and the wave
     archive all load into; one that does not fit is never started, and the
-    species has no cry at all."""
-    room = 0
-    for bank in range(1, 0x1EF):
-        fileId, _, *waves = struct.unpack("<HH4H", archive.records["SBNK"][bank])
-        war = struct.unpack("<H", archive.records["SWAR"][waves[0]][:2])[0]
-        room = max(room, len(archive.files[fileId]) + len(archive.files[war]))
-    return room
+    species has no cry at all. The bank is bank 1's, whichever the cry."""
+    bank = len(archive.files[struct.unpack("<H", archive.records["SBNK"][1][:2])[0]])
+    return max(bank + len(archive.files[struct.unpack("<H", archive.records["SWAR"][war][:2])[0]])
+               for war in range(1, 0x1EF))
 
 
 def fitted_cry(path, room, bankSize):
@@ -165,6 +162,16 @@ def main():
     bankBytes = archive.files[modelFile]
     room = cry_room(archive)
 
+    # HeartGold's own cry banks, 2 to 494: each is bank 1's instrument on its
+    # own wave archive, so each goes, record and file, and the loader plays
+    # the wave archive on bank 1. Bank 1 stays, the instrument they share.
+    for bank in range(2, 0x1EF):
+        fileId, _, *waves = struct.unpack("<HH4H", archive.records["SBNK"][bank])
+        if archive.files[fileId] != bankBytes or waves != [bank, 0xFFFF, 0xFFFF, 0xFFFF]:
+            raise SystemExit(f"bank {bank} is not bank 1's instrument on wave archive {bank}")
+        archive.records["SBNK"][bank] = None
+        archive.names["SBNK"][bank] = None
+
     mapping, bytesAdded = {}, 0
     for offset, name in enumerate(added):
         number = theirs.get(name)
@@ -182,6 +189,8 @@ def main():
         archive.records["SWAR"].append(struct.pack("<HH", warFile, 0))
         archive.names["SWAR"].append(None)
         mapping[name] = index
+
+    archive.drop_unused_files()
 
     for name, base in sharing.items():
         # An added base has a wave archive of its own; a retail one's is its number.
