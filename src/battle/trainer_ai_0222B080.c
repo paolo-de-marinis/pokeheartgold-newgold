@@ -4,9 +4,20 @@
 
 #include "battle/trainer_ai.h"
 
-// The AI's two effect lists, each ended by 0xFFFF (trainer_ai.h). Retail has
-// them between Low Kick's weight table and the AI command table, which stay in
-// the assembly on either side.
+// The AI's read-only tables beside its script (trainer_ai_script.c): Low
+// Kick's weight table and the two effect lists, each ended by 0xFFFF
+// (trainer_ai.h). The AI command table follows them, in the assembly.
+
+// Low Kick's and Grass Knot's power by the target's weight in tenths of a
+// kilogram: the first row whose weight is at least the target's.
+const u16 ov10_0222B068[][2] = {
+    { 100, 20 },
+    { 250, 40 },
+    { 500, 60 },
+    { 1000, 80 },
+    { 2000, 100 },
+    { 0xFFFF, 0xFFFF },
+};
 
 // Effects whose damage the AI estimates whatever their listed power: the
 // power, the type or the damage is worked out when the move is used

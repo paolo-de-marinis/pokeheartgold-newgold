@@ -170,4 +170,3 @@
 .public ov10_0221FD34
 .public ov10_0221FE8C
 .public ov10_0222B068
-.public ov10_0222B06A

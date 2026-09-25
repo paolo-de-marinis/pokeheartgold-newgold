@@ -160,5 +160,6 @@ BOOL ov10_02220010(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
 BOOL ov10_02220270(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL ov10_0222036C(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 BOOL ov10_022203A4(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
+int ov10_022205BC(BattleSystem *battleSystem, int battlerId);
 
 #endif
