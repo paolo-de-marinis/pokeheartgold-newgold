@@ -55,11 +55,13 @@ int ov10_022205BC(BattleSystem *battleSystem, int battlerId) {
 }
 
 // Whether the AI uses one of its trainer's items this turn, and which: the
-// first of the four that would help the battler now -- a Full Restore or a
-// potion when its HP is low, a status cure it needs, or on its first turn out
-// an X item or a Guard Spec -- where the second item waits until one of the
-// party has fainted, the third until two have, the fourth until three have.
-// Not for the AI partner in a multi battle, nor under Embargo.
+// first of the four that would help the battler now -- a Full Restore below a
+// quarter of its HP, a potion below a quarter or when the HP missing is more
+// than it heals, a status cure it needs, or on its first turn out an X item or
+// a Guard Spec -- where item slot i (from 0) waits until at most (the number
+// of items less i) of the party still stand: a trainer with two items and six
+// Pokemon uses the second once five have fainted. Not for the AI partner in a
+// multi battle, nor under Embargo.
 static BOOL ov10_022206B0(BattleSystem *battleSystem, int battlerId) {
     int i;
     u16 item;
