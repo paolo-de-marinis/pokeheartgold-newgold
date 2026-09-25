@@ -9,8 +9,9 @@ Dal 25 settembre vale la regola di Paolo: «se una cosa di konefr è palesemente
 comunque mettila nella nota». Palesemente errata vuol dire che nel suo gioco non fa quello che lui
 voleva, e che c'è una sola correzione, presa dai suoi dati o da una regola del gioco. Quelle le
 correggiamo nel port, e la voce resta qui con la sua domanda, perché lui lo sappia. Il resto resta
-com'è. Ogni voce l'hanno giudicata tre giudici, ognuno per conto suo. Quando il loro motivo aiuta a
-fare la domanda, lo riportiamo in una riga.
+com'è. Le voci che potevano essere errori (Allenatori, Incontri 3-6, Specie 2-4, Strumenti 1,
+Script e flag 1-2, Testi 1-2 e quelle nuove trovate cercando) le hanno giudicate tre giudici,
+ognuno per conto suo. Quando il loro motivo aiuta a fare la domanda, lo riportiamo in una riga.
 
 Come leggere le voci:
 
@@ -664,13 +665,13 @@ L'elenco completo è in AUDIT-2026-09-23.md ("Differences from konefr's referenc
   (commento in `src/trainer_data.c`).
 - 79 mosse bloccate come non implementate. Il port ha implementato quelle raggiungibili (f37822a03,
   5f8ccce35).
-- Pika Papow e Veevee Volley colpiscono con potenza 0 (98f07b4ab).
+- Pika Papow e Veevee Volley colpiscono con potenza 0 (370835844).
 - Defog toglie Toxic Spikes, Stealth Rock e Sticky Web del bersaglio dalla coda di chi la usa
   (2c4affe08).
 - Tidy Up controlla gli id dei lottatori al posto delle condizioni di campo, quindi non toglie mai
   Stealth Rock e Sticky Web (087370d84).
 - Un portatore di Red Card che usa U-turn esce comunque (9c5c98f1e).
-- Lo script di Matcha Gotcha tira la bruciatura due volte (40485e35d).
+- Lo script di Matcha Gotcha tira la bruciatura due volte (80128eaed).
 - La riga di Flower Veil nel subscript del veleno stampa il messaggio sbagliato (ec42c85dc).
 - RKS System di Silvally legge le Piastre invece delle Memorie (356311335).
 - Tre difetti nei meteo primordiali (e8ceb35eb).
