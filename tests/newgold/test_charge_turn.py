@@ -187,6 +187,13 @@ class ChargeTurnTests(unittest.TestCase):
         self.assertLess(first.index("PrintAttackMessage"), first.index("BufferMessage msg_0197_01480, TAG_NICKNAME"))
         self.assertLess(first.index("BufferMessage msg_0197_01480"), first.index("HOLD_EFFECT_CHARGE_SKIP, _026"))
 
+    def test_electro_shot_s_second_turn_asks_no_rain(self):
+        # Locked in, it hits: asked again, the rain would raise its Sp. Atk.
+        # a second time (Showdown's electroshot: removeVolatile, then return).
+        shot = script("effect_script", "effect_script_0330.s")
+        first = [line.strip() for line in shot.split("_000:\n")[1].splitlines() if line.strip() and not line.strip().startswith("//")][0]
+        self.assertEqual(first, "CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS2, STATUS2_LOCKED_INTO_MOVE, _033")
+
     def test_solar_beam_in_the_sun_absorbs_light_before_its_hit(self):
         solar = script("effect_script", "effect_script_0151.s")
         unlocked = solar[solar.index("_033\n"):solar.index("\n_033:")]

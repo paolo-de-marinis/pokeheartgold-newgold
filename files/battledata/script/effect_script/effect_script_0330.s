@@ -3,13 +3,16 @@
     .data
 
 _000:
+    // A locked user hits: the rain is its first turn's to ask, and asked
+    // again on the second it would raise the Sp. Atk. a second time, as the
+    // engine's script does. Showdown's electroshot ends there once charged.
+    CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS2, STATUS2_LOCKED_INTO_MOVE, _033
     CheckIgnoreWeather _006
     // A Utility Umbrella holder charges it in the rain too (Superombrello).
     CheckItemHoldEffect CHECK_OPCODE_HAVE, BATTLER_CATEGORY_ATTACKER, HOLD_EFFECT_UNAFFECTED_BY_RAIN_OR_SUN, _006
     CompareVarToValue OPCODE_FLAG_SET, BSCRIPT_VAR_FIELD_CONDITION, FIELD_CONDITION_RAIN_ALL, _028
 
 _006:
-    CompareMonDataToValue OPCODE_FLAG_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS2, STATUS2_LOCKED_INTO_MOVE, _033
     // Its charge turn is its own, the rain being its script's to ask; like
     // the other charge moves' (TryChargeTurn, subscript 473) it says the
     // attack message first, then the line its move script does not buffer.
