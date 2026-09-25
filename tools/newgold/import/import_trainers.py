@@ -346,8 +346,12 @@ def main():
                 else:
                     stale.append(f"{index}: not the retail first Silver any more (FIRST_SILVER)")
             wanted["double"] = DOUBLE[battle_type(index, block)]
-            if index in NO_PARTNER and "DOUBLE_BATTLE" != re.search(r"\.battleType\s*=\s*(\w+)", block).group(1):
-                stale.append(f"{index}: not DOUBLE_BATTLE any more (NO_PARTNER)")
+            # Stale once he writes the no-partner double himself. The retail
+            # single battle at d0380a487, before his data, is not his change;
+            # a single he wrote would fail test_nelson_and_mark_... instead.
+            written = re.search(r"\.battleType\s*=\s*(\w+)", block).group(1)
+            if index in NO_PARTNER and written == "NO_PARTNER_DOUBLE_BATTLE":
+                stale.append(f"{index}: NO_PARTNER_DOUBLE_BATTLE in his data now (NO_PARTNER)")
         except (AttributeError, KeyError, ValueError) as error:
             problems[f"unreadable: {error}"] += 1
             continue

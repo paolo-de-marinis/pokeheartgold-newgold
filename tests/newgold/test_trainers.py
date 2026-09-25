@@ -450,6 +450,22 @@ class TrainerTests(unittest.TestCase):
             self.assertIn((index, 4), rows)       # TRMSG_DBL_LOSE_1
             self.assertNotIn((index, 1), rows)    # TRMSG_LOSE
 
+    @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
+    def test_no_correction_is_stale_at_the_engine_or_at_konefr_s_tip(self):
+        """The importer says a correction is stale when konefr's data no
+        longer has the slip it corrects. At his tip every slip is there, and
+        at d0380a487 there is no data of his to have changed: Nelson is
+        retail's single battle there, not a stale correction."""
+        for revision in (gmm.ENGINE, gmm.NEWGOLD):
+            with tempfile.TemporaryDirectory(prefix="newgold-import-") as directory:
+                for path in ("include/trainer_data.h", "data/Trainers.c"):
+                    (Path(directory) / path).parent.mkdir(parents=True, exist_ok=True)
+                    (Path(directory) / path).write_text(gmm.git_show(revision, path))
+                output = subprocess.run([sys.executable, str(ROOT / "tools/newgold/import/import_trainers.py"), directory],
+                                        capture_output=True, text=True, check=True).stdout
+            self.assertIn("nothing written", output)
+            self.assertNotIn("correction stale", output, revision)
+
     def test_samantha_s_lines_name_her_persian(self):
         """konefr's eb4e20f17 made Beauty Samantha #70's Meowth a Persian with
         the same moves and her other Meowth a Wigglytuff; her retail lines,
