@@ -334,6 +334,47 @@ class TrainerTests(unittest.TestCase):
         self.assertEqual([member["item"] for member in self.trainers[251]["party"]],
                          ["ITEM_SITRUS_BERRY", "ITEM_BLACK_BELT"])
 
+    def test_a_double_battle_without_a_partner_is_engaged_alone(self):
+        """When a trainer sees the player, TryGetSeenByNpcTrainers sends a
+        partner walking up with him if the sight record says so, and looks
+        for one on the map; finding none it asserts and goes on with a null
+        object. The real GetEngagingTrainerParams and battle-type checks, run
+        on the host for each battle type: only a double with a partner
+        (TRAINER_BATTLE_DOUBLE) has one; Mark's and Nelson's
+        (TRAINER_BATTLE_DOUBLE_NO_PARTNER) are engaged alone."""
+        header = (ROOT / "include/unk_020632B0.h").read_text()
+        record = re.search(r"typedef struct EngagingTrainer \{.*?\} EngagingTrainer;", header, re.S)[0]
+        manager = (ROOT / "src/script_manager.c").read_text()
+        program = "\n".join([
+            "#include <stdint.h>", "#include <stdio.h>", '#include "constants/trainers.h"',
+            "typedef uint16_t u16; typedef uint32_t u32; typedef int BOOL;",
+            "typedef struct LocalMapObject LocalMapObject;", "enum { TRATTR_DOUBLEBTL = 1 };",
+            record, "static int battleType;",
+            "static u32 MapObject_GetScriptID(LocalMapObject *object) { return 3000; }",
+            "static u16 ScriptNumToTrainerNum(u16 script) { return script - 2999; }",
+            "static int TrainerData_GetAttr(u32 trainer, int attr) { return attr == TRATTR_DOUBLEBTL ? battleType : -1; }",
+            function(manager, "TrainerNumIsDouble"), function(manager, "TrainerNumHasDoublePartner"),
+            function((ROOT / "src/trainer_sight.c").read_text(), "GetEngagingTrainerParams"),
+            "int main(void) {",
+            "    for (battleType = 0; battleType < 4; battleType++) {",
+            "        EngagingTrainer trainer;",
+            "        GetEngagingTrainerParams(&trainer, 0, 0, 0);",
+            "        printf(\"%d\\n\", *(int *)((char *)&trainer + 0x10));",
+            "    }",
+            "    return 0;",
+            "}"])
+        with tempfile.TemporaryDirectory(prefix="newgold-sight-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(program)
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-Wno-unused-parameter",
+                "-iquote", str(ROOT / "include"), str(path / "test.c"), "-o", str(path / "test")], check=True)
+            output = subprocess.run([str(path / "test")], capture_output=True, text=True, check=True).stdout
+        # Single, (unused), double with a partner, double without one.
+        self.assertEqual(output.split(), ["0", "0", "1", "0"])
+        # The record's flag is the word TryGetSeenByNpcTrainers tests, 0x10 in.
+        self.assertIn("ldr r0, [sp, #0x50]\n\tcmp r0, #0", (ROOT / "asm/unk_020632B0.s").read_text())
+
     def test_a_party_entry_can_name_every_species(self):
         """The species field is 11 bits of species and 5 of form, hg-engine's
         split. Platinum's was 10 and 6, which wrapped every species from 1024

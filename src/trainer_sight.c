@@ -10,6 +10,9 @@ void GetEngagingTrainerParams(EngagingTrainer *trainer, LocalMapObject *object, 
     trainer->unk4 = unk4;
     trainer->scriptId = MapObject_GetScriptID(object);
     trainer->trainerNum = ScriptNumToTrainerNum(trainer->scriptId);
-    trainer->isDouble = TrainerNumIsDouble((u16)trainer->trainerNum);
+    // TryGetSeenByNpcTrainers sends a partner walking up with him when this
+    // is set, and looks for that partner on the map. A double battle without
+    // a partner is engaged alone, as hg-engine's walking patches do.
+    trainer->hasPartner = TrainerNumHasDoublePartner(trainer->trainerNum);
     trainer->object = object;
 }

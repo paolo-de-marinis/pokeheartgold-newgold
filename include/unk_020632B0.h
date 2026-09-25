@@ -5,14 +5,14 @@
 
 // A trainer that sees the player, as CheckSeenByNpcTrainers records it: the
 // two values the sight check gave (EngagedTrainer's unk0 and unk4), the
-// object's script and trainer, whether the trainer fights a double battle,
-// and the object.
+// object's script and trainer, whether a partner walks up with him, and the
+// object.
 typedef struct EngagingTrainer {
     int unk0;
     int unk4;
     u32 scriptId;
     u32 trainerNum;
-    BOOL isDouble;
+    BOOL hasPartner;
     LocalMapObject *object;
 } EngagingTrainer;
 

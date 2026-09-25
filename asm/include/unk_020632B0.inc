@@ -16,7 +16,6 @@
 .public StartMapSceneScript
 .public FieldSystem_SetEngagedTrainer
 .public ScriptNumToTrainerNum
-.public TrainerNumIsDouble
 .public TrainerFlagCheck
 .public sub_02055780
 .public FieldSystem_ApricornTree_TryGetApricorn
