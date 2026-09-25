@@ -5629,8 +5629,10 @@ static int EmbodyAspectStat(u16 ability) {
 // Tera Shift (Pokemon Central, Teramorfosi): a Terapagos coming in takes its
 // Terastal Form, whose ability is Tera Shell, before anything else on the way
 // in speaks, and nothing suppresses it, so the ability is read off the
-// battler. It keeps the form when it is switched out or faints, and goes back
-// at the end of the battle (sFormReversion), so this happens once. hg-engine
+// battler. It keeps the form when it is switched out or faints, as Showdown's
+// Tera Shift has it (data/abilities.ts, a permanent formeChange; Pokemon
+// Central says nothing), and goes back at the end of the battle
+// (sFormReversion), so this happens once. hg-engine
 // (d0380a487, SwitchInAbilityCheck.c:107) names the ability there and does
 // nothing with it. Not for a Pokemon Transformed into one, which keeps the
 // form it copied.

@@ -1853,15 +1853,19 @@ BOOL BtlCmd_PlayFaintAnimation(BattleSystem *battleSystem, BattleContext *ctx) {
     // (Fantasmanto, Sciamefusione, Morfosintonia), and says Aegislash, Zen
     // Mode Darmanitan and Minior are never in the battle form outside a fight
     // (Accendilotta, Stato Zen, Scudosoglia). It says nothing of Wishiwashi,
-    // Morpeko, Meloetta, Cramorant, Castform, Cherrim or the Terastal forms,
-    // and Showdown puts all of them back on a faint. The party slot is read
+    // Morpeko, Meloetta, Cramorant, Castform, Cherrim or Ogerpon's Terastal
+    // forms, and Showdown puts all of them back on a faint. The party slot is read
     // now, while the place still has it; at the end of the turn a place with
     // nothing to send in is left empty (ov12_0224D540), and SwitchAndUpdateMon
     // cannot find this Pokemon any more. Not an Eiscue's Noice Face, which
     // lasts until the battle ends, through a switch (Bulbapedia, Ice Face) and
     // through a faint (Showdown). Nor the forms a Pokemon keeps from the start
     // of a battle to its end: a crowned Zacian or Zamazenta, an Active
-    // Xerneas, a Hero Palafin.
+    // Xerneas, a Hero Palafin. Nor a Terapagos in its Terastal Form, which
+    // Tera Shift gives it for the rest of the battle: Showdown's Tera Shift
+    // (data/abilities.ts) changes the form for good, formeChange(...,
+    // isPermanent) with no formeRegression, so the faint keeps it
+    // (Battler_TeraShiftForm). Pokemon Central says nothing (Teramorfosi).
     {
         Pokemon *mon = BattleSystem_GetPartyMon(battleSystem, ctx->battlerIdFainted, ctx->selectedMonIndex[ctx->battlerIdFainted]);
 
@@ -1871,6 +1875,7 @@ BOOL BtlCmd_PlayFaintAnimation(BattleSystem *battleSystem, BattleContext *ctx) {
         case SPECIES_ZAMAZENTA_CROWNED:
         case SPECIES_XERNEAS_ACTIVE:
         case SPECIES_PALAFIN_HERO:
+        case SPECIES_TERAPAGOS_TERASTAL:
             break;
         default:
             Mon_RevertFormChange(mon);
@@ -2339,7 +2344,10 @@ BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSystem, BattleContext *ctx) {
     // crowned Zacian or Zamazenta: hg-engine crowns them when the battle starts
     // and nowhere else, so it took the crown for the rest of the battle. Nor a
     // Palafin in its Hero Form, which it took by leaving: hg-engine sent it
-    // back to its Zero Form the second time it left. Nor a place left empty,
+    // back to its Zero Form the second time it left. Nor a Terapagos in its
+    // Terastal Form, which keeps it here as through a faint
+    // (BtlCmd_PlayFaintAnimation): put back in its Normal Form, it took Tera
+    // Shift a second time on its way back in. Nor a place left empty,
     // where what fainted last has no party slot to be found at any more: a
     // Revive from the bag, or a Revival Blessing, fills it at the end of the
     // turn, and battleMons still holds the fallen one's form, which went back
@@ -2348,7 +2356,8 @@ BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSystem, BattleContext *ctx) {
         && Species_GetBattleFormReversion(ctx->battleMons[battlerId].species) != SPECIES_NONE
         && ctx->battleMons[battlerId].species != SPECIES_ZACIAN_CROWNED
         && ctx->battleMons[battlerId].species != SPECIES_ZAMAZENTA_CROWNED
-        && ctx->battleMons[battlerId].species != SPECIES_PALAFIN_HERO) {
+        && ctx->battleMons[battlerId].species != SPECIES_PALAFIN_HERO
+        && ctx->battleMons[battlerId].species != SPECIES_TERAPAGOS_TERASTAL) {
         Mon_RevertFormChange(BattleSystem_GetPartyMon(battleSystem, battlerId, ctx->selectedMonIndex[battlerId]));
     }
     // Zero to Hero (btl_scr_cmd_125, run from hg-engine's switch and

@@ -175,7 +175,9 @@ static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx;
 static int BattleScriptReadWord(BattleContext *ctx) { return ctx->script; }
 static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
 static void CopyBattleMonToPartyMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; }
-static u16 Species_GetBattleFormReversion(u16 species) { return species == SPECIES_AEGISLASH_BLADE ? SPECIES_AEGISLASH : SPECIES_NONE; }
+static u16 Species_GetBattleFormReversion(u16 species) {
+    return species == SPECIES_AEGISLASH_BLADE ? SPECIES_AEGISLASH : species == SPECIES_TERAPAGOS_TERASTAL ? SPECIES_TERAPAGOS : SPECIES_NONE;
+}
 static BOOL Mon_RevertFormChange(Pokemon *mon) { sReverted = mon; return TRUE; }
 static void Mon_ChangeFormSpecies(Pokemon *mon, int species) { (void)mon; (void)species; assert(0); }
 static void BattleSystem_GetBattleMon(BattleSystem *bs, BattleContext *ctx, int battlerId, int index) {
@@ -224,6 +226,14 @@ int main(void) {
     ctx.script = BATTLER_CATEGORY_ATTACKER;
     BtlCmd_SwitchAndUpdateMon(0, &ctx);
     assert(sReverted == &sParties[0][1]);
+
+    // A Terapagos in its Terastal Form keeps it on the way out, as through
+    // a faint: Tera Shift gave it for the rest of the battle (Showdown).
+    sReverted = NULL;
+    ctx.battleMons[2].species = SPECIES_TERAPAGOS_TERASTAL;
+    ctx.unk_21A0[2] = 1;
+    BtlCmd_SwitchAndUpdateMon(0, &ctx);
+    assert(sReverted == NULL);
     return 0;
 }
 """
@@ -443,6 +453,7 @@ static BOOL Mon_RevertFormChange(Pokemon *mon) {
     static const u16 rows[][2] = {
         { SPECIES_AEGISLASH_BLADE, SPECIES_AEGISLASH }, { SPECIES_MIMIKYU_BUSTED, SPECIES_MIMIKYU },
         { SPECIES_EISCUE_NOICE_FACE, SPECIES_EISCUE }, { SPECIES_ZACIAN_CROWNED, SPECIES_ZACIAN },
+        { SPECIES_TERAPAGOS_TERASTAL, SPECIES_TERAPAGOS },
     };
     for (unsigned i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
         if (mon->species == rows[i][0]) {
@@ -478,6 +489,10 @@ int main(void) {
     // its crown.
     assert(Faint(3, 1, SPECIES_EISCUE_NOICE_FACE) == SPECIES_EISCUE_NOICE_FACE);
     assert(Faint(0, 1, SPECIES_ZACIAN_CROWNED) == SPECIES_ZACIAN_CROWNED);
+
+    // A Terapagos keeps the Terastal Form Tera Shift gave it, so a Revival
+    // Blessing does not bring it back to take Tera Shift a second time.
+    assert(Faint(2, 0, SPECIES_TERAPAGOS_TERASTAL) == SPECIES_TERAPAGOS_TERASTAL);
     return 0;
 }
 """

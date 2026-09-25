@@ -276,7 +276,7 @@ class FormChangeTests(unittest.TestCase):
     puts("PASS: Zero to Hero on the way out.");""", "newgold-hero-", "src/battle/battle_command.c"))
         switch = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SwitchAndUpdateMon")
         self.assertIn("if (side != BATTLER_CATEGORY_FORCED_OUT && Battler_TurnsHero(ctx, battlerId)) {", switch)
-        self.assertIn("&& ctx->battleMons[battlerId].species != SPECIES_PALAFIN_HERO) {", switch)
+        self.assertIn("&& ctx->battleMons[battlerId].species != SPECIES_PALAFIN_HERO", switch)
         self.assertLess(switch.index("SPECIES_PALAFIN_HERO"), switch.index("ctx->selectedMonIndex[battlerId] = ctx->unk_21A0[battlerId];"))
         entry = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
         entry = entry[entry.index("case 19: // Intrepid Sword"):entry.index("case 20: // Hospitality")]
