@@ -4003,6 +4003,8 @@ def main():
                         help="put one Pokemon in box N, counted from one")
     parser.add_argument("--party", metavar="SPECIES:LEVEL[:NATURE][:MOVE+...][:ITEM][,...]",
                         help="fill the party, e.g. CHIKORITA:5,PIDGEY:3:::ORAN_BERRY")
+    parser.add_argument("--bag", metavar="ITEM:COUNT[,...]",
+                        help="the same as --item, a count left out being 1, e.g. MASTER_BALL:1")
     parser.add_argument("--name", help="the player's name, which the save must carry "
                                        "terminated: the main menu copies it into a String "
                                        "and asserts on one that never ends")
@@ -4039,19 +4041,21 @@ def main():
         save.write()
         print("party: " + ", ".join(f"{n} at level {l}" for n, l, *_ in wanted))
 
-    if args.item:
+    if args.item or args.bag:
+        # --bag is --item under the name the battle scenarios use; both go
+        # through set_item, so in the save's own layout.
         items = constants("include/constants/items.h", "ITEM_")
-        for entry in args.item.split(","):
+        for entry in ",".join(filter(None, (args.item, args.bag))).split(","):
             name, _, count = entry.upper().partition(":")
             name = name if name.startswith("ITEM_") else "ITEM_" + name
             if name not in items:
                 raise SystemExit(f"there is no {name}")
             try:
-                set_item(save, items[name], int(count))
+                set_item(save, items[name], int(count or 1))
             except ValueError as e:
                 raise SystemExit(str(e))
         save.write()
-        print(f"bag: {args.item}")
+        print(f"bag: {','.join(filter(None, (args.item, args.bag)))}")
 
     if args.tm:
         machines = [int(n) for n in args.tm.split(",")]

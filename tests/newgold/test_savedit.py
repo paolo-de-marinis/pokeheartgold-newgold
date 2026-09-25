@@ -631,6 +631,17 @@ class SaveditLibraryTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             sv.parse_party("PIKACHU:10:::NO_SUCH_ITEM")
 
+    def test_the_cli_puts_items_in_the_bag(self):
+        """--bag puts each item in its own pocket: a scenario's catch wants
+        a ball the save does not have."""
+        out = Path(self.tmp.name) / "cli.sav"
+        out.write_bytes(self.path.read_bytes())
+        subprocess.run([sys.executable, str(ROOT / "tools/newgold/devkit/savedit.py"), str(out),
+                        "--bag", "master_ball:1,POTION:3"], check=True, capture_output=True)
+        bag = sv.bag(sv.Save(out))
+        self.assertIn(("Master Ball", 1), [(i["name"], i["quantity"]) for i in bag["balls"]])
+        self.assertIn(("Potion", 3), [(i["name"], i["quantity"]) for i in bag["medicine"]])
+
     def test_the_cli_names_a_pokemon_as_the_game_prints_it(self):
         """build_mon writes the species bank's name, not its constant."""
         self.assertEqual(sv.describe_mon(sv.build_mon("MR_MIME", 5))["nickname"], "Mr. Mime")
