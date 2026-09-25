@@ -1,0 +1,19 @@
+{
+  "about": "The Metronome item counts a move that hits several Pokemon once (3f58cbbe2: before, once for each target, the second target taking one more use's boost than the first), and keeps the count when the move fails on its last target after landing on another (489b74905). The Twins' double battle in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-30 Pawmot holding the item (set:) and a level-30 Baxcalibur on the twins' platform; the Pawmot is given Snarl, which hits both foes, first the Ledyba, then the Spinarak, and everyone else Splash, in the running battle (teach:); the foes' HP is set back before each turn. The damage roll is forced to the bottom of the range: 29 to the Spinarak and 12 to the Ledyba, both with no boost (before, the Spinarak's 35 had the second use's); then 14 to the Ledyba (1.2) while the Spinarak protects itself; then 41 and 17 (1.4), the Protect on the last target not having taken the count back.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:30,BAXCALIBUR:30", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_SNARL", "teach:2,0,MOVE_SPLASH",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:3,0,MOVE_SPLASH", "teach:3,1,0,0", "teach:3,2,0,0", "teach:3,3,0,0",
+            "set:0,item,ITEM_METRONOME", "fight:1:1",
+            {"expect": {"lines": ["Pawmot used Snarl!", "The opposing Ledyba’s Sp. Atk fell!", "The opposing Spinarak’s Sp. Atk fell!"],
+                        "battler0.item": "ITEM_METRONOME", "battler1.species": "SPECIES_SPINARAK", "battler1.hp": 18,
+                        "battler3.species": "SPECIES_LEDYBA", "battler3.hp": 39}},
+            "teach:1,0,MOVE_PROTECT", "set:1,hp,47", "set:3,hp,51", "fight:1:1",
+            {"expect": {"lines": ["The opposing Spinarak used Protect!", "Pawmot used Snarl!", "The opposing Spinarak protected itself!"],
+                        "battler1.hp": 47, "battler3.hp": 37}},
+            "teach:1,0,MOVE_SPLASH", "set:3,hp,51", "fight:1:1"],
+  "expect": {"battler1.hp": 6, "battler3.hp": 34}
+}
