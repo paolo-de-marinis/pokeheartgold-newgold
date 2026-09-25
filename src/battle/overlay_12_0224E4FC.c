@@ -9491,33 +9491,18 @@ BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int bat
         ret = TRUE;
         break;
     default:
-        // Berries whose record has no effect for another's route to them: what
-        // they do for their eater is read off the held effect. The Enigma
-        // Berry gives it a quarter of its maximum HP (Pokemon Central,
-        // Baccaenigma: from the eighth generation, Bug Bite and Pluck too),
-        // the Kee Berry a stage of Defense and the Maranga Berry one of Sp.
-        // Def (Baccalighia, Baccapane), whatever the Berry's own condition.
+        // A Berry whose record has no effect for another's route to it: the
+        // Enigma Berry gives its eater a quarter of its maximum HP (Pokemon
+        // Central, Baccaenigma: from the eighth generation, Bug Bite and Pluck
+        // too), whatever its own condition, read off the held effect. The
+        // Kee and Maranga Berries' records give the Ganlon and Apicot
+        // Berries' stage of Defense and Sp. Def (Baccalighia, Baccapane).
         // The Jaboca, Rowap and Custap Berries and the ones that weaken a
         // type's hit have nothing to give whoever eats them (Baccajaba).
-        switch (GetItemVar(ctx, ctx->battleMons[battlerId].item, ITEM_VAR_HOLD_EFFECT)) {
-        case HOLD_EFFECT_HP_RESTORE_SE: // enigma berry
-            if (ctx->battleMons[ctx->battlerIdAttacker].hp != ctx->battleMons[ctx->battlerIdAttacker].maxHp) {
-                ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp, mod);
-                script = BATTLE_SUBSCRIPT_HELD_ITEM_HP_RESTORE;
-            }
-            break;
-        case HOLD_EFFECT_BOOST_DEF_ON_PHYSICAL_HIT: // kee berry
-            if (ctx->battleMons[ctx->battlerIdAttacker].statChanges[STAT_DEF] < 12) {
-                ctx->msgTemp = STAT_DEF;
-                script = BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT;
-            }
-            break;
-        case HOLD_EFFECT_BOOST_SPDEF_ON_SPECIAL_HIT: // maranga berry
-            if (ctx->battleMons[ctx->battlerIdAttacker].statChanges[STAT_SPDEF] < 12) {
-                ctx->msgTemp = STAT_SPDEF;
-                script = BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_STAT;
-            }
-            break;
+        if (GetItemVar(ctx, ctx->battleMons[battlerId].item, ITEM_VAR_HOLD_EFFECT) == HOLD_EFFECT_HP_RESTORE_SE
+            && ctx->battleMons[ctx->battlerIdAttacker].hp != ctx->battleMons[ctx->battlerIdAttacker].maxHp) {
+            ctx->hpCalc = DamageDivide(ctx->battleMons[ctx->battlerIdAttacker].maxHp, mod);
+            script = BATTLE_SUBSCRIPT_HELD_ITEM_HP_RESTORE;
         }
         if (BattleItemIsBerry(ctx->battleMons[battlerId].item) == TRUE) {
             ret = TRUE;

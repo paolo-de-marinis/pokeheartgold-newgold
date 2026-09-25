@@ -99,11 +99,19 @@ class EatenBerryTests(unittest.TestCase):
         # records have no pluck effect, and they were eaten for nothing.
         eat = function(OVERLAY.read_text(), "TryEatOpponentBerry")
         default = eat[eat.index("    default:"):]
-        for effect, line in (("HOLD_EFFECT_HP_RESTORE_SE", "script = BATTLE_SUBSCRIPT_HELD_ITEM_HP_RESTORE;"),
-                             ("HOLD_EFFECT_BOOST_DEF_ON_PHYSICAL_HIT", "ctx->msgTemp = STAT_DEF;"),
-                             ("HOLD_EFFECT_BOOST_SPDEF_ON_SPECIAL_HIT", "ctx->msgTemp = STAT_SPDEF;")):
-            case = default[default.index(f"case {effect}:"):]
-            self.assertIn(line, case[:case.index("break;")])
+        enigma = default[default.index("== HOLD_EFFECT_HP_RESTORE_SE"):]
+        self.assertIn("script = BATTLE_SUBSCRIPT_HELD_ITEM_HP_RESTORE;", enigma[:enigma.index("}")])
+        # The Kee and Maranga Berries by their records' pluck effects, the
+        # Ganlon and Apicot Berries' cases.
+        records = {row[0]: row for row in (line.split(",") for line in
+                   (ROOT / "files/itemtool/itemdata/item_data.csv").read_text().splitlines())}
+        header = records["item"]
+        for item, twin in (("ITEM_KEE_BERRY", "ITEM_GANLON_BERRY"), ("ITEM_MARANGA_BERRY", "ITEM_APICOT_BERRY")):
+            pluck = header.index("pluckEffect")
+            self.assertEqual(records[item][pluck], records[twin][pluck], item)
+        for case, stat in (("STEAL_EFFECT_DEF_UP", "2"), ("STEAL_EFFECT_SPDEF_UP", "5")):
+            body = eat[eat.index(f"case {case}:"):]
+            self.assertIn(f"ctx->msgTemp = {stat};", body[:body.index("break;")])
         # Bug Bite and Pluck eat a Kee Berry before it raises its holder's
         # Defense, Sticky Hold aside (Baccalighia).
         hit = function(OVERLAY.read_text(), "CheckItemEffectOnHit")
