@@ -1,0 +1,15 @@
+{
+  "about": "A foe's Dragon Cheer is copied by the Mirror Herb and by Opportunist (41523b7b7: before, by neither). The Twins' double battle in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-30 Pawmot and a level-30 Baxcalibur on the twins' platform; the Pawmot is given Dragon Cheer in the running battle (teach:), everyone else only Splash, and the twins' Spinarak Opportunist and their Ledyba a Mirror Herb (set:). The Pawmot cheers the Baxcalibur, and both foes take the cheer: the herb under its own line, which uses it up, and Opportunist with Dragon Cheer's.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:30,BAXCALIBUR:30", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_DRAGON_CHEER", "teach:2,0,MOVE_SPLASH",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:3,0,MOVE_SPLASH", "teach:3,1,0,0", "teach:3,2,0,0", "teach:3,3,0,0",
+            "set:1,ability,ABILITY_OPPORTUNIST", "set:3,item,ITEM_MIRROR_HERB", "fight:1:1"],
+  "expect": {"lines": ["Pawmot used Dragon Cheer!", "Baxcalibur is getting pumped!",
+                       "The opposing Ledyba used its Mirror Herb to mirror its opponent’s stat changes!",
+                       "The opposing Spinarak is getting pumped!"],
+             "battler1.species": "SPECIES_SPINARAK", "battler3.item": 0}
+}
