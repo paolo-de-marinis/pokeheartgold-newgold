@@ -244,6 +244,7 @@ class Core:
         `path`, through ffmpeg; close() finishes it."""
         av = AvInfo()
         self.lib.retro_get_system_av_info(ctypes.byref(av))
+        self._recording = path
         self._size = (av.base_width, av.base_height)
         # ffmpeg takes raw sound at a whole number of samples a second, and
         # melonDS DS mixes 32728.498 (33513982/1024): labelled 32728, the
@@ -301,8 +302,10 @@ class Core:
         self._ffmpeg.stdin.close()
         self._sounds.put(None)
         self._pourer.join()
-        self._ffmpeg.wait()
+        failed = self._ffmpeg.wait()
         self._ffmpeg, self._sound, self._grab = None, None, False
+        if failed:      # the mp4's index is written last: a full disk shows only here
+            raise RuntimeError(f"ffmpeg could not finish {self._recording} (exit {failed})")
 
     def _env(self, cmd, data):
         if cmd in (9, 31):  # system and save directory
@@ -407,10 +410,10 @@ class Core:
         return buffer.raw
 
     def close(self):
-        if self._ffmpeg:
-            self._stop_recording()
         if self._sram:
             self._write_save()
         self.lib.retro_unload_game()
         self.lib.retro_deinit()
         shutil.rmtree(self.dir, ignore_errors=True)
+        if self._ffmpeg:        # last, so a recording that failed leaves the rest closed
+            self._stop_recording()

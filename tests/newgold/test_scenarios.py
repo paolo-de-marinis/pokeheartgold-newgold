@@ -99,6 +99,26 @@ class RecordingTests(unittest.TestCase):
             self.assertAlmostEqual(float(audio["duration"]), float(video["duration"]), delta=0.1)
             self.assertEqual(audio["channels"], 2)
 
+    def test_an_mp4_ffmpeg_could_not_finish_fails_the_run(self):
+        # ffmpeg writes the mp4's index last; if that fails (a full disk),
+        # close() says so rather than leave a broken file behind quietly. An
+        # ffmpeg that takes everything and exits 1 stands in for it.
+        import tempfile
+        for needed in (ROM, CORE):
+            if not os.path.exists(needed):
+                self.skipTest(f"{needed} is not there")
+        with tempfile.TemporaryDirectory(prefix="newgold-record-") as temp:
+            fake = os.path.join(temp, "ffmpeg")
+            with open(fake, "w") as out:
+                out.write("#!/bin/sh\ncat > /dev/null\nexit 1\n")
+            os.chmod(fake, 0o755)
+            script = (f"import sys; sys.path.insert(0, {str(DIAG)!r}); import core; "
+                      f"c = core.Core({str(ROM)!r}, record={os.path.join(temp, 'clip.mp4')!r}); c.step(5); c.close()")
+            run = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=600,
+                                 env={**os.environ, "PATH": f"{temp}:{os.environ['PATH']}"})
+            self.assertNotEqual(run.returncode, 0)
+            self.assertIn("ffmpeg could not finish", run.stderr)
+
     def test_each_core_is_the_one_named_and_its_sound_gets_through(self):
         # NEWGOLD_CORE picks the core, and what it mixes reaches the mp4: a
         # save continued, A pressed at the title and its menu, recorded. The
