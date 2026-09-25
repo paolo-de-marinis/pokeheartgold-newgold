@@ -5,25 +5,46 @@
 
 typedef void (*ControllerFunction)(BattleSystem *, BattleContext *ctx);
 
-// How every battler on the field looks, for the opponent controller to draw
-// a battler's sprite from: its substitute's (BattleController_EmitSwapToSubstituteSprite)
-// or its own again (BattleController_EmitRestoreSprite). The packet is the
-// move animation's, whose other fields these leave unset.
-typedef struct BattlerSpritesCommand {
+// The move animation's packet (ov12_022643C8): the move and its two
+// battlers, the damage, the power, the weather, the terrain, and how every
+// battler on the field looks.
+typedef struct MoveAnimationCommand {
     u8 command;
-    u8 unused1[0x17];
+    u16 move;
+    u32 damage;
+    u16 power;
+    u16 unkA; // BattleContext.unk_2164
+    u16 friendship; // the attacker's
+    u16 substitute : 1; // the attacker is behind one
+    u16 transformed : 1; // the attacker is
+    u16 unkE_2 : 1; // the attacker's party slot is ov12_0223C140's
+    u16 unkE_3 : 1; // the defender's
+    u16 unkE_4 : 12;
+    u32 fieldCondition; // none under Cloud Nine or Air Lock
+    u16 attacker;
+    u16 defender;
     u16 battlerSpecies[BATTLER_MAX];
     u8 battlerGender[BATTLER_MAX];
     u8 battlerShiny[BATTLER_MAX];
     u8 battlerForm[BATTLER_MAX];
     u32 battlerPersonality[BATTLER_MAX];
-    u8 unused2[0x1C];
-} BattlerSpritesCommand;
+    u32 battlerMoveEffectFlags[BATTLER_MAX];
+    u32 unk4C;
+    u32 unk50;
+    u32 terrain;
+} MoveAnimationCommand;
 
 // The opponent controller reads this packet by offset.
-typedef char BattlerSpritesCommandSizeCheck[sizeof(BattlerSpritesCommand) == 0x58 ? 1 : -1];
+typedef char MoveAnimationCommandSizeCheck[sizeof(MoveAnimationCommand) == 0x58 ? 1 : -1];
+
+// How every battler on the field looks, for the opponent controller to draw
+// a battler's sprite from: its substitute's (BattleController_EmitSwapToSubstituteSprite)
+// or its own again (BattleController_EmitRestoreSprite). The packet is the
+// move animation's, whose other fields these leave unset.
+typedef MoveAnimationCommand BattlerSpritesCommand;
 
 void ov12_02262240(BattleSystem *battleSystem, int bufferId, int battlerId, void *data, u8 size);
+void ov12_022643C8(BattleSystem *battleSystem, BattleContext *ctx, MoveAnimationCommand *data, int a3, int a4, int attacker, int defender, u16 move);
 void BattleController_EmitPlayEncounterAnimation(BattleSystem *battleSystem, BOOL a1);
 void BattleController_EmitPokemonEncounter(BattleSystem *battleSystem, int battlerId);
 void BattleController_EmitPokemonSlideIn(BattleSystem *battleSystem, int battlerId);
