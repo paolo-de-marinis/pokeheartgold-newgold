@@ -1,0 +1,13 @@
+{
+  "about": "Psychic Mark #395 on Route 36, a double battle without a partner, fought to the end: a scratch copy of Paolo's Morty save with a level-36 Houndoom and Honchkrow, put in Mark's sight at (382, 244). Mark walks up and sends Kadabra and Girafarig; the first Kadabra falls in turn one, Girafarig and Meowstic in turn two, and his level-28 Kadabra comes out beside an empty place (battler 3 at 0 HP, nobody left to send). Its turn plays on to 'You defeated Psychic Mark!' with no assert. With 757cb7ff3's change to battle_command.c taken out, the first damage worked out in the next turn asserts at Party_GetMonByIndex+0x16 from RawSpeedOrder (the empty place's party index 6), as the review of 35b4ac8ac saw on Mark, and the battle never ends. His defeat line, 'I was wrong.', is printed by BattleSystem_PrintTrainerMessage, which the diagnostics' text ring does not record; test_nelson_and_mark_are_doubles_without_a_partner pins it.",
+  "save": "gyms/morty.sav",
+  "edit": ["--party", "HOUNDOOM:36,HONCHKROW:36", "--where", "40:382:244:2"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "fight::2",
+            {"expect": {"battler1.species": "SPECIES_KADABRA", "battler1.level": 28, "battler3.hp": 0}},
+            "fight"],
+  "expect": {"lines": ["You are challenged by Psychic Mark!", "Psychic Mark sent out Kadabra and Girafarig!",
+                       "Go! Houndoom and Honchkrow!", "The opposing Meowstic fainted!", "Psychic Mark sent out Kadabra!",
+                       "The opposing Kadabra fainted!", "You defeated Psychic Mark!", "You got $1792 for winning!"],
+             "asserts": 0}
+}
