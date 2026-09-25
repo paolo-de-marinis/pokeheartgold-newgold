@@ -19073,7 +19073,7 @@
       "name": "{TRNAME}Nelson",
       "items": [],
       "ai_flags": 7,
-      "double": 2,
+      "double": 3,
       "party": [
         {
           "difficulty": 120,
@@ -19138,7 +19138,7 @@
           "message": "Let me see what your Pok\u00e9mon are\\ncapable of.\\r"
         },
         {
-          "type": "TRMSG_LOSE",
+          "type": "TRMSG_DBL_LOSE_1",
           "message": "Ooh, your Pok\u00e9mon have potential.\\n"
         },
         {
@@ -19475,7 +19475,7 @@
           "message": "Let me guess what you\u2019re thinking!\\r"
         },
         {
-          "type": "TRMSG_LOSE",
+          "type": "TRMSG_DBL_LOSE_1",
           "message": "I was wrong.\\n"
         },
         {

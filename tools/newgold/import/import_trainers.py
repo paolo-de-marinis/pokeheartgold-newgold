@@ -86,6 +86,25 @@ DOUBLE = {"SINGLE_BATTLE": 0, "DOUBLE_BATTLE": 2, "NO_PARTNER_DOUBLE_BATTLE": 3}
 # rival has no name yet there. KONEFR-NOTES.md, Allenatori 1.
 FIRST_SILVER = {495: 265, 496: 2, 497: 3}
 
+# Psychic Nelson #389 on Route 39: konefr made him a double battle
+# (77469fbd4, DOUBLE_BATTLE_BATTLE, fixed to DOUBLE_BATTLE in 84efd24c6) with
+# a rain team built for doubles, but DOUBLE_BATTLE is the two-trainer kind:
+# nobody on Route 39 walks up with him, and he has only single-battle lines.
+# He met the same thing on Mark #395 and made him NO_PARTNER_DOUBLE_BATTLE in
+# 62e0c76de, the commit that also retuned Nelson's levels; Nelson gets Mark's
+# fix. import_trainer_text.py reads the same correction. KONEFR-NOTES.md,
+# Allenatori 7.
+NO_PARTNER = {389}
+
+
+def battle_type(index, block):
+    """A trainer's .battleType, with konefr's no-partner slips corrected."""
+    name = re.search(r"\.battleType\s*=\s*(\w+)", block).group(1)
+    if index in NO_PARTNER and name == "DOUBLE_BATTLE":
+        return "NO_PARTNER_DOUBLE_BATTLE"
+    return name
+
+
 # Names this repository spells differently from the reference.
 ALIASES = {
     "MOVE_FEINT_ATTACK": "MOVE_FAINT_ATTACK",
@@ -316,6 +335,9 @@ def main():
                     wanted.update(items=his["items"], party=his["party"])
                 else:
                     stale.append(f"{index}: not the retail first Silver any more (FIRST_SILVER)")
+            wanted["double"] = DOUBLE[battle_type(index, block)]
+            if index in NO_PARTNER and "DOUBLE_BATTLE" != re.search(r"\.battleType\s*=\s*(\w+)", block).group(1):
+                stale.append(f"{index}: not DOUBLE_BATTLE any more (NO_PARTNER)")
         except (AttributeError, KeyError, ValueError) as error:
             problems[f"unreadable: {error}"] += 1
             continue

@@ -30,6 +30,7 @@ import struct
 import sys
 
 import gmm
+import import_trainers
 from wotbl import build_narc, read_narc
 
 TRAINERS = gmm.ROOT / "files/poketool/trainer/trainers.json"
@@ -72,6 +73,18 @@ def generate(revision):
               re.findall(r"\.type\s*=\s*(\w+),\s*\.text\s*=\s*" + STRING, block)] for block in trainers]
     if sum(map(len, texts)) != source.count(".type = TRMSG_"):
         raise SystemExit(f"{revision}: a text entry this reader does not understand")
+    # A double battle prints its trainer's defeat line from TRMSG_DBL_LOSE_1
+    # (subscript_0004_BattleWin.s), and hg-engine's rule for a double without
+    # a partner is that its line is written there. konefr's two -- Mark #395,
+    # and Nelson #389 once import_trainers.py corrects his battle type -- keep
+    # their retail TRMSG_LOSE, which the battle never reads: the line is
+    # retyped, not rewritten. KONEFR-NOTES.md, Allenatori 7.
+    for index, block in enumerate(trainers):
+        kinds = [kind for kind, _ in texts[index]]
+        if (import_trainers.battle_type(index, block) == "NO_PARTNER_DOUBLE_BATTLE"
+                and "TRMSG_LOSE" in kinds and "TRMSG_DBL_LOSE_1" not in kinds):
+            texts[index] = [("TRMSG_DBL_LOSE_1" if kind == "TRMSG_LOSE" else kind, text)
+                            for kind, text in texts[index]]
 
     rows, trtbl, offsets = [], b"", [0] * len(trainers)
     for trainer in order:

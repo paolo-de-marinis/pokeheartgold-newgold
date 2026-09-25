@@ -375,6 +375,28 @@ class TrainerTests(unittest.TestCase):
         # The record's flag is the word TryGetSeenByNpcTrainers tests, 0x10 in.
         self.assertIn("ldr r0, [sp, #0x50]\n\tcmp r0, #0", (ROOT / "asm/unk_020632B0.s").read_text())
 
+    def test_nelson_and_mark_are_doubles_without_a_partner(self):
+        """konefr made Nelson #389 DOUBLE_BATTLE, the two-trainer kind, but he
+        stands alone on Route 39 with single-battle lines; he made Mark #395
+        NO_PARTNER_DOUBLE_BATTLE after meeting the same thing, and Nelson is
+        corrected to it. A double prints the defeat line from
+        TRMSG_DBL_LOSE_1, where both have their retail TRMSG_LOSE retyped."""
+        route = json.loads((ROOT / "files/fielddata/eventdata/zone_event/040_R39.json").read_text())
+        self.assertEqual([o["scriptId"] for o in route["objects"] if "NELSON" in str(o["scriptId"])],
+                         ["std_trainer(TRAINER_PSYCHIC_M_NELSON)"])
+        subscript = (ROOT / "files/battledata/script/subscript/subscript_0004_BattleWin.s").read_text()
+        doubles = subscript[subscript.index("\n_TRAINER_LOSE_MSG_MULTI:"):]
+        self.assertIn("TRAINER_MESSAGE_LOSE_1\n", doubles[:doubles.index("GoTo")])
+        trtbl = wotbl.read_narc((ROOT / "files/poketool/trmsg/trtbl.narc").read_bytes())[0][0]
+        rows = {struct.unpack_from("<HH", trtbl, at) for at in range(0, len(trtbl), 4)}
+        for index, line in ((389, "Ooh, your Pokémon have potential.\\n"), (395, "I was wrong.\\n")):
+            self.assertEqual(self.trainers[index]["double"], 3, index)
+            self.assertIn({"type": "TRMSG_DBL_LOSE_1", "message": line}, self.trainers[index]["messages"])
+            self.assertEqual([m["type"] for m in self.trainers[index]["messages"]],
+                             ["TRMSG_INTRO", "TRMSG_DBL_LOSE_1", "TRMSG_AFTER"])
+            self.assertIn((index, 4), rows)       # TRMSG_DBL_LOSE_1
+            self.assertNotIn((index, 1), rows)    # TRMSG_LOSE
+
     def test_a_party_entry_can_name_every_species(self):
         """The species field is 11 bits of species and 5 of form, hg-engine's
         split. Platinum's was 10 and 6, which wrapped every species from 1024
