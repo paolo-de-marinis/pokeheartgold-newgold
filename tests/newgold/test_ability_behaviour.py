@@ -106,6 +106,7 @@ static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *dat
 static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return S.ability[battlerId]; }
 static u16 GetBattlerHeldItem(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return 0; }
 static int GetItemVar(BattleContext *ctx, u16 item, u32 var) { (void)ctx; (void)item; (void)var; return 0; }
+static u16 SpeciesToDexSpecies(u16 species) { return species; }
 static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { (void)bs; return S.maxBattlers; }
 static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &S.move; }
 static u8 BattleMoveTypeForAbility(BattleContext *ctx, int battlerId, int ability, u32 moveNo, int type) { (void)ctx; (void)battlerId; (void)ability; (void)moveNo; return type; }

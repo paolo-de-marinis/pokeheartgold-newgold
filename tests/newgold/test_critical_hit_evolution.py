@@ -73,6 +73,7 @@ static u16 GetBattlerHeldItem(BattleContext *ctx, int battlerId) { (void)ctx; (v
 static int GetItemVar(BattleContext *ctx, u16 item, int var) { (void)ctx; (void)item; assert(var == ITEM_VAR_HOLD_EFFECT); return 0; }
 static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int attacker, int target, int ability) { (void)attacker; return ctx->battleMons[target].ability == ability; }
 static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static u16 SpeciesToDexSpecies(u16 species) { return species == SPECIES_FARFETCHD_GALARIAN ? SPECIES_FARFETCHD : species; }
 @TABLE@
 @FUNCTION@
 

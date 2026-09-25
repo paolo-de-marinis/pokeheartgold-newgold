@@ -1719,5 +1719,25 @@ class GhostTypeTests(unittest.TestCase):
                             script.index("UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_DEFENDER, BMON_DATA_STATUS2, STATUS2_MEAN_LOOK"))
 
 
+class FormHeldItemTests(unittest.TestCase):
+    """hg-engine keeps a form as its base species and a form number, so its
+    Leek, Thick Club and Light Ball answer every form of the species they are
+    for. Here a form is a species of its own (Galarian Farfetch'd, Alolan
+    Marowak, the Pikachu forms) and asks as its base, SpeciesToDexSpecies."""
+
+    def test_the_leek_thick_club_and_light_ball_take_forms(self):
+        overlay = OVERLAY.read_text()
+        self.assertIn("species = SpeciesToDexSpecies(ctx->battleMons[battlerIdAttacker].species);",
+                      function(overlay, "TryCriticalHit"))
+        damage = function(overlay, "CalcMoveDamage")
+        self.assertIn("calcAttacker.item == HOLD_EFFECT_PIKA_SPATK_UP && SpeciesToDexSpecies(calcAttacker.species) == SPECIES_PIKACHU", damage)
+        self.assertIn("calcAttacker.item == HOLD_EFFECT_CUBONE_ATK_UP && (SpeciesToDexSpecies(calcAttacker.species) == SPECIES_CUBONE"
+                      " || SpeciesToDexSpecies(calcAttacker.species) == SPECIES_MAROWAK)", damage)
+        # And the forms map to them.
+        pokedex = (ROOT / "src/pokedex.c").read_text()
+        for form, base in (("FARFETCHD_GALARIAN", "FARFETCHD"), ("MAROWAK_ALOLAN", "MAROWAK"), ("PIKACHU_LIBRE", "PIKACHU")):
+            self.assertIn(f"[SPECIES_{form} - NATIONAL_DEX_COUNT - 1] = SPECIES_{base},", pokedex)
+
+
 if __name__ == "__main__":
     unittest.main()

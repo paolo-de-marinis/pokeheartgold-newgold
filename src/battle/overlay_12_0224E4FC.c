@@ -11054,7 +11054,10 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monSpDef *= 2;
     }
 
-    if (calcAttacker.item == HOLD_EFFECT_PIKA_SPATK_UP && calcAttacker.species == SPECIES_PIKACHU) {
+    // The Light Ball and the Thick Club answer every form of their species,
+    // as in hg-engine, which keeps a form as its species and a form number:
+    // the Pikachu forms, Alolan Marowak.
+    if (calcAttacker.item == HOLD_EFFECT_PIKA_SPATK_UP && SpeciesToDexSpecies(calcAttacker.species) == SPECIES_PIKACHU) {
         movePower *= 2;
     }
 
@@ -11070,7 +11073,7 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
         monDef = monDef * 3 / 4;
     }
 
-    if (calcAttacker.item == HOLD_EFFECT_CUBONE_ATK_UP && (calcAttacker.species == SPECIES_CUBONE || calcAttacker.species == SPECIES_MAROWAK)) {
+    if (calcAttacker.item == HOLD_EFFECT_CUBONE_ATK_UP && (SpeciesToDexSpecies(calcAttacker.species) == SPECIES_CUBONE || SpeciesToDexSpecies(calcAttacker.species) == SPECIES_MAROWAK)) {
         monAtk *= 2;
     }
 
@@ -11588,7 +11591,9 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     int ability;
 
     item = GetItemVar(ctx, GetBattlerHeldItem(ctx, battlerIdAttacker), ITEM_VAR_HOLD_EFFECT);
-    species = ctx->battleMons[battlerIdAttacker].species;
+    // A form asks as its base species, Galarian Farfetch'd as Farfetch'd:
+    // hg-engine keeps a form as its species and a form number.
+    species = SpeciesToDexSpecies(ctx->battleMons[battlerIdAttacker].species);
     status2 = ctx->battleMons[battlerIdAttacker].status2;
     moveEffect = ctx->battleMons[battlerIdTarget].moveEffectFlags;
     ability = ctx->battleMons[battlerIdAttacker].ability;
