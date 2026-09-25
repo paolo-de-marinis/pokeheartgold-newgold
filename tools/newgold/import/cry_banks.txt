@@ -1,537 +1,537 @@
-    843, // Lillipup
-    844, // Herdier
-    845, // Stoutland
-    846, // Purrloin
-    847, // Liepard
-    848, // Tympole
-    849, // Palpitoad
-    850, // Seismitoad
-    851, // Sewaddle
-    852, // Swadloon
-    853, // Leavanny
-    854, // Yamask
-    855, // Cofagrigus
-    856, // Trubbish
-    857, // Garbodor
-    858, // Emolga
-    859, // Karrablast
-    860, // Escavalier
-    861, // Foongus
-    862, // Amoonguss
-    863, // Joltik
-    864, // Galvantula
-    865, // Ferroseed
-    866, // Ferrothorn
-    867, // Klink
-    868, // Klang
-    869, // Klinklang
-    870, // Elgyem
-    871, // Beheeyem
-    872, // Litwick
-    873, // Lampent
-    874, // Chandelure
-    875, // Shelmet
-    876, // Accelgor
-    877, // Bouffalant
-    878, // Bunnelby
-    879, // Diggersby
-    880, // Fletchling
-    881, // Fletchinder
-    882, // Talonflame
-    883, // Litleo
-    884, // Pyroar
-    885, // Espurr
-    886, // Meowstic
-    887, // Sylveon
-    888, // Dedenne
-    889, // Phantump
-    890, // Trevenant
-    891, // Pumpkaboo
-    892, // Gourgeist
-    893, // Noibat
-    894, // Noivern
-    895, // Applin
-    896, // Flapple
-    897, // Appletun
-    898, // Sizzlipede
-    899, // Centiskorch
-    900, // Wyrdeer
-    901, // Kleavor
-    902, // Ursaluna
-    903, // Annihilape
-    904, // Farigiraf
-    905, // Dudunsparce
-    906, // Dipplin
-    907, // Hydrapple
+    778, // Lillipup
+    779, // Herdier
+    780, // Stoutland
+    781, // Purrloin
+    782, // Liepard
+    783, // Tympole
+    784, // Palpitoad
+    785, // Seismitoad
+    786, // Sewaddle
+    787, // Swadloon
+    788, // Leavanny
+    789, // Yamask
+    790, // Cofagrigus
+    791, // Trubbish
+    792, // Garbodor
+    793, // Emolga
+    794, // Karrablast
+    795, // Escavalier
+    796, // Foongus
+    797, // Amoonguss
+    798, // Joltik
+    799, // Galvantula
+    800, // Ferroseed
+    801, // Ferrothorn
+    802, // Klink
+    803, // Klang
+    804, // Klinklang
+    805, // Elgyem
+    806, // Beheeyem
+    807, // Litwick
+    808, // Lampent
+    809, // Chandelure
+    810, // Shelmet
+    811, // Accelgor
+    812, // Bouffalant
+    813, // Bunnelby
+    814, // Diggersby
+    815, // Fletchling
+    816, // Fletchinder
+    817, // Talonflame
+    818, // Litleo
+    819, // Pyroar
+    820, // Espurr
+    821, // Meowstic
+    822, // Sylveon
+    823, // Dedenne
+    824, // Phantump
+    825, // Trevenant
+    826, // Pumpkaboo
+    827, // Gourgeist
+    828, // Noibat
+    829, // Noivern
+    830, // Applin
+    831, // Flapple
+    832, // Appletun
+    833, // Sizzlipede
+    834, // Centiskorch
+    835, // Wyrdeer
+    836, // Kleavor
+    837, // Ursaluna
+    838, // Annihilape
+    839, // Farigiraf
+    840, // Dudunsparce
+    841, // Dipplin
+    842, // Hydrapple
     79, // Slowpoke Galarian
     80, // Slowbro Galarian
-    908, // Victini
-    909, // Snivy
-    910, // Servine
-    911, // Serperior
-    912, // Tepig
-    913, // Pignite
-    914, // Emboar
-    915, // Oshawott
-    916, // Dewott
-    917, // Samurott
-    918, // Patrat
-    919, // Watchog
-    920, // Pansage
-    921, // Simisage
-    922, // Pansear
-    923, // Simisear
-    924, // Panpour
-    925, // Simipour
-    926, // Munna
-    927, // Musharna
-    928, // Pidove
-    929, // Tranquill
-    930, // Unfezant
-    931, // Blitzle
-    932, // Zebstrika
-    933, // Roggenrola
-    934, // Boldore
-    935, // Gigalith
-    936, // Woobat
-    937, // Swoobat
-    938, // Drilbur
-    939, // Excadrill
-    940, // Audino
-    941, // Timburr
-    942, // Gurdurr
-    943, // Conkeldurr
-    944, // Throh
-    945, // Sawk
-    946, // Venipede
-    947, // Whirlipede
-    948, // Scolipede
-    949, // Cottonee
-    950, // Whimsicott
-    951, // Petilil
-    952, // Lilligant
-    953, // Basculin
-    954, // Sandile
-    955, // Krokorok
-    956, // Krookodile
-    957, // Darumaka
-    958, // Darmanitan
-    959, // Maractus
-    960, // Dwebble
-    961, // Crustle
-    962, // Scraggy
-    963, // Scrafty
-    964, // Sigilyph
-    965, // Tirtouga
-    966, // Carracosta
-    967, // Archen
-    968, // Archeops
-    969, // Zorua
-    970, // Zoroark
-    971, // Minccino
-    972, // Cinccino
-    973, // Gothita
-    974, // Gothorita
-    975, // Gothitelle
-    976, // Solosis
-    977, // Duosion
-    978, // Reuniclus
-    979, // Ducklett
-    980, // Swanna
-    981, // Vanillite
-    982, // Vanillish
-    983, // Vanilluxe
-    984, // Deerling
-    985, // Sawsbuck
-    986, // Frillish
-    987, // Jellicent
-    988, // Alomomola
-    989, // Tynamo
-    990, // Eelektrik
-    991, // Eelektross
-    992, // Axew
-    993, // Fraxure
-    994, // Haxorus
-    995, // Cubchoo
-    996, // Beartic
-    997, // Cryogonal
-    998, // Stunfisk
-    999, // Mienfoo
-    1000, // Mienshao
-    1001, // Druddigon
-    1002, // Golett
-    1003, // Golurk
-    1004, // Pawniard
-    1005, // Bisharp
-    1006, // Rufflet
-    1007, // Braviary
-    1008, // Vullaby
-    1009, // Mandibuzz
-    1010, // Heatmor
-    1011, // Durant
-    1012, // Deino
-    1013, // Zweilous
-    1014, // Hydreigon
-    1015, // Larvesta
-    1016, // Volcarona
-    1017, // Cobalion
-    1018, // Terrakion
-    1019, // Virizion
-    1020, // Tornadus
-    1021, // Thundurus
-    1022, // Reshiram
-    1023, // Zekrom
-    1024, // Landorus
-    1025, // Kyurem
-    1026, // Keldeo
-    1027, // Meloetta
-    1028, // Genesect
-    1029, // Chespin
-    1030, // Quilladin
-    1031, // Chesnaught
-    1032, // Fennekin
-    1033, // Braixen
-    1034, // Delphox
-    1035, // Froakie
-    1036, // Frogadier
-    1037, // Greninja
-    1038, // Scatterbug
-    1039, // Spewpa
-    1040, // Vivillon
-    1041, // Flabebe
-    1042, // Floette
-    1043, // Florges
-    1044, // Skiddo
-    1045, // Gogoat
-    1046, // Pancham
-    1047, // Pangoro
-    1048, // Furfrou
-    1049, // Honedge
-    1050, // Doublade
-    1051, // Aegislash
-    1052, // Spritzee
-    1053, // Aromatisse
-    1054, // Swirlix
-    1055, // Slurpuff
-    1056, // Inkay
-    1057, // Malamar
-    1058, // Binacle
-    1059, // Barbaracle
-    1060, // Skrelp
-    1061, // Dragalge
-    1062, // Clauncher
-    1063, // Clawitzer
-    1064, // Helioptile
-    1065, // Heliolisk
-    1066, // Tyrunt
-    1067, // Tyrantrum
-    1068, // Amaura
-    1069, // Aurorus
-    1070, // Hawlucha
-    1071, // Carbink
-    1072, // Goomy
-    1073, // Sliggoo
-    1074, // Goodra
-    1075, // Klefki
-    1076, // Bergmite
-    1077, // Avalugg
-    1078, // Xerneas
-    1079, // Yveltal
-    1080, // Zygarde
-    1081, // Diancie
-    1082, // Hoopa
-    1083, // Volcanion
-    1084, // Rowlet
-    1085, // Dartrix
-    1086, // Decidueye
-    1087, // Litten
-    1088, // Torracat
-    1089, // Incineroar
-    1090, // Popplio
-    1091, // Brionne
-    1092, // Primarina
-    1093, // Pikipek
-    1094, // Trumbeak
-    1095, // Toucannon
-    1096, // Yungoos
-    1097, // Gumshoos
-    1098, // Grubbin
-    1099, // Charjabug
-    1100, // Vikavolt
-    1101, // Crabrawler
-    1102, // Crabominable
-    1103, // Oricorio
-    1104, // Cutiefly
-    1105, // Ribombee
-    1106, // Rockruff
-    1107, // Lycanroc
-    1108, // Wishiwashi
-    1109, // Mareanie
-    1110, // Toxapex
-    1111, // Mudbray
-    1112, // Mudsdale
-    1113, // Dewpider
-    1114, // Araquanid
-    1115, // Fomantis
-    1116, // Lurantis
-    1117, // Morelull
-    1118, // Shiinotic
-    1119, // Salandit
-    1120, // Salazzle
-    1121, // Stufful
-    1122, // Bewear
-    1123, // Bounsweet
-    1124, // Steenee
-    1125, // Tsareena
-    1126, // Comfey
-    1127, // Oranguru
-    1128, // Passimian
-    1129, // Wimpod
-    1130, // Golisopod
-    1131, // Sandygast
-    1132, // Palossand
-    1133, // Pyukumuku
-    1134, // Type Null
-    1135, // Silvally
-    1136, // Minior
-    1137, // Komala
-    1138, // Turtonator
-    1139, // Togedemaru
-    1140, // Mimikyu
-    1141, // Bruxish
-    1142, // Drampa
-    1143, // Dhelmise
-    1144, // Jangmo O
-    1145, // Hakamo O
-    1146, // Kommo O
-    1147, // Tapu Koko
-    1148, // Tapu Lele
-    1149, // Tapu Bulu
-    1150, // Tapu Fini
-    1151, // Cosmog
-    1152, // Cosmoem
-    1153, // Solgaleo
-    1154, // Lunala
-    1155, // Nihilego
-    1156, // Buzzwole
-    1157, // Pheromosa
-    1158, // Xurkitree
-    1159, // Celesteela
-    1160, // Kartana
-    1161, // Guzzlord
-    1162, // Necrozma
-    1163, // Magearna
-    1164, // Marshadow
-    1165, // Poipole
-    1166, // Naganadel
-    1167, // Stakataka
-    1168, // Blacephalon
-    1169, // Zeraora
-    1170, // Meltan
-    1171, // Melmetal
-    1172, // Grookey
-    1173, // Thwackey
-    1174, // Rillaboom
-    1175, // Scorbunny
-    1176, // Raboot
-    1177, // Cinderace
-    1178, // Sobble
-    1179, // Drizzile
-    1180, // Inteleon
-    1181, // Skwovet
-    1182, // Greedent
-    1183, // Rookidee
-    1184, // Corvisquire
-    1185, // Corviknight
-    1186, // Blipbug
-    1187, // Dottler
-    1188, // Orbeetle
-    1189, // Nickit
-    1190, // Thievul
-    1191, // Gossifleur
-    1192, // Eldegoss
-    1193, // Wooloo
-    1194, // Dubwool
-    1195, // Chewtle
-    1196, // Drednaw
-    1197, // Yamper
-    1198, // Boltund
-    1199, // Rolycoly
-    1200, // Carkol
-    1201, // Coalossal
-    1202, // Silicobra
-    1203, // Sandaconda
-    1204, // Cramorant
-    1205, // Arrokuda
-    1206, // Barraskewda
-    1207, // Toxel
-    1208, // Toxtricity
-    1209, // Clobbopus
-    1210, // Grapploct
-    1211, // Sinistea
-    1212, // Polteageist
-    1213, // Hatenna
-    1214, // Hattrem
-    1215, // Hatterene
-    1216, // Impidimp
-    1217, // Morgrem
-    1218, // Grimmsnarl
-    1219, // Obstagoon
-    1220, // Perrserker
-    1221, // Cursola
-    1222, // Sirfetchd
-    1223, // Mr Rime
-    1224, // Runerigus
-    1225, // Milcery
-    1226, // Alcremie
-    1227, // Falinks
-    1228, // Pincurchin
-    1229, // Snom
-    1230, // Frosmoth
-    1231, // Stonjourner
-    1232, // Eiscue
-    1233, // Indeedee
-    1234, // Morpeko
-    1235, // Cufant
-    1236, // Copperajah
-    1237, // Dracozolt
-    1238, // Arctozolt
-    1239, // Dracovish
-    1240, // Arctovish
-    1241, // Duraludon
-    1242, // Dreepy
-    1243, // Drakloak
-    1244, // Dragapult
-    1245, // Zacian
-    1246, // Zamazenta
-    1247, // Eternatus
-    1248, // Kubfu
-    1249, // Urshifu
-    1250, // Zarude
-    1251, // Regieleki
-    1252, // Regidrago
-    1253, // Glastrier
-    1254, // Spectrier
-    1255, // Calyrex
-    1256, // Basculegion
-    1257, // Sneasler
-    1258, // Overqwil
-    1259, // Enamorus
-    1260, // Sprigatito
-    1261, // Floragato
-    1262, // Meowscarada
-    1263, // Fuecoco
-    1264, // Crocalor
-    1265, // Skeledirge
-    1266, // Quaxly
-    1267, // Quaxwell
-    1268, // Quaquaval
-    1269, // Lechonk
-    1270, // Oinkologne
-    1271, // Tarountula
-    1272, // Spidops
-    1273, // Nymble
-    1274, // Lokix
-    1275, // Pawmi
-    1276, // Pawmo
-    1277, // Pawmot
-    1278, // Tandemaus
-    1279, // Maushold
-    1280, // Fidough
-    1281, // Dachsbun
-    1282, // Smoliv
-    1283, // Dolliv
-    1284, // Arboliva
-    1285, // Squawkabilly
-    1286, // Nacli
-    1287, // Naclstack
-    1288, // Garganacl
-    1289, // Charcadet
-    1290, // Armarouge
-    1291, // Ceruledge
-    1292, // Tadbulb
-    1293, // Bellibolt
-    1294, // Wattrel
-    1295, // Kilowattrel
-    1296, // Maschiff
-    1297, // Mabosstiff
-    1298, // Shroodle
-    1299, // Grafaiai
-    1300, // Bramblin
-    1301, // Brambleghast
-    1302, // Toedscool
-    1303, // Toedscruel
-    1304, // Klawf
-    1305, // Capsakid
-    1306, // Scovillain
-    1307, // Rellor
-    1308, // Rabsca
-    1309, // Flittle
-    1310, // Espathra
-    1311, // Tinkatink
-    1312, // Tinkatuff
-    1313, // Tinkaton
-    1314, // Wiglett
-    1315, // Wugtrio
-    1316, // Bombirdier
-    1317, // Finizen
-    1318, // Palafin
-    1319, // Varoom
-    1320, // Revavroom
-    1321, // Cyclizar
-    1322, // Orthworm
-    1323, // Glimmet
-    1324, // Glimmora
-    1325, // Greavard
-    1326, // Houndstone
-    1327, // Flamigo
-    1328, // Cetoddle
-    1329, // Cetitan
-    1330, // Veluza
-    1331, // Dondozo
-    1332, // Tatsugiri
-    1333, // Clodsire
-    1334, // Kingambit
-    1335, // Great Tusk
-    1336, // Scream Tail
-    1337, // Brute Bonnet
-    1338, // Flutter Mane
-    1339, // Slither Wing
-    1340, // Sandy Shocks
-    1341, // Iron Treads
-    1342, // Iron Bundle
-    1343, // Iron Hands
-    1344, // Iron Jugulis
-    1345, // Iron Moth
-    1346, // Iron Thorns
-    1347, // Frigibax
-    1348, // Arctibax
-    1349, // Baxcalibur
-    1350, // Gimmighoul
-    1351, // Gholdengo
-    1352, // Wo Chien
-    1353, // Chien Pao
-    1354, // Ting Lu
-    1355, // Chi Yu
-    1356, // Roaring Moon
-    1357, // Iron Valiant
-    1358, // Koraidon
-    1359, // Miraidon
-    1360, // Walking Wake
-    1361, // Iron Leaves
-    1362, // Poltchageist
-    1363, // Sinistcha
-    1364, // Okidogi
-    1365, // Munkidori
-    1366, // Fezandipiti
-    1367, // Ogerpon
-    1368, // Archaludon
-    1369, // Gouging Fire
-    1370, // Raging Bolt
-    1371, // Iron Boulder
-    1372, // Iron Crown
-    1373, // Terapagos
-    1374, // Pecharunt
+    843, // Victini
+    844, // Snivy
+    845, // Servine
+    846, // Serperior
+    847, // Tepig
+    848, // Pignite
+    849, // Emboar
+    850, // Oshawott
+    851, // Dewott
+    852, // Samurott
+    853, // Patrat
+    854, // Watchog
+    855, // Pansage
+    856, // Simisage
+    857, // Pansear
+    858, // Simisear
+    859, // Panpour
+    860, // Simipour
+    861, // Munna
+    862, // Musharna
+    863, // Pidove
+    864, // Tranquill
+    865, // Unfezant
+    866, // Blitzle
+    867, // Zebstrika
+    868, // Roggenrola
+    869, // Boldore
+    870, // Gigalith
+    871, // Woobat
+    872, // Swoobat
+    873, // Drilbur
+    874, // Excadrill
+    875, // Audino
+    876, // Timburr
+    877, // Gurdurr
+    878, // Conkeldurr
+    879, // Throh
+    880, // Sawk
+    881, // Venipede
+    882, // Whirlipede
+    883, // Scolipede
+    884, // Cottonee
+    885, // Whimsicott
+    886, // Petilil
+    887, // Lilligant
+    888, // Basculin
+    889, // Sandile
+    890, // Krokorok
+    891, // Krookodile
+    892, // Darumaka
+    893, // Darmanitan
+    894, // Maractus
+    895, // Dwebble
+    896, // Crustle
+    897, // Scraggy
+    898, // Scrafty
+    899, // Sigilyph
+    900, // Tirtouga
+    901, // Carracosta
+    902, // Archen
+    903, // Archeops
+    904, // Zorua
+    905, // Zoroark
+    906, // Minccino
+    907, // Cinccino
+    908, // Gothita
+    909, // Gothorita
+    910, // Gothitelle
+    911, // Solosis
+    912, // Duosion
+    913, // Reuniclus
+    914, // Ducklett
+    915, // Swanna
+    916, // Vanillite
+    917, // Vanillish
+    918, // Vanilluxe
+    919, // Deerling
+    920, // Sawsbuck
+    921, // Frillish
+    922, // Jellicent
+    923, // Alomomola
+    924, // Tynamo
+    925, // Eelektrik
+    926, // Eelektross
+    927, // Axew
+    928, // Fraxure
+    929, // Haxorus
+    930, // Cubchoo
+    931, // Beartic
+    932, // Cryogonal
+    933, // Stunfisk
+    934, // Mienfoo
+    935, // Mienshao
+    936, // Druddigon
+    937, // Golett
+    938, // Golurk
+    939, // Pawniard
+    940, // Bisharp
+    941, // Rufflet
+    942, // Braviary
+    943, // Vullaby
+    944, // Mandibuzz
+    945, // Heatmor
+    946, // Durant
+    947, // Deino
+    948, // Zweilous
+    949, // Hydreigon
+    950, // Larvesta
+    951, // Volcarona
+    952, // Cobalion
+    953, // Terrakion
+    954, // Virizion
+    955, // Tornadus
+    956, // Thundurus
+    957, // Reshiram
+    958, // Zekrom
+    959, // Landorus
+    960, // Kyurem
+    961, // Keldeo
+    962, // Meloetta
+    963, // Genesect
+    964, // Chespin
+    965, // Quilladin
+    966, // Chesnaught
+    967, // Fennekin
+    968, // Braixen
+    969, // Delphox
+    970, // Froakie
+    971, // Frogadier
+    972, // Greninja
+    973, // Scatterbug
+    974, // Spewpa
+    975, // Vivillon
+    976, // Flabebe
+    977, // Floette
+    978, // Florges
+    979, // Skiddo
+    980, // Gogoat
+    981, // Pancham
+    982, // Pangoro
+    983, // Furfrou
+    984, // Honedge
+    985, // Doublade
+    986, // Aegislash
+    987, // Spritzee
+    988, // Aromatisse
+    989, // Swirlix
+    990, // Slurpuff
+    991, // Inkay
+    992, // Malamar
+    993, // Binacle
+    994, // Barbaracle
+    995, // Skrelp
+    996, // Dragalge
+    997, // Clauncher
+    998, // Clawitzer
+    999, // Helioptile
+    1000, // Heliolisk
+    1001, // Tyrunt
+    1002, // Tyrantrum
+    1003, // Amaura
+    1004, // Aurorus
+    1005, // Hawlucha
+    1006, // Carbink
+    1007, // Goomy
+    1008, // Sliggoo
+    1009, // Goodra
+    1010, // Klefki
+    1011, // Bergmite
+    1012, // Avalugg
+    1013, // Xerneas
+    1014, // Yveltal
+    1015, // Zygarde
+    1016, // Diancie
+    1017, // Hoopa
+    1018, // Volcanion
+    1019, // Rowlet
+    1020, // Dartrix
+    1021, // Decidueye
+    1022, // Litten
+    1023, // Torracat
+    1024, // Incineroar
+    1025, // Popplio
+    1026, // Brionne
+    1027, // Primarina
+    1028, // Pikipek
+    1029, // Trumbeak
+    1030, // Toucannon
+    1031, // Yungoos
+    1032, // Gumshoos
+    1033, // Grubbin
+    1034, // Charjabug
+    1035, // Vikavolt
+    1036, // Crabrawler
+    1037, // Crabominable
+    1038, // Oricorio
+    1039, // Cutiefly
+    1040, // Ribombee
+    1041, // Rockruff
+    1042, // Lycanroc
+    1043, // Wishiwashi
+    1044, // Mareanie
+    1045, // Toxapex
+    1046, // Mudbray
+    1047, // Mudsdale
+    1048, // Dewpider
+    1049, // Araquanid
+    1050, // Fomantis
+    1051, // Lurantis
+    1052, // Morelull
+    1053, // Shiinotic
+    1054, // Salandit
+    1055, // Salazzle
+    1056, // Stufful
+    1057, // Bewear
+    1058, // Bounsweet
+    1059, // Steenee
+    1060, // Tsareena
+    1061, // Comfey
+    1062, // Oranguru
+    1063, // Passimian
+    1064, // Wimpod
+    1065, // Golisopod
+    1066, // Sandygast
+    1067, // Palossand
+    1068, // Pyukumuku
+    1069, // Type Null
+    1070, // Silvally
+    1071, // Minior
+    1072, // Komala
+    1073, // Turtonator
+    1074, // Togedemaru
+    1075, // Mimikyu
+    1076, // Bruxish
+    1077, // Drampa
+    1078, // Dhelmise
+    1079, // Jangmo O
+    1080, // Hakamo O
+    1081, // Kommo O
+    1082, // Tapu Koko
+    1083, // Tapu Lele
+    1084, // Tapu Bulu
+    1085, // Tapu Fini
+    1086, // Cosmog
+    1087, // Cosmoem
+    1088, // Solgaleo
+    1089, // Lunala
+    1090, // Nihilego
+    1091, // Buzzwole
+    1092, // Pheromosa
+    1093, // Xurkitree
+    1094, // Celesteela
+    1095, // Kartana
+    1096, // Guzzlord
+    1097, // Necrozma
+    1098, // Magearna
+    1099, // Marshadow
+    1100, // Poipole
+    1101, // Naganadel
+    1102, // Stakataka
+    1103, // Blacephalon
+    1104, // Zeraora
+    1105, // Meltan
+    1106, // Melmetal
+    1107, // Grookey
+    1108, // Thwackey
+    1109, // Rillaboom
+    1110, // Scorbunny
+    1111, // Raboot
+    1112, // Cinderace
+    1113, // Sobble
+    1114, // Drizzile
+    1115, // Inteleon
+    1116, // Skwovet
+    1117, // Greedent
+    1118, // Rookidee
+    1119, // Corvisquire
+    1120, // Corviknight
+    1121, // Blipbug
+    1122, // Dottler
+    1123, // Orbeetle
+    1124, // Nickit
+    1125, // Thievul
+    1126, // Gossifleur
+    1127, // Eldegoss
+    1128, // Wooloo
+    1129, // Dubwool
+    1130, // Chewtle
+    1131, // Drednaw
+    1132, // Yamper
+    1133, // Boltund
+    1134, // Rolycoly
+    1135, // Carkol
+    1136, // Coalossal
+    1137, // Silicobra
+    1138, // Sandaconda
+    1139, // Cramorant
+    1140, // Arrokuda
+    1141, // Barraskewda
+    1142, // Toxel
+    1143, // Toxtricity
+    1144, // Clobbopus
+    1145, // Grapploct
+    1146, // Sinistea
+    1147, // Polteageist
+    1148, // Hatenna
+    1149, // Hattrem
+    1150, // Hatterene
+    1151, // Impidimp
+    1152, // Morgrem
+    1153, // Grimmsnarl
+    1154, // Obstagoon
+    1155, // Perrserker
+    1156, // Cursola
+    1157, // Sirfetchd
+    1158, // Mr Rime
+    1159, // Runerigus
+    1160, // Milcery
+    1161, // Alcremie
+    1162, // Falinks
+    1163, // Pincurchin
+    1164, // Snom
+    1165, // Frosmoth
+    1166, // Stonjourner
+    1167, // Eiscue
+    1168, // Indeedee
+    1169, // Morpeko
+    1170, // Cufant
+    1171, // Copperajah
+    1172, // Dracozolt
+    1173, // Arctozolt
+    1174, // Dracovish
+    1175, // Arctovish
+    1176, // Duraludon
+    1177, // Dreepy
+    1178, // Drakloak
+    1179, // Dragapult
+    1180, // Zacian
+    1181, // Zamazenta
+    1182, // Eternatus
+    1183, // Kubfu
+    1184, // Urshifu
+    1185, // Zarude
+    1186, // Regieleki
+    1187, // Regidrago
+    1188, // Glastrier
+    1189, // Spectrier
+    1190, // Calyrex
+    1191, // Basculegion
+    1192, // Sneasler
+    1193, // Overqwil
+    1194, // Enamorus
+    1195, // Sprigatito
+    1196, // Floragato
+    1197, // Meowscarada
+    1198, // Fuecoco
+    1199, // Crocalor
+    1200, // Skeledirge
+    1201, // Quaxly
+    1202, // Quaxwell
+    1203, // Quaquaval
+    1204, // Lechonk
+    1205, // Oinkologne
+    1206, // Tarountula
+    1207, // Spidops
+    1208, // Nymble
+    1209, // Lokix
+    1210, // Pawmi
+    1211, // Pawmo
+    1212, // Pawmot
+    1213, // Tandemaus
+    1214, // Maushold
+    1215, // Fidough
+    1216, // Dachsbun
+    1217, // Smoliv
+    1218, // Dolliv
+    1219, // Arboliva
+    1220, // Squawkabilly
+    1221, // Nacli
+    1222, // Naclstack
+    1223, // Garganacl
+    1224, // Charcadet
+    1225, // Armarouge
+    1226, // Ceruledge
+    1227, // Tadbulb
+    1228, // Bellibolt
+    1229, // Wattrel
+    1230, // Kilowattrel
+    1231, // Maschiff
+    1232, // Mabosstiff
+    1233, // Shroodle
+    1234, // Grafaiai
+    1235, // Bramblin
+    1236, // Brambleghast
+    1237, // Toedscool
+    1238, // Toedscruel
+    1239, // Klawf
+    1240, // Capsakid
+    1241, // Scovillain
+    1242, // Rellor
+    1243, // Rabsca
+    1244, // Flittle
+    1245, // Espathra
+    1246, // Tinkatink
+    1247, // Tinkatuff
+    1248, // Tinkaton
+    1249, // Wiglett
+    1250, // Wugtrio
+    1251, // Bombirdier
+    1252, // Finizen
+    1253, // Palafin
+    1254, // Varoom
+    1255, // Revavroom
+    1256, // Cyclizar
+    1257, // Orthworm
+    1258, // Glimmet
+    1259, // Glimmora
+    1260, // Greavard
+    1261, // Houndstone
+    1262, // Flamigo
+    1263, // Cetoddle
+    1264, // Cetitan
+    1265, // Veluza
+    1266, // Dondozo
+    1267, // Tatsugiri
+    1268, // Clodsire
+    1269, // Kingambit
+    1270, // Great Tusk
+    1271, // Scream Tail
+    1272, // Brute Bonnet
+    1273, // Flutter Mane
+    1274, // Slither Wing
+    1275, // Sandy Shocks
+    1276, // Iron Treads
+    1277, // Iron Bundle
+    1278, // Iron Hands
+    1279, // Iron Jugulis
+    1280, // Iron Moth
+    1281, // Iron Thorns
+    1282, // Frigibax
+    1283, // Arctibax
+    1284, // Baxcalibur
+    1285, // Gimmighoul
+    1286, // Gholdengo
+    1287, // Wo Chien
+    1288, // Chien Pao
+    1289, // Ting Lu
+    1290, // Chi Yu
+    1291, // Roaring Moon
+    1292, // Iron Valiant
+    1293, // Koraidon
+    1294, // Miraidon
+    1295, // Walking Wake
+    1296, // Iron Leaves
+    1297, // Poltchageist
+    1298, // Sinistcha
+    1299, // Okidogi
+    1300, // Munkidori
+    1301, // Fezandipiti
+    1302, // Ogerpon
+    1303, // Archaludon
+    1304, // Gouging Fire
+    1305, // Raging Bolt
+    1306, // Iron Boulder
+    1307, // Iron Crown
+    1308, // Terapagos
+    1309, // Pecharunt
     3, // Mega Venusaur
     6, // Mega Charizard X
     6, // Mega Charizard Y
@@ -578,8 +578,8 @@
     448, // Mega Lucario
     460, // Mega Abomasnow
     475, // Mega Gallade
-    940, // Mega Audino
-    1081, // Mega Diancie
+    875, // Mega Audino
+    1016, // Mega Diancie
     382, // Kyogre Primal
     383, // Groudon Primal
     19, // Rattata Alolan
@@ -602,16 +602,16 @@
     105, // Marowak Alolan
     20, // Raticate Alolan Large
     105, // Marowak Alolan Large
-    1097, // Gumshoos Large
-    1100, // Vikavolt Large
-    1105, // Ribombee Large
-    1114, // Araquanid Large
-    1116, // Lurantis Large
-    1120, // Salazzle Large
-    1139, // Togedemaru Large
-    1140, // Mimikyu Large
-    1140, // Mimikyu Busted Large
-    1146, // Kommo O Large
+    1032, // Gumshoos Large
+    1035, // Vikavolt Large
+    1040, // Ribombee Large
+    1049, // Araquanid Large
+    1051, // Lurantis Large
+    1055, // Salazzle Large
+    1074, // Togedemaru Large
+    1075, // Mimikyu Large
+    1075, // Mimikyu Busted Large
+    1081, // Kommo O Large
     52, // Meowth Galarian
     77, // Ponyta Galarian
     78, // Rapidash Galarian
@@ -625,10 +625,10 @@
     222, // Corsola Galarian
     263, // Zigzagoon Galarian
     264, // Linoone Galarian
-    957, // Darumaka Galarian
-    958, // Darmanitan Galarian
-    854, // Yamask Galarian
-    998, // Stunfisk Galarian
+    892, // Darumaka Galarian
+    893, // Darmanitan Galarian
+    789, // Yamask Galarian
+    933, // Stunfisk Galarian
     25, // Pikachu Cosplay
     25, // Pikachu Rock Star
     25, // Pikachu Belle
@@ -651,133 +651,133 @@
     423, // Gastrodon East Sea
     483, // Dialga Origin
     484, // Palkia Origin
-    953, // Basculin Blue Striped
-    953, // Basculin White Striped
-    958, // Darmanitan Zen Mode
-    958, // Darmanitan Zen Mode Galarian
-    984, // Deerling Summer
-    984, // Deerling Autumn
-    984, // Deerling Winter
-    985, // Sawsbuck Summer
-    985, // Sawsbuck Autumn
-    985, // Sawsbuck Winter
-    1020, // Tornadus Therian
-    1021, // Thundurus Therian
-    1024, // Landorus Therian
-    1025, // Kyurem White
-    1025, // Kyurem Black
-    1026, // Keldeo Resolute
-    1027, // Meloetta Pirouette
-    1028, // Genesect Douse Drive
-    1028, // Genesect Shock Drive
-    1028, // Genesect Burn Drive
-    1028, // Genesect Chill Drive
-    1037, // Greninja Battle Bond
-    1037, // Greninja Ash
-    1040, // Vivillon Polar
-    1040, // Vivillon Tundra
-    1040, // Vivillon Continental
-    1040, // Vivillon Garden
-    1040, // Vivillon Elegant
-    1040, // Vivillon Meadow
-    1040, // Vivillon Modern
-    1040, // Vivillon Marine
-    1040, // Vivillon Archipelago
-    1040, // Vivillon High Plains
-    1040, // Vivillon Sandstorm
-    1040, // Vivillon River
-    1040, // Vivillon Monsoon
-    1040, // Vivillon Savanna
-    1040, // Vivillon Sun
-    1040, // Vivillon Ocean
-    1040, // Vivillon Jungle
-    1040, // Vivillon Fancy
-    1040, // Vivillon Poke Ball
-    1041, // Flabebe Yellow Flower
-    1041, // Flabebe Orange Flower
-    1041, // Flabebe Blue Flower
-    1041, // Flabebe White Flower
-    1042, // Floette Yellow Flower
-    1042, // Floette Orange Flower
-    1042, // Floette Blue Flower
-    1042, // Floette White Flower
-    1042, // Floette Eternal Flower
-    1043, // Florges Yellow Flower
-    1043, // Florges Orange Flower
-    1043, // Florges Blue Flower
-    1043, // Florges White Flower
-    1048, // Furfrou Heart
-    1048, // Furfrou Star
-    1048, // Furfrou Diamond
-    1048, // Furfrou Debutante
-    1048, // Furfrou Matron
-    1048, // Furfrou Dandy
-    1048, // Furfrou La Reine
-    1048, // Furfrou Kabuki
-    1048, // Furfrou Pharaoh
-    1051, // Aegislash Blade
-    891, // Pumpkaboo Small
-    891, // Pumpkaboo Large
-    891, // Pumpkaboo Super
-    892, // Gourgeist Small
-    892, // Gourgeist Large
-    892, // Gourgeist Super
-    1078, // Xerneas Active
-    1080, // Zygarde 10
-    1080, // Zygarde 10 Power Construct
-    1080, // Zygarde 50 Power Construct
-    1080, // Zygarde 10 Complete
-    1080, // Zygarde 50 Complete
-    1082, // Hoopa Unbound
-    1103, // Oricorio Pom Pom
-    1103, // Oricorio Pau
-    1103, // Oricorio Sensu
-    1106, // Rockruff Own Tempo
-    1107, // Lycanroc Midnight
-    1107, // Lycanroc Dusk
-    1108, // Wishiwashi School
-    1136, // Minior Meteor Orange
-    1136, // Minior Meteor Yellow
-    1136, // Minior Meteor Green
-    1136, // Minior Meteor Blue
-    1136, // Minior Meteor Indigo
-    1136, // Minior Meteor Violet
-    1136, // Minior Core Red
-    1136, // Minior Core Orange
-    1136, // Minior Core Yellow
-    1136, // Minior Core Green
-    1136, // Minior Core Blue
-    1136, // Minior Core Indigo
-    1136, // Minior Core Violet
-    1140, // Mimikyu Busted
-    1162, // Necrozma Dusk Mane
-    1162, // Necrozma Dawn Wings
-    1162, // Necrozma Ultra Dusk Mane
-    1162, // Necrozma Ultra Dawn Wings
-    1163, // Magearna Original
+    888, // Basculin Blue Striped
+    888, // Basculin White Striped
+    893, // Darmanitan Zen Mode
+    893, // Darmanitan Zen Mode Galarian
+    919, // Deerling Summer
+    919, // Deerling Autumn
+    919, // Deerling Winter
+    920, // Sawsbuck Summer
+    920, // Sawsbuck Autumn
+    920, // Sawsbuck Winter
+    955, // Tornadus Therian
+    956, // Thundurus Therian
+    959, // Landorus Therian
+    960, // Kyurem White
+    960, // Kyurem Black
+    961, // Keldeo Resolute
+    962, // Meloetta Pirouette
+    963, // Genesect Douse Drive
+    963, // Genesect Shock Drive
+    963, // Genesect Burn Drive
+    963, // Genesect Chill Drive
+    972, // Greninja Battle Bond
+    972, // Greninja Ash
+    975, // Vivillon Polar
+    975, // Vivillon Tundra
+    975, // Vivillon Continental
+    975, // Vivillon Garden
+    975, // Vivillon Elegant
+    975, // Vivillon Meadow
+    975, // Vivillon Modern
+    975, // Vivillon Marine
+    975, // Vivillon Archipelago
+    975, // Vivillon High Plains
+    975, // Vivillon Sandstorm
+    975, // Vivillon River
+    975, // Vivillon Monsoon
+    975, // Vivillon Savanna
+    975, // Vivillon Sun
+    975, // Vivillon Ocean
+    975, // Vivillon Jungle
+    975, // Vivillon Fancy
+    975, // Vivillon Poke Ball
+    976, // Flabebe Yellow Flower
+    976, // Flabebe Orange Flower
+    976, // Flabebe Blue Flower
+    976, // Flabebe White Flower
+    977, // Floette Yellow Flower
+    977, // Floette Orange Flower
+    977, // Floette Blue Flower
+    977, // Floette White Flower
+    977, // Floette Eternal Flower
+    978, // Florges Yellow Flower
+    978, // Florges Orange Flower
+    978, // Florges Blue Flower
+    978, // Florges White Flower
+    983, // Furfrou Heart
+    983, // Furfrou Star
+    983, // Furfrou Diamond
+    983, // Furfrou Debutante
+    983, // Furfrou Matron
+    983, // Furfrou Dandy
+    983, // Furfrou La Reine
+    983, // Furfrou Kabuki
+    983, // Furfrou Pharaoh
+    986, // Aegislash Blade
+    826, // Pumpkaboo Small
+    826, // Pumpkaboo Large
+    826, // Pumpkaboo Super
+    827, // Gourgeist Small
+    827, // Gourgeist Large
+    827, // Gourgeist Super
+    1013, // Xerneas Active
+    1015, // Zygarde 10
+    1015, // Zygarde 10 Power Construct
+    1015, // Zygarde 50 Power Construct
+    1015, // Zygarde 10 Complete
+    1015, // Zygarde 50 Complete
+    1017, // Hoopa Unbound
+    1038, // Oricorio Pom Pom
+    1038, // Oricorio Pau
+    1038, // Oricorio Sensu
+    1041, // Rockruff Own Tempo
+    1042, // Lycanroc Midnight
+    1042, // Lycanroc Dusk
+    1043, // Wishiwashi School
+    1071, // Minior Meteor Orange
+    1071, // Minior Meteor Yellow
+    1071, // Minior Meteor Green
+    1071, // Minior Meteor Blue
+    1071, // Minior Meteor Indigo
+    1071, // Minior Meteor Violet
+    1071, // Minior Core Red
+    1071, // Minior Core Orange
+    1071, // Minior Core Yellow
+    1071, // Minior Core Green
+    1071, // Minior Core Blue
+    1071, // Minior Core Indigo
+    1071, // Minior Core Violet
+    1075, // Mimikyu Busted
+    1097, // Necrozma Dusk Mane
+    1097, // Necrozma Dawn Wings
+    1097, // Necrozma Ultra Dusk Mane
+    1097, // Necrozma Ultra Dawn Wings
+    1098, // Magearna Original
     25, // Pikachu Partner
     133, // Eevee Partner
-    1204, // Cramorant Gulping
-    1204, // Cramorant Gorging
-    1208, // Toxtricity Low Key
-    1211, // Sinistea Antique
-    1212, // Polteageist Antique
-    1226, // Alcremie Berry Sweet
-    1226, // Alcremie Love Sweet
-    1226, // Alcremie Star Sweet
-    1226, // Alcremie Clover Sweet
-    1226, // Alcremie Flower Sweet
-    1226, // Alcremie Ribbon Sweet
-    1232, // Eiscue Noice Face
-    1234, // Morpeko Hangry
-    1245, // Zacian Crowned
-    1246, // Zamazenta Crowned
-    1247, // Eternatus Eternamax
-    1249, // Urshifu Rapid Strike
-    1250, // Zarude Dada
-    1255, // Calyrex Ice Rider
-    1255, // Calyrex Shadow Rider
-    1259, // Enamorus Therian
+    1139, // Cramorant Gulping
+    1139, // Cramorant Gorging
+    1143, // Toxtricity Low Key
+    1146, // Sinistea Antique
+    1147, // Polteageist Antique
+    1161, // Alcremie Berry Sweet
+    1161, // Alcremie Love Sweet
+    1161, // Alcremie Star Sweet
+    1161, // Alcremie Clover Sweet
+    1161, // Alcremie Flower Sweet
+    1161, // Alcremie Ribbon Sweet
+    1167, // Eiscue Noice Face
+    1169, // Morpeko Hangry
+    1180, // Zacian Crowned
+    1181, // Zamazenta Crowned
+    1182, // Eternatus Eternamax
+    1184, // Urshifu Rapid Strike
+    1185, // Zarude Dada
+    1190, // Calyrex Ice Rider
+    1190, // Calyrex Shadow Rider
+    1194, // Enamorus Therian
     58, // Growlithe Hisuian
     59, // Arcanine Hisuian
     100, // Voltorb Hisuian
@@ -785,66 +785,66 @@
     157, // Typhlosion Hisuian
     211, // Qwilfish Hisuian
     215, // Sneasel Hisuian
-    917, // Samurott Hisuian
-    952, // Lilligant Hisuian
-    969, // Zorua Hisuian
-    970, // Zoroark Hisuian
-    1007, // Braviary Hisuian
-    1073, // Sliggoo Hisuian
-    1074, // Goodra Hisuian
-    1077, // Avalugg Hisuian
-    1086, // Decidueye Hisuian
-    901, // Kleavor Lord
-    952, // Lilligant Lady
+    852, // Samurott Hisuian
+    887, // Lilligant Hisuian
+    904, // Zorua Hisuian
+    905, // Zoroark Hisuian
+    942, // Braviary Hisuian
+    1008, // Sliggoo Hisuian
+    1009, // Goodra Hisuian
+    1012, // Avalugg Hisuian
+    1021, // Decidueye Hisuian
+    836, // Kleavor Lord
+    887, // Lilligant Lady
     59, // Arcanine Lord
     101, // Electrode Lord
-    1077, // Avalugg Lord
-    930, // Unfezant Female
-    986, // Frillish Female
-    987, // Jellicent Female
-    884, // Pyroar Female
-    886, // Meowstic Female
-    1233, // Indeedee Female
-    1256, // Basculegion Female
-    1279, // Maushold Family Of Three
-    1285, // Squawkabilly Blue Plumage
-    1285, // Squawkabilly Yellow Plumage
-    1285, // Squawkabilly White Plumage
-    1318, // Palafin Hero
-    1332, // Tatsugiri Droopy
-    1332, // Tatsugiri Stretchy
-    905, // Dudunsparce Three Segment
-    1350, // Gimmighoul Roaming
+    1012, // Avalugg Lord
+    865, // Unfezant Female
+    921, // Frillish Female
+    922, // Jellicent Female
+    819, // Pyroar Female
+    821, // Meowstic Female
+    1168, // Indeedee Female
+    1191, // Basculegion Female
+    1214, // Maushold Family Of Three
+    1220, // Squawkabilly Blue Plumage
+    1220, // Squawkabilly Yellow Plumage
+    1220, // Squawkabilly White Plumage
+    1253, // Palafin Hero
+    1267, // Tatsugiri Droopy
+    1267, // Tatsugiri Stretchy
+    840, // Dudunsparce Three Segment
+    1285, // Gimmighoul Roaming
     194, // Wooper Paldean
     128, // Tauros Combat
     128, // Tauros Blaze
     128, // Tauros Aqua
-    1270, // Oinkologne Female
-    1320, // Revavroom Segin
-    1320, // Revavroom Schedar
-    1320, // Revavroom Navi
-    1320, // Revavroom Ruchbah
-    1320, // Revavroom Caph
-    1358, // Koraidon Limited Build
-    1358, // Koraidon Sprinting Build
-    1358, // Koraidon Swimming Build
-    1358, // Koraidon Gliding Build
-    1359, // Miraidon Low Power Mode
-    1359, // Miraidon Drive Mode
-    1359, // Miraidon Aquatic Mode
-    1359, // Miraidon Glide Mode
-    1362, // Poltchageist Masterpiece
-    1363, // Sinistcha Masterpiece
-    1367, // Ogerpon Wellspring Mask
-    1367, // Ogerpon Hearthflame Mask
-    1367, // Ogerpon Cornerstone Mask
-    1367, // Ogerpon Teal Mask Terastal
-    1367, // Ogerpon Wellspring Mask Terastal
-    1367, // Ogerpon Hearthflame Mask Terastal
-    1367, // Ogerpon Cornerstone Mask Terastal
-    902, // Ursaluna Bloodmoon
-    1373, // Terapagos Terastal
-    1373, // Terapagos Stellar
+    1205, // Oinkologne Female
+    1255, // Revavroom Segin
+    1255, // Revavroom Schedar
+    1255, // Revavroom Navi
+    1255, // Revavroom Ruchbah
+    1255, // Revavroom Caph
+    1293, // Koraidon Limited Build
+    1293, // Koraidon Sprinting Build
+    1293, // Koraidon Swimming Build
+    1293, // Koraidon Gliding Build
+    1294, // Miraidon Low Power Mode
+    1294, // Miraidon Drive Mode
+    1294, // Miraidon Aquatic Mode
+    1294, // Miraidon Glide Mode
+    1297, // Poltchageist Masterpiece
+    1298, // Sinistcha Masterpiece
+    1302, // Ogerpon Wellspring Mask
+    1302, // Ogerpon Hearthflame Mask
+    1302, // Ogerpon Cornerstone Mask
+    1302, // Ogerpon Teal Mask Terastal
+    1302, // Ogerpon Wellspring Mask Terastal
+    1302, // Ogerpon Hearthflame Mask Terastal
+    1302, // Ogerpon Cornerstone Mask Terastal
+    837, // Ursaluna Bloodmoon
+    1308, // Terapagos Terastal
+    1308, // Terapagos Stellar
     3, // Gigantamax Venusaur
     6, // Gigantamax Charizard
     9, // Gigantamax Blastoise
@@ -857,28 +857,28 @@
     131, // Gigantamax Lapras
     133, // Gigantamax Eevee
     143, // Gigantamax Snorlax
-    857, // Gigantamax Garbodor
-    1171, // Gigantamax Melmetal
-    1174, // Gigantamax Rillaboom
-    1177, // Gigantamax Cinderace
-    1180, // Gigantamax Inteleon
-    1185, // Gigantamax Corviknight
-    1188, // Gigantamax Orbeetle
-    1196, // Gigantamax Drednaw
-    1201, // Gigantamax Coalossal
-    896, // Gigantamax Flapple
-    897, // Gigantamax Appletun
-    1203, // Gigantamax Sandaconda
-    1208, // Gigantamax Toxtricity
-    1208, // Gigantamax Toxtricity Low Key
-    899, // Gigantamax Centiskorch
-    1215, // Gigantamax Hatterene
-    1218, // Gigantamax Grimmsnarl
-    1226, // Gigantamax Alcremie
-    1236, // Gigantamax Copperajah
-    1241, // Gigantamax Duraludon
-    1249, // Gigantamax Urshifu
-    1249, // Gigantamax Urshifu Rapid Strike
+    792, // Gigantamax Garbodor
+    1106, // Gigantamax Melmetal
+    1109, // Gigantamax Rillaboom
+    1112, // Gigantamax Cinderace
+    1115, // Gigantamax Inteleon
+    1120, // Gigantamax Corviknight
+    1123, // Gigantamax Orbeetle
+    1131, // Gigantamax Drednaw
+    1136, // Gigantamax Coalossal
+    831, // Gigantamax Flapple
+    832, // Gigantamax Appletun
+    1138, // Gigantamax Sandaconda
+    1143, // Gigantamax Toxtricity
+    1143, // Gigantamax Toxtricity Low Key
+    834, // Gigantamax Centiskorch
+    1150, // Gigantamax Hatterene
+    1153, // Gigantamax Grimmsnarl
+    1161, // Gigantamax Alcremie
+    1171, // Gigantamax Copperajah
+    1176, // Gigantamax Duraludon
+    1184, // Gigantamax Urshifu
+    1184, // Gigantamax Urshifu Rapid Strike
     26, // Mega Raichu X
     26, // Mega Raichu Y
     36, // Mega Clefable
@@ -896,35 +896,35 @@
     478, // Mega Froslass
     485, // Mega Heatran
     491, // Mega Darkrai
-    914, // Mega Emboar
-    939, // Mega Excadrill
-    948, // Mega Scolipede
-    963, // Mega Scrafty
-    991, // Mega Eelektross
-    874, // Mega Chandelure
-    1003, // Mega Golurk
-    1031, // Mega Chesnaught
-    1034, // Mega Delphox
-    1037, // Mega Greninja
-    884, // Mega Pyroar
-    1042, // Mega Floette
-    886, // Mega Meowstic
-    886, // Mega Meowstic Female
-    1057, // Mega Malamar
-    1059, // Mega Barbaracle
-    1061, // Mega Dragalge
-    1070, // Mega Hawlucha
-    1080, // Mega Zygarde
-    1102, // Mega Crabominable
-    1130, // Mega Golisopod
-    1142, // Mega Drampa
-    1163, // Mega Magearna
-    1163, // Mega Magearna Original
-    1169, // Mega Zeraora
-    1227, // Mega Falinks
-    1306, // Mega Scovillain
-    1324, // Mega Glimmora
-    1332, // Mega Tatsugiri
-    1332, // Mega Tatsugiri Droopy
-    1332, // Mega Tatsugiri Stretchy
-    1349, // Mega Baxcalibur
+    849, // Mega Emboar
+    874, // Mega Excadrill
+    883, // Mega Scolipede
+    898, // Mega Scrafty
+    926, // Mega Eelektross
+    809, // Mega Chandelure
+    938, // Mega Golurk
+    966, // Mega Chesnaught
+    969, // Mega Delphox
+    972, // Mega Greninja
+    819, // Mega Pyroar
+    977, // Mega Floette
+    821, // Mega Meowstic
+    821, // Mega Meowstic Female
+    992, // Mega Malamar
+    994, // Mega Barbaracle
+    996, // Mega Dragalge
+    1005, // Mega Hawlucha
+    1015, // Mega Zygarde
+    1037, // Mega Crabominable
+    1065, // Mega Golisopod
+    1077, // Mega Drampa
+    1098, // Mega Magearna
+    1098, // Mega Magearna Original
+    1104, // Mega Zeraora
+    1162, // Mega Falinks
+    1241, // Mega Scovillain
+    1259, // Mega Glimmora
+    1267, // Mega Tatsugiri
+    1267, // Mega Tatsugiri Droopy
+    1267, // Mega Tatsugiri Stretchy
+    1284, // Mega Baxcalibur

@@ -100,6 +100,18 @@ class CryLookupTests(unittest.TestCase):
         self.assertEqual(last, len(self.banks) - 1,
                          f"{added[-1]} lands on entry {last} of {len(self.banks)}")
 
+    def test_every_added_cry_is_one_the_lookup_names(self):
+        """A cry nothing looks up still costs the sound heap its table entries.
+
+        The importer used to append to the archive of 4c8176ea1, which already
+        held the first sixty-five added species, and appended them again: 778
+        to 842 were copies nothing played, and the sound heap the archive's
+        tables live in is where the music has to fit.
+        """
+        archive = sdat.load(import_cries.ARCHIVE)
+        self.assertEqual(set(range(RETAIL_BANKS, len(archive.records["SWAR"]))),
+                         {bank for bank in self.banks if bank >= RETAIL_BANKS})
+
     def test_no_bank_is_past_the_end_of_the_archive(self):
         limit = int(re.search(r"#define ARCHIVE_BANK_COUNT\s+(\d+)", self.source).group(1))
         archive = sdat.load(import_cries.ARCHIVE)

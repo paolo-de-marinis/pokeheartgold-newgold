@@ -34,12 +34,14 @@ import sdat  # noqa: E402
 # needs for it.
 CRY_RATE = 10512
 NDS_CLOCK = 16756991
-# The archive this import appends to: the one commit 4c8176ea1 left, 843
-# banks, HeartGold's own 778 and the first sixty-five it added. Every run
-# appends the whole added range again, so it has to start from that one --
-# `git show 4c8176ea1:files/data/sound/gs_sound_data.sdat` -- or the archive
-# doubles.
-BASE_BANKS = 843
+# The archive this import appends to: HeartGold's own, 778 banks, as it was
+# before any cry was added -- `git show 4c8176ea1^:files/data/sound/
+# gs_sound_data.sdat`. Every run appends the whole added range, so it has to
+# start from that one or the archive doubles. It used to start from the 843
+# banks 4c8176ea1 left, the first sixty-five added species among them, and
+# appended those sixty-five again: 778 to 842 were copies nothing played,
+# 3,648 bytes of the sound heap the archive's tables are loaded into.
+BASE_BANKS = 778
 
 # A form has no cry of its own; it uses its base species'.
 SHARED_WITH = {
@@ -152,7 +154,7 @@ def main():
     firstBank = len(archive.records["SBNK"])
     if firstBank != BASE_BANKS:
         raise SystemExit(f"the archive holds {firstBank} banks and this import appends to the one with "
-                         f"{BASE_BANKS}: git show 4c8176ea1:files/data/sound/gs_sound_data.sdat > "
+                         f"{BASE_BANKS}: git show 4c8176ea1^:files/data/sound/gs_sound_data.sdat > "
                          "files/data/sound/gs_sound_data.sdat first")
     model = archive.records["SBNK"][1]
     modelFile = struct.unpack("<H", model[:2])[0]
