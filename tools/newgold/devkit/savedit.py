@@ -3999,7 +3999,8 @@ def info(save):
     return {"half": save.half, "counter": save.counter(), "legacy": save.legacy, "layout": save.layout,
             "halves": [{"at": h, "valid": save.valid(h), "counter": save.counter(h)} for h in (0, HALF)],
             "blocks": [{k: b[k] for k in ("index", "id", "offset", "size", "slot")} for b in save.table],
-            "slots": save.specs}
+            "slots": save.specs,
+            "pockets": {p["name"]: p["slots"] for p in pockets(save.layout)}}   # in the save's own layout
 
 
 def main():

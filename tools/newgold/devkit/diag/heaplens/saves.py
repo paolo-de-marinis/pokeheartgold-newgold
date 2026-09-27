@@ -57,7 +57,7 @@ def make(out, place, party=None):
     for item, n in ((2, 99), (4, 99), (50, 20), (17, 50), (450, 1)):
         pocket = next(p["name"] for p in savedit.pockets()
                       if p["const"] == savedit.pocket_const(savedit.item_table()[item]["pocket"]))
-        savedit.put_in_pocket(bag, pocket, item, n)
+        savedit.put_in_pocket(bag, pocket, item, n, save.layout)
     if party and place not in BASES:
         savedit.set_party(save, party)
         one_short(save, 0)

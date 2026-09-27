@@ -187,6 +187,7 @@ class SaveditLibraryTests(unittest.TestCase):
         pocket = {p["const"]: p["name"] for p in sv.pockets()}
         self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(save)[pocket["POCKET_BALLS"]]], [(items["ITEM_ULTRA_BALL"], 7)])
         self.assertEqual(sv.pocket_at(pocket["POCKET_BERRIES"], save.layout)[1], sv.BAG_BERRIES_LEGACY)
+        self.assertEqual(sv.info(save)["pockets"][pocket["POCKET_BERRIES"]], sv.BAG_BERRIES_LEGACY)   # what the page shows
         sv.set_item(save, items["ITEM_ORAN_BERRY"], 3)
         path.write_bytes(save.image())
         again = sv.Save(path)

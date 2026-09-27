@@ -1595,7 +1595,7 @@ function renderBag() {
     </form>
     <p class="note" style="margin-bottom:10px">Lo strumento va nella tasca che il gioco gli assegna, e al massimo quanti il gioco ne tiene: una MT è una sola (New Gold non le consuma).</p>
     ${machines ? `<div id="machines"></div>` : `<div class="scroll"><table>
-      <tr><th>${esc(pocketName(here.const))} <span class="muted">(${rows.length} di ${here.slots} posti)</span></th><th class="num">Quantità</th><th></th></tr>
+      <tr><th>${esc(pocketName(here.const))} <span class="muted">(${rows.length} di ${S.save.info.pockets?.[here.name] ?? here.slots} posti)</span></th><th class="num">Quantità</th><th></th></tr>
       ${rows.map(r => `<tr><td>${esc(r.name)}</td>
         <td class="num"><input type="number" min="1" max="${limit(r.item)}" value="${r.quantity}" data-item="${r.item}" aria-label="Quantità di ${esc(r.name)}"></td>
         <td class="num"><button type="button" class="small" data-set="${r.item}">Imposta</button> <button type="button" class="small danger" data-del="${r.item}">Togli</button></td></tr>`).join("")
