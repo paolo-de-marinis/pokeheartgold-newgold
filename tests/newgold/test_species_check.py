@@ -74,6 +74,24 @@ class SpeciesCheckTests(unittest.TestCase):
         self.assertLess(max(species.battle_scores(Image.new("RGB", (256, 384)), e)), 0.1)
         self.assertLess(species.battle_scores(frame(Image.open(back).getpalette()), e)[1], species.PASS)
 
+    def test_a_battle_puts_out_only_what_the_tree_explains(self):
+        # Judged by who the battle says is out, a Mega Tatsugiri Stretchy
+        # that came in as the Droopy form scored full; the species put out
+        # in the variant's place has to be the form form_reversion.h sends it
+        # back to, a battle form of it, its species' base or its own other
+        # gender's.
+        n = sv.species_numbers()
+        entry = lambda name: next(x for x in species.entries() if x["species"] == n[name])  # noqa: E731
+        cases = (("MEGA_TATSUGIRI_STRETCHY", "TATSUGIRI_STRETCHY", True), ("MEGA_TATSUGIRI_STRETCHY", "TATSUGIRI_DROOPY", False),
+                 ("GIGANTAMAX_URSHIFU_RAPID_STRIKE", "URSHIFU_RAPID_STRIKE", True),
+                 ("GIGANTAMAX_URSHIFU_RAPID_STRIKE", "URSHIFU", False), ("XERNEAS", "XERNEAS_ACTIVE", True),
+                 ("GENESECT_DOUSE_DRIVE", "GENESECT", True), ("UNFEZANT", "UNFEZANT_FEMALE", True),
+                 ("PICHU", "PIKACHU", False))
+        for variant, drawn, fine in cases:
+            record = {"walk": "battle", "state": "BATTLE_MAIN", "prompt": 2, "became": [None, n[drawn]]}
+            wrong = species.problems(record, entry(variant))
+            self.assertEqual(not wrong, fine, (variant, drawn, wrong))
+
     def test_the_added_sample_is_every_species_past_arceus_and_every_form_group(self):
         n = sv.species_numbers()
         picked = {(e["species"], e["form"]) for e in species.added(species.entries())}

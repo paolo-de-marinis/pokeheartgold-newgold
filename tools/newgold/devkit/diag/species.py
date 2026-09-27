@@ -31,14 +31,23 @@ The ROM is the NEWGOLD_DIAG=1 HeartGold build. What each walk does:
           ability none of those has: the variant leads the party, the wild
           one is its species (form 0, as the switch makes it), until both
           are out and the game asks for a command. A battle is judged by
-          its markers -- the state, the battlers, the cries, asserts and
-          failed allocations -- and by the frame core.shot() draws there:
+          its markers -- the state, the battlers, the cries (asked and
+          started: whose is not compared, the foe's and the leader's both
+          playing), asserts and failed allocations -- and by the frame
+          core.shot() draws there:
           the wild one's front picture (form 0, either gender's PNG) and
           the leader's back picture, drawn with the front's palette as the
           game draws it, each against its PNG: of the species the battle
           says each is (gDiagBattlers), a Xerneas coming in Active, and in
           form 0 for the form groups the battle puts back in it
-          (BATTLE_FORM_ZERO). The frame is kept in OUT/battle/.
+          (BATTLE_FORM_ZERO). A species the battle says is out in the
+          variant's place fails unless the tree explains it: for a battle
+          form, the form src/data/form_reversion.h sends it back to (or, for
+          a form a held item gives, Species_HeldItemForm's, that form's base:
+          the wild one holds nothing); for any other, a battle form of it that goes back to it (a Xerneas coming
+          in Active), its species' base (a Genesect Drive without its Drive)
+          or a species of its own (its other gender's). The frame is kept in
+          OUT/battle/.
 
 --only added is the sample the round-11 rerun of the battle walk used:
 every species and form past Arceus -- each added species and each form
@@ -1027,9 +1036,50 @@ def text_failures(records, table):
     return out
 
 
+@cache
+def _reversions():
+    """src/data/form_reversion.h as the tree has it: {battle form: the
+    species it goes back to}."""
+    numbers = savedit.species_numbers()
+    table = {numbers[a]: numbers[b] for a, b in re.findall(r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_(\w+),",
+                                                           (ROOT / "src/data/form_reversion.h").read_text())}
+    # Species_GetBattleFormReversion's Minior, in C and not in the table: a
+    # meteor goes back to the core of its colour, the red one being MINIOR.
+    table[numbers["MINIOR"]] = numbers["MINIOR_CORE_RED"]
+    for name, number in numbers.items():
+        if name.startswith("MINIOR_METEOR_"):
+            table[number] = numbers["MINIOR_CORE_" + name[len("MINIOR_METEOR_"):]]
+    return table
+
+
+@cache
+def _held_item_forms():
+    """The species whose form their held item gives (Species_HeldItemForm)."""
+    numbers = savedit.species_numbers()
+    return {numbers[name] for name in re.findall(r"case SPECIES_(\w+):",
+                                                 savedit.c_function("src/pokemon.c", "u16 Species_HeldItemForm("))}
+
+
+def unexplained(record, e):
+    """The species a battle drew in the variant's place that the tree does
+    not explain (battle's docstring above)."""
+    base, reversions = _dex_tables()[0], _reversions()
+    variant = e["species"]
+    if variant in reversions:       # a battle form: only the form it goes back to
+        back = reversions[variant]
+        # ... or, one whose form a held item gives, the base the wild one is
+        # without the item (an Ogerpon Terastal comes in as Teal).
+        empty = base.get(back, back) if back in _held_item_forms() else back
+        return [drawn for drawn in record.get("became") or () if drawn not in (None, back, empty)]
+    return [drawn for drawn in record.get("became") or () if drawn is not None
+            and drawn != base.get(variant) and variant not in (reversions.get(drawn), base.get(drawn))]
+
+
 def problems(record, e):
     """What is wrong in one record, in words."""
     out = []
+    for drawn in unexplained(record, e):
+        out.append(f"the battle put species {drawn} in its place, which the tree does not explain")
     if record.get("error"):
         out.append(record["error"])
     if record.get("asserts"):
