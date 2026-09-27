@@ -1,0 +1,14 @@
+{
+  "about": "Two switches after one move, in play: a U-turn that hits an Eject Button holder sends the holder back and leaves its user in (Pokemon Central, Pulsantefuga; Showdown's gen-9 ejectbutton clears the pivot's switch) -- battle_controller_player.c's post-move steps, where the button's switch comes first and U-turn's is not made for a target that left (PivotSwitchPending, Battler_CameInAfterTheHit), the C that does the work of the reference's SetCurrentMoveSwitchingStatus pending order (a stub here, test_battle_commands). In the Violet Gym the Snorlax is taught U-turn and Falkner's Hoothoot is given an Eject Button (teach:, set:); the Snorlax hits it, the Hoothoot goes back and Falkner sends out his Doduo, and the Snorlax is still out, the party screen never opened.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:13,RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13",
+           "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceDamageRoll": 1, "gDiagForceHit": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_U_TURN", "set:1,item,ITEM_EJECT_BUTTON",
+            "fight:1:1",
+            {"expect": {"lines": ["Snorlax used U-turn!", "is switched out with the Eject Button!"],
+                        "battler0.species": "SPECIES_SNORLAX", "battler1.species": "SPECIES_DODUO"}},
+            "fight", "field"],
+  "expect": {"lines": ["You defeated Leader Falkner!"]}
+}

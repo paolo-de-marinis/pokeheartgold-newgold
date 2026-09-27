@@ -112,7 +112,12 @@ class BattleCommandTests(unittest.TestCase):
         # over: Parting Shot's (HANDLE_PARTING_SHOT, battle_controller_player.c),
         # the Eject Button's and the Eject Pack's (CheckSwitchItemOnHit and
         # CheckEjectPack, SWITCH_OUT_ITEM); Wimp Out and Emergency Exit ask
-        # ahead of U-turn's switch.
+        # ahead of U-turn's switch. In play each has been seen alone
+        # (scenarios parting_shot, eject_button, eject_pack) and one pair,
+        # U-turn into an Eject Button (u_turn_into_eject_button: the button's
+        # switch, and U-turn's not made). The other pairs -- the Red Card
+        # before the button, the button shutting the Eject Packs, the card
+        # disarming Wimp Out and Emergency Exit -- no scenario plays yet.
         "SetCurrentMoveSwitchingStatus": "nothing: the switches after a move are asked in C",
         # Battler_TurnsHero in BtlCmd_SwitchAndUpdateMon, and the entry
         # abilities' step that runs subscript ZERO_TO_HERO.
