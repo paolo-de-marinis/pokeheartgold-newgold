@@ -17655,25 +17655,25 @@
           {
             "level": 16,
             "species": {
-              "morn": "SPECIES_VENONAT",
-              "day": "SPECIES_FLAAFFY",
-              "nite": "SPECIES_MAREEP"
+              "morn": "SPECIES_WHISMUR",
+              "day": "SPECIES_WHISMUR",
+              "nite": "SPECIES_WHISMUR"
             }
           },
           {
             "level": 17,
             "species": {
-              "morn": "SPECIES_PIDGEOTTO",
-              "day": "SPECIES_FLAAFFY",
-              "nite": "SPECIES_VENONAT"
+              "morn": "SPECIES_ZIGZAGOON",
+              "day": "SPECIES_ZIGZAGOON",
+              "nite": "SPECIES_SHROODLE"
             }
           },
           {
             "level": 16,
             "species": {
-              "morn": "SPECIES_VENONAT",
-              "day": "SPECIES_FLAAFFY",
-              "nite": "SPECIES_MAREEP"
+              "morn": "SPECIES_STUFFUL",
+              "day": "SPECIES_DEDENNE",
+              "nite": "SPECIES_HATENNA"
             }
           },
           {

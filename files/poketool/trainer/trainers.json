@@ -6383,7 +6383,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON_MOVES",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_FISHERMAN",
       "name": "{TRNAME}Marvin",
       "items": [],
@@ -6394,11 +6394,14 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 10,
-          "species": "SPECIES_MAGIKARP",
+          "level": 44,
+          "species": "SPECIES_SEAKING",
+          "item": "ITEM_ORAN_BERRY",
           "moves": [
-            "MOVE_SPLASH",
-            "MOVE_TACKLE"
+            "MOVE_WATERFALL",
+            "MOVE_MEGAHORN",
+            "MOVE_AGILITY",
+            "MOVE_AQUA_RING"
           ],
           "capsule": 0
         },
@@ -6406,23 +6409,44 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 20,
+          "level": 45,
+          "species": "SPECIES_POLIWRATH",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_WATERFALL",
+            "MOVE_BRICK_BREAK",
+            "MOVE_ICE_PUNCH",
+            "MOVE_HYPNOSIS"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 45,
+          "species": "SPECIES_LUMINEON",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_SURF",
+            "MOVE_ICE_BEAM",
+            "MOVE_SILVER_WIND",
+            "MOVE_AQUA_RING"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 47,
           "species": "SPECIES_GYARADOS",
+          "item": "ITEM_SITRUS_BERRY",
           "moves": [
-            "MOVE_THRASH",
-            "MOVE_SURF"
-          ],
-          "capsule": 0
-        },
-        {
-          "difficulty": 0,
-          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 15,
-          "species": "SPECIES_MAGIKARP",
-          "moves": [
-            "MOVE_SPLASH",
-            "MOVE_TACKLE"
+            "MOVE_DRAGON_DANCE",
+            "MOVE_WATERFALL",
+            "MOVE_ICE_FANG",
+            "MOVE_BITE"
           ],
           "capsule": 0
         }
@@ -6443,7 +6467,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_FISHERMAN",
       "name": "{TRNAME}Tully",
       "items": [],
@@ -6454,8 +6478,45 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 19,
+          "level": 44,
           "species": "SPECIES_QWILFISH",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_RAIN_DANCE",
+            "MOVE_AQUA_TAIL",
+            "MOVE_POISON_JAB",
+            "MOVE_TOXIC_SPIKES"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
+          "level": 45,
+          "species": "SPECIES_LANTURN",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_SURF",
+            "MOVE_DISCHARGE",
+            "MOVE_CONFUSE_RAY",
+            "MOVE_AQUA_RING"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 46,
+          "species": "SPECIES_SEISMITOAD",
+          "item": "ITEM_SITRUS_BERRY",
+          "moves": [
+            "MOVE_MUDDY_WATER",
+            "MOVE_EARTH_POWER",
+            "MOVE_SLUDGE_BOMB",
+            "MOVE_RAIN_DANCE"
+          ],
           "capsule": 0
         }
       ],
@@ -6727,7 +6788,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_POKE_MANIAC",
       "name": "{TRNAME}Shane",
       "items": [],
@@ -6738,16 +6799,45 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 17,
-          "species": "SPECIES_NIDORINA",
+          "level": 44,
+          "species": "SPECIES_NIDOQUEEN",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_POISON_JAB",
+            "MOVE_EARTH_POWER",
+            "MOVE_BODY_SLAM",
+            "MOVE_ICE_BEAM"
+          ],
           "capsule": 0
         },
         {
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 17,
-          "species": "SPECIES_NIDORINO",
+          "level": 45,
+          "species": "SPECIES_EXPLOUD",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_HYPER_VOICE",
+            "MOVE_CRUNCH",
+            "MOVE_FLAMETHROWER",
+            "MOVE_REST"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 46,
+          "species": "SPECIES_NIDOKING",
+          "item": "ITEM_SITRUS_BERRY",
+          "moves": [
+            "MOVE_POISON_JAB",
+            "MOVE_EARTH_POWER",
+            "MOVE_MEGAHORN",
+            "MOVE_FOCUS_BLAST"
+          ],
           "capsule": 0
         }
       ],
@@ -6767,7 +6857,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_POKE_MANIAC",
       "name": "{TRNAME}Beckett",
       "items": [],
@@ -6778,8 +6868,60 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 20,
+          "level": 45,
           "species": "SPECIES_SLOWBRO",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_SURF",
+            "MOVE_PSYCHIC",
+            "MOVE_AMNESIA",
+            "MOVE_SLACK_OFF"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 45,
+          "species": "SPECIES_SLOWKING",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_SURF",
+            "MOVE_PSYCHIC",
+            "MOVE_NASTY_PLOT",
+            "MOVE_SLACK_OFF"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
+          "level": 46,
+          "species": "SPECIES_MEOWSTIC",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_PSYCHIC",
+            "MOVE_SIGNAL_BEAM",
+            "MOVE_FAKE_OUT",
+            "MOVE_LIGHT_SCREEN"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 47,
+          "species": "SPECIES_BRONZONG",
+          "item": "ITEM_SITRUS_BERRY",
+          "moves": [
+            "MOVE_PSYCHIC",
+            "MOVE_GYRO_BALL",
+            "MOVE_HYPNOSIS",
+            "MOVE_REFLECT"
+          ],
           "capsule": 0
         }
       ],
@@ -6799,7 +6941,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_POKE_MANIAC",
       "name": "{TRNAME}Brent",
       "items": [],
@@ -6810,16 +6952,45 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 20,
-          "species": "SPECIES_NIDORINA",
+          "level": 45,
+          "species": "SPECIES_NIDOQUEEN",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_POISON_JAB",
+            "MOVE_EARTH_POWER",
+            "MOVE_BODY_SLAM",
+            "MOVE_ICE_BEAM"
+          ],
           "capsule": 0
         },
         {
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 24,
-          "species": "SPECIES_NIDORINO",
+          "level": 46,
+          "species": "SPECIES_DEDENNE",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_DISCHARGE",
+            "MOVE_DRAINING_KISS",
+            "MOVE_THUNDER_WAVE",
+            "MOVE_GRASS_KNOT"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 47,
+          "species": "SPECIES_ABSOL",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_NIGHT_SLASH",
+            "MOVE_PSYCHO_CUT",
+            "MOVE_SWORDS_DANCE",
+            "MOVE_QUICK_ATTACK"
+          ],
           "capsule": 0
         }
       ],
@@ -6843,7 +7014,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_POKE_MANIAC",
       "name": "{TRNAME}Ron",
       "items": [],
@@ -6854,8 +7025,15 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-          "level": 20,
+          "level": 49,
           "species": "SPECIES_NIDOKING",
+          "item": "ITEM_SITRUS_BERRY",
+          "moves": [
+            "MOVE_POISON_JAB",
+            "MOVE_EARTHQUAKE",
+            "MOVE_MEGAHORN",
+            "MOVE_THUNDER_PUNCH"
+          ],
           "capsule": 0
         }
       ],
@@ -6915,7 +7093,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_HIKER",
       "name": "{TRNAME}Benjamin",
       "items": [],
@@ -6926,24 +7104,75 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 15,
-          "species": "SPECIES_DIGLETT",
+          "level": 44,
+          "species": "SPECIES_DUGTRIO",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_DIG",
+            "MOVE_ROCK_SLIDE",
+            "MOVE_SUCKER_PUNCH",
+            "MOVE_SANDSTORM"
+          ],
           "capsule": 0
         },
         {
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND",
-          "level": 15,
-          "species": "SPECIES_GEODUDE",
+          "level": 45,
+          "species": "SPECIES_GRAVELER",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_ROCK_SLIDE",
+            "MOVE_BULLDOZE",
+            "MOVE_BRICK_BREAK",
+            "MOVE_EXPLOSION"
+          ],
           "capsule": 0
         },
         {
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 17,
-          "species": "SPECIES_DUGTRIO",
+          "level": 45,
+          "species": "SPECIES_LAIRON",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_IRON_HEAD",
+            "MOVE_ROCK_SLIDE",
+            "MOVE_DIG",
+            "MOVE_IRON_DEFENSE"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 46,
+          "species": "SPECIES_MAGCARGO",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_LAVA_PLUME",
+            "MOVE_ANCIENT_POWER",
+            "MOVE_EARTH_POWER",
+            "MOVE_RECOVER"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 47,
+          "species": "SPECIES_FERROTHORN",
+          "item": "ITEM_SITRUS_BERRY",
+          "moves": [
+            "MOVE_GYRO_BALL",
+            "MOVE_POWER_WHIP",
+            "MOVE_LEECH_SEED",
+            "MOVE_CURSE"
+          ],
           "capsule": 0
         }
       ],
@@ -19835,7 +20064,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON_MOVES",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_PICNICKER",
       "name": "{TRNAME}Tiffany",
       "items": [],
@@ -19846,13 +20075,44 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 21,
-          "species": "SPECIES_CLEFAIRY",
+          "level": 46,
+          "species": "SPECIES_CLEFABLE",
+          "item": "ITEM_ORAN_BERRY",
           "moves": [
+            "MOVE_MOONBLAST",
             "MOVE_ENCORE",
             "MOVE_SING",
-            "MOVE_DOUBLE_SLAP",
             "MOVE_MINIMIZE"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 46,
+          "species": "SPECIES_DELCATTY",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_FAKE_OUT",
+            "MOVE_ATTRACT",
+            "MOVE_SING",
+            "MOVE_PLAY_ROUGH"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 48,
+          "species": "SPECIES_TOGEKISS",
+          "item": "ITEM_SITRUS_BERRY",
+          "moves": [
+            "MOVE_AIR_SLASH",
+            "MOVE_AURA_SPHERE",
+            "MOVE_MOONBLAST",
+            "MOVE_THUNDER_WAVE"
           ],
           "capsule": 0
         }
@@ -19877,7 +20137,7 @@
       ]
     },
     {
-      "type": "TRTYPE_MON",
+      "type": "TRTYPE_MON_ITEM_MOVES",
       "class": "TRAINERCLASS_CAMPER",
       "name": "{TRNAME}Spencer",
       "items": [],
@@ -19888,24 +20148,60 @@
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 18,
-          "species": "SPECIES_SANDSHREW",
-          "capsule": 0
-        },
-        {
-          "difficulty": 0,
-          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
-          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 18,
+          "level": 44,
           "species": "SPECIES_SANDSLASH",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_SLASH",
+            "MOVE_DIG",
+            "MOVE_ROCK_SLIDE",
+            "MOVE_SANDSTORM"
+          ],
           "capsule": 0
         },
         {
           "difficulty": 0,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 20,
-          "species": "SPECIES_ZUBAT",
+          "level": 44,
+          "species": "SPECIES_DIGGERSBY",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_DIG",
+            "MOVE_HAMMER_ARM",
+            "MOVE_ROCK_SLIDE",
+            "MOVE_QUICK_ATTACK"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 45,
+          "species": "SPECIES_NOCTOWL",
+          "item": "ITEM_ORAN_BERRY",
+          "moves": [
+            "MOVE_AIR_SLASH",
+            "MOVE_PSYCHIC",
+            "MOVE_HYPNOSIS",
+            "MOVE_ROOST"
+          ],
+          "capsule": 0
+        },
+        {
+          "difficulty": 0,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 46,
+          "species": "SPECIES_CROBAT",
+          "item": "ITEM_SITRUS_BERRY",
+          "moves": [
+            "MOVE_FLY",
+            "MOVE_CROSS_POISON",
+            "MOVE_BITE",
+            "MOVE_CONFUSE_RAY"
+          ],
           "capsule": 0
         }
       ],
