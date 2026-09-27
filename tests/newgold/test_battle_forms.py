@@ -210,6 +210,25 @@ class BattleFormTests(unittest.TestCase):
         self.assertEqual(written["GRENINJA_ASH"], "GRENINJA_BATTLE_BOND")
         self.assertNotIn("DARMANITAN_GALARIAN", written)
 
+    @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
+    def test_a_form_goes_back_to_the_form_its_name_says(self):
+        """A battle form whose name names another form of its species -- the
+        Stretchy one's Mega, the Rapid Strike one's Gigantamax -- goes back
+        to that form, or to one of its own (Zygarde's 10% Complete to the
+        10% with Power Construct). The engine sent a Mega Tatsugiri Stretchy
+        back to the Droopy form and a Gigantamax Urshifu Rapid Strike to
+        Single Strike (import_form_reversion.CORRECTIONS)."""
+        forms = import_form_reversion.form_table()
+        owner = {form: base for base, entries in forms.items() for form, _ in entries}
+        for form, target in import_form_reversion.table():
+            base = owner[form]
+            kept = [name for name, reverts in forms[base] if not reverts and name.startswith(base + "_")]
+            named = sorted((name for name in kept if f"_{name[len(base) + 1:]}" in f"_{form}"), key=len)
+            if named:
+                self.assertTrue(target.startswith(named[-1]), f"{form} goes back to {target}, not to {named[-1]}")
+        self.assertEqual(dict(import_form_reversion.table())["MEGA_TATSUGIRI_STRETCHY"], "TATSUGIRI_STRETCHY")
+        self.assertEqual(dict(import_form_reversion.table())["GIGANTAMAX_URSHIFU_RAPID_STRIKE"], "URSHIFU_RAPID_STRIKE")
+
     def test_every_battle_is_set_up_and_cleared(self):
         """Where the forms are put on and taken off: the trainer battle's
         parties, a wild Pokemon, a battler leaving the field, the player's

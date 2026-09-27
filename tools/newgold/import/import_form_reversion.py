@@ -19,6 +19,12 @@ out of a battle (Pokemon Central, Scudosoglia), so it is the meteor that goes
 back, and to the core of its colour. Species_GetBattleFormReversion says so in
 C, because the red meteor is SPECIES_MINIOR itself and has no row here.
 
+Two of the engine's reversions are wrong and are not copied (CORRECTIONS): at
+d0380a487 its FormReversionMapping sends a Mega Tatsugiri Stretchy back to
+form 1, the Droopy one, and names no form for a Gigantamax Urshifu Rapid
+Strike, which goes back to form 0, Single Strike. Each goes back to the form
+it came from, as the Mega Tatsugiri Droopy does to the Droopy.
+
 Usage: import_form_reversion.py [--write]
 """
 
@@ -32,6 +38,9 @@ import gmm  # noqa: E402
 
 ROOT = gmm.ROOT
 TABLE = ROOT / "src/data/form_reversion.h"
+# The engine's wrong reversions, and the form each goes back to here.
+CORRECTIONS = {"MEGA_TATSUGIRI_STRETCHY": "TATSUGIRI_STRETCHY",
+               "GIGANTAMAX_URSHIFU_RAPID_STRIKE": "URSHIFU_RAPID_STRIKE"}
 
 
 def form_table():
@@ -62,7 +71,7 @@ def table():
             if not reverts or form not in ours or form.startswith("MINIOR_CORE_"):
                 continue
             number = mapping.get(form, 0)
-            target = base if number == 0 else forms[number - 1][0]
+            target = CORRECTIONS.get(form, base if number == 0 else forms[number - 1][0])
             if target not in ours:
                 raise SystemExit(f"{form} goes back to {target}, which is not a species here")
             rows.append((form, target))
