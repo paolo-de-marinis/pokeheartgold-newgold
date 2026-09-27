@@ -3995,8 +3995,19 @@ def undo_step(save, step_id, done=None):
     return left
 
 
+@tree_cache
+def layout_names():
+    """enum SaveLayout's constants by number, as include/save.h has them:
+    the numbers run newest first, so a layout added renumbers the older
+    ones, and a label is keyed by the name."""
+    enum = re.search(r"enum SaveLayout \{(.*?)\};", source("include/save.h").read_text(), re.S).group(1)
+    names = re.findall(r"^\s*(SAVE_LAYOUT_\w+),", enum, re.M)
+    return names[:names.index("SAVE_LAYOUT_COUNT")]
+
+
 def info(save):
     return {"half": save.half, "counter": save.counter(), "legacy": save.legacy, "layout": save.layout,
+            "layout_name": layout_names()[save.layout],
             "halves": [{"at": h, "valid": save.valid(h), "counter": save.counter(h)} for h in (0, HALF)],
             "blocks": [{k: b[k] for k in ("index", "id", "offset", "size", "slot")} for b in save.table],
             "slots": save.specs,

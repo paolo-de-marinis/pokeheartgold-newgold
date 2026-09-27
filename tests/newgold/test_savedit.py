@@ -157,6 +157,7 @@ class SaveditLibraryTests(unittest.TestCase):
         save = sv.Save(path)
         self.assertTrue(save.legacy)
         self.assertEqual(save.layout, sv.LAYOUT_BEFORE_DNA_SPLICERS)
+        self.assertEqual(sv.info(save)["layout_name"], "SAVE_LAYOUT_BEFORE_DNA_SPLICERS")
         self.assertEqual(save.table, legacy)
         self.assertEqual(save.image(), path.read_bytes(), "unchanged, it stays byte for byte")
         sv.set_profile(save, money=4242)
@@ -188,12 +189,27 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(save)[pocket["POCKET_BALLS"]]], [(items["ITEM_ULTRA_BALL"], 7)])
         self.assertEqual(sv.pocket_at(pocket["POCKET_BERRIES"], save.layout)[1], sv.BAG_BERRIES_LEGACY)
         self.assertEqual(sv.info(save)["pockets"][pocket["POCKET_BERRIES"]], sv.BAG_BERRIES_LEGACY)   # what the page shows
+        self.assertEqual(sv.info(save)["layout_name"], "SAVE_LAYOUT_BEFORE_BERRY_POCKET")
         sv.set_item(save, items["ITEM_ORAN_BERRY"], 3)
         path.write_bytes(save.image())
         again = sv.Save(path)
         self.assertEqual(again.layout, sv.LAYOUT_BEFORE_BERRY_POCKET, "an edit keeps the layout the game will convert")
         self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(again)[pocket["POCKET_BERRIES"]]], [(items["ITEM_ORAN_BERRY"], 3)])
         self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(again)[pocket["POCKET_BALLS"]]], [(items["ITEM_ULTRA_BALL"], 7)])
+
+    def test_the_page_names_a_layout_by_its_constant(self):
+        """enum SaveLayout is numbered newest first, so a layout added
+        renumbers the older ones: the page's Italian label is keyed by the
+        constant savedit.info() names, each a layout the tree has."""
+        names = sv.layout_names()
+        self.assertEqual(names[sv.LAYOUT_NOW], "SAVE_LAYOUT_NOW")
+        self.assertEqual(len(names), sv.LAYOUT_COUNT)
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        label = page[page.index("<dt>Formato</dt>"):]
+        label = label[:label.index("</dd>")]
+        self.assertIn("[i.layout_name]", label)
+        self.assertNotIn("[i.layout]", label)
+        self.assertLessEqual(set(re.findall(r"\b(SAVE_LAYOUT_\w+):", label)), set(names) - {"SAVE_LAYOUT_NOW"})
 
     def test_a_pokemon_s_types_are_the_game_s(self):
         """GetMonData's MON_DATA_TYPE_1/_2: the species' two, one when they
