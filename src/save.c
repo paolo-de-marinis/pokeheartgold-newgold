@@ -468,6 +468,10 @@ static int Save_GetSaveFilesStatus(SaveData *saveData) {
 
     BOOL read1, read2;
     struct SaveSlotSpec specs[2];
+    struct SaveSlotCheck first_main[2];
+    struct SaveSlotCheck first_sub[2];
+    u32 first;
+    BOOL pastNewer;
 
     data1 = Heap_AllocAtEnd(HEAP_ID_3, SAVE_PAGE_MAX * SAVE_SECTOR_SIZE);
     data2 = Heap_AllocAtEnd(HEAP_ID_3, SAVE_PAGE_MAX * SAVE_SECTOR_SIZE);
@@ -475,13 +479,37 @@ static int Save_GetSaveFilesStatus(SaveData *saveData) {
     read2 = FlashLoadChunk(1 * 0x40000, data2, SAVE_PAGE_MAX * SAVE_SECTOR_SIZE);
     saveData->saveLayout = SAVE_LAYOUT_NOW;
     Save_CheckSlotFooters(saveData, read1 ? data1 : NULL, read2 ? data2 : NULL, checks_main, checks_sub);
-    // Nothing reads as this layout: perhaps a save in an older one, whose
-    // footers are where that layout put them, with its magic. The newest
-    // first, so a flash with a half of each loads its newer half.
+    // No main slot, or no PC slot, reads as this layout: perhaps a save in an
+    // older one, whose footers are where that layout put them, with its
+    // magic. The newest first, so a flash with a half of each loads its newer
+    // half. Where no layout has both, the first that any slot reads as is
+    // judged, as before.
+    //
+    // Both, not either: the first save after a conversion writes the main
+    // slot and its footer first and the PC's footer last, after every box.
+    // Stopped between them, it leaves a main slot of now in one half and the
+    // whole older save in the other. That is loaded, and the player told the
+    // previous save file was (LOAD_STATUS_SLOT_FAIL), where before the flash
+    // was called corrupt and erased. Told only past a slot of now, the only
+    // layout the game writes: an older layout's PC slot can sit where another
+    // older layout's would, and that says nothing.
     specs[0] = saveData->saveSlotSpecs[0];
     specs[1] = saveData->saveSlotSpecs[1];
-    while (!checks_main[0].valid && !checks_main[1].valid && !checks_sub[0].valid && !checks_sub[1].valid
-           && ++saveData->saveLayout < SAVE_LAYOUT_COUNT) {
+    first = SAVE_LAYOUT_COUNT;
+    for (;;) {
+        BOOL anyMain = checks_main[0].valid || checks_main[1].valid;
+        BOOL anySub = checks_sub[0].valid || checks_sub[1].valid;
+
+        if (first == SAVE_LAYOUT_COUNT && (anyMain || anySub)) {
+            first = saveData->saveLayout;
+            first_main[0] = checks_main[0];
+            first_main[1] = checks_main[1];
+            first_sub[0] = checks_sub[0];
+            first_sub[1] = checks_sub[1];
+        }
+        if ((anyMain && anySub) || ++saveData->saveLayout == SAVE_LAYOUT_COUNT) {
+            break;
+        }
         Save_GetLayoutSlotSpecs(saveData, saveData->saveLayout, saveData->saveSlotSpecs);
         Save_CheckSlotFooters(saveData, read1 ? data1 : NULL, read2 ? data2 : NULL, checks_main, checks_sub);
         saveData->saveSlotSpecs[0] = specs[0];
@@ -489,7 +517,15 @@ static int Save_GetSaveFilesStatus(SaveData *saveData) {
     }
     if (saveData->saveLayout == SAVE_LAYOUT_COUNT) {
         saveData->saveLayout = SAVE_LAYOUT_NOW;
+        if (first != SAVE_LAYOUT_COUNT) {
+            saveData->saveLayout = first;
+            checks_main[0] = first_main[0];
+            checks_main[1] = first_main[1];
+            checks_sub[0] = first_sub[0];
+            checks_sub[1] = first_sub[1];
+        }
     }
+    pastNewer = first == SAVE_LAYOUT_NOW && saveData->saveLayout != SAVE_LAYOUT_NOW;
     Heap_Free(data1);
     Heap_Free(data2);
 
@@ -518,7 +554,7 @@ static int Save_GetSaveFilesStatus(SaveData *saveData) {
             Save_RecordWhichLatestGoodSector(saveData, checks_main, checks_sub, __newer_main);
             saveData->sectorCleanFlag[0] = 0;
             saveData->sectorCleanFlag[1] = 0;
-            return LOAD_STATUS_IS_GOOD;
+            return pastNewer ? LOAD_STATUS_SLOT_FAIL : LOAD_STATUS_IS_GOOD;
         }
         if (checks_main[__older_main].count != checks_sub[__older_main].count) {
             return LOAD_STATUS_TOTAL_FAIL;
@@ -536,7 +572,7 @@ static int Save_GetSaveFilesStatus(SaveData *saveData) {
     if (numGood_main == 2 && numGood_sub == 1) {
         if (checks_main[__newer_main].count == checks_sub[__newer_main].count) {
             Save_RecordWhichLatestGoodSector(saveData, checks_main, checks_sub, __newer_main);
-            return LOAD_STATUS_IS_GOOD;
+            return pastNewer ? LOAD_STATUS_SLOT_FAIL : LOAD_STATUS_IS_GOOD;
         }
         if (__older_main == 2) {
             return LOAD_STATUS_TOTAL_FAIL;
@@ -552,7 +588,7 @@ static int Save_GetSaveFilesStatus(SaveData *saveData) {
             GF_ASSERT(checks_main[newer_main].count == checks_sub[newer_sub].count);
             Save_RecordWhichLatestGoodSector(saveData, checks_main, checks_sub, newer_main);
             saveData->sectorCleanFlag[newer_main] = 0;
-            return LOAD_STATUS_IS_GOOD;
+            return pastNewer ? LOAD_STATUS_SLOT_FAIL : LOAD_STATUS_IS_GOOD;
         }
     }
     return LOAD_STATUS_TOTAL_FAIL;

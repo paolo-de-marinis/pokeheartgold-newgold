@@ -123,6 +123,148 @@ int main(void) {
 """
 
 
+# Save_GetSaveFilesStatus over a made-up flash: the same four blocks, a PC
+# slot of 0x100 bytes after the first slot's next 0x100, and slots written
+# the way each layout wrote them.
+STATUS = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define GF_ASSERT(x) assert(x)
+#define SAVE_PAGE_MAX 4
+#define SAVE_SECTOR_SIZE 0x100
+#define HEAP_ID_3 3
+#define SAVE_BAG 1
+#define SAVE_MISC 3
+#define SAVE_MISC_LEGACY_SIZE 0x20
+#define NUM_BAG_BERRIES 10
+#define NUM_BAG_BERRIES_LEGACY 6
+typedef struct { u16 id, quantity; } ItemSlot;
+typedef struct { ItemSlot items[4]; ItemSlot berries[NUM_BAG_BERRIES]; ItemSlot balls[3]; } Bag;
+@DEFINES@
+@ENUM@
+@STRUCTS@
+typedef struct {
+    u32 saveCounter;
+    struct SaveArrayHeader arrayHeaders[4];
+    struct SaveSlotSpec saveSlotSpecs[2];
+    u8 sectorCleanFlag[2];
+    u16 lastGoodSector;
+    u32 saveLayout;
+} SaveData;
+static u8 sFlash[2][SAVE_PAGE_MAX * SAVE_SECTOR_SIZE];
+static void *Heap_AllocAtEnd(int heapId, u32 size) { (void)heapId; return malloc(size); }
+static void Heap_Free(void *p) { free(p); }
+static BOOL FlashLoadChunk(u32 offset, void *dest, u32 size) { memcpy(dest, sFlash[offset / 0x40000] + offset % 0x40000, size); return TRUE; }
+static u16 GF_CalcCRC16(const void *data, u32 size) {
+    u16 crc = 0;
+    for (u32 i = 0; i < size; i++) crc = crc * 31 + ((const u8 *)data)[i];
+    return crc;
+}
+static void SaveFooterDebugPrn(struct SaveChunkFooter *footer) { (void)footer; }
+static void DebugPrn_MirrorValid(BOOL valid) { (void)valid; }
+@NATIVE@
+
+static SaveData sSave;
+
+// Slot idx of a save in `layout`, counter `count`, into half h, where that
+// layout put it and with its magic.
+static void put(int h, u32 layout, int idx, u32 count) {
+    struct SaveSlotSpec specs[2];
+    struct SaveChunkFooter *footer;
+
+    Save_GetLayoutSlotSpecs(&sSave, layout, specs);
+    memset(sFlash[h] + specs[idx].offset, 0x40 + count, specs[idx].size);
+    footer = (struct SaveChunkFooter *)(sFlash[h] + specs[idx].offset + specs[idx].size - sizeof(*footer));
+    footer->count = count;
+    footer->size = specs[idx].size;
+    footer->magic = layout == SAVE_LAYOUT_NOW ? SAVE_CHUNK_MAGIC_BERRY_POCKET : SAVE_CHUNK_MAGIC;
+    footer->slot = idx;
+    footer->crc = SaveArray_CalcCRC16MinusFooter(&sSave, sFlash[h] + specs[idx].offset, specs[idx].size);
+}
+
+static int status(void) {
+    sSave.saveCounter = 0;
+    sSave.lastGoodSector = 7;
+    return Save_GetSaveFilesStatus(&sSave);
+}
+
+int main(void) {
+    // The first block 184 bytes, so that as in the game the PC slot is
+    // where it is now in the layout before the Berries pocket, and 0x100
+    // lower before the DNA Splicers.
+    u32 bag = sizeof(Bag) + 4, misc = 0x38 + 4, size = 184 + bag + 204 + misc + 16;
+    int got;
+    SaveData save = { 0, { { 0, 184, 0 }, { SAVE_BAG, bag, 184 }, { 2, 204, 184 + bag }, { SAVE_MISC, misc, 184 + bag + 204 } } };
+
+    sSave = save;
+    sSave.saveSlotSpecs[0].size = size;
+    sSave.saveSlotSpecs[1].offset = (size + 0xFF) & ~0xFF;
+    sSave.saveSlotSpecs[1].size = 0x100;
+    {
+        struct SaveSlotSpec older[2];
+        Save_GetLayoutSlotSpecs(&sSave, SAVE_LAYOUT_BEFORE_BERRY_POCKET, older);
+        assert(sSave.saveSlotSpecs[1].offset == 0x300 && older[1].offset == 0x300);
+        Save_GetLayoutSlotSpecs(&sSave, SAVE_LAYOUT_BEFORE_DNA_SPLICERS, older);
+        assert(older[1].offset == 0x200);
+    }
+
+    // Nothing: a new game.
+    memset(sFlash, 0xFF, sizeof(sFlash));
+    assert(status() == LOAD_STATUS_NOT_EXIST);
+    // A whole save before the DNA Splicers in the first half: loaded as it is.
+    put(0, SAVE_LAYOUT_BEFORE_DNA_SPLICERS, 0, 5);
+    put(0, SAVE_LAYOUT_BEFORE_DNA_SPLICERS, 1, 5);
+    got = status();
+    assert(got == LOAD_STATUS_IS_GOOD && sSave.saveLayout == SAVE_LAYOUT_BEFORE_DNA_SPLICERS && sSave.lastGoodSector == 0);
+    // Its first save after the conversion, stopped between the main slot's
+    // footer and the PC's: the second half has a main slot of now and no PC
+    // slot. The first half's older save is loaded as the previous save file;
+    // before, the flash was called corrupt and erased.
+    put(1, SAVE_LAYOUT_NOW, 0, 6);
+    got = status();
+    printf("interrupted first save: status %d, layout %u, half %u\n", got, sSave.saveLayout, sSave.lastGoodSector);
+    assert(got == LOAD_STATUS_SLOT_FAIL && sSave.saveLayout == SAVE_LAYOUT_BEFORE_DNA_SPLICERS && sSave.lastGoodSector == 0);
+    assert(sSave.saveCounter == 5);
+    // The same with the second half's PC slot the save before that one's.
+    put(1, SAVE_LAYOUT_BEFORE_DNA_SPLICERS, 1, 4);
+    put(1, SAVE_LAYOUT_NOW, 0, 6);
+    got = status();
+    assert(got == LOAD_STATUS_SLOT_FAIL && sSave.saveLayout == SAVE_LAYOUT_BEFORE_DNA_SPLICERS && sSave.lastGoodSector == 0);
+    // The save finished: the second half is a whole save of now, loaded.
+    put(1, SAVE_LAYOUT_NOW, 1, 6);
+    got = status();
+    assert(got == LOAD_STATUS_IS_GOOD && sSave.saveLayout == SAVE_LAYOUT_NOW && sSave.lastGoodSector == 1);
+    // A main slot of now and nothing else anywhere is judged as before.
+    memset(sFlash, 0xFF, sizeof(sFlash));
+    put(1, SAVE_LAYOUT_NOW, 0, 6);
+    got = status();
+    assert(got == LOAD_STATUS_TOTAL_FAIL && sSave.saveLayout == SAVE_LAYOUT_NOW);
+    puts("PASS: a first save after a conversion cut short loads the older save it came from.");
+    return 0;
+}
+"""
+
+
+def any_function(source, name):
+    """A function's definition, whatever it returns (a struct pointer too)."""
+    match = re.search(rf"^[A-Za-z][^\n;(]*\b{name}\([^;{{]*\) \{{", source, re.M)
+    depth, end = 1, match.end()
+    while depth:
+        depth += (source[end] == "{") - (source[end] == "}")
+        end += 1
+    return source[match.start():end]
+
+
 def struct_source(header, name):
     text = (ROOT / header).read_text()
     body = text[text.index(f"struct {name} {{"):]
@@ -148,6 +290,38 @@ class LegacySaveTests(unittest.TestCase):
                                  env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
             print(run.stdout.strip())
+
+    def test_an_interrupted_first_save_falls_back_to_the_older_one(self):
+        """The first save after a conversion writes the main slot and its
+        footer first and the PC's footer last, after every box, about 800
+        frames later. Cut short between them, the flash has a main slot of
+        now in one half and the whole older save in the other: the game
+        loads that as the previous save file. savedit already opens only a
+        half whose every slot reads (Save.valid)."""
+        source = (ROOT / "src/save.c").read_text()
+        header = (ROOT / "include/save.h").read_text()
+        enum = re.search(r"enum SaveLayout \{.*?\};", header, re.S).group(0)
+        defines = "\n".join(re.findall(r"^#define (?:LOAD_STATUS_|SAVE_CHUNK_MAGIC)\w* .*$", header, re.M))
+        structs = "\n".join(struct_source("include/save.h", name)
+                            for name in ("SaveArrayHeader", "SaveArrayFooter", "SaveChunkFooter", "SaveSlotSpec", "SaveSlotCheck"))
+        native = "\n".join(any_function(source, name) for name in (
+            "SaveSlotCheck_InitDummy", "SaveArray_CalcCRC16MinusFooter", "GetSaveSectorFooterPtr", "ValidateSaveSectorFooter",
+            "SaveSlotCheck_InitFromSavedat", "SaveCounterCompare", "SaveSlotCheckCompare", "Save_RecordWhichLatestGoodSector",
+            "Save_CheckSlotFooters", "Save_LayoutGrowth", "Save_GetLayoutSlotSpecs", "Save_GetSaveFilesStatus"))
+        native = re.sub(r"^#pragma unused.*$", "", native, flags=re.M)
+        program = (STATUS.replace("@NATIVE@", native).replace("@STRUCTS@", structs).replace("@ENUM@", enum)
+                   .replace("@DEFINES@", defines))
+        with tempfile.TemporaryDirectory(prefix="newgold-save-status-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            c.write_text(program)
+            build = subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
+                                   ["-std=c11", "-O1", "-g", "-fsanitize=address,undefined", str(c), "-o", str(exe)],
+                                   capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            run = subprocess.run([str(exe)], capture_output=True, text=True,
+                                 env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            print(run.stdout.strip().splitlines()[-1])
 
     def test_the_layout_is_one_the_game_reads(self):
         """A layout is told by where the footers are, the sizes they give
