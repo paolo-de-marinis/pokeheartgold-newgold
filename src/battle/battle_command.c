@@ -11120,6 +11120,21 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
     case MOVE_REVIVAL_BLESSING:
         ctx->calcTemp = RevivalBlessingStep(battleSystem, ctx, battlerId);
         break;
+    // Whether Focus Energy takes: not on a Pokemon pumped or cheered already
+    // (Battler_CriticalRisen), for its effect script to ask.
+    case MOVE_FOCUS_ENERGY:
+        ctx->calcTemp = !Battler_CriticalRisen(ctx, battlerId);
+        break;
+    // Heart Swap swaps Focus Energy as retail does, in its script, and
+    // Dragon Cheer's stages with it: each side's critical rises go over
+    // whole, so neither ends with both.
+    case MOVE_HEART_SWAP: {
+        u8 cheer = ctx->moveConditions[battlerId].dragonCheer;
+
+        ctx->moveConditions[battlerId].dragonCheer = ctx->moveConditions[ctx->battlerIdTarget].dragonCheer;
+        ctx->moveConditions[ctx->battlerIdTarget].dragonCheer = cheer;
+        break;
+    }
     // Whether the battler's Shell Trap was sprung, for its script to ask.
     case MOVE_SHELL_TRAP:
         ctx->calcTemp = ctx->turnData[battlerId].shellTrapSprung;
@@ -11135,7 +11150,7 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
     // A critical stage more, two for a Dragon-type as it is now; nothing for
     // a Pokemon already cheered or pumped by Focus Energy (CALC_TEMP says).
     case MOVE_DRAGON_CHEER:
-        ctx->calcTemp = !ctx->moveConditions[battlerId].dragonCheer && !(ctx->battleMons[battlerId].status2 & STATUS2_FOCUS_ENERGY);
+        ctx->calcTemp = !Battler_CriticalRisen(ctx, battlerId);
         if (ctx->calcTemp) {
             ctx->moveConditions[battlerId].dragonCheer = (GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_1, NULL) == TYPE_DRAGON
                                                              || GetBattlerVar(ctx, battlerId, BMON_DATA_TYPE_2, NULL) == TYPE_DRAGON

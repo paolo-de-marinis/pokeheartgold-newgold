@@ -5770,6 +5770,16 @@ static BOOL BattlerClearStatChanges(BattleContext *ctx, int battlerId) {
     return cleared;
 }
 
+// Focus Energy, a Lansat Berry, a Dire Hit and Dragon Cheer raise the
+// critical-hit odds, and none takes on a Pokemon one of them has raised
+// already (Pokemon Central, Grido del Drago; Showdown's gen-9 focusenergy
+// fails on a dragoncheer volatile and dragoncheer on a focusenergy one, and a
+// Lansat Berry adds the same focusenergy). Without it a cheered Pokemon that
+// used Focus Energy had four stages and every hit a critical one.
+BOOL Battler_CriticalRisen(BattleContext *ctx, int battlerId) {
+    return (ctx->battleMons[battlerId].status2 & STATUS2_FOCUS_ENERGY) || ctx->moveConditions[battlerId].dragonCheer;
+}
+
 // Psych Up and Costar: the other Pokemon's stat stages become this one's, and
 // so does what raises its critical-hit odds -- Focus Energy, Laser Focus and
 // Dragon Cheer, a Dragon-type's two stages kept as they were cheered -- this
@@ -5805,7 +5815,7 @@ static u8 *OnceOnlyEntryAbilityDone(BattleSystem *battleSystem, BattleContext *c
 // move itself asks. RecordMirrorHerbStages keeps them in the HP slot of the
 // stages to copy, which no stage lives in. TRUE if it took.
 static BOOL CopyDragonCheer(BattleContext *ctx, int battlerId, int cheer) {
-    if (!cheer || ctx->moveConditions[battlerId].dragonCheer || (ctx->battleMons[battlerId].status2 & STATUS2_FOCUS_ENERGY)) {
+    if (!cheer || Battler_CriticalRisen(ctx, battlerId)) {
         return FALSE;
     }
     ctx->moveConditions[battlerId].dragonCheer = cheer > 2 ? 2 : cheer;
@@ -8470,7 +8480,7 @@ BOOL TryUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
             if (GetBattlerAbility(ctx, battlerId) == ABILITY_GLUTTONY) {
                 boost /= 2;
             }
-            if (ctx->battleMons[battlerId].hp <= ctx->battleMons[battlerId].maxHp / boost && !(ctx->battleMons[battlerId].status2 & STATUS2_FOCUS_ENERGY)) {
+            if (ctx->battleMons[battlerId].hp <= ctx->battleMons[battlerId].maxHp / boost && !Battler_CriticalRisen(ctx, battlerId)) {
                 script = BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_CRIT;
                 ret = TRUE;
             }
@@ -8932,7 +8942,7 @@ BOOL CheckUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battle
             if (GetBattlerAbility(ctx, battlerId) == ABILITY_GLUTTONY) {
                 boost /= 2;
             }
-            if (ctx->battleMons[battlerId].hp <= ctx->battleMons[battlerId].maxHp / boost && !(ctx->battleMons[battlerId].status2 & STATUS2_FOCUS_ENERGY)) {
+            if (ctx->battleMons[battlerId].hp <= ctx->battleMons[battlerId].maxHp / boost && !Battler_CriticalRisen(ctx, battlerId)) {
                 *script = BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_CRIT;
                 ret = TRUE;
             }
@@ -9628,7 +9638,7 @@ BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int bat
         break;
     }
     case STEAL_EFFECT_CRITRATE_UP: // apicot berry
-        if (!(ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_FOCUS_ENERGY)) {
+        if (!Battler_CriticalRisen(ctx, ctx->battlerIdAttacker)) {
             script = BATTLE_SUBSCRIPT_HELD_ITEM_RAISE_CRIT;
         }
         ret = TRUE;
@@ -9916,7 +9926,7 @@ BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
         break;
     }
     case STEAL_EFFECT_CRITRATE_UP: // apicot berry
-        if (!(ctx->battleMons[ctx->battlerIdTarget].status2 & STATUS2_FOCUS_ENERGY)) {
+        if (!Battler_CriticalRisen(ctx, ctx->battlerIdTarget)) {
             ctx->flingScript = 209;
         }
         break;

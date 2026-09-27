@@ -517,7 +517,7 @@ BOOL BattleSystem_RecoverStatus(BattleSystem *battleSystem, int battlerId, int s
     if (GetItemAttr(item, ITEMATTR_CRITRATE_STAGES, HEAP_ID_BATTLE)) {
         if (index1 == selectedMonIndex || index2 == selectedMonIndex) {
             data = GetBattlerVar(ctx, battlerId, BMON_DATA_STATUS2, NULL);
-            if (!(data & STATUS2_FOCUS_ENERGY)) {
+            if (!Battler_CriticalRisen(ctx, battlerId)) {
                 data |= STATUS2_FOCUS_ENERGY;
                 SetBattlerVar(ctx, battlerId, BMON_DATA_STATUS2, &data);
                 ret = TRUE;

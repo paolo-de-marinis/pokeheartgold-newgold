@@ -1609,6 +1609,95 @@ class Conversion2Tests(unittest.TestCase):
         self.assertNotIn("conversion2Move[ctx->battlerIdTarget]", record)
 
 
+CRITICAL_RISES = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
+#include "constants/battle.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8;
+typedef int8_t s8;
+typedef uint32_t u32;
+typedef int BOOL;
+typedef struct { s8 statChanges[NUM_BATTLE_STATS]; u32 status2; } BattleMon;
+typedef struct { u8 laserFocusTimer : 2; u8 dragonCheer : 2; } MoveConditions;
+typedef struct { BattleMon battleMons[4]; MoveConditions moveConditions[4]; } BattleContext;
+@FUNCTIONS@
+// The stages TryCriticalHit adds for them.
+static int stages(BattleContext *ctx, int battlerId) {
+    return ((ctx->battleMons[battlerId].status2 & STATUS2_FOCUS_ENERGY) != 0) * 2 + ctx->moveConditions[battlerId].dragonCheer;
+}
+int main(void) {
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    assert(!Battler_CriticalRisen(&ctx, 0));
+    // Cheered: Focus Energy, a Lansat Berry and a Dire Hit find it risen.
+    ctx.moveConditions[0].dragonCheer = 1;
+    assert(Battler_CriticalRisen(&ctx, 0));
+    // Pumped: Dragon Cheer, the Mirror Herb and Opportunist find it risen.
+    ctx.moveConditions[0].dragonCheer = 0;
+    ctx.battleMons[0].status2 = STATUS2_FOCUS_ENERGY;
+    assert(Battler_CriticalRisen(&ctx, 0));
+    // Psych Up of a cheered target leaves the user the cheer's stages, its
+    // own Focus Energy gone: never both.
+    ctx.moveConditions[2].dragonCheer = 1;
+    CopyStatStagesAndCriticalRises(&ctx, 0, 2);
+    assert(stages(&ctx, 0) == 1 && !(ctx.battleMons[0].status2 & STATUS2_FOCUS_ENERGY));
+    return 0;
+}
+"""
+
+
+class CriticalRisesTests(unittest.TestCase):
+    """Focus Energy, a Lansat Berry, a Dire Hit and Dragon Cheer never add up
+    (Pokemon Central, Grido del Drago; Showdown's gen-9 focusenergy fails on a
+    dragoncheer volatile): a cheered Pokemon that used Focus Energy had four
+    stages, a critical hit every time, and Psych Up, Costar, Transform and
+    Baton Pass handed the stack on."""
+
+    def test_either_one_is_a_rise(self):
+        overlay = OVERLAY.read_text()
+        program = CRITICAL_RISES.replace("@FUNCTIONS@", function(overlay, "Battler_CriticalRisen")
+                                         + function(overlay, "CopyStatStagesAndCriticalRises"))
+        with tempfile.TemporaryDirectory(prefix="newgold-crit-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(program)
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"), str(path / "test.c"), "-o", str(path / "test")], check=True)
+            subprocess.run([str(path / "test")], check=True)
+
+    def test_every_rise_asks_it(self):
+        overlay, commands = OVERLAY.read_text(), COMMANDS.read_text()
+        # The Lansat Berry, eaten, plucked or flung, and a Dire Hit from the bag.
+        for source, name in ((overlay, "TryUseHeldItem"), (overlay, "CheckUseHeldItem"), (overlay, "TryEatOpponentBerry"),
+                             (overlay, "TryFling"), ((ROOT / "src/battle/battle_system.c").read_text(), "BattleSystem_RecoverStatus"),
+                             (overlay, "CopyDragonCheer")):
+            body = function(source, name)
+            self.assertIn("Battler_CriticalRisen(ctx, ", body, name)
+            self.assertNotRegex(body, r"!\(ctx->battleMons\[\w+\]\.status2 & STATUS2_FOCUS_ENERGY\)", name)
+        condition = function(commands, "BtlCmd_SetMoveConditionFlag")
+        for move in ("MOVE_DRAGON_CHEER", "MOVE_FOCUS_ENERGY"):
+            case = condition[condition.index(f"case {move}:"):]
+            self.assertIn("ctx->calcTemp = !Battler_CriticalRisen(ctx, battlerId);", case[:case.index("break;")], move)
+        # Focus Energy asks it, where retail asked its own flag only.
+        focus = (ROOT / "files/battledata/script/effect_script/effect_script_0047.s").read_text()
+        self.assertIn("SetMoveConditionFlag MOVE_FOCUS_ENERGY, BATTLER_CATEGORY_ATTACKER\n"
+                      "    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0, _010", focus)
+        self.assertNotIn("STATUS2_FOCUS_ENERGY", focus)
+
+    def test_heart_swap_swaps_the_cheer_with_focus_energy(self):
+        # Retail's script swaps Focus Energy; Dragon Cheer's stages go over
+        # with it, so each side's rises move whole.
+        swap = subscript("HeartSwap")
+        self.assertLess(swap.index("BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS2, STATUS2_FOCUS_ENERGY"),
+                        swap.index("SetMoveConditionFlag MOVE_HEART_SWAP, BATTLER_CATEGORY_ATTACKER"))
+        condition = function(COMMANDS.read_text(), "BtlCmd_SetMoveConditionFlag")
+        case = condition[condition.index("case MOVE_HEART_SWAP:"):]
+        case = case[:case.index("break;")]
+        self.assertIn("ctx->moveConditions[battlerId].dragonCheer = ctx->moveConditions[ctx->battlerIdTarget].dragonCheer;", case)
+        self.assertIn("ctx->moveConditions[ctx->battlerIdTarget].dragonCheer = cheer;", case)
+
+
 class SleepTalkMultiStrikeTests(unittest.TestCase):
     def test_a_move_sleep_talk_calls_strikes_every_time(self):
         # Pokemon Central, Mossa multicolpo: falling asleep partway stops a

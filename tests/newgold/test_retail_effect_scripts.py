@@ -49,6 +49,9 @@ WEATHER = ("the engine sets the weather through its HANDLE_*_TEMPORARY subscript
 STILL_DIFFERENT = {
     34: "Pay Day scatters its coins on the first strike or the only one; the engine's branch scatters "
          "them only on a first strike of Parental Bond, never without the ability (a6ee2c81c)",
+    47: "Focus Energy fails on a Pokemon Dragon Cheer has cheered as well as on one pumped already "
+         "(SetMoveConditionFlag MOVE_FOCUS_ENERGY, Battler_CriticalRisen), as Showdown's gen-9 focusenergy "
+         "does; the engine's script asks its own flag only, so the two stacked",
     83: CALLED_MOVE + BACK_TO_BEFORE_MOVE + ", and prints the move the finger picked (message 1483), "
          "which retail's Metronome does not",
     97: CALLED_MOVE + NOT_BACK_TO_BEFORE_MOVE,

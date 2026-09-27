@@ -1199,7 +1199,7 @@ class MirrorHerbTests(unittest.TestCase):
 
     def test_what_is_recorded_and_copied(self):
         source = OVERLAY.read_text()
-        functions = "\n".join(function(source, name) for name in ("CopyDragonCheer", "RecordMirrorHerbStages", "MirrorHerbCopiesStages"))
+        functions = "\n".join(function(source, name) for name in ("Battler_CriticalRisen", "CopyDragonCheer", "RecordMirrorHerbStages", "MirrorHerbCopiesStages"))
         run_c(MIRROR_HERB_FIXTURE.replace("@FUNCTIONS@", functions))
 
     def test_where_it_is_told_and_asked(self):

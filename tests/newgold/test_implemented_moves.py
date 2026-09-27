@@ -661,7 +661,7 @@ int main(void) {
                       subscript_named("BATTLE_SUBSCRIPT_DRAGON_CHEER"))
         flag = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_SetMoveConditionFlag")
         cheer = flag[flag.index("case MOVE_DRAGON_CHEER:"):]
-        self.assertIn("!(ctx->battleMons[battlerId].status2 & STATUS2_FOCUS_ENERGY)", cheer)
+        self.assertIn("ctx->calcTemp = !Battler_CriticalRisen(ctx, battlerId);", cheer)
         self.assertIn("TYPE_DRAGON)\n                ? 2\n                : 1;", cheer)
         self.assertIn("+ ctx->moveConditions[battlerIdAttacker].dragonCheer +",
                       function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "TryCriticalHit"))

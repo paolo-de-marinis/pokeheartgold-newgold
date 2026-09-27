@@ -51,6 +51,8 @@ _185:
     UpdateMonData OPCODE_FLAG_ON, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS2, STATUS2_FOCUS_ENERGY
 
 _190:
+    // Dragon Cheer's stages go over with Focus Energy (SetMoveConditionFlag).
+    SetMoveConditionFlag MOVE_HEART_SWAP, BATTLER_CATEGORY_ATTACKER
     // {0} switched stat changes with the target!
     PrintMessage msg_0197_01024, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
     Wait 
