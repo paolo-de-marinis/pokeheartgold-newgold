@@ -7172,14 +7172,18 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
 // Central: Furto, items stolen from any trainer come back at the battle's end
 // from the fifth generation; Prestigiatore, even consumed from the eighth).
 // GiveBackHeldItems reads the mark; a Berry not marked that its holder no
-// longer has was eaten, and stays so.
+// longer has was eaten, and stays so. The mark is for the item the Pokemon
+// started with: taking one it got in the battle says nothing of that, and a
+// Berry it has back and eats itself undoes it (NoteHeldItemUsedUp).
 //
 // Taken from a wild Pokemon, it goes to the bag when the battle is over,
 // unless that Pokemon is caught: then it keeps its item and the bag gets no
 // copy (Pokemon Central, Arraffalesto and Furto, from the ninth generation).
 void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdLoser) {
     if (BattleSystem_GetParty(battleSystem, battlerIdLoser) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
-        ctx->heldItemsTaken |= MaskOfFlagNo(ctx->selectedMonIndex[battlerIdLoser]);
+        if (ctx->battleMons[battlerIdLoser].item == ctx->itemsToRestore[ctx->selectedMonIndex[battlerIdLoser]]) {
+            ctx->heldItemsTaken |= MaskOfFlagNo(ctx->selectedMonIndex[battlerIdLoser]);
+        }
     } else if (Battler_IsWild(battleSystem, battlerIdLoser)) {
         ctx->itemsTakenFromWild[battlerIdLoser >> 1] = ctx->battleMons[battlerIdLoser].item;
     }
@@ -7209,7 +7213,8 @@ void NoteHeldItemGiven(BattleSystem *battleSystem, BattleContext *ctx, int battl
 // a wild Pokemon's gives back what it used of the player's, Berries
 // excepted). A Berry taken from the player's Pokemon comes back even eaten
 // (NoteHeldItemTaken), and one a Pokemon has back and eats itself is its own
-// Berry eaten, as ever.
+// Berry eaten, as ever: its marks go, taken back by Thief or Tricked back
+// before it was eaten.
 //
 // ponytail: matched by kind, so another Pokemon's own Berry of the same kind,
 // eaten while the handed one is still held, counts as the handed one.
@@ -7219,6 +7224,10 @@ void NoteHeldItemUsedUp(BattleSystem *battleSystem, BattleContext *ctx, int batt
 
     if (!BattleItemIsBerry(item)) {
         return;
+    }
+    if (own != PARTY_SIZE && ctx->itemsToRestore[own] == item) {
+        ctx->heldItemsTaken &= ~MaskOfFlagNo(own);
+        ctx->heldItemsGiven &= ~MaskOfFlagNo(own);
     }
     for (int i = 0; i < PARTY_SIZE; i++) {
         if (i != own && (ctx->heldItemsGiven >> i & 1) && ctx->itemsToRestore[i] == item) {

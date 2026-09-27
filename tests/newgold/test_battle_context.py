@@ -365,7 +365,7 @@ static Party *BattleSystem_GetParty(BattleSystem *bs, int battlerId) { return &b
 int main(void) {
     BattleSystem bs = { BATTLE_TYPE_TRAINER | BATTLE_TYPE_DOUBLES };
     BattleContext ctx = { .battleMons = { { ITEM_ORAN_BERRY }, { ITEM_LEFTOVERS }, { ITEM_POTION }, { ITEM_ESCAPE_ROPE } },
-                          .selectedMonIndex = { 1, 0, 4, 2 } };
+                          .selectedMonIndex = { 1, 0, 4, 2 }, .itemsToRestore = { [1] = ITEM_ORAN_BERRY, [4] = ITEM_POTION } };
     // The player's Pokemon, by party slot; a trainer's, not at all.
     NoteHeldItemTaken(&bs, &ctx, 0);
     NoteHeldItemTaken(&bs, &ctx, 2);
@@ -388,13 +388,9 @@ int main(void) {
     NoteHeldItemGiven(&bs, &ctx, 1);
     assert(ctx.heldItemsGiven == (1 << 1) && ctx.heldItemsTaken == 0);
     // The Oran Berry went to the trainer's Pokemon (battler 1), which eats
-    // it: gone for good (Raggiro). Not before: a Potion, and the player's own
-    // Pokemon eating an Oran Berry of its own.
+    // it: gone for good (Raggiro). Not before: a Potion.
     ctx.battleMons[1].item = ITEM_POTION;
     NoteHeldItemUsedUp(&bs, &ctx, 1);
-    ctx.battleMons[0].item = ITEM_ORAN_BERRY;
-    ctx.selectedMonIndex[0] = 1;
-    NoteHeldItemUsedUp(&bs, &ctx, 0);
     assert(ctx.itemsToRestore[1] == ITEM_ORAN_BERRY);
     ctx.battleMons[1].item = ITEM_ORAN_BERRY;
     NoteHeldItemUsedUp(&bs, &ctx, 1);
@@ -406,6 +402,24 @@ int main(void) {
     ctx.battleMons[1].item = ITEM_SITRUS_BERRY;
     NoteHeldItemUsedUp(&bs, &ctx, 1);
     assert(ctx.itemsToRestore[1] == ITEM_SITRUS_BERRY);
+    // Only the item the Pokemon started with is marked: after its Sitrus was
+    // eaten, the trainer's Leftovers it Coveted and then lost to Thief or
+    // Knock Off are not what it has back.
+    ctx.heldItemsTaken = 0;
+    ctx.battleMons[0].item = ITEM_LEFTOVERS;
+    NoteHeldItemTaken(&bs, &ctx, 0);
+    NoteHeldItemGiven(&bs, &ctx, 0);
+    assert(ctx.heldItemsTaken == 0 && ctx.heldItemsGiven == 0);
+    // Its own Oran Berry taken by Thief or handed over by Trick, had back,
+    // and eaten by itself: eaten, the marks gone, so it is not had back
+    // again when the battle is over.
+    ctx.itemsToRestore[1] = ITEM_ORAN_BERRY;
+    ctx.battleMons[0].item = ITEM_ORAN_BERRY;
+    NoteHeldItemTaken(&bs, &ctx, 0);
+    NoteHeldItemGiven(&bs, &ctx, 0);
+    assert(ctx.heldItemsTaken == 1 << 1 && ctx.heldItemsGiven == 1 << 1);
+    NoteHeldItemUsedUp(&bs, &ctx, 0);
+    assert(ctx.heldItemsTaken == 0 && ctx.heldItemsGiven == 0 && ctx.itemsToRestore[1] == ITEM_ORAN_BERRY);
     return 0;
 }
 """

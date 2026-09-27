@@ -206,13 +206,16 @@ class KnockOffTests(unittest.TestCase):
                      "src/battle/battle_controller_mon_copy.c"):
             self.assertNotIn("battlerBitKnockedOffItem", read(path), path)
         knock = function(read("src/battle/battle_command.c"), "BtlCmd_TryKnockOff")
-        self.assertRegex(knock, r"ctx->battleMons\[ctx->battlerIdTarget\]\.item = 0;\n(\s*//.*\n)*"
-                                r"\s*if \(BattleSystem_GetParty\(battleSystem, ctx->battlerIdTarget\) == BattleSystem_GetParty\(battleSystem, BATTLER_PLAYER\)\) \{\n"
-                                r"\s*ctx->heldItemsTaken \|= MaskOfFlagNo\(ctx->selectedMonIndex\[ctx->battlerIdTarget\]\);")
+        # The mark is for the item the Pokemon started with, asked before
+        # the hand is emptied (NoteHeldItemTaken asks the same).
+        self.assertRegex(knock, r"\s*if \(BattleSystem_GetParty\(battleSystem, ctx->battlerIdTarget\) == BattleSystem_GetParty\(battleSystem, BATTLER_PLAYER\)\n"
+                                r"\s*&& ctx->battleMons\[ctx->battlerIdTarget\]\.item == ctx->itemsToRestore\[ctx->selectedMonIndex\[ctx->battlerIdTarget\]\]\) \{\n"
+                                r"\s*ctx->heldItemsTaken \|= MaskOfFlagNo\(ctx->selectedMonIndex\[ctx->battlerIdTarget\]\);\n\s*\}\n"
+                                r"\s*ctx->battleMons\[ctx->battlerIdTarget\]\.item = 0;\n")
         # The party copy writes the empty hand, at once, so a Pokemon sent
         # back in has nothing, and a wild one caught nothing either.
         self.assertIn("data.knockedOffItems = 0;", read("src/battle/battle_controller_mon_copy.c"))
-        self.assertRegex(knock, r"ctx->heldItemsTaken \|= MaskOfFlagNo\(ctx->selectedMonIndex\[ctx->battlerIdTarget\]\);\n\s*\}\n(\s*//.*\n)*"
+        self.assertRegex(knock, r"ctx->battleMons\[ctx->battlerIdTarget\]\.item = 0;\n(\s*//.*\n)*"
                                 r"\s*CopyBattleMonToPartyMon\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\} else \{")
 
     def test_a_wild_pokemon_knocks_off_nothing_of_the_players(self):

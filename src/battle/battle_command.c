@@ -5362,17 +5362,22 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdAttacker);
         ctx->buffMsg.param[1] = CreateNicknameTag(ctx, ctx->battlerIdTarget);
         ctx->buffMsg.param[2] = ctx->battleMons[ctx->battlerIdTarget].item;
+        // One of the player's own has its item back when the battle is over,
+        // a Berry too, as a taken one does (GiveBackHeldItems) -- the item it
+        // started with, not one it got in the battle: a Pokemon that ate its
+        // Berry and then lost what it took after has nothing to have back
+        // (NoteHeldItemTaken asks the same).
+        if (BattleSystem_GetParty(battleSystem, ctx->battlerIdTarget) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)
+            && ctx->battleMons[ctx->battlerIdTarget].item == ctx->itemsToRestore[ctx->selectedMonIndex[ctx->battlerIdTarget]]) {
+            ctx->heldItemsTaken |= MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]);
+        }
         ctx->battleMons[ctx->battlerIdTarget].item = 0;
         // Taken off, not made useless as retail's fourth generation did: the
         // Pokemon can be given another, or take one with Thief, Covet, Trick
         // or a Sticky Barb (Pokemon Central, Privazione: from the fifth
         // generation), and a wild one caught has none. The engine no longer
-        // marks it either (btl_scr_cmd_87_tryknockoff at d0380a487). One of
-        // the player's own has its item back when the battle is over, a Berry
-        // too, as a taken one does (GiveBackHeldItems).
-        if (BattleSystem_GetParty(battleSystem, ctx->battlerIdTarget) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
-            ctx->heldItemsTaken |= MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]);
-        }
+        // marks it either (btl_scr_cmd_87_tryknockoff at d0380a487).
+        //
         // The party holds what the battler holds at once, as an item used up
         // does (BtlCmd_RemoveItem): the hit's own copy came before, and a
         // Pokemon switched out, or caught, before the next would have its
