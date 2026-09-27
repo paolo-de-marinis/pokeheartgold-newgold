@@ -86,6 +86,8 @@ class SpeciesCheckTests(unittest.TestCase):
                  ("GIGANTAMAX_URSHIFU_RAPID_STRIKE", "URSHIFU_RAPID_STRIKE", True),
                  ("GIGANTAMAX_URSHIFU_RAPID_STRIKE", "URSHIFU", False), ("XERNEAS", "XERNEAS_ACTIVE", True),
                  ("GENESECT_DOUSE_DRIVE", "GENESECT", True), ("UNFEZANT", "UNFEZANT_FEMALE", True),
+                 ("TERAPAGOS_STELLAR", "TERAPAGOS_TERASTAL", True), ("OGERPON_WELLSPRING_MASK_TERASTAL", "OGERPON", True),
+                 ("MINIOR_CORE_ORANGE", "MINIOR_METEOR_ORANGE", True),
                  ("PICHU", "PIKACHU", False))
         for variant, drawn, fine in cases:
             record = {"walk": "battle", "state": "BATTLE_MAIN", "prompt": 2, "became": [None, n[drawn]]}

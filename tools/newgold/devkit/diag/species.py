@@ -44,7 +44,8 @@ The ROM is the NEWGOLD_DIAG=1 HeartGold build. What each walk does:
           variant's place fails unless the tree explains it: for a battle
           form, the form src/data/form_reversion.h sends it back to (or, for
           a form a held item gives, Species_HeldItemForm's, that form's base:
-          the wild one holds nothing); for any other, a battle form of it that goes back to it (a Xerneas coming
+          the wild one holds nothing; or a battle form that form takes on
+          coming in, a Terapagos Stellar coming in Terastal); for any other, a battle form of it that goes back to it (a Xerneas coming
           in Active), its species' base (a Genesect Drive without its Drive)
           or a species of its own (its other gender's). The frame is kept in
           OUT/battle/.
@@ -1070,7 +1071,10 @@ def unexplained(record, e):
         # ... or, one whose form a held item gives, the base the wild one is
         # without the item (an Ogerpon Terastal comes in as Teal).
         empty = base.get(back, back) if back in _held_item_forms() else back
-        return [drawn for drawn in record.get("became") or () if drawn not in (None, back, empty)]
+        # ... or a battle form that form takes on coming in (a Terapagos
+        # Stellar comes back as Terapagos, whose Tera Shift makes it Terastal).
+        return [drawn for drawn in record.get("became") or ()
+                if drawn not in (None, back, empty) and reversions.get(drawn) != back]
     return [drawn for drawn in record.get("became") or () if drawn is not None
             and drawn != base.get(variant) and variant not in (reversions.get(drawn), base.get(drawn))]
 
