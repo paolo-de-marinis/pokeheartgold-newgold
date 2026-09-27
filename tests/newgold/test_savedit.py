@@ -211,6 +211,28 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertNotIn("[i.layout]", label)
         self.assertLessEqual(set(re.findall(r"\b(SAVE_LAYOUT_\w+):", label)), set(names) - {"SAVE_LAYOUT_NOW"})
 
+    def test_every_berry_slot_of_now_is_written_and_read(self):
+        """The layout of now's Berries pocket holds every Berry, NUM_BAG_BERRIES
+        slots: all of them written with set_item, through image() and write(),
+        read back in place, and the page told the pocket's size."""
+        pocket = {p["const"]: p["name"] for p in sv.pockets()}["POCKET_BERRIES"]
+        berries = [number for number, entry in sv.item_table().items() if entry["pocket"] == pocket]
+        self.assertGreaterEqual(len(berries), sv.BAG_BERRIES)
+        save = self.open()
+        self.assertEqual(save.layout, sv.LAYOUT_NOW)
+        for n, item in enumerate(berries[:sv.BAG_BERRIES]):
+            sv.set_item(save, item, n % 9 + 1)
+        want = sorted((item, n % 9 + 1) for n, item in enumerate(berries[:sv.BAG_BERRIES]))
+        for again in (self.written(save), None):
+            if again is None:
+                out = Path(self.tmp.name) / "berries-now.sav"
+                save.write(out)
+                again = sv.Save(out)
+            got = sorted((s["item"], s["quantity"]) for s in sv.bag(again)[pocket])
+            self.assertEqual(got, want)
+            self.assertEqual(sv.info(again)["pockets"][pocket], sv.BAG_BERRIES)
+        self.assertEqual(sv.BAG_BERRIES, 100)
+
     def test_a_pokemon_s_types_are_the_game_s(self):
         """GetMonData's MON_DATA_TYPE_1/_2: the species' two, one when they
         are the same; Arceus with Multitype its plate's, Silvally with RKS
