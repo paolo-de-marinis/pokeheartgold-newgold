@@ -1,15 +1,15 @@
 {
-  "about": "A Berry the player's Pokemon hands over by Trick to a wild Pokemon is not lost as if eaten (0fbd7b2c5), and the swap lasts (241e83d0f: Pokemon Central's Rapidscambio and Raggiro, from the ninth generation): the Pokemon keeps what it got and the Berry goes to the bag. A level-30 Pikachu holding an Oran Berry (savedit --party's item) is given Trick in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash and holds an Oval Stone: the two items change hands, gym.py's player wins the battle, and the Pikachu holds the Oval Stone in the party while the Oran Berry is in the bag, which had none. The field's RNG is pinned as in rolls_forced_high.json, and with it the Chansey's item.",
+  "about": "A Berry the player's Pokemon hands over by Trick to a trainer's Pokemon comes back to it after the battle, not lost as if eaten (0fbd7b2c5; Pokemon Central, Raggiro: from the fifth generation a swap does not outlast a battle against a trainer, a Berry included). In the Violet Gym the Snorlax starts the battle holding a Cheri Berry, which nothing in the fight can make anyone eat, and is taught Trick (teach:): the Trick hands Falkner's Hoothoot the Berry for its Wide Lens, the six then beat Falkner, and back on the field the Snorlax holds the Cheri Berry again, the Wide Lens gone back to Falkner. The wild half is trick_berry_to_wild_goes_to_bag.json, the eaten Berry trick_berry_eaten.json.",
   "save": "route29-official.sav",
-  "edit": ["--party", "PIKACHU:30:::ORAN_BERRY"],
-  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
-  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+  "edit": ["--party", "SNORLAX:13:::CHERI_BERRY,RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13",
+           "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceDamageRoll": 1},
+  "steps": ["field", "A", "fight:1:0",
             "teach:0,0,MOVE_TRICK",
-            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
-            {"expect": {"battler0.item": "ITEM_ORAN_BERRY", "battler1.item": "ITEM_OVAL_STONE"}},
             "fight:1:1",
-            {"expect": {"lines": ["Pikachu used Trick!"], "battler0.item": "ITEM_OVAL_STONE", "battler1.item": "ITEM_ORAN_BERRY"}},
+            {"expect": {"lines": ["Snorlax used Trick!", "Snorlax obtained Wide Lens.", "The opposing Hoothoot obtained Cheri Berry."],
+             "battler0.item": "ITEM_WIDE_LENS", "battler1.item": "ITEM_CHERI_BERRY"}},
             "fight", "field"],
-  "expect": {"lines": ["The wild Chansey fainted!"], "party0.species": "SPECIES_PIKACHU", "party0.item": "ITEM_OVAL_STONE",
-             "bag:ITEM_ORAN_BERRY": 1, "bag:ITEM_OVAL_STONE": 0}
+  "expect": {"lines": ["Snorlax used Trick!", "You defeated Leader Falkner!"],
+             "party0.species": "SPECIES_SNORLAX", "party0.item": "ITEM_CHERI_BERRY"}
 }
