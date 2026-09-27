@@ -68,6 +68,26 @@ class ScenarioFileTests(unittest.TestCase):
                     self.assertIn(pin, steps)
                     self.assertLess(steps.index("field"), steps.index(pin))
 
+    def test_new_lines_start_where_the_check_before_ended(self):
+        # A later phase's lines are not matched by an earlier phase's alike:
+        # a Power Herb turn that said its attack message after the charge
+        # passed "lines", its Solar Beam lines found in the turn before.
+        s = scene.Scene.__new__(scene.Scene)
+        s.lines, s._checked = ["Pikachu used Solar Beam!", "Pikachu absorbed light!"], 0
+        s._collect = lambda core: None
+        s.core = type("Core", (), {"ram": lambda self: b""})()
+        s.markers = type("Markers", (), {"heaps": lambda self, ram: {}})()
+        self.assertEqual(s.check({"new_lines": ["used Solar Beam!", "absorbed light!"]}), [])
+        s.lines += ["Pikachu absorbed light!", "Pikachu became fully charged due to its Power Herb!", "Pikachu used Solar Beam!"]
+        turn = ["used Solar Beam!", "absorbed light!", "fully charged"]
+        self.assertEqual(s.check({"lines": turn}), [])
+        s._checked = 2
+        wrong = s.check({"new_lines": turn})
+        self.assertEqual(len(wrong), 2, wrong)
+        self.assertIn("since the check before", wrong[0])
+        self.assertEqual(s._checked, 5)
+        self.assertTrue(scene.readable("new_lines", key=True))
+
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.
         self.assertTrue(scene.Scene.wanted("x", 663)[0](663))
