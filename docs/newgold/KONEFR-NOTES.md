@@ -281,18 +281,20 @@ rivincite sono ancora retail:
 - la Lass Dana #400 è L33-34; DANA_2 #464 è L31/32.
 
 Quindi la prima rivincita è più debole del primo scontro, come per Irwin (voce 12). Per Huey (voce 3)
-è il contrario.
+è il contrario. I giudici: la rivincita _2 si sblocca solo dopo la Torre Radio, e prima il telefono
+ripete il primo scontro. Il calo si vede solo oltre il punto dove sei arrivato.
 
 Lo stesso ora per tre allenatori di `a477c662f` (27 settembre), che alza i primi scontri e lascia le
 rivincite retail:
 - il Fisherman Tully #123 è L44-46; TULLY_2 #323 è L33, TULLY_3 #324 L30-38, TULLY_4 #517 L41-53;
 - il Poké Maniac Brent #131 è L45-47; BRENT_2 #172 è L32-34, BRENT_3 #173 L38-43, BRENT_4 #530
   L40-58;
-- la Picnicker Tiffany #402 è L46-48; TIFFANY_2 #466 è L34, TIFFANY_3 #467 L41, TIFFANY_4 #522 L61. I giudici: la rivincita _2 si sblocca solo dopo la Torre Radio, e prima il telefono
-ripete il primo scontro. Il calo si vede solo oltre il punto dove sei arrivato.
+- la Picnicker Tiffany #402 è L46-48; TIFFANY_2 #466 è L34, TIFFANY_3 #467 L41, TIFFANY_4 #522 L61.
 
 **Dove:** `data/Trainers.c:2202` (#44), `:19483` (#438), `:19516` (#439), `:17759` (#397), `:19365`
-(#434), `:17912` (#400) e `:20446` (#464).
+(#434), `:17912` (#400) e `:20446` (#464). Per i tre di `a477c662f`, righe a quella punta: `:5850`
+(#123), `:14824` (#323), `:14850` (#324), `:22834` (#517); `:6264` (#131), `:7863` (#172), `:7903`
+(#173), `:23342` (#530); `:18127` (#402), `:20665` (#466), `:20692` (#467), `:23031` (#522).
 
 **Nel port:** tenuto com'è.
 
