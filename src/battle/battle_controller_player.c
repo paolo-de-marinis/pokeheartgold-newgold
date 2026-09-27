@@ -191,10 +191,14 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // byte that says the held items are back. The byte for the player's Pokemon
 // another has taken an item from grew it by four, and the items taken from the
 // wild ones by four more. Sky Drop's holder took the move conditions to a
-// fourth byte, four more. The byte for the player's Pokemon that handed an
-// item over went into padding and grew it by nothing, and so did the party's
-// count the held items were written down for, after the taken ones' byte
-// (both measured with the compiler, plain and NEWGOLD_DIAG).
+// fourth byte, four more. The party's count the held items were written down
+// for went into the padding after the taken ones' byte (0x3255). The byte for
+// the player's Pokemon that handed an item over (0x325A) grew it by nothing
+// too, but not in place: the move conditions, bytes, moved up one to 0x325B
+// and the added moves' data up two to 0x326C, into the two bytes of padding
+// the script buffer had before it at 0x4EEC. One spare byte is left, before
+// the added moves' data; the one after it grows BattleContext by four (all
+// measured with the compiler, plain and NEWGOLD_DIAG).
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x326C + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
