@@ -1,5 +1,5 @@
 {
-  "about": "Solar Beam fires at once for a Mega Sol user holding a Utility Umbrella (7dfc399a6: before, the umbrella took Mega Sol's sun away and it charged), and with a Power Herb it charges and fires in one turn, the attack message first (71ac3ac52, seen by a host test only until now). A level-10 Pikachu is given Solar Beam in the running battle (teach:), then Mega Sol and the umbrella (set:), against a forced wild level-5 Chansey that knows only Splash: 'absorbed light!' and the hit in the first turn, 15 damage. In the second, with its own ability back and a Power Herb, the herb is used up and the hit comes the same turn, 15 more. The field's RNG is pinned as in rolls_forced_high.json.",
+  "about": "Solar Beam fires at once for a Mega Sol user holding a Utility Umbrella (7dfc399a6: before, the umbrella took Mega Sol's sun away and it charged), and with a Power Herb it charges and fires in one turn, the attack message first (71ac3ac52, seen by a host test only until now). A level-10 Pikachu is given Solar Beam in the running battle (teach:), then Mega Sol and the umbrella (set:), against a forced wild level-5 Chansey that knows only Splash: 'absorbed light!' and the hit in the first turn, 15 damage. In the second, with its own ability back and a Power Herb, the attack message, the charge line and the herb's, in that order and among the lines of that turn alone (new_lines: the first turn's Solar Beam lines matched them before), the herb used up and the hit the same turn, 15 more. The field's RNG is pinned as in rolls_forced_high.json.",
   "save": "route29-official.sav",
   "edit": ["--party", "PIKACHU:10"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
@@ -10,7 +10,7 @@
             {"expect": {"lines": ["Pikachu used Solar Beam!", "Pikachu absorbed light!", "The wild Chansey used Splash!"],
                         "battler1.hp": 25, "battler0.item": "ITEM_UTILITY_UMBRELLA"}},
             "set:0,ability,ABILITY_STATIC", "set:0,item,ITEM_POWER_HERB", "fight:1:1"],
-  "expect": {"lines": ["Pikachu used Solar Beam!", "Pikachu absorbed light!", "Pikachu became fully charged due to its Power Herb!",
+  "expect": {"new_lines": ["Pikachu used Solar Beam!", "Pikachu absorbed light!", "Pikachu became fully charged due to its Power Herb!",
                        "The wild Chansey used Splash!"],
              "battler1.hp": 10, "battler0.item": 0}
 }
