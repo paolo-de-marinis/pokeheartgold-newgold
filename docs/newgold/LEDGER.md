@@ -12,8 +12,8 @@ argument.
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
 | reference | `a477c662f` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 1363 commits |
-| generated | 2026-09-27 23:44 |
+| port | 1364 commits |
+| generated | 2026-09-28 00:30 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
@@ -26,9 +26,9 @@ Overall                                                                    98%
 
 Implementation         ██████████████████████████████████████████████████  99%
 Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%
-Audit rows closed      ██████████████████████████████████████████████░░░░  93%
+Audit rows closed      ██████████████████████████████████████████████░░░░  92%
 
-Audit: 42 of 569 rows in docs/newgold/AUDIT-*.md still open.
+Audit: 43 of 569 rows in docs/newgold/AUDIT-*.md still open.
 The port is finished when none is, or each is closed with a reason.
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
