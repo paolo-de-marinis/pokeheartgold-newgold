@@ -17,10 +17,15 @@ Come leggere le voci:
 
 - **Domanda** è quella da fargli.
 - **Cosa** dice che cosa abbiamo trovato.
-- **Dove** dà i commit del suo range (`d0380a487..8cbe6ab86`, sopra hg-engine) e i file. Le righe
-  sono ancora quelle di `1fa3c9366`. La sua punta, `8cbe6ab86`, cambia solo la squadra di Nob
-  (Allenatori 4), e le righe di Nob sono date alla punta. Dopo Nob, alla punta le righe di
-  `data/Trainers.c` sono due più avanti.
+- **Dove** dà i commit del suo range (`d0380a487..a477c662f`, sopra hg-engine) e i file. Le righe
+  sono ancora quelle di `1fa3c9366`. `8cbe6ab86` cambia solo la squadra di Nob (Allenatori 4), e le
+  righe di Nob sono date a quel commit; dopo Nob, lì le righe di `data/Trainers.c` sono due più
+  avanti.
+- La sua punta ora è `a477c662f` ("Rebalance Route 42 and Route 43", 27 settembre), portata in
+  466dfaa08: nove allenatori delle Route 42 e 43 e della strada per il Mt. Mortar e l'erba della
+  Route 43 (Incontri 5, Allenatori 15). Tocca solo `data/Trainers.c` e `data/Encounters.c`, mette
+  lui i flag delle mosse e degli strumenti e non ha sviste da correggere. A `a477c662f` le righe di
+  `data/Trainers.c` dopo il #122 sono ancora più avanti (Nob a `:11215`).
 - **Nel port** dice che cosa abbiamo fatto nel frattempo: tenuto com'è (è suo), corretto (e perché)
   o deciso da Paolo.
 
@@ -265,7 +270,8 @@ Beam, in nessun modo. Sembra un cambio di specie con le mosse vecchie rimaste.
 che siano legali. Correggerlo vuol dire scegliere due mosse al posto tuo.
 
 ### 15. Rivincite al telefono più deboli del primo scontro
-**Domanda:** le rivincite di Derek, Chad e Dana sono ancora da fare?
+**Domanda:** le rivincite di Derek, Chad e Dana sono ancora da fare? E quelle di Tully, Brent e
+Tiffany, ora che i loro primi scontri sono a L44-48?
 
 **Cosa:** in 77469fbd4 e 84efd24c6 hai alzato tre primi scontri delle Route 38 e 39, ma le loro
 rivincite sono ancora retail:
@@ -275,7 +281,14 @@ rivincite sono ancora retail:
 - la Lass Dana #400 è L33-34; DANA_2 #464 è L31/32.
 
 Quindi la prima rivincita è più debole del primo scontro, come per Irwin (voce 12). Per Huey (voce 3)
-è il contrario. I giudici: la rivincita _2 si sblocca solo dopo la Torre Radio, e prima il telefono
+è il contrario.
+
+Lo stesso ora per tre allenatori di `a477c662f` (27 settembre), che alza i primi scontri e lascia le
+rivincite retail:
+- il Fisherman Tully #123 è L44-46; TULLY_2 #323 è L33, TULLY_3 #324 L30-38, TULLY_4 #517 L41-53;
+- il Poké Maniac Brent #131 è L45-47; BRENT_2 #172 è L32-34, BRENT_3 #173 L38-43, BRENT_4 #530
+  L40-58;
+- la Picnicker Tiffany #402 è L46-48; TIFFANY_2 #466 è L34, TIFFANY_3 #467 L41, TIFFANY_4 #522 L61. I giudici: la rivincita _2 si sblocca solo dopo la Torre Radio, e prima il telefono
 ripete il primo scontro. Il calo si vede solo oltre il punto dove sei arrivato.
 
 **Dove:** `data/Trainers.c:2202` (#44), `:19483` (#438), `:19516` (#439), `:17759` (#397), `:19365`
@@ -349,6 +362,12 @@ stanza della cascata invece è salita a L23-26. Anche gli allenatori sono divisi
 Benjamin e Harrison sono retail a L15-19, Markus è a L19-20 (col Cofagrigus nuovo), mentre Hugh è a
 L39-40 e Kiyo a L40-43. Poi: la Route 38 (L26-29) è più alta della 39 (L25-27), anche se viene prima.
 
+Il 27 settembre `a477c662f` ha portato a L44-49, con mosse e strumenti, Marvin, Tully, Shane,
+Beckett, Brent, Ron, Benjamin, Tiffany e Spencer (#122, 123, 129-132, 134, 402, 403), e ha cambiato
+tre specie per fascia oraria dell'erba della Route 43, ai livelli di prima. I selvatici della Route
+42 e del Mt. Mortar, Harrison #537 (L17) e Markus #539 (L19-20) sono rimasti come sopra: sulla Route
+42 ora gli allenatori sono a L44-49 e i selvatici a L13-17.
+
 **Dove:** `data/Encounters.c:5214`, `:5314`, `:5414`, `:5614`, `:3811` e `:3911`.
 
 **Nel port:** tenuto com'è.
@@ -403,7 +422,10 @@ Evaporate non ha il controllo su chi la usa.
 
 **Dove:** `src/battle/ability.c:66-82` e `:184-190`.
 
-**Nel port:** tenuto com'è.
+**Nel port:** tenuto com'è. In più, trovato nell'undicesimo giro: l'intelligenza artificiale degli
+allenatori non sa che Irrigation ed Evaporate assorbono l'Acqua, né nel suo gioco (quella di
+hg-engine) né nel port, e un allenatore usa mosse Acqua contro chi le ha. Insegnargliele sarebbe un
+commit del layer New Gold (AUDIT, undicesimo giro).
 
 ### 4. Solar Seeds
 **Domanda:** Solar Seeds va messa fra le mosse a colpi multipli?
@@ -455,8 +477,9 @@ decidere se usarle.
 
 **Dove:** `include/constants/item.h:2657-2689` e `data/itemdata/itemdata.c:172329` (la prima).
 
-**Nel port:** tenuto com'è: ci sono i record e niente le dà. La tasca delle Bacche ha 64 posti, e oggi
-si possono avere solo le 64 retail (AUDIT, riga aperta).
+**Nel port:** tenuto com'è: ci sono i record e niente le dà. Dall'undicesimo giro la tasca delle Bacche
+ha 100 posti, uno per ogni Bacca, Hyper comprese (7e3eb8e35, un nuovo formato del salvataggio che il
+gioco converte da solo); oggi si possono avere solo le 64 retail.
 
 ---
 
@@ -679,6 +702,12 @@ L'elenco completo è in AUDIT-2026-09-23.md ("Differences from konefr's referenc
 - Tutte le specie dopo Arceus hanno body style 0 (8ae70cd5b). 87 cartelle di sprite usano l'immagine
   di Bulbasaur (tenute).
 - Refuso "ELECRIC" nel nome di un effetto degli strumenti (`hold_item_effects.h`).
+- `RESTORE_ITEMS_AT_BATTLE_END` conta la squadra a fine lotta, dopo la cattura: il Pokémon appena
+  catturato perde lo strumento che teneva, che va nella borsa (1cf303d3b).
+- `FormReversionMapping` rimanda il Mega Tatsugiri Stretchy alla forma Droopy e il Gigamax Urshifu
+  Pluricolpo alla forma Singolcolpo (0f72c35cb).
+- Elettroraggio caricato col sereno e liberato con la pioggia rialza l'Attacco Speciale (lo script
+  325, 90adab2cb).
 - Queste cose sono di hg-engine e non sue, anche se i nostri record a volte gliele attribuiscono: i
   prezzi degli strumenti e le potenze di Natural Gift, `ALLOW_SAVE_CHANGES`, gli sprite segnaposto,
   le voci del Pokédex e le 33 Bacche Hyper (Strumenti 3).
