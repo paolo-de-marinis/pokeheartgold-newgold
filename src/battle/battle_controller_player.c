@@ -192,7 +192,9 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // another has taken an item from grew it by four, and the items taken from the
 // wild ones by four more. Sky Drop's holder took the move conditions to a
 // fourth byte, four more. The byte for the player's Pokemon that handed an
-// item over went into padding and grew it by nothing.
+// item over went into padding and grew it by nothing, and so did the party's
+// count the held items were written down for, after the taken ones' byte
+// (both measured with the compiler, plain and NEWGOLD_DIAG).
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x326C + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
