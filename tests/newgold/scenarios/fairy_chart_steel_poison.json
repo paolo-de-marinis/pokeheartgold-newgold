@@ -1,0 +1,10 @@
+{
+  "about": "Two more cells of the Fairy type's chart, in play (fairy_chart.json has Dragon's two): a level-40 Clefairy uses Splash while a forced wild Magnemite, Electric and Steel, left only Poison Sting, hits it super effectively -- Poison against Fairy -- then hits the Magnemite with Moonblast, not very effective -- Fairy against Steel. Both sides' moves taught in the battle. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CLEFAIRY:40"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=81", "LEFT", "fight:1:0", "teach:0,0,MOVE_SPLASH", "teach:0,1,MOVE_MOONBLAST", "teach:1,0,MOVE_POISON_STING", "teach:1,1,MOVE_POISON_STING,0", "teach:1,2,MOVE_POISON_STING,0", "teach:1,3,MOVE_POISON_STING,0", "fight:1:1",
+            {"expect": {"lines": ["The wild Magnemite used Poison Sting!", "It’s super effective!"]}},
+            "fight:2:1"],
+  "expect": {"new_lines": ["Clefairy used Moonblast!", "It’s not very effective"]}
+}
