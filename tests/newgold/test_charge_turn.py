@@ -11,11 +11,14 @@ import re
 import unittest
 
 from test_ability_interactions import label_body, run_c
+from test_hold_effects import run_c as run_c_output
 from test_level_cap import ROOT
 from test_move_effects import moves, records
 from test_repels import function
 
 CONTROLLER = ROOT / "src/battle/battle_controller_player.c"
+COMMANDS = ROOT / "src/battle/battle_command.c"
+OVERLAY = ROOT / "src/battle/overlay_12_0224E4FC.c"
 SCRIPTS = ROOT / "files/battledata/script"
 
 PROGRAM = r"""
@@ -96,6 +99,57 @@ CHARGES = {
 }
 
 
+# The real BtlCmd_TrySleepTalk, once for every move: a sleeper knowing Sleep
+# Talk and that move. Prints the moves it would not call.
+SLEEP_TALK = r"""
+#include <stdio.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
+#define MAX_MON_MOVES 4
+#include "constants/moves.h"
+#include "constants/move_effects.h"
+typedef struct { int unused; } BattleSystem;
+typedef struct { int effect; } MoveTbl;
+typedef struct { u16 moves[MAX_MON_MOVES]; } BattleMon;
+typedef struct { BattleMon battleMons[4]; int battlerIdAttacker; u32 moveTemp; MoveTbl move; } BattleContext;
+static const int sEffects[] = { @EFFECTS@ };
+static MoveTbl *BattleMoveTbl(BattleContext *ctx, int move) { ctx->move.effect = sEffects[move]; return &ctx->move; }
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return 0; }
+static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
+static int StruggleCheck(BattleSystem *bs, BattleContext *ctx, int battlerId, int mask, int check) { return mask; }
+static u32 sRandom;
+static u32 BattleSystem_Random(BattleSystem *bs) { return sRandom++; }
+@FUNCTIONS@
+int main(void) {
+    for (int move = 1; move < (int)NELEMS(sEffects); move++) {
+        BattleSystem bs;
+        BattleContext ctx = { .battleMons = { { { MOVE_SLEEP_TALK, move } } } };
+        BtlCmd_TrySleepTalk(&bs, &ctx);
+        if (ctx.moveTemp != (u32)move) {
+            printf("%d\n", move);
+        }
+    }
+    return 0;
+}
+"""
+
+# Showdown's gen-9 moves with the charge flag, and with nosleeptalk (Pokemon
+# Central, Sonnolalia, lists the same): what Sleep Talk does not call.
+SLEEP_TALK_UNCALLABLE = {
+    "BOUNCE", "DIG", "DIVE", "ELECTRO_SHOT", "FLY", "FREEZE_SHOCK", "GEOMANCY", "ICE_BURN", "METEOR_BEAM",
+    "PHANTOM_FORCE", "RAZOR_WIND", "SHADOW_FORCE", "SKULL_BASH", "SKY_ATTACK", "SKY_DROP", "SOLAR_BEAM", "SOLAR_BLADE",
+    "ASSIST", "BEAK_BLAST", "BELCH", "BIDE", "BLAZING_TORQUE", "CELEBRATE", "CHATTER", "COMBAT_TORQUE", "COPYCAT",
+    "DYNAMAX_CANNON", "FOCUS_PUNCH", "HOLD_HANDS", "MAGICAL_TORQUE", "ME_FIRST", "METRONOME", "MIMIC", "MIRROR_MOVE",
+    "NATURE_POWER", "NOXIOUS_TORQUE", "SHELL_TRAP", "SKETCH", "SLEEP_TALK", "STRUGGLE", "UPROAR", "WICKED_TORQUE",
+}
+
+
 def script(kind, pattern):
     return next((SCRIPTS / kind).glob(pattern)).read_text()
 
@@ -122,12 +176,28 @@ def label_run(text, label):
 class ChargeTurnTests(unittest.TestCase):
     def test_the_controller_starts_the_charge(self):
         controller = CONTROLLER.read_text()
-        code = (table(controller, "sChargeTurnEffects") + "\n" + function(controller, "SolarBeamFiresAtOnce")
+        code = (table(controller, "sChargeTurnEffects") + "\n" + function(controller, "IsChargeTurnEffect")
+                + "\n" + function(controller, "SolarBeamFiresAtOnce")
                 + "\n" + function(controller, "TryChargeTurn"))
         run_c(PROGRAM.replace("@FUNCTIONS@", code))
         # In place of the move script, which buffered the line and charged.
         self.assertIn("if (TryChargeTurn(battleSystem, ctx) == FALSE) {\n"
                       "            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_0, ctx->moveNoCur);", function(controller, "ov12_0224C38C"))
+
+    def test_sleep_talk_calls_no_charge_move(self):
+        # A charge move Sleep Talk called charged, the sleeper was let go of it
+        # at the turn's end, and it never struck; Meteor Beam and Electro Shot
+        # raised the Sp. Atk. each time. Its filter was retail's charge list,
+        # which knows none of the engine's charge moves.
+        controller, commands, overlay = CONTROLLER.read_text(), COMMANDS.read_text(), OVERLAY.read_text()
+        code = "\n".join((function(overlay, "CheckMoveCallsOtherMove"), function(overlay, "BattleCtx_IsIdenticalToCurrentMove"),
+                          table(controller, "sChargeTurnEffects"), function(controller, "IsChargeTurnEffect"),
+                          table(commands, "sSleepTalkUncallable"), function(commands, "SleepTalkCannotCall"),
+                          function(commands, "BtlCmd_TrySleepTalk")))
+        effects = ", ".join(str(record[0]) for record in records())
+        refused = {int(line) for line in run_c_output(SLEEP_TALK.replace("@EFFECTS@", effects).replace("@FUNCTIONS@", code)).split()}
+        names = {number: name for name, number in moves().items()}
+        self.assertEqual(sorted(names[number] for number in refused), sorted(SLEEP_TALK_UNCALLABLE))
 
     def test_every_charge_move_says_its_line_and_vanishes(self):
         charge = script("subscript", "subscript_0473_*.s")

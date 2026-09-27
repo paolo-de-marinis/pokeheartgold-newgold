@@ -4072,6 +4072,53 @@ BOOL BtlCmd_TrySketch(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// What Sleep Talk does not call, besides the moves that call others: every
+// move that charges first -- retail's (BattleCtx_IsIdenticalToCurrentMove,
+// Bide with them), the engine's that charge in the controller
+// (IsChargeTurnEffect), Electro Shot and Sky Drop, which charge in their own
+// scripts -- and the moves below (Pokemon Central, Sonnolalia; Showdown's
+// gen-9 sleeptalk refuses every move with the charge or nosleeptalk flag).
+// Retail refused Focus Punch, Uproar and Chatter of these. A charge move
+// called while asleep charged and never struck, the sleeper let go of it at
+// the turn's end, with Meteor Beam's and Electro Shot's Sp. Atk. rise each
+// time.
+static const u16 sSleepTalkUncallable[] = {
+    MOVE_FOCUS_PUNCH,
+    MOVE_UPROAR,
+    MOVE_CHATTER,
+    MOVE_BEAK_BLAST,
+    MOVE_BELCH,
+    MOVE_CELEBRATE,
+    MOVE_HOLD_HANDS,
+    MOVE_NATURE_POWER,
+    MOVE_SHELL_TRAP,
+    MOVE_DYNAMAX_CANNON,
+    MOVE_MIMIC,
+    MOVE_SKETCH,
+    MOVE_STRUGGLE,
+    MOVE_BLAZING_TORQUE,
+    MOVE_COMBAT_TORQUE,
+    MOVE_MAGICAL_TORQUE,
+    MOVE_NOXIOUS_TORQUE,
+    MOVE_WICKED_TORQUE,
+};
+
+static BOOL SleepTalkCannotCall(BattleContext *ctx, u16 move) {
+    int effect = BattleMoveTbl(ctx, move)->effect;
+    int i;
+
+    if (CheckMoveCallsOtherMove(move) || BattleCtx_IsIdenticalToCurrentMove(ctx, move) || IsChargeTurnEffect(effect)
+        || effect == MOVE_EFFECT_CHARGE_TURN_SP_ATK_UP_RAIN_SKIPS || effect == MOVE_EFFECT_SKY_DROP) {
+        return TRUE;
+    }
+    for (i = 0; i < (int)NELEMS(sSleepTalkUncallable); i++) {
+        if (sSleepTalkUncallable[i] == move) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 BOOL BtlCmd_TrySleepTalk(BattleSystem *battleSystem, BattleContext *ctx) {
     int moveIndex, nonSelectableMoves;
 
@@ -4082,7 +4129,7 @@ BOOL BtlCmd_TrySleepTalk(BattleSystem *battleSystem, BattleContext *ctx) {
     nonSelectableMoves = 0;
 
     for (moveIndex = 0; moveIndex < MAX_MON_MOVES; moveIndex++) {
-        if (CheckMoveCallsOtherMove(ctx->battleMons[ctx->battlerIdAttacker].moves[moveIndex]) || ctx->battleMons[ctx->battlerIdAttacker].moves[moveIndex] == MOVE_FOCUS_PUNCH || ctx->battleMons[ctx->battlerIdAttacker].moves[moveIndex] == MOVE_UPROAR || ctx->battleMons[ctx->battlerIdAttacker].moves[moveIndex] == MOVE_CHATTER || BattleCtx_IsIdenticalToCurrentMove(ctx, ctx->battleMons[ctx->battlerIdAttacker].moves[moveIndex])) {
+        if (SleepTalkCannotCall(ctx, ctx->battleMons[ctx->battlerIdAttacker].moves[moveIndex])) {
             nonSelectableMoves |= MaskOfFlagNo(moveIndex);
         }
     }

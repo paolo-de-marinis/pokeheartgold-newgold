@@ -3877,6 +3877,17 @@ static const u16 sChargeTurnEffects[] = {
     MOVE_EFFECT_CHARGE_TURN_BURN_HIT,
 };
 
+// Whether a move of this effect charges on its first turn in TryChargeTurn;
+// Sleep Talk asks it too (BtlCmd_TrySleepTalk).
+BOOL IsChargeTurnEffect(int effect) {
+    for (int i = 0; i < (int)NELEMS(sChargeTurnEffects); i++) {
+        if (sChargeTurnEffects[i] == effect) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 // A charge move's first turn, asked of the controller before the move script
 // as the engine's BattleController_CheckChargeMoves and CheckPowerHerb ask it
 // (BattleController_BeforeMove.c:2253 and 2354 at d0380a487): the effect
@@ -3889,15 +3900,7 @@ static const u16 sChargeTurnEffects[] = {
 // Pokemon Central does not say) -- then charges as retail's scripts did, or
 // spends a Power Herb and goes on to the hit.
 static BOOL TryChargeTurn(BattleSystem *battleSystem, BattleContext *ctx) {
-    int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
-    int i;
-
-    for (i = 0; i < NELEMS(sChargeTurnEffects); i++) {
-        if (sChargeTurnEffects[i] == effect) {
-            break;
-        }
-    }
-    if (i == NELEMS(sChargeTurnEffects)
+    if (!IsChargeTurnEffect(BattleMoveTbl(ctx, ctx->moveNoCur)->effect)
         || (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_LOCKED_INTO_MOVE)
         || (ctx->battleStatus & BATTLE_STATUS_CHARGE_MOVE_HIT)
         || SolarBeamFiresAtOnce(battleSystem, ctx) == TRUE) {

@@ -8,6 +8,7 @@ BOOL BattleContext_Main(BattleSystem *battleSystem, BattleContext *ctx);
 void BattleContext_Delete(BattleContext *ctx);
 void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx);
 void CaughtMonKeepsItem(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon);
+BOOL IsChargeTurnEffect(int effect);
 void BattleSystem_CheckMoveHitEffect(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int moveNo);
 
 #endif
