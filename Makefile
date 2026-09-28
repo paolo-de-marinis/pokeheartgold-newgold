@@ -136,6 +136,10 @@ $(WORK_DIR)/include/global.h: | $(FX_CONST_H) ;
 # include it: in a fresh tree their first compiles ran before it was made and
 # stopped on "the file 'nitro/fx/fx_const.h' cannot be opened".
 dsprot sub: | $(FX_CONST_H)
+# The ARM7's makefile and libsyscall's each patch their assembler first,
+# which builds mwasmarm_patcher when it is missing: built here before either
+# starts, it is not built by both at once.
+sub libsyscall: | $(ASPATCH)
 
 # Convenience targets
 heartgold:          ; @$(MAKE) GAME_VERSION=HEARTGOLD

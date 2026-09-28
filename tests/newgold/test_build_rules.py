@@ -316,6 +316,21 @@ class BuildRuleTests(unittest.TestCase):
                 prerequisites = " ".join(m.group(1) for m in re.finditer(rf"^{target}:(.*)$", db, re.M) if "=" not in m.group(1))
                 self.assertIn("lib/include/nitro/fx/fx_const.h", prerequisites)
 
+    def test_the_assembler_patcher_is_built_before_it_runs(self):
+        """patch_mwasmarm ran mwasmarm_patcher and nothing built it: the
+        ARM7's makefile patches its assembler first, and a ROM target made in
+        a fresh tree before make tools stopped there, the patcher not found.
+        The step depends on the tool now. libsyscall's makefile patches as
+        well, beside the ARM7's: the main makefile builds the tool before
+        either, not both at once."""
+        db = database()
+        patcher = next(p for p in re.search(r"^NATIVE_TOOLS := (.*)$", db, re.M).group(1).split()
+                       if p.endswith("/tools/mwasmarm_patcher/mwasmarm_patcher"))
+        for target in ("patch_mwasmarm", "sub", "libsyscall"):
+            with self.subTest(target):
+                prerequisites = " ".join(m.group(1) for m in re.finditer(rf"^{target}:(.*)$", db, re.M) if "=" not in m.group(1))
+                self.assertIn(patcher, prerequisites.split())
+
     def test_zukan_enc_naix_is_made_before_anything_is_compiled(self):
         """The Pokedex includes zukan_enc.naix, which is sed's copy of the
         version's own index, not an archive's. Only `filesystem` asked for

@@ -166,7 +166,7 @@ endif
 .PHONY: all tidy clean tools clean-tools patch_mwasmarm $(TOOLDIRS)
 .PRECIOUS: $(SBIN)
 
-patch_mwasmarm:
+patch_mwasmarm: $(ASPATCH)
 	$(ASPATCH) -q $(MWAS)
 
 ifeq ($(NODEP),)
