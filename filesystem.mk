@@ -402,6 +402,7 @@ $(eval $(call arc_strip_name,files/poketool/personal/personal.narc,files/a/0/0/2
 $(eval $(call arc_strip_name,files/poketool/personal/growtbl.narc,files/a/0/0/3))
 $(eval $(call arc_strip_name,files/poketool/pokegra/pokegra.narc,files/a/0/0/4))
 $(eval $(call arc_strip_name,files/poketool/pokegra/height.narc,files/a/0/0/5))
+$(eval $(call arc_strip_name,files/battle/graphic/batt_bg.narc,files/a/0/0/7))
 $(eval $(call arc_strip_name,files/poketool/waza/waza_tbl.narc,files/a/0/1/1))
 $(eval $(call arc_strip_name,files/fielddata/script/scr_seq.narc,files/a/0/1/2))
 $(eval $(call arc_strip_name,files/graphic/bag_gra.narc,files/a/0/1/5))
@@ -581,6 +582,7 @@ include files/demo/intro/intro.mk
 include files/data/namein.mk
 include files/data/sbox_gra.mk
 include files/arc/safari_enc.mk
+include files/battle/graphic/batt_bg.mk
 
 # An archive is only as current as the o2narc that laid it out: f9de102b7
 # changed where o2narc puts each member, and the Dex archives it had already
