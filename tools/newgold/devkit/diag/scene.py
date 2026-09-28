@@ -36,7 +36,7 @@ A step is one of
                                 starts in, two speeds alike for a tie (hp last: the
                                 battler is found by the HP gDiagBattlers shows, a
                                 frame behind)
-    goto:MAP,X,Y                walk there: the path planned from the tree's map data
+    goto:MAP,X,Y[,N]            walk there: the path planned from the tree's map data
                                 (tile attributes, ledges, warps) and the objects in
                                 RAM, planned again when left or blocked; A through
                                 text boxes, gym.py's player through battles. MAP is
@@ -44,6 +44,8 @@ A step is one of
                                 (the matrix's tiles outdoors). A tile someone stands
                                 on -- or started on, wherever they have wandered
                                 since -- is reached beside them, facing them.
+                                N frames at most (30000 by default): a route
+                                of the playthrough, with its battles, takes more
     newgame[:N]                 from an empty flash (no save) through the intro, the
                                 title, NEW GAME, the Oak speech (no information, the
                                 boy, the default name) to the bedroom, the player free
@@ -521,8 +523,9 @@ class Scene:
             if not self.movable():
                 self.say(f"[{core.frames}] the field never let the player move")
         elif kind == "goto":
-            name, x, y = rest.split(",")
-            done, said = self.goto((self.number(name) if not name.isdigit() else int(name), int(x), int(y)))
+            name, x, y, *most = rest.split(",")
+            done, said = self.goto((self.number(name) if not name.isdigit() else int(name), int(x), int(y)),
+                                   *map(int, most))
             self.say(f"[{core.frames}] {said}")
             return None if done else [said]
         elif kind == "teach":
