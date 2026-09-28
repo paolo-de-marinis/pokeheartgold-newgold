@@ -41,8 +41,10 @@ def table(lines, index):
 def follow(lines, start, stop, **given):
     """What the script adds to a move's score from start until it reaches stop
     or ends, run as the AI runs it with only the commands met here: given
-    names the target's and the attacker's abilities, the move, its effect and
-    the field's conditions; it is the battler's first turn out."""
+    names the target's and the attacker's abilities, the move, its effect,
+    the field's conditions and how many of the attacker's party could come
+    in; it is the battle's first turn and the battler's first out, and the
+    target is a foe."""
     index, score, loaded = start, 0, None
     while index != stop:
         script = lines[index][0]
@@ -55,6 +57,7 @@ def follow(lines, start, stop, **given):
                 "AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO": lambda: given["effect"] == args[0],
                 "AI_IF_CURRENT_MOVE_EFFECT_NOT_EQUAL_TO": lambda: given["effect"] != args[0],
                 "AI_IF_FIELD_CONDITIONS_MASK": lambda: given["field"] & field(args[0]),
+                "AI_IF_TARGET_IS_PARTNER": lambda: False,
                 "AI_GOTO": lambda: True}.get(op)
         if test:
             index = after + int(args[-1]) if test() else after
@@ -67,6 +70,10 @@ def follow(lines, start, stop, **given):
             loaded = str(weather(given["field"]))
         elif op == "AI_LOAD_IS_FIRST_TURN_IN_BATTLE":
             loaded = "1"
+        elif op == "AI_LOAD_TURN_COUNT":
+            loaded = "0"
+        elif op == "AI_COUNT_ALIVE_PARTY_BATTLERS":
+            loaded = str(given["party"])
         elif op == "AI_ADD_TO_MOVE_SCORE":
             score += int(args[0])
         elif op == "AI_POP_OR_END":
@@ -265,6 +272,41 @@ class TrainerAIScriptTests(unittest.TestCase):
         script = lines[0x1672][0]
         self.assertEqual(script[0], "AI_IF_FIELD_CONDITIONS_MASK")
         self.assertTrue(field(script[1]) & hail and not field(script[1]) & snow)
+
+    def test_a_weather_move_that_fails_is_marked_down(self):
+        # A weather move fails under its own weather, under a strong weather,
+        # which only another replaces, and under the weather the map brought
+        # (effect scripts 115, 136, 137 and 164, Snowscape's subscript 339):
+        # flag 0 takes 8 off it and flag 9 gives it no first-turn bonus.
+        lines = words()
+        holding = ("HEAVY_RAIN", "EXTREMELY_HARSH_SUNLIGHT", "STRONG_WINDS", "RAIN_PERMANENT", "SANDSTORM_PERMANENT",
+                   "SUN_PERMANENT", "HAIL_PERMANENT", "SNOW_PERMANENT")
+        none = dict(target="ABILITY_NONE", attacker="ABILITY_NONE")
+        for effect, own, start in (("MOVE_EFFECT_WEATHER_SANDSTORM", "SANDSTORM", 0x052E),
+                                   ("MOVE_EFFECT_WEATHER_RAIN", "RAIN", 0x058E),
+                                   ("MOVE_EFFECT_WEATHER_SUN", "SUN", 0x05A7),
+                                   ("MOVE_EFFECT_WEATHER_HAIL", "HAIL", 0x05CD),
+                                   ("MOVE_EFFECT_WEATHER_SNOW", "SNOW_TEMP", 0x2987)):
+            other = "SUN" if own == "RAIN" else "RAIN"
+            for name, fails in ((None, False), (own, True), (other, False), *((h, True) for h in holding)):
+                value = field("FIELD_CONDITION_" + name) if name else 0
+                self.assertEqual(follow(lines, start, 0x007E, field=value, effect=effect, **none), -8 if fails else 0,
+                                 (effect, name))
+                self.assertEqual(follow(lines, 0x28E6, None, field=value, effect=effect), 0 if fails else 5,
+                                 (effect, name))
+        # Chilly Reception brings Snowscape's snow and then sends its user
+        # back, which is worth the move whenever someone can come in.
+        snow = field("FIELD_CONDITION_SNOW_TEMP")
+        for party, value, score in ((0, snow, -8), (0, 0, 0), (1, snow, 0)):
+            self.assertEqual(follow(lines, 0x2987, 0x007E, field=value, effect="MOVE_EFFECT_SNOW_AND_SWITCH",
+                                    party=party, **none), score, (party, value))
+        self.assertEqual(follow(lines, 0x28E6, None, field=snow, effect="MOVE_EFFECT_SNOW_AND_SWITCH"), 0)
+        self.assertEqual(follow(lines, 0x28E6, None, field=0, effect="MOVE_EFFECT_SNOW_AND_SWITCH"), 5)
+        # Every other move keeps flag 9's bonus unless the sun is up, as
+        # retail's fell into Sunny Day's lines.
+        for name, score in ((None, 5), ("SUN", 0), ("RAIN", 5), ("RAIN_PERMANENT", 5), ("HEAVY_RAIN", 5)):
+            value = field("FIELD_CONDITION_" + name) if name else 0
+            self.assertEqual(follow(lines, 0x28E6, None, field=value, effect="MOVE_EFFECT_HIT"), score, name)
 
 
 if __name__ == "__main__":

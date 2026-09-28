@@ -134,6 +134,12 @@ enum AIScriptCommand {
 // Ends a table.
 #define AI_TABLE_END 0xFFFFFFFF
 
+// What keeps a weather move from setting its weather, besides that weather
+// already up: a strong weather, which only another replaces, and the weather
+// the map brought, which from the ninth generation no move writes over
+// (effect scripts 115, 136, 137 and 164, and Snowscape's subscript 339).
+#define AI_WEATHER_HOLDS (FIELD_CONDITION_PRIMAL_WEATHER | FIELD_CONDITION_OVERWORLD_WEATHER_ANY)
+
 const u32 ov10_02220AAC[] = {
     // Where each AI flag's routine starts, by flag (a word index into this script).
     /* 0000 */ 0x0020, // flag 0, basic: the moves that would fail or do nothing (hg-engine's F_PRIORITIZE_SUPER_EFFECTIVE)
@@ -782,7 +788,9 @@ const u32 ov10_02220AAC[] = {
 
     // 052E
     /* 052E */ AI_LOAD_CURRENT_WEATHER,
-    /* 052F */ AI_IF_LOADED_EQUAL_TO, 3, 1189, // -> 09D7
+    // retail asked the weather loaded for a sandstorm (3); the move also fails
+    // under a strong weather or the map's, so the field is asked
+    /* 052F */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_SANDSTORM_ALL | AI_WEATHER_HOLDS, 1189, // -> 09D7
     /* 0532 */ AI_POP_OR_END,
 
     // 0533
@@ -840,7 +848,8 @@ const u32 ov10_02220AAC[] = {
 
     // 058E
     /* 058E */ AI_LOAD_CURRENT_WEATHER,
-    /* 058F */ AI_IF_LOADED_EQUAL_TO, 2, 1093, // -> 09D7
+    // as at 052F, for rain (2)
+    /* 058F */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_RAIN_ALL | AI_WEATHER_HOLDS, 1093, // -> 09D7
     /* 0592 */ AI_POP_OR_END,
 
     // 0593
@@ -854,7 +863,8 @@ const u32 ov10_02220AAC[] = {
 
     // 05A7
     /* 05A7 */ AI_LOAD_CURRENT_WEATHER,
-    /* 05A8 */ AI_IF_LOADED_EQUAL_TO, 1, 1068, // -> 09D7
+    // as at 052F, for sun (1)
+    /* 05A8 */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_SUN_ALL | AI_WEATHER_HOLDS, 1068, // -> 09D7
     /* 05AB */ AI_POP_OR_END,
 
     // 05AC
@@ -883,7 +893,7 @@ const u32 ov10_02220AAC[] = {
     /* 05CD */ AI_LOAD_CURRENT_WEATHER,
     // retail asked the weather loaded for hail (4), which snow reads as too;
     // Hail replaces snow (effect script 164), so the field is asked for hail
-    /* 05CE */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_HAIL_ALL, 1030, // -> 09D7
+    /* 05CE */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_HAIL_ALL | AI_WEATHER_HOLDS, 1030, // -> 09D7
     /* 05D1 */ AI_LOAD_BATTLER_ABILITY, AI_BATTLER_TARGET,
     /* 05D3 */ AI_IF_LOADED_NOT_EQUAL_TO, ABILITY_ICE_BODY, 9, // -> 05DF
     /* 05D6 */ AI_ADD_TO_MOVE_SCORE, -8,
@@ -5957,27 +5967,32 @@ const u32 ov10_02220AAC[] = {
     /* 28EC */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_WEATHER_SUN, 9, // -> 28F8
     /* 28EF */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_WEATHER_RAIN, 12, // -> 28FE
     /* 28F2 */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_WEATHER_SANDSTORM, 15, // -> 2904
-    /* 28F5 */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_WEATHER_HAIL, 18, // -> 290A
+    // retail asked for Hail here and every other move went on into Sunny Day's
+    // lines at 28F8; Sunny Day was taken above, so every move reaching this
+    // line goes on to 2A02, where Hail, Snowscape and Chilly Reception are
+    // asked and the rest go on as they did
+    /* 28F5 */ AI_IF_CURRENT_MOVE_EFFECT_NOT_EQUAL_TO, MOVE_EFFECT_WEATHER_SUN, 266, // -> 2A02
 
     // 28F8
     /* 28F8 */ AI_LOAD_CURRENT_WEATHER,
-    /* 28F9 */ AI_IF_LOADED_EQUAL_TO, 1, 27, // -> 2917
+    // as at 052F: no bonus for a weather move that fails
+    /* 28F9 */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_SUN_ALL | AI_WEATHER_HOLDS, 27, // -> 2917
     /* 28FC */ AI_GOTO, 18, // -> 2910
 
     // 28FE
     /* 28FE */ AI_LOAD_CURRENT_WEATHER,
-    /* 28FF */ AI_IF_LOADED_EQUAL_TO, 2, 21, // -> 2917
+    /* 28FF */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_RAIN_ALL | AI_WEATHER_HOLDS, 21, // -> 2917
     /* 2902 */ AI_GOTO, 12, // -> 2910
 
     // 2904
     /* 2904 */ AI_LOAD_CURRENT_WEATHER,
-    /* 2905 */ AI_IF_LOADED_EQUAL_TO, 3, 15, // -> 2917
+    /* 2905 */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_SANDSTORM_ALL | AI_WEATHER_HOLDS, 15, // -> 2917
     /* 2908 */ AI_GOTO, 6, // -> 2910
 
     // 290A
     /* 290A */ AI_LOAD_CURRENT_WEATHER,
     // as at 05CE: Hail replaces snow, so only hail already up is asked
-    /* 290B */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_HAIL_ALL, 9, // -> 2917
+    /* 290B */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_HAIL_ALL | AI_WEATHER_HOLDS, 9, // -> 2917
     /* 290E */ AI_GOTO, 0, // -> 2910
 
     // 2910
@@ -6076,7 +6091,8 @@ const u32 ov10_02220AAC[] = {
     // fails on a target already held (effect script 426); Mean Look's own
     // check of that is at 04E4. Appended, so no word index above moves.
     /* 2987 */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_PREVENT_ESCAPE, 3, // -> 298D
-    /* 298A */ AI_IF_CURRENT_MOVE_EFFECT_NOT_EQUAL_TO, MOVE_EFFECT_OCTOLOCK, -10511, // -> 007E
+    // this went on to 007E; Snowscape and Chilly Reception are asked at 2A16
+    /* 298A */ AI_IF_CURRENT_MOVE_EFFECT_NOT_EQUAL_TO, MOVE_EFFECT_OCTOLOCK, 137, // -> 2A16
 
     // 298D
     /* 298D */ AI_IF_VOLATILE_STATUS, AI_BATTLER_TARGET, 0x4000000, -8119, // -> 09DA
@@ -6156,4 +6172,34 @@ const u32 ov10_02220AAC[] = {
     /* 29FA */ AI_IF_LOADED_EQUAL_TO, ABILITY_IRRIGATION, -10664, // -> 0055
     /* 29FD */ AI_IF_LOADED_EQUAL_TO, ABILITY_EVAPORATE, -10667, // -> 0055
     /* 2A00 */ AI_GOTO, -10633, // -> 0079
+
+    // 2A02: flag 9, from 28F5, on the battle's first turn: Hail and the two
+    // snow moves get the bonus for setting a weather when theirs is not up
+    // and none holds against them; every other move goes on as retail's did,
+    // into Sunny Day's lines. Appended, so no word index above moves.
+    /* 2A02 */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_WEATHER_HAIL, -251, // -> 290A
+    /* 2A05 */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_WEATHER_SNOW, 9, // -> 2A11
+    /* 2A08 */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_SNOW_AND_SWITCH, 6, // -> 2A11
+    /* 2A0B */ AI_LOAD_CURRENT_WEATHER,
+    /* 2A0C */ AI_IF_LOADED_EQUAL_TO, 1, -248, // -> 2917
+    /* 2A0F */ AI_GOTO, -257, // -> 2910
+
+    // 2A11: Snowscape and Chilly Reception, which bring snow
+    /* 2A11 */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_SNOW_ALL | AI_WEATHER_HOLDS, -253, // -> 2917
+    /* 2A14 */ AI_GOTO, -262, // -> 2910
+
+    // 2A16: flag 0, from 298A: a status move but Mean Look's kind and
+    // Octolock. Snowscape fails where Hail fails, with snow in place of hail
+    // (subscript 339), and loses 8 as Hail does at 05CE; snow feeds Ice Body
+    // as hail does (05D1). Chilly Reception brings the same snow and then
+    // sends its user back, which is worth the move whenever someone can come
+    // in (effect script 436). Appended, so no word index above moves.
+    /* 2A16 */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_WEATHER_SNOW, 8, // -> 2A21
+    /* 2A19 */ AI_IF_CURRENT_MOVE_EFFECT_NOT_EQUAL_TO, MOVE_EFFECT_SNOW_AND_SWITCH, -10654, // -> 007E
+    /* 2A1C */ AI_COUNT_ALIVE_PARTY_BATTLERS, AI_BATTLER_ATTACKER,
+    /* 2A1E */ AI_IF_LOADED_NOT_EQUAL_TO, 0, -10659, // -> 007E
+
+    // 2A21
+    /* 2A21 */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_SNOW_ALL | AI_WEATHER_HOLDS, -8269, // -> 09D7
+    /* 2A24 */ AI_GOTO, -9301, // -> 05D1
 };
