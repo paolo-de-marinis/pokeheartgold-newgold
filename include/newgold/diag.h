@@ -64,6 +64,7 @@ extern unsigned long gDiagForceHit;        // 1: the accuracy roll hits; 2: it m
 extern unsigned long gDiagForceDamageRoll; // 1: the top of the damage range (100%); 2: the bottom (85%)
 extern unsigned long gDiagForceEffect;     // 1: an additional effect's roll succeeds; 2: it fails
 extern unsigned long gDiagForceSpeedTie;   // 1: a speed tie goes to the second battler asked; 2: to the first
+extern unsigned long gDiagForceThaw;       // 1: a frozen Pokemon's thaw roll thaws it; 2: it stays frozen
 // Each check says which roll it is about to ask BattleSystem_Random for, and
 // BattleSystem_Random hands its value to Diag_Roll, which answers the forced
 // one when that switch is on and forgets the kind either way.
@@ -73,6 +74,7 @@ extern unsigned long gDiagForceSpeedTie;   // 1: a speed tie goes to the second 
 #define DIAG_ROLL_DAMAGE 3
 #define DIAG_ROLL_EFFECT 4
 #define DIAG_ROLL_SPEED_TIE 5
+#define DIAG_ROLL_THAW 6
 extern unsigned long gDiagRollNext;
 void Diag_RollNext(unsigned long kind);
 unsigned short Diag_Roll(unsigned short roll);

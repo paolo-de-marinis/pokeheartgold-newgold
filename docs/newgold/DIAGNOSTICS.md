@@ -63,8 +63,9 @@ And the switches, zero unless something outside the game writes them:
 | `gDiagForceDamageRoll` | `DamageCalcDefault`, `ApplyDamageRange` | 1: the top of the damage range (100%); 2: the bottom (85%). |
 | `gDiagForceEffect` | `ov12_02250490`, `BtlCmd_CheckEffectActivation` | 1: an additional effect's roll succeeds (a burn, a flinch, a stat drop); 2: it fails. A certain effect still happens. |
 | `gDiagForceSpeedTie` | `CheckSortSpeed` | 1: a speed tie goes to the second of the two battlers compared -- the pair swaps, so in a single battle the foe moves first; 2: to the first, the player. The roll only: priority, the Quick Claw, the Lagging Tail, Stall and Trick Room still order the pair first, and only a tie is rolled. Every ordering the game sorts by Speed, the AI's own guess included. |
+| `gDiagForceThaw` | `ov12_0224B528`'s frozen step | 1: a frozen Pokemon's one-in-five thaw on its own turn happens; 2: it stays frozen. The roll only: a move that thaws its user as it is chosen still does, and a hit that thaws its target still does. |
 
-The five forced rolls work the same way: the check says which roll it is about to
+The six forced rolls work the same way: the check says which roll it is about to
 ask for (`Diag_RollNext`), and `BattleSystem_Random` hands its value to `Diag_Roll`,
 which answers the forced one when that switch is on. The RNG advances as it always
 does, so forcing one roll moves no other. Between frames no roll is waiting

@@ -3075,6 +3075,9 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             break;
         case 2:
             if (ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_FREEZE) {
+#ifdef NEWGOLD_DIAG
+                Diag_RollNext(DIAG_ROLL_THAW);
+#endif
                 if (BattleSystem_Random(battleSystem) % 5 != 0) {
                     if (MoveThawsUser(ctx, effect) == FALSE) {
                         ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_FROZEN);

@@ -90,6 +90,15 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(body[start:end].count("BattleSystem_Random(battleSystem) & 1"), 5)
         self.assertEqual(body.count("BattleSystem_Random("), 5)
 
+    def test_the_thaw_roll_is_forced(self):
+        # A frozen Pokemon's one-in-five thaw on its own turn: the roll the
+        # frozen step takes is named just before it.
+        from test_dex_range import c_function
+        body = c_function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224B528")
+        rolls = re.findall(r"#ifdef NEWGOLD_DIAG\n\s*Diag_RollNext\(DIAG_ROLL_THAW\);\n#endif\n"
+                           r"\s*if \(BattleSystem_Random\(battleSystem\) % 5 != 0\)", body)
+        self.assertEqual(len(rolls), 1)
+
     def test_gym_reads_the_hp_past_a_two_word_species(self):
         # markers.battle names a form in two words; gym.py once took the
         # fourth word for the HP, read "L30" and died without a word.
@@ -162,7 +171,7 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 @DEFINES@
-u32 gDiagForceCritical, gDiagForceHit, gDiagForceDamageRoll, gDiagForceEffect, gDiagForceSpeedTie, gDiagRollNext;
+u32 gDiagForceCritical, gDiagForceHit, gDiagForceDamageRoll, gDiagForceEffect, gDiagForceSpeedTie, gDiagForceThaw, gDiagRollNext;
 @TABLE@
 @NEXT@
 @ROLL@
@@ -182,6 +191,8 @@ int main(void) {
     assert(roll(DIAG_ROLL_EFFECT, &gDiagForceEffect, 2, 777) % 100 >= 99);
     assert(roll(DIAG_ROLL_SPEED_TIE, &gDiagForceSpeedTie, 1, 776) & 1);      /* the pair swaps */
     assert(!(roll(DIAG_ROLL_SPEED_TIE, &gDiagForceSpeedTie, 2, 777) & 1));   /* it stays */
+    assert(roll(DIAG_ROLL_THAW, &gDiagForceThaw, 1, 777) % 5 == 0);          /* it thaws out */
+    assert(roll(DIAG_ROLL_THAW, &gDiagForceThaw, 2, 775) % 5 != 0);          /* it stays frozen */
     assert(roll(DIAG_ROLL_EFFECT, &gDiagForceEffect, 0, 777) == 777);        /* off: the RNG's */
     assert(gDiagRollNext == DIAG_ROLL_NONE);                                   /* forgotten */
     gDiagForceCritical = 1;

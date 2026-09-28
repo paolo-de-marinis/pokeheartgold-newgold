@@ -22,7 +22,7 @@ STATES = ["INIT", "LINK_INIT", "LINK_MAIN", "UNK_A_INIT", "UNK_A_MAIN", "UNK_B_I
 SWITCHES = {"gDiagIgnoreCommunicationError": 4, "gDiagForceEncounter": 4, "gDiagForceBattleSpecies": 2,
             "gDiagForceTutorial": 2, "gDiagWarpX": 2, "gDiagWarpZ": 2, "gDiagBattleSeed": 4,
             "gDiagForceCritical": 4, "gDiagForceHit": 4, "gDiagForceDamageRoll": 4, "gDiagForceEffect": 4,
-            "gDiagForceSpeedTie": 4}
+            "gDiagForceSpeedTie": 4, "gDiagForceThaw": 4}
 
 
 PROMPTS = {1: "choose a command", 2: "choose a command", 3: "choose a move", 4: "choose a move",
