@@ -30,7 +30,7 @@ PLIST_GRA_FILES := \
 	plist_gra_00000025.NSCR \
 	plist_gra_00000026.NCGR
 
-$(PLIST_GRA_NARC): $(addprefix $(PLIST_GRA_DIR)/,$(PLIST_GRAPFILES))
+$(PLIST_GRA_NARC): $(addprefix $(PLIST_GRA_DIR)/,$(PLIST_GRA_FILES))
 
 clean-plist-gra:
 	$(RM) $(PLIST_GRA_NARC)

@@ -599,13 +599,13 @@ $(filter-out $(DIFF_ARCS) $(FS_RULE_OVERRIDES),$(NITROFS_FILES)): ;
 # This must come after the above includes
 include graphics_files_rules.mk
 
-NTR_FILE_EXT := bin NCGR NCLR NCER NSCR NSBMD NSBCA NSBTA
-
-%.narc: NARC_DEPS = $(foreach ext,$(NTR_FILE_EXT),$(wildcard $*/*.$ext))
-# nitroarc packs the folder beside the archive. An archive with no folder
+# nitroarc packs the folder beside the archive: every file in it but those
+# its .narcignore leaves out, in the order a .narcorder gives. The archive
+# depends on all of them, those two included, and on the folder, whose time
+# changes when a member is added or removed. An archive with no folder
 # (height.narc, waza_tbl.narc) is a source the tree holds, and a newer
 # nitroarc has nothing to pack it from.
-%.narc: $(NARC_DEPS) $$(if $$(wildcard $$*/),$$(NARC))
+%.narc: $$(wildcard $$*/ $$*/* $$*/.narcignore $$*/.narcorder) $$(if $$(wildcard $$*/),$$(NARC))
 	$(NARC) -cf $@ --index-namespace $*
 %.naix: %.narc
 # nitroarc writes an archive's index beside it, so a .naix a dependency file

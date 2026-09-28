@@ -258,6 +258,28 @@ class BuildRuleTests(unittest.TestCase):
                 self.assertIn("files/" + header.group(1), prerequisites[bin_], bin_)
         print(f"{built} of {len(jsons)} zone events depend on their json's header")
 
+    def test_an_archive_packed_from_its_folder_depends_on_every_file_in_it(self):
+        """The archive rule of last resort packs the folder beside the
+        archive and took its prerequisites from $(NARC_DEPS), a
+        pattern-specific variable, empty where the makefile is read (and its
+        $ext was $e and "xt"): no archive it packed depended on its members,
+        plist_gra.narc and map_matrix.narc on nothing at all, and a changed
+        member left the old archive until it was deleted by hand. Each file
+        in the folder is a prerequisite now, found in the second expansion,
+        and so is the folder, whose time changes when a member is added or
+        removed."""
+        archives = ("files/graphic/plist_gra.narc", "files/fielddata/mapmatrix/map_matrix.narc")
+        result = run_make("-pn", *archives)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for archive in archives:
+            with self.subTest(archive):
+                folder = archive.removesuffix(".narc")
+                rules = [m.group(1) for m in re.finditer(rf"^{re.escape(archive)}:(.*)$", result.stdout, re.M)
+                         if "=" not in m.group(1)]
+                members = {f"{folder}/{p.name}" for p in (ROOT / folder).iterdir() if not p.name.startswith(".")}
+                self.assertTrue(members)
+                self.assertEqual({folder + "/", *members} - set(" ".join(rules).split()), set())
+
     def test_otherpoke_depends_on_its_pictures_and_its_map(self):
         """otherpoke.mk listed its pictures with $(find ...), which is not a
         make function, so the list was empty, and its map, otherpoke.txt, was
