@@ -47,9 +47,20 @@ def badges(ram, elf):
     return bin(ram[at]).count("1")
 
 
+def sealed(raw):
+    """Whether a Pokemon's bytes are as the game leaves them between uses:
+    neither half marked decrypted, and the checksum the box half's words
+    add up to. A frame can end while the game is decrypting one in place
+    (AcquireMonLock) or encrypting it again (ReleaseMonLock); read then, a
+    level-13 Shinx after Falkner's battle came out as species 2142."""
+    personality, flags, checksum = struct.unpack_from("<IHH", raw, 0)
+    words = struct.unpack("<64H", savedit.mon_crypt(bytes(raw[8:8 + 4 * BLOCK_A_SIZE]), checksum))
+    return not flags & 3 and sum(words) & 0xFFFF == checksum
+
+
 def mons(ram, elf):
     """The party as the game holds it, each Pokemon in its order: species,
-    item, exp, level, hp, maxHp."""
+    item, exp, level, hp, maxHp, and whether it was sealed (above)."""
     memory = where.Memory(ram)
     base = block(memory, elf, where.SAVE_PARTY)
     out = []
@@ -62,7 +73,8 @@ def mons(ram, elf):
         species, item, _, exp = struct.unpack_from("<HHII", blocks, first)
         stats = savedit.mon_crypt(bytes(raw[savedit.BOX_MON:]), personality)
         level, _, hp, max_hp = struct.unpack_from("<BBHH", stats, 4)
-        out.append({"species": species, "item": item, "exp": exp, "level": level, "hp": hp, "maxHp": max_hp})
+        out.append({"species": species, "item": item, "exp": exp, "level": level, "hp": hp, "maxHp": max_hp,
+                    "sealed": sealed(raw)})
     return out
 
 

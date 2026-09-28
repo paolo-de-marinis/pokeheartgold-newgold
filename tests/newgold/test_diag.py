@@ -120,6 +120,20 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertTrue(runs(high, True, 100))
         self.assertTrue(runs(["you Raichu Alolan L30 12/80 | 1:Thunderbolt 15"], True, 40))
 
+    def test_a_pokemon_read_mid_encryption_is_not_taken_for_sealed(self):
+        # A frame can end with the game re-encrypting a party Pokemon; scene.py
+        # reads the party again until every one is sealed.
+        import struct
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from party import sealed
+        import savedit
+        plain = bytes(range(128))
+        checksum = sum(struct.unpack("<64H", plain)) & 0xFFFF
+        raw = struct.pack("<IHH", 0x10203, 0, checksum) + savedit.mon_crypt(plain, checksum)
+        self.assertTrue(sealed(raw))
+        self.assertFalse(sealed(struct.pack("<IHH", 0x10203, 1, checksum) + raw[8:]))       # AcquireMonLock's
+        self.assertFalse(sealed(raw[:8] + plain[:52] + raw[8 + 52:]))                        # half re-encrypted
+
     def test_gym_touches_the_target_panel_a_move_asks_for(self):
         # A double battle's target screen: a move on the user (Revival
         # Blessing) is confirmed on the user's own panel, an attack goes to a
