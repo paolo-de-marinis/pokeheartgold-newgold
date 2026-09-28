@@ -108,6 +108,18 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(battler_hp("you Iron Crown L30 103/103 holding Leftovers | 1:Smart Strike 10"), 103)
         self.assertEqual(battler_hp("you Porygon2 L30 57/90 PSN | 1:Tackle 35"), 57)
 
+    def test_gym_runs_from_a_wild_pokemon_only_when_its_own_is_low(self):
+        # flee:40 in a scenario: RUN under 40% of the HP, in a wild battle.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from gym import runs
+        low, high = ["you Cyndaquil L7 7/24 | 1:Tackle 50"], ["you Cyndaquil L7 12/24 | 1:Tackle 50"]
+        self.assertTrue(runs(low, True, 40))
+        self.assertFalse(runs(high, True, 40))
+        self.assertFalse(runs(low, False, 40))      # a trainer's
+        self.assertFalse(runs(low, True, 0))        # no flee: step, as before
+        self.assertTrue(runs(high, True, 100))
+        self.assertTrue(runs(["you Raichu Alolan L30 12/80 | 1:Thunderbolt 15"], True, 40))
+
     def test_gym_touches_the_target_panel_a_move_asks_for(self):
         # A double battle's target screen: a move on the user (Revival
         # Blessing) is confirmed on the user's own panel, an attack goes to a

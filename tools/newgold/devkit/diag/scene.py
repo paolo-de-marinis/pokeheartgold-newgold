@@ -46,6 +46,8 @@ A step is one of
                                 since -- is reached beside them, facing them.
                                 N frames at most (30000 by default): a route
                                 of the playthrough, with its battles, takes more
+    flee:N                      from now on goto's battles run from a wild Pokemon
+                                when the player's has under N% of its HP left
     newgame[:N]                 from an empty flash (no save) through the intro, the
                                 title, NEW GAME, the Oak speech (no information, the
                                 boy, the default name) to the bedroom, the player free
@@ -137,7 +139,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
-         "set", "newgame", "starter", "save")
+         "set", "newgame", "starter", "save", "flee")
 
 
 def readable(step_or_key, key=False):
@@ -391,6 +393,7 @@ class Scene:
         self._field = self.markers.address("sFieldSysPtr")
         self.hooks = [self._poke, self._collect]
         self.saved = None       # the flash an in-game save left (save), for the next leg
+        self.flee = 0           # flee:N
 
     def hold(self, name, value):
         address = self.markers.address(name)
@@ -577,6 +580,8 @@ class Scene:
                       turns=int(turns) if turns else None, since=core.word(self._text_count),
                       partner=self.partner_prompt())
             self._collect(core)
+        elif kind == "flee":
+            self.flee = int(rest)
         else:
             button, _, times = step.partition("*")
             for _ in range(int(times or 1)):
@@ -789,7 +794,7 @@ class Scene:
             if self.in_battle():
                 battles += 1
                 gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
-                          since=core.word(self._text_count), partner=self.partner_prompt())
+                          since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee)
                 self._collect(core)
                 continue
             if not self.movable():

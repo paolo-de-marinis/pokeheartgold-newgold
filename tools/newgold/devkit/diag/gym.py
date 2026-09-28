@@ -39,6 +39,7 @@ ROOT = Path(__file__).resolve().parents[4]
 ROM = ROOT / "build/heartgold.us.diag/pokeheartgold.us.nds"
 # The bottom screen, in its own pixels (256 by 192).
 FIGHT = (128, 83)
+RUN = (128, 170)             # under FIGHT
 MOVES = [(64, 51), (192, 51), (64, 116), (192, 116)]
 PARTY = [(64, 35), (192, 38), (64, 78), (192, 81), (64, 123), (192, 126)]
 SHIFT = (127, 113)
@@ -121,6 +122,13 @@ def battler_hp(line):
     return int(re.search(r" (\d+)/\d+", line).group(1))
 
 
+def runs(view, wild, flee):
+    """Whether the player runs this turn: a wild battle, and its Pokemon
+    (markers.battle's first line) under `flee` percent of its HP."""
+    hp = re.search(r" (\d+)/(\d+)", view[0]) if view else None
+    return bool(wild and hp and int(hp.group(1)) * 100 < flee * int(hp.group(2)))
+
+
 def second_down(ram, markers):
     """Whether the player's second Pokemon in a double battle has fainted."""
     second = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000 + 2 * struct.calcsize(BATTLER))
@@ -149,7 +157,7 @@ def quiet():
     return os.fdopen(keep, "w", buffering=1)
 
 
-def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=None, since=0, partner=None):
+def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=None, since=0, partner=None, flee=0):
     """Play the battle that is up until it is over or the core reaches
     `frames`, and return the last line it printed. `move` is a move slot,
     1 to 4, to use every turn; 0 the first with PP; -1 the hardest-hitting
@@ -164,7 +172,10 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     first's); it chooses as the first does, from its own moves. A move that
     asks for a target is aimed, every turn, by the player's first at battler
     3 and by its second at battler 1 -- at the other foe when that touch is
-    not taken -- and one on the user's side at the user or its partner.
+    not taken -- and one on the user's side at the user or its partner. With
+    `flee`, a percentage, the player runs from a wild Pokemon when its own has
+    less than that share of its HP left, as a player walking a long route
+    does rather than black out.
 
     Memory is read every four frames, but the text ring is decoded only when
     its counter has moved: decoding it every time halved the frame rate.
@@ -175,6 +186,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     last_count, last_asserts, restarts, decoded = 0, 0, 0, None
     last_prompt, commands, revive, use_next = None, 0, None, None
     moves_chosen, tries = {}, 0        # the move each of the player's two took, for its target screen
+    wild = False
     while core.frames < frames:
         core.step(4, hold)
         ram = core.ram()
@@ -214,6 +226,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                     revive = None
                 if "Use next Pok" in line:
                     use_next = core.frames
+                wild = wild or line.startswith("You encountered a wild")
                 if not line.startswith("What will"):
                     say(f"[{core.frames}] {line.split('?{')[0]}")
         decoded = count
@@ -236,7 +249,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             if view != last_view:
                 say(f"[{core.frames}]   " + "\n          ".join(view[:-1]))
                 last_view = view
-            core.touch(*FIGHT, 6, hold)
+            core.touch(*(RUN if runs(view, wild, flee) else FIGHT), 6, hold)
             core.step(20, hold)
         elif prompt in (3, 4):
             moves = view[0].split("|")[1].split(",")
