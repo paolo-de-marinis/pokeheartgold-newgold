@@ -103,6 +103,35 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertIn("printed 0 times", s.check(once)[0])
         self.assertTrue(scene.readable("once_lines", key=True))
 
+    def test_a_fight_with_nobody_to_fight_gives_up_soon(self):
+        # fight after a goto on which the trainer spotted and fought the
+        # player: the field stays free, with no text box, press after press.
+        # Five presses and the step is done, where 300 took about 12,000 frames.
+        class Core:
+            frames = 0
+
+            def ram(self):
+                return b""
+
+            def press(self, button, frames, hooks):
+                self.frames += frames
+
+            def step(self, frames, hooks):
+                self.frames += frames
+
+        said = []
+        s = scene.Scene.__new__(scene.Scene)
+        s.core, s.hooks, s.say = Core(), [], said.append
+        s.markers = type("Markers", (), {"read": lambda self, ram, name: 0})()
+        s.movable, s.textbox = (lambda: True), (lambda: False)
+        self.assertIsNone(s.run("fight"))
+        self.assertLess(s.core.frames, 400)
+        self.assertIn("no battle came up", said[-1])
+        # A text box up, or the field taken by a script, keeps it pressing.
+        s.core.frames, s.movable = 0, (lambda: s.core.frames > 3000)
+        s.run("fight")
+        self.assertGreater(s.core.frames, 3000)
+
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.
         self.assertTrue(scene.Scene.wanted("x", 663)[0](663))

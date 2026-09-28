@@ -22,7 +22,8 @@ A step is one of
                                 and through any text box on the way (N frames at most)
     fight[:N[:T]]               A until a battle is up, then gym.py's player plays
                                 it to the end (N: always move slot N; T: stop at the
-                                command prompt after T turns, to expect what they did)
+                                command prompt after T turns, to expect what they did);
+                                nothing when the field stays free through five presses
     teach:B,SLOT,MOVE[,PP]      battler B's move in that slot (0-3), and its PP (5 by
                                 default), written into the running battle: a move
                                 no trainer's data gives, for the AI to use
@@ -471,14 +472,20 @@ class Scene:
             core.poke(at + layout[field], number, 2 if field in ("ability", "item", "speed") else 4)
         elif kind == "fight":
             import gym
-            for _ in range(300):
-                if self.markers.read(core.ram(), "gDiagBattleState") == BATTLE_MAIN:
-                    break
+            idle = presses = 0
+            while self.markers.read(core.ram(), "gDiagBattleState") != BATTLE_MAIN:
+                # The field free, press after press, with no text box: nobody
+                # is there to fight -- one who spotted the player on a goto
+                # has been fought on it. The first press talks to whoever
+                # the player faces; four more with the field still free and
+                # the step gives up, rather than 300 presses later.
+                idle = idle + 1 if self.movable() and not self.textbox() else 0
+                if idle > 4 or presses == 300:
+                    self.say(f"[{core.frames}] no battle came up")
+                    return None
                 core.press("A", 6, hooks)
                 core.step(30, hooks)
-            else:
-                self.say(f"[{core.frames}] no battle came up")
-                return None
+                presses += 1
             slot, _, turns = rest.partition(":")
             gym.fight(core, self.markers, hooks, self.say, int(slot) if slot else -1, core.frames + 60000,
                       turns=int(turns) if turns else None, since=core.word(self._text_count),
