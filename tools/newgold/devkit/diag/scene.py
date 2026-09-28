@@ -44,6 +44,12 @@ A step is one of
                                 (the matrix's tiles outdoors). A tile someone stands
                                 on -- or started on, wherever they have wandered
                                 since -- is reached beside them, facing them.
+    newgame[:N]                 from an empty flash (no save) through the intro, the
+                                title, NEW GAME, the Oak speech (no information, the
+                                boy, the default name) to the bedroom, the player free
+    starter:SPECIES             the starter machine, opened by the A before it: turned
+                                to that Pokemon and taken, and B through what follows,
+                                which says no to the nickname
     save                        the game saved through the start menu as a player saves,
                                 the flash kept for the next leg of a chain
 
@@ -62,8 +68,8 @@ both screens and the last battle lines.
      "expect": {"lines": ["Falkner sent out Pidgey!"], "badges": 1}}
 
 A save's path is taken in ~/hgss-saves unless it is absolute; the saves there
-are Paolo's and only a copy is ever edited. A scenario with no save starts
-from an empty flash. One that names another as "from", a leg of a chain
+are Paolo's and only a copy is ever edited. A scenario with no save starts a
+new game (newgame). One that names another as "from", a leg of a chain
 (the playthrough), starts from the in-game save that one made (save): the
 legs of a run share a directory (--chain), where each leaves its report,
 NAME.txt, and on a pass its save, NAME.sav; a leg whose leg before has not
@@ -129,7 +135,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
-         "set", "save")
+         "set", "newgame", "starter", "save")
 
 
 def readable(step_or_key, key=False):
@@ -170,7 +176,8 @@ def field_layout():
              "FieldSystem, processManager", "FieldSystem, runningFieldMap", "FieldSystem, mapObjectManager",
              "FieldProcessManager, isPaused", "PlayerAvatar, mapObject", "LocalMapObject, currentX",
              "LocalMapObject, currentZ", "MapObjectManager, objectCount", "MapObjectManager, objects",
-             "LocalMapObject, initialX", "LocalMapObject, initialZ", "LocalMapObject, currentFacing")
+             "LocalMapObject, initialX", "LocalMapObject, initialZ", "LocalMapObject, currentFacing",
+             "FieldProcessManager, child")
     values, (textbox,) = savedit.compile_c(
         exprs=tuple(f"__builtin_offsetof({n})" for n in names) + ("sizeof(LocalMapObject)",),
         inits=(("FieldSystem", ".textbox_open = 1"),),
@@ -194,19 +201,30 @@ def c_declarations(path, name):
 
 @savedit.tree_cache
 def app_layout():
-    """What save: reads, from the tree: the start menu's buttons (its cursor
-    is FieldSystem.unkD3) and the save's progress -- offsets, and the
+    """What newgame:, starter: and save: read, from the tree: main.c's
+    running OverlayManager, the Oak speech's state and the naming screen it
+    opens, the starter machine's cursor, the start menu's buttons (its
+    cursor is FieldSystem.unkD3) and the save's progress -- offsets, and the
     numbers of the states waited for."""
     out = {}
     for path, name, exprs in (
+            ("src/main.c", "struct UnkStruct_02111868", ("__builtin_offsetof(struct UnkStruct_02111868, overlayManager)",)),
+            ("src/oaks_speech.c", "enum OakSpeechMainState", ("OAK_SPEECH_MAIN_STATE_TUTORIAL_MENU_HANDLE_INPUT",)),
+            ("src/naming_screen.c", "enum NamingScreenMainState", ("NS_MAIN_STATE_INPUT_LOOP",)),
+            ("src/choose_starter_app.c", "struct ChooseStarterAppWork", (
+                "__builtin_offsetof(struct ChooseStarterAppWork, curSelection)",
+                "__builtin_offsetof(struct ChooseStarterAppWork, state)", "CHOOSE_STARTER_STATE_HANDLE_INPUT",
+                "SELECT_STATE_CONFIRM")),
             ("src/start_menu.c", "enum StartMenuAction", ("START_MENU_ACTION_SAVE",)),):
         headers, decls = c_declarations(path, name)
         out.update(zip(exprs, savedit.compile_c(exprs=exprs, headers=headers, decls=decls)[0]))
-    names = ("TaskManager, func", "TaskManager, env",
+    names = ("OverlayManager, template.exec", "OverlayManager, proc_state", "OverlayManager, data",
+             "OakSpeechData, state", "OakSpeechData, overlayManager", "TaskManager, func", "TaskManager, env",
              "StartMenuTaskData, state", "StartMenuTaskData, numActiveButtons", "StartMenuTaskData, selectionToAction",
              "FieldSystem, unkD3", "SaveData, saveCounter", "SaveData, lastGoodSector")
     values = savedit.compile_c(exprs=tuple(f"__builtin_offsetof({n})" for n in names) + ("START_MENU_STATE_HANDLE_INPUT",),
-                               headers=savedit.LAYOUT_HEADERS + ("task.h", "start_menu.h", "field_system.h"))[0]
+                               headers=savedit.LAYOUT_HEADERS + ("overlay_manager.h", "oaks_speech_internal.h", "task.h",
+                                                                  "start_menu.h", "field_system.h"))[0]
     out.update({n.replace(", ", "."): v for n, v in zip(names, values)})
     out["START_MENU_STATE_HANDLE_INPUT"] = values[-1]
     return {key.replace("__builtin_offsetof(struct ", "").replace(", ", ".").rstrip(")"): value
@@ -525,6 +543,10 @@ class Scene:
             else:
                 number = self.number(value)
             core.poke(at + layout[field], number, 2 if field in ("ability", "item", "speed") else 4)
+        elif kind == "newgame":
+            return self.new_game(int(rest or 40000))
+        elif kind == "starter":
+            return self.starter(self.number(rest))
         elif kind == "save":
             return self.save()
         elif kind == "fight":
@@ -555,7 +577,25 @@ class Scene:
                 core.step(20, hooks)
         return None
 
-    # -- the in-game save --------------------------------------------------
+    # -- the applications --------------------------------------------------
+
+    def app(self):
+        """(the name of the running application's exec function, among those
+        the steps wait for, else None; its OverlayManager): main.c's, or
+        the one it opened -- the naming screen the Oak speech opens, the
+        application the field launched (the starter machine)."""
+        layout, core = app_layout(), self.core
+        manager = core.word(self.markers.address("_02111868") + layout["UnkStruct_02111868.overlayManager"])
+        if core.word(self._field) and self._chain("FieldSystem.processManager", "FieldProcessManager.child"):
+            manager = self._chain("FieldSystem.processManager", "FieldProcessManager.child")
+        names = {self.markers.address(n) & ~1: n for n in ("OakSpeech_Main", "NamingScreenApp_Main", "ChooseStarter_Main")}
+        name = manager and names.get(core.word(manager + layout["OverlayManager.template.exec"]) & ~1)
+        if name == "OakSpeech_Main":
+            data = core.word(manager + layout["OverlayManager.data"])
+            naming = core.word(data + layout["OakSpeechData.overlayManager"])
+            if naming:
+                return names.get(core.word(naming + layout["OverlayManager.template.exec"]) & ~1), naming
+        return name, manager
 
     def through(self, button="A"):
         """One beat of a scripted scene on the field: the button for a text
@@ -566,6 +606,65 @@ class Scene:
             self.core.step(20, self.hooks)
         else:
             self.core.step(1, self.hooks)
+
+    def new_game(self, frames):
+        """newgame: from an empty flash to the player's first step in the
+        bedroom. A through the intro, the title and NEW GAME; in the Oak
+        speech B at its first menu, which takes the last choice (no
+        information needed), A for the rest (the boy, yes, yes); the naming
+        screen closed with START, which puts the cursor on OK, and A (an
+        empty name is given the game's default)."""
+        core, hooks, layout = self.core, self.hooks, app_layout()
+        end = core.frames + frames
+        while core.frames < end and not self.movable():
+            name, manager = self.app()
+            state = manager and core.word(manager + layout["OverlayManager.proc_state"])
+            if name == "OakSpeech_Main" and core.word(core.word(manager + layout["OverlayManager.data"])
+                                                      + layout["OakSpeechData.state"]) \
+                    == layout["OAK_SPEECH_MAIN_STATE_TUTORIAL_MENU_HANDLE_INPUT"]:
+                core.press("B", 6, hooks)
+                core.step(20, hooks)
+            elif name == "NamingScreenApp_Main":
+                if state == layout["NS_MAIN_STATE_INPUT_LOOP"]:
+                    core.press("START", 6, hooks)
+                    core.press("A", 6, hooks)
+                core.step(20, hooks)
+            else:
+                self.through()
+        if not self.movable():
+            return [f"the new game never reached the field in {frames} frames"]
+        self.say(f"[{core.frames}] a new game on the field at {self.location()}")
+
+    def starter(self, species):
+        """starter:SPECIES -- the starter machine, opened by the step before
+        (A facing it): turned until that Pokemon's ball is in front (its
+        cursor, ChooseStarterAppWork.curSelection, over the machine's sSpecies),
+        A to look, to be asked and to take it; then B through the lines until
+        the player can move, which answers no to the nickname."""
+        import re
+        core, hooks, layout = self.core, self.hooks, app_layout()
+        machine = re.search(r"static const int sSpecies\[\] = \{(.*?)\};",
+                            savedit.source("src/choose_starter_app.c").read_text(), re.S).group(1)
+        order = [self.number(name.strip()) for name in machine.split(",") if name.strip()]
+        end, seen = core.frames + 20000, False
+        while core.frames < end:
+            name, manager = self.app()
+            if name != "ChooseStarter_Main":
+                if seen and self.movable():
+                    break
+                self.through("B" if seen else "A")
+                continue
+            seen = True
+            work = core.word(manager + layout["OverlayManager.data"])
+            if core.word(manager + layout["OverlayManager.proc_state"]) != layout["CHOOSE_STARTER_STATE_HANDLE_INPUT"]:
+                core.step(1, hooks)
+            elif order[core.word(work + layout["ChooseStarterAppWork.curSelection"])] != species \
+                    and core.word(work + layout["ChooseStarterAppWork.state"]) != layout["SELECT_STATE_CONFIRM"]:
+                core.press("RIGHT", 6, hooks)
+            else:
+                core.press("A", 6, hooks)
+        if not (seen and self.movable()):
+            return [f"the starter machine {'never opened' if not seen else 'never let the player go'}"]
 
     def save(self, frames=12000):
         """save: -- the game saved as a player saves it: X, the start menu's
