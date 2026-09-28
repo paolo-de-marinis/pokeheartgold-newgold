@@ -31,6 +31,45 @@ def words():
     return lines
 
 
+def table(lines, index):
+    """The words of the table at the index, up to its end."""
+    script = lines[index][0]
+    return script[:script.index("AI_TABLE_END")]
+
+
+def follow(lines, start, stop, **given):
+    """What the script adds to a move's score from start until it reaches stop
+    or ends, run as the AI runs it with only the commands met here: given
+    names the target's and the attacker's abilities, the move and its effect."""
+    index, score, loaded = start, 0, None
+    while index != stop:
+        script = lines[index][0]
+        op, args, after = script[0], script[1:], index + len(script)
+        test = {"AI_IF_LOADED_EQUAL_TO": lambda: loaded == args[0],
+                "AI_IF_LOADED_NOT_EQUAL_TO": lambda: loaded != args[0],
+                "AI_IF_LOADED_IN_TABLE": lambda: loaded in table(lines, after + int(args[0])),
+                "AI_IF_LOADED_NOT_IN_TABLE": lambda: loaded not in table(lines, after + int(args[0])),
+                "AI_IF_MOVE_EQUAL_TO": lambda: given["move"] == args[0],
+                "AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO": lambda: given["effect"] == args[0],
+                "AI_IF_CURRENT_MOVE_EFFECT_NOT_EQUAL_TO": lambda: given["effect"] != args[0],
+                "AI_GOTO": lambda: True}.get(op)
+        if test:
+            index = after + int(args[-1]) if test() else after
+            continue
+        if op == "AI_LOAD_BATTLER_ABILITY":
+            loaded = given[{"AI_BATTLER_TARGET": "target", "AI_BATTLER_ATTACKER": "attacker"}[args[0]]]
+        elif op == "AI_LOAD_CURRENT_MOVE":
+            loaded = given["move"]
+        elif op == "AI_ADD_TO_MOVE_SCORE":
+            score += int(args[0])
+        elif op == "AI_POP_OR_END":
+            return score
+        else:
+            raise AssertionError(f"{index:04X}: {op} is not followed here")
+        index = after
+    return score
+
+
 class TrainerAIScriptTests(unittest.TestCase):
     def test_every_index_and_every_reach_is_the_words(self):
         lines = words()
@@ -120,6 +159,24 @@ class TrainerAIScriptTests(unittest.TestCase):
             at = next(i for i in ran(effect) if lines[i][0] == ["AI_FLAG_BATTLER_IS_TYPE", "AI_BATTLER_TARGET", "TYPE_GHOST"])
             self.assertEqual(lines[at + 3][0][:2], ["AI_IF_LOADED_EQUAL_TO", "1"])
             self.assertEqual(reach(at + 3), 0x09DA, effect)
+
+    def test_teravolt_and_turboblaze_pass_abilities_by(self):
+        # The battle takes Teravolt and Turboblaze for Mold Breaker
+        # (AbilityBreaksMolds), and so does every check of flag 0 that lets
+        # the attacker's Mold Breaker past the target's ability: each asks a
+        # table of the three. Flag 7's line at 2508 is an ability worth having.
+        lines = words()
+        by_name = [i for i, (script, _) in lines.items() if script[0].startswith("AI_IF_LOADED") and "ABILITY_MOLD_BREAKER" in script]
+        self.assertEqual(by_name, [0x2508])
+        checks = [i for i, (script, _) in lines.items() if script[0] == "AI_IF_LOADED_IN_TABLE"
+                  and table(lines, i + 3 + int(script[1])) == ["ABILITY_MOLD_BREAKER", "ABILITY_TERAVOLT", "ABILITY_TURBOBLAZE"]]
+        self.assertEqual(checks, [0x0032, 0x0085, 0x0288, 0x03EE, 0x043C, 0x0448, 0x045A, 0x0490, 0x055C, 0x0630, 0x097E])
+        # Soundproof's line, one of them: Growl on a Soundproof target is
+        # marked down, unless the attacker passes the ability by.
+        for attacker, score in (("ABILITY_NONE", -10), ("ABILITY_MOLD_BREAKER", 0),
+                                ("ABILITY_TERAVOLT", 0), ("ABILITY_TURBOBLAZE", 0)):
+            self.assertEqual(follow(lines, 0x007E, 0x00A9, target="ABILITY_SOUNDPROOF", attacker=attacker,
+                                    move="MOVE_GROWL"), score, attacker)
 
 
 if __name__ == "__main__":

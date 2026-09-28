@@ -1,0 +1,10 @@
+{
+  "about": "The trainer AI knows Teravolt passes Levitate by as Mold Breaker does (flag 0, trainer_ai_script.c 0032 and the table at 2999). Falkner's Hoothoot is given Teravolt and taught Mud-Slap and Leer once the battle is up and faces a Baltoy, whose only ability is Levitate, that only Splashes: it uses Mud-Slap, which hits. Before the fix the AI's Levitate check took 12 off Mud-Slap for any attacker but a Mold Breaker, and the Hoothoot Leered every turn.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "BALTOY:15", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0", "set:1,ability,ABILITY_TERAVOLT",
+            "teach:1,0,MOVE_MUD_SLAP", "teach:1,1,MOVE_LEER", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:0,0,MOVE_SPLASH", "fight:1:4"],
+  "expect": {"lines": ["The opposing Hoothoot used Mud-Slap!", "accuracy fell!"], "battler1.species": "SPECIES_HOOTHOOT"}
+}
