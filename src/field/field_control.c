@@ -468,6 +468,23 @@ int FieldInput_Process_BattleTower(FieldInput *fieldInput, FieldSystem *fieldSys
     return 0;
 }
 
+#ifdef NEWGOLD_DIAG
+// The catching demonstration from wherever the player stands, for
+// gDiagForceTutorial: a field task that starts it as ScrCmd_CatchingTutorial
+// does from a script's, and ends when it is over. Here in the field overlay,
+// the only place that asks for it, it costs the boot's main arena nothing.
+static BOOL Task_DiagTutorialBattle(TaskManager *taskManager) {
+    u32 *state = TaskManager_GetStatePtr(taskManager);
+
+    if (*state == 0) {
+        (*state)++;
+        SetupAndStartTutorialBattle(taskManager);
+        return FALSE;
+    }
+    return TRUE;
+}
+#endif
+
 static BOOL FieldSystem_CheckWildEncounter(FieldSystem *fieldSystem) {
     if (fieldSystem->encounterInhibitSteps < 0xFFFF) {
         fieldSystem->encounterInhibitSteps++;
@@ -501,7 +518,7 @@ static BOOL FieldSystem_CheckWildEncounter(FieldSystem *fieldSystem) {
     }
     if (gDiagForceTutorial != 0) {
         gDiagForceTutorial = 0;
-        Diag_StartTutorialBattle(fieldSystem);
+        FieldSystem_CreateTask(fieldSystem, Task_DiagTutorialBattle, NULL);
         return TRUE;
     }
 #endif

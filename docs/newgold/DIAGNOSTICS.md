@@ -281,6 +281,23 @@ have the same heaps, so the low-water marker reads the heap the game has.
 `tests/newgold/test_heaps.py` checks each built ROM's map against what the
 boot takes from the arena, so the next growth fails a test, not the screen.
 
+Where the diagnostics' bytes go (HeartGold, the twelfth round: 0x1500 of the
+arena, `xmap.py diff` of the two builds' maps): 0x1340 in the static module
+-- the battle's text ring 0xC00, the heaps' low-water marks 0x2C0, the
+assertion's stack 0x100, the four battlers 0x70 and the other globals, then
+`diag.c`'s functions and the hooks in `heap.c`, `battle_setup.c`,
+`encounter.c`, the cry's and `main.c` -- and 0x1C0 in overlay 12,
+`Diag_BattleView` 0x10C and the battle's hooks. Everything loaded with a battle
+lies on the chain that ends at the arena (main, overlays 0, 6, 7 and 12), and
+the data cannot leave the static module without a change to the link: the
+readers find it at one address from the boot on, and an overlay's `.bss` is
+cleared at each load and shared with the overlays placed over it. Code that
+only an overlay off that chain calls costs nothing there: the field overlay
+ends 0x38000 below the arena, and the catching demonstration's starter moved
+into it (0x40). What else would give room back gives a diagnostic up: eight
+lines of the battle's text instead of sixteen, 0x600; sixteen words of the
+assertion's stack instead of sixty-four, 0xC0.
+
 The return address costs the site nothing -- `bl Diag_AssertFail` is the
 size of `bl GF_AssertFail` -- so that is what is kept, and the ELF turns it
 back into a function.
