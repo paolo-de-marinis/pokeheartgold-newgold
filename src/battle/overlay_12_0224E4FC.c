@@ -6585,9 +6585,11 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             break;
         case 14: // Held item activated on entry
+            // Not a Berry a Bug Bite or a Pluck is about to take: this runs
+            // after every move too (ov12_0224CC88), before the theft.
             for (i = 0; i < maxBattlers; i++) {
                 battlerId = ctx->turnOrder[i];
-                if (CheckUseHeldItem(battleSystem, ctx, battlerId, (u32 *)&script) == TRUE) {
+                if (!PluckTakesBerry(ctx, battlerId) && CheckUseHeldItem(battleSystem, ctx, battlerId, (u32 *)&script) == TRUE) {
                     ctx->battlerIdTemp = battlerId;
                     flag = TRUE;
                     break;
@@ -9182,13 +9184,11 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
         // (Pokemon Central, Forzabruta), which the reference does not ask.
         // Nor a Bug Bite or Pluck, whose user eats the Berry first and has
         // its Defense raised instead, unless Sticky Hold keeps it
-        // (Baccalighia; TryEatOpponentBerry, once the move is over), or
-        // Rough Skin, Iron Barbs or the like has felled the user already, the
-        // Berry left uneaten (Coleomorso).
+        // (Baccalighia; PluckTakesBerry), or Rough Skin, Iron Barbs or the
+        // like has felled the user already, the Berry left uneaten
+        // (Coleomorso).
         ret = ItemRaisesStatOnHit(ctx, physical && !SheerForceTradedEffect(ctx)
-                && !(BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_EAT_BERRY
-                    && ctx->battleMons[ctx->battlerIdAttacker].hp
-                    && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) != TRUE),
+                && !PluckTakesBerry(ctx, ctx->battlerIdTarget),
             STAT_DEF, script);
         break;
     case HOLD_EFFECT_BOOST_SPDEF_ON_SPECIAL_HIT: // maranga berry
@@ -9446,6 +9446,29 @@ BOOL BattlerCanSwitch(BattleSystem *battleSystem, BattleContext *ctx, int battle
     }
 
     return ret;
+}
+
+// Whether battlerId's Berry is the one the Bug Bite or Pluck in use takes
+// once the move is over (TryAdditionalMoveEffect, subscript 219): the
+// target's, its user standing once Rough Skin and Aftermath have answered,
+// no Sticky Hold keeping it -- and the target the Pokemon the move hit, with
+// a hit on record in its place: the move stays the one in use until the next,
+// and a Pokemon sent into the place after a faint is not asked about. Its
+// holder does not eat it first, not even one
+// the hit brought into range -- a Sitrus Berry below half, a Liechi Berry in
+// a pinch: the user eats it (Bulbapedia's Bug Bite and Pluck, whatever the
+// Berry's own condition; Showdown's gen-9 bugbite takes it on the hit,
+// before the Update event where a Berry fires; Pokemon Central's Coleomorso
+// says nothing of it), and a Kee Berry does not answer the hit
+// (Baccalighia). A miss, or a substitute that took the hit, which the theft
+// refuses, brought nothing into range for the holder to eat; a fallen
+// holder, whose Sticky Hold keeps nothing, eats nothing either.
+BOOL PluckTakesBerry(BattleContext *ctx, int battlerId) {
+    return battlerId == ctx->battlerIdTarget
+        && BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_EAT_BERRY
+        && ctx->battleMons[ctx->battlerIdAttacker].hp
+        && ctx->battleMons[battlerId].hitCount && BattleItemIsBerry(ctx->battleMons[battlerId].item)
+        && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, battlerId, ABILITY_STICKY_HOLD) != TRUE;
 }
 
 BOOL TryEatOpponentBerry(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {

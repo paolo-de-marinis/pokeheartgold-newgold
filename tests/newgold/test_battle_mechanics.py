@@ -118,18 +118,110 @@ class EatenBerryTests(unittest.TestCase):
         hit = function(OVERLAY.read_text(), "CheckItemEffectOnHit")
         kee = hit[hit.index("case HOLD_EFFECT_BOOST_DEF_ON_PHYSICAL_HIT:"):]
         kee = kee[:kee.index("break;")]
-        self.assertIn("->effect == MOVE_EFFECT_EAT_BERRY", kee)
-        self.assertIn("ABILITY_STICKY_HOLD) != TRUE", kee)
         # A user Rough Skin or Iron Barbs has felled, asked before this
         # (ov12_0224CAA4, controller command 29), eats nothing: the Berry
-        # answers the hit (Coleomorso).
-        self.assertIn("MOVE_EFFECT_EAT_BERRY\n                    && ctx->battleMons[ctx->battlerIdAttacker].hp\n", kee)
+        # answers the hit (Coleomorso). PluckTakesBerry asks both; its
+        # fixture is PluckTakesBerryTests'.
+        self.assertIn("!PluckTakesBerry(ctx, ctx->battlerIdTarget)", kee)
         controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
         abilities = function(controller, "ov12_0224CAA4")
         self.assertIn("CheckAbilityEffectOnHit(battleSystem, ctx, &script)", abilities)
         self.assertTrue(abilities.rstrip().endswith("ctx->command = CONTROLLER_COMMAND_31;\n}"))
         self.assertIn("CheckItemEffectOnHit(battleSystem, ctx, &script)", function(controller, "ov12_0224CC88"))
 
+
+
+PLUCK_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/abilities.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+#include "constants/move_effects.h"
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { u16 effect; } MoveTbl;
+typedef struct { u16 item; int hp; uint8_t hitCount; } BattleMon;
+typedef struct { BattleMon battleMons[4]; int battlerIdAttacker, battlerIdTarget; u16 moveNoCur; } BattleContext;
+static MoveTbl sMoves[MOVE_BUG_BITE + 1];
+static BOOL sStickyHold;
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 move) { (void)ctx; return &sMoves[move]; }
+static BOOL BattleItemIsBerry(u16 item) { return item == ITEM_ORAN_BERRY || item == ITEM_SITRUS_BERRY; }
+static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int a, int b, int ability) {
+    (void)ctx; (void)a; (void)b; return ability == ABILITY_STICKY_HOLD && sStickyHold;
+}
+@PLUCK@
+int main(void) {
+    sMoves[MOVE_BUG_BITE].effect = sMoves[MOVE_PLUCK].effect = MOVE_EFFECT_EAT_BERRY;
+    BattleContext ctx = { .battleMons = { { ITEM_NONE, 30, 0 }, { ITEM_SITRUS_BERRY, 10, 1 }, { ITEM_ORAN_BERRY, 30, 1 } },
+                          .battlerIdAttacker = 0, .battlerIdTarget = 1, .moveNoCur = MOVE_BUG_BITE };
+    // A Sitrus Berry the hit brought below half is the user's to take.
+    assert(PluckTakesBerry(&ctx, 1));
+    ctx.moveNoCur = MOVE_PLUCK;
+    assert(PluckTakesBerry(&ctx, 1));
+    // Only the target's, and only a Berry.
+    assert(!PluckTakesBerry(&ctx, 2) && !PluckTakesBerry(&ctx, 0));
+    ctx.battleMons[1].item = ITEM_LEFTOVERS;
+    assert(!PluckTakesBerry(&ctx, 1));
+    ctx.battleMons[1].item = ITEM_SITRUS_BERRY;
+    // Not a Pokemon sent into the place since, after a faint: the move is
+    // still the one in use, but no hit is on record for it.
+    ctx.battleMons[1].hitCount = 0;
+    assert(!PluckTakesBerry(&ctx, 1));
+    ctx.battleMons[1].hitCount = 1;
+    // Not another move, not once the user has fallen to Rough Skin or the
+    // like: then the holder eats it as ever.
+    ctx.moveNoCur = MOVE_TACKLE;
+    assert(!PluckTakesBerry(&ctx, 1));
+    ctx.moveNoCur = MOVE_BUG_BITE;
+    ctx.battleMons[0].hp = 0;
+    assert(!PluckTakesBerry(&ctx, 1));
+    ctx.battleMons[0].hp = 30;
+    // Nor against Sticky Hold.
+    sStickyHold = TRUE;
+    assert(!PluckTakesBerry(&ctx, 1));
+    return 0;
+}
+"""
+
+
+class PluckTakesBerryTests(unittest.TestCase):
+    """Bug Bite and Pluck take the target's Berry once the move is over, and
+    the target does not eat it first, not even one the hit brought into
+    range (Bulbapedia's Bug Bite and Pluck; Showdown's gen-9 bugbite, which
+    takes it on the hit, before the Update event where a Berry fires)."""
+
+    def test_the_real_question(self):
+        program = PLUCK_FIXTURE.replace("@PLUCK@", function(OVERLAY.read_text(), "PluckTakesBerry"))
+        with tempfile.TemporaryDirectory(prefix="newgold-pluck-") as directory:
+            path = Path(directory)
+            (path / "check.c").write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+                str(path / "check.c"), "-o", str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_the_target_does_not_eat_it_after_the_hit(self):
+        # Neither the target's own check nor the walk over every battler that
+        # follows it, both before the post-move pass takes the Berry.
+        after = function(CONTROLLER.read_text(), "ov12_0224CC88")
+        self.assertIn("if (ctx->battlerIdTarget != BATTLER_NONE && !PluckTakesBerry(ctx, ctx->battlerIdTarget)) {\n"
+                      "            if (TryUseHeldItem(battleSystem, ctx, ctx->battlerIdTarget) == TRUE) {", after)
+        self.assertIn("if ((ctx->switchInFlag & MaskOfFlagNo(battlerId)) || PluckTakesBerry(ctx, battlerId)) {", after)
+        self.assertLess(after.index("PluckTakesBerry(ctx, battlerId)"), after.index("CheckUseHeldItem(battleSystem, ctx, battlerId, &script)"))
+        # The entry abilities' check, which ov12_0224CC88 runs first, walks
+        # every battler's held item too.
+        entry = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        self.assertIn("TryAbilityOnEntry(battleSystem, ctx)", after)
+        self.assertIn("if (!PluckTakesBerry(ctx, battlerId) && CheckUseHeldItem(battleSystem, ctx, battlerId, (u32 *)&script) == TRUE) {",
+                      entry[entry.index("case 14: // Held item activated on entry"):])
+        # And the theft is the post-move pass's, subscript 219.
+        self.assertIn("case MOVE_EFFECT_EAT_BERRY:", function(CONTROLLER.read_text(), "TryAdditionalMoveEffect"))
 
 class PluckKlutzTests(unittest.TestCase):
     def test_bug_bite_and_pluck_feed_a_klutz_or_embargo_eater(self):

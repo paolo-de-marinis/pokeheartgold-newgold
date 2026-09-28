@@ -4618,8 +4618,10 @@ void ov12_0224CC88(BattleSystem *battleSystem, BattleContext *ctx) {
         }
         // fallthrough
     case 4:
+        // Not a Berry a Bug Bite or a Pluck is about to take, here or in the
+        // walk below (PluckTakesBerry).
         ctx->unk_40++;
-        if (ctx->battlerIdTarget != BATTLER_NONE) {
+        if (ctx->battlerIdTarget != BATTLER_NONE && !PluckTakesBerry(ctx, ctx->battlerIdTarget)) {
             if (TryUseHeldItem(battleSystem, ctx, ctx->battlerIdTarget) == TRUE) {
                 return;
             }
@@ -4668,7 +4670,7 @@ void ov12_0224CC88(BattleSystem *battleSystem, BattleContext *ctx) {
 
         while (ctx->unk_44 < BattleSystem_GetMaxBattlers(battleSystem)) {
             battlerId = ctx->turnOrder[ctx->unk_44];
-            if (ctx->switchInFlag & MaskOfFlagNo(battlerId)) {
+            if ((ctx->switchInFlag & MaskOfFlagNo(battlerId)) || PluckTakesBerry(ctx, battlerId)) {
                 ctx->unk_44++;
                 continue;
             }

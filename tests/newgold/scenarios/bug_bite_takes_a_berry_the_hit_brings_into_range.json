@@ -1,0 +1,14 @@
+{
+  "about": "Bug Bite takes a Berry the hit brings into range before its holder can eat it: the user eats it whatever the Berry's own condition (Bulbapedia's Bug Bite and Pluck; Showdown's gen-9 bugbite takes it on the hit, before the Update event where a Berry fires; Pokemon Central's Coleomorso says nothing of it). Before, the target ate its own Berry in the held-item check that follows the hit, and the theft, once the move was over, found nothing. A level-10 Chansey at 5 HP is taught Bug Bite (teach:) against a forced wild level-5 Chansey that knows only Splash, holds an Oran Berry and is at 28 of its 40 HP (set:): the bite's 11 leave it at 17, below half, and the player's Chansey steals and eats the Berry, healing 10, while the wild one keeps its 17. The field's RNG is pinned as in rolls_forced_high.json, the damage roll forced as in bug_bite_klutz_embargo.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CHANSEY:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_BUG_BITE",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:1,item,ITEM_ORAN_BERRY", "set:1,hp,28", "set:0,hp,5", "fight:1:1"],
+  "expect": {"lines": ["Chansey used Bug Bite!", "Chansey stole and ate its target’s Oran Berry!",
+                       "Chansey restored its health using its Oran Berry!"],
+             "no_lines": ["The wild Chansey restored its health"],
+             "battler0.hp": 15, "battler1.hp": 17, "battler1.maxHp": 40, "battler1.item": "ITEM_NONE"}
+}
