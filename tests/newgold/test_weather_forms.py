@@ -3,7 +3,9 @@
 
 Battler_CheckWeatherFormChange changes them by the retail species and form
 number. Forecast asks for Castform's form, not its type (Pokemon Central,
-Previsioni): a type a move gave it stays until the form changes.
+Previsioni): a type a move gave it stays until the form changes. They come
+into a battle in the form they have out of one, the weather's form species
+and a retail weather form alike (BattleSystem_GetBattleMon).
 """
 
 import re
@@ -13,6 +15,8 @@ from test_level_cap import ROOT
 from test_repels import function
 
 OVERLAY = ROOT / "src/battle/overlay_12_0224E4FC.c"
+SPECIES = ROOT / "include/constants/species.h"
+REVERSION = ROOT / "src/data/form_reversion.h"
 
 
 class ForecastTests(unittest.TestCase):
@@ -39,6 +43,36 @@ class ForecastTests(unittest.TestCase):
         for weather, form in (("SUN_ALL", "SUNNY"), ("RAIN_ALL", "RAINY"), ("HAIL_ALL", "SNOWY")):
             self.assertRegex(self.castform, rf"if \(weather & FIELD_CONDITION_{weather}\) \{{\s*form = CASTFORM_{form};")
         self.assertLess(self.castform.index("form = CASTFORM_NORMAL;"), self.castform.index("ABILITY_CLOUD_NINE"))
+
+
+class EntryTests(unittest.TestCase):
+    def setUp(self):
+        self.body = function(OVERLAY.read_text(), "BattleSystem_GetBattleMon")
+        start = self.body.index("u16 species = ctx->battleMons[battlerId].species;")
+        self.block = self.body[start:self.body.index("ctx->battleMons[battlerId].level =", start)]
+
+    def test_they_come_in_in_their_form_out_of_battle(self):
+        # After the party's form and types are read, which it replaces.
+        start = self.body.index(self.block)
+        self.assertLess(self.body.index("GetMonData(mon, MON_DATA_FORM, NULL)"), start)
+        self.assertLess(self.body.index("GetMonData(mon, MON_DATA_TYPE_2, NULL)"), start)
+        castform, cherrim = self.block.split("} else if")
+        self.assertIn("species == SPECIES_CASTFORM || (species >= SPECIES_CASTFORM_SUNNY && species <= SPECIES_CASTFORM_SNOWY)", castform)
+        for line in ("species = SPECIES_CASTFORM;", "form = CASTFORM_NORMAL;", "type1 = TYPE_NORMAL;", "type2 = TYPE_NORMAL;"):
+            self.assertIn(f"ctx->battleMons[battlerId].{line}", castform)
+        self.assertIn("species == SPECIES_CHERRIM || species == SPECIES_CHERRIM_SUNSHINE", cherrim)
+        for line in ("species = SPECIES_CHERRIM;", "form = CHERRIM_CLOUDY;"):
+            self.assertIn(f"ctx->battleMons[battlerId].{line}", cherrim)
+
+    def test_those_are_all_their_weather_form_species(self):
+        # The range above holds every species the reversion table sends back
+        # to Castform, and Cherrim has the one.
+        numbers = {name: int(value) for name, value in
+                   re.findall(r"#define SPECIES_(\w+)\s+(\d+)\s*$", SPECIES.read_text(), re.M)}
+        back = re.findall(r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_(CASTFORM|CHERRIM),", REVERSION.read_text())
+        castform = sorted(numbers[form] for form, base in back if base == "CASTFORM")
+        self.assertEqual(castform, list(range(numbers["CASTFORM_SUNNY"], numbers["CASTFORM_SNOWY"] + 1)))
+        self.assertEqual([form for form, base in back if base == "CHERRIM"], ["CHERRIM_SUNSHINE"])
 
 
 if __name__ == "__main__":

@@ -237,6 +237,25 @@ void BattleSystem_GetBattleMon(BattleSystem *battleSystem, BattleContext *ctx, i
         ctx->battleMons[battlerId].form = GetMonData(mon, MON_DATA_FORM, NULL);
     }
 
+    // Castform and Cherrim come into a battle in the form they have out of
+    // one, and take their weather's there (Battler_CheckWeatherFormChange,
+    // by the retail species and form number). Their weather forms are also
+    // species of their own, which that check does not know, so one of those
+    // kept its form out of the weather; and a Castform in a retail weather
+    // form came in with the Normal Form's types and kept them in its
+    // weather. The other side's form species go back before the battle
+    // (Mon_ChangeToBattleForm), the player's only in a trainer battle.
+    u16 species = ctx->battleMons[battlerId].species;
+    if (species == SPECIES_CASTFORM || (species >= SPECIES_CASTFORM_SUNNY && species <= SPECIES_CASTFORM_SNOWY)) {
+        ctx->battleMons[battlerId].species = SPECIES_CASTFORM;
+        ctx->battleMons[battlerId].form = CASTFORM_NORMAL;
+        ctx->battleMons[battlerId].type1 = TYPE_NORMAL;
+        ctx->battleMons[battlerId].type2 = TYPE_NORMAL;
+    } else if (species == SPECIES_CHERRIM || species == SPECIES_CHERRIM_SUNSHINE) {
+        ctx->battleMons[battlerId].species = SPECIES_CHERRIM;
+        ctx->battleMons[battlerId].form = CHERRIM_CLOUDY;
+    }
+
     ctx->battleMons[battlerId].level = GetMonData(mon, MON_DATA_LEVEL, NULL);
     ctx->battleMons[battlerId].friendship = GetMonData(mon, MON_DATA_FRIENDSHIP, NULL);
 
