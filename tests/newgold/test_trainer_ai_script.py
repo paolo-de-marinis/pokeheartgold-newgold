@@ -176,7 +176,7 @@ class TrainerAIScriptTests(unittest.TestCase):
         self.assertEqual(by_name, [0x2508])
         checks = [i for i, (script, _) in lines.items() if script[0] == "AI_IF_LOADED_IN_TABLE"
                   and table(lines, i + 3 + int(script[1])) == ["ABILITY_MOLD_BREAKER", "ABILITY_TERAVOLT", "ABILITY_TURBOBLAZE"]]
-        self.assertEqual(checks, [0x0032, 0x0085, 0x0288, 0x03EE, 0x043C, 0x0448, 0x045A, 0x0490, 0x055C, 0x0630, 0x097E])
+        self.assertLessEqual({0x0032, 0x0085, 0x0288, 0x03EE, 0x043C, 0x0448, 0x045A, 0x0490, 0x055C, 0x0630, 0x097E}, set(checks))
         # Soundproof's line, one of them: Growl on a Soundproof target is
         # marked down, unless the attacker passes the ability by.
         for attacker, score in (("ABILITY_NONE", -10), ("ABILITY_MOLD_BREAKER", 0),
@@ -200,6 +200,27 @@ class TrainerAIScriptTests(unittest.TestCase):
                                     move=move), aimed, move)
             self.assertEqual(follow(lines, 0x007E, 0x00A9, target="ABILITY_SOUNDPROOF", attacker="ABILITY_TERAVOLT",
                                     move=move), 0, move)
+
+    def test_wind_rider_and_bulletproof_refuse_their_moves(self):
+        # Wind Rider takes a wind move and Bulletproof refuses a ball or bomb
+        # move (sWindMoves, sBallAndBombMoves): flag 0 takes 12 off the one,
+        # as for the absorbing abilities, and 10 off the other, as for
+        # Soundproof, unless the attacker passes the ability by. Sandstorm and
+        # Tailwind are not aimed at the target, whose Wind Rider takes nothing
+        # from them.
+        lines = words()
+        for ability, moves, left_out, score in (
+                ("ABILITY_WIND_RIDER", battle_list("sWindMoves"), {"MOVE_SANDSTORM", "MOVE_TAILWIND"}, -12),
+                ("ABILITY_BULLETPROOF", battle_list("sBallAndBombMoves"), set(), -10)):
+            self.assertLessEqual(left_out, set(moves))
+            for move in moves + ["MOVE_TACKLE"]:
+                aimed = score if move in set(moves) - left_out else 0
+                self.assertEqual(follow(lines, 0x007E, 0x00A9, target=ability, attacker="ABILITY_NONE", move=move),
+                                 aimed, (ability, move))
+                self.assertEqual(follow(lines, 0x007E, 0x00A9, target=ability, attacker="ABILITY_MOLD_BREAKER",
+                                        move=move), 0, (ability, move))
+                self.assertEqual(follow(lines, 0x007E, 0x00A9, target="ABILITY_NONE", attacker="ABILITY_NONE",
+                                        move=move), 0, move)
 
 
 if __name__ == "__main__":

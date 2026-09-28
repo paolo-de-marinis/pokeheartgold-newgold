@@ -229,7 +229,8 @@ const u32 ov10_02220AAC[] = {
 
     // 007E
     /* 007E */ AI_LOAD_BATTLER_ABILITY, AI_BATTLER_TARGET,
-    /* 0080 */ AI_IF_LOADED_NOT_EQUAL_TO, ABILITY_SOUNDPROOF, 38, // -> 00A9
+    // retail went on to 00A9 here; Wind Rider and Bulletproof are asked at 29B3
+    /* 0080 */ AI_IF_LOADED_NOT_EQUAL_TO, ABILITY_SOUNDPROOF, 10544, // -> 29B3
     /* 0083 */ AI_LOAD_BATTLER_ABILITY, AI_BATTLER_ATTACKER,
     /* 0085 */ AI_IF_LOADED_IN_TABLE, 10513, 33, // table 2999, -> 00A9
     /* 0088 */ AI_IF_MOVE_EQUAL_TO, MOVE_GROWL, 2383, // -> 09DA
@@ -6098,4 +6099,44 @@ const u32 ov10_02220AAC[] = {
                MOVE_OVERDRIVE, MOVE_PARTING_SHOT, MOVE_PERISH_SONG, MOVE_PSYCHIC_NOISE,
                MOVE_RELIC_SONG, MOVE_ROUND, MOVE_SNARL, MOVE_SPARKLING_ARIA, MOVE_TORCH_SONG,
                AI_TABLE_END,
+
+    // 29B3: flag 0, from 0080, the target's ability loaded and not
+    // Soundproof. Wind Rider takes a wind move aimed at its holder and raises
+    // its Attack for it, as Sap Sipper takes a Grass move, and Bulletproof
+    // keeps ball and bomb moves off as Soundproof keeps sound moves
+    // (BattleContext_CheckMoveImmunityFromAbility; Pokemon Central, Cavalcavento
+    // and Antiproiettile): the one takes 12 off the move's score as the
+    // absorbing abilities do, the other 10 as Soundproof does, unless the
+    // attacker passes the ability by. Appended, so no word index above moves.
+    /* 29B3 */ AI_IF_LOADED_EQUAL_TO, ABILITY_WIND_RIDER, 14, // -> 29C4
+    /* 29B6 */ AI_IF_LOADED_NOT_EQUAL_TO, ABILITY_BULLETPROOF, -10512, // -> 00A9
+    /* 29B9 */ AI_LOAD_BATTLER_ABILITY, AI_BATTLER_ATTACKER,
+    /* 29BB */ AI_IF_LOADED_IN_TABLE, -37, -10517, // table 2999, -> 00A9
+    /* 29BE */ AI_LOAD_CURRENT_MOVE,
+    /* 29BF */ AI_IF_LOADED_IN_TABLE, 13, -8168, // table 29CF, -> 09DA
+    /* 29C2 */ AI_GOTO, -10523, // -> 00A9
+
+    // 29C4: Wind Rider
+    /* 29C4 */ AI_LOAD_BATTLER_ABILITY, AI_BATTLER_ATTACKER,
+    /* 29C6 */ AI_IF_LOADED_IN_TABLE, -48, -10528, // table 2999, -> 00A9
+    /* 29C9 */ AI_LOAD_CURRENT_MOVE,
+    /* 29CA */ AI_IF_LOADED_IN_TABLE, 29, -8176, // table 29EA, -> 09DD
+    /* 29CD */ AI_GOTO, -10534, // -> 00A9
+
+    // 29CF: the ball and bomb moves Bulletproof keeps off its holder
+    // (sBallAndBombMoves)
+    /* 29CF */ MOVE_ACID_SPRAY, MOVE_AURA_SPHERE, MOVE_BARRAGE, MOVE_BEAK_BLAST, MOVE_BULLET_SEED,
+               MOVE_EGG_BOMB, MOVE_ELECTRO_BALL, MOVE_ENERGY_BALL, MOVE_FOCUS_BLAST,
+               MOVE_GYRO_BALL, MOVE_ICE_BALL, MOVE_MAGNET_BOMB, MOVE_MIST_BALL, MOVE_MUD_BOMB,
+               MOVE_OCTAZOOKA, MOVE_POLLEN_PUFF, MOVE_PYRO_BALL, MOVE_ROCK_BLAST,
+               MOVE_ROCK_WRECKER, MOVE_SEARING_SHOT, MOVE_SEED_BOMB, MOVE_SHADOW_BALL,
+               MOVE_SLUDGE_BOMB, MOVE_SYRUP_BOMB, MOVE_WEATHER_BALL, MOVE_ZAP_CANNON, AI_TABLE_END,
+
+    // 29EA: the wind moves Wind Rider takes (sWindMoves), those aimed at
+    // the target: Sandstorm and Tailwind are left out, as a foe's Wind Rider
+    // takes nothing from them
+    /* 29EA */ MOVE_AEROBLAST, MOVE_AIR_CUTTER, MOVE_BLEAKWIND_STORM, MOVE_BLIZZARD,
+               MOVE_FAIRY_WIND, MOVE_GUST, MOVE_HEAT_WAVE, MOVE_HURRICANE, MOVE_ICY_WIND,
+               MOVE_PETAL_BLIZZARD, MOVE_SANDSEAR_STORM, MOVE_SPRINGTIDE_STORM, MOVE_TWISTER,
+               MOVE_WHIRLWIND, MOVE_WILDBOLT_STORM, AI_TABLE_END,
 };

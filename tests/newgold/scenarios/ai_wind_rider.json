@@ -1,0 +1,11 @@
+{
+  "about": "The trainer AI knows Wind Rider takes a wind move (flag 0, trainer_ai_script.c 29B3 and the table at 29EA, the battle's sWindMoves). Falkner's Hoothoot is taught Air Cutter, its own wind move, and Leer once the battle is up and faces a Bramblin, whose only ability is Wind Rider, that only Splashes: it Leers every turn. Before the fix Air Cutter, twice effective on a Grass-type, was rated as a hit, and each one raised the Bramblin's Attack.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "BRAMBLIN:15", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:1,0,MOVE_AIR_CUTTER", "teach:1,1,MOVE_LEER", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:0,0,MOVE_SPLASH", "fight:1:4"],
+  "expect": {"lines": ["The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!"],
+             "no_lines": ["used Air Cutter"], "battler1.species": "SPECIES_HOOTHOOT"}
+}
