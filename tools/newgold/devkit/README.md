@@ -434,7 +434,17 @@ Reading what the debug ROM records, and playing it without looking.
   the battle's lines and memory (location, badges, flags, variables, the
   battlers, the heaps, asserts, failed allocations) have to show -- to PASS
   or FAIL; `tests/newgold/scenarios/` holds them and `test_scenarios.py`
-  runs each on the diagnostics ROM.
+  runs each on the diagnostics ROM. The playthrough is played by it leg by
+  leg, `playthrough_NN_NAME.json`, each leg waiting on the game's state in
+  RAM rather than on frame counts: `newgame` plays the opening from an
+  empty flash (a scenario with no save) by the application running and the
+  Oak speech's state, `starter:SPECIES` turns the machine in Elm's lab by
+  its cursor, and `save` saves through the start menu as a player does and
+  keeps the flash (melonDS DS hands it over; melonDS 0.9.3 writes none back
+  while it runs). A leg names the one before it (`"from"`) and starts from
+  that save: the legs of a run share a directory (`--chain`), a leg run
+  alone plays the ones before it first, and one after a failed leg fails
+  without playing.
 - `species.py OUT` -- every species and form through the screens that load
   its resources: in the PC, in boxes savedit fills (its icon, its sprite,
   its name, Dex number, types and ability on the hover, and its summary's
