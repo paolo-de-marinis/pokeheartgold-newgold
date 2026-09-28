@@ -1587,8 +1587,9 @@ class DraggedInTests(unittest.TestCase):
                       "        && BattleMoveTbl(ctx, ctx->moveNoCur)->category != CATEGORY_STATUS) {\n"
                       "        ctx->selfTurnData[ctx->battlerIdStatChange].dragPending = TRUE;\n"
                       "        ret = FALSE;", dispatch)
-        # After Parental Bond's hold-back, so only the last strike drags.
-        self.assertLess(dispatch.index("ParentalBond_StrikeToCome(ctx)"), dispatch.index("dragPending = TRUE"))
+        # Parental Bond's first strike marks it too (Codadrago: a Pokemon being
+        # dragged out answers neither strike); the drag waits for the move's end.
+        self.assertNotIn("ParentalBond", dispatch)
         controller = (ROOT / "src/battle/battle_controller_player.c").read_text()
         effects = function(controller, "TryAdditionalMoveEffect")
         drag = effects.index("RunPostMoveScript(ctx, BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE);")
@@ -1839,7 +1840,7 @@ class SleepTalkMultiStrikeTests(unittest.TestCase):
         self.assertIn("(ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_SLEEP) && ctx->moveNoTemp != MOVE_SLEEP_TALK",
                       function(OVERLAY.read_text(), "MultiHit_StoppedBySleep"))
         loop = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224CF14")
-        self.assertEqual(loop.count("MultiHit_StoppedBySleep(ctx)"), 3)
+        self.assertEqual(loop.count("MultiHit_StoppedBySleep(ctx)"), 2)
         self.assertNotIn("STATUS_SLEEP", loop)
         # Parental Bond's wait for its second strike asks the same.
         self.assertIn("!MultiHit_StoppedBySleep(ctx)", function(OVERLAY.read_text(), "ParentalBond_StrikeToCome"))

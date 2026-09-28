@@ -198,9 +198,10 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // and the added moves' data up two to 0x326C, into the two bytes of padding
 // the script buffer had before it at 0x4EEC. One spare byte is left, before
 // the added moves' data; the one after it grows BattleContext by four (all
-// measured with the compiler, plain and NEWGOLD_DIAG).
+// measured with the compiler, plain and NEWGOLD_DIAG). Parental Bond's
+// deferred side effect, a word, went, and the size with it (0x3268).
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x326C + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3268 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -1091,7 +1092,6 @@ static void ov12_02249460(BattleSystem *battleSystem, BattleContext *ctx) {
     // Nothing has bounced the move about to be used; BtlCmd_MagicCoat says
     // who does.
     ctx->battlerIdMagicCoat = BATTLER_NONE;
-    ctx->parentalBondDeferred = 0;
     // Before any action, and before the end of the turn: an Illusion whose
     // Pokemon no longer has the ability drops, whatever took it away.
     {
@@ -4720,36 +4720,6 @@ static void ov12_0224CF10(BattleSystem *battleSystem, BattleContext *ctx) {
 }
 
 static void ov12_0224CF14(BattleSystem *battleSystem, BattleContext *ctx) {
-    // Parental Bond's first strike left its side effect to the second
-    // (ov12_02250490), and Effect Spore has since put the user to sleep,
-    // which ends the move here. What was left is done now, as after the last
-    // strike: the move no longer strikes twice. When the second strike comes
-    // -- a Chesto or Lum Berry woke the user straight away -- it does it
-    // itself. The recoil is no side effect: it comes once the move is over
-    // (TryRecoil), from the one strike's damage.
-    //
-    // A first strike after which the user fainted -- to Rough Skin, a Rocky
-    // Helmet, a Jaboca Berry -- gives nothing back: Dragon Tail drags nothing
-    // once its user has fainted (Pokemon Central, Codadrago). Smack Down's
-    // fall and the terrain's end wait for no strike: they are post-move
-    // steps (TryFallAfterHit, TerrainEnds).
-    if (ctx->parentalBondDeferred != 0) {
-        u32 deferred = ctx->parentalBondDeferred;
-        int script;
-
-        ctx->parentalBondDeferred = 0;
-        if (ParentalBond_IsFirstStrike(ctx) && MultiHit_StoppedBySleep(ctx) && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {
-            ctx->selfTurnData[ctx->battlerIdAttacker].parentalBond = FALSE;
-            ctx->unk_2174 = deferred;
-            if (ov12_02250490(battleSystem, ctx, &script) == TRUE) {
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
-                ctx->commandNext = ctx->command;
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                return;
-            }
-        }
-    }
-
     if (ctx->multiHitCountTemp != 0) {
         if (ctx->battlerIdFainted == BATTLER_NONE && !MultiHit_StoppedBySleep(ctx) && !(ctx->moveStatusFlag & MOVE_STATUS_MULTI_HIT_DISRUPTED)) {
             if (--ctx->multiHitCount) {

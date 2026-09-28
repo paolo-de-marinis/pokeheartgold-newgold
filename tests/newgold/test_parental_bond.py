@@ -240,15 +240,19 @@ class ParentalBondTests(unittest.TestCase):
             self.assertIn("return CallMove(ctx);", function(commands, name), name)
 
     def test_what_waits_for_the_second_strike(self):
+        # Nothing a strike's side effect does is held back for the second
+        # strike: Smack Down's fall, the terrain's end and Dragon Tail's drag
+        # are marked as the hit lands and done once the move is over, both
+        # strikes over (Pokemon Central, Amorefiliale; TryFallAfterHit,
+        # TerrainEnds, TryAdditionalMoveEffect).
         body = function(OVERLAY.read_text(), "ov12_02250490")
-        waiting = body[body.index("if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {"):]
-        self.assertIn("case BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE:", waiting)
-        # Smack Down's fall and the terrain's end wait for the move's end,
-        # both strikes over (test_move_effects).
-        for script in ("FELL_STRAIGHT_DOWN", "HANDLE_TERRAIN_END"):
-            self.assertLess(body.index(f"*out == BATTLE_SUBSCRIPT_{script}"), body.index("ParentalBond_StrikeToCome(ctx)"))
+        self.assertNotIn("ParentalBond", body)
+        for script in ("FELL_STRAIGHT_DOWN", "HANDLE_TERRAIN_END", "FORCE_TARGET_TO_SWITCH_OR_FLEE"):
+            self.assertIn(f"*out == BATTLE_SUBSCRIPT_{script}", body)
+        self.assertIn("ctx->selfTurnData[ctx->battlerIdStatChange].dragPending = TRUE;", body)
         # Anchor Shot's hold is no side effect: it comes once the move is over.
-        self.assertNotIn("MEAN_LOOK", waiting[:waiting.index("return ret;")])
+        tail = body[body.index("*out == BATTLE_SUBSCRIPT_FELL_STRAIGHT_DOWN"):]
+        self.assertNotIn("MEAN_LOOK", tail[:tail.index("return ret;")])
         self.assertIn("!ParentalBond_StrikeToCome(ctx)", function(CONTROLLER.read_text(), "ov12_0224CC88"))
         self.assertIn("!ParentalBond_IsSecondStrike(ctx)", function(COMMANDS.read_text(), "BtlCmd_CalcFuryCutterPower"))
 
@@ -279,24 +283,24 @@ class ParentalBondTests(unittest.TestCase):
         self.assertIsNone(re.search(r"UpdateVar +OPCODE_(FLAG_ON|SET|ADD), *BSCRIPT_VAR_MOVE_STATUS_FLAGS, *[^/\n]*"
                                     r"MOVE_STATUS_(MISSED|MULTI_HIT_DISRUPTED)", scripts))
 
-    def test_a_first_strike_that_proves_the_last_does_what_it_left(self):
-        # Pokemon Central (Spargispora, Mossa multicolpo): Effect Spore's
-        # sleep ends a multi-strike move at once. Parental Bond's first strike
-        # has left Dragon Tail's drag to the second by then; the loop does it
-        # when the second will not come.
-        # The recoil is a post-move step (TryRecoil) and waits for nothing.
-        body = function(OVERLAY.read_text(), "ov12_02250490")
-        self.assertIn("u32 sideEffect = ctx->unk_2174;", body)
-        waiting = body[body.index("if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {"):]
-        held = waiting[:waiting.index("ret = FALSE;")]
-        self.assertIn("ctx->parentalBondDeferred = sideEffect;", held)
-        self.assertNotIn("RECOIL", waiting[:waiting.index("return ret;")])
-        loop = function(CONTROLLER.read_text(), "ov12_0224CF14")
-        deferred = loop[:loop.index("if (ctx->multiHitCountTemp != 0) {")]
-        self.assertIn("if (ParentalBond_IsFirstStrike(ctx) && MultiHit_StoppedBySleep(ctx) && ctx->battleMons[ctx->battlerIdAttacker].hp != 0) {", deferred)
-        self.assertLess(deferred.index("parentalBond = FALSE;"), deferred.index("ov12_02250490(battleSystem, ctx, &script)"))
-        self.assertIn("ctx->unk_2174 = deferred;", deferred)
-        self.assertIn("ctx->parentalBondDeferred = 0;", function(CONTROLLER.read_text(), "ov12_02249460"))
+    def test_a_pokemon_being_dragged_out_answers_neither_strike(self):
+        # Pokemon Central (Codadrago): a Pokemon being dragged out does not
+        # answer with Color Change or Anger Shell. The first strike marks the
+        # drag as the second does, so neither strike is answered; before, the
+        # first left the drag to the second and was answered. The drag waits
+        # for the move's end, which Effect Spore's sleep can bring after the
+        # first strike (Spargispora): nothing is replayed then, the mark being
+        # there already. The recoil is a post-move step (TryRecoil) and waits
+        # for nothing.
+        overlay, controller = OVERLAY.read_text(), CONTROLLER.read_text()
+        self.assertNotIn("ov12_02250490", function(controller, "ov12_0224CF14"))
+        self.assertNotIn("parentalBondDeferred", (ROOT / "include/battle/battle.h").read_text())
+        on_hit = function(overlay, "CheckAbilityEffectOnHit")
+        for ability in ("COLOR_CHANGE", "ANGER_SHELL"):
+            case = on_hit[on_hit.index(f"case ABILITY_{ability}:"):]
+            self.assertIn("!Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget)", case[:case.index("break;")], ability)
+        self.assertIn("if (!ctx->selfTurnData[battlerId].dragPending", function(overlay, "Battler_WillBeDraggedOut"))
+        self.assertIn("if (target != BATTLER_NONE && ctx->selfTurnData[target].dragPending) {", function(controller, "TryAdditionalMoveEffect"))
 
     def test_the_scripts_that_ask(self):
         pay_day = (EFFECTS / "effect_script_0034.s").read_text()

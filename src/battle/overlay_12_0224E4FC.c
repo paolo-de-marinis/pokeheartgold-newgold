@@ -1945,7 +1945,6 @@ u16 MoveEffectChance(BattleSystem *battleSystem, BattleContext *ctx) {
 BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     BOOL ret = FALSE;
     u16 effectChance;
-    u32 sideEffect = ctx->unk_2174;
 
     // A Covert Cloak on whoever was hit eats the same effects Sheer Force
     // gives up, and the reference asks the two in one condition here. What it
@@ -2064,38 +2063,19 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
         }
     }
 
-    // What this does waits for Parental Bond's second strike (Pokemon Central,
-    // Amorefiliale): Dragon Tail's switch. The reference does it after the
-    // move; here it comes with the hit, so the first strike leaves it to the
-    // second, unless the first was the last. (The cure Smelling Salts and Wake-Up Slap
-    // give, Knock Off's knocking, Thief's taking, Pluck's eating, and the
-    // holds and hazards of the moves past retail's are post-move steps here
-    // too, TryAdditionalMoveEffect and TryHoldAfterHit, and U-turn's switch is
-    // TryPivotSwitch.)
-    //
-    // The first strike can still prove the last once these have been asked:
-    // Effect Spore puts the user to sleep, and the move ends there (Pokemon
-    // Central, Spargispora). What was left to the second strike is then done
-    // after all, as after the last strike, by the multi-strike loop
-    // (ov12_0224CF14), which parentalBondDeferred tells what it was. The
-    // recoil is no side effect: it comes once the move is over (TryRecoil),
-    // from the damage of the strikes there were.
-    if (ret == TRUE && ParentalBond_StrikeToCome(ctx)) {
-        switch (*out) {
-        case BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE:
-            ctx->parentalBondDeferred = sideEffect;
-            ret = FALSE;
-            break;
-        }
-    }
-
     // Dragon Tail and Circle Throw drag their target out after it has
     // answered the hit -- its Rough Skin, Justified, Rocky Helmet or Berry --
     // as in the games, where the drag comes at the end of the move; here the
     // hit's side effect would drag it before those steps, which would then
     // find a Pokemon that took no hit. The target is marked instead, and
     // ov12_0224E1BC drags it once the hit's steps are over. Roar and
-    // Whirlwind hit nothing and drag as they are used.
+    // Whirlwind hit nothing and drag as they are used. Parental Bond's first
+    // strike marks it as the second does, so that a Pokemon being dragged out
+    // answers neither with Color Change or Anger Shell (Battler_WillBeDraggedOut;
+    // Pokemon Central, Codadrago), as it answers no single strike; the drag
+    // waits for the move's end all the same, both strikes over or the move
+    // stopped after the first (Amorefiliale; Spargispora for Effect Spore's
+    // sleep).
     if (ret == TRUE && *out == BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE
         && BattleMoveTbl(ctx, ctx->moveNoCur)->category != CATEGORY_STATUS) {
         ctx->selfTurnData[ctx->battlerIdStatChange].dragPending = TRUE;

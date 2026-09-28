@@ -688,11 +688,6 @@ typedef struct BattleContext {
     // damage is dealt. Written for the target whenever a bind begins
     // (BtlCmd_SetBindingTurns), which is the only way into one.
     u8 bindingBandBinds;
-    // What Parental Bond's first strike left to the second -- the side
-    // effect ov12_02250490 held back -- as the side-effect flags that ask for
-    // it, until the multi-strike loop knows whether the second strike comes;
-    // zero when nothing waits. Cleared as each action is dispatched.
-    u32 parentalBondDeferred;
     // Echoed Voice: the turns in a row someone has used it, four at most, and
     // whether someone has in this one. A turn it was used in lengthens the
     // run when it ends, and a turn it was not ends the run.

@@ -571,7 +571,8 @@ class PostMoveEffectsTests(unittest.TestCase):
         self.assertIn("} else if (*out == BATTLE_SUBSCRIPT_HANDLE_TERRAIN_END) {\n"
                       "            ctx->selfTurnData[ctx->battlerIdAttacker].terrainEndPending = TRUE;\n"
                       "            ret = FALSE;", marks)
-        self.assertLess(marks.index("fallPending"), marks.index("ParentalBond_StrikeToCome(ctx)"))
+        # Marked as the hit lands, Parental Bond's first strike too.
+        self.assertNotIn("ParentalBond", hit)
         body = function(controller, "ov12_0224E1BC")
         self.assertIn("TryHoldAfterHit(ctx, battlerId) == TRUE || TryFallAfterHit(ctx, battlerId) == TRUE", body)
         self.assertLess(body.index("TryFallAfterHit("), body.index("TryMagician("))
