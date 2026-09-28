@@ -462,6 +462,57 @@ int main(void) {
 """
 
 
+# The real BtlCmd_TrySwapItems: which branch Trick, Switcheroo and Bestow take,
+# and who is marked for the battle's end.
+SWAP_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/abilities.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+typedef uint16_t u16;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { u16 item; } BattleMon;
+typedef struct { BattleMon battleMons[4]; int battlerIdAttacker, battlerIdTarget; u16 moveNoCur; } BattleContext;
+typedef struct BattleSystem BattleSystem;
+// The second address is the script's Sticky Hold branch: Trick's goes to its
+// own line, Bestow's is the next line, 0 (subscript 308).
+static int sWords, sJump, sMarked, sStickyHold, sStickyBranch;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; if (n != 1) sJump = n; }
+static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return ++sWords == 1 ? 100 : sStickyBranch; }
+static BOOL CanTrickHeldItem(BattleContext *ctx, int a, int b) { (void)ctx; (void)a; (void)b; return TRUE; }
+static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int a, int b, int ability) {
+    (void)ctx; (void)a; assert(b == 1 && ability == ABILITY_STICKY_HOLD); return sStickyHold;
+}
+static void NoteHeldItemGiven(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; sMarked |= 1 << battlerId; }
+@SWAP@
+static void use(BattleContext *ctx, u16 move) {
+    sWords = sJump = sMarked = 0;
+    sStickyBranch = move == MOVE_BESTOW ? 0 : 200;
+    ctx->moveNoCur = move;
+    BtlCmd_TrySwapItems(0, ctx);
+}
+int main(void) {
+    BattleContext ctx = { .battleMons = { { ITEM_CHERI_BERRY }, { ITEM_NONE } }, .battlerIdAttacker = 0, .battlerIdTarget = 1 };
+    // No Sticky Hold: both handed over, both marked.
+    use(&ctx, MOVE_TRICK);
+    assert(sJump == 0 && sMarked == 3);
+    // Sticky Hold turns Trick and Switcheroo away by the second branch.
+    sStickyHold = TRUE;
+    use(&ctx, MOVE_TRICK);
+    assert(sJump == 200 && sMarked == 0);
+    use(&ctx, MOVE_SWITCHEROO);
+    assert(sJump == 200 && sMarked == 0);
+    // Bestow takes nothing from the target: the gift goes on, marked.
+    use(&ctx, MOVE_BESTOW);
+    assert(sJump == 0 && sMarked == 3);
+    return 0;
+}
+"""
+
+
 class TakenItemTests(unittest.TestCase):
     """Pokemon Central: Furto and Arraffalesto. An item taken from the
     player's Pokemon comes back after the battle; one taken from a wild
@@ -493,6 +544,22 @@ class TakenItemTests(unittest.TestCase):
         self.assertRegex(swap, r"ABILITY_STICKY_HOLD\) == TRUE\) \{\n\s*BattleScriptIncrementPointer\(ctx, adrsB\);\n\s*\} else \{\n"
                                r"\s*NoteHeldItemGiven\(battleSystem, ctx, ctx->battlerIdAttacker\);\n"
                                r"\s*NoteHeldItemGiven\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\}")
+
+    def test_bestow_marks_what_it_hands_to_a_sticky_hold_holder(self):
+        # Pokemon Central (Cediregalo): an item given to a trainer's Pokemon
+        # comes back at the battle's end, Sticky Hold or not -- it keeps its
+        # own item from Trick, and Bestow takes none. Bestow's subscript
+        # gives the ability no branch (test_knock_off pins its next line).
+        program = SWAP_FIXTURE.replace("@SWAP@", function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TrySwapItems"))
+        with tempfile.TemporaryDirectory(prefix="newgold-swap-") as directory:
+            path = Path(directory)
+            (path / "check.c").write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+                str(path / "check.c"), "-o", str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_a_berry_handed_over_and_used_up_is_gone(self):
         # Pokemon Central (Raggiro): the swapped item comes back unless it

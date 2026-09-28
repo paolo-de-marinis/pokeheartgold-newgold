@@ -17,10 +17,8 @@ _Start:
     // handing over what it started with has it back when the battle is over,
     // as a tricked one does (NoteHeldItemGiven). Sticky Hold, its other
     // refusal, keeps nothing from Bestow, which takes no item from the target
-    // (Showdown's bestow).
-    // ponytail: that path skips the mark, so a Berry given to a holder of
-    // Sticky Hold is not the player's again after the battle; a command of
-    // Bestow's own if anything in New Gold ever learns the move.
+    // (Showdown's bestow): the second address is the next line, which tells
+    // the command not to ask it.
     TrySwapItems _MoveFailed, _Give
 
 _Give:

@@ -5228,9 +5228,15 @@ BOOL BtlCmd_TrySwapItems(BattleSystem *battleSystem, BattleContext *ctx) {
     // back when the battle ends, a Berry too (NoteHeldItemGiven), so the item
     // is not gone for good. Nor does a knocked-off item stop it any more
     // (BtlCmd_TryKnockOff).
+    //
+    // Sticky Hold keeps the target's item from Trick and Switcheroo, which
+    // branch to their own line for it. Bestow takes nothing from the target:
+    // its subscript (308) gives the ability no branch, the second address
+    // being the next line, and the gift goes on, marked as a swap is
+    // (Showdown's bestow; the reference's battle test bestow/sticky_hold.c).
     if ((ctx->battleMons[ctx->battlerIdAttacker].item == 0 && ctx->battleMons[ctx->battlerIdTarget].item == 0) || !CanTrickHeldItem(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget)) {
         BattleScriptIncrementPointer(ctx, adrsA);
-    } else if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
+    } else if (adrsB && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
         BattleScriptIncrementPointer(ctx, adrsB);
     } else {
         NoteHeldItemGiven(battleSystem, ctx, ctx->battlerIdAttacker);
