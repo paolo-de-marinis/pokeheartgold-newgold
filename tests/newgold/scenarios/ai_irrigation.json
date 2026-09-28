@@ -1,0 +1,12 @@
+{
+  "about": "The trainer AI knows New Gold's Irrigation swallows a Water move (flag 0, trainer_ai_script.c 29FA). Falkner's Hoothoot is taught Water Gun and Leer once the battle is up and faces a Sudowoodo, whose only ability here is Irrigation, that only Splashes: it Leers every turn of six. Before the fix Water Gun, twice effective on a Rock-type, was rated as a hit and used once the Sudowoodo's Defense was down four stages, which raised its Attack two stages. Leer and Splash are given 30 PP, so neither runs out.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SUDOWOODO:15", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:1,0,MOVE_WATER_GUN", "teach:1,1,MOVE_LEER,30", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:0,0,MOVE_SPLASH,30", "fight:1:6"],
+  "expect": {"lines": ["The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!",
+                       "The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!"],
+             "no_lines": ["used Water Gun"], "battler1.species": "SPECIES_HOOTHOOT"}
+}

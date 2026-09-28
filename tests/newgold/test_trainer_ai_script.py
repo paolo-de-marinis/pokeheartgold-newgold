@@ -96,8 +96,9 @@ class TrainerAIScriptTests(unittest.TestCase):
         # generation Lightning Rod and Storm Drain swallow their type as Volt
         # Absorb and Water Absorb do; Dry Skin, which retail's word 0049 meant
         # and asked as Levitate, takes Water, Earth Eater Ground, Well-Baked
-        # Body Fire and Sap Sipper Grass. Each goes to a check of the move's
-        # type that takes 12 off its score.
+        # Body Fire and Sap Sipper Grass, and New Gold's Irrigation and
+        # Evaporate Water. Each goes to a check of the move's type that takes
+        # 12 off its score.
         lines = words()
 
         def reach(index):
@@ -112,22 +113,21 @@ class TrainerAIScriptTests(unittest.TestCase):
         self.assertEqual(lines[0x0035][0], ["AI_LOAD_BATTLER_ABILITY", "AI_BATTLER_TARGET"])
         absorbers = {}
         index = 0x0037
-        while lines[index][0][0] == "AI_IF_LOADED_EQUAL_TO":
-            absorbers[lines[index][0][1]] = reach(index)
-            index += 3
-        self.assertEqual(lines[index][0][0], "AI_GOTO")
-        index = reach(index)
-        while lines[index][0][0] == "AI_IF_LOADED_EQUAL_TO":
-            absorbers[lines[index][0][1]] = reach(index)
-            index += 3
-        self.assertEqual(lines[index][0][0], "AI_GOTO")
-        self.assertEqual(reach(index), 0x0079)
+        while True:
+            while lines[index][0][0] == "AI_IF_LOADED_EQUAL_TO":
+                absorbers[lines[index][0][1]] = reach(index)
+                index += 3
+            self.assertEqual(lines[index][0][0], "AI_GOTO")
+            if reach(index) == 0x0079:
+                break
+            index = reach(index)
         for ability, kind in (("ABILITY_VOLT_ABSORB", "TYPE_ELECTRIC"), ("ABILITY_MOTOR_DRIVE", "TYPE_ELECTRIC"),
                               ("ABILITY_LIGHTNINGROD", "TYPE_ELECTRIC"), ("ABILITY_WATER_ABSORB", "TYPE_WATER"),
                               ("ABILITY_STORM_DRAIN", "TYPE_WATER"), ("ABILITY_DRY_SKIN", "TYPE_WATER"),
                               ("ABILITY_FLASH_FIRE", "TYPE_FIRE"), ("ABILITY_WELL_BAKED_BODY", "TYPE_FIRE"),
                               ("ABILITY_LEVITATE", "TYPE_GROUND"), ("ABILITY_EARTH_EATER", "TYPE_GROUND"),
-                              ("ABILITY_SAP_SIPPER", "TYPE_GRASS")):
+                              ("ABILITY_SAP_SIPPER", "TYPE_GRASS"), ("ABILITY_IRRIGATION", "TYPE_WATER"),
+                              ("ABILITY_EVAPORATE", "TYPE_WATER")):
             self.assertEqual(type_check(absorbers[ability]), kind, ability)
 
     def test_a_ghost_type_is_not_held(self):

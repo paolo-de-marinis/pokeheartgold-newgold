@@ -6056,7 +6056,8 @@ const u32 ov10_02220AAC[] = {
     /* 2975 */ AI_IF_LOADED_EQUAL_TO, ABILITY_EARTH_EATER, -10509, // -> 006B
     /* 2978 */ AI_IF_LOADED_EQUAL_TO, ABILITY_WELL_BAKED_BODY, -10527, // -> 005C
     /* 297B */ AI_IF_LOADED_EQUAL_TO, ABILITY_SAP_SIPPER, 2, // -> 2980
-    /* 297E */ AI_GOTO, -10503, // -> 0079
+    // this went on to 0079; New Gold's Water absorbers are asked at 29FA
+    /* 297E */ AI_GOTO, 122, // -> 29FA
 
     // 2980
     /* 2980 */ AI_LOAD_TYPE_FROM, 4,
@@ -6139,4 +6140,15 @@ const u32 ov10_02220AAC[] = {
                MOVE_FAIRY_WIND, MOVE_GUST, MOVE_HEAT_WAVE, MOVE_HURRICANE, MOVE_ICY_WIND,
                MOVE_PETAL_BLIZZARD, MOVE_SANDSEAR_STORM, MOVE_SPRINGTIDE_STORM, MOVE_TWISTER,
                MOVE_WHIRLWIND, MOVE_WILDBOLT_STORM, AI_TABLE_END,
+
+    // 29FA: flag 0, from 297E, the target's ability still loaded. New Gold's
+    // Irrigation swallows a Water move and raises its holder's Attack for it,
+    // as Storm Drain swallows one, and Evaporate refuses a Water move with
+    // power, as Levitate refuses a Ground move
+    // (BattleContext_CheckMoveImmunityFromAbility): both go to the Water
+    // check, which takes 12 off the move's score. Appended, so no word index
+    // above moves.
+    /* 29FA */ AI_IF_LOADED_EQUAL_TO, ABILITY_IRRIGATION, -10664, // -> 0055
+    /* 29FD */ AI_IF_LOADED_EQUAL_TO, ABILITY_EVAPORATE, -10667, // -> 0055
+    /* 2A00 */ AI_GOTO, -10633, // -> 0079
 };
