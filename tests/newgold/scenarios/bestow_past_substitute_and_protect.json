@@ -1,0 +1,17 @@
+{
+  "about": "Bestow goes past a substitute and past Protect (Pokemon Central, Sostituto (bambola): it ignores the substitute from the sixth generation; Cediregalo: every protection but Crafty Shield; Bulbapedia and Showdown's gen-9 bestow the same), where the audit read it as stopped by both: its subscript asks for no substitute and its record has no protect flag. Nothing in New Gold learns the move, so the scenario teaches it: in the Violet Gym the player's Snorlax holds Leftovers and knows Bestow alone, Falkner's Hoothoot holds nothing and knows Substitute alone (set:, teach:). The Hoothoot, the faster, puts up its substitute and still receives the Leftovers; then, taught Protect alone and holding nothing again, it protects itself and still receives the Snorlax's Silk Scarf.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "set:0,item,ITEM_LEFTOVERS", "set:1,item,ITEM_NONE",
+            "teach:0,0,MOVE_BESTOW", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SUBSTITUTE", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["The opposing Hoothoot used Substitute!", "Snorlax used Bestow!", "received Leftovers"],
+                        "battler0.item": "ITEM_NONE", "battler1.item": "ITEM_LEFTOVERS"}},
+            "set:0,item,ITEM_SILK_SCARF", "set:1,item,ITEM_NONE", "teach:1,0,MOVE_PROTECT",
+            "fight:1:1"],
+  "expect": {"new_lines": ["The opposing Hoothoot used Protect!", "Snorlax used Bestow!", "received Silk Scarf"],
+             "battler0.item": "ITEM_NONE", "battler1.item": "ITEM_SILK_SCARF"}
+}

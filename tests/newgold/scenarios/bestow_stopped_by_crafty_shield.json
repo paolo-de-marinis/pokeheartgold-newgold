@@ -1,0 +1,14 @@
+{
+  "about": "Crafty Shield stops Bestow, the one guard that does from the sixth generation (Pokemon Central, Cediregalo: it ignores every protection but Crafty Shield); Bestow's record has no protect flag, which let it through that one too. Nothing in New Gold learns the move, so the scenario teaches it: in the Violet Gym the player's Snorlax holds Leftovers and knows Bestow alone, Falkner's Hoothoot holds nothing and knows Crafty Shield alone (set:, teach:). The shield goes up first and the Bestow fails against it; each keeps what it had.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "set:0,item,ITEM_LEFTOVERS", "set:1,item,ITEM_NONE",
+            "teach:0,0,MOVE_BESTOW", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_CRAFTY_SHIELD", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["The opposing Hoothoot used Crafty Shield!", "Snorlax used Bestow!", "Crafty Shield protected"],
+             "no_lines": ["received"],
+             "battler0.item": "ITEM_LEFTOVERS", "battler1.item": "ITEM_NONE"}
+}

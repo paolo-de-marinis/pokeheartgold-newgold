@@ -3541,10 +3541,19 @@ static BOOL IsTeamGuardMove(u16 guard) {
 // does damage; Crafty Shield only a status move; Quick Guard only a move with
 // raised priority; Wide Guard only a move that hits every adjacent opponent
 // or every adjacent battler.
+//
+// Bestow, whose record has no protect flag, is asked too: from the sixth
+// generation it ignores every protection but Crafty Shield (Pokemon Central,
+// Cediregalo; Truccodifesa has Crafty Shield stop some of the moves Protect
+// lets through), and the rest let a status move through already.
 static BOOL GuardStopsMove(BattleContext *ctx, int battlerIdAttacker, u32 move, u16 guard, BOOL ownGuard) {
-    BOOL status = BattleMoveTbl(ctx, move)->category == CATEGORY_STATUS;
-    u16 range = BattleMoveTbl(ctx, move)->range;
+    const MoveTbl *moveTbl = BattleMoveTbl(ctx, move);
+    BOOL status = moveTbl->category == CATEGORY_STATUS;
+    u16 range = moveTbl->range;
 
+    if (!(moveTbl->unkB & (1 << 1))) {
+        return move == MOVE_BESTOW && guard == MOVE_CRAFTY_SHIELD;
+    }
     switch (guard) {
     case MOVE_PROTECT:
     case MOVE_DETECT:
@@ -3590,7 +3599,6 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         && BattleMoveMakesContact(ctx, move) == TRUE;
 
     if (ctx->turnData[battlerIdTarget].protectFlag
-        && BattleMoveTbl(ctx, move)->unkB & (1 << 1)
         && punchesThroughProtect == FALSE
         && (move != MOVE_CURSE || CurseUserIsGhost(ctx, move, battlerIdAttacker) == TRUE)
         && (!BattleCtx_IsIdenticalToCurrentMove(ctx, move) || ctx->battleStatus & BATTLE_STATUS_CHARGE_MOVE_HIT)) {
