@@ -1,0 +1,10 @@
+{
+  "about": "The playthrough's first leg, from no save: a new game through the intro, the title and NEW GAME, Professor Oak's speech (no information needed, the boy, the default name), the bedroom -- its music New Bark's -- downstairs, where the mother gives the bag, the Trainer Card, the save and options buttons, out through New Bark Town into Elm's lab, the Professor's speech, and the starter machine turned to Cyndaquil, taken without a nickname; saved through the start menu in the lab, where the next leg starts. Every input waits on the game's state in RAM -- the application running, the Oak speech's and the machine's states, the field's text box, the map and the player's tile -- not on frame counts.",
+  "steps": ["newgame",
+            {"expect": {"map": "MAP_NEW_BARK_PLAYER_HOUSE_2F", "x": 6, "y": 6, "party": 0, "music": "SEQ_GS_T_WAKABA"}},
+            "goto:MAP_NEW_BARK_ELMS_LAB_1F,8,4",
+            {"expect": {"flag:FLAG_GOT_BAG": 1, "flag:FLAG_GOT_TRAINER_CARD": 1, "flag:FLAG_GOT_SAVE_BUTTON": 1, "flag:FLAG_GOT_STARTER": 0, "music": "SEQ_GS_UTSUGI_RABO"}},
+            "A", "starter:SPECIES_CYNDAQUIL", "save"],
+  "expect": {"map": "MAP_NEW_BARK_ELMS_LAB_1F", "x": 4, "y": 7, "party": 1, "party0.species": "SPECIES_CYNDAQUIL",
+             "party0.level": 5, "flag:FLAG_GOT_STARTER": 1, "var:VAR_SCENE_ELMS_LAB": 1, "music": "SEQ_GS_UTSUGI_RABO"}
+}
