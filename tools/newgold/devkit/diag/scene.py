@@ -313,10 +313,14 @@ def plan(start, goals, blocked=frozenset(), most=300000):
     def edges(node):
         m, x, z = node
         here = tile(m, x, z)
+        # A ladder's foot warps when pressed its way, so no step is taken
+        # that way from it: Sprout Tower 1F's (6, 16), LADDER_NORTH, below
+        # its (6, 15), LADDER_SOUTH, sent the walk up to 2F and back for ever.
+        pressed = kinds["press"].get(here[1] & 0xFF) if here and warps(m).get((x, z)) else None
         for direction, (dx, dz) in STEP.items():
             nx, nz = x + dx, z + dz
             there = tile(m, nx, nz)
-            if there is None:
+            if there is None or direction == pressed:
                 continue
             owner, attr = there
             behaviour = attr & 0xFF

@@ -312,6 +312,18 @@ class NavigatorTests(unittest.TestCase):
         for node in nodes[mat + 2:]:
             self.assertFalse(scene.tile(*node)[1] & scene.savedit.COLLISION, node)
 
+    def test_a_ladder_foot_is_not_walked_off_its_way(self):
+        # Sprout Tower 1F's ladder is two tiles, (6, 16) climbed pressing up
+        # and (6, 15) pressing down: from the foot the walk goes round it,
+        # not up into it and back to 2F. The way down from 3F to Violet
+        # City came to (6, 16) and looped there.
+        path = scene.plan((110, 6, 16), [(110, 7, 9)])
+        self.assertEqual(path[1][0], (110, 7, 16))
+        self.assertNotIn((110, 6, 15), [node for node, _ in path])
+        # and up it still goes, pressed down from its other end
+        up = scene.plan((110, 6, 14), [(155, 6, 17)])
+        self.assertEqual(up[:2], [((110, 6, 14), "DOWN"), ((110, 6, 15), "DOWN")])
+
     def test_a_ledge_is_jumped_one_way_only(self):
         # Route 29's ledges at x = 651 face east: over one in two tiles going
         # east, round by the shore coming back.
