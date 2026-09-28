@@ -60,8 +60,9 @@ A save's path is taken in ~/hgss-saves unless it is absolute; the saves there
 are Paolo's and only a copy is ever edited. In "expect", "lines" have to be
 printed by the battle, in that order (a part of the line is enough),
 "new_lines" the same since the check before this one (a later phase's lines,
-not matched by an earlier phase's alike), and "no_lines" never; "heaps" is
-the least a heap may have had left at its
+not matched by an earlier phase's alike), "once_lines" exactly once each
+since the check before (one line where a rule prints one, not two), and
+"no_lines" never; "heaps" is the least a heap may have had left at its
 fullest (gDiagHeapLowWater); every other key is a value read out of main RAM
 by name, through the ELF's symbols and the offsets the tree's own headers
 give: map, x, y, party (the count), partyN.species|item|level|exp|hp|maxHp
@@ -126,7 +127,7 @@ def readable(step_or_key, key=False):
     import re
     from core import BUTTONS
     if key:
-        return (step_or_key in ("lines", "new_lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
+        return (step_or_key in ("lines", "new_lines", "once_lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
                                 "party", "badges", "music")
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
@@ -723,7 +724,7 @@ class Scene:
     def check(self, expect, final=False):
         """What in `expect` does not hold, as sentences; [] when it all does."""
         self._collect(self.core)
-        ram, wrong = self.core.ram(), []
+        ram, wrong, since = self.core.ram(), [], self._checked
         if final:
             expect = {"asserts": 0, "alloc_failures": 0, **expect}
         for key, start in (("lines", 0), ("new_lines", self._checked)):
@@ -737,6 +738,10 @@ class Scene:
                 else:
                     at = found + 1
         self._checked = len(self.lines)
+        for line in expect.get("once_lines", []):
+            times = sum(line in printed for printed in self.lines[since:])
+            if times != 1:
+                wrong.append(f"the line {line!r} was printed {times} times since the check before, not once")
         wrong += [f"the line {line!r} was printed" for line in expect.get("no_lines", [])
                   if any(line in printed for printed in self.lines)]
         low = self.markers.heaps(ram)
@@ -746,7 +751,7 @@ class Scene:
             elif low[heap] < self.number(least):
                 wrong.append(f"{heap} had {low[heap]:#x} left at its fullest, under {self.number(least):#x}")
         for name, expected in expect.items():
-            if name in ("lines", "new_lines", "no_lines", "heaps"):
+            if name in ("lines", "new_lines", "once_lines", "no_lines", "heaps"):
                 continue
             test, said = self.wanted(name, expected)
             value = self.value(ram, name)

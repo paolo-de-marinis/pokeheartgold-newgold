@@ -88,6 +88,21 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertEqual(s._checked, 5)
         self.assertTrue(scene.readable("new_lines", key=True))
 
+    def test_once_lines_count_what_was_printed_since_the_check_before(self):
+        # One line where a rule prints one: an Opportunist copying Belly
+        # Drum's rise printed its line twice and passed "lines".
+        s = scene.Scene.__new__(scene.Scene)
+        s.lines, s._checked = ["Chansey’s Opportunist raised its Attack!"], 0
+        s._collect = lambda core: None
+        s.core = type("Core", (), {"ram": lambda self: b""})()
+        s.markers = type("Markers", (), {"heaps": lambda self, ram: {}})()
+        once = {"once_lines": ["Opportunist raised its Attack!"]}
+        self.assertEqual(s.check(once), [])
+        s.lines += ["Chansey’s Opportunist raised its Attack!"] * 2
+        self.assertIn("printed 2 times", s.check(once)[0])
+        self.assertIn("printed 0 times", s.check(once)[0])
+        self.assertTrue(scene.readable("once_lines", key=True))
+
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.
         self.assertTrue(scene.Scene.wanted("x", 663)[0](663))
