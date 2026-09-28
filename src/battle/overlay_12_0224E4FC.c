@@ -2610,6 +2610,20 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
         }
     }
 
+    // Shed Tail switches as Baton Pass does and passes the decoy alone
+    // (Pokemon Central, Tagliacoda: the substitute stays to shield what comes
+    // in; Showdown's gen-9 copyVolatileFrom with 'shedtail' copies the
+    // substitute and nothing else). Its script has put the stages back.
+    if ((ctx->battleStatus & BATTLE_STATUS_BATON_PASS) && ctx->moveNoCur == MOVE_SHED_TAIL) {
+        int decoy = unkStruct.substituteHp;
+
+        MI_CpuClear8(&unkStruct, sizeof(unkStruct));
+        unkStruct.substituteHp = decoy;
+        dragonCheer = 0;
+        ctx->battleMons[battlerId].status2 &= STATUS2_SUBSTITUTE;
+        ctx->battleMons[battlerId].moveEffectFlags = 0;
+    }
+
     if (!(ctx->battleStatus & BATTLE_STATUS_BATON_PASS)) {
         ctx->battleMons[battlerId].status2 = 0;
         ctx->battleMons[battlerId].moveEffectFlags = 0;

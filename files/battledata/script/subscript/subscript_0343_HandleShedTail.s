@@ -31,12 +31,12 @@ _000:
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STAT_CHANGE_SPEED, 6
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STAT_CHANGE_ACC, 6
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STAT_CHANGE_EVASION, 6
-    UpdateMonData OPCODE_FLAG_OFF, BATTLER_CATEGORY_DEFENDER, BMON_DATA_MOVE_EFFECT, MOVE_EFFECT_FLAG_LEECH_SEED
     // The reference switches the user out once the move is over, as it does
     // for Parting Shot (ServerDoPostMoveEffects.c:2136-2147), with the Baton
     // Pass flag set so the decoy goes to what comes in; the stages were reset
-    // above so that they do not go with it. This tree has no pass after the
-    // move, so the switch is Baton Pass's own, from here.
+    // above so that they do not go with it, and InitSwitchWork passes the
+    // decoy and nothing else. This tree has no pass after the move, so the
+    // switch is Baton Pass's own, from here.
     TryRestoreStatusOnSwitch BATTLER_CATEGORY_ATTACKER, _SWITCH_OUT
     UpdateMonData OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS, STATUS_NONE
 

@@ -1,0 +1,16 @@
+{
+  "about": "Shed Tail passes the decoy and nothing else (Pokemon Central, Tagliacoda: the substitute stays to shield what comes in; Showdown's gen-9 copyVolatileFrom with 'shedtail' copies the substitute alone). Before, it switched as Baton Pass does and passed Perish Song's count with the rest. A level-10 Pikachu with a level-40 Snorlax behind it is given Shed Tail and Splash in the running battle (teach:) against a forced wild level-5 Chansey given Perish Song, then Splash. The song takes both; the Pikachu sheds its tail and the Snorlax comes in behind the decoy, and at the turn's end only the Chansey's count falls. gym.py answers the party screen. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10,SNORLAX:40"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SHED_TAIL", "teach:0,1,MOVE_SPLASH", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_PERISH_SONG", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:2:1",
+            {"expect": {"lines": ["All Pokémon that heard the song will faint in three turns!", "Pikachu’s perish count fell to",
+                                  "The wild Chansey’s perish count fell to"]}},
+            "teach:1,0,MOVE_SPLASH", "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Shed Tail!", "Pikachu shed its tail to create a decoy!", "Go! Snorlax!",
+                           "The wild Chansey’s perish count fell to"],
+             "no_lines": ["Snorlax’s perish count"], "battler0.species": "SPECIES_SNORLAX"}
+}

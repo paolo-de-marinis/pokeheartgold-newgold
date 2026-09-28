@@ -426,6 +426,21 @@ class ShedTailTests(unittest.TestCase):
         self.assertLess(script.index("BMON_DATA_STAT_CHANGE_ATK, 6"), script.index(switch))
         self.assertIn("GoToSubscript BATTLE_SUBSCRIPT_SHOW_PARTY_LIST", script[decoy:])
 
+    def test_it_passes_the_decoy_alone(self):
+        # Pokemon Central (Tagliacoda) and Showdown's gen-9 copyVolatileFrom
+        # with 'shedtail': the substitute and nothing else goes over. Baton
+        # Pass's switch passed Perish Song's count, Magnet Rise, Ingrain,
+        # Heal Block, Embargo, Aqua Ring, Dragon Cheer and the rest with it.
+        switching = function(OVERLAY.read_text(), "InitSwitchWork")
+        decoy = switching[switching.index("if ((ctx->battleStatus & BATTLE_STATUS_BATON_PASS) && ctx->moveNoCur == MOVE_SHED_TAIL) {"):]
+        decoy = decoy[:decoy.index("\n    }\n")]
+        for line in ("MI_CpuClear8(&unkStruct, sizeof(unkStruct));", "unkStruct.substituteHp = decoy;", "dragonCheer = 0;",
+                     "ctx->battleMons[battlerId].status2 &= STATUS2_SUBSTITUTE;", "ctx->battleMons[battlerId].moveEffectFlags = 0;"):
+            self.assertIn(line, decoy)
+        # Before the Baton Pass branch takes its masks and copies.
+        self.assertLess(switching.index("ctx->moveNoCur == MOVE_SHED_TAIL"), switching.index("&= STATUS2_BATON_PASSABLE;"))
+        self.assertNotIn("MOVE_EFFECT_FLAG_LEECH_SEED", subscript("HandleShedTail"))
+
 
 class CriticalHitTests(unittest.TestCase):
     def test_the_odds_at_each_stage_are_the_reference_s(self):
