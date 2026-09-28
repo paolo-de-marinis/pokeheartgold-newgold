@@ -425,6 +425,43 @@ int main(void) {
 """
 
 
+# The real BtlCmd_TryIncinerate: what it burns, and the party's copy after.
+INCINERATE_FIXTURE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/abilities.h"
+#include "constants/items.h"
+typedef uint16_t u16;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { u16 item; int hp; } BattleMon;
+typedef struct { BattleMon battleMons[4]; int battlerIdAttacker, battlerIdTarget, battlerIdTemp; u16 itemTemp; } BattleContext;
+typedef struct BattleSystem BattleSystem;
+static int sCopies, sCopied = -1, sHeldAtCopy = -1;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return 1; }
+static BOOL BattleItemIsBerry(u16 item) { return item == ITEM_ORAN_BERRY; }
+static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int a, int b, int ability) { (void)ctx; (void)a; (void)b; (void)ability; return FALSE; }
+static void NoteHeldItemUsedUp(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; }
+static void CopyBattleMonToPartyMon(BattleSystem *bs, BattleContext *ctx, int battlerId) {
+    (void)bs; sCopies++; sCopied = battlerId; sHeldAtCopy = ctx->battleMons[battlerId].item;
+}
+@INCINERATE@
+int main(void) {
+    BattleContext ctx = { .battleMons = { [1] = { ITEM_ORAN_BERRY, 10 } }, .battlerIdAttacker = 0, .battlerIdTarget = 1 };
+    BtlCmd_TryIncinerate(0, &ctx);
+    assert(ctx.battleMons[1].item == ITEM_NONE && ctx.itemTemp == ITEM_ORAN_BERRY && ctx.battlerIdTemp == 1);
+    assert(sCopies == 1 && sCopied == 1 && sHeldAtCopy == ITEM_NONE);
+    // Nothing burnt, nothing copied.
+    ctx.battleMons[1].item = ITEM_LEFTOVERS;
+    BtlCmd_TryIncinerate(0, &ctx);
+    assert(sCopies == 1 && ctx.battleMons[1].item == ITEM_LEFTOVERS);
+    return 0;
+}
+"""
+
+
 class TakenItemTests(unittest.TestCase):
     """Pokemon Central: Furto and Arraffalesto. An item taken from the
     player's Pokemon comes back after the battle; one taken from a wild
@@ -466,6 +503,22 @@ class TakenItemTests(unittest.TestCase):
         burn = function(commands, "BtlCmd_TryIncinerate")
         self.assertLess(burn.index("NoteHeldItemUsedUp(battleSystem, ctx, ctx->battlerIdTarget);"),
                         burn.index("ctx->battleMons[ctx->battlerIdTarget].item = ITEM_NONE;"))
+
+    def test_a_burnt_berry_leaves_the_party_s_hand_too(self):
+        # The party holds what the battler holds at once, as after Knock Off:
+        # a burnt Berry of the player's is not had back at the battle's end,
+        # nor kept by a wild Pokemon caught before the next copy.
+        program = INCINERATE_FIXTURE.replace("@INCINERATE@", function((ROOT / "src/battle/battle_command.c").read_text(),
+                                                                      "BtlCmd_TryIncinerate"))
+        with tempfile.TemporaryDirectory(prefix="newgold-incinerate-") as directory:
+            path = Path(directory)
+            (path / "check.c").write_text(program)
+            result = subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
+                str(path / "check.c"), "-o", str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([str(path / "check")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_the_items_are_written_down_with_the_party_count(self):
         # GiveBackHeldItems gives back to the Pokemon the battle started with,

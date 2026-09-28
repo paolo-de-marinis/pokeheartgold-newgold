@@ -10262,11 +10262,8 @@ BOOL BtlCmd_TryIncinerate(BattleSystem *battleSystem, BattleContext *ctx) {
     int adrs = BattleScriptReadWord(ctx);
     int item = ctx->battleMons[ctx->battlerIdTarget].item;
 
-    if (!BattleItemIsBerry(item)) {
-        BattleScriptIncrementPointer(ctx, adrs);
-        return FALSE;
-    }
-    if (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE && ctx->battleMons[ctx->battlerIdTarget].hp) {
+    if (!BattleItemIsBerry(item)
+        || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE && ctx->battleMons[ctx->battlerIdTarget].hp)) {
         BattleScriptIncrementPointer(ctx, adrs);
         return FALSE;
     }
@@ -10276,6 +10273,10 @@ BOOL BtlCmd_TryIncinerate(BattleSystem *battleSystem, BattleContext *ctx) {
     NoteHeldItemUsedUp(battleSystem, ctx, ctx->battlerIdTarget);
     // Burnt, not knocked off: there is nothing left for Recycle to find.
     ctx->battleMons[ctx->battlerIdTarget].item = ITEM_NONE;
+    // The party holds what the battler holds at once, as after Knock Off
+    // (BtlCmd_TryKnockOff): the hit's own copy came before, and a Pokemon
+    // caught, or the battle over, before the next would have its Berry back.
+    CopyBattleMonToPartyMon(battleSystem, ctx, ctx->battlerIdTarget);
 
     return FALSE;
 }
