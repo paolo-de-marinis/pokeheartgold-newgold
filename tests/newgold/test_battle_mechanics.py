@@ -387,6 +387,32 @@ class CoachingTests(unittest.TestCase):
         self.assertIn("MOVE_STATUS_FAILED", script[script.index("\n_NO_PARTNER:"):])
 
 
+class BatonPassTests(unittest.TestCase):
+    def test_the_trap_and_the_aim_stay_behind(self):
+        # Pokemon Central, Staffetta: neither Lock-On's aim nor Mean Look's
+        # trap is passed from the fifth generation; Antifuga: the trap ends
+        # when its user uses Baton Pass from the fifth, and its victim's
+        # Baton Pass does not pass it from the eighth. The fourth generation
+        # passed both, and kept a leaving user's aim for what came in.
+        header = (ROOT / "include/constants/battle.h").read_text()
+        status2 = re.search(r"#define STATUS2_BATON_PASSABLE \((.*)\)", header).group(1)
+        effects = re.search(r"#define MOVE_EFFECT_FLAG_BATON_PASSABLE\s+\((.*)\)", header).group(1)
+        self.assertIn("STATUS2_SUBSTITUTE", status2)
+        self.assertNotIn("STATUS2_MEAN_LOOK", status2)
+        self.assertIn("MOVE_EFFECT_FLAG_PERISH_SONG", effects)
+        self.assertNotIn("LOCK_ON", effects)
+        switching = function(OVERLAY.read_text(), "InitSwitchWork")
+        # What the leaving Pokemon holds on others ends, Baton Pass or not.
+        before = switching[:switching.index("if (!(ctx->battleStatus & BATTLE_STATUS_BATON_PASS)) {")]
+        self.assertRegex(before, r"if \(\(ctx->battleMons\[i\]\.status2 & STATUS2_MEAN_LOOK\) && ctx->battleMons\[i\]\.unk88\.battlerIdMeanLook == battlerId\) \{\s*"
+                                 r"ctx->battleMons\[i\]\.status2 &= ~STATUS2_MEAN_LOOK;\s*ctx->moveConditions\[i\]\.octolocked = FALSE;")
+        self.assertRegex(before, r"ctx->battleMons\[i\]\.unk88\.battlerIdLockOn == battlerId\) \{\s*"
+                                 r"ctx->battleMons\[i\]\.moveEffectFlags &= ~MOVE_EFFECT_FLAG_LOCK_ON;")
+        self.assertNotIn("MOVE_EFFECT_FLAG_LOCK_ON_SET", switching)
+        for field in ("battlerIdLockOn", "battlerIdMeanLook"):
+            self.assertNotIn(f"unk88.{field} = unkStruct.{field};", switching)
+
+
 class ShedTailTests(unittest.TestCase):
     def test_the_user_leaves_its_decoy_behind(self):
         # ServerDoPostMoveEffects.c:2136-2147 at d0380a487 switches the user

@@ -2590,40 +2590,32 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
     // next turn begins, so a Pokemon sent out between turns does not keep it.
     ctx->turnData[battlerId].switchedIn = TRUE;
 
-    // An Octolock ends when its user leaves, Baton Pass or not: the hold
-    // may pass, the wearing down does not (Pokemon Central, Tentacolock).
+    // What its user holds on others ends as it leaves, Baton Pass or not,
+    // from the fifth generation (Pokemon Central, Antifuga and Staffetta;
+    // Showdown's gen-9 trapper and lockon are noCopy): Mean Look's trap and
+    // the rest of the traps (Octolock's, which lasts only while its user
+    // stays, Tentacolock), Lock-On's aim, Syrup Bomb's syrup (Bomba
+    // Sciroppata). The fourth generation passed the trap and the aim on.
     for (i = 0; i < maxBattlers; i++) {
-        if (ctx->moveConditions[i].octolocked && ctx->battleMons[i].unk88.battlerIdMeanLook == battlerId) {
+        if ((ctx->battleMons[i].status2 & STATUS2_MEAN_LOOK) && ctx->battleMons[i].unk88.battlerIdMeanLook == battlerId) {
+            ctx->battleMons[i].status2 &= ~STATUS2_MEAN_LOOK;
             ctx->moveConditions[i].octolocked = FALSE;
         }
-        // Syrup Bomb's syrup goes with the Pokemon that threw it (Pokemon
-        // Central, Bomba Sciroppata).
+        if ((ctx->battleMons[i].moveEffectFlags & MOVE_EFFECT_FLAG_LOCK_ON) && ctx->battleMons[i].unk88.battlerIdLockOn == battlerId) {
+            ctx->battleMons[i].moveEffectFlags &= ~MOVE_EFFECT_FLAG_LOCK_ON;
+            ctx->battleMons[i].unk88.battlerIdLockOn = 0;
+        }
         if (ctx->moveConditions[i].syrupBombTurns && ctx->moveConditions[i].syrupBombUser == battlerId) {
             ctx->moveConditions[i].syrupBombTurns = 0;
         }
     }
 
     if (!(ctx->battleStatus & BATTLE_STATUS_BATON_PASS)) {
-        for (i = 0; i < maxBattlers; i++) {
-            if ((ctx->battleMons[i].status2 & STATUS2_MEAN_LOOK) && (ctx->battleMons[i].unk88.battlerIdMeanLook == battlerId)) {
-                ctx->battleMons[i].status2 &= ~STATUS2_MEAN_LOOK;
-            }
-            if ((ctx->battleMons[i].moveEffectFlags & MOVE_EFFECT_FLAG_LOCK_ON) && ctx->battleMons[i].unk88.battlerIdLockOn == battlerId) {
-                ctx->battleMons[i].moveEffectFlags &= ~MOVE_EFFECT_FLAG_LOCK_ON;
-                ctx->battleMons[i].unk88.battlerIdLockOn = 0;
-            }
-        }
         ctx->battleMons[battlerId].status2 = 0;
         ctx->battleMons[battlerId].moveEffectFlags = 0;
     } else { // baton pass
         ctx->battleMons[battlerId].status2 &= STATUS2_BATON_PASSABLE;
         ctx->battleMons[battlerId].moveEffectFlags &= MOVE_EFFECT_FLAG_BATON_PASSABLE;
-        for (i = 0; i < maxBattlers; i++) {
-            if ((ctx->battleMons[i].moveEffectFlags & MOVE_EFFECT_FLAG_LOCK_ON) && ctx->battleMons[i].unk88.battlerIdLockOn == battlerId) {
-                ctx->battleMons[i].moveEffectFlags &= ~MOVE_EFFECT_FLAG_LOCK_ON;
-                ctx->battleMons[i].moveEffectFlags |= MOVE_EFFECT_FLAG_LOCK_ON_SET;
-            }
-        }
     }
 
     for (i = 0; i < maxBattlers; i++) {
@@ -2650,9 +2642,7 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
 
     if (ctx->battleStatus & BATTLE_STATUS_BATON_PASS) {
         ctx->battleMons[battlerId].unk88.substituteHp = unkStruct.substituteHp;
-        ctx->battleMons[battlerId].unk88.battlerIdLockOn = unkStruct.battlerIdLockOn;
         ctx->battleMons[battlerId].unk88.perishSongTurns = unkStruct.perishSongTurns;
-        ctx->battleMons[battlerId].unk88.battlerIdMeanLook = unkStruct.battlerIdMeanLook;
         ctx->battleMons[battlerId].unk88.magnetRiseTurns = unkStruct.magnetRiseTurns;
         ctx->battleMons[battlerId].unk88.embargoFlag = unkStruct.embargoFlag;
         ctx->battleMons[battlerId].unk88.healBlockTurns = unkStruct.healBlockTurns;
