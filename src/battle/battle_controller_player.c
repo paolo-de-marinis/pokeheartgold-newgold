@@ -3001,6 +3001,26 @@ static BOOL MoveThawsUser(BattleContext *ctx, int effect) {
     return effect == MOVE_EFFECT_THAW_AND_BURN_HIT || effect == MOVE_EFFECT_RECOIL_BURN_HIT || effect == MOVE_EFFECT_RECOVER_HALF_DAMAGE_DEALT_BURN_HIT
         || move == MOVE_FUSION_FLARE || move == MOVE_PYRO_BALL || move == MOVE_SCORCHING_SANDS || move == MOVE_HYDRO_STEAM;
 }
+
+// Gravity or Heal Block stops the move being used: its fail script, and the
+// move marked as failed for it. Asked of a chosen move among what stops a
+// Pokemon acting (ov12_0224B528), and of a called one, which goes past the
+// rest (ov12_0224C38C).
+static BOOL MoveStoppedByGravityOrHealBlock(BattleSystem *battleSystem, BattleContext *ctx) {
+    if (BattleContext_CheckMoveUnuseableInGravity(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoCur)) {
+        ctx->moveFail[ctx->battlerIdAttacker].gravity = TRUE;
+        ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_MOVE_FAIL_GRAVITY);
+    } else if (BattleContext_CheckMoveHealBlocked(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoCur) || TargetIsHealBlocked(ctx)) {
+        ctx->moveFail[ctx->battlerIdAttacker].healBlock = TRUE;
+        ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_MOVE_IS_HEAL_BLOCKED);
+    } else {
+        return FALSE;
+    }
+    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+    ctx->commandNext = CONTROLLER_COMMAND_39;
+    return TRUE;
+}
+
 static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
     int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
     int ret = 0;
@@ -3133,26 +3153,12 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_50++;
             break;
         case 9:
-            if (BattleContext_CheckMoveUnuseableInGravity(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoCur)) {
-                ctx->moveFail[ctx->battlerIdAttacker].gravity = TRUE;
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_MOVE_FAIL_GRAVITY);
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                ctx->commandNext = CONTROLLER_COMMAND_39;
+            if (MoveStoppedByGravityOrHealBlock(battleSystem, ctx) == TRUE) {
                 ret = 1;
             }
             ctx->unk_50++;
             break;
         case 10:
-            if (BattleContext_CheckMoveHealBlocked(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoCur) || TargetIsHealBlocked(ctx)) {
-                ctx->moveFail[ctx->battlerIdAttacker].healBlock = TRUE;
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_MOVE_IS_HEAL_BLOCKED);
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                ctx->commandNext = CONTROLLER_COMMAND_39;
-                ret = 1;
-            }
-            ctx->unk_50++;
-            break;
-        case 11:
             ctx->unk_50++;
             if (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_CONFUSION) {
                 ctx->battleMons[ctx->battlerIdAttacker].status2 -= 1;
@@ -3191,7 +3197,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
                 }
             }
             break;
-        case 12:
+        case 11:
             if (ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_PARALYSIS && GetBattlerAbility(ctx, ctx->battlerIdAttacker) != ABILITY_MAGIC_GUARD) {
                 if (BattleSystem_Random(battleSystem) % 4 == 0) {
                     ctx->moveFail[ctx->battlerIdAttacker].paralysis = TRUE;
@@ -3203,7 +3209,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_50++;
             break;
-        case 13:
+        case 12:
             if (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_ATTRACT) {
                 ctx->battlerIdTemp = LowestFlagNo((ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_ATTRACT) >> STATUS2_ATTRACT_SHIFT);
                 if (BattleSystem_Random(battleSystem) & 1) {
@@ -3221,7 +3227,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_50++;
             break;
-        case 14:
+        case 13:
             ctx->unk_50++;
             if (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_BIDE) {
                 ctx->battleMons[ctx->battlerIdAttacker].status2 -= (1 << STATUS2_BIDE_SHIFT);
@@ -3246,7 +3252,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
                 ret = 2;
             }
             break;
-        case 15:
+        case 14:
             if (ctx->battleMons[ctx->battlerIdAttacker].status & STATUS_FREEZE) {
                 if (MoveThawsUser(ctx, effect) == TRUE) {
                     ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_DEFROSTED_BY_MOVE);
@@ -3257,7 +3263,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_50++;
             break;
-        case 16:
+        case 15:
             // Throat Chop refuses a sound move for the turn it landed and the
             // next. The selection screen refuses it too; this catches a move
             // chosen before the chop, or picked by something else.
@@ -3270,7 +3276,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_50++;
             break;
-        case 17:
+        case 16:
             if (ctx->dancing && Battler_DanceLocked(ctx, ctx->battlerIdAttacker)) {
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_DANCE_FAILED);
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
@@ -3279,7 +3285,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             }
             ctx->unk_50++;
             break;
-        case 18:
+        case 17:
             ctx->unk_50 = 0;
             ret = 3;
             break;
@@ -3978,6 +3984,17 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
         return;
     case 1:
         if (!(ctx->unk_2184 & 4) && ov12_0224B528(battleSystem, ctx) == TRUE) {
+            return;
+        }
+        // A called move goes past what stops its user acting, which was its
+        // caller's to go through (CallMove), but not past Gravity and Heal
+        // Block, which stop the move itself: from the fifth generation
+        // Metronome, Copycat and Assist call a move either would stop, and it
+        // fails here (Pokemon Central, Metronomo; Showdown's gen-9 gravity and
+        // healblock conditions stop a called move in onModifyMove).
+        if ((ctx->unk_2184 & MULTIHIT_CALLED_MOVE) && MoveStoppedByGravityOrHealBlock(battleSystem, ctx) == TRUE) {
+            ctx->battleStatus |= BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE;
+            ctx->moveStatusFlag |= MOVE_STATUS_NO_MORE_WORK;
             return;
         }
         ctx->unk_48++;

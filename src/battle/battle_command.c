@@ -3864,7 +3864,7 @@ BOOL BtlCmd_Metronome(BattleSystem *battleSystem, BattleContext *ctx) {
         // Sky Drop stays callable: Pokemon Central's table (Metronomo) does
         // not list it, so Metronome calls it in every game that has it, as
         // Showdown's data for those generations does.
-        if (CheckLegalCalledMove(battleSystem, ctx, ctx->battlerIdAttacker, moveNo, 0, CALLED_MOVE_BANS_COPYCAT) == FALSE) {
+        if (CheckLegalCalledMove(moveNo, 0, CALLED_MOVE_BANS_COPYCAT) == FALSE) {
             continue;
         }
 
@@ -5282,7 +5282,7 @@ BOOL BtlCmd_TryAssist(BattleSystem *battleSystem, BattleContext *ctx) {
                 && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, 0) != SPECIES_EGG) {
                 for (j = 0; j < MAX_MON_MOVES; j++) {
                     move = GetMonData(mon, MON_DATA_MOVE1 + j, 0);
-                    if (CheckMoveCallsOtherMove(move) == FALSE && CheckLegalCalledMove(battleSystem, ctx, ctx->battlerIdAttacker, move, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_END) == TRUE) {
+                    if (CheckMoveCallsOtherMove(move) == FALSE && CheckLegalCalledMove(move, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_END) == TRUE) {
                         avaliableMoves[moveCnt] = move;
                         moveCnt++;
                     }
@@ -5894,7 +5894,7 @@ BOOL BtlCmd_TryCopycat(BattleSystem *battleSystem, BattleContext *ctx) {
 
     int adrs = BattleScriptReadWord(ctx);
 
-    if (CheckMoveCallsOtherMove(ctx->moveNoPrev) == FALSE && ctx->moveNoPrev && CheckLegalCalledMove(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveNoPrev, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_ASSIST) == TRUE) {
+    if (CheckMoveCallsOtherMove(ctx->moveNoPrev) == FALSE && ctx->moveNoPrev && CheckLegalCalledMove(ctx->moveNoPrev, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_ASSIST) == TRUE) {
         ctx->moveTemp = ctx->moveNoPrev;
     } else {
         BattleScriptIncrementPointer(ctx, adrs);

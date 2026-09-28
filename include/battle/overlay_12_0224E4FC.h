@@ -195,7 +195,7 @@ u32 QMul_RoundDown(u32 value, u32 q);
 u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, int critCnt, u32 sideCondition);
 BOOL CheckLegalMimicMove(u16 moveNo);
 BOOL Battler_CriticalRisen(BattleContext *ctx, int battlerId);
-BOOL CheckLegalCalledMove(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 moveNo, u16 first, u16 last);
+BOOL CheckLegalCalledMove(u16 moveNo, u16 first, u16 last);
 BOOL IsMoveEncored(BattleContext *ctx, u16 moveNo);
 s32 GetItemVar(BattleContext *ctx, u16 itemNo, u16 var);
 int ov12_02257E98(BattleSystem *battleSystem, BattleContext *ctx, int side);

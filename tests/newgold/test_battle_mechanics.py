@@ -1169,7 +1169,8 @@ int main(void) {
                 "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-iquote", str(ROOT / "include"),
                 str(path / "test.c"), "-o", str(path / "test")], check=True)
             subprocess.run([str(path / "test")], check=True)
-        self.assertIn("|| TargetIsHealBlocked(ctx)) {", function(controller, "ov12_0224B528"))
+        self.assertIn("|| TargetIsHealBlocked(ctx)) {", function(controller, "MoveStoppedByGravityOrHealBlock"))
+        self.assertIn("if (MoveStoppedByGravityOrHealBlock(battleSystem, ctx) == TRUE) {", function(controller, "ov12_0224B528"))
 
 
 class TintedLensTests(unittest.TestCase):

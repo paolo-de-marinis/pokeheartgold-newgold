@@ -161,6 +161,21 @@ int main(void) {
         self.assertLess(steps.index("TryStartParentalBond(battleSystem, ctx);"),
                         steps.index("ReadBattleScriptFromNarc(ctx, NARC_a_0_0_0, ctx->moveNoCur);"))
 
+    def test_gravity_and_heal_block_stop_the_called_move(self):
+        # From the fifth generation Metronome, Copycat and Assist call a move
+        # Gravity or Heal Block would stop, and it fails as it is used
+        # (Pokemon Central, Metronomo; Showdown's gen-9 gravity and healblock
+        # onModifyMove): the called move goes past what stops its user acting
+        # but not past these two. The call itself no longer asks them.
+        steps = function(CONTROLLER.read_text(), "ov12_0224C38C")
+        self.assertRegex(steps, r"if \(\(ctx->unk_2184 & MULTIHIT_CALLED_MOVE\) && MoveStoppedByGravityOrHealBlock\(battleSystem, ctx\) == TRUE\) \{\n"
+                                r"\s+ctx->battleStatus \|= BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE;\n\s+ctx->moveStatusFlag \|= MOVE_STATUS_NO_MORE_WORK;\n\s+return;")
+        self.assertLess(steps.index("ov12_0224B528(battleSystem, ctx)"), steps.index("MoveStoppedByGravityOrHealBlock"))
+        self.assertLess(steps.index("MoveStoppedByGravityOrHealBlock"), steps.index("TryDisobedience"))
+        called = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CheckLegalCalledMove")
+        self.assertNotIn("Gravity", called)
+        self.assertNotIn("HealBlocked", called)
+
     def test_the_called_move_is_noted_as_the_move_used(self):
         run_c(NOTED.replace("@FUNCTIONS@", function(CONTROLLER.read_text(), "NoteMoveUsed")))
 

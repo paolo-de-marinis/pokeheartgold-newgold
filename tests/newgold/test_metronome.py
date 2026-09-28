@@ -45,18 +45,16 @@ static u16 rolls[8];
 static int rollCount;
 static u16 BattleSystem_Random(BattleSystem *bs) { (void)bs; assert(rollCount < 8); return rolls[rollCount++]; }
 static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
-static BOOL BattleContext_CheckMoveUnuseableInGravity(BattleSystem *bs, BattleContext *ctx, int b, u16 m) { (void)bs; (void)ctx; (void)b; (void)m; return FALSE; }
-static BOOL BattleContext_CheckMoveHealBlocked(BattleSystem *bs, BattleContext *ctx, int b, u16 m) { (void)bs; (void)ctx; (void)b; (void)m; return FALSE; }
 @NATIVE@
 
 static BOOL metronomeCalls(u16 move) {
-    return CheckLegalCalledMove(0, 0, 0, move, 0, CALLED_MOVE_BANS_COPYCAT);
+    return CheckLegalCalledMove(move, 0, CALLED_MOVE_BANS_COPYCAT);
 }
 static BOOL copycatCopies(u16 move) {
-    return CheckLegalCalledMove(0, 0, 0, move, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_ASSIST);
+    return CheckLegalCalledMove(move, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_ASSIST);
 }
 static BOOL assistCalls(u16 move) {
-    return CheckLegalCalledMove(0, 0, 0, move, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_END);
+    return CheckLegalCalledMove(move, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_END);
 }
 
 // The move Metronome calls when the first roll is `roll` and every later one
@@ -152,6 +150,14 @@ int main(void) {
     assert(metronomeCalls(MOVE_ROAR) && metronomeCalls(MOVE_FLY) && !metronomeCalls(MOVE_MIRROR_COAT));
     assert(!copycatCopies(MOVE_COLLISION_COURSE));
 
+    // What Gravity or Heal Block would stop is called by all three, and fails
+    // as it is used, from the fifth generation (Metronomo); retail refused it.
+    static const u16 stopped[] = { MOVE_FLY, MOVE_SPLASH, MOVE_HIGH_JUMP_KICK, MOVE_RECOVER, MOVE_ROOST, MOVE_DRAIN_PUNCH };
+    for (unsigned i = 0; i < sizeof(stopped) / sizeof(stopped[0]); i++) {
+        assert(metronomeCalls(stopped[i]) && copycatCopies(stopped[i]));
+    }
+    assert(assistCalls(MOVE_SPLASH) && assistCalls(MOVE_RECOVER));
+
     // And the ordinary moves stay open to all.
     static const u16 open[] = { MOVE_POUND, MOVE_SURF, MOVE_ACROBATICS, MOVE_MOONBLAST, MOVE_MALIGNANT_CHAIN };
     for (unsigned i = 0; i < sizeof(open) / sizeof(open[0]); i++) {
@@ -199,9 +205,8 @@ class MetronomeTests(unittest.TestCase):
         table = table[:table.index("};") + 2]
         native = "\n".join([
             table,
-            function(overlay, "CalledMoveBanned"),
-            function(overlay, "CheckLegalMimicMove"),
             function(overlay, "CheckLegalCalledMove"),
+            function(overlay, "CheckLegalMimicMove"),
             function(COMMAND.read_text(), "BtlCmd_Metronome"),
         ])
         with tempfile.TemporaryDirectory(prefix="newgold-metronome-") as temp:

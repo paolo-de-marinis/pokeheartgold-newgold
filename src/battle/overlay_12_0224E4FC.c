@@ -12145,9 +12145,15 @@ static const u16 sMetronomeUnuseableMoves[] = {
     CALLED_MOVE_BANS_END
 };
 
-// Whether moveNo is in the run of the list from the block `first` begins (0,
-// the list's start) to the block `last` begins.
-static BOOL CalledMoveBanned(u16 moveNo, u16 first, u16 last) {
+// Whether Metronome (0, the list's start, to CALLED_MOVE_BANS_COPYCAT), Mimic
+// (CALLED_MOVE_BANS_MIMIC to CALLED_MOVE_BANS_SHARED), Copycat
+// (CALLED_MOVE_BANS_MIMIC to CALLED_MOVE_BANS_ASSIST) or Assist
+// (CALLED_MOVE_BANS_MIMIC to CALLED_MOVE_BANS_END) may take moveNo: it is not in
+// the run of the list from the block `first` begins to the block `last`
+// begins. A move Gravity or Heal Block would stop is taken all the same and
+// fails as it is used (MoveStoppedByGravityOrHealBlock), from the fifth
+// generation (Pokemon Central, Metronomo); retail refused it here.
+BOOL CheckLegalCalledMove(u16 moveNo, u16 first, u16 last) {
     const u16 *ban = sMetronomeUnuseableMoves;
 
     if (first != 0) {
@@ -12156,26 +12162,14 @@ static BOOL CalledMoveBanned(u16 moveNo, u16 first, u16 last) {
     }
     for (; *ban != last; ban++) {
         if (*ban == moveNo) {
-            return TRUE;
+            return FALSE;
         }
     }
-    return FALSE;
+    return TRUE;
 }
 
 BOOL CheckLegalMimicMove(u16 moveNo) {
-    return !CalledMoveBanned(moveNo, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_SHARED);
-}
-
-// Whether Metronome (0 to CALLED_MOVE_BANS_COPYCAT), Copycat
-// (CALLED_MOVE_BANS_MIMIC to CALLED_MOVE_BANS_ASSIST) or Assist
-// (CALLED_MOVE_BANS_MIMIC to CALLED_MOVE_BANS_END) may call moveNo: nothing
-// Gravity or Heal Block stops, as retail had it for all three, nor its run of
-// the list.
-BOOL CheckLegalCalledMove(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u16 moveNo, u16 first, u16 last) {
-    if (BattleContext_CheckMoveUnuseableInGravity(battleSystem, ctx, battlerId, moveNo) == TRUE || BattleContext_CheckMoveHealBlocked(battleSystem, ctx, battlerId, moveNo) == TRUE) {
-        return FALSE;
-    }
-    return !CalledMoveBanned(moveNo, first, last);
+    return CheckLegalCalledMove(moveNo, CALLED_MOVE_BANS_MIMIC, CALLED_MOVE_BANS_SHARED);
 }
 
 static const u16 sEncoreFailMoves[] = {
