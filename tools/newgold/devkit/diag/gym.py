@@ -51,8 +51,9 @@ USE_NEXT = (128, 67)         # a wild battle's "Use next Pokemon?" -- the upper;
 # Tail's. A Baton Pass with nobody to pass to says "But it failed!" after it.
 PIVOT_LINES = ("went back to", "switched out with the Eject Button", "switched out by the Eject Pack",
                "used Baton Pass!", "shed its tail to create a decoy!")
-# A double battle's target screen: the foes above, the player's two below,
-# the first on the left. A move on the user's side is confirmed on its own panel.
+# A double battle's target screen: the foes above, battler 3 on the left and
+# battler 1 on the right, and the player's two below, the first on the left.
+# A move on the user's side is confirmed on its own panel.
 FOE_PANELS = [(64, 43), (192, 43)]
 OWN_PANELS = {0: (64, 115), 2: (192, 115)}
 RANGE_USER, RANGE_USER_SIDE, RANGE_ALLY = 1 << 4, 1 << 5, 1 << 8   # include/constants/moves.h
@@ -98,7 +99,9 @@ class Scorer:
             return OWN_PANELS[battler]
         if reach & RANGE_ALLY:
             return OWN_PANELS[2 - battler]
-        return FOE_PANELS[tries % 2]     # the other foe when the first is gone
+        # The player's first aims at battler 3, its second at battler 1, each
+        # at the other foe when that touch is not taken (the foe gone).
+        return FOE_PANELS[(tries + battler // 2) % 2]
 
     def score(self, move, user, target):
         record = self.moves[move] if move < len(self.moves) else b""
@@ -159,7 +162,9 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     `partner`, in a double battle, says where the player's second Pokemon is
     in choosing (its BattleContext.unk_0, as gDiagBattlePrompt is the
     first's); it chooses as the first does, from its own moves. A move that
-    asks for a target is not handled.
+    asks for a target is aimed, every turn, by the player's first at battler
+    3 and by its second at battler 1 -- at the other foe when that touch is
+    not taken -- and one on the user's side at the user or its partner.
 
     Memory is read every four frames, but the text ring is decoded only when
     its counter has moved: decoding it every time halved the frame rate.
@@ -244,6 +249,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 slot = max(usable, key=lambda i: scorer.score(you[7 + i], you[0], foe[0]))
             last_slot = slot
             moves_chosen[0] = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000)[7 + slot]
+            tries = 0       # each one's target screen starts from its own foe
             core.touch(*MOVES[slot], 6, hold)
             core.step(20, hold)
         elif revive is not None and core.frames - revive > 90:
@@ -274,6 +280,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                                          + struct.calcsize(BATTLER))
                 slot = max(usable, key=lambda i: scorer.score(second[7 + i], second[0], foe[0]))
             moves_chosen[2] = second[7 + slot]
+            tries = 0
             core.touch(*MOVES[slot], 6, hold)
             core.step(20, hold)
         elif use_next is not None:

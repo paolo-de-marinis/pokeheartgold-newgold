@@ -111,16 +111,19 @@ class DiagnosticsTests(unittest.TestCase):
     def test_gym_touches_the_target_panel_a_move_asks_for(self):
         # A double battle's target screen: a move on the user (Revival
         # Blessing) is confirmed on the user's own panel, an attack goes to a
-        # foe's, the other foe's when the first is gone. Read from the moves'
-        # range in waza_tbl.
+        # foe's -- the player's first to battler 3's, its second to battler
+        # 1's, every turn, whatever touches came before -- and to the other
+        # foe's when that one is gone. Read from the moves' range in waza_tbl.
         sys.path[:0] = [str(ROOT / "tools/newgold/devkit/diag"), str(ROOT / "tools/newgold/devkit")]
         from gym import FOE_PANELS, OWN_PANELS, Scorer
         from savedit import move_numbers
         moves, scorer = move_numbers(), Scorer()
         self.assertEqual(scorer.panel(moves["REVIVAL_BLESSING"], 0, 0), OWN_PANELS[0])
         self.assertEqual(scorer.panel(moves["REVIVAL_BLESSING"], 2, 0), OWN_PANELS[2])
-        self.assertEqual(scorer.panel(moves["THUNDERBOLT"], 2, 0), FOE_PANELS[0])
+        self.assertEqual(scorer.panel(moves["THUNDERBOLT"], 0, 0), FOE_PANELS[0])
         self.assertEqual(scorer.panel(moves["THUNDERBOLT"], 0, 1), FOE_PANELS[1])
+        self.assertEqual(scorer.panel(moves["THUNDERBOLT"], 2, 0), FOE_PANELS[1])
+        self.assertEqual(scorer.panel(moves["THUNDERBOLT"], 2, 1), FOE_PANELS[0])
 
     def test_nested_melonds_binds_every_button(self):
         # nested.py writes melonDS's key table before melonDS starts; a table
