@@ -43,8 +43,11 @@ SHIFT = (127, 113)
 KEEP_BATTLING = (128, 139)   # "will you switch?" -- the lower of the two
 GIVE_UP = (128, 67)          # "give up on learning this new move?" -- the upper of the two
 # The lines after which the party screen asks who comes in for a Pokemon that
-# is still standing: a pivot move's or Parting Shot's, the Eject items'.
-PIVOT_LINES = ("went back to", "switched out with the Eject Button", "switched out by the Eject Pack")
+# is still standing: a pivot move's or Parting Shot's, the Eject items',
+# Baton Pass's (whose move line is the last before the screen) and Shed
+# Tail's. A Baton Pass with nobody to pass to says "But it failed!" after it.
+PIVOT_LINES = ("went back to", "switched out with the Eject Button", "switched out by the Eject Pack",
+               "used Baton Pass!", "shed its tail to create a decoy!")
 # A double battle's target screen: the foes above, the player's two below,
 # the first on the left. A move on the user's side is confirmed on its own panel.
 FOE_PANELS = [(64, 43), (192, 43)]
@@ -283,10 +286,10 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 stuck = 0
         elif (any(line in last_line for line in PIVOT_LINES) and not last_line.startswith(("The opposing", "The wild"))
               and reserve(ram, markers) is not None):
-            # Parting Shot, U-turn, an Eject Button or an Eject Pack has sent
-            # the player's Pokemon back, and the party screen asks who comes
-            # in: the first that can, once the screen is up. Until a "Go!"
-            # line the touches land on nothing.
+            # Parting Shot, U-turn, Baton Pass, Shed Tail, an Eject Button or
+            # an Eject Pack has sent the player's Pokemon back, and the party
+            # screen asks who comes in: the first that can, once the screen
+            # is up. Until a "Go!" line the touches land on nothing.
             core.touch(*PARTY[reserve(ram, markers)], 6, hold)
             core.step(30, hold)
             core.touch(*SHIFT, 6, hold)
