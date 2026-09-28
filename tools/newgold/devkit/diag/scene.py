@@ -19,7 +19,9 @@ A step is one of
     poke:SYMBOL=VALUE           a word of the ROM's memory, by name
     hold:SYMBOL=VALUE           the same before every frame from now on; 0 lets go
     field[:N]                   A until the field is up and the player can move,
-                                and through any text box on the way (N frames at most)
+                                and through any text box on the way (N frames at most);
+                                a battle up on the way, its end screens too, gym.py's
+                                player plays to its end
     fight[:N[:T]]               A until a battle is up, then gym.py's player plays
                                 it to the end (N: always move slot N; T: stop at the
                                 command prompt after T turns, to expect what they did);
@@ -434,9 +436,21 @@ class Scene:
             # A through the title and Continue until the field map runs; after
             # that A only for a text box, or the press that lands as the
             # player gets control talks to whoever the player faces.
+            # A battle up on the way -- its end screens still to go through, or
+            # one a trainer started -- gym.py's player plays to its end, as
+            # goto's does; its frames are not counted in N.
             end = core.frames + int(rest or 12000)
-            while core.frames < end and not self.movable() and not self.in_battle():
-                if not self._chain("FieldSystem.runningFieldMap") or self.textbox():
+            while core.frames < end and (self.in_battle() or not self.movable()):
+                if self.in_battle():
+                    import gym
+                    started = core.frames
+                    gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
+                              since=core.word(self._text_count), partner=self.partner_prompt())
+                    self._collect(core)
+                    if self.in_battle():
+                        break       # gym.py's player could not end it
+                    end += core.frames - started
+                elif not self._chain("FieldSystem.runningFieldMap") or self.textbox():
                     core.press("A", 6, hooks)
                     core.step(20, hooks)
                 else:

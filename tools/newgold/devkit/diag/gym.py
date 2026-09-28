@@ -14,10 +14,11 @@ drawn and nothing is looked at: after every few frames the diagnostics'
 memory says what the battle printed, who is fighting, and whether the game
 is waiting for the player, and the player answers through the game's own
 menus -- a touch on FIGHT, on a move, on a Pokemon -- exactly where a thumb
-would go. B moves text on and declines "will you switch?" and forgetting a
-move for a new one, which a touch then gives up; A moves it on through an
-evolution, which B would stop. A wild battle's "Use next Pokemon?" is
-answered with the next one.
+would go. B moves text on and declines "will you switch?", forgetting a
+move for a new one, which a touch then gives up, and a caught Pokemon's
+nickname; A moves it on through an evolution, which B would stop, and a
+caught Pokemon's Dex entry, which B does not close. A wild battle's "Use
+next Pokemon?" is answered with the next one.
 
 The report is the battle's own lines, the battlers each turn, what the
 trainer's AI spent, anything that asserted, and the party before and after.
@@ -326,7 +327,9 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             stuck = 0
             idle += 1
             if idle % 8 == 0:
-                core.press("A" if state in EVOLVING else "B", 4, hold)
+                # A through an evolution and a caught Pokemon's Dex entry,
+                # which B would stop or never close; B declines its nickname.
+                core.press("A" if state in EVOLVING or "added to the Pok" in last_line else "B", 4, hold)
 
     return last_line
 

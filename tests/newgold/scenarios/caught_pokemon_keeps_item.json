@@ -1,5 +1,5 @@
 {
-  "about": "A wild Pokemon caught with the item the player's Pokemon handed it keeps that item, and the player's Pokemon keeps what it got in the swap: nothing is copied (b51f81591: before, the caught Pokemon kept the player's item and the player's Pokemon got it back as well). A level-30 Pikachu holding Leftovers (savedit --party's item), with a Master Ball in the bag (--bag), is given Trick in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash and holds an Oval Stone; after the swap the ball is thrown from the battle's bag (touch:, its pocket, the ball, USE), the Dex entry closed with A once it is up and the nickname declined (No). In the party, the Pikachu holds the Oval Stone and the Chansey the Leftovers, and the bag has neither: since 241e83d0f a swap with a wild Pokemon lasts, so without b51f81591 the copy no longer shows on the Pikachu, it lands in the bag as a Leftovers. The field's RNG is pinned as in rolls_forced_high.json, and with it the Chansey's item.",
+  "about": "A wild Pokemon caught with the item the player's Pokemon handed it keeps that item, and the player's Pokemon keeps what it got in the swap: nothing is copied (b51f81591: before, the caught Pokemon kept the player's item and the player's Pokemon got it back as well). A level-30 Pikachu holding Leftovers (savedit --party's item), with a Master Ball in the bag (--bag), is given Trick in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash and holds an Oval Stone; after the swap the ball is thrown from the battle's bag (touch:, its pocket, the ball, USE), and the field step plays the battle's end on, gym.py's player closing the Dex entry with A and declining the nickname with B (before, the field step returned at once while a battle was up, and the scenario waited and pressed its way there). In the party, the Pikachu holds the Oval Stone and the Chansey the Leftovers, and the bag has neither: since 241e83d0f a swap with a wild Pokemon lasts, so without b51f81591 the copy no longer shows on the Pikachu, it lands in the bag as a Leftovers. The field's RNG is pinned as in rolls_forced_high.json, and with it the Chansey's item.",
   "save": "route29-official.sav",
   "edit": ["--party", "PIKACHU:30:::LEFTOVERS", "--bag", "MASTER_BALL:1"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
@@ -10,7 +10,7 @@
             {"expect": {"lines": ["Pikachu used Trick!", "The wild Chansey obtained Leftovers."],
                         "battler0.item": "ITEM_OVAL_STONE", "battler1.item": "ITEM_LEFTOVERS"}},
             "wait:60", "touch:40,170", "wait:60", "touch:192,55", "wait:60", "touch:64,40", "wait:60", "touch:100,168",
-            "wait:2000", "A", "wait:400", "touch:128,140", "wait:400", "field"],
+            "field"],
   "expect": {"lines": ["used one Master Ball!", "Gotcha! Chansey was caught!", "Would you like to give Chansey a nickname?"],
              "party": 2, "party0.species": "SPECIES_PIKACHU", "party0.item": "ITEM_OVAL_STONE",
              "party1.species": "SPECIES_CHANSEY", "party1.item": "ITEM_LEFTOVERS",
