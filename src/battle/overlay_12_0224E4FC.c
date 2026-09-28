@@ -10323,6 +10323,9 @@ static u16 Battler_PowerConstructForm(BattleContext *ctx, int battlerId) {
     return SPECIES_NONE;
 }
 
+// The type of each of Castform's forms, by the retail form number.
+static const u8 sCastformTypes[CASTFORM_FORM_MAX] = { TYPE_NORMAL, TYPE_FIRE, TYPE_WATER, TYPE_ICE };
+
 BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int form;
@@ -10334,41 +10337,28 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
         // A Utility Umbrella keeps Castform and Cherrim in the form they take
         // with no weather, in the rain or the sun (Superombrello).
         weather = WeatherUnderUmbrella(ctx, ctx->fieldCondition, ctx->battlerIdTemp);
+        // Forecast follows the weather by Castform's form, not its type: a
+        // type a move gave it -- Soak, Reflect Type, Trick-or-Treat's -- stays
+        // until the form changes, and then gives way to the weather's
+        // (Pokemon Central, Previsioni). Retail compared the types, so a
+        // Soaked Castform was changed back at once, and one that came in with
+        // a weather form but the Normal type kept that form out of the weather.
         if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_CASTFORM && ctx->battleMons[ctx->battlerIdTemp].hp && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_FORECAST) {
+            form = CASTFORM_NORMAL;
             if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-                if (!(weather & FIELD_CONDITION_WEATHER_CASTFORM) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_NORMAL && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_NORMAL) {
-                    ctx->battleMons[ctx->battlerIdTemp].type1 = TYPE_NORMAL;
-                    ctx->battleMons[ctx->battlerIdTemp].type2 = TYPE_NORMAL;
-                    ctx->battleMons[ctx->battlerIdTemp].form = (u8)CASTFORM_NORMAL;
-                    *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
-                    ret = TRUE;
-                    break;
-                } else if ((weather & FIELD_CONDITION_SUN_ALL) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_FIRE && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_FIRE) {
-                    ctx->battleMons[ctx->battlerIdTemp].type1 = TYPE_FIRE;
-                    ctx->battleMons[ctx->battlerIdTemp].type2 = TYPE_FIRE;
-                    ctx->battleMons[ctx->battlerIdTemp].form = (u8)CASTFORM_SUNNY;
-                    *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
-                    ret = TRUE;
-                    break;
-                } else if ((weather & FIELD_CONDITION_RAIN_ALL) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_WATER && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_WATER) {
-                    ctx->battleMons[ctx->battlerIdTemp].type1 = TYPE_WATER;
-                    ctx->battleMons[ctx->battlerIdTemp].type2 = TYPE_WATER;
-                    ctx->battleMons[ctx->battlerIdTemp].form = (u8)CASTFORM_RAINY;
-                    *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
-                    ret = TRUE;
-                    break;
-                } else if ((weather & FIELD_CONDITION_HAIL_ALL) && ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_ICE && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_ICE) {
-                    ctx->battleMons[ctx->battlerIdTemp].type1 = TYPE_ICE;
-                    ctx->battleMons[ctx->battlerIdTemp].type2 = TYPE_ICE;
-                    ctx->battleMons[ctx->battlerIdTemp].form = (u8)CASTFORM_SNOWY;
-                    *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
-                    ret = TRUE;
-                    break;
+                if (weather & FIELD_CONDITION_SUN_ALL) {
+                    form = CASTFORM_SUNNY;
+                } else if (weather & FIELD_CONDITION_RAIN_ALL) {
+                    form = CASTFORM_RAINY;
+                } else if (weather & FIELD_CONDITION_HAIL_ALL) {
+                    form = CASTFORM_SNOWY;
                 }
-            } else if (ctx->battleMons[ctx->battlerIdTemp].type1 != TYPE_NORMAL && ctx->battleMons[ctx->battlerIdTemp].type2 != TYPE_NORMAL) {
-                ctx->battleMons[ctx->battlerIdTemp].type1 = TYPE_NORMAL;
-                ctx->battleMons[ctx->battlerIdTemp].type2 = TYPE_NORMAL;
-                ctx->battleMons[ctx->battlerIdTemp].form = (u8)CASTFORM_NORMAL;
+            }
+            if (ctx->battleMons[ctx->battlerIdTemp].form != form) {
+                ctx->battleMons[ctx->battlerIdTemp].form = form;
+                ctx->battleMons[ctx->battlerIdTemp].type1 = sCastformTypes[form];
+                ctx->battleMons[ctx->battlerIdTemp].type2 = sCastformTypes[form];
+                ctx->battleMons[ctx->battlerIdTemp].type3 = TYPE_NONE;
                 *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
                 ret = TRUE;
                 break;
