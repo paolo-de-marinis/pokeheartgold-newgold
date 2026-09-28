@@ -103,22 +103,28 @@ int main(void) {
     assert(metronome(MOVE_SOLAR_SEEDS - 1) == MOVE_SOLAR_SEEDS);
     assert(reached > NUM_MOVES);
 
-    // Banned for both: retail's own, and the engine's Z-, Let's Go and Max
-    // moves and placeholders.
+    // Banned for both: retail's own, the engine's Z- and Max moves and
+    // placeholders, and what Scarlet and Violet's Mimic refuses (Mimica,
+    // Showdown's gen-9 failmimic).
     static const u16 both[] = {
         MOVE_METRONOME, MOVE_STRUGGLE, MOVE_SKETCH, MOVE_MIMIC, MOVE_CHATTER,
         MOVE_BEHEMOTH_BLADE, MOVE_BREAKNECK_BLITZ_PHYSICAL, MOVE_CATASTROPIKA,
-        MOVE_ZIPPY_ZAP, MOVE_MAX_GUARD, MOVE_MAX_STEELSPIKE, MOVE_468, MOVE_470,
+        MOVE_MAX_GUARD, MOVE_MAX_STEELSPIKE, MOVE_468, MOVE_470,
+        MOVE_SLEEP_TALK, MOVE_ASSIST, MOVE_COPYCAT, MOVE_ME_FIRST, MOVE_NATURE_POWER, MOVE_TRANSFORM,
+        MOVE_BELCH, MOVE_CELEBRATE, MOVE_HOLD_HANDS, MOVE_TERA_STARSTORM, MOVE_BLAZING_TORQUE, MOVE_WICKED_TORQUE,
     };
     for (unsigned i = 0; i < sizeof(both) / sizeof(both[0]); i++) {
         assert(!metronomeCalls(both[i]) && !copycatCopies(both[i]) && !assistCalls(both[i]));
         assert(!CheckLegalMimicMove(both[i]));
     }
 
-    // Banned for Metronome alone: Mimic can still copy them.
+    // Banned for Metronome alone: Mimic can still copy them -- Mirror Move
+    // among them (Mimica), and Double Iron Bash and the Let's Go moves, which
+    // Copycat copies and Assist calls too.
     static const u16 metronomeOnly[] = {
-        MOVE_PROTECT, MOVE_COUNTER, MOVE_SWITCHEROO, MOVE_TRANSFORM,
-        MOVE_AFTER_YOU, MOVE_BELCH, MOVE_WIDE_GUARD, MOVE_ASTRAL_BARRAGE,
+        MOVE_PROTECT, MOVE_COUNTER, MOVE_SWITCHEROO, MOVE_MIRROR_MOVE,
+        MOVE_AFTER_YOU, MOVE_COLLISION_COURSE, MOVE_WIDE_GUARD, MOVE_ASTRAL_BARRAGE,
+        MOVE_DOUBLE_IRON_BASH, MOVE_ZIPPY_ZAP,
     };
     for (unsigned i = 0; i < sizeof(metronomeOnly) / sizeof(metronomeOnly[0]); i++) {
         assert(!metronomeCalls(metronomeOnly[i]));
@@ -129,7 +135,9 @@ int main(void) {
     // call; the switching moves, which neither does; and the moves that take
     // their user out of sight, which Assist alone does not call, as Mirror
     // Coat (Copione, Assistente; Showdown's gen-9 failcopycat and noassist).
-    static const u16 bothCall[] = { MOVE_AFTER_YOU, MOVE_V_CREATE, MOVE_SNARL, MOVE_FREEZE_SHOCK, MOVE_ASTRAL_BARRAGE };
+    static const u16 bothCall[] = {
+        MOVE_AFTER_YOU, MOVE_V_CREATE, MOVE_SNARL, MOVE_FREEZE_SHOCK, MOVE_ASTRAL_BARRAGE, MOVE_DOUBLE_IRON_BASH, MOVE_VEEVEE_VOLLEY,
+    };
     for (unsigned i = 0; i < sizeof(bothCall) / sizeof(bothCall[0]); i++) {
         assert(!metronomeCalls(bothCall[i]) && copycatCopies(bothCall[i]) && assistCalls(bothCall[i]));
     }
@@ -198,6 +206,16 @@ SCARLET_VIOLET = {"MOVE_" + name for name in (
     "WICKED_TORQUE").split()}
 
 
+# What Scarlet and Violet's Mimic refuses that the engine's Mimic copied, and
+# what it copies that the engine's refused.
+MIMIC_REFUSES = {"MOVE_" + name for name in (
+    "SLEEP_TALK ASSIST COPYCAT ME_FIRST NATURE_POWER TRANSFORM BELCH CELEBRATE HOLD_HANDS TERA_STARSTORM "
+    "BLAZING_TORQUE COMBAT_TORQUE MAGICAL_TORQUE NOXIOUS_TORQUE WICKED_TORQUE").split()}
+MIMIC_COPIES = {"MOVE_" + name for name in (
+    "ZIPPY_ZAP SPLISHY_SPLASH FLOATY_FALL PIKA_PAPOW BOUNCY_BUBBLE BUZZY_BUZZ SIZZLY_SLIDE GLITZY_GLOW BADDY_BAD "
+    "SAPPY_SEED FREEZY_FROST SPARKLY_SWIRL VEEVEE_VOLLEY DOUBLE_IRON_BASH").split()}
+
+
 class MetronomeTests(unittest.TestCase):
     def test_metronome_reaches_every_move_but_the_banned(self):
         overlay = OVERLAY.read_text()
@@ -223,13 +241,15 @@ class MetronomeTests(unittest.TestCase):
         engine = revision(REFERENCE, ENGINE_COMMIT, "src/battle/other_battle_calculators.c")
         both, metronome = ban_list(engine, "u16 sMetronomeMimicMoveBanList[]")
         port_both, port_metronome = port_ban_runs(OVERLAY.read_text())
-        self.assertEqual(port_both, both)
-        # Double Iron Bash and Dynamax Cannon sit on both sides of the engine's
-        # marker; the Mimic half already covers them here. Scarlet and
-        # Violet's refusals are the port's (Metronomo's table, Showdown's gen-9
-        # data), and Dragon Hammer, which the engine refuses, is called.
-        self.assertLessEqual(SCARLET_VIOLET, port_metronome)
-        self.assertEqual(port_metronome - SCARLET_VIOLET, metronome - both - {"MOVE_DRAGON_HAMMER"})
+        # Mimic's block is the engine's, less what Scarlet and Violet's Mimic
+        # copies and more of what it refuses (Mimica, Showdown's gen-9
+        # failmimic): moved from the rest of Metronome's run, not added to it.
+        self.assertEqual(port_both, (both - MIMIC_COPIES) | MIMIC_REFUSES)
+        self.assertLessEqual(MIMIC_REFUSES, metronome | SCARLET_VIOLET)
+        # Metronome's whole run is the engine's with Scarlet and Violet's
+        # refusals (Metronomo's table, Showdown's gen-9 data), and Dragon
+        # Hammer, which the engine refuses, is called.
+        self.assertEqual(port_both | port_metronome, (both | metronome | SCARLET_VIOLET) - {"MOVE_DRAGON_HAMMER"})
 
 
 if __name__ == "__main__":

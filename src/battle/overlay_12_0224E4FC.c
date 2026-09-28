@@ -11858,7 +11858,7 @@ u32 TryCriticalHit(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
 
 // What the moves that call another may not call: one list in blocks, each
 // caller refusing a run of them from the block it starts at to the one it
-// stops at (CalledMoveBanned). Metronome refuses from the list's start to
+// stops at (CheckLegalCalledMove). Metronome refuses from the list's start to
 // Copycat's block, Mimic its own block alone, Copycat from Mimic's block to
 // Assist's, Assist from Mimic's block to the end. Retail shared one list,
 // Metronome's, among Metronome, Copycat and Assist, and the engine kept that;
@@ -11968,10 +11968,37 @@ static const u16 sMetronomeUnuseableMoves[] = {
     MOVE_TWIN_BEAM,
     MOVE_SPRINGTIDE_STORM,
 
+    // Metronome alone too: the Let's Go moves and Double Iron Bash, which
+    // Mimic and Copycat take and Assist calls in Showdown's gen-9 data (no
+    // failmimic, failcopycat or noassist; Pokemon Central names them for
+    // none of the three), and Metronome does not call (no metronome flag;
+    // Metronomo's table has Double Iron Bash).
+    MOVE_ZIPPY_ZAP,
+    MOVE_SPLISHY_SPLASH,
+    MOVE_FLOATY_FALL,
+    MOVE_PIKA_PAPOW,
+    MOVE_BOUNCY_BUBBLE,
+    MOVE_BUZZY_BUZZ,
+    MOVE_SIZZLY_SLIDE,
+    MOVE_GLITZY_GLOW,
+    MOVE_BADDY_BAD,
+    MOVE_SAPPY_SEED,
+    MOVE_FREEZY_FROST,
+    MOVE_SPARKLY_SWIRL,
+    MOVE_VEEVEE_VOLLEY,
+    MOVE_DOUBLE_IRON_BASH,
+
     CALLED_MOVE_BANS_MIMIC,
-    // Metronome, Mimic, Copycat and Assist: retail's own, and the engine's Z-,
-    // Let's Go and Max moves and placeholders, which Copycat does not copy
-    // (Copione) and no party Pokemon knows for Assist.
+    // Metronome, Mimic, Copycat and Assist: retail's own, the engine's Z- and
+    // Max moves and placeholders, which Copycat does not copy (Copione) and no
+    // party Pokemon knows for Assist, and what Scarlet and Violet's Mimic
+    // refuses among the moves all three refuse (Pokemon Central, Mimica:
+    // Sleep Talk from the second generation, Belch, Celebrate and Hold Hands
+    // from the fifth, the torques and Tera Starstorm in the ninth; Transform
+    // from the fifth, Bulbapedia's Mimic; Assist, Copycat, Me First and Nature
+    // Power, of which Mimica says nothing, by Showdown's gen-9 failmimic).
+    // Mirror Move, which Showdown refuses too, Mimica has copyable from the
+    // third generation.
     MOVE_METRONOME,
     MOVE_STRUGGLE,
     MOVE_SKETCH,
@@ -12032,20 +12059,6 @@ static const u16 sMetronomeUnuseableMoves[] = {
     MOVE_MENACING_MOONRAZE_MAELSTROM,
     MOVE_LIGHT_THAT_BURNS_THE_SKY,
     MOVE_SOUL_STEALING_7_STAR_STRIKE,
-    MOVE_ZIPPY_ZAP,
-    MOVE_SPLISHY_SPLASH,
-    MOVE_FLOATY_FALL,
-    MOVE_PIKA_PAPOW,
-    MOVE_BOUNCY_BUBBLE,
-    MOVE_BUZZY_BUZZ,
-    MOVE_SIZZLY_SLIDE,
-    MOVE_GLITZY_GLOW,
-    MOVE_BADDY_BAD,
-    MOVE_SAPPY_SEED,
-    MOVE_FREEZY_FROST,
-    MOVE_SPARKLY_SWIRL,
-    MOVE_VEEVEE_VOLLEY,
-    MOVE_DOUBLE_IRON_BASH,
     MOVE_MAX_GUARD,
     MOVE_DYNAMAX_CANNON,
     MOVE_MAX_FLARE,
@@ -12069,13 +12082,26 @@ static const u16 sMetronomeUnuseableMoves[] = {
     MOVE_468,
     MOVE_469,
     MOVE_470,
+    MOVE_SLEEP_TALK,
+    MOVE_ASSIST,
+    MOVE_COPYCAT,
+    MOVE_ME_FIRST,
+    MOVE_NATURE_POWER,
+    MOVE_TRANSFORM,
+    MOVE_BELCH,
+    MOVE_CELEBRATE,
+    MOVE_HOLD_HANDS,
+    MOVE_TERA_STARSTORM,
+    MOVE_BLAZING_TORQUE,
+    MOVE_COMBAT_TORQUE,
+    MOVE_MAGICAL_TORQUE,
+    MOVE_NOXIOUS_TORQUE,
+    MOVE_WICKED_TORQUE,
 
     CALLED_MOVE_BANS_SHARED,
     // Metronome, Copycat and Assist: retail's, and the engine's (Copione's and
     // Assistente's tables; King's Shield, missing from Assistente's among the
     // other guards, is Showdown's gen-9 noassist).
-    MOVE_SLEEP_TALK,
-    MOVE_ASSIST,
     MOVE_MIRROR_MOVE,
     MOVE_COUNTER,
     MOVE_PROTECT,
@@ -12090,34 +12116,19 @@ static const u16 sMetronomeUnuseableMoves[] = {
     MOVE_TRICK,
     MOVE_FOCUS_PUNCH,
     MOVE_FEINT,
-    MOVE_COPYCAT,
-    MOVE_ME_FIRST,
     MOVE_SWITCHEROO,
     MOVE_BANEFUL_BUNKER,
     MOVE_BEAK_BLAST,
-    MOVE_BELCH,
     MOVE_BESTOW,
-    MOVE_CELEBRATE,
-    MOVE_HOLD_HANDS,
     MOVE_KINGS_SHIELD,
     MOVE_MAT_BLOCK,
-    MOVE_NATURE_POWER,
     MOVE_RAGE_POWDER,
     MOVE_SHELL_TRAP,
     MOVE_SPIKY_SHIELD,
     MOVE_SPOTLIGHT,
-    MOVE_TRANSFORM,
-    // Scarlet and Violet's, which none of the three calls: Tera Starstorm
-    // (Metronomo, Copione); the torques, which Pokemon Central does not
-    // name, by Showdown's gen-9 data; and Collision Course, which Metronomo's
-    // and Copione's tables list, the second with the torques, where
-    // Showdown's gen-9 data lets Copycat copy it.
-    MOVE_TERA_STARSTORM,
-    MOVE_BLAZING_TORQUE,
-    MOVE_COMBAT_TORQUE,
-    MOVE_MAGICAL_TORQUE,
-    MOVE_NOXIOUS_TORQUE,
-    MOVE_WICKED_TORQUE,
+    // Scarlet and Violet's Collision Course, which Metronomo's and Copione's
+    // tables list, the second with the torques, where Showdown's gen-9 data
+    // lets Copycat copy it.
     MOVE_COLLISION_COURSE,
 
     CALLED_MOVE_BANS_COPYCAT,
