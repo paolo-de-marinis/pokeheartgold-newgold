@@ -11,12 +11,20 @@ since the core it drives pins the clock by starting its process again.
 The ROM is the NEWGOLD_DIAG=1 HeartGold build; without it, or without the
 libretro core, or without the save a scenario starts from (Paolo's saves,
 ~/hgss-saves), a test is skipped and says why.
+
+The legs of the playthrough are a chain: a leg names the one before it
+("from") and starts from the in-game save that one made. They share one
+directory for the run (CHAIN), and run in the order of their names, so each
+finds the save of the one before; one run alone plays the legs before it
+first.
 """
 import json
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
+from pathlib import Path
 
 from test_level_cap import ROOT
 
@@ -30,6 +38,7 @@ import core  # noqa: E402
 import scene  # noqa: E402
 
 CORE = str(core.CORE)       # the one NEWGOLD_CORE names, or core.py's default
+CHAIN = tempfile.TemporaryDirectory(prefix="newgold-chain-")    # the legs' saves, for this run
 
 
 class ScenarioFileTests(unittest.TestCase):
@@ -47,8 +56,14 @@ class ScenarioFileTests(unittest.TestCase):
         for path in sorted(SCENARIOS.glob("*.json")):
             with self.subTest(path.name):
                 spec = json.loads(path.read_text())
-                self.assertLessEqual(set(spec), {"about", "save", "edit", "hold", "steps", "expect"})
-                self.assertTrue(spec.get("about") and spec.get("save") and spec.get("steps"))
+                self.assertLessEqual(set(spec), {"about", "save", "from", "edit", "hold", "steps", "expect"})
+                self.assertTrue(spec.get("about") and spec.get("steps"))
+                # a save, the leg before, or neither: a new game (which has nothing to edit)
+                self.assertFalse("save" in spec and "from" in spec)
+                self.assertTrue("edit" not in spec or "save" in spec or "from" in spec)
+                if "from" in spec:     # a leg before it in the run's order
+                    self.assertTrue((SCENARIOS / f"{spec['from']}.json").exists(), spec["from"])
+                    self.assertLess(spec["from"], path.stem)
                 self.assertEqual([s for s in spec["steps"] if not scene.readable(s)], [])
                 self.assertEqual([k for k in spec.get("expect", {}) if not scene.readable(k, key=True)], [])
                 self.assertTrue(all(name.startswith("gDiag") for name in spec.get("hold", {})))
@@ -149,6 +164,41 @@ class ScenarioFileTests(unittest.TestCase):
             self.assertTrue(scene.readable(key, key=True), key)
         for key in ("battler0.pp4", "party6.item", "party0.ability"):
             self.assertFalse(scene.readable(key, key=True), key)
+
+
+class ChainTests(unittest.TestCase):
+    """A leg starts from the save the leg before it left in the chain's
+    directory, and does not play when that leg did not pass; read without
+    the emulator."""
+
+    def leg(self, chain, report=None, save=None):
+        folder = Path(chain)
+        (folder / "before.json").write_text(json.dumps({"about": "a", "steps": ["save"]}))
+        (folder / "after.json").write_text(json.dumps({"about": "b", "from": "before", "steps": ["A"]}))
+        if report is not None:
+            (folder / "before.txt").write_text(report)
+        if save is not None:
+            (folder / "before.sav").write_bytes(save)
+        return folder / "after.json"
+
+    def test_a_leg_starts_from_the_save_the_leg_before_left(self):
+        with tempfile.TemporaryDirectory() as chain:
+            leg = self.leg(chain, "PASS before.json\n", b"flash")
+            self.assertEqual(scene.leg_save(leg, Path(chain)), (Path(chain) / "before.sav", []))
+
+    def test_a_leg_after_one_that_failed_fails_without_playing(self):
+        with tempfile.TemporaryDirectory() as chain:
+            leg = self.leg(chain, "FAIL before.json: 10 frames\n  map is 60, not 61\n")
+            passed, report = scene.scenario(leg, chain=chain)
+            self.assertIs(passed, False)
+            self.assertEqual(report[0], "FAIL after.json: the leg before, before, left no save")
+            self.assertIn("map is 60, not 61", report[-1])
+            self.assertTrue((Path(chain) / "after.txt").read_text().startswith("FAIL"))
+
+    def test_a_leg_after_one_that_could_not_run_is_skipped(self):
+        with tempfile.TemporaryDirectory() as chain:
+            leg = self.leg(chain, "SKIP before.json: no ROM\n")
+            self.assertIsNone(scene.scenario(leg, chain=chain)[0])
 
 
 class RecordingTests(unittest.TestCase):
@@ -270,14 +320,20 @@ class NavigatorTests(unittest.TestCase):
         self.assertGreater(len(scene.plan((33, 653, 400), [(33, 650, 400)])), 20)
 
 
+def legs(path):
+    """How many legs a run of this scenario plays: itself and those before it."""
+    before = json.loads(path.read_text()).get("from")
+    return 1 + (legs(SCENARIOS / f"{before}.json") if before else 0)
+
+
 def play(path):
     def test(self):
         for needed, how in ((ROM, "make NEWGOLD_DIAG=1 COMPARE=0 build/heartgold.us.diag/pokeheartgold.us.nds"),
                             (ELF, "the same build"), (CORE, "the libretro core (NEWGOLD_CORE)")):
             if not os.path.exists(needed):
                 self.skipTest(f"{needed} is not there: {how}")
-        run = subprocess.run([sys.executable, str(DIAG / "scene.py"), "--scenario", str(path)],
-                             capture_output=True, text=True, timeout=1800)
+        run = subprocess.run([sys.executable, str(DIAG / "scene.py"), "--scenario", str(path), "--chain", CHAIN.name],
+                             capture_output=True, text=True, timeout=1800 * legs(path))
         report = run.stdout.strip() or run.stderr.strip()[-2000:]
         if report.startswith("SKIP"):
             self.skipTest(report)

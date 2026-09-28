@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Play a scene from a save, step by step, and check what it shows.
 
-    scene.py SAVE OUT STEP... [--rom ROM] [--elf ELF]
-    scene.py --scenario FILE [--out DIR] [--rom ROM] [--elf ELF]
+    scene.py SAVE OUT STEP... [--rom ROM] [--elf ELF]      SAVE "new": an empty flash
+    scene.py --scenario FILE [--out DIR] [--chain DIR] [--rom ROM] [--elf ELF]
     ... --record RUN.mp4        either, filmed: every frame and its sound (core.py)
 
 A step is one of
@@ -44,6 +44,8 @@ A step is one of
                                 (the matrix's tiles outdoors). A tile someone stands
                                 on -- or started on, wherever they have wandered
                                 since -- is reached beside them, facing them.
+    save                        the game saved through the start menu as a player saves,
+                                the flash kept for the next leg of a chain
 
     scene.py mart.sav out wait:300 A*3 untilheap:HEAP_ID_FIELD2 heaps:mart shot:mart
 
@@ -60,14 +62,20 @@ both screens and the last battle lines.
      "expect": {"lines": ["Falkner sent out Pidgey!"], "badges": 1}}
 
 A save's path is taken in ~/hgss-saves unless it is absolute; the saves there
-are Paolo's and only a copy is ever edited. In "expect", "lines" have to be
-printed by the battle, in that order (a part of the line is enough),
-"new_lines" the same since the check before this one (a later phase's lines,
-not matched by an earlier phase's alike), "once_lines" exactly once each
-since the check before (one line where a rule prints one, not two), and
-"no_lines" never; "heaps" is the least a heap may have had left at its
-fullest (gDiagHeapLowWater); every other key is a value read out of main RAM
-by name, through the ELF's symbols and the offsets the tree's own headers
+are Paolo's and only a copy is ever edited. A scenario with no save starts
+from an empty flash. One that names another as "from", a leg of a chain
+(the playthrough), starts from the in-game save that one made (save): the
+legs of a run share a directory (--chain), where each leaves its report,
+NAME.txt, and on a pass its save, NAME.sav; a leg whose leg before has not
+run plays it first, and one whose leg before failed fails without playing.
+
+In "expect", "lines" have to be printed by the battle, in that order (a
+part of the line is enough), "new_lines" the same since the check before
+this one (a later phase's lines, not matched by an earlier phase's alike),
+"once_lines" exactly once each since the check before (one line where a
+rule prints one, not two), and "no_lines" never; "heaps" is the least a
+heap may have had left at its fullest (gDiagHeapLowWater); every other key
+is a value read out of main RAM by name, through the ELF's symbols and the offsets the tree's own headers
 give: map, x, y, party (the count), partyN.species|item|level|exp|hp|maxHp
 (the party as its save block holds it, slot N from 0, once the field is up:
 what a battle gave back), bag:ITEM_... (how many the bag holds), badges,
@@ -121,7 +129,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
-         "set")
+         "set", "save")
 
 
 def readable(step_or_key, key=False):
@@ -171,6 +179,38 @@ def field_layout():
     out["LocalMapObject.size"] = values[-1]
     out["FieldSystem.textbox_open"] = savedit.set_bit(textbox)
     return out
+
+
+def c_declarations(path, name):
+    """For compile_c: a .c file's includes, and what it declares after them
+    up to the end of `name` ("struct X", "enum Y") -- a struct it keeps to
+    itself, with the ones it holds."""
+    import re
+    text = savedit.source(path).read_text()
+    end = re.search(rf"^(?:typedef )?{name} \{{.*?^\}}[^;\n]*;", text, re.S | re.M).end()
+    includes = list(re.finditer(r'^#include "(.*)"\n', text[:end], re.M))
+    return tuple(m.group(1) for m in includes), (text[includes[-1].end():end],)
+
+
+@savedit.tree_cache
+def app_layout():
+    """What save: reads, from the tree: the start menu's buttons (its cursor
+    is FieldSystem.unkD3) and the save's progress -- offsets, and the
+    numbers of the states waited for."""
+    out = {}
+    for path, name, exprs in (
+            ("src/start_menu.c", "enum StartMenuAction", ("START_MENU_ACTION_SAVE",)),):
+        headers, decls = c_declarations(path, name)
+        out.update(zip(exprs, savedit.compile_c(exprs=exprs, headers=headers, decls=decls)[0]))
+    names = ("TaskManager, func", "TaskManager, env",
+             "StartMenuTaskData, state", "StartMenuTaskData, numActiveButtons", "StartMenuTaskData, selectionToAction",
+             "FieldSystem, unkD3", "SaveData, saveCounter", "SaveData, lastGoodSector")
+    values = savedit.compile_c(exprs=tuple(f"__builtin_offsetof({n})" for n in names) + ("START_MENU_STATE_HANDLE_INPUT",),
+                               headers=savedit.LAYOUT_HEADERS + ("task.h", "start_menu.h", "field_system.h"))[0]
+    out.update({n.replace(", ", "."): v for n, v in zip(names, values)})
+    out["START_MENU_STATE_HANDLE_INPUT"] = values[-1]
+    return {key.replace("__builtin_offsetof(struct ", "").replace(", ", ".").rstrip(")"): value
+            for key, value in out.items()}
 
 
 # -- the navigator's map, from the tree -------------------------------------
@@ -326,6 +366,7 @@ class Scene:
         self._text_count = self.markers.address("gDiagBattleTextCount")
         self._field = self.markers.address("sFieldSysPtr")
         self.hooks = [self._poke, self._collect]
+        self.saved = None       # the flash an in-game save left (save), for the next leg
 
     def hold(self, name, value):
         address = self.markers.address(name)
@@ -484,6 +525,8 @@ class Scene:
             else:
                 number = self.number(value)
             core.poke(at + layout[field], number, 2 if field in ("ability", "item", "speed") else 4)
+        elif kind == "save":
+            return self.save()
         elif kind == "fight":
             import gym
             idle = presses = 0
@@ -511,6 +554,77 @@ class Scene:
                 core.press(button, 6, hooks)
                 core.step(20, hooks)
         return None
+
+    # -- the in-game save --------------------------------------------------
+
+    def through(self, button="A"):
+        """One beat of a scripted scene on the field: the button for a text
+        box or before the map runs, a frame otherwise (a press as the player
+        gets control would talk to whoever they face)."""
+        if not self._chain("FieldSystem.runningFieldMap") or self.textbox():
+            self.core.press(button, 6, self.hooks)
+            self.core.step(20, self.hooks)
+        else:
+            self.core.step(1, self.hooks)
+
+    def save(self, frames=12000):
+        """save: -- the game saved as a player saves it: X, the start menu's
+        cursor (FieldSystem.unkD3) moved onto SAVE -- the menu's buttons are
+        in RAM, not where they sit, so each direction is tried from where it
+        is until SAVE is under it -- A through the questions until the write
+        has begun (SaveData.saveCounter moves) and is done (lastGoodSector
+        turns to the half written, Save_WriteManFinish), and B until the
+        player can move again. The flash as the game left it is kept
+        (self.saved) for the next leg of a chain: melonDS DS hands it over
+        as memory; melonDS 0.9.3 writes it nowhere while it runs, nor when
+        the game is unloaded, and cannot be asked."""
+        import ctypes
+        core, hooks, layout = self.core, self.hooks, app_layout()
+        if not core._sram:
+            return [f"{core.name} hands no flash back: save needs melonDS DS, core.py's default"]
+        end = core.frames + frames
+        data = core.word(self.markers.address("sSaveDataPtr"))
+        counter, half = data + layout["SaveData.saveCounter"], data + layout["SaveData.lastGoodSector"]
+        start, first = core.word(counter), core.word(half, 2)
+        while core.frames < end and not self.movable():
+            self.through()
+        core.press("X", 6, hooks)
+
+        def menu():
+            task = self._chain("FieldSystem.taskman")
+            if not task or core.word(task + layout["TaskManager.func"]) & ~1 != self.markers.address("Task_StartMenu") & ~1:
+                return None
+            env = core.word(task + layout["TaskManager.env"])
+            if core.word(env + layout["StartMenuTaskData.state"], 2) != layout["START_MENU_STATE_HANDLE_INPUT"]:
+                return None
+            at = env + layout["StartMenuTaskData.selectionToAction"]
+            return [core.word(at + i, 1) for i in range(core.word(env + layout["StartMenuTaskData.numActiveButtons"]))]
+        while core.frames < end and menu() is None:
+            core.step(1, hooks)
+        buttons, cursor = menu() or [], core.word(self._field) + layout["FieldSystem.unkD3"]
+        if layout["START_MENU_ACTION_SAVE"] not in buttons:
+            return [f"the start menu has no SAVE: {buttons}"]
+        tried = set()
+        for press in range(40):
+            here = core.word(cursor, 1)
+            if here < len(buttons) and buttons[here] == layout["START_MENU_ACTION_SAVE"]:
+                break
+            direction = next((d for d in STEP if (here, d) not in tried), list(STEP)[press % 4])
+            tried.add((here, direction))
+            core.press(direction, 6, hooks)
+            core.step(10, hooks)
+        while core.frames < end and core.word(counter) == start:
+            core.press("A", 6, hooks)
+            core.step(34, hooks)
+        while core.frames < end and core.word(half, 2) == first:
+            core.step(10, hooks)
+        if core.word(half, 2) == first:
+            return [f"the game did not save in {frames} frames (counter {start} -> {core.word(counter)})"]
+        self.saved = ctypes.string_at(*core._sram)
+        while core.frames < end and not self.movable():
+            core.press("B", 6, hooks)
+            core.step(20, hooks)
+        self.say(f"[{core.frames}] saved at {self.location()}: counter {start} -> {core.word(counter)}")
 
     # -- the navigator -----------------------------------------------------
 
@@ -781,23 +895,61 @@ class Scene:
         return wrong
 
 
-def scenario(path, rom=ROM, elf=DIAG_ELF, out=None, record=None):
+def leg_save(path, chain):
+    """The save a leg starts from, when it names the leg before ("from"):
+    the one that leg's in-game save left in the chain's directory, the leg
+    played first when it has not been yet. (the save or None, the report's
+    lines when there is none)."""
+    before = json.loads(Path(path).read_text())["from"]
+    save, report = chain / f"{before}.sav", chain / f"{before}.txt"
+    if not save.exists() and not report.exists():
+        subprocess.run([sys.executable, __file__, "--scenario", str(Path(path).with_name(f"{before}.json")),
+                        "--chain", str(chain)], stdout=subprocess.DEVNULL)
+    if save.exists():
+        return save, []
+    lines = report.read_text().splitlines() if report.exists() else [f"{before} did not run"]
+    kind = "SKIP" if lines[0].startswith("SKIP") else "FAIL"
+    return None, [f"{kind} {Path(path).name}: the leg before, {before}, left no save"] + [f"  {line}" for line in lines]
+
+
+def scenario(path, rom=ROM, elf=DIAG_ELF, out=None, record=None, chain=None):
     """Run one scenario file: (True, False, or None when it cannot run here;
-    the report's lines)."""
+    the report's lines). A leg of a chain writes its report, and on a pass
+    the in-game save it made, to the chain's directory as NAME.txt and
+    NAME.sav, for the leg after it."""
     spec = json.loads(Path(path).read_text())
-    save = Path(spec["save"]) if Path(spec["save"]).is_absolute() else SAVES / spec["save"]
-    if not save.exists():
-        return None, [f"SKIP {Path(path).name}: {save} is not on this machine"]
+    chain = Path(chain or tempfile.mkdtemp(prefix="newgold-chain-"))
+    chain.mkdir(parents=True, exist_ok=True)
+    save, report, saved = None, [], None
+    if "from" in spec:
+        save, report = leg_save(path, chain)
+    elif "save" in spec:
+        save = Path(spec["save"]) if Path(spec["save"]).is_absolute() else SAVES / spec["save"]
+        if not save.exists():
+            save, report = None, [f"SKIP {Path(path).name}: {save} is not on this machine"]
+    # no save and nothing said: a new game, from the flash as it leaves the factory
+    passed = None if report[:1] and report[0].startswith("SKIP") else False
+    if not report:
+        passed, report, saved = play_scenario(path, spec, save, rom, elf, out, record)
+    (chain / f"{Path(path).stem}.txt").write_text("\n".join(report) + "\n")
+    if passed and saved:
+        (chain / f"{Path(path).stem}.sav").write_bytes(saved)
+    return passed, report
+
+
+def play_scenario(path, spec, save, rom, elf, out, record):
     out = Path(out or tempfile.mkdtemp(prefix=f"newgold-scene-{Path(path).stem}-"))
     out.mkdir(parents=True, exist_ok=True)
-    copy = out / "save.sav"
-    shutil.copyfile(save, copy)
+    copy = None
+    if save:
+        copy = out / "save.sav"
+        shutil.copyfile(save, copy)
     if spec.get("edit"):
         edit = subprocess.run([sys.executable, str(ROOT / "tools/newgold/devkit/savedit.py"), *spec["edit"], str(copy)],
                               capture_output=True, text=True)
         if edit.returncode:
             return False, [f"FAIL {Path(path).name}: savedit.py {' '.join(spec['edit'])}: "
-                           + (edit.stderr.strip().splitlines() or ["failed"])[-1]]
+                           + (edit.stderr.strip().splitlines() or ["failed"])[-1]], None
     log, wrong, started = [], [], time.time()
     scene = Scene(copy, rom, elf, out, say=log.append, record=record)
     for name, value in spec.get("hold", {}).items():
@@ -817,7 +969,7 @@ def scenario(path, rom=ROM, elf=DIAG_ELF, out=None, record=None):
     scene.core.close()
     if not wrong:
         shutil.rmtree(out, ignore_errors=True)
-    return not wrong, report
+    return not wrong, report, scene.saved
 
 
 def main():
@@ -829,10 +981,12 @@ def main():
         parser.add_argument("--record", type=Path, help="the run, picture and sound, to this mp4 (core.py)")
         parser.add_argument("--rom", default=ROM)
         parser.add_argument("--elf", type=Path, default=DIAG_ELF)
+        parser.add_argument("--chain", type=Path, help="where the legs of a chain leave their saves (a new "
+                                                        "directory, and the legs before played, by default)")
         args = parser.parse_args()
         from gym import quiet
         out = quiet()
-        passed, report = scenario(args.scenario, args.rom, args.elf, args.out, args.record)
+        passed, report = scenario(args.scenario, args.rom, args.elf, args.out, args.record, args.chain)
         print("\n".join(report), file=out)
         sys.exit(1 if passed is False else 0)
     parser = argparse.ArgumentParser()
@@ -844,10 +998,12 @@ def main():
     parser.add_argument("--record", type=Path, help="the run, picture and sound, to this mp4 (core.py)")
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
-    scene = Scene(args.save, args.rom, args.elf, args.out, say=print, record=args.record)
+    scene = Scene(None if args.save == "new" else args.save, args.rom, args.elf, args.out, say=print, record=args.record)
     for step in args.steps:
         scene.run(step)
     print(scene.markers.describe(scene.core.ram()))
+    if scene.saved:
+        (args.out / "saved.sav").write_bytes(scene.saved)
     scene.core.close()
 
 
