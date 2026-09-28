@@ -5837,13 +5837,14 @@ static BOOL CopyDragonCheer(BattleContext *ctx, int battlerId, int cheer) {
 }
 
 // Opportunist copies what the other side raised (RecordMirrorHerbStages)
-// a stat at a time and at most two stages a step, each with the ability's
+// a stat at a time, all of a stat's stages in one rise with the ability's
 // line, and a Dragon Cheer first, with the move's. An Opportunist that has
 // fainted or lost the ability since takes nothing. TRUE with the script to
 // run.
 static BOOL TryOpportunistCopy(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int j;
+    int stage;
     int battlerId;
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
@@ -5875,13 +5876,18 @@ static BOOL TryOpportunistCopy(BattleSystem *battleSystem, BattleContext *ctx, i
             *script = BATTLE_SUBSCRIPT_SHOW_PREPARED_MESSAGE;
             return TRUE;
         }
-        if (ctx->opportunistStages[battlerId][j] >= 2) {
-            ctx->opportunistStages[battlerId][j] -= 2;
-            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES + j - STAT_ATK;
-        } else {
-            ctx->opportunistStages[battlerId][j]--;
-            ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;
+        // One line for the rise however large (Belly Drum's +6 was three):
+        // the stat command raises its one stage and says so, and the stages
+        // past it go on first, short of +6 so that it has its stage to raise.
+        // Bulbapedia's Opportunist sums what comes at once; Showdown's gen-9
+        // one boosts it in one go.
+        stage = ctx->battleMons[battlerId].statChanges[j];
+        if (stage < 12) {
+            stage += ctx->opportunistStages[battlerId][j] - 1;
+            ctx->battleMons[battlerId].statChanges[j] = stage > 11 ? 11 : stage;
         }
+        ctx->opportunistStages[battlerId][j] = 0;
+        ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;
         ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
         ctx->battlerIdStatChange = battlerId;
         *script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;

@@ -1,5 +1,5 @@
 {
-  "about": "Opportunist copies the rises a script writes (c941ddd3b: before, only the stat command's). A level-10 Pikachu is given Swords Dance and Belly Drum in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash and is given Opportunist (set:). Swords Dance's two stages, the stat command's, are copied as before; Belly Drum's, which its script writes, are copied too: four more stages, two at a time, each with the ability's line. The field's RNG is pinned as in rolls_forced_high.json.",
+  "about": "Opportunist copies the rises a script writes (c941ddd3b: before, only the stat command's). A level-10 Pikachu is given Swords Dance and Belly Drum in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash and is given Opportunist (set:). Swords Dance's two stages, the stat command's, are copied as before; Belly Drum's, which its script writes, are copied too: four more stages, in one rise with one line of the ability's (before, two at a time, a line each). The field's RNG is pinned as in rolls_forced_high.json.",
   "save": "route29-official.sav",
   "edit": ["--party", "PIKACHU:10"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
@@ -10,8 +10,8 @@
             {"expect": {"lines": ["Pikachu used Swords Dance!", "The wild Chansey’s Opportunist raised its Attack!",
                                   "The wild Chansey used Splash!"]}},
             "fight:2:1"],
-  "expect": {"lines": ["Pikachu used Belly Drum!", "Pikachu cut its own HP and maximized its Attack!",
-                       "The wild Chansey’s Opportunist raised its Attack!", "The wild Chansey’s Opportunist raised its Attack!",
-                       "The wild Chansey used Splash!"],
+  "expect": {"new_lines": ["Pikachu used Belly Drum!", "Pikachu cut its own HP and maximized its Attack!",
+                           "The wild Chansey’s Opportunist raised its Attack!", "The wild Chansey used Splash!"],
+             "once_lines": ["The wild Chansey’s Opportunist raised its Attack!"],
              "battler0.hp": 15}
 }

@@ -678,11 +678,79 @@ int main(void) {
         self.assertIn("ctx->buffMsg.id = msg_0197_00276;", state)
         self.assertIn("*script = BATTLE_SUBSCRIPT_SHOW_PREPARED_MESSAGE;", state)
         self.assertIn("GetBattlerAbility(ctx, battlerId) != ABILITY_OPPORTUNIST", state)
-        self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_2_STAGES + j - STAT_ATK;", state)
-        self.assertIn("ctx->statChangeParam = MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + j - STAT_ATK;", state)
         self.assertIn("ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;", state)
         self.assertIn("*script = BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE;", state)
         self.assertIn("MI_CpuClear8(ctx->opportunistStages[battlerId], NUM_BATTLE_STATS);", function(OVERLAY, "BattleSystem_GetBattleMon"))
+
+    def test_a_large_rise_is_one_step_with_one_line(self):
+        """Belly Drum's +6 copied was three lines of "Opportunist raised its
+        Attack!", two stages a step; the games print one (Bulbapedia sums
+        what comes at once, Showdown's gen-9 Opportunist boosts it in one
+        go). The stages past the stat command's one go on first, short of
+        +6, and the command raises the last and says so."""
+        program = HEADER + r"""
+#define msg_0197_00276 276
+#define TAG_NICKNAME 2
+typedef struct { int maxBattlers; } BattleSystem;
+typedef struct { int hp; s8 statChanges[NUM_BATTLE_STATS]; } BattleMon;
+typedef struct { int id, tag, param[6]; } Msg;
+typedef struct {
+    BattleMon battleMons[4];
+    u8 opportunistStages[4][NUM_BATTLE_STATS];
+    u8 turnOrder[4];
+    Msg buffMsg;
+    int statChangeParam, statChangeType, battlerIdStatChange;
+} BattleContext;
+static int BattleSystem_GetMaxBattlers(BattleSystem *bs) { return bs->maxBattlers; }
+static u16 GetBattlerAbility(BattleContext *ctx, int battlerId) { (void)ctx; return battlerId == 1 ? ABILITY_OPPORTUNIST : 0; }
+static void MI_CpuClear8(void *p, int n) { memset(p, 0, n); }
+static BOOL CopyDragonCheer(BattleContext *ctx, int battlerId, int cheer) { (void)ctx; (void)battlerId; return cheer != 0; }
+static int CreateNicknameTag(BattleContext *ctx, int battlerId) { (void)ctx; return battlerId; }
+""" + function(OVERLAY, "TryOpportunistCopy") + r"""
+int main(void) {
+    BattleSystem bs = { 4 };
+    BattleContext ctx;
+    int script = 0;
+    memset(&ctx, 0, sizeof(ctx));
+    for (int i = 0; i < 4; i++) {
+        ctx.turnOrder[i] = i;
+        ctx.battleMons[i].hp = 50;
+        for (int j = 0; j < NUM_BATTLE_STATS; j++) ctx.battleMons[i].statChanges[j] = 6;
+    }
+    // Belly Drum's six stages, and a Speed stage: one step each, and none
+    // left over.
+    ctx.opportunistStages[1][STAT_ATK] = 6;
+    ctx.opportunistStages[1][STAT_SPEED] = 1;
+    EXPECT(TryOpportunistCopy(&bs, &ctx, &script), TRUE);
+    EXPECT(script, BATTLE_SUBSCRIPT_UPDATE_STAT_STAGE);
+    EXPECT(ctx.statChangeParam, MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE);
+    EXPECT(ctx.statChangeType, SIDE_EFFECT_TYPE_ABILITY);
+    EXPECT(ctx.battlerIdStatChange, 1);
+    EXPECT(ctx.battleMons[1].statChanges[STAT_ATK], 11);
+    EXPECT(ctx.opportunistStages[1][STAT_ATK], 0);
+    EXPECT(TryOpportunistCopy(&bs, &ctx, &script), TRUE);
+    EXPECT(ctx.statChangeParam, MOVE_SUBSCRIPT_PTR_ATTACK_UP_1_STAGE + STAT_SPEED - STAT_ATK);
+    EXPECT(ctx.battleMons[1].statChanges[STAT_SPEED], 6);
+    EXPECT(TryOpportunistCopy(&bs, &ctx, &script), FALSE);
+    // Two stages onto +5: the stat command's stage alone is left to raise.
+    ctx.battleMons[1].statChanges[STAT_DEF] = 11;
+    ctx.opportunistStages[1][STAT_DEF] = 2;
+    EXPECT(TryOpportunistCopy(&bs, &ctx, &script), TRUE);
+    EXPECT(ctx.battleMons[1].statChanges[STAT_DEF], 11);
+    // Three onto +1: +3 on first, the command's the fourth.
+    ctx.battleMons[1].statChanges[STAT_SPATK] = 7;
+    ctx.opportunistStages[1][STAT_SPATK] = 3;
+    EXPECT(TryOpportunistCopy(&bs, &ctx, &script), TRUE);
+    EXPECT(ctx.battleMons[1].statChanges[STAT_SPATK], 9);
+    // At +6 nothing goes on; the command finds no room and says nothing.
+    ctx.battleMons[1].statChanges[STAT_SPDEF] = 12;
+    ctx.opportunistStages[1][STAT_SPDEF] = 2;
+    EXPECT(TryOpportunistCopy(&bs, &ctx, &script), TRUE);
+    EXPECT(ctx.battleMons[1].statChanges[STAT_SPDEF], 12);
+    return 0;
+}
+"""
+        run_c(self, program)
 
 
 class SymbiosisTests(unittest.TestCase):
