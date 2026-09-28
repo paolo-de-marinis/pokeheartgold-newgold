@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check Water Absorb's two guards and Leaf Guard's sunshine.
+"""Check the absorbing abilities' guards and Leaf Guard's sunshine.
 
 Both are conditions on an ability rather than logic of their own, and both fail
 quietly: a Water Absorb that heals off its own Surf and a Leaf Guard that lets
@@ -56,23 +56,34 @@ class WaterAbsorbTests(unittest.TestCase):
         self.assertIn("battlerIdAttacker != battlerIdTarget", condition)
         self.assertIn("BattleMoveTbl(ctx, ctx->moveNoCur)->power", condition)
 
-    def test_dry_skin_keeps_only_the_power(self):
-        # The asymmetry is the reference's, not an oversight to tidy up: Dry
-        # Skin drinks a Water move its holder aimed at itself.
+    def test_dry_skin_takes_a_status_move_but_not_its_own(self):
+        # Soak too, but not the holder's own Rain Dance or Aqua Ring (Pokemon
+        # Central, Pellearsa).
         condition = ability_condition(self.source, "ABILITY_DRY_SKIN")
-        self.assertIn("BattleMoveTbl(ctx, ctx->moveNoCur)->power", condition)
-        self.assertNotIn("battlerIdAttacker != battlerIdTarget", condition)
+        self.assertNotIn("power", condition)
+        self.assertIn("battlerIdAttacker != battlerIdTarget", condition)
 
-    def test_the_guards_match_the_reference(self):
+    def test_earth_eater_takes_a_status_move_but_not_spikes(self):
+        # Sand Attack too, but not Spikes, whose target this game draws from
+        # the other side (Pokemon Central, Mangiaterra).
+        condition = ability_condition(self.source, "ABILITY_EARTH_EATER")
+        self.assertNotIn("power", condition)
+        self.assertIn("battlerIdAttacker != battlerIdTarget", condition)
+        self.assertIn("BattleMoveTbl(ctx, ctx->moveNoCur)->range != RANGE_OPPONENT_SIDE", condition)
+
+    def test_the_reference_asks_for_the_power(self):
+        # What the port does not copy: the reference's Dry Skin and Earth
+        # Eater take only a move with power, and Dry Skin its holder's own.
         if REFERENCE is None:
             self.skipTest("no reference checkout")
         source = revision(REFERENCE, REFERENCE_COMMIT, "src/battle/ability.c")
         water = reference_condition(source, "ABILITY_WATER_ABSORB")
         self.assertIn("attacker != defender", water)
         self.assertIn("power", water)
-        dry = reference_condition(source, "ABILITY_DRY_SKIN")
-        self.assertIn("power", dry)
-        self.assertNotIn("attacker != defender", dry)
+        for ability in ("ABILITY_DRY_SKIN", "ABILITY_EARTH_EATER"):
+            condition = reference_condition(source, ability)
+            self.assertIn("power", condition)
+            self.assertNotIn("attacker != defender", condition)
 
 
 

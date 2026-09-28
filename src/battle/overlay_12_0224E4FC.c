@@ -5192,8 +5192,8 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
     }
 
     // Water Absorb wants a damaging Water move, and one it did not aim at
-    // itself -- the reference asks both of it, as it does of Volt Absorb and
-    // Irrigation. Dry Skin below asks only for the power, there as here.
+    // itself -- konefr's reference asks both of it (82b788666), and of Volt
+    // Absorb and Irrigation the second only.
     if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_WATER_ABSORB) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && battlerIdAttacker != battlerIdTarget && BattleMoveTbl(ctx, ctx->moveNoCur)->power) {
         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerIdTarget].maxHp, 4);
         script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;
@@ -5240,7 +5240,11 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
         ctx->battlerIdStatChange = battlerIdTarget;
         script = BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_SP_ATTACK;
     }
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_DRY_SKIN) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && BattleMoveTbl(ctx, ctx->moveNoCur)->power) {
+    // Dry Skin drinks every Water move aimed at its holder, a status move
+    // such as Soak too, but none its holder aimed at itself or at the whole
+    // field -- Withdraw, Aqua Ring, Rain Dance (Pokemon Central, Pellearsa).
+    // The reference asks for the power instead, and so let Soak through.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_DRY_SKIN) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && battlerIdAttacker != battlerIdTarget) {
         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerIdTarget].maxHp, 4);
         script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;
     }
@@ -5258,7 +5262,12 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
         ctx->battlerIdStatChange = battlerIdTarget;
         script = BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_ATTACK;
     }
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_EARTH_EATER) == TRUE && moveType == TYPE_GROUND && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && BattleMoveTbl(ctx, ctx->moveNoCur)->power) {
+    // Earth Eater eats every Ground move aimed at its holder, Sand Attack
+    // too, but not Spikes (Pokemon Central, Mangiaterra), which is aimed at
+    // the holder's side though this game names a foe as its target, nor a
+    // move its holder aimed at itself or at the field. The reference asks for
+    // the power instead.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_EARTH_EATER) == TRUE && moveType == TYPE_GROUND && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && battlerIdAttacker != battlerIdTarget && BattleMoveTbl(ctx, ctx->moveNoCur)->range != RANGE_OPPONENT_SIDE) {
         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerIdTarget].maxHp, 4);
         script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;
     }

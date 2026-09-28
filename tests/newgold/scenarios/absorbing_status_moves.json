@@ -1,0 +1,18 @@
+{
+  "about": "Dry Skin and Earth Eater take any move of their type aimed at their holder, status moves too, but not Spikes nor the holder's own Rain Dance (Pokemon Central, Pellearsa and Mangiaterra; before, they took only moves with power, the reference's condition). A level-10 Pikachu is given Soak, Sand Attack, Spikes and Rain Dance in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash and is given Dry Skin, then Earth Eater (set:): Soak and Sand Attack are made useless and Spikes still lands; then the Pikachu is given Dry Skin and its own Rain Dance still starts the rain. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SOAK", "teach:0,1,MOVE_SAND_ATTACK", "teach:0,2,MOVE_SPIKES", "teach:0,3,MOVE_RAIN_DANCE",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:1,ability,ABILITY_DRY_SKIN", "fight:1:1",
+            "set:1,ability,ABILITY_EARTH_EATER", "fight:2:1", "fight:3:1",
+            "set:0,ability,ABILITY_DRY_SKIN", "fight:4:1"],
+  "expect": {"lines": ["Pikachu used Soak!", "The wild Chansey’s Dry Skin made Soak useless!",
+                       "Pikachu used Sand Attack!", "The wild Chansey’s Earth Eater made Sand Attack useless!",
+                       "Pikachu used Spikes!", "Spikes were scattered",
+                       "Pikachu used Rain Dance!", "It started to rain!"],
+             "no_lines": ["transformed into the Water type", "accuracy fell", "made Spikes useless", "made Rain Dance useless"],
+             "battler1.hp": 40}
+}
