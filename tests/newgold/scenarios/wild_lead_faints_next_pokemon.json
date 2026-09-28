@@ -1,0 +1,11 @@
+{
+  "about": "gym.py's player goes on with the next Pokemon when its lead faints in a wild battle: 'Use next Pokemon?' is answered with its upper button, the party screen sends the Snorlax, and the forced wild Geodude is beaten -- where it touched the lower button, which flees (the party screen's SHIFT, touched while the question was up), and the battle ended with 'You got away safely!'. A level-5 Magikarp at 1 HP (set:) leads a level-40 Snorlax; the Geodude, left only Tackle (teach:), fells it. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "MAGIKARP:5,SNORLAX:40"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0",
+            "teach:1,0,MOVE_TACKLE", "teach:1,1,MOVE_TACKLE,0", "teach:1,2,MOVE_TACKLE,0", "teach:1,3,MOVE_TACKLE,0",
+            "set:0,hp,1", "fight", "field"],
+  "expect": {"lines": ["The wild Geodude used Tackle!", "Magikarp fainted!", "Go! Snorlax!", "The wild Geodude fainted!"],
+             "no_lines": ["got away safely!"], "party": 2}
+}

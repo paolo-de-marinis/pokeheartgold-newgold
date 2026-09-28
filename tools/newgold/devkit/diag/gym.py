@@ -16,7 +16,8 @@ is waiting for the player, and the player answers through the game's own
 menus -- a touch on FIGHT, on a move, on a Pokemon -- exactly where a thumb
 would go. B moves text on and declines "will you switch?" and forgetting a
 move for a new one, which a touch then gives up; A moves it on through an
-evolution, which B would stop.
+evolution, which B would stop. A wild battle's "Use next Pokemon?" is
+answered with the next one.
 
 The report is the battle's own lines, the battlers each turn, what the
 trainer's AI spent, anything that asserted, and the party before and after.
@@ -42,6 +43,7 @@ PARTY = [(64, 35), (192, 38), (64, 78), (192, 81), (64, 123), (192, 126)]
 SHIFT = (127, 113)
 KEEP_BATTLING = (128, 139)   # "will you switch?" -- the lower of the two
 GIVE_UP = (128, 67)          # "give up on learning this new move?" -- the upper of the two
+USE_NEXT = (128, 67)         # a wild battle's "Use next Pokemon?" -- the upper; the lower flees
 # The lines after which the party screen asks who comes in for a Pokemon that
 # is still standing: a pivot move's or Parting Shot's, the Eject items',
 # Baton Pass's (whose move line is the last before the screen) and Shed
@@ -165,7 +167,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     seen, last_view, stuck, idle, last_line = set(range(since)), None, 0, 0, ""
     refused, last_slot = set(), None   # moves the game turned down this turn: Taunt, Disable, no PP
     last_count, last_asserts, restarts, decoded = 0, 0, 0, None
-    last_prompt, commands, revive = None, 0, None
+    last_prompt, commands, revive, use_next = None, 0, None, None
     moves_chosen, tries = {}, 0        # the move each of the player's two took, for its target screen
     while core.frames < frames:
         core.step(4, hold)
@@ -204,6 +206,8 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                     revive = core.frames
                 if "But it failed" in line or "was revived" in line:
                     revive = None
+                if "Use next Pok" in line:
+                    use_next = core.frames
                 if not line.startswith("What will"):
                     say(f"[{core.frames}] {line.split('?{')[0]}")
         decoded = count
@@ -271,6 +275,18 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             moves_chosen[2] = second[7 + slot]
             core.touch(*MOVES[slot], 6, hold)
             core.step(20, hold)
+        elif use_next is not None:
+            # A wild battle's lead has fainted with others left: the upper
+            # button goes on with the next Pokemon; the lower one flees, and
+            # the SHIFT touch of the branch below lands on it. The buttons
+            # come up a while after the question is printed (sooner or later
+            # with the save's text speed), and a touch there on the party
+            # screen after them lands on nothing: touch it for five seconds,
+            # then leave the party screen to the branch below.
+            core.touch(*USE_NEXT, 6, hold)
+            core.step(30, hold)
+            if core.frames - use_next > 300:
+                use_next = None
         elif state == BATTLE_MAIN and (you_hp == 0 or second_down(ram, markers)) and reserve(ram, markers) is not None:
             stuck += 1
             if stuck > 60:
