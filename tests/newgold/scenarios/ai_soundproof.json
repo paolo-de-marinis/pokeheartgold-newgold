@@ -1,0 +1,11 @@
+{
+  "about": "The trainer AI knows every sound move Soundproof keeps off (flag 0, trainer_ai_script.c 00A4 and the table at 299D, the battle's sSoundMoves). Falkner's Hoothoot is taught Hyper Voice and Leer once the battle is up and faces a Whismur, whose only ability is Soundproof, that only Splashes: it Leers every turn. Before the fix the AI knew retail's eleven sound moves, without Hyper Voice, and rated it as a hit its own type makes stronger.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "WHISMUR:15", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:1,0,MOVE_HYPER_VOICE", "teach:1,1,MOVE_LEER", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:0,0,MOVE_SPLASH", "fight:1:4"],
+  "expect": {"lines": ["The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!"],
+             "no_lines": ["used Hyper Voice"], "battler1.species": "SPECIES_HOOTHOOT"}
+}

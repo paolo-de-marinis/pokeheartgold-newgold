@@ -241,8 +241,11 @@ const u32 ov10_02220AAC[] = {
     /* 009A */ AI_IF_MOVE_EQUAL_TO, MOVE_UPROAR, 2365, // -> 09DA
     /* 009D */ AI_IF_MOVE_EQUAL_TO, MOVE_METAL_SOUND, 2362, // -> 09DA
     /* 00A0 */ AI_IF_MOVE_EQUAL_TO, MOVE_GRASS_WHISTLE, 2359, // -> 09DA
-    /* 00A3 */ AI_IF_MOVE_EQUAL_TO, MOVE_BUG_BUZZ, 2356, // -> 09DA
-    /* 00A6 */ AI_IF_MOVE_EQUAL_TO, MOVE_CHATTER, 2353, // -> 09DA
+    // retail asked Bug Buzz and Chatter here, the last of its eleven: the
+    // table at 299D holds them and every other sound move the battle lists
+    /* 00A3 */ AI_LOAD_CURRENT_MOVE,
+    /* 00A4 */ AI_IF_LOADED_IN_TABLE, 10486, 2355, // table 299D, -> 09DA
+    /* 00A7 */ AI_GOTO, 0, // -> 00A9
 
     // 00A9
     /* 00A9 */ AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO, MOVE_EFFECT_STATUS_SLEEP, 454, // -> 0272
@@ -6081,4 +6084,18 @@ const u32 ov10_02220AAC[] = {
     // where retail asked the one ability. Appended, so no word index above
     // moves.
     /* 2999 */ ABILITY_MOLD_BREAKER, ABILITY_TERAVOLT, ABILITY_TURBOBLAZE, AI_TABLE_END,
+
+    // 299D: from 00A4, the sound moves Soundproof keeps off its holder
+    // (sSoundMoves, BattleContext_CheckMoveImmunityFromAbility) that retail's
+    // lines at 0088-00A0 do not ask: retail knew eleven, and missed Hyper
+    // Voice and Perish Song among its own. Heal Bell, Howl and Clangorous Soul
+    // are left out: they are aimed at the user's side, so the target's
+    // Soundproof takes nothing from them. Appended, so no word index above
+    // moves.
+    /* 299D */ MOVE_ALLURING_VOICE, MOVE_BOOMBURST, MOVE_BUG_BUZZ, MOVE_CHATTER,
+               MOVE_CLANGING_SCALES, MOVE_CLANGOROUS_SOULBLAZE, MOVE_CONFIDE, MOVE_DISARMING_VOICE,
+               MOVE_ECHOED_VOICE, MOVE_EERIE_SPELL, MOVE_HYPER_VOICE, MOVE_NOBLE_ROAR,
+               MOVE_OVERDRIVE, MOVE_PARTING_SHOT, MOVE_PERISH_SONG, MOVE_PSYCHIC_NOISE,
+               MOVE_RELIC_SONG, MOVE_ROUND, MOVE_SNARL, MOVE_SPARKLING_ARIA, MOVE_TORCH_SONG,
+               AI_TABLE_END,
 };

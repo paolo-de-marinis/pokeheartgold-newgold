@@ -70,6 +70,12 @@ def follow(lines, start, stop, **given):
     return score
 
 
+def battle_list(name):
+    """A move list of the battle's (overlay_12_0224E4FC.c), by its name."""
+    source = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+    return re.findall(r"MOVE_\w+", re.search(name + r"\[\] = \{(.*?)\};", source, re.S).group(1))
+
+
 class TrainerAIScriptTests(unittest.TestCase):
     def test_every_index_and_every_reach_is_the_words(self):
         lines = words()
@@ -177,6 +183,23 @@ class TrainerAIScriptTests(unittest.TestCase):
                                 ("ABILITY_TERAVOLT", 0), ("ABILITY_TURBOBLAZE", 0)):
             self.assertEqual(follow(lines, 0x007E, 0x00A9, target="ABILITY_SOUNDPROOF", attacker=attacker,
                                     move="MOVE_GROWL"), score, attacker)
+
+    def test_soundproof_knows_every_sound_move(self):
+        # Soundproof keeps every move of the battle's sound list off its
+        # holder (sSoundMoves, BattleContext_CheckMoveImmunityFromAbility):
+        # flag 0 marks each down against a Soundproof target, but the three
+        # aimed at the user's side, and none when the attacker passes the
+        # ability by. Retail knew eleven.
+        lines = words()
+        sound = battle_list("sSoundMoves")
+        own_side = {"MOVE_HEAL_BELL", "MOVE_HOWL", "MOVE_CLANGOROUS_SOUL"}
+        self.assertLessEqual(own_side, set(sound))
+        for move in sound + ["MOVE_TACKLE"]:
+            aimed = -10 if move in set(sound) - own_side else 0
+            self.assertEqual(follow(lines, 0x007E, 0x00A9, target="ABILITY_SOUNDPROOF", attacker="ABILITY_NONE",
+                                    move=move), aimed, move)
+            self.assertEqual(follow(lines, 0x007E, 0x00A9, target="ABILITY_SOUNDPROOF", attacker="ABILITY_TERAVOLT",
+                                    move=move), 0, move)
 
 
 if __name__ == "__main__":
