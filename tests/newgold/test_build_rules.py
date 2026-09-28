@@ -258,6 +258,23 @@ class BuildRuleTests(unittest.TestCase):
                 self.assertIn("files/" + header.group(1), prerequisites[bin_], bin_)
         print(f"{built} of {len(jsons)} zone events depend on their json's header")
 
+    def test_otherpoke_depends_on_its_pictures_and_its_map(self):
+        """otherpoke.mk listed its pictures with $(find ...), which is not a
+        make function, so the list was empty, and its map, otherpoke.txt, was
+        no prerequisite either: a changed picture left the old archive until
+        it was deleted by hand. Each picture the map names, the .key nitrogfx
+        reads beside it and the map are prerequisites now, and the recipe
+        empties the members' folder first, so a line taken out of the map
+        leaves no member behind."""
+        narc = "files/poketool/pokegra/otherpoke.narc"
+        rules = re.findall(rf"^{re.escape(narc)}:(?!=)([^\n]*)\n(?:#[^\n]*\n)*((?:\t[^\n]*\n)+)", database(), re.M)
+        self.assertEqual(len(rules), 1)
+        prerequisites, recipe = rules[0]
+        map_txt = "files/poketool/pokegra/otherpoke.txt"
+        pictures = {line.split()[0] for line in (ROOT / map_txt).read_text().splitlines() if line.strip()}
+        self.assertEqual({map_txt, *pictures, *(p + ".key" for p in pictures)} - set(prerequisites.split()), set())
+        self.assertEqual(recipe.splitlines()[0].strip(), "$(RM) -r $(OTHERPOKE_BUILD_DIR)")
+
     def test_safari_enc_is_built_beside_its_json(self):
         """Its recipe writes $*.s and $*.o. The rule was an explicit one, which
         has no stem, so they were '.s' and '.o' in the tree's root."""

@@ -5,9 +5,13 @@ OTHERPOKE_NARC := $(POKEGRA_DIR)/otherpoke.narc
 
 OTHERPOKE_MAP_TXT := $(POKEGRA_DIR)/otherpoke.txt
 
-OTHERPOKE_PIC_FILES := $(find $(OTHERPOKE_SPRITES_DIR) -name '*.png')
+# Each picture and the .key nitrogfx reads beside it.
+OTHERPOKE_PIC_FILES := $(shell find $(OTHERPOKE_SPRITES_DIR) -type f)
 
-$(OTHERPOKE_NARC): %.narc: $(OTHERPOKE_PIC_FILES) $(GFX) $(NARC)
+# The map names every member, so the folder is made again from it alone: a
+# line taken out leaves no member of its own behind.
+$(OTHERPOKE_NARC): %.narc: $(OTHERPOKE_PIC_FILES) $(OTHERPOKE_MAP_TXT) $(GFX) $(NARC)
+	$(RM) -r $(OTHERPOKE_BUILD_DIR)
 	mkdir -p $(OTHERPOKE_BUILD_DIR)
 	while read -r line; do $(GFX) $$line; done < $(OTHERPOKE_MAP_TXT)
 	$(NARC) -cf $@ --index-namespace $(OTHERPOKE_BUILD_DIR)
