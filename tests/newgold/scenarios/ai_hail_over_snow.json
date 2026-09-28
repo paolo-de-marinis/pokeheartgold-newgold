@@ -1,0 +1,11 @@
+{
+  "about": "The trainer AI tells snow from hail where they part (trainer_ai_script.c 05CE): Hail replaces snow (effect script 164), so under snow it is no repeat. The player's Marill uses Snowscape; Falkner's Hoothoot, taught Hail and Leer once the battle is up, uses Hail under the snow and brings hail. Before the fix the weather command read snow as hail, flag 0 took 8 off Hail as a repeat, and the Hoothoot Leered while it snowed.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "MARILL:15", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:1,0,MOVE_LEER", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:0,0,MOVE_SNOWSCAPE", "fight:1:1", {"expect": {"lines": ["It started to snow!"]}},
+            "teach:1,1,MOVE_HAIL", "fight:1:4"],
+  "expect": {"new_lines": ["The opposing Hoothoot used Hail!", "It started to hail!"], "battler1.species": "SPECIES_HOOTHOOT"}
+}

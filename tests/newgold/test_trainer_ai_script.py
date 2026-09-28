@@ -7,6 +7,7 @@ command's last argument. A word added or dropped moves everything after it,
 so this checks each index and each reach against the words themselves.
 """
 
+import functools
 import re
 import unittest
 
@@ -40,7 +41,8 @@ def table(lines, index):
 def follow(lines, start, stop, **given):
     """What the script adds to a move's score from start until it reaches stop
     or ends, run as the AI runs it with only the commands met here: given
-    names the target's and the attacker's abilities, the move and its effect."""
+    names the target's and the attacker's abilities, the move, its effect and
+    the field's conditions; it is the battler's first turn out."""
     index, score, loaded = start, 0, None
     while index != stop:
         script = lines[index][0]
@@ -52,6 +54,7 @@ def follow(lines, start, stop, **given):
                 "AI_IF_MOVE_EQUAL_TO": lambda: given["move"] == args[0],
                 "AI_IF_CURRENT_MOVE_EFFECT_EQUAL_TO": lambda: given["effect"] == args[0],
                 "AI_IF_CURRENT_MOVE_EFFECT_NOT_EQUAL_TO": lambda: given["effect"] != args[0],
+                "AI_IF_FIELD_CONDITIONS_MASK": lambda: given["field"] & field(args[0]),
                 "AI_GOTO": lambda: True}.get(op)
         if test:
             index = after + int(args[-1]) if test() else after
@@ -60,6 +63,10 @@ def follow(lines, start, stop, **given):
             loaded = given[{"AI_BATTLER_TARGET": "target", "AI_BATTLER_ATTACKER": "attacker"}[args[0]]]
         elif op == "AI_LOAD_CURRENT_MOVE":
             loaded = given["move"]
+        elif op == "AI_LOAD_CURRENT_WEATHER":
+            loaded = str(weather(given["field"]))
+        elif op == "AI_LOAD_IS_FIRST_TURN_IN_BATTLE":
+            loaded = "1"
         elif op == "AI_ADD_TO_MOVE_SCORE":
             score += int(args[0])
         elif op == "AI_POP_OR_END":
@@ -74,6 +81,24 @@ def battle_list(name):
     """A move list of the battle's (overlay_12_0224E4FC.c), by its name."""
     source = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
     return re.findall(r"MOVE_\w+", re.search(name + r"\[\] = \{(.*?)\};", source, re.S).group(1))
+
+
+@functools.lru_cache(maxsize=None)
+def field(expression):
+    """The value of a field condition expression: FIELD_CONDITION_* names
+    (constants/battle.h) and the script's AI_WEATHER_HOLDS."""
+    text = (ROOT / "include/constants/battle.h").read_text() + SCRIPT.read_text()
+    names = dict(re.findall(r"^#define ((?:FIELD_CONDITION|AI_WEATHER)_\w+)\s+(.+?)\s*(?://.*)?$", text, re.M))
+    return eval(re.sub(r"[A-Z][A-Z0-9_]*", lambda m: f"({field(names[m.group(0)])})", expression))
+
+
+def weather(value):
+    """What command 2E loads for the field (ov10_0221D594)."""
+    number = 0
+    for name, n in (("RAIN_ALL", 2), ("SANDSTORM_ALL", 3), ("SUN_ALL", 1), ("HAIL_ALL", 4), ("SNOW_ALL", 4), ("FOG", 5)):
+        if value & field("FIELD_CONDITION_" + name):
+            number = n
+    return number
 
 
 class TrainerAIScriptTests(unittest.TestCase):
@@ -221,6 +246,25 @@ class TrainerAIScriptTests(unittest.TestCase):
                                         move=move), 0, (ability, move))
                 self.assertEqual(follow(lines, 0x007E, 0x00A9, target="ABILITY_NONE", attacker="ABILITY_NONE",
                                         move=move), 0, move)
+
+    def test_snow_is_not_hail_where_they_part(self):
+        # Command 2E reads snow as hail (4), which the moves snow changes as
+        # hail does want; where the two part, the field itself is asked. Hail
+        # replaces snow (effect script 164): flag 0 takes 8 off it as a repeat
+        # only under hail, and flag 9 gives it its first-turn bonus under
+        # snow. Snow hurts no one, so the Fly and Dig line at 1672 asks for
+        # hail alone.
+        lines = words()
+        hail, snow = field("FIELD_CONDITION_HAIL"), field("FIELD_CONDITION_SNOW_TEMP")
+        self.assertEqual(weather(snow), weather(hail))
+        none = dict(target="ABILITY_NONE", attacker="ABILITY_NONE")
+        self.assertEqual(follow(lines, 0x05CD, None, field=hail, **none), -8)
+        self.assertEqual(follow(lines, 0x05CD, None, field=snow, **none), 0)
+        self.assertEqual(follow(lines, 0x290A, None, field=hail), 0)
+        self.assertEqual(follow(lines, 0x290A, None, field=snow), 5)
+        script = lines[0x1672][0]
+        self.assertEqual(script[0], "AI_IF_FIELD_CONDITIONS_MASK")
+        self.assertTrue(field(script[1]) & hail and not field(script[1]) & snow)
 
 
 if __name__ == "__main__":

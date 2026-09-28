@@ -881,7 +881,9 @@ const u32 ov10_02220AAC[] = {
 
     // 05CD
     /* 05CD */ AI_LOAD_CURRENT_WEATHER,
-    /* 05CE */ AI_IF_LOADED_EQUAL_TO, 4, 1030, // -> 09D7
+    // retail asked the weather loaded for hail (4), which snow reads as too;
+    // Hail replaces snow (effect script 164), so the field is asked for hail
+    /* 05CE */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_HAIL_ALL, 1030, // -> 09D7
     /* 05D1 */ AI_LOAD_BATTLER_ABILITY, AI_BATTLER_TARGET,
     /* 05D3 */ AI_IF_LOADED_NOT_EQUAL_TO, ABILITY_ICE_BODY, 9, // -> 05DF
     /* 05D6 */ AI_ADD_TO_MOVE_SCORE, -8,
@@ -3210,7 +3212,9 @@ const u32 ov10_02220AAC[] = {
     /* 166A */ AI_IF_MOVE_EFFECT_FLAG, AI_BATTLER_TARGET, 0x4, 44, // -> 169A
     /* 166E */ AI_LOAD_CURRENT_WEATHER,
     /* 166F */ AI_IF_LOADED_EQUAL_TO, 3, 5, // -> 1677
-    /* 1672 */ AI_IF_LOADED_EQUAL_TO, 4, 14, // -> 1683
+    // retail asked for hail (4), which snow reads as too; snow hurts no one
+    // (battle_command.c), so the field is asked for hail
+    /* 1672 */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_HAIL_ALL, 14, // -> 1683
     /* 1675 */ AI_GOTO, 24, // -> 168F
 
     // 1677
@@ -5972,7 +5976,8 @@ const u32 ov10_02220AAC[] = {
 
     // 290A
     /* 290A */ AI_LOAD_CURRENT_WEATHER,
-    /* 290B */ AI_IF_LOADED_EQUAL_TO, 4, 9, // -> 2917
+    // as at 05CE: Hail replaces snow, so only hail already up is asked
+    /* 290B */ AI_IF_FIELD_CONDITIONS_MASK, FIELD_CONDITION_HAIL_ALL, 9, // -> 2917
     /* 290E */ AI_GOTO, 0, // -> 2910
 
     // 2910
