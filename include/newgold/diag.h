@@ -142,6 +142,11 @@ extern unsigned long gDiagLastBattleMap;
 extern unsigned long gDiagLastBattleBg;
 extern unsigned long gDiagLastBattleTerrain;
 
+// The background the battle drew last partway through it, a terrain's or its
+// own again (BattleSystem_ChangeBackground): its tiles' member of a/0/0/7.
+// 0 until the first.
+extern unsigned long gDiagBattleBackground;
+
 #endif // NEWGOLD_DIAG
 
 #endif // POKEHEARTGOLD_NEWGOLD_DIAG_H

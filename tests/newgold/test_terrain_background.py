@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
-"""The backgrounds the four terrains draw, hg-engine's (d0380a487).
+"""A terrain draws its own background, hg-engine's look (d0380a487).
 
-They are members of the battle backgrounds' archive, a/0/0/7, after the 351
-the game shipped with, which come out of the shipped archive unchanged.
+Each of the four terrains has a background of its own, with no platforms,
+from the moment the terrain is laid to the moment it goes, when the battle's
+own comes back with its platforms. The four pictures are members of the
+battle backgrounds' archive, a/0/0/7, after the 351 the game shipped with,
+which come out of the shipped archive unchanged; the subscripts that lay a
+terrain and end one run ChangePermanentBackground, which sends the display
+SetBattleBackground's command with the two ids (BattleSystem_SetBackground).
+In play: scenarios/terrain_background.json.
 """
 
+import re
 import struct
 import sys
 import unittest
@@ -20,6 +27,7 @@ BUILT = GRAPHIC / "batt_bg.narc"
 SHIPPED = 351
 # hg-engine's BATTLE_BG_*_TERRAIN order, 23 to 26.
 TERRAINS = ("electric", "misty", "grassy", "psychic")
+SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
 
 
 def unlz(data):
@@ -43,6 +51,10 @@ def unlz(data):
                 i += 1
             flags <<= 1
     return bytes(out)
+
+
+def script(name):
+    return next(SUBSCRIPTS.glob(f"subscript_{name}_*.s")).read_text()
 
 
 class ArchiveTests(unittest.TestCase):
@@ -75,6 +87,27 @@ class ArchiveTests(unittest.TestCase):
         index = (GRAPHIC / "batt_bg.naix").read_text()
         for n, terrain in enumerate(TERRAINS):
             self.assertIn(f"NARC_batt_bg_terrain_{terrain}_NCGR_lz {SHIPPED + 2 * n}\n", index)
+
+
+class ScriptTests(unittest.TestCase):
+    def test_each_terrain_draws_its_background_before_its_line(self):
+        text = script("0347")
+        branches = {"GRASSY": "Grass grew", "MISTY": "Mist swirled", "ELECTRIC": "An electric current",
+                    "PSYCHIC": "got weird", "ELECTRIC_ENGINE": "turned the ground into Electric Terrain"}
+        for terrain, line in branches.items():
+            name = terrain.split("_")[0]
+            before = text[:text.index(line)]
+            label = before[before.rindex(":\n"):]
+            self.assertRegex(label, rf"\n\s*ChangePermanentBackground BATTLE_BG_{name}_TERRAIN, "
+                                    rf"TERRAIN_{name}_TERRAIN\n", terrain)
+
+    def test_the_battles_own_comes_back_wherever_a_terrain_ends(self):
+        for name in ("0378", "0171"):
+            lines = [l.strip() for l in script(name).splitlines()]
+            ends = [i for i, l in enumerate(lines) if l.startswith("UpdateTerrainOverlay TRUE")]
+            self.assertEqual(len(ends), 4, name)
+            for i in ends:
+                self.assertEqual(lines[i + 1:i + 3], ["ChangePermanentBackground BATTLE_BG_CURRENT, TERRAIN_CURRENT", "Wait"], name)
 
 
 if __name__ == "__main__":

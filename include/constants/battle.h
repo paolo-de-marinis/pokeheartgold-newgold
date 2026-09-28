@@ -112,6 +112,21 @@ typedef enum Terrain {
 
 #endif // PM_ASM
 
+// ChangePermanentBackground's operands, hg-engine's numbers: the background
+// and the ground a terrain draws, past the battle's own (BattleBg, Terrain);
+// a terrain's ground has no platforms. CURRENT is the battle's own again.
+#define BATTLE_BG_ELECTRIC_TERRAIN 23
+#define BATTLE_BG_MISTY_TERRAIN    24
+#define BATTLE_BG_GRASSY_TERRAIN   25
+#define BATTLE_BG_PSYCHIC_TERRAIN  26
+#define BATTLE_BG_CURRENT          0xFFFFFFFF
+
+#define TERRAIN_ELECTRIC_TERRAIN 24
+#define TERRAIN_MISTY_TERRAIN    25
+#define TERRAIN_GRASSY_TERRAIN   26
+#define TERRAIN_PSYCHIC_TERRAIN  27
+#define TERRAIN_CURRENT          0xFFFFFFFF
+
 // Battle outcome
 // Used with BattleSetup::winFlag
 #define BATTLE_OUTCOME_NONE        0

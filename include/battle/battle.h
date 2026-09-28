@@ -804,7 +804,8 @@ typedef struct OpponentData {
     void *unk80;
     u8 unk84[0x4];
     UnkBallData *ballData;
-    u8 unk8C[0x108];
+    u8 unk8C[0x8];
+    u8 command[0x100]; // the controller's last command to this battler, its number first (ov12_02258E54)
     u8 unk194;
     u8 battlerType;
     u8 unk196;

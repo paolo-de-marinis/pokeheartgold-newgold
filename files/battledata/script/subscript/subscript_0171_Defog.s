@@ -130,9 +130,8 @@ _USER_STICKY_WEB:
     UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_STICKY_WEB
     Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
 
-// Defog is the other way a terrain ends. The reference repaints the battle
-// background as it goes; that command does nothing in this game, so the line
-// is left out, and the terrain is named by the move that laid it.
+// Defog is the other way a terrain ends: the battle's own background comes
+// back, and the terrain is named by the move that laid it.
 _ClearTerrain:
     GotoIfTerrainOverlayIsType GRASSY_TERRAIN, _ClearGrassyTerrain
     GotoIfTerrainOverlayIsType MISTY_TERRAIN, _ClearMistyTerrain
@@ -142,24 +141,32 @@ _ClearTerrain:
 
 _ClearGrassyTerrain:
     UpdateTerrainOverlay TRUE, _164
+    ChangePermanentBackground BATTLE_BG_CURRENT, TERRAIN_CURRENT
+    Wait
     UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_GRASSY_TERRAIN
     Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
     GoTo _164
 
 _ClearMistyTerrain:
     UpdateTerrainOverlay TRUE, _164
+    ChangePermanentBackground BATTLE_BG_CURRENT, TERRAIN_CURRENT
+    Wait
     UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_MISTY_TERRAIN
     Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
     GoTo _164
 
 _ClearElectricTerrain:
     UpdateTerrainOverlay TRUE, _164
+    ChangePermanentBackground BATTLE_BG_CURRENT, TERRAIN_CURRENT
+    Wait
     UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_ELECTRIC_TERRAIN
     Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
     GoTo _164
 
 _ClearPsychicTerrain:
     UpdateTerrainOverlay TRUE, _164
+    ChangePermanentBackground BATTLE_BG_CURRENT, TERRAIN_CURRENT
+    Wait
     UpdateVar OPCODE_SET, BSCRIPT_VAR_MSG_MOVE_TEMP, MOVE_PSYCHIC_TERRAIN
     Call BATTLE_SUBSCRIPT_DEFOG_MESSAGE
 

@@ -11753,15 +11753,22 @@ BOOL BtlCmd_ChangeExecutionOrderPriority(BattleSystem *battleSystem, BattleConte
     return FALSE;
 }
 
-// The background a battle is fought against is chosen when the battle starts
-// and there is no way to change it partway through, so this asks for something
-// the game cannot do. It is cosmetic, and nothing else depends on it.
+// Draw the battle's background again: a terrain's as it is laid, the battle's
+// own (BATTLE_BG_CURRENT, TERRAIN_CURRENT) as it goes. The drawing is the
+// display's, so it goes to battler 0 as SetBattleBackground's command does,
+// the two ids after its number (BattleSystem_SetBackground), and every
+// machine of a link battle draws it; hg-engine drew it from here, on the one
+// that runs the battle only. The script's next Wait waits for it.
 BOOL BtlCmd_ChangePermanentBackground(BattleSystem *battleSystem, BattleContext *ctx) {
-#pragma unused(battleSystem)
+    u8 data[4];
+
     BattleScriptIncrementPointer(ctx, 1);
 
-    BattleScriptReadWord(ctx);
-    BattleScriptReadWord(ctx);
+    data[0] = 46; // BattleController_EmitSetBattleBackground's
+    data[1] = TRUE;
+    data[2] = BattleScriptReadWord(ctx);
+    data[3] = BattleScriptReadWord(ctx);
+    ov12_02262240(battleSystem, 1, 0, data, sizeof(data));
 
     return FALSE;
 }

@@ -103,7 +103,6 @@ class BattleCommandTests(unittest.TestCase):
         # asked with the entry abilities after every action rather than by
         # the switch and faint scripts the reference asks it from.
         "CanClearPrimalWeather": "nothing: no script needs to ask it",
-        "ChangePermanentBackground": "the battle background Defog and a terrain's end redraw",
         "GoToIfTerastallized": "no script in the reference runs it either",
         "MakeTotem": "totems",
         # The reference's pending-switch ordering (subscripts 0009, 0091,

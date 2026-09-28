@@ -66,6 +66,7 @@ u32 gDiagLastWildLevel;
 u32 gDiagLastBattleMap;
 u32 gDiagLastBattleBg;
 u32 gDiagLastBattleTerrain;
+u32 gDiagBattleBackground;
 
 void Diag_BattleState(int state) {
     if ((u32)state == gDiagBattleState) {

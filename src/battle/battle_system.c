@@ -15,8 +15,10 @@
 #include "battle/battle_input.h"
 #include "battle/overlay_12_0224E4FC.h"
 #include "battle/overlay_12_0226BEC4.h"
+#include "battle/graphic/batt_bg.naix"
 #include "msgdata/msg/msg_0197.h"
 
+#include "gf_gfx_loader.h"
 #include "msgdata.h"
 #include "party.h"
 #include "pokemon_mood.h"
@@ -876,20 +878,72 @@ void ov12_0223B854(BattleSystem *battleSystem, int battlerId, int selectedMonInd
 void ov12_0223B870() {
 }
 
+// A background drawn again partway through the battle: a terrain's, which
+// covers the battle's ground and has no platforms (hg-engine's, from 351 in
+// a/0/0/7), or, BATTLE_BG_CURRENT and TERRAIN_CURRENT, the battle's own and
+// its platforms, made again as sprites for BattleSystem_SetBackground to
+// paint in; the command carries each as a byte. Only the background's own
+// colours are loaded, 0 to 0x6F: the platforms' row and the message box's
+// come after them.
+static void BattleSystem_ChangeBackground(BattleSystem *battleSystem, int background, int terrain) {
+    int tiles, palette;
+
+    if (background == (u8)BATTLE_BG_CURRENT) {
+        background = battleSystem->backgroundId;
+    }
+    if (terrain == (u8)TERRAIN_CURRENT) {
+        terrain = battleSystem->terrain;
+    }
+    if (background < BATTLE_BG_ELECTRIC_TERRAIN) {
+        tiles = 3 + background;
+        palette = 176 + background * 3 + ov12_0223B52C(battleSystem);
+    } else {
+        tiles = NARC_batt_bg_terrain_electric_NCGR_lz + (background - BATTLE_BG_ELECTRIC_TERRAIN) * 2;
+        palette = tiles + 1;
+    }
+#ifdef NEWGOLD_DIAG
+    gDiagBattleBackground = tiles;
+#endif
+    GfGfxLoader_LoadCharData(NARC_a_0_0_7, tiles, battleSystem->bgConfig, GF_BG_LYR_MAIN_3, 0, 0, TRUE, HEAP_ID_BATTLE);
+    PaletteData_LoadNarc(battleSystem->palette, NARC_a_0_0_7, palette, HEAP_ID_BATTLE, PLTTBUF_MAIN_BG, 0x70 * sizeof(u16), 0);
+    if (terrain < TERRAIN_MAX) {
+        ov12_02265FD4(&battleSystem->unk17C[0], battleSystem, 0, terrain);
+        ov12_02265FD4(&battleSystem->unk17C[1], battleSystem, 1, terrain);
+    }
+}
+
+// SetBattleBackground's command, once the Pokemon are out: the two platforms,
+// sprites until now, are painted into the background's tiles at palette row
+// 7, and a copy of the tiles and of the palette is kept for the move
+// animations that draw over the background to put it back.
+//
+// ChangePermanentBackground sends the same command with a background and a
+// ground (BtlCmd_ChangePermanentBackground), which the game's own leaves
+// zero; the copies are then of what is drawn now, so an animation puts back
+// the terrain's background while the terrain is down.
 void BattleSystem_SetBackground(BattleSystem *battleSystem) {
     NNSG2dImageProxy *image;
     int bgX, bgY, objX, objY, data, i;
     u8 *vram;
     u32 *src;
     u32 *dst;
+    u8 *command = battleSystem->opponentData[0]->command;
 
-    battleSystem->unk220 = Heap_Alloc(HEAP_ID_BATTLE, 0x10000);
-    battleSystem->unk224 = Heap_Alloc(HEAP_ID_BATTLE, 0x200);
+    if (command[1]) {
+        BattleSystem_ChangeBackground(battleSystem, command[2], command[3]);
+    } else {
+        battleSystem->unk220 = Heap_Alloc(HEAP_ID_BATTLE, 0x10000);
+        battleSystem->unk224 = Heap_Alloc(HEAP_ID_BATTLE, 0x200);
+    }
 
     MI_CpuCopy32((void *)0x6010000, (u32 *)battleSystem->unk220, 0x10000);
     dst = (u32 *)battleSystem->unk224;
     src = (u32 *)PaletteData_GetUnfadedBuf(battleSystem->palette, PLTTBUF_MAIN_BG);
     MI_CpuCopy32(src, dst, 0x200);
+
+    if (battleSystem->unk17C[0].unk0 == NULL) {
+        return;
+    }
 
     vram = (u8 *)0x6400000;
     image = Sprite_GetImageProxy(battleSystem->unk17C[1].unk0->sprite);

@@ -41,6 +41,7 @@ there. `GAME_VERSION=SOULSILVER` works the same way.
 | `gDiagWildStage`, `gDiagWildTicks` | `Task_WildEncounter` | How far the wild encounter task got and how often it ran. |
 | `gDiagLastWildSpecies`, `gDiagLastWildLevel` | the encounter generator | What the encounter actually made. |
 | `gDiagLastBattleMap`, `gDiagLastBattleBg`, `gDiagLastBattleTerrain` | the battle setup | Where the battle was started from and what it chose to draw. A battle whose screen stays black has usually failed to choose one of these. |
+| `gDiagBattleBackground` | `BattleSystem_ChangeBackground` | The background drawn again partway through the battle, as its tiles' member of a/0/0/7: a terrain's (351 Electric, 353 Misty, 355 Grassy, 357 Psychic) or the battle's own again (3 + its BattleBg). 0 until the first, and not cleared between battles. |
 
 | `gDiagBattleText`, `gDiagBattleTextCount` | `BattleSystem_PrintBattleMessage` | The last sixteen lines the battle printed, in the game's own character codes (`charmap.txt` decodes them). The battle as text: "Falkner used a Potion!", "It's super effective!". |
 | `gDiagBattlers`, `gDiagBattlePrompt`, `gDiagBattleCommand` | `BattleContext_Main`, every frame | The four battlers -- species, level, HP, status, held item, moves and PP -- and where the player is in choosing (a command, a move, a target, a Pokemon). |
