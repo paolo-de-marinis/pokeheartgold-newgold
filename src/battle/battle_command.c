@@ -11132,16 +11132,6 @@ BOOL BtlCmd_SetMoveConditionFlag(BattleSystem *battleSystem, BattleContext *ctx)
     case MOVE_FOCUS_ENERGY:
         ctx->calcTemp = !Battler_CriticalRisen(ctx, battlerId);
         break;
-    // Heart Swap swaps Focus Energy as retail does, in its script, and
-    // Dragon Cheer's stages with it: each side's critical rises go over
-    // whole, so neither ends with both.
-    case MOVE_HEART_SWAP: {
-        u8 cheer = ctx->moveConditions[battlerId].dragonCheer;
-
-        ctx->moveConditions[battlerId].dragonCheer = ctx->moveConditions[ctx->battlerIdTarget].dragonCheer;
-        ctx->moveConditions[ctx->battlerIdTarget].dragonCheer = cheer;
-        break;
-    }
     // Whether the battler's Shell Trap was sprung, for its script to ask.
     case MOVE_SHELL_TRAP:
         ctx->calcTemp = ctx->turnData[battlerId].shellTrapSprung;

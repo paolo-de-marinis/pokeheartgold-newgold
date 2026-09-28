@@ -1777,17 +1777,17 @@ class CriticalRisesTests(unittest.TestCase):
                       "    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0, _010", focus)
         self.assertNotIn("STATUS2_FOCUS_ENERGY", focus)
 
-    def test_heart_swap_swaps_the_cheer_with_focus_energy(self):
-        # Retail's script swaps Focus Energy; Dragon Cheer's stages go over
-        # with it, so each side's rises move whole.
+    def test_heart_swap_swaps_the_stages_alone(self):
+        # Pokemon Central (Cuorbaratto), Bulbapedia and Showdown's gen-9
+        # heartswap: the seven stat stages change sides, and Focus Energy and
+        # Dragon Cheer stay with their Pokemon. Retail's script swapped Focus
+        # Energy.
         swap = subscript("HeartSwap")
-        self.assertLess(swap.index("BATTLER_CATEGORY_ATTACKER, BMON_DATA_STATUS2, STATUS2_FOCUS_ENERGY"),
-                        swap.index("SetMoveConditionFlag MOVE_HEART_SWAP, BATTLER_CATEGORY_ATTACKER"))
-        condition = function(COMMANDS.read_text(), "BtlCmd_SetMoveConditionFlag")
-        case = condition[condition.index("case MOVE_HEART_SWAP:"):]
-        case = case[:case.index("break;")]
-        self.assertIn("ctx->moveConditions[battlerId].dragonCheer = ctx->moveConditions[ctx->battlerIdTarget].dragonCheer;", case)
-        self.assertIn("ctx->moveConditions[ctx->battlerIdTarget].dragonCheer = cheer;", case)
+        for stat in ("ATK", "DEF", "SPATK", "SPDEF", "SPEED", "ACC", "EVASION"):
+            self.assertIn(f"BATTLER_CATEGORY_DEFENDER, BMON_DATA_STAT_CHANGE_{stat}, BSCRIPT_VAR_CALC_TEMP", swap)
+        self.assertNotIn("STATUS2", swap)
+        self.assertNotIn("SetMoveConditionFlag", swap)
+        self.assertNotIn("case MOVE_HEART_SWAP:", function(COMMANDS.read_text(), "BtlCmd_SetMoveConditionFlag"))
 
 
 class SleepTalkMultiStrikeTests(unittest.TestCase):
