@@ -1,0 +1,20 @@
+{
+  "about": "Two switches after one move, in play: a Red Card played keeps Emergency Exit and Wimp Out from answering the move, whoever holds them (Pokemon Central, Cartelrosso) -- CheckSwitchItemOnHit disarms every battler's retreat as it plays the card, before TryRetreatAbility asks. In the Violet Gym Falkner's Hoothoot (41 HP) is given Wimp Out and a Red Card and only Splash, and put at 21 HP, just above half (set:, teach:); the level-5 Snorlax's Seismic Toss takes 5, to 16, at half or below, and the card drags the Snorlax out for the Raichu while the Hoothoot stays. Then it is given Emergency Exit and another Red Card and put at 21 again, and the level-5 Raichu's Seismic Toss does the same: the card drags the Raichu out for the Snorlax, and the Hoothoot stays. With the retreat not disarmed it would go back to Falkner after either card ('went back to'), and his Doduo would come in.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:5,RAICHU:5", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_SEISMIC_TOSS",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:1,ability,ABILITY_WIMP_OUT", "set:1,item,ITEM_RED_CARD", "set:1,hp,21",
+            "fight:1:1",
+            {"expect": {"lines": ["Snorlax used Seismic Toss!", "held up its Red Card against", "Raichu was dragged out!"],
+                        "no_lines": ["went back to"],
+                        "battler0.species": "SPECIES_RAICHU", "battler1.species": "SPECIES_HOOTHOOT", "battler1.hp": 16}},
+            "teach:0,0,MOVE_SEISMIC_TOSS",
+            "set:1,ability,ABILITY_EMERGENCY_EXIT", "set:1,item,ITEM_RED_CARD", "set:1,hp,21",
+            "fight:1:1"],
+  "expect": {"new_lines": ["Raichu used Seismic Toss!", "held up its Red Card against", "Snorlax was dragged out!"],
+             "no_lines": ["went back to"],
+             "battler0.species": "SPECIES_SNORLAX", "battler1.species": "SPECIES_HOOTHOOT", "battler1.hp": 16}
+}

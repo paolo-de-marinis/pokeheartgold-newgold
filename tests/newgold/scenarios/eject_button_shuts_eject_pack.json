@@ -1,0 +1,15 @@
+{
+  "about": "Two switches after one move, in play: a move that hits an Eject Button holder and lowers its user's own stats sends the holder back, and the user's Eject Pack does not act -- of the two only the button does (Pokemon Central, Pulsantefuga; Showdown's gen-9 Eject Pack refuses while the button's switch is pending and forgets the drop): battle_controller_player.c's post-move steps, where the button clears the stats the move lowered (statLoweredBattlers) before CheckEjectPack asks. In the Violet Gym Falkner's Hoothoot is given an Eject Pack and only Close Combat, the Snorlax an Eject Button and Splash (set:, teach:); the Close Combat lowers the Hoothoot's Defense and Sp. Def, the Snorlax goes back with its button and the Raichu comes in, and the Hoothoot stays out, its pack still held.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:13,RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13",
+           "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_SPLASH", "set:0,item,ITEM_EJECT_BUTTON",
+            "teach:1,0,MOVE_CLOSE_COMBAT", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:1,item,ITEM_EJECT_PACK",
+            "fight:1:1"],
+  "expect": {"lines": ["Hoothoot used Close Combat!", "Defense fell!", "Snorlax is switched out with the Eject Button!", "Go! Raichu!"],
+             "no_lines": ["Eject Pack"],
+             "battler0.species": "SPECIES_RAICHU", "battler1.species": "SPECIES_HOOTHOOT", "battler1.item": "ITEM_EJECT_PACK"}
+}
