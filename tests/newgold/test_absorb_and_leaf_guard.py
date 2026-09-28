@@ -51,10 +51,12 @@ class WaterAbsorbTests(unittest.TestCase):
     def setUp(self):
         self.source = OVERLAY.read_text()
 
-    def test_it_wants_a_damaging_move_aimed_at_it(self):
+    def test_it_takes_a_status_move_aimed_at_it(self):
+        # Soak too, but not the holder's own Aqua Ring (Pokemon Central,
+        # Assorbacqua); konefr's power check is not copied.
         condition = ability_condition(self.source, "ABILITY_WATER_ABSORB")
         self.assertIn("battlerIdAttacker != battlerIdTarget", condition)
-        self.assertIn("BattleMoveTbl(ctx, ctx->moveNoCur)->power", condition)
+        self.assertNotIn("power", condition)
 
     def test_dry_skin_takes_a_status_move_but_not_its_own(self):
         # Soak too, but not the holder's own Rain Dance or Aqua Ring (Pokemon
@@ -72,8 +74,9 @@ class WaterAbsorbTests(unittest.TestCase):
         self.assertIn("BattleMoveTbl(ctx, ctx->moveNoCur)->range != RANGE_OPPONENT_SIDE", condition)
 
     def test_the_reference_asks_for_the_power(self):
-        # What the port does not copy: the reference's Dry Skin and Earth
-        # Eater take only a move with power, and Dry Skin its holder's own.
+        # What the port does not copy: the reference's Water Absorb, Dry Skin
+        # and Earth Eater take only a move with power, and the last two their
+        # holder's own.
         if REFERENCE is None:
             self.skipTest("no reference checkout")
         source = revision(REFERENCE, REFERENCE_COMMIT, "src/battle/ability.c")

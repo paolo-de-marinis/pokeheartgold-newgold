@@ -5191,10 +5191,12 @@ int BattleContext_CheckMoveImmunityFromAbility(BattleContext *ctx, int battlerId
         script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;
     }
 
-    // Water Absorb wants a damaging Water move, and one it did not aim at
-    // itself -- konefr's reference asks both of it (82b788666), and of Volt
-    // Absorb and Irrigation the second only.
-    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_WATER_ABSORB) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && battlerIdAttacker != battlerIdTarget && BattleMoveTbl(ctx, ctx->moveNoCur)->power) {
+    // Water Absorb takes every Water move aimed at its holder, a status move
+    // such as Soak too (Pokemon Central, Assorbacqua, from the fourth
+    // generation), but not one its holder aimed at itself or the field.
+    // konefr's reference also asks for the power (82b788666, which put back
+    // the check hg-engine had left out), and so let Soak through.
+    if (CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, battlerIdTarget, ABILITY_WATER_ABSORB) == TRUE && moveType == TYPE_WATER && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && battlerIdAttacker != battlerIdTarget) {
         ctx->hpCalc = DamageDivide(ctx->battleMons[battlerIdTarget].maxHp, 4);
         script = BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP;
     }
