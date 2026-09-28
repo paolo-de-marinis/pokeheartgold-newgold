@@ -790,6 +790,14 @@ class Scene:
                     texts += 1
                     core.press("A", 6, hooks)
                     core.step(10, hooks)
+                elif not self._chain("FieldSystem.runningFieldMap"):
+                    # A screen over the field that waits for a press: a phone
+                    # call (Elm's as the player leaves Mr. Pokemon's house),
+                    # the blackout's. B, not A: a call ends in the Pokegear's
+                    # list of numbers, where A calls the one under the cursor
+                    # and B, twice, closes the Pokegear.
+                    core.press("B", 6, hooks)
+                    core.step(10, hooks)
                 else:
                     core.step(1, hooks)
                 path = None if path and self.location() not in index else path
