@@ -124,6 +124,42 @@ int main(void) {
     ov12_02256694(0, &ctx);
     ov12_022565E0(0, &ctx);
     assert(ctx.battleMons[0].unk88.metronomeTurns == 1);
+    ov12_02256694(0, &ctx);
+
+    // A charge move's hit is its use: the charge turn's count goes back once
+    // it is over, and the first hit is worth 1.2, the second use's 1.4
+    // (Plessimetro, from the fifth generation). Before, the charge turn
+    // counted and the hit did not: 1.0, then 1.2.
+    ctx.moveNoTemp = MOVE_SOLAR_BEAM;
+    for (int use = 1; use <= 2; use++) {
+        ov12_022565E0(0, &ctx);
+        ctx.battleStatus = BATTLE_STATUS_CHARGE_TURN;
+        ov12_02256694(0, &ctx);
+        ctx.battleStatus = 0;
+        assert(ctx.battleMons[0].unk88.metronomeTurns == use - 1);
+        ov12_022565E0(0, &ctx);
+        assert(ctx.battleMons[0].unk88.metronomeTurns == use);
+        ov12_02256694(0, &ctx);
+    }
+    // Outrage's and Rollout's forced turns count, each as a use in a row
+    // (Showdown's gen-9 item); a forced turn that fails starts it over.
+    ctx.moveNoTemp = MOVE_OUTRAGE;
+    ctx.battleMons[0].status2 = STATUS2_RAMPAGE;
+    for (int turn = 0; turn < 3; turn++) {
+        ov12_022565E0(0, &ctx);
+        assert(ctx.battleMons[0].unk88.metronomeTurns == turn);
+        ov12_02256694(0, &ctx);
+    }
+    ctx.moveNoTemp = MOVE_ROLLOUT;
+    ctx.battleMons[0].status2 = STATUS2_LOCKED_INTO_MOVE;
+    ov12_022565E0(0, &ctx);
+    ov12_022565E0(0, &ctx);
+    assert(ctx.battleMons[0].unk88.metronomeTurns == 1);
+    ctx.moveStatusFlag = MOVE_STATUS_MISSED;
+    ov12_02256694(0, &ctx);
+    ctx.moveStatusFlag = 0;
+    ov12_022565E0(0, &ctx);
+    assert(ctx.battleMons[0].unk88.metronomeTurns == 0);
     return 0;
 }
 """
