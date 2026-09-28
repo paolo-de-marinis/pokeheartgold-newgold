@@ -1,11 +1,11 @@
 {
-  "about": "Cianwood Gym walked and played from a scratch copy of Paolo's chuck.sav (inside the door, four badges, six at level 48), the battle's seed fixed. goto: finds Black Belt Lung where he has wandered to -- (17, 3) in the one-tile corridor of row 3, blocking the way to his own (15, 3) -- and Lao, then Lung, spot the player on the way and are fought there. Nob is talked to: konefr's new team from 8cbe6ab86, a Hariyama at 43, the level checked, and a Machoke, 45 in his data but only its line read (his old one was a Machop and a Machoke at 25). Yoshi spots the player on the way to him. Then the winch at the top left, turned with A and a Yes, which stops the waterfall Chuck trains under (FLAG_SYS_CIANWOOD_WATERFALL_DISABLE; until then he only talks), and Chuck himself: his six beaten, the Storm Badge and TM01.",
+  "about": "Cianwood Gym walked and played from a scratch copy of Paolo's chuck.sav (inside the door, four badges, six at level 48), the battle's seed fixed. goto: finds Black Belt Lung where he has wandered to -- (17, 3) in the one-tile corridor of row 3, blocking the way to his own (15, 3) -- and Lao, then Lung, spot the player on the way and are fought there. Nob is talked to: konefr's new team from 8cbe6ab86, a Hariyama at 43 holding the Sitrus Berry konefr gave it, the level and the item checked (ba314aa29 gives his items the flag they lacked), and a Machoke, 45 in his data but only its line read (his old one was a Machop and a Machoke at 25). Yoshi spots the player on the way to him. Then the winch at the top left, turned with A and a Yes, which stops the waterfall Chuck trains under (FLAG_SYS_CIANWOOD_WATERFALL_DISABLE; until then he only talks), and Chuck himself: his six beaten, the Storm Badge and TM01.",
   "save": "gyms/chuck.sav",
   "hold": {"gDiagBattleSeed": 1},
   "steps": ["field",
             "goto:139,15,3",
             "goto:139,7,5", "fight::0",
-            {"expect": {"battler1.species": "SPECIES_HARIYAMA", "battler1.level": 43}},
+            {"expect": {"battler1.species": "SPECIES_HARIYAMA", "battler1.level": 43, "battler1.item": "ITEM_SITRUS_BERRY"}},
             "fight", "field",
             "goto:139,6,9",
             "goto:139,10,2", "A", "field",
