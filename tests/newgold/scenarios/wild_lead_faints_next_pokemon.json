@@ -4,7 +4,7 @@
   "edit": ["--party", "MAGIKARP:5,SNORLAX:40"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
   "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0",
-            "teach:1,0,MOVE_TACKLE", "teach:1,1,MOVE_TACKLE,0", "teach:1,2,MOVE_TACKLE,0", "teach:1,3,MOVE_TACKLE,0",
+            "teach:1,0,MOVE_TACKLE", "teach:1,1,MOVE_TACKLE", "teach:1,2,MOVE_TACKLE", "teach:1,3,MOVE_TACKLE",
             "set:0,hp,1", "fight", "field"],
   "expect": {"lines": ["The wild Geodude used Tackle!", "Magikarp fainted!", "Go! Snorlax!", "The wild Geodude fainted!"],
              "no_lines": ["got away safely!"], "party": 2}

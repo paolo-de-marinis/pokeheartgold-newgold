@@ -6,7 +6,7 @@
   "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1, "gDiagForceCritical": 2},
   "steps": ["field", "A", "fight:1:0",
             "teach:0,0,MOVE_SPLASH", "set:0,item,ITEM_EJECT_BUTTON",
-            "teach:1,0,MOVE_CLOSE_COMBAT", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:1,0,MOVE_CLOSE_COMBAT", "teach:1,1,MOVE_CLOSE_COMBAT", "teach:1,2,MOVE_CLOSE_COMBAT", "teach:1,3,MOVE_CLOSE_COMBAT",
             "set:1,item,ITEM_EJECT_PACK",
             "fight:1:1"],
   "expect": {"lines": ["Hoothoot used Close Combat!", "Defense fell!", "Snorlax is switched out with the Eject Button!", "Go! Raichu!"],
