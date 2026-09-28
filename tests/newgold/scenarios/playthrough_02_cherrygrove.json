@@ -1,0 +1,14 @@
+{
+  "about": "The playthrough's second leg, from the save the first left in Elm's lab: out of the lab, home, where the mother gives the Pokegear, west out of New Bark Town onto Route 29 -- whose music plays -- and across it to Cherrygrove City, where the guide gent shows the town and gives the running shoes; into the Pokemon Center, to the nurse, and the game is saved there. The path the navigator plans meets no wild Pokemon on this tree; the field's RNG is pinned once the field is up and the battles' seed is held, so whatever the grass sends on a later one is the same every run, and the starter fights it alone.",
+  "from": "playthrough_01_new_game",
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215",
+            "goto:MAP_NEW_BARK_PLAYER_HOUSE_1F,6,7", "A", "field",
+            {"expect": {"flag:FLAG_GOT_POKEGEAR": 1, "music": "SEQ_GS_T_WAKABA"}},
+            "goto:MAP_ROUTE_29,660,400",
+            {"expect": {"map": "MAP_ROUTE_29", "music": "SEQ_GS_R_1_29"}},
+            "goto:MAP_CHERRYGROVE_POKECENTER_1F,8,13", "UP", "A", "field", "save"],
+  "expect": {"map": "MAP_CHERRYGROVE_POKECENTER_1F", "x": 8, "y": 13, "party": 1, "party0.species": "SPECIES_CYNDAQUIL",
+             "flag:FLAG_GOT_POKEGEAR": 1, "var:VAR_SCENE_CHERRYGROVE_CITY_OW": 1, "flag:FLAG_HIDE_CHERRYGROVE_GUIDE_GENT": 1,
+             "music": "SEQ_GS_POKESEN"}
+}
