@@ -93,8 +93,11 @@ offsets the tree's own headers give: map, x, y, party (the count),
 partyN.species|item|level|exp|hp|maxHp (the party as its save block holds
 it, slot N from 0, once the field is up: what a battle gave back),
 bag:ITEM_... (how many the bag holds), badges, running_shoes (1 once the
-player has them: PlayerSaveData's, which no flag says), flag:FLAG_...,
-var:VAR_..., battlerN.species|hp|maxHp|level|partySlot|
+player has them: PlayerSaveData's, which no flag says),
+options.textSpeed|soundMethod|battleStyle|battleScene|buttonMode|frame (the
+start menu's settings as Options holds them: text speed 2 fast, battle
+scene 1 off, battle style 1 set), flag:FLAG_..., var:VAR_...,
+battlerN.species|hp|maxHp|level|partySlot|
 status|item|moveK|ppK (gDiagBattlers; N counts the player's side even, K is
 a move slot, 0 to 3), music (the sequence the field's sound handle plays, -1
 for none: a load the sound heap cannot hold leaves it empty and counts as no
@@ -140,6 +143,8 @@ BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "ite
                   *(f"move{k}" for k in range(4)), *(f"pp{k}" for k in range(4)))
 # party.mons' keys, the fields a scenario may name.
 PARTY_FIELDS = ("species", "item", "level", "exp", "hp", "maxHp")
+# The Options bitfields (include/options.h), the settings a scenario may name.
+OPTION_FIELDS = ("textSpeed", "soundMethod", "battleStyle", "battleScene", "buttonMode", "frame")
 CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/species.h",
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
@@ -158,7 +163,8 @@ def readable(step_or_key, key=False):
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
                 or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)})", step_or_key) is not None
-                or re.fullmatch(rf"party[0-5]\.({'|'.join(PARTY_FIELDS)})", step_or_key) is not None)
+                or re.fullmatch(rf"party[0-5]\.({'|'.join(PARTY_FIELDS)})", step_or_key) is not None
+                or re.fullmatch(rf"options\.({'|'.join(OPTION_FIELDS)})", step_or_key) is not None)
     if isinstance(step_or_key, dict):
         return list(step_or_key) == ["expect"] and all(readable(k, True) for k in step_or_key["expect"])
     kind = step_or_key.partition(":")[0]
@@ -175,6 +181,15 @@ def battle_layout():
              "__builtin_offsetof(BattleMon, speed)")
     return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item", "speed"), savedit.compile_c(
         exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h",))[0]))
+
+
+@savedit.tree_cache
+def options_layout():
+    """Where SAVE_PLAYERDATA keeps each option: PLAYERDATA.options plus the
+    bitfield's place in Options, as savedit.bitfield() gives it."""
+    (at,), raws = savedit.compile_c(("__builtin_offsetof(PLAYERDATA, options)",),
+                                    tuple(("Options", f".{name} = ~0u") for name in OPTION_FIELDS))
+    return {name: (at + byte, width, mask) for name, (byte, width, mask) in zip(OPTION_FIELDS, map(savedit.bitfield, raws))}
 
 
 @savedit.tree_cache
@@ -939,6 +954,10 @@ class Scene:
             return memory.word(party.block(memory, self.elf, where.SAVE_PARTY) + where.PARTY_COUNT)
         if name == "badges":
             return party.badges(ram, self.elf)
+        if name.startswith("options."):
+            at = party.block(memory, self.elf, savedit.block_ids().index("SAVE_PLAYERDATA")) - 0x02000000
+            offset, width, mask = options_layout()[name.partition(".")[2]]
+            return savedit.get_bits(ram, (at + offset, width, mask))
         if name == "running_shoes":
             at = party.block(memory, self.elf, savedit.block_ids().index("SAVE_LOCAL_FIELD_DATA")) - 0x02000000
             offset, width, mask = savedit._given_layout()["shoes"]

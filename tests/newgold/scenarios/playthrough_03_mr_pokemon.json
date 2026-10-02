@@ -12,5 +12,6 @@
             "untilheap:HEAP_ID_NAMING_SCREEN:80", "wait:90", "START", "A", "field", "save"],
   "expect": {"map": "MAP_NEW_BARK_ELMS_LAB_1F", "x": 4, "y": 6, "party": 1, "flag:FLAG_GAVE_RIVAL_NAME_TO_OFFICER": 1,
              "var:VAR_SCENE_ELMS_LAB": 4, "bag:ITEM_MYSTERY_EGG": 0, "music": "SEQ_GS_UTSUGI_RABO",
+             "options.textSpeed": 2, "options.battleScene": 1, "options.battleStyle": 1,
              "lines": ["You are challenged by Passerby Boy!", "Passerby Boy sent out Totodile!"]}
 }

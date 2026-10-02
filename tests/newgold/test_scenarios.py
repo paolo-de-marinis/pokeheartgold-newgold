@@ -192,10 +192,17 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertTrue(scene.Scene.wanted("music", "SEQ_GS_R_1_29")[0](1028))
         # The keys a battle scenario reads beyond the battlers' HP: a move's
         # PP, and the party's items once the battle has given them back.
-        for key in ("battler0.pp0", "battler3.move3", "party0.item", "party5.species", "running_shoes"):
+        for key in ("battler0.pp0", "battler3.move3", "party0.item", "party5.species", "running_shoes",
+                    "options.textSpeed", "options.battleScene"):
             self.assertTrue(scene.readable(key, key=True), key)
-        for key in ("battler0.pp4", "party6.item", "party0.ability"):
+        for key in ("battler0.pp4", "party6.item", "party0.ability", "options.speed"):
             self.assertFalse(scene.readable(key, key=True), key)
+        # The options word leads PLAYERDATA: text speed in its low four bits,
+        # the battle style and scene the two above the sound method's two.
+        layout = scene.options_layout()
+        self.assertEqual(layout["textSpeed"], (0, 1, 0x0F))
+        self.assertEqual(layout["battleStyle"], (0, 1, 0x40))
+        self.assertEqual(layout["battleScene"], (0, 1, 0x80))
 
 
 class ChainTests(unittest.TestCase):
