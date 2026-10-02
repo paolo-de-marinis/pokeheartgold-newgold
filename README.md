@@ -13,17 +13,17 @@ the unmodified upstream base, not the modified ROMs.
 <!-- LEDGER:SUMMARY:START -->
 ```
 Overall                                                                    98%
-  done, seen running   ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%
-  done, never played   ████████████████████████████████░░░░░░░░░░░░░░░░░░  65%
+  done, seen running   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%
+  done, never played   ████████████████████████████████░░░░░░░░░░░░░░░░░░  63%
   partial              ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   3%
   still to do          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
   deferred / no scope  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  19%
 
 Implementation         ██████████████████████████████████████████████████  99%
-Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%
-Audit rows closed      ██████████████████████████████████████████████░░░░  92%
+Verified in play       █████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  18%
+Audit rows closed      ████████████████████████████████████████████████░░  95%
 
-Audit: 43 of 569 rows in docs/newgold/AUDIT-*.md still open.
+Audit: 33 of 606 rows in docs/newgold/AUDIT-*.md still open.
 The port is finished when none is, or each is closed with a reason.
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
@@ -38,7 +38,7 @@ Moves       ██████████████████████�
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████████████████████████████████████████████  2685 / 2685
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       166 files
+Tests       168 files
 ROM         164.9 MB of 268.4 MB   (2G card, 61% used)
 ```
 <!-- LEDGER:COUNTS:END -->

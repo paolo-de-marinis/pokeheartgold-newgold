@@ -415,19 +415,24 @@ e Typhlosion Fuoco/Terra, mentre Feraligatr resta solo Acqua (con statistiche nu
 **Nel port:** tenuto com'è.
 
 ### 3. Le tre abilità che assorbono l'Acqua non controllano le stesse cose
-**Domanda:** Irrigation ed Evaporate dovevano avere gli stessi controlli di Water Absorb?
+**Domanda:** Irrigation ed Evaporate dovevano avere gli stessi controlli di Water Absorb? E ora che
+Water Absorb e Irrigation prendono anche Soak, Evaporate deve fermare anche le mosse Acqua di stato?
 
-**Cosa:** in 82b788666 Water Absorb ha avuto due condizioni nuove: la mossa deve fare danno (la regola
-della 5a gen) e chi la usa non può attivare la propria abilità. Irrigation, aggiunta nello stesso
+**Cosa:** in 82b788666 Water Absorb ha avuto due condizioni nuove: la mossa deve fare danno (un
+controllo che hg-engine aveva tolto «as of Gen5») e chi la usa non può attivare la propria abilità. Irrigation, aggiunta nello stesso
 commit, non ha il controllo sul danno, quindi una mossa Acqua di stato come Soak la fa scattare.
 Evaporate non ha il controllo su chi la usa.
 
 **Dove:** `src/battle/ability.c:66-82` e `:184-190`.
 
-**Nel port:** tenuto com'è. In più, trovato nell'undicesimo giro: l'intelligenza artificiale degli
-allenatori non sa che Irrigation ed Evaporate assorbono l'Acqua, né nel suo gioco (quella di
-hg-engine) né nel port, e un allenatore usa mosse Acqua contro chi le ha. Insegnargliele sarebbe un
-commit del layer New Gold (AUDIT, undicesimo giro).
+**Nel port:** Water Absorb è corretto nel dodicesimo giro (3112cb441, layer New Gold): il controllo
+sul danno faceva passare Soak, che diventava di tipo Acqua, mentre dalla 4a gen Assorbacqua prende
+anche le mosse Acqua di stato (Pokémon Central; Showdown fa lo stesso). Il controllo su chi la usa
+resta. Così Water Absorb e Irrigation ora prendono tutte e due Soak; Evaporate è tenuta com'è: ferma
+solo le mosse Acqua che fanno danno e non ha il controllo su chi la usa, e quale regola volesse è la
+domanda. L'intelligenza artificiale degli allenatori, che nell'undicesimo giro non sapeva che
+Irrigation ed Evaporate assorbono l'Acqua (né nel suo gioco, quella di hg-engine, né nel port), lo sa
+dal dodicesimo, nel layer New Gold (ca0182d8c, e 45f67b02e per Soak contro Irrigation).
 
 ### 4. Solar Seeds
 **Domanda:** Solar Seeds va messa fra le mosse a colpi multipli?
@@ -710,6 +715,12 @@ L'elenco completo è in AUDIT-2026-09-23.md ("Differences from konefr's referenc
   Pluricolpo alla forma Singolcolpo (0f72c35cb).
 - Elettroraggio caricato col sereno e liberato con la pioggia rialza l'Attacco Speciale (lo script
   325, 90adab2cb).
+- Dry Skin ed Earth Eater chiedono che la mossa faccia danno, quindi Soak e Sand Attack arrivano a chi
+  le ha (a96fb2180).
+- Lo sfondo dei terreni: l'inizio è un'animazione, che l'opzione della scena di lotta spegne, la fine
+  no; il comando disegna solo sulla console che fa girare la lotta, quindi in una lotta in link
+  l'altro giocatore tiene lo sfondo del terreno; e LoadDifferentBattleBackground legge la sua tabella
+  oltre la fine (d27f4aff6).
 - Queste cose sono di hg-engine e non sue, anche se i nostri record a volte gliele attribuiscono: i
   prezzi degli strumenti e le potenze di Natural Gift, `ALLOW_SAVE_CHANGES`, gli sprite segnaposto,
   le voci del Pokédex e le 33 Bacche Hyper (Strumenti 3).
