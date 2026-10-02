@@ -1,0 +1,20 @@
+{
+  "about": "An ability that swallows a move takes it before the accuracy roll and the type chart: Showdown's gen-9 trySpreadMoveHit runs the TryHit step, where they act, before type immunity and accuracy, and Pokemon Central's Mangiaterra has Earth Eater come before the Flying type and an Air Balloon. A level-10 Pikachu is given Hydro Pump, Mud-Slap and Telekinesis in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash, brought to 20 of its 40 HP before each heal (set:). With the accuracy roll forced to miss, Hydro Pump (80% accurate; the forced roll does not make a sure hit miss) into its Water Absorb restores 10 HP; with the roll hitting again, Mud-Slap into its Earth Eater restores 10 under an Air Balloon and, the balloon taken away, 10 under Telekinesis. Before, the Hydro Pump missed and both Mud-Slaps were turned away by the lift. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 2, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_HYDRO_PUMP", "teach:0,1,MOVE_MUD_SLAP", "teach:0,2,MOVE_TELEKINESIS",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:1,ability,ABILITY_WATER_ABSORB", "set:1,hp,20", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Hydro Pump!", "The wild Chansey restored HP using its Water Absorb!"],
+                        "battler1.hp": 30}},
+            "hold:gDiagForceHit=1",
+            "set:1,ability,ABILITY_EARTH_EATER", "set:1,item,ITEM_AIR_BALLOON", "set:1,hp,20", "fight:2:1",
+            {"expect": {"new_lines": ["Pikachu used Mud-Slap!", "The wild Chansey restored HP using its Earth Eater!"],
+                        "battler1.hp": 30, "battler1.item": "ITEM_AIR_BALLOON"}},
+            "set:1,item,0", "fight:3:1", "set:1,hp,20", "fight:2:1"],
+  "expect": {"new_lines": ["Pikachu used Telekinesis!", "hurled into the air", "Pikachu used Mud-Slap!", "The wild Chansey restored HP using its Earth Eater!"],
+             "no_lines": ["missed", "doesn’t affect", "evades Ground moves"],
+             "battler1.hp": 30}
+}

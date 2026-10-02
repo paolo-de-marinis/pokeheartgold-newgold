@@ -17,6 +17,7 @@ from test_level_cap import ROOT
 from test_repels import REFERENCE, REFERENCE_COMMIT, function, revision
 
 OVERLAY = ROOT / "src/battle/overlay_12_0224E4FC.c"
+CONTROLLER = ROOT / "src/battle/battle_controller_player.c"
 SUBSCRIPTS = ROOT / "files/battledata/script/subscript"
 
 # Every subscript that lets Leaf Guard turn a status away. Rest is the seventh:
@@ -88,6 +89,29 @@ class WaterAbsorbTests(unittest.TestCase):
             self.assertIn("power", condition)
             self.assertNotIn("attacker != defender", condition)
 
+
+
+class AbsorbFirstTests(unittest.TestCase):
+    def setUp(self):
+        controller = CONTROLLER.read_text()
+        self.check = function(controller, "ov12_0224BC2C")
+        self.absorbs = function(controller, "ScriptAbsorbsMove")
+
+    def test_they_come_before_the_type_chart_and_the_accuracy_roll(self):
+        # Showdown's gen-9 TryHit step, before type immunity and accuracy: a
+        # miss, an immunity, Magnet Rise's or an Air Balloon's lift and a
+        # failed one-hit KO give way; a guard or a target out of reach do not.
+        clear = re.search(r"if \(ScriptAbsorbsMove\(script\) == TRUE\) \{\s*ctx->moveStatusFlag &= ~\(([^)]*)\);", self.check)
+        self.assertIsNotNone(clear)
+        self.assertEqual(set(clear.group(1).split(" | ")), {"MOVE_STATUS_MISSED", "MOVE_STATUS_NO_EFFECT",
+                                                            "MOVE_STATUS_MAGNET_RISE_IMMUNE", "MOVE_STATUS_ONE_HIT_KO_FAILED"})
+        self.assertLess(self.check.index("ScriptAbsorbsMove(script)"), self.check.index("MOVE_STATUS_DID_NOT_HIT"))
+
+    def test_every_absorbing_script_of_the_sweep_is_one(self):
+        sweep = function(OVERLAY.read_text(), "BattleContext_CheckMoveImmunityFromAbility")
+        scripts = set(re.findall(r"script = (BATTLE_SUBSCRIPT_(?:ABSORB_AND_\w+|ABILITY_RESTORES_HP));", sweep))
+        self.assertEqual(len(scripts), 6)
+        self.assertEqual(scripts, set(re.findall(r"case (BATTLE_SUBSCRIPT_\w+):", self.absorbs)))
 
 
 class LightningRodTests(unittest.TestCase):

@@ -3306,6 +3306,22 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
     return ret != 3;
 }
 
+// The scripts of the abilities that swallow a move: Water Absorb, Volt
+// Absorb, Dry Skin, Earth Eater, Flash Fire, Motor Drive, Lightning Rod,
+// Storm Drain, Sap Sipper, Wind Rider and Well-Baked Body.
+static BOOL ScriptAbsorbsMove(int script) {
+    switch (script) {
+    case BATTLE_SUBSCRIPT_ABILITY_RESTORES_HP:
+    case BATTLE_SUBSCRIPT_ABSORB_AND_BOOST_FIRE_TYPE_MOVES:
+    case BATTLE_SUBSCRIPT_ABSORB_AND_SPEED_UP_1_STAGE:
+    case BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_ATTACK:
+    case BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_DEFENSE:
+    case BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_SP_ATTACK:
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static BOOL ov12_0224BC2C(BattleSystem *battleSystem, BattleContext *ctx) {
     int ret = 0;
     int script;
@@ -3314,6 +3330,20 @@ static BOOL ov12_0224BC2C(BattleSystem *battleSystem, BattleContext *ctx) {
         switch (ctx->unk_54) {
         case 0:
             script = BattleContext_CheckMoveImmunityFromAbility(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
+            // An ability that swallows a move takes it before the type chart
+            // and the accuracy roll are asked: a Water Gun that would have
+            // missed a Water Absorb holder is absorbed, and Earth Eater eats
+            // a Ground move a Flying type, an Air Balloon, Magnet Rise or
+            // Telekinesis would have kept off (Pokemon Central, Mangiaterra:
+            // it comes before the other immunities). Pokemon Central does not
+            // say where the accuracy check falls; Showdown's gen-9
+            // trySpreadMoveHit runs the TryHit step, where these abilities
+            // act, before the type immunity and accuracy steps, which the
+            // fourth generation ran first. A guard or a target out of reach
+            // still stops the move before them.
+            if (ScriptAbsorbsMove(script) == TRUE) {
+                ctx->moveStatusFlag &= ~(MOVE_STATUS_MISSED | MOVE_STATUS_NO_EFFECT | MOVE_STATUS_MAGNET_RISE_IMMUNE | MOVE_STATUS_ONE_HIT_KO_FAILED);
+            }
             // A Surf that reaches this target lets a Cramorant catch its prey.
             if (script == BATTLE_SUBSCRIPT_NONE && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT) && ctx->moveNoCur == MOVE_SURF) {
                 Battler_GulpMissileCatch(ctx, ctx->battlerIdAttacker);
