@@ -120,6 +120,18 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertTrue(runs(high, True, 100))
         self.assertTrue(runs(["you Raichu Alolan L30 12/80 | 1:Thunderbolt 15"], True, 40))
 
+    def test_gym_tries_to_run_once_and_fights_when_it_cannot(self):
+        # A wrapped Cyndaquil was told "You couldn't get away!" 384 times,
+        # no turn spent, until the walk ran out of frames.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from gym import may_run
+        wild = False
+        for line, after in (("You encountered a wild Ekans!", True), ("The wild Ekans used Wrap!", True),
+                            ("You couldn’t get away!", False), ("The wild Ekans used Leer!", False)):
+            wild = may_run(wild, line)
+            self.assertIs(wild, after, line)
+        self.assertFalse(may_run(False, "You are challenged by Youngster Joey!"))
+
     def test_a_pokemon_read_mid_encryption_is_not_taken_for_sealed(self):
         # A frame can end with the game re-encrypting a party Pokemon; scene.py
         # reads the party again until every one is sealed.

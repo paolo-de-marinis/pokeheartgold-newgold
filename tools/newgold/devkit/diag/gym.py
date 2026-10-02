@@ -129,6 +129,14 @@ def runs(view, wild, flee):
     return bool(wild and hp and int(hp.group(1)) * 100 < flee * int(hp.group(2)))
 
 
+def may_run(wild, line):
+    """Whether the player may still run after this battle line: a wild
+    battle, until a try has failed. "You couldn't get away!" is also what a
+    trapped Pokemon is told (CantEscape: Wrap, Mean Look...) with no turn
+    spent, so trying again would choose RUN for ever; it fights instead."""
+    return (wild or line.startswith("You encountered a wild")) and "get away" not in line and "escape" not in line
+
+
 def second_down(ram, markers):
     """Whether the player's second Pokemon in a double battle has fainted."""
     second = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000 + 2 * struct.calcsize(BATTLER))
@@ -226,7 +234,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                     revive = None
                 if "Use next Pok" in line:
                     use_next = core.frames
-                wild = wild or line.startswith("You encountered a wild")
+                wild = may_run(wild, line)
                 if not line.startswith("What will"):
                     say(f"[{core.frames}] {line.split('?{')[0]}")
         decoded = count
