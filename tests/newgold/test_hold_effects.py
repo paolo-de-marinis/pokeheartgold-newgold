@@ -990,7 +990,7 @@ class ReplacedUserTests(unittest.TestCase):
 
     def test_the_departed_user_s_move_is_not_the_newcomer_s(self):
         body = function(CONTROLLER.read_text(), "ov12_0224D23C")
-        self.assertIn("BOOL userGone = (ctx->battleStatus2 & BATTLE_STATUS2_UTURN) || (ctx->battleStatus & BATTLE_STATUS_BATON_PASS);", body)
+        self.assertIn("BOOL userGone = (ctx->battleStatus2 & BATTLE_STATUS2_UTURN) != 0;", body)
         self.assertIn("if (!userGone && copyLocks && ", body)
         self.assertNotIn("MOVE_U_TURN", body)
         self.assertNotIn("MOVE_BATON_PASS", body)

@@ -4854,12 +4854,13 @@ static void ov12_0224D23C(BattleSystem *battleSystem, BattleContext *ctx) {
     BOOL copyLocks = !copied || (ctx->battleMons[ctx->battlerIdAttacker].unk88.moveNoChoice == 0
         && BattleMon_GetMoveIndex(&ctx->battleMons[ctx->battlerIdAttacker], ctx->moveNoTemp) < MAX_MON_MOVES);
     // The user can have left in the middle of its move: U-turn and the other
-    // pivot moves, Teleport, a Red Card, or its own Eject Pack or Emergency
-    // Exit (U-turn's flag), Baton Pass or Shed Tail (the Baton Pass flag).
+    // pivot moves, Teleport, a Red Card, its own Eject Pack or Emergency
+    // Exit, Baton Pass or Shed Tail: U-turn's flag, which Baton Pass's switch
+    // sets as it puts its own flag down (BtlCmd_SwitchAndUpdateMon).
     // What stands in its slot now did not use the move, so it is neither
     // locked into it by a Choice item nor remembered as having used it last;
     // retail excused U-turn and Baton Pass from the lock alone.
-    BOOL userGone = (ctx->battleStatus2 & BATTLE_STATUS2_UTURN) || (ctx->battleStatus & BATTLE_STATUS_BATON_PASS);
+    BOOL userGone = (ctx->battleStatus2 & BATTLE_STATUS2_UTURN) != 0;
 
     if (!userGone && copyLocks && (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN || ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE)) {
         if (item == HOLD_EFFECT_CHOICE_ATK || item == HOLD_EFFECT_CHOICE_SPEED || item == HOLD_EFFECT_CHOICE_SPATK) {

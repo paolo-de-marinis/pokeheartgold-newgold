@@ -412,6 +412,19 @@ class BatonPassTests(unittest.TestCase):
         for field in ("battlerIdLockOn", "battlerIdMeanLook"):
             self.assertNotIn(f"unk88.{field} = unkStruct.{field};", switching)
 
+    def test_only_its_own_switch_takes_the_baton(self):
+        # Showdown's gen-9 Baton Pass and Shed Tail copy the volatiles to the
+        # Pokemon their own switch brings in. A switch later in the same
+        # action -- an Eject Pack, Emergency Exit or Wimp Out answering the
+        # entry, on either side -- is an ordinary one, so the flag goes as
+        # the first switch is over, and the steps after the move learn that
+        # the user has gone from U-turn's flag instead.
+        body = function(COMMANDS.read_text(), "BtlCmd_SwitchAndUpdateMon")
+        after = body[body.index("InitSwitchWork(battleSystem, ctx, battlerId);"):]
+        self.assertRegex(after, r"if \(ctx->battleStatus & BATTLE_STATUS_BATON_PASS\) \{\s*"
+                                r"ctx->battleStatus &= ~BATTLE_STATUS_BATON_PASS;\s*ctx->battleStatus2 \|= BATTLE_STATUS2_UTURN;")
+        self.assertNotIn("BATTLE_STATUS_BATON_PASS", function(CONTROLLER.read_text(), "ov12_0224D23C"))
+
 
 class ShedTailTests(unittest.TestCase):
     def test_the_user_leaves_its_decoy_behind(self):

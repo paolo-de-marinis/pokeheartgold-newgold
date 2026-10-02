@@ -1,0 +1,15 @@
+{
+  "about": "Baton Pass passes what it passes to the Pokemon its own switch brings in, and to nothing a later switch in the same action brings (Showdown's gen-9 Baton Pass copies the volatiles to its own switch-in); before, the flag stayed up until the action ended, and an Eject Pack's switch passed the stat stages, Leech Seed, the substitute and the rest again. Falkner's Hoothoot is given an Eject Pack and taught Splash alone; a level-20 Pikachu seeds it, then passes the baton to a Staravia whose Intimidate sets the Eject Pack off. The Delibird that comes in is not seeded (before, \"The opposing Delibird's health is sapped by Leech Seed!\" at the turn's end).",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:20,STARAVIA:20", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "A", "fight:1:0", "set:1,item,ITEM_EJECT_PACK",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:0,0,MOVE_LEECH_SEED", "teach:0,1,MOVE_BATON_PASS", "teach:0,2,0,0", "teach:0,3,0,0",
+            "fight:1:1",
+            {"expect": {"new_lines": ["The opposing Hoothoot was seeded!", "The opposing Hoothoot’s health is sapped by Leech Seed!"]}},
+            "fight:2:1"],
+  "expect": {"new_lines": ["Pikachu used Baton Pass!", "Go! Staravia!", "The opposing Hoothoot is switched out by the Eject Pack!",
+                           "Leader Falkner sent out Delibird!"],
+             "no_lines": ["Delibird’s health is sapped"]}
+}

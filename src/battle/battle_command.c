@@ -2380,6 +2380,16 @@ BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSystem, BattleContext *ctx) {
 
     InitSwitchWork(battleSystem, ctx, battlerId);
 
+    // Baton Pass and Shed Tail pass what they pass to the Pokemon their own
+    // switch brings in and to nothing after it: an Eject Pack, Emergency Exit
+    // or Wimp Out answering the entry, on either side, is a switch of its
+    // own. From here the user having gone is said by U-turn's flag, which
+    // the steps after the move ask (ov12_0224D23C).
+    if (ctx->battleStatus & BATTLE_STATUS_BATON_PASS) {
+        ctx->battleStatus &= ~BATTLE_STATUS_BATON_PASS;
+        ctx->battleStatus2 |= BATTLE_STATUS2_UTURN;
+    }
+
     return FALSE;
 }
 

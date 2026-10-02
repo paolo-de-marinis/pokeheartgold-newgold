@@ -169,6 +169,7 @@ typedef struct {
     u8 selectedMonIndex[4];
     u8 unk_21A0[4];
     u8 switchInFlag;
+    u32 battleStatus, battleStatus2;
 } BattleContext;
 static Pokemon *sReverted;
 static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
@@ -234,6 +235,18 @@ int main(void) {
     ctx.unk_21A0[2] = 1;
     BtlCmd_SwitchAndUpdateMon(0, &ctx);
     assert(sReverted == NULL);
+
+    // Baton Pass's own switch puts the Baton Pass flag down once it has
+    // passed what it passes, and says the user has gone with U-turn's: a
+    // later switch in the same action passes nothing.
+    ctx.battleStatus = BATTLE_STATUS_BATON_PASS;
+    ctx.battleStatus2 = 0;
+    ctx.unk_21A0[2] = 0;
+    BtlCmd_SwitchAndUpdateMon(0, &ctx);
+    assert(!(ctx.battleStatus & BATTLE_STATUS_BATON_PASS) && (ctx.battleStatus2 & BATTLE_STATUS2_UTURN));
+    ctx.unk_21A0[2] = 1;
+    BtlCmd_SwitchAndUpdateMon(0, &ctx);
+    assert(!(ctx.battleStatus & BATTLE_STATUS_BATON_PASS));
     return 0;
 }
 """
