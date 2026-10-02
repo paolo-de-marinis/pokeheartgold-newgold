@@ -422,9 +422,13 @@ Reading what the debug ROM records, and playing it without looking.
   events' warps, and the map objects standing in RAM; a goal someone
   started on is sought where they have wandered to), planned again when
   the player leaves it or is blocked, A through text boxes (read from
-  FieldSystem.textbox_open) and gym.py's player through any battle on the
-  way; one line says how it went. `fight:N:T` stops after T turns at the
-  prompt, so a scenario can expect what they did, and `teach:B,SLOT,MOVE`
+  FieldSystem.textbox_open), B through a phone call and the blackout
+  screen, and gym.py's player through any battle on the way; one line says
+  how it went. `goto:MAP,X,Y,N` spends N frames at most (30000 by
+  default), and `flee:N` has the player run from a wild Pokemon when its
+  own has under N% of its HP left -- one try a battle, then it fights.
+  `fight:N:T` stops after T turns at the prompt, so a scenario can expect
+  what they did, and `teach:B,SLOT,MOVE`
   writes a move into battler B's BattleMon in the running battle (found in
   RAM by what gDiagBattlers shows), for an AI to use a move no trainer's
   data gives; `set:B,FIELD,VALUE` writes its HP, status, ability, held
