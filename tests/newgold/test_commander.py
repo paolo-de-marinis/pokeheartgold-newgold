@@ -317,7 +317,7 @@ typedef struct {
 typedef int BOOL;
 static int sItem[4];
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return sItem[battlerId]; }
-static BOOL MetronomeItemPassesOver(u16 move) { (void)move; return 0; }
+static BOOL CheckMoveCallsOtherMove(u16 move) { (void)move; return 0; }
 @COUNT@
 static void use(BattleContext *ctx, int battlerId, u16 move) {
     ctx->battlerIdAttacker = battlerId;

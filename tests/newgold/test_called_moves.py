@@ -215,11 +215,39 @@ int main(void) {
         # earlier one was hit.
         controller = CONTROLLER.read_text()
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
-        run_c(self.METRONOME_ITEM.replace("@FUNCTIONS@", function(overlay, "CheckMoveCallsOtherMove") + function(overlay, "MetronomeItemPassesOver")
+        run_c(self.METRONOME_ITEM.replace("@FUNCTIONS@", function(overlay, "CheckMoveCallsOtherMove")
                                           + function(overlay, "ov12_022565E0") + function(overlay, "ov12_02256694")))
         loop = function(controller, "ov12_0224D03C")
         self.assertLess(loop.index("ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded = TRUE;"), loop.index("BATTLE_STATUS2_MAGIC_COAT"))
         self.assertIn("if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {\n        ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded = TRUE;", loop)
+
+    CALLERS = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/moves.h"
+typedef uint16_t u16;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+@FUNCTIONS@
+int main(void) {
+    static const u16 callers[] = { MOVE_METRONOME, MOVE_MIRROR_MOVE, MOVE_SLEEP_TALK, MOVE_NATURE_POWER, MOVE_ASSIST,
+        MOVE_COPYCAT, MOVE_ME_FIRST };
+    for (unsigned i = 0; i < sizeof(callers) / sizeof(*callers); i++) {
+        assert(CheckMoveCallsOtherMove(callers[i]));
+    }
+    assert(!CheckMoveCallsOtherMove(MOVE_TACKLE) && !CheckMoveCallsOtherMove(MOVE_INSTRUCT));
+    return 0;
+}
+"""
+
+    def test_the_moves_that_call_another_are_showdown_s_seven(self):
+        # Nature Power among them, which retail's list left out: Instruct
+        # does not have it used again (Pokemon Central, Imposizione), and the
+        # Metronome item passes over it for the move it calls (Showdown's
+        # gen-9 callsMove: Metronome, Mirror Move, Sleep Talk, Nature Power,
+        # Assist, Copycat, Me First).
+        run_c(self.CALLERS.replace("@FUNCTIONS@", function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CheckMoveCallsOtherMove")))
 
     def test_mirror_move_s_copy_does_too(self):
         body = function(COMMANDS.read_text(), "BtlCmd_SetMirrorMove")

@@ -3723,8 +3723,14 @@ int CalculateTypeEffectiveness(u8 typeMove, u8 typeMon1, u8 typeMon2) {
     return damage;
 }
 
+// The moves that call another, Nature Power among them, which retail's list
+// left out: Instruct does not have it used again (Pokemon Central,
+// Imposizione: "una mossa che chiama un'altra mossa"; Showdown's gen-9
+// naturepower has failinstruct and callsMove). Sleep Talk, Assist, Copycat
+// and Mimic refuse it by their own lists already.
 BOOL CheckMoveCallsOtherMove(u16 moveNo) {
-    if (moveNo == MOVE_NONE || moveNo == MOVE_SLEEP_TALK || moveNo == MOVE_COPYCAT || moveNo == MOVE_ASSIST || moveNo == MOVE_ME_FIRST || moveNo == MOVE_MIRROR_MOVE || moveNo == MOVE_METRONOME) {
+    if (moveNo == MOVE_NONE || moveNo == MOVE_SLEEP_TALK || moveNo == MOVE_COPYCAT || moveNo == MOVE_ASSIST || moveNo == MOVE_ME_FIRST || moveNo == MOVE_MIRROR_MOVE || moveNo == MOVE_METRONOME
+        || moveNo == MOVE_NATURE_POWER) {
         return TRUE;
     }
     return FALSE;
@@ -10053,17 +10059,6 @@ BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     return TRUE;
 }
 
-// Whether the Metronome item leaves `move` uncounted: a move that calls
-// another, whose called move is the one counted -- Metronome twice is a run
-// only if it calls one move twice, and a Copycat that copies the move used
-// the turn before goes on with its run (Showdown's gen-9 item returns for a
-// callsMove move and counts the move it calls: Metronome, Mirror Move, Sleep
-// Talk, Nature Power, Assist, Copycat, Me First). Plessimetro's fourth
-// generation counts the move chosen, its fifth on is silent.
-static BOOL MetronomeItemPassesOver(u16 move) {
-    return CheckMoveCallsOtherMove(move) || move == MOVE_NATURE_POWER;
-}
-
 // The Metronome item, as a move is used: the same move as the last one
 // counts a use more, a new one starts the count (Pokemon Central,
 // Plessimetro). Every use counts from the fifth generation -- the forced turns
@@ -10071,10 +10066,15 @@ static BOOL MetronomeItemPassesOver(u16 move) {
 // item counts a use in a row whose last one did not fail, and a twoturnmove's
 // hit) -- where the fourth counted only the move chosen. A charge turn is
 // taken back once the move is over (ov12_02256694). The move counted is
-// moveNoCur, a called move's own.
+// moveNoCur, a called move's own, and not a move that calls another --
+// Metronome twice is a run only if it calls one move twice, and a Copycat
+// that copies the move used the turn before goes on with its run (Showdown's
+// gen-9 item returns for a callsMove move and counts the move it calls;
+// Plessimetro's fourth generation counts the move chosen, its fifth on is
+// silent).
 void ov12_022565E0(BattleSystem *battleSystem, BattleContext *ctx) {
     if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_BOOST_REPEATED) {
-        if (MetronomeItemPassesOver(ctx->moveNoCur)) {
+        if (CheckMoveCallsOtherMove(ctx->moveNoCur)) {
             return;
         }
         if (ctx->moveNoMetronome[ctx->battlerIdAttacker] == ctx->moveNoCur) {
@@ -10108,7 +10108,7 @@ void ov12_02256694(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->battleMons[ctx->battlerIdAttacker].unk88.metronomeTurns--;
             }
         } else if ((ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded
-            && (ctx->moveNoMetronome[ctx->battlerIdAttacker] == ctx->moveNoCur || MetronomeItemPassesOver(ctx->moveNoCur))) {
+            && (ctx->moveNoMetronome[ctx->battlerIdAttacker] == ctx->moveNoCur || CheckMoveCallsOtherMove(ctx->moveNoCur))) {
             ctx->moveNoMetronome[ctx->battlerIdAttacker] = MOVE_NONE;
         }
     } else {
