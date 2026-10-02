@@ -50,6 +50,7 @@ KEEP_BATTLING = (128, 139)   # "will you switch?" -- the lower of the two
 GIVE_UP = (128, 67)          # "give up on learning this new move?" -- the upper of the two
 USE_NEXT = (128, 67)         # a wild battle's "Use next Pokemon?" -- the upper; the lower flees
 BAG = (40, 170)              # left of RUN
+POKEMON = (216, 170)         # right of RUN
 # The battle bag, overlay 8, by its hitbox tables: the Poke Balls pocket at
 # the upper right (ov08_02225B4C), a pocket page's first item at the upper
 # left (ov08_02225B68), USE along the bottom (ov08_02225ADC).
@@ -212,6 +213,28 @@ def throw(core, markers, hold, frames=1500):
     return False
 
 
+def relieve(core, markers, hold, slot, frames=900):
+    """Party slot `slot` sent in for the Pokemon out: POKEMON while the
+    command prompt still asks, then, once the party screen asks (prompt 9
+    or 10), the slot's place on it and SHIFT. True once the prompt has
+    moved past the party screen."""
+    end, asked = core.frames + frames, False
+    while core.frames < end:
+        prompt = markers.read(core.ram(), "gDiagBattlePrompt")
+        if prompt in (1, 2) and not asked:
+            core.touch(*POKEMON, 6, hold)
+        elif prompt in (9, 10):
+            asked = True
+            core.step(20, hold)
+            core.touch(*PARTY[place(core.ram(), markers, slot)], 6, hold)
+            core.step(30, hold)
+            core.touch(*SHIFT, 6, hold)
+        elif asked:
+            return True
+        core.step(10, hold)
+    return False
+
+
 def second_down(ram, markers):
     """Whether the player's second Pokemon in a double battle has fainted."""
     second = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000 + 2 * struct.calcsize(BATTLER))
@@ -250,7 +273,7 @@ def quiet():
 
 
 def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=None, since=0, partner=None, flee=0,
-          catch=None):
+          catch=None, shift=None):
     """Play the battle that is up until it is over or the core reaches
     `frames`, and return the last line it printed. `move` is a move slot,
     1 to 4, to use every turn; 0 the first with PP; -1 the hardest-hitting
@@ -278,6 +301,11 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     the most that move has taken off it, then throws them, one a turn, from
     the bag: the battle keeps a copy of the bag, so the balls thrown are
     counted here. Running, when `flee` says so, comes first.
+
+    With `shift`, a party slot, a wild battle's first Pokemon out is
+    relieved by that one at the first prompt: it fights, and the first,
+    which has been out, shares what the battle pays -- the way a player
+    trains a Pokemon too weak to win its own battles.
 
     Memory is read every four frames, but the text ring is decoded only when
     its counter has moved: decoding it every time halved the frame rate.
@@ -359,8 +387,15 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             if foe_before is not None:
                 hit, foe_before = max(hit, foe_before - foe[1]), None
             wanted = bool(catch and wild_battle and foe[1] and thrown < catch(foe[0]))
+            hp = struct.unpack_from("<6H", ram, markers.address("gDiagPartyHp") - 0x02000000)
+            relieving = (shift is not None and wild_battle and you[4] != shift and hp[shift] and you[1]
+                         and commands == 1 and not wanted)
             damaging = [i for i in range(4) if you[7 + i] and you[11 + i] and scorer.score(you[7 + i], you[0], foe[0]) > 0.1]
-            if runs(view, wild, flee):
+            if relieving:
+                say(f"[{core.frames}] party slot {shift} relieves slot {you[4]}")
+                relieve(core, markers, hold, shift)
+                shift = None
+            elif runs(view, wild, flee):
                 core.touch(*RUN, 6, hold)
             elif wanted and throws_now(foe[1], foe[2], hit, damaging):
                 say(f"[{core.frames}] ball {thrown + 1} of {catch(foe[0])} thrown")

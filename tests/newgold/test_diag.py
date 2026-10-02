@@ -195,6 +195,32 @@ class DiagnosticsTests(unittest.TestCase):
         firsts = [core.touches.index(t) for t in (gym.BAG, gym.BALLS, gym.FIRST_ITEM, gym.USE)]
         self.assertEqual(firsts, sorted(firsts))
 
+    def test_gym_relieves_the_first_with_the_slot_shift_names(self):
+        # shift: POKEMON while the command prompt asks, then on the party
+        # screen the slot's place -- by the battle's order -- and SHIFT.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        import gym
+        from unittest import mock
+
+        class Core:
+            frames, touches = 0, []
+
+            def ram(self):
+                return b""
+
+            def step(self, frames, hold):
+                self.frames += frames
+
+            def touch(self, x, y, frames, hold):
+                self.touches.append((x, y))
+                self.frames += frames + 4
+        core = Core()
+        prompt = lambda: 1 if core.frames < 40 else 10 if gym.SHIFT not in core.touches else 13    # noqa: E731
+        markers = type("Markers", (), {"read": lambda self, ram, name: prompt()})()
+        with mock.patch.object(gym, "place", lambda ram, markers, slot: {2: 1}[slot]):
+            self.assertTrue(gym.relieve(core, markers, [], 2))
+        self.assertEqual(core.touches[-3:], [gym.POKEMON, gym.PARTY[1], gym.SHIFT])
+
     def test_a_pokemon_read_mid_encryption_is_not_taken_for_sealed(self):
         # A frame can end with the game re-encrypting a party Pokemon; scene.py
         # reads the party again until every one is sealed.
