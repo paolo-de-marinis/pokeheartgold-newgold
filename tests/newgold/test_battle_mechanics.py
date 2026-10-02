@@ -432,6 +432,21 @@ class BatonPassTests(unittest.TestCase):
         self.assertIn("UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_MEAN_LOOK_TARGET, BSCRIPT_VAR_BATTLER_ATTACKER",
                       subscript("NoRetreat"))
 
+    def test_a_trap_names_its_trapper_alone(self):
+        # The trapper's battler id is two bits (battlerIdMeanLook), and a
+        # released trap leaves it behind. Mean Look and Jaw Lock ORed the new
+        # trapper into it, as retail's Mean Look did: in a double battle,
+        # battler 0 trapping what battler 2 had held once named battler 2,
+        # so battler 0 leaving freed nothing and battler 2 leaving freed it.
+        # Every script writes the id whole, as Octolock's always did.
+        writes = []
+        for path in sorted(SUBSCRIPTS.glob("subscript_*.s")) + sorted((SUBSCRIPTS.parent / "effect_script").glob("*.s")):
+            writes += [(path.name, line.strip()) for line in path.read_text().splitlines()
+                       if "BMON_DATA_MEAN_LOOK_TARGET" in line and line.strip().startswith("UpdateMonData")]
+        self.assertGreaterEqual(len(writes), 8, writes)
+        for name, line in writes:
+            self.assertIn(" OPCODE_SET, ", line, name)
+
     def test_only_its_own_switch_takes_the_baton(self):
         # Showdown's gen-9 Baton Pass and Shed Tail copy the volatiles to the
         # Pokemon their own switch brings in. A switch later in the same
