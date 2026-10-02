@@ -39,6 +39,12 @@ class ForecastTests(unittest.TestCase):
         table = re.search(r"sCastformTypes\[CASTFORM_FORM_MAX\] = \{ ([^}]*) \};", self.source).group(1)
         self.assertEqual(table, "TYPE_NORMAL, TYPE_FIRE, TYPE_WATER, TYPE_ICE")
 
+    def test_without_forecast_it_goes_back_to_its_normal_form(self):
+        # Lost or suppressed, Forecast leaves Castform in its Normal Form
+        # (Previsioni): the ability is asked for the weather's form only.
+        self.assertRegex(self.castform, r"^SPECIES_CASTFORM && ctx->battleMons\[ctx->battlerIdTemp\]\.hp\) \{\s*"
+                                        r"form = CASTFORM_NORMAL;\s*if \(GetBattlerAbility\(ctx, ctx->battlerIdTemp\) == ABILITY_FORECAST\s")
+
     def test_each_weather_its_form(self):
         for weather, form in (("SUN_ALL", "SUNNY"), ("RAIN_ALL", "RAINY"), ("HAIL_ALL", "SNOWY")):
             self.assertRegex(self.castform, rf"if \(weather & FIELD_CONDITION_{weather}\) \{{\s*form = CASTFORM_{form};")

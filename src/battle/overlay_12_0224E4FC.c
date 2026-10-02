@@ -10402,9 +10402,14 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
         // (Pokemon Central, Previsioni). Retail compared the types, so a
         // Soaked Castform was changed back at once, and one that came in with
         // a weather form but the Normal type kept that form out of the weather.
-        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_CASTFORM && ctx->battleMons[ctx->battlerIdTemp].hp && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_FORECAST) {
+        // A Castform that loses Forecast or has it suppressed -- Skill Swap,
+        // Gastro Acid, Neutralizing Gas -- goes back to its Normal Form
+        // (Previsioni), as the reference has it (BattleFormChangeCheck.c:85);
+        // retail asked for Forecast first and left that Castform as it was.
+        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_CASTFORM && ctx->battleMons[ctx->battlerIdTemp].hp) {
             form = CASTFORM_NORMAL;
-            if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
+            if (GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_FORECAST
+                && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
                 if (weather & FIELD_CONDITION_SUN_ALL) {
                     form = CASTFORM_SUNNY;
                 } else if (weather & FIELD_CONDITION_RAIN_ALL) {
