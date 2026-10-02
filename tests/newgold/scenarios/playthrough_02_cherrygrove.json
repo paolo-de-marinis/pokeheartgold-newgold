@@ -10,5 +10,6 @@
             "goto:MAP_CHERRYGROVE_POKECENTER_1F,8,13", "UP", "A", "field", "save"],
   "expect": {"map": "MAP_CHERRYGROVE_POKECENTER_1F", "x": 8, "y": 13, "party": 1, "party0.species": "SPECIES_CYNDAQUIL",
              "flag:FLAG_GOT_POKEGEAR": 1, "var:VAR_SCENE_CHERRYGROVE_CITY_OW": 1, "flag:FLAG_HIDE_CHERRYGROVE_GUIDE_GENT": 1,
+             "running_shoes": 1,
              "music": "SEQ_GS_POKESEN"}
 }

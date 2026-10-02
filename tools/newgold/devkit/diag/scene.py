@@ -92,8 +92,9 @@ is a value read out of main RAM by name, through the ELF's symbols and the
 offsets the tree's own headers give: map, x, y, party (the count),
 partyN.species|item|level|exp|hp|maxHp (the party as its save block holds
 it, slot N from 0, once the field is up: what a battle gave back),
-bag:ITEM_... (how many the bag holds), badges, flag:FLAG_..., var:VAR_...,
-battlerN.species|hp|maxHp|level|partySlot|
+bag:ITEM_... (how many the bag holds), badges, running_shoes (1 once the
+player has them: PlayerSaveData's, which no flag says), flag:FLAG_...,
+var:VAR_..., battlerN.species|hp|maxHp|level|partySlot|
 status|item|moveK|ppK (gDiagBattlers; N counts the player's side even, K is
 a move slot, 0 to 3), music (the sequence the field's sound handle plays, -1
 for none: a load the sound heap cannot hold leaves it empty and counts as no
@@ -153,7 +154,7 @@ def readable(step_or_key, key=False):
     from core import BUTTONS
     if key:
         return (step_or_key in ("lines", "new_lines", "once_lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
-                                "party", "badges", "music")
+                                "party", "badges", "music", "running_shoes")
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
                 or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)})", step_or_key) is not None
@@ -938,6 +939,10 @@ class Scene:
             return memory.word(party.block(memory, self.elf, where.SAVE_PARTY) + where.PARTY_COUNT)
         if name == "badges":
             return party.badges(ram, self.elf)
+        if name == "running_shoes":
+            at = party.block(memory, self.elf, savedit.block_ids().index("SAVE_LOCAL_FIELD_DATA")) - 0x02000000
+            offset, width, mask = savedit._given_layout()["shoes"]
+            return savedit.get_bits(ram, (at + offset, width, mask))
         if name.startswith("bag:"):
             return party.bag(ram, self.elf, self.number(name[len("bag:"):]))
         if name.startswith("party") and "." in name:
