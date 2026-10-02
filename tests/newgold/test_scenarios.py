@@ -205,6 +205,36 @@ class ScenarioFileTests(unittest.TestCase):
             self.assertIsNone(s.catch)
         self.assertTrue(scene.readable("caught:SPECIES_ONIX", key=True))
 
+    def test_pace_walks_to_and_fro_until_the_value_and_heals_its_first(self):
+        # pace: goes from one tile to the other and back until the key reads
+        # enough; between two walks, at heal:'s tile when the party's first
+        # has under flee:'s share of its HP.
+        import party
+        from unittest import mock
+
+        class Core:
+            frames = 0
+
+            def ram(self):
+                return b""
+        s = scene.Scene.__new__(scene.Scene)
+        s.core, s.say, s.flee, s.healer, s.elf = Core(), (lambda line: None), 40, (158, 8, 13), None
+        values, hps, walks, steps = iter([5, 5, 6, 8]), iter([20, 7, 20]), [], []
+
+        def goto(goal, frames):
+            s.core.frames += 100
+            walks.append(goal)
+            return True, "there"
+        s.goto, s.run = goto, steps.append
+        s.value = lambda ram, key: next(values)
+        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": next(hps), "maxHp": 20}]):
+            self.assertIsNone(s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 10000))
+        self.assertEqual(walks, [(33, 1, 2), (33, 3, 4), (33, 1, 2)])
+        self.assertEqual(steps, ["goto:158,8,13", "UP", "A", "field"])
+        s.value = lambda ram, key: 5
+        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20}]):
+            self.assertIn("under 8", s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 1000)[0])
+
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.
         self.assertTrue(scene.Scene.wanted("x", 663)[0](663))

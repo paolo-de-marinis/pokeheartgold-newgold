@@ -56,6 +56,13 @@ A step is one of
                                 catch that wild species, or any, while the Pokedex has
                                 it not caught and the bag has a ball: gym.fight weakens
                                 it and throws them; none stops
+    heal:MAP,X,Y                where pace: heals: the tile before a Pokemon Center's
+                                nurse, UP and A there, when the party's first has under
+                                flee:'s share of its HP
+    pace:MAP,X1,Y1,X2,Y2,KEY,V[,N]  walk from one tile to the other and back, through
+                                what the grass sends, until the expectation KEY reads
+                                at least V (party 3, party1.level 8, caught:SPECIES_...
+                                1); N frames at most (30000 by default)
     newgame[:N]                 from an empty flash (no save) through the intro, the
                                 title, NEW GAME, the Oak speech (no information, the
                                 boy, the default name) to the bedroom, the player free
@@ -155,7 +162,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
-         "set", "newgame", "starter", "save", "flee", "catch")
+         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace")
 
 
 def readable(step_or_key, key=False):
@@ -448,6 +455,7 @@ class Scene:
         self.saved = None       # the flash an in-game save left (save), for the next leg
         self.flee = 0           # flee:N
         self.catch = None       # catch:, a species number or "new"
+        self.healer = None      # heal:, (map, x, y)
 
     def hold(self, name, value):
         address = self.markers.address(name)
@@ -638,6 +646,13 @@ class Scene:
             self.flee = int(rest)
         elif kind == "catch":
             self.catch = None if rest == "none" else rest if rest == "new" else self.number(rest)
+        elif kind == "heal":
+            name, x, y = rest.split(",")
+            self.healer = (self.number(name), int(x), int(y))
+        elif kind == "pace":
+            name, x1, y1, x2, y2, key, least, *most = rest.split(",")
+            return self.pace((self.number(name), int(x1), int(y1)), (self.number(name), int(x2), int(y2)),
+                             key, self.number(least), int(most[0]) if most else 30000)
         else:
             button, _, times = step.partition("*")
             for _ in range(int(times or 1)):
@@ -793,7 +808,7 @@ class Scene:
             core.step(20, hooks)
         self.say(f"[{core.frames}] saved at {self.location()}: counter {start} -> {core.word(counter)}")
 
-    # -- catching ----------------------------------------------------------
+    # -- catching and training ---------------------------------------------
 
     def caught(self, ram, species):
         """Whether the Pokedex has `species` caught."""
@@ -816,6 +831,29 @@ class Scene:
         bag = party.block(where.Memory(ram), self.elf, savedit.block_ids().index("SAVE_BAG")) - 0x02000000
         start, slots = savedit.pocket_at("balls")
         return sum(struct.unpack_from("<HH", ram, bag + start + 4 * i)[1] for i in range(slots))
+
+    def pace(self, a, b, key, least, frames):
+        """pace: -- from one tile to the other and back until `key` reads at
+        least `least`; at the heal: tile between two walks when the party's
+        first Pokemon has under flee:'s share of its HP (or none)."""
+        import party
+        end, ends, walks = self.core.frames + frames, [a, b], 0
+        while self.core.frames < end:
+            now = self.value(self.core.ram(), key) or 0
+            if now >= least:
+                self.say(f"[{self.core.frames}] pace: {key} {now} after {walks} walks")
+                return None
+            first = party.mons(self.core.ram(), self.elf)[0]
+            if self.healer and first["hp"] * 100 < max(self.flee, 1) * first["maxHp"]:
+                for step in (f"goto:{','.join(map(str, self.healer))}", "UP", "A", "field"):
+                    self.run(step)
+            done, said = self.goto(ends[0], end - self.core.frames)
+            self.say(f"[{self.core.frames}] pace: {said}")
+            if not done:
+                return [f"pace: {said}"]
+            ends.reverse()
+            walks += 1
+        return [f"pace: {key} is {self.value(self.core.ram(), key)}, under {least}, after {frames} frames"]
 
     # -- the navigator -----------------------------------------------------
 
