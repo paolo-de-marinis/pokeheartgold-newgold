@@ -1,0 +1,40 @@
+{
+  "about": "The playthrough's Elder Li, from Violet City's Pokemon Center: up Sprout Tower again to 3F, past the rival's scene with Li (FLAG_UNK_078), to Li himself: his four at level 10 -- two Bellsprouts, a Hoothoot with Reflect and Hypnosis, a Meditite whose Pure Power Fake Out and Force Palm knocked out the Hoothoot, the Cyndaquil and the Geodude every time -- against the party the legs before caught and trained, no edit: the Cyndaquil leads, the Misdreavus, which neither of the Meditite's physical moves touches, the Hoothoot, the Geodude. A loss sends the player to the nurse; again: walks up and talks to Li again, each attempt a new battle (the battle seed one higher), as a player's next try is. Where the leg was written the first attempt was lost and the second won. TM70 (Flash) and FLAG_UNK_076, which lifts the level cap to 13. Back to the nurse and the game's save. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04e_route_31_misdreavus",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "goto:MAP_SPROUT_TOWER_3F,12,9",
+    "A",
+    "fight",
+    "field",
+    "again:4,flag:FLAG_UNK_076,1",
+    {
+      "expect": {
+        "flag:FLAG_UNK_076": 1,
+        "flag:FLAG_UNK_078": 1,
+        "bag:ITEM_TM70": 1
+      }
+    },
+    "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_VIOLET_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "party": 4,
+    "music": "SEQ_GS_POKESEN",
+    "lines": [
+      "You are challenged by Elder Li!",
+      "You defeated Elder Li!"
+    ]
+  }
+}

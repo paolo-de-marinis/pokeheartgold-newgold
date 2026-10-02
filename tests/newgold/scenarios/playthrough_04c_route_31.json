@@ -1,0 +1,69 @@
+{
+  "about": "The playthrough's first catches, from Violet City's Pokemon Center. Back west into Route 31's grass by the city's gate, where at night -- the pinned clock's -- a fifth of what comes out is a level-5 Hoothoot: catch:SPECIES_HOOTHOOT has the Cyndaquil, at the cap, weaken one with its weakest damaging move, Tackle, to half its HP or less and throw one of Lyra's Poke Balls from the battle's bag; everything else it beats with Ember, and pace: walks the grass until the Dex has the Hoothoot. The route's Poke Ball on the ground (FLAG_HIDE_ITEMBALL_R31_POKE_BALL) is picked up, then into Dark Cave by its Route 31 mouth, where a fifth of the cave's Pokemon are level-5 Geodude, for one the same way (catch:SPECIES_GEODUDE). Back at the nurse, swap: puts the Hoothoot first: Sprout Tower's sages send Bellsprouts, which its Peck hits twice as hard and whose Vine Whip it resists. The game's save there. The party is the Cyndaquil and these two, caught here, one ball each (37432 frames where the leg was written). The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04b_violet",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "heal:MAP_VIOLET_POKECENTER_1F,8,13",
+    "catch:SPECIES_HOOTHOOT",
+    "pace:MAP_ROUTE_31,556,283,564,286,caught:SPECIES_HOOTHOOT,1,30000",
+    {
+      "expect": {
+        "map": "MAP_ROUTE_31",
+        "party": 2,
+        "party1.species": "SPECIES_HOOTHOOT",
+        "party1.level": 5,
+        "bag:ITEM_POKE_BALL": 4,
+        "music": "SEQ_GS_R_1_30",
+        "lines": [
+          "You encountered a wild Hoothoot!",
+          "Cyndaquil used Tackle!",
+          "used one Poké Ball!",
+          "Gotcha! Hoothoot was caught!"
+        ]
+      }
+    },
+    "goto:MAP_ROUTE_31,545,281",
+    "A",
+    "field",
+    "catch:SPECIES_GEODUDE",
+    "pace:MAP_DARK_CAVE_ROUTE_31_SIDE,5,8,14,17,caught:SPECIES_GEODUDE,1,30000",
+    "catch:none",
+    {
+      "expect": {
+        "map": "MAP_DARK_CAVE_ROUTE_31_SIDE",
+        "party": 3,
+        "party2.species": "SPECIES_GEODUDE",
+        "new_lines": [
+          "You encountered a wild Geodude!",
+          "used one Poké Ball!",
+          "Gotcha! Geodude was caught!"
+        ]
+      }
+    },
+    "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "swap:0,1",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_VIOLET_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "party": 3,
+    "party0.species": "SPECIES_HOOTHOOT",
+    "party1.species": "SPECIES_CYNDAQUIL",
+    "party2.species": "SPECIES_GEODUDE",
+    "caught:SPECIES_HOOTHOOT": 1,
+    "caught:SPECIES_GEODUDE": 1,
+    "music": "SEQ_GS_POKESEN",
+    "party1.level": 10,
+    "bag:ITEM_POKE_BALL": 4
+  }
+}

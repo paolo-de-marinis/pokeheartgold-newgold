@@ -1,0 +1,37 @@
+{
+  "about": "The playthrough trains its Misdreavus, from Violet City's Pokemon Center: swap: puts it first, and pace: walks two tiles of Route 31's grass nearest the city -- the walk back to the nurse crosses none -- until it has level 8. Its Confusion hits the night's Spinarak, Bellsprout and Zubat twice as hard, and Rattata's and Hoothoot's Normal moves pass through it; flee:40 runs from a battle once it is low and heal: takes it to the nurse between two walks, running from everything on the way. Then swaps put the party in the order for Elder Li: the Cyndaquil first for his Bellsprouts, the Misdreavus second for his Meditite, the Hoothoot, the Geodude. The game's save at the nurse. The party is the one the legs before caught, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04d_sprout_tower",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "heal:MAP_VIOLET_POKECENTER_1F,8,13",
+    "swap:0,3",
+    "pace:MAP_ROUTE_31,531,276,532,276,party0.level,8,50000",
+    "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "swap:0,1",
+    "swap:2,3",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_VIOLET_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "party": 4,
+    "party0.species": "SPECIES_CYNDAQUIL",
+    "party1.species": "SPECIES_MISDREAVUS",
+    "party1.level": [
+      8,
+      10
+    ],
+    "party2.species": "SPECIES_HOOTHOOT",
+    "party3.species": "SPECIES_GEODUDE",
+    "music": "SEQ_GS_POKESEN"
+  }
+}

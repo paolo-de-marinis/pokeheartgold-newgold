@@ -1,0 +1,63 @@
+{
+  "about": "The playthrough's Sprout Tower, from Violet City's Pokemon Center: up the three floors by the navigator (the ladders' warps planned from the map data) to 3F, the sages who spot the player on the way -- Nico, Chow, Edmond, Jin and Neal, all Bellsprouts -- then down to the nurse. The party is the one the leg before caught, no edit: the Hoothoot from Route 31 leads, and the sages' experience, half again a wild Pokemon's and more for a Pokemon below the one it beats, takes it from level 5 towards the cap, 10; the Cyndaquil, at the cap, and the Geodude come after it. Then up to 3F again, where at night more than half of what comes out is a Misdreavus, levels 3 to 5: catch:SPECIES_MISDREAVUS, the healed Hoothoot's Peck to weaken it, and a ball. A Ghost is the party's answer to Elder Li's Meditite, whose Fake Out and Force Palm do nothing to it and which took the three others out at the cap, every time. The nurse and the game's save. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04c_route_31",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "goto:MAP_SPROUT_TOWER_3F,14,22,40000",
+    "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    {
+      "expect": {
+        "lines": [
+          "You defeated Sage Nico!",
+          "You defeated Sage Chow!",
+          "You defeated Sage Edmond!",
+          "You defeated Sage Jin!",
+          "You defeated Sage Neal!"
+        ]
+      }
+    },
+    "goto:MAP_SPROUT_TOWER_3F,14,23",
+    "catch:SPECIES_MISDREAVUS",
+    "pace:MAP_SPROUT_TOWER_3F,14,23,16,23,caught:SPECIES_MISDREAVUS,1,30000",
+    "catch:none",
+    {
+      "expect": {
+        "map": "MAP_SPROUT_TOWER_3F",
+        "party": 4,
+        "party3.species": "SPECIES_MISDREAVUS",
+        "new_lines": [
+          "You encountered a wild Misdreavus!",
+          "Hoothoot used Peck!",
+          "used one Poké Ball!",
+          "Gotcha! Misdreavus was caught!"
+        ]
+      }
+    },
+    "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_VIOLET_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "party": 4,
+    "party0.species": "SPECIES_HOOTHOOT",
+    "party0.level": [
+      8,
+      10
+    ],
+    "music": "SEQ_GS_POKESEN",
+    "caught:SPECIES_MISDREAVUS": 1
+  }
+}
