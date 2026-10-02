@@ -1020,16 +1020,16 @@ class Scene:
         return wrong
 
 
-def leg_save(path, chain):
+def leg_save(path, chain, rom=ROM, elf=DIAG_ELF):
     """The save a leg starts from, when it names the leg before ("from"):
     the one that leg's in-game save left in the chain's directory, the leg
-    played first when it has not been yet. (the save or None, the report's
-    lines when there is none)."""
+    played first, on the same ROM, when it has not been yet. (the save or
+    None, the report's lines when there is none)."""
     before = json.loads(Path(path).read_text())["from"]
     save, report = chain / f"{before}.sav", chain / f"{before}.txt"
     if not save.exists() and not report.exists():
         subprocess.run([sys.executable, __file__, "--scenario", str(Path(path).with_name(f"{before}.json")),
-                        "--chain", str(chain)], stdout=subprocess.DEVNULL)
+                        "--chain", str(chain), "--rom", str(rom), "--elf", str(elf)], stdout=subprocess.DEVNULL)
     if save.exists():
         return save, []
     lines = report.read_text().splitlines() if report.exists() else [f"{before} did not run"]
@@ -1047,7 +1047,7 @@ def scenario(path, rom=ROM, elf=DIAG_ELF, out=None, record=None, chain=None):
     chain.mkdir(parents=True, exist_ok=True)
     save, report, saved = None, [], None
     if "from" in spec:
-        save, report = leg_save(path, chain)
+        save, report = leg_save(path, chain, rom, elf)
     elif "save" in spec:
         save = Path(spec["save"]) if Path(spec["save"]).is_absolute() else SAVES / spec["save"]
         if not save.exists():

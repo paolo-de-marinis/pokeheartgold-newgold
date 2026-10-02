@@ -218,6 +218,18 @@ class ChainTests(unittest.TestCase):
             leg = self.leg(chain, "PASS before.json\n", b"flash")
             self.assertEqual(scene.leg_save(leg, Path(chain)), (Path(chain) / "before.sav", []))
 
+    def test_a_leg_before_plays_on_the_rom_its_leg_was_given(self):
+        # A leg run alone against another ROM plays the legs before it on
+        # that ROM, not on the default one.
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as chain:
+            leg = self.leg(chain)
+            with mock.patch.object(scene.subprocess, "run") as run:
+                scene.leg_save(leg, Path(chain), "/x/other.nds", Path("/x/other.elf"))
+            command = run.call_args[0][0]
+            self.assertEqual(command[command.index("--rom") + 1], "/x/other.nds")
+            self.assertEqual(command[command.index("--elf") + 1], "/x/other.elf")
+
     def test_a_leg_after_one_that_failed_fails_without_playing(self):
         with tempfile.TemporaryDirectory() as chain:
             leg = self.leg(chain, "FAIL before.json: 10 frames\n  map is 60, not 61\n")
