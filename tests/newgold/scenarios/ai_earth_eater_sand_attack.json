@@ -1,0 +1,11 @@
+{
+  "about": "The trainer AI knows Earth Eater swallows a status move of its type aimed at its holder (flag 0, trainer_ai_script.c 2A26): the battle asks no power of it since a96fb2180. Falkner's Hoothoot is taught Sand Attack and Leer once the battle is up and faces an Orthworm, whose only ability is Earth Eater, that only Splashes: it Leers every turn. Before the fix a status move went from 002A to the sound checks and past every absorbing ability, and Sand Attack, rated as Leer is, was used about every other turn, each one healing the Orthworm.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "ORTHWORM:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:1,0,MOVE_SAND_ATTACK", "teach:1,1,MOVE_LEER", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:0,0,MOVE_SPLASH", "fight:1:4"],
+  "expect": {"lines": ["The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!"],
+             "no_lines": ["used Sand Attack"], "battler1.species": "SPECIES_HOOTHOOT"}
+}

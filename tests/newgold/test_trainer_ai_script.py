@@ -41,10 +41,10 @@ def table(lines, index):
 def follow(lines, start, stop, **given):
     """What the script adds to a move's score from start until it reaches stop
     or ends, run as the AI runs it with only the commands met here: given
-    names the target's and the attacker's abilities, the move, its effect,
-    the field's conditions and how many of the attacker's party could come
-    in; it is the battle's first turn and the battler's first out, and the
-    target is a foe."""
+    names the target's and the attacker's abilities, the move, its effect
+    and its type, the field's conditions and how many of the attacker's
+    party could come in; it is the battle's first turn and the battler's
+    first out, the target is a foe, and the move is a status move."""
     index, score, loaded = start, 0, None
     while index != stop:
         script = lines[index][0]
@@ -62,10 +62,17 @@ def follow(lines, start, stop, **given):
         if test:
             index = after + int(args[-1]) if test() else after
             continue
+        if op in ("AI_IF_TEMP_EQUAL_TO", "AI_IF_TEMP_NOT_EQUAL_TO"):
+            index = after + int(args[-1]) if (loaded == args[0]) == (op == "AI_IF_TEMP_EQUAL_TO") else after
+            continue
         if op == "AI_LOAD_BATTLER_ABILITY":
             loaded = given[{"AI_BATTLER_TARGET": "target", "AI_BATTLER_ATTACKER": "attacker"}[args[0]]]
         elif op == "AI_LOAD_CURRENT_MOVE":
             loaded = given["move"]
+        elif op == "AI_LOAD_TYPE_FROM" and args[0] == "4":
+            loaded = given["type"]
+        elif op == "AI_FLAG_MOVE_DAMAGE_SCORE":
+            loaded = "0"        # a status move is not compared
         elif op == "AI_LOAD_CURRENT_WEATHER":
             loaded = str(weather(given["field"]))
         elif op == "AI_LOAD_IS_FIRST_TURN_IN_BATTLE":
@@ -162,6 +169,44 @@ class TrainerAIScriptTests(unittest.TestCase):
                               ("ABILITY_EVAPORATE", "TYPE_WATER")):
             self.assertEqual(type_check(absorbers[ability]), kind, ability)
 
+    def test_a_status_move_an_ability_swallows_is_marked_down(self):
+        # BattleContext_CheckMoveImmunityFromAbility swallows a status move
+        # of the ability's type aimed at the holder as it swallows a damaging
+        # one: flag 0 takes 12 off it as off a damaging one, unless the
+        # attacker passes the ability by. Before, a status move went from 002A
+        # to the sound checks and missed every absorber: Sand Attack into
+        # Earth Eater and Soak into Water Absorb scored 0, as did Thunder
+        # Wave into Lightning Rod. A status move aimed at the user or the
+        # field is not swallowed, nor Spikes by Earth Eater, nor anything by
+        # Evaporate or Levitate.
+        from test_move_effects import moves, records
+        lines = words()
+        types = {int(n): name for name, n in re.findall(r"#define (TYPE_[A-Z]+)\s+(\d+)",
+                                                        (ROOT / "include/constants/pokemon.h").read_text())}
+        ranges = dict(re.findall(r"#define (RANGE_\w+)\s+\(?(?:1 << )?(\d+)\)?",
+                                 (ROOT / "include/constants/moves.h").read_text()))
+        not_a_foe = {1 << int(ranges[name]) for name in ("RANGE_USER", "RANGE_USER_SIDE", "RANGE_FIELD", "RANGE_OPPONENT_SIDE",
+                                                         "RANGE_ALLY", "RANGE_SINGLE_TARGET_USER_SIDE")}
+        absorbed = {"TYPE_ELECTRIC", "TYPE_WATER", "TYPE_FIRE", "TYPE_GROUND", "TYPE_GRASS"}
+        names, data = {n: f"MOVE_{name}" for name, n in moves().items()}, records()
+        kind = {names[n]: types[r[3]] for n, r in enumerate(data) if n in names}
+        aimed = {names[n] for n, r in enumerate(data) if n in names and r[1] == 2 and types[r[3]] in absorbed
+                 and r[7] not in not_a_foe}
+        self.assertEqual(lines[0x2A2C][0][0], "AI_IF_LOADED_NOT_IN_TABLE")
+        self.assertEqual(set(table(lines, 0x2A2F + int(lines[0x2A2C][0][1]))), aimed)
+        takers = {"TYPE_ELECTRIC": ("ABILITY_VOLT_ABSORB", "ABILITY_MOTOR_DRIVE", "ABILITY_LIGHTNINGROD"),
+                  "TYPE_WATER": ("ABILITY_WATER_ABSORB", "ABILITY_STORM_DRAIN", "ABILITY_DRY_SKIN"),
+                  "TYPE_FIRE": ("ABILITY_FLASH_FIRE", "ABILITY_WELL_BAKED_BODY"), "TYPE_GROUND": ("ABILITY_EARTH_EATER",),
+                  "TYPE_GRASS": ("ABILITY_SAP_SIPPER",)}
+        everyone = [a for group in takers.values() for a in group] + ["ABILITY_EVAPORATE", "ABILITY_LEVITATE", "ABILITY_NONE",
+                                                                      "ABILITY_IRRIGATION"]
+        for move in sorted(aimed) + ["MOVE_CHARGE", "MOVE_AQUA_RING", "MOVE_RAIN_DANCE", "MOVE_SPIKES", "MOVE_SHORE_UP"]:
+            for ability in everyone:
+                score = -12 if move in aimed and ability in takers[kind[move]] else 0
+                for attacker, expected in (("ABILITY_NONE", score), ("ABILITY_MOLD_BREAKER", 0), ("ABILITY_TURBOBLAZE", 0)):
+                    self.assertEqual(follow(lines, 0x0028, 0x007E, target=ability, attacker=attacker, move=move,
+                                            effect="?", type=kind[move], field=0, party=0), expected, (move, ability, attacker))
+
     def test_a_ghost_type_is_not_held(self):
         # From the sixth generation nothing holds a Ghost-type
         # (Battler_HasGhostType): flag 0 marks Mean Look, Block, Spider Web
@@ -176,9 +221,10 @@ class TrainerAIScriptTests(unittest.TestCase):
         def ran(effect):
             """The lines flag 0 runs for a status move with the effect, from
             the jump that takes such a move on (002A) to the one that goes on
-            to the sound checks (007E)."""
+            to the sound checks (007E) or to the absorbing abilities (2A26,
+            test_a_status_move_an_ability_swallows_is_marked_down)."""
             index, out = reach(0x002A), []
-            while index != 0x007E:
+            while index not in (0x007E, 0x2A26):
                 script = lines[index][0]
                 if script[0].startswith("AI_IF_CURRENT_MOVE_EFFECT_"):
                     taken = (script[1] == effect) != ("NOT" in script[0])
