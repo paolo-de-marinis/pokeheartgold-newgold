@@ -129,6 +129,47 @@ class TrainerAIScriptTests(unittest.TestCase):
             offsets = [int(w) for w in script[1:] if re.fullmatch(r"-?\d+", w)][-len(reaches):] if reaches else []
             self.assertEqual([at + o for o in offsets], reaches, f"line {index:04X}: {script} // {comment}")
 
+    def test_each_line_is_what_its_command_reads_and_lands_on_its_kind(self):
+        # Every command line has as many arguments as its handler reads
+        # (ov10_0221EEF0, in the handler ov10_0222B0B4 names for its number),
+        # and each jump, call and table it names lands on the start of a
+        # line of the right kind: a command, or a table that AI_TABLE_END
+        # ends. The index test above follows the comments, which a line short
+        # of an argument at the end of the script would still agree with.
+        # Retail's Safari line at 2960 keeps the word its command, empty in
+        # this game, does not read; nothing sets flag 30.
+        source = SCRIPT.read_text()
+        names = re.findall(r"^\s*(AI_\w+),", re.search(r"enum AIScriptCommand \{(.*?)\};", source, re.S).group(1), re.M)
+        handler = {int(n, 16): h for h, n in re.findall(r"(ov10_\w+), // 0x([0-9A-F]+)",
+                                                        (ROOT / "src/battle/trainer_ai_0222B0B4.c").read_text())}
+        code = "".join(path.read_text() for path in (ROOT / "src/battle").glob("trainer_ai*.c"))
+        reads, kinds = {}, {}
+        for number, name in enumerate(names):
+            body = re.search(r"\nvoid " + handler[number] + r"\(BattleSystem[^)]*\) \{(.*?)\n\}", code, re.S).group(1)
+            reads[name] = body.count("ov10_0221EEF0(ctx)")
+            jumps = set(re.findall(r"ov10_0221EF24\(ctx, (\w+)\)", body)) - {"1"}
+            tables = set(re.findall(r"ov10_0221EF10\(ctx, (\w+)", body))
+            read_into = re.findall(r"(\w+) = ov10_0221EEF0\(ctx\)", body)
+            kinds[name] = ["command" if v in jumps else "table" if v in tables else None for v in read_into]
+        kinds["AI_GOTO"] = kinds["AI_CALL"] = ["command"]
+        lines = words()
+        kind = {i: "entry" if i < 0x20 else "command" if script[0] in names else "table" for i, (script, _) in lines.items()}
+        for index, (script, _) in sorted(lines.items()):
+            if kind[index] == "entry":
+                self.assertEqual(kind[int(script[0], 16)], "command", f"{index:04X}")
+                continue
+            if kind[index] == "table":
+                self.assertEqual(script[-1], "AI_TABLE_END", f"{index:04X}")
+                continue
+            op, args = script[0], script[1:]
+            if index == 0x2960:
+                self.assertEqual((op, len(args), reads[op]), ("AI_IF_RANDOM_SAFARI_FLEE", 1, 0))
+                continue
+            self.assertEqual(len(args), reads[op], f"{index:04X} {op}")
+            for arg, want in zip(args, kinds[op]):
+                if want:
+                    self.assertEqual(kind.get(index + len(script) + int(arg)), want, f"{index:04X} {op} {arg}")
+
     def test_every_absorbing_ability_reaches_its_type_check(self):
         # Flag 0 marks down a move the target's ability swallows
         # (BattleContext_CheckMoveImmunityFromAbility). From the fifth
