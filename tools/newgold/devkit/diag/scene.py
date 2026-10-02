@@ -85,8 +85,8 @@ this one (a later phase's lines, not matched by an earlier phase's alike),
 "once_lines" exactly once each since the check before (one line where a
 rule prints one, not two), and "no_lines" never; "heaps" is the least a
 heap may have had left at its fullest (gDiagHeapLowWater); every other key
-is a value read out of main RAM by name, through the ELF's symbols and the offsets the tree's own headers
-give: map, x, y, party (the count), partyN.species|item|level|exp|hp|maxHp
+is a value read out of main RAM by name, through the ELF's symbols and the
+offsets the tree's own headers give: map, x, y, party (the count), partyN.species|item|level|exp|hp|maxHp
 (the party as its save block holds it, slot N from 0, once the field is up:
 what a battle gave back), bag:ITEM_... (how many the bag holds), badges,
 flag:FLAG_..., var:VAR_..., battlerN.species|hp|maxHp|level|partySlot|

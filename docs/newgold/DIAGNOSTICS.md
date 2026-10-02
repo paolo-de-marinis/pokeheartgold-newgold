@@ -281,8 +281,9 @@ have the same heaps, so the low-water marker reads the heap the game has.
 `tests/newgold/test_heaps.py` checks each built ROM's map against what the
 boot takes from the arena, so the next growth fails a test, not the screen.
 
-Where the diagnostics' bytes go (HeartGold, the twelfth round: 0x1500 of the
-arena, `xmap.py diff` of the two builds' maps): 0x1340 in the static module
+Where the diagnostics' bytes go (HeartGold, the twelfth round's landing: 0x1500
+of the arena, 0x1C88 left on the plain builds and 0x788 on the diagnostics
+ones; `xmap.py diff` of the two builds' maps): 0x1354 in the static module
 -- the battle's text ring 0xC00, the heaps' low-water marks 0x2C0, the
 assertion's stack 0x100, the four battlers 0x70 and the other globals, then
 `diag.c`'s functions and the hooks in `heap.c`, `battle_setup.c`,
