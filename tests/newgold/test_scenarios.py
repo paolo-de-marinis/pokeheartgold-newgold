@@ -251,8 +251,10 @@ class ScenarioFileTests(unittest.TestCase):
         # enough; at most N times, and it says so when that was not enough.
         s = scene.Scene.__new__(scene.Scene)
         s.core = type("Core", (), {"ram": lambda self: b"", "frames": 0})()
-        s.hooks, s.say, played = [], (lambda line: None), []
+        s.hooks, s.say, played, seeds = [], (lambda line: None), [], []
         s.done = ["field", "goto:MAP_VIOLET_GYM,15,4", {"expect": {}}, "A", "fight"]
+        s.markers = type("Markers", (), {"address": lambda self, name: 0x100})()
+        s.holds = {0x100: (1, 4)}                   # gDiagBattleSeed held at 1
         badges = iter([0, 0, 1])
         s.value = lambda ram, key: next(badges)
         real = scene.Scene.run
@@ -261,9 +263,13 @@ class ScenarioFileTests(unittest.TestCase):
             if isinstance(step, str) and step.startswith("again:"):
                 return real(s, step)
             played.append(step)
+            seeds.append(s.holds[0x100][0])
         s.run = run
         self.assertIsNone(s.run("again:4,badges,1"))
         self.assertEqual(played, ["goto:MAP_VIOLET_GYM,15,4", "A", "fight"] * 2)
+        # each attempt a new battle: the seed one higher, the old one back after
+        self.assertEqual(seeds, [2, 2, 2, 3, 3, 3])
+        self.assertEqual(s.holds[0x100], (1, 4))
         s.value = lambda ram, key: 0
         self.assertIn("under 1", s.run("again:3,badges,1,2")[0])
 

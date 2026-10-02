@@ -682,14 +682,25 @@ class Scene:
         elif kind == "again":
             count, key, least, *most = rest.split(",")
             steps = [st for st in self.done[-int(count):] if not isinstance(st, dict)]
+            # A held battle seed starts every battle the same: with the
+            # party at the cap the same loss again. Each attempt holds the
+            # seed one higher -- a new battle, as a player's retry is, and
+            # the same on every run -- and the seed held before comes back.
+            seed = self.markers.address("gDiagBattleSeed")
+            held = self.holds.get(seed)
             for attempt in range(int(most[0]) if most else 5):
                 now = self.value(core.ram(), key) or 0
                 if now >= self.number(least):
-                    return None
+                    break
                 self.say(f"[{core.frames}] again: {key} is {now}, attempt {attempt + 2}")
+                if held:
+                    self.holds[seed] = (held[0] + attempt + 1, held[1])
                 for again in steps:
                     self.run(again)
-            now = self.value(core.ram(), key) or 0
+            else:
+                now = self.value(core.ram(), key) or 0
+            if held:
+                self.holds[seed] = held
             if now < self.number(least):
                 return [f"again: {key} is {now}, under {least}"]
         elif kind == "shift":
