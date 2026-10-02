@@ -18,7 +18,8 @@ would go. B moves text on and declines "will you switch?", forgetting a
 move for a new one, which a touch then gives up, and a caught Pokemon's
 nickname; A moves it on through an evolution, which B would stop, and a
 caught Pokemon's Dex entry, which B does not close. A wild battle's "Use
-next Pokemon?" is answered with the next one.
+next Pokemon?" is answered with the next one. A wild Pokemon the caller
+wants caught is weakened and a ball thrown at it (fight's catch).
 
 The report is the battle's own lines, the battlers each turn, what the
 trainer's AI spent, anything that asserted, and the party before and after.
@@ -31,6 +32,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import savedit  # noqa: E402
 from core import Core, pin_clock  # noqa: E402
 from markers import BATTLER, DIAG_ELF, STATES, Markers  # noqa: E402
 from party import badges, party, sealed_mons  # noqa: E402
@@ -46,6 +49,13 @@ SHIFT = (127, 113)
 KEEP_BATTLING = (128, 139)   # "will you switch?" -- the lower of the two
 GIVE_UP = (128, 67)          # "give up on learning this new move?" -- the upper of the two
 USE_NEXT = (128, 67)         # a wild battle's "Use next Pokemon?" -- the upper; the lower flees
+BAG = (40, 170)              # left of RUN
+# The battle bag, overlay 8, by its hitbox tables: the Poke Balls pocket at
+# the upper right (ov08_02225B4C), a pocket page's first item at the upper
+# left (ov08_02225B68), USE along the bottom (ov08_02225ADC).
+BALLS, FIRST_ITEM, USE = (192, 43), (64, 31), (104, 171)
+IN_BAG = 8                   # gDiagBattlePrompt while the bag is up (SSI_STATE_8)
+MARGIN = 50                  # a Pokemon to catch is weakened while it has more than this share of its HP
 # The lines after which the party screen asks who comes in for a Pokemon that
 # is still standing: a pivot move's or Parting Shot's, the Eject items',
 # Baton Pass's (whose move line is the last before the screen) and Shed
@@ -129,6 +139,14 @@ def runs(view, wild, flee):
     return bool(wild and hp and int(hp.group(1)) * 100 < flee * int(hp.group(2)))
 
 
+def throws_now(hp, max_hp, hit, damaging):
+    """Whether a wild Pokemon to be caught gets a ball this turn rather than
+    the player's weakest damaging move: at MARGIN percent of its HP or
+    under, within half again the most a move has taken off it (a critical
+    hit, a high roll), or with no damaging move left to weaken it."""
+    return hp * 100 <= MARGIN * max_hp or 2 * hp <= 3 * hit or not damaging
+
+
 def may_run(wild, line):
     """Whether the player may still run after this battle line: a wild
     battle, until a try has failed. "You couldn't get away!" is also what a
@@ -146,6 +164,49 @@ def aimed_at(ram, markers, battler):
     first, other = (3, 1) if battler == 0 else (1, 3)
     foe = struct.unpack_from(BATTLER, ram, at + first * size)
     return foe if foe[0] and foe[1] else struct.unpack_from(BATTLER, ram, at + other * size)
+
+
+@savedit.tree_cache
+def bag_state_at():
+    """Where the battle bag keeps the state its task runs (BattleBag.state)."""
+    return savedit.compile_c(exprs=("__builtin_offsetof(BattleBag, state)",),
+                             headers=savedit.LAYOUT_HEADERS + ("battle_bag.h",))[0][0]
+
+
+def bag_screen(ram, markers):
+    """The battle bag's state: 1 its pockets, 2 a pocket's items, 3 an
+    item's USE, anything else between them. Found through the bag's task,
+    the one running ov08_02222670 at priority 100, the bag its data (a task
+    ended is cleared); None when there is none."""
+    func = markers.address("ov08_02222670") & ~1
+    for word in (func | 1, func):
+        for m in re.finditer(re.escape(struct.pack("<I", word)), ram):
+            if m.start() % 4 == 0:
+                priority, data = struct.unpack_from("<II", ram, m.start() - 8)
+                if priority == 100 and 0x02000000 <= data < 0x02400000:
+                    return ram[data - 0x02000000 + bag_state_at()]
+    return None
+
+
+def throw(core, markers, hold, frames=1500):
+    """The bag's first ball thrown: BAG, then the Poke Balls pocket, the
+    first ball on its page and USE, each touched while the bag's state says
+    that screen takes input -- again while it fades in, when a touch is not
+    read. True once the bag has closed on it."""
+    core.touch(*BAG, 6, hold)
+    touches, seen, end = {1: BALLS, 2: FIRST_ITEM, 3: USE}, False, core.frames + frames
+    while core.frames < end:
+        core.step(10, hold)
+        ram = core.ram()
+        if markers.read(ram, "gDiagBattlePrompt") != IN_BAG:
+            if seen:
+                return True
+            continue
+        seen = True
+        state = bag_screen(ram, markers)
+        if state in touches:
+            core.touch(*touches[state], 6, hold)
+    return False
 
 
 def second_down(ram, markers):
@@ -185,7 +246,8 @@ def quiet():
     return os.fdopen(keep, "w", buffering=1)
 
 
-def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=None, since=0, partner=None, flee=0):
+def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=None, since=0, partner=None, flee=0,
+          catch=None):
     """Play the battle that is up until it is over or the core reaches
     `frames`, and return the last line it printed. `move` is a move slot,
     1 to 4, to use every turn; 0 the first with PP; -1 the hardest-hitting
@@ -206,6 +268,14 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     less than that share of its HP left, as a player walking a long route
     does rather than black out.
 
+    With `catch`, a function of a wild Pokemon's species giving how many
+    balls the player may throw at it (0: none, it is not wanted), the
+    player weakens a wanted one with its weakest damaging move while the
+    wild one has more than MARGIN percent of its HP and more than half again
+    the most that move has taken off it, then throws them, one a turn, from
+    the bag: the battle keeps a copy of the bag, so the balls thrown are
+    counted here. Running, when `flee` says so, comes first.
+
     Memory is read every four frames, but the text ring is decoded only when
     its counter has moved: decoding it every time halved the frame rate.
     """
@@ -216,6 +286,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     last_prompt, commands, revive, use_next = None, 0, None, None
     moves_chosen, tries = {}, 0        # the move each of the player's two took, for its target screen
     wild = False
+    wild_battle, weakening, foe_before, hit, thrown = False, False, None, 0, 0
     while core.frames < frames:
         core.step(4, hold)
         ram = core.ram()
@@ -255,6 +326,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                     revive = None
                 if "Use next Pok" in line:
                     use_next = core.frames
+                wild_battle = wild_battle or line.startswith("You encountered a wild")
                 wild = may_run(wild, line)
                 if not line.startswith("What will"):
                     say(f"[{core.frames}] {line.split('?{')[0]}")
@@ -278,7 +350,26 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             if view != last_view:
                 say(f"[{core.frames}]   " + "\n          ".join(view[:-1]))
                 last_view = view
-            core.touch(*(RUN if runs(view, wild, flee) else FIGHT), 6, hold)
+            at = markers.address("gDiagBattlers") - 0x02000000
+            you = struct.unpack_from(BATTLER, ram, at)
+            foe = struct.unpack_from(BATTLER, ram, at + struct.calcsize(BATTLER))
+            if foe_before is not None:
+                hit, foe_before = max(hit, foe_before - foe[1]), None
+            wanted = bool(catch and wild_battle and foe[1] and thrown < catch(foe[0]))
+            damaging = [i for i in range(4) if you[7 + i] and you[11 + i] and scorer.score(you[7 + i], you[0], foe[0]) > 0.1]
+            if runs(view, wild, flee):
+                core.touch(*RUN, 6, hold)
+            elif wanted and throws_now(foe[1], foe[2], hit, damaging):
+                say(f"[{core.frames}] ball {thrown + 1} of {catch(foe[0])} thrown")
+                if throw(core, markers, hold):
+                    thrown += 1
+                else:
+                    catch = None    # the bag never opened or never closed: fight on
+                    say(f"[{core.frames}] the bag did not take the throw")
+            else:
+                weakening = wanted
+                foe_before = foe[1] if wanted else None
+                core.touch(*FIGHT, 6, hold)
             core.step(20, hold)
         elif prompt in (3, 4):
             moves = view[0].split("|")[1].split(",")
@@ -288,6 +379,9 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 you = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000)
                 foe = aimed_at(ram, markers, 0)
                 slot = max(usable, key=lambda i: scorer.score(you[7 + i], you[0], foe[0]))
+                gentle = [i for i in usable if scorer.score(you[7 + i], you[0], foe[0]) > 0.1]
+                if weakening and gentle:
+                    slot = min(gentle, key=lambda i: scorer.score(you[7 + i], you[0], foe[0]))
             last_slot = slot
             moves_chosen[0] = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000)[7 + slot]
             tries = 0       # each one's target screen starts from its own foe

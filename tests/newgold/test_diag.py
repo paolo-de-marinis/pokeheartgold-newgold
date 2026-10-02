@@ -132,6 +132,38 @@ class DiagnosticsTests(unittest.TestCase):
             self.assertIs(wild, after, line)
         self.assertFalse(may_run(False, "You are challenged by Youngster Joey!"))
 
+    def test_gym_weakens_a_pokemon_to_catch_then_throws(self):
+        # catch: the weakest damaging move while the wild one has more than
+        # half its HP and more than half again the most a move took off it;
+        # a ball once it has not, or when nothing can weaken it.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from gym import throws_now
+        self.assertFalse(throws_now(20, 20, 0, True))
+        self.assertFalse(throws_now(11, 20, 0, True))
+        self.assertTrue(throws_now(10, 20, 0, True))
+        self.assertTrue(throws_now(15, 20, 10, True))      # one more hit could take it
+        self.assertFalse(throws_now(16, 20, 10, True))
+        self.assertTrue(throws_now(20, 20, 0, False))      # nothing damaging: a ball at once
+
+    def test_gym_finds_the_battle_bag_by_its_task(self):
+        # The bag's screen is read from its own state, through the task that
+        # runs it (priority 100, the bag its data); the same function's
+        # address in a literal pool is no task, and an ended task is cleared.
+        import struct
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from gym import bag_screen, bag_state_at
+
+        class Markers:
+            def address(self, name):
+                return 0x02229A58 if name == "ov08_02222670" else None
+        ram = bytearray(0x400000)
+        struct.pack_into("<I", ram, 0x1000, 0x02229A59)                     # a literal pool
+        self.assertIsNone(bag_screen(bytes(ram), Markers()))
+        struct.pack_into("<IIII", ram, 0x2008, 100, 0x02300000, 0x02229A59, 0)
+        ram[0x300000 + bag_state_at()] = 2
+        self.assertEqual(bag_screen(bytes(ram), Markers()), 2)
+        self.assertEqual(bag_state_at(), 0x114A)
+
     def test_a_pokemon_read_mid_encryption_is_not_taken_for_sealed(self):
         # A frame can end with the game re-encrypting a party Pokemon; scene.py
         # reads the party again until every one is sealed.
