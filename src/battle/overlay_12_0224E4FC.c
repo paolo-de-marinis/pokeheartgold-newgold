@@ -1732,10 +1732,14 @@ BOOL SheerForceTradedEffect(BattleContext *ctx) {
 // as in the games; the reference keeps it in, having no Pokemon to send. Damage
 // from outside a move arms it through Battler_ArmRetreatOutsideMove below; the
 // reference has none of that.
+//
+// Anger Shell is armed the same way (CheckColorChangeAndAngerShell): the
+// shell cracks once the hit, or a move that strikes more than once, has left
+// its Pokemon at half or below, from above.
 void Battler_ArmRetreat(BattleContext *ctx, int battlerId) {
     int ability = GetBattlerAbility(ctx, battlerId);
 
-    if ((ability == ABILITY_EMERGENCY_EXIT || ability == ABILITY_WIMP_OUT)
+    if ((ability == ABILITY_EMERGENCY_EXIT || ability == ABILITY_WIMP_OUT || ability == ABILITY_ANGER_SHELL)
         && ctx->battleMons[battlerId].hp > (int)(ctx->battleMons[battlerId].maxHp / 2)
         && !SheerForceTradedEffect(ctx)) {
         ctx->selfTurnData[battlerId].retreatArmed = TRUE;
@@ -7398,6 +7402,58 @@ static BOOL Battler_WillBeDraggedOut(BattleSystem *battleSystem, BattleContext *
     return WhirlwindCheck(battleSystem, ctx);
 }
 
+// Color Change and Anger Shell answering the move that hit battlerIdTarget:
+// a hit, from CheckAbilityEffectOnHit, or, once it is over, a move that
+// struck more than once -- a multi-strike move, Parental Bond's two strikes
+// -- from the first of the post-move steps (ov12_0224E1BC), before the
+// recoil, as a hit's answers come before it. Those answer once, after the
+// last strike, Anger Shell on the whole move's damage (Pokemon Central,
+// Cambiacolore from the fifth generation; Bulbapedia's Color Change and
+// Anger Shell; Showdown's gen-9 onAfterMoveSecondary, Anger Shell on
+// move.totalDamage); before, each strike was answered. A move cut short --
+// its user felled by a Rocky Helmet, a later strike of Triple Axel or
+// Population Bomb missing -- is answered all the same.
+//
+// Only a Pokemon still standing that a strike reached, not its substitute;
+// not one the move drags out (Pokemon Central, Codadrago), nor after a move
+// Sheer Force powered (Forzabruta; the reference's
+// ServerDoPostMoveEffects.c:1962 at d0380a487). Color Change takes the type
+// of a move with power, not Struggle's. Anger Shell cracks -- Berserk's
+// crossing, with five stat changes for its payout, so the whole of it is a
+// subscript -- if a hit found its Pokemon above half (Battler_ArmRetreat),
+// the move has left it at half or below, and one of the five has room.
+BOOL CheckColorChangeAndAngerShell(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
+    int target = ctx->battlerIdTarget;
+    int ability = GetBattlerAbility(ctx, target);
+    BattleMon *mon = &ctx->battleMons[target];
+    u8 moveType;
+
+    if ((ability != ABILITY_ANGER_SHELL && ability != ABILITY_COLOR_CHANGE)
+        || !mon->hp || !(ctx->selfTurnData[target].physicalDamage || ctx->selfTurnData[target].specialDamage)
+        || (ctx->battleStatus2 & BATTLE_STATUS2_UTURN) || SheerForceTradedEffect(ctx) || Battler_WillBeDraggedOut(battleSystem, ctx, target)) {
+        return FALSE;
+    }
+    if (ability == ABILITY_ANGER_SHELL) {
+        if (!ctx->selfTurnData[target].retreatArmed || mon->hp > (int)(mon->maxHp / 2)
+            || (mon->statChanges[STAT_ATK] == 12 && mon->statChanges[STAT_SPATK] == 12 && mon->statChanges[STAT_SPEED] == 12
+                && mon->statChanges[STAT_DEF] == 0 && mon->statChanges[STAT_SPDEF] == 0)) {
+            return FALSE;
+        }
+        ctx->battlerIdStatChange = target;
+        ctx->battlerIdTemp = target;
+        *script = BATTLE_SUBSCRIPT_ANGER_SHELL;
+        return TRUE;
+    }
+    moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
+    if (ctx->moveNoCur == MOVE_STRUGGLE || !BattleMoveTbl(ctx, ctx->moveNoCur)->power
+        || GetBattlerVar(ctx, target, BMON_DATA_TYPE_1, NULL) == moveType || GetBattlerVar(ctx, target, BMON_DATA_TYPE_2, NULL) == moveType) {
+        return FALSE;
+    }
+    ctx->msgTemp = moveType;
+    *script = BATTLE_SUBSCRIPT_COLOR_CHANGE;
+    return TRUE;
+}
+
 BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     BOOL ret = FALSE;
     u16 form;
@@ -7496,19 +7552,14 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
             ret = TRUE;
         }
         break;
-    case ABILITY_COLOR_CHANGE: {
-        u8 moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
-
-        // Not for a move Sheer Force powered (Pokemon Central, Forzabruta;
-        // the reference's ServerDoPostMoveEffects.c:1962 at d0380a487).
-
-        if (ctx->battleMons[ctx->battlerIdTarget].hp && !Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && ctx->moveNoCur != MOVE_STRUGGLE && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && BattleMoveTbl(ctx, ctx->moveNoCur)->power && !SheerForceTradedEffect(ctx) && GetBattlerVar(ctx, ctx->battlerIdTarget, BMON_DATA_TYPE_1, NULL) != moveType && GetBattlerVar(ctx, ctx->battlerIdTarget, BMON_DATA_TYPE_2, NULL) != moveType) {
-            *script = BATTLE_SUBSCRIPT_COLOR_CHANGE;
-            ctx->msgTemp = moveType;
-            ret = TRUE;
+    case ABILITY_COLOR_CHANGE:
+    case ABILITY_ANGER_SHELL:
+        // A move that strikes more than once is answered once it is over, by
+        // the post-move steps.
+        if (ctx->multiHitCountTemp == 0 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {
+            ret = CheckColorChangeAndAngerShell(battleSystem, ctx, script);
         }
         break;
-    }
     case ABILITY_GULP_MISSILE:
         // A Cramorant with its prey spits it at whatever hits it with a
         // damaging move (Pokemon Central, Inghiottimissile): a quarter of the
@@ -7616,17 +7667,6 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
             ctx->battlerIdStatChange = ctx->battlerIdTarget;
             ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_ABILITY_STAT_CHANGE;
-            ret = TRUE;
-        }
-        break;
-    case ABILITY_ANGER_SHELL:
-        // The same crossing Berserk waits for, but the payout is five stat
-        // changes, so the whole of it is a subscript. Any one of the five
-        // having room is enough.
-        if (ctx->battleMons[ctx->battlerIdTarget].hp && !Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget) && (ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_ATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPATK] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPEED] < 12 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_DEF] > 0 || ctx->battleMons[ctx->battlerIdTarget].statChanges[STAT_SPDEF] > 0) && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !SheerForceTradedEffect(ctx) && ctx->battleMons[ctx->battlerIdTarget].hp <= (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) && (ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2) || ctx->battleMons[ctx->battlerIdTarget].hp - ctx->selfTurnData[ctx->battlerIdTarget].specialDamage > (int)(ctx->battleMons[ctx->battlerIdTarget].maxHp / 2))) {
-            ctx->battlerIdStatChange = ctx->battlerIdTarget;
-            ctx->battlerIdTemp = ctx->battlerIdTarget;
-            *script = BATTLE_SUBSCRIPT_ANGER_SHELL;
             ret = TRUE;
         }
         break;

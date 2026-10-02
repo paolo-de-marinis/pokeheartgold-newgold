@@ -1,0 +1,13 @@
+{
+  "about": "Color Change and Anger Shell answer a multi-strike move once, after its last strike, Anger Shell on the whole move's damage (Pokemon Central, Cambiacolore from the fifth generation; Bulbapedia's Color Change and Anger Shell; Showdown's gen-9 onAfterMoveSecondary); before, both answered after each strike, between the two. A level-10 Pikachu is given Twineedle in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash, given Color Change (set:): the needles do 11 each, 40 to 18, and the Chansey turns Bug after the hit count (before, after the first needle). Given Anger Shell and its HP set to 25, a little above half, the first needle takes it to 14, below half, the second to 3, and the shell cracks after the hit count (before, between the needles, and the second needle met its lowered Defense and felled it). The damage roll is forced to the bottom of the range; the field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_TWINEEDLE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
+            "set:1,ability,ABILITY_COLOR_CHANGE", "set:1,hp,40", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Twineedle!", "hit 2 time", "type changed to Bug!"], "battler1.hp": 18}},
+            "set:1,ability,ABILITY_ANGER_SHELL", "set:1,hp,25", "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Twineedle!", "hit 2 time", "Defense fell!", "Attack rose!"], "battler1.hp": 3}
+}

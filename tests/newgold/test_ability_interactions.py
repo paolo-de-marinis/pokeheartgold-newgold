@@ -161,11 +161,12 @@ class SheerForceAftermathTests(unittest.TestCase):
     def test_the_answers_to_the_hit_ask_what_was_kept(self):
         source = OVERLAY.read_text()
         hit = function(source, "CheckAbilityEffectOnHit")
-        for ability in ("BERSERK", "ANGER_SHELL", "COLOR_CHANGE"):
-            case = hit[hit.index(f"case ABILITY_{ability}:"):]
-            case = case[:case.index("break;")]
-            self.assertIn("!SheerForceTradedEffect(ctx)", case, ability)
-            self.assertNotIn("IsSuppressibleSecondaryEffect", case, ability)
+        case = hit[hit.index("case ABILITY_BERSERK:"):]
+        case = case[:case.index("break;")]
+        self.assertIn("!SheerForceTradedEffect(ctx)", case)
+        self.assertNotIn("IsSuppressibleSecondaryEffect", case)
+        # Anger Shell and Color Change, for a hit and after a multi-strike move.
+        self.assertIn("|| SheerForceTradedEffect(ctx) ||", function(source, "CheckColorChangeAndAngerShell"))
         self.assertIn("|| SheerForceTradedEffect(ctx)\n", function(source, "PickpocketLifts"))
         self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "SwitchItemAnswersHit"))
 

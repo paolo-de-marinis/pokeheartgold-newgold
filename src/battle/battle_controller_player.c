@@ -6100,12 +6100,22 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
 
     do {
         switch (ctx->unk_30) {
-        case 0:
+        case 0: {
+            int script;
+
             if (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_RAGE && ctx->moveNoCur != MOVE_RAGE) {
                 ctx->battleMons[ctx->battlerIdAttacker].status2 &= ~STATUS2_RAGE;
             }
             ctx->unk_30++;
+            // Color Change and Anger Shell, once, for a move that struck more
+            // than once (CheckColorChangeAndAngerShell).
+            if (ctx->multiHitCountTemp != 0 && ctx->battlerIdTarget != BATTLER_NONE
+                && CheckColorChangeAndAngerShell(battleSystem, ctx, &script) == TRUE) {
+                RunPostMoveScript(ctx, script);
+                flag = 1;
+            }
             break;
+        }
         case 1:
             ctx->unk_30++;
             if (TryRecoil(ctx) == TRUE) {

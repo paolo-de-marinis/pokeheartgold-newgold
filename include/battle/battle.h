@@ -116,8 +116,8 @@ typedef struct SelfTurnData {
     u32 trickRoomFlag : 1;
     u32 endureItemFlag : 1;
     u32 rolloutCount : 3;
-    // Emergency Exit and Wimp Out: this Pokemon, holding either, was above
-    // half its health when a hit of this action landed on it.
+    // Emergency Exit and Wimp Out, and Anger Shell: this Pokemon, holding
+    // one, was above half its health when a hit of this action landed on it.
     u32 retreatArmed : 1;
     // Parental Bond: this Pokemon's move is striking twice.
     u32 parentalBond : 1;

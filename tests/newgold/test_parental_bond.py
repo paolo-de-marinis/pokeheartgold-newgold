@@ -295,10 +295,7 @@ class ParentalBondTests(unittest.TestCase):
         overlay, controller = OVERLAY.read_text(), CONTROLLER.read_text()
         self.assertNotIn("ov12_02250490", function(controller, "ov12_0224CF14"))
         self.assertNotIn("parentalBondDeferred", (ROOT / "include/battle/battle.h").read_text())
-        on_hit = function(overlay, "CheckAbilityEffectOnHit")
-        for ability in ("COLOR_CHANGE", "ANGER_SHELL"):
-            case = on_hit[on_hit.index(f"case ABILITY_{ability}:"):]
-            self.assertIn("!Battler_WillBeDraggedOut(battleSystem, ctx, ctx->battlerIdTarget)", case[:case.index("break;")], ability)
+        self.assertIn("|| Battler_WillBeDraggedOut(battleSystem, ctx, target)) {", function(overlay, "CheckColorChangeAndAngerShell"))
         self.assertIn("if (!ctx->selfTurnData[battlerId].dragPending", function(overlay, "Battler_WillBeDraggedOut"))
         self.assertIn("if (target != BATTLER_NONE && ctx->selfTurnData[target].dragPending) {", function(controller, "TryAdditionalMoveEffect"))
 
@@ -337,6 +334,133 @@ class ParentalBondTests(unittest.TestCase):
                 self.assertNotIn("BSCRIPT_VAR_HIT_DAMAGE", script, number)
         self.assertIn("TryRecoil(ctx)", function(CONTROLLER.read_text(), "ov12_0224E1BC"))
 
+    def test_color_change_and_anger_shell_answer_once_the_move_is_over(self):
+        # Color Change and Anger Shell answer a move that strikes more than
+        # once after its last strike, Anger Shell on the whole move's damage
+        # (Pokemon Central, Cambiacolore from the fifth generation;
+        # Bulbapedia's Color Change and Anger Shell; Showdown's gen-9
+        # onAfterMoveSecondary on move.totalDamage). Before, both answered
+        # after each strike.
+        from test_ability_interactions import run_c
+        overlay, controller = OVERLAY.read_text(), CONTROLLER.read_text()
+        run_c(AFTER_STRIKES.replace("@FUNCTIONS@", function(overlay, "Battler_ArmRetreat")
+                                    + function(overlay, "CheckColorChangeAndAngerShell")))
+        on_hit = function(overlay, "CheckAbilityEffectOnHit")
+        case = on_hit[on_hit.index("case ABILITY_COLOR_CHANGE:\n    case ABILITY_ANGER_SHELL:"):]
+        self.assertIn("if (ctx->multiHitCountTemp == 0 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {\n"
+                      "            ret = CheckColorChangeAndAngerShell(battleSystem, ctx, script);", case[:case.index("break;")])
+        # The first of the post-move steps, before the recoil and the drag,
+        # for a move that struck more than once.
+        end = function(controller, "ov12_0224E1BC")
+        ask = "if (ctx->multiHitCountTemp != 0 && ctx->battlerIdTarget != BATTLER_NONE\n                && CheckColorChangeAndAngerShell(battleSystem, ctx, &script) == TRUE) {"
+        self.assertIn(ask, end)
+        self.assertLess(end.index("case 0:"), end.index(ask))
+        self.assertLess(end.index(ask), end.index("case 1:"))
+        self.assertLess(end.index("case 1:"), end.index("TryRecoil(ctx)"))
+
+
+AFTER_STRIKES = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/abilities.h"
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+typedef struct { int unused; } BattleSystem;
+typedef struct { u8 power; } MoveTbl;
+typedef struct { int hp, maxHp, ability, type1, type2; int statChanges[8]; } BattleMon;
+typedef struct { u32 retreatArmed : 1; int physicalDamage, specialDamage; } SelfTurnData;
+typedef struct {
+    BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
+    int battlerIdAttacker, battlerIdTarget, battlerIdStatChange, battlerIdTemp, msgTemp;
+    u32 moveNoCur, battleStatus2;
+} BattleContext;
+static BOOL dragged, sheerForce;
+static MoveTbl move = { 30 };
+static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }
+static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *data) {
+    (void)data;
+    return varId == BMON_DATA_TYPE_1 ? ctx->battleMons[battlerId].type1 : ctx->battleMons[battlerId].type2;
+}
+static u8 BattleMoveAdjustedType(BattleContext *ctx, int battlerId, u32 moveNo) { (void)ctx; (void)battlerId; (void)moveNo; return TYPE_FIGHTING; }
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, u32 moveNo) { (void)ctx; (void)moveNo; return &move; }
+static BOOL Battler_WillBeDraggedOut(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return dragged; }
+static BOOL SheerForceTradedEffect(BattleContext *ctx) { (void)ctx; return sheerForce; }
+@FUNCTIONS@
+static BattleSystem bs;
+static BattleContext ctx;
+static int script;
+static void strike(int damage) {
+    // A strike lands on 1: armed as it lands, then its damage taken.
+    Battler_ArmRetreat(&ctx, 1);
+    ctx.battleMons[1].hp -= damage;
+    ctx.selfTurnData[1].physicalDamage = -damage;
+}
+static void reset(int ability, int hp) {
+    memset(&ctx, 0, sizeof(ctx));
+    dragged = sheerForce = FALSE;
+    ctx.battlerIdTarget = 1;
+    ctx.moveNoCur = MOVE_DOUBLE_KICK;
+    ctx.battleMons[1] = (BattleMon){ hp, 100, ability, TYPE_NORMAL, TYPE_NORMAL, { 6, 6, 6, 6, 6, 6, 6, 6 } };
+    script = 0;
+}
+static BOOL answers(void) { return CheckColorChangeAndAngerShell(&bs, &ctx, &script); }
+int main(void) {
+    // Color Change takes the move's type once the strikes are over.
+    reset(ABILITY_COLOR_CHANGE, 100);
+    strike(20); strike(5);
+    assert(answers() && script == BATTLE_SUBSCRIPT_COLOR_CHANGE && ctx.msgTemp == TYPE_FIGHTING);
+    // Not with the type already, not when no strike reached the Pokemon
+    // itself, not for a Pokemon that fell or is dragged out, not after
+    // Sheer Force, not for Struggle.
+    reset(ABILITY_COLOR_CHANGE, 100); strike(20); ctx.battleMons[1].type2 = TYPE_FIGHTING;
+    assert(!answers());
+    reset(ABILITY_COLOR_CHANGE, 100);
+    assert(!answers());
+    reset(ABILITY_COLOR_CHANGE, 20); strike(20);
+    assert(!answers());
+    reset(ABILITY_COLOR_CHANGE, 100); strike(20); dragged = TRUE;
+    assert(!answers());
+    reset(ABILITY_COLOR_CHANGE, 100); strike(20); sheerForce = TRUE;
+    assert(!answers());
+    reset(ABILITY_COLOR_CHANGE, 100); strike(20); ctx.moveNoCur = MOVE_STRUGGLE;
+    assert(!answers());
+    // Nor any other ability, which the post-move step asks as well.
+    reset(ABILITY_STATIC, 100); strike(20); strike(20);
+    assert(!answers() && script == 0);
+    // Anger Shell cracks once a hit found it above half and the move has
+    // left it at half or below: from 60, 5 and 10 take it to 45; 5 and 4
+    // leave it at 51; from 50 it was never above half.
+    reset(ABILITY_ANGER_SHELL, 60); strike(5); strike(10);
+    assert(answers() && script == BATTLE_SUBSCRIPT_ANGER_SHELL);
+    assert(ctx.battlerIdStatChange == 1 && ctx.battlerIdTemp == 1);
+    reset(ABILITY_ANGER_SHELL, 60); strike(5); strike(4);
+    assert(!answers());
+    reset(ABILITY_ANGER_SHELL, 50); strike(5); strike(10);
+    assert(!answers());
+    // A single hit: from 60 to 40.
+    reset(ABILITY_ANGER_SHELL, 60); strike(20);
+    assert(answers());
+    // Nothing left to change; any one stage with room is enough.
+    reset(ABILITY_ANGER_SHELL, 60); strike(20);
+    ctx.battleMons[1].statChanges[STAT_ATK] = ctx.battleMons[1].statChanges[STAT_SPATK] = ctx.battleMons[1].statChanges[STAT_SPEED] = 12;
+    ctx.battleMons[1].statChanges[STAT_DEF] = ctx.battleMons[1].statChanges[STAT_SPDEF] = 0;
+    assert(!answers());
+    ctx.battleMons[1].statChanges[STAT_SPDEF] = 1;
+    assert(answers());
+    // A move Sheer Force powered arms nothing.
+    reset(ABILITY_ANGER_SHELL, 60); sheerForce = TRUE; strike(20); sheerForce = FALSE;
+    assert(!answers());
+    return 0;
+}
+"""
 
 if __name__ == "__main__":
     unittest.main()

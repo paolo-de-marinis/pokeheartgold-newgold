@@ -1,5 +1,5 @@
 {
-  "about": "A Pokemon Parental Bond's Dragon Tail will drag out does not answer its first strike with Color Change (Pokemon Central, Codadrago: a Pokemon being dragged out does not answer), as it does not answer a single strike; before, the first strike left the drag to the second and Color Change made the target a Dragon-type in between. A level-7 Pikachu is given Parental Bond (set:), Water Gun and Dragon Tail in the running battle (teach:) against a forced wild level-5 Chansey given Color Change that knows only Splash. Water Gun shows the ability at work; Dragon Tail, which moves last, strikes twice and drags the Chansey out, which ends the battle, with no type change: before, the Chansey turned Dragon-type and fainted to the second strike. The field's RNG is pinned as in rolls_forced_high.json.",
+  "about": "A Pokemon Parental Bond's Dragon Tail will drag out does not answer its first strike with Color Change (Pokemon Central, Codadrago: a Pokemon being dragged out does not answer), as it does not answer a single strike; before, the first strike left the drag to the second and Color Change made the target a Dragon-type in between. A level-7 Pikachu is given Parental Bond (set:), Water Gun and Dragon Tail in the running battle (teach:) against a forced wild level-5 Chansey given Color Change that knows only Splash. Water Gun shows the ability at work, once both strikes are over; Dragon Tail, which moves last, strikes twice and drags the Chansey out, which ends the battle, with no type change: before, the Chansey turned Dragon-type and fainted to the second strike. The field's RNG is pinned as in rolls_forced_high.json.",
   "save": "route29-official.sav",
   "edit": ["--party", "PIKACHU:7"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
@@ -7,8 +7,8 @@
             "teach:0,0,MOVE_WATER_GUN", "teach:0,1,MOVE_DRAGON_TAIL", "teach:0,2,0,0", "teach:0,3,0,0",
             "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
             "set:0,ability,ABILITY_PARENTAL_BOND", "set:1,ability,ABILITY_COLOR_CHANGE", "fight:1:1",
-            {"expect": {"lines": ["Pikachu used Water Gun!", "The wild Chansey’s type changed to Water!",
-                                  "The Pokémon was hit 2 time(s)!"]}},
+            {"expect": {"lines": ["Pikachu used Water Gun!", "The Pokémon was hit 2 time(s)!",
+                                  "The wild Chansey’s type changed to Water!"]}},
             "set:1,hp,40", "fight:2:1"],
   "expect": {"new_lines": ["Pikachu used Dragon Tail!", "The Pokémon was hit 2 time(s)!"],
              "no_lines": ["type changed to Dragon", "The wild Chansey fainted!"], "gDiagBattleState": 15}
