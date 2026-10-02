@@ -10269,16 +10269,19 @@ BOOL BtlCmd_HandleDoubleShock(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
-// Incinerate burns the berry the target was holding. Sticky Hold keeps hold of
-// it, and there is nothing to burn if the target was not holding one; either
-// way the move has nothing to say and takes the branch.
+// Incinerate burns the Berry or the Gem the target was holding (Pokemon
+// Central, Bruciatutto: Gems as well from the sixth generation; Showdown's
+// gen-9 incinerate, isBerry or isGem) -- the eighteen Gems, the items whose
+// record has the hold effect that powers a move once. Sticky Hold keeps hold
+// of it, and there is nothing to burn if the target was holding neither;
+// either way the move has nothing to say and takes the branch.
 BOOL BtlCmd_TryIncinerate(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
     int adrs = BattleScriptReadWord(ctx);
     int item = ctx->battleMons[ctx->battlerIdTarget].item;
 
-    if (!BattleItemIsBerry(item)
+    if (!(BattleItemIsBerry(item) || GetItemVar(ctx, item, ITEM_VAR_HOLD_EFFECT) == HOLD_EFFECT_POWERING_UP_MOVE_ONCE)
         || (CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE && ctx->battleMons[ctx->battlerIdTarget].hp)) {
         BattleScriptIncrementPointer(ctx, adrs);
         return FALSE;
@@ -10291,7 +10294,7 @@ BOOL BtlCmd_TryIncinerate(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->battleMons[ctx->battlerIdTarget].item = ITEM_NONE;
     // The party holds what the battler holds at once, as after Knock Off
     // (BtlCmd_TryKnockOff): the hit's own copy came before, and a Pokemon
-    // caught, or the battle over, before the next would have its Berry back.
+    // caught, or the battle over, before the next would have it back.
     CopyBattleMonToPartyMon(battleSystem, ctx, ctx->battlerIdTarget);
 
     return FALSE;

@@ -1,0 +1,11 @@
+{
+  "about": "Incinerate burns a Gem as it burns a Berry (Pokemon Central, Bruciatutto: Berries and Gems from the sixth generation; Showdown's gen-9 incinerate, isBerry or isGem). TryIncinerate asked BattleItemIsBerry alone, so a Gem was left where it was. A level-10 Chansey, whose low Sp. Atk leaves its foe standing, is taught Incinerate (teach:) against a forced wild level-5 Chansey that knows only Splash, a status move its Normal Gem does not power, and moves first (set:). After the hit the wild Chansey's Normal Gem is burned up and its hand is empty; before, no line, and it still held the Gem. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CHANSEY:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_INCINERATE",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0", "set:1,item,ITEM_NORMAL_GEM", "set:0,speed,1",
+            "fight:1:1"],
+  "expect": {"lines": ["Chansey used Incinerate!", "Normal Gem was burned up!"], "battler1.item": "ITEM_NONE"}
+}

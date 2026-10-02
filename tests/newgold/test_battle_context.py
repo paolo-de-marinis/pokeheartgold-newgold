@@ -442,6 +442,10 @@ static int sCopies, sCopied = -1, sHeldAtCopy = -1;
 static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
 static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return 1; }
 static BOOL BattleItemIsBerry(u16 item) { return item == ITEM_ORAN_BERRY; }
+// The Gems' records, and only theirs, have the hold effect that powers a move once.
+static int GetItemVar(BattleContext *ctx, u16 item, u16 var) {
+    (void)ctx; assert(var == ITEM_VAR_HOLD_EFFECT); return item == ITEM_FIRE_GEM ? HOLD_EFFECT_POWERING_UP_MOVE_ONCE : HOLD_EFFECT_NONE;
+}
 static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int a, int b, int ability) { (void)ctx; (void)a; (void)b; (void)ability; return FALSE; }
 static void NoteHeldItemUsedUp(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; }
 static void CopyBattleMonToPartyMon(BattleSystem *bs, BattleContext *ctx, int battlerId) {
@@ -453,10 +457,15 @@ int main(void) {
     BtlCmd_TryIncinerate(0, &ctx);
     assert(ctx.battleMons[1].item == ITEM_NONE && ctx.itemTemp == ITEM_ORAN_BERRY && ctx.battlerIdTemp == 1);
     assert(sCopies == 1 && sCopied == 1 && sHeldAtCopy == ITEM_NONE);
+    // A Gem burns as well (Pokemon Central, Bruciatutto: from the sixth
+    // generation).
+    ctx.battleMons[1].item = ITEM_FIRE_GEM;
+    BtlCmd_TryIncinerate(0, &ctx);
+    assert(ctx.battleMons[1].item == ITEM_NONE && ctx.itemTemp == ITEM_FIRE_GEM && sCopies == 2);
     // Nothing burnt, nothing copied.
     ctx.battleMons[1].item = ITEM_LEFTOVERS;
     BtlCmd_TryIncinerate(0, &ctx);
-    assert(sCopies == 1 && ctx.battleMons[1].item == ITEM_LEFTOVERS);
+    assert(sCopies == 2 && ctx.battleMons[1].item == ITEM_LEFTOVERS);
     return 0;
 }
 """
