@@ -146,6 +146,32 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertFalse(sealed(struct.pack("<IHH", 0x10203, 1, checksum) + raw[8:]))       # AcquireMonLock's
         self.assertFalse(sealed(raw[:8] + plain[:52] + raw[8 + 52:]))                        # half re-encrypted
 
+    def test_the_closing_party_list_waits_for_every_pokemon_sealed(self):
+        # gym.py's closing list, which whitney.py prints too, read the party
+        # once: a frame that ended inside the game's decryption gave Whitney's
+        # replay a slot-3 species 19423 at exp 2775330619. It reads again a
+        # frame later while one is not sealed, as scene.py's party
+        # expectations do, and says so of one that never is.
+        from unittest import mock
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        import party
+        reads = iter([[{"sealed": False}], [{"sealed": False}], [{"sealed": True}]])
+
+        class Core:
+            frames = 0
+
+            def ram(self):
+                return b""
+
+            def step(self, frames, hooks):
+                self.frames += frames
+        core = Core()
+        with mock.patch.object(party, "mons", lambda ram, elf: next(reads)):
+            self.assertEqual(party.sealed_mons(core, None), [{"sealed": True}])
+        self.assertEqual(core.frames, 2)
+        torn = {"species": 19423, "item": 0, "exp": 2775330619, "level": 1, "hp": 0, "maxHp": 0, "sealed": False}
+        self.assertTrue(party.party(b"", None, [torn])[0].endswith("(read mid-encryption)"))
+
     def test_gym_touches_the_target_panel_a_move_asks_for(self):
         # A double battle's target screen: a move on the user (Revival
         # Blessing) is confirmed on the user's own panel, an attack goes to a

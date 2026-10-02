@@ -78,6 +78,19 @@ def mons(ram, elf):
     return out
 
 
+def sealed_mons(core, elf, hooks=(), frames=60):
+    """mons() of a running core once every Pokemon is sealed: read again a
+    frame later while one is not, `frames` at most. scene.py's party
+    expectations and gym.py's closing list read the party this way."""
+    out = mons(core.ram(), elf)
+    for _ in range(frames):
+        if all(m["sealed"] for m in out):
+            break
+        core.step(1, hooks)
+        out = mons(core.ram(), elf)
+    return out
+
+
 def bag(ram, elf, item):
     """How many of `item` the bag holds, in whichever pocket."""
     memory = where.Memory(ram)
@@ -90,13 +103,16 @@ def bag(ram, elf, item):
     return 0
 
 
-def party(ram, elf):
+def party(ram, elf, found=None):
+    """The party as lines, from `found` (sealed_mons) or read from `ram`
+    once; a Pokemon caught mid-encryption is said to be."""
     names = {v: k for k, v in savedit.species_numbers().items()}
     items = {int(m.group(2)): m.group(1)[len("ITEM_"):] for m in
              re.finditer(r"^#define (ITEM_[A-Z0-9_]+)\s+(\d+)\s*$", (ROOT / "include/constants/items.h").read_text(), re.M)}
     return [f"{slot + 1}. {names.get(m['species'], m['species'])} L{m['level']} exp {m['exp']} HP {m['hp']}/{m['maxHp']}"
             + (f" holding {items.get(m['item'], m['item'])}" if m["item"] else "")
-            for slot, m in enumerate(mons(ram, elf))]
+            + ("" if m["sealed"] else " (read mid-encryption)")
+            for slot, m in enumerate(found if found is not None else mons(ram, elf))]
 
 
 def main():

@@ -33,7 +33,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from core import Core, pin_clock  # noqa: E402
 from markers import BATTLER, DIAG_ELF, STATES, Markers  # noqa: E402
-from party import badges, party  # noqa: E402
+from party import badges, party, sealed_mons  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
 ROM = ROOT / "build/heartgold.us.diag/pokeheartgold.us.nds"
@@ -426,7 +426,7 @@ def main():
         say("the battle did not finish; last prompt " + str(markers.read(ram, "gDiagBattlePrompt"))
             + ", last line: " + repr(last_line[:80]))
     try:
-        say("party at the end:\n  " + "\n  ".join(party(ram, DIAG_ELF)))
+        say("party at the end:\n  " + "\n  ".join(party(ram, DIAG_ELF, sealed_mons(core, DIAG_ELF, hold))))
     except SystemExit as field_down:
         say(f"party: {field_down}")
     core.close()

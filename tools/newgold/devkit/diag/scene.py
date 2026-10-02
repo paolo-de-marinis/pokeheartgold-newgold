@@ -966,12 +966,7 @@ class Scene:
             return party.bag(ram, self.elf, self.number(name[len("bag:"):]))
         if name.startswith("party") and "." in name:
             slot, field = name[len("party"):].split(".")
-            mons = party.mons(ram, self.elf)
-            for _ in range(60):     # read again once the game has sealed them (party.sealed)
-                if all(mon["sealed"] for mon in mons):
-                    break
-                self.core.step(1, self.hooks)
-                mons = party.mons(self.core.ram(), self.elf)
+            mons = party.sealed_mons(self.core, self.elf, self.hooks)
             return mons[int(slot)][field] if int(slot) < len(mons) else None
         if name.startswith(("flag:", "var:")):
             kind, _, constant = name.partition(":")
