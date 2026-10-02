@@ -1,0 +1,47 @@
+{
+  "about": "The playthrough's Violet Gym trainers, from Violet City's Pokemon Center: in past the gym guide Sprout Tower moved, up its lift (the elevator at (15, 20), a coord event the walk steps on), Bird Keepers Abe and Rod, who spot the player on the way. The party is the one the legs before caught and trained, no edit: the Geodude leads, and its Rollout, twice as strong against every bird, takes Abe's Spearow, Farfetch'd and Natu and the Geodude from 10 to 13; the Misdreavus, the Hoothoot and the Cyndaquil after it, against Rod. retry:on would give a battle after a loss a new seed (where the leg was written both were won the first time, 33,589 frames). Back to the nurse; swaps put the party in the order Falkner's leg wants -- the Misdreavus, the Hoothoot, the Cyndaquil, whose Ember his Delibird fears, and the Geodude last, for his birds once the Delibird is down -- and the game is saved there. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04h_route_31_rollout",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "retry:on",
+    "goto:MAP_VIOLET_GYM,12,15,90000",
+    "goto:MAP_VIOLET_GYM,18,11,90000",
+    {
+      "expect": {
+        "music": "SEQ_GS_GYM"
+      }
+    },
+    "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "swap:0,3",
+    "swap:0,1",
+    "swap:1,2",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_VIOLET_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "party": 4,
+    "badges": 0,
+    "party0.species": "SPECIES_MISDREAVUS",
+    "party1.species": "SPECIES_HOOTHOOT",
+    "party2.species": "SPECIES_CYNDAQUIL",
+    "party3.species": "SPECIES_GEODUDE",
+    "party3.level": 13,
+    "music": "SEQ_GS_POKESEN",
+    "lines": [
+      "You are challenged by Bird Keeper Abe!",
+      "Geodude used Rollout!",
+      "You defeated Bird Keeper Abe!",
+      "You defeated Bird Keeper Rod!"
+    ]
+  }
+}
