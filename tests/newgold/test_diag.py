@@ -164,6 +164,37 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(bag_screen(bytes(ram), Markers()), 2)
         self.assertEqual(bag_state_at(), 0x114A)
 
+    def test_gym_touches_bag_until_the_bag_opens_then_each_screen(self):
+        # The command prompt comes a little before its buttons: a BAG touched
+        # at once was not read, twice in one leg, and the throw given up. BAG
+        # again while the prompt asks; then the pocket, the ball and USE as
+        # the bag's own state comes to each.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        import gym
+        from unittest import mock
+
+        class Core:
+            frames, touches = 0, []
+
+            def ram(self):
+                return b""
+
+            def step(self, frames, hold):
+                self.frames += frames
+
+            def touch(self, x, y, frames, hold):
+                self.touches.append((x, y))
+                self.frames += frames + 4
+        core = Core()
+        prompt = lambda: 1 if core.frames < 60 else 8 if core.frames < 300 else 13       # noqa: E731
+        markers = type("Markers", (), {"read": lambda self, ram, name: prompt()})()
+        screen = lambda ram, markers: 1 if core.frames < 120 else 2 if core.frames < 180 else 3   # noqa: E731
+        with mock.patch.object(gym, "bag_screen", screen):
+            self.assertTrue(gym.throw(core, markers, []))
+        self.assertGreater(core.touches.count(gym.BAG), 1)
+        firsts = [core.touches.index(t) for t in (gym.BAG, gym.BALLS, gym.FIRST_ITEM, gym.USE)]
+        self.assertEqual(firsts, sorted(firsts))
+
     def test_a_pokemon_read_mid_encryption_is_not_taken_for_sealed(self):
         # A frame can end with the game re-encrypting a party Pokemon; scene.py
         # reads the party again until every one is sealed.

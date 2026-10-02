@@ -192,10 +192,13 @@ def throw(core, markers, hold, frames=1500):
     """The bag's first ball thrown: BAG, then the Poke Balls pocket, the
     first ball on its page and USE, each touched while the bag's state says
     that screen takes input -- again while it fades in, when a touch is not
-    read. True once the bag has closed on it."""
-    core.touch(*BAG, 6, hold)
+    read, and BAG again while the command menu is still asking (its buttons
+    come up a little after the prompt). True once the bag has closed on it."""
     touches, seen, end = {1: BALLS, 2: FIRST_ITEM, 3: USE}, False, core.frames + frames
     while core.frames < end:
+        prompt = markers.read(core.ram(), "gDiagBattlePrompt")
+        if prompt in (1, 2) and not seen:
+            core.touch(*BAG, 6, hold)
         core.step(10, hold)
         ram = core.ram()
         if markers.read(ram, "gDiagBattlePrompt") != IN_BAG:
