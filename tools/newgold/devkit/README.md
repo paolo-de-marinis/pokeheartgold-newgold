@@ -448,7 +448,8 @@ Reading what the debug ROM records, and playing it without looking.
   while it runs). A leg names the one before it (`"from"`) and starts from
   that save: the legs of a run share a directory (`--chain`), a leg run
   alone plays the ones before it first, and one after a failed leg fails
-  without playing.
+  without playing. `test_scenarios.py` plays up to three scenarios at once,
+  a chain's legs together in one of the three, in their order.
 - `species.py OUT` -- every species and form through the screens that load
   its resources: in the PC, in boxes savedit fills (its icon, its sprite,
   its name, Dex number, types and ability on the hover, and its summary's

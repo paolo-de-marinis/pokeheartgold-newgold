@@ -14,16 +14,23 @@ libretro core, or without the save a scenario starts from (Paolo's saves,
 
 The legs of the playthrough are a chain: a leg names the one before it
 ("from") and starts from the in-game save that one made. They share one
-directory for the run (CHAIN), and run in the order of their names, so each
-finds the save of the one before; one run alone plays the legs before it
-first.
+directory for the run (CHAIN); one run alone plays the legs before it first.
+
+Up to three scene.py processes play at once (WORKERS), started when the
+first scenario test runs, for every scenario the run selected: a chain's
+legs in one worker, leg before leg, so each finds the save of the one
+before, and the other two take the single scenarios meanwhile -- the chain
+alone plays for over half an hour.
 """
 import json
 import os
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 import unittest
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 
 from test_level_cap import ROOT
@@ -200,6 +207,48 @@ class ChainTests(unittest.TestCase):
             leg = self.leg(chain, "SKIP before.json: no ROM\n")
             self.assertIsNone(scene.scenario(leg, chain=chain)[0])
 
+    def test_three_play_at_once_and_a_chains_legs_in_order(self):
+        # run() faked: each scenario takes a moment, noting who plays at once.
+        legs_ = ["playthrough_01_new_game", "playthrough_02_cherrygrove", "playthrough_03_mr_pokemon"]
+        alone = ["fairy_chart", "chuck", "thaw_scald_scorching_sands", "red_card_disarms_retreat", "snipe_shot_not_redirected"]
+        paths = [SCENARIOS / f"{name}.json" for name in alone + legs_[::-1]]
+        jobs_ = jobs(paths)
+        self.assertEqual(jobs_[0], [SCENARIOS / f"{name}.json" for name in legs_])
+        self.assertEqual(len(jobs_), 1 + len(alone))
+        playing, most, order, lock = set(), [0], [], threading.Lock()
+
+        def fake(path):
+            with lock:
+                playing.add(path)
+                most[0] = max(most[0], len(playing))
+            time.sleep(0.2)
+            with lock:
+                playing.discard(path)
+                order.append(path.stem)
+            return 0, f"PASS {path.name}"
+        global run
+        real, run = run, fake
+        try:
+            start(paths)
+            reports = [RESULTS[path].result(timeout=10)[1] for path in paths]
+        finally:
+            run = real
+            for path in paths:
+                RESULTS.pop(path, None)
+        self.assertEqual(reports, [f"PASS {path.name}" for path in paths])
+        self.assertEqual(most[0], WORKERS)
+        self.assertEqual([stem for stem in order if stem in legs_], legs_)
+
+    def test_the_run_starts_what_its_loader_selected(self):
+        loader, kept = unittest.TestLoader(), ScenarioTests.selected
+        loader.testNamePatterns = ["*.test_chuck"]
+        ScenarioTests.selected = []
+        try:
+            loader.loadTestsFromName("ScenarioTests", sys.modules[__name__])
+            self.assertEqual(ScenarioTests.selected, [SCENARIOS / "chuck.json"])
+        finally:
+            ScenarioTests.selected = kept
+
 
 class RecordingTests(unittest.TestCase):
     def test_a_run_records_its_frames_and_sound_to_an_mp4(self):
@@ -338,25 +387,75 @@ def legs(path):
     return 1 + (legs(SCENARIOS / f"{before}.json") if before else 0)
 
 
+WORKERS = 3                 # scene.py processes at once, an emulator each
+RESULTS = {}                # a scenario's path -> the Future of run(path)
+
+
+def run(path):
+    """One scenario played by scene.py: (its exit code, its report)."""
+    done = subprocess.run([sys.executable, str(DIAG / "scene.py"), "--scenario", str(path), "--chain", CHAIN.name],
+                          capture_output=True, text=True, timeout=1800 * legs(path))
+    return done.returncode, done.stdout.strip() or done.stderr.strip()[-2000:]
+
+
+def jobs(paths):
+    """The scenarios as the workers take them: each alone, but the legs of a
+    chain together, first leg first; the longest job first."""
+    def first(path):
+        before = json.loads(path.read_text()).get("from")
+        return first(SCENARIOS / f"{before}.json") if before else path
+    chains = {}
+    for path in paths:
+        chains.setdefault(first(path), []).append(path)
+    return sorted((sorted(job, key=legs) for job in chains.values()), key=len, reverse=True)
+
+
+def start(paths, workers=WORKERS):
+    """Play `paths` in the background, `workers` at a time; RESULTS holds a
+    Future for each."""
+    def work(job):
+        for path in job:
+            try:
+                RESULTS[path].set_result(run(path))
+            except Exception as e:
+                RESULTS[path].set_exception(e)
+    paths = [path for path in paths if path not in RESULTS]
+    for path in paths:
+        RESULTS[path] = Future()
+    pool = ThreadPoolExecutor(workers)
+    for job in jobs(paths):
+        pool.submit(work, job)
+    pool.shutdown(wait=False)
+
+
 def play(path):
     def test(self):
         for needed, how in ((ROM, "make NEWGOLD_DIAG=1 COMPARE=0 build/heartgold.us.diag/pokeheartgold.us.nds"),
                             (ELF, "the same build"), (CORE, "the libretro core (NEWGOLD_CORE)")):
             if not os.path.exists(needed):
                 self.skipTest(f"{needed} is not there: {how}")
-        run = subprocess.run([sys.executable, str(DIAG / "scene.py"), "--scenario", str(path), "--chain", CHAIN.name],
-                             capture_output=True, text=True, timeout=1800 * legs(path))
-        report = run.stdout.strip() or run.stderr.strip()[-2000:]
+        start([path])       # nothing when the class has started it
+        returncode, report = RESULTS[path].result()
         if report.startswith("SKIP"):
             self.skipTest(report)
         print(report.splitlines()[0])
-        self.assertEqual(run.returncode, 0, report)
+        self.assertEqual(returncode, 0, report)
         self.assertTrue(report.startswith("PASS"), report)
     return test
 
 
 class ScenarioTests(unittest.TestCase):
-    pass
+    selected = []           # the scenarios this run's loader made a test of (-k too)
+
+    def __init__(self, name="runTest"):
+        super().__init__(name)
+        if name.startswith("test_"):
+            self.selected.append(SCENARIOS / f"{name[5:]}.json")
+
+    @classmethod
+    def setUpClass(cls):
+        if all(os.path.exists(needed) for needed in (ROM, ELF, CORE)):
+            start(cls.selected)
 
 
 for _path in sorted(SCENARIOS.glob("*.json")):
