@@ -23,9 +23,11 @@ A step is one of
                                 a battle up on the way, its end screens too, gym.py's
                                 player plays to its end
     fight[:N[:T]]               A until a battle is up, then gym.py's player plays
-                                it to the end (N: always move slot N; T: stop at the
-                                command prompt after T turns, to expect what they did);
-                                nothing when the field stays free through five presses
+                                it to the end (N: always the move in slot N, counted
+                                1 to 4 -- 0 the first with PP -- where teach: counts
+                                0 to 3; T: stop at the command prompt after T turns,
+                                to expect what they did); nothing when the field
+                                stays free through five presses
     teach:B,SLOT,MOVE[,PP]      battler B's move in that slot (0-3), and its PP (5 by
                                 default), written into the running battle: a move
                                 no trainer's data gives, for the AI to use
