@@ -944,8 +944,12 @@ class Scene:
             mons = party.mons(self.core.ram(), self.elf)
             fighters = [mons[0]] + ([mons[self.shift]] if self.shift is not None and self.shift < len(mons) else [])
             if self.healer and any(mon["hp"] * 100 < max(self.flee, 1) * mon["maxHp"] for mon in fighters):
+                # On the way to the nurse every wild Pokemon is run from: the
+                # walk once met four in grass the plan crossed.
+                flee, shift, self.flee, self.shift = self.flee, self.shift, 101, None
                 for step in (f"goto:{','.join(map(str, self.healer))}", "UP", "A", "field"):
                     self.run(step)
+                self.flee, self.shift = flee, shift
             done, said = self.goto(ends[0], end - self.core.frames)
             self.say(f"[{self.core.frames}] pace: {said}")
             if not done:
