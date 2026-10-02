@@ -1,0 +1,11 @@
+{
+  "about": "A foe that has given its move for the turn and is then taught others is asked again (scene.py's teach:). A foe is asked for its move as the turn's choosing starts, and the battle runs the slot it gave, whatever that holds when it moves: one asked before fight:1:0 stopped and teach: wrote ran a slot teach: had emptied, \"The wild Chansey's - is disabled!\" (roost_pure_flying_is_normal on r12-lab's ROM, where the moment fight:1:0 stopped moved). Here a wait after fight:1:0 makes sure it has been asked: a forced wild level-5 Chansey, which knows Sweet Kiss, Pound, Defense Curl and Tail Whip, gives slot 2 on this pinned run; it is then given Lick in slot 0 and its other three slots emptied, and on turn one it uses Lick, where before it ran the empty slot 2. The player's Pokemon knows only Splash. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0", "wait:30",
+            "teach:0,0,MOVE_SPLASH", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_LICK", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["The wild Chansey used Lick!"], "no_lines": ["is disabled"],
+             "battler1.species": "SPECIES_CHANSEY", "battler1.move0": "MOVE_LICK"}
+}

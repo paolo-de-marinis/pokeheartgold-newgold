@@ -211,6 +211,24 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(aimed_at(battlers((25, 50), (16, 0), (26, 50), (74, 40)), At, 2)[0], 74)
         self.assertEqual(aimed_at(battlers((25, 50), (16, 40), (0, 0), (0, 0)), At, 0)[0], 16)    # a single battle
 
+    def test_a_foe_that_gave_its_move_is_asked_again_by_teach(self):
+        # A foe gives its move as the turn's choosing starts, and the battle
+        # runs the slot it gave: asked before teach:, one ran a slot teach:
+        # emptied ("The wild Chansey's - is disabled!"). teach: asks again a
+        # battler that gave its move this turn (SSI_STATE_13 or 14, unk_314C
+        # bit 1), and no other: one locked into or encored into its move was
+        # not asked, and one with nothing usable would have nothing to give.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from scene import asks_again, select_states
+        states = select_states()
+        self.assertEqual((states["SSI_STATE_3"], states["SSI_STATE_13"], states["SSI_STATE_14"]), (3, 13, 14))
+        lick, none = [122, 0, 0, 0], [5, 0, 0, 0]
+        self.assertTrue(asks_again(14, 2 | 1, lick, none))
+        self.assertTrue(asks_again(13, 2, lick, none))
+        self.assertFalse(asks_again(3, 1, lick, none))         # not asked for its move yet: it will be
+        self.assertFalse(asks_again(14, 1, lick, none))        # locked or encored: given no request
+        self.assertFalse(asks_again(14, 2, lick, [0, 0, 0, 0]))
+
     def test_nested_melonds_binds_every_button(self):
         # nested.py writes melonDS's key table before melonDS starts; a table
         # whose parent was implicit made melonDS's toml writer abort.

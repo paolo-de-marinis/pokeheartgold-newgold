@@ -30,7 +30,8 @@ A step is one of
                                 stays free through five presses
     teach:B,SLOT,MOVE[,PP]      battler B's move in that slot (0-3), and its PP (5 by
                                 default), written into the running battle: a move
-                                no trainer's data gives, for the AI to use
+                                no trainer's data gives, for the AI to use: a foe
+                                that has given its move this turn is asked again
     set:B,FIELD,VALUE           battler B's hp, status (its flags as markers.py names
                                 them: "BRN", "PSN"), ability (ABILITY_...), item
                                 (ITEM_...) or speed (the stat before its stages),
@@ -178,8 +179,8 @@ def battle_layout():
              "__builtin_offsetof(BattleMon, hp)", "__builtin_offsetof(BattleContext, battleMons)",
              "__builtin_offsetof(BattleContext, unk_0)", "__builtin_offsetof(BattleMon, status)",
              "__builtin_offsetof(BattleMon, ability)", "__builtin_offsetof(BattleMon, item)",
-             "__builtin_offsetof(BattleMon, speed)")
-    return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item", "speed"), savedit.compile_c(
+             "__builtin_offsetof(BattleMon, speed)", "__builtin_offsetof(BattleContext, unk_314C)")
+    return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item", "speed", "chose"), savedit.compile_c(
         exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h",))[0]))
 
 
@@ -210,6 +211,26 @@ def field_layout():
     out["LocalMapObject.size"] = values[-1]
     out["FieldSystem.textbox_open"] = savedit.set_bit(textbox)
     return out
+
+
+@savedit.tree_cache
+def select_states():
+    """BattleSelectState's numbers by name, as battle_controller_player.c
+    counts them (BattleContext.unk_0, a battler's place in choosing)."""
+    import re
+    text = savedit.source("src/battle/battle_controller_player.c").read_text()
+    body = re.search(r"typedef enum BattleSelectState \{(.*?)\}", text, re.S).group(1)
+    return {name.strip(): i for i, name in enumerate(n for n in body.split(",") if n.strip())}
+
+
+def asks_again(state, chose, moves, pp):
+    """Whether teach: has a battler asked for its move again: it gave one
+    this turn from the request (SSI_STATE_13 or 14, BattleContext.unk_314C's
+    bit 1) -- not a move it is locked into or encored into, which nobody
+    asks for -- and it knows one it can use now."""
+    states = select_states()
+    return (state in (states["SSI_STATE_13"], states["SSI_STATE_14"]) and bool(chose & 2)
+            and any(m and p for m, p in zip(moves, pp)))
 
 
 def c_declarations(path, name):
@@ -556,11 +577,10 @@ class Scene:
             # the battle as it runs (the trainer's data cannot say it): with the
             # others' PP at 0, the AI has that move to use and no other.
             battler, slot, move, *pp = rest.split(",")
-            at, layout = self.battle_mon(int(battler)), battle_layout()
+            at = self.battle_mon(int(battler))
             if at is None:
                 return [f"battler {battler} is not in the battle: {self.markers.battle(core.ram())}"]
-            core.poke(at + layout["moves"] + 2 * int(slot), self.number(move), 2)
-            core.poke(at + layout["pp"] + int(slot), int(pp[0]) if pp else 5, 1)
+            self.teach(int(battler), at, int(slot), self.number(move), int(pp[0]) if pp else 5)
         elif kind == "set":
             # set:BATTLER,FIELD,VALUE -- a battler's hp, status, ability, item or speed,
             # written into the battle as it runs, as teach: writes its moves.
@@ -887,6 +907,34 @@ class Scene:
             core.step(1, hooks)
         core.buttons = set()
         return False, f"goto {goal}: stopped at {self.location()} after {frames} frames, {replans} plans"
+
+    def teach(self, battler, at, slot, move, pp):
+        """teach:'s write, for a battler that may have chosen its move. A foe
+        is asked for its move as the turn's choosing starts -- on turn one
+        before the player's prompt, later with it -- and the battle keeps
+        the slot it gave, running whatever that holds when it moves: one
+        asked before fight:N:T stopped ran a slot teach: emptied ("The wild
+        Chansey's - is disabled!"), or the move taught over the one it had
+        chosen. An answer on its way is let in first (SSI_STATE_4 to 6, a
+        message), the moves are written, and a battler that has given its
+        move (asks_again) is put back to SSI_STATE_3, where the battle asks
+        it again with the moves it knows now."""
+        layout, core, states = battle_layout(), self.core, select_states()
+        context = at - layout["mons"] - battler * layout["size"]
+        state, chose = context + layout["select"] + battler, context + layout["chose"] + battler
+        on_its_way = {states[n] for n in ("SSI_STATE_4", "SSI_STATE_5", "SSI_STATE_6", "SSI_STATE_15",
+                                          "SSI_STATE_NO_MOVES", "SSI_STATE_END")}
+        for _ in range(300):
+            if core.word(state, 1) not in on_its_way:
+                break
+            core.step(1, self.hooks)
+        core.poke(at + layout["moves"] + 2 * slot, move, 2)
+        core.poke(at + layout["pp"] + slot, pp, 1)
+        moves = [core.word(at + layout["moves"] + 2 * k, 2) for k in range(4)]
+        pp = [core.word(at + layout["pp"] + k, 1) for k in range(4)]
+        if asks_again(core.word(state, 1), core.word(chose, 1), moves, pp):
+            core.poke(chose, core.word(chose, 1) & ~6, 1)
+            core.poke(state, states["SSI_STATE_3"], 1)
 
     def battle_mon(self, battler):
         """Where the battle keeps a battler's BattleMon: found in main RAM by
