@@ -10,6 +10,7 @@ sealed the way the game seals one -- the older half different from the
 newest, the blocks' own checksum fields zero, as the game leaves most of them.
 """
 
+import os
 import re
 import struct
 import subprocess
@@ -165,6 +166,28 @@ class SaveditLibraryTests(unittest.TestCase):
         again = sv.Save(path)
         self.assertTrue(again.legacy, "an edit keeps the layout the game will convert")
         self.assertEqual(sv.profile(again)["money"], 4242)
+
+    def test_a_build_behind_the_tree_is_blamed_not_the_save(self):
+        """A save the tree's ROM wrote, read by the sizes of a build made
+        before a block grew, reads as nothing: the error names that build
+        as behind, since the tree's other one reads the save. Before, it
+        said only that neither half held a valid save (r12-play-opening's
+        four scenarios, with only the diagnostics build made again)."""
+        from unittest import mock
+        stale = Path(tempfile.mkdtemp(dir=self.tmp.name))
+        (stale / "main.elf").write_bytes(b"")
+        os.utime(stale / "main.elf", ns=(1 << 62, 1 << 62))     # no header newer than its link
+        measure = sv.measure
+
+        def grown(build=None):
+            inside, outside = measure()
+            if Path(build or BUILD) != stale:
+                return inside, outside
+            return [(inside[0][0], inside[0][1] - 4, inside[0][2])] + inside[1:], outside
+        with mock.patch.object(sv, "measure", grown):
+            with self.assertRaises(SystemExit) as refused:
+                sv.Save(self.blank, stale)
+        self.assertIn(f"but one by {BUILD}'s: {stale} is behind the tree", str(refused.exception))
 
     def test_a_save_from_before_the_berries_pocket_grew(self):
         """The layout before the Berries pocket held every Berry: 64 slots,

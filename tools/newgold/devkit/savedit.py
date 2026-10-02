@@ -867,9 +867,10 @@ def slot_specs(table):
 
 
 class Save:
-    def __init__(self, path, build=None):
+    def __init__(self, path, build=None, blame=True):
         self.path = Path(path)
         self.raw = bytearray(self.path.read_bytes())
+        self.build, self.blame = build, blame       # for _stale, when no half reads
         # A save in an older layout is read, and written, in its own: the game
         # converts it when it loads it (Save_LoadLegacySlots), so it is left
         # for the game to do. The layouts are tried newest first, as the game
@@ -915,8 +916,31 @@ class Save:
     def _newest_half(self):
         good = [h for h in (0, HALF) if self.valid(h)]
         if not good:
-            raise SystemExit(f"{self.path}: neither half of the flash holds a valid save")
+            raise SystemExit(f"{self.path}: neither half of the flash holds a valid save" + self._stale())
         return max(good, key=lambda h: self._footer(h, self.specs[0])["count"])
+
+    def _stale(self):
+        """What to say when no half reads and the build may be at fault, not
+        the save: the blocks' sizes are measured from the build, and one
+        behind the tree reads a save its ROM wrote as nothing (with only the
+        diagnostics build made again, four scenarios failed so). Said when a
+        header the layout reads is newer than the link (build_behind), or
+        when the tree's other HeartGold build reads the save."""
+        if not self.blame:
+            return ""
+        build = Path(self.build or ROOT / "build/heartgold.us")
+        behind = build_behind(build)
+        if behind:
+            return f" by {build}'s block sizes, linked before {', '.join(behind)} changed: make it again"
+        for other in (ROOT / "build/heartgold.us", ROOT / "build/heartgold.us.diag"):
+            if other.resolve() == build.resolve() or not (other / "main.elf").exists():
+                continue
+            try:
+                Save(self.path, other, blame=False)
+            except (SystemExit, Exception):
+                continue
+            return f" by {build}'s block sizes, but one by {other}'s: {build} is behind the tree, make it again"
+        return ""
 
     def block(self, name):
         entry = next(b for b in self.table if b["id"] == name)
