@@ -22,9 +22,9 @@ void Diag_BattleState(int state);
 // nothing, where __FILE__ and __LINE__ cost the main arena more than it has.
 extern unsigned long gDiagAssertCount;
 extern unsigned long gDiagAssertReturn;
-// The sixteen words under the stack pointer when the last one fired: the
-// caller's saved registers and, among them, its own return address, so the
-// reader can say who asked the function that asserted.
+// The sixty-four words under the stack pointer when the last one fired: the
+// callers' saved registers and, among them, their return addresses, so the
+// reader (markers.py) can say who asked the function that asserted.
 #define DIAG_ASSERT_STACK_WORDS 64
 extern unsigned long gDiagAssertStack[DIAG_ASSERT_STACK_WORDS];
 void Diag_AssertFail(void);
