@@ -28,7 +28,10 @@ game loads, the blocks by name. The party (`--party SPECIES:LEVEL::MOVE+MOVE`,
 always the player's own, so it obeys; `--level SLOT:LEVEL` raises one already
 there and keeps the rest of it), the bag, TMs, badges, the Dex, the
 position (`--where MAP:X:Y:DIR`, as a warp so the map builds itself), script
-flags (`--flag NAME`) and variables (`--var NAME=VALUE`). The gym saves in
+flags (`--flag NAME`) and variables (`--var NAME=VALUE`); `--train LEVEL`
+raises the party already there to a level, evolving by level on the way
+with the moves the game gives there, eggs apart -- the playthrough's
+stand-in for the grinding its bot does not do. The gym saves in
 `~/hgss-saves/gyms` are made with it; their README says how.
 
 It is a library as well: every option is a function of a `Save`, and it

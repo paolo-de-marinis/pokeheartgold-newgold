@@ -1154,6 +1154,29 @@ def parse_party(text):
     return wanted
 
 
+def trained(raw, level):
+    """A party Pokemon trained up to `level`, what the playthrough's legs
+    stand in for the grinding its bot does not do: raised to the level,
+    evolved on the way where evo.json evolves it by level alone (EVO_LEVEL;
+    ponytail: the gendered and conditioned ones are not followed), with the
+    moves the game gives that species at that level (preset_moves). An egg,
+    or a Pokemon already there, is left as it was."""
+    mon = describe_mon(raw)
+    if not mon or not mon["ok"] or mon["egg"] or mon["level"] >= level:
+        return raw
+    numbers = species_numbers()
+    evolves = {numbers[entry["baseSpecies"][len("SPECIES_"):]]: entry["evos"]
+               for entry in json.loads(source("files/poketool/personal/evo.json").read_text())["evoTable"]}
+    species = mon["species"]
+    while True:
+        into = next((evo["target"] for evo in evolves.get(species, [])
+                     if evo["method"] == "EVO_LEVEL" and evo["param"] <= level), None)
+        if into is None:
+            break
+        species = numbers[into[len("SPECIES_"):]]
+    return edit_mon(raw, species=species, level=level, moves=preset_moves(species, level))
+
+
 def short_of_next_level(raw, points):
     """A party Pokemon left `points` experience short of its next level, its
     level and stats as they were: the smallest gain a battle gives then
@@ -4052,6 +4075,9 @@ def main():
                         help="put one Pokemon in box N, counted from one")
     parser.add_argument("--party", metavar="SPECIES:LEVEL[:NATURE][:MOVE+...][:ITEM][,...]",
                         help="fill the party, e.g. CHIKORITA:5,PIDGEY:3:::ORAN_BERRY")
+    parser.add_argument("--train", type=int, metavar="LEVEL",
+                        help="raise every Pokemon in the party below LEVEL to it, eggs apart: evolved "
+                             "on the way by level, with the moves the game gives at that level")
     parser.add_argument("--bag", metavar="ITEM:COUNT[,...]",
                         help="the same as --item, a count left out being 1, e.g. MASTER_BALL:1")
     parser.add_argument("--exp-short", action="append", default=[], metavar="SLOT:POINTS",
@@ -4095,6 +4121,12 @@ def main():
         set_party(save, wanted)
         save.write()
         print("party: " + ", ".join(f"{n} at level {l}" for n, l, *_ in wanted))
+
+    if args.train:
+        for slot, raw in enumerate(party_raw(save)):
+            set_party_mon(save, slot, trained(raw, args.train))
+        save.write()
+        print(f"party: trained to level {args.train}")
 
     if args.item or args.bag:
         # --bag is --item under the name the battle scenarios use; both go

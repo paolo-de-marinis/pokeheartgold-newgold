@@ -399,6 +399,20 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertGreater(after["stats"][0], before["stats"][0])
         self.assertEqual([m["level"] for m in party[2:]], [20] * 4)
 
+    def test_a_party_trained_to_a_level(self):
+        # --train, the playthrough's stand-in for grinding to the cap: raised
+        # to the level, evolved by level on the way (Chikorita at 16, Pidgey
+        # at 18; Geodude waits for 25), with the moves that species has there.
+        save, n = self.open(), sv.species_numbers()
+        party = [sv.describe_mon(sv.trained(raw, 22)) for raw in sv.party_raw(save)]
+        self.assertEqual([(m["species_name"], m["level"]) for m in party],
+                         [("Bayleef", 22), ("Pidgeotto", 22), ("Raichu", 22), ("Eevee", 22), ("Geodude", 22),
+                          ("Shedinja", 22)])
+        self.assertEqual([m["id"] for m in party[0]["moves"]], sv.preset_moves(n["BAYLEEF"], 22))
+        self.assertEqual(party[0]["ot_name"], "A")
+        raw = sv.party_raw(save)[0]
+        self.assertEqual(sv.trained(raw, 20), raw, "one already there is left as it was")
+
     def test_editing_the_third_leaves_the_other_five(self):
         save = self.open()
         before = sv.party_raw(save)
