@@ -50,7 +50,7 @@ struct PatchDef gPatchDefs[] = {
     {
         "mwasmarm 1.2/base",
         "87f942cc0a0e90e73550d8d6f3fffcdeb5f69fa5",
-        "3395ac5decf49135d892e93a3e6dd38676025983",
+        "049af7422f8ddcfb2ce0e0ab46129fc750ad05b8",
         g12BasePatches
     },
     // mwasmarm 2.0/base definition

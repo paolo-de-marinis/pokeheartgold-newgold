@@ -7,6 +7,7 @@ building a thing. WINPATH is emptied for it: its only use is a winepath call,
 and a wine started outside the project's prefix makes one in ~/.wine.
 """
 
+import hashlib
 import os
 import re
 import subprocess
@@ -330,6 +331,35 @@ class BuildRuleTests(unittest.TestCase):
             with self.subTest(target):
                 prerequisites = " ".join(m.group(1) for m in re.finditer(rf"^{target}:(.*)$", db, re.M) if "=" not in m.group(1))
                 self.assertIn(patcher, prerequisites.split())
+
+    def test_the_patcher_knows_every_assembler_it_has_patched(self):
+        """Its table gave the 1.2 assembler's patched sha1 as 3395ac5d..., and
+        the two bytes it writes into 87f942cc... make 049af742...: a 1.2
+        assembler it had patched was "Unsupported" on the next run, which
+        stopped the build. Nothing ran it twice until every assembler a
+        target uses was patched (nitrocrypto's is 1.2/sp2p3). Each entry is
+        patched, on a copy of an assembler with its unpatched sha1 from
+        tools/mwccarm, to its patched sha1, and then left alone."""
+        source = (ROOT / "tools/mwasmarm_patcher/mwasmarm_patcher.c").read_text()
+        entries = re.findall(r'\{\s*"(mwasmarm [^"]+)",\s*"(\w{40})",\s*"(\w{40})"', source)
+        self.assertEqual(len(entries), 3)
+        found = {}
+        for exe in sorted((ROOT / "tools/mwccarm").glob("*/*/mwasmarm.exe")):
+            found.setdefault(hashlib.sha1(exe.read_bytes()).hexdigest(), exe)
+        with tempfile.TemporaryDirectory(prefix="newgold-aspatch-") as directory:
+            patcher = Path(directory) / "mwasmarm_patcher"
+            subprocess.run(["gcc", "-O2", "-o", patcher, ROOT / "tools/mwasmarm_patcher/mwasmarm_patcher.c"], check=True)
+            for version, before, after in entries:
+                with self.subTest(version):
+                    if before not in found:
+                        self.skipTest(f"no unpatched {version} in tools/mwccarm")
+                    copy = Path(directory) / "mwasmarm.exe"
+                    copy.write_bytes(found[before].read_bytes())
+                    self.assertEqual(subprocess.run([patcher, "-q", copy]).returncode, 0)
+                    self.assertEqual(hashlib.sha1(copy.read_bytes()).hexdigest(), after)
+                    again = subprocess.run([patcher, copy], capture_output=True, text=True)
+                    self.assertEqual(again.returncode, 0, again.stdout)
+                    self.assertIn("patched version detected", again.stdout)
 
     def test_zukan_enc_naix_is_made_before_anything_is_compiled(self):
         """The Pokedex includes zukan_enc.naix, which is sed's copy of the
