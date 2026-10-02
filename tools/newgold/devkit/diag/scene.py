@@ -898,7 +898,7 @@ class Scene:
         on the party menu's state; done when A's slot holds what B's held."""
         import party
         core, hooks, layout, menu = self.core, self.hooks, app_layout(), party_menu_layout()
-        before = [mon["species"] for mon in party.mons(core.ram(), self.elf)]
+        before = [mon["species"] for mon in self.mons()]
         if max(first, second) >= len(before):
             return [f"swap: the party has {len(before)} Pokemon"]
         end = core.frames + frames
@@ -919,7 +919,7 @@ class Scene:
                 core.step(10, hooks)
                 continue
             state = core.word(manager + layout["OverlayManager.proc_state"])
-            swapped = swapped or [mon["species"] for mon in party.mons(core.ram(), self.elf)][first] == before[second]
+            swapped = swapped or self.mons()[first]["species"] == before[second]
             if state == menu["input"]:
                 if swapped:
                     core.press("B", 6, hooks)
@@ -942,6 +942,14 @@ class Scene:
             else:
                 core.step(4, hooks)
         return [f"swap: slots {first} and {second} not traded in {frames} frames"]
+
+    def mons(self):
+        """party.mons once the game has sealed every Pokemon (party.sealed),
+        a frame at a time for a second at most: one read in the middle of the
+        game's decryption is nonsense -- a species 17223 just after a swap.
+        party.sealed_mons does it, as for gym.py's closing list."""
+        import party
+        return party.sealed_mons(self.core, self.elf, self.hooks)
 
     def caught(self, ram, species):
         """Whether the Pokedex has `species` caught."""
@@ -977,7 +985,7 @@ class Scene:
             if now >= least:
                 self.say(f"[{self.core.frames}] pace: {key} {now} after {walks} walks")
                 return None
-            mons = party.mons(self.core.ram(), self.elf)
+            mons = self.mons()
             fighters = [mons[0]] + ([mons[self.shift]] if self.shift is not None and self.shift < len(mons) else [])
             if self.healer and any(mon["hp"] * 100 < max(self.flee, 1) * mon["maxHp"] for mon in fighters):
                 # On the way to the nurse every wild Pokemon is run from: the
@@ -1246,7 +1254,7 @@ class Scene:
             return party.bag(ram, self.elf, self.number(name[len("bag:"):]))
         if name.startswith("party") and "." in name:
             slot, field = name[len("party"):].split(".")
-            mons = party.sealed_mons(self.core, self.elf, self.hooks)
+            mons = self.mons()
             return mons[int(slot)][field] if int(slot) < len(mons) else None
         if name.startswith("caught:"):
             return self.caught(ram, self.number(name[len("caught:"):]))

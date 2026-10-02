@@ -229,19 +229,19 @@ class ScenarioFileTests(unittest.TestCase):
         flees = []
         s.goto, s.run = goto, (lambda step: (steps.append(step), flees.append(s.flee)))
         s.value = lambda ram, key: next(values)
-        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": next(hps), "maxHp": 20}]):
+        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": next(hps), "maxHp": 20, "sealed": True}]):
             self.assertIsNone(s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 10000))
         self.assertEqual(walks, [(33, 1, 2), (33, 3, 4), (33, 1, 2)])
         self.assertEqual(steps, ["goto:158,8,13", "UP", "A", "field"])
         self.assertEqual((flees, s.flee), ([101] * 4, 40))     # runs from all on the way, then as before
         s.value = lambda ram, key: 5
-        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20}]):
+        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20, "sealed": True}]):
             self.assertIn("under 8", s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 1000)[0])
         # With shift:, the one sent in for the first fights: its HP counts too.
         steps.clear()
         s.shift, values = 1, iter([5, 8])
         s.value = lambda ram, key: next(values)
-        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20}, {"hp": 5, "maxHp": 30}]):
+        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20, "sealed": True}, {"hp": 5, "maxHp": 30, "sealed": True}]):
             self.assertIsNone(s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 10000))
         self.assertEqual(steps, ["goto:158,8,13", "UP", "A", "field"])
 
@@ -272,6 +272,28 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertEqual(s.holds[0x100], (1, 4))
         s.value = lambda ram, key: 0
         self.assertIn("under 1", s.run("again:3,badges,1,2")[0])
+
+    def test_the_party_is_read_once_the_game_has_sealed_it(self):
+        # swap: read the species before it, right after another swap, with a
+        # Pokemon half decrypted (17223) and never saw the trade it waited
+        # for: the menu swapped the two back and forth for 6000 frames.
+        import party
+        from unittest import mock
+
+        class Core:
+            frames = 0
+
+            def ram(self):
+                return b""
+
+            def step(self, frames, hooks):
+                self.frames += frames
+        s = scene.Scene.__new__(scene.Scene)
+        s.core, s.hooks, s.elf = Core(), [], None
+        reads = iter([[{"species": 17223, "sealed": False}], [{"species": 163, "sealed": True}]])
+        with mock.patch.object(party, "mons", lambda ram, elf: next(reads)):
+            self.assertEqual(s.mons(), [{"species": 163, "sealed": True}])
+        self.assertEqual(s.core.frames, 1)
 
     def test_retry_gives_the_battle_after_a_loss_a_new_seed(self):
         # retry:on -- after a loss on a goto, the held seed one higher; a win
