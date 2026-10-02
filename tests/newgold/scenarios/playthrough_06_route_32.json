@@ -1,0 +1,12 @@
+{
+  "about": "The playthrough's Route 32, from Violet City's Pokemon Center: out of Violet's south exit, where the man on the route's first corridor walks up (a coord event the way south steps on, VAR_UNK_408D) and, the egg in the party, gives the Miracle Seed (FLAG_UNK_074); down the route, Youngster Albert and the wild Pokemon on the way (two Doduo fought, a Marill and three Mareep run from), to the route's Pokemon Center, where the fishing guru gives the Old Rod (FLAG_GOT_OLD_ROD, a yes taken by A); the nurse, and the game's save. The party is leg 05's as it left it. Split from Union Cave to keep each leg near three or four minutes. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_05_falkner",
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40", "goto:MAP_ROUTE_32,476,307",
+            {"expect": {"flag:FLAG_UNK_074": 1, "bag:ITEM_MIRACLE_SEED": 1, "var:VAR_UNK_408D": 1, "music": "SEQ_GS_R_2_30"}},
+            "goto:MAP_ROUTE_32_POKECENTER_1F,4,15,40000", "A", "field",
+            {"expect": {"flag:FLAG_GOT_OLD_ROD": 1, "bag:ITEM_OLD_ROD": 1, "music": "SEQ_GS_POKESEN"}},
+            "goto:MAP_ROUTE_32_POKECENTER_1F,8,13", "UP", "A", "field", "save"],
+  "expect": {"map": "MAP_ROUTE_32_POKECENTER_1F", "x": 8, "y": 13, "badges": 1, "party": 6,
+             "music": "SEQ_GS_POKESEN", "lines": ["You defeated Youngster Albert!"]}
+}
