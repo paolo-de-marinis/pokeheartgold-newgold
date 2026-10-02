@@ -37,7 +37,8 @@ typedef struct BattleBag {
     Window *windows;          // 0x2C
     u8 unk30[0x3C - 0x30];
     ItemSlot pocketItems[4][36]; // 0x3C, the four lists the battle bag shows
-    u8 unk27C[0x114B - 0x27C];
+    u8 unk27C[0x114A - 0x27C];
+    u8 state;     // 0x114A, the one ov08_02222670 runs: 1 the pockets, 2 a pocket's items, 3 an item's USE
     u8 nextState; // 0x114B
     u8 unk114C;
     u8 pocket; // 0x114D
