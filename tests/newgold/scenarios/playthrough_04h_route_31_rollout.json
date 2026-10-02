@@ -1,0 +1,39 @@
+{
+  "about": "The playthrough's Geodude trained on, from Violet City's Pokemon Center: the same grass, the Cyndaquil relieving it (shift:3), from level 8 to 10, where it learns Rollout -- Rock, its own type, twice as strong against every Pokemon of Falkner's and of his Bird Keepers', and stronger each turn it rolls on. Split from the leg before to keep each near six minutes (43,059 frames where it was written). The nurse and the game's save, the Geodude first for the gym. The party is the one the legs before caught, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04g_route_31_geodude",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "heal:MAP_VIOLET_POKECENTER_1F,8,13",
+    "shift:3",
+    "pace:MAP_ROUTE_31,531,276,532,276,party0.level,10,60000",
+    "shift:none",
+    "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_VIOLET_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "party": 4,
+    "party0.species": "SPECIES_GEODUDE",
+    "party0.level": [
+      10,
+      13
+    ],
+    "party1.species": "SPECIES_MISDREAVUS",
+    "party2.species": "SPECIES_HOOTHOOT",
+    "music": "SEQ_GS_POKESEN",
+    "lines": [
+      "Geodude learned Rollout!"
+    ],
+    "party3.species": "SPECIES_CYNDAQUIL"
+  }
+}

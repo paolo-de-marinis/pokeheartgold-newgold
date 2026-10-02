@@ -1,0 +1,37 @@
+{
+  "about": "The playthrough trains its Geodude for Falkner's birds, from Violet City's Pokemon Center after Elder Li, the cap at 13: swap: puts it first, and on the two tiles of Route 31's grass nearest the city shift:3 has the Cyndaquil relieve it at every wild battle's first prompt -- the Geodude, Tackle only and four times weak to the night's Bellsprouts, Spinarak and Zubat, would lose them; out at the start, it shares what the Cyndaquil's Ember wins. Fighting Dark Cave alone it went from 5 to 8 in 80,000 frames, most of them walks to the nurse; relieved, 41,654 frames where the leg was written. The nurse (heal:) when the Cyndaquil is low, running from everything on the way, and the game's save. The party is the one the legs before caught, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04f_elder_li",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "heal:MAP_VIOLET_POKECENTER_1F,8,13",
+    "swap:0,3",
+    "shift:3",
+    "pace:MAP_ROUTE_31,531,276,532,276,party0.level,8,50000",
+    "shift:none",
+    "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_VIOLET_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "party": 4,
+    "party0.species": "SPECIES_GEODUDE",
+    "party0.level": [
+      8,
+      10
+    ],
+    "party1.species": "SPECIES_MISDREAVUS",
+    "party2.species": "SPECIES_HOOTHOOT",
+    "music": "SEQ_GS_POKESEN",
+    "party3.species": "SPECIES_CYNDAQUIL"
+  }
+}
