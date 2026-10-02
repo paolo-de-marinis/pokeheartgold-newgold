@@ -111,6 +111,7 @@ typedef int BOOL;
 enum { FALSE = 0, TRUE = 1 };
 #define NELEMS(a) (sizeof(a) / sizeof(*(a)))
 #define MAX_MON_MOVES 4
+#include "constants/battle.h"
 #include "constants/moves.h"
 #include "constants/move_effects.h"
 typedef struct { int unused; } BattleSystem;

@@ -4147,7 +4147,12 @@ BOOL BtlCmd_TrySleepTalk(BattleSystem *battleSystem, BattleContext *ctx) {
         }
     }
 
-    nonSelectableMoves = StruggleCheck(battleSystem, ctx, ctx->battlerIdAttacker, nonSelectableMoves, ~2);
+    // A move Gravity or Heal Block stops is called and fails as it is used
+    // (MoveStoppedByGravityOrHealBlock), from the fifth generation (Pokemon
+    // Central, Sonnolalia: "verranno chiamate ma falliranno"); the fourth
+    // refused it. One with no PP left is called.
+    nonSelectableMoves = StruggleCheck(battleSystem, ctx, ctx->battlerIdAttacker, nonSelectableMoves,
+        ~(STRUGGLE_CHECK_NO_PP | STRUGGLE_CHECK_GRAVITY | STRUGGLE_CHECK_HEAL_BLOCK));
 
     if (nonSelectableMoves == 15) {
         BattleScriptIncrementPointer(ctx, adrs);

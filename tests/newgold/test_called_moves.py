@@ -257,6 +257,12 @@ int main(void) {
         called = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CheckLegalCalledMove")
         self.assertNotIn("Gravity", called)
         self.assertNotIn("HealBlocked", called)
+        # Sleep Talk calls such a move too, and it fails (Pokemon Central,
+        # Sonnolalia, from the fifth generation): its pick leaves out the
+        # Gravity and Heal Block checks of the moves its user could not choose.
+        self.assertIn("StruggleCheck(battleSystem, ctx, ctx->battlerIdAttacker, nonSelectableMoves,\n"
+                      "        ~(STRUGGLE_CHECK_NO_PP | STRUGGLE_CHECK_GRAVITY | STRUGGLE_CHECK_HEAL_BLOCK));",
+                      function(COMMANDS.read_text(), "BtlCmd_TrySleepTalk"))
 
     def test_the_called_move_is_noted_as_the_move_used(self):
         run_c(NOTED.replace("@FUNCTIONS@", function(CONTROLLER.read_text(), "NoteMoveUsed")))
