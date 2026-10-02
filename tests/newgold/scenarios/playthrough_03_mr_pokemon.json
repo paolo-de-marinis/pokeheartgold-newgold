@@ -1,0 +1,16 @@
+{
+  "about": "The playthrough from Cherrygrove's Pokemon Center to Elm's lab, as the tree's scripts order it. First the player's settings, through the start menu's OPTIONS: text fast, battle scene off, battle style set -- a player's choice that shortens every leg after it (the save keeps them). Then north across Route 30 to Mr. Pokemon's house: his Mystery Egg (bag:ITEM_MYSTERY_EGG 1), Professor Oak, the Pokedex and his number, a heal; Elm's panic call as the player steps out (FLAG_GOT_ELMS_PANIC_CALL, played through the Pokegear by goto's B); the rival at Cherrygrove's east edge (TRAINER_PASSERBY_BOY_3, his level-7 Totodile, whose Water Gun takes the level-5 Cyndaquil that has fought its way back down a route with no Pokemon Center: it loses, and the game carries on and heals, as it does for this one battle), the nurse again, Route 29 and New Bark, and in Elm's lab the officer: the rival named on the keyboard (START to OK, A: the default, Silver) and the egg handed to Elm (bag:ITEM_MYSTERY_EGG 0, VAR_SCENE_ELMS_LAB 4). The game's save in the lab. flee:40 runs from a wild Pokemon when the Cyndaquil has under 40% of its HP; the field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_02_cherrygrove",
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "X", "DOWN", "RIGHT", "A", "wait:60", "RIGHT", "DOWN", "RIGHT", "DOWN", "RIGHT", "DOWN*4", "LEFT",
+            "A", "wait:120", "B", "wait:40", "poke:sLCRNG_State=0xbb160215", "flee:40",
+            "goto:MAP_ROUTE_30_MR_POKEMON_HOUSE,4,8",
+            {"expect": {"flag:FLAG_GOT_POKEDEX": 1, "bag:ITEM_MYSTERY_EGG": 1, "var:VAR_SCENE_MR_POKEMONS_HOUSE": 1, "var:VAR_SCENE_CHERRYGROVE_CITY_OW": 3, "music": "SEQ_GS_R_1_30"}},
+            "goto:MAP_ROUTE_29,580,399",
+            {"expect": {"flag:FLAG_GOT_ELMS_PANIC_CALL": 1, "flag:FLAG_MET_PASSERBY_BOY": 1, "var:VAR_SCENE_CHERRYGROVE_CITY_OW": 4}},
+            "goto:MAP_CHERRYGROVE_POKECENTER_1F,8,13", "UP", "A", "field", "goto:MAP_NEW_BARK,684,394", "UP*2",
+            "untilheap:HEAP_ID_NAMING_SCREEN:80", "wait:90", "START", "A", "field", "save"],
+  "expect": {"map": "MAP_NEW_BARK_ELMS_LAB_1F", "x": 4, "y": 6, "party": 1, "flag:FLAG_GAVE_RIVAL_NAME_TO_OFFICER": 1,
+             "var:VAR_SCENE_ELMS_LAB": 4, "bag:ITEM_MYSTERY_EGG": 0, "music": "SEQ_GS_UTSUGI_RABO",
+             "lines": ["You are challenged by Passerby Boy!", "Passerby Boy sent out Totodile!"]}
+}
