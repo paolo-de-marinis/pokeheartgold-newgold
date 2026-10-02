@@ -1177,6 +1177,18 @@ def trained(raw, level):
     return edit_mon(raw, species=species, level=level, moves=preset_moves(species, level))
 
 
+def taught(raw, move):
+    """A party Pokemon that has learned `move` from a machine: into its
+    first empty move slot, else in place of its first move -- the one the
+    game asks it to forget, a player's pick (ponytail: always the first).
+    The species must learn it (check_moves)."""
+    known = [entry["id"] for entry in describe_mon(raw)["moves"]]
+    if move in known:
+        return raw
+    known = known + [move] if len(known) < MAX_MON_MOVES else known[1:] + [move]
+    return edit_mon(raw, moves=known)
+
+
 def short_of_next_level(raw, points):
     """A party Pokemon left `points` experience short of its next level, its
     level and stats as they were: the smallest gain a battle gives then
@@ -4078,6 +4090,9 @@ def main():
     parser.add_argument("--train", type=int, metavar="LEVEL",
                         help="raise every Pokemon in the party below LEVEL to it, eggs apart: evolved "
                              "on the way by level, with the moves the game gives at that level")
+    parser.add_argument("--teach", action="append", default=[], metavar="SLOT:MOVE",
+                        help="party Pokemon SLOT (counted from one) learns MOVE as a machine teaches it: "
+                             "in an empty move slot, else in place of its first move; repeatable")
     parser.add_argument("--bag", metavar="ITEM:COUNT[,...]",
                         help="the same as --item, a count left out being 1, e.g. MASTER_BALL:1")
     parser.add_argument("--exp-short", action="append", default=[], metavar="SLOT:POINTS",
@@ -4127,6 +4142,12 @@ def main():
             set_party_mon(save, slot, trained(raw, args.train))
         save.write()
         print(f"party: trained to level {args.train}")
+
+    for entry in args.teach:
+        slot, _, move = entry.partition(":")
+        set_party_mon(save, int(slot) - 1, taught(party_raw(save)[int(slot) - 1], move_numbers()[move.upper()]))
+        save.write()
+        print(f"party slot {slot}: learned {move.upper()}")
 
     if args.item or args.bag:
         # --bag is --item under the name the battle scenarios use; both go

@@ -413,6 +413,22 @@ class SaveditLibraryTests(unittest.TestCase):
         raw = sv.party_raw(save)[0]
         self.assertEqual(sv.trained(raw, 20), raw, "one already there is left as it was")
 
+    def test_a_party_pokemon_taught_a_machine_move(self):
+        # --teach, the playthrough's stand-in for the bag's HM01: Chikorita
+        # learns Cut in place of its first move, the rest kept with their PP;
+        # one already knowing it is left as it was; a move it cannot learn
+        # is refused.
+        n, moves = sv.species_numbers(), sv.move_numbers()
+        raw = sv.party_raw(self.open())[0]
+        before = sv.describe_mon(raw)["moves"]
+        after = sv.describe_mon(sv.taught(raw, moves["CUT"]))
+        self.assertEqual([m["id"] for m in after["moves"]], [m["id"] for m in before[1:]] + [moves["CUT"]])
+        self.assertEqual([m["pp"] for m in after["moves"][:3]], [m["pp"] for m in before[1:]])
+        self.assertEqual(sv.taught(sv.taught(raw, moves["CUT"]), moves["CUT"]), sv.taught(raw, moves["CUT"]))
+        with self.assertRaises(sv.Illegal):
+            sv.taught(raw, moves["SURF"])
+        self.assertEqual(sv.describe_mon(raw)["species"], n["CHIKORITA"])
+
     def test_editing_the_third_leaves_the_other_five(self):
         save = self.open()
         before = sv.party_raw(save)

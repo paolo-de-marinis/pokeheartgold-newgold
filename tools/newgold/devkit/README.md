@@ -31,7 +31,9 @@ position (`--where MAP:X:Y:DIR`, as a warp so the map builds itself), script
 flags (`--flag NAME`) and variables (`--var NAME=VALUE`); `--train LEVEL`
 raises the party already there to a level, evolving by level on the way
 with the moves the game gives there, eggs apart -- the playthrough's
-stand-in for the grinding its bot does not do. The gym saves in
+stand-in for the grinding its bot does not do -- and `--teach SLOT:MOVE`
+teaches a party Pokemon a move as a machine does, for the HM its bot
+cannot teach from the bag. The gym saves in
 `~/hgss-saves/gyms` are made with it; their README says how.
 
 It is a library as well: every option is a function of a `Save`, and it
