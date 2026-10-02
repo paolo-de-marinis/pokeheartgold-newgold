@@ -295,6 +295,37 @@ class ScenarioFileTests(unittest.TestCase):
             self.assertEqual(s.mons(), [{"species": 163, "sealed": True}])
         self.assertEqual(s.core.frames, 1)
 
+    def test_a_swap_that_does_not_happen_leaves_the_menus(self):
+        # The menus left open sent the next goto nowhere for 30000 frames.
+        import party
+        from unittest import mock
+
+        class Core:
+            frames, pressed = 0, []
+
+            def ram(self):
+                return b""
+
+            def word(self, address, size=4):
+                return 99                   # a party menu state no branch answers
+
+            def step(self, frames, hooks):
+                self.frames += frames
+
+            def press(self, button, frames, hooks):
+                self.pressed.append(button)
+                self.frames += frames
+        s = scene.Scene.__new__(scene.Scene)
+        s.core, s.hooks, s.elf, s.say = Core(), [], None, (lambda line: None)
+        s.markers = type("Markers", (), {"address": lambda self, name: 0x100})()
+        s.start_menu = lambda action, end: None
+        s.app = lambda: ("PartyMenuApp_Main", 0x200)
+        s.movable = lambda: s.core.pressed.count("B") >= 2
+        mons = [{"species": 155, "sealed": True}, {"species": 163, "sealed": True}]
+        with mock.patch.object(party, "mons", lambda ram, elf: mons):
+            self.assertIn("not traded", s.swap(0, 1, frames=100)[0])
+        self.assertEqual(s.core.pressed[-2:], ["B", "B"])
+
     def test_retry_gives_the_battle_after_a_loss_a_new_seed(self):
         # retry:on -- after a loss on a goto, the held seed one higher; a win
         # leaves it, and a seed not held is not made one.

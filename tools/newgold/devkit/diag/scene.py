@@ -941,6 +941,11 @@ class Scene:
                 core.step(20, hooks)
             else:
                 core.step(4, hooks)
+        for _ in range(40):     # out of the menus, so the steps after can walk
+            if self.movable():
+                break
+            core.press("B", 6, hooks)
+            core.step(20, hooks)
         return [f"swap: slots {first} and {second} not traded in {frames} frames"]
 
     def mons(self):
