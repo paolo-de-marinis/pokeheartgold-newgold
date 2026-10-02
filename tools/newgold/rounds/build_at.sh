@@ -40,9 +40,13 @@ rom() {
 
 build() {  # build TAG: every target at what is checked out now
     local line="$1 $(git log -1 --format=%s)" t args
-    # The ROM targets do not depend on the host tools: build them first, for
-    # a fresh worktree and for a commit that changed one.
-    if ! "$CAPPED" -m "${CAP:-8G}" make -j"${JOBS:-8}" tools > "$OUT/$1.tools.log" 2>&1; then
+    # Since 02bc104af every host tool is a prerequisite of what it makes, and
+    # since common.mk has MWAS_PATCHED every assembler is patched before it
+    # runs: there the ROM targets need neither step. An older commit needs
+    # both, in this order, as make's all target does them: the tools, then
+    # the ARM9's assembler patched, which in a fresh mwccarm it is not.
+    if ! { "$CAPPED" -m "${CAP:-8G}" make -j"${JOBS:-8}" tools &&
+           "$CAPPED" -m "${CAP:-8G}" make patch_mwasmarm; } > "$OUT/$1.tools.log" 2>&1; then
         echo "$1 tools FAILED (log $OUT/$1.tools.log)" | tee -a "$OUT/md5.txt"
         return 1
     fi
