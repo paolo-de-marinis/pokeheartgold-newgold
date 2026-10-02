@@ -137,6 +137,17 @@ def may_run(wild, line):
     return (wild or line.startswith("You encountered a wild")) and "get away" not in line and "escape" not in line
 
 
+def aimed_at(ram, markers, battler):
+    """The foe a move of the player's `battler` (0 or 2) is scored against:
+    the one its touch on the target screen goes to (Scorer.panel) --
+    battler 3 for the first, battler 1 for the second -- or the other foe
+    when that one is not up (no battler 3 in a single battle, or fainted)."""
+    at, size = markers.address("gDiagBattlers") - 0x02000000, struct.calcsize(BATTLER)
+    first, other = (3, 1) if battler == 0 else (1, 3)
+    foe = struct.unpack_from(BATTLER, ram, at + first * size)
+    return foe if foe[0] and foe[1] else struct.unpack_from(BATTLER, ram, at + other * size)
+
+
 def second_down(ram, markers):
     """Whether the player's second Pokemon in a double battle has fainted."""
     second = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000 + 2 * struct.calcsize(BATTLER))
@@ -189,7 +200,8 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     first's); it chooses as the first does, from its own moves. A move that
     asks for a target is aimed, every turn, by the player's first at battler
     3 and by its second at battler 1 -- at the other foe when that touch is
-    not taken -- and one on the user's side at the user or its partner. With
+    not taken -- and one on the user's side at the user or its partner; each
+    scores its moves against the foe it aims at (aimed_at). With
     `flee`, a percentage, the player runs from a wild Pokemon when its own has
     less than that share of its HP left, as a player walking a long route
     does rather than black out.
@@ -273,9 +285,8 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             usable = [i for i, part in enumerate(moves) if not part.strip().endswith(" 0") and i not in refused]
             slot = move - 1 if 1 <= move <= 4 and move - 1 not in refused else (usable or [0])[0]
             if move < 0 and usable:
-                at = markers.address("gDiagBattlers") - 0x02000000
-                you = struct.unpack_from(BATTLER, ram, at)
-                foe = struct.unpack_from(BATTLER, ram, at + struct.calcsize(BATTLER))
+                you = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000)
+                foe = aimed_at(ram, markers, 0)
                 slot = max(usable, key=lambda i: scorer.score(you[7 + i], you[0], foe[0]))
             last_slot = slot
             moves_chosen[0] = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000)[7 + slot]
@@ -306,8 +317,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             usable = [i for i in range(4) if second[7 + i] and second[11 + i]]
             slot = move - 1 if 1 <= move <= 4 else (usable or [0])[0]
             if move < 0 and usable:
-                foe = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000
-                                         + struct.calcsize(BATTLER))
+                foe = aimed_at(ram, markers, 2)
                 slot = max(usable, key=lambda i: scorer.score(second[7 + i], second[0], foe[0]))
             moves_chosen[2] = second[7 + slot]
             tries = 0

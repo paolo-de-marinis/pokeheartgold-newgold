@@ -1,0 +1,14 @@
+{
+  "about": "gym.py's player scores each of its two Pokemon's moves against the foe it aims at: the first at battler 3, the second at battler 1 (aimed_at; before, both against battler 1). The Twins' double battle in the Azalea Gym, as in revival_blessing_ai_double.json, with a level-30 Pawmot and a level-30 Baxcalibur: the Pawmot is given Drill Run and Thunder Shock in the running battle (teach:), everyone else only Splash. Against the twins' Spinarak, battler 1, Drill Run scores 80 and Thunder Shock 60 (40, by 1.5 for the Pawmot's own type); against their Ledyba, battler 3, where the Pawmot's touch goes, Drill Run scores 0 (Flying) and Thunder Shock 120. Scored against battler 1 the Pawmot used Drill Run into the Ledyba; now Thunder Shock.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:30,BAXCALIBUR:30", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_DRILL_RUN", "teach:0,1,MOVE_THUNDER_SHOCK", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:2,0,MOVE_SPLASH", "teach:2,1,0,0", "teach:2,2,0,0", "teach:2,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:3,0,MOVE_SPLASH", "teach:3,1,0,0", "teach:3,2,0,0", "teach:3,3,0,0",
+            "fight::1"],
+  "expect": {"lines": ["Pawmot used Thunder Shock!"], "no_lines": ["Drill Run"],
+             "battler1.species": "SPECIES_SPINARAK", "battler3.species": "SPECIES_LEDYBA"}
+}

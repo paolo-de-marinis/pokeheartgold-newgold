@@ -189,6 +189,28 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(scorer.panel(moves["THUNDERBOLT"], 2, 0), FOE_PANELS[1])
         self.assertEqual(scorer.panel(moves["THUNDERBOLT"], 2, 1), FOE_PANELS[0])
 
+    def test_gym_scores_a_move_against_the_foe_it_aims_at(self):
+        # The player's first aims at battler 3 and its second at battler 1
+        # (above); each picked its move by battler 1's types, so the first
+        # chose against the foe it would not hit.
+        import struct
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from gym import aimed_at
+        from markers import BATTLER
+
+        class At:
+            address = staticmethod(lambda name: 0x02000000)
+
+        def battlers(*mons):
+            return b"".join(struct.pack(BATTLER, species, hp, 50, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                            for species, hp in mons)
+        double = battlers((25, 50), (16, 40), (26, 50), (74, 40))
+        self.assertEqual(aimed_at(double, At, 0)[0], 74)
+        self.assertEqual(aimed_at(double, At, 2)[0], 16)
+        self.assertEqual(aimed_at(battlers((25, 50), (16, 40), (26, 50), (74, 0)), At, 0)[0], 16)
+        self.assertEqual(aimed_at(battlers((25, 50), (16, 0), (26, 50), (74, 40)), At, 2)[0], 74)
+        self.assertEqual(aimed_at(battlers((25, 50), (16, 40), (0, 0), (0, 0)), At, 0)[0], 16)    # a single battle
+
     def test_nested_melonds_binds_every_button(self):
         # nested.py writes melonDS's key table before melonDS starts; a table
         # whose parent was implicit made melonDS's toml writer abort.
