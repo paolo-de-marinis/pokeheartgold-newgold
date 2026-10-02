@@ -1,0 +1,10 @@
+{
+  "about": "The playthrough's way out of Ilex Forest, from Azalea's Pokemon Center: HM01 is taught here, and says so -- the bot does not use the bag, so savedit --teach gives the Quilava (party slot 2) Cut in place of its first move, as the machine would -- then into the forest to the tree on the way north (16, 62), A, yes to Cut (FLAG_MAPTEMP_010, the tree's, set), and on through the forest's north to the gatehouse onto Route 34, where the game is saved. The party is leg 08's. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_09_ilex",
+  "edit": ["--teach", "2:CUT"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40", {"expect": {"party1.species": "SPECIES_QUILAVA"}},
+            "goto:MAP_ILEX_FOREST,16,62", "A", "field", {"expect": {"flag:FLAG_MAPTEMP_010": 1}},
+            "goto:MAP_ROUTE_34_ILEX_FOREST_GATEHOUSE,5,10,40000", "save"],
+  "expect": {"map": "MAP_ROUTE_34_ILEX_FOREST_GATEHOUSE", "x": 5, "y": 10, "badges": 2, "party": 5}
+}
