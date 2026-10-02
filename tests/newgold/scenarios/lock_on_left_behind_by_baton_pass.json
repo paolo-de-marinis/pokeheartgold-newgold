@@ -1,0 +1,20 @@
+{
+  "about": "Baton Pass leaves Lock-On's aim behind from the fifth generation (Pokemon Central, Staffetta; Showdown's gen-9 lockon is noCopy): the aim ends as its user leaves, and the Pokemon the baton goes to has none. Before, the aim went on for the replacement, its turn count started again. The accuracy roll is forced to miss (gDiagForceHit 2), so only a Lock-On's aim makes a move with less than 100 accuracy hit. A level-10 Pikachu with a level-40 Snorlax behind it is given Lock-On and Baton Pass in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash. The Pikachu takes aim at the Chansey and passes the baton; the Snorlax, given Zap Cannon (50 accuracy) and Lock-On, misses with Zap Cannon (before, the aim passed and it hit), then takes aim itself and hits, felling the Chansey. gym.py answers the party screen. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10,SNORLAX:40"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 2, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_LOCK_ON", "teach:0,1,MOVE_BATON_PASS", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Lock-On!", "Pikachu took aim at the wild Chansey!"]}},
+            "fight:2:1",
+            {"expect": {"new_lines": ["Pikachu used Baton Pass!", "Go! Snorlax!"], "battler0.species": "SPECIES_SNORLAX"}},
+            "teach:0,0,MOVE_ZAP_CANNON", "teach:0,1,MOVE_LOCK_ON", "teach:0,2,0,0", "teach:0,3,0,0",
+            "fight:1:1",
+            {"expect": {"new_lines": ["Snorlax used Zap Cannon!", "Snorlax’s attack missed!"]}},
+            "fight:2:1",
+            {"expect": {"new_lines": ["Snorlax used Lock-On!", "Snorlax took aim at the wild Chansey!"]}},
+            "fight:1:1"],
+  "expect": {"new_lines": ["Snorlax used Zap Cannon!", "The wild Chansey fainted!"]}
+}
