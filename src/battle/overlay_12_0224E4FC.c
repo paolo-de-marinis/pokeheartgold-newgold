@@ -7370,10 +7370,14 @@ BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) {
 // to fell the user is its held item, which answers the hit after them
 // (CheckItemEffectOnHit): a Rocky Helmet on a contact move or a Jaboca Berry
 // on a physical one, a share of the user's maximum HP that Magic Guard
-// spares. What they would take is what they take there.
+// spares. What they would take is what they take there. Parental Bond's
+// first strike, with the second to come, is answered twice by a Rocky
+// Helmet, so the user stands only above two shares; a Jaboca Berry is eaten
+// by the first.
 static BOOL Battler_WillBeDraggedOut(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int attacker = ctx->battlerIdAttacker;
     int item = GetBattlerHeldItemEffect(ctx, battlerId);
+    int shares = (item == HOLD_EFFECT_DAMAGE_ON_CONTACT && ParentalBond_StrikeToCome(ctx)) ? 2 : 1;
 
     if (!ctx->selfTurnData[battlerId].dragPending || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
         || Battler_HeldByCommander(ctx, battlerId)) {
@@ -7382,7 +7386,7 @@ static BOOL Battler_WillBeDraggedOut(BattleSystem *battleSystem, BattleContext *
     if (((item == HOLD_EFFECT_DAMAGE_ON_CONTACT && BattleMoveMakesContact(ctx, ctx->moveNoCur))
             || (item == HOLD_EFFECT_RECOIL_PHYSICAL && ctx->selfTurnData[battlerId].physicalDamage))
         && GetBattlerAbility(ctx, attacker) != ABILITY_MAGIC_GUARD
-        && ctx->battleMons[attacker].hp <= DamageDivide(ctx->battleMons[attacker].maxHp, GetHeldItemModifier(ctx, battlerId, 0))) {
+        && ctx->battleMons[attacker].hp <= shares * DamageDivide(ctx->battleMons[attacker].maxHp, GetHeldItemModifier(ctx, battlerId, 0))) {
         return FALSE;
     }
     if (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) {
