@@ -46,8 +46,9 @@ class ForecastTests(unittest.TestCase):
                                         r"form = CASTFORM_NORMAL;\s*if \(GetBattlerAbility\(ctx, ctx->battlerIdTemp\) == ABILITY_FORECAST\s")
 
     def test_each_weather_its_form(self):
-        for weather, form in (("SUN_ALL", "SUNNY"), ("RAIN_ALL", "RAINY"), ("HAIL_ALL", "SNOWY")):
-            self.assertRegex(self.castform, rf"if \(weather & FIELD_CONDITION_{weather}\) \{{\s*form = CASTFORM_{form};")
+        # Hail and snow alike bring the Snowy Form (Previsioni).
+        for weather, form in (("SUN_ALL", "SUNNY"), ("RAIN_ALL", "RAINY"), ("HAIL_ALL | FIELD_CONDITION_SNOW_ALL", "SNOWY")):
+            self.assertRegex(self.castform, rf"if \(weather & \(?FIELD_CONDITION_{re.escape(weather)}\)?\) \{{\s*(//.*\s*)*form = CASTFORM_{form};")
         self.assertLess(self.castform.index("form = CASTFORM_NORMAL;"), self.castform.index("ABILITY_CLOUD_NINE"))
 
 

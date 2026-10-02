@@ -10414,7 +10414,9 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
                     form = CASTFORM_SUNNY;
                 } else if (weather & FIELD_CONDITION_RAIN_ALL) {
                     form = CASTFORM_RAINY;
-                } else if (weather & FIELD_CONDITION_HAIL_ALL) {
+                } else if (weather & (FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL)) {
+                    // Snow too (Previsioni). The reference reads hail alone, its
+                    // comment calling snow's effect on Castform unknown.
                     form = CASTFORM_SNOWY;
                 }
             }
