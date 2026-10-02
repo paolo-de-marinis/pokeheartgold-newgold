@@ -1,0 +1,14 @@
+{
+  "about": "The playthrough's Slowpoke Well, from Azalea's Pokemon Center: down the well to Executive Proton and his five, after him Kurt's scene and the warp to his house, where his frame script (VAR_UNK_4080 2) gives the Fast Ball (FLAG_UNK_07C) and his granddaughter's phone number (VAR_UNK_4080 4); the nurse, and the game's save. The party is trained here, and says so: leg 05's party fights with its lead, which alone takes the experience, and it came to Proton with a Geodude at the cap, 19, and four Pokemon at 13 to 15; Proton's Gulpin (Toxic Spikes' poison, its Black Sludge) beat them all after the Geodude, healed, had taken his first four. So the scratch copy's party is trained to 19 (savedit --train: Flaaffy, Luxio and Quilava evolved by level, the moves the game gives them there; the egg left an egg) until the catch step brings a caught team. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_07_azalea",
+  "edit": ["--train", "19"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40",
+            {"expect": {"party0.level": 19, "party4.species": "SPECIES_QUILAVA", "party": 6}},
+            "goto:MAP_SLOWPOKE_WELL_B1F,27,3,40000", "A", "field",
+            {"expect": {"flag:FLAG_BEAT_AZALEA_ROCKETS": 1, "map": "MAP_AZALEA_KURT_HOUSE"}}, "wait:30", "field",
+            {"expect": {"flag:FLAG_UNK_07C": 1, "bag:ITEM_FAST_BALL": 1, "var:VAR_UNK_4080": 4, "map": "MAP_AZALEA_KURT_HOUSE", "music": "SEQ_GS_T_HIWADA"}},
+            "goto:MAP_AZALEA_POKECENTER_1F,8,13", "UP", "A", "field", "save"],
+  "expect": {"map": "MAP_AZALEA_POKECENTER_1F", "x": 8, "y": 13, "badges": 1, "party": 6, "music": "SEQ_GS_POKESEN",
+             "lines": ["You are challenged by Executive Proton!", "You defeated Executive Proton!"]}
+}
