@@ -382,6 +382,23 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(mon["exp"], sv.experience_for(rate, 21) - 3)
         self.assertEqual((mon["level"], sv.open_mon(sv.short_of_next_level(raw, 3))["party"][4]), (20, 20))
 
+    def test_the_cli_sets_a_party_pokemon_s_level_and_keeps_the_rest(self):
+        # --level: a caught Pokemon raised to a level, the same Pokemon --
+        # its personality, IVs and moves -- with that level's experience.
+        out = Path(self.tmp.name) / "level.sav"
+        out.write_bytes(self.path.read_bytes())
+        before = sv.describe_mon(sv.party_raw(sv.Save(out))[1])
+        subprocess.run([sys.executable, str(ROOT / "tools/newgold/devkit/savedit.py"), str(out), "--level", "2:25"],
+                       check=True, capture_output=True)
+        party = [sv.describe_mon(raw) for raw in sv.party_raw(sv.Save(out))]
+        after = party[1]
+        rate = sv.personal_records()[after["species"]]["growthRate"]
+        self.assertEqual((after["level"], after["exp"]), (25, sv.experience_for(rate, 25)))
+        self.assertEqual((after["personality"], after["ivs"], [m["id"] for m in after["moves"]]),
+                         (before["personality"], before["ivs"], [m["id"] for m in before["moves"]]))
+        self.assertGreater(after["stats"][0], before["stats"][0])
+        self.assertEqual([m["level"] for m in party[2:]], [20] * 4)
+
     def test_editing_the_third_leaves_the_other_five(self):
         save = self.open()
         before = sv.party_raw(save)

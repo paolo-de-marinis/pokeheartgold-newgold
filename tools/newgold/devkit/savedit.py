@@ -4057,6 +4057,9 @@ def main():
     parser.add_argument("--exp-short", action="append", default=[], metavar="SLOT:POINTS",
                         help="leave party Pokemon SLOT (counted from one) POINTS experience "
                              "short of its next level; repeatable")
+    parser.add_argument("--level", action="append", default=[], metavar="SLOT:LEVEL",
+                        help="party Pokemon SLOT (counted from one) at LEVEL, the experience it costs, "
+                             "and everything else it had kept (edit_mon); repeatable")
     parser.add_argument("--name", help="the player's name, which the save must carry "
                                        "terminated: the main menu copies it into a String "
                                        "and asserts on one that never ends")
@@ -4114,6 +4117,12 @@ def main():
         set_party_mon(save, slot - 1, short_of_next_level(party_raw(save)[slot - 1], points))
         save.write()
         print(f"party slot {slot}: {points} experience short of its next level")
+
+    for entry in args.level:
+        slot, level = (int(v) for v in entry.split(":"))
+        set_party_mon(save, slot - 1, edit_mon(party_raw(save)[slot - 1], level=level))
+        save.write()
+        print(f"party slot {slot}: level {level}")
 
     if args.tm:
         machines = [int(n) for n in args.tm.split(",")]
