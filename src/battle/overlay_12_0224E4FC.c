@@ -2075,11 +2075,11 @@ BOOL ov12_02250490(BattleSystem *battleSystem, BattleContext *ctx, int *out) {
     // ov12_0224E1BC drags it once the hit's steps are over. Roar and
     // Whirlwind hit nothing and drag as they are used. Parental Bond's first
     // strike marks it as the second does, so that a Pokemon being dragged out
-    // answers neither with Color Change or Anger Shell (Battler_WillBeDraggedOut;
-    // Pokemon Central, Codadrago), as it answers no single strike; the drag
-    // waits for the move's end all the same, both strikes over or the move
-    // stopped after the first (Amorefiliale; Spargispora for Effect Spore's
-    // sleep).
+    // answers with neither Color Change nor Anger Shell once the move is over
+    // (Battler_WillBeDraggedOut; Pokemon Central, Codadrago), as it answers no
+    // single strike; the drag waits for the move's end all the same, both
+    // strikes over or the move stopped after the first (Amorefiliale;
+    // Spargispora for Effect Spore's sleep).
     if (ret == TRUE && *out == BATTLE_SUBSCRIPT_FORCE_TARGET_TO_SWITCH_OR_FLEE
         && BattleMoveTbl(ctx, ctx->moveNoCur)->category != CATEGORY_STATUS) {
         ctx->selfTurnData[ctx->battlerIdStatChange].dragPending = TRUE;
@@ -7378,28 +7378,28 @@ BOOL Battler_CameInAfterTheHit(BattleContext *ctx, int battlerId) {
 // (InitSwitchWork's clearing of the slot).
 //
 // Nor if the user will not stand to drag it (Codadrago: not when the user
-// faints to a Rocky Helmet, Rough Skin, Iron Barbs or Gulp Missile). The
-// three abilities asking this are the Pokemon's own, so the only thing left
-// to fell the user is its held item, which answers the hit after them
-// (CheckItemEffectOnHit): a Rocky Helmet on a contact move or a Jaboca Berry
-// on a physical one, a share of the user's maximum HP that Magic Guard
-// spares. What they would take is what they take there. Parental Bond's
-// first strike, with the second to come, is answered twice by a Rocky
-// Helmet, so the user stands only above two shares; a Jaboca Berry is eaten
-// by the first.
+// faints to a Rocky Helmet, Rough Skin, Iron Barbs or Gulp Missile). A
+// single hit is answered before what follows it has acted: the abilities
+// asking this are the Pokemon's own, so the only thing left to fell the user
+// is its held item, which answers the hit after them (CheckItemEffectOnHit):
+// a Rocky Helmet on a contact move or a Jaboca Berry on a physical one, a
+// share of the user's maximum HP that Magic Guard spares. What they would
+// take is what they take there. A move that struck more than once is
+// answered once it is over (CheckColorChangeAndAngerShell), every strike's
+// item and ability have acted, and the user stands or has fallen.
 static BOOL Battler_WillBeDraggedOut(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int attacker = ctx->battlerIdAttacker;
     int item = GetBattlerHeldItemEffect(ctx, battlerId);
-    int shares = (item == HOLD_EFFECT_DAMAGE_ON_CONTACT && ParentalBond_StrikeToCome(ctx)) ? 2 : 1;
 
     if (!ctx->selfTurnData[battlerId].dragPending || (ctx->battleMons[battlerId].moveEffectFlags & MOVE_EFFECT_FLAG_INGRAIN)
-        || Battler_HeldByCommander(ctx, battlerId)) {
+        || Battler_HeldByCommander(ctx, battlerId) || !ctx->battleMons[attacker].hp) {
         return FALSE;
     }
-    if (((item == HOLD_EFFECT_DAMAGE_ON_CONTACT && BattleMoveMakesContact(ctx, ctx->moveNoCur))
+    if (ctx->multiHitCountTemp == 0
+        && ((item == HOLD_EFFECT_DAMAGE_ON_CONTACT && BattleMoveMakesContact(ctx, ctx->moveNoCur))
             || (item == HOLD_EFFECT_RECOIL_PHYSICAL && ctx->selfTurnData[battlerId].physicalDamage))
         && GetBattlerAbility(ctx, attacker) != ABILITY_MAGIC_GUARD
-        && ctx->battleMons[attacker].hp <= shares * DamageDivide(ctx->battleMons[attacker].maxHp, GetHeldItemModifier(ctx, battlerId, 0))) {
+        && ctx->battleMons[attacker].hp <= DamageDivide(ctx->battleMons[attacker].maxHp, GetHeldItemModifier(ctx, battlerId, 0))) {
         return FALSE;
     }
     if (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) {

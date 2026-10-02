@@ -1671,7 +1671,8 @@ class DraggedInTests(unittest.TestCase):
     def test_a_user_its_item_will_fell_drags_nothing(self):
         # Pokemon Central (Codadrago): a user a Rocky Helmet fells drags
         # nothing, so the target's Color Change and Anger Shell answer the hit;
-        # with Parental Bond's second strike to come, the helmet answers twice.
+        # after a move that struck more than once the helmet has answered
+        # every strike, and the user stands or not.
         from test_ability_interactions import run_c
         overlay = OVERLAY.read_text()
         functions = function(overlay, "DamageDivide") + function(overlay, "Battler_WillBeDraggedOut")
@@ -1691,7 +1692,7 @@ enum { FALSE = 0, TRUE = 1 };
 typedef struct { int unused; } BattleSystem;
 typedef struct { int hp, maxHp; u32 moveEffectFlags; int ability, holdEffect, modifier; } Mon;
 typedef struct { u32 dragPending : 1; int physicalDamage; } SelfTurnData;
-typedef struct { Mon battleMons[4]; SelfTurnData selfTurnData[4]; int battlerIdAttacker; u32 moveNoCur; } BattleContext;
+typedef struct { Mon battleMons[4]; SelfTurnData selfTurnData[4]; int battlerIdAttacker, multiHitCountTemp; u32 moveNoCur; } BattleContext;
 static BOOL contact;
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].holdEffect; }
 static int GetHeldItemModifier(BattleContext *ctx, int battlerId, int flag) { (void)flag; return ctx->battleMons[battlerId].modifier; }
@@ -1701,15 +1702,12 @@ static u32 BattleSystem_GetBattleType(BattleSystem *bs) { (void)bs; return BATTL
 static BOOL CanSwitchMon(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; return TRUE; }
 static BOOL WhirlwindCheck(BattleSystem *bs, BattleContext *ctx) { (void)bs; (void)ctx; return TRUE; }
 static BOOL Battler_HeldByCommander(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
-static BOOL strikeToCome;
-static BOOL ParentalBond_StrikeToCome(BattleContext *ctx) { (void)ctx; return strikeToCome; }
 @FUNCTIONS@
 static BattleSystem bs;
 static BattleContext ctx;
 static void reset(void) {
     // The user 0, at 60 of 120 HP, Dragon Tails 1, which holds a Rocky Helmet.
     ctx = (BattleContext){ 0 };
-    strikeToCome = FALSE;
     ctx.battleMons[0] = (Mon){ 60, 120, 0, ABILITY_NONE, HOLD_EFFECT_NONE, 0 };
     ctx.battleMons[1] = (Mon){ 50, 100, 0, ABILITY_COLOR_CHANGE, HOLD_EFFECT_DAMAGE_ON_CONTACT, 6 };
     ctx.selfTurnData[1].dragPending = TRUE; ctx.selfTurnData[1].physicalDamage = 30;
@@ -1729,13 +1727,11 @@ int main(void) {
     assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
     reset(); ctx.battleMons[0].hp = 15; ctx.battleMons[1].holdEffect = HOLD_EFFECT_RECOIL_PHYSICAL; ctx.battleMons[1].modifier = 8;
     ctx.selfTurnData[1].physicalDamage = 0; assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
-    // Parental Bond's first strike, the second to come: the helmet answers
-    // both, 40 in all, and a user at 40 falls to the second; the Berry is
-    // eaten by the first, and takes 15 once.
-    reset(); strikeToCome = TRUE; ctx.battleMons[0].hp = 40; assert(!Battler_WillBeDraggedOut(&bs, &ctx, 1));
-    reset(); strikeToCome = TRUE; ctx.battleMons[0].hp = 41; assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
-    reset(); strikeToCome = TRUE; ctx.battleMons[0].hp = 16; ctx.battleMons[1].holdEffect = HOLD_EFFECT_RECOIL_PHYSICAL;
-    ctx.battleMons[1].modifier = 8; assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    // A move that struck more than once is asked once it is over, the
+    // helmet having answered every strike: a user still standing drags, at
+    // 5 HP as at 60, and a fallen one does not.
+    reset(); ctx.multiHitCountTemp = 2; ctx.battleMons[0].hp = 5; assert(Battler_WillBeDraggedOut(&bs, &ctx, 1));
+    reset(); ctx.multiHitCountTemp = 2; ctx.battleMons[0].hp = 0; assert(!Battler_WillBeDraggedOut(&bs, &ctx, 1));
     // Ingrain, or no drag pending.
     reset(); ctx.battleMons[1].moveEffectFlags = MOVE_EFFECT_FLAG_INGRAIN; assert(!Battler_WillBeDraggedOut(&bs, &ctx, 1));
     reset(); ctx.selfTurnData[1].dragPending = FALSE; assert(!Battler_WillBeDraggedOut(&bs, &ctx, 1));
