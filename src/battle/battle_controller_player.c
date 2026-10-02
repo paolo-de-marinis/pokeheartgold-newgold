@@ -397,6 +397,7 @@ static void Diag_BattleView(BattleSystem *battleSystem, BattleContext *ctx) {
         Pokemon *mon = i < count ? BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i) : NULL;
         gDiagPartySpecies[i] = mon ? GetMonData(mon, MON_DATA_SPECIES, NULL) : 0;
         gDiagPartyHp[i] = mon ? GetMonData(mon, MON_DATA_HP, NULL) : 0;
+        gDiagPartyOrder[i] = ctx->unk_312C[BATTLER_PLAYER][i];
     }
 
     for (battlerId = 0; battlerId < 4; battlerId++) {

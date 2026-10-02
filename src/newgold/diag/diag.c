@@ -48,6 +48,7 @@ u32 gDiagLastScriptMessage[4];
 DiagBattler gDiagBattlers[4];
 u16 gDiagPartySpecies[6];
 u16 gDiagPartyHp[6];
+u8 gDiagPartyOrder[6];
 u32 gDiagBattleCommand;
 u32 gDiagBattleScript[3];
 u32 gDiagBattlePrompt;

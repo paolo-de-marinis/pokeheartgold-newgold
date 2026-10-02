@@ -144,14 +144,23 @@ def second_down(ram, markers):
 
 
 def reserve(ram, markers):
-    """The party slot the party screen after a faint sends, in the battle's
-    own order: the first Pokemon with HP left that is not already out --
-    in a double battle, not the partner still standing."""
+    """The party slot the party screen after a faint or a pivot sends: the
+    first Pokemon with HP left, by party slot, that is not already out --
+    in a double battle, not the partner still standing. place() finds it on
+    the screen."""
     at, size = markers.address("gDiagBattlers") - 0x02000000, struct.calcsize(BATTLER)
     out = {mon[4] for mon in (struct.unpack_from(BATTLER, ram, at + b * size) for b in (0, 2)) if mon[0] and mon[1]}
     species = struct.unpack_from("<6H", ram, markers.address("gDiagPartySpecies") - 0x02000000)
     hp = struct.unpack_from("<6H", ram, markers.address("gDiagPartyHp") - 0x02000000)
     return next((i for i in range(6) if species[i] and hp[i] and i not in out), None)
+
+
+def place(ram, markers, slot):
+    """Where the battle's party screen shows party slot `slot`: the battle
+    keeps its own order (gDiagPartyOrder), which a switch changes -- the
+    Pokemon that came in moves to the top."""
+    order = struct.unpack_from("<6B", ram, markers.address("gDiagPartyOrder") - 0x02000000)
+    return order.index(slot)
 
 
 def quiet():
@@ -278,7 +287,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             hp = struct.unpack_from("<6H", ram, markers.address("gDiagPartyHp") - 0x02000000)
             fainted = [i for i in range(6) if species[i] and not hp[i]]
             if fainted:
-                core.touch(*PARTY[fainted[0]], 6, hold)
+                core.touch(*PARTY[place(ram, markers, fainted[0])], 6, hold)
                 core.step(30, hold)
                 core.touch(*SHIFT, 6, hold)
                 core.step(60, hold)
@@ -324,7 +333,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 # at the end of a turn where a Revive or a Revival Blessing
                 # gave an empty place someone to send. With no one to send
                 # the place stays empty, and B below moves the text on.
-                core.touch(*PARTY[reserve(ram, markers)], 6, hold)
+                core.touch(*PARTY[place(ram, markers, reserve(ram, markers))], 6, hold)
                 core.step(30, hold)
                 core.touch(*SHIFT, 6, hold)
                 core.step(60, hold)
@@ -335,7 +344,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             # an Eject Pack has sent the player's Pokemon back, and the party
             # screen asks who comes in: the first that can, once the screen
             # is up. Until a "Go!" line the touches land on nothing.
-            core.touch(*PARTY[reserve(ram, markers)], 6, hold)
+            core.touch(*PARTY[place(ram, markers, reserve(ram, markers))], 6, hold)
             core.step(30, hold)
             core.touch(*SHIFT, 6, hold)
             core.step(60, hold)

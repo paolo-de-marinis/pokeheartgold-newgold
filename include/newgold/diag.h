@@ -111,11 +111,13 @@ typedef struct DiagBattler {
     unsigned char pp[4];
 } DiagBattler;
 extern DiagBattler gDiagBattlers[4];
-// The player's party in the battle's own order -- the order its party
-// screen shows -- as species and HP, so the Pokemon to send after a faint can
-// be chosen from memory.
+// The player's party by party slot, as species and HP, so the Pokemon to send
+// after a faint can be chosen from memory; and the battle's own order, the
+// order its party screen shows -- the party slot at each place of it
+// (BattleContext.unk_312C), which a switch changes.
 extern unsigned short gDiagPartySpecies[6];
 extern unsigned short gDiagPartyHp[6];
+extern unsigned char gDiagPartyOrder[6];
 extern unsigned long gDiagBattleCommand;
 // The battle script running: its archive, its member and how far into it.
 extern unsigned long gDiagBattleScript[3];

@@ -1,0 +1,16 @@
+{
+  "about": "Shed Tail passes the decoy to the Pokemon its own switch brings in and to nothing a later switch in the same action brings; before, the Baton Pass flag stayed up until the action ended, and an Eject Pack's switch passed the decoy back. A level-10 Pikachu, Splash then Shed Tail, with a level-40 Snorlax holding an Eject Pack behind it, against a forced wild level-5 Chansey given Sticky Web, then Pound. The Snorlax comes in behind the decoy, the web drops its Speed, the Eject Pack sends it back and the Pikachu returns, and the Chansey's Pound hits the Pikachu (before, \"The substitute took damage for Pikachu!\"). gym.py answers the second party screen by the battle's own order (gDiagPartyOrder), where the Snorlax that came in is listed first (before, it touched the Snorlax: \"Snorlax is already in battle!\"). The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10,SNORLAX:40:::EJECT_PACK,MAGIKARP:30"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SHED_TAIL", "teach:0,1,MOVE_SPLASH", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_STICKY_WEB", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:2:1",
+            {"expect": {"lines": ["sticky web has been laid out"]}},
+            "teach:1,0,MOVE_POUND",
+            "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Shed Tail!", "Go! Snorlax!", "Snorlax was caught in a sticky web!",
+                           "Snorlax is switched out by the Eject Pack!", "Go! Pikachu!", "The wild Chansey used Pound!"],
+             "no_lines": ["The substitute took damage"], "battler0.species": "SPECIES_PIKACHU"}
+}
