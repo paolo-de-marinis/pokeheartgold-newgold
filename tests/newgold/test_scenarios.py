@@ -387,6 +387,25 @@ class RecordingTests(unittest.TestCase):
                     self.assertGreater(loudest(clip, 5, 20), -40)
 
 
+class HarnessToolTests(unittest.TestCase):
+    """The harness's scripts run as Paolo runs them: a process each."""
+
+    def test_step_mode_keeps_the_cores_chatter_out(self):
+        # 'scene.py SAVE OUT STEPS' let melonDS DS print its own lines among
+        # scene.py's -- a retro_get_memory_data line at every read of main
+        # RAM, 600,000 lines a playthrough leg; --scenario never did.
+        if not ROM.exists() or not core.MELONDSDS.exists():
+            self.skipTest("the diagnostics ROM or melonDS DS is not there")
+        with tempfile.TemporaryDirectory(prefix="newgold-steps-") as temp:
+            run = subprocess.run([sys.executable, str(DIAG / "scene.py"), "new", temp, "wait:30"], capture_output=True,
+                                 text=True, timeout=600, env={**os.environ, "NEWGOLD_CORE": str(core.MELONDSDS)})
+        self.assertEqual(run.returncode, 0, run.stderr[-2000:])
+        self.assertNotIn("retro_get_memory_data", run.stdout + run.stderr)
+        lines = run.stdout.splitlines()
+        self.assertEqual(len(lines), 1, lines[:5])
+        self.assertIn("| battle ", lines[0])         # markers.describe's, the step mode's last word
+
+
 class NavigatorTests(unittest.TestCase):
     """scene.py's goto plans from the tree's own map data; these read the plan
     without the emulator."""

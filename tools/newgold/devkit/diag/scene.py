@@ -1150,6 +1150,8 @@ def main():
     parser.add_argument("--record", type=Path, help="the run, picture and sound, to this mp4 (core.py)")
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
+    from gym import quiet
+    sys.stdout = quiet()    # the core's own chatter off, as --scenario has it
     scene = Scene(None if args.save == "new" else args.save, args.rom, args.elf, args.out, say=print, record=args.record)
     for step in args.steps:
         scene.run(step)
