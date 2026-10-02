@@ -178,7 +178,7 @@ class TrainerAIScriptTests(unittest.TestCase):
         # Earth Eater and Soak into Water Absorb scored 0, as did Thunder
         # Wave into Lightning Rod. A status move aimed at the user or the
         # field is not swallowed, nor Spikes by Earth Eater, nor anything by
-        # Evaporate or Levitate.
+        # Evaporate or Levitate. New Gold's Irrigation swallows Soak.
         from test_move_effects import moves, records
         lines = words()
         types = {int(n): name for name, n in re.findall(r"#define (TYPE_[A-Z]+)\s+(\d+)",
@@ -195,11 +195,10 @@ class TrainerAIScriptTests(unittest.TestCase):
         self.assertEqual(lines[0x2A2C][0][0], "AI_IF_LOADED_NOT_IN_TABLE")
         self.assertEqual(set(table(lines, 0x2A2F + int(lines[0x2A2C][0][1]))), aimed)
         takers = {"TYPE_ELECTRIC": ("ABILITY_VOLT_ABSORB", "ABILITY_MOTOR_DRIVE", "ABILITY_LIGHTNINGROD"),
-                  "TYPE_WATER": ("ABILITY_WATER_ABSORB", "ABILITY_STORM_DRAIN", "ABILITY_DRY_SKIN"),
+                  "TYPE_WATER": ("ABILITY_WATER_ABSORB", "ABILITY_STORM_DRAIN", "ABILITY_DRY_SKIN", "ABILITY_IRRIGATION"),
                   "TYPE_FIRE": ("ABILITY_FLASH_FIRE", "ABILITY_WELL_BAKED_BODY"), "TYPE_GROUND": ("ABILITY_EARTH_EATER",),
                   "TYPE_GRASS": ("ABILITY_SAP_SIPPER",)}
-        everyone = [a for group in takers.values() for a in group] + ["ABILITY_EVAPORATE", "ABILITY_LEVITATE", "ABILITY_NONE",
-                                                                      "ABILITY_IRRIGATION"]
+        everyone = [a for group in takers.values() for a in group] + ["ABILITY_EVAPORATE", "ABILITY_LEVITATE", "ABILITY_NONE"]
         for move in sorted(aimed) + ["MOVE_CHARGE", "MOVE_AQUA_RING", "MOVE_RAIN_DANCE", "MOVE_SPIKES", "MOVE_SHORE_UP"]:
             for ability in everyone:
                 score = -12 if move in aimed and ability in takers[kind[move]] else 0

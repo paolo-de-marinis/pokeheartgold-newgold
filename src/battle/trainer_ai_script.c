@@ -6210,18 +6210,18 @@ const u32 ov10_02220AAC[] = {
     // (BattleContext_CheckMoveImmunityFromAbility, which asks them for no
     // power -- Water Absorb, Dry Skin and Earth Eater since a96fb2180 and
     // 3112cb441 -- and lets Flash Fire and Well-Baked Body take Will-O-Wisp):
-    // Thunder Wave into Volt Absorb, Soak into Water Absorb, Will-O-Wisp into
-    // Flash Fire, Sand Attack into Earth Eater, a powder into Sap Sipper.
-    // Only the moves aimed at the target, the table at 2A51 -- not Charge,
-    // Aqua Ring, Rain Dance, nor Spikes, which Earth Eater leaves alone --
-    // and not past a Mold Breaker; each goes to the damaging moves' check of
-    // its type, which takes 12 off. Evaporate refuses only a move with
-    // power, and Levitate no status move. Appended, so no word index above
-    // moves.
+    // Thunder Wave into Volt Absorb, Soak into Water Absorb or New Gold's
+    // Irrigation, Will-O-Wisp into Flash Fire, Sand Attack into Earth Eater,
+    // a powder into Sap Sipper. Only the moves aimed at the target, the table
+    // at 2A54 -- not Charge, Aqua Ring, Rain Dance, nor Spikes, which Earth
+    // Eater leaves alone -- and not past a Mold Breaker; each goes to the
+    // damaging moves' check of its type, which takes 12 off. Evaporate
+    // refuses only a move with power, and Levitate no status move. Appended,
+    // so no word index above moves.
     /* 2A26 */ AI_LOAD_BATTLER_ABILITY, AI_BATTLER_ATTACKER,
     /* 2A28 */ AI_IF_LOADED_IN_TABLE, -146, -10669, // table 2999, -> 007E
     /* 2A2B */ AI_LOAD_CURRENT_MOVE,
-    /* 2A2C */ AI_IF_LOADED_NOT_IN_TABLE, 34, -10673, // table 2A51, -> 007E
+    /* 2A2C */ AI_IF_LOADED_NOT_IN_TABLE, 37, -10673, // table 2A54, -> 007E
     /* 2A2F */ AI_LOAD_BATTLER_ABILITY, AI_BATTLER_TARGET,
     /* 2A31 */ AI_IF_LOADED_EQUAL_TO, ABILITY_VOLT_ABSORB, -10726, // -> 004E
     /* 2A34 */ AI_IF_LOADED_EQUAL_TO, ABILITY_MOTOR_DRIVE, -10729, // -> 004E
@@ -6229,16 +6229,17 @@ const u32 ov10_02220AAC[] = {
     /* 2A3A */ AI_IF_LOADED_EQUAL_TO, ABILITY_WATER_ABSORB, -10728, // -> 0055
     /* 2A3D */ AI_IF_LOADED_EQUAL_TO, ABILITY_STORM_DRAIN, -10731, // -> 0055
     /* 2A40 */ AI_IF_LOADED_EQUAL_TO, ABILITY_DRY_SKIN, -10734, // -> 0055
-    /* 2A43 */ AI_IF_LOADED_EQUAL_TO, ABILITY_FLASH_FIRE, -10730, // -> 005C
-    /* 2A46 */ AI_IF_LOADED_EQUAL_TO, ABILITY_WELL_BAKED_BODY, -10733, // -> 005C
-    /* 2A49 */ AI_IF_LOADED_EQUAL_TO, ABILITY_EARTH_EATER, -10721, // -> 006B
-    /* 2A4C */ AI_IF_LOADED_EQUAL_TO, ABILITY_SAP_SIPPER, -207, // -> 2980
-    /* 2A4F */ AI_GOTO, -10707, // -> 007E
+    /* 2A43 */ AI_IF_LOADED_EQUAL_TO, ABILITY_IRRIGATION, -10737, // -> 0055
+    /* 2A46 */ AI_IF_LOADED_EQUAL_TO, ABILITY_FLASH_FIRE, -10733, // -> 005C
+    /* 2A49 */ AI_IF_LOADED_EQUAL_TO, ABILITY_WELL_BAKED_BODY, -10736, // -> 005C
+    /* 2A4C */ AI_IF_LOADED_EQUAL_TO, ABILITY_EARTH_EATER, -10724, // -> 006B
+    /* 2A4F */ AI_IF_LOADED_EQUAL_TO, ABILITY_SAP_SIPPER, -210, // -> 2980
+    /* 2A52 */ AI_GOTO, -10710, // -> 007E
 
-    // 2A51: the status moves of an absorbed type aimed at the target
+    // 2A54: the status moves of an absorbed type aimed at the target
     // (waza_tbl: Electric, Water, Fire, Ground or Grass, a status move, and
     // a range that names a foe)
-    /* 2A51 */ MOVE_THUNDER_WAVE, MOVE_ELECTRIFY, MOVE_EERIE_IMPULSE, MOVE_SOAK, MOVE_WILL_O_WISP,
+    /* 2A54 */ MOVE_THUNDER_WAVE, MOVE_ELECTRIFY, MOVE_EERIE_IMPULSE, MOVE_SOAK, MOVE_WILL_O_WISP,
                MOVE_SAND_ATTACK, MOVE_LEECH_SEED, MOVE_STUN_SPORE, MOVE_SLEEP_POWDER, MOVE_SPORE,
                MOVE_GRASS_WHISTLE, MOVE_COTTON_SPORE, MOVE_WORRY_SEED, MOVE_FORESTS_CURSE,
                MOVE_STRENGTH_SAP, MOVE_SPICY_EXTRACT, AI_TABLE_END,
