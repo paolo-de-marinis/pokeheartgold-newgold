@@ -3811,12 +3811,15 @@ BOOL BtlCmd_DivideVarByVar(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// A substitute does not stop Mimic: it failed against one in the third and
+// fourth generations, and copies through it again from the fifth (Pokemon
+// Central, Mimica; Showdown's gen-9 mimic has bypasssub).
 BOOL BtlCmd_TryMimic(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
     int adrs = BattleScriptReadWord(ctx);
 
-    if ((!CheckLegalMimicMove(ctx->moveNoBattlerPrev[ctx->battlerIdTarget])) || (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_TRANSFORM) || (ctx->battleMons[ctx->battlerIdTarget].status2 & STATUS2_SUBSTITUTE) || ctx->moveNoBattlerPrev[ctx->battlerIdTarget] == 0) {
+    if ((!CheckLegalMimicMove(ctx->moveNoBattlerPrev[ctx->battlerIdTarget])) || (ctx->battleMons[ctx->battlerIdAttacker].status2 & STATUS2_TRANSFORM) || ctx->moveNoBattlerPrev[ctx->battlerIdTarget] == 0) {
         BattleScriptIncrementPointer(ctx, adrs);
     } else {
         int moveIndex = 0;

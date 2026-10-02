@@ -216,7 +216,61 @@ MIMIC_COPIES = {"MOVE_" + name for name in (
     "SAPPY_SEED FREEZY_FROST SPARKLY_SWIRL VEEVEE_VOLLEY DOUBLE_IRON_BASH").split()}
 
 
+MIMIC = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
+#include "constants/battle.h"
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef struct { int unused; } BattleSystem;
+typedef struct { u8 pp; } MoveTbl;
+typedef struct {
+    u16 moves[MAX_MON_MOVES]; u8 movePPCur[MAX_MON_MOVES]; u32 status2;
+    struct { u32 mimicedMoveIndex : 4; u32 lastResortCount : 3; } unk88;
+} BattleMon;
+typedef struct {
+    BattleMon battleMons[4];
+    int battlerIdAttacker, battlerIdTarget, moveTemp, jumped;
+    u16 moveNoBattlerPrev[4];
+} BattleContext;
+static const MoveTbl sMove = { 10 };
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { ctx->jumped += n == 7; }
+static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return 7; }
+static BOOL CheckLegalMimicMove(u16 move) { return move != MOVE_STRUGGLE; }
+static const MoveTbl *BattleMoveTbl(BattleContext *ctx, int move) { (void)ctx; (void)move; return &sMove; }
+static u32 MaskOfFlagNo(int n) { return 1u << n; }
+@MIMIC@
+int main(void) {
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.battlerIdTarget = 1;
+    ctx.battleMons[0].moves[0] = MOVE_MIMIC;
+    ctx.moveNoBattlerPrev[1] = MOVE_TACKLE;
+    // Behind a substitute, the target's last move is copied all the same
+    // (Mimica, from the fifth generation).
+    ctx.battleMons[1].status2 = STATUS2_SUBSTITUTE;
+    BtlCmd_TryMimic(0, &ctx);
+    assert(!ctx.jumped && ctx.battleMons[0].moves[0] == MOVE_TACKLE && ctx.battleMons[0].movePPCur[0] == 5);
+    // A transformed user still fails.
+    ctx.battleMons[0].moves[0] = MOVE_MIMIC;
+    ctx.battleMons[0].status2 = STATUS2_TRANSFORM;
+    BtlCmd_TryMimic(0, &ctx);
+    assert(ctx.jumped == 1 && ctx.battleMons[0].moves[0] == MOVE_MIMIC);
+    return 0;
+}
+"""
+
+
 class MetronomeTests(unittest.TestCase):
+    def test_mimic_copies_through_a_substitute(self):
+        from test_ability_interactions import run_c
+        run_c(MIMIC.replace("@MIMIC@", function(COMMAND.read_text(), "BtlCmd_TryMimic")))
+
     def test_metronome_reaches_every_move_but_the_banned(self):
         overlay = OVERLAY.read_text()
         table = overlay[overlay.index("static const u16 sMetronomeUnuseableMoves[]"):]
