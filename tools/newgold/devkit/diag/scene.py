@@ -46,8 +46,9 @@ A step is one of
                                 since -- is reached beside them, facing them.
                                 N frames at most (30000 by default): a route
                                 of the playthrough, with its battles, takes more
-    flee:N                      from now on goto's battles run from a wild Pokemon
-                                when the player's has under N% of its HP left
+    flee:N                      from now on the battles goto and field play run from
+                                a wild Pokemon when the player's has under N% of its
+                                HP left
     newgame[:N]                 from an empty flash (no save) through the intro, the
                                 title, NEW GAME, the Oak speech (no information, the
                                 boy, the default name) to the bedroom, the player free
@@ -513,7 +514,7 @@ class Scene:
                     import gym
                     started = core.frames
                     gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
-                              since=core.word(self._text_count), partner=self.partner_prompt())
+                              since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee)
                     self._collect(core)
                     if self.in_battle():
                         break       # gym.py's player could not end it

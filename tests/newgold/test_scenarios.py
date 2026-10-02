@@ -154,6 +154,31 @@ class ScenarioFileTests(unittest.TestCase):
         s.run("fight")
         self.assertGreater(s.core.frames, 3000)
 
+    def test_a_battle_on_the_way_runs_as_flee_says(self):
+        # flee:N holds for the battles scene.py plays on the way somewhere:
+        # goto's, and the field step's, which plays a battle up on its way.
+        import gym
+        from unittest import mock
+
+        class Core:
+            frames = 0
+
+            def word(self, address):
+                return 0
+
+            def step(self, frames, hooks):
+                self.frames += frames
+
+        asked = []
+        s = scene.Scene.__new__(scene.Scene)
+        s.core, s.hooks, s.say, s.markers, s.flee, s._text_count = Core(), [], print, None, 40, 0
+        battles = iter([True, True])
+        s.in_battle = lambda: next(battles, False)
+        s.movable, s.textbox, s.partner_prompt, s._collect = (lambda: True), (lambda: False), (lambda: None), (lambda core: None)
+        with mock.patch.object(gym, "fight", lambda *args, **kwargs: asked.append(kwargs)):
+            s.run("field")
+        self.assertEqual([kwargs.get("flee") for kwargs in asked], [40])
+
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.
         self.assertTrue(scene.Scene.wanted("x", 663)[0](663))
