@@ -7792,4 +7792,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">The opposing {STRVAR_1 1, 0, 0} was revived\nand is ready to fight again!</language>
 	</row>
+	<row id="msg_0197_01948" index="1948">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">You can’t escape!\r</language>
+	</row>
 </body>

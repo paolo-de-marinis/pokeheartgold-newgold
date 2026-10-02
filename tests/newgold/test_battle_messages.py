@@ -143,7 +143,7 @@ class BattleMessageTests(unittest.TestCase):
         """Lines the port prints that the engine has no text for, and who
         prints them."""
         table = rows()
-        self.assertEqual(max(table) + 1, FIRST_PORT_ROW + 161)
+        self.assertEqual(max(table) + 1, FIRST_PORT_ROW + 162)
         expected = {
             "wandering spirit": (1787, "{STRVAR_1 1, 0, 0}’s Ability\\nbecame {STRVAR_1 5, 1, 0}!"),
             "belch": (1790, "{STRVAR_1 1, 0, 0} hasn’t eaten any held Berries,\\nso it can’t possibly belch!"),
@@ -201,6 +201,20 @@ class BattleMessageTests(unittest.TestCase):
                 ("subscript_0347_CreateTerrainOverlay.s", 1388, "Grass grew to cover the battlefield!")):
             self.assertIn(f"msg_0197_{row:05d},", script(name), name)
             self.assertEqual(table[row], text, name)
+
+    def test_a_trapped_pokemon_s_refused_run_is_not_a_failed_escape(self):
+        """CantEscape's line spends no turn and is the latest games' "You
+        can't escape!" (Scarlet and Violet's English common text), not the
+        failed try's "You couldn't get away!", which the engine's row 794 had
+        become."""
+        table = rows()
+        row = import_battle_messages.port_row("trapped run")
+        self.assertEqual(table[row], "You can’t escape!\\r")
+        cant = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        cant = cant[cant.index("BOOL CantEscape("):cant.index("BOOL BattleTryRun(")]
+        self.assertEqual(cant.count(f"msg->id = msg_0197_{row:05d};"), 2)
+        self.assertNotIn("msg_0197_00794", cant)
+        self.assertEqual(table[42], "You couldn’t get away!\\r")
 
     @unittest.skipUnless(gmm.REFERENCE.exists(), "the reference checkout is not here")
     def test_rows_up_to_the_engines_last_are_the_engines(self):

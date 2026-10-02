@@ -4046,6 +4046,9 @@ BOOL Battler_HasGhostType(BattleContext *ctx, int battlerId) {
         || ctx->battleMons[battlerId].type3 == TYPE_GHOST;
 }
 
+// A trapped Pokemon's refused run spends no turn and says "You can't escape!"
+// (msg_0197_01948, the latest games' line), not the failed try's "You
+// couldn't get away!", which the engine's row 794 had become.
 BOOL CantEscape(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, BattleMessage *msg) {
     int battlerIdAbility;
     int maxBattlers;
@@ -4061,7 +4064,7 @@ BOOL CantEscape(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, B
     if (Battler_HeldBySkyDrop(ctx, battlerId)) {
         if (msg != NULL) {
             msg->tag = TAG_NONE;
-            msg->id = msg_0197_00794;
+            msg->id = msg_0197_01948;
         }
         return TRUE;
     }
@@ -4130,7 +4133,7 @@ BOOL CantEscape(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, B
             return TRUE;
         }
         msg->tag = TAG_NONE;
-        msg->id = msg_0197_00794;
+        msg->id = msg_0197_01948;
         return TRUE;
     }
 

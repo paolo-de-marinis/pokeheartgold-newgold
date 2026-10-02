@@ -405,6 +405,15 @@ PORT_ROWS = [
         r"The wild {STRVAR_1 1, 0, 0} was revived\nand is ready to fight again!",
         r"The opposing {STRVAR_1 1, 0, 0} was revived\nand is ready to fight again!",
     ]),
+    # A trapped Pokemon's refused run, which spends no turn. Retail's row 794
+    # said "Can't escape!"; the engine rewrote it as row 42's "You couldn't
+    # get away!", the line for a try that failed and spent the turn. The
+    # latest games' line, beside that one (Scarlet and Violet's English
+    # common text: "You couldn't get away!", then "You can't escape!"); about
+    # no Pokemon, one row.
+    ("trapped run", [
+        r"You can’t escape!\r",
+    ]),
 ]
 
 
