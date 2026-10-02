@@ -87,10 +87,11 @@ this one (a later phase's lines, not matched by an earlier phase's alike),
 rule prints one, not two), and "no_lines" never; "heaps" is the least a
 heap may have had left at its fullest (gDiagHeapLowWater); every other key
 is a value read out of main RAM by name, through the ELF's symbols and the
-offsets the tree's own headers give: map, x, y, party (the count), partyN.species|item|level|exp|hp|maxHp
-(the party as its save block holds it, slot N from 0, once the field is up:
-what a battle gave back), bag:ITEM_... (how many the bag holds), badges,
-flag:FLAG_..., var:VAR_..., battlerN.species|hp|maxHp|level|partySlot|
+offsets the tree's own headers give: map, x, y, party (the count),
+partyN.species|item|level|exp|hp|maxHp (the party as its save block holds
+it, slot N from 0, once the field is up: what a battle gave back),
+bag:ITEM_... (how many the bag holds), badges, flag:FLAG_..., var:VAR_...,
+battlerN.species|hp|maxHp|level|partySlot|
 status|item|moveK|ppK (gDiagBattlers; N counts the player's side even, K is
 a move slot, 0 to 3), music (the sequence the field's sound handle plays, -1
 for none: a load the sound heap cannot hold leaves it empty and counts as no
