@@ -21,7 +21,7 @@ files_for_compile: $(ZUKAN_ENC_NAIX)
 # This explicit dependency is required for multi-core builds
 $(ZUKAN_ENC_NARC:%.narc=%.naix): $(ZUKAN_ENC_NARC) ;
 
-$(ZUKAN_ENC_NARC): %.narc: $(ZUKAN_ENC_JSON) $(ZUKAN_ENC_JSON_TXT)
+$(ZUKAN_ENC_NARC): %.narc: $(ZUKAN_ENC_JSON) $(ZUKAN_ENC_JSON_TXT) | $$(MWAS_PATCHED)
 	$(JSONPROC) $(filter-out %.h $(O2NARC) $(JSONPROC),$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -DPM_ASM -o $*.o $*.s
 	$(O2NARC) $*.o $@ -n -p 0x00

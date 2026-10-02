@@ -13,7 +13,7 @@ SCRIPT_DEPS := $(SCRIPT_BINS:%.bin=%.d)
 $(SCRIPT_DEPS):
 
 $(SCRIPT_BINS): %.bin: %.s
-$(SCRIPT_BINS): %.bin: %.s %.d
+$(SCRIPT_BINS): %.bin: %.s %.d | $$(MWAS_PATCHED)
 	@echo $(WINE) $(MWAS) $(MWASFLAGS) $(DEPFLAGS) -o $*.o $<
 	@$(WINE) $(MWAS) $(MWASFLAGS) $(DEPFLAGS) -o $*.o $< || { rm -f $*.d; exit 1; }
 	@$(call fixdep,$*.d)
@@ -22,7 +22,7 @@ $(SCRIPT_BINS): %.bin: %.s %.d
 
 include $(wildcard $(SCRIPT_DEPS))
 else
-$(SCRIPT_BINS): %.bin: %.s
+$(SCRIPT_BINS): %.bin: %.s | $$(MWAS_PATCHED)
 	$(WINE) $(MWAS) $(MWASFLAGS) -o $*.o $<
 	$(OBJCOPY) -O binary --file-alignment 4 $*.o $@
 endif

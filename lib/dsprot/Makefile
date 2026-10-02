@@ -79,7 +79,7 @@ install: all
 
 
 # Assembly assembling
-$(BUILD_DIR)/%.o: $(BUILD_DIR)/%.s
+$(BUILD_DIR)/%.o: $(BUILD_DIR)/%.s | $$(MWAS_PATCHED)
 	$(WINE) $(MWAS) $(ASM_PARAM) $< -o $@
 
 

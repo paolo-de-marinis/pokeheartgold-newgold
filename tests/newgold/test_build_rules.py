@@ -246,7 +246,9 @@ class BuildRuleTests(unittest.TestCase):
         prerequisites = {}
         for m in re.finditer(r"^(files/fielddata/eventdata/zone_event/[^:\s]+\.bin):(.*)$", db, re.M):
             if "=" not in m.group(2):
-                prerequisites.setdefault(m.group(1), set()).update(m.group(2).replace("|", " ").split())
+                # the rule's own list waits for a second expansion, and is shown with its %
+                stem = m.group(1).removesuffix(".bin")
+                prerequisites.setdefault(m.group(1), set()).update(m.group(2).replace("|", " ").replace("%", stem).split())
         jsons = sorted((ROOT / "files/fielddata/eventdata/zone_event").glob("*.json"))
         self.assertEqual(len(prerequisites), len(jsons))
         built = 0
@@ -322,15 +324,53 @@ class BuildRuleTests(unittest.TestCase):
         ARM7's makefile patches its assembler first, and a ROM target made in
         a fresh tree before make tools stopped there, the patcher not found.
         The step depends on the tool now. libsyscall's makefile patches as
-        well, beside the ARM7's: the main makefile builds the tool before
-        either, not both at once."""
+        well, beside the ARM7's, and dsprot's assembles with the same
+        2.0/sp2p3: the main makefile patches it before any of them starts,
+        its stamp waiting for the tool, so no two build or patch at once."""
         db = database()
         patcher = next(p for p in re.search(r"^NATIVE_TOOLS := (.*)$", db, re.M).group(1).split()
                        if p.endswith("/tools/mwasmarm_patcher/mwasmarm_patcher"))
-        for target in ("patch_mwasmarm", "sub", "libsyscall"):
+        stamp = "build/heartgold.us/mwasmarm/2.0/sp2p3.patched"
+        for target, needed in (("patch_mwasmarm", patcher), ("build/heartgold.us/mwasmarm/%.patched", patcher),
+                               ("sub", stamp), ("libsyscall", stamp), ("dsprot", stamp)):
             with self.subTest(target):
-                prerequisites = " ".join(m.group(1) for m in re.finditer(rf"^{target}:(.*)$", db, re.M) if "=" not in m.group(1))
-                self.assertIn(patcher, prerequisites.split())
+                prerequisites = " ".join(m.group(1) for m in re.finditer(rf"^{re.escape(target)}:(.*)$", db, re.M) if "=" not in m.group(1))
+                self.assertIn(needed, prerequisites.split())
+
+    def test_every_rule_that_assembles_waits_for_its_assembler_patched(self):
+        """Only make's all target patched the ARM9's assembler, 2.0/sp2p2: a
+        ROM target in a tree with a fresh mwccarm assembled the ARM9's .s
+        files and every script with the line-ending and 0x400-incbin bugs the
+        patcher fixes, nitrocrypto's 1.2/sp2p3 was never patched, and the
+        SDK's and dsprot's 2.0/sp2p3 only by the ARM7's and libsyscall's
+        makefiles, alongside. Every rule whose recipe runs $(MWAS), in the
+        main makefile and in dsprot's, libsyscall's and the ARM7's, now waits
+        (order-only) for a stamp the patcher makes, named in a second
+        expansion by the target's own MWCCVER: a newer assembler, as a fresh
+        mwccarm's is, is patched before a target that uses it is assembled."""
+        for directory in ("", "lib/dsprot", "lib/syscall", "sub"):
+            with self.subTest(directory or "main"):
+                db = database() if not directory else run_make("-C", directory, "-pn", "print-NOTHING").stdout
+                phony = set(re.search(r"^\.PHONY:(.*)$", db, re.M).group(1).split())
+                rules = re.findall(r"^([^#\s][^:\n]*):(?!=)([^\n]*)\n(?:#[^\n]*\n)*((?:\t[^\n]*\n)+)", db, re.M)
+                users = [(target, prerequisites) for target, prerequisites, recipe in rules
+                         if re.search(r"\$[({]MWAS[)}]", recipe) and target not in phony]
+                self.assertTrue(users)
+                for target, prerequisites in users:
+                    self.assertRegex(prerequisites, r"\|.*\$\(MWAS_PATCHED\)", target)
+        db = database()
+        tools = re.search(r"^TOOLSDIR := (.*)$", db, re.M).group(1)
+        for target, source, version in (
+                ("build/heartgold.us/asm/nitrocrypto.o", "asm/nitrocrypto.s", "1.2/sp2p3"),
+                ("build/heartgold.us/lib/MSL_C/asm/MSL_ARM_abort_exit.o", "lib/MSL_C/asm/MSL_ARM_abort_exit.s", "2.0/sp2p3"),
+                ("files/battledata/script/subscript/subscript_0001_UseMove.bin",
+                 "files/battledata/script/subscript/subscript_0001_UseMove.s", "2.0/sp2p2")):
+            with self.subTest(target):
+                assembler = f"{tools}/mwccarm/{version}/mwasmarm.exe"
+                lines = run_make("-n", "-W", assembler, "-W", source, target).stdout.splitlines()
+                patched = [i for i, line in enumerate(lines) if line.endswith(f"-q {assembler}")]
+                assembled = [i for i, line in enumerate(lines) if line.startswith("wine ") and assembler in line and source in line]
+                self.assertTrue(patched and assembled and patched[0] < assembled[0], "\n".join(lines[:40]))
 
     def test_the_patcher_knows_every_assembler_it_has_patched(self):
         """Its table gave the 1.2 assembler's patched sha1 as 3395ac5d..., and

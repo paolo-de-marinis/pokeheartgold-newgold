@@ -14,7 +14,7 @@ $(TRDATA_NARC): %.narc: $(TRAINER_JSON) $(TRDATA_TEMPLATE)
 	$(O2NARC) $*.o $@ -n
 	@$(RM) $*.o $*.c
 
-$(TRPOKE_NARC): %.narc: $(TRAINER_JSON) $(TRPOKE_TEMPLATE)
+$(TRPOKE_NARC): %.narc: $(TRAINER_JSON) $(TRPOKE_TEMPLATE) | $$(MWAS_PATCHED)
 	$(JSONPROC) $(filter-out %.h $(O2NARC) $(JSONPROC),$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -DPM_ASM -o $*.o $*.s
 	$(O2NARC) $*.o $@ -n -p 0x00

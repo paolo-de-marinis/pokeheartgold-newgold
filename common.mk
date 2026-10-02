@@ -169,6 +169,17 @@ endif
 patch_mwasmarm: $(ASPATCH)
 	$(ASPATCH) -q $(MWAS)
 
+# Every rule that runs the assembler waits for it to be patched: before, only
+# make's all target patched 2.0/sp2p2, and a ROM target in a tree with a fresh
+# mwccarm assembled the ARM9 and every script with the line-ending and
+# 0x400-incbin bugs the patcher fixes. Order-only and in a second expansion,
+# so that a target's own MWCCVER names its assembler (nitrocrypto's 1.2/sp2p3,
+# the SDK's 2.0/sp2p3); the stamp is newer than the assembler and the patcher.
+MWAS_PATCHED = $(BUILD_DIR)/mwasmarm/$(MWCCVER).patched
+$(BUILD_DIR)/mwasmarm/%.patched: $(TOOLSDIR)/mwccarm/%/mwasmarm.exe $(ASPATCH)
+	$(ASPATCH) -q $<
+	@mkdir -p $(@D) && touch $@
+
 ifeq ($(NODEP),)
 # fixdep also gives every file after the first line an empty rule of its own,
 # as gcc's -MP does: a header or an asm include deleted later is then a
@@ -211,7 +222,7 @@ $(BUILD_DIR)/%.o: %.c $(BUILD_DIR)/%.d
 	@$(call fixdep,$(BUILD_DIR)/$*.d)
 
 $(BUILD_DIR)/%.o: %.s
-$(BUILD_DIR)/%.o: %.s $(BUILD_DIR)/%.d
+$(BUILD_DIR)/%.o: %.s $(BUILD_DIR)/%.d | $$(MWAS_PATCHED)
 	@echo $(WINE) $(MWAS) $(MWASFLAGS) $(DEPFLAGS) -o $@ $<
 	@$(WINE) $(MWAS) $(MWASFLAGS) $(DEPFLAGS) -o $@ $< || { rm -f $(BUILD_DIR)/%.d; exit 1; }
 	@$(call fixdep,$(BUILD_DIR)/$*.d)
@@ -224,9 +235,11 @@ BUILD_C ?= $(MW_COMPILE) -c -o
 $(BUILD_DIR)/%.o: %.c
 	$(BUILD_C) $@ $<
 
-$(BUILD_DIR)/%.o: %.s
+$(BUILD_DIR)/%.o: %.s | $$(MWAS_PATCHED)
 	$(WINE) $(MWAS) $(MWASFLAGS) -o $@ $<
 endif
+# asm_processor assembles what a GLOBAL_ASM names.
+$(GLOBAL_ASM_OBJS): | $$(MWAS_PATCHED)
 
 # Each tool is made by its own directory's makefile, so what depends on one
 # tool waits for that one alone, and a build never remakes a tool while

@@ -12,7 +12,7 @@ BTL_SUBSCRIPT_SCRIPT_DEPS := $(BTL_SUBSCRIPT_SCRIPT_BINS:%.bin=%.d)
 $(BTL_SUBSCRIPT_SCRIPT_DEPS):
 
 $(BTL_SUBSCRIPT_SCRIPT_BINS): %.bin: %.s
-$(BTL_SUBSCRIPT_SCRIPT_BINS): %.bin: %.s %.d
+$(BTL_SUBSCRIPT_SCRIPT_BINS): %.bin: %.s %.d | $$(MWAS_PATCHED)
 	@echo $(WINE) $(MWAS) $(MWASFLAGS) $(DEPFLAGS) -o $*.o $<
 	@$(WINE) $(MWAS) $(MWASFLAGS) $(DEPFLAGS) -o $*.o $< || { rm -f $*.d; exit 1; }
 	@$(call fixdep,$*.d)
@@ -20,7 +20,7 @@ $(BTL_SUBSCRIPT_SCRIPT_BINS): %.bin: %.s %.d
 	$(OBJCOPY) -O binary --file-alignment 4 $*.o $@
 include $(wildcard $(BTL_SUBSCRIPT_SCRIPT_DEPS))
 else
-$(BTL_SUBSCRIPT_SCRIPT_BINS): %.bin: %.s
+$(BTL_SUBSCRIPT_SCRIPT_BINS): %.bin: %.s | $$(MWAS_PATCHED)
 	$(WINE) $(MWAS) $(MWASFLAGS) -o $*.o $<
 	$(OBJCOPY) -O binary --file-alignment 4 $*.o $@
 endif

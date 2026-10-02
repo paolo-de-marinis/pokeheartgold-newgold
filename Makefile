@@ -137,9 +137,11 @@ $(WORK_DIR)/include/global.h: | $(FX_CONST_H) ;
 # stopped on "the file 'nitro/fx/fx_const.h' cannot be opened".
 dsprot sub: | $(FX_CONST_H)
 # The ARM7's makefile and libsyscall's each patch their assembler first,
-# which builds mwasmarm_patcher when it is missing: built here before either
-# starts, it is not built by both at once.
-sub libsyscall: | $(ASPATCH)
+# which builds mwasmarm_patcher when it is missing, and dsprot's assembles
+# with the same 2.0/sp2p3 as the SDK here: patched here before any of them
+# starts, the patcher is not built by two at once, nor the file written by
+# one while another reads it.
+dsprot sub libsyscall: | $(BUILD_DIR)/mwasmarm/2.0/sp2p3.patched
 
 # Convenience targets
 heartgold:          ; @$(MAKE) GAME_VERSION=HEARTGOLD

@@ -3,7 +3,7 @@ SAFARI_ENC_NARC := files/arc/safari_enc.narc
 # The headers the template includes: a change to one changes what it compiles to.
 $(SAFARI_ENC_NARC): include/constants/species.h include/constants/safari.h
 
-$(SAFARI_ENC_NARC): %.narc: %.json %.json.txt
+$(SAFARI_ENC_NARC): %.narc: %.json %.json.txt | $$(MWAS_PATCHED)
 	$(JSONPROC) $(filter-out %.h $(O2NARC) $(JSONPROC),$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -o $*.o $*.s
 	$(O2NARC) $*.o $@

@@ -6,7 +6,7 @@ PMTEL_BOOK_TEMPLATE := files/tel/pmtel_book.json.txt
 $(PMTEL_BOOK_DAT): include/constants/phone_contacts.h include/constants/trainer_class.h \
 	include/constants/trainers.h include/constants/items.h include/constants/phone_scripts.h include/constants/maps.h
 
-$(PMTEL_BOOK_DAT): %.dat: $(PMTEL_BOOK_JSON) $(PMTEL_BOOK_TEMPLATE)
+$(PMTEL_BOOK_DAT): %.dat: $(PMTEL_BOOK_JSON) $(PMTEL_BOOK_TEMPLATE) | $$(MWAS_PATCHED)
 	$(JSONPROC) $(filter-out %.h $(JSONPROC),$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -c -o $*.o $*.s
 	$(OBJCOPY) -O binary $*.o $@

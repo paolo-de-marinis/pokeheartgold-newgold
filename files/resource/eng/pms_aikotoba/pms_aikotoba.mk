@@ -13,7 +13,7 @@ clean-filesystem: clean-pms-aikotoba
 
 ifeq ($(NODEP),)
 $(PMS_AIKOTOBA_NARC): %.narc: %.s
-$(PMS_AIKOTOBA_NARC): %.narc: %.s %.d $(NARC)
+$(PMS_AIKOTOBA_NARC): %.narc: %.s %.d $(NARC) | $$(MWAS_PATCHED)
 	@echo gen  $@
 	@mkdir -p $*
 	@$(RM) $*/*
@@ -27,7 +27,7 @@ $(PMS_AIKOTOBA_DEP):
 
 include $(wildcard $(PMS_AIKOTOBA_DEP))
 else
-$(PMS_AIKOTOBA_NARC): %.narc: %.s $(NARC)
+$(PMS_AIKOTOBA_NARC): %.narc: %.s $(NARC) | $$(MWAS_PATCHED)
 	@echo gen  $@
 	@mkdir -p $*
 	@$(RM) $*/*

@@ -8,7 +8,7 @@ MMODEL_NARC := $(MMODEL_ROOT).narc
 
 $(MMODEL_NARC): $(MMODEL_BINS) $(MMODEL_NSBTX) $(MMODEL_NSBMD)
 
-$(MMODEL_BINS): %.bin: %.json $(MMODEL_ROOT).json.txt
+$(MMODEL_BINS): %.bin: %.json $(MMODEL_ROOT).json.txt | $$(MWAS_PATCHED)
 	$(JSONPROC) $(filter-out %.h $(JSONPROC),$^) $*.s
 	$(WINE) $(MWAS) $(MWASFLAGS) -c -o $*.o $*.s
 	$(OBJCOPY) -O binary $*.o $@

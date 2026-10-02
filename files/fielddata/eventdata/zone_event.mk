@@ -29,7 +29,7 @@ ifeq ($(NODEP),)
 # never read, so one left by an older build does no harm. A bin whose
 # dependency file is missing is made again, which is how it gets one.
 $(ZONE_EVENT_BIN_DEPS):
-$(ZONE_EVENT_BIN): %.bin: %.json %.bin.d
+$(ZONE_EVENT_BIN): %.bin: %.json %.bin.d | $$(MWAS_PATCHED)
 	@echo event_data: gen $@
 	@$(JSONPROC) $< $(ZONE_EVENT_TEMPL) $*.s
 	@$(WINE) $(MWAS) $(MWASFLAGS) $(DEPFLAGS) -o $*.o $*.s
@@ -41,7 +41,7 @@ $(ZONE_EVENT_BIN): %.bin: %.json %.bin.d
 
 include $(wildcard $(ZONE_EVENT_BIN_DEPS))
 else
-$(ZONE_EVENT_BIN): %.bin: %.json
+$(ZONE_EVENT_BIN): %.bin: %.json | $$(MWAS_PATCHED)
 	@echo event_data: gen $@
 	@$(JSONPROC) $< $(ZONE_EVENT_TEMPL) $*.s
 	@$(WINE) $(MWAS) $(MWASFLAGS) -o $*.o $*.s
