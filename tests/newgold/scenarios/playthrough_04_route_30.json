@@ -1,0 +1,12 @@
+{
+  "about": "The playthrough from Elm's lab to Youngster Joey's defeat on Route 30. West through New Bark to Route 29, where Lyra's catching demonstration plays itself (the Marill's battle, then her five Poke Balls: VAR_UNK_408B back to 0), the Cherrygrove nurse, then north into Route 30's grass. The lone Cyndaquil (Tackle, Leer, Smokescreen: Ember comes at level 10, the cap until Sprout Tower) fights what the grass sends, runs when it has under 40% of its HP, meets Joey's Sentret with what it has left, loses, blacks out to Cherrygrove's Pokemon Center and walks again -- the grinding a player who catches nothing does -- until it wins: three losses, at levels 7, 7 and 8, and the win at 9, on this ROM. Each loss costs a walk, so the goto may spend 70000 frames. The game's save just north of Joey, out of Mikey's sight, where the next leg starts. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_03_mr_pokemon",
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40", "goto:MAP_CHERRYGROVE_POKECENTER_1F,8,13", "UP", "A",
+            "field", {"expect": {"bag:ITEM_POKE_BALL": 5, "var:VAR_UNK_408B": 0, "flag:FLAG_HIDE_ROUTE_29_FRIEND": 1}},
+            "goto:MAP_ROUTE_30,552,329,70000", "save"],
+  "expect": {"map": "MAP_ROUTE_30", "x": 552, "y": 329, "party": 1, "party0.species": "SPECIES_CYNDAQUIL",
+             "music": "SEQ_GS_R_1_30",
+             "lines": ["You are challenged by Youngster Joey!", "You defeated Youngster Joey!"],
+             "no_lines": ["Pippo Franco"]}
+}
