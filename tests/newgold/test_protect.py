@@ -4,7 +4,8 @@
 Wide Guard, Quick Guard, Mat Block and Crafty Shield (MOVE_EFFECT_PROTECT_USER_SIDE)
 used to set no flag at all, and King's Shield, Obstruct, Silk Trap and Burning
 Bulwark stopped status moves they let through in the reference; none of the
-six shields handed anything back to a move that touched it. The real
+six shields handed anything back to a move that touched it; Crafty Shield
+let through the status moves with no protect flag. The real
 functions are extracted from src/battle and compiled natively.
 """
 
@@ -98,35 +99,57 @@ int main(void) {
 
     BattleContext ctx;
     // Each guard stops what the reference's CheckProtectedBySelf says it does.
-    assert(GuardStopsMove(&ctx, 0, MOVE_TACKLE, MOVE_PROTECT, TRUE));
-    assert(GuardStopsMove(&ctx, 0, MOVE_GROWL, MOVE_PROTECT, TRUE));
-    assert(GuardStopsMove(&ctx, 0, MOVE_TACKLE, MOVE_KINGS_SHIELD, TRUE));
-    assert(!GuardStopsMove(&ctx, 0, MOVE_GROWL, MOVE_KINGS_SHIELD, TRUE));
-    assert(!GuardStopsMove(&ctx, 0, MOVE_GROWL, MOVE_BURNING_BULWARK, TRUE));
-    assert(GuardStopsMove(&ctx, 0, MOVE_GROWL, MOVE_CRAFTY_SHIELD, TRUE));
-    assert(!GuardStopsMove(&ctx, 0, MOVE_TACKLE, MOVE_CRAFTY_SHIELD, TRUE));
-    assert(GuardStopsMove(&ctx, 0, MOVE_TACKLE, MOVE_MAT_BLOCK, TRUE));
-    assert(!GuardStopsMove(&ctx, 0, MOVE_GROWL, MOVE_MAT_BLOCK, TRUE));
-    assert(GuardStopsMove(&ctx, 0, MOVE_QUICK_ATTACK, MOVE_QUICK_GUARD, TRUE));
-    assert(!GuardStopsMove(&ctx, 0, MOVE_TACKLE, MOVE_QUICK_GUARD, TRUE));
-    assert(GuardStopsMove(&ctx, 0, MOVE_EARTHQUAKE, MOVE_WIDE_GUARD, TRUE));
-    assert(GuardStopsMove(&ctx, 0, MOVE_GROWL, MOVE_WIDE_GUARD, TRUE));
-    assert(!GuardStopsMove(&ctx, 0, MOVE_TACKLE, MOVE_WIDE_GUARD, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_TACKLE, MOVE_PROTECT, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_GROWL, MOVE_PROTECT, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_TACKLE, MOVE_KINGS_SHIELD, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_GROWL, MOVE_KINGS_SHIELD, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_GROWL, MOVE_BURNING_BULWARK, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_GROWL, MOVE_CRAFTY_SHIELD, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_TACKLE, MOVE_CRAFTY_SHIELD, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_TACKLE, MOVE_MAT_BLOCK, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_GROWL, MOVE_MAT_BLOCK, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_QUICK_ATTACK, MOVE_QUICK_GUARD, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_TACKLE, MOVE_QUICK_GUARD, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_EARTHQUAKE, MOVE_WIDE_GUARD, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_GROWL, MOVE_WIDE_GUARD, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_TACKLE, MOVE_WIDE_GUARD, TRUE));
     // An ally's Protect guards nobody else; its Wide Guard does.
-    assert(!GuardStopsMove(&ctx, 0, MOVE_TACKLE, MOVE_PROTECT, FALSE));
-    assert(!GuardStopsMove(&ctx, 0, MOVE_TACKLE, MOVE_KINGS_SHIELD, FALSE));
-    assert(GuardStopsMove(&ctx, 0, MOVE_EARTHQUAKE, MOVE_WIDE_GUARD, FALSE));
-    assert(!GuardStopsMove(&ctx, 0, MOVE_TACKLE, MOVE_NONE, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_TACKLE, MOVE_PROTECT, FALSE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_TACKLE, MOVE_KINGS_SHIELD, FALSE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_EARTHQUAKE, MOVE_WIDE_GUARD, FALSE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_TACKLE, MOVE_NONE, TRUE));
     static const u16 guards[] = { MOVE_PROTECT, MOVE_DETECT, MOVE_SPIKY_SHIELD, MOVE_BANEFUL_BUNKER, MOVE_MAX_GUARD,
         MOVE_KINGS_SHIELD, MOVE_OBSTRUCT, MOVE_SILK_TRAP, MOVE_BURNING_BULWARK, MOVE_MAT_BLOCK, MOVE_QUICK_GUARD,
         MOVE_WIDE_GUARD };
     for (unsigned i = 0; i < NELEMS(guards); i++) {
-        assert(!GuardStopsMove(&ctx, 0, MOVE_BESTOW, guards[i], TRUE));
-        assert(!GuardStopsMove(&ctx, 0, MOVE_FEINT, guards[i], TRUE));
+        assert(!GuardStopsMove(&ctx, 0, 1, MOVE_BESTOW, guards[i], TRUE));
+        assert(!GuardStopsMove(&ctx, 0, 1, MOVE_FEINT, guards[i], TRUE));
     }
-    assert(GuardStopsMove(&ctx, 0, MOVE_BESTOW, MOVE_CRAFTY_SHIELD, TRUE));
-    assert(GuardStopsMove(&ctx, 0, MOVE_BESTOW, MOVE_CRAFTY_SHIELD, FALSE));
-    assert(!GuardStopsMove(&ctx, 0, MOVE_FEINT, MOVE_CRAFTY_SHIELD, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_BESTOW, MOVE_CRAFTY_SHIELD, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_BESTOW, MOVE_CRAFTY_SHIELD, FALSE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_FEINT, MOVE_CRAFTY_SHIELD, TRUE));
+    // Crafty Shield stops every status move aimed at a Pokemon, protect flag
+    // or not, an ally's lent shield too -- Roar, Sketch -- and not one aimed
+    // at the field or the other side, nor one aimed at its user (Pokemon
+    // Central, Truccodifesa; Showdown's gen-9 craftyshield).
+    sMoves[MOVE_ROAR].category = sMoves[MOVE_SKETCH].category = CATEGORY_STATUS;
+    sMoves[MOVE_PERISH_SONG].category = sMoves[MOVE_SPIKES].category = CATEGORY_STATUS;
+    sMoves[MOVE_PERISH_SONG].range = RANGE_FIELD;
+    sMoves[MOVE_SPIKES].range = RANGE_OPPONENT_SIDE;
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_ROAR, MOVE_CRAFTY_SHIELD, TRUE));
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_SKETCH, MOVE_CRAFTY_SHIELD, FALSE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_ROAR, MOVE_PROTECT, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_PERISH_SONG, MOVE_CRAFTY_SHIELD, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 1, MOVE_SPIKES, MOVE_CRAFTY_SHIELD, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 0, MOVE_GROWL, MOVE_CRAFTY_SHIELD, FALSE));
+    // No guard stops a move its user aims at itself, the protect flag
+    // the engine's record gives it or not: a Victory Dance through its own
+    // Protect.
+    sMoves[MOVE_VICTORY_DANCE].category = CATEGORY_STATUS;
+    sMoves[MOVE_VICTORY_DANCE].range = RANGE_USER;
+    sMoves[MOVE_VICTORY_DANCE].unkB = 1 << 1;
+    assert(GuardStopsMove(&ctx, 0, 1, MOVE_VICTORY_DANCE, MOVE_PROTECT, TRUE));
+    assert(!GuardStopsMove(&ctx, 0, 0, MOVE_VICTORY_DANCE, MOVE_PROTECT, TRUE));
 
     // Wide Guard goes up on the user and its ally, and says so for the side.
     memset(&ctx, 0, sizeof(ctx));

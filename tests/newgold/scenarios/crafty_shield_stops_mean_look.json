@@ -1,0 +1,16 @@
+{
+  "about": "Crafty Shield stops every status move aimed at a Pokemon on its side, protect flag or not, and not one aimed at the whole field (Pokemon Central, Truccodifesa: not Perish Song; Showdown's gen-9 craftyshield). Before, it let through the status moves whose records have no protect flag -- Mean Look, Roar, Whirlwind, Transform, Block, Psych Up, Role Play, Sketch, Play Nice. A level-10 Pikachu is given Crafty Shield and Splash in the running battle (teach:) against a forced wild level-5 Chansey that knows only Mean Look, then only Perish Song. The shield turns the Mean Look away, and the Pikachu stays free; the next turn the Perish Song goes past it. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_CRAFTY_SHIELD", "teach:0,1,MOVE_SPLASH", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_MEAN_LOOK", "teach:1,1,MOVE_MEAN_LOOK", "teach:1,2,MOVE_MEAN_LOOK", "teach:1,3,MOVE_MEAN_LOOK",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Crafty Shield!", "The wild Chansey used Mean Look!", "Crafty Shield protected Pikachu!"],
+                        "no_lines": ["Pikachu can no longer escape!"]}},
+            "teach:1,0,MOVE_PERISH_SONG", "teach:1,1,MOVE_PERISH_SONG", "teach:1,2,MOVE_PERISH_SONG", "teach:1,3,MOVE_PERISH_SONG",
+            "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Crafty Shield!", "The wild Chansey used Perish Song!", "will faint in three turns!"],
+             "no_lines": ["Pikachu can no longer escape!"]}
+}

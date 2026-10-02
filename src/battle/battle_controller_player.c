@@ -3583,26 +3583,40 @@ static BOOL IsTeamGuardMove(u16 guard) {
     return guard == MOVE_QUICK_GUARD || guard == MOVE_WIDE_GUARD || guard == MOVE_MAT_BLOCK || guard == MOVE_CRAFTY_SHIELD;
 }
 
-// Whether a guard raised with the move `guard` stops `move`. ownGuard is the
-// target's own; otherwise it is its ally's, and only a team guard reaches
-// that far. As the reference (BattleController_BeforeMove.c): Protect,
-// Detect, Spiky Shield, Baneful Bunker and Max Guard stop everything; King's
-// Shield, Obstruct, Silk Trap, Burning Bulwark and Mat Block only a move that
-// does damage; Crafty Shield only a status move; Quick Guard only a move with
-// raised priority; Wide Guard only a move that hits every adjacent opponent
-// or every adjacent battler.
+// Whether a guard raised with the move `guard` stops `move`, aimed at
+// battlerIdTarget. ownGuard is the target's own; otherwise it is its ally's,
+// and only a team guard reaches that far. As the reference
+// (BattleController_BeforeMove.c): Protect, Detect, Spiky Shield, Baneful
+// Bunker and Max Guard stop everything; King's Shield, Obstruct, Silk Trap,
+// Burning Bulwark and Mat Block only a move that does damage; Quick Guard
+// only a move with raised priority; Wide Guard only a move that hits every
+// adjacent opponent or every adjacent battler -- each a move with the
+// protect flag.
 //
-// Bestow, whose record has no protect flag, is asked too: from the sixth
-// generation it ignores every protection but Crafty Shield (Pokemon Central,
-// Cediregalo; Truccodifesa has Crafty Shield stop some of the moves Protect
-// lets through), and the rest let a status move through already.
-static BOOL GuardStopsMove(BattleContext *ctx, int battlerIdAttacker, u32 move, u16 guard, BOOL ownGuard) {
+// Crafty Shield asks no protect flag: it stops every status move aimed at a
+// Pokemon on its side, an ally's too, and only those -- Sketch and Play Nice,
+// which Protect lets through, among them, and not Perish Song, Rototiller,
+// Flower Shield or the entry hazards, nor a move its user aims at itself, as
+// Acupressure may (Pokemon Central, Truccodifesa; Showdown's gen-9
+// craftyshield stops every status move but those aimed at the user or the
+// whole field). The reference asks the protect flag first, and lets Roar,
+// Whirlwind, Transform, Mean Look, Block, Psych Up, Role Play and Bestow
+// through. No guard stops a move its user aims at itself, guarded or not: a
+// Victory Dance a Dancer copies through its own Protect, a Shore Up behind
+// an ally's Crafty Shield, though the engine's records give both the flag.
+static BOOL GuardStopsMove(BattleContext *ctx, int battlerIdAttacker, int battlerIdTarget, u32 move, u16 guard, BOOL ownGuard) {
     const MoveTbl *moveTbl = BattleMoveTbl(ctx, move);
     BOOL status = moveTbl->category == CATEGORY_STATUS;
     u16 range = moveTbl->range;
 
+    if (battlerIdTarget == battlerIdAttacker) {
+        return FALSE;
+    }
+    if (guard == MOVE_CRAFTY_SHIELD) {
+        return status && !(range & (RANGE_USER | RANGE_USER_SIDE | RANGE_FIELD | RANGE_OPPONENT_SIDE));
+    }
     if (!(moveTbl->unkB & (1 << 1))) {
-        return move == MOVE_BESTOW && guard == MOVE_CRAFTY_SHIELD;
+        return FALSE;
     }
     switch (guard) {
     case MOVE_PROTECT:
@@ -3618,8 +3632,6 @@ static BOOL GuardStopsMove(BattleContext *ctx, int battlerIdAttacker, u32 move, 
         return ownGuard && !status;
     case MOVE_MAT_BLOCK:
         return !status;
-    case MOVE_CRAFTY_SHIELD:
-        return status;
     case MOVE_QUICK_GUARD:
         return BattlerMovePriority(ctx, battlerIdAttacker, move) > 0;
     case MOVE_WIDE_GUARD:
@@ -3656,9 +3668,9 @@ static BOOL BattleSystem_CheckMoveEffect(BattleSystem *battleSystem, BattleConte
         // target's own or its ally's, as the reference's CheckProtectedBySelf
         // and CheckProtectedByAlly decide. A guard the ally lent does not
         // make the target's last move count as one of its own.
-        BOOL byAlly = GuardStopsMove(ctx, battlerIdAttacker, move, ctx->moveNoProtect[battlerIdTarget ^ 2], FALSE);
+        BOOL byAlly = GuardStopsMove(ctx, battlerIdAttacker, battlerIdTarget, move, ctx->moveNoProtect[battlerIdTarget ^ 2], FALSE);
         BOOL bySelf = !ctx->turnData[battlerIdTarget].gainedProtectFlagFromAlly
-            && GuardStopsMove(ctx, battlerIdAttacker, move, ctx->moveNoProtect[battlerIdTarget], TRUE);
+            && GuardStopsMove(ctx, battlerIdAttacker, battlerIdTarget, move, ctx->moveNoProtect[battlerIdTarget], TRUE);
 
         if (byAlly || bySelf) {
             // The move named in the line subscript 7 prints: none for "{0}
