@@ -2570,6 +2570,13 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
     // next turn begins, so a Pokemon sent out between turns does not keep it.
     ctx->turnData[battlerId].switchedIn = TRUE;
 
+    // No Retreat's hold is Mean Look's flag with the user as its own trapper
+    // (subscript 447), and Baton Pass passes it: Showdown's gen-9 noretreat
+    // is not noCopy, as trapped and trapper are. The loop below ends it as a
+    // hold of the leaver's; Baton Pass gives it back further down, and Shed
+    // Tail, which passes the decoy alone, does not.
+    BOOL noRetreat = (ctx->battleMons[battlerId].status2 & STATUS2_MEAN_LOOK) && unkStruct.battlerIdMeanLook == battlerId;
+
     // What its user holds on others ends as it leaves, Baton Pass or not,
     // from the fifth generation (Pokemon Central, Antifuga and Staffetta;
     // Showdown's gen-9 trapper and lockon are noCopy): Mean Look's trap and
@@ -2644,6 +2651,10 @@ void InitSwitchWork(BattleSystem *battleSystem, BattleContext *ctx, int battlerI
         // they were cheered, from Scarlet and Violet 3.0.0 (Pokemon Central,
         // Grido del Drago; Showdown's gen-9 Baton Pass copies the volatile).
         ctx->moveConditions[battlerId].dragonCheer = dragonCheer;
+        if (noRetreat && ctx->moveNoCur != MOVE_SHED_TAIL) {
+            ctx->battleMons[battlerId].status2 |= STATUS2_MEAN_LOOK;
+            ctx->battleMons[battlerId].unk88.battlerIdMeanLook = battlerId;
+        }
     }
 
     ctx->battleMons[battlerId].unk88.fakeOutCount = ctx->totalTurns + 1;

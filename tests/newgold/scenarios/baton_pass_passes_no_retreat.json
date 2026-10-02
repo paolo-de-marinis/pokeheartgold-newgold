@@ -1,0 +1,15 @@
+{
+  "about": "Baton Pass passes No Retreat's hold on its own user (Showdown's gen-9 noretreat is not noCopy, where Mean Look's trapped and trapper are); round 12's change that left Mean Look's trap behind had dropped it too, the hold being Mean Look's flag with the user as its own trapper. A level-10 Pikachu with a level-40 Snorlax behind it is given No Retreat and Baton Pass in the running battle (teach:) against a forced wild level-5 Chansey given Splash. The Pikachu holds itself with No Retreat and passes the baton to the Snorlax; the Snorlax, given Teleport, cannot get away (before, it fled). gym.py answers the party screen. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10,SNORLAX:40"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_NO_RETREAT", "teach:0,1,MOVE_BATON_PASS", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used No Retreat!", "because it used No Retreat!"]}},
+            "fight:2:1",
+            {"expect": {"new_lines": ["Pikachu used Baton Pass!", "Go! Snorlax!"], "battler0.species": "SPECIES_SNORLAX"}},
+            "teach:0,0,MOVE_TELEPORT", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0", "fight:1:1"],
+  "expect": {"new_lines": ["Snorlax used Teleport!", "But it failed!"], "no_lines": ["fled from battle!"], "battler0.species": "SPECIES_SNORLAX"}
+}

@@ -412,6 +412,26 @@ class BatonPassTests(unittest.TestCase):
         for field in ("battlerIdLockOn", "battlerIdMeanLook"):
             self.assertNotIn(f"unk88.{field} = unkStruct.{field};", switching)
 
+    def test_no_retreat_s_hold_goes_with_the_baton(self):
+        # Showdown's gen-9 noretreat is not noCopy: Baton Pass passes the
+        # hold No Retreat puts on its own user -- Mean Look's flag with the
+        # user as its trapper (subscript 447) -- and Shed Tail does not.
+        switching = function(OVERLAY.read_text(), "InitSwitchWork")
+        self.assertIn("BOOL noRetreat = (ctx->battleMons[battlerId].status2 & STATUS2_MEAN_LOOK) && unkStruct.battlerIdMeanLook == battlerId;",
+                      switching)
+        # Read before the loop that ends the leaver's holds, given back in
+        # the Baton Pass branch after the masks and the clearing of unk88.
+        self.assertLess(switching.index("BOOL noRetreat"), switching.index("for (i = 0; i < maxBattlers; i++)"))
+        at = switching.index("if (noRetreat && ctx->moveNoCur != MOVE_SHED_TAIL) {")
+        given = switching[at:]
+        self.assertLess(switching.index("&= STATUS2_BATON_PASSABLE;"), at)
+        self.assertLess(switching.index("data[i] = 0;"), at)
+        self.assertLess(switching.rindex("if (ctx->battleStatus & BATTLE_STATUS_BATON_PASS) {", 0, at), at)
+        self.assertIn("ctx->battleMons[battlerId].status2 |= STATUS2_MEAN_LOOK;", given)
+        self.assertIn("ctx->battleMons[battlerId].unk88.battlerIdMeanLook = battlerId;", given)
+        self.assertIn("UpdateMonDataFromVar OPCODE_SET, BATTLER_CATEGORY_ATTACKER, BMON_DATA_MEAN_LOOK_TARGET, BSCRIPT_VAR_BATTLER_ATTACKER",
+                      subscript("NoRetreat"))
+
     def test_only_its_own_switch_takes_the_baton(self):
         # Showdown's gen-9 Baton Pass and Shed Tail copy the volatiles to the
         # Pokemon their own switch brings in. A switch later in the same
