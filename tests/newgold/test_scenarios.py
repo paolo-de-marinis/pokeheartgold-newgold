@@ -179,6 +179,32 @@ class ScenarioFileTests(unittest.TestCase):
             s.run("field")
         self.assertEqual([kwargs.get("flee") for kwargs in asked], [40])
 
+    def test_catch_wants_a_species_the_dex_lacks_while_a_ball_is_left(self):
+        # catch: tells gym.fight how many balls to spend on a wild Pokemon:
+        # the bag's, for the species asked (or any, catch:new) that the Dex
+        # has not caught; none otherwise.
+        import party
+        import savedit
+        from unittest import mock
+        s = scene.Scene.__new__(scene.Scene)
+        ram = bytearray(0x400000)
+        s.core = type("Core", (), {"ram": lambda self: bytes(ram)})()
+        s.elf, s.catch, s.hooks = None, None, []
+        s.caught = lambda ram_, species: species == 163           # a Hoothoot is in the Dex
+        start, _ = savedit.pocket_at("balls")
+        ram[0x100000 + start + 2] = 3                               # three Poke Balls
+        with mock.patch.object(party, "block", lambda memory, elf, index: 0x02100000):
+            self.assertEqual(s.balls_for(95), 0)                    # nothing asked
+            s.run("catch:new")
+            self.assertEqual((s.balls_for(95), s.balls_for(163)), (3, 0))
+            s.run("catch:SPECIES_ONIX")
+            self.assertEqual((s.balls_for(95), s.balls_for(19)), (3, 0))
+            ram[0x100000 + start + 2] = 0
+            self.assertEqual(s.balls_for(95), 0)                    # no ball left
+            s.run("catch:none")
+            self.assertIsNone(s.catch)
+        self.assertTrue(scene.readable("caught:SPECIES_ONIX", key=True))
+
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.
         self.assertTrue(scene.Scene.wanted("x", 663)[0](663))

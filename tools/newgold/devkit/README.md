@@ -427,6 +427,12 @@ Reading what the debug ROM records, and playing it without looking.
   how it went. `goto:MAP,X,Y,N` spends N frames at most (30000 by
   default), and `flee:N` has the player run from a wild Pokemon when its
   own has under N% of its HP left -- one try a battle, then it fights.
+  `catch:SPECIES` (`new` for any, `none` to stop) has it catch that wild
+  species while the Pokedex has it not caught and the bag has a ball: the
+  weakest damaging move while the wild one has more than half its HP, then
+  the bag's first ball, each of the battle bag's screens touched when the
+  bag's own state (BattleBag.state, found through its task) says it takes
+  input; `caught:SPECIES_...` is an expectation.
   `fight:N:T` stops after T turns at the prompt, so a scenario can expect
   what they did, and `teach:B,SLOT,MOVE`
   writes a move into battler B's BattleMon in the running battle (found in

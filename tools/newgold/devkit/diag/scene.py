@@ -52,6 +52,10 @@ A step is one of
     flee:N                      from now on the battles goto and field play run from
                                 a wild Pokemon when the player's has under N% of its
                                 HP left
+    catch:SPECIES|new|none      from now on the battles goto, field and fight play
+                                catch that wild species, or any, while the Pokedex has
+                                it not caught and the bag has a ball: gym.fight weakens
+                                it and throws them; none stops
     newgame[:N]                 from an empty flash (no save) through the intro, the
                                 title, NEW GAME, the Oak speech (no information, the
                                 boy, the default name) to the bedroom, the player free
@@ -98,9 +102,10 @@ player has them: PlayerSaveData's, which no flag says),
 options.textSpeed|soundMethod|battleStyle|battleScene|buttonMode|frame (the
 start menu's settings as Options holds them: text speed 2 fast, battle
 scene 1 off, battle style 1 set), flag:FLAG_..., var:VAR_...,
-battlerN.species|hp|maxHp|level|partySlot|
-status|item|moveK|ppK (gDiagBattlers; N counts the player's side even, K is
-a move slot, 0 to 3), music (the sequence the field's sound handle plays, -1
+caught:SPECIES_... (1 once the Pokedex has it caught),
+battlerN.species|hp|maxHp|level|partySlot|status|item|moveK|ppK
+(gDiagBattlers; N counts the player's side even, K is a move slot, 0 to
+3), music (the sequence the field's sound handle plays, -1
 for none: a load the sound heap cannot hold leaves it empty and counts as no
 failed allocation), or any gDiag* global. A value is a number, a constant's
 name (MAP_..., SPECIES_..., ITEM_..., MOVE_..., SEQ_...), [low, high], or for
@@ -150,7 +155,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
-         "set", "newgame", "starter", "save", "flee")
+         "set", "newgame", "starter", "save", "flee", "catch")
 
 
 def readable(step_or_key, key=False):
@@ -162,6 +167,7 @@ def readable(step_or_key, key=False):
         return (step_or_key in ("lines", "new_lines", "once_lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
                                 "party", "badges", "music", "running_shoes")
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
+                or re.fullmatch(r"caught:SPECIES_\w+", step_or_key) is not None
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
                 or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)})", step_or_key) is not None
                 or re.fullmatch(rf"party[0-5]\.({'|'.join(PARTY_FIELDS)})", step_or_key) is not None
@@ -182,6 +188,12 @@ def battle_layout():
              "__builtin_offsetof(BattleMon, speed)", "__builtin_offsetof(BattleContext, unk_314C)")
     return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item", "speed", "chose"), savedit.compile_c(
         exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h",))[0]))
+
+
+@savedit.tree_cache
+def caught_at():
+    """Where the Pokedex keeps its caught flags, one bit a species from 1."""
+    return savedit.compile_c(exprs=("__builtin_offsetof(Pokedex, caughtSpecies)",))[0][0]
 
 
 @savedit.tree_cache
@@ -435,6 +447,7 @@ class Scene:
         self.hooks = [self._poke, self._collect]
         self.saved = None       # the flash an in-game save left (save), for the next leg
         self.flee = 0           # flee:N
+        self.catch = None       # catch:, a species number or "new"
 
     def hold(self, name, value):
         address = self.markers.address(name)
@@ -554,7 +567,8 @@ class Scene:
                     import gym
                     started = core.frames
                     gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
-                              since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee)
+                              since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee,
+                              catch=self.balls_for)
                     self._collect(core)
                     if self.in_battle():
                         break       # gym.py's player could not end it
@@ -618,10 +632,12 @@ class Scene:
             slot, _, turns = rest.partition(":")
             gym.fight(core, self.markers, hooks, self.say, int(slot) if slot else -1, core.frames + 60000,
                       turns=int(turns) if turns else None, since=core.word(self._text_count),
-                      partner=self.partner_prompt())
+                      partner=self.partner_prompt(), catch=self.balls_for)
             self._collect(core)
         elif kind == "flee":
             self.flee = int(rest)
+        elif kind == "catch":
+            self.catch = None if rest == "none" else rest if rest == "new" else self.number(rest)
         else:
             button, _, times = step.partition("*")
             for _ in range(int(times or 1)):
@@ -777,6 +793,30 @@ class Scene:
             core.step(20, hooks)
         self.say(f"[{core.frames}] saved at {self.location()}: counter {start} -> {core.word(counter)}")
 
+    # -- catching ----------------------------------------------------------
+
+    def caught(self, ram, species):
+        """Whether the Pokedex has `species` caught."""
+        import party
+        import where
+        at = party.block(where.Memory(ram), self.elf, savedit.block_ids().index("SAVE_POKEDEX")) - 0x02000000 + caught_at()
+        return ram[at + (species - 1) // 8] >> (species - 1) % 8 & 1
+
+    def balls_for(self, species):
+        """For gym.fight: the balls the bag holds when catch: wants this wild
+        species -- itself, or "new", and not caught yet -- else 0. The bag in
+        the save, which the battle copies and gives back at its end."""
+        import party
+        import where
+        if self.catch not in ("new", species):
+            return 0
+        ram = self.core.ram()
+        if self.caught(ram, species):
+            return 0
+        bag = party.block(where.Memory(ram), self.elf, savedit.block_ids().index("SAVE_BAG")) - 0x02000000
+        start, slots = savedit.pocket_at("balls")
+        return sum(struct.unpack_from("<HH", ram, bag + start + 4 * i)[1] for i in range(slots))
+
     # -- the navigator -----------------------------------------------------
 
     def objects(self):
@@ -834,7 +874,8 @@ class Scene:
             if self.in_battle():
                 battles += 1
                 gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
-                          since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee)
+                          since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee,
+                          catch=self.balls_for)
                 self._collect(core)
                 continue
             if not self.movable():
@@ -1016,6 +1057,8 @@ class Scene:
             slot, field = name[len("party"):].split(".")
             mons = party.sealed_mons(self.core, self.elf, self.hooks)
             return mons[int(slot)][field] if int(slot) < len(mons) else None
+        if name.startswith("caught:"):
+            return self.caught(ram, self.number(name[len("caught:"):]))
         if name.startswith(("flag:", "var:")):
             kind, _, constant = name.partition(":")
             flags = party.block(memory, self.elf, savedit.block_ids().index("SAVE_FLAGS")) - 0x02000000
