@@ -32,9 +32,10 @@ is, unpacked under ~/hgss-build/deps/melondsds; the default) and melonDS
 its built-in BIOS and firmware, draws in software, runs without its JIT
 (NEWGOLD_JIT=1 turns it on: faster, but on melonDS DS no wild battle ever
 starts) and keeps the console's clock at CLOCK; main RAM
-is the core's memory 2 on both, from 0x02000000. melonDS 0.9.3 reads and
-writes the save file itself; melonDS DS is handed it and gives it back as
-memory, and core.py keeps the same file for it (save_file).
+is the core's memory 2 on both, from 0x02000000. melonDS 0.9.3 reads the
+save file itself and never writes it back, so a game saved on it is saved
+nowhere; melonDS DS is handed it and gives it back as memory, and core.py
+keeps the same file for it (save_file).
 
 Both mix the game's sound alike: the music, the clicks and the cries.
 
@@ -222,7 +223,7 @@ class Core:
             raise SystemExit("the core would not load the ROM")
         self.lib.retro_get_memory_data.restype = ctypes.c_void_p
         self.lib.retro_get_memory_size.restype = ctypes.c_size_t
-        # melonDS 0.9.3 reads and writes <save directory>/<rom>.sav itself;
+        # melonDS 0.9.3 reads <save directory>/<rom>.sav itself, and never writes it;
         # melonDS DS hands the save to the frontend as memory, which is filled
         # from that file here, before the first frame, and written back to it
         # when it changes (every second of the game's time, and at close()).

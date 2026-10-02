@@ -156,7 +156,7 @@ it, because its core reads a null as zero.
   throughout, as on 0.9.3. (`real` sets the clock once and lets it run; the
   `absolute` options take their seconds from the host.) The save goes in
   and out as the core's memory 0, kept in the same `.sav` file 0.9.3
-  writes.
+  reads (and never writes back: no in-game save on it).
 - melonDS 0.9.3, `/usr/lib/libretro/melonds_libretro.so` (Arch's
   libretro-melonds), the harness's first core:
   `NEWGOLD_CORE=/usr/lib/libretro/melonds_libretro.so`. `boot_check.c`,

@@ -2,7 +2,7 @@
 """Have the game save: continue a save, save through the start menu, and
 write what the game wrote to flash.
 
-    ingame_save.py SAVE OUT [--keys X,DOWN,RIGHT,A] [--after 300] [--wait 6000] [--shots] [--build DIR]
+    ingame_save.py SAVE OUT [--keys X,DOWN,RIGHT,A] [--wait 6000] [--shots] [--build DIR]
 
 savedit writes a save the way the game reads it; this is the other half of
 the proof -- the game itself reading it, and writing it back. SAVE is
@@ -11,13 +11,15 @@ the keys are pressed on the field, then A until the save counter in RAM
 moves (the one the game bumps in the chunk footers on a save). The save is
 done when Save_WriteManFinish turns SaveData.lastGoodSector to the half it
 wrote: the counter moves as it starts, and the PC slot's footer is written
-last, some 800 frames later. The flash is then read from the core (melonDS
-DS hands it over as memory); on melonDS 0.9.3, which writes its .sav file
-itself, the file once it has changed and stayed the same for AFTER frames.
-Either is copied to OUT. Not the file's first still spell on melonDS DS: a
-save whose boxes are the bytes the flash holds already leaves it unchanged
-for seconds between the main slot's footer and the PC's, and a copy taken
-then is half a save. A counter that never moves says the game refused
+last, some 800 frames later. The flash is then read from the core, which
+melonDS DS hands over as memory, and copied to OUT -- not when the flash
+first stays still: a save whose boxes are the bytes the flash holds already
+leaves it unchanged for seconds between the main slot's footer and the
+PC's, and a copy taken then is half a save. melonDS 0.9.3 (NEWGOLD_CORE)
+cannot be used: it exposes no save memory and never writes its .sav file,
+not after a finished save nor at unload or deinit, so it is refused before
+anything is played, as scene.py's save step refuses it. A counter that
+never moves says the game refused
 (--shots: a screenshot after each key and every few waits, beside OUT, shows
 where it stopped).
 
@@ -47,7 +49,6 @@ def main():
     parser.add_argument("save", type=Path)
     parser.add_argument("out", type=Path)
     parser.add_argument("--keys", default="X,DOWN,RIGHT,A", help="buttons, or TOUCH:X:Y")
-    parser.add_argument("--after", type=int, default=300, help="frames the save file must stay the same (melonDS 0.9.3)")
     parser.add_argument("--wait", type=int, default=6000, help="frames to wait for it at most")
     parser.add_argument("--shots", action="store_true")
     parser.add_argument("--build", type=Path, default=species.BUILD)
@@ -56,6 +57,10 @@ def main():
     say = lambda line: print(line, file=out)  # noqa: E731
     game = species.Game(args.save, args.build)
     core, markers = game.core, game.markers
+    if not core._sram:
+        game.close()
+        say(f"{core.name} hands no flash back: an in-game save needs melonDS DS, core.py's default")
+        sys.exit(1)
     shots = [0]
 
     def shot(tag):
@@ -111,26 +116,11 @@ def main():
     else:
         say(f"[{core.frames}] the save did not finish in {args.wait} frames: lastGoodSector is still {half}")
     finished = last_good() != half
-    before, last = args.save.read_bytes(), None
-    if core._sram:
-        last = ctypes.string_at(*core._sram)
-    else:
-        # melonDS 0.9.3 writes the flash to its .sav file a while after the
-        # game's last write to it: wait for the file to change, then to
-        # stay the same.
-        flash = next(Path(core.dir).glob("*.sav"))   # where core.py put SAVE
-        still = 0
-        for _ in range(args.wait // 60):
-            game.step(60)
-            now = flash.read_bytes()
-            still = still + 1 if now == last and now != before else 0
-            last = now
-            if still * 60 >= args.after:
-                break
+    before, last = args.save.read_bytes(), ctypes.string_at(*core._sram)
     for _ in range(4):
         game.press("B", 30)
     game.close()
-    if not finished or last is None or last == before:
+    if not finished or last == before:
         say(f"the game's save did not finish, or the flash did not change: {args.out} not written")
         sys.exit(1)
     args.out.write_bytes(last)

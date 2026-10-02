@@ -405,6 +405,21 @@ class HarnessToolTests(unittest.TestCase):
         self.assertEqual(len(lines), 1, lines[:5])
         self.assertIn("| battle ", lines[0])         # markers.describe's, the step mode's last word
 
+    def test_an_in_game_save_on_melonds_093_is_refused_at_once(self):
+        # melonDS 0.9.3 never writes its .sav, so ingame_save.py's path for
+        # it played a whole save to end "the flash did not change"; it is
+        # refused before anything is played, as scene.py's save step is.
+        if not ROM.exists() or not core.MELONDS.exists():
+            self.skipTest("the diagnostics ROM or melonDS 0.9.3 is not there")
+        with tempfile.TemporaryDirectory(prefix="newgold-ingame-") as temp:
+            flash, out = Path(temp) / "empty.sav", Path(temp) / "out.sav"
+            flash.write_bytes(bytes(0x80000))
+            run = subprocess.run([sys.executable, str(DIAG / "ingame_save.py"), str(flash), str(out)], capture_output=True,
+                                 text=True, timeout=600, env={**os.environ, "NEWGOLD_CORE": str(core.MELONDS)})
+            self.assertEqual(run.returncode, 1, run.stderr[-2000:])
+            self.assertIn("hands no flash back: an in-game save needs melonDS DS", run.stdout)
+            self.assertFalse(out.exists())
+
 
 class NavigatorTests(unittest.TestCase):
     """scene.py's goto plans from the tree's own map data; these read the plan
