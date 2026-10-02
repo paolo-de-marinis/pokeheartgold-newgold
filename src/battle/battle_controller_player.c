@@ -199,9 +199,12 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // the script buffer had before it at 0x4EEC. One spare byte is left, before
 // the added moves' data; the one after it grows BattleContext by four (all
 // measured with the compiler, plain and NEWGOLD_DIAG). Parental Bond's
-// deferred side effect, a word, went, and the size with it (0x3268).
+// deferred side effect, a word, went, and the size with it (0x3268). The
+// items the battlers lost for the rest of the battle, four halfwords after
+// the items taken from the wild ones (0x3256), grew it by eight (0x3270),
+// the one spare byte still before the added moves' data, now at 0x3270.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3268 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3270 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -258,11 +261,18 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     if (!(BattleSystem_GetBattleType(battleSystem) & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_NO_EXP))) {
         // A swap with a wild Pokemon lasts (Pokemon Central, Rapidscambio):
         // the player's Pokemon keeps what it got, and what it handed over
-        // goes to the bag if a wild Pokemon still has it, held or used up
-        // (Raggiro, from the ninth generation; a Berry eaten is gone,
+        // goes to the bag if a wild Pokemon still has it, used it up or lost
+        // it to Knock Off, Corrosive Gas or Incinerate (Raggiro, from the
+        // ninth generation: what was handed to a wild Pokemon goes back to
+        // the bag at the battle's end; a Berry eaten is gone,
         // NoteHeldItemUsedUp, and one caught keeps it, CaughtMonKeepsItem).
         // Before, the Pokemon had its own item back and the one it got went
-        // to the bag: the same two items, in each other's place.
+        // to the bag: the same two items, in each other's place; and one
+        // knocked off was lost.
+        //
+        // ponytail: itemsLost keeps a battler's last loss only, so of two
+        // items one wild Pokemon lost the first is not bagged; a bit per
+        // party slot, set where the item is lost, if that is ever played.
         for (i = 0; i < count; i++) {
             u16 given = ctx->itemsToRestore[i];
 
@@ -270,7 +280,7 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
                 continue;
             }
             for (j = 1; given != ITEM_NONE && j < BATTLER_MAX; j += 2) {
-                if (ctx->battleMons[j].item == given || ctx->recycleItem[j] == given) {
+                if (ctx->battleMons[j].item == given || ctx->recycleItem[j] == given || ctx->itemsLost[j] == given) {
                     Bag_AddItem(BattleSystem_GetBag(battleSystem), given, 1, HEAP_ID_BATTLE);
                     break;
                 }

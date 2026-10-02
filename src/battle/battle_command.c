@@ -5424,7 +5424,10 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->buffMsg.tag = TAG_NICKNAME_NICKNAME_ITEM;
         ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdAttacker);
         ctx->buffMsg.param[1] = CreateNicknameTag(ctx, ctx->battlerIdTarget);
-        ctx->buffMsg.param[2] = ctx->battleMons[ctx->battlerIdTarget].item;
+        // What one of the player's Pokemon handed a wild Pokemon goes to the
+        // bag when the battle is over, knocked off it or not (Pokemon
+        // Central, Raggiro: from the ninth generation; GiveBackHeldItems).
+        ctx->buffMsg.param[2] = ctx->itemsLost[ctx->battlerIdTarget] = ctx->battleMons[ctx->battlerIdTarget].item;
         // One of the player's own has its item back when the battle is over,
         // a Berry too, as a taken one does (GiveBackHeldItems) -- the item it
         // started with, not one it got in the battle: a Pokemon that ate its
@@ -10289,6 +10292,10 @@ BOOL BtlCmd_TryIncinerate(BattleSystem *battleSystem, BattleContext *ctx) {
 
     ctx->itemTemp = item;
     ctx->battlerIdTemp = ctx->battlerIdTarget;
+    // A Gem one of the player's Pokemon handed a wild Pokemon goes to the bag
+    // when the battle is over, burnt or not, as a knocked-off item does
+    // (BtlCmd_TryKnockOff); a Berry handed over is gone (NoteHeldItemUsedUp).
+    ctx->itemsLost[ctx->battlerIdTarget] = item;
     NoteHeldItemUsedUp(battleSystem, ctx, ctx->battlerIdTarget);
     // Burnt, not knocked off: there is nothing left for Recycle to find.
     ctx->battleMons[ctx->battlerIdTarget].item = ITEM_NONE;

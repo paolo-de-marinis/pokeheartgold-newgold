@@ -218,6 +218,18 @@ class KnockOffTests(unittest.TestCase):
         self.assertRegex(knock, r"ctx->battleMons\[ctx->battlerIdTarget\]\.item = 0;\n(\s*//.*\n)*"
                                 r"\s*CopyBattleMonToPartyMon\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\} else \{")
 
+    def test_what_a_battler_loses_is_written_down(self):
+        # Pokemon Central (Raggiro): from the ninth generation what was
+        # handed to a wild Pokemon goes back to the bag at the battle's end,
+        # knocked off or corroded too. The item is written down by battler
+        # before the hand is emptied, and GiveBackHeldItems asks it of the
+        # wild ones as it asks what they hold and used up.
+        knock = function(read("src/battle/battle_command.c"), "BtlCmd_TryKnockOff")
+        self.assertLess(knock.index("ctx->itemsLost[ctx->battlerIdTarget] = ctx->battleMons[ctx->battlerIdTarget].item;"),
+                        knock.index("ctx->battleMons[ctx->battlerIdTarget].item = 0;"))
+        self.assertIn("ctx->battleMons[j].item == given || ctx->recycleItem[j] == given || ctx->itemsLost[j] == given",
+                      function(read("src/battle/battle_controller_player.c"), "GiveBackHeldItems"))
+
     def test_a_wild_pokemon_knocks_off_nothing_of_the_players(self):
         # Pokemon Central (Privazione): from the fifth generation a wild
         # Pokemon's Knock Off does not take the player's Pokemon's item. The

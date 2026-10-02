@@ -128,7 +128,7 @@ typedef struct { u16 item; } Pokemon;
 typedef struct { int unused; } Bag;
 typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; u8 outcome; } BattleSystem;
 typedef struct { u16 item; } BattleMon;
-typedef struct { BattleMon battleMons[BATTLER_MAX]; u16 recycleItem[BATTLER_MAX]; u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken, heldItemsCount; u16 itemsTakenFromWild[2]; u8 heldItemsGiven; } BattleContext;
+typedef struct { BattleMon battleMons[BATTLER_MAX]; u16 recycleItem[BATTLER_MAX]; u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken, heldItemsCount; u16 itemsTakenFromWild[2], itemsLost[BATTLER_MAX]; u8 heldItemsGiven; } BattleContext;
 static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 
 static u16 sAdded[8][2];
@@ -290,16 +290,21 @@ int main(void) {
 
     // Tricked with a wild Pokemon that then fainted or fled: the swap lasts
     // (Rapidscambio) -- the player's Pokemon keeps the Leftovers it got, and
-    // the Focus Sash it handed over, which the wild one still holds or has
-    // used up, goes to the bag (Raggiro, from the ninth generation). Before,
-    // the Sash came back to the Pokemon and the Leftovers went to the bag.
-    for (int used = 0; used < 3; used++) {
+    // the Focus Sash it handed over goes to the bag (Raggiro, from the ninth
+    // generation: what was handed to a wild Pokemon goes back to the bag at
+    // the battle's end), whether the wild one still holds it, has used it
+    // up, or lost it to Knock Off, Corrosive Gas or Incinerate (the third
+    // pass: before, it was gone). Before all this, the Sash came back to the
+    // Pokemon and the Leftovers went to the bag. With none of the wild ones
+    // (the fourth pass), it is back on the player's side, and no copy.
+    for (int used = 0; used < 4; used++) {
         for (int i = 0; i < PARTY_SIZE; i++) {
             ctx.itemsToRestore[i] = before[i];
             bs.party[i].item = swappedWild[i];
         }
         ctx.battleMons[1].item = used == 0 ? ITEM_FOCUS_SASH : ITEM_NONE;
         ctx.recycleItem[1] = used == 1 ? ITEM_FOCUS_SASH : ITEM_NONE;
+        ctx.itemsLost[1] = used == 2 ? ITEM_FOCUS_SASH : ITEM_NONE;
         ctx.heldItemsGivenBack = 0;
         ctx.heldItemsTaken = 0;
         ctx.heldItemsGiven = 1 << 0;
@@ -307,10 +312,9 @@ int main(void) {
         sAdds = 0;
         GiveBackHeldItems(&bs, &ctx);
         assert(bs.party[0].item == ITEM_LEFTOVERS);
-        // Knocked off, it is gone (the third pass).
-        assert(used == 2 ? sAdds == 0 : sAdds == 1 && sAdded[0][0] == ITEM_FOCUS_SASH && sAdded[0][1] == 1);
+        assert(used == 3 ? sAdds == 0 : sAdds == 1 && sAdded[0][0] == ITEM_FOCUS_SASH && sAdded[0][1] == 1);
     }
-    ctx.battleMons[1].item = ctx.recycleItem[1] = ITEM_NONE;
+    ctx.battleMons[1].item = ctx.recycleItem[1] = ctx.itemsLost[1] = ITEM_NONE;
     ctx.heldItemsGiven = 0;
 
     // Swapped within the party is not gained.
@@ -436,7 +440,7 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 typedef struct { u16 item; int hp; } BattleMon;
-typedef struct { BattleMon battleMons[4]; int battlerIdAttacker, battlerIdTarget, battlerIdTemp; u16 itemTemp; } BattleContext;
+typedef struct { BattleMon battleMons[4]; int battlerIdAttacker, battlerIdTarget, battlerIdTemp; u16 itemTemp, itemsLost[4]; } BattleContext;
 typedef struct BattleSystem BattleSystem;
 static int sCopies, sCopied = -1, sHeldAtCopy = -1;
 static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
@@ -459,13 +463,16 @@ int main(void) {
     assert(sCopies == 1 && sCopied == 1 && sHeldAtCopy == ITEM_NONE);
     // A Gem burns as well (Pokemon Central, Bruciatutto: from the sixth
     // generation).
+    // Written down as lost, so one the player's Pokemon handed a wild
+    // Pokemon goes to the bag at the battle's end (GiveBackHeldItems).
     ctx.battleMons[1].item = ITEM_FIRE_GEM;
     BtlCmd_TryIncinerate(0, &ctx);
     assert(ctx.battleMons[1].item == ITEM_NONE && ctx.itemTemp == ITEM_FIRE_GEM && sCopies == 2);
-    // Nothing burnt, nothing copied.
+    assert(ctx.itemsLost[1] == ITEM_FIRE_GEM && ctx.itemsLost[0] == ITEM_NONE);
+    // Nothing burnt, nothing copied, nothing written down.
     ctx.battleMons[1].item = ITEM_LEFTOVERS;
     BtlCmd_TryIncinerate(0, &ctx);
-    assert(sCopies == 2 && ctx.battleMons[1].item == ITEM_LEFTOVERS);
+    assert(sCopies == 2 && ctx.battleMons[1].item == ITEM_LEFTOVERS && ctx.itemsLost[1] == ITEM_FIRE_GEM);
     return 0;
 }
 """

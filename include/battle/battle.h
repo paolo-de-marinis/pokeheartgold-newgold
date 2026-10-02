@@ -731,6 +731,11 @@ typedef struct BattleContext {
     // catch clears the other's, and GiveBackHeldItems bags no copy of what is
     // left.
     u16 itemsTakenFromWild[2];
+    // The item each battler last lost for the rest of the battle -- knocked
+    // off, corroded or burnt (BtlCmd_TryKnockOff, BtlCmd_TryIncinerate) --
+    // by battlerId, for GiveBackHeldItems: one the player's Pokemon handed a
+    // wild Pokemon goes to the bag all the same.
+    u16 itemsLost[BATTLER_MAX];
     // The player's own Pokemon that handed the item they started with to
     // another by Trick, Switcheroo or Bestow, a bit each by party slot
     // (NoteHeldItemGiven), for GiveBackHeldItems: such an item comes back

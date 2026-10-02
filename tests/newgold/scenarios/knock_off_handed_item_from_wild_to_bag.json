@@ -1,0 +1,15 @@
+{
+  "about": "An item the player's Pokemon handed to a wild Pokemon and then knocked off it goes to the bag when the battle is over, as one the wild Pokemon still holds or used up does (Pokemon Central, Raggiro: from the ninth generation what was handed to a wild Pokemon goes back to the bag at the battle's end, unless it is caught with it, consumed or not, eaten Berries excepted). Before, nobody held it at the end and it was lost. On Route 29 the Cyndaquil starts the battle holding a Silk Scarf and is taught Trick, Knock Off and Water Gun; the forced wild Geodude holds an Everstone (set:, teach:). The Trick swaps the two, Knock Off takes the Silk Scarf off the Geodude, Water Gun beats it, and back on the field the Cyndaquil holds the Everstone and the bag has the Silk Scarf. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CYNDAQUIL:12:::SILK_SCARF"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0",
+            "set:1,item,ITEM_EVERSTONE", "teach:0,0,MOVE_TRICK", "teach:0,1,MOVE_KNOCK_OFF", "teach:0,2,MOVE_WATER_GUN",
+            "fight:1:1",
+            {"expect": {"lines": ["Cyndaquil used Trick!"], "battler0.item": "ITEM_EVERSTONE", "battler1.item": "ITEM_SILK_SCARF"}},
+            "fight:2:1",
+            {"expect": {"new_lines": ["Cyndaquil used Knock Off!", "Silk Scarf"], "battler1.item": "ITEM_NONE"}},
+            "fight:3", "field"],
+  "expect": {"lines": ["Cyndaquil used Water Gun!", "The wild Geodude fainted!"],
+             "party0.item": "ITEM_EVERSTONE", "bag:ITEM_SILK_SCARF": 1, "bag:ITEM_EVERSTONE": 0}
+}
