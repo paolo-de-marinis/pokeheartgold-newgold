@@ -245,6 +245,28 @@ class ScenarioFileTests(unittest.TestCase):
             self.assertIsNone(s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 10000))
         self.assertEqual(steps, ["goto:158,8,13", "UP", "A", "field"])
 
+    def test_again_plays_the_steps_before_until_the_value(self):
+        # again: a leader fought again after a loss: the steps before it,
+        # from where the blackout left the player, until the key reads
+        # enough; at most N times, and it says so when that was not enough.
+        s = scene.Scene.__new__(scene.Scene)
+        s.core = type("Core", (), {"ram": lambda self: b"", "frames": 0})()
+        s.hooks, s.say, played = [], (lambda line: None), []
+        s.done = ["field", "goto:MAP_VIOLET_GYM,15,4", {"expect": {}}, "A", "fight"]
+        badges = iter([0, 0, 1])
+        s.value = lambda ram, key: next(badges)
+        real = scene.Scene.run
+
+        def run(step):
+            if isinstance(step, str) and step.startswith("again:"):
+                return real(s, step)
+            played.append(step)
+        s.run = run
+        self.assertIsNone(s.run("again:4,badges,1"))
+        self.assertEqual(played, ["goto:MAP_VIOLET_GYM,15,4", "A", "fight"] * 2)
+        s.value = lambda ram, key: 0
+        self.assertIn("under 1", s.run("again:3,badges,1,2")[0])
+
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.
         self.assertTrue(scene.Scene.wanted("x", 663)[0](663))

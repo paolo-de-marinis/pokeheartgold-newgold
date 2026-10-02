@@ -69,6 +69,11 @@ A step is one of
                                 what the grass sends, until the expectation KEY reads
                                 at least V (party 3, party1.level 8, caught:SPECIES_...
                                 1); N frames at most (30000 by default)
+    again:K,KEY,V[,N]           the K steps before this one played again until the
+                                expectation KEY reads at least V, N times at most (5 by
+                                default): a leader or a trainer fought again after a
+                                loss, from the Pokemon Center the blackout left the
+                                player in, as a player who lost does
     newgame[:N]                 from an empty flash (no save) through the intro, the
                                 title, NEW GAME, the Oak speech (no information, the
                                 boy, the default name) to the bedroom, the player free
@@ -168,7 +173,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
-         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift")
+         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift", "again")
 
 
 def readable(step_or_key, key=False):
@@ -481,6 +486,7 @@ class Scene:
         self.catch = None       # catch:, a species number or "new"
         self.healer = None      # heal:, (map, x, y)
         self.shift = None       # shift:, a party slot
+        self.done = []          # the steps played before this one, for again:
 
     def hold(self, name, value):
         address = self.markers.address(name)
@@ -673,6 +679,19 @@ class Scene:
             self.flee = int(rest)
         elif kind == "catch":
             self.catch = None if rest == "none" else rest if rest == "new" else self.number(rest)
+        elif kind == "again":
+            count, key, least, *most = rest.split(",")
+            steps = [st for st in self.done[-int(count):] if not isinstance(st, dict)]
+            for attempt in range(int(most[0]) if most else 5):
+                now = self.value(core.ram(), key) or 0
+                if now >= self.number(least):
+                    return None
+                self.say(f"[{core.frames}] again: {key} is {now}, attempt {attempt + 2}")
+                for again in steps:
+                    self.run(again)
+            now = self.value(core.ram(), key) or 0
+            if now < self.number(least):
+                return [f"again: {key} is {now}, under {least}"]
         elif kind == "shift":
             self.shift = None if rest == "none" else int(rest)
         elif kind == "heal":
@@ -1333,7 +1352,8 @@ def play_scenario(path, spec, save, rom, elf, out, record):
     scene = Scene(copy, rom, elf, out, say=log.append, record=record)
     for name, value in spec.get("hold", {}).items():
         scene.hold(name, Scene.number(value))
-    for step in spec["steps"]:
+    for index, step in enumerate(spec["steps"]):
+        scene.done = spec["steps"][:index]
         where_ = json.dumps(step["expect"]) if isinstance(step, dict) else step
         wrong += [f"at {where_}: {w}" for w in scene.run(step) or []]
     wrong += scene.check(spec.get("expect", {}), final=True)
@@ -1380,7 +1400,8 @@ def main():
     from gym import quiet
     sys.stdout = quiet()    # the core's own chatter off, as --scenario has it
     scene = Scene(None if args.save == "new" else args.save, args.rom, args.elf, args.out, say=print, record=args.record)
-    for step in args.steps:
+    for index, step in enumerate(args.steps):
+        scene.done = args.steps[:index]
         scene.run(step)
     print(scene.markers.describe(scene.core.ram()))
     if scene.saved:

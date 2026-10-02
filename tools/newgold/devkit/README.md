@@ -444,7 +444,9 @@ Reading what the debug ROM records, and playing it without looking.
   so the one to train leads. `shift:SLOT` has a wild battle's first
   Pokemon relieved by that party slot at the first prompt: the slot fights
   and the first, out at the start, shares the experience -- how a catch too
-  weak to win its own battles is trained.
+  weak to win its own battles is trained. `again:K,KEY,V` plays the K
+  steps before it again until KEY reads V -- a leader fought again from the
+  Pokemon Center a loss left the player in, as a player does.
   `fight:N:T` stops after T turns at the prompt, so a scenario can expect
   what they did, and `teach:B,SLOT,MOVE`
   writes a move into battler B's BattleMon in the running battle (found in
