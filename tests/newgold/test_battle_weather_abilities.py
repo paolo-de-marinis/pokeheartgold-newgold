@@ -154,9 +154,8 @@ class StrongWeatherTests(unittest.TestCase):
         for mask, bit in (("RAIN_ALL", "HEAVY_RAIN"), ("SUN_ALL", "EXTREMELY_HARSH_SUNLIGHT"), ("WEATHER", "STRONG_WINDS")):
             line = next(l for l in battle.splitlines() if l.startswith(f"#define FIELD_CONDITION_{mask} "))
             self.assertIn(f"FIELD_CONDITION_{bit}", line, mask)
-        for mask in ("WEATHER_NO_SUN", "WEATHER_CASTFORM"):
-            line = next(l for l in battle.splitlines() if l.startswith(f"#define FIELD_CONDITION_{mask} "))
-            self.assertNotIn("STRONG_WINDS", line, mask)
+        line = next(l for l in battle.splitlines() if l.startswith("#define FIELD_CONDITION_WEATHER_NO_SUN "))
+        self.assertNotIn("STRONG_WINDS", line)
 
     def test_they_come_in_over_any_weather_and_nothing_else_replaces_them(self):
         body = function(OVERLAY.read_text(), "TryAbilityOnEntry")

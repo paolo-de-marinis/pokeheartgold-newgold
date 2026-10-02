@@ -45,6 +45,20 @@ class ForecastTests(unittest.TestCase):
         self.assertLess(self.castform.index("form = CASTFORM_NORMAL;"), self.castform.index("ABILITY_CLOUD_NINE"))
 
 
+class FlowerGiftTests(unittest.TestCase):
+    def setUp(self):
+        body = function(OVERLAY.read_text(), "Battler_CheckWeatherFormChange")
+        self.cherrim = body[body.index("SPECIES_CHERRIM"):body.index("SPECIES_ARCEUS")]
+
+    def test_the_sunshine_form_needs_the_ability(self):
+        # Without Flower Gift -- Skill Swap, Gastro Acid, Neutralizing Gas --
+        # Cherrim goes back to its Overcast Form, in the sun too (Regalfiore).
+        self.assertRegex(self.cherrim, r"form = CHERRIM_CLOUDY;\s*if \(GetBattlerAbility\(ctx, ctx->battlerIdTemp\) == ABILITY_FLOWER_GIFT && \(weather & FIELD_CONDITION_SUN_ALL\)")
+        self.assertIn("form = CHERRIM_SUNNY;", self.cherrim)
+        self.assertIn("if (ctx->battleMons[ctx->battlerIdTemp].form != form) {", self.cherrim)
+        self.assertEqual(self.cherrim.count("form = "), 3)
+
+
 class EntryTests(unittest.TestCase):
     def setUp(self):
         self.body = function(OVERLAY.read_text(), "BattleSystem_GetBattleMon")

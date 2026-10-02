@@ -10423,31 +10423,19 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
                 break;
             }
         }
+        // Flower Gift turns Cherrim to its Sunshine Form in the sun, and only
+        // while it has the ability: one that loses it or has it suppressed --
+        // Skill Swap, Gastro Acid, Neutralizing Gas -- goes back to its
+        // Overcast Form (Pokemon Central, Regalfiore). Retail and the
+        // reference (BattleFormChangeCheck.c:96) asked the species alone.
         if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_CHERRIM && ctx->battleMons[ctx->battlerIdTemp].hp) {
-            if (!CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
-                if (!(weather & FIELD_CONDITION_WEATHER_CASTFORM) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_SUNNY) {
-                    ctx->battleMons[ctx->battlerIdTemp].form = (u8)CHERRIM_CLOUDY;
-                    *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
-                    ret = TRUE;
-                    break;
-                } else if ((weather & FIELD_CONDITION_SUN_ALL) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_CLOUDY) {
-                    ctx->battleMons[ctx->battlerIdTemp].form = (u8)CHERRIM_SUNNY;
-                    *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
-                    ret = TRUE;
-                    break;
-                } else if ((weather & FIELD_CONDITION_RAIN_ALL) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_SUNNY) {
-                    ctx->battleMons[ctx->battlerIdTemp].form = (u8)CHERRIM_CLOUDY;
-                    *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
-                    ret = TRUE;
-                    break;
-                } else if ((weather & FIELD_CONDITION_HAIL_ALL) && ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_SUNNY) {
-                    ctx->battleMons[ctx->battlerIdTemp].form = (u8)CHERRIM_CLOUDY;
-                    *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
-                    ret = TRUE;
-                    break;
-                }
-            } else if (ctx->battleMons[ctx->battlerIdTemp].form == (u8)CHERRIM_SUNNY) {
-                ctx->battleMons[ctx->battlerIdTemp].form = (u8)CHERRIM_CLOUDY;
+            form = CHERRIM_CLOUDY;
+            if (GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_FLOWER_GIFT && (weather & FIELD_CONDITION_SUN_ALL)
+                && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
+                form = CHERRIM_SUNNY;
+            }
+            if (ctx->battleMons[ctx->battlerIdTemp].form != form) {
+                ctx->battleMons[ctx->battlerIdTemp].form = form;
                 *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
                 ret = TRUE;
                 break;

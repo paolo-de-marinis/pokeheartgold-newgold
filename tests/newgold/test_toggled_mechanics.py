@@ -96,13 +96,11 @@ class SnowTests(unittest.TestCase):
         self.assertIsNone(re.search(r"^#define FIELD_CONDITION_SNOW", re.sub(r"//.*", "",
                           source("include/constants/battle_script_imports.h")), re.M))
 
-    def test_snow_is_weather_but_not_weather_castform_answers_to(self):
+    def test_snow_is_weather(self):
         battle = source("include/constants/battle.h")
         for mask in ("FIELD_CONDITION_WEATHER ", "FIELD_CONDITION_WEATHER_NO_SUN "):
             line = re.search(rf"#define {mask}\s*\((.*)\)", battle).group(1)
             self.assertIn("FIELD_CONDITION_SNOW_ALL", line, mask)
-        line = re.search(r"#define FIELD_CONDITION_WEATHER_CASTFORM\s*\((.*)\)", battle).group(1)
-        self.assertNotIn("SNOW", line)
 
     def test_the_battle_reads_the_snow(self):
         overlay = source("src/battle/overlay_12_0224E4FC.c")

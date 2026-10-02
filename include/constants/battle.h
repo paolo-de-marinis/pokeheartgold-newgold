@@ -324,9 +324,6 @@ typedef enum Terrain {
 #define FIELD_CONDITION_ION_DELUGE          (1 << 27)
 
 #define FIELD_CONDITION_WEATHER_NO_SUN   (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SANDSTORM_ALL | FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL | FIELD_CONDITION_FOG)
-// Snow is not on this one: the reference leaves Castform and Cherrim reading
-// hail alone, so a Forecast Castform stays Normal while it snows.
-#define FIELD_CONDITION_WEATHER_CASTFORM (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SUN_ALL | FIELD_CONDITION_HAIL_ALL)
 #define FIELD_CONDITION_WEATHER          (FIELD_CONDITION_RAIN_ALL | FIELD_CONDITION_SANDSTORM_ALL | FIELD_CONDITION_SUN_ALL | FIELD_CONDITION_HAIL_ALL | FIELD_CONDITION_SNOW_ALL | FIELD_CONDITION_FOG | FIELD_CONDITION_STRONG_WINDS)
 // The weather the map brought into the battle, which nothing but the map sets
 // for good: the reference's mask, with the hail HeartGold's snowy maps bring.
