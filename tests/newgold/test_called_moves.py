@@ -90,15 +90,18 @@ typedef struct BattleSystem BattleSystem;
 typedef struct { u32 status2; struct { int metronomeTurns; } unk88; } BattleMon;
 typedef struct { u32 metronomeLanded : 1; int rolloutCount; } SelfTurnData;
 typedef struct {
-    int battlerIdAttacker; u32 battleStatus, moveStatusFlag; u16 moveNoTemp; u16 moveNoMetronome[4];
+    int battlerIdAttacker; u32 battleStatus, moveStatusFlag; u16 moveNoCur; u16 moveNoMetronome[4];
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
 } BattleContext;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return HOLD_EFFECT_BOOST_REPEATED; }
 @FUNCTIONS@
 int main(void) {
     BattleContext ctx;
     memset(&ctx, 0, sizeof(ctx));
-    ctx.moveNoTemp = ctx.moveNoMetronome[0] = MOVE_EARTHQUAKE;
+    ctx.moveNoCur = ctx.moveNoMetronome[0] = MOVE_EARTHQUAKE;
     // A third Earthquake in a row that hit one foe and not the Flying-type
     // after it keeps its count; one that hit nothing starts it over, the
     // next Earthquake being a first (Plessimetro, from the fifth generation).
@@ -130,7 +133,7 @@ int main(void) {
     // it is over, and the first hit is worth 1.2, the second use's 1.4
     // (Plessimetro, from the fifth generation). Before, the charge turn
     // counted and the hit did not: 1.0, then 1.2.
-    ctx.moveNoTemp = MOVE_SOLAR_BEAM;
+    ctx.moveNoCur = MOVE_SOLAR_BEAM;
     for (int use = 1; use <= 2; use++) {
         ov12_022565E0(0, &ctx);
         ctx.battleStatus = BATTLE_STATUS_CHARGE_TURN;
@@ -143,14 +146,14 @@ int main(void) {
     }
     // Outrage's and Rollout's forced turns count, each as a use in a row
     // (Showdown's gen-9 item); a forced turn that fails starts it over.
-    ctx.moveNoTemp = MOVE_OUTRAGE;
+    ctx.moveNoCur = MOVE_OUTRAGE;
     ctx.battleMons[0].status2 = STATUS2_RAMPAGE;
     for (int turn = 0; turn < 3; turn++) {
         ov12_022565E0(0, &ctx);
         assert(ctx.battleMons[0].unk88.metronomeTurns == turn);
         ov12_02256694(0, &ctx);
     }
-    ctx.moveNoTemp = MOVE_ROLLOUT;
+    ctx.moveNoCur = MOVE_ROLLOUT;
     ctx.battleMons[0].status2 = STATUS2_LOCKED_INTO_MOVE;
     ov12_022565E0(0, &ctx);
     ov12_022565E0(0, &ctx);
@@ -160,6 +163,47 @@ int main(void) {
     ctx.moveStatusFlag = 0;
     ov12_022565E0(0, &ctx);
     assert(ctx.battleMons[0].unk88.metronomeTurns == 0);
+
+    // A move another calls is counted, not the move calling it (Showdown's
+    // gen-9 item): a Copycat that copies the Tackle used the turn before
+    // goes on with its run, and Metronome twice is a run only if it calls
+    // one move twice. Before, the caller was counted and the called move
+    // not: Tackle then Copycat's Tackle started over, any two Metronomes ran.
+    ctx.battleMons[0].status2 = 0;
+    ctx.moveNoCur = MOVE_TACKLE;
+    ov12_022565E0(0, &ctx);
+    ov12_02256694(0, &ctx);
+    ctx.moveNoCur = MOVE_COPYCAT;
+    ov12_022565E0(0, &ctx);
+    ctx.moveNoCur = MOVE_TACKLE;
+    ov12_022565E0(0, &ctx);
+    ov12_02256694(0, &ctx);
+    assert(ctx.battleMons[0].unk88.metronomeTurns == 1 && ctx.moveNoMetronome[0] == MOVE_TACKLE);
+    ctx.moveNoCur = MOVE_METRONOME;
+    ov12_022565E0(0, &ctx);
+    ctx.moveNoCur = MOVE_EMBER;
+    ov12_022565E0(0, &ctx);
+    ov12_02256694(0, &ctx);
+    ctx.moveNoCur = MOVE_NATURE_POWER;
+    ov12_022565E0(0, &ctx);
+    ctx.moveNoCur = MOVE_EMBER;
+    ov12_022565E0(0, &ctx);
+    ov12_02256694(0, &ctx);
+    assert(ctx.battleMons[0].unk88.metronomeTurns == 1 && ctx.moveNoMetronome[0] == MOVE_EMBER);
+    ctx.moveNoCur = MOVE_METRONOME;
+    ov12_022565E0(0, &ctx);
+    ctx.moveNoCur = MOVE_WATER_GUN;
+    ov12_022565E0(0, &ctx);
+    assert(ctx.battleMons[0].unk88.metronomeTurns == 0);
+    ov12_02256694(0, &ctx);
+    // A calling move that fails with nothing to call is a failed use: the
+    // next use of the move before it starts over (moveLastTurnResult).
+    ctx.moveNoCur = MOVE_COPYCAT;
+    ov12_022565E0(0, &ctx);
+    ctx.moveStatusFlag = MOVE_STATUS_FAILED;
+    ov12_02256694(0, &ctx);
+    ctx.moveStatusFlag = 0;
+    assert(ctx.moveNoMetronome[0] == MOVE_NONE);
     return 0;
 }
 """
@@ -171,7 +215,8 @@ int main(void) {
         # earlier one was hit.
         controller = CONTROLLER.read_text()
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
-        run_c(self.METRONOME_ITEM.replace("@FUNCTIONS@", function(overlay, "ov12_022565E0") + function(overlay, "ov12_02256694")))
+        run_c(self.METRONOME_ITEM.replace("@FUNCTIONS@", function(overlay, "CheckMoveCallsOtherMove") + function(overlay, "MetronomeItemPassesOver")
+                                          + function(overlay, "ov12_022565E0") + function(overlay, "ov12_02256694")))
         loop = function(controller, "ov12_0224D03C")
         self.assertLess(loop.index("ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded = TRUE;"), loop.index("BATTLE_STATUS2_MAGIC_COAT"))
         self.assertIn("if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {\n        ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded = TRUE;", loop)
@@ -181,15 +226,16 @@ int main(void) {
         self.assertIn("return CallMove(ctx);", body)
         self.assertNotIn("NARC_a_0_0_0", body)
 
-    def test_the_steps_skip_the_caller_s_pp_and_metronome_count(self):
-        # The PP was the calling move's; the Metronome item counted the
-        # calling move once.
+    def test_the_steps_skip_the_caller_s_pp_and_count_the_called_move(self):
+        # The PP was the calling move's; the Metronome item counts the move
+        # called, which comes through the steps (ov12_022565E0 passes over
+        # the caller).
         controller = CONTROLLER.read_text()
         steps = function(controller, "ov12_0224C38C")
         self.assertIn("!(ctx->unk_2184 & (MULTIHIT_SKIP_PP_DECREMENT | MULTIHIT_CALLED_MOVE)) && ov12_0224B1FC(", steps)
-        # Nor a spread move's later targets, which come back with unk_2184 at
+        # Not a spread move's later targets, which come back with unk_2184 at
         # 13: one use, one count (Pokemon Central, Plessimetro).
-        self.assertRegex(steps, r"if \(!\(ctx->unk_2184 & MULTIHIT_CALLED_MOVE\) && ctx->unk_2184 != MULTIHIT_HIT_MULTIPLE_TARGETS\) \{\n\s+ov12_022565E0\(battleSystem, ctx\);")
+        self.assertRegex(steps, r"if \(ctx->unk_2184 != MULTIHIT_HIT_MULTIPLE_TARGETS\) \{\n\s+ov12_022565E0\(battleSystem, ctx\);")
         self.assertIn("ctx->unk_2184 = 13;", function(controller, "ov12_0224D03C"))
         # Parental Bond starts for the called move where it does for a
         # chosen one, once the steps are through: CallMove leaves the PP flag

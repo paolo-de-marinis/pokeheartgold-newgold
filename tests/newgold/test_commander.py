@@ -312,14 +312,16 @@ typedef uint16_t u16; typedef uint32_t u32;
 typedef struct BattleSystem BattleSystem;
 typedef struct { u32 status2; struct { int metronomeTurns; } unk88; } BattleMon;
 typedef struct {
-    int battlerIdAttacker; u32 battleStatus; u16 moveNoTemp; u16 moveNoMetronome[4]; BattleMon battleMons[4];
+    int battlerIdAttacker; u32 battleStatus; u16 moveNoCur; u16 moveNoMetronome[4]; BattleMon battleMons[4];
 } BattleContext;
+typedef int BOOL;
 static int sItem[4];
 static int GetBattlerHeldItemEffect(BattleContext *ctx, int battlerId) { (void)ctx; return sItem[battlerId]; }
+static BOOL MetronomeItemPassesOver(u16 move) { (void)move; return 0; }
 @COUNT@
 static void use(BattleContext *ctx, int battlerId, u16 move) {
     ctx->battlerIdAttacker = battlerId;
-    ctx->moveNoTemp = move;
+    ctx->moveNoCur = move;
     ov12_022565E0(0, ctx);
 }
 int main(void) {

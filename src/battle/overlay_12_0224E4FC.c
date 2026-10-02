@@ -10013,22 +10013,37 @@ BOOL TryFling(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     return TRUE;
 }
 
+// Whether the Metronome item leaves `move` uncounted: a move that calls
+// another, whose called move is the one counted -- Metronome twice is a run
+// only if it calls one move twice, and a Copycat that copies the move used
+// the turn before goes on with its run (Showdown's gen-9 item returns for a
+// callsMove move and counts the move it calls: Metronome, Mirror Move, Sleep
+// Talk, Nature Power, Assist, Copycat, Me First). Plessimetro's fourth
+// generation counts the move chosen, its fifth on is silent.
+static BOOL MetronomeItemPassesOver(u16 move) {
+    return CheckMoveCallsOtherMove(move) || move == MOVE_NATURE_POWER;
+}
+
 // The Metronome item, as a move is used: the same move as the last one
 // counts a use more, a new one starts the count (Pokemon Central,
 // Plessimetro). Every use counts from the fifth generation -- the forced turns
 // of Outrage, Uproar and Rollout, and a charge move's hit (Showdown's gen-9
 // item counts a use in a row whose last one did not fail, and a twoturnmove's
 // hit) -- where the fourth counted only the move chosen. A charge turn is
-// taken back once the move is over (ov12_02256694).
+// taken back once the move is over (ov12_02256694). The move counted is
+// moveNoCur, a called move's own.
 void ov12_022565E0(BattleSystem *battleSystem, BattleContext *ctx) {
     if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_BOOST_REPEATED) {
-        if (ctx->moveNoMetronome[ctx->battlerIdAttacker] == ctx->moveNoTemp) {
+        if (MetronomeItemPassesOver(ctx->moveNoCur)) {
+            return;
+        }
+        if (ctx->moveNoMetronome[ctx->battlerIdAttacker] == ctx->moveNoCur) {
             if (ctx->battleMons[ctx->battlerIdAttacker].unk88.metronomeTurns < 10) {
                 ctx->battleMons[ctx->battlerIdAttacker].unk88.metronomeTurns++;
             }
         } else {
             ctx->battleMons[ctx->battlerIdAttacker].unk88.metronomeTurns = 0;
-            ctx->moveNoMetronome[ctx->battlerIdAttacker] = ctx->moveNoTemp;
+            ctx->moveNoMetronome[ctx->battlerIdAttacker] = ctx->moveNoCur;
         }
     } else {
         ctx->battleMons[ctx->battlerIdAttacker].unk88.metronomeTurns = 0;
@@ -10042,16 +10057,18 @@ void ov12_022565E0(BattleSystem *battleSystem, BattleContext *ctx) {
 // Pokemon it was aimed at -- missed, failed, or came to nothing against a
 // type, an ability or a guard -- starts the count over, a forced turn's too,
 // the next use of the move being a first (Plessimetro; Showdown's gen-9 item
-// asks moveLastTurnResult). The fourth generation took back the one count
-// ov12_022565E0 gave it. A hit a substitute takes, or a Disguise or an Ice
-// Face, fails nothing, and counts.
+// asks moveLastTurnResult). So does a calling move that failed with nothing
+// to call, which counted nothing. The fourth generation took back the one
+// count ov12_022565E0 gave it. A hit a substitute takes, or a Disguise or an
+// Ice Face, fails nothing, and counts.
 void ov12_02256694(BattleSystem *battleSystem, BattleContext *ctx) {
     if (GetBattlerHeldItemEffect(ctx, ctx->battlerIdAttacker) == HOLD_EFFECT_BOOST_REPEATED) {
         if (ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) {
             if (ctx->battleMons[ctx->battlerIdAttacker].unk88.metronomeTurns) {
                 ctx->battleMons[ctx->battlerIdAttacker].unk88.metronomeTurns--;
             }
-        } else if ((ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded && ctx->moveNoMetronome[ctx->battlerIdAttacker] == ctx->moveNoTemp) {
+        } else if ((ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !ctx->selfTurnData[ctx->battlerIdAttacker].metronomeLanded
+            && (ctx->moveNoMetronome[ctx->battlerIdAttacker] == ctx->moveNoCur || MetronomeItemPassesOver(ctx->moveNoCur))) {
             ctx->moveNoMetronome[ctx->battlerIdAttacker] = MOVE_NONE;
         }
     } else {

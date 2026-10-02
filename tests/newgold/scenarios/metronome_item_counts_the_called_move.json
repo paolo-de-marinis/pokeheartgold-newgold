@@ -1,0 +1,14 @@
+{
+  "about": "The Metronome item counts the move another move calls, not the one calling it (Showdown's gen-9 item passes over a callsMove move and counts the move it calls; Pokemon Central's Plessimetro is silent from the fifth generation): a Copycat that copies the Tackle its user used the turn before is the second Tackle in a row. Before, the item counted the Copycat and started over. A level-10 Pikachu holding the item (set:) is given Tackle and Copycat in the running battle (teach:) against a forced wild level-5 Chansey that knows only Tackle, its HP set to 40 before each of the Pikachu's moves; the damage roll is forced to the bottom of the range. The Pikachu's Tackle does 17; its Copycat copies the Chansey's Tackle for 20, 17 boosted by 1.2 (before, 17 again).",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_TACKLE", "teach:0,1,MOVE_COPYCAT", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_TACKLE", "teach:1,1,MOVE_TACKLE", "teach:1,2,MOVE_TACKLE", "teach:1,3,MOVE_TACKLE",
+            "set:0,item,ITEM_METRONOME", "set:1,hp,40", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Tackle!", "The wild Chansey used Tackle!"],
+                        "battler0.item": "ITEM_METRONOME", "battler1.hp": 23}},
+            "set:1,hp,40", "fight:2:1"],
+  "expect": {"new_lines": ["Pikachu used Copycat!", "Pikachu used Tackle!"], "battler1.hp": 20}
+}
