@@ -1,0 +1,16 @@
+{
+  "about": "The playthrough's Violet Gym, from Violet City's Pokemon Center: in past the gym guide Sprout Tower moved, up its lift (the elevator at (15, 20), a coord event the walk steps on), Bird Keepers Abe and Rod, who spot the player on the way, the nurse, then Falkner: his five, the Zephyr Badge, TM51 and FLAG_GOT_TM51_FROM_FALKNER. Out in Violet City Elm calls (FLAG_GOT_PICK_UP_EGG_CALL_FROM_ELM) about the egg, and his aide in the Poke Mart hands it over -- the Mystery Egg from Mr. Pokemon's house, a Togepi (FLAG_GOT_EGG_FROM_ELMS_ASSISTANT, party slot 6) -- the egg story as the game has it. The nurse, and the game's save. The party is edited here, and says so: the bot catches nothing yet, and a lone Cyndaquil at the cap, 13, lost to Falkner's first Pokemon, his Hoothoot (Tailwind, Reflect, Hypnosis, a Super Potion), and three at 13 to his fourth. So the scratch copy's party is five at the cap from what Routes 31 and 32, Dark Cave and Violet City's Onix trade give a player -- Geodude, Mareep, Onix, Shinx and the Cyndaquil -- five, so the egg has a place. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04c_sprout_tower",
+  "edit": ["--party", "GEODUDE:13,MAREEP:13,ONIX:13,SHINX:13,CYNDAQUIL:13"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40", "goto:MAP_VIOLET_GYM,12,15",
+            "goto:MAP_VIOLET_GYM,18,11", {"expect": {"music": "SEQ_GS_GYM"}}, "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+            "UP", "A", "field", "goto:MAP_VIOLET_GYM,15,4", "A", "fight", "field",
+            {"expect": {"badges": 1, "flag:FLAG_GOT_TM51_FROM_FALKNER": 1, "bag:ITEM_TM51": 1}},
+            "goto:MAP_VIOLET_POKEMART,6,8", "A", "field",
+            {"expect": {"flag:FLAG_GOT_PICK_UP_EGG_CALL_FROM_ELM": 1, "flag:FLAG_GOT_EGG_FROM_ELMS_ASSISTANT": 1, "party": 6, "party5.species": "SPECIES_TOGEPI", "party5.level": 1}},
+            "goto:MAP_VIOLET_POKECENTER_1F,8,13", "UP", "A", "field", "save"],
+  "expect": {"map": "MAP_VIOLET_POKECENTER_1F", "x": 8, "y": 13, "badges": 1, "party": 6, "music": "SEQ_GS_POKESEN",
+             "lines": ["You defeated Bird Keeper Abe!", "You defeated Bird Keeper Rod!",
+                       "You are challenged by Leader Falkner!", "You defeated Leader Falkner!"]}
+}
