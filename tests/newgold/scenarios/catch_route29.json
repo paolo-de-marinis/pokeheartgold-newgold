@@ -1,0 +1,13 @@
+{
+  "about": "The playthrough's bot catches, and puts the catch first. From Paolo's Route 29 save, five Poke Balls given to a scratch copy, the level-5 Chikorita walks between two of the route's grass tiles (pace:) until the party has two. A wild Hoothoot comes out -- level 4, the pinned clock's night -- and is wanted (catch:new: not in the Pokedex, a ball in the bag), so gym.py's player weakens it with the Chikorita's weakest damaging move, Tackle, while it has more than half its HP, then throws a ball from the battle's bag: BAG, the Poke Balls pocket, the ball, USE, each touched when the bag's own state (BattleBag.state, found through its task) says that screen takes input. 'Gotcha!', the Dex entry closed with A, the nickname declined with B. The Hoothoot is in the party with half its HP or less, which the weakening shows, the Dex has it caught and the bag four balls. Then swap: puts it first through the start menu's POKEMON and the party menu's SWITCH. The field's RNG is pinned and the battle's seed fixed.",
+  "save": "route29-official.sav",
+  "edit": ["--bag", "POKE_BALL:5"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40", "catch:new", "pace:MAP_ROUTE_29,653,401,658,404,party,2,20000",
+            {"expect": {"party": 2, "party1.species": "SPECIES_HOOTHOOT", "party1.hp": [1, 10], "caught:SPECIES_HOOTHOOT": 1,
+                        "bag:ITEM_POKE_BALL": 4,
+                        "lines": ["You encountered a wild Hoothoot!", "CHIKORITA used Tackle!", "used one Poké Ball!",
+                                  "Gotcha! Hoothoot was caught!"]}},
+            "swap:0,1"],
+  "expect": {"party": 2, "party0.species": "SPECIES_HOOTHOOT", "party1.species": "SPECIES_CHIKORITA", "map": "MAP_ROUTE_29"}
+}
