@@ -59,6 +59,9 @@ A step is one of
     heal:MAP,X,Y                where pace: heals: the tile before a Pokemon Center's
                                 nurse, UP and A there, when the party's first has under
                                 flee:'s share of its HP
+    shift:SLOT|none             from now on a wild battle's first Pokemon is relieved
+                                at the first prompt by party slot SLOT, which fights:
+                                the first, out at the start, shares what it pays
     swap:A,B                    party slots A and B traded (0 the first), through the
                                 start menu's POKEMON and the party menu's SWITCH, as a
                                 player puts a Pokemon first: it leads the next battles
@@ -165,7 +168,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
-         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap")
+         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift")
 
 
 def readable(step_or_key, key=False):
@@ -477,6 +480,7 @@ class Scene:
         self.flee = 0           # flee:N
         self.catch = None       # catch:, a species number or "new"
         self.healer = None      # heal:, (map, x, y)
+        self.shift = None       # shift:, a party slot
 
     def hold(self, name, value):
         address = self.markers.address(name)
@@ -597,7 +601,7 @@ class Scene:
                     started = core.frames
                     gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
                               since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee,
-                              catch=self.balls_for)
+                              catch=self.balls_for, shift=self.shift)
                     self._collect(core)
                     if self.in_battle():
                         break       # gym.py's player could not end it
@@ -663,12 +667,14 @@ class Scene:
             slot, _, turns = rest.partition(":")
             gym.fight(core, self.markers, hooks, self.say, int(slot) if slot else -1, core.frames + 60000,
                       turns=int(turns) if turns else None, since=core.word(self._text_count),
-                      partner=self.partner_prompt(), catch=self.balls_for)
+                      partner=self.partner_prompt(), catch=self.balls_for, shift=self.shift)
             self._collect(core)
         elif kind == "flee":
             self.flee = int(rest)
         elif kind == "catch":
             self.catch = None if rest == "none" else rest if rest == "new" else self.number(rest)
+        elif kind == "shift":
+            self.shift = None if rest == "none" else int(rest)
         elif kind == "heal":
             name, x, y = rest.split(",")
             self.healer = (self.number(name), int(x), int(y))
@@ -926,7 +932,8 @@ class Scene:
     def pace(self, a, b, key, least, frames):
         """pace: -- from one tile to the other and back until `key` reads at
         least `least`; at the heal: tile between two walks when the party's
-        first Pokemon has under flee:'s share of its HP (or none)."""
+        first Pokemon, or the one shift: sends for it, has under flee:'s
+        share of its HP (or none)."""
         import party
         end, ends, walks = self.core.frames + frames, [a, b], 0
         while self.core.frames < end:
@@ -934,8 +941,9 @@ class Scene:
             if now >= least:
                 self.say(f"[{self.core.frames}] pace: {key} {now} after {walks} walks")
                 return None
-            first = party.mons(self.core.ram(), self.elf)[0]
-            if self.healer and first["hp"] * 100 < max(self.flee, 1) * first["maxHp"]:
+            mons = party.mons(self.core.ram(), self.elf)
+            fighters = [mons[0]] + ([mons[self.shift]] if self.shift is not None and self.shift < len(mons) else [])
+            if self.healer and any(mon["hp"] * 100 < max(self.flee, 1) * mon["maxHp"] for mon in fighters):
                 for step in (f"goto:{','.join(map(str, self.healer))}", "UP", "A", "field"):
                     self.run(step)
             done, said = self.goto(ends[0], end - self.core.frames)
@@ -1004,7 +1012,7 @@ class Scene:
                 battles += 1
                 gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
                           since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee,
-                          catch=self.balls_for)
+                          catch=self.balls_for, shift=self.shift)
                 self._collect(core)
                 continue
             if not self.movable():

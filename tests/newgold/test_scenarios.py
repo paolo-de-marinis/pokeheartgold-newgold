@@ -172,6 +172,7 @@ class ScenarioFileTests(unittest.TestCase):
         asked = []
         s = scene.Scene.__new__(scene.Scene)
         s.core, s.hooks, s.say, s.markers, s.flee, s._text_count = Core(), [], print, None, 40, 0
+        s.catch, s.shift = None, None
         battles = iter([True, True])
         s.in_battle = lambda: next(battles, False)
         s.movable, s.textbox, s.partner_prompt, s._collect = (lambda: True), (lambda: False), (lambda: None), (lambda core: None)
@@ -218,7 +219,7 @@ class ScenarioFileTests(unittest.TestCase):
             def ram(self):
                 return b""
         s = scene.Scene.__new__(scene.Scene)
-        s.core, s.say, s.flee, s.healer, s.elf = Core(), (lambda line: None), 40, (158, 8, 13), None
+        s.core, s.say, s.flee, s.healer, s.elf, s.shift = Core(), (lambda line: None), 40, (158, 8, 13), None, None
         values, hps, walks, steps = iter([5, 5, 6, 8]), iter([20, 7, 20]), [], []
 
         def goto(goal, frames):
@@ -234,6 +235,13 @@ class ScenarioFileTests(unittest.TestCase):
         s.value = lambda ram, key: 5
         with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20}]):
             self.assertIn("under 8", s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 1000)[0])
+        # With shift:, the one sent in for the first fights: its HP counts too.
+        steps.clear()
+        s.shift, values = 1, iter([5, 8])
+        s.value = lambda ram, key: next(values)
+        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20}, {"hp": 5, "maxHp": 30}]):
+            self.assertIsNone(s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 10000))
+        self.assertEqual(steps, ["goto:158,8,13", "UP", "A", "field"])
 
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.

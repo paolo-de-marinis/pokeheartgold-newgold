@@ -441,7 +441,10 @@ Reading what the debug ROM records, and playing it without looking.
   first has under flee's share of its HP. `swap:A,B` trades two party
   slots as a player does, through the start menu's POKEMON and the party
   menu's SWITCH (each touch and press waiting on the party menu's state),
-  so the one to train leads.
+  so the one to train leads. `shift:SLOT` has a wild battle's first
+  Pokemon relieved by that party slot at the first prompt: the slot fights
+  and the first, out at the start, shares the experience -- how a catch too
+  weak to win its own battles is trained.
   `fight:N:T` stops after T turns at the prompt, so a scenario can expect
   what they did, and `teach:B,SLOT,MOVE`
   writes a move into battler B's BattleMon in the running battle (found in
