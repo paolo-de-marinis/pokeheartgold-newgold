@@ -1,0 +1,14 @@
+{
+  "about": "The playthrough's Sprout Tower, from Violet City's Pokemon Center: up the three floors by the navigator (the ladders' warps planned from the map data), the sages who spot the player on the way -- Nico, Chow, Edmond, Jin and Neal -- then the nurse, then up again to 3F, past the rival's scene with Elder Li (FLAG_UNK_078), to Li himself: his four at level 10, TM70 (Flash) and FLAG_UNK_076, which lifts the level cap to 13. Back to the nurse and the game's save. The party is edited here, and says so: the bot catches nothing yet, and the lone Cyndaquil at the cap, 10, lost to Li's Meditite (Fake Out, Confusion, Force Palm) at full HP, as did a Cyndaquil and a Spearow at 10, and four at 10 to his Hoothoot (Reflect, Hypnosis, his Potion). So the scratch copy's party is six at the cap that Routes 30 to 32 and Sprout Tower give a player by then -- Cyndaquil, Spearow, Mareep, Geodude, Gastly, Zubat -- and Li still takes three of them. Split from the Violet leg to keep each near six minutes. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04b_violet",
+  "edit": ["--party", "CYNDAQUIL:10,SPEAROW:10,MAREEP:10,GEODUDE:10,GASTLY:10,ZUBAT:10"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40", "goto:MAP_SPROUT_TOWER_3F,14,22,40000",
+            "goto:MAP_VIOLET_POKECENTER_1F,8,13", "UP", "A", "field", "goto:MAP_SPROUT_TOWER_3F,12,9", "A", "fight",
+            "field", {"expect": {"flag:FLAG_UNK_076": 1, "flag:FLAG_UNK_078": 1, "bag:ITEM_TM70": 1}},
+            "goto:MAP_VIOLET_POKECENTER_1F,8,13", "UP", "A", "field", "save"],
+  "expect": {"map": "MAP_VIOLET_POKECENTER_1F", "x": 8, "y": 13, "party": 6, "music": "SEQ_GS_POKESEN",
+             "lines": ["You defeated Sage Nico!", "You defeated Sage Chow!", "You defeated Sage Edmond!",
+                       "You defeated Sage Jin!", "You defeated Sage Neal!", "You are challenged by Elder Li!",
+                       "You defeated Elder Li!"]}
+}
