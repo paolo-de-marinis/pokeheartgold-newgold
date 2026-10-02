@@ -394,7 +394,9 @@ Reading what the debug ROM records, and playing it without looking.
   asserted and where, the party before and after. No image. In a double
   battle it chooses for the second Pokemon too (read from the battle's own
   selection state) and touches the target screen by the move's range; the
-  player's own Revival Blessing gets the first fainted Pokemon.
+  player's own Revival Blessing gets the first fainted Pokemon. A move a
+  foe's ability turned away ("makes Ground moves miss by using Levitate!")
+  is not chosen against that foe again.
 - `watch.py` -- the same text for the melonDS that is running.
 - `live.py` -- one line about the running melonDS: field, encounter,
   battle, failures.

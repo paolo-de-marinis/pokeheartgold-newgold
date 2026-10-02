@@ -221,6 +221,19 @@ class DiagnosticsTests(unittest.TestCase):
             self.assertTrue(gym.relieve(core, markers, [], 2))
         self.assertEqual(core.touches[-3:], [gym.POKEMON, gym.PARTY[1], gym.SHIFT])
 
+    def test_gym_drops_a_move_a_foe_turned_away(self):
+        # Proton's Koffing: a Geodude used Bulldoze into its Levitate ten
+        # times, the type chart scoring it twice effective, and fell.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from gym import wasted
+        koffing, bulldoze = 109, 523
+        self.assertEqual(wasted("The opposing Koffing makes Ground moves miss by using Levitate!", koffing, bulldoze),
+                         (koffing, bulldoze))
+        self.assertEqual(wasted("It doesn’t affect the wild Koffing...", koffing, bulldoze), (koffing, bulldoze))
+        self.assertIsNone(wasted("It doesn’t affect Geodude...", koffing, bulldoze))     # the foe's move
+        self.assertIsNone(wasted("The opposing Koffing used Sludge!", koffing, bulldoze))
+        self.assertIsNone(wasted("The opposing Koffing is unaffected!", koffing, None))   # nothing chosen yet
+
     def test_a_pokemon_read_mid_encryption_is_not_taken_for_sealed(self):
         # A frame can end with the game re-encrypting a party Pokemon; scene.py
         # reads the party again until every one is sealed.

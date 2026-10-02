@@ -7,7 +7,9 @@ Without --move it picks, each turn, the move that hits hardest by the game's
 own data: power from the move table, same-type bonus from the personal
 records, and the type chart from the battle's source. That is a heuristic --
 no accuracy, no stat stages, no status moves unless nothing else is left --
-but it is enough to play a leader rather than lose to one on purpose.
+but it is enough to play a leader rather than lose to one on purpose. A move
+the battle says did nothing to a foe (Levitate against a Ground move) is not
+chosen against that species again in the battle.
 
 The ROM is the NEWGOLD_DIAG=1 build, run in-process by core.py. Nothing is
 drawn and nothing is looked at: after every few frames the diagnostics'
@@ -235,6 +237,18 @@ def relieve(core, markers, hold, slot, frames=900):
     return False
 
 
+def wasted(line, foe, move):
+    """The (foe species, move) this battle line shows did nothing to the
+    foe -- what the type chart does not know: Levitate against a Ground
+    move, an immunity an ability or a form gives -- or None. The move is the
+    last the player's first Pokemon chose (ponytail: in a double battle the
+    partner's is not told apart)."""
+    said = ("makes Ground moves", "doesn’t affect", "doesn't affect", "is unaffected")
+    if move and any(part in line for part in said) and ("opposing" in line or "wild" in line):
+        return foe, move
+    return None
+
+
 def second_down(ram, markers):
     """Whether the player's second Pokemon in a double battle has fainted."""
     second = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000 + 2 * struct.calcsize(BATTLER))
@@ -316,7 +330,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     last_count, last_asserts, restarts, decoded = 0, 0, 0, None
     last_prompt, commands, revive, use_next = None, 0, None, None
     moves_chosen, tries = {}, 0        # the move each of the player's two took, for its target screen
-    wild = False
+    wild, useless = False, set()       # useless: (foe, move) a line said did nothing
     wild_battle, weakening, foe_before, hit, thrown = False, False, None, 0, 0
     while core.frames < frames:
         core.step(4, hold)
@@ -359,6 +373,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                     use_next = core.frames
                 wild_battle = wild_battle or line.startswith("You encountered a wild")
                 wild = may_run(wild, line)
+                useless.add(wasted(line, aimed_at(ram, markers, 0)[0], moves_chosen.get(0)))
                 if not line.startswith("What will"):
                     say(f"[{core.frames}] {line.split('?{')[0]}")
         decoded = count
@@ -416,6 +431,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             if move < 0 and usable:
                 you = struct.unpack_from(BATTLER, ram, markers.address("gDiagBattlers") - 0x02000000)
                 foe = aimed_at(ram, markers, 0)
+                usable = [i for i in usable if (foe[0], you[7 + i]) not in useless] or usable
                 slot = max(usable, key=lambda i: scorer.score(you[7 + i], you[0], foe[0]))
                 gentle = [i for i in usable if scorer.score(you[7 + i], you[0], foe[0]) > 0.1]
                 if weakening and gentle:
