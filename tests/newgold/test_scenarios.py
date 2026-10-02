@@ -273,6 +273,22 @@ class ScenarioFileTests(unittest.TestCase):
         s.value = lambda ram, key: 0
         self.assertIn("under 1", s.run("again:3,badges,1,2")[0])
 
+    def test_retry_gives_the_battle_after_a_loss_a_new_seed(self):
+        # retry:on -- after a loss on a goto, the held seed one higher; a win
+        # leaves it, and a seed not held is not made one.
+        s = scene.Scene.__new__(scene.Scene)
+        s.core, s.say = type("Core", (), {"frames": 0})(), (lambda line: None)
+        s.markers = type("Markers", (), {"address": lambda self, name: 0x100})()
+        s.holds = {0x100: (1, 4)}
+        s.reseed(["Bird Keeper Rod sent out Delibird!", "You defeated Bird Keeper Rod!"])
+        self.assertEqual(s.holds[0x100], (1, 4))
+        s.reseed(["You have no more Pokémon that can fight!", "You were overwhelmed by your defeat!"])
+        self.assertEqual(s.holds[0x100], (2, 4))
+        s.holds = {}
+        s.reseed(["You were overwhelmed by your defeat!"])
+        self.assertEqual(s.holds, {})
+        self.assertTrue(scene.readable("retry:on"))
+
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.
         self.assertTrue(scene.Scene.wanted("x", 663)[0](663))

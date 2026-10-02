@@ -69,6 +69,9 @@ A step is one of
                                 what the grass sends, until the expectation KEY reads
                                 at least V (party 3, party1.level 8, caught:SPECIES_...
                                 1); N frames at most (30000 by default)
+    retry:on|off                from now on a battle goto plays after one the player
+                                lost holds the battle seed one higher, a new battle as
+                                a player's next try is (again: does so for its own)
     again:K,KEY,V[,N]           the K steps before this one played again until the
                                 expectation KEY reads at least V, N times at most (5 by
                                 default): a leader or a trainer fought again after a
@@ -173,7 +176,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
-         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift", "again")
+         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift", "again", "retry")
 
 
 def readable(step_or_key, key=False):
@@ -487,6 +490,7 @@ class Scene:
         self.healer = None      # heal:, (map, x, y)
         self.shift = None       # shift:, a party slot
         self.done = []          # the steps played before this one, for again:
+        self.retry = False      # retry:
 
     def hold(self, name, value):
         address = self.markers.address(name)
@@ -703,6 +707,8 @@ class Scene:
                 self.holds[seed] = held
             if now < self.number(least):
                 return [f"again: {key} is {now}, under {least}"]
+        elif kind == "retry":
+            self.retry = rest == "on"
         elif kind == "shift":
             self.shift = None if rest == "none" else int(rest)
         elif kind == "heal":
@@ -1044,10 +1050,13 @@ class Scene:
             core.buttons = set()
             if self.in_battle():
                 battles += 1
+                before = len(self.lines)
                 gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
                           since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee,
                           catch=self.balls_for, shift=self.shift)
                 self._collect(core)
+                if self.retry:
+                    self.reseed(self.lines[before:])
                 continue
             if not self.movable():
                 if self.textbox():
@@ -1147,6 +1156,17 @@ class Scene:
         if asks_again(core.word(state, 1), core.word(chose, 1), moves, pp):
             core.poke(chose, core.word(chose, 1) & ~6, 1)
             core.poke(state, states["SSI_STATE_3"], 1)
+
+    def reseed(self, lines):
+        """retry: -- the held battle seed one higher when `lines`, a
+        battle's, end in the player's loss: the next battle is a new one,
+        where with the seed held the trainer who won would win the same way
+        again, for ever once the party is at the level cap."""
+        seed = self.markers.address("gDiagBattleSeed")
+        if seed in self.holds and any("overwhelmed by your defeat" in line for line in lines):
+            value, width = self.holds[seed]
+            self.holds[seed] = (value + 1, width)
+            self.say(f"[{self.core.frames}] retry: the battle seed is now {value + 1}")
 
     def battle_mon(self, battler):
         """Where the battle keeps a battler's BattleMon: found in main RAM by
