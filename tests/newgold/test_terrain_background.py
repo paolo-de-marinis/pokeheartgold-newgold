@@ -109,6 +109,18 @@ class ScriptTests(unittest.TestCase):
             for i in ends:
                 self.assertEqual(lines[i + 1:i + 3], ["ChangePermanentBackground BATTLE_BG_CURRENT, TERRAIN_CURRENT", "Wait"], name)
 
+    def test_a_background_comes_with_its_own_ground(self):
+        # BattleSystem_ChangeBackground draws the two operands as they are:
+        # a terrain's background with the battle's own ground would show the
+        # platforms, which hg-engine hides under every background it adds
+        # (LoadDifferentBattleBackground). No script mixes them, so the game
+        # need not handle it; this keeps it so.
+        text = "".join(path.read_text() for path in (ROOT / "files/battledata").rglob("*.s"))
+        pairs = re.findall(r"^\s*ChangePermanentBackground (\w+), (\w+)", text, re.M)
+        self.assertEqual(len(pairs), 13)
+        for background, ground in pairs:
+            self.assertEqual(background.removeprefix("BATTLE_BG_"), ground.removeprefix("TERRAIN_"))
+
 
 if __name__ == "__main__":
     unittest.main()
