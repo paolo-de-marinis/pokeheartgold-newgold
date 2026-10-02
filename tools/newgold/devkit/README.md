@@ -438,7 +438,10 @@ Reading what the debug ROM records, and playing it without looking.
   (`party` 3, `party0.level` 10, `caught:SPECIES_...` 1): the way a leg
   catches or trains; between two walks it heals at `heal:MAP,X,Y` -- the
   tile before a Pokemon Center's nurse, UP and A there -- when the party's
-  first has under flee's share of its HP.
+  first has under flee's share of its HP. `swap:A,B` trades two party
+  slots as a player does, through the start menu's POKEMON and the party
+  menu's SWITCH (each touch and press waiting on the party menu's state),
+  so the one to train leads.
   `fight:N:T` stops after T turns at the prompt, so a scenario can expect
   what they did, and `teach:B,SLOT,MOVE`
   writes a move into battler B's BattleMon in the running battle (found in

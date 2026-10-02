@@ -59,6 +59,9 @@ A step is one of
     heal:MAP,X,Y                where pace: heals: the tile before a Pokemon Center's
                                 nurse, UP and A there, when the party's first has under
                                 flee:'s share of its HP
+    swap:A,B                    party slots A and B traded (0 the first), through the
+                                start menu's POKEMON and the party menu's SWITCH, as a
+                                player puts a Pokemon first: it leads the next battles
     pace:MAP,X1,Y1,X2,Y2,KEY,V[,N]  walk from one tile to the other and back, through
                                 what the grass sends, until the expectation KEY reads
                                 at least V (party 3, party1.level 8, caught:SPECIES_...
@@ -162,7 +165,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
-         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace")
+         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap")
 
 
 def readable(step_or_key, key=False):
@@ -195,6 +198,24 @@ def battle_layout():
              "__builtin_offsetof(BattleMon, speed)", "__builtin_offsetof(BattleContext, unk_314C)")
     return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item", "speed", "chose"), savedit.compile_c(
         exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h",))[0]))
+
+
+# The party menu's panels on the bottom screen, by slot: the middle of each
+# of its touch rects (src/party_menu.c, _02110128).
+PANELS = [(64, 24), (192, 32), (64, 72), (192, 80), (64, 120), (192, 128)]
+
+
+@savedit.tree_cache
+def party_menu_layout():
+    """What swap: reads of the party menu: its states, where it keeps its
+    context menu's cursor, and the cursor's selection and items."""
+    names = ("PARTY_MENU_STATE_1", "PARTY_MENU_STATE_HANDLE_CONTEXT_MENU_INPUT", "PARTY_MENU_STATE_SELECT_SWITCH_MON",
+             "__builtin_offsetof(PartyMenu, contextMenuCursor)", "__builtin_offsetof(PartyMenuContextMenuCursor, selection)",
+             "__builtin_offsetof(PartyMenuContextMenuCursor, numItems)",
+             "__builtin_offsetof(PartyMenuContextMenuCursor, menu.items)", "sizeof(ListMenuItem)",
+             "__builtin_offsetof(ListMenuItem, value)")
+    keys = ("input", "context", "switching", "cursor", "selection", "count", "items", "item", "value")
+    return dict(zip(keys, savedit.compile_c(exprs=names, headers=savedit.LAYOUT_HEADERS + ("party_menu.h",))[0]))
 
 
 @savedit.tree_cache
@@ -279,7 +300,7 @@ def app_layout():
                 "__builtin_offsetof(struct ChooseStarterAppWork, curSelection)",
                 "__builtin_offsetof(struct ChooseStarterAppWork, state)", "CHOOSE_STARTER_STATE_HANDLE_INPUT",
                 "SELECT_STATE_CONFIRM")),
-            ("src/start_menu.c", "enum StartMenuAction", ("START_MENU_ACTION_SAVE",)),):
+            ("src/start_menu.c", "enum StartMenuAction", ("START_MENU_ACTION_SAVE", "START_MENU_ACTION_POKEMON")),):
         headers, decls = c_declarations(path, name)
         out.update(zip(exprs, savedit.compile_c(exprs=exprs, headers=headers, decls=decls)[0]))
     names = ("OverlayManager, template.exec", "OverlayManager, proc_state", "OverlayManager, data",
@@ -621,6 +642,8 @@ class Scene:
             return self.starter(self.number(rest))
         elif kind == "save":
             return self.save()
+        elif kind == "swap":
+            return self.swap(*map(int, rest.split(",")))
         elif kind == "fight":
             import gym
             idle = presses = 0
@@ -671,7 +694,8 @@ class Scene:
         manager = core.word(self.markers.address("_02111868") + layout["UnkStruct_02111868.overlayManager"])
         if core.word(self._field) and self._chain("FieldSystem.processManager", "FieldProcessManager.child"):
             manager = self._chain("FieldSystem.processManager", "FieldProcessManager.child")
-        names = {self.markers.address(n) & ~1: n for n in ("OakSpeech_Main", "NamingScreenApp_Main", "ChooseStarter_Main")}
+        names = {self.markers.address(n) & ~1: n for n in ("OakSpeech_Main", "NamingScreenApp_Main", "ChooseStarter_Main",
+                                                             "PartyMenuApp_Main")}
         name = manager and names.get(core.word(manager + layout["OverlayManager.template.exec"]) & ~1)
         if name == "OakSpeech_Main":
             data = core.word(manager + layout["OverlayManager.data"])
@@ -749,11 +773,49 @@ class Scene:
         if not (seen and self.movable()):
             return [f"the starter machine {'never opened' if not seen else 'never let the player go'}"]
 
+    def start_menu(self, action, end):
+        """X once the player can move, and the start menu's cursor
+        (FieldSystem.unkD3) moved onto `action`, a START_MENU_ACTION_ name --
+        the menu's buttons are in RAM, not where they sit, so each direction
+        is tried from where it is until the action is under it. A step
+        that ended in the grass can start a battle just after it, which
+        takes the X: the battle is played (field) and X pressed again. What
+        went wrong, or None."""
+        core, hooks, layout = self.core, self.hooks, app_layout()
+
+        def menu():
+            task = self._chain("FieldSystem.taskman")
+            if not task or core.word(task + layout["TaskManager.func"]) & ~1 != self.markers.address("Task_StartMenu") & ~1:
+                return None
+            env = core.word(task + layout["TaskManager.env"])
+            if core.word(env + layout["StartMenuTaskData.state"], 2) != layout["START_MENU_STATE_HANDLE_INPUT"]:
+                return None
+            at = env + layout["StartMenuTaskData.selectionToAction"]
+            return [core.word(at + i, 1) for i in range(core.word(env + layout["StartMenuTaskData.numActiveButtons"]))]
+        while core.frames < end and menu() is None:
+            self.run("field")
+            core.press("X", 6, hooks)
+            for _ in range(90):
+                if menu() is not None:
+                    break
+                core.step(1, hooks)
+        buttons, cursor = menu() or [], core.word(self._field) + layout["FieldSystem.unkD3"]
+        if layout[action] not in buttons:
+            return [f"the start menu has no {action[len('START_MENU_ACTION_'):]}: {buttons}"]
+        tried = set()
+        for press in range(40):
+            here = core.word(cursor, 1)
+            if here < len(buttons) and buttons[here] == layout[action]:
+                return None
+            direction = next((d for d in STEP if (here, d) not in tried), list(STEP)[press % 4])
+            tried.add((here, direction))
+            core.press(direction, 6, hooks)
+            core.step(10, hooks)
+        return [f"the start menu's cursor never reached {action[len('START_MENU_ACTION_'):]}"]
+
     def save(self, frames=12000):
-        """save: -- the game saved as a player saves it: X, the start menu's
-        cursor (FieldSystem.unkD3) moved onto SAVE -- the menu's buttons are
-        in RAM, not where they sit, so each direction is tried from where it
-        is until SAVE is under it -- A through the questions until the write
+        """save: -- the game saved as a player saves it: the start menu's
+        SAVE (start_menu), A through the questions until the write
         has begun (SaveData.saveCounter moves) and is done (lastGoodSector
         turns to the half written, Save_WriteManFinish), and B until the
         player can move again. The flash as the game left it is kept
@@ -768,33 +830,9 @@ class Scene:
         data = core.word(self.markers.address("sSaveDataPtr"))
         counter, half = data + layout["SaveData.saveCounter"], data + layout["SaveData.lastGoodSector"]
         start, first = core.word(counter), core.word(half, 2)
-        while core.frames < end and not self.movable():
-            self.through()
-        core.press("X", 6, hooks)
-
-        def menu():
-            task = self._chain("FieldSystem.taskman")
-            if not task or core.word(task + layout["TaskManager.func"]) & ~1 != self.markers.address("Task_StartMenu") & ~1:
-                return None
-            env = core.word(task + layout["TaskManager.env"])
-            if core.word(env + layout["StartMenuTaskData.state"], 2) != layout["START_MENU_STATE_HANDLE_INPUT"]:
-                return None
-            at = env + layout["StartMenuTaskData.selectionToAction"]
-            return [core.word(at + i, 1) for i in range(core.word(env + layout["StartMenuTaskData.numActiveButtons"]))]
-        while core.frames < end and menu() is None:
-            core.step(1, hooks)
-        buttons, cursor = menu() or [], core.word(self._field) + layout["FieldSystem.unkD3"]
-        if layout["START_MENU_ACTION_SAVE"] not in buttons:
-            return [f"the start menu has no SAVE: {buttons}"]
-        tried = set()
-        for press in range(40):
-            here = core.word(cursor, 1)
-            if here < len(buttons) and buttons[here] == layout["START_MENU_ACTION_SAVE"]:
-                break
-            direction = next((d for d in STEP if (here, d) not in tried), list(STEP)[press % 4])
-            tried.add((here, direction))
-            core.press(direction, 6, hooks)
-            core.step(10, hooks)
+        wrong = self.start_menu("START_MENU_ACTION_SAVE", end)
+        if wrong:
+            return wrong
         while core.frames < end and core.word(counter) == start:
             core.press("A", 6, hooks)
             core.step(34, hooks)
@@ -809,6 +847,59 @@ class Scene:
         self.say(f"[{core.frames}] saved at {self.location()}: counter {start} -> {core.word(counter)}")
 
     # -- catching and training ---------------------------------------------
+
+    def swap(self, first, second, frames=6000):
+        """swap:A,B -- the start menu's POKEMON; in the party menu, A's panel
+        touched, the cursor of the menu that opens moved onto SWITCH (the item
+        whose action is PartyMonContextMenuAction_Switch) and A, then B's
+        panel touched; B out of the party menu and the start menu. Each waits
+        on the party menu's state; done when A's slot holds what B's held."""
+        import party
+        core, hooks, layout, menu = self.core, self.hooks, app_layout(), party_menu_layout()
+        before = [mon["species"] for mon in party.mons(core.ram(), self.elf)]
+        if max(first, second) >= len(before):
+            return [f"swap: the party has {len(before)} Pokemon"]
+        end = core.frames + frames
+        wrong = self.start_menu("START_MENU_ACTION_POKEMON", end)
+        if wrong:
+            return wrong
+        core.press("A", 6, hooks)
+        switch = self.markers.address("PartyMonContextMenuAction_Switch") & ~1
+        swapped = False
+        while core.frames < end:
+            name, manager = self.app()
+            if name != "PartyMenuApp_Main":
+                if swapped and self.movable():
+                    self.say(f"[{core.frames}] swap: slots {first} and {second} traded")
+                    return None
+                if swapped:
+                    core.press("B", 6, hooks)       # the start menu, back from the party menu
+                core.step(10, hooks)
+                continue
+            state = core.word(manager + layout["OverlayManager.proc_state"])
+            swapped = swapped or [mon["species"] for mon in party.mons(core.ram(), self.elf)][first] == before[second]
+            if state == menu["input"]:
+                if swapped:
+                    core.press("B", 6, hooks)
+                else:
+                    core.touch(*PANELS[first], 6, hooks)
+                core.step(20, hooks)
+            elif state == menu["context"]:
+                cursor = core.word(core.word(manager + layout["OverlayManager.data"]) + menu["cursor"])
+                items = core.word(cursor + menu["items"])
+                actions = [core.word(items + i * menu["item"] + menu["value"]) & ~1
+                           for i in range(core.word(cursor + menu["count"], 1))]
+                if switch not in actions:
+                    return [f"swap: slot {first}'s menu has no SWITCH"]
+                here, want = core.word(cursor + menu["selection"], 1), actions.index(switch)
+                core.press("A" if here == want else "DOWN" if here < want else "UP", 6, hooks)
+                core.step(10, hooks)
+            elif state == menu["switching"] and not swapped:
+                core.touch(*PANELS[second], 6, hooks)
+                core.step(20, hooks)
+            else:
+                core.step(4, hooks)
+        return [f"swap: slots {first} and {second} not traded in {frames} frames"]
 
     def caught(self, ram, species):
         """Whether the Pokedex has `species` caught."""
