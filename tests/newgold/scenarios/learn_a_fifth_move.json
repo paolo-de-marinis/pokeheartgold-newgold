@@ -1,0 +1,14 @@
+{
+  "about": "A level-up that brings a fifth move, answered by gym.py's rule: the strongest damaging move of each type stays, then the other damaging ones, then the rest. A level-12 Cyndaquil (Tackle, Leer, Smokescreen, Ember) a point short of 13 beats a forced wild Rattata and wants Quick Attack: \"Forget a move!\", Smokescreen touched on the menu the battle opens and FORGET on its page, and Quick Attack takes its slot. Then a level-11 Hoothoot (Peck, Tackle, Echoed Voice, Confusion), put first, a point short of 12, wants Reflect, which deals no damage: the menu's back arrow gives it up, and the top button of \"give up on learning this new move?\". Elder Li's flag (FLAG_UNK_076) lifts the level cap to 13 for both. Until the rule the bot gave every new move up. The field's RNG is pinned and the battle's seed fixed.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CYNDAQUIL:12,HOOTHOOT:11", "--exp-short", "1:1", "--exp-short", "2:1", "--flag", "FLAG_UNK_076"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=19", "LEFT", "fight", "field",
+            {"expect": {"lines": ["Cyndaquil wants to learn the move Quick Attack.", "Cyndaquil forgot Smokescreen.",
+                                  "Cyndaquil learned Quick Attack!"],
+                        "party0.level": 13, "party0.move2": "MOVE_QUICK_ATTACK", "party0.move3": "MOVE_EMBER"}},
+            "swap:1,0", "poke:gDiagForceBattleSpecies=19", "RIGHT", "fight", "field"],
+  "expect": {"new_lines": ["Hoothoot wants to learn the move Reflect.", "Should this Pok", "Hoothoot did not learn Reflect."],
+             "party0.species": "SPECIES_HOOTHOOT", "party0.level": 12, "party0.move3": "MOVE_CONFUSION",
+             "party1.move2": "MOVE_QUICK_ATTACK"}
+}

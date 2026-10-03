@@ -333,6 +333,49 @@ class DiagnosticsTests(unittest.TestCase):
         torn = {"species": 19423, "item": 0, "exp": 2775330619, "level": 1, "hp": 0, "maxHp": 0, "sealed": False}
         self.assertTrue(party.party(b"", None, [torn])[0].endswith("(read mid-encryption)"))
 
+    def test_gym_keeps_the_strongest_damaging_move_of_each_type(self):
+        # A fifth move: the strongest damaging move of each type stays,
+        # then the other damaging ones, then the rest; on a tie the move
+        # known before. The playthrough's Hoothoot gave up Confusion and its
+        # Cyndaquil Quick Attack when the bot answered every prompt with no.
+        sys.path[:0] = [str(ROOT / "tools/newgold/devkit/diag"), str(ROOT / "tools/newgold/devkit")]
+        from gym import Scorer, forgets
+        from savedit import move_numbers, species_numbers
+        moves, species, scorer = move_numbers(), species_numbers(), Scorer()
+
+        def let_go(name, *known):
+            return known[forgets(scorer, species[name], [moves[m] for m in known])]
+        self.assertEqual(let_go("HOOTHOOT", "GROWL", "PECK", "TACKLE", "ECHOED_VOICE", "CONFUSION"), "GROWL")
+        self.assertEqual(let_go("HOOTHOOT", "CONFUSION", "PECK", "TACKLE", "ECHOED_VOICE", "REFLECT"), "REFLECT")
+        self.assertEqual(let_go("NOCTOWL", "CONFUSION", "PECK", "TACKLE", "ECHOED_VOICE", "AIR_SLASH"), "PECK")
+        self.assertEqual(let_go("CYNDAQUIL", "TACKLE", "LEER", "SMOKESCREEN", "EMBER", "QUICK_ATTACK"), "SMOKESCREEN")
+        self.assertEqual(let_go("QUILAVA", "TACKLE", "EMBER", "QUICK_ATTACK", "FLAME_WHEEL", "CUT"), "QUICK_ATTACK")
+
+    def test_gym_reads_the_move_to_forget_from_the_battle_party_menu(self):
+        # The menu a level-up opens to forget a move: its task (ov08_0221BE98
+        # at priority 0, the menu its data), mode 3, the party slot learning
+        # (selectedPos), the moves the menu lists by party slot, the new move
+        # (cannotSwitch) and the screen, 6 the moves, 7 one move's page.
+        import struct
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from gym import learn_layout, learn_menu
+        layout = learn_layout()
+        self.assertEqual((layout["screen"], layout["mon"], layout["move"]), (0x207A, 0x50, 0x24))
+
+        class Markers:
+            def address(self, name):
+                return 0x0221BE98 if name == "ov08_0221BE98" else None
+        ram = bytearray(0x400000)
+        struct.pack_into("<III", ram, 0x2008, 0, 0x02300000, 0x0221BE99)
+        struct.pack_into("<I", ram, 0x300000, 0x02310000)
+        self.assertIsNone(learn_menu(bytes(ram), Markers()))                # a switch's menu, not a move's
+        ram[0x310000 + layout["mode"]], ram[0x310000 + layout["slot"]] = 3, 2
+        struct.pack_into("<H", ram, 0x310000 + layout["move"], 98)
+        ram[0x300000 + layout["screen"]] = 6
+        for k, move in enumerate((33, 43, 108, 52)):
+            struct.pack_into("<H", ram, 0x300000 + layout["mons"] + 2 * layout["mon"] + layout["moves"] + k * 8, move)
+        self.assertEqual(learn_menu(bytes(ram), Markers()), (6, 2, [33, 43, 108, 52], 98))
+
     def test_gym_touches_the_target_panel_a_move_asks_for(self):
         # A double battle's target screen: a move on the user (Revival
         # Blessing) is confirmed on the user's own panel, an attack goes to a

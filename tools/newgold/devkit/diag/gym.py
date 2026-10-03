@@ -16,10 +16,12 @@ drawn and nothing is looked at: after every few frames the diagnostics'
 memory says what the battle printed, who is fighting, and whether the game
 is waiting for the player, and the player answers through the game's own
 menus -- a touch on FIGHT, on a move, on a Pokemon -- exactly where a thumb
-would go. B moves text on and declines "will you switch?", forgetting a
-move for a new one, which a touch then gives up, and a caught Pokemon's
-nickname; A moves it on through an evolution, which B would stop, and a
-caught Pokemon's Dex entry, which B does not close. A wild battle's "Use
+would go. B moves text on and declines "will you switch?" and a caught
+Pokemon's nickname; A moves it on through an evolution, which B would stop,
+and a caught Pokemon's Dex entry, which B does not close. A move a level-up
+brings to a Pokemon that knows four is learned or given up by a rule
+(forgets): the strongest damaging move of each type is kept, strongest
+first, then the other damaging moves, then the rest. A wild battle's "Use
 next Pokemon?" is answered with the next one. A wild Pokemon the caller
 wants caught is weakened and a ball thrown at it (fight's catch).
 
@@ -51,6 +53,12 @@ SHIFT = (127, 113)
 KEEP_BATTLING = (128, 139)   # "will you switch?" -- the lower of the two
 GIVE_UP = (128, 67)          # "give up on learning this new move?" -- the upper of the two
 USE_NEXT = (128, 67)         # a wild battle's "Use next Pokemon?" -- the upper; the lower flees
+FORGET_A_MOVE = (128, 67)    # "Make it forget another move?" -- the upper, "Forget a move!"
+# The battle party menu a move to forget opens (its mode 3): on screen 6 the
+# four moves where the fight menu has them, the new one below and the back
+# arrow, which gives the new one up; on screen 7, a move's page, FORGET.
+LEARN_MOVES, LEARN_BACK, LEARN_FORGET = [(64, 73), (192, 73), (64, 120), (192, 120)], (234, 170), (104, 170)
+LEARN_MODE, LEARN_LIST, LEARN_PAGE = 3, 6, 7
 BAG = (40, 170)              # left of RUN
 POKEMON = (216, 170)         # right of RUN
 # The battle bag, overlay 8, by its hitbox tables: the Poke Balls pocket at
@@ -117,6 +125,18 @@ class Scorer:
         # at the other foe when that touch is not taken (the foe gone).
         return FOE_PANELS[(tries + battler // 2) % 2]
 
+    def kind(self, move):
+        record = self.moves[move] if move < len(self.moves) else b""
+        return record[4] if len(record) >= 5 else None
+
+    def strength(self, move, user):
+        """A move's power with its same-type bonus, 0 for a status move: how
+        forgets() ranks what a Pokemon knows, against no foe in particular."""
+        record = self.moves[move] if move < len(self.moves) else b""
+        if len(record) < 5 or record[3] == 0:
+            return 0
+        return record[3] * (1.5 if record[4] in self.types(user) else 1)
+
     def score(self, move, user, target):
         record = self.moves[move] if move < len(self.moves) else b""
         # effect (2 bytes), split, power, type: import_moves.py's RECORD.
@@ -127,6 +147,23 @@ class Scorer:
         for defending in self.types(target):
             value *= self.chart.get((kind, defending), 1)
         return value
+
+
+def forgets(scorer, species, moves):
+    """Which of a Pokemon's moves -- the four it knows, then the one a
+    level-up or a machine brings -- it lets go: the last in the order it
+    keeps them, the strongest damaging move of each type first, strongest
+    first, then its other damaging moves, then the moves that deal no
+    damage; on a tie the move known before, so 4 is the new one given up."""
+    power = [scorer.strength(move, species) for move in moves]
+    order = sorted(range(len(moves)), key=lambda i: -power[i])
+    kinds, best = set(), []
+    for i in order:
+        if power[i] and scorer.kind(moves[i]) not in kinds:
+            kinds.add(scorer.kind(moves[i]))
+            best.append(i)
+    ranked = best + [i for i in order if power[i] and i not in best] + [i for i in range(len(moves)) if not power[i]]
+    return ranked[-1]
 
 
 def battler_hp(line):
@@ -177,19 +214,59 @@ def bag_state_at():
                              headers=savedit.LAYOUT_HEADERS + ("battle_bag.h",))[0][0]
 
 
-def bag_screen(ram, markers):
-    """The battle bag's state: 1 its pockets, 2 a pocket's items, 3 an
-    item's USE, anything else between them. Found through the bag's task,
-    the one running ov08_02222670 at priority 100, the bag its data (a task
-    ended is cleared); None when there is none."""
-    func = markers.address("ov08_02222670") & ~1
+def task_data(ram, markers, func, priority):
+    """Where the data of the task running `func` at `priority` is in `ram`
+    (a SysTask's priority, data and func in a row; a task ended is
+    cleared, and the function's address in a literal pool is no task), or
+    None."""
+    func = markers.address(func) & ~1
     for word in (func | 1, func):
         for m in re.finditer(re.escape(struct.pack("<I", word)), ram):
             if m.start() % 4 == 0:
-                priority, data = struct.unpack_from("<II", ram, m.start() - 8)
-                if priority == 100 and 0x02000000 <= data < 0x02400000:
-                    return ram[data - 0x02000000 + bag_state_at()]
+                at, data = struct.unpack_from("<II", ram, m.start() - 8)
+                if at == priority and 0x02000000 <= data < 0x02400000:
+                    return data - 0x02000000
     return None
+
+
+def bag_screen(ram, markers):
+    """The battle bag's state: 1 its pockets, 2 a pocket's items, 3 an
+    item's USE, anything else between them. Found through the bag's task,
+    the one running ov08_02222670 at priority 100, the bag its data; None
+    when there is none."""
+    bag = task_data(ram, markers, "ov08_02222670", 100)
+    return None if bag is None else ram[bag + bag_state_at()]
+
+
+@savedit.tree_cache
+def learn_layout():
+    """What learn_menu reads of the battle party menu and its arguments."""
+    names = ("BattlePartyMenu, args", "BattlePartyMenu, screen", "BattlePartyMenu, mons", "BattlePartyMenuMon, moves",
+             "BattlePartyMenuArgs, selectedPos", "BattlePartyMenuArgs, cannotSwitch", "BattlePartyMenuArgs, mode")
+    values = savedit.compile_c(exprs=tuple(f"__builtin_offsetof({n})" for n in names)
+                               + ("sizeof(BattlePartyMenuMon)", "sizeof(((BattlePartyMenuMon *)0)->moves[0])"),
+                               headers=savedit.LAYOUT_HEADERS + ("battle_party_menu.h",))[0]
+    return dict(zip(("args", "screen", "mons", "moves", "slot", "move", "mode", "mon", "entry"), values))
+
+
+def learn_menu(ram, markers):
+    """The battle party menu while a level-up asks which move to forget:
+    (its screen, the party slot learning, the four moves that Pokemon
+    knows, the one it wants to learn), or None. Its task runs ov08_0221BE98
+    at priority 0, the menu its data; in that mode (3) the menu lists the
+    party by slot, selectedPos is the one learning and cannotSwitch holds
+    the new move."""
+    menu = task_data(ram, markers, "ov08_0221BE98", 0)
+    layout = learn_layout()
+    if menu is None:
+        return None
+    args = struct.unpack_from("<I", ram, menu + layout["args"])[0] - 0x02000000
+    if not 0 <= args < len(ram) or ram[args + layout["mode"]] != LEARN_MODE:
+        return None
+    slot = ram[args + layout["slot"]] % 6
+    mon = menu + layout["mons"] + slot * layout["mon"] + layout["moves"]
+    known = [struct.unpack_from("<H", ram, mon + k * layout["entry"])[0] for k in range(4)]
+    return ram[menu + layout["screen"]], slot, known, struct.unpack_from("<H", ram, args + layout["move"])[0]
 
 
 def throw(core, markers, hold, frames=1500):
@@ -334,6 +411,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     moves_chosen, tries = {}, 0        # the move each of the player's two took, for its target screen
     wild, useless = False, set()       # useless: (foe, move) a line said did nothing
     wild_battle, weakening, foe_before, hit, thrown = False, False, None, 0, 0
+    learning = None                    # the (party slot, move) a level-up's choice was said for
     while core.frames < frames:
         core.step(4, hold)
         ram = core.ram()
@@ -515,12 +593,31 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             core.step(30, hold)
             core.touch(*SHIFT, 6, hold)
             core.step(60, hold)
+        elif "forget another move" in last_line:
+            # A move learnt by level with four already known: "Forget a
+            # move!", once the buttons are up; the menu that opens decides.
+            core.touch(*FORGET_A_MOVE, 6, hold)
+            core.step(30, hold)
+        elif "should be forgotten" in last_line:
+            # The menu's moves: the one forgets() lets go touched, then its
+            # page's FORGET; the new one given up by the back arrow.
+            menu = learn_menu(ram, markers)
+            if menu and menu[0] == LEARN_LIST:
+                _, slot, known, new = menu
+                species = struct.unpack_from("<6H", ram, markers.address("gDiagPartySpecies") - 0x02000000)[slot]
+                gone = forgets(scorer, species, known + [new])
+                if (slot, new) != learning:
+                    say(f"[{core.frames}] the rule lets go of {'the new move' if gone == 4 else f'move {gone + 1}'}")
+                    learning = (slot, new)
+                core.touch(*(LEARN_BACK if gone == 4 else LEARN_MOVES[gone]), 6, hold)
+            elif menu and menu[0] == LEARN_PAGE:
+                core.touch(*LEARN_FORGET, 6, hold)
+            core.step(30, hold)
         elif "give up on learning" in last_line:
-            # A move learnt by level with four already known: B turns down
-            # forgetting one, then the top button gives the new one up, once
-            # the question has finished printing and the buttons are up. B
-            # here would say no to giving it up, and the whole thing would be
-            # asked again for ever.
+            # The new move given up (the back arrow above): the top button,
+            # once the question has finished printing and the buttons are
+            # up. B here would say no to giving it up, and the whole thing
+            # would be asked again for ever.
             core.touch(*GIVE_UP, 6, hold)
             core.step(30, hold)
         elif "Will you switch" in last_line:

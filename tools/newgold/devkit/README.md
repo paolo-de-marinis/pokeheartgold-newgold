@@ -406,6 +406,11 @@ Reading what the debug ROM records, and playing it without looking.
   player's own Revival Blessing gets the first fainted Pokemon. A move a
   foe's ability turned away ("makes Ground moves miss by using Levitate!")
   is not chosen against that foe again.
+  A new move a level-up brings to a Pokemon that knows four is learned or
+  given up by a rule: the strongest damaging move of each type stays,
+  strongest first, then the other damaging moves, then the rest, the move
+  known before on a tie; the last of that order is let go on the menu the
+  battle opens (found through its task, like the bag).
 - `watch.py` -- the same text for the melonDS that is running.
 - `live.py` -- one line about the running melonDS: field, encounter,
   battle, failures.
