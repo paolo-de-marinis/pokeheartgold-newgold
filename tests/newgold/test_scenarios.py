@@ -81,12 +81,15 @@ class ScenarioFileTests(unittest.TestCase):
                 self.assertTrue(all(name.startswith("gDiag") for name in spec.get("hold", {})))
 
     def test_the_playthrough_is_one_chain_from_a_new_game_with_its_own_team(self):
-        # Every leg follows the one before it, from the new game to the Route
-        # 34 gate, one line with no branch; the party is the one the bot
-        # caught: no leg replaces it (--party), and one that edits it at all
-        # (--level, --train, --teach) says so and why, through savedit.
+        # Every leg follows the one before it, from the new game to
+        # Goldenrod's Radio Card, one line with no branch; the party is the one the
+        # bot caught and trained: no leg replaces it (--party), sets its
+        # levels (--level) or teaches it a move (--teach) -- the bot trains
+        # in play, learns by gym.py's rule and teaches a machine from the
+        # bag -- and the one that still raises it (--train, leg 08b) says so
+        # and why, through savedit.
         legs_ = {path.stem: json.loads(path.read_text()) for path in SCENARIOS.glob("playthrough_*.json")}
-        line, leg = [], "playthrough_09b_route_34_gate"
+        line, leg = [], "playthrough_10_goldenrod"
         while leg:
             line.append(leg)
             leg = legs_[leg].get("from")
@@ -96,7 +99,7 @@ class ScenarioFileTests(unittest.TestCase):
         for name, spec in legs_.items():
             with self.subTest(name):
                 options = [part for part in spec.get("edit", []) if part.startswith("--")]
-                self.assertLessEqual(set(options), {"--level", "--train", "--teach"})
+                self.assertLessEqual(set(options), {"--train"})
                 if options:
                     self.assertIn("savedit", spec["about"])
 

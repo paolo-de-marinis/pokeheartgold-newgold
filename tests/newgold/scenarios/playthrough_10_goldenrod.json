@@ -1,0 +1,55 @@
+{
+  "about": "The playthrough's Route 34 and Goldenrod City, from the gatehouse out of Ilex Forest: north up Route 34 -- its music -- through the grass and past the trainers who spot the player on the navigator's way (two battles where the leg was written), into Goldenrod City and its Pokemon Center, the nurse. Goldenrod Gym is shut: a woman at its door says Whitney went flying by for a Radio Card (obj_T25_gswoman2_4, until FLAG_UNK_318). So to the Radio Tower, where the quiz at the counter on 1F is answered by answers: -- yes, yes, no (Kurt's balls are Apricorns), yes, no (Oak's partner is Mary) -- for the Radio Card (FLAG_GOT_RADIO_CARD), and Whitney, there for the same quiz, runs back to her Gym (FLAG_UNK_318). Back to the nurse and the game's save (21,019 frames where the leg was written). The party is the bot's own, no edit of its own (it carries leg 08b's savedit --train). The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_09b_route_34_gate",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "retry:on",
+    "goto:MAP_ROUTE_34,372,446",
+    {
+      "expect": {
+        "music": "SEQ_GS_R_4_34"
+      }
+    },
+    "goto:MAP_GOLDENROD,352,369,60000",
+    {
+      "expect": {
+        "music": "SEQ_GS_C_KOGANE",
+        "flag:FLAG_UNK_318": 0
+      }
+    },
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "goto:MAP_GOLDENROD_RADIO_TOWER_1F,13,10",
+    "DOWN",
+    "A",
+    "answers:YYYNYN",
+    {
+      "expect": {
+        "flag:FLAG_GOT_RADIO_CARD": 1,
+        "flag:FLAG_UNK_318": 1
+      }
+    },
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_GOLDENROD_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 2,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "flag:FLAG_GOT_RADIO_CARD": 1,
+    "flag:FLAG_UNK_318": 1
+  }
+}
