@@ -1,0 +1,13 @@
+{
+  "about": "Berserk answers a multi-strike move once, after its last strike, on the whole move's damage (Pokemon Central, Furore: it activates only after the last hit of a multi-hit move; Showdown's gen-9 berserk, onAfterMoveSecondary on move.totalDamage); before, it answered the strike that crossed half, between the strikes. A level-10 Pikachu is given Twineedle in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash, given Berserk (set:) and its HP set to 25, a little above half: the first needle takes it to 14, below half, the second to 3, and \"The wild Chansey's Berserk raised its Sp. Atk!\" comes after the hit count (before, between the needles). A single hit still answers at once: given Tackle, the Pikachu takes the Chansey, its HP set to 22, a little above half, below it, and Berserk raises its Sp. Atk again. The damage roll is forced to the bottom of the range; the field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_TWINEEDLE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
+            "set:1,ability,ABILITY_BERSERK", "set:1,hp,25", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Twineedle!", "hit 2 time", "Berserk raised its Sp. Atk!"], "battler1.hp": 3}},
+            "teach:0,0,MOVE_TACKLE", "set:1,hp,22", "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Tackle!", "Berserk raised its Sp. Atk!"]}
+}

@@ -1664,7 +1664,7 @@ class DraggedInTests(unittest.TestCase):
         for part in ("!ctx->selfTurnData[battlerId].dragPending", "MOVE_EFFECT_FLAG_INGRAIN",
                      "return CanSwitchMon(battleSystem, ctx, battlerId);", "return WhirlwindCheck(battleSystem, ctx);"):
             self.assertIn(part, will)
-        self.assertIn("|| Battler_WillBeDraggedOut(battleSystem, ctx, target)) {", function(overlay, "CheckColorChangeAndAngerShell"))
+        self.assertIn("|| (ability != ABILITY_BERSERK && Battler_WillBeDraggedOut(battleSystem, ctx, target))) {", function(overlay, "CheckColorChangeAngerShellAndBerserk"))
         self.assertIn("|| Battler_CameInAfterTheHit(ctx, battlerId)", function(overlay, "PickpocketLifts"))
         end = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224E1BC")
         self.assertLess(end.index("TryAdditionalMoveEffect(ctx)"), end.index("TryPickpocket("))

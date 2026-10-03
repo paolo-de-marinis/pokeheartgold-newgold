@@ -537,12 +537,12 @@ class SheerForceTests(unittest.TestCase):
         # what answers the hit, through SheerForceTradedEffect.
         self.assertEqual(source.count("IsSuppressibleSecondaryEffect(ctx,"), 4)
         self.assertEqual(source.count("static BOOL IsSuppressibleSecondaryEffect"), 1)
-        # Emergency Exit's and Anger Shell's arming, Berserk, Anger Shell and
-        # Color Change (one check for the two), Pickpocket, the Red Card and
-        # Eject Button, the Kee and Maranga Berries, and Relic Song's change
-        # of form (Pokemon Central, Forzabruta); the controller asks it for
-        # the user's Shell Bell and Life Orb.
-        self.assertEqual(source.count("SheerForceTradedEffect(ctx)"), 8)
+        # Emergency Exit's, Anger Shell's and Berserk's arming, Anger Shell,
+        # Berserk and Color Change (one check for the three), Pickpocket, the
+        # Red Card and Eject Button, the Kee and Maranga Berries, and Relic
+        # Song's change of form (Pokemon Central, Forzabruta); the controller
+        # asks it for the user's Shell Bell and Life Orb.
+        self.assertEqual(source.count("SheerForceTradedEffect(ctx)"), 7)
         self.assertIn("SheerForceTradedEffect(ctx) == TRUE", function(source, "Battler_RelicSongForm"))
 
     def test_the_guaranteed_effects_are_left_alone(self):

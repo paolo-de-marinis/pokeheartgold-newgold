@@ -295,7 +295,7 @@ class ParentalBondTests(unittest.TestCase):
         overlay, controller = OVERLAY.read_text(), CONTROLLER.read_text()
         self.assertNotIn("ov12_02250490", function(controller, "ov12_0224CF14"))
         self.assertNotIn("parentalBondDeferred", (ROOT / "include/battle/battle.h").read_text())
-        self.assertIn("|| Battler_WillBeDraggedOut(battleSystem, ctx, target)) {", function(overlay, "CheckColorChangeAndAngerShell"))
+        self.assertIn("|| (ability != ABILITY_BERSERK && Battler_WillBeDraggedOut(battleSystem, ctx, target))) {", function(overlay, "CheckColorChangeAngerShellAndBerserk"))
         self.assertIn("if (!ctx->selfTurnData[battlerId].dragPending", function(overlay, "Battler_WillBeDraggedOut"))
         self.assertIn("if (target != BATTLER_NONE && ctx->selfTurnData[target].dragPending) {", function(controller, "TryAdditionalMoveEffect"))
 
@@ -344,16 +344,21 @@ class ParentalBondTests(unittest.TestCase):
         from test_ability_interactions import run_c
         overlay, controller = OVERLAY.read_text(), CONTROLLER.read_text()
         run_c(AFTER_STRIKES.replace("@FUNCTIONS@", function(overlay, "Battler_ArmRetreat")
-                                    + function(overlay, "CheckColorChangeAndAngerShell")))
+                                    + function(overlay, "CheckColorChangeAngerShellAndBerserk")))
         on_hit = function(overlay, "CheckAbilityEffectOnHit")
-        case = on_hit[on_hit.index("case ABILITY_COLOR_CHANGE:\n    case ABILITY_ANGER_SHELL:"):]
+        case = on_hit[on_hit.index("case ABILITY_COLOR_CHANGE:\n    case ABILITY_ANGER_SHELL:\n    case ABILITY_BERSERK:"):]
         self.assertIn("if (ctx->multiHitCountTemp == 0 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {\n"
-                      "            ret = CheckColorChangeAndAngerShell(battleSystem, ctx, script);", case[:case.index("break;")])
+                      "            ret = CheckColorChangeAngerShellAndBerserk(battleSystem, ctx, script);", case[:case.index("break;")])
         # The first of the post-move steps, before the recoil and the drag,
         # for a move that struck more than once.
         end = function(controller, "ov12_0224E1BC")
-        ask = "if (ctx->multiHitCountTemp != 0 && ctx->battlerIdTarget != BATTLER_NONE\n                && CheckColorChangeAndAngerShell(battleSystem, ctx, &script) == TRUE) {"
+        ask = "if (ctx->multiHitCountTemp != 0 && ctx->battlerIdTarget != BATTLER_NONE\n                && CheckColorChangeAngerShellAndBerserk(battleSystem, ctx, &script) == TRUE) {"
         self.assertIn(ask, end)
+        # Berserk's rise credited to the ability, which RunPostMoveScript's
+        # SIDE_EFFECT_TYPE_MOVE_EFFECT would not.
+        self.assertIn(ask + "\n                RunPostMoveScript(ctx, script);\n"
+                      "                // Berserk's rise is the ability's, as it is for a single hit.\n"
+                      "                ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;", end)
         self.assertLess(end.index("case 0:"), end.index(ask))
         self.assertLess(end.index(ask), end.index("case 1:"))
         self.assertLess(end.index("case 1:"), end.index("TryRecoil(ctx)"))
@@ -379,7 +384,7 @@ typedef struct { int hp, maxHp, ability, type1, type2; int statChanges[8]; } Bat
 typedef struct { u32 retreatArmed : 1; int physicalDamage, specialDamage; } SelfTurnData;
 typedef struct {
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
-    int battlerIdAttacker, battlerIdTarget, battlerIdStatChange, battlerIdTemp, msgTemp;
+    int battlerIdAttacker, battlerIdTarget, battlerIdStatChange, battlerIdTemp, msgTemp, statChangeParam, statChangeType;
     u32 moveNoCur, battleStatus2;
 } BattleContext;
 static BOOL dragged, sheerForce;
@@ -411,7 +416,7 @@ static void reset(int ability, int hp) {
     ctx.battleMons[1] = (BattleMon){ hp, 100, ability, TYPE_NORMAL, TYPE_NORMAL, { 6, 6, 6, 6, 6, 6, 6, 6 } };
     script = 0;
 }
-static BOOL answers(void) { return CheckColorChangeAndAngerShell(&bs, &ctx, &script); }
+static BOOL answers(void) { return CheckColorChangeAngerShellAndBerserk(&bs, &ctx, &script); }
 int main(void) {
     // Color Change takes the move's type once the strikes are over.
     reset(ABILITY_COLOR_CHANGE, 100);
@@ -457,6 +462,24 @@ int main(void) {
     assert(answers());
     // A move Sheer Force powered arms nothing.
     reset(ABILITY_ANGER_SHELL, 60); sheerForce = TRUE; strike(20); sheerForce = FALSE;
+    assert(!answers());
+    // Berserk is Anger Shell's crossing with a stage of Sp. Atk (Pokemon
+    // Central, Furore: after the last strike): from 60, 5 and 10 to 45; not
+    // 5 and 4; not from 50; not with the Sp. Atk at +6; and, Codadrago naming
+    // only Color Change and Anger Shell, for a Pokemon dragged out too.
+    reset(ABILITY_BERSERK, 60); strike(5); strike(10);
+    assert(answers() && script == BATTLE_SUBSCRIPT_ABILITY_STAT_CHANGE);
+    assert(ctx.statChangeParam == MOVE_SUBSCRIPT_PTR_SP_ATTACK_UP_1_STAGE && ctx.statChangeType == SIDE_EFFECT_TYPE_ABILITY);
+    assert(ctx.battlerIdStatChange == 1 && ctx.battlerIdTemp == 1);
+    reset(ABILITY_BERSERK, 60); strike(5); strike(4);
+    assert(!answers());
+    reset(ABILITY_BERSERK, 50); strike(5); strike(10);
+    assert(!answers());
+    reset(ABILITY_BERSERK, 60); strike(20); ctx.battleMons[1].statChanges[STAT_SPATK] = 12;
+    assert(!answers());
+    reset(ABILITY_BERSERK, 60); strike(20); dragged = TRUE;
+    assert(answers());
+    reset(ABILITY_BERSERK, 60); sheerForce = TRUE; strike(20);
     assert(!answers());
     return 0;
 }

@@ -6138,11 +6138,13 @@ static BOOL ov12_0224E1BC(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->battleMons[ctx->battlerIdAttacker].status2 &= ~STATUS2_RAGE;
             }
             ctx->unk_30++;
-            // Color Change and Anger Shell, once, for a move that struck more
-            // than once (CheckColorChangeAndAngerShell).
+            // Color Change, Anger Shell and Berserk, once, for a move that
+            // struck more than once (CheckColorChangeAngerShellAndBerserk).
             if (ctx->multiHitCountTemp != 0 && ctx->battlerIdTarget != BATTLER_NONE
-                && CheckColorChangeAndAngerShell(battleSystem, ctx, &script) == TRUE) {
+                && CheckColorChangeAngerShellAndBerserk(battleSystem, ctx, &script) == TRUE) {
                 RunPostMoveScript(ctx, script);
+                // Berserk's rise is the ability's, as it is for a single hit.
+                ctx->statChangeType = SIDE_EFFECT_TYPE_ABILITY;
                 flag = 1;
             }
             break;

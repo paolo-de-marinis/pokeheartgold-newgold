@@ -163,10 +163,10 @@ class SheerForceAftermathTests(unittest.TestCase):
         hit = function(source, "CheckAbilityEffectOnHit")
         case = hit[hit.index("case ABILITY_BERSERK:"):]
         case = case[:case.index("break;")]
-        self.assertIn("!SheerForceTradedEffect(ctx)", case)
         self.assertNotIn("IsSuppressibleSecondaryEffect", case)
-        # Anger Shell and Color Change, for a hit and after a multi-strike move.
-        self.assertIn("|| SheerForceTradedEffect(ctx) ||", function(source, "CheckColorChangeAndAngerShell"))
+        # Anger Shell, Berserk and Color Change, for a hit and after a
+        # multi-strike move.
+        self.assertIn("|| SheerForceTradedEffect(ctx)\n", function(source, "CheckColorChangeAngerShellAndBerserk"))
         self.assertIn("|| SheerForceTradedEffect(ctx)\n", function(source, "PickpocketLifts"))
         self.assertIn("|| SheerForceTradedEffect(ctx)) {", function(source, "SwitchItemAnswersHit"))
 
