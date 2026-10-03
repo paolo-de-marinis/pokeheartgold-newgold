@@ -201,6 +201,7 @@ class ScenarioFileTests(unittest.TestCase):
         battles = iter([True, True])
         s.in_battle = lambda: next(battles, False)
         s.movable, s.textbox, s.partner_prompt, s._collect = (lambda: True), (lambda: False), (lambda: None), (lambda core: None)
+        s.frame_script_due = lambda: None
         with mock.patch.object(gym, "fight", lambda *args, **kwargs: asked.append(kwargs)):
             s.run("field")
         self.assertEqual([kwargs.get("flee") for kwargs in asked], [40])
@@ -682,6 +683,52 @@ class NavigatorTests(unittest.TestCase):
         # and up it still goes, pressed down from its other end
         up = scene.plan((110, 6, 14), [(155, 6, 17)])
         self.assertEqual(up[:2], [((110, 6, 14), "DOWN"), ((110, 6, 15), "DOWN")])
+
+    def test_kurt_s_house_runs_its_frame_table_on_his_variable(self):
+        self.assertEqual(scene.frame_table(164), [("VAR_UNK_4080", 2)])    # MAP_AZALEA_KURT_HOUSE
+        self.assertEqual(scene.frame_table(180), [])                        # MAP_AZALEA_GYM
+
+    def test_field_and_goto_wait_for_a_frame_table_script_due(self):
+        # field let go on the first frame the player could move, and goto 16
+        # frames after its goal, while a script was about to run: Kurt's on
+        # arriving in his house (VAR_UNK_4080 2) some 30 frames later, a
+        # coord event's on the goal with its message not through. Faked: the
+        # player may move throughout, a frame-table script due until 30.
+        from unittest import mock
+
+        class Core:
+            frames, buttons = 0, set()
+
+            def step(self, frames, hold):
+                self.frames += frames
+
+            def press(self, key, frames, hold):
+                self.frames += frames
+        fake = object.__new__(scene.Scene)
+        fake.core, fake.hooks, fake.say = Core(), [], lambda line: None
+        fake.in_battle = lambda: False
+        fake.movable = lambda: True
+        fake.textbox = lambda: False
+        fake._chain = lambda *fields: 1
+        fake.frame_script_due = lambda: "VAR_UNK_4080" if fake.core.frames < 30 else None
+        fake.run("field")
+        self.assertEqual(fake.core.frames, 30)
+        fake.core.frames = 0
+        fake.location = lambda: (164, 3, 4)
+        fake.objects = lambda: {}
+        with mock.patch.object(scene, "tile", lambda *at: (164, 0)):
+            done, said = fake.goto((164, 3, 4))
+        self.assertTrue(done, said)
+        self.assertGreaterEqual(fake.core.frames, 30)
+        # and a script the goal sets off, its text box up until frame 60
+        fake.core.frames = 0
+        fake.frame_script_due = lambda: None
+        fake.movable = lambda: not 16 <= fake.core.frames < 60
+        fake.textbox = lambda: not fake.movable()
+        with mock.patch.object(scene, "tile", lambda *at: (164, 0)):
+            done, said = fake.goto((164, 3, 4))
+        self.assertTrue(done, said)
+        self.assertGreaterEqual(fake.core.frames, 60)
 
     def test_a_ledge_is_jumped_one_way_only(self):
         # Route 29's ledges at x = 651 face east: over one in two tiles going

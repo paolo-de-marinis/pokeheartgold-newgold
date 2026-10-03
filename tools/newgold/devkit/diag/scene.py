@@ -18,7 +18,9 @@ A step is one of
                                 (400 presses at most by default)
     poke:SYMBOL=VALUE           a word of the ROM's memory, by name
     hold:SYMBOL=VALUE           the same before every frame from now on; 0 lets go
-    field[:N]                   A until the field is up and the player can move,
+    field[:N]                   A until the field is up and the player can move
+                                with no frame-table script due on the map (one the
+                                map's header runs when its variable holds its value),
                                 and through any text box on the way (N frames at most);
                                 a battle up on the way, its end screens too, gym.py's
                                 player plays to its end
@@ -47,6 +49,9 @@ A step is one of
                                 (the matrix's tiles outdoors). A tile someone stands
                                 on -- or started on, wherever they have wandered
                                 since -- is reached beside them, facing them.
+                                What the goal sets off (a coord event's script, a
+                                warp, a trainer) is played through, and a frame-table
+                                script due on the map, before it returns.
                                 N frames at most (30000 by default): a route
                                 of the playthrough, with its battles, takes more
     flee:N                      from now on the battles goto and field play run from
@@ -394,6 +399,21 @@ def warps(map_id):
     return out
 
 
+@savedit.tree_cache
+def frame_table(map_id):
+    """[(variable, value)]: the map's frame table (INIT_SCRIPT_ON_FRAME_TABLE,
+    InitScriptGoToIfEqual in its _hdr script), whose first entry with its
+    variable equal to its value FieldInput_Process starts, before the
+    player's input, on a frame the player could move."""
+    import re
+    header = savedit.map_headers().get(savedit.map_table().get(map_id, {}).get("const"), {})
+    path = savedit._bank_file(header, "scriptHeaderBank", "scr_seq_", savedit.SCRIPTS, ".s")
+    if not path or not (ROOT / path).exists():
+        return []
+    return [(var, int(value, 0)) for var, value in
+            re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), ", savedit.source(path).read_text())]
+
+
 def plan(start, goals, blocked=frozenset(), most=300000):
     """The cheapest walk from `start` (map, x, z) to any of `goals`, as
     [(node, the direction held from it)], the last node a goal; None when
@@ -539,6 +559,16 @@ class Scene:
         field = self.core.word(self._field)
         return bool(field and self.core.word(field + byte, 1) >> bit & 1)
 
+    def frame_script_due(self):
+        """The variable of the map's frame-table entry that holds its value
+        (frame_table): its script starts on a frame the player could move,
+        a few frames after the field has let go -- Kurt's, on arriving in his
+        house, about 30. None when no entry is due."""
+        here = self.location()
+        ram = self.core.ram()
+        return next((var for var, value in frame_table(here[0]) if self.value(ram, f"var:{var}") == value),
+                    None) if here else None
+
     def location(self):
         """(map, x, y): the map from FieldSystem.location, the tile from the
         player's map object."""
@@ -606,8 +636,8 @@ class Scene:
             # A battle up on the way -- its end screens still to go through, or
             # one a trainer started -- gym.py's player plays to its end, as
             # goto's does; its frames are not counted in N.
-            end = core.frames + int(rest or 12000)
-            while core.frames < end and (self.in_battle() or not self.movable()):
+            end, due = core.frames + int(rest or 12000), None
+            while core.frames < end and (self.in_battle() or not self.movable() or self.frame_script_due()):
                 if self.in_battle():
                     import gym
                     started = core.frames
@@ -622,9 +652,14 @@ class Scene:
                     core.press("A", 6, hooks)
                     core.step(20, hooks)
                 else:
+                    if due is None and self.movable():
+                        due = self.frame_script_due()
+                        self.say(f"[{core.frames}] field: the frame table's {due} entry is due; its script comes")
                     core.step(1, hooks)
             if not self.movable():
                 self.say(f"[{core.frames}] the field never let the player move")
+            elif self.frame_script_due():
+                self.say(f"[{core.frames}] the frame table's {self.frame_script_due()} entry never ran")
         elif kind == "goto":
             name, x, y, *most = rest.split(",")
             done, said = self.goto((self.number(name) if not name.isdigit() else int(name), int(x), int(y)),
@@ -1060,6 +1095,7 @@ class Scene:
         end, started = core.frames + frames, core.frames
         blocked, path, index, goals = {}, None, {}, [goal]
         replans = battles = texts = 0
+        arrived = None      # the frame the goal was reached
         last, still = None, 0
         while core.frames < end:
             core.buttons = set()
@@ -1103,6 +1139,17 @@ class Scene:
                 if target in objects or not (tile(*target) and not tile(*target)[1] & savedit.COLLISION):
                     goals = [(target[0], target[1] + dx, target[2] + dz) for dx, dz in STEP.values()]
                 path = None
+            if arrived is not None:
+                # What the goal set off -- a coord event's script, a trainer
+                # who saw the player there, a warp and the map's frame-table
+                # script after it -- is played through above, as on the way,
+                # until the player can move with nothing more to come.
+                if self.frame_script_due():
+                    core.step(1, hooks)
+                    continue
+                after = f", then {core.frames - arrived} frames of what it set off" if core.frames > arrived else ""
+                return True, (f"goto {goal}: there in {arrived - started} frames, {replans} plans, "
+                              f"{battles} battles, {texts} text boxes{after}")
             if here in goals:
                 if target in objects and target not in self.objects():
                     path = None     # they walked on while the player came
@@ -1120,8 +1167,8 @@ class Scene:
                             break
                 else:
                     core.step(16, hooks)
-                return True, (f"goto {goal}: there in {core.frames - started} frames, {replans} plans, "
-                              f"{battles} battles, {texts} text boxes")
+                arrived = core.frames
+                continue
             if path is None:
                 blocked = {tile_: until for tile_, until in blocked.items() if until > core.frames}
                 path = plan(here, goals, frozenset(objects) | frozenset(blocked))

@@ -1,0 +1,7 @@
+{
+  "about": "field waits for a frame-table script the map is about to run. Kurt's house's frame table (scr_seq_0874_T23R0501_hdr) starts his Fast Ball script while VAR_UNK_4080 is 2 -- on a frame the player could move, some way after the field has let go. The save is put in his house, by the door, with the variable at 2: field has to see the entry due, wait for its script and press through it, which sets the variable to 3, gives the Fast Ball (FLAG_UNK_07C) and sets it to 4. Before, field let go on the first frame the player could move: at frame 1032, the variable still 2 and no ball (leg 07b's \"wait:30\" before its \"field\" covers the same gap).",
+  "save": "route29-official.sav",
+  "edit": ["--where", "164:4:8:0", "--var", "VAR_UNK_4080=2"],
+  "steps": ["field", {"expect": {"var:VAR_UNK_4080": 4, "flag:FLAG_UNK_07C": 1, "bag:ITEM_FAST_BALL": 1,
+                                 "map": "MAP_AZALEA_KURT_HOUSE"}}]
+}

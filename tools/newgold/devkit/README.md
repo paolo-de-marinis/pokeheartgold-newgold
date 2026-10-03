@@ -423,7 +423,9 @@ Reading what the debug ROM records, and playing it without looking.
   error held off. The marts, the Move Relearner, the summary, the bag, the
   PC, trades, the Union Room, the GTS's first screens and the Pokeathlon's
   team choice were measured with it. `field` presses through Continue until
-  the player can move, `fight` has gym.py's player fight the battle that
+  the player can move with no script of the map's frame table due (its
+  variable holding its value: the field starts it a few frames after it
+  lets go), `fight` has gym.py's player fight the battle that
   comes up, `hold:` keeps a switch poked every frame, and `goto:MAP,X,Y`
   walks there: the path planned from the tree's map data (each matrix's
   tile attributes -- collision, ledges, doors, warp mats -- the zone
@@ -431,7 +433,9 @@ Reading what the debug ROM records, and playing it without looking.
   started on is sought where they have wandered to), planned again when
   the player leaves it or is blocked, A through text boxes (read from
   FieldSystem.textbox_open), B through a phone call and the blackout
-  screen, and gym.py's player through any battle on the way; one line says
+  screen, and gym.py's player through any battle on the way, and on the
+  goal through what the goal sets off -- a coord event's script, a warp, a
+  frame-table script due -- until the player can move; one line says
   how it went. `goto:MAP,X,Y,N` spends N frames at most (30000 by
   default), and `flee:N` has the player run from a wild Pokemon when its
   own has under N% of its HP left -- one try a battle, then it fights.

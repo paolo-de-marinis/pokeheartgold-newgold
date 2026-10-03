@@ -1,0 +1,9 @@
+{
+  "about": "goto plays through what its goal sets off before it returns. From Azalea, before Kurt's door, with VAR_UNK_4080 at 2, goto walks into his house to the mat inside (4, 9): the warp puts the player there, and the house's frame table starts Kurt's Fast Ball script (scr_seq_0874_T23R0501_hdr), which sets the variable to 3, gives the ball (FLAG_UNK_07C) and sets it to 4. goto waits for the script due, presses through it and returns once the player can move with nothing more to come. Before, it returned 16 frames after the goal: the script had begun (the variable 3) and the ball was not given (leg 09's coord events, the twigs that turn a Farfetch'd, were left the same way, and a field after the goto finished them).",
+  "save": "route29-official.sav",
+  "edit": ["--where", "74:399:455:0", "--var", "VAR_UNK_4080=2"],
+  "steps": ["field", {"expect": {"map": "MAP_AZALEA", "x": 399, "y": 455, "var:VAR_UNK_4080": 2}},
+            "goto:MAP_AZALEA_KURT_HOUSE,4,9",
+            {"expect": {"var:VAR_UNK_4080": 4, "flag:FLAG_UNK_07C": 1, "bag:ITEM_FAST_BALL": 1,
+                        "map": "MAP_AZALEA_KURT_HOUSE", "x": 4, "y": 9}}]
+}
