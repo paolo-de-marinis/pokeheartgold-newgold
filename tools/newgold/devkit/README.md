@@ -27,8 +27,10 @@ Edits a save file the way the game reads it -- checksums, the half the
 game loads, the blocks by name. The party (`--party SPECIES:LEVEL::MOVE+MOVE`,
 always the player's own, so it obeys; `--level SLOT:LEVEL` raises one already
 there and keeps the rest of it), the bag, TMs, badges, the Dex, the
-position (`--where MAP:X:Y:DIR`, as a warp so the map builds itself), script
-flags (`--flag NAME`) and variables (`--var NAME=VALUE`); `--train LEVEL`
+position (`--where MAP:X:Y:DIR`, as a warp so the map builds itself; MAP
+is the map's number), script
+flags (`--flag NAME`) and variables (`--var NAME=VALUE`); `--dex` takes a
+form as well (`SLOWPOKE_GALARIAN`), caught as the game records one; `--train LEVEL`
 raises the party already there to a level, evolving by level on the way
 with the moves the game gives there, eggs apart -- the playthrough's
 stand-in for the grinding its bot does not do -- and `--teach SLOT:MOVE`
@@ -239,7 +241,9 @@ party), Borsa (the machines as a checklist, the Pokedex's way: every TM, TR
 and HM with its move and type, "ce l'ho", and a count for a TR, which a use
 spends; searched by "MT 45" as by "TM045"; written as the game keeps the
 pocket, 101 slots at most), Pokedex (per
-species, all at once, and the two switches), Posizione (the `--where`
+species, all at once, and the two switches; then the forms the Dex records
+on their own, a Galarian Slowpoke seen or caught, its species with it, for
+a save of the layout that has the record), Posizione (the `--where`
 write, the map picked from a list or on the town map), Flag e variabili (by
 name) and Info (the two halves and the block table). The name can only be written in letters and digits: that is all
 `savedit.charcode` knows, although the game's character set has more. The
