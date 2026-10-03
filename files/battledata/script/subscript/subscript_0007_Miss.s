@@ -89,14 +89,10 @@ _CHECK_OHKO_FAIL:
     GoTo _PRINT_MSG
 
 _CHECK_RANGE:
-    GetCurrentMoveData MOVE_ATTRIBUTE_RANGE
-    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0x00000004, _MON_AVOIDED
-    CompareVarToValue OPCODE_EQU, BSCRIPT_VAR_CALC_TEMP, 0x00000008, _MON_AVOIDED
-    // {0}’s attack missed!
-    PrintMessage msg_0197_00012, TAG_NICKNAME, BATTLER_CATEGORY_ATTACKER
-    GoTo _PRINT_MSG
-
-_MON_AVOIDED:
+    // Every miss names the Pokemon that avoided it, as from the fifth
+    // generation (Scarlet and Violet's text has no "attack missed" line;
+    // Showdown's gen-9 '-miss' names the target): HeartGold kept "{0}’s
+    // attack missed!" for a move aimed at one Pokemon.
     // {0} avoided the attack!
     PrintMessage msg_0197_00024, TAG_NICKNAME, BATTLER_CATEGORY_DEFENDER
 

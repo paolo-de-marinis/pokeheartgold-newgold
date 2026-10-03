@@ -15,6 +15,6 @@
                         "battler1.hp": 30, "battler1.item": "ITEM_AIR_BALLOON"}},
             "set:1,item,0", "fight:3:1", "set:1,hp,20", "fight:2:1"],
   "expect": {"new_lines": ["Pikachu used Telekinesis!", "hurled into the air", "Pikachu used Mud-Slap!", "The wild Chansey restored HP using its Earth Eater!"],
-             "no_lines": ["missed", "doesn’t affect", "evades Ground moves"],
+             "no_lines": ["avoided the attack", "doesn’t affect", "evades Ground moves"],
              "battler1.hp": 30}
 }

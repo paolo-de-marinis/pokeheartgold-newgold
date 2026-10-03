@@ -12,7 +12,7 @@
             {"expect": {"new_lines": ["Pikachu used Baton Pass!", "Go! Snorlax!"], "battler0.species": "SPECIES_SNORLAX"}},
             "teach:0,0,MOVE_ZAP_CANNON", "teach:0,1,MOVE_LOCK_ON", "teach:0,2,0,0", "teach:0,3,0,0",
             "fight:1:1",
-            {"expect": {"new_lines": ["Snorlax used Zap Cannon!", "Snorlax’s attack missed!"]}},
+            {"expect": {"new_lines": ["Snorlax used Zap Cannon!", "The wild Chansey avoided the attack!"]}},
             "fight:2:1",
             {"expect": {"new_lines": ["Snorlax used Lock-On!", "Snorlax took aim at the wild Chansey!"]}},
             "fight:1:1"],
