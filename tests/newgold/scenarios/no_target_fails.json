@@ -1,0 +1,11 @@
+{
+  "about": "A move with no one left to hit fails: from the fifth generation the games print \"But it failed!\" (Showdown's gen-9 useMoveInner sends '-fail' for no target, '-notarget' before; Scarlet and Violet's English text has no \"no target\" line), where HeartGold's \"But there was no target...\" stood (subscript 281). Falkner's Hoothoot is taught only Explosion once the battle is up (teach:) and faces a level-13 Shuckle that knows Tackle, its speed set to 1 (set:) so the Hoothoot moves first: it explodes and faints, the Shuckle holds, and its Tackle has no one to hit before Falkner sends his next Pokemon.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SHUCKLE:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:1,0,MOVE_EXPLOSION", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:0,0,MOVE_TACKLE", "set:0,speed,1", "fight:1:1"],
+  "expect": {"lines": ["The opposing Hoothoot used Explosion!", "Shuckle used Tackle!", "But it failed!"],
+             "no_lines": ["no target"], "battler0.species": "SPECIES_SHUCKLE"}
+}

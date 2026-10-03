@@ -2909,12 +2909,11 @@ static BOOL ov12_0224B398(BattleSystem *battleSystem, BattleContext *ctx) {
         // An explosion with nothing left to hit still fells its user, from
         // the fifth generation (Pokemon Central, Esplosione): TrySelfDestruct
         // has put it at 0 HP, and ov12_0224D1DC faints it. The line before is
-        // HeartGold's "But there was no target...", which every move with
-        // nothing left to hit prints here; the latest games have no such
-        // line (Scarlet and Violet's English text, the sv-text dump) and say
-        // "But it failed!" for every move alike, an explosion's too, its user
-        // fainting after (Showdown's gen-9 useMoveInner: the faint, then
-        // '-fail' for no target from the fifth generation). Natural Gift with
+        // "But it failed!", which every move with nothing left to hit prints
+        // (subscript 281), an explosion's too, its user fainting after, as in
+        // the latest games (Showdown's gen-9 useMoveInner: the faint, then
+        // '-fail' for no target from the fifth generation; Scarlet and
+        // Violet's English text has no "no target" line). Natural Gift with
         // nothing left to hit still spends its Berry (Pokemon Central,
         // Dononaturale), once the move is over (NaturalGiftSpendsBerry).
         if ((ctx->battleStatus & BATTLE_STATUS_SELFDESTRUCTED) || BattleMoveTbl(ctx, ctx->moveNoCur)->effect == MOVE_EFFECT_NATURAL_GIFT) {

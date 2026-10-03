@@ -6,8 +6,11 @@ _000:
     PrintAttackMessage 
     Wait 
     WaitButtonABTime 30
-    // But there was no target...
-    PrintMessage msg_0197_01234, TAG_NONE
+    // A move with no one left to hit fails, as from the fifth generation
+    // (Showdown's gen-9 useMoveInner: '-fail' for no target, '-notarget'
+    // before), where HeartGold said "But there was no target...".
+    // But it failed!
+    PrintMessage msg_0197_00796, TAG_NONE
     Wait 
     WaitButtonABTime 30
     UnlockMoveChoice BATTLER_CATEGORY_ATTACKER
