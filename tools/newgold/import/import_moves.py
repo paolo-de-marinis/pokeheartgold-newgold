@@ -578,6 +578,17 @@ FIELDS_HERE = {
                    "flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT", "FLAG_MIRROR_MOVE")},
 }
 
+# A move aimed at its user, at the user's side or at the whole field is aimed
+# at no Pokemon a guard could stand in front of. Pokemon Central has every
+# added one "not blocked by Protect and Detect" -- Victory Dance, Geomancy,
+# Celebrate, Shore Up, Shed Tail, Tidy Up, Revival Blessing, the four
+# terrains, Magnetic Flux, Gear Up, Aurora Veil, Life Dew and the rest -- and
+# so has Showdown's gen-9 data; the engine's records give twenty-eight of
+# them the flag. Bide, retail's, is a hit at whoever struck the user and keeps
+# it.
+UNGUARDED_TARGETS = 1 << 4 | 1 << 5 | 1 << 6   # RANGE_USER, RANGE_USER_SIDE, RANGE_FIELD
+UNGUARDED_FLAGS = ("FLAG_PROTECT",)
+
 # The effects written here for those moves follow the reference's in
 # move_effects.h, under this line. A run keeps them where they are and numbers
 # the reference's before them, as it always has.
@@ -1071,9 +1082,11 @@ def main():
         else:
             raise SystemExit(f"{name} has effect {effect}, which the reference does not define")
         split = SPLITS[field(block, "split")]
+        target = rangesets[FIELDS_HERE[name]['target']] if 'target' in FIELDS_HERE.get(name, {}) else ranges(block, rangesets)
         flags = sum(1 << bit for flag, bit in FLAG_BITS.items()
                     if (flag in named_flags(block) or flag in FIELDS_HERE.get(name, {}).get("flagsOn", ()))
                     and not (name in IMPLEMENTED_HERE and flag == "FLAG_UNUSABLE_UNIMPLEMENTED")
+                    and not (flag in UNGUARDED_FLAGS and target & UNGUARDED_TARGETS)
                     and flag not in FIELDS_HERE.get(name, {}).get("flagsOff", ()))
         added.append((first_move + offset, name, struct.pack(
             RECORD,
@@ -1084,7 +1097,7 @@ def main():
             number(block, "accuracy"),
             number(block, "pp"),
             FIELDS_HERE.get(name, {}).get("effectChance", number(block, "effectChance")),
-            rangesets[FIELDS_HERE[name]['target']] if 'target' in FIELDS_HERE.get(name, {}) else ranges(block, rangesets),
+            target,
             number(block, "priority"),
             flags,
             appeals.get(contest_field(block, "appeal"), 0),
