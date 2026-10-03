@@ -27,13 +27,13 @@ typedef struct BattlePartyMenuArgs {
     u8 unk13;
     u8 activeSlots[2]; // 0x14: the party slots the battler and its ally have on the field
     u8 unk16[0x24 - 0x16];
-    u16 cannotSwitch; // 0x24: the battler is trapped (BattlerCanSwitch)
+    u16 cannotSwitch; // 0x24: the battler is trapped (BattlerCanSwitch); in mode 3, the move to learn
     u8 unk26[2];
     int battlerId;   // 0x28
     u8 partySlots[6]; // 0x2C: the party slot each list position shows
     u8 unk32[2];
     u8 unk34;        // 0x34: which of screen 4's four buttons is drawn selected
-    u8 mode;         // 0x35: 1 a switch that cannot be declined, 2 an item to use on the Pokemon picked
+    u8 mode;         // 0x35: 1 a switch that cannot be declined, 2 an item to use on the Pokemon picked, 3 a move to forget (selectedPos the party slot that learns)
     u8 done;         // 0x36
 } BattlePartyMenuArgs;
 
@@ -68,6 +68,7 @@ typedef struct BattlePartyMenu {
     u8 unk2077_4 : 4;
     u8 unk2078;
     u8 nextState; // 0x2079
+    u8 screen;    // 0x207A: the screen shown (ov08_022221CC); a level-up's move to forget (mode 3) opens on 6, the moves, and the one picked shows 7, its page with FORGET
 } BattlePartyMenu;
 
 #endif // POKEHEARTGOLD_BATTLE_PARTY_MENU_H
