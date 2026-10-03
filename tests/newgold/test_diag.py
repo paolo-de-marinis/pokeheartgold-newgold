@@ -108,6 +108,23 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(battler_hp("you Iron Crown L30 103/103 holding Leftovers | 1:Smart Strike 10"), 103)
         self.assertEqual(battler_hp("you Porygon2 L30 57/90 PSN | 1:Tackle 35"), 57)
 
+    def test_a_battle_line_reads_past_its_control_codes(self):
+        # "{WAIT 3}Gotcha!\nX was caught!{WAIT 2}" read as "?{WAIT}..." and
+        # gym.py, cutting a line at "?{", printed it empty.
+        import struct
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        import markers
+        code = {char: number for number, char in markers._charmap().items()}
+        wait = lambda frames: [0xFFFE, 0x0202, 1, frames]    # noqa: E731
+        line = wait(3) + [code[c] for c in "Gotcha!"] + [0xE000] + [code[c] for c in "Togepi was caught!"] \
+            + wait(2) + [0xFFFF]
+        ram = bytearray(0x400)
+        struct.pack_into("<I", ram, 0, 1)
+        struct.pack_into(f"<{len(line)}H", ram, 0x100, *line)
+        reader = object.__new__(markers.Markers)
+        reader.table = {"gDiagBattleTextCount": (markers.MAIN_RAM,), "gDiagBattleText": (markers.MAIN_RAM + 0x100,)}
+        self.assertEqual(reader.text(bytes(ram)), [(0, "Gotcha! Togepi was caught!")])
+
     def test_gym_runs_from_a_wild_pokemon_only_when_its_own_is_low(self):
         # flee:40 in a scenario: RUN under 40% of the HP, in a wild battle.
         sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))

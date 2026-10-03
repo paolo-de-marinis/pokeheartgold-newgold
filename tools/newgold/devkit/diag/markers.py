@@ -127,11 +127,13 @@ class Markers:
         for index in range(max(0, count - TEXT_LINES), count):
             at = where + (index % TEXT_LINES) * TEXT_CHARS * 2
             codes = struct.unpack_from(f"<{TEXT_CHARS}H", ram, at)
-            chars = []
-            for code in codes:
-                if code == 0xFFFF:
-                    break
-                chars.append(charmap.get(code, "?"))
+            chars, i = [], 0
+            while i < TEXT_CHARS and codes[i] != 0xFFFF:
+                if codes[i] == 0xFFFE:      # a control code, {WAIT 3} and the like: MsgArray_SkipControlCode
+                    i += 3 + (codes[i + 2] if i + 2 < TEXT_CHARS else 0)
+                    continue
+                chars.append(charmap.get(codes[i], "?"))
+                i += 1
             lines.append((index, re.sub(r"\s+", " ", "".join(chars)).strip()))
         return lines
 

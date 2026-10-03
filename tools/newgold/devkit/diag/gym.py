@@ -376,7 +376,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 wild = may_run(wild, line)
                 useless.add(wasted(line, aimed_at(ram, markers, 0)[0], moves_chosen.get(0)))
                 if not line.startswith("What will"):
-                    say(f"[{core.frames}] {line.split('?{')[0]}")
+                    say(f"[{core.frames}] {line}")
         decoded = count
         state = markers.read(ram, "gDiagBattleState")
         if state == EXIT:
