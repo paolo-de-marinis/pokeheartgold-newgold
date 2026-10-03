@@ -3806,12 +3806,15 @@ static BOOL ov12_0224C204(BattleSystem *battleSystem, BattleContext *ctx) {
     // its bounce through this very script. The ability stands down when the
     // coat is already up, and it cannot reach something halfway underground.
     // What is not here is the reference's doubles apparatus, where a
-    // field-wide move can be bounced by both opponents in turn.
+    // field-wide move can be bounced by both opponents in turn. Nothing is
+    // sent back to the Pokemon that is its own target -- a move aimed at its
+    // user, its side, the field, or at an ally it has not got: the bounce
+    // would come back to the bouncer, again and again.
     BOOL bouncedByAbility = !ctx->turnData[ctx->battlerIdTarget].magicCoatFlag
         && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_MAGIC_BOUNCE) == TRUE
         && !(ctx->battleMons[ctx->battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE);
 
-    if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && (ctx->turnData[ctx->battlerIdTarget].magicCoatFlag || bouncedByAbility) && (BattleMoveTbl(ctx, ctx->moveNoCur)->unkB & 4)) {
+    if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && ctx->battlerIdTarget != ctx->battlerIdAttacker && (ctx->turnData[ctx->battlerIdTarget].magicCoatFlag || bouncedByAbility) && (BattleMoveTbl(ctx, ctx->moveNoCur)->unkB & 4)) {
         ctx->turnData[ctx->battlerIdTarget].magicCoatFlag = 0;
         ctx->moveNoProtect[ctx->battlerIdAttacker] = 0;
         ctx->moveNoBattlerPrev[ctx->battlerIdAttacker] = ctx->moveNoTemp;

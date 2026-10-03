@@ -10,6 +10,7 @@ import struct
 import unittest
 
 from test_implemented_moves import MOVES, record
+from test_level_cap import ROOT, function
 import import_moves
 
 RANGE_USER = 1 << 4
@@ -45,6 +46,20 @@ class UnguardedMoveTests(unittest.TestCase):
         self.assertEqual(flagged, [MOVES["MOVE_BIDE"]])
         for move in ("VICTORY_DANCE", "ELECTRIC_TERRAIN", "AURORA_VEIL", "SHED_TAIL"):
             self.assertNotIn("FLAG_PROTECT", flags(move), move)
+
+    def test_no_move_aimed_at_its_user_an_ally_or_the_field_is_sent_back(self):
+        # Pokemon Central: "Non è riflessa da Magivelo e Magispecchio" for each
+        # of them; the engine's records gave thirty-three the Magic Coat flag,
+        # and a Magic Bounce holder bounced its own Victory Dance back at
+        # itself without end.
+        table = import_moves.read_table()
+        flagged = [move for move in range(1, len(table))
+                   if record_at(table, move)[7] & import_moves.UNREFLECTED_TARGETS
+                   and record_at(table, move)[9] & (1 << FLAG["FLAG_MAGIC_COAT"])]
+        self.assertEqual(flagged, [])
+        # Nor is anything sent back to a Pokemon that is its own target.
+        bounce = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224C204")
+        self.assertIn("&& ctx->battlerIdTarget != ctx->battlerIdAttacker && (ctx->turnData[ctx->battlerIdTarget].magicCoatFlag || bouncedByAbility)", bounce)
 
 
 if __name__ == "__main__":

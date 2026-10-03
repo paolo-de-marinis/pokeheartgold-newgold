@@ -587,7 +587,15 @@ FIELDS_HERE = {
 # them the flag. Bide, retail's, is a hit at whoever struck the user and keeps
 # it.
 UNGUARDED_TARGETS = 1 << 4 | 1 << 5 | 1 << 6   # RANGE_USER, RANGE_USER_SIDE, RANGE_FIELD
-UNGUARDED_FLAGS = ("FLAG_PROTECT",)
+# Nor is such a move, or one aimed at the user's ally, sent back by Magic Coat
+# or Magic Bounce: Pokemon Central has each of the added ones "not reflected
+# by Magic Coat and Magic Bounce", Aromatic Mist, Hold Hands, Coaching,
+# Rototiller and Flower Shield among them, and Showdown's gen-9 data gives
+# none the reflectable flag; the engine's records give thirty-three of them
+# the Magic Coat flag.
+UNREFLECTED_TARGETS = UNGUARDED_TARGETS | 1 << 8   # and RANGE_ALLY
+# The targets past which each flag is left off.
+UNAIMED_FLAGS = {"FLAG_PROTECT": UNGUARDED_TARGETS, "FLAG_MAGIC_COAT": UNREFLECTED_TARGETS}
 
 # The effects written here for those moves follow the reference's in
 # move_effects.h, under this line. A run keeps them where they are and numbers
@@ -1086,7 +1094,7 @@ def main():
         flags = sum(1 << bit for flag, bit in FLAG_BITS.items()
                     if (flag in named_flags(block) or flag in FIELDS_HERE.get(name, {}).get("flagsOn", ()))
                     and not (name in IMPLEMENTED_HERE and flag == "FLAG_UNUSABLE_UNIMPLEMENTED")
-                    and not (flag in UNGUARDED_FLAGS and target & UNGUARDED_TARGETS)
+                    and not target & UNAIMED_FLAGS.get(flag, 0)
                     and flag not in FIELDS_HERE.get(name, {}).get("flagsOff", ()))
         added.append((first_move + offset, name, struct.pack(
             RECORD,
