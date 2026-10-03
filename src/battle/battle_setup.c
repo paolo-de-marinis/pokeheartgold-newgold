@@ -3,6 +3,7 @@
 #include "global.h"
 
 #include "constants/battle.h"
+#include "constants/moves.h"
 
 #include "msgdata/msg.naix"
 #include "msgdata/msg/msg_0445.h"
@@ -130,6 +131,12 @@ BattleSetup *BattleSetup_New_Tutorial(enum HeapID heapID, FieldSystem *fieldSyst
     {
         Pokemon *pokemon = AllocMonZeroed(heapID);
         CreateMon(pokemon, SPECIES_MARILL, 5, 32, FALSE, 0, OT_ID_RANDOM_NO_SHINY, 0);
+        // The demonstration always uses the first move, and "I got its HP
+        // down!" follows it: retail's level-5 Marill had Tackle there, this
+        // game's learnset puts Tail Whip, so Tackle is given. It cannot
+        // knock out the level-2 Rattata (13 HP; at most 12, with no critical
+        // hit in the demonstration).
+        MonSetMoveInSlot(pokemon, MOVE_TACKLE, 0);
         Party_AddMon(setup->party[BATTLER_PLAYER], pokemon);
         CreateMon(pokemon, SPECIES_RATTATA, 2, 32, FALSE, 0, OT_ID_RANDOM_NO_SHINY, 0);
         Party_AddMon(setup->party[BATTLER_ENEMY], pokemon);

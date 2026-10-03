@@ -1,0 +1,12 @@
+{
+  "about": "The catching demonstration on Route 29 (the player's friend's: Ethan's, for this save's player): the level-5 Marill uses Tackle, as in retail, so \"I got its HP down!\" is true. With this game's learnset a level-5 Marill's moves are Tail Whip, Water Gun, Rollout and Defense Curl, and the demonstration always picks the first, so the Rattata was caught at full HP after a Tail Whip (243f5e8ca's ROM: move0 39, the Rattata's HP 13); BattleSetup_New_Tutorial now puts Tackle in that slot. A scratch copy of the Route 29 save is put back to before the demonstration (VAR_UNK_408B 1, the friend and the Marill shown) a few steps east of the line that starts it, walked over by goto; the demonstration plays itself. The level-2 Rattata has 13 HP, and the Tackle takes off 3 to 12 of them (no critical hits in the demonstration): its HP at the end of the battle (gDiagBattlers keeps the last battle's) is under its maximum and above 0. The field's RNG is pinned and the battle's seed fixed.",
+  "save": "route29-official.sav",
+  "edit": ["--var", "VAR_UNK_408B=1", "--flag", "FLAG_HIDE_ROUTE_29_FRIEND=0", "--flag", "FLAG_HIDE_ROUTE_29_MARILL=0",
+           "--where", "33:668:399:2"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "goto:MAP_ROUTE_29,664,399", "field"],
+  "expect": {"lines": ["Marill used Tackle!"], "no_lines": ["Tail Whip", "fainted"],
+             "battler0.species": "SPECIES_MARILL", "battler0.move0": "MOVE_TACKLE",
+             "battler1.species": "SPECIES_RATTATA", "battler1.maxHp": 13, "battler1.hp": [1, 12],
+             "var:VAR_UNK_408B": 0}
+}
