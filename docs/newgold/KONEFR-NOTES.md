@@ -298,6 +298,37 @@ rivincite retail:
 
 **Nel port:** tenuto com'è.
 
+### 16. Il Caterpie e il Weedle di Al a L22
+**Domanda:** il Caterpie e il Weedle di Al devono restare non evoluti a L22?
+
+**Cosa:** in 782a0aeb4 il Bug Catcher Al #68 della palestra di Azalea passa da L12 a L22 e prende un
+Joltik, ma il Caterpie e il Weedle restano com'erano, e tutti e due evolvono al 7. È il contrario
+della voce 12: qui sono quindici livelli sopra la loro evoluzione.
+
+**Dove:** `data/Trainers.c:3322`, righe a `a477c662f`.
+
+**Nel port:** tenuto com'è. Il playthrough del port lo batte nella sua tappa 08.
+
+### 17. Li e Falkner, molto sopra il retail
+**Domanda:** Li e Falkner devono essere così duri per la prima palestra?
+
+**Cosa:** in 5cfd84cc7 (dopo f6d878a53) Li #290, in cima alla Sprout Tower, passa da due Bellsprout
+L7 e un Hoothoot L10 a quattro Pokémon a L10 con mosse e strumenti: due Bellsprout con la Salac e la
+Micle Berry, un Hoothoot con Hypnosis e Reflect, un Meditite con Pure Power, Fake Out, Confusion,
+Force Palm e Detect, e in borsa una Potion e una Super Potion. Falkner #20 passa da un Pidgey L9 e un
+Pidgeotto L13 a cinque Pokémon a L12-13: un Hoothoot con la Wide Lens, un Doduo con la Scope Lens, un
+Farfetch'd col Leek, un Delibird con la Focus Sash, un Murkrow con l'Eviolite che usa Roost, e due
+Super Potion. Il playthrough del port gioca da una partita nuova con la squadra che cattura: al cap
+(10) il Meditite di Li ha battuto sei volte di fila Hoothoot, Cyndaquil e Geodude, e passa solo un
+Pokémon Spettro, che Fake Out e Force Palm non toccano; Falkner ha battuto nove volte di fila la
+squadra ai suoi livelli (10-12), e il Delibird con la Focus Sash decide quasi tutte le lotte.
+
+**Dove:** `data/Trainers.c:13463` (#290) e `:884` (#20), righe a `a477c662f`.
+
+**Nel port:** tenuto com'è. Il playthrough batte Li con il Misdreavus contro il Meditite, al secondo
+tentativo, e Falkner al quarto, dopo aver portato a 13 con savedit tre dei suoi Pokémon (una riga
+dell'audit).
+
 ---
 
 ## Incontri e gara pigliamosche
@@ -717,6 +748,11 @@ L'elenco completo è in AUDIT-2026-09-23.md ("Differences from konefr's referenc
   325, 90adab2cb).
 - Dry Skin ed Earth Eater chiedono che la mossa faccia danno, quindi Soak e Sand Attack arrivano a chi
   le ha (a96fb2180).
+- Il cambio di forma di Cherrim non chiede Flower Gift: anche senza l'abilità prende la forma Sole
+  (`BattleFormChangeCheck.c:96`); e Castform con la neve resta com'è, il motore legge solo la
+  grandine (d59d0c871, 845f0630d).
+- Take Heart ha come bersaglio l'alleato (RANGE_ALLY) e il flag di Protect, anche se alza le
+  statistiche di chi la usa: in doppio la ferma il Protect del compagno (una riga dell'audit).
 - Lo sfondo dei terreni: l'inizio è un'animazione, che l'opzione della scena di lotta spegne, la fine
   no; il comando disegna solo sulla console che fa girare la lotta, quindi in una lotta in link
   l'altro giocatore tiene lo sfondo del terreno; e LoadDifferentBattleBackground legge la sua tabella
