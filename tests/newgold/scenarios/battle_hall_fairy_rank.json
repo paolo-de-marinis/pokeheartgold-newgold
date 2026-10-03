@@ -1,0 +1,10 @@
+{
+  "about": "The Battle Hall's Fairy rank, played: a scratch copy of Paolo's Route 29 save put before the Hall's single-battle receptionist (savedit --where, the tile east of her, facing west) with a level 50 Typhlosion; the challenge taken through her menus and the party menu, the game saved (the waits are the save's), the type board up with Fairy after Steel in the bottom row and the Pokemon's summary one cell beside it, the cursor taken up from Normal to Steel and right to Fairy, the Fairy-type rank 1 battle accepted and fought. The opponent's Pokemon has to be of the Fairy type (the pick reads the sets' own types), as the battle's first prompt shows: here Mime Jr.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "TYPHLOSION:50", "--where", "276:7:9:2"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50",
+            "wait:5000", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60",
+            "A", "wait:120", {"expect": {"map": "MAP_BATTLE_FRONTIER_BATTLE_HALL"}}, "UP", "wait:30", "RIGHT", "wait:30", "A", "wait:120", "poke:sLCRNG_State=0x5eed", "A", "fight:0:0", {"expect": {"battler1.types": "TYPE_FAIRY", "lines": ["sent out"]}}, "fight"],
+  "expect": {"lines": ["sent out"], "no_lines": ["Typhlosion fainted"]}
+}
