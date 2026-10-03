@@ -259,7 +259,10 @@ class Core:
              # twice the size, pixels kept square and sharp; the sound as it
              # was mixed, which the AAC encoder resamples to 32 kHz
              "-vf", "scale=iw*2:ih*2:flags=neighbor", "-c:v", "libx264", "-preset", "veryfast",
-             "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", str(path)],
+             "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k",
+             # the index first, so a player that streams the file (a long
+             # run is hundreds of MB) can start before it has read it all
+             "-movflags", "+faststart", str(path)],
             stdin=subprocess.PIPE, pass_fds=(audio,))
         os.close(audio)
         # The sound goes down its pipe from a thread of its own: ffmpeg reads

@@ -27,6 +27,7 @@ three quarters alone.
 """
 import json
 import os
+import struct
 import subprocess
 import sys
 import tempfile
@@ -525,6 +526,20 @@ class RecordingTests(unittest.TestCase):
             self.assertEqual(int(video["nb_frames"]), 180)
             self.assertAlmostEqual(float(audio["duration"]), float(video["duration"]), delta=0.1)
             self.assertEqual(audio["channels"], 2)
+            # The index (moov) comes before the frames (mdat), so a player
+            # that streams a long run's file can start at once: written at
+            # the end, a 700 MB playthrough played black in the app.
+            boxes, at = [], 0
+            with open(clip, "rb") as mp4:
+                size = mp4.seek(0, 2)
+                while at < size:
+                    mp4.seek(at)
+                    length, kind = struct.unpack(">I4s", mp4.read(8))
+                    if length == 1:
+                        length = struct.unpack(">Q", mp4.read(8))[0]
+                    boxes.append(kind.decode())
+                    at += length
+            self.assertLess(boxes.index("moov"), boxes.index("mdat"), boxes)
 
     def test_an_mp4_ffmpeg_could_not_finish_fails_the_run(self):
         # ffmpeg writes the mp4's index last; if that fails (a full disk),
