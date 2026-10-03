@@ -18,6 +18,15 @@
 // benefits this split would have provided.
 #define NUM_DEX_FLAG_WORDS (CEILDIV(NATIONAL_DEX_COUNT + 8, 32))
 
+// The forms the Dex records on their own. Each is a species here that the Dex
+// credits to its base species (SpeciesToDexSpecies): the Galarian Slowpoke
+// and Slowbro, kept inside the Dex's range, and every species past the last
+// Dex species. One bit a species from the first of them on, as the species'
+// flags are one a species from 1; a species that is no form keeps its bit
+// clear.
+#define DEX_FIRST_FORM     SPECIES_SLOWPOKE_GALARIAN
+#define NUM_DEX_FORM_WORDS (CEILDIV(NUM_SPECIES - DEX_FIRST_FORM + 1, 32))
+
 typedef struct Pokedex {
     u32 magic;
     u32 caughtSpecies[NUM_DEX_FLAG_WORDS];
@@ -40,7 +49,11 @@ typedef struct Pokedex {
     u8 giratinaFormOrder;
     u8 pichuFormOrder;
     u8 dummy;
-} Pokedex; // size=0x340
+    // The port's, past HeartGold's record (docs/newgold/SAVE-LAYOUT.md): the
+    // forms seen, and those caught, which count as seen as well.
+    u32 formsSeen[NUM_DEX_FORM_WORDS];
+    u32 formsCaught[NUM_DEX_FORM_WORDS];
+} Pokedex;
 
 u32 Save_Pokedex_sizeof(void);
 Pokedex *Pokedex_New(enum HeapID heapID);

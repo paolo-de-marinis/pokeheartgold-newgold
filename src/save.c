@@ -5,6 +5,7 @@
 #include "bag_types_def.h"
 #include "heap.h"
 #include "math_util.h"
+#include "pokedex.h"
 #include "save_arrays.h"
 #include "save_data_read_error.h"
 #include "save_data_write_error.h"
@@ -344,7 +345,7 @@ static BOOL ValidateSaveSectorFooter(SaveData *saveData, void *data, int idx) {
     if (footer->size != spec->size) {
         return FALSE;
     }
-    if (footer->magic != (saveData->saveLayout == SAVE_LAYOUT_NOW ? SAVE_CHUNK_MAGIC_BERRY_POCKET : SAVE_CHUNK_MAGIC)) {
+    if (footer->magic != (saveData->saveLayout <= SAVE_LAYOUT_BEFORE_DEX_FORMS ? SAVE_CHUNK_MAGIC_BERRY_POCKET : SAVE_CHUNK_MAGIC)) {
         return FALSE;
     }
     if (footer->slot != idx) {
@@ -820,6 +821,12 @@ static u32 GetSaveChunkSizePlusCRC(int idx) {
 // What the change from an older layout (enum SaveLayout) to the next newer
 // one added: its bytes, in `block` from `at` on. Nothing else changed.
 static u32 Save_LayoutGrowth(const SaveData *saveData, u32 layout, int *block, u32 *at) {
+    if (layout == SAVE_LAYOUT_BEFORE_DEX_FORMS) {
+        // The Dex's record of the forms, after HeartGold's.
+        *block = SAVE_POKEDEX;
+        *at = offsetof(Pokedex, formsSeen);
+        return sizeof(Pokedex) - offsetof(Pokedex, formsSeen);
+    }
     if (layout == SAVE_LAYOUT_BEFORE_BERRY_POCKET) {
         // The Berries pocket's slots past HeartGold's 64, before the balls.
         *block = SAVE_BAG;

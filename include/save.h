@@ -16,9 +16,10 @@
 #define WRITE_STATUS_TOTAL_FAIL 3
 
 #define SAVE_CHUNK_MAGIC 0x20060623
-// The footer magic of the region's two slots in the layout of now, since the
-// Berries pocket holds every Berry; SAVE_CHUNK_MAGIC is the older layouts'
-// and the extra chunks' (docs/newgold/SAVE-LAYOUT.md).
+// The footer magic of the region's two slots since the Berries pocket holds
+// every Berry, in the layout of now and the one before the Dex's record of
+// the forms, which the slots' sizes tell apart; SAVE_CHUNK_MAGIC is the
+// older layouts' and the extra chunks' (docs/newgold/SAVE-LAYOUT.md).
 #define SAVE_CHUNK_MAGIC_BERRY_POCKET 0x20260925
 
 // The layouts of the region a save can have been written in, the newest
@@ -26,7 +27,8 @@
 // (Save_LayoutGrowth).
 enum SaveLayout {
     SAVE_LAYOUT_NOW,
-    SAVE_LAYOUT_BEFORE_BERRY_POCKET,  // the Berries pocket HeartGold's 64 slots
+    SAVE_LAYOUT_BEFORE_DEX_FORMS,     // the Dex without its record of the forms
+    SAVE_LAYOUT_BEFORE_BERRY_POCKET,  // and the Berries pocket HeartGold's 64 slots
     SAVE_LAYOUT_BEFORE_DNA_SPLICERS,  // and the misc block HeartGold's too
     SAVE_LAYOUT_COUNT,
 };

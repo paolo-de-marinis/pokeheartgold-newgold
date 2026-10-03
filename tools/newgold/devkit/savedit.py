@@ -270,9 +270,11 @@ def _layout():
         "BOX_MON": "sizeof(BoxPokemon)", "PARTY_MON": "sizeof(Pokemon)", "BLOCK": "sizeof(PokemonDataBlock)",
         "LOCATION": "sizeof(Location)",
         "CHUNK_MAGIC": "SAVE_CHUNK_MAGIC", "CHUNK_FOOTER": "sizeof(struct SaveChunkFooter)",
-        # The region's magic in the layout of now; SAVE_CHUNK_MAGIC is the
-        # older layouts' (docs/newgold/SAVE-LAYOUT.md), and the layouts.
+        # The region's magic in the layout of now and the one before the Dex's
+        # record of the forms; SAVE_CHUNK_MAGIC is the older layouts'
+        # (docs/newgold/SAVE-LAYOUT.md), and the layouts.
         "CHUNK_MAGIC_NOW": "SAVE_CHUNK_MAGIC_BERRY_POCKET", "LAYOUT_NOW": "SAVE_LAYOUT_NOW",
+        "LAYOUT_BEFORE_DEX_FORMS": "SAVE_LAYOUT_BEFORE_DEX_FORMS",
         "LAYOUT_BEFORE_BERRY_POCKET": "SAVE_LAYOUT_BEFORE_BERRY_POCKET",
         "LAYOUT_BEFORE_DNA_SPLICERS": "SAVE_LAYOUT_BEFORE_DNA_SPLICERS", "LAYOUT_COUNT": "SAVE_LAYOUT_COUNT",
         # SAVE_BAG's Berries pocket, which grew from HeartGold's 64 slots.
@@ -298,6 +300,9 @@ def _layout():
         "DEX_ENABLED": f"{offset}(Pokedex, dexEnabled)", "DEX_NATIONAL": f"{offset}(Pokedex, nationalDex)",
         "UNOWN_SEEN": f"{offset}(Pokedex, unownSeenOrder)", "UNOWN_CAUGHT": f"{offset}(Pokedex, unownCaughtOrder)",
         "DEX_GENDERS": f"{offset}(Pokedex, seenGenders)",
+        # The Dex's record of the forms, one bit a species from DEX_FIRST_FORM.
+        "DEX_FORMS_SEEN": f"{offset}(Pokedex, formsSeen)", "DEX_FORMS_CAUGHT": f"{offset}(Pokedex, formsCaught)",
+        "DEX_FORMS_SIZE": f"sizeof(Pokedex) - {offset}(Pokedex, formsSeen)", "DEX_FIRST_FORM": "DEX_FIRST_FORM",
         **{f"ORDER_{name}": f"{offset}(Pokedex, {field})" for name, (field, _) in DEX_FORM_FIELDS.items()},
         # SAVE_PCSTORAGE.
         "NUM_BOXES": "NUM_BOXES", "MONS_PER_BOX": "MONS_PER_BOX", "BOX_NAME_LENGTH": "BOX_NAME_LENGTH",
@@ -808,6 +813,8 @@ def set_dex_flag(block, at, species):
 def layout_growth(layout, build=None):
     """Save_LayoutGrowth: what the change from `layout` to the next newer
     one added -- the block, where in it its bytes start, and how many."""
+    if layout == LAYOUT_BEFORE_DEX_FORMS:
+        return "SAVE_POKEDEX", DEX_FORMS_SEEN, DEX_FORMS_SIZE
     if layout == LAYOUT_BEFORE_BERRY_POCKET:
         return "SAVE_BAG", BERRIES_AT + BAG_BERRIES_LEGACY * ITEM_SLOT, (BAG_BERRIES - BAG_BERRIES_LEGACY) * ITEM_SLOT
     legacy = constants("include/save_misc_data.h", "SAVE_MISC_LEGACY_")["SAVE_MISC_LEGACY_SIZE"]
@@ -821,7 +828,7 @@ def blocks(build=None, layout=0):
     This is SaveData_InitSubstructs: sizes come rounded up to a word with four
     bytes of checksum added, a slot's last block is followed by the chunk
     footer, and the next slot starts on a 0x100 boundary. With an older
-    `layout` (LAYOUT_BEFORE_BERRY_POCKET, LAYOUT_BEFORE_DNA_SPLICERS), that
+    `layout` (LAYOUT_BEFORE_DEX_FORMS and the older ones), that
     layout's (Save_GetLayoutSlotSpecs): the same blocks, less what every
     change since added to them, laid out the same way.
     """
@@ -900,7 +907,7 @@ class Save:
 
     def magic(self):
         """The footer magic of this save's layout."""
-        return CHUNK_MAGIC_NOW if self.layout == LAYOUT_NOW else CHUNK_MAGIC
+        return CHUNK_MAGIC_NOW if self.layout <= LAYOUT_BEFORE_DEX_FORMS else CHUNK_MAGIC
 
     def valid(self, half):
         """A half is good when every slot's footer says what it should."""
@@ -1225,12 +1232,16 @@ def add_machines(save, machines):
 
 
 def mark_dex(save, names):
-    """Seen and caught, and the Dex and the National Dex switched on."""
+    """Seen and caught, and the Dex and the National Dex switched on. A form
+    is caught as the game records it (set_form_record)."""
     block = save.block("SAVE_POKEDEX")
     numbers = species_numbers()
     for name in names:
         if name not in numbers:
             raise SystemExit(f"there is no SPECIES_{name}")
+        if numbers[name] in dex_forms():
+            set_form_record(save, numbers[name], True, True)
+            continue
         if not _dex_bit(block, DEX_SEEN, numbers[name]):
             _set_seen_genders(block, numbers[name])
             _set_seen_form(block, numbers[name])
@@ -2838,8 +2849,48 @@ def dex(save):
     seen = [s for s in dex_species() if _dex_bit(block, DEX_SEEN, s)]
     # Pokedex_CheckMonCaughtFlag wants both flags.
     caught = [s for s in seen if _dex_bit(block, DEX_CAUGHT, s)]
+    # A form caught counts as seen (Pokedex_RecordForm records one or the
+    # other). A save in an older layout has no record of the forms.
+    forms_caught = [f for f in dex_forms() if not save.legacy and _form_bit(block, DEX_FORMS_CAUGHT, f)]
+    forms_seen = [f for f in dex_forms() if not save.legacy and (f in forms_caught or _form_bit(block, DEX_FORMS_SEEN, f))]
     return {"enabled": bool(block[DEX_ENABLED]) and flag_is_set(save, _got_pokedex()),
-            "national": bool(block[DEX_NATIONAL]), "seen": seen, "caught": caught}
+            "national": bool(block[DEX_NATIONAL]), "seen": seen, "caught": caught,
+            "forms_seen": forms_seen, "forms_caught": forms_caught}
+
+
+@tree_cache
+def dex_forms():
+    """The forms the Dex records on their own: the species SpeciesToDexSpecies
+    credits to another (src/pokedex.c), by number, with their base."""
+    numbers = species_numbers()
+    text = source("src/pokedex.c").read_text()
+    bases = {numbers[f]: numbers[b] for f, b in re.findall(r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_(\w+)", text)}
+    body = text[text.index("u16 SpeciesToDexSpecies(u16 species) {"):]
+    body = body[:body.index("\n}\n")]
+    bases.update({numbers[f]: numbers[b] for f, b in re.findall(r"species == SPECIES_(\w+)\) \{\s*return SPECIES_(\w+);", body)})
+    return dict(sorted(bases.items()))
+
+
+def _form_bit(block, at, form):
+    return (block[at + ((form - DEX_FIRST_FORM) >> 3)] >> ((form - DEX_FIRST_FORM) & 7)) & 1
+
+
+def set_form_record(save, form, seen, caught):
+    """A form seen and caught, as the game records one (Pokedex_RecordForm):
+    caught counts as seen, and the base species is seen as well (set_dex),
+    and caught when the form is. The record is the layout of now's."""
+    if save.legacy:
+        raise ValueError("a save in an older layout has no record of the forms: the game adds it when it loads the save")
+    if form not in dex_forms():
+        raise ValueError(f"species {form} is no form the Dex records")
+    block = save.block("SAVE_POKEDEX")
+    seen = seen or caught
+    for at, on in ((DEX_FORMS_SEEN, seen), (DEX_FORMS_CAUGHT, caught)):
+        byte, bit = at + ((form - DEX_FIRST_FORM) >> 3), 1 << ((form - DEX_FIRST_FORM) & 7)
+        block[byte] = block[byte] | bit if on else block[byte] & ~bit
+    base = dex_forms()[form]
+    if seen and not _dex_bit(block, DEX_SEEN, base) or caught and not _dex_bit(block, DEX_CAUGHT, base):
+        set_dex(save, [base], True, caught or bool(_dex_bit(block, DEX_CAUGHT, base)))
 
 
 def _set_seen_genders(block, species):

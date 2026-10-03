@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Check that a form counts in the Pokedex as its base species.
+"""Check that a form counts in the Pokedex as its base species, and is
+recorded as itself as well.
 
 Every form is a species of its own here, past the last Dex species: a female
 Pyroar is 1312, not Pyroar. The reference stores it as Pyroar and a form
 number, so its Dex credits Pyroar. A female Litleo evolving at 35 is how the
 difference shows: before src/pokedex.c mapped the form to its base, it left
 Pyroar neither seen nor caught, and the summary printed its number as ?12.
+
+The Dex keeps its own record of the forms too, formsSeen and formsCaught,
+which its FORMS page lists them from: Larry's Galarian Slowpoke seen in
+battle is a Slowpoke seen and a Galarian Slowpoke seen.
 """
 
 import os
@@ -88,15 +93,24 @@ REGISTRATION = PREFIX + r'''
 #define GAME_LANGUAGE 2
 #define WORDS ((NATIONAL_DEX_COUNT + 8 + 31) / 32)
 
+@FORM_DEFINES@
+
 // The fields the two setters touch, sized as the save's are: for the Dex
-// species and no further, so a form's own number would be out of bounds.
+// species and no further, so a form's own number would be out of bounds,
+// and the record of the forms, from the first form to the last.
 typedef struct Pokedex {
     u32 magic;
     u32 caughtSpecies[WORDS];
     u32 seenSpecies[WORDS];
     u32 seenGenders[2][WORDS];
     u32 spindaPersonality;
+    u32 formsSeen[NUM_DEX_FORM_WORDS];
+    u32 formsCaught[NUM_DEX_FORM_WORDS];
 } Pokedex;
+
+static int FormRecorded(const u32 *forms, u16 species) {
+    return (forms[(species - DEX_FIRST_FORM) / 32] >> ((species - DEX_FIRST_FORM) % 32)) & 1;
+}
 
 typedef struct Pokemon { u16 species; } Pokemon;
 static u32 GetMonData(Pokemon *mon, int field, void *unused) {
@@ -114,6 +128,20 @@ static void Pokedex_SetInternationalViewFlag(Pokedex *pokedex) { (void)pokedex; 
 int main(void) {
     static Pokedex dex = { .magic = POKEDEX_MAGIC };
 
+    // Larry's Galarian Slowpoke seen in battle: Slowpoke seen, and the
+    // Galarian form recorded seen, not caught; Slowpoke itself is no form.
+    Pokemon larrys = { SPECIES_SLOWPOKE_GALARIAN };
+    Pokedex_SetMonSeenFlag(&dex, &larrys);
+    assert(Pokedex_CheckMonSeenFlag(&dex, SPECIES_SLOWPOKE));
+    assert(FormRecorded(dex.formsSeen, SPECIES_SLOWPOKE_GALARIAN));
+    assert(!FormRecorded(dex.formsCaught, SPECIES_SLOWPOKE_GALARIAN));
+    assert(!FormRecorded(dex.formsSeen, SPECIES_SLOWBRO_GALARIAN));
+    // A Kantonian Slowbro caught records no form.
+    Pokemon slowbro = { SPECIES_SLOWBRO };
+    Pokedex_SetMonCaughtFlag(&dex, &slowbro);
+    assert(Pokedex_CheckMonCaughtFlag(&dex, SPECIES_SLOWBRO));
+    assert(!FormRecorded(dex.formsSeen, SPECIES_SLOWBRO_GALARIAN) && !FormRecorded(dex.formsCaught, SPECIES_SLOWBRO_GALARIAN));
+
     // A female Litleo evolved: the scene registers the mon as Pyroar's
     // female form, and the Dex credits Pyroar, female.
     Pokemon pyroar = { SPECIES_PYROAR_FEMALE };
@@ -123,6 +151,8 @@ int main(void) {
     assert(CheckDexFlag((const u8 *)dex.seenGenders[0], SPECIES_PYROAR));
     // Asking about the form asks about its base.
     assert(Pokedex_CheckMonCaughtFlag(&dex, SPECIES_PYROAR_FEMALE));
+    // The form itself is recorded caught.
+    assert(FormRecorded(dex.formsCaught, SPECIES_PYROAR_FEMALE));
 
     // Seeing a form is seeing its base, and no more than that.
     Pokemon meowstic = { SPECIES_MEOWSTIC_FEMALE };
@@ -136,11 +166,22 @@ int main(void) {
     Pokedex_SetMonCaughtFlag(&dex, &toxtricity);
     assert(Pokedex_CheckMonCaughtFlag(&dex, SPECIES_TOXTRICITY));
 
-    // Every form lands on a Dex page, and nothing else moves.
+    // Every form lands on a Dex page and in the record, and nothing else
+    // moves.
     for (u16 species = NATIONAL_DEX_COUNT + 1; species <= NUM_SPECIES; species++) {
         Pokemon mon = { species };
         Pokedex_SetMonSeenFlag(&dex, &mon);
         assert(Pokedex_CheckMonSeenFlag(&dex, species));
+        assert(FormRecorded(dex.formsSeen, species));
+    }
+    // The record holds the forms and nothing else: none sits before its first
+    // bit, and a species that is no form keeps its bit clear.
+    for (u16 species = 1; species <= NUM_SPECIES; species++) {
+        if (SpeciesToDexSpecies(species) != species) {
+            assert(species >= DEX_FIRST_FORM);
+        } else if (species >= DEX_FIRST_FORM) {
+            assert(!FormRecorded(dex.formsSeen, species) && !FormRecorded(dex.formsCaught, species));
+        }
     }
     // Galarian Slowpoke and Slowbro, forms kept as species inside the Dex's
     // range, land on Slowpoke's and Slowbro's too; nothing else moves.
@@ -221,7 +262,13 @@ int main(void) {
 NATIVE = ["CheckDexFlag", "SetDexFlag", "SetDexFlagState", "CheckDexGender",
           "Pokedex_SetSeenGenderFlagInternal", "Pokedex_SetSeenGenderFlag",
           "DexSpeciesIsInvalid", "SpeciesToDexSpecies", "Pokedex_CheckMonCaughtFlag",
-          "Pokedex_CheckMonSeenFlag", "Pokedex_SetMonSeenFlag", "Pokedex_SetMonCaughtFlag"]
+          "Pokedex_CheckMonSeenFlag", "Pokedex_RecordForm", "Pokedex_SetMonSeenFlag", "Pokedex_SetMonCaughtFlag"]
+
+
+def form_defines():
+    """include/pokedex.h's sizes of the record of the forms."""
+    header = (ROOT / "include/pokedex.h").read_text()
+    return "\n".join(re.findall(r"^#define (?:CEILDIV|DEX_FIRST_FORM|NUM_DEX_FORM_WORDS)\b.*$", header, re.M))
 
 
 class FormTableTests(unittest.TestCase):
@@ -258,7 +305,7 @@ class FormDexTests(unittest.TestCase):
     def test_a_form_registers_its_base(self):
         source = (ROOT / "src/pokedex.c").read_text()
         native = form_table(source) + "\n" + "\n".join(definition(source, name) for name in NATIVE)
-        print(run(REGISTRATION.replace("@NATIVE@", native), "newgold-form-dex-"))
+        print(run(REGISTRATION.replace("@NATIVE@", native).replace("@FORM_DEFINES@", form_defines()), "newgold-form-dex-"))
 
     def test_a_form_prints_its_base_number(self):
         source = (ROOT / "src/pokedex.c").read_text()

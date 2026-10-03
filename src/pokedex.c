@@ -1772,13 +1772,28 @@ static u32 Pokedex_GetSeenFormNum_Deoxys(Pokedex *pokedex) {
     return Pokedex_CountSeenDeoxysForms(pokedex);
 }
 
+// The Dex species a Pokemon counts for. A form, a species of its own here
+// that counts for its base species, is also recorded as itself in forms:
+// formsSeen, or formsCaught.
+static u16 Pokedex_RecordForm(Pokemon *mon, u32 *forms) {
+    u16 form = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    u16 species = SpeciesToDexSpecies(form);
+    u32 i;
+
+    if (form != species) {
+        i = form - DEX_FIRST_FORM;
+        ((u8 *)forms)[i / 8] |= 1 << (i % 8);
+    }
+    return species;
+}
+
 void Pokedex_SetMonSeenFlag(Pokedex *pokedex, Pokemon *mon) {
     u16 species;
     u32 personality;
     u32 gender;
     u8 seenGender;
 
-    species = SpeciesToDexSpecies(GetMonData(mon, MON_DATA_SPECIES, NULL));
+    species = Pokedex_RecordForm(mon, pokedex->formsSeen);
     personality = GetMonData(mon, MON_DATA_PERSONALITY, NULL);
     gender = GetMonGender(mon);
 
@@ -1807,7 +1822,7 @@ void Pokedex_SetMonCaughtFlag(Pokedex *pokedex, Pokemon *mon) {
     u32 gender;
     u32 gender_ct;
 
-    species = SpeciesToDexSpecies(GetMonData(mon, MON_DATA_SPECIES, NULL));
+    species = Pokedex_RecordForm(mon, pokedex->formsCaught);
     language = GetMonData(mon, MON_DATA_LANGUAGE, NULL);
     personality = GetMonData(mon, MON_DATA_PERSONALITY, NULL);
     gender = GetMonGender(mon);

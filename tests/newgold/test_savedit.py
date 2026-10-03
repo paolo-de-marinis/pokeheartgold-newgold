@@ -910,6 +910,66 @@ class SaveditLibraryTests(unittest.TestCase):
             sv.set_dex(save, [n["EGG"]], True, True)
         self.assert_only(save, ["SAVE_POKEDEX", "SAVE_PLAYERDATA", "SAVE_FLAGS"])
 
+    def test_the_dex_s_record_of_the_forms(self):
+        """A form seen and caught, as Pokedex_RecordForm records it: one bit
+        a species from DEX_FIRST_FORM, caught counting as seen, and its base
+        species seen, or caught, with it. The forms are the species
+        SpeciesToDexSpecies credits to another."""
+        save = self.open()
+        n = sv.species_numbers()
+        forms = sv.dex_forms()
+        self.assertEqual(forms[n["SLOWPOKE_GALARIAN"]], n["SLOWPOKE"])
+        self.assertEqual(forms[n["PYROAR_FEMALE"]], n["PYROAR"])
+        self.assertNotIn(n["SLOWPOKE"], forms)
+        self.assertEqual(min(forms), sv.DEX_FIRST_FORM)
+        self.assertEqual(sv.DEX_FORMS_SIZE, 2 * 4 * -(-(max(forms) - sv.DEX_FIRST_FORM + 1) // 32))
+        sv.set_form_record(save, n["SLOWPOKE_GALARIAN"], seen=True, caught=False)
+        sv.set_form_record(save, n["RATTATA_ALOLAN"], seen=True, caught=True)
+        dex = sv.dex(self.written(save))
+        self.assertEqual(dex["forms_seen"], [n["SLOWPOKE_GALARIAN"], n["RATTATA_ALOLAN"]])
+        self.assertEqual(dex["forms_caught"], [n["RATTATA_ALOLAN"]])
+        self.assertIn(n["SLOWPOKE"], dex["seen"])
+        self.assertNotIn(n["SLOWPOKE"], dex["caught"])
+        self.assertIn(n["RATTATA"], dex["caught"])
+        block = save.block("SAVE_POKEDEX")
+        bit = n["SLOWPOKE_GALARIAN"] - sv.DEX_FIRST_FORM
+        self.assertEqual(block[sv.DEX_FORMS_SEEN + bit // 8] >> bit % 8 & 1, 1)
+        sv.set_form_record(save, n["SLOWPOKE_GALARIAN"], seen=False, caught=False)
+        self.assertEqual(sv.dex(save)["forms_seen"], [n["RATTATA_ALOLAN"]])
+        with self.assertRaises(ValueError):
+            sv.set_form_record(save, n["SLOWPOKE"], True, False)
+        self.assert_only(save, ["SAVE_POKEDEX"])
+
+    def test_a_save_from_before_the_dex_recorded_the_forms(self):
+        """The layout before the Dex's record of the forms: the Dex block
+        that much shorter, every block after it earlier, the footers with the
+        Berries pocket's magic, the PC's slot 0x100 lower. It reads with no
+        form recorded, and refuses one, which the game adds when it loads
+        it."""
+        older = sv.blocks(layout=sv.LAYOUT_BEFORE_DEX_FORMS)
+        now = sv.blocks()
+        dex = lambda table: next(b for b in table if b["id"] == "SAVE_POKEDEX")  # noqa: E731
+        self.assertEqual(dex(now)["size"] - dex(older)["size"], sv.DEX_FORMS_SIZE)
+        self.assertEqual([s["offset"] for s in sv.slot_specs(now)][1] - [s["offset"] for s in sv.slot_specs(older)][1], 0x100)
+        region = bytearray(save_budget.REGION)
+        player = next(b for b in older if b["id"] == "SAVE_PLAYERDATA")
+        region[player["offset"] + sv.NAME:player["offset"] + sv.NAME + 4] = struct.pack("<HH", sv.charcode("A")[0], 0xFFFF)
+        seal_footers(region, older, 1, sv.CHUNK_MAGIC_NOW)
+        path = Path(self.tmp.name) / "dexforms.sav"
+        path.write_bytes(bytes(sv.build_save(region)))
+        save = sv.Save(path)
+        self.assertEqual(save.layout, sv.LAYOUT_BEFORE_DEX_FORMS)
+        self.assertEqual(sv.info(save)["layout_name"], "SAVE_LAYOUT_BEFORE_DEX_FORMS")
+        self.assertEqual(save.table, older)
+        self.assertEqual((sv.dex(save)["forms_seen"], sv.dex(save)["forms_caught"]), ([], []))
+        with self.assertRaises(ValueError):
+            sv.set_form_record(save, sv.species_numbers()["SLOWPOKE_GALARIAN"], True, False)
+        sv.set_profile(save, money=4242)
+        path.write_bytes(save.image())
+        again = sv.Save(path)
+        self.assertEqual(again.layout, sv.LAYOUT_BEFORE_DEX_FORMS, "an edit keeps the layout the game will convert")
+        self.assertEqual(sv.profile(again)["money"], 4242)
+
     def test_flags_vars_and_position(self):
         save = self.open()
         sv.write_flag(save, 0x76, True)

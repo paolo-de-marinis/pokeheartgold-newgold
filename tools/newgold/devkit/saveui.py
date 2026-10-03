@@ -950,6 +950,12 @@ class Library:
     def op_dex(self, save, a):
         for change in a["changes"]:
             species = number(change["id"], 1, 0xFFFF, "specie")
+            if species in sv.dex_forms():
+                if save.legacy:
+                    raise Refused("il salvataggio è in un formato più vecchio, senza il registro delle forme: "
+                                  "il gioco lo aggiunge quando lo carica")
+                sv.set_form_record(save, species, bool(change["seen"]), bool(change["caught"]))
+                continue
             if species not in sv.dex_species():
                 raise Refused(f"la specie {species} non ha una pagina nel Pokédex")
             sv.set_dex(save, [species], bool(change["seen"]), bool(change["caught"]))
@@ -1393,7 +1399,7 @@ def tables():
             "natures": sv.bank(sv.NATURE_NAMES), "nature_mods": sv.nature_mods(),
             "maps": [m for m in sv.map_table().values() if standable(m["id"])],
             "world": part(errors, "world", world, {"cols": 0, "rows": 0, "tiles": {}, "main": [], "buildings": [], "heals": []}),
-            "dex": sv.dex_species(),
+            "dex": sv.dex_species(), "dex_forms": list(sv.dex_forms()),
             "pockets": [{k: p[k] for k in ("name", "const", "slots")} for p in sv.pockets()],
             "stats": by_value("include/constants/pokemon.h", "STAT_", sv.NUM_STATS),
             "directions": by_value("include/constants/global_fieldmap.h", "DIR_", sv.DIR_MAX),

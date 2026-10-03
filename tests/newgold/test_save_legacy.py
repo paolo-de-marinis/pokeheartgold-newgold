@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """A save made in an older layout still loads.
 
-Two changes have grown the region's first slot since this port's saves
+Three changes have grown the region's first slot since this port's saves
 began: hg-engine's expansion of the misc block (storedMons, isMonStored, for
-the DNA Splicers), and the Berries pocket holding every Berry. Each moves the
-blocks after it and changes the first slot's size in its footer, and the
-second has a footer magic of its own: read the new way, an older save would
-be refused as corrupt. Save_GetSaveFilesStatus tries the older layouts,
+the DNA Splicers), the Berries pocket holding every Berry, and the Dex's
+record of the forms. Each moves the blocks after it and changes the first
+slot's size in its footer, and the second has a footer magic of its own,
+which the third keeps: read the new way, an older save would be refused as
+corrupt. Save_GetSaveFilesStatus tries the older layouts,
 newest first, when nothing reads as this one, and Save_LoadLegacySlots reads
 the one found: the PC's slot from where it was in the flash, the first slot
 as it was, then Save_ConvertFirstSlot makes it this layout's one change at a
@@ -33,8 +34,9 @@ import savedit  # noqa: E402
 
 BUILD = ROOT / "build/heartgold.us"
 # The first slot's size and the PC slot's, in each layout the game reads:
-# now, before the Berries pocket held every Berry, before the DNA Splicers.
-LAYOUTS = {0: [65232, 124156], 1: [65088, 124156], 2: [64140, 124156]}
+# now, before the Dex's record of the forms, before the Berries pocket held
+# every Berry, before the DNA Splicers.
+LAYOUTS = {0: [65456, 124156], 1: [65232, 124156], 2: [65088, 124156], 3: [64140, 124156]}
 
 NATIVE = r"""
 #include <assert.h>
@@ -46,13 +48,7 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 #define MI_CpuClear8(p, n) memset((p), 0, (n))
-#define SAVE_BAG 1
-#define SAVE_MISC 3
-#define SAVE_MISC_LEGACY_SIZE 0x20
-#define NUM_BAG_BERRIES 10
-#define NUM_BAG_BERRIES_LEGACY 6
-typedef struct { u16 id, quantity; } ItemSlot;
-typedef struct { ItemSlot items[4]; ItemSlot berries[NUM_BAG_BERRIES]; ItemSlot balls[3]; } Bag;
+@BLOCKS@
 @ENUM@
 @STRUCTS@
 typedef struct { struct SaveArrayHeader arrayHeaders[4]; struct SaveSlotSpec saveSlotSpecs[2]; } SaveData;
@@ -63,10 +59,12 @@ static u8 region[0x4000];
 
 // Four blocks in the first slot, as a save in `layout` wrote them: 100
 // bytes, the bag (its Berries pocket 6 slots before the change, 10 after),
-// 200 bytes, the misc block (0x20 before the DNA Splicers, 0x18 more after),
-// each with its check word, then the footer.
+// the Dex (200 bytes before its record of the forms, 240 more after), the
+// misc block (0x20 before the DNA Splicers, 0x18 more after), each with its
+// check word, then the footer.
 static void old_region(u32 layout) {
     u32 berries = 4 * (layout >= SAVE_LAYOUT_BEFORE_BERRY_POCKET ? NUM_BAG_BERRIES_LEGACY : NUM_BAG_BERRIES);
+    u32 dex = layout >= SAVE_LAYOUT_BEFORE_DEX_FORMS ? offsetof(Pokedex, formsSeen) : sizeof(Pokedex);
     u32 misc = layout >= SAVE_LAYOUT_BEFORE_DNA_SPLICERS ? 0x24 : 0x3C;
     u8 *at = region;
 
@@ -76,29 +74,33 @@ static void old_region(u32 layout) {
     memset(at, 0xB2, berries), at += berries;
     memset(at, 0xB3, 12), at += 12;       // the balls
     memset(at, 0xB4, 4), at += 4;         // the bag's check word
-    memset(at, 0x33, 204), at += 204;
+    memset(at, 0x33, dex), at += dex;
+    memset(at, 0x34, 4), at += 4;         // the Dex's check word
     memset(at, 0x44, misc), at += misc;
     memset(at, 0x55, 16);
 }
 
 int main(void) {
-    u32 bag = sizeof(Bag) + 4, misc = 0x38 + 4, grownBag = 4 * (NUM_BAG_BERRIES - NUM_BAG_BERRIES_LEGACY);
-    SaveData save = { { { 0, 104, 0 }, { SAVE_BAG, bag, 104 }, { 2, 204, 104 + bag }, { SAVE_MISC, misc, 104 + bag + 204 } } };
+    u32 bag = sizeof(Bag) + 4, dex = sizeof(Pokedex) + 4, misc = 0x38 + 4;
+    u32 grownBag = 4 * (NUM_BAG_BERRIES - NUM_BAG_BERRIES_LEGACY), grownDex = sizeof(Pokedex) - offsetof(Pokedex, formsSeen);
+    SaveData save = { { { 0, 104, 0 }, { SAVE_BAG, bag, 104 }, { SAVE_POKEDEX, dex, 104 + bag }, { SAVE_MISC, misc, 104 + bag + dex } } };
     struct SaveSlotSpec specs[2];
-    u32 i, layout, size = 104 + bag + 204 + misc + 16;
+    u32 i, layout, size = 104 + bag + dex + misc + 16;
 
     save.saveSlotSpecs[0].size = size;
     save.saveSlotSpecs[1].offset = (size + 0xFF) & ~0xFF;
     save.saveSlotSpecs[1].size = 0x1000;
     Save_GetLayoutSlotSpecs(&save, SAVE_LAYOUT_NOW, specs);
     assert(specs[0].size == size && specs[1].offset == save.saveSlotSpecs[1].offset);
-    Save_GetLayoutSlotSpecs(&save, SAVE_LAYOUT_BEFORE_BERRY_POCKET, specs);
-    assert(specs[0].offset == 0 && specs[0].size == size - grownBag);
+    Save_GetLayoutSlotSpecs(&save, SAVE_LAYOUT_BEFORE_DEX_FORMS, specs);
+    assert(specs[0].offset == 0 && specs[0].size == size - grownDex);
     assert(specs[1].offset == ((specs[0].size + 0xFF) & ~0xFF) && specs[1].size == 0x1000);
+    Save_GetLayoutSlotSpecs(&save, SAVE_LAYOUT_BEFORE_BERRY_POCKET, specs);
+    assert(specs[0].size == size - grownDex - grownBag);
     Save_GetLayoutSlotSpecs(&save, SAVE_LAYOUT_BEFORE_DNA_SPLICERS, specs);
-    assert(specs[0].size == size - grownBag - (misc - 0x24));
+    assert(specs[0].size == size - grownDex - grownBag - (misc - 0x24));
 
-    for (layout = SAVE_LAYOUT_BEFORE_BERRY_POCKET; layout < SAVE_LAYOUT_COUNT; layout++) {
+    for (layout = SAVE_LAYOUT_BEFORE_DEX_FORMS; layout < SAVE_LAYOUT_COUNT; layout++) {
         u8 *at = region;
 
         Save_GetLayoutSlotSpecs(&save, layout, specs);
@@ -107,10 +109,12 @@ int main(void) {
         for (i = 0; i < 104; i++) assert(*at++ == 0x11);
         for (i = 0; i < 16; i++) assert(*at++ == 0xB1);
         for (i = 0; i < 4 * NUM_BAG_BERRIES_LEGACY; i++) assert(*at++ == 0xB2);
-        for (i = 0; i < grownBag; i++) assert(*at++ == 0);          // the new Berry slots, empty
+        for (i = 0; i < grownBag; i++) assert(*at++ == (layout >= SAVE_LAYOUT_BEFORE_BERRY_POCKET ? 0 : 0xB2));  // new: empty
         for (i = 0; i < 12; i++) assert(*at++ == 0xB3);
         for (i = 0; i < 4; i++) assert(*at++ == 0xB4);
-        for (i = 0; i < 204; i++) assert(*at++ == 0x33);
+        for (i = 0; i < offsetof(Pokedex, formsSeen); i++) assert(*at++ == 0x33);
+        for (i = 0; i < grownDex; i++) assert(*at++ == 0);           // the record of the forms, empty
+        for (i = 0; i < 4; i++) assert(*at++ == 0x34);
         for (i = 0; i < SAVE_MISC_LEGACY_SIZE; i++) assert(*at++ == 0x44);
         for (i = 0; i < 0x18; i++) assert(*at++ == (layout >= SAVE_LAYOUT_BEFORE_DNA_SPLICERS ? 0 : 0x44));
         for (i = 0; i < 4; i++) assert(*at++ == 0x44);             // the misc block's check word
@@ -140,16 +144,10 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 #define GF_ASSERT(x) assert(x)
-#define SAVE_PAGE_MAX 4
+#define SAVE_PAGE_MAX 6
 #define SAVE_SECTOR_SIZE 0x100
 #define HEAP_ID_3 3
-#define SAVE_BAG 1
-#define SAVE_MISC 3
-#define SAVE_MISC_LEGACY_SIZE 0x20
-#define NUM_BAG_BERRIES 10
-#define NUM_BAG_BERRIES_LEGACY 6
-typedef struct { u16 id, quantity; } ItemSlot;
-typedef struct { ItemSlot items[4]; ItemSlot berries[NUM_BAG_BERRIES]; ItemSlot balls[3]; } Bag;
+@BLOCKS@
 @DEFINES@
 @ENUM@
 @STRUCTS@
@@ -187,7 +185,7 @@ static void put(int h, u32 layout, int idx, u32 count) {
     footer = (struct SaveChunkFooter *)(sFlash[h] + specs[idx].offset + specs[idx].size - sizeof(*footer));
     footer->count = count;
     footer->size = specs[idx].size;
-    footer->magic = layout == SAVE_LAYOUT_NOW ? SAVE_CHUNK_MAGIC_BERRY_POCKET : SAVE_CHUNK_MAGIC;
+    footer->magic = layout <= SAVE_LAYOUT_BEFORE_DEX_FORMS ? SAVE_CHUNK_MAGIC_BERRY_POCKET : SAVE_CHUNK_MAGIC;
     footer->slot = idx;
     footer->crc = SaveArray_CalcCRC16MinusFooter(&sSave, sFlash[h] + specs[idx].offset, specs[idx].size);
 }
@@ -200,11 +198,12 @@ static int status(void) {
 
 int main(void) {
     // The first block 184 bytes, so that as in the game the PC slot is
-    // where it is now in the layout before the Berries pocket, and 0x100
-    // lower before the DNA Splicers.
-    u32 bag = sizeof(Bag) + 4, misc = 0x38 + 4, size = 184 + bag + 204 + misc + 16;
+    // 0x100 lower than now before the Dex's record of the forms, where it
+    // still is before the Berries pocket (the magic tells those two apart),
+    // and 0x100 lower again before the DNA Splicers.
+    u32 bag = sizeof(Bag) + 4, dex = sizeof(Pokedex) + 4, misc = 0x38 + 4, size = 184 + bag + dex + misc + 16;
     int got;
-    SaveData save = { 0, { { 0, 184, 0 }, { SAVE_BAG, bag, 184 }, { 2, 204, 184 + bag }, { SAVE_MISC, misc, 184 + bag + 204 } } };
+    SaveData save = { 0, { { 0, 184, 0 }, { SAVE_BAG, bag, 184 }, { SAVE_POKEDEX, dex, 184 + bag }, { SAVE_MISC, misc, 184 + bag + dex } } };
 
     sSave = save;
     sSave.saveSlotSpecs[0].size = size;
@@ -212,10 +211,23 @@ int main(void) {
     sSave.saveSlotSpecs[1].size = 0x100;
     {
         struct SaveSlotSpec older[2];
+        assert(sSave.saveSlotSpecs[1].offset == 0x400);
+        Save_GetLayoutSlotSpecs(&sSave, SAVE_LAYOUT_BEFORE_DEX_FORMS, older);
+        assert(older[1].offset == 0x300);
         Save_GetLayoutSlotSpecs(&sSave, SAVE_LAYOUT_BEFORE_BERRY_POCKET, older);
-        assert(sSave.saveSlotSpecs[1].offset == 0x300 && older[1].offset == 0x300);
+        assert(older[1].offset == 0x300);
         Save_GetLayoutSlotSpecs(&sSave, SAVE_LAYOUT_BEFORE_DNA_SPLICERS, older);
         assert(older[1].offset == 0x200);
+    }
+
+    // A whole save of each older layout, alone in the flash, is read as its
+    // own; the two whose PC slots share a place by their magic.
+    for (u32 layout = SAVE_LAYOUT_BEFORE_DEX_FORMS; layout < SAVE_LAYOUT_COUNT; layout++) {
+        memset(sFlash, 0xFF, sizeof(sFlash));
+        put(0, layout, 0, 3);
+        put(0, layout, 1, 3);
+        got = status();
+        assert(got == LOAD_STATUS_IS_GOOD && sSave.saveLayout == layout && sSave.lastGoodSector == 0);
     }
 
     // Nothing: a new game.
@@ -255,6 +267,23 @@ int main(void) {
 """
 
 
+# The made-up save's blocks the layouts grew, as small as the native tests
+# need: the bag's Berries pocket 6 slots then 10, the Dex 200 bytes then 240
+# more (enough to move the PC slot as the game's does), the misc block 0x20
+# then 0x18 more.
+BLOCKS = r"""
+#define SAVE_BAG 1
+#define SAVE_POKEDEX 2
+#define SAVE_MISC 3
+#define SAVE_MISC_LEGACY_SIZE 0x20
+#define NUM_BAG_BERRIES 10
+#define NUM_BAG_BERRIES_LEGACY 6
+typedef struct { u16 id, quantity; } ItemSlot;
+typedef struct { ItemSlot items[4]; ItemSlot berries[NUM_BAG_BERRIES]; ItemSlot balls[3]; } Bag;
+typedef struct { u8 retail[200]; u32 formsSeen[30]; u32 formsCaught[30]; } Pokedex;
+"""
+
+
 def any_function(source, name):
     """A function's definition, whatever it returns (a struct pointer too)."""
     match = re.search(rf"^[A-Za-z][^\n;(]*\b{name}\([^;{{]*\) \{{", source, re.M)
@@ -278,7 +307,8 @@ class LegacySaveTests(unittest.TestCase):
         structs = "\n".join(struct_source("include/save.h", name) for name in ("SaveArrayHeader", "SaveSlotSpec"))
         native = "\n".join(function(source, name) for name in ("Save_LayoutGrowth", "Save_GetLayoutSlotSpecs",
                                                                 "Save_ConvertFirstSlot"))
-        program = NATIVE.replace("@NATIVE@", native).replace("@STRUCTS@", structs).replace("@ENUM@", enum)
+        program = (NATIVE.replace("@NATIVE@", native).replace("@STRUCTS@", structs).replace("@ENUM@", enum)
+                   .replace("@BLOCKS@", BLOCKS))
         with tempfile.TemporaryDirectory(prefix="newgold-legacy-save-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"
             c.write_text(program)
@@ -310,7 +340,7 @@ class LegacySaveTests(unittest.TestCase):
             "Save_CheckSlotFooters", "Save_LayoutGrowth", "Save_GetLayoutSlotSpecs", "Save_GetSaveFilesStatus"))
         native = re.sub(r"^#pragma unused.*$", "", native, flags=re.M)
         program = (STATUS.replace("@NATIVE@", native).replace("@STRUCTS@", structs).replace("@ENUM@", enum)
-                   .replace("@DEFINES@", defines))
+                   .replace("@DEFINES@", defines).replace("@BLOCKS@", BLOCKS))
         with tempfile.TemporaryDirectory(prefix="newgold-save-status-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"
             c.write_text(program)
@@ -334,13 +364,15 @@ class LegacySaveTests(unittest.TestCase):
             got = [spec["size"] for spec in savedit.slot_specs(savedit.blocks(BUILD, layout))]
             self.assertEqual(got, sizes, f"layout {layout}: the save's layout changed, see docs/newgold/SAVE-LAYOUT.md")
 
-    def test_the_layout_of_now_has_a_magic_of_its_own(self):
-        # The PC's slot is the same in the layout of now and in the one
-        # before the Berries pocket grew: only the magic tells them apart.
+    def test_the_layouts_since_the_berries_pocket_have_a_magic_of_their_own(self):
+        # The PC's slot is the same in the layout before the Dex's record of
+        # the forms and in the one before the Berries pocket grew: only the
+        # magic tells them apart. The layout of now has its PC slot 0x100
+        # further on, and keeps the magic (docs/newgold/SAVE-LAYOUT.md).
         magics = re.findall(r"#define (SAVE_CHUNK_MAGIC\w*) (0x[0-9A-F]+)", (ROOT / "include/save.h").read_text())
         self.assertEqual(len({value for _, value in magics}), 2, magics)
         source = (ROOT / "src/save.c").read_text()
-        self.assertIn("saveData->saveLayout == SAVE_LAYOUT_NOW ? SAVE_CHUNK_MAGIC_BERRY_POCKET : SAVE_CHUNK_MAGIC",
+        self.assertIn("saveData->saveLayout <= SAVE_LAYOUT_BEFORE_DEX_FORMS ? SAVE_CHUNK_MAGIC_BERRY_POCKET : SAVE_CHUNK_MAGIC",
                       function(source, "ValidateSaveSectorFooter"))
         self.assertIn("footer->magic = SAVE_CHUNK_MAGIC_BERRY_POCKET;", function(source, "SaveSlot_BuildFooter"))
 

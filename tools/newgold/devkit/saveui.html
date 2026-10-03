@@ -1687,11 +1687,14 @@ function renderMachines(pocket) {
 
 // ---- Pokédex -------------------------------------------------------------
 function renderDex() {
-  const dex = S.save.dex, seen = new Set(dex.seen), caught = new Set(dex.caught), ch = S.dex.changes;
+  const dex = S.save.dex, ch = S.dex.changes;
+  // The forms the Dex records on their own come after the species, by their label (Slowpoke (Slowpoke Galarian)).
+  const seen = new Set([...dex.seen, ...dex.forms_seen]), caught = new Set([...dex.caught, ...dex.forms_caught]);
+  const forms = new Set(S.data.dex_forms);
   const state = id => ch.get(id) || {seen: seen.has(id), caught: caught.has(id)};
   const q = S.dex.q.toLowerCase();
-  const rows = S.data.dex.filter(id => {
-    const s = state(id), name = S.species.get(id)?.name ?? "";
+  const rows = [...S.data.dex, ...S.data.dex_forms].filter(id => {
+    const s = state(id), name = (forms.has(id) ? S.species.get(id)?.label : S.species.get(id)?.name) ?? "";
     if (q && !name.toLowerCase().includes(q) && String(id) !== q) return false;
     return S.dex.show === "all" || (S.dex.show === "seen" && s.seen) || (S.dex.show === "caught" && s.caught) || (S.dex.show === "missing" && !s.caught);
   });
@@ -1711,9 +1714,9 @@ function renderDex() {
       <input type="search" id="dexq" placeholder="Cerca per nome o numero…" value="${esc(S.dex.q)}" style="flex:1;min-width:180px" aria-label="Cerca nel Pokédex">
       <select id="dexshow" aria-label="Mostra">${[["all", "Tutti"], ["seen", "Visti"], ["caught", "Catturati"], ["missing", "Non catturati"]].map(([k, l]) => `<option value="${k}" ${S.dex.show === k ? "selected" : ""}>${l}</option>`).join("")}</select>
     </div>
-    <p class="note">Le caselle cambiano solo qui finché non premi "Salva modifiche". Catturato vale solo se anche visto, come lo legge il gioco.</p>
+    <p class="note">Le caselle cambiano solo qui finché non premi "Salva modifiche". Catturato vale solo se anche visto, come lo legge il gioco. Dopo le specie, le forme che il Pokédex registra a sé (le regionali come Slowpoke di Galar): una forma vista o presa segna vista o presa anche la sua specie.${S.save.info.legacy ? " Questo salvataggio è in un formato più vecchio e non ha ancora il registro delle forme: il gioco lo aggiunge quando lo carica." : ""}</p>
     <div class="dexlist" style="margin-top:10px">${rows.map(id => { const s = state(id); return `<div class="dexrow ${ch.has(id) ? "dirty" : ""}" data-id="${id}">
-      <span class="n">${id}</span><span class="nm">${esc(S.species.get(id)?.name ?? id)}</span>
+      <span class="n">${id}</span><span class="nm">${esc((forms.has(id) ? S.species.get(id)?.label : S.species.get(id)?.name) ?? id)}</span>
       <label><input type="checkbox" data-k="seen" ${s.seen ? "checked" : ""}> visto</label>
       <label><input type="checkbox" data-k="caught" ${s.caught ? "checked" : ""}> preso</label></div>`; }).join("") || `<span class="muted">Nessuna specie.</span>`}</div>`;
   $("#dexq").oninput = ev => { S.dex.q = ev.target.value; const pos = ev.target.selectionStart; renderDex(); const el = $("#dexq"); el.focus(); el.setSelectionRange(pos, pos); };
@@ -1963,7 +1966,7 @@ function renderInfo() {
   $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">
       <dt>File</dt><dd class="mono">${esc(S.save.path)}</dd>
       <dt>Metà più recente</dt><dd>${hx(i.half)} · salvataggio n. ${i.counter}</dd>
-      ${i.legacy ? `<dt>Formato</dt><dd>${{SAVE_LAYOUT_BEFORE_BERRY_POCKET: "quello di prima che la tasca Bacche le tenesse tutte", SAVE_LAYOUT_BEFORE_DNA_SPLICERS: "quello di prima dei DNA Splicers"}[i.layout_name] || i.layout_name}: il gioco lo converte da solo quando lo carica, e le modifiche fatte qui lo lasciano com'è</dd>` : ""}
+      ${i.legacy ? `<dt>Formato</dt><dd>${{SAVE_LAYOUT_BEFORE_DEX_FORMS: "quello di prima che il Pokédex registrasse le forme", SAVE_LAYOUT_BEFORE_BERRY_POCKET: "quello di prima che la tasca Bacche le tenesse tutte", SAVE_LAYOUT_BEFORE_DNA_SPLICERS: "quello di prima dei DNA Splicers"}[i.layout_name] || i.layout_name}: il gioco lo converte da solo quando lo carica, e le modifiche fatte qui lo lasciano com'è</dd>` : ""}
     </dl>
     <div class="box"><h3>Le due metà della flash</h3><div class="scroll"><table><tr><th>Inizio</th><th>Valida</th><th class="num">Contatore</th></tr>
       ${i.halves.map(h => `<tr><td class="mono">${hx(h.at)}</td><td>${h.valid ? "sì" : `<span class="invalid">no</span>`}</td><td class="num">${h.valid ? h.counter : "—"}</td></tr>`).join("")}</table></div>
