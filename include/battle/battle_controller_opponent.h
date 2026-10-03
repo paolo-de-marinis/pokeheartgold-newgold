@@ -14,5 +14,6 @@ BattleHpBar *OpponentData_GetHpBar(OpponentData *opponentData);
 BattleCursorPosition *ov12_02261280(OpponentData *opponentData);
 void ov12_02261294(OpponentData *opponentData, s32);
 void ov12_0225E4EC(SysTask *task, void *data);
+void ov12_02261D30(u8 *hideHpBars, u8 *hideShadows, int isBattleAnimation, int animation, u16 move);
 
 #endif
