@@ -3406,6 +3406,9 @@ BOOL BtlCmd_PlayBattleAnimationOnMons(BattleSystem *battleSystem, BattleContext 
         int battlerIdB = BattleSystem_GetBattlerIDBySide(battleSystem, ctx, sideB);
         if (CheckStatusEffectsSubstitute(ctx, battlerIdA, status) == TRUE && CheckStatusEffectsSubstitute(ctx, battlerIdB, status) == TRUE) {
             BattleController_EmitCopyStatus2Effect(battleSystem, ctx, battlerIdA, battlerIdB, status);
+#ifdef NEWGOLD_DIAG
+            gDiagBattleAnimation = status;
+#endif
         }
     }
 

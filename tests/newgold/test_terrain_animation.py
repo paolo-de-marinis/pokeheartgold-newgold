@@ -8,7 +8,10 @@ alone, and its terrain moves' animations are borrowed from other moves.
 Here they are battle animations of the game's own kind, members 50 to 53
 of a/0/6/1 after the 50 the game shipped with, made of the game's own
 effects and its background tint, in the script overlay 7 runs
-(asm/macros/btlanim.inc).
+(asm/macros/btlanim.inc). Subscript 347, which every terrain's start goes
+through -- the moves, the Surges and Hadron Engine, Seed Sower -- plays the
+terrain's before its background is drawn and its line printed. In play:
+scenarios/terrain_animation.json.
 """
 
 import re
@@ -27,6 +30,7 @@ SHIPPED = 50
 # BATTLE_ANIMATION_GRASSY_TERRAIN (50) and the three after it.
 TERRAINS = ("grassy", "misty", "electric", "psychic")
 PARTICLES = 486     # a/0/2/9's members: the effects the game has
+SUBSCRIPT = next((ROOT / "files/battledata/script/subscript").glob("subscript_0347_*.s"))
 
 
 class ArchiveTests(unittest.TestCase):
@@ -54,6 +58,27 @@ class ArchiveTests(unittest.TestCase):
                 self.assertLess(int(effect), PARTICLES, terrain)
                 self.assertRegex(text, rf"\n\s*UnloadParticles {slot}\n", terrain)
             self.assertRegex(text, r"\n\s*End\n$", terrain)
+
+
+class ScriptTests(unittest.TestCase):
+    def test_each_terrain_plays_its_animation_before_its_background(self):
+        text = SUBSCRIPT.read_text()
+        backgrounds = re.findall(r"^\s*ChangePermanentBackground BATTLE_BG_(\w+)_TERRAIN", text, re.M)
+        plays = re.findall(r"^\s*PlayBattleAnimationOnMons BATTLER_CATEGORY_PLAYER, BATTLER_CATEGORY_ENEMY, "
+                           r"BATTLE_ANIMATION_(\w+)_TERRAIN\n\s*Wait\n\s*ChangePermanentBackground BATTLE_BG_(\w+)_TERRAIN",
+                           text, re.M)
+        self.assertEqual(len(backgrounds), 5)
+        self.assertEqual(len(plays), 5)
+        for animation, background in plays:
+            self.assertEqual(animation, background)
+
+    def test_a_substitute_does_not_stop_it(self):
+        # The field's animations, the weathers', play over a Pokemon behind a
+        # substitute (CheckStatusEffectsSubstitute's list); a terrain's too.
+        source = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
+        listed = re.search(r"static const int ov12_0226CBDC\[\] = \{(.*?)\};", source, re.S).group(1)
+        for terrain in TERRAINS:
+            self.assertIn(f"BATTLE_ANIMATION_{terrain.upper()}_TERRAIN", listed)
 
 
 if __name__ == "__main__":

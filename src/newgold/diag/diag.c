@@ -69,6 +69,7 @@ u32 gDiagLastBattleMap;
 u32 gDiagLastBattleBg;
 u32 gDiagLastBattleTerrain;
 u32 gDiagBattleBackground;
+u32 gDiagBattleAnimation;
 
 void Diag_BattleState(int state) {
     if ((u32)state == gDiagBattleState) {

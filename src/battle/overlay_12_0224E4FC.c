@@ -12375,8 +12375,12 @@ void SortRemainingExecutionOrderBySpeed(BattleSystem *battleSystem, BattleContex
     }
 }
 
+// The animations a substitute does not stop: its own coming and going, and
+// those of the field -- the item's escape, the weathers and the terrains'
+// starts -- which play over a Pokemon behind one as over any other.
 static const int ov12_0226CBDC[] = {
-    15, 16, 17, 18, 19, 20, 21, 22, 25, 26
+    15, 16, 17, 18, 19, 20, 21, 22, 25, 26,
+    BATTLE_ANIMATION_GRASSY_TERRAIN, BATTLE_ANIMATION_MISTY_TERRAIN, BATTLE_ANIMATION_ELECTRIC_TERRAIN, BATTLE_ANIMATION_PSYCHIC_TERRAIN
 };
 
 BOOL CheckStatusEffectsSubstitute(BattleContext *ctx, int battlerId, int status) {

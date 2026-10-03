@@ -2,15 +2,19 @@
 
     .data
 
-// Imported from the reference. Each terrain draws its own background, with no
-// platforms, before its line: the reference draws it with
-// PlayBattleAnimation BATTLE_ANIMATION_*_TERRAIN, entries it added to the
-// status-effect animation table whose one command is its background change,
-// and which the Battle Scene option turns off with the rest. The background is
-// the field's state as long as the terrain lasts, not an effect, as the
-// substitute's sprite is (PlayBattleAnimation's statuses 15, 16, 25 and 26),
-// and it goes with the terrain whatever the option says in the reference
-// too (HandleTerrainEnd): so it is drawn here by the command itself.
+// Imported from the reference. Each terrain plays the animation of its
+// start and then draws its own background, with no platforms, before its
+// line. The reference's PlayBattleAnimation BATTLE_ANIMATION_*_TERRAIN, entries
+// it added to the status-effect animation table, is its background change
+// and nothing else, and the Battle Scene option turns it off with the rest.
+// The background is the field's state as long as the terrain lasts, not an
+// effect, as the substitute's sprite is (PlayBattleAnimation's statuses 15,
+// 16, 25 and 26), and it goes with the terrain whatever the option says in
+// the reference too (HandleTerrainEnd): so it is drawn here by the command
+// itself. The animations are this game's own, members 50 to 53 of a/0/6/1
+// (files/battle/anim/battle_anim), and play on the first Pokemon of each
+// side, for their effects to cover the field; the option turns them off, as
+// it turns off a weather's.
 
 _000:
     CompareVarToValue OPCODE_NEQ, BSCRIPT_VAR_SIDE_EFFECT_TYPE, SIDE_EFFECT_TYPE_ABILITY, _skipAbilityPopup
@@ -24,6 +28,8 @@ _skipAbilityPopup:
     GoTo _049
 
 _HadronEngineTerrain:
+    PlayBattleAnimationOnMons BATTLER_CATEGORY_PLAYER, BATTLER_CATEGORY_ENEMY, BATTLE_ANIMATION_ELECTRIC_TERRAIN
+    Wait
     ChangePermanentBackground BATTLE_BG_ELECTRIC_TERRAIN, TERRAIN_ELECTRIC_TERRAIN
     Wait
     // {0} turned the ground into Electric Terrain, energizing its futuristic engine!
@@ -33,6 +39,8 @@ _HadronEngineTerrain:
     GoTo _ActivateParadoxTerrainAbility
 
 _019:
+    PlayBattleAnimationOnMons BATTLER_CATEGORY_PLAYER, BATTLER_CATEGORY_ENEMY, BATTLE_ANIMATION_GRASSY_TERRAIN
+    Wait
     ChangePermanentBackground BATTLE_BG_GRASSY_TERRAIN, TERRAIN_GRASSY_TERRAIN
     Wait
     // Grass grew to cover the battlefield!
@@ -40,6 +48,8 @@ _019:
     GoTo _ResetParadoxTerrainAbility
 
 _024:
+    PlayBattleAnimationOnMons BATTLER_CATEGORY_PLAYER, BATTLER_CATEGORY_ENEMY, BATTLE_ANIMATION_MISTY_TERRAIN
+    Wait
     ChangePermanentBackground BATTLE_BG_MISTY_TERRAIN, TERRAIN_MISTY_TERRAIN
     Wait
     // Mist swirled about the battlefield!
@@ -47,6 +57,8 @@ _024:
     GoTo _ResetParadoxTerrainAbility
 
 _029:
+    PlayBattleAnimationOnMons BATTLER_CATEGORY_PLAYER, BATTLER_CATEGORY_ENEMY, BATTLE_ANIMATION_ELECTRIC_TERRAIN
+    Wait
     ChangePermanentBackground BATTLE_BG_ELECTRIC_TERRAIN, TERRAIN_ELECTRIC_TERRAIN
     Wait
     // An electric current ran across the battlefield!
@@ -56,6 +68,8 @@ _029:
     GoTo _ActivateParadoxTerrainAbility
 
 _034:
+    PlayBattleAnimationOnMons BATTLER_CATEGORY_PLAYER, BATTLER_CATEGORY_ENEMY, BATTLE_ANIMATION_PSYCHIC_TERRAIN
+    Wait
     ChangePermanentBackground BATTLE_BG_PSYCHIC_TERRAIN, TERRAIN_PSYCHIC_TERRAIN
     Wait
     // The battlefield got weird!

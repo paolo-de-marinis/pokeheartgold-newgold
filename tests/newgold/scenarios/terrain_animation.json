@@ -1,0 +1,18 @@
+{
+  "about": "A terrain's start plays its animation, whatever lays it (test_terrain_animation.py): gDiagBattleAnimation is the battle animation PlayBattleAnimationOnMons last sent the display, read once each turn is over, 0 until the first. A forced wild Tapu Lele's Psychic Surge as the battle starts plays 53 before its line. A level-50 Pikachu behind its Substitute lays Misty Terrain, 51 -- a substitute does not stop a terrain's, as it does not stop a weather's -- and Electric Terrain, 52; then its Tackle on the Tapu Lele, given Seed Sower (set:), lays Grassy Terrain, 50. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:50"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=815", "LEFT", "fight:1:0",
+            {"expect": {"lines": ["The battlefield got weird!"], "gDiagBattleAnimation": 53, "gDiagBattleBackground": 357}},
+            "teach:0,0,MOVE_SUBSTITUTE", "teach:0,1,MOVE_MISTY_TERRAIN", "teach:0,2,MOVE_ELECTRIC_TERRAIN", "teach:0,3,MOVE_TACKLE",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"new_lines": ["Pikachu used Substitute!", "Pikachu made"], "gDiagBattleAnimation": 53}},
+            "fight:2:1",
+            {"expect": {"new_lines": ["Mist swirled about the battlefield!"], "gDiagBattleAnimation": 51, "gDiagBattleBackground": 353}},
+            "fight:3:1",
+            {"expect": {"new_lines": ["An electric current ran across the battlefield!"], "gDiagBattleAnimation": 52, "gDiagBattleBackground": 351}},
+            "set:1,ability,ABILITY_SEED_SOWER", "set:1,hp,500", "fight:4:1"],
+  "expect": {"new_lines": ["Grass grew to cover the battlefield!"], "gDiagBattleAnimation": 50, "gDiagBattleBackground": 355}
+}

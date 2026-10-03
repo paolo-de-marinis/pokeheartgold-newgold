@@ -157,6 +157,11 @@ extern unsigned long gDiagLastBattleTerrain;
 // 0 until the first.
 extern unsigned long gDiagBattleBackground;
 
+// The last battle animation PlayBattleAnimationOnMons sent the display
+// (BtlCmd_PlayBattleAnimationOnMons), a BATTLE_ANIMATION_* number: a
+// terrain's start, a Leech Seed's drain. 0 until the first.
+extern unsigned long gDiagBattleAnimation;
+
 #endif // NEWGOLD_DIAG
 
 #endif // POKEHEARTGOLD_NEWGOLD_DIAG_H
