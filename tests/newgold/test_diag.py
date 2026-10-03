@@ -215,6 +215,45 @@ class DiagnosticsTests(unittest.TestCase):
         firsts = [core.touches.index(t) for t in (gym.BAG, gym.BALLS, gym.FIRST_ITEM, gym.USE)]
         self.assertEqual(firsts, sorted(firsts))
 
+    def test_gym_touches_no_command_before_the_menu_is_up(self):
+        # A gDiagBattlePrompt of 2 is SSI_STATE_2: on turn one the player
+        # waits for the AI's choice before the menu is up, and gym.fight
+        # touched FIGHT there, on nothing. fight:N:0 still stops there: the
+        # foe's first choice is yet to come, and a teach: then is what it
+        # chooses from (with the stop at 1, smack_down_terrain_fatal_answer's
+        # teach: asked the foe again, its rolls moved and Static paralyzed).
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        import gym
+
+        class Core:
+            frames, touches = 0, []
+
+            def ram(self):
+                return bytes(0x1000)
+
+            def step(self, frames, hold):
+                self.frames += frames
+
+            def touch(self, x, y, frames, hold):
+                self.touches.append((x, y, self.frames))
+                self.frames += frames + 4
+        core = Core()
+        values = {"gDiagBattleTextCount": 0, "gDiagAssertCount": 0, "gDiagBattleState": gym.BATTLE_MAIN}
+        prompt = lambda: 2 if core.frames < 100 else 1     # noqa: E731
+
+        class Markers:
+            text = staticmethod(lambda ram: [])
+            address = staticmethod(lambda name: 0x02000000)
+            read = staticmethod(lambda ram, name: prompt() if name == "gDiagBattlePrompt" else values[name])
+            battle = staticmethod(lambda ram: ["you Cyndaquil L5 20/20 | 1:Tackle 35", "foe Rattata L3 10/10", ""])
+        gym.fight(core, Markers, [], lambda line: None, scorer=object(), turns=0)
+        self.assertLess(core.frames, 100)
+        self.assertEqual(core.touches, [])
+        core.frames, core.touches = 0, []
+        gym.fight(core, Markers, [], lambda line: None, scorer=object(), frames=200)
+        self.assertTrue(core.touches)
+        self.assertTrue(all(frame >= 100 for x, y, frame in core.touches), core.touches)
+
     def test_gym_relieves_the_first_with_the_slot_shift_names(self):
         # shift: POKEMON while the command prompt asks, then on the party
         # screen the slot's place -- by the battle's order -- and SHIFT.

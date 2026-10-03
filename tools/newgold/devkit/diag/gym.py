@@ -201,7 +201,7 @@ def throw(core, markers, hold, frames=1500):
     touches, seen, end = {1: BALLS, 2: FIRST_ITEM, 3: USE}, False, core.frames + frames
     while core.frames < end:
         prompt = markers.read(core.ram(), "gDiagBattlePrompt")
-        if prompt in (1, 2) and not seen:
+        if prompt == 1 and not seen:
             core.touch(*BAG, 6, hold)
         core.step(10, hold)
         ram = core.ram()
@@ -224,7 +224,7 @@ def relieve(core, markers, hold, slot, frames=900):
     end, asked = core.frames + frames, False
     while core.frames < end:
         prompt = markers.read(core.ram(), "gDiagBattlePrompt")
-        if prompt in (1, 2) and not asked:
+        if prompt == 1 and not asked:
             core.touch(*POKEMON, 6, hold)
         elif prompt in (9, 10):
             asked = True
@@ -293,8 +293,9 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     `frames`, and return the last line it printed. `move` is a move slot,
     1 to 4, to use every turn; 0 the first with PP; -1 the hardest-hitting
     by the Scorer. `hold` runs before every frame, `say` gets the report.
-    With `turns`, it stops at the command prompt after that many turns, the
-    battle waiting, so what a turn did can be read; called again, it goes on,
+    With `turns`, it stops as the turn after that many starts its choosing,
+    the battle waiting, so what a turn did can be read (on turn one before
+    the command menu is up: see below); called again, it goes on,
     and `since` (the text counter then) keeps it from saying old lines again.
     The player's own Revival Blessing opens the party menu in its revive
     mode, which takes only a fainted Pokemon: the first fainted is chosen.
@@ -388,12 +389,19 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
         # A turn's command is the first place's to give, or, with the first
         # place empty in a double battle, the second's.
         asked = partner() if you_hp == 0 and partner else prompt
+        # A turn's choosing starts at 1 or, on turn one, at 2, where the
+        # player waits for the AI's choice and the menu is not up yet
+        # (markers.PROMPTS): `turns` stops there, where on turn one the foe
+        # has often not answered yet, so a teach: or set: then is what its
+        # first choice is made with (teach: asks again one that has).
         if asked in (1, 2) and last_prompt not in (1, 2):
             commands += 1
         last_prompt = asked
         if asked in (1, 2) and turns is not None and commands > turns:
             return last_line
-        if prompt in (1, 2):
+        if prompt == 2:
+            pass        # no menu to touch until the AI has chosen
+        elif prompt == 1:
             if view != last_view:
                 say(f"[{core.frames}]   " + "\n          ".join(view[:-1]))
                 last_view = view
@@ -457,7 +465,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             core.touch(*scorer.panel(moves_chosen.get(battler, 0), battler, tries), 6, hold)
             core.step(20, hold)
             tries += 1
-        elif partner and prompt not in (1, 2, 3, 4) and partner() in (1, 2):
+        elif partner and prompt not in (1, 2, 3, 4) and partner() == 1:
             core.touch(*FIGHT, 6, hold)
             core.step(20, hold)
         elif partner and prompt not in (1, 2, 3, 4) and partner() in (3, 4):

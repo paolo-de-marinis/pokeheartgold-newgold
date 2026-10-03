@@ -46,7 +46,7 @@ def main():
             break
     for _ in range(400):
         game.step(10)
-        if game.read("gDiagBattleState") == battle_main and game.read("gDiagBattlePrompt") in (1, 2):
+        if game.read("gDiagBattleState") == battle_main and game.read("gDiagBattlePrompt") == 1:
             break
     else:
         sys.exit("no command prompt: " + game.markers.describe(game.core.ram()))
