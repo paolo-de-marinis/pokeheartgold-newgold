@@ -304,7 +304,7 @@ class DiagnosticsTests(unittest.TestCase):
             address = staticmethod(lambda name: 0x02000000)
 
         def battlers(*mons):
-            return b"".join(struct.pack(BATTLER, species, hp, 50, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            return b"".join(struct.pack(BATTLER, species, hp, 50, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
                             for species, hp in mons)
         double = battlers((25, 50), (16, 40), (26, 50), (74, 40))
         self.assertEqual(aimed_at(double, At, 0)[0], 74)

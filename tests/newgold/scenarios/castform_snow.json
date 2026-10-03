@@ -1,5 +1,5 @@
 {
-  "about": "Forecast gives Castform its Snowy Form in snow as in hail (Pokemon Central, Previsioni). A level-10 Pikachu is given Snowscape in the running battle (teach:) against a forced wild Castform that knows only Splash: the snow brings the Snowy Form. Before, Forecast read hail alone, as the reference does, and the Castform stayed in its Normal Form while it snowed. The field's RNG is pinned as in rolls_forced_high.json.",
+  "about": "Forecast gives Castform its Snowy Form in snow as in hail (Pokemon Central, Previsioni). A level-10 Pikachu is given Snowscape in the running battle (teach:) against a forced wild Castform that knows only Splash: the snow brings the Snowy Form (battler1.form 3, CASTFORM_SNOWY: the species stays SPECIES_CASTFORM in every form). Before, Forecast read hail alone, as the reference does, and the Castform stayed in its Normal Form while it snowed. The field's RNG is pinned as in rolls_forced_high.json.",
   "save": "route29-official.sav",
   "edit": ["--party", "PIKACHU:10"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
@@ -8,5 +8,5 @@
             "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
             "fight:1:1"],
   "expect": {"lines": ["Pikachu used Snowscape!", "The wild Castform transformed!"],
-             "battler1.species": "SPECIES_CASTFORM"}
+             "battler1.form": 3}
 }

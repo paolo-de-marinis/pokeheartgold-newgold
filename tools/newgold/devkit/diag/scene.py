@@ -124,9 +124,10 @@ options.textSpeed|soundMethod|battleStyle|battleScene|buttonMode|frame (the
 start menu's settings as Options holds them: text speed 2 fast, battle
 scene 1 off, battle style 1 set), flag:FLAG_..., var:VAR_...,
 caught:SPECIES_... (1 once the Pokedex has it caught),
-battlerN.species|hp|maxHp|level|partySlot|status|item|moveK|ppK
+battlerN.species|hp|maxHp|level|partySlot|status|item|moveK|ppK|form
 (gDiagBattlers; N counts the player's side even, K is a move slot, 0 to
-3), music (the sequence the field's sound handle plays, -1
+3; form is the battle's, which a species keeps through Castform's weather
+or Cherrim's sun: CASTFORM_SNOWY 3), music (the sequence the field's sound handle plays, -1
 for none: a load the sound heap cannot hold leaves it empty and counts as no
 failed allocation), or any gDiag* global. A value is a number, a constant's
 name (MAP_..., SPECIES_..., ITEM_..., MOVE_..., SEQ_...), [low, high], or for
@@ -165,9 +166,9 @@ ROOT = Path(__file__).resolve().parents[4]
 ROM = ROOT / "build/heartgold.us.diag/pokeheartgold.us.nds"
 SAVES = Path.home() / "hgss-saves"
 BATTLE_MAIN = STATES.index("BATTLE_MAIN")
-# DiagBattler's fields in BATTLER's order, then its two arrays, a name a slot.
+# DiagBattler's fields in BATTLER's order, its two arrays, a name a slot, then the form.
 BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item",
-                  *(f"move{k}" for k in range(4)), *(f"pp{k}" for k in range(4)))
+                  *(f"move{k}" for k in range(4)), *(f"pp{k}" for k in range(4)), "form")
 # party.mons' keys, the fields a scenario may name.
 PARTY_FIELDS = ("species", "item", "level", "exp", "hp", "maxHp")
 # The Options bitfields (include/options.h), the settings a scenario may name.

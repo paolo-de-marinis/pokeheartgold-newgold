@@ -428,6 +428,7 @@ static void Diag_BattleView(BattleSystem *battleSystem, BattleContext *ctx) {
             view->moves[i] = mon->moves[i];
             view->pp[i] = mon->movePPCur[i];
         }
+        view->form = mon->form;
     }
     gDiagBattleCommand = ctx->command;
     gDiagBattleScript[0] = ctx->scriptNarcId;
