@@ -734,4 +734,32 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Fairy</language>
 	</row>
+	<row id="msg_0802_00177" index="177">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Alolan Form</language>
+	</row>
+	<row id="msg_0802_00178" index="178">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Galarian Form</language>
+	</row>
+	<row id="msg_0802_00179" index="179">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hisuian Form</language>
+	</row>
+	<row id="msg_0802_00180" index="180">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Paldean Form</language>
+	</row>
+	<row id="msg_0802_00181" index="181">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Combat Breed</language>
+	</row>
+	<row id="msg_0802_00182" index="182">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Blaze Breed</language>
+	</row>
+	<row id="msg_0802_00183" index="183">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Aqua Breed</language>
+	</row>
 </body>

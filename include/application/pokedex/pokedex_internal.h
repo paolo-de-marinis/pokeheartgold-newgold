@@ -338,7 +338,8 @@ struct PokedexAppData {
     PokedexAppData_UnkSub1908 *unk_1908;            // 0x1908
     PokedexAppData_UnkSub190C *unk_190C;            // 0x190C
     DexEntryPages entryPages;                       // 0x1910, the port's
-}; // size: 0x1920
+    u16 seenFormSpecies[0x20];                      // 0x1920, the port's: the species each of seenForms is
+}; // size: 0x1960
 
 // overlay_18.s reads and writes this struct at fixed offsets, retail's up to
 // 0x1910.

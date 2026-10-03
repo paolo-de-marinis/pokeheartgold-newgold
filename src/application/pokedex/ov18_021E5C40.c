@@ -36,6 +36,7 @@ static void ov18_021E7BD0(PokedexAppData *pokedexApp);
 static void ov18_021E7D90(PokedexAppData *pokedexApp);
 static void ov18_021E7ED8(PokedexAppData *pokedexApp);
 static u8 ov18_021E83D0(PokedexAppData *pokedexApp, u8 idx);
+static void PokedexApp_AppendSeenForms(PokedexAppData *pokedexApp);
 static void ov18_021E8698(PokedexAppData_UnkSub18DC_0 *a0, u16 species, int a2);
 static void ov18_021E8714(PokedexAppData *pokedexApp, PokedexAppData_UnkSub18DC_0 *a1, int a2, int a3);
 static void ov18_021E8878(PokedexAppData *pokedexApp, PokedexAppData_UnkSub18DC_0 *a1, int a2, int a3, int a4);
@@ -1759,6 +1760,9 @@ void ov18_021E81A8(PokedexAppData *pokedexApp) {
 
 void ov18_021E8254(PokedexAppData *pokedexApp) {
     memset(pokedexApp->seenForms, 0, sizeof(pokedexApp->seenForms));
+    for (u32 i = 0; i < NELEMS(pokedexApp->seenFormSpecies); ++i) {
+        pokedexApp->seenFormSpecies[i] = pokedexApp->curSpecies;
+    }
 
     switch (pokedexApp->curSpecies) {
     case SPECIES_UNOWN:
@@ -1796,7 +1800,28 @@ void ov18_021E8254(PokedexAppData *pokedexApp) {
         } else {
             pokedexApp->numSeenForms = 2;
         }
+        PokedexApp_AppendSeenForms(pokedexApp);
         break;
+    }
+}
+
+// The forms of the species shown that the Dex has seen, after its genders,
+// as the latest games' Dex lists a species' regional forms: each is a
+// species of its own here, which the Dex records on its own
+// (Pokedex_RecordForm), drawn and named as that species. An entry is a form
+// 0 (0x80), and seenFormSpecies says which species.
+static void PokedexApp_AppendSeenForms(PokedexAppData *pokedexApp) {
+    const Pokedex *pokedex = pokedexApp->args->pokedex;
+    u32 i;
+
+    for (u16 species = DEX_FIRST_FORM; species <= NUM_SPECIES && pokedexApp->numSeenForms < (s8)NELEMS(pokedexApp->seenForms); ++species) {
+        i = species - DEX_FIRST_FORM;
+        if (species != pokedexApp->curSpecies && SpeciesToDexSpecies(species) == pokedexApp->curSpecies
+            && (((pokedex->formsSeen[i / 32] | pokedex->formsCaught[i / 32]) >> (i % 32)) & 1)) {
+            pokedexApp->seenForms[pokedexApp->numSeenForms] = 0x80;
+            pokedexApp->seenFormSpecies[pokedexApp->numSeenForms] = species;
+            ++pokedexApp->numSeenForms;
+        }
     }
 }
 

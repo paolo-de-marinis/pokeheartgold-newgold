@@ -16,12 +16,14 @@ void ov18_021F5EF0(PokedexAppData *pokedexApp, int idx) {
 
 // The FORMS page's entry idx on the top screen, its front and its back:
 // drawn into the pair of sprites not shown (1 and 2, or 3 and 4), which then
-// replace the other pair.
+// replace the other pair. A form that is a species of its own is drawn as
+// that species.
 void ov18_021F5EFC(PokedexAppData *pokedexApp, int idx, int a2) {
     u8 gender;
     u8 form;
     int front;
     int back;
+    u16 species = pokedexApp->seenFormSpecies[idx];
 
     ov18_021F3CA8(pokedexApp, idx, &form, &gender);
     if (pokedexApp->unk_18C7_5 == 0) {
@@ -36,16 +38,17 @@ void ov18_021F5EFC(PokedexAppData *pokedexApp, int idx, int a2) {
         ov18_021F11C0(pokedexApp, 2, 0);
     }
     pokedexApp->unk_18C7_5 ^= 1;
-    ov18_021F1A7C(pokedexApp, pokedexApp->curSpecies, form, gender, 2, front, a2);
+    ov18_021F1A7C(pokedexApp, species, form, gender, 2, front, a2);
     ManagedSprite_SetPositionXYWithSubscreenOffset(pokedexApp->unk_0670[front], 64, 120, FX32_CONST(512));
-    ov18_021F1A7C(pokedexApp, pokedexApp->curSpecies, form, gender, 0, back, a2);
-    ManagedSprite_SetPositionXYWithSubscreenOffset(pokedexApp->unk_0670[back], 192, GetMonPicHeightBySpeciesGenderForm(pokedexApp->curSpecies, gender, 0, form, 0) + 120, FX32_CONST(512));
+    ov18_021F1A7C(pokedexApp, species, form, gender, 0, back, a2);
+    ManagedSprite_SetPositionXYWithSubscreenOffset(pokedexApp->unk_0670[back], 192, GetMonPicHeightBySpeciesGenderForm(species, gender, 0, form, 0) + 120, FX32_CONST(512));
     ov18_021F11C0(pokedexApp, front, 1);
     ov18_021F11C0(pokedexApp, back, 1);
 }
 
-// The icon of the FORMS page's entry idx, in the sprite spriteIdx. Pichu's
-// Spiky-eared form (2 in the Dex) is its icon's form 1.
+// The icon of the FORMS page's entry idx, in the sprite spriteIdx: a form
+// that is a species of its own has that species' icon. Pichu's Spiky-eared
+// form (2 in the Dex) is its icon's form 1.
 void ov18_021F5FFC(PokedexAppData *pokedexApp, int spriteIdx, int idx) {
     u8 entry = pokedexApp->seenForms[idx];
     int form;
@@ -62,5 +65,5 @@ void ov18_021F5FFC(PokedexAppData *pokedexApp, int spriteIdx, int idx) {
     } else {
         form = 0;
     }
-    ov18_021F14FC(pokedexApp, pokedexApp->curSpecies, form, spriteIdx);
+    ov18_021F14FC(pokedexApp, pokedexApp->seenFormSpecies[idx], form, spriteIdx);
 }

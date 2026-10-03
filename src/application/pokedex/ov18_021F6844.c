@@ -16,7 +16,8 @@ void ov18_021F6844(PokedexAppData *pokedexApp, int spriteIdx, int idx) {
 // COMPARE's entry idx on the top screen, on the left (spriteIdx 1) or the
 // right (2): its front, or its back while the page shows the backs, drawn
 // into the sprite of that side not shown (1 or 3, 2 or 4), which then
-// replaces the other.
+// replaces the other. A form that is a species of its own is drawn as that
+// species.
 void ov18_021F684C(PokedexAppData *pokedexApp, int spriteIdx, int idx, int a3) {
     u8 gender;
     u8 form;
@@ -31,7 +32,7 @@ void ov18_021F684C(PokedexAppData *pokedexApp, int spriteIdx, int idx, int a3) {
         height = 0;
     } else {
         facing = 0;
-        height = GetMonPicHeightBySpeciesGenderForm(pokedexApp->curSpecies, gender, facing, form, 0);
+        height = GetMonPicHeightBySpeciesGenderForm(pokedexApp->seenFormSpecies[idx], gender, facing, form, 0);
     }
     if (spriteIdx == 1) {
         x = 64;
@@ -58,6 +59,6 @@ void ov18_021F684C(PokedexAppData *pokedexApp, int spriteIdx, int idx, int a3) {
         }
         pokedexApp->unk_18C7_6 ^= 1;
     }
-    ov18_021F1A7C(pokedexApp, pokedexApp->curSpecies, form, gender, facing, spriteIdx, a3);
+    ov18_021F1A7C(pokedexApp, pokedexApp->seenFormSpecies[idx], form, gender, facing, spriteIdx, a3);
     ov18_021F1294(pokedexApp, spriteIdx, x, y, 1);
 }
