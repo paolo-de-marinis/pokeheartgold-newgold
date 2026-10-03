@@ -481,8 +481,9 @@ Reading what the debug ROM records, and playing it without looking.
   (`options.*`, the flags and variables). A leg names the one before it (`"from"`) and starts from
   that save: the legs of a run share a directory (`--chain`), a leg run
   alone plays the ones before it first, and one after a failed leg fails
-  without playing. `test_scenarios.py` plays up to three scenarios at once,
-  a chain's legs together in one of the three, in their order.
+  without playing. `test_scenarios.py` plays up to three scenarios at once
+  (`NEWGOLD_WORKERS=2` two, as a round's agent must), a chain's legs
+  together in one of them, in their order.
   `NEWGOLD_PLAYTHROUGH=0` leaves the playthrough's legs out of a run (they
   alone play for well over an hour) and the other scenarios play as ever;
   unset, or anything else, it plays them, and a round's landing always does.

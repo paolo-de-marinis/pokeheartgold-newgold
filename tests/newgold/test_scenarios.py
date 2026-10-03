@@ -18,10 +18,11 @@ directory for the run (CHAIN); one run alone plays the legs before it first.
 NEWGOLD_PLAYTHROUGH=0 leaves every leg of a chain out (skipped, not played);
 unset, they play.
 
-Up to three scene.py processes play at once (WORKERS), started when the
+Up to three scene.py processes play at once (WORKERS; NEWGOLD_WORKERS=2
+plays two, as a round's agent, allowed two emulators, must), started when the
 first scenario test runs, for every scenario the run selected: a chain's
 legs in one worker, leg before leg, so each finds the save of the one
-before, and the other two take the single scenarios meanwhile -- the chain,
+before, and the others take the single scenarios meanwhile -- the chain,
 a new game to the Route 34 gate in 21 legs, plays for about an hour and
 three quarters alone.
 """
@@ -440,7 +441,14 @@ class ChainTests(unittest.TestCase):
             self.assertIsNone(scene.scenario(leg, chain=chain)[0])
 
     def test_three_play_at_once_and_a_chains_legs_in_order(self):
+        self.assertEqual(self.most_at_once({}), WORKERS)
+
+    def test_newgold_workers_sets_how_many_play_at_once(self):
+        self.assertEqual(self.most_at_once({"NEWGOLD_WORKERS": "2"}), 2)
+
+    def most_at_once(self, env):
         # run() faked: each scenario takes a moment, noting who plays at once.
+        from unittest import mock
         legs_ = ["playthrough_01_new_game", "playthrough_02_cherrygrove", "playthrough_03_mr_pokemon"]
         alone = ["fairy_chart", "chuck", "thaw_scald_scorching_sands", "red_card_disarms_retreat", "snipe_shot_not_redirected"]
         paths = [SCENARIOS / f"{name}.json" for name in alone + legs_[::-1]]
@@ -461,15 +469,18 @@ class ChainTests(unittest.TestCase):
         global run
         real, run = run, fake
         try:
-            start(paths)
+            with mock.patch.dict(os.environ):
+                os.environ.pop("NEWGOLD_WORKERS", None)
+                os.environ.update(env)
+                start(paths)
             reports = [RESULTS[path].result(timeout=10)[1] for path in paths]
         finally:
             run = real
             for path in paths:
                 RESULTS.pop(path, None)
         self.assertEqual(reports, [f"PASS {path.name}" for path in paths])
-        self.assertEqual(most[0], WORKERS)
         self.assertEqual([stem for stem in order if stem in legs_], legs_)
+        return most[0]
 
     def test_newgold_playthrough_0_leaves_the_chain_out(self):
         # The playthrough's legs, its first among them, are skipped without
@@ -700,7 +711,7 @@ def playthrough():
     return os.environ.get("NEWGOLD_PLAYTHROUGH", "1") != "0"
 
 
-WORKERS = 3                 # scene.py processes at once, an emulator each
+WORKERS = 3                 # scene.py processes at once, an emulator each, unless NEWGOLD_WORKERS
 RESULTS = {}                # a scenario's path -> the Future of run(path)
 
 
@@ -723,9 +734,9 @@ def jobs(paths):
     return sorted((sorted(job, key=legs) for job in chains.values()), key=len, reverse=True)
 
 
-def start(paths, workers=WORKERS):
-    """Play `paths` in the background, `workers` at a time; RESULTS holds a
-    Future for each."""
+def start(paths):
+    """Play `paths` in the background, NEWGOLD_WORKERS (or WORKERS) at a
+    time; RESULTS holds a Future for each."""
     def work(job):
         for path in job:
             try:
@@ -735,7 +746,7 @@ def start(paths, workers=WORKERS):
     paths = [path for path in paths if path not in RESULTS]
     for path in paths:
         RESULTS[path] = Future()
-    pool = ThreadPoolExecutor(workers)
+    pool = ThreadPoolExecutor(int(os.environ.get("NEWGOLD_WORKERS", WORKERS)))
     for job in jobs(paths):
         pool.submit(work, job)
     pool.shutdown(wait=False)
