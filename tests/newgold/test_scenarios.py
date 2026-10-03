@@ -23,8 +23,8 @@ plays two, as a round's agent, allowed two emulators, must), started when the
 first scenario test runs, for every scenario the run selected: a chain's
 legs in one worker, leg before leg, so each finds the save of the one
 before, and the others take the single scenarios meanwhile -- the chain,
-a new game to the Route 34 gate in 21 legs, plays for about an hour and
-three quarters alone.
+a new game to Goldenrod's Radio Card in 25 legs, plays for about two hours
+and ten minutes alone.
 """
 import json
 import os
