@@ -3,15 +3,25 @@
 #include "application/pokedex/pokedex_internal.h"
 
 #include "pokemon.h"
+#include "sound_chatot.h"
 #include "sprite_system.h"
 
 void ov18_021F3CA8(PokedexAppData *pokedexApp, int idx, u8 *form, u8 *gender);
 void ov18_021F1A7C(PokedexAppData *pokedexApp, u16 species, int form, int gender, int facing, int spriteIdx, int a6);
 void ov18_021F14FC(PokedexAppData *pokedexApp, u16 species, int form, int spriteIdx);
 
-// The FORMS page's entry idx, after the arrows or a touch moved to it.
+// The FORMS page's entry idx, after the arrows or a touch moved to it, and
+// its cry, as the list cries a species picked on it (ov18_021EDE04): a form
+// that is a species of its own cries as itself.
 void ov18_021F5EF0(PokedexAppData *pokedexApp, int idx) {
+    u8 form;
+    u8 gender;
+
     ov18_021F5EFC(pokedexApp, idx, 0);
+    ov18_021F3CA8(pokedexApp, idx, &form, &gender);
+    sub_02006E3C(1);
+    PlayCry(pokedexApp->seenFormSpecies[idx], form);
+    sub_02006E3C(0);
 }
 
 // The FORMS page's entry idx on the top screen, its front and its back:

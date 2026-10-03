@@ -143,6 +143,46 @@ int main(void) {
 }
 '''
 
+CRY = r'''
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef struct PokedexAppData {
+    u16 curSpecies;
+    u8 seenForms[0x20];
+    u16 seenFormSpecies[0x20];
+} PokedexAppData;
+static int sDrawn = -1, sChatot, sCries;
+static u32 sCrySpecies, sCryForm;
+static void ov18_021F5EFC(PokedexAppData *app, int idx, int a2) { (void)app; (void)a2; sDrawn = idx; }
+// ov18_021F3CA8's reading of a form entry: retail's form, Pichu's 2 its form 1.
+static void ov18_021F3CA8(PokedexAppData *app, int idx, u8 *form, u8 *gender) {
+    *form = app->seenForms[idx] & 0x80 ? app->seenForms[idx] ^ 0x80 : 0;
+    if (app->curSpecies == SPECIES_PICHU && *form) {
+        *form = *form == 2;
+    }
+    *gender = 0;
+}
+static void sub_02006E3C(u8 on) { sChatot = on; }
+static void PlayCry(u16 species, u8 form) { assert(sChatot == 1); sCries++; sCrySpecies = species; sCryForm = form; }
+@NATIVE@
+
+int main(void) {
+    PokedexAppData app = { SPECIES_SLOWPOKE, { 1, 0x80 }, { SPECIES_SLOWPOKE, SPECIES_SLOWPOKE_GALARIAN } };
+    ov18_021F5EF0(&app, 1);
+    assert(sDrawn == 1 && sCries == 1 && sCrySpecies == SPECIES_SLOWPOKE_GALARIAN && sCryForm == 0 && sChatot == 0);
+    ov18_021F5EF0(&app, 0);
+    assert(sDrawn == 0 && sCries == 2 && sCrySpecies == SPECIES_SLOWPOKE);
+    PokedexAppData pichu = { SPECIES_PICHU, { 0x80, 0x82 }, { SPECIES_PICHU, SPECIES_PICHU } };
+    ov18_021F5EF0(&pichu, 1);
+    assert(sCrySpecies == SPECIES_PICHU && sCryForm == 1);
+    puts("PASS: an entry moved to cries as its species and form.");
+    return 0;
+}
+'''
+
 REGIONS = {"ALOLAN": "Alolan Form", "GALARIAN": "Galarian Form", "HISUIAN": "Hisuian Form", "PALDEAN": "Paldean Form"}
 BREEDS = {"TAUROS_COMBAT": "Combat Breed", "TAUROS_BLAZE": "Blaze Breed", "TAUROS_AQUA": "Aqua Breed"}
 
@@ -184,6 +224,15 @@ class DexFormsPageTests(unittest.TestCase):
         msgs = "\n".join(f"#define {name} {index}" for name, (index, _) in messages().items())
         program = (PREFIX.replace("@DEFINES@", defines).replace("@MESSAGES@", msgs).replace("@FORM_TABLE@", table)
                    .replace("@NATIVE@", native) + MAIN)
+        print(run(program))
+
+    def test_moving_to_an_entry_plays_its_cry(self):
+        """ov18_021F5EF0, which the arrows and the touches move to an entry
+        through, draws it and plays its cry as the list cries a species
+        picked on it: a form that is a species of its own cries as itself,
+        with the form ov18_021F3CA8 reads (Pichu's Spiky-eared is form 1)."""
+        source = (ROOT / "src/application/pokedex/ov18_021F5EF0.c").read_text()
+        program = CRY.replace("@NATIVE@", function(source, "ov18_021F5EF0"))
         print(run(program))
 
     def test_a_regional_form_is_named_by_its_region(self):
