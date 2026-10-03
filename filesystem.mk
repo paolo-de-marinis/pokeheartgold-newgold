@@ -422,6 +422,7 @@ $(eval $(call arc_strip_name,files/demo/title/titledemo.narc,files/a/0/4/6))
 $(eval $(call arc_strip_name,files/poketool/trainer/trdata.narc,files/a/0/5/5))
 $(eval $(call arc_strip_name,files/poketool/trainer/trpoke.narc,files/a/0/5/6))
 $(eval $(call arc_strip_name,files/poketool/trmsg/trtbl.narc,files/a/0/5/7))
+$(eval $(call arc_strip_name,files/battle/anim/battle_anim.narc,files/a/0/6/1))
 $(eval $(call arc_strip_name,files/graphic/zukan_gra.narc,files/a/0/6/8))
 $(eval $(call arc_strip_name,files/poketool/pokefoot/pokefoot.narc,files/a/0/6/9))
 $(eval $(call arc_strip_name,files/application/zukanlist/zkn_data/zukan_data.narc,files/a/0/7/4))
@@ -585,6 +586,7 @@ include files/data/namein.mk
 include files/data/sbox_gra.mk
 include files/arc/safari_enc.mk
 include files/battle/graphic/batt_bg.mk
+include files/battle/anim/battle_anim.mk
 
 # An archive is only as current as the o2narc that laid it out: f9de102b7
 # changed where o2narc puts each member, and the Dex archives it had already
