@@ -203,8 +203,11 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // items the battlers lost for the rest of the battle, four halfwords after
 // the items taken from the wild ones (0x3256), grew it by eight (0x3270),
 // the one spare byte still before the added moves' data, now at 0x3270.
+// Whose starting item each Pokemon holds, a byte by party slot after the
+// handed-over byte (0x325F), grew it by 24 (0x3288), the spare byte still
+// there, before the added moves' data at 0x3288.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3270 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x3288 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given
@@ -222,6 +225,7 @@ static void RememberHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->heldItemsCount = count;
     for (int i = 0; i < count && i < PARTY_SIZE; i++) {
         ctx->itemsToRestore[i] = GetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, NULL);
+        ctx->heldItemOwner[i] = ctx->itemsToRestore[i] != ITEM_NONE ? i + 1 : 0;
     }
 }
 

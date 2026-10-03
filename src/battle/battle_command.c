@@ -4304,7 +4304,7 @@ BOOL BtlCmd_TryStealItem(BattleSystem *battleSystem, BattleContext *ctx) {
             // has left the hand empty (ServerDoPostMoveEffects.c:1242).
             BattleScriptIncrementPointer(ctx, adrs1);
         } else {
-            NoteHeldItemTaken(battleSystem, ctx, ctx->battlerIdTarget);
+            NoteHeldItemTaken(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
         }
     }
 
@@ -5267,8 +5267,7 @@ BOOL BtlCmd_TrySwapItems(BattleSystem *battleSystem, BattleContext *ctx) {
     } else if (adrsB && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_STICKY_HOLD) == TRUE) {
         BattleScriptIncrementPointer(ctx, adrsB);
     } else {
-        NoteHeldItemGiven(battleSystem, ctx, ctx->battlerIdAttacker);
-        NoteHeldItemGiven(battleSystem, ctx, ctx->battlerIdTarget);
+        NoteHeldItemGiven(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
     }
 
     return FALSE;

@@ -219,8 +219,8 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
     return !ctx->battleMons[taker].item && ctx->battleMons[loser].item;
 }
 // Which battler's item was marked as taken, for the end of the battle.
-static int noted = -1;
-static void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdLoser) { (void)battleSystem; (void)ctx; noted = battlerIdLoser; }
+static int noted = -1, notedTaker = -1;
+static void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTaker, int battlerIdLoser) { (void)battleSystem; (void)ctx; notedTaker = battlerIdTaker; noted = battlerIdLoser; }
 @FUNCTIONS@
 static BattleSystem bs = { 4 };
 static BattleContext ctx;
@@ -250,7 +250,7 @@ static int takes(void) {
         assert(noted == -1);
         return -1;
     }
-    assert(script == BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM && ctx.battlerIdStatChange == 0 && noted == ctx.battlerIdTemp);
+    assert(script == BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM && ctx.battlerIdStatChange == 0 && noted == ctx.battlerIdTemp && notedTaker == 0);
     return ctx.battlerIdTemp;
 }
 int main(void) {
@@ -334,8 +334,8 @@ static BOOL CanStealHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int
     return ctx->battleMons[loser].item != 0;
 }
 // Which battler's item was marked as taken, for the end of the battle.
-static int noted = -1;
-static void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdLoser) { (void)battleSystem; (void)ctx; noted = battlerIdLoser; }
+static int noted = -1, notedTaker = -1;
+static void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTaker, int battlerIdLoser) { (void)battleSystem; (void)ctx; notedTaker = battlerIdTaker; noted = battlerIdLoser; }
 @FUNCTIONS@
 static BattleSystem bs = { 4 };
 static BattleContext ctx;
@@ -363,7 +363,7 @@ static int lifts(void) {
         assert(noted == -1);
         return -1;
     }
-    assert(script == BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM && ctx.battlerIdTemp == 0 && noted == 0);
+    assert(script == BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM && ctx.battlerIdTemp == 0 && noted == 0 && notedTaker == ctx.battlerIdStatChange);
     return ctx.battlerIdStatChange;
 }
 int main(void) {

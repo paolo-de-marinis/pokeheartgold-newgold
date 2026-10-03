@@ -5936,6 +5936,7 @@ static BOOL TryOpportunistCopy(BattleSystem *battleSystem, BattleContext *ctx, i
 static BOOL TrySymbiosisHandOver(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int j;
+    int k;
     int battlerId;
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
@@ -5951,6 +5952,13 @@ static BOOL TrySymbiosisHandOver(BattleSystem *battleSystem, BattleContext *ctx,
             ctx->itemTemp = ctx->battleMons[j].item;
             ctx->battleMons[battlerId].item = ctx->battleMons[j].item;
             ctx->battleMons[j].item = ITEM_NONE;
+            // Whose item it is goes with it, and nobody is marked: one of
+            // the player's own handing its Berry to its partner has it back
+            // unless the partner eats it, as with its own Berry eaten
+            // (GiveBackHeldItems, NoteHeldItemUsedUp).
+            k = Battler_PartySlot(battleSystem, ctx, j);
+            ctx->heldItemOwner[Battler_PartySlot(battleSystem, ctx, battlerId)] = ctx->heldItemOwner[k];
+            ctx->heldItemOwner[k] = 0;
             CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
             CopyBattleMonToPartyMon(battleSystem, ctx, j);
             ctx->battlerIdTemp = j;
@@ -7227,74 +7235,81 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
     return CanStealHeldItem(battleSystem, ctx, battlerIdTaker, battlerIdLoser);
 }
 
-// battlerIdLoser's item is being taken, by Magician, Pickpocket, Thief or
-// Covet. Taken from one of the player's own Pokemon, it is theirs again when
-// the battle is over, a Berry too, and even one the taker has used up (Pokemon
-// Central: Furto, items stolen from any trainer come back at the battle's end
-// from the fifth generation; Prestigiatore, even consumed from the eighth).
-// GiveBackHeldItems reads the mark; a Berry not marked that its holder no
-// longer has was eaten, and stays so. The mark is for the item the Pokemon
-// started with: taking one it got in the battle says nothing of that, and a
-// Berry it has back and eats itself undoes it (NoteHeldItemUsedUp).
+// battlerIdLoser's item is being taken by battlerIdTaker, by Magician,
+// Pickpocket, Thief or Covet. Taken from one of the player's own Pokemon, it
+// is theirs again when the battle is over, a Berry too, and even one the
+// taker has used up (Pokemon Central: Furto, items stolen from any trainer
+// come back at the battle's end from the fifth generation; Prestigiatore,
+// even consumed from the eighth). GiveBackHeldItems reads the mark; a Berry
+// not marked that its holder no longer has was eaten, and stays so. The mark
+// is for the item the Pokemon started with: taking one it got in the battle
+// says nothing of that, and a Berry it has back and eats itself undoes it
+// (NoteHeldItemUsedUp). Whose item it is goes with it (heldItemOwner).
 //
 // Taken from a wild Pokemon, it goes to the bag when the battle is over,
 // unless that Pokemon is caught: then it keeps its item and the bag gets no
 // copy (Pokemon Central, Arraffalesto and Furto, from the ninth generation).
-void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdLoser) {
-    if (BattleSystem_GetParty(battleSystem, battlerIdLoser) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)) {
-        if (ctx->battleMons[battlerIdLoser].item == ctx->itemsToRestore[ctx->selectedMonIndex[battlerIdLoser]]) {
-            ctx->heldItemsTaken |= MaskOfFlagNo(ctx->selectedMonIndex[battlerIdLoser]);
-        }
+void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTaker, int battlerIdLoser) {
+    int from = Battler_PartySlot(battleSystem, ctx, battlerIdLoser);
+    int owner = ctx->heldItemOwner[from];
+
+    if (owner == from + 1) {
+        ctx->heldItemsTaken |= MaskOfFlagNo(from);
     } else if (Battler_IsWild(battleSystem, battlerIdLoser)) {
         ctx->itemsTakenFromWild[battlerIdLoser >> 1] = ctx->battleMons[battlerIdLoser].item;
     }
+    ctx->heldItemOwner[from] = 0;
+    ctx->heldItemOwner[Battler_PartySlot(battleSystem, ctx, battlerIdTaker)] = owner;
 }
 
-// Trick, Switcheroo and Bestow: battlerId hands its item to the other. One
-// of the player's own Pokemon handing over what it started the battle with
-// has it back when the battle is over, a Berry too (Pokemon Central, Raggiro
-// and Rapidscambio: from the fifth generation a swap does not outlast a
-// battle against a trainer; GiveBackHeldItems), unless the one it went to
-// uses it up (NoteHeldItemUsedUp). A wild Pokemon caught with it keeps it
-// (CaughtMonKeepsItem).
-void NoteHeldItemGiven(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
-    int slot = ctx->selectedMonIndex[battlerId];
+// Trick, Switcheroo and Bestow: the two swap what they hold. One of the
+// player's own Pokemon handing over what it started the battle with has it
+// back when the battle is over, a Berry too (Pokemon Central, Raggiro and
+// Rapidscambio: from the fifth generation a swap does not outlast a battle
+// against a trainer; GiveBackHeldItems), unless the one it went to uses it
+// up (NoteHeldItemUsedUp). A wild Pokemon caught with it keeps it
+// (CaughtMonKeepsItem). Whose item each is goes with it (heldItemOwner).
+void NoteHeldItemGiven(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdA, int battlerIdB) {
+    int a = Battler_PartySlot(battleSystem, ctx, battlerIdA);
+    int b = Battler_PartySlot(battleSystem, ctx, battlerIdB);
+    int owner = ctx->heldItemOwner[a];
 
-    if (BattleSystem_GetParty(battleSystem, battlerId) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)
-        && ctx->battleMons[battlerId].item != ITEM_NONE && ctx->battleMons[battlerId].item == ctx->itemsToRestore[slot]) {
-        ctx->heldItemsGiven |= MaskOfFlagNo(slot);
+    if (owner == a + 1) {
+        ctx->heldItemsGiven |= MaskOfFlagNo(a);
     }
+    if (ctx->heldItemOwner[b] == b + 1) {
+        ctx->heldItemsGiven |= MaskOfFlagNo(b);
+    }
+    ctx->heldItemOwner[a] = ctx->heldItemOwner[b];
+    ctx->heldItemOwner[b] = owner;
 }
 
-// battlerId is using up the Berry it holds: eating it, or losing it to Pluck,
-// Bug Bite, Fling, Natural Gift or Incinerate. One of the player's own
-// Pokemon handed it that Berry (NoteHeldItemGiven): it is gone for good, not
+// battlerId is using up the item it holds: eating its Berry, or losing it to
+// Pluck, Bug Bite, Fling, Natural Gift or Incinerate. A Berry one of the
+// player's own Pokemon handed it (NoteHeldItemGiven) is gone for good, not
 // the player's again when the battle is over (Pokemon Central, Raggiro: the
 // swapped item comes back unless it was consumed; from the ninth generation
 // a wild Pokemon's gives back what it used of the player's, Berries
 // excepted). A Berry taken from the player's Pokemon comes back even eaten
 // (NoteHeldItemTaken), and one a Pokemon has back and eats itself is its own
 // Berry eaten, as ever: its marks go, taken back by Thief or Tricked back
-// before it was eaten.
-//
-// ponytail: matched by kind, so another Pokemon's own Berry of the same kind,
-// eaten while the handed one is still held, counts as the handed one.
+// before it was eaten. Which Pokemon's Berry it is, the item's tag says
+// (heldItemOwner): another Pokemon's own Berry of the same kind, eaten while
+// the handed one is still held, is not the handed one. Before, the Berry was
+// matched by kind, and such a Berry took the handed one's place. The tag
+// stays: what Recycle or Harvest brings back is the same item.
 void NoteHeldItemUsedUp(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
-    u16 item = ctx->battleMons[battlerId].item;
-    int own = BattleSystem_GetParty(battleSystem, battlerId) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER) ? ctx->selectedMonIndex[battlerId] : PARTY_SIZE;
+    int at = Battler_PartySlot(battleSystem, ctx, battlerId);
+    int slot = ctx->heldItemOwner[at] - 1;
 
-    if (!BattleItemIsBerry(item)) {
+    if (slot < 0 || !BattleItemIsBerry(ctx->battleMons[battlerId].item)) {
         return;
     }
-    if (own != PARTY_SIZE && ctx->itemsToRestore[own] == item) {
-        ctx->heldItemsTaken &= ~MaskOfFlagNo(own);
-        ctx->heldItemsGiven &= ~MaskOfFlagNo(own);
-    }
-    for (int i = 0; i < PARTY_SIZE; i++) {
-        if (i != own && (ctx->heldItemsGiven >> i & 1) && ctx->itemsToRestore[i] == item) {
-            ctx->itemsToRestore[i] = ITEM_NONE;
-            return;
-        }
+    if (slot == at) {
+        ctx->heldItemsTaken &= ~MaskOfFlagNo(slot);
+        ctx->heldItemsGiven &= ~MaskOfFlagNo(slot);
+    } else if (ctx->heldItemsGiven >> slot & 1) {
+        ctx->itemsToRestore[slot] = ITEM_NONE;
     }
 }
 
@@ -7991,7 +8006,7 @@ BOOL TryMagician(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
             }
             ctx->battlerIdStatChange = attacker;
             ctx->battlerIdTemp = battlerId;
-            NoteHeldItemTaken(battleSystem, ctx, battlerId);
+            NoteHeldItemTaken(battleSystem, ctx, attacker, battlerId);
             *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
             return TRUE;
         }
@@ -8048,7 +8063,7 @@ BOOL TryPickpocket(BattleSystem *battleSystem, BattleContext *ctx, int *script) 
         }
         ctx->battlerIdStatChange = battlerId;
         ctx->battlerIdTemp = ctx->battlerIdAttacker;
-        NoteHeldItemTaken(battleSystem, ctx, ctx->battlerIdAttacker);
+        NoteHeldItemTaken(battleSystem, ctx, battlerId, ctx->battlerIdAttacker);
         *script = BATTLE_SUBSCRIPT_ABILITY_TAKES_ITEM;
         return TRUE;
     }
@@ -9386,7 +9401,7 @@ int CheckSwitchItemOnHit(BattleSystem *battleSystem, BattleContext *ctx, int bat
         ctx->battlerIdTemp = battlerId;
         ctx->tempData = PickpocketLifts(battleSystem, ctx, battlerId);
         if (ctx->tempData) {
-            NoteHeldItemTaken(battleSystem, ctx, ctx->battlerIdAttacker);
+            NoteHeldItemTaken(battleSystem, ctx, battlerId, ctx->battlerIdAttacker);
         }
         return BATTLE_SUBSCRIPT_RED_CARD;
     }

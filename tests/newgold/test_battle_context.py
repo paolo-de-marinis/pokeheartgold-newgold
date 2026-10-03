@@ -367,7 +367,9 @@ int main(void) {
 """
 
 
-# The real NoteHeldItemTaken and Battler_IsWild: who is marked for what.
+# The real NoteHeldItemTaken, NoteHeldItemGiven and NoteHeldItemUsedUp, with
+# Battler_IsWild and Battler_PartySlot: who is marked for what, and whose item
+# each Pokemon holds (heldItemOwner).
 NOTE_FIXTURE = r"""
 #include <assert.h>
 #include <stdint.h>
@@ -377,76 +379,102 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef int BOOL;
+#define PARTY_SIZE 6
 typedef struct { int unused; } Party;
 typedef struct { u32 type; Party parties[4]; } BattleSystem;
 typedef struct { u16 item; } BattleMon;
-typedef struct { BattleMon battleMons[4]; u8 selectedMonIndex[4], heldItemsTaken, heldItemsGiven; u16 itemsTakenFromWild[2], itemsToRestore[6]; } BattleContext;
-#define PARTY_SIZE 6
+typedef struct {
+    BattleMon battleMons[4]; u8 selectedMonIndex[4], heldItemsTaken, heldItemsGiven;
+    u16 itemsTakenFromWild[2], itemsToRestore[PARTY_SIZE]; u8 heldItemOwner[BATTLER_MAX * PARTY_SIZE];
+} BattleContext;
 static BOOL BattleItemIsBerry(u16 item) { return item == ITEM_ORAN_BERRY || item == ITEM_SITRUS_BERRY; }
 static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 static u32 BattleSystem_GetBattleType(BattleSystem *bs) { return bs->type; }
 static u8 BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
-// A double battle's two player battlers share the player's party.
-static Party *BattleSystem_GetParty(BattleSystem *bs, int battlerId) { return &bs->parties[battlerId == 2 ? 0 : battlerId]; }
+// A double battle's two player battlers share the player's party, and the two
+// foes theirs (BattleSystem_GetParty outside a multi battle).
+static Party *BattleSystem_GetParty(BattleSystem *bs, int battlerId) { return &bs->parties[battlerId & 1]; }
 @FUNCTIONS@
+// The tag battler b's Pokemon carries.
+static int tag(BattleSystem *bs, BattleContext *ctx, int b) { return ctx->heldItemOwner[Battler_PartySlot(bs, ctx, b)]; }
+// A trainer's double battle: the player's slots 1 and 4 out (battlers 0 and
+// 2), each holding the Oran Berry it started with, tagged as
+// RememberHeldItems tags them; the trainer's battler 1 holds Leftovers, its
+// battler 3 nothing.
+static void reset(BattleSystem *bs, BattleContext *ctx) {
+    const BattleContext start = { .battleMons = { { ITEM_ORAN_BERRY }, { ITEM_LEFTOVERS }, { ITEM_ORAN_BERRY }, { ITEM_NONE } },
+                                  .selectedMonIndex = { 1, 0, 4, 2 }, .itemsToRestore = { [1] = ITEM_ORAN_BERRY, [4] = ITEM_ORAN_BERRY },
+                                  .heldItemOwner = { [1] = 2, [4] = 5 } };
+    bs->type = BATTLE_TYPE_TRAINER | BATTLE_TYPE_DOUBLES;
+    *ctx = start;
+}
 int main(void) {
-    BattleSystem bs = { BATTLE_TYPE_TRAINER | BATTLE_TYPE_DOUBLES };
-    BattleContext ctx = { .battleMons = { { ITEM_ORAN_BERRY }, { ITEM_LEFTOVERS }, { ITEM_POTION }, { ITEM_ESCAPE_ROPE } },
-                          .selectedMonIndex = { 1, 0, 4, 2 }, .itemsToRestore = { [1] = ITEM_ORAN_BERRY, [4] = ITEM_POTION } };
-    // The player's Pokemon, by party slot; a trainer's, not at all.
-    NoteHeldItemTaken(&bs, &ctx, 0);
-    NoteHeldItemTaken(&bs, &ctx, 2);
-    NoteHeldItemTaken(&bs, &ctx, 1);
-    assert(ctx.heldItemsTaken == ((1 << 1) | (1 << 4)));
+    BattleSystem bs;
+    BattleContext ctx;
+
+    // Taken from the player's Pokemon: marked by party slot, the tag going
+    // with the item. Taken from the trainer's: no mark. Taken back from the
+    // trainer's: no mark either, the trainer's Pokemon not being its owner.
+    reset(&bs, &ctx);
+    NoteHeldItemTaken(&bs, &ctx, 3, 0);
+    assert(ctx.heldItemsTaken == 1 << 1 && tag(&bs, &ctx, 3) == 2 && tag(&bs, &ctx, 0) == 0);
+    NoteHeldItemTaken(&bs, &ctx, 0, 1);
+    assert(ctx.heldItemsTaken == 1 << 1 && tag(&bs, &ctx, 0) == 0);
+    NoteHeldItemTaken(&bs, &ctx, 1, 0);
+    assert(ctx.heldItemsTaken == 1 << 1 && ctx.heldItemsGiven == 0);
     assert(ctx.itemsTakenFromWild[0] == ITEM_NONE && ctx.itemsTakenFromWild[1] == ITEM_NONE);
-    // A wild one's item, by battler.
-    bs.type = BATTLE_TYPE_DOUBLES;
-    NoteHeldItemTaken(&bs, &ctx, 3);
-    NoteHeldItemTaken(&bs, &ctx, 1);
-    assert(ctx.itemsTakenFromWild[0] == ITEM_LEFTOVERS && ctx.itemsTakenFromWild[1] == ITEM_ESCAPE_ROPE);
-    // Trick and Switcheroo: the player's Pokemon handing over the item it
-    // started with (slot 1's Oran Berry), not one it got in the battle (slot
-    // 4 started with Leftovers and holds a Potion), nor a wild one.
-    ctx.heldItemsTaken = 0;
-    ctx.itemsToRestore[1] = ITEM_ORAN_BERRY;
-    ctx.itemsToRestore[4] = ITEM_LEFTOVERS;
-    NoteHeldItemGiven(&bs, &ctx, 0);
-    NoteHeldItemGiven(&bs, &ctx, 2);
-    NoteHeldItemGiven(&bs, &ctx, 1);
-    assert(ctx.heldItemsGiven == (1 << 1) && ctx.heldItemsTaken == 0);
-    // The Oran Berry went to the trainer's Pokemon (battler 1), which eats
-    // it: gone for good (Raggiro). Not before: a Potion.
-    ctx.battleMons[1].item = ITEM_POTION;
-    NoteHeldItemUsedUp(&bs, &ctx, 1);
-    assert(ctx.itemsToRestore[1] == ITEM_ORAN_BERRY);
-    ctx.battleMons[1].item = ITEM_ORAN_BERRY;
-    NoteHeldItemUsedUp(&bs, &ctx, 1);
-    assert(ctx.itemsToRestore[1] == ITEM_NONE && ctx.itemsToRestore[4] == ITEM_LEFTOVERS);
     // A Berry taken, not handed over, stays the player's even eaten.
-    ctx.itemsToRestore[1] = ITEM_SITRUS_BERRY;
-    ctx.heldItemsGiven = 0;
-    ctx.heldItemsTaken = 1 << 1;
-    ctx.battleMons[1].item = ITEM_SITRUS_BERRY;
-    NoteHeldItemUsedUp(&bs, &ctx, 1);
-    assert(ctx.itemsToRestore[1] == ITEM_SITRUS_BERRY);
-    // Only the item the Pokemon started with is marked: after its Sitrus was
-    // eaten, the trainer's Leftovers it Coveted and then lost to Thief or
-    // Knock Off are not what it has back.
-    ctx.heldItemsTaken = 0;
+    ctx.battleMons[3].item = ITEM_ORAN_BERRY;
+    NoteHeldItemUsedUp(&bs, &ctx, 3);
+    assert(ctx.itemsToRestore[1] == ITEM_ORAN_BERRY && ctx.heldItemsTaken == 1 << 1);
+
+    // A wild one's item, by battler.
+    reset(&bs, &ctx);
+    bs.type = BATTLE_TYPE_DOUBLES;
+    ctx.battleMons[0].item = ITEM_NONE;
+    ctx.heldItemOwner[1] = 0;
+    ctx.battleMons[3].item = ITEM_ESCAPE_ROPE;
+    NoteHeldItemTaken(&bs, &ctx, 0, 3);
+    NoteHeldItemTaken(&bs, &ctx, 2, 1);
+    assert(ctx.itemsTakenFromWild[0] == ITEM_LEFTOVERS && ctx.itemsTakenFromWild[1] == ITEM_ESCAPE_ROPE);
+    assert(ctx.heldItemsTaken == 0);
+
+    // Trick and Switcheroo: the player's Pokemon handing over the Oran Berry
+    // it started with is marked, and the two tags change places.
+    reset(&bs, &ctx);
+    NoteHeldItemGiven(&bs, &ctx, 0, 1);
     ctx.battleMons[0].item = ITEM_LEFTOVERS;
-    NoteHeldItemTaken(&bs, &ctx, 0);
-    NoteHeldItemGiven(&bs, &ctx, 0);
-    assert(ctx.heldItemsTaken == 0 && ctx.heldItemsGiven == 0);
-    // Its own Oran Berry taken by Thief or handed over by Trick, had back,
-    // and eaten by itself: eaten, the marks gone, so it is not had back
-    // again when the battle is over.
-    ctx.itemsToRestore[1] = ITEM_ORAN_BERRY;
-    ctx.battleMons[0].item = ITEM_ORAN_BERRY;
-    NoteHeldItemTaken(&bs, &ctx, 0);
-    NoteHeldItemGiven(&bs, &ctx, 0);
-    assert(ctx.heldItemsTaken == 1 << 1 && ctx.heldItemsGiven == 1 << 1);
+    ctx.battleMons[1].item = ITEM_ORAN_BERRY;
+    assert(ctx.heldItemsGiven == 1 << 1 && ctx.heldItemsTaken == 0);
+    assert(tag(&bs, &ctx, 0) == 0 && tag(&bs, &ctx, 1) == 2);
+    // The other of the player's eats its own Oran Berry, and the trainer's
+    // other Pokemon one of its own, while the handed one is still held: theirs,
+    // not the handed one. Before, matched by kind, either emptied slot 1's
+    // entry, and the Oran Berry it handed over was not had back.
+    NoteHeldItemUsedUp(&bs, &ctx, 2);
+    ctx.battleMons[3].item = ITEM_ORAN_BERRY;
+    NoteHeldItemUsedUp(&bs, &ctx, 3);
+    assert(ctx.itemsToRestore[1] == ITEM_ORAN_BERRY && ctx.heldItemsGiven == 1 << 1);
+    // The trainer's Pokemon eats the handed one: gone for good (Raggiro).
+    // The tag stays, for a Recycle or a Harvest to bring back the same Berry.
+    NoteHeldItemUsedUp(&bs, &ctx, 1);
+    assert(ctx.itemsToRestore[1] == ITEM_NONE && ctx.itemsToRestore[4] == ITEM_ORAN_BERRY && tag(&bs, &ctx, 1) == 2);
+    // Handing over the Leftovers it got in the battle marks nothing.
+    NoteHeldItemGiven(&bs, &ctx, 0, 3);
+    assert(ctx.heldItemsGiven == 1 << 1);
+
+    // Its own Oran Berry handed over by Trick, Tricked back, taken by Thief
+    // and taken back, then eaten by itself: eaten, the marks gone, so it is
+    // not had back again when the battle is over.
+    reset(&bs, &ctx);
+    NoteHeldItemGiven(&bs, &ctx, 0, 1);
+    NoteHeldItemGiven(&bs, &ctx, 1, 0);
+    assert(tag(&bs, &ctx, 0) == 2 && tag(&bs, &ctx, 1) == 0);
+    NoteHeldItemTaken(&bs, &ctx, 1, 0);
+    NoteHeldItemTaken(&bs, &ctx, 0, 1);
+    assert(ctx.heldItemsTaken == 1 << 1 && ctx.heldItemsGiven == 1 << 1 && tag(&bs, &ctx, 0) == 2);
     NoteHeldItemUsedUp(&bs, &ctx, 0);
-    assert(ctx.heldItemsTaken == 0 && ctx.heldItemsGiven == 0 && ctx.itemsToRestore[1] == ITEM_ORAN_BERRY);
+    assert(ctx.heldItemsTaken == 0 && ctx.heldItemsGiven == 0 && ctx.itemsToRestore[1] == ITEM_ORAN_BERRY && tag(&bs, &ctx, 0) == 2);
     return 0;
 }
 """
@@ -525,7 +553,7 @@ static BOOL CanTrickHeldItem(BattleContext *ctx, int a, int b) { (void)ctx; (voi
 static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int a, int b, int ability) {
     (void)ctx; (void)a; assert(b == 1 && ability == ABILITY_STICKY_HOLD); return sStickyHold;
 }
-static void NoteHeldItemGiven(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; sMarked |= 1 << battlerId; }
+static void NoteHeldItemGiven(BattleSystem *bs, BattleContext *ctx, int a, int b) { (void)bs; (void)ctx; sMarked |= 1 << a | 1 << b; }
 @SWAP@
 static void use(BattleContext *ctx, u16 move) {
     sWords = sJump = sMarked = 0;
@@ -559,7 +587,8 @@ class TakenItemTests(unittest.TestCase):
 
     def test_who_is_marked(self):
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
-        program = NOTE_FIXTURE.replace("@FUNCTIONS@", function(overlay, "Battler_IsWild") + function(overlay, "NoteHeldItemTaken")
+        program = NOTE_FIXTURE.replace("@FUNCTIONS@", function(overlay, "Battler_IsWild") + function(overlay, "Battler_PartySlot")
+                                                + function(overlay, "NoteHeldItemTaken")
                                                 + function(overlay, "NoteHeldItemGiven") + function(overlay, "NoteHeldItemUsedUp"))
         with tempfile.TemporaryDirectory(prefix="newgold-taken-") as directory:
             path = Path(directory)
@@ -573,7 +602,8 @@ class TakenItemTests(unittest.TestCase):
 
     def test_thief_and_covet_mark_what_they_take(self):
         thief = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TryStealItem")
-        self.assertRegex(thief, r"\} else \{\n\s*NoteHeldItemTaken\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\}\n\s*\}\n\n\s*return FALSE;")
+        self.assertRegex(thief, r"\} else \{\n\s*NoteHeldItemTaken\(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget\);\n"
+                                r"\s*\}\n\s*\}\n\n\s*return FALSE;")
 
     def test_trick_and_switcheroo_mark_what_the_player_hands_over(self):
         # Pokemon Central (Raggiro, Rapidscambio): from the fifth generation
@@ -581,8 +611,7 @@ class TakenItemTests(unittest.TestCase):
         # included.
         swap = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_TrySwapItems")
         self.assertRegex(swap, r"ABILITY_STICKY_HOLD\) == TRUE\) \{\n\s*BattleScriptIncrementPointer\(ctx, adrsB\);\n\s*\} else \{\n"
-                               r"\s*NoteHeldItemGiven\(battleSystem, ctx, ctx->battlerIdAttacker\);\n"
-                               r"\s*NoteHeldItemGiven\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\}")
+                               r"\s*NoteHeldItemGiven\(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget\);\n\s*\}")
 
     def test_bestow_marks_what_it_hands_to_a_sticky_hold_holder(self):
         # Pokemon Central (Cediregalo): an item given to a trainer's Pokemon
@@ -625,6 +654,20 @@ class TakenItemTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             result = subprocess.run([str(path / "check")], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_each_pokemon_starts_holding_its_own(self):
+        # Whose item each holds (heldItemOwner): its own, if it has one.
+        self.assertIn("ctx->heldItemOwner[i] = ctx->itemsToRestore[i] != ITEM_NONE ? i + 1 : 0;",
+                      function(CONTROLLER.read_text(), "RememberHeldItems"))
+
+    def test_symbiosis_hands_the_tag_over_with_the_item(self):
+        # The partner's item goes with whose it is, unmarked: a Berry of the
+        # player's handed on by Symbiosis and eaten is gone, as eaten.
+        hand = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "TrySymbiosisHandOver")
+        self.assertRegex(hand, r"ctx->battleMons\[j\]\.item = ITEM_NONE;\n(\s*//.*\n)*"
+                               r"\s*k = Battler_PartySlot\(battleSystem, ctx, j\);\n"
+                               r"\s*ctx->heldItemOwner\[Battler_PartySlot\(battleSystem, ctx, battlerId\)\] = ctx->heldItemOwner\[k\];\n"
+                               r"\s*ctx->heldItemOwner\[k\] = 0;\n")
 
     def test_the_items_are_written_down_with_the_party_count(self):
         # GiveBackHeldItems gives back to the Pokemon the battle started with,

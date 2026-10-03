@@ -746,6 +746,16 @@ typedef struct BattleContext {
     // even if it was a Berry, unless the one it went to used it up
     // (BtlCmd_RemoveItem), where a taken one comes back all the same.
     u8 heldItemsGiven;
+    // Whose starting item each Pokemon holds now: 1 + the player's party slot
+    // that started the battle holding it, 0 for any other item or none, by
+    // party slot (Battler_PartySlot), so it goes out and comes back in with
+    // the Pokemon. RememberHeldItems gives each of the party its own; the
+    // tag goes with the item when it is taken (NoteHeldItemTaken) or handed
+    // over (NoteHeldItemGiven), and stays when it is used up, for Recycle and
+    // Harvest to bring back the same item (NoteHeldItemUsedUp). The player's
+    // Pokemon in slot i holds its own starting item when its entry, i, is
+    // i + 1.
+    u8 heldItemOwner[BATTLER_MAX * PARTY_SIZE];
     // The move table a battle keeps is retail's length and cannot grow, so the
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.
