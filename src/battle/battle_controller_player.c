@@ -3032,6 +3032,24 @@ static BOOL MoveStoppedByGravityOrHealBlock(BattleSystem *battleSystem, BattleCo
     return TRUE;
 }
 
+// Throat Chop refuses a sound move for the turn it landed and the next. The
+// selection screen refuses it too; this catches a move chosen before the
+// chop, among what stops a Pokemon acting (ov12_0224B528), or called by
+// another, which goes past the rest (ov12_0224C38C): a sound move Metronome
+// or Sleep Talk calls is called and fails (Pokemon Central, Sonnolalia, from
+// the seventh generation; Showdown's gen-9 throatchop condition stops a
+// called move in onModifyMove).
+static BOOL MoveStoppedByThroatChop(BattleContext *ctx) {
+    if (!ctx->moveConditions[ctx->battlerIdAttacker].throatChopTimer || !BattleMoveIsSoundBased(ctx->moveNoCur)) {
+        return FALSE;
+    }
+    ctx->moveFail[ctx->battlerIdAttacker].throatChop = TRUE;
+    ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_MOVE_FAIL_THROAT_CHOP);
+    ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+    ctx->commandNext = CONTROLLER_COMMAND_39;
+    return TRUE;
+}
+
 static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
     int effect = BattleMoveTbl(ctx, ctx->moveNoCur)->effect;
     int ret = 0;
@@ -3278,14 +3296,7 @@ static BOOL ov12_0224B528(BattleSystem *battleSystem, BattleContext *ctx) {
             ctx->unk_50++;
             break;
         case 15:
-            // Throat Chop refuses a sound move for the turn it landed and the
-            // next. The selection screen refuses it too; this catches a move
-            // chosen before the chop, or picked by something else.
-            if (ctx->moveConditions[ctx->battlerIdAttacker].throatChopTimer && BattleMoveIsSoundBased(ctx->moveNoCur)) {
-                ctx->moveFail[ctx->battlerIdAttacker].throatChop = TRUE;
-                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, BATTLE_SUBSCRIPT_MOVE_FAIL_THROAT_CHOP);
-                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
-                ctx->commandNext = CONTROLLER_COMMAND_39;
+            if (MoveStoppedByThroatChop(ctx) == TRUE) {
                 ret = 1;
             }
             ctx->unk_50++;
@@ -4043,12 +4054,14 @@ static void ov12_0224C38C(BattleSystem *battleSystem, BattleContext *ctx) {
             return;
         }
         // A called move goes past what stops its user acting, which was its
-        // caller's to go through (CallMove), but not past Gravity and Heal
-        // Block, which stop the move itself: from the fifth generation
-        // Metronome, Copycat and Assist call a move either would stop, and it
-        // fails here (Pokemon Central, Metronomo; Showdown's gen-9 gravity and
-        // healblock conditions stop a called move in onModifyMove).
-        if ((ctx->unk_2184 & MULTIHIT_CALLED_MOVE) && MoveStoppedByGravityOrHealBlock(battleSystem, ctx) == TRUE) {
+        // caller's to go through (CallMove), but not past Gravity, Heal Block
+        // and Throat Chop, which stop the move itself: from the fifth
+        // generation Metronome, Copycat and Assist call a move Gravity or
+        // Heal Block would stop, and it fails here (Pokemon Central,
+        // Metronomo; Showdown's gen-9 gravity, healblock and throatchop
+        // conditions stop a called move in onModifyMove).
+        if ((ctx->unk_2184 & MULTIHIT_CALLED_MOVE)
+            && (MoveStoppedByGravityOrHealBlock(battleSystem, ctx) == TRUE || MoveStoppedByThroatChop(ctx) == TRUE)) {
             ctx->battleStatus |= BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE;
             ctx->moveStatusFlag |= MOVE_STATUS_NO_MORE_WORK;
             return;

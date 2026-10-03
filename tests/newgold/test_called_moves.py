@@ -278,7 +278,8 @@ int main(void) {
         # onModifyMove): the called move goes past what stops its user acting
         # but not past these two. The call itself no longer asks them.
         steps = function(CONTROLLER.read_text(), "ov12_0224C38C")
-        self.assertRegex(steps, r"if \(\(ctx->unk_2184 & MULTIHIT_CALLED_MOVE\) && MoveStoppedByGravityOrHealBlock\(battleSystem, ctx\) == TRUE\) \{\n"
+        self.assertRegex(steps, r"if \(\(ctx->unk_2184 & MULTIHIT_CALLED_MOVE\)\n\s+&& \(MoveStoppedByGravityOrHealBlock\(battleSystem, ctx\) == TRUE"
+                                r" \|\| MoveStoppedByThroatChop\(ctx\) == TRUE\)\) \{\n"
                                 r"\s+ctx->battleStatus \|= BATTLE_STATUS_CHECK_LOOP_ONLY_ONCE;\n\s+ctx->moveStatusFlag \|= MOVE_STATUS_NO_MORE_WORK;\n\s+return;")
         self.assertLess(steps.index("ov12_0224B528(battleSystem, ctx)"), steps.index("MoveStoppedByGravityOrHealBlock"))
         self.assertLess(steps.index("MoveStoppedByGravityOrHealBlock"), steps.index("TryDisobedience"))
@@ -291,6 +292,18 @@ int main(void) {
         self.assertIn("StruggleCheck(battleSystem, ctx, ctx->battlerIdAttacker, nonSelectableMoves,\n"
                       "        ~(STRUGGLE_CHECK_NO_PP | STRUGGLE_CHECK_GRAVITY | STRUGGLE_CHECK_HEAL_BLOCK));",
                       function(COMMANDS.read_text(), "BtlCmd_TrySleepTalk"))
+
+    def test_throat_chop_stops_a_called_sound_move(self):
+        # From the seventh generation a sound move another calls under Throat
+        # Chop is called and fails (Pokemon Central, Sonnolalia; Showdown's
+        # gen-9 throatchop onModifyMove), as a chosen one is refused among
+        # what stops a Pokemon acting; one check serves both.
+        controller = CONTROLLER.read_text()
+        stop = function(controller, "MoveStoppedByThroatChop")
+        self.assertIn("!ctx->moveConditions[ctx->battlerIdAttacker].throatChopTimer || !BattleMoveIsSoundBased(ctx->moveNoCur)", stop)
+        self.assertIn("BATTLE_SUBSCRIPT_MOVE_FAIL_THROAT_CHOP", stop)
+        self.assertIn("if (MoveStoppedByThroatChop(ctx) == TRUE) {\n                ret = 1;", function(controller, "ov12_0224B528"))
+        self.assertIn("MoveStoppedByThroatChop(ctx) == TRUE", function(controller, "ov12_0224C38C"))
 
     def test_the_called_move_is_noted_as_the_move_used(self):
         run_c(NOTED.replace("@FUNCTIONS@", function(CONTROLLER.read_text(), "NoteMoveUsed")))
