@@ -979,6 +979,7 @@ void ov18_021E67C8(PokedexAppData *pokedexApp, int a1) {
         ov18_021E800C(pokedexApp);
         ov18_021E602C();
         ov18_021F0900(pokedexApp);
+        PokedexApp_CreateFormTypeIcons(pokedexApp);   // before the entry is drawn with them
         ov18_021F5DC0(pokedexApp);
         break;
     case 4:

@@ -2395,6 +2395,7 @@ static int PokedexApp_MainSeq_67(PokedexAppData *pokedexApp) {
         if (pokedexApp->unk_185B == 3) {
             ov18_021F0918(pokedexApp);
             ov18_021F5DE0(pokedexApp);
+            PokedexApp_FreeFormTypeIcons(pokedexApp);
         } else if (pokedexApp->unk_185B == 2) {
             ov18_021F0838(pokedexApp);
             ov18_021F4A50(pokedexApp);
@@ -3037,6 +3038,7 @@ static int PokedexApp_MainSeq_81(PokedexAppData *pokedexApp) {
     case 1:
         ov18_021F0918(pokedexApp);
         ov18_021F5DE0(pokedexApp);
+        PokedexApp_FreeFormTypeIcons(pokedexApp);
         r4->unk_0 = 0;
         if (pokedexApp->unk_185B == 1) {
             return POKEDEXAPP_MAINSEQ_68;
@@ -3185,6 +3187,7 @@ static int PokedexApp_MainSeq_86(PokedexAppData *pokedexApp) {
         ov18_021E81A8(pokedexApp);
         ov18_021F0DD0(pokedexApp);
         ov18_021F6684(pokedexApp);
+        PokedexApp_HideFormTypeIcons(pokedexApp);
         ov18_021F6714(pokedexApp);
         PaletteData_BeginPaletteFade(pokedexApp->paletteData, PLTTBUF_MAIN_BG_F, 0xF7BE, 0, 16, 0, RGB_BLACK);
         PaletteData_BeginPaletteFade(pokedexApp->paletteData, PLTTBUF_MAIN_OBJ_F, 0xFFEF, 0, 16, 0, RGB_BLACK);

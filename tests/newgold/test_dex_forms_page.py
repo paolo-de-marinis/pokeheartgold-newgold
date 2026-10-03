@@ -12,6 +12,7 @@ latest games' Dex does ("Galarian Form"), Paldean Tauros by its breed.
 Both are cut from the tree and compiled natively over a stand-in Dex.
 """
 
+import json
 import os
 import re
 import shlex
@@ -183,6 +184,59 @@ int main(void) {
 }
 '''
 
+TYPES = r'''
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int32_t fx32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define FX32_CONST(x) ((fx32)((x) * 4096))
+typedef struct { int drawn; int x, y; int type; } ManagedSprite;
+typedef struct PokedexAppData {
+    ManagedSprite *unk_0670[120];
+    u16 curSpecies;
+    u8 seenForms[0x20];
+    u16 seenFormSpecies[0x20];
+    u8 unk_18C7_5;
+} PokedexAppData;
+static ManagedSprite sSprites[120];
+static int GetMonBaseStat_HandleAlternateForm(int species, int form, int stat) {
+    (void)form;
+@TYPES@
+    assert(0);
+    return 0;
+}
+static void ManagedSprite_SetDrawFlag(ManagedSprite *s, int flag) { s->drawn = flag; }
+static void ManagedSprite_SetPositionXYWithSubscreenOffset(ManagedSprite *s, int x, int y, fx32 off) { s->x = x; s->y = y; (void)off; }
+static void ov18_021F21FC(PokedexAppData *app, int spriteIdx, u16 type) { app->unk_0670[spriteIdx]->type = type; }
+static void ov18_021F3CA8(PokedexAppData *app, int idx, u8 *form, u8 *gender) { (void)app; (void)idx; *form = 0; *gender = 0; }
+static void ov18_021F11C0(PokedexAppData *app, int spriteIdx, int on) { (void)app; (void)spriteIdx; (void)on; }
+static void ov18_021F1A7C(PokedexAppData *app, u16 species, int form, int gender, int facing, int spriteIdx, int a6) { (void)app; (void)species; (void)form; (void)gender; (void)facing; (void)spriteIdx; (void)a6; }
+static u8 GetMonPicHeightBySpeciesGenderForm(u16 species, u8 gender, u8 facing, u8 form, u32 pid) { (void)species; (void)gender; (void)facing; (void)form; (void)pid; return 0; }
+@NATIVE@
+
+int main(void) {
+    static PokedexAppData app = { .curSpecies = SPECIES_SLOWPOKE, .seenForms = { 1, 0x80 },
+                                  .seenFormSpecies = { SPECIES_SLOWPOKE, SPECIES_SLOWPOKE_GALARIAN } };
+    for (int i = 0; i < 120; i++) app.unk_0670[i] = &sSprites[i];
+    ManagedSprite *icons = &sSprites[FORMS_TYPE_SPRITE];
+
+    ov18_021F5EFC(&app, 0, 0);      // Slowpoke, drawn into the first pair
+    assert(icons[0].drawn && icons[0].type == TYPE_WATER && icons[0].x == FORMS_TYPE_X_FIRST);
+    assert(icons[1].drawn && icons[1].type == TYPE_PSYCHIC && icons[1].x == FORMS_TYPE_X_SECOND);
+    assert(!icons[2].drawn && !icons[3].drawn);
+    ov18_021F5EFC(&app, 1, 0);      // the Galarian form, into the second
+    assert(!icons[0].drawn && !icons[1].drawn);
+    assert(icons[2].drawn && icons[2].type == TYPE_PSYCHIC && icons[2].x == FORMS_TYPE_X_LONE && !icons[3].drawn);
+    puts("PASS: the Galarian Slowpoke shows Psychic alone, Slowpoke Water and Psychic.");
+    return 0;
+}
+'''
+
 REGIONS = {"ALOLAN": "Alolan Form", "GALARIAN": "Galarian Form", "HISUIAN": "Hisuian Form", "PALDEAN": "Paldean Form"}
 BREEDS = {"TAUROS_COMBAT": "Combat Breed", "TAUROS_BLAZE": "Blaze Breed", "TAUROS_AQUA": "Aqua Breed"}
 
@@ -234,6 +288,24 @@ class DexFormsPageTests(unittest.TestCase):
         source = (ROOT / "src/application/pokedex/ov18_021F5EF0.c").read_text()
         program = CRY.replace("@NATIVE@", function(source, "ov18_021F5EF0"))
         print(run(program))
+
+    def test_an_entry_shows_its_own_types(self):
+        """ov18_021F5EFC draws the entry's types beneath its front and back,
+        with the list's type icons (ov18_021F21FC): a form that is a species
+        of its own its own types, from the tree's personal data -- the
+        Galarian Slowpoke Psychic alone, centred, Slowpoke Water and
+        Psychic side by side -- in the pair of sprites the page draws next,
+        the other hidden."""
+        source = (ROOT / "src/application/pokedex/ov18_021F5EF0.c").read_text()
+        records = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
+        header = (ROOT / "include/constants/species.h").read_text()
+        numbers = {name: int(n) for name, n in re.findall(r"#define SPECIES_(\w+)\s+(\d+)", header)}
+        types = {numbers[name]: records[numbers[name]]["types"] for name in ("SLOWPOKE", "SLOWPOKE_GALARIAN")}
+        table = "\n".join(f"    if (species == {n}) return stat == BASE_TYPE1 ? {t[0]} : {t[1]};" for n, t in types.items())
+        defines = "\n".join(re.findall(r"^#define (?:FORMS_TYPE_\w+)\b.*$", source, re.M))
+        body = (defines + "\n" + function(source, "PokedexApp_HideFormTypeIcons") + "\n"
+                + function(source, "PokedexApp_ShowFormTypes") + "\n" + function(source, "ov18_021F5EFC"))
+        print(run(TYPES.replace("@TYPES@", table).replace("@NATIVE@", body)))
 
     def test_a_regional_form_is_named_by_its_region(self):
         """Every regional form the tree has falls in sRegionalForms under its
