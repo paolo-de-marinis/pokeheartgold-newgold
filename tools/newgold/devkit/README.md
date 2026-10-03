@@ -475,8 +475,8 @@ Reading what the debug ROM records, and playing it without looking.
   empty flash (a scenario with no save) by the application running and the
   Oak speech's state, `starter:SPECIES` turns the machine in Elm's lab by
   its cursor, and `save` saves through the start menu as a player does and
-  keeps the flash (melonDS DS hands it over; melonDS 0.9.3 writes none back
-  while it runs). The presses a leg makes between them -- leg 03's
+  keeps the flash (melonDS DS hands it over; melonDS 0.9.3 never writes one
+  back, not even at unload, so the step refuses it). The presses a leg makes between them -- leg 03's
   OPTIONS, the rival's name -- are timed, and the leg checks what they set
   (`options.*`, the flags and variables). A leg names the one before it (`"from"`) and starts from
   that save: the legs of a run share a directory (`--chain`), a leg run
