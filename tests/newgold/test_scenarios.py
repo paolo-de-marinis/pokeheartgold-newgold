@@ -243,6 +243,7 @@ class ScenarioFileTests(unittest.TestCase):
                 return b""
         s = scene.Scene.__new__(scene.Scene)
         s.core, s.say, s.flee, s.healer, s.elf, s.shift = Core(), (lambda line: None), 40, (158, 8, 13), None, None
+        s.hooks = []
         values, hps, walks, steps = iter([5, 5, 6, 8]), iter([20, 7, 20]), [], []
 
         def goto(goal, frames):
