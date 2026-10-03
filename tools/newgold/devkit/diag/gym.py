@@ -152,9 +152,10 @@ def throws_now(hp, max_hp, hit, damaging):
 
 def may_run(wild, line):
     """Whether the player may still run after this battle line: a wild
-    battle, until a try has failed. "You couldn't get away!" is also what a
-    trapped Pokemon is told (CantEscape: Wrap, Mean Look...) with no turn
-    spent, so trying again would choose RUN for ever; it fights instead."""
+    battle, until a try has failed ("You couldn't get away!") or the
+    Pokemon is trapped ("You can't escape!", CantEscape: Wrap, Mean Look...,
+    with no turn spent, so trying again would choose RUN for ever); it
+    fights instead."""
     return (wild or line.startswith("You encountered a wild")) and "get away" not in line and "escape" not in line
 
 

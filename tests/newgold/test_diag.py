@@ -121,15 +121,18 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertTrue(runs(["you Raichu Alolan L30 12/80 | 1:Thunderbolt 15"], True, 40))
 
     def test_gym_tries_to_run_once_and_fights_when_it_cannot(self):
-        # A wrapped Cyndaquil was told "You couldn't get away!" 384 times,
-        # no turn spent, until the walk ran out of frames.
+        # A wrapped Cyndaquil was told it could not get away 384 times, no
+        # turn spent, until the walk ran out of frames. A trapped Pokemon is
+        # told "You can't escape!" (CantEscape, msg_0197 row 01948); a try
+        # that failed and spent the turn, "You couldn't get away!".
         sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
         from gym import may_run
-        wild = False
-        for line, after in (("You encountered a wild Ekans!", True), ("The wild Ekans used Wrap!", True),
-                            ("You couldn’t get away!", False), ("The wild Ekans used Leer!", False)):
-            wild = may_run(wild, line)
-            self.assertIs(wild, after, line)
+        for refusal in ("You can’t escape!", "You couldn’t get away!"):
+            wild = False
+            for line, after in (("You encountered a wild Ekans!", True), ("The wild Ekans used Wrap!", True),
+                                (refusal, False), ("The wild Ekans used Leer!", False)):
+                wild = may_run(wild, line)
+                self.assertIs(wild, after, line)
         self.assertFalse(may_run(False, "You are challenged by Youngster Joey!"))
 
     def test_gym_weakens_a_pokemon_to_catch_then_throws(self):
