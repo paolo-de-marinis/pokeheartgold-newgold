@@ -1,0 +1,119 @@
+{
+  "about": "The playthrough's Azalea Gym, its other two trainers, from Azalea's Pokemon Center after Al and Benny: in by station 0 to the middle; the switch there (11, 18) flipped, station 7 up to the top right, Bug Catcher Josh; back down and out to the nurse; in again, the gym's carts and switches set again on entering (AzaleaGymInit), so station 7 goes up to the top left, Twins Amy & Mimi, a double battle; back down by stations 9 and 4, out, the nurse, and the game's save. Leader Bugsy is the next leg's. A loss sends the player to the nurse, and again: rides back and fights that trainer again until trainer: reads them beaten, each attempt a new battle, four times more at most; with the Geodude leading, Josh's Pinsir, Shuckle and Speed Boost Yanma beat the team once, with the Hoothoot leading both were won the first time (32,052 frames). The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_08_azalea_gym",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "goto:MAP_AZALEA_GYM,3,33",
+    "UP*2",
+    "field",
+    {
+      "expect": {
+        "map": "MAP_AZALEA_GYM",
+        "x": 9,
+        "y": 23
+      }
+    },
+    "goto:MAP_AZALEA_GYM,11,18",
+    "A",
+    "field",
+    "goto:MAP_AZALEA_GYM,9,18",
+    "UP*2",
+    "field",
+    {
+      "expect": {
+        "x": 15,
+        "y": 8
+      }
+    },
+    "goto:MAP_AZALEA_GYM,15,7",
+    "A",
+    "fight",
+    "field",
+    "again:15,trainer:TRAINER_BUG_CATCHER_JOSH,1,4",
+    "DOWN*2",
+    "field",
+    {
+      "expect": {
+        "x": 9,
+        "y": 18
+      }
+    },
+    "goto:MAP_AZALEA_GYM,9,23",
+    "DOWN*2",
+    "field",
+    {
+      "expect": {
+        "x": 3,
+        "y": 33
+      }
+    },
+    "goto:MAP_AZALEA_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "goto:MAP_AZALEA_GYM,3,33",
+    "UP*2",
+    "field",
+    {
+      "expect": {
+        "x": 9,
+        "y": 23
+      }
+    },
+    "goto:MAP_AZALEA_GYM,9,18",
+    "UP*2",
+    "field",
+    {
+      "expect": {
+        "x": 3,
+        "y": 8
+      }
+    },
+    "goto:MAP_AZALEA_GYM,3,7",
+    "A",
+    "fight",
+    "field",
+    "again:12,trainer:TRAINER_TWINS_AMY_AND_MIMI,1,4",
+    "goto:MAP_AZALEA_GYM,3,8",
+    "DOWN*2",
+    "field",
+    {
+      "expect": {
+        "x": 9,
+        "y": 18
+      }
+    },
+    "goto:MAP_AZALEA_GYM,9,23",
+    "DOWN*2",
+    "field",
+    {
+      "expect": {
+        "x": 3,
+        "y": 33
+      }
+    },
+    "goto:MAP_AZALEA_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_AZALEA_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 1,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "trainer:TRAINER_BUG_CATCHER_JOSH": 1,
+    "trainer:TRAINER_TWINS_AMY_AND_MIMI": 1,
+    "lines": [
+      "You defeated Bug Catcher Josh!",
+      "You defeated Twins Amy & Mimi!"
+    ]
+  }
+}
