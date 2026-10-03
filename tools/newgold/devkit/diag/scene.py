@@ -1144,6 +1144,9 @@ class Scene:
         mons = self.mons()
         if move is None or slot >= len(mons):
             return [f"machine: no machine {item}, or no party slot {slot}"]
+        if not any(way["how"] == "machine" and way.get("item") == item and "from" not in way
+                   for way in savedit.learnable_moves(mons[slot]["species"]).get(move, [])):
+            return [f"machine: slot {slot}'s species {mons[slot]['species']} cannot learn move {move} from it"]
         known = [m for m in mons[slot]["moves"] if m]
         gone = gym.forgets(gym.Scorer(), mons[slot]["species"], known + [move]) if len(known) == 4 else None
         if gone == 4:

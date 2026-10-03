@@ -437,6 +437,8 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertEqual(party[0]["moves"], [numbers[m] for m in ("TACKLE", "EMBER", "CUT", "FLAME_WHEEL")])
         self.assertEqual(s.core.touches[:4], [scene.TABS[3], scene.CELLS[1], scene.BAG_USE, scene.PANELS[0]])
         self.assertIn("keeps", s.machine(items["ITEM_TM17"], 0)[0])         # Protect over four attacks
+        party[0]["species"] = scene.savedit.species_numbers()["FLAAFFY"]
+        self.assertIn("cannot learn", s.machine(items["ITEM_HM01"], 0)[0])  # leg 09b's first try: no Cut for it
         self.assertTrue(scene.readable("machine:ITEM_HM01,2"))
         self.assertTrue(scene.readable("party2.move3", key=True))
 
