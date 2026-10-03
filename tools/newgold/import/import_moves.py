@@ -569,6 +569,13 @@ FIELDS_HERE = {
     # del Te); the reference's adjacent Pokemon and the user would have the
     # controller walk them again.
     "TEATIME": {"target": "RANGE_FIELD", "flagsOff": ("FLAG_MAGIC_COAT",)},
+    # The user, whose stats its script raises: not blocked by Protect, not
+    # sent back by Magic Coat, taken by Snatch, not copied by Mirror Move
+    # (Pokemon Central, Baldimpulso; Showdown's gen-9 takeheart, target self).
+    # The reference aims it at the ally, so in a double battle the partner's
+    # Protect or Crafty Shield stopped it and its Magic Bounce sent it back.
+    "TAKE_HEART": {"target": "RANGE_USER", "flagsOn": ("FLAG_SNATCH",),
+                   "flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT", "FLAG_MIRROR_MOVE")},
 }
 
 # The effects written here for those moves follow the reference's in

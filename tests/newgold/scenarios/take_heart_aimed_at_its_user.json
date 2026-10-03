@@ -1,0 +1,10 @@
+{
+  "about": "Take Heart is aimed at its user (Pokemon Central, Baldimpulso: it hits the user, is not blocked by Protect, is not sent back by Magic Coat; Showdown's gen-9 takeheart, target self). The engine's record aimed it at the ally with the protect flag, so in a double battle the partner's Protect stopped it. The Twins' double battle in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-30 Pawmot and a level-30 Baxcalibur on the twins' platform: the Pawmot is given Take Heart and the Baxcalibur Protect in the running battle (teach:); the Protect goes first, and the Take Heart still raises the Pawmot's Sp. Atk and Sp. Def (before, \"Baxcalibur protected itself!\" a second time, after the Take Heart, and no stat rose).",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:30,BAXCALIBUR:30", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_TAKE_HEART", "teach:2,0,MOVE_PROTECT", "fight:1:1"],
+  "expect": {"lines": ["Baxcalibur used Protect!", "Pawmot used Take Heart!", "Sp. Atk rose!", "Sp. Def rose!"],
+             "once_lines": ["Baxcalibur protected itself!"]}
+}
