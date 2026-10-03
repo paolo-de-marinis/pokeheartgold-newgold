@@ -5,7 +5,9 @@ Battler_CheckWeatherFormChange changes them by the retail species and form
 number. Forecast asks for Castform's form, not its type (Pokemon Central,
 Previsioni): a type a move gave it stays until the form changes. They come
 into a battle in the form they have out of one, the weather's form species
-and a retail weather form alike (BattleSystem_GetBattleMon).
+and a retail weather form alike (BattleSystem_GetBattleMon). A Pokemon
+transformed into one keeps the form it copied (Previsioni from the fifth
+generation; Showdown's gen-9 Forecast and Flower Gift).
 """
 
 import re
@@ -17,6 +19,8 @@ from test_repels import function
 OVERLAY = ROOT / "src/battle/overlay_12_0224E4FC.c"
 SPECIES = ROOT / "include/constants/species.h"
 REVERSION = ROOT / "src/data/form_reversion.h"
+TRANSFORMED = ("SPECIES && ctx->battleMons[ctx->battlerIdTemp].hp"
+               " && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {")
 
 
 class ForecastTests(unittest.TestCase):
@@ -42,8 +46,12 @@ class ForecastTests(unittest.TestCase):
     def test_without_forecast_it_goes_back_to_its_normal_form(self):
         # Lost or suppressed, Forecast leaves Castform in its Normal Form
         # (Previsioni): the ability is asked for the weather's form only.
-        self.assertRegex(self.castform, r"^SPECIES_CASTFORM && ctx->battleMons\[ctx->battlerIdTemp\]\.hp\) \{\s*"
+        self.assertRegex(self.castform, r"^SPECIES_CASTFORM && ctx->battleMons\[ctx->battlerIdTemp\]\.hp && [^{]*\) \{\s*"
                                         r"form = CASTFORM_NORMAL;\s*if \(GetBattlerAbility\(ctx, ctx->battlerIdTemp\) == ABILITY_FORECAST\s")
+
+    def test_a_transformed_one_keeps_its_form(self):
+        # A Ditto that copied Castform keeps the form it copied (Previsioni).
+        self.assertTrue(self.castform.startswith(TRANSFORMED.replace("SPECIES", "SPECIES_CASTFORM")))
 
     def test_each_weather_its_form(self):
         # Hail and snow alike bring the Snowy Form (Previsioni).
@@ -64,6 +72,10 @@ class FlowerGiftTests(unittest.TestCase):
         self.assertIn("form = CHERRIM_SUNNY;", self.cherrim)
         self.assertIn("if (ctx->battleMons[ctx->battlerIdTemp].form != form) {", self.cherrim)
         self.assertEqual(self.cherrim.count("form = "), 3)
+
+    def test_a_transformed_one_keeps_its_form(self):
+        # As Castform does (Showdown's gen-9 Flower Gift).
+        self.assertTrue(self.cherrim.startswith(TRANSFORMED.replace("SPECIES", "SPECIES_CHERRIM")))
 
 
 class EntryTests(unittest.TestCase):

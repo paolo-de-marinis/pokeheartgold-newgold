@@ -1,0 +1,16 @@
+{
+  "about": "A Pokemon transformed into Cherrim keeps the form it copied whatever the weather (Showdown's gen-9 Flower Gift returns for a transformed Pokemon; Pokemon Central's Regalfiore does not say, Previsioni has Castform so from the fifth generation). A level-10 Cherrim with Flower Gift is given Splash and Sunny Day in the running battle (teach:) against a forced wild Ditto that knows only Transform: the Ditto becomes a Cherrim in its Overcast Form (battler1.species SPECIES_CHERRIM, form 0) with Flower Gift, and Sunny Day brings the player's Cherrim its Sunshine Form (battler0.form 1, CHERRIM_SUNNY) while the Ditto stays in the Overcast Form (battler1.form 0). Before, Flower Gift asked nothing of a transformed Pokemon and the Ditto took the Sunshine Form too (\"The wild Ditto transformed!\", battler1.form 1). The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CHERRIM:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=132", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SPLASH", "teach:0,1,MOVE_SUNNY_DAY", "teach:0,2,0,0", "teach:0,3,0,0",
+            "set:0,ability,ABILITY_FLOWER_GIFT",
+            "teach:1,0,MOVE_TRANSFORM", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["The wild Ditto transformed into Cherrim!"], "battler1.species": "SPECIES_CHERRIM", "battler1.form": 0}},
+            "fight:2:1"],
+  "expect": {"new_lines": ["used Sunny Day!", "Cherrim transformed!"],
+             "no_lines": ["The wild Ditto transformed!"],
+             "battler0.form": 1, "battler1.species": "SPECIES_CHERRIM", "battler1.form": 0}
+}

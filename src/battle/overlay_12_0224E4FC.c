@@ -10493,7 +10493,10 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
         // Gastro Acid, Neutralizing Gas -- goes back to its Normal Form
         // (Previsioni), as the reference has it (BattleFormChangeCheck.c:85);
         // retail asked for Forecast first and left that Castform as it was.
-        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_CASTFORM && ctx->battleMons[ctx->battlerIdTemp].hp) {
+        // A Pokemon transformed into Castform keeps the form it copied
+        // whatever the weather, as from the fifth generation (Previsioni;
+        // Showdown's gen-9 Forecast): retail and the reference changed it.
+        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_CASTFORM && ctx->battleMons[ctx->battlerIdTemp].hp && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {
             form = CASTFORM_NORMAL;
             if (GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_FORECAST
                 && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
@@ -10522,7 +10525,10 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
         // Skill Swap, Gastro Acid, Neutralizing Gas -- goes back to its
         // Overcast Form (Pokemon Central, Regalfiore). Retail and the
         // reference (BattleFormChangeCheck.c:96) asked the species alone.
-        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_CHERRIM && ctx->battleMons[ctx->battlerIdTemp].hp) {
+        // A Pokemon transformed into Cherrim keeps the form it copied, as
+        // one transformed into Castform does: Regalfiore does not say, and
+        // Showdown's gen-9 Flower Gift returns for a transformed Pokemon.
+        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_CHERRIM && ctx->battleMons[ctx->battlerIdTemp].hp && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {
             form = CHERRIM_CLOUDY;
             if (GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_FLOWER_GIFT && (weather & FIELD_CONDITION_SUN_ALL)
                 && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK)) {
