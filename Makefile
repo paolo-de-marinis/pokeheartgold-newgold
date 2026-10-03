@@ -33,7 +33,6 @@ MAKEFLAGS += --no-print-directory
 
 all:
 	$(MAKE) tools
-	$(MAKE) patch_mwasmarm
 	$(MAKE) $(ROM)
 
 tidy:
@@ -136,11 +135,11 @@ $(WORK_DIR)/include/global.h: | $(FX_CONST_H) ;
 # include it: in a fresh tree their first compiles ran before it was made and
 # stopped on "the file 'nitro/fx/fx_const.h' cannot be opened".
 dsprot sub: | $(FX_CONST_H)
-# The ARM7's makefile and libsyscall's each patch their assembler first,
-# which builds mwasmarm_patcher when it is missing, and dsprot's assembles
-# with the same 2.0/sp2p3 as the SDK here: patched here before any of them
-# starts, the patcher is not built by two at once, nor the file written by
-# one while another reads it.
+# dsprot's, the ARM7's and libsyscall's makefiles assemble with the same
+# 2.0/sp2p3 as the SDK here, each waiting for a patch stamp of its own,
+# which builds mwasmarm_patcher when it is missing: patched here before any
+# of them starts, the patcher is not built by two at once, nor the file
+# written by one while another reads it -- theirs only read it.
 dsprot sub libsyscall: | $(BUILD_DIR)/mwasmarm/2.0/sp2p3.patched
 
 # Convenience targets

@@ -19,9 +19,7 @@ tidy:
 
 clean: tidy
 
-all:
-	$(MAKE) patch_mwasmarm 
-	$(MAKE) target
+all: target
 
 target: $(SBIN) $(ELF)
 

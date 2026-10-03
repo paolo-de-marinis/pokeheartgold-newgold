@@ -323,10 +323,11 @@ class BuildRuleTests(unittest.TestCase):
         """patch_mwasmarm ran mwasmarm_patcher and nothing built it: the
         ARM7's makefile patches its assembler first, and a ROM target made in
         a fresh tree before make tools stopped there, the patcher not found.
-        The step depends on the tool now. libsyscall's makefile patches as
-        well, beside the ARM7's, and dsprot's assembles with the same
-        2.0/sp2p3: the main makefile patches it before any of them starts,
-        its stamp waiting for the tool, so no two build or patch at once."""
+        The step depends on the tool now. dsprot's, the ARM7's and
+        libsyscall's makefiles assemble with the same 2.0/sp2p3, each behind
+        a stamp of its own: the main makefile patches it before any of them
+        starts, its stamp waiting for the tool, so no two build or patch at
+        once."""
         db = database()
         patcher = next(p for p in re.search(r"^NATIVE_TOOLS := (.*)$", db, re.M).group(1).split()
                        if p.endswith("/tools/mwasmarm_patcher/mwasmarm_patcher"))
@@ -371,6 +372,16 @@ class BuildRuleTests(unittest.TestCase):
                 patched = [i for i, line in enumerate(lines) if line.endswith(f"-q {assembler}")]
                 assembled = [i for i, line in enumerate(lines) if line.startswith("wine ") and assembler in line and source in line]
                 self.assertTrue(patched and assembled and patched[0] < assembled[0], "\n".join(lines[:40]))
+
+    def test_only_the_stamps_patch(self):
+        """make's all target, the ARM7's and libsyscall's each ran a phony
+        patch_mwasmarm first, a second make, which had only read the
+        assembler since every rule that assembles waits for its stamp: gone."""
+        for directory in ("", "sub", "lib/syscall"):
+            with self.subTest(directory or "main"):
+                db = database() if not directory else run_make("-C", directory, "-pn", "print-NOTHING").stdout
+                rule = re.search(r"^all:.*\n(?:#.*\n)*((?:\t.*\n)*)", db, re.M)
+                self.assertNotIn("patch_mwasmarm", rule.group(0))
 
     def test_a_lone_object_s_assembler_stays_its_own(self):
         """make hands a target's variables down to its prerequisites: made
