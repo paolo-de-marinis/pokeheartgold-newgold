@@ -136,7 +136,8 @@ bag:ITEM_... (how many the bag holds), badges, running_shoes (1 once the
 player has them: PlayerSaveData's, which no flag says),
 options.textSpeed|soundMethod|battleStyle|battleScene|buttonMode|frame (the
 start menu's settings as Options holds them: text speed 2 fast, battle
-scene 1 off, battle style 1 set), flag:FLAG_..., var:VAR_...,
+scene 1 off, battle style 1 set), flag:FLAG_..., var:VAR_..., trainer:TRAINER_...
+(1 once that trainer is beaten, TrainerFlagCheck),
 caught:SPECIES_... (1 once the Pokedex has it caught),
 battlerN.species|hp|maxHp|level|partySlot|status|item|moveK|ppK|form|movePos
 (gDiagBattlers; N counts the player's side even, K is a move slot, 0 to
@@ -208,6 +209,7 @@ def readable(step_or_key, key=False):
         return (step_or_key in ("lines", "new_lines", "once_lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
                                 "party", "badges", "music", "running_shoes")
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
+                or re.fullmatch(r"trainer:TRAINER_\w+", step_or_key) is not None
                 or re.fullmatch(r"caught:SPECIES_\w+", step_or_key) is not None
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
                 or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)}|types)", step_or_key) is not None
@@ -1595,9 +1597,13 @@ class Scene:
             return mons[int(slot)]["moves"][int(field[4:])] if field.startswith("move") else mons[int(slot)][field]
         if name.startswith("caught:"):
             return self.caught(ram, self.number(name[len("caught:"):]))
-        if name.startswith(("flag:", "var:")):
+        if name.startswith(("flag:", "var:", "trainer:")):
             kind, _, constant = name.partition(":")
             flags = party.block(memory, self.elf, savedit.block_ids().index("SAVE_FLAGS")) - 0x02000000
+            if kind == "trainer":       # TrainerFlagCheck: the trainer's flag from TRAINER_FLAG_BASE
+                number = savedit.constants("include/constants/flags.h", "TRAINER_FLAG_")["TRAINER_FLAG_BASE"] \
+                    + savedit.constants("include/constants/trainers.h", "TRAINER_")[constant]
+                return ram[flags + savedit.FLAGS_AT + number // 8] >> (number % 8) & 1
             if kind == "var":
                 number = savedit.constants("include/constants/vars.h", "VAR_")[constant]
                 return struct.unpack_from("<H", ram, flags + 2 * (number - savedit.VAR_BASE))[0]

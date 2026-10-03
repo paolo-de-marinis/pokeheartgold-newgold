@@ -456,6 +456,22 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertEqual(s.holds, {})
         self.assertTrue(scene.readable("retry:on"))
 
+    def test_a_trainer_beaten_is_read_from_its_flag(self):
+        # trainer:TRAINER_... -- TrainerFlagCheck's flag, TRAINER_FLAG_BASE
+        # plus the trainer's number, in the save's flags: what again: waits
+        # on for a gym's trainer fought again after a loss.
+        import party
+        from unittest import mock
+        s = scene.Scene.__new__(scene.Scene)
+        s.markers, s.elf = None, None
+        ram = bytearray(0x400000)
+        number = 0x550 + scene.savedit.constants("include/constants/trainers.h", "TRAINER_")["TRAINER_BUG_CATCHER_JOSH"]
+        with mock.patch.object(party, "block", lambda memory, elf, index: 0x02100000):
+            self.assertEqual(s.value(bytes(ram), "trainer:TRAINER_BUG_CATCHER_JOSH"), 0)
+            ram[0x100000 + scene.savedit.FLAGS_AT + number // 8] |= 1 << number % 8
+            self.assertEqual(s.value(bytes(ram), "trainer:TRAINER_BUG_CATCHER_JOSH"), 1)
+        self.assertTrue(scene.readable("trainer:TRAINER_LEADER_WHITNEY", key=True))
+
     def test_an_expectation_reads_what_it_names(self):
         # The checks themselves, on values given rather than read.
         self.assertTrue(scene.Scene.wanted("x", 663)[0](663))
