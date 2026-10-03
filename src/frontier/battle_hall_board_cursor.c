@@ -12,62 +12,35 @@
 
 u8 sub_02030BD0(u8 category, u8 *ranks);
 
+// The cursor moves with the pad, round the four columns and the five rows.
 void ov82_0223F300(BattleHallBoard *board) {
     BOOL moved = FALSE;
 
     if (gSystem.newKeys & PAD_KEY_LEFT) {
-        if (ov80_02237920(board->cursor) != BATTLE_HALL_CELL_SUMMARY) {
-            board->lastCell = board->cursor;
-        }
         if (board->cursor % 4 == 0) {
             board->cursor += 3;
-        } else if (ov80_02237920(board->cursor) == BATTLE_HALL_CELL_SUMMARY) {
-            board->cursor = 16;
         } else {
             board->cursor--;
         }
         moved = TRUE;
     }
     if (gSystem.newKeys & PAD_KEY_RIGHT) {
-        if (ov80_02237920(board->cursor) != BATTLE_HALL_CELL_SUMMARY) {
-            board->lastCell = board->cursor;
-        }
         if (board->cursor % 4 == 3) {
             board->cursor -= 3;
-        } else if (ov80_02237920(board->cursor) == BATTLE_HALL_CELL_SUMMARY) {
-            board->cursor = 19;
         } else {
             board->cursor++;
         }
         moved = TRUE;
     }
     if (gSystem.newKeys & PAD_KEY_UP) {
-        if (ov80_02237920(board->cursor) != BATTLE_HALL_CELL_SUMMARY) {
-            board->lastCell = board->cursor;
-        }
         if (board->cursor < 4) {
             board->cursor += 16;
-        } else if (ov80_02237920(board->cursor) == BATTLE_HALL_CELL_SUMMARY) {
-            if (board->lastCell == 16) {
-                board->cursor = 13;
-            } else if (board->lastCell == 19) {
-                board->cursor = 14;
-            } else if (board->lastCell == 13 || board->lastCell == 1) {
-                board->cursor = 13;
-            } else if (board->lastCell == 14 || board->lastCell == 2) {
-                board->cursor = 14;
-            } else {
-                board->cursor = 13;
-            }
         } else {
             board->cursor -= 4;
         }
         moved = TRUE;
     }
     if (gSystem.newKeys & PAD_KEY_DOWN) {
-        if (ov80_02237920(board->cursor) != BATTLE_HALL_CELL_SUMMARY) {
-            board->lastCell = board->cursor;
-        }
         if (board->cursor >= 16) {
             board->cursor -= 16;
         } else {
@@ -79,12 +52,7 @@ void ov82_0223F300(BattleHallBoard *board) {
         PlaySE(SEQ_SE_DP_SELECT);
         ov82_0223FCBC(board->cursorObj, ov82_0223F558(board), ov82_0223F570(board));
     }
-    if (ov80_02237920(board->cursor) == BATTLE_HALL_CELL_SUMMARY) {
-        ov82_0223FCFC(board->cursorObj, 2);
-        ov82_0223FCBC(board->cursorObj, 128, 168);
-    } else {
-        ov82_0223FCFC(board->cursorObj, 1);
-    }
+    ov82_0223FCFC(board->cursorObj, 1);
 }
 
 BOOL ov82_0223F488(BattleHallBoard *board) {
@@ -109,12 +77,7 @@ BOOL ov82_0223F488(BattleHallBoard *board) {
                 if (left <= x && x <= right && top <= y && y <= bottom) {
                     board->cursor = col + row * 4;
                     ov82_0223FCBC(board->cursorObj, ov82_0223F558(board), ov82_0223F570(board));
-                    if (ov80_02237920(board->cursor) == BATTLE_HALL_CELL_SUMMARY) {
-                        ov82_0223FCFC(board->cursorObj, 2);
-                        ov82_0223FCBC(board->cursorObj, 128, 168);
-                    } else {
-                        ov82_0223FCFC(board->cursorObj, 1);
-                    }
+                    ov82_0223FCFC(board->cursorObj, 1);
                     board->touched = TRUE;
                     return TRUE;
                 }
@@ -144,16 +107,16 @@ void ov82_0223F580(BattleHallBoard *board, BgConfig *bgConfig) {
     int i;
 
     if (ov82_0223F6E4(board) == TRUE) {
-        for (i = 0; i < 17; i++) {
+        for (i = 0; i < BATTLE_HALL_TYPE_CATEGORIES; i++) {
             ov82_0223F5E0(bgConfig, i, 3);
         }
     } else {
-        for (i = 0; i < 17; i++) {
+        for (i = 0; i < BATTLE_HALL_TYPE_CATEGORIES; i++) {
             if (sub_02030BD0(i, board->ranks) >= 10) {
                 ov82_0223F5E0(bgConfig, i, 3);
             }
         }
-        ov82_0223F5E0(bgConfig, 19, 3);
+        ov82_0223F5E0(bgConfig, BATTLE_HALL_CELL_MATRON, 3);
     }
     ScheduleBgTilemapBufferTransfer(bgConfig, GF_BG_LYR_MAIN_3);
 }
@@ -217,8 +180,13 @@ void ov82_0223F5E0(BgConfig *bgConfig, u8 cell, u8 look) {
             y = 20;
         }
 
+        // The strips' colours are palette 1's for the first nine cells and
+        // palette 2's for the rest; the Hall Matron's grey is palette 0's
+        // (the same grey), and its place in palette 2 is Fairy's pink.
         if (cell < 9) {
             BgTilemapRectChangePalette(bgConfig, GF_BG_LYR_MAIN_3, x, y, width, height, 1);
+        } else if (cell == BATTLE_HALL_CELL_MATRON) {
+            BgTilemapRectChangePalette(bgConfig, GF_BG_LYR_MAIN_3, x, y, width, height, 0);
         } else {
             BgTilemapRectChangePalette(bgConfig, GF_BG_LYR_MAIN_3, x, y, width, height, 2);
         }

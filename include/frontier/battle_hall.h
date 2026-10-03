@@ -13,9 +13,11 @@ typedef struct BattleHallData {
 } BattleHallData;
 
 // The type board's twenty cells, four to a row: a category (its rank, its
-// opponents) for each type, then the Pokemon's summary and the Hall Matron's
-// cell. ov80_02237920 gives a cell's type.
-#define BATTLE_HALL_CELL_SUMMARY 0xFE
+// opponents) for each of the eighteen types, then the Pokemon's summary and
+// the Hall Matron's cell. ov80_02237920 gives a cell's type.
+#define BATTLE_HALL_TYPE_CATEGORIES 18
+#define BATTLE_HALL_CELL_SUMMARY    0xFE
+#define BATTLE_HALL_CELL_MATRON     19
 
 void ov80_022319B0(BattleHallData *data);
 void ov80_02237448(u8 count, u8 type, u8 rank, u8 battleNo, u16 species, u16 *sets, int mode);

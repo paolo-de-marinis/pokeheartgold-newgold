@@ -13,7 +13,7 @@ typedef struct BattleHallBoard {
     u8 state;
     u8 mode;
     u8 fillerA[2];
-    u8 lastCell; // the cell the cursor last left that was not the summary
+    u8 fillerC; // retail's last cell before the two-cell summary
     u8 cursor;
     u8 fillerE[0x10];
     u8 matronPrompted; // only the Hall Matron's cell can be picked

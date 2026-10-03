@@ -23,8 +23,8 @@ static const u8 sCellTypes[] = {
     TYPE_DRAGON,
     TYPE_DARK,
     TYPE_STEEL,
-    BATTLE_HALL_CELL_SUMMARY, // the Pokemon's summary, two cells wide
-    BATTLE_HALL_CELL_SUMMARY,
+    TYPE_FAIRY,
+    BATTLE_HALL_CELL_SUMMARY, // the Pokemon's summary
     TYPE_MYSTERY, // the Hall Matron's cell
 };
 
