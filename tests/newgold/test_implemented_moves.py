@@ -1369,13 +1369,14 @@ int main(void) {
 
     REVIVAL_BLESSING_PROGRAM = r"""
 typedef struct { int unused; } BattleSystem;
-typedef struct { int species, hp, maxHp, status; } Pokemon;
-typedef struct { int hp; } BattleMon;
+typedef struct { int species, hp, maxHp, status; u32 personality; } Pokemon;
+typedef struct { int hp; u32 personality; } BattleMon;
 typedef struct { u32 revivalBlessing : 1; } SelfTurnData;
 typedef struct {
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4]; u8 unk_13C[4]; u8 unk_21A0[4]; u8 selectedMonIndex[4];
-    int battlerIdSwitch;
+    int battlerIdSwitch; u32 switchInFlag;
 } BattleContext;
+#define MaskOfFlagNo(n) (1 << (n))
 static Pokemon sParty[6]; static int sPartySize; static int sDoubles;
 static int BattleSystem_GetPartySize(BattleSystem *bs, int battlerId) { (void)bs; (void)battlerId; return sPartySize; }
 static Pokemon *BattleSystem_GetPartyMon(BattleSystem *bs, int battlerId, int slot) { (void)bs; (void)battlerId; return &sParty[slot]; }
@@ -1387,6 +1388,7 @@ static u32 GetMonData(Pokemon *mon, int field, void *data) {
     case MON_DATA_SPECIES_OR_EGG: return mon->species;
     case MON_DATA_HP: return mon->hp;
     case MON_DATA_MAX_HP: return mon->maxHp;
+    case MON_DATA_PERSONALITY: return mon->personality;
     }
     return 0;
 }
@@ -1399,7 +1401,7 @@ static BattleContext ctx;
 static BattleSystem bs;
 static void reset(void) {
     memset(&ctx, 0, sizeof(ctx)); memset(sParty, 0, sizeof(sParty)); sPartySize = 3; sDoubles = 0;
-    for (int i = 0; i < 3; i++) { sParty[i].species = SPECIES_PIKACHU; sParty[i].hp = 20; sParty[i].maxHp = 41; }
+    for (int i = 0; i < 3; i++) { sParty[i].species = SPECIES_PIKACHU; sParty[i].hp = 20; sParty[i].maxHp = 41; sParty[i].personality = 100 + i; }
     for (int i = 0; i < 4; i++) { ctx.battleMons[i].hp = 10; ctx.unk_21A0[i] = 6; ctx.selectedMonIndex[i] = i >> 1; }
 }
 int main(void) {
@@ -1422,6 +1424,17 @@ int main(void) {
     RevivalBlessingStep(&bs, &ctx, 0); ctx.unk_21A0[0] = 1;
     EXPECT(RevivalBlessingStep(&bs, &ctx, 0), 1); EXPECT(ctx.battlerIdSwitch, 2); EXPECT(ctx.unk_21A0[2], 1);
     reset(); sDoubles = 1; sParty[2].hp = 0; ctx.battleMons[2].hp = 0;
+    RevivalBlessingStep(&bs, &ctx, 0); ctx.unk_21A0[0] = 2;
+    EXPECT(RevivalBlessingStep(&bs, &ctx, 0), 0);
+    // The place left empty a turn before, its party slot dropped at that
+    // turn's end: the one that fell there, known by its personality, goes
+    // back in at once; one from the bench does not.
+    reset(); sDoubles = 1; sParty[1].hp = 0; sParty[2].hp = 0; ctx.battleMons[2].hp = 0;
+    ctx.battleMons[2].personality = sParty[1].personality; ctx.selectedMonIndex[2] = 6; ctx.switchInFlag = MaskOfFlagNo(2);
+    RevivalBlessingStep(&bs, &ctx, 0); ctx.unk_21A0[0] = 1;
+    EXPECT(RevivalBlessingStep(&bs, &ctx, 0), 1); EXPECT(ctx.battlerIdSwitch, 2); EXPECT(ctx.unk_21A0[2], 1);
+    reset(); sDoubles = 1; sParty[1].hp = 0; sParty[2].hp = 0; ctx.battleMons[2].hp = 0;
+    ctx.battleMons[2].personality = sParty[1].personality; ctx.selectedMonIndex[2] = 6; ctx.switchInFlag = MaskOfFlagNo(2);
     RevivalBlessingStep(&bs, &ctx, 0); ctx.unk_21A0[0] = 2;
     EXPECT(RevivalBlessingStep(&bs, &ctx, 0), 0);
     return 0;

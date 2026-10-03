@@ -10891,9 +10891,16 @@ static BOOL AllySwitchWorks(BattleSystem *battleSystem, BattleContext *ctx) {
 // open the party menu to and the AI's pick (ov12_0225F8AC) to take the first,
 // and 1; the move fails without one. Then, the one picked (WaitMonSelection
 // left it in unk_21A0) is revived with half its maximum HP, rounded down, and
-// no status. In a double battle, a Pokemon whose own place stands empty goes
-// back into it at once: 1, with the place in battlerIdSwitch for the script
-// to send it out; 0 otherwise.
+// no status. In a double battle, the Pokemon that fell in the ally's place
+// and was never replaced goes back into it at once, whether it fell this turn
+// or before (Paolo, 2026-10-02, as the games do; Showdown's gen 9
+// instaswitches a revived Pokemon still in an active slot, sim/battle.ts
+// 'revivalblessing', PR #9204): 1, with the place in battlerIdSwitch for the
+// script to send it out; 0 otherwise, and one from the bench comes in at the
+// turn's end, as Showdown has it. The place holds the fallen one's party slot
+// until the end of the turn it fell in, which leaves a place with nothing to
+// send empty (ov12_0224D540: switchInFlag, the slot dropped); after that the
+// fallen one is known by its personality, which battleMons keeps.
 static int RevivalBlessingStep(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int slot;
     int partner;
@@ -10931,7 +10938,9 @@ static int RevivalBlessingStep(BattleSystem *battleSystem, BattleContext *ctx, i
 
     partner = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
     if (partner != battlerId && BattleSystem_GetParty(battleSystem, partner) == BattleSystem_GetParty(battleSystem, battlerId)
-        && ctx->selectedMonIndex[partner] == slot && ctx->battleMons[partner].hp == 0) {
+        && ctx->battleMons[partner].hp == 0
+        && (ctx->selectedMonIndex[partner] == slot
+            || ((ctx->switchInFlag & MaskOfFlagNo(partner)) && ctx->battleMons[partner].personality == GetMonData(mon, MON_DATA_PERSONALITY, NULL)))) {
         ctx->battlerIdSwitch = partner;
         ctx->unk_21A0[partner] = slot;
         return 1;

@@ -1,0 +1,12 @@
+{
+  "about": "Revival Blessing sends the Pokemon that fell in its ally's place back into it at once, the place having stood empty since an earlier turn (Paolo, 2026-10-02: as the games do; Showdown's gen 9 instaswitches a revived Pokemon still in an active slot, sim/battle.ts 'revivalblessing', PR #9204). Before, it came in at the turn's end, after the foes had moved: the place's party slot is dropped at the end of the turn it is left empty (ov12_0224D540), and RevivalBlessingStep asked for it. Twins Amy & Mimi in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-30 Pawmot and a level-5 Magikarp on the twins' platform: in the first turn the Pawmot is given Splash (teach:) and the Spinarak's Shadow Sneak faints the Magikarp, with no one left to take its place; in the second the Pawmot is given Revival Blessing, picks the Magikarp in the party menu's revive mode, and it comes back at half its HP, rounded down (9 of 18), and goes out before the Spinarak's Night Shade (before, after it: \"Go! Magikarp!\" was the turn's last line).",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:30,MAGIKARP:5", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "A", "fight:1:0", "teach:0,0,MOVE_SPLASH", "fight:1:1",
+            {"expect": {"lines": ["Go! Pawmot and Magikarp!", "Magikarp fainted!"], "no_lines": ["Revival Blessing"], "battler2.hp": 0}},
+            "teach:0,0,MOVE_REVIVAL_BLESSING", "fight:1:1"],
+  "expect": {"new_lines": ["Pawmot used Revival Blessing!", "Magikarp was revived and is ready to fight again!", "Go! Magikarp!",
+                           "The opposing Spinarak used Night Shade!"],
+             "battler2.species": "SPECIES_MAGIKARP", "battler2.hp": 9, "battler2.maxHp": 18}
+}
