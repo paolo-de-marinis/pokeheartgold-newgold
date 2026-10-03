@@ -372,6 +372,21 @@ class BuildRuleTests(unittest.TestCase):
                 assembled = [i for i, line in enumerate(lines) if line.startswith("wine ") and assembler in line and source in line]
                 self.assertTrue(patched and assembled and patched[0] < assembled[0], "\n".join(lines[:40]))
 
+    def test_a_lone_object_s_assembler_stays_its_own(self):
+        """make hands a target's variables down to its prerequisites: made
+        as the goal, nitrocrypto.o -- whose MWCCVER is 1.2/sp2p3 -- reached
+        files_for_compile through $(ALL_GAME_OBJS) and assembled the battle
+        and field scripts out of date with 1.2/sp2p3, about a thousand of
+        them. Its MWCCVER is private now: its own recipe and its own patch
+        stamp still read 1.2/sp2p3, its prerequisites 2.0/sp2p2."""
+        script = "files/battledata/script/subscript/subscript_0001_UseMove.s"
+        lines = run_make("-n", "-W", script, "-W", "asm/nitrocrypto.s", "build/heartgold.us/asm/nitrocrypto.o").stdout
+        assembled = {source: [line for line in lines.splitlines() if line.startswith("wine ") and source in line]
+                     for source in (script, "asm/nitrocrypto.s")}
+        self.assertTrue(all(assembled.values()), lines[:2000])
+        self.assertTrue(all("/mwccarm/2.0/sp2p2/" in line for line in assembled[script]), assembled[script])
+        self.assertTrue(all("/mwccarm/1.2/sp2p3/" in line for line in assembled["asm/nitrocrypto.s"]))
+
     def test_the_patcher_knows_every_assembler_it_has_patched(self):
         """Its table gave the 1.2 assembler's patched sha1 as 3395ac5d..., and
         the two bytes it writes into 87f942cc... make 049af742...: a 1.2

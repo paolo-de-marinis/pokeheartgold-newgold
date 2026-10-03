@@ -14,7 +14,7 @@ include filesystem.mk
 
 $(ASM_OBJS): MWASFLAGS += -DPM_ASM
 
-$(BUILD_DIR)/asm/nitrocrypto.o:  MWCCVER := 1.2/sp2p3
+$(BUILD_DIR)/asm/nitrocrypto.o:  private MWCCVER := 1.2/sp2p3
 $(BUILD_DIR)/lib/msl/src/*.o:    EXCCFLAGS := -Cpp_exceptions on
 
 $(ASM_OBJS): $(WORK_DIR)/include/config.h
