@@ -78,6 +78,18 @@ class FlowerGiftTests(unittest.TestCase):
         self.assertTrue(self.cherrim.startswith(TRANSFORMED.replace("SPECIES", "SPECIES_CHERRIM")))
 
 
+class ItemFormTests(unittest.TestCase):
+    def test_a_transformed_arceus_or_silvally_keeps_its_form(self):
+        # From the fifth generation a Pokemon transformed into Arceus or
+        # Silvally keeps the form it copied, whatever plate or Memory it
+        # holds (Pokemon Central, Multitipo and Sistema Primevo).
+        body = function(OVERLAY.read_text(), "Battler_CheckWeatherFormChange")
+        for species, ability in (("ARCEUS", "MULTITYPE"), ("SILVALLY", "RKS_SYSTEM")):
+            self.assertIn(f"species == SPECIES_{species} && ctx->battleMons[ctx->battlerIdTemp].hp"
+                          f" && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_{ability}"
+                          " && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {", body)
+
+
 class EntryTests(unittest.TestCase):
     def setUp(self):
         self.body = function(OVERLAY.read_text(), "BattleSystem_GetBattleMon")

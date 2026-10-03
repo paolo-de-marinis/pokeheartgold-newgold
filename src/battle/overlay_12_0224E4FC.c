@@ -10541,7 +10541,12 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
                 break;
             }
         }
-        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_ARCEUS && ctx->battleMons[ctx->battlerIdTemp].hp && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_MULTITYPE) {
+        // A Pokemon transformed into Arceus or Silvally keeps the form it
+        // copied, whatever plate or Memory it holds (Pokemon Central,
+        // Multitipo from the fifth generation, Sistema Primevo): only the
+        // fourth set it again by the user's own plate. It has Multitype or
+        // RKS System now that Transform copies the ability.
+        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_ARCEUS && ctx->battleMons[ctx->battlerIdTemp].hp && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_MULTITYPE && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {
             form = GetArceusTypeByHeldItemEffect(GetItemAttr(ctx->battleMons[ctx->battlerIdTemp].item, ITEMATTR_HOLD_EFFECT, HEAP_ID_BATTLE));
             if (ctx->battleMons[ctx->battlerIdTemp].form != form) {
                 ctx->battleMons[ctx->battlerIdTemp].form = form;
@@ -10554,7 +10559,7 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
         // reference copies the Arceus block for it verbatim, plates and all,
         // and says in its own comment that it means to read memories instead;
         // RKS System reads the Memory (Pokemon Central, Sistema Primevo).
-        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_SILVALLY && ctx->battleMons[ctx->battlerIdTemp].hp && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_RKS_SYSTEM) {
+        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_SILVALLY && ctx->battleMons[ctx->battlerIdTemp].hp && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_RKS_SYSTEM && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {
             form = GetSilvallyTypeByHeldItemEffect(GetItemAttr(ctx->battleMons[ctx->battlerIdTemp].item, ITEMATTR_HOLD_EFFECT, HEAP_ID_BATTLE));
             if (ctx->battleMons[ctx->battlerIdTemp].form != form) {
                 ctx->battleMons[ctx->battlerIdTemp].form = form;
