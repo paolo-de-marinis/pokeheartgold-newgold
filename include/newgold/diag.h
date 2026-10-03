@@ -157,6 +157,10 @@ extern unsigned long gDiagLastBattleTerrain;
 // 0 until the first.
 extern unsigned long gDiagBattleBackground;
 
+// How many move animations PlayMoveAnimation has sent the display
+// (BtlCmd_PlayMoveAnimation): one a move, a borrowed one too.
+extern unsigned long gDiagMoveAnimationCount;
+
 // The last battle animation PlayBattleAnimationOnMons sent the display
 // (BtlCmd_PlayBattleAnimationOnMons), a BATTLE_ANIMATION_* number: a
 // terrain's start, a Leech Seed's drain. 0 until the first.

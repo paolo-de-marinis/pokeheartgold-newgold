@@ -75,8 +75,6 @@ _034:
     // The battlefield got weird!
     PrintMessage msg_0197_01394, TAG_NONE
 
-// TODO: something weird is happening after using Terrain move rather than Surge ability
-
 _ResetParadoxTerrainAbility:
     Wait
     WaitButtonABTime 30
@@ -86,8 +84,13 @@ _ResetParadoxTerrainAbility:
 _ActivateParadoxTerrainAbility:
     ActivateParadoxAbility ABILITY_QUARK_DRIVE
 
+// A terrain move's animation is its terrain's start: the move's own counts
+// as played, or UseMove's subscript 76 plays the one it borrows
+// (MoveAnimationFor) after the line. The reference clears the flag here, for
+// its own animation of the move to play there, and a TODO says something
+// weird happens after a terrain move.
 _037:
-    UpdateVar OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_MOVE_ANIMATIONS_OFF
+    UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_MOVE_ANIMATIONS_OFF
     End
 
 _049:

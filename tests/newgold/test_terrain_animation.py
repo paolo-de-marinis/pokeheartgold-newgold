@@ -10,8 +10,8 @@ of a/0/6/1 after the 50 the game shipped with, made of the game's own
 effects and its background tint, in the script overlay 7 runs
 (asm/macros/btlanim.inc). Subscript 347, which every terrain's start goes
 through -- the moves, the Surges and Hadron Engine, Seed Sower -- plays the
-terrain's before its background is drawn and its line printed. In play:
-scenarios/terrain_animation.json.
+terrain's before its background is drawn and its line printed, and a
+terrain move's animation is that one. In play: scenarios/terrain_animation.json.
 """
 
 import re
@@ -79,6 +79,15 @@ class ScriptTests(unittest.TestCase):
         listed = re.search(r"static const int ov12_0226CBDC\[\] = \{(.*?)\};", source, re.S).group(1)
         for terrain in TERRAINS:
             self.assertIn(f"BATTLE_ANIMATION_{terrain.upper()}_TERRAIN", listed)
+
+    def test_a_terrain_move_borrows_no_animation_after_its_line(self):
+        # UseMove's subscript 76 plays the move's animation when it has not
+        # played: the terrain's start is a terrain move's, so the subscript
+        # marks it played where each terrain's branch ends.
+        text = SUBSCRIPT.read_text()
+        self.assertNotIn("OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_MOVE_ANIMATIONS_OFF", text)
+        self.assertRegex(text, r"\n_037:\n\s*UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, "
+                               r"BATTLE_STATUS_MOVE_ANIMATIONS_OFF\n\s*End\n")
 
 
 if __name__ == "__main__":

@@ -204,7 +204,7 @@ class Markers:
             field,
             f"wild stage {w('gDiagWildStage')} after {w('gDiagWildTicks')} sp {w('gDiagLastWildSpecies')} L{w('gDiagLastWildLevel')}"
             f" map {w('gDiagLastBattleMap')} bg {w('gDiagLastBattleBg')} terrain {w('gDiagLastBattleTerrain')}"
-            f" redrawn {w('gDiagBattleBackground')} animated {w('gDiagBattleAnimation')}",
+            f" redrawn {w('gDiagBattleBackground')} animated {w('gDiagBattleAnimation')} moves {w('gDiagMoveAnimationCount')}",
             f"battle {STATES[state] if state < 16 else state} {w('gDiagBattleTicks')} ticks [{reached}]",
             f"asserts {asserts}" + (f" last at {where.function_at(w('gDiagAssertReturn'), table=self.table)}"
                                    f" called from {self.callers(ram, loaded)}" if asserts else ""),

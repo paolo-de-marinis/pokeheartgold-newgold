@@ -1728,6 +1728,9 @@ BOOL BtlCmd_PlayMoveAnimation(BattleSystem *battleSystem, BattleContext *ctx) {
     if ((!(ctx->battleStatus & BATTLE_STATUS_MOVE_ANIMATIONS_OFF) && BattleSystem_AreBattleAnimationsOn(battleSystem) == TRUE) || move == MOVE_TRANSFORM) {
         ctx->battleStatus |= BATTLE_STATUS_MOVE_ANIMATIONS_OFF;
         BattleController_SetMoveAnimation(battleSystem, ctx, MoveAnimationFor(move));
+#ifdef NEWGOLD_DIAG
+        gDiagMoveAnimationCount++;
+#endif
     }
 
     if (!BattleSystem_AreBattleAnimationsOn(battleSystem)) {
