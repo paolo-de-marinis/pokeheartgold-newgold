@@ -21,8 +21,9 @@ unset, they play.
 Up to three scene.py processes play at once (WORKERS), started when the
 first scenario test runs, for every scenario the run selected: a chain's
 legs in one worker, leg before leg, so each finds the save of the one
-before, and the other two take the single scenarios meanwhile -- the chain
-alone plays for over half an hour.
+before, and the other two take the single scenarios meanwhile -- the chain,
+a new game to the Route 34 gate in 21 legs, plays for about an hour and
+three quarters alone.
 """
 import json
 import os
@@ -76,6 +77,26 @@ class ScenarioFileTests(unittest.TestCase):
                 self.assertEqual([s for s in spec["steps"] if not scene.readable(s)], [])
                 self.assertEqual([k for k in spec.get("expect", {}) if not scene.readable(k, key=True)], [])
                 self.assertTrue(all(name.startswith("gDiag") for name in spec.get("hold", {})))
+
+    def test_the_playthrough_is_one_chain_from_a_new_game_with_its_own_team(self):
+        # Every leg follows the one before it, from the new game to the Route
+        # 34 gate, one line with no branch; the party is the one the bot
+        # caught: no leg replaces it (--party), and one that edits it at all
+        # (--level, --train, --teach) says so and why, through savedit.
+        legs_ = {path.stem: json.loads(path.read_text()) for path in SCENARIOS.glob("playthrough_*.json")}
+        line, leg = [], "playthrough_09b_route_34_gate"
+        while leg:
+            line.append(leg)
+            leg = legs_[leg].get("from")
+        self.assertEqual(line[-1], "playthrough_01_new_game")
+        self.assertNotIn("save", legs_[line[-1]])
+        self.assertEqual(sorted(line), sorted(legs_))
+        for name, spec in legs_.items():
+            with self.subTest(name):
+                options = [part for part in spec.get("edit", []) if part.startswith("--")]
+                self.assertLessEqual(set(options), {"--level", "--train", "--teach"})
+                if options:
+                    self.assertIn("savedit", spec["about"])
 
     def test_a_forced_wild_pokemon_is_rolled_from_a_pinned_rng(self):
         # A forced wild Pokemon's stats come from the field's RNG, which
