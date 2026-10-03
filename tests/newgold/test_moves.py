@@ -350,6 +350,14 @@ class MoveTests(unittest.TestCase):
         self.assertEqual(text[3][3 * self.moves["MOVE_HONE_CLAWS"]],
                          "{STRVAR_1 1, 0, 0} used\\nHone Claws!")
 
+    def test_incinerate_s_description_names_more_than_berries(self):
+        """Incinerate burns a held Gem as it does a Berry (1ebf68d73), and its
+        description says "a certain item, such as a Berry", as the latest
+        games' does, over the engine's "rendering a held Berry useless"."""
+        text = import_moves.gmm.read(749)[self.moves["MOVE_INCINERATE"]]["text"]
+        self.assertEqual(text, "The user attacks\\nwith fire. A certain\\nheld item, such as a\\nBerry, is burned up.")
+        self.assertEqual(import_moves.DESCRIPTIONS_FIXED["INCINERATE"], text)
+
     @unittest.skipUnless(REFERENCE.exists(), "the reference checkout is not here")
     def test_the_text_banks_are_what_the_importer_writes(self):
         """Every row of the five banks is `import_moves.py --text` at the

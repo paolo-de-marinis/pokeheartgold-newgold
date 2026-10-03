@@ -687,6 +687,15 @@ def used_rows(block):
 # NONE's name, "-", and the description of its unused slots 468..470, "--".
 FILLER = '.name = "-" .capsName = "-" .fullName = "-" .description = "--"'
 
+# A description the engine's text gets wrong for this game, by the move's name.
+# Incinerate burns a held Gem as it does a Berry (1ebf68d73), as from the sixth
+# generation, and the engine's "rendering a held Berry useless" names Berries
+# only; the latest games' text says "a certain item, such as a Berry"
+# (Pokemon Central, Bruciatutto; Scarlet and Violet's English description).
+DESCRIPTIONS_FIXED = {
+    "INCINERATE": "The user attacks\\nwith fire. A certain\\nheld item, such as a\\nBerry, is burned up.",
+}
+
 # The engine gives Fairy 9, the number of TYPE_MYSTERY, and calls the ??? type
 # TYPE_TYPELESS at 18; this game keeps TYPE_MYSTERY at 9 and gives Fairy 18. A
 # type is named with the engine's name for the same type, not the same number.
@@ -705,7 +714,8 @@ def text_banks(revision):
     banks = {749: [], 750: [], 751: [], 3: []}
     for move in range(last + 1):
         block = next((blocks[name] for name in names[move] if name in blocks), FILLER)
-        banks[749].append(c_text(block, "description"))
+        fixed = [DESCRIPTIONS_FIXED[name] for name in names[move] if name in DESCRIPTIONS_FIXED]
+        banks[749].append(fixed[0] if fixed else c_text(block, "description"))
         banks[750].append(c_text(block, "name"))
         banks[751].append(c_text(block, "capsName").upper())
         banks[3] += used_rows(block)

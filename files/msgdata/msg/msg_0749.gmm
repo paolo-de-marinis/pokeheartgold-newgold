@@ -2138,7 +2138,7 @@
 	</row>
 	<row id="msg_0749_00534" index="534">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">The user burns\nthe foe completely,\nrendering a held\nBerry useless.</language>
+		<language name="English">The user attacks\nwith fire. A certain\nheld item, such as a\nBerry, is burned up.</language>
 	</row>
 	<row id="msg_0749_00535" index="535">
 		<attribute name="window_context_name">used</attribute>
