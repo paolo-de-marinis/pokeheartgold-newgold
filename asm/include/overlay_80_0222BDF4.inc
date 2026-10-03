@@ -391,7 +391,6 @@
 .public ov80_0223C698
 .public ov80_0223C738
 .public ov80_0223C990
-.public ov80_0223CD4A
 .public ov80_0223B9CC
 .public ov80_0223B9D0
 .public ov80_0223B9D8
@@ -454,7 +453,6 @@
 .public ov80_0223C698
 .public ov80_0223C738
 .public ov80_0223C990
-.public ov80_0223CD4A
 .public ov81_0223DD60
 .public ov81_0223DEA8
 .public ov81_0223E234
