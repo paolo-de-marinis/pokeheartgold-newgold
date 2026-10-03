@@ -110,8 +110,11 @@ typedef struct DiagBattler {
     unsigned short moves[4];
     unsigned char pp[4];
     // BattleMon.form: Castform's weather, Cherrim's sunshine; the species
-    // stays the same through either (in the struct's padding: no larger).
+    // stays the same through either. It and movePos fill what was the
+    // struct's padding: it is no larger.
     unsigned char form;
+    // The move slot it chose last (BattleContext.movePos), 0 to 3.
+    unsigned char movePos;
 } DiagBattler;
 extern DiagBattler gDiagBattlers[4];
 // The player's party by party slot, as species and HP, so the Pokemon to send

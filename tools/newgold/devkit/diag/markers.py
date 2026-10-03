@@ -28,7 +28,7 @@ SWITCHES = {"gDiagIgnoreCommunicationError": 4, "gDiagForceEncounter": 4, "gDiag
 PROMPTS = {1: "choose a command", 2: "choose a command", 3: "choose a move", 4: "choose a move",
            5: "choosing a target", 6: "choose a target", 9: "choose a Pokemon", 10: "choose a Pokemon"}
 STATUS = [(7, "SLP"), (1 << 3, "PSN"), (1 << 4, "BRN"), (1 << 5, "FRZ"), (1 << 6, "PAR"), (1 << 7, "TOX")]
-BATTLER = "<HHHBBIH4H4BBx"  # DiagBattler, include/newgold/diag.h
+BATTLER = "<HHHBBIH4H4BBB"  # DiagBattler, include/newgold/diag.h
 TEXT_LINES, TEXT_CHARS = 16, 96
 
 
