@@ -3350,44 +3350,85 @@ static BOOL ScriptAbsorbsMove(int script) {
     return FALSE;
 }
 
+// The outcomes of the steps a move goes through after the TryHit step of the
+// ninth generation (Showdown's gen-9 trySpreadMoveHit, whose order this
+// follows): type immunity -- Levitate's, Magnet Rise's and an Air Balloon's
+// among them --, the move's own immunities (a one-hit KO's level), accuracy.
+#define MOVE_STATUS_AFTER_TRY_HIT (MOVE_STATUS_MISSED | MOVE_STATUS_NO_EFFECT | MOVE_STATUS_LEVITATE_IMMUNE | MOVE_STATUS_ONE_HIT_KO_FAILED | MOVE_STATUS_MAGNET_RISE_IMMUNE)
+
+// Which outcomes of a move's earlier steps silence a refusal the sweep
+// (BattleContext_CheckMoveImmunityFromAbility) found, by the step it acts at
+// in the ninth generation's order: semi-invulnerability first, then TryHit --
+// Protect, then the abilities -- then type immunity and the move's own
+// immunities, then accuracy, then the hit itself.
+//  - Armor Tail, Queenly Majesty and Dazzling turn the move away before it
+//    reaches anyone (Showdown's onFoeTryMove): nothing silences them.
+//  - Soundproof, Bulletproof, Telepathy, Oblivious against Taunt and the
+//    abilities that swallow a move are TryHit's (onTryHit): a guard or a
+//    target out of reach silences them; a miss, a type immunity or a one-hit
+//    KO's level does not, those coming after.
+//  - The status refusals -- Comatose, Shields Down, the Pastel, Sweet, Flower
+//    and Aroma Veils -- and the Electric and Misty Terrains' act only as the
+//    status is set, once the move has hit (onSetStatus, onAllyTryAddVolatile):
+//    anything that kept the move from hitting silences them.
+// Before, every refusal but the absorbing abilities' spoke through a guard
+// and over a target out of reach, and the status refusals over a miss.
+static u32 RefusalSilencedBy(BattleContext *ctx, int script) {
+    switch (script) {
+    case BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY:
+        switch (GetBattlerAbility(ctx, ctx->battlerIdTemp)) {
+        case ABILITY_ARMOR_TAIL:
+        case ABILITY_QUEENLY_MAJESTY:
+        case ABILITY_DAZZLING:
+            return 0;
+        case ABILITY_OBLIVIOUS:
+            return MOVE_STATUS_DID_NOT_HIT & ~MOVE_STATUS_AFTER_TRY_HIT;
+        }
+        break;
+    case BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF:
+        return MOVE_STATUS_DID_NOT_HIT & ~MOVE_STATUS_AFTER_TRY_HIT;
+    }
+    if (ScriptAbsorbsMove(script) == TRUE) {
+        return MOVE_STATUS_DID_NOT_HIT & ~MOVE_STATUS_AFTER_TRY_HIT;
+    }
+    return MOVE_STATUS_DID_NOT_HIT;
+}
+
 static BOOL ov12_0224BC2C(BattleSystem *battleSystem, BattleContext *ctx) {
     int ret = 0;
     int script;
+    u32 silencedBy;
 
     do {
         switch (ctx->unk_54) {
         case 0:
             script = BattleContext_CheckMoveImmunityFromAbility(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
-            // An ability that swallows a move takes it before the type chart
-            // and the accuracy roll are asked: a Water Gun that would have
-            // missed a Water Absorb holder is absorbed, and Earth Eater eats
-            // a Ground move a Flying type, an Air Balloon, Magnet Rise or
-            // Telekinesis would have kept off (Pokemon Central, Mangiaterra:
-            // it comes before the other immunities). Pokemon Central does not
-            // say where the accuracy check falls; Showdown's gen-9
-            // trySpreadMoveHit runs the TryHit step, where these abilities
-            // act, before the type immunity and accuracy steps, which the
-            // fourth generation ran first. A guard or a target out of reach
-            // still stops the move before them.
-            if (ScriptAbsorbsMove(script) == TRUE) {
-                ctx->moveStatusFlag &= ~(MOVE_STATUS_MISSED | MOVE_STATUS_NO_EFFECT | MOVE_STATUS_MAGNET_RISE_IMMUNE | MOVE_STATUS_ONE_HIT_KO_FAILED);
-                // Nor did the Micle Berry's boost go into the roll: it is kept
-                // for the next move (Showdown's gen-9 micleberry is spent in
-                // onSourceAccuracy, which a move stopped at TryHit never
-                // reaches).
-                if (ctx->selfTurnData[ctx->battlerIdAttacker].micleSpent) {
-                    ctx->selfTurnData[ctx->battlerIdAttacker].micleSpent = FALSE;
-                    ctx->battleMons[ctx->battlerIdAttacker].unk88.micleBerryFlag = 1;
-                }
-            }
+            silencedBy = RefusalSilencedBy(ctx, script);
             // A Surf that reaches this target lets a Cramorant catch its prey.
             if (script == BATTLE_SUBSCRIPT_NONE && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT) && ctx->moveNoCur == MOVE_SURF) {
                 Battler_GulpMissileCatch(ctx, ctx->battlerIdAttacker);
             }
-            // A refusal is still worth saying even when the move was going to
-            // miss or do nothing anyway, which is why the two scripts that
-            // only name an ability are let past the DID_NOT_HIT test.
-            if ((script && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT)) || script == BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF || script == BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY) {
+            if (script && !(ctx->moveStatusFlag & silencedBy)) {
+                // A refusal, or an ability that swallows the move, before
+                // the accuracy roll: what the later steps found -- a miss,
+                // a type immunity, a one-hit KO's level, and for one before
+                // the guard the guard -- is not the move's outcome, so a
+                // Water Gun that would have missed a Water Absorb holder is
+                // absorbed, and Earth Eater eats a Ground move a Flying type,
+                // an Air Balloon, Magnet Rise or Telekinesis would have kept
+                // off (Pokemon Central, Mangiaterra: it comes before the
+                // other immunities).
+                if (silencedBy != MOVE_STATUS_DID_NOT_HIT) {
+                    ctx->moveStatusFlag &= ~((MOVE_STATUS_AFTER_TRY_HIT | MOVE_STATUS_PROTECTED | MOVE_STATUS_SEMI_INVULNERABLE) & ~silencedBy);
+                    // Nor did the Micle Berry's boost go into the roll: it is
+                    // kept for the next move (Showdown's gen-9 micleberry is
+                    // spent in onSourceAccuracy, which a move stopped at
+                    // TryHit never reaches).
+                    if (ctx->selfTurnData[ctx->battlerIdAttacker].micleSpent) {
+                        ctx->selfTurnData[ctx->battlerIdAttacker].micleSpent = FALSE;
+                        ctx->battleMons[ctx->battlerIdAttacker].unk88.micleBerryFlag = 1;
+                    }
+                }
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;

@@ -101,11 +101,10 @@ class AbsorbFirstTests(unittest.TestCase):
         # Showdown's gen-9 TryHit step, before type immunity and accuracy: a
         # miss, an immunity, Magnet Rise's or an Air Balloon's lift and a
         # failed one-hit KO give way; a guard or a target out of reach do not.
-        clear = re.search(r"if \(ScriptAbsorbsMove\(script\) == TRUE\) \{\s*ctx->moveStatusFlag &= ~\(([^)]*)\);", self.check)
-        self.assertIsNotNone(clear)
-        self.assertEqual(set(clear.group(1).split(" | ")), {"MOVE_STATUS_MISSED", "MOVE_STATUS_NO_EFFECT",
-                                                            "MOVE_STATUS_MAGNET_RISE_IMMUNE", "MOVE_STATUS_ONE_HIT_KO_FAILED"})
-        self.assertLess(self.check.index("ScriptAbsorbsMove(script)"), self.check.index("MOVE_STATUS_DID_NOT_HIT"))
+        # test_refusal_order runs it.
+        silenced = function(CONTROLLER.read_text(), "RefusalSilencedBy")
+        self.assertIn("if (ScriptAbsorbsMove(script) == TRUE) {\n        return MOVE_STATUS_DID_NOT_HIT & ~MOVE_STATUS_AFTER_TRY_HIT;", silenced)
+        self.assertIn("silencedBy = RefusalSilencedBy(ctx, script);", self.check)
 
     def test_a_swallowed_move_leaves_the_micle_berry_s_boost(self):
         # The roll it would have had spent the boost; the move never reaches
@@ -113,7 +112,7 @@ class AbsorbFirstTests(unittest.TestCase):
         roll = function(CONTROLLER.read_text(), "BattleSystem_CheckMoveHit")
         self.assertLess(roll.index("micleSpent = FALSE;"), roll.index("return"))
         self.assertRegex(roll, r"micleBerryFlag = 0;\n\s+ctx->selfTurnData\[battlerIdAttacker\]\.micleSpent = TRUE;")
-        given = re.search(r"if \(ScriptAbsorbsMove\(script\) == TRUE\) \{(.*?)\n            \}\n", self.check, re.S).group(1)
+        given = re.search(r"if \(silencedBy != MOVE_STATUS_DID_NOT_HIT\) \{(.*?)\n                \}\n", self.check, re.S).group(1)
         self.assertRegex(given, r"if \(ctx->selfTurnData\[ctx->battlerIdAttacker\]\.micleSpent\) \{\n"
                                 r"\s+ctx->selfTurnData\[ctx->battlerIdAttacker\]\.micleSpent = FALSE;\n"
                                 r"\s+ctx->battleMons\[ctx->battlerIdAttacker\]\.unk88\.micleBerryFlag = 1;")

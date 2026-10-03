@@ -1,0 +1,13 @@
+{
+  "about": "A status refusal acts only when the status is set, once the move has hit (Showdown's gen-9 Comatose, Shields Down and the Veils refuse in onSetStatus, after the accuracy step): a Thunder Wave that misses a Comatose Pokemon is a miss. Before, the refusal spoke over the miss (ov12_0224BC2C let BLOCKED_BY_ABILITY past every DID_NOT_HIT bit). A level-10 Pikachu is given Thunder Wave in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash, given Comatose (set:): with the accuracy roll forced to miss, \"Comatose blocks Thunder Wave!\" is not said (on the base ROM it was); with it forced to hit, it is.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 2, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_THUNDER_WAVE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
+            "set:1,ability,ABILITY_COMATOSE", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Thunder Wave!", "The wild Chansey used Splash!"], "no_lines": ["Comatose"]}},
+            "hold:gDiagForceHit=1", "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Thunder Wave!", "Comatose blocks Thunder Wave!"]}
+}
