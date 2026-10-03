@@ -133,10 +133,12 @@ battlerN.species|hp|maxHp|level|partySlot|status|item|moveK|ppK|form|movePos
 (gDiagBattlers; N counts the player's side even, K is a move slot, 0 to
 3; form is the battle's, which a species keeps through Castform's weather
 or Cherrim's sun: CASTFORM_SNOWY 3; movePos the slot it chose last, 0 to
-3), music (the sequence the field's sound handle plays, -1
-for none: a load the sound heap cannot hold leaves it empty and counts as no
-failed allocation), or any gDiag* global. A value is a number, a constant's
-name (MAP_..., SPECIES_..., ITEM_..., MOVE_..., SEQ_...), [low, high], or for
+3), battlerN.types (the species' two types in the tree's personal.json: a
+TYPE_... expected is one of them), music (the sequence the field's sound
+handle plays, -1 for none: a load the sound heap cannot hold leaves it empty
+and counts as no failed allocation), or any gDiag* global. A value is a
+number, a constant's name (MAP_..., SPECIES_..., ITEM_..., MOVE_..., SEQ_...,
+TYPE_...), [low, high], or for
 a status the flags as markers.py names them ("BRN", "" for none).
 "asserts" and "alloc_failures" are 0 unless the file says otherwise. A step
 may also be {"expect": {...}}, checked when the run gets there.
@@ -181,7 +183,8 @@ PARTY_FIELDS = ("species", "item", "level", "exp", "hp", "maxHp")
 OPTION_FIELDS = ("textSpeed", "soundMethod", "battleStyle", "battleScene", "buttonMode", "frame")
 CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/species.h",
              "ITEM_": "include/constants/items.h", "MOVE_": "include/constants/moves.h",
-             "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h"}
+             "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h",
+             "TYPE_": "include/constants/pokemon.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
          "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift", "again", "retry")
 
@@ -197,7 +200,7 @@ def readable(step_or_key, key=False):
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
                 or re.fullmatch(r"caught:SPECIES_\w+", step_or_key) is not None
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
-                or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)})", step_or_key) is not None
+                or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)}|types)", step_or_key) is not None
                 or re.fullmatch(rf"party[0-5]\.({'|'.join(PARTY_FIELDS)})", step_or_key) is not None
                 or re.fullmatch(rf"options\.({'|'.join(OPTION_FIELDS)})", step_or_key) is not None)
     if isinstance(step_or_key, dict):
@@ -1323,7 +1326,14 @@ class Scene:
         if name.startswith("battler") and "." in name:
             battler, field = name[len("battler"):].split(".")
             at = markers.address("gDiagBattlers") - 0x02000000 + int(battler) * struct.calcsize(BATTLER)
-            return struct.unpack_from(BATTLER, ram, at)[BATTLER_FIELDS.index(field)]
+            shown = struct.unpack_from(BATTLER, ram, at)
+            if field == "types":
+                species, form = shown[BATTLER_FIELDS.index("species")], shown[BATTLER_FIELDS.index("form")]
+                if form:
+                    raise SystemExit(f"battler {battler} is in form {form}: scene.py reads only a species' types")
+                record = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"][species]
+                return [self.number(t) for t in record["types"]]
+            return shown[BATTLER_FIELDS.index(field)]
         raise SystemExit(f"a scenario asks for {name!r}, which scene.py cannot read")
 
     @staticmethod
@@ -1332,6 +1342,9 @@ class Scene:
         if isinstance(expected, list):
             low, high = (Scene.number(e) for e in expected)
             return (lambda v: v is not None and low <= v <= high), f"within [{low}, {high}]"
+        if name.endswith(".types"):
+            number = Scene.number(expected)
+            return (lambda v: v is not None and number in v), f"a type {expected}"
         if isinstance(expected, str) and name.endswith(".status"):
             names = sorted(expected.split())
             return (lambda v: sorted(n for mask, n in STATUS if v & mask) == names), f"status {expected or 'none'}"
