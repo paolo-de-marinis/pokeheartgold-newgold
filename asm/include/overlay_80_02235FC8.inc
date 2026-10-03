@@ -32,6 +32,5 @@
 .public ov80_02235FF8
 .public ov80_02236040
 .public ov80_0223C040
-.public ov80_0223D4C0
 .public ov80_0223DD50
 .public ov80_0223C040

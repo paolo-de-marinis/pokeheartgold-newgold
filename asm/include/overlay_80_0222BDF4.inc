@@ -387,7 +387,7 @@
 .public ov80_0223C5B4
 .public ov80_0223C5B8
 .public ov80_0223C5E0
-.public ov80_0223C608
+.public gBattleHallTypeTrainerClasses
 .public ov80_0223C698
 .public ov80_0223C738
 .public ov80_0223C990
@@ -450,7 +450,7 @@
 .public ov80_0223C5B4
 .public ov80_0223C5B8
 .public ov80_0223C5E0
-.public ov80_0223C608
+.public gBattleHallTypeTrainerClasses
 .public ov80_0223C698
 .public ov80_0223C738
 .public ov80_0223C990

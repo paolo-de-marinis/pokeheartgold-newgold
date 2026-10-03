@@ -83,3 +83,4 @@
 .public ov80_0223DD44
 .public ov80_0223BDFC
 .public ov80_0223BE10
+.public ov80_02231A14

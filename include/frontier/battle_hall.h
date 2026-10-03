@@ -1,0 +1,24 @@
+#ifndef POKEHEARTGOLD_FRONTIER_BATTLE_HALL_H
+#define POKEHEARTGOLD_FRONTIER_BATTLE_HALL_H
+
+#include "global.h"
+
+// The Battle Hall's data (0xD98 bytes, allocated by ov80_022310C4), as far as
+// the C reads it.
+typedef struct BattleHallData {
+    u8 filler0[4];
+    u8 mode; // single, double, multi, link multi
+    u8 filler5[0x6FF];
+    u8 ranks[4][9]; // a rank a category, a nibble each (sub_02030BD0), per mode
+} BattleHallData;
+
+// The type board's twenty cells, four to a row: a category (its rank, its
+// opponents) for each type, then the Pokemon's summary and the Hall Matron's
+// cell. ov80_02237920 gives a cell's type.
+#define BATTLE_HALL_CELL_SUMMARY 0xFE
+
+void ov80_022319B0(BattleHallData *data);
+void ov80_02237448(u8 count, u8 type, u8 rank, u8 battleNo, u16 species, u16 *sets, int mode);
+u8 ov80_02237920(u8 cell);
+
+#endif // POKEHEARTGOLD_FRONTIER_BATTLE_HALL_H
