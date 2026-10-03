@@ -1,0 +1,13 @@
+{
+  "about": "The Dex records each form seen and its FORMS page lists them (Pokedex_RecordForm, ov18_021E8254): Poke Maniac Larry's Galarian Slowpoke, fought in Union Cave against a scratch copy of Paolo's Falkner save (the Dex switched on by savedit, Raichu the first species it has seen, the player put by the cave's Route 33 mouth), is a Slowpoke seen and a Galarian Slowpoke seen. The Dex is opened through the start menu, its grid walked from No. 0026 Raichu down ten rows and right three to No. 0079 Slowpoke, and its DETAILS and FORMS pages opened: the list has the gender the Galarian Slowpoke was seen in, then Galarian Form, and DOWN moves to it -- the Galarian Slowpoke's front and back, \"Slowpoke Galarian Form\" in the bar -- and plays its cry (ov18_021F5EF0): gDiagCrySpecies, cleared just before, is the Galarian species. Without the record there is no second entry, DOWN moves nowhere and no cry plays.",
+  "save": "gyms/falkner.sav",
+  "edit": ["--flag", "FLAG_GOT_POKEDEX", "--dex", "RAICHU", "--where", "99:27:92:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "goto:MAP_UNION_CAVE_1F,12,80",
+            {"expect": {"lines": ["Poké Maniac Larry sent out Slowpoke!", "You defeated Poké Maniac Larry!"], "caught:SPECIES_SLOWPOKE": 0}},
+            "field", "X", "wait:30", "A", "wait:200", "A", "wait:150",
+            "DOWN", "wait:40", "DOWN", "wait:40", "DOWN", "wait:40", "DOWN", "wait:40", "DOWN", "wait:40", "DOWN", "wait:40", "DOWN", "wait:40", "DOWN", "wait:40", "DOWN", "wait:40", "DOWN", "wait:40",
+            "RIGHT", "wait:40", "RIGHT", "wait:40", "RIGHT", "wait:40",
+            "wait:30", "A", "wait:200", "touch:160,176", "wait:200", "poke:gDiagCrySpecies=0", "DOWN", "wait:90", "shot:slowpoke_galarian_form"],
+  "expect": {"gDiagCrySpecies": "SPECIES_SLOWPOKE_GALARIAN"}
+}
