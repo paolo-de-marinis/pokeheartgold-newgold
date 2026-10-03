@@ -353,7 +353,7 @@ class ImplementedMoveTests(unittest.TestCase):
         self.assertIn("if (*hits < 6) {\n                    (*hits)++;", hp_calc)
         self.assertLess(hp_calc.index("BATTLE_SUBSCRIPT_HIT_SUBSTITUTE"), hp_calc.index(counting))
         where = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "Battler_RageFistHits")
-        self.assertIn("return &ctx->rageFistHits[party][ctx->selectedMonIndex[battlerId]];", where)
+        self.assertIn("return (u8 *)ctx->rageFistHits + Battler_PartySlot(battleSystem, ctx, battlerId);", where)
 
     def test_tera_starstorm_is_a_single_target_hit_without_the_stellar_form(self):
         # Pokemon Central (Teracluster): Normal, special, 120, one foe; the

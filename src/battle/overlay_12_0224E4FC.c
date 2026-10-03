@@ -5835,16 +5835,23 @@ void CopyStatStagesAndCriticalRises(BattleContext *ctx, int battlerId, int from)
     ctx->moveConditions[battlerId].dragonCheer = ctx->moveConditions[from].dragonCheer;
 }
 
-// Where a once-per-battle entry ability is remembered for this battler's
-// Pokemon: its slot in the party it was sent out from. A side one trainer
-// fields shares one party between its two battlers, and a multi or tag
-// battle gives each partner its own (BattleSystem_GetParty's choice), so
-// the partner's first Pokemon is not the player's (the reference's
-// SanitizeClientForTeamAccess).
-static u8 *OnceOnlyEntryAbilityDone(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+// Where what is kept for this battler's Pokemon by party slot is found, in a
+// table of BATTLER_MAX rows of PARTY_SIZE: its slot in the party it was sent
+// out from, row by row. A side one trainer fields shares one party, and so
+// one row, between its two battlers, and a multi or tag battle gives each
+// partner its own (BattleSystem_GetParty's choice), so the partner's first
+// Pokemon is not the player's (the reference's SanitizeClientForTeamAccess).
+// The player's party is the first row.
+int Battler_PartySlot(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int party = BattleSystem_GetParty(battleSystem, battlerId) == BattleSystem_GetParty(battleSystem, battlerId & 1) ? (battlerId & 1) : battlerId;
 
-    return &ctx->onceOnlyEntryAbilityDone[party][ctx->selectedMonIndex[battlerId]];
+    return party * PARTY_SIZE + ctx->selectedMonIndex[battlerId];
+}
+
+// Where a once-per-battle entry ability is remembered for this battler's
+// Pokemon (Battler_PartySlot).
+static u8 *OnceOnlyEntryAbilityDone(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
+    return (u8 *)ctx->onceOnlyEntryAbilityDone + Battler_PartySlot(battleSystem, ctx, battlerId);
 }
 
 // A foe's Dragon Cheer copied, as Opportunist and the Mirror Herb do
@@ -5970,12 +5977,10 @@ int TryOpportunistOrSymbiosis(BattleSystem *battleSystem, BattleContext *ctx) {
 }
 
 // Where Rage Fist's count is kept for this battler's Pokemon: its slot in the
-// party it was sent out from, as for the once-per-battle entry abilities
-// above, so the count goes out and comes back in with it.
+// party it was sent out from (Battler_PartySlot), as for the once-per-battle
+// entry abilities above, so the count goes out and comes back in with it.
 u8 *Battler_RageFistHits(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
-    int party = BattleSystem_GetParty(battleSystem, battlerId) == BattleSystem_GetParty(battleSystem, battlerId & 1) ? (battlerId & 1) : battlerId;
-
-    return &ctx->rageFistHits[party][ctx->selectedMonIndex[battlerId]];
+    return (u8 *)ctx->rageFistHits + Battler_PartySlot(battleSystem, ctx, battlerId);
 }
 
 // Commander holds its pair on the field (Pokemon Central, Torre di Comando):

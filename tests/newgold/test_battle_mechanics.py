@@ -1372,7 +1372,8 @@ class OnceOnlyEntryAbilityTests(unittest.TestCase):
         source = OVERLAY.read_text()
         with tempfile.TemporaryDirectory(prefix="newgold-once-") as directory:
             path = Path(directory)
-            (path / "test.c").write_text(ONCE_FIXTURE.replace("@FUNCTION@", function(source, "OnceOnlyEntryAbilityDone")))
+            (path / "test.c").write_text(ONCE_FIXTURE.replace("@FUNCTION@", function(source, "Battler_PartySlot")
+                                                              + function(source, "OnceOnlyEntryAbilityDone")))
             subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
                 "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", str(path / "test.c"), "-o", str(path / "test")], check=True)
             subprocess.run([str(path / "test")], check=True)

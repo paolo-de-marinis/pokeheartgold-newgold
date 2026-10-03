@@ -120,6 +120,7 @@ BOOL CheckItemGradualHPRestore(BattleSystem *battleSystem, BattleContext *ctx, i
 BOOL CheckUseHeldItem(BattleSystem *battleSystem, BattleContext *ctx, int battlerId, u32 *scriptOut);
 BOOL TryHeldItemNegativeEffect(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 u16 GetBattlerHeldItem(BattleContext *ctx, int battlerId);
+int Battler_PartySlot(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 u8 *Battler_RageFistHits(BattleSystem *battleSystem, BattleContext *ctx, int battlerId);
 int BattleMoveCategory(BattleContext *ctx, u32 moveNo, int battlerIdAttacker);
 void ChooseMoveCategory(BattleSystem *battleSystem, BattleContext *ctx);
