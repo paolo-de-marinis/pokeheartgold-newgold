@@ -5416,6 +5416,7 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
     int adrs = BattleScriptReadWord(ctx);
+    int slot;
 
     // Sticky Hold keeps nothing for a holder the move has felled (Pokemon
     // Central, Antifurto, from the fifth generation).
@@ -5441,19 +5442,22 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
         ctx->buffMsg.tag = TAG_NICKNAME_NICKNAME_ITEM;
         ctx->buffMsg.param[0] = CreateNicknameTag(ctx, ctx->battlerIdAttacker);
         ctx->buffMsg.param[1] = CreateNicknameTag(ctx, ctx->battlerIdTarget);
-        // What one of the player's Pokemon handed a wild Pokemon goes to the
-        // bag when the battle is over, knocked off it or not (Pokemon
-        // Central, Raggiro: from the ninth generation; GiveBackHeldItems).
-        ctx->buffMsg.param[2] = ctx->itemsLost[ctx->battlerIdTarget] = ctx->battleMons[ctx->battlerIdTarget].item;
-        // One of the player's own has its item back when the battle is over,
-        // a Berry too, as a taken one does (GiveBackHeldItems) -- the item it
-        // started with, not one it got in the battle: a Pokemon that ate its
-        // Berry and then lost what it took after has nothing to have back
-        // (NoteHeldItemTaken asks the same).
-        if (BattleSystem_GetParty(battleSystem, ctx->battlerIdTarget) == BattleSystem_GetParty(battleSystem, BATTLER_PLAYER)
-            && ctx->battleMons[ctx->battlerIdTarget].item == ctx->itemsToRestore[ctx->selectedMonIndex[ctx->battlerIdTarget]]) {
-            ctx->heldItemsTaken |= MaskOfFlagNo(ctx->selectedMonIndex[ctx->battlerIdTarget]);
+        ctx->buffMsg.param[2] = ctx->battleMons[ctx->battlerIdTarget].item;
+        // An item one of the player's Pokemon started with is the player's
+        // again when the battle is over, a Berry too, as a taken one is,
+        // whoever held it (GiveBackHeldItems): its own, or one it handed a
+        // wild Pokemon, which goes to the bag (Pokemon Central, Raggiro: from
+        // the ninth generation). Not one it got in the battle: a Pokemon that
+        // ate its Berry and then lost what it took after has nothing to have
+        // back. Whose item it is, the tag says (heldItemOwner), and it goes
+        // with the item, out of Recycle's reach. Before, a lost item was
+        // written down by battler, the last one only, so of two items one
+        // wild Pokemon lost the first was not bagged.
+        slot = Battler_PartySlot(battleSystem, ctx, ctx->battlerIdTarget);
+        if (ctx->heldItemOwner[slot]) {
+            ctx->heldItemsTaken |= MaskOfFlagNo(ctx->heldItemOwner[slot] - 1);
         }
+        ctx->heldItemOwner[slot] = 0;
         ctx->battleMons[ctx->battlerIdTarget].item = 0;
         // Taken off, not made useless as retail's fourth generation did: the
         // Pokemon can be given another, or take one with Thief, Covet, Trick
@@ -10311,8 +10315,8 @@ BOOL BtlCmd_TryIncinerate(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->battlerIdTemp = ctx->battlerIdTarget;
     // A Gem one of the player's Pokemon handed a wild Pokemon goes to the bag
     // when the battle is over, burnt or not, as a knocked-off item does
-    // (BtlCmd_TryKnockOff); a Berry handed over is gone (NoteHeldItemUsedUp).
-    ctx->itemsLost[ctx->battlerIdTarget] = item;
+    // (BtlCmd_TryKnockOff); a Berry handed over is gone (NoteHeldItemUsedUp
+    // marks the one and not the other).
     NoteHeldItemUsedUp(battleSystem, ctx, ctx->battlerIdTarget);
     // Burnt, not knocked off: there is nothing left for Recycle to find.
     ctx->battleMons[ctx->battlerIdTarget].item = ITEM_NONE;

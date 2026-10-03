@@ -720,9 +720,13 @@ typedef struct BattleContext {
     // then finds it done.
     u8 heldItemsGivenBack;
     // The player's own Pokemon another has taken an item from -- Magician,
-    // Pickpocket, Thief, Covet -- or knocked it off, a bit each by party slot
-    // (NoteHeldItemTaken, BtlCmd_TryKnockOff), for GiveBackHeldItems: such an
-    // item comes back even if it was a Berry.
+    // Pickpocket, Thief, Covet -- a bit each by party slot
+    // (NoteHeldItemTaken), for GiveBackHeldItems: such an item comes back
+    // even if it was a Berry. So does one knocked off or corroded, whoever
+    // held it then, and one other than a Berry used up or burnt by another
+    // than its owner (BtlCmd_TryKnockOff, NoteHeldItemUsedUp), marked the
+    // same: one the player's Pokemon handed a wild Pokemon that is lost so
+    // goes to the bag all the same.
     u8 heldItemsTaken;
     // How many Pokemon the party had when RememberHeldItems wrote their items
     // down: GiveBackHeldItems gives back to those, and a Pokemon caught into
@@ -735,11 +739,6 @@ typedef struct BattleContext {
     // catch clears the other's, and GiveBackHeldItems bags no copy of what is
     // left.
     u16 itemsTakenFromWild[2];
-    // The item each battler last lost for the rest of the battle -- knocked
-    // off, corroded or burnt (BtlCmd_TryKnockOff, BtlCmd_TryIncinerate) --
-    // by battlerId, for GiveBackHeldItems: one the player's Pokemon handed a
-    // wild Pokemon goes to the bag all the same.
-    u16 itemsLost[BATTLER_MAX];
     // The player's own Pokemon that handed the item they started with to
     // another by Trick, Switcheroo or Bestow, a bit each by party slot
     // (NoteHeldItemGiven), for GiveBackHeldItems: such an item comes back

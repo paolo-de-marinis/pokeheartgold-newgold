@@ -206,11 +206,13 @@ class KnockOffTests(unittest.TestCase):
                      "src/battle/battle_controller_mon_copy.c"):
             self.assertNotIn("battlerBitKnockedOffItem", read(path), path)
         knock = function(read("src/battle/battle_command.c"), "BtlCmd_TryKnockOff")
-        # The mark is for the item the Pokemon started with, asked before
-        # the hand is emptied (NoteHeldItemTaken asks the same).
-        self.assertRegex(knock, r"\s*if \(BattleSystem_GetParty\(battleSystem, ctx->battlerIdTarget\) == BattleSystem_GetParty\(battleSystem, BATTLER_PLAYER\)\n"
-                                r"\s*&& ctx->battleMons\[ctx->battlerIdTarget\]\.item == ctx->itemsToRestore\[ctx->selectedMonIndex\[ctx->battlerIdTarget\]\]\) \{\n"
-                                r"\s*ctx->heldItemsTaken \|= MaskOfFlagNo\(ctx->selectedMonIndex\[ctx->battlerIdTarget\]\);\n\s*\}\n"
+        # The mark is for the party slot that started the battle with the
+        # item, whoever holds it now (heldItemOwner), asked before the hand
+        # is emptied; the tag goes with the item.
+        self.assertRegex(knock, r"\s*slot = Battler_PartySlot\(battleSystem, ctx, ctx->battlerIdTarget\);\n"
+                                r"\s*if \(ctx->heldItemOwner\[slot\]\) \{\n"
+                                r"\s*ctx->heldItemsTaken \|= MaskOfFlagNo\(ctx->heldItemOwner\[slot\] - 1\);\n\s*\}\n"
+                                r"\s*ctx->heldItemOwner\[slot\] = 0;\n"
                                 r"\s*ctx->battleMons\[ctx->battlerIdTarget\]\.item = 0;\n")
         # The party copy writes the empty hand, at once, so a Pokemon sent
         # back in has nothing, and a wild one caught nothing either.
@@ -218,17 +220,21 @@ class KnockOffTests(unittest.TestCase):
         self.assertRegex(knock, r"ctx->battleMons\[ctx->battlerIdTarget\]\.item = 0;\n(\s*//.*\n)*"
                                 r"\s*CopyBattleMonToPartyMon\(battleSystem, ctx, ctx->battlerIdTarget\);\n\s*\} else \{")
 
-    def test_what_a_battler_loses_is_written_down(self):
+    def test_what_a_battler_loses_is_marked_for_its_owner(self):
         # Pokemon Central (Raggiro): from the ninth generation what was
         # handed to a wild Pokemon goes back to the bag at the battle's end,
-        # knocked off or corroded too. The item is written down by battler
-        # before the hand is emptied, and GiveBackHeldItems asks it of the
-        # wild ones as it asks what they hold and used up.
+        # knocked off or corroded too. The slot whose item it was is marked
+        # before the hand is emptied, as a taken one is, and GiveBackHeldItems
+        # asks the mark of each item handed over as it asks the wild ones what
+        # they hold: a mark each, so of two items one wild Pokemon lost the
+        # first goes to the bag too (test_battle_context). Before, the item
+        # was written down by battler, the last one only.
         knock = function(read("src/battle/battle_command.c"), "BtlCmd_TryKnockOff")
-        self.assertLess(knock.index("ctx->itemsLost[ctx->battlerIdTarget] = ctx->battleMons[ctx->battlerIdTarget].item;"),
+        self.assertLess(knock.index("ctx->heldItemsTaken |= MaskOfFlagNo(ctx->heldItemOwner[slot] - 1);"),
                         knock.index("ctx->battleMons[ctx->battlerIdTarget].item = 0;"))
-        self.assertIn("ctx->battleMons[j].item == given || ctx->recycleItem[j] == given || ctx->itemsLost[j] == given",
+        self.assertIn("if ((ctx->heldItemsTaken >> i & 1) || ctx->battleMons[j].item == given) {",
                       function(read("src/battle/battle_controller_player.c"), "GiveBackHeldItems"))
+        self.assertNotIn("itemsLost", read("include/battle/battle.h"))
 
     def test_a_wild_pokemon_knocks_off_nothing_of_the_players(self):
         # Pokemon Central (Privazione): from the fifth generation a wild

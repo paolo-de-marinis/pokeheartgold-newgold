@@ -1,0 +1,19 @@
+{
+  "about": "An item the player's Pokemon handed to a wild Pokemon and knocked off it goes to the bag even when the wild Pokemon loses another after it (Pokemon Central, Raggiro: from the ninth generation what was handed to a wild Pokemon goes back to the bag at the battle's end). Before, the item a battler lost was written down by battler, the last one only: the second loss wrote over the first, and the handed item was lost. On Route 29 the Cyndaquil starts the battle holding a Silk Scarf and is taught Trick and Knock Off; the forced wild Geodude holds an Everstone (set:, teach:). The Trick swaps the two and Knock Off takes the Silk Scarf off the Geodude; a second Trick hands the Geodude back its Everstone, the Cyndaquil left with nothing, and a second Knock Off fells the Geodude and takes the Everstone off it all the same. Back on the field the bag has the Silk Scarf, not the Everstone, and the Cyndaquil holds nothing. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CYNDAQUIL:12:::SILK_SCARF"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0",
+            "set:1,item,ITEM_EVERSTONE", "teach:0,0,MOVE_TRICK", "teach:0,1,MOVE_KNOCK_OFF",
+            "fight:1:1",
+            {"expect": {"lines": ["Cyndaquil used Trick!"], "battler0.item": "ITEM_EVERSTONE", "battler1.item": "ITEM_SILK_SCARF"}},
+            "fight:2:1",
+            {"expect": {"new_lines": ["Cyndaquil used Knock Off!", "Silk Scarf"], "battler1.item": "ITEM_NONE"}},
+            "fight:1:1",
+            {"expect": {"new_lines": ["Cyndaquil used Trick!", "The wild Geodude obtained Everstone."],
+                        "battler0.item": "ITEM_NONE", "battler1.item": "ITEM_EVERSTONE"}},
+            "fight:2:1",
+            {"expect": {"new_lines": ["Cyndaquil used Knock Off!", "The wild Geodude fainted!", "Everstone"]}},
+            "field"],
+  "expect": {"party0.item": "ITEM_NONE", "bag:ITEM_SILK_SCARF": 1, "bag:ITEM_EVERSTONE": 0}
+}

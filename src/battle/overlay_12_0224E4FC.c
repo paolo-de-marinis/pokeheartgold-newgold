@@ -7293,21 +7293,28 @@ void NoteHeldItemGiven(BattleSystem *battleSystem, BattleContext *ctx, int battl
 // excepted). A Berry taken from the player's Pokemon comes back even eaten
 // (NoteHeldItemTaken), and one a Pokemon has back and eats itself is its own
 // Berry eaten, as ever: its marks go, taken back by Thief or Tricked back
-// before it was eaten. Which Pokemon's Berry it is, the item's tag says
-// (heldItemOwner): another Pokemon's own Berry of the same kind, eaten while
-// the handed one is still held, is not the handed one. Before, the Berry was
-// matched by kind, and such a Berry took the handed one's place. The tag
-// stays: what Recycle or Harvest brings back is the same item.
+// before it was eaten. Any other item one of the player's Pokemon started
+// with, used up by another, is the player's again when the battle is over,
+// as a knocked-off one is, and is marked the same (BtlCmd_TryKnockOff;
+// Raggiro: what a wild Pokemon used of the player's goes back to the bag, a
+// Gem burnt with it too); its owner using it up undoes the marks, as for a
+// Berry. Which Pokemon's item it is, the item's tag says (heldItemOwner):
+// another Pokemon's own Berry of the same kind, eaten while the handed one is
+// still held, is not the handed one. Before, the Berry was matched by kind,
+// and such a Berry took the handed one's place. The tag stays: what Recycle
+// or Harvest brings back is the same item.
 void NoteHeldItemUsedUp(BattleSystem *battleSystem, BattleContext *ctx, int battlerId) {
     int at = Battler_PartySlot(battleSystem, ctx, battlerId);
     int slot = ctx->heldItemOwner[at] - 1;
 
-    if (slot < 0 || !BattleItemIsBerry(ctx->battleMons[battlerId].item)) {
+    if (slot < 0) {
         return;
     }
     if (slot == at) {
         ctx->heldItemsTaken &= ~MaskOfFlagNo(slot);
         ctx->heldItemsGiven &= ~MaskOfFlagNo(slot);
+    } else if (!BattleItemIsBerry(ctx->battleMons[battlerId].item)) {
+        ctx->heldItemsTaken |= MaskOfFlagNo(slot);
     } else if (ctx->heldItemsGiven >> slot & 1) {
         ctx->itemsToRestore[slot] = ITEM_NONE;
     }

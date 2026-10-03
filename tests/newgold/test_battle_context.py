@@ -128,7 +128,7 @@ typedef struct { u16 item; } Pokemon;
 typedef struct { int unused; } Bag;
 typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; u8 outcome; } BattleSystem;
 typedef struct { u16 item; } BattleMon;
-typedef struct { BattleMon battleMons[BATTLER_MAX]; u16 recycleItem[BATTLER_MAX]; u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken, heldItemsCount; u16 itemsTakenFromWild[2], itemsLost[BATTLER_MAX]; u8 heldItemsGiven; } BattleContext;
+typedef struct { BattleMon battleMons[BATTLER_MAX]; u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken, heldItemsCount; u16 itemsTakenFromWild[2]; u8 heldItemsGiven; } BattleContext;
 static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 
 static u16 sAdded[8][2];
@@ -289,11 +289,12 @@ int main(void) {
     assert(sAdds == 1 && sAdded[0][0] == ITEM_FOCUS_SASH && bs.party[0].item == ITEM_LEFTOVERS);
     ctx.battleMons[3].item = ITEM_NONE;
     // Two of the party Trick the wild one in turn and the second's item is
-    // knocked off it, then the second Bestows the first's to it, and it is
-    // caught with that: the first keeps the wild one's own item, which it
-    // got, and only the second's, lost, goes to the bag. Before, the first's
-    // entry, rewritten by the catch, was still marked as handed over, and the
-    // item it now names was found among those lost: a second copy bagged.
+    // knocked off it, marked as lost, then the second Bestows the first's to
+    // it, and it is caught with that: the first keeps the wild one's own
+    // item, which it got, and only the second's, lost, goes to the bag.
+    // Before, the first's entry, rewritten by the catch, was still marked as
+    // handed over, and the item it now names was found among those lost: a
+    // second copy bagged.
     const u16 started[PARTY_SIZE] = { ITEM_SILK_SCARF, ITEM_EVERSTONE, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
     const u16 ended[PARTY_SIZE] = { ITEM_EVERSTONE, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
     for (int i = 0; i < PARTY_SIZE; i++) {
@@ -301,7 +302,7 @@ int main(void) {
         bs.party[i].item = ended[i];
     }
     caught.item = ITEM_SILK_SCARF;
-    ctx.itemsLost[1] = ITEM_EVERSTONE;
+    ctx.heldItemsTaken = 1 << 1;
     ctx.heldItemsGivenBack = 0;
     ctx.heldItemsGiven = (1 << 0) | (1 << 1);
     sAdds = 0;
@@ -309,27 +310,42 @@ int main(void) {
     GiveBackHeldItems(&bs, &ctx);
     assert(sAdds == 1 && sAdded[0][0] == ITEM_EVERSTONE && sAdded[0][1] == 1);
     assert(bs.party[0].item == ITEM_EVERSTONE && bs.party[1].item == ITEM_NONE && caught.item == ITEM_SILK_SCARF);
-    ctx.itemsLost[1] = ITEM_NONE;
+    // The two items handed to the wild one both knocked off it, and it not
+    // caught: both go to the bag, and each of the two keeps what it got,
+    // nothing. Before, only the last item a battler lost was written down,
+    // and the first was not bagged.
+    for (int i = 0; i < PARTY_SIZE; i++) {
+        ctx.itemsToRestore[i] = started[i];
+        bs.party[i].item = ITEM_NONE;
+    }
+    ctx.heldItemsGivenBack = 0;
+    ctx.heldItemsGiven = ctx.heldItemsTaken = (1 << 0) | (1 << 1);
+    bs.outcome = BATTLE_OUTCOME_WIN;
+    sAdds = 0;
+    GiveBackHeldItems(&bs, &ctx);
+    assert(sAdds == 2 && sAdded[0][0] == ITEM_SILK_SCARF && sAdded[1][0] == ITEM_EVERSTONE);
+    assert(bs.party[0].item == ITEM_NONE && bs.party[1].item == ITEM_NONE);
+    ctx.heldItemsTaken = 0;
 
     // Tricked with a wild Pokemon that then fainted or fled: the swap lasts
     // (Rapidscambio) -- the player's Pokemon keeps the Leftovers it got, and
     // the Focus Sash it handed over goes to the bag (Raggiro, from the ninth
     // generation: what was handed to a wild Pokemon goes back to the bag at
-    // the battle's end), whether the wild one still holds it, has used it
-    // up, or lost it to Knock Off, Corrosive Gas or Incinerate (the third
+    // the battle's end), whether the wild one still holds it, or has used
+    // it up or lost it to Knock Off, Corrosive Gas or Incinerate, which
+    // marks it as lost (NoteHeldItemUsedUp, BtlCmd_TryKnockOff; the third
     // pass: before, it was gone). Before all this, the Sash came back to the
     // Pokemon and the Leftovers went to the bag. With none of the wild ones
-    // (the fourth pass), it is back on the player's side, and no copy.
+    // and no mark (the fourth pass), it is back on the player's side, and no
+    // copy.
     for (int used = 0; used < 4; used++) {
         for (int i = 0; i < PARTY_SIZE; i++) {
             ctx.itemsToRestore[i] = before[i];
             bs.party[i].item = swappedWild[i];
         }
         ctx.battleMons[1].item = used == 0 ? ITEM_FOCUS_SASH : ITEM_NONE;
-        ctx.recycleItem[1] = used == 1 ? ITEM_FOCUS_SASH : ITEM_NONE;
-        ctx.itemsLost[1] = used == 2 ? ITEM_FOCUS_SASH : ITEM_NONE;
         ctx.heldItemsGivenBack = 0;
-        ctx.heldItemsTaken = 0;
+        ctx.heldItemsTaken = used == 1 || used == 2 ? 1 << 0 : 0;
         ctx.heldItemsGiven = 1 << 0;
         bs.outcome = BATTLE_OUTCOME_WIN;
         sAdds = 0;
@@ -337,8 +353,8 @@ int main(void) {
         assert(bs.party[0].item == ITEM_LEFTOVERS);
         assert(used == 3 ? sAdds == 0 : sAdds == 1 && sAdded[0][0] == ITEM_FOCUS_SASH && sAdded[0][1] == 1);
     }
-    ctx.battleMons[1].item = ctx.recycleItem[1] = ctx.itemsLost[1] = ITEM_NONE;
-    ctx.heldItemsGiven = 0;
+    ctx.battleMons[1].item = ITEM_NONE;
+    ctx.heldItemsGiven = ctx.heldItemsTaken = 0;
 
     // Swapped within the party is not gained.
     const u16 swapped[PARTY_SIZE] = { ITEM_NONE, ITEM_FOCUS_SASH, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
@@ -475,6 +491,23 @@ int main(void) {
     assert(ctx.heldItemsTaken == 1 << 1 && ctx.heldItemsGiven == 1 << 1 && tag(&bs, &ctx, 0) == 2);
     NoteHeldItemUsedUp(&bs, &ctx, 0);
     assert(ctx.heldItemsTaken == 0 && ctx.heldItemsGiven == 0 && ctx.itemsToRestore[1] == ITEM_ORAN_BERRY && tag(&bs, &ctx, 0) == 2);
+
+    // A White Herb handed over and used up by the Pokemon it went to is
+    // marked as lost, as one knocked off is: it comes back, to the bag from a
+    // wild Pokemon (Raggiro). Tricked back and used by its owner, it is the
+    // owner's own item used, and the marks go, as for a Berry.
+    reset(&bs, &ctx);
+    ctx.battleMons[0].item = ctx.itemsToRestore[1] = ITEM_WHITE_HERB;
+    NoteHeldItemGiven(&bs, &ctx, 0, 1);
+    ctx.battleMons[1].item = ITEM_WHITE_HERB;
+    NoteHeldItemUsedUp(&bs, &ctx, 1);
+    assert(ctx.heldItemsTaken == 1 << 1 && ctx.heldItemsGiven == 1 << 1 && ctx.itemsToRestore[1] == ITEM_WHITE_HERB);
+    reset(&bs, &ctx);
+    ctx.battleMons[0].item = ctx.itemsToRestore[1] = ITEM_WHITE_HERB;
+    NoteHeldItemGiven(&bs, &ctx, 0, 1);
+    NoteHeldItemGiven(&bs, &ctx, 1, 0);
+    NoteHeldItemUsedUp(&bs, &ctx, 0);
+    assert(ctx.heldItemsTaken == 0 && ctx.heldItemsGiven == 0 && ctx.itemsToRestore[1] == ITEM_WHITE_HERB);
     return 0;
 }
 """
@@ -491,7 +524,7 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 typedef struct { u16 item; int hp; } BattleMon;
-typedef struct { BattleMon battleMons[4]; int battlerIdAttacker, battlerIdTarget, battlerIdTemp; u16 itemTemp, itemsLost[4]; } BattleContext;
+typedef struct { BattleMon battleMons[4]; int battlerIdAttacker, battlerIdTarget, battlerIdTemp; u16 itemTemp; } BattleContext;
 typedef struct BattleSystem BattleSystem;
 static int sCopies, sCopied = -1, sHeldAtCopy = -1;
 static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
@@ -502,7 +535,8 @@ static int GetItemVar(BattleContext *ctx, u16 item, u16 var) {
     (void)ctx; assert(var == ITEM_VAR_HOLD_EFFECT); return item == ITEM_FIRE_GEM ? HOLD_EFFECT_POWERING_UP_MOVE_ONCE : HOLD_EFFECT_NONE;
 }
 static BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int a, int b, int ability) { (void)ctx; (void)a; (void)b; (void)ability; return FALSE; }
-static void NoteHeldItemUsedUp(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; (void)battlerId; }
+static int sUsedUp = -1;
+static void NoteHeldItemUsedUp(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; sUsedUp = battlerId; }
 static void CopyBattleMonToPartyMon(BattleSystem *bs, BattleContext *ctx, int battlerId) {
     (void)bs; sCopies++; sCopied = battlerId; sHeldAtCopy = ctx->battleMons[battlerId].item;
 }
@@ -513,17 +547,18 @@ int main(void) {
     assert(ctx.battleMons[1].item == ITEM_NONE && ctx.itemTemp == ITEM_ORAN_BERRY && ctx.battlerIdTemp == 1);
     assert(sCopies == 1 && sCopied == 1 && sHeldAtCopy == ITEM_NONE);
     // A Gem burns as well (Pokemon Central, Bruciatutto: from the sixth
-    // generation).
-    // Written down as lost, so one the player's Pokemon handed a wild
-    // Pokemon goes to the bag at the battle's end (GiveBackHeldItems).
+    // generation), used up as a Berry is: one the player's Pokemon handed a
+    // wild Pokemon is marked as lost, and goes to the bag at the battle's end
+    // (NoteHeldItemUsedUp, GiveBackHeldItems).
+    sUsedUp = -1;
     ctx.battleMons[1].item = ITEM_FIRE_GEM;
     BtlCmd_TryIncinerate(0, &ctx);
-    assert(ctx.battleMons[1].item == ITEM_NONE && ctx.itemTemp == ITEM_FIRE_GEM && sCopies == 2);
-    assert(ctx.itemsLost[1] == ITEM_FIRE_GEM && ctx.itemsLost[0] == ITEM_NONE);
-    // Nothing burnt, nothing copied, nothing written down.
+    assert(ctx.battleMons[1].item == ITEM_NONE && ctx.itemTemp == ITEM_FIRE_GEM && sCopies == 2 && sUsedUp == 1);
+    // Nothing burnt, nothing copied, nothing used up.
+    sUsedUp = -1;
     ctx.battleMons[1].item = ITEM_LEFTOVERS;
     BtlCmd_TryIncinerate(0, &ctx);
-    assert(sCopies == 2 && ctx.battleMons[1].item == ITEM_LEFTOVERS && ctx.itemsLost[1] == ITEM_FIRE_GEM);
+    assert(sCopies == 2 && ctx.battleMons[1].item == ITEM_LEFTOVERS && sUsedUp == -1);
     return 0;
 }
 """
