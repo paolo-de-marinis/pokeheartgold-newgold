@@ -61,6 +61,19 @@ class UnguardedMoveTests(unittest.TestCase):
         bounce = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224C204")
         self.assertIn("&& ctx->battlerIdTarget != ctx->battlerIdAttacker && (ctx->turnData[ctx->battlerIdTarget].magicCoatFlag || bouncedByAbility)", bounce)
 
+    def test_none_of_them_is_copied_by_mirror_move_but_five(self):
+        # Pokemon Central: "Non può essere copiata da Speculmossa" for each of
+        # them but Court Change, Fairy Lock, Magic Room, Wonder Room and
+        # Power Shift. Mirror Move copies the last move aimed at its user, so
+        # the flag on Victory Dance let a Pokemon copy its own. Retail's Trick
+        # Room keeps retail's flag.
+        table = import_moves.read_table()
+        flagged = {move for move in range(MOVES["MOVE_SHADOW_FORCE"] + 1, len(table))
+                   if record_at(table, move)[7] & import_moves.UNREFLECTED_TARGETS
+                   and record_at(table, move)[9] & (1 << FLAG["FLAG_MIRROR_MOVE"])}
+        self.assertEqual(flagged, {MOVES[f"MOVE_{name}"] for name in
+                                   ("COURT_CHANGE", "FAIRY_LOCK", "MAGIC_ROOM", "WONDER_ROOM", "POWER_SHIFT")})
+
 
 if __name__ == "__main__":
     unittest.main()

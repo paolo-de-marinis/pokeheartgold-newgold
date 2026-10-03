@@ -555,7 +555,7 @@ FIELDS_HERE = {
     "DRAGON_CHEER": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
     # The field's: Protect and Magic Coat have nothing to do with it (Pokemon
     # Central, Blocco Fatato).
-    "FAIRY_LOCK": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
+    "FAIRY_LOCK": {"flagsOn": ("FLAG_MIRROR_MOVE",), "flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
     # The field's weather and the user's switch: Protect and Magic Coat have
     # nothing to do with it (Pokemon Central, Freddura).
     "CHILLY_RECEPTION": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
@@ -564,7 +564,7 @@ FIELDS_HERE = {
     "DOODLE": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT", "FLAG_MIRROR_MOVE")},
     # The field's: Protect and Magic Coat have nothing to do with it (Pokemon
     # Central, Cambiocampo).
-    "COURT_CHANGE": {"flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
+    "COURT_CHANGE": {"flagsOn": ("FLAG_MIRROR_MOVE",), "flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT")},
     # The whole field, as the effect script walks it (Pokemon Central, Ora
     # del Te); the reference's adjacent Pokemon and the user would have the
     # controller walk them again.
@@ -576,6 +576,11 @@ FIELDS_HERE = {
     # Protect or Crafty Shield stopped it and its Magic Bounce sent it back.
     "TAKE_HEART": {"target": "RANGE_USER", "flagsOn": ("FLAG_SNATCH",),
                    "flagsOff": ("FLAG_PROTECT", "FLAG_MAGIC_COAT", "FLAG_MIRROR_MOVE")},
+    # Copied by Mirror Move though aimed at the field or the user (Pokemon
+    # Central, Magicozona, Mirabilzona, Scambioforza): see UNAIMED_FLAGS.
+    "MAGIC_ROOM": {"flagsOn": ("FLAG_MIRROR_MOVE",)},
+    "WONDER_ROOM": {"flagsOn": ("FLAG_MIRROR_MOVE",)},
+    "POWER_SHIFT": {"flagsOn": ("FLAG_MIRROR_MOVE",)},
 }
 
 # A move aimed at its user, at the user's side or at the whole field is aimed
@@ -594,8 +599,15 @@ UNGUARDED_TARGETS = 1 << 4 | 1 << 5 | 1 << 6   # RANGE_USER, RANGE_USER_SIDE, RA
 # none the reflectable flag; the engine's records give thirty-three of them
 # the Magic Coat flag.
 UNREFLECTED_TARGETS = UNGUARDED_TARGETS | 1 << 8   # and RANGE_ALLY
-# The targets past which each flag is left off.
-UNAIMED_FLAGS = {"FLAG_PROTECT": UNGUARDED_TARGETS, "FLAG_MAGIC_COAT": UNREFLECTED_TARGETS}
+# Nor is one copied by Mirror Move, which copies the last move aimed at its
+# user: these are aimed at the user, so the engine's records, which give
+# thirty-four of them the flag, let a Pokemon's Mirror Move copy its own
+# Victory Dance. Pokemon Central has each "not copied by Mirror Move" but
+# Court Change, Fairy Lock, Magic Room, Wonder Room and Power Shift, which
+# keep it (FIELDS_HERE), as retail's self-aimed moves never had it.
+# The targets past which each flag is left off, unless FIELDS_HERE puts it on.
+UNAIMED_FLAGS = {"FLAG_PROTECT": UNGUARDED_TARGETS, "FLAG_MAGIC_COAT": UNREFLECTED_TARGETS,
+                 "FLAG_MIRROR_MOVE": UNREFLECTED_TARGETS}
 
 # The effects written here for those moves follow the reference's in
 # move_effects.h, under this line. A run keeps them where they are and numbers
@@ -1094,7 +1106,7 @@ def main():
         flags = sum(1 << bit for flag, bit in FLAG_BITS.items()
                     if (flag in named_flags(block) or flag in FIELDS_HERE.get(name, {}).get("flagsOn", ()))
                     and not (name in IMPLEMENTED_HERE and flag == "FLAG_UNUSABLE_UNIMPLEMENTED")
-                    and not target & UNAIMED_FLAGS.get(flag, 0)
+                    and not (target & UNAIMED_FLAGS.get(flag, 0) and flag not in FIELDS_HERE.get(name, {}).get("flagsOn", ()))
                     and flag not in FIELDS_HERE.get(name, {}).get("flagsOff", ()))
         added.append((first_move + offset, name, struct.pack(
             RECORD,

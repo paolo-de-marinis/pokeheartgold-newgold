@@ -1,0 +1,13 @@
+{
+  "about": "Mirror Move, which copies the last move aimed at its user, does not copy the user's own Victory Dance: a move aimed at its user, its side, the field or its ally is not copied by Mirror Move (Pokemon Central: \"Non può essere copiata da Speculmossa\" for each added one but Court Change, Fairy Lock, Magic Room, Wonder Room and Power Shift). The engine's records gave thirty-four of them the Mirror Move flag, and the move aimed at the user was noted as the last aimed at it. A level-10 Pikachu is given Victory Dance, then Mirror Move, in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash, aimed at itself: the Mirror Move has nothing to copy: \"Mirror Move failed!\" (on the base ROM it became Victory Dance). The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_VICTORY_DANCE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Victory Dance!"]}},
+            "teach:0,0,MOVE_MIRROR_MOVE", "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Mirror Move!", "Mirror Move failed!"]}
+}
