@@ -15,6 +15,8 @@ libretro core, or without the save a scenario starts from (Paolo's saves,
 The legs of the playthrough are a chain: a leg names the one before it
 ("from") and starts from the in-game save that one made. They share one
 directory for the run (CHAIN); one run alone plays the legs before it first.
+NEWGOLD_PLAYTHROUGH=0 leaves every leg of a chain out (skipped, not played);
+unset, they play.
 
 Up to three scene.py processes play at once (WORKERS), started when the
 first scenario test runs, for every scenario the run selected: a chain's
@@ -446,6 +448,25 @@ class ChainTests(unittest.TestCase):
         self.assertEqual(most[0], WORKERS)
         self.assertEqual([stem for stem in order if stem in legs_], legs_)
 
+    def test_newgold_playthrough_0_leaves_the_chain_out(self):
+        # The playthrough's legs, its first among them, are skipped without
+        # playing; a scenario of its own is not a leg. Unset, they play.
+        from unittest import mock
+        first, leg, alone = (SCENARIOS / f"{name}.json" for name in
+                             ("playthrough_01_new_game", "playthrough_05_falkner", "catch_route29"))
+        self.assertEqual([chained(path) for path in (first, leg, alone)], [True, True, False])
+        with mock.patch.dict(os.environ, {"NEWGOLD_PLAYTHROUGH": "0"}):
+            self.assertFalse(playthrough())
+            for path in (first, leg):
+                with self.assertRaisesRegex(unittest.SkipTest, "NEWGOLD_PLAYTHROUGH=0"):
+                    play(path)(self)
+                self.assertNotIn(path, RESULTS)
+        with mock.patch.dict(os.environ, {"NEWGOLD_PLAYTHROUGH": "1"}):
+            self.assertTrue(playthrough())
+        with mock.patch.dict(os.environ):
+            os.environ.pop("NEWGOLD_PLAYTHROUGH", None)
+            self.assertTrue(playthrough())
+
     def test_the_run_starts_what_its_loader_selected(self):
         loader, kept = unittest.TestLoader(), ScenarioTests.selected
         loader.testNamePatterns = ["*.test_chuck"]
@@ -628,7 +649,21 @@ def legs(path):
     return 1 + (legs(SCENARIOS / f"{before}.json") if before else 0)
 
 
-WORKERS = 3                 # scene.py processes at once, an emulator each
+def chained(path):
+    """Whether a scenario is a leg of a chain (the playthrough): it names the
+    leg before it, or another leg names it."""
+    return "from" in json.loads(path.read_text()) or any(
+        json.loads(other.read_text()).get("from") == path.stem for other in SCENARIOS.glob("*.json"))
+
+
+def playthrough():
+    """Whether this run plays the chains: not under NEWGOLD_PLAYTHROUGH=0,
+    which leaves their legs out -- the playthrough alone plays for well over
+    an hour."""
+    return os.environ.get("NEWGOLD_PLAYTHROUGH", "1") != "0"
+
+
+WORKERS = 3                # scene.py processes at once, an emulator each
 RESULTS = {}                # a scenario's path -> the Future of run(path)
 
 
@@ -671,6 +706,8 @@ def start(paths, workers=WORKERS):
 
 def play(path):
     def test(self):
+        if not playthrough() and chained(path):
+            self.skipTest("NEWGOLD_PLAYTHROUGH=0: the playthrough's legs are left out")
         for needed, how in ((ROM, "make NEWGOLD_DIAG=1 COMPARE=0 build/heartgold.us.diag/pokeheartgold.us.nds"),
                             (ELF, "the same build"), (CORE, "the libretro core (NEWGOLD_CORE)")):
             if not os.path.exists(needed):
@@ -696,7 +733,7 @@ class ScenarioTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if all(os.path.exists(needed) for needed in (ROM, ELF, CORE)):
-            start(cls.selected)
+            start([path for path in cls.selected if playthrough() or not chained(path)])
 
 
 for _path in sorted(SCENARIOS.glob("*.json")):

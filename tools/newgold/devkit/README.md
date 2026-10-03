@@ -483,6 +483,9 @@ Reading what the debug ROM records, and playing it without looking.
   alone plays the ones before it first, and one after a failed leg fails
   without playing. `test_scenarios.py` plays up to three scenarios at once,
   a chain's legs together in one of the three, in their order.
+  `NEWGOLD_PLAYTHROUGH=0` leaves the playthrough's legs out of a run (they
+  alone play for well over an hour) and the other scenarios play as ever;
+  unset, or anything else, it plays them, and a round's landing always does.
 - `species.py OUT` -- every species and form through the screens that load
   its resources: in the PC, in boxes savedit fills (its icon, its sprite,
   its name, Dex number, types and ability on the hover, and its summary's
