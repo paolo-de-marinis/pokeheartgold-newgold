@@ -520,7 +520,7 @@ def frame_table(map_id):
             re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), ", savedit.source(path).read_text())]
 
 
-def plan(start, goals, blocked=frozenset(), most=300000, walls=frozenset()):
+def plan(start, goals, blocked=frozenset(), most=300000, walls=frozenset(), climb=True):
     """The cheapest walk from `start` (map, x, z) to any of `goals`, as
     [(node, the direction held from it)], the last node a goal; None when
     there is none. A step costs 1, a ledge 2, a warp 4. `blocked` are tiles
@@ -529,7 +529,9 @@ def plan(start, goals, blocked=frozenset(), most=300000, walls=frozenset()):
     is a tile and the height of its floor the player is at: a walk keeps
     off a step the floor climbs too far for (Goldenrod Gym's walkways, its
     arches a walkway over a path), and the side walls a tile's behaviour
-    names. `start` may carry the player's height, (map, x, z, height)."""
+    names. `start` may carry the player's height, (map, x, z, height).
+    With `climb` False any height is a step: a map whose script lifts the
+    player (Violet Gym's lift) has its upper floor out of reach otherwise."""
     import heapq
     kinds, water = behaviours(), savedit.surfable()
     goal_set = set(goals)
@@ -552,7 +554,7 @@ def plan(start, goals, blocked=frozenset(), most=300000, walls=frozenset()):
         CLIMB or more, in one land data member (the matrix's altitudes are
         not added: a step across members is not judged)."""
         here, there = heights(*state[:3]), heights(*nxt[:3])
-        return bool(here and there and here[0] == there[0] and there[1] and abs(nxt[3] - state[3]) >= CLIMB)
+        return bool(climb and here and there and here[0] == there[0] and there[1] and abs(nxt[3] - state[3]) >= CLIMB)
 
     def edges(state):
         node = state[:3]
@@ -1427,6 +1429,10 @@ class Scene:
             if path is None:
                 blocked = {tile_: until for tile_, until in blocked.items() if until > core.frames}
                 path = plan(standing, goals, frozenset(objects) | frozenset(blocked), walls=frozenset(self.walls))
+                # No way on the floor's heights: a lift or a script takes
+                # the player up (Violet Gym's), so plan as if none climbed.
+                path = path or plan(standing, goals, frozenset(objects) | frozenset(blocked),
+                                    walls=frozenset(self.walls), climb=False)
                 replans += 1
                 if path is None:
                     return False, f"goto {goal}: no way from {here} (blocked {sorted(blocked)})"

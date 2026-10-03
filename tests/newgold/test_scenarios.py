@@ -837,6 +837,15 @@ class NavigatorTests(unittest.TestCase):
         self.assertEqual(scene.behaviours()["walls"]["LEFT"] & {0x31}, {0x31})
         self.assertNotIn((gym, 9, 25), [node for node, _ in scene.plan((gym, 8, 25), [(gym, 10, 25)]) or []][1:2])
 
+    def test_a_lift_up_is_planned_as_flat_when_no_stair_climbs(self):
+        # Violet Gym's upper floor is reached by the lift at (15, 20), a
+        # script: on the floor's heights there is no way to Falkner, so goto
+        # plans that one as if none climbed (the walk before the heights).
+        maps = scene.savedit.constants("include/constants/maps.h", "MAP_")
+        pc, gym = maps["MAP_VIOLET_POKECENTER_1F"], maps["MAP_VIOLET_GYM"]
+        self.assertIsNone(scene.plan((pc, 8, 13), [(gym, 15, 5)]))
+        self.assertIsNotNone(scene.plan((pc, 8, 13), [(gym, 15, 5)], climb=False))
+
     def test_a_goto_tells_a_wall_from_someone_in_the_way(self):
         # Stuck before a tile no one stands on, goto learns a wall (the
         # step, kept for the scene); before someone, it waits for them to
