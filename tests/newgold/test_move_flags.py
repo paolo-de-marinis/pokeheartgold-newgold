@@ -74,6 +74,13 @@ class UnguardedMoveTests(unittest.TestCase):
         self.assertEqual(flagged, {MOVES[f"MOVE_{name}"] for name in
                                    ("COURT_CHANGE", "FAIRY_LOCK", "MAGIC_ROOM", "WONDER_ROOM", "POWER_SHIFT")})
 
+    def test_snatch_takes_the_ones_pokemon_central_says_it_takes(self):
+        # "Può essere rubata da Scippo"; the engine's records left these off.
+        for move in ("AURORA_VEIL", "CLANGOROUS_SOUL", "FILLET_AWAY", "GEAR_UP", "LASER_FOCUS", "LIFE_DEW",
+                     "LUNAR_BLESSING", "MAGNETIC_FLUX", "MAT_BLOCK", "SHELTER", "SHORE_UP", "STUFF_CHEEKS",
+                     "VICTORY_DANCE"):
+            self.assertIn("FLAG_SNATCH", flags(move), move)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -605,6 +605,12 @@ UNREFLECTED_TARGETS = UNGUARDED_TARGETS | 1 << 8   # and RANGE_ALLY
 # Victory Dance. Pokemon Central has each "not copied by Mirror Move" but
 # Court Change, Fairy Lock, Magic Room, Wonder Room and Power Shift, which
 # keep it (FIELDS_HERE), as retail's self-aimed moves never had it.
+# Taken by Snatch, which the engine's records leave off them (Pokemon
+# Central: "Può essere rubata da Scippo"; Showdown's gen-9 data gives each
+# the snatch flag).
+for _name in ("AURORA_VEIL", "CLANGOROUS_SOUL", "FILLET_AWAY", "GEAR_UP", "LASER_FOCUS", "LIFE_DEW", "LUNAR_BLESSING",
+              "MAGNETIC_FLUX", "MAT_BLOCK", "SHELTER", "SHORE_UP", "STUFF_CHEEKS", "VICTORY_DANCE"):
+    FIELDS_HERE.setdefault(_name, {})["flagsOn"] = FIELDS_HERE.get(_name, {}).get("flagsOn", ()) + ("FLAG_SNATCH",)
 # The targets past which each flag is left off, unless FIELDS_HERE puts it on.
 UNAIMED_FLAGS = {"FLAG_PROTECT": UNGUARDED_TARGETS, "FLAG_MAGIC_COAT": UNREFLECTED_TARGETS,
                  "FLAG_MIRROR_MOVE": UNREFLECTED_TARGETS}

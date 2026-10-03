@@ -1,0 +1,11 @@
+{
+  "about": "Snatch takes Victory Dance (Pokemon Central, Danzavittoria: \"Può essere rubata da Scippo\"; Showdown's gen-9 victorydance has the snatch flag), and the twelve other added moves Pokemon Central says it takes -- Aurora Veil, Clangorous Soul, Fillet Away, Gear Up, Laser Focus, Life Dew, Lunar Blessing, Magnetic Flux, Mat Block, Shelter, Shore Up and Stuff Cheeks -- whose engine records left the flag off. A level-10 Pikachu is given Victory Dance in the running battle (teach:) against a forced wild level-5 Chansey that knows only Snatch: the Chansey snatches the dance and its own stats rise (on the base ROM the Pikachu danced and the Snatch failed). The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_VICTORY_DANCE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SNATCH", "teach:1,1,MOVE_SNATCH", "teach:1,2,MOVE_SNATCH", "teach:1,3,MOVE_SNATCH",
+            "fight:1:1"],
+  "expect": {"lines": ["The wild Chansey used Snatch!", "Pikachu used Victory Dance!", "snatched", "The wild Chansey’s Attack rose!"]}
+}
