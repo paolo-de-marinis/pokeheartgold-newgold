@@ -90,6 +90,15 @@ int main(void) {
     ctx.selfTurnData[0].micleSpent = TRUE; sScript = BATTLE_SUBSCRIPT_ABSORB_AND_RAISE_ATTACK;
     ov12_0224BC2C(&bs, &ctx);
     assert(!ctx.selfTurnData[0].micleSpent && ctx.battleMons[0].unk88.micleBerryFlag == 1);
+    // Safety Goggles are TryHit's too.
+    assert(said(BATTLE_SUBSCRIPT_SAFETY_GOGGLES, 0, MOVE_STATUS_MISSED));
+    assert(!said(BATTLE_SUBSCRIPT_SAFETY_GOGGLES, 0, MOVE_STATUS_PROTECTED));
+    // Psychic Terrain comes before the guard (priority 4 to Protect's 3):
+    // said over a miss and through a guard, not over a target out of reach.
+    assert(said(BATTLE_SUBSCRIPT_PSYCHIC_TERRAIN_PROTECTION, 0, MOVE_STATUS_MISSED));
+    assert(said(BATTLE_SUBSCRIPT_PSYCHIC_TERRAIN_PROTECTION, 0, MOVE_STATUS_PROTECTED));
+    assert(!(ctx.moveStatusFlag & MOVE_STATUS_PROTECTED));
+    assert(!said(BATTLE_SUBSCRIPT_PSYCHIC_TERRAIN_PROTECTION, 0, MOVE_STATUS_SEMI_INVULNERABLE));
     // The Electric and Misty Terrains' refusals act at the hit.
     assert(!said(BATTLE_SUBSCRIPT_ELECTRIC_TERRAIN_PROTECTION, 0, MOVE_STATUS_MISSED));
     assert(said(BATTLE_SUBSCRIPT_MISTY_TERRAIN_PROTECTION, 0, 0));

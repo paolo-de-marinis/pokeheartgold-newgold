@@ -1,0 +1,17 @@
+{
+  "about": "Safety Goggles and Psychic Terrain refuse a move before the accuracy roll (Showdown's gen-9 trySpreadMoveHit: both are TryHit's, before the accuracy step), Psychic Terrain before a guard too (its onTryHitPriority 4 to Protect's 3). Before, both acted only on a move that had hit, so a powder move that missed a goggles holder read as a miss, and a guard spoke instead of the terrain. A level-10 Pikachu against a forced wild level-5 Chansey, the accuracy roll forced to miss throughout: the Pikachu's Sleep Powder at the Chansey given Safety Goggles (set:) is turned away by the goggles; then the Pikachu lays Psychic Terrain, is given Prankster (set:), and its Hypnosis, hurried, is turned away by the terrain, the Chansey on the ground; then the Chansey uses Protect and the terrain still answers the Hypnosis, not the guard. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 2, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SLEEP_POWDER", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
+            "set:1,item,ITEM_SAFETY_GOGGLES", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Sleep Powder!", "thanks to its Safety Goggles!"]}},
+            "teach:0,0,MOVE_PSYCHIC_TERRAIN", "fight:1:1",
+            "teach:0,0,MOVE_HYPNOSIS", "set:0,ability,ABILITY_PRANKSTER", "fight:1:1",
+            {"expect": {"new_lines": ["Pikachu used Hypnosis!", "protected by the Psychic Terrain!"]}},
+            "teach:1,0,MOVE_PROTECT", "teach:1,1,MOVE_PROTECT", "teach:1,2,MOVE_PROTECT", "teach:1,3,MOVE_PROTECT", "fight:1:1"],
+  "expect": {"new_lines": ["The wild Chansey used Protect!", "Pikachu used Hypnosis!", "protected by the Psychic Terrain!"],
+             "once_lines": ["The wild Chansey protected itself!"]}
+}

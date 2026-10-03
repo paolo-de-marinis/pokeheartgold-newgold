@@ -3363,16 +3363,19 @@ static BOOL ScriptAbsorbsMove(int script) {
 // immunities, then accuracy, then the hit itself.
 //  - Armor Tail, Queenly Majesty and Dazzling turn the move away before it
 //    reaches anyone (Showdown's onFoeTryMove): nothing silences them.
-//  - Soundproof, Bulletproof, Telepathy, Oblivious against Taunt and the
-//    abilities that swallow a move are TryHit's (onTryHit): a guard or a
-//    target out of reach silences them; a miss, a type immunity or a one-hit
-//    KO's level does not, those coming after.
+//  - Psychic Terrain is TryHit's, ahead of Protect (onTryHitPriority 4,
+//    Protect's 3): only a target out of reach silences it.
+//  - Soundproof, Bulletproof, Telepathy, Oblivious against Taunt, Safety
+//    Goggles and the abilities that swallow a move are TryHit's (onTryHit):
+//    a guard or a target out of reach silences them; a miss, a type immunity
+//    or a one-hit KO's level does not, those coming after.
 //  - The status refusals -- Comatose, Shields Down, the Pastel, Sweet, Flower
 //    and Aroma Veils -- and the Electric and Misty Terrains' act only as the
 //    status is set, once the move has hit (onSetStatus, onAllyTryAddVolatile):
 //    anything that kept the move from hitting silences them.
 // Before, every refusal but the absorbing abilities' spoke through a guard
-// and over a target out of reach, and the status refusals over a miss.
+// and over a target out of reach, the status refusals over a miss, and
+// Psychic Terrain and Safety Goggles only when the move had hit.
 static u32 RefusalSilencedBy(BattleContext *ctx, int script) {
     switch (script) {
     case BATTLE_SUBSCRIPT_BLOCKED_BY_ABILITY:
@@ -3386,7 +3389,10 @@ static u32 RefusalSilencedBy(BattleContext *ctx, int script) {
         }
         break;
     case BATTLE_SUBSCRIPT_BLOCKED_BY_SOUNDPROOF:
+    case BATTLE_SUBSCRIPT_SAFETY_GOGGLES:
         return MOVE_STATUS_DID_NOT_HIT & ~MOVE_STATUS_AFTER_TRY_HIT;
+    case BATTLE_SUBSCRIPT_PSYCHIC_TERRAIN_PROTECTION:
+        return MOVE_STATUS_DID_NOT_HIT & ~(MOVE_STATUS_AFTER_TRY_HIT | MOVE_STATUS_PROTECTED);
     }
     if (ScriptAbsorbsMove(script) == TRUE) {
         return MOVE_STATUS_DID_NOT_HIT & ~MOVE_STATUS_AFTER_TRY_HIT;
