@@ -70,6 +70,10 @@ A step is one of
     swap:A,B                    party slots A and B traded (0 the first), through the
                                 start menu's POKEMON and the party menu's SWITCH, as a
                                 player puts a Pokemon first: it leads the next battles
+    machine:ITEM,SLOT           a TM or HM taught to party slot SLOT (0 the first) from
+                                the bag, as a player teaches one: with four moves known,
+                                the one gym.py's rule lets go is forgotten on the
+                                summary screen (the rule keeping all four fails it)
     pace:MAP,X1,Y1,X2,Y2,KEY,V[,N]  walk from one tile to the other and back, through
                                 what the grass sends, until the expectation KEY reads
                                 at least V (party 3, party1.level 8, caught:SPECIES_...
@@ -187,7 +191,8 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "SEQ_": "include/constants/sndseq.h", "ABILITY_": "include/constants/abilities.h",
              "TYPE_": "include/constants/pokemon.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
-         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift", "again", "retry")
+         "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift", "again", "retry",
+         "machine")
 
 
 def readable(step_or_key, key=False):
@@ -238,6 +243,29 @@ def party_menu_layout():
              "__builtin_offsetof(ListMenuItem, value)")
     keys = ("input", "context", "switching", "cursor", "selection", "count", "items", "item", "value")
     return dict(zip(keys, savedit.compile_c(exprs=names, headers=savedit.LAYOUT_HEADERS + ("party_menu.h",))[0]))
+
+
+# The field bag's bottom screen: the pockets' tabs along the top, a page of
+# six items below them, two to a row, and an item's USE.
+TABS = [(16 + 32 * i, 15) for i in range(8)]
+CELLS = [(64 + 128 * (i % 2), (57, 93, 130)[i // 2]) for i in range(6)]
+BAG_USE = (48, 143)
+
+
+@savedit.tree_cache
+def machine_layout():
+    """What machine: reads of the bag (its view: the pocket on show, the
+    item picked, each pocket's slots), the party menu's states and the
+    summary screen's move cursor (the low nibble of PokemonSummaryAppPrefix's
+    byte at 0x7BD), from the tree's headers."""
+    names = ("__builtin_offsetof(BagAppState, bagView)", "__builtin_offsetof(BagView, unk64)",
+             "__builtin_offsetof(BagView, itemId)", "__builtin_offsetof(BagView, pockets)", "sizeof(BagViewPocket)",
+             "__builtin_offsetof(BagViewPocket, slots)", "__builtin_offsetof(BagViewPocket, pocketId)",
+             "__builtin_offsetof(BagViewPocket, count)", "POCKET_TMHMS", "__builtin_offsetof(PokemonSummaryAppPrefix, unk7BD)",
+             "PARTY_MENU_STATE_USE_TMHM", "PARTY_MENU_STATE_WAIT_TEXT_PRINTER", "PARTY_MENU_STATE_YES_NO_HANDLE_INPUT")
+    keys = ("view", "pocket", "item", "pockets", "entry", "slots", "id", "count", "tms", "cursor", "pick", "text", "yesno")
+    return dict(zip(keys, savedit.compile_c(exprs=names, headers=savedit.LAYOUT_HEADERS + (
+        "bag_app_state.h", "pokemon_summary_app.h", "party_menu.h"))[0]))
 
 
 @savedit.tree_cache
@@ -322,7 +350,7 @@ def app_layout():
                 "__builtin_offsetof(struct ChooseStarterAppWork, curSelection)",
                 "__builtin_offsetof(struct ChooseStarterAppWork, state)", "CHOOSE_STARTER_STATE_HANDLE_INPUT",
                 "SELECT_STATE_CONFIRM")),
-            ("src/start_menu.c", "enum StartMenuAction", ("START_MENU_ACTION_SAVE", "START_MENU_ACTION_POKEMON")),):
+            ("src/start_menu.c", "enum StartMenuAction", ("START_MENU_ACTION_SAVE", "START_MENU_ACTION_POKEMON", "START_MENU_ACTION_BAG")),):
         headers, decls = c_declarations(path, name)
         out.update(zip(exprs, savedit.compile_c(exprs=exprs, headers=headers, decls=decls)[0]))
     names = ("OverlayManager, template.exec", "OverlayManager, proc_state", "OverlayManager, data",
@@ -699,6 +727,9 @@ class Scene:
             return self.save()
         elif kind == "swap":
             return self.swap(*map(int, rest.split(",")))
+        elif kind == "machine":
+            item, slot = rest.split(",")
+            return self.machine(self.number(item), int(slot))
         elif kind == "fight":
             import gym
             idle = presses = 0
@@ -778,7 +809,7 @@ class Scene:
         if core.word(self._field) and self._chain("FieldSystem.processManager", "FieldProcessManager.child"):
             manager = self._chain("FieldSystem.processManager", "FieldProcessManager.child")
         names = {self.markers.address(n) & ~1: n for n in ("OakSpeech_Main", "NamingScreenApp_Main", "ChooseStarter_Main",
-                                                             "PartyMenuApp_Main")}
+                                                             "PartyMenuApp_Main", "Bag_Main", "PokemonSummary_Main")}
         name = manager and names.get(core.word(manager + layout["OverlayManager.template.exec"]) & ~1)
         if name == "OakSpeech_Main":
             data = core.word(manager + layout["OverlayManager.data"])
@@ -988,6 +1019,86 @@ class Scene:
             core.press("B", 6, hooks)
             core.step(20, hooks)
         return [f"swap: slots {first} and {second} not traded in {frames} frames"]
+
+    def machine(self, item, slot, frames=12000):
+        """machine:ITEM,SLOT -- the start menu's BAG; in the bag the TMs &
+        HMs tab, touched until the bag shows that pocket (BagView.unk64), the
+        machine's place on its page, until the bag has it picked
+        (BagView.itemId), and USE; A through "booted up" and its yes; in the
+        party menu, slot SLOT's panel, A through its lines and yes to
+        forgetting a move; on the summary screen the cursor moved onto the
+        move gym.forgets lets go, A to pick it and A to forget it; B out of
+        the bag and the start menu. Done when the Pokemon knows the move.
+        ponytail: the machine on the pocket's first page only, the six
+        most a player with few machines has."""
+        import gym
+        core, hooks, layout, bag = self.core, self.hooks, app_layout(), machine_layout()
+        move = next((m for m, it in savedit.machines() if it == item), None)
+        mons = self.mons()
+        if move is None or slot >= len(mons):
+            return [f"machine: no machine {item}, or no party slot {slot}"]
+        known = [m for m in mons[slot]["moves"] if m]
+        gone = gym.forgets(gym.Scorer(), mons[slot]["species"], known + [move]) if len(known) == 4 else None
+        if gone == 4:
+            return [f"machine: the rule keeps slot {slot}'s moves {known} over move {move}"]
+        end = core.frames + frames
+        wrong = self.start_menu("START_MENU_ACTION_BAG", end)
+        if wrong:
+            return wrong
+        core.press("A", 6, hooks)
+        used = taught = False
+        while core.frames < end:
+            name, manager = self.app()
+            state = manager and core.word(manager + layout["OverlayManager.proc_state"])
+            data = manager and core.word(manager + layout["OverlayManager.data"])
+            taught = taught or move in self.mons()[slot]["moves"]
+            if name is None:
+                if taught and self.movable():
+                    self.say(f"[{core.frames}] machine: slot {slot} learned move {move}"
+                             + ("" if gone is None else f" for its move {gone + 1}"))
+                    return None
+                if taught:
+                    core.press("B", 6, hooks)       # the start menu, back from the bag
+                core.step(10, hooks)
+            elif name == "Bag_Main" and taught:
+                core.press("B", 6, hooks)
+                core.step(20, hooks)
+            elif name == "Bag_Main" and data and state:
+                view = core.word(data + bag["view"])
+                pockets = [view + bag["pockets"] + i * bag["entry"] for i in range(8)]
+                tab = next(i for i, at in enumerate(pockets) if core.word(at + bag["id"], 1) == bag["tms"])
+                if used:
+                    core.press("A", 6, hooks)       # "You booted up the TM." and its yes
+                elif core.word(view + bag["pocket"], 1) != tab:
+                    core.touch(*TABS[tab], 6, hooks)
+                elif core.word(view + bag["item"], 2) != item:
+                    slots, count = core.word(pockets[tab] + bag["slots"]), core.word(pockets[tab] + bag["count"], 1)
+                    shown = [core.word(slots + 4 * i, 2) for i in range(count)]
+                    if item not in shown[:len(CELLS)]:
+                        return [f"machine: item {item} is not on the TMs pocket's first page: {shown}"]
+                    core.touch(*CELLS[shown.index(item)], 6, hooks)
+                else:
+                    core.touch(*BAG_USE, 6, hooks)
+                    used = True
+                core.step(20, hooks)
+            elif name == "PartyMenuApp_Main":
+                if state == bag["pick"] and not taught:
+                    core.touch(*PANELS[slot], 6, hooks)
+                elif state in (bag["text"], bag["yesno"]):
+                    core.press("A", 6, hooks)       # the lines, and yes to forgetting a move
+                core.step(20, hooks)
+            elif name == "PokemonSummary_Main" and data:
+                cursor = core.word(data + bag["cursor"], 1) & 0xF
+                core.press("A" if cursor == gone else "DOWN" if cursor < gone else "UP", 6, hooks)
+                core.step(20, hooks)
+            else:
+                core.step(10, hooks)
+        for _ in range(40):     # out of the menus, so the steps after can walk
+            if self.movable():
+                break
+            core.press("B", 6, hooks)
+            core.step(20, hooks)
+        return [f"machine: slot {slot} did not learn move {move} in {frames} frames"]
 
     def mons(self):
         """party.mons once the game has sealed every Pokemon (party.sealed),

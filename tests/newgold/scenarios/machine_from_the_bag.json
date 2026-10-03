@@ -1,0 +1,8 @@
+{
+  "about": "HM01 taught from the bag, as a player teaches a machine, by scene.py's machine: step: the start menu's BAG, the TMs & HMs tab, HM01 on its page, USE, A through \"You booted up the TM.\" and its yes, the party menu's first panel; the level-19 Quilava knows four (Smokescreen, Ember, Quick Attack, Flame Wheel), so yes to forgetting one, and on the summary screen the cursor goes down to the move gym.py's rule lets go -- Smokescreen, which deals no damage -- and A picks it and A forgets it; B out of the bag and the start menu. Cut takes the first slot and the HM stays in the bag, New Gold's machines being reusable. The bot taught Cut through savedit --teach before (leg 09b).",
+  "save": "route29-official.sav",
+  "edit": ["--party", "QUILAVA:19", "--tm", "93"],
+  "steps": ["field", "machine:ITEM_HM01,0"],
+  "expect": {"party0.move0": "MOVE_CUT", "party0.move1": "MOVE_EMBER", "party0.move2": "MOVE_QUICK_ATTACK",
+             "party0.move3": "MOVE_FLAME_WHEEL", "bag:ITEM_HM01": 1, "map": "MAP_ROUTE_29"}
+}

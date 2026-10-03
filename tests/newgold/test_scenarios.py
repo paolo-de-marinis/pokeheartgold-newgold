@@ -353,6 +353,59 @@ class ScenarioFileTests(unittest.TestCase):
             self.assertIn("not traded", s.swap(0, 1, frames=100)[0])
         self.assertEqual(s.core.pressed[-2:], ["B", "B"])
 
+    def test_a_machine_goes_through_the_bag_to_the_move_the_rule_lets_go(self):
+        # machine: the TMs & HMs tab until the bag shows it, the machine's
+        # place until the bag has it picked, USE; the party menu's panel; on
+        # the summary screen the cursor onto the move gym.py's rule lets go,
+        # and A. A machine the rule would not keep is refused at once.
+        numbers = scene.savedit.move_numbers()
+        items = scene.savedit.constants("include/constants/items.h", "ITEM_")
+        bag, app = scene.machine_layout(), scene.app_layout()
+        party = [{"species": scene.savedit.species_numbers()["QUILAVA"],
+                  "moves": [numbers[m] for m in ("TACKLE", "EMBER", "SMOKESCREEN", "FLAME_WHEEL")]}]
+        MANAGER, DATA, VIEW, SLOTS = 0x100, 0x1000, 0x5000, 0x6000
+        tms = VIEW + bag["pockets"] + 3 * bag["entry"]
+        memory = {MANAGER + app["OverlayManager.proc_state"]: bag["pick"], MANAGER + app["OverlayManager.data"]: DATA,
+                  DATA + bag["view"]: VIEW, tms + bag["id"]: bag["tms"], tms + bag["slots"]: SLOTS,
+                  tms + bag["count"]: 2, SLOTS: items["ITEM_TM51"], SLOTS + 4: items["ITEM_HM01"]}
+        screens = {"bag": "Bag_Main", "party": "PartyMenuApp_Main", "summary": "PokemonSummary_Main", "field": None}
+
+        class Core:
+            frames, touches = 0, []
+
+            def word(self, address, size=4):
+                return memory.get(address, 0)
+
+            def step(self, frames, hooks):
+                self.frames += frames
+
+            def touch(self, x, y, frames, hooks):
+                self.touches.append((x, y))
+                effect = {scene.TABS[3]: (VIEW + bag["pocket"], 3), scene.CELLS[1]: (VIEW + bag["item"], items["ITEM_HM01"])}
+                if (x, y) in effect:
+                    memory.__setitem__(*effect[(x, y)])
+                s.screen = {scene.BAG_USE: "party", scene.PANELS[0]: "summary"}.get((x, y), s.screen)
+
+            def press(self, button, frames, hooks):
+                cursor = DATA + bag["cursor"]
+                if s.screen == "summary" and button == "DOWN":
+                    memory[cursor] = memory.get(cursor, 0) + 1
+                elif s.screen == "summary" and button == "A":
+                    party[0]["moves"][memory.get(cursor, 0)] = numbers["CUT"]
+                    s.screen = "field"
+        s = scene.Scene.__new__(scene.Scene)
+        s.core, s.hooks, s.say, s.screen = Core(), [], (lambda line: None), "bag"
+        s.start_menu = lambda action, end: None
+        s.mons = lambda: party
+        s.movable = lambda: s.screen == "field"
+        s.app = lambda: (screens[s.screen], MANAGER if screens[s.screen] else 0)
+        self.assertIsNone(s.machine(items["ITEM_HM01"], 0, frames=3000))
+        self.assertEqual(party[0]["moves"], [numbers[m] for m in ("TACKLE", "EMBER", "CUT", "FLAME_WHEEL")])
+        self.assertEqual(s.core.touches[:4], [scene.TABS[3], scene.CELLS[1], scene.BAG_USE, scene.PANELS[0]])
+        self.assertIn("keeps", s.machine(items["ITEM_TM17"], 0)[0])         # Protect over four attacks
+        self.assertTrue(scene.readable("machine:ITEM_HM01,2"))
+        self.assertTrue(scene.readable("party2.move3", key=True))
+
     def test_retry_gives_the_battle_after_a_loss_a_new_seed(self):
         # retry:on -- after a loss on a goto, the held seed one higher; a win
         # leaves it, and a seed not held is not made one.

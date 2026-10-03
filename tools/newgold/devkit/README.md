@@ -462,7 +462,11 @@ Reading what the debug ROM records, and playing it without looking.
   first has under flee's share of its HP. `swap:A,B` trades two party
   slots as a player does, through the start menu's POKEMON and the party
   menu's SWITCH (each touch and press waiting on the party menu's state),
-  so the one to train leads. `shift:SLOT` has a wild battle's first
+  so the one to train leads. `machine:ITEM,SLOT` teaches a TM or HM to a
+  party slot from the bag as a player does -- the TMs & HMs tab, the
+  machine, USE, the slot's panel -- and, with four moves known, forgets on
+  the summary screen the one gym.py's rule lets go; `partyN.moveK` is an
+  expectation. `shift:SLOT` has a wild battle's first
   Pokemon relieved by that party slot at the first prompt: the slot fights
   and the first, out at the start, shares the experience -- how a catch too
   weak to win its own battles is trained. `again:K,KEY,V` plays the K
