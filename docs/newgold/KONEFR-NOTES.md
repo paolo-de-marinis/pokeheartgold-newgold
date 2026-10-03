@@ -416,6 +416,22 @@ Route 37/38 a L12-17, dove i selvatici a piedi sono L25-29. L'unica tabella a cu
 
 **Nel port:** tenuto com'è.
 
+### 7. Le forme regionali non si trovano in natura
+**Domanda:** vuoi che qualche forma regionale si possa catturare, e dove? Per esempio lo Slowpoke di
+Galar in un posto diverso da quello dello Slowpoke normale.
+
+**Cosa:** nessuna forma regionale (Alola, Galar, Hisui, Paldea) compare in una tabella di incontri:
+non nell'erba, nell'acqua, nelle rocce, negli alberi da Headbutt né nella gara pigliamosche. Le uniche
+due nel gioco le hanno degli allenatori: lo Slowpoke di Galar di Larry #23 e lo Slowbro di Galar di
+Nelson #389. Quindi oggi nessuna si può catturare.
+
+**Dove:** `data/Encounters.c` e `data/Headbutt.c` alla tua punta `a477c662f`: nessuna `SPECIES_*_GALARIAN`,
+`_ALOLAN`, `_HISUIAN` o `_PALDEAN`.
+
+**Nel port:** tenuto com'è. Paolo ha deciso (3 ottobre) che il Pokédex le traccia comunque una per una
+(viste, catturate, la loro pagina e la loro mappa): se le metti nelle tue tabelle, l'importer le porta e il
+Pokédex le segue da solo.
+
 ---
 
 ## Specie e set di mosse
