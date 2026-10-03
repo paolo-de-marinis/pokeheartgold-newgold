@@ -1,0 +1,43 @@
+{
+  "about": "The playthrough trains the Mareep it caught in leg 04j, from Violet City's Pokemon Center: swap: puts it first, and pace: walks the two tiles of Route 32's first grass until it has 13, the cap. Its Thunder Shock, its one damaging move, is twice as strong against every one of Falkner's birds; against the night's Wooper, which it does not touch, flee:40 runs once it is low, and heal: takes it to the nurse between two walks -- five times where the leg was written, 42,998 frames. Then swaps put the party back: the Mareep, the Geodude, the Cyndaquil, the Misdreavus and the Hoothoot, which stays at 10: trained alone in that grass it took 90,000 frames from 10 to 12, fainting to the Mareep and Shinx there, and Falkner was beaten without it. The nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04j_route_32_training",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "heal:MAP_VIOLET_POKECENTER_1F,8,13",
+    "swap:0,4",
+    "pace:MAP_ROUTE_32,475,292,475,296,party0.level,13,40000",
+    {
+      "expect": {
+        "party0.species": "SPECIES_MAREEP",
+        "party0.level": 13
+      }
+    },
+    "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "swap:1,3",
+    "swap:2,3",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_VIOLET_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "party": 5,
+    "badges": 0,
+    "party0.species": "SPECIES_MAREEP",
+    "party0.level": 13,
+    "party1.species": "SPECIES_GEODUDE",
+    "party2.species": "SPECIES_CYNDAQUIL",
+    "party3.species": "SPECIES_MISDREAVUS",
+    "party4.species": "SPECIES_HOOTHOOT",
+    "music": "SEQ_GS_POKESEN",
+    "party4.level": 10
+  }
+}

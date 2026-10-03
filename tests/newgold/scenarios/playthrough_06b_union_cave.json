@@ -1,10 +1,10 @@
 {
-  "about": "The playthrough's Union Cave, from Route 32's Pokemon Center: down the rest of Route 32 to the cave's mouth, through Union Cave's first floor -- Hiker Daniel, Hiker Russel and Poke Maniac Larry, who spot the player on the navigator's way, and the wild Pokemon of the cave -- and out onto Route 33, where it rains, and the game's save there. The party is the bot's own as leg 06 left it, with no edit of its own (its levels carry leg 05's savedit --level), its Misdreavus at the lead taking the experience: where the leg was written it took the two Hikers' six alone, from 13 to 16, learning Confuse Ray, and fell to Larry's Galarian Slowpoke, Yawn behind its Confusion, which the Hoothoot finished. Each map's own music is expected as the player stands in it. The field's RNG is pinned and the battle's seed fixed.",
+  "about": "The playthrough's Union Cave, from Route 32's Pokemon Center: down the rest of Route 32 to the cave's mouth, through Union Cave's first floor -- Hiker Daniel, Hiker Russel and Poke Maniac Larry, who spot the player on the navigator's way, and the wild Pokemon of the cave -- and out onto Route 33, where it rains, and the game's save there. The party is the bot's own as leg 06 left it, no edit, its Geodude at the lead taking the experience: where the leg was written it went from 13 to 16, Rock Throw in place of Defense Curl by gym.py's rule (30,171 frames). Each map's own music is expected as the player stands in it. The field's RNG is pinned and the battle's seed fixed.",
   "from": "playthrough_06_route_32",
   "hold": {"gDiagBattleSeed": 1},
   "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40", "goto:MAP_ROUTE_32,462,431",
             {"expect": {"music": "SEQ_GS_R_2_30"}}, "goto:MAP_UNION_CAVE_1F,27,42", {"expect": {"music": "SEQ_GS_D_CHIKATSUURO"}},
             "goto:MAP_ROUTE_33,467,463,40000", "save"],
-  "expect": {"map": "MAP_ROUTE_33", "x": 467, "y": 463, "badges": 1, "party": 5, "music": "SEQ_GS_R_3_30",
+  "expect": {"map": "MAP_ROUTE_33", "x": 467, "y": 463, "badges": 1, "party": 6, "music": "SEQ_GS_R_3_30",
              "lines": ["You defeated Hiker Daniel!", "You defeated Hiker Russel!", "You defeated Poké Maniac Larry!"]}
 }
