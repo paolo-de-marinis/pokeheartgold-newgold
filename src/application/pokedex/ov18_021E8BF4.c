@@ -2364,6 +2364,7 @@ static int ov18_021EC1DC(PokedexAppData *pokedexApp, u8 a1, u8 a2) {
 
 static int PokedexApp_MainSeq_66(PokedexAppData *pokedexApp) {
     pokedexApp->curSpecies = ov18_021F8838(pokedexApp);
+    pokedexApp->unk_18C5 = 0;   // the FORMS entry the AREA page shows: the species' own first
     pokedexApp->unk_18C9 = 0;
     pokedexApp->unk_18CA = 0;
     pokedexApp->unk_18C8 = 0;

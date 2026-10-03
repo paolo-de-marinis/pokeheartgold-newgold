@@ -1873,11 +1873,16 @@ void ov18_021E84EC(PokedexAppData *pokedexApp) {
     Heap_Free(r5->mon_scale);
 }
 
+// The AREA page's areas at the time of day a1: those of the entry the FORMS
+// page was left on, a form of its own when it is one (seenFormSpecies), the
+// species shown before FORMS is opened.
 void ov18_021E8528(PokedexAppData *pokedexApp, int a1, int a2) {
-    ov18_021E8698(&pokedexApp->unk_18DC.unk_00, pokedexApp->curSpecies, a1 + 4);
-    ov18_021E8698(&pokedexApp->unk_18DC.unk_08, pokedexApp->curSpecies, 7);
-    ov18_021E8698(&pokedexApp->unk_18DC.unk_10, pokedexApp->curSpecies, a1);
-    ov18_021E8698(&pokedexApp->unk_18DC.unk_18, pokedexApp->curSpecies, 3);
+    u16 species = pokedexApp->seenFormSpecies[pokedexApp->unk_18C5];
+
+    ov18_021E8698(&pokedexApp->unk_18DC.unk_00, species, a1 + 4);
+    ov18_021E8698(&pokedexApp->unk_18DC.unk_08, species, 7);
+    ov18_021E8698(&pokedexApp->unk_18DC.unk_10, species, a1);
+    ov18_021E8698(&pokedexApp->unk_18DC.unk_18, species, 3);
 
     u32 nMaps = 1;
     nMaps += pokedexApp->unk_18DC.unk_00.nMaps - 1;
@@ -1911,9 +1916,9 @@ void ov18_021E8648(PokedexAppData *pokedexApp) {
 }
 
 // The archive is the two drawing tables, then eight blocks, one a method,
-// of one record a Dex species from species 0 to the last
+// of one record a species from species 0 to the last form, a form's its own
 // (tools/newgold/devkit/dex_areas.py writes them from the wild data).
-#define ZUKAN_ENC_BLOCK(method) (NARC_zukan_enc_zukan_enc_00000002 + (method) * (NATIONAL_DEX_COUNT + 1))
+#define ZUKAN_ENC_BLOCK(method) (NARC_zukan_enc_zukan_enc_00000002 + (method) * (NUM_SPECIES + 1))
 
 static void ov18_021E8698(PokedexAppData_UnkSub18DC_0 *a0, u16 species, int a2) {
     int base;
@@ -1945,15 +1950,11 @@ static void ov18_021E8698(PokedexAppData_UnkSub18DC_0 *a0, u16 species, int a2) 
         base = ZUKAN_ENC_BLOCK(7);
         break;
     }
-    // Every Dex species has its record. A species past the last one has
-    // none, and reading on would hand it the next method's records: it
-    // reads the egg's, which holds only the terminator, and the page says
-    // "Area Unknown". Every record has its terminator, and ov18_021E8528
-    // sizes the merged list as one plus each record's count less one: four
-    // empty records made that -3, a 4-byte block written past its end.
-    if (species > NATIONAL_DEX_COUNT) {
-        species = SPECIES_EGG;
-    }
+    // Every species and every form has its record, and every record its
+    // terminator: ov18_021E8528 sizes the merged list as one plus each
+    // record's count less one, and four empty records made that -3, a 4-byte
+    // block written past its end. A form no table holds reads its
+    // terminator alone, and the page says "Area Unknown".
 
     // UB: if unexpected a2, r3 is uninitialized
     a0->maps = GfGfxLoader_LoadFromNarc_GetSizeOut(NARC_application_zukanlist_zkn_data_zukan_enc, base + species, FALSE, HEAP_ID_POKEDEX_APP, FALSE, &size);

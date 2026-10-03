@@ -10,7 +10,7 @@ through something special, and the same for the overworld. Each record is
 a list of indices into the page's two area lists (sOverworldMapIDs and
 sDungeonMapIDs in ov18_021E5C40.c) ending in 0. The archive is the
 dungeons' and the overworld's drawing tables, then eight blocks with one
-record for each species up to the last Dex species:
+record for each species up to the last form:
 
     0 1 2   dungeons, morning / day / night
     3 4 5   overworld, morning / day / night
@@ -37,9 +37,10 @@ Retail's records are what this gives from retail's tables, byte for byte
   - an area is listed once, in the order met: the tables' order, and the
     headbutt maps' by area.
 
-A form counts for its base species, as the Dex credits it
-(SpeciesToDexSpecies). Species 0's records (every area) and the two
-drawing tables are retail's, carried over.
+A form has records of its own, as a species does: the page shows the form
+its FORMS page was left on (ov18_021E8528), and a form no table holds is
+"Area Unknown" there. Species 0's records (every area) and the two drawing
+tables are retail's, carried over.
 """
 
 import argparse
@@ -73,13 +74,7 @@ class Tree:
         for name, value in self.species.items():
             self.names.setdefault(value, name)
         self.dex_count = self.species[re.search(r"#define LAST_DEX_SPECIES\s+(\w+)", header).group(1)]
-
-        dex = read("src/pokedex.c")
-        self.form_base = {self.species[f]: self.species[b] for f, b in re.findall(
-            r"\[(SPECIES_\w+) - NATIONAL_DEX_COUNT - 1\] = (SPECIES_\w+)", dex)}
-        body = re.search(r"u16 SpeciesToDexSpecies\(u16 species\) \{(.*?)\n\}", dex, re.S).group(1)
-        for f, b in re.findall(r"species == (SPECIES_\w+)\) \{\s*return (SPECIES_\w+);", body):
-            self.form_base[self.species[f]] = self.species[b]
+        self.count = self.species[re.search(r"#define NUM_SPECIES\s+(\w+)", header).group(1)]
 
         self.internal = {}  # MAP_R01 -> MAP_ROUTE_1
         for m in re.finditer(r"#define (MAP_\w+)\s+\d+\s+// (MAP_\w+)", read("include/constants/maps.h")):
@@ -112,9 +107,8 @@ class Tree:
                     return kind, i
         return None
 
-    def dex_species(self, name):
-        value = self.species[name]
-        return self.form_base.get(value, value)
+    def number(self, name):
+        return self.species[name]
 
 
 def version_value(value, keys):
@@ -128,7 +122,7 @@ def records(tree, enc, headbutt, keys):
     out = [defaultdict(list) for _ in range(8)]
 
     def add(block, name, index):
-        species = tree.dex_species(version_value(name, keys))
+        species = tree.number(version_value(name, keys))
         if species and index not in out[block][species]:
             out[block][species].append(index)
 
@@ -155,9 +149,9 @@ def records(tree, enc, headbutt, keys):
                     names += fish
             for name in names:
                 add(block, name, index)
-        grass = {tree.dex_species(version_value(slot[t], keys)) for slot in land for t in ("morn", "day", "nite")}
+        grass = {tree.number(version_value(slot[t], keys)) for slot in land for t in ("morn", "day", "nite")}
         for name in table["hoenn"] + table["sinnoh"]:
-            if tree.dex_species(version_value(name, keys)) not in grass:
+            if tree.number(version_value(name, keys)) not in grass:
                 add(6 if kind == "dungeon" else 7, name, index)
 
     trees = []
@@ -204,7 +198,7 @@ def from_tree():
     enc = json.loads(read(ENC))["encounters"]
     headbutt = json.loads(read(HEADBUTT))["tables"]
     previous = json.loads(read(OUT))
-    return text(build(tree, enc, headbutt, previous, tree.dex_count + 1))
+    return text(build(tree, enc, headbutt, previous, tree.count + 1))
 
 
 def main():
