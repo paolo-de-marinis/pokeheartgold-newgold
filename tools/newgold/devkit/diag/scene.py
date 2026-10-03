@@ -121,8 +121,9 @@ rule prints one, not two), and "no_lines" never; "heaps" is the least a
 heap may have had left at its fullest (gDiagHeapLowWater); every other key
 is a value read out of main RAM by name, through the ELF's symbols and the
 offsets the tree's own headers give: map, x, y, party (the count),
-partyN.species|item|level|exp|hp|maxHp (the party as its save block holds
-it, slot N from 0, once the field is up: what a battle gave back),
+partyN.species|item|level|exp|hp|maxHp|moveK (the party as its save block
+holds it, slot N from 0, move K from 0, once the field is up: what a battle
+gave back),
 bag:ITEM_... (how many the bag holds), badges, running_shoes (1 once the
 player has them: PlayerSaveData's, which no flag says),
 options.textSpeed|soundMethod|battleStyle|battleScene|buttonMode|frame (the
@@ -178,7 +179,7 @@ BATTLE_MAIN = STATES.index("BATTLE_MAIN")
 BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item",
                   *(f"move{k}" for k in range(4)), *(f"pp{k}" for k in range(4)), "form", "movePos")
 # party.mons' keys, the fields a scenario may name.
-PARTY_FIELDS = ("species", "item", "level", "exp", "hp", "maxHp")
+PARTY_FIELDS = ("species", "item", "level", "exp", "hp", "maxHp", *(f"move{k}" for k in range(4)))
 # The Options bitfields (include/options.h), the settings a scenario may name.
 OPTION_FIELDS = ("textSpeed", "soundMethod", "battleStyle", "battleScene", "buttonMode", "frame")
 CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/species.h",
@@ -1312,7 +1313,9 @@ class Scene:
         if name.startswith("party") and "." in name:
             slot, field = name[len("party"):].split(".")
             mons = self.mons()
-            return mons[int(slot)][field] if int(slot) < len(mons) else None
+            if int(slot) >= len(mons):
+                return None
+            return mons[int(slot)]["moves"][int(field[4:])] if field.startswith("move") else mons[int(slot)][field]
         if name.startswith("caught:"):
             return self.caught(ram, self.number(name[len("caught:"):]))
         if name.startswith(("flag:", "var:")):

@@ -60,7 +60,8 @@ def sealed(raw):
 
 def mons(ram, elf):
     """The party as the game holds it, each Pokemon in its order: species,
-    item, exp, level, hp, maxHp, and whether it was sealed (above)."""
+    item, exp, level, hp, maxHp, its four moves, and whether it was sealed
+    (above)."""
     memory = where.Memory(ram)
     base = block(memory, elf, where.SAVE_PARTY)
     out = []
@@ -71,10 +72,11 @@ def mons(ram, elf):
         blocks = savedit.mon_crypt(bytes(raw[8:8 + 4 * BLOCK_A_SIZE]), checksum)
         first = savedit.shuffle_order(personality)[0] * BLOCK_A_SIZE
         species, item, _, exp = struct.unpack_from("<HHII", blocks, first)
+        moves = list(struct.unpack_from("<4H", blocks, savedit.shuffle_order(personality)[1] * BLOCK_A_SIZE))
         stats = savedit.mon_crypt(bytes(raw[savedit.BOX_MON:]), personality)
         level, _, hp, max_hp = struct.unpack_from("<BBHH", stats, 4)
         out.append({"species": species, "item": item, "exp": exp, "level": level, "hp": hp, "maxHp": max_hp,
-                    "sealed": sealed(raw)})
+                    "moves": moves, "sealed": sealed(raw)})
     return out
 
 
