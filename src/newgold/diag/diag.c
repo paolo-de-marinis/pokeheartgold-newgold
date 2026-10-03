@@ -71,6 +71,7 @@ u32 gDiagLastBattleTerrain;
 u32 gDiagBattleBackground;
 u32 gDiagBattleAnimation;
 u32 gDiagMoveAnimationCount;
+u32 gDiagHealthBoxesHiddenBy;
 
 void Diag_BattleState(int state) {
     if ((u32)state == gDiagBattleState) {

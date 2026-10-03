@@ -18,7 +18,9 @@ import re
 import sys
 import unittest
 
+from test_hold_effects import run_c
 from test_level_cap import ROOT
+from test_repels import function
 
 sys.path.insert(0, str(ROOT / "tools/newgold/devkit"))
 from narccheck import members  # noqa: E402
@@ -31,6 +33,19 @@ SHIPPED = 50
 TERRAINS = ("grassy", "misty", "electric", "psychic")
 PARTICLES = 486     # a/0/2/9's members: the effects the game has
 SUBSCRIPT = next((ROOT / "files/battledata/script/subscript").glob("subscript_0347_*.s"))
+FIXTURE = r"""
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+#define TRUE 1
+#define FALSE 0
+#define MOVEATTR_UNK9 9
+#include "constants/battle_script_imports.h"
+#include "constants/battle_subscript.h"
+static u32 GetMoveAttr(u16 move, int attr) { return move == 1 ? 0x40 : 0; }
+"""
 
 
 class ArchiveTests(unittest.TestCase):
@@ -88,6 +103,39 @@ class ScriptTests(unittest.TestCase):
         self.assertNotIn("OPCODE_FLAG_OFF, BSCRIPT_VAR_BATTLE_STATUS, BATTLE_STATUS_MOVE_ANIMATIONS_OFF", text)
         self.assertRegex(text, r"\n_037:\n\s*UpdateVar OPCODE_FLAG_ON, BSCRIPT_VAR_BATTLE_STATUS, "
                                r"BATTLE_STATUS_MOVE_ANIMATIONS_OFF\n\s*End\n")
+
+
+class HidesTests(unittest.TestCase):
+    """What an animation hides while it plays (ov12_02261D30), compiled on
+    the host from the tree's C, with a stand-in for GetMoveAttr."""
+
+    def hides(self):
+        source = (ROOT / "src/battle/battle_controller_animation_hides.c").read_text()
+        program = FIXTURE + function(source, "ov12_02261D30") + r"""
+int main(void) {
+    u8 boxes, shadows;
+    for (int animation = 0; animation < 54; animation++) {
+        ov12_02261D30(&boxes, &shadows, TRUE, animation, 0);
+        printf("%d %d %d\n", animation, boxes, shadows);
+    }
+    ov12_02261D30(&boxes, &shadows, FALSE, 0, 1);
+    printf("-1 %d %d\n", boxes, shadows);
+    return 0;
+}
+"""
+        return {int(a): (int(b), int(s)) for a, b, s in (line.split() for line in run_c(program).splitlines())}
+
+    def test_a_terrain_s_start_hides_the_health_boxes_as_a_weather_does(self):
+        hides = self.hides()
+        for n, terrain in enumerate(TERRAINS):
+            self.assertEqual(hides[SHIPPED + n], (1, 0), terrain)
+        # Retail's: the weathers' and six binding moves' damage hide the
+        # boxes, Magma Storm's and Whirlpool's the shadows too; a move with
+        # bit 6 of its flags keeps them.
+        self.assertEqual(sorted(a for a, h in hides.items() if h == (1, 0) and 0 <= a < SHIPPED),
+                         [18, 19, 20, 21, 22, 31, 32, 34, 35, 37, 39])
+        self.assertEqual(sorted(a for a, h in hides.items() if h == (1, 1)), [36, 38])
+        self.assertEqual(hides[-1], (0, 0))
 
 
 if __name__ == "__main__":

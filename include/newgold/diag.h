@@ -157,6 +157,11 @@ extern unsigned long gDiagLastBattleTerrain;
 // 0 until the first.
 extern unsigned long gDiagBattleBackground;
 
+// The last battle animation that hid the health boxes as it played
+// (ov12_02261D30), a BATTLE_ANIMATION_* number: a weather's, a binding
+// move's damage, a terrain's start. 0 until the first.
+extern unsigned long gDiagHealthBoxesHiddenBy;
+
 // How many move animations PlayMoveAnimation has sent the display
 // (BtlCmd_PlayMoveAnimation): one a move, a borrowed one too.
 extern unsigned long gDiagMoveAnimationCount;

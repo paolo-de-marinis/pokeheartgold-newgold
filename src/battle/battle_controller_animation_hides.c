@@ -1,4 +1,5 @@
 #include "battle/battle_controller_opponent.h"
+#include "constants/battle_script_imports.h"
 #include "constants/battle_subscript.h"
 #include "move.h"
 
@@ -8,7 +9,8 @@
 // (PokepicManager_SetG3UpdateFlagsMask). A move's say so in its flags: the
 // boxes stay with bit 6, the shadows go with bit 7. Of the battle
 // animations (a/0/6/1), the weathers' and most binding moves' damage hide
-// the boxes, Magma Storm's and Whirlpool's the shadows too.
+// the boxes, Magma Storm's and Whirlpool's the shadows too; and a terrain's
+// start, which covers the field as a weather's does.
 void ov12_02261D30(u8 *hideHpBars, u8 *hideShadows, int isBattleAnimation, int animation, u16 move) {
     if (!isBattleAnimation) {
         u16 moveNo = move & 0xFFFF; // kept in a register for both reads, as the game's code keeps it
@@ -37,6 +39,10 @@ void ov12_02261D30(u8 *hideHpBars, u8 *hideShadows, int isBattleAnimation, int a
     case BATTLE_ANIMATION_DAMAGE_FIRE_SPIN:
     case BATTLE_ANIMATION_DAMAGE_CLAMP:
     case BATTLE_ANIMATION_DAMAGE_SAND_TOMB:
+    case BATTLE_ANIMATION_GRASSY_TERRAIN:
+    case BATTLE_ANIMATION_MISTY_TERRAIN:
+    case BATTLE_ANIMATION_ELECTRIC_TERRAIN:
+    case BATTLE_ANIMATION_PSYCHIC_TERRAIN:
         *hideHpBars = TRUE;
         *hideShadows = FALSE;
         break;
@@ -50,4 +56,9 @@ void ov12_02261D30(u8 *hideHpBars, u8 *hideShadows, int isBattleAnimation, int a
         *hideShadows = FALSE;
         break;
     }
+#ifdef NEWGOLD_DIAG
+    if (*hideHpBars) {
+        gDiagHealthBoxesHiddenBy = animation;
+    }
+#endif
 }
