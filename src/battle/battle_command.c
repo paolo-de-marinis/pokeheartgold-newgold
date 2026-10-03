@@ -4141,18 +4141,22 @@ BOOL BtlCmd_TrySleepTalk(BattleSystem *battleSystem, BattleContext *ctx) {
 
     nonSelectableMoves = 0;
 
+    // Nothing that keeps its user from choosing a move keeps Sleep Talk from
+    // calling it, from the fifth generation (Pokemon Central, Sonnolalia;
+    // Showdown's gen-9 sleeptalk asks only the nosleeptalk and charge
+    // flags): a move with no PP left, a Disabled one, one Torment or
+    // Imprison holds back -- the called move goes past those checks -- and
+    // every move when its user is locked into Sleep Talk itself, by a Choice
+    // item or an Encore, from its second turn on. One Gravity, Heal Block or
+    // Throat Chop stops is called and fails as it is used
+    // (MoveStoppedByGravityOrHealBlock, MoveStoppedByThroatChop). The fourth
+    // generation refused them all but the one with no PP (StruggleCheck):
+    // a sleeper locked into Sleep Talk failed from its second turn.
     for (moveIndex = 0; moveIndex < MAX_MON_MOVES; moveIndex++) {
         if (SleepTalkCannotCall(ctx, ctx->battleMons[ctx->battlerIdAttacker].moves[moveIndex])) {
             nonSelectableMoves |= MaskOfFlagNo(moveIndex);
         }
     }
-
-    // A move Gravity or Heal Block stops is called and fails as it is used
-    // (MoveStoppedByGravityOrHealBlock), from the fifth generation (Pokemon
-    // Central, Sonnolalia: "verranno chiamate ma falliranno"); the fourth
-    // refused it. One with no PP left is called.
-    nonSelectableMoves = StruggleCheck(battleSystem, ctx, ctx->battlerIdAttacker, nonSelectableMoves,
-        ~(STRUGGLE_CHECK_NO_PP | STRUGGLE_CHECK_GRAVITY | STRUGGLE_CHECK_HEAL_BLOCK));
 
     if (nonSelectableMoves == 15) {
         BattleScriptIncrementPointer(ctx, adrs);

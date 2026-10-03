@@ -1,0 +1,14 @@
+{
+  "about": "Sleep Talk works turn after turn under a Choice item, from the fifth generation (Pokemon Central, Sonnolalia: \"Sonnolalia può ora essere usata ripetutamente con successo per più turni consecutivi, anche se il Pokémon tiene uno strumento scelta\"; Showdown's gen-9 sleeptalk asks only the nosleeptalk and charge flags). The Choice Band locks its holder into Sleep Talk itself, and Sleep Talk's pick used to leave out every move its user could not choose (StruggleCheck), so from the second turn it had nothing to call: \"But it failed!\". A level-10 Pikachu, holding a Choice Band and put to sleep (set:), is given Sleep Talk and Tail Whip in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash; Sleep Talk calls Tail Whip on both turns. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SLEEP_TALK", "teach:0,1,MOVE_TAIL_WHIP", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:0,item,ITEM_CHOICE_BAND", "set:0,status,SLP", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Sleep Talk!", "Pikachu used Tail Whip!"]}},
+            "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Sleep Talk!", "Pikachu used Tail Whip!"], "no_lines": ["But it failed!"],
+             "battler0.item": "ITEM_CHOICE_BAND", "battler0.status": "SLP"}
+}

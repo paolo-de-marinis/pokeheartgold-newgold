@@ -286,12 +286,6 @@ int main(void) {
         called = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "CheckLegalCalledMove")
         self.assertNotIn("Gravity", called)
         self.assertNotIn("HealBlocked", called)
-        # Sleep Talk calls such a move too, and it fails (Pokemon Central,
-        # Sonnolalia, from the fifth generation): its pick leaves out the
-        # Gravity and Heal Block checks of the moves its user could not choose.
-        self.assertIn("StruggleCheck(battleSystem, ctx, ctx->battlerIdAttacker, nonSelectableMoves,\n"
-                      "        ~(STRUGGLE_CHECK_NO_PP | STRUGGLE_CHECK_GRAVITY | STRUGGLE_CHECK_HEAL_BLOCK));",
-                      function(COMMANDS.read_text(), "BtlCmd_TrySleepTalk"))
 
     def test_throat_chop_stops_a_called_sound_move(self):
         # From the seventh generation a sound move another calls under Throat
@@ -304,6 +298,19 @@ int main(void) {
         self.assertIn("BATTLE_SUBSCRIPT_MOVE_FAIL_THROAT_CHOP", stop)
         self.assertIn("if (MoveStoppedByThroatChop(ctx) == TRUE) {\n                ret = 1;", function(controller, "ov12_0224B528"))
         self.assertIn("MoveStoppedByThroatChop(ctx) == TRUE", function(controller, "ov12_0224C38C"))
+
+    def test_sleep_talk_calls_what_its_user_could_not_choose(self):
+        # From the fifth generation (Pokemon Central, Sonnolalia; Showdown's
+        # gen-9 sleeptalk): a Disabled move, one Torment or Imprison holds
+        # back, one Gravity, Heal Block or Throat Chop stops (it fails as it
+        # is used), and Sleep Talk again under a Choice item or an Encore of
+        # it. The real StruggleCheck is beside it, so asking it again fails.
+        overlay, commands = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), COMMANDS.read_text()
+        start = commands.index("static const u16 sSleepTalkUncallable[]")
+        code = "\n".join((function(overlay, "CheckMoveCallsOtherMove"), function(overlay, "StruggleCheck"),
+                          commands[start:commands.index("};", start) + 2], function(commands, "SleepTalkCannotCall"),
+                          function(commands, "BtlCmd_TrySleepTalk")))
+        run_c(SLEEP_TALK_PICK.replace("@FUNCTIONS@", code))
 
     def test_the_called_move_is_noted_as_the_move_used(self):
         run_c(NOTED.replace("@FUNCTIONS@", function(CONTROLLER.read_text(), "NoteMoveUsed")))
@@ -328,6 +335,112 @@ int main(void) {
         self.assertLess(steps.index(redirect), steps.index("ChargeCallerPressure(battleSystem, ctx);"))
         self.assertLess(steps.index(redirect), steps.index("ov12_0224C204(battleSystem, ctx)"))
 
+
+# BtlCmd_TrySleepTalk with the real StruggleCheck: a sleeper knowing Sleep Talk
+# and Tackle, under each thing that keeps a move from being chosen.
+SLEEP_TALK_PICK = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
+#define MAX_MON_MOVES 4
+#include "constants/battle.h"
+#include "constants/moves.h"
+#include "constants/abilities.h"
+#include "constants/move_effects.h"
+#include "constants/items.h"
+typedef struct { int unused; } BattleSystem;
+typedef struct { int effect, power, category; } MoveTbl;
+typedef struct { u16 disabledMove, encoredMove, moveNoChoice; u8 tauntTurns; } Unk88;
+typedef struct { u16 moves[4]; u8 movePPCur[4]; u32 status2; Unk88 unk88; } BattleMon;
+typedef struct { u8 throatChopTimer; } MoveConditions;
+typedef struct {
+    BattleMon battleMons[4];
+    int battlerIdAttacker, item, selectedMonIndex[4];
+    u32 moveTemp;
+    MoveTbl move;
+    u16 moveNoBattlerPrev[4];
+    MoveConditions moveConditions[4];
+    u8 berryEaten[4][6];
+} BattleContext;
+static int sBlocked;  // the move Imprison, Gravity or Heal Block holds back
+static u32 sRandom;
+static MoveTbl *BattleMoveTbl(BattleContext *ctx, int move) {
+    ctx->move.effect = 0;
+    ctx->move.power = move == MOVE_TACKLE;
+    ctx->move.category = 0;
+    return &ctx->move;
+}
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return 0; }
+static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
+static u32 BattleSystem_Random(BattleSystem *bs) { (void)bs; return sRandom++; }
+static int GetBattlerHeldItemEffect(BattleContext *ctx, int b) { (void)b; return ctx->item; }
+static int GetBattlerAbility(BattleContext *ctx, int b) { (void)ctx; (void)b; return ABILITY_NONE; }
+static BOOL BattleMoveIsSoundBased(u32 m) { return (int)m == sBlocked; }
+static BOOL BattleContext_CheckMoveImprisoned(BattleSystem *bs, BattleContext *c, int b, int m) { (void)bs; (void)c; (void)b; return m == sBlocked; }
+static BOOL BattleContext_CheckMoveUnuseableInGravity(BattleSystem *bs, BattleContext *c, int b, int m) { (void)bs; (void)c; (void)b; return m == sBlocked; }
+static BOOL BattleContext_CheckMoveHealBlocked(BattleSystem *bs, BattleContext *c, int b, int m) { (void)bs; (void)c; (void)b; return m == sBlocked; }
+static int BattleMon_GetMoveIndex(BattleMon *mon, u16 move) {
+    for (int i = 0; i < 4; i++) {
+        if (mon->moves[i] == move) {
+            return i;
+        }
+    }
+    return 4;
+}
+static BOOL BattleCtx_IsIdenticalToCurrentMove(BattleContext *c, u16 m) { (void)c; (void)m; return FALSE; }
+static BOOL IsChargeTurnEffect(int e) { (void)e; return FALSE; }
+@FUNCTIONS@
+static u32 Called(BattleContext *ctx) {
+    BattleSystem bs;
+    ctx->moveTemp = MOVE_NONE;
+    BtlCmd_TrySleepTalk(&bs, ctx);
+    return ctx->moveTemp;
+}
+int main(void) {
+    BattleContext base = { 0 }, ctx;
+    base.battleMons[0].moves[0] = MOVE_SLEEP_TALK;
+    base.battleMons[0].moves[1] = MOVE_TACKLE;
+    base.battleMons[0].movePPCur[0] = base.battleMons[0].movePPCur[1] = 10;
+    ctx = base;
+    assert(Called(&ctx) == MOVE_TACKLE);
+    // Its second turn locked into Sleep Talk by a Choice Band, or encored
+    // into it: before, every other move was refused and it failed.
+    ctx = base;
+    ctx.item = HOLD_EFFECT_CHOICE_ATK;
+    ctx.battleMons[0].unk88.moveNoChoice = MOVE_SLEEP_TALK;
+    assert(Called(&ctx) == MOVE_TACKLE);
+    ctx = base;
+    ctx.battleMons[0].unk88.encoredMove = MOVE_SLEEP_TALK;
+    assert(Called(&ctx) == MOVE_TACKLE);
+    ctx = base;
+    ctx.battleMons[0].unk88.disabledMove = MOVE_TACKLE;
+    assert(Called(&ctx) == MOVE_TACKLE);
+    ctx = base;
+    ctx.battleMons[0].status2 = STATUS2_TORMENT;
+    ctx.moveNoBattlerPrev[0] = MOVE_TACKLE;
+    assert(Called(&ctx) == MOVE_TACKLE);
+    // Imprisoned, under Gravity or Heal Block, a sound move under Throat Chop.
+    ctx = base;
+    sBlocked = MOVE_TACKLE;
+    ctx.moveConditions[0].throatChopTimer = 2;
+    assert(Called(&ctx) == MOVE_TACKLE);
+    sBlocked = MOVE_NONE;
+    ctx = base;
+    ctx.battleMons[0].movePPCur[1] = 0;
+    assert(Called(&ctx) == MOVE_TACKLE);
+    // Nothing else known: nothing to call.
+    ctx = base;
+    ctx.battleMons[0].moves[1] = MOVE_NONE;
+    assert(Called(&ctx) == MOVE_NONE);
+    return 0;
+}
+"""
 
 PRESSURE = r"""
 #include <assert.h>
