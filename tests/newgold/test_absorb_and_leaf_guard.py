@@ -107,6 +107,17 @@ class AbsorbFirstTests(unittest.TestCase):
                                                             "MOVE_STATUS_MAGNET_RISE_IMMUNE", "MOVE_STATUS_ONE_HIT_KO_FAILED"})
         self.assertLess(self.check.index("ScriptAbsorbsMove(script)"), self.check.index("MOVE_STATUS_DID_NOT_HIT"))
 
+    def test_a_swallowed_move_leaves_the_micle_berry_s_boost(self):
+        # The roll it would have had spent the boost; the move never reaches
+        # it in the later games (Showdown's gen-9 micleberry, onSourceAccuracy).
+        roll = function(CONTROLLER.read_text(), "BattleSystem_CheckMoveHit")
+        self.assertLess(roll.index("micleSpent = FALSE;"), roll.index("return"))
+        self.assertRegex(roll, r"micleBerryFlag = 0;\n\s+ctx->selfTurnData\[battlerIdAttacker\]\.micleSpent = TRUE;")
+        given = re.search(r"if \(ScriptAbsorbsMove\(script\) == TRUE\) \{(.*?)\n            \}\n", self.check, re.S).group(1)
+        self.assertRegex(given, r"if \(ctx->selfTurnData\[ctx->battlerIdAttacker\]\.micleSpent\) \{\n"
+                                r"\s+ctx->selfTurnData\[ctx->battlerIdAttacker\]\.micleSpent = FALSE;\n"
+                                r"\s+ctx->battleMons\[ctx->battlerIdAttacker\]\.unk88\.micleBerryFlag = 1;")
+
     def test_every_absorbing_script_of_the_sweep_is_one(self):
         sweep = function(OVERLAY.read_text(), "BattleContext_CheckMoveImmunityFromAbility")
         scripts = set(re.findall(r"script = (BATTLE_SUBSCRIPT_(?:ABSORB_AND_\w+|ABILITY_RESTORES_HP));", sweep))

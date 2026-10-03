@@ -155,7 +155,11 @@ typedef struct SelfTurnData {
     // The Metronome item: this Pokemon's move has not failed on every
     // Pokemon it was aimed at (ov12_0224D03C), so it counts as a use.
     u32 metronomeLanded : 1;
-    u32 unk0_11 : 8;
+    // The Micle Berry's boost went into this Pokemon's last accuracy roll
+    // (BattleSystem_CheckMoveHit), for an ability that swallows the move to
+    // give back (ov12_0224BC2C).
+    u32 micleSpent : 1;
+    u32 unk0_11 : 7;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;

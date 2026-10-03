@@ -305,6 +305,7 @@ typedef struct {
 typedef struct {
     u32 battleStatus; u32 fieldCondition; u32 moveStatusFlag; BattleMon battleMons[4];
     struct { int telekinesisTurns; } moveConditions[4];
+    struct { int micleSpent; } selfTurnData[4];
 } BattleContext;
 typedef struct { int accuracy, category, effect; } MoveTbl;
 
@@ -380,6 +381,18 @@ class VictoryStarTests(unittest.TestCase):
     reset(4); S.ability[1] = S.ability[3] = ABILITY_VICTORY_STAR; EXPECT(lands(50), 0);
     reset(4); S.ability[2] = ABILITY_VICTORY_STAR; ctx.battleMons[2].hp = 0; EXPECT(lands(50), 0);
     reset(2); S.ability[2] = ABILITY_VICTORY_STAR; EXPECT(lands(50), 0);
+"""))
+
+
+class MicleBerryTests(unittest.TestCase):
+    def test_the_roll_notes_the_boost_it_spent(self):
+        # A fifth surer once (50 * 120 / 100 = 60), and the roll says it spent
+        # the boost, for an ability that swallows the move to give it back
+        # (ov12_0224BC2C); the next roll has none to spend and says so.
+        run_c(self, accuracy_program(r"""
+    reset(2); ctx.battleMons[0].unk88.micleBerryFlag = 1; EXPECT(lands(59), 1);
+    EXPECT(ctx.battleMons[0].unk88.micleBerryFlag, 0); EXPECT(ctx.selfTurnData[0].micleSpent, 1);
+    EXPECT(lands(59), 0); EXPECT(ctx.selfTurnData[0].micleSpent, 0);
 """))
 
 

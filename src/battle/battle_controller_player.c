@@ -3368,6 +3368,14 @@ static BOOL ov12_0224BC2C(BattleSystem *battleSystem, BattleContext *ctx) {
             // still stops the move before them.
             if (ScriptAbsorbsMove(script) == TRUE) {
                 ctx->moveStatusFlag &= ~(MOVE_STATUS_MISSED | MOVE_STATUS_NO_EFFECT | MOVE_STATUS_MAGNET_RISE_IMMUNE | MOVE_STATUS_ONE_HIT_KO_FAILED);
+                // Nor did the Micle Berry's boost go into the roll: it is kept
+                // for the next move (Showdown's gen-9 micleberry is spent in
+                // onSourceAccuracy, which a move stopped at TryHit never
+                // reaches).
+                if (ctx->selfTurnData[ctx->battlerIdAttacker].micleSpent) {
+                    ctx->selfTurnData[ctx->battlerIdAttacker].micleSpent = FALSE;
+                    ctx->battleMons[ctx->battlerIdAttacker].unk88.micleBerryFlag = 1;
+                }
             }
             // A Surf that reaches this target lets a Cramorant catch its prey.
             if (script == BATTLE_SUBSCRIPT_NONE && !(ctx->moveStatusFlag & MOVE_STATUS_DID_NOT_HIT) && ctx->moveNoCur == MOVE_SURF) {
@@ -3429,6 +3437,7 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
     u8 moveCategory;
     u32 weather;
 
+    ctx->selfTurnData[battlerIdAttacker].micleSpent = FALSE;
     if (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TUTORIAL) {
         return FALSE;
     }
@@ -3569,6 +3578,7 @@ static BOOL BattleSystem_CheckMoveHit(BattleSystem *battleSystem, BattleContext 
 
     if (ctx->battleMons[battlerIdAttacker].unk88.micleBerryFlag) {
         ctx->battleMons[battlerIdAttacker].unk88.micleBerryFlag = 0;
+        ctx->selfTurnData[battlerIdAttacker].micleSpent = TRUE;
         hitChance = hitChance * 120 / 100;
     }
 
