@@ -6395,14 +6395,55 @@ BOOL BtlCmd_TryCamouflage(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// The move Nature Power calls (Pokemon Central, Naturforza), from the eighth
+// generation's table, the last the move can be chosen in: a terrain laid over
+// the field comes first, wherever the battle is -- Energy Ball in Grassy
+// Terrain, Moonblast in Misty, Thunderbolt in Electric, Psychic in Psychic --
+// and otherwise the ground decides: Tri Attack on plain ground (the sixth and
+// seventh generations' "terreno normale"), in a building and in the League's
+// and the Frontier's rooms, Earth Power on sand and rock, Energy Ball in
+// grass, Power Gem in a cave, Ice Beam on snow and ice, Hydro Pump on water.
+// Mud, which the eighth generation has not got, keeps Mud Bomb (the sixth's
+// "palude"), and the two grounds nothing here uses keep the latest move named
+// for them: Mud Bomb for the puddle, Air Slash for the unknown one (the
+// eighth's bridge). Retail's table, the fourth generation's
+// (sNaturePowerMoveTable: Earthquake on plain ground, Seed Bomb in grass,
+// Rock Slide in a cave, Blizzard on snow), is gone.
+static const u16 sNaturePowerTerrainMoves[] = {
+    [GRASSY_TERRAIN] = MOVE_ENERGY_BALL,
+    [MISTY_TERRAIN] = MOVE_MOONBLAST,
+    [ELECTRIC_TERRAIN] = MOVE_THUNDERBOLT,
+    [PSYCHIC_TERRAIN] = MOVE_PSYCHIC,
+};
+
+static const u16 sNaturePowerMoves[TERRAIN_OTHERS + 1] = {
+    [TERRAIN_PLAIN] = MOVE_TRI_ATTACK,
+    [TERRAIN_SAND] = MOVE_EARTH_POWER,
+    [TERRAIN_GRASS] = MOVE_ENERGY_BALL,
+    [TERRAIN_PUDDLE] = MOVE_MUD_BOMB,
+    [TERRAIN_MOUNTAIN] = MOVE_EARTH_POWER,
+    [TERRAIN_CAVE] = MOVE_POWER_GEM,
+    [TERRAIN_SNOW] = MOVE_ICE_BEAM,
+    [TERRAIN_WATER] = MOVE_HYDRO_PUMP,
+    [TERRAIN_ICE] = MOVE_ICE_BEAM,
+    [TERRAIN_BUILDING] = MOVE_TRI_ATTACK,
+    [TERRAIN_GREAT_MARSH] = MOVE_MUD_BOMB,
+    [TERRAIN_UNKNOWN] = MOVE_AIR_SLASH,
+    [TERRAIN_OTHERS] = MOVE_TRI_ATTACK,
+};
+
 BOOL BtlCmd_GetTerrainMove(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
     int terrain = BattleSystem_GetTerrainId(battleSystem);
-    if (terrain > 12) {
-        terrain = 12;
+    if (terrain > TERRAIN_OTHERS) {
+        terrain = TERRAIN_OTHERS;
     }
-    ctx->moveTemp = sNaturePowerMoveTable[terrain];
+    if (ctx->terrainOverlayType != TERRAIN_NONE) {
+        ctx->moveTemp = sNaturePowerTerrainMoves[ctx->terrainOverlayType];
+    } else {
+        ctx->moveTemp = sNaturePowerMoves[terrain];
+    }
 
     return FALSE;
 }

@@ -6,12 +6,14 @@
 
     .rodata
 
-; Eight of battle_command.c's read-only tables, between the ones in
+; Seven of battle_command.c's read-only tables, between the ones in
 ; src/battle/overlay_12_0226C2F8.c and src/battle/overlay_12_0226C3E8.c. The
 ; first is a stat list nothing reads, which the linker would drop from a C
-; file, and the last, the Safari table, starts two bytes past a word boundary,
-; where no section can start, so it has to share one with Nature Power's before
-; it. The six in between are left here with them.
+; file, and the last, the Safari table, started two bytes past a word boundary
+; in retail, where no section can start, so it shared one with Nature Power's
+; before it. The five in between are left here with them. Nature Power's,
+; retail's fourth-generation table, is gone: BtlCmd_GetTerrainMove reads the
+; eighth generation's, in C.
 
 ov12_0226C324: ; 0x0226C324
 	.word NUM_BATTLE_STATS
@@ -66,12 +68,6 @@ sLowKickDamageTable:
 	.short 1000, 80
 	.short 2000, 100
 	.short 0xFFFF, 0xFFFF
-
-.public sNaturePowerMoveTable
-
-sNaturePowerMoveTable: ; 0x0226C3B4
-	.short MOVE_EARTHQUAKE, MOVE_EARTHQUAKE, MOVE_SEED_BOMB, MOVE_SEED_BOMB, MOVE_ROCK_SLIDE, MOVE_ROCK_SLIDE
-	.short MOVE_BLIZZARD, MOVE_HYDRO_PUMP, MOVE_ICE_BEAM, MOVE_TRI_ATTACK, MOVE_MUD_BOMB, MOVE_AIR_SLASH, MOVE_TRI_ATTACK
 
 .public sSafariCatchRateStages
 ; Numerator, Denominator

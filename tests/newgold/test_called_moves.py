@@ -71,6 +71,51 @@ int main(void) {
 """
 
 
+NATURE_POWER = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/moves.h"
+typedef struct { int terrain; } BattleSystem;
+typedef struct { u8 terrainOverlayType; u32 moveTemp; } BattleContext;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static int BattleSystem_GetTerrainId(BattleSystem *bs) { return bs->terrain; }
+@FUNCTIONS@
+static BattleSystem bs;
+static BattleContext ctx;
+static u32 called(int terrain, int overlay) {
+    bs.terrain = terrain; ctx.terrainOverlayType = overlay; ctx.moveTemp = 0;
+    BtlCmd_GetTerrainMove(&bs, &ctx);
+    return ctx.moveTemp;
+}
+int main(void) {
+    assert(called(TERRAIN_PLAIN, TERRAIN_NONE) == MOVE_TRI_ATTACK);
+    assert(called(TERRAIN_SAND, TERRAIN_NONE) == MOVE_EARTH_POWER);
+    assert(called(TERRAIN_GRASS, TERRAIN_NONE) == MOVE_ENERGY_BALL);
+    assert(called(TERRAIN_MOUNTAIN, TERRAIN_NONE) == MOVE_EARTH_POWER);
+    assert(called(TERRAIN_CAVE, TERRAIN_NONE) == MOVE_POWER_GEM);
+    assert(called(TERRAIN_SNOW, TERRAIN_NONE) == MOVE_ICE_BEAM);
+    assert(called(TERRAIN_WATER, TERRAIN_NONE) == MOVE_HYDRO_PUMP);
+    assert(called(TERRAIN_ICE, TERRAIN_NONE) == MOVE_ICE_BEAM);
+    assert(called(TERRAIN_BUILDING, TERRAIN_NONE) == MOVE_TRI_ATTACK);
+    assert(called(TERRAIN_GREAT_MARSH, TERRAIN_NONE) == MOVE_MUD_BOMB);
+    assert(called(TERRAIN_LANCE, TERRAIN_NONE) == MOVE_TRI_ATTACK);
+    assert(called(TERRAIN_BATTLE_HALL, TERRAIN_NONE) == MOVE_TRI_ATTACK);
+    // A terrain comes first, wherever the battle is.
+    assert(called(TERRAIN_WATER, GRASSY_TERRAIN) == MOVE_ENERGY_BALL);
+    assert(called(TERRAIN_CAVE, MISTY_TERRAIN) == MOVE_MOONBLAST);
+    assert(called(TERRAIN_PLAIN, ELECTRIC_TERRAIN) == MOVE_THUNDERBOLT);
+    assert(called(TERRAIN_BUILDING, PSYCHIC_TERRAIN) == MOVE_PSYCHIC);
+    return 0;
+}
+"""
+
+
 class CalledMoveTests(unittest.TestCase):
     def test_a_called_move_goes_back_through_the_steps_before_a_move(self):
         commands = COMMANDS.read_text()
@@ -207,6 +252,15 @@ int main(void) {
     return 0;
 }
 """
+
+    def test_nature_power_calls_the_eighth_generation_s_move(self):
+        # Pokemon Central, Naturforza: the eighth generation's table, the last
+        # the move can be chosen in, a terrain first; retail's was the
+        # fourth's (Earthquake on plain ground, Seed Bomb in grass).
+        import re
+        commands = COMMANDS.read_text()
+        tables = "".join(re.findall(r"static const u16 sNaturePower\w+\[[^]]*\] = \{.*?\};\n", commands, re.S))
+        run_c(NATURE_POWER.replace("@FUNCTIONS@", tables + function(commands, "BtlCmd_GetTerrainMove")))
 
     def test_the_metronome_item_counts_a_spread_move_once(self):
         # Pokemon Central (Plessimetro): a move that hits several Pokemon is

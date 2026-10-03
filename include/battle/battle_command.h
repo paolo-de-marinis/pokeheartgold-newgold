@@ -327,7 +327,6 @@ extern const TempStatsStruct ov12_0226C354;
 extern const TempStatsStruct ov12_0226C36C;
 extern const TempStatsStruct ov12_0226C384;
 extern const u16 sLowKickDamageTable[6][2];
-extern const u16 sNaturePowerMoveTable[13];
 extern const u8 sSafariCatchRateStages[13][2];
 extern const u16 sMoonBallPokemon[6];
 extern const u16 sPickupTable1[18];
