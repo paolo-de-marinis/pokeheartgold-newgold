@@ -70,6 +70,10 @@ A step is one of
     swap:A,B                    party slots A and B traded (0 the first), through the
                                 start menu's POKEMON and the party menu's SWITCH, as a
                                 player puts a Pokemon first: it leads the next battles
+    answers:YN...               the scene a script is playing answered: A through its
+                                text, and each yes/no it waits on A for a Y, B for an
+                                N, in order (a quiz); done when all are given and the
+                                player can move
     machine:ITEM,SLOT           a TM or HM taught to party slot SLOT (0 the first) from
                                 the bag, as a player teaches one: with four moves known,
                                 the one gym.py's rule lets go is forgotten on the
@@ -192,7 +196,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "TYPE_": "include/constants/pokemon.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
          "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift", "again", "retry",
-         "machine")
+         "machine", "answers")
 
 
 def readable(step_or_key, key=False):
@@ -266,6 +270,15 @@ def machine_layout():
     keys = ("view", "pocket", "item", "pockets", "entry", "slots", "id", "count", "tms", "cursor", "pick", "text", "yesno")
     return dict(zip(keys, savedit.compile_c(exprs=names, headers=savedit.LAYOUT_HEADERS + (
         "bag_app_state.h", "pokemon_summary_app.h", "party_menu.h"))[0]))
+
+
+@savedit.tree_cache
+def script_layout():
+    """Where a running script's contexts are (ScriptEnvironment, the env of
+    the field task running Task_RunScripts) and the native wait each holds."""
+    return dict(zip(("contexts", "native"), savedit.compile_c(
+        exprs=("__builtin_offsetof(ScriptEnvironment, scriptContexts)", "__builtin_offsetof(ScriptContext, native_ptr)"),
+        headers=savedit.LAYOUT_HEADERS + ("script.h",))[0]))
 
 
 @savedit.tree_cache
@@ -727,6 +740,8 @@ class Scene:
             return self.save()
         elif kind == "swap":
             return self.swap(*map(int, rest.split(",")))
+        elif kind == "answers":
+            return self.answers(rest.replace(",", ""))
         elif kind == "machine":
             item, slot = rest.split(",")
             return self.machine(self.number(item), int(slot))
@@ -1099,6 +1114,42 @@ class Scene:
             core.press("B", 6, hooks)
             core.step(20, hooks)
         return [f"machine: slot {slot} did not learn move {move} in {frames} frames"]
+
+    def asking(self):
+        """Whether the script the field runs waits on a yes/no: a context of
+        the Task_RunScripts task's ScriptEnvironment running
+        ScrCmd_GetMenuChoice's native wait, sub_020477C0."""
+        core, layout, script = self.core, app_layout(), script_layout()
+        task = self._chain("FieldSystem.taskman")
+        if not task or core.word(task + layout["TaskManager.func"]) & ~1 != self.markers.address("Task_RunScripts") & ~1:
+            return False
+        env = core.word(task + layout["TaskManager.env"])
+        contexts = [core.word(env + script["contexts"] + 4 * i) for i in range(3)]
+        wait = self.markers.address("sub_020477C0") & ~1
+        return any(ctx and core.word(ctx + script["native"]) & ~1 == wait for ctx in contexts)
+
+    def answers(self, given, frames=8000):
+        """answers:YN... -- A through the scene's text boxes; at each yes/no
+        the script waits on (asking), A for a Y or B for an N, the next in
+        order, and the frames until the menu has closed; done when all are
+        given and the player can move."""
+        core, hooks, end, left = self.core, self.hooks, self.core.frames + frames, list(given)
+        while core.frames < end:
+            if not left and self.movable():
+                self.say(f"[{core.frames}] answers: {given} given")
+                return None
+            if left and self.asking():
+                core.press("A" if left.pop(0) == "Y" else "B", 6, hooks)
+                for _ in range(120):
+                    core.step(2, hooks)
+                    if not self.asking():
+                        break
+            elif self.textbox() or not self._chain("FieldSystem.runningFieldMap"):
+                core.press("A", 6, hooks)
+                core.step(20, hooks)
+            else:
+                core.step(2, hooks)
+        return [f"answers: {len(given) - len(left)} of {given} given in {frames} frames"]
 
     def mons(self):
         """party.mons once the game has sealed every Pokemon (party.sealed),

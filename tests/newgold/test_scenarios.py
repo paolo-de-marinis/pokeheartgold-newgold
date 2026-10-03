@@ -353,6 +353,40 @@ class ScenarioFileTests(unittest.TestCase):
             self.assertIn("not traded", s.swap(0, 1, frames=100)[0])
         self.assertEqual(s.core.pressed[-2:], ["B", "B"])
 
+    def test_answers_give_each_yes_no_in_order_and_a_through_the_text(self):
+        # The Radio Tower's quiz: A through its lines, and at each yes/no
+        # the script waits on, A for Y and B for N, once, in order -- the
+        # menu stays up a few frames after the press, and a second press
+        # there would answer the next question too.
+        script = iter(["text", "ask", "ask", "text", "ask", "text", "ask", "free"])
+
+        class Core:
+            frames, pressed = 0, []
+
+            def press(self, button, frames, hooks):
+                self.pressed.append(button)
+                self.frames += frames
+                if s.now == "ask":
+                    s.lag = 3                       # the menu closes a few frames on
+                else:
+                    s.now = next(script)
+
+            def step(self, frames, hooks):
+                self.frames += frames
+                if s.now == "ask" and s.lag:
+                    s.lag -= 1
+                    if not s.lag:
+                        s.now = next(script)
+        s = scene.Scene.__new__(scene.Scene)
+        s.core, s.hooks, s.say, s.now, s.lag = Core(), [], (lambda line: None), next(script), 0
+        s.asking = lambda: s.now == "ask" and not s.lag
+        s.textbox = lambda: s.now == "text"
+        s.movable = lambda: s.now == "free"
+        s._chain = lambda *fields: 1
+        self.assertIsNone(s.answers("YNYN", frames=2000))
+        self.assertEqual(s.core.pressed, ["A", "A", "B", "A", "A", "A", "B"])
+        self.assertTrue(scene.readable("answers:YYYNYN"))
+
     def test_a_machine_goes_through_the_bag_to_the_move_the_rule_lets_go(self):
         # machine: the TMs & HMs tab until the bag shows it, the machine's
         # place until the bag has it picked, USE; the party menu's panel; on
