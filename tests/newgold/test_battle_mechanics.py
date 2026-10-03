@@ -1782,6 +1782,17 @@ class TransformTests(unittest.TestCase):
         self.assertLess(body.index("src[i] = dest[i];"),
                         body.index("CopyStatStagesAndCriticalRises(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);"))
 
+    def test_the_ability_comes_with_the_copy(self):
+        # Trasformazione copies the ability. The forty bytes copied whole no
+        # longer hold it since it was widened to a u16 outside them
+        # (BattleMon.unusedAbility is the old byte), so it is copied on its
+        # own, as the reference's HandleTransform does.
+        body = function(COMMANDS.read_text(), "BtlCmd_Transform")
+        self.assertIn("ctx->battleMons[ctx->battlerIdAttacker].ability = ctx->battleMons[ctx->battlerIdTarget].ability;", body)
+        header = (ROOT / "include/battle/battle.h").read_text()
+        mon = header[header.index("typedef struct BattleMon {"):header.index("} BattleMon;")]
+        self.assertLess(mon.index("u8 unusedAbility;"), mon.index("u16 ability;"))
+
 
 class Conversion2Tests(unittest.TestCase):
     def test_it_reads_the_move_its_target_last_used(self):

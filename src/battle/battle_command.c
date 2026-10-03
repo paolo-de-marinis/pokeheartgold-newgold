@@ -4506,6 +4506,11 @@ BOOL BtlCmd_Transform(BattleSystem *battleSystem, BattleContext *ctx) {
     for (i = 0; i < 40; i++) {
         src[i] = dest[i];
     }
+    // The ability comes with the copy (Pokemon Central, Trasformazione).
+    // The forty bytes held it while it was a byte; widened, it lives
+    // outside them, and the reference copies it on its own after the loop
+    // (HandleTransform, other_battle_calculators.c:4663 at d0380a487).
+    ctx->battleMons[ctx->battlerIdAttacker].ability = ctx->battleMons[ctx->battlerIdTarget].ability;
     // From the sixth generation the user takes the target's critical-hit
     // rises too, those moves gave it -- Focus Energy, Laser Focus, Dragon
     // Cheer -- in place of its own (Pokemon Central, Trasformazione (stato)
