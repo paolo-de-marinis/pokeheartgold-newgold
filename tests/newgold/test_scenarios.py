@@ -685,7 +685,7 @@ def playthrough():
     return os.environ.get("NEWGOLD_PLAYTHROUGH", "1") != "0"
 
 
-WORKERS = 3                # scene.py processes at once, an emulator each
+WORKERS = 3                 # scene.py processes at once, an emulator each
 RESULTS = {}                # a scenario's path -> the Future of run(path)
 
 
