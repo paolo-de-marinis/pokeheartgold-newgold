@@ -344,13 +344,17 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
 // copy (Pokemon Central, Raggiro: from the ninth generation). The player's
 // Pokemon keeps what it holds now, what the swap gave it: a swap with a wild
 // Pokemon lasts (Rapidscambio). Asked at the catch, once the caught Pokemon
-// has had back what was taken from it (Task_GetPokemon).
+// has had back what was taken from it (Task_GetPokemon). The slot's marks go
+// with its old entry: it keeps what it holds, and GiveBackHeldItems does not
+// look for that in the wild Pokemon's hands as something it handed over.
 void CaughtMonKeepsItem(BattleSystem *battleSystem, BattleContext *ctx, Pokemon *mon) {
     u16 item = GetMonData(mon, MON_DATA_HELD_ITEM, NULL);
 
     for (int i = 0; item != ITEM_NONE && i < PARTY_SIZE; i++) {
         if (((ctx->heldItemsTaken | ctx->heldItemsGiven) & MaskOfFlagNo(i)) && ctx->itemsToRestore[i] == item) {
             ctx->itemsToRestore[i] = GetMonData(BattleSystem_GetPartyMon(battleSystem, BATTLER_PLAYER, i), MON_DATA_HELD_ITEM, NULL);
+            ctx->heldItemsTaken &= ~MaskOfFlagNo(i);
+            ctx->heldItemsGiven &= ~MaskOfFlagNo(i);
             return;
         }
     }

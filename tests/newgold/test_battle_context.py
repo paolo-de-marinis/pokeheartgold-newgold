@@ -282,11 +282,34 @@ int main(void) {
     }
     ctx.battleMons[3].item = ITEM_FOCUS_SASH;
     ctx.heldItemsGivenBack = 0;
+    ctx.heldItemsGiven = 1 << 0;
     sAdds = 0;
     CaughtMonKeepsItem(&bs, &ctx, &caught);
     GiveBackHeldItems(&bs, &ctx);
     assert(sAdds == 1 && sAdded[0][0] == ITEM_FOCUS_SASH && bs.party[0].item == ITEM_LEFTOVERS);
     ctx.battleMons[3].item = ITEM_NONE;
+    // Two of the party Trick the wild one in turn and the second's item is
+    // knocked off it, then the second Bestows the first's to it, and it is
+    // caught with that: the first keeps the wild one's own item, which it
+    // got, and only the second's, lost, goes to the bag. Before, the first's
+    // entry, rewritten by the catch, was still marked as handed over, and the
+    // item it now names was found among those lost: a second copy bagged.
+    const u16 started[PARTY_SIZE] = { ITEM_SILK_SCARF, ITEM_EVERSTONE, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
+    const u16 ended[PARTY_SIZE] = { ITEM_EVERSTONE, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE };
+    for (int i = 0; i < PARTY_SIZE; i++) {
+        ctx.itemsToRestore[i] = started[i];
+        bs.party[i].item = ended[i];
+    }
+    caught.item = ITEM_SILK_SCARF;
+    ctx.itemsLost[1] = ITEM_EVERSTONE;
+    ctx.heldItemsGivenBack = 0;
+    ctx.heldItemsGiven = (1 << 0) | (1 << 1);
+    sAdds = 0;
+    CaughtMonKeepsItem(&bs, &ctx, &caught);
+    GiveBackHeldItems(&bs, &ctx);
+    assert(sAdds == 1 && sAdded[0][0] == ITEM_EVERSTONE && sAdded[0][1] == 1);
+    assert(bs.party[0].item == ITEM_EVERSTONE && bs.party[1].item == ITEM_NONE && caught.item == ITEM_SILK_SCARF);
+    ctx.itemsLost[1] = ITEM_NONE;
 
     // Tricked with a wild Pokemon that then fainted or fled: the swap lasts
     // (Rapidscambio) -- the player's Pokemon keeps the Leftovers it got, and
