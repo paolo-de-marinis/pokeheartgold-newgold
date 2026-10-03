@@ -1279,14 +1279,15 @@ def set_var(save, name, value):
     return number
 
 
-def set_flag(save, name):
-    """A script flag by its name in include/constants/flags.h: the cap for
-    Falkner is 13 only once FLAG_UNK_076 says Sprout Tower is done."""
-    flags = save.block("SAVE_FLAGS")
+def set_flag(save, name, on=True):
+    """A script flag by its name in include/constants/flags.h, set or (on
+    False) cleared: the cap for Falkner is 13 only once FLAG_UNK_076 says
+    Sprout Tower is done; Lyra shows on Route 29 only while
+    FLAG_HIDE_ROUTE_29_FRIEND is clear."""
     number = constants("include/constants/flags.h", "FLAG_").get(name)
     if number is None:
         raise SystemExit(f"there is no {name} in include/constants/flags.h")
-    flags[FLAGS_AT + number // 8] |= 1 << (number % 8)
+    write_flag(save, number, on)
     return number
 
 
@@ -4108,8 +4109,9 @@ def main():
     parser.add_argument("--badges", type=int, help="how many Johto badges to set")
     parser.add_argument("--var", action="append", default=[], metavar="VAR_NAME=VALUE",
                         help="set a script variable by its name in include/constants/vars.h; repeatable")
-    parser.add_argument("--flag", action="append", default=[], metavar="FLAG_NAME",
-                        help="set a script flag by its name in include/constants/flags.h; repeatable")
+    parser.add_argument("--flag", action="append", default=[], metavar="FLAG_NAME[=0]",
+                        help="set a script flag by its name in include/constants/flags.h, or clear "
+                             "it with =0; repeatable")
     parser.add_argument("--where", metavar="MAP:X:Y[:DIR]",
                         help="put the player on a map, the way the save records it: "
                              "LocalFieldData.currentPosition, which is a Location of "
@@ -4210,10 +4212,11 @@ def main():
         save.write()
         print(f"{name} ({number:#x}) = {value}")
 
-    for name in args.flag:
-        number = set_flag(save, name)
+    for assignment in args.flag:
+        name, _, value = assignment.partition("=")
+        number = set_flag(save, name, value != "0")
         save.write()
-        print(f"{name} ({number:#x}) set")
+        print(f"{name} ({number:#x}) {'cleared' if value == '0' else 'set'}")
 
     if args.where:
         parts = args.where.split(":")

@@ -924,6 +924,8 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertTrue(sv.position(again)["by_warp"])
         found = sv.find_flags(again, "UNK_076")
         self.assertIn({"kind": "flag", "name": "FLAG_UNK_076", "number": 0x76, "value": 1}, found)
+        sv.set_flag(again, "FLAG_UNK_076", False)
+        self.assertFalse(sv.flag_is_set(again, 0x76), "--flag NAME=0 clears it")
         self.assert_only(save, ["SAVE_FLAGS", "SAVE_LOCAL_FIELD_DATA"])
 
     def test_the_profile(self):
