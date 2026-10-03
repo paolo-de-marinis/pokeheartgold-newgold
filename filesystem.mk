@@ -452,6 +452,7 @@ $(eval $(call arc_strip_name,files/poketool/personal/performance.narc,files/a/1/
 $(eval $(call arc_strip_name,files/application/annon/puzzle_gra.narc,files/a/1/7/2))
 $(eval $(call arc_strip_name,files/demo/legend.narc,files/a/1/7/4))
 $(eval $(call arc_strip_name,files/data/resdat.narc,files/a/1/7/5))
+$(eval $(call arc_strip_name,files/graphic/frontier_gra.narc,files/a/1/8/3))
 $(eval $(call arc_strip_name,files/application/custom_ball/edit/gs_cb_data.narc,files/a/1/8/5))
 $(eval $(call arc_strip_name,files/pbr/dp_height.narc,files/a/1/9/4))
 $(eval $(call arc_strip_name,files/pbr/dp_height_o.narc,files/a/1/9/5))
@@ -545,6 +546,7 @@ include files/poketool/personal/growtbl.mk
 include files/poketool/pokegra/otherpoke.mk
 include files/poketool/pokegra/pokegra.mk
 include files/graphic/zukan_gra.mk
+include files/graphic/frontier_gra.mk
 include files/poketool/trainer/trainer.mk
 include files/poketool/pokefoot/pokefoot.mk
 include files/fielddata/mapmatrix/map_matrix.mk
