@@ -797,6 +797,7 @@ class NavigatorTests(unittest.TestCase):
         fake.movable = lambda: True
         fake.textbox = lambda: False
         fake._chain = lambda *fields: 1
+        fake.walls, fake.standing = set(), (lambda here: here + (0,))
         fake.frame_script_due = lambda: "VAR_UNK_4080" if fake.core.frames < 30 else None
         fake.run("field")
         self.assertEqual(fake.core.frames, 30)
@@ -816,6 +817,55 @@ class NavigatorTests(unittest.TestCase):
             done, said = fake.goto((164, 3, 4))
         self.assertTrue(done, said)
         self.assertGreaterEqual(fake.core.frames, 60)
+
+    def test_a_walk_keeps_to_the_floor_the_player_stands_on(self):
+        # Goldenrod Gym's walkways stand 52 over its floor, its arches a
+        # walkway over a path, none of which the tile attributes say: the
+        # walk to Whitney, on the walkway over the arch at (13, 10), pressed
+        # up into the floor below. The BDHC's heights: a step that climbs
+        # 20 or more is no step, so the walk takes the stairs and the floor,
+        # and goes under the arch to her; the side walls a behaviour names
+        # (0x30 to 0x37) are kept too.
+        gym = scene.savedit.constants("include/constants/maps.h", "MAP_")["MAP_GOLDENROD_GYM"]
+        self.assertEqual(sorted(scene.heights(gym, 13, 10)[1]), [0, 52])
+        self.assertEqual(sorted(scene.heights(gym, 4, 17)[1]), [26])           # a stair
+        self.assertIsNone(scene.plan((gym, 13, 10, 52), [(gym, 13, 9)], most=50))
+        self.assertEqual(scene.plan((gym, 13, 10, 0), [(gym, 13, 9)]), [((gym, 13, 10), "UP"), ((gym, 13, 9), None)])
+        path = [node for node, _ in scene.plan((gym, 6, 24), [(gym, 13, 5)])]
+        self.assertEqual(path.count((gym, 13, 10)), 2)                        # over the arch, then under it
+        self.assertEqual(path[-6:], [(gym, 13, 10), (gym, 13, 9), (gym, 13, 8), (gym, 13, 7), (gym, 13, 6), (gym, 13, 5)])
+        self.assertEqual(scene.behaviours()["walls"]["LEFT"] & {0x31}, {0x31})
+        self.assertNotIn((gym, 9, 25), [node for node, _ in scene.plan((gym, 8, 25), [(gym, 10, 25)]) or []][1:2])
+
+    def test_a_goto_tells_a_wall_from_someone_in_the_way(self):
+        # Stuck before a tile no one stands on, goto learns a wall (the
+        # step, kept for the scene); before someone, it waits for them to
+        # walk on, as it always did.
+        from unittest import mock
+        tiles = iter([(1, 5, 5)] * 60 + [(1, 6, 5)] * 4)
+
+        class Core:
+            frames, buttons = 0, set()
+
+            def step(self, frames, hooks):
+                self.frames += frames
+        s = scene.Scene.__new__(scene.Scene)
+        s.core, s.hooks, s.walls, s.say = Core(), [], set(), (lambda line: None)
+        s.in_battle, s.movable = (lambda: False), (lambda: True)
+        s.location = lambda: next(tiles, (1, 6, 5))
+        s.objects = lambda: {}
+        s.standing = lambda here: here + (0,)
+        s.frame_script_due = lambda: None
+        plans = []
+
+        def plan(here, goals, blocked=frozenset(), most=0, walls=frozenset()):
+            plans.append(walls)
+            return [(here[:3], "RIGHT" if not walls else "DOWN"), ((1, 6, 5), None)]
+        with mock.patch.object(scene, "plan", plan), mock.patch.object(scene, "tile", lambda m, x, z: (m, 0)):
+            done, said = s.goto((1, 6, 5), frames=500)
+        self.assertTrue(done, said)
+        self.assertEqual(s.walls, {((1, 5, 5, 0), "RIGHT")})
+        self.assertEqual(plans[-1], frozenset({((1, 5, 5, 0), "RIGHT")}))
 
     def test_a_ledge_is_jumped_one_way_only(self):
         # Route 29's ledges at x = 651 face east: over one in two tiles going

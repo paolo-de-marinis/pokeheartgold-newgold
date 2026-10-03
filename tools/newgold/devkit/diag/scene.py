@@ -305,7 +305,7 @@ def field_layout():
              "FieldProcessManager, isPaused", "PlayerAvatar, mapObject", "LocalMapObject, currentX",
              "LocalMapObject, currentZ", "MapObjectManager, objectCount", "MapObjectManager, objects",
              "LocalMapObject, initialX", "LocalMapObject, initialZ", "LocalMapObject, currentFacing",
-             "FieldProcessManager, child")
+             "FieldProcessManager, child", "LocalMapObject, positionVector.y")
     values, (textbox,) = savedit.compile_c(
         exprs=tuple(f"__builtin_offsetof({n})" for n in names) + ("sizeof(LocalMapObject)",),
         inits=(("FieldSystem", ".textbox_open = 1"),),
@@ -397,10 +397,22 @@ def behaviours():
              "WARP_PANEL", "LADDER_DOWN", "ESCALATOR", "ESCALATOR_FLIP_FACE", "WARP_ENTRANCE_SOUTH", "WARP_SOUTH",
              "WARP_ENTRANCE_EAST", "WARP_EAST", "WARP_STAIRS_EAST", "WARP_ENTRANCE_WEST", "WARP_WEST",
              "WARP_STAIRS_WEST", "LADDER_NORTH", "LADDER_SOUTH")
-    values = savedit.compile_c(exprs=tuple(f"TILE_BEHAVIOR_{n}" for n in names),
+    # The step check (sub_02060DEC, asm/unk_0205FD20.s) refuses a step out of
+    # a tile with a wall on that side or into one with a wall on the side it
+    # is entered by; the four tests of a side, in the order its table
+    # _020FD4CC calls them for north, south, west and east.
+    import re
+    text = savedit.source("src/metatile_behavior.c").read_text()
+    sides = {direction: re.findall(r"TILE_BEHAVIOR_(\w+)", re.search(rf"BOOL {func}\(u8 tile\) \{{\s*return (.*?);", text, re.S).group(1))
+             for direction, func in (("UP", "sub_0205B8F4"), ("DOWN", "sub_0205B918"), ("LEFT", "sub_0205B93C"),
+                                     ("RIGHT", "sub_0205B960"))}
+    walled = sorted({n for found in sides.values() for n in found})
+    values = savedit.compile_c(exprs=tuple(f"TILE_BEHAVIOR_{n}" for n in names + tuple(walled)),
                                headers=savedit.LAYOUT_HEADERS + ("constants/metatile_behavior.h",))[0]
-    b = dict(zip(names, values))
+    b = dict(zip(names + tuple(walled), values))
     return {
+        # a wall on a tile's side: no step across it, out of the tile or into it
+        "walls": {direction: {b[n] for n in found} for direction, found in sides.items()},
         # a ledge is jumped over in its own direction and nowhere else
         "jump": {b["JUMP_NORTH"]: "UP", b["JUMP_SOUTH"]: "DOWN", b["JUMP_WEST"]: "LEFT", b["JUMP_EAST"]: "RIGHT"},
         # FieldSystem_CheckTransition: these warp the moment they are stepped on
@@ -427,6 +439,55 @@ def tile(map_id, x, z):
         return None
     width, _, owners, _ = savedit._matrix(matrix)
     return (owners[z // savedit.CHUNK_ROWS * width + x // savedit.CHUNK_TILES] if owners else map_id), attr
+
+
+@savedit.tree_cache
+def land_heights(land_id):
+    """{(x, z): the floor's heights there}, a land data member's tiles, from
+    its BDHC section: the plates, rectangles between two points, each on a
+    plane (a normal, a constant: n.p + d = 0, fx32), whose height the field
+    reads at the tile's centre (sub_02054954, by the field's height
+    function). A bridge has two: a walkway over a path. The chunk's centre
+    is its origin; heights in world units, rounded."""
+    member = savedit._land()[land_id]
+    at = member.find(b"BDHC")
+    if at < 0:
+        return {}
+    counts = struct.unpack_from("<6H", member, at + 4)
+    sizes, sections, offset = (8, 12, 4, 8), [], at + 16
+    for count, size, fmt in zip(counts, sizes, ("<ii", "<iii", "<i", "<4H")):
+        sections.append([struct.unpack_from(fmt, member, offset + size * i) for i in range(count)])
+        offset += size * count
+    points, normals, constants, plates = sections
+    out = {}
+    for x in range(savedit.CHUNK_TILES):
+        for z in range(savedit.CHUNK_ROWS):
+            px, pz = (x * 16 + 8 - 256) << 12, (z * 16 + 8 - 256) << 12
+            for first, second, normal, constant in plates:
+                (x1, z1), (x2, z2), (nx, ny, nz) = points[first], points[second], normals[normal]
+                if ny and min(x1, x2) <= px <= max(x1, x2) and min(z1, z2) <= pz <= max(z1, z2):
+                    y = -((nx * px >> 12) + (nz * pz >> 12) + constants[constant][0]) * 4096 // ny
+                    out.setdefault((x, z), set()).add(round(y / 4096))
+    return out
+
+
+def heights(map_id, x, z):
+    """(the land data member, the heights its floor has at the tile), or
+    None off the map."""
+    matrix = savedit._matrix_of().get(map_id)
+    if matrix is None:
+        return None
+    width, height, _, land = savedit._matrix(matrix)
+    cx, cz = x // savedit.CHUNK_TILES, z // savedit.CHUNK_ROWS
+    if x < 0 or z < 0 or cx >= width or cz >= height or land[cz * width + cx] == 0xFFFF:
+        return None
+    member = land[cz * width + cx]
+    return member, land_heights(member).get((x % savedit.CHUNK_TILES, z % savedit.CHUNK_ROWS), set())
+
+
+# A step that changes the floor's height by this much or more is refused
+# (sub_02054954: 5 << 14 in fx32): Goldenrod Gym's walkways, 52 over its floor.
+CLIMB = 20
 
 
 @savedit.tree_cache
@@ -459,11 +520,16 @@ def frame_table(map_id):
             re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), ", savedit.source(path).read_text())]
 
 
-def plan(start, goals, blocked=frozenset(), most=300000):
+def plan(start, goals, blocked=frozenset(), most=300000, walls=frozenset()):
     """The cheapest walk from `start` (map, x, z) to any of `goals`, as
     [(node, the direction held from it)], the last node a goal; None when
     there is none. A step costs 1, a ledge 2, a warp 4. `blocked` are tiles
-    (map, x, z) something stands on."""
+    (map, x, z) something stands on; `walls` are steps (state, direction)
+    the player was seen not to take, though the data allows them. A state
+    is a tile and the height of its floor the player is at: a walk keeps
+    off a step the floor climbs too far for (Goldenrod Gym's walkways, its
+    arches a walkway over a path), and the side walls a tile's behaviour
+    names. `start` may carry the player's height, (map, x, z, height)."""
     import heapq
     kinds, water = behaviours(), savedit.surfable()
     goal_set = set(goals)
@@ -473,7 +539,23 @@ def plan(start, goals, blocked=frozenset(), most=300000):
         return found is not None and not found[1] & savedit.COLLISION and found[1] & 0xFF not in water \
             and found[1] & 0xFF not in kinds["on_step"] and (found[0], *node[1:]) not in blocked
 
-    def edges(node):
+    back = {"UP": "DOWN", "DOWN": "UP", "LEFT": "RIGHT", "RIGHT": "LEFT"}
+
+    def level(node, near):
+        """A state: the tile and the height of the floor there nearest
+        `near` (a bridge has two), as the field picks it."""
+        found = heights(*node)
+        return node + (min(found[1], key=lambda h: abs(h - near)) if found and found[1] else near,)
+
+    def climbs(state, nxt):
+        """Whether a step from state onto nxt changes the floor's height by
+        CLIMB or more, in one land data member (the matrix's altitudes are
+        not added: a step across members is not judged)."""
+        here, there = heights(*state[:3]), heights(*nxt[:3])
+        return bool(here and there and here[0] == there[0] and there[1] and abs(nxt[3] - state[3]) >= CLIMB)
+
+    def edges(state):
+        node = state[:3]
         m, x, z = node
         here = tile(m, x, z)
         # A ladder's foot warps when pressed its way, so no step is taken
@@ -483,19 +565,23 @@ def plan(start, goals, blocked=frozenset(), most=300000):
         for direction, (dx, dz) in STEP.items():
             nx, nz = x + dx, z + dz
             there = tile(m, nx, nz)
-            if there is None or direction == pressed:
+            if there is None or direction == pressed or (state, direction) in walls:
                 continue
             owner, attr = there
             behaviour = attr & 0xFF
+            if here and here[1] & 0xFF in kinds["walls"][direction] or behaviour in kinds["walls"][back[direction]]:
+                continue
             warp = warps(owner).get((nx, nz))
             if warp and (behaviour == kinds["door"] or behaviour in kinds["on_step"]):
-                yield warp, direction, 4
+                yield level(warp, 0), direction, 4
             elif kinds["jump"].get(behaviour) == direction:
                 landing = (owner, nx + dx, nz + dz)
                 if free(landing):
-                    yield (tile(*landing)[0], nx + dx, nz + dz), direction, 2
+                    yield level((tile(*landing)[0], nx + dx, nz + dz), state[3]), direction, 2
             elif free((owner, nx, nz)):
-                yield (owner, nx, nz), direction, 1
+                nxt = level((owner, nx, nz), state[3])
+                if not climbs(state, nxt):
+                    yield nxt, direction, 1
         warp = warps(m).get((x, z)) if here else None
         if warp:
             # A mat or a stair: pressed into the wall its behaviour names; any
@@ -504,7 +590,7 @@ def plan(start, goals, blocked=frozenset(), most=300000):
                 (d for d, (dx, dz) in STEP.items() if (tile(m, x + dx, z + dz) or (0, savedit.COLLISION))[1]
                  & savedit.COLLISION), None)
             if direction:
-                yield warp, direction, 4
+                yield level(warp, 0), direction, 4
 
     def matrix(m):
         return savedit._matrix_of().get(m), savedit._matrix(savedit._matrix_of()[m])[2] is not None or m
@@ -516,14 +602,15 @@ def plan(start, goals, blocked=frozenset(), most=300000):
             return 0
         return min(abs(node[1] - g[1]) + abs(node[2] - g[2]) for g in goals)
 
+    start = level(start[:3], start[3] if len(start) == 4 else 0)
     came, cost, queue, seen = {start: None}, {start: 0}, [(guess(start), 0, start)], 0
     while queue and seen < most:
         _, spent, node = heapq.heappop(queue)
-        if node in goal_set:
-            path = [(node, None)]
+        if node[:3] in goal_set:
+            path = [(node[:3], None)]
             while came[node]:
                 node, direction = came[node]
-                path.append((node, direction))
+                path.append((node[:3], direction))
             return path[::-1]
         if spent > cost[node]:
             continue
@@ -558,6 +645,7 @@ class Scene:
         self.shift = None       # shift:, a party slot
         self.done = []          # the steps played before this one, for again:
         self.retry = False      # retry:
+        self.walls = set()      # the steps goto found the floor does not allow (plan's walls)
 
     def hold(self, name, value):
         address = self.markers.address(name)
@@ -1293,6 +1381,7 @@ class Scene:
                 path = None if path and self.location() not in index else path
                 continue
             here = self.location()
+            standing = self.standing(here)
             if path is None or here not in index:
                 # The objects are read when planning, not every frame: a
                 # walk read at every frame ran at half the core's speed.
@@ -1337,17 +1426,25 @@ class Scene:
                 continue
             if path is None:
                 blocked = {tile_: until for tile_, until in blocked.items() if until > core.frames}
-                path = plan(here, goals, frozenset(objects) | frozenset(blocked))
+                path = plan(standing, goals, frozenset(objects) | frozenset(blocked), walls=frozenset(self.walls))
                 replans += 1
                 if path is None:
                     return False, f"goto {goal}: no way from {here} (blocked {sorted(blocked)})"
-                index = {node: i for i, (node, _) in enumerate(path)}
-            direction = path[index[here]][1]
+                index, progress = {}, 0
+                for i, (node, _) in enumerate(path):
+                    index.setdefault(node, []).append(i)
+            # A tile the walk crosses twice (an arch, over it and under it)
+            # is the next time on from the last one reached.
+            progress = next((i for i in index[here] if i >= progress), index[here][0])
+            direction = path[progress][1]
             if here == last:
                 still += 1
                 if still > 48:      # something the plan did not know stands in the way
-                    nxt = path[index[here] + 1][0]
-                    blocked[nxt] = core.frames + 600
+                    nxt = path[progress + 1][0]
+                    if nxt in self.objects():
+                        blocked[nxt] = core.frames + 600    # someone, who may walk on
+                    else:
+                        self.walls.add((standing, direction))  # a step the floor does not allow
                     path, still = None, 0
                     continue
             else:
@@ -1356,6 +1453,18 @@ class Scene:
             core.step(1, hooks)
         core.buttons = set()
         return False, f"goto {goal}: stopped at {self.location()} after {frames} frames, {replans} plans"
+
+    def standing(self, here):
+        """here and the height of its floor the player stands at, the one of
+        the tile's heights (two on an arch) nearest the player's own
+        (LocalMapObject.positionVector.y)."""
+        obj = self._chain("FieldSystem.playerAvatar", "PlayerAvatar.mapObject")
+        found = heights(*here)
+        if not obj or not found or not found[1]:
+            return here + (0,)
+        y = self.core.word(obj + field_layout()["LocalMapObject.positionVector.y"])
+        y = (y - (1 << 32) if y >> 31 else y) / 4096
+        return here + (min(found[1], key=lambda h: abs(h - y)),)
 
     def teach(self, battler, at, slot, move, pp):
         """teach:'s write, for a battler that may have chosen its move. A foe
