@@ -754,60 +754,6 @@ ov82_0223EFB4: ; 0x0223EFB4
 	pop {r3, pc}
 	thumb_func_end ov82_0223EFB4
 
-	thumb_func_start ov82_0223EFCC
-ov82_0223EFCC: ; 0x0223EFCC
-	push {r3, r4, r5, r6, r7, lr}
-	sub sp, #0x28
-	add r5, r1, #0
-	mov r1, #0x85
-	lsl r1, r1, #2
-	ldr r0, [r0, r1]
-	mov r1, #0
-	add r7, r2, #0
-	add r4, r3, #0
-	bl Party_GetMonByIndex
-	mov r1, #0xb3
-	add r2, sp, #0x10
-	bl GetMonData
-	add r1, sp, #0x30
-	ldrb r1, [r1, #0x18]
-	add r0, r5, #0
-	bl FillWindowPixelBuffer
-	mov r0, #0xb
-	mov r1, #0x69
-	bl String_New
-	add r1, sp, #0x10
-	add r6, r0, #0
-	bl CopyU16ArrayToString
-	str r4, [sp]
-	mov r4, #0
-	str r4, [sp, #4]
-	add r2, sp, #0x30
-	ldrb r0, [r2, #0x10]
-	ldrb r3, [r2, #0x14]
-	ldrb r1, [r2, #0x18]
-	lsl r0, r0, #0x18
-	lsl r3, r3, #0x18
-	lsr r0, r0, #8
-	lsr r3, r3, #0x10
-	orr r0, r3
-	orr r0, r1
-	str r0, [sp, #8]
-	str r4, [sp, #0xc]
-	ldrb r1, [r2, #0x1c]
-	add r0, r5, #0
-	add r2, r6, #0
-	add r3, r7, #0
-	bl AddTextPrinterParameterizedWithColor
-	add r0, r6, #0
-	bl String_Delete
-	add r0, r5, #0
-	bl CopyWindowToVram
-	add sp, #0x28
-	pop {r3, r4, r5, r6, r7, pc}
-	.balign 4, 0
-	thumb_func_end ov82_0223EFCC
-
 	thumb_func_start ov82_0223F040
 ov82_0223F040: ; 0x0223F040
 	push {r4, r5, r6, r7, lr}

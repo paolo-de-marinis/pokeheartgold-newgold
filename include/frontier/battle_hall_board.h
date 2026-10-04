@@ -5,6 +5,10 @@
 
 #include "bg_window.h"
 
+// The board's second window printed the Pokemon's name in retail's two-cell
+// summary; it is never added (src/frontier/battle_hall_board_windows.c).
+#define BATTLE_HALL_BOARD_NO_WINDOW 1
+
 // The Battle Hall's type board (overlay 82): twenty cells, four to a row (see
 // ov80_02237920), a cursor over them and the player's Pokemon's icon. As far
 // as the C reads it.
@@ -19,7 +23,7 @@ typedef struct BattleHallBoard {
     u8 matronPrompted; // only the Hall Matron's cell can be picked
     u8 filler1F[0x29];
     BgConfig *bgConfig;
-    Window windows[4]; // the message, the Pokemon's name, the cells' names and ranks, the top screen's message
+    Window windows[4]; // the message, none (BATTLE_HALL_BOARD_NO_WINDOW), the cells' names and ranks, the top screen's message
     u8 filler8C[4];
     u8 touched;
     u8 filler91[0x173];
@@ -45,7 +49,6 @@ void ov82_0223FD5C(Window *windows);
 // Still assembly.
 void ov82_0223E9B0(void);
 void ov82_0223E9E8(BattleHallBoard *board);
-void ov82_0223EFCC(BattleHallBoard *board, Window *window, u32 x, u32 y, u8 textColor, u8 shadowColor, u8 bgColor, u8 fontID);
 void ov82_0223F040(BattleHallBoard *board, Window *window, u32 textColor, u32 shadowColor, u32 bgColor, u32 fontID);
 void ov82_0223F134(BattleHallBoard *board, Window *window);
 BOOL ov82_0223F6E4(BattleHallBoard *board);

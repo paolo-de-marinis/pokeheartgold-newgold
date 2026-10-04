@@ -179,6 +179,36 @@ def tilemap():
     return lambda x, y: struct.unpack_from("<H", entries, 2 * (y * width + x))[0]
 
 
+# The board's windows added and removed (src/frontier/battle_hall_board_windows.c),
+# each by its place and its template's.
+WINDOWS = r'''
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8; typedef uint16_t u16;
+typedef struct BgConfig BgConfig;
+typedef struct { int unused; } Window;
+typedef struct { u8 bytes[8]; } WindowTemplate;
+@DEFINES@
+static const WindowTemplate ov82_0223FF00[4];
+static Window *sWindows;
+static void AddWindow(BgConfig *bgConfig, Window *window, const WindowTemplate *template) {
+    (void)bgConfig;
+    printf("add %d %d\n", (int)(window - sWindows), (int)(template - ov82_0223FF00));
+}
+static void FillWindowPixelBuffer(Window *window, u8 fill) { (void)window; (void)fill; }
+static void RemoveWindow(Window *window) { printf("remove %d\n", (int)(window - sWindows)); }
+@NATIVE@
+int main(void) {
+    Window windows[4];
+    sWindows = windows;
+    ov82_0223FD2C(NULL, windows);
+    ov82_0223FD5C(windows);
+    return 0;
+}
+'''
+
+
 class BattleHallFairyTests(unittest.TestCase):
     def test_board_and_ranks_on_the_host(self):
         self.assertEqual(run(program(), "newgold-hall-fairy-"), "ok")
@@ -222,6 +252,20 @@ class BattleHallFairyTests(unittest.TestCase):
         pool = set(u16s(asm_tables((ROOT / "asm/overlay_80_0223C698.s",))["ov80_0223C738"])[:300])
         for name in re.findall(r"TRAINERCLASS_\w+", rows[17][0]):
             self.assertIn(int(classes[name]), pool, name)
+
+
+    def test_the_board_has_no_name_window(self):
+        # The summary cell shows the Pokemon's icon alone since it gave half
+        # of itself to Fairy: the routine that printed the name in window 1
+        # (ov82_0223EFCC) is gone, and the window is neither added nor removed.
+        source = (ROOT / "src/frontier/battle_hall_board_windows.c").read_text()
+        native = source[source.index("void ov82_0223FD2C"):]
+        defines = "\n".join(re.findall(r"^#define BATTLE_HALL_BOARD_\w+ .*$",
+                                       (ROOT / "include/frontier/battle_hall_board.h").read_text(), re.M))
+        out = run(WINDOWS.replace("@DEFINES@", defines).replace("@NATIVE@", native), "newgold-hall-windows-")
+        self.assertEqual(out.splitlines(), ["add 0 0", "add 2 2", "add 3 3", "remove 0", "remove 2", "remove 3"])
+        for path in (ROOT / "asm").glob("overlay_82*.s"):
+            self.assertNotIn("ov82_0223EFCC", path.read_text(), path.name)
 
 
 if __name__ == "__main__":
