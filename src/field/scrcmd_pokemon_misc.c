@@ -374,11 +374,18 @@ static const u16 sStatJudgeBestStatMsgIdxs[6] = {
     msg_0096_D31R0201_00126,
 };
 
+// The Judge as the latest games have him with Hyper Training (Pokemon
+// Central, Allenamento Pro): a trained stat is judged as the 31 it counts as,
+// its true IV never told, and named "Hyper trained" -- here a best stat that
+// was trained comes back as STAT_JUDGE_HYPER_TRAINED, which the script says so for.
+#define STAT_JUDGE_HYPER_TRAINED (MAX_IV + 1)
+
 BOOL ScrCmd_StatJudge(ScriptContext *ctx) {
     u32 ivList[6];
     u8 i;
     u8 offset;
     u8 highestIvValue;
+    u32 trained;
     FieldSystem *fieldSystem = ctx->fieldSystem;
     u32 monIndex = ScriptGetVar(ctx);
     u16 *ivTotal = ScriptGetVarPointer(ctx);
@@ -391,6 +398,12 @@ BOOL ScrCmd_StatJudge(ScriptContext *ctx) {
     ivList[3] = GetMonData(mon, MON_DATA_SPEED_IV, 0);
     ivList[4] = GetMonData(mon, MON_DATA_SPATK_IV, 0);
     ivList[5] = GetMonData(mon, MON_DATA_SPDEF_IV, 0);
+    trained = GetMonData(mon, MON_DATA_UNUSED_114, 0);
+    for (i = 0; i < 6; ++i) {
+        if (trained & MON_HYPER_TRAINED_BIT(i)) {
+            ivList[i] = MAX_IV;
+        }
+    }
 
     highestIvValue = 0;
     *ivTotal = 0;
@@ -414,7 +427,7 @@ BOOL ScrCmd_StatJudge(ScriptContext *ctx) {
         offset = (offset + 1) % 6;
     }
 
-    *highestIv = highestIvValue;
+    *highestIv = (trained & MON_HYPER_TRAINED_BIT(*highestIvIndex)) ? STAT_JUDGE_HYPER_TRAINED : highestIvValue;
     *highestIvIndex = sStatJudgeBestStatMsgIdxs[*highestIvIndex];
 
     return FALSE;

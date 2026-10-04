@@ -136,6 +136,68 @@ int main(void) {
 }
 """
 
+JUDGE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include "constants/pokemon.h"
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+#define FALSE 0
+#define msg_0096_D31R0201_00122 122
+#define msg_0096_D31R0201_00123 123
+#define msg_0096_D31R0201_00124 124
+#define msg_0096_D31R0201_00125 125
+#define msg_0096_D31R0201_00126 126
+#define msg_0096_D31R0201_00127 127
+typedef struct { u32 judgeStatPosition; void *saveData; } FieldSystem;
+typedef struct { FieldSystem *fieldSystem; } ScriptContext;
+typedef struct { u32 iv[6]; u32 flags; } Pokemon;
+static Pokemon sMon;
+static u16 sVars[4];
+static int sNext;
+static u16 ScriptGetVar(ScriptContext *ctx) { (void)ctx; return 0; }
+static u16 *ScriptGetVarPointer(ScriptContext *ctx) { (void)ctx; return &sVars[sNext++]; }
+static void *SaveArray_Party_Get(void *save) { return save; }
+static Pokemon *Party_GetMonByIndex(void *party, u32 i) { (void)party; (void)i; return &sMon; }
+static u32 GetMonData(Pokemon *mon, int attr, void *dest) {
+    (void)dest;
+    if (attr >= MON_DATA_HP_IV && attr <= MON_DATA_SPDEF_IV) return mon->iv[attr - MON_DATA_HP_IV];
+    assert(attr == MON_DATA_UNUSED_114);
+    return mon->flags;
+}
+@TABLE@
+@JUDGE@
+static void Judge(u32 flags, u16 *total, u16 *best, u16 *rating) {
+    FieldSystem field = { 0, 0 };
+    ScriptContext ctx = { &field };
+    sMon.flags = flags;
+    sNext = 0;
+    ScrCmd_StatJudge(&ctx);
+    *total = sVars[0];
+    *best = sVars[1];
+    *rating = sVars[2];
+}
+int main(void) {
+    u16 total, best, rating;
+    sMon = (Pokemon) { { 10, 30, 12, 8, 20, 5 }, 0 };
+    // Untrained: retail's Judge, Attack the best at 30.
+    Judge(0, &total, &best, &rating);
+    assert(total == 85 && best == 123 && rating == 30);
+    // Speed trained counts as 31: it is the best now, and named Hyper trained.
+    Judge(MON_HYPER_TRAINED_BIT(STAT_SPEED), &total, &best, &rating);
+    assert(total == 85 - 8 + 31 && best == 127 && rating == STAT_JUDGE_HYPER_TRAINED);
+    // HP trained, 31, is above Attack's 30: the best now, and named Hyper trained.
+    Judge(MON_HYPER_TRAINED_BIT(STAT_HP), &total, &best, &rating);
+    assert(total == 85 - 10 + 31 && best == 122 && rating == STAT_JUDGE_HYPER_TRAINED);
+    sMon.iv[STAT_HP] = 10;
+    Judge(MON_HYPER_TRAINED_BIT(STAT_DEF), &total, &best, &rating);
+    assert(best == 124 && rating == STAT_JUDGE_HYPER_TRAINED);
+    return 0;
+}
+"""
+
 # The places allowed to read the Hyper Training bits: the stats, the summary's
 # IV view, the Frontier's Judge, the trainer app and the save editor.
 READERS = {
@@ -162,6 +224,25 @@ class HyperTrainingTests(unittest.TestCase):
                 str(path / "check.c"), "-o", str(path / "check"),
             ], check=True)
             subprocess.run([str(path / "check")], cwd=directory, check=True)
+
+    def test_the_judge_counts_a_trained_stat_as_31_and_names_it(self):
+        misc = read("src/field/scrcmd_pokemon_misc.c")
+        table = re.search(r"static const u16 sStatJudgeBestStatMsgIdxs\[6\] = \{.*?\};", misc, re.S).group(0)
+        define = re.search(r"#define STAT_JUDGE_HYPER_TRAINED .*", misc).group(0)
+        source = JUDGE.replace("@TABLE@", table).replace("@JUDGE@", define + "\n" + function(misc, "ScrCmd_StatJudge"))
+        with tempfile.TemporaryDirectory(prefix="newgold-judge-") as directory:
+            path = Path(directory)
+            (path / "check.c").write_text(source)
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-variable", "-O2", "-iquote", str(ROOT / "include"),
+                str(path / "check.c"), "-o", str(path / "check")], check=True)
+            subprocess.run([str(path / "check")], cwd=directory, check=True)
+        # The script says so: a rating past 31 is the new line, read before the four retail ones.
+        script = read("files/fielddata/script/scr_seq/scr_seq_0069_D31R0201.s")
+        block = script[script.index("_15AF:"):]
+        self.assertLess(block.index("Compare VAR_SPECIAL_x8003, 32"), block.index("Compare VAR_SPECIAL_x8003, 15"))
+        self.assertIn("NPCMsg msg_0096_D31R0201_00133", script[script.index("_HyperTrained:"):])
+        self.assertIn("Hyper trained", read("files/msgdata/msg/msg_0096_D31R0201.gmm"))
 
     def test_the_flags_are_hg_engines_bits(self):
         constants = read("include/constants/pokemon.h")

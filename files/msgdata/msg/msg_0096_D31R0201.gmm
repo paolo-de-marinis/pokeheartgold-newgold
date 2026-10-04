@@ -563,4 +563,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">A Ribbon will be awarded to the\nparticipating Pokémon!</language>
 	</row>
+	<row id="msg_0096_D31R0201_00133" index="133">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It’s been Hyper trained in that\nregard. That’s how I judged it.</language>
+	</row>
 </body>

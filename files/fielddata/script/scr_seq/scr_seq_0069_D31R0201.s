@@ -1387,6 +1387,8 @@ _15A3:
 	End
 
 _15AF:
+	Compare VAR_SPECIAL_x8003, 32 ; STAT_JUDGE_HYPER_TRAINED: the best is Hyper trained
+	GoToIfGe _HyperTrained
 	Compare VAR_SPECIAL_x8003, 15
 	GoToIfLe _1611
 	Compare VAR_SPECIAL_x8003, 25
@@ -1434,6 +1436,11 @@ _1627:
 
 _1632:
 	NPCMsg msg_0096_D31R0201_00131
+	GoTo _163D
+	End
+
+_HyperTrained:
+	NPCMsg msg_0096_D31R0201_00133
 	GoTo _163D
 	End
 
