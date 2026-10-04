@@ -3856,12 +3856,18 @@ static BOOL ov12_0224C204(BattleSystem *battleSystem, BattleContext *ctx) {
     // field-wide move can be bounced by both opponents in turn. Nothing is
     // sent back to the Pokemon that is its own target -- a move aimed at its
     // user, its side, the field, or at an ally it has not got: the bounce
-    // would come back to the bouncer, again and again.
+    // would come back to the bouncer, again and again. Nor is a move sent
+    // back a second time: BtlCmd_MagicCoat has turned it round and marked it
+    // (BATTLE_STATUS2_MAGIC_COAT, until the move is over), and this step asks
+    // again of the Pokemon it now goes to. Before, two Magic Bounce holders
+    // sent a Toxic back and forth without end, and a Magic Bounce holder's
+    // move into a Magic Coat came back, was sent off again by the ability,
+    // and hit the coat's user (Showdown, gen 9: a bounced move hasBounced).
     BOOL bouncedByAbility = !ctx->turnData[ctx->battlerIdTarget].magicCoatFlag
         && CheckBattlerAbilityIfNotIgnored(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget, ABILITY_MAGIC_BOUNCE) == TRUE
         && !(ctx->battleMons[ctx->battlerIdTarget].moveEffectFlags & MOVE_EFFECT_FLAG_SEMI_INVULNERABLE);
 
-    if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && ctx->battlerIdTarget != ctx->battlerIdAttacker && (ctx->turnData[ctx->battlerIdTarget].magicCoatFlag || bouncedByAbility) && (BattleMoveTbl(ctx, ctx->moveNoCur)->unkB & 4)) {
+    if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && ctx->battlerIdTarget != ctx->battlerIdAttacker && !(ctx->battleStatus2 & BATTLE_STATUS2_MAGIC_COAT) && (ctx->turnData[ctx->battlerIdTarget].magicCoatFlag || bouncedByAbility) && (BattleMoveTbl(ctx, ctx->moveNoCur)->unkB & 4)) {
         ctx->turnData[ctx->battlerIdTarget].magicCoatFlag = 0;
         ctx->moveNoProtect[ctx->battlerIdAttacker] = 0;
         ctx->moveNoBattlerPrev[ctx->battlerIdAttacker] = ctx->moveNoTemp;

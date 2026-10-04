@@ -59,7 +59,19 @@ class UnguardedMoveTests(unittest.TestCase):
         self.assertEqual(flagged, [])
         # Nor is anything sent back to a Pokemon that is its own target.
         bounce = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224C204")
-        self.assertIn("&& ctx->battlerIdTarget != ctx->battlerIdAttacker && (ctx->turnData[ctx->battlerIdTarget].magicCoatFlag || bouncedByAbility)", bounce)
+        self.assertIn("&& ctx->battlerIdTarget != ctx->battlerIdAttacker && !(ctx->battleStatus2 & BATTLE_STATUS2_MAGIC_COAT) "
+                      "&& (ctx->turnData[ctx->battlerIdTarget].magicCoatFlag || bouncedByAbility)", bounce)
+
+    def test_a_move_sent_back_is_not_sent_back_again(self):
+        # Showdown, gen 9: a bounced move hasBounced. BtlCmd_MagicCoat marks
+        # the move it turns round, and the move's end clears the mark: two
+        # Magic Bounce holders sent a Toxic back and forth without end.
+        bounce = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224C204")
+        self.assertIn("!(ctx->battleStatus2 & BATTLE_STATUS2_MAGIC_COAT) && (ctx->turnData[ctx->battlerIdTarget].magicCoatFlag", bounce)
+        coat = function((ROOT / "src/battle/battle_command.c").read_text(), "BtlCmd_MagicCoat")
+        self.assertIn("ctx->battleStatus2 |= BATTLE_STATUS2_MAGIC_COAT;", coat)
+        end = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224D03C")
+        self.assertIn("ctx->battleStatus2 &= ~BATTLE_STATUS2_MAGIC_COAT;", end)
 
     def test_none_of_them_is_copied_by_mirror_move_but_five(self):
         # Pokemon Central: "Non può essere copiata da Speculmossa" for each of
