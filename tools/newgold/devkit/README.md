@@ -26,7 +26,8 @@ The ROM side is `src/newgold/diag/` and `include/newgold/diag.h`.
 Edits a save file the way the game reads it -- checksums, the half the
 game loads, the blocks by name. The party (`--party SPECIES:LEVEL::MOVE+MOVE`,
 always the player's own, so it obeys; `--level SLOT:LEVEL` raises one already
-there and keeps the rest of it), the bag, TMs, badges, the Dex, the
+there and keeps the rest of it), the bag, TMs (`--tm 1,94,148`, by their
+number), badges, the Dex, the
 position (`--where MAP:X:Y:DIR`, as a warp so the map builds itself; MAP
 is the map's number), script
 flags (`--flag NAME`, and `--flag NAME=0` to clear one) and variables (`--var NAME=VALUE`); `--dex` takes a

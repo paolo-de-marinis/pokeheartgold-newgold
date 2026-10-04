@@ -288,6 +288,16 @@ class SaveditLibraryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             sv.set_item(save, items["ITEM_TM098"], 1)    # Venoshock: no machine of hg-engine's taught it
 
+    def test_a_tm_by_its_number(self):
+        """--tm: TM93 is the TM093 item and TM148 the TM148 one; past HM08 a
+        number used to land on the HMs (TM01's item and on, by count)."""
+        items = sv.constants("include/constants/items.h", "ITEM_")
+        self.assertEqual([sv.tm_item(n) for n in (1, 92, 93, 96, 100, 101, 148)],
+                         [items[n] for n in ("ITEM_TM01", "ITEM_TM92", "ITEM_TM093", "ITEM_TM096", "ITEM_TM100",
+                                             "ITEM_TM101", "ITEM_TM148")])
+        with self.assertRaises(ValueError):
+            sv.tm_item(149)
+
     def test_the_page_names_a_layout_by_its_constant(self):
         """enum SaveLayout is numbered newest first, so a layout added
         renumbers the older ones: the page's Italian label is keyed by the

@@ -1256,12 +1256,18 @@ def set_party(save, wanted):
         block[PARTY_AT + slot * PARTY_MON:PARTY_AT + (slot + 1) * PARTY_MON] = mon
 
 
+def tm_item(number):
+    """The item of TM `number` (sMachineRuns)."""
+    for first, last, _, low, kind in machine_runs():
+        if kind == "TM" and low <= number <= low + last - first:
+            return first + number - low
+    raise ValueError(f"there is no TM{number:02d}")
+
+
 def add_machines(save, machines):
-    block = save.block("SAVE_BAG")
-    first = int(re.search(r"#define ITEM_TM01\s+(\d+)",
-                          (ROOT / "include/constants/items.h").read_text()).group(1))
+    """--tm: each TM by its number, as set_item puts it in the bag."""
     for n in machines:
-        put_in_pocket(block, next(p["name"] for p in pockets() if p["const"] == "POCKET_TMHMS"), first + n - 1, 1, save.layout)
+        set_item(save, tm_item(n), 1)
 
 
 def mark_dex(save, names):
@@ -4268,7 +4274,8 @@ def main():
     parser.add_argument("--item", metavar="ITEM:COUNT[,...]",
                         help="how many of each item the bag holds, in its own pocket (ITEM_ optional)")
     parser.add_argument("--tm", metavar="N[,N...]",
-                        help="put these machines in the bag, e.g. 1,2,26")
+                        help="put these TMs in the bag by their number, e.g. 1,2,26,94 (an older save: as the game "
+                             "will read them)")
     parser.add_argument("--dex", metavar="SPECIES[,...]",
                         help="mark these seen and caught, and switch the Dex on")
     parser.add_argument("--box", metavar="N:SPECIES:LEVEL",
