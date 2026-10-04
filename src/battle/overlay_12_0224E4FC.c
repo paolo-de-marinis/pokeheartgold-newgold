@@ -7148,11 +7148,17 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
             // catch, once in the battle (Pokemon Central, Raccattapalle). The
             // reference declares the ability and nothing reads it; its note in
             // ServerBeforeAct means to look after the ball was used, which is
-            // where the throw's subscript now asks.
+            // where the throw's subscript now asks. The ball is none of the
+            // party's starting items (heldItemOwner): the empty hand's tag,
+            // that of an item it used up, kept for Recycle and Harvest, goes.
+            // Before, the ball Tricked away or taken counted as that item
+            // handed over or taken, which came back, or was lost, at the
+            // battle's end.
             if (ctx->ballFetchBall != ITEM_NONE) {
                 for (i = 0; i < maxBattlers; i++) {
                     battlerId = ctx->turnOrder[i];
                     if (BattleSystem_GetFieldSide(battleSystem, battlerId) == 0 && ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].item == ITEM_NONE && GetBattlerAbility(ctx, battlerId) == ABILITY_BALL_FETCH) {
+                        ctx->heldItemOwner[Battler_PartySlot(battleSystem, ctx, battlerId)] = 0;
                         ctx->battleMons[battlerId].item = ctx->ballFetchBall;
                         CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
                         ctx->itemTemp = ctx->ballFetchBall;

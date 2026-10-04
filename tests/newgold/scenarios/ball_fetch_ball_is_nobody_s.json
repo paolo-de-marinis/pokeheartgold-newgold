@@ -1,0 +1,20 @@
+{
+  "about": "The ball Ball Fetch picks up is nobody's starting item: Tricked away to a wild Pokemon, it hands over nothing of the Pokemon's own, which has its used-up White Herb back at the battle's end, and the wild Pokemon's item it got goes to the bag, as anything taken from a wild Pokemon does. A level-30 Pikachu holding a White Herb, with a Poke Ball in the bag (savedit --party's item, --bag), is given Ball Fetch and taught Splash and Trick (set:, teach:) against a forced wild Chansey holding an Everstone and knowing only Leer: the Leer has the Pikachu use the Herb up, the ball thrown from the battle's bag (touch:, as in caught_pokemon_keeps_item.json) does not catch, Ball Fetch picks it up, and Trick swaps it for the Everstone; gym.py's player wins the battle. The Pikachu holds its White Herb and the bag has the Everstone. Before, the ball arrived in a hand still tagged with the Herb used up (heldItemOwner): the Trick marked the Herb as handed over, the swap lasted, and the Pikachu kept the Everstone and lost its Herb. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:30:::WHITE_HERB", "--bag", "POKE_BALL:1"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "set:0,ability,ABILITY_BALL_FETCH", "set:1,item,ITEM_EVERSTONE", "teach:0,0,MOVE_SPLASH", "teach:0,1,MOVE_TRICK",
+            "teach:1,0,MOVE_LEER", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Splash!", "The wild Chansey used Leer!", "White Herb"],
+                        "battler0.item": "ITEM_NONE"}},
+            "wait:60", "touch:40,170", "wait:60", "touch:192,55", "wait:60", "touch:64,40", "wait:60", "touch:100,168",
+            "fight:1:0",
+            {"expect": {"new_lines": ["used one Poké Ball!", "found one"], "battler0.item": "ITEM_POKE_BALL"}},
+            "fight:2:1",
+            {"expect": {"new_lines": ["Pikachu used Trick!"], "battler0.item": "ITEM_EVERSTONE", "battler1.item": "ITEM_POKE_BALL"}},
+            "fight", "field"],
+  "expect": {"lines": ["The wild Chansey fainted!"], "party0.species": "SPECIES_PIKACHU", "party0.item": "ITEM_WHITE_HERB",
+             "bag:ITEM_EVERSTONE": 1}
+}

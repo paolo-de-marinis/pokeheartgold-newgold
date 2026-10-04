@@ -765,6 +765,15 @@ class TakenItemTests(unittest.TestCase):
         self.assertEqual(len(re.findall(r"PassStickyBarbTag\(battleSystem, ctx\);\n\s*\*script = BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB;",
                                         overlay)), 2)
 
+    def test_a_fetched_ball_is_nobody_s(self):
+        # Ball Fetch's ball is none of the party's starting items: the hand
+        # it lands in loses the tag of the item it used up, as it gets the
+        # ball.
+        entry = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "TryAbilityOnEntry")
+        state = entry[entry.index("case 35: // Ball Fetch"):entry.index("case 36:")]
+        self.assertRegex(state, r"\n\s*ctx->heldItemOwner\[Battler_PartySlot\(battleSystem, ctx, battlerId\)\] = 0;\n"
+                                r"\s*ctx->battleMons\[battlerId\]\.item = ctx->ballFetchBall;\n")
+
     def test_the_items_are_written_down_with_the_party_count(self):
         # GiveBackHeldItems gives back to the Pokemon the battle started with,
         # not to one caught into the party since.
