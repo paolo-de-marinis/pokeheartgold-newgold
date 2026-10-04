@@ -323,5 +323,73 @@ class TerrainAbilityTests(unittest.TestCase):
                                   f"{tag}, so msg_0197_{int(message) + offset:05d} has to exist")
 
 
+# BtlCmd_GetTerrainSecondaryEffect on the host, with its table: Secret
+# Power's added effect by the ground and the terrain over it.
+SECRET_POWER = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/battle_subscript.h"
+typedef struct { int terrain; } BattleSystem;
+typedef struct { u8 terrainOverlayType; u32 unk_2174; } BattleContext;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; (void)n; }
+static int BattleSystem_GetTerrainId(BattleSystem *bs) { return bs->terrain; }
+@FUNCTIONS@
+static BattleSystem bs;
+static BattleContext ctx;
+static u32 effect(int ground, int overlay) {
+    bs.terrain = ground; ctx.terrainOverlayType = overlay; ctx.unk_2174 = 0;
+    BtlCmd_GetTerrainSecondaryEffect(&bs, &ctx);
+    assert(ctx.unk_2174 & MOVE_SIDE_EFFECT_TO_DEFENDER);
+    return ctx.unk_2174 & ~MOVE_SIDE_EFFECT_TO_DEFENDER;
+}
+int main(void) {
+    assert(effect(TERRAIN_PLAIN, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_PARALYZE);
+    assert(effect(TERRAIN_BUILDING, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_PARALYZE);
+    assert(effect(TERRAIN_LANCE, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_PARALYZE);
+    assert(effect(TERRAIN_BATTLE_HALL, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_PARALYZE);
+    assert(effect(TERRAIN_SAND, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_ACCURACY_DOWN_1_STAGE);
+    assert(effect(TERRAIN_MOUNTAIN, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_ACCURACY_DOWN_1_STAGE);
+    assert(effect(TERRAIN_GRASS, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_SLEEP);
+    assert(effect(TERRAIN_CAVE, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_FLINCH);
+    assert(effect(TERRAIN_SNOW, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_FREEZE);
+    assert(effect(TERRAIN_ICE, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_FREEZE);
+    assert(effect(TERRAIN_WATER, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_ATTACK_DOWN_1_STAGE);
+    assert(effect(TERRAIN_PUDDLE, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE);
+    assert(effect(TERRAIN_GREAT_MARSH, TERRAIN_NONE) == MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE);
+    // A terrain comes first, wherever the battle is.
+    assert(effect(TERRAIN_CAVE, ELECTRIC_TERRAIN) == MOVE_SUBSCRIPT_PTR_PARALYZE);
+    assert(effect(TERRAIN_WATER, GRASSY_TERRAIN) == MOVE_SUBSCRIPT_PTR_SLEEP);
+    assert(effect(TERRAIN_PLAIN, MISTY_TERRAIN) == MOVE_SUBSCRIPT_PTR_SP_ATTACK_DOWN_1_STAGE);
+    assert(effect(TERRAIN_BATTLE_TOWER, PSYCHIC_TERRAIN) == MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE);
+    return 0;
+}
+"""
+
+
+def table(path, name):
+    """A table's definition, from its name to its closing brace."""
+    text = (ROOT / path).read_text()
+    start = text.index(f" {name}[")
+    start = text.rindex("\n", 0, start) + 1
+    return text[start:text.index("};", start) + 2] + "\n"
+
+
+class TerrainMoveTests(unittest.TestCase):
+    """The moves that ask the ground the battle is fought on, and the terrain
+    laid over it first: the latest generation's tables each can be chosen in."""
+
+    def test_secret_power_s_effect_is_the_seventh_generation_s(self):
+        # Pokemon Central, Forzasegreta: the move cannot be chosen from the
+        # eighth generation, so the seventh's table is the last.
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        run_c(SECRET_POWER.replace("@FUNCTIONS@", table("src/battle/overlay_12_0226C3E8.c", "sSecretPowerEffectTable")
+                                   + function(commands, "BtlCmd_GetTerrainSecondaryEffect")))
+
+
 if __name__ == "__main__":
     unittest.main()

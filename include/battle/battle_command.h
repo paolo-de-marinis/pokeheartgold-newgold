@@ -332,7 +332,7 @@ extern const u16 sMoonBallPokemon[6];
 extern const u16 sPickupTable1[18];
 extern const ManagedSpriteTemplate sLevelUpNameplateTemplate;
 extern const ManagedSpriteTemplate sPokeIconTemplate;
-extern const u32 sSecretPowerEffectTable[13];
+extern const u8 sSecretPowerEffectTable[TERRAIN_OTHERS + PSYCHIC_TERRAIN + 1];
 extern const u16 sPrizeMoneyTbl[0x81][2];
 extern const BtlCmdFunc sBattleScriptCommandTable[];
 extern const u8 sPickupWeightTable[9];

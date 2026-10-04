@@ -1,5 +1,6 @@
 #include "global.h"
 
+#include "constants/battle_subscript.h"
 #include "constants/items.h"
 #include "constants/species.h"
 #include "constants/trainer_class.h"
@@ -10,7 +11,8 @@
 // table; see overlay_12_0226C2F8.c for the rest. The compiler lays out a file's
 // tables by size, sorting them from the last defined to the first with a heap
 // sort, which does not keep tables of one size in the order they were written:
-// the three of 52 bytes are defined in the order that comes out as retail's.
+// the three of 52 bytes were defined in the order that comes out as retail's,
+// and Secret Power's, a byte a ground now, is no longer one of them.
 
 // HGSS listed whole families here. New Gold lists only the species a Moon Stone
 // actually evolves, which is what the ball has meant since Generation VIII, so
@@ -58,21 +60,37 @@ const ManagedSpriteTemplate sPokeIconTemplate = {
     .vramTransfer = 0,
 };
 
-// By terrain.
-const u32 sSecretPowerEffectTable[13] = {
-    0x8000001B,
-    0x8000001B,
-    0x80000001,
-    0x80000001,
-    0x80000008,
-    0x80000008,
-    0x80000004,
-    0x80000016,
-    0x80000004,
-    0x80000005,
-    0x80000018,
-    0x8000001C,
-    0x80000005,
+// What Secret Power's hit may do to its target, by the ground the battle is
+// fought on (BattleSystem_GetTerrainId) and, past TERRAIN_OTHERS, by the
+// terrain laid over it, which comes first (BtlCmd_GetTerrainSecondaryEffect):
+// the seventh generation's, the last the move can be chosen in (Pokemon
+// Central, Forzasegreta). Paralysis on plain ground, in buildings, in the
+// League's and the Frontier's rooms and in Electric Terrain; a stage of
+// accuracy on sand and rock; sleep in grass and Grassy Terrain; a flinch in
+// a cave; freezing on snow and ice; a stage of Attack on water, of Sp. Atk in
+// Misty Terrain, of Speed in Psychic Terrain. Puddles and mud, which the
+// seventh has not got, keep the sixth's stage of Speed ("pozzanghera",
+// "palude"), and the unknown ground nothing here uses keeps retail's. Retail's
+// table, the fourth generation's, lowered accuracy on plain ground, put to
+// sleep on a puddle and flinched on rock, and knew no terrain.
+const u8 sSecretPowerEffectTable[TERRAIN_OTHERS + PSYCHIC_TERRAIN + 1] = {
+    [TERRAIN_PLAIN] = MOVE_SUBSCRIPT_PTR_PARALYZE,
+    [TERRAIN_SAND] = MOVE_SUBSCRIPT_PTR_ACCURACY_DOWN_1_STAGE,
+    [TERRAIN_GRASS] = MOVE_SUBSCRIPT_PTR_SLEEP,
+    [TERRAIN_PUDDLE] = MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE,
+    [TERRAIN_MOUNTAIN] = MOVE_SUBSCRIPT_PTR_ACCURACY_DOWN_1_STAGE,
+    [TERRAIN_CAVE] = MOVE_SUBSCRIPT_PTR_FLINCH,
+    [TERRAIN_SNOW] = MOVE_SUBSCRIPT_PTR_FREEZE,
+    [TERRAIN_WATER] = MOVE_SUBSCRIPT_PTR_ATTACK_DOWN_1_STAGE,
+    [TERRAIN_ICE] = MOVE_SUBSCRIPT_PTR_FREEZE,
+    [TERRAIN_BUILDING] = MOVE_SUBSCRIPT_PTR_PARALYZE,
+    [TERRAIN_GREAT_MARSH] = MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE,
+    [TERRAIN_UNKNOWN] = MOVE_SUBSCRIPT_PTR_EVASION_DOWN_1_STAGE,
+    [TERRAIN_OTHERS] = MOVE_SUBSCRIPT_PTR_PARALYZE,
+    [TERRAIN_OTHERS + GRASSY_TERRAIN] = MOVE_SUBSCRIPT_PTR_SLEEP,
+    [TERRAIN_OTHERS + MISTY_TERRAIN] = MOVE_SUBSCRIPT_PTR_SP_ATTACK_DOWN_1_STAGE,
+    [TERRAIN_OTHERS + ELECTRIC_TERRAIN] = MOVE_SUBSCRIPT_PTR_PARALYZE,
+    [TERRAIN_OTHERS + PSYCHIC_TERRAIN] = MOVE_SUBSCRIPT_PTR_SPEED_DOWN_1_STAGE,
 };
 
 const ManagedSpriteTemplate sLevelUpNameplateTemplate = {

@@ -6481,10 +6481,13 @@ BOOL BtlCmd_GetTerrainSecondaryEffect(BattleSystem *battleSystem, BattleContext 
     BattleScriptIncrementPointer(ctx, 1);
 
     int terrain = BattleSystem_GetTerrainId(battleSystem);
-    if (terrain > 12) {
-        terrain = 12;
+    if (terrain > TERRAIN_OTHERS) {
+        terrain = TERRAIN_OTHERS;
     }
-    ctx->unk_2174 = sSecretPowerEffectTable[terrain];
+    if (ctx->terrainOverlayType != TERRAIN_NONE) {
+        terrain = TERRAIN_OTHERS + ctx->terrainOverlayType;
+    }
+    ctx->unk_2174 = MOVE_SIDE_EFFECT_TO_DEFENDER | sSecretPowerEffectTable[terrain];
 
     return FALSE;
 }
