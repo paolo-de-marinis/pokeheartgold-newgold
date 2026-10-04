@@ -441,8 +441,26 @@ static void Trainer_Apply(EvIvTrainer *app) {
 
 // ---- drawing ---------------------------------------------------------------------------------
 
+// A filled rectangle, x1 and y1 included. Written here four pixels at a time
+// where a tile's row allows: FillWindowPixelRect's pixel at a time took half
+// of a page's redraw, and an arrow held down redraws a page every few frames.
 static void Rect(Window *window, int x0, int y0, int x1, int y1, u8 colour) {
-    FillWindowPixelRect(window, colour, x0, y0, x1 - x0 + 1, y1 - y0 + 1);
+    u32 four = colour * 0x01010101;
+    int x, y;
+
+    for (y = y0; y <= y1; y++) {
+        u8 *row = (u8 *)window->pixelBuffer + (y / 8) * window->width * TILE_SIZE_8BPP + (y % 8) * 8;
+        for (x = x0; x <= x1;) {
+            u8 *pixel = row + (x / 8) * TILE_SIZE_8BPP + x % 8;
+            if ((x & 3) == 0 && x + 3 <= x1) {
+                *(u32 *)pixel = four;
+                x += 4;
+            } else {
+                *pixel = colour;
+                x++;
+            }
+        }
+    }
 }
 
 // A panel the summary's way: a dark rim two pixels wide.
@@ -473,7 +491,7 @@ static void Bar(Window *window, int x0, int y, int w, int value, int most) {
     }
 }
 
-static u8 *WindowPixel(Window *window, int x, int y) {
+static inline u8 *WindowPixel(Window *window, int x, int y) {
     return (u8 *)window->pixelBuffer + ((y / 8) * window->width + x / 8) * TILE_SIZE_8BPP + (y % 8) * 8 + x % 8;
 }
 
@@ -502,22 +520,33 @@ static void BlitTilesFlipped(Window *window, const u8 *tiles, int tw, int th, in
 
 // The same for the first `columns` tile columns of a block tw tiles wide,
 // unflipped: a printed string.
+// Two source pixels a byte, and a byte with neither drawn is skipped: a
+// string is mostly see-through, and an arrow held down redraws a page every
+// few frames.
 static void BlitTiles(Window *window, const u8 *tiles, int tw, int th, int columns, int x, int y, u8 base) {
+    int width = window->width * 8;
+    int height = window->height * 8;
     int tx, ty, px, py;
 
     for (ty = 0; ty < th; ty++) {
         for (tx = 0; tx < columns && tx < tw; tx++) {
-            const u8 *tile = tiles + (ty * tw + tx) * TILE_SIZE_4BPP;
-            for (py = 0; py < 8; py++) {
+            const u8 *row = tiles + (ty * tw + tx) * TILE_SIZE_4BPP;
+            for (py = 0; py < 8; py++, row += 4) {
                 int dy = y + ty * 8 + py;
-                if (dy < 0 || dy >= window->height * 8) {
+                if (dy < 0 || dy >= height) {
                     continue;
                 }
-                for (px = 0; px < 8; px++) {
-                    u8 v = (tile[py * 4 + px / 2] >> ((px & 1) * 4)) & 0xF;
+                for (px = 0; px < 8; px += 2) {
+                    u8 pair = row[px / 2];
                     int dx = x + tx * 8 + px;
-                    if (v != 0 && dx >= 0 && dx < window->width * 8) {
-                        *WindowPixel(window, dx, dy) = base + v;
+                    if (pair == 0) {
+                        continue;
+                    }
+                    if ((pair & 0xF) != 0 && dx >= 0 && dx < width) {
+                        *WindowPixel(window, dx, dy) = base + (pair & 0xF);
+                    }
+                    if ((pair >> 4) != 0 && dx + 1 >= 0 && dx + 1 < width) {
+                        *WindowPixel(window, dx + 1, dy) = base + (pair >> 4);
                     }
                 }
             }
@@ -1584,7 +1613,7 @@ static void Trainer_Act(EvIvTrainer *app, int hit, int step) {
 }
 
 #define HOLD_DELAY  16
-#define HOLD_REPEAT 2
+#define HOLD_REPEAT 1
 
 static void Trainer_HandleInput(EvIvTrainer *app) {
     int keys = gSystem.newKeys;
@@ -1663,7 +1692,9 @@ static void Trainer_HandleInput(EvIvTrainer *app) {
     if (app->state != STATE_INPUT || app->page != page) {
         return;
     }
-    if (app->topChanged) {
+    // While an arrow is held only the bottom screen follows it; the top
+    // catches up when it is let go.
+    if (app->topChanged && app->held == HIT_NONE) {
         Trainer_DrawTop(app);
     }
     if (hit != HIT_NONE || app->row != row || app->pressed != pressed) {
@@ -1800,8 +1831,9 @@ BOOL EvIvTrainer_Init(OverlayManager *manager, int *state) {
     app->options = Save_PlayerData_GetOptionsAddr(app->saveData);
     app->partyArgs = Heap_Alloc(app->heapID, sizeof(PartyMenuArgs));
     app->preview = AllocMonZeroed(app->heapID);
-    app->msgData = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, NARC_msg_msg_0829_bin, app->heapID);
-    app->setNames = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, EV_IV_TRAINER_SETS_BANK, app->heapID);
+    // Read whole: a redraw reads a hundred rows, and a lazy bank goes to the card for each.
+    app->msgData = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, NARC_msg_msg_0829_bin, app->heapID);
+    app->setNames = NewMsgDataFromNarc(MSGDATA_LOAD_DIRECT, NARC_msgdata_msg, EV_IV_TRAINER_SETS_BANK, app->heapID);
     app->msgFormat = MessageFormat_New(app->heapID);
     app->string = String_New(128, app->heapID);
 #ifdef NEWGOLD_DIAG
