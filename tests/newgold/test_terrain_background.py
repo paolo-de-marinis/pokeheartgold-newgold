@@ -17,6 +17,7 @@ import sys
 import unittest
 
 from test_level_cap import ROOT
+from test_repels import function
 
 sys.path.insert(0, str(ROOT / "tools/newgold/devkit"))
 from narccheck import members  # noqa: E402
@@ -120,6 +121,30 @@ class ScriptTests(unittest.TestCase):
         self.assertEqual(len(pairs), 13)
         for background, ground in pairs:
             self.assertEqual(background.removeprefix("BATTLE_BG_"), ground.removeprefix("TERRAIN_"))
+
+
+class DisplayTests(unittest.TestCase):
+    def test_the_tiles_go_to_vram_in_the_vblank_that_sends_their_colours(self):
+        # Written at once, while the screen was drawn, the tiles showed for a
+        # frame in the old colours: PaletteData sends the new ones at the
+        # next VBlank (the battle's VBlank work, ov12_02239730). The tiles go
+        # into the animations' copy, and a VWait task -- run after that work
+        # in the same VBlank (main.c) -- writes them.
+        source = (ROOT / "src/battle/battle_system.c").read_text()
+        change = function(source, "BattleSystem_ChangeBackground")
+        self.assertNotIn("GfGfxLoader_LoadCharData", change)
+        self.assertIn("battleSystem->unk220, chars->szByte", change)
+        draw = function(source, "BattleSystem_SetBackground")
+        self.assertNotIn("BG_LoadCharTilesData", draw)
+        self.assertIn("SysTask_CreateOnVWaitQueue(Task_BattleSystem_LoadBackgroundTiles, battleSystem,", draw)
+        task = function(source, "Task_BattleSystem_LoadBackgroundTiles")
+        self.assertIn("BG_LoadCharTilesData(battleSystem->bgConfig, GF_BG_LYR_MAIN_3, battleSystem->unk220, 0x10000, 0)", task)
+        vblank = (ROOT / "asm/overlay_12_022378C0.s").read_text()
+        vblank = vblank[vblank.index("thumb_func_start ov12_02239730"):vblank.index("thumb_func_end ov12_02239730")]
+        self.assertIn("bl PaletteData_PushTransparentBuffers", vblank)
+        main = (ROOT / "src/main.c").read_text()
+        self.assertLess(main.index("gSystem.vBlankIntr(gSystem.vBlankIntrArg)"),
+                        main.index("SysTaskQueue_RunTasks(gSystem.vwaitTaskQueue)"))
 
 
 if __name__ == "__main__":

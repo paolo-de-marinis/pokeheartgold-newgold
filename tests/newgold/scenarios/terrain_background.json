@@ -1,5 +1,5 @@
 {
-  "about": "A terrain draws its own background and the battle's own comes back when it ends (hg-engine's look; test_terrain_background.py). A forced wild level-5 Chansey against a level-50 Pikachu on Route 29's grass. The Pikachu lays Electric Terrain: the background is redrawn with member 351 of a/0/0/7; then Psychic Terrain over it: member 357; then the Chansey's Ice Spinner ends it and the battle's own, member 3 (BATTLE_BG_GENERAL's tiles), is redrawn. gDiagBattleBackground is the tiles' member each redraw was asked for (BattleSystem_ChangeBackground sets it before it loads them), read once each turn is over: the scenario sees that the controller's command 46 reached the display with those members, not the picture, and not that it came before the line (test_terrain_background.py holds that order); 0 until the first. The field's RNG is pinned as in rolls_forced_high.json.",
+  "about": "A terrain draws its own background and the battle's own comes back when it ends (hg-engine's look; test_terrain_background.py). A forced wild level-5 Chansey against a level-50 Pikachu on Route 29's grass. The Pikachu lays Electric Terrain: the background is redrawn with member 351 of a/0/0/7; then Psychic Terrain over it: member 357; then the Chansey's Ice Spinner ends it and the battle's own, member 3 (BATTLE_BG_GENERAL's tiles), is redrawn. gDiagBattleBackground is the tiles' member each redraw was asked for (BattleSystem_ChangeBackground sets it before it loads them), read once each turn is over: the scenario sees that the controller's command 46 reached the display with those members, not the picture, and not that it came before the line (test_terrain_background.py holds that order); 0 until the first. Each redraw's tiles go to VRAM in the VBlank after it, after the battle's VBlank work has sent the hardware its colours (Task_BattleSystem_LoadBackgroundTiles): gDiagBackgroundTilesLine is the scanline they started on, set to 0 before each turn here (it is set at the battle's start too) and within 192 to 262, the VBlank, after it; written at once, as before, the tiles showed for a frame in the old colours. The field's RNG is pinned as in rolls_forced_high.json.",
   "save": "route29-official.sav",
   "edit": ["--party", "PIKACHU:50"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
@@ -7,11 +7,13 @@
             {"expect": {"gDiagBattleBackground": 0}},
             "teach:0,0,MOVE_ELECTRIC_TERRAIN", "teach:0,1,MOVE_PSYCHIC_TERRAIN", "teach:0,2,MOVE_SPLASH",
             "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
-            "fight:1:1",
-            {"expect": {"lines": ["An electric current ran across the battlefield!"], "gDiagBattleBackground": 351}},
-            "fight:2:1",
-            {"expect": {"new_lines": ["The battlefield got weird!"], "gDiagBattleBackground": 357}},
-            "teach:1,0,MOVE_ICE_SPINNER", "fight:3:1"],
+            "poke:gDiagBackgroundTilesLine=0", "fight:1:1",
+            {"expect": {"lines": ["An electric current ran across the battlefield!"], "gDiagBattleBackground": 351,
+                        "gDiagBackgroundTilesLine": [192, 262]}},
+            "poke:gDiagBackgroundTilesLine=0", "fight:2:1",
+            {"expect": {"new_lines": ["The battlefield got weird!"], "gDiagBattleBackground": 357,
+                        "gDiagBackgroundTilesLine": [192, 262]}},
+            "teach:1,0,MOVE_ICE_SPINNER", "poke:gDiagBackgroundTilesLine=0", "fight:3:1"],
   "expect": {"new_lines": ["The wild Chansey used Ice Spinner!", "The weirdness disappeared from the battlefield."],
-             "gDiagBattleBackground": 3}
+             "gDiagBattleBackground": 3, "gDiagBackgroundTilesLine": [192, 262]}
 }

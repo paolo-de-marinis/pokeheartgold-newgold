@@ -884,9 +884,13 @@ void ov12_0223B870() {
 // its platforms, made again as sprites for BattleSystem_SetBackground to
 // paint in; the command carries each as a byte. Only the background's own
 // colours are loaded, 0 to 0x6F: the platforms' row and the message box's
-// come after them.
+// come after them. The tiles go into the copy the animations draw from
+// (unk220), not to VRAM: BattleSystem_SetBackground sends them there with
+// the colours.
 static void BattleSystem_ChangeBackground(BattleSystem *battleSystem, int background, int terrain) {
     int tiles, palette;
+    NNSG2dCharacterData *chars;
+    void *file;
 
     if (background == (u8)BATTLE_BG_CURRENT) {
         background = battleSystem->backgroundId;
@@ -904,12 +908,29 @@ static void BattleSystem_ChangeBackground(BattleSystem *battleSystem, int backgr
 #ifdef NEWGOLD_DIAG
     gDiagBattleBackground = tiles;
 #endif
-    GfGfxLoader_LoadCharData(NARC_a_0_0_7, tiles, battleSystem->bgConfig, GF_BG_LYR_MAIN_3, 0, 0, TRUE, HEAP_ID_BATTLE);
+    file = GfGfxLoader_GetCharData(NARC_a_0_0_7, tiles, TRUE, &chars, HEAP_ID_BATTLE);
+    MI_CpuCopy32(chars->pRawData, battleSystem->unk220, chars->szByte);
+    Heap_Free(file);
     PaletteData_LoadNarc(battleSystem->palette, NARC_a_0_0_7, palette, HEAP_ID_BATTLE, PLTTBUF_MAIN_BG, 0x70 * sizeof(u16), 0);
     if (terrain < TERRAIN_MAX) {
         ov12_02265FD4(&battleSystem->unk17C[0], battleSystem, 0, terrain);
         ov12_02265FD4(&battleSystem->unk17C[1], battleSystem, 1, terrain);
     }
+}
+
+// The background's tiles, painted, go to VRAM in the VBlank after
+// BattleSystem_SetBackground, after the battle's VBlank work
+// (ov12_02239730) has sent the hardware the colours PaletteData holds: the
+// next frame has both. Written at once, while the screen was being drawn,
+// a background drawn again showed its tiles in the old colours for a frame.
+static void Task_BattleSystem_LoadBackgroundTiles(SysTask *task, void *data) {
+    BattleSystem *battleSystem = data;
+
+#ifdef NEWGOLD_DIAG
+    gDiagBackgroundTilesLine = GX_GetVCount();
+#endif
+    BG_LoadCharTilesData(battleSystem->bgConfig, GF_BG_LYR_MAIN_3, battleSystem->unk220, 0x10000, 0);
+    SysTask_Destroy(task);
 }
 
 // SetBattleBackground's command, once the Pokemon are out: the two platforms,
@@ -934,12 +955,13 @@ void BattleSystem_SetBackground(BattleSystem *battleSystem) {
     } else {
         battleSystem->unk220 = Heap_Alloc(HEAP_ID_BATTLE, 0x10000);
         battleSystem->unk224 = Heap_Alloc(HEAP_ID_BATTLE, 0x200);
+        MI_CpuCopy32((void *)0x6010000, (u32 *)battleSystem->unk220, 0x10000);
     }
 
-    MI_CpuCopy32((void *)0x6010000, (u32 *)battleSystem->unk220, 0x10000);
     dst = (u32 *)battleSystem->unk224;
     src = (u32 *)PaletteData_GetUnfadedBuf(battleSystem->palette, PLTTBUF_MAIN_BG);
     MI_CpuCopy32(src, dst, 0x200);
+    SysTask_CreateOnVWaitQueue(Task_BattleSystem_LoadBackgroundTiles, battleSystem, 10);
 
     if (battleSystem->unk17C[0].unk0 == NULL) {
         return;
@@ -1003,8 +1025,6 @@ void BattleSystem_SetBackground(BattleSystem *battleSystem) {
             }
         }
     }
-
-    BG_LoadCharTilesData(battleSystem->bgConfig, 3, battleSystem->unk220, 0x10000, 0);
 
     ov12_02266008(&battleSystem->unk17C[0]);
     ov12_02266008(&battleSystem->unk17C[1]);

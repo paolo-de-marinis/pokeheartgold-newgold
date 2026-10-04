@@ -157,6 +157,12 @@ extern unsigned long gDiagLastBattleTerrain;
 // 0 until the first.
 extern unsigned long gDiagBattleBackground;
 
+// The battle background's tiles, the last time they went to VRAM
+// (Task_BattleSystem_LoadBackgroundTiles): the scanline they started on,
+// 192 to 262 in the VBlank, which is after the battle's VBlank work has sent
+// the hardware the colours. 0 until the first, at the battle's start.
+extern unsigned long gDiagBackgroundTilesLine;
+
 // The last battle animation that hid the health boxes as it played
 // (ov12_02261D30), a BATTLE_ANIMATION_* number: a weather's, a binding
 // move's damage, a terrain's start. 0 until the first.

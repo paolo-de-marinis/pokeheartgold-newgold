@@ -69,6 +69,7 @@ u32 gDiagLastBattleMap;
 u32 gDiagLastBattleBg;
 u32 gDiagLastBattleTerrain;
 u32 gDiagBattleBackground;
+u32 gDiagBackgroundTilesLine;
 u32 gDiagBattleAnimation;
 u32 gDiagMoveAnimationCount;
 u32 gDiagHealthBoxesHiddenBy;
