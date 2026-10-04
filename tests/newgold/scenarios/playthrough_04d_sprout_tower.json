@@ -1,5 +1,5 @@
 {
-  "about": "The playthrough's Sprout Tower, from Violet City's Pokemon Center: up the three floors by the navigator (the ladders' warps planned from the map data) to 3F, the sages who spot the player on the way -- Nico, Chow, Edmond, Jin and Neal, all Bellsprouts -- then down to the nurse. The party is the one the leg before caught, no edit: the Hoothoot from Route 31 leads, and the sages' experience, half again a wild Pokemon's and more for a Pokemon below the one it beats, takes it from level 5 towards the cap, 10; the Cyndaquil, at the cap, and the Geodude come after it. Then up to 3F again, where at night more than half of what comes out is a Misdreavus, levels 3 to 5: catch:SPECIES_MISDREAVUS, the healed Hoothoot's Peck to weaken it, and a ball. A Ghost is the party's answer to Elder Li's Meditite, whose Fake Out and Force Palm do nothing to it and which took the three others out at the cap, every time. The nurse and the game's save. The field's RNG is pinned and the battle's seed fixed.",
+  "about": "The playthrough's Sprout Tower, from Violet City's Pokemon Center: up the three floors by the navigator (the ladders' warps planned from the map data) to 3F, the sages who spot the player on the way -- Nico, Chow, Edmond, Jin and Neal, all Bellsprouts -- then down to the nurse. The party is the one the leg before caught, no edit: the Hoothoot from Route 31 leads, and the sages' experience, half again a wild Pokemon's and more for a Pokemon below the one it beats, takes it from level 5 towards the cap, 10; the Cyndaquil, at the cap, and the Geodude come after it. Then up to 3F again, where at night more than half of what comes out is a Misdreavus, levels 3 to 5: catch:SPECIES_MISDREAVUS, the healed Hoothoot's Peck to weaken it, and a ball -- the catch's battles on battle seed 2 (hold:): on the merged tree of round 14 the Misdreavus that comes is at 3, and on seed 1 it took all four of the bag's balls, leaving none for leg 04j's Mareep; on seed 2 the first ball holds, and the sages' battles keep seed 1 (44,387 frames as the joined chain plays it). A Ghost is the party's answer to Elder Li's Meditite, whose Fake Out and Force Palm do nothing to it and which took the three others out at the cap, every time. The nurse and the game's save. The field's RNG is pinned and the battle's seed fixed.",
   "from": "playthrough_04c_route_31",
   "hold": {
     "gDiagBattleSeed": 1
@@ -25,6 +25,7 @@
       }
     },
     "goto:MAP_SPROUT_TOWER_3F,14,23",
+    "hold:gDiagBattleSeed=2",
     "catch:SPECIES_MISDREAVUS",
     "pace:MAP_SPROUT_TOWER_3F,14,23,16,23,caught:SPECIES_MISDREAVUS,1,30000",
     "catch:none",
