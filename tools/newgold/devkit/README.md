@@ -423,9 +423,15 @@ Reading what the debug ROM records, and playing it without looking.
   asserted and where, the party before and after. No image. In a double
   battle it chooses for the second Pokemon too (read from the battle's own
   selection state) and touches the target screen by the move's range; the
-  player's own Revival Blessing gets the first fainted Pokemon. A move a
-  foe's ability turned away ("makes Ground moves miss by using Levitate!")
-  is not chosen against that foe again.
+  player's own Revival Blessing gets the first fainted Pokemon. It plays
+  as a player weighs a turn (`Scorer.choose`): the damage formula from the
+  battlers' stats, stages, types, abilities and items as the battle holds
+  them, each move's chance to land; a Potion from the bag or a healing
+  move when the HP wins the exchange; a status move where it pays; a
+  Pokemon from the bench brought in when it wins the exchange the one out
+  loses (`Scorer.relief`), and the best of the bench sent after a faint.
+  A move a foe's ability turned away ("makes Ground moves miss by using
+  Levitate!") is not chosen against that foe again.
   A new move a level-up brings to a Pokemon that knows four is learned or
   given up by a rule: the strongest damaging move of each type stays,
   strongest first, then the other damaging moves, then the rest, the move

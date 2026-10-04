@@ -1,0 +1,9 @@
+{
+  "about": "gym.py's player brings in the Pokemon that wins the exchange when the one out loses it (Scorer.relief): Bugsy's battle with a level-21 Geodude knowing Smack Down and Tackle and a level-22 Quilava knowing Flame Wheel and Ember. The Geodude's Smack Down knocks Ledian out; Scizor comes, whose Technician Bullet Punch, with its Metal Coat, takes the Geodude in a hit, and the Quilava's Flame Wheel is four times as strong against it: the Geodude is called back and the Quilava comes in, taking the Bullet Punch aimed at the Geodude (resisted). Before, the bot kept the Geodude in and it fell to the first Bullet Punch (round 15's first Bugsy probe). The battle's seed is fixed.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "GEODUDE:21::SMACK_DOWN+TACKLE,QUILAVA:22::FLAME_WHEEL+EMBER"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "goto:MAP_AZALEA_GYM,9,5", "A", "fight"],
+  "expect": {"lines": ["Geodude used Smack Down!", "The opposing Ledian fainted!", "Leader Bugsy sent out Scizor!",
+                       "Geodude, switch out!", "Go! Quilava!", "Quilava used Flame Wheel!"]}
+}

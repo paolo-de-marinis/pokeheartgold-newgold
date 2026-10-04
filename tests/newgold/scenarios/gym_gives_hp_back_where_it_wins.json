@@ -1,0 +1,9 @@
+{
+  "about": "gym.py's player uses the bag's Super Potion when its Pokemon would lose the exchange low on HP and the HP given wins it (Scorer.choose): Bugsy's battle with a level-22 Quilava knowing Flame Wheel and Ember, the bag holding two Potions and a Super Potion, the Quilava left with 10 HP (savedit --hp): Ledian, as fast, would knock it out before its second Flame Wheel; a Potion's 20 HP would not change that, the Super Potion's 50 does, so the Super Potion is used and not a Potion. Before, the bot never opened the bag but to throw a ball. The battle's seed is fixed.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "QUILAVA:22::FLAME_WHEEL+EMBER", "--hp", "1:10", "--bag", "POTION:2,SUPER_POTION:1"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "goto:MAP_AZALEA_GYM,9,5", "A", "fight"],
+  "expect": {"lines": ["Used the Super Potion!", "Quilava’s HP was restored by 50 point(s).", "Quilava used Flame Wheel!"],
+             "no_lines": ["Used the Potion!"]}
+}

@@ -415,6 +415,97 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(aimed_at(battlers((25, 50), (16, 0), (26, 50), (74, 40)), At, 2)[0], 74)
         self.assertEqual(aimed_at(battlers((25, 50), (16, 40), (0, 0), (0, 0)), At, 0)[0], 16)    # a single battle
 
+    def _picker(self):
+        """A Scorer and a battler maker for the picker's tests: stats as the
+        game computes them at a level (IVs 15, no EVs, a neutral nature)."""
+        sys.path[:0] = [str(ROOT / "tools/newgold/devkit/diag"), str(ROOT / "tools/newgold/devkit")]
+        from gym import Scorer
+        from savedit import ability_numbers, item_table, move_numbers, personal
+        scorer, moves, abilities = Scorer(), move_numbers(), ability_numbers()
+        items = {row["const"]: number for number, row in item_table().items()}
+
+        def mon(species, level, known, ability=None, item=None, hp=None, status=0, stages=None):
+            record, number = personal(species)
+            stat = {k: (2 * record[k] + 15) * level // 100 + 5 for k in ("atk", "def", "speed", "spatk", "spdef")}
+            max_hp = (2 * record["hp"] + 15) * level // 100 + level + 10
+            return {"species": number, "level": level, "hp": max_hp if hp is None else hp, "maxHp": max_hp,
+                    "atk": stat["atk"], "def": stat["def"], "speed": stat["speed"], "spAtk": stat["spatk"],
+                    "spDef": stat["spdef"], "stages": stages or [6] * 8, "types": scorer.types(number), "weight": 500,
+                    "moves": [moves[m] for m in known] + [0] * (4 - len(known)), "pp": [10] * 4,
+                    "ability": abilities[ability] if ability else 0, "item": items["ITEM_" + item] if item else 0,
+                    "status": status}
+        field = {"rain": False, "sun": False, "sides": (0, 0), "reflect": 1, "screen": 2, "veil": 1 << 15}
+        return scorer, mon, field, items
+
+    def test_gym_weighs_a_move_by_the_stats_it_meets(self):
+        # gym.py picked by power and type alone: Flame Wheel seven times into
+        # Bugsy's Shuckle, Defense 230, while Rock Tomb knocked the Quilava
+        # out. The picker now weighs the damage formula: the user's Attack or
+        # Sp. Atk against the foe's Defense or Sp. Def, at their stages, the
+        # foe's ability.
+        scorer, mon, field, _ = self._picker()
+        quilava = mon("QUILAVA", 22, ["FLAME_WHEEL", "EMBER"])
+        shuckle, ariados = mon("SHUCKLE", 20, ["ROCK_TOMB"]), mon("ARIADOS", 22, ["POISON_JAB"])
+        self.assertEqual(scorer.choose(quilava, shuckle, [0, 1], field)[:2], ("move", 0))     # its defenses alike
+        shuckle["def"] *= 3
+        self.assertEqual(scorer.choose(quilava, shuckle, [0, 1], field)[:2], ("move", 1))
+        self.assertEqual(scorer.choose(quilava, ariados, [0, 1], field)[:2], ("move", 0))     # Flame Wheel, the stronger
+        ariados["stages"] = [6, 6, 10, 6, 6, 6, 6, 6]                                         # Defense +4
+        self.assertEqual(scorer.choose(quilava, ariados, [0, 1], field)[:2], ("move", 1))
+        geodude, koffing = mon("GEODUDE", 20, ["BULLDOZE", "TACKLE"]), mon("KOFFING", 20, ["SLUDGE"], "LEVITATE")
+        self.assertEqual(scorer.hit(geodude["moves"][0], geodude, koffing, field), (0, 0))
+        self.assertEqual(scorer.choose(geodude, koffing, [0, 1], field)[:2], ("move", 1))
+
+    def test_gym_gives_hp_back_where_it_wins_the_exchange(self):
+        # A Potion from the bag when the Pokemon loses the exchange below half
+        # its HP and the HP given, the foe's hit taken in the turn, wins it;
+        # the smallest that does; not when it would only put off the loss,
+        # unless it is the last Pokemon. Round 15's first Bugsy probe spent
+        # five Potions keeping a Quilava alive against a Shuckle it could not
+        # beat.
+        scorer, mon, field, items = self._picker()
+        potion, super_potion = items["ITEM_POTION"], items["ITEM_SUPER_POTION"]
+        quilava = mon("QUILAVA", 22, ["FLAME_WHEEL"], hp=12)
+        foe = mon("PIDGEOTTO", 22, ["WING_ATTACK"], hp=40)
+        foe["speed"] = quilava["speed"] + 1
+        w = scorer.weigh(quilava, foe, [0], field)
+        self.assertFalse(w["wins"])
+        self.assertEqual(scorer.choose(quilava, foe, [0], field, {potion: 3, super_potion: 1})[:2], ("item", super_potion))
+        self.assertEqual(scorer.choose(quilava, foe, [0], field, {potion: 3})[0], "move")
+        self.assertEqual(scorer.choose(quilava, foe, [0], field, {potion: 3}, last=True)[:2], ("item", potion))
+        shuckle = mon("SHUCKLE", 20, ["ROCK_TOMB"])
+        self.assertEqual(scorer.choose(quilava, shuckle, [0], field, {potion: 3, super_potion: 1})[0], "move")
+        self.assertEqual(scorer.choose(dict(quilava, hp=50), foe, [0], field, {super_potion: 1})[0], "move")
+
+    def test_gym_uses_a_status_move_where_it_pays(self):
+        # Thunder Wave on a faster foe that takes three turns or more to
+        # knock out, while the user lasts two: not into a Ground type, not on
+        # one already paralyzed or with Limber, and not when an attack ends
+        # it sooner.
+        scorer, mon, field, _ = self._picker()
+        mareep = mon("MAREEP", 20, ["THUNDER_WAVE", "TACKLE"])
+        foe = mon("PIDGEOTTO", 24, ["GUST"])
+        self.assertEqual(scorer.choose(mareep, foe, [0, 1], field)[:3], ("move", 0, "paralyzes it"))
+        self.assertEqual(scorer.choose(mareep, dict(foe, status=1 << 6), [0, 1], field)[:2], ("move", 1))
+        self.assertEqual(scorer.choose(mareep, dict(foe, ability=7), [0, 1], field)[:2], ("move", 1))   # ABILITY_LIMBER
+        self.assertEqual(scorer.choose(mareep, mon("SANDSHREW", 24, ["SCRATCH"]), [0, 1], field)[:2], ("move", 1))
+        self.assertEqual(scorer.choose(mareep, dict(foe, hp=5), [0, 1], field)[:2], ("move", 1))
+
+    def test_gym_brings_in_the_pokemon_that_wins(self):
+        # A player brings in the Pokemon that wins the exchange, the hit it
+        # takes coming in counted, when the one out loses it: the round-15
+        # Bugsy probe's Geodude stayed in against Scizor's Bullet Punch while
+        # the Quilava, four times as strong against it, waited. After a faint
+        # the one sent is the best of the bench, not the first by slot.
+        scorer, mon, field, _ = self._picker()
+        geodude = mon("GEODUDE", 21, ["TACKLE", "ROCK_THROW", "BULLDOZE"])
+        scizor = mon("SCIZOR", 21, ["BULLET_PUNCH", "BUG_BITE", "AERIAL_ACE"], "TECHNICIAN", "METAL_COAT")
+        team = {1: mon("MISDREAVUS", 17, ["CONFUSION", "ASTONISH"]), 2: mon("QUILAVA", 22, ["FLAME_WHEEL", "EMBER"])}
+        self.assertEqual(scorer.relief(geodude, scizor, team, field), 2)
+        self.assertEqual(scorer.rank(team, scizor, field), [2, 1])
+        self.assertIsNone(scorer.relief(team[2], scizor, {0: geodude}, field))       # the Quilava wins it already
+        self.assertIsNone(scorer.relief(geodude, scizor, {1: team[1], 3: None}, field))
+
     def test_a_foe_that_gave_its_move_is_asked_again_by_teach(self):
         # A foe gives its move as the turn's choosing starts, and the battle
         # runs the slot it gave: asked before teach:, one ran a slot teach:

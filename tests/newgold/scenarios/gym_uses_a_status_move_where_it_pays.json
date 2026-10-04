@@ -1,0 +1,8 @@
+{
+  "about": "gym.py's player uses a status move where it pays (Scorer.status_pays): Bugsy's battle with a level-15 Mareep knowing Thunder Wave and Thunder Shock. Ledian is faster and its Light Screen leaves the Thunder Shock three turns or more from knocking it out, while the Mareep lasts more than two of its hits: Thunder Wave first, then Thunder Shock into the paralyzed Ledian. Before, the bot used a status move only when nothing else was left. The battle's seed is fixed.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "MAREEP:15::THUNDER_WAVE+THUNDER_SHOCK"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "goto:MAP_AZALEA_GYM,9,5", "A", "fight::2"],
+  "expect": {"lines": ["Mareep used Thunder Wave!", "paralyzed", "Mareep used Thunder Shock!"]}
+}

@@ -60,8 +60,9 @@ def sealed(raw):
 
 def mons(ram, elf):
     """The party as the game holds it, each Pokemon in its order: species,
-    item, exp, level, hp, maxHp, its four moves, and whether it was sealed
-    (above)."""
+    item, exp, level, hp, maxHp, its four moves and their PP, its other
+    stats, ability and status, whether it is an egg, and whether it was
+    sealed (above)."""
     memory = where.Memory(ram)
     base = block(memory, elf, where.SAVE_PARTY)
     out = []
@@ -71,14 +72,18 @@ def mons(ram, elf):
         personality, checksum = struct.unpack_from("<IxxH", raw, 0)
         blocks = savedit.mon_crypt(bytes(raw[8:8 + 4 * BLOCK_A_SIZE]), checksum)
         first = savedit.shuffle_order(personality)[0] * BLOCK_A_SIZE
-        species, item, _, exp = struct.unpack_from("<HHII", blocks, first)
-        moves = list(struct.unpack_from("<4H", blocks, savedit.shuffle_order(personality)[1] * BLOCK_A_SIZE))
+        species, item, _, exp, _, ability = struct.unpack_from("<HHIIBB", blocks, first)
+        second = savedit.shuffle_order(personality)[1] * BLOCK_A_SIZE
+        moves, pp = list(struct.unpack_from("<4H", blocks, second)), list(blocks[second + 8:second + 12])
+        egg = struct.unpack_from("<I", blocks, second + 0x10)[0] >> 30 & 1     # PokemonDataBlockB.isEgg
         stats = savedit.mon_crypt(bytes(raw[savedit.BOX_MON:]), personality)
-        level, _, hp, max_hp, *rest = struct.unpack_from("<BBHHHHHHH", stats, 4)
+        status, level, _, hp, max_hp, *rest = struct.unpack_from("<IBBHHHHHHH", stats, 0)
         a, b = (blocks[savedit.shuffle_order(personality)[i] * BLOCK_A_SIZE:][:BLOCK_A_SIZE] for i in (0, 1))
         ivword = struct.unpack_from("<I", b, 0x10)[0]
+        # NewGold keeps the ability's ninth bit in experience's top bit (PokemonDataBlockA).
         out.append({"species": species, "item": item, "exp": exp, "level": level, "hp": hp, "maxHp": max_hp,
-                    "moves": moves, "sealed": sealed(raw),
+                    "moves": moves, "pp": pp, "ability": ability | (exp >> 31) << 8, "status": status, "egg": egg,
+                    "sealed": sealed(raw),
                     # the stats in STAT_* order after HP, the EVs and IVs in the record's, and
                     # Hyper Training's bits as a mask, bit 0 STAT_HP's (savedit.hyper_trained)
                     **dict(zip(("atk", "def", "speed", "spatk", "spdef"), rest)),
