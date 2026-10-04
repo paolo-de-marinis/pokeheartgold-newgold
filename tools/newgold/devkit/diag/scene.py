@@ -139,7 +139,9 @@ is a value read out of main RAM by name, through the ELF's symbols and the
 offsets the tree's own headers give: map, x, y, party (the count),
 partyN.species|item|level|exp|hp|maxHp|moveK (the party as its save block
 holds it, slot N from 0, move K from 0, once the field is up: what a battle
-gave back),
+gave back), partyN.atk|def|speed|spatk|spdef (its stats), partyN.evK|ivK
+(its EVs and IVs, K in the record's order: HP, Attack, Defense, Speed,
+Sp. Atk, Sp. Def), partyN.hyper (its Hyper trained stats, a mask, bit 0 HP),
 bag:ITEM_... (how many the bag holds), badges, money, running_shoes (1 once the
 player has them: PlayerSaveData's, which no flag says),
 options.textSpeed|soundMethod|battleStyle|battleScene|buttonMode|frame (the
@@ -201,7 +203,8 @@ BATTLE_MAIN = STATES.index("BATTLE_MAIN")
 BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item",
                   *(f"move{k}" for k in range(4)), *(f"pp{k}" for k in range(4)), "form", "movePos")
 # party.mons' keys, the fields a scenario may name.
-PARTY_FIELDS = ("species", "item", "level", "exp", "hp", "maxHp", *(f"move{k}" for k in range(4)))
+PARTY_FIELDS = ("species", "item", "level", "exp", "hp", "maxHp", *(f"move{k}" for k in range(4)),
+                "atk", "def", "speed", "spatk", "spdef", *(f"ev{k}" for k in range(6)), *(f"iv{k}" for k in range(6)), "hyper")
 # The Options bitfields (include/options.h), the settings a scenario may name.
 OPTION_FIELDS = ("textSpeed", "soundMethod", "battleStyle", "battleScene", "buttonMode", "frame")
 CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/species.h",
@@ -1621,6 +1624,8 @@ class Scene:
             mons = self.mons()
             if int(slot) >= len(mons):
                 return None
+            if field[:2] in ("ev", "iv") and field[2:].isdigit():
+                return mons[int(slot)][field[:2] + "s"][int(field[2:])]
             return mons[int(slot)]["moves"][int(field[4:])] if field.startswith("move") else mons[int(slot)][field]
         if name.startswith("caught:"):
             return self.caught(ram, self.number(name[len("caught:"):]))

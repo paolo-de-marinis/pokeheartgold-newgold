@@ -66,6 +66,14 @@ class ScenarioFileTests(unittest.TestCase):
         for key in ("party6.item", "party0.moves", "bag:ORAN_BERRY"):
             self.assertFalse(scene.readable(key, key=True), key)
 
+    def test_a_scenario_can_read_what_the_ev_iv_trainer_changes(self):
+        # The money paid, the EVs and IVs in the record's order, the stats
+        # they make, and the Hyper trained ones as a mask.
+        for key in ("money", "party0.ev0", "party5.ev5", "party0.iv3", "party0.atk", "party0.spdef", "party2.hyper"):
+            self.assertTrue(scene.readable(key, key=True), key)
+        for key in ("party0.ev6", "party0.evs", "party0.hp_ev", "cash"):
+            self.assertFalse(scene.readable(key, key=True), key)
+
     def test_every_scenario_is_one_scene_py_can_play(self):
         # A typo in a step or an expectation is found here, without the
         # emulator, rather than twenty seconds into a run.

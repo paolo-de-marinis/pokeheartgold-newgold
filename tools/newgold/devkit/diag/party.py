@@ -74,9 +74,16 @@ def mons(ram, elf):
         species, item, _, exp = struct.unpack_from("<HHII", blocks, first)
         moves = list(struct.unpack_from("<4H", blocks, savedit.shuffle_order(personality)[1] * BLOCK_A_SIZE))
         stats = savedit.mon_crypt(bytes(raw[savedit.BOX_MON:]), personality)
-        level, _, hp, max_hp = struct.unpack_from("<BBHH", stats, 4)
+        level, _, hp, max_hp, *rest = struct.unpack_from("<BBHHHHHHH", stats, 4)
+        a, b = (blocks[savedit.shuffle_order(personality)[i] * BLOCK_A_SIZE:][:BLOCK_A_SIZE] for i in (0, 1))
+        ivword = struct.unpack_from("<I", b, 0x10)[0]
         out.append({"species": species, "item": item, "exp": exp, "level": level, "hp": hp, "maxHp": max_hp,
-                    "moves": moves, "sealed": sealed(raw)})
+                    "moves": moves, "sealed": sealed(raw),
+                    # the stats in STAT_* order after HP, the EVs and IVs in the record's, and
+                    # Hyper Training's bits as a mask, bit 0 STAT_HP's (savedit.hyper_trained)
+                    **dict(zip(("atk", "def", "speed", "spatk", "spdef"), rest)),
+                    "evs": list(a[0x10:0x16]), "ivs": [(ivword >> (5 * i)) & 0x1F for i in range(6)],
+                    "hyper": sum(1 << i for i, on in enumerate(savedit.hyper_trained(b)) if on)})
     return out
 
 
