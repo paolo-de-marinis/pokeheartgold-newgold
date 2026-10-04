@@ -4191,7 +4191,9 @@ def main():
     parser.add_argument("--where", metavar="MAP:X:Y[:DIR]",
                         help="put the player on a map, the way the save records it: "
                              "LocalFieldData.currentPosition, which is a Location of "
-                             "mapId, warpId, x, y and direction")
+                             "mapId, warpId, x, y and direction; Continue enters the map as "
+                             "a warp does, a gym in its first state (Azalea's Spinarak at "
+                             "their starts, none in Bugsy's room)")
     parser.add_argument("--from-ram", type=Path,
                         help="a boot_check memory dump; the game lays out a whole "
                              "save region before the title screen, and this seals it "

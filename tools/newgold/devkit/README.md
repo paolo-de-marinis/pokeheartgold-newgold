@@ -39,6 +39,16 @@ Pokemon a move as a machine does (the playthrough's bot teaches its HM
 from the bag now, scene.py's `machine:`). The gym saves in
 `~/hgss-saves/gyms` are made with it; their README says how.
 
+A warp builds the map as walking in through its door does: the game clears
+the gym's state and the map's OnTransition script writes its first one
+(`InitAzaleaGym` and the others in `src/gymmick_init.c`), whatever the save
+held, so a player put past a gym's puzzle stands in a gym set for the
+door. In Azalea Gym that means no Spinarak in the top row, stations 9 to
+11: a player put in Bugsy's room (`gyms/bugsy.sav`) has none to ride out
+on, and a step onto its station counts an assert
+(`BeginAzaleaGymSpinarakRide`). Only a save the game made in the room
+keeps the Spinarak that brought the player there.
+
 It is a library as well: every option is a function of a `Save`, and it
 reads everything else -- the party and all nine hundred box slots decoded,
 the bag, the Dex, the position, any flag or variable by name -- with the
