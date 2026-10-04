@@ -479,6 +479,33 @@ int main(void) {
     NoteHeldItemGiven(&bs, &ctx, 0, 3);
     assert(ctx.heldItemsGiven == 1 << 1);
 
+    // An empty hand hands nothing over. The player's Pokemon eats its own
+    // Oran Berry (the tag stays, for Recycle), then the trainer's Bestow
+    // gives it the Leftovers, or its own Trick takes them: nobody is marked,
+    // and the Berry stays eaten. Before, the tag left on the empty hand
+    // marked the Berry as handed over, and it came back.
+    reset(&bs, &ctx);
+    NoteHeldItemUsedUp(&bs, &ctx, 0);
+    ctx.battleMons[0].item = ITEM_NONE;
+    NoteHeldItemGiven(&bs, &ctx, 1, 0);
+    assert(ctx.heldItemsGiven == 0 && ctx.heldItemsTaken == 0 && tag(&bs, &ctx, 0) == 0 && tag(&bs, &ctx, 1) == 0);
+    reset(&bs, &ctx);
+    NoteHeldItemUsedUp(&bs, &ctx, 0);
+    ctx.battleMons[0].item = ITEM_NONE;
+    NoteHeldItemGiven(&bs, &ctx, 0, 1);
+    assert(ctx.heldItemsGiven == 0 && ctx.heldItemsTaken == 0 && tag(&bs, &ctx, 0) == 0 && tag(&bs, &ctx, 1) == 0);
+    // In a wild battle, a Focus Sash used up and then the wild Pokemon's
+    // Leftovers Tricked off it: nothing marked, so the Sash is the
+    // Pokemon's again and the Leftovers go to the bag (GiveBackHeldItems).
+    // Before, the Sash was marked as handed over and lost.
+    reset(&bs, &ctx);
+    bs.type = BATTLE_TYPE_DOUBLES;
+    ctx.battleMons[0].item = ctx.itemsToRestore[1] = ITEM_FOCUS_SASH;
+    NoteHeldItemUsedUp(&bs, &ctx, 0);
+    ctx.battleMons[0].item = ITEM_NONE;
+    NoteHeldItemGiven(&bs, &ctx, 0, 1);
+    assert(ctx.heldItemsGiven == 0 && ctx.heldItemsTaken == 0 && ctx.itemsToRestore[1] == ITEM_FOCUS_SASH);
+
     // Its own Oran Berry handed over by Trick, Tricked back, taken by Thief
     // and taken back, then eaten by itself: eaten, the marks gone, so it is
     // not had back again when the battle is over.

@@ -7270,19 +7270,26 @@ void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battl
 // against a trainer; GiveBackHeldItems), unless the one it went to uses it
 // up (NoteHeldItemUsedUp). A wild Pokemon caught with it keeps it
 // (CaughtMonKeepsItem). Whose item each is goes with it (heldItemOwner).
+// An empty hand hands nothing over: its tag is the item it used up, kept for
+// Recycle and Harvest (NoteHeldItemUsedUp), and the hand it goes to gets no
+// tag. Before, a Pokemon that had eaten its Berry and was then given an item
+// by Bestow, or Tricked one off a foe, was marked as handing its Berry over:
+// it had the Berry back after a trainer battle, and after a wild one its
+// used-up item was lost and the item it got went to the bag.
 void NoteHeldItemGiven(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdA, int battlerIdB) {
     int a = Battler_PartySlot(battleSystem, ctx, battlerIdA);
     int b = Battler_PartySlot(battleSystem, ctx, battlerIdB);
-    int owner = ctx->heldItemOwner[a];
+    int ownerA = ctx->battleMons[battlerIdA].item != ITEM_NONE ? ctx->heldItemOwner[a] : 0;
+    int ownerB = ctx->battleMons[battlerIdB].item != ITEM_NONE ? ctx->heldItemOwner[b] : 0;
 
-    if (owner == a + 1) {
+    if (ownerA == a + 1) {
         ctx->heldItemsGiven |= MaskOfFlagNo(a);
     }
-    if (ctx->heldItemOwner[b] == b + 1) {
+    if (ownerB == b + 1) {
         ctx->heldItemsGiven |= MaskOfFlagNo(b);
     }
-    ctx->heldItemOwner[a] = ctx->heldItemOwner[b];
-    ctx->heldItemOwner[b] = owner;
+    ctx->heldItemOwner[a] = ownerB;
+    ctx->heldItemOwner[b] = ownerA;
 }
 
 // battlerId is using up the item it holds: eating its Berry, or losing it to
