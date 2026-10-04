@@ -69,6 +69,8 @@ typedef struct {
 } PokedexAppData;
 static u16 gTypes[2];
 static int Pokedex_GetSeenFormByIdx(Pokedex *pokedex, u32 species, int idx) { return 0; }
+/* the species itself: none of these was seen first as one of its forms */
+static u16 PokedexApp_ShownSpecies(PokedexAppData *app, u16 species) { return species; }
 static u16 GetMonBaseStat_HandleAlternateForm(u32 species, int form, int stat) { return gTypes[stat == BASE_TYPE2]; }
 static void ov18_021F21FC(PokedexAppData *app, int spriteIdx, u16 type) { shown[spriteIdx] = type; }
 @NATIVE@
