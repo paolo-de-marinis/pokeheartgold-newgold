@@ -24,4 +24,32 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Welcome to the Pokémon\nCommunication Club Colosseum.\r...Oh, I was just trying to learn that\nline by heart.\rIt’ll take a little longer before\nwe open the Colosseum.</language>
 	</row>
+	<row id="msg_0552_T21PC0101_00006" index="6">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hi! I’m a Pokémon trainer of a\nspecial kind.\rI can set a Pokémon’s EVs for you,\nby hand or from one of my sets.\rI can also Hyper train it with\nBottle Caps, once it reaches Lv. 50.\rWhat would you like to do?</language>
+	</row>
+	<row id="msg_0552_T21PC0101_00007" index="7">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Train a Pokémon</language>
+	</row>
+	<row id="msg_0552_T21PC0101_00008" index="8">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Buy Bottle Caps</language>
+	</row>
+	<row id="msg_0552_T21PC0101_00009" index="9">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Cancel</language>
+	</row>
+	<row id="msg_0552_T21PC0101_00010" index="10">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bottle Caps are what Hyper Training\ntakes. Have a look!</language>
+	</row>
+	<row id="msg_0552_T21PC0101_00011" index="11">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Come back anytime!</language>
+	</row>
+	<row id="msg_0552_T21PC0101_00012" index="12">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Your Pokémon will thank you.\nCome back anytime!</language>
+	</row>
 </body>

@@ -129,6 +129,9 @@ const u16 _020FBAA8[] = { ITEM_STEEL_MAIL, ITEM_NET_BALL, ITEM_HEAL_BALL, 0xFFFF
 const u16 _020FBB16[] = { ITEM_POKE_DOLL, ITEM_FRESH_WATER, ITEM_SODA_POP, ITEM_LEMONADE, ITEM_REPEL, ITEM_HEART_MAIL, 0xFFFF };
 const u16 _020FBAB8[] = { ITEM_TINYMUSHROOM, ITEM_POKE_BALL, ITEM_POTION, 0xFFFF };
 const u16 _020FBBD8[] = { ITEM_GREAT_BALL, ITEM_SUPER_POTION, ITEM_HYPER_POTION, ITEM_ANTIDOTE, ITEM_PARLYZ_HEAL, ITEM_SUPER_REPEL, ITEM_REVIVE, ITEM_AIR_MAIL, 0xFFFF };
+// New Gold: the EV/IV trainer in Cherrygrove's Pokemon Center sells the Bottle
+// Caps Hyper Training takes, at their price (scr_seq_0852's SpecialMartBuy 30).
+const u16 sEvIvTrainerCaps[] = { ITEM_BOTTLE_CAP, ITEM_GOLD_BOTTLE_CAP, 0xFFFF };
 
 const u16 *_0210FA3C[] = {
     _020FBA54,
@@ -161,6 +164,7 @@ const u16 *_0210FA3C[] = {
     _020FBB16,
     _020FBAB8,
     _020FBBD8,
+    sEvIvTrainerCaps,
 };
 
 // Goldenrod's TM floor (the Department Store's 5F, special mart list 7):

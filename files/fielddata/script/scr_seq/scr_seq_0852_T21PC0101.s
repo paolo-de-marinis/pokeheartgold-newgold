@@ -11,6 +11,7 @@
 	ScrDef scr_seq_T21PC0101_003
 	ScrDef scr_seq_T21PC0101_004
 	ScrDef scr_seq_T21PC0101_005
+	ScrDef scr_seq_T21PC0101_006
 	ScrDefEnd
 
 scr_seq_T21PC0101_000:
@@ -49,5 +50,55 @@ scr_seq_T21PC0101_001:
 
 scr_seq_T21PC0101_002:
 	SimpleNPCMsg msg_0552_T21PC0101_00001
+	End
+
+; New Gold's EV/IV trainer: the trainer app for a Pokemon of the party, and
+; the Bottle Caps Hyper Training takes, at their price.
+scr_seq_T21PC0101_006:
+	PlaySE SEQ_SE_DP_SELECT
+	LockAll
+	FacePlayer
+	NPCMsg msg_0552_T21PC0101_00006
+	TouchscreenMenuHide
+	MenuInit 1, 1, 0, 1, VAR_SPECIAL_RESULT
+	MenuItemAdd msg_0552_T21PC0101_00007, 255, 0
+	MenuItemAdd msg_0552_T21PC0101_00008, 255, 1
+	MenuItemAdd msg_0552_T21PC0101_00009, 255, 2
+	MenuExec
+	TouchscreenMenuShow
+	Switch VAR_SPECIAL_RESULT
+	Case 0, _EvIvTrain
+	Case 1, _EvIvCaps
+	GoTo _EvIvBye
+	End
+
+_EvIvTrain:
+	FadeScreen 6, 1, 0, RGB_BLACK
+	WaitFade
+	CloseMsg
+	EvIvTrainer VAR_SPECIAL_x8000
+	RestoreOverworld
+	FadeScreen 6, 1, 1, RGB_BLACK
+	WaitFade
+	Compare VAR_SPECIAL_x8000, 0
+	GoToIfEq _EvIvBye
+	NPCMsg msg_0552_T21PC0101_00012
+	WaitButton
+	CloseMsg
+	ReleaseAll
+	End
+
+_EvIvCaps:
+	NPCMsg msg_0552_T21PC0101_00010
+	WaitButton
+	SpecialMartBuy 30 ; the Bottle Caps, scrcmd_mart.c
+	GoTo _EvIvBye
+	End
+
+_EvIvBye:
+	NPCMsg msg_0552_T21PC0101_00011
+	WaitButton
+	CloseMsg
+	ReleaseAll
 	End
 	.balign 4, 0

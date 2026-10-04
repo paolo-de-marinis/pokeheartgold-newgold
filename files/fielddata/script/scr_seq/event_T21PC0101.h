@@ -7,6 +7,7 @@
 #define _EV_scr_seq_T21PC0101_003 3
 #define _EV_scr_seq_T21PC0101_004 4
 #define _EV_scr_seq_T21PC0101_005 5
+#define _EV_scr_seq_T21PC0101_006 6
 
 #define obj_T21PC0101_pcwoman1    0
 #define obj_T21PC0101_pcwoman2    1
@@ -18,5 +19,6 @@
 #define obj_T21PC0101_pcwoman1_2  7
 #define obj_T21PC0101_pcwoman2_4  8
 #define obj_T21PC0101_pcwoman2_5  9
+#define obj_T21PC0101_gswoman2    10
 
 #endif // SCR_SEQ_T21PC0101_H_
