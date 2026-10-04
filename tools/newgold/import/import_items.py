@@ -44,6 +44,9 @@ WHAT COMES OUT OF WHERE
     src/item.c                             sItemNarcIds
     tools/newgold/import/item_map.csv             the mapping
 
+then machine_items.py gives TM93 to TM148, which sit on the reference's
+TM items, their own move's description and type's disc.
+
 An icon is resolved by ARCHIVE MEMBER, never by name: data/graphics/itemgra.mk
 keys a PNG by the member, which is the item's id plus two, and 1634 of those
 PNGs are byte-identical to none.png -- snowball_pla.png is not the Snowball's.
@@ -67,6 +70,7 @@ import shutil
 from pathlib import Path
 
 import gmm
+import machine_items
 
 ROOT = Path(__file__).resolve().parents[3]
 ITEMS_H = ROOT / "include/constants/items.h"
@@ -479,6 +483,10 @@ def item_text(revision, reference=gmm.REFERENCE):
             if number not in engine:
                 engine[number] = gmm.reference_rows(revision, number, reference)
             out[bank][ours] = engine[number][offset] if offset < len(engine[number]) else ""
+    # TM93 to TM148 sit on the reference's TM items but teach other moves:
+    # their descriptions are machine_items.py's, left as they are here.
+    for item, _ in machine_items.machines_past_hm08():
+        out[221].pop(item, None)
     return out
 
 
@@ -615,6 +623,8 @@ def main():
                 print(f"  {index}: {old!r} -> {new!r}")
         if not args.write:
             print("\nnothing written; pass --write")
+        else:
+            machine_items.apply(True)
         return
 
     reference = Reference(args.reference)
@@ -786,6 +796,7 @@ def main():
         writer.writerow(["reference_id", "reference_name", "item_id", "item_name"])
         writer.writerows(mapping)
     write_text(item_text(args.revision, args.reference), count, True)
+    machine_items.apply(True)
     print(f"\nwritten; {ITEM_MAP.relative_to(ROOT)} holds {len(mapping)} names")
 
 

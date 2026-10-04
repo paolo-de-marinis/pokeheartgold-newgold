@@ -354,6 +354,32 @@ int main(void) {
 """
 
 
+class MachineItemTextTests(unittest.TestCase):
+    """TM93 to TM148 sit on hg-engine's TM items; each shows its own move's
+    description and its type's disc, not the move hg-engine's taught."""
+
+    def test_each_shows_its_own_move(self):
+        result = subprocess.run([sys.executable, ROOT / "tools/newgold/import/machine_items.py", "--check"],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+        import gmm
+        import machine_items
+        ids = item_ids()
+        rows = gmm.read(221)
+        # TM101 was hg-engine's Power Gem; New Gold's is Smack Down.
+        self.assertTrue(rows[ids["ITEM_TM101"]]["text"].startswith("A projectile is thrown at the opponent."),
+                        rows[ids["ITEM_TM101"]]["text"])
+        for item, _ in machine_items.machines_past_hm08():
+            self.assertLessEqual(rows[item]["text"].count("\\n"), 2, item)     # three lines at most
+        source = (ROOT / "src/item.c").read_text()
+        start, end = machine_items.icon_table(source)
+        icons = [int(n) for n in re.findall(r"\d+", source[start:end])]
+        disc = lambda name: icons[ids[name] - machine_items.first_imported()]  # noqa: E731
+        self.assertEqual((disc("ITEM_TM093"), disc("ITEM_TM101"), disc("ITEM_TM146"), disc("ITEM_TM094")),
+                         tuple(machine_items.TYPE_DISC[t] for t in ("ELECTRIC", "ROCK", "FAIRY", "NORMAL")))
+
+
 class LegacyMachineTests(unittest.TestCase):
     """A save from before TM93 to TM148 holds hg-engine's machines; loading
     it makes each New Gold's machine with its move, or drops it."""
