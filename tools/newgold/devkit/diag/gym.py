@@ -1046,9 +1046,11 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     def send(ram):
         """The Pokemon the party screen after a faint or a pivot sends: of
         reserves(), the one Scorer.rank puts first against the foe the
-        player's first faces; the first of them when it cannot weigh."""
+        player's first faces; the first of them when it cannot weigh, and
+        when the battle is played with a fixed move (fight:N), as a
+        scenario that sets up its battle does."""
         slots = reserves(ram, markers)
-        seen_now = facing(ram) if len(slots) > 1 else None
+        seen_now = facing(ram) if len(slots) > 1 and move < 0 else None
         if not seen_now or not seen_now[2]["hp"]:
             return slots[0]
         try:
