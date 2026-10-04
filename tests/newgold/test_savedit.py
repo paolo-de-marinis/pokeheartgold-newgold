@@ -556,6 +556,26 @@ class SaveditLibraryTests(unittest.TestCase):
         heat = sv.edit_mon(sv.seal_mon(mon), moves=[moves["OVERHEAT"], moves["THUNDER_SHOCK"]])
         self.assertEqual([m["name"] for m in sv.describe_mon(heat)["moves"]], ["Overheat", "Thunder Shock"])
 
+    def test_a_party_pokemon_takes_a_form(self):
+        """--form SLOT:FORM (edit_mon's form): a Rotom put in its Heat form
+        keeps everything but the form and the stats, which are the Heat
+        form's personal record's, as ResolveMonForm reads it; a form the
+        species has no record for is refused."""
+        n = sv.species_numbers()
+        me = sv.owner(self.open())
+        rotom = sv.new_mon(n["ROTOM"], 30, me)
+        before, heat = sv.describe_mon(rotom), sv.describe_mon(sv.edit_mon(rotom, form=1))
+        self.assertEqual((before["form"], heat["form"]), (0, 1))
+        self.assertEqual(sv.personal_row(n["ROTOM"], 1), n["ROTOM_HEAT"])
+        wanted = sv.stat_line(sv.personal_records()[n["ROTOM_HEAT"]], 30, heat["ivs"], heat["evs"], heat["nature"])
+        self.assertEqual(heat["stats"], wanted)
+        self.assertNotEqual(heat["stats"], before["stats"])
+        self.assertEqual({k: v for k, v in heat.items() if k not in ("form", "stats", "hp", "types")},
+                         {k: v for k, v in before.items() if k not in ("form", "stats", "hp", "types")})
+        for species, form in ((n["ROTOM"], 6), (n["PIKACHU"], 1)):
+            with self.assertRaises(ValueError):
+                sv.edit_mon(sv.new_mon(species, 30, me), form=form)
+
     def test_the_blackthorn_tutor_teaches_a_type(self):
         """scr_seq_0948_T30R0601.s teaches Draco Meteor to a Pokemon that
         GetMonTypes calls Dragon: Druddigon and Applin, with no tutor bit of

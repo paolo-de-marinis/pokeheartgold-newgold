@@ -2344,7 +2344,7 @@ def _set_party_stats(mon, level):
 
 
 def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
-             ivs=None, evs=None, friendship=None, ability=None):
+             ivs=None, evs=None, friendship=None, ability=None, form=None):
     """One stored Pokemon with these things changed as the game changes them,
     and everything else -- its trainer, its ribbons, its met data -- as it was.
 
@@ -2360,8 +2360,10 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
     is a new personality (personality_for_nature) with any Mint taken away;
     a move it already knew keeps its PP and PP Ups, a new one gets full PP,
     and PP above GetMoveMaxPP's (an older editor wrote 40) come down to it.
-    A party Pokemon's stats follow. Illegal, a ValueError, says what the
-    species cannot have.
+    A form is one ResolveMonForm gives base stats of their own (a Rotom's
+    appliances, 1 Heat to 5 Mow), its stats with it, as the Rotom Catalog
+    changes it. A party Pokemon's stats follow. Illegal, a ValueError, says
+    what the species cannot have.
     """
     mon = open_mon(raw)
     if mon is None or not mon["ok"]:
@@ -2372,7 +2374,7 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
     ot_id = struct.unpack_from("<I", a, 4)[0]
     exp = struct.unpack_from("<I", a, 8)[0] & EXP_BITS
     current = mon["party"][4] if mon["party"] is not None else level_for(records[old_species]["growthRate"], exp)
-    restat = any(v is not None for v in (level, nature, ivs, evs)) or (species not in (None, old_species))
+    restat = any(v is not None for v in (level, nature, ivs, evs, form)) or (species not in (None, old_species))
     knew = [struct.unpack_from("<H", b, 2 * i)[0] for i in range(MAX_MON_MOVES)]
     if level is not None and not 1 <= level <= MAX_LEVEL:
         raise ValueError(f"a level is 1 to {MAX_LEVEL}")
@@ -2393,6 +2395,11 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
         knew = []
         if ability is None:
             _set_ability(mon)
+    if form is not None:
+        kept = struct.unpack_from("<H", a, 0)[0]
+        if form and not (kept in form_rows() and form < form_rows()[kept][1]):
+            raise ValueError(f"{species_name(kept)} has no form {form} of its own (ResolveMonForm)")
+        b[0x18] = (b[0x18] & 7) | form << 3
     if ability is not None:
         _choose_ability(mon, ability)
     if level is not None:
@@ -4178,6 +4185,9 @@ def main():
     parser.add_argument("--level", action="append", default=[], metavar="SLOT:LEVEL",
                         help="party Pokemon SLOT (counted from one) at LEVEL, the experience it costs, "
                              "and everything else it had kept (edit_mon); repeatable")
+    parser.add_argument("--form", action="append", default=[], metavar="SLOT:FORM",
+                        help="party Pokemon SLOT (counted from one) in FORM, one with base stats of its own "
+                             "(ResolveMonForm: a Rotom's 1 Heat to 5 Mow), its stats with it; repeatable")
     parser.add_argument("--name", help="the player's name, which the save must carry "
                                        "terminated: the main menu copies it into a String "
                                        "and asserts on one that never ends")
@@ -4256,6 +4266,12 @@ def main():
         set_party_mon(save, slot - 1, edit_mon(party_raw(save)[slot - 1], level=level))
         save.write()
         print(f"party slot {slot}: level {level}")
+
+    for entry in args.form:
+        slot, form = (int(v) for v in entry.split(":"))
+        set_party_mon(save, slot - 1, edit_mon(party_raw(save)[slot - 1], form=form))
+        save.write()
+        print(f"party slot {slot}: form {form}")
 
     if args.tm:
         machines = [int(n) for n in args.tm.split(",")]
