@@ -464,7 +464,7 @@ class Scorer:
         back, {item: count}; `last`, whether it is the last Pokemon the
         player has; `bench`, (party slot, HP, maximum HP) of the others still
         standing. In order: a move that knocks the foe out before it can
-        answer; an item for a Pokemon on the bench below half its HP, while
+        answer; an item for a Pokemon on the bench below three quarters of its HP, while
         the foe needs four hits or more to take the one out down (Bugsy's
         Shuckle, against which a hurt Quilava is healed for his Heracross); a move
         or an item from the bag that gives HP back, when the Pokemon would
@@ -487,10 +487,10 @@ class Scorer:
         if kills:
             slot = max(kills, key=lambda s: (hits[s][1], first[s], hits[s][0]))
             return "move", slot, "knocks it out"
-        hurt = [(hp * 2 < most, slot, most - hp) for slot, hp, most in bench if hp and hp * 2 < most]
+        hurt = [(slot, most - hp) for slot, hp, most in bench if hp and hp * 4 < 3 * most]
         items = [item for item, count in (heals or {}).items() if count and self.heal(item)]
         if hurt and items and lasts >= 4:
-            _, slot, lost = max(hurt, key=lambda h: h[2])
+            slot, lost = max(hurt, key=lambda h: h[1])
             item = min(items, key=lambda i: (self.heal(i) < min(lost, 50), self.heal(i)))
             return "item", item, f"heals party slot {slot} on the bench", slot
         if not wins and 2 * user["hp"] < user["maxHp"] and threat:
@@ -543,12 +543,26 @@ class Scorer:
         w = self.weigh(mon, foe, [i for i in range(4) if mon["moves"][i] and mon["pp"][i]], field)
         return w["wins"], w["dealt"], -w["needed"], w["lasts"]
 
+    def rocks(self, mon, field):
+        """What Stealth Rock on the player's side takes off a Pokemon coming
+        in: an eighth of its HP by the Rock type's chart against it."""
+        if not field.get("rocks") or not field["sides"][0] & field["rocks"]:
+            return 0
+        self.effects
+        rate = 1
+        for t in mon["types"]:
+            rate *= self.chart.get((self._type["ROCK"], t), 1)
+        return mon["maxHp"] * rate // 8
+
     def rank(self, team, foe, field):
         """The party slots of `team`, {slot: battler}, best first against `foe`:
         those that win the exchange, then by the share of its HP they take
-        before they fall, the turns they need, the hits they last; on a tie
-        the earlier slot."""
-        return sorted(team, key=lambda slot: (self.standing(team[slot], foe, field), -slot), reverse=True)
+        before they fall, the turns they need, the hits they last -- each
+        with what Stealth Rock takes as it comes in; on a tie the earlier
+        slot."""
+        def entered(mon):
+            return mon and {**mon, "hp": max(0, mon["hp"] - self.rocks(mon, field))}
+        return sorted(team, key=lambda slot: (self.standing(entered(team[slot]), foe, field), -slot), reverse=True)
 
     def relief(self, user, foe, team, field):
         """The party slot to bring in for `user`, as a player does, or None:
@@ -565,7 +579,8 @@ class Scorer:
         for slot in self.rank(team, foe, field):
             mon = team[slot]
             hit = self.hit(aimed, foe, mon, field, field["sides"][0])[0] if mon else 0
-            standing = self.standing({**mon, "hp": mon["hp"] - hit}, foe, field) if mon and hit < mon["hp"] else None
+            left = mon["hp"] - hit - self.rocks(mon, field) if mon else 0
+            standing = self.standing({**mon, "hp": left}, foe, field) if left > 0 else None
             if standing and (standing[0] or standing[1] >= w["dealt"] + 0.5 or (w["needed"] >= 99 and standing[1] > 0)):
                 return slot
         return None
@@ -668,9 +683,9 @@ def mon_layout():
     names = tuple(f"__builtin_offsetof(BattleMon, {f})" for f in fields) + (
         "sizeof(BattleMon)", "__builtin_offsetof(BattleContext, battleMons)", "__builtin_offsetof(BattleContext, fieldCondition)",
         "__builtin_offsetof(BattleContext, fieldSideConditionFlags)", "FIELD_CONDITION_RAIN_ALL", "FIELD_CONDITION_SUN_ALL",
-        "SIDE_CONDITION_REFLECT", "SIDE_CONDITION_LIGHT_SCREEN", "SIDE_CONDITION_AURORA_VEIL")
+        "SIDE_CONDITION_REFLECT", "SIDE_CONDITION_LIGHT_SCREEN", "SIDE_CONDITION_AURORA_VEIL", "SIDE_CONDITION_STEALTH_ROCKS")
     values = savedit.compile_c(exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h", "constants/battle.h"))[0]
-    return dict(zip(fields + ("size", "mons", "field", "sides", "rain", "sun", "reflect", "screen", "veil"), values))
+    return dict(zip(fields + ("size", "mons", "field", "sides", "rain", "sun", "reflect", "screen", "veil", "rocks"), values))
 
 
 def read_mon(ram, at):
@@ -714,7 +729,7 @@ def battlers(ram, at):
     weather = struct.unpack_from("<I", ram, at + layout["field"])[0]
     return mons, {"rain": bool(weather & layout["rain"]), "sun": bool(weather & layout["sun"]),
                   "sides": struct.unpack_from("<2I", ram, at + layout["sides"]),
-                  "reflect": layout["reflect"], "screen": layout["screen"], "veil": layout["veil"]}
+                  "reflect": layout["reflect"], "screen": layout["screen"], "veil": layout["veil"], "rocks": layout["rocks"]}
 
 
 @savedit.tree_cache

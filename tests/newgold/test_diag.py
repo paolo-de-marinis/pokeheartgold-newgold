@@ -503,7 +503,7 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(scorer.choose(quilava, shuckle, [0], field, {potion: 3, super_potion: 1})[0], "move")
         self.assertEqual(scorer.choose(dict(quilava, hp=50), foe, [0], field, {super_potion: 1})[0], "move")
         # While the foe needs four hits or more to take the one out down, a
-        # Pokemon on the bench below half its HP is healed: against Bugsy's
+        # Pokemon on the bench below three quarters of its HP is healed: against Bugsy's
         # Shuckle a Geodude's turn for the Quilava his Heracross needs; not
         # against his Scizor.
         geodude = mon("GEODUDE", 22, ["ROCK_THROW", "BULLDOZE"])
@@ -543,6 +543,10 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(scorer.rank(team, scizor, field), [2, 1])
         self.assertIsNone(scorer.relief(team[2], scizor, {0: geodude}, field))       # the Quilava wins it already
         self.assertIsNone(scorer.relief(geodude, scizor, {1: team[1], 3: None}, field))
+        # Stealth Rock on the player's side takes its eighth by the Rock
+        # chart as a Pokemon comes in: a quarter of a Quilava's.
+        rocky = {**field, "sides": (1 << 7, 0), "rocks": 1 << 7}
+        self.assertEqual((scorer.rocks(team[2], rocky), scorer.rocks(team[2], field)), (team[2]["maxHp"] // 4, 0))
         # A Mareep whose one damaging move cannot touch the rival's Larvitar
         # used Growl eight times: one that can hurt it comes in, winning or not.
         mareep, larvitar = mon("MAREEP", 15, ["GROWL", "THUNDER_SHOCK"]), mon("LARVITAR", 10, ["ROCK_THROW", "BITE"])
