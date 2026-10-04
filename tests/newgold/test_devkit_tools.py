@@ -240,5 +240,21 @@ class XmapTests(unittest.TestCase):
                                                   ("Pledge_Go", "b.o"): 0x200, ("sState", "b.o"): 0x40})
 
 
+class FrontLiftTests(unittest.TestCase):
+    """scene.py's front1.lift: how many rows over ov12's ground line, 89, a
+    wild foe's front stands on the top screen, found by its PNG."""
+
+    def test_a_front_three_rows_up(self):
+        sys.path.insert(0, str(DEVKIT / "diag"))
+        import scene
+        from PIL import Image
+        frame = Image.open(ROOT / "files/poketool/pokegra/pokegra/0521/male/front.png").crop((0, 0, 80, 80))
+        lowest = max(y for y in range(80) if any(frame.getpixel((x, y)) for x in range(80)))
+        mask = Image.frombytes("L", (80, 80), bytes(255 if i else 0 for i in frame.tobytes()))
+        top = Image.new("RGB", (256, 192), (200, 200, 200))
+        top.paste(frame.convert("RGB"), (152, 89 - 3 - lowest), mask)
+        self.assertEqual(scene.front_lift(top, 521), 3)
+
+
 if __name__ == "__main__":
     unittest.main()

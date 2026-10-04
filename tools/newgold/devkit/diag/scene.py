@@ -152,7 +152,11 @@ battlerN.species|hp|maxHp|level|partySlot|status|item|moveK|ppK|form|movePos
 or Cherrim's sun: CASTFORM_SNOWY 3; movePos the slot it chose last, 0 to
 3), battlerN.types (its two types as the battle has them, BattleMon's type1
 and type2 -- a form's, Castform's in the rain, or the one Soak gave: a
-TYPE_... expected is one of them), music (the sequence the field's sound
+TYPE_... expected is one of them), front1.lift (how many rows over the
+ground line the wild foe's front stands on the screen: the line ov12 stands
+the lowest opaque row of a front with a Y offset of 0 on, 89, less that row
+as a shot shows it, the picture found by its PNG; so its a/1/8/0 Y offset;
+None where the picture is not there), music (the sequence the field's sound
 handle plays, -1 for none: a load the sound heap cannot hold leaves it empty
 and counts as no failed allocation), or any gDiag* global. A value is a
 number, a constant's name (MAP_..., SPECIES_..., ITEM_..., MOVE_..., SEQ_...,
@@ -215,7 +219,7 @@ def readable(step_or_key, key=False):
     from core import BUTTONS
     if key:
         return (step_or_key in ("lines", "new_lines", "once_lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
-                                "party", "badges", "music", "running_shoes")
+                                "party", "badges", "music", "running_shoes", "front1.lift")
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
                 or re.fullmatch(r"trainer:TRAINER_\w+", step_or_key) is not None
                 or re.fullmatch(r"caught:SPECIES_\w+", step_or_key) is not None
@@ -1630,6 +1634,8 @@ class Scene:
                 mon, layout = self.battle_mon(int(battler)), battle_layout()
                 return None if mon is None else [ram[mon - 0x02000000 + layout[t]] for t in ("type1", "type2")]
             return shown[BATTLER_FIELDS.index(field)]
+        if name == "front1.lift":
+            return front_lift(self.core.shot(self.hooks).crop((0, 0, 256, 192)), self.value(ram, "battler1.species"))
         raise SystemExit(f"a scenario asks for {name!r}, which scene.py cannot read")
 
     @staticmethod
@@ -1693,6 +1699,28 @@ class Scene:
             if not test(value):
                 wrong.append(f"{name} is {value}, not {said}")
         return wrong
+
+
+def front_lift(top, species):
+    """front1.lift: the wild foe's front found on the top screen where ov12
+    draws its 80x80 frame, x 152 (ov07_022377DC), any row; the line a Y
+    offset of 0 stands the picture's lowest row on is 50 + 39 (its place,
+    ov07_022377F4, and the frame's bottom). Either gender's PNG, either
+    frame; None where none shows 90% of its pixels."""
+    import species as walk
+    px, best = top.load(), (0.0, None)
+    for gender in ("male", "female"):
+        png = walk.POKEGRA / "pokegra" / f"{species:04d}" / gender / "front.png"
+        if not png.exists() or not png.stat().st_size:
+            continue
+        for frame in walk._frames(png, 80):
+            lowest = max(y for _, y, _ in frame)
+            for x in range(151, 154):
+                for y in range(-40, 60):
+                    score = walk._score(px, top.size, frame, x, y, 1, (0, 0, 256, 95), walk.BATTLE_LEAST)
+                    if score > best[0]:
+                        best = (score, 89 - (y + lowest))
+    return best[1] if best[0] >= walk.PASS else None
 
 
 def leg_save(path, chain, rom=ROM, elf=DIAG_ELF, start=None):
