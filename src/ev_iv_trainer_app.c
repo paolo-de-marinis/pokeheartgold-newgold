@@ -1,5 +1,6 @@
 #include "global.h"
 
+#include "constants/balls.h"
 #include "constants/items.h"
 #include "constants/sndseq.h"
 
@@ -117,6 +118,11 @@ enum TrainerQuestion {
 #define PLTT_ARROWS   0x70 // slot 7: the summary's arrow buttons, a/1/6/2 member 3
 #define PLTT_BUTTONS  0x80 // slot 8: the party menu's blue buttons, plist_gra member 8
 #define PLTT_MON      0x90 // slot 9: the Pokemon's own
+#define PLTT_BALL     0xA0 // slot 10: the ball it was caught in
+
+// The summary's palette for each ball's icon, an offset from a/1/6/2's member
+// 49 (sub_0208B48C, asm/unk_0208B1AC.s).
+extern const u8 _02104C68[];
 
 #define TEXT_DARK   MAKE_TEXT_COLOR(1, 2, 0)
 #define TEXT_BLUE   MAKE_TEXT_COLOR(3, 4, 0)
@@ -286,6 +292,8 @@ typedef struct EvIvTrainer {
     Cells buttons;
     void *digitsRaw;
     NNSG2dCharacterData *digits;
+    void *ballRaw;
+    NNSG2dCharacterData *ball;
     u8 *monTiles;
     MsgData *msgData;
     MsgData *setNames;
@@ -750,6 +758,7 @@ static void Trainer_DrawTop(EvIvTrainer *app) {
 
     // The Pokemon as the summary shows it: name, gender, level, picture, and
     // the nature in Item's box, the one a Mint gave if it was given one.
+    BlitTiles(win, app->ball->pRawData, 2, 2, 2, 159, 31, PLTT_BALL);
     BufferBoxMonNickname(app->msgFormat, 0, Mon_GetBoxMon(app->mon));
     PrintRow(app, win, msg_0829_00059, 0, 176, 32, TEXT_WHITE, ALIGN_LEFT);
     switch (GetMonGender(app->mon)) {
@@ -1266,6 +1275,18 @@ static void Trainer_OpenScreens(EvIvTrainer *app) {
     GfGfxLoader_GXLoadPal(NARC_graphic_plist_gra, 8, GF_PAL_LOCATION_SUB_BG, GF_PAL_SLOT_8_OFFSET, 0x20, app->heapID);
     app->digitsRaw = GfGfxLoader_GetCharData(NARC_graphic_font, 5, TRUE, &app->digits, app->heapID);
 
+    // The ball it was caught in, as the summary draws it beside the name
+    // (sub_0208B48C): its icon member ball + 24 of a/1/6/2, 25 with none.
+    // The summary has icons as far as the Sport Ball; past it, a Poke Ball's.
+    {
+        int ball = GetMonData(app->mon, MON_DATA_POKEBALL, NULL);
+        if (ball > BALL_SPORT) {
+            ball = BALL_POKE;
+        }
+        app->ballRaw = GfGfxLoader_GetCharData(NARC_a_1_6_2, ball == BALL_NONE ? 25 : ball + 24, FALSE, &app->ball, app->heapID);
+        GfGfxLoader_GXLoadPal(NARC_a_1_6_2, 49 + _02104C68[ball], GF_PAL_LOCATION_MAIN_BG, GF_PAL_SLOT_10_OFFSET, 0x20, app->heapID);
+    }
+
     // The Pokemon's front picture, as the summary draws it.
     GetPokemonSpriteCharAndPlttNarcIds(&pic, app->mon, MON_PIC_FACING_FRONT);
     app->monTiles = Heap_Alloc(app->heapID, 10 * 10 * TILE_SIZE_4BPP);
@@ -1312,6 +1333,7 @@ static void Trainer_CloseScreens(EvIvTrainer *app) {
     FontID_Release(TRAINER_FONT_SMALL);
     Heap_Free(app->monTiles);
     Heap_Free(app->digitsRaw);
+    Heap_Free(app->ballRaw);
     FreeCells(&app->buttons);
     FreeCells(&app->arrows);
     Heap_Free(app->plates[1].charRaw);
