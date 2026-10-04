@@ -9,8 +9,9 @@ void ov18_021F1160(PokedexAppData *pokedexApp, int spriteIdx, BOOL a2);
 void ov18_021F14FC(PokedexAppData *pokedexApp, u16 species, int form, int spriteIdx);
 
 // The icon of the species a grid entry holds, in the sprite spriteIdx: hidden
-// for an empty entry, drawn in the seen-only style for a species not caught.
-// Pichu's Spiky-eared form (2 in the Dex) is its icon's form 1.
+// for an empty entry, drawn in the seen-only style for a species not caught,
+// as the species the Dex shows for it (PokedexApp_ShownSpecies). Pichu's
+// Spiky-eared form (2 in the Dex) is its icon's form 1.
 void ov18_021F1598(PokedexAppData *pokedexApp, int idx, int spriteIdx) {
     int form;
 
@@ -24,7 +25,7 @@ void ov18_021F1598(PokedexAppData *pokedexApp, int idx, int spriteIdx) {
                 form = 0;
             }
         }
-        ov18_021F14FC(pokedexApp, pokedexApp->unk_1030[idx].unk_0, form, spriteIdx);
+        ov18_021F14FC(pokedexApp, PokedexApp_ShownSpecies(pokedexApp, pokedexApp->unk_1030[idx].unk_0), form, spriteIdx);
         ManagedSprite_SetDrawFlag(pokedexApp->unk_0670[spriteIdx], TRUE);
         if (pokedexApp->unk_1030[idx].unk_2 == 1) {
             ov18_021F1160(pokedexApp, spriteIdx, TRUE);

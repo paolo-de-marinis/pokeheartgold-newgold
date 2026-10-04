@@ -9,9 +9,11 @@ void ov18_021F1A7C(PokedexAppData *pokedexApp, u16 species, u8 form, u8 gender, 
 
 // A species' front on the top screen, the grid's and its pages': drawn into
 // the sprite of the pair at spriteIdx not shown (unk_185F_0 says which),
-// which then replaces the other, in the gender and form the Dex saw first.
-// No species shows the sprite emptyIdx instead. Pichu's Spiky-eared form (2
-// in the Dex) is its picture's form 1, which is female only.
+// which then replaces the other, in the gender and form the Dex saw first,
+// as the species the Dex shows for it (PokedexApp_ShownSpecies: the form it
+// was seen as first while it is the only kind seen). No species shows the
+// sprite emptyIdx instead. Pichu's Spiky-eared form (2 in the Dex) is its
+// picture's form 1, which is female only.
 void ov18_021F1BC8(PokedexAppData *pokedexApp, u16 species, int spriteIdx, int emptyIdx) {
     int gender;
     int form;
@@ -36,7 +38,11 @@ void ov18_021F1BC8(PokedexAppData *pokedexApp, u16 species, int spriteIdx, int e
             form = 0;
         }
     }
+    species = PokedexApp_ShownSpecies(pokedexApp, species);
     ov18_021F1A7C(pokedexApp, species, form, gender, 2, spriteIdx, 0);
+#ifdef NEWGOLD_DIAG
+    gDiagDexShown = species | form << 16;
+#endif
 }
 
 void ov18_021F1CAC(PokedexAppData *pokedexApp, u16 species, int spriteIdx, int emptyIdx) {

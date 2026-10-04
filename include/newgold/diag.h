@@ -171,6 +171,12 @@ extern unsigned long gDiagMoveAnimationCount;
 // terrain's start, a Leech Seed's drain. 0 until the first.
 extern unsigned long gDiagBattleAnimation;
 
+// The Pokedex's top screen, the grid's and a species' pages': the species it
+// drew last there (ov18_021F1BC8), the one the Dex shows for the species
+// (PokedexApp_ShownSpecies), as species | form << 16. 0 until the first,
+// and not cleared when the Dex closes.
+extern unsigned long gDiagDexShown;
+
 // The Pokedex's FORMS page: the entry it drew last (ov18_021F5EFC), as the
 // species and form it draws, species | form << 16, and the types it showed
 // for it (PokedexApp_ShowFormTypes), type1 | type2 << 8. Its AREA page: the

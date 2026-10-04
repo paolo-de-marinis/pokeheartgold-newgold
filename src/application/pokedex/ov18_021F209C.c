@@ -8,8 +8,9 @@
 
 void ov18_021F21FC(PokedexAppData *pokedexApp, int spriteIdx, u16 type);
 
-// The type icons of an entry's species, on its pages in the Dex's own
-// language, from the four sprites at spriteIdx: two pairs used in turn
+// The type icons of an entry's species, or of the form the Dex shows it as
+// (PokedexApp_ShownSpecies), on its pages in the Dex's own language, from
+// the four sprites at spriteIdx: two pairs used in turn
 // (unk_185F_4 says which), so the pair being replaced can be hidden while
 // the other is drawn. A species only seen shows none; a second type that is
 // the first shows no second icon. Retail hid a Normal second type too, as no
@@ -45,6 +46,7 @@ void ov18_021F209C(PokedexAppData *pokedexApp, u32 species, int idx, u32 spriteI
             form = 0;
         }
     }
+    species = PokedexApp_ShownSpecies(pokedexApp, species);
     type1 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_TYPE1);
     ov18_021F21FC(pokedexApp, spriteIdx, type1);
     ManagedSprite_SetDrawFlag(pokedexApp->unk_0670[spriteIdx], TRUE);

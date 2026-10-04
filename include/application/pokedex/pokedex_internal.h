@@ -422,6 +422,7 @@ void ov18_021E7B6C(BOOL a0);
 void ov18_021E800C(PokedexAppData *pokedexApp);
 void ov18_021E81A8(PokedexAppData *pokedexApp);
 void ov18_021E8254(PokedexAppData *pokedexApp);
+u16 PokedexApp_ShownSpecies(PokedexAppData *pokedexApp, u16 species);
 void ov18_021E8410(PokedexAppData *pokedexApp);
 void ov18_021E84EC(PokedexAppData *pokedexApp);
 void ov18_021E8528(PokedexAppData *pokedexApp, int a1, int a2);

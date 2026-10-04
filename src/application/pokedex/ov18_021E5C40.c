@@ -1759,10 +1759,50 @@ void ov18_021E81A8(PokedexAppData *pokedexApp) {
     ScheduleBgTilemapBufferTransfer(pokedexApp->bgConfig, GF_BG_LYR_SUB_3);
 }
 
+// The species the Dex shows for one of its species, on the grid, the top
+// screen and the FORMS page's first entry: the species itself, or while the
+// Dex has seen it only as its forms, the form it was seen as first
+// (Pokedex_RecordMonSeen, DEX_SEEN_AS_FORM_ONLY), until it sees the species
+// itself. Retail's form species keep retail's ways: their FORMS pages list
+// their forms as retail does.
+u16 PokedexApp_ShownSpecies(PokedexAppData *pokedexApp, u16 species) {
+    const Pokedex *pokedex = pokedexApp->args->pokedex;
+
+    switch (species) {
+    case SPECIES_NONE:
+    case SPECIES_UNOWN:
+    case SPECIES_PICHU:
+    case SPECIES_DEOXYS:
+    case SPECIES_BURMY:
+    case SPECIES_WORMADAM:
+    case SPECIES_SHELLOS:
+    case SPECIES_GASTRODON:
+    case SPECIES_ROTOM:
+    case SPECIES_GIRATINA:
+    case SPECIES_SHAYMIN:
+    case SPECIES_CASTFORM:
+    case SPECIES_CHERRIM:
+        return species;
+    }
+    if (pokedex->caughtLanguages[species] & DEX_SEEN_AS_FORM_ONLY) {
+        for (u16 form = DEX_FIRST_FORM; form <= NUM_SPECIES; ++form) {
+            if ((pokedex->caughtLanguages[form - DEX_FIRST_FORM] & DEX_FORM_SEEN_FIRST) && SpeciesToDexSpecies(form) == species) {
+                return form;
+            }
+        }
+    }
+    return species;
+}
+
+// The FORMS page's list. Its first entries, the genders the species was
+// seen in, are the species the Dex shows (PokedexApp_ShownSpecies): the form
+// seen first, while it is the only kind seen.
 void ov18_021E8254(PokedexAppData *pokedexApp) {
+    u16 shown = PokedexApp_ShownSpecies(pokedexApp, pokedexApp->curSpecies);
+
     memset(pokedexApp->seenForms, 0, sizeof(pokedexApp->seenForms));
     for (u32 i = 0; i < NELEMS(pokedexApp->seenFormSpecies); ++i) {
-        pokedexApp->seenFormSpecies[i] = pokedexApp->curSpecies;
+        pokedexApp->seenFormSpecies[i] = shown;
     }
 
     switch (pokedexApp->curSpecies) {
@@ -1810,14 +1850,15 @@ void ov18_021E8254(PokedexAppData *pokedexApp) {
 // as the latest games' Dex lists a species' regional forms: each is a
 // species of its own here, which the Dex records on its own
 // (Pokedex_RecordMonSeen), drawn and named as that species. An entry is a form
-// 0 (0x80), and seenFormSpecies says which species.
+// 0 (0x80), and seenFormSpecies says which species. The form the genders are
+// shown as is not listed again.
 static void PokedexApp_AppendSeenForms(PokedexAppData *pokedexApp) {
     const Pokedex *pokedex = pokedexApp->args->pokedex;
     u32 i;
 
     for (u16 species = DEX_FIRST_FORM; species <= NUM_SPECIES && pokedexApp->numSeenForms < (s8)NELEMS(pokedexApp->seenForms); ++species) {
         i = species - DEX_FIRST_FORM;
-        if (species != pokedexApp->curSpecies && SpeciesToDexSpecies(species) == pokedexApp->curSpecies
+        if (species != pokedexApp->seenFormSpecies[0] && SpeciesToDexSpecies(species) == pokedexApp->curSpecies
             && (((pokedex->formsSeen[i / 32] | pokedex->formsCaught[i / 32]) >> (i % 32)) & 1)) {
             pokedexApp->seenForms[pokedexApp->numSeenForms] = 0x80;
             pokedexApp->seenFormSpecies[pokedexApp->numSeenForms] = species;

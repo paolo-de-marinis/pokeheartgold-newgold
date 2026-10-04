@@ -43,6 +43,7 @@ typedef int BOOL;
 @DEFINES@
 @MESSAGES@
 typedef struct Pokedex {
+    u8 caughtLanguages[(NATIONAL_DEX_COUNT + 3) & ~3];
     u32 formsSeen[NUM_DEX_FORM_WORDS];
     u32 formsCaught[NUM_DEX_FORM_WORDS];
 } Pokedex;
@@ -75,6 +76,16 @@ static void Record(Pokedex *dex, u32 *forms, u16 species) {
     (void)dex;
 }
 
+// What Pokedex_RecordMonSeen marks when a species is first seen as a form,
+// and clears when it is seen as itself.
+static void SeenFirstAs(Pokedex *dex, u16 form) {
+    dex->caughtLanguages[SpeciesToDexSpecies(form)] |= DEX_SEEN_AS_FORM_ONLY;
+    dex->caughtLanguages[form - DEX_FIRST_FORM] |= DEX_FORM_SEEN_FIRST;
+}
+static void SeenAsItself(Pokedex *dex, u16 species) {
+    dex->caughtLanguages[species] &= ~DEX_SEEN_AS_FORM_ONLY;
+}
+
 static void Open(PokedexAppData *app, u16 species) {
     app->curSpecies = species;
     app->numSeenForms = 0;
@@ -104,6 +115,24 @@ int main(void) {
     Open(&app, SPECIES_SLOWBRO);
     assert(app.numSeenForms == 2);
 
+    // Slowpoke seen first as the Galarian form, and only so: the Dex shows
+    // that form, the genders' entries are the form's, named by its region,
+    // and the form is not listed a second time.
+    SeenFirstAs(&dex, SPECIES_SLOWPOKE_GALARIAN);
+    assert(PokedexApp_ShownSpecies(&app, SPECIES_SLOWPOKE) == SPECIES_SLOWPOKE_GALARIAN);
+    Open(&app, SPECIES_SLOWPOKE);
+    assert(app.numSeenForms == 2 && app.seenForms[0] == 1 && app.seenForms[1] == 2);
+    assert(app.seenFormSpecies[0] == SPECIES_SLOWPOKE_GALARIAN && app.seenFormSpecies[1] == SPECIES_SLOWPOKE_GALARIAN);
+    assert(ov18_021F09D8(&app, 0) == msg_0802_00178);
+    // Slowpoke itself seen: Slowpoke's genders first again, then the form.
+    SeenAsItself(&dex, SPECIES_SLOWPOKE);
+    assert(PokedexApp_ShownSpecies(&app, SPECIES_SLOWPOKE) == SPECIES_SLOWPOKE);
+    Open(&app, SPECIES_SLOWPOKE);
+    assert(app.numSeenForms == 3 && app.seenFormSpecies[0] == SPECIES_SLOWPOKE && app.seenFormSpecies[2] == SPECIES_SLOWPOKE_GALARIAN);
+    // Retail's form species keep retail's list, marks or not.
+    SeenFirstAs(&dex, SPECIES_SHELLOS_EAST_SEA);
+    assert(PokedexApp_ShownSpecies(&app, SPECIES_SHELLOS) == SPECIES_SHELLOS);
+
     // A form caught counts as seen; forms come in their species' order.
     Record(&dex, dex.formsCaught, SPECIES_MEOWTH_GALARIAN);
     Record(&dex, dex.formsSeen, SPECIES_MEOWTH_ALOLAN);
@@ -130,8 +159,10 @@ int main(void) {
     Open(&app, SPECIES_SHELLOS);
     assert(app.numSeenForms == 1 && app.seenForms[0] == 0x80 && app.seenFormSpecies[0] == SPECIES_SHELLOS);
 
-    // Every form of every species, all seen: the list never runs past its 32.
+    // Every form of every species, all seen, and every species shown as its
+    // first form: the list never runs past its 32.
     memset(dex.formsSeen, 0xFF, sizeof(dex.formsSeen));
+    memset(dex.caughtLanguages, DEX_SEEN_AS_FORM_ONLY | DEX_FORM_SEEN_FIRST, sizeof(dex.caughtLanguages));
     for (u16 species = 1; species <= NATIONAL_DEX_COUNT; species++) {
         Open(&app, species);
         assert(app.numSeenForms >= 1 && app.numSeenForms <= 0x20);
@@ -237,6 +268,83 @@ int main(void) {
 }
 '''
 
+TOP = r'''
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+@DEFINES@
+typedef struct Pokedex {
+    u8 caughtLanguages[(NATIONAL_DEX_COUNT + 3) & ~3];
+} Pokedex;
+typedef struct { Pokedex *pokedex; } PokedexArgs;
+typedef struct { int drawn; } ManagedSprite;
+typedef struct { u16 unk_0; u16 unk_2; } PokedexAppData_UnkSub1030;
+typedef struct PokedexAppData {
+    PokedexArgs *args;
+    ManagedSprite *unk_0670[120];
+    PokedexAppData_UnkSub1030 *unk_1030;
+    u8 unk_185C;
+    u8 unk_185F_0 : 4;
+    u8 unk_185F_4 : 4;
+} PokedexAppData;
+static ManagedSprite sSprites[120];
+static u32 sDrawn, sDrawnGender, sIcon, sTypes;
+static void ManagedSprite_SetDrawFlag(ManagedSprite *s, int flag) { s->drawn = flag; }
+// The Dex's records are its species', which a form past them is not.
+static int Pokedex_SpeciesGetLastSeenGender(Pokedex *pokedex, u16 species, u32 idx) { (void)pokedex; (void)idx; assert(species <= NATIONAL_DEX_COUNT); return MON_FEMALE; }
+static int Pokedex_GetSeenFormByIdx(Pokedex *pokedex, int species, int idx) { (void)pokedex; (void)idx; assert(species <= NATIONAL_DEX_COUNT); return 0; }
+static void ov18_021F1A7C(PokedexAppData *app, u16 species, u8 form, u8 gender, int facing, int spriteIdx, int a6) {
+    (void)app; (void)facing; (void)spriteIdx; (void)a6; sDrawn = species | form << 16; sDrawnGender = gender;
+}
+static void ov18_021F14FC(PokedexAppData *app, u16 species, int form, int spriteIdx) { (void)app; (void)form; (void)spriteIdx; sIcon = species; }
+static void ov18_021F1160(PokedexAppData *app, int spriteIdx, BOOL seenOnly) { (void)app; (void)spriteIdx; (void)seenOnly; }
+static void ov18_021F21FC(PokedexAppData *app, int spriteIdx, u16 type) { (void)app; (void)spriteIdx; sTypes = sTypes << 8 | type; }
+static int GetMonBaseStat_HandleAlternateForm(int species, int form, int stat) {
+    (void)form;
+@TYPES@
+    assert(0);
+    return 0;
+}
+@FORM_TABLE@
+@NATIVE@
+
+int main(void) {
+    static Pokedex dex;
+    static PokedexArgs args = { &dex };
+    static PokedexAppData_UnkSub1030 grid[1] = { { SPECIES_SLOWPOKE, 2 } };
+    static PokedexAppData app = { .args = &args, .unk_1030 = grid, .unk_185C = 2 };
+    for (int i = 0; i < 120; i++) app.unk_0670[i] = &sSprites[i];
+
+    // Slowpoke seen first as the Galarian form, and only so: the top screen,
+    // the grid's icon and the types its pages show are the form's, in the
+    // gender the species' record holds.
+    dex.caughtLanguages[SPECIES_SLOWPOKE] |= DEX_SEEN_AS_FORM_ONLY;
+    dex.caughtLanguages[SPECIES_SLOWPOKE_GALARIAN - DEX_FIRST_FORM] |= DEX_FORM_SEEN_FIRST;
+    ov18_021F1BC8(&app, SPECIES_SLOWPOKE, 11, 10);
+    assert(sDrawn == SPECIES_SLOWPOKE_GALARIAN && sDrawnGender == MON_FEMALE);
+    ov18_021F1598(&app, 0, 20);
+    assert(sIcon == SPECIES_SLOWPOKE_GALARIAN);
+    sTypes = 0;
+    ov18_021F209C(&app, SPECIES_SLOWPOKE, 0, 14);
+    assert(sTypes == TYPE_PSYCHIC);
+    // Slowpoke itself seen: all three are Slowpoke's.
+    dex.caughtLanguages[SPECIES_SLOWPOKE] &= ~DEX_SEEN_AS_FORM_ONLY;
+    ov18_021F1BC8(&app, SPECIES_SLOWPOKE, 11, 10);
+    ov18_021F1598(&app, 0, 20);
+    sTypes = 0;
+    ov18_021F209C(&app, SPECIES_SLOWPOKE, 0, 14);
+    assert(sDrawn == SPECIES_SLOWPOKE && sIcon == SPECIES_SLOWPOKE && sTypes == (TYPE_WATER << 8 | TYPE_PSYCHIC));
+    puts("PASS: the grid and the top screen show the form a species was seen as first, until it is seen itself.");
+    return 0;
+}
+'''
+
 REGIONS = {"ALOLAN": "Alolan Form", "GALARIAN": "Galarian Form", "HISUIAN": "Hisuian Form", "PALDEAN": "Paldean Form"}
 BREEDS = {"TAUROS_COMBAT": "Combat Breed", "TAUROS_BLAZE": "Blaze Breed", "TAUROS_AQUA": "Aqua Breed"}
 
@@ -268,11 +376,12 @@ class DexFormsPageTests(unittest.TestCase):
         page, label = PAGE.read_text(), LABEL.read_text()
         dex = (ROOT / "src/pokedex.c").read_text()
         header = (ROOT / "include/pokedex.h").read_text()
-        defines = "\n".join(re.findall(r"^#define (?:CEILDIV|DEX_FIRST_FORM|NUM_DEX_FORM_WORDS)\b.*$", header, re.M))
+        defines = "\n".join(re.findall(r"^#define (?:CEILDIV|DEX_FIRST_FORM|NUM_DEX_FORM_WORDS|DEX_SEEN_AS_FORM_ONLY|DEX_FORM_SEEN_FIRST)\b.*$",
+                                        header, re.M))
         table = re.search(r"static const u16 sFormBaseSpecies\[.*?\n\};", dex, re.S).group(0)
         table += "\n" + function(dex, "SpeciesToDexSpecies")
         native = "\n".join([function(page, "ov18_021E83D0"), function(page, "PokedexApp_AppendSeenForms"),
-                            function(page, "ov18_021E8254"),
+                            function(page, "PokedexApp_ShownSpecies"), function(page, "ov18_021E8254"),
                             label[label.index("static const struct {"):label.index("int ov18_021F09D8(")],
                             function(label, "ov18_021F09D8")])
         msgs = "\n".join(f"#define {name} {index}" for name, (index, _) in messages().items())
@@ -306,6 +415,31 @@ class DexFormsPageTests(unittest.TestCase):
         body = (defines + "\n" + function(source, "PokedexApp_HideFormTypeIcons") + "\n"
                 + function(source, "PokedexApp_ShowFormTypes") + "\n" + function(source, "ov18_021F5EFC"))
         print(run(TYPES.replace("@TYPES@", table).replace("@NATIVE@", body)))
+
+    def test_the_grid_and_the_top_screen_show_the_look_seen(self):
+        """ov18_021F1BC8 (the top screen, the grid's and a species' pages'),
+        ov18_021F1598 (the grid's icons) and ov18_021F209C (the types on a
+        species' pages) draw the species PokedexApp_ShownSpecies gives: the
+        form seen first while the Dex has seen the species only as its
+        forms, the species once it is seen; the gender and form come from
+        the species' own record, which a form past the Dex's species has
+        none of."""
+        page = PAGE.read_text()
+        dex = (ROOT / "src/pokedex.c").read_text()
+        header = (ROOT / "include/pokedex.h").read_text()
+        defines = "\n".join(re.findall(r"^#define (?:DEX_FIRST_FORM|DEX_SEEN_AS_FORM_ONLY|DEX_FORM_SEEN_FIRST)\b.*$", header, re.M))
+        table = re.search(r"static const u16 sFormBaseSpecies\[.*?\n\};", dex, re.S).group(0)
+        table += "\n" + function(dex, "SpeciesToDexSpecies")
+        records = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
+        species_h = (ROOT / "include/constants/species.h").read_text()
+        numbers = {name: int(n) for name, n in re.findall(r"#define SPECIES_(\w+)\s+(\d+)", species_h)}
+        types = {numbers[name]: records[numbers[name]]["types"] for name in ("SLOWPOKE", "SLOWPOKE_GALARIAN")}
+        typed = "\n".join(f"    if (species == {n}) return stat == BASE_TYPE1 ? {t[0]} : {t[1]};" for n, t in types.items())
+        sources = [(ROOT / "src/application/pokedex" / f).read_text() for f in ("ov18_021F1BC8.c", "ov18_021F1598.c", "ov18_021F209C.c")]
+        native = "\n".join([function(page, "PokedexApp_ShownSpecies"), function(sources[0], "ov18_021F1BC8"),
+                            function(sources[1], "ov18_021F1598"), function(sources[2], "ov18_021F209C")])
+        print(run(TOP.replace("@DEFINES@", defines).replace("@FORM_TABLE@", table)
+                  .replace("@TYPES@", typed).replace("@NATIVE@", native)))
 
     def test_a_regional_form_is_named_by_its_region(self):
         """Every regional form the tree has falls in sRegionalForms under its
