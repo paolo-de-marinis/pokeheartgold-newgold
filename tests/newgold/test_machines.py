@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """The machines past HM08: which species can be taught them.
 
-hg-engine numbers 340 machines, HeartGold's TM01 to HM08 first (sMachineMoves
-in its src/item.c), and keeps one bit per machine per species. The personal
-record here held 128 bits, of which HeartGold used 100; the other 240 machines
-had nowhere to go, so no species could be taught Flash Cannon from TM093 or
-anything from a TR. The record now carries seven more words, and the reader
-takes a machine's place in that numbering to its word and bit.
+New Gold has 156 machines, HeartGold's TM01 to HM08 first and then TM93 to
+TM148 (sTMHMMoves in src/item.c), and keeps one bit per machine per species.
+The personal record held 128 bits, of which HeartGold used 100; it carries
+seven more words (hg-engine's 340 machines needed them), and the reader takes
+a machine's place to its word and bit.
 
 The archive is compared bit for bit with the JSON it is built from, for every
 species; the reader is compiled natively over a record with one bit set.
@@ -30,7 +29,7 @@ from test_personal_abilities import NARC, SOURCE, records
 sys.path[:0] = [str(ROOT / "tools/newgold/import")]
 import import_species  # noqa: E402
 
-NUM_MACHINES = 340
+NUM_MACHINES = 156
 WORDS_AT = [0x1C, 0x20, 0x24, 0x28] + [0x34 + 4 * i for i in range(7)]
 
 
@@ -63,16 +62,18 @@ class MachineDataTests(unittest.TestCase):
         for record, row in zip(built, self.rows):
             self.assertEqual(bits(record), wanted(row), row["species"])
 
-    def test_the_machines_hg_engine_gives_pikachu(self):
-        """TR08 is Thunderbolt, place 248; TM093 Flash Cannon is not Pikachu's."""
+    def test_the_machines_past_hm08_pikachu_learns(self):
+        """TM93 Wild Charge, place 100, and TM115 Volt Switch, place 122, are
+        Pikachu's; TM108 Scald, place 115, is not."""
         pikachu = next(row for row in self.rows if row["species"] == "PIKACHU")
-        self.assertIn(248, pikachu["machines"])
-        self.assertNotIn(102, pikachu["machines"])
+        self.assertIn(100, pikachu["machines"])
+        self.assertIn(122, pikachu["machines"])
+        self.assertNotIn(115, pikachu["machines"])
 
     def test_trash_cloak_wormadam_has_machines(self):
         """The reference gives Trash Cloak Wormadam none (wotbl.REFERENCE_DEFECTS
         says why). Its own list, by the reference's rule, over the machine
-        list src/item.c keeps in the reference's order."""
+        list src/item.c keeps."""
         import wotbl
         source = (ROOT / "src/item.c").read_text()
         table = source[source.index("static const u16 sTMHMMoves[]"):]
@@ -81,21 +82,22 @@ class MachineDataTests(unittest.TestCase):
         taught = set(entry["MachineMoves"]) | {step["Move"] for step in entry["LevelMoves"]}
         trash = next(row for row in self.rows if row["species"] == "WORMADAM_TRASH")
         self.assertEqual(trash["machines"], import_species.machines_past_hm08(taught, machine_list))
-        # TM093 Flash Cannon, the Steel cloak's, and not the Sandy Cloak's.
-        self.assertIn(102, trash["machines"])
+        # TM116 Bulldoze, place 123, is the Sandy Cloak's and not the Trash Cloak's.
+        self.assertTrue(trash["machines"])
+        self.assertNotIn(123, trash["machines"])
         sandy = next(row for row in self.rows if row["species"] == "WORMADAM_SANDY")
-        self.assertNotIn(102, sandy["machines"])
+        self.assertIn(123, sandy["machines"])
 
     def test_plant_cloak_wormadam_has_only_its_own_machines(self):
         """The reference gives Plant Cloak Wormadam the other two cloaks'
         machines (wotbl.REFERENCE_DEFECTS says why): no TM26 Earthquake, TM74
-        Gyro Ball, TM76 Stealth Rock or TM91 Flash Cannon, nor TM093 Flash
-        Cannon past HM08; its own TM53 Energy Ball stays."""
+        Gyro Ball, TM76 Stealth Rock or TM91 Flash Cannon, nor the Sandy
+        Cloak's TM116 Bulldoze past HM08; its own TM53 Energy Ball stays."""
         plant = next(row for row in self.rows if row["species"] == "WORMADAM")
         for tm in (26, 37, 39, 74, 76, 91):
             self.assertNotIn(tm, plant["tms"])
         self.assertIn(53, plant["tms"])
-        self.assertNotIn(102, plant["machines"])
+        self.assertNotIn(123, plant["machines"])
 
 
 NATIVE = r"""
@@ -138,7 +140,7 @@ int main(void) {
         *words[machine / 32] = 0;
     }
     assert(!GetTMHMCompatBySpeciesAndForm(SPECIES_EGG, 0, 0));
-    puts("PASS: 340 machines, each read from its own bit and no other.");
+    printf("PASS: %d machines, each read from its own bit and no other.\n", NUM_MACHINES);
     return 0;
 }
 """
@@ -183,7 +185,6 @@ typedef int BOOL;
 
 BOOL ItemIsTM(u16 itemId);
 BOOL ItemIsHM(u16 itemId);
-BOOL ItemIsTR(u16 itemId);
 BOOL ItemIsMachine(u16 itemId);
 u16 ItemToTMHMId(u16 itemId);
 
@@ -197,7 +198,7 @@ int main(void) {
             assert(TMHMGetMove(item) == MOVE_NONE);
             continue;
         }
-        assert(ItemIsTM(item) + ItemIsHM(item) + ItemIsTR(item) == 1);
+        assert(ItemIsTM(item) + ItemIsHM(item) == 1);
         u16 place = ItemToTMHMId(item);
         assert(place < NUM_MACHINES && itemAt[place] == ITEM_NONE);
         itemAt[place] = item;
@@ -206,10 +207,15 @@ int main(void) {
         machines++;
     }
     assert(machines == NUM_MACHINES && sizeof(sTMHMMoves) / sizeof(*sTMHMMoves) == NUM_MACHINES);
-    // HeartGold's own keep their places.
+    // HeartGold's own keep their places; TM93 to TM148 follow, on the item ids
+    // hg-engine gave TM093 to TM100 and TM101 to TM148.
     assert(ItemToTMHMId(ITEM_TM01) == 0 && ItemToTMHMId(ITEM_HM08) == 99);
-    assert(TMHMGetMove(ITEM_TM093) == MOVE_FLASH_CANNON && TMHMGetMove(ITEM_TM100) == MOVE_CONFIDE);
-    assert(TMHMGetMove(ITEM_TR00) == MOVE_SWORDS_DANCE && TMHMGetMove(ITEM_TR99) == MOVE_BODY_PRESS);
+    assert(ItemToTMHMId(ITEM_TM093) == 100 && ItemToTMHMId(ITEM_TM096) == 103 && ItemToTMHMId(ITEM_TM148) == 155);
+    assert(TMHMGetMove(ITEM_TM093) == MOVE_WILD_CHARGE && TMHMGetMove(ITEM_TM100) == MOVE_CONFIDE);
+    assert(TMHMGetMove(ITEM_TM101) == MOVE_SMACK_DOWN && TMHMGetMove(ITEM_TM148) == MOVE_UPPER_HAND);
+    // hg-engine's other machines are not machines here.
+    assert(!ItemIsMachine(ITEM_TR00) && !ItemIsMachine(ITEM_TR99) && !ItemIsMachine(ITEM_TM00));
+    assert(!ItemIsMachine(ITEM_HM07_ORAS) && !ItemIsMachine(ITEM_TM100_SV) && !ItemIsMachine(ITEM_TM149));
     return 0;
 }
 """
@@ -249,7 +255,7 @@ class MachineItemTests(unittest.TestCase):
             return {int(line) for line in run.stdout.split()}
 
     def test_every_machine_has_a_place_and_a_move(self):
-        """The items the game calls machines are the 340 the item data sends
+        """The items the game calls machines are the 156 the item data sends
         to the TM routine, each at its own place with its own move."""
         machines = self.run_mapping()
         ids = item_ids()
@@ -257,16 +263,34 @@ class MachineItemTests(unittest.TestCase):
             routine = {ids[row["item"]] for row in csv.DictReader(stream) if row["fieldUseFunc"] == "6"}
         self.assertEqual(machines, routine)
 
-    def test_the_table_is_the_references(self):
-        """The species' bits were written in the reference's order."""
-        reference = Path(os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE",
-                                        "/home/paolo/Porting HGSS/hg-engine-newgold-reference"))
-        if not (reference / "src/item.c").exists():
-            self.skipTest("behaviour reference not present")
+    def test_the_table_is_heartgolds_then_new_golds(self):
+        """TM01 to HM08 are HeartGold's (retail pokeheartgold, 43b084839);
+        TM93 to TM148 are Paolo's (2026-10-04): Gen 7's TMs HeartGold lacks,
+        Wild Charge, Snarl, Nature Power, Dazzling Gleam and Confide on their
+        own numbers and the rest from TM94 in Gen 7's order, then the moves
+        after Gen 7 that are TMs in Scarlet and Violet, in theirs."""
         source = (ROOT / "src/item.c").read_text()
         table = source[source.index("static const u16 sTMHMMoves[]"):]
-        ours = re.findall(r"(MOVE_[A-Z0-9_]+),", table[:table.index("};")])
-        self.assertEqual(ours, import_species.reference_machine_list(reference))
+        ours = re.findall(r"MOVE_([A-Z0-9_]+),", table[:table.index("};")])
+        retail = subprocess.run(["git", "-C", str(ROOT), "show", "43b084839:src/item.c"],
+                                capture_output=True, text=True).stdout
+        if not retail:
+            self.skipTest("retail's src/item.c is not in this clone")
+        retail = retail[retail.index("static const u16 sTMHMMoves[]"):]
+        self.assertEqual(ours[:100], re.findall(r"MOVE_([A-Z0-9_]+),", retail[:retail.index("};")]))
+        self.assertEqual(ours[100:], NEW_GOLD_TMS)
+
+
+NEW_GOLD_TMS = """
+    WILD_CHARGE WORK_UP SNARL NATURE_POWER PSYSHOCK VENOSHOCK DAZZLING_GLEAM CONFIDE
+    SMACK_DOWN LEECH_LIFE SLUDGE_WAVE FLAME_CHARGE LOW_SWEEP ROUND ECHOED_VOICE SCALD SKY_DROP
+    BRUTAL_SWING QUASH ACROBATICS SMART_STRIKE AURORA_VEIL VOLT_SWITCH BULLDOZE FROST_BREATH
+    DRAGON_TAIL INFESTATION
+    TRAILBLAZE POUNCE CHILLING_WATER SNOWSCAPE BODY_PRESS ICE_SPINNER STEEL_BEAM GRASSY_GLIDE
+    BURNING_JEALOUSY FLIP_TURN DUAL_WINGBEAT POLTERGEIST LASH_OUT SCALE_SHOT MISTY_EXPLOSION
+    TEMPER_FLARE SUPERCELL_SLAM TRIPLE_AXEL COACHING SCORCHING_SANDS EXPANDING_FORCE SKITTER_SMACK
+    METEOR_BEAM BREAKING_SWIPE HARD_PRESS DRAGON_CHEER ALLURING_VOICE PSYCHIC_NOISE UPPER_HAND
+""".split()
 
 
 if __name__ == "__main__":

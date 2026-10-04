@@ -868,7 +868,7 @@ function flagLabel(name) {
   }
   return [...lead, out.filter(Boolean).join(" ")].join(": ");
 }
-const machineName = name => name.replace(/^(TM|HM|TR)(?=\d)/, p => MACHINE_PREFIX[p] + " ");
+const machineName = name => name.replace(/^(TM|HM)(?=\d)/, p => MACHINE_PREFIX[p] + " ");
 const itemNameOf = c => machineName(S.itemByConst.get(c)?.name ?? c);
 // A step's name: its marker's, and -- where that is a bare constant, or another step of its place has it too -- what
 // tells it apart: the first thing it gives that the others of that name do not (for a bare constant, the first that is
@@ -1364,11 +1364,11 @@ function onDragKey(ev) { if (ev.key === "Escape") stopDrag(); }
 // What a species can learn and be comes from the server (/api/species), read
 // from the tree: every move with all its sources, the abilities by the slot
 // the game keeps them in, and the moves the game gives it at a level.
-const MACHINE_PREFIX = {TM: "MT", HM: "MN", TR: "DT"};
+const MACHINE_PREFIX = {TM: "MT", HM: "MN"};
 function sourceTag(s) {
   const item = S.items.get(s.item)?.name ?? `#${s.item}`;
   const how = s.how === "level" ? (s.level ? `Lv. ${s.level}` : "Evoluzione")
-    : s.how === "machine" ? item.replace(/^(TM|HM|TR)/, p => MACHINE_PREFIX[p] + " ")
+    : s.how === "machine" ? item.replace(/^(TM|HM)/, p => MACHINE_PREFIX[p] + " ")
     : s.how === "tutor" ? (s.type ? `Insegnante (tipo ${(TYPES[s.type] || [s.type])[0]})` : "Insegnante")
     : s.how === "form" ? "Mossa della forma" : s.item ? `Mossa uovo (${item})` : s.daycare ? "Mossa uovo (Pensione)" : "Mossa uovo";
   const from = s.from ? S.species.get(s.from)?.name ?? `#${s.from}` : "";
@@ -1409,7 +1409,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
         autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mvlist"></div><div class="mvtags" id="mvtags${i}"></div></div>`).join("")}</div>
       <p class="note" id="presetnote" hidden></p>
       <p class="note">Si sceglie solo tra le mosse che la specie può imparare, a qualsiasi livello, ognuna con tutte le sue fonti: livello (Evoluzione: quando si evolve),
-        MT, MN e DT, insegnanti, mosse uovo, la mossa della forma (Rotom), e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
+        MT e MN, insegnanti, mosse uovo, la mossa della forma (Rotom), e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
         (una mossa evento, o una che i dati attuali non le danno più) resta finché non la cambi e non cambi specie. Il livello non si
         controlla: una mossa imparata salendo di livello va bene a qualsiasi livello, perché un uovo la eredita a livello 1 se
         entrambi i genitori la conoscono (per una specie che non nasce da un uovo, invece, sta a te). Una mossa che il Pokémon già conosce tiene i suoi PP (salvando, quelli oltre il massimo scendono al massimo); una nuova li ha pieni.
@@ -1620,39 +1620,38 @@ function renderBag() {
     if (b.dataset.set) return edit("item", {item: +b.dataset.set, quantity: +$(`input[data-item="${b.dataset.set}"]`).value}, "Quantità cambiata");
   };
 }
-// The machines pocket as a checklist, the Pokédex's way: every TM, TR and HM
-// the tree has, in the order the bag sorts them; a count only where the game
-// keeps one (a TR is used up; the rest are one each, or up to the limit).
+// The machines pocket as a checklist, the Pokédex's way: every TM and HM the
+// tree has, in the order the bag sorts them; none is used up, so none has a
+// count.
 function renderMachines(pocket) {
   const held = new Map((S.save.bag[pocket.name] || []).map(r => [r.item, r.quantity])), ch = S.tm.changes;
   const count = id => ch.has(id) ? ch.get(id) : held.get(id) || 0;
   // "MT 45", "mt45", "TM045" are one machine: spaces and a number's leading zeros do not count; a machine's code
-  // alone ("MN", "DT 1") is looked for in the codes only, not in the moves' names.
+  // alone ("MN", "MT 1") is looked for in the codes only, not in the moves' names.
   const norm = s => s.toLowerCase().replace(/\s+/g, "").replace(/(^|\D)0+(?=\d)/g, "$1");
-  const q = norm(S.tm.q), codeOnly = /^(mt|mn|dt|tm|hm|tr)\d*$/.test(q);
+  const q = norm(S.tm.q), codeOnly = /^(mt|mn|tm|hm)\d*$/.test(q);
   const rows = S.data.machines.filter(m => {
     const item = S.items.get(m.item), codes = [machineName(item?.name ?? ""), item?.name ?? "", item?.const.replace(/^ITEM_/, "") ?? ""].map(norm);
     const label = norm(`${codes.join(" ")} ${S.moves.get(m.move)?.name ?? ""} ${(TYPES[m.type] || [m.type])[0]}`);
     if (q && !(codeOnly ? codes.some(c => c.startsWith(q)) : label.includes(q))) return false;
     return S.tm.show === "all" || (S.tm.show === "have") === count(m.item) > 0;
   });
-  // The kinds in the order the bag sorts them, and the ones a use spends, as the tree's table has them.
+  // The kinds in the order the bag sorts them, as the tree's table has them.
   const kind = m => machineName(S.items.get(m.item)?.name ?? "").split(" ")[0];
-  const groups = [...new Set(S.data.machines.map(kind))], spent = [...new Set(S.data.machines.filter(m => m.spent).map(kind))];
+  const groups = [...new Set(S.data.machines.map(kind))];
   $("#machines").innerHTML = `<div class="bar" id="tmhead" style="margin-top:0"></div>
     <div class="bar">
       <input type="search" id="tmq" placeholder="Cerca: numero, mossa, tipo…" value="${esc(S.tm.q)}" style="flex:1;min-width:180px" aria-label="Cerca tra le macchine">
       <select id="tmshow" aria-label="Mostra">${[["all", "Tutte"], ["have", "Ce l'ho"], ["missing", "Mancano"]].map(([k, l]) => `<option value="${k}" ${S.tm.show === k ? "selected" : ""}>${l}</option>`).join("")}</select>
     </div>
     <p class="note">Le caselle cambiano solo qui finché non premi "Salva modifiche"; il salvataggio tiene la tasca come il gioco: ogni macchina una volta, ordinate
-      ${esc(groups.join(", "))}. ${esc(spent.join(", "))} si consuma a ogni uso, per questo ha la quantità; le altre no. Una macchina che un personaggio
+      ${esc(groups.join(", "))}, e nessuna si consuma a ogni uso. Una macchina che un personaggio
       regala, se ce l'hai già, non te la dà: il gioco vede la tasca senza posto e il regalo non avviene.</p>
     <div class="dexlist" style="margin-top:10px">${rows.map(m => {
       const n = count(m.item), name = machineName(S.items.get(m.item)?.label ?? S.items.get(m.item)?.name ?? `#${m.item}`);   // two named alike: the constant too
       return `<div class="dexrow ${ch.has(m.item) ? "dirty" : ""}" data-item="${m.item}">
         <span class="n" style="width:4.6em">${esc(name)}</span><span class="nm">${esc(S.moves.get(m.move)?.name ?? m.move)} ${typeBadges([m.type])}</span>
-        <label><input type="checkbox" data-k="have" ${n ? "checked" : ""}> ce l'ho</label>
-        ${m.spent ? `<input type="number" data-k="n" min="1" max="${m.limit}" value="${n || 1}" style="width:4.5em" aria-label="Quantità di ${esc(name)}" ${n ? "" : "disabled"}>` : ""}</div>`;
+        <label><input type="checkbox" data-k="have" ${n ? "checked" : ""}> ce l'ho</label></div>`;
     }).join("") || `<span class="muted">Nessuna macchina.</span>`}</div>`;
   // The counts and the buttons are drawn again on a change; the list is not, so the keyboard's focus stays where it is.
   const head = () => {
@@ -1672,14 +1671,11 @@ function renderMachines(pocket) {
     if (n === (held.get(id) || 0)) ch.delete(id); else ch.set(id, n);
     row.classList.toggle("dirty", ch.has(id));
     row.querySelector('[data-k="have"]').checked = n > 0;
-    const many = row.querySelector('[data-k="n"]');
-    if (many) Object.assign(many, {disabled: !n, value: n || 1});
     head();
   };
   $("#machines .dexlist").onchange = ev => {
-    const row = ev.target.closest(".dexrow"), id = +row.dataset.item, m = S.data.machines.find(x => x.item === id);
+    const row = ev.target.closest(".dexrow"), id = +row.dataset.item;
     if (ev.target.dataset.k === "have") set(row, id, ev.target.checked ? Math.max(1, held.get(id) || 1) : 0);
-    else set(row, id, Math.min(m.limit, Math.max(1, +ev.target.value || 1)));
   };
   $("#tmq").oninput = ev => { S.tm.q = ev.target.value; const pos = ev.target.selectionStart; renderMachines(pocket); const el = $("#tmq"); el.focus(); el.setSelectionRange(pos, pos); };
   $("#tmshow").onchange = ev => { S.tm.show = ev.target.value; renderMachines(pocket); };

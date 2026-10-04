@@ -265,35 +265,31 @@ def base_exp_yields(reference):
     return {m[1]: int(m[2]) for m in re.finditer(r"\[SPECIES_([A-Z0-9_]+)\s*\]\s*=\s*(\d+)", table)}
 
 
-# HeartGold's own machines, TM01 to HM08, lead the reference's list.
+# HeartGold's own machines, TM01 to HM08, lead the list.
 RETAIL_MACHINES = 100
 
 
-def reference_machine_list(reference):
-    """The reference's machines in its own order (sMachineMoves in its
-    src/item.c): TM01 to HM08 as here, then the later games' TMs and TRs."""
-    source = (reference / "src/item.c").read_text(errors="replace")
-    table = source[source.index("sMachineMoves[] = {"):]
+def machine_list():
+    """This game's machines in their order (sTMHMMoves in src/item.c, the
+    place ItemToTMHMId gives each): HeartGold's TM01 to HM08, then New
+    Gold's TM93 to TM148."""
+    source = (ROOT / "src/item.c").read_text()
+    table = source[source.index("static const u16 sTMHMMoves[] = {"):]
     return re.findall(r"MOVE_[A-Z0-9_]+", table[:table.index("};")])
-
-
-def reference_machines(reference):
-    """The moves the reference has a machine for."""
-    return set(reference_machine_list(reference))
 
 
 def machines_past_hm08(learned, machine_list):
     """The machines past HM08 a species can be taught, by their place in the
-    reference's list, which is the number the game reads their bit by."""
+    game's list, which is the number the game reads their bit by."""
     return [index for index, move in enumerate(machine_list)
             if index >= RETAIL_MACHINES and move in learned]
 
 
 def machine_moves(reference):
     """Each species' machine moves, by the reference's rule (hg-engine's
-    scripts/build_learnsets.py, write_machine_data): a species can be taught a
-    machine's move if its MachineMoves list names it or it learns it by
-    level-up. A form with no list of its own takes its base species' -- the
+    scripts/build_learnsets.py, write_machine_data) over this game's machines
+    (machine_list): a species can be taught a machine's move if its
+    MachineMoves list names it or it learns it by level-up. A form with no list of its own takes its base species' -- the
     reference reads the base's for it -- so 324 forms do not come out unable
     to learn any TM. Where the reference's learnset is wrong or missing,
     wotbl.REFERENCE_DEFECTS' is read instead (Plant and Trash Cloak
@@ -309,7 +305,7 @@ def machine_moves(reference):
             found = learnsets.get("SPECIES_" + bases[name], {}).get(key, [])
         return found
 
-    machines = reference_machines(reference)
+    machines = set(machine_list())
     moves = {}
     for name in {key[len("SPECIES_"):] for key in learnsets} | set(bases):
         taught = set(listed(name, "MachineMoves")) | {
@@ -424,7 +420,7 @@ def main():
         yields.setdefault(form, yields.get(base, 0))
     learnsets = machine_moves(args.reference)
     tms, hms = machine_numbers()
-    machine_list = reference_machine_list(args.reference)
+    machines = machine_list()
 
     personalPath = ROOT / "files/poketool/personal/personal.json"
     personal = json.loads(personalPath.read_text())
@@ -439,7 +435,7 @@ def main():
         if name not in blocks:
             absent.append(name)
             continue
-        entry = record(name, blocks[name], yields.get(name, 0), learnsets.get(name, set()), tms, hms, machine_list)
+        entry = record(name, blocks[name], yields.get(name, 0), learnsets.get(name, set()), tms, hms, machines)
         if yields.get(name, 0) > MAX_STORED_EXP_YIELD:
             clamped.append((name, yields[name]))
         added.append(entry)
@@ -455,7 +451,7 @@ def main():
         name = entry["species"]
         if name in wanted_all and name in learnsets:
             fresh = (sorted(tms[m] for m in learnsets[name] if m in tms), sorted(hms[m] for m in learnsets[name] if m in hms),
-                     machines_past_hm08(learnsets[name], machine_list))
+                     machines_past_hm08(learnsets[name], machines))
             if (entry["tms"], entry["hms"], entry.get("machines")) != fresh:
                 entry["tms"], entry["hms"], entry["machines"] = fresh
                 refreshed += 1

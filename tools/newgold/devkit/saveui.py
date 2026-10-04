@@ -1034,7 +1034,7 @@ class Library:
         for change in a["changes"]:
             item = number(change["item"], 1, 0xFFFF, "macchina")
             if item not in table:
-                raise Refused(f"lo strumento {item} non è una MT, una MN o una DT")
+                raise Refused(f"lo strumento {item} non è una MT o una MN")
             name = sv.item_table()[item]["name"]
             wanted[item] = number(change["quantity"], 0, table[item]["limit"], f"{name}, quantità" +
                                   (" (una MT è una sola: New Gold non le consuma)" if table[item]["limit"] == 1 else ""))
@@ -1230,7 +1230,7 @@ def illegal(e):
                 f"conosce già, scegline un'altra")
     if e.moves:
         return (f"{who} non può imparare {', '.join(sv.move_table()[m]['name'] for m in e.moves)}: non è tra le "
-                f"mosse della specie (livello, MT/MN/DT, insegnanti, mosse uovo, forma, pre-evoluzioni). Una mossa "
+                f"mosse della specie (livello, MT/MN, insegnanti, mosse uovo, forma, pre-evoluzioni). Una mossa "
                 f"che solo un evento o un regalo dà resta su un Pokémon che la conosce già, non si aggiunge")
     what = "un'abilità nascosta" if e.ability == sv.HIDDEN_SLOT else "una seconda abilità"
     return f"{who} non ha {what}: scegli una delle sue abilità"

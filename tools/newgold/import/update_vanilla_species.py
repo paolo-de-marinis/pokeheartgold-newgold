@@ -44,7 +44,7 @@ def pending(reference):
     yields = import_species.base_exp_yields(reference)
     learnsets = import_species.machine_moves(reference)
     tms, hms = import_species.machine_numbers()
-    machine_list = import_species.reference_machine_list(reference)
+    machine_list = import_species.machine_list()
 
     personal = json.loads(PERSONAL.read_text())
     records = personal["baseStats"]

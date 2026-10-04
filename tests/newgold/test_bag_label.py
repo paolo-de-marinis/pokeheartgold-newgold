@@ -105,10 +105,8 @@ typedef enum { PRINTING_MODE_LEFT_ALIGN, PRINTING_MODE_RIGHT_ALIGN, PRINTING_MOD
 
 #define BAG_HM_BADGE NARC_bag_gra_bag_gra_00000037_NCGR
 #define BAG_TM_BADGE NARC_bag_gra_bag_gra_00000095_NCGR
-#define BAG_TR_BADGE NARC_bag_gra_bag_gra_00000096_NCGR
 #define HM_DIGITS 2
 #define TM_DIGITS 3
-#define TR_DIGITS 2
 typedef int BOOL;
 #include <stddef.h>
 #define NELEMS(a) (sizeof(a) / sizeof(*(a)))
@@ -157,26 +155,20 @@ int main(void) {
         assert(drawn.x == 24 && drawn.y == 21 && drawn.badgeY == 16);
     }
 
-    // The machines past HM08 go by the numbers their games gave them.
-    draw(ITEM_TM093);
-    assert(drawn.badge == BAG_TM_BADGE && drawn.digits == 3 && drawn.number == 93);
-    draw(ITEM_TM100);
-    assert(drawn.badge == BAG_TM_BADGE && drawn.number == 100);
-    draw(ITEM_TM100_SV);
-    assert(drawn.badge == BAG_TM_BADGE && drawn.number == 100);
-    draw(ITEM_TM229);
-    assert(drawn.badge == BAG_TM_BADGE && drawn.number == 229);
-    draw(ITEM_TM00);
-    assert(drawn.badge == BAG_TM_BADGE && drawn.number == 0);
-    draw(ITEM_HM07_ORAS);
-    assert(drawn.badge == BAG_HM_BADGE && drawn.digits == 2 && drawn.number == 7);
-    for (u16 item = ITEM_TR00; item <= ITEM_TR99; item++) {
-        draw(item);
-        assert(drawn.badge == BAG_TR_BADGE && drawn.digits == 2 && drawn.number == item - ITEM_TR00);
-        assert(drawn.mode == PRINTING_MODE_LEADING_ZEROS && drawn.x == 24 && drawn.y == 21);
+    // TM93 to TM148 follow on from TM92, on hg-engine's TM093 to TM100 and
+    // TM101 to TM148 items.
+    const u16 runs[][2] = { { ITEM_TM093, ITEM_TM095 }, { ITEM_TM096, ITEM_TM100 }, { ITEM_TM101, ITEM_TM148 } };
+    u32 number = 93;
+    for (int run = 0; run < 3; run++) {
+        for (u16 item = runs[run][0]; item <= runs[run][1]; item++, number++) {
+            draw(item);
+            assert(drawn.badge == BAG_TM_BADGE && drawn.digits == 3 && drawn.number == number);
+            assert(drawn.mode == PRINTING_MODE_LEADING_ZEROS && drawn.x == 24 && drawn.y == 21);
+        }
     }
+    assert(number == 149);
 
-    puts("PASS: 340 machine labels, badge choice, digits and placement.");
+    puts("PASS: 156 machine labels, badge choice, digits and placement.");
     return 0;
 }
 """

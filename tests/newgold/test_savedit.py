@@ -1390,10 +1390,11 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual((first["item"], sv.move_table()[first["move"]]["name"], first["type"], first["limit"]),
                          (items["ITEM_TM01"], "Focus Punch", "FIGHTING", 1))
         groups = [sv._machine_order((row["item"], 1))[1] for row in table]
-        self.assertEqual(groups, sorted(groups), "the TMs, then the TRs, then the HMs")
-        hm01, tr00 = (next(r for r in table if r["item"] == items[name]) for name in ("ITEM_HM01", "ITEM_TR00"))
-        self.assertEqual((hm01["limit"], hm01["spent"], tr00["spent"], first["spent"]),
-                         (sv.BAG_TMHM_QUANTITY_MAX, False, True, False))
+        self.assertEqual(groups, sorted(groups), "the TMs, then the HMs")
+        self.assertEqual([row["item"] for row in table[92:96]],
+                         [items[name] for name in ("ITEM_TM093", "ITEM_TM094", "ITEM_TM095", "ITEM_TM096")])
+        hm01 = next(r for r in table if r["item"] == items["ITEM_HM01"])
+        self.assertEqual((hm01["limit"], table[-1]["item"], len(table)), (sv.BAG_TMHM_QUANTITY_MAX, items["ITEM_HM08"], 156))
 
 
 class TheCodeSaveditKeeps(unittest.TestCase):
@@ -1511,14 +1512,13 @@ class TheCodeSaveditKeeps(unittest.TestCase):
         badge = sv.c_function("src/player_data.c", "void PlayerProfile_SetBadgeFlag(")
         self.assertRegex(badge, r"if \(badge_no < 8\) \{\s*profile->johtoBadges \|= \(1 << badge_no\);\s*\} else \{\s*"
                                 r"profile->kantoBadges \|= \(1 << badge_no - 8\);", "badges()")
-        self.assertIn("if (!ItemIsMachine(partyMenu->args->itemId) || ItemIsTR(partyMenu->args->itemId)) {",
+        self.assertIn("if (!ItemIsMachine(partyMenu->args->itemId)) {",
                       sv.c_function("src/party_menu_items.c", "void PartyMenu_LearnMoveToSlot("),
-                      "machine_table: only a TR is used up")
+                      "machine_table: no machine is used up")
         self.assertIn("u16 max = ItemIsTM(itemId) ? 1 : BAG_TMHM_QUANTITY_MAX;",
                       sv.c_function("src/bag.c", "static ItemSlot *Bag_GetItemSlotForAdd("), "item_limit")
-        self.assertRegex(sv.c_function("src/bag.c", "static int MachineSortGroup("),
-                         r"if \(ItemIsHM\(itemId\)\) \{\s*return 2;\s*\}\s*if \(ItemIsTR\(itemId\)\) \{\s*return 1;\s*\}\s*"
-                         r"return 0;", "_machine_order")
+        self.assertIn("return ItemIsHM(itemId) ? 1 : 0;", sv.c_function("src/bag.c", "static int MachineSortGroup("),
+                      "_machine_order")
         ability = sv.c_function("src/pokemon.c", "void UpdateBoxMonAbility(")
         self.assertRegex(ability, r"(?s)MON_SWAP_ABILITY_SLOT_BIT\) \{\s*pid \^= 1;\s*\}\s*if \(\(GetBoxMonData\(boxMon, "
                                   r"MON_DATA_UNUSED_113, NULL\) & MON_HIDDEN_ABILITY_BIT\) && hiddenAbility != ABILITY_NONE\)"

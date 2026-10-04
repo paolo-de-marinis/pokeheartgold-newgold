@@ -791,8 +791,8 @@ def machine_runs():
 
 @tree_cache
 def item_kind(test):
-    """The items one of src/item.c's tests -- ItemIsTM, ItemIsHM, ItemIsTR --
-    says yes to: the runs of its kind."""
+    """The items one of src/item.c's tests -- ItemIsTM, ItemIsHM -- says yes
+    to: the runs of its kind."""
     kind = test[len("ItemIs"):]
     return frozenset(item for first, last, _, _, of in machine_runs() if of == kind
                      for item in range(first, last + 1))
@@ -2102,12 +2102,12 @@ def type_names():
 @tree_cache
 def machine_table():
     """Every machine as the bag keeps it: the item, the move it teaches and
-    that move's type (MOVEATTR_TYPE), how many the bag takes (item_limit),
-    and whether teaching uses one up -- a TR, as PartyMenu_LearnMoveToSlot
-    takes one only when ItemIsTR -- in the order SortTMHMPocket puts them."""
-    types, kind, spent = type_names(), move_attr("MOVEATTR_TYPE"), item_kind("ItemIsTR")
-    rows = [{"item": item, "move": move, "type": types.get(kind[move], str(kind[move])), "limit": item_limit(item),
-             "spent": item in spent} for move, item in machines() if item is not None]
+    that move's type (MOVEATTR_TYPE), and how many the bag takes
+    (item_limit), in the order SortTMHMPocket puts them. Teaching uses none
+    up (PartyMenu_LearnMoveToSlot)."""
+    types, kind = type_names(), move_attr("MOVEATTR_TYPE")
+    rows = [{"item": item, "move": move, "type": types.get(kind[move], str(kind[move])), "limit": item_limit(item)}
+            for move, item in machines() if item is not None]
     return sorted(rows, key=lambda row: _machine_order((row["item"], 1)))
 
 
@@ -2197,7 +2197,7 @@ def learnable_moves(species, form=0):
     """Every move this species can know, whatever its level, with every way
     it is learnt, never only the first: {move: [source, ...]}. A source is
     {"how": "level", "level": n} (0: on evolving), {"how": "machine",
-    "item": the TM, HM or TR}, {"how": "tutor"} ("type": the type the
+    "item": the TM or HM}, {"how": "tutor"} ("type": the type the
     Blackthorn tutor teaches it for, type_tutors), {"how": "egg"} ("item":
     the one a parent holds, item_egg_moves; "daycare": learnt at the
     Day-Care, by a species no egg hatches as) or
@@ -2808,9 +2808,9 @@ def bag(save):
 
 
 def _machine_order(slot):
-    """SortTMHMPocket's MachineSortGroup: the TMs, then the TRs, then the
-    HMs, each by item id."""
-    group = 2 if slot[0] in item_kind("ItemIsHM") else 1 if slot[0] in item_kind("ItemIsTR") else 0
+    """SortTMHMPocket's MachineSortGroup: the TMs, then the HMs, each by
+    item id."""
+    group = 1 if slot[0] in item_kind("ItemIsHM") else 0
     return (slot[1] == 0, group, slot[0])
 
 

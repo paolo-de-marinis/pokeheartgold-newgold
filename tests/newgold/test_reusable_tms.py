@@ -46,7 +46,6 @@ typedef struct PartyMenu { PartyMenuArgs *args; } PartyMenu;
 
 BOOL ItemIsTM(u16 itemId);
 BOOL ItemIsHM(u16 itemId);
-BOOL ItemIsTR(u16 itemId);
 BOOL ItemIsMachine(u16 itemId);
 
 static u16 requestedMax;
@@ -117,10 +116,11 @@ int main(void) {
     assert(ITEM_TM92 - ITEM_TM01 + 1 == NUM_TMS);
     assert(ITEM_HM08 - ITEM_HM01 + 1 == NUM_HMS);
 
-    // The machines past HM08: the later TMs are TMs, the TRs are not.
-    assert(ItemIsTM(ITEM_TM00) && ItemIsTM(ITEM_TM093) && ItemIsTM(ITEM_TM100) && ItemIsTM(ITEM_TM229));
-    assert(ItemIsHM(ITEM_HM07_ORAS) && !ItemIsTM(ITEM_HM07_ORAS));
-    for (u16 item = ITEM_TR00; item <= ITEM_TR99; item++) assert(ItemIsMachine(item) && !ItemIsTM(item));
+    // The machines past HM08 are TM93 to TM148; hg-engine's others are none.
+    assert(ItemIsTM(ITEM_TM093) && ItemIsTM(ITEM_TM100) && ItemIsTM(ITEM_TM101) && ItemIsTM(ITEM_TM148));
+    assert(!ItemIsMachine(ITEM_TM00) && !ItemIsMachine(ITEM_HM07_ORAS) && !ItemIsMachine(ITEM_TM100_SV));
+    assert(!ItemIsMachine(ITEM_TM149) && !ItemIsMachine(ITEM_TM229));
+    for (u16 item = ITEM_TR00; item <= ITEM_TR99; item++) assert(!ItemIsMachine(item));
 
     // The bag takes exactly one of each TM, and HMs keep the pocket's limit.
     for (u16 item = ITEM_TM01; item <= ITEM_TM92; item++) {
@@ -128,7 +128,7 @@ int main(void) {
         assert(Bag_GetItemSlotForAdd(NULL, item, 1, HEAP_ID_DUMMY) != NULL);
         assert(requestedMax == 1);
     }
-    for (u16 item = ITEM_TM100_SV; item <= ITEM_TM229; item++) {
+    for (u16 item = ITEM_TM101; item <= ITEM_TM148; item++) {
         requestedMax = 0;
         assert(Bag_GetItemSlotForAdd(NULL, item, 1, HEAP_ID_DUMMY) != NULL);
         assert(requestedMax == 1);
@@ -149,11 +149,10 @@ int main(void) {
     teach(ITEM_TM92, 433);
     assert(takeCalls == 0);
 
-    // A TR is spent, and still counts as learning from a machine.
-    teach(ITEM_TR00, 14);
-    assert(takeCalls == 1 && takenItem == ITEM_TR00 && friendshipCalls == 1 && moodCalls == 1);
     // A TM past HM08 is kept like the others.
-    teach(ITEM_TM093, 430);
+    teach(ITEM_TM093, 548);
+    assert(takeCalls == 0 && friendshipCalls == 1 && moodCalls == 1);
+    teach(ITEM_TM148, 922);
     assert(takeCalls == 0);
 
     // HMs were already kept, by move and now also by item.
@@ -164,7 +163,7 @@ int main(void) {
     teach(ITEM_NONE, 264);
     assert(takeCalls == 0 && friendshipCalls == 0 && moodCalls == 0);
 
-    puts("PASS: TMs, HMs and TRs, bag limits, machine teaching and the relearner path.");
+    puts("PASS: TMs and HMs, bag limits, machine teaching and the relearner path.");
 }
 '''
 
@@ -245,7 +244,6 @@ typedef struct { Bag *bag; MessageFormat *messageFormat; MsgData *msgData; } Bag
 typedef struct { ItemSlot *slots; u16 position; s16 scroll; u8 pocketId; u8 count; } BagViewPocket;
 BOOL ItemIsTM(u16 itemId);
 BOOL ItemIsHM(u16 itemId);
-BOOL ItemIsTR(u16 itemId);
 static int counted, labelled;
 static void AddTextPrinterParameterizedWithColor(Window *w, int f, String *s, int x, int y, int speed, u32 c, void *cb) {}
 static void ov15_021FE914(BagAppState *state, Window *window, ItemSlot *slot, u32 y) { labelled++; }
@@ -266,27 +264,24 @@ static int row(u8 pocket, u16 item) {
 }
 int main(void) {
     assert(row(POCKET_TMHMS, ITEM_TM01) == 0 && labelled == 1);
-    assert(row(POCKET_TMHMS, ITEM_TM100_SV) == 0);
+    assert(row(POCKET_TMHMS, ITEM_TM148) == 0 && labelled == 1);
     assert(row(POCKET_TMHMS, ITEM_HM01) == 0);
-    assert(row(POCKET_TMHMS, ITEM_TR00) == 1 && labelled == 1);
-    assert(row(POCKET_TMHMS, ITEM_TR99) == 1);
     assert(row(POCKET_ITEMS, ITEM_POTION) == 1 && labelled == 0);
-    puts("PASS: a TM or HM row has no count, a TR row and every other pocket have one.");
+    puts("PASS: a TM or HM row has no count, every other pocket's has one.");
     return 0;
 }
 """
 
 
 class BagDisplayTests(unittest.TestCase):
-    """A TM that is never spent has no quantity worth showing; a TR does.
+    """A TM that is never spent has no quantity worth showing.
 
     HeartGold prints a count beside every TM in the bag. With reusable TMs the
     number is whatever the player happened to buy and never changes, so it says
-    nothing; HMs never had one for the same reason. A TR is used up, so its
-    count is worth showing, as hg-engine shows it.
+    nothing; HMs never had one for the same reason.
     """
 
-    def test_the_machine_row_counts_only_trs(self):
+    def test_a_machine_row_has_no_count(self):
         item = (ROOT / "src/item.c").read_text()
         native = [machine_code(item)]
         native.append(function((ROOT / "src/bag_item_row.c").read_text(), "ov15_021FF570"))
@@ -314,31 +309,30 @@ typedef int BOOL;
 typedef struct { u16 id, quantity; } ItemSlot;
 BOOL ItemIsTM(u16 itemId);
 BOOL ItemIsHM(u16 itemId);
-BOOL ItemIsTR(u16 itemId);
 @NATIVE@
 int main(void) {
     ItemSlot pocket[] = {
-        { ITEM_HM01, 1 }, { ITEM_TR05, 3 }, { 0, 0 }, { ITEM_TM100_SV, 1 }, { ITEM_HM07_ORAS, 1 },
-        { ITEM_TM093, 1 }, { ITEM_TR00, 1 }, { ITEM_TM01, 1 }, { ITEM_TM92, 1 }, { ITEM_HM08, 1 },
+        { ITEM_HM01, 1 }, { ITEM_TM148, 1 }, { 0, 0 }, { ITEM_TM101, 1 }, { ITEM_HM05, 2 },
+        { ITEM_TM093, 1 }, { ITEM_TM096, 1 }, { ITEM_TM01, 1 }, { ITEM_TM92, 1 }, { ITEM_HM08, 1 },
     };
-    const u16 wanted[] = { ITEM_TM01, ITEM_TM92, ITEM_TM093, ITEM_TM100_SV, ITEM_TR00, ITEM_TR05,
-                           ITEM_HM01, ITEM_HM08, ITEM_HM07_ORAS, 0 };
+    const u16 wanted[] = { ITEM_TM01, ITEM_TM92, ITEM_TM093, ITEM_TM096, ITEM_TM101, ITEM_TM148,
+                           ITEM_HM01, ITEM_HM05, ITEM_HM08, 0 };
     SortTMHMPocket(pocket, 10);
     for (int i = 0; i < 10; i++) {
         assert(pocket[i].id == wanted[i]);
     }
-    assert(pocket[5].quantity == 3);
-    puts("PASS: the TM case sorts its TMs, then its TRs, then its HMs.");
+    assert(pocket[7].quantity == 2);
+    puts("PASS: the TM case sorts its TMs by number, then its HMs.");
     return 0;
 }
 """
 
 
 class MachineSortTests(unittest.TestCase):
-    """hg-engine sorts the TM case in three groups; by id alone the HMs would
-    sit between TM92 and TM093, and the TRs among the later TMs."""
+    """hg-engine sorts the TM case in groups; by id alone the HMs would sit
+    between TM92 and TM93."""
 
-    def test_the_tm_case_sorts_tms_trs_then_hms(self):
+    def test_the_tm_case_sorts_tms_then_hms(self):
         item = (ROOT / "src/item.c").read_text()
         bag = (ROOT / "src/bag.c").read_text()
         native = [machine_code(item)]

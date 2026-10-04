@@ -20,14 +20,11 @@ typedef char BagAppStateStringCheck[offsetof(BagAppState, unk5EC) == 0x5EC ? 1 :
 
 // HeartGold has a badge only for HMs, and marks a TM with a "No." glyph and
 // two digits instead. New Gold gives TMs a badge of their own and room for
-// three digits, which is what a machine list has looked like since, and the
-// TRs hg-engine adds a TR badge and two digits, as its bag draws them.
+// three digits, which is what a machine list has looked like since.
 #define BAG_HM_BADGE NARC_bag_gra_bag_gra_00000037_NCGR
 #define BAG_TM_BADGE NARC_bag_gra_bag_gra_00000095_NCGR
-#define BAG_TR_BADGE NARC_bag_gra_bag_gra_00000096_NCGR
 #define HM_DIGITS    2
 #define TM_DIGITS    3
-#define TR_DIGITS    2
 
 // The number sits immediately right of the badge.
 #define NUMBER_X 24
@@ -40,9 +37,6 @@ void ov15_021FE914(BagAppState *state, Window *window, ItemSlot *slot, u32 y) {
     if (ItemIsTM(slot->id)) {
         badge = BAG_TM_BADGE;
         digits = TM_DIGITS;
-    } else if (ItemIsTR(slot->id)) {
-        badge = BAG_TR_BADGE;
-        digits = TR_DIGITS;
     }
 
     PrintUIntOnWindow(state->msgPrinter, ItemToMachineNumber(slot->id), digits, PRINTING_MODE_LEADING_ZEROS, window, NUMBER_X, y + NUMBER_Y);

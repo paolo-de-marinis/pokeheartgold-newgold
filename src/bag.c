@@ -309,16 +309,10 @@ static void SortPocket(ItemSlot *slots, u32 count) {
     }
 }
 
-// hg-engine's SortTMHMPocket: the TMs, then the TRs, then the HMs, each by
-// item id. By id alone the HMs would sit between TM92 and TM093.
+// hg-engine's SortTMHMPocket: the TMs, then the HMs, each by item id. By id
+// alone the HMs would sit between TM92 and TM93.
 static int MachineSortGroup(u16 itemId) {
-    if (ItemIsHM(itemId)) {
-        return 2;
-    }
-    if (ItemIsTR(itemId)) {
-        return 1;
-    }
-    return 0;
+    return ItemIsHM(itemId) ? 1 : 0;
 }
 
 static void SortTMHMPocket(ItemSlot *slots, u32 count) {

@@ -67,7 +67,7 @@ It holds a Pokemon to what its species can have. `learnable_moves` is every
 move a species can know at any level, each with every way it is learnt: its
 level-up learnset (`wotbl.narc`; level 0 is on evolving) without the moves
 `IsMoveUnimplemented` flags, which `LoadLevelUpLearnset_HandleAlternateForm`
-drops for every reader, the TMs, HMs and TRs its `personal.json` record is
+drops for every reader, the TMs and HMs its `personal.json` record is
 compatible with (`sTMHMMoves` and `sMachineRuns` in `src/item.c`), the move
 tutors (`waza_oshie.json` through `sTutorMoves`, at the record
 `GetMoveTutorLearnsetIndex` reads; and the Blackthorn tutor's script,
@@ -167,10 +167,9 @@ owns, rows moved as
 `PokegearMap_InitInternal` moves them, any other at its header's world
 coordinates -- and `town_tile` where the Pokégear marks the player.
 
-`machine_table()` is every TM, TR and HM as the bag keeps them: in
-`SortTMHMPocket`'s order, each with its move, the move's type, how many the
-bag takes, and whether a use spends it (a TR, as `PartyMenu_LearnMoveToSlot`
-takes one only then).
+`machine_table()` is every TM and HM as the bag keeps them: in
+`SortTMHMPocket`'s order, each with its move, the move's type and how many
+the bag takes; teaching spends none (`PartyMenu_LearnMoveToSlot`).
 
 Nothing the game has is typed into it: all of it is read from the tree as
 the build would compile it, and read again once a file it came from has
@@ -185,7 +184,7 @@ laid out as `include/pokemon.h`'s `LEVEL_UP_LEARNSET_` macros and
 `struct MoveTbl` say. The tables are read out of the C that has them: the block
 order (`GetSubstruct`), `gNatureStatMods`, `ResolveMonForm`'s forms, the
 pockets (`struct Bag`, `Bag_GetItemPocket`, `sPockets`), which items are
-TMs, HMs and TRs (`sMachineRuns`, which `ItemIsTM` and the rest read), the message banks
+TMs and HMs (`sMachineRuns`, which `ItemIsTM` and `ItemIsHM` read), the message banks
 (`message_format.c`'s Buffer functions), the icons' numbers
 (`GetMonIconNaixEx`). The blocks' sizes are the one thing measured from the
 build, since the game's `Save_*_sizeof` exist in no other form; the page
@@ -248,9 +247,9 @@ On the right, the open save, in tabs: Allenatore (name, ids, money, gender,
 coins, play time, and the story), Squadra and Box (every Pokemon, a
 slot editor for species, level, nature, ability, held item, moves, IVs, EVs
 and friendship; adding, removing, reordering, moving between box and
-party), Borsa (the machines as a checklist, the Pokedex's way: every TM, TR
-and HM with its move and type, "ce l'ho", and a count for a TR, which a use
-spends; searched by "MT 45" as by "TM045"; written as the game keeps the
+party), Borsa (the machines as a checklist, the Pokedex's way: every TM
+and HM with its move and type and "ce l'ho"; searched by "MT 45" as by
+"TM045"; written as the game keeps the
 pocket, 101 slots at most), Pokedex (per
 species, all at once, and the two switches; then the forms the Dex records
 on their own, a Galarian Slowpoke seen or caught, its species with it, for

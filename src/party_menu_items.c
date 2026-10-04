@@ -953,11 +953,9 @@ void PartyMenu_LearnMoveToSlot(PartyMenu *partyMenu, Pokemon *mon, int moveIdx) 
     SetMonData(mon, MON_DATA_MOVE1_PP + moveIdx, &data);
     if (partyMenu->args->itemId != ITEM_NONE) {
         // New Gold's TMs and HMs are reusable, so teaching from one leaves it
-        // in the bag. A TR is spent, as in Sword and Shield and in hg-engine's
-        // PartyMenu_LearnMoveToSlot. This asks about the item because HMs are
-        // forgettable now and MoveIsHM no longer says which moves came from a
-        // machine.
-        if (!ItemIsMachine(partyMenu->args->itemId) || ItemIsTR(partyMenu->args->itemId)) {
+        // in the bag. This asks about the item because HMs are forgettable now
+        // and MoveIsHM no longer says which moves came from a machine.
+        if (!ItemIsMachine(partyMenu->args->itemId)) {
             Bag_TakeItem(partyMenu->args->bag, partyMenu->args->itemId, 1, HEAP_ID_PARTY_MENU);
         }
         MonApplyFriendshipMod(mon, FRIENDSHIP_EVENT_LEARN_TMHM, PartyMenu_GetCurrentMapSec(partyMenu));

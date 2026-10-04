@@ -133,7 +133,7 @@ class SpeciesRecordTests(unittest.TestCase):
             yields.setdefault(form, yields.get(base, 0))  # as the import gives a form its base's yield
         learnsets = import_species.machine_moves(reference)
         tms, hms = import_species.machine_numbers()
-        machine_list = import_species.reference_machine_list(reference)
+        machine_list = import_species.machine_list()
         # The hidden ability lives in a table of its own in the reference, and
         # an ability this game has not got leaves the species without one.
         known = set(re.findall(r"#define (ABILITY_[A-Z0-9_]+)",

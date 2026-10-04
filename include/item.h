@@ -267,12 +267,10 @@ BOOL MoveIsHM(u16 moveId);
 /*
  * u16 ItemToTMHMId
  *
- * Converts a machine to its place in hg-engine's numbering of its 340
- * machines, the place of its move in the machine table and of its bit in a
- * species' record: TM01 to TM92 are 0 to 91 and HM01 to HM08 92 to 99, as
- * HeartGold numbered them, then HM07 (Dive) 100, TM00 101, TM093 to TM100 102
- * to 109, Scarlet and Violet's TM100 to TM229 110 to 239, TR00 to TR99 240 to
- * 339.
+ * Converts a machine to its place among New Gold's 156 machines, the place
+ * of its move in the machine table and of its bit in a species' record: TM01
+ * to TM92 are 0 to 91 and HM01 to HM08 92 to 99, as HeartGold numbered them,
+ * then TM93 to TM148 100 to 155.
  *
  * @param itemId:      ID of the item to convert
  *
@@ -280,11 +278,10 @@ BOOL MoveIsHM(u16 moveId);
  */
 BOOL ItemIsTM(u16 itemId);
 BOOL ItemIsHM(u16 itemId);
-BOOL ItemIsTR(u16 itemId);
 BOOL ItemIsMachine(u16 itemId);
 u16 ItemToTMHMId(u16 itemId);
 
-// The number the bag labels a machine with (TM05 is 5, TR00 0); 0 for an
+// The number the bag labels a machine with (TM05 is 5, HM01 1); 0 for an
 // item that is not a machine.
 u16 ItemToMachineNumber(u16 itemId);
 

@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Write every species' machines past HM08 into the personal table.
 
-hg-engine numbers 340 machines (sMachineMoves in its src/item.c): HeartGold's
-TM01 to HM08 first, then the later games' TMs, HM07 (Dive), TM00 and the TRs.
-Its build sets a species' bit for a machine when the machine's move is in the
-species' MachineMoves or LevelMoves (scripts/build_learnsets.py,
-write_machine_data), a form with no list of its own reading its base's. The
-first 100 are the records' "tms" and "hms"; this writes the rest as
-"machines", the places past 99 in that numbering, which the template packs
-into the record's machine words.
+New Gold has 156 machines (sTMHMMoves in src/item.c): HeartGold's TM01 to
+HM08 first, then TM93 to TM148. A species' bit for a machine is set, as
+hg-engine's build sets it (scripts/build_learnsets.py, write_machine_data),
+when the machine's move is in the species' MachineMoves or LevelMoves in the
+reference, a form with no list of its own reading its base's. The first 100
+are the records' "tms" and "hms"; this writes the rest as "machines", the
+places past 99, which the template packs into the record's machine words.
 
 HeartGold's own alternate forms (496 to 507) have their learnsets under their
 number in the reference. The reference has no learnset for 500, Trash Cloak
@@ -33,7 +32,7 @@ NUMBERED_FORMS = range(496, 508)
 
 def wanted(reference, records):
     learnsets = import_species.machine_moves(reference)
-    machine_list = import_species.reference_machine_list(reference)
+    machine_list = import_species.machine_list()
     result = []
     for index, record in enumerate(records):
         name = str(index) if index in NUMBERED_FORMS else record["species"]
