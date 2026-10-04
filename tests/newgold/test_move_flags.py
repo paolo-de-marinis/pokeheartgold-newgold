@@ -76,9 +76,11 @@ class UnguardedMoveTests(unittest.TestCase):
     def test_none_of_them_is_copied_by_mirror_move_but_five(self):
         # Pokemon Central: "Non può essere copiata da Speculmossa" for each of
         # them but Court Change, Fairy Lock, Magic Room, Wonder Room and
-        # Power Shift. Mirror Move copies the last move aimed at its user, so
-        # the flag on Victory Dance let a Pokemon copy its own. Retail's Trick
-        # Room keeps retail's flag.
+        # Power Shift. Retail's Trick Room keeps retail's flag. Mirror Move
+        # here copies the last move another Pokemon aimed at its user, and
+        # these are aimed at the user: the flag on Victory Dance let a
+        # Pokemon copy its own, and the five keep the flag to no effect
+        # (test_a_pokemon_s_own_move_is_not_noted_for_its_mirror_move).
         table = import_moves.read_table()
         flagged = {move for move in range(MOVES["MOVE_SHADOW_FORCE"] + 1, len(table))
                    if record_at(table, move)[7] & import_moves.UNREFLECTED_TARGETS
@@ -93,6 +95,15 @@ class UnguardedMoveTests(unittest.TestCase):
         # engine's text with retail's names.
         script = (ROOT / "files/battledata/script/subscript/subscript_0139_MagicCoat.s").read_text()
         self.assertIn("PrintMessage msg_0197_00574, TAG_NICKNAME_MOVE, BATTLER_CATEGORY_DEFENDER, BATTLER_CATEGORY_ATTACKER", script)
+
+    def test_a_pokemon_s_own_move_is_not_noted_for_its_mirror_move(self):
+        # A move aimed at its user, its side or the field has the user for
+        # its target, and Mirror Move reads what was noted for its user: a
+        # Pokemon's Mirror Move copied its own Magic Room.
+        noted = function((ROOT / "src/battle/battle_controller_player.c").read_text(), "ov12_0224DD74")
+        self.assertIn("ctx->battlerIdTarget != BATTLER_NONE && ctx->battlerIdTarget != ctx->battlerIdAttacker && "
+                      "ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {\n"
+                      "        ctx->moveNoCopied[ctx->battlerIdTarget] = ctx->moveNoTemp;", noted)
 
     def test_snatch_takes_the_ones_pokemon_central_says_it_takes(self):
         # "Può essere rubata da Scippo"; the engine's records left these off.

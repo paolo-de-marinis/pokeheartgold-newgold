@@ -5636,7 +5636,12 @@ static void ov12_0224DD74(BattleSystem *battleSystem, BattleContext *ctx) {
 
     flag = BattleMoveTbl(ctx, ctx->moveNoTemp)->unkB;
 
-    if (flag & 0x10 && !(ctx->battleStatus & BATTLE_STATUS_NO_MOVE_SET) && ctx->battlerIdTarget != BATTLER_NONE && ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {
+    // Mirror Move copies the last move another Pokemon aimed at its user
+    // (moveNoCopied). A move aimed at its own user, its side or the field has
+    // the user for its target here (ov12_022506D4), and is not noted: before,
+    // a Pokemon's Mirror Move copied its own Magic Room, Wonder Room, Power
+    // Shift, Court Change, Fairy Lock or Trick Room, which keep the flag.
+    if (flag & 0x10 && !(ctx->battleStatus & BATTLE_STATUS_NO_MOVE_SET) && ctx->battlerIdTarget != BATTLER_NONE && ctx->battlerIdTarget != ctx->battlerIdAttacker && ctx->battleStatus2 & BATTLE_STATUS2_DISPLAY_ATTACK_MESSAGE) {
         ctx->moveNoCopied[ctx->battlerIdTarget] = ctx->moveNoTemp;
         ctx->moveNoCopiedHit[ctx->battlerIdTarget][ctx->battlerIdAttacker] = ctx->moveNoTemp;
     }

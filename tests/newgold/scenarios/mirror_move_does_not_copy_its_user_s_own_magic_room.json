@@ -1,0 +1,13 @@
+{
+  "about": "Mirror Move copies the last move another Pokemon aimed at its user, never the user's own. Magic Room keeps the Mirror Move flag (Pokemon Central, Speculmossa: one of five, with Wonder Room, Power Shift, Court Change and Fairy Lock; retail's Trick Room has it too), and it is aimed at its user here (RANGE_USER), so ov12_0224DD74 noted it for the user itself. A level-10 Pikachu is given Magic Room, then Mirror Move, in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash: the Mirror Move has nothing to copy, \"Mirror Move failed!\". Before, it became Magic Room again, and the user's Mirror Move ended its own room. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_MAGIC_ROOM", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Magic Room!"]}},
+            "teach:0,0,MOVE_MIRROR_MOVE", "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Mirror Move!", "Mirror Move failed!"], "no_lines": ["wore off"]}
+}
