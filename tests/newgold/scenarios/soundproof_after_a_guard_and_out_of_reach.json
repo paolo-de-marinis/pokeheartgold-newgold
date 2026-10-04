@@ -10,5 +10,5 @@
             {"expect": {"lines": ["The wild Chansey used Protect!", "Pikachu used Growl!", "The wild Chansey protected itself!"],
                         "no_lines": ["Soundproof"]}},
             "teach:1,0,MOVE_DIG", "teach:1,1,MOVE_DIG", "teach:1,2,MOVE_DIG", "teach:1,3,MOVE_DIG", "fight:1:1"],
-  "expect": {"new_lines": ["The wild Chansey used Dig!", "Pikachu used Growl!"], "no_lines": ["Soundproof"]}
+  "expect": {"new_lines": ["The wild Chansey used Dig!", "Pikachu used Growl!", "The wild Chansey avoided the attack!"], "no_lines": ["Soundproof"]}
 }

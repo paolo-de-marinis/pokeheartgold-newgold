@@ -7,7 +7,8 @@
             "teach:0,0,MOVE_THUNDER_WAVE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
             "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
             "set:1,ability,ABILITY_COMATOSE", "fight:1:1",
-            {"expect": {"lines": ["Pikachu used Thunder Wave!", "The wild Chansey used Splash!"], "no_lines": ["Comatose"]}},
+            {"expect": {"lines": ["Pikachu used Thunder Wave!", "The wild Chansey avoided the attack!", "The wild Chansey used Splash!"],
+                        "no_lines": ["Comatose"]}},
             "hold:gDiagForceHit=1", "fight:1:1"],
   "expect": {"new_lines": ["Pikachu used Thunder Wave!", "Comatose blocks Thunder Wave!"]}
 }

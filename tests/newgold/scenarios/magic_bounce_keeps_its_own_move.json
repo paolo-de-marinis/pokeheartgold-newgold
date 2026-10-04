@@ -7,5 +7,5 @@
             "teach:0,0,MOVE_VICTORY_DANCE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
             "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
             "set:0,ability,ABILITY_MAGIC_BOUNCE", "fight:1:1"],
-  "expect": {"lines": ["Pikachu used Victory Dance!", "Attack rose!"], "no_lines": ["bounced"]}
+  "expect": {"lines": ["Pikachu used Victory Dance!", "Attack rose!", "Defense rose!", "Speed rose!"], "no_lines": ["bounced"]}
 }
