@@ -87,6 +87,7 @@ PROGRAM = r'''
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
@@ -95,7 +96,14 @@ typedef struct { u16 species, moves[4]; u8 evs, nature; u16 item, form; } Fronti
 typedef struct { u8 filler[6]; u8 types[2]; } BASE_STATS;
 @DATA@
 static u32 sSeed = 1;
-static u16 LCRandom(void) { sSeed = sSeed * 1103515245 + 24691; return sSeed >> 16; }
+static int sStart = -1; // where in the stretch the search starts, or -1 at random
+static u16 LCRandom(void) {
+    if (sStart >= 0) {
+        return sStart;
+    }
+    sSeed = sSeed * 1103515245 + 24691;
+    return sSeed >> 16;
+}
 static int ov80_022379C0(int rank) { return rank < 10 ? rank : 9; }
 static void ov80_02229EF4(FrontierMonNarcData *dest, u32 index, int narcId) {
     assert(narcId == NARC_a_2_0_4 && index >= 1 && index <= BATTLE_HALL_SET_COUNT);
@@ -111,8 +119,13 @@ static void LoadMonBaseStats_HandleAlternateForm(int species, int form, BASE_STA
 }
 @NATIVE@
 
+@MAIN@
+'''
+
+MAIN = r'''
 int main(void) {
     static const u8 board[] = {@BOARD@};
+    alarm(60); // a search that never ends
     for (int i = 0; i < BATTLE_HALL_SET_COUNT; i++) {
         sTypes[sSetSpecies[i]][sSetForm[i]][0] = sSetType1[i];
         sTypes[sSetSpecies[i]][sSetForm[i]][1] = sSetType2[i];
@@ -143,6 +156,39 @@ int main(void) {
 }
 '''
 
+# A double challenge's first three battles all of one type at one rank, each
+# search started on the same set of the stretch, for every set: the picks run
+# out of sets of the type not yet picked, and the search has to notice it has
+# been round the stretch to take one again.
+ROUND = r'''
+int main(void) {
+    static const u8 board[] = {@BOARD@};
+    alarm(60); // a search that never ends
+    for (int i = 0; i < BATTLE_HALL_SET_COUNT; i++) {
+        sTypes[sSetSpecies[i]][sSetForm[i]][0] = sSetType1[i];
+        sTypes[sSetSpecies[i]][sSetForm[i]][1] = sSetType2[i];
+    }
+    for (unsigned b = 0; b < sizeof(board); b++) {
+        for (int rank = 0; rank < 10; rank++) {
+            const BattleHallSetRange *range = &gBattleHallRankStretches[rank];
+            for (int start = 0; start <= range->last - range->first; start++) {
+                u16 sets[16] = {0};
+                sStart = start;
+                for (u8 battle = 0; battle < 3; battle++) {
+                    ov80_02237448(2, board[b], rank, battle, 0, sets, 0);
+                    for (int k = 0; k < 2; k++) {
+                        u16 set = sets[battle * 2 + k];
+                        assert(sSetType1[set - 1] == board[b] || sSetType2[set - 1] == board[b]);
+                    }
+                }
+            }
+        }
+    }
+    puts("ok");
+    return 0;
+}
+'''
+
 
 def c_tables():
     """The Hall's tables as the C defines them, for the host: the files
@@ -163,7 +209,7 @@ def ranges(name):
     return [(int(a), int(b)) for a, b in re.findall(r"\{\s*(\d+),\s*(\d+)\s*\}", body)]
 
 
-def program():
+def program(main=MAIN):
     sets, types = hall_sets(), set_types()
     data = "".join([
         "#include \"constants/species.h\"\n",
@@ -173,7 +219,7 @@ def program():
     ])
     source = SOURCE.read_text()
     native = source[source.index("int ov80_022379C0(int rank);") + len("int ov80_022379C0(int rank);"):]
-    return PROGRAM.replace("@DATA@", data).replace("@NATIVE@", native).replace(
+    return PROGRAM.replace("@DATA@", data).replace("@NATIVE@", native).replace("@MAIN@", main).replace(
         "@BOARD@", ", ".join(map(str, BOARD)))
 
 
@@ -181,13 +227,20 @@ class BattleHallSetTests(unittest.TestCase):
     def test_every_pick_is_of_its_type(self):
         self.assertEqual(run(program(), "newgold-hall-sets-"), "ok")
 
+    def test_a_search_started_on_a_stretch_s_last_set_ends(self):
+        # Retail's search turned back one set before the stretch's end: one
+        # started on the last set never came back to it, never knew it had
+        # been round, and once the type's other sets were all picked in the
+        # round it never ended (the game hung).
+        self.assertEqual(run(program(ROUND), "newgold-hall-round-"), "ok")
+
     def test_every_type_has_two_sets_in_every_stretch(self):
         # Two, for the double battles' two picks; the search goes round the
         # stretch and would never end on a type with none.
         types = set_types()
         for rank, (first, last) in enumerate(ranges("gBattleHallRankStretches")):
             for t in BOARD:
-                found = [s for s in range(first, last) if t in types[s - 1]]
+                found = [s for s in range(first, last + 1) if t in types[s - 1]]
                 self.assertGreaterEqual(len(found), 2, (TYPES[t], rank + 1))
 
     def test_the_species_table_is_the_sets(self):

@@ -27,8 +27,11 @@ static BOOL BattleHallSet_HasType(u16 set, u8 type) {
 // Gen IV's: a Clefairy was offered as Normal); the Hall Matron's battles
 // (mode 1 and 2) any set from the strength of the player's species, or the
 // strongest. The player's own species is never picked. The search starts at
-// random in the stretch and goes round it; past one round it no longer
-// avoids the earlier picks.
+// random in the stretch and goes round it, its last set too; past one round
+// it no longer avoids the earlier picks. Retail turned back one set before
+// the stretch's end: a search started on the last set never came back to its
+// start, never knew it had been round, and once the type's other sets in the
+// stretch had all been picked in the round it went on for ever.
 void ov80_02237448(u8 count, u8 type, u8 rank, u8 battleNo, u16 species, u16 *sets, int mode) {
     u16 i;
     u16 j;
@@ -99,7 +102,7 @@ void ov80_02237448(u8 count, u8 type, u8 rank, u8 battleNo, u16 species, u16 *se
             }
         }
         idx++;
-        if (idx + 1 >= range->last) {
+        if (idx + 1 > range->last) {
             idx = range->first - 1;
         }
         if (idx == start) {
