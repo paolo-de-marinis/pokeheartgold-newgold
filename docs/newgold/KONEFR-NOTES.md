@@ -326,8 +326,35 @@ squadra ai suoi livelli (10-12), e il Delibird con la Focus Sash decide quasi tu
 **Dove:** `data/Trainers.c:13463` (#290) e `:884` (#20), righe a `a477c662f`.
 
 **Nel port:** tenuto com'è. Il playthrough batte Li con il Misdreavus contro il Meditite, al secondo
-tentativo, e Falkner al quarto, dopo aver portato a 13 con savedit tre dei suoi Pokémon (una riga
-dell'audit).
+tentativo. Falkner lo batteva al quarto, dopo aver portato a 13 con savedit tre dei suoi Pokémon; dal
+quattordicesimo giro nessuna modifica: la squadra si allena sull'erba della Route 32 e prende un Mareep
+(9af39f13f), e lo batte al primo tentativo (al quinto dove la tappa fu scritta).
+
+### 18. Bugsy, Whitney e la strada per Goldenrod
+**Domanda:** Bugsy, Whitney e gli allenatori della Route 35 devono essere così forti?
+
+**Cosa:** seguono la tua scala del cap (22 dopo Proton, 30 dopo Bugsy) ma sono molto sopra il retail:
+- Bugsy #21 (782a0aeb4) passa da Scyther L17, Kakuna e Metapod L15 a cinque Pokémon a L20-22 con
+  strumento e quattro mosse: un Ledian con Light Clay, Reflect e Light Screen, uno Shuckle con la
+  Bacca Oran, Stealth Rock e Rock Tomb, un Ariados con Sticky Web e Sucker Punch, uno Scizor con
+  Bullet Punch e un Heracross con Guts e la Flame Orb;
+- Whitney #30 (621a22d3c) passa da Clefairy L17 e Miltank L19 a cinque a L28-30: Furret, Ambipom,
+  Wigglytuff, un Farigiraf con Nasty Plot, Psychic e Thunderbolt, un Miltank con Milk Drink e
+  Bulldoze, e due Super Potion;
+- la Lass Carrie #22 della sua palestra ha Granbull e Herdier a L30, il livello più alto di Whitney
+  (lo Skitty L20 è la voce 11);
+- sulla Route 35, prima della terza medaglia, gli otto allenatori sono a L22-26 (in retail L2-16).
+
+Il playthrough del port, con la squadra che il bot cattura e allena, ha perso con Bugsy dieci volte in
+due ordini, mai oltre Ledian, Shuckle o Scizor, e arriva a lui solo dopo una modifica col savedit;
+una squadra a L23-27 ha perso con Whitney nove volte di fila e con Carrie sei. Il bot però sceglie le
+mosse solo per potenza e tipo e non usa mosse di stato né Pozioni, quindi un giocatore vero fa meglio.
+
+**Dove:** `data/Trainers.c:956` (#21), `:1444` (#30), `:1072` (#22); la Route 35 `:277` (#7),
+`:3509` (#72), `:3612` (#74), `:3667` (#75), `:3715` (#76), `:3763` (#77), `:3911` (#80), `:17397`
+(#388); righe a `a477c662f`.
+
+**Nel port:** tenuto com'è.
 
 ---
 
@@ -429,8 +456,11 @@ Nelson #389. Quindi oggi nessuna si può catturare.
 `_ALOLAN`, `_HISUIAN` o `_PALDEAN`.
 
 **Nel port:** tenuto com'è. Paolo ha deciso (3 ottobre) che il Pokédex le traccia comunque una per una
-(viste, catturate, la loro pagina e la loro mappa): se le metti nelle tue tabelle, l'importer le porta e il
-Pokédex le segue da solo.
+(viste, catturate, la loro pagina e la loro mappa), e dal quattordicesimo giro lo fa: il salvataggio
+tiene quali forme hai visto e catturato (4ff1cd928), la pagina FORMS le elenca col nome della regione e
+i tipi (0c57ffe2e, d8c4a38f5), e la pagina AREA mostra dove vive la forma scelta (a301b164b); lo
+Slowpoke di Galar di Larry ci si vede. Se le metti nelle tue tabelle, l'importer le porta e il Pokédex
+le segue da solo.
 
 ---
 
@@ -463,7 +493,8 @@ e Typhlosion Fuoco/Terra, mentre Feraligatr resta solo Acqua (con statistiche nu
 
 ### 3. Le tre abilità che assorbono l'Acqua non controllano le stesse cose
 **Domanda:** Irrigation ed Evaporate dovevano avere gli stessi controlli di Water Absorb? E ora che
-Water Absorb e Irrigation prendono anche Soak, Evaporate deve fermare anche le mosse Acqua di stato?
+Water Absorb e Irrigation prendono anche Soak, Evaporate deve fermare anche le mosse Acqua di stato? E
+deve parlare dopo la protezione, come Soundproof (vedi sotto)?
 
 **Cosa:** in 82b788666 Water Absorb ha avuto due condizioni nuove: la mossa deve fare danno (un
 controllo che hg-engine aveva tolto «as of Gen5») e chi la usa non può attivare la propria abilità. Irrigation, aggiunta nello stesso
@@ -481,6 +512,12 @@ domanda. L'intelligenza artificiale degli allenatori, che nell'undicesimo giro n
 Irrigation ed Evaporate assorbono l'Acqua (né nel suo gioco, quella di hg-engine, né nel port), lo sa
 dal dodicesimo, nel layer New Gold (ca0182d8c, e 45f67b02e per Soak contro Irrigation).
 
+Dal quattordicesimo giro (f48dc4533, layer del motore) i rifiuti delle abilità parlano dove li mette
+la nona generazione, e Evaporate, che usa lo script di Soundproof (3e122ad8a), segue il suo posto: una
+mossa Acqua contro chi ha Evaporate e si protegge mostra la riga della protezione, e contro chi è
+sottoterra o in volo un mancato, non più la riga di Evaporate; parla ancora sopra un tiro di
+precisione mancato, perché agisce prima della precisione. Il suo codice non è toccato.
+
 ### 4. Solar Seeds
 **Domanda:** Solar Seeds va messa fra le mosse a colpi multipli?
 
@@ -493,6 +530,21 @@ cambiato: va bene così?
 
 **Nel port:** corretto già prima della regola: aggiunta nel layer New Gold (b7c31a7d7). L'animazione
 è tenuta com'è (c7f39fca8).
+
+### 5. I tuoi cinque cambi di tipo nella Sala Lotta
+**Domanda:** ti va che i tuoi Pokémon ritipizzati arrivino nella Sala Lotta coi tipi nuovi?
+
+**Cosa:** nel quattordicesimo giro la Sala Lotta della Frontiera ha preso il rango Folletto (Paolo,
+2 ottobre), e per scegliere l'avversario ora legge i tipi di ogni set dai dati delle specie, non più
+dalla tabella della quarta generazione. Così i tuoi cinque cambi di tipo (f61b40c9a, e0bf78b7a,
+e9950130e, 05a81a4d4) arrivano anche lì: Meganium (Erba/Folletto) e Mismagius (Spettro/Folletto)
+sono offerti sotto Folletto, Typhlosion sotto Fuoco e Terra, Sudowoodo sotto Roccia e Coleottero,
+Sunflora sotto Erba e Fuoco. Il rango Folletto ha undici set nel primo tratto e sette nell'ultimo,
+due di questi tuoi.
+
+**Dove:** `data/Species.c` alla tua punta `a477c662f`; nel port 912d5cd58 e 24ef4532a.
+
+**Nel port:** tenuto così, con i tuoi tipi.
 
 ---
 
@@ -708,6 +760,20 @@ adesso; una più forte rende il gioco più difficile.
 **Nel port:** non fatto; è nel piano, dopo la fine del porting (`DEVKIT-PLAN.md`, «After the
 port: game features to build»).
 
+### 2. L'esperienza intera a chi ha lottato
+**Domanda:** vuoi che ogni Pokémon che ha lottato prenda l'esperienza intera, come dalla sesta
+generazione? Se sì, i cap o i livelli degli allenatori andrebbero rivisti?
+
+**Cosa:** oggi l'esperienza di una lotta si divide fra i Pokémon che hanno lottato, come in HeartGold
+e in hg-engine (la regola della quinta generazione, anche con `EXPERIENCE_FORMULA_GEN` a
+`GEN_LATEST`); dalla sesta ognuno di loro prende l'intera (Pokémon Central, Esperienza). Il tuo range
+non la tocca, e hai bilanciato New Gold su questa. Nel quattordicesimo giro un ramo ha provato la
+regola moderna: allenare cambiando Pokémon diventa molto più veloce (il Geodude del playthrough da
+L5 a L8 in 15.007 frame invece di 41.649).
+
+**Nel port:** Paolo (4 ottobre) la tiene divisa, com'è in HGSS e in hg-engine, finché non lo decidi
+tu; il cambio non è stato portato.
+
 ---
 
 ## Cose di hg-engine (non sue)
@@ -768,11 +834,18 @@ L'elenco completo è in AUDIT-2026-09-23.md ("Differences from konefr's referenc
   (`BattleFormChangeCheck.c:96`); e Castform con la neve resta com'è, il motore legge solo la
   grandine (d59d0c871, 845f0630d).
 - Take Heart ha come bersaglio l'alleato (RANGE_ALLY) e il flag di Protect, anche se alza le
-  statistiche di chi la usa: in doppio la ferma il Protect del compagno (una riga dell'audit).
+  statistiche di chi la usa: in doppio la ferma il Protect del compagno (corretto nel port, 862bbf415).
+- Molte mosse aggiunte che mirano a chi le usa, al suo lato o al campo (Victory Dance, Shore Up, i
+  terreni, Aurora Veil e altre) hanno i flag di Protect, Magic Coat e Mirror Move, e tredici non
+  hanno quello di Snatch: un Pokémon con Magic Bounce si rimandava la sua Victory Dance all'infinito e
+  la lotta si bloccava, e Mirror Move copiava la mossa di chi la usava (corretti nel port, c83450ada,
+  b30969756, 27d5a5632, 3d3cdaa93).
 - Lo sfondo dei terreni: l'inizio è un'animazione, che l'opzione della scena di lotta spegne, la fine
   no; il comando disegna solo sulla console che fa girare la lotta, quindi in una lotta in link
   l'altro giocatore tiene lo sfondo del terreno; e LoadDifferentBattleBackground legge la sua tabella
-  oltre la fine (d27f4aff6).
+  oltre la fine (d27f4aff6). Dopo la riga di una mossa terreno si vedeva l'animazione di un'altra
+  mossa (il «TODO: something weird» del motore, `subscript_0354_CREATE_TERRAIN_OVERLAY.s:55`); nel port
+  ogni terreno ha ora un'animazione d'inizio sua, che il motore non ha (50d5ad0fa, 22a9c1a48, 3b6951d5a).
 - Queste cose sono di hg-engine e non sue, anche se i nostri record a volte gliele attribuiscono: i
   prezzi degli strumenti e le potenze di Natural Gift, `ALLOW_SAVE_CHANGES`, gli sprite segnaposto,
   le voci del Pokédex e le 33 Bacche Hyper (Strumenti 3).
