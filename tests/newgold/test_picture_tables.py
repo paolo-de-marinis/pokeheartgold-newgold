@@ -211,6 +211,33 @@ class PictureTableTests(unittest.TestCase):
         self.assertEqual(retail, 12)
         self.assertEqual(sunk, {})
 
+    def test_added_fronts_stand_as_their_kind_does(self):
+        """konefr, through Paolo: "trubbish offset sprite (forse tutti
+        nuovi?)". A front's lowest row stands its Y offset over the ground
+        line, retail's grounded fronts from 12 rows under it (Metagross) to
+        3 over it (Pikachu, and Trubbish with the same small shadow).
+        Trubbish had the reference's -20 until 6c562886d, under the player's
+        HP box. The 120 added species that draw the reference's placeholder,
+        Bulbasaur's front, floated 21 or 22 rows over the line; the reference
+        drew some grounded species in the air (a Steenee 11 rows up), and
+        gave forms their base's record for pictures drawn otherwise in their
+        frames (a Sunny Castform 8 rows under Castform)."""
+        member = read_narc((ROOT / "files/a/1/8/0").read_bytes())[0][0]
+        names = import_sprite_offsets.port_species()
+        number = {name: n for n, name in enumerate(names)}
+        tail = lambda n: member[n * import_sprite_offsets.RECORD + import_sprite_offsets.Y_OFFSET:  # noqa: E731
+                                (n + 1) * import_sprite_offsets.RECORD]
+        offset = lambda name: struct.unpack("<b", tail(number[f"SPECIES_{name}"])[:1])[0]  # noqa: E731
+        bulbasaur = import_sprite_offsets.front_picture(number["SPECIES_BULBASAUR"])
+        placeholders = [n for n in range(import_sprite_offsets.FIRST_ADDED, len(names))
+                        if import_sprite_offsets.front_picture(n) == bulbasaur]
+        self.assertTrue(placeholders)
+        self.assertEqual({names[n]: tail(n) for n in placeholders if tail(n) != tail(number["SPECIES_BULBASAUR"])}, {})
+        grounded = ("TRUBBISH", "TIRTOUGA", "CLAWITZER", "STEENEE", "EISCUE", "ARCTOVISH", "REVAVROOM", "ORTHWORM",
+                    "IRON_TREADS", "ENAMORUS_THERIAN", "TERAPAGOS_TERASTAL", "TERAPAGOS_STELLAR", "TAUROS_COMBAT")
+        self.assertEqual({name: offset(name) for name in grounded if not -12 <= offset(name) <= 3}, {})
+        self.assertEqual({offset(f"CASTFORM_{form}") for form in ("SUNNY", "RAINY", "SNOWY")}, {offset("CASTFORM")})
+
     def test_every_picture_record_reader_reads_its_species(self):
         """a/1/8/0 member 0 now has a record for every species; the six
         functions that read it by species all take that record."""

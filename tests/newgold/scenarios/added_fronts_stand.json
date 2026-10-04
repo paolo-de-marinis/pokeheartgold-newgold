@@ -1,0 +1,17 @@
+{
+  "about": "Where three wild foes' front pictures stand over the ground line, as a shot shows them (front1.lift: the rows between the picture's lowest opaque row and the line ov12 stands a Y offset of 0 on, which is the a/1/8/0 Y offset). Steenee, which the reference draws 11 rows in the air with a record it never placed, stands on the line as retail's grounded fronts with a medium shadow do (0); Naclstack, one of the 120 added species that draw the reference's placeholder, Bulbasaur's front, stands where Bulbasaur does (-1), not 22 rows up; Trubbish, konefr's report, stands 3 rows over the line at the middle of its small shadow, as retail's Pikachu does, not the 20 rows under it, behind the player's HP box, that it was drawn before 6c562886d.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CYNDAQUIL:46"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215",
+            "poke:gDiagForceBattleSpecies=791", "LEFT", "fight:0:0",
+            {"expect": {"battler1.species": "SPECIES_STEENEE", "front1.lift": 0}},
+            "fight", "field",
+            "poke:gDiagForceBattleSpecies=954", "RIGHT", "fight:0:0",
+            {"expect": {"battler1.species": "SPECIES_NACLSTACK", "front1.lift": -1}},
+            "fight", "field",
+            "poke:gDiagForceBattleSpecies=521", "LEFT", "fight:0:0",
+            {"expect": {"battler1.species": "SPECIES_TRUBBISH", "front1.lift": 3}},
+            "fight", "field"],
+  "expect": {"lines": ["Steenee", "Naclstack", "Trubbish"]}
+}
