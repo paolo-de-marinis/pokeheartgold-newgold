@@ -469,6 +469,20 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(mon["exp"], sv.experience_for(rate, 21) - 3)
         self.assertEqual((mon["level"], sv.open_mon(sv.short_of_next_level(raw, 3))["party"][4]), (20, 20))
 
+    def test_the_cli_leaves_a_party_pokemon_hurt(self):
+        # --hp: the HP a party Pokemon has left, its maximum at most, the rest
+        # as it was -- what gym.py's Potion scenario has the bag heal (a
+        # battle's set: hp changes the battler, not the Pokemon an item heals).
+        out = Path(self.tmp.name) / "hp.sav"
+        out.write_bytes(self.path.read_bytes())
+        before = sv.describe_mon(sv.party_raw(sv.Save(out))[1])
+        subprocess.run([sys.executable, str(ROOT / "tools/newgold/devkit/savedit.py"), str(out), "--hp", "2:5", "--hp", "3:999"],
+                       check=True, capture_output=True)
+        party = [sv.describe_mon(raw) for raw in sv.party_raw(sv.Save(out))]
+        self.assertTrue(party[1]["ok"])
+        self.assertEqual((party[1]["hp"], party[1]["stats"], party[1]["level"]), (5, before["stats"], before["level"]))
+        self.assertEqual(party[2]["hp"], party[2]["stats"][0])
+
     def test_the_cli_sets_a_party_pokemon_s_level_and_keeps_the_rest(self):
         # --level: a caught Pokemon raised to a level, the same Pokemon --
         # its personality, IVs and moves -- with that level's experience.

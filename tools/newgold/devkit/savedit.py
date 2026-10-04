@@ -1244,6 +1244,14 @@ def short_of_next_level(raw, points):
     return seal_mon(mon)
 
 
+def with_hp(raw, hp):
+    """A party Pokemon with `hp` HP left, its maximum at most: hurt as a
+    battle leaves it, for what a scenario has the bag heal."""
+    mon = open_mon(raw)
+    struct.pack_into("<H", mon["party"], 6, min(hp, struct.unpack_from("<H", mon["party"], 8)[0]))
+    return seal_mon(mon)
+
+
 def set_party(save, wanted):
     """The whole party, always the player's own so that it obeys."""
     if len(wanted) > PARTY_SIZE:
@@ -4319,6 +4327,8 @@ def main():
     parser.add_argument("--exp-short", action="append", default=[], metavar="SLOT:POINTS",
                         help="leave party Pokemon SLOT (counted from one) POINTS experience "
                              "short of its next level; repeatable")
+    parser.add_argument("--hp", action="append", default=[], metavar="SLOT:HP",
+                        help="party Pokemon SLOT (counted from one) with HP left, its maximum at most; repeatable")
     parser.add_argument("--level", action="append", default=[], metavar="SLOT:LEVEL",
                         help="party Pokemon SLOT (counted from one) at LEVEL, the experience it costs, "
                              "and everything else it had kept (edit_mon); repeatable")
@@ -4401,6 +4411,12 @@ def main():
         set_party_mon(save, slot - 1, short_of_next_level(party_raw(save)[slot - 1], points))
         save.write()
         print(f"party slot {slot}: {points} experience short of its next level")
+
+    for entry in args.hp:
+        slot, hp = (int(v) for v in entry.split(":"))
+        set_party_mon(save, slot - 1, with_hp(party_raw(save)[slot - 1], hp))
+        save.write()
+        print(f"party slot {slot}: {hp} HP")
 
     for entry in args.level:
         slot, level = (int(v) for v in entry.split(":"))
