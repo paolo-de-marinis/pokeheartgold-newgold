@@ -647,6 +647,8 @@ Overlay OVY_7
 {
     After OVY_6
     Object asm/overlay_07.o
+    Object src/battle/battle_anim_script.o
+    Object asm/overlay_07_0221F8C4.o
 }
 Overlay OVY_8
 {
