@@ -507,7 +507,24 @@ Reading what the debug ROM records, and playing it without looking.
   together in one of them, in their order.
   `NEWGOLD_PLAYTHROUGH=0` leaves the playthrough's legs out of a run (they
   alone play for well over an hour) and the other scenarios play as ever;
-  unset, or anything else, it plays them, and a round's landing always does.
+  unset, or anything else, it plays them.
+
+  The whole chain from a new game plays once a round, after the landing's
+  push, in the background: `tools/newgold/chain.sh DIR`, run in a tree at
+  the commit landed (`. ~/hgss-build/env.sh && tools/newgold/devkit/capped
+  -m 4G tools/newgold/chain.sh DIR &`), builds its diagnostics ROM, plays
+  the legs one after another on a copy of it in `DIR/run`, and stops at the
+  first that fails; `DIR/chain.log` has a line for each leg -- its exit
+  code, its time, its report's first line with its frames. Each leg that
+  passes leaves its save and report in DIR, `NAME.sav` and `NAME.txt`, the
+  report's last line naming the commit it was played on: DIR is the cache
+  of each leg's last good run (a leg that fails keeps the older one there),
+  and a leg that fails becomes an audit row. During a round's integration
+  and fixes, the landing's check among them, `NEWGOLD_CHAIN_FROM=DIR` plays
+  every leg at once instead, each from the save its leg before left in DIR
+  (`scene.py --from DIR`; a leg whose leg before has none there is
+  skipped), the longest there first: the legs add up to two hours and a
+  half and the longest to 18 minutes, about 20 at `NEWGOLD_WORKERS=8`.
 - `species.py OUT` -- every species and form through the screens that load
   its resources: in the PC, in boxes savedit fills (its icon, its sprite,
   its name, Dex number, types and ability on the hover, and its summary's

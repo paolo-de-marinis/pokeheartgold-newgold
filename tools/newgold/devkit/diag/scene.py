@@ -2,7 +2,7 @@
 """Play a scene from a save, step by step, and check what it shows.
 
     scene.py SAVE OUT STEP... [--rom ROM] [--elf ELF]      SAVE "new": an empty flash
-    scene.py --scenario FILE [--out DIR] [--chain DIR] [--rom ROM] [--elf ELF]
+    scene.py --scenario FILE [--out DIR] [--chain DIR] [--from DIR] [--rom ROM] [--elf ELF]
     ... --record RUN.mp4        either, filmed: every frame and its sound (core.py)
 
 A step is one of
@@ -120,6 +120,9 @@ new game (newgame). One that names another as "from", a leg of a chain
 legs of a run share a directory (--chain), where each leaves its report,
 NAME.txt, and on a pass its save, NAME.sav; a leg whose leg before has not
 run plays it first, and one whose leg before failed fails without playing.
+With --from DIR a leg starts from DIR/BEFORE.sav instead, the leg before
+not played (skipped when DIR has none): the legs of tools/newgold/chain.sh's
+last good run, each played at once (test_scenarios.py, NEWGOLD_CHAIN_FROM).
 
 In "expect", "lines" have to be printed by the battle, in that order (a
 part of the line is enough), "new_lines" the same since the check before
@@ -1688,12 +1691,18 @@ class Scene:
         return wrong
 
 
-def leg_save(path, chain, rom=ROM, elf=DIAG_ELF):
+def leg_save(path, chain, rom=ROM, elf=DIAG_ELF, start=None):
     """The save a leg starts from, when it names the leg before ("from"):
     the one that leg's in-game save left in the chain's directory, the leg
-    played first, on the same ROM, when it has not been yet. (the save or
-    None, the report's lines when there is none)."""
+    played first, on the same ROM, when it has not been yet; or with `start`
+    (--from), the one in that directory, the leg before never played. (the
+    save or None, the report's lines when there is none)."""
     before = json.loads(Path(path).read_text())["from"]
+    if start:
+        save = Path(start) / f"{before}.sav"
+        if save.exists():
+            return save, []
+        return None, [f"SKIP {Path(path).name}: {start} has no save of the leg before, {before}"]
     save, report = chain / f"{before}.sav", chain / f"{before}.txt"
     if not save.exists() and not report.exists():
         subprocess.run([sys.executable, __file__, "--scenario", str(Path(path).with_name(f"{before}.json")),
@@ -1705,17 +1714,18 @@ def leg_save(path, chain, rom=ROM, elf=DIAG_ELF):
     return None, [f"{kind} {Path(path).name}: the leg before, {before}, left no save"] + [f"  {line}" for line in lines]
 
 
-def scenario(path, rom=ROM, elf=DIAG_ELF, out=None, record=None, chain=None):
+def scenario(path, rom=ROM, elf=DIAG_ELF, out=None, record=None, chain=None, start=None):
     """Run one scenario file: (True, False, or None when it cannot run here;
     the report's lines). A leg of a chain writes its report, and on a pass
     the in-game save it made, to the chain's directory as NAME.txt and
-    NAME.sav, for the leg after it."""
+    NAME.sav, for the leg after it; with `start` it starts from the save of
+    the leg before in that directory instead (leg_save)."""
     spec = json.loads(Path(path).read_text())
     chain = Path(chain or tempfile.mkdtemp(prefix="newgold-chain-"))
     chain.mkdir(parents=True, exist_ok=True)
     save, report, saved = None, [], None
     if "from" in spec:
-        save, report = leg_save(path, chain, rom, elf)
+        save, report = leg_save(path, chain, rom, elf, start)
     elif "save" in spec:
         save = Path(spec["save"]) if Path(spec["save"]).is_absolute() else SAVES / spec["save"]
         if not save.exists():
@@ -1777,10 +1787,12 @@ def main():
         parser.add_argument("--elf", type=Path, default=DIAG_ELF)
         parser.add_argument("--chain", type=Path, help="where the legs of a chain leave their saves (a new "
                                                         "directory, and the legs before played, by default)")
+        parser.add_argument("--from", dest="start", type=Path, help="a leg starts from the save of the leg "
+                            "before in this directory, which is not played (a chain.sh cache)")
         args = parser.parse_args()
         from gym import quiet
         out = quiet()
-        passed, report = scenario(args.scenario, args.rom, args.elf, args.out, args.record, args.chain)
+        passed, report = scenario(args.scenario, args.rom, args.elf, args.out, args.record, args.chain, args.start)
         print("\n".join(report), file=out)
         sys.exit(1 if passed is False else 0)
     parser = argparse.ArgumentParser()

@@ -16,7 +16,10 @@ The legs of the playthrough are a chain: a leg names the one before it
 ("from") and starts from the in-game save that one made. They share one
 directory for the run (CHAIN); one run alone plays the legs before it first.
 NEWGOLD_PLAYTHROUGH=0 leaves every leg of a chain out (skipped, not played);
-unset, they play.
+unset, they play. NEWGOLD_CHAIN_FROM=DIR plays every leg at once instead,
+each from the save the leg before it left in DIR -- the cache of the last
+good run of the whole chain, tools/newgold/chain.sh's -- the longest there
+first: a round's check, where the whole chain plays once after the landing.
 
 Up to three scene.py processes play at once (WORKERS; NEWGOLD_WORKERS=2
 plays two, as a round's agent, allowed two emulators, must), started when the
@@ -28,6 +31,7 @@ and a half alone.
 """
 import json
 import os
+import re
 import struct
 import subprocess
 import sys
@@ -559,6 +563,49 @@ class ChainTests(unittest.TestCase):
             leg = self.leg(chain, "SKIP before.json: no ROM\n")
             self.assertIsNone(scene.scenario(leg, chain=chain)[0])
 
+    def test_a_leg_from_a_cache_starts_from_the_save_there_and_never_plays_the_leg_before(self):
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as chain, tempfile.TemporaryDirectory() as cache:
+            leg = self.leg(chain)
+            (Path(cache) / "before.sav").write_bytes(b"flash")
+            with mock.patch.object(scene.subprocess, "run") as played:
+                self.assertEqual(scene.leg_save(leg, Path(chain), start=Path(cache)), (Path(cache) / "before.sav", []))
+                (Path(cache) / "before.sav").unlink()
+                save, report = scene.leg_save(leg, Path(chain), start=Path(cache))
+            played.assert_not_called()
+            self.assertIsNone(save)
+            self.assertEqual(report, [f"SKIP after.json: {cache} has no save of the leg before, before"])
+
+    def test_newgold_chain_from_plays_every_leg_alone_the_longest_there_first(self):
+        # Each leg a job of its own, so the workers play them at once, the
+        # one that took longest in the cache's run first; each is handed the
+        # cache (scene.py --from), and a cache that is not there fails.
+        from unittest import mock
+        legs_ = [SCENARIOS / f"{name}.json" for name in
+                 ("playthrough_01_new_game", "playthrough_02_cherrygrove", "playthrough_03_mr_pokemon")]
+        with tempfile.TemporaryDirectory() as cache, \
+                mock.patch.dict(os.environ, {"NEWGOLD_CHAIN_FROM": cache, "NEWGOLD_PLAYTHROUGH": "1"}):
+            (Path(cache) / "playthrough_02_cherrygrove.txt").write_text(
+                "PASS playthrough_02_cherrygrove.json: 19811 frames in 215 s\n  played on 6fee9b238\n")
+            (Path(cache) / "playthrough_03_mr_pokemon.txt").write_text(
+                "PASS playthrough_03_mr_pokemon.json: 34215 frames in 312 s\n  played on 6fee9b238\n")
+            self.assertEqual(jobs(legs_), [[legs_[2]], [legs_[1]], [legs_[0]]])
+            with mock.patch.object(subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "PASS", "")) as played:
+                run(legs_[1])
+            command = played.call_args[0][0]
+            self.assertEqual(command[command.index("--from") + 1], cache)
+            os.environ["NEWGOLD_CHAIN_FROM"] = str(Path(cache) / "nowhere")
+            with self.assertRaisesRegex(AssertionError, "nowhere is not a directory"):
+                play(legs_[1])(self)
+
+    def test_chain_sh_takes_the_legs_in_the_chain_s_order(self):
+        # tools/newgold/chain.sh plays the legs as the C locale sorts their
+        # names, which Python's sort is: that has to be the line "from" draws.
+        legs_ = sorted(SCENARIOS.glob("playthrough_*.json"))
+        self.assertNotIn("from", json.loads(legs_[0].read_text()))
+        for before, after in zip(legs_, legs_[1:]):
+            self.assertEqual(json.loads(after.read_text()).get("from"), before.stem)
+
     def test_three_play_at_once_and_a_chains_legs_in_order(self):
         self.assertEqual(self.most_at_once({}), WORKERS)
 
@@ -939,16 +986,35 @@ WORKERS = 3                 # scene.py processes at once, an emulator each, unle
 RESULTS = {}                # a scenario's path -> the Future of run(path)
 
 
+def chain_from():
+    """NEWGOLD_CHAIN_FROM's directory, where each leg finds the save of the
+    leg before it (scene.py --from), or None: the legs play as one chain."""
+    return Path(os.environ["NEWGOLD_CHAIN_FROM"]) if os.environ.get("NEWGOLD_CHAIN_FROM") else None
+
+
 def run(path):
     """One scenario played by scene.py: (its exit code, its report)."""
-    done = subprocess.run([sys.executable, str(DIAG / "scene.py"), "--scenario", str(path), "--chain", CHAIN.name],
-                          capture_output=True, text=True, timeout=1800 * legs(path))
+    start = ["--from", str(chain_from())] if chain_from() else []
+    done = subprocess.run([sys.executable, str(DIAG / "scene.py"), "--scenario", str(path), "--chain", CHAIN.name,
+                           *start], capture_output=True, text=True, timeout=1800 * (1 if start else legs(path)))
     return done.returncode, done.stdout.strip() or done.stderr.strip()[-2000:]
+
+
+def seconds(path):
+    """How long a leg played in NEWGOLD_CHAIN_FROM's run, by the report it
+    left there ("PASS NAME.json: N frames in S s"); 0 when it left none."""
+    report = chain_from() / f"{path.stem}.txt"
+    played = re.search(r" in (\d+) s", report.read_text()) if report.exists() else None
+    return int(played[1]) if played else 0
 
 
 def jobs(paths):
     """The scenarios as the workers take them: each alone, but the legs of a
-    chain together, first leg first; the longest job first."""
+    chain together, first leg first; the longest job first. Under
+    NEWGOLD_CHAIN_FROM every leg is a job alone, the longest there first."""
+    if chain_from():
+        return sorted(([path] for path in paths), key=lambda job: seconds(job[0]), reverse=True)
+
     def first(path):
         before = json.loads(path.read_text()).get("from")
         return first(SCENARIOS / f"{before}.json") if before else path
@@ -980,6 +1046,8 @@ def play(path):
     def test(self):
         if not playthrough() and chained(path):
             self.skipTest("NEWGOLD_PLAYTHROUGH=0: the playthrough's legs are left out")
+        if chain_from() and not chain_from().is_dir():
+            self.fail(f"NEWGOLD_CHAIN_FROM: {chain_from()} is not a directory")
         for needed, how in ((ROM, "make NEWGOLD_DIAG=1 COMPARE=0 build/heartgold.us.diag/pokeheartgold.us.nds"),
                             (ELF, "the same build"), (CORE, "the libretro core (NEWGOLD_CORE)")):
             if not os.path.exists(needed):
