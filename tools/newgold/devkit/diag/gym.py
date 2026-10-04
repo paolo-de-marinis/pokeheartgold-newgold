@@ -721,6 +721,30 @@ def battle_at(ram, markers, known=None):
     return found[0] - layout["mons"] if len(found) == 1 else None
 
 
+@savedit.tree_cache
+def system_layout():
+    """Where BattleSystem keeps its battle type, its context and its battler
+    count, and the trainer battle's bit."""
+    names = ("__builtin_offsetof(BattleSystem, battleType)", "__builtin_offsetof(BattleSystem, ctx)",
+             "__builtin_offsetof(BattleSystem, maxBattlers)", "BATTLE_TYPE_TRAINER")
+    values = savedit.compile_c(exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h", "constants/battle.h"))[0]
+    return dict(zip(("type", "ctx", "count", "trainer"), values))
+
+
+def trainer_battle(ram, at):
+    """Whether the battle whose context is at `at` is a trainer's: its
+    BattleSystem's battleType, the system found by its pointer to the
+    context (and a battler count of 2 or 4); None when it is not found. The
+    lines tell it only while "You encountered a wild" is still among them,
+    which a battle played in two fight: steps has passed."""
+    layout = system_layout()
+    for m in re.finditer(re.escape(struct.pack("<I", 0x02000000 + at)), ram):
+        system = m.start() - layout["ctx"]
+        if m.start() % 4 == 0 and system >= 0 and struct.unpack_from("<i", ram, system + layout["count"])[0] in (2, 4):
+            return bool(struct.unpack_from("<I", ram, system + layout["type"])[0] & layout["trainer"])
+    return None
+
+
 def battlers(ram, at):
     """The four battlers and the field, read from the battle context at `at`:
     ([battler 0..3], {rain, sun, sides, and the screens' bits})."""
@@ -1004,6 +1028,14 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     wild_battle, weakening, foe_before, hit, thrown = False, False, None, 0, 0
     learning = None                    # the (party slot, move) a level-up's choice was said for
     found = {"at": None, "heals": None}  # the battle context (battle_at), the bag's HP items when first asked
+
+    def is_wild():
+        """Whether this is a wild battle: by the battle's own type once its
+        context is found, else by its lines."""
+        ram = core.ram()
+        found["at"] = battle_at(ram, markers, found["at"])
+        kind = trainer_battle(ram, found["at"]) if found["at"] is not None else None
+        return wild_battle if kind is None else not kind
     switched = set()                   # the foes a Pokemon was brought in against (switch_to)
 
     def picker(ram, battler):
@@ -1030,7 +1062,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             team = bench(ram, markers, scorer) if others else []
         except SystemExit:
             team = []
-        return scorer.choose(user, foe, usable, field, found["heals"] if battler == 0 and not wild_battle else None,
+        return scorer.choose(user, foe, usable, field, found["heals"] if battler == 0 and not is_wild() else None,
                              not others, [(slot, team[slot]["hp"], team[slot]["maxHp"]) for slot in others
                                           if slot < len(team) and team[slot]])
 
@@ -1162,7 +1194,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 shift = None
             elif runs(view, wild, flee):
                 core.touch(*RUN, 6, hold)
-            elif move < 0 and not wild_battle and (better := switch_to(ram)) is not None:
+            elif move < 0 and not is_wild() and (better := switch_to(ram)) is not None:
                 say(f"[{core.frames}] party slot {better} comes in for slot {you[4]}")
                 relieve(core, markers, hold, better)
             elif wanted and throws_now(foe[1], foe[2], hit, damaging):

@@ -554,6 +554,26 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertFalse(scorer.standing(hoothoot, larvitar, field)[0])
         self.assertEqual(scorer.relief(mareep, larvitar, {4: hoothoot}, field), 4)
 
+    def test_gym_reads_a_trainer_battle_from_its_system(self):
+        # The second fight: step of a wild battle starts past "You
+        # encountered a wild": the battle's own type says what it is -- its
+        # BattleSystem, found by the pointer to its context, a battler count
+        # of 2 or 4 beside it; a stray word equal to the pointer is not it.
+        import struct
+        sys.path[:0] = [str(ROOT / "tools/newgold/devkit/diag"), str(ROOT / "tools/newgold/devkit")]
+        from gym import system_layout, trainer_battle
+        layout, ram, context = system_layout(), bytearray(0x10000), 0x8000
+        struct.pack_into("<I", ram, 0x100, 0x02000000 + context)                     # a stray pointer
+        system = 0x2000
+        struct.pack_into("<I", ram, system + layout["type"], layout["trainer"] | 0x10)
+        struct.pack_into("<I", ram, system + layout["ctx"], 0x02000000 + context)
+        struct.pack_into("<i", ram, system + layout["count"], 2)
+        self.assertIs(trainer_battle(bytes(ram), context), True)
+        struct.pack_into("<I", ram, system + layout["type"], 0)
+        self.assertIs(trainer_battle(bytes(ram), context), False)
+        struct.pack_into("<i", ram, system + layout["count"], 7)
+        self.assertIsNone(trainer_battle(bytes(ram), context))
+
     def test_a_foe_that_gave_its_move_is_asked_again_by_teach(self):
         # A foe gives its move as the turn's choosing starts, and the battle
         # runs the slot it gave: asked before teach:, one ran a slot teach:
