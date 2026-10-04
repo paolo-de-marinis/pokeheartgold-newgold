@@ -1,0 +1,9 @@
+{
+  "about": "A save from before TM93 to TM148, converted when the game loads it: a scratch copy of Paolo's route29-official.sav (the oldest layout the game reads, before the DNA Splicers), given TM94, TM101, TM126 and TM51 by savedit --tm, which writes into that save what its time had -- hg-engine's TR85 (Work Up), its TM179 (Smack Down) and its TM170 (Steel Beam), and HeartGold's TM51 -- in its 101-slot TM case. Loaded, the bag has New Gold's TM094, TM101 and TM126 and TM51, and none of hg-engine's: TR85, the TM170 item (no machine now) and TM24 (the TM126 item read as hg-engine's Thunderbolt would have made it) are not there. The game saves it, in the layout of now (tm_save_conversion_reload loads that).",
+  "save": "route29-official.sav",
+  "edit": ["--tm", "94,101,126,51"],
+  "steps": ["field", "save"],
+  "expect": {"bag:ITEM_TM094": 1, "bag:ITEM_TM101": 1, "bag:ITEM_TM126": 1, "bag:ITEM_TM51": 1,
+             "bag:ITEM_TR85": 0, "bag:ITEM_TM170": 0, "bag:ITEM_TM179": 0, "bag:ITEM_TM24": 0,
+             "bag:ITEM_POTION": 5, "map": "MAP_ROUTE_29"}
+}

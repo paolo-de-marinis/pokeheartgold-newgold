@@ -1,0 +1,23 @@
+{
+  "about": "TM148 (Upper Hand) taught from the bag by scene.py's machine: step, as a player teaches one: the start menu's BAG, the TMs & HMs tab, TM148 on its page, USE, the party menu's first panel. A scratch copy of route29-official.sav, an older save -- savedit --tm writes into it hg-engine's TM229, Upper Hand, which the game makes TM148 when it loads it -- with a level-20 Pikachu, which can be taught it (personal.json, place 155) and knows four moves as --party gives them: the one gym.py's rule lets go, in the first slot, is forgotten, Upper Hand takes it, and Electro Ball, Feint and Spark stay. A machine past TM100 teaches as HeartGold's do, and stays in the bag.",
+  "save": "route29-official.sav",
+  "edit": [
+    "--party",
+    "PIKACHU:20",
+    "--tm",
+    "148"
+  ],
+  "steps": [
+    "field",
+    "machine:ITEM_TM148,0"
+  ],
+  "expect": {
+    "party0.species": "SPECIES_PIKACHU",
+    "party0.move0": "MOVE_UPPER_HAND",
+    "party0.move1": "MOVE_ELECTRO_BALL",
+    "party0.move2": "MOVE_FEINT",
+    "party0.move3": "MOVE_SPARK",
+    "bag:ITEM_TM148": 1,
+    "map": "MAP_ROUTE_29"
+  }
+}
