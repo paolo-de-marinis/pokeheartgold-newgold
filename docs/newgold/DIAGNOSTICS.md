@@ -85,6 +85,17 @@ The other chance rolls are not forced, only fixed by the seed: the flinch of a K
 Rock, a Razor Fang or Stench, the contact abilities' three in ten (Static, Flame Body,
 Poison Point, Effect Spore, Cute Charm and the like) and Toxic Chain among them.
 
+## konefr's developer vendor
+
+konefr's debug vendor (b23dc7360) is development help, not a player's: in a
+diagnostics build only, the EV/IV trainer (Cherrygrove's Pokemon Center) has a
+page after Sets -- SELECT on the Sets page -- with his password, 0-2-5-1 (Up/Down
+a digit, Left/Right to move, A to try), then his Rare Candies at 1 each, 1, 10, 50
+or 99 at once. Every line of it is under `#ifdef NEWGOLD_DIAG` in
+`src/ev_iv_trainer_app.c` (`test_developer_vendor` reads for any outside it), so
+the ordinary build is the build without it; the scenario
+`ev_iv_trainer_developer_vendor` plays it.
+
 ## Reading it
 
 Every reader takes the ELF the ROM was linked from, `build/heartgold.us.diag/main.elf`

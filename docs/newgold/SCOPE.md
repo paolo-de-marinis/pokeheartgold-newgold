@@ -190,7 +190,12 @@ already implements equivalently:
   twelve invalid species numbers, 2000 to 2011, that set the first party
   Pokemon's effort values to a chosen spread. It is also written as a patch
   into a built script file rather than as source. A player never sees it and
-  the method here would not reproduce it that way, so it stays out.
+  the method here would not reproduce it that way, so it stays out as it was.
+  What it did came back on Paolo's word of 2026-10-04, the method here's: the
+  EV/IV trainer, a person in Cherrygrove's Pokemon Center with an app of its
+  own (the engine's), whose Sets page is konefr's twelve presets with his names
+  (New Gold); his password and his Rare Candies at 1 each only in a
+  diagnostics build, a page of that app (`ev_iv_trainer_developer_vendor`).
 * **Mega Evolution**, **Primal Reversion** and **seasons**. Each is a large
   feature of form lifecycles, assets and interface work rather than a record in
   a table, and none of the three is in the expansion's work order. Widening the
