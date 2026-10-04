@@ -1,0 +1,43 @@
+#include "global.h"
+
+#include "frontier/battle_hall.h"
+
+// The Hall's sets in four strengths, the weakest first: the Hall Matron's
+// battles pick from the strength of the player's species, or from the
+// strongest (ov80_02237448).
+const BattleHallSetRange gBattleHallStrengths[4] = {
+    { 1,   154 },
+    { 155, 270 },
+    { 271, 375 },
+    { 376, 477 },
+};
+
+// The IVs of each rank's opponents, in each row's second byte (ov80_0223796C;
+// ov80_022379C0 gives a rank its row). The Hall Matron's are 31.
+const u8 gBattleHallRankIVs[10][4] = {
+    { 0, 8,  0, 0 },
+    { 0, 10, 0, 0 },
+    { 0, 12, 0, 0 },
+    { 0, 14, 0, 0 },
+    { 0, 16, 0, 0 },
+    { 0, 18, 0, 0 },
+    { 0, 20, 0, 0 },
+    { 0, 22, 0, 0 },
+    { 0, 24, 0, 0 },
+    { 0, 26, 0, 0 },
+};
+
+// The stretch of the sets each rank picks its opponents from: the first
+// strength, then the first two, the middle two and the last two.
+const BattleHallSetRange gBattleHallRankStretches[10] = {
+    { 1,   154 },
+    { 1,   154 },
+    { 1,   270 },
+    { 1,   270 },
+    { 1,   270 },
+    { 155, 375 },
+    { 155, 375 },
+    { 155, 375 },
+    { 271, 477 },
+    { 271, 477 },
+};

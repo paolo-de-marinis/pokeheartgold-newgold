@@ -12,6 +12,20 @@ typedef struct BattleHallData {
     u8 ranks[4][9]; // a rank a category, a nibble each (sub_02030BD0), per mode
 } BattleHallData;
 
+// The Hall's sets (a/2/0/4, files/arc/battle_hall.json), counted from one:
+// from the weakest Pokemon to the strongest, in four strengths.
+#define BATTLE_HALL_SET_COUNT 477
+
+// A stretch of the sets, both ends counted.
+typedef struct BattleHallSetRange {
+    u16 first;
+    u16 last;
+} BattleHallSetRange;
+
+extern const BattleHallSetRange gBattleHallStrengths[4];
+extern const BattleHallSetRange gBattleHallRankStretches[10];
+extern const u16 gBattleHallSetSpecies[BATTLE_HALL_SET_COUNT];
+
 // The type board's twenty cells, four to a row: a category (its rank, its
 // opponents) for each of the eighteen types, then the Pokemon's summary and
 // the Hall Matron's cell. ov80_02237920 gives a cell's type.

@@ -2,12 +2,12 @@
 """Run the Battle Hall's opponent pick on the host, with the Hall's own sets.
 
 ov80_02237448 (src/frontier/battle_hall_sets.c) picks the opponent of a type
-board category from its rank's stretch of the Hall's 477 sets (a/2/0/4, built
+board category from its rank's stretch of the Hall's sets (a/2/0/4, built
 from files/arc/battle_hall.json).
 Retail matched the type against two types baked for each set, Gen IV's, so a
 Normal pick could bring a Clefairy, Fairy since Gen VI. The pick now reads the
 set's species, or form, from the personal data. It runs here against the
-sets, the tree's personal.json and the Hall's tables in the assembly: every
+sets, the tree's personal.json and the Hall's tables in C: every
 pick of every type, rank and battle has to be a Pokemon of that type, and has
 to end (a type with no set in a stretch would never stop looking).
 """
@@ -20,9 +20,9 @@ from test_form_dex import run
 from test_level_cap import ROOT
 
 SOURCE = ROOT / "src/frontier/battle_hall_sets.c"
-# The Hall's tables: the stretches, then the sets' species (and, before this
-# fix, their baked types).
-TABLES = (ROOT / "asm/overlay_80_0222BDF4.s", ROOT / "asm/overlay_80_0223C698.s")
+# The Hall's tables: the stretches of the sets by strength and by rank, and
+# each set's species.
+TABLES = (ROOT / "src/frontier/battle_hall_tables.c", ROOT / "src/frontier/battle_hall_set_species.c")
 TYPES = ["NORMAL", "FIGHTING", "FLYING", "POISON", "GROUND", "ROCK", "BUG", "GHOST", "STEEL", "MYSTERY",
          "FIRE", "WATER", "GRASS", "ELECTRIC", "PSYCHIC", "ICE", "DRAGON", "DARK", "FAIRY"]
 # The types the board offers (TYPE_MYSTERY is the Hall Matron's cell).
@@ -98,7 +98,7 @@ static u32 sSeed = 1;
 static u16 LCRandom(void) { sSeed = sSeed * 1103515245 + 24691; return sSeed >> 16; }
 static int ov80_022379C0(int rank) { return rank < 10 ? rank : 9; }
 static void ov80_02229EF4(FrontierMonNarcData *dest, u32 index, int narcId) {
-    assert(narcId == NARC_a_2_0_4 && index >= 1 && index <= 477);
+    assert(narcId == NARC_a_2_0_4 && index >= 1 && index <= BATTLE_HALL_SET_COUNT);
     memset(dest, 0, sizeof(*dest));
     dest->species = sSetSpecies[index - 1];
     dest->form = sSetForm[index - 1];
@@ -113,7 +113,7 @@ static void LoadMonBaseStats_HandleAlternateForm(int species, int form, BASE_STA
 
 int main(void) {
     static const u8 board[] = {@BOARD@};
-    for (int i = 0; i < 477; i++) {
+    for (int i = 0; i < BATTLE_HALL_SET_COUNT; i++) {
         sTypes[sSetSpecies[i]][sSetForm[i]][0] = sSetType1[i];
         sTypes[sSetSpecies[i]][sSetForm[i]][1] = sSetType2[i];
     }
@@ -144,31 +144,35 @@ int main(void) {
 '''
 
 
+def c_tables():
+    """The Hall's tables as the C defines them, for the host: the files
+    without their includes, the header's count and range type before them."""
+    header = (ROOT / "include/frontier/battle_hall.h").read_text()
+    out = re.search(r"#define BATTLE_HALL_SET_COUNT .*", header)[0] + "\n"
+    out += re.search(r"typedef struct BattleHallSetRange \{.*?\} BattleHallSetRange;", header, re.S)[0] + "\n"
+    for path in TABLES:
+        out += re.sub(r"(?m)^#include .*$", "", path.read_text())
+    return out
+
+
+def ranges(name):
+    """A table of stretches in battle_hall_tables.c, as (first, last)."""
+    text = TABLES[0].read_text()
+    body = text[text.index(f"BattleHallSetRange {name}["):]
+    body = body[:body.index("};")]
+    return [(int(a), int(b)) for a, b in re.findall(r"\{\s*(\d+),\s*(\d+)\s*\}", body)]
+
+
 def program():
-    tables = asm_tables(TABLES)
     sets, types = hall_sets(), set_types()
     data = "".join([
+        "#include \"constants/species.h\"\n",
         c_array("sSetSpecies", [s for s, _ in sets]), c_array("sSetForm", [f for _, f in sets]),
         c_array("sSetType1", [t[0] for t in types], "u8"), c_array("sSetType2", [t[1] for t in types], "u8"),
-        "typedef struct { u16 first, last; } BattleHallSetRange;\n",
+        c_tables(),
     ])
-    # The Hall's tables, from the assembly, by their labels; a table the
-    # source still names (the baked types, before this fix) comes along too.
-    for label in ("ov80_0223C990", "ov80_0223CD4A"):
-        if label in tables:
-            data += c_array(label, u16s(tables[label]))
-    if "ov80_0223CD4A" in tables:
-        data += "#define ov80_0223CD4A ((const u16 (*)[2])ov80_0223CD4A)\n"
-    ranges = u16s(tables["ov80_0223C5A8"]) + u16s(tables["ov80_0223C5B4"][:4])
-    data += "static const BattleHallSetRange ov80_0223C5A8[4] = {" + ", ".join(
-        f"{{{ranges[i]}, {ranges[i + 1]}}}" for i in range(0, 8, 2)) + "};\n"
-    data += "#define ov80_0223C5B4 (ov80_0223C5A8[3])\n"
-    ranks = u16s(tables["ov80_0223C5E0"])
-    data += "static const BattleHallSetRange ov80_0223C5E0[10] = {" + ", ".join(
-        f"{{{ranks[i]}, {ranks[i + 1]}}}" for i in range(0, 20, 2)) + "};\n"
     source = SOURCE.read_text()
     native = source[source.index("int ov80_022379C0(int rank);") + len("int ov80_022379C0(int rank);"):]
-    native = re.sub(r"\nextern [^\n]*", "", native)
     return PROGRAM.replace("@DATA@", data).replace("@NATIVE@", native).replace(
         "@BOARD@", ", ".join(map(str, BOARD)))
 
@@ -180,13 +184,22 @@ class BattleHallSetTests(unittest.TestCase):
     def test_every_type_has_two_sets_in_every_stretch(self):
         # Two, for the double battles' two picks; the search goes round the
         # stretch and would never end on a type with none.
-        tables, types = asm_tables(TABLES), set_types()
-        ranks = u16s(tables["ov80_0223C5E0"])
-        for rank in range(10):
-            first, last = ranks[2 * rank], ranks[2 * rank + 1]
+        types = set_types()
+        for rank, (first, last) in enumerate(ranges("gBattleHallRankStretches")):
             for t in BOARD:
                 found = [s for s in range(first, last) if t in types[s - 1]]
                 self.assertGreaterEqual(len(found), 2, (TYPES[t], rank + 1))
+
+    def test_the_species_table_is_the_sets(self):
+        # The pick looks the player's species up in gBattleHallSetSpecies and
+        # reads the sets from a/2/0/4: the two have to agree, set for set.
+        text = TABLES[1].read_text()
+        table = re.findall(r"\b(SPECIES_\w+),", text[text.index("gBattleHallSetSpecies["):])
+        sets = json.loads((ROOT / "files/arc/battle_hall.json").read_text())["sets"]
+        self.assertEqual(table, [s["species"] for s in sets])
+        count = int(re.search(r"#define BATTLE_HALL_SET_COUNT (\d+)",
+                              (ROOT / "include/frontier/battle_hall.h").read_text())[1])
+        self.assertEqual(count, len(sets))
 
 
 if __name__ == "__main__":

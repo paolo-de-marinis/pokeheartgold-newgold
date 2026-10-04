@@ -8,18 +8,6 @@
 #include "math_util.h"
 #include "pokemon.h"
 
-// A stretch of the Hall's 477 sets, counted from one: the sets are ordered
-// from the weakest Pokemon to the strongest.
-typedef struct BattleHallSetRange {
-    u16 first;
-    u16 last;
-} BattleHallSetRange;
-
-extern const BattleHallSetRange ov80_0223C5A8[4]; // the four strengths
-extern const BattleHallSetRange ov80_0223C5B4;    // the strongest
-extern const BattleHallSetRange ov80_0223C5E0[10]; // each rank's stretch
-extern const u16 ov80_0223C990[];                 // each set's species
-
 int ov80_022379C0(int rank);
 
 // Whether set (counted from one) is a Pokemon of the type: its species' types,
@@ -57,17 +45,17 @@ void ov80_02237448(u8 count, u8 type, u8 rank, u8 battleNo, u16 species, u16 *se
     wrapped = FALSE;
     rankIdx = ov80_022379C0(rank);
     if (mode != 0) {
-        for (idx = 0; idx < 477; idx++) {
-            if (species == ov80_0223C990[idx]) {
+        for (idx = 0; idx < BATTLE_HALL_SET_COUNT; idx++) {
+            if (species == gBattleHallSetSpecies[idx]) {
                 pos = idx;
                 break;
             }
         }
-        if (idx == 477) {
-            pos = 477 - 101;
+        if (idx == BATTLE_HALL_SET_COUNT) {
+            pos = BATTLE_HALL_SET_COUNT - 101;
         }
         for (i = 0; i < 4; i++) {
-            if (pos < ov80_0223C5A8[i].last) {
+            if (pos < gBattleHallStrengths[i].last) {
                 break;
             }
         }
@@ -75,12 +63,12 @@ void ov80_02237448(u8 count, u8 type, u8 rank, u8 battleNo, u16 species, u16 *se
             i = 3;
         }
         if (mode == 2) {
-            range = &ov80_0223C5B4;
+            range = &gBattleHallStrengths[3];
         } else {
-            range = &ov80_0223C5A8[i];
+            range = &gBattleHallStrengths[i];
         }
     } else {
-        range = &ov80_0223C5E0[rankIdx];
+        range = &gBattleHallRankStretches[rankIdx];
     }
     n = range->last - range->first + 1;
     idx = (u16)(range->first + LCRandom() % n) - 1;
@@ -99,12 +87,12 @@ void ov80_02237448(u8 count, u8 type, u8 rank, u8 battleNo, u16 species, u16 *se
         }
         if (j == numPrev) {
             if (mode != 0) {
-                if (species != ov80_0223C990[idx]) {
+                if (species != gBattleHallSetSpecies[idx]) {
                     sets[numPrev + found] = idx + 1;
                     found++;
                 }
             } else if (BattleHallSet_HasType(idx + 1, type)) {
-                if (species != ov80_0223C990[idx]) {
+                if (species != gBattleHallSetSpecies[idx]) {
                     sets[numPrev + found] = idx + 1;
                     found++;
                 }

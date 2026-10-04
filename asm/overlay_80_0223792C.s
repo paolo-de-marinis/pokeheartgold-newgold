@@ -46,11 +46,11 @@ ov80_0223796C: ; 0x0223796C
 	push {r3, lr}
 	bl ov80_022379C0
 	lsl r1, r0, #2
-	ldr r0, _0223797C ; =ov80_0223C5B8
+	ldr r0, _0223797C ; =gBattleHallRankIVs + 1
 	ldrb r0, [r0, r1]
 	pop {r3, pc}
 	nop
-_0223797C: .word ov80_0223C5B8
+_0223797C: .word gBattleHallRankIVs + 1 ; each row's second byte
 	thumb_func_end ov80_0223796C
 
 	thumb_func_start ov80_02237980
