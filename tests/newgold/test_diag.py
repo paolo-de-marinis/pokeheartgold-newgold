@@ -502,6 +502,18 @@ class DiagnosticsTests(unittest.TestCase):
         shuckle = mon("SHUCKLE", 20, ["ROCK_TOMB"])
         self.assertEqual(scorer.choose(quilava, shuckle, [0], field, {potion: 3, super_potion: 1})[0], "move")
         self.assertEqual(scorer.choose(dict(quilava, hp=50), foe, [0], field, {super_potion: 1})[0], "move")
+        # While the foe needs four hits or more to take the one out down, a
+        # Pokemon on the bench below half its HP is healed: against Bugsy's
+        # Shuckle a Geodude's turn for the Quilava his Heracross needs; not
+        # against his Scizor.
+        geodude = mon("GEODUDE", 22, ["ROCK_THROW", "BULLDOZE"])
+        shuckle = mon("SHUCKLE", 20, ["ROCK_TOMB", "STRUGGLE_BUG", "KNOCK_OFF"])
+        scizor = mon("SCIZOR", 21, ["BULLET_PUNCH", "AERIAL_ACE"], "TECHNICIAN", "METAL_COAT")
+        bench = [(1, 23, 61), (2, 40, 48)]
+        self.assertEqual(scorer.choose(geodude, shuckle, [0, 1], field, {potion: 3, super_potion: 2}, bench=bench),
+                         ("item", super_potion, "heals party slot 1 on the bench", 1))
+        self.assertEqual(scorer.choose(geodude, scizor, [0, 1], field, {potion: 3, super_potion: 2}, bench=bench)[0], "move")
+        self.assertEqual(scorer.choose(geodude, shuckle, [0, 1], field, {potion: 3}, bench=[(2, 40, 48)])[0], "move")
 
     def test_gym_uses_a_status_move_where_it_pays(self):
         # Thunder Wave on a faster foe that takes three turns or more to

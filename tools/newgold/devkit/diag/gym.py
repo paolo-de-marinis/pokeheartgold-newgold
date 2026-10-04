@@ -457,12 +457,16 @@ class Scorer:
         turns = math.ceil(needed)
         return (turns - 1) * threat + (ahead if first else threat)
 
-    def choose(self, user, foe, usable, field, heals=None, last=False):
+    def choose(self, user, foe, usable, field, heals=None, last=False, bench=()):
         """What the player does this turn, weighed as a player weighs it:
-        ("move", slot, why) or ("item", item, why). `usable` are the move
-        slots it may pick; `heals` the bag's items that give HP back, {item:
-        count}; `last`, whether it is the last Pokemon the player has. In
-        order: a move that knocks the foe out before it can answer; a move
+        ("move", slot, why) or ("item", item, why[, party slot]). `usable` are
+        the move slots it may pick; `heals` the bag's items that give HP
+        back, {item: count}; `last`, whether it is the last Pokemon the
+        player has; `bench`, (party slot, HP, maximum HP) of the others still
+        standing. In order: a move that knocks the foe out before it can
+        answer; an item for a Pokemon on the bench below half its HP, while
+        the foe needs four hits or more to take the one out down (Bugsy's
+        Shuckle, against which a hurt Quilava is healed for his Heracross); a move
         or an item from the bag that gives HP back, when the Pokemon would
         lose the exchange below half its HP and with the HP given -- the
         foe's hardest hit taken in the turn it costs -- it wins it (or, the
@@ -483,6 +487,12 @@ class Scorer:
         if kills:
             slot = max(kills, key=lambda s: (hits[s][1], first[s], hits[s][0]))
             return "move", slot, "knocks it out"
+        hurt = [(hp * 2 < most, slot, most - hp) for slot, hp, most in bench if hp and hp * 2 < most]
+        items = [item for item, count in (heals or {}).items() if count and self.heal(item)]
+        if hurt and items and lasts >= 4:
+            _, slot, lost = max(hurt, key=lambda h: h[2])
+            item = min(items, key=lambda i: (self.heal(i) < min(lost, 50), self.heal(i)))
+            return "item", item, f"heals party slot {slot} on the bench", slot
         if not wins and 2 * user["hp"] < user["maxHp"] and threat:
             lost = user["maxHp"] - user["hp"]
             # (the move slot or None, the item or None, the HP given, the HP
@@ -1000,8 +1010,14 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             except SystemExit:
                 found["heals"] = {}
         # The bag is kept for trainers: a wild Pokemon is run from (flee) instead.
+        others = reserves(ram, markers)
+        try:
+            team = bench(ram, markers, scorer) if others else []
+        except SystemExit:
+            team = []
         return scorer.choose(user, foe, usable, field, found["heals"] if battler == 0 and not wild_battle else None,
-                             not reserves(ram, markers))
+                             not others, [(slot, team[slot]["hp"], team[slot]["maxHp"]) for slot in others
+                                          if slot < len(team) and team[slot]])
 
     def facing(ram):
         """(the battle's four battlers, the field, the foe the player's first
@@ -1145,7 +1161,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 plan = picker(ram, 0) if move < 0 and not wanted else None
                 if plan and plan[0] == "item":
                     say(f"[{core.frames}] the bag: item {plan[1]}, {plan[2]}")
-                    if use_item(core, markers, hold, plan[1], place(ram, markers, you[4])):
+                    if use_item(core, markers, hold, plan[1], place(ram, markers, plan[3] if len(plan) > 3 else you[4])):
                         found["heals"][plan[1]] -= 1
                     else:
                         found["heals"][plan[1]] = 0
