@@ -328,6 +328,13 @@ void CalcMonLevelAndStats(Pokemon *mon) {
     ReleaseMonLock(mon, decry);
 }
 
+static int GetMonIvForStats(Pokemon *mon, u32 trained, int stat) {
+    if (trained & MON_HYPER_TRAINED_BIT(stat)) {
+        return MAX_IV;
+    }
+    return (int)GetMonData(mon, MON_DATA_HP_IV + stat, NULL);
+}
+
 void CalcMonStats(Pokemon *mon) {
     BASE_STATS *baseStats;
     int level;
@@ -354,22 +361,26 @@ void CalcMonStats(Pokemon *mon) {
     int newSpatk;
     int newSpdef;
     u8 nature;
+    u32 trained;
 
     BOOL decry = AcquireMonLock(mon);
     level = (int)GetMonData(mon, MON_DATA_LEVEL, NULL);
     maxHp = (int)GetMonData(mon, MON_DATA_MAX_HP, NULL);
     hp = (int)GetMonData(mon, MON_DATA_HP, NULL);
-    hpIv = (int)GetMonData(mon, MON_DATA_HP_IV, NULL);
+    // The one place Hyper Training reaches (Allenamento Pro): a trained stat
+    // counts as 31 here, while MON_DATA_*_IV keeps answering the true IV.
+    trained = GetMonData(mon, MON_DATA_UNUSED_114, NULL);
+    hpIv = GetMonIvForStats(mon, trained, STAT_HP);
     hpEv = (int)GetMonData(mon, MON_DATA_HP_EV, NULL);
-    atkIv = (int)GetMonData(mon, MON_DATA_ATK_IV, NULL);
+    atkIv = GetMonIvForStats(mon, trained, STAT_ATK);
     atkEv = (int)GetMonData(mon, MON_DATA_ATK_EV, NULL);
-    defIv = (int)GetMonData(mon, MON_DATA_DEF_IV, NULL);
+    defIv = GetMonIvForStats(mon, trained, STAT_DEF);
     defEv = (int)GetMonData(mon, MON_DATA_DEF_EV, NULL);
-    speedIv = (int)GetMonData(mon, MON_DATA_SPEED_IV, NULL);
+    speedIv = GetMonIvForStats(mon, trained, STAT_SPEED);
     speedEv = (int)GetMonData(mon, MON_DATA_SPEED_EV, NULL);
-    spatkIv = (int)GetMonData(mon, MON_DATA_SPATK_IV, NULL);
+    spatkIv = GetMonIvForStats(mon, trained, STAT_SPATK);
     spatkEv = (int)GetMonData(mon, MON_DATA_SPATK_EV, NULL);
-    spdefIv = (int)GetMonData(mon, MON_DATA_SPDEF_IV, NULL);
+    spdefIv = GetMonIvForStats(mon, trained, STAT_SPDEF);
     spdefEv = (int)GetMonData(mon, MON_DATA_SPDEF_EV, NULL);
     form = (int)GetMonData(mon, MON_DATA_FORM, NULL);
     species = (int)GetMonData(mon, MON_DATA_SPECIES, NULL);

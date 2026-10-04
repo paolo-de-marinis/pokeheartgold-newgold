@@ -377,6 +377,15 @@
 // nature takes bits 1 to 5 of the same field.
 #define MON_SWAP_ABILITY_SLOT_BIT 1
 
+// hg-engine's DUMMY_P2_2_HP_IV_OVERRIDE to DUMMY_P2_2_SP_DEFENSE_IV_OVERRIDE,
+// bits 6 to 11 of MON_DATA_UNUSED_114 in STAT_HP..STAT_SPDEF order: the stat
+// has been Hyper trained, and counts as MAX_IV when the stats are worked out.
+// The IV itself is not touched -- Hidden Power and breeding read the true one.
+#define MAX_IV                      31
+#define HYPER_TRAINING_MIN_LEVEL    50
+#define MON_HYPER_TRAINED_BIT(stat) (0x40 << (stat))
+#define MON_HYPER_TRAINED_ALL       (0x3F << 6)
+
 #define OT_ID_PLAYER_ID       0
 #define OT_ID_PRESET          1
 #define OT_ID_RANDOM_NO_SHINY 2
