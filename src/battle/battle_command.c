@@ -4533,6 +4533,12 @@ BOOL BtlCmd_Transform(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->battleMons[ctx->battlerIdAttacker].unk88.slowStartTurns = ctx->totalTurns + 1;
     ctx->battleMons[ctx->battlerIdAttacker].slowStartFlag = 0;
     ctx->battleMons[ctx->battlerIdAttacker].slowStartEnded = 0;
+    // Imposter acts as its Pokemon comes in and at no other time (Pokemon
+    // Central, Sosia; Showdown's gen-9 Imposter is a switch-in handler), and
+    // a transformed Pokemon transforms no more: one that copied Imposter is
+    // not to act on it at the next entry check, into whatever stands
+    // opposite then. The reference sets imposter_flag here too.
+    ctx->battleMons[ctx->battlerIdAttacker].imposterFlag = TRUE;
 
     for (i = 0; (int)i < MAX_MON_MOVES; i++) {
         if (BattleMoveTbl(ctx, ctx->battleMons[ctx->battlerIdAttacker].moves[i])->pp < 5) {

@@ -1,0 +1,18 @@
+{
+  "about": "A Pokemon that copies Imposter by Transform does not act on it afterwards: Imposter acts as its Pokemon comes in and at no other time (Pokemon Central, Sosia; Showdown's gen-9 Imposter is a switch-in handler). A level-10 Pikachu is given Substitute and Transform (teach:) against a forced wild Ditto that knows only Splash. The Pikachu goes behind a Substitute; the Ditto is then given Imposter (set:, as Skill Swap would), which finds the Pikachu behind its Substitute and does nothing; the Pikachu transforms into the Ditto, Imposter with it; the Ditto then loses Imposter (set: Limber). Nothing more happens: the Pikachu transformed once. Before, Transform left the copied Imposter unspent, and at the next turn's entry check the Pikachu, its Imposter now facing a Ditto without one, transformed into it a second time.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=132", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SUBSTITUTE", "teach:0,1,MOVE_TRANSFORM", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            "set:1,ability,ABILITY_IMPOSTER",
+            "fight:2:1",
+            "set:1,ability,ABILITY_LIMBER",
+            "fight:1:1"],
+  "expect": {"lines": ["Pikachu used Substitute!", "Pikachu used Transform!", "Pikachu used Splash!"],
+             "once_lines": ["transformed into Ditto!"],
+             "no_lines": ["The wild Ditto transformed into"],
+             "battler0.species": "SPECIES_DITTO"}
+}

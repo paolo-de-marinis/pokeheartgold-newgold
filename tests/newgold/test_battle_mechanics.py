@@ -1793,6 +1793,15 @@ class TransformTests(unittest.TestCase):
         mon = header[header.index("typedef struct BattleMon {"):header.index("} BattleMon;")]
         self.assertLess(mon.index("u8 unusedAbility;"), mon.index("u16 ability;"))
 
+    def test_a_copied_imposter_does_not_act(self):
+        # Imposter acts on entry only (Pokemon Central, Sosia; Showdown's
+        # gen-9 Imposter is a switch-in handler): Transform spends it, as the
+        # reference's HandleTransform does, and the entry check asks the flag.
+        body = function(COMMANDS.read_text(), "BtlCmd_Transform")
+        self.assertIn("ctx->battleMons[ctx->battlerIdAttacker].imposterFlag = TRUE;", body)
+        entry = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        self.assertIn("if (!ctx->battleMons[battlerId].imposterFlag && ", entry)
+
 
 class Conversion2Tests(unittest.TestCase):
     def test_it_reads_the_move_its_target_last_used(self):
