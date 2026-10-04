@@ -61,10 +61,18 @@ TITLEDEMO_4BPP_PNGS := \
 TITLEDEMO_4BPP_NCGR := $(TITLEDEMO_4BPP_PNGS:%.png=%.NCGR)
 TITLEDEMO_8BPP_NCGR := $(TITLEDEMO_8BPP_PNGS:%.png=%.NCGR)
 
+# The logos' palettes come from their PNGs, as their tiles do: members 2 and 4
+# are the palettes of 1 (SoulSilver's logo) and 3 (HeartGold's).
+TITLEDEMO_LOGO_NCLR := $(TITLEDEMO_DIR)/titledemo_00000002.NCLR $(TITLEDEMO_DIR)/titledemo_00000004.NCLR
+$(TITLEDEMO_DIR)/titledemo_00000002.NCLR: $(TITLEDEMO_DIR)/titledemo_00000001.png $(GFX)
+	$(GFX) $< $@ -bitdepth 8
+$(TITLEDEMO_DIR)/titledemo_00000004.NCLR: $(TITLEDEMO_DIR)/titledemo_00000003.png $(GFX)
+	$(GFX) $< $@ -bitdepth 8
+
 $(TITLEDEMO_NARC): $(addprefix $(TITLEDEMO_DIR)/,$(TITLEDEMO_DEPS))
 
 clean-titledemo:
-	$(RM) $(TITLEDEMO_NARC) $(TITLEDEMO_4BPP_NCGR) $(TITLEDEMO_8BPP_NCGR)
+	$(RM) $(TITLEDEMO_NARC) $(TITLEDEMO_4BPP_NCGR) $(TITLEDEMO_8BPP_NCGR) $(TITLEDEMO_LOGO_NCLR)
 
 .PHONY: clean-titledemo
 clean-filesystem: clean-titledemo
