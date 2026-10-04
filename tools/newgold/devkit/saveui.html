@@ -1382,7 +1382,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
   const isNew = !m;
   const lim = S.data.limits, six = range(S.data.stats.length);
   // A new one's friendship is its species' own (personal.json), filled in when the species is chosen.
-  const v = m || {species: 0, level: 5, nature: 0, item: 0, moves: [], ivs: six.map(() => lim.iv), evs: six.map(() => 0), friendship: ""};
+  const v = m || {species: 0, level: 5, nature: 0, item: 0, moves: [], ivs: six.map(() => lim.iv), evs: six.map(() => 0), hyper: six.map(() => false), friendship: ""};
   const title = isNew ? (where.kind === "party" ? "Nuovo Pokémon in squadra" : `Nuovo Pokémon · box ${where.box + 1}, posto ${where.slot + 1}`)
                       : (where.kind === "party" ? `Squadra, posto ${where.slot + 1}` : `Box ${where.box + 1}, posto ${where.slot + 1}`);
   const moves = range(lim.moves).map(i => v.moves[i]?.id ?? 0);
@@ -1415,7 +1415,9 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
         entrambi i genitori la conoscono (per una specie che non nasce da un uovo, invece, sta a te). Una mossa che il Pokémon già conosce tiene i suoi PP (salvando, quelli oltre il massimo scendono al massimo); una nuova li ha pieni.
         "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie; finché
         non le tocchi, seguono il livello se lo cambi.</p></div>
-    <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="${lim.iv}">Tutti ${lim.iv}</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${perStat("iv", v.ivs, lim.iv)}</div>
+    <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="${lim.iv}">Tutti ${lim.iv}</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${perStat("iv", v.ivs, lim.iv)}
+      <div class="stats6">${stats().map((s, i) => `<label class="f"><span><input type="checkbox" name="ht${i}" ${v.hyper?.[i] ? "checked" : ""}> <span class="star">★</span> Allenamento Pro</span></label>`).join("")}</div>
+      <p class="note">Allenamento Pro (Tappo d'argento, Tappo d'oro): la statistica conta come se l'IV fosse 31; l'IV vero resta, per Introforza e per l'allevamento.</p></div>
     <div class="box"><div class="sechead"><h3 style="margin:0">EV</h3><span class="muted" id="evsum"></span></div>${perStat("ev", v.evs, lim.ev)}</div>
     <p class="note">Cambiare specie sostituisce subito mosse e abilità con quelle che il gioco dà alla nuova specie: le mosse al livello scelto, l'abilità
       che il Pokémon avrebbe come quella specie (la nascosta se ha la nascosta e la specie ne ha una, altrimenti prima o seconda come la sua personalità);
@@ -1566,7 +1568,8 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       return again(`${S.species.get(species)?.name ?? ""} non può imparare ${wrong.map(x => S.moves.get(x)?.name ?? x).join(", ")}: scegli dall'elenco delle sue mosse.`);
     const args = {...base, species, level: +d.level, nature: +d.nature, item, friendship: d.friendship === "" ? undefined : +d.friendship,
                   ability: d.ability === "" ? undefined : +d.ability,
-                  moves: mv.filter(Boolean), ivs: six.map(i => +d["iv" + i]), evs: six.map(i => +d["ev" + i])};
+                  moves: mv.filter(Boolean), ivs: six.map(i => +d["iv" + i]), evs: six.map(i => +d["ev" + i]),
+                  hyper: six.map(i => !!d["ht" + i])};
     const op = isNew ? (where.kind === "party" ? "party_add" : "box_add") : (where.kind === "party" ? "party_edit" : "box_edit");
     if (!await edit(op, args, isNew ? "Pokémon aggiunto" : "Pokémon salvato", version) && refusal?.code !== "stale")
       return monDialog(where, m, d, version, refusal?.message);

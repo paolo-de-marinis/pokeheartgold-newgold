@@ -1204,9 +1204,14 @@ def checked_mon(a):
         out["evs"] = [number(v, 0, sv.MAX_EV_PER_STAT, "EV") for v in evs]
     if "friendship" in a:
         out["friendship"] = number(a["friendship"], 0, 255, "amicizia")
+    if "hyper" in a:
+        # Allenamento Pro: the stats that count as 31, the IVs kept (savedit.hyper_trained).
+        if not isinstance(a["hyper"], list) or not all(isinstance(v, bool) for v in a["hyper"]):
+            raise Refused("allenamento pro: un sì o un no per statistica")
+        out["hyper"] = a["hyper"]
     if "ability" in a:
         out["ability"] = number(a["ability"], 0, sv.HIDDEN_SLOT, "abilità")
-    for key in ("ivs", "evs"):
+    for key in ("ivs", "evs", "hyper"):
         if key in out and len(out[key]) != sv.NUM_STATS:
             raise Refused(f"{key}: {sv.NUM_STATS} valori")
     return out
@@ -1221,7 +1226,7 @@ def changed(fields, now):
     if now is None or not now["ok"]:
         raise Refused("qui non c'è un Pokémon leggibile")
     current = {"species": now["species"], "level": now["level"], "nature": now["nature"], "item": now["item"],
-               "moves": [m["id"] for m in now["moves"]], "ivs": now["ivs"], "evs": now["evs"],
+               "moves": [m["id"] for m in now["moves"]], "ivs": now["ivs"], "evs": now["evs"], "hyper": now["hyper"],
                "friendship": now["friendship"], "ability": now["ability_slot"] if now["ability_ok"] else None}
     out = {k: v for k, v in fields.items() if v != current[k]}
     if "species" in out:
@@ -1269,6 +1274,8 @@ def created(save, a, party):
                      ivs=fields.get("ivs", 31), evs=fields.get("evs", 0), party=party)
     if "friendship" in fields:
         raw = sv.edit_mon(raw, friendship=fields["friendship"])
+    if any(fields.get("hyper", ())):
+        raw = sv.edit_mon(raw, hyper=fields["hyper"])
     return raw
 
 

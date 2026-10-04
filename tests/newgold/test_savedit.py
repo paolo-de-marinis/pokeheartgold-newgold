@@ -538,6 +538,22 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(mon["stats"], sv.stat_line(record, 50, mon["ivs"], mon["evs"], mon["nature"]))
         self.assert_only(save, ["SAVE_PARTY"])
 
+    def test_hyper_training_counts_a_stat_as_31_and_keeps_the_iv(self):
+        """Hyper Training's bits (MON_HYPER_TRAINED_BIT, bits 6 to 11 of
+        unused2) are set and shown, and the stats follow CalcMonStats, which
+        counts a trained stat's IV as 31; the IVs and the Mint's bits stay."""
+        save = self.open()
+        raw = sv.edit_mon(sv.party_raw(save)[2], level=50, ivs=[3, 4, 5, 6, 7, 8])
+        trained = sv.describe_mon(sv.edit_mon(raw, hyper=[True, False, False, True, False, False]))
+        self.assertEqual(trained["hyper"], [True, False, False, True, False, False])
+        self.assertEqual(trained["ivs"], [3, 4, 5, 6, 7, 8])
+        record = sv.personal_records()[trained["species"]]
+        self.assertEqual(trained["stats"], sv.stat_line(record, 50, [31, 4, 5, 31, 7, 8], trained["evs"], trained["nature"]))
+        b = sv.open_mon(sv.edit_mon(raw, hyper=[True] * 6))["blocks"][1]
+        self.assertEqual(struct.unpack_from("<H", b, 0x1A)[0] & 0xFC0, 0xFC0)
+        cleared = sv.describe_mon(sv.edit_mon(sv.edit_mon(raw, hyper=[True] * 6), hyper=[False] * 6))
+        self.assertEqual((cleared["hyper"], cleared["stats"]), ([False] * 6, sv.describe_mon(raw)["stats"]))
+
     def test_editing_only_the_item_leaves_the_stats(self):
         save = self.open()
         raw = sv.party_raw(save)[0]

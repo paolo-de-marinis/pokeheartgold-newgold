@@ -327,6 +327,8 @@ def _layout():
         "MAILMSG_FIELDS_MAX": "MAILMSG_FIELDS_MAX", "EC_WORD_NULL": "EC_WORD_NULL", "ITEM_POKE_BALL": "ITEM_POKE_BALL",
         # The bits a Pokemon keeps its hidden ability and its Capsule in.
         "HIDDEN_ABILITY_BIT": "MON_HIDDEN_ABILITY_BIT", "SWAP_ABILITY_BIT": "MON_SWAP_ABILITY_SLOT_BIT",
+        # Hyper Training's six bits in the same field, STAT_HP's first: a stat that counts as 31.
+        "HYPER_TRAINED_FIRST": "MON_HYPER_TRAINED_BIT(STAT_HP)", "HYPER_TRAINED_ALL": "MON_HYPER_TRAINED_ALL",
         # A map chunk's tiles, and where its land data member keeps their attributes.
         "CHUNK_TILES": "MAP_TILES_COUNT_X", "CHUNK_ROWS": "MAP_TILES_COUNT_Z",
         "TERRAIN_OFFSET": "TERRAIN_ATTRIBUTES_OFFSET",
@@ -2345,14 +2347,21 @@ def _choose_ability(mon, slot):
     _set_ability(mon)
 
 
+def hyper_trained(b):
+    """The stats Hyper Training made count as 31, by STAT_* index: its bits in
+    blockB's unused2, MON_DATA_UNUSED_114."""
+    word = struct.unpack_from("<H", b, 0x1A)[0]
+    return [bool(word & (HYPER_TRAINED_FIRST << i)) for i in range(NUM_STATS)]
+
+
 def _set_party_stats(mon, level):
-    """CalcMonStats at this level, the nature a Mint gave if it gave one, and
-    HP moved the way CalcMonStats moves it."""
+    """CalcMonStats at this level, the nature a Mint gave if it gave one, a
+    Hyper trained stat's IV as 31, and HP moved the way CalcMonStats moves it."""
     a, b, _, _ = mon["blocks"]
     party = mon["party"]
     species = struct.unpack_from("<H", a, 0)[0]
     ivword = struct.unpack_from("<I", b, 0x10)[0]
-    ivs = [(ivword >> (5 * i)) & MAX_IV for i in range(NUM_STATS)]
+    ivs = [MAX_IV if trained else (ivword >> (5 * i)) & MAX_IV for i, trained in enumerate(hyper_trained(b))]
     mint = (struct.unpack_from("<H", b, 0x1A)[0] & MINT_MASK) >> 1
     nature = mint - 1 if mint else mon["personality"] % 25
     stats = stat_line(personal_records()[personal_row(species, b[0x18] >> 3)], level, ivs, list(a[0x10:0x16]), nature)
@@ -2374,7 +2383,7 @@ def _set_party_stats(mon, level):
 
 
 def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
-             ivs=None, evs=None, friendship=None, ability=None, form=None):
+             ivs=None, evs=None, friendship=None, ability=None, form=None, hyper=None):
     """One stored Pokemon with these things changed as the game changes them,
     and everything else -- its trainer, its ribbons, its met data -- as it was.
 
@@ -2392,7 +2401,9 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
     and PP above GetMoveMaxPP's (an older editor wrote 40) come down to it.
     A form is one ResolveMonForm gives base stats of their own (a Rotom's
     appliances, 1 Heat to 5 Mow), its stats with it, as the Rotom Catalog
-    changes it. A party Pokemon's stats follow. Illegal, a ValueError, says
+    changes it. Hyper Training (hyper, six booleans in STAT_* order) sets or
+    clears the bits that make a stat count as 31, the IV itself untouched.
+    A party Pokemon's stats follow. Illegal, a ValueError, says
     what the species cannot have.
     """
     mon = open_mon(raw)
@@ -2404,7 +2415,7 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
     ot_id = struct.unpack_from("<I", a, 4)[0]
     exp = struct.unpack_from("<I", a, 8)[0] & EXP_BITS
     current = mon["party"][4] if mon["party"] is not None else level_for(records[old_species]["growthRate"], exp)
-    restat = any(v is not None for v in (level, nature, ivs, evs, form)) or (species not in (None, old_species))
+    restat = any(v is not None for v in (level, nature, ivs, evs, form, hyper)) or (species not in (None, old_species))
     knew = [struct.unpack_from("<H", b, 2 * i)[0] for i in range(MAX_MON_MOVES)]
     if level is not None and not 1 <= level <= MAX_LEVEL:
         raise ValueError(f"a level is 1 to {MAX_LEVEL}")
@@ -2458,6 +2469,9 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
         a[0x10:0x16] = bytes(evs)
     if friendship is not None:
         a[0x0C] = friendship
+    if hyper is not None:
+        word = struct.unpack_from("<H", b, 0x1A)[0] & ~HYPER_TRAINED_ALL
+        struct.pack_into("<H", b, 0x1A, word | sum(HYPER_TRAINED_FIRST << i for i, on in enumerate(hyper) if on))
     if mon["party"] is not None and restat:
         _set_party_stats(mon, current if level is None else level)
     return seal_mon(mon)
@@ -2588,6 +2602,7 @@ def describe_mon(raw):
            "types": mon_types(species, ability, item, b[0x18] >> 3),
            "friendship": a[0x0C], "moves": moves,
            "ivs": [(ivword >> (5 * i)) & MAX_IV for i in range(NUM_STATS)], "evs": list(a[0x10:0x10 + NUM_STATS]),
+           "hyper": hyper_trained(b),
            "ot_name": decode_text(struct.unpack_from(f"<{PLAYER_NAME_LENGTH + 1}H", d, 0)), "ot_id": ot_id & 0xFFFF,
            "ot_sid": ot_id >> 16, "ot_gender": d[0x1C] >> 7, "gender": (b[0x18] >> 1) & 3,
            "shiny": is_shiny(p, ot_id), "ball": d[0x1B], "met_level": d[0x1C] & 0x7F}
@@ -4302,6 +4317,9 @@ def main():
     parser.add_argument("--name", help="the player's name, which the save must carry "
                                        "terminated: the main menu copies it into a String "
                                        "and asserts on one that never ends")
+    parser.add_argument("--hyper", action="append", default=[], metavar="SLOT:STAT[+STAT...]",
+                        help="Hyper train a party Pokemon's stats (HP, ATK, DEF, SPEED, SPATK, SPDEF, "
+                             "or ALL; NONE clears them): they count as 31, the IVs kept; repeatable")
     parser.add_argument("--trainer-id", type=int)
     parser.add_argument("--badges", type=int, help="how many Johto badges to set")
     parser.add_argument("--money", type=int, help="the money the player has")
@@ -4384,6 +4402,18 @@ def main():
         set_party_mon(save, slot - 1, edit_mon(party_raw(save)[slot - 1], form=form))
         save.write()
         print(f"party slot {slot}: form {form}")
+
+    for entry in args.hyper:
+        slot, _, stats = entry.upper().partition(":")
+        order = ("HP", "ATK", "DEF", "SPEED", "SPATK", "SPDEF")
+        names = set(stats.split("+")) - {"NONE"}
+        if "ALL" in names:
+            names = set(order)
+        if names - set(order):
+            raise SystemExit(f"--hyper: no stat {', '.join(sorted(names - set(order)))}")
+        set_party_mon(save, int(slot) - 1, edit_mon(party_raw(save)[int(slot) - 1], hyper=[name in names for name in order]))
+        save.write()
+        print(f"party slot {slot}: Hyper trained {'+'.join(n for n in order if n in names) or 'nothing'}")
 
     if args.tm:
         machines = [int(n) for n in args.tm.split(",")]
