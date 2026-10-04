@@ -908,4 +908,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Washing Machine</language>
 	</row>
+	<row id="msg_0300_00227" index="227">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Train which Pokémon?</language>
+	</row>
 </body>

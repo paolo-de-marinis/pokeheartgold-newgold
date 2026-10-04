@@ -274,6 +274,8 @@ static BOOL PartyMenuApp_Init(OverlayManager *manager, int *pState) {
         PartyMenu_PrintMessageOnWindow32(partyMenu, msg_0300_00035, TRUE);
     } else if (partyMenu->args->context == PARTY_MENU_CONTEXT_23) {
         PartyMenu_PrintMessageOnWindow32(partyMenu, msg_0300_00035, TRUE);
+    } else if (partyMenu->args->context == PARTY_MENU_CONTEXT_TRAIN_MON) {
+        PartyMenu_PrintMessageOnWindow32(partyMenu, msg_0300_00227, TRUE);
     } else if (partyMenu->args->context != PARTY_MENU_CONTEXT_10) {
         PartyMenu_PrintMessageOnWindow32(partyMenu, msg_0300_00029, TRUE);
     } else {
@@ -482,6 +484,7 @@ static int PartyMenu_Subtask_MainNormal(PartyMenu *partyMenu) {
         switch (partyMenu->args->context) {
         case PARTY_MENU_CONTEXT_3:
         case PARTY_MENU_CONTEXT_20:
+        case PARTY_MENU_CONTEXT_TRAIN_MON:
             partyMenu->args->selectedAction = PARTY_MENU_ACTION_RETURN_0;
             return PARTY_MENU_STATE_BEGIN_EXIT;
         case PARTY_MENU_CONTEXT_GIVE_MAIL_FROM_MAILBOX:
@@ -1460,7 +1463,7 @@ static int sub_0207AC70(PartyMenu *partyMenu, MenuInputState menuInputState) {
     } else if (partyMenu->args->context == PARTY_MENU_CONTEXT_3 || partyMenu->args->context == PARTY_MENU_CONTEXT_INGAME_TRADE) {
         PlaySE(SEQ_SE_DP_SELECT);
         return 0;
-    } else if (partyMenu->args->context == PARTY_MENU_CONTEXT_20 || partyMenu->args->context == PARTY_MENU_CONTEXT_GIVE_MAIL_FROM_MAILBOX) {
+    } else if (partyMenu->args->context == PARTY_MENU_CONTEXT_20 || partyMenu->args->context == PARTY_MENU_CONTEXT_GIVE_MAIL_FROM_MAILBOX || partyMenu->args->context == PARTY_MENU_CONTEXT_TRAIN_MON) {
         if (!partyMenu->monsDrawState[partyMenu->partyMonIndex].isEgg) {
             PlaySE(SEQ_SE_DP_SELECT);
             return 0;

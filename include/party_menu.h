@@ -90,6 +90,7 @@ typedef enum PartyMenuContext {
     PARTY_MENU_CONTEXT_SPIN_TRADE,
     PARTY_MENU_CONTEXT_BATTLE_HALL,
     PARTY_MENU_CONTEXT_23,
+    PARTY_MENU_CONTEXT_TRAIN_MON, // the EV/IV trainer's: one Pokemon, no Egg, as context 20
 } PartyMenuContext;
 
 typedef enum PartyMonContextMenuItem {
