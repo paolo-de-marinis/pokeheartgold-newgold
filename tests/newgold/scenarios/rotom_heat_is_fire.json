@@ -1,0 +1,11 @@
+{
+  "about": "Rotom's appliance forms take their appliance's type in place of Ghost, as the games from the fifth generation on and the reference's SPECIES_503 to SPECIES_507 have them (update_vanilla_species.ALTERNATE_FORMS): a level-20 Rotom put in its Heat form by savedit (--form, as the Rotom Catalog does), knowing only Charge, leads against a forced wild level-5 Psyduck taught Water Gun alone in the running battle (teach:), and the Water Gun is super effective on an Electric and Fire Rotom. HeartGold's records left the Heat form Electric and Ghost, which Water hits for its plain damage, with no effectiveness line. The field's RNG is pinned as in rolls_forced_high.json; the hit is forced and the critical hit refused.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "ROTOM:20::CHARGE", "--form", "1:1"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=54", "LEFT", "fight:1:0",
+            "teach:1,0,MOVE_WATER_GUN", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["Go! Rotom!", "Rotom used Charge!", "The wild Psyduck used Water Gun!", "It’s super effective!"],
+             "no_lines": ["not very effective"]}
+}

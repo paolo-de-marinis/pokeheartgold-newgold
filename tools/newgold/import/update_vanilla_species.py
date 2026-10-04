@@ -23,8 +23,17 @@ PERSONAL = ROOT / "files/poketool/personal/personal.json"
 import import_species  # noqa: E402
 
 # HGSS's own species, leaving the egg, the bad egg and the alternate forms
-# alone: those records are not species and the reference does not describe them.
+# alone: those records are not species.
 LAST_VANILLA = 493
+
+# The alternate forms' records, Deoxys's three to Rotom's five, which the
+# reference keeps at the same numbers (its SPECIES_496 to SPECIES_507). Their
+# types are taken from there: HeartGold's own left Rotom's appliance forms
+# Electric and Ghost, where the games from the fifth generation on and the
+# reference make them Electric and Fire, Water, Ice, Flying and Grass. The
+# rest of these records is HeartGold's, which matches the reference but for
+# the machines (Deoxys's forms and Wormadam's cloaks), left as they are.
+ALTERNATE_FORMS = range(496, 508)
 
 
 def pending(reference):
@@ -61,6 +70,12 @@ def pending(reference):
         differing = [key for key in record if record[key] != wanted[key]]
         if differing:
             updates.append((index, wanted, differing))
+
+    for index in ALTERNATE_FORMS:
+        record = records[index]
+        types = [import_species.native(name) for name in import_species.pair(blocks[str(index)], "types")]
+        if record["types"] != types:
+            updates.append((index, {**record, "types": types}, ["types"]))
     return personal, updates, skipped
 
 

@@ -87,6 +87,16 @@ class SpeciesRecordTests(unittest.TestCase):
         for name, types in expected.items():
             self.assertEqual(self.records[self.constants[name]]["types"], types, name)
 
+    def test_rotom_s_appliance_forms_take_their_appliance_s_type(self):
+        # HeartGold's records left them Electric and Ghost; from the fifth
+        # generation on, and in the reference's SPECIES_503 to SPECIES_507,
+        # the appliance's type takes the place of Ghost
+        # (update_vanilla_species.ALTERNATE_FORMS).
+        expected = {"ROTOM": "GHOST", "ROTOM_HEAT": "FIRE", "ROTOM_WASH": "WATER", "ROTOM_FROST": "ICE",
+                    "ROTOM_FAN": "FLYING", "ROTOM_MOW": "GRASS"}
+        for name, second in expected.items():
+            self.assertEqual(self.records[self.constants[name]]["types"], ["TYPE_ELECTRIC", "TYPE_" + second], name)
+
     def test_yields_past_the_old_ceiling_survive(self):
         # The byte keeps what fits; the full value is what the game reads.
         for name, yieldValue in (("BLISSEY", 635), ("CHANSEY", 395), ("DRAGONITE", 300)):
