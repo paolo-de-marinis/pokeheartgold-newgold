@@ -6404,9 +6404,12 @@ BOOL BtlCmd_TryCamouflage(BattleSystem *battleSystem, BattleContext *ctx) {
         return FALSE;
     }
 
-    Terrain terrain = BattleSystem_GetTerrainId(battleSystem);
+    int terrain = BattleSystem_GetTerrainId(battleSystem);
     if (terrain > TERRAIN_OTHERS) {
         terrain = TERRAIN_OTHERS;
+    }
+    if (ctx->terrainOverlayType != TERRAIN_NONE) {
+        terrain = TERRAIN_OTHERS + ctx->terrainOverlayType;
     }
     int type = sCamouflageTypeTable[terrain];
 

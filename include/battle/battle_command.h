@@ -337,6 +337,6 @@ extern const u16 sPrizeMoneyTbl[0x81][2];
 extern const BtlCmdFunc sBattleScriptCommandTable[];
 extern const u8 sPickupWeightTable[9];
 extern const u8 sHoneyGatherChanceTable[10];
-extern const u8 sCamouflageTypeTable[13];
+extern const u8 sCamouflageTypeTable[TERRAIN_OTHERS + PSYCHIC_TERRAIN + 1];
 
 #endif

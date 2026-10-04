@@ -371,6 +371,65 @@ int main(void) {
 """
 
 
+# BtlCmd_TryCamouflage on the host, with its table: the type it gives a
+# Bulbasaur (Grass/Poison) by the ground and the terrain over it.
+CAMOUFLAGE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stddef.h>
+typedef uint8_t u8;
+typedef uint32_t u32;
+typedef int BOOL;
+enum { FALSE = 0, TRUE = 1 };
+#include "constants/battle.h"
+#include "constants/pokemon.h"
+typedef struct { int terrain; } BattleSystem;
+typedef struct { int type1, type2, type3; } BattleMon;
+typedef struct { BattleMon battleMons[4]; int battlerIdAttacker, msgTemp, skipped; u8 terrainOverlayType; } BattleContext;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { ctx->skipped += n != 1; }
+static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return 7; }
+static BOOL BattlerTypeIsItsAbilitys(BattleContext *ctx, int battlerId) { (void)ctx; (void)battlerId; return FALSE; }
+static int BattleSystem_GetTerrainId(BattleSystem *bs) { return bs->terrain; }
+static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *data) {
+    (void)data;
+    return varId == BMON_DATA_TYPE_1 ? ctx->battleMons[battlerId].type1 : ctx->battleMons[battlerId].type2;
+}
+@FUNCTIONS@
+static BattleSystem bs;
+static BattleContext ctx;
+static int camouflage(int ground, int overlay) {
+    BattleContext blank = { 0 };
+    ctx = blank;
+    ctx.battleMons[0] = (BattleMon){ TYPE_GRASS, TYPE_POISON, TYPE_NONE };
+    bs.terrain = ground; ctx.terrainOverlayType = overlay;
+    BtlCmd_TryCamouflage(&bs, &ctx);
+    return ctx.skipped ? -1 : ctx.battleMons[0].type1;
+}
+int main(void) {
+    assert(camouflage(TERRAIN_PLAIN, TERRAIN_NONE) == TYPE_NORMAL);
+    assert(camouflage(TERRAIN_BUILDING, TERRAIN_NONE) == TYPE_NORMAL);
+    assert(camouflage(TERRAIN_LANCE, TERRAIN_NONE) == TYPE_NORMAL);
+    assert(camouflage(TERRAIN_SAND, TERRAIN_NONE) == TYPE_GROUND);
+    assert(camouflage(TERRAIN_MOUNTAIN, TERRAIN_NONE) == TYPE_GROUND);
+    assert(camouflage(TERRAIN_PUDDLE, TERRAIN_NONE) == TYPE_GROUND);
+    assert(camouflage(TERRAIN_GREAT_MARSH, TERRAIN_NONE) == TYPE_GROUND);
+    assert(camouflage(TERRAIN_CAVE, TERRAIN_NONE) == TYPE_ROCK);
+    assert(camouflage(TERRAIN_SNOW, TERRAIN_NONE) == TYPE_ICE);
+    assert(camouflage(TERRAIN_ICE, TERRAIN_NONE) == TYPE_ICE);
+    assert(camouflage(TERRAIN_WATER, TERRAIN_NONE) == TYPE_WATER);
+    // Grass it is already: the move fails.
+    assert(camouflage(TERRAIN_GRASS, TERRAIN_NONE) == -1);
+    // A terrain comes first, wherever the battle is.
+    assert(camouflage(TERRAIN_CAVE, ELECTRIC_TERRAIN) == TYPE_ELECTRIC);
+    assert(camouflage(TERRAIN_PLAIN, MISTY_TERRAIN) == TYPE_FAIRY);
+    assert(camouflage(TERRAIN_WATER, PSYCHIC_TERRAIN) == TYPE_PSYCHIC);
+    assert(camouflage(TERRAIN_SAND, GRASSY_TERRAIN) == -1);
+    assert(ctx.battleMons[0].type1 == TYPE_GRASS);
+    return 0;
+}
+"""
+
+
 def table(path, name):
     """A table's definition, from its name to its closing brace."""
     text = (ROOT / path).read_text()
@@ -389,6 +448,14 @@ class TerrainMoveTests(unittest.TestCase):
         commands = (ROOT / "src/battle/battle_command.c").read_text()
         run_c(SECRET_POWER.replace("@FUNCTIONS@", table("src/battle/overlay_12_0226C3E8.c", "sSecretPowerEffectTable")
                                    + function(commands, "BtlCmd_GetTerrainSecondaryEffect")))
+
+
+    def test_camouflage_s_type_is_the_seventh_generation_s(self):
+        # Pokemon Central, Camuffamento: the move cannot be chosen from the
+        # eighth generation, so the seventh's table is the last.
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        run_c(CAMOUFLAGE.replace("@FUNCTIONS@", table("src/battle/overlay_12_0226CA4C.c", "sCamouflageTypeTable")
+                                 + function(commands, "BtlCmd_TryCamouflage")))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,14 @@
+{
+  "about": "Camouflage gives its user the seventh generation's type, the last generation the move can be chosen in (Pokemon Central, Camuffamento): Normal on plain ground, and in a terrain the terrain's -- Fairy in Misty Terrain. Retail's table, the fourth generation's, made plain ground Ground and knew no terrain. A level-10 Pikachu is given Camouflage in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash, on Route 29's plain ground: \"Pikachu transformed into the Normal type!\" (before, the Ground type); the Pikachu lays Misty Terrain, and the next Camouflage makes it Fairy (before, Ground again, which it was: \"But it failed!\"). The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_CAMOUFLAGE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Camouflage!", "Pikachu transformed into the Normal type!"]}},
+            "teach:0,0,MOVE_MISTY_TERRAIN", "fight:1:1", "teach:0,0,MOVE_CAMOUFLAGE", "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Misty Terrain!", "Pikachu used Camouflage!", "Pikachu transformed into the Fairy type!"],
+             "no_lines": ["the Ground type!", "But it failed!"]}
+}
