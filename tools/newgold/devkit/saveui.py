@@ -1046,7 +1046,14 @@ class Library:
             raise Refused(f"la tasca MT e MN ha {slots} posti: ne servirebbero {sum(1 for q in after.values() if q)}")
         for item, quantity in sorted(wanted.items(), key=lambda kv: kv[1] != 0):
             if held.get(item, 0) != quantity:
-                sv.set_item(save, item, quantity)
+                try:
+                    sv.set_item(save, item, quantity)
+                except ValueError as e:
+                    if "before TM93 to TM148" not in str(e):
+                        raise
+                    raise Refused(f"{sv.item_table()[item]['name']}: il salvataggio è di prima delle MT93–MT148 e tiene "
+                                  "le macchine di hg-engine; nessuna di loro diventa questa. Caricalo nel gioco e "
+                                  "salvalo, poi aggiungila")
 
     def op_flag(self, save, a):
         sv.write_flag(save, number(a["number"], 1, sv.num_flags() - 1, "flag"), bool(a["value"]))

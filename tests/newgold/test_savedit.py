@@ -255,6 +255,39 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(again)[pocket["POCKET_TMHMS"]]], [(items["ITEM_TM51"], 1)])
         self.assertIn(sv.species_numbers()["SLOWPOKE_GALARIAN"], sv.dex(again)["forms_seen"])
 
+    def test_an_older_save_holds_hg_engine_s_machines(self):
+        """A save from before TM93 to TM148 holds hg-engine's machines, and
+        the game makes them New Gold's when it loads it (LegacyMachineToItem):
+        savedit shows its TMs and HMs as they will be, writes a TM past HM08
+        as one of hg-engine's that becomes it, takes out every one that does,
+        and refuses one that none becomes. TM01 to HM08 are themselves."""
+        older = sv.blocks(layout=sv.LAYOUT_BEFORE_TM_POCKET)
+        region = bytearray(save_budget.REGION)
+        player = next(b for b in older if b["id"] == "SAVE_PLAYERDATA")
+        region[player["offset"] + sv.NAME:player["offset"] + sv.NAME + 4] = struct.pack("<HH", sv.charcode("A")[0], 0xFFFF)
+        items = sv.constants("include/constants/items.h", "ITEM_")
+        bag = next(b for b in older if b["id"] == "SAVE_BAG")
+        tms = sv.pocket_at("TMsHMs", sv.LAYOUT_BEFORE_TM_POCKET)[0]
+        for slot, (item, quantity) in enumerate((("ITEM_TR00", 5), ("ITEM_TM126", 1), ("ITEM_TM24", 1), ("ITEM_TR01", 1))):
+            struct.pack_into("<HH", region, bag["offset"] + tms + 4 * slot, items[item], quantity)
+        seal_footers(region, older, 1, sv.CHUNK_MAGIC_NOW)
+        path = Path(self.tmp.name) / "legacy-tms.sav"
+        path.write_bytes(bytes(sv.build_save(region)))
+        save = sv.Save(path)
+        shown = lambda: [s["item"] for s in sv.bag(save)["TMsHMs"]]  # noqa: E731
+        # TR00 Swords Dance is TM75; hg-engine's TM126 Thunderbolt is TM24, held already; TR01 Body Slam goes.
+        self.assertEqual(shown(), [items["ITEM_TM24"], items["ITEM_TM75"]])
+        raw = lambda: [struct.unpack_from("<H", save.block("SAVE_BAG"), tms + 4 * s)[0] for s in range(6)]  # noqa: E731
+        sv.set_item(save, items["ITEM_TM094"], 1)
+        sv.set_item(save, items["ITEM_TM126"], 1)
+        self.assertIn(items["ITEM_TR85"], raw(), "Work Up was hg-engine's TR85")
+        self.assertIn(items["ITEM_TM170"], raw(), "Steel Beam was hg-engine's TM170")
+        self.assertEqual(shown(), [items[n] for n in ("ITEM_TM24", "ITEM_TM75", "ITEM_TM094", "ITEM_TM126")])
+        sv.set_item(save, items["ITEM_TM24"], 0)        # the TM24 held and the Thunderbolt that becomes it
+        self.assertEqual(shown(), [items[n] for n in ("ITEM_TM75", "ITEM_TM094", "ITEM_TM126")])
+        with self.assertRaises(ValueError):
+            sv.set_item(save, items["ITEM_TM098"], 1)    # Venoshock: no machine of hg-engine's taught it
+
     def test_the_page_names_a_layout_by_its_constant(self):
         """enum SaveLayout is numbered newest first, so a layout added
         renumbers the older ones: the page's Italian label is keyed by the

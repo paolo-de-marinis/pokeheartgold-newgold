@@ -2808,13 +2808,56 @@ def set_profile(save, money=None, gender=None, johto=None, kanto=None, coins=Non
         struct.pack_into("<HBB", block, PLAY_TIME, hours, minutes, seconds)
 
 
+@tree_cache
+def legacy_machines():
+    """LegacyMachineToItem (src/item.c): what each machine item of a save
+    from before TM93 to TM148 (hg-engine's numbering) becomes when the game
+    loads it -- its item now, or None where none has its move. TM01 to HM08
+    are themselves."""
+    text = source("src/item.c").read_text()
+    items = constants("include/constants/items.h", "ITEM_")
+    runs = text[text.index("sLegacyMachineRuns[] = {"):]
+    runs = re.findall(r"\{\s*(ITEM_\w+),\s*(ITEM_\w+),\s*(\d+)\s*\}", runs[:runs.index("};")])
+    places = text[text.index("sLegacyMachinePlaces[] = {"):]
+    places = re.findall(r"MACHINE_GONE|\d+", places[places.index("{"):places.index("};")])
+    item_at = {place: item for place, (_, item) in enumerate(machines())}
+    out = {item: item for item in range(items["ITEM_TM01"], items["ITEM_HM08"] + 1)}
+    for first, last, place in runs:
+        for k in range(items[last] - items[first] + 1):
+            at = places[int(place) + k - constants("include/constants/items.h", "NUM_")["NUM_TMHMS"]]
+            out[items[first] + k] = None if at == "MACHINE_GONE" else item_at[int(at)]
+    return out
+
+
+def _legacy_tms(save):
+    """A save from before TM93 to TM148 holds hg-engine's machines."""
+    return save.layout >= LAYOUT_BEFORE_TM_POCKET
+
+
+def _converted(slots):
+    """Bag_ConvertLegacyMachines: each machine made New Gold's or dropped,
+    one of each, a TM once, sorted."""
+    out, seen = [], set()
+    for item, quantity in slots:
+        now = legacy_machines().get(item)
+        if now is None or now in seen or not quantity:
+            continue
+        seen.add(now)
+        out.append((now, 1 if now in item_kind("ItemIsTM") else quantity))
+    return sorted(out, key=_machine_order)
+
+
 def bag(save):
+    """Every pocket's items. A save from before TM93 to TM148 shows its TMs
+    and HMs as the game will have them once it loads it (_converted)."""
     block = save.block("SAVE_BAG")
     items = item_table()
     out = {}
     for pocket in pockets(save.layout):
         at, count = pocket["at"], pocket["slots"]
         slots = [struct.unpack_from("<HH", block, at + 4 * s) for s in range(count)]
+        if pocket["const"] == "POCKET_TMHMS" and _legacy_tms(save):
+            slots = _converted(slots)
         out[pocket["name"]] = [{"item": item, "quantity": quantity,
                                 "name": items[item]["name"] if item in items else f"#{item}"}
                                for item, quantity in slots if item and quantity]
@@ -2833,7 +2876,10 @@ def set_item(save, item, quantity):
     0 takes it out and the pocket closes up (PocketCompaction); a new one
     goes in the first free slot, and the berries and the machines are then
     sorted as Bag_AddItem sorts them. A TM is one at most: New Gold never
-    uses one up."""
+    uses one up. In a save from before TM93 to TM148 a machine past HM08 is
+    written as one of hg-engine's that the game makes it (legacy_machines),
+    and taken out as every one that becomes it; one that none becomes is
+    refused."""
     entry = item_table().get(item)
     if not entry or not entry["pocket"]:
         raise ValueError(f"item {item} goes in no pocket")
@@ -2843,6 +2889,18 @@ def set_item(save, item, quantity):
     block = save.block("SAVE_BAG")
     at, count = pocket_at(pocket, save.layout)
     slots = [list(struct.unpack_from("<HH", block, at + 4 * s)) for s in range(count)]
+    if pocket_const(pocket) == "POCKET_TMHMS" and _legacy_tms(save):
+        sources = [old for old, now in sorted(legacy_machines().items()) if now == item]
+        if quantity and not sources:
+            raise ValueError(f"{entry['name']}: this save is from before TM93 to TM148, and none of hg-engine's "
+                             "machines it can hold becomes this one; load it in the game and save it first")
+        if quantity and any(s[0] in sources for s in slots) and item not in item_kind("ItemIsHM"):
+            return
+        if quantity and item not in sources:
+            item = sources[0]
+        elif not quantity:
+            slots = [[0, 0] if s[0] in sources else s for s in slots]
+            item = None
     held = next((s for s in slots if s[0] == item), None)
     added = False
     if held:

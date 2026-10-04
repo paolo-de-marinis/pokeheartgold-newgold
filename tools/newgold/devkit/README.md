@@ -39,6 +39,14 @@ Pokemon a move as a machine does (the playthrough's bot teaches its HM
 from the bag now, scene.py's `machine:`). The gym saves in
 `~/hgss-saves/gyms` are made with it; their README says how.
 
+A save from before TM93 to TM148 holds hg-engine's machines, numbered its
+way, which the game makes New Gold's when it loads it (`LegacyMachineToItem`,
+read through `legacy_machines()`): `bag()` shows its TMs and HMs as they will
+be, a TM past HM08 is written as one of hg-engine's that becomes it (TM94 as
+its TR85, Work Up) and taken out as every one that does, and one that none
+becomes (TM98, Venoshock) is refused -- load the save in the game and save
+it first.
+
 A warp builds the map as walking in through its door does: the game clears
 the gym's state and the map's OnTransition script writes its first one
 (`InitAzaleaGym` and the others in `src/gymmick_init.c`), whatever the save
@@ -250,7 +258,8 @@ and friendship; adding, removing, reordering, moving between box and
 party), Borsa (the machines as a checklist, the Pokedex's way: every TM
 and HM with its move and type and "ce l'ho"; searched by "MT 45" as by
 "TM045"; written as the game keeps the
-pocket, 101 slots at most), Pokedex (per
+pocket, 156 slots, one for each machine; an older save's as the game will
+read it, above), Pokedex (per
 species, all at once, and the two switches; then the forms the Dex records
 on their own, a Galarian Slowpoke seen or caught, its species with it, for
 a save of the layout that has the record), Posizione (the `--where`
