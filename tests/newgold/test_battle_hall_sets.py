@@ -14,6 +14,7 @@ to end (a type with no set in a stretch would never stop looking).
 
 import json
 import re
+import sys
 import unittest
 
 from test_form_dex import run
@@ -111,9 +112,9 @@ static void ov80_02229EF4(FrontierMonNarcData *dest, u32 index, int narcId) {
     dest->species = sSetSpecies[index - 1];
     dest->form = sSetForm[index - 1];
 }
-static u8 sTypes[1024][4][2]; // by species and form, filled from the sets in main
+static u8 sTypes[2048][4][2]; // by species and form, filled from the sets in main
 static void LoadMonBaseStats_HandleAlternateForm(int species, int form, BASE_STATS *personal) {
-    assert(species < 1024 && form < 4);
+    assert(species < 2048 && form < 4);
     personal->types[0] = sTypes[species][form][0];
     personal->types[1] = sTypes[species][form][1];
 }
@@ -223,6 +224,38 @@ def program(main=MAIN):
         "@BOARD@", ", ".join(map(str, BOARD)))
 
 
+# The same pick, from every start in each rank's stretch in turn (LCRandom
+# gives the start), for a Fairy-type board category: each pick's species.
+STARTS = r'''
+#include "constants/pokemon.h"
+int main(void) {
+    for (int i = 0; i < BATTLE_HALL_SET_COUNT; i++) {
+        sTypes[sSetSpecies[i]][sSetForm[i]][0] = sSetType1[i];
+        sTypes[sSetSpecies[i]][sSetForm[i]][1] = sSetType2[i];
+    }
+    for (int rank = 0; rank < 10; rank++) {
+        const BattleHallSetRange *range = &gBattleHallRankStretches[rank];
+        for (int start = 0; start <= range->last - range->first; start++) {
+            u16 sets[16] = {0};
+            sStart = start;
+            ov80_02237448(1, TYPE_FAIRY, rank, 0, SPECIES_NONE, sets, 0);
+            printf("%d %d\n", rank, sSetSpecies[sets[0] - 1]);
+        }
+    }
+    return 0;
+}
+'''
+
+
+def fairy_picks():
+    """Each rank's Fairy-type picks, a species for every start."""
+    picks = [[] for _ in range(10)]
+    for line in run(program(STARTS), "newgold-hall-starts-").splitlines():
+        rank, species = map(int, line.split())
+        picks[rank].append(species)
+    return picks
+
+
 class BattleHallSetTests(unittest.TestCase):
     def test_every_pick_is_of_its_type(self):
         self.assertEqual(run(program(), "newgold-hall-sets-"), "ok")
@@ -242,6 +275,55 @@ class BattleHallSetTests(unittest.TestCase):
             for t in BOARD:
                 found = [s for s in range(first, last + 1) if t in types[s - 1]]
                 self.assertGreaterEqual(len(found), 2, (TYPES[t], rank + 1))
+
+    def test_the_ranks_pick_from_retail_s_strengths(self):
+        # The sets go from the weakest to the strongest in four strengths,
+        # one after the other; each rank picks from retail's ones: the first,
+        # the first two, the middle two, the last two.
+        strengths = ranges("gBattleHallStrengths")
+        count = len(hall_sets())
+        self.assertEqual([first for first, _ in strengths], [1] + [last + 1 for _, last in strengths[:3]])
+        self.assertEqual(strengths[3][1], count)
+        joined = [strengths[0]] * 2 + [(strengths[0][0], strengths[1][1])] * 3 + \
+            [(strengths[1][0], strengths[2][1])] * 3 + [(strengths[2][0], strengths[3][1])] * 2
+        self.assertEqual(ranges("gBattleHallRankStretches"), joined)
+
+    def test_every_fairy_rank_fields_the_newer_fairy_pokemon(self):
+        # Paolo (2026-10-02): the Hall's Fairy rank fields the Fairy Pokemon
+        # of the later generations. The pick goes on from a random start to
+        # the next set of the type, so a set is picked as often as the sets
+        # before it since the last of its type: the new sets are spread
+        # through their strengths, not bunched at one end, and at every rank
+        # they are a third of the Fairy picks or more.
+        arceus = constants("include/constants/species.h", "SPECIES_")["SPECIES_ARCEUS"]
+        for rank, picks in enumerate(fairy_picks()):
+            newer = [species for species in picks if species > arceus]
+            self.assertGreaterEqual(3 * len(newer), len(picks), rank + 1)
+
+    def test_the_newer_sets_are_ones_a_player_could_have(self):
+        # The sets past retail's: moves the species learns in this game, no
+        # move twice and none the game leaves unimplemented, a nature, an
+        # item and the stats the EVs go to.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit"))
+        import savedit
+        species = constants("include/constants/species.h", "SPECIES_")
+        moves = constants("include/constants/moves.h", "MOVE_")
+        items = constants("include/constants/items.h", "ITEM_")
+        natures = constants("include/constants/pokemon.h", "NATURE_")
+        newer = [s for s in json.loads((ROOT / "files/arc/battle_hall.json").read_text())["sets"]
+                 if species[s["species"]] > species["SPECIES_ARCEUS"]]
+        self.assertTrue(newer)
+        for s in newer:
+            number = species[s["species"]]
+            learnt = savedit.learnable_moves(number, s["form"])
+            known = [moves[m] for m in s["moves"]]
+            self.assertEqual(len(set(known)), 4, s["species"])
+            for move in known:
+                self.assertIn(move, learnt, (s["species"], move))
+                self.assertNotIn(move, savedit.unimplemented_moves(), (s["species"], move))
+            self.assertIn(s["nature"], natures)
+            self.assertGreater(items[s["item"]], 0, s["species"])
+            self.assertTrue(s["evs"], s["species"])
 
     def test_the_species_table_is_the_sets(self):
         # The pick looks the player's species up in gBattleHallSetSpecies and

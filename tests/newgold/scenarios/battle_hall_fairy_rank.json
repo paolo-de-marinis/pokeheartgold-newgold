@@ -5,7 +5,7 @@
   "hold": {"gDiagBattleSeed": 1},
   "steps": ["field", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50", "A", "wait:50",
             "wait:5000", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60", "A", "wait:60",
-            "A", "wait:120", {"expect": {"map": "MAP_BATTLE_FRONTIER_BATTLE_HALL"}}, "UP", "wait:30", "RIGHT", "wait:30", "A", "wait:120", "poke:sLCRNG_State=0x3", "A", "fight:0:0",
+            "A", "wait:120", {"expect": {"map": "MAP_BATTLE_FRONTIER_BATTLE_HALL"}}, "UP", "wait:30", "RIGHT", "wait:30", "A", "wait:120", "poke:sLCRNG_State=0x2A6", "A", "fight:0:0",
             {"expect": {"battler1.species": "SPECIES_CLEFFA", "battler1.types": "TYPE_FAIRY", "lines": ["sent out Cleffa!"]}}, "fight"],
   "expect": {"lines": ["sent out Cleffa!", "You defeated"], "no_lines": ["Typhlosion fainted"]}
 }

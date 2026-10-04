@@ -6,10 +6,10 @@
 // battles pick from the strength of the player's species, or from the
 // strongest (ov80_02237448).
 const BattleHallSetRange gBattleHallStrengths[4] = {
-    { 1,   154 },
-    { 155, 270 },
-    { 271, 375 },
-    { 376, 477 },
+    { 1,   165 },
+    { 166, 287 },
+    { 288, 403 },
+    { 404, 522 },
 };
 
 // The IVs of each rank's opponents, in each row's second byte (ov80_0223796C;
@@ -30,14 +30,14 @@ const u8 gBattleHallRankIVs[10][4] = {
 // The stretch of the sets each rank picks its opponents from: the first
 // strength, then the first two, the middle two and the last two.
 const BattleHallSetRange gBattleHallRankStretches[10] = {
-    { 1,   154 },
-    { 1,   154 },
-    { 1,   270 },
-    { 1,   270 },
-    { 1,   270 },
-    { 155, 375 },
-    { 155, 375 },
-    { 155, 375 },
-    { 271, 477 },
-    { 271, 477 },
+    { 1,   165 },
+    { 1,   165 },
+    { 1,   287 },
+    { 1,   287 },
+    { 1,   287 },
+    { 166, 403 },
+    { 166, 403 },
+    { 166, 403 },
+    { 288, 522 },
+    { 288, 522 },
 };

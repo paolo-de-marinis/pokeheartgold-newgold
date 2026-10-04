@@ -14,7 +14,7 @@ typedef struct BattleHallData {
 
 // The Hall's sets (a/2/0/4, files/arc/battle_hall.json), counted from one:
 // from the weakest Pokemon to the strongest, in four strengths.
-#define BATTLE_HALL_SET_COUNT 477
+#define BATTLE_HALL_SET_COUNT 522
 
 // A stretch of the sets, both ends counted.
 typedef struct BattleHallSetRange {
