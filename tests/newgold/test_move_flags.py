@@ -74,6 +74,14 @@ class UnguardedMoveTests(unittest.TestCase):
         self.assertEqual(flagged, {MOVES[f"MOVE_{name}"] for name in
                                    ("COURT_CHANGE", "FAIRY_LOCK", "MAGIC_ROOM", "WONDER_ROOM", "POWER_SHIFT")})
 
+    def test_the_bounce_names_the_pokemon_that_sends_it_back(self):
+        # hg-engine's subscript 139 at d0380a487: "{0} bounced the {1} back!"
+        # with {0} the defender, the Pokemon with the coat or the ability;
+        # retail's line named the move's user, and the port printed the
+        # engine's text with retail's names.
+        script = (ROOT / "files/battledata/script/subscript/subscript_0139_MagicCoat.s").read_text()
+        self.assertIn("PrintMessage msg_0197_00574, TAG_NICKNAME_MOVE, BATTLER_CATEGORY_DEFENDER, BATTLER_CATEGORY_ATTACKER", script)
+
     def test_snatch_takes_the_ones_pokemon_central_says_it_takes(self):
         # "Può essere rubata da Scippo"; the engine's records left these off.
         for move in ("AURORA_VEIL", "CLANGOROUS_SOUL", "FILLET_AWAY", "GEAR_UP", "LASER_FOCUS", "LIFE_DEW",
