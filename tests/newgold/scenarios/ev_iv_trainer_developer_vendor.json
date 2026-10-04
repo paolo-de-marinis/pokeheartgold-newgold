@@ -1,0 +1,11 @@
+{
+  "about": "konefr's developer vendor, in the diagnostics build (the scenarios' ROM) only: the EV/IV trainer's page after Sets (SELECT three times), his password asked first -- 0000 is refused, 0-2-5-1 lets in -- and his Rare Candies at 1 each: x1 and x10 bought, 11 Candies for 11 of route29-official's 3000.",
+  "save": "route29-official.sav",
+  "edit": ["--where", "69:12:15:0"],
+  "steps": ["field", "goto:MAP_CHERRYGROVE_POKECENTER_1F,12,12", "untilheap:HEAP_ID_EV_IV_TRAINER", "wait:100", "A", "wait:150",
+            "SELECT", "SELECT", "SELECT", "A",
+            "RIGHT", "UP", "UP", "RIGHT", "UP", "UP", "UP", "UP", "UP", "RIGHT", "UP", "A",
+            "A", "DOWN", "A",
+            "B", "wait:200", "B", "wait:300", "A", "wait:100", "field"],
+  "expect": {"money": 2989, "bag:ITEM_RARE_CANDY": 11}
+}

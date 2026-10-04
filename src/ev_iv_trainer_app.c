@@ -34,6 +34,10 @@
 
 #include "data/ev_iv_trainer_sets.h"
 
+#ifdef NEWGOLD_DIAG
+#include "msgdata/msg/msg_0550_T21.h"
+#endif
+
 // The EV/IV trainer. It is one app that runs the game's own party menu for
 // the choice of a Pokemon ("Train which Pokemon?", no Egg) and, on a choice,
 // its own two screens, in the summary screen's look: the summary's page
@@ -56,6 +60,17 @@ enum TrainerPage {
     PAGE_SETS,
     PAGE_COUNT,
 };
+
+#ifdef NEWGOLD_DIAG
+// New Gold, in the diagnostics build only: konefr's developer vendor
+// (b23dc7360), his password and his Rare Candies at 1 each, on a page of its
+// own that SELECT reaches after the Sets. Its texts are his, in Cherrygrove
+// City's bank; his EV presets are the Sets page's.
+#define PAGE_DEV      PAGE_COUNT
+#define TRAINER_PAGES (PAGE_COUNT + 1)
+#else
+#define TRAINER_PAGES PAGE_COUNT
+#endif
 
 enum TrainerState {
     STATE_CHOOSE,      // the party menu
@@ -130,11 +145,14 @@ static const u16 sButtonTextShadow = RGB(5, 5, 5);
 // Speed before Sp. Atk and Sp. Def.
 static const u8 sDisplayStat[NUM_STATS] = { STAT_HP, STAT_ATK, STAT_DEF, STAT_SPATK, STAT_SPDEF, STAT_SPEED };
 
-static const u16 sPagePlates[PAGE_COUNT][2] = {
+static const u16 sPagePlates[TRAINER_PAGES][2] = {
     // top, bottom
     { 13, 12 },
     { 19, 17 },
     { 10, 9 },
+#ifdef NEWGOLD_DIAG
+    { 13, 12 },
+#endif
 };
 static const u16 sPageTitles[PAGE_COUNT] = { msg_0829_00001, msg_0829_00002, msg_0829_00003 };
 static const u16 sTabLabels[PAGE_COUNT] = { msg_0829_00005, msg_0829_00004, msg_0829_00028 };
@@ -275,6 +293,13 @@ typedef struct EvIvTrainer {
     String *string;
     String *expanded;
     YesNoPrompt *yesNo;
+#ifdef NEWGOLD_DIAG
+    MsgData *devMsg;  // bank 550, konefr's vendor's lines
+    u8 devDigits[4];
+    u8 devCursor;     // the digit, then the shop's row
+    BOOL devOpen;     // the password was right
+    u16 devLine;      // what the vendor said last, 0 for nothing
+#endif
 } EvIvTrainer;
 
 static void Trainer_StartPartyMenu(EvIvTrainer *app);
@@ -925,12 +950,147 @@ static void DrawSetsPage(EvIvTrainer *app, Window *win) {
     DrawButton(app, win, c->button1X, c->button1Y, c->button1, c->button1Small);
 }
 
+#ifdef NEWGOLD_DIAG
+static void Trainer_SetPage(EvIvTrainer *app, int page);
+static void Trainer_Act(EvIvTrainer *app, int hit, int step);
+static void Trainer_Back(EvIvTrainer *app);
+static void Trainer_Done(EvIvTrainer *app);
+
+// konefr's password, 0-2-5-1, which his vendor asked a digit at a time.
+static const u8 sDevPassword[4] = { 0, 2, 5, 1 };
+// His shop's four lines, Rare Candies at 1 each, and Exit.
+static const u8 sDevQuantities[4] = { 1, 10, 50, 99 };
+
+static void DevLine(EvIvTrainer *app, Window *win, u16 row, int line, int x, int y) {
+    ReadMsgDataIntoString(app->devMsg, row, app->string);
+    String_GetLineN(app->expanded, app->string, line);
+    Print(app, win, 0, x, y, TEXT_DARK, ALIGN_LEFT);
+}
+
+static void DrawDevPage(EvIvTrainer *app, Window *win) {
+    int i;
+
+    Panel(win, ROWS_LEFT, ROWS_TOP, ROWS_RIGHT, 153, COL_VALUE);
+    if (!app->devOpen) {
+        DevLine(app, win, msg_0550_T21_00025, 0, 9, 8); // Password?
+        for (i = 0; i < 4; i++) {
+            int x = 18 + 28 * i;
+            Panel(win, x, 36, x + 23, 61, COL_VALUE_ALT);
+            DevLine(app, win, msg_0550_T21_00026 + app->devDigits[i], 0, x + 8, 40);
+        }
+        Frame(win, 16 + 28 * app->devCursor, 34, 16 + 28 * app->devCursor + 27, 63);
+    } else {
+        DevLine(app, win, msg_0550_T21_00046, 0, 9, 6);  // Developer Shop
+        DevLine(app, win, msg_0550_T21_00046, 1, 9, 20); // Rare Candy: $1 each.
+        for (i = 0; i < 5; i++) {
+            int y = 40 + 18 * i;
+            Rect(win, 6, y, 141, y + 17, (i % 2) ? COL_VALUE_ALT : COL_VALUE);
+            DevLine(app, win, i < 4 ? msg_0550_T21_00038 + i : msg_0550_T21_00042, 0, 9, y);
+        }
+        Frame(win, ROWS_LEFT, 38 + 18 * app->devCursor, ROWS_RIGHT, 38 + 18 * app->devCursor + 21);
+    }
+    if (app->devLine != 0) {
+        DevLine(app, win, app->devLine, 0, 9, 132);
+    }
+    ReadMsgDataIntoString(app->devMsg, msg_0550_T21_00048, app->expanded); // Rare Candy
+    Panel(win, 154, 28, 244, 62, COL_VALUE);
+    Rect(win, 156, 30, 242, 44, COL_LABEL);
+    Print(app, win, 0, 159, 29, TEXT_WHITE, ALIGN_LEFT);
+    PrintNumber(app, win, Bag_GetQuantity(app->bag, ITEM_RARE_CANDY, app->heapID), 0, 240, 45, TEXT_DARK, ALIGN_RIGHT);
+}
+
+static void Trainer_DevInput(EvIvTrainer *app) {
+    int keys = gSystem.newKeys;
+    int repeat = gSystem.newAndRepeatedKeys;
+    u32 x, y;
+    int i;
+
+    if (System_GetTouchNewCoords(&x, &y)) {
+        for (i = 0; sTabHitboxes[i].rect.top != TOUCHSCREEN_RECTLIST_END; i++) {
+            if (TouchscreenHitbox_PointIsIn(&sTabHitboxes[i], x, y)) {
+                Trainer_Act(app, HIT_TAB0 + i, 1);
+                return;
+            }
+        }
+        if (app->devOpen && x >= ROWS_LEFT && x <= ROWS_RIGHT && y >= 40 && y < 40 + 18 * 5) {
+            app->devCursor = (y - 40) / 18;
+            keys |= PAD_BUTTON_A;
+        }
+    }
+    if (keys & PAD_BUTTON_B) {
+        Trainer_Back(app);
+        return;
+    }
+    if (keys & PAD_BUTTON_SELECT) {
+        Trainer_SetPage(app, PAGE_EV);
+        return;
+    }
+    if (keys & PAD_BUTTON_START) {
+        Trainer_Done(app);
+        return;
+    }
+    if (!app->devOpen) {
+        if (repeat & PAD_KEY_LEFT) {
+            app->devCursor = (app->devCursor + 3) % 4;
+        } else if (repeat & PAD_KEY_RIGHT) {
+            app->devCursor = (app->devCursor + 1) % 4;
+        } else if (repeat & PAD_KEY_UP) {
+            app->devDigits[app->devCursor] = (app->devDigits[app->devCursor] + 1) % 10;
+        } else if (repeat & PAD_KEY_DOWN) {
+            app->devDigits[app->devCursor] = (app->devDigits[app->devCursor] + 9) % 10;
+        } else if (keys & PAD_BUTTON_A) {
+            app->devOpen = memcmp(app->devDigits, sDevPassword, sizeof(sDevPassword)) == 0;
+            app->devLine = app->devOpen ? msg_0550_T21_00036 : msg_0550_T21_00037; // Access granted. / Wrong password.
+            app->devCursor = 0;
+            PlaySE(app->devOpen ? SEQ_SE_DP_DECIDE : SEQ_SE_DP_CUSTOM06);
+        } else {
+            return;
+        }
+    } else {
+        if (repeat & PAD_KEY_UP) {
+            app->devCursor = (app->devCursor + 4) % 5;
+        } else if (repeat & PAD_KEY_DOWN) {
+            app->devCursor = (app->devCursor + 1) % 5;
+        } else if (keys & PAD_BUTTON_A) {
+            if (app->devCursor == 4) { // Exit
+                Trainer_SetPage(app, PAGE_EV);
+                return;
+            }
+            i = sDevQuantities[app->devCursor];
+            if (!Bag_HasSpaceForItem(app->bag, ITEM_RARE_CANDY, i, app->heapID)) {
+                app->devLine = msg_0550_T21_00045;
+                PlaySE(SEQ_SE_DP_CUSTOM06);
+            } else if (PlayerProfile_GetMoney(app->profile) < (u32)i) {
+                app->devLine = msg_0550_T21_00044;
+                PlaySE(SEQ_SE_DP_CUSTOM06);
+            } else {
+                PlayerProfile_SubMoney(app->profile, i);
+                Bag_AddItem(app->bag, ITEM_RARE_CANDY, i, app->heapID);
+                app->devLine = msg_0550_T21_00043; // Purchase complete.
+                PlaySE(SEQ_SE_DP_REGI);
+            }
+        } else {
+            return;
+        }
+    }
+    PlaySE(SEQ_SE_DP_SELECT);
+    Trainer_DrawBottom(app);
+}
+#endif
+
 static void Trainer_DrawBottom(EvIvTrainer *app) {
     Window *win = &app->bottom;
 
     FillWindowPixelBuffer(win, 0);
     Rect(win, 0, 0, 146, 157, PageColour(app));
     Rect(win, 152, 26, 244, 160, COL_VALUE);
+#ifdef NEWGOLD_DIAG
+    if (app->page == PAGE_DEV) {
+        ReadMsgDataIntoString(app->devMsg, msg_0550_T21_00047, app->expanded);
+        Print(app, win, 0, 156, 8, TEXT_WHITE, ALIGN_LEFT);
+        DrawDevPage(app, win);
+    } else
+#endif
     PrintRow(app, win, sPageTitles[app->page], 0, 156, 8, TEXT_WHITE, ALIGN_LEFT);
     switch (app->page) {
     case PAGE_EV:
@@ -1414,6 +1574,17 @@ static void Trainer_HandleInput(EvIvTrainer *app) {
     u8 row = app->row;
     s8 pressed = app->pressed;
 
+#ifdef NEWGOLD_DIAG
+    if (app->page == PAGE_DEV) {
+        Trainer_DevInput(app);
+        return;
+    }
+    if (app->page == PAGE_SETS && keys & PAD_BUTTON_SELECT) {
+        Trainer_SetPage(app, PAGE_DEV);
+        return;
+    }
+#endif
+
     if (System_GetTouchNewCoords(&x, &y)) {
         hit = Trainer_Touched(app, x, y);
         app->held = (hit == HIT_DOWN || hit == HIT_UP) ? hit : HIT_NONE;
@@ -1611,6 +1782,9 @@ BOOL EvIvTrainer_Init(OverlayManager *manager, int *state) {
     app->setNames = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, EV_IV_TRAINER_SETS_BANK, app->heapID);
     app->msgFormat = MessageFormat_New(app->heapID);
     app->string = String_New(128, app->heapID);
+#ifdef NEWGOLD_DIAG
+    app->devMsg = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, NARC_msg_msg_0550_T21_bin, app->heapID);
+#endif
     app->expanded = String_New(128, app->heapID);
     for (i = 0; sEvIvTrainerSets[i].name != EV_IV_TRAINER_SETS_END; i++) { }
     app->setCount = i;
@@ -1704,6 +1878,9 @@ BOOL EvIvTrainer_Exit(OverlayManager *manager, int *state) {
     String_Delete(app->string);
     MessageFormat_Delete(app->msgFormat);
     DestroyMsgData(app->setNames);
+#ifdef NEWGOLD_DIAG
+    DestroyMsgData(app->devMsg);
+#endif
     DestroyMsgData(app->msgData);
     Heap_Free(app->preview);
     Heap_Free(app->partyArgs);
