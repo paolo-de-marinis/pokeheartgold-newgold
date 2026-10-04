@@ -39,6 +39,8 @@ u16 ov82_0223F570(BattleHallBoard *board);
 void ov82_0223F580(BattleHallBoard *board, BgConfig *bgConfig);
 void ov82_0223F5E0(BgConfig *bgConfig, u8 cell, u8 look);
 void ov82_0223F90C(BattleHallBoard *board);
+void ov82_0223FD2C(BgConfig *bgConfig, Window *windows);
+void ov82_0223FD5C(Window *windows);
 
 // Still assembly.
 void ov82_0223E9B0(void);

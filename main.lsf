@@ -1322,6 +1322,8 @@ Overlay OVY_82
     Object asm/overlay_82_0223F6C4.o
     Object src/frontier/battle_hall_board_restore.o
     Object asm/overlay_82_0223F948.o
+    Object src/frontier/battle_hall_board_windows.o
+    Object asm/overlay_82_0223FD78.o
 }
 Overlay OVY_83
 {
