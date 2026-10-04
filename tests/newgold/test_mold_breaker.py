@@ -3,7 +3,7 @@
 
 CheckBattlerAbilityIfNotIgnored answers whether a target's ability counts
 against the attacker's move; the redirection by Lightning Rod and Storm Drain
-(ov12_02250A18) and the target's side's Flower Gift (SideAbilityNotIgnored)
+(ov12_02250A18) and the target's side's Flower Gift (SideHasFlowerGift)
 ask it, so that Teravolt and Turboblaze pass them by as Mold Breaker does
 (the reference's CLIENT_HAS_MOLD_BREAKER_VARIATION and MoldBreakerAbilityCheck).
 """
@@ -32,12 +32,13 @@ PROGRAM = r"""
 #include "constants/items.h"
 #include "constants/moves.h"
 #include "constants/pokemon.h"
+#include "constants/species.h"
 typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 typedef struct { int unused; } BattleSystem;
-typedef struct { int hp; u16 item; } BattleMon;
+typedef struct { u16 species; int hp; u16 item; u32 status2; } BattleMon;
 typedef struct { u32 lightningRodFlag : 1, stormDrainFlag : 1, moldBreakerFlag : 1; } SelfTurnData;
 typedef struct { u32 followMeFlag : 1; u8 battlerIdFollowMe; } FieldSideConditionData;
 typedef struct {
@@ -102,12 +103,29 @@ int main(void) {
         reset();
         S.ability[0] = breakers[i];
         S.ability[3] = ABILITY_FLOWER_GIFT;
-        assert(!SideAbilityNotIgnored(&bs, &ctx, 0, 1, ABILITY_FLOWER_GIFT));
+        ctx.battleMons[3].species = SPECIES_CHERRIM;
+        assert(!SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE));
+        // The breaker's own side keeps its flowers.
+        S.ability[2] = ABILITY_FLOWER_GIFT;
+        ctx.battleMons[2].species = SPECIES_CHERRIM;
+        assert(SideHasFlowerGift(&bs, &ctx, 0, 0, FALSE));
         S.ability[0] = ABILITY_NONE;
-        assert(SideAbilityNotIgnored(&bs, &ctx, 0, 1, ABILITY_FLOWER_GIFT));
+        assert(SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE));
         ctx.battleMons[3].hp = 0;
-        assert(!SideAbilityNotIgnored(&bs, &ctx, 0, 1, ABILITY_FLOWER_GIFT));
+        assert(!SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE));
     }
+    // Only a Cherrim of its own: one that took the ability by Skill Swap, or
+    // a Ditto transformed into Cherrim, lifts nothing (Showdown's gen-9
+    // Flower Gift asks the holder's base species).
+    reset();
+    S.ability[3] = ABILITY_FLOWER_GIFT;
+    ctx.battleMons[3].species = SPECIES_CHERRIM;
+    assert(SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE) && SideHasFlowerGift(&bs, &ctx, 1, 1, FALSE));
+    ctx.battleMons[3].status2 = STATUS2_TRANSFORM;
+    assert(!SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE) && !SideHasFlowerGift(&bs, &ctx, 1, 1, FALSE));
+    ctx.battleMons[3].status2 = 0;
+    ctx.battleMons[3].species = SPECIES_DITTO;
+    assert(!SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE) && !SideHasFlowerGift(&bs, &ctx, 1, 1, FALSE));
     // A move never passes its own user's ability by: Sunsteel Strike's user
     // keeps its Contrary for itself, while the target's is passed.
     reset();
@@ -159,8 +177,9 @@ int main(void) {
         reset();
         S.ability[0] = breakers[i];
         S.ability[3] = ABILITY_FLOWER_GIFT;
+        ctx.battleMons[3].species = SPECIES_CHERRIM;
         ctx.battleMons[3].item = HOLD_EFFECT_PREVENT_ABILITY_CHANGES;
-        assert(SideAbilityNotIgnored(&bs, &ctx, 0, 1, ABILITY_FLOWER_GIFT));
+        assert(SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE));
     }
     return 0;
 }
@@ -169,7 +188,7 @@ int main(void) {
 
 def run(test):
     names = ["AbilityBreaksMolds", "BattlerIgnoresRedirection", "BattlerHasAbilityShield", "BattlerIgnoresAbilities",
-             "CheckBattlerAbilityIfNotIgnored", "SideAbilityNotIgnored", "ov12_02250A18"]
+             "CheckBattlerAbilityIfNotIgnored", "SideHasFlowerGift", "ov12_02250A18"]
     functions = "\n".join(function(OVERLAY, name) for name in names)
     program = PROGRAM.replace("@FUNCTIONS@", functions)
     with tempfile.TemporaryDirectory(prefix="newgold-mold-breaker-") as directory:
@@ -201,7 +220,7 @@ class MoldBreakerTests(unittest.TestCase):
         asked = set()
         for path in (ROOT / "src/battle").glob("*.c"):
             text = path.read_text()
-            asked |= set(re.findall(r"(?:CheckBattlerAbilityIfNotIgnored|SideAbilityNotIgnored)\([^;]*?, (ABILITY_\w+)\)", text))
+            asked |= set(re.findall(r"CheckBattlerAbilityIfNotIgnored\([^;]*?, (ABILITY_\w+)\)", text))
         for path in (ROOT / "files/battledata/script").glob("*/*.s"):
             asked |= set(re.findall(r"CheckIgnorableAbility \w+, \w+, (ABILITY_\w+)", path.read_text()))
         self.assertGreater(len(asked), 50)
@@ -213,8 +232,12 @@ class MoldBreakerTests(unittest.TestCase):
             self.assertIn("if ((!AbilityBreaksMolds(abilityAttacker) || item == HOLD_EFFECT_PREVENT_ABILITY_CHANGES) && abilityTarget == ABILITY_" + ability, body)
 
     def test_the_damage_asks_the_side_s_flower_gift_so(self):
-        self.assertIn("(weatherOnTarget & FIELD_CONDITION_SUN_ALL) && SideAbilityNotIgnored(battleSystem, ctx, battlerIdAttacker, battlerIdTarget, ABILITY_FLOWER_GIFT)",
-                      function(OVERLAY, "CalcMoveDamage"))
+        # The target's side's for its Sp. Def, which the move may pass by;
+        # the attacker's own side's for its Attack, which it may not.
+        body = function(OVERLAY, "CalcMoveDamage")
+        self.assertIn("(weatherOnTarget & FIELD_CONDITION_SUN_ALL) && SideHasFlowerGift(battleSystem, ctx, battlerIdAttacker, battlerIdTarget, TRUE)", body)
+        self.assertIn("(weather & FIELD_CONDITION_SUN_ALL) && SideHasFlowerGift(battleSystem, ctx, battlerIdAttacker, battlerIdAttacker, FALSE)", body)
+        self.assertEqual(body.count("ABILITY_FLOWER_GIFT"), 0)
 
 
 if __name__ == "__main__":

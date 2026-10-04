@@ -1,0 +1,14 @@
+{
+  "about": "Flower Gift lifts its side's Attack in the sun only from a Cherrim of its own (Showdown's gen-9 Flower Gift does nothing unless the holder's base species is Cherrim; Pokemon Central's Regalfiore does not say). A level-10 Machop is given Flower Gift (set:), as Skill Swap would give it, and Sunny Day and Tackle (teach:) against a forced wild Snorlax that knows only Splash: under the sun the Machop's Tackle takes the Snorlax from 31 HP to 20, its Attack unlifted. Before, the ability alone was asked, and the same Tackle left it at 15. The field's RNG and the damage roll are pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "MACHOP:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=143", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SUNNY_DAY", "teach:0,1,MOVE_TACKLE", "teach:0,2,0,0", "teach:0,3,0,0",
+            "set:0,ability,ABILITY_FLOWER_GIFT",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["Machop used Sunny Day!"], "battler1.species": "SPECIES_SNORLAX", "battler1.hp": 31}},
+            "fight:2:1"],
+  "expect": {"new_lines": ["Machop used Tackle!"], "battler1.hp": 20}
+}
