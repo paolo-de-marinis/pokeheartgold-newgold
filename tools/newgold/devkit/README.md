@@ -29,7 +29,7 @@ always the player's own, so it obeys; `--level SLOT:LEVEL` raises one already
 there and keeps the rest of it), the bag, TMs, badges, the Dex, the
 position (`--where MAP:X:Y:DIR`, as a warp so the map builds itself; MAP
 is the map's number), script
-flags (`--flag NAME`) and variables (`--var NAME=VALUE`); `--dex` takes a
+flags (`--flag NAME`, and `--flag NAME=0` to clear one) and variables (`--var NAME=VALUE`); `--dex` takes a
 form as well (`SLOWPOKE_GALARIAN`), caught as the game records one; `--train LEVEL`
 raises the party already there to a level, evolving by level on the way
 with the moves the game gives there, eggs apart -- the one edit the
