@@ -1,0 +1,27 @@
+{{ doNotModifyHeader }}
+
+#include "global.h"
+#include "scrcmd_9.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+#include "constants/species.h"
+
+// The Battle Hall's sets, a/2/0/4: one member each, counted from one; member
+// 0 is none. The EVs are the stats the set trains, 510 shared out among them
+// (ov80_02229F6C).
+u32 __size = sizeof(FrontierMonNarcData);
+
+const FrontierMonNarcData __data[] = {
+    { 0 },
+## for set in sets
+    {
+        .species = {{ set.species }},
+        .moves = { {{ set.moves.0 }}, {{ set.moves.1 }}, {{ set.moves.2 }}, {{ set.moves.3 }} },
+        .evs = {% for ev in set.evs %}(1 << {{ ev }}) | {% endfor %}0,
+        .nature = {{ set.nature }},
+        .item = {{ set.item }},
+        .form = {{ set.form }},
+    },
+## endfor
+};

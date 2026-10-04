@@ -457,6 +457,7 @@ $(eval $(call arc_strip_name,files/graphic/frontier_gra.narc,files/a/1/8/3))
 $(eval $(call arc_strip_name,files/application/custom_ball/edit/gs_cb_data.narc,files/a/1/8/5))
 $(eval $(call arc_strip_name,files/pbr/dp_height.narc,files/a/1/9/4))
 $(eval $(call arc_strip_name,files/pbr/dp_height_o.narc,files/a/1/9/5))
+$(eval $(call arc_strip_name,files/arc/battle_hall.narc,files/a/2/0/4))
 $(eval $(call arc_strip_name,files/resource/eng/pms_aikotoba/pms_aikotoba.narc,files/a/2/1/2))
 $(eval $(call arc_strip_name,files/application/zukanlist/zkn_data/zukan_data_gira.narc,files/a/2/1/4))
 $(eval $(call arc_strip_name,files/fielddata/sodateya/kowaza_list.narc,files/a/2/2/9))
@@ -563,6 +564,7 @@ include files/application/pokegear/configure/pgconf_gra.mk
 include files/application/pokegear/phone/pgphone_gra.mk
 include files/application/pokegear/radio/pgradio_gra.mk
 include files/arc/ppark.mk
+include files/arc/battle_hall.mk
 include files/application/record/record.mk
 include files/application/voltorb_flip.mk
 include files/application/annon/puzzle_gra.mk
@@ -595,7 +597,7 @@ include files/battle/anim/battle_anim.mk
 # list, is assembled or compiled from. And for every other tool the tree
 # builds: each rule that runs msgenc, nitrogfx, nitroarc or csv2bin lists it
 # beside its sources, as the module lists compstatic and the ROM fixrom.
-$(ZUKAN_DATA_NARC) $(ZUKAN_ENC_NARC) $(PPARK_NARC) $(SAFARI_ENC_NARC) $(HEADBUTT_NARC) \
+$(ZUKAN_DATA_NARC) $(ZUKAN_ENC_NARC) $(PPARK_NARC) $(BATTLE_HALL_NARC) $(SAFARI_ENC_NARC) $(HEADBUTT_NARC) \
 	$(PHOTO_DATA_NARC) $(DATA_RESDAT_BIN) $(ENCDATA_NARCS) $(EVO_NARC) $(PERSONAL_NARC) \
 	$(TRDATA_NARC) $(TRPOKE_NARC): $(O2NARC) $(JSONPROC)
 $(MMODEL_BINS) $(ZONE_EVENT_BIN) $(WAZA_OSHIE_BIN) $(PMTEL_BOOK_DAT) $(TRNAME_GMM): $(JSONPROC)

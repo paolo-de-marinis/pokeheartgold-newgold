@@ -2,7 +2,8 @@
 """Run the Battle Hall's opponent pick on the host, with the Hall's own sets.
 
 ov80_02237448 (src/frontier/battle_hall_sets.c) picks the opponent of a type
-board category from its rank's stretch of the Hall's 477 sets (a/2/0/4).
+board category from its rank's stretch of the Hall's 477 sets (a/2/0/4, built
+from files/arc/battle_hall.json).
 Retail matched the type against two types baked for each set, Gen IV's, so a
 Normal pick could bring a Clefairy, Fairy since Gen VI. The pick now reads the
 set's species, or form, from the personal data. It runs here against the
@@ -13,14 +14,10 @@ to end (a type with no set in a stretch would never stop looking).
 
 import json
 import re
-import sys
 import unittest
 
 from test_form_dex import run
 from test_level_cap import ROOT
-
-sys.path.insert(0, str(ROOT / "tools/newgold/devkit"))
-from narccheck import members  # noqa: E402
 
 SOURCE = ROOT / "src/frontier/battle_hall_sets.c"
 # The Hall's tables: the stretches, then the sets' species (and, before this
@@ -51,10 +48,18 @@ def u16s(data):
     return [data[i] | data[i + 1] << 8 for i in range(0, len(data) - 1, 2)]
 
 
+def constants(header, prefix):
+    """A header's #define PREFIX_NAME N, by name."""
+    return {m[1]: int(m[2]) for m in re.finditer(rf"#define ({prefix}\w+)\s+(\d+)\s*$",
+                                                 (ROOT / header).read_text(), re.M)}
+
+
 def hall_sets():
-    """Each set's (species, form), set 1 first."""
-    sets = members(ROOT / "files/a/2/0/4")[1:]
-    return [(m[0] | m[1] << 8, m[14] | m[15] << 8) for m in sets]
+    """Each set's (species, form), set 1 first, from files/arc/battle_hall.json,
+    which a/2/0/4 is built from."""
+    species = constants("include/constants/species.h", "SPECIES_")
+    sets = json.loads((ROOT / "files/arc/battle_hall.json").read_text())["sets"]
+    return [(species[s["species"]], s["form"]) for s in sets]
 
 
 def set_types():

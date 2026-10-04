@@ -1,4 +1,5 @@
 ppark.narc
+battle_hall.narc
 headbutt.*.narc
 *.o
 *.c
