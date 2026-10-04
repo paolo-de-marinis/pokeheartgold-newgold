@@ -140,7 +140,7 @@ offsets the tree's own headers give: map, x, y, party (the count),
 partyN.species|item|level|exp|hp|maxHp|moveK (the party as its save block
 holds it, slot N from 0, move K from 0, once the field is up: what a battle
 gave back),
-bag:ITEM_... (how many the bag holds), badges, running_shoes (1 once the
+bag:ITEM_... (how many the bag holds), badges, money, running_shoes (1 once the
 player has them: PlayerSaveData's, which no flag says),
 options.textSpeed|soundMethod|battleStyle|battleScene|buttonMode|frame (the
 start menu's settings as Options holds them: text speed 2 fast, battle
@@ -220,7 +220,7 @@ def readable(step_or_key, key=False):
     from core import BUTTONS
     if key:
         return (step_or_key in ("lines", "new_lines", "once_lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
-                                "party", "badges", "music", "running_shoes", "front1.lift")
+                                "party", "badges", "money", "music", "running_shoes", "front1.lift")
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
                 or re.fullmatch(r"trainer:TRAINER_\w+", step_or_key) is not None
                 or re.fullmatch(r"caught:SPECIES_\w+", step_or_key) is not None
@@ -1603,6 +1603,9 @@ class Scene:
             return memory.word(party.block(memory, self.elf, where.SAVE_PARTY) + where.PARTY_COUNT)
         if name == "badges":
             return party.badges(ram, self.elf)
+        if name == "money":     # PlayerProfile's, in the save block the field keeps
+            at = party.block(memory, self.elf, savedit.block_ids().index("SAVE_PLAYERDATA")) - 0x02000000
+            return struct.unpack_from("<I", ram, at + savedit.MONEY)[0]
         if name.startswith("options."):
             at = party.block(memory, self.elf, savedit.block_ids().index("SAVE_PLAYERDATA")) - 0x02000000
             offset, width, mask = options_layout()[name.partition(".")[2]]

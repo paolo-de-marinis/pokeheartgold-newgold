@@ -61,7 +61,7 @@ class ScenarioFileTests(unittest.TestCase):
     def test_a_scenario_can_read_the_party_and_the_bag(self):
         # After the battle, on the field: what the party holds and what the
         # bag has, as the battle's end left them.
-        for key in ("party0.item", "party5.species", "bag:ITEM_ORAN_BERRY"):
+        for key in ("party0.item", "party5.species", "bag:ITEM_ORAN_BERRY", "money"):
             self.assertTrue(scene.readable(key, key=True), key)
         for key in ("party6.item", "party0.moves", "bag:ORAN_BERRY"):
             self.assertFalse(scene.readable(key, key=True), key)

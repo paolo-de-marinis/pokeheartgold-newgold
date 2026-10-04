@@ -4304,6 +4304,7 @@ def main():
                                        "and asserts on one that never ends")
     parser.add_argument("--trainer-id", type=int)
     parser.add_argument("--badges", type=int, help="how many Johto badges to set")
+    parser.add_argument("--money", type=int, help="the money the player has")
     parser.add_argument("--var", action="append", default=[], metavar="VAR_NAME=VALUE",
                         help="set a script variable by its name in include/constants/vars.h; repeatable")
     parser.add_argument("--flag", action="append", default=[], metavar="FLAG_NAME[=0]",
@@ -4410,6 +4411,11 @@ def main():
         set_badges(save, args.badges)
         save.write()
         print(f"{args.badges} Johto badges")
+
+    if args.money is not None:
+        set_profile(save, money=args.money)
+        save.write()
+        print(f"money {args.money}")
 
     for assignment in args.var:
         name, _, value = assignment.partition("=")
